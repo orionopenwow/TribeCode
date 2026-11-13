@@ -18,14 +18,14 @@
   // Project rooms: every call says which project it is about (the server scopes tasks, docs, chat… to it).
   const projKey = () => 'tribecode.project:' + base();
   const project = () => state.project || null;
-  async function api(path, { method = 'GET', body, project: pj } = {}) {
-    const pid = pj || project();
+  async function api(path, { method = 'GET', body, project: pj, keepalive } = {}) {
+    const pid = pj || project(), text = body ? JSON.stringify(body) : undefined;
     const res = await fetch(base() + '/api' + path, {
       method, headers: { 'Content-Type': 'application/json', ...(token() ? { Authorization: 'Bearer ' + token() } : {}), ...(pid ? { 'X-Project': pid } : {}) },
-      body: body ? JSON.stringify(body) : undefined,
+      body: text, ...(keepalive && (!text || text.length < 60000) ? { keepalive: true } : {}),   // feat/site-v2: a save that outlives the page
     });
     const data = await res.json().catch(() => ({}));
-    if (!res.ok) throw Object.assign(new Error(data.error || res.statusText), { status: res.status });
+    if (!res.ok) throw Object.assign(new Error(data.error || res.statusText), { status: res.status, data });
     return data;
   }
 
@@ -179,7 +179,12 @@
   // Called after first-run setup on the host machine (UI served by the server, no token yet).
   // defer: an empty local tribe (no members yet, not a cloud server) is not claimed on open. The person sees their
   // Dashboard first and becomes host when they start their first project (app.js startFirst). Returns 'fresh'.
-  async function ensureMember({ name, color, reclaim = false, defer = false }) {
+  // Signed out, a guest or a TEST account on this device (accounts.js): nothing signs in on its own (the boot's auto-claim,
+  // the sign-in cookie, the host reclaim). A person's own click (Start your first project, Log in) still does.
+  const autoBlocked = () => { try { const a = JSON.parse(localStorage.getItem('tribecode.accounts.v1') || 'null'); return !!a && !!a.mode && a.mode !== 'signedin'; } catch { return false; } };
+  async function ensureMember(opts) {
+    const { name, color, reclaim = false, defer = false } = opts || {};
+    if (!token() && autoBlocked() && (reclaim || 'defer' in (opts || {}))) return 'signedout';
     if (token()) {   // cloud: a napping host comes back empty; restore from this device, or wait for a friend's copy
       const r = await cloudRevive(); if (r === 'empty') await waitForTribe();
       return 'member';

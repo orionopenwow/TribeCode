@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Form and survey</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main>
+    <form id="form" class="card" novalidate>
+      <p class="muted step" id="step"></p>
+      <h1 id="title">Quick survey</h1>
+      <div id="q"></div>
+      <p class="err" id="err" role="alert"></p>
+      <div class="nav"><button class="btn" type="button" id="back">Back</button><button class="btn primary" type="submit" id="next">Next</button></div>
+    </form>
+  </main>
+  <script src="config.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

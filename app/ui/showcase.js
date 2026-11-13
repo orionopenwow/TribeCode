@@ -13,7 +13,7 @@
   const O = () => window.TribeOffline, K = () => window.TribeOffline && window.TribeOffline._k;
   const A = () => window.TribeApp, C = () => window.TribeClient;
   const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-  const PID = 'lantern-run', TAV = 'tavern-3d';
+  const PID = 'demo_lantern-run', TAV = 'demo_tavern-3d';   // demo_: never a real project's id (offline.js wipes these keys on exit)
   const FRIENDS = ['maya', 'jay', 'rio', 'sam'];
 
   // ---------- the tribe ----------

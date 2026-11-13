@@ -110,7 +110,7 @@ def main():
             host.evaluate("document.querySelector('#invite-modal').classList.add('hidden')")
             # ---- no model: a helpful fallback
             last = ask(host, "tell me a joke about dragons", "basic mode")
-            assert host.locator("#flint .fl-msg.fl").last.locator(".fl-act", has_text="Give Flint a brain").count() == 1
+            assert host.locator("#flint .fl-msg.fl").last.locator(".fl-act", has_text="Use my AI").count() == 1   # feat/flint-site: one AI-boost pair
             # ---- the ? menu has Ask Flint, which focuses the bar
             host.evaluate("document.querySelector('#fl-fold').click()")   # fold
             assert host.evaluate("document.querySelector('#flint').classList.contains('folded')")

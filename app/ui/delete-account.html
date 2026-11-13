@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#12151A">
+<title>Delete your TribeCode account · TribeCode</title>
+<link rel="icon" type="image/svg+xml" href="assets/icon.svg">
+<link rel="stylesheet" href="tokens.css">
+<link rel="stylesheet" href="fonts.css">
+<link rel="stylesheet" href="pubpage.css">
+<!-- Public web page for account and data deletion requests (Google Play's account deletion rule, App Store 5.1.1(v);
+     docs/APP-STORE.md). Self-serve first, then a mailto form for people who no longer have the app. -->
+</head>
+<body>
+<main>
+  <div class="top"><img src="assets/icon-mark.svg" alt=""><a href="./">TribeCode</a></div>
+  <span class="eyebrow">Your data</span>
+  <h1>Delete your TribeCode account</h1>
+  <p class="meta">For the TribeCode app on the web, desktop, iPhone and Android</p>
+
+  <h2>Do it yourself, in the app</h2>
+  <ol>
+    <li>Open TribeCode and go to <b>Settings › Privacy &amp; safety</b>.</li>
+    <li>Tap <b>Delete my account…</b>, type <code>DELETE</code> and confirm.</li>
+  </ol>
+  <p>This removes your account from your tribe: your profile, sign-ins and devices, links to Discord, GitHub or Google, your private notes, and the messages, uploads and docs you posted (deleted, or shown as "deleted member" where a thread would stop making sense). It also clears everything TribeCode keeps on that device. It happens at once and can't be undone.</p>
+  <p>If you only used TribeCode on this device (no tribe, or "On this device"), the same button clears everything here.</p>
+
+  <h2>Who holds your data</h2>
+  <p>TribeCode is self-hosted. Your tribe's data lives on its <b>host's</b> computer or server, not with the TribeCode project. The host can also remove you and everything you posted. Code you pushed to a Git repository stays in that repository's history unless its owner rewrites it. See the <a href="privacy.html#delete">privacy policy</a>.</p>
+
+  <h2>No longer have the app? Ask us</h2>
+  <p>Send this and we will delete it for tribes we run (the demo and featured tribes) within 30 days, and help you reach the host of any other tribe. We only use what you send to handle the request.</p>
+  <form class="card-form" id="del-form">
+    <label for="del-name">Your name in TribeCode</label>
+    <input id="del-name" required maxlength="80" autocomplete="name">
+    <label for="del-tribe">The tribe (its name or invite link) <span class="opt">optional</span></label>
+    <input id="del-tribe" maxlength="300">
+    <label for="del-how">How you signed in <span class="opt">optional</span></label>
+    <select id="del-how"><option value="">Not sure</option><option>An invite link</option><option>GitHub</option><option>Discord</option><option>Google</option><option>Sign in with Apple</option></select>
+    <label for="del-note">Anything else <span class="opt">optional</span></label>
+    <textarea id="del-note" rows="3" maxlength="2000"></textarea>
+    <div class="acts"><button class="btn primary" type="submit">Email the request</button></div>
+    <p class="small">This opens your email app with the request to <a data-support-mailto data-subject="Account deletion request"><span data-support-email>support@tribecode.org</span></a>.</p>
+  </form>
+  <footer><a href="support.html">Support</a> · <a href="privacy.html">Privacy policy</a> · <a href="terms.html">Terms of use</a> · <a href="./">Back to TribeCode</a></footer>
+</main>
+<script src="support-contact.js"></script>
+<script>
+  document.getElementById('del-form').addEventListener('submit', e => {
+    e.preventDefault();
+    const v = id => document.getElementById(id).value.trim();
+    const body = `Please delete my TribeCode account and data.\n\nName in TribeCode: ${v('del-name')}\nTribe: ${v('del-tribe') || '(not given)'}\nSigned in with: ${v('del-how') || 'not sure'}\n\n${v('del-note')}`;
+    location.href = window.TribeSupport.mailto('Account deletion request', body);
+  });
+</script>
+</body>
+</html>

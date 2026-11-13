@@ -129,3 +129,41 @@ Every explainer, infographic or illustration on the site or in the app is built 
 
 - The CSS is the source of truth. After changing a color, radius, font or motion token, run `node scripts/dev/design-tokens.js`.
 - `npm test` runs it with `--check` and fails if the JSON is out of date.
+
+## 11. Basic features, supercharged by AI
+
+Every feature works fully without AI. With AI it becomes effortless: one tap, in the same place, with no new screens.
+
+- **Basic first.** The feature does its job with rules, templates and Flint's local brain (`app/ui/aibasics-core.js`,
+  `app/ui/flintnlu.js`), on any device, offline, with no model. AI never becomes the only way to do something.
+- **The same place.** AI shows up as one quiet **✦** where you already are: the chat header, a task's row, the doc
+  toolbar, Files' bar, a company seat, Flint on Home. It opens a small card under itself (a bottom sheet on phones),
+  never a new view.
+- **Instant, then better.** The ✦ card shows the basic answer at once and says **Basic · no AI**. When the tribe's AI is
+  on (the host's key, Ollama, or a member's own), the same card refines in place and says **✦ via <model>**. If the AI
+  fails or is slow, the basic answer stands.
+- **Humans apply.** The card proposes; a button applies (Add these to Tasks, Assign Jay, Replace the text, Fill it in).
+  Nothing changes on its own.
+- **Honest.** The card always says who answered. Private words only go to a cloud model when the host chose one, and the
+  privacy line says so.
+- **Quiet.** The ✦ is Ember on a transparent button, at most one per spot, revealed on hover in dense lists (tasks).
+  No glows, no sparkle animations, no gradients: the flat matte rules apply.
+
+When a request needs an AI and none is connected, say it the same way everywhere (`app/ui/aiboost.js`,
+`TribeBoost.html({ did, would, ask })`): **This one needs an AI.**, then two rows, **Free · no AI** (what Flint did, or
+"Nothing changed" and what he can do for free) and **With an AI** (what an AI would add), then two buttons: **Use my AI**
+(free: connect your own, or hand it to your connected AI helper) and **Get credits / Premium** (`TribePremium.gate('credits')`).
+Never "Send to my AI helper" or "Give Flint a brain" as the only way out.
+
+Checklist for a new feature:
+
+1. Does it work with AI off (Settings › Flint's brain › None)? Test it that way first.
+2. Is the AI part a ✦ in the place the feature already lives, not a new screen or a modal flow?
+3. Does the first answer appear instantly from rules, labelled "Basic · no AI"?
+4. Does the refined answer keep the same shape, say "via …", and fall back quietly on errors?
+5. Does a human press the button that changes anything?
+6. Is there a Playwright test with no AI and with a fake model (see `app/test/e2e_ai_basics.py`)?
+
+Code: `app/ui/aibasics.js` (the ✦ and its card), `app/ui/aibasics-core.js` (the rules, shared with the server), `app/ui/localdoc.js` (summaries, key points, titles, tags, reading time and the glossary, no model),
+`server/aibasics.js` (`POST /api/ai/refine`). The map from Grok's abilities to TribeCode's basics is in
+[GROK-SCOPE.md](GROK-SCOPE.md).

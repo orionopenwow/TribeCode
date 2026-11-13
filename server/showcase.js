@@ -43,6 +43,7 @@ const FIELDS = { headline: 80, tagline: 160, about: 2000, footer: 160, playUrl: 
 const SUGGESTABLE = { headline: 'headline', tagline: 'tagline', about: 'about text', footer: 'footer line' };
 const sitegen = require('./sitegen');   // feat/customize: the generator ("Design it for me"): layouts, copy, the brain pass
 const CSP = "default-src 'none'; img-src data:; font-src data:; style-src 'unsafe-inline'; base-uri 'none'; form-action 'none'; frame-ancestors 'self'; sandbox allow-popups allow-popups-to-escape-sandbox";
+const CSP_EDIT = "default-src 'none'; img-src data: blob:; font-src data:; style-src 'unsafe-inline'; script-src 'unsafe-inline'; connect-src data: blob:; base-uri 'none'; form-action 'none'; frame-ancestors 'self'; sandbox allow-scripts allow-popups allow-popups-to-escape-sandbox";
 const SHOT_MAX = 3 * 1024 * 1024;
 const LOGO_MAX = 200 * 1024;
 const LOGO_MIME = { png: 'image/png', jpg: 'image/jpeg', svg: 'image/svg+xml' };
@@ -473,7 +474,7 @@ ${blocks.join('\n')}
     const T = gen && sitegen.TYPES[gen.type] ? gen.type : null, picks = picksFor(pid), ptype = T || sitegen.guessType(null, P.get(pid), '');
     const order = gen ? (T ? sitegen.TYPES[T].order : sitegen.LAYOUTS[gen.layout].order) : [];
     return { draft: gen ? { layout: gen.layout, off: gen.off || {}, order: gen.order, edited: gen.edited || {}, copy: gen.copy, polished: gen.polished || null, updated: gen.updated, seed: gen.seed,
-        type: T, info: gen.info || {}, theme: gen.theme || null, secs: order } : null,
+        type: T, info: gen.info || {}, theme: gen.theme || null, secs: [...order, ...(gen.add || []).filter(k => !order.includes(k))], add: gen.add || [] } : null,
       types: sitegen.TYPE_IDS.map(id => ({ id, name: sitegen.TYPES[id].name, icon: sitegen.TYPES[id].icon, note: sitegen.TYPES[id].note })),
       themes: sitegen.rankThemes(ptype, picks).map(id => { const x = sitegen.THEMES[id]; return { id, name: x.name, note: x.note, primary: x.primary, accent: x.accent, font: x.font, fontName: sitegen.FONTS[x.font].name, layout: x.layout, why: sitegen.why(id, ptype, picks) }; }),
       guess: sitegen.TYPES[ptype] ? { type: ptype, name: sitegen.TYPES[ptype].name } : null,
@@ -607,6 +608,29 @@ ${blocks.join('\n')}
   setInterval(() => tick().catch(e => console.error("website tick:", e.message)), POLL_MS).unref();
 
   // ---------- state ----------
+  // feat/tasks-company: has the team already started a website? The Website button and the preview open what is
+  // there instead of the empty "Make the project's website" card. In order: a site-builder draft (.tribe/website),
+  // a built page (site/index.html in the repo or the tribe folder), a site someone made in the repo (website/,
+  // docs/, www/, web/ or a root index.html in a site project), or site-builder settings saved but nothing built.
+  const SITE_DIRS = ['site', 'website', 'www', 'docs', 'web', 'public/site'];
+  const mtime = f => { try { return fs.statSync(f).mtime.toISOString(); } catch { return null; } };
+  function started(pid) {
+    const st = load(pid), p = P.get(pid) || {};
+    try { const dc = base.readJSON(`.tribe/website/${String(pid).replace(/[^\w-]/g, '')}.config.json`, null); if (dc) return { kind: 'designer', path: '.tribe/website', at: dc.savedAt || null, label: 'a website design' }; } catch {}   // feat/site-v2: the website designer's draft
+    if (st.gen) return { kind: 'draft', path: '.tribe/website', at: st.gen.updated || null, label: 'a site-builder draft' };
+    if (exists(pid)) { const w = siteDir(pid); return { kind: 'built', path: w.shown, at: mtime(path.join(w.dir, 'index.html')), label: 'the built page' }; }
+    const tribeCopy = base.p('projects', pid, 'site', 'index.html');
+    if (p.repo && fs.existsSync(tribeCopy)) return { kind: 'built', path: `projects/${pid}/site/index.html (tribe folder)`, at: mtime(tribeCopy), label: 'the built page', tribeCopy: true };
+    if (p.repo && fs.existsSync(p.repo)) {
+      for (const d of SITE_DIRS.slice(1)) { const f = path.join(p.repo, d, 'index.html'); if (fs.existsSync(f)) return { kind: 'repo', path: `${d}/index.html`, at: mtime(f), label: `${d}/ in the code repository` }; }
+      const kind = (() => { try { const x = sense(); const g = x ? x.get(pid) : null; return (g && (g.kind || (g.project || {}).kind)) || ''; } catch { return ''; } })();
+      const root = path.join(p.repo, 'index.html');
+      if (kind === 'site' && fs.existsSync(root)) return { kind: 'repo', path: 'index.html', at: mtime(root), label: 'index.html in the code repository' };
+    }
+    const f = st.fields || {};
+    if (st.built || st.brand || st.idea || Object.keys(f).length || st.genLive) return { kind: 'config', path: '.tribe/website', at: (st.built && st.built.at) || null, label: 'site-builder settings' };
+    return null;
+  }
   function exists(pid) { try { return fs.existsSync(path.join(siteDir(pid).dir, 'index.html')); } catch { return false; } }
   async function view(pid, me, req) {
     const p = P.get(pid), st = load(pid), where = siteDir(pid);
@@ -618,7 +642,7 @@ ${blocks.join('\n')}
       .map(s => ({ ...s, byName: nameOf(s.by), decidedByName: s.decidedBy ? nameOf(s.decidedBy) : null, label: SUGGESTABLE[s.field] || s.field }));
     return { project: pid, auto: !!st.auto, sections: st.sections, fields: st.fields, defaults: defaults(p, vision), shots: st.shots, screens: screens().map(s => ({ slug: s.slug, name: s.name })),
       built: st.built, exists: exists(pid), path: where.shown, inRepo: where.inRepo, autopilot: ap, previewUrl, suggestions: sug, open: sug.filter(s => s.status === 'open').length,
-      canManage: canManage(pid, me), canSuggest: canSuggest(me), suggestable: SUGGESTABLE, sectionList: SECTIONS, gen: genView(pid, me),
+      canManage: canManage(pid, me), canSuggest: canSuggest(me), suggestable: SUGGESTABLE, sectionList: SECTIONS, gen: genView(pid, me), started: started(pid),
       hint: where.inRepo ? 'Publish it with GitHub Pages: Settings › Pages › Deploy from a branch (root), then open /site/ on the Pages address. Or add a Pages workflow that uploads the site/ folder.' : 'This project has no repo yet, so the page stays in the tribe folder. Give it a repo to publish it with GitHub Pages.' };
   }
 
@@ -683,6 +707,9 @@ ${blocks.join('\n')}
     // feat/site-builder: the stylesheet and the logo travel inside the preview (its CSP allows inline styles and data: images only)
     page = page.replace(/<link rel="stylesheet" href="styles\.css">/, () => { try { return `<style>\n${fs.readFileSync(path.join(dir, 'styles.css'), 'utf8').replace(/<\/style/gi, '<\\/style')}</style>`; } catch { return ''; } })
       .replace(/(src|href)="logo\.(png|svg|jpg)"/g, (all, a, t) => { try { const b = fs.readFileSync(path.join(dir, `logo.${t}`)); return b.length <= LOGO_MAX ? `${a}="${logoUrl({ type: t, data: b.toString('base64') })}"` : `${a}=""`; } catch { return `${a}=""`; } });
+    // the website designer's Publish keeps pictures in assets/: they travel inline too (the preview's CSP has no 'self')
+    const MIME = { png: 'image/png', jpg: 'image/jpeg', jpeg: 'image/jpeg', gif: 'image/gif', webp: 'image/webp', svg: 'image/svg+xml' };
+    page = page.replace(/(src|href)="assets\/([\w.-]+)\.(png|jpe?g|gif|webp|svg)"/gi, (all, a, f, t) => { try { const x = fs.readFileSync(path.join(dir, 'assets', `${f}.${t}`)); return x.length <= 4 * 1024 * 1024 ? `${a}="data:${MIME[t.toLowerCase()]};base64,${x.toString('base64')}"` : `${a}=""`; } catch { return `${a}=""`; } });
     const shots = [...page.matchAll(/src="shots\/([a-z0-9][a-z0-9-]*)\.png"/g)].map(m => ({ slug: m[1], file: path.join(dir, 'shots', m[1] + '.png') }));
     const out = inline(page, shots, opts);
     return opts.keepFrame ? out : out.replace(/href="(?!https:|data:|#)[^"]*"/g, 'href="#"');   // relative links (Play) don't lead anywhere inside TribeCode's preview
@@ -705,9 +732,13 @@ ${blocks.join('\n')}
         res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8', 'Content-Disposition': `attachment; filename="${String(p.name).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'site'}-website.html"`, 'X-Content-Type-Options': 'nosniff', 'Cache-Control': 'no-store' });
         return res.end(page);
       }
-      const page = sub === 'draft' ? await draftHtml(b) : previewHtml(b);
+      let page = sub === 'draft' ? await draftHtml(b) : previewHtml(b);
       if (page === null) return fail(res, 404, sub === 'draft' ? 'there is no draft yet' : 'the website is not built yet');
-      res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8', 'Content-Security-Policy': CSP, 'X-Content-Type-Options': 'nosniff', 'Referrer-Policy': 'no-referrer', 'Cache-Control': 'no-store', 'X-Frame-Options': 'SAMEORIGIN' });
+      // ?edit=1 (the preview pane): the same draft plus the preview helper (pick, double-click text, comment pins, screenshots).
+      // Still its own opaque origin (sandbox without allow-same-origin): the only script is TribeCode's own helper.
+      const edit = sub === 'draft' && url.searchParams.get('edit') === '1' && preview.HELPER_SRC;
+      if (edit) page = page.replace(/<head\b[^>]*>/i, h => h + preview.HELPER_SRC.replace('__TCV__', '0'));
+      res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8', 'Content-Security-Policy': edit ? CSP_EDIT : CSP, 'X-Content-Type-Options': 'nosniff', 'Referrer-Policy': 'no-referrer', 'Cache-Control': 'no-store', 'X-Frame-Options': 'SAMEORIGIN' });
       return res.end(page);
     }
     if (!me) return fail(res, 401, 'not a member of this tribe');
@@ -779,7 +810,7 @@ ${blocks.join('\n')}
     return null;
   }
 
-  return { route, build, gather, html, signature, tick, exists, load, httpsRepo, siteDir, generate, publish, draftHtml, mcpTools, instant, ideas, handEdits, brandSet };
+  return { route, build, gather, html, signature, tick, exists, started, brandView, load, save: (pid, st) => save(pid, st), push: pid => push(pid), canManage: (pid, me) => canManage(pid, me), canDraft: me => canDraft(me), cleanLogo, fresh, newGen: (g, pid) => newGen(g, pid), httpsRepo, siteDir, generate, publish, draftHtml, mcpTools, instant, ideas, handEdits, brandSet };
 };
 module.exports.httpsRepo = httpsRepo;
 module.exports.visionText = visionText;

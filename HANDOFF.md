@@ -48,23 +48,42 @@ Pushing from the Claude cloud sandbox:
   - `notify.js` + `approvals.js` + `webpush.js`: inbox, phone push, one-tap approvals.
   - `chatx.js` + `dm.js` + `voice.js`: chat actions, DMs, voice, captions, meeting notes.
   - `docs.js` + `docsx.js` + `live.js` + `ot.js`: docs and live co-editing.
-  - `plan.js`: calendar.
+  - `plan.js`: calendar (repeat weekly / weekdays / daily; `ritual` events call `rituals.js`).
+  - `rituals.js`: standup / weekly review / retro rituals that collect answers in chat and write the doc.
+  - `talent.js`: Work (gigs, matching, assign, progress, review, credit, time bank, compute).
   - `visuals.js`: screenshots.
   - `repo.js` + `context.js` + `integrator.js`: live repo, TRIBE_CONTEXT.md, gated merges.
   - `board.js`: proposals and milestones.
+  - `taskflow.js`: how work is shared on the Task Board: Lead assigns (assign → Accept / Decline with a reason) or Council (Open to claim, Claim, a claim limit); `/api/tasks/settings`, `/api/tasks/<id>/accept|decline|claim`, MCP `accept_task`, `decline_task`, `claim_task`. Test: `app/test/e2e_tasks_accept.py`.
   - `bugs.js`, `brain.js` (Ollama/Qwen), `mcp.js` (Claude Code tools).
+  - `aibasics.js` + `app/ui/aibasics-core.js`: the ✦ "basic features, supercharged by AI" (rules first, `POST /api/ai/refine` when an AI is on; docs/DESIGN-SYSTEM.md §11, docs/GROK-SCOPE.md).
+  - `flintrun.js` + `app/ui/flintrun.js`: Watch Flint build (a scripted run-through with his normal commands) and the proof-of-work ZIPs in `<tribe>/exports/`; the Blender bridge stub (docs/FLINT-CREATORS.md). `app/ui/localdoc.js`: local summarize, key points, titles, tags, reading time, glossary (no model). Dev: `scripts/dev/clean-slate.js` (docs/DEV-TOOLS.md).
+  - `inspo.js` + `imgcolors.js`: inspiration boards (per project and per person), Openverse/Wikimedia search, a thumbnail/sound cache in `.tribe/inspo/cache`, server-side palettes.
   - `askai.js`: `@ai` for people without their own Claude (own Claude → a teammate's Claude by owner policy → local model → board).
   - `openspace.js`: optional Open Space office (host-only install/start/stop/open, port 4850).
   - `showcase.js`: per-project website (`site/index.html`), preview, suggestions.
+  - `siteflint.js` + `app/ui/siteedit-core.js` + `app/ui/siteshelf.js`: Flint edits the website in the preview with no AI (undo, a version per change) and the Saved shelf (docs/WEBSITE.md).
+  - `sitedesign.js` + `app/ui/sitecfg.js` + `app/ui/sitedesigner.js`: the website designer on OpenPage's model (one JSON config, blocks with variants, themes with a dark variant, wiring, export; NOTICE credits OpenPage). `app/ui/aiboost.js`: the one "this needs an AI" card. `app/ui/flintlessons.js`: Flint's lessons with Show me (docs/WEBSITE.md › The website designer, docs/FLINT-TIERS.md).
   - `applink.js` + `export.js` + `github-auth.js`: Home Screen/desktop app links, Desktop folder export/copy, GitHub device-flow sign-in.
   - `demo.js` + `scripts/start-demo-tribe.js`: the demo tribe (templates/lantern-run, templates/tavern-3d).
+  - `app/ui/demowatch.js`: "See how TribeCode works", the hands-off ~2-minute tour with Flint: one short chapter per feature (Home, a project, chat, tasks with accept and council claim, docs, Files, canvas, website designer, preview pin, Work and approvals, Claude as a teammate, Company, inspiration board, a pretend huddle, Flint's lesson and the AI-boost card, Your turn), chapter dots to jump (`app/?demo=watch`, the site's hero link, Help, the empty Home's Tour with Flint, Welcome's Just watch it). Every demo (offline.js) lives in its tab only and never touches the saved settings. Tests: e2e_demo_watch, e2e_demo_actions, e2e_demo_isolation.
+  - `places.js` + `app/ui/presence.js` + `app/ui/peoplepanel.js`: where everyone is. Small `place` websocket frames on route change (doc, website designer, channel, task, preview, canvas; a DM is only "in messages"), filtered per viewer, Show where I am / Appear away, last seen; avatars on places and list rows; the People button in the top bar (This tribe · Friends, Jump to; Friends has star, invite link and the one-time guest pass: the old friends.js button is retired). `GET /api/places`, `PUT /api/places/prefs`. Test: `app/test/e2e_presence.py`.
   - `share.js`: public https via Tailscale Funnel or cloudflared.
   - `site.js`: GitHub Pages friend links.
   - `devices.js`: phone device links.
 - `app/ui`:
   - `shell.js`: project circles, the calm sidebar, breadcrumbs, the right panel.
+  - `router.js`: the one router (global dashboard vs a project, Back/Forward via history, no dead ends, one pane on screen). Route table: docs/NAVIGATION.md.
+  - `accounts.js`: Log in / Log out / Continue as guest, the account switcher and TEST accounts (docs/ACCOUNTS.md). Server scaffold: `server/accounts.js` (off unless `TRIBE_ACCOUNTS=1`); clean-up: `scripts/dev/clean-accounts.js`.
+  - `signup.js`: the sign-up sheet (guest, account, providers), Save your work nudges, Forgot password (docs/ACCOUNTS.md › Sign up). Test: `app/test/e2e_signup.py`.
   - `app.js`: core views; `hostHere` auto-hosts on desktop.
   - `settings.js`: zero-step setup and the Settings page.
+  - `setuplocal.js` + `localfiles.js`: instant setup on this device with the home chosen last (GitHub repo, this computer, free cloud, phone), and Files with no tribe (docs/LIGHT-HOSTING.md); local docs, sheets, slides, whiteboards, designs, websites and code files.
+  - `designflow.js` + `designflow-data.js` + `starterkit.js`: Design is a creation flow (what are you making → a template gallery with an optional prompt → the design opens with a Plan card that ticks off and becomes tasks); plans in `.tribe/design-plans` (`server/designplans.js`). App and game starters in `app/ui/starters/` (docs/STARTERS.md); Flint builds them free (`server/flintfree.js`). Tests: `e2e_design_flow.py`, `starters_test.js`.
+  - `filesview.js`: the one Files dashboard (Home's and each project's): + Create (the Studio), tabs with stroke icons, Where (Mine · Everything · each tribe), sections by source, previews, ⋯ menu. Home also has Design, Code and Work-across-tribes pages (hub.js). The Marketplace (`market.js`, a full page at `#/market` or `TribeMarket.mount(el)`; server/market.js) lists `templates/marketplace.json`, checked by `node scripts/dev/market-catalog.js --fetch` (repos over git: license, author, last update, README thumbnails in `app/ui/market-thumbs/`, MCP configs; drops in `templates/market-dropped.json`). Add/Remove per kind with an undo record (`.tribe/market/installed.json`); with no tribe it saves the setup as a doc in Files on this device (`market-catalog.json`). Test: `e2e_market_v2.py`. Tests: `e2e_files_rehaul.py`, `e2e_home_parity.py`.
+  - `talent.js` + `workloop.js` + `workcore.js`: Work and its loop and suggestions; `doctpl.js` + `doctpl-data.js`: company templates (Guided / Advanced / ✦); `premium.js`: calm Premium gates (docs/PREMIUM.md).
+  - `aiconsent.js`: asks once (per device and provider) before data first goes to a cloud AI; Settings › Privacy & safety revokes. `aibasics.js ask()` is the one ✦ AI path (tribe AI, then the in-browser model, then basic).
+  - Public pages: `support.html`, `delete-account.html` (`support-contact.js` holds the one support address), `privacy.html`, `terms.html`.
   - One JS/CSS pair per feature.
 - `app/src-tauri`:
   - `main.rs`: sidecar `host_start`/`host_log`; reuses a server already on the port.
@@ -88,8 +107,11 @@ Pushing from the Claude cloud sandbox:
 - Simplicity first: zero-step setup (no wizard), sleek and bare UI, no repeated labels.
 
 ## State right now
+- **v0.31.0** (2026-11-12): Design flow + starters, website designer v2, presence/People, Company v2 + gigs, Marketplace v2, shell polish, blank-slate desktop demo, stale-UI cleanup; see CHANGELOG.
+- **v0.30.0** (2026-11-12): Flint eval + website designer + Files rebuild + task Accept/Council + the hands-off tour; see CHANGELOG.
+- **v0.29.0** (2026-11-11): see CHANGELOG and docs/CONTEXT.md. Launch checklist: docs/LAUNCH.md. Owner's one-pager: docs/ONE-PAGER.md. Quick local edits: `Tools\Clean-Slate-Dev.bat`. Truth test: `python3 app/test/e2e_truth.py` → docs/TRUTH-TEST.md.
 - On `main` and released: v0.8.0 (everything in CHANGELOG.md). `dev` = working lane; release = bump 4 version files + CHANGELOG (with a **Phones** line) + sw.js CACHE, merge dev → main, push; CI builds installers + latest.json. If latest.json lacks windows, re-run the failed Windows job.
-- New since v0.7.0 (server modules): `openspace.js` (Office), `showcase.js` (project websites), `applink.js` + `export.js` + `github-auth.js` (app links, Desktop folders, GitHub device flow), `demo.js` (demo tribe), `oauth.js` (Discord/GitHub/Google sign-in), `huddlesum.js` (after-huddle summary), `files.js` + phone app mode (viewers, Expo starter). UI: `friends.js`, `userbar.js` (desktop bottom-left bar), `chatlist.css` (chat as a list), `themes.js`/`themes.css`, `guide.js` (when merged).
+- New since v0.7.0 (server modules): `openspace.js` (Office), `showcase.js` (project websites), `applink.js` + `export.js` + `github-auth.js` (app links, Desktop folders, GitHub device flow), `demo.js` (demo tribe), `oauth.js` (Discord/GitHub/Google sign-in), `huddlesum.js` (after-huddle summary), `files.js` + phone app mode (viewers, Expo starter). UI: `userbar.js` (desktop bottom-left bar), `chatlist.css` (chat as a list), `themes.js`/`themes.css`, `guide.js` (when merged).
 - Windows desktop: the page is http://tauri.localhost; the client must use the saved server (:4747). The server answers Private Network Access preflights. Host switch in Settings; the server only runs with a tribe + Host on.
 - In flight: the vision/research/guide agent (docs/VISION.md, docs/RESEARCH-2026-11.md, docs/guide/*.md).
 - The user's machine: Windows, `C:\Users\campw\Desktop\TribeCode` (TribeCode.bat reinstaller, Invite-A-Friend.bat, Start-Demo-Tribe.bat, Working\ dev lane on :4848, Tools\). Tailscale signed in. Leyline workspace at Desktop\Leyline (reference only).

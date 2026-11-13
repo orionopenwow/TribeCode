@@ -294,16 +294,16 @@ def main():
             Path(kom, "index.html").write_text(page_html("v10 back"))
             wait_mark(host, "v10 back", "page written again", limit=LIMIT + 2)
 
-            # phones: the Flint sheet pulls up over the preview
-            ph.wait_for_selector("#pvf", timeout=5000)
+            # phones: Page · Edit · Saved tabs (feat/preview); Edit slides the Flint sheet over the preview
+            ph.wait_for_selector("#pvf", state="attached", timeout=5000)
             assert not ph.evaluate("document.querySelector('#pvf').classList.contains('is-open')"), "the sheet starts closed on phones"
-            ph.click("#pvf .pvf-handle"); ph.wait_for_selector("#pvf.is-open", timeout=3000)
+            ph.click("#pvw-ph [data-ph='edit']"); ph.wait_for_selector("#pvf.is-open", timeout=3000)
             ph.wait_for_timeout(400)
             box = ph.evaluate("(() => { const r = document.querySelector('#pvf').getBoundingClientRect(); return [r.left, r.right, r.bottom] })()")
             assert box[0] >= 0 and box[1] <= 391 and box[2] <= 845, box
             assert ph.evaluate("document.documentElement.scrollWidth") <= 391
             shot(ph, "flint-sheet-390")
-            ph.keyboard.press("Escape") if ph.evaluate("document.activeElement && document.activeElement.closest && !!document.activeElement.closest('#pvf')") else ph.click("#pvf .pvf-handle")
+            ph.keyboard.press("Escape") if ph.evaluate("document.activeElement && document.activeElement.closest && !!document.activeElement.closest('#pvf')") else ph.click("#pvw-ph [data-ph='page']")
             b.close()
         assert not errors, errors
         print(f"ok e2e_build_loop (agent write → preview {d2:.2f}s, first version {dt1:.1f}s)")

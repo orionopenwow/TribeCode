@@ -1,4 +1,4 @@
-"""Friends panel (right of the bell), one-time guest passes, and the Windows desktop origin (http://tauri.localhost)
+"""Friends (the People panel's Friends tab; the old Friends button is retired), one-time guest passes, and the Windows desktop origin (http://tauri.localhost)
 signing in to its own server. Usage: python app/test/e2e_friends.py
 """
 import json, os, signal, subprocess, sys, tempfile, time, urllib.request, urllib.error, mimetypes
@@ -58,20 +58,25 @@ def main():
             host_tok = dp.evaluate("TribeStore.get().server.token"); assert host_tok
             desk.close(); wb.close()
 
-            # 2) Friends panel next to the bell; add a friend; one-time guest pass
+            # 2) The old Friends button is gone; its entry points open People › Friends; star a friend; one-time guest pass
             st, inv = api("/invites", "POST", {"role": "builder", "maxUses": 3}, token=host_tok)
             st, sam = api("/join", "POST", {"code": inv["invite"]["code"], "name": "Sam"}); assert st == 200, sam
             host = b.new_page(viewport={"width": 1440, "height": 900}); host.on("pageerror", lambda e: errors.append("host: " + str(e)))
             host.add_init_script(f"localStorage.setItem('tribecode.settings.v1', JSON.stringify({{name: 'Orion', server: {{url: '{BASE}', token: '{host_tok}'}}}}))")
             host.goto(BASE + "/?skipIntro=1"); host.wait_for_function("TribeClient.connected()", timeout=15000)
-            assert host.evaluate("document.querySelector('#nf-bell').nextElementSibling.id") == "fr-btn", "friends button sits right of the bell"
-            host.click("#fr-btn"); host.wait_for_selector("#fr-panel:not(.hidden)")
-            host.wait_for_selector("[data-friend]", timeout=10000); host.click("[data-friend]")
-            host.wait_for_selector("[data-unfriend]", timeout=10000)
-            assert "Sam" in host.text_content("#fr-body")
+            assert host.evaluate("!document.querySelector('#fr-btn, #fr-panel')"), "the old Friends button and panel are retired"
+            host.evaluate("TribeFriends.open()"); host.wait_for_selector("#ppl-panel:not([hidden])")
+            assert host.evaluate("document.querySelector('#ppl-panel [data-tab=friends]').getAttribute('aria-selected')") == "true", "old entry points land on Friends"
+            host.click("#ppl-close"); host.wait_for_selector("#ppl-panel", state="hidden")
+            host.click("#ppl-btn"); host.click("#ppl-panel [data-tab=friends]")
+            star = f"#ppl-body [data-star='{sam['member']['id']}']"
+            host.wait_for_selector(star, timeout=10000); host.click(star)
+            host.wait_for_selector(star + ".on", timeout=10000)
+            assert "Sam" in host.text_content("#ppl-body")
             assert api("/friends", token=host_tok)[1]["friends"] == [sam["member"]["id"]]
-            host.click("#fr-guest"); host.wait_for_selector("#fr-link:not(.hidden) input", timeout=10000)
-            link = host.input_value("#fr-link input"); code = link.rstrip("/").split("/")[-1].split("c=")[-1]
+            assert host.evaluate("TribeFriends.list()") == [sam["member"]["id"]]
+            host.click("#ppl-guest"); host.wait_for_selector("#ppl-link:not([hidden]) input", timeout=10000)
+            link = host.input_value("#ppl-link input"); code = link.rstrip("/").split("/")[-1].split("c=")[-1]
             assert "/join/" in link or "go.html" in link, link
             if "--shots" in sys.argv: host.screenshot(path=str(ROOT / "docs" / "screenshots" / "friends.png"))
             st, g = api("/join", "POST", {"code": code, "name": "Guest Gia"}); assert st == 200 and g["member"].get("guest"), g
@@ -96,11 +101,11 @@ def main():
             ph = b.new_page(viewport={"width": 390, "height": 844}, is_mobile=True, has_touch=True)
             ph.add_init_script(f"localStorage.setItem('tribecode.settings.v1', JSON.stringify({{name: 'Sam', server: {{url: '{BASE}', token: '{sam['token']}'}}}}))")
             ph.goto(BASE + "/?skipIntro=1"); ph.wait_for_function("TribeClient.connected()", timeout=15000)
-            ph.evaluate("TribeFriends.open()"); ph.wait_for_selector("#fr-panel:not(.hidden)")
+            ph.evaluate("TribeFriends.open()"); ph.wait_for_selector("#ppl-panel:not([hidden])")
             assert ph.evaluate("document.documentElement.scrollWidth <= innerWidth + 1"), "no sideways scroll"
             b.close()
         assert not errors, errors
-        print("e2e_friends: OK (desktop origin signs in, friends panel, one-time guest pass expires)")
+        print("e2e_friends: OK (desktop origin signs in, People › Friends, one-time guest pass expires)")
     except Exception:
         log.flush(); log.seek(0); print(log.read()[-2000:]); raise
     finally:

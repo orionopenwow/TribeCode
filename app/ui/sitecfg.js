@@ -1,0 +1,523 @@
+// The website designer's model (feat/flint-site), shared by the browser (window.TribeSiteCfg) and the server (require).
+// One JSON site config is the source of truth, after OpenPage (github.com/buildingopen/openpage, MIT; reimplemented in
+// plain JS, no code copied, see NOTICE): blocks with layout variants, theme presets with a real dark variant, pages,
+// links that go somewhere, and a standalone HTML export.
+//   cfg = { v: 1, name, theme: { preset, mode: 'light'|'dark', colors: {bg, ink, muted, card, line, accent}, fonts: {display, body}, radius },
+//           pages: [{ id, slug, title, blocks: [{ id, type, variant, props }] }] }
+//   BLOCKS[type] = { label, variants, make(name) -> props }      PRESETS[id] = { name, colors, fonts, radius }
+//   blank(name) · fromTemplate(id, siteJson, img(rel) -> url) · normalize(cfg) · colors(cfg) (the mode applied)
+//   render(cfg, { page, edit, mode: 'single'|'pages', fonts }) -> HTML     exportFiles(cfg) -> { 'index.html': text, … , images: [...] }
+//   ops: addPage, renamePage, deletePage, addBlock, removeBlock, moveBlock, setVariant, setProp, setTheme, setMode, setColor,
+//        setLink, autoWire, setImage, imageShape, imageAlt, setText — each returns a NEW cfg (undo keeps the old one)
+//   command(cfg, step, at) -> { cfg?, say, need?, boost? }   runs one step from Flint's local brain (app/ui/flintnlu.js)
+//   feat/site-v2 (the deeper OpenPage port, docs/OPENPAGE-PORT.md): more block types (newsletter, cta, stats, logos, banner,
+//   divider, image) and variants, per-block { hidden, style: { bg, pad } }, theme.space, font pairs (FONT_PAIRS), OpenPage's
+//   ten theme presets, cfg.seo { title, description, image, favicon, lang }, cfg.logo, cfg.credit (CC-BY attribution in
+//   the footer), ops duplicateBlock/setHidden/setStyle/setSpace/setFonts/setSeo/setLogo, rewrite(text, tone) (copy with
+//   no AI) and fill(cfg, facts) (auto-populate from what the project knows).
+(function (root, factory) { const api = factory(); if (typeof module === 'object' && module.exports) module.exports = api; else root.TribeSiteCfg = api; })(typeof self !== 'undefined' ? self : this, function () {
+  'use strict';
+  const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const clone = o => JSON.parse(JSON.stringify(o));
+  let seq = 0;
+  const uid = p => (p || 'b') + Date.now().toString(36).slice(-4) + (seq++).toString(36) + Math.floor(Math.random() * 1296).toString(36);
+  const slugify = s => String(s || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 40) || 'page';
+  const L = (label, kind, to) => ({ label, link: { kind: kind || '', to: to || '' } });
+
+  // ---------- color ----------
+  const hex = h => { h = String(h || '').replace('#', ''); if (h.length === 3) h = h.split('').map(x => x + x).join(''); const n = parseInt(h.slice(0, 6), 16); return isNaN(n) ? [0, 0, 0] : [n >> 16 & 255, n >> 8 & 255, n & 255]; };
+  const toHex = a => '#' + a.map(x => Math.max(0, Math.min(255, Math.round(x))).toString(16).padStart(2, '0')).join('').toUpperCase();
+  const mix = (a, b, t) => { const x = hex(a), y = hex(b); return toHex(x.map((v, i) => v + (y[i] - v) * t)); };
+  const lum = h => { const c = hex(h).map(v => { v /= 255; return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); }); return 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]; };
+  const contrast = (a, b) => { const x = lum(a), y = lum(b); return (Math.max(x, y) + 0.05) / (Math.min(x, y) + 0.05); };
+  const isDark = c => lum(c.bg) < 0.2;
+  function readable(accent, bg) { let a = accent; for (let i = 0; i < 8 && contrast(a, bg) < 3; i++) a = mix(a, lum(bg) < 0.2 ? '#FFFFFF' : '#000000', 0.18); return a; }
+  // the other mode of a palette: a real variant, not a filter (paper stays warm, night stays tinted by the accent)
+  function flip(c, toDark) {
+    if (toDark) { const bg = mix('#121316', c.accent, 0.05); return { bg, card: mix(bg, '#FFFFFF', 0.06), ink: mix('#F3F0EA', c.bg, 0.1), muted: mix('#A8A39A', c.bg, 0.1), line: mix(bg, '#FFFFFF', 0.14), accent: readable(c.accent, bg) }; }
+    const bg = mix('#FAF8F4', c.accent, 0.03); return { bg, card: '#FFFFFF', ink: mix('#1B1A17', c.bg, 0.1), muted: '#625E57', line: mix(bg, '#000000', 0.1), accent: readable(c.accent, bg) };
+  }
+  const FONT = { 'Fraunces': ['fraunces-latin-700-normal', 700, 'Georgia, serif'], 'Instrument Serif': ['instrument-serif-latin-400-normal', 400, 'Georgia, serif'], 'Space Grotesk': ['space-grotesk-latin-700-normal', 700, 'system-ui, sans-serif'], 'Bricolage Grotesque': ['bricolage-grotesque-latin-800-normal', 800, 'system-ui, sans-serif'], 'JetBrains Mono': ['jetbrains-mono-latin-700-normal', 700, 'ui-monospace, monospace'], 'Silkscreen': ['silkscreen-latin-400-normal', 400, 'ui-monospace, monospace'], 'Inter': ['inter-latin-400-normal', 400, 'system-ui, sans-serif'] };
+  const stack = f => FONT[f] ? `'${f}', ${FONT[f][2]}` : /mono/i.test(f || '') ? 'ui-monospace, SFMono-Regular, Menlo, monospace' : /serif/i.test(f || '') && !/sans/i.test(f || '') ? 'Georgia, "Times New Roman", serif' : 'system-ui, -apple-system, "Segoe UI", Roboto, sans-serif';
+
+  // ---------- theme presets ----------
+  const PRESETS = {
+    paper: { name: 'Paper', colors: { bg: '#F1EADB', ink: '#2B241C', muted: '#6E604E', card: '#FBF7EE', line: '#D8CDB8', accent: '#B4532C' }, fonts: { display: 'Instrument Serif', body: 'System sans' }, radius: 10 },
+    swiss: { name: 'Swiss', colors: { bg: '#F6F5F2', ink: '#111111', muted: '#55524D', card: '#FFFFFF', line: '#111111', accent: '#E2361B' }, fonts: { display: 'Space Grotesk', body: 'Inter' }, radius: 0 },
+    editorial: { name: 'Editorial', colors: { bg: '#F7F4EE', ink: '#1F1A15', muted: '#6A6157', card: '#FFFFFF', line: '#D9D0C2', accent: '#8C3B22' }, fonts: { display: 'Fraunces', body: 'Inter' }, radius: 4 },
+    terminal: { name: 'Terminal', colors: { bg: '#0E1110', ink: '#D7F5DD', muted: '#86A58C', card: '#151A18', line: '#26302B', accent: '#5BE37D' }, fonts: { display: 'JetBrains Mono', body: 'JetBrains Mono' }, radius: 2 },
+    playful: { name: 'Playful', colors: { bg: '#FFF6E9', ink: '#24163A', muted: '#5E5170', card: '#FFFFFF', line: '#24163A', accent: '#FF5A4E' }, fonts: { display: 'Bricolage Grotesque', body: 'Inter' }, radius: 18 },
+    minimal: { name: 'Minimal', colors: { bg: '#FFFFFF', ink: '#16181D', muted: '#62666E', card: '#F6F6F4', line: '#E4E4E0', accent: '#2C5BE0' }, fonts: { display: 'Inter', body: 'Inter' }, radius: 8 },
+    bold: { name: 'Bold', colors: { bg: '#111111', ink: '#F4F1E8', muted: '#A39F94', card: '#1C1C1C', line: '#2E2E2E', accent: '#F7D13D' }, fonts: { display: 'Bricolage Grotesque', body: 'Inter' }, radius: 0 },
+    soft: { name: 'Soft', colors: { bg: '#F3F0F7', ink: '#2A2438', muted: '#685F7A', card: '#FFFFFF', line: '#DDD6E8', accent: '#7A5CCB' }, fonts: { display: 'Fraunces', body: 'Inter' }, radius: 16 },
+    // OpenPage's ten presets (src/lib/theme-presets.ts), their fonts mapped to the OFL families we ship
+    night: { name: 'Dark Minimal', colors: { bg: '#09090B', ink: '#FAFAFA', muted: '#A1A1AA', card: '#18181B', line: '#2A2A2F', accent: '#22C55E' }, fonts: { display: 'Space Grotesk', body: 'Inter' }, radius: 8 },
+    ivory: { name: 'Ivory', colors: { bg: '#FDFCFA', ink: '#1C1917', muted: '#6B655F', card: '#F5F3EF', line: '#E5E2DB', accent: '#4F46E5' }, fonts: { display: 'Space Grotesk', body: 'Inter' }, radius: 10 },
+    clean: { name: 'Clean', colors: { bg: '#FFFFFF', ink: '#212529', muted: '#5F676E', card: '#F8F9FA', line: '#E9ECEF', accent: '#1C7ED6' }, fonts: { display: 'Inter', body: 'Inter' }, radius: 8 },
+    sand: { name: 'Sand', colors: { bg: '#FAF8F5', ink: '#2C2418', muted: '#6E655A', card: '#F2EFE8', line: '#E2DDD4', accent: '#B45309' }, fonts: { display: 'Bricolage Grotesque', body: 'Inter' }, radius: 10 },
+    amber: { name: 'Amber', colors: { bg: '#171210', ink: '#FAF6F0', muted: '#B5A894', card: '#26201C', line: '#352E28', accent: '#E8A838' }, fonts: { display: 'Bricolage Grotesque', body: 'Inter' }, radius: 6 },
+    ocean: { name: 'Ocean', colors: { bg: '#0A1628', ink: '#EEF4FF', muted: '#8FAACB', card: '#162740', line: '#1E3250', accent: '#60A5FA' }, fonts: { display: 'Space Grotesk', body: 'Inter' }, radius: 8 },
+    rose: { name: 'Rosé', colors: { bg: '#16101A', ink: '#FAF4F8', muted: '#B39BAB', card: '#261E28', line: '#30252E', accent: '#F472B6' }, fonts: { display: 'Fraunces', body: 'Inter' }, radius: 12 },
+    haze: { name: 'Purple Haze', colors: { bg: '#100C1A', ink: '#F5F0FF', muted: '#A497CF', card: '#1E1828', line: '#2A2240', accent: '#A78BFA' }, fonts: { display: 'Space Grotesk', body: 'Inter' }, radius: 10 },
+    slate: { name: 'Slate', colors: { bg: '#0F1114', ink: '#F0F4F8', muted: '#94A3B8', card: '#1E2228', line: '#252A32', accent: '#06B6D4' }, fonts: { display: 'Space Grotesk', body: 'Inter' }, radius: 6 },
+    forest: { name: 'Forest', colors: { bg: '#0A120C', ink: '#EEF8F0', muted: '#8DB896', card: '#16221A', line: '#1E3022', accent: '#10B981' }, fonts: { display: 'Inter', body: 'Inter' }, radius: 8 },
+  };
+  // font pairs (display + body), all SIL OFL families in app/ui/assets/site-fonts
+  const FONT_PAIRS = { classic: { name: 'Classic serif', display: 'Fraunces', body: 'Inter' }, editorial: { name: 'Editorial', display: 'Instrument Serif', body: 'Inter' }, modern: { name: 'Modern grotesk', display: 'Space Grotesk', body: 'Inter' },
+    loud: { name: 'Loud display', display: 'Bricolage Grotesque', body: 'Inter' }, plain: { name: 'Plain sans', display: 'Inter', body: 'Inter' }, code: { name: 'Code', display: 'JetBrains Mono', body: 'JetBrains Mono' }, pixel: { name: 'Pixel', display: 'Silkscreen', body: 'Inter' },
+    book: { name: 'Book', display: 'Fraunces', body: 'System serif' } };
+
+  // ---------- blocks: what tribecode.org's own site has, each with layout variants ----------
+  const BLOCKS = {
+    hero: { label: 'Hero', variants: ['center', 'split', 'minimal', 'accent', 'cover'], make: n => ({ eyebrow: '', title: n || 'Say what it is in one line', text: 'One or two sentences on who it is for and why it helps.', img: '', alt: '', shape: '', buttons: [L('Get in touch'), L('See the work')] }) },
+    features: { label: 'Features', variants: ['grid', 'list', 'stats', 'alternating'], make: () => ({ title: 'What you get', items: [{ title: 'Made by hand', text: 'Say one plain thing people get.' }, { title: 'Close to home', text: 'A second, specific reason.' }, { title: 'Fair prices', text: 'A third, with a real detail.' }] }) },
+    gallery: { label: 'Gallery', variants: ['grid', 'masonry', 'strip'], make: () => ({ title: 'Gallery', items: [{ img: '', alt: 'A picture', caption: '' }, { img: '', alt: 'A picture', caption: '' }, { img: '', alt: 'A picture', caption: '' }] }) },
+    pricing: { label: 'Pricing', variants: ['cards', 'table'], make: () => ({ title: 'Prices', note: 'Set your real prices here.', plans: [{ name: 'Basic', price: '$0', per: '', features: ['The essentials'], button: L('Start') }, { name: 'Plus', price: '$12', per: '/ month', features: ['Everything in Basic', 'One more thing'], button: L('Choose Plus') }] }) },
+    testimonials: { label: 'Testimonials', variants: ['cards', 'quotes', 'spotlight'], make: () => ({ title: 'What people say', items: [{ quote: 'Add a real quote from a real customer here.', name: 'Their name', role: 'Where they are from' }] }) },
+    faq: { label: 'FAQ', variants: ['list', 'columns'], make: () => ({ title: 'Questions', items: [{ q: 'A question people ask?', a: 'A short, honest answer.' }, { q: 'Another one?', a: 'Another answer.' }] }) },
+    team: { label: 'Team', variants: ['grid', 'list'], make: () => ({ title: 'Who we are', items: [{ name: 'A name', role: 'What they do', img: '', alt: '' }, { name: 'Another name', role: 'What they do', img: '', alt: '' }] }) },
+    links: { label: 'Links (link in bio)', variants: ['stack', 'cards', 'pills'], make: n => ({ name: n || 'Your name', bio: 'A line about you.', img: '', alt: '', shape: 'round', items: [{ label: 'My shop', note: '', link: { kind: 'url', to: 'https://example.com' } }, { label: 'Latest video', note: '', link: { kind: '', to: '' } }], socials: [] }) },
+    list: { label: 'List (menu, dates, episodes)', variants: ['rows', 'cards', 'menu'], make: () => ({ title: 'Coming up', items: [{ title: 'Something', meta: 'Date or price', text: '', link: { kind: '', to: '' } }] }) },
+    contact: { label: 'Contact form', variants: ['form', 'simple'], make: () => ({ title: 'Get in touch', text: 'Write a line and we will answer within a day.', email: '', action: '', button: 'Send' }) },
+    embed: { label: 'Video / embed', variants: ['wide', 'inline'], make: () => ({ title: '', url: '', caption: 'Paste a YouTube, Vimeo, Spotify or SoundCloud link.' }) },
+    text: { label: 'Text', variants: ['plain', 'two', 'highlight'], make: () => ({ title: 'Our story', text: 'Tell it in a few honest sentences.' }) },
+    footer: { label: 'Footer', variants: ['simple', 'columns', 'minimal'], make: n => ({ text: `© ${n || 'Us'}`, links: [] }) },
+    newsletter: { label: 'Newsletter', variants: ['inline', 'card'], make: () => ({ title: 'Get the next update', text: 'One short email when something new happens. No spam.', action: '', button: 'Subscribe' }) },
+    cta: { label: 'Call to action', variants: ['simple', 'split', 'accent'], make: () => ({ title: 'Ready when you are', text: 'Say what happens next in one line.', buttons: [L('Get in touch')] }) },
+    stats: { label: 'Stats', variants: ['grid', 'bar', 'big'], make: () => ({ title: '', items: [{ value: '12', label: 'years open' }, { value: '3,400', label: 'people served' }, { value: '4.9', label: 'average rating' }] }) },
+    logos: { label: 'Logo cloud', variants: ['row', 'grid'], make: () => ({ title: 'As seen in', items: [{ name: 'Northwind', img: '', alt: '' }, { name: 'Fieldnote', img: '', alt: '' }, { name: 'Brightline', img: '', alt: '' }, { name: 'Oakhouse', img: '', alt: '' }] }) },
+    banner: { label: 'Banner', variants: ['bar', 'ribbon'], make: () => ({ text: 'New: say what is new here.', button: L('Learn more') }) },
+    divider: { label: 'Divider', variants: ['line', 'space', 'dots'], make: () => ({}) },
+    image: { label: 'Image', variants: ['wide', 'side', 'framed'], make: () => ({ title: '', text: '', img: '', alt: '', shape: '' }) },
+  };
+  const CATS = { hero: 'Intro', banner: 'Intro', features: 'Content', text: 'Content', list: 'Content', stats: 'Social proof', testimonials: 'Social proof', logos: 'Social proof', team: 'Content', gallery: 'Media', image: 'Media', embed: 'Media',
+    pricing: 'Commerce', cta: 'Conversion', newsletter: 'Conversion', contact: 'Conversion', faq: 'Content', links: 'Intro', divider: 'Layout', footer: 'Layout' };
+  const TYPES = Object.keys(BLOCKS);
+  const block = (type, props, variant) => ({ id: uid('b'), type, variant: variant || BLOCKS[type].variants[0], props: props || BLOCKS[type].make() });
+  const page = (title, blocks) => ({ id: uid('p'), slug: slugify(title) === 'home' ? 'index' : slugify(title), title, blocks: blocks || [] });
+
+  function blank(name) {
+    name = name || 'My site';
+    return normalize({ v: 1, name, theme: { preset: 'minimal', mode: 'light', ...clone(PRESETS.minimal) }, pages: [page('Home', [block('hero', BLOCKS.hero.make(name)), block('features'), block('contact'), block('footer', BLOCKS.footer.make(name))])] });
+  }
+  function normalize(c) {
+    c = c && typeof c === 'object' ? c : {};
+    c.v = 1; c.name = String(c.name || 'My site').slice(0, 80);
+    const t = c.theme || {}, p = PRESETS[t.preset] || PRESETS.minimal;
+    c.theme = { preset: t.preset || 'minimal', mode: t.mode === 'dark' ? 'dark' : 'light', colors: { ...p.colors, ...(t.colors || {}) }, fonts: { ...p.fonts, ...(t.fonts || {}) }, radius: Number.isFinite(+t.radius) ? +t.radius : p.radius };
+    c.theme.base = t.base || (isDark(c.theme.colors) ? 'dark' : 'light');
+    if (!Array.isArray(c.pages) || !c.pages.length) c.pages = [page('Home')];
+    const seen = new Set();
+    c.pages.forEach((pg, i) => { pg.id = pg.id || uid('p'); pg.title = String(pg.title || 'Page').slice(0, 40); pg.slug = i === 0 ? 'index' : (pg.slug && pg.slug !== 'index' ? pg.slug : slugify(pg.title)); while (seen.has(pg.slug)) pg.slug += '-2'; seen.add(pg.slug); pg.blocks = (pg.blocks || []).filter(b => b && BLOCKS[b.type]).map(b => { const o = { id: b.id || uid('b'), type: b.type, variant: BLOCKS[b.type].variants.includes(b.variant) ? b.variant : BLOCKS[b.type].variants[0], props: b.props || BLOCKS[b.type].make() }; if (b.hidden) o.hidden = true; const st = b.style || {}; if (st.bg || st.pad) o.style = { bg: /^(card|accent|ink)$/.test(st.bg) ? st.bg : '', pad: /^(s|l)$/.test(st.pad) ? st.pad : '' }; return o; }); });
+    c.theme.space = /^(compact|roomy)$/.test(t.space) ? t.space : 'normal';
+    const so = c.seo || {}; c.seo = { title: String(so.title || '').slice(0, 120), description: String(so.description || '').slice(0, 320), image: String(so.image || ''), favicon: String(so.favicon || ''), lang: /^[a-z]{2}(-[A-Za-z]{2})?$/.test(so.lang || '') ? so.lang : 'en' };
+    if (c.logo && !/^(data:image\/|https:\/\/)/.test(c.logo)) delete c.logo;
+    if (c.credit && !(c.credit.text && /^https:\/\//.test(c.credit.url || ''))) delete c.credit;
+    return c;
+  }
+  function colors(c) { const t = c.theme; return t.mode === t.base ? t.colors : (t.alt && t.alt[t.mode]) || flip(t.colors, t.mode === 'dark'); }
+
+  // ---------- templates: the 16 in templates/sites/<id>/site.json, as configs ----------
+  const pick = (a, n) => (Array.isArray(a) ? a.slice(0, n || 12) : []);
+  const lk = u => { u = String(u || ''); return !u ? { kind: '', to: '' } : /^mailto:/i.test(u) ? { kind: 'email', to: u.slice(7) } : /@/.test(u) && !/\//.test(u) ? { kind: 'email', to: u } : { kind: 'url', to: u }; };
+  const TPL = {
+    linkbio: (d, I) => [[block('links', { name: d.name, bio: [d.handle, d.bio].filter(Boolean).join(' · '), img: I(d.avatar), alt: `${d.name}`, shape: 'round', items: pick(d.links).map(x => ({ label: x.label, note: x.note || '', link: lk(x.url) })), socials: pick(d.socials).map(x => ({ label: x.label, link: lk(x.url) })) }), block('footer', { text: d.footer || '', links: [] })]],
+    band: (d, I) => [[block('hero', { eyebrow: 'On tour', title: d.name, text: d.tagline, img: I(d.hero), alt: 'The band on stage', shape: '', buttons: [L('Tour dates', 'section', 'list'), L('Booking', 'email', d.booking)] }, 'split'), block('list', { title: 'Tour dates', items: pick(d.shows).map(s => ({ title: `${s.city} · ${s.venue}`, meta: s.date, text: s.status || '', link: lk(s.url) })) }), block('gallery', { title: 'Records', items: pick(d.releases).map(r => ({ img: I(r.img), alt: r.title, caption: `${r.title} · ${r.kind} ${r.year}` })) }), block('text', { title: 'About', text: d.bio }), block('contact', { title: 'Booking', text: 'Shows, press and festivals.', email: d.booking, action: '', button: 'Send' }), block('footer', { text: d.name, links: pick(d.socials).map(x => ({ label: x.label, link: lk(x.url) })) })]],
+    cafe: (d, I) => [[block('hero', { eyebrow: 'Open today', title: d.name, text: d.tagline, img: I(d.photo), alt: 'Inside the café', shape: '', buttons: [L('See the menu', 'page', 'menu'), L('Reserve', 'url', d.reserve)] }, 'split'), block('list', { title: 'Hours', items: pick(d.hours).map(h => ({ title: h.d, meta: h.h, text: '' })) }, 'rows'), block('gallery', { title: 'The room', items: pick(d.gallery).map(g => ({ img: I(g.img), alt: g.alt, caption: '' })) }), block('contact', { title: 'Find us', text: `${d.address} · ${d.phone}`, email: '', action: '', button: 'Send' }, 'simple'), block('footer', { text: d.name, links: [] })],
+      ['Menu', pick(d.menu).map(m => block('list', { title: m.section, items: pick(m.items, 20).map(it => ({ title: it.name || it.n || it.t || '', meta: it.price || it.p || '', text: it.note || it.d || '' })) }, 'menu'))]],
+    merch: (d, I) => [[block('hero', { eyebrow: 'New batch', title: d.name, text: d.tagline, img: I(((d.products || [])[0] || {}).img), alt: ((d.products || [])[0] || {}).name || '', shape: '', buttons: [L('Shop', 'section', 'gallery'), L('Questions', 'section', 'faq')] }, 'split'), block('gallery', { title: 'Shop', items: pick(d.products).map(p => ({ img: I(p.img), alt: p.name, caption: `${p.name} · ${d.currency || '$'}${p.price}` })) }), block('features', { title: 'How we make them', items: pick(d.facts).map(f => ({ title: f.title, text: f.text })) }), block('faq', { title: 'Questions', items: pick(d.faq).map(f => ({ q: f.q, a: f.a })) }), block('contact', { title: 'Write to us', text: d.intro || '', email: d.contact, action: '', button: 'Send' }), block('footer', { text: d.name, links: [] })]],
+    portfolio: (d, I) => [[block('hero', { eyebrow: d.role, title: d.name, text: d.statement, img: '', alt: '', shape: '', buttons: [L('Selected work', 'section', 'gallery'), L('Email', 'email', d.email)] }, 'minimal'), block('gallery', { title: 'Selected work', items: pick(d.work).map(w => ({ img: I(w.img), alt: w.title, caption: `${w.title} · ${w.client}, ${w.year}` })) }, 'masonry'), block('features', { title: 'Services', items: pick(d.services).map(s => ({ title: s.s || s, text: '' })) }, 'list'), block('contact', { title: 'Work with me', text: 'Tell me about the room.', email: d.email, action: '', button: 'Send' }), block('footer', { text: d.name, links: [] })], ['About', [block('text', { title: 'About', text: d.about })]]],
+    creator: (d, I) => [[block('hero', { eyebrow: d.next, title: d.name, text: d.tagline, img: I(d.face), alt: d.name, shape: 'round', buttons: [L('Watch live', 'url', d.watch), L('Schedule', 'section', 'list')] }, 'split'), block('list', { title: 'Schedule', items: pick(d.schedule).map(s => ({ title: s.day, meta: s.time, text: s.what })) }, 'cards'), block('gallery', { title: 'Videos', items: pick(d.videos).map(v => ({ img: I(v.img), alt: v.title, caption: `${v.title} · ${v.len}` })) }), block('features', { title: 'By the numbers', items: pick(d.stats).map(s => ({ title: s.n, text: s.t })) }, 'stats'), block('contact', { title: 'Business', text: 'Sponsorships and collabs.', email: d.email, action: '', button: 'Send' }), block('footer', { text: d.name, links: pick(d.socials).map(x => ({ label: x.label, link: lk(x.url) })) })]],
+    service: (d, I) => [[block('hero', { eyebrow: d.phone, title: d.headline || d.name, text: d.tagline, img: '', alt: '', shape: '', buttons: [L('Book a visit', 'url', d.book), L('Prices', 'section', 'pricing')] }, 'center'), block('features', { title: 'Why us', items: pick(d.badges).map(b => ({ title: b.t, text: '' })) }, 'list'), block('pricing', { title: 'Prices', note: `We work in ${d.area}.`, plans: pick(d.services).map(s => ({ name: s.name, price: s.price, per: s.time ? `· ${s.time}` : '', features: [s.desc].filter(Boolean), button: L('Book', 'url', d.book) })) }, 'table'), block('testimonials', { title: 'Reviews', items: [{ quote: d.reviewsNote || 'Real reviews go here.', name: '', role: '' }] }), block('contact', { title: 'Call or write', text: d.phone, email: '', action: d.book, button: 'Book' }), block('footer', { text: d.name, links: [] })]],
+    wedding: (d, I) => [[block('hero', { eyebrow: d.date, title: d.name, text: `${d.place}. ${d.note || ''}`.trim(), img: I(d.photo), alt: 'The venue', shape: '', buttons: [L('RSVP', 'section', 'contact'), L('Schedule', 'section', 'list')] }, 'center'), block('list', { title: 'The day', items: pick(d.schedule).map(s => ({ title: s.what, meta: s.time, text: s.where })) }), block('features', { title: 'Getting there', items: pick(d.travel).map(t => ({ title: t.t, text: t.d })) }), block('faq', { title: 'Questions', items: pick(d.faq).map(f => ({ q: f.q, a: f.a })) }), block('contact', { title: 'RSVP', text: d.rsvp && d.rsvp.by ? `Please answer by ${d.rsvp.by}.` : '', email: '', action: (d.rsvp || {}).url || '', button: 'Send RSVP' }), block('footer', { text: d.name, links: [] })]],
+    podcast: (d, I) => [[block('hero', { eyebrow: 'A podcast', title: d.name, text: d.tagline, img: I(d.cover), alt: 'Show cover', shape: '', buttons: pick(d.listen, 2).map(x => L(x.label, 'url', x.url)) }, 'split'), block('list', { title: 'Episodes', items: pick(d.episodes).map(e => ({ title: `${e.no}. ${e.title}`, meta: `${e.date} · ${e.len}`, text: e.notes, link: lk(e.url) })) }), block('team', { title: 'Hosts', items: pick(d.hosts).map(h => ({ name: h.name, role: h.bio, img: '', alt: '' })) }, 'list'), block('contact', { title: 'Mailbag', text: 'Send us a question for the show.', email: d.ask, action: '', button: 'Send' }), block('footer', { text: d.name, links: [] })]],
+    blog: (d, I) => [[block('hero', { eyebrow: `By ${d.author}`, title: d.name, text: d.tagline, img: '', alt: '', shape: '', buttons: [L('Subscribe', 'section', 'contact'), L('Read the latest', 'page', 'post')] }, 'minimal'), block('list', { title: 'Letters', items: pick(d.posts).map(p => ({ title: p.title, meta: p.date, text: p.dek, link: { kind: 'page', to: 'post' } })) }, 'cards'), block('contact', { title: 'Subscribe', text: (d.subscribe || {}).note || '', email: '', action: (d.subscribe || {}).url || '', button: 'Subscribe' }), block('footer', { text: d.author, links: [] })], ['Post', [block('text', { title: (d.post || {}).title || 'A post', text: String((d.post || {}).body || '').replace(/<[^>]+>/g, '') })]]],
+    saas: (d, I) => [[block('hero', { eyebrow: 'Now in beta', title: d.name, text: d.tagline, img: I(d.shot), alt: 'The app', shape: '', buttons: [L((d.cta || {}).label || 'Try it', 'url', (d.cta || {}).url), L('Pricing', 'section', 'pricing')] }, 'split'), block('features', { title: 'What it does', items: pick(d.does).map(x => ({ title: x.t, text: x.d })) }), block('features', { title: 'What it does not do yet', items: pick(d.notyet).map(x => ({ title: x.t, text: '' })) }, 'list'), block('pricing', { title: 'Plans', note: '', plans: pick(d.plans).map(p => ({ name: p.name, price: p.price, per: p.per || '', features: [].concat(p.what || []), button: L('Choose', 'url', (d.cta || {}).url) })) }), block('list', { title: 'Changelog', items: pick(d.changelog).map(x => ({ title: x.t, meta: x.date, text: '' })) }), block('footer', { text: d.name, links: [] })]],
+    gamepage: (d, I) => [[block('hero', { eyebrow: 'An indie game', title: d.name, text: d.tagline, img: I(((d.shots || [])[0] || {}).img), alt: ((d.shots || [])[0] || {}).alt || '', shape: '', buttons: [L((d.play || {}).label || 'Play', 'url', (d.play || {}).url), L('Press kit', 'page', 'press')] }, 'split'), block('embed', { title: 'Trailer', url: d.trailer, caption: '' }), block('gallery', { title: 'Screenshots', items: pick(d.shots).map(s => ({ img: I(s.img), alt: s.alt, caption: '' })) }, 'strip'), block('features', { title: 'Features', items: pick(d.features).map(f => ({ title: f.t, text: f.d })) }), block('list', { title: 'Devlog', items: pick(d.devlog).map(x => ({ title: x.t, meta: x.date, text: '' })) }), block('footer', { text: d.name, links: [] })],
+      ['Press', [block('list', { title: 'Facts', items: pick(d.facts).map(f => ({ title: f.k, meta: f.v, text: '' })) }, 'rows'), block('contact', { title: 'Press', text: 'Keys and interviews.', email: d.press, action: '', button: 'Send' }, 'simple')]]],
+    resume: (d, I) => [[block('hero', { eyebrow: d.where, title: d.name, text: `${d.role}. ${d.summary}`, img: I(d.photo), alt: d.name, shape: 'round', buttons: [L('Email me', 'email', d.email), ...pick(d.links, 1).map(x => L(x.label, 'url', x.url))] }, 'split'), block('list', { title: 'Experience', items: pick(d.jobs).map(j => ({ title: `${j.title} · ${j.org}`, meta: j.when, text: j.did })) }), block('features', { title: 'Skills', items: pick(d.skills).map(s => ({ title: s.s || s, text: '' })) }, 'list'), block('list', { title: 'Education', items: pick(d.school).map(s => ({ title: s.what, meta: s.when, text: s.where })) }), block('footer', { text: d.name, links: [] })]],
+    nonprofit: (d, I) => [[block('hero', { eyebrow: d.name, title: d.mission, text: '', img: I(d.photo), alt: 'Our work', shape: '', buttons: [L((d.donate || {}).label || 'Donate', 'url', (d.donate || {}).url), L('Ways to help', 'section', 'features')] }, 'split'), block('features', { title: 'This year', items: pick(d.impact).map(x => ({ title: x.n, text: x.t })) }, 'stats'), block('text', { title: 'Our story', text: d.story }), block('features', { title: 'Ways to help', items: pick(d.ways).map(w => ({ title: w.t, text: w.d })) }), block('contact', { title: 'Write to us', text: (d.donate || {}).note || '', email: d.email, action: '', button: 'Send' }), block('footer', { text: d.name, links: [] })]],
+    photography: (d, I) => [[block('hero', { eyebrow: 'Photography', title: d.name, text: d.tagline, img: '', alt: '', shape: '', buttons: [L('Prints and commissions', 'section', 'contact')] }, 'minimal'), block('gallery', { title: 'Recent', items: pick(d.photos).map(p => ({ img: I(p.img), alt: p.title, caption: `${p.title} · ${p.place}` })) }, 'masonry'), block('text', { title: 'About', text: d.about }), block('contact', { title: 'Contact', text: '', email: d.email, action: '', button: 'Send' }), block('footer', { text: d.name, links: [] })]],
+    comingsoon: (d, I) => [[block('hero', { eyebrow: `Opening ${d.launchText}`, title: d.name, text: d.tagline, img: I(d.object), alt: '', shape: '', buttons: [L('Join the waitlist', 'section', 'contact')] }, 'split'), block('contact', { title: 'Join the waitlist', text: (d.waitlist || {}).note || '', email: '', action: (d.waitlist || {}).url || '', button: 'Join' }, 'simple'), block('footer', { text: d.name, links: [] })]],
+  };
+  const TPL_PRESET = { linkbio: 'paper', band: 'bold', cafe: 'paper', merch: 'swiss', portfolio: 'editorial', creator: 'playful', service: 'minimal', wedding: 'editorial', podcast: 'paper', blog: 'editorial', saas: 'minimal', gamepage: 'terminal', resume: 'minimal', nonprofit: 'paper', photography: 'bold', comingsoon: 'soft' };
+  const TEMPLATES = Object.keys(TPL);
+  function fromTemplate(id, d, I) {
+    I = I || (x => x || ''); d = d || {};
+    const pages = (TPL[id] || TPL.saas)(d, I);
+    const th = d.theme || {}, p = PRESETS[TPL_PRESET[id]] || PRESETS.minimal, col = th.colors || {};
+    const colors = { bg: col.bg || p.colors.bg, ink: col.ink || p.colors.ink, muted: col.muted || p.colors.muted, card: col.card || col.panel || col.soft || mix(col.bg || p.colors.bg, isDark({ bg: col.bg || '#fff' }) ? '#FFFFFF' : '#000000', 0.04), line: col.line || p.colors.line, accent: col.accent || p.colors.accent };
+    const fonts = { display: (th.fonts || {}).display || p.fonts.display, body: (th.fonts || {}).body || p.fonts.body };
+    const cfg = { v: 1, name: d.name || 'My site', template: id, theme: { preset: TPL_PRESET[id], mode: isDark(colors) ? 'dark' : 'light', colors, fonts, radius: p.radius }, pages: pages.map((x, i) => i === 0 ? page('Home', x) : page(x[0], x[1])) };
+    return autoWire(normalize(cfg), null, { quiet: true }).cfg;
+  }
+
+  // ---------- links ----------
+  const findPage = (c, to) => { const t = String(to || '').toLowerCase().trim(); return c.pages.find(p => p.slug === slugify(t) || p.title.toLowerCase() === t || p.id === to) || (t === 'home' ? c.pages[0] : null); };
+  const findBlock = (pg, to) => { const t = String(to || '').toLowerCase().trim(); return (pg.blocks || []).find(b => b.id === to || b.type === t || String(b.props.title || '').toLowerCase() === t) || null; };
+  function href(c, link, here, mode) {
+    if (!link || !link.to) return '';
+    const k = link.kind, to = String(link.to);
+    if (k === 'email') return 'mailto:' + to.replace(/^mailto:/i, '');
+    if (k === 'url') return /^(https?:|mailto:|tel:)/i.test(to) ? to : /^www\./i.test(to) ? 'https://' + to : /^[\w-]+\.[a-z]{2,}/i.test(to) ? 'https://' + to : '';
+    const pageUrl = p => mode === 'pages' ? (p.slug === 'index' ? 'index.html' : p.slug + '.html') : '#p-' + p.slug;
+    if (k === 'page') { const p = findPage(c, to); return p ? pageUrl(p) : ''; }
+    if (k === 'section') {
+      for (const p of [here, ...c.pages]) { if (!p) continue; const b = findBlock(p, to); if (b) return p === here ? '#b-' + b.id : mode === 'pages' ? pageUrl(p) + '#b-' + b.id : pageUrl(p); }
+      return '';
+    }
+    return '';
+  }
+  // every button in a page: [{ block, path, label, link }] (path = props path to the { label, link } object or link holder)
+  function buttons(pg) {
+    const out = [];
+    (pg.blocks || []).forEach(b => {
+      const P = b.props || {};
+      if (b.type === 'hero') (P.buttons || []).forEach((x, i) => out.push({ block: b, path: `buttons.${i}`, label: x.label, link: x.link }));
+      if (b.type === 'pricing') (P.plans || []).forEach((x, i) => x.button && out.push({ block: b, path: `plans.${i}.button`, label: x.button.label, link: x.button.link }));
+      if (b.type === 'links') (P.items || []).forEach((x, i) => out.push({ block: b, path: `items.${i}`, label: x.label, link: x.link }));
+      if (b.type === 'footer') (P.links || []).forEach((x, i) => out.push({ block: b, path: `links.${i}`, label: x.label, link: x.link }));
+      if (b.type === 'cta') (P.buttons || []).forEach((x, i) => out.push({ block: b, path: `buttons.${i}`, label: x.label, link: x.link }));
+      if (b.type === 'banner' && P.button) out.push({ block: b, path: 'button', label: P.button.label, link: P.button.link });
+    });
+    return out;
+  }
+  const getAt = (o, path) => String(path).split('.').reduce((a, k) => (a == null ? a : a[k]), o);
+  const setAt = (o, path, v) => { const ks = String(path).split('.'), last = ks.pop(); const t = ks.reduce((a, k) => (a[k] = a[k] == null ? (/^\d+$/.test(k) ? [] : {}) : a[k]), o); t[last] = v; };
+  // which section or page a button's words point at
+  const GUESS = [[/contact|touch|email|write|book|reserve|rsvp|hire|call|join|waitlist|sign ?up|subscribe|quote|enquir|inquir|send|ask/i, ['contact']], [/price|pricing|plan|buy|order|shop|store|cart|get it/i, ['pricing', 'gallery']], [/work|portfolio|gallery|photos|see|look|records|shots|videos/i, ['gallery', 'list']], [/menu|dates|tour|shows|episodes|schedule|events|listen|letters|read/i, ['list', 'embed']], [/watch|trailer|video|play/i, ['embed', 'gallery']], [/about|story|who|team|us\b/i, ['text', 'team']], [/question|faq|help/i, ['faq']], [/feature|how it works|learn more|more|start|get started|try/i, ['features', 'pricing', 'contact']]];
+  function guess(c, pg, label) {
+    const lab = String(label || '');
+    const pgHit = c.pages.find(p => p !== pg && p.slug !== 'index' && new RegExp(`\\b${p.title.replace(/[^\w ]/g, '')}\\b`, 'i').test(lab)); if (pgHit) return { kind: 'page', to: pgHit.slug };
+    for (const [rx, types] of GUESS) if (rx.test(lab)) for (const t of types) { const b = (pg.blocks || []).find(x => x.type === t); if (b) return { kind: 'section', to: b.id }; for (const p of c.pages) { const bb = (p.blocks || []).find(x => x.type === t); if (bb) return { kind: 'section', to: bb.id }; } }
+    return null;
+  }
+  // "make the buttons work": every unwired button goes somewhere real; a contact form is added when nothing else fits
+  function autoWire(c, pageId, opts = {}) {
+    c = clone(c); let n = 0; const made = [];
+    for (const pg of pageId ? c.pages.filter(p => p.id === pageId) : c.pages) {
+      for (const b of buttons(pg)) {
+        if (b.link && b.link.to && href(c, b.link, pg, 'single')) continue;
+        let t = guess(c, pg, b.label);
+        if (!t && !opts.quiet) { let cb = (pg.blocks || []).find(x => x.type === 'contact'); if (!cb) { cb = block('contact'); const fi = pg.blocks.findIndex(x => x.type === 'footer'); pg.blocks.splice(fi < 0 ? pg.blocks.length : fi, 0, cb); made.push('a contact form'); } t = { kind: 'section', to: cb.id }; }
+        if (!t) continue;
+        const holder = getAt(b.block.props, b.path); if (holder && typeof holder === 'object') { holder.link = t; n++; }
+      }
+    }
+    return { cfg: c, n, made };
+  }
+
+  // ---------- ops (each returns a new cfg) ----------
+  const pageOf = (c, id) => c.pages.find(p => p.id === id) || c.pages[0];
+  function addPage(c, title, at) {
+    c = clone(c); title = String(title || '').trim() || `Page ${c.pages.length + 1}`;
+    const kind = /contact/i.test(title) ? ['hero', 'contact'] : /about|story/i.test(title) ? ['hero', 'text', 'team'] : /price|pricing/i.test(title) ? ['hero', 'pricing', 'faq'] : /faq|question/i.test(title) ? ['hero', 'faq'] : /gallery|work|photos|portfolio/i.test(title) ? ['hero', 'gallery'] : /shop|store/i.test(title) ? ['hero', 'gallery', 'pricing'] : /team/i.test(title) ? ['hero', 'team'] : /menu|tour|dates|events|episodes/i.test(title) ? ['hero', 'list'] : ['hero', 'text'];
+    const p = page(title, kind.map(t => t === 'hero' ? block('hero', { eyebrow: c.name, title, text: '', img: '', alt: '', shape: '', buttons: [] }, 'minimal') : block(t)));
+    const foot = c.pages[0].blocks.find(b => b.type === 'footer'); if (foot) p.blocks.push(block('footer', clone(foot.props), foot.variant));
+    c.pages.splice(at == null ? c.pages.length : at, 0, p);
+    return { cfg: normalize(c), page: c.pages.find(x => x.title === title && x.blocks.length === p.blocks.length) || p };
+  }
+  function renamePage(c, id, title) { c = clone(c); const p = pageOf(c, id); p.title = String(title).slice(0, 40); if (p.slug !== 'index') p.slug = slugify(title); return normalize(c); }
+  function deletePage(c, id) { c = clone(c); const i = c.pages.findIndex(p => p.id === id); if (i <= 0) return null; const gone = c.pages[i]; c.pages.splice(i, 1); c.pages.forEach(p => buttons(p).forEach(b => { if (b.link && b.link.kind === 'page' && findPage({ pages: [gone] }, b.link.to)) b.link.to = ''; })); return normalize(c); }
+  function addBlock(c, pageId, type, variant, at) { c = clone(c); const p = pageOf(c, pageId), b = block(type, BLOCKS[type].make(c.name), variant); const fi = p.blocks.findIndex(x => x.type === 'footer'); p.blocks.splice(at != null ? at : fi < 0 ? p.blocks.length : fi, 0, b); return { cfg: c, block: b }; }
+  function removeBlock(c, pageId, id) { c = clone(c); const p = pageOf(c, pageId); p.blocks = p.blocks.filter(b => b.id !== id); return c; }
+  function moveBlock(c, pageId, id, to) { c = clone(c); const p = pageOf(c, pageId), i = p.blocks.findIndex(b => b.id === id); if (i < 0) return c; const [b] = p.blocks.splice(i, 1); let j = to === 'top' ? 0 : to === 'bottom' ? p.blocks.length : to === 'up' ? i - 1 : to === 'down' ? i + 1 : +to; j = Math.max(0, Math.min(p.blocks.length, j)); p.blocks.splice(j, 0, b); return c; }
+  function setVariant(c, pageId, id, v) { c = clone(c); const b = pageOf(c, pageId).blocks.find(x => x.id === id); if (b) { const vs = BLOCKS[b.type].variants; b.variant = vs.includes(v) ? v : vs[(vs.indexOf(b.variant) + 1) % vs.length]; } return c; }
+  function setProp(c, pageId, id, path, v) { c = clone(c); const b = pageOf(c, pageId).blocks.find(x => x.id === id); if (b) setAt(b.props, path, v); return c; }
+  function setTheme(c, preset) { c = clone(c); const p = PRESETS[preset]; if (!p) return c; const mode = c.theme.mode; c.theme = { preset, mode: 'light', ...clone(p) }; c.theme.base = isDark(p.colors) ? 'dark' : 'light'; c.theme.mode = mode; return normalize(c); }
+  function setMode(c, mode) { c = clone(c); c.theme.mode = mode === 'dark' ? 'dark' : 'light'; return c; }
+  function setColor(c, hexv) { c = clone(c); c.theme.colors.accent = readable(hexv, c.theme.colors.bg); return c; }
+  function setLink(c, pageId, id, path, link) { c = clone(c); const b = pageOf(c, pageId).blocks.find(x => x.id === id); const h = b && getAt(b.props, path); if (h && typeof h === 'object') h.link = link; return c; }
+  function images(pg) { const out = []; (pg.blocks || []).forEach(b => { if ('img' in b.props) out.push({ block: b, path: '' }); ['items'].forEach(k => (b.props[k] || []).forEach((x, i) => { if (x && 'img' in x) out.push({ block: b, path: `${k}.${i}.` }); })); }); return out; }
+  function setImage(c, pageId, id, path, src, alt) { c = clone(c); const b = pageOf(c, pageId).blocks.find(x => x.id === id); if (b) { setAt(b.props, path + 'img', src); if (alt != null) setAt(b.props, path + 'alt', alt); } return c; }
+  function imageShape(c, pageId, id, path, shape) { c = clone(c); const b = pageOf(c, pageId).blocks.find(x => x.id === id); if (b) setAt(b.props, path + 'shape', shape === 'round' ? 'round' : 'square'); return c; }
+
+  // ---------- Flint: one understood step -> a change ----------
+  // at = { page: id, sel: { block, path } }. Returns { cfg?, say, page?, sel?, need? ('upload'|'board'|'pick'), boost? }
+  const TYPEW = { newsletter: 'newsletter', cta: 'cta', stats: 'stats', logos: 'logos', banner: 'banner', divider: 'divider', image: 'image', gallery: 'gallery', pricing: 'pricing', testimonials: 'testimonials', faq: 'faq', contact: 'contact', team: 'team', embed: 'embed', features: 'features', links: 'links', footer: 'footer', hero: 'hero', text: 'text' };
+  // feat/site-v2: the newer steps; anything else goes to command0. at.facts = what the project knows (fill()), if loaded.
+  function command(c, s, at) {
+    at = at || {}; const sl = s.slots || {}, id = s.intent, pg = pageOf(c, at.page), sel = at.sel || {};
+    const selBlock = sel.block && pg.blocks.find(b => b.id === sel.block);
+    const blk = t => (t ? (selBlock && selBlock.type === t ? selBlock : pg.blocks.find(b => b.type === t)) : selBlock) || null;
+    const label = b => BLOCKS[b.type].label.toLowerCase().replace(/ \(.*/, '');
+    if (id === 'site.block.dup') { const b = blk(TYPEW[sl.block]) || selBlock; if (!b) return { say: 'Which section? Click it in the preview, then say "duplicate this".' }; const r = duplicateBlock(c, pg.id, b.id); return { cfg: r.cfg, sel: { block: r.block.id }, say: `Duplicated the ${label(b)}. The copy sits right under it.` }; }
+    if (id === 'site.block.hide' || id === 'site.block.show') { const on = id === 'site.block.hide'; const b = blk(TYPEW[sl.block]) || (!on ? pg.blocks.find(x => x.hidden) : null); if (!b) return { say: 'Which section? Click it in the preview first.' }; if (!!b.hidden === on) return { say: `The ${label(b)} is already ${on ? 'hidden' : 'showing'}.` }; return { cfg: setHidden(c, pg.id, b.id, on), sel: { block: b.id }, say: on ? `Hid the ${label(b)}: it stays here, dimmed, and is left out of the published site. Say "show the ${label(b)} again" to bring it back.` : `The ${label(b)} is back on the site.` }; }
+    if (id === 'site.bg') { const b = blk(TYPEW[sl.block]) || selBlock; if (!b) return { say: 'Click the section first, then say the background: the accent, a soft tint, dark, or none.' }; const bg = sl.bg === 'none' ? '' : sl.bg || ((b.style || {}).bg === 'card' ? 'accent' : (b.style || {}).bg === 'accent' ? 'ink' : (b.style || {}).bg === 'ink' ? '' : 'card'); return { cfg: setStyle(c, pg.id, b.id, { bg }), sel: { block: b.id }, say: bg ? `The ${label(b)} sits on ${bg === 'card' ? 'a soft tint' : bg === 'accent' ? 'the accent color' : 'a dark band'} now.` : `The ${label(b)} has no background of its own now.` }; }
+    if (id === 'site.spacing') { if (selBlock && !/\b(?:sections|everything|whole|all)\b/.test(s.text || '')) { const pad = sl.size === 'less' ? 's' : 'l'; return { cfg: setStyle(c, pg.id, selBlock.id, { pad }), say: `${sl.size === 'less' ? 'Tighter' : 'More room'} around the ${label(selBlock)}.` }; } const cur = c.theme.space || 'normal', next = sl.size === 'less' ? (cur === 'roomy' ? 'normal' : 'compact') : (cur === 'compact' ? 'normal' : 'roomy'); return { cfg: setSpace(c, next), say: `Spacing is ${next} now${next === cur ? ' (that is as far as it goes)' : ''}.` }; }
+    if (id === 'site.font') { const f = String(sl.font || '').toLowerCase(); const pair = { serif: 'classic', fraunces: 'classic', 'instrument serif': 'editorial', 'space grotesk': 'modern', sans: 'plain', inter: 'plain', bricolage: 'loud', mono: 'code', 'jetbrains mono': 'code', pixel: 'pixel', silkscreen: 'pixel' }[f]; const keys = Object.keys(FONT_PAIRS), cur = keys.find(k => FONT_PAIRS[k].display === c.theme.fonts.display && FONT_PAIRS[k].body === c.theme.fonts.body); const p = pair || keys[(keys.indexOf(cur) + 1) % keys.length]; return { cfg: setFonts(c, p), say: `Fonts: ${FONT_PAIRS[p].name} (${FONT_PAIRS[p].display} headings, ${FONT_PAIRS[p].body} text). Say "different fonts" for the next pair.` }; }
+    if (id === 'site.seo') { if (sl.field === 'image') return { need: 'seoimage', say: 'Pick the picture people see when the link is shared (1200 × 630 works best).' }; if (sl.text && sl.field) return { cfg: setSeo(c, { [sl.field]: sl.text }), say: `The ${sl.field === 'title' ? 'page title (the tab and search results)' : 'description search engines show'} is “${sl.text}”.` }; return { need: 'settings', say: `Search and sharing: the title is “${(c.seo && c.seo.title) || c.name}”${c.seo && c.seo.description ? ` and the description is set` : ', and there is no description yet: say "set the description to …"'}. The Site settings panel has every field.` }; }
+    if (id === 'site.favicon') return c.logo ? { cfg: setSeo(c, { favicon: c.logo }), say: 'The logo is the favicon (the tab icon) now.' } : { need: 'favicon', say: 'Choose a square picture for the tab icon (PNG or SVG). The logo works best.' };
+    if (id === 'site.logo') return { need: 'logo', say: 'Choose your logo (PNG or SVG). It goes in the header and becomes the tab icon too.' };
+    if (id === 'site.copy') {
+      const tone = sl.tone || 'punchy', hero = blk('hero') || pg.blocks.find(b => b.type === 'links');
+      if (!hero) return { say: 'This page has no headline to rewrite. Click the words and type, or add a hero.' };
+      const path = sl.field === 'tagline' ? (hero.type === 'hero' ? 'text' : 'bio') : sl.field === 'button' ? (hero.type === 'hero' ? 'buttons.0.label' : 'items.0.label') : (hero.type === 'hero' ? 'title' : 'name');
+      const before = getAt(hero.props, path) || '', r = rewrite(before, tone);
+      if (!r.text || r.text === before) return { boost: true, say: `“${before}” is already as ${tone === 'shorter' ? 'short' : tone === 'punchy' ? 'tight' : tone} as I can make it without an AI.` };
+      return { cfg: setProp(c, pg.id, hero.id, path, r.text), sel: { block: hero.id }, say: `${sl.field === 'tagline' ? 'Tagline' : sl.field === 'button' ? 'Button' : 'Headline'}: “${r.text}” (was “${before}”). Undo brings it back.${r.alts.length ? ` Another take: “${r.alts[0]}”.` : ''}` };
+    }
+    if (id === 'site.hours') {
+      const H = (at.facts && at.facts.hours) || [];
+      const items = (H.length ? H : [{ d: 'Mon–Fri', h: '9:00–17:00' }, { d: 'Sat', h: '10:00–14:00' }, { d: 'Sun', h: 'Closed' }]).map(h => ({ title: h.d, meta: h.h, text: '' }));
+      let hb = c.pages.map(p => p.blocks.find(b => b.type === 'list' && /hour|open/i.test(b.props.title || ''))).find(Boolean), cfg = c, bid;
+      if (hb && !H.length) return { sel: { block: hb.id }, say: 'The hours are on the page: click a day or a time to change it. I found no hours in chat to fill in.' };
+      if (hb) { const pgo = c.pages.find(p => p.blocks.includes(hb)); cfg = setProp(c, pgo.id, hb.id, 'items', items); bid = hb.id; }
+      else { const r = addBlock(c, pg.id, 'list', 'rows', Math.max(1, pg.blocks.findIndex(b => b.type === 'hero') + 1)); cfg = setProp(r.cfg, pg.id, r.block.id, 'title', 'Opening hours'); cfg = setProp(cfg, pg.id, r.block.id, 'items', items); bid = r.block.id; }
+      return { cfg, sel: { block: bid }, say: H.length ? `Added the opening hours from chat (${H.map(h => `${h.d} ${h.h}`).join(', ')}).` : 'Added an Opening hours section with example hours: click them to put in yours.' };
+    }
+    if (id === 'site.publish') return { need: 'publish', say: 'Publishing: the site goes to the project’s site/ folder, one HTML file per page.' };
+    if (id === 'site.device') return { need: 'device', dev: sl.dev || 'phone', say: `Showing the ${sl.dev || 'phone'} size.` };
+    if (id === 'site.comments') return { need: 'comments', say: 'Here are the comments on the site.' };
+    if (id === 'site.comments.tasks') return { need: 'comments-tasks', say: 'Summing up the open comments into tasks…' };
+    if (id === 'site.autofill') return { need: 'autofill', say: 'Filling the site from what the project knows…' };
+    if (id === 'site.blank') return { need: 'blank', say: 'Starting blank.' };
+    if (id === 'site.repo') return { need: 'repo', say: 'Building it into the repo as code.' };
+    return command0(c, s, at);
+  }
+  function command0(c, s, at) {
+    at = at || {}; const sl = s.slots || {}, id = s.intent, pg = pageOf(c, at.page), sel = at.sel || {};
+    const selBlock = sel.block && pg.blocks.find(b => b.id === sel.block);
+    const blk = t => (selBlock && (!t || selBlock.type === t) ? selBlock : pg.blocks.find(b => b.type === t)) || (t ? c.pages.map(p => p.blocks.find(b => b.type === t)).find(Boolean) : null);
+    if (id === 'site.wire') {
+      const target = sl.to ? (() => {
+        if (sl.kind === 'url' || sl.kind === 'email') return { kind: sl.kind, to: sl.kind === 'url' && !/^https?:|^www\./.test(sl.to) ? `https://${sl.to}.com` : sl.to };
+        const p = findPage(c, sl.to); if (p) return { kind: 'page', to: p.slug };
+        const b = c.pages.map(x => findBlock(x, TYPEW[sl.to] || sl.to)).find(Boolean); if (b) return { kind: 'section', to: b.id };
+        return { kind: 'newpage', to: sl.to };
+      })() : null;
+      if (!target) { const r = autoWire(c, pg.id); return r.n ? { cfg: r.cfg, say: `Wired ${r.n} button${r.n === 1 ? '' : 's'} on ${pg.title} to the right sections${r.made.length ? `, and added ${r.made.join(', ')} so they have somewhere to go` : ''}. Click one in the preview to see where it goes.` } : { say: `Every button on ${pg.title} already goes somewhere. Pick one and say "link this to the contact page" to change it.` }; }
+      let cfg = c, t = target, extra = '';
+      if (t.kind === 'newpage') { const r = addPage(c, titleCase(t.to)); cfg = r.cfg; t = { kind: 'page', to: r.page.slug }; extra = ` I made the ${r.page.title} page for it.`; }
+      const btn = sel.path && selBlock ? { block: selBlock, path: sel.path } : (() => { const bs = buttons(pageOf(cfg, pg.id)); return bs.find(b => !b.link || !b.link.to) || bs[0]; })();
+      if (!btn) return { say: 'This page has no buttons yet. Say "add a hero" and it comes with two.' };
+      cfg = setLink(cfg, pg.id, btn.block.id, btn.path, t);
+      const label = (getAt(btn.block.props, btn.path) || {}).label || 'The button';
+      return { cfg, say: `“${label}” now goes to ${t.kind === 'email' ? `an email to ${t.to}` : t.kind === 'url' ? t.to : t.kind === 'page' ? `the ${findPage(cfg, t.to).title} page` : `the ${(c.pages.map(x => findBlock(x, t.to)).find(Boolean) || {}).type || ''} section`}.${extra}` };
+    }
+    if (id === 'site.page.add') { const r = addPage(c, sl.name); return { cfg: r.cfg, page: r.page.id, say: `Added the ${r.page.title} page with a starter layout, and it is in the menu. Wire a button to it with "link this button to the ${r.page.title.toLowerCase()} page".` }; }
+    if (id === 'site.page.rename') { if (!sl.name) return { say: 'What should the page be called?' }; return { cfg: renamePage(c, pg.id, sl.name), say: `Renamed the page to ${sl.name}. Links to it still work.` }; }
+    if (id === 'site.page.delete') { const p = sl.name ? findPage(c, sl.name) : pg; if (!p) return { say: `There is no ${sl.name} page.` }; if (p === c.pages[0]) return { say: 'The home page stays. Delete another page, or empty this one.' }; return { cfg: deletePage(c, p.id), page: c.pages[0].id, say: `Deleted the ${p.title} page. Buttons that pointed at it now need a new place: say "make the buttons work".` }; }
+    if (/^site\.image\./.test(id)) {
+      const img = sel.block && selBlock && ('img' in selBlock.props || /\.$/.test(sel.path || '')) ? { block: selBlock, path: /\.$/.test(sel.path || '') ? sel.path : '' } : images(pg)[0];
+      if (!img) return { say: 'This page has no picture yet. Say "add a gallery", or add a hero with a picture.' };
+      if (id === 'site.image.shape') return { cfg: imageShape(c, pg.id, img.block.id, img.path, sl.shape), sel: { block: img.block.id, path: img.path }, say: `Made the picture ${sl.shape === 'square' ? 'square' : 'round'}.` };
+      if (id === 'site.image.alt') { if (!sl.alt) return { need: 'alt', sel: { block: img.block.id, path: img.path }, say: 'Type what the picture shows, for people using screen readers.' }; return { cfg: setImage(c, pg.id, img.block.id, img.path, getAt(img.block.props, img.path + 'img'), sl.alt), say: `Alt text set: “${sl.alt}”.` }; }
+      return { need: sl.source === 'board' ? 'board' : 'upload', sel: { block: img.block.id, path: img.path }, say: sl.source === 'board' ? 'Pick a picture from your inspiration board.' : 'Choose a picture from your computer. It is copied into the site, so the export works on its own.' };
+    }
+    if (id === 'site.dark') { const m = sl.mode === 'light' ? 'light' : 'dark'; if (c.theme.mode === m) return { say: `It is already in ${m} mode.` }; return { cfg: setMode(c, m), say: `Switched the site to its ${m} variant: the same ${PRESETS[c.theme.preset] ? PRESETS[c.theme.preset].name : ''} design with ${m} colors, checked for contrast. Say "light mode" to switch back.`.replace('  ', ' ') }; }
+    if (id === 'site.theme') { const keys = Object.keys(PRESETS), p = sl.preset && PRESETS[sl.preset] ? sl.preset : keys[(keys.indexOf(c.theme.preset) + 1) % keys.length]; return { cfg: setTheme(c, p), say: `Using the ${PRESETS[p].name} theme (${PRESETS[p].fonts.display} headings).` }; }
+    if (id === 'site.color') { const h = sl.color && sl.color.hex; if (!h) return { say: 'Which color?' }; const cfg = setColor(c, h); return { cfg, say: `The accent is ${sl.color.name || h} now${cfg.theme.colors.accent.toUpperCase() !== h.toUpperCase() ? ', a touch deeper so it reads on this background' : ''}.` }; }
+    if (id === 'site.block.add') { const t = TYPEW[sl.block] || 'text'; const r = addBlock(c, pg.id, t); return { cfg: r.cfg, sel: { block: r.block.id }, say: `Added ${BLOCKS[t].label.toLowerCase().replace(/ \(.*/, '')} to ${pg.title}. Click its words in the preview to change them.` }; }
+    if (id === 'site.block.remove') { const b = blk(TYPEW[sl.block]); if (!b) return { say: `There is no ${sl.block} on this page.` }; return { cfg: removeBlock(c, pg.id, b.id), say: `Removed the ${BLOCKS[b.type].label.toLowerCase()}. Undo brings it back.` }; }
+    if (id === 'site.block.move') { const b = blk(TYPEW[sl.block]); if (!b) return { say: `There is no ${sl.block} on this page.` }; return { cfg: moveBlock(c, pg.id, b.id, sl.dir || 'up'), say: `Moved the ${BLOCKS[b.type].label.toLowerCase()} ${sl.dir === 'top' ? 'to the top' : sl.dir === 'bottom' ? 'to the bottom' : sl.dir || 'up'}.` }; }
+    if (id === 'site.layout') { const b = blk(TYPEW[sl.block]); if (!b) return { say: 'Which section? Click it in the preview first.' }; const cfg = setVariant(c, pg.id, b.id, sl.variant); const nb = pageOf(cfg, pg.id).blocks.find(x => x.id === b.id); return { cfg, sel: { block: b.id }, say: `The ${BLOCKS[b.type].label.toLowerCase()} uses the ${nb.variant} layout now (${BLOCKS[b.type].variants.join(', ')}).` }; }
+    if (id === 'site.text') {
+      if (sl.field === 'name') { const cfg = clone(c); cfg.name = sl.text; return { cfg, say: `The site is called ${sl.text} now.` }; }
+      const hero = blk('hero') || pg.blocks.find(b => b.type === 'links');
+      if (!hero) return { say: 'This page has no hero. Click the words you want to change and type over them.' };
+      if (sl.field === 'button') { const p = hero.type === 'hero' ? 'buttons.0.label' : 'items.0.label'; return { cfg: setProp(c, pg.id, hero.id, p, sl.text), say: `The button says “${sl.text}”.` }; }
+      return { cfg: setProp(c, pg.id, hero.id, sl.field === 'tagline' ? (hero.type === 'hero' ? 'text' : 'bio') : (hero.type === 'hero' ? 'title' : 'name'), sl.text), say: `The ${sl.field} says “${sl.text}”.` };
+    }
+    if (id === 'site.export') return { need: sl.fmt === 'zip' ? 'zip' : 'html', say: sl.fmt === 'zip' ? 'Downloading a zip: one HTML file per page, the pictures in assets/, the fonts and their licenses.' : 'Downloading index.html: one standalone file with every page, the pictures inside it, and no scripts.' };
+    if (/^site\./.test(id) && TEMPLATES.includes(id.slice(5))) return { need: 'template', template: id.slice(5), say: `Starting from the ${id.slice(5)} template. Your current design is one Undo away.` };
+    return null;
+  }
+  const titleCase = s => String(s || '').trim().replace(/\b[a-z]/g, ch => ch.toUpperCase());
+
+  // ---------- feat/site-v2: more ops (each returns a new cfg) ----------
+  function duplicateBlock(c, pageId, id) { c = clone(c); const p = pageOf(c, pageId), i = p.blocks.findIndex(b => b.id === id); if (i < 0) return { cfg: c, block: null }; const b = clone(p.blocks[i]); b.id = uid('b'); p.blocks.splice(i + 1, 0, b); return { cfg: c, block: b }; }
+  function setHidden(c, pageId, id, on) { c = clone(c); const b = pageOf(c, pageId).blocks.find(x => x.id === id); if (b) { if (on) b.hidden = true; else delete b.hidden; } return c; }
+  function setStyle(c, pageId, id, patch) { c = clone(c); const b = pageOf(c, pageId).blocks.find(x => x.id === id); if (b) { b.style = { bg: '', pad: '', ...(b.style || {}), ...patch }; if (!b.style.bg && !b.style.pad) delete b.style; } return normalize(c); }
+  function setSpace(c, space) { c = clone(c); c.theme.space = /^(compact|roomy)$/.test(space) ? space : 'normal'; return c; }
+  function setFonts(c, pair) { c = clone(c); const f = FONT_PAIRS[pair]; if (f) c.theme.fonts = { display: f.display, body: f.body }; else if (FONT[pair]) c.theme.fonts.display = pair; return c; }
+  function setSeo(c, patch) { c = clone(c); c.seo = { ...(c.seo || {}), ...patch }; return normalize(c); }
+  function setLogo(c, src, favicon) { c = clone(c); if (src) c.logo = src; else delete c.logo; if (favicon !== false && src) c.seo = { ...(c.seo || {}), favicon: src }; return normalize(c); }
+  // markdown-lite for text blocks: ## / ### headings, **bold**, *em*, - lists, paragraphs (escaped first)
+  function md(t) {
+    const inl = x => esc(x).replace(/\*\*(.+?)\*\*/g, '<b>$1</b>').replace(/\*(.+?)\*/g, '<em>$1</em>');
+    return String(t || '').split(/\n{2,}/).map(par => { const ls = par.split('\n'); if (ls.every(l => /^[-*] /.test(l))) return `<ul>${ls.map(l => `<li>${inl(l.slice(2))}</li>`).join('')}</ul>`; const h = /^(#{2,3}) (.+)$/.exec(ls[0]); if (h && ls.length === 1) return `<h3>${inl(h[2])}</h3>`; return `<p>${inl(par).replace(/\n/g, '<br>')}</p>`; }).join('');
+  }
+
+  // ---------- copy with no AI: rewrite(text, tone) -> { text, alts } (an AI does it better; this is honest and local) ----------
+  const FILLER = /\b(?:very|really|just|truly|simply|actually|basically|quite|incredibly|extremely|highly|totally|absolutely|literally)\s+/gi;
+  const SWAP_PLAIN = [[/\butili[sz]e\b/gi, 'use'], [/\bpurchase\b/gi, 'buy'], [/\bassist(?:ance)?\b/gi, 'help'], [/\bobtain\b/gi, 'get'], [/\bcommence\b/gi, 'start'], [/\bin order to\b/gi, 'to'], [/\bprior to\b/gi, 'before'], [/\binquire\b/gi, 'ask'], [/\bat this point in time\b/gi, 'now'], [/\bwe are\b/gi, "we're"], [/\bdo not\b/gi, "don't"], [/\bit is\b/gi, "it's"], [/\byou are\b/gi, "you're"], [/\bcannot\b/gi, "can't"]];
+  const SWAP_FORMAL = [[/\bwe're\b/gi, 'we are'], [/\bdon't\b/gi, 'do not'], [/\bit's\b/gi, 'it is'], [/\byou're\b/gi, 'you are'], [/\bcan't\b/gi, 'cannot'], [/\bwon't\b/gi, 'will not'], [/\bhey\b/gi, 'hello'], [/\bstuff\b/gi, 'work'], [/\bkinda\b/gi, 'somewhat'], [/\bgonna\b/gi, 'going to'], [/!+/g, '.']];
+  const cap = t => t.charAt(0).toUpperCase() + t.slice(1);
+  function rewrite(text, tone) {
+    let t = String(text || '').trim(); if (!t) return { text: t, alts: [] };
+    const words = x => x.split(/\s+/).filter(Boolean);
+    const INTRO = /^(?:welcome to|we are|we're|this is|introducing|meet|hello,? (?:we are|we're)|hi,? (?:we are|we're|i'm|i am))\s+/i;
+    if (tone === 'shorter') {
+      let x = t.split(/(?<=[.!?])\s+/)[0].replace(/\s*\([^)]*\)/g, '').replace(FILLER, '').replace(INTRO, '');
+      const parts = x.split(/,|\s[-–—]\s|;/).map(p => p.trim()).filter(Boolean);
+      if (words(x).length > 10) x = parts.slice(0, parts[0] && words(parts[0]).length <= 3 ? 2 : 1).join(', ');
+      if (words(x).length > 12) x = words(x).slice(0, 10).join(' ');
+      x = cap(x.replace(/[,;:.\s]+$/, '')) + '.';
+      return { text: x, alts: [] };
+    }
+    if (tone === 'friendlier') { let x = t; SWAP_PLAIN.forEach(([a, b]) => { x = x.replace(a, m => /^[A-Z]/.test(m) ? cap(b) : b); }); x = x.replace(/\bcustomers\b/gi, 'you').replace(/\bclients\b/gi, 'you').replace(/\busers\b/gi, 'you'); return { text: x, alts: [] }; }
+    if (tone === 'formal') { let x = t; SWAP_FORMAL.forEach(([a, b]) => { x = x.replace(a, m => /^[A-Z]/.test(m) ? cap(b) : b); }); return { text: x, alts: [] }; }
+    // punchy: drop the warm-up words, keep the claim, end hard
+    let x = t.replace(FILLER, '').replace(INTRO, '').replace(/^(?:the\s+)?(?:best|ultimate|leading|premier|number one|#1)\s+/i, '');
+    x = x.split(/(?<=[.!?])\s+/)[0];
+    if (words(x).length > 8) { const parts = x.split(/,|\s[-–—]\s|;|\s(?:that|which|who)\s/).map(p => p.trim()).filter(Boolean); x = parts[0] && words(parts[0]).length <= 3 && parts[1] ? `${parts[0]}: ${parts[1].replace(/^(?:the|a|an)\s+(?:very\s+)?(?=best|only|first)/i, 'the ')}` : parts[0] || x; }
+    if (words(x).length > 9) x = words(x).slice(0, 7).join(' ');
+    x = cap(x.replace(/[,;:.!?\s]+$/, '')) + '.';
+    const alts = [x.replace(/\.$/, ''), `${x.replace(/\.$/, '')}. No fuss.`].filter(a => a !== x);
+    return { text: x === t ? cap(x.replace(/\.$/, '')) : x, alts };
+  }
+
+  // ---------- auto-populate: fill(cfg, facts) -> { cfg, used: ['the project name', '3 members', …] } ----------
+  // facts (all optional, from server/sitedesign.js autofill or this device): { name, tagline, mission, members: [{ name, role, img }],
+  // building: [{ title, text }], hours: [{ d, h }], dates: [{ title, meta }], email, phone, address, links: [{ label, url }],
+  // accent, images: [src], logo }
+  const BUILDS = /^(saas|comingsoon|gamepage|nonprofit|blog|portfolio|creator)$|^gh-/;
+  function fill(cfg, F) {
+    let c = clone(cfg); F = F || {}; const used = [], home = c.pages[0], add = (t, props, variant, after) => { const b = block(t, props, variant); const at = after ? home.blocks.findIndex(x => x.type === after) + 1 : home.blocks.findIndex(x => x.type === 'footer'); home.blocks.splice(at <= 0 ? (after ? 1 : home.blocks.length) : at, 0, b); return b; };
+    const first = t => home.blocks.find(b => b.type === t);
+    if (F.name) {
+      const old = c.name; c.name = String(F.name).slice(0, 80); used.push('the name');
+      c.pages.forEach(p => p.blocks.forEach(b => { if (b.type === 'hero' && (b.props.title === old || p === home && b === first('hero'))) b.props.title = c.name; if (b.type === 'links') b.props.name = c.name; if (b.type === 'footer' && /^©|^$/.test(b.props.text || '') || b.type === 'footer' && b.props.text === old) b.props.text = `© ${new Date().getFullYear()} ${c.name}`; }));
+    }
+    const line = F.tagline || F.mission;
+    if (line) { const h = first('hero'), l = first('links'); if (h) h.props.text = String(line).slice(0, 220); else if (l) l.props.bio = String(line).slice(0, 160); used.push(F.tagline ? 'the tagline' : 'the mission'); }
+    if (F.mission && F.tagline) { let t = home.blocks.find(b => b.type === 'text'); if (!t) t = add('text', { title: 'Why we exist', text: '' }, 'highlight', 'hero'); t.props.text = String(F.mission).slice(0, 900); }
+    const mem = (F.members || []).filter(m => m && m.name);
+    if (mem.length) { let t = first('team'); if (!t && mem.length >= 2) t = add('team', { title: 'Who we are', items: [] }, 'grid'); if (t) { t.props.items = mem.slice(0, 12).map(m => ({ name: m.name, role: m.role || '', img: m.img || '', alt: m.name })); used.push(`${mem.length} member${mem.length === 1 ? '' : 's'}`); } }
+    const bl = (F.building || []).filter(x => x && x.title);
+    if (bl.length && (BUILDS.test(c.template || '') || !c.template)) { let f = home.blocks.find(b => b.type === 'features'); if (!f) f = add('features', { title: '', items: [] }, 'grid', 'hero'); f.props.title = 'What we’re building'; f.props.items = bl.slice(0, 6).map(x => ({ title: x.title, text: x.text || '' })); used.push('what you’re building (tasks and milestones)'); }
+    if ((F.hours || []).length) { let hb = c.pages.map(p => p.blocks.find(b => b.type === 'list' && /hour|open/i.test(b.props.title || ''))).find(Boolean); if (!hb) hb = add('list', { title: 'Opening hours', items: [] }, 'rows', 'hero'); hb.props.items = F.hours.slice(0, 8).map(h => ({ title: h.d, meta: h.h, text: '' })); used.push('opening hours from chat'); }
+    if ((F.dates || []).length) { const lb = home.blocks.find(b => b.type === 'list' && !/hour|open/i.test(b.props.title || '')); if (lb) { lb.props.items = F.dates.slice(0, 8).map(d => ({ title: d.title, meta: d.meta, text: '', link: { kind: '', to: '' } })); used.push('dates from chat'); } }
+    if (F.email) { c.pages.forEach(p => p.blocks.forEach(b => { if (b.type === 'contact') b.props.email = F.email; })); used.push('the contact email'); }
+    if (F.phone || F.address) { const ct = c.pages.map(p => p.blocks.find(b => b.type === 'contact')).find(Boolean); if (ct) { ct.props.text = [F.address, F.phone].filter(Boolean).join(' · '); used.push(F.address ? 'the address' : 'the phone number'); } }
+    const lk2 = (F.links || []).filter(x => /^https:\/\//.test(x.url || ''));
+    if (lk2.length) { const l = first('links'); if (l) { l.props.items = lk2.slice(0, 8).map(x => ({ label: x.label || x.url.replace(/^https:\/\/(www\.)?/, '').split('/')[0], note: '', link: { kind: 'url', to: x.url } })).concat(l.props.items.filter(x => !lk2.some(y => y.url === (x.link || {}).to)).slice(0, 2)); } else { const f = c.pages.map(p => p.blocks.find(b => b.type === 'footer')).find(Boolean); if (f) f.props.links = lk2.slice(0, 5).map(x => ({ label: x.label || 'Link', link: { kind: 'url', to: x.url } })); } used.push(`${lk2.length} link${lk2.length === 1 ? '' : 's'} from chat`); }
+    if (F.accent && /^#[0-9a-f]{6}$/i.test(F.accent)) { c.theme.colors.accent = readable(F.accent, c.theme.colors.bg); if (c.theme.alt) delete c.theme.alt; used.push('the accent from your inspiration board'); }
+    const pics = (F.images || []).filter(Boolean);
+    if (pics.length) { let n = 0; const h = first('hero'); if (h && !/^data:image\/(png|jpe?g|webp)/.test(h.props.img || '') && h.variant !== 'minimal') { h.props.img = pics[n++ % pics.length]; } const g = c.pages.map(p => p.blocks.find(b => b.type === 'gallery')).find(Boolean); if (g) g.props.items.forEach(x => { if (n < pics.length) x.img = pics[n++]; }); if (n) used.push(`${n} picture${n === 1 ? '' : 's'} from your board`); }
+    if (F.logo) { c.logo = F.logo; c.seo = { ...(c.seo || {}), favicon: F.logo }; used.push('the logo'); }
+    c.seo = { ...(c.seo || {}), title: c.seo && c.seo.title || c.name, description: (c.seo && c.seo.description) || String(F.tagline || F.mission || '').slice(0, 160) };
+    return { cfg: normalize(c), used };
+  }
+
+  // ---------- render ----------
+  const embedUrl = u => { u = String(u || ''); let m; if ((m = /(?:youtube\.com\/watch\?v=|youtu\.be\/)([\w-]{6,})/.exec(u))) return `https://www.youtube-nocookie.com/embed/${m[1]}`; if ((m = /vimeo\.com\/(\d+)/.exec(u))) return `https://player.vimeo.com/video/${m[1]}`; if ((m = /open\.spotify\.com\/(track|album|playlist|episode|show)\/(\w+)/.exec(u))) return `https://open.spotify.com/embed/${m[1]}/${m[2]}`; return ''; };
+  const ph = (alt, w, h) => `data:image/svg+xml;utf8,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${w} ${h}"><rect width="${w}" height="${h}" fill="#8885"/><path d="M0 ${h * 0.75} L${w * 0.35} ${h * 0.45} L${w * 0.6} ${h * 0.68} L${w * 0.78} ${h * 0.55} L${w} ${h * 0.75} V${h} H0Z" fill="#8886"/><circle cx="${w * 0.72}" cy="${h * 0.3}" r="${h * 0.09}" fill="#8887"/></svg>`)}`;
+  function css(c, fontsBase) {
+    const k = colors(c), t = c.theme, r = t.radius, on = lum(k.accent) > 0.45 ? '#111111' : '#FFFFFF';
+    const fsrc = f => (typeof fontsBase === 'function' ? fontsBase(FONT[f][0]) : fontsBase ? `${fontsBase}${FONT[f][0]}.woff2` : '');   // a base URL, or (file) -> data: URL (the sandboxed preview has no origin)
+    const faces = fontsBase ? [t.fonts.display, t.fonts.body].filter((f, i, a) => FONT[f] && a.indexOf(f) === i && fsrc(f)).map(f => `@font-face{font-family:'${f}';src:url('${fsrc(f)}') format('woff2');font-weight:${FONT[f][1]};font-display:swap}`).join('') : '';
+    return `${faces}:root{--bg:${k.bg};--ink:${k.ink};--muted:${k.muted};--card:${k.card};--line:${k.line};--accent:${k.accent};--on:${on};--r:${r}px;--display:${stack(t.fonts.display)};--body:${stack(t.fonts.body)};--pad:${t.space === 'compact' ? 40 : t.space === 'roomy' ? 96 : 64}px;color-scheme:${t.mode}}
+*{box-sizing:border-box}html{scroll-behavior:smooth}@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.6 var(--body);-webkit-text-size-adjust:100%}
+a{color:inherit}img{max-width:100%;display:block}.wrap{max-width:1080px;margin:0 auto;padding:0 24px}.skip{position:absolute;left:-999px}.skip:focus{left:12px;top:12px;background:var(--card);padding:8px 12px;z-index:9}
+h1,h2,h3{font-family:var(--display);line-height:1.1;margin:0 0 .4em;letter-spacing:-.01em}h1{font-size:clamp(2.2rem,6vw,4rem)}h2{font-size:clamp(1.5rem,3.4vw,2.2rem)}h3{font-size:1.15rem}p{margin:0 0 1em}
+.nav{border-bottom:1px solid var(--line)}.nav .wrap{display:flex;align-items:center;gap:20px;min-height:64px;flex-wrap:wrap}.nav b{font-family:var(--display);font-size:1.2rem;margin-right:auto}.nav nav{display:flex;gap:20px;flex-wrap:wrap}.nav a{text-decoration:none;color:var(--muted)}.nav a[aria-current]{color:var(--ink);text-decoration:underline;text-underline-offset:6px}
+section{padding:var(--pad) 0;border-bottom:1px solid var(--line)}.eyebrow{font:600 .78rem/1.2 ui-monospace,monospace;letter-spacing:.08em;text-transform:uppercase;color:var(--accent);margin-bottom:12px}.lead{font-size:1.15rem;color:var(--muted);max-width:60ch}
+.btns{display:flex;gap:12px;flex-wrap:wrap;margin-top:24px}.btn{display:inline-block;padding:12px 20px;border-radius:var(--r);border:1px solid var(--accent);background:var(--accent);color:var(--on);text-decoration:none;font-weight:600}.btn.alt{background:transparent;color:var(--ink);border-color:var(--line)}.btn:focus-visible,a:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+.hero-split .wrap{display:grid;grid-template-columns:1.1fr 1fr;gap:48px;align-items:center}.hero-center{text-align:center}.hero-center .lead{margin:0 auto}.hero-center .btns{justify-content:center}.hero-center .pic{max-width:720px;margin:40px auto 0}.hero-minimal h1{font-size:clamp(2.4rem,8vw,5.4rem)}
+.pic{border-radius:var(--r);overflow:hidden;border:1px solid var(--line);background:var(--card)}.pic img{width:100%;height:100%;object-fit:cover;aspect-ratio:4/3}.pic.round{border-radius:50%;aspect-ratio:1;max-width:320px}.pic.round img{aspect-ratio:1}.pic.square img{aspect-ratio:1}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:20px}.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:20px}.muted{color:var(--muted)}
+.f-list .item{display:grid;grid-template-columns:200px 1fr;gap:24px;padding:16px 0;border-top:1px solid var(--line)}.f-stats .card b{display:block;font:700 2.4rem/1 var(--display);color:var(--accent)}
+.g-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:16px}.g-masonry{columns:3 240px;column-gap:16px}.g-masonry figure{break-inside:avoid;margin:0 0 16px}.g-masonry img{aspect-ratio:auto}.g-strip{display:flex;gap:16px;overflow-x:auto;scroll-snap-type:x mandatory}.g-strip figure{flex:0 0 min(80%,420px);scroll-snap-align:start}
+figure{margin:0}figcaption{font-size:.9rem;color:var(--muted);margin-top:8px}.g-grid img,.g-strip img{aspect-ratio:4/3;object-fit:cover;width:100%;border-radius:var(--r);border:1px solid var(--line)}.g-masonry img{width:100%;border-radius:var(--r);border:1px solid var(--line)}
+.plans{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:20px}.plan .price{font:700 2rem/1 var(--display);margin:8px 0}.plan ul{padding-left:18px;color:var(--muted)}table.p{width:100%;border-collapse:collapse}table.p td,table.p th{text-align:left;padding:14px 8px;border-top:1px solid var(--line);vertical-align:top}
+blockquote{margin:0;font-family:var(--display);font-size:1.3rem;line-height:1.35}.q-quotes blockquote{font-size:1.8rem;max-width:30ch}
+details{border-top:1px solid var(--line);padding:14px 0}summary{cursor:pointer;font-weight:600}.faq-columns{display:grid;grid-template-columns:1fr 1fr;gap:0 40px}
+.team .who{display:flex;gap:16px;align-items:center}.team .av{width:64px;height:64px;border-radius:50%;object-fit:cover;border:1px solid var(--line)}
+.links{max-width:560px;margin:0 auto;text-align:center}.links .pic{margin:0 auto 16px;max-width:120px}.links .pic img{aspect-ratio:1}.lk{display:block;padding:16px 20px;margin:12px 0;border:1px solid var(--line);border-radius:var(--r);background:var(--card);text-decoration:none;font-weight:600}.lk small{display:block;font-weight:400;color:var(--muted)}.l-cards .lk{border-color:var(--ink)}.l-pills .lk{border-radius:999px}.soc{display:flex;gap:16px;justify-content:center;flex-wrap:wrap;margin-top:16px}
+.row p,.card p:last-child{margin:0}.rows .row{display:grid;grid-template-columns:1fr auto;gap:16px;padding:14px 0;border-top:1px solid var(--line)}.menu .row{display:flex;gap:8px;align-items:baseline;padding:8px 0}.menu .row .dots{flex:1;border-bottom:1px dotted var(--muted);transform:translateY(-4px)}
+form.cf{display:grid;gap:12px;max-width:560px}form.cf input,form.cf textarea{font:inherit;padding:12px;border-radius:var(--r);border:1px solid var(--line);background:var(--card);color:var(--ink)}form.cf label{font-weight:600;font-size:.92rem}
+.embed{aspect-ratio:16/9;width:100%;border:1px solid var(--line);border-radius:var(--r);background:var(--card)}.e-inline .embed{max-width:640px}.t-two .wrap{display:grid;grid-template-columns:1fr 2fr;gap:40px}
+footer{padding:40px 0;color:var(--muted)}footer .wrap{display:flex;gap:20px;flex-wrap:wrap;align-items:center}footer nav{display:flex;gap:16px;flex-wrap:wrap;margin-left:auto}
+.pg{display:none}.pg-home,.pg:target,.pg:has(:target){display:block}body:has(.pg:not(.pg-home):target) .pg-home,body:has(.pg:not(.pg-home) :target) .pg-home{display:none}
+section.pad-s{padding:calc(var(--pad) * .5) 0}section.pad-l{padding:calc(var(--pad) * 1.6) 0}.bg-card{background:var(--card)}.bg-accent{background:var(--accent);color:var(--on)}.bg-ink{background:var(--ink);color:var(--bg)}.bg-accent .muted,.bg-accent .lead,.bg-accent .eyebrow,.bg-ink .muted,.bg-ink .lead,.bg-ink .eyebrow{color:inherit;opacity:.82}.bg-accent .btn{background:var(--on);color:var(--accent);border-color:var(--on)}.bg-accent .btn.alt,.bg-ink .btn.alt{background:transparent;color:inherit;border-color:currentColor}.bg-accent .card,.bg-ink .card{background:transparent;border-color:currentColor}
+.hero-accent{background:var(--accent);color:var(--on)}.hero-accent .lead,.hero-accent .eyebrow{color:inherit;opacity:.85}.hero-accent .btn{background:var(--on);color:var(--accent);border-color:var(--on)}.hero-accent .btn.alt{background:transparent;color:inherit;border-color:currentColor}.hero-accent .wrap{text-align:center}.hero-accent .lead{margin:0 auto}.hero-accent .btns{justify-content:center}.hero-accent .pic{max-width:720px;margin:40px auto 0}
+.hero-cover{padding-top:0}.hero-cover .pic{border-radius:0;border:0;border-bottom:1px solid var(--line);margin:0 0 40px}.hero-cover .pic img{aspect-ratio:21/9}.hero-cover .wrap{display:block}
+.f-alternating .alt-row{display:grid;grid-template-columns:1fr 1fr;gap:40px;align-items:center;padding:28px 0;border-top:1px solid var(--line)}.f-alternating .alt-row:nth-child(even) .pic{order:2}.f-alternating .num{font:700 3rem/1 var(--display);color:var(--accent)}
+.q-spotlight{text-align:center}.q-spotlight blockquote{font-size:clamp(1.6rem,3.6vw,2.4rem);max-width:28ch;margin:0 auto 16px}
+.t-highlight .wrap>div{border-left:4px solid var(--accent);padding-left:24px}.t-highlight .lead{font-size:1.35rem;color:var(--ink)}.md h3{margin-top:1.2em}.md ul{padding-left:20px}
+.foot-minimal .wrap{justify-content:center;text-align:center}.foot-columns .wrap{display:grid;grid-template-columns:2fr repeat(3,1fr);gap:24px}.foot-columns nav{flex-direction:column;margin:0}
+.nl form{display:flex;gap:12px;flex-wrap:wrap;max-width:560px}.nl input{flex:1 1 220px;font:inherit;padding:12px;border-radius:var(--r);border:1px solid var(--line);background:var(--card);color:var(--ink)}.nl-card .wrap>div{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:32px}
+.cta-simple{text-align:center}.cta-simple .lead{margin:0 auto}.cta-simple .btns{justify-content:center}.cta-split .wrap{display:flex;gap:32px;align-items:center;justify-content:space-between;flex-wrap:wrap}.cta-split .btns{margin:0}.cta-accent{background:var(--accent);color:var(--on);text-align:center}.cta-accent .lead{color:inherit;opacity:.85;margin:0 auto}.cta-accent .btns{justify-content:center}.cta-accent .btn{background:var(--on);color:var(--accent);border-color:var(--on)}
+.st{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:20px}.st b{display:block;font:700 2.4rem/1.1 var(--display);color:var(--accent)}.st-bar .st{border-top:1px solid var(--line);border-bottom:1px solid var(--line);padding:20px 0}.st-bar .st>div+div{border-left:1px solid var(--line);padding-left:20px}.st-big b{font-size:clamp(3rem,8vw,5rem)}
+.lg{display:flex;flex-wrap:wrap;gap:28px 48px;align-items:center;justify-content:center}.lg-grid .lg{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr))}.lg span,.lg img{font:700 1.2rem/1 var(--display);color:var(--muted);max-height:40px;width:auto;margin:0 auto}.b-logos h2{text-align:center;font-size:1rem;color:var(--muted);font-family:var(--body);font-weight:600}
+.bn{padding:10px 0;border-bottom:1px solid var(--line);font-size:.95rem}.bn .wrap{display:flex;gap:12px;align-items:center;justify-content:center;flex-wrap:wrap}.bn-bar{background:var(--accent);color:var(--on)}.bn-bar a{color:inherit;font-weight:600}.bn-ribbon{background:var(--card)}
+.dv{padding:0;border:0}.dv-line hr{border:0;border-top:1px solid var(--line);margin:24px auto}.dv-space{height:64px}.dv-dots p{text-align:center;letter-spacing:.6em;color:var(--muted);margin:24px 0}
+.im-wide .pic img{aspect-ratio:21/9}.im-side .wrap{display:grid;grid-template-columns:1fr 1fr;gap:40px;align-items:center}.im-framed .pic{max-width:760px;margin:0 auto;padding:12px;background:var(--card)}.im-wide h2,.im-framed h2{margin-top:20px}
+.nav-centered .wrap{justify-content:center;flex-direction:column;gap:8px;padding:16px 24px}.nav-centered b{margin:0}.nav .logo{height:32px;width:auto;margin-right:10px;vertical-align:middle;display:inline-block}.credit{text-align:center;font-size:.78rem;color:var(--muted);padding:12px 24px 20px;margin:0}
+.is-hidden{opacity:.45;outline:1px dashed var(--muted);outline-offset:-6px}.is-hidden::before{content:'Hidden: not on the published site';display:block;font:600 11px/1 ui-monospace,monospace;padding:8px 24px;color:var(--muted)}
+@media (max-width:760px){.f-alternating .alt-row,.im-side .wrap,.foot-columns .wrap{grid-template-columns:1fr}.f-alternating .alt-row:nth-child(even) .pic{order:0}.st-bar .st>div+div{border-left:0;padding-left:0}}
+@media (max-width:760px){.hero-split .wrap,.t-two .wrap,.faq-columns{grid-template-columns:1fr}.f-list .item{grid-template-columns:1fr;gap:4px}section{padding:44px 0}}`;
+  }
+  function renderBlock(c, b, pg, o) {
+    const P = b.props || {}, E = (path, tag, txt, cls) => `<${tag}${cls ? ` class="${cls}"` : ''}${o.edit ? ` data-e="${b.id}|${path}" contenteditable="plaintext-only" spellcheck="false"` : ''}>${esc(txt)}</${tag}>`;
+    const H = l => href(c, l, pg, o.mode) || (o.edit ? '#' : '');
+    const A = (path, lab, l, cls) => { const h = H(l); return `<a class="${cls}"${h ? ` href="${esc(h)}"` : ''}${/^https?:/.test(h) ? ' rel="noopener"' : ''}${o.edit ? ` data-btn="${b.id}|${path}"${h && h !== '#' ? '' : ' data-unwired="1"'}` : ''}>${o.edit ? `<span data-e="${b.id}|${path}.label" contenteditable="plaintext-only" spellcheck="false">${esc(lab)}</span>` : esc(lab)}</a>`; };
+    const IMG = (path, src, alt, shape, w, h) => `<div class="pic${shape ? ' ' + shape : ''}"${o.edit ? ` data-img="${b.id}|${path}"` : ''}><img src="${esc(src || ph(alt, w || 800, h || 600))}" alt="${esc(alt || '')}" loading="lazy"></div>`;
+    const T = (path, txt, tag = 'h2') => txt || o.edit ? E(path, tag, txt || '') : '';
+    switch (b.type) {
+      case 'hero': if (b.variant === 'cover') return `${IMG('', P.img, P.alt, '', 1600, 700)}<div class="wrap">${P.eyebrow || o.edit ? E('eyebrow', 'p', P.eyebrow, 'eyebrow') : ''}${E('title', 'h1', P.title)}${P.text || o.edit ? E('text', 'p', P.text, 'lead') : ''}<div class="btns">${(P.buttons || []).map((x, i) => A(`buttons.${i}`, x.label, x.link, i ? 'btn alt' : 'btn')).join('')}</div></div>`;
+        return `<div class="wrap">${b.variant === 'split' ? '<div>' : ''}${P.eyebrow || o.edit ? E('eyebrow', 'p', P.eyebrow, 'eyebrow') : ''}${E('title', 'h1', P.title)}${P.text || o.edit ? E('text', 'p', P.text, 'lead') : ''}<div class="btns">${(P.buttons || []).map((x, i) => A(`buttons.${i}`, x.label, x.link, i ? 'btn alt' : 'btn')).join('')}</div>${b.variant === 'split' ? '</div>' : ''}${b.variant !== 'minimal' && (P.img || (o.edit && b.variant !== 'accent') || b.variant === 'split') ? IMG('', P.img, P.alt, P.shape) : ''}</div>`;
+      case 'features': if (b.variant === 'alternating') return `<div class="wrap f-alternating">${T('title', P.title)}${(P.items || []).map((x, i) => `<div class="alt-row">${x.img || o.edit ? IMG(`items.${i}.`, x.img, x.alt || x.title, '') : `<p class="num">${String(i + 1).padStart(2, '0')}</p>`}<div>${E(`items.${i}.title`, 'h3', x.title)}${E(`items.${i}.text`, 'p', x.text, 'muted')}</div></div>`).join('')}</div>`;
+        return `<div class="wrap f-${b.variant}">${T('title', P.title)}<div class="${b.variant === 'list' ? '' : 'grid'}">${(P.items || []).map((x, i) => b.variant === 'list' ? `<div class="item">${E(`items.${i}.title`, 'h3', x.title)}${E(`items.${i}.text`, 'p', x.text, 'muted')}</div>` : `<div class="card">${b.variant === 'stats' ? E(`items.${i}.title`, 'b', x.title) : E(`items.${i}.title`, 'h3', x.title)}${E(`items.${i}.text`, 'p', x.text, 'muted')}</div>`).join('')}</div></div>`;
+      case 'gallery': return `<div class="wrap">${T('title', P.title)}<div class="g-${b.variant}">${(P.items || []).map((x, i) => `<figure>${IMG(`items.${i}.`, x.img, x.alt, x.shape)}${x.caption || o.edit ? E(`items.${i}.caption`, 'figcaption', x.caption) : ''}</figure>`).join('')}</div></div>`;
+      case 'pricing': return `<div class="wrap">${T('title', P.title)}${P.note ? E('note', 'p', P.note, 'muted') : ''}${b.variant === 'table' ? `<table class="p"><tbody>${(P.plans || []).map((x, i) => `<tr><th>${E(`plans.${i}.name`, 'span', x.name)}<div class="muted">${esc((x.features || []).join(' · '))}</div></th><td>${E(`plans.${i}.price`, 'b', x.price)} ${E(`plans.${i}.per`, 'span', x.per, 'muted')}</td><td>${x.button ? A(`plans.${i}.button`, x.button.label, x.button.link, 'btn') : ''}</td></tr>`).join('')}</tbody></table>` : `<div class="plans">${(P.plans || []).map((x, i) => `<div class="card plan">${E(`plans.${i}.name`, 'h3', x.name)}<div class="price">${E(`plans.${i}.price`, 'span', x.price)} ${E(`plans.${i}.per`, 'small', x.per, 'muted')}</div><ul>${(x.features || []).map((f, j) => E(`plans.${i}.features.${j}`, 'li', f)).join('')}</ul>${x.button ? A(`plans.${i}.button`, x.button.label, x.button.link, 'btn') : ''}</div>`).join('')}</div>`}</div>`;
+      case 'testimonials': return `<div class="wrap q-${b.variant}">${T('title', P.title)}<div class="${b.variant === 'cards' ? 'grid' : ''}">${(b.variant === 'spotlight' ? (P.items || []).slice(0, 1) : P.items || []).map((x, i) => `<figure class="${b.variant === 'cards' ? 'card' : ''}">${E(`items.${i}.quote`, 'blockquote', x.quote)}<figcaption>${E(`items.${i}.name`, 'b', x.name)} ${E(`items.${i}.role`, 'span', x.role)}</figcaption></figure>`).join('')}</div></div>`;
+      case 'faq': return `<div class="wrap">${T('title', P.title)}<div class="faq-${b.variant}">${(P.items || []).map((x, i) => `<details${o.edit ? ' open' : ''}><summary>${E(`items.${i}.q`, 'span', x.q)}</summary>${E(`items.${i}.a`, 'p', x.a, 'muted')}</details>`).join('')}</div></div>`;
+      case 'team': return `<div class="wrap team">${T('title', P.title)}<div class="grid">${(P.items || []).map((x, i) => `<div class="who">${o.edit ? `<span data-img="${b.id}|items.${i}."><img class="av" src="${esc(x.img || ph(x.name, 200, 200))}" alt="${esc(x.alt || x.name)}"></span>` : `<img class="av" src="${esc(x.img || ph(x.name, 200, 200))}" alt="${esc(x.alt || x.name)}">`}<div>${E(`items.${i}.name`, 'b', x.name)}<div class="muted">${E(`items.${i}.role`, 'span', x.role)}</div></div></div>`).join('')}</div></div>`;
+      case 'links': return `<div class="wrap links l-${b.variant}">${IMG('', P.img, P.alt, P.shape || 'round', 300, 300)}${E('name', 'h1', P.name)}${E('bio', 'p', P.bio, 'muted')}${(P.items || []).map((x, i) => A(`items.${i}`, x.label, x.link, 'lk') + (x.note ? `<small class="muted">${esc(x.note)}</small>` : '')).join('')}<div class="soc">${(P.socials || []).map((x, i) => A(`socials.${i}`, x.label, x.link, '')).join('')}</div></div>`;
+      case 'list': return `<div class="wrap">${T('title', P.title)}<div class="${b.variant === 'cards' ? 'grid' : b.variant}">${(P.items || []).map((x, i) => { const h = href(c, x.link, pg, o.mode); const inner = b.variant === 'menu' ? `${E(`items.${i}.title`, 'b', x.title)}<span class="dots"></span>${E(`items.${i}.meta`, 'span', x.meta)}` : `<div>${E(`items.${i}.title`, b.variant === 'cards' ? 'h3' : 'b', x.title)}${x.text || (o.edit && b.variant !== 'menu') ? E(`items.${i}.text`, 'p', x.text, 'muted') : ''}</div>${E(`items.${i}.meta`, 'span', x.meta, 'muted')}`; return `<div class="${b.variant === 'cards' ? 'card' : 'row'}">${inner}${h && !o.edit ? ` <a href="${esc(h)}">→</a>` : ''}</div>`; }).join('')}</div></div>`;
+      case 'contact': { const act = P.action && /^https?:/.test(P.action) ? P.action : P.email ? `mailto:${P.email}` : ''; return `<div class="wrap">${T('title', P.title)}${E('text', 'p', P.text, 'lead')}${b.variant === 'simple' ? `${P.email ? `<p><a class="btn" href="mailto:${esc(P.email)}">${esc(P.email)}</a></p>` : act ? `<p><a class="btn" href="${esc(act)}">${esc(P.button || 'Go')}</a></p>` : ''}` : `<form class="cf"${act ? ` action="${esc(act)}" method="${/^mailto:/.test(act) ? 'post" enctype="text/plain' : 'post'}"` : ''}><label for="n-${b.id}">Name</label><input id="n-${b.id}" name="name" autocomplete="name"><label for="e-${b.id}">Email</label><input id="e-${b.id}" name="email" type="email" autocomplete="email"><label for="m-${b.id}">Message</label><textarea id="m-${b.id}" name="message" rows="4"></textarea><button class="btn" type="submit"${act ? '' : ' disabled title="Set an email or a form link first"'}>${esc(P.button || 'Send')}</button>${act ? '' : '<p class="muted">This form needs an email or a form link before it sends anything.</p>'}</form>`}</div>`; }
+      case 'embed': { const u = embedUrl(P.url); return `<div class="wrap e-${b.variant}">${T('title', P.title)}${u ? `<iframe class="embed" src="${esc(u)}" title="${esc(P.title || 'Embedded media')}" loading="lazy" allow="encrypted-media; picture-in-picture" allowfullscreen></iframe>` : P.url ? `<p><a class="btn" href="${esc(P.url)}" rel="noopener">Open it</a></p>` : `<div class="embed" role="img" aria-label="No video yet"></div>`}${P.caption ? E('caption', 'p', P.caption, 'muted') : ''}</div>`; }
+      case 'text': return `<div class="wrap t-${b.variant}">${E('title', 'h2', P.title)}<div>${!o.edit && /(^|\n)(#{2,3} |- |\* )|\*\*/.test(P.text || '') ? `<div class="md lead">${md(P.text)}</div>` : E('text', 'p', P.text, 'lead')}</div></div>`;
+      case 'footer': return `<div class="wrap">${E('text', 'span', P.text)}<nav>${(P.links || []).map((x, i) => A(`links.${i}`, x.label, x.link, '')).join('')}</nav></div>`;
+      case 'newsletter': { const act = /^https?:/.test(P.action || '') ? P.action : ''; return `<div class="wrap nl">${b.variant === 'card' ? '<div>' : ''}${T('title', P.title)}${P.text || o.edit ? E('text', 'p', P.text, 'lead') : ''}<form${act ? ` action="${esc(act)}" method="post"` : ''}><label class="skip" for="nl-${b.id}">Email</label><input id="nl-${b.id}" name="email" type="email" autocomplete="email" placeholder="you@example.com"><button class="btn" type="submit"${act ? '' : ' disabled title="Set a signup link first (Buttondown, Mailchimp, a Google Form)"'}>${esc(P.button || 'Subscribe')}</button></form>${act ? '' : '<p class="muted">Needs a signup link before it collects anything.</p>'}${b.variant === 'card' ? '</div>' : ''}</div>`; }
+      case 'cta': return `<div class="wrap">${b.variant === 'split' ? '<div>' : ''}${T('title', P.title)}${P.text || o.edit ? E('text', 'p', P.text, 'lead') : ''}${b.variant === 'split' ? '</div>' : ''}<div class="btns">${(P.buttons || []).map((x, i) => A(`buttons.${i}`, x.label, x.link, i ? 'btn alt' : 'btn')).join('')}</div></div>`;
+      case 'stats': return `<div class="wrap">${T('title', P.title)}<div class="st">${(P.items || []).map((x, i) => `<div>${E(`items.${i}.value`, 'b', x.value)}${E(`items.${i}.label`, 'span', x.label, 'muted')}</div>`).join('')}</div></div>`;
+      case 'logos': return `<div class="wrap">${T('title', P.title)}<div class="lg">${(P.items || []).map((x, i) => x.img ? (o.edit ? `<span data-img="${b.id}|items.${i}."><img src="${esc(x.img)}" alt="${esc(x.alt || x.name)}"></span>` : `<img src="${esc(x.img)}" alt="${esc(x.alt || x.name)}">`) : E(`items.${i}.name`, 'span', x.name)).join('')}</div></div>`;
+      case 'banner': return `<div class="wrap">${E('text', 'span', P.text)}${P.button && (P.button.label || o.edit) ? A('button', P.button.label, P.button.link, '') : ''}</div>`;
+      case 'divider': return b.variant === 'dots' ? '<div class="wrap"><p aria-hidden="true">• • •</p></div>' : b.variant === 'line' ? '<div class="wrap"><hr></div>' : '';
+      case 'image': return `<div class="wrap">${IMG('', P.img, P.alt, P.shape, 1600, 800)}${b.variant === 'side' ? '<div>' : ''}${T('title', P.title)}${P.text || o.edit ? E('text', 'p', P.text, 'lead') : ''}${b.variant === 'side' ? '</div>' : ''}</div>`;
+    }
+    return '';
+  }
+  function renderPage(c, pg, o) {
+    const XC = { footer: 'foot-', newsletter: 'nl-', cta: 'cta-', stats: 'st-', logos: 'lg-', banner: 'bn bn-', divider: 'dv dv-', image: 'im-', text: 't-' };
+    return (pg.blocks || []).filter(b => o.edit || !b.hidden).map(b => { const tag = b.type === 'footer' ? 'footer' : b.type === 'banner' ? 'div' : 'section', st = b.style || {}; return `<${tag} id="b-${b.id}" class="${b.type}-${b.variant} b-${b.type}${XC[b.type] ? ' ' + XC[b.type] + b.variant : ''}${st.bg ? ' bg-' + st.bg : ''}${st.pad ? ' pad-' + st.pad : ''}${b.hidden ? ' is-hidden' : ''}"${o.edit ? ` data-block="${b.id}"` : ''}>${renderBlock(c, b, pg, o)}</${tag}>`; }).join('\n');
+  }
+  function nav(c, pg, o) {
+    if (c.pages.length < 2 && !o.edit && !c.logo) return '';
+    const links = c.pages.map(p => { const h = o.mode === 'pages' ? (p.slug === 'index' ? 'index.html' : p.slug + '.html') : '#p-' + p.slug; return `<a href="${h}"${p === pg && o.mode !== 'single' ? ' aria-current="page"' : ''}${o.edit ? ` data-page="${p.id}"` : ''}>${esc(p.title)}</a>`; }).join('');
+    return `<header class="nav${c.nav === 'centered' ? ' nav-centered' : ''}"><div class="wrap"><b>${c.logo ? `<img class="logo" src="${esc(c.logo)}" alt="">` : ''}${esc(c.name)}</b>${c.pages.length > 1 ? `<nav aria-label="Pages">${links}</nav>` : ''}</div></header>`;
+  }
+  // o: { page, edit, mode: 'single' (one file, every page) | 'pages' (this page as its own file), fonts: base url, extraHead }
+  function render(cfg, o = {}) {
+    const c = normalize(clone(cfg)), mode = o.mode || 'single';
+    const S = c.seo, title = S.title || c.name, desc = S.description, abs = u => /^https:\/\//.test(u || '') || (o.mode === 'pages' && /^assets\//.test(u || ''));
+    const meta = `${desc ? `<meta name="description" content="${esc(desc)}"><meta property="og:description" content="${esc(desc)}">` : ''}<meta property="og:title" content="${esc(title)}"><meta property="og:type" content="website"><meta name="twitter:card" content="${S.image ? 'summary_large_image' : 'summary'}">${abs(S.image) ? `<meta property="og:image" content="${esc(S.image)}">` : ''}${S.favicon ? `<link rel="icon" href="${esc(S.favicon)}">` : ''}`;
+    const credit = c.credit ? `<p class="credit">Design based on <a href="${esc(c.credit.url)}" rel="noopener">${esc(c.credit.text)}</a>${c.credit.license ? ` (${esc(c.credit.license)})` : ''}</p>` : '';
+    const head = `<!doctype html><html lang="${esc(S.lang)}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${esc(title)}</title>${meta}<meta name="generator" content="TribeCode website designer"><style>${css(c, o.fonts || '')}</style>${o.extraHead || ''}</head><body><a class="skip" href="#main">Skip to content</a>`;
+    if (mode === 'single' && !o.edit) return `${head}${c.pages.map((p, i) => `<div class="pg${i === 0 ? ' pg-home' : ''}" id="p-${p.slug}">${nav(c, p, { mode })}<main${i === 0 ? ' id="main"' : ''}>${renderPage(c, p, { mode })}</main></div>`).join('\n')}${credit}</body></html>`;
+    const pg = c.pages.find(p => p.id === o.page || p.slug === o.page) || c.pages[0];
+    return `${head}${nav(c, pg, { mode, edit: o.edit })}<main id="main">${renderPage(c, pg, { mode, edit: o.edit })}</main>${credit}${o.extraBody || ''}</body></html>`;
+  }
+  // standalone files: 'single' = { 'index.html' } with every page and the pictures inside; 'zip' = one file per page,
+  // pictures in assets/ (data: URLs written out), fonts in fonts/ (paths listed in .fonts for the caller to copy)
+  function exportFiles(cfg, kind) {
+    const c = normalize(clone(cfg));
+    if (kind !== 'zip') return { 'index.html': render(c, { mode: 'single' }) };
+    const files = {}, assets = new Map(); let n = 0;
+    const out = (src, alt) => { if (!/^data:image\//.test(src || '')) return src; if (!assets.has(src)) { const m = /^data:image\/([a-z+]+)(;base64)?,(.*)$/i.exec(src); const ext = m ? (m[1] === 'svg+xml' ? 'svg' : m[1] === 'jpeg' ? 'jpg' : m[1]) : 'png'; assets.set(src, `assets/${slugify(alt || 'image')}-${++n}.${ext}`); } return assets.get(src); };
+    if (c.logo) c.logo = out(c.logo, 'logo'); if (c.seo.favicon) c.seo.favicon = out(c.seo.favicon, 'favicon'); if (c.seo.image) c.seo.image = out(c.seo.image, 'share');
+    c.pages.forEach(p => p.blocks.forEach(b => { if (b.props.img) b.props.img = out(b.props.img, b.props.alt); (b.props.items || []).forEach(x => { if (x && x.img) x.img = out(x.img, x.alt); }); }));
+    const used = new Set([c.theme.fonts.display, c.theme.fonts.body].filter(f => FONT[f]));
+    c.pages.forEach(p => { files[p.slug === 'index' ? 'index.html' : p.slug + '.html'] = render(c, { page: p.id, mode: 'pages', fonts: used.size ? 'fonts/' : '' }); });
+    files['site.json'] = JSON.stringify(cfg, null, 1);
+    files['README.md'] = `# ${c.name}\n\nMade with the TribeCode website designer. Plain HTML and CSS, no build step and no scripts: open index.html, or upload this folder to any static host (GitHub Pages, Netlify, a USB stick).\n\n- ${c.pages.map(p => (p.slug === 'index' ? 'index' : p.slug) + '.html: ' + p.title).join('\n- ')}\n- assets/: the pictures\n- fonts/: the fonts (SIL Open Font License, licenses alongside)\n- site.json: the design, to open again in TribeCode\n`;
+    return { files, assets: [...assets].map(([src, path]) => ({ src, path })), fonts: [...used].map(f => ({ file: FONT[f][0] + '.woff2', license: 'LICENSE-' + f.replace(/\s+/g, '') + '.txt' })) };
+  }
+  const dataToBytes = src => { const m = /^data:[^;,]+(;base64)?,(.*)$/.exec(src || ''); if (!m) return null; if (m[1]) { const bin = typeof atob === 'function' ? atob(m[2]) : Buffer.from(m[2], 'base64').toString('binary'); const u = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) u[i] = bin.charCodeAt(i); return u; } return new TextEncoder().encode(decodeURIComponent(m[2])); };
+
+  return { FONT_PAIRS, CATS, duplicateBlock, setHidden, setStyle, setSpace, setFonts, setSeo, setLogo, rewrite, fill, md, BLOCKS, TYPES, PRESETS, TEMPLATES, blank, normalize, colors, fromTemplate, render, exportFiles, dataToBytes, buttons, images, href, autoWire, addPage, renamePage, deletePage, addBlock, removeBlock, moveBlock, setVariant, setProp, setTheme, setMode, setColor, setLink, setImage, imageShape, command, getAt, slugify, contrast };
+});

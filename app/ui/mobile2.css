@@ -70,7 +70,6 @@
   body.m2-in-chat .tabbar.m2-rack { left: env(safe-area-inset-left); right: env(safe-area-inset-right); justify-content: center; }
   body.m2-in-chat .m2-seg { flex: 1; justify-content: space-evenly; }
   body.m2-in-chat #menu-btn { visibility: hidden; }   /* the rack covers it in Chat (the side panel is a swipe from the left): keep it out of taps and keyboard focus */
-  .titlebar #fr-btn { display: none !important; }   /* Friends lives in your bar at the bottom of the side panel */
   body.m2-in-chat .m2-seg button { width: 44px; height: 44px; }
   body.m2-in-chat .m2-seg button.on::before { top: auto; bottom: 0; border-radius: 3px 3px 0 0; }
   body.m2-in-chat .m2-seg .bd { top: 4px; box-shadow: 0 0 0 2px var(--canvas); }

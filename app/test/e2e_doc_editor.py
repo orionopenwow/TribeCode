@@ -275,14 +275,14 @@ async def main():
 
             # Close goes back to the docs list (with the repo hero)
             await host.click("#dl-close")
-            await host.wait_for_selector("#doc-first")
+            await host.wait_for_selector("#fg-new-menu")
             assert await host.locator(".docs-grid.dl-on").count() == 0 and await host.locator(".docs-grid > #doc-list-wrap").count() == 1
             assert not await host.evaluate("document.body.classList.contains('dl-wide')")
 
             # ---------------- a personal note: same layout, saves, Escape / ✓ close ----------------
             await host.evaluate("TribeHub.open('docs')")
             await host.wait_for_selector("#hub-docs")
-            await host.click("#dc-new")
+            await host.click("#dc-new"); await host.click("#dc-newmenu [data-new=note]")   # + New › Note
             await host.wait_for_selector("#note-ed .note-ed.dl-shell #note-text")
             for sel in ["#note-ed .dl-top", "#note-ed .dl-fmt[role=toolbar]", "#note-ed #note-undo", "#note-ed #note-redo", "#note-ed #note-done", "#note-ed #note-ai", "#note-ed #note-more", "#note-ed .dl-page #note-title", "#note-outline"]:
                 assert await host.locator(sel).count() == 1, f"note: missing {sel}"

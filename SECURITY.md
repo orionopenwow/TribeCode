@@ -73,7 +73,7 @@ TribeCode is young and moves fast. Security fixes go into the latest release onl
 
 ## For developers
 
-`app/test/security_test.py`, `app/test/security2_test.py` and `app/test/security3_test.py` are the regression tests for past
+`app/test/security_test.py`, `app/test/security2_test.py`, `app/test/security3_test.py` and `app/test/security4_test.py` are the regression tests for past
 security fixes; all run in `npm test`. The cloudflared download is checked against the SHA-256 Cloudflare publishes for the
 release before it is kept or run. Media links: `server/media.js` and `app/ui/media.js`. Pinned CDN code:
 `app/ui/brainworker.js` and `app/ui/viewers.js` (when a version changes, update its SHA-384 there). The server and web app have zero npm dependencies. The desktop app is a Tauri v2 wrapper; its updates are

@@ -1,0 +1,16 @@
+/* the shared look: flat, 1px borders; colors come from config.js (--bg, --surface, --accent, --ink, --muted, --line) */
+*, *::before, *::after { box-sizing: border-box; }
+html, body { margin: 0; min-height: 100%; background: var(--bg, #12151A); color: var(--ink, #E7E9EE); font: 15px/1.5 system-ui, -apple-system, Segoe UI, sans-serif; }
+main { max-width: 720px; margin: 0 auto; padding: 20px 16px 40px; }
+h1 { font-size: 22px; margin: 0 0 4px; } .muted { color: var(--muted, #94A3B8); }
+button, input, select, textarea { font: inherit; color: inherit; }
+.btn { background: var(--surface, #1B2028); border: 1px solid var(--line, #2A313C); border-radius: 8px; padding: 8px 14px; cursor: pointer; }
+.btn.primary { background: var(--accent, #F26B1D); border-color: var(--accent, #F26B1D); color: #fff; }
+.input { width: 100%; background: var(--surface, #1B2028); border: 1px solid var(--line, #2A313C); border-radius: 8px; padding: 10px 12px; }
+.input:focus, .btn:focus-visible { outline: 2px solid var(--accent, #F26B1D); outline-offset: 1px; }
+.card { background: var(--surface, #1B2028); border: 1px solid var(--line, #2A313C); border-radius: 12px; padding: 14px; }
+.wrap { max-width: 840px; }
+canvas { width: 100%; height: auto; background: var(--paper, #F8FAFC); border: 1px solid var(--line, #2A313C); border-radius: 12px 12px 0 0; display: block; touch-action: none; }
+.toolbox { display: flex; align-items: center; gap: 8px; padding: 8px; background: var(--surface, #1B2028); border: 1px solid var(--line, #2A313C); border-top: 0; border-radius: 0 0 12px 12px; }
+#size { min-width: 28px; text-align: center; } input[type=color] { width: 44px; height: 36px; border: 1px solid var(--line, #2A313C); border-radius: 8px; background: none; padding: 2px; }
+#save { margin-left: auto; }

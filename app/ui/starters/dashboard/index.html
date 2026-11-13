@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Dashboard</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main class="wide">
+    <header class="top"><div><h1 id="title">Dashboard</h1><p class="muted" id="sub"></p></div><select class="input sel" id="range" aria-label="Range"><option value="7">Last 7 days</option><option value="30" selected>Last 30 days</option></select></header>
+    <section class="kpis" id="kpis"></section>
+    <section class="card"><h2>Visits</h2><svg id="chart" viewBox="0 0 640 220" role="img" aria-label="Visits per day"></svg></section>
+    <section class="grid2"><div class="card"><h2>Top pages</h2><div id="bars"></div></div><div class="card"><h2>Latest signups</h2><table id="table"></table></div></section>
+  </main>
+  <script src="config.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

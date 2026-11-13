@@ -10,7 +10,9 @@
 //   window.TribeCanvas = { open(fileId?), close(), state(), exportFrame(id), insertSample() }
 (function () {
   'use strict';
-  const C = window.TribeClient;
+  // feat/setup-local: a design kept on this device (localfiles.js) swaps in its own small backend while open.
+  const RC = window.TribeClient; let LB = null;
+  const C = new Proxy(RC, { get: (t, k) => (LB && k in LB ? LB[k] : t[k]) });
   const SC = window.TribeCanvasScene;
   const NAME = 'canvas';
   const $ = (s, r = document) => r.querySelector(s);
@@ -89,8 +91,9 @@
     sec = document.createElement('section'); sec.id = 'view-' + NAME; sec.className = 'hidden'; main.appendChild(sec);
     return sec;
   }
-  function show(id) {
+  function show(id, opts) {
     const sec = ensureSection(); if (!sec) return;
+    const nb = (opts && opts.backend) || null; if (nb !== LB) { LB = nb; loadedFor = ''; if (!nb && !id) fileId = 'main'; }
     if (id && id !== fileId) { fileId = id; loadedFor = ''; }
     document.querySelectorAll('.main > section[id^="view-"]').forEach(s => { if (s !== sec) s.classList.add('hidden'); });
     sec.classList.remove('hidden');
@@ -1344,7 +1347,7 @@
   setTimeout(fromHash, 0);
 
   window.TribeCanvas = {
-    open: id => show(id), close: () => { if (open && window.TribeApp) window.TribeApp.show('home'); },
+    open: (id, opts) => show(id, opts), local: () => !!LB, close: () => { if (open && window.TribeApp) window.TribeApp.show('home'); },
     state: () => ({ open, file: fileId, name: fileName, canEdit, tool, view: { ...view }, selected: [...sel], inner: inner ? { ...inner } : null, undo: undo.length, redo: redo.length, peers: [...peers.keys()],
       nodes: S.live().map(clone) }),
     exportFrame: id => SC.toHTML(S, id),   // P1-C: { html, css, name } for a frame, written to the project by server/canvascode.js

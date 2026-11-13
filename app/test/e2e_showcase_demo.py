@@ -5,7 +5,7 @@ that plays out the workflow by itself. NO tribe server: the Pages layout (site/ 
 Checks: ?demo=showcase starts it with zero clicks (2 projects, 4 friends, the agents); at 2x, within ~20 s, at least
 3 new chat messages, a task changing column, a gist and the milestone advancing; Pause stops events; a fast-forward
 (test hook) ends the season with the celebration card; @claude still answers you; Leave restores your settings
-exactly; the chooser's "Watch it come alive" starts it too; the website's "Watch a demo tribe" link and demo.html's
+exactly; the chooser's "Watch it come alive" starts it too; the website's "See how TribeCode works" link and demo.html's
 "Host a demo tribe" card go to app/?demo=showcase and land in it; a phone at 390 sees the events in Chat and on Tasks,
 has no sideways scroll, and keeps working offline after the first visit. No console errors.
 Usage: python app/test/e2e_showcase_demo.py [--shots]   (--shots saves docs/screenshots/showcase-demo-*.png)
@@ -164,7 +164,7 @@ def main():
             assert info["shipped"] == ["v0.2"] and info["season"] == 2 and info["milestone"] == "v0.3", info   # the vote made the next milestone
             until(pg, "TribeClient.api('/milestones').then(r => r.milestones.some(m => m.version === 'v0.2' && m.status === 'released'))", timeout=5000)
             until(pg, "TribeClient.api('/notify/inbox').then(r => r.items.some(i => i.type === 'release'))", timeout=5000)
-            until(pg, "TribeClient.api('/projects/lantern-run/pulse').then(r => !!r.repo && r.recent.some(x => x.kind === 'commit'))", timeout=5000)   # the repo got pinned, commits landed
+            until(pg, "TribeClient.api('/projects/demo_lantern-run/pulse').then(r => !!r.repo && r.recent.some(x => x.kind === 'commit'))", timeout=5000)   # the repo got pinned, commits landed
             pg.wait_for_selector("#pj-check.done", timeout=8000)   # the Onboarding Checklist ticked to All set
             nf = pg.text_content("#nf-count"); assert nf.strip() and int(nf.replace("+", "")) >= 3, f"the bell counts up: {nf!r}"
             if shots: time.sleep(0.5); pg.screenshot(path=str(SHOTS / "showcase-demo-desktop-shipped.png"))
@@ -193,11 +193,12 @@ def main():
             pg.evaluate("TribeOffline.leave()"); pg.wait_for_function("window.TribeOffline && !TribeOffline.active()", timeout=10000)
             assert settings(pg)["server"] == REAL["server"]
 
-            # the website: "Watch a demo tribe" goes to app/?demo=showcase and lands in it
+            # the website: "See how TribeCode works" plays the tour with Flint (app/?demo=watch, e2e_demo_watch.py); the footer's
+            # "Demo tribe" still goes to app/?demo=showcase and lands in it
             pg.goto(BASE + "/")
-            link = pg.locator(".hero a:has-text('Watch a demo tribe')")
+            assert pg.locator(".hero a:has-text('See how TribeCode works')").get_attribute("href") == "app/?demo=watch"
+            link = pg.locator("footer a:has-text('Demo tribe')")
             assert link.get_attribute("href") == "app/?demo=showcase"
-            for sel in ["footer a:has-text('Demo tribe')"]: assert pg.locator(sel).get_attribute("href") == "app/?demo=showcase", sel
             link.click(); pg.wait_for_url("**/app/**", timeout=10000); landed(pg, "site link")
             pg.evaluate("TribeOffline.leave()"); pg.wait_for_function("window.TribeOffline && !TribeOffline.active()", timeout=10000)
             # demo.html: "Host a demo tribe"

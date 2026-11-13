@@ -399,7 +399,7 @@
       ${preview ? '' : `${(d.inCommon || []).length && !d.you ? `<section class="pf-sec"><span class="eyebrow">Projects in common</span><div class="pf-chips">${d.inCommon.map(x => `<span class="pf-chip">${esc(x.name)}</span>`).join('')}</div></section>` : ''}
       ${(d.agents || []).length ? `<section class="pf-sec"><span class="eyebrow">${d.you ? 'Your agents' : 'Their agents'}</span><div class="pf-agents">${d.agents.map(a => { const am = memberOf(a.id) || a; return `<button class="pf-agent" data-pop-agent="${esc(a.id)}">${avatar({ ...am, role: 'agent' }, 'sm')}<span>${esc(a.name)}</span><i class="pf-dot sm" data-state="${esc(stateOf(am))}"></i></button>`; }).join('')}</div></section>` : ''}
       ${d.you ? `<div class="pf-acts"><button class="btn primary" data-pop="edit">Edit profile</button><button class="btn tonal" data-pop="activity">Activity</button></div>`
-        : `${window.TribePeople ? '<button class="linkish pf-full" data-pop="activity">View activity</button>' : ''}<section class="pf-sec pf-note"><label class="eyebrow" for="pf-note-in">Note <span class="pf-only">only you see this</span></label><textarea id="pf-note-in" class="pf-note-in" maxlength="256" rows="2" placeholder="Click to add a note">${esc(d.note || '')}</textarea></section>`}`}`;
+        : `${window.TribePeople ? '<button class="linkish pf-full" data-pop="activity">View activity</button>' : ''}${window.TribeAbilities && !m.agent ? '<button class="linkish pf-full" data-pop="work">Abilities, gigs and finished work</button>' : ''}<section class="pf-sec pf-note"><label class="eyebrow" for="pf-note-in">Note <span class="pf-only">only you see this</span></label><textarea id="pf-note-in" class="pf-note-in" maxlength="256" rows="2" placeholder="Click to add a note">${esc(d.note || '')}</textarea></section>`}`}`;
   }
   let friendSet = null;
   const isFriend = id => !!(friendSet && friendSet.has(id)) || !!(window.TribeFriends && window.TribeFriends.list && window.TribeFriends.list().includes(id));
@@ -487,6 +487,7 @@
     if (k === 'dm') { close(); return window.TribeDM && window.TribeDM.open(id); }
     if (k === 'edit') { close(); return edit(); }
     if (k === 'activity') { close(); return window.TribePeople && window.TribePeople.open(id); }
+    if (k === 'work') { close(); return window.TribeAbilities && window.TribeAbilities.profile(id); }   // feat/company-gigs: the work profile page
     if (k === 'copy') { try { await navigator.clipboard.writeText(id); toast('User ID copied'); } catch { prompt('User ID', id); } return; }
     if (k === 'mute') {
       const on = !d.muted;
@@ -507,7 +508,7 @@
     menuEl = document.createElement('div'); menuEl.id = 'pf-menu2'; menuEl.className = 'pf-menu2'; menuEl.setAttribute('role', 'menu');
     menuEl.innerHTML = `${window.TribePeople ? '<button role="menuitem" data-pop="activity">Activity</button>' : ''}
       ${d.you ? '<button role="menuitem" data-pop="edit">Edit profile</button>' : `<button role="menuitem" data-pop="mute">${d.muted ? 'Unmute' : 'Mute for me'}</button>`}
-      <button role="menuitem" data-pop="copy">Copy user ID</button>`;
+      <button role="menuitem" data-pop="copy">Copy user ID</button>${window.TribeModeration ? window.TribeModeration.profileItems(d) : ''}`;   // feat/appstore: Report, Block
     pop.el.appendChild(menuEl);
     const r = btn.getBoundingClientRect(), pr = pop.el.getBoundingClientRect();
     menuEl.style.top = `${r.bottom - pr.top + 4}px`; menuEl.style.right = `${pr.right - r.right}px`;

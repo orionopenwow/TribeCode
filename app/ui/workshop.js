@@ -3,8 +3,10 @@
 // repo over jsDelivr). Server: server/workshop.js (/api/workshop/*). Agents: workshop_search,
 // workshop_publish (a human approves), workshop_use (server/mcp-workshop.js).
 //
-// It is its own layer over the window (the rail stays visible on desktop), so it never mixes with a
-// project's sections. Open it with location.hash = '#/workshop' or window.TribeWorkshop.open().
+// feat/shell-polish: a destination in the main content area (the rail, title bar and sidebar stay), with its own route
+// #/workshop: TribeRouter.where() says { place: 'workshop' }, the rail's wrench is lit (pill + pressed tile), Back works.
+// The Marketplace (market*.js) renders into TribeWorkshop.container() (#ws-body). Open it with location.hash =
+// '#/workshop', the rail's wrench or window.TribeWorkshop.open(tab).
 (function () {
   const C = window.TribeClient;
   const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -49,7 +51,7 @@
         <button class="btn primary ws-add" id="ws-add">${ico('i-plus', 15)}<span>Add</span></button>
       </header>
       <div class="ws-bar">
-        <nav class="ws-tabs" role="tablist"><button role="tab" data-wt="market" aria-label="Marketplace"><span class="ws-tl">Marketplace</span><span class="ws-ts" aria-hidden="true">Market</span></button><button role="tab" data-wt="studios">Studios</button><button role="tab" data-wt="shelf" aria-label="Starter shelf"><span class="ws-tl">Starter shelf</span><span class="ws-ts" aria-hidden="true">Shelf</span></button><button role="tab" data-wt="library" aria-label="Tribe library"><span class="ws-tl">Tribe library</span><span class="ws-ts" aria-hidden="true">Library</span></button><button role="tab" data-wt="community">Community</button></nav>
+        <nav class="ws-tabs" role="tablist"><button role="tab" data-wt="market" aria-label="Marketplace"><span data-icon="store"></span><span class="ws-tl">Marketplace</span><span class="ws-ts" aria-hidden="true">Market</span></button><button role="tab" data-wt="studios"><span data-icon="palette"></span>Studios</button><button role="tab" data-wt="shelf" aria-label="Starter shelf"><span data-icon="shelf"></span><span class="ws-tl">Starter shelf</span><span class="ws-ts" aria-hidden="true">Shelf</span></button><button role="tab" data-wt="library" aria-label="Tribe library"><span data-icon="book"></span><span class="ws-tl">Tribe library</span><span class="ws-ts" aria-hidden="true">Library</span></button><button role="tab" data-wt="community"><span data-icon="people"></span>Community</button></nav>
         <div class="ws-chips" id="ws-chips">${KINDS.map(([k, l]) => `<button class="ws-chip" data-k="${k}">${l}</button>`).join('')}</div>
       </div>
       <div class="ws-scroll" id="ws-scroll"><div class="ws-inner" id="ws-body"></div></div>
@@ -68,10 +70,11 @@
     return root;
   }
 
+  const lit = on => { const b = document.getElementById('rail-workshop'); if (!b) return; b.classList.toggle('on', on); if (on) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current'); };
   function open(which) {
     if (typeof which === 'string' && ['market', 'studios', 'shelf', 'library', 'community'].includes(which)) tab = which;   // v0.27 company: + market
     const root = frame(); open_ = true;
-    root.classList.remove('hidden'); document.body.classList.add('ws-open'); document.body.classList.remove('drawer-open');
+    root.classList.remove('hidden'); document.body.classList.add('ws-open'); document.body.classList.remove('drawer-open'); lit(true);
     if (location.hash !== '#/workshop') history.replaceState(null, '', location.pathname + location.search + '#/workshop');
     const crumb = document.getElementById('crumb-label'); if (crumb) crumb.textContent = 'Workshop';
     try { C.sendActivity('Workshop'); } catch {}
@@ -79,7 +82,7 @@
   }
   function close() {
     const root = document.getElementById('workshop'); if (!root) return;
-    open_ = false; root.classList.add('hidden'); if (window.TribeMarket) window.TribeMarket.close(); document.body.classList.remove('ws-open'); closeDetail(); closeModal();
+    open_ = false; root.classList.add('hidden'); if (window.TribeMarket) window.TribeMarket.close(); document.body.classList.remove('ws-open'); lit(false); closeDetail(); closeModal();
     if (location.hash === '#/workshop') history.replaceState(null, '', location.pathname + location.search);
     if (window.TribeApp && window.TribeApp.view) { const v = window.TribeApp.view(); const crumb = document.getElementById('crumb-label'); if (crumb && v) crumb.textContent = v[0].toUpperCase() + v.slice(1); }
   }
@@ -97,6 +100,7 @@
     root.querySelector('#ws-chips').classList.toggle('hidden', tab === 'shelf' || tab === 'market' || tab === 'studios');
     root.querySelector('#ws-add').classList.toggle('hidden', !(me().role && me().role !== 'spectator') || tab !== 'library');
     const body = root.querySelector('#ws-body');
+    if (!C.hasToken() && tab === 'market' && window.TribeMarket) { window.TribeMarket.mount(body); return; }   // feat/files-dash: the Marketplace works with no tribe (the saved list)
     if (!C.hasToken()) { body.innerHTML = empty('Needs a tribe', 'The Workshop is shared, so it lives on the tribe host. Host or join a tribe first.'); return; }
     try {
       if (tab === 'studios') { if (window.TribeStudios) window.TribeStudios.mount(body); else body.innerHTML = empty('Studios unavailable', 'Reload the app.'); return; }   // v0.27: Studios (studios.js)
@@ -514,12 +518,12 @@
   C.on('ws', m => { if (open_ && (m.type === 'workshop' || m.type === 'approval') && tab === 'library') load(); });
   C.on('hello', () => { if (location.hash === '#/workshop') open(); });
 
-  window.TribeWorkshop = { open, close, isOpen: () => open_, reload: load };
+  window.TribeWorkshop = { open, close, isOpen: () => open_, reload: load, container: () => { frame(); return document.getElementById('ws-body'); }, tab: () => tab };
   if (location.hash === '#/workshop') setTimeout(open, 0);
 })();
 
 // Rail entry (top level, apart from the project circles) and a palette-friendly global.
 (() => {
   const b = document.getElementById('rail-workshop');
-  if (b) b.addEventListener('click', e => { e.stopPropagation(); window.TribeWorkshop && (window.TribeWorkshop.isOpen() ? window.TribeWorkshop.close() : window.TribeWorkshop.open()); });
+  if (b) b.addEventListener('click', e => { e.stopPropagation(); if (window.TribeWorkshop && !window.TribeWorkshop.isOpen()) window.TribeWorkshop.open(); });   // a destination: clicking it again stays (Back or the logo leave)
 })();

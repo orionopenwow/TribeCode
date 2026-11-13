@@ -1,0 +1,17 @@
+/* The shared stroke icons (app/ui/icons.js): quiet, inherit the text color, never filled. */
+.ti { display: inline-grid; place-items: center; flex: none; line-height: 0; vertical-align: -0.2em; }
+.ti-svg { display: block; flex: none; }
+.ti + span, .ti + b { margin-left: 0; }
+
+/* where they sit (feat/shell-polish): beside the label, a step quieter than it, Ember only when that tab is on */
+#view-tabs .wt { display: inline-flex; align-items: center; gap: 6px; }
+#view-tabs .wt .wt-ic { display: inline-grid; place-items: center; color: var(--faint); transition: color var(--dur-quick) var(--ease-out); }
+#view-tabs .wt:hover .wt-ic { color: var(--muted); }
+#view-tabs .wt.on .wt-ic { color: var(--accent); }
+.ws-tabs button { display: inline-flex; align-items: center; justify-content: center; gap: 6px; }
+.ws-tabs button .ti { color: var(--faint); }
+.ws-tabs button.on .ti { color: var(--accent); }
+.set-l b { display: flex; align-items: center; gap: 8px; }
+.set-l b .ti { color: var(--faint); }
+@media (prefers-reduced-motion: reduce) { #view-tabs .wt .wt-ic { transition: none; } }
+@media (max-width: 520px) { .ws-tabs button .ti { display: none; } }   /* phones: the five tabs need the room */

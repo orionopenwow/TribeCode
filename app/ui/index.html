@@ -17,16 +17,20 @@
 <script src="selfheal.js"></script>
 <link rel="stylesheet" href="tokens.css">
 <link rel="stylesheet" href="fonts.css">
+<link rel="stylesheet" href="icons.css">
 <link rel="stylesheet" href="styles.css">
 <link rel="stylesheet" href="updater.css">
 <link rel="stylesheet" href="live.css">
 <link rel="stylesheet" href="docs.css">
 <link rel="stylesheet" href="doclayout.css">
-<link rel="stylesheet" href="filegrid.css">
+<link rel="stylesheet" href="filegrid.css"><link rel="stylesheet" href="filesview.css"><!-- feat/files-dash -->
+<link rel="stylesheet" href="designflow.css"><!-- feat/design-flow -->
 <link rel="stylesheet" href="assets.css">
 <link rel="stylesheet" href="inspo.css">
 <link rel="stylesheet" href="ledger.css"><!-- v0.27 company: Money + seat autopilot -->
 <link rel="stylesheet" href="talent.css"><!-- v0.27 company: Work -->
+<link rel="stylesheet" href="abilities.css"><!-- feat/company-gigs: abilities + gigs for yourself -->
+<link rel="stylesheet" href="workloop.css"><link rel="stylesheet" href="doctpl.css"><link rel="stylesheet" href="premium.css"><link rel="stylesheet" href="plans.css"><!-- feat/work-company: Work loop, templates, Premium -->
 <link rel="stylesheet" href="academy.css"><link rel="stylesheet" href="legal.css"><link rel="stylesheet" href="offload.css"><!-- v0.27 company: Academy, Legal, Offload -->
 <link rel="stylesheet" href="crafts.css">
 <link rel="stylesheet" href="feedback.css">
@@ -38,14 +42,18 @@
 <link rel="stylesheet" href="repo.css">
 <link rel="stylesheet" href="ship.css">
 <link rel="stylesheet" href="notify.css">
-<link rel="stylesheet" href="friends.css">
+<link rel="stylesheet" href="presence.css"><link rel="stylesheet" href="peoplepanel.css">
 <link rel="stylesheet" href="cropper.css">
 <link rel="stylesheet" href="flint.css"><!-- feat/flint -->
+<link rel="stylesheet" href="aibasics.css"><link rel="stylesheet" href="aiconsent.css"><link rel="stylesheet" href="inspoboard.css"><!-- feat/flint-ai: ✦ basics + the inspiration board -->
+<link rel="stylesheet" href="flintrun.css"><!-- feat/flint-runthrough -->
 <link rel="stylesheet" href="assist.css"><!-- feat/assist -->
 <link rel="stylesheet" href="voice.css">
 <link rel="stylesheet" href="plan.css">
 <link rel="stylesheet" href="projects.css">
 <link rel="stylesheet" href="shell.css">
+<link rel="stylesheet" href="accounts.css">
+<link rel="stylesheet" href="signup.css">
 <link rel="stylesheet" href="coord.css">
 <link rel="stylesheet" href="people.css">
 <link rel="stylesheet" href="votes.css">
@@ -61,8 +69,10 @@
 <link rel="stylesheet" href="hostpill.css">
 <link rel="stylesheet" href="offline.css"><!-- feat/offline-demo -->
 <link rel="stylesheet" href="phonehost.css"><!-- phone hosting: where should your tribe live? -->
+<link rel="stylesheet" href="setuplocal.css"><link rel="stylesheet" href="homegit.css"><link rel="stylesheet" href="localfiles.css"><!-- feat/setup-local: instant setup on this device, files with no tribe -->
 <link rel="stylesheet" href="showcase.css"><!-- feat/showcase-demo -->
 <link rel="stylesheet" href="director.css"><!-- feat/demo-tour -->
+<link rel="stylesheet" href="demowatch.css"><!-- feat/demo-tour2: See how TribeCode works, the hands-off tour -->
 <link rel="stylesheet" href="panes.css">
 <link rel="stylesheet" href="logo.css">
 <link rel="stylesheet" href="flintguide.css">
@@ -76,6 +86,7 @@
 <link rel="stylesheet" href="preview.css">
 <link rel="stylesheet" href="pins.css"><!-- P1-E comment pins -->
 <link rel="stylesheet" href="previewflint.css">
+<link rel="stylesheet" href="siteshelf.css"><link rel="stylesheet" href="sitedesigner.css"><link rel="stylesheet" href="aiboost.css"><link rel="stylesheet" href="flintlessons.css"><!-- feat/flint-site -->
 <link rel="stylesheet" href="hub.css">
 <link rel="stylesheet" href="folders.css">
 <link rel="stylesheet" href="website.css">
@@ -83,7 +94,7 @@
 <link rel="stylesheet" href="company.css"><!-- v0.27 company -->
 <link rel="stylesheet" href="publish.css"><!-- v0.27 publish: play links -->
 <link rel="stylesheet" href="jam.css"><!-- v0.27 jams -->
-<link rel="stylesheet" href="sitegen.css"><link rel="stylesheet" href="look.css"><!-- feat/customize: site generator + Customize -->
+<link rel="stylesheet" href="look.css"><!-- feat/customize: Customize -->
 <link rel="stylesheet" href="widgets.css"><!-- feat/sidebar-widgets: sidebar widgets + the calmer right panel -->
 <link rel="stylesheet" href="whiteboard.css"><!-- feat/whiteboard -->
 <link rel="stylesheet" href="canvas/canvas.css"><!-- P1-A design canvas --><link rel="stylesheet" href="canvas/code.css"><!-- P1-C canvas <-> code --><link rel="stylesheet" href="canvas/flint.css"><link rel="stylesheet" href="canvas/flintpane.css"><link rel="stylesheet" href="canvas/extras.css"><!-- P1-F Flint on the canvas -->
@@ -92,7 +103,7 @@
 <link rel="stylesheet" href="oauth.css">
 <link rel="stylesheet" href="connectai.css"><!-- feat/any-llm: Connect your AI, Flint's brain, Ask an agent -->
 <link rel="stylesheet" href="mcpdir.css"><!-- feat/mcp-directory: TribeCode MCP page -->
-<link rel="stylesheet" href="agentsdash.css"><!-- feat/agents-dash: the Agents dashboard -->
+<link rel="stylesheet" href="agentsdash.css"><link rel="stylesheet" href="fleet.css"><!-- feat/fleet --><!-- feat/agents-dash: the Agents dashboard -->
 <link rel="stylesheet" href="brainpick.css"><!-- feat/any-llm -->
 <link rel="stylesheet" href="profiles.css"><!-- feat/profiles -->
 <link rel="stylesheet" href="themes.css"><!-- themes (themes.js); keep last -->
@@ -105,6 +116,8 @@
 <link rel="stylesheet" href="motion.css">
 <link rel="stylesheet" href="readability.css"><!-- v0.19: the readability floor for every pane; keep last -->
 <link rel="stylesheet" href="tasks.css"><!-- v0.27.2: the calm Task Board (cards, drawer, phone segments) -->
+<link rel="stylesheet" href="pwa.css"><link rel="stylesheet" href="moderation.css"><!-- feat/appstore -->
+<link rel="stylesheet" href="rail.css"><link rel="stylesheet" href="sidefoot.css"><link rel="stylesheet" href="reorder.css"><!-- feat/shell-polish: the rail's you-are-here (pill + pressed tile); keep last -->
 </head>
 <body class="dark">
 <svg style="display:none" aria-hidden="true">
@@ -125,6 +138,8 @@
   <symbol id="i-clip" viewBox="0 0 24 24"><path d="M21 11.5 12.6 19.9a5.5 5.5 0 0 1-7.8-7.8l8.5-8.5a3.7 3.7 0 0 1 5.2 5.2l-8.5 8.5a1.8 1.8 0 0 1-2.6-2.6l7.8-7.8"/></symbol>
   <symbol id="i-grid" viewBox="0 0 24 24"><rect x="4" y="4" width="7" height="7" rx="1.5"/><rect x="13" y="4" width="7" height="7" rx="1.5"/><rect x="4" y="13" width="7" height="7" rx="1.5"/><rect x="13" y="13" width="7" height="7" rx="1.5"/></symbol>
   <symbol id="i-box" viewBox="0 0 24 24"><path d="M3 7.5 12 3l9 4.5v9L12 21l-9-4.5z"/><path d="M3 7.5 12 12l9-4.5M12 12v9"/></symbol>
+  <symbol id="i-wrench" viewBox="0 0 24 24"><path d="M14.6 6.6l2.8 2.8 4-4a6 6 0 0 1-7.6 7.7L6.9 20a2.1 2.1 0 0 1-3-3l6.9-6.9a6 6 0 0 1 7.7-7.6z"/></symbol>
+  <symbol id="i-logout" viewBox="0 0 24 24"><path d="M10 4H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h4"/><path d="m15 8 4 4-4 4M19 12H9"/></symbol>
   <symbol id="i-folder" viewBox="0 0 24 24"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></symbol>
   <symbol id="i-users" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0M16 4.5a3.5 3.5 0 0 1 0 7M18 14a6 6 0 0 1 3.5 6"/></symbol>
   <symbol id="i-zap" viewBox="0 0 24 24"><path d="M13 2 4 14h7l-1 8 9-12h-7z"/></symbol>
@@ -169,7 +184,7 @@
       <button class="logo-btn" id="rail-logo" title="Home: your overview of everything" aria-label="Home"><img class="logo" src="assets/icon-mark-animated.svg" alt="TribeCode"></button>
       <div class="pj-rail" id="pj-rail" role="list" aria-label="Projects"></div>
       <button class="pj-circle pj-plus" id="pj-plus" title="Start a project" aria-label="Start a project">+</button>
-      <button class="nav ws-nav" id="rail-workshop" title="Workshop: skills, recipes, templates and assets" aria-label="Workshop"><svg class="i"><use href="#i-box"/></svg></button>
+      <button class="nav ws-nav" id="rail-workshop" title="Workshop: skills, recipes, templates and assets" aria-label="Workshop"><svg class="i"><use href="#i-wrench"/></svg></button>
       <div class="spacer" data-tauri-drag-region></div>
     </nav>
 
@@ -230,7 +245,7 @@
       <div class="nest-foot">
         <button class="nest-row" id="nest-settings" data-pnav="settings"><svg class="i"><use href="#i-gear"/></svg><span>Settings</span></button>
         <div class="nest-preview-slot" id="nest-preview-slot"></div><!-- Preview game / app: its own button at the bottom (widgets.js) -->
-        <button class="invite-pill" id="tour-invite"><span>+</span>Invite friends</button>
+        <button class="nest-row sf-invite" id="tour-invite" title="Invite friends to this tribe"><i class="sf-thumb sf-faces" id="sf-faces" aria-hidden="true"></i><span>Invite friends</span></button>
         <button class="item local-folder hidden" id="folder-item" title="Workspace folder"><span id="folder-label"></span></button>
       </div>
     </aside>
@@ -351,9 +366,12 @@
 
 <script src="qr.js"></script>
 <script src="float.js"></script>
+<script src="devslate.js"></script><!-- feat/flint-runthrough: ?devslate= clean-slate dev profile (before store.js) -->
+<script src="icons.js"></script><!-- feat/shell-polish: the shared stroke icons (TribeIcons, data-icon) -->
 <script src="store.js"></script>
 <script src="offline.js"></script><!-- feat/offline-demo: the offline demo tribe (before tribe.js) -->
 <script src="phonehost.js"></script><!-- phone hosting chooser + move to a host (docs/PHONE-HOSTING.md) -->
+<script src="demowatch.js"></script><!-- feat/demo-tour2: See how TribeCode works, ?demo=watch (after offline.js, before tribe.js) -->
 <script src="showcase.js"></script><!-- feat/showcase-demo: showcase mode, ?demo=showcase (after offline.js, before tribe.js) -->
 <script src="themes.js"></script>
 <script src="tribe.js"></script>
@@ -363,13 +381,15 @@
 <script src="updater.js"></script>
 <script src="md.js"></script>
 <script src="doclayout.js"></script>
-<script src="filegrid.js"></script><!-- feat/file-grid -->
+<script src="filesview.js"></script><script src="filegrid.js"></script><!-- feat/file-grid, feat/files-dash -->
 <script src="assets.js"></script><!-- v0.25: the asset library -->
 <script src="inspo.js"></script><!-- v0.25: the inspiration board -->
 <script src="reco.js"></script>
 <script src="companylinks.js"></script><!-- v0.27: Company view ↔ Money, Work, Academy, autopilot --><!-- v0.27: recommended next for this project -->
 <script src="ledger.js"></script><!-- v0.27 company: Money + seat autopilot (window.TribeLedger, window.TribeSeatPilot) -->
 <script src="talent.js"></script><!-- v0.27 company: Work (gigs, hiring, time bank, compute) -->
+<script src="abilities.js"></script><!-- feat/company-gigs: abilities, gigs for yourself, profile pages -->
+<script src="workcore.js"></script><script src="workloop.js"></script><script src="doctpl-data.js"></script><script src="doctpl.js"></script><script src="premium.js"></script><script src="plans.js"></script><!-- feat/work-company: Work loop + suggestions, company templates + rituals, Premium gates -->
 <script src="academy.js"></script><script src="legal.js"></script><script src="offload.js"></script><!-- v0.27 company: Academy, Legal, Offload -->
 <script src="cursors.js"></script><!-- feat/live-cursors --><!-- feat/doc-editor -->
 <script src="richtext.js"></script><!-- feat/richtext -->
@@ -413,12 +433,13 @@
 <script src="helpersetup.js" defer></script><!-- right panel: Meet Flint, give him an AI, bring your own AI --><!-- Word, Excel, PowerPoint, Google: exports for docs, sheets and slides --><!-- @ picker: people, agents (public commands), @ai --><!-- Beginner · Intermediate · Advanced: how much each person sees -->
 <script src="keyboard.js" defer></script><!-- phones: the message bar rides up with the keyboard -->
 <script src="notify.js"></script>
-<script src="friends.js"></script>
+<script src="presence.js" defer></script><script src="peoplepanel.js" defer></script><!-- feat/presence: where everyone is, the People panel -->
 <script src="cropper.js"></script>
 <script src="userbar.js"></script>
 <script src="stage.js"></script>
 <script src="projects.js"></script>
 <script src="shell.js"></script>
+  <script src="router.js"></script>
 <script src="coord.js"></script>
 <script src="people.js"></script>
 <script src="profiles.js"></script><!-- feat/profiles: avatars, name colors, status, popout, editor -->
@@ -442,23 +463,31 @@
 <script src="secretary.js"></script>
 <script src="profilemenu.js"></script>
 <script src="plusmenu.js"></script>
+<script src="siteedit-core.js"></script>
+<script src="siteshelf.js"></script><script src="sitecfg.js"></script><script src="siteimport.js"></script><script src="sitedesigner.js"></script><script src="aiboost.js"></script><script src="flintlessons.js"></script><!-- feat/flint-site: the website designer, the AI-boost card, Flint's lessons -->
 <script src="previewflint.js"></script>
 <script src="preview.js"></script>
 <script src="pins.js"></script><!-- P1-E comment pins + preview presence -->
 <script src="github.js"></script>
 <script src="oauth.js"></script>
+  <script src="accounts.js"></script>
 <script src="folders.js"></script>
 <script src="hub.js"></script>
+<script src="localfiles.js"></script><script src="setuplocal.js"></script><script src="homegit.js"></script><script src="sidefoot.js"></script><script src="reorder.js"></script><!-- feat/setup-local (docs/LIGHT-HOSTING.md) -->
+<script src="signup.js"></script><!-- feat/signup: one sign-up sheet, Save your work, Forgot password (docs/ACCOUNTS.md) -->
 <script src="connectai.js"></script><!-- feat/any-llm: Connect your AI (any coding agent) -->
 <script src="mcpdir.js"></script><!-- feat/mcp-directory: TribeCode MCP page + special connections -->
+<script src="fleet.js"></script><!-- feat/fleet: the Agent fleet -->
 <script src="agentsdash.js"></script><!-- feat/agents-dash: the Agents dashboard + pinned tabs -->
 <script src="brainpick.js"></script><!-- feat/any-llm: Flint's brain (built-in WebLLM / Ollama / your key / none) -->
 <script src="askagent.js"></script><!-- feat/any-llm: Ask an agent -->
 <script src="flintnlu.js"></script><script src="flintlocal.js"></script><!-- flint-local: Flint understands and acts with no model -->
+<script src="aibasics-core.js"></script><script src="localdoc.js"></script><script src="flintgrow.js"></script><script src="inspoboard.js"></script><!-- feat/flint-ai: ✦ rules, grow your idea, the inspiration board -->
 <script src="flint.js"></script><!-- feat/flint: the built-in helper -->
+<script src="aiconsent.js"></script><script src="aibasics.js"></script><!-- feat/flint-ai: the ✦ affordances; polish: ask once before a cloud AI -->
+<script src="flintrun.js"></script><!-- feat/flint-runthrough: local doc features, Watch Flint build + proof ZIPs --><!-- feat/flint-ai: the ✦ affordances -->
 <script src="flintmem.js"></script><!-- v0.27.1: Flint remembers you, teaches, writes docs, builds, learns skills -->
 <script src="assist.js"></script><!-- feat/assist: vision composer + suggested tasks -->
-<script src="sitegen.js"></script><!-- feat/customize: Website > Design it for me -->
 <script src="website.js"></script>
 <script src="captures.js"></script><!-- feat/captures: Files › Captures, link reader, voice notes -->
 <script src="company.js"></script><!-- v0.27 company: Company view, seats, goals, decisions -->
@@ -475,6 +504,8 @@
 <script src="roles.js"></script><!-- feat/roles: roles & privileges (server/perms.js) -->
 <script src="codefiles.js"></script><!-- feat/files-code: Files · Code · Docs -->
 <script src="i18n.js"></script><!-- v0.26: app languages (translates the chrome by exact text) -->
+<script src="framerun.js"></script><script src="starterkit.js"></script><script src="designflow-data.js"></script><script src="designflow.js"></script><!-- feat/design-flow: Design is a creation flow (templates, starters, a plan) -->
+<script src="pwa.js"></script><script src="makelink.js"></script><!-- feat/site-showcase: the website gallery's Make this links (?ask=, ?make=doc:) --><script src="moderation.js"></script><!-- feat/appstore: browser app (share/file/protocol handlers, badge, wake lock, storage) + report/block/delete account -->
 <script src="director.js"></script><!-- feat/demo-tour: the guided 3-minute showcase tour (last: it drives the other modules) -->
 </body>
 </html>

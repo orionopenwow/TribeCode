@@ -61,12 +61,16 @@
   }
   function close() { modal().classList.add('hidden'); window.TribeApp && window.TribeApp.refresh(); }
   const moreOpen = () => { try { return localStorage.getItem('tribecode.set.more') === '1'; } catch { return false; } };   // qa-qol-2: "More settings" stays as you left it
-  function row(label, control, hint = '') { return `<div class="set-row"><div class="set-l"><b>${label}</b>${hint ? `<small>${hint}</small>` : ''}</div><div class="set-c">${control}</div></div>`; }
+  // feat/shell-polish: a quiet stroke icon beside each section's name (app/ui/icons.js)
+  const SET_ICO = { Plan: 'bolt', Personalize: 'sparkle', Profile: 'user', Experience: 'sliders', Name: 'rename', Color: 'palette', Language: 'globe', Look: 'palette', 'Sidebar order': 'list', Folder: 'files', "Flint's brain": 'flame', 'Local brain': 'flame', 'Host on this computer': 'monitor', 'Open at login': 'monitor', 'Download updates in the background': 'download', 'Friends can ask my AI': 'people', GitHub: 'github', 'Save a copy': 'download', 'TribeCode MCP': 'plug', Chat: 'chat', 'Sign-in': 'key', 'Start fresh': 'refresh', 'Fix problems': 'wrench', 'Crash reports': 'bug', 'Agents in chat': 'agent', 'Starting modes': 'sliders', 'Roles &amp; privileges': 'shield', Packs: 'assets', Backup: 'cloud', 'Freesound sounds': 'media' };
+  const setIco = label => SET_ICO[label] ? `<span data-icon="${SET_ICO[label]}"></span>` : '';
+  function row(label, control, hint = '') { return `<div class="set-row"><div class="set-l"><b>${setIco(label)}${label}</b>${hint ? `<small>${hint}</small>` : ''}</div><div class="set-c">${control}</div></div>`; }
   function draw() {
     const box = $('#settings-body'); if (!box || modal().classList.contains('hidden')) return;
     const st = S.get(), desk = window.TribeHost.isDesktop;
     const brainTxt = probe.state === 'host' ? `${esc(probe.models[0])} on the host` : probe.state === 'found' ? (st.brain.enabled ? `${esc(st.brain.model)}` : 'Ollama found') : probe.state === 'checking' ? 'Looking…' : 'Off. Install Ollama and run <code>ollama pull qwen3</code>.';
     box.innerHTML = `<header class="set-head"><h2>Settings</h2><button class="btn ghost" id="set-close" aria-label="Close">Done</button></header>
+      ${window.TribePlans ? row('Plan', window.TribePlans.chip({ id: 'set-plan-chip' }), 'Free forever, Premium, AI credits, or your own AI. Tap to see the plans.') : ''}
       ${window.TribePersonalize && C() && C().connected() ? row('Personalize', '<button class="btn" id="set-personalize">Make it yours…</button>', 'Name, profile icon, theme, accent, language and text size, with a live preview.') : ''}
       ${window.TribeProfiles && C() && C().connected() ? row('Profile', '<button class="btn" id="set-profile">Edit profile</button>', 'Avatar, name color, bio, status and presence.') : ''}
       ${window.TribeMode ? row('Experience', '<div id="set-mode"></div>', 'How much of TribeCode you see. Your role still decides what you can do.') : ''}
@@ -74,6 +78,7 @@
       ${row('Color', `<div class="swatches">${COLORS.map(c => `<button class="swatch ${c === st.color ? 'on' : ''}" data-color="${c}" style="background:${c}" aria-label="Color ${c}"></button>`).join('')}</div>`)}
       ${window.TribeI18n ? row('Language', `<select class="input set-select" id="set-lang" aria-label="Language">${window.TribeI18n.LANGS.map(([k, n]) => `<option value="${k}" ${k === window.TribeI18n.lang() ? 'selected' : ''}>${n}</option>`).join('')}</select>`, 'Menus and buttons. What people write stays as they wrote it.') : ''}
       ${themeRow(st)}
+      ${window.TribeReorder ? row('Sidebar order', '<button class="btn" id="set-reorder">Reset order</button>', 'Drag the rail and the sidebar rows into your own order (or focus one and press Alt+↑ / Alt+↓). This puts them back.') : ''}
       ${window.TribeLook ? row('Look', '<button class="btn" id="set-look">Customize…</button>', 'Accent, background, spacing, font size, and the tribe\'s name and icon.') : ''}
       ${C() && C().connected() && window.TribeStorage ? `<div class="set-row set-row-wide"><div class="set-l"><b>Storage &amp; sync</b><small>Where your tribe, code and drafts are kept, and what keeps them safe.</small></div><div class="set-c" id="set-storage"></div></div>` : ''}
       ${desk ? row('Folder', `<div class="folder"><input class="input" id="set-folder" value="${esc(st.folder)}" spellcheck="false"><button class="btn" id="set-browse">Browse</button></div>`, 'Docs, tasks and chat live here as plain files.') : ''}
@@ -97,15 +102,23 @@
       ${canRoles() ? row('Roles &amp; privileges', '<button class="btn" id="set-roles">Manage</button>', 'Admins, 🛡️ mods and what each role can do.') : ''}
       ${isHost() && window.TribePacks ? row('Packs', '<div id="set-packs"></div>', 'Optional tools for video captions and local transcripts. Downloaded on this computer, checked by sha256.') : ''}
       ${isHost() ? row('Backup', '<button class="btn" id="set-backup">Download backup</button>', 'The whole tribe folder as one .tar.gz. GitHub keys stay on this computer.') : ''}
+      ${isHost() && C() && C().connected() ? row('Freesound sounds', '<form class="set-fs" id="set-fs" autocomplete="off"><input class="input" id="set-fs-key" type="password" placeholder="API key" aria-label="Freesound API key" maxlength="80"><button class="btn" type="submit" id="set-fs-save">Save</button></form>', 'With a free key from freesound.org/apiv2/apply, the inspiration board also searches Freesound. The key stays on this server and is never sent to anyone\'s browser. <span id="set-fs-st"></span>') : ''}
       </details>
       <div class="set-links"><button class="linkish" id="set-tour">Tour with Flint</button><button class="linkish" id="set-join">Join another tribe with a link</button>${window.TribeOffline ? `<button class="linkish" id="set-demo">${esc(window.TribeOffline.label())}</button>` : ''}${window.TribeGuide ? '<button class="linkish set-guide" id="set-guide" title="How to TribeCode"><span aria-hidden="true">?</span> Guide</button>' : ''}</div>`;
     $('#set-close').onclick = close;
+    { const ro = $('#set-reorder'); if (ro) ro.onclick = () => { window.TribeReorder.reset(); ro.textContent = 'Done'; setTimeout(() => { ro.textContent = 'Reset order'; }, 1500); }; }
+    if (window.TribeAccounts) window.TribeAccounts.settings(box);   // Account (Switch, Log out) and More settings › Test accounts (accounts.js)
     const sm = $('#set-more'); if (sm) sm.ontoggle = () => { try { localStorage.setItem('tribecode.set.more', sm.open ? '1' : '0'); } catch {} };   // qa-qol-2
     const sp = $('#set-profile'); if (sp) sp.onclick = () => { close(); window.TribeProfiles.edit(); };   // feat/profiles
     const spz = $('#set-personalize'); if (spz) spz.onclick = () => { close(); window.TribePersonalize.open(0); };
     $('#set-name').onchange = () => { const v = $('#set-name').value.trim(); if (v) { S.set({ name: v }); syncMe({ name: v }); } window.TribeApp.refresh(); };
     box.querySelectorAll('[data-color]').forEach(b => b.onclick = () => { S.set({ color: b.dataset.color }); syncMe({ color: b.dataset.color }); window.TribeApp.refresh(); draw(); });
     const bk = $('#set-backup'); if (bk) bk.onclick = backup;
+    const fsf = $('#set-fs'); if (fsf) {   // polish: the Freesound key goes to the server only (server/inspo.js); we learn just whether one is set
+      const stl = $('#set-fs-st'), say = on => { if (stl) stl.textContent = on ? 'On: a key is saved.' : 'Off.'; };
+      C().api('/inspo/freesound').then(r => say(r.configured), () => {});
+      fsf.onsubmit = async e => { e.preventDefault(); const k = $('#set-fs-key'); try { const r = await C().api('/inspo/freesound', { method: 'PUT', body: { key: k.value } }); k.value = ''; say(r.configured); toast(r.configured ? 'Freesound is on for the inspiration board' : 'Freesound key removed'); } catch (err) { toast(err.message); } };
+    }
     const lng = $('#set-lang'); if (lng) lng.onchange = () => { window.TribeI18n.set(lng.value); toast('✓'); };   // v0.26 app languages (i18n.js)
     const stg = $('#set-storage'); if (stg) window.TribeStorage.mount(stg);   // v0.26 Storage & sync (storage.js)
     const pk = $('#set-packs'); if (pk) window.TribePacks.mount(pk);   // feat/captures (app/ui/captures.js)

@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Blocks</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div id="tetris">
+    <div id="menu">
+      <p id="start"><button type="button">Press Space to play</button></p>
+      <p><canvas id="upcoming"></canvas></p>
+      <p>score <span id="score">00000</span></p>
+      <p>rows <span id="rows">0</span></p>
+    </div>
+    <canvas id="canvas"></canvas>
+  </div>
+  <div id="pad" aria-label="Touch controls"><button data-dir="LEFT" aria-label="Left">&#9664;</button><button data-dir="UP" aria-label="Rotate">&#8635;</button><button data-dir="DOWN" aria-label="Drop">&#9660;</button><button data-dir="RIGHT" aria-label="Right">&#9654;</button></div>
+  <script src="config.js"></script>
+  <script src="game.js"></script>
+</body>
+</html>

@@ -174,7 +174,8 @@ def main():
                 # agent: teal name with the Claude glyph
                 assert page.locator(row(t4["id"]) + " .mb > b.nm .nm-g").count() == 1
                 # header + composer pill
-                page.wait_for_selector("#chat-head .cb-av"); assert page.locator("#chat-head .cb-btn").count() == 4   # feat/chat2: + Pinned
+                page.wait_for_selector("#chat-head .cb-av"); assert page.locator("#chat-head .cb-btn[data-cb]").count() == 4   # feat/chat2: + Pinned
+                assert page.locator("#chat-head .cb-btn:not([data-cb])").count() <= 1   # feat/flint-ai: at most the one ✦ button
                 assert "members" in page.inner_text("#chat-head .cb-sub")
                 assert page.locator("#chat-form .cx-emo").count() == 1 and page.locator("#chat-form .cx-plus").count() == 1
                 page.click("#chat-form .cx-emo"); page.click("#emoji-pick .ep-c[data-e='🚀']")   # feat/chat2: the shared emoji picker

@@ -250,7 +250,7 @@ body.light .mt .tk.read { color: var(--live-ink); }
 #chat-list > :first-child, #dm-list > :first-child { margin-top: auto; }
 /* the "you're hosting" banner sits above the chat: the chat takes the rest of the height, so the composer never covers messages */
 @media (min-width: 821px) {
-  .main:has(> #view-chat:not(.hidden)) { display: flex; flex-direction: column; }
-  .main:has(> #view-chat:not(.hidden)) > * { flex: none; width: 100%; }
+  body[data-view="chat"] .main { display: flex; flex-direction: column; }
+  body[data-view="chat"] .main > * { flex: none; width: 100%; }
   .main > #view-chat:not(.hidden) { flex: 1 1 0; min-height: 0; height: auto; width: 100%; }
 }

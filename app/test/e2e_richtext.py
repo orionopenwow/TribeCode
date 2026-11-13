@@ -345,12 +345,16 @@ async def main():
             await open_doc(host, slug3)
             t_open = await host.evaluate("() => { const el = document.querySelector('#doc-body'), t = performance.now(); el.value = el.value + ' '; el.value = el.value.slice(0, -1); return performance.now() - t; }")
             await select(host, "Paragraph 400 with", collapse="end")
-            per_key = await host.evaluate("""() => { const el = document.querySelector('#doc-body'), t = performance.now();
-                for (let i = 0; i < 40; i++) el.dispatchEvent(new InputEvent('beforeinput', { inputType: 'insertText', data: 'x', bubbles: true, cancelable: true }));
-                return (performance.now() - t) / 40; }""")
-            assert "Paragraph 400 with" + "x" * 40 in await value(host)
-            assert per_key < 25, f"typing in a 20k-word doc takes {per_key:.1f} ms per key"
-            print(f"20k words: re-render {t_open:.0f} ms, {per_key:.1f} ms per keystroke")
+            # best of 3 batches of 40 keys: on a busy 2-core runner one batch can share the CPU with the server and other pages
+            per_key = await host.evaluate("""() => { const el = document.querySelector('#doc-body'), runs = [];
+                for (let r = 0; r < 3; r++) { const t = performance.now();
+                  for (let i = 0; i < 40; i++) el.dispatchEvent(new InputEvent('beforeinput', { inputType: 'insertText', data: 'x', bubbles: true, cancelable: true }));
+                  runs.push((performance.now() - t) / 40); }
+                return Math.min(...runs); }""")
+            assert "Paragraph 400 with" + "x" * 120 in await value(host)
+            # polish: 21 -> ~5 ms/key once `.main:has(> #view-x:not(.hidden))` rules stopped restyling the whole page per key
+            print(f"20k words: re-render {t_open:.0f} ms, {per_key:.1f} ms/key (budget 15)")
+            assert per_key < 15, f"typing in a 20k-word doc takes {per_key:.1f} ms per key"
 
             # ---------------- phone (390px) ----------------
             ph = await open_as(b, "Orion", host_tok, phone=True)
@@ -393,7 +397,9 @@ async def main():
             # the personal note editor is rich too, and its ⋮ More has View Markdown
             await ph.evaluate("TribeHub.open('docs')")
             await ph.wait_for_selector("#dc-new", state="attached")
-            await ph.evaluate("document.querySelector('#dc-new').click()")
+            await ph.evaluate("TribeHub.newMenu(null)")   # + Create opens the Studio (phones too)
+            await ph.wait_for_selector("#dc-newmenu [data-new=note]")
+            await ph.evaluate("document.querySelector('#dc-newmenu [data-new=note]').click()")
             await ph.wait_for_selector("#note-ed #note-text.rt")
             await ph.fill("#note-title", "Night list")
             await ph.tap("#note-text")

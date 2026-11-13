@@ -1,0 +1,39 @@
+/* Where everyone is (feat/presence, presence.js): stacked avatars on a place and on its list rows, the "Maya is here"
+   chip, and the two Settings switches. Flat matte: avatars are separated by a 2px ring in the surface color. */
+.pz-slot { display: inline-flex; align-items: center; flex: none; }
+.pz-stack { display: inline-flex; align-items: center; padding-left: 4px; animation: tm-fade-in var(--dur-quick) var(--ease-out); }
+.pz-stack .pz-av, .pz-stack .pf-av { width: 24px; height: 24px; font-size: 10px; margin-left: -6px; border: 2px solid var(--surface); box-sizing: content-box; }
+.pz-stack .pz-more { margin-left: -6px; min-width: 24px; height: 24px; padding: 0 5px; box-sizing: border-box; border-radius: 12px; border: 2px solid var(--surface); background: var(--surface-3, var(--surface-2)); color: var(--muted); font: 600 10px/20px var(--mono); text-align: center; }
+.pz-head { margin: 0 6px; }
+.pz-row .pz-av, .pz-row .pf-av { width: 18px; height: 18px; font-size: 8.5px; margin-left: -5px; border-width: 1.5px; }
+.pz-row .pz-more { height: 18px; min-width: 18px; font-size: 9px; line-height: 15px; border-width: 1.5px; margin-left: -5px; }
+/* rows: the doc list's buttons, Files cards' meta line, task cards */
+.doc-item > .pz-slot { margin-left: auto; }
+.fx-r2 > .pz-slot { margin-left: auto; }
+#board .task { position: relative; }
+#board .task > .pz-slot { position: absolute; right: 8px; bottom: 6px; }
+.pz-drawer { display: flex; justify-content: flex-end; padding: 8px 12px 0; }
+.pvw-bar > .pz-slot, .wdz-top > .pz-slot { align-self: center; }
+
+/* someone joined the place you're in: a quiet chip that fades away */
+.pz-hello { display: inline-flex; align-items: center; gap: 6px; margin: 0 6px; padding: 2px 9px 2px 7px; border-radius: 999px; border: 1px solid var(--edge); background: var(--surface-2);
+  color: var(--muted); font-size: 12px; white-space: nowrap; animation: tm-rise var(--dur-base) var(--ease-out) both; transition: opacity var(--dur-base) var(--ease-in); }
+.pz-hello i { width: 7px; height: 7px; border-radius: 50%; background: var(--online, var(--live)); flex: none; }
+.pz-hello.out { opacity: 0; }
+.pz-hello-float { position: fixed; top: 52px; left: 50%; transform: translateX(-50%); z-index: 60; animation-name: tm-fade-in; }
+
+/* Settings › Show where I am / Appear away */
+.pz-sw { display: inline-flex; align-items: center; cursor: pointer; }
+.pz-sw input { appearance: none; width: 36px; height: 20px; border-radius: 10px; border: 1px solid var(--edge); background: var(--surface-2); position: relative; margin: 0; cursor: pointer;
+  transition: background-color var(--dur-quick) var(--ease-out), border-color var(--dur-quick) var(--ease-out); }
+.pz-sw input::after { content: ''; position: absolute; top: 2px; left: 2px; width: 14px; height: 14px; border-radius: 50%; background: var(--muted); transition: transform var(--dur-quick) var(--ease-out), background-color var(--dur-quick) var(--ease-out); }
+.pz-sw input:checked { background: var(--live); border-color: var(--live); }
+.pz-sw input:checked::after { transform: translateX(16px); background: var(--on-live, var(--canvas)); }
+.pz-sw input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.pz-sw .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+@media (prefers-reduced-motion: reduce) { .pz-stack, .pz-hello { animation: none; } .pz-hello, .pz-sw input, .pz-sw input::after { transition: none; } }
+/* the doc's top bar orders its items (doclayout.css): sit just before "✓ Saved", pushed right with it */
+.dl-acts > .pz-slot { order: 7; margin-left: auto; }
+.dl-acts > .pz-slot + .dl-save, .dl-acts > .pz-slot ~ .pz-hello + .dl-save { margin-left: 0; }
+.dl-acts > .pz-hello { order: 7; }

@@ -1,0 +1,4751 @@
+{
+ "about": "Flint evaluation set (feat/flint-site): websites, the design canvas, preview edits, lessons and global commands. Written by scripts/dev/flint-eval-cases.js; checked by app/test/flint_eval_test.js. \"i\" = the expected intent (a list for several steps, null when Flint should not claim it), \"s\" = slots that must match, \"ctx\" = s|c|cs|p|g (site designer, canvas, canvas with a selection, preview, anywhere).",
+ "now": "2026-11-10T10:00:00",
+ "cases": [
+  {
+   "t": "link tree website",
+   "i": "site.linkbio",
+   "ctx": "g"
+  },
+  {
+   "t": "linktree",
+   "i": "site.linkbio",
+   "ctx": "g"
+  },
+  {
+   "t": "bio link page",
+   "i": "site.linkbio",
+   "ctx": "g"
+  },
+  {
+   "t": "make me a linktree",
+   "i": "site.linkbio",
+   "ctx": "g"
+  },
+  {
+   "t": "link in bio for my insta",
+   "i": "site.linkbio",
+   "ctx": "g"
+  },
+  {
+   "t": "i need one link for my instagram bio with all my stuff",
+   "i": "site.linkbio",
+   "ctx": "g"
+  },
+  {
+   "t": "a page with all my links",
+   "i": "site.linkbio",
+   "ctx": "g"
+  },
+  {
+   "t": "lnik tree site pls",
+   "i": "site.linkbio",
+   "ctx": "g"
+  },
+  {
+   "t": "links page for my tiktok",
+   "i": "site.linkbio",
+   "ctx": "g"
+  },
+  {
+   "t": "make a linkinbio called mara makes",
+   "i": "site.linkbio",
+   "s": {
+    "name": "mara makes"
+   },
+   "ctx": "g"
+  },
+  {
+   "t": "something for my band",
+   "i": "site.band",
+   "ctx": "g"
+  },
+  {
+   "t": "a website for my band",
+   "i": "site.band",
+   "ctx": "g"
+  },
+  {
+   "t": "we are a band and need a site with tour dates",
+   "i": "site.band",
+   "ctx": "g"
+  },
+  {
+   "t": "site for my dj gigs",
+   "i": "site.band",
+   "ctx": "g"
+  },
+  {
+   "t": "make a band page for the night owls",
+   "i": "site.band",
+   "s": {
+    "name": "the night owls"
+   },
+   "ctx": "g"
+  },
+  {
+   "t": "musician website",
+   "i": "site.band",
+   "ctx": "g"
+  },
+  {
+   "t": "bnad website",
+   "i": "site.band",
+   "ctx": "g"
+  },
+  {
+   "t": "a website for my bakery",
+   "i": "site.cafe",
+   "ctx": "g"
+  },
+  {
+   "t": "site for our coffee shop",
+   "i": "site.cafe",
+   "ctx": "g"
+  },
+  {
+   "t": "restaurant website with the menu",
+   "i": "site.cafe",
+   "ctx": "g"
+  },
+  {
+   "t": "my food truck needs a page",
+   "i": "site.cafe",
+   "ctx": "g"
+  },
+  {
+   "t": "something for my cafe",
+   "i": "site.cafe",
+   "ctx": "g"
+  },
+  {
+   "t": "menu page for a pizza place",
+   "i": "site.cafe",
+   "ctx": "g"
+  },
+  {
+   "t": "i sell candles online",
+   "i": "site.merch",
+   "ctx": "g"
+  },
+  {
+   "t": "online store for my t shirts",
+   "i": "site.merch",
+   "ctx": "g"
+  },
+  {
+   "t": "make a merch store for ember socks",
+   "i": "site.merch",
+   "s": {
+    "name": "ember socks"
+   },
+   "ctx": "g"
+  },
+  {
+   "t": "shop page to sell my prints",
+   "i": "site.merch",
+   "ctx": "g"
+  },
+  {
+   "t": "ecomerce site",
+   "i": "site.merch",
+   "ctx": "g"
+  },
+  {
+   "t": "portfolio",
+   "i": "site.portfolio",
+   "ctx": "g"
+  },
+  {
+   "t": "show off my design work",
+   "i": "site.portfolio",
+   "ctx": "g"
+  },
+  {
+   "t": "a site to show my case studies",
+   "i": "site.portfolio",
+   "ctx": "g"
+  },
+  {
+   "t": "make my portfolio site",
+   "i": "site.portfolio",
+   "ctx": "g"
+  },
+  {
+   "t": "portfollio pls",
+   "i": "site.portfolio",
+   "ctx": "g"
+  },
+  {
+   "t": "i stream on twitch, need a page",
+   "i": "site.creator",
+   "ctx": "g"
+  },
+  {
+   "t": "youtuber site",
+   "i": "site.creator",
+   "ctx": "g"
+  },
+  {
+   "t": "creator page with my schedule",
+   "i": "site.creator",
+   "ctx": "g"
+  },
+  {
+   "t": "website for my plumbing business",
+   "i": "site.service",
+   "ctx": "g"
+  },
+  {
+   "t": "a page for my hair salon",
+   "i": "site.service",
+   "ctx": "g"
+  },
+  {
+   "t": "local business site for my cleaning company",
+   "i": "site.service",
+   "ctx": "g"
+  },
+  {
+   "t": "handyman website",
+   "i": "site.service",
+   "ctx": "g"
+  },
+  {
+   "t": "we are getting married, need an rsvp site",
+   "i": "site.wedding",
+   "ctx": "g"
+  },
+  {
+   "t": "wedding website",
+   "i": "site.wedding",
+   "ctx": "g"
+  },
+  {
+   "t": "save the date page",
+   "i": "site.wedding",
+   "ctx": "g"
+  },
+  {
+   "t": "birthday party invite page",
+   "i": "site.wedding",
+   "ctx": "g"
+  },
+  {
+   "t": "podcast site",
+   "i": "site.podcast",
+   "ctx": "g"
+  },
+  {
+   "t": "a page for my podcast episodes",
+   "i": "site.podcast",
+   "ctx": "g"
+  },
+  {
+   "t": "something for our show",
+   "i": "site.podcast",
+   "ctx": "g"
+  },
+  {
+   "t": "i write a newsletter",
+   "i": "site.blog",
+   "ctx": "g"
+  },
+  {
+   "t": "blog",
+   "i": "site.blog",
+   "ctx": "g"
+  },
+  {
+   "t": "make a blog for my travel stories",
+   "i": "site.blog",
+   "ctx": "g"
+  },
+  {
+   "t": "devlog site",
+   "i": "site.blog",
+   "ctx": "g"
+  },
+  {
+   "t": "startup landing site",
+   "i": "site.saas",
+   "ctx": "g"
+  },
+  {
+   "t": "website for my app",
+   "i": "site.saas",
+   "ctx": "g"
+  },
+  {
+   "t": "product site for our saas",
+   "i": "site.saas",
+   "ctx": "g"
+  },
+  {
+   "t": "site for my startup",
+   "i": "site.saas",
+   "ctx": "g"
+  },
+  {
+   "t": "steam page for my indie game",
+   "i": "site.gamepage",
+   "ctx": "g"
+  },
+  {
+   "t": "press kit for our game",
+   "i": "site.gamepage",
+   "ctx": "g"
+  },
+  {
+   "t": "website for my game",
+   "i": "site.gamepage",
+   "ctx": "g"
+  },
+  {
+   "t": "my resume as a website",
+   "i": "site.resume",
+   "ctx": "g"
+  },
+  {
+   "t": "cv page",
+   "i": "site.resume",
+   "ctx": "g"
+  },
+  {
+   "t": "personal website",
+   "i": "site.resume",
+   "ctx": "g"
+  },
+  {
+   "t": "online resume pls",
+   "i": "site.resume",
+   "ctx": "g"
+  },
+  {
+   "t": "donation page for our charity",
+   "i": "site.nonprofit",
+   "ctx": "g"
+  },
+  {
+   "t": "nonprofit site",
+   "i": "site.nonprofit",
+   "ctx": "g"
+  },
+  {
+   "t": "fundraiser page for the animal shelter",
+   "i": "site.nonprofit",
+   "ctx": "g"
+  },
+  {
+   "t": "photo gallery site",
+   "i": "site.photography",
+   "ctx": "g"
+  },
+  {
+   "t": "i am a photographer, need a site",
+   "i": "site.photography",
+   "ctx": "g"
+  },
+  {
+   "t": "photography portfolio",
+   "i": "site.photography",
+   "ctx": "g"
+  },
+  {
+   "t": "coming soon page",
+   "i": "site.comingsoon",
+   "ctx": "g"
+  },
+  {
+   "t": "waitlist page to collect emails",
+   "i": "site.comingsoon",
+   "ctx": "g"
+  },
+  {
+   "t": "were launching soon, need a teaser page",
+   "i": "site.comingsoon",
+   "ctx": "g"
+  },
+  {
+   "t": "open the website designer",
+   "i": "site.open",
+   "ctx": "g"
+  },
+  {
+   "t": "edit my website",
+   "i": "site.open",
+   "ctx": "g"
+  },
+  {
+   "t": "website builder",
+   "i": "nav.website",
+   "ctx": "g"
+  },
+  {
+   "t": "design my site",
+   "i": "site.open",
+   "ctx": "g"
+  },
+  {
+   "t": "show me the website templates",
+   "i": "site.gallery",
+   "ctx": "g"
+  },
+  {
+   "t": "make the buttons work",
+   "i": "site.wire",
+   "ctx": "s"
+  },
+  {
+   "t": "wire the buttons",
+   "i": "site.wire",
+   "ctx": "s"
+  },
+  {
+   "t": "functional buttons",
+   "i": "site.wire",
+   "ctx": "s"
+  },
+  {
+   "t": "buttons dont do anything",
+   "i": "site.wire",
+   "ctx": "s"
+  },
+  {
+   "t": "hook up the buttons",
+   "i": "site.wire",
+   "ctx": "s"
+  },
+  {
+   "t": "make the links work",
+   "i": "site.wire",
+   "ctx": "s"
+  },
+  {
+   "t": "make all the buttons clickable",
+   "i": "site.wire",
+   "ctx": "s"
+  },
+  {
+   "t": "the buttons should go somewhere",
+   "i": "site.wire",
+   "ctx": "s"
+  },
+  {
+   "t": "link this button to the contact page",
+   "i": "site.wire",
+   "s": {
+    "kind": "page",
+    "to": "contact"
+   },
+   "ctx": "s"
+  },
+  {
+   "t": "wire this button to the about page",
+   "i": "site.wire",
+   "s": {
+    "kind": "page",
+    "to": "about"
+   },
+   "ctx": "s"
+  },
+  {
+   "t": "make the get started button go to pricing",
+   "i": "site.wire",
+   "s": {
+    "to": "pricing"
+   },
+   "ctx": "s"
+  },
+  {
+   "t": "point the button at the faq",
+   "i": "site.wire",
+   "s": {
+    "to": "faq"
+   },
+   "ctx": "s"
+  },
+  {
+   "t": "link the button to https://shop.example.com",
+   "i": "site.wire",
+   "s": {
+    "kind": "url",
+    "to": "https://shop.example.com"
+   },
+   "ctx": "s"
+  },
+  {
+   "t": "button should open hello@mara.studio",
+   "i": "site.wire",
+   "s": {
+    "kind": "email",
+    "to": "hello@mara.studio"
+   },
+   "ctx": "s"
+  },
+  {
+   "t": "make it email me at sam@band.com",
+   "i": "site.wire",
+   "s": {
+    "kind": "email",
+    "to": "sam@band.com"
+   },
+   "ctx": "s"
+  },
+  {
+   "t": "link it to my instagram",
+   "i": "site.wire",
+   "s": {
+    "kind": "url"
+   },
+   "ctx": "s"
+  },
+  {
+   "t": "send the button to the gallery section",
+   "i": "site.wire",
+   "s": {
+    "to": "gallery"
+   },
+   "ctx": "s"
+  },
+  {
+   "t": "wire teh button to contact",
+   "i": "site.wire",
+   "s": {
+    "to": "contact"
+   },
+   "ctx": "s"
+  },
+  {
+   "t": "conect the buttons to the pages",
+   "i": "site.wire",
+   "ctx": "s"
+  },
+  {
+   "t": "have the cta scroll to the signup form",
+   "i": "site.wire",
+   "s": {
+    "to": "contact"
+   },
+   "ctx": "s"
+  },
+  {
+   "t": "this button should go to the shop page",
+   "i": "site.wire",
+   "s": {
+    "kind": "page",
+    "to": "shop"
+   },
+   "ctx": "s"
+  },
+  {
+   "t": "link the second button to the menu",
+   "i": "site.wire",
+   "s": {
+    "to": "menu"
+   },
+   "ctx": "s"
+  },
+  {
+   "t": "add a page",
+   "i": "site.page.add",
+   "ctx": "s"
+  },
+  {
+   "t": "new page called about",
+   "i": "site.page.add",
+   "s": {
+    "name": "About"
+   },
+   "ctx": "s"
+  },
+  {
+   "t": "add an about page",
+   "i": "site.page.add",
+   "s": {
+    "name": "About"
+   },
+   "ctx": "s"
+  },
+  {
+   "t": "make a contact page",
+   "i": "site.page.add",
+   "s": {
+    "name": "Contact"
+   },
+   "ctx": "s"
+  },
+  {
+   "t": "i need a page for my shop",
+   "i": "site.page.add",
+   "s": {
+    "name": "Shop"
+   },
+   "ctx": "s"
+  },
+  {
+   "t": "create another page named Tour Dates",
+   "i": "site.page.add",
+   "s": {
+    "name": "Tour Dates"
+   },
+   "ctx": "s"
+  },
+  {
+   "t": "add a pricing page",
+   "i": "site.page.add",
+   "s": {
+    "name": "Pricing"
+   },
+   "ctx": "s"
+  },
+  {
+   "t": "ad a page called team",
+   "i": "site.page.add",
+   "s": {
+    "name": "Team"
+   },
+   "ctx": "s"
+  },
+  {
+   "t": "new page",
+   "i": "site.page.add",
+   "ctx": "s"
+  },
+  {
+   "t": "can we get a faq page too",
+   "i": "site.page.add",
+   "s": {
+    "name": "FAQ"
+   },
+   "ctx": "s"
+  },
+  {
+   "t": "add a second page",
+   "i": "site.page.add",
+   "ctx": "s"
+  },
+  {
+   "t": "rename this page to Work",
+   "i": "site.page.rename",
+   "s": {
+    "name": "Work"
+   },
+   "ctx": "s"
+  },
+  {
+   "t": "call this page Services",
+   "i": "site.page.rename",
+   "s": {
+    "name": "Services"
+   },
+   "ctx": "s"
+  },
+  {
+   "t": "change the page name to Our Story",
+   "i": "site.page.rename",
+   "s": {
+    "name": "Our Story"
+   },
+   "ctx": "s"
+  },
+  {
+   "t": "delete this page",
+   "i": "site.page.delete",
+   "ctx": "s"
+  },
+  {
+   "t": "remove the about page",
+   "i": "site.page.delete",
+   "s": {
+    "name": "about"
+   },
+   "ctx": "s"
+  },
+  {
+   "t": "get rid of the contact page",
+   "i": "site.page.delete",
+   "s": {
+    "name": "contact"
+   },
+   "ctx": "s"
+  },
+  {
+   "t": "i dont need the pricing page",
+   "i": "site.page.delete",
+   "s": {
+    "name": "pricing"
+   },
+   "ctx": "s"
+  },
+  {
+   "t": "replace the image",
+   "i": "site.image.replace",
+   "ctx": "s"
+  },
+  {
+   "t": "use my photo",
+   "i": "site.image.replace",
+   "s": {
+    "source": "upload"
+   },
+   "ctx": "s"
+  },
+  {
+   "t": "swap the picture",
+   "i": "site.image.replace",
+   "ctx": "s"
+  },
+  {
+   "t": "change the photo",
+   "i": "site.image.replace",
+   "ctx": "s"
+  },
+  {
+   "t": "upload a new picture",
+   "i": "site.image.replace",
+   "s": {
+    "source": "upload"
+   },
+   "ctx": "s"
+  },
+  {
+   "t": "use a picture from my inspiration board",
+   "i": "site.image.replace",
+   "s": {
+    "source": "board"
+   },
+   "ctx": "s"
+  },
+  {
+   "t": "put my moodboard pic there",
+   "i": "site.image.replace",
+   "s": {
+    "source": "board"
+   },
+   "ctx": "s"
+  },
+  {
+   "t": "use https://example.com/me.jpg as the image",
+   "i": "site.image.replace",
+   "s": {
+    "source": "url"
+   },
+   "ctx": "s"
+  },
+  {
+   "t": "replace teh pic with my own",
+   "i": "site.image.replace",
+   "s": {
+    "source": "upload"
+   },
+   "ctx": "s"
+  },
+  {
+   "t": "different image please",
+   "i": "site.image.replace",
+   "ctx": "s"
+  },
+  {
+   "t": "make the picture round",
+   "i": "site.image.shape",
+   "s": {
+    "shape": "round"
+   },
+   "ctx": "s"
+  },
+  {
+   "t": "round photo",
+   "i": "site.image.shape",
+   "s": {
+    "shape": "round"
+   },
+   "ctx": "s"
+  },
+  {
+   "t": "make my avatar a circle",
+   "i": "site.image.shape",
+   "s": {
+    "shape": "round"
+   },
+   "ctx": "s"
+  },
+  {
+   "t": "crop it into a circle",
+   "i": "site.image.shape",
+   "s": {
+    "shape": "round"
+   },
+   "ctx": "s"
+  },
+  {
+   "t": "make the image square",
+   "i": "site.image.shape",
+   "s": {
+    "shape": "square"
+   },
+   "ctx": "s"
+  },
+  {
+   "t": "square crop",
+   "i": "site.image.shape",
+   "s": {
+    "shape": "square"
+   },
+   "ctx": "s"
+  },
+  {
+   "t": "no rounded image",
+   "i": "site.image.shape",
+   "s": {
+    "shape": "square"
+   },
+   "ctx": "s"
+  },
+  {
+   "t": "add alt text",
+   "i": "site.image.alt",
+   "ctx": "s"
+  },
+  {
+   "t": "set the alt text to Mara at the wheel",
+   "i": "site.image.alt",
+   "s": {
+    "alt": "Mara at the wheel"
+   },
+   "ctx": "s"
+  },
+  {
+   "t": "describe the image for screen readers",
+   "i": "site.image.alt",
+   "ctx": "s"
+  },
+  {
+   "t": "edit this image",
+   "i": "site.image.replace",
+   "ctx": "s"
+  },
+  {
+   "t": "dark mode",
+   "i": "site.dark",
+   "s": {
+    "mode": "dark"
+   },
+   "ctx": "s"
+  },
+  {
+   "t": "make a dark mode",
+   "i": "site.dark",
+   "s": {
+    "mode": "dark"
+   },
+   "ctx": "s"
+  },
+  {
+   "t": "make it darker",
+   "i": "site.dark",
+   "s": {
+    "mode": "dark"
+   },
+   "ctx": "s"
+  },
+  {
+   "t": "night theme",
+   "i": "site.dark",
+   "s": {
+    "mode": "dark"
+   },
+   "ctx": "s"
+  },
+  {
+   "t": "dark version of the site",
+   "i": "site.dark",
+   "s": {
+    "mode": "dark"
+   },
+   "ctx": "s"
+  },
+  {
+   "t": "go dark",
+   "i": "site.dark",
+   "s": {
+    "mode": "dark"
+   },
+   "ctx": "s"
+  },
+  {
+   "t": "make the site dark",
+   "i": "site.dark",
+   "s": {
+    "mode": "dark"
+   },
+   "ctx": "s"
+  },
+  {
+   "t": "drak mode",
+   "i": "site.dark",
+   "s": {
+    "mode": "dark"
+   },
+   "ctx": "s"
+  },
+  {
+   "t": "light mode",
+   "i": "site.dark",
+   "s": {
+    "mode": "light"
+   },
+   "ctx": "s"
+  },
+  {
+   "t": "make it light again",
+   "i": "site.dark",
+   "s": {
+    "mode": "light"
+   },
+   "ctx": "s"
+  },
+  {
+   "t": "too dark, brighten it up",
+   "i": "site.dark",
+   "s": {
+    "mode": "light"
+   },
+   "ctx": "s"
+  },
+  {
+   "t": "black background",
+   "i": "site.dark",
+   "s": {
+    "mode": "dark"
+   },
+   "ctx": "s"
+  },
+  {
+   "t": "use the night theme",
+   "i": "site.dark",
+   "s": {
+    "mode": "dark"
+   },
+   "ctx": "s"
+  },
+  {
+   "t": "use the paper theme",
+   "i": "site.theme",
+   "s": {
+    "preset": "paper"
+   },
+   "ctx": "s"
+  },
+  {
+   "t": "switch the theme to swiss",
+   "i": "site.theme",
+   "s": {
+    "preset": "swiss"
+   },
+   "ctx": "s"
+  },
+  {
+   "t": "try the terminal look",
+   "i": "site.theme",
+   "s": {
+    "preset": "terminal"
+   },
+   "ctx": "s"
+  },
+  {
+   "t": "make it look more editorial",
+   "i": "site.theme",
+   "s": {
+    "preset": "editorial"
+   },
+   "ctx": "s"
+  },
+  {
+   "t": "another theme",
+   "i": "site.theme",
+   "ctx": "s"
+  },
+  {
+   "t": "change the style",
+   "i": "site.theme",
+   "ctx": "s"
+  },
+  {
+   "t": "make it more playful",
+   "i": "site.theme",
+   "s": {
+    "preset": "playful"
+   },
+   "ctx": "s"
+  },
+  {
+   "t": "minimal look please",
+   "i": "site.theme",
+   "s": {
+    "preset": "minimal"
+   },
+   "ctx": "s"
+  },
+  {
+   "t": "make the accent teal",
+   "i": "site.color",
+   "s": {
+    "color": "teal"
+   },
+   "ctx": "s"
+  },
+  {
+   "t": "change the main color to #2A8C80",
+   "i": "site.color",
+   "s": {
+    "color": "#2a8c80"
+   },
+   "ctx": "s"
+  },
+  {
+   "t": "make it purple",
+   "i": "site.color",
+   "s": {
+    "color": "purple"
+   },
+   "ctx": "s"
+  },
+  {
+   "t": "brand color green",
+   "i": "site.color",
+   "s": {
+    "color": "green"
+   },
+   "ctx": "s"
+  },
+  {
+   "t": "use pink for the buttons",
+   "i": "site.color",
+   "s": {
+    "color": "pink"
+   },
+   "ctx": "s"
+  },
+  {
+   "t": "add a gallery",
+   "i": "site.block.add",
+   "s": {
+    "block": "gallery"
+   },
+   "ctx": "s"
+  },
+  {
+   "t": "add a pricing section",
+   "i": "site.block.add",
+   "s": {
+    "block": "pricing"
+   },
+   "ctx": "s"
+  },
+  {
+   "t": "put some testimonials in",
+   "i": "site.block.add",
+   "s": {
+    "block": "testimonials"
+   },
+   "ctx": "s"
+  },
+  {
+   "t": "add a faq",
+   "i": "site.block.add",
+   "s": {
+    "block": "faq"
+   },
+   "ctx": "s"
+  },
+  {
+   "t": "add a contact form",
+   "i": "site.block.add",
+   "s": {
+    "block": "contact"
+   },
+   "ctx": "s"
+  },
+  {
+   "t": "add a team section",
+   "i": "site.block.add",
+   "s": {
+    "block": "team"
+   },
+   "ctx": "s"
+  },
+  {
+   "t": "add a video",
+   "i": "site.block.add",
+   "s": {
+    "block": "embed"
+   },
+   "ctx": "s"
+  },
+  {
+   "t": "embed my youtube video",
+   "i": "site.block.add",
+   "s": {
+    "block": "embed"
+   },
+   "ctx": "s"
+  },
+  {
+   "t": "add some features",
+   "i": "site.block.add",
+   "s": {
+    "block": "features"
+   },
+   "ctx": "s"
+  },
+  {
+   "t": "add a links list",
+   "i": "site.block.add",
+   "s": {
+    "block": "links"
+   },
+   "ctx": "s"
+  },
+  {
+   "t": "add a footer",
+   "i": "site.block.add",
+   "s": {
+    "block": "footer"
+   },
+   "ctx": "s"
+  },
+  {
+   "t": "i want people to be able to email me",
+   "i": "site.block.add",
+   "s": {
+    "block": "contact"
+   },
+   "ctx": "s"
+  },
+  {
+   "t": "show reviews from customers",
+   "i": "site.block.add",
+   "s": {
+    "block": "testimonials"
+   },
+   "ctx": "s"
+  },
+  {
+   "t": "add a photo grid",
+   "i": "site.block.add",
+   "s": {
+    "block": "gallery"
+   },
+   "ctx": "s"
+  },
+  {
+   "t": "add a section with prices",
+   "i": "site.block.add",
+   "s": {
+    "block": "pricing"
+   },
+   "ctx": "s"
+  },
+  {
+   "t": "questions and answers section",
+   "i": "site.block.add",
+   "s": {
+    "block": "faq"
+   },
+   "ctx": "s"
+  },
+  {
+   "t": "add a hero",
+   "i": "site.block.add",
+   "s": {
+    "block": "hero"
+   },
+   "ctx": "s"
+  },
+  {
+   "t": "ad a galery",
+   "i": "site.block.add",
+   "s": {
+    "block": "gallery"
+   },
+   "ctx": "s"
+  },
+  {
+   "t": "add a text section",
+   "i": "site.block.add",
+   "s": {
+    "block": "text"
+   },
+   "ctx": "s"
+  },
+  {
+   "t": "add my spotify embed",
+   "i": "site.block.add",
+   "s": {
+    "block": "embed"
+   },
+   "ctx": "s"
+  },
+  {
+   "t": "who we are section",
+   "i": "site.block.add",
+   "s": {
+    "block": "team"
+   },
+   "ctx": "s"
+  },
+  {
+   "t": "remove the faq",
+   "i": "site.block.remove",
+   "s": {
+    "block": "faq"
+   },
+   "ctx": "s"
+  },
+  {
+   "t": "delete the pricing section",
+   "i": "site.block.remove",
+   "s": {
+    "block": "pricing"
+   },
+   "ctx": "s"
+  },
+  {
+   "t": "get rid of the testimonials",
+   "i": "site.block.remove",
+   "s": {
+    "block": "testimonials"
+   },
+   "ctx": "s"
+  },
+  {
+   "t": "no gallery",
+   "i": "site.block.remove",
+   "s": {
+    "block": "gallery"
+   },
+   "ctx": "s"
+  },
+  {
+   "t": "move the faq to the top",
+   "i": "site.block.move",
+   "s": {
+    "block": "faq",
+    "dir": "top"
+   },
+   "ctx": "s"
+  },
+  {
+   "t": "move the gallery up",
+   "i": "site.block.move",
+   "s": {
+    "block": "gallery",
+    "dir": "up"
+   },
+   "ctx": "s"
+  },
+  {
+   "t": "put pricing at the bottom",
+   "i": "site.block.move",
+   "s": {
+    "block": "pricing",
+    "dir": "bottom"
+   },
+   "ctx": "s"
+  },
+  {
+   "t": "move testimonials down",
+   "i": "site.block.move",
+   "s": {
+    "block": "testimonials",
+    "dir": "down"
+   },
+   "ctx": "s"
+  },
+  {
+   "t": "put the contact form last",
+   "i": "site.block.move",
+   "s": {
+    "block": "contact",
+    "dir": "bottom"
+   },
+   "ctx": "s"
+  },
+  {
+   "t": "change the hero layout",
+   "i": "site.layout",
+   "s": {
+    "block": "hero"
+   },
+   "ctx": "s"
+  },
+  {
+   "t": "try a different layout for the gallery",
+   "i": "site.layout",
+   "s": {
+    "block": "gallery"
+   },
+   "ctx": "s"
+  },
+  {
+   "t": "make the hero split",
+   "i": "site.layout",
+   "s": {
+    "block": "hero",
+    "variant": "split"
+   },
+   "ctx": "s"
+  },
+  {
+   "t": "center the hero",
+   "i": "site.layout",
+   "s": {
+    "block": "hero",
+    "variant": "center"
+   },
+   "ctx": "s"
+  },
+  {
+   "t": "show the pricing as a table",
+   "i": "site.layout",
+   "s": {
+    "block": "pricing",
+    "variant": "table"
+   },
+   "ctx": "s"
+  },
+  {
+   "t": "masonry gallery",
+   "i": "site.layout",
+   "s": {
+    "block": "gallery",
+    "variant": "masonry"
+   },
+   "ctx": "s"
+  },
+  {
+   "t": "change the headline to Fresh bread daily",
+   "i": "site.text",
+   "s": {
+    "field": "headline",
+    "text": "Fresh bread daily"
+   },
+   "ctx": "s"
+  },
+  {
+   "t": "make the title say We play loud",
+   "i": "site.text",
+   "s": {
+    "field": "headline",
+    "text": "We play loud"
+   },
+   "ctx": "s"
+  },
+  {
+   "t": "the button should say Book now",
+   "i": "site.text",
+   "s": {
+    "field": "button",
+    "text": "Book now"
+   },
+   "ctx": "s"
+  },
+  {
+   "t": "change the tagline to Small batches, mostly mugs",
+   "i": "site.text",
+   "s": {
+    "field": "tagline",
+    "text": "Small batches, mostly mugs"
+   },
+   "ctx": "s"
+  },
+  {
+   "t": "rename the site to Night Owls",
+   "i": "site.text",
+   "s": {
+    "field": "name",
+    "text": "Night Owls"
+   },
+   "ctx": "s"
+  },
+  {
+   "t": "download the html",
+   "i": "site.export",
+   "s": {
+    "fmt": "html"
+   },
+   "ctx": "s"
+  },
+  {
+   "t": "export my site",
+   "i": "site.export",
+   "ctx": "s"
+  },
+  {
+   "t": "export as html",
+   "i": "site.export",
+   "s": {
+    "fmt": "html"
+   },
+   "ctx": "s"
+  },
+  {
+   "t": "give me a zip",
+   "i": "site.export",
+   "s": {
+    "fmt": "zip"
+   },
+   "ctx": "s"
+  },
+  {
+   "t": "download it as a zip with all the pages",
+   "i": "site.export",
+   "s": {
+    "fmt": "zip"
+   },
+   "ctx": "s"
+  },
+  {
+   "t": "can i get the code for this",
+   "i": "site.export",
+   "ctx": "s"
+  },
+  {
+   "t": "save it as a webpage file",
+   "i": "site.export",
+   "s": {
+    "fmt": "html"
+   },
+   "ctx": "s"
+  },
+  {
+   "t": "exprot html",
+   "i": "site.export",
+   "s": {
+    "fmt": "html"
+   },
+   "ctx": "s"
+  },
+  {
+   "t": "undo",
+   "i": "undo",
+   "ctx": "s"
+  },
+  {
+   "t": "undo that",
+   "i": "undo",
+   "ctx": "s"
+  },
+  {
+   "t": "oops go back",
+   "i": "undo",
+   "ctx": "s"
+  },
+  {
+   "t": "redo",
+   "i": "redo",
+   "ctx": "s"
+  },
+  {
+   "t": "redo that",
+   "i": "redo",
+   "ctx": "s"
+  },
+  {
+   "t": "put it back",
+   "i": "redo",
+   "ctx": "s"
+  },
+  {
+   "t": "start over from the band template",
+   "i": "site.band",
+   "ctx": "s"
+  },
+  {
+   "t": "switch to the link in bio template",
+   "i": "site.linkbio",
+   "ctx": "s"
+  },
+  {
+   "t": "use the cafe template instead",
+   "i": "site.cafe",
+   "ctx": "s"
+  },
+  {
+   "t": "make the buttons work",
+   "i": "site.wire",
+   "ctx": "p"
+  },
+  {
+   "t": "link this button to the contact page",
+   "i": "site.wire",
+   "s": {
+    "kind": "page",
+    "to": "contact"
+   },
+   "ctx": "p"
+  },
+  {
+   "t": "replace the image",
+   "i": "site.image.replace",
+   "ctx": "p"
+  },
+  {
+   "t": "make the picture round",
+   "i": "site.image.shape",
+   "s": {
+    "shape": "round"
+   },
+   "ctx": "p"
+  },
+  {
+   "t": "dark mode",
+   "i": "site.dark",
+   "s": {
+    "mode": "dark"
+   },
+   "ctx": "p"
+  },
+  {
+   "t": "make it darker",
+   "i": "site.dark",
+   "s": {
+    "mode": "dark"
+   },
+   "ctx": "p"
+  },
+  {
+   "t": "add a page called about",
+   "i": "site.page.add",
+   "s": {
+    "name": "About"
+   },
+   "ctx": "p"
+  },
+  {
+   "t": "add a gallery",
+   "i": "site.block.add",
+   "s": {
+    "block": "gallery"
+   },
+   "ctx": "p"
+  },
+  {
+   "t": "download the html",
+   "i": "site.export",
+   "s": {
+    "fmt": "html"
+   },
+   "ctx": "p"
+  },
+  {
+   "t": "open the designer",
+   "i": "site.open",
+   "ctx": "p"
+  },
+  {
+   "t": "show it on a phone",
+   "i": "preview.device",
+   "s": {
+    "dev": "phone"
+   },
+   "ctx": "p"
+  },
+  {
+   "t": "reload the preview",
+   "i": "preview.reload",
+   "ctx": "p"
+  },
+  {
+   "t": "make the headline say Open late on fridays",
+   "i": "site.text",
+   "s": {
+    "field": "headline",
+    "text": "Open late on fridays"
+   },
+   "ctx": "p"
+  },
+  {
+   "t": "link tree website",
+   "i": "site.linkbio",
+   "ctx": "c"
+  },
+  {
+   "t": "something for my band",
+   "i": "site.band",
+   "ctx": "c"
+  },
+  {
+   "t": "a website for my bakery",
+   "i": "site.cafe",
+   "ctx": "c"
+  },
+  {
+   "t": "functional buttons",
+   "i": "canvas.wire",
+   "ctx": "c"
+  },
+  {
+   "t": "make the buttons work",
+   "i": "canvas.wire",
+   "ctx": "c"
+  },
+  {
+   "t": "wire the buttons",
+   "i": "canvas.wire",
+   "ctx": "c"
+  },
+  {
+   "t": "hook the buttons up to screens",
+   "i": "canvas.wire",
+   "ctx": "c"
+  },
+  {
+   "t": "make a dark mode",
+   "i": "canvas.dark",
+   "s": {
+    "mode": "dark"
+   },
+   "ctx": "c"
+  },
+  {
+   "t": "dark mode",
+   "i": "canvas.dark",
+   "s": {
+    "mode": "dark"
+   },
+   "ctx": "c"
+  },
+  {
+   "t": "make it darker",
+   "i": "canvas.dark",
+   "s": {
+    "mode": "dark"
+   },
+   "ctx": "c"
+  },
+  {
+   "t": "night theme",
+   "i": "canvas.dark",
+   "s": {
+    "mode": "dark"
+   },
+   "ctx": "c"
+  },
+  {
+   "t": "dark mode version",
+   "i": "canvas.dark",
+   "s": {
+    "mode": "dark"
+   },
+   "ctx": "c"
+  },
+  {
+   "t": "light mode",
+   "i": "canvas.dark",
+   "s": {
+    "mode": "light"
+   },
+   "ctx": "c"
+  },
+  {
+   "t": "add a page",
+   "i": "canvas.page",
+   "ctx": "c"
+  },
+  {
+   "t": "add a screen",
+   "i": "canvas.page",
+   "ctx": "c"
+  },
+  {
+   "t": "new screen called settings",
+   "i": "canvas.page",
+   "s": {
+    "name": "Settings"
+   },
+   "ctx": "c"
+  },
+  {
+   "t": "add another page called pricing",
+   "i": "canvas.page",
+   "s": {
+    "name": "Pricing"
+   },
+   "ctx": "c"
+  },
+  {
+   "t": "new frame",
+   "i": "canvas.page",
+   "ctx": "c"
+  },
+  {
+   "t": "add an about page",
+   "i": "canvas.page",
+   "s": {
+    "name": "About"
+   },
+   "ctx": "c"
+  },
+  {
+   "t": "make a login screen",
+   "i": "canvas.login",
+   "ctx": "c"
+  },
+  {
+   "t": "a pricing section",
+   "i": "canvas.pricing",
+   "ctx": "c"
+  },
+  {
+   "t": "tidy up",
+   "i": "canvas.tidy",
+   "ctx": "c"
+  },
+  {
+   "t": "rename layers",
+   "i": "canvas.rename",
+   "ctx": "c"
+  },
+  {
+   "t": "open this in the website designer",
+   "i": "site.open",
+   "ctx": "c"
+  },
+  {
+   "t": "turn this into a real website",
+   "i": "site.open",
+   "ctx": "c"
+  },
+  {
+   "t": "make this a website i can publish",
+   "i": "site.open",
+   "ctx": "c"
+  },
+  {
+   "t": "wire this button to the login screen",
+   "i": "canvas.wire",
+   "s": {
+    "to": "login"
+   },
+   "ctx": "cs"
+  },
+  {
+   "t": "link this to the pricing page",
+   "i": "canvas.wire",
+   "s": {
+    "to": "pricing"
+   },
+   "ctx": "cs"
+  },
+  {
+   "t": "make this button go to settings",
+   "i": "canvas.wire",
+   "s": {
+    "to": "settings"
+   },
+   "ctx": "cs"
+  },
+  {
+   "t": "link this button to https://ember.shop",
+   "i": "canvas.wire",
+   "s": {
+    "kind": "url",
+    "to": "https://ember.shop"
+   },
+   "ctx": "cs"
+  },
+  {
+   "t": "make this clickable",
+   "i": "canvas.wire",
+   "ctx": "cs"
+  },
+  {
+   "t": "edit this image",
+   "i": "canvas.image",
+   "ctx": "cs"
+  },
+  {
+   "t": "replace the image",
+   "i": "canvas.image",
+   "s": {
+    "action": "replace"
+   },
+   "ctx": "cs"
+  },
+  {
+   "t": "use my photo",
+   "i": "canvas.image",
+   "s": {
+    "action": "replace"
+   },
+   "ctx": "cs"
+  },
+  {
+   "t": "make the picture round",
+   "i": "canvas.image",
+   "s": {
+    "action": "round"
+   },
+   "ctx": "cs"
+  },
+  {
+   "t": "make the image square",
+   "i": "canvas.image",
+   "s": {
+    "action": "square"
+   },
+   "ctx": "cs"
+  },
+  {
+   "t": "use a picture from my board",
+   "i": "canvas.image",
+   "s": {
+    "action": "replace",
+    "source": "board"
+   },
+   "ctx": "cs"
+  },
+  {
+   "t": "round photo",
+   "i": "canvas.image",
+   "s": {
+    "action": "round"
+   },
+   "ctx": "cs"
+  },
+  {
+   "t": "make a dark mode",
+   "i": "canvas.dark",
+   "s": {
+    "mode": "dark"
+   },
+   "ctx": "cs"
+  },
+  {
+   "t": "dark mode version of this frame",
+   "i": "canvas.dark",
+   "s": {
+    "mode": "dark"
+   },
+   "ctx": "cs"
+  },
+  {
+   "t": "make variants",
+   "i": "canvas.variants",
+   "ctx": "cs"
+  },
+  {
+   "t": "make it bigger",
+   "i": "edit.picked",
+   "ctx": "cs"
+  },
+  {
+   "t": "teach me the website designer",
+   "i": "lesson",
+   "s": {
+    "feature": "site"
+   },
+   "ctx": "g"
+  },
+  {
+   "t": "how do i make a website",
+   "i": "lesson",
+   "s": {
+    "feature": "site"
+   },
+   "ctx": "g"
+  },
+  {
+   "t": "how does the site builder work",
+   "i": "lesson",
+   "s": {
+    "feature": "site"
+   },
+   "ctx": "g"
+  },
+  {
+   "t": "teach me the canvas",
+   "i": "lesson",
+   "s": {
+    "feature": "canvas"
+   },
+   "ctx": "g"
+  },
+  {
+   "t": "how do i use the design canvas",
+   "i": "lesson",
+   "s": {
+    "feature": "canvas"
+   },
+   "ctx": "g"
+  },
+  {
+   "t": "show me how design works",
+   "i": "lesson",
+   "s": {
+    "feature": "canvas"
+   },
+   "ctx": "g"
+  },
+  {
+   "t": "teach me the preview",
+   "i": "lesson",
+   "s": {
+    "feature": "preview"
+   },
+   "ctx": "g"
+  },
+  {
+   "t": "how does the preview work",
+   "i": "lesson",
+   "s": {
+    "feature": "preview"
+   },
+   "ctx": "g"
+  },
+  {
+   "t": "teach me tasks",
+   "i": "lesson",
+   "s": {
+    "feature": "tasks"
+   },
+   "ctx": "g"
+  },
+  {
+   "t": "how do tasks work",
+   "i": "lesson",
+   "s": {
+    "feature": "tasks"
+   },
+   "ctx": "g"
+  },
+  {
+   "t": "how do i use the task board",
+   "i": "lesson",
+   "s": {
+    "feature": "tasks"
+   },
+   "ctx": "g"
+  },
+  {
+   "t": "teach me work",
+   "i": "lesson",
+   "s": {
+    "feature": "work"
+   },
+   "ctx": "g"
+  },
+  {
+   "t": "how do gigs work",
+   "i": "lesson",
+   "s": {
+    "feature": "work"
+   },
+   "ctx": "g"
+  },
+  {
+   "t": "teach me templates",
+   "i": "lesson",
+   "s": {
+    "feature": "templates"
+   },
+   "ctx": "g"
+  },
+  {
+   "t": "how do website templates work",
+   "i": "lesson",
+   "s": {
+    "feature": "templates"
+   },
+   "ctx": "g"
+  },
+  {
+   "t": "teach me files",
+   "i": "lesson",
+   "s": {
+    "feature": "files"
+   },
+   "ctx": "g"
+  },
+  {
+   "t": "how do i upload files",
+   "i": "lesson",
+   "s": {
+    "feature": "files"
+   },
+   "ctx": "g"
+  },
+  {
+   "t": "teach me chat",
+   "i": "lesson",
+   "s": {
+    "feature": "chat"
+   },
+   "ctx": "g"
+  },
+  {
+   "t": "how does chat work",
+   "i": "lesson",
+   "s": {
+    "feature": "chat"
+   },
+   "ctx": "g"
+  },
+  {
+   "t": "teach me huddles",
+   "i": "lesson",
+   "s": {
+    "feature": "huddles"
+   },
+   "ctx": "g"
+  },
+  {
+   "t": "how do i start a voice call",
+   "i": "lesson",
+   "s": {
+    "feature": "huddles"
+   },
+   "ctx": "g"
+  },
+  {
+   "t": "teach me agents",
+   "i": "lesson",
+   "s": {
+    "feature": "agents"
+   },
+   "ctx": "g"
+  },
+  {
+   "t": "how do ai helpers work",
+   "i": "lesson",
+   "s": {
+    "feature": "agents"
+   },
+   "ctx": "g"
+  },
+  {
+   "t": "teach me company mode",
+   "i": "lesson",
+   "s": {
+    "feature": "company"
+   },
+   "ctx": "g"
+  },
+  {
+   "t": "how does the company work",
+   "i": "lesson",
+   "s": {
+    "feature": "company"
+   },
+   "ctx": "g"
+  },
+  {
+   "t": "teach me the inspiration board",
+   "i": "lesson",
+   "s": {
+    "feature": "inspo"
+   },
+   "ctx": "g"
+  },
+  {
+   "t": "how do i use a moodboard",
+   "i": "lesson",
+   "s": {
+    "feature": "inspo"
+   },
+   "ctx": "g"
+  },
+  {
+   "t": "teach me export",
+   "i": "lesson",
+   "s": {
+    "feature": "export"
+   },
+   "ctx": "g"
+  },
+  {
+   "t": "how do i export my site as html",
+   "i": "lesson",
+   "s": {
+    "feature": "export"
+   },
+   "ctx": "g"
+  },
+  {
+   "t": "teach me premium",
+   "i": "lesson",
+   "s": {
+    "feature": "premium"
+   },
+   "ctx": "g"
+  },
+  {
+   "t": "how do credits work",
+   "i": "lesson",
+   "s": {
+    "feature": "premium"
+   },
+   "ctx": "g"
+  },
+  {
+   "t": "what is premium",
+   "i": "lesson",
+   "s": {
+    "feature": "premium"
+   },
+   "ctx": "g"
+  },
+  {
+   "t": "lesson on the canvas",
+   "i": "lesson",
+   "s": {
+    "feature": "canvas"
+   },
+   "ctx": "g"
+  },
+  {
+   "t": "tutorial for tasks",
+   "i": "lesson",
+   "s": {
+    "feature": "tasks"
+   },
+   "ctx": "g"
+  },
+  {
+   "t": "teach me how to wire buttons",
+   "i": "lesson",
+   "s": {
+    "feature": "site"
+   },
+   "ctx": "g"
+  },
+  {
+   "t": "tech me the website designer",
+   "i": "lesson",
+   "s": {
+    "feature": "site"
+   },
+   "ctx": "g"
+  },
+  {
+   "t": "walk me through huddles",
+   "i": "lesson",
+   "s": {
+    "feature": "huddles"
+   },
+   "ctx": "g"
+  },
+  {
+   "t": "dark mode",
+   "i": "theme.dark-mode",
+   "ctx": "g"
+  },
+  {
+   "t": "make it darker",
+   "i": "theme.dark-mode",
+   "ctx": "g"
+  },
+  {
+   "t": "switch to dark mode",
+   "i": "theme.dark-mode",
+   "ctx": "g"
+  },
+  {
+   "t": "night mode",
+   "i": "theme.dark-mode",
+   "ctx": "g"
+  },
+  {
+   "t": "light mode",
+   "i": "theme.light",
+   "ctx": "g"
+  },
+  {
+   "t": "switch to campfire",
+   "i": "theme.campfire",
+   "ctx": "g"
+  },
+  {
+   "t": "add a task to fix the contact page",
+   "i": "task.add",
+   "s": {
+    "title": "Fix the contact page"
+   },
+   "ctx": "g"
+  },
+  {
+   "t": "open the website",
+   "i": "nav.website",
+   "ctx": "g"
+  },
+  {
+   "t": "open the design canvas",
+   "i": "nav.design",
+   "ctx": "g"
+  },
+  {
+   "t": "make a landing page for sunrise bakery",
+   "i": "build.landing",
+   "ctx": "g"
+  },
+  {
+   "t": "undo",
+   "i": "undo",
+   "ctx": "g"
+  },
+  {
+   "t": "tell maya the site is live",
+   "i": "dm.send",
+   "ctx": "g"
+  },
+  {
+   "t": "add a page to the docs about rules",
+   "i": "doc.new",
+   "ctx": "g"
+  },
+  {
+   "t": "open files",
+   "i": "nav.files",
+   "ctx": "g"
+  },
+  {
+   "t": "what can you do",
+   "i": "tiers",
+   "ctx": "g"
+  },
+  {
+   "t": "publish it",
+   "i": "publish",
+   "ctx": "g"
+  },
+  {
+   "t": "make a 3d game called orb run",
+   "i": "build.3d",
+   "ctx": "g"
+  },
+  {
+   "t": "change the accent color to teal",
+   "i": "accent.set",
+   "s": {
+    "color": "teal"
+   },
+   "ctx": "g"
+  },
+  {
+   "t": "open the inspiration board",
+   "i": "nav.inspo",
+   "ctx": "g"
+  },
+  {
+   "t": "open my moodboard",
+   "i": "nav.inspo",
+   "ctx": "g"
+  },
+  {
+   "t": "buy credits",
+   "i": "premium.open",
+   "ctx": "g"
+  },
+  {
+   "t": "get premium",
+   "i": "premium.open",
+   "ctx": "g"
+  },
+  {
+   "t": "upgrade",
+   "i": "premium.open",
+   "ctx": "g"
+  },
+  {
+   "t": "connect my ai",
+   "i": "connect.ai",
+   "ctx": "g"
+  },
+  {
+   "t": "use my own ai",
+   "i": "connect.ai",
+   "ctx": "g"
+  },
+  {
+   "t": "write a poem about the sea",
+   "i": null,
+   "ctx": "g"
+  },
+  {
+   "t": "make the backend scale to a million users",
+   "i": null,
+   "ctx": "g"
+  },
+  {
+   "t": "make a band page, then tell everyone",
+   "i": [
+    "site.band",
+    "dm.send"
+   ],
+   "ctx": "g"
+  },
+  {
+   "t": "add a gallery page",
+   "i": "doc.new",
+   "ctx": "g"
+  },
+  {
+   "t": "can u make me one of those link pages for my bio",
+   "i": "site.linkbio",
+   "ctx": "g",
+   "v": "h1"
+  },
+  {
+   "t": "website for my sourdough micro bakery",
+   "i": "site.cafe",
+   "ctx": "g",
+   "v": "h1"
+  },
+  {
+   "t": "our jazz trio needs a site",
+   "i": "site.band",
+   "ctx": "g",
+   "v": "h1"
+  },
+  {
+   "t": "site where i sell my zines",
+   "i": "site.merch",
+   "ctx": "g",
+   "v": "h1"
+  },
+  {
+   "t": "page for my yoga classes",
+   "i": "site.service",
+   "ctx": "g",
+   "v": "h1"
+  },
+  {
+   "t": "we got engaged!! need a page for the guests",
+   "i": "site.wedding",
+   "ctx": "g",
+   "v": "h1"
+  },
+  {
+   "t": "make a site for my mobile app",
+   "i": "site.saas",
+   "ctx": "g",
+   "v": "h1"
+  },
+  {
+   "t": "teach me the inspo board",
+   "i": "lesson",
+   "s": {
+    "feature": "inspo"
+   },
+   "ctx": "g",
+   "v": "h1"
+  },
+  {
+   "t": "how do i use huddles",
+   "i": "lesson",
+   "s": {
+    "feature": "huddles"
+   },
+   "ctx": "g",
+   "v": "h1"
+  },
+  {
+   "t": "tutorial on exporting",
+   "i": "lesson",
+   "s": {
+    "feature": "export"
+   },
+   "ctx": "g",
+   "v": "h1"
+  },
+  {
+   "t": "night theme",
+   "i": "theme.dark-mode",
+   "ctx": "g",
+   "v": "h1"
+  },
+  {
+   "t": "the signup button goes nowhere",
+   "i": "site.wire",
+   "ctx": "s",
+   "v": "h1"
+  },
+  {
+   "t": "make the order button link to the menu page",
+   "i": "site.wire",
+   "s": {
+    "to": "menu"
+   },
+   "ctx": "s",
+   "v": "h1"
+  },
+  {
+   "t": "new page: Workshops",
+   "i": "site.page.add",
+   "s": {
+    "name": "Workshops"
+   },
+   "ctx": "s",
+   "v": "h1"
+  },
+  {
+   "t": "swap in a photo from my board",
+   "i": "site.image.replace",
+   "s": {
+    "source": "board"
+   },
+   "ctx": "s",
+   "v": "h1"
+  },
+  {
+   "t": "circle crop the headshot",
+   "i": "site.image.shape",
+   "s": {
+    "shape": "round"
+   },
+   "ctx": "s",
+   "v": "h1"
+  },
+  {
+   "t": "flip it to dark",
+   "i": "site.dark",
+   "s": {
+    "mode": "dark"
+   },
+   "ctx": "s",
+   "v": "h1"
+  },
+  {
+   "t": "dark theme for the site pls",
+   "i": "site.dark",
+   "s": {
+    "mode": "dark"
+   },
+   "ctx": "s",
+   "v": "h1"
+  },
+  {
+   "t": "add customer reviews",
+   "i": "site.block.add",
+   "s": {
+    "block": "testimonials"
+   },
+   "ctx": "s",
+   "v": "h1"
+  },
+  {
+   "t": "add a map",
+   "i": "site.block.add",
+   "s": {
+    "block": "embed"
+   },
+   "ctx": "s",
+   "v": "h1"
+  },
+  {
+   "t": "ditch the footer",
+   "i": "site.block.remove",
+   "s": {
+    "block": "footer"
+   },
+   "ctx": "s",
+   "v": "h1"
+  },
+  {
+   "t": "move the team section above the faq",
+   "i": "site.block.move",
+   "s": {
+    "block": "team"
+   },
+   "ctx": "s",
+   "v": "h1"
+  },
+  {
+   "t": "download a zip",
+   "i": "site.export",
+   "s": {
+    "fmt": "zip"
+   },
+   "ctx": "s",
+   "v": "h1"
+  },
+  {
+   "t": "change the headline to Hand thrown in Tucson",
+   "i": "site.text",
+   "s": {
+    "field": "headline",
+    "text": "Hand thrown in Tucson"
+   },
+   "ctx": "s",
+   "v": "h1"
+  },
+  {
+   "t": "make the accent orange",
+   "i": "site.color",
+   "s": {
+    "color": "orange"
+   },
+   "ctx": "s",
+   "v": "h1"
+  },
+  {
+   "t": "add an faq section",
+   "i": "site.block.add",
+   "s": {
+    "block": "faq"
+   },
+   "ctx": "s",
+   "v": "h1"
+  },
+  {
+   "t": "rename this page Menu",
+   "i": "site.page.rename",
+   "s": {
+    "name": "Menu"
+   },
+   "ctx": "s",
+   "v": "h1"
+  },
+  {
+   "t": "link this one to the checkout screen",
+   "i": "canvas.wire",
+   "s": {
+    "to": "checkout"
+   },
+   "ctx": "cs",
+   "v": "h1"
+  },
+  {
+   "t": "make the photo a circle",
+   "i": "canvas.image",
+   "s": {
+    "action": "round"
+   },
+   "ctx": "cs",
+   "v": "h1"
+  },
+  {
+   "t": "dark version",
+   "i": "canvas.dark",
+   "s": {
+    "mode": "dark"
+   },
+   "ctx": "cs",
+   "v": "h1"
+  },
+  {
+   "t": "another screen for settings",
+   "i": "canvas.page",
+   "ctx": "c",
+   "v": "h1"
+  },
+  {
+   "t": "buttons should actually work",
+   "i": "canvas.wire",
+   "ctx": "c",
+   "v": "h1"
+  },
+  {
+   "t": "i do pottery and want a page with my shop + classes links",
+   "i": "site.linkbio",
+   "ctx": "g",
+   "v": "held"
+  },
+  {
+   "t": "site for our church choir",
+   "i": "site.band",
+   "ctx": "g",
+   "v": "held"
+  },
+  {
+   "t": "a page for my dog grooming biz",
+   "i": "site.service",
+   "ctx": "g",
+   "v": "held"
+  },
+  {
+   "t": "site for the bake sale fundraiser",
+   "i": "site.nonprofit",
+   "ctx": "g",
+   "v": "held"
+  },
+  {
+   "t": "teach me how the canvas works",
+   "i": "lesson",
+   "s": {
+    "feature": "canvas"
+   },
+   "ctx": "g",
+   "v": "held"
+  },
+  {
+   "t": "how do i invite a friend",
+   "i": "invite",
+   "ctx": "g",
+   "v": "held"
+  },
+  {
+   "t": "make every button go to the right page",
+   "i": "site.wire",
+   "ctx": "s",
+   "v": "held"
+  },
+  {
+   "t": "add a page for events",
+   "i": "site.page.add",
+   "s": {
+    "name": "Events"
+   },
+   "ctx": "s",
+   "v": "held"
+  },
+  {
+   "t": "kill the pricing section",
+   "i": "site.block.remove",
+   "s": {
+    "block": "pricing"
+   },
+   "ctx": "s",
+   "v": "held"
+  },
+  {
+   "t": "upload my logo as the picture",
+   "i": "site.image.replace",
+   "s": {
+    "source": "upload"
+   },
+   "ctx": "s",
+   "v": "held"
+  },
+  {
+   "t": "make it look like night time",
+   "i": "site.dark",
+   "s": {
+    "mode": "dark"
+   },
+   "ctx": "s",
+   "v": "held"
+  },
+  {
+   "t": "swap the gallery to masonry",
+   "i": "site.layout",
+   "s": {
+    "block": "gallery",
+    "variant": "masonry"
+   },
+   "ctx": "s",
+   "v": "held"
+  },
+  {
+   "t": "export to html please",
+   "i": "site.export",
+   "s": {
+    "fmt": "html"
+   },
+   "ctx": "s",
+   "v": "held"
+  },
+  {
+   "t": "bring back what i undid",
+   "i": "redo",
+   "ctx": "s",
+   "v": "held"
+  },
+  {
+   "t": "hook this button up to the profile screen",
+   "i": "canvas.wire",
+   "s": {
+    "to": "profile"
+   },
+   "ctx": "cs",
+   "v": "held"
+  },
+  {
+   "t": "make this image round",
+   "i": "canvas.image",
+   "s": {
+    "action": "round"
+   },
+   "ctx": "cs",
+   "v": "held"
+  },
+  {
+   "t": "post a gig for me: I'll design your logo",
+   "i": "gig.self",
+   "s": {
+    "what": "I'll design your logo"
+   },
+   "ctx": "g"
+  },
+  {
+   "t": "post a gig for me: i can build a landing page this weekend",
+   "i": "gig.self",
+   "ctx": "g"
+  },
+  {
+   "t": "create a gig for myself",
+   "i": "gig.self",
+   "ctx": "g"
+  },
+  {
+   "t": "offer my skills",
+   "i": "gig.self",
+   "ctx": "g"
+  },
+  {
+   "t": "post an offer for me: tutoring in math",
+   "i": "gig.self",
+   "s": {
+    "what": "tutoring in math"
+   },
+   "ctx": "g"
+  },
+  {
+   "t": "set up a gig saying i can mix your track",
+   "i": "gig.self",
+   "ctx": "g"
+  },
+  {
+   "t": "list a gig",
+   "i": "gig.self",
+   "ctx": "g"
+  },
+  {
+   "t": "find someone who can draw",
+   "i": "people.find",
+   "s": {
+    "skill": "draw"
+   },
+   "ctx": "g"
+  },
+  {
+   "t": "who can do pixel art",
+   "i": "people.find",
+   "ctx": "g"
+  },
+  {
+   "t": "anyone who can edit video",
+   "i": "people.find",
+   "s": {
+    "skill": "edit video"
+   },
+   "ctx": "g"
+  },
+  {
+   "t": "find me someone who knows how to code",
+   "i": "people.find",
+   "s": {
+    "skill": "code"
+   },
+   "ctx": "g"
+  },
+  {
+   "t": "i need someone who can write copy",
+   "i": "people.find",
+   "s": {
+    "skill": "write copy"
+   },
+   "ctx": "g"
+  },
+  {
+   "t": "find people",
+   "i": "people.find",
+   "ctx": "g"
+  },
+  {
+   "t": "find someone to draw my sprites",
+   "i": "people.find",
+   "s": {
+    "skill": "draw my sprites"
+   },
+   "ctx": "g"
+  },
+  {
+   "t": "get someone to make music for the game",
+   "i": "people.find",
+   "s": {
+    "skill": "make music for the game"
+   },
+   "ctx": "g"
+  },
+  {
+   "t": "hire an artist to draw the logo",
+   "i": "people.find",
+   "s": {
+    "skill": "draw the logo"
+   },
+   "ctx": "g"
+  },
+  {
+   "t": "make a card called fix the jump",
+   "i": "task.add",
+   "s": {
+    "title": "Fix the jump"
+   },
+   "ctx": "g"
+  },
+  {
+   "t": "find a coin sprite",
+   "i": "asset.add",
+   "ctx": "g"
+  },
+  {
+   "t": "where is maya",
+   "i": "people.where",
+   "ctx": "g"
+  },
+  {
+   "t": "where's Sam right now?",
+   "i": "people.where",
+   "ctx": "g"
+  },
+  {
+   "t": "what is maya doing",
+   "i": "people.where",
+   "ctx": "g"
+  },
+  {
+   "t": "is sam online",
+   "i": "people.where",
+   "ctx": "g"
+  },
+  {
+   "t": "who is online right now",
+   "i": "people.online",
+   "ctx": "g"
+  },
+  {
+   "t": "show me who's online",
+   "i": "people.online",
+   "ctx": "g"
+  },
+  {
+   "t": "anyone online today",
+   "i": "people.online",
+   "ctx": "g"
+  },
+  {
+   "t": "who's working on the website",
+   "i": "people.working",
+   "s": {
+    "what": "the website"
+   },
+   "ctx": "g"
+  },
+  {
+   "t": "who is editing the launch plan",
+   "i": "people.working",
+   "s": {
+    "what": "the launch plan"
+   },
+   "ctx": "g"
+  },
+  {
+   "t": "is anyone working on the login task",
+   "i": "people.working",
+   "ctx": "g"
+  },
+  {
+   "t": "make me a link tree website",
+   "i": "site.linkbio",
+   "ctx": "g",
+   "v": "v2"
+  },
+  {
+   "t": "i want a linktree thing for my insta",
+   "i": "site.linkbio",
+   "ctx": "g",
+   "v": "v2"
+  },
+  {
+   "t": "one page with all my socials",
+   "i": "site.linkbio",
+   "ctx": "g",
+   "v": "v2"
+  },
+  {
+   "t": "link in bio site called june bakes",
+   "i": "site.linkbio",
+   "s": {
+    "name": "june bakes"
+   },
+   "ctx": "g",
+   "v": "v2"
+  },
+  {
+   "t": "tour dates page for our band",
+   "i": "site.band",
+   "ctx": "g",
+   "v": "v2"
+  },
+  {
+   "t": "a site for my rapper friend with his songs",
+   "i": "site.band",
+   "ctx": "g",
+   "v": "v2"
+  },
+  {
+   "t": "website for our choir concerts",
+   "i": "site.band",
+   "ctx": "g",
+   "v": "v2"
+  },
+  {
+   "t": "menu website for my taco truck",
+   "i": "site.cafe",
+   "ctx": "g",
+   "v": "v2"
+  },
+  {
+   "t": "our bistro needs a website with reservations",
+   "i": "site.cafe",
+   "ctx": "g",
+   "v": "v2"
+  },
+  {
+   "t": "make a site for my coffee cart",
+   "i": "site.cafe",
+   "ctx": "g",
+   "v": "v2"
+  },
+  {
+   "t": "i make jewelry and want to sell it online",
+   "i": "site.merch",
+   "ctx": "g",
+   "v": "v2"
+  },
+  {
+   "t": "store for our band merch",
+   "i": "site.merch",
+   "ctx": "g",
+   "v": "v2"
+  },
+  {
+   "t": "sell my stickers on a website",
+   "i": "site.merch",
+   "ctx": "g",
+   "v": "v2"
+  },
+  {
+   "t": "website to show my illustration work",
+   "i": "site.portfolio",
+   "ctx": "g",
+   "v": "v2"
+  },
+  {
+   "t": "architecture portfolio site",
+   "i": "site.portfolio",
+   "ctx": "g",
+   "v": "v2"
+  },
+  {
+   "t": "a portfolio for my ux work",
+   "i": "site.portfolio",
+   "ctx": "g",
+   "v": "v2"
+  },
+  {
+   "t": "page for my youtube channel",
+   "i": "site.creator",
+   "ctx": "g",
+   "v": "v2"
+  },
+  {
+   "t": "twitch streamer website with my schedule",
+   "i": "site.creator",
+   "ctx": "g",
+   "v": "v2"
+  },
+  {
+   "t": "a site for my tiktok creator brand",
+   "i": "site.creator",
+   "ctx": "g",
+   "v": "v2"
+  },
+  {
+   "t": "website for my landscaping business",
+   "i": "site.service",
+   "ctx": "g",
+   "v": "v2"
+  },
+  {
+   "t": "a booking site for my nail salon",
+   "i": "site.service",
+   "ctx": "g",
+   "v": "v2"
+  },
+  {
+   "t": "site for my dog walking service",
+   "i": "site.service",
+   "ctx": "g",
+   "v": "v2"
+  },
+  {
+   "t": "rsvp page for our wedding in june",
+   "i": "site.wedding",
+   "ctx": "g",
+   "v": "v2"
+  },
+  {
+   "t": "website for our engagement party",
+   "i": "site.wedding",
+   "ctx": "g",
+   "v": "v2"
+  },
+  {
+   "t": "event page for the summer meetup",
+   "i": "site.wedding",
+   "ctx": "g",
+   "v": "v2"
+  },
+  {
+   "t": "website for our true crime podcast",
+   "i": "site.podcast",
+   "ctx": "g",
+   "v": "v2"
+  },
+  {
+   "t": "podcast landing page with episodes",
+   "i": "site.podcast",
+   "ctx": "g",
+   "v": "v2"
+  },
+  {
+   "t": "page for my audio show",
+   "i": "site.podcast",
+   "ctx": "g",
+   "v": "v2"
+  },
+  {
+   "t": "i want to start a blog about gardening",
+   "i": "site.blog",
+   "ctx": "g",
+   "v": "v2"
+  },
+  {
+   "t": "newsletter website with a subscribe box",
+   "i": "site.blog",
+   "ctx": "g",
+   "v": "v2"
+  },
+  {
+   "t": "a site for my essays",
+   "i": "site.blog",
+   "ctx": "g",
+   "v": "v2"
+  },
+  {
+   "t": "landing page for our b2b software",
+   "i": "site.saas",
+   "ctx": "g",
+   "v": "v2"
+  },
+  {
+   "t": "marketing site for my ios app",
+   "i": "site.saas",
+   "ctx": "g",
+   "v": "v2"
+  },
+  {
+   "t": "website for our ai startup",
+   "i": "site.saas",
+   "ctx": "g",
+   "v": "v2"
+  },
+  {
+   "t": "website for our steam game",
+   "i": "site.gamepage",
+   "ctx": "g",
+   "v": "v2"
+  },
+  {
+   "t": "a page to get wishlists for my game",
+   "i": "site.gamepage",
+   "ctx": "g",
+   "v": "v2"
+  },
+  {
+   "t": "presskit page for my game jam entry",
+   "i": "site.gamepage",
+   "ctx": "g",
+   "v": "v2"
+  },
+  {
+   "t": "online resume",
+   "i": "site.resume",
+   "ctx": "g",
+   "v": "v2"
+  },
+  {
+   "t": "personal website with my cv",
+   "i": "site.resume",
+   "ctx": "g",
+   "v": "v2"
+  },
+  {
+   "t": "a page about me for job hunting",
+   "i": "site.resume",
+   "ctx": "g",
+   "v": "v2"
+  },
+  {
+   "t": "donation site for our animal shelter",
+   "i": "site.nonprofit",
+   "ctx": "g",
+   "v": "v2"
+  },
+  {
+   "t": "charity website for the food bank",
+   "i": "site.nonprofit",
+   "ctx": "g",
+   "v": "v2"
+  },
+  {
+   "t": "fundraising page for our school club",
+   "i": "site.nonprofit",
+   "ctx": "g",
+   "v": "v2"
+  },
+  {
+   "t": "website for my wedding photography",
+   "i": "site.photography",
+   "ctx": "g",
+   "v": "v2"
+  },
+  {
+   "t": "photo portfolio for my street shots",
+   "i": "site.photography",
+   "ctx": "g",
+   "v": "v2"
+  },
+  {
+   "t": "gallery website for my photos",
+   "i": "site.photography",
+   "ctx": "g",
+   "v": "v2"
+  },
+  {
+   "t": "coming soon site for our launch",
+   "i": "site.comingsoon",
+   "ctx": "g",
+   "v": "v2"
+  },
+  {
+   "t": "a waitlist landing page",
+   "i": "site.comingsoon",
+   "ctx": "g",
+   "v": "v2"
+  },
+  {
+   "t": "prelaunch signup page for the app",
+   "i": "site.comingsoon",
+   "ctx": "g",
+   "v": "v2"
+  },
+  {
+   "t": "open the website templates",
+   "i": "site.gallery",
+   "ctx": "g",
+   "v": "v2"
+  },
+  {
+   "t": "browse website templates",
+   "i": "site.gallery",
+   "ctx": "g",
+   "v": "v2"
+  },
+  {
+   "t": "edit our website",
+   "i": "site.open",
+   "ctx": "g",
+   "v": "v2"
+  },
+  {
+   "t": "open the site designer",
+   "i": "site.open",
+   "ctx": "g",
+   "v": "v2"
+  },
+  {
+   "t": "build the website into the repo",
+   "i": "site.repo",
+   "ctx": "g",
+   "v": "v2"
+  },
+  {
+   "t": "put the website in our repo as code",
+   "i": "site.repo",
+   "ctx": "g",
+   "v": "v2"
+  },
+  {
+   "t": "make the headline on our website punchier",
+   "i": "site.copy",
+   "s": {
+    "field": "headline"
+   },
+   "ctx": "g",
+   "v": "v2"
+  },
+  {
+   "t": "add our opening hours to the website",
+   "i": "site.hours",
+   "ctx": "g",
+   "v": "v2"
+  },
+  {
+   "t": "publish our website",
+   "i": "site.publish",
+   "ctx": "g",
+   "v": "v2"
+  },
+  {
+   "t": "turn the website comments into tasks",
+   "i": "site.comments.tasks",
+   "ctx": "g",
+   "v": "v2"
+  },
+  {
+   "t": "fill the website in from our project",
+   "i": "site.autofill",
+   "ctx": "g",
+   "v": "v2"
+  },
+  {
+   "t": "make the headline punchier",
+   "i": "site.copy",
+   "s": {
+    "field": "headline",
+    "tone": "punchy"
+   },
+   "ctx": "s",
+   "v": "v2"
+  },
+  {
+   "t": "punch up the headline",
+   "i": "site.copy",
+   "s": {
+    "field": "headline",
+    "tone": "punchy"
+   },
+   "ctx": "s",
+   "v": "v2"
+  },
+  {
+   "t": "the headline is boring",
+   "i": "site.copy",
+   "s": {
+    "field": "headline",
+    "tone": "punchy"
+   },
+   "ctx": "s",
+   "v": "v2"
+  },
+  {
+   "t": "make the tagline shorter",
+   "i": "site.copy",
+   "s": {
+    "field": "tagline",
+    "tone": "shorter"
+   },
+   "ctx": "s",
+   "v": "v2"
+  },
+  {
+   "t": "shorten the intro text",
+   "i": "site.copy",
+   "s": {
+    "field": "tagline",
+    "tone": "shorter"
+   },
+   "ctx": "s",
+   "v": "v2"
+  },
+  {
+   "t": "make the copy friendlier",
+   "i": "site.copy",
+   "s": {
+    "tone": "friendlier"
+   },
+   "ctx": "s",
+   "v": "v2"
+  },
+  {
+   "t": "make the text more professional",
+   "i": "site.copy",
+   "s": {
+    "tone": "formal"
+   },
+   "ctx": "s",
+   "v": "v2"
+  },
+  {
+   "t": "tighten up the words",
+   "i": "site.copy",
+   "s": {
+    "tone": "shorter"
+   },
+   "ctx": "s",
+   "v": "v2"
+  },
+  {
+   "t": "rewrite the headline",
+   "i": "site.copy",
+   "s": {
+    "field": "headline"
+   },
+   "ctx": "s",
+   "v": "v2"
+  },
+  {
+   "t": "change the button to say Book now",
+   "i": "site.text",
+   "s": {
+    "field": "button",
+    "text": "Book now"
+   },
+   "ctx": "s",
+   "v": "v2"
+  },
+  {
+   "t": "the main button should say Order online",
+   "i": "site.text",
+   "s": {
+    "field": "button",
+    "text": "Order online"
+   },
+   "ctx": "s",
+   "v": "v2"
+  },
+  {
+   "t": "button text: Reserve a table",
+   "i": "site.text",
+   "s": {
+    "field": "button",
+    "text": "Reserve a table"
+   },
+   "ctx": "s",
+   "v": "v2"
+  },
+  {
+   "t": "make the cta say Join the waitlist",
+   "i": "site.text",
+   "s": {
+    "field": "button",
+    "text": "Join the waitlist"
+   },
+   "ctx": "s",
+   "v": "v2"
+  },
+  {
+   "t": "change the headline to Fresh bread every morning",
+   "i": "site.text",
+   "s": {
+    "field": "headline",
+    "text": "Fresh bread every morning"
+   },
+   "ctx": "s",
+   "v": "v2"
+  },
+  {
+   "t": "headline: We fix bikes",
+   "i": "site.text",
+   "s": {
+    "field": "headline",
+    "text": "We fix bikes"
+   },
+   "ctx": "s",
+   "v": "v2"
+  },
+  {
+   "t": "set the subtitle to Open late on fridays",
+   "i": "site.text",
+   "s": {
+    "field": "tagline",
+    "text": "Open late on fridays"
+   },
+   "ctx": "s",
+   "v": "v2"
+  },
+  {
+   "t": "rename the site to Ember Socks",
+   "i": "site.text",
+   "s": {
+    "field": "name",
+    "text": "Ember Socks"
+   },
+   "ctx": "s",
+   "v": "v2"
+  },
+  {
+   "t": "add our opening hours",
+   "i": "site.hours",
+   "ctx": "s",
+   "v": "v2"
+  },
+  {
+   "t": "put the hours on the site",
+   "i": "site.hours",
+   "ctx": "s",
+   "v": "v2"
+  },
+  {
+   "t": "show when we are open",
+   "i": "site.hours",
+   "ctx": "s",
+   "v": "v2"
+  },
+  {
+   "t": "add business hours",
+   "i": "site.hours",
+   "ctx": "s",
+   "v": "v2"
+  },
+  {
+   "t": "our hours are wrong, update them",
+   "i": "site.hours",
+   "ctx": "s",
+   "v": "v2"
+  },
+  {
+   "t": "set the page title to Ember Socks | Warm socks",
+   "i": "site.seo",
+   "s": {
+    "field": "title",
+    "text": "Ember Socks | Warm socks"
+   },
+   "ctx": "s",
+   "v": "v2"
+  },
+  {
+   "t": "change the seo title to Mara Makes Pottery",
+   "i": "site.seo",
+   "s": {
+    "field": "title",
+    "text": "Mara Makes Pottery"
+   },
+   "ctx": "s",
+   "v": "v2"
+  },
+  {
+   "t": "set the meta description to Hand thrown mugs from Leeds",
+   "i": "site.seo",
+   "s": {
+    "field": "description",
+    "text": "Hand thrown mugs from Leeds"
+   },
+   "ctx": "s",
+   "v": "v2"
+  },
+  {
+   "t": "seo description: Bikes fixed same day",
+   "i": "site.seo",
+   "s": {
+    "field": "description",
+    "text": "Bikes fixed same day"
+   },
+   "ctx": "s",
+   "v": "v2"
+  },
+  {
+   "t": "improve the seo",
+   "i": "site.seo",
+   "ctx": "s",
+   "v": "v2"
+  },
+  {
+   "t": "what shows up on google",
+   "i": "site.seo",
+   "ctx": "s",
+   "v": "v2"
+  },
+  {
+   "t": "add a description for search engines",
+   "i": "site.seo",
+   "s": {
+    "field": "description"
+   },
+   "ctx": "s",
+   "v": "v2"
+  },
+  {
+   "t": "set the share image",
+   "i": "site.seo",
+   "s": {
+    "field": "image"
+   },
+   "ctx": "s",
+   "v": "v2"
+  },
+  {
+   "t": "use our logo as the favicon",
+   "i": "site.favicon",
+   "ctx": "s",
+   "v": "v2"
+  },
+  {
+   "t": "add a favicon",
+   "i": "site.favicon",
+   "ctx": "s",
+   "v": "v2"
+  },
+  {
+   "t": "change the tab icon",
+   "i": "site.favicon",
+   "ctx": "s",
+   "v": "v2"
+  },
+  {
+   "t": "set the browser icon to our logo",
+   "i": "site.favicon",
+   "ctx": "s",
+   "v": "v2"
+  },
+  {
+   "t": "publish it",
+   "i": "site.publish",
+   "ctx": "s",
+   "v": "v2"
+  },
+  {
+   "t": "put the site live",
+   "i": "site.publish",
+   "ctx": "s",
+   "v": "v2"
+  },
+  {
+   "t": "publish the website to the project",
+   "i": "site.publish",
+   "ctx": "s",
+   "v": "v2"
+  },
+  {
+   "t": "ship the site",
+   "i": "site.publish",
+   "ctx": "s",
+   "v": "v2"
+  },
+  {
+   "t": "make it live",
+   "i": "site.publish",
+   "ctx": "s",
+   "v": "v2"
+  },
+  {
+   "t": "download the html",
+   "i": "site.export",
+   "s": {
+    "fmt": "html"
+   },
+   "ctx": "s",
+   "v": "v2"
+  },
+  {
+   "t": "export as a zip",
+   "i": "site.export",
+   "s": {
+    "fmt": "zip"
+   },
+   "ctx": "s",
+   "v": "v2"
+  },
+  {
+   "t": "give me the files",
+   "i": "site.export",
+   "ctx": "s",
+   "v": "v2"
+  },
+  {
+   "t": "export the site",
+   "i": "site.export",
+   "ctx": "s",
+   "v": "v2"
+  },
+  {
+   "t": "use a serif font",
+   "i": "site.font",
+   "s": {
+    "font": "serif"
+   },
+   "ctx": "s",
+   "v": "v2"
+  },
+  {
+   "t": "change the font to space grotesk",
+   "i": "site.font",
+   "s": {
+    "font": "space grotesk"
+   },
+   "ctx": "s",
+   "v": "v2"
+  },
+  {
+   "t": "make the headings monospace",
+   "i": "site.font",
+   "s": {
+    "font": "mono"
+   },
+   "ctx": "s",
+   "v": "v2"
+  },
+  {
+   "t": "use fraunces for the headings",
+   "i": "site.font",
+   "s": {
+    "font": "fraunces"
+   },
+   "ctx": "s",
+   "v": "v2"
+  },
+  {
+   "t": "different font pairing",
+   "i": "site.font",
+   "ctx": "s",
+   "v": "v2"
+  },
+  {
+   "t": "the fonts look boring",
+   "i": "site.font",
+   "ctx": "s",
+   "v": "v2"
+  },
+  {
+   "t": "use a pixel font",
+   "i": "site.font",
+   "s": {
+    "font": "pixel"
+   },
+   "ctx": "s",
+   "v": "v2"
+  },
+  {
+   "t": "use a cleaner font",
+   "i": "site.font",
+   "s": {
+    "font": "sans"
+   },
+   "ctx": "s",
+   "v": "v2"
+  },
+  {
+   "t": "make the accent teal",
+   "i": "site.color",
+   "s": {
+    "color": "teal"
+   },
+   "ctx": "s",
+   "v": "v2"
+  },
+  {
+   "t": "use #2A8C80 for the buttons",
+   "i": "site.color",
+   "s": {
+    "color": "#2a8c80"
+   },
+   "ctx": "s",
+   "v": "v2"
+  },
+  {
+   "t": "brand color should be orange",
+   "i": "site.color",
+   "s": {
+    "color": "orange"
+   },
+   "ctx": "s",
+   "v": "v2"
+  },
+  {
+   "t": "change the main color to navy",
+   "i": "site.color",
+   "s": {
+    "color": "navy"
+   },
+   "ctx": "s",
+   "v": "v2"
+  },
+  {
+   "t": "use the forest theme",
+   "i": "site.theme",
+   "s": {
+    "preset": "forest"
+   },
+   "ctx": "s",
+   "v": "v2"
+  },
+  {
+   "t": "switch to the ocean look",
+   "i": "site.theme",
+   "s": {
+    "preset": "ocean"
+   },
+   "ctx": "s",
+   "v": "v2"
+  },
+  {
+   "t": "try the ivory theme",
+   "i": "site.theme",
+   "s": {
+    "preset": "ivory"
+   },
+   "ctx": "s",
+   "v": "v2"
+  },
+  {
+   "t": "make it look editorial",
+   "i": "site.theme",
+   "s": {
+    "preset": "editorial"
+   },
+   "ctx": "s",
+   "v": "v2"
+  },
+  {
+   "t": "dark mode please",
+   "i": "site.dark",
+   "s": {
+    "mode": "dark"
+   },
+   "ctx": "s",
+   "v": "v2"
+  },
+  {
+   "t": "too dark, go light",
+   "i": "site.dark",
+   "s": {
+    "mode": "light"
+   },
+   "ctx": "s",
+   "v": "v2"
+  },
+  {
+   "t": "add a newsletter signup",
+   "i": "site.block.add",
+   "s": {
+    "block": "newsletter"
+   },
+   "ctx": "s",
+   "v": "v2"
+  },
+  {
+   "t": "add a call to action at the end",
+   "i": "site.block.add",
+   "s": {
+    "block": "cta"
+   },
+   "ctx": "s",
+   "v": "v2"
+  },
+  {
+   "t": "add some stats",
+   "i": "site.block.add",
+   "s": {
+    "block": "stats"
+   },
+   "ctx": "s",
+   "v": "v2"
+  },
+  {
+   "t": "add a logo cloud",
+   "i": "site.block.add",
+   "s": {
+    "block": "logos"
+   },
+   "ctx": "s",
+   "v": "v2"
+  },
+  {
+   "t": "add a banner announcing the sale",
+   "i": "site.block.add",
+   "s": {
+    "block": "banner"
+   },
+   "ctx": "s",
+   "v": "v2"
+  },
+  {
+   "t": "put a divider between sections",
+   "i": "site.block.add",
+   "s": {
+    "block": "divider"
+   },
+   "ctx": "s",
+   "v": "v2"
+  },
+  {
+   "t": "add a big image section",
+   "i": "site.block.add",
+   "s": {
+    "block": "image"
+   },
+   "ctx": "s",
+   "v": "v2"
+  },
+  {
+   "t": "add a team section",
+   "i": "site.block.add",
+   "s": {
+    "block": "team"
+   },
+   "ctx": "s",
+   "v": "v2"
+  },
+  {
+   "t": "add a pricing table",
+   "i": "site.block.add",
+   "s": {
+    "block": "pricing"
+   },
+   "ctx": "s",
+   "v": "v2"
+  },
+  {
+   "t": "add testimonials",
+   "i": "site.block.add",
+   "s": {
+    "block": "testimonials"
+   },
+   "ctx": "s",
+   "v": "v2"
+  },
+  {
+   "t": "add a faq",
+   "i": "site.block.add",
+   "s": {
+    "block": "faq"
+   },
+   "ctx": "s",
+   "v": "v2"
+  },
+  {
+   "t": "add a map",
+   "i": "site.block.add",
+   "s": {
+    "block": "embed"
+   },
+   "ctx": "s",
+   "v": "v2"
+  },
+  {
+   "t": "remove the pricing",
+   "i": "site.block.remove",
+   "s": {
+    "block": "pricing"
+   },
+   "ctx": "s",
+   "v": "v2"
+  },
+  {
+   "t": "get rid of the testimonials",
+   "i": "site.block.remove",
+   "s": {
+    "block": "testimonials"
+   },
+   "ctx": "s",
+   "v": "v2"
+  },
+  {
+   "t": "delete the newsletter section",
+   "i": "site.block.remove",
+   "s": {
+    "block": "newsletter"
+   },
+   "ctx": "s",
+   "v": "v2"
+  },
+  {
+   "t": "hide the faq for now",
+   "i": "site.block.hide",
+   "s": {
+    "block": "faq"
+   },
+   "ctx": "s",
+   "v": "v2"
+  },
+  {
+   "t": "hide this section",
+   "i": "site.block.hide",
+   "ctx": "s",
+   "v": "v2"
+  },
+  {
+   "t": "hide the pricing until launch",
+   "i": "site.block.hide",
+   "s": {
+    "block": "pricing"
+   },
+   "ctx": "s",
+   "v": "v2"
+  },
+  {
+   "t": "show the faq again",
+   "i": "site.block.show",
+   "s": {
+    "block": "faq"
+   },
+   "ctx": "s",
+   "v": "v2"
+  },
+  {
+   "t": "unhide the pricing",
+   "i": "site.block.show",
+   "s": {
+    "block": "pricing"
+   },
+   "ctx": "s",
+   "v": "v2"
+  },
+  {
+   "t": "duplicate this section",
+   "i": "site.block.dup",
+   "ctx": "s",
+   "v": "v2"
+  },
+  {
+   "t": "copy the pricing section",
+   "i": "site.block.dup",
+   "s": {
+    "block": "pricing"
+   },
+   "ctx": "s",
+   "v": "v2"
+  },
+  {
+   "t": "make another one of these",
+   "i": "site.block.dup",
+   "ctx": "s",
+   "v": "v2"
+  },
+  {
+   "t": "clone the features block",
+   "i": "site.block.dup",
+   "s": {
+    "block": "features"
+   },
+   "ctx": "s",
+   "v": "v2"
+  },
+  {
+   "t": "move the faq to the top",
+   "i": "site.block.move",
+   "s": {
+    "block": "faq",
+    "dir": "top"
+   },
+   "ctx": "s",
+   "v": "v2"
+  },
+  {
+   "t": "put the gallery below the hero",
+   "i": "site.block.move",
+   "s": {
+    "block": "gallery",
+    "dir": "down"
+   },
+   "ctx": "s",
+   "v": "v2"
+  },
+  {
+   "t": "move testimonials up",
+   "i": "site.block.move",
+   "s": {
+    "block": "testimonials",
+    "dir": "up"
+   },
+   "ctx": "s",
+   "v": "v2"
+  },
+  {
+   "t": "make the hero split",
+   "i": "site.layout",
+   "s": {
+    "block": "hero",
+    "variant": "split"
+   },
+   "ctx": "s",
+   "v": "v2"
+  },
+  {
+   "t": "show the gallery as masonry",
+   "i": "site.layout",
+   "s": {
+    "block": "gallery",
+    "variant": "masonry"
+   },
+   "ctx": "s",
+   "v": "v2"
+  },
+  {
+   "t": "pricing as a table",
+   "i": "site.layout",
+   "s": {
+    "block": "pricing",
+    "variant": "table"
+   },
+   "ctx": "s",
+   "v": "v2"
+  },
+  {
+   "t": "center the hero",
+   "i": "site.layout",
+   "s": {
+    "block": "hero",
+    "variant": "center"
+   },
+   "ctx": "s",
+   "v": "v2"
+  },
+  {
+   "t": "alternate the features left and right",
+   "i": "site.layout",
+   "s": {
+    "block": "features",
+    "variant": "alternating"
+   },
+   "ctx": "s",
+   "v": "v2"
+  },
+  {
+   "t": "make the testimonials a spotlight",
+   "i": "site.layout",
+   "s": {
+    "block": "testimonials",
+    "variant": "spotlight"
+   },
+   "ctx": "s",
+   "v": "v2"
+  },
+  {
+   "t": "more space between sections",
+   "i": "site.spacing",
+   "s": {
+    "size": "more"
+   },
+   "ctx": "s",
+   "v": "v2"
+  },
+  {
+   "t": "tighter spacing",
+   "i": "site.spacing",
+   "s": {
+    "size": "less"
+   },
+   "ctx": "s",
+   "v": "v2"
+  },
+  {
+   "t": "the hero needs more breathing room",
+   "i": "site.spacing",
+   "s": {
+    "size": "more"
+   },
+   "ctx": "s",
+   "v": "v2"
+  },
+  {
+   "t": "less padding",
+   "i": "site.spacing",
+   "s": {
+    "size": "less"
+   },
+   "ctx": "s",
+   "v": "v2"
+  },
+  {
+   "t": "make it more compact",
+   "i": "site.spacing",
+   "s": {
+    "size": "less"
+   },
+   "ctx": "s",
+   "v": "v2"
+  },
+  {
+   "t": "make the pricing background dark",
+   "i": "site.bg",
+   "s": {
+    "block": "pricing",
+    "bg": "ink"
+   },
+   "ctx": "s",
+   "v": "v2"
+  },
+  {
+   "t": "give this section the accent color as background",
+   "i": "site.bg",
+   "s": {
+    "bg": "accent"
+   },
+   "ctx": "s",
+   "v": "v2"
+  },
+  {
+   "t": "use a light gray background for the features",
+   "i": "site.bg",
+   "s": {
+    "block": "features",
+    "bg": "card"
+   },
+   "ctx": "s",
+   "v": "v2"
+  },
+  {
+   "t": "remove the section background",
+   "i": "site.bg",
+   "s": {
+    "bg": "none"
+   },
+   "ctx": "s",
+   "v": "v2"
+  },
+  {
+   "t": "replace the hero image",
+   "i": "site.image.replace",
+   "ctx": "s",
+   "v": "v2"
+  },
+  {
+   "t": "use a picture from my board",
+   "i": "site.image.replace",
+   "s": {
+    "source": "board"
+   },
+   "ctx": "s",
+   "v": "v2"
+  },
+  {
+   "t": "upload my own photo",
+   "i": "site.image.replace",
+   "s": {
+    "source": "upload"
+   },
+   "ctx": "s",
+   "v": "v2"
+  },
+  {
+   "t": "make the photo round",
+   "i": "site.image.shape",
+   "s": {
+    "shape": "round"
+   },
+   "ctx": "s",
+   "v": "v2"
+  },
+  {
+   "t": "alt text: Mara at the wheel",
+   "i": "site.image.alt",
+   "s": {
+    "alt": "Mara at the wheel"
+   },
+   "ctx": "s",
+   "v": "v2"
+  },
+  {
+   "t": "add our logo",
+   "i": "site.logo",
+   "ctx": "s",
+   "v": "v2"
+  },
+  {
+   "t": "put our logo in the header",
+   "i": "site.logo",
+   "ctx": "s",
+   "v": "v2"
+  },
+  {
+   "t": "use the project logo",
+   "i": "site.logo",
+   "ctx": "s",
+   "v": "v2"
+  },
+  {
+   "t": "make the buttons work",
+   "i": "site.wire",
+   "ctx": "s",
+   "v": "v2"
+  },
+  {
+   "t": "link the book button to the contact page",
+   "i": "site.wire",
+   "s": {
+    "to": "contact"
+   },
+   "ctx": "s",
+   "v": "v2"
+  },
+  {
+   "t": "the order button goes nowhere",
+   "i": "site.wire",
+   "ctx": "s",
+   "v": "v2"
+  },
+  {
+   "t": "add a page called Menu",
+   "i": "site.page.add",
+   "s": {
+    "name": "Menu"
+   },
+   "ctx": "s",
+   "v": "v2"
+  },
+  {
+   "t": "rename this page to Work",
+   "i": "site.page.rename",
+   "s": {
+    "name": "Work"
+   },
+   "ctx": "s",
+   "v": "v2"
+  },
+  {
+   "t": "show me the phone version",
+   "i": "site.device",
+   "s": {
+    "dev": "phone"
+   },
+   "ctx": "s",
+   "v": "v2"
+  },
+  {
+   "t": "tablet preview",
+   "i": "site.device",
+   "s": {
+    "dev": "tablet"
+   },
+   "ctx": "s",
+   "v": "v2"
+  },
+  {
+   "t": "how does it look on mobile",
+   "i": "site.device",
+   "s": {
+    "dev": "phone"
+   },
+   "ctx": "s",
+   "v": "v2"
+  },
+  {
+   "t": "back to desktop view",
+   "i": "site.device",
+   "s": {
+    "dev": "desktop"
+   },
+   "ctx": "s",
+   "v": "v2"
+  },
+  {
+   "t": "turn these comments into tasks",
+   "i": "site.comments.tasks",
+   "ctx": "s",
+   "v": "v2"
+  },
+  {
+   "t": "flint summarize the comments",
+   "i": "site.comments.tasks",
+   "ctx": "s",
+   "v": "v2"
+  },
+  {
+   "t": "make tasks from the feedback",
+   "i": "site.comments.tasks",
+   "ctx": "s",
+   "v": "v2"
+  },
+  {
+   "t": "what did people comment",
+   "i": "site.comments",
+   "ctx": "s",
+   "v": "v2"
+  },
+  {
+   "t": "show the comments",
+   "i": "site.comments",
+   "ctx": "s",
+   "v": "v2"
+  },
+  {
+   "t": "fill it in from our project",
+   "i": "site.autofill",
+   "ctx": "s",
+   "v": "v2"
+  },
+  {
+   "t": "use our team and hours from the project",
+   "i": "site.autofill",
+   "ctx": "s",
+   "v": "v2"
+  },
+  {
+   "t": "autofill the site",
+   "i": "site.autofill",
+   "ctx": "s",
+   "v": "v2"
+  },
+  {
+   "t": "start blank instead",
+   "i": "site.blank",
+   "ctx": "s",
+   "v": "v2"
+  },
+  {
+   "t": "undo that",
+   "i": "undo",
+   "ctx": "s",
+   "v": "v2"
+  },
+  {
+   "t": "make the headline punchier",
+   "i": "site.copy",
+   "s": {
+    "field": "headline",
+    "tone": "punchy"
+   },
+   "ctx": "p",
+   "v": "v2"
+  },
+  {
+   "t": "add our opening hours",
+   "i": "site.hours",
+   "ctx": "p",
+   "v": "v2"
+  },
+  {
+   "t": "change the button to say Book now",
+   "i": "site.text",
+   "s": {
+    "field": "button",
+    "text": "Book now"
+   },
+   "ctx": "p",
+   "v": "v2"
+  },
+  {
+   "t": "use a serif font",
+   "i": "site.font",
+   "s": {
+    "font": "serif"
+   },
+   "ctx": "p",
+   "v": "v2"
+  },
+  {
+   "t": "hide the faq",
+   "i": "site.block.hide",
+   "s": {
+    "block": "faq"
+   },
+   "ctx": "p",
+   "v": "v2"
+  },
+  {
+   "t": "add a favicon",
+   "i": "site.favicon",
+   "ctx": "p",
+   "v": "v2"
+  },
+  {
+   "t": "publish it",
+   "i": "site.publish",
+   "ctx": "p",
+   "v": "v2"
+  },
+  {
+   "t": "add a newsletter signup",
+   "i": "site.block.add",
+   "s": {
+    "block": "newsletter"
+   },
+   "ctx": "p",
+   "v": "v2"
+  },
+  {
+   "t": "gimme a linktree for my art account",
+   "i": "site.linkbio",
+   "ctx": "g",
+   "v": "held3"
+  },
+  {
+   "t": "site for my barbershop",
+   "i": "site.service",
+   "ctx": "g",
+   "v": "held3"
+  },
+  {
+   "t": "our ramen place needs a website",
+   "i": "site.cafe",
+   "ctx": "g",
+   "v": "held3"
+  },
+  {
+   "t": "a page to sell my zines",
+   "i": "site.merch",
+   "ctx": "g",
+   "v": "held3"
+  },
+  {
+   "t": "website for my wedding next spring",
+   "i": "site.wedding",
+   "ctx": "g",
+   "v": "held3"
+  },
+  {
+   "t": "i run a podcast about birds, need a site",
+   "i": "site.podcast",
+   "ctx": "g",
+   "v": "held3"
+  },
+  {
+   "t": "make a waitlist page for the beta",
+   "i": "site.comingsoon",
+   "ctx": "g",
+   "v": "held3"
+  },
+  {
+   "t": "portfolio site for my 3d art",
+   "i": "site.portfolio",
+   "ctx": "g",
+   "v": "held3"
+  },
+  {
+   "t": "add the opening hours to our website",
+   "i": "site.hours",
+   "ctx": "g",
+   "v": "held3"
+  },
+  {
+   "t": "make our website headline snappier",
+   "i": "site.copy",
+   "s": {
+    "field": "headline"
+   },
+   "ctx": "g",
+   "v": "held3"
+  },
+  {
+   "t": "the title needs more punch",
+   "i": "site.copy",
+   "s": {
+    "field": "headline",
+    "tone": "punchy"
+   },
+   "ctx": "s",
+   "v": "held3"
+  },
+  {
+   "t": "make the intro less wordy",
+   "i": "site.copy",
+   "s": {
+    "field": "tagline",
+    "tone": "shorter"
+   },
+   "ctx": "s",
+   "v": "held3"
+  },
+  {
+   "t": "button should say Get a quote",
+   "i": "site.text",
+   "s": {
+    "field": "button",
+    "text": "Get a quote"
+   },
+   "ctx": "s",
+   "v": "held3"
+  },
+  {
+   "t": "list our hours",
+   "i": "site.hours",
+   "ctx": "s",
+   "v": "held3"
+  },
+  {
+   "t": "set the google description to Fresh pasta in Brighton",
+   "i": "site.seo",
+   "s": {
+    "field": "description",
+    "text": "Fresh pasta in Brighton"
+   },
+   "ctx": "s",
+   "v": "held3"
+  },
+  {
+   "t": "make our logo the favicon",
+   "i": "site.favicon",
+   "ctx": "s",
+   "v": "held3"
+  },
+  {
+   "t": "switch the headings to a serif",
+   "i": "site.font",
+   "s": {
+    "font": "serif"
+   },
+   "ctx": "s",
+   "v": "held3"
+  },
+  {
+   "t": "go live with the site",
+   "i": "site.publish",
+   "ctx": "s",
+   "v": "held3"
+  },
+  {
+   "t": "add an email signup box",
+   "i": "site.block.add",
+   "s": {
+    "block": "newsletter"
+   },
+   "ctx": "s",
+   "v": "held3"
+  },
+  {
+   "t": "add a numbers section",
+   "i": "site.block.add",
+   "s": {
+    "block": "stats"
+   },
+   "ctx": "s",
+   "v": "held3"
+  },
+  {
+   "t": "temporarily hide the team section",
+   "i": "site.block.hide",
+   "s": {
+    "block": "team"
+   },
+   "ctx": "s",
+   "v": "held3"
+  },
+  {
+   "t": "duplicate the pricing block",
+   "i": "site.block.dup",
+   "s": {
+    "block": "pricing"
+   },
+   "ctx": "s",
+   "v": "held3"
+  },
+  {
+   "t": "give the faq a dark background",
+   "i": "site.bg",
+   "s": {
+    "block": "faq",
+    "bg": "ink"
+   },
+   "ctx": "s",
+   "v": "held3"
+  },
+  {
+   "t": "add more whitespace",
+   "i": "site.spacing",
+   "s": {
+    "size": "more"
+   },
+   "ctx": "s",
+   "v": "held3"
+  },
+  {
+   "t": "preview it on a tablet",
+   "i": "site.device",
+   "s": {
+    "dev": "tablet"
+   },
+   "ctx": "s",
+   "v": "held3"
+  },
+  {
+   "t": "turn the pins into tasks",
+   "i": "site.comments.tasks",
+   "ctx": "s",
+   "v": "held3"
+  },
+  {
+   "t": "use the sand theme",
+   "i": "site.theme",
+   "s": {
+    "preset": "sand"
+   },
+   "ctx": "s",
+   "v": "held3"
+  },
+  {
+   "t": "make the hero image round",
+   "i": "site.image.shape",
+   "s": {
+    "shape": "round"
+   },
+   "ctx": "s",
+   "v": "held3"
+  },
+  {
+   "t": "put a call to action before the footer",
+   "i": "site.block.add",
+   "s": {
+    "block": "cta"
+   },
+   "ctx": "s",
+   "v": "held3"
+  },
+  {
+   "t": "pull our team from the project",
+   "i": "site.autofill",
+   "ctx": "s",
+   "v": "held3"
+  },
+  {
+   "t": "shorten the headline",
+   "i": "site.copy",
+   "s": {
+    "field": "headline",
+    "tone": "shorter"
+   },
+   "ctx": "p",
+   "v": "held3"
+  },
+  {
+   "t": "add business hours",
+   "i": "site.hours",
+   "ctx": "p",
+   "v": "held3"
+  },
+  {
+   "t": "make a breakout game",
+   "i": "site.starter-breakout",
+   "ctx": "g"
+  },
+  {
+   "t": "build me a brick breaker",
+   "i": "site.starter-breakout",
+   "ctx": "g"
+  },
+  {
+   "t": "make an arkanoid clone called brick party",
+   "i": "site.starter-breakout",
+   "s": {
+    "name": "brick party"
+   },
+   "ctx": "g"
+  },
+  {
+   "t": "make a snake game",
+   "i": "site.starter-snake",
+   "ctx": "g"
+  },
+  {
+   "t": "build a snake game called sssnek",
+   "i": "site.starter-snake",
+   "s": {
+    "name": "sssnek"
+   },
+   "ctx": "g"
+  },
+  {
+   "t": "make a tetris clone",
+   "i": "site.starter-blocks",
+   "ctx": "g"
+  },
+  {
+   "t": "build a falling blocks game",
+   "i": "site.starter-blocks",
+   "ctx": "g"
+  },
+  {
+   "t": "make an endless runner",
+   "i": "site.starter-runner",
+   "ctx": "g"
+  },
+  {
+   "t": "make a dino game",
+   "i": "site.starter-runner",
+   "ctx": "g"
+  },
+  {
+   "t": "build a top down shooter",
+   "i": "site.starter-topdown",
+   "ctx": "g"
+  },
+  {
+   "t": "make a survivor game",
+   "i": "site.starter-topdown",
+   "ctx": "g"
+  },
+  {
+   "t": "make a memory game",
+   "i": "site.starter-memory",
+   "ctx": "g"
+  },
+  {
+   "t": "build a matching pairs game",
+   "i": "site.starter-memory",
+   "ctx": "g"
+  },
+  {
+   "t": "make a card game",
+   "i": "site.starter-memory",
+   "ctx": "g"
+  },
+  {
+   "t": "build me a card game called snap",
+   "i": "site.starter-memory",
+   "s": {
+    "name": "snap"
+   },
+   "ctx": "g"
+  },
+  {
+   "t": "make a notes app",
+   "i": "site.starter-notes",
+   "ctx": "g"
+  },
+  {
+   "t": "build a kanban board",
+   "i": "site.starter-kanban",
+   "ctx": "g"
+  },
+  {
+   "t": "make a trello clone",
+   "i": "site.starter-kanban",
+   "ctx": "g"
+  },
+  {
+   "t": "make an admin dashboard",
+   "i": "site.starter-dashboard",
+   "ctx": "g"
+  },
+  {
+   "t": "build a chat app",
+   "i": "site.starter-chat",
+   "ctx": "g"
+  },
+  {
+   "t": "make a survey",
+   "i": "site.starter-survey",
+   "ctx": "g"
+  },
+  {
+   "t": "make a feedback form",
+   "i": "site.starter-survey",
+   "ctx": "g"
+  },
+  {
+   "t": "build a pomodoro timer",
+   "i": "site.starter-pomodoro",
+   "ctx": "g"
+  },
+  {
+   "t": "make a calculator",
+   "i": "site.starter-calculator",
+   "ctx": "g"
+  },
+  {
+   "t": "make a weather app",
+   "i": "site.starter-weather",
+   "ctx": "g"
+  },
+  {
+   "t": "build me a drawing app",
+   "i": "site.starter-sketch",
+   "ctx": "g"
+  }
+ ]
+}

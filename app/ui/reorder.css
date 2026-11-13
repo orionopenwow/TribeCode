@@ -1,0 +1,14 @@
+/* Your own order for the rail and the sidebar (app/ui/reorder.js): a flat 2px drop line, the lifted item a step quieter.
+   Flat matte: no shadow, no scale bounce; motion tokens; nothing moves under prefers-reduced-motion. */
+.ro-line { position: fixed; z-index: 300; height: 2px; border-radius: 2px; background: var(--accent); pointer-events: none; opacity: 0;
+  transition: top var(--dur-instant) var(--ease-out), opacity var(--dur-quick) var(--ease-out); }
+.ro-line.on { opacity: 1; }
+.ro-dragging { opacity: .45; transition: opacity var(--dur-quick) var(--ease-out); }
+.ro-armed { opacity: .8; }
+body.ro-on, body.ro-on * { cursor: grabbing !important; user-select: none; -webkit-user-select: none; }
+#pj-rail > [data-pj-open], #pj-rail > #rail-workshop, #grp-global > .nest-row, #pj-nav > .nest-row, #pj-nav > .nest-line, #nest-extra > .nest-row { touch-action: pan-y; -webkit-touch-callout: none; }
+.ro-live { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); clip-path: inset(50%); white-space: nowrap; }
+.ro-menu { position: fixed; z-index: 220; }
+.ro-menu .ro-up { transform: rotate(-90deg); }
+.ro-menu .ro-down { transform: rotate(90deg); }
+@media (prefers-reduced-motion: reduce) { .ro-line, .ro-dragging { transition: none; } }

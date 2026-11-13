@@ -25,6 +25,8 @@
     // start at home so the first trip is a glide from Flint's corner
     const h = homeRect(); place(h ? h.left : innerWidth - 120, h ? h.top : innerHeight - 80, true);
     addEventListener('scroll', follow, true); addEventListener('resize', follow);
+    // the pill can grow after it was placed (the web font lands, a longer label): clamp it again so it never pokes out
+    if (window.ResizeObserver) new ResizeObserver(() => { if (last) place(last[0], last[1], false, true); }).observe(el);
     return el;
   }
   const elOf = t => (typeof t === 'string' ? document.querySelector(t) : t);
@@ -46,7 +48,9 @@
     if (!r || (!r.width && !r.height)) return null;
     return phone() ? { left: r.right - 92, top: r.top - 34 } : { left: r.left + 6, top: r.top - 28 };
   }
-  function place(x, y, instant) {
+  let last = null;
+  function place(x, y, instant, again) {
+    if (!again) last = [x, y];
     const w = el.offsetWidth || 80;
     x = Math.max(6, Math.min(innerWidth - w - 6, x)); y = Math.max(6, Math.min(innerHeight - 30, y));
     if (instant || calm()) { el.classList.add('ffly-jump'); el.style.transform = `translate(${Math.round(x)}px, ${Math.round(y)}px)`; void el.offsetWidth; el.classList.remove('ffly-jump'); }

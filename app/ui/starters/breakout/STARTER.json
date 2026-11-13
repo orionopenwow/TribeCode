@@ -1,0 +1,23 @@
+{
+ "id": "breakout", "kind": "game", "icon": "breakout", "title": "Breakout",
+ "summary": "Bounce the ball, break every brick. The classic MDN canvas tutorial game, ready to restyle and extend.",
+ "tags": ["breakout", "arkanoid", "brick breaker", "paddle", "arcade", "2d"],
+ "phrases": ["breakout game", "breakout", "brick breaker", "arkanoid clone", "paddle and ball game"],
+ "controls": "Mouse, a finger or the arrow keys move the paddle. Space or a tap restarts.",
+ "source": { "name": "Gamedev-Canvas-workshop (MDN 2D breakout tutorial)", "repo": "end3r/Gamedev-Canvas-workshop", "url": "https://github.com/end3r/Gamedev-Canvas-workshop", "license": "CC0-1.0", "authors": "Andrzej Mazur and Mozilla contributors",
+   "changes": "the numbers and colors read config.js, touch controls, an on-canvas win and game-over message instead of alert(), bricks fill the width." },
+ "params": [
+  { "key": "ballSpeed", "label": "Ball speed", "type": "number", "min": 1, "max": 8, "step": 0.5, "default": 3, "words": { "up": "faster|quicker|harder", "down": "slower|easier" } },
+  { "key": "paddleWidth", "label": "Paddle width", "type": "number", "min": 30, "max": 200, "step": 5, "default": 75, "words": { "up": "bigger paddle|wider paddle", "down": "smaller paddle|narrower paddle" } },
+  { "key": "rows", "label": "Brick rows", "type": "number", "min": 1, "max": 8, "step": 1, "default": 3, "words": { "up": "more bricks|more rows", "down": "fewer bricks|fewer rows" } },
+  { "key": "columns", "label": "Brick columns", "type": "number", "min": 2, "max": 12, "step": 1, "default": 5 },
+  { "key": "lives", "label": "Lives", "type": "number", "min": 1, "max": 9, "step": 1, "default": 3, "words": { "up": "more lives", "down": "fewer lives" } },
+  { "key": "brick", "label": "Brick color", "type": "color", "default": "#38C6B1", "main": true },
+  { "key": "brick2", "label": "Second brick color", "type": "color", "default": "#6C7CFF" },
+  { "key": "paddle", "label": "Paddle color", "type": "color", "default": "#F26B1D" },
+  { "key": "ball", "label": "Ball color", "type": "color", "default": "#F8FAFC" },
+  { "key": "bg", "label": "Page background", "type": "color", "default": "#12151A" },
+  { "key": "field", "label": "Play field", "type": "color", "default": "#1B2028" }
+ ],
+ "try": ["Make the ball faster", "Add power-ups that widen the paddle", "Add levels with brick patterns", "Add sound when a brick breaks"]
+}

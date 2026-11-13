@@ -54,7 +54,7 @@ def wait_text(page, sel, text, timeout=15000):
 
 
 def rows(page):
-    return page.evaluate("[...document.querySelectorAll('#pj-nav .nest-row')].filter(e => e.offsetParent !== null).map(e => e.querySelector(':scope > span:not(.wg-emo)').textContent.trim())")
+    return page.evaluate("[...document.querySelectorAll('#pj-nav .nest-row:not(.co-subtle)')].filter(e => e.offsetParent !== null).map(e => e.querySelector(':scope > span:not(.wg-emo)').textContent.trim())")
 
 
 def shot(page, name):
@@ -131,6 +131,7 @@ def main():
             # ---- the rows, in order: core, Preview game, + Add
             host.wait_for_selector("#nest-add", state="visible")
             assert rows(host) == CORE, rows(host)   # Preview and + Add are not among the rows
+            assert host.is_visible("#nest-company.co-subtle"), "leads see the quiet 'Set up company' row (counted apart from the core rows)"
             assert host.evaluate("!!document.querySelector('.nest-foot #nest-preview')"), "Preview sits at the bottom of the pane"
             assert host.evaluate("document.querySelector('#nest-add').getBoundingClientRect().top >= document.querySelector('#nest-pinned').getBoundingClientRect().bottom - 1"), "+ Add sits below the Repo row"
             assert "Preview game" in host.inner_text("#nest-preview")
@@ -147,8 +148,8 @@ def main():
             ok(api(f"/projects/{pid}/website/build", "POST", {}, token=orion), "build")
             host.wait_for_selector("#nest-website", state="visible", timeout=15000)
             assert rows(host) == CORE + ["Website"], rows(host)
-            host.click("#nest-website"); host.wait_for_selector("#wb-root", timeout=15000)
-            wait_text(host, "#crumb-label", "Files › Website")
+            host.click("#nest-website"); host.wait_for_selector("#wdz:not([hidden])", timeout=15000)   # site-v2: the Website row opens the designer
+            host.evaluate("TribeSiteDesigner.close()"); host.wait_for_selector("#wdz", state="hidden")
 
             # ---- + Add: the picker, Calendar
             host.click("#nest-add"); host.wait_for_selector("#wg-picker")

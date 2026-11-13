@@ -32,6 +32,7 @@ jobs:
           mkdir -p _site/app
           cp -R site/. _site/
           cp -R app/ui/. _site/app/
+          mkdir -p _site/.well-known && cp app/ui/.well-known/assetlinks.json _site/.well-known/   # Android TWA: Digital Asset Links at the domain root (mobile/android/README.md)
           # old addresses keep working: friend links (go.html), the demo, /about/, and the old root service worker
           cp -R scripts/pages-compat/. _site/
           touch _site/.nojekyll

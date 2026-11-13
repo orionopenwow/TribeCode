@@ -201,7 +201,8 @@ def main():
             # ---- docs ----
             wait_text(host, "#brain-label", "qwen3:8b")
             host.click('[data-nav="docs"]:visible')
-            host.wait_for_selector("#doc-first")
+            host.wait_for_selector("#doc-first, #fg-new-menu")
+            if host.locator("#fg-new-menu").count(): host.click("#fg-new-menu")   # feat/files-dash: + Create › Doc
             host.click("#doc-first")
             host.wait_for_selector("#doc-title")
             host.fill("#doc-title", "Game design doc")

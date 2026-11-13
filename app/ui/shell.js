@@ -69,8 +69,9 @@
     { key: 'money', label: 'Money', icon: 'i-coin', kind: 'Go to', keys: 'money ledger revenue costs runway users stripe finance books csv export autopilot seats budget ai spend', when: () => !!(window.TribeLedger && window.TribeLedger.hasCompany()), run: () => window.TribeLedger && window.TribeLedger.open() },   // v0.27 company: Money (app/ui/ledger.js adds its own sidebar row when a company exists)
     { key: 'secretary', label: 'Secretary', tab: 'Secretary', slug: 'secretary', icon: 'i-quill', group: 'agents', keys: 'journal digest inspirations background', run: () => window.TribeSecretary && window.TribeSecretary.open() },
     { key: 'hub', label: 'Home', icon: 'i-home', group: 'global', row: 'Home', keys: 'hub dashboard stream feed overview all projects start', run: () => hubOpen('home') },
-    { key: 'docs-all', label: 'All files', icon: 'i-doc', group: 'global', keys: 'documents across projects search every', run: () => hubOpen('docs') },
-    { key: 'repos-all', label: 'All code', icon: 'i-git', group: 'global', keys: 'all repos repositories every project code branches status',   /* qa-qol-2: plain word (was All repos) */ run: () => hubOpen('repos') },
+    { key: 'docs-all', label: 'Your files', row: 'Files', icon: 'i-doc', group: 'global', keys: 'all files documents notes docs sheets slides pictures uploads across projects search every my files', run: () => hubOpen('docs') },   // feat/files-dash: "Files" (was All files)
+    { key: 'design-all', label: 'Your designs', row: 'Design', icon: 'i-canvas', group: 'global', keys: 'all designs canvases whiteboards frames every project my designs', run: () => hubOpen('design') },   // feat/files-dash: Home parity
+    { key: 'repos-all', label: 'Your code', row: 'Code', icon: 'i-git', group: 'global', keys: 'all code repos repositories every project branches status code files',   /* feat/files-dash: "Code" (was All code) */ run: () => hubOpen('repos') },
     { key: 'work', label: 'Work', icon: 'i-users', group: 'global', keys: 'work gigs jobs hire hiring talent people open to work time bank compute share bounty seat freelance', run: () => window.TribeTalent && window.TribeTalent.open() },   // v0.27 company: app/ui/talent.js
     { key: 'fleet', label: 'Agent fleet', icon: 'i-robot', group: 'global', keys: 'agents models claude secretary all fleet office open space', run: () => window.TribeAgentsHub && window.TribeAgentsHub.open({ global: true }) },
     { key: 'updates', label: 'Updates', icon: 'i-bell', keys: 'inbox notifications plan feed timeline', run: () => openUpdates() },
@@ -81,7 +82,7 @@
     { key: 'scratch', label: 'Scratchpad', icon: 'i-quill', kind: 'Action', keys: 'notes jot snippet quick personal scratch', run: () => openScratch() },
     { key: 'panel', label: 'Toggle right panel', icon: 'i-list', kind: 'Action', keys: 'right panel in the room sidebar show hide preview', run: () => setPanel(!document.body.classList.contains('panel-off')) },
     { key: 'context', label: 'Tribe context', icon: 'i-doc', kind: 'Action', keys: 'context tribe_context brief drawer', hint: 'Ctrl Shift K', run: () => { const b = $('#ctx-btn'); if (b) b.click(); } },
-    { key: 'market', label: 'Marketplace', icon: 'i-box', kind: 'Go to', keys: 'marketplace market widgets skills templates connectors mcp libraries tools playbooks starters legal academy browse add hot new', run: () => window.TribeMarket && window.TribeMarket.open() },   // v0.27 company: the Marketplace (market.js)
+    { key: 'market', label: 'Marketplace', icon: 'i-wrench', kind: 'Go to', keys: 'marketplace market widgets skills templates connectors mcp libraries tools playbooks starters legal academy browse add hot new', run: () => window.TribeMarket && window.TribeMarket.open() },   // v0.27 company: the Marketplace (market.js)
     { key: 'guide', label: 'Guide', icon: 'i-help', kind: 'Go to', keys: 'help how to wiki manual faq docs guide start troubleshooting tutorial', run: () => window.TribeGuide && window.TribeGuide.open() },   // no group: no row (feat/vision-guide, app/ui/guide.js)
     { key: 'project-settings', label: 'Project settings', icon: 'i-gear', kind: 'Action', keys: 'rename emoji color picture project', run: () => projectSettings() },
     { key: 'customize', label: 'Customize', icon: 'i-sparkle', kind: 'Action', keys: 'look theme background accent banner cover density font size tribe name emoji icon', run: () => window.TribeLook && window.TribeLook.open(isGlobal() ? 'tribe' : 'project') },   // feat/customize (app/ui/look.js)
@@ -106,7 +107,8 @@
   const AD = w => (w === 'agents' && window.TribeAgentsDash) || null;
   const adTabs = (w, list, cur) => (AD(w) ? AD(w).tabs(list, cur) : list);
   // No project selected: the Global Hub is on screen (its sub-pages too).
-  const isGlobal = () => document.body.dataset.view === 'hub' || (document.body.dataset.view === 'agents-hub' && document.body.dataset.scope === 'global');
+  // Work and the Agent fleet belong to your dashboard too: the global sidebar stays (router.js, docs/NAVIGATION.md).
+  const isGlobal = () => window.TribeRouter ? window.TribeRouter.isGlobal() : (document.body.dataset.view === 'hub' || document.body.dataset.view === 'work' || (document.body.dataset.view === 'agents-hub' && document.body.dataset.scope === 'global'));
   const hubOpen = m => { if (window.TribeHub) window.TribeHub.open(m); };
   function openScratch() {
     // Phones, no tribe yet, or already on Home: Home shows the scratchpad in its own page.
@@ -115,10 +117,14 @@
     setTimeout(() => { const t = $('#scratch-in'); if (t) { t.focus(); t.scrollIntoView({ block: 'nearest' }); } }, 60);
   }
   const COUNT = { bugs: 1, requests: 1, reviews: 1, handoffs: 1 };
+  const TAB_ICO = { tasks: 'board', bugs: 'bug', board: 'vote', milestones: 'flag', calendar: 'calendar', repo: 'git', visuals: 'photo', roles: 'people', requests: 'inbox',
+    agents: 'agent', 'agents-hub': 'plug', 'mcp-directory': 'link', ownership: 'map', conflicts: 'merge', handoffs: 'hand', reviews: 'eye', plan: 'sun', secretary: 'quill' };   // feat/shell-polish
   const HOT = { requests: 1, reviews: 1, handoffs: 1 };
   function go(key) {
     const d = byKey(key); if (!d) return;
-    lastDest = key; closePop(); closeDrawer();
+    closePop(); closeDrawer();
+    const R = window.TribeRouter; if (R && R.blocked(key)) return R.go(key);   // no tribe yet: Home with a next step, never a dead end
+    lastDest = key;
     const run = () => { d.run(); setTimeout(markActive, 0); };
     window.TribeMotion ? window.TribeMotion.swap(run) : run();
   }
@@ -141,7 +147,7 @@
   // ---------- which destination is on screen ----------
   function current() {
     const v = document.body.dataset.view || '';
-    if (v === 'hub') { const m = window.TribeHub ? window.TribeHub.mode() : 'home'; return m === 'repos' ? 'repos-all' : m === 'docs' ? 'docs-all' : 'hub'; }
+    if (v === 'hub') { const m = window.TribeHub ? window.TribeHub.mode() : 'home'; return m === 'repos' ? 'repos-all' : m === 'docs' ? 'docs-all' : m === 'design' ? 'design-all' : 'hub'; }
     if (v === 'agents-hub' && document.body.dataset.scope === 'global') return 'fleet';
     if (v === 'coord') return (window.TribeCoord && window.TribeCoord.tab()) || 'agents';
     if (v === 'flow-roles') return 'roles';
@@ -163,7 +169,7 @@
   function drawTabs(cur) {
     if (cur === undefined) cur = document.body.classList.contains('ws-open') || document.body.classList.contains('gd-open') ? '' : current();
     const bar = $('#view-tabs'); if (!bar) return;
-    const TAB_EMO = { tasks: '📋', bugs: '🐞', board: '🗳️', milestones: '🏁', calendar: '📅', repo: '🌿', visuals: '📸', roles: '👥', requests: '📥' };   // a small emoji beside each Task Board tab
+    const TI = window.TribeIcons, tabIco = k => TI && TAB_ICO[k] ? `<span class="wt-ic">${TI.svg(TAB_ICO[k], 16)}</span>` : '';   // a quiet stroke icon beside each tab (app/ui/icons.js)
     const w = wsOf(cur);
     if (gated(w) && cur === 'tasks') { if (document.body.classList.contains('ws-tabbed')) document.body.classList.remove('ws-tabbed'); if (!bar.classList.contains('hidden')) bar.classList.add('hidden'); tabsSig = ''; return; }   // feat/setup-flow
     document.body.classList.toggle('ws-tabbed', !!w);
@@ -179,13 +185,13 @@
     if (sig !== tabsSig) {
       tabsSig = sig;
       if (w === 'docs') {   // Files: one emoji row, no eyebrow (feat: tidy Files)
-        const items = [['docs-files', 'files', '📝 Notes'], ...(code ? [['docs-files', 'code', '💻 Code'], ['docs-files', 'docs', '📚 Docs']] : []), ['website', '', '🌐 Website'], ['captures', '', '📎 Captures'], ['academy', '', '🎓 Academy']].filter(([k]) => list.some(t => t.key === k));   // v0.27 company: + Academy tab
-        bar.innerHTML = `<div class="wt-row wt-pills" role="tablist" aria-label="Files">${items.map(([k, m, l]) => { const on = k === cur && (!m || m === cfm);
-          return `<button role="tab" class="wt ${on ? 'on' : ''}" id="wt-${esc(k)}${m && m !== 'files' ? '-' + m : ''}" data-tab="${esc(k)}"${m ? ` data-cfseg="${m}"` : ''} aria-selected="${on}" tabindex="${on ? 0 : -1}">${esc(l)}</button>`; }).join('')}</div>`;
+        const items = [['docs-files', 'files', 'Files', 'all'], ...(code ? [['docs-files', 'code', 'Code', 'code'], ['docs-files', 'docs', 'Docs', 'docs']] : []), ['website', '', 'Website', 'sites'], ['captures', '', 'Captures', 'other'], ['academy', '', 'Academy', 'template']].filter(([k]) => list.some(t => t.key === k));   // v0.27 company: + Academy tab
+        bar.innerHTML = `<div class="wt-row wt-pills" role="tablist" aria-label="Files">${items.map(([k, m, l, ic]) => { const on = k === cur && (!m || m === cfm);
+          return `<button role="tab" class="wt ${on ? 'on' : ''}" id="wt-${esc(k)}${m && m !== 'files' ? '-' + m : ''}" data-tab="${esc(k)}"${m ? ` data-cfseg="${m}"` : ''} aria-selected="${on}" tabindex="${on ? 0 : -1}">${window.TribeFilesView ? `<span class="wt-ic">${window.TribeFilesView.icon(ic, 14)}</span>` : ''}${esc(l)}</button>`; }).join('')}</div>`;   // feat/files-dash: small stroke icons, no emoji
         bar.classList.add('wt-files');
       } else { bar.classList.remove('wt-files');
       bar.innerHTML = `<span class="eyebrow wt-eye">${esc(WS[w].label)}</span><div class="wt-row" role="tablist" aria-label="${esc(WS[w].label)}">${list.map(t => { const n = COUNT[t.key] && counts[t.key] ? counts[t.key] : 0;
-        return `<button role="tab" class="wt ${t.key === cur ? 'on' : ''}" id="wt-${esc(t.key)}" data-tab="${esc(t.key)}" aria-selected="${t.key === cur}" tabindex="${t.key === cur ? 0 : -1}">${TAB_EMO[t.key] ? TAB_EMO[t.key] + ' ' : ''}${esc(t.tab)}${n ? `<span class="n ${HOT[t.key] ? 'hot' : ''}">${n > 99 ? '99+' : n}</span>` : ''}${ad ? ad.tabExtra(t.key) : ''}</button>`; }).join('')}${ad ? ad.plusHtml() : ''}</div>`; }
+        return `<button role="tab" class="wt ${t.key === cur ? 'on' : ''}" id="wt-${esc(t.key)}" data-tab="${esc(t.key)}" aria-selected="${t.key === cur}" tabindex="${t.key === cur ? 0 : -1}">${tabIco(t.key)}${esc(t.tab)}${n ? `<span class="n ${HOT[t.key] ? 'hot' : ''}">${n > 99 ? '99+' : n}</span>` : ''}${ad ? ad.tabExtra(t.key) : ''}</button>`; }).join('')}${ad ? ad.plusHtml() : ''}</div>`; }
     }
     bar.classList.remove('hidden');
     const onTab = bar.querySelector('.wt.on'), row = bar.querySelector('.wt-row');
@@ -352,7 +358,7 @@
         <h6>Tribe</h6><button data-sw="hub" class="${isGlobal() ? 'on' : ''}"><span class="pj-face sm tribe-face">${esc(tribe.charAt(0).toUpperCase())}</span><span>${esc(tribe)}<small>${on ? 'Home · every project' : 'Not connected yet'}</small></span>${isGlobal() ? ico('i-tick', 14) : ''}</button>
         ${cur ? `<h6>${esc((list.find(p => p.id === cur) || {}).name || 'Project')}</h6><div class="sw-views">${[['home', 'Dashboard', 'i-home'], ['tasks', 'Board', 'i-check'], ['repo', 'Code', 'i-git'], ['updates', 'Timeline', 'i-bell']].map(([k, l, i]) => `<button data-dest="${k}" class="sw-view">${ico(i, 15)}<span>${l}</span></button>`).join('')}</div>` : ''}
         ${groupH('Pinned', pinnedL)}${groupH('Collaborative rooms', rooms)}${groupH(rooms.length || pinnedL.length ? 'Personal' : 'Projects', personal)}
-        <button data-sw="workshop" class="sw-scratch"><span class="sw-ico">${ico('i-box')}</span><span>Workshop<small>Skills, recipes, templates and assets</small></span></button>
+        <button data-sw="workshop" class="sw-scratch"><span class="sw-ico">${ico('i-wrench')}</span><span>Workshop<small>Skills, recipes, templates and assets</small></span></button>
         <button data-sw="scratch" class="sw-scratch"><span class="sw-ico">${ico('i-quill')}</span><span>Personal scratchpad<small>Notes only you see</small></span></button>
         <hr>${scoped || !on ? '' : `<button data-pj-new>${ico('i-plus')}<span>New project</span></button>`}<button data-sw="join">${ico('i-link')}<span>Paste invite link</span></button>${cur ? `<button data-dest="project-settings">${ico('i-gear')}<span>Project settings</span></button>` : ''}<button data-dest="customize">${ico('i-sparkle')}<span>Customize</span></button></div>`,
       { id: 'project-menu', side: anchor.id === 'nest-switch' ? 'right' : 'below', cls: 'sh-wide' + (anchor.id === 'side-switch' ? ' sh-under-switch' : '') });
@@ -375,7 +381,7 @@
     $('#ss-face').innerHTML = p ? PJ().face(p, 'sm') : '<span class="pj-face sm ss-camp">⛺</span>';
     $('#ss-name').textContent = p ? p.name : 'Home';
     const n = (PJ() && PJ().list() || []).length;
-    $('#ss-sub').textContent = p ? `${tribe} · ${n} project${n === 1 ? '' : 's'}` : `${tribe} · every project`;
+    $('#ss-sub').textContent = p ? `${tribe} · ${n} project${n === 1 ? '' : 's'}` : 'Your dashboard';
   }
 
   // ---------- nest ----------
@@ -403,9 +409,10 @@
     const b = e.target.closest && e.target.closest('#pj-rail [data-pj-open]'); if (!b) return;
     e.preventDefault(); const id = b.dataset.pjOpen, pinned = pins.includes(id);
     const el = pop(b, `<div class="sh-menu"><button data-rc="open">${ico('i-home', 15)}<span>Open dashboard</span></button><button data-rc="chat">${ico('i-chat', 15)}<span>Messages</span></button>
-      <button data-rc="pin">${ico('i-tick', 15)}<span>${pinned ? 'Unpin' : 'Pin to the top'}</span></button><hr><button data-rc="invite">${ico('i-users', 15)}<span>Invite to this project</span></button><button data-rc="settings">${ico('i-gear', 15)}<span>Project settings</span></button><button data-rc="customize">${ico('i-sparkle', 15)}<span>Customize</span></button></div>`, { id: 'rail-menu', side: 'right' });
+      <button data-rc="pin">${ico('i-tick', 15)}<span>${pinned ? 'Unpin' : 'Pin to the top'}</span></button><hr><button data-rc="invite">${ico('i-users', 15)}<span>Invite to this project</span></button><button data-rc="settings">${ico('i-gear', 15)}<span>Project settings</span></button>${window.TribeReorder ? `<button data-rc="reset-order">${ico('i-refresh', 15)}<span>Reset order</span></button>` : ''}<button data-rc="customize">${ico('i-sparkle', 15)}<span>Customize</span></button></div>`, { id: 'rail-menu', side: 'right' });
     el.querySelectorAll('[data-rc]').forEach(x => x.onclick = async () => {
       const k = x.dataset.rc; closePop();
+      if (k === 'reset-order') { window.TribeReorder.reset('rail'); return; }   // feat/shell-polish (reorder.js)
       if (k === 'pin') { await togglePin(id); PJ().refresh && PJ().refresh(); return; }
       if (PJ().current() !== id) await PJ().switchTo(id, k === 'chat' ? 'chat' : 'home');
       if (k === 'open') App().show('home'); else if (k === 'chat') App().show('chat'); else if (k === 'invite') App().openInvite(); else if (k === 'settings') projectSettings(); else if (k === 'customize' && window.TribeLook) window.TribeLook.open('project');
@@ -425,7 +432,7 @@
       title.dataset.nav = 'hub'; title.title = 'Your home';
       $('#nest-face').innerHTML = `<span class="pj-face sm tribe-face" style="background:${esc(me.color || 'var(--accent)')}">${esc(nm.trim().charAt(0).toUpperCase())}</span>`;
       $('#nest-name').textContent = 'Home';
-      $('#nest-sub').textContent = on ? 'Everything, every project' : '';   // no tribe yet: the user bar says it once
+      $('#nest-sub').textContent = 'Your dashboard';   // no tribe yet: the user bar says it once
     } else {
       title.dataset.nav = 'home'; title.title = 'Project home';
       if (p) { $('#nest-face').innerHTML = h ? h.face(p, 'sm') : ''; $('#nest-name').textContent = p.name; }

@@ -43,20 +43,10 @@ button.take:hover, .take:hover { background: color-mix(in srgb, var(--people) 24
 
 /* pops of color: small flat emoji on the actions people use most (a light matte filter takes the gloss off) */
 button[data-take]::before, .take[data-take]::before,
-button.claude[data-give]::before,
-#tour-invite::before, .wg-preview::before { font-family: 'Apple Color Emoji', 'Segoe UI Emoji', 'Noto Color Emoji', sans-serif; font-size: 15px; line-height: 1; filter: saturate(.8) contrast(.95); margin-right: 2px; }
+button.claude[data-give]::before { font-family: 'Apple Color Emoji', 'Segoe UI Emoji', 'Noto Color Emoji', sans-serif; font-size: 15px; line-height: 1; filter: saturate(.8) contrast(.95); margin-right: 2px; }
 button[data-take]::before, .take[data-take]::before { content: '✋'; }
 button.claude[data-give]::before { content: '✨'; }
 .m2-si-b .take[data-take] svg, .m2-si-b .claude[data-give] svg { display: none; }
-#tour-invite::before { content: '👋'; }
-#tour-invite > span:first-child { display: none; }          /* the 👋 replaces the orange "+" */
-.wg-preview::before { content: '▶️'; }                  /* the emoji follows what the crew is making */
-.wg-preview[data-kind="game"]::before { content: '🎮'; }
-.wg-preview[data-kind="3d"]::before { content: '🧊'; }
-.wg-preview[data-kind="app"]::before { content: '📱'; }
-.wg-preview[data-kind="site"]::before { content: '🌐'; }
-.wg-preview[data-kind="tool"]::before { content: '🛠️'; }
-.wg-preview svg.i { display: none; }
 
 /* gentle emoji before a few page titles (just these: the pages people live in, not every heading) */
 #view-tasks .view-head h1::before { content: '📝'; }
@@ -143,10 +133,7 @@ button.claude[data-give]::before { content: '✨'; }
   .pj-title2 #pj-invite { width: 100%; justify-content: center; margin-left: 0 !important; }
 }
 
-/* Invite friends (sidebar foot): emoji and label centred as one unit, a touch bigger */
-.nest-foot #tour-invite, #tour-invite { display: inline-flex; align-items: center; justify-content: center; gap: 10px; height: 44px; font-size: 14.5px; line-height: 1; }
-#tour-invite::before { display: block; font-size: 18px; line-height: 1; margin: 0; filter: none; transform: translateY(-1px); }
-.nest-foot #tour-invite:hover { border-color: color-mix(in srgb, var(--action, #B4512A) 60%, var(--edge)); }
+/* Invite friends and Preview are plain sidebar rows now (feat/shell-polish, sidefoot.css) */
 
 /* ---- Add context: the drop zone as a main point of the Dashboard, right under Set up ---- */
 .pj-context { margin: 0 0 26px; padding: 22px 24px; border: 1px solid var(--edge); border-radius: 14px; background: var(--surface); }

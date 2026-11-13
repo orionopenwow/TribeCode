@@ -8,6 +8,11 @@
 //   profiles.json  { <memberId>: { skills, roles, hours, rate: { type, text }, tz, links: [{label,url}], projects, open } }
 //   gigs.json      [ { id, title, kind: seat|task|bounty, seat?, seatKind?, project?, description, skills, hours,
 //                      pay: { type: free|time|paid, text }, status: draft|open|filled|closed, applicants: [...], by, at } ]
+//   (feat/company-gigs) profiles also hold levels { skill: 1|2|3 }, tools, bio, visibleIn [projectIds] (empty = the
+//                  whole tribe) and hidden (a lead hid it as spam). A gig of kind "offer" is one you post for yourself
+//                  ("I'll design your logo"): deliver, timeline, places [projectIds], requests [{ id, member, note,
+//                  project, status: requested|accepted|declined, task? }]. Accepting a request makes a task assigned to
+//                  the poster through the Task Board's accept flow (server/taskflow.js).
 //   timebank.json  [ { id, from, to, hours, note, task?, at, by, ok: { from, to }, status: proposed|confirmed|declined } ]
 //   compute.json   { offers: [ { id, member, what, hoursPerWeek, rules, on, at } ], requests: [ { id, offer, by, hours, note, status, approval, used, at } ] }
 //   public/<id>.json  ready-to-upload public gig bundles (opt-in; the poster picks a public contact)
@@ -23,6 +28,9 @@
 //   POST /gigs/:id/hire { applicant }        member -> seat + DM; outside person -> project invite, seat on join
 //   POST /gigs/:id/share { contact, pr? }    public bundle + GitHub links (+ PR with the poster's saved token)
 //   GET  /public[?refresh=1]                 community gigs (read-only, jsDelivr)
+//   POST /gigs/:id/request { note, project? }   POST /gigs/:id/requests/:rid/accept | /decline { reason }   (offers)
+//   POST /gigs/:id/hide { hidden }   POST /profile/:id/hide { hidden }   leads hide spam (only you edit your own)
+//   GET  /profile/:id                        + gigs (their open offers) and done (finished work, proof from tasks)
 //   GET  /timebank  POST /timebank { from, to, hours, note, task? }  POST /timebank/:id/confirm | /decline
 //   GET  /compute   PUT /compute/offers { id?, what, hoursPerWeek, rules, on }  DELETE /compute/offers/:id
 //   POST /compute/request { offer, hours, note }   POST /compute/requests/:id/used { hours }
@@ -32,8 +40,8 @@ const fs = require('node:fs');
 const SEAT_COLORS = { ceo: '#F26B1D', cto: '#38C6B1', design: '#E86A92', growth: '#FABD2F', sales: '#6C7CFF', support: '#3BD16F', ops: '#94A3B8', finance: '#2DD4BF', legal: '#A78BFA', custom: '#9AA7B8' };
 const SEAT_TITLES = { ceo: 'CEO', cto: 'Build', design: 'Design', growth: 'Grow', sales: 'Sales', support: 'Support', ops: 'Run', finance: 'Finance', legal: 'Legal', custom: 'Custom' };
 const SEAT_KINDS = Object.keys(SEAT_COLORS);
-const KINDS = ['seat', 'task', 'bounty'];
-const PAY = ['free', 'time', 'paid'];
+const KINDS = ['seat', 'task', 'bounty', 'offer'];
+const PAY = ['free', 'time', 'paid', 'equity', 'fun'];
 const WHAT = ['claude-code', 'local-model', 'gpu', 'other'];
 const STATUSES = ['draft', 'open', 'filled', 'closed'];
 const GID = /^g-[a-z0-9]{4,24}$/;
@@ -57,7 +65,7 @@ function contactOf(v) {
   return s;
 }
 
-module.exports = function talent({ P, base, id, getMembers, nameOf, postChat, broadcast, bus, dms, approvals, askai, workshop, perms, makeInvite, linkFor, joinProject, tribeName = () => 'tribe', now = () => Date.now() }) {
+module.exports = function talent({ P, base, id, getMembers, nameOf, postChat, broadcast, bus, dms, approvals, askai, workshop, perms, makeInvite, linkFor, joinProject, ledger = null, loadTasks = null, saveTask = null, createTask = null, taskFlow = null, tribeName = () => 'tribe', now = () => Date.now() }) {
   const F = { profiles: '.tribe/talent/profiles.json', gigs: '.tribe/talent/gigs.json', bank: '.tribe/talent/timebank.json', compute: '.tribe/talent/compute.json' };
   fs.mkdirSync(base.p('.tribe', 'talent', 'public'), { recursive: true });
   const read = (k, d) => { const v = base.readJSON(F[k], d); return v && typeof v === 'object' ? v : d; };
@@ -69,8 +77,9 @@ module.exports = function talent({ P, base, id, getMembers, nameOf, postChat, br
   const ownerOf = me => (me && me.role === 'agent' && me.owner ? member(me.owner) : me);
   const isBoss = me => !!me && (me.role === 'host' || (perms && perms.atLeast && perms.atLeast(me, 'admin')));
   const projHost = (me, pid) => !!me && !!pid && ((P.get(pid) || {}).members || {})[me.id] === 'host';
-  const canManageGig = (me, g) => !!me && me.role !== 'agent' && (g.by === me.id || isBoss(me) || projHost(me, g.project));
-  const seesGig = (me, g) => !g.project || P.canSee(me, g.project);
+  const canManageGig = (me, g) => !!me && me.role !== 'agent' && (g.by === me.id || (g.kind !== 'offer' && (isBoss(me) || projHost(me, g.project))));   // an offer is yours alone; leads can only hide it
+  const isLeadOf = (me, g) => !!me && me.role !== 'agent' && (isBoss(me) || (g.project ? projHost(me, g.project) : (g.places || []).some(x => projHost(me, x))));
+  const seesGig = (me, g) => !!me && (g.by === me.id || ((!g.project || P.canSee(me, g.project)) && (!(g.places || []).length || g.places.some(x => P.get(x) && P.canSee(me, x))) && (!g.hidden || isBoss(me) || projHost(me, g.project))));
   const changed = what => broadcast({ type: 'talent', what });
   const first = n => String(n || 'someone').split(/\s+/)[0];
   const notify = (to, from, title, body, extra) => { try { bus.notify({ type: 'talent', to: [to], from, title: clean(title, 160), body: clean(body || '', 280), view: 'work', ...(extra || {}) }); } catch {} };
@@ -107,8 +116,10 @@ module.exports = function talent({ P, base, id, getMembers, nameOf, postChat, br
   // ---------- profiles ----------
   function profileOf(mid) {
     const p = (read('profiles', {})[mid]) || {};
-    return { skills: p.skills || [], roles: p.roles || [], hours: p.hours || 0, rate: p.rate || { type: 'free', text: '' }, tz: p.tz || null, links: p.links || [], projects: (p.projects || []).filter(x => P.get(x)), open: !!p.open, updated: p.updated || null };
+    return { skills: p.skills || [], levels: p.levels || {}, roles: p.roles || [], tools: p.tools || [], bio: p.bio || '', hours: p.hours || 0, rate: p.rate || { type: 'free', text: '' }, tz: p.tz || null, links: p.links || [],
+      projects: (p.projects || []).filter(x => P.get(x)), visibleIn: (p.visibleIn || []).filter(x => P.get(x)), open: !!p.open, hidden: !!p.hidden, updated: p.updated || null };
   }
+
   function setProfile(mid, b) {
     const all = read('profiles', {}), p = { ...(all[mid] || {}) };
     if ('skills' in b) p.skills = skillList(b.skills);
@@ -119,6 +130,11 @@ module.exports = function talent({ P, base, id, getMembers, nameOf, postChat, br
     if ('links' in b) p.links = (Array.isArray(b.links) ? b.links : []).map(l => ({ label: clean((l && l.label) || '', 40), url: url(l && (l.url || l)) })).filter(l => l.url).slice(0, 5);
     if ('projects' in b) p.projects = (Array.isArray(b.projects) ? b.projects : []).filter(x => typeof x === 'string' && P.get(x) && P.canSee(member(mid), x)).slice(0, 8);
     if ('open' in b) p.open = !!b.open;
+    if ('levels' in b) { const lv = {}; for (const k of p.skills || []) { const n = Math.round(Number((b.levels || {})[k])); if (n >= 1 && n <= 3) lv[k] = n; } p.levels = lv; }
+    else if ('skills' in b && p.levels) for (const k of Object.keys(p.levels)) if (!p.skills.includes(k)) delete p.levels[k];
+    if ('tools' in b) p.tools = skillList(b.tools);
+    if ('bio' in b) p.bio = clean(b.bio || '', 600, 8);
+    if ('visibleIn' in b) p.visibleIn = (Array.isArray(b.visibleIn) ? b.visibleIn : []).filter(x => typeof x === 'string' && P.get(x) && P.canSee(member(mid), x)).slice(0, 20);
     p.updated = iso(); all[mid] = p; write('profiles', all); changed('people');
     return profileOf(mid);
   }
@@ -126,12 +142,13 @@ module.exports = function talent({ P, base, id, getMembers, nameOf, postChat, br
     const p = profileOf(m.id), b = bankBalances()[m.id] || { given: 0, received: 0 };
     return { id: m.id, name: m.name, color: m.color, ...p, projects: p.projects.filter(x => P.canSee(viewer, x)).map(x => ({ id: x, name: (P.get(x) || {}).name })), balance: Math.round((b.given - b.received) * 100) / 100 };
   }
-  function people(viewer, { skills, seat } = {}) {
-    const want = skillList(skills || []);
+  const profileVisible = (p, mid, viewer) => !!viewer && (mid === viewer.id || (!p.hidden || isBoss(viewer)) && (!p.visibleIn.length || p.visibleIn.some(x => P.canSee(viewer, x))));
+  function people(viewer, { skills, seat, hours, tz } = {}) {
+    const want = skillList(skills || []), minH = hoursOf(hours, 80);
     const visible = new Set(getMembers().filter(m => human(m) && (!P.scoped(viewer) || !P.scoped(m) || m.projects.some(x => P.canSee(viewer, x)))).map(m => m.id));
-    return getMembers().filter(m => visible.has(m.id) && profileOf(m.id).open)
+    return getMembers().filter(m => visible.has(m.id) && profileOf(m.id).open && profileVisible(profileOf(m.id), m.id, viewer))
       .map(m => personView(m, viewer))
-      .filter(p => (!seat || p.roles.includes(seat)) && (!want.length || want.some(s => p.skills.includes(s))))
+      .filter(p => (!seat || p.roles.includes(seat)) && (!want.length || want.some(s => p.skills.some(k => k.includes(s) || s.includes(k)))) && (!minH || p.hours >= minH) && (!tz || p.tz === tz))
       .sort((a, b) => (want.length ? want.filter(s => b.skills.includes(s)).length - want.filter(s => a.skills.includes(s)).length : 0) || String(b.updated).localeCompare(String(a.updated)));
   }
 
@@ -151,8 +168,10 @@ module.exports = function talent({ P, base, id, getMembers, nameOf, postChat, br
   function gigView(g, me) {
     const mgr = canManageGig(me, g);
     const apps = (g.applicants || []).map(a => (mgr || a.member === me.id ? { ...a, name: a.member ? nameOf(a.member) : a.name } : null)).filter(Boolean);
-    return { ...g, applicants: apps, applicantCount: (g.applicants || []).length, applied: (g.applicants || []).some(a => a.member === me.id), canManage: mgr,
-      byName: nameOf(g.by), projectName: g.project ? (P.get(g.project) || {}).name || null : null,
+    const reqs = (g.requests || []).filter(r => mgr || r.member === me.id).map(r => ({ ...r, name: nameOf(r.member), projectName: r.project ? (P.get(r.project) || {}).name : null }));
+    return { ...g, requests: reqs, requestCount: (g.requests || []).filter(r => r.status === 'requested').length, requested: (g.requests || []).some(r => r.member === me.id && r.status === 'requested'), canHide: isLeadOf(me, g),
+      placeNames: (g.places || []).map(x => (P.get(x) || {}).name).filter(Boolean), applicants: apps, applicantCount: (g.applicants || []).length, applied: (g.applicants || []).some(a => a.member === me.id), canManage: mgr,
+      byName: nameOf(g.by), stage: stageOf(g), filledName: g.filledBy ? nameOf(g.filledBy) : null, filledAgent: !!(g.filledBy && (member(g.filledBy) || {}).role === 'agent'), mine: isAssignee(me, g), updates: (g.updates || []).map(u => ({ ...u, byName: nameOf(u.by) })), projectName: g.project ? (P.get(g.project) || {}).name || null : null,
       seatInfo: g.seat ? seatInfo(g.project, g.seat) : null, color: (g.seat && (seatInfo(g.project, g.seat) || {}).color) || SEAT_COLORS[g.seatKind] || null };
   }
   function listGigs(me) { return syncDrafts(gigs()).filter(g => seesGig(me, g) && (g.status !== 'draft' || canManageGig(me, g) || g.by === me.id || (member(g.by) || {}).owner === me.id)).map(g => gigView(g, me)); }
@@ -171,25 +190,33 @@ module.exports = function talent({ P, base, id, getMembers, nameOf, postChat, br
     if (!prev || 'skills' in b) g.skills = skillList(b.skills || []);
     if (!prev || 'hours' in b) g.hours = hoursOf(b.hours, 168);
     if (!prev || 'pay' in b) g.pay = payOf(b.pay);
+    if (!prev || 'tasks' in b) g.tasks = (Array.isArray(b.tasks) ? b.tasks : []).filter(x => typeof x === 'string' && /^[A-Za-z0-9_-]{1,48}$/.test(x)).slice(0, 20);   // the board tasks this gig covers
+    if (!prev || 'deliver' in b) g.deliver = clean(b.deliver || '', 600, 10);
+    if (!prev || 'timeline' in b) g.timeline = clean(b.timeline || '', 80);
+    if (!prev || 'places' in b) g.places = (Array.isArray(b.places) ? b.places : []).filter(x => typeof x === 'string' && P.get(x) && P.canSee(me, x)).slice(0, 12);
+    if (g.kind === 'offer') { g.seat = null; g.seatKind = null; }
     if (prev && 'status' in b) { if (!STATUSES.includes(b.status) || b.status === 'draft') throw err(400, 'status must be open, filled or closed'); g.status = b.status; }
     return g;
   }
   function postGig(b, me) {
     if (!me || me.role === 'spectator') throw err(403, 'spectators can\'t post gigs');
     const g = cleanGig(b, me, null);
+    if (g.kind === 'offer' && !human(me)) throw err(403, 'only people offer their own work');
     if (g.kind === 'seat' && me.role !== 'agent' && !(isBoss(me) || projHost(me, g.project) || (perms && perms.can(me, 'members.invite', g.project)))) throw err(403, 'only people who can invite to this project post seats');
-    Object.assign(g, { id: nid('g'), status: 'open', applicants: [], by: me.id, at: iso() });
+    Object.assign(g, { id: nid('g'), status: 'open', applicants: [], ...(g.kind === 'offer' ? { requests: [] } : {}), by: me.id, at: iso() });
     if (me.role === 'agent') {   // agents draft; a person approves before anyone sees it
       g.status = 'draft';
       if (approvals) { try { const a = approvals.create({ title: `Post the gig "${g.title}"?`, details: `${g.description || ''}\n\nKind: ${g.kind}${g.seatKind ? ` (${g.seatKind})` : ''} · pay: ${g.pay.type}${g.pay.text ? ` (${g.pay.text})` : ''} · ${g.hours || '?'} h`, risk: 'medium', kind: 'gig-post' }, me); g.approval = a.id; if (a.status === 'approved') g.status = 'open'; } catch {} }
     }
     const list = gigs(); list.push(g); saveGigs(list); changed('gigs');
-    if (g.status === 'open') try { P.inProject(g.project || P.defaultId(), () => postChat('general', 'tribecode', `🧰 New ${g.kind === 'seat' ? 'seat' : g.kind} on Work: **${g.title}**${g.pay.type === 'paid' ? ' · paid' : g.pay.type === 'time' ? ' · time exchange' : ''}`)); } catch {}
+    if (g.status === 'open' && g.kind === 'offer') try { P.inProject((g.places || [])[0] || P.defaultId(), () => postChat('general', 'tribecode', `🙋 **${me.name}** offers on Work: **${g.title}**${g.timeline ? ` · ${g.timeline}` : ''}`)); } catch {}
+    else if (g.status === 'open') try { P.inProject(g.project || P.defaultId(), () => postChat('general', 'tribecode', `🧰 New ${g.kind === 'seat' ? 'seat' : g.kind} on Work: **${g.title}**${g.pay.type === 'paid' ? ' · paid' : g.pay.type === 'time' ? ' · time exchange' : ''}`)); } catch {}
     return gigView(g, me);
   }
   const findGig = (gid, me) => { if (!GID.test(String(gid))) throw err(404, 'no such gig'); const list = syncDrafts(gigs()); const g = list.find(x => x.id === gid); if (!g || !seesGig(me, g)) throw err(404, 'no such gig'); return { list, g }; };
   function apply(gid, b, me) {
     const { list, g } = findGig(gid, me);
+    if (g.kind === 'offer') return request(gid, b, me);
     if (g.status !== 'open') throw err(409, 'this gig is not open');
     const note = clean(b.note || '', 600, 10);
     let a;
@@ -211,6 +238,7 @@ module.exports = function talent({ P, base, id, getMembers, nameOf, postChat, br
   }
   function hire(gid, b, me) {
     const { list, g } = findGig(gid, me);
+    if (g.kind === 'offer') throw err(400, 'an offer is requested, not hired: accept a request instead');
     if (!canManageGig(me, g)) throw err(403, 'only the poster or a project host hires');
     if (g.status !== 'open') throw err(409, 'this gig is not open');
     const a = (g.applicants || []).find(x => x.id === b.applicant || (b.member && x.member === b.member));
@@ -260,6 +288,75 @@ module.exports = function talent({ P, base, id, getMembers, nameOf, postChat, br
     const { list, g } = findGig(gid, me);
     if (!canManageGig(me, g)) throw err(403, 'only the poster or a project host removes this gig');
     saveGigs(list.filter(x => x !== g)); changed('gigs'); return { ok: true };
+  }
+
+  // ---------- offers: gigs you post for yourself (feat/company-gigs) ----------
+  function request(gid, b, me) {
+    const { list, g } = findGig(gid, me);
+    if (g.kind !== 'offer') throw err(400, 'only offers are requested');
+    if (g.status !== 'open') throw err(409, 'this offer is not open');
+    if (!human(me)) throw err(403, 'only people request an offer (your agent can point you here)');
+    if (g.by === me.id) throw err(400, 'that\'s your own offer');
+    if ((g.requests || []).some(r => r.member === me.id && r.status === 'requested')) throw err(409, 'you already asked');
+    const pid = b.project && P.get(String(b.project)) && P.canSee(me, String(b.project)) && P.canSee(member(g.by), String(b.project)) ? String(b.project) : null;
+    const r = { id: nid('r'), member: me.id, note: clean(b.note || '', 600, 10), project: pid, status: 'requested', at: iso() };
+    g.requests = [...(g.requests || []), r].slice(-100); saveGigs(list); changed('gigs');
+    notify(g.by, me.id, `${me.name} requested "${g.title}"`, r.note || 'Accept or decline it in Work › My gigs.', { ref: g.id });
+    dm(me.id, g.by, `🙋 I'd love your offer **${g.title}**${r.note ? `: ${r.note}` : ''}`);
+    return gigView(g, me);
+  }
+  function answer(gid, rid, yes, b, me) {
+    const { list, g } = findGig(gid, me);
+    if (g.kind !== 'offer' || g.by !== me.id) throw err(403, 'only the person who posted the offer answers requests');
+    const r = (g.requests || []).find(x => x.id === rid); if (!r) throw err(404, 'no such request');
+    if (r.status !== 'requested') throw err(409, `already ${r.status}`);
+    if (!yes) {
+      r.status = 'declined'; r.reason = clean(b.reason || '', 300) || ''; r.answeredAt = iso();
+      saveGigs(list); changed('gigs');
+      notify(r.member, me.id, `${me.name} can't take "${g.title}" right now`, r.reason || 'Try another time, or find someone else in Work › Find people.', { ref: g.id });
+      return { gig: gigView(g, me) };
+    }
+    if (!createTask) throw err(503, 'tasks are not available');
+    const pid = r.project || (g.places || []).find(x => P.get(x) && P.canSee(me, x) && P.canSee(member(r.member), x)) || P.defaultId();
+    const body = [`Requested by ${nameOf(r.member)} from the offer "${g.title}".`, r.note ? `\nTheir note: ${r.note}` : '', g.deliver ? `\nWhat you deliver: ${g.deliver}` : '', g.timeline ? `\nTimeline: ${g.timeline}` : '', g.pay ? `\nTerms: ${g.pay.type}${g.pay.text ? ` (${g.pay.text})` : ''}` : ''].join('');
+    const task = P.inProject(pid, () => {
+      const t = createTask({ title: `${g.title} · for ${first(nameOf(r.member))}`, by: r.member, assignee: me.id, body, source: 'gig' });
+      t.assignedBy = r.member; t.assignedAt = iso(); t.accept = 'pending'; t.gig = g.id;   // the requester asked; the poster answers with the board's own Accept
+      return taskFlow && taskFlow.accept ? taskFlow.accept(t, me) : (() => { t.accept = 'accepted'; t.status = 'doing'; return saveTask ? saveTask(t) : t; })();
+    });
+    r.status = 'accepted'; r.task = task.id; r.taskProject = pid; r.answeredAt = iso();
+    saveGigs(list); changed('gigs');
+    dm(me.id, r.member, `✅ I'm on it: **${g.title}**. It's on the task board as "${task.title}".`);
+    return { gig: gigView(g, me), task: { id: task.id, title: task.title, project: pid, status: task.status, accept: task.accept } };
+  }
+  function hideGig(gid, b, me) {
+    const { list, g } = findGig(gid, me);
+    if (!isLeadOf(me, g)) throw err(403, 'only a lead hides gigs');
+    g.hidden = b.hidden !== false; g.hiddenBy = me.id; saveGigs(list); changed('gigs');
+    return { gig: gigView(g, me) };
+  }
+  function hideProfile(mid, b, me) {
+    if (!isBoss(me)) throw err(403, 'only a lead hides a profile');
+    if (!member(mid)) throw err(404, 'no such person');
+    const all = read('profiles', {}); all[mid] = { ...(all[mid] || {}), hidden: b.hidden !== false }; write('profiles', all); changed('people');
+    return { ok: true, hidden: all[mid].hidden };
+  }
+  // A profile page: their abilities, open offers, and finished work (proof from completed tasks and gigs)
+  function finished(mid, viewer) {
+    const out = [];
+    if (loadTasks) for (const p of P.all()) {
+      if (!P.canSee(viewer, p.id)) continue;
+      try { P.inProject(p.id, () => { for (const t of loadTasks()) if (t.status === 'done' && t.assignee === mid) out.push({ title: t.title, project: p.id, projectName: p.name, at: t.updated || t.created, kind: 'task', id: t.id }); }); } catch {}
+    }
+    for (const g of gigs()) if (g.filledBy === mid && ['done', 'credited'].includes(stageOf(g)) && seesGig(viewer, g)) out.push({ title: g.title, at: g.doneAt || g.at, kind: 'gig', id: g.id, rating: g.review && g.review.rating });
+    return out.sort((a, b) => String(b.at).localeCompare(String(a.at))).slice(0, 12);
+  }
+  function profilePage(mid, viewer) {
+    const x = member(mid); if (!x || !human(x)) throw err(404, 'no such person');
+    const p = profileOf(mid);
+    if (!profileVisible(p, mid, viewer)) throw err(404, 'this profile is not shared with you');
+    return { profile: { ...personView(x, viewer), hidden: p.hidden, visibleIn: mid === viewer.id ? p.visibleIn : undefined },
+      gigs: listGigs(viewer).filter(g => g.by === mid && g.kind === 'offer' && g.status === 'open'), done: finished(mid, viewer), you: mid === viewer.id, canHide: isBoss(viewer) && mid !== viewer.id };
   }
 
   // ---------- public board (opt-in, the Workshop's community repository) ----------
@@ -418,6 +515,134 @@ module.exports = function talent({ P, base, id, getMembers, nameOf, postChat, br
     return r;
   }
 
+  // ---------- the loop after posting (feat/work-company): match -> assign -> track -> review -> credit ----------
+  // stage: open (no one yet) · assigned · working · review · done · credited. Agents can hold a gig too ("Claude could
+  // take these 2"); their owner answers for them. Credit is hours in the time bank (both confirm, as always) and/or a
+  // cost line in the company's Money ledger. TribeCode moves no money.
+  const STAGES = ['open', 'assigned', 'working', 'review', 'done', 'credited'];
+  const stageOf = g => g.stage || (g.status === 'filled' ? 'assigned' : 'open');
+  const isAssignee = (me, g) => !!me && !!g.filledBy && (g.filledBy === me.id || (member(g.filledBy) || {}).owner === me.id);
+  const AGENTY = /\b(test|tests|docs?|readme|refactor|typo|rename|lint|format|summari[sz]e|translate|write|draft|fix|bug|script|copy|tidy|clean ?up|changelog|migrate|port)\b/i;
+  function syncTasks(g, fn) {
+    if (!loadTasks || !saveTask || !(g.tasks || []).length) return;
+    try { P.inProject(g.project || P.defaultId(), () => { for (const t of loadTasks()) if (g.tasks.includes(t.id)) { fn(t); t.updated = iso(); saveTask(t); } }); } catch (e) { console.error(e); }
+  }
+  function matches(gid, me) {
+    const { g } = findGig(gid, me), want = g.skills || [], text = `${g.title} ${g.description || ''}`;
+    const out = [];
+    for (const m of getMembers()) {
+      if (m.role === 'spectator' || m.id === g.by) continue;
+      if (g.project && P.scoped(m) && !(m.projects || []).includes(g.project) && m.role !== 'agent') { /* outside this project: still a candidate, joins on assign */ }
+      const agent = m.role === 'agent', p = agent ? { skills: [], roles: [] } : profileOf(m.id);
+      let score = 0; const why = [];
+      const hit = want.filter(s => (p.skills || []).some(k => k.includes(s) || s.includes(k)));
+      if (hit.length) { score += hit.length * 3; why.push(`knows ${hit.slice(0, 3).join(', ')}`); }
+      if (g.seatKind && (p.roles || []).includes(g.seatKind)) { score += 4; why.push(`can fill ${SEAT_TITLES[g.seatKind]}`); }
+      if (!agent && p.open) { score += 1; why.push('open to work'); }
+      if (agent) {
+        if (g.kind === 'seat') continue;   // seats go to people; an agent can sit beside them from Company
+        const small = !g.hours || g.hours <= 6;
+        if (AGENTY.test(text)) { score += 3; why.push('the kind of job an agent does well'); }
+        if (small) { score += 1; why.push('small enough to hand off'); }
+        const owner = member(m.owner); if (owner) why.push(`runs on ${first(owner.name)}'s AI`);
+      }
+      const applied = (g.applicants || []).some(a => a.member === m.id);
+      if (applied) { score += 5; why.unshift('asked for it'); }
+      out.push({ id: m.id, name: m.name, color: m.color, agent, score, why: why.slice(0, 3).join(' · ') || (agent ? 'an AI helper in this tribe' : 'in this tribe') });
+    }
+    return out.sort((a, b) => b.score - a.score || Number(a.agent) - Number(b.agent)).slice(0, 8);
+  }
+  function assign(gid, b, me) {
+    const { list, g } = findGig(gid, me);
+    if (!canManageGig(me, g)) throw err(403, 'only the poster or a project host assigns');
+    if (g.status !== 'open') throw err(409, 'this gig is not open');
+    const target = member(String(b.member || '')); if (!target || target.role === 'spectator') throw err(404, 'pick someone in the tribe');
+    if (target.role === 'agent' && g.kind === 'seat') throw err(400, 'seats go to people; put an agent beside them in Company');
+    if (target.id === g.by && target.role !== 'agent') throw err(400, 'that\'s you: just do it, or post it for someone else');
+    let a = (g.applicants || []).find(x => x.member === target.id);
+    if (!a) { a = { id: nid('a'), member: target.id, note: '', at: iso(), status: 'applied', direct: true }; g.applicants = [...(g.applicants || []), a]; }
+    a.status = 'hired'; a.hiredAt = iso();
+    if (human(target) && g.project) joinProject(target.id, g.project);
+    const seat = human(target) && g.kind === 'seat' && g.project ? assignSeat(g.project, g.seat, g.seatKind, target.id) : null;
+    Object.assign(g, { status: 'filled', filledBy: target.id, stage: 'assigned', assignedAt: iso(), updates: [...(g.updates || []), { at: iso(), by: me.id, text: `Assigned to ${target.name}`, kind: 'assign' }] });
+    saveGigs(list); changed('gigs');
+    syncTasks(g, t => { t.assignee = target.id; if (t.status === 'backlog') t.status = 'doing'; });
+    const owner = target.role === 'agent' ? member(target.owner) : null;
+    notify(target.id, me.id, `${me.name} gave you "${g.title}"`, g.description || 'Open Work to see it.', { ref: g.id });
+    if (owner) notify(owner.id, me.id, `${me.name} gave your ${target.name} "${g.title}"`, 'It works on your AI. You can take it back in Work.', { ref: g.id });
+    if (human(target)) dm(me.id, target.id, `🎯 You've got **${g.title}**${seat ? ` (the ${seat.title} seat)` : ''}. Post progress from Work when you can.`);
+    return { gig: gigView(g, me), seat };
+  }
+  const canWork = (me, g) => !!me && (isAssignee(me, g) || canManageGig(me, g));
+  function progress(gid, b, me) {
+    const { list, g } = findGig(gid, me);
+    if (!g.filledBy) throw err(409, 'assign it first');
+    if (!canWork(me, g)) throw err(403, 'only the person doing it (or the poster) posts progress');
+    const text = clean(b.text || '', 400, 6); if (!text) throw err(400, 'say what moved');
+    const pct = b.pct == null || b.pct === '' ? null : Math.max(0, Math.min(100, Math.round(Number(b.pct)) || 0));
+    if (['done', 'credited'].includes(stageOf(g))) throw err(409, 'this gig is finished');
+    g.updates = [...(g.updates || []), { at: iso(), by: me.id, text, pct, kind: 'progress' }].slice(-60);
+    if (pct != null) g.pct = pct;
+    g.stage = 'working'; saveGigs(list); changed('gigs');
+    if (g.by !== me.id) notify(g.by, me.id, `${me.name}: progress on "${g.title}"`, text, { ref: g.id });
+    return { gig: gigView(g, me) };
+  }
+  function submit(gid, b, me) {
+    const { list, g } = findGig(gid, me);
+    if (!isAssignee(me, g) && !canManageGig(me, g)) throw err(403, 'only the person doing it hands it in');
+    if (!['assigned', 'working'].includes(stageOf(g))) throw err(409, `it is ${stageOf(g)} already`);
+    const note = clean(b.note || '', 600, 10);
+    g.updates = [...(g.updates || []), { at: iso(), by: me.id, text: note || 'Ready for review', kind: 'submit' }].slice(-60);
+    g.stage = 'review'; g.pct = 100; saveGigs(list); changed('gigs');
+    syncTasks(g, t => { t.status = 'review'; });
+    notify(g.by, me.id, `"${g.title}" is ready for your review`, note || `${me.name} handed it in.`, { ref: g.id });
+    return { gig: gigView(g, me) };
+  }
+  function review(gid, b, me) {
+    const { list, g } = findGig(gid, me);
+    if (!canManageGig(me, g)) throw err(403, 'only the poster or a project host reviews');
+    if (stageOf(g) !== 'review') throw err(409, 'nothing to review yet');
+    const ok = b.verdict !== 'changes', note = clean(b.note || '', 600, 10), rating = Math.max(0, Math.min(5, Math.round(Number(b.rating) || 0)));
+    g.review = { by: me.id, at: iso(), verdict: ok ? 'approved' : 'changes', note, rating: rating || null };
+    g.updates = [...(g.updates || []), { at: iso(), by: me.id, text: ok ? `Approved${note ? `: ${note}` : ''}` : `Asked for changes${note ? `: ${note}` : ''}`, kind: 'review' }].slice(-60);
+    g.stage = ok ? 'done' : 'working'; if (ok) g.doneAt = iso();
+    saveGigs(list); changed('gigs');
+    syncTasks(g, t => { t.status = ok ? 'done' : 'doing'; });
+    const to = member(g.filledBy), owner = to && to.role === 'agent' ? to.owner : null;
+    notify(owner || g.filledBy, me.id, ok ? `${me.name} approved "${g.title}"` : `${me.name} asked for changes on "${g.title}"`, note, { ref: g.id });
+    return { gig: gigView(g, me) };
+  }
+  function credit(gid, b, me) {
+    const { list, g } = findGig(gid, me);
+    if (!canManageGig(me, g)) throw err(403, 'only the poster or a project host credits');
+    if (stageOf(g) !== 'done') throw err(409, stageOf(g) === 'credited' ? 'already credited' : 'approve the work first');
+    const worker = member(g.filledBy); if (!worker) throw err(404, 'the person who did it left the tribe');
+    const out = { hours: null, ledger: null };
+    const hours = hoursOf(b.hours, 80);
+    if (hours && human(worker) && human(ownerOf(me)) && worker.id !== ownerOf(me).id) {
+      const e = { id: nid('t'), from: worker.id, to: ownerOf(me).id, hours, note: clean(`Work: ${g.title}`, 200), task: g.id, at: iso(), by: me.id, ok: { from: false, to: true }, status: 'proposed' };
+      const bl = bank(); bl.push(e); saveBank(bl); changed('timebank'); out.hours = entryView(e);
+      notify(worker.id, me.id, `${me.name} credited you ${hours} h`, `For "${g.title}". Confirm it in Work › Time bank.`, { ref: e.id });
+    }
+    const amount = Number(b.amount);
+    if (Number.isFinite(amount) && amount > 0) {
+      if (!ledger || !g.project || !readCompany(g.project)) throw err(400, 'money credit needs a company project with Money turned on');
+      if (ledger.canWrite && !ledger.canWrite(me, g.project)) throw err(403, 'your role can\'t write to Money');
+      const e = ledger.add(g.project, me, { kind: 'cost', amount, currency: b.currency, label: `Work: ${g.title} (${worker.name})`, category: worker.role === 'agent' ? 'ai' : 'people', source: { type: 'manual', name: 'Work', ref: g.id } });
+      out.ledger = e;
+    }
+    if (!out.hours && !out.ledger) {
+      if (b.thanks) out.thanks = true;   // a plain thank-you: free and volunteer gigs
+      else throw err(400, 'credit hours, an amount, or just say thanks');
+    }
+    g.credit = { at: iso(), by: me.id, hours: out.hours ? hours : 0, amount: out.ledger ? out.ledger.amount : 0, currency: out.ledger ? out.ledger.currency : null, thanks: !!out.thanks };
+    g.stage = 'credited';
+    g.updates = [...(g.updates || []), { at: iso(), by: me.id, text: `Credited${out.hours ? ` ${hours} h` : ''}${out.ledger ? ` · ${out.ledger.amount} ${out.ledger.currency} in Money` : ''}${out.thanks ? ' with thanks' : ''}`, kind: 'credit' }].slice(-60);
+    saveGigs(list); changed('gigs');
+    if (worker.role !== 'agent') dm(me.id, worker.id, `🙏 Thanks for **${g.title}**!${out.hours ? ` I logged ${hours} h for you in the time bank: confirm it in Work.` : ''}`);
+    return { gig: gigView(g, me), ...out };
+  }
+
   // ---------- HTTP ----------
   async function route(req, res, { m, b, c, parts, me, url: u, readBody, send, fail }) {
     if (!me) return fail(res, 401, 'not a member');
@@ -425,10 +650,12 @@ module.exports = function talent({ P, base, id, getMembers, nameOf, postChat, br
     try {
       if (!b && m === 'GET') return send(res, 200, { me: profileOf(ownerOf(me).id), gigs: listGigs(me), people: people(me), seatKinds: SEAT_KINDS.map(k => ({ kind: k, title: SEAT_TITLES[k], color: SEAT_COLORS[k] })), balance: bankView(me).balance, canPost: me.role !== 'spectator' });
       if (b === 'profile') {
-        if (m === 'GET') { const mid = c || ownerOf(me).id, x = member(mid); if (!x || !human(x)) return fail(res, 404, 'no such person'); return send(res, 200, { profile: personView(x, me) }); }
+        if (m === 'GET' && c && d !== 'hide') return send(res, 200, profilePage(c, ownerOf(me)));
+        if (m === 'GET') { const mid = c || ownerOf(me).id, x = member(mid); if (!x || !human(x)) return fail(res, 404, 'no such person'); return send(res, 200, { profile: { ...personView(x, me), visibleIn: profileOf(mid).visibleIn, hidden: profileOf(mid).hidden } }); }
+        if (m === 'POST' && c && d === 'hide') return send(res, 200, hideProfile(c, await readBody(req) || {}, me));
         if (m === 'PUT' && !c) { if (!human(me)) return fail(res, 403, 'only people have work profiles'); return send(res, 200, { profile: setProfile(me.id, await readBody(req) || {}) }); }
       }
-      if (b === 'people' && m === 'GET') return send(res, 200, { people: people(me, { skills: (u.searchParams.get('skills') || '').split(','), seat: u.searchParams.get('seat') || '' }) });
+      if (b === 'people' && m === 'GET') return send(res, 200, { people: people(me, { skills: (u.searchParams.get('skills') || '').split(','), seat: u.searchParams.get('seat') || '', hours: u.searchParams.get('hours') || 0, tz: u.searchParams.get('tz') || '' }) });
       if (b === 'gigs') {
         if (!c && m === 'GET') return send(res, 200, { gigs: listGigs(me) });
         if (!c && m === 'POST') return send(res, 200, { gig: postGig(await readBody(req) || {}, me) });
@@ -437,6 +664,15 @@ module.exports = function talent({ P, base, id, getMembers, nameOf, postChat, br
         if (c && d === 'apply' && m === 'POST') return send(res, 200, { gig: apply(c, await readBody(req) || {}, me) });
         if (c && d === 'hire' && m === 'POST') return send(res, 200, hire(c, await readBody(req) || {}, me));
         if (c && d === 'share' && m === 'POST') return send(res, 200, await share(c, await readBody(req) || {}, me));
+        if (c && d === 'matches' && m === 'GET') return send(res, 200, { matches: matches(c, me) });
+        if (c && d === 'assign' && m === 'POST') return send(res, 200, assign(c, await readBody(req) || {}, me));
+        if (c && d === 'progress' && m === 'POST') return send(res, 200, progress(c, await readBody(req) || {}, me));
+        if (c && d === 'submit' && m === 'POST') return send(res, 200, submit(c, await readBody(req) || {}, me));
+        if (c && d === 'review' && m === 'POST') return send(res, 200, review(c, await readBody(req) || {}, me));
+        if (c && d === 'request' && m === 'POST') return send(res, 200, { gig: request(c, await readBody(req) || {}, me) });
+        if (c && d === 'requests' && parts[4] && ['accept', 'decline'].includes(parts[5]) && m === 'POST') return send(res, 200, answer(c, parts[4], parts[5] === 'accept', await readBody(req) || {}, me));
+        if (c && d === 'hide' && m === 'POST') return send(res, 200, hideGig(c, await readBody(req) || {}, me));
+        if (c && d === 'credit' && m === 'POST') return send(res, 200, credit(c, await readBody(req) || {}, me));
       }
       if (b === 'public' && m === 'GET') return send(res, 200, await publicGigs(u.searchParams.get('refresh') === '1'));
       if (b === 'timebank') {
@@ -460,11 +696,37 @@ module.exports = function talent({ P, base, id, getMembers, nameOf, postChat, br
   const mcpTools = {
     talent_find: {
       description: 'Find people in this tribe who are open to work, by skills and/or the company seat they can fill (ceo, cto, design, growth, sales, support, ops, finance, legal). Returns names, skills, hours per week, rate type and time zone. Only people who switched on "open to work" show up.',
-      inputSchema: { type: 'object', properties: { skills: { type: 'array', items: { type: 'string' }, description: 'Skills to match, e.g. ["pixel art", "javascript"]' }, seatKind: { type: 'string', enum: SEAT_KINDS } }, additionalProperties: false },
-      run: ({ skills, seatKind } = {}, me) => {
-        const list = people(ownerOf(me) || me, { skills: skills || [], seat: SEAT_KINDS.includes(seatKind) ? seatKind : '' });
+      inputSchema: { type: 'object', properties: { skills: { type: 'array', items: { type: 'string' }, description: 'Skills to match, e.g. ["pixel art", "javascript"]' }, seatKind: { type: 'string', enum: SEAT_KINDS }, minHours: { type: 'number', description: 'At least this many hours a week free' } }, additionalProperties: false },
+      run: ({ skills, seatKind, minHours } = {}, me) => {
+        const list = people(ownerOf(me) || me, { skills: skills || [], seat: SEAT_KINDS.includes(seatKind) ? seatKind : '', hours: minHours || 0 });
         if (!list.length) return reply('Nobody open to work matches that yet. You can draft a gig with gig_post so a person can approve and post it.');
         return reply(list.slice(0, 20).map(p => `- ${p.name} (${p.id}): ${p.skills.join(', ') || 'no skills listed'} · seats: ${p.roles.join(', ') || 'any'} · ${p.hours || '?'} h/week · ${p.rate.type}${p.rate.text ? ` (${p.rate.text})` : ''}${p.tz ? ` · ${p.tz}` : ''}`).join('\n'));
+      },
+    },
+    talent_profile: {
+      description: 'Read one person\'s work profile in this tribe: skills with levels (1 learning, 2 good, 3 expert), the roles they\'d take, tools, hours per week, time zone, rate or terms, links, a short bio, their open offers (gigs they posted for themselves) and finished work (proof from completed tasks). Read-only.',
+      inputSchema: { type: 'object', required: ['member'], properties: { member: { type: 'string', description: 'Member id (from talent_find) or a name' } }, additionalProperties: false },
+      run: ({ member: q } = {}, me) => {
+        const v = ownerOf(me) || me, ql = String(q || '').toLowerCase();
+        const x = member(q) || getMembers().find(m => human(m) && String(m.name).toLowerCase() === ql) || getMembers().find(m => human(m) && String(m.name).toLowerCase().startsWith(ql));
+        if (!x) return reply('No such person in this tribe.', true);
+        try {
+          const pg = profilePage(x.id, v), p = pg.profile;
+          return reply([`${p.name} (${p.id})${p.open ? ' · open to work' : ''}`, `skills: ${p.skills.map(s => `${s}${p.levels[s] ? ` (${['', 'learning', 'good', 'expert'][p.levels[s]]})` : ''}`).join(', ') || 'none listed'}`,
+            `roles: ${p.roles.join(', ') || 'any'} · tools: ${p.tools.join(', ') || 'none listed'} · ${p.hours || '?'} h/week${p.tz ? ` · ${p.tz}` : ''} · ${p.rate.type}${p.rate.text ? ` (${p.rate.text})` : ''}`,
+            p.bio ? `bio: ${p.bio}` : '', p.links.length ? `links: ${p.links.map(l => l.url).join(' ')}` : '',
+            `open offers: ${pg.gigs.map(g => `"${g.title}" (${g.id})`).join(', ') || 'none'}`, `finished work: ${pg.done.map(d => d.title).slice(0, 8).join('; ') || 'nothing yet'}`].filter(Boolean).join('\n'));
+        } catch (e) { return reply(e.message, true); }
+      },
+    },
+    gigs_offered: {
+      description: 'List offers people in this tribe posted for themselves ("I\'ll design your logo"), optionally filtered by skills. A person requests one in Work; the poster accepts and it becomes their task. Read-only.',
+      inputSchema: { type: 'object', properties: { skills: { type: 'array', items: { type: 'string' } } }, additionalProperties: false },
+      run: ({ skills } = {}, me) => {
+        const want = skillList(skills || []), v = ownerOf(me) || me;
+        const list = listGigs(v).filter(g => g.kind === 'offer' && g.status === 'open' && !g.hidden && (!want.length || want.some(s => (g.skills || []).some(k => k.includes(s) || s.includes(k)))));
+        if (!list.length) return reply('No open offers match. talent_find lists people by skill.');
+        return reply(list.slice(0, 20).map(g => `- "${g.title}" by ${g.byName} (${g.id}): ${(g.skills || []).join(', ') || 'no tags'}${g.timeline ? ` · ${g.timeline}` : ''} · ${g.pay.type}${g.pay.text ? ` (${g.pay.text})` : ''}`).join('\n'));
       },
     },
     gig_post: {

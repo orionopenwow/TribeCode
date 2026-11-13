@@ -1,0 +1,33 @@
+/* Connect GitHub on Home › Code (app/ui/homegit.js). One plain card, flat: 1px border, a luminance step, no shadow. */
+.hgh { border: 1px solid var(--edge); border-radius: var(--r); background: var(--surface); padding: 16px 18px; display: grid; gap: 14px; }
+.hgh .hgh-head { margin: 0; display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.hgh-st { display: inline-flex; align-items: center; gap: 6px; padding: 3px 9px; border: 1px solid var(--edge); border-radius: 999px; font-size: 12.5px; color: var(--muted); }
+.hgh-st.is-on { color: var(--online); border-color: var(--online); }
+.hgh-st.is-on b { color: var(--text); }
+.hgh-st.is-off { color: var(--faint); }
+.hgh-why { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+.hgh-why li { display: grid; grid-template-columns: 20px 1fr; gap: 8px; align-items: start; padding: 10px; border: 1px solid var(--edge); border-radius: var(--r-sm); background: var(--canvas); }
+.hgh-why li > svg { color: var(--accent); margin-top: 1px; }
+.hgh-why b { display: block; font-size: 13px; color: var(--text); }
+.hgh-why small { display: block; font-size: 12px; color: var(--muted); line-height: 1.45; margin-top: 2px; }
+.hgh-lead { margin: 0; color: var(--muted); font-size: 13.5px; }
+.hgh-guide { display: grid; gap: 10px; }
+.hgh-guide .su-way { border: 1px solid var(--edge); border-radius: var(--r-sm); background: var(--canvas); padding: 12px 14px; }
+.hgh-guide .su-way h4 { margin-top: 0; }
+.hgh-acts { display: flex; gap: 8px; flex-wrap: wrap; }
+.hgh-acts .btn, .hgh-acct .btn { display: inline-flex; align-items: center; gap: 6px; }
+.hgh-acct { display: grid; grid-template-columns: 20px 1fr auto; align-items: center; gap: 10px; padding: 10px 12px; border: 1px solid var(--edge); border-radius: var(--r-sm); background: var(--canvas); }
+.hgh-acct b { display: block; color: var(--text); }
+.hgh-acct small { display: block; color: var(--faint); font-size: 12px; }
+.hgh-repos { display: grid; gap: 6px; }
+.hgh-repos ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
+.hgh-repos a { display: grid; grid-template-columns: 16px 1fr 16px; align-items: center; gap: 10px; padding: 8px 10px; border-radius: var(--r-sm); color: var(--text); text-decoration: none;
+  transition: background-color var(--dur-quick) var(--ease-out); }
+.hgh-repos a:hover { background: var(--surface-2); }
+.hgh-repos a > svg { color: var(--faint); }
+.hgh-repos b { display: block; font-size: 13px; }
+.hgh-repos small { display: block; font-size: 12px; color: var(--faint); }
+.hgh-repos p { margin: 0; font-size: 13px; }
+@media (max-width: 900px) { .hgh-why { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 520px) { .hgh { padding: 14px; } .hgh-why { grid-template-columns: 1fr; } .hgh-acts .btn { min-height: 44px; flex: 1; justify-content: center; } }
+@media (prefers-reduced-motion: reduce) { .hgh-repos a { transition: none; } }

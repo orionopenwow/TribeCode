@@ -75,7 +75,9 @@ def nodes(page, **kw):
 
 def open_canvas(page):
     page.wait_for_selector("#nest-canvas", state="visible", timeout=20000)
-    page.click("#nest-canvas")
+    page.click("#nest-canvas")   # feat/design-flow: Design opens the creation flow; the project's canvas is under Continue
+    page.wait_for_selector("#view-designflow:not(.hidden) #dfl-cont-list [data-cv=main]", timeout=15000)
+    page.click("#dfl-cont-list [data-cv=main]")
     page.wait_for_selector("#view-canvas:not(.hidden) #cv-stage", timeout=15000)
     page.wait_for_function("window.TribeCanvas && TribeCanvas.state().open && document.querySelector('#cv-file-t').textContent.length > 0", timeout=15000)
     page.wait_for_timeout(400)
@@ -216,10 +218,11 @@ def main():
 
             # ---- honest cards
             out = ask(o, "rewrite the whole app in react with a database")
-            assert "Bigger than my free tier" in out and o.locator("#fp-log .fp-flint").last.locator("[data-fp='hand']").is_visible(), out
+            card = o.locator("#fp-log .fp-flint").last.locator(".boost")   # feat/flint-site: the one AI-boost card (aiboost.js)
+            assert "This one needs an AI" in out and card.locator("[data-boost='ai']").is_visible() and card.locator("[data-boost='credits']").is_visible(), out
             out = ask(o, "a cat wearing a tiny hat")
-            assert "freeform" in out.lower(), out
-            o.locator("#fp-log [data-fp='hand']").last.click()
+            assert "needs an AI" in out and "Nothing changed" in out, out
+            o.locator("#fp-log [data-boost='ai']").last.click()
             o.wait_for_function("/Sent to your AI helpers/.test(document.querySelector('#fp-log').textContent)", timeout=8000)
             o.click("#cv-flint-btn"); o.wait_for_timeout(200); assert o.is_hidden("#cv-fpane"), "the flame button closes Flint's pane"
 

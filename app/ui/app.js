@@ -518,7 +518,14 @@
       };
       ['#inv-hours', '#inv-uses', '#inv-role', '#inv-project'].forEach(s => $(s) && $(s).addEventListener('change', make));
       $('#inv-copy').onclick = async () => { try { await navigator.clipboard.writeText($('#inv-link').textContent); toast('Invite link copied'); } catch { getSelection().selectAllChildren($('#inv-link')); toast('Press Ctrl+C to copy'); } };
-      make();
+      // A project that lives only on this device can't make an invite yet: say so here, with the way on, instead of
+      // asking for one (the refusal would open Where should it live? a moment later, over whatever is on screen by then)
+      const O = window.TribeOffline;
+      if (O && O.solo && O.solo()) {
+        $('#inv-link').textContent = 'This project lives on this device. Choose where it lives first, then friends can join.';
+        $('#inv-copy').textContent = 'Choose'; $('#inv-copy').disabled = false;
+        $('#inv-copy').onclick = () => { closeInvite(); const L = window.TribeLocalSetup, P = window.TribePhoneHost; if (L && L.where && !matchMedia('(max-width: 820px)').matches) L.where(); else if (P && P.move) P.move(); };
+      } else make();
     }
     body.querySelectorAll('[data-close]').forEach(b => b.onclick = closeInvite);
   }
@@ -587,8 +594,11 @@
   }
 
   // ---- desktop: host the tribe server on this computer (bundled sidecar) ----
+  // opts.silent (feat/setup-local, setuplocal.js "This computer"): no toast, no invite and no Home error card; the caller
+  // shows the result. Returns { ok: true, url, role } or { ok: false, error }.
   async function hostHere(opts) {
-    const quiet = !!(opts && opts.quiet === true);
+    const quiet = !!(opts && (opts.quiet === true || opts.silent)), silent = !!(opts && opts.silent);
+    const before = S.get().server;
     const st = S.get(), inv = window.__TAURI__ && window.__TAURI__.core;
     if (!inv) return;
     const btn = $('#host-here'); if (btn) { btn.disabled = true; btn.textContent = 'Starting…'; }
@@ -633,10 +643,18 @@
       S.set({ server: { url, token: keep }, hosting: true, hostOff: false });
       const role = await C.ensureMember({ name: st.name, color: st.color, reclaim: true });
       C.connect(); refresh();
-      if (!role && !keep) { showHostError(`A TribeCode server is running here but this app could not sign in to it.\n${window.__authError || ''}`.trim()); return; }
-      else if (role === 'reclaimed') toast('Welcome back: you are the host on this computer again.');
+      if (!role && !keep) { const m = `A TribeCode server is running here but this app could not sign in to it.\n${window.__authError || ''}`.trim(); if (silent) { S.set({ server: before, hosting: false }); return { ok: false, error: m }; } showHostError(m); return { ok: false, error: m }; }
+      S.set({ tribeHere: true });   // a tribe exists on this computer: the next launch may start it (when Host is on)
+      if (silent) return { ok: true, url, role: role || 'member' };
+      if (role === 'reclaimed') toast('Welcome back: you are the host on this computer again.');
       else if (!quiet) { closeInvite(); toast(role === 'host' ? "You're hosting! Now invite your friends." : 'Hosting again on this computer.'); setTimeout(openInvite, 600); }
-    } catch (e) { reset(); if (!quiet || !(e && e.message)) toast(String(e && e.message || e)); else showHostError(e.message); }
+      return { ok: true, url, role };
+    } catch (e) {
+      reset();
+      if (silent) { if (S.get().server !== before && !S.get().tribeHere) S.set({ server: before, hosting: false }); return { ok: false, error: String(e && e.message || e) }; }
+      if (!quiet || !(e && e.message)) toast(String(e && e.message || e)); else showHostError(e.message);
+      return { ok: false, error: String(e && e.message || e) };
+    }
   }
   // Stop this computer's tribe server (and any older copy left on the port).
   async function stopHost() {
@@ -809,8 +827,16 @@
     // tour follow (personalize.js, flinttour.js), and "Start your first project" makes the tribe (startFirst below).
     // Automated tests keep the old auto-claim unless ?freshopen=1.
     const freshOpen = !navigator.webdriver || params.has('freshopen');
-    if (window.TribeHost.isDesktop && !served && !remote && st.hosting && !st.hostOff) hostHere({ quiet: true });
-    else if (window.TribeHost.isDesktop && !served && !remote) { stopHost(); if (!st.hosting && !C.hasToken()) { window.__tribeFresh = true; announceFresh(); } }
+    // feat/setup-local, the decided rule: start the server only if a tribe exists here (hosting with a tribe made on this
+    // computer) and Host is on. A fresh profile, or a leftover sign-in to a local server that never became a tribe here,
+    // starts nothing and shows no "didn't start" card: setup happens on this device first (setuplocal.js).
+    const tribeHere = !!(st.hosting && (st.tribeHere || (st.server && st.server.token)));
+    if (window.TribeHost.isDesktop && !served && !remote && tribeHere && !st.hostOff) hostHere({ quiet: true });
+    else if (window.TribeHost.isDesktop && !served && !remote) {
+      stopHost();
+      if (!tribeHere && C.hasToken()) S.set({ staleServer: st.server, server: { url: '', token: '' }, hosting: false });   // kept aside, never deleted
+      if (!tribeHere) { window.__tribeFresh = true; window.__hostError = null; announceFresh(); }
+    }
     else {
       const r = await C.ensureMember({ name: st.name, color: st.color, defer: freshOpen && !C.hasToken() });
       if (r === 'fresh') announceFresh();

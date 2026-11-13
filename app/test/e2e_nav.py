@@ -21,7 +21,9 @@ take = "--shots" in sys.argv or os.environ.get("TRIBE_SHOTS") == "1"
 errors = []
 
 CORE = ["Dashboard", "Messages", "Files", "Design", "Task Board", "Agents Hub"]
-TASK_TABS = ["📋 Board", "🐞 Bugs", "🗳️ Proposals", "🏁 Milestones", "📅 Calendar", "🌿 Code repository", "📸 Visuals"]
+SETUP_CO = "Set up company"   # polish: leads also see this quiet row (company.js) once the project's company view loads
+core = lambda rs: [r for r in rs if r != SETUP_CO]
+TASK_TABS = ["Board", "Bugs", "Proposals", "Milestones", "Calendar", "Code repository", "Visuals"]   # feat/shell-polish: stroke icons, not emoji
 AGENT_KEYS = ["agents", "agents-hub", "ownership", "conflicts", "handoffs", "reviews", "plan", "secretary"]   # the Agents Hub shows Dashboard + pinned tabs (feat/agents-dash)
 # tab key -> how to tell its view is on screen
 OPENS = {
@@ -80,7 +82,7 @@ def rows(page, sel):
 
 
 def tabs(page):
-    return page.evaluate("[...document.querySelectorAll('#view-tabs [data-tab]')].map(b => b.childNodes[0].textContent.trim())")
+    return page.evaluate("[...document.querySelectorAll('#view-tabs [data-tab]')].map(b => [...b.childNodes].filter(n => n.nodeType === 3).map(n => n.textContent).join('').trim())")
 
 
 def no_dupes(page):
@@ -88,6 +90,84 @@ def no_dupes(page):
     labels = [l.replace("+", "").strip() for l in labels]
     assert len(labels) == len(set(labels)), labels
     return labels
+
+
+# ---- the one router (app/ui/router.js, docs/NAVIGATION.md): global sections keep the global dashboard, Back works,
+# Work with no tribe stays global with a next step, the logo is always Home, one pane on screen, no dead ends.
+GLOBAL = [("nest-hub", "hub", "Your dashboard", "#/hub"), ("nest-docs-all", "docs-all", "Files", "#/hub/docs"), ("nest-design-all", "design-all", "Design", "#/hub/design"), ("nest-repos-all", "repos-all", "Code", "#/hub/repos"),
+          ("nest-work", "work", "Work", "#/hub/work"), ("nest-fleet", "fleet", "Agent fleet", "#/fleet")]
+STATE = """() => ({ view: document.body.dataset.view, global: document.body.classList.contains('global'), place: TribeRouter.where().place,
+  lit: [...document.querySelectorAll('.side [data-pnav].on')].filter(e => e.offsetParent).map(e => e.dataset.pnav),
+  rows: [...document.querySelectorAll('.side [data-pnav]')].filter(e => e.offsetParent).map(e => e.dataset.pnav),
+  panes: [...document.querySelectorAll('.main > section[id^="view-"]')].filter(s => !s.classList.contains('hidden')).map(s => s.id),
+  crumb: (document.querySelector('#crumb-label') || {}).textContent, hash: location.hash })"""
+
+
+def settled(page):
+    page.wait_for_timeout(260)   # the router settles 140 ms after a move
+    return page.evaluate(STATE)
+
+
+def check_global(page, row, key, crumb, hsh, tribe):
+    page.click("#" + row); page.wait_for_function("k => TribeRouter.where().key === k", arg=key, timeout=8000)
+    st = settled(page)
+    assert st["global"] and st["place"] == "global", (row, st)
+    assert st["rows"] == [g[1] for g in GLOBAL], (row, st["rows"])   # the global sidebar stays: never a tribe's nest
+    assert st["lit"] == [key], (row, st["lit"])
+    assert len(st["panes"]) == 1, (row, st["panes"])   # no stale panes from the previous dashboard
+    assert st["crumb"] == crumb and st["hash"] == hsh, (row, st)
+    assert page.evaluate("document.querySelector('#rail-logo').classList.contains('on') && !document.querySelector('#crumb-home').hidden"), (row, "Home is lit")   # feat/files-dash
+    return st
+
+
+def global_nav(page, tribe):
+    page.click("#rail-logo"); page.wait_for_function("TribeRouter.where().key === 'hub'")
+    for row, key, crumb, hsh in GLOBAL[1:] + GLOBAL[:1]: check_global(page, row, key, crumb, hsh, tribe)
+    # Work: with no tribe its empty state says what to do, inside the global dashboard; Back to Home works
+    check_global(page, "nest-work", "work", "Work", "#/hub/work", tribe)
+    if not tribe:
+        page.wait_for_selector("#tl-empty #tl-e-start", state="visible"); page.wait_for_selector("#tl-e-join", state="visible")
+        shot(page, "nav-work-empty")
+        page.click("#tl-e-home"); page.wait_for_function("TribeRouter.where().key === 'hub'")
+        page.click("#nest-work"); page.wait_for_selector("#tl-empty")
+    else:
+        page.wait_for_selector("#view-work .tl-tabs", timeout=8000)
+    # Back walks the places you've been, one step at a time
+    page.click("#nest-repos-all"); page.wait_for_function("TribeRouter.where().key === 'repos-all'"); settled(page)
+    page.go_back(); page.wait_for_function("TribeRouter.where().key === 'work'", timeout=8000)
+    page.go_back(); page.wait_for_function("TribeRouter.where().key === 'hub'", timeout=8000)
+    page.go_forward(); page.wait_for_function("TribeRouter.where().key === 'work'", timeout=8000)
+    st = settled(page); assert st["global"] and st["rows"] == [g[1] for g in GLOBAL] and len(st["panes"]) == 1, st
+    # the logo is always Home, and it closes the Workshop layer on its way
+    page.click("#rail-workshop"); page.wait_for_function("TribeWorkshop.isOpen()")
+    assert page.locator("#rail-workshop use").get_attribute("href") == "#i-wrench", "the Workshop is a wrench"
+    page.click("#rail-logo"); page.wait_for_function("TribeRouter.where().key === 'hub' && !TribeWorkshop.isOpen()")
+    if not tribe:
+        shot(page, "nav-home")
+        # a project place asked for with no tribe: Home with a next step, never an empty page
+        page.evaluate("TribeShell.go('chat')"); st = settled(page); assert st["view"] == "hub" and st["global"], st
+        page.evaluate("TribeShell.go('ws-tasks')"); st = settled(page); assert st["view"] == "hub", st
+        # the + sheet always has a way out
+        # (feat/setup-local: with no tribe, + is the instant Start sheet on this device)
+        page.click("#pj-plus"); page.wait_for_selector("#su-start .su-x", state="visible")
+        page.click("#su-start .su-x"); page.wait_for_selector("#su-start", state="detached")
+        return
+    # with a tribe: into a project from the rail, Back returns to the global section you came from
+    page.click("#nest-work"); page.wait_for_function("TribeRouter.where().key === 'work'"); settled(page)
+    page.locator("#pj-rail [data-pj-open]").first.click(); page.wait_for_function("TribeRouter.where().place === 'project'", timeout=10000)
+    st = settled(page); assert not st["global"] and "home" in st["rows"] and len(st["panes"]) == 1, st
+    page.click("#nest-chat"); page.wait_for_selector("#view-chat:not(.hidden)"); settled(page)
+    page.go_back(); page.wait_for_function("TribeRouter.where().place === 'project' && document.body.dataset.view === 'home'", timeout=8000)
+    page.go_back(); page.wait_for_function("TribeRouter.where().key === 'work'", timeout=8000)
+    st = settled(page); assert st["global"] and st["lit"] == ["work"] and st["panes"] == ["view-work"], st
+    page.go_forward(); page.wait_for_function("TribeRouter.where().place === 'project'", timeout=8000)
+    page.click("#rail-logo"); page.wait_for_function("TribeRouter.where().key === 'hub'")
+    st = settled(page); assert st["global"] and st["lit"] == ["hub"] and len(st["panes"]) == 1, st
+    # the palette's Marketplace entry is a wrench too
+    assert any(d["key"] == "market" for d in page.evaluate("TribeShell.dests()"))
+    page.keyboard.press("Control+k"); page.fill("#pal-input", "marketplace"); page.wait_for_timeout(80)
+    assert page.evaluate("[...document.querySelectorAll('#pal-list .pal-item')].some(b => b.textContent.includes('Marketplace') && b.querySelector('use') && b.querySelector('use').getAttribute('href') === '#i-wrench')"), page.inner_text("#pal-list")
+    page.keyboard.press("Escape")
 
 
 def main():
@@ -102,6 +182,10 @@ def main():
             except Exception: time.sleep(0.1)
         with sync_playwright() as p:
             b = p.chromium.launch(executable_path="/usr/bin/google-chrome", args=["--no-proxy-server"])
+            # ---- no tribe yet (fresh open): every global button stays on the global dashboard
+            nt = b.new_context(viewport={"width": 1440, "height": 900}, device_scale_factor=1); fresh = nt.new_page(); watch(fresh, "fresh")
+            named(fresh, "Orion"); fresh.goto(BASE + "/?skipIntro=1&freshopen=1"); fresh.wait_for_function("window.TribeRouter && TribeApp.fresh()", timeout=15000)
+            fresh.wait_for_selector("#nest-work", state="visible"); global_nav(fresh, tribe=False); nt.close()
             ctx = b.new_context(viewport={"width": 1440, "height": 900}, device_scale_factor=1)
             host = ctx.new_page(); watch(host, "host")
             named(host, "Orion")
@@ -117,10 +201,12 @@ def main():
                 assert host.locator(gone).count() == 0, gone
 
             # ---- four rows, exactly, in order; nothing else between them and Settings
-            assert rows(host, "#pj-nav .nest-row.core") == CORE, rows(host, "#pj-nav .nest-row.core")
+            assert core(rows(host, "#pj-nav .nest-row.core")) == CORE, rows(host, "#pj-nav .nest-row.core")
+            host.wait_for_selector("#nest-company.co-subtle:not(.hidden)", timeout=10000)
+            assert rows(host, "#pj-nav .nest-row.core") == CORE + [SETUP_CO], rows(host, "#pj-nav .nest-row.core")
             api("/vision", "PUT", {"text": "# Nav\n\nA small test project."}, token=host.evaluate("TribeStore.get().server.token"), project=pid)   # + Add waits for the vision (feat/setup-flow)
             host.wait_for_selector("#nest-add", state="visible", timeout=10000)   # the + row (widgets.js) closes the list for the host
-            assert rows(host, "#pj-nav .nest-row") == CORE, rows(host, "#pj-nav .nest-row")   # + Add sits below the Repo row, outside the rows
+            assert core(rows(host, "#pj-nav .nest-row")) == CORE, rows(host, "#pj-nav .nest-row")   # + Add sits below the Repo row, outside the rows
             assert host.locator("#nest-huddle").is_hidden() and host.locator("#capture-toggle").is_hidden(), "huddle and capture have no rows"
             for t in ["One", "Two"]: assert api("/tasks", "POST", {"title": f"Task {t}"}, token=token, project=pid)[0] == 200
             # v0.26: the Task Board badge counts others' task updates you haven't seen (e2e_counts.py), never your own
@@ -159,7 +245,8 @@ def main():
             host.mouse.move(720, 600); shot(host, "nav-tabs-bugs")
             # remembered: away and back lands on Bugs
             host.click("#nest-docs"); host.wait_for_selector("#view-docs:not(.hidden)")
-            host.wait_for_selector("#view-tabs:not(.hidden) #wt-website"); assert tabs(host) == ["📝 Notes", "🌐 Website", "📎 Captures", "🎓 Academy"], tabs(host)   # Files: one emoji row (v0.27: + Academy)
+            host.wait_for_selector("#view-tabs:not(.hidden) #wt-website"); assert tabs(host) == ["Files", "Website", "Captures", "Academy"], tabs(host)   # Files: one row, a small stroke icon each (feat/files-dash)
+            assert host.eval_on_selector_all("#view-tabs [data-tab]", "e => e.every(x => x.querySelector('svg.fx-i'))")
             host.click("#nest-ws-tasks"); host.wait_for_selector("#view-bugs:not(.hidden)")
             # Requests shows up as a tab only while something waits
             st, r = api("/changes", "POST", {"title": "Hook up the gamepad"}, token=token, project=pid); assert st == 200, r
@@ -237,8 +324,11 @@ def main():
             host.click("#nest-ws-tasks"); host.wait_for_selector("#wt-roles", timeout=15000)
             host.click("#wt-roles"); host.wait_for_selector("#view-flow-roles:not(.hidden)")
             host.wait_for_function("document.querySelector('#wt-roles').classList.contains('on')")
-            assert tabs(host)[:8] == TASK_TABS + ["👥 Roles"], tabs(host)
+            assert tabs(host)[:8] == TASK_TABS + ["Roles"], tabs(host)
             no_dupes(host)
+
+            # ---- with a tribe: global sections still keep the global dashboard; Back crosses into a project and out again
+            global_nav(host, tribe=True)
 
             # ---- phone: the swipe-in panel shows the same four rows, Settings + Invite at the bottom, no overflow
             ph = b.new_context(viewport={"width": 390, "height": 844}, is_mobile=True, has_touch=True, device_scale_factor=2)
@@ -248,7 +338,7 @@ def main():
             phone.wait_for_selector("#tabbar.m2-rack")
             phone.click("#menu-btn"); phone.wait_for_selector(".nest-row[data-nav='chat']", state="visible")
             phone.wait_for_timeout(400)
-            assert rows(phone, "#pj-nav .nest-row.core") == CORE
+            assert core(rows(phone, "#pj-nav .nest-row.core")) == CORE
             for sel in ["#ub-gear", "#tour-invite"]: phone.wait_for_selector(sel, state="visible")
             fs, inv = (phone.locator(s).bounding_box() for s in ["#ub-gear", "#tour-invite"])
             assert fs["y"] > inv["y"], (fs, inv)   # your bar (with Settings) sits at the very bottom of the panel, under Invite friends

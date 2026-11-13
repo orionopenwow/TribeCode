@@ -29,7 +29,7 @@
     visuals: { label: 'Visuals & screenshots', icon: 'i-photo', go: 'visuals' },
     website: { label: 'Website', icon: 'i-link', go: 'website' },
     preview: { label: 'Preview', icon: 'i-play', run: () => window.TribePreview && window.TribePreview.open() },
-    workshop: { label: 'Workshop', icon: 'i-box', run: () => window.TribeWorkshop && window.TribeWorkshop.open() },
+    workshop: { label: 'Workshop', icon: 'i-wrench', run: () => window.TribeWorkshop && window.TribeWorkshop.open() },
     plan: { label: 'Daily plan', icon: 'i-sun', go: 'plan' },
     secretary: { label: 'Secretary', icon: 'i-quill', go: 'secretary' },
     whiteboard: { label: 'Whiteboard', icon: 'i-whiteboard', run: () => window.TribeWhiteboard && window.TribeWhiteboard.open() },   // feat/whiteboard (whiteboard.js)
@@ -37,7 +37,7 @@
     captures: { label: 'Captures', icon: 'i-link', go: 'captures' },
     assets: { label: 'Asset library', icon: 'i-photo', run: () => window.TribeAssets && window.TribeAssets.open() },
     mcp: { label: 'TribeCode MCP', icon: 'i-plug', go: 'mcp-directory' },
-    market: { label: 'Marketplace', icon: 'i-box', run: () => window.TribeMarket && window.TribeMarket.open() },
+    market: { label: 'Marketplace', icon: 'i-wrench', run: () => window.TribeMarket && window.TribeMarket.open() },
   };
   const ORDER = ['whiteboard', 'calendar', 'bugs', 'board', 'milestones', 'repo', 'visuals', 'website', 'preview', 'workshop', 'plan', 'secretary', 'captures', 'assets', 'mcp', 'market'];
 
@@ -53,7 +53,13 @@
 
   // ---------- the rows ----------
   const autoPreview = () => !!(st.preview && st.preview.show);
-  const autoSite = () => !!(st.website && st.website.show);
+  // feat/site-v2: the Website row shows once a website draft exists (a designer config, a published site, a started site,
+  // or a design on this device) and opens the website designer; a dot while edits are not on the host yet
+  const SD = () => window.TribeSiteDesigner;
+  const autoSite = () => !!(st.website && st.website.show) || !!(pid() && SD() && SD().hasDraft && SD().hasDraft(pid()));
+  const siteIcon = () => (window.TribeIcons && window.TribeIcons.svg ? window.TribeIcons.svg('website', 18) : `<svg class="ico" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.7 3.6 5.7 3.6 9s-1.1 6.3-3.6 9c-2.5-2.7-3.6-5.7-3.6-9S9.5 5.7 12 3z"/></svg>`);
+  addEventListener('tribe:site-draft', e => { const d = e.detail || {}; if (d.pid && d.pid === pid()) { if (!document.getElementById('nest-website')) draw(); const dot = document.querySelector('#nest-website .wg-dot'); if (dot) dot.hidden = !d.dirty; } });
+  document.addEventListener('click', e => { const r = e.target.closest && e.target.closest('#nest-website[data-wdz-open]'); if (!r || !SD()) return; e.preventDefault(); e.stopPropagation(); SD().open({ pid: pid() }); }, true);
   function rowOf(w) {
     if (w.kind === 'builtin') {
       const b = BUILT[w.key]; if (!b) return '';
@@ -67,7 +73,7 @@
   function draw() {
     const box = $('#nest-extra'); if (!box) return;
     const rows = [];
-    if (autoSite()) rows.push(`<button class="nest-row wg-auto" id="nest-website" data-pnav="website" title="The project's public page">${ico('i-link')}<span>Website</span></button>`);
+    if (autoSite()) { const dirty = !!(SD() && SD().dirty && SD().dirty(pid())); rows.push(`<button class="nest-row wg-auto" id="nest-website" data-wdz-open="1" title="The project's website: open the designer">${siteIcon()}<span>Website</span><span class="wg-dot" title="Not saved to the host yet"${dirty ? '' : ' hidden'}></span></button>`); }
     (st.widgets || []).forEach(w => rows.push(rowOf(w)));
     const html = rows.join('');
     if (box.innerHTML !== html) box.innerHTML = html;
@@ -76,7 +82,9 @@
     // Always there once a project is open (the user's ask): the play button for the code under the whole app or game.
     // Before there is code, the preview opens on its "nothing to run yet" start screen.
     const pk = (st.preview && st.preview.kind) || '', plabel = (st.preview && st.preview.show && st.preview.label) || ({ game: 'Play the game', site: 'Preview the site', app: 'Preview the app' }[pk] || 'Preview app');
-    const pslot = $('#nest-preview-slot'), prev = pid() ? `<button class="wg-preview" id="nest-preview" data-wrun="preview" data-kind="${esc(pk)}" title="Run the project's code and see it live">${ico('i-play')}<span>${esc(plabel)}</span></button>` : '';
+    // feat/shell-polish: a normal sidebar row, "Preview" (or "Preview game" for a game), with a small thumbnail (sidefoot.js)
+    const game = pk === 'game' || pk === '3d', short = game ? 'Preview game' : 'Preview';
+    const pslot = $('#nest-preview-slot'), prev = pid() ? `<button class="nest-row wg-preview" id="nest-preview" data-wrun="preview" data-kind="${esc(pk)}" title="${esc(plabel)}: run the project's code and see it live" aria-label="${esc(plabel)}"><i class="sf-thumb sf-pv" aria-hidden="true">${window.TribeIcons ? window.TribeIcons.svg('preview', 20, 'i') : ico('i-play')}</i><span>${esc(short)}</span></button>` : '';
     if (pslot && pslot.innerHTML !== prev) pslot.innerHTML = prev;
     // + Add sits below the Repo row, in a bordered pill (the user's ask), not among the rows
     const slot = $('#nest-add-slot') || box, add = st.canEdit ? `<button class="nest-row wg-add" id="nest-add" title="Add a widget to this project's sidebar" aria-haspopup="menu">${ico('i-plus')}<span>Add</span></button>` : '';

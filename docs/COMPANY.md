@@ -20,6 +20,22 @@ after the people who use it, and keeping track of money. A tribe can run more th
 project. Turn it on from a project's settings, or start from a template (a software product, an agency, a creator,
 a game studio, a local business, a nonprofit, a club, or blank).
 
+## The Company view
+
+*v2 (feat/company-gigs).* The Company page reads top to bottom like a one-page company report:
+
+- **Header**: the company's name, its mission and one sentence on how it's doing ("Goals are 41% done, 1 approval
+  waiting and 1 seat is open").
+- **Seats**: one card per seat with a big avatar, the role, who holds it (a person, an AI helper or both), what they're
+  on now, the seat's goal and **one** action (Hire someone, Post standup, View profile, Edit seat).
+- **This week**: today's standup, the approvals waiting and the seats that need a call, with the decision log.
+- **Money**: revenue, costs and net for the month, and a small flat chart of the last six months.
+- **Charters & goals**, **Rituals** (the next standup, weekly review and board update, each with Run now) and
+  **Activity**.
+
+Each section has its own empty state with one action. On phones the sections fold. Before a project is a company, the
+page shows four big tiles and one button: **Make it a company**.
+
 ## Seats
 
 A seat is a job, not a person. New companies start with a lean four:
@@ -77,6 +93,39 @@ financial advice.
 - **Hire into your tribe**: invite a builder for a role, with the same invite links as always.
 - **Trade time**: swap hours with other builders (a review for a logo, a bug fix for a landing page).
 - **Share compute**: lend spare computer power to your tribe (see [SHARED-COMPUTE.md](SHARED-COMPUTE.md)).
+
+Work runs the whole loop: **post** a need (a gig, a role or a seat) → **match** people and AI helpers (ranked by skills,
+seats and who asked) → **assign** (linked board tasks follow) → **track** progress updates → **review** (approve with a
+rating, or ask for changes) → **credit** (hours in the time bank, both confirm, and/or a cost line in Money; TribeCode
+moves no money). "Suggested next" on Gigs reads the board, seats and gigs with plain rules ("You have 3 untaken tasks in
+Design, so post a Designer role", "Claude could take these 2"), labelled *Basic · no AI*; with the tribe's AI on, the
+same lines are reworded in place. Code: `server/talent.js`, `app/ui/workloop.js`, `app/ui/workcore.js`.
+
+### Gigs for yourself and your abilities
+
+Anyone can **list their abilities**: skills with a level (learning, good, expert), the roles they'd take, tools, hours a
+week and time zone, a rate or "free / for equity / for fun", GitHub and portfolio links and a short bio. You choose
+which projects see it. With no tribe it stays on your device and goes to every tribe you join.
+
+**Create a gig for yourself** to offer what you can do ("I'll design your logo", "I can build a landing page this
+weekend"): a title, what you deliver, a timeline, a price or terms and tags. It shows in Work's gigs where you pick.
+Others **Request** it; you **Accept** (it becomes a task assigned to you, through the Task Board's accept flow) or
+**Decline**. Each member has a profile page (from Work › Find people, a chat avatar or a seat) with their abilities,
+open gigs and finished work. Only you edit your profile and gigs; leads can hide spam. Agents read them with the MCP
+tools `talent_find`, `talent_profile` and `gigs_offered`. Code: `app/ui/abilities.js`, `server/talent.js`.
+
+## Templates and rituals
+
+Work › Templates holds docs for running a company: daily standup, weekly review, OKRs, meeting notes, decision record,
+product brief, launch plan, website plan + copy brief, brand guide, hiring/role doc, onboarding, investor update, retro
+and incident postmortem. Each opens **Guided** (3–5 friendly questions, one at a time, Skip any), can switch to
+**Advanced** at any moment (every question at once, live preview), and has **✦ Draft the rest** (fills empty sections
+from the board and the people with no AI; with AI, drafts them from the project context). Docs save into the project's
+Files, or on this device with no tribe. The standup, weekly review and retro can become **rituals**: one calendar event
+("every weekday at 9") that asks each member in chat (a small card, or `/standup did … | next … | stuck …`) and writes
+the day's doc. Code: `app/ui/doctpl.js`, `app/ui/doctpl-data.js`, `server/rituals.js`.
+
+Premium is described in [PREMIUM.md](PREMIUM.md): everything local stays free.
 
 ## Academy
 

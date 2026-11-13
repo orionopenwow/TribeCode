@@ -4,21 +4,24 @@
 //   * tribe.js's connect() asks TribeOffline.socket(url) for a fake WebSocket (one marked line in tribe.js).
 // You are the host of "Demo Tribe" with one project (Lantern Run), two pretend friends (Maya, Jay) and a pretend
 // Claude agent that answers @mentions, picks up new tasks and posts a gist. Inviting someone makes a pretend link and
-// a third friend (Rio) "joins" a few seconds later. Anything not built here answers "Not in the offline demo".
-// Leaving restores your real settings exactly (server URL and token, hosting); the demo survives reloads until reset.
+// a third friend (Rio) "joins" a few seconds later. Chat (replies, reactions, pins, edit/delete, pictures, DMs), tasks
+// (assign/accept, approvals), docs and comments, notes, uploads, proposals and a pretend huddle all work here; only what
+// truly needs another device or a real agent shows a calm "This needs a real tribe" card with Host.
+// feat/demo-auto: a demo lives in THIS TAB only (sessionStorage) and never rewrites your saved settings, so it can't leak
+// into the real app; it survives reloads in the tab; Leave/Exit, a real sign-in or hosting end it cleanly.
 // Showcase mode (app/ui/showcase.js): the same backend seeded with a lively "Campfire Crew" tribe and a script that
 // plays out by itself (db.mode === 'showcase'). start() with no mode asks which one you want.
 // Solo mode (db.mode === 'solo', docs/PHONE-HOSTING.md): a REAL tribe that lives on this phone only. Same backend, but
 // no pretend people and no demo data: you, Flint and an empty first project. exportSolo() packs it for the move to a
 // real host (POST /api/import/solo, server/soloimport.js); app/ui/phonehost.js draws the chooser and the move sheet.
-//   window.TribeOffline = { active(), start(mode), choose(), leave(), reset(), hostForReal(), socket(url), state(), _k }
+//   window.TribeOffline = { active(), start(mode), choose(), leave(), exit(), end(), reset(), hostForReal(), socket(url), mediaUrl(u), ephemeral(), state(), _k }
 (function () {
   'use strict';
   const S = window.TribeStore;
   const KEY = 'tribecode.offlineDemo.v1', BKEY = 'tribecode.offlineDemo.backup';
   const ORIGIN = 'https://offline-demo.tribecode.invalid';   // server.url while in the demo (what the desktop app's base() returns)
   const TOKEN = 'offline-demo';
-  const NOPE = 'Not in the offline demo';
+  const NOPE = 'This needs a real tribe';
   const RELEASES = 'https://github.com/orionopenwow/TribeCode/releases/latest';
   const ls = {
     get(k) { try { return JSON.parse(localStorage.getItem(k) || 'null'); } catch { return null; } },
@@ -33,14 +36,68 @@
   // feat/welcome: the pretend tribe someone named in Flint's welcome (welcome.js), else the default
   const wtribe = dflt => { const w = ls.get('tribecode.welcome.tribe'); return w && w.name ? { name: String(w.name).slice(0, 40), emoji: w.emoji || '🔥' } : { name: dflt, emoji: '🔥' }; };
 
-  let db = ls.get(KEY);
+  // feat/demo-auto: every demo but the solo phone tribe lives in this TAB only (sessionStorage), so it never leaks into
+  // the real app: your saved settings (server, sign-in, hosting) are never rewritten while it runs. TribeStore.get()
+  // answers the demo's pretend server only while a demo is on; signing in or hosting for real ends the demo first.
+  const ss = {
+    get(k) { try { return JSON.parse(sessionStorage.getItem(k) || 'null'); } catch { return null; } },
+    set(k, v) { try { sessionStorage.setItem(k, JSON.stringify(v)); } catch {} },
+    del(k) { try { sessionStorage.removeItem(k); } catch {} },
+  };
+  let eph = !!ss.get(KEY);
+  let db = eph ? ss.get(KEY) : ls.get(KEY);
   const active = () => !!(db && db.on && ((S.get().server || {}).token === TOKEN));
-  const save = () => { if (db) ls.set(KEY, db); };
+  const save = () => { if (!db) return; if (eph) ss.set(KEY, db); else ls.set(KEY, db); };
+  const S0 = { get: S.get, set: S.set };
+  // fix/desk-demo: the hands-off tour shows Flint's blank slate, never who is signed in on this device (name, colour, folder)
+  const WATCHER = { name: 'Flint', color: '#F26B1D', folder: '', staleServer: null, tribeHere: false };
+  S.get = () => { const st = S0.get(); if (!(eph && db && db.on)) return st; return { ...st, ...(db.mode === 'watch' ? WATCHER : {}), server: { url: ORIGIN, token: TOKEN }, hosting: false }; };
+  S.set = patch => {
+    if (!(eph && db)) return S0.set(patch);
+    const p = { ...(patch || {}) };
+    if (p.server && p.server.token && p.server.token !== TOKEN) { endDemo(); return S0.set(p); }   // a real sign-in or host: the demo ends, the real app starts clean
+    delete p.server; delete p.hosting; delete p.hostOff;
+    S0.set(p); return S.get();
+  };
+  // fix/desk-demo: modules that read the saved settings or the account straight from localStorage (the user bar, the
+  // profile menu, Home's greeting, mobile, themes) see the tour's identity too, so nobody's name or sign-in shows in it.
+  // Reads only: every write still goes to the real keys (TribeStore keeps the real settings in memory).
+  const MASK = { 'tribecode.settings.v1': () => JSON.stringify(S.get()), 'tribecode.accounts.v1': () => null };
+  let rawGet = k => { try { return localStorage.getItem(k); } catch { return null; } };
+  try {
+    const gi = Storage.prototype.getItem; rawGet = k => { try { return gi.call(window.localStorage, k); } catch { return null; } };
+    Storage.prototype.getItem = function (k) { return eph && db && db.on && db.mode === 'watch' && this === window.localStorage && Object.prototype.hasOwnProperty.call(MASK, k) ? MASK[k]() : gi.call(this, k); };
+  } catch {}
+  // fix/desk-demo: inside a demo the desktop app behaves like the browser. Its host paths (hostHere, the Host switch,
+  // startFirst, "This computer") would start or stop the real tribe server on this computer and sign in to it, which
+  // ended the demo mid-tour (S.set with a real token) and showed the real tribe under the tour. While a demo in this tab
+  // is on, TribeHost.isDesktop is false and the sidecar commands are refused.
+  const H = window.TribeHost, DESK = !!(H && H.isDesktop);
+  if (H) Object.defineProperty(H, 'isDesktop', { configurable: true, enumerable: true, get: () => DESK && !(eph && db && db.on) });
+  const T = window.__TAURI__ && window.__TAURI__.core;
+  if (T && typeof T.invoke === 'function') {
+    const inv = T.invoke.bind(T);
+    try { T.invoke = (cmd, ...a) => (eph && db && db.on && /^host_(start|stop|kill_stale)$/.test(String(cmd)) ? Promise.reject(new Error('The demo lives in this tab: it never starts or stops a tribe server.')) : inv(cmd, ...a)); } catch {}
+  }
+  // fix/batch-fixes: projects of the wiped demos (watch, showcase) have ids starting with demo_ (a real project id is a
+  // slug of [a-z0-9-], never with an underscore), and only those are wiped: a real project's keys can never match
+  const DEMO_ID = 'demo_';
+  function wipeKeys(ids) {
+    ids = ids.filter(id => typeof id === 'string' && id.startsWith(DEMO_ID));
+    const hit = k => k === 'tribecode.setup.wherePending' || ids.some(id => id && new RegExp(`[.:/]${id.replace(/[^\w-]/g, '')}([.:/]|$)`).test(k));
+    for (const st of [localStorage, sessionStorage]) { try { for (let i = st.length - 1; i >= 0; i--) { const k = st.key(i); if (k && hit(k)) st.removeItem(k); } } catch {} }
+  }
+  // Leftovers of a demo: keys made for the pretend server's address, the pretend tribe's name from the welcome.
+  function cleanKeys() {
+    try { for (let i = localStorage.length - 1; i >= 0; i--) { const k = localStorage.key(i); if (k && (k.includes('offline-demo.tribecode.invalid') || k === 'tribecode.mediaKey' && !(S0.get().server || {}).token)) localStorage.removeItem(k); } } catch {}
+    try { for (let i = sessionStorage.length - 1; i >= 0; i--) { const k = sessionStorage.key(i); if (k && k.includes('offline-demo.tribecode.invalid')) sessionStorage.removeItem(k); } } catch {}
+  }
 
   // ---------- the pretend tribe ----------
   const AGENT = 'claude';
   function seed(mode) {
     if (mode === 'showcase' && window.TribeShowcase) return window.TribeShowcase.seed({ iso, rid, st: S.get() });
+    if (mode === 'watch' && window.TribeDemoWatch) return window.TribeDemoWatch.seed({ iso, rid, st: S.get() });   // feat/demo-tour2: See how TribeCode works
     if (mode === 'solo') return seedSolo();
     const st = S.get(), now = Date.now();
     const name = st.name && st.name !== 'Me' ? st.name : 'You', first = name.split(' ')[0];
@@ -81,28 +138,52 @@
   }
 
   // A real tribe on this phone: just you and an empty first project (Flint answers from the Flint panel, no model needed).
-  function seedSolo() {
+  // draft (feat/setup-local, app/ui/setuplocal.js): the project you just named on the dashboard, made instantly here:
+  //   { name, bio, emoji, notes, company: { name, mission, seats: { ceo, cto, growth, ops: 'me' | 'ai' | 'later' } } | null }
+  function seedSolo(draft) {
     const st = S.get(), now = Date.now(), name = st.name && st.name !== 'Me' ? st.name : 'You', first = name.split(' ')[0];
-    const tname = (ls.get('tribecode.welcome.tribe') || {}).name || `${first}’s tribe`, pid = 'first-project';
+    const d = draft || {}, pname = String(d.name || 'My first project').slice(0, 48);
+    const tname = `${first}’s tribe`,   /* feat/demo-auto: never the pretend tribe's name from the welcome */ pid = d.name ? (slugify(pname) || 'first-project') : 'first-project';
+    const where = phoneLike() ? 'this phone' : 'this device';
+    const docs = d.notes && String(d.notes).trim() ? [{ slug: 'notes', title: 'Notes', by: 'me', created: iso(now), updated: iso(now), updatedBy: 'me', version: 1, project: pid, body: String(d.notes).slice(0, 400000) }] : [];
     return {
-      on: true, v: 1, mode: 'solo', created: iso(now), seq: 0,
+      on: true, v: 1, mode: 'solo', id: 'd-' + rid(12), created: iso(now), seq: 0,
       tribe: { name: String(tname).slice(0, 40), created: iso(now) },
       members: [{ id: 'me', name, color: st.color || '#F26B1D', role: 'host', joined: iso(now) }],
       current: pid,
-      projects: [{ id: pid, name: 'My first project', emoji: '✨', image: null, bio: '', color: '#F26B1D', channel: 'general', default: true, created: iso(now), members: { me: 'host' } }],
-      chat: { [pid]: [{ id: 'm-' + rid(), at: iso(now), by: 'tribecode', text: `${first} started **${String(tname).slice(0, 40)}** on this phone. It lives only here for now: add tasks and notes, ask Flint for help, and move it to a host when friends should join.` }] },
-      tasks: { [pid]: [] }, docs: { [pid]: [] }, vision: { [pid]: '' }, gists: { [pid]: [] },
+      projects: [{ id: pid, name: pname, emoji: d.emoji || '✨', image: null, bio: String(d.bio || '').slice(0, 400), color: '#F26B1D', channel: 'general', default: true, created: iso(now), members: { me: 'host' } }],
+      chat: { [pid]: [{ id: 'm-' + rid(), at: iso(now), by: 'tribecode', text: d.name ? `${first} started **${pname}** on ${where}. Everything works here already: add tasks, notes and docs, ask Flint for help. Choose where it lives (GitHub, this computer, a free cloud or a phone) whenever you like.` : `${first} started **${String(tname).slice(0, 40)}** on ${where}. It lives only here for now: add tasks and notes, ask Flint for help, and move it to a host when friends should join.` }] },
+      tasks: { [pid]: (Array.isArray(d.tasks) ? d.tasks : []).map(x => String(x || '').trim().slice(0, 200)).filter(Boolean).slice(0, 30).map((title, i) => ({ id: 't-' + rid(6), title, status: 'backlog', assignee: null, by: 'me', created: iso(now), updated: iso(now), order: now + i, source: 'board', body: '', project: pid })) },
+      docs: { [pid]: docs }, vision: { [pid]: String(d.bio || '') }, gists: { [pid]: [] },
+      company: d.company ? { [pid]: companyDraft(d.company, pname) } : {}, whiteboard: {},
       scratch: [], uploads: [], invites: [], friends: [], prefs: { pins: [] }, joinedRio: true, mayaHi: true,
     };
   }
   const solo = () => db?.mode === 'solo';
+  const phoneLike = () => matchMedia('(max-width: 820px)').matches || /Android|iPhone|iPad/i.test(navigator.userAgent || '');
+  // ---------- Company basics in a draft (setuplocal.js): name, mission and the four lean seats; anything can be "later" ----------
+  const SEATS = [['ceo', 'CEO', '#F26B1D'], ['cto', 'Build', '#38C6B1'], ['growth', 'Grow', '#FABD2F'], ['ops', 'Run', '#94A3B8']];
+  function companyDraft(c, pname) {
+    const seats = c.seats || {};
+    return { on: true, name: String(c.name || '').slice(0, 60), mission: String(c.mission || '').slice(0, 400), project: pname, seats: Object.fromEntries(SEATS.map(([k]) => [k, ['me', 'ai'].includes(seats[k]) ? seats[k] : 'later'])) };
+  }
+  function companyView(p) {
+    const c = (db.company || {})[p.id]; const meV = { id: 'me', name: me().name, color: me().color, role: 'host' };
+    if (!c || !c.on) return { company: null, canLead: true, canEdit: true, mySeats: [], templates: [], kinds: [], people: [meV], agents: [], myAgent: null };
+    const seats = SEATS.map(([k, title, color]) => { const h = c.seats[k]; return { id: k, kind: k, title, color, status: h === 'me' ? 'on-track' : 'idle', charter: { goal: h === 'ai' ? 'For an AI helper, once one is connected' : '', owns: [], mayDo: [], needsOk: [] }, holder: { person: h === 'me' ? 'me' : null, agent: null }, who: { person: h === 'me' ? meV : null, agent: null }, last: null }; });
+    return { company: { on: true, name: c.name || p.name, mission: c.mission, template: 'blank', seats, goals: [], rhythms: {}, draft: true }, canLead: true, canEdit: true, mySeats: seats.filter(x => x.holder.person === 'me').map(x => x.id),
+      templates: [], kinds: SEATS.map(([id, title, color]) => ({ id, title, color })), people: [meV], agents: [], myAgent: null, today: { standups: {}, missing: [] }, decisions: [], waiting: 0, spend: null };
+  }
   // Everything a host needs to take the phone tribe over (server/soloimport.js reads exactly this shape).
+  // draftId (feat/setup-local): the host remembers it, so sending the same draft twice makes no second copy.
   function exportSolo() {
     if (!db) return null;
-    return { tribe: { name: db.tribe.name }, projects: db.projects.map(p => ({
-      name: p.name, emoji: p.emoji || '', color: p.color, bio: p.bio || '', vision: db.vision[p.id] || '',
+    if (!db.id) { db.id = 'd-' + rid(12); save(); }
+    return { draftId: db.id, tribe: { name: db.tribe.name }, projects: db.projects.map(p => ({
+      key: p.id, name: p.name, emoji: p.emoji || '', color: p.color, bio: p.bio || '', vision: db.vision[p.id] || '',
+      company: (db.company || {})[p.id] || null, github: ((db.homes || {})[p.id] || {}).github || null,
       tasks: (db.tasks[p.id] || []).map(t => ({ title: t.title, status: t.status, body: t.body || '', due: t.due || null, type: t.type, subtasks: t.subtasks })),
-      docs: (db.docs[p.id] || []).map(d => ({ title: d.title, body: d.body || '' })),
+      docs: (db.docs[p.id] || []).map(d => ({ title: d.title, body: d.body || '', ...(d.kind ? { kind: d.kind } : {}) })),
       chat: (db.chat[p.id] || []).filter(m => m.text).map(m => ({ by: m.by === 'me' ? 'me' : m.by === 'tribecode' ? 'tribecode' : m.by, name: nameOf(m.by), at: m.at, text: m.text })),
     })) };
   }
@@ -111,7 +192,7 @@
   const me = () => db.members.find(m => m.id === 'me');
   const nameOf = id => id === 'tribecode' ? 'TribeCode' : ((db.members.find(m => m.id === id) || {}).name || 'someone');
   const proj = id => db.projects.find(p => p.id === id);
-  const cur = () => proj(db.current) ? db.current : db.projects[0].id;
+  const cur = () => proj(db.current) ? db.current : (db.projects[0] || {}).id || null;
   let where = 'Home';
   // offline-profiles: the profile editor works in the demo too (the same fields as server/profiles.js, kept in this browser)
   const PF_COLORS = { teal: '#38C6B1', indigo: '#6C7CFF', sky: '#4FA8F0', violet: '#A58BFF', rose: '#FF6F8E', coral: '#FF8A65', amber: '#F2B33D', lime: '#9AD65C', mint: '#4CD6A0', sand: '#D9B98C', orchid: '#E07BD0', slate: '#9AA7B8' };
@@ -201,19 +282,27 @@
       let want = ''; try { want = new URL(url.replace(/^ws/, 'http')).searchParams.get('project') || ''; } catch {}
       if (want && proj(want)) db.current = want;
       sockets.add(this);
-      setTimeout(() => { if (this.readyState !== 0 || !active()) return; this.readyState = 1; if (this.onopen) this.onopen({}); this._recv(hello()); }, 20);
+      setTimeout(() => this._open(), 20);
     }
+    // fix/desk-demo: the tour's blank slate (db.blank) has no tribe yet, so nothing connects until Flint makes one (wake())
+    _open() { if (this.readyState !== 0 || !active() || (db && db.blank)) return; this.readyState = 1; if (this.onopen) this.onopen({}); this._recv(hello()); }
     _recv(msg) { if (this.readyState !== 1) return; const data = JSON.stringify(msg); setTimeout(() => { if (this.readyState === 1 && this.onmessage) this.onmessage({ data }); }, 0); }
     send(raw) { let m; try { m = JSON.parse(raw); } catch { return; } if (active()) onSocket(this, m); }
     close() { if (this.readyState === 3) return; this.readyState = 3; sockets.delete(this); setTimeout(() => this.onclose && this.onclose({}), 0); }
   }
-  let presT = null;
+  let presT = null, hud = null;
   function onSocket(sock, m) {
     if (m.type === 'activity' && typeof m.where === 'string') { where = m.where.slice(0, 80); clearTimeout(presT); presT = setTimeout(pushPresence, 300); return; }
     if (m.type === 'project' && proj(m.id)) { db.current = m.id; save(); sock._recv({ type: 'project-switched', project: m.id }); pushPresence(); return; }
     if (m.type === 'ping') return sock._recv({ type: 'pong', t: m.t });
     if (m.type === 'announce' && m.text) return post(cur(), 'me', String(m.text).slice(0, 400));
-    if (m.type === 'huddle-join') return toast('Huddles are ' + NOPE.toLowerCase().replace('not in', 'not in') + '.');
+    if (m.type === 'huddle-join' || m.type === 'huddle-state') {   // a pretend huddle: Maya is there (no audio travels anywhere)
+      if (solo()) return push({ type: 'huddle', members: [{ id: 'me', muted: !!m.muted }] });
+      hud = { me: { id: 'me', muted: !!m.muted, sharing: !!m.sharing } }; push({ type: 'huddle', members: [hud.me, { id: 'maya', muted: false, demo: true }] });
+      if (m.type === 'huddle-join' && !db.huddled) { db.huddled = true; save(); later(1800, () => post(cur(), 'maya', 'Hi from the huddle 🎧 (a pretend one: in a real tribe you\'d hear me)')); }
+      return;
+    }
+    if (m.type === 'huddle-leave') { hud = null; return push({ type: 'huddle', members: [] }); }
     if (String(m.type).startsWith('doc-')) return live(sock, m);
     if (m.type === 'cnv-op') { cnvApply(String(m.file || 'main'), m.ops); return; }   // one person, so nobody to tell
   }
@@ -303,7 +392,7 @@
     const last = (ms || []).map(m => String(m.version).replace(/^v/, '').split('.').map(Number)).sort((a, b) => b[0] - a[0] || b[1] - a[1])[0] || [0, 0];
     return `v${last[0]}.${(last[1] || 0) + 1}`;
   }
-  const hooks = { approved: [], decided: [], route: [] };   // route: feat/demo-tour (director.js answers a few showcase-only paths first)
+  const hooks = { approved: [], decided: [], route: [], create: [] };   // route: feat/demo-tour (director.js answers a few showcase-only paths first)
   function vote(pid, pr, who, v) {
     if (pr.status !== 'open') return pr;
     (pr.votes = pr.votes || {})[who] = v; save();
@@ -346,11 +435,34 @@
         const g = { id: 'g-' + rid(8), kind: 'progress', title: `Done: ${t2.title}`.slice(0, 90), bullets: ['Made the change in a pretend branch (nothing is really built in the demo)', 'Moved the task to Review', 'Next: a friend checks it, then it ships'],
           files: [], link: null, task: t2.id, by: AGENT, byName: nameOf(AGENT), agent: true, role: null, at: iso(), project: pid, auto: false };
         const msg = post(pid, AGENT, `📈 **${g.title}**\n${g.bullets.map(b => `- ${b}`).join('\n')}`, { gist: g });
-        g.msg = msg.id; (db.gists[pid] = db.gists[pid] || []).unshift(g); save();
+        g.msg = msg.id; (db.gists[pid] = db.gists[pid] || []).unshift(g); save(); askApproval(pid, t2, AGENT, msg.id);
         push({ type: 'gist', gist: g, project: pid }); pushHub();
       });
     });
   }
+  // Someone was given a task: a pretend friend accepts it (and starts), the pretend Claude picks it up.
+  function assigned(pid, t) {
+    if (solo() || !t.assignee || t.assignee === 'me') return;
+    if (t.assignee === AGENT) return pickUp(pid, t.id, 1200);
+    const m = db.members.find(x => x.id === t.assignee); if (!m || m.role === 'agent') return;
+    later(1400, () => { const x = (db.tasks[pid] || []).find(y => y.id === t.id); if (!x || x.assignee !== m.id) return; if (x.status === 'backlog') { x.status = 'doing'; x.updated = iso(); x.updatedBy = m.id; save(); if (pid === cur()) push({ type: 'task', task: x }); } post(pid, m.id, `Accepted **${x.title}** 👍 I'm on it.`); });
+  }
+  // A finished task asks for a merge: approve it in the Inbox, with ✅ on the message, or by moving the card to Done.
+  function askApproval(pid, t, who, msgId) {
+    if (solo()) return null;
+    const a = { id: 'a-' + rid(6), status: 'pending', kind: 'merge', risk: 'low', title: `Merge “${t.title.replace(/^\[[^\]]*\]\s*/, '')}” into main`, details: `${nameOf(who)} finished it in a pretend branch. Low risk: one lane, no shared files.`,
+      by: who, byName: nameOf(who), to: ['me'], toNames: [me().name], created: iso(), task: t.id, project: pid, ...(msgId ? { msg: msgId } : {}) };
+    (db.approvals = db.approvals || []).unshift(a); db.approvals = db.approvals.slice(0, 40); save();
+    push({ type: 'approval', approval: a });
+    notify({ type: 'approval', title: `${nameOf(who)} asks: ${a.title}`, body: a.details, priority: 'high', approval: a.id, view: 'tasks' });
+    return a;
+  }
+  hooks.decided.push(ap => {   // approving moves the task to Done, like the real integrator
+    if (!db || db.mode === 'showcase' || ap.status !== 'approved' || !ap.task) return;
+    const pid = ap.project || cur(), t = (db.tasks[pid] || []).find(x => x.id === ap.task); if (!t || t.status === 'done') return;
+    Object.assign(t, { status: 'done', updated: iso(), updatedBy: ap.decidedBy || 'me' }); save(); if (pid === cur()) push({ type: 'task', task: t });
+    post(pid, 'tribecode', `✅ ${nameOf(ap.decidedBy || 'me')} approved: ${ap.title.replace(/^Merge /, '').replace(/ into main$/, '')} is in main (pretend).`);
+  });
   function friendJoins() {
     if (db.joinedRio || solo()) return; db.joinedRio = true; save();
     later(6000, () => {
@@ -555,7 +667,7 @@
     if (!name) name = 'Lantern'; else if (name === name.toLowerCase()) name = name.replace(/\b([a-z])/g, (_, ch) => ch.toUpperCase());
     const map = {}, fresh = () => Math.random().toString(16).slice(2, 14).padEnd(12, '0');
     for (const n of best.create) map[n.id] = fresh();
-    const live = Object.values(cnvFiles()[String(body.file || 'main')] ? cnvFiles()[String(body.file || 'main')].nodes : {}).filter(n => !n.del && !n.p);
+    const live = (Array.isArray(body.live) ? body.live : Object.values(db && cnvFiles()[String(body.file || 'main')] ? cnvFiles()[String(body.file || 'main')].nodes : {})).filter(n => n && !n.del && !n.p);   // polish: body.live = a local design's top layers (canvas/flint.js)
     const dx = live.length ? Math.max(...live.map(n => (n.x || 0) + (n.w || 0))) + 120 : 0;
     const sw = s => typeof s === 'string' ? s.split('Lantern').join(name) : s;
     const create = best.create.map(n => {
@@ -601,6 +713,129 @@
     return no();
   }
 
+  // ---------- chat, like server/chatx.js + dm.js: replies, reactions, pins, edit/delete, forwards, pictures and files ----------
+  // A channel is a project's chat ('general' = the current project, or a project's own channel) or a DM ('dm-a-b').
+  // Pictures and files are kept as blobs (object URLs for <img src>; IndexedDB so they survive a reload, memory only
+  // in a watch-only demo). The pretend friends react and answer, so it feels like a real tribe.
+  const QUICK_OK = /^[\p{Extended_Pictographic}\p{Emoji_Component}‍️]{1,16}$/u;
+  function chanOf(ch) {
+    if (typeof ch !== 'string' || !ch) return null;
+    if (ch.startsWith('dm-')) { const other = ch.slice(3).split('-').find(x => x !== 'me'); if (!other || !db.members.some(m => m.id === other) || `dm-${['me', other].sort().join('-')}` !== ch) return null; db.dms = db.dms || {}; return { dm: true, other, key: ch, list: () => (db.dms[ch] = db.dms[ch] || []), name: ch }; }
+    const p = ch === 'general' ? proj(cur()) : db.projects.find(x => x.channel === ch); if (!p) return null;
+    return { dm: false, pid: p.id, key: p.id, list: () => (db.chat[p.id] = db.chat[p.id] || []), name: p.id === cur() ? 'general' : p.channel };
+  }
+  function chPost(cx, by, text, extra) {
+    if (!cx.dm) return post(cx.pid, by, text, extra);
+    const msg = { id: 'm-' + rid(), at: iso(), by, text: String(text || '').slice(0, 4000), ...(extra || {}) };
+    const l = cx.list(); l.push(msg); if (l.length > 400) l.splice(0, l.length - 400); save(); push({ type: 'chat', channel: cx.name, message: msg }); return msg;
+  }
+  function chUpdate(cx, m) { save(); push({ type: 'chat-update', channel: cx.name, message: m }); return m; }
+  const cpins = cx => ((db.cpins = db.cpins || {})[cx.key] = (db.cpins || {})[cx.key] || []);
+  const pinList = cx => cpins(cx).map(id => cx.list().find(m => m.id === id)).filter(m => m && !m.deleted);
+  const pushPins = cx => push({ type: 'chat-pins', channel: cx.name, pins: pinList(cx) });
+  function reactAs(cx, m, who, e, on) {
+    if (!m || m.deleted) return false;
+    const r = { ...(m.reactions || {}) }, set = new Set(r[e] || []); let added = false;
+    if (on === true && set.has(who)) return false;
+    if (set.has(who)) set.delete(who); else { set.add(who); added = true; }
+    if (set.size) r[e] = [...set]; else delete r[e];
+    m.reactions = r; if (!Object.keys(r).length) delete m.reactions; chUpdate(cx, m); return added;
+  }
+  const media = new Map();   // file or upload id -> object URL
+  function mediaKeep(id, blob, persist = true) { try { const old = media.get(id); if (old) URL.revokeObjectURL(old); media.set(id, URL.createObjectURL(blob)); } catch {} if (persist) blobPut(id, blob); }
+  const b64blob = (data, mime) => { const s = atob(String(data || '').replace(/^data:[^,]*,/, '')); const u = new Uint8Array(s.length); for (let i = 0; i < s.length; i++) u[i] = s.charCodeAt(i); return new Blob([u], { type: mime || 'application/octet-stream' }); };
+  const EXT = { 'image/png': 'png', 'image/jpeg': 'jpg', 'image/gif': 'gif', 'image/webp': 'webp', 'image/svg+xml': 'svg', 'audio/webm': 'webm', 'audio/ogg': 'ogg', 'audio/mp4': 'm4a' };
+  function saveMediaB64(data, mime, kind, name) {
+    const blob = b64blob(data, mime); if (!blob.size) throw new Error('That file is empty.'); if (blob.size > MAX_UPLOAD) throw new Error('The demo keeps files up to 8 MB.');
+    const file = 'd' + rid(10) + '.' + (kind === 'file' ? 'bin' : (EXT[mime] || 'bin'));
+    mediaKeep(file, blob);
+    return kind === 'file' ? { kind: 'file', file, name: String(name || 'file').slice(0, 120), mime: mime || 'application/octet-stream', size: blob.size } : { kind, file, mime: mime || '', size: blob.size };
+  }
+  // <img src> can't go through window.fetch: media.js asks here for the object URL of a demo picture or file
+  function mediaUrl(u) {
+    const m = /\/api\/chat\/[^/]+\/media\/([^/?#]+)/.exec(u) || /\/api\/uploads\/([^/?#]+)\/raw/.exec(u);
+    return m ? media.get(decodeURIComponent(m[1])) || null : null;
+  }
+  async function mediaWarm() {   // after a reload: the blobs come back from IndexedDB, then their messages redraw
+    if (!db) return;
+    const ids = [...(db.uploads || []).map(f => f.id)];
+    const msgs = [];
+    for (const [k, l] of [...Object.entries(db.chat || {}), ...Object.entries(db.dms || {})]) for (const m of l || []) { for (const md of [m.media, ...(m.images || [])]) if (md && md.file) { ids.push(md.file); msgs.push([k, m]); } }
+    for (const id of ids) { if (media.has(id)) continue; const b = await blobGet(id); if (b) mediaKeep(id, b, false); }
+    for (const [k, m] of msgs) { const cx = k.startsWith('dm-') ? chanOf(k) : chanOf(k === cur() ? 'general' : (proj(k) || {}).channel); if (cx) push({ type: 'chat-update', channel: cx.name, message: m }); }
+  }
+  function notesDoc(line) {
+    const pid = cur(), list = db.docs[pid] = db.docs[pid] || [], day = iso().slice(0, 10), slug = 'notes-' + day;
+    let d = list.find(x => x.slug === slug);
+    if (!d) { d = { slug, title: `Notes · ${day}`, by: 'me', created: iso(), updated: iso(), updatedBy: 'me', version: 1, project: pid, body: `# Notes · ${day}\n` }; list.push(d); }
+    d.body += `\n- ${line}`; d.updated = iso(); d.version++; save(); push({ type: 'doc', doc: { slug, title: d.title, version: d.version, updated: d.updated, updatedBy: 'me' } }); return d;
+  }
+  function dmList() {
+    return Object.entries(db.dms || {}).filter(([, l]) => l.length).map(([ch, l]) => ({ channel: ch, with: ch.slice(3).split('-').find(x => x !== 'me'), last: l[l.length - 1], incoming: l.filter(x => x.by !== 'me').map(x => x.at) }))
+      .sort((a, b) => String(b.last.at).localeCompare(String(a.last.at)));
+  }
+  function friendAnswers(cx, msg) {   // the pretend people answer and react, so replies and reactions feel real
+    if (solo()) return;
+    if (cx.dm) { const who = cx.other, m = db.members.find(x => x.id === who); if (!m) return; later(1300, () => { reactAs(cx, msg, who, '👍'); if (m.role === 'agent') return; chPost(cx, who, pickLine(['Got it 👍', 'Ha, love it. I\'m a pretend friend, but I\'d say yes.', 'On it after lunch!', 'Sounds good to me ✨'])); }); return; }
+    if (/\?$|!$|🎉|nice|great|love|done|ship/i.test(msg.text || '') || ((db.seqReact = (db.seqReact || 0) + 1) % 2)) later(1100, () => reactAs(cx, msg, 'maya', /🎉|ship|done/i.test(msg.text || '') ? '🎉' : '👍'));
+  }
+  let lineN = 0; const pickLine = a => a[lineN++ % a.length];
+  async function chatRoute(method, ch, action, arg, body, q, pid) {
+    const GET = method === 'GET', POST = method === 'POST';
+    const cx = chanOf(ch); if (!cx) return no(404, 'no such channel');
+    const list = cx.list();
+    if (!action && GET) { const lim = Math.min(Number(q.get('limit')) || 100, 500), before = q.get('before'); let l = list; if (before) { const i = l.findIndex(m => m.id === before); l = i >= 0 ? l.slice(0, i) : []; } return ok({ messages: l.slice(-lim) }); }
+    if (action === 'pins' && GET) return ok({ pins: pinList(cx) });
+    if (action === 'receipt' && GET) return ok({ receipt: {} });
+    if (action === 'votes' && GET) return ok({ votes: [] });
+    if (action === 'search' && GET) { const s = String(q.get('q') || '').toLowerCase(); return ok({ messages: s ? list.filter(m => !m.deleted && String(m.text || '').toLowerCase().includes(s)).slice(-30) : [] }); }
+    if (action === 'media' && GET) { const u = media.get(arg); return u ? fetch(u) : no(404, 'That file is gone from this browser.'); }
+    if ((!action && POST) || (action === 'send' && POST)) {
+      const text = String(body.text || '').trim(); if (!text) return no(400, 'empty message');
+      const orig = body.replyTo ? list.find(m => m.id === String(body.replyTo)) : null;
+      const extra = { ...(body.cid ? { cid: String(body.cid).slice(0, 40) } : {}), ...(orig ? { replyTo: { id: orig.id, by: orig.by, text: orig.deleted ? 'message deleted' : String(orig.text || (orig.media ? (orig.media.kind === 'file' ? `File: ${orig.media.name || ''}` : orig.media.kind === 'voice' ? 'Voice note' : 'Image') : '')).slice(0, 160) } } : {}) };
+      const msg = chPost(cx, 'me', text, extra);   // cid: the outbox's instant bubble gives way to the real one
+      if (!cx.dm) onChat(cx.pid, text); friendAnswers(cx, msg);
+      return ok({ message: msg });
+    }
+    try {
+      if (POST && (action === 'image' || action === 'voice')) { const md = saveMediaB64(body.data, body.mime, action); if (action === 'voice') md.dur = Math.max(0, Math.min(Number(body.dur) || 0, 125)); const msg = chPost(cx, 'me', String((action === 'voice' ? body.transcript : body.text) || '').slice(0, 4000), { media: md }); friendAnswers(cx, msg); return ok({ message: msg }); }
+      if (POST && action === 'images') { const items = (Array.isArray(body.items) ? body.items : []).slice(0, 10); if (!items.length) return no(400, 'no pictures'); const images = items.map(it => saveMediaB64(it && it.data, it && it.mime, 'image')); const t = String(body.text || '').slice(0, 4000); const msg = chPost(cx, 'me', t, images.length === 1 ? { media: images[0] } : { images }); friendAnswers(cx, msg); return ok({ message: msg }); }
+      if (POST && action === 'file') { const md = saveMediaB64(body.data, body.mime, 'file', body.name); return ok({ message: chPost(cx, 'me', String(body.text || '').slice(0, 4000), { media: md }) }); }
+    } catch (e) { return no(400, e.message); }
+    const target = list.find(m => m.id === String(body.id || arg || ''));
+    if (!target) return no(404, 'message not found');
+    if (POST && action === 'react') {
+      const e = String(body.emoji || ''); if (!QUICK_OK.test(e)) return no(400, 'unknown reaction');
+      if (target.deleted) return no(400, 'message was deleted');
+      const added = reactAs(cx, target, 'me', e, body.on === true), out = { message: target };
+      if (added && e === '✅') { const ap = (db.approvals || []).find(a => a.status === 'pending' && (a.msg === target.id || a.by === target.by)); if (ap) { decide(ap, 'approve', 'me', 'Approved with ✅ in chat'); out.approved = { id: ap.id, title: ap.title }; } }
+      if (added && e === '📌' && !cpins(cx).includes(target.id) && cpins(cx).length < 50) { cpins(cx).unshift(target.id); save(); pushPins(cx); out.pinned = true; }
+      return ok(out);
+    }
+    if (POST && action === 'pin') {
+      let ids = cpins(cx).filter(i => i !== target.id); if (body.on !== false) ids = [target.id, ...ids];
+      db.cpins[cx.key] = ids.slice(0, 50); save(); pushPins(cx); return ok({ pins: pinList(cx) });
+    }
+    if (POST && action === 'forward') {
+      if (target.deleted) return no(400, 'message was deleted');
+      if (body.to === 'notes') { const d = notesDoc(`${nameOf(target.by)}: ${String(target.text || 'a file').slice(0, 300)}`); return ok({ doc: { slug: d.slug, title: d.title } }); }
+      const to = chanOf(String(body.to || '')); if (!to) return no(400, 'bad channel');
+      return ok({ message: chPost(to, 'me', target.text || '', { fwd: { by: target.by, from: cx.dm ? nameOf(cx.other) : '#' + ((proj(cx.pid) || {}).name || 'general'), at: target.at }, ...(target.media ? { media: target.media } : {}), ...(target.images ? { images: target.images } : {}) }) });
+    }
+    if (POST && action === 'notes') { const d = notesDoc(`${nameOf(target.by)}: ${String(target.text || 'a file').slice(0, 300)}`); return ok({ doc: { slug: d.slug, title: d.title } }); }
+    if (action === 'msg' && (method === 'PATCH' || method === 'DELETE')) {
+      if (target.by !== 'me') return no(403, 'you can only change your own messages');
+      if (target.deleted) return no(400, 'message was deleted');
+      if (method === 'PATCH') { const t = String(body.text || '').trim().slice(0, 4000); if (!t) return no(400, 'empty message'); target.text = t; target.edited = iso(); return ok({ message: chUpdate(cx, target) }); }
+      for (const k of Object.keys(target)) if (!['id', 'at', 'by'].includes(k)) delete target[k];
+      target.text = ''; target.deleted = iso();
+      if (cpins(cx).includes(target.id)) { db.cpins[cx.key] = cpins(cx).filter(i => i !== target.id); pushPins(cx); }
+      return ok({ message: chUpdate(cx, target) });
+    }
+    return no();
+  }
+
   async function route(method, path, q, body, headers) {
     const parts = path.split('/').filter(Boolean).map(decodeURIComponent), [a, b, c] = parts;
     for (const h of hooks.route) { const r = h(method, parts, q, body, headers); if (r) return r; }   // feat/demo-tour
@@ -614,8 +849,8 @@
       case 'projects': {
         if (!b && GET) return ok({ projects: projects(), current: cur() });
         if (!b && POST) {
-          if (body.path || body.url || body.files) return no(400, 'Folders and repos are ' + NOPE.toLowerCase() + '. Start an empty project instead.');
-          const name = String(body.name || 'New project').slice(0, 48); let id = slugify(name), n = 2; while (proj(id)) id = `${slugify(name)}-${n++}`;
+          if (body.path || body.url || body.files) return no(400, 'Folders and repos need a real tribe. Start an empty project instead.');
+          const name = String(body.name || 'New project').slice(0, 48), pre = db && (db.mode === 'watch' || db.mode === 'showcase') ? DEMO_ID : ''; let id = pre + slugify(name), n = 2; while (proj(id)) id = `${pre}${slugify(name)}-${n++}`;
           const p = { id, name, emoji: body.emoji || '', image: null, bio: '', color: ['#38C6B1', '#6C7CFF', '#FFB86B', '#FF6F8E'][db.projects.length % 4], channel: 'p-' + id, default: false, created: iso(), members: { me: 'host', maya: 'builder' } };
           db.projects.push(p); db.tasks[id] = []; db.docs[id] = []; db.chat[id] = []; db.gists[id] = []; save();
           post(id, 'tribecode', `${me().name} started **${name}**`);
@@ -644,19 +879,19 @@
           if (POST && parts[3] === 'dismiss') { e.gone.push(String(body.id || '')); save(); }
           if (GET || PUT || POST) return ok(senseMock(p, e));
         }
+        if (c === 'company') {   // feat/setup-local: the Company basics you filled in (or left for later) in setup
+          db.company = db.company || {};
+          if (!parts[3] && GET) return ok(companyView(p));
+          if (!parts[3] && (PUT || PATCH)) { if (body.on === false) { delete db.company[p.id]; } else { const cd = db.company[p.id] = db.company[p.id] || companyDraft({}, p.name); if (body.name !== undefined) cd.name = String(body.name).slice(0, 60); if (body.mission !== undefined) cd.mission = String(body.mission).slice(0, 400); } save(); push({ type: 'company', project: p.id }); return ok(companyView(p)); }
+          if (parts[3] === 'template' && POST) { db.company[p.id] = companyDraft({ name: body.name || p.name, seats: { ceo: 'me' } }, p.name); save(); push({ type: 'company', project: p.id }); return ok({ company: companyView(p).company, tasks: [], helper: null }); }
+          if (parts[3] === 'seats' && parts[5] === 'assign' && POST) { const cd = db.company[p.id]; if (cd && cd.seats[parts[4]] !== undefined) { cd.seats[parts[4]] = body.person === 'me' ? 'me' : body.person === null ? 'later' : cd.seats[parts[4]]; save(); push({ type: 'company', project: p.id }); } return ok({ seat: (companyView(p).company || { seats: [] }).seats.find(x => x.id === parts[4]) || null }); }
+          return no(409, 'Goals, standups and decisions start once the project has a home. Choose where it lives from the pill at the top.');
+        }
         if (c === 'workspace' && GET) return ok({ repo: null, github: { installed: false, signedIn: false, user: null }, branch: null, identity: { name: me().name, email: '', custom: false, hasToken: false } });
         break;
       }
-      case 'chat': {
-        if (!b) break;
-        const chPid = b === 'general' ? pid : (db.projects.find(p => p.channel === b) || {}).id;
-        if (!chPid) return no(404, 'Direct messages are ' + NOPE.toLowerCase());
-        if (!c && GET) { const lim = Math.min(Number(q.get('limit')) || 100, 500), before = q.get('before'); let list = db.chat[chPid] || []; if (before) { const i = list.findIndex(m => m.id === before); list = i >= 0 ? list.slice(0, i) : []; } return ok({ messages: list.slice(-lim) }); }
-        if ((!c && POST) || (c === 'send' && POST)) { const text = String(body.text || '').trim(); if (!text) return no(400, 'empty message'); const msg = post(chPid, 'me', text, body.cid ? { cid: String(body.cid).slice(0, 40) } : undefined); onChat(chPid, text); return ok({ message: msg }); }   // cid: the outbox's instant bubble gives way to the real one
-        if (c === 'pins' && GET) return ok({ pins: [] });
-        if (c === 'receipt' && GET) return ok({ receipts: {} });
-        break;
-      }
+      case 'chat': return chatRoute(method, b, c, parts[3], body, q, pid);
+      case 'dms': if (GET) return ok({ conversations: dmList() }); break;
       case 'ship': {   // feat/ship-flow: Ready to ship in the demo (pretend saved changes; "shipping" stays in this browser)
         const S = db.ship = db.ship || {}; const sp = S[pid] = S[pid] || { mode: 'host', turbo: { on: false, quietMin: 10, maxPerHour: 4 }, current: null, log: [], lastShip: null };
         const MT = { host: 'The host decides', majority: 'More than half of the people decide', everyone: 'Everyone has to say yes' };
@@ -703,7 +938,7 @@
       case 'tasks': {
         const list = db.tasks[pid] = db.tasks[pid] || [];
         if (!b && GET) return ok({ tasks: list });
-        if (!b && POST) { const t = addTask(pid, { ...body, by: 'me' }); if (!body.assignee) pickUp(pid, t.id); return ok({ task: t }); }
+        if (!b && POST) { const t = addTask(pid, { ...body, assignee: body.assignee && db.members.some(x => x.id === body.assignee) ? body.assignee : null, by: 'me' }); if (!body.assignee) pickUp(pid, t.id); else assigned(pid, t); return ok({ task: t }); }
         const t = list.find(x => x.id === b); if (!t) return no(404, 'task not found');
         if (c === 'split' && POST) {   // feat/ship-flow: a task becomes smaller ones (rules, like the server's basic fallback)
           const base = t.title.replace(/^\[[^\]]*\]\s*/, '').trim(), bits = base.split(/\s*(?:,|;|\band then\b|\bthen\b|\band\b|\+)\s*/i).map(x => x.trim()).filter(x => x.length > 2);
@@ -715,11 +950,11 @@
         if (PATCH) {
           if (body.title !== undefined) t.title = String(body.title).slice(0, 200) || t.title;
           if (body.status !== undefined) { if (!['backlog', 'doing', 'review', 'done'].includes(body.status)) return no(400, 'bad status'); t.status = body.status; }
-          if (body.assignee !== undefined) t.assignee = body.assignee && db.members.some(x => x.id === body.assignee) ? body.assignee : null;
+          const was = t.assignee; if (body.assignee !== undefined) t.assignee = body.assignee && db.members.some(x => x.id === body.assignee) ? body.assignee : null;
           if (body.order !== undefined && Number.isFinite(Number(body.order))) t.order = Number(body.order);
           if (body.body !== undefined) t.body = String(body.body).slice(0, 20000);
           if (body.due !== undefined) t.due = body.due || null;
-          t.updated = iso(); t.updatedBy = 'me'; save(); push({ type: 'task', task: t }); return ok({ task: t });
+          t.updated = iso(); t.updatedBy = 'me'; save(); push({ type: 'task', task: t }); if (t.assignee && t.assignee !== was) assigned(pid, t); if (body.status === 'done' && t.status === 'done') { const ap = (db.approvals || []).find(a => a.task === t.id && a.status === 'pending'); if (ap) decide(ap, 'approve', 'me', 'Moved to Done'); } return ok({ task: t });
         }
         if (DEL) { db.tasks[pid] = list.filter(x => x !== t); save(); push({ type: 'task-removed', id: t.id }); return ok({ ok: true }); }
         break;
@@ -729,7 +964,7 @@
         if (!b && GET) return ok({ docs: list.map(docMeta).sort((x, y) => String(y.updated).localeCompare(String(x.updated))) });
         if (!b && POST) {
           const title = String(body.title || 'Untitled').slice(0, 120); let s = slugify(title), n = 2; while (list.some(d => d.slug === s)) s = `${slugify(title)}-${n++}`;
-          const now = iso(), d = { slug: s, title, by: 'me', created: now, updated: now, updatedBy: 'me', version: 1, project: pid, body: String(body.body || '').slice(0, 400000) };
+          const now = iso(), d = { slug: s, title, by: 'me', created: now, updated: now, updatedBy: 'me', version: 1, project: pid, body: String(body.body || '').slice(0, 400000), ...(['sheet', 'deck'].includes(body.kind) ? { kind: body.kind } : {}) };
           list.push(d); save(); push({ type: 'doc', doc: { slug: s, title, version: 1, updated: now, updatedBy: 'me' } }); return ok({ doc: { ...d, summary: '' } });
         }
         const d = list.find(x => x.slug === b); if (!d) return no(404, 'doc not found');
@@ -742,7 +977,19 @@
           push({ type: 'doc', doc: { slug: d.slug, title: d.title, version: d.version, updated: d.updated, updatedBy: 'me' } }); return ok({ doc: { ...d, summary: '' } });
         }
         if (!c && DEL) { db.docs[pid] = list.filter(x => x !== d); sessions.delete(b); save(); push({ type: 'doc-removed', slug: b }); return ok({ ok: true }); }
-        if (c === 'comments' && GET) return ok({ comments: [], threads: [] });   // docsx.js reads threads
+        if (c === 'comments') {   // comment threads, like server/docsx.js (a pretend friend answers the first one)
+          const all = (db.comments = db.comments || {}), list2 = all[b] = all[b] || [], tid = parts[3];
+          const out = () => { save(); push({ type: 'doc-comments', slug: b, threads: list2 }); };
+          if (GET) return ok({ comments: [], threads: list2 });
+          if (POST && !tid) { const text = String(body.body || '').trim().slice(0, 4000); if (!text) return no(400, 'empty comment');
+            const t = { id: 'c' + rid(8), quote: String(body.quote || '').slice(0, 500), offset: Math.max(0, Number(body.offset) || 0), by: 'me', at: iso(), body: text, resolved: false, replies: [] };
+            list2.push(t); out(); if (!solo() && !db.commented) { db.commented = true; later(1600, () => { t.replies.push({ id: 'r' + rid(8), by: 'maya', at: iso(), body: 'Good catch, agreed 👍' }); out(); }); }
+            return ok({ thread: t }); }
+          const t = list2.find(x => x.id === tid); if (!t) return no(404, 'thread not found');
+          if (POST) { const text = String(body.body || '').trim().slice(0, 4000); if (!text) return no(400, 'empty reply'); t.replies.push({ id: 'r' + rid(8), by: 'me', at: iso(), body: text }); t.resolved = false; out(); return ok({ thread: t }); }
+          if (PATCH) { if (body.resolved !== undefined) { t.resolved = !!body.resolved; t.resolvedBy = t.resolved ? 'me' : undefined; } if (body.offset !== undefined) t.offset = Math.max(0, Number(body.offset) || 0); out(); return ok({ thread: t }); }
+          if (DEL) { all[b] = list2.filter(x => x !== t); save(); push({ type: 'doc-comments', slug: b, threads: all[b] }); return ok({ ok: true }); }
+        }
         if (c === 'backlinks' && GET) return ok({ backlinks: [] });
         if (c === 'history' && GET && !parts[3]) return ok({ history: [] });
         if (c === 'meta' && (PUT || POST || PATCH)) { if (body.pinned !== undefined) d.pinned = !!body.pinned; save(); return ok({ meta: { pinned: !!d.pinned } }); }
@@ -753,6 +1000,13 @@
       case 'proposals': {   // the approval board (board.js): showcase.js seeds one and votes on it
         const list = (db.proposals = db.proposals || {})[pid] = db.proposals[pid] || [];
         if (GET && !b) return ok({ proposals: list.map(x => ({ ...x, tally: tally(x) })) });
+        if (POST && !b) {   // a new proposal: your vote counts as yes; the pretend friends vote a moment later
+          const title = String(body.title || '').trim().slice(0, 160); if (!title) return no(400, 'give it a title');
+          const pr = { id: 'p-' + rid(6), title, short: title, body: String(body.body || '').slice(0, 20000), kind: 'feature', status: 'open', by: 'me', created: iso(), votes: {} };
+          list.unshift(pr); save(); vote(pid, pr, 'me', 'yes');
+          if (pr.status === 'open' && !solo()) later(1800, () => { if (pr.status === 'open') vote(pid, pr, 'maya', 'yes'); });
+          return ok({ proposal: { ...pr, tally: tally(pr) } });
+        }
         const pr = list.find(x => x.id === b); if (!pr) break;
         if (POST && c === 'vote') { vote(pid, pr, 'me', body.vote === 'no' ? 'no' : 'yes'); return ok({ proposal: { ...pr, tally: tally(pr) } }); }
         if (POST && c === 'comment') { const t = String(body.text || '').trim().slice(0, 1000); if (!t) return no(400, 'say something'); pr.comments = [...(pr.comments || []), { by: 'me', text: t, at: iso() }]; save(); return ok({ proposal: { ...pr, tally: tally(pr) } }); }
@@ -776,7 +1030,7 @@
         break;
       }
       case 'invites': {
-        if (solo() && !b && POST) { setTimeout(() => window.TribePhoneHost && window.TribePhoneHost.move(), 50); return no(409, 'This tribe lives on this phone. Move it to a host first, then friends can join.'); }
+        if (solo() && !b && POST) { setTimeout(() => (window.TribeLocalSetup && !phoneLike() ? window.TribeLocalSetup.where() : window.TribePhoneHost && window.TribePhoneHost.move()), 50); return no(409, phoneLike() ? 'This tribe lives on this phone. Move it to a host first, then friends can join.' : 'This project lives on this device. Choose where it lives first, then friends can join.'); }
         if (!b && POST) {
           const inv = { code: 'DEMO' + rid(4).toUpperCase(), by: 'me', role: body.role === 'spectator' ? 'spectator' : 'builder', maxUses: Number(body.maxUses) || 5, uses: 0, created: iso(), expires: iso(Date.now() + (Number(body.hours) || 24) * 3600e3), demo: true, ...(body.project && body.project !== 'tribe' ? { project: body.project } : {}) };
           db.invites.push(inv); save(); friendJoins(); noteInvite();
@@ -821,7 +1075,7 @@
           if (blob.size > MAX_UPLOAD) return no(413, 'The offline demo keeps files up to 8 MB.');
           const name = String(q.get('name') || 'file').replace(/[\\/:*?"<>|]/g, '_').slice(0, 120), scope = q.get('scope') === 'project' ? 'project' : 'me';
           const f = { id: 'u-' + rid(10), name, size: blob.size, type: blob.type || (KIND(name) === 'image' ? 'image/' + (name.split('.').pop().toLowerCase().replace('jpg', 'jpeg')) : 'application/octet-stream'), kind: KIND(name), by: 'me', byName: me().name, at: iso(), scope, ...(scope === 'project' ? { project: pid } : {}) };
-          await blobPut(f.id, blob.type ? blob : new Blob([blob], { type: f.type })); db.uploads.push(f); save(); return ok({ file: f });
+          const keep = blob.type ? blob : new Blob([blob], { type: f.type }); await blobPut(f.id, keep); mediaKeep(f.id, keep, false); db.uploads.push(f); save(); return ok({ file: f });
         }
         const f = db.uploads.find(x => x.id === b); if (!f) return no(404, 'file not found');
         if (c === 'raw' && GET) { const blob = await blobGet(f.id); return blob ? new Response(blob, { status: 200, headers: { 'Content-Type': f.type } }) : no(404, 'That file is gone from this browser.'); }
@@ -860,7 +1114,6 @@
         if (GET && ['agents', 'reviews', 'handoffs', 'conflicts', 'ownership', 'delegations', 'asks'].includes(b)) return ok({ [b]: [] });
         if (POST && b === 'asks') return ok({ ask: { id: 'h-' + rid(6), title: String(body.text || 'A request').split('\n')[0].slice(0, 160), status: 'open', fromName: me().name, created: iso() } });   // feat/any-llm: the pretend Claude would pick it up
         break;
-      case 'dms': if (GET) return ok({ conversations: [] }); break;
       case 'notify':
         if (GET && b === 'inbox') { const items = db.inbox || []; return ok({ items, unread: items.filter(i => !db.lastRead || i.at > db.lastRead).length, lastRead: db.lastRead || null, marks: db.marks || {} }); }
         if (GET && b === 'prefs') return ok({ prefs: {} });
@@ -900,6 +1153,20 @@
         break;
       // v0.28: the Design canvas, Flint beside it, comment pins and the website templates, so the demo shows them too
       case 'canvas': return demoCanvas(method, b, c, body);
+      case 'whiteboard': {   // feat/setup-local: boards in a local draft (the same last-writer-wins rule as server/whiteboard.js)
+        const wb = (db.whiteboard = db.whiteboard || {})[pid] = (db.whiteboard || {})[pid] || {};
+        if (!wb.main) wb.main = { id: 'main', name: 'Team board', created: iso(), updated: iso(), elements: {} };
+        const liveEls = x => Object.fromEntries(Object.entries(x.elements).filter(([, e]) => !e.del));
+        if (!b && GET) return ok({ boards: Object.values(wb).map(x => ({ id: x.id, name: x.name, updated: x.updated, count: Object.keys(liveEls(x)).length })), canEdit: true, canManage: true });
+        if (!b && POST) { const nb = { id: 'b-' + rid(10), name: String(body.name || 'New board').slice(0, 60), created: iso(), updated: iso(), elements: {} }; wb[nb.id] = nb; save(); return ok({ board: nb }); }
+        const x = wb[b]; if (!x) return no(404, 'no such board');
+        if (!c && GET) return ok({ board: { ...x, elements: liveEls(x) }, canEdit: true, canManage: true });
+        if (!c && PATCH) { if (body.name) x.name = String(body.name).slice(0, 60); save(); return ok({ board: x }); }
+        if (c === 'ops' && POST) { const ap = window.TribeLocalFiles ? window.TribeLocalFiles.lww(x.elements, body.ops) : []; if (ap.length) { x.updated = iso(); save(); } return ok({ ok: true, applied: ap.length, rejected: [] }); }
+        if (c === 'clear' && POST) { for (const [k, e] of Object.entries(x.elements)) if (!e.del) x.elements[k] = { id: k, del: true, v: (e.v || 0) + 1 }; save(); return ok({ ok: true }); }
+        if (!c && DEL) { if (b === 'main') return no(400, 'the team board stays; clear it instead'); delete wb[b]; save(); return ok({ ok: true }); }
+        return no();
+      }
       case 'canvaschat': return demoCanvasChat(method, b, c, body);
       case 'canvasai':
         if (b === 'templates' && GET) return ok({ templates: (await demoData()).canvas.map(t => ({ id: t.id, title: t.title })) });
@@ -955,11 +1222,19 @@
       catch (e) { console.warn('offline demo:', e); out = [500, { error: 'The offline demo hit a snag: ' + (e && e.message || e) }]; }
       if (out instanceof Response) return out;
       const [status, data] = out;
-      if (status === 404 && data.error === NOPE && method !== 'GET' && Date.now() - lastNope > 1500) { lastNope = Date.now(); setTimeout(() => toast('Not in the offline demo. Host for real to use it.'), 50); }
+      if (status === 404 && data.error === NOPE && method !== 'GET' && Date.now() - lastNope > 1500) { lastNope = Date.now(); setTimeout(() => (solo() ? toast('That works once the project has a home. Choose where it lives from the pill at the top.') : needsReal()), 50); }
       return new Response(JSON.stringify(data), { status, headers: { 'Content-Type': 'application/json' } });
     })();
   };
 
+  // Only truly impossible things land here (another device, a real agent): a calm card, not an error.
+  function needsReal(what) {
+    let c = document.getElementById('od-needs');
+    if (!c) { c = document.createElement('div'); c.id = 'od-needs'; c.className = 'od-needs'; c.setAttribute('role', 'status'); document.body.appendChild(c); }
+    c.innerHTML = `<span class="od-dot" aria-hidden="true"></span><div class="od-needs-t"><b>This needs a real tribe</b><small>${esc(what || 'Other devices and real AI agents can\'t reach a demo that lives in this tab.')}</small></div><button class="btn sm primary" data-od="real">Host</button><button class="od-needs-x" aria-label="Close">×</button>`;
+    c.querySelector('.od-needs-x').onclick = () => c.remove();
+    clearTimeout(needsReal.t); needsReal.t = setTimeout(() => c.remove(), 6000);
+  }
   // The invite modal: say plainly that the link is pretend.
   function noteInvite() {
     setTimeout(() => {
@@ -978,24 +1253,27 @@
     return { server: { ...(st.server || {}) }, hosting: st.hosting, hostOff: st.hostOff, projKey: pk, projVal: pkv, at: iso() };
   }
   // start(): ask which demo (Explore quietly / Watch it come alive). start('quiet' | 'showcase') starts that one.
-  function start(mode) {
-    if (mode !== 'quiet' && mode !== 'showcase' && mode !== 'solo') return choose();
+  function start(mode, draft) {
+    if (!['quiet', 'showcase', 'solo', 'watch'].includes(mode)) return choose();
+    // fix/desk-demo: "Start a project" inside the tour makes the project in the tour's own tribe (never a real one here)
+    if (mode === 'solo' && draft && active() && db && db.mode === 'watch' && hooks.create.length) { hooks.create.forEach(fn => { try { fn(draft); } catch (e) { console.warn(e); } }); return; }
     closeChooser();
-    if (active() && (db?.mode || 'quiet') === mode) { enterUi(); return; }
-    const wasReal = !!(C() && C().hasToken()), wasDemo = active();
-    if (!ls.get(BKEY)) ls.set(BKEY, backup());
-    db = seed(mode); save(); blobClear();
-    S.set({ server: { url: ORIGIN, token: TOKEN }, hosting: false });
+    if (active() && (db?.mode || 'quiet') === mode && !draft) { enterUi(); return; }
+    const wasReal = !active() && !!(C() && C().hasToken()), wasDemo = active();
+    if (mode === 'solo') {   // a real tribe on this device: kept in localStorage, the old settings backed up
+      endDemo(true);
+      if (!ls.get(BKEY)) ls.set(BKEY, backup());
+      db = seedSolo(draft); save(); blobClear();
+      S.set({ server: { url: ORIGIN, token: TOKEN }, hosting: false });
+    } else { eph = true; db = seed(mode); save(); }   // a solo tribe in localStorage stays as it is
     if (wasReal || wasDemo) { try { sessionStorage.setItem('tribecode.view', 'home'); } catch {} location.reload(); return; }
     paint(); C().connect();
     enterUi();
   }
-  // Before tribe.js has loaded (showcase.js handles ?demo=showcase): set the demo up so the app boots straight into it.
-  function boot(mode, fresh) {   // fresh: feat/demo-tour starts the tour from a new tribe
+  // Before tribe.js has loaded (?demo=showcase | watch): set the demo up in this tab so the app boots straight into it.
+  function boot(mode, fresh) {   // fresh: the tour starts from a new tribe
     if (!fresh && active() && (db?.mode || 'quiet') === mode) return;
-    if (!ls.get(BKEY)) ls.set(BKEY, backup());
-    db = seed(mode); save(); blobClear();
-    S.set({ server: { url: ORIGIN, token: TOKEN }, hosting: false });
+    eph = true; db = seed(mode); save();
   }
   function choose() {
     if (active()) return enterUi();
@@ -1013,24 +1291,34 @@
   }
   function closeChooser() { const body = document.querySelector('#invite-body'); if (body && body.querySelector('.od-choice')) document.querySelector('#invite-modal').classList.add('hidden'); }
   function enterUi() {
-    const go = () => { if (A() && A().show) A().show('home'); toast(db?.mode === 'showcase' ? `${db?.tribe?.name || 'Campfire Crew'} is live. Sit back and watch, or join in.` : solo() ? `${db?.tribe?.name} is ready on this phone.` : `${db?.tribe?.name || 'Demo Tribe'} is ready. Nothing leaves this device.`); };
+    const go = () => { if (A() && A().show) A().show('home'); toast(db?.mode === 'showcase' ? `${db?.tribe?.name || 'Campfire Crew'} is live. Sit back and watch, or join in.` : solo() ? (db.projects[0] && db.projects[0].name !== 'My first project' ? `${db.projects[0].name} is ready. It lives on ${phoneLike() ? 'this phone' : 'this device'} until you choose a home.` : `${db?.tribe?.name} is ready on this phone.`) : `${db?.tribe?.name || 'Demo Tribe'} is ready. Nothing leaves this device.`); };
     if (C().connected()) return go();
     let n = 0; const wait = () => (C().connected() || ++n > 40 ? go() : setTimeout(wait, 50)); wait();
   }
-  function restore() {
+  function restore() {   // the solo tribe (and demos from before feat/demo-auto) changed the saved settings: put them back
     const bk = ls.get(BKEY);
     if (bk) {
-      S.set({ server: { url: (bk.server || {}).url || '', token: (bk.server || {}).token || '' }, hosting: bk.hosting, hostOff: bk.hostOff });
+      S0.set({ server: { url: (bk.server || {}).url || '', token: (bk.server || {}).token || '' }, hosting: bk.hosting, hostOff: bk.hostOff });
       try { if (bk.projVal == null) localStorage.removeItem(bk.projKey); else localStorage.setItem(bk.projKey, bk.projVal); } catch {}
-    } else S.set({ server: { url: '', token: '' } });
+    } else if ((S0.get().server || {}).token === TOKEN) S0.set({ server: { url: '', token: '' } });
     ls.del(BKEY);
   }
-  function leave() {
+  // End any demo without a reload: no demo data, no pretend server, no offline flag left behind. keepBlobs: a new demo follows.
+  function endDemo(keepBlobs) {
     closePop(); for (const s of [...sockets]) s.close();
-    restore(); ls.del(KEY); db = null; blobClear();
-    try { sessionStorage.removeItem('tribecode.view'); } catch {}
-    location.reload();
+    const wasEph = eph; eph = false;
+    // fix/desk-demo: the tour's projects leave nothing behind (checklist, canvas view, seen tasks, the start sheet's flag)
+    if (wasEph && db && (db.mode === 'watch' || db.mode === 'showcase')) wipeKeys((db.projects || []).map(p => p.id));
+    if (wasEph) ss.del(KEY); else { restore(); ls.del(KEY); }   // a demo in this tab never changed your settings; a solo tribe put back what it changed
+    db = null; media.forEach(u => { try { URL.revokeObjectURL(u); } catch {} }); media.clear();
+    if (!keepBlobs && !(ls.get(KEY) || {}).on) blobClear();   // a phone tribe kept beside the demo keeps its pictures
+    cleanKeys();
+    try { sessionStorage.removeItem('tribecode.view'); localStorage.removeItem('tribecode.welcome.tribe'); } catch {}
+    document.body && document.body.classList.remove('offline-demo', 'od-watch');
+    if (pill) { pill.remove(); pill = null; }
+    try { dispatchEvent(new CustomEvent('tribe-demo-end')); } catch {}
   }
+  function leave() { endDemo(); location.reload(); }
   function reset() {
     closePop(); if (!active()) return;
     db = seed(db?.mode); save(); blobClear();
@@ -1038,7 +1326,11 @@
     location.reload();
   }
   // A demo whose token was replaced (you joined a real tribe meanwhile) is over: forget it, keep the new sign-in.
-  if (db && db.on && (S.get().server || {}).token !== TOKEN) { ls.del(KEY); ls.del(BKEY); db = null; }
+  if (db && db.on && !eph && (S0.get().server || {}).token !== TOKEN) { ls.del(KEY); ls.del(BKEY); db = null; }
+  // A pretend tribe saved by an older version (localStorage, not this tab): the real app comes back, clean.
+  if (db && db.on && !eph && db.mode !== 'solo') { restore(); ls.del(KEY); db = null; blobClear(); cleanKeys(); }
+  if (!db) cleanKeys();
+  if (db && db.on) setTimeout(() => mediaWarm().catch(() => {}), 700);
 
   // ---------- the pill (where the Hosting pill sits) and its popout ----------
   let pill = null, pop = null;
@@ -1048,12 +1340,13 @@
     if (!on) { if (pill) pill.remove(); pill = null; return; }
     if (pill && pill.isConnected) return;
     pill = document.createElement('button'); pill.id = 'demo-pill'; pill.className = 'od-pill'; pill.setAttribute('aria-haspopup', 'dialog');
-    const sc = db?.mode === 'showcase';
+    const sc = db?.mode === 'showcase', wt = db?.mode === 'watch';
     if (sc) pill.classList.add('sc');
+    if (wt) pill.classList.add('wt');
     if (solo()) pill.classList.add('solo');
-    pill.title = sc ? 'Showcase: a pretend tribe that runs by itself' : solo() ? 'On this phone only: friends can join once it moves to a host' : 'Offline demo: nothing leaves this device';
-    pill.innerHTML = sc ? '<span class="od-dot" aria-hidden="true"></span><span class="od-l">Showcase</span><span class="od-s"> · pretend tribe</span><span class="sc-state" id="sc-pill-state"></span>'
-      : solo() ? '<span class="od-dot" aria-hidden="true"></span><span class="od-l">On this phone</span><span class="od-s"> · move to a host for friends</span>'
+    pill.title = wt ? 'A demo that plays by itself in this tab. Exit returns to your own app.' : sc ? 'Showcase: a pretend tribe that runs by itself' : solo() ? 'On this phone only: friends can join once it moves to a host' : 'Offline demo: nothing leaves this device';
+    pill.innerHTML = wt ? '<span class="od-dot" aria-hidden="true"></span><span class="od-l">Demo</span><span class="od-s"> · See how TribeCode works</span>' : sc ? '<span class="od-dot" aria-hidden="true"></span><span class="od-l">Showcase</span><span class="od-s"> · pretend tribe</span><span class="sc-state" id="sc-pill-state"></span>'
+      : solo() ? (phoneLike() ? '<span class="od-dot" aria-hidden="true"></span><span class="od-l">On this phone</span><span class="od-s"> · move to a host for friends</span>' : `<span class="od-dot" aria-hidden="true"></span><span class="od-l">On this device</span><span class="od-s"> · ${(db.homes && Object.values(db.homes).some(h => h && h.github)) ? 'live on GitHub' : 'choose where it lives'}</span>`)
       : '<span class="od-dot" aria-hidden="true"></span><span class="od-l">Offline demo</span><span class="od-s"> · nothing leaves this device</span>';
     place();
     pill.onclick = e => { e.stopPropagation(); pop ? closePop() : openPop(); };
@@ -1077,25 +1370,26 @@
       document.body.appendChild(pop); placePop(); return;
     }
     if (solo()) {
-      pop = document.createElement('div'); pop.className = 'od-pop'; pop.id = 'demo-pop'; pop.setAttribute('role', 'dialog'); pop.setAttribute('aria-label', 'On this phone');
-      pop.innerHTML = `<header><span class="od-dot" aria-hidden="true"></span><div><span class="eyebrow">On this phone only</span><b>${esc(db.tribe.name)} lives on this phone</b></div></header>
-        <p>It's a real tribe: tasks, notes and chat are kept here and survive reloads. Friends can join once it moves to a host (a computer, a free cloud server or an Android phone).</p>
+      pop = document.createElement('div'); pop.className = 'od-pop'; pop.id = 'demo-pop'; pop.setAttribute('role', 'dialog'); pop.setAttribute('aria-label', phoneLike() ? 'On this phone' : 'On this device');
+      const dev = phoneLike() ? 'this phone' : 'this device', p0 = db.projects[0] || {}, gh = ((db.homes || {})[p0.id] || {}).github;
+      pop.innerHTML = `<header><span class="od-dot" aria-hidden="true"></span><div><span class="eyebrow">On ${dev} only</span><b>${esc(p0.name && p0.name !== 'My first project' ? p0.name : db.tribe.name)} lives on ${dev}</b></div></header>
+        <p>It's real: tasks, notes, docs and chat are kept here and survive reloads. ${gh ? `It is mirrored to <b>${esc(gh.repo)}</b> on GitHub, so anyone can see the live repo and the suggested changes.` : 'Choose where it lives (a GitHub repo, this computer, a free cloud or a phone) and friends can join.'}</p>
         <div class="od-acts">
-          <button id="od-move"><svg class="i"><use href="#i-zap"/></svg><span>Move to a host</span></button>
+          <button id="od-move"><svg class="i"><use href="#i-zap"/></svg><span>${window.TribeLocalSetup ? 'Choose where it lives' : 'Move to a host'}</span></button>
           <button id="od-del"><svg class="i"><use href="#i-x"/></svg><span>Delete this phone tribe</span></button>
         </div>`;
       document.body.appendChild(pop);
-      pop.querySelector('#od-move').onclick = () => { closePop(); window.TribePhoneHost && window.TribePhoneHost.move(); };
+      pop.querySelector('#od-move').onclick = () => { closePop(); if (window.TribeLocalSetup) window.TribeLocalSetup.where(); else if (window.TribePhoneHost) window.TribePhoneHost.move(); };
       pop.querySelector('#od-del').onclick = () => { if (confirm(`Delete ${db.tribe.name} from this phone? Its tasks, notes and chat are gone for good unless you moved it to a host first.`)) leave(); };
       placePop(); return;
     }
     pop = document.createElement('div'); pop.className = 'od-pop'; pop.id = 'demo-pop'; pop.setAttribute('role', 'dialog'); pop.setAttribute('aria-label', 'Offline demo');
-    pop.innerHTML = `<header><span class="od-dot" aria-hidden="true"></span><div><span class="eyebrow">Offline demo</span><b>${esc(db.tribe.name)} lives in this browser</b></div></header>
-      <p>You're the host of a pretend tribe: Maya, Jay and a pretend Claude answer you here. Nothing leaves this device, and it stays until you reset it.</p>
+    pop.innerHTML = `<header><span class="od-dot" aria-hidden="true"></span><div><span class="eyebrow">${db.mode === 'watch' ? 'Demo' : 'Offline demo'}</span><b>${esc(db.tribe.name)} lives in this tab</b></div></header>
+      <p>${db.mode === 'watch' ? 'Flint builds a small game while you watch. Nothing leaves this device, and Exit puts your own app back exactly as it was.' : 'You\'re the host of a pretend tribe: Maya, Jay and a pretend Claude answer you here. Nothing leaves this device, and it ends when you leave or close this tab.'}</p>
       <div class="od-acts">
         <button id="od-real" data-od="real"><svg class="i"><use href="#i-zap"/></svg><span>Host this for real</span></button>
         <button id="od-reset"><svg class="i"><use href="#i-refresh"/></svg><span>Reset demo</span></button>
-        <button id="od-leave"><svg class="i"><use href="#i-x"/></svg><span>Leave demo</span></button>
+        <button id="od-leave"><svg class="i"><use href="#i-x"/></svg><span>${db.mode === 'watch' ? 'Exit demo' : 'Leave demo'}</span></button>
       </div>`;
     document.body.appendChild(pop);
     pop.querySelector('#od-reset').onclick = reset;
@@ -1121,11 +1415,11 @@
       <p class="faint od-fine">Leaving the demo puts your own settings back exactly as they were. The demo itself stays in this browser only.</p>
       <div class="modal-foot"><button class="btn" data-close>Back to the demo</button><span style="flex:1"></span><button class="btn" id="od-join">Join with a link</button><a class="btn primary" id="od-get" href="${RELEASES}" target="_blank" rel="noopener">Get the desktop app</a></div>`;
     body.querySelector('[data-close]').onclick = () => modal.classList.add('hidden');
-    body.querySelector('#od-join').onclick = () => { modal.classList.add('hidden'); if (active()) { restore(); ls.del(KEY); db = null; try { sessionStorage.setItem('tribecode.openJoin', '1'); } catch {} location.reload(); } else if (window.TribeSettings) window.TribeSettings.joinPrompt(); };
+    body.querySelector('#od-join').onclick = () => { modal.classList.add('hidden'); if (active()) { endDemo(); try { sessionStorage.setItem('tribecode.openJoin', '1'); } catch {} location.reload(); } else if (window.TribeSettings) window.TribeSettings.joinPrompt(); };
   }
   document.addEventListener('click', e => {
     const t = e.target.closest && e.target.closest('[data-od]'); if (!t) return;
-    if (t.dataset.od === 'real') { e.preventDefault(); hostForReal(); }
+    if (t.dataset.od === 'real') { e.preventDefault(); const n = document.getElementById('od-needs'); if (n) n.remove(); hostForReal(); }
     if (t.dataset.od === 'start') { e.preventDefault(); start(t.dataset.mode); }
   });
   document.addEventListener('keydown', e => { if (e.key === 'Escape' && pop) closePop(); });
@@ -1134,14 +1428,23 @@
 
   window.TribeOffline = {
     active, start, choose, boot, leave, reset, hostForReal,
-    solo: () => active() && solo(), exportSolo,
+    solo: () => active() && solo(), exportSolo, realFetch: (i, o) => realFetch(i, o),
+    // feat/setup-local: where each draft project lives (github: { repo, branch, synced }), kept in the draft itself
+    planDesign: demoPlan,   // polish: Flint's free screen templates for designs kept on this device (canvas/flint.js)
+    homes: () => (db && db.homes) || {}, setHome: (pid, h) => { if (!db) return; db.homes = db.homes || {}; db.homes[pid] = { ...(db.homes[pid] || {}), ...h }; save(); try { dispatchEvent(new CustomEvent('tribe-local-home', { detail: { pid } })); } catch {} if (pill) { pill.remove(); pill = null; } paint(); },
+    // forget the draft after its home confirmed it has everything (keeps your current sign-in as it is)
+    forget: () => { closePop(); for (const s of [...sockets]) s.close(); ls.del(KEY); ss.del(KEY); ls.del(BKEY); eph = false; blobClear(); db = null; paint(); },
     // After a move: forget the phone copy and sign in to the real host (no restore of the old settings).
-    finishMove: (server, token, name, go) => { closePop(); ls.del(KEY); ls.del(BKEY); blobClear(); try { sessionStorage.setItem('tribecode.view', 'home'); } catch {} if (go) { try { const k = 'tribecode.settings.v1', v = JSON.parse(localStorage.getItem(k) || '{}'); localStorage.setItem(k, JSON.stringify({ ...v, name, server: { url: '', token: '' }, hosting: false })); } catch {} location.href = go; return; } for (const s of [...sockets]) s.close(); db = null; S.set({ name, server: { url: server, token }, hosting: false }); location.reload(); },   // go: a web page on another origin opens the host's own page (a device link signs it in there)
+    finishMove: (server, token, name, go) => { closePop(); ls.del(KEY); ss.del(KEY); eph = false; ls.del(BKEY); blobClear(); try { sessionStorage.setItem('tribecode.view', 'home'); } catch {} if (go) { try { const k = 'tribecode.settings.v1', v = JSON.parse(localStorage.getItem(k) || '{}'); localStorage.setItem(k, JSON.stringify({ ...v, name, server: { url: '', token: '' }, hosting: false })); } catch {} location.href = go; return; } for (const s of [...sockets]) s.close(); db = null; S.set({ name, server: { url: server, token }, hosting: false }); location.reload(); },   // go: a web page on another origin opens the host's own page (a device link signs it in there)
     socket: url => new FakeSocket(url),
+    mediaUrl, ephemeral: () => active() && eph, exit: () => leave(), end: endDemo, needsReal,
+    saved: k => rawGet(k),   // what is really stored (the tour masks your identity from the app's own raw reads)
+    wake: () => { if (db) { delete db.blank; save(); } for (const s of [...sockets]) s._open(); },   // fix/desk-demo: the blank slate's tribe exists now
     state: () => db,
+    asleep: () => !!(active() && db && db.blank),   // fix/batch-fixes: the tour's blank slate before wake(): no connection pills
     mode: () => (active() ? db?.mode || 'quiet' : null),
     // for showcase.js: the same building blocks the pretend people above use
-    _k: { db: () => db, save, push, post, addTask, presence, pushPresence, pushHub, nameOf, cur, proj, iso, rid, vote, decide, notify, tally, hooks, toast, peerEdit, liveText, pickUp, closePop: () => closePop(), placePop: () => pop && placePop() },
+    _k: { db: () => db, save, push, post, chanOf, reactAs, askApproval, assigned, addTask, presence, pushPresence, pushHub, nameOf, cur, proj, iso, rid, vote, decide, notify, tally, hooks, toast, peerEdit, liveText, pickUp, closePop: () => closePop(), placePop: () => pop && placePop() },
     // A button for Home, the phone sheets, Settings and Help: "Try a demo tribe (offline)" or, while in it, "Leave".
     label: () => (active() ? (solo() ? 'Move this phone tribe to a host' : 'Leave the offline demo') : 'Try a demo tribe (offline)'),
     toggle: () => (active() ? (solo() ? window.TribePhoneHost && window.TribePhoneHost.move() : leave()) : start()),

@@ -1,5 +1,90 @@
 # Changelog
 
+## v0.31.2
+- **Home's sidebar heading is gone**: the "Your Dashboard" line above Files, Design, Code, Work and Agent fleet is removed. The lit logo and the "Home ›" breadcrumb already say where you are.
+- **Phones**: the same, one less line above the rows.
+
+## v0.31.1
+- **The tour waits for you**: "See how TribeCode works" now goes one step at a time. Flint does a step, then waits for **Next** (→ or Enter); **Back** (←) replays the previous one. A step line shows where you are ("Step 3 of 12 · Start a project").
+- **Auto-play is a toggle**, slower than before: each caption stays up long enough to read, typing looks human, the cursor glides and each click pauses with a ripple. The whole tour runs about 2½ minutes.
+- **Fix**: the tour's caption card is centred again.
+- **Phones**: the caption card with Next and Back fits at 390px.
+
+## v0.31.0
+- **Find your way**:
+  - **Left bar:** one "you are here" look for Home, tribes and the Workshop (a pressed tile with a slim accent bar). Drag the left bar and sidebar rows into your own order (Alt+↑/↓ on the keyboard, reset in Settings).
+  - **Labels:** "Your Dashboard" heads Home, and one set of line icons covers tabs, Settings and the sidebar.
+  - **Sidebar:** Preview and Invite friends are normal sidebar rows with a small thumbnail and faces.
+  - **Workshop:** the Marketplace is a full page.
+  - **Look:** the Campfire logo has white brackets again.
+- **Plans pop-out**: click FREE anywhere to see Free, Premium, credit packs and Use my AI, with your credits.
+- **Design is a creation flow**:
+  - Pick what you're making (website, app, game, screen, slides, poster, whiteboard, logo), then a template with an optional prompt, then a Plan card that ticks off and becomes tasks.
+  - 17 small open-source and original app and game starters, each with its license (docs/STARTERS.md).
+  - Flint starts them ("make a breakout game").
+- **Website designer v2**:
+  - **Templates:** "link tree website" works everywhere, including offline. 48 templates with previews, 32 converted from open-source sets (Start Bootstrap, Tailwind Toolbox, HTML5 UP with its credit line). Templates fill in from your project (name, team, hours and links from chat, colors from the inspiration board).
+  - **Comments:** comment on a section, and Flint turns the comments into tasks.
+  - **Saving:** a Website row appears once a draft exists, and edits are never lost (saved to this device and the host, with Keep mine / theirs / both).
+  - **Ported from OpenPage:** more blocks, search-engine settings, favicon, themes, font pairs and device previews.
+  - **Flint:** 99% on 674 phrasings with no AI.
+- **People**: see where everyone is right now (avatars on the doc, designer, chat, task or canvas they're in; DMs show only as "in messages"). A People button in the top bar lists this tribe and friends with status, place, Message, Jump to and Profile. Turn off "Show where I am" in Settings.
+- **Company and Work**: the Company dashboard reads like a one-page report (health line, seats, this week, money chart, goals, rituals). List your abilities, offer a gig yourself, find people by skill.
+- **Marketplace**: 553 items with real source links, licenses, authors and thumbnails. Add does something real for every kind, with Undo and an Installed tab.
+- **Home › Code**: a Connect GitHub panel with your status and three ways in.
+- **Demo**:
+  - Works in the desktop app: it can no longer start or stop your real server or sign you in.
+  - Starts from a blank dashboard, and Flint builds a tribe, project, tasks, a design and a website from nothing.
+  - Everything it made is cleared on exit.
+- **No more old screens**: updates load the newest files first and delete old cached copies. The old site builder and the old Friends button are gone (docs/UI-CLEANUP.md).
+- **Fixes**:
+  - Click-to-edit and starters work under the desktop app's security policy.
+  - An invite on a device-only project no longer leaves a scrim blocking clicks.
+  - The tour closes with Esc again.
+  - Flint's flier stays on a phone screen.
+- **Phones**: Files, the Design flow, the People sheet, the Company report (sections fold), the Marketplace and the plans sheet all fit at 390px; drag to reorder uses a long-press.
+
+## v0.30.1
+- **v0.30.0, released properly**: the release workflow now makes one draft before the Windows, Linux and Mac builds start. In v0.30.0 each build made its own draft at the same moment, so the installers split across two drafts and nothing was published. Everything in v0.30.0 below ships in this version.
+- **Phones**: unchanged from v0.30.0.
+
+## v0.30.0
+- **Flint understands what you mean**: a new set of 390 real phrasings (typos, slang, indirect asks) scores 99.5% with no AI, up from 14%; 87.5% on fresh phrasings he was never tuned on. "link tree website" makes a link-in-bio, "something for my band" the band site, "make the buttons work" wires them, "dark mode" really recolors. On the design canvas: functional buttons link screens, dark mode recolors layers (Ctrl Z undoes), add a screen, replace or round an image.
+- **A new website designer** modeled on OpenPage (MIT, credited in NOTICE), written in plain JS: one site config, 13 kinds of blocks with layout choices, 8 themes each with a real dark mode, edit text in place, drag to reorder, undo/redo, pages, button wiring and image tools. **Download HTML** gives one standalone page; the zip has every page. All 16 templates load in it ([docs/WEBSITE.md](docs/WEBSITE.md)).
+- **One message when AI is needed**: Flint says what he did for free and what an AI would add, with two buttons: Use my AI (free) and Get credits / Premium.
+- **A Flint lesson for every feature**: "teach me …" or "how do I …" opens a short lesson, and Show me outlines the real button.
+- **Files, rebuilt**: one Files view on Home and in projects, with category tabs and small icons, real previews instead of "Empty", a Where filter (yours first, then each tribe), a ⋯ menu on every card, and one + Create menu for everything, all working on this device with no tribe.
+- **Home is your dashboard**: the logo lights up, a "Home ›" breadcrumb and a full-width Home band show where you are; Files, Design, Code, Work and Agent fleet work across all your stuff. The Marketplace works offline from a bundled catalog instead of "failed to fetch".
+- **Tasks**: descriptions in Markdown; a task a lead assigns waits for Accept or Decline (with a reason); Council mode lets anyone claim open tasks. Agents get `accept_task`, `decline_task` and `claim_task`. Every button in every task board tab now does what it says.
+- **Company**: an infographic shows seats, charters, money, rituals, the Work loop and approvals before a project is a company, with Make it a company and See an example.
+- **Website button** finds a site the team already started. **GitHub repo** checks whether you're signed in and shows a short setup guide if not.
+- **See how TribeCode works**: a hands-off two-minute tour where Flint walks through 16 features in the real app, with pause, 2×, skip and chapter dots. The guided tour's dim never gets stuck. In the offline demo, reactions, replies, tasks, files and approvals work. The demo stays in its own tab and never mixes into the real app.
+- **Website**: every page in 7 languages, a gallery of 23 real apps, sites, docs and designs (not only games), and a Why TribeCode section.
+- **Fixes**: no account check before you choose where a project lives; Work's filter pop stays on screen; the website code view is no longer all caps.
+- **Phones**: the new Files, Home band, tasks Accept/Decline and Company infographic fit at 390px; the tour runs on phones.
+
+## v0.29.1
+- **Security fixes** from the post-release review ([docs/REVIEW-2026-11-11.md](docs/REVIEW-2026-11-11.md)): another member's private inspiration board can no longer be read or changed; proof-of-work ZIPs are visible only to the person who made them and the host, and can't be overwritten by someone else; ✦ tags can only be written to projects you're in; the Agent fleet only gives tasks to agents in your project; the Blender bridge refuses shell syntax. New `security4_test.py`.
+- **Phones**: unchanged.
+
+## v0.29.0
+- **One router, no dead ends**: the logo always goes Home; Home, All files, All code, Work and Agent fleet stay on your own dashboard (Work with no tribe shows next steps instead of jumping into a tribe); Back and Forward work everywhere; panes no longer glitch into other dashboards ([docs/NAVIGATION.md](docs/NAVIGATION.md)). The Workshop button is a wrench.
+- **Accounts**: Log out, an account switcher, Add account and TEST accounts (Orion, Maya, Jay, Guest) for trying sign-in. With `TRIBE_ACCOUNTS=1` the screens use the real accounts backend: sign up, log in, sessions, delete my account ([docs/ACCOUNTS.md](docs/ACCOUNTS.md)). `scripts/dev/clean-accounts.js` tidies usernames and old data, with a backup and `--dry-run`.
+- **Start a project instantly, choose where it lives last**: Start your first project makes it right away on this device (name, one line, optional notes, first tasks and Company basics where anything can be "later"); tasks, docs, chat and Company work with no server. "Where should it live?" is the optional last step and stays in the top pill: a GitHub repo (anyone sees the live repo and suggested changes, mirrored as files on a `tribe/suggestions` branch, no server needed to view), this computer, a free cloud or a phone. Moving in is one idempotent call and the device keeps its copy until the host confirms ([docs/LIGHT-HOSTING.md](docs/LIGHT-HOSTING.md)).
+- **No server errors before setup**: a fresh install starts no server and never says "didn't start" or "Reconnecting…"; the desktop app hosts only when a tribe exists on that computer and Host is on. After setup, a failed server shows one line with Details, Try again and Keep working offline.
+- **All files works without a tribe**: + New makes a note, doc, sheet, whiteboard or design, and Upload keeps any file, all on this device in the same editors projects use; new Sheets, Designs, Whiteboards and Code filters; Move to… puts any of them in a project.
+- **Basic features, supercharged by AI**: ✦ in chat (summarize, tasks), tasks (split, estimate, owner), docs and notes (tidy, outline, continue, summary, key points, titles, tags, outline, glossary), files, company seats and Home (today's plan). Every one works with no AI; with an AI (your cloud AI after a one-time consent, the tribe's local model or the in-browser model) it gets better in place.
+- **Flint on your Home dashboard** with no tribe: today's plan, Grow my idea (three questions, then a plan linking company, app and website to the right lessons and templates), files, start a project. **Watch Flint build** (Help) runs 17 steps through the whole app and exports proof-of-work ZIPs for the project and the tribe.
+- **Inspiration board**: openly licensed images and sounds (Openverse, Wikimedia, Freesound with a host key) with credits on every item; ✦ Use my board's style sets your accent and fonts.
+- **Preview**: App | Website switch, edit the website by sentence with no AI (headline, colors, sections, template, logo, undo), click to select, a Saved shelf of versions, and a phone layout with Page · Edit · Saved.
+- **Work**: post → match → assign → track → review → credit, with Suggested next. **Templates** (Work › Templates): 14 company docs with Guided, Advanced and ✦ Draft the rest; standups, weekly reviews and retros as recurring rituals.
+- **Premium**: calm notes at the 4th project, the 6th seat and premium extras; "Not now" always first and nothing local is ever blocked ([docs/PREMIUM.md](docs/PREMIUM.md)). No payments yet.
+- **Agent fleet**: one clear next step, copy-ready connect commands for Claude Code, Codex, Gemini CLI, Cursor and Qwen Code with Test connection, and a card per agent.
+- **Browser app**: shortcuts, share to TribeCode, open files with TribeCode, an offline page, unread badges and wake lock in huddles. Report and Block on messages and profiles, draft privacy and terms, delete-account and support pages, Sign in with Apple ready behind config ([docs/APP-STORE.md](docs/APP-STORE.md)).
+- **Company**: a quiet "Set up company" row until there is one. **Typing in long docs** is about 4 ms per key (was about 40).
+- **Dev**: `Tools\Clean-Slate-Dev.bat` opens a throwaway guest copy on port 4858, wiped each run. The truth test (`app/test/e2e_truth.py`) checks every screen reaches the backend without errors and chat stays light. [docs/LAUNCH.md](docs/LAUNCH.md) and [docs/ONE-PAGER.md](docs/ONE-PAGER.md).
+- **Phones**: + opens the instant Start sheet; Preview has Page · Edit · Saved tabs; the Agent fleet, Work, templates and Premium sheets fit at 390px; the user bar says "On this device" until you pick a home.
+
 ## v0.28.0
 - **Design canvas** (a new Design row in every project): frames, shapes and text as real layers, a layers panel and a properties panel, auto layout that is real CSS flex, components with copies that keep their own text and colors, snapping with alignment guides, a rotate handle, align and distribute, selection colors, frame presets, a right-click menu, Figma-familiar shortcuts and live editing with friends (their cursors and drags show as they move). **Send to app** turns a frame into code in your project and the preview updates; **Open in canvas** turns anything in the preview into layers; **Inspect** shows each layer's CSS; export PNG, PNG 2x and SVG.
 - **Talk to Flint while you design**: Simple mode is just the canvas and a Flint chat pane ("make a login screen for Ember"), with Show and Undo on every step and a small quick bar on the selection; Advanced (Ctrl Shift \) brings back layers, properties and Inspect with Flint as a tab. 13 screen templates, tidy up into auto layout, rename layers, dark/light versions and variants, all free. Members' Claude Code can read and edit designs through new canvas tools, with its own cursor.

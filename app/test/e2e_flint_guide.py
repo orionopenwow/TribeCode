@@ -43,20 +43,21 @@ def main():
             pg.click("#tb-help"); pg.click("[data-help=tour]"); pg.wait_for_selector("#fg-bubble.on .fg-steps", timeout=5000); pg.keyboard.press("Escape")
             pg.wait_for_function("!document.querySelector('#flint-guide').classList.contains('on')", timeout=5000)
             # asking Flint to open Files: v0.27.2 he flies to the Files row as the small "at work" flame (flintfly.js), then Files opens
-            pg.fill("[data-flbar] input, [data-flbar] textarea", "open files"); pg.keyboard.press("Enter")
+            # (the Home card keeps its own Flint bar in the hidden Home view, feat/flint-ai: type in the one on screen)
+            pg.locator("[data-flbar] input:visible, [data-flbar] textarea:visible").first.fill("open files"); pg.keyboard.press("Enter")
             pg.wait_for_function("(() => { const f = document.getElementById('flint-fly'); return f && f.classList.contains('on'); })()", timeout=6000)
             pg.wait_for_function("document.body.dataset.view === 'docs'", timeout=6000)
             # with the flier turned off he points with the big guide instead
             pg.evaluate("TribeFlintFly.setEnabled(false)")
-            pg.fill("[data-flbar] input, [data-flbar] textarea", "open files"); pg.keyboard.press("Enter")
+            pg.locator("[data-flbar] input:visible, [data-flbar] textarea:visible").first.fill("open files"); pg.keyboard.press("Enter")
             pg.wait_for_selector("#fg-bubble.on", timeout=6000); assert "Files" in pg.inner_text("#fg-bubble")
             pg.click("#fg-next"); pg.evaluate("TribeFlintFly.setEnabled(true)")
             # Flint's own intro: dimmed, six tiles, a Try chip fills the box and it's remembered
-            pg.evaluate("TribeFlintGuide.intro(document.querySelector('[data-flbar] .fl-in'))"); pg.wait_for_selector("#fg-intro .fg-tile", timeout=4000)
+            pg.evaluate("TribeFlintGuide.intro(document.querySelector('#fl-input'))"); pg.wait_for_selector("#fg-intro .fg-tile", timeout=4000)
             assert pg.locator("#fg-intro .fg-tile").count() == 6 and pg.evaluate("document.querySelector('#flint-guide').classList.contains('dim')")
             pg.click("#fg-intro [data-try='task: fix the jump']"); pg.wait_for_selector("#fg-intro", state="detached")
-            assert pg.input_value("[data-flbar] .fl-in") == "task: fix the jump" and pg.evaluate("localStorage.getItem('tribecode.flint.intro')") == "done"
-            pg.fill("[data-flbar] .fl-in", "")
+            assert pg.input_value("#fl-input") == "task: fix the jump" and pg.evaluate("localStorage.getItem('tribecode.flint.intro')") == "done"
+            pg.fill("#fl-input", "")
             # Flint's face is the mascot everywhere
             assert pg.locator(".fl-av img.fl-face[src$='flint.svg']").count() >= 1
             # phone: the tour fits

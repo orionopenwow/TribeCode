@@ -199,19 +199,18 @@
       C.send({ type: 'doc-cursor', slug: this.slug, pos, sel, rev: this.ot.rev });
     }
 
-    // loops: friends' cursors are drawn at most once per frame. Drawing measures the text (a forced layout), and doing
-    // that on every keystroke made typing in a long doc slow while a friend had it open.
+    // Remote carets are drawn once per frame: measuring them forces a layout of the whole doc, so doing it on every key
+    // made typing in a big doc slow while a friend was in it.
     render() {
       if (this.rafR) return;
-      const go = () => { this.rafR = 0; if (!this.closed) this.renderNow(); };
-      this.rafR = typeof requestAnimationFrame === 'function' ? requestAnimationFrame(go) : setTimeout(go, 16);
+      this.rafR = requestAnimationFrame(() => { this.rafR = 0; this.renderNow(); });
     }
     renderNow() {
       const ta = this.ta, layer = this.layer;
       if (!ta || !layer || !ta.isConnected) return;
       if (!layer.isConnected) (ta.offsetParent || ta.parentNode).appendChild(layer);
       const list = [...this.cursors.values()];
-      const hidden = ta.offsetParent === null || !list.length;
+      const hidden = !list.length || ta.offsetParent === null;   // no peers: skip offsetParent, which forces a layout of the whole doc on every key
       layer.classList.toggle('hidden', hidden); if (hidden) { layer.innerHTML = ''; return; }
       const max = this.dom.length;
       // cursor positions are in doc space; while composing the DOM lags by `queued`

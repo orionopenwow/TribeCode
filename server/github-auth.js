@@ -138,7 +138,33 @@ module.exports = function githubAuth({ W, store, getMembers, isLocal, str, broad
       gh: local && !process.env.TRIBE_NO_GH ? await W.ghStatus().catch(() => null) : null };
   }
 
+  // ---------- is this person (or this computer) signed in to GitHub? (feat/tasks-company) ----------
+  // GET /api/github/detect[?force=1]: a member, or anyone on the host computer itself (setup before a tribe exists).
+  // { ready: 'oauth'|'gh'|'git'|null, oauth: { configured, signedIn, login }, gh: { installed, signedIn, user },
+  //   git: { installed, version, helper, credential: 'stored'|'helper'|null }, local, platform }. Never a token.
+  async function gitStatus() {
+    const v = await run('git', ['--version'], { timeout: 5000, env: W.NOPROMPT });
+    if (v.code) return { installed: false, version: null, helper: null, credential: null };
+    const h = await run('git', ['config', '--global', '--get', 'credential.helper'], { timeout: 5000, env: W.NOPROMPT });
+    const helper = (h.out || '').trim().split('\n')[0] || null;
+    let stored = false;
+    try { stored = /github\.com/.test(require('node:fs').readFileSync(require('node:path').join(require('node:os').homedir(), '.git-credentials'), 'utf8')); } catch {}
+    return { installed: true, version: ((v.out || '').match(/\d+\.\d+(\.\d+)?/) || [null])[0], helper, credential: stored ? 'stored' : helper ? 'helper' : null };
+  }
+  async function detect(req, me, force) {
+    const local = isLocal(req), s = me ? W.readSecret(me.id) : {}, tools = local && !process.env.TRIBE_NO_GH;
+    const [gh, git] = tools ? await Promise.all([W.ghStatus(force).catch(() => null), gitStatus().catch(() => null)]) : [null, null];
+    const signedIn = !!s.githubToken;
+    return { ready: signedIn ? 'oauth' : gh && gh.signedIn ? 'gh' : git && git.credential === 'stored' ? 'git' : null,
+      oauth: { configured: !!clientId(), signedIn, login: signedIn ? s.githubLogin || null : null, member: !!(me && human(me)) },
+      gh, git, local, platform: process.platform };
+  }
+
   async function route(req, res, { m, b, me, readBody, send, fail }) {
+    if (b === 'detect' && m === 'GET') {
+      if (!me && !isLocal(req)) return fail(res, 401, 'not a member of this tribe');
+      try { return send(res, 200, { detect: await detect(req, me && human(me) ? me : null, /[?&]force=1\b/.test(req.url || '')) }); } catch (e) { return fail(res, e.status || 500, e.message); }
+    }
     if (!me) return fail(res, 401, 'not a member of this tribe');
     if (!human(me)) return fail(res, 403, 'people sign in to GitHub, not agents');
     try {

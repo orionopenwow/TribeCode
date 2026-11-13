@@ -24,7 +24,7 @@
   const calm = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
   const phone = () => matchMedia('(max-width: 820px)').matches;
   const on = () => !!(O() && O().mode && O().mode() === 'showcase');
-  const PID = 'lantern-run', NEW = 'Firefly Garden', NEWID = 'firefly-garden';
+  const PID = 'demo_lantern-run', NEW = 'Firefly Garden', NEWID = 'demo_firefly-garden';   // the showcase's ids (demo_, see offline.js)
   const RELEASES = 'https://github.com/orionopenwow/TribeCode/releases/latest';
   const ABORT = { abort: true };
   const iso = (t = Date.now()) => new Date(t).toISOString();
@@ -95,6 +95,12 @@
     const [a, b, c, e] = parts, GET = method === 'GET', POST = method === 'POST', PUT = method === 'PUT';
     const ok = x => [200, x];
     if (a === 'coord' && GET && b === 'agents' && !c) return ok({ agents: agents() });
+    if (a === 'agents' && GET && b === 'fleet' && !c) {   // feat/fleet: the Agents Hub draws one row per agent from this
+      const list = agents().map(x => ({ ...x, kindLabel: x.kind === 'codex' ? 'Codex' : 'Claude Code', label: null, owner: null, status: x.online ? (x.task || x.files.length ? 'working' : 'idle') : 'offline',
+        lastSeen: x.lastActive, everSeen: true, branch: x.task ? 'task/' + x.task.id : null, budget: null, recent: [], project: PID, projectName: '', projectColor: null }));
+      return ok({ scope: 'project', project: PID, you: { id: 'me', host: true, canAct: true }, connected: list.some(x => x.yours), agents: list, projects: [],
+        next: [{ kind: 'working', rank: 5, title: `${list.filter(x => x.status === 'working').length} agents are working`, sub: list.filter(x => x.task).slice(0, 2).map(x => `${x.name}: ${x.task.title}`).join(' · '), project: PID }] });
+    }
     if (a === 'coord' && b === 'handoffs') {
       const T = tourState();
       if (GET && !c) return ok({ handoffs: T.handoffs });
@@ -218,7 +224,7 @@
     if (!liveOn()) return;
     const el = elOf(target);
     if (!spotEl || !spotEl.isConnected) { spotEl = document.createElement('div'); spotEl.className = 'dt-spot'; spotEl.id = 'dt-spot'; spotEl.setAttribute('aria-hidden', 'true'); document.body.appendChild(spotEl); }
-    if (!el || !el.getClientRects().length) { if (target === null) spotEl.classList.add('wide'); return; }   // keep the last spot when a target is missing
+    if (!el || !el.isConnected || !el.getClientRects().length) { spotEl.classList.add('wide'); return; }   // feat/demo-auto: no target, no dim (the old spot used to stay on a stale box)
     const r = el.getBoundingClientRect(), x = Math.max(4, r.left - pad), y = Math.max(4, r.top - pad);
     const w = Math.min(innerWidth - x - 4, r.width + pad * 2), h = Math.min(innerHeight - y - 4, r.height + pad * 2);
     spotEl.classList.remove('wide'); spotEl.style.transform = `translate(${Math.round(x)}px, ${Math.round(y)}px)`; spotEl.style.width = Math.round(w) + 'px'; spotEl.style.height = Math.round(h) + 'px';
@@ -521,7 +527,7 @@
     { id: 'agents', title: 'Agents Hub', flint: ["#nest-ws-agents", "Click Agents Hub to see what every AI helper is doing right now."], after: "Each AI helper works on its own part, so nobody gets in anyone's way. When one hands work to you, it takes one click.", cap: 'Every agent at work, in one calm place. Hand-offs take one click.', dur: 12000, pdur: 12000, async run() {
       dropCursor('maya');
       await go('agents');
-      await settle('#ad-hero .ad-agent', 'agents at work');
+      await settle('#ad-dash .fl-row, #ad-hero .ad-agent', 'agents at work');   // feat/fleet: one row per agent
       const T = tourState();
       const refresh = () => { const el = $('#ad-dash'); if (el && el.parentElement && window.TribeAgentsDash) window.TribeAgentsDash.render(el.parentElement); };
       await wait(1200);
@@ -769,7 +775,8 @@
     if (fast || quiet || !G || !s.flint) return;
     if (guided) return guidedStep(s, n);
     if (!opts0.classic) {   // v0.22 default: Flint shows and tells, nothing to click
-      const [sel0, text0] = s.flint; const el0 = sel0 ? [...document.querySelectorAll(sel0)].find(e => e.getClientRects().length && e.getBoundingClientRect().width > 0) : null;
+      const [sel0, text0] = s.flint; const el0 = sel0 ? await waitFor(() => [...document.querySelectorAll(sel0)].find(e => e.getClientRects().length && e.getBoundingClientRect().width > 0), 2000) : null;   // watchdog: 2 s, then on without a spotlight
+      if (sel0 && !el0) check('target found', false, sel0);
       spot(el0, 10); live(text0.replace(/\b(First, |Now |Then |Next, )?([Cc])lick\b/g, (m, a) => (a || '') + (a ? 'I click' : 'I click')).replace(/(^|[.!?]\s+)I click/g, (m, p) => p + 'I click'), { lead: `${n + 1}/${list.length} · ${s.title}` });
       await readFor(text0); return;
     }
@@ -869,6 +876,7 @@
   }
   function finish() {
     done = true; running = false; flush(); paintTime();
+    if (spotEl) { spotEl.remove(); spotEl = null; } if (sayEl) { sayEl.remove(); sayEl = null; } if (window.TribeFlintGuide) window.TribeFlintGuide.hide();
     clearInterval(loopT); loopT = null;
     document.querySelectorAll('#dt-chaps [data-i]').forEach(b => { b.classList.add('past'); b.classList.remove('on'); });
     const t = $('#dt-title'); if (t) t.textContent = 'The end';
@@ -930,7 +938,7 @@
     const was = running || done;
     running = false; done = false; token++; flush(); clearInterval(loopT); loopT = null;
     if (window.TribeFlintGuide) window.TribeFlintGuide.hide();
-    document.body.classList.remove('dt-guided', 'dt-live');
+    document.body.classList.remove('dt-guided', 'dt-live', 'dt-paused', 'dt-narr');
     removeUi();
     if (!quiet && was && SC() && SC().hold) SC().hold(false);
   }
@@ -941,8 +949,8 @@
     K().toast('Your turn: click anything. The tribe keeps going by itself.');
   }
   function restart() { stop(true); try { sessionStorage.setItem('tribecode.tour.next', fast ? 'fast' : guided ? 'on' : 'watch'); } catch {} O().reset(); }
-  function pause() { if (!running) return; paused = true; paintCtl(); }
-  function play() { if (!running) return; paused = false; lastReal = performance.now(); paintCtl(); }
+  function pause() { if (!running) return; paused = true; document.body.classList.add('dt-paused'); paintCtl(); }
+  function play() { if (!running) return; paused = false; document.body.classList.remove('dt-paused'); lastReal = performance.now(); paintCtl(); }
   function skip(to) {
     if (!running) return;
     const n = to == null ? idx + 1 : to;
@@ -954,6 +962,10 @@
   // You clicked into the app yourself: the tour waits for you
   document.addEventListener('pointerdown', e => { if (running && !paused && !guided && e.isTrusted && e.target.closest && !e.target.closest('.dt-bar, .dt-end, .fg-root, .dt-say, .dt-intro')) { pause(); K().toast('Paused. Press play to keep watching, or Try it yourself.'); } }, true);
 
+  // feat/demo-auto: Esc, Back and a crash always lift the dim: Esc hands you the tribe (like Try it yourself)
+  addEventListener('keydown', e => { if (e.key === 'Escape' && e.isTrusted && running && !$('#dt-intro')) { e.preventDefault(); tryIt(); } });
+  addEventListener('popstate', () => { if (running && !fast) tryIt(); });
+  addEventListener('error', () => { if (!running && spotEl) { spotEl.remove(); spotEl = null; } });
   window.TribeDirector = {
     start, stop, pause, play, skip, speed, tryIt, restart, active: () => running,
     _test: {

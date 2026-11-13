@@ -94,3 +94,122 @@ and **Undo** takes back the last change on that page (up to 40 steps, kept while
 - The Flint panel is a bottom sheet over the preview at phone width, with full-size buttons.
 
 Tests: `app/test/e2e_flint_free.py`, `app/test/e2e_flint_local.py`, `app/test/flint_nlu_test.js`.
+
+## Flint everywhere: the Dashboard, your idea, your style
+
+- **On Home, with or without a tribe.** Ask Flint sits on the Dashboard (`TribeFlint.mountDashboard(el)`, one slot in
+  `app/ui/hub.js`). It shares the thread with the room panel. With no tribe yet he still plans your day, grows your
+  idea, explains features from the docs (`/api/flint/kb` answers this computer even before a tribe exists), opens your
+  files and the inspiration board, and starts your first project.
+- **Grow your idea.** Three tappable questions (what you're growing, where it is, what would help most), then a short
+  plan that ties the company, the app and the website together, with deep links to the right resources: Academy
+  tracks, Guide pages, Legal templates, the build kit and Studios, the Marketplace, the 16 website templates and the
+  docs (`app/ui/flintgrow.js`). Rules write the plan; an AI, when on, refines it in place.
+- **Your style.** The inspiration board (`app/ui/inspoboard.js`, `server/inspo.js`) holds openly licensed pictures and
+  sounds from Openverse and Wikimedia Commons, each with its license, creator and source, copied through the host
+  (no hotlinking). The server measures each picture's colors (`server/imgcolors.js`: PNG, and a DC-only JPEG average),
+  suggests an accent and a font pairing, and "Use my board's style" applies them to your view and the project's website
+  and app.
+- **✦ everyday help.** See [DESIGN-SYSTEM.md §11](DESIGN-SYSTEM.md#11-basic-features-supercharged-by-ai).
+
+## Watch Flint build and proof of work
+
+`app/ui/flintrun.js` (Help › Watch Flint build, "watch flint build", `scripts/flint-runthrough.js`). Flint drives the real
+app with his normal commands, one caption per step, checks each step through the API, then exports two ZIPs with the
+existing ZIP writer (`TribeExport.zip`), saved by the host in `<tribe>/exports/` (`server/flintrun.js`) and downloadable:
+
+```
+<project>-proof.zip                           tribe-<name>-proof.zip
+  README.md          what Flint built            README.md
+  TIMELINE.md        every step, time, command   TIMELINE.md, timeline.json
+  timeline.json      + Flint's reply + check     tribe/manifest.json
+  tribe/manifest.json  tribe, members, projects  projects/<project>/…   the project's proof (all of the left)
+  website/           the site (template + edit)  projects/<other>/…     each other project's
+  game/              the game from the starter                           tasks, docs, chat, vision
+  builds/            other builds
+  docs/*.md          docs from templates + the presentation deck
+  design/            design.svg, design.png, canvas.json
+  chat/              transcript.md, messages.json
+  tasks/             board.json, board.md
+  vision/VISION.md, company/company.json, proposals/proposals.json
+  presentation/      index.html (standalone), slides.md
+```
+
+New commands it uses (also usable on their own): "start a tribe called …", "start a project called …", "set the vision
+to: …", "propose: …", "approve the proposal", "run the standup", "change the website headline to …", "make the product
+presentation", "export the proof of work", "make a blender turntable [for model.glb]" ([FLINT-CREATORS.md](FLINT-CREATORS.md)).
+
+## Local document smarts
+
+`app/ui/localdoc.js` (shared by the browser and the server) reads any text with no model: **summarize** (extractive,
+TextRank-lite: a sentence graph by shared words, PageRank, a small lead and heading bonus, near-duplicates dropped),
+**key points and action items**, **title ideas**, **tags**, **reading time and outline**, and **explain like I'm new** (a
+glossary from the text's own definitions, "Model Context Protocol (MCP)", and ~90 plain-language basics). Text comes from
+docs, notes, chat, and repo files (txt, md, html, json, csv and the text layer of PDFs, `GET /api/ai/extract`).
+Each is a ✦ in the doc and note toolbars and a Flint command ("summarize the doc called …", "key points of this doc",
+"suggest tags for …", "how long to read …", "explain the terms in …", "summarize the file brief.pdf", "summarize the chat").
+With an AI on, the same answer is refined in place (`POST /api/ai/refine`, kinds `doc.summary`, `doc.points`,
+`doc.title`, `doc.tags`, `doc.read`, `doc.glossary`) and says "via …". The docs API's summarize (`POST
+/api/docs/:slug/summarize`) falls back to the extractive summary when there is no local brain. Test:
+`app/test/e2e_local_summarize.py`.
+
+## When something needs an AI
+
+One card everywhere (Flint's chat, the canvas, the preview, the website designer; `app/ui/aiboost.js`): **This one
+needs an AI.** **Free · no AI**: what Flint did (or "Nothing changed") and what he does for free. **With an AI**: what an
+AI adds. Buttons: **Use my AI** (free: connect your own, or hand it to your connected AI helper) and **Get credits /
+Premium** (`TribePremium.gate('credits')`).
+
+## Lessons
+
+`app/ui/flintlessons.js`: a short lesson for each feature (website designer, canvas, preview, tasks, work, templates,
+files, chat, huddles, agents, company, inspiration board, export, Premium). "teach me <feature>", "how do I <thing>",
+"how does <feature> work" open it; **Show me** opens the real place and rings the real control; Read more goes to the
+Guide or the Academy where they exist. Tests: `app/test/flint_eval_test.js` (the lesson index), `app/test/e2e_flint_lessons.py`.
+
+## Evaluation set
+
+`app/test/flint_eval.json` (written by `scripts/dev/flint-eval-cases.js`, run by `app/test/flint_eval_test.js`): 390
+phrasings for websites, the canvas, preview edits, lessons and global commands, with typos, slang and indirect wording,
+in four contexts (website designer, canvas, canvas with a selection, preview, anywhere). Before this work: 49/342
+(14.3%). Now: 388/390 (99.5%). Held-out batch 1 scored 22/32 (68.8%) when first run and was then tuned; batch 2 was
+never tuned against: 14/16 (87.5%).
+
+## Abilities log
+
+Agents: add a dated line whenever Flint learns something new. Newest first. Say which tier it runs in.
+
+- **2026-11-11** (feat/flint-site)
+  - Understands websites by meaning: "link tree website", "something for my band", "i sell candles online", "we got engaged, need a page" pick the right one of the 16 templates (free · no AI).
+  - The website designer, on OpenPage's model: one JSON config, blocks with layout variants, theme presets with a real dark variant, inline editing, drag to reorder, undo/redo, Download HTML (one standalone file) or a zip (free · no AI).
+  - Wires buttons and links to pages, sections, web addresses and email; "make the buttons work" wires every one, adding a contact form when nothing fits (free · no AI).
+  - Adds, renames and deletes pages; adds, removes, moves and re-lays-out blocks; changes the theme, accent and words (free · no AI).
+  - Pictures: replace from an upload or the inspiration board, round or square, alt text (free · no AI).
+  - On the design canvas: "functional buttons" wires layers to screens (making the screens it needs; Send to app exports real links), "make a dark mode" recolors the layers in place, "add a page/screen", "edit this image" fills a layer with a picture, "make it round"; websites open the website designer (free · no AI).
+  - Says plainly when something needs an AI, with Use my AI and Get credits / Premium (free · no AI).
+  - A lesson for every feature with Show me (free · no AI).
+  - Redo; "buy credits", "get premium"; "open my moodboard" (free · no AI).
+
+- **2026-11-11** (feat/flint-runthrough)
+  - Watch Flint build: a 17-step run-through that drives the real app with his normal commands, one caption per step, checked through the API (free · no AI; captions refined by AI when on).
+  - Proof of work: `<project>-proof.zip` and `tribe-<name>-proof.zip` in `<tribe>/exports/` and as downloads: code, docs, design SVG + PNG, chat, tasks, timeline, manifest, README, presentation (free · no AI).
+  - Starts a tribe (or renames it) and a project by name; sets the vision from one sentence (free · no AI).
+  - Proposes, and approves a proposal (free · no AI).
+  - Runs the daily standup from the board and posts it in chat; pings company seats when it's a company (free · no AI).
+  - Changes the website's headline and saves it as a version (free · no AI).
+  - Makes the product presentation: a deck in Files plus a standalone page (free · no AI).
+  - Summarizes any doc, note, repo file (txt, md, html, json, csv, PDF text) or the chat with no model, extractive TextRank-lite; the chat summary no longer needs a brain (free · no AI; refined by AI when on).
+  - Key points and action items (Add to Tasks), title ideas (one tap sets the title), tag ideas, reading time and outline, and an "explain like I'm new" glossary (free · no AI; refined by AI when on).
+  - Blender bridge stub: writes a turntable-render Python script for you to run in your own Blender; nothing runs on its own (free · no AI). Plan in [FLINT-CREATORS.md](FLINT-CREATORS.md).
+
+- **2026-11-10** (feat/flint-ai)
+  - Flint on the Dashboard, working with no tribe (free · no AI).
+  - Today's plan from your tasks, reviews, calendar and note checkboxes (free · no AI; refined by AI when on).
+  - "Grow my idea": 3 tappable questions, then a plan for company + app + website + cohesion with resource links (free · no AI; refined by AI).
+  - Recommends learning resources for a goal (company, app, website, cohesion) with deep links (free · no AI).
+  - Explains a feature from the local knowledge base ("explain the inspiration board") (free · no AI).
+  - Opens your files and the inspiration board; starts your first project (free · no AI).
+  - Searches openly licensed pictures and sounds ("find sounds of rain"), saves them with credits (free · no AI, needs internet).
+  - "Use my board's style": accent, font pairing, website brand kit and design/inspiration.css (free · no AI).
+  - ✦ in chat (summarize, turn into tasks), tasks (split, estimate, suggest an owner), docs and notes (tidy, outline,
+    continue), files (describe and tag), company seats (fill in the charter) (free · no AI; refined by AI).

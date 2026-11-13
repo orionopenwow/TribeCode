@@ -47,7 +47,7 @@ def main():
             ctx = b.new_context(viewport={"width": 1440, "height": 900}); ap = ctx.new_page(); ap.on("pageerror", lambda e: errors.append(str(e)))
             ap.add_init_script("window.__opened = []; window.open = (u) => { window.__opened.push(u); return null; };")
             ap.goto(f"http://localhost:{APORT}/?skipIntro=1"); ap.wait_for_function("window.TribeFeedback && window.TribeFlint", timeout=15000)
-            ap.click("[data-flme]"); ap.click("#fl-menu [data-fm]:last-child")
+            ap.locator("[data-flme]:visible").first.click(); ap.click("#fl-menu [data-fm]:last-child")   # with no tribe, Flint's bar is the one on Home (feat/flint-ai)
             ap.wait_for_selector("#fb .fb-card")
             assert ap.is_disabled("#fb-go")
             ap.click("#fb [data-n='4']"); ap.fill("#fb-text", "Sheets and slides are great for our jam plans.")

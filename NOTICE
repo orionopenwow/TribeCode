@@ -1,0 +1,73 @@
+TribeCode
+Copyright (c) the TribeCode contributors. MIT License (see LICENSE).
+
+This product includes ideas and approaches from the following open-source projects. No code was copied unless a
+section below says so.
+
+-------------------------------------------------------------------------------
+OpenPage (https://github.com/buildingopen/openpage), MIT License, by buildingopen
+-------------------------------------------------------------------------------
+TribeCode's website designer (app/ui/sitecfg.js, app/ui/sitedesigner.js, server/sitedesign.js) follows OpenPage's
+model: one JSON site config as the source of truth (a name, a theme and blocks, each with an id, type, variant and
+props), a block picker with layout variants, theme presets set through CSS custom properties, inline text editing,
+drag to reorder, undo/redo, a live preview and a standalone HTML export. OpenPage is built with React, Zustand and
+dnd-kit; TribeCode reimplements the approach in plain browser JavaScript with no dependencies. No OpenPage source code
+is included. Unlike OpenPage's export, TribeCode's export loads nothing from a CDN.
+
+MIT License (OpenPage): Permission is hereby granted, free of charge, to any person obtaining a copy of this software
+and associated documentation files, to deal in the Software without restriction, subject to the condition that the
+copyright notice and this permission notice are included in all copies or substantial portions of the Software. THE
+SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND.
+
+feat/site-v2 (the deeper port, docs/OPENPAGE-PORT.md): OpenPage's block types and variants, its ten theme presets'
+colors (app/ui/sitecfg.js PRESETS night … forest), its site settings (SEO title and description, favicon, share image,
+language), responsive previews, duplicate/hide and its keyboard shortcuts were reimplemented the same way: no code copied.
+
+-------------------------------------------------------------------------------
+Website templates in app/ui/sitetpl (converted into designer configs; list: docs/SITE-TEMPLATES.md)
+-------------------------------------------------------------------------------
+Start Bootstrap (https://startbootstrap.com, https://github.com/StartBootstrap), MIT License, Copyright (c) 2013-2023
+Start Bootstrap LLC: agency, business-casual, business-frontpage, clean-blog, coming-soon, creative,
+freelancer, grayscale, landing-page, modern-business, new-age, one-page-wonder, personal, resume, small-business,
+stylish-portfolio. Their section structure, headings and some copy are used in app/ui/sitetpl/sb-*.json.
+
+Tailwind Toolbox (https://www.tailwindtoolbox.com, https://github.com/tailwindtoolbox), MIT License, Copyright (c)
+2018-2020 Tailwind Toolbox: Landing-Page, App-Landing-Page, Ghostwind, Minimal-Blog, Nordic-Store, Profile-Card (app/ui/sitetpl/tt-*.json).
+
+MIT License (both): Permission is hereby granted, free of charge, to any person obtaining a copy of this software and
+associated documentation files, to deal in the Software without restriction, subject to the condition that the copyright
+notice and this permission notice are included in all copies or substantial portions of the Software. THE SOFTWARE IS
+PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND.
+
+HTML5 UP (https://html5up.net) by AJ (@ajlkn), Creative Commons Attribution 3.0 Unported
+(https://creativecommons.org/licenses/by/3.0/): Identity, Photon, Forty, Stellar, Dimension, Eventually, Miniport, Read
+Only, Massively, Landed (app/ui/sitetpl/h5-*.json). Adapted: converted into blocks, photos replaced with original art,
+fonts changed, placeholder text rewritten. Every site exported from one of them shows "Design based on <name> by HTML5 UP
+(CC BY 3.0)" with a link in its footer.
+
+Template pictures are original flat art made by scripts/dev/site-gallery.py; no third-party photos are included.
+
+-------------------------------------------------------------------------------
+Fonts in app/ui/assets/site-fonts: SIL Open Font License 1.1 (licenses alongside the files).
+Anthropic's public frontend-design skill (Apache-2.0) informed the website design rules (docs/WEBSITE-GENERATOR.md).
+
+<!-- starters:begin -->
+App and game starters (app/ui/starters/, docs/STARTERS.md). Each folder keeps its original LICENSE.
+- blocks: adapted from https://github.com/jakesgordon/javascript-tetris by Jake Gordon and contributors, MIT
+- breakout: adapted from https://github.com/end3r/Gamedev-Canvas-workshop by Andrzej Mazur and Mozilla contributors, CC0-1.0
+- calculator: original TribeCode starter, MIT
+- chat: original TribeCode starter, MIT
+- dashboard: original TribeCode starter, MIT
+- kanban: original TribeCode starter, MIT
+- memory: original TribeCode starter, MIT
+- notes: adapted from https://github.com/bradtraversy/50projects50days/tree/master/notes-app by Brad Traversy, MIT
+- platformer: adapted from https://github.com/jakesgordon/javascript-tiny-platformer by Jake Gordon and contributors, MIT
+- pomodoro: original TribeCode starter, MIT
+- runner: original TribeCode starter, MIT
+- sketch: adapted from https://github.com/bradtraversy/50projects50days/tree/master/drawing-app by Brad Traversy, MIT
+- snake: adapted from https://github.com/patorjk/JavaScript-Snake by Patrick Gillespie and contributors, MIT
+- survey: original TribeCode starter, MIT
+- todo: adapted from https://github.com/bradtraversy/50projects50days/tree/master/todo-list by Brad Traversy, MIT
+- topdown: original TribeCode starter, MIT
+- weather: original TribeCode starter, MIT
+<!-- starters:end -->

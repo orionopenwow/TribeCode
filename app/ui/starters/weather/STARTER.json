@@ -1,0 +1,83 @@
+{
+ "icon": "weather",
+ "summary": "Search a city, see today and five days ahead. Runs on mock data, with one function to swap for a real weather API.",
+ "tags": [
+  "weather",
+  "forecast",
+  "api",
+  "fetch",
+  "mock data"
+ ],
+ "phrases": [
+  "weather app",
+  "forecast app",
+  "weather dashboard",
+  "api app"
+ ],
+ "controls": "Type a city and press Show.",
+ "source": {
+  "original": true,
+  "license": "MIT",
+  "inspired": "weather apps built on free APIs like Open-Meteo"
+ },
+ "params": [
+  {
+   "key": "city",
+   "label": "Starting city",
+   "type": "text",
+   "default": "Lisbon"
+  },
+  {
+   "key": "units",
+   "label": "Units (C or F)",
+   "type": "text",
+   "default": "C"
+  },
+  {
+   "key": "accent",
+   "label": "Accent",
+   "type": "color",
+   "default": "#F26B1D",
+   "main": true
+  },
+  {
+   "key": "bg",
+   "label": "Background",
+   "type": "color",
+   "default": "#12151A"
+  },
+  {
+   "key": "surface",
+   "label": "Cards",
+   "type": "color",
+   "default": "#1B2028"
+  },
+  {
+   "key": "ink",
+   "label": "Text",
+   "type": "color",
+   "default": "#E7E9EE"
+  },
+  {
+   "key": "muted",
+   "label": "Quiet text",
+   "type": "color",
+   "default": "#94A3B8"
+  },
+  {
+   "key": "line",
+   "label": "Lines",
+   "type": "color",
+   "default": "#2A313C"
+  }
+ ],
+ "try": [
+  "Use the real Open-Meteo API",
+  "Remember the last cities",
+  "Add an hourly chart",
+  "Change the colors by the weather"
+ ],
+ "id": "weather",
+ "kind": "app",
+ "title": "Weather"
+}

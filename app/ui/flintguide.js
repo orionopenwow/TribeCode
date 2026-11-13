@@ -85,6 +85,18 @@
       resolveCur = res; setTimeout(() => $('#fg-next') && $('#fg-next').focus(), 50);
     });
   }
+  // feat/demo-auto: the ring follows its target while the bubble is open (re-renders, scrolling). If the target is gone
+  // for 2 s (a route change, a stale selector), Flint moves on by himself: a tour step says 'next', anything else closes.
+  let follow = null;
+  function track(el, sel, opts) {
+    clearInterval(follow); if (!el) return;
+    let lost = 0;
+    follow = setInterval(() => {
+      if (!root || !root.classList.contains('on') || !resolveCur) { clearInterval(follow); return; }
+      if (!el.isConnected || !visible(el)) { const again = typeof sel === 'string' ? document.querySelector(sel) : null; if (again && visible(again)) { el = again; lost = 0; } else { lost += 250; const fr = $('#fg-ring'); if (fr) fr.classList.remove('on'); if (lost >= 2000) { clearInterval(follow); const r = resolveCur; resolveCur = null; close(true); if (!opts.keep) close(); r(opts.steps ? 'next' : 'close'); } return; } }
+      const r = el.getBoundingClientRect(), fr = $('#fg-ring'); if (fr) { fr.style.cssText = `left:${r.left - 6}px;top:${r.top - 6}px;width:${r.width + 12}px;height:${r.height + 12}px`; fr.classList.add('on'); }
+    }, 250);
+  }
 
   async function point(target, text, opts = {}) {
     ensure(); root.classList.add('on'); root.classList.toggle('dim', !!opts.dim);
@@ -94,12 +106,14 @@
     bubble.classList.remove('on');
     const p = place(el, text, opts);
     await flyTo(p.fx, p.fy);
-    const res = await showBubble(p, opts);
+    const shown = showBubble(p, opts); track(el, target, opts);
+    const res = await shown; clearInterval(follow);
     if (!opts.keep) close(true);
     return res;
   }
   function close(soft) {
     if (!root) return;
+    if (!soft) clearInterval(follow);
     if (bubble) bubble.classList.remove('on'); const fr = $('#fg-ring'); if (fr) fr.classList.remove('on');
     if (resolveCur) { const r = resolveCur; resolveCur = null; if (!soft) r('close'); }
     if (!soft || !root.classList.contains('touring')) {
@@ -149,5 +163,8 @@
   });
 
 
+  // navigating away (Back/Forward, a hash route) never leaves the dim behind
+  addEventListener('popstate', () => { if (root && root.classList.contains('on')) close(); });
+  addEventListener('hashchange', () => { if (root && root.classList.contains('on') && !root.classList.contains('touring')) close(); });
   window.TribeFlintGuide = { point, tour: () => window.TribeFlintTour && window.TribeFlintTour.start(), intro, hide: () => { const c = document.getElementById('fg-intro'); if (c) c.remove(); close(); }, _burst: burst };
 })();

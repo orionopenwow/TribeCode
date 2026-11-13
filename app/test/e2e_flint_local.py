@@ -129,7 +129,8 @@ def main():
             assert len(ok(api("/flint/learned", token=tok))["items"]) == n_learned + 1, "tapping a 'did you mean' teaches Flint"; done.append(f"did you mean ({label})")
             # 15 · the honest card for what needs a model
             last = ask(host, "write me a sonnet about our bug tracker", "basic mode")
-            assert host.locator("#flint .fl-msg.fl").last.locator(".fl-act", has_text="Give Flint a brain").count() == 1; done.append("honest card")
+            last_msg = host.locator("#flint .fl-msg.fl").last   # feat/flint-site: the one AI-boost pair (aiboost.js)
+            assert last_msg.locator(".fl-act", has_text="Use my AI").count() == 1 and last_msg.locator(".fl-act", has_text="Get credits / Premium").count() == 1 and "This one needs an AI" in last; done.append("honest card")
             if take: host.wait_for_timeout(300); host.locator("#flint").screenshot(path=str(SHOTS / "flint-local-desktop.png"))
 
             # ---- the phone at 390px

@@ -49,8 +49,11 @@ const LAYOUTS = {
     paper: '#14121C', surface: '#1C1928', ink: '#F4F1FF', muted: '#B9B3D1', rule: '#34304A', motif: 'stars', primary: '#FFC23D', order: ['hero', 'play', 'features', 'gallery', 'story', 'roadmap', 'devlog', 'team', 'faq', 'footer'] },
 };
 const LAYOUT_IDS = Object.keys(LAYOUTS);
-const SECTIONS = ['hero', 'story', 'features', 'gallery', 'play', 'devlog', 'roadmap', 'team', 'visit', 'event', 'contact', 'faq', 'footer'];
-const SECTION_NAMES = { hero: 'Hero', story: 'Story', features: 'Features', gallery: 'Gallery', play: 'Play / try it', devlog: 'Devlog', roadmap: 'Roadmap', team: 'Team', visit: 'Visit us', event: 'Event details', contact: 'Contact', faq: 'FAQ', footer: 'Footer' };
+const SECTIONS = ['hero', 'story', 'features', 'gallery', 'play', 'devlog', 'roadmap', 'team', 'visit', 'event', 'pricing', 'testimonials', 'contact', 'faq', 'footer'];
+// Opt-in sections: no layout or site type starts with them; they show once someone adds them (gen.add, e.g. Flint's
+// "add a pricing section") and fill with honest placeholders that say what to write (never made-up prices or quotes).
+const EXTRA = ['pricing', 'testimonials'];
+const SECTION_NAMES = { hero: 'Hero', story: 'Story', features: 'Features', gallery: 'Gallery', play: 'Play / try it', devlog: 'Devlog', roadmap: 'Roadmap', team: 'Team', visit: 'Visit us', event: 'Event details', pricing: 'Pricing', testimonials: 'Testimonials', contact: 'Contact', faq: 'FAQ', footer: 'Footer' };
 
 // feat/site-builder: the brand kit's font pairs (a display face + Inter), independent of the layout.
 const FONTS = {
@@ -261,6 +264,8 @@ function draftCopy(g, seed = 0, type = null, info = {}) {
     visit: { title: 'Visit us', body: '' },
     event: { title: 'The details', body: '' },
     contact: { title: 'Get in touch', body: 'Write any time. We read everything.' },
+    pricing: { title: 'Pricing', body: 'Placeholder prices: set your own before you publish.', items: [{ name: 'Free', price: '$0', body: 'Everything you need to try it.' }, { name: 'Plus', price: 'Set a price', body: 'Say what the paid plan adds.' }] },
+    testimonials: { title: 'What people say', items: [{ quote: 'Paste a real quote from someone who used it here.', who: 'Their name' }] },
   };
   return typeCopy(base, g, type, info || {}, dek);
 }
@@ -305,7 +310,8 @@ function available(g, gen) {
   const c = gen.copy || {}, i = gen.info || {};
   return { hero: true, story: !!(c.story && c.story.body), features: !!(c.features && (c.features.items || []).length >= 2), gallery: (g.shots || []).length > 0, play: !!g.play,
     devlog: (g.commits || []).length + (g.news || []).length > 0, roadmap: (g.milestones || []).length > 0, team: (g.people || []).length + (g.agents || []).length > 0, faq: !!(c.faq && (c.faq.items || []).length), footer: true,
-    visit: !!(i.hours || i.address || i.phone || i.email), event: !!(i.date || i.place || i.rsvp), contact: !!(i.email || i.link || i.phone) };
+    visit: !!(i.hours || i.address || i.phone || i.email), event: !!(i.date || i.place || i.rsvp), contact: !!(i.email || i.link || i.phone),
+    pricing: (gen.add || []).includes('pricing') && !!(c.pricing && (c.pricing.items || []).length), testimonials: (gen.add || []).includes('testimonials') && !!(c.testimonials && (c.testimonials.items || []).length) };
 }
 
 // ---------- palette ----------
@@ -386,10 +392,11 @@ function render(g, gen, opts = {}) {
   const brand = gen.brand || (g.st && g.st.brand) || {}, F = fontOf(id, brand.font), pal = palette(L, g, brand), info = gen.info || {}, T = TYPES[gen.type] ? gen.type : null;
   const c = gen.copy || draftCopy(g, 0, T, info), cc = k => c[k] || {};
   const fontUrl = opts.fontUrl || (f => `fonts/${f}`), seed = `${p.id}:${gen.seed || 0}`;
-  const avail = available(g, { copy: c, info }), off = gen.off || {};
+  const add = (gen.add || []).filter(k => EXTRA.includes(k)), avail = available(g, { copy: c, info, add }), off = gen.off || {};
   const base = T ? TYPES[T].order : L.order;
-  const order = (Array.isArray(gen.order) && gen.order.length ? gen.order : base).filter(k => SECTIONS.includes(k) && (!T || base.includes(k)));
+  const order = (Array.isArray(gen.order) && gen.order.length ? gen.order : base).filter(k => SECTIONS.includes(k) && (!T || base.includes(k) || add.includes(k)));
   for (const k of base) if (!order.includes(k)) order.splice(Math.max(0, order.length - 1), 0, k);
+  for (const k of add) if (!order.includes(k)) { const at = ['faq', 'contact', 'footer'].map(x => order.indexOf(x)).filter(i => i >= 0); order.splice(at.length ? Math.min(...at) : order.length, 0, k); }
   if (order.includes('footer')) order.push(...order.splice(order.indexOf('footer'), 1));
   const shown = order.filter(k => avail[k] && !off[k]);
   let n = 0; const num = () => String(++n).padStart(2, '0');
@@ -441,6 +448,8 @@ function render(g, gen, opts = {}) {
     contact: () => { const i = info;
       return `<section class="sec contact" id="contact"><div class="wrap">${head('contact', cc('contact').title || 'Get in touch')}${cc('contact').body ? `<p class="lede">${esc(cc('contact').body)}</p>` : ''}
       <p class="acts">${i.email ? `<a class="btn primary" href="mailto:${esc(i.email)}">${esc(i.email)}</a>` : ''}${okHttps(i.link) ? `<a class="btn" href="${esc(i.link)}" target="_blank" rel="noopener noreferrer">${esc(i.link.replace(/^https:\/\/(www\.)?/, '').replace(/\/$/, ''))}</a>` : ''}${i.phone ? `<a class="btn" href="tel:${esc(i.phone.replace(/[^\d+]/g, ''))}">${esc(i.phone)}</a>` : ''}</p></div></section>`; },
+    pricing: () => `<section class="sec pricing" id="pricing"><div class="wrap">${head('pricing', cc('pricing').title || 'Pricing')}${cc('pricing').body ? `<p class="lede">${esc(cc('pricing').body)}</p>` : ''}<ul class="plans">${(cc('pricing').items || []).map(x => `<li><h3>${esc(x.name)}</h3><p class="price">${esc(x.price)}</p>${x.body ? `<p>${esc(x.body)}</p>` : ''}</li>`).join('')}</ul></div></section>`,
+    testimonials: () => `<section class="sec testimonials" id="testimonials"><div class="wrap">${head('testimonials', cc('testimonials').title || 'What people say')}<div class="quotes">${(cc('testimonials').items || []).map(x => `<figure><blockquote><p>${esc(x.quote)}</p></blockquote>${x.who ? `<figcaption>${esc(x.who)}</figcaption>` : ''}</figure>`).join('')}</div></div></section>`,
     faq: () => `<section class="sec faq" id="faq"><div class="wrap">${head('faq', c.faq.title)}<div class="qa">${c.faq.items.map(x => `<details><summary>${esc(x.q)}</summary><p>${esc(x.a)}</p></details>`).join('')}</div></div></section>`,
     footer: () => `<footer class="foot"><div class="wrap foot-in"><p>${esc(c.footer.text)}</p><p class="foot-links">${g.repoUrl ? `<a href="${esc(g.repoUrl)}" target="_blank" rel="noopener noreferrer">Source</a>` : ''}<a href="#top">Back to top</a></p></div></footer>`,
   };
@@ -562,7 +571,7 @@ h1{font-size:clamp(44px,7vw,92px);line-height:.98}
 .sh{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:24px;margin-bottom:32px;align-items:baseline}
 .eb{grid-column:1/span 2;font:500 13px/1.4 var(--mono);color:var(--accent);text-transform:uppercase;letter-spacing:.08em}
 .sh h2{grid-column:3/span 10;font-size:clamp(30px,4vw,48px);line-height:1.05}
-.prose,.lede,.feat,.gal,.log,.road,.ppl,.qa,.frame,.facts,.sec .acts{margin-left:calc((100% + 24px) / 12 * 2)}
+.prose,.lede,.feat,.gal,.log,.road,.ppl,.qa,.frame,.facts,.plans,.quotes,.sec .acts{margin-left:calc((100% + 24px) / 12 * 2)}
 .facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:24px;margin-top:0;margin-bottom:0;border-top:1px solid var(--rule);padding-top:20px}
 .facts dt{font:500 12px/1.4 var(--mono);color:var(--accent);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px}.facts dd{margin:0;font-size:18px;line-height:1.5}
 .prose{max-width:65ch}.prose p,.lede{margin-top:0;margin-bottom:16px;font-size:19px;line-height:1.65}.lede{max-width:60ch;color:var(--muted)}
@@ -581,13 +590,15 @@ figcaption{font:500 13px/1.4 var(--mono);color:var(--muted);margin-top:10px}
 .ppl{list-style:none;padding:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:20px}
 .ppl li{display:grid;grid-template-columns:44px minmax(0,1fr);column-gap:12px;align-items:center}.ppl b{font-weight:600}.ppl small{grid-column:2;color:var(--muted);font-size:14px}
 .av{grid-row:span 2;width:44px;height:44px;display:grid;place-items:center;font:700 14px/1 var(--body);background:var(--tint);color:var(--ink)}
+.plans{list-style:none;padding:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px}.plans li{border:1px solid var(--rule);background:var(--surface);padding:22px 24px}.plans h3{font-size:20px}.plans .price{font:600 28px/1.2 var(--display);color:var(--ink);margin:10px 0 8px}.plans p{margin:0;color:var(--muted)}
+.quotes{display:grid;gap:16px;max-width:72ch}.quotes figure{margin:0;border-left:3px solid var(--primary);padding:6px 0 6px 20px}.quotes blockquote{margin:0}.quotes p{margin:0;font-size:20px;line-height:1.5;color:var(--ink)}.quotes figcaption{margin-top:8px;font:500 13px/1.4 var(--mono);color:var(--muted)}
 .qa{max-width:72ch;border-top:1px solid var(--rule)}details{border-bottom:1px solid var(--rule);padding:16px 0}
 summary{cursor:pointer;font-weight:600;font-size:18px;list-style:none}summary::-webkit-details-marker{display:none}summary::after{content:'+';float:right;color:var(--muted);font-family:var(--mono)}details[open] summary::after{content:'–'}
 details p{margin:10px 0 0;color:var(--muted)}
 .foot{border-top:1px solid var(--rule);padding:36px 0 48px;color:var(--muted);font-size:15px}.foot-in{display:flex;flex-wrap:wrap;gap:12px 24px;justify-content:space-between}.foot p{margin:0}
 .foot-links{display:flex;gap:18px}
 @media (max-width:820px){.hero{padding:40px 0}.hero-txt,.hero-art{grid-column:1/-1}.sh{grid-template-columns:1fr;gap:8px}.eb,.sh h2{grid-column:1}
-.prose,.lede,.feat,.gal,.log,.road,.ppl,.qa,.frame,.facts,.sec .acts{margin-left:0}.sec{padding:52px 0}.log li,.road li{grid-template-columns:1fr;gap:4px}nav{display:none}.wrap{padding:0 18px}}`;
+.prose,.lede,.feat,.gal,.log,.road,.ppl,.qa,.frame,.facts,.plans,.quotes,.sec .acts{margin-left:0}.sec{padding:52px 0}.log li,.road li{grid-template-columns:1fr;gap:4px}nav{display:none}.wrap{padding:0 18px}}`;
   const per = {
     editorial: `h1{font-size:clamp(46px,7.6vw,104px);letter-spacing:-.025em}.sh h2{font-style:normal}.eb{font-size:15px;color:var(--ink)}.hero{border-bottom:1px solid var(--ink)}.sec{border-top-color:var(--ink)}
 .feat li{padding-right:32px}.feat h3{font-family:var(--display)}.prose p:first-child::first-letter{font:700 3.4em/0.8 var(--display);float:left;margin:6px 10px 0 0;color:var(--primary)}`,
@@ -603,7 +614,7 @@ h1{font-size:clamp(56px,13vw,176px);line-height:.86;letter-spacing:-.045em;text-
 .feat li:nth-child(3n+1){background:var(--primary);color:var(--on-primary);border-color:var(--primary)}.feat li:nth-child(3n+1) h3,.feat li:nth-child(3n+1) p,.feat li:nth-child(3n+1) .fn{color:var(--on-primary)}.btn{border-width:2px}`,
     journal: `body{font-size:18px}.hero{text-align:center;padding:80px 0 64px}.hero-in{display:block}.hero-txt{max-width:760px;margin:0 auto}.hero-art{max-width:880px;margin:48px auto 0}.hero .dek{margin:22px auto 0}.hero .acts{justify-content:center}
 h1{font-size:clamp(48px,8vw,108px);line-height:1;font-style:italic;letter-spacing:-.01em}.kicker{letter-spacing:.2em}.sh{display:block;text-align:center}.eb{display:block;color:var(--primary);font-size:20px;margin-bottom:6px}
-.sh h2{font-size:clamp(34px,5vw,56px);font-weight:400}.prose,.lede,.feat,.gal,.log,.road,.ppl,.qa,.frame,.facts,.sec .acts{margin-left:auto;margin-right:auto}.facts{max-width:860px;text-align:center}.prose,.lede{max-width:62ch}.lede{text-align:center}
+.sh h2{font-size:clamp(34px,5vw,56px);font-weight:400}.prose,.lede,.feat,.gal,.log,.road,.ppl,.qa,.frame,.facts,.plans,.quotes,.sec .acts{margin-left:auto;margin-right:auto}.facts{max-width:860px;text-align:center}.prose,.lede{max-width:62ch}.lede{text-align:center}
 .feat{max-width:860px}.feat h3{font-weight:400;font-size:28px}.gal{max-width:980px}.log,.road,.qa{max-width:720px}.ppl{max-width:880px;justify-content:center}.sec{border-top:0}.sec+.sec .sh::before{content:'· · ·';display:block;color:var(--muted);letter-spacing:.4em;margin-bottom:28px}
 .frame{max-width:980px}.sec .acts{justify-content:center}`,
     arcade: `body{font-size:16px}h1,h2,h3{text-transform:uppercase;letter-spacing:0;line-height:1.05}h1{font-size:clamp(38px,7vw,84px);color:var(--primary)}.sh h2{font-size:clamp(24px,3.6vw,40px)}
@@ -647,14 +658,16 @@ function applyPolish(gen, reply) {
 function editSection(copy, sec, body) {
   if (!SECTIONS.includes(sec)) throw Object.assign(new Error(`sections are: ${SECTIONS.join(', ')}`), { status: 400 });
   const cur = JSON.parse(JSON.stringify(copy[sec] || {})), str = (v, n) => clean(v, n);
-  const fields = { hero: { kicker: 80, title: 80, dek: 220, cta: 30 }, story: { title: 60, body: 1600 }, features: { title: 60 }, gallery: { title: 60 }, play: { title: 60, body: 220 }, devlog: { title: 60 }, roadmap: { title: 60 }, team: { title: 60, body: 300 }, faq: { title: 60 }, footer: { text: 160 }, visit: { title: 60, body: 300 }, event: { title: 60, body: 300 }, contact: { title: 60, body: 300 } }[sec];
+  const fields = { hero: { kicker: 80, title: 80, dek: 220, cta: 30 }, story: { title: 60, body: 1600 }, features: { title: 60 }, gallery: { title: 60 }, play: { title: 60, body: 220 }, devlog: { title: 60 }, roadmap: { title: 60 }, team: { title: 60, body: 300 }, faq: { title: 60 }, footer: { text: 160 }, visit: { title: 60, body: 300 }, event: { title: 60, body: 300 }, contact: { title: 60, body: 300 }, pricing: { title: 60, body: 300 }, testimonials: { title: 60 } }[sec];
   for (const [k, n] of Object.entries(fields)) if (typeof body[k] === 'string') { const v = str(body[k], n); if (k === 'title' && !v && sec === 'hero') continue; cur[k] = v; }
   if (sec === 'features' && Array.isArray(body.items)) cur.items = body.items.slice(0, 6).map(x => ({ title: str(x && x.title, 60), body: str(x && x.body, 180) })).filter(x => x.title);
+  if (sec === 'pricing' && Array.isArray(body.items)) cur.items = body.items.slice(0, 4).map(x => ({ name: str(x && x.name, 40), price: str(x && x.price, 30), body: str(x && x.body, 180) })).filter(x => x.name);
+  if (sec === 'testimonials' && Array.isArray(body.items)) cur.items = body.items.slice(0, 6).map(x => ({ quote: str(x && x.quote, 320), who: str(x && x.who, 60) })).filter(x => x.quote);
   if (sec === 'faq' && Array.isArray(body.items)) cur.items = body.items.slice(0, 8).map(x => ({ q: str(x && x.q, 120), a: str(x && x.a, 320) })).filter(x => x.q && x.a);
   return cur;
 }
 
 const fontFiles = (layout, font) => [...new Set([fontOf(LAYOUTS[layout] ? layout : 'editorial', font).file, ...FONT_BODY, FONT_MONO])];
 
-module.exports = { LAYOUTS, LAYOUT_IDS, SECTIONS, SECTION_NAMES, HYPE, pickLayout, nextLayout, draftCopy, mergeCopy, available, render, art, palette, polishPrompt, applyPolish, editSection, clean, hasHype, fontFiles, ratio,
+module.exports = { LAYOUTS, LAYOUT_IDS, SECTIONS, EXTRA, SECTION_NAMES, HYPE, pickLayout, nextLayout, draftCopy, mergeCopy, available, render, art, palette, polishPrompt, applyPolish, editSection, clean, hasHype, fontFiles, ratio,
   FONTS, FONT_IDS, LAYOUT_FONT, SWATCHES, TYPES, TYPE_IDS, THEMES, THEME_IDS, INFO, cleanInfo, guessType, brandNotes, rankThemes, why, suggestRules, suggestPrompt, parseSuggest, okHex, okHttps, prettyCss };

@@ -581,7 +581,7 @@
     const onHome = !!$('#download');
     const ACT = {
       app: ['Open the app', 'app/'],
-      demo: ['Watch the demo tribe', 'app/?demo=showcase'],
+      demo: ['See how TribeCode works', 'app/?demo=watch'],   // feat/demo-tour2: the hands-off tour with Flint
       download: ['Download', onHome ? '#download' : 'index.html#download'],
       pricing: ['Pricing', 'pricing.html'],
       mission: ['Mission', 'mission.html'],

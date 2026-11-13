@@ -8,7 +8,9 @@
 // open for commercial use). Server: server/whiteboard.js (/api/whiteboard, WebSocket 'wbd-*').
 //   window.TribeWhiteboard = { open(boardId?), close(), state() }
 (function () {
-  const C = window.TribeClient;
+  // feat/setup-local: a board kept on this device (localfiles.js) swaps in its own small backend (api/send/state) while open.
+  const RC = window.TribeClient; let LB = null;
+  const C = new Proxy(RC, { get: (t, k) => (LB && k in LB ? LB[k] : t[k]) });
   const NAME = 'whiteboard';
   const $ = (s, r = document) => r.querySelector(s);
   const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -80,8 +82,9 @@
     sec = document.createElement('section'); sec.id = 'view-' + NAME; sec.className = 'hidden'; main.appendChild(sec);
     return sec;
   }
-  function show(id) {
+  function show(id, opts) {
     const sec = ensureSection(); if (!sec) return;
+    const nb = (opts && opts.backend) || null; if (nb !== LB) { LB = nb; loadedFor = ''; if (!nb && !id) boardId = 'main'; }
     if (id && id !== boardId) { boardId = id; loadedFor = ''; }
     document.querySelectorAll('.main > section[id^="view-"]').forEach(s => { if (s !== sec) s.classList.add('hidden'); });
     sec.classList.remove('hidden');
@@ -332,6 +335,10 @@
     if (imgs.has(src)) return imgs.get(src);
     const im = new Image(); im.decoding = 'async';
     im.onload = () => paint(); im.onerror = () => { im.failed = true; paint(); };
+    if (/^local:/.test(src)) {   // polish: a picture on a board kept on this device (localfiles.js, IndexedDB)
+      const LF = window.TribeLocalFiles; if (LF && LF.imageUrl) LF.imageUrl(src).then(x => { im.src = x; }, () => { im.failed = true; paint(); }); else im.failed = true;
+      imgs.set(src, im); return im;
+    }
     const u = `${C.base()}/api/uploads/${encodeURIComponent(src)}/raw`;   // fix/security-2: signed link, not the sign-in key
     if (window.TribeMedia) window.TribeMedia.urlAsync(u).then(x => { im.src = x; }); else im.src = u;
     imgs.set(src, im); return im;
@@ -689,6 +696,7 @@
 
   // ---------- pictures ----------
   async function upload(blob, name) {
+    if (LB && LB.upload) return LB.upload(blob, name);   // polish: a board kept on this device keeps its pictures there too
     const res = await fetch(`${C.base()}/api/uploads?scope=project&name=${encodeURIComponent(name)}`, { method: 'POST', body: blob, headers: { Authorization: 'Bearer ' + token(), 'X-Project': pid() } });
     const d = await res.json().catch(() => ({})); if (!res.ok) throw new Error(d.error || res.statusText); return d.file;
   }
@@ -825,7 +833,8 @@
       if (kind === 'svg') { const b = await toSvg(); if (b) download(b, fileName('svg')); return; }
       const png = await toPng(); if (!png) return toast('Could not draw the picture (a picture from elsewhere may block it).');
       if (kind === 'png') return download(png, fileName('png'));
-      if (kind === 'files') { const f = await upload(png, fileName('png')); toast(`📁 Saved to Files: ${f.name}`); }
+      if (kind === 'files' && LB && window.TribeLocalFiles) { await window.TribeLocalFiles.addFiles([new File([png], fileName('png'), { type: 'image/png' })]); toast(`📁 Saved to Files on this device: ${fileName('png')}`); }
+      else if (kind === 'files') { const f = await upload(png, fileName('png')); toast(`📁 Saved to Files: ${f.name}`); }
     } catch (e) { toast(e.message); }
   }
 
@@ -836,7 +845,7 @@
   setTimeout(fromHash, 0);
 
   window.TribeWhiteboard = {
-    open: id => show(id), close: () => { if (open && window.TribeApp) window.TribeApp.show('home'); },
+    open: (id, opts) => show(id, opts), local: () => !!LB, close: () => { if (open && window.TribeApp) window.TribeApp.show('home'); },
     state: () => ({ open, board: boardId, name: boardName, canEdit, canManage, tool: curTool(), count: live().length, view: { ...view }, selected: [...sel], undo: undo.length, redo: redo.length, peers: [...peers.keys()],
       elements: live().map(clone) }),
   };

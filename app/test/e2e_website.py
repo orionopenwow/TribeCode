@@ -126,7 +126,7 @@ def main():
             host.wait_for_function("pid => TribeProjects.current() === pid", arg=pid, timeout=10000)
             host.click("#nest-docs"); host.wait_for_selector("#view-docs:not(.hidden)")
             host.wait_for_selector("#view-tabs:not(.hidden) #wt-website")
-            labels = host.evaluate("[...document.querySelectorAll('#view-tabs [data-tab]')].map(b => b.textContent.trim())"); assert labels[0] == "📝 Notes" and "🌐 Website" in labels, labels
+            labels = host.evaluate("[...document.querySelectorAll('#view-tabs [data-tab]')].map(b => b.textContent.trim())"); assert labels[0] == "Files" and "Website" in labels, labels
             host.click("#wt-website"); host.wait_for_selector("#wb-root")
             wait_text(host, "#crumb-label", "Files › Website")
             assert host.evaluate("location.hash") == "#/docs/website"

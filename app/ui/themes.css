@@ -126,7 +126,7 @@ html body[data-theme="campfire"] {
   --accent: #FE8019; --brand: #FE8019; --accent-ink: #FE9A4A; --chip: rgba(254,128,25,0.15);
   --action: #B4501C; --action-hover: #9E4518; --rust-ink: #F2A35E;
   --sel: #4F3B2C;
-  --logo-bracket: #EBDBB2; --logo-flame: #FE8019; --logo-tile: #32302F;
+  --logo-bracket: var(--text); --logo-flame: #FE8019; --logo-tile: #32302F;   /* feat/shell-polish: white brackets again (the theme's ink), the flame stays Ember */
 }
 html body[data-theme="dark"] { --sel: #3B3030; }
 html body[data-theme="light"] {

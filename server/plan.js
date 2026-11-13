@@ -1,6 +1,7 @@
 // Planning: calendar events (calendar/<id>.md), task due dates, and reminders.
 // Events are Markdown files with front-matter so people, agents and git all read the same thing:
-//   title, start, end (ISO), attendees [memberId], huddle (bool), repeat ('weekly' | null), remind (minutes, optional)
+//   title, start, end (ISO), attendees [memberId], huddle (bool), repeat ('weekly' | 'weekdays' | 'daily' | null),
+//   remind (minutes, optional), ritual ('standup' | 'weekly-review' | 'retro' …, optional: server/rituals.js runs it)
 // The reminder loop emits bus.notify({ type: 'reminder' }) to attendees/assignees and posts a chat line with
 // a "Join huddle" button when a scheduled huddle starts.
 'use strict';
@@ -15,19 +16,21 @@ const localDay = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2,
 function occurrences(ev, from, to) {
   const s0 = Date.parse(ev.start), len = Math.max(0, Date.parse(ev.end) - s0) || 30 * 60_000;
   const out = [];
-  if (ev.repeat !== 'weekly') { if (s0 < to && s0 + len > from) out.push({ start: s0, end: s0 + len }); return out; }
-  const until = ev.until ? Date.parse(ev.until) + DAY : Infinity;
+  if (!['weekly', 'weekdays', 'daily'].includes(ev.repeat)) { if (s0 < to && s0 + len > from) out.push({ start: s0, end: s0 + len }); return out; }
+  const until = ev.until ? Date.parse(ev.until) + DAY : Infinity, step = ev.repeat === 'weekly' ? 7 : 1;   // weekdays/daily step a day (local time)
   const d = new Date(s0);
-  if (s0 + len <= from) { const skip = Math.floor((from - len - s0) / (7 * DAY)); if (skip > 0) d.setDate(d.getDate() + skip * 7); }
+  if (s0 + len <= from) { const skip = Math.floor((from - len - s0) / (step * DAY)) - 1; if (skip > 0) d.setDate(d.getDate() + skip * step); }
   for (let i = 0; i < 1000; i++) {
     const t = d.getTime(); if (t >= to || t >= until) break;
-    if (t + len > from && !(ev.skip || []).includes(new Date(t).toISOString())) out.push({ start: t, end: t + len });
-    d.setDate(d.getDate() + 7);
+    const wk = d.getDay(), weekend = wk === 0 || wk === 6;
+    if (t + len > from && !(ev.repeat === 'weekdays' && weekend) && !(ev.skip || []).includes(new Date(t).toISOString())) out.push({ start: t, end: t + len });
+    d.setDate(d.getDate() + step);
   }
   return out;
 }
 
 module.exports = function plan({ store, id, str, broadcast, postChat, getMembers, loadTasks, nameOf }) {
+  let ritualHook = null;   // server/rituals.js: a ritual event (standup…) starting -> collect answers in chat, write the doc
   const rel = eid => `calendar/${eid}.md`;
   const okId = v => /^e-[a-z0-9-]{3,40}$/i.test(v);
   try { require('node:fs').mkdirSync(store.p('calendar'), { recursive: true }); } catch {}
@@ -59,7 +62,8 @@ module.exports = function plan({ store, id, str, broadcast, postChat, getMembers
       out.attendees = [...new Set(list.map(a => { const s = String(a); const m = ms.find(x => x.id === s) || ms.find(x => x.name.toLowerCase() === s.toLowerCase()) || ms.find(x => x.name.toLowerCase().split(/\s+/)[0] === s.toLowerCase()); return m && m.id; }).filter(Boolean))];
     }
     if (b.huddle !== undefined) out.huddle = !!b.huddle;
-    if (b.repeat !== undefined) out.repeat = b.repeat === 'weekly' ? 'weekly' : null;
+    if (b.repeat !== undefined) out.repeat = ['weekly', 'weekdays', 'daily'].includes(b.repeat) ? b.repeat : null;
+    if (b.ritual !== undefined) out.ritual = /^[a-z][a-z0-9-]{1,30}$/.test(String(b.ritual || '')) ? String(b.ritual) : null;
     if (b.remind !== undefined) out.remind = b.remind === null ? null : Math.min(Math.max(Number(b.remind) || 0, 0), 7 * 24 * 60);
     if (b.notes !== undefined) out.notes = str(b.notes, 20000);
     return out;
@@ -78,7 +82,7 @@ module.exports = function plan({ store, id, str, broadcast, postChat, getMembers
     const out = [];
     for (const ev of all()) for (const o of occurrences(ev, from, to))
       out.push({ id: ev.id, key: `${ev.id}@${new Date(o.start).toISOString()}`, title: ev.title, start: new Date(o.start).toISOString(), end: new Date(o.end).toISOString(),
-        attendees: ev.attendees || [], huddle: !!ev.huddle, repeat: ev.repeat || null, by: ev.by });
+        attendees: ev.attendees || [], huddle: !!ev.huddle, repeat: ev.repeat || null, ritual: ev.ritual || null, by: ev.by });
     return out.sort((a, b) => a.start.localeCompare(b.start));
   }
   const dueTasks = (fromDay, toDay) => loadTasks().filter(t => isDay(t.due) && t.due >= fromDay && t.due <= toDay)
@@ -117,6 +121,10 @@ module.exports = function plan({ store, id, str, broadcast, postChat, getMembers
           const who = (ev.attendees || []).map(nameOf).join(', ');
           postChat('general', 'tribecode', `🎙️ Scheduled huddle **${ev.title}** is starting${who ? ` · ${who}` : ''}. Join the huddle.`);
         }
+        if (ev.ritual && ritualHook && o.start <= now && o.start > now - 5 * 60_000 && !sent['q:' + key]) {
+          mark('q:' + key);
+          try { ritualHook(ev, o.start); } catch (e) { console.error(e); }
+        }
       }
     }
     // Tasks due today: remind the assignee once, on the morning of.
@@ -153,6 +161,6 @@ module.exports = function plan({ store, id, str, broadcast, postChat, getMembers
     return null;
   }
 
-  return { route, all, get, create, expand, upcoming, tick, occurrences };
+  return { route, all, get, create, expand, upcoming, tick, occurrences, onRitual: fn => { ritualHook = fn; } };
 };
 module.exports.occurrences = occurrences;

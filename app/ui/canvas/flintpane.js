@@ -13,8 +13,8 @@
   'use strict';
   const C = window.TribeClient;
   const MODE_KEY = 'tribecode.canvas.mode';
-  const START = ['A login screen', 'A pricing section', 'A mobile home for a café', 'A dashboard in dark mode'];
-  const WITH_SEL = ['Dark mode version', 'Make variants', 'Tidy up', 'Rename layers'];
+  const START = ['A login screen', 'A pricing section', 'Add a screen', 'Make the buttons work', 'Make a dark mode'];
+  const WITH_SEL = ['Dark mode version', 'Make a dark mode', 'Wire this to a sign up screen', 'Make variants', 'Tidy up', 'Rename layers'];
   let E = null, pane = null, quick = null, items = [], loadedFor = '', busy = false, notes = [];
   const snaps = new Map();   // Flint message id -> that undo step (this browser only)
   const T = k => (E && E.T ? E.T(k) : k);
@@ -52,6 +52,13 @@
       if (b && !b.disabled) { b.click(); return { r: { kind: 'note', say: s.intent === 'canvas.send' ? T('Sending the selected frame to the app.') : T('Pick a format in the Export menu.') } }; }
       return { r: { kind: 'note', say: T('Select a frame first, then ask again.') } };
     }
+    // feat/flint-site: a website (a template by meaning, "turn this into a real website") opens the website designer
+    if (sure && /^site\./.test(s.intent) && window.TribeSiteDesigner) {
+      const tpl = s.intent.slice(5), S2 = window.TribeSiteCfg, isTpl = !!(S2 && S2.TEMPLATES.includes(tpl));
+      window.TribeSiteDesigner.open(isTpl ? { template: tpl } : {});
+      return { r: { kind: 'note', say: isTpl ? T(`That is a website, so I opened the website designer with the ${s.label || tpl} template: real pages, buttons that go somewhere, dark mode and Download HTML. Your canvas stays as it is.`) : T('Opened the website designer: pages, working buttons, themes with a dark variant, and Download HTML.') } };
+    }
+    if (sure && s.intent === 'lesson' && window.TribeFlintLessons) { window.TribeFlintLessons.open(s.slots.feature); return { r: { kind: 'note', say: T('Here is a short lesson. Show me points at the real thing.') } }; }
     if (sure && L && L.handle && !/^(canvas\.|edit\.picked|build\.|site\.)/.test(s.intent)) {
       const said = [];
       const H = {
@@ -108,6 +115,7 @@
       if (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === 'd' && window.TribeSpeech) { e.preventDefault(); window.TribeSpeech.dictate(inp); }
     });
     pane.addEventListener('click', onClick);
+    if (window.TribeBoost) window.TribeBoost.bind(pane, { onAI: async t => { if (t) { const msg = await window.TribeCanvasFlint.sendToHelpers(t); await post({ role: 'flint', kind: 'note', text: msg }); paintLog(); } else if (window.TribeBrain) window.TribeBrain.open(); } });   // feat/flint-site: the one AI-boost card
     window.TribeCanvasFlint && window.TribeCanvasFlint.use({ open, toggle, send: t => { open(); return send(t); } });
     // Ctrl Shift \ switches Simple / Advanced
     addEventListener('keydown', e => {
@@ -237,8 +245,8 @@
       if (it.role === 'me') return `<div class="fp-msg fp-me"><span class="fp-av" style="--a:${esc(it.color || '#6C7CFF')}">${esc((it.name || '?').slice(0, 1).toUpperCase())}</span><div><p class="fp-who">${esc(it.by === meId ? T('You') : it.name)} <time>${esc(ago(it.at))}</time></p><p class="fp-t">${esc(it.text)}</p></div></div>`;
       const canUndo = !it.undone && it.kind && it.kind !== 'tier' && it.kind !== 'freeform' && it.kind !== 'note' && (snaps.has(it.id) || (it.ids && it.ids.length)) && E.canEdit;
       const honest = it.kind === 'tier' || it.kind === 'freeform';
-      return `<div class="fp-msg fp-flint${it.undone ? ' is-undone' : ''}">${flame(13, 16)}<div><p class="fp-t">${honest ? `<b>${esc(it.kind === 'tier' ? T('Bigger than my free tier.') : T('That one is freeform.'))}</b> ` : ''}${esc(it.text)}</p>
-        <p class="fp-acts">${it.undone ? `<span class="fp-undone">${esc(T('Undone'))}</span>` : ''}${it.focus && !it.undone ? `<button type="button" class="fp-link" data-fp="show" data-id="${esc(it.focus)}">${esc(T('Show'))}</button>` : ''}${canUndo ? `<button type="button" class="fp-link" data-fp="undo" data-id="${esc(it.id)}">${esc(T('Undo'))}</button>` : ''}${honest && it.ref ? `<button type="button" class="btn sm primary" data-fp="hand" data-text="${esc(it.ref)}">${esc(T('Send to my AI helper'))}</button>` : ''}<time>${esc(ago(it.at))}</time></p></div></div>`;
+      return `<div class="fp-msg fp-flint${it.undone ? ' is-undone' : ''}">${flame(13, 16)}<div>${honest && window.TribeBoost ? window.TribeBoost.html({ did: `Nothing changed on the canvas. ${it.text || ''}`.trim(), would: 'An AI draws what you described as real layers here, and Undo takes it back.', ask: it.ref }) : `<p class="fp-t">${esc(it.text)}</p>`}
+        <p class="fp-acts">${it.undone ? `<span class="fp-undone">${esc(T('Undone'))}</span>` : ''}${it.focus && !it.undone ? `<button type="button" class="fp-link" data-fp="show" data-id="${esc(it.focus)}">${esc(T('Show'))}</button>` : ''}${canUndo ? `<button type="button" class="fp-link" data-fp="undo" data-id="${esc(it.id)}">${esc(T('Undo'))}</button>` : ''}<time>${esc(ago(it.at))}</time></p></div></div>`;
     }).join('') + (busy ? `<div class="fp-msg fp-flint is-wait">${flame(13, 16)}<div><p class="fp-t">${esc(T('On it…'))}</p></div></div>` : '');
     scrollLog();
   }

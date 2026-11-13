@@ -77,7 +77,7 @@
   }
   const LABEL = { approval: 'Approval', mention: 'Mention', dm: 'Message', 'task-assigned': 'Task', reminder: 'Reminder', proposal: 'Proposal', 'bug-critical': 'Critical bug', release: 'Release', huddle: 'Huddle', digest: 'Digest', 'approval-question': 'Question', 'approval-result': 'Decision', 'comment-reply': 'Comment', 'meeting-notes': 'Meeting', 'visual-diff': 'Visuals', repo: 'Code repository' };
   // v0.26: group titles count all of them; how many are unread shows as its own "N new" (it used to say "new" for read ones too)
-  const GROUP = { 'task-assigned': n => `${n} tasks assigned to you`, mention: n => `${n} mentions`, dm: n => `${n} messages`, proposal: n => `${n} proposals`,
+  const GROUP = { /* task-assigned: each one is answered on its own (Accept / Decline) */ mention: n => `${n} mentions`, dm: n => `${n} messages`, proposal: n => `${n} proposals`,
     release: n => `${n} releases`, huddle: n => `${n} huddles started`, 'bug-critical': n => `${n} critical bugs`, reminder: n => `${n} reminders` };
   const openGroups = new Set();
 
@@ -100,12 +100,19 @@
     }
     return `${details}${qs}<div class="nf-actions">${risk}<span class="nf-state ${esc(a.status)}">${a.status === 'closed' ? 'Closed' : a.status === 'approved' ? 'Approved' : 'Denied'}${a.decidedByName ? ' by ' + esc(a.decidedByName) : ''}${a.note ? ` · “${esc(a.note)}”` : ''}</span></div>`;
   }
+  // feat/tasks-company: a task offered to you answers right here (Accept, or Decline with a reason)
+  function offerBlock(i) {
+    const T = window.TribeTasks, t = T && T.all ? T.all().find(x => x.id === i.ref) : null;
+    if (t && t.accept !== 'pending') return `<div class="nf-actions"><span class="nf-state">${t.accept === 'accepted' ? 'Accepted' : t.declined ? 'Declined' : 'No longer waiting'}</span></div>`;
+    return `<div class="nf-actions nf-offer" data-offer="${esc(i.ref)}" data-proj="${esc(i.project || '')}"><input class="input nf-why hidden" maxlength="300" placeholder="Why not? (sent to whoever assigned it)" aria-label="Reason for declining">
+      <button class="btn nf-deny" data-tkans="decline">Decline</button><button class="btn primary nf-approve" data-tkans="accept">Accept</button></div>`;
+  }
   const itemHtml = (i, extra = '') => `
       <article class="nf-item ${isUnread(i) ? 'unread' : ''} ${i.priority === 'high' ? 'hi' : ''} ${extra}" data-id="${esc(i.id)}" data-view="${esc(i.view || '')}" data-ref="${esc(i.ref || '')}" data-type="${esc(i.type)}">
         <div class="nf-ico t-${esc(i.type)}">${ico(i.type)}</div>
         <div class="nf-main"><div class="nf-title"><span>${esc(i.title)}</span><time>${ago(i.at)}</time><button class="nf-more" data-more="${esc(i.id)}" title="More" aria-label="More actions">…</button></div>
           ${i.body && i.type !== 'approval' ? `<div class="nf-body">${esc(i.body)}</div>` : ''}
-          ${i.type === 'approval' ? approvalBlock(i) : ''}</div>
+          ${i.type === 'approval' ? approvalBlock(i) : ''}${i.type === 'task-assigned' && i.ref ? offerBlock(i) : ''}</div>
       </article>`;
   // Repeated items of one kind (back to back) collapse into "3 new tasks assigned to you".
   function grouped(list) {
@@ -177,6 +184,19 @@
   $('#nf-list').addEventListener('click', async e => {
     const btn = e.target.closest('[data-decide]');
     if (btn) { e.stopPropagation(); btn.disabled = true; try { await decideAp(btn.dataset.ap, btn.dataset.decide); } catch (err) { toast(err.message); btn.disabled = false; } return; }
+    const ans = e.target.closest('[data-tkans]');
+    if (ans) {
+      e.stopPropagation(); const box = ans.closest('[data-offer]'), why = box.querySelector('.nf-why'), act = ans.dataset.tkans;
+      if (act === 'decline' && (why.classList.contains('hidden') || !why.value.trim())) { why.classList.remove('hidden'); why.focus(); ans.textContent = 'Send decline'; return; }
+      ans.disabled = true;
+      try {
+        const r = await C.api(`/tasks/${encodeURIComponent(box.dataset.offer)}/${act}`, { method: 'POST', body: act === 'decline' ? { reason: why.value.trim() } : {}, ...(box.dataset.proj ? { project: box.dataset.proj } : {}) });
+        if (window.TribeTasks && window.TribeTasks.load) window.TribeTasks.load();
+        toast(act === 'accept' ? `Accepted: ${r.task.title}. It's yours and in progress.` : 'Declined. They get it back with your reason.');
+        box.outerHTML = `<div class="nf-actions"><span class="nf-state">${act === 'accept' ? 'Accepted' : 'Declined'}</span></div>`;
+      } catch (err) { toast(err.message); ans.disabled = false; }
+      return;
+    }
     const ask = e.target.closest('[data-ask]');
     if (ask) {
       e.stopPropagation(); const inp = document.querySelector(`[data-cm="${CSS.escape(ask.dataset.ask)}"]`);
@@ -190,7 +210,7 @@
     if (g) { openGroups.has(g.dataset.group) ? openGroups.delete(g.dataset.group) : openGroups.add(g.dataset.group); return render(); }
     const j = e.target.closest('[data-jump]');
     if (j) return highlight(j.dataset.jump);
-    if (e.target.closest('input, label, .nf-comment')) return;
+    if (e.target.closest('input, label, .nf-comment, .nf-offer')) return;
     const it = e.target.closest('.nf-item'); if (!it || it.dataset.type === 'approval') return;
     if (isUnread(items.find(i => i.id === it.dataset.id) || {})) setMark(it.dataset.id, { read: true });
     go(it.dataset.view, it.dataset.ref);

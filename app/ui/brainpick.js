@@ -171,7 +171,11 @@
   }
   async function put(body) {
     busy = true;
-    try { info = await C.api('/llm', { method: 'PUT', body }); return true; } catch (e) { toast(e.message); return false; } finally { busy = false; }
+    try {
+      info = await C.api('/llm', { method: 'PUT', body });
+      if (info && info.cloud && info.provider && window.TribeAIConsent) window.TribeAIConsent.allow(info.provider);   // picking a cloud provider here is the consent, on this device (aiconsent.js)
+      return true;
+    } catch (e) { toast(e.message); return false; } finally { busy = false; }
   }
   function readForm() {
     const v = id => { const el = $(id); return el ? el.value.trim() : undefined; };

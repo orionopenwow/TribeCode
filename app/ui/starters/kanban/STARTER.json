@@ -1,0 +1,84 @@
+{
+ "icon": "kanban",
+ "summary": "Columns and cards you drag between them, saved in the browser. The base for a task tracker, a CRM or a content calendar.",
+ "tags": [
+  "kanban",
+  "board",
+  "tasks",
+  "trello",
+  "project management"
+ ],
+ "phrases": [
+  "kanban board",
+  "kanban app",
+  "trello clone",
+  "task board app"
+ ],
+ "controls": "Drag cards between columns (arrow keys on a focused card; tap on a phone moves it on). Double-click renames.",
+ "source": {
+  "original": true,
+  "license": "MIT",
+  "inspired": "Trello-style boards"
+ },
+ "params": [
+  {
+   "key": "title",
+   "label": "Title",
+   "type": "text",
+   "default": "Board"
+  },
+  {
+   "key": "columns",
+   "label": "Columns",
+   "type": "text",
+   "default": "To do|Doing|Done",
+   "hint": "separated by |"
+  },
+  {
+   "key": "accent",
+   "label": "Accent",
+   "type": "color",
+   "default": "#F26B1D",
+   "main": true
+  },
+  {
+   "key": "bg",
+   "label": "Background",
+   "type": "color",
+   "default": "#12151A"
+  },
+  {
+   "key": "surface",
+   "label": "Cards",
+   "type": "color",
+   "default": "#1B2028"
+  },
+  {
+   "key": "ink",
+   "label": "Text",
+   "type": "color",
+   "default": "#E7E9EE"
+  },
+  {
+   "key": "muted",
+   "label": "Quiet text",
+   "type": "color",
+   "default": "#94A3B8"
+  },
+  {
+   "key": "line",
+   "label": "Lines",
+   "type": "color",
+   "default": "#2A313C"
+  }
+ ],
+ "try": [
+  "Add a column for Review",
+  "Add colored labels",
+  "Add who is on each card",
+  "Add due dates and a calendar view"
+ ],
+ "id": "kanban",
+ "kind": "app",
+ "title": "Kanban board"
+}

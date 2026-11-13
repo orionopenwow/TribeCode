@@ -490,7 +490,7 @@ ${canEdit && !started ? `      <section class="pj-context" id="pj-context"><div 
       : `<div class="pj-gh">${gh.installed ? 'GitHub CLI is not signed in on the host' : 'No GitHub CLI on the host'}: pushes use the host's git credentials. GitHub is optional; everything works with plain git.</div>`;
     let html = '';
     if (!r && box.dataset.quiet) { box.innerHTML = ''; return; }
-    if (!r) html = `<div class="pj-none">No code repository yet. ${isHost() ? 'Start a project from a folder or a GitHub URL with <b>+</b> in the sidebar.' : 'The host can attach one.'}</div>`;
+    if (!r) html = `<div class="pj-none">No code repository yet. ${isHost() ? 'One click makes one on this computer (with a first saved version); GitHub follows when it is set up.' : 'The host can attach one.'}</div>${isHost() ? '<div class="pj-actions"><button class="btn primary" id="pj-mkrepo">Create the code repository</button></div>' : ''}`;   // feat/tasks-company: no dead end
     else if (!r.git) html = `<div class="pj-none">The folder <b>${esc(r.name)}</b> is not a code repository yet.</div>${isHost() ? '<button class="btn primary" id="pj-gitinit">Make it a code repository</button><div class="faint pj-small">Runs git init with a .gitignore for node_modules, build folders and .env, then saves a first version.</div>' : ''}`;
     else {
       html = `<div class="pj-repo"><b>${esc(r.name)}</b>${r.remote ? ` <span class="faint">· ${esc(r.remote.replace(/^https?:\/\//, ''))}</span>` : ' <span class="faint">· local only</span>'}</div>${ghLine}`;
@@ -509,6 +509,7 @@ ${canEdit && !started ? `      <section class="pj-context" id="pj-context"><div 
     const pid = encodeURIComponent(p.id), again = () => workspacePanel(box);
     const act = (sel, fn) => { const x = box.querySelector(sel); if (x) x.onclick = async () => { x.disabled = true; try { await fn(); } catch (e) { toast(e.message); } x.disabled = false; again(); }; };
     act('#pj-gitinit', async () => { await C.api(`/projects/${pid}/git-init`, { method: 'POST' }); toast('It’s a code repository now, with its first saved version.'); refresh(); });
+    act('#pj-mkrepo', async () => { await createRepo(p); if (window.TribeRepo && window.TribeRepo.load) window.TribeRepo.load(); });   // feat/tasks-company
     act('#pj-mybranch', async () => { const r2 = await C.api(`/projects/${pid}/branch`, { method: 'POST' }); toast(`Your branch ${r2.branch.branch} is ready`); });
     act('#pj-commit', async () => { const msg = prompt('Commit message', 'Work in progress'); if (msg === null) return; await C.api(`/projects/${pid}/branch/commit`, { method: 'POST', body: { message: msg } }); toast('Committed as you'); });
     act('#pj-push', async () => { const r2 = await C.api(`/projects/${pid}/branch/push`, { method: 'POST' }); toast(`Pushed ${r2.branch} with ${r2.as}`); });
@@ -581,12 +582,19 @@ ${canEdit && !started ? `      <section class="pj-context" id="pj-context"><div 
     { k: 'business', emoji: '🏢', t: 'A business', s: 'Seats, goals and AI helpers, like a company', word: 'Company', bio: 'A business we run together', note: '', business: true },   // v0.27 company: becomes a company (server/setup.js business)
   ];
   const setup = { tpl: null, image: null };
+  // feat/work-company: a calm Premium note when a 4th project starts (docs/PREMIUM.md). It never stops it: "Not now" opens the sheet as usual.
   function openNew() {
+    const n = (projects || []).length + 1;
+    if (C.connected() && window.TribePremium && n > window.TribePremium.LIMITS.projects) return window.TribePremium.gate('projects', { count: n }).then(() => openNew0());
+    return openNew0();
+  }
+  function openNew0() {
+    if (!C.connected() && window.TribeLocalSetup) return window.TribeLocalSetup.start();   // feat/setup-local: no tribe yet: an instant project on this device, its home chosen last
     dropped = null; setup.tpl = null; setup.image = null;
     modal().classList.remove('hidden'); body().classList.add('np-setup');
     const on = C.connected(), host = on && isHost(), desk = !!window.TribeHost.isDesktop, scoped = scopedMe();
     if (!on || scoped) {
-      body().innerHTML = `<div class="ns-head"><h2>${on ? 'Join a project' : 'Create your project'}</h2><p class="lead">${desk ? 'Your work lives in a shared GitHub repository; friends join with one link.' : 'Your work lives in a shared GitHub repository. Get the app to start a tribe, or join a friend.'}</p></div>
+      body().innerHTML = `<button class="ns-x" data-close aria-label="Close">${ico('i-x', 16)}</button><div class="ns-head"><h2>${on ? 'Join a project' : 'Create your project'}</h2><p class="lead">${desk ? 'Your work lives in a shared GitHub repository; friends join with one link.' : 'Your work lives in a shared GitHub repository. Get the app to start a tribe, or join a friend.'}</p></div>
         ${on ? '' : `<div class="ns-list"><button class="ns-row ns-own" id="np-host"><span class="ns-ic">${ico('i-plus', 18)}</span><span class="ns-t"><b>${desk ? 'Host on this computer' : 'Get the desktop app'}</b><small>${desk ? 'Start a tribe here, then make your first project' : 'Windows, Mac and Linux'}</small></span>${ico('i-chev', 16)}</button></div>`}
         ${joinFoot()}`;
       wireStart(); return;
@@ -653,9 +661,10 @@ ${canEdit && !started ? `      <section class="pj-context" id="pj-context"><div 
   const KIND_E = { game: '🎮 Games', app: '📱 Apps', site: '🌐 Sites', asset: '🎨 Art and sound' };
   async function openStarters() {
     body().classList.add('np-setup');
-    body().innerHTML = `<button class="ns-x" data-close aria-label="Close">${ico('i-x', 16)}</button><div class="ns-head"><h2>Remix a starter</h2><p class="lead">Open-source projects you can build on. Each one keeps its authors' license and credit.</p></div><div class="st-list" id="st-list"><p class="faint">Loading…</p></div>
+    body().innerHTML = `<button class="ns-x" data-close aria-label="Close">${ico('i-x', 16)}</button><div class="ns-head"><h2>Remix a starter</h2><p class="lead">Open-source projects you can build on. Each one keeps its authors' license and credit.</p></div>${window.TribeDesignFlow ? '<div class="ns-sub">Built in, ready to play</div><div class="st-row"><span class="st-t"><b>Small app and game starters</b><small>Breakout, snake, a platformer, kanban, notes, a dashboard and more: no build step, with knobs and a plan (Design › App or Game).</small></span><button class="btn sm primary" id="st-builtin">Open</button></div>' : ''}<div class="st-list" id="st-list"><p class="faint">Loading…</p></div>
       <div class="ns-btns"><button class="linkish" id="np-back">Back</button></div>`;
     body().querySelector('[data-close]').onclick = close; $('#np-back').onclick = openNew;
+    const bi = $('#st-builtin'); if (bi) bi.onclick = () => { close(); window.TribeDesignFlow.open({ kind: 'game' }); };   // feat/design-flow
     let items = []; try { items = (await C.api('/shelf/starters')).items || []; } catch {}
     const box = $('#st-list'); if (!box) return;
     if (!items.length) { box.innerHTML = '<p class="faint">Starters are not available right now.</p>'; return; }

@@ -162,6 +162,8 @@ def main():
             host.wait_for_selector("#flint #fl-input", state="visible", timeout=10000)
             host.evaluate("TribeFlint.clear && TribeFlint.clear()")
             host.fill("#fl-input", "tell me a joke about dragons"); host.press("#fl-input", "Enter")
+            # polish: the provider was set through the API (not this device's brain picker), so the device asks once first
+            host.wait_for_selector("#ai-consent", timeout=10000); assert "Send this to" in host.inner_text("#ai-consent"); host.click("#aic-yes")
             host.wait_for_function("() => [...document.querySelectorAll('#flint .fl-msg.fl')].some(m => m.textContent.includes('Dragons hoard semicolons.') && m.querySelector('.fl-via'))", timeout=15000)
             via = host.locator("#flint .fl-msg.fl .fl-via").last.text_content()
             assert via == "via tiny-model (custom)", via

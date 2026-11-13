@@ -206,10 +206,11 @@ def main():
             # ---- 4: bigger than free → an honest card; Plan first → editable steps → hand-off ----
             host.check("#pvf-plan")
             send(host, "add multiplayer and a leaderboard")
-            host.wait_for_selector("#pvf-feed .pvf-honest", timeout=8000)
+            host.wait_for_selector("#pvf-feed .boost", timeout=8000)   # feat/flint-site: the one AI-boost card
+            assert "Get credits / Premium" in host.inner_text("#pvf-feed .boost")
             assert host.locator("#pvf-feed [data-pvf='tribeai']").count() == 0, "no tribe-AI button when the tribe has no AI"
             shot(host, "honest")
-            host.click("#pvf-feed [data-pvf='hand']")
+            host.click("#pvf-feed [data-boost='ai']")
             host.wait_for_selector("#pvf-feed .pvf-plancard textarea", timeout=5000)
             ta = host.locator("#pvf-feed .pvf-plancard textarea").last
             ta.fill(ta.input_value() + "\nTest it with two players")
@@ -251,7 +252,7 @@ def main():
             ph.goto(BASE + "/?skipIntro=1")
             ph.wait_for_function("window.TribeClient && TribeClient.connected() && TribeClient.project() === %r" % cp, timeout=15000)
             ph.evaluate("TribePreview.open()")
-            ph.wait_for_selector("#pvf", timeout=8000)
+            ph.wait_for_selector("#pvf", state="attached", timeout=8000)   # phones open on the Page tab; the sheet waits behind Edit
             ph.evaluate("TribePreviewFlint.open()")
             ph.wait_for_selector("#pvf.is-open #pvf-in", timeout=5000)
             ph.wait_for_timeout(450)   # the sheet slides up
@@ -263,6 +264,7 @@ def main():
             assert Path(phone_repo, "index.html").exists()
             ph.evaluate("TribePreviewFlint.close()")
             ph.frame_locator("#pvw-iframe").locator("#add").wait_for(timeout=10000)
+            ph.wait_for_timeout(800); ph.frame_locator("#pvw-iframe").locator("#add").wait_for(timeout=10000)   # the live reload for the new files can land just after the first paint (and wipe what was typed)
             ph.frame_locator("#pvw-iframe").locator("#new").fill("Take out the bins")
             ph.frame_locator("#pvw-iframe").locator("#new").press("Enter")
             ph.frame_locator("#pvw-iframe").locator("#list", has_text="Take out the bins").wait_for(timeout=8000)   # the list redraws after Enter (and after a late reload)

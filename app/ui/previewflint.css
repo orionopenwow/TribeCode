@@ -122,3 +122,16 @@
 .pvf-props.is-min .pvf-pmin::after { content: "▸"; }
 .pvf-props.is-min .pvf-pgrid, .pvf-props.is-min .pvf-pstat { display: none; }
 .pvf-props.is-min header { margin-bottom: 0; }
+
+/* feat/preview: phones get Page · Edit · Saved (preview.js); the edit sheet slides in from the right, full height */
+@media (max-width: 820px) {
+  .pvf { top: 0; max-height: none; border-top: 0; border-left: 1px solid var(--edge); border-radius: 0; transform: translateX(100%); visibility: hidden; transition: transform var(--dur-base) var(--ease-out), visibility 0s linear var(--dur-base); padding-bottom: 0; }
+  .pvf.is-open { transform: none; visibility: visible; transition: transform var(--dur-base) var(--ease-out), visibility 0s; }
+  .pvf-handle { display: none; }
+  .pvf-head { touch-action: pan-y; }
+}
+/* the website: no property sheet, plan or notes (Flint's local edits cover it); who answered, per §11 */
+.pvw.src-site .pvf-props, .pvw.src-site .pvf-plan, .pvw.src-site #pvf-add, .pvw.src-site .pvf-tocanvas, .pvw.src-site .pvw-edbar { display: none !important; }
+.pvf-via { display: inline-block; margin-left: 4px; padding: 0 6px; border: 1px solid var(--edge); border-radius: 5px; font: 500 10.5px/1.6 var(--mono); color: var(--faint); white-space: nowrap; }
+.pvf-via.is-ai { color: var(--accent); border-color: var(--accent); }
+body.pvw-focus .pvf-chips, .pvf-chips { flex-wrap: wrap; overflow: visible; }

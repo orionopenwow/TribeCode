@@ -63,14 +63,19 @@ def main():
             pg.add_init_script(init)
             pg.goto(BASE + "/?skipIntro=1", wait_until="domcontentloaded", timeout=90000); pg.wait_for_function("window.TribeClient && TribeClient.connected() && window.TribeCompany", timeout=20000)
             pg.evaluate(f"TribeProjects.switchTo('{pid}', 'home')"); pg.wait_for_timeout(800)
-            # the sidebar offers it to the host, then the empty state with template cards: one click makes it
-            # v0.27 polish: the sidebar stays at five rows until it's a company; making one starts from Ctrl K / Recommended next
-            assert pg.locator("#nest-company:not(.hidden)").count() == 0
-            pg.evaluate("TribeCompany.open()"); pg.wait_for_selector("#view-company .co-tpl[data-tpl='saas']", timeout=10000)
+            # v0.27 polish: the sidebar stays at five rows until it's a company; the host makes one from Ctrl K
+            # (TribeShell.go('company')), which shows the empty state with template cards: one click makes it
+            # polish: before there is a company, leads see a quiet "Set up company" row that opens the setup
+            pg.wait_for_function("window.TribeCompany && (TribeCompany.view() || {}).canLead", timeout=10000)
+            pg.wait_for_selector("#nest-company.co-subtle:not(.hidden)", timeout=10000)
+            assert pg.inner_text("#nest-company").strip() == "Set up company", pg.inner_text("#nest-company")
+            pg.screenshot(path=str(SHOTS / "company-setup-row.png"), clip={"x": 0, "y": 0, "width": 420, "height": 720})
+            pg.click("#nest-company"); pg.wait_for_selector("#view-company .co-tpl[data-tpl='saas']", timeout=10000)
             assert pg.locator("#view-company .co-tpl").count() == 8
             pg.click("#view-company .co-tpl[data-tpl='saas']")
             pg.wait_for_selector("#view-company .co-seat.ceo", timeout=10000)
-            assert pg.locator("#view-company .co-seat").count() == 5 and pg.inner_text("#nest-company").strip().startswith("Company")
+            assert pg.locator("#view-company .co-seat").count() == 5
+            pg.wait_for_selector("#nest-company:not(.hidden):not(.co-subtle)", timeout=10000); assert pg.inner_text("#nest-company").strip().startswith("Company")
             c = ok(api(f"/projects/{pid}/company", token=host, project=pid))["company"]
             assert [s["kind"] for s in c["seats"]] == ["ceo", "cto", "growth", "support", "finance"] and c["seats"][0]["holder"]["person"], c["seats"]
             assert len(c["goals"]) == 2 and all(g["seat"] for g in c["goals"]), c["goals"]

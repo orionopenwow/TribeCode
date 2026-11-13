@@ -24,7 +24,8 @@
   const settingsName = () => { try { return (JSON.parse(localStorage.getItem('tribecode.settings.v1') || '{}').name) || ''; } catch { return ''; } };
   const status = () => {
     const st = C.state() || {}, on = C.connected();
-    if (!on) return { on: false, text: st.server && st.server.url ? 'Reconnecting…' : 'Only on this device' };
+    const asleep = window.TribeOffline && window.TribeOffline.asleep && window.TribeOffline.asleep();   // the tour before its tribe exists
+    if (!on) return { on: false, text: st.server && st.server.url && !asleep ? 'Reconnecting…' : 'Only on this device' };
     const role = (me() || {}).role;
     return { on: true, text: `${role === 'host' ? 'Hosting' : 'Connected to'} ${(st.tribe && st.tribe.name) || 'the tribe'}` };
   };
@@ -45,7 +46,8 @@
   const item = (act, icon, label, extra = '') => `<button role="menuitem" class="pf-item" data-act="${act}">${ico(icon)}<span>${label}</span>${extra}</button>`;
   function draw() {
     const m = me(), s = status(), name = (m && m.name) || settingsName() || 'You';
-    const role = m ? (m.role === 'host' ? 'Host' : m.role === 'spectator' ? 'Spectator' : 'Builder') : 'Just you for now';
+    const acs = window.TribeAccounts && window.TribeAccounts.status();
+    const role = m ? (m.role === 'host' ? 'Host' : m.role === 'spectator' ? 'Spectator' : 'Builder') : acs || 'Just you for now';
     const lm = local(), P = window.TribeProfiles;
     const capOn = !!(window.TribeCapture && window.TribeCapture.on());
     const upd = window.TribeUpdater && window.TribeUpdater.pending ? window.TribeUpdater.pending() : null;
@@ -67,6 +69,7 @@
       ${item('settings', 'i-gear', 'Settings')}
       ${window.TribeGuide ? item('guide', 'i-help', 'Guide') : ''}
       ${window.TribeUpdater ? item('update', 'i-refresh', 'Check for updates') : ''}
+      ${window.TribeAccounts ? window.TribeAccounts.menuHtml() : ''}
       ${window.TribeUi && window.TribeUi.desktop() ? (window.TribeUi.onWorking() ? item('installed', 'i-home', 'Back to the installed version') : item('working', 'i-zap', 'Open the Working version (newest)')) : ''}`;
   }
 
@@ -89,6 +92,7 @@
     const a = b.dataset.act, m = me();
     if (a === 'capture') { window.TribeCapture.toggle(); draw(); return; }
     close();
+    if (window.TribeAccounts && window.TribeAccounts.menuAct(b)) return;   // switch account, Add account / Log in, Log out (accounts.js)
     const click = sel => { const el = $(sel); if (el) el.click(); };
     if (a === 'profile' && m && window.TribePeople) window.TribePeople.open(m.id);
     else if (a === 'editprofile') window.TribeProfiles.edit();   // feat/profiles

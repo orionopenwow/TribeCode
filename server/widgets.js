@@ -73,7 +73,7 @@ module.exports = function widgets({ P, store, broadcast, preview, showcase, shel
       }
     } catch {}
     let site = false;
-    try { const st = showcase.load(pid) || {}; site = !!(st.built || st.auto || showcase.exists(pid)); } catch {}
+    try { const st = showcase.load(pid) || {}; site = !!(st.built || st.auto || showcase.exists(pid) || (showcase.started && showcase.started(pid))); } catch {}   // feat/site-v2: a designer draft, a built page or a started site
     return { preview: pv, website: { show: site } };
   }
 
@@ -89,6 +89,17 @@ module.exports = function widgets({ P, store, broadcast, preview, showcase, shel
     return { widgets: all[pid] };
   }
 
+  // feat/market-v2: the Marketplace's Remove takes back the one widget it added
+  function removeOne(pid, w, me) {
+    if (!P.get(pid) || !P.canSee(me, pid)) throw err(404, 'project not found');
+    if (!canEdit(me, pid)) throw err(403, 'only the host and builders can change the sidebar');
+    const [one] = clean([w]); const cur = all[pid] || [];
+    const left = cur.filter(x => !(one && x.kind === one.kind && (one.kind === 'builtin' ? x.key === one.key : one.kind === 'link' ? x.url === one.url : x.doc === one.doc)));
+    if (left.length === cur.length) return { gone: true, widgets: cur };
+    if (left.length) all[pid] = left; else delete all[pid];
+    save(); broadcast({ type: 'widgets', project: pid });
+    return { widgets: all[pid] || [] };
+  }
   function view(pid, me) { return { widgets: all[pid] || [], canEdit: canEdit(me, pid), builtin: BUILTIN, ...auto(pid, me) }; }
 
   async function route(req, res, { m, b, me, readBody, send, fail }) {
@@ -109,5 +120,5 @@ module.exports = function widgets({ P, store, broadcast, preview, showcase, shel
     return null;
   }
 
-  return { route, view, addOne, BUILTIN };
+  return { route, view, addOne, removeOne, BUILTIN };
 };

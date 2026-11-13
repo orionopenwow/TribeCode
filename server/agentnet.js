@@ -198,9 +198,11 @@ module.exports = function agentnet({ P, store, id, str, broadcast, bus, getMembe
         if (me.role === 'spectator') return fail(res, 403, 'spectators are read-only');
         const body = await readBody(req); const tx = str(body.text, 4000);
         const names = tx.match(/@[^\s,.:;!?]+(?:\s·\s[^\s,.:;!?]+)?/g) || [];
-        const targets = /@agents\b/i.test(tx) ? agentsHere() : names.map(n => resolve(n)).filter(Boolean);
+        const direct = body.to ? agentsHere().find(x => x.id === body.to) : null;   // feat/fleet: Message on an agent's row
+        if (body.to && !direct) return fail(res, 404, 'no such agent in this project');
+        const targets = direct ? [direct] : /@agents\b/i.test(tx) ? agentsHere() : names.map(n => resolve(n)).filter(Boolean);
         if (!tx || !targets.length) return fail(res, 400, 'In #agents, @mention an agent (for example @maya\'s-claude or @agents).');
-        const msg = post(me.id, tx, { thread: str(body.thread, 40) || null, human: true });
+        const msg = post(me.id, tx, { thread: str(body.thread, 40) || null, human: true, ...(direct ? { to: direct.id } : {}) });
         humanSpoke(str(body.thread, 40) || null);
         for (const t of targets) coord.tell(t.id, 'mention', `${me.name} in #agents: ${tx}`, me.id);
         return send(res, 200, { message: msg, mentioned: targets.map(t => t.name) });

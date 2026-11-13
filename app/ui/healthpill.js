@@ -12,7 +12,7 @@
   function paint() {
     const c = C(), waiting = c.outbox ? c.outbox().length : 0, has = c.hasToken && c.hasToken();
     let kind = '', text = '';
-    if (!has) { pill.classList.add('hidden'); return; }
+    if (!has || (window.TribeOffline && window.TribeOffline.asleep && window.TribeOffline.asleep())) { pill.classList.add('hidden'); return; }   // the tour's blank slate holds a token before its fake socket opens
     if (status === 'online' && waiting) { kind = 'warn'; text = `${waiting} waiting to send`; }
     else if (status === 'reconnecting' || status === 'connecting') { kind = 'warn'; text = Date.now() - since > 8000 ? 'Waking up the tribe…' : 'Reconnecting…'; }
     else if (status === 'offline') { kind = 'off'; text = waiting ? `Offline · ${waiting} waiting` : 'Offline'; }

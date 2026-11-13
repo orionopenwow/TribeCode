@@ -210,6 +210,7 @@
   // "+" on Home: one sheet to start or join, even from a phone (phones can't run the tribe themselves).
   function startTribe() {
     if (C.connected()) return PJ() && PJ().openNew ? PJ().openNew() : null;   // in a tribe: a new project (Create my own · templates · Join)
+    if (window.TribeLocalSetup) return window.TribeLocalSetup.start();   // polish: the instant Start sheet; join, phone and cloud homes sit in its "Where should it live?" step
     if (window.TribePhoneHost) return window.TribePhoneHost.open();   // where should your tribe live? (phonehost.js, docs/PHONE-HOSTING.md)
     const dl = (window.TribeWeb && window.TribeWeb.RELEASES) || 'https://github.com/orionopenwow/TribeCode/releases/latest';
     const el = sheet(`<div class="m2-sh-h"><span class="eyebrow">Start a tribe</span><h3>Who runs it?</h3></div>
@@ -818,12 +819,15 @@
     if (window.TribeRepoHero) window.TribeRepoHero.refresh();
     if (!C.connected()) return renderHub();
     const p = PJ() && PJ().cur && PJ().cur();
-    const [repo, chat, vis] = await Promise.all([
+    let [repo, chat, vis] = await Promise.all([
       p && p.hasRepo ? C.api('/repo').catch(() => null) : Promise.resolve(null),
       C.api('/chat/general?limit=200').catch(() => ({ messages: [] })),
       C.api('/visuals').catch(() => ({ screens: [] })),
     ]);
-    hub.repo = repo && repo.status && repo.status.enabled ? repo.status : (p && p.hasRepo ? { enabled: false, name: p.name } : null);
+    // the project list can learn about the repo while we wait (hasRepo turns true): read it then rather than leave "reading…" for 15s
+    const p2 = PJ() && PJ().cur && PJ().cur();
+    if (!repo && p2 && p2.hasRepo) repo = await C.api('/repo').catch(() => null);
+    hub.repo = repo && repo.status && repo.status.enabled ? repo.status : (p2 && p2.hasRepo ? { enabled: false, name: p2.name } : null);
     hub.notes = notesFrom(chat.messages || []);
     hub.shots = vis.screens || [];
     renderHub();

@@ -112,7 +112,7 @@ function lanUrls() {
   const rank = u => (u.kind === 'tailscale' ? 0 : u.kind === 'lan' ? (/wi-?fi|wlan|wireless|ethernet|^en|^eth/i.test(u.name) ? 1 : 2) : 3);
   return out.sort((x, y) => rank(x) - rank(y));
 }
-const MIME = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.png': 'image/png', '.svg': 'image/svg+xml', '.ico': 'image/x-icon', '.json': 'application/json', '.webmanifest': 'application/manifest+json', '.woff2': 'font/woff2' };
+const MIME = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.png': 'image/png', '.webp': 'image/webp', '.svg': 'image/svg+xml', '.ico': 'image/x-icon', '.json': 'application/json', '.webmanifest': 'application/manifest+json', '.woff2': 'font/woff2' };
 // A sign-in that survives cleared storage (iPhone Safari wipes site storage after a week away; every address is its own
 // storage): whenever a response hands out a new key (claim, join, sign-in, device link, reclaim), the browser also gets it as
 // an HttpOnly cookie that pages can't read. GET /api/session swaps the cookie back for the key when storage comes up empty.
@@ -206,8 +206,8 @@ function clientKey(req) {
   const cf = req.headers['cf-connecting-ip'], xff = String(req.headers['x-forwarded-for'] || '').split(',').map(x => x.trim()).filter(Boolean).pop();
   return String(cf || xff || ra).slice(0, 64);
 }
-function limited(req, max = 20, windowMs = 60_000) {
-  const k = clientKey(req), now = Date.now();
+function limited(req, max = 20, windowMs = 60_000, bucket = '') {   // bucket: a route's own count (accounts), else shared
+  const k = (bucket ? bucket + ':' : '') + clientKey(req), now = Date.now();
   const h = (hits.get(k) || []).filter(t => now - t < windowMs); h.push(now); hits.set(k, h);
   return h.length > max;
 }
@@ -249,6 +249,7 @@ function broadcast(msg, except) {
 let dashboard = null;   // the Global Hub, server/hub.js (made below)
 let talent = null;   // v0.27 company: the Work view (server/talent.js, made below)
 let profiles = null;   // feat/profiles: avatar, name color, status, presence (server/profiles.js, made below)
+let moderation = null;   // feat/appstore: report, block, word filter (server/moderation.js, made below)
 let sense = null;   // feat/project-sense (server/sense.js, made below)
 let buildKit = null;   // server/buildkit.js (made below)
 let setupFlow = null;   // feat/setup-flow (server/setup.js, made below)
@@ -263,7 +264,8 @@ function presence() {
 const idleAll = mid => { const o = online.get(mid); return !!o && o.sockets.size > 0 && [...o.sockets].every(s => s.idle); };   // feat/profiles: every tab idle
 function presenceFor(viewer) {
   const fix = list => (profiles ? list.map(e => profiles.forViewer(e, viewer, online.has(e.id))) : list);   // feat/profiles: invisible, nicknames
-  return fix(presenceForRaw(viewer));
+  const out = fix(presenceForRaw(viewer));
+  return places ? places.scrub(out, viewer) : out;   // feat/presence: "Show where I am" off / "Appear away"
 }
 // What one viewer sees: project-scoped friends only see people who share one of their projects.
 function presenceForRaw(viewer) {
@@ -284,10 +286,24 @@ function touchAgent(me, tool) {
   const where = tool === 'connected' ? (prev && Date.now() - prev.at < AGENT_IDLE ? prev.where : 'connected') : `using ${tool.replace(/_/g, ' ')}`;   // comms-smoke: MCP initialize/tools/list (server/mcp.js)
   const changed = !prev || Date.now() - prev.at > AGENT_IDLE || prev.where !== where || prev.project !== project;
   agentSeen.set(me.id, { at: Date.now(), where, project });
-  if (changed) pushPresence();
+  if (changed) { pushPresence(); if (places) places.agentMoved(me.id); }
 }
 setInterval(() => { for (const [k, a] of agentSeen) if (Date.now() - a.at > AGENT_IDLE && !a.off) { a.off = true; pushPresence(); } }, 30_000).unref();
 const pushPresence = () => broadcast({ type: 'presence', members: presence() });
+// feat/presence: where everyone is (server/places.js). A viewer only hears about people they can see, and not about
+// someone who is invisible (online but shown offline).
+function canSeeMember(viewer, mid) {
+  const e = presenceFor(viewer).find(x => x.id === mid); if (!e) return false;
+  const m = memberById(mid); if (m && m.role === 'agent') return true;
+  return !!e.online || !online.has(mid);
+}
+function agentPlace(mid) {
+  const a = agentSeen.get(mid); if (!a || Date.now() - a.at > AGENT_IDLE) return null;
+  const pid = a.project || P.defaultId(); let t = null;
+  try { t = P.inProject(pid, () => loadTasks()).find(x => x.assignee === mid && x.status === 'doing'); } catch {}
+  return t ? { k: 'task', id: t.id, l: String(t.title || 'a task').slice(0, 60), pr: pid || '' } : { k: 'agent', id: '', l: String(a.where || 'working').slice(0, 60), pr: pid || '' };
+}
+let places = null;   // made below, once chans exists
 
 // ---------- huddles (WebRTC signaling only; audio/video flow peer to peer) ----------
 const huddle = new Map(); // memberId -> { muted, sharing, joined }
@@ -299,6 +315,7 @@ function sendTo(mid, msg) { const o = online.get(mid); if (o) for (const s of o.
 // ---------- chat ----------
 const channelOk = c => /^[a-z0-9][a-z0-9-]{0,31}$/.test(c);
 let chatHook = null;
+let rituals = null;   // feat/work-company: /standup answers + ritual runs (server/rituals.js)
 let captureHook = null;   // feat/captures (server/captures.js onChat)   // the secretary hears @secretary (server/secretary.js)
 // The outbox (app/ui/tribe.js) gives each message a client id (cid): the app shows it at once, the echo replaces it, and a
 // resend after a lost reply posts nothing twice.
@@ -307,6 +324,7 @@ const cidOf = body => (body && typeof body.cid === 'string' && CID_RE.test(body.
 function postChat(channel, by, text, extra) {
   if (channel === 'general') channel = P.channelOf(P.current() || P.defaultId());   // project rooms: each project has its own channel
   if (extra && extra.cid) { const k = `${channel}:${by}:${extra.cid}`; if (cidSeen.has(k)) return cidSeen.get(k); }
+  if (moderation && by !== 'tribecode') text = moderation.clean(text);   // feat/appstore: the host's word filter
   const msg = { id: id(12), at: new Date().toISOString(), by, text, ...extra };   // extra: media, replyTo, fwd (chatx.js), cid (outbox)
   if (extra && extra.cid) { cidSeen.set(`${channel}:${by}:${extra.cid}`, msg); if (cidSeen.size > 2000) cidSeen.delete(cidSeen.keys().next().value); }
   store.appendJSONL(`chat/${channel}.jsonl`, msg);
@@ -317,6 +335,7 @@ function postChat(channel, by, text, extra) {
   return msg;
 }
 function handleCommands(channel, member, text) {
+  if (rituals && /^\/(standup|retro|weekly-review)\b/i.test(text)) { try { if (rituals.onCommand(channel, member, text)) return; } catch (e) { console.error(e); } }
   const t = text.match(/^\/task\s+(.+)/i);
   if (t) { const task = createTask({ title: t[1], by: member.id, source: 'chat' }); postChat(channel, 'tribecode', `Made that a task: **${task.title}**`); }
   const d = text.match(/^\/decide\s+(.+)/i);
@@ -338,6 +357,7 @@ function saveTask(t) {
   let was = null; try { const r = store.readMd(taskFile(t)); was = r && r.meta && r.meta.status; } catch {}
   const { body = '', ...meta } = t; store.writeMd(taskFile(t), meta, body); broadcast({ type: 'task', task: t });
   bugs.onTask(t);
+  try { if (t.site) siteDesign.onTask(t); } catch {}   // feat/site-v2: a finished website task resolves its comments
   if (flow) flow.onTask(t);   // the living plan checks items off (server/flow.js)
   if (t.status === 'done' && was && was !== 'done' && askai) try { askai.taskDone(t, 'general'); } catch {}   // agents' finished work in the channel
   return t;
@@ -349,6 +369,8 @@ function createTask({ title, by, status = 'backlog', assignee = null, body = '',
   if (TASK_TYPES.includes(type)) t.type = type;   // feat/setup-flow
   return saveTask(t);
 }
+
+const taskFlow = require('./taskflow')({ P, store, getMembers: () => members, perms, bus, postChat: (...a) => postChat(...a), saveTask: t => saveTask(t), loadTasks: () => loadTasks(), str, nameOf: x => nameOf(x) });   // feat/tasks-company: assign → accept, Council claims
 
 // ---------- brain, board, docs ----------
 let flow = null;   // server/flow.js: one-click project flow, gists, living plan (made below)
@@ -375,6 +397,19 @@ const site = require('./site')({ args, root: path.join(__dirname, '..'), log: m 
 // per project, each bound to its project's repo and files (--repo is the first project's repo).
 // GitHub sign-in (server/github-auth.js): device flow / gh CLI / token; pushAuth() gives the autopilot the host's login.
 // Sign in with Discord / GitHub / Google to join a tribe or sign back in on a new device (server/oauth.js, docs/SIGN-IN.md).
+const accounts = require('./accounts')({ store: baseStore, getMembers: () => members, isLocal, limited, hash, id, log: m => console.log('  ' + m),
+  forgetMembers: ids => {   // DELETE /api/account: the member and their agents leave the tribe (keys, device links, project seats)
+    members = members.filter(x => !ids.includes(x.id)); saveMembers();
+    try { store.writeJSON('.tribe/devices.json', (store.readJSON('.tribe/devices.json', []) || []).filter(d => !ids.includes(d.member))); devices.reload(); } catch {}
+    for (const p of P.all()) if (p.members && ids.some(x => p.members[x])) { for (const x of ids) delete p.members[x]; P.update(p.id, {}); }
+    try { pushPresence(); rooms.pushProjects(); } catch {}
+  },
+  memberFromReq: req => authed(req),
+  signInMember: (mid, req) => {   // POST /api/accounts/login: this device gets the member's own device link, redeemed at once
+    const mem = members.find(x => x.id === mid); if (!mem) return null;
+    const { key } = devices.create(mem, req, 'Account sign-in'); const r = devices.redeem(key, req);
+    return r ? { token: r.token, member: publicMember(mem) } : null;
+  } });   // feat/nav-accounts: accounts scaffold, off unless TRIBE_ACCOUNTS=1 (docs/ACCOUNTS.md)
 const oauth = require('./oauth')({ store: baseStore, getMembers: () => members, saveMembers, publicMember, isLocal, str, limited, devices, tribe,
   publicBase: () => args['public-url'] || process.env.TRIBE_PUBLIC_URL || share.publicUrl(), findInvite, joinByInvite, addToProject, log: m => console.log('  ' + m) });
 const githubAuth = require('./github-auth')({ W, store: baseStore, getMembers: () => members, isLocal, str, log: m => console.log('  ' + m) });
@@ -403,19 +438,21 @@ const repoHub = {   // MCP tools run against the calling agent's project hub
 let mcpFlow = null;
 // Notification hub + approvals (server/notify.js, server/approvals.js)
 const pocket = makeNotify({ store, bus, getMembers: () => members, sendTo, postChat: (...x) => postChat(...x), log: m => console.error('  notify: ' + m),
-  dnd: mid => !!profiles && profiles.isDnd(mid), muted: (to, from) => !!profiles && !!from && profiles.isMuted(to, from),   // feat/profiles: do not disturb, muted people
+  dnd: mid => !!profiles && profiles.isDnd(mid), muted: (to, from) => (!!profiles && !!from && profiles.isMuted(to, from)) || (!!moderation && moderation.isBlocked(to, from)),   // feat/profiles: do not disturb, muted people
   publicUrl: () => (args['public-url'] || process.env.TRIBE_PUBLIC_URL || share.publicUrl() || (lanUrls()[0] || {}).url || `http://localhost:${PORT}`).replace(/\/+$/, '') });
 let shipHub = null;   // feat/ship-flow: a ship vote decided from a phone (one-tap approval) counts as that person's vote
 let publishOnApproval = null;   // v0.27 publish: an approved "publish" request from an AI helper (server/publish.js)
 let companyHub = null;   // v0.27 company: decided approvals land in the company's decision log (server/company.js)
 const approvals = makeApprovals({ store, id, str, bus, getMembers: () => members, postChat, broadcast: m => { broadcast(m); if (shipHub && m && m.type === 'approval') try { shipHub.onApproval(m.approval); } catch (e) { console.error('ship:', e.message); } if (companyHub && m && m.type === 'approval') try { companyHub.onApproval(m.approval); } catch (e) { console.error('company:', e.message); } if (publishOnApproval && m && m.type === 'approval') try { publishOnApproval(m.approval); } catch (e) { console.error('publish:', e.message); } }, hub: pocket, project: () => P.current(), canSee: (m, pid) => !pid || P.canSee(m, pid),
   canDecideAny: (who, a) => who.role === 'host' || ((!a.project || P.canSee(who, a.project)) && (perms.can(who, 'approvals.approve', a.project) || (a.risk === 'low' && perms.can(who, 'approvals.approve_low', a.project)))) });   // feat/roles
-const dms = makeDm({ store, getMembers: () => members, sendTo, broadcast, bus, canSeeChannel: (me, ch) => {   // fix/security-2: typing only in channels you can read
+const canSeeCh = (me, ch) => {   // fix/security-2: typing only in channels you can read
   if (ch === 'general') return true;
   const pj = P.byChannel(ch); if (pj) return P.canSee(me, pj.id);
   if (chans.isCustom(ch)) return chans.canRead(me, ch);
   const ag = /^agents-(.+)$/.exec(ch); return !!(ag && P.get(ag[1]) && P.canSee(me, ag[1]));
-} });
+};
+const dms = makeDm({ store, getMembers: () => members, sendTo, broadcast, bus, canSeeChannel: canSeeCh });
+places = require('./places')({ P, store: baseStore, getMembers: () => members, online, idleAll, canSeeChannel: canSeeCh, visible: canSeeMember, agentPlace });
 let askai = null;   // server/askai.js (made below, once coord exists): @ai for people without their own Claude
 const chatx = makeChatx({ store, id, str, getMembers: () => members, postChat, dms, sendTo, broadcast, brain, docs, loadTasks: () => loadTasks(), commands: (c, mem, t) => handleCommands(c, mem, t), pubCmd: (c, mem, t) => askai && askai.command(c, mem, t), ask: (c, mem, t) => askai && askai.ask(c, mem, t),
   approvals, board, createTask: o => createTask(o), bus, slug, project: () => P.current() || P.defaultId(), channelOf: () => P.channelOf(P.current() || P.defaultId()), inProject: (pid, fn) => P.inProject(pid, fn),
@@ -436,6 +473,7 @@ huddleSum.setSink(x => captures.fromHuddle(x));
 captureHook = (...x) => captures.onChat(...x);
 const voice = makeVoice({ canSeeHuddle: me => !huddleProject || P.canSee(me, huddleProject), store, id, str, huddle, sendTo, broadcast, postChat, createTask: o => createTask(o), getMembers: () => members, nameOf, brain, docs, bus, P, summary: huddleSum });
 const plan = makePlan({ store, id, str, broadcast, postChat, getMembers: () => members, loadTasks: () => loadTasks(), nameOf });
+rituals = require('./rituals')({ store, docs, plan, postChat, broadcast, getMembers: () => members, nameOf, str });   // feat/work-company: standup/retro rituals on the calendar
 const docsx = makeDocsX({ store, id, str, slug, broadcast, docs, getMembers: () => members, nameOf });
 const visuals = makeVisuals({ store, slug, str, broadcast, nameOf });
 const thumb = require('./thumb')({ P, visuals });
@@ -464,6 +502,8 @@ const codeFiles = require('./codefiles')({ P, claims, identity: W.identity, memb
 const uploads = require('./uploads')({ store: baseStore, P, nameOf, broadcast, can: (me, cap) => perms.can(me, cap) });   // the Files center: any file type, yours or the project's
 const connections = require('./connections')({ P, store: baseStore, uploads, visuals, postChat, nameOf, broadcast, isLocal });   // feat/mcp-directory: special connections (ArtCraft…), host only
 profiles = require('./profiles')({ P, store: baseStore, getMembers: () => members, pushPresence: () => pushPresence() });   // feat/profiles
+moderation = require('./moderation')({ store: baseStore, getMembers: () => members, bus, id, limited, log: m => console.log('  moderation: ' + m) });   // feat/appstore (docs/APP-STORE.md)
+const pwaIn = require('./pwa')({ UI });   // feat/appstore: the share target without a service worker (docs/BROWSER-APP.md)
 const phoneapp = require('./phoneapp')({ P, store: baseStore, shelf, broadcast, isLocal, lanUrls, nameOf, log: m => console.log('  ' + m) });
 const people = makePeople({ P, store, getMembers: () => members, presenceFor, claims, coord, docs, loadTasks: () => loadTasks(), nameOf, emailOf: W.emailOf });
 require('./mcp-people').bind(people);   // share_prompt, report_context + the agent prompt log
@@ -475,7 +515,8 @@ const secretary = makeSecretary({ P, store: baseStore, pstore: store, brain, doc
   votes: chatx.votes, broadcast, str, id, log: m => console.error('  ' + m) });
 require('./mcp-secretary').bind(secretary);
 chatHook = (...x) => secretary.onChat(...x);
-const agentsHub = makeAgentsHub({ P, store: baseStore, brain, getMembers: () => members, presenceFor, agentSeen, idleMs: AGENT_IDLE, nameOf, people, coord, claims, endpoints: (req, t) => agentEndpoints(req, t), secretary });
+const agentsHub = makeAgentsHub({ P, store: baseStore, pstore: store, brain, getMembers: () => members, presenceFor, agentSeen, idleMs: AGENT_IDLE, nameOf, people, coord, claims, endpoints: (req, t) => agentEndpoints(req, t), secretary,
+  approvals, loadTasks: () => loadTasks(), createTask: o => createTask(o), saveTask: t => saveTask(t) });   // + the Agent fleet (feat/fleet)
 // The Global Hub (server/hub.js): what you see with no project selected. Member-scoped, rolling.
 dashboard = makeHub({ P, base: baseStore, getMembers: () => members, presenceFor, loadTasks: () => loadTasks(), docs, approvals, flow: null, secretary, workshop, pocket, sendTo,
   isOnline: mid => online.has(mid), nameOf, str, slug, brain, coord, people, hubFor, preview, agentSeen, idleMs: AGENT_IDLE });
@@ -532,19 +573,37 @@ dashboard.setFlow(flow);
 const showcase = require('./showcase')({ P, base: baseStore, W, getMembers: () => members, nameOf, visuals, hubFor, preview, flow: () => flow, broadcast, postChat, bus, str , ui: UI, llm, sense: () => sense });   // per-project Website (server/showcase.js)
 sense = require('./sense')({ P, store, base: baseStore, broadcast, postChat, loadTasks: () => loadTasks(), readVision, shelf, brain, llm, log: m => console.error('  ' + m) });   // feat/project-sense: what the project is + inspiration (server/sense.js)
 const look = require('./look')({ base: baseStore, P, tribe, saveTribe: () => baseStore.writeJSON('.tribe/tribe.json', tribe), broadcast, getMembers: () => members, W, perms });   // feat/customize: tribe + project look (server/look.js)
+const siteFlint = require('./siteflint')({ P, base: baseStore, showcase, nameOf, llm, log: m => console.log(m) });   // Flint edits the website locally + the Saved shelf (server/siteflint.js)
 const inspoBoard = require('./inspo')({ P, base: baseStore, embeds, showcase, assets: assetLib, postChat, nameOf, broadcast });   // v0.25: the inspiration board (server/inspo.js)
 const ledger = require('./ledger')({ P, base: baseStore, broadcast, postChat, nameOf, perms, getMembers: () => members }), seatpilot = require('./seatpilot')({ P, base: baseStore, broadcast, nameOf, perms, getMembers: () => members, approvals, coord, bus, ledger });   // v0.27 company: Money + seat autopilot (server/ledger.js, server/seatpilot.js)
 const academy = require('./academy')({ P, base: baseStore, store, docs, captures, nameOf, broadcast }), legalDocs = require('./legal')({ P, base: baseStore, store, docs, approvals, postChat, nameOf, broadcast });   // v0.27 company: Role Academy + Offload (server/academy.js), Legal documents (server/legal.js)
 const flintKB = require('./flintkb')({ ui: UI, nlu: require(path.join(UI, 'flintnlu.js')) });   // flint-local: Flint's knowledge base (TF-IDF over the Guide and docs)
+const aiBasics = require('./aibasics')({ llm, base: baseStore, P, str });   // feat/flint-ai: ✦ basic features supercharged by AI (server/aibasics.js)
 const flintMem = require('./flintmem')({ base: baseStore, store, docs, str, nameOf, loadTasks: () => loadTasks(), readVision, recentChat: n => store.readJSONL('chat/general.jsonl', n).filter(x => !x.deleted && x.by !== 'tribecode').map(x => ({ who: nameOf(x.by), text: x.text })), llm, perms, broadcast }); flint.useBrief(me => flintMem.brief(me));   // v0.27.1: Flint remembers you, tribe skills, project words, drafts (server/flintmem.js)
-const soloImport = require('./soloimport')({ P, docs, postChat, store, str, saveTask, createTask, rooms });   // phone tribe -> host (docs/PHONE-HOSTING.md)
+const repoBinding = new Map();   // pid -> the clone in flight (a GitHub-linked draft moved here, server/soloimport.js)
+function connectRepo(pid, gh) {   // bind owner/name as the project's code repository, the same as connecting a repo by URL
+  if (repoBinding.has(pid)) return repoBinding.get(pid);
+  const job = (async () => {
+    const p = P.get(pid); if (!p) throw new Error('no such project');
+    if (p.repo && W.isRepo(p.repo)) return { already: true, repo: p.repo };
+    const dest = baseStore.p('workspaces', pid);
+    if (!W.isRepo(dest)) await W.clone(process.env.TRIBE_TEST && process.env.TRIBE_GITHUB_GIT ? path.join(process.env.TRIBE_GITHUB_GIT, gh + '.git') : `https://github.com/${gh}.git`, dest);
+    P.update(pid, { repo: dest, workspace: true }); resetHub(pid);
+    try { rooms.pushProjects(); } catch {}
+    return { repo: dest };
+  })().finally(() => repoBinding.delete(pid));
+  repoBinding.set(pid, job); return job;
+}
+const soloImport = require('./soloimport')({ P, docs, postChat, store, str, saveTask, createTask, rooms, base: baseStore, company: () => company, connectRepo });   // phone tribe -> host (docs/PHONE-HOSTING.md)
 const siteTpl = require('./sitetemplates')({ P, base: baseStore, siteDir: pid => showcase.siteDir(pid), postChat, nameOf, isManager: (pid, me) => !!me && me.role !== 'agent' && (me.role === 'host' || ((P.get(pid) || {}).members || {})[me.id] === 'host') });   // v0.25: site templates
-talent = require('./talent')({ P, base: baseStore, id, getMembers: () => members, nameOf, postChat, broadcast, bus, dms, approvals, askai, workshop, perms, makeInvite, linkFor, tribeName: () => tribe.name,   // v0.27 company: Work (gigs, hiring, time bank, compute)
+talent = require('./talent')({ P, base: baseStore, id, getMembers: () => members, nameOf, postChat, broadcast, bus, dms, approvals, askai, workshop, perms, makeInvite, linkFor, tribeName: () => tribe.name, ledger, loadTasks: () => loadTasks(), saveTask: t => saveTask(t), createTask: o => createTask(o), taskFlow,   // v0.27 company: Work (gigs, hiring, time bank, compute)
   joinProject: (mid, pid) => { const mem = memberById(mid); if (!mem) return; if (Array.isArray(mem.projects) && !mem.projects.includes(pid)) mem.projects.push(pid); P.addMember(pid, mid, P.scoped(mem) ? 'builder' : mem.role); saveMembers(); pushPresence(); rooms.pushProjects(); } });
 buildKit = require('./buildkit')({ P, root: require('./tpldir').root(), sense });   // build kit: the open-source stack + quality bar per project kind (server/buildkit.js)
 setupFlow = require('./setup')({ P, W, base: baseStore, sense, buildKit, readVision, createTask: o => createTask(o), broadcast, resetHub, getMembers: () => members, siteTpl: () => siteTpl, company: () => companyHub });   // v0.27 company: setup/business   // feat/setup-flow: role flows, Create the repo, Make the starter
+const siteDesign = require('./sitedesign')({ base: baseStore, root: require('./tpldir').root(), showcase, siteFlint, P, nameOf, members: () => members, inspo: inspoBoard, postChat: (...a) => postChat(...a), broadcast: m => broadcast(m), tasks: { create: a => createTask(a), save: t => saveTask(t), load: () => loadTasks(), flow: taskFlow } });   // the website designer (server/sitedesign.js, app/ui/sitecfg.js)
 const siteLib = require('./sitelib')({ P, W, root: require('./tpldir').root(), getMembers: () => members, broadcast, ensureRepo: (pid, me) => setupFlow.ensureRepo(pid, me), log: m => console.error('  ' + m) });   // website template library (server/sitelib.js)
-const flintFree = require('./flintfree')({ P, W, root: require('./tpldir').root(), getMembers: () => members, broadcast, ensureRepo: (pid, me) => setupFlow.ensureRepo(pid, me), siteLib, llmStatus: () => (llm.status ? llm.status() : {}), log: m => console.error('  ' + m) });   // Flint's free tier (server/flintfree.js)
+const flintFree = require('./flintfree')({ P, W, root: require('./tpldir').root(), startersDir: path.join(UI, 'starters'), getMembers: () => members, broadcast, ensureRepo: (pid, me) => setupFlow.ensureRepo(pid, me), siteLib, llmStatus: () => (llm.status ? llm.status() : {}), log: m => console.error('  ' + m) });   // Flint's free tier (server/flintfree.js)
+const flintRun = require('./flintrun')({ P, root: baseStore.root, tribe, getMembers: () => members, publicMember, visibleMembers: me => presenceFor(me).map(x => x.id), log: m => console.error('  ' + m) });   // feat/flint-runthrough: proof-of-work ZIPs + the Blender bridge stub (server/flintrun.js)
 // v0.27 breakout: one-click Publish to a public play link (with a safety check) and tribe game jams (server/publish.js, server/jam.js)
 const visualCard = pid => P.inProject(pid, () => { let best = null; const root = store.p('visuals'); try { for (const d of fs.readdirSync(root)) { let fl = []; try { fl = fs.readdirSync(path.join(root, d)); } catch { continue; } for (const f of fl) if (f.endsWith('.png')) { const full = path.join(root, d, f), t = fs.statSync(full).mtimeMs; if (!best || t > best.t) best = { full, t }; } } } catch {} return best && best.full; });
 const publishHub = require('./publish')({ P, W, base: baseStore, preview, setupFlow, getMembers: () => members, broadcast, postChat, approvals, nameOf, visualCard, log: m => console.error('  ' + m),
@@ -554,10 +613,11 @@ const jamHub = require('./jam')({ P, W, base: baseStore, setupFlow, publish: pub
 const widgets = require('./widgets')({ P, store: baseStore, broadcast, preview, showcase, shelf, sense, can: (me, cap, pid) => perms.can(me, cap, pid) });   // feat/sidebar-widgets (server/widgets.js)
 const studios = require('./studios')({ P, base: baseStore, root: require('./tpldir').root(), sense, broadcast, buildKit });   // v0.27: Studios — creative apps beside TribeCode, linked not bundled (server/studios.js)
 const trending = require('./trending')({ store: baseStore, root: require('./tpldir').root() });   // daily "Trending on GitHub" feed (server/trending.js)
-const market = require('./market')({ P, store: baseStore, root: require('./tpldir').root(), approvals, widgets, shelf, docs, postChat, nameOf, getMembers: () => members, str, trending });   // v0.27 company: the Marketplace (server/market.js)
+const market = require('./market')({ P, store: baseStore, root: require('./tpldir').root(), approvals, widgets, shelf, docs, inspo: inspoBoard, postChat, nameOf, getMembers: () => members, str, trending });   // v0.27 company: the Marketplace (server/market.js)
 const whiteboard = require('./whiteboard')({ P, base: baseStore, broadcast, perms, nameOf, memberColor: mid => (memberById(mid) || {}).color || '#F26B1D' });   // feat/whiteboard: the shared team board (server/whiteboard.js)
 const pinsHub = require('./pins')({ P, base: baseStore, broadcast, bus, getMembers: () => members, perms, nameOf, memberColor: mid => (memberById(mid) || {}).color || '#F26B1D' });   // P1-E comment pins + preview presence (server/pins.js)
 const designCanvas = require('./canvas')({ P, base: baseStore, broadcast, perms, nameOf, memberColor: mid => (memberById(mid) || {}).color || '#F26B1D' });   // P1-A: the design canvas (server/canvas.js)   // feat/whiteboard: the shared team board (server/whiteboard.js)
+const designPlans = require('./designplans')({ P, base: baseStore, broadcast, perms });   // feat/design-flow: each design's plan in .tribe/design-plans (server/designplans.js)
 const canvasCode = require('./canvascode')({ P, W, base: baseStore, getMembers: () => members, broadcast, ensureRepo: (pid, me) => setupFlow.ensureRepo(pid, me), log: m => console.error('  ' + m) });   // P1-C: design frame -> HTML/CSS in the project (server/canvascode.js)
 const canvasAI = require('./canvasai')({ P, canvas: designCanvas, nameOf, memberColor: mid => (memberById(mid) || {}).color || '#38C6B1', root: require('./tpldir').root(), classify: require('./flintfree').classify, log: m => console.error('  ' + m) });   // P1-F: Flint + agents on the canvas (server/canvasai.js)
 const canvasChat = require('./canvaschat')({ P, base: baseStore, broadcast, canvas: designCanvas, nameOf, memberColor: mid => (memberById(mid) || {}).color || '#F26B1D' });   // Flint's Make-style chat beside the Design canvas (server/canvaschat.js)
@@ -582,12 +642,12 @@ const mcp = makeMcp({
       const t = loadTasks().find(x => x.id === tid); if (!t) return null;
       if (a.status && STATUSES.includes(a.status)) t.status = a.status;
       if (a.title) t.title = str(a.title, 200);
-      if (a.take) t.assignee = me.id;
+      if (a.take) { const prev = t.assignee; t.assignee = me.id; taskFlow.assigned(t, prev, me); }
       if (a.note) t.body = `${t.body ? t.body + '\n\n' : ''}**${me.name}** · ${new Date().toISOString().slice(0, 16).replace('T', ' ')}: ${str(a.note, 2000)}`;
       t.updated = new Date().toISOString(); t.updatedBy = me.id; return saveTask(t);
     },
   },
-  docs, claims, extraTools: { ...agentTools, ...visuals.mcpTools, ...mcpFlow.tools, ...makeWorkshopMcp(workshop, { current: () => P.current() }), ...require('./mcp-preview')(preview, P), ...whiteboard.mcpTools, ...showcase.mcpTools, ...captures.mcpTools, ...assetLib.mcpTools, ...company.mcpTools, ...ledger.mcpTools, ...seatpilot.mcpTools, ...talent.mcpTools /* v0.27 company */, ...market.mcpTools, ...academy.mcpTools, ...flintMem.mcpTools, ...publishHub.mcpTools, ...jamHub.mcpTools, ...pinsHub.mcpTools, ...buildKit.mcpTools, ...canvasAI.mcpTools }, port: PORT, coordTools: h => ({ ...coord.mcpTools(h), ...agentnet.mcpTools(h), ...ship.mcpTools(h) }),
+  docs, claims, extraTools: { ...agentTools, ...visuals.mcpTools, ...mcpFlow.tools, ...makeWorkshopMcp(workshop, { current: () => P.current() }), ...require('./mcp-preview')(preview, P), ...whiteboard.mcpTools, ...showcase.mcpTools, ...siteDesign.mcpTools, ...captures.mcpTools, ...assetLib.mcpTools, ...company.mcpTools, ...taskFlow.mcpTools, ...ledger.mcpTools, ...seatpilot.mcpTools, ...talent.mcpTools /* v0.27 company */, ...market.mcpTools, ...academy.mcpTools, ...flintMem.mcpTools, ...publishHub.mcpTools, ...jamHub.mcpTools, ...pinsHub.mcpTools, ...buildKit.mcpTools, ...canvasAI.mcpTools }, port: PORT, coordTools: h => ({ ...coord.mcpTools(h), ...agentnet.mcpTools(h), ...ship.mcpTools(h) }),
   chat: {
     post(me, text, channel) {   // feat/chat2: optional channel ("design", "#design"); #general by default
       const tx = str(text, 4000); if (!tx) return; const muted = perms.muteBlock(me); if (muted) throw new Error(muted);   /* feat/roles */
@@ -640,6 +700,13 @@ async function apiInProject(req, res, url) {
 
   if (!req.headers['x-tribe-ping']) lastActivity = Date.now();
   // the sign-in backup: the cookie set when this browser joined or signed in becomes the key again
+  // Log out (accounts.js): this browser forgets the sign-in backup cookie, so a reload can't sign it back in
+  if (a === 'session' && m === 'DELETE') {
+    res.setHeader('Set-Cookie', `${SESSION_COOKIE}=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0`);
+    return send(res, 200, { ok: true });
+  }
+  if (a === 'accounts') return accounts.route(req, res, { b, c, m, readBody, send, fail });
+  if (a === 'account' && !b) return accounts.account(req, res, { m, me, readBody, send, fail });   // delete my account (docs/APP-STORE.md), flag-gated   // feature-flagged scaffold (server/accounts.js)
   if (a === 'session' && m === 'GET') {
     const t = cookieToken(req); if (!t) return send(res, 200, { member: null });
     const who = authed({ headers: { authorization: 'Bearer ' + t }, url: '/api/session' });
@@ -683,6 +750,12 @@ async function apiInProject(req, res, url) {
 
   if (a === 'media' && b === 'key' && m === 'GET') { const th = tokenHashOf(req); return me && th ? send(res, 200, media.issue(me, th)) : fail(res, 401, 'not a member of this tribe'); }   // fix/security-2: key for signed media links (app/ui/media.js)
   if (a === 'guide') return guide.route(req, res, ctx());   // feat/vision-guide: public, read-only how-to pages (server/guide.js)
+  // feat/flint-ai: no tribe yet, on this computer: Flint's how-to answers and your own inspiration board still work (a local you)
+  if (a === 'inspo' && b === 'cache' && m === 'GET') return inspoBoard.cache(req, res, c);   // cached openly licensed thumbnails and sound previews, by content hash (public media)
+  if (!me && isLocal(req) && ((a === 'flint' && b === 'kb') || (a === 'inspo' && (b === 'search' || url.searchParams.get('board') === 'me')))) {
+    const local = { id: 'local', name: 'You', role: 'local' };
+    return a === 'flint' ? flintKB.route(req, res, { ...ctx(), me: local }) : inspoBoard.route(req, res, { ...ctx(), me: local });
+  }
 
   // One-click "invite a friend" for the host machine (scripts/invite-friend.js): makes the host if needed,
   // optionally turns on the public https address, and returns a fresh join link.
@@ -725,6 +798,7 @@ async function apiInProject(req, res, url) {
 
   if (a === 'host' && b === 'demo-tribe') return require('./demo')({ P, rooms, flow, shelf, docs, docsx, chatx, hubFor, resetHub, getMembers: () => members, newMember, saveMembers, pushPresence, devices, share, site, lanUrls, makeInvite, linkFor, isLocal, endpoints: agentEndpoints, id, hash, slug, postChat, str, port: PORT }).route(req, res, ctx());   // the demo tribe, local only (server/demo.js)
 
+  if (a === 'dev' && b === 'stamp' && m === 'GET' && args.dev) return send(res, 200, { stamp: devStamp, dev: true });   // feat/flint-runthrough: clean-slate live reload (no sign-in needed)
   if (a === 'bootstrap' && m === 'POST') {
     if (members.length) return fail(res, 409, 'tribe already has a host');
     if (!isLocal(req) && limited(req, 5)) return fail(res, 429, 'slow down');
@@ -835,9 +909,10 @@ async function apiInProject(req, res, url) {
 
   if (a === 'agents' && b === 'bridge.js') { const h = await agentsHub.route(req, res, ctx()); if (h !== null) return; }   // the stdio bridge (plain code, no secrets)
   if (a === 'approvals') { const h = await approvals.route(req, res, { m, b, c, me, url, readBody, send, fail }); if (h !== null) return; }
-  if (a === 'projects' && c === 'website') { const h = await showcase.route(req, res, ctx()); if (h !== null) return; }   // Website (signed preview links need no key)
+  if (a === 'projects' && c === 'website') { if ((await siteFlint.route(req, res, ctx())) !== null) return; const h = await showcase.route(req, res, ctx()); if (h !== null) return; }   // Website (signed preview links need no key)
   if (a === 'oauth') { const h = await oauth.route(req, res, { m, b, c, me, url, readBody, send, fail }); if (h !== null) return; }   // Sign in with Discord/GitHub/Google (server/oauth.js)
   if (a === 'site-library' && parts[2] === 'thumb.png') return siteLib.route(req, res, ctx());   // template thumbnails are public (gallery <img> tags carry no key)
+  if (a === 'github' && b === 'detect' && m === 'GET' && !me) { const h = await githubAuth.route(req, res, ctx()); if (h !== null) return; }   // feat/tasks-company: setup on the host computer, before a tribe exists
   if (!need()) return;
   if (a === 'notify') { const h = await pocket.route(req, res, { m, b, c, me, readBody, send, fail }); if (h !== null) return; }
 
@@ -898,6 +973,8 @@ async function apiInProject(req, res, url) {
   if (a === 'uploads') return uploads.route(req, res, ctx());
   if (a === 'connections') return connections.route(req, res, ctx());   // feat/mcp-directory: special connections (server/connections.js)
   if (a === 'code') return codeFiles.route(req, res, ctx());   // feat/files-code
+  if (a === 'moderation') return moderation.route(req, res, ctx());   // feat/appstore: report, block, filter
+  if (a === 'places') return places.route(req, res, { me, send, fail, readBody, b, m });   // feat/presence: where everyone is
   if (a === 'profile') return profiles.route(req, res, ctx(), { visible: mid => presenceFor(me).some(x => x.id === mid) });   // feat/profiles
   if (a === 'channels') return chans.route(req, res, ctx());   // feat/chat2
   if (a === 'embeds') return embeds.route(req, res, ctx());    // feat/chat2
@@ -914,14 +991,17 @@ async function apiInProject(req, res, url) {
   if (a === 'projects' && (c === 'ledger' || c === 'ledger.csv')) return ledger.route(req, res, ctx());   // v0.27 company: Money (server/ledger.js)
   if (a === 'projects' && c === 'seatpilot') return seatpilot.route(req, res, ctx());   // v0.27 company: seat autopilot (server/seatpilot.js)
   if (a === 'projects' && c === 'sense') return sense.route(req, res, ctx());
+  if (a === 'site-designer' || (a === 'projects' && (c === 'site-config' || c === 'site-autofill' || c === 'site-comments'))) return siteDesign.route(req, res, { ...ctx(), d: parts[3] });
   if (a === 'site-library' || (a === 'projects' && (c === 'site-library' || c === 'site-data'))) return siteLib.route(req, res, ctx());   // website templates (server/sitelib.js)
-  if ((a === 'flint' && (b === 'tiers' || b === 'tier')) || (a === 'projects' && c === 'flint')) return flintFree.route(req, res, ctx());   // Flint's free tier: recipes + the capability map (server/flintfree.js)
+  if (a === 'flint' && (b === 'proof' || b === 'blender')) return flintRun.route(req, res, ctx());   // feat/flint-runthrough
+  if ((a === 'flint' && (b === 'tiers' || b === 'tier' || b === 'starters')) || (a === 'projects' && c === 'flint')) return flintFree.route(req, res, ctx());   // Flint's free tier: recipes + the capability map (server/flintfree.js)
   if (a === 'buildkit' || (a === 'projects' && c === 'buildkit')) return buildKit.route(req, res, ctx());   // build kit (server/buildkit.js)
   if (a === 'projects' && c === 'studios') return studios.route(req, res, ctx());   // v0.27: Studios (server/studios.js)   // feat/project-sense: GET what the project is + inspiration, PUT the host's override
   if (a === 'pins') return pinsHub.route(req, res, ctx());   // P1-E comment pins (server/pins.js)
   if (a === 'whiteboard') return whiteboard.route(req, res, ctx());   // feat/whiteboard (server/whiteboard.js)
   if (a === 'canvasai') return canvasAI.route(req, res, ctx());
   if (a === 'canvaschat') return canvasChat.route(req, res, ctx());   // Flint's chat on a design file   // P1-F: Flint's free design moves (server/canvasai.js)
+  if (a === 'projects' && c === 'design-plans') return designPlans.route(req, res, ctx());   // feat/design-flow
   if (a === 'canvas') return designCanvas.route(req, res, ctx());   // P1-A design canvas   // feat/whiteboard (server/whiteboard.js)
   if (a === 'canvascode') return canvasCode.route(req, res, ctx());   // P1-C send a frame to the app
   if (a === 'market') return market.route(req, res, ctx());   // v0.27 company: the Marketplace (server/market.js)
@@ -986,8 +1066,15 @@ async function apiInProject(req, res, url) {
   if (a === 'ship' || (a === 'tasks' && c === 'split')) { const h = await ship.route(req, res, ctx()); if (h !== null) return; }   // feat/ship-flow
   if (a === 'tasks') {
     if (m === 'GET' && !b) return send(res, 200, { tasks: loadTasks() });
+    try { const r = await taskFlow.route(m, b, c, me, () => readBody(req)); if (r) return send(res, 200, r); } catch (e) { return fail(res, e.status || 400, e.message); }   // feat/tasks-company
     if (me.role === 'spectator') return fail(res, 403, 'spectators are read-only');
-    if (m === 'POST' && !b) { const body = await readBody(req); return send(res, 200, { task: createTask({ ...body, by: me.id, source: 'board' }) }); }
+    if (m === 'POST' && !b) {
+      const body = await readBody(req), to = body.assignee && members.some(x => x.id === body.assignee) ? body.assignee : null;
+      const no = taskFlow.canAssign(me, to); if (no) return fail(res, 403, no);
+      const t = createTask({ ...body, assignee: null, by: me.id, source: 'board' });
+      if (!to) return send(res, 200, { task: t });
+      t.assignee = to; taskFlow.assigned(t, null, me); return send(res, 200, { task: saveTask(t) });
+    }
     const t = b && loadTasks().find(x => x.id === b); if (!t) return fail(res, 404, 'task not found');
     const ownTask = t.by === me.id || t.assignee === me.id || (me.role === 'agent' && (t.by === me.owner || t.assignee === me.owner));
     if ((m === 'PATCH' || m === 'DELETE') && !ownTask && !perms.can(me, 'tasks.triage')) return fail(res, 403, 'your role can only change your own tasks');   // feat/roles
@@ -996,8 +1083,12 @@ async function apiInProject(req, res, url) {
       if (body.title !== undefined) t.title = str(body.title, 200) || t.title;
       if (body.status !== undefined) { if (!STATUSES.includes(body.status)) return fail(res, 400, 'bad status'); t.status = body.status; }
       const prevAssignee = t.assignee;
-      if (body.assignee !== undefined) t.assignee = body.assignee && members.some(x => x.id === body.assignee) ? body.assignee : null;
-      if (t.assignee && t.assignee !== prevAssignee && t.assignee !== me.id) bus.notify({ type: 'task-assigned', to: [t.assignee], from: me.id, title: `${me.name} assigned you a task`, body: t.title, view: 'tasks', ref: t.id });
+      if (body.assignee !== undefined) {
+        const to = body.assignee && members.some(x => x.id === body.assignee) ? body.assignee : null;
+        const no = to !== (prevAssignee || null) && taskFlow.canAssign(me, to, t); if (no) return fail(res, 403, no);   // feat/tasks-company: only leads assign others
+        t.assignee = to;
+      }
+      taskFlow.assigned(t, prevAssignee, me);   // pending until the person accepts (taskflow.js notifies them)
       if (body.order !== undefined && Number.isFinite(Number(body.order))) t.order = Number(body.order);
       if (body.body !== undefined) t.body = str(body.body, 20000);
       if (body.due !== undefined) t.due = dueOk(body.due);
@@ -1012,6 +1103,7 @@ async function apiInProject(req, res, url) {
     if (m === 'DELETE') { store.remove(taskFile(t)); broadcast({ type: 'task-removed', id: t.id }); return send(res, 200, { ok: true }); }
   }
 
+  if (a === 'ai' && ['basic', 'refine', 'tags', 'extract'].includes(b)) return aiBasics.route(req, res, ctx());   // feat/flint-ai: ✦ refine + file tags
   if (a === 'flint' && b === 'kb') return flintKB.route(req, res, ctx());   // flint-local: how-to answers from the docs, no model (server/flintkb.js)
   if (a === 'flint' && ['memory', 'skills', 'vocab', 'draft', 'learned'].includes(b)) return flintMem.route(req, res, ctx());   // v0.27.1; flint-local: phrases people taught Flint
   if (a === 'import' && b === 'solo') return soloImport.route(req, res, { ...ctx(), isBoss: x => x.role === 'host' || perms.can(x, 'project.create') });   // a phone tribe moves to this host (server/soloimport.js)
@@ -1030,7 +1122,7 @@ async function apiInProject(req, res, url) {
     if (handled !== null) return;
   }
   if ((a === 'agents' && b === 'channel') || (a === 'coord' && ['delegations', 'recommendations'].includes(b))) { const h = await agentnet.route(req, res, ctx()); if (h !== null) return; }
-  if (a === 'agents' && b === 'hub') { const h = await agentsHub.route(req, res, ctx()); if (h !== null) return; }   // solo mode: "Your agents" (server/agentshub.js)
+  if (a === 'agents' && (b === 'hub' || b === 'fleet')) { const h = await agentsHub.route(req, res, ctx()); if (h !== null) return; }   // + the Agent fleet (feat/fleet)   // solo mode: "Your agents" (server/agentshub.js)
   if (a === 'agents' && m === 'POST' && !b) {
     if (me.role === 'spectator' || me.role === 'agent') return fail(res, 403, 'only members can connect agents');
     // Default (no kind/label): the person's one Claude Code agent, as before. With { kind, label }: one more
@@ -1086,6 +1178,7 @@ async function apiInProject(req, res, url) {
     const handled = await hubFor(P.current()).route(req, res, { m, a, b, c, me, readBody, send, fail });
     if (handled !== null) return;
   }
+  if (a === 'rituals') return rituals.route(req, res, ctx());   // feat/work-company
   if (a === 'calendar') { const h = await plan.route(req, res, ctx()); if (h !== null) return; }
   if (a === 'workshop') { const h = await workshop.route(req, res, ctx()); if (h !== null) return; }
   if (a === 'visuals') { const h = await visuals.route(req, res, ctx()); if (h !== null) return; }
@@ -1146,6 +1239,7 @@ const server = http.createServer(async (req, res) => {
     if (url.pathname.startsWith('/api/')) return await api(req, res, url);
     if (preview.match(req, url)) return preview.serve(req, res, url);   // /preview/<project>/<pt>/… (server/preview.js)
     if (publishHub.match(req, url)) return publishHub.serve(req, res, url);   // /play/<slug>/… public play links (server/publish.js)
+    if (req.method === 'POST' && pwaIn.match(url)) return await pwaIn.shareTarget(req, res, url);   // feat/appstore
     if (req.method === 'GET') return serveStatic(req, res, url);
     fail(res, 405, 'method not allowed');
   } catch (e) {
@@ -1169,7 +1263,7 @@ server.on('upgrade', (req, sock) => {
   o.sockets.add(s); online.set(me.id, o);
   dashboard.seen(me.id, s.project);
   pocket.attach(me, s);   // idle/away tracking for notifications
-  s.send({ type: 'hello', member: publicMember(me), tribe, members: presenceFor(me), version: VERSION, huddle: huddleProject && !P.canSee(me, huddleProject) ? [] : huddleState(), project: s.project, projects: rooms.listFor(me) });
+  s.send({ type: 'hello', member: publicMember(me), tribe, members: presenceFor(me), version: VERSION, huddle: huddleProject && !P.canSee(me, huddleProject) ? [] : huddleState(), project: s.project, projects: rooms.listFor(me), places: places.snapshot(me) });
   pushPresence();
   s.on('message', msg => P.inProject(s.project || P.defaultId(), () => onMessage(msg)));
   function onMessage(msg) {
@@ -1181,7 +1275,8 @@ server.on('upgrade', (req, sock) => {
       s.send({ type: 'project-switched', project: msg.id });
       pushPresence(); return;
     }
-    if (msg.type === 'activity' && typeof msg.where === 'string') { o.where = msg.where.slice(0, 80); pushPresence(); }
+    if (msg.type === 'activity' && typeof msg.where === 'string') { const w = msg.where.slice(0, 80); if (w !== o.where) { o.where = w; pushPresence(); } }   // feat/presence: only on change (doc autosaves re-send it)
+    if (msg.type === 'place') { places.set(me, s, msg.p); return; }   // feat/presence
     if (msg.type === 'activity' && typeof msg.idle === 'boolean' && !!s.idle !== msg.idle) { const was = idleAll(me.id); s.idle = msg.idle; if (idleAll(me.id) !== was) pushPresence(); }   // feat/profiles: idle after inactivity
     if (msg.type === 'ping') s.send({ type: 'pong', t: msg.t });
     // feat/live-cursors: { type:'cursor', view, x, y } (x, y = 0..1 of the main pane) reaches the others in the same
@@ -1221,15 +1316,17 @@ server.on('upgrade', (req, sock) => {
     voice.socketClosed(me, online.has(me.id));
     docs.live.leaveAll(s);
     const h = huddle.get(me.id); if (h && h.socket === s) { huddle.delete(me.id); pushHuddle(); }
+    places.closed(me, s);   // feat/presence: the last tab takes the place with it, "last seen"
     pushPresence();
   });
 });
 
+let devStamp = Date.now();   // feat/flint-runthrough: GET /api/dev/stamp lets a signed-out dev page (scripts/dev/clean-slate.js) live-reload too
 function start() {
   // --dev (used by scripts/live.js): open tabs reload when UI files change.
   if (args.dev) {
     let t; try {
-      fs.watch(UI, { recursive: true }, () => { clearTimeout(t); t = setTimeout(() => broadcast({ type: 'dev-reload' }), 300); });
+      fs.watch(UI, { recursive: true }, () => { clearTimeout(t); t = setTimeout(() => { devStamp = Date.now(); broadcast({ type: 'dev-reload' }); }, 300); });
       console.log('  Live:     UI changes reload open tabs');
     } catch (e) { console.log('  Live:     file watching unavailable (' + e.message + ')'); }
   }

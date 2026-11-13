@@ -164,5 +164,5 @@
     };
   }
 
-  window.TribePhoneHost = { open, move, close, parseInvite };
+  window.TribePhoneHost = { open, move, close, parseInvite, cloud, termux, computer };   // cloud/termux/computer: setuplocal.js reuses these steps
 })();

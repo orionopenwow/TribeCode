@@ -315,14 +315,14 @@ def ui_host(b, host, orion, maya, pq, b1):
         host.click("#nest-ws-agents"); host.wait_for_selector("#view-tabs:not(.hidden) #wt-agents")
         wait_text(host, "#view-tabs", "Dashboard"); host.wait_for_selector("#view-tabs #wt-plus")
         host.wait_for_selector("#view-coord:not(.hidden) #ad-hero")
-        wait_text(host, "#ad-hero", "Claude · Orion")
-        wait_text(host, "#ad-hero", "12k")
+        wait_text(host, "#fl-agents", "Claude · Orion")   # feat/fleet: one row per agent under the next-step hero
+        wait_text(host, "#fl-agents", "12k")
         wait_text(host, "#coord-body", "What the agents are saying"); wait_text(host, "#coord-body", "Polish bridge sprites")
         host.fill("#talk-input", "@agents nice work"); host.press("#talk-input", "Enter"); wait_text(host, "#coord-body .talk", "nice work")
-        host.click("#ad-hero [data-ad-ctl='pause']")
-        wait_text(host, "#ad-hero", "Pause requested")
+        host.click("#fl-agents [data-fl-act='pause']")
+        wait_text(host, "#fl-agents", "Paused")
         shot(host, "coord-agents")
-        host.click("#ad-hero [data-ad-ctl='resume']")
+        host.click("#fl-agents [data-fl-act='resume']"); host.wait_for_selector("#fl-agents [data-fl-act='pause']")
         for tab, text in [("ownership", "src/ui/"), ("conflicts", "src/game.js"), ("handoffs", "Campfire save points"), ("reviews", "Speed boots"), ("plan", "Title screen music")]:
             host.evaluate("t => TribeShell.go(t)", tab); host.wait_for_selector(f"#wt-{tab}.on"); wait_text(host, "#coord-body", text)
         # agents also show in the right panel

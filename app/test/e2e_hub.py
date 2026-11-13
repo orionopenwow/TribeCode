@@ -154,7 +154,7 @@ def main():
             assert off.locator("#hub-demo").count() == 0, "the demo isn't pushed on Home (it's in the ? menu and Ctrl K)"
             for gone in ["#hub-suggest", "#hub-ask-in", "#hub-start", "#hub-fleet"]: assert off.locator(gone).count() == 0, f"{gone} is gone from Home"
             for sel in ["#hub-join", "#hub-host", "#hub-note-new", "#hub-stream", "#grp-global"]: off.wait_for_selector(sel, state="visible")   # no "Your home" card: you are in the bar
-            wait_text(off, ".hub-head .eyebrow", "YOUR COMMAND CENTER")   # eyebrows render uppercase
+            wait_text(off, ".hub-head .hub-crumb", "YOUR DASHBOARD")   # eyebrows render uppercase
             assert off.locator("#home-share-btn").count() == 0 and off.locator("#home-invite").count() == 0, "no Share / Invite buttons in the Home panel"
             wait_text(off, "#home-ai-cards", "Start or join a tribe")
             assert off.locator(".solo-empty:visible").count() == 0
@@ -187,7 +187,7 @@ def main():
             tops = host.evaluate("['#hub-resume', '#hub-instant'].map(s => { const r = document.querySelector(s).getBoundingClientRect(); return [Math.round(r.top), Math.round(r.left), Math.round(r.width)]; })")
             assert tops[0][0] == tops[1][0] and tops[0][1] < tops[1][1] and all(t[2] > 250 for t in tops), tops
             host.wait_for_selector("#hub-hero #hub-new"); host.wait_for_selector("#hub-hero #hub-join")
-            wait_text(host, "#crumb-label", "Home")
+            wait_text(host, "#crumb-label", "Your dashboard"); assert host.evaluate("document.querySelector('#rail-logo').classList.contains('on')")
             host.wait_for_selector("#hub-feed .ha-row")
             if host.locator("#hub-feed-more").count(): host.click("#hub-feed-more")
             wait_text(host, "#hub-feed", "Light the first lantern")
@@ -197,7 +197,7 @@ def main():
             assert "lantern" in chips and "Sketches" in chips, chips   # a folder project is named after its folder
             # the sidebar: the four rows are the Global ones, plus a way into the project
             assert host.locator("#nest-ws-tasks").is_hidden() and host.locator("#nest-chat").is_hidden()
-            _g = [t.strip() for t in host.locator("#grp-global .nest-row span").all_inner_texts()]; assert _g == ["Home", "All files", "All code", "Work", "Agent fleet"], _g   # v0.27: Work (gigs, hiring) lives on Home
+            _g = [t.strip() for t in host.locator("#grp-global .nest-row span").all_inner_texts()]; assert _g == ["Home", "Files", "Design", "Code", "Work", "Agent fleet"], _g   # v0.27: Work (gigs, hiring) lives on Home
             assert host.evaluate("document.body.classList.contains('global')")
             host.wait_for_selector("#pj-rail [data-pj-open]", state="attached")   # projects are the rail bubbles
             # right panel: agents + helpers + scratchpad
@@ -323,20 +323,20 @@ def main():
             assert ok(api("/scratch", token=zed))["notes"][0]["text"] == "Zed's secret sketch idea", "Zed's own notes, untouched"
             # your notes sit above the project docs
             # one docs center: your notes and project docs as cards, newest first; list/grid is remembered
-            host.click("[data-dv=list]"); host.wait_for_selector("#hub-docs.list"); host.reload(); host.evaluate("TribeHub.open('docs')"); host.wait_for_selector("#hub-docs.list"); host.click("[data-dv=grid]")
+            host.click("[data-dv=list]"); host.wait_for_selector("#hub-docs .fx-items.list"); host.reload(); host.evaluate("TribeHub.open('docs')"); host.wait_for_selector("#hub-docs .fx-items.list"); host.click("[data-dv=grid]")
             # ---------------- Files: upload any kind of file (a picture, an odd type), filter, open, delete ----------------
             pic = Path(tempfile.mkdtemp(prefix="tribe-up-", dir="/tmp"))
             import struct, zlib; ch = lambda t, d: struct.pack(">I", len(d)) + t + d + struct.pack(">I", zlib.crc32(t + d) & 0xffffffff)
             (pic / "dot.png").write_bytes(b"\x89PNG\r\n\x1a\n" + ch(b"IHDR", struct.pack(">IIBBBBB", 8, 8, 8, 2, 0, 0, 0)) + ch(b"IDAT", zlib.compress(b"".join(b"\x00" + b"\xf2\x6b\x1d" * 8 for _ in range(8)))) + ch(b"IEND", b""))
             (pic / "level.tmx").write_text("<map/>")
-            host.wait_for_selector("#dc-up", state="visible")
+            host.wait_for_selector("#dc-new", state="visible")
             with host.expect_file_chooser() as fc:
-                host.click("#dc-up"); host.click("#dc-upmenu [data-scope=me]")
+                host.click("#dc-new"); host.click("#dc-newmenu [data-new=upload]"); host.click("#dc-upmenu [data-scope=me]")
             fc.value.set_files([str(pic / "dot.png"), str(pic / "level.tmx")])
-            host.wait_for_selector("#hub-docs [data-up] img.dc-thumb[src^='blob:']", timeout=15000)
+            host.wait_for_selector("#hub-docs [data-up] .fx-th img[src^='blob:']", timeout=15000)
             wait_text(host, "#hub-docs", "level.tmx")
             host.click("[data-dk=pics]"); host.wait_for_function("() => !document.querySelector('#hub-docs').innerText.includes('level.tmx') && document.querySelector('#hub-docs').innerText.includes('dot.png')")
-            host.click("[data-dk=other]"); wait_text(host, "#hub-docs", "level.tmx")
+            host.click("[data-dk=code]"); wait_text(host, "#hub-docs", "level.tmx")
             host.click("#hub-docs [data-up]"); host.wait_for_selector("#fv .fv-pre:has-text(\"map\")"); assert host.get_attribute("#fv-dl", "href").startswith("blob:")
             host.click("#fv-del"); host.click("#fv-del"); host.wait_for_selector("#fv", state="detached")
             host.wait_for_function("() => !document.querySelector('#hub-docs').innerText.includes('level.tmx')")
@@ -363,10 +363,10 @@ def main():
             # ---------------- update icon: the same save / hand-off / restart flow ----------------
             assert host.locator("#update-pill").count() == 0
             host.wait_for_selector("#update-btn.ready:not(.hidden)")
-            # desktop: the header keeps only the update button; you, the bell and Friends sit in the bottom-left user bar
-            assert host.evaluate("[...document.querySelectorAll('.titlebar .tb-right > *')].filter(e => e.offsetParent !== null).map(e => e.id).filter(Boolean)") == ["update-btn", "tb-help"]
-            assert host.evaluate("['#pf-btn', '#nf-bell', '#fr-btn'].every(s => document.querySelector(s).closest('#userbar'))"), "user bar holds profile, bell, friends"
-            order = host.evaluate("['#pf-btn', '#nf-bell', '#fr-btn'].map(s => document.querySelector(s).getBoundingClientRect().left)")
+            # desktop: the header keeps People and the update button; you and the bell sit in the bottom-left user bar
+            assert host.evaluate("[...document.querySelectorAll('.titlebar .tb-right > *')].filter(e => e.offsetParent !== null).map(e => e.id).filter(Boolean)") == ["ppl-btn", "update-btn", "tb-help"]   # feat/presence: People sits in the top bar
+            assert host.evaluate("['#pf-btn', '#nf-bell'].every(s => document.querySelector(s).closest('#userbar')) && !document.querySelector('#fr-btn')"), "user bar holds profile and bell (Friends is in People)"
+            order = host.evaluate("['#pf-btn', '#nf-bell'].map(s => document.querySelector(s).getBoundingClientRect().left)")
             assert order == sorted(order), order
             assert host.locator(".titlebar #panel-toggle").count() == 0 and host.locator("#ctx-btn").is_hidden()
             host.keyboard.press("Control+Shift+K"); host.wait_for_selector("#ctx-win:not(.hidden)"); host.keyboard.press("Control+Shift+K")

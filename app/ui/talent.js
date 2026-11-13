@@ -2,7 +2,9 @@
 // Time bank (hours, no money), Compute (offers of AI / computer time, asked for, never taken), Public (the community
 // repository's shared gigs, read-only). One "Filters" popover, Hot / New sort, a Post-a-gig sheet and a small work
 // profile sheet (opened from the profile editor's Work section).
-// Public: window.TribeTalent = { open(tab?), post(prefill?), editProfile(), hireSlot(el, pid, seatId) }.
+// Public: window.TribeTalent = { open(tab?), post(prefill?), editProfile(), hireSlot(el, pid, seatId), find(skill) }.
+// feat/company-gigs: offers (gigs people post for themselves) render with TribeAbilities.offerCard; People is "Find people"
+// (skill + hours free); #ab-mount holds Your abilities + My gigs (abilities.js), also with no tribe.
 // Every string from a person or the community repository is escaped; links are http(s) / mailto only.
 (function () {
   'use strict';
@@ -21,12 +23,12 @@
   const SEATS = { ceo: ['CEO', '#F26B1D'], cto: ['Build', '#38C6B1'], design: ['Design', '#E86A92'], growth: ['Grow', '#FABD2F'], sales: ['Sales', '#6C7CFF'], support: ['Support', '#3BD16F'], ops: ['Run', '#94A3B8'], finance: ['Finance', '#2DD4BF'], legal: ['Legal', '#A78BFA'], custom: ['Custom', '#9AA7B8'] };
   const PAY = { free: 'Free', time: 'Time exchange', paid: 'Paid' };
   const WHAT = { 'claude-code': 'Claude Code', 'local-model': 'Local model', gpu: 'GPU', other: 'Other' };
-  const TABS = [['gigs', 'Gigs'], ['people', 'People'], ['bank', 'Time bank'], ['compute', 'Compute'], ['public', 'Public']];
+  const TABS = [['gigs', 'Gigs'], ['templates', 'Templates'], ['people', 'Find people'], ['bank', 'Time bank'], ['compute', 'Compute'], ['public', 'Public']];
   const LS = 'tribecode.work.v1';
   const saved = (() => { try { return JSON.parse(localStorage.getItem(LS) || '{}') || {}; } catch { return {}; } })();
   const remember = () => { try { localStorage.setItem(LS, JSON.stringify({ tab: st.tab, sort: st.sort })); } catch {} };
 
-  const st = { tab: TABS.some(t => t[0] === saved.tab) ? saved.tab : 'gigs', sort: saved.sort === 'new' ? 'new' : 'hot', f: { skills: '', seat: '', pay: '', hours: 0 },
+  const st = { tab: TABS.some(t => t[0] === saved.tab) ? saved.tab : 'gigs', sort: saved.sort === 'new' ? 'new' : 'hot', f: { skills: '', seat: '', pay: '', hours: 0, free: 0 },
     data: null, bank: null, compute: null, pub: null, busy: false };
   let open_ = false;
 
@@ -44,10 +46,13 @@
     document.body.classList.remove('mobile-chat', 'drawer-open');
     document.body.dataset.view = NAME; open_ = true;
     document.querySelectorAll('[data-nav].on, [data-go].on').forEach(b => b.classList.remove('on'));
+    // Work is part of your dashboard (router.js): the global sidebar stays, the crumb and the link say Work
+    const cl = $('#crumb-label'); if (cl) cl.textContent = 'Work';
+    if (location.hash !== '#/hub/work') history.replaceState(null, '', location.pathname + location.search + '#/hub/work');
     try { C.sendActivity && C.sendActivity('Work'); } catch {}
     draw(); load();
   }
-  function hide() { const sec = section(); if (sec) sec.classList.add('hidden'); open_ = false; closePop(); }
+  function hide() { const sec = section(); if (sec) sec.classList.add('hidden'); open_ = false; closePop(); if (location.hash === '#/hub/work') history.replaceState(null, '', location.pathname + location.search); }
   new MutationObserver(() => { if (open_ && document.body.dataset.view !== NAME) hide(); }).observe(document.body, { attributes: true, attributeFilter: ['data-view'] });
 
   async function load() {
@@ -71,6 +76,7 @@
     if (st.f.seat && (isPerson ? !(x.roles || []).includes(st.f.seat) : x.seatKind !== st.f.seat)) return false;
     if (st.f.pay && ((isPerson ? x.rate : x.pay) || {}).type !== st.f.pay) return false;
     if (st.f.hours && (x.hours || 0) > st.f.hours) return false;
+    if (isPerson && st.f.free && (x.hours || 0) < st.f.free) return false;   // Find people: at least N hours a week free
     return true;
   }
   const hot = g => (g.applicantCount || 0) * 2 + (g.pay && g.pay.type === 'paid' ? 1 : 0) + 6 / (1 + (Date.now() - Date.parse(g.at || 0)) / 86400000);
@@ -86,38 +92,45 @@
       <button class="btn ghost sm tl-fbtn" id="tl-filters" aria-haspopup="dialog">${ico('i-list', 14)} Filters${n ? ` <b class="tl-fn">${n}</b>` : ''}</button></div>`;
   }
   function gigCard(g, hero) {
+    if (g.kind === 'offer' && window.TribeAbilities) return window.TribeAbilities.offerCard(g);   // a gig someone posted for themselves
     const col = g.color || (g.seatKind && SEATS[g.seatKind] ? SEATS[g.seatKind][1] : 'var(--edge)');
     return `<article class="tl-gig${hero ? ' hero card' : ''}" data-gig="${esc(g.id)}" style="--seat:${col}" tabindex="0" role="button" aria-label="${esc(g.title)}">
-      <div class="tl-gig-top"><span class="eyebrow">${esc(g.kind === 'seat' ? 'Seat' : g.kind === 'bounty' ? 'Bounty' : 'Task')}${g.projectName ? ` · ${esc(g.projectName)}` : ''}${g.status === 'draft' ? ' · draft, waiting for approval' : g.status !== 'open' ? ` · ${esc(g.status)}` : ''}</span>${seatChip(g.seatKind)}</div>
+      <div class="tl-gig-top"><span class="eyebrow">${esc(g.kind === 'seat' ? 'Seat' : g.kind === 'bounty' ? 'Bounty' : 'Task')}${g.projectName ? ` · ${esc(g.projectName)}` : ''}${g.status === 'draft' ? ' · draft, waiting for approval' : g.status === 'filled' && g.stage ? ` · ${esc({ assigned: 'assigned', working: 'in progress', review: 'in review', done: 'done', credited: 'credited' }[g.stage] || g.stage)}` : g.status !== 'open' ? ` · ${esc(g.status)}` : ''}</span>${seatChip(g.seatKind)}</div>
       <h3>${esc(g.title)}</h3>
       ${g.description ? `<p class="tl-desc">${esc(g.description)}</p>` : ''}
       <div class="tl-meta">${payChip(g.pay)}${g.hours ? `<i class="tl-h">${esc(g.hours)} h</i>` : ''}${skillChips(g.skills, hero ? 6 : 3)}</div>
+      ${window.TribeWorkLoop ? window.TribeWorkLoop.stageHtml(g) : ''}
       <div class="tl-foot"><small>${esc(g.byName)} · ${esc(ago(g.at))}${g.applicantCount ? ` · ${g.applicantCount} interested` : ''}</small>
-        ${g.canManage ? `<button class="btn sm tonal" data-open="${esc(g.id)}">${g.applicantCount ? 'Review' : 'Manage'}</button>` : g.applied ? '<span class="tl-ok">Applied ✓</span>' : g.status === 'open' && human() ? `<button class="btn sm primary" data-apply="${esc(g.id)}">I'm interested</button>` : ''}</div>
+        ${g.canManage ? `<button class="btn sm tonal" data-open="${esc(g.id)}">${g.stage === 'review' ? 'Review' : g.stage === 'done' ? 'Credit' : g.status === 'open' ? (g.applicantCount ? 'Pick someone' : 'Match') : 'Track'}</button>` : g.mine ? `<button class="btn sm primary" data-open="${esc(g.id)}">${g.stage === 'review' ? 'Handed in' : 'Update'}</button>` : g.applied ? '<span class="tl-ok">Applied ✓</span>' : g.status === 'open' && human() ? `<button class="btn sm primary" data-apply="${esc(g.id)}">I'm interested</button>` : ''}</div>
     </article>`;
   }
   function gigsTab() {
     const all = (st.data && st.data.gigs) || [];
-    const list = sorted(all.filter(g => g.status === 'open' || g.status === 'draft' || g.canManage).filter(g => passes(g)));
-    const live = list.filter(g => g.status === 'open' || g.status === 'draft'), done = list.filter(g => g.status !== 'open' && g.status !== 'draft');
-    if (!all.length) return `${toolbar(true)}<section class="card tl-empty"><span class="eyebrow">Nothing posted yet</span><h3>Post the first gig</h3><p>A seat in your company, a task or a bounty. Friends in this tribe see it here; you choose if it goes public.</p>${st.data && st.data.canPost ? '<button class="btn primary" data-post="1">Post a gig</button>' : ''}</section>`;
-    return `${toolbar(true)}${live.length ? gigCard(live[0], true) : `<p class="tl-none">No open gigs match your filters.</p>`}
+    const sug = window.TribeWorkLoop && st.data && st.data.canPost ? window.TribeWorkLoop.suggestHtml() : '';
+    const active = g => g.status === 'open' || g.status === 'draft' || (g.status === 'filled' && !['done', 'credited'].includes(g.stage));
+    const list = sorted(all.filter(g => g.status === 'open' || g.status === 'draft' || g.canManage || g.mine).filter(g => passes(g)));
+    const live = list.filter(active), done = list.filter(g => !active(g));
+    if (!all.length) return `${sug}${toolbar(true)}<section class="card tl-empty"><span class="eyebrow">Nothing posted yet</span><h3>Post the first gig</h3><p>A seat in your company, a task or a bounty. Friends in this tribe see it here; you choose if it goes public.</p>${st.data && st.data.canPost ? '<button class="btn primary" data-post="1">Post a gig</button>' : ''}</section>`;
+    return `${sug}${toolbar(true)}${live.length ? gigCard(live[0], true) : `<p class="tl-none">No open gigs match your filters.</p>`}
       ${live.length > 1 ? `<div class="tl-grid">${live.slice(1).map(g => gigCard(g)).join('')}</div>` : ''}
-      ${done.length ? `<details class="tl-done"><summary>Filled and closed (${done.length})</summary><div class="tl-grid">${done.map(g => gigCard(g)).join('')}</div></details>` : ''}`;
+      ${done.length ? `<details class="tl-done"><summary>Finished and closed (${done.length})</summary><div class="tl-grid">${done.map(g => gigCard(g)).join('')}</div></details>` : ''}`;
   }
   function personCard(p) {
     const mine = p.id === me().id;
     return `<article class="tl-person card" data-person="${esc(p.id)}">
       <div class="tl-p-head"><span class="tl-av" style="background:${esc(p.color || '#6C7CFF')}">${esc((p.name || '?').slice(0, 1).toUpperCase())}</span><div><b>${esc(p.name)}</b><small>${p.hours ? `${esc(p.hours)} h/week` : 'hours flexible'}${p.tz ? ` · ${esc(p.tz.split('/').pop().replace(/_/g, ' '))}` : ''}</small></div>${payChip(p.rate)}</div>
       ${(p.roles || []).length ? `<div class="tl-meta">${p.roles.map(seatChip).join('')}</div>` : ''}
-      ${skillChips(p.skills, 6)}
+      ${(p.skills || []).length ? `<span class="tl-skills">${p.skills.slice(0, 6).map(s => `<i>${esc(s)}${(p.levels || {})[s] === 3 ? ' · expert' : ''}</i>`).join('')}</span>` : ''}
+      ${p.bio ? `<p class="tl-desc">${esc(p.bio)}</p>` : ''}
       ${(p.projects || []).length || (p.links || []).length ? `<div class="tl-port">${(p.projects || []).map(x => `<span>${esc(x.name)}</span>`).join('')}${(p.links || []).map(l => safeHref(l.url) ? `<a href="${esc(safeHref(l.url))}" target="_blank" rel="noopener noreferrer">${esc(l.label || new URL(l.url).hostname)}</a>` : '').join('')}</div>` : ''}
-      <div class="tl-foot"><small>${p.balance ? `Time bank ${p.balance > 0 ? '+' : ''}${esc(p.balance)} h` : ''}</small>${mine ? '<button class="btn sm ghost" data-edit-prof="1">Edit</button>' : human() ? `<button class="btn sm tonal" data-dm="${esc(p.id)}">Message</button>` : ''}</div>
+      <div class="tl-foot"><small>${p.balance ? `Time bank ${p.balance > 0 ? '+' : ''}${esc(p.balance)} h` : ''}</small><span class="tl-tx-b">${window.TribeAbilities ? `<button class="btn sm ghost" data-ab-person="${esc(p.id)}">View profile</button>` : ''}${mine ? `<button class="btn sm ghost" ${window.TribeAbilities ? 'data-ab-edit="1"' : 'data-edit-prof="1"'}>Edit</button>` : human() ? `<button class="btn sm tonal" data-dm="${esc(p.id)}">Message</button>` : ''}</span></div>
     </article>`;
   }
   function peopleTab() {
     const mp = (st.data && st.data.me) || {}, list = ((st.data && st.data.people) || []).filter(p => passes(p, true));
-    return `${toolbar(false)}
+    const findbar = `<div class="ab-findbar" role="search"><input class="input" id="tl-find-skill" placeholder="Find someone who can… (draw, javascript)" value="${esc(st.f.skills)}" aria-label="Skill">
+      <select class="input" id="tl-find-hours" aria-label="Availability">${[[0, 'Any availability'], [5, '5+ h/week'], [10, '10+ h/week'], [20, '20+ h/week']].map(([v, l]) => `<option value="${v}" ${st.f.free === v ? 'selected' : ''}>${l}</option>`).join('')}</select></div>`;
+    return `${findbar}${toolbar(false)}
       ${human() && !mp.open ? `<section class="card tl-cta"><div><span class="eyebrow">You</span><h3>Open to work?</h3><p>Show your skills, the seats you can fill and how many hours you have. Only people in this tribe see it.</p></div><button class="btn primary" data-edit-prof="1">Set up my work profile</button></section>` : ''}
       ${list.length ? `<div class="tl-grid">${list.map(personCard).join('')}</div>` : `<p class="tl-none">${fCount() ? 'Nobody open to work matches your filters.' : 'Nobody here is open to work yet.'}</p>`}`;
   }
@@ -167,14 +180,44 @@
     const card = g => { const href = safeHref(g.contact); return `<article class="tl-gig" style="--seat:${g.seatKind && SEATS[g.seatKind] ? SEATS[g.seatKind][1] : 'var(--edge)'}"><div class="tl-gig-top"><span class="eyebrow">${esc(g.kind)}${g.tribe ? ` · ${esc(g.tribe)}` : ''}</span>${seatChip(g.seatKind)}</div><h3>${esc(g.title)}</h3>${g.description ? `<p class="tl-desc">${esc(g.description)}</p>` : ''}<div class="tl-meta">${payChip(g.pay)}${g.hours ? `<i class="tl-h">${esc(g.hours)} h</i>` : ''}${skillChips(g.skills, 3)}</div><div class="tl-foot"><small>${esc(g.posted || '')}</small>${g.contact ? (href ? `<a class="btn sm tonal" href="${esc(href)}" target="_blank" rel="noopener noreferrer">Contact</a>` : `<span class="tl-contact">${esc(g.contact)}</span>`) : ''}</div></article>`; };
     return `${toolbar(true)}<p class="tl-fine">From the community repository ${esc(p.repo)}. Read-only; reach posters through the contact they chose.</p>${list.length ? `<div class="tl-grid">${list.map(card).join('')}</div>` : '<p class="tl-none">No public gigs match your filters.</p>'}`;
   }
+  // No tribe on this device yet: Work stays on your dashboard with one clear next step (never a blank or a dead end).
+  function empty(sec) {
+    const waiting = C.hasToken && C.hasToken();
+    sec.innerHTML = `<div class="tl-wrap"><header class="tl-head"><div class="sec-head"><span class="eyebrow">Your dashboard</span><h2>Work</h2></div></header>
+      <section class="card tl-empty" id="tl-empty"><span class="eyebrow">${waiting ? 'Reconnecting' : 'No tribe yet'}</span>
+        <h3>${waiting ? 'Work comes back when your tribe does' : 'Work happens inside a tribe'}</h3>
+        <p>${waiting ? 'Your tribe is reconnecting. Gigs, people and the time bank show up here as soon as it is back.' : 'Gigs, people open to work, the time bank and shared AI time all live in a tribe. Start your first project to make one, or join a friend with their link.'}</p>
+        <div class="tl-empty-acts">${waiting ? '' : '<button class="btn primary" id="tl-e-start">Start your first project</button><button class="btn" id="tl-e-join">Join with a link</button>'}<button class="btn ghost" id="tl-e-home">Back to Home</button></div>
+        ${waiting ? '' : `<ol class="tl-steps" id="tl-e-steps"><li><b>Write the plan.</b> A product brief or a launch plan from Templates below, saved on this device.</li><li><b>Start a project.</b> Your docs move in with one tap.</li><li><b>Post a need.</b> Friends or your Claude pick it up, you track it here and credit them.</li></ol>`}</section>
+      <div id="ab-mount"></div>
+      ${waiting ? '' : `<section class="tl-e-tpl"><div class="sec-head"><span class="eyebrow">Works offline</span><h2>Company templates</h2></div><div id="tl-tpl"></div></section>`}
+      ${window.TribePremium ? window.TribePremium.footHtml() : ''}</div>`;
+    const tp = sec.querySelector('#tl-tpl'); if (tp && window.TribeTemplates) window.TribeTemplates.mount(tp);
+    const am = sec.querySelector('#ab-mount'); if (am && window.TribeAbilities) window.TribeAbilities.mount(am);
+    const on = (id, fn) => { const b = sec.querySelector('#' + id); if (b) b.onclick = fn; };
+    on('tl-e-start', () => { if (window.TribeProjects && window.TribeProjects.openNew) window.TribeProjects.openNew(); });
+    on('tl-e-join', () => window.TribeSettings && window.TribeSettings.joinPrompt());
+    on('tl-e-home', () => { if (window.TribeHub) window.TribeHub.open('home'); });
+  }
   function draw() {
     const sec = section(); if (!sec) return;
-    const body = st.tab === 'people' ? peopleTab() : st.tab === 'bank' ? bankTab() : st.tab === 'compute' ? computeTab() : st.tab === 'public' ? publicTab() : gigsTab();
+    if (!C.connected()) return empty(sec);
+    const body = st.tab === 'templates' ? '<div id="tl-tpl"></div>' : st.tab === 'people' ? peopleTab() : st.tab === 'bank' ? bankTab() : st.tab === 'compute' ? computeTab() : st.tab === 'public' ? publicTab() : gigsTab();
     sec.innerHTML = `<div class="tl-wrap">
       <header class="tl-head"><div class="sec-head"><span class="eyebrow">Company · Work</span><h2>Work</h2></div>${st.data && st.data.canPost ? '<button class="btn primary" data-post="1" id="tl-post">Post a gig</button>' : ''}</header>
+      <div id="ab-mount"></div>
       <p class="tl-lead">Find help, hire friends into a seat, trade hours and share spare AI time. It all stays in this tribe unless you share a gig publicly.</p>
       <nav class="tl-tabs" role="tablist">${TABS.map(([k, l]) => `<button role="tab" class="${st.tab === k ? 'on' : ''}" aria-selected="${st.tab === k}" data-tab="${k}">${l}${k === 'bank' && st.data && st.data.balance && st.data.balance.net ? ` <small>${st.data.balance.net > 0 ? '+' : ''}${esc(st.data.balance.net)}</small>` : ''}</button>`).join('')}</nav>
-      <div class="tl-body" id="tl-body">${st.data ? body : '<p class="tl-none">Loading…</p>'}</div></div>`;
+      <div class="tl-body" id="tl-body">${st.data || st.tab === 'templates' ? body : '<p class="tl-none">Loading…</p>'}</div>
+      ${window.TribePremium ? window.TribePremium.footHtml() : ''}</div>`;
+    afterDraw(sec);
+  }
+  function afterDraw(sec) {
+    const am = sec.querySelector('#ab-mount'); if (am && window.TribeAbilities) window.TribeAbilities.mount(am);
+    const fs = sec.querySelector('#tl-find-skill'); if (fs) { fs.oninput = () => { st.f.skills = fs.value; clearTimeout(fs.t); fs.t = setTimeout(() => { const pos = fs.selectionStart; draw(); const n = $('#tl-find-skill'); if (n) { n.focus(); try { n.setSelectionRange(pos, pos); } catch {} } }, 250); }; }
+    const fh = sec.querySelector('#tl-find-hours'); if (fh) fh.onchange = () => { st.f.free = +fh.value || 0; draw(); };
+    const tp = sec.querySelector('#tl-tpl'); if (tp && window.TribeTemplates) window.TribeTemplates.mount(tp);
+    const sg = sec.querySelector('#wl-suggest'); if (sg && window.TribeWorkLoop) window.TribeWorkLoop.mountSuggest(sg, (st.data && st.data.gigs) || [], () => load());
   }
 
   // ---------- popover + sheets ----------
@@ -189,7 +232,7 @@
       <label class="tl-lbl">At most <b id="tl-f-hn">${st.f.hours ? st.f.hours + ' h' : 'any hours'}</b><input type="range" id="tl-f-hours" min="0" max="40" step="1" value="${st.f.hours}"></label>
       <div class="tl-pop-f"><button class="btn ghost sm" data-fclear="1">Clear</button><button class="btn primary sm" data-fdone="1">Done</button></div>`;
     document.body.appendChild(pop);
-    if (!phone()) { const r = btn.getBoundingClientRect(); pop.style.top = `${Math.round(r.bottom + 6)}px`; pop.style.left = `${Math.round(Math.max(12, Math.min(innerWidth - 300, r.right - 288)))}px`; }
+    if (!phone()) { const r = btn.getBoundingClientRect(); const h = pop.offsetHeight, below = r.bottom + 6 + h <= innerHeight - 12; pop.style.top = `${Math.round(below ? r.bottom + 6 : Math.max(12, Math.min(r.top - 6 - h, innerHeight - 12 - h)))}px`;   /* fits on screen: above the button when there's no room below */ pop.style.left = `${Math.round(Math.max(12, Math.min(innerWidth - 300, r.right - 288)))}px`; }
     const redraw = () => { const b = $('#tl-body'); if (b) { draw(); } };
     pop.addEventListener('input', e => {
       if (e.target.id === 'tl-f-skills') st.f.skills = e.target.value;
@@ -246,7 +289,7 @@
         e.preventDefault();
         const k = segVal(el, 'tl-p-kind'), body = { title: el.querySelector('#tl-p-title').value, kind: k, project: el.querySelector('#tl-p-proj').value || null,
           description: el.querySelector('#tl-p-desc').value, skills: el.querySelector('#tl-p-skills').value.split(','), hours: +el.querySelector('#tl-p-hours').value || 0,
-          pay: { type: segVal(el, 'tl-p-pay'), text: el.querySelector('#tl-p-paytext').value } };
+          pay: { type: segVal(el, 'tl-p-pay'), text: el.querySelector('#tl-p-paytext').value }, tasks: pre.tasks || [] };
         if (k === 'seat') { body.seatKind = el.querySelector('#tl-p-seat').value; if (pre.seat && body.project === pre.project) body.seat = pre.seat; }
         try { await C.api('/talent/gigs', { method: 'POST', body }); closeSheet(); toast('Posted on Work'); if (open_) { st.tab = 'gigs'; load(); } else show('gigs'); } catch (er) { toast(er.message); }
       };
@@ -258,14 +301,18 @@
     const apps = g.applicants || [];
     const appRow = a => `<li class="tl-app"><span class="tl-tx-t"><b>${esc(a.name)}${a.member ? '' : ' <small class="faint">(outside the tribe)</small>'}</b><small>${a.note ? esc(a.note) + ' · ' : ''}${a.contact ? esc(a.contact) + ' · ' : ''}${esc(a.status)}</small></span>
       ${g.status === 'open' && (a.status === 'applied' || a.status === 'invited') ? `<button class="btn sm ${a.status === 'invited' ? 'ghost' : 'primary'}" data-hire="${esc(a.id)}">${a.status === 'invited' ? 'New link' : a.member ? 'Hire' : 'Hire + invite'}</button>` : ''}</li>`;
+    const loop = window.TribeWorkLoop ? window.TribeWorkLoop.loopHtml(g) : '';
+    if (!g.canManage) return sheet(g.title, 'Yours to do', `<div class="tl-meta">${seatChip(g.seatKind)}${payChip(g.pay)}${g.hours ? `<i class="tl-h">${esc(g.hours)} h</i>` : ''}</div>${g.description ? `<p class="tl-read">${esc(g.description)}</p>` : ''}${loop}`, el => window.TribeWorkLoop && window.TribeWorkLoop.wireLoop(el, g, reopen));
     sheet(g.title, g.kind === 'seat' ? `Seat${g.projectName ? ' · ' + g.projectName : ''}` : g.kind, `
       <div class="tl-meta">${seatChip(g.seatKind)}${payChip(g.pay)}${g.hours ? `<i class="tl-h">${esc(g.hours)} h</i>` : ''}${skillChips(g.skills, 8)}</div>
       ${g.description ? `<p class="tl-read">${esc(g.description)}</p>` : ''}
+      ${loop}
       <section><span class="eyebrow">Interested (${apps.length})</span>${apps.length ? `<ul class="tl-txs">${apps.map(appRow).join('')}</ul>` : '<p class="tl-none">Nobody yet. Share it in chat, or publicly below.</p>'}</section>
       <div id="tl-invite-out"></div>
       ${g.status === 'open' ? `<details class="tl-more"><summary>Add someone from outside the tribe</summary><form class="tl-form" id="tl-ext"><div class="tl-two"><input class="input" id="tl-ext-n" maxlength="40" placeholder="Their name" required><input class="input" id="tl-ext-c" maxlength="120" placeholder="How to reach them (kept private)"></div><button class="btn tonal sm" type="submit">Add</button></form></details>
       <details class="tl-more"><summary>Share publicly${g.shared ? ' (prepared ✓)' : ''}</summary><form class="tl-form" id="tl-share"><p class="tl-fine">Goes to the community repository on GitHub through a pull request; every tribe can then see it in Public. Nothing personal is added: write the contact you want people to use.</p><input class="input" id="tl-share-c" maxlength="120" placeholder="Public contact: a link, an email, or @you on Discord" required><button class="btn tonal sm" type="submit">Prepare</button><div id="tl-share-out"></div></form></details>` : ''}
       <div class="tl-sh-foot">${g.status === 'open' ? '<button class="btn ghost" data-gclose="1">Close gig</button>' : '<button class="btn ghost" data-gopen="1">Reopen</button>'}<button class="btn ghost" data-gdel="1">Delete</button></div>`, el => {
+      if (window.TribeWorkLoop) window.TribeWorkLoop.wireLoop(el, g, reopen);
       el.addEventListener('click', async e => {
         const t = e.target.closest('button'); if (!t) return;
         try {
@@ -289,6 +336,8 @@
       };
     });
   }
+  async function reopen(gid) { await load(); if (((st.data && st.data.gigs) || []).some(x => x.id === gid)) gigSheet(gid); else closeSheet(); }
+  async function openGig(gid) { if (!open_) show('gigs'); if (!st.data) await load(); const g = ((st.data && st.data.gigs) || []).find(x => x.id === gid); if (!g) return toast('That gig is gone'); return g.canManage || g.mine ? gigSheet(gid) : applySheet(gid); }
   async function applySheet(gid) {
     const g = ((st.data && st.data.gigs) || []).find(x => x.id === gid); if (!g) return;
     sheet(g.title, 'I\'m interested', `<form class="tl-form" id="tl-af">${g.description ? `<p class="tl-read">${esc(g.description)}</p>` : ''}<label class="tl-lbl">A note for ${esc(g.byName)} <small class="faint">optional</small><textarea class="input" id="tl-a-note" rows="3" maxlength="600" placeholder="What you'd bring, when you're free"></textarea></label><div class="tl-sh-foot"><button type="button" class="btn ghost" data-x2="1">Cancel</button><button class="btn primary" type="submit" id="tl-a-go">Send</button></div></form>`, el => {
@@ -360,6 +409,7 @@
       if (t.id === 'tl-filters') return pop ? closePop() : filtersPop(t);
       if (d.post) return post();
       if (d.editProf) return editProfile();
+      if (d.abEdit) return window.TribeAbilities.edit();
       if (d.apply) return applySheet(d.apply);
       if (d.open) return gigSheet(d.open);
       if (d.dm) return window.TribeDM && window.TribeDM.open(d.dm);
@@ -371,7 +421,7 @@
       if (d.used) { await C.api(`/talent/compute/requests/${encodeURIComponent(d.used)}/used`, { method: 'POST', body: { hours: 1 } }); return load(); }
       if (d.inbox) return window.TribeShell && window.TribeShell.go('updates');
       if (d.pubRefresh) { st.pub = null; draw(); st.pub = await C.api('/talent/public?refresh=1').catch(() => ({ available: false, gigs: [] })); return draw(); }
-      if (d.gig) { const g = ((st.data && st.data.gigs) || []).find(x => x.id === d.gig); if (g && g.canManage) return gigSheet(g.id); if (g && !g.applied && g.status === 'open' && human()) return applySheet(g.id); }
+      if (d.gig) { const g = ((st.data && st.data.gigs) || []).find(x => x.id === d.gig); if (g && (g.canManage || g.mine)) return gigSheet(g.id); if (g && !g.applied && g.status === 'open' && human()) return applySheet(g.id); }
     } catch (er) { toast(er.message); }
   });
   document.addEventListener('submit', async e => {
@@ -382,6 +432,7 @@
   });
   document.addEventListener('keydown', e => { if ((e.key === 'Enter' || e.key === ' ') && e.target.matches && e.target.matches('#view-work [data-gig]')) { e.preventDefault(); e.target.click(); } });
   if (C && C.on) C.on('ws', m => { if (open_ && m && (m.type === 'talent' || m.type === 'approval')) load(); });
+  if (C && C.on) C.on('hello', () => { if (open_) { draw(); load(); } });   // the tribe came back (or was just made): Work fills in
 
   // ---------- Company seats (Agent A's #co-hire-slot): an empty seat -> "Hire someone for this seat" ----------
   async function hireSlot(el, pid, seatId) {
@@ -396,5 +447,7 @@
     return el;
   }
 
-  window.TribeTalent = { open: tab => show(tab), post, editProfile, hireSlot };
+  // Find people (Flint's "find someone who can draw"): the People tab with the skill filled in
+  function find(q) { st.f.skills = String(q || ''); show('people'); }
+  window.TribeTalent = { open: tab => show(tab), post, editProfile, hireSlot, openGig, find, reload: () => load() };
 })();

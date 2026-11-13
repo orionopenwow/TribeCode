@@ -47,6 +47,7 @@
     inspoApply: to => window.TribeInspo && window.TribeInspo.apply(to || 'both'),
     connect: () => App() && App().connectClaude && App().connectClaude(),
     brain: () => (B() ? B().open() : ACTS.guide('agents-and-office')),
+    credits: () => window.TribePremium && window.TribePremium.gate('credits'),   // feat/flint-site: the one AI-boost pair (aiboost.js)
     guide: slug => window.TribeGuide && window.TribeGuide.open(slug || undefined),
     note: id => { if (Hub() && Hub().openNote) Hub().openNote(id); else if (Hub()) Hub().open('docs'); },
     newnote: () => { const b = $('#room-note-new'); if (b) b.click(); else if (Hub()) Hub().open('docs'); },
@@ -70,7 +71,11 @@
     prompt: async () => { const p = window.TribeFocus && window.TribeFocus.prompt(); if (!p) return; try { await navigator.clipboard.writeText(p); toast('Copied. Paste it into your AI helper.'); } catch { window.prompt('Copy this for your AI helper:', p); } },   // feat/focus
     preview: () => (window.TribePreview && window.TribePreview.open ? window.TribePreview.open() : App().show('docs')),
     dm: id => window.TribeDM && window.TribeDM.open && window.TribeDM.open(id),   // flint-local
-    meant: arg => window.TribeFlintLocal && window.TribeFlintLocal.meant(arg),   // flint-local: a "did you mean" chip teaches Flint the phrase, then runs it
+    meant: arg => window.TribeFlintLocal && window.TribeFlintLocal.meant(arg),
+    res: key => window.TribeFlintGrow && window.TribeFlintGrow.run('res', key),   // feat/flint-ai: open a resource (Academy, Guide, Legal, Marketplace, templates, docs)
+    grow: arg => window.TribeFlintGrow && window.TribeFlintGrow.run('grow', arg),   // feat/flint-ai: the "Grow your idea" questions
+    usestyle: () => window.TribeFlintGrow && window.TribeFlintGrow.run('usestyle'),
+    today: () => window.TribeFlintGrow && window.TribeFlintGrow.run('today'),   // flint-local: a "did you mean" chip teaches Flint the phrase, then runs it
   };
   const act = (label, name, arg) => ({ label, act: name, arg: arg == null ? '' : String(arg) });
   // v0.27.2 Flint at work: a small flame flies to whatever he's changing (app/ui/flintfly.js)
@@ -196,6 +201,9 @@
   }
   let localBusy = false;
   async function special(text) {   // the feature routers that know their own phrases (memory, company, academy, captures)
+    if (window.TribeFlintGrow && await window.TribeFlintGrow.flint(text)) return true;   // feat/flint-ai: grow your idea, resources, today's plan, the inspiration board, your style
+    if (window.TribeFlintRun) { const r = await window.TribeFlintRun.flint(text); if (r) { if (r !== true) say(r.text, r.acts || []); return true; } }   // feat/flint-runthrough: tribe/project/vision/proposal/standup/presentation/proof/Blender
+    if (window.TribeAIBasics && window.TribeAIBasics.flint) { const r = await window.TribeAIBasics.flint(text); if (r) { if (r !== true) say(r.text, r.acts || []); return true; } }   // feat/flint-runthrough: summarize / key points / title / tags / reading time / glossary of any doc, note or file   // feat/flint-ai: grow your idea, resources, today's plan, the inspiration board, your style
     if (window.TribeFlintMem) { const r = await window.TribeFlintMem.route(text); if (r) { if (r !== true) say(r.text, r.acts || []); return true; } }   // v0.27.1: memory, teaching, drafts, build, skills, project words (flintmem.js)
     if (window.TribeCompany) { const co = await window.TribeCompany.flint(text); if (co) { say(co.text, co.open ? [act('Open Company', 'company')] : []); return true; } }   // v0.27 company: make me a company, who's in charge of X, give X to my claude
     if (window.TribeAcademy) { const ac = window.TribeAcademy.flint(text); if (ac) { say(ac.text); return true; } }   // v0.27 company: "learn sales", "do this for free", "draft an NDA"
@@ -349,16 +357,21 @@
     const cm = r.commit ? ` Last saved change: “${r.commit.title}”${r.commit.byName ? ` by ${first(r.commit.byName)}` : ''}${r.commit.at ? `, ${ago(r.commit.at)}` : ''}.` : '';
     return say(who + ag + tk + cm, [act('Open Tasks', 'nav', 'tasks'), act('Open chat', 'nav', 'chat')]);
   }
-  async function summarize() {
-    await refreshModel();
-    if (!model.online) return say('Summaries need a brain: the built-in one in your browser, Ollama on the host, or the host\'s cloud key.', [act('Give Flint a brain', 'brain')]);
+  async function summarize() {   // feat/flint-runthrough: works with no AI (extractive, aibasics-core.js); an AI refines it in place
     if (!connected()) return say('There\'s no chat yet: host or join a tribe first.');
     let msgs = [];
-    try { msgs = ((await C.api('/chat/general')).messages || []).filter(x => x.by !== 'tribecode' && x.text).slice(-60); } catch {}
+    try { msgs = ((await C.api('/chat/' + encodeURIComponent((window.TribeChannels && window.TribeChannels.current && window.TribeChannels.current()) || 'general'))).messages || []).filter(x => x.by !== 'tribecode' && x.text).slice(-80); } catch {}
+    if (!msgs.length) try { msgs = ((await C.api('/chat/general')).messages || []).filter(x => x.by !== 'tribecode' && x.text).slice(-80); } catch {}
     if (!msgs.length) return say('The chat is quiet so far: nothing to summarize.');
     const st = C.state(), nm = id => ((st.members || []).find(x => x.id === id) || {}).name || 'someone';
-    const log = msgs.map(x => `${nm(x.by)}: ${String(x.text).slice(0, 300)}`).join('\n');
-    return modelReply('Summarize this chat in three short lines.', log);
+    const lines = msgs.map(x => ({ who: nm(x.by), text: String(x.text).slice(0, 400) }));
+    const basic = window.TribeAICore ? window.TribeAICore.summarize(lines) : { lines: [`${msgs.length} messages.`] };
+    const msg = say(`✦ **Chat summary** · Basic · no AI\n${basic.lines.map(l => `- ${l}`).join('\n')}`);
+    await refreshModel();
+    if (model.online || (window.TribeAIBasics && (await window.TribeAIBasics.online()).online)) {
+      try { const r = await C.api('/ai/refine', { method: 'POST', body: { kind: 'chat.summary', input: lines, draft: basic.text } }); if (r && r.text) { msg.text = `✦ **Chat summary** · via ${esc(r.via)}\n${r.text.split('\n').filter(Boolean).map(l => `- ${l.replace(/^\s*[-*•]\s*/, '')}`).join('\n')}`; msg.via = r.via; save(); draw(); } } catch {}
+    }
+    return msg;
   }
   async function find(q) {
     const out = [];
@@ -376,8 +389,8 @@
     const g = triedGuide ? null : await guideSearch(text);
     if (g) return say(`I'm in basic mode, but the Guide might help. ${g.title}: ${g.snippet}`, [act('Open in Guide', 'guide', g.slug)], { guide: g.slug });
     // flint-local: the honest card. With no AI, Flint still does a lot (see "what can you do"); this one needs more.
-    return say('I\'m in basic mode (no AI), and that one is more than I can do on my own. Without one I still add, finish and assign tasks, tell people things, schedule, switch themes, build from templates and answer how-to questions from the docs. For this, hand it to your AI helper or give me a brain.',
-      [act('Ask my AI helper', 'agents'), act('Give Flint a brain', 'brain'), act('What can you do?', 'ask', 'what can you do')]);
+    return say('This one needs an AI. I\'m in basic mode (no AI), so nothing changed. Free · no AI: I add, finish and assign tasks, tell people things, schedule, switch themes, design websites and screens from templates, and answer how-to questions from the docs. With an AI: it reads what you mean and does this one too.',
+      [act('Use my AI (free)', 'brain'), act('Get credits / Premium', 'credits'), act('What can you do?', 'ask', 'what can you do')]);
   }
 
   // ---------- a brain: built in (this browser, WebLLM) or the tribe's (server/flint.js → server/llm.js), streamed ----------
@@ -462,7 +475,7 @@
       <button type="button" class="fl-ic fl-mic" data-flmic title="Dictate" aria-label="Dictate">${ico('i-mic', 16)}</button>
       <button type="submit" class="fl-ic fl-send" title="Send" aria-label="Send">${SEND}</button></form>`;
   }
-  const threads = () => [...document.querySelectorAll('.fl-thread')];
+  const threads = () => [...document.querySelectorAll('.fl-thread, .fh-thread')];   // feat/flint-ai: the Home card's thread too
   window.addEventListener('tribe:stage', () => { if (!thread.length) draw(); });   // nudges follow the project's progress
   function draw() {
     threads().forEach(el => { el.innerHTML = threadHtml(); el.scrollTop = el.scrollHeight; });
@@ -561,6 +574,28 @@
   // a quiet message from Flint with one button (feedback.js asks for a review this way, once)
   const nudge = (text, label, actName, arg) => say(text, [act(label, actName, arg)]);
   function prefill(t) { focus(); setTimeout(() => { const i = document.querySelector('.fl-in, #fl-in, [data-flin]'); if (i) { i.value = t; i.focus(); i.setSelectionRange(t.length, t.length); } }, 60); }
-  window.TribeFlint = { prefill, focus, openFull, closeFull, ask: send, thread: () => thread.slice(), clear, status: () => ({ ...model }), nudge,
+  // feat/flint-ai: Flint on the Dashboard (Home), with or without a tribe. The same thread as the room panel; the chips
+  // are his dashboard abilities: today's plan, grow your idea, the inspiration board, your files, start a project.
+  function dashChips() {
+    const on = connected();
+    return [['✦', 'Today\'s plan', 'plan my day'], ['🌱', 'Grow my idea', 'grow my idea'], ['🎨', 'Inspiration board', 'open my inspiration board'], ['📁', 'My files', 'open my files'],
+      on ? ['📚', 'Learn something', 'resources to grow my company'] : ['➕', 'Start a project', 'start a project'], ['❔', 'What can you do?', 'what can you do']];
+  }
+  function mountDashboard(el) {
+    if (!el) return null;
+    let card = el.querySelector('#flint-home');
+    if (!card) {
+      card = document.createElement('section'); card.className = 'flint-home'; card.id = 'flint-home'; card.setAttribute('aria-label', 'Flint');
+      el.appendChild(card);
+      card.innerHTML = `<div class="fh-head"><span class="fl-av" aria-hidden="true">${flintIco(16)}</span><div class="fh-id"><span class="eyebrow">Flint · ${connected() ? 'your helper' : 'works without a tribe'}</span><h2>Ask Flint</h2></div><span class="fl-st" data-flst>${statusLine()}</span></div>
+      <div class="fh-chips" role="group" aria-label="Flint's shortcuts">${dashChips().map(([e, l, q]) => `<button type="button" class="fl-chip fh-chip" data-fhq="${esc(q)}"><span aria-hidden="true">${e}</span>${esc(l)}</button>`).join('')}</div>
+      <div class="fh-thread" role="log" aria-live="polite" aria-label="Conversation with Flint"></div>${barHtml('fh-input')}`;
+    }
+    if (!card._wired) { card._wired = true; wire(card); card.addEventListener('click', e => { const b = e.target.closest('[data-fhq]'); if (b) send(b.dataset.fhq); }); }
+    draw(); drawStatus(); refreshModel();
+    return card;
+  }
+  { const slot = document.getElementById('hub-flint-slot'); if (slot) setTimeout(() => mountDashboard(slot), 0); }   // Home drew before Flint loaded
+  window.TribeFlint = { mountDashboard, redraw: () => { save(); draw(); }, prefill, focus, openFull, closeFull, ask: send, thread: () => thread.slice(), clear, status: () => ({ ...model }), nudge,
     say: (text, acts) => say(text, acts || []), act, step: async t => { push('me', t); await route(t); }, think: async t => { await refreshModel(); if (!model.online) return false; await modelReply(t); return true; } };   // v0.27.1: flintmem.js uses say/act/step/think
 })();
