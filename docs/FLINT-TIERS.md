@@ -153,12 +153,82 @@ With an AI on, the same answer is refined in place (`POST /api/ai/refine`, kinds
 /api/docs/:slug/summarize`) falls back to the extractive summary when there is no local brain. Test:
 `app/test/e2e_local_summarize.py`.
 
+## One Flint chat everywhere
+
+The website designer, the design canvas and the live preview all use the same Flint chat as the right panel and Home:
+`TribeFlint.mount(el, { ctx, run, chips, onSay, onClear, tools })` in `app/ui/flint.js` (CSS in `flint.css`, `.flint-mount`).
+Same thread look, composer (flame menu, dictation, send), chips, AI card and history; only the context changes:
+
+- `ctx: 'designer'` (`app/ui/sitedesigner.js`): the thread is the design's log, so Undo on a message and the designer's
+  Undo/Redo share one history. Chips follow what you're doing (a link-in-bio page, a selected section, a picture).
+- `ctx: 'canvas'` (`app/ui/canvas/flintpane.js`): the thread is the design file's, shared live; each change has its own
+  Undo and Show; + Note collects several asks.
+- `ctx: 'preview'` (`app/ui/previewflint.js`): the build feed (saved files with +/− counts, reloads, errors with Fix it,
+  AI helpers' work) is event lines in the same thread; Plan first, History, Properties and notes sit above the composer.
+
+`run(text, ui)` does the editor's own commands; anything else goes to Flint's full brain (`ui.flint(text)`), and the
+reply lands in that same thread. At 390px each is the editor's bottom sheet with the same chat.
+
+## When Flint doesn't understand
+
+He asks one short question with chips that do something real (`TribeNLU.clarify(text, { view })`): "Add a link: what
+should it say, and where does it go?", "Align which way?", or anywhere else "Should I… add it as a task / save it as a
+note / search for it". After an edit with a missing detail he asks for just that detail ("Added “Book club”. What's the
+address?") and takes your next message as the answer (a link, an email, a @handle, a phone number, or a page name);
+"leave it" skips it.
+
 ## When something needs an AI
 
-One card everywhere (Flint's chat, the canvas, the preview, the website designer; `app/ui/aiboost.js`): **This one
+Only when the ask really needs generation (`TribeNLU.needsAI`: writing long copy, poems and jokes, pictures and logos,
+code and engineering, "make it look like …", judging a design). Then one card everywhere (`app/ui/aiboost.js`): **This one
 needs an AI.** **Free · no AI**: what Flint did (or "Nothing changed") and what he does for free. **With an AI**: what an
 AI adds. Buttons: **Use my AI** (free: connect your own, or hand it to your connected AI helper) and **Get credits /
 Premium** (`TribePremium.gate('credits')`).
+
+## Command list (free, no AI)
+
+Every edit can be undone ("undo", the message's Undo, or Ctrl Z). New in feat/flint-unify (`app/ui/flintnlu.js` reads
+them, `app/ui/sitecfg.js` `command2`, `app/ui/canvas/flintpane.js` `MOVES` and `app/ui/flintcmds.js` do them):
+
+**Website designer**
+- Links: "add a link for my book club" (asks for the address), "add a link called Tickets to https://…", "remove the
+  shop link", "move the tickets link to the top", "the shop link should go to https://…". Link-in-bio pages get a link
+  item; other sites a hero button, else a footer link.
+- Socials: "add my instagram @mara", "add a tiktok icon", "add soundcloud and bandcamp icons", "remove the twitter icon"
+  (Instagram, TikTok, YouTube, Spotify, X, GitHub, LinkedIn, Facebook, Twitch, SoundCloud, Bandcamp, Pinterest, Threads,
+  Bluesky, Mastodon, Discord, Patreon, Substack, Ko-fi, Behance, Dribbble, Snapchat, WhatsApp, Telegram, Vimeo, Apple Music).
+- Buttons: "add an email me button", "add a button to call us at …", "add a button that says Book now", "remove the
+  second button", "send the contact form to hi@…".
+- Sections with items: "add a faq: do you ship abroad? yes", "add a pro plan for $19", "add Maya to the team as our
+  designer", "add a testimonial from Sam saying …", "add a stat: 300 customers", "add a feature called Free delivery",
+  "add a menu item Latte $4", "add a tour date: Leeds Jun 3", "add an episode called …", "add a photo to the gallery".
+- Places and media: "add a map to 12 Main St" (a Find us section with an OpenStreetMap button), "embed my youtube video
+  https://…", "add a countdown to june 5" (a dated banner; exported sites stay script-free).
+- Words: "change the faq title to …", "footer should say …", "update the copyright year", "add an announcement: …",
+  "change my bio to …" (plus the earlier headline, tagline and button words).
+- Pages and menu: "add Shop to the menu", "move the about page first", "go to the contact page", "clear this page".
+- Look: "center the text in the hero", "left align everything", "make the pricing section teal", "make this section
+  navy", "rounder corners", "square corners", "set the site language to spanish", "remove the logo", "move this
+  section up" (plus themes, dark mode, accent, fonts, spacing, backgrounds, layouts, hide/duplicate/move sections).
+
+**Design canvas** (select layers first where it makes sense)
+- "align these to the left / top / center", "distribute evenly", "space them vertically", "group them", "ungroup",
+  "duplicate this", "lock it" / "unlock it", "hide this layer", "bring it to the front", "send it backward",
+  "resize it to 320 by 200", "set the width to 250", "make it twice as big", "rename this to Header", "add a rectangle /
+  circle / line / frame / card / image placeholder", "add a text that says hello", "add a button that says Sign up",
+  "snap to grid", "delete this", "select all", "zoom to fit / in / out" (plus screens from templates, tidy, rename
+  layers, dark and light versions, variants, wiring, send to app, export).
+
+**Anywhere** (Flint's panel, Home, or any of the mounted chats)
+- "set a timer for 10 minutes", "remind me in 5 minutes to stretch" (undo cancels it)
+- "turn off animations" / "bring back animations" (this device), "mute notifications" / "turn on notifications",
+  "appear away" / "I'm back", "hide where I am"
+- "pin the last message", "react thumbs up to the last message", "heart the last message"
+- "reopen the logo task", "unassign the logo task", "make the logo task urgent" (moves it to the top of its column)
+- "start a fresh whiteboard", "new doc from the meeting notes template", "add three js from the marketplace",
+  "find inspiration for a cozy cafe", "open the people panel", "any gigs for me", "run the app", "copy the preview
+  link", "clear our chat"
+- plus the ~170 earlier actions (tasks, notes, docs, chat and DMs, calendar, builds, themes, navigation, math…).
 
 ## Lessons
 
@@ -169,11 +239,15 @@ Guide or the Academy where they exist. Tests: `app/test/flint_eval_test.js` (the
 
 ## Evaluation set
 
-`app/test/flint_eval.json` (written by `scripts/dev/flint-eval-cases.js`, run by `app/test/flint_eval_test.js`): 390
-phrasings for websites, the canvas, preview edits, lessons and global commands, with typos, slang and indirect wording,
-in four contexts (website designer, canvas, canvas with a selection, preview, anywhere). Before this work: 49/342
-(14.3%). Now: 388/390 (99.5%). Held-out batch 1 scored 22/32 (68.8%) when first run and was then tuned; batch 2 was
-never tuned against: 14/16 (87.5%).
+`app/test/flint_eval.json` (written by `scripts/dev/flint-eval-cases.js`, run by `app/test/flint_eval_test.js`, fails
+under 98%): 1,003 phrasings for websites, the canvas, preview edits, lessons and global commands, with typos, slang and
+indirect wording, in five contexts (website designer, canvas, canvas with a selection, preview, anywhere). Before
+feat/flint-unify: 667/674 (99.0%). Now: 996/1,003 (99.3%), including 249 phrasings for the new commands (100%).
+Held-out batches: 1 scored 22/32 (68.8%) when first run and was then tuned; 2 was never tuned against: 14/16 (87.5%);
+3: 27/32 (84.4%). Batch 4 (40, `scripts/dev/flint-held4.js`) was written before the new commands were built, so its
+phrasings shaped them: 0/40 before, 40/40 after. Batch 5 (40, `flint-held5.js`) was written after the matchers existed and
+scored 34/40 (85%) on its first, untuned run; its six misses were then fixed (40/40). `app/test/e2e_flint_unify.py`
+runs 45 commands end to end in the designer, the canvas, the preview and the main chat.
 
 ## Abilities log
 
