@@ -69,15 +69,20 @@ button.ppl-where:hover { text-decoration: underline; }
 @media (max-width: 760px) {
   .ppl-panel { inset: 0; width: auto; top: 0; right: 0; bottom: 0; border-radius: 0; border: 0; padding-top: env(safe-area-inset-top); padding-bottom: env(safe-area-inset-bottom); }
   .ppl-btn { width: 36px; height: 36px; }
+  /* 390px: the title keeps its own line; Invite, Invite your Claude and Done sit under it (the title used to break in two beside them) */
+  .ppl-head { flex-wrap: wrap; }
+  .ppl-head > div { flex-basis: 100%; }
+  .ppl-head #ppl-close { margin-left: auto; }
 }
 @media (prefers-reduced-motion: reduce) { .ppl-panel, .ppl-scrim { animation: none; } }
 /* fix/batch-fixes: Add someone new (an invite link, a one-time guest pass), moved from the old Friends panel */
 .ppl-add { display: flex; align-items: center; gap: 12px; width: 100%; padding: 12px; margin-bottom: 8px; border: 1px solid var(--edge); border-radius: 12px; background: var(--surface); color: var(--text); font: inherit; text-align: left; cursor: pointer; transition: background-color var(--dur-quick) var(--ease-out); }
 .ppl-add:hover { background: var(--surface-2); }
 .ppl-add .ppl-t small { color: var(--faint); }
-.ppl-ai { flex: none; width: 34px; height: 34px; border-radius: 10px; display: grid; place-items: center; font: 700 14px var(--mono); border: 1px solid var(--edge); background: var(--surface-2); }
-.ppl-ai.k-ember { color: var(--brand); border-color: var(--brand); }
-.ppl-ai.k-indigo { color: var(--peer); border-color: var(--peer); }
+/* the tile in front of an Add row. Scoped: the same class is the small "AI" tag after a name (line ~53), which this rule used to blow up to a 34px box */
+.ppl-add .ppl-ai, .ic-hubcard .ppl-ai { flex: none; width: 34px; height: 34px; border-radius: 10px; display: grid; place-items: center; font: 700 14px var(--mono); border: 1px solid var(--edge); background: var(--surface-2); }
+.ppl-add .ppl-ai.k-ember { color: var(--brand); border-color: var(--brand); }
+.ppl-add .ppl-ai.k-indigo { color: var(--peer); border-color: var(--peer); }
 .ppl-link { margin-top: 4px; padding: 12px; border: 1px solid var(--edge); border-radius: 12px; background: var(--surface-2); }
 .ppl-lrow { display: flex; gap: 8px; margin-top: 8px; }
 .ppl-lrow .input { flex: 1; min-width: 0; font: 12px var(--mono); }

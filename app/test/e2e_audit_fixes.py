@@ -117,6 +117,11 @@ def main():
             # Versions opened from the palette (focus still outside the sheet) closes on Esc
             h.evaluate("TribeShell.go('versions')"); h.wait_for_selector("#vr"); h.evaluate("document.activeElement && document.activeElement.blur()")
             h.keyboard.press("Escape"); h.wait_for_selector("#vr", state="detached", timeout=4000)
+            # the small "AI" tag after a name stays a tag (a second .ppl-ai rule, for the Add tiles, used to make it a 34px box)
+            h.evaluate("TribePeoplePanel.open()"); h.wait_for_selector("#ppl-panel .ppl-row")
+            box = h.evaluate("(() => { const b = document.querySelector('#ppl-panel .ppl-row .ppl-t b'); const t = document.createElement('span'); t.className = 'ppl-ai'; t.textContent = 'AI'; b.appendChild(t); const r = t.getBoundingClientRect(); t.remove(); return [r.width, r.height]; })()")
+            assert box[1] < 24 and box[0] < 34, f"the AI tag is a box again: {box}"
+            h.evaluate("TribePeoplePanel.close()")
             # no icon symbol is defined twice by chat's sprite
             h.evaluate("TribeShell.go('chat')"); h.wait_for_timeout(800)
             dup = h.evaluate("(() => { const n = {}; document.querySelectorAll('symbol[id]').forEach(s => n[s.id] = (n[s.id] || 0) + 1); return Object.keys(n).filter(k => n[k] > 1 && ['i-image', 'i-more', 'i-reply', 'i-smile', 'i-info'].includes(k)); })()")
