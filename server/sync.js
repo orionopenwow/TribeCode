@@ -35,14 +35,15 @@ const MINUTE = Number(process.env.TRIBE_SYNC_MINUTE_MS) || 60_000;
 const SAVE_MS = Number(process.env.TRIBE_SYNC_SAVE_MS) || 4000;
 const TRIGGERS = ['approve', 'done', 'interval', 'save'];
 const BOT = { name: 'TribeCode bot', email: 'bot@users.noreply.tribecode' };
-const DEFAULTS = () => ({ repo: '', branch: 'main', mode: 'manual', trigger: 'done', intervalMin: 15, target: 'push', prTitle: '{project}: {summary}',
+const RETRY_MS = Number(process.env.TRIBE_SYNC_RETRY_MS) || 2000;
+const DEFAULTS = () => ({ kind: 'github', shared: '', sharedName: '', repo: '', branch: 'main', mode: 'manual', trigger: 'done', intervalMin: 15, target: 'push', prTitle: '{project}: {summary}',
   message: 'auto', ownMessage: '', exclude: [], pullFirst: true, conflict: 'stop', autoPullMin: 0, tagMilestones: false, signAs: 'member',
   requireApproval: false, paused: false });
 const fail = (status, msg) => Object.assign(new Error(msg), { status });
 // Anything that looks like a credential is cut out of every message that leaves this module.
 const scrub = s => String(s || '').replace(/(gh[pousr]_|github_pat_)[A-Za-z0-9_]+/g, '[token]').replace(/\/\/[^/@\s]+@/g, '//').replace(/password=\S+/gi, 'password=[token]');
 
-module.exports = function sync({ P, W, base, getMembers, approvals, broadcast, postChat, nameOf, perms, pushAuth, brain = null, resetHub, log = () => {} }) {
+module.exports = function sync({ P, W, base, getMembers, approvals, broadcast, postChat, nameOf, perms, pushAuth, brain = null, resetHub, checkShared = null, display = p => p, tribeName = () => 'tribe', log = () => {} }) {
   const file = pid => `.tribe/sync/${String(pid).replace(/[^\w-]/g, '_')}.json`;
   const load = pid => { const d = base.readJSON(file(pid), null) || {}; return { settings: { ...DEFAULTS(), ...(d.settings || {}) }, log: d.log || [], conflict: d.conflict || null, lastShip: d.lastShip || null, lastPull: d.lastPull || null, lastAuto: d.lastAuto || 0, pending: d.pending || null, remote: d.remote || null }; };
   const save = (pid, s) => { fs.mkdirSync(base.p('.tribe/sync'), { recursive: true }); s.log = (s.log || []).slice(0, 50); base.writeJSON(file(pid), s); };
@@ -56,6 +57,36 @@ module.exports = function sync({ P, W, base, getMembers, approvals, broadcast, p
   const repoDir = pid => { const p = P.get(pid); return p && p.repo && fs.existsSync(p.repo) ? p.repo : null; };
   const parseRepo = v => { const m = String(v || '').trim().replace(/\.git$/, '').match(/^(?:https:\/\/github\.com\/|git@github\.com:)?([\w.-]+)\/([\w.-]+)\/?$/); return m ? `${m[1]}/${m[2]}` : ''; };
   const remoteUrl = gh => (process.env.TRIBE_GITHUB_GIT ? path.join(process.env.TRIBE_GITHUB_GIT, gh + '.git') : `https://github.com/${gh}.git`);
+  // A shared folder as the remote (Dropbox, OneDrive, Google Drive, iCloud, a NAS/SMB share, Syncthing): a bare repo
+  // <shared>/<name>.tribecode.git, pushed and pulled like GitHub with no account and no network service.
+  const bareOf = st => path.join(st.shared, st.sharedName);
+  const remoteOf = st => (st.kind === 'folder' ? bareOf(st) : remoteUrl(st.repo));
+  const slugify = v => String(v || '').toLowerCase().normalize('NFKD').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 40) || 'tribe';
+  const defaultName = pid => `${slugify(tribeName())}${pid === P.defaultId() ? '' : '-' + slugify(pid)}.tribecode.git`;
+  // A cloud-synced folder can be caught half-way: lock files left by a sync in flight, a missing HEAD or objects dir,
+  // "conflicted copy" files. Look first; wait and look again; never write into a repo that looks mid-sync.
+  function bareProblems(bare) {
+    const out = [];
+    try { if (!fs.statSync(bare).isDirectory()) return ['not a folder']; } catch { return ['missing']; }
+    for (const need of ['HEAD', 'objects', 'refs']) if (!fs.existsSync(path.join(bare, need))) out.push(`no ${need}`);
+    const walk = (d, depth) => { let ents = []; try { ents = fs.readdirSync(d, { withFileTypes: true }); } catch { return; }
+      for (const e of ents) { const full = path.join(d, e.name);
+        if (/\.lock$/.test(e.name)) out.push(`lock ${path.relative(bare, full)}`);
+        else if (/conflicted copy|\(conflict|\.sync-conflict-|\.icloud$|~\$|\.tmp\.drivedownload/i.test(e.name)) out.push(`sync leftover ${path.relative(bare, full)}`);
+        else if (e.isDirectory() && depth < 4 && e.name !== 'objects') walk(full, depth + 1); } };
+    walk(bare, 0);
+    return out.slice(0, 8);
+  }
+  async function healthy(st, dir) {
+    if (st.kind !== 'folder') return;
+    for (let i = 0; i < 3; i++) {
+      let probs = bareProblems(bareOf(st));
+      if (!probs.length && dir) { const r = await git(dir, ['ls-remote', '--heads', REMOTE]); if (r.code) probs = ['unreadable: ' + (r.err.split('\n')[0] || 'git could not read it')]; }
+      if (!probs.length) return;
+      if (i === 2) throw fail(503, `The shared folder looks like it’s still syncing (${probs.slice(0, 2).join(', ')}). Nothing was written; try again in a moment.`);
+      await new Promise(r => setTimeout(r, RETRY_MS));
+    }
+  }
   const ident = who => ['-c', `user.name=${String(who.name).replace(/[<>\n]/g, '').slice(0, 64)}`, '-c', `user.email=${who.email}`];
   const whoFor = (s, me) => (s.settings.signAs === 'bot' || !me || me.role === 'agent' ? BOT : { name: me.name || me.id, email: W.emailOf(member(me.id) || me) });
   // the credential: the shipping member's own token when they saved one, else the host's (github-auth pushAuth)
@@ -65,7 +96,7 @@ module.exports = function sync({ P, W, base, getMembers, approvals, broadcast, p
     return { ...r, out: scrub(r.out), err: scrub(r.err) };
   }
   async function must(dir, args, o) { const r = await git(dir, args, o); if (r.code) throw fail(422, (r.err || r.out || `git ${args[0]} failed`).split('\n').slice(0, 3).join(' ')); return r.out; }
-  const REMOTE = 'tribe-github';
+  const REMOTE = 'tribe-sync';
   function protect(dir) {   // .tribe/ never ships: keep it out of git without touching tracked files
     try { const f = path.join(dir, '.git', 'info', 'exclude'); fs.mkdirSync(path.dirname(f), { recursive: true }); const t = fs.existsSync(f) ? fs.readFileSync(f, 'utf8') : ''; const add = ['/.tribe/', '/.trees/'].filter(x => !t.split('\n').includes(x)); if (add.length) fs.appendFileSync(f, (t && !t.endsWith('\n') ? '\n' : '') + add.join('\n') + '\n'); } catch {}
   }
@@ -87,21 +118,28 @@ module.exports = function sync({ P, W, base, getMembers, approvals, broadcast, p
     const s = load(pid), dir = repoDir(pid), connected = !!s.settings.repo;
     const ch = connected ? await changes(pid).catch(() => ({ count: 0 })) : { count: 0 };
     const state = !connected ? 'off' : s.conflict ? 'conflict' : s.settings.paused ? 'paused' : ch.count ? 'pending' : s.lastShip ? 'synced' : 'ready';
-    return { connected, repo: s.settings.repo || null, url: connected ? `https://github.com/${s.settings.repo}` : null, branch: s.settings.branch, mode: s.settings.mode, trigger: s.settings.trigger,
+    return { connected, kind: s.settings.kind, repo: s.settings.repo || null, url: connected && s.settings.kind === 'github' ? `https://github.com/${s.settings.repo}` : null, branch: s.settings.branch, mode: s.settings.mode, trigger: s.settings.trigger,
       target: s.settings.target, paused: !!s.settings.paused, state, pending: ch.count || 0, conflict: s.conflict, lastShip: s.lastShip, lastPull: s.lastPull, hasFolder: !!dir, git: !!(dir && W.isRepo(dir)), busy: busy.has(pid),
       awaiting: s.pending ? { approval: s.pending.approval, at: s.pending.at } : null };
   }
 
   // ---------- connect ----------
+  let pid0 = null;
   function clean(body, prev) {
     const s = { ...prev };
-    if (body.repo !== undefined) { const r = parseRepo(body.repo); if (body.repo && !r) throw fail(400, 'Type the repository as owner/name.'); s.repo = r; }
+    if (body.kind !== undefined) { if (!['github', 'folder'].includes(body.kind)) throw fail(400, 'kind: github or folder'); s.kind = body.kind; }
+    if (s.kind === 'folder') {
+      if (body.shared !== undefined) { if (!checkShared) throw fail(400, 'Shared folders need the host computer.'); s.shared = body.shared ? checkShared(String(body.shared), pid0) : ''; }
+      if (body.sharedName !== undefined) { const n = String(body.sharedName || '').trim(); if (n && !/^[\w.-]{1,80}\.tribecode\.git$/.test(n)) throw fail(400, 'The shared repo is named like my-tribe.tribecode.git.'); s.sharedName = n; }
+      if (s.shared && !s.sharedName) s.sharedName = defaultName(pid0);
+      s.repo = s.shared ? display(bareOf(s)) : ''; s.target = 'push';
+    } else if (body.repo !== undefined) { const r = parseRepo(body.repo); if (body.repo && !r) throw fail(400, 'Type the repository as owner/name.'); s.repo = r; }
     if (body.branch !== undefined) { const b = String(body.branch || '').trim(); if (!/^[\w./-]{1,100}$/.test(b) || b.startsWith('-') || b.includes('..')) throw fail(400, 'That branch name won’t work.'); s.branch = b; }
     if (body.mode !== undefined) { if (!['manual', 'auto'].includes(body.mode)) throw fail(400, 'mode: manual or auto'); s.mode = body.mode; }
     if (body.trigger !== undefined) { if (!TRIGGERS.includes(body.trigger)) throw fail(400, `trigger: ${TRIGGERS.join(', ')}`); s.trigger = body.trigger; }
     if (body.intervalMin !== undefined) s.intervalMin = Math.max(1, Math.min(1440, Math.round(Number(body.intervalMin) || 15)));
     if (body.autoPullMin !== undefined) s.autoPullMin = Math.max(0, Math.min(1440, Math.round(Number(body.autoPullMin) || 0)));
-    if (body.target !== undefined) { if (!['push', 'pr'].includes(body.target)) throw fail(400, 'target: push or pr'); s.target = body.target; }
+    if (body.target !== undefined) { if (!['push', 'pr'].includes(body.target)) throw fail(400, 'target: push or pr'); s.target = s.kind === 'folder' ? 'push' : body.target; }
     if (body.prTitle !== undefined) s.prTitle = String(body.prTitle || '').slice(0, 200) || DEFAULTS().prTitle;
     if (body.message !== undefined) { if (!['auto', 'flint', 'own'].includes(body.message)) throw fail(400, 'message: auto, flint or own'); s.message = body.message; }
     if (body.ownMessage !== undefined) s.ownMessage = String(body.ownMessage || '').slice(0, 500);
@@ -124,17 +162,22 @@ module.exports = function sync({ P, W, base, getMembers, approvals, broadcast, p
   }
   async function connect(pid, body, me) {
     const s = load(pid), was = s.settings.repo;
-    s.settings = clean(body, s.settings);
+    pid0 = pid; s.settings = clean(body, s.settings);
     if (s.settings.repo) {
       const dir = await ensureRepo(pid, me);
-      const url = remoteUrl(s.settings.repo);
+      if (s.settings.kind === 'folder') {   // the shared repo: made once, then everyone with the folder pushes and pulls it
+        const bare = bareOf(s.settings);
+        if (!fs.existsSync(bare)) { if (body.join) throw fail(404, 'There is no shared repo with that name in this folder (yet). It may still be syncing.'); await must(path.dirname(bare), ['init', '-q', '--bare', '-b', s.settings.branch, bare]); }
+        else await healthy(s.settings, null);
+      }
+      const url = remoteOf(s.settings);
       const has = await git(dir, ['remote', 'get-url', REMOTE]);
       await must(dir, has.code ? ['remote', 'add', REMOTE, url] : ['remote', 'set-url', REMOTE, url]);
       s.remote = REMOTE;
       if (was !== s.settings.repo) { s.conflict = null; s.lastShip = null; }
     }
     save(pid, s); push(pid);
-    if (s.settings.repo && was !== s.settings.repo) try { P.inProject(pid, () => postChat('general', 'tribecode', `${me.name} connected **${s.settings.repo}** on GitHub. ${s.settings.mode === 'auto' ? `It ships by itself (${triggerText(s.settings)}).` : 'Nothing ships until someone presses Ship.'}`)); } catch {}
+    if (s.settings.repo && was !== s.settings.repo) try { P.inProject(pid, () => postChat('general', 'tribecode', `${me.name} connected **${s.settings.repo}** ${s.settings.kind === 'folder' ? 'as a shared folder' : 'on GitHub'}. ${s.settings.mode === 'auto' ? `It ships by itself (${triggerText(s.settings)}).` : 'Nothing ships until someone presses Ship.'}`)); } catch {}
     return view(pid, me);
   }
   const triggerText = st => ({ approve: 'on approve', done: 'when a task is done', interval: `every ${st.intervalMin} min with changes`, save: 'on every save' }[st.trigger]);
@@ -147,6 +190,7 @@ module.exports = function sync({ P, W, base, getMembers, approvals, broadcast, p
 
   // ---------- pull ----------
   async function fetchRemote(dir, s, a) {
+    await healthy(s.settings, dir);
     const r = await git(dir, ['fetch', '--quiet', REMOTE, `+refs/heads/${s.settings.branch}:refs/remotes/${REMOTE}/${s.settings.branch}`], { pre: a.args, env: a.env });
     if (r.code && !/couldn't find remote ref|not found|does not appear/i.test(r.err)) throw fail(502, `GitHub didn’t answer: ${r.err.split('\n')[0]}`);
   }
@@ -241,8 +285,13 @@ module.exports = function sync({ P, W, base, getMembers, approvals, broadcast, p
         entry.pr = await openPr(s, br, title, `Shipped from TribeCode by ${entry.byName}.\n\n${pre.files.slice(0, 30).map(f => `- ${f.path}`).join('\n')}`, a);
         entry.headBranch = br;
       } else {
+        await healthy(s.settings, dir);
         const r = await git(dir, ['push', '--quiet', REMOTE, `HEAD:refs/heads/${s.settings.branch}`], { pre: a.args, env: a.env });
-        if (r.code) throw fail(502, /rejected|non-fast-forward|fetch first/i.test(r.err) ? 'GitHub has newer changes. Turn on “Pull before ship” or press Pull first.' : `Push failed: ${r.err.split('\n')[0]}`);
+        if (r.code) throw fail(502, /rejected|non-fast-forward|fetch first/i.test(r.err) ? `${s.settings.kind === 'folder' ? 'The shared folder' : 'GitHub'} has newer changes. Turn on “Pull before ship” or press Pull first.` : `Push failed: ${r.err.split('\n')[0]}`);
+        if (s.settings.kind === 'folder') {   // verify: the shared repo really holds what was pushed
+          const v = await git(dir, ['ls-remote', REMOTE, `refs/heads/${s.settings.branch}`]);
+          if (v.code || !v.out.startsWith(head)) throw fail(502, 'The shared folder didn’t keep the push (it may be mid-sync). Nothing is lost here; try again in a moment.');
+        }
         await git(dir, ['update-ref', `refs/remotes/${REMOTE}/${s.settings.branch}`, head]);
       }
       const ss = load(pid); ss.lastShip = { at: entry.at, sha: entry.short, by: entry.byName, pr: entry.pr || null }; ss.log.unshift(entry); ss.lastAuto = why === 'manual' ? ss.lastAuto : Date.now(); ss.pending = null; save(pid, ss);
@@ -260,6 +309,7 @@ module.exports = function sync({ P, W, base, getMembers, approvals, broadcast, p
       const parents = (await git(dir, ['rev-list', '--parents', '-n', '1', last.sha])).out.split(' ').length - 1;
       await must(dir, [...ident(whoFor(s, me)), 'revert', '--no-edit', ...(parents > 1 ? ['-m', '1'] : []), last.sha]);
       const head = await must(dir, ['rev-parse', 'HEAD']);
+      await healthy(s.settings, dir).catch(async e => { await git(dir, ['reset', '--hard', 'HEAD~1']); throw e; });
       const r = await git(dir, ['push', '--quiet', REMOTE, `HEAD:refs/heads/${s.settings.branch}`], { pre: a.args, env: a.env });
       if (r.code) { await git(dir, ['reset', '--hard', 'HEAD~1']); throw fail(502, `Couldn’t push the undo: ${r.err.split('\n')[0]}`); }
       await git(dir, ['update-ref', `refs/remotes/${REMOTE}/${s.settings.branch}`, head]);
@@ -351,6 +401,13 @@ module.exports = function sync({ P, W, base, getMembers, approvals, broadcast, p
       if (!sub && m === 'DELETE') { if (!lead(me, b)) return f(res, 403, 'Only the host or the project lead changes sync settings.'); return send(res, 200, disconnect(b)); }
       if (sub === 'changes' && m === 'GET') { const ch = await changes(b); return send(res, 200, { ...ch, summary: summaryOf(ch.files) }); }
       if (sub === 'ship' && m === 'POST') { if (!writer(me, b)) return f(res, 403, 'read-only'); const body = await readBody(req); return send(res, 200, await ship(b, me, { message: body.message, target: body.target })); }
+      if (sub === 'join' && m === 'POST') {   // a friend with the same shared folder: connect to the shared repo and pull it in
+        if (!lead(me, b)) return f(res, 403, 'Only the host or the project lead joins a shared folder.');
+        const body = await readBody(req);
+        await connect(b, { ...body, kind: 'folder', join: true }, me);
+        await pull(b, me);
+        return send(res, 200, await view(b, me));
+      }
       if (sub === 'pull' && m === 'POST') { if (!writer(me, b)) return f(res, 403, 'read-only'); return send(res, 200, { ...(await pull(b, me)), status: await status(b) }); }
       if (sub === 'resolve' && m === 'POST') { if (!lead(me, b)) return f(res, 403, 'Only the host or the project lead sorts out a conflict.'); return send(res, 200, await resolve(b, me, (await readBody(req)).use)); }
       if (sub === 'undo' && m === 'POST') { if (!lead(me, b)) return f(res, 403, 'Only the host or the project lead can undo a ship.'); return send(res, 200, await undo(b, me)); }

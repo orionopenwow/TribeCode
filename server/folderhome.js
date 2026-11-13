@@ -97,6 +97,19 @@ module.exports = function folderHome({ P, W, baseStore, isLocal, broadcast, perm
     return { abs, real, exists };
   }
 
+  // A shared folder for a sync remote (server/sync.js): a real folder, not a system one, not TribeCode's data, not this
+  // project's own folder. Several projects may share one (each gets its own <name>.tribecode.git inside).
+  function checkShared(input, pid) {
+    const x = check(input, { legacy: true });
+    if (inside(x.real, dataDir())) throw fail(400, 'That folder is inside TribeCode’s own data. Pick the folder your sync app keeps.');
+    const own = pid && folderOf(P.get(pid)); if (own && overlap(x.real, own)) throw fail(400, 'Pick a different folder from the project’s own: the shared one is where the copy goes.');
+    return x.real;
+  }
+  function sharedRepos(dir) {
+    let ents = []; try { ents = fs.readdirSync(dir, { withFileTypes: true }); } catch { return []; }
+    return ents.filter(e => e.isDirectory() && /\.tribecode\.git$/.test(e.name)).map(e => { let at = null; try { at = fs.statSync(path.join(dir, e.name, 'refs', 'heads')).mtime.toISOString(); } catch {} return { name: e.name, title: e.name.replace(/\.tribecode\.git$/, ''), at }; }).slice(0, 100);
+  }
+
   function summary(dir) {
     let names = []; try { names = fs.readdirSync(dir).filter(n => n !== '.DS_Store' && n !== 'Thumbs.db'); } catch {}
     const has = n => names.includes(n);
@@ -245,6 +258,7 @@ module.exports = function folderHome({ P, W, baseStore, isLocal, broadcast, perm
         if (!isLocal(req)) return f(res, 403, 'Folders can only be picked on the computer that runs TribeCode.');
         if (me && me.role !== 'host') return f(res, 403, 'Only the host picks folders on this computer.');
         if (b === 'browse' && m === 'GET') return send(res, 200, browse(url.searchParams.get('path') || ''));
+        if (b === 'shared' && m === 'GET') { const d = checkShared(url.searchParams.get('path') || ''); return send(res, 200, { path: d, display: display(d), repos: sharedRepos(d) }); }
         if (b === 'check' && m === 'POST') {
           const body = await readBody(req), x = check(body.path, { project: str(body.project, 64) || null });
           return send(res, 200, { ok: true, path: x.real, display: display(x.real), summary: summary(x.real) });
@@ -284,5 +298,5 @@ module.exports = function folderHome({ P, W, baseStore, isLocal, broadcast, perm
     } catch (e) { return f(res, e.status || 500, e.message); }
   }
 
-  return { initRepo, check, browse, summary, display, writeFile, readFile, resolveIn, list, watch, unwatch, watchAll, setFolder, info, route, folderOf, homeDir };
+  return { initRepo, checkShared, sharedRepos, check, browse, summary, display, writeFile, readFile, resolveIn, list, watch, unwatch, watchAll, setFolder, info, route, folderOf, homeDir };
 };

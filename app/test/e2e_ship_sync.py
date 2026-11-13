@@ -9,6 +9,8 @@ plays GitHub (TRIBE_GITHUB_GIT) and a tiny local server plays the GitHub API for
   - Undo last ship pushes a revert
   - only leads change settings; builders can ship; spectators can't
   - tokens never appear in logs or responses
+  - a shared folder as the remote (a temp dir plays Dropbox): two clients push and pull, a conflict stops, a
+    half-synced shared repo (a lock file left by the sync app) is detected and nothing is written
   - the UI: the one home pill, the sync sheet (screenshot docs/screenshots/ship-settings.png), the three sharing paths
 Usage: python3 app/test/e2e_ship_sync.py
 """
@@ -66,7 +68,7 @@ def main():
     (folder / "notes.log").write_text("noise\n")
     ghs = HTTPServer(("127.0.0.1", GHPORT), GH); threading.Thread(target=ghs.serve_forever, daemon=True).start()
     env = {**os.environ, "TRIBE_TEST": "1", "TRIBE_NO_DOWNLOAD": "1", "TRIBE_NO_GH": "1", "NO_PROXY": "127.0.0.1,localhost", "HOME": str(home),
-           "TRIBE_GITHUB_GIT": str(ghroot), "TRIBE_GITHUB_API": f"http://127.0.0.1:{GHPORT}", "TRIBE_SYNC_TICK_MS": "400", "TRIBE_SYNC_MINUTE_MS": "1500", "TRIBE_SYNC_SAVE_MS": "300"}
+           "TRIBE_GITHUB_GIT": str(ghroot), "TRIBE_GITHUB_API": f"http://127.0.0.1:{GHPORT}", "TRIBE_SYNC_TICK_MS": "400", "TRIBE_SYNC_MINUTE_MS": "1500", "TRIBE_SYNC_SAVE_MS": "300", "TRIBE_SYNC_RETRY_MS": "200"}
     logf = tmp / "log"
     srv = subprocess.Popen(["node", str(ROOT / "server" / "index.js"), "--port", str(PORT), "--dir", str(tmp / "tribe"), "--ollama", "http://localhost:9"], stdout=open(logf, "w"), stderr=subprocess.STDOUT, env=env)
     bodies = []
@@ -189,6 +191,45 @@ def main():
             (folder / "g.js").write_text("g\n")
             out = mcp("ship_now", {"message": "Agent ships g"}); assert "Shipped" in out, out[:400]
             assert "g.js" in git("ls-tree", "-r", "--name-only", "main", cwd=bare)
+
+        # ---------- a shared folder as the remote: two clients ----------
+        shared = home / "Dropbox" / "Tribes"; shared.mkdir(parents=True)
+        for n in ("s1", "s2"): (home / n).mkdir()
+        (home / "s1" / "README.md").write_text("# Shared\n")
+        p1 = call("/projects", "POST", {"name": "Shared One"}, token=host)[1]["project"]["id"]
+        p2 = call("/projects", "POST", {"name": "Shared Two"}, token=host)[1]["project"]["id"]
+        for p, n in ((p1, "s1"), (p2, "s2")): assert call(f"/projects/{p}/folder", "PUT", {"path": f"~/{n}", "gitInit": True}, token=host)[0] == 200
+        st, d = call(f"/projects/{p1}/sync", "PUT", {"kind": "folder", "shared": "/etc"}, token=host); assert st == 400, d
+        st, d = call(f"/projects/{p1}/sync", "PUT", {"kind": "folder", "shared": "~/s1"}, token=host); assert st == 400, "not the project's own folder"
+        st, d = call(f"/projects/{p1}/sync", "PUT", {"kind": "folder", "shared": "~/Dropbox/Tribes", "sharedName": "camp.tribecode.git"}, token=host); assert st == 200, d
+        bare2 = shared / "camp.tribecode.git"; assert (bare2 / "HEAD").exists(), "a bare repo in the shared folder"
+        assert d["status"]["kind"] == "folder" and d["status"]["url"] is None and "Dropbox" in d["status"]["repo"], d["status"]
+        st, d = call(f"/projects/{p1}/sync/ship", "POST", {"message": "From one"}, token=host); assert st == 200 and d["shipped"], d
+        assert git("show", "main:README.md", cwd=bare2) == "# Shared"
+        st, d = call("/folders/shared?path=~/Dropbox/Tribes", token=host); assert [r["name"] for r in d["repos"]] == ["camp.tribecode.git"], d
+        st, d = call(f"/projects/{p2}/sync/join", "POST", {"shared": "~/Dropbox/Tribes", "sharedName": "nope.tribecode.git"}, token=host); assert st == 404, d
+        st, d = call(f"/projects/{p2}/sync/join", "POST", {"shared": "~/Dropbox/Tribes", "sharedName": "camp.tribecode.git"}, token=host); assert st == 200, d
+        assert (home / "s2" / "README.md").read_text() == "# Shared\n", "the second client pulled it in"
+        (home / "s2" / "two.txt").write_text("from two\n")
+        st, d = call(f"/projects/{p2}/sync/ship", "POST", {"message": "From two"}, token=host); assert st == 200 and d["shipped"], d
+        st, d = call(f"/projects/{p1}/sync/pull", "POST", {}, token=host); assert st == 200, d
+        assert (home / "s1" / "two.txt").read_text() == "from two\n", "the first client pulled the second's ship"
+        (home / "s1" / "README.md").write_text("# One's\n"); (home / "s2" / "README.md").write_text("# Two's\n")
+        assert call(f"/projects/{p1}/sync/ship", "POST", {}, token=host)[0] == 200
+        st, d = call(f"/projects/{p2}/sync/ship", "POST", {}, token=host); assert st == 409 and d["conflict"]["files"] == ["README.md"], d
+        assert (home / "s2" / "README.md").read_text() == "# Two's\n", "nothing lost"
+        assert call(f"/projects/{p2}/sync/resolve", "POST", {"use": "theirs"}, token=host)[0] == 200
+        assert (home / "s2" / "README.md").read_text() == "# One's\n", "took the shared copy"
+        lock = bare2 / "refs" / "heads" / "main.lock"; lock.write_text("")
+        (home / "s1" / "three.txt").write_text("3\n")
+        before = git("rev-parse", "main", cwd=bare2)
+        st, d = call(f"/projects/{p1}/sync/ship", "POST", {}, token=host); assert st == 503 and "syncing" in d["error"], d
+        assert git("rev-parse", "main", cwd=bare2) == before, "nothing written mid-sync"
+        lock.unlink()
+        st, d = call(f"/projects/{p1}/sync/ship", "POST", {}, token=host); assert st == 200 and d["shipped"], d
+        (bare2 / "objects (Bob's conflicted copy 2026-11-12)").mkdir()
+        assert call(f"/projects/{p2}/sync/pull", "POST", {}, token=host)[0] == 503, "a cloud conflict copy is a half-synced repo too"
+        (bare2 / "objects (Bob's conflicted copy 2026-11-12)").rmdir()
 
         # ---------- UI: the one pill, the sync sheet, the sharing paths ----------
         with sync_playwright() as p:

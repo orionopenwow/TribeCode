@@ -491,7 +491,8 @@ const coord = makeCoord({ P, store, id, str, broadcast, postChat, bus, getMember
 const ship = shipHub = require('./ship')({ P, store, hubFor, approvals, getMembers: () => members, loadTasks: () => loadTasks(), createTask: o => createTask(o), postChat, broadcast, bus, str, nameOf,
   can: (m, cap) => m.role === 'host' || perms.can(m, cap, P.current()), pushAuth: () => githubAuth.pushAuth(), coord, claims, id, brain });
 // feat/folder-sync: a folder on this computer as the project's home (server/folderhome.js), GitHub as its synced copy (server/sync.js)
-syncHub = require('./sync')({ P, W, base: baseStore, getMembers: () => members, approvals, broadcast, postChat, nameOf, perms, pushAuth: () => githubAuth.pushAuth(), brain, resetHub, log: m => console.error('  ' + m) });
+syncHub = require('./sync')({ P, W, base: baseStore, getMembers: () => members, approvals, broadcast, postChat, nameOf, perms, pushAuth: () => githubAuth.pushAuth(), brain, resetHub,
+  checkShared: (p, pid) => folderHome.checkShared(p, pid), display: p => folderHome.display(p), tribeName: () => tribe.name, log: m => console.error('  ' + m) });
 folderHome = require('./folderhome')({ P, W, baseStore, isLocal, broadcast, perms, resetHub, postChat, nameOf, str, appRoot: path.join(__dirname, '..'), onSave: pid => syncHub.onSave(pid), log: m => console.error('  ' + m) });
 folderHome.watchAll();
 bus.on('notify', n => { if (n && n.type === 'release') syncHub.onRelease(P.current() || P.defaultId(), n.ref).catch(() => {}); });
