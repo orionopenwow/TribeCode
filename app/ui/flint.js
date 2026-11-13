@@ -38,7 +38,9 @@
   let model = { online: false, model: '' }, busy = false;
   const save = () => ls.set(KEY, thread.slice(-MAX).map(m => ({ who: m.who, text: m.text, acts: m.acts || [], at: m.at, link: m.link, ...(m.via ? { via: m.via } : {}) })));
   const B = () => window.TribeBrain;   // feat/any-llm: Flint's brain (built in / host / none)
-  function push(who, text, acts, extra) { const m = { who, text: String(text || ''), acts: acts || [], at: new Date().toISOString(), ...(extra || {}) }; thread.push(m); thread = thread.slice(-MAX); save(); draw(); return m; }
+  const mounts = new Set();
+  let sink = null;   // feat/flint-unify: while a mounted chat (designer, canvas, preview) runs a command, Flint's replies go there
+  function push(who, text, acts, extra) { const m = { who, text: String(text || ''), acts: acts || [], at: new Date().toISOString(), ...(extra || {}) }; if (sink) { sink.add(m); return m; } thread.push(m); thread = thread.slice(-MAX); save(); draw(); return m; }
   const say = (text, acts, extra) => push('flint', text, acts, extra);
 
   // ---------- actions (stored by name so buttons still work after a reload) ----------
@@ -62,6 +64,7 @@
     doc: ref => { const [pid, slug] = String(ref).split('|'); const open = () => { App().show('docs'); setTimeout(() => window.TribeDocs && window.TribeDocs.open && window.TribeDocs.open(slug), 120); }; if (pid && PJ() && PJ().current && PJ().current() !== pid && PJ().switchTo) { PJ().switchTo(pid, 'docs'); setTimeout(open, 400); } else open(); },
     search: q => { if (!window.TribePalette) return; window.TribePalette.open(); const i = $('#pal-input'); if (i) { i.value = q || ''; i.dispatchEvent(new Event('input', { bubbles: true })); } },
     ask: text => send(text),
+    fill: text => prefill(String(text || '')),   // feat/flint-unify: a chip that starts the sentence for you
     website: () => (window.TribeShell ? window.TribeShell.go('website') : window.TribeWebsite && window.TribeWebsite.open()),   // feat/customize
     customize: tab => window.TribeLook && window.TribeLook.open(tab || 'tribe'),
     capture: id => window.TribeCaptures && window.TribeCaptures.open(id || undefined),   // feat/captures
@@ -388,10 +391,20 @@
     if (model.online && !noModel) return modelReply(text);
     const g = triedGuide ? null : await guideSearch(text);
     if (g) return say(`I'm in basic mode, but the Guide might help. ${g.title}: ${g.snippet}`, [act('Open in Guide', 'guide', g.slug)], { guide: g.slug });
-    // flint-local: the honest card. With no AI, Flint still does a lot (see "what can you do"); this one needs more.
-    return say('This one needs an AI. I\'m in basic mode (no AI), so nothing changed. Free · no AI: I add, finish and assign tasks, tell people things, schedule, switch themes, design websites and screens from templates, and answer how-to questions from the docs. With an AI: it reads what you mean and does this one too.',
-      [act('Use my AI (free)', 'brain'), act('Get credits / Premium', 'credits'), act('What can you do?', 'ask', 'what can you do')]);
+    // feat/flint-unify: the AI card only when the ask really needs generation (long copy, pictures, code). Anything
+    // else gets one short question with chips that do something real.
+    const NL = window.TribeNLU, ctx = sink ? sink.ctx : 'app';
+    if (!(NL && NL.needsAI && !NL.needsAI(text))) return say('', [], { html: boostHtml(text, ctx) });
+    const q = NL.clarify(text, { view: ctx });
+    return say(q.q, q.chips.map(c => c.fill ? act(c.label, 'fill', c.say) : act(c.label, 'ask', c.say)));
   }
+  const BOOST = {
+    app: ['Nothing changed. For free I add, finish and assign tasks, tell people things, schedule, switch themes, design websites and screens from templates, and answer how-to questions from the docs.', 'An AI reads what you mean and does this one too: longer writing, pictures and code.'],
+    designer: ['Nothing changed. For free I add links, socials, buttons, pages and sections, change any words, colors and layouts, and export HTML.', 'An AI writes new copy or pictures for this site and turns them into the same edits here, each one undoable.'],
+    canvas: ['Nothing changed on the canvas. For free I draw screens from templates, align, group, tidy, rename, recolor and export.', 'An AI draws what you described as real layers here, and Undo takes it back.'],
+    preview: ['Nothing changed yet. For free I edit what you pick, build first versions from recipes and reload the preview.', 'An AI makes this change in your code, and the preview reloads as it saves.'],
+  };
+  const boostHtml = (ask, ctx) => { const b = BOOST[ctx] || BOOST.app; return window.TribeBoost ? window.TribeBoost.html({ did: b[0], would: b[1], ask }) : esc(b[0]); };
 
   // ---------- a brain: built in (this browser, WebLLM) or the tribe's (server/flint.js → server/llm.js), streamed ----------
   async function browserReply(text, extra) {
@@ -463,10 +476,12 @@
   }
   const linkify = s => esc(s).replace(/```[a-z]*\n?([\s\S]*?)```/g, (_, c) => `<pre class="fl-code"><code>${c.replace(/\n$/, '')}</code></pre>`)   // v0.27.1: lessons show code
     .replace(/`([^`\n]{1,80})`/g, '<code>$1</code>').replace(/\*\*([^*\n]{1,120})\*\*/g, '<b>$1</b>').replace(/“([^”]{1,120})”/g, '“<b>$1</b>”');
+  const EVI = { reload: '↻', file: '✎', error: '!', agent: '◆', ask: '→', build: '▣', info: '·' };
   function msgHtml(m, i) {
+    if (m.who === 'ev') return `<div class="fl-ev fl-ev-${esc(m.k || 'info')}" data-i="${i}"><span class="fl-ev-ic" aria-hidden="true">${EVI[m.k] || '·'}</span><span class="fl-ev-t">${m.who2 ? `<b>${esc(m.who2)}</b> ` : ''}${m.html || linkify(m.text)}${m.add != null ? ` <span class="fl-diff"><ins>+${m.add}</ins> <del>−${m.del || 0}</del></span>` : ''}</span>${(m.acts || []).length ? `<span class="fl-acts">${m.acts.map((a, j) => `<button class="fl-act" data-act="${i}:${j}">${esc(a.label)}</button>`).join('')}</span>` : ''}</div>`;
     const mine = m.who === 'me';
-    return `<div class="fl-msg ${mine ? 'me' : 'fl'}${m.streaming ? ' streaming' : ''}" data-i="${i}">${mine ? '' : `<span class="fl-av sm">${flintIco(12)}</span>`}
-      <div class="fl-b"><div class="fl-t">${linkify(m.text)}</div>${m.via && !m.streaming ? `<small class="fl-via">via ${esc(m.via)}</small>` : ''}${(m.acts || []).length ? `<div class="fl-acts">${m.acts.map((a, j) => `<button class="fl-act" data-act="${i}:${j}">${esc(a.label)}</button>`).join('')}</div>` : ''}</div></div>`;
+    return `<div class="fl-msg ${mine ? 'me' : 'fl'}${m.streaming ? ' streaming' : ''}${m.undone ? ' undone' : ''}" data-i="${i}">${mine ? '' : `<span class="fl-av sm">${flintIco(12)}</span>`}
+      <div class="fl-b">${mine && m.name ? `<small class="fl-who">${esc(m.name)}</small>` : ''}${m.text ? `<div class="fl-t">${linkify(m.text)}</div>` : ''}${m.html ? `<div class="fl-h">${m.html}</div>` : ''}${m.via && !m.streaming ? `<small class="fl-via">via ${esc(m.via)}</small>` : ''}${(m.acts || []).length ? `<div class="fl-acts">${m.acts.map((a, j) => `<button class="fl-act${a.primary ? ' primary' : ''}" data-act="${i}:${j}"${a.off ? ' disabled' : ''}>${esc(a.label)}</button>`).join('')}</div>` : ''}</div></div>`;
   }
   function threadHtml() { return thread.length ? thread.map(msgHtml).join('') : emptyHtml(); }
   function barHtml(id) {
@@ -478,23 +493,26 @@
   const threads = () => [...document.querySelectorAll('.fl-thread, .fh-thread')];   // feat/flint-ai: the Home card's thread too
   window.addEventListener('tribe:stage', () => { if (!thread.length) draw(); });   // nudges follow the project's progress
   function draw() {
-    threads().forEach(el => { el.innerHTML = threadHtml(); el.scrollTop = el.scrollHeight; });
+    mounts.forEach(u => u.draw());
+    threads().filter(el => !el.closest('.flint-mount')).forEach(el => { el.innerHTML = threadHtml(); el.scrollTop = el.scrollHeight; });
     const dock = $('#flint'); if (dock) { dock.classList.toggle('has-msgs', thread.length > 0); const c = dock.querySelector('#fl-clear'); if (c) c.hidden = !thread.length; }
   }
   function drawLast() {
+    mounts.forEach(u => u.draw());
     const i = thread.length - 1, m = thread[i];
-    threads().forEach(el => { const n = el.querySelector(`.fl-msg[data-i="${i}"] .fl-t`); if (n) { n.innerHTML = linkify(m.text); el.scrollTop = el.scrollHeight; } else { el.innerHTML = threadHtml(); el.scrollTop = el.scrollHeight; } });
+    threads().filter(el => !el.closest('.flint-mount')).forEach(el => { const n = el.querySelector(`.fl-msg[data-i="${i}"] .fl-t`); if (n) { n.innerHTML = linkify(m.text); el.scrollTop = el.scrollHeight; } else { el.innerHTML = threadHtml(); el.scrollTop = el.scrollHeight; } });
   }
   function drawStatus() { document.querySelectorAll('[data-flst]').forEach(e => { e.textContent = statusLine(); e.classList.toggle('ok', model.online); }); }
   // The flame in the Ask bar: a small menu of what Flint does (feat: clickable Flint)
-  function flintMenu(btn, root) {
+  function flintMenu(btn, root, sendFn) {
+    const go = sendFn || (t => { setOpen(true); send(t); });
     const old = document.getElementById('fl-menu'); if (old) { old.remove(); return; }
     const input = root.querySelector('.fl-in');
     const fill = t => { if (input) { input.value = t; input.focus(); input.setSelectionRange(t.length, t.length); } };
     const items = [
-      ['🎯', 'What should I do next?', 'Your task, and what is next for the tribe', () => { setOpen(true); send('what should i do next?'); }],
-      ['🤖', 'Prompt for my AI helper', 'Keeps it in your part of the code', () => { setOpen(true); send('copy a prompt for my ai'); }],
-      ['📰', "What's new?", 'A quick catch-up on the project', () => { setOpen(true); send("what's new?"); }],
+      ['🎯', 'What should I do next?', 'Your task, and what is next for the tribe', () => go('what should i do next?')],
+      ['🤖', 'Prompt for my AI helper', 'Keeps it in your part of the code', () => go('copy a prompt for my ai')],
+      ['📰', "What's new?", 'A quick catch-up on the project', () => go("what's new?")],
       ['📝', 'Take a note', 'Saved for the whole tribe', () => fill('note: ')],
       ['✅', 'Make a task', 'Straight onto the Task Board', () => fill('task: ')],
       ['📄', 'Write a doc', 'A page, plan or write-up in Files', () => fill('write a doc about ')],
@@ -520,6 +538,7 @@
     const first = m.querySelector('[data-fm]'); if (first) first.focus();
   }
   function wire(root) {
+    if (window.TribeBoost) window.TribeBoost.bind(root);
     root.addEventListener('click', e => {
       const ns = e.target.closest('[data-step]'); if (ns && ns.closest('.fl-empty')) { if (window.TribeProjects && window.TribeProjects.step) window.TribeProjects.step(ns.dataset.step); return; }
       const c = e.target.closest('[data-chip]'); if (c) { const v = c.dataset.chip; if (v === 'Capture a note') { const i = root.querySelector('.fl-in'); if (i) { i.value = 'note: '; i.focus(); } return; } return send(v); }
@@ -595,7 +614,90 @@
     draw(); drawStatus(); refreshModel();
     return card;
   }
+
+  // ---------- one Flint chat everywhere (feat/flint-unify) ----------
+  // TribeFlint.mount(el, { ctx, run, chips, onSay, onClear, tools, placeholder }) puts Flint's own chat (the same thread,
+  // composer, chips, AI-boost card and history look) inside an editor: the website designer, the design canvas, the
+  // live preview. run(text, ui) does the editor's own commands and returns 'flint' to hand the rest to Flint's full
+  // brain, whose replies land in this thread (sink). onSay(m) lets an editor keep the thread in its own log (undo
+  // history, a shared canvas thread); otherwise the thread is kept per ctx on this device.
+  //   ui = { ctx, el, thread, say(text, acts, extra), ev(text, extra), me(text), add(m), set(list), draw(), chips(list),
+  //          send(text), flint(text), capture(text), fill(text), focus(), extra, input }
+  const CTXN = { designer: 'Website', canvas: 'Design', preview: 'Preview', app: 'Anywhere' };
+  const CTXPH = { designer: 'Tell Flint what to change…', canvas: 'Describe a screen or a change…', preview: 'Ask Flint to change…', app: 'Ask Flint…' };
+  function mount(el, o = {}) {
+    if (!el) return null;
+    const ctx = o.ctx || 'app';
+    const old = el.querySelector(`.flint-mount[data-flctx="${ctx}"]`); if (old && old._ui) return old._ui;
+    const root = document.createElement('section'); root.className = 'flint-mount'; root.dataset.flctx = ctx; root.setAttribute('aria-label', 'Flint');
+    root.innerHTML = `<header class="flm-head"><span class="fl-av sm" aria-hidden="true">${flintIco(12)}</span><b class="flm-name">Flint</b><span class="fl-eyebrow flm-ctx">${esc(CTXN[ctx] || ctx)}</span><span class="fl-st" data-flst>${statusLine()}</span>
+        <span class="flm-tools"></span><button type="button" class="fl-x" data-flm="clear" title="Clear the thread" aria-label="Clear the thread"${o.onClear || !o.onSay ? '' : ' hidden'}>${ico('i-x', 13)}</button></header>
+      <div class="fl-thread flm-thread" role="log" aria-live="polite" aria-label="Conversation with Flint"></div>
+      <div class="fl-chips flm-chips" role="group" aria-label="Suggestions"></div>
+      <div class="flm-extra"></div>${barHtml('flm-in-' + ctx)}`;
+    el.appendChild(root);
+    const KEYT = `tribecode.flint.thread.${ctx}${o.key ? '.' + o.key : ''}`;
+    let list = o.onSay ? [] : (ls.get(KEYT, []) || []).filter(m => m && (m.text != null || m.html)).slice(-MAX), chipList = [];
+    const box = root.querySelector('.flm-thread'), chipBox = root.querySelector('.flm-chips'), input = root.querySelector('.fl-in');
+    if (o.placeholder || CTXPH[ctx]) input.placeholder = o.placeholder || CTXPH[ctx];
+    const keep = () => { if (!o.onSay) ls.set(KEYT, list.slice(-MAX).map(m => ({ who: m.who, text: m.text, html: m.html, acts: (m.acts || []).filter(a => a.act), at: m.at, k: m.k }))); };
+    const ui = {
+      ctx, el: root, input, extra: root.querySelector('.flm-extra'), tools: root.querySelector('.flm-tools'), busy: false,
+      get thread() { return list; },
+      add(m) { m.at = m.at || new Date().toISOString(); m.acts = m.acts || []; if (o.onSay) o.onSay(m); else { list.push(m); list = list.slice(-MAX); keep(); } ui.draw(); return m; },
+      say: (text, acts, extra) => ui.add({ who: 'flint', text: String(text || ''), acts: acts || [], ...(extra || {}) }),
+      ev: (text, extra) => ui.add({ who: 'ev', text: String(text || ''), ...(extra || {}) }),
+      me: text => ui.add({ who: 'me', text: String(text || '') }),
+      set(l) { list = l || []; ui.draw(); },
+      draw() {
+        const empty = !list.length && !ui.busy;
+        box.innerHTML = empty ? `<div class="fl-empty"><p class="fl-hi"><b>Hi, I'm Flint.</b> ${esc(o.hello || 'Say what you want. Everything I do here can be undone.')}</p></div>`
+          : list.map(msgHtml).join('') + (ui.busy ? `<div class="fl-msg fl streaming"><span class="fl-av sm">${flintIco(12)}</span><div class="fl-b"><div class="fl-t">On it…</div></div></div>` : '');
+        box.scrollTop = box.scrollHeight;
+        const c = root.querySelector('[data-flm="clear"]'); if (c && !o.onSay) c.hidden = !list.length;
+      },
+      chips(l) {
+        chipList = (l || []).map(c => typeof c === 'string' ? { label: c.replace(/…$/, '…'), say: c, fill: /…$/.test(c) } : c).filter(Boolean);
+        chipBox.innerHTML = chipList.map((c, i) => `<button type="button" class="fl-chip" data-flchip="${i}">${esc(c.label)}</button>`).join('');
+        chipBox.hidden = !chipList.length;
+      },
+      fill(t) { input.value = String(t || '').replace(/…$/, ''); input.focus(); try { input.setSelectionRange(input.value.length, input.value.length); } catch {} },
+      focus(prefillText) { if (typeof prefillText === 'string') ui.fill(prefillText); else if (!phone()) input.focus({ preventScroll: true }); },
+      async flint(text) { const prev = sink; sink = ui; try { await route(text); } finally { sink = prev; } },
+      async capture(text) { const out = []; const cap = { ctx, add: m => { out.push(m); return m; }, draw() {} }; const prev = sink; sink = cap; try { await route(text); } finally { sink = prev; } return out; },
+      async send(text) {
+        text = String(text || '').trim(); if (!text || ui.busy) return;
+        ui.busy = true; if (o.echo !== false) ui.me(text); else ui.draw();
+        try { const r = o.run ? await o.run(text, ui) : 'flint'; if (r === 'flint') { ui.busy = false; await ui.flint(text); } }
+        catch (e) { ui.say('Something went wrong: ' + (e && e.message || e)); }
+        finally { ui.busy = false; ui.draw(); if (o.after) try { o.after(ui); } catch {} }
+        if (window.TribeFlintMem) try { window.TribeFlintMem.log(text); } catch {}
+      },
+    };
+    root._ui = ui; mounts.add(ui);
+    root.addEventListener('click', e => {
+      const ch = e.target.closest('[data-flchip]'); if (ch) { const c = chipList[+ch.dataset.flchip]; if (!c) return; if (c.fn) return c.fn(ui); return c.fill ? ui.fill(c.say) : ui.send(c.say); }
+      const a = e.target.closest('[data-act]'); if (a && root.contains(a)) {
+        const [i, j] = a.dataset.act.split(':').map(Number), x = list[i] && list[i].acts && list[i].acts[j]; if (!x) return;
+        if (x.fn) return x.fn(ui, a);
+        if (x.act === 'ask') return ui.send(x.arg);
+        if (x.act === 'fill') return ui.fill(x.arg);
+        if (x.act === 'meant') { let m = {}; try { m = JSON.parse(x.arg); } catch {} if (m.say && m.means && window.TribeFlintLocal && window.TribeFlintLocal._learn) window.TribeFlintLocal._learn(m.say, m.means); return ui.send(m.means || ''); }
+        if (ACTS[x.act]) ACTS[x.act](x.arg); return;
+      }
+      if (e.target.closest('[data-flm="clear"]')) { if (o.onClear) o.onClear(ui); else { list = []; keep(); ui.draw(); } return; }
+      const me = e.target.closest('[data-flme]'); if (me) { e.preventDefault(); flintMenu(me, root, t => ui.send(t)); return; }
+      const mic = e.target.closest('[data-flmic]'); if (mic) { if (window.TribeSpeech && window.TribeSpeech.supported && window.TribeSpeech.supported()) window.TribeSpeech.dictate(input); else toast((window.TribeSpeech && window.TribeSpeech.HINT) || 'Dictation is not available in this browser.'); }
+    });
+    root.querySelector('[data-flbar]').addEventListener('submit', e => { e.preventDefault(); const v = input.value; input.value = ''; if (window.TribeSpeech && window.TribeSpeech.stopDictation) try { window.TribeSpeech.stopDictation(); } catch {} ui.send(v); });
+    input.addEventListener('keydown', e => { e.stopPropagation(); if (e.key === 'Escape' && o.onEscape) { e.preventDefault(); o.onEscape(ui); } });
+    if (window.TribeBoost) window.TribeBoost.bind(root, o.onAI ? { onAI: (t, b) => o.onAI(t, b, ui) } : {});
+    if (o.tools) o.tools.forEach(t => { const b = document.createElement('button'); b.type = 'button'; b.className = 'fl-x flm-tool'; b.title = t.title || ''; b.setAttribute('aria-label', t.title || t.label || ''); b.innerHTML = t.html || esc(t.label || ''); if (t.attrs) Object.entries(t.attrs).forEach(([k, v]) => b.setAttribute(k, v)); b.onclick = () => t.fn(ui, b); ui.tools.appendChild(b); });
+    ui.chips(typeof o.chips === 'function' ? o.chips() : o.chips || []);
+    ui.draw(); drawStatus();
+    return ui;
+  }
   { const slot = document.getElementById('hub-flint-slot'); if (slot) setTimeout(() => mountDashboard(slot), 0); }   // Home drew before Flint loaded
-  window.TribeFlint = { mountDashboard, redraw: () => { save(); draw(); }, prefill, focus, openFull, closeFull, ask: send, thread: () => thread.slice(), clear, status: () => ({ ...model }), nudge,
+  window.TribeFlint = { mount, mounts: () => [...mounts], mountDashboard, redraw: () => { save(); draw(); }, prefill, focus, openFull, closeFull, ask: send, thread: () => thread.slice(), clear, status: () => ({ ...model }), nudge,
     say: (text, acts) => say(text, acts || []), act, step: async t => { push('me', t); await route(t); }, think: async t => { await refreshModel(); if (!model.online) return false; await modelReply(t); return true; } };   // v0.27.1: flintmem.js uses say/act/step/think
 })();
