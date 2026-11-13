@@ -210,7 +210,7 @@ def main():
             assert ph.evaluate("document.documentElement.scrollWidth <= innerWidth + 1")
             ph.click("#tn-next"); ph.wait_for_selector("#tn[data-step='2']", state="visible", timeout=10000)
             homes = ph.eval_on_selector_all("#tn [data-tn-where]", "els => els.map(e => e.dataset.tnWhere)")
-            assert homes == ["folder", "device", "cloud", "github"], homes   # feat/folder-sync: the folder home, off on a phone
+            assert homes == ["folder", "device", "cloud", "github", "shared"], homes   # feat/folder-sync: the folder home, off on a phone
             assert ph.get_attribute("#tn [data-tn-where='folder']", "disabled") is not None, "a phone: no folder home"
             assert ph.get_attribute("#tn [data-tn-where='device']", "aria-checked") == "true", "a phone: this phone is recommended"
             ph.click("#tn #tn-x"); ph.wait_for_selector("#tn", state="detached")

@@ -62,16 +62,19 @@
       if (window.TribeClient && window.TribeClient.connected()) return toast('This project already has a home.');
       return start();
     }
-    const gh = homeOf().github, desk = desktopApp();
+    const gh = homeOf().github, desk = desktopApp(), fo = window.TribeHome && window.TribeHome.canPickFolder ? window.TribeHome.canPickFolder() : { ok: false };
     const row = (k, icon, title, sub, tag, live) => `<button class="ph-row" data-su="${k}"><span class="ph-ic${live ? ' live' : ''}">${ic(icon)}</span><span class="ph-tt"><b>${title}${tag ? ` <em class="ph-tag">${tag}</em>` : ''}</b><small>${sub}</small></span><span class="ph-go">${ic('chev', 16)}</span></button>`;
     const s = sheet(`<header class="ph-h"><div><span class="eyebrow">${o.first ? 'Last step · optional' : 'Where it lives'}</span><h3>Where should it live?</h3></div></header>
       <p class="ph-lead">${o.first ? 'It already works here. Pick a home now so friends can join, or decide later from the pill at the top.' : 'It works on this device now. A home lets friends see it and join.'}</p>
       <div class="ph-list">
+        ${fo.ok ? row('folder', 'folder', 'A folder on this computer', 'Your own folder holds the files; this computer hosts it. Edit here or in VS Code', desk ? 'Recommended' : '') : ''}
+        ${fo.ok ? row('shared', 'net', 'A shared folder', 'A Dropbox, OneDrive, Google Drive, iCloud, NAS or Syncthing folder you already sync. No account; friends join from it') : ''}
+        ${row('computer', 'box', 'This computer', desk ? 'The desktop app hosts it in TribeCode’s own folder. Friends on your network join with a link' : 'The TribeCode app or server on this computer hosts it. Friends on your network join with a link')}
+        ${row('cloud', 'zap', 'Free cloud', 'Always online on a free Render server')}
         ${row('github', 'git', 'A GitHub repo', gh ? `Live on ${esc(gh.repo)}` : 'Anyone can see the live repo and suggested changes. No server needed', gh ? 'Connected' : 'Light', true)}
-        ${row('computer', 'box', 'This computer', desk ? 'The desktop app hosts it here. Friends join with a link' : 'The TribeCode app or server on this computer hosts it')}
-        ${row('cloud', 'net', 'Free cloud', 'Always online on a free Render server')}
-        ${row('phone', 'zap', 'Phone', phoneLike() ? 'Keep it on this phone, or host from an Android phone' : 'Host from an Android phone with Termux')}
+        ${phoneLike() ? row('phone', 'spark', 'Phone', 'Keep it on this phone, or host from an Android phone') : ''}
       </div>
+      <p class="ph-note">A GitHub repo or a shared folder can also be added later to any home, as its synced copy.</p>
       <p class="ph-foot"><button class="linkish" data-su-close id="su-later">Decide later</button><span aria-hidden="true">·</span><button class="linkish" data-su-join>Join with a link</button></p>`, 'su-where', 'Where should it live?');
     s.addEventListener('click', e => {
       const b = e.target.closest('[data-su]'); if (!b) return;
@@ -80,6 +83,8 @@
     return s;
   }
   function choose(home) {
+    if (home === 'folder' && window.TribeHome) { close(); return window.TribeHome.folder(); }
+    if (home === 'shared' && window.TribeHome) { close(); return window.TribeHome.sharedFolder(); }
     if (home === 'github') return githubGate();
     if (home === 'computer') return computer();
     if (home === 'cloud') return cloud();

@@ -254,7 +254,7 @@ def main():
             st, d = call(f"/projects/{pid}/sync", token=host); assert d["settings"]["mode"] == "manual"
             # sharing: three paths from the pill
             pg.click("#home-pill"); pg.click("#hp-share"); pg.wait_for_selector("#lr-share")
-            ways = pg.locator("#lr-share [data-share]").evaluate_all("els => els.map(e => e.dataset.share)"); assert ways == ["anywhere", "network", "solo"], ways
+            ways = pg.locator("#lr-share [data-share]").evaluate_all("els => els.map(e => e.dataset.share)"); assert ways == ["anywhere", "network", "folder", "solo"], ways
             assert "Recommended" in pg.text_content("#lr-share [data-share='anywhere']")
             pg.click("#lr-share [data-share='network']"); pg.wait_for_function("(document.querySelector('#lr-share-link') || {}).value && document.querySelector('#lr-share-link').value.includes('/join/')", timeout=15000)
             pg.click("#lr-share [data-share='anywhere']"); pg.wait_for_selector("#lr-share [data-step='repo']")
@@ -262,6 +262,15 @@ def main():
             pg.click("#lr-share [data-ship-pick='auto']"); pg.click("#lr-share-go"); pg.wait_for_function("(document.querySelector('#lr-share-link') || {}).value && document.querySelector('#lr-share-link').value.includes('/join/')", timeout=15000)
             st, d = call(f"/projects/{pid}/sync", token=host); assert d["settings"]["mode"] == "auto", "the guided path set auto-ship"
             pg.click("#lr-share [data-share='solo']"); pg.wait_for_selector("#lr-share [data-solo-done]")
+            # the 4th path: share through a folder you already sync (start a new shared copy in ~/Dropbox/Tribes)
+            pg.click("#lr-share [data-share='folder']"); pg.click("#lr-share-folder"); pg.wait_for_selector("#lr-folder .lr-dir")
+            pg.click("#lr-folder [data-open$='Dropbox']"); pg.wait_for_selector("#lr-folder [data-dir$='Tribes']"); pg.click("#lr-folder [data-dir$='Tribes']")
+            pg.wait_for_selector("#lr-found [data-join]"); assert "Join camp" in pg.inner_text("#lr-found"), "copies already there can be joined"
+            pg.check("#lr-found [data-join][value='']"); assert pg.inner_text("#lr-folder-go") == "Share through this folder"
+            pg.click("#lr-folder-go"); pg.wait_for_selector("#lr-folder", state="detached")
+            wait(lambda: call(f"/projects/{pid}/sync", token=host)[1]["status"]["kind"] == "folder", "now synced through the shared folder")
+            wait(lambda: "shared folder" in pg.inner_text("#home-pill"), "the pill says so")
+            assert any(x.name.endswith(".tribecode.git") and x.name != "camp.tribecode.git" for x in shared.iterdir())
             b.close()
 
         # ---------- tokens never in logs or responses ----------

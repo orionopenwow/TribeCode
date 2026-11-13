@@ -107,3 +107,4 @@ body.lr-on #host-pill { display: none !important; }   /* one pill: the home pill
 @media (prefers-reduced-motion: reduce) { .lr-dir, .lr-seg button { transition: none; } }
 /* end */
 .lr-check input, .lr-radio input { accent-color: var(--accent); }
+.lr-joins { display: grid; gap: 6px; margin-top: 6px; }

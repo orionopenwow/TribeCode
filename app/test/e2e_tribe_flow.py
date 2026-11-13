@@ -103,10 +103,10 @@ def main():
             pg.click("#tn-next"); assert pg.is_visible("#tn-err") and pg.evaluate("TribeNew.state().step") == 1, "a calm inline note, no empty name"
             pg.fill("#tn-name", "Lantern Crew"); pg.click("#tn [data-tn-emo='🎮']"); pg.click("#tn-next")
             pg.wait_for_selector("#tn[data-step='2'] [data-tn-where]")
-            homes = pg.evaluate("TribeNew.homes()"); assert homes == ["folder", "device", "cloud", "github"], homes
+            homes = pg.evaluate("TribeNew.homes()"); assert homes == ["folder", "device", "cloud", "github", "shared"], homes
             assert pg.evaluate("TribeNew.recommended()") == "folder", "a page served by TribeCode: a folder on this computer"
             assert pg.locator("#tn [data-tn-where='folder'] .ph-tag").text_content().strip() == "Recommended"
-            assert [t.strip() for t in pg.locator("#tn [data-tn-where] .ph-tt b").evaluate_all("els => els.map(e => e.firstChild.textContent)")] == ["A folder on this computer", "This device only", "Free cloud", "GitHub repo"]
+            assert [t.strip() for t in pg.locator("#tn [data-tn-where] .ph-tt b").evaluate_all("els => els.map(e => e.firstChild.textContent)")] == ["A folder on this computer", "This device only", "Free cloud", "GitHub repo", "A shared folder"]
             assert "connect GitHub later to any of the others" in pg.inner_text("#tn [data-tn-where='github']")
             pg.click("#tn [data-tn-where='github']"); pg.wait_for_selector("#tn-repo"); pg.mouse.move(5, 5); pg.wait_for_timeout(300)
             pg.screenshot(path=str(SHOTS / "tribe-flow-where.png"))
@@ -167,7 +167,7 @@ def main():
             pg.mouse.move(5, 5); pg.evaluate("document.querySelector('#tn').scrollTop = 1e4"); pg.wait_for_timeout(250); pg.screenshot(path=str(SHOTS / "folder-home.png"))
             pg.click("#tn-go")
             pg.wait_for_function("document.querySelector('#tn-link') && /\\/join\\//.test(document.querySelector('#tn-link').value)", timeout=20000)
-            assert pg.input_value("#tn-link").startswith(BASE + "/join/")
+            assert "/join/" in pg.input_value("#tn-link"), "the network link (Share on this network)"
             assert api("/health")["members"] >= 1
             with pg.expect_navigation(timeout=20000): pg.click("#tn-done")   # a new host: the page reloads into it
             pg.wait_for_selector("#home-pill:not(.hidden)", timeout=20000)
@@ -178,7 +178,7 @@ def main():
             n0 = pg.evaluate("TribeProjects.list().length")
             pg.click("#tn-first-later"); pg.wait_for_selector("#tn-first", state="detached")
             pg.click("#pj-plus"); opened(pg, "rail + on a server"); pg.fill("#tn-name", "Second Crew"); pg.click("#tn-next")
-            assert pg.evaluate("TribeNew.homes()") == ["tribe", "folder", "github"]
+            assert pg.evaluate("TribeNew.homes()") == ["tribe", "folder", "github", "shared"]
             pg.click("#tn-go"); pg.wait_for_function("document.querySelector('#tn-link') && document.querySelector('#tn-link').value", timeout=10000)
             pg.click("#tn-done"); closed(pg, "server tribe")
             pg.wait_for_function(f"TribeProjects.list().length === {n0 + 1} && (TribeProjects.cur() || {{}}).name === 'Second Crew'", timeout=10000)

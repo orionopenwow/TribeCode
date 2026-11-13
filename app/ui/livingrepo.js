@@ -54,8 +54,9 @@
   function statusText(folder, sync) {
     const st = sync && sync.status, gh = !!(st && st.connected);
     const tail = !gh ? '' : st.state === 'conflict' ? 'conflict needs you' : st.paused ? 'Paused' : st.pending ? `${plural(st.pending, 'change')} not shipped` : st.lastShip ? `synced ${ago(st.lastShip.at)}` : 'not shipped yet';
-    if (folder && gh) return { l: 'Folder + GitHub', s: tail, tone: st.state };
-    if (gh) return { l: 'GitHub', s: tail, tone: st.state };
+    const remote = st && st.kind === 'folder' ? 'shared folder' : 'GitHub';
+    if (folder && gh) return { l: `Folder + ${remote}`, s: tail, tone: st.state };
+    if (gh) return { l: remote === 'GitHub' ? 'GitHub' : 'Shared folder', s: tail, tone: st.state };
     if (folder) return { l: 'Folder', s: folder.display, tone: 'ok' };
     const hosting = window.TribeHostPill && document.getElementById('host-pill') && !document.getElementById('host-pill').classList.contains('hidden');
     return { l: hosting ? 'This computer' : 'In the tribe', s: 'choose where it lives', tone: 'none' };
@@ -99,7 +100,8 @@
       ${st.state === 'conflict' ? `<p class="lr-warn">GitHub and this folder changed the same lines (${esc((st.conflict.files || []).slice(0, 2).join(', '))}). Nothing was lost. <button class="linkish" id="hp-fix">Sort it out</button></p>` : ''}
       <div class="hpo-acts">
         <button id="hp-move" ${pick.ok ? '' : `aria-disabled="true" title="${esc(pick.why)}"`}>${ic('folder')}<span>${cur.folder ? 'Move to another folder' : 'Move to a folder'}${pick.ok ? '' : `<small>${esc(pick.why)}</small>`}</span></button>
-        <button id="hp-github">${ic('git')}<span>${gh ? `GitHub · ${esc(st.repo)}` : 'Connect GitHub'}</span></button>
+        <button id="hp-github">${ic('git')}<span>${gh && st.kind !== 'folder' ? `GitHub · ${esc(st.repo)}` : 'Connect GitHub'}</span></button>
+        <button id="hp-shared" ${pick.ok ? '' : `aria-disabled="true" title="${esc(pick.why)}"`}>${ic('net')}<span>${gh && st.kind === 'folder' ? `Shared folder · ${esc(st.repo)}` : 'Share through a synced folder'}</span></button>
         ${gh && can.ship ? `<button id="hp-ship">${ic('upload')}<span>Ship now${st.pending ? ` · ${plural(st.pending, 'change')}` : ''}</span></button>` : ''}
         <button id="hp-sync">${ic('gear')}<span>Ship / sync settings</span></button>
         ${window.TribeVersions ? `<button id="hp-versions">${ic('refresh')}<span>Versions</span></button>` : ''}
@@ -111,7 +113,7 @@
     pill.setAttribute('aria-expanded', 'true');
     const on = (id, f) => { const b = pop.querySelector(id); if (b) b.onclick = () => { close(); f(); }; };
     on('#hp-move', () => (pick.ok ? folder({ pid: pid() }) : toast(pick.why)));
-    on('#hp-github', () => github()); on('#hp-ship', () => ship()); on('#hp-fix', () => ship()); on('#hp-sync', () => sync()); on('#hp-versions', () => window.TribeVersions.open()); on('#hp-share', () => share());
+    on('#hp-github', () => (st.kind === 'folder' ? github(null, true) : github())); on('#hp-shared', () => (gh && st.kind === 'folder' ? sync() : pick.ok ? sharedFolder() : toast(pick.why))); on('#hp-ship', () => ship()); on('#hp-fix', () => ship()); on('#hp-sync', () => sync()); on('#hp-versions', () => window.TribeVersions.open()); on('#hp-share', () => share());
     on('#hp-host', () => { window.TribeSettings && window.TribeSettings.open(); });
     setTimeout(() => document.addEventListener('click', outside, true), 0);
   }
@@ -171,10 +173,22 @@
     let chosen = null, browsing = '';
     const err = t => { const e = $('#lr-ferr', s); e.textContent = t || ''; e.hidden = !t; };
     const go = $('#lr-folder-go', s) || { disabled: true, textContent: '' };
-    const tell = () => { if (inline && o.onChange) o.onChange(chosen ? { path: chosen.path, display: chosen.display, summary: chosen.summary, gitInit: !$('#lr-git-l', s).hidden && $('#lr-git', s).checked } : null); };
+    const pickOf = () => chosen && { path: chosen.path, display: chosen.display, summary: chosen.summary, gitInit: !$('#lr-git-l', s).hidden && $('#lr-git', s).checked, ...(o.shared ? { join: (s.querySelector('[data-join]:checked') || {}).value || '' } : {}) };
+    const tell = () => { if (inline && o.onChange) o.onChange(pickOf()); };
     async function choose(path) {
       err(''); go.disabled = true; chosen = null; tell();
       let d = null;
+      if (o.shared) {   // a folder your sync app keeps: the shared copies already in it, or a new one
+        try { d = await srv('/folders/shared?path=' + encodeURIComponent(path), { auth: live() }); }
+        catch (e) { if (how.how === 'native' && !base()) d = { path, display: path, repos: [] }; else { $('#lr-found', s).hidden = true; return err(e.message); } }
+        chosen = { path: d.path, display: d.display, repos: d.repos || [] }; $('#lr-found', s).hidden = false; $('#lr-chosen', s).textContent = d.display;
+        $('#lr-found-body', s).innerHTML = `${chosen.repos.length ? `<p class="lr-found-t">Shared TribeCode copies already here. Join one, or start a new one:</p>` : '<p class="lr-found-t">No shared copy here yet: TribeCode makes one, and friends with this folder join from it.</p>'}
+          <div class="lr-joins">${chosen.repos.map((r, i) => `<label class="lr-radio"><input type="radio" name="lr-join" data-join value="${esc(r.name)}" ${i === 0 ? 'checked' : ''}><span><b>Join ${esc(r.title)}</b><small>${esc(r.name)}${r.at ? ' · updated ' + ago(r.at) : ''}</small></span></label>`).join('')}
+          <label class="lr-radio"><input type="radio" name="lr-join" data-join value="" ${chosen.repos.length ? '' : 'checked'}><span><b>Start sharing here</b><small>A new shared copy in this folder</small></span></label></div>`;
+        s.querySelectorAll('[data-join]').forEach(x => x.onchange = () => { go.textContent = x.value ? 'Join it' : 'Share through this folder'; tell(); });
+        $('#lr-git-l', s).hidden = true;
+        go.textContent = chosen.repos.length ? 'Join it' : 'Share through this folder'; go.disabled = false; tell(); return;
+      }
       try { d = await srv('/folders/check', { method: 'POST', body: { path, project: o.pid || undefined }, auth: live() }); }
       catch (e) { if (how.how === 'native' && !base()) d = { path, display: path, summary: null }; else { $('#lr-found', s).hidden = true; return err(e.message); } }
       chosen = d; $('#lr-found', s).hidden = false; $('#lr-chosen', s).textContent = d.display;
@@ -210,7 +224,7 @@
     if (inline) return s;
     go.onclick = async () => {
       if (!chosen) return;
-      const choice = { path: chosen.path, display: chosen.display, summary: chosen.summary, gitInit: !$('#lr-git-l', s).hidden && $('#lr-git', s).checked };
+      const choice = pickOf();
       if (o.onPick) { closeSheet(); return o.onPick(choice); }
       go.disabled = true; go.textContent = moving ? 'Moving…' : 'Setting it up…';
       try {
@@ -227,26 +241,43 @@
     return pickFolder({ pid: p, moving: !!cur.folder || !!(cur.sync && cur.sync.status && cur.sync.status.hasFolder && !cur.folder && false) });
   }
   // A project on this device only: pick the folder, then this computer hosts it (setuplocal's host.computer) and it moves in.
-  function soloToFolder() {
-    return pickFolder({ title: 'Pick its folder', onPick: async choice => {
+  function soloToFolder() { return pickFolder({ title: 'Pick its folder', onPick: choice => soloTo(choice, 'folder') }); }
+  async function soloTo(choice, kind) {
+    {
       const s = sheet('lr-moving', 'Moving it', `${head('A folder on this computer', 'Moving it to your folder')}<div class="su-prog" role="status" aria-live="polite"><span class="su-spin" aria-hidden="true"></span><span id="lr-mv-t">Starting…</span></div><p class="tn-err ph-err" id="lr-mv-e" hidden></p>`);
       try {
         const r = await L().host.computer({ step: t => { const x = $('#lr-mv-t', s); if (x) x.textContent = t; }, noReload: true });
         if (!r || r.noApp || r.alreadyTribe) throw new Error(r && r.alreadyTribe ? 'This computer already hosts a tribe. Ask its host for an invite link.' : 'TribeCode isn’t running on this computer.');
         const first = (r.projects || [])[0];
-        await realFetch(`${r.server}/api/projects/${encodeURIComponent(first.id)}/folder`, { method: 'PUT', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + r.token }, body: JSON.stringify({ path: choice.path, gitInit: choice.gitInit }) })
-          .then(async x => { if (!x.ok) throw new Error((await x.json().catch(() => ({}))).error || 'The folder didn’t take.'); });
+        const call = async (path, o2) => { const x = await realFetch(`${r.server}/api${path}`, { method: o2.method, headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + r.token }, body: JSON.stringify(o2.body) }); const d = await x.json().catch(() => ({})); if (!x.ok) throw new Error(d.error || 'That didn’t take.'); return d; };
+        if (kind === 'shared') await connectShared(first.id, choice, call);
+        else await call(`/projects/${encodeURIComponent(first.id)}/folder`, { method: 'PUT', body: { path: choice.path, gitInit: choice.gitInit } });
         location.reload();
       } catch (e) { const x = $('#lr-mv-e', s); if (x) { x.textContent = e.message + ' Your project is safe on this device.'; x.hidden = false; } }
+    }
+  }
+
+  // ---------- A shared folder (Dropbox, OneDrive, Google Drive, iCloud, a NAS, Syncthing) as the synced copy ----------
+  const SHARED_LINE = 'A Dropbox, OneDrive, Google Drive or iCloud folder, a network share or a Syncthing folder you already sync. No account; friends with the same folder join from it.';
+  async function connectShared(p, choice, call = srv) {
+    const body = { shared: choice.path, ...(choice.join ? { sharedName: choice.join } : {}) };
+    return choice.join ? call(`/projects/${encodeURIComponent(p)}/sync/join`, { method: 'POST', body }) : call(`/projects/${encodeURIComponent(p)}/sync`, { method: 'PUT', body: { kind: 'folder', ...body } });
+  }
+  function sharedFolder(after) {
+    const how = canPickFolder(); if (!how.ok) { toast(how.why); return null; }
+    return pickFolder({ shared: true, title: 'Share through a folder you already sync', onPick: async choice => {
+      if (!live()) return soloTo(choice, 'shared');
+      try { await connectShared(pid(), choice); refresh(); toast(choice.join ? 'Joined the shared copy: its files are here now.' : `Sharing through ${choice.display}. Ship to send changes; friends pull them.`); if (after) after(); }
+      catch (e) { toast(e.message); }
     } });
   }
 
   // ---------- GitHub (a synced copy of any home) ----------
-  async function github(after) {
+  async function github(after, replace) {
     if (solo()) return L() && L().choose ? L().choose('github') : null;
     await load(true).catch(() => {});
     const can = (cur.sync && cur.sync.can) || {}, st = (cur.sync && cur.sync.status) || {};
-    if (st.connected) return sync();
+    if (st.connected && !replace) return sync();
     const s = sheet('lr-gh', 'Connect GitHub', `${head('Connect a GitHub repo', 'Give it a synced copy on GitHub')}
       <p class="ph-lead">The home stays the real thing. GitHub gets a copy when you ship, by hand or by itself. You can disconnect any time.</p>
       <div id="lr-gh-sign" class="lr-gh-sign"><span class="faint">Checking for a GitHub sign-in…</span></div>
@@ -262,7 +293,7 @@
     $('#lr-gh-go', s).onclick = async () => {
       const repo = $('#lr-gh-repo', s).value.trim(); if (!repo) return errf('Type the repository as owner/name.');
       $('#lr-gh-go', s).disabled = true;
-      try { await srv(`/projects/${encodeURIComponent(pid())}/sync`, { method: 'PUT', body: { repo, branch: $('#lr-gh-branch', s).value.trim() || 'main' } }); closeSheet(); refresh(); if (after) after(); else sync(); }
+      try { await srv(`/projects/${encodeURIComponent(pid())}/sync`, { method: 'PUT', body: { kind: 'github', repo, branch: $('#lr-gh-branch', s).value.trim() || 'main' } }); closeSheet(); refresh(); if (after) after(); else sync(); }
       catch (e) { $('#lr-gh-go', s).disabled = false; errf(e.message); }
     };
     return s;
@@ -274,10 +305,10 @@
     let d; try { d = await srv(`/projects/${encodeURIComponent(p)}/sync`); } catch (e) { el.innerHTML = `<p class="faint">${esc(e.message)}</p>`; return null; }
     const v = d.settings, st = d.status, ro = !d.can.edit, dis = ro ? 'disabled' : '';
     const seg = (name, val, opts) => `<div class="lr-seg" role="radiogroup">${opts.map(([k, t]) => `<button type="button" role="radio" data-${name}="${k}" aria-checked="${val === k}" ${dis}>${esc(t)}</button>`).join('')}</div>`;
-    el.innerHTML = `${!st.connected ? `<p class="lr-warn">No GitHub repo yet. <button type="button" class="linkish" id="lr-s-connect">Connect a GitHub repo</button>. Until then nothing ships.</p>` : ''}
+    el.innerHTML = `${!st.connected ? `<p class="lr-warn">Nothing to ship to yet. <button type="button" class="linkish" id="lr-s-connect">Connect a GitHub repo</button> or <button type="button" class="linkish" id="lr-s-shared">share through a synced folder</button>. Until then nothing ships.</p>` : ''}
       ${ro ? '<p class="ph-note">Only the host or the project lead changes these. You can still ship by hand.</p>' : ''}
       <div class="lr-grid">
-        <div><label class="ph-lab" for="lr-repo">Repository</label><input class="input" id="lr-repo" value="${esc(v.repo)}" placeholder="owner/name" ${dis}></div>
+        <div><label class="ph-lab" for="lr-repo">${v.kind === 'folder' ? 'Shared folder copy' : 'Repository'}</label><input class="input" id="lr-repo" value="${esc(v.repo)}" placeholder="owner/name" ${v.kind === 'folder' ? 'readonly title="Pick another shared folder from the pill"' : dis}></div>
         <div><label class="ph-lab" for="lr-branch">Branch</label><input class="input" id="lr-branch" value="${esc(v.branch)}" ${dis}></div>
       </div>
       <span class="ph-lab">Shipping</span>${seg('mode', v.mode, [['manual', 'Manual'], ['auto', 'Auto-ship']])}
@@ -287,7 +318,7 @@
         <label class="lr-inline">Every <input class="input lr-num" id="lr-int" type="number" min="1" max="1440" value="${v.intervalMin}" ${dis}> minutes (for “every few minutes”)</label>
         <label class="lr-check"><input type="checkbox" id="lr-appr" ${v.requireApproval ? 'checked' : ''} ${dis}> Ask for approval before an auto-ship</label>
       </div>
-      <span class="ph-lab">Where it goes</span>${seg('target', v.target, [['push', 'Push to the branch'], ['pr', 'A pull request per ship']])}
+      <span class="ph-lab">Where it goes</span>${v.kind === 'folder' ? '<p class="ph-note">Straight to the shared copy’s branch (pull requests are a GitHub thing).</p>' : seg('target', v.target, [['push', 'Push to the branch'], ['pr', 'A pull request per ship']])}
       <label class="ph-lab" for="lr-prt" ${v.target === 'pr' ? '' : 'hidden'} id="lr-prt-l">Pull request title</label><input class="input" id="lr-prt" value="${esc(v.prTitle)}" ${v.target === 'pr' ? '' : 'hidden'} ${dis}>
       <label class="ph-lab" for="lr-msg">Commit message</label>
       <select class="input" id="lr-msg" ${dis}><option value="auto" ${v.message === 'auto' ? 'selected' : ''}>Auto-summary of the changed files</option><option value="flint" ${v.message === 'flint' ? 'selected' : ''}>Flint writes it (needs an AI; else the auto-summary)</option><option value="own" ${v.message === 'own' ? 'selected' : ''}>My own</option></select>
@@ -308,25 +339,26 @@
     pickSeg('target', t => { q('#lr-prt').hidden = q('#lr-prt-l').hidden = t !== 'pr'; });
     q('#lr-msg').onchange = () => { q('#lr-own').hidden = q('#lr-msg').value !== 'own'; };
     const c = q('#lr-s-connect'); if (c) c.onclick = () => { closeSheet(true); github(); };
+    const c2 = q('#lr-s-shared'); if (c2) c2.onclick = () => { closeSheet(true); sharedFolder(); };
     const u = q('#lr-undo'); if (u && !u.disabled) u.onclick = async () => {
       if (!confirm('Undo the last ship? TribeCode adds a commit that reverses it and pushes that.')) return;
       u.disabled = true; try { await srv(`/projects/${encodeURIComponent(p)}/sync/undo`, { method: 'POST' }); toast('Undone: a revert commit is on GitHub.'); renderSync(el, p); refresh(); } catch (e) { u.disabled = false; toast(e.message); }
     };
-    const read = () => ({ repo: q('#lr-repo').value.trim(), branch: q('#lr-branch').value.trim() || 'main', mode: (el.querySelector('[data-mode][aria-checked="true"]') || {}).dataset?.mode || 'manual',
+    const read = () => ({ ...(v.kind === 'folder' ? {} : { repo: q('#lr-repo').value.trim() }), branch: q('#lr-branch').value.trim() || 'main', mode: (el.querySelector('[data-mode][aria-checked="true"]') || {}).dataset?.mode || 'manual',
       trigger: (el.querySelector('[data-trigger]:checked') || {}).dataset?.trigger || v.trigger, intervalMin: Number(q('#lr-int').value) || 15, requireApproval: q('#lr-appr').checked,
       target: (el.querySelector('[data-target][aria-checked="true"]') || {}).dataset?.target || 'push', prTitle: q('#lr-prt').value, message: q('#lr-msg').value, ownMessage: q('#lr-own').value,
       exclude: q('#lr-ex').value, pullFirst: q('#lr-pull').checked, conflict: q('#lr-conf').value, autoPullMin: Number(q('#lr-ap').value) || 0, tagMilestones: q('#lr-tag').checked, signAs: q('#lr-sign').value, paused: q('#lr-pause').checked });
-    return { read, can: d.can, data: d, save: async () => { const body = read(); if (!body.repo) delete body.repo; await srv(`/projects/${encodeURIComponent(p)}/sync`, { method: 'PUT', body }); refresh(); } };
+    return { read, can: d.can, data: d, save: async () => { const body = read(); if (!body.repo) delete body.repo; if (v.kind === 'folder') delete body.target; await srv(`/projects/${encodeURIComponent(p)}/sync`, { method: 'PUT', body }); refresh(); } };
   }
   async function sync() {
     if (solo()) return L() && L().choose ? L().choose('github') : null;
-    const s = sheet('lr-sync', 'Ship and sync settings', `${head('Ship / sync settings', 'How it ships to GitHub')}<div id="lr-sync-body" class="lr-sync-body"><p class="faint">Loading…</p></div>
+    const s = sheet('lr-sync', 'Ship and sync settings', `${head('Ship / sync settings', 'How it ships and syncs')}<div id="lr-sync-body" class="lr-sync-body"><p class="faint">Loading…</p></div>
       <p class="tn-err ph-err" id="lr-sync-err" role="status" hidden></p>
       <div class="ph-acts"><button type="button" class="btn lr-disc" id="lr-disc" hidden>Disconnect GitHub</button><span class="lr-sp"></span><button type="button" class="btn" data-lr-close>Cancel</button><button type="button" class="btn primary" id="lr-save">Save</button></div>`);
     const f = await renderSync($('#lr-sync-body', s)); if (!f || !sh) return s;
     const save = $('#lr-save', s), disc = $('#lr-disc', s);
     if (!f.can.edit) { save.hidden = true; }
-    if (f.can.edit && f.data.status.connected) { disc.hidden = false; disc.onclick = async () => { if (!confirm('Disconnect GitHub? Nothing on GitHub is deleted.')) return; await srv(`/projects/${encodeURIComponent(pid())}/sync`, { method: 'DELETE' }).catch(e => toast(e.message)); closeSheet(); refresh(); }; }
+    if (f.can.edit && f.data.status.connected) { disc.hidden = false; if (f.data.status.kind === 'folder') disc.textContent = 'Stop sharing'; disc.onclick = async () => { if (!confirm(f.data.status.kind === 'folder' ? 'Stop sharing through the folder? The shared copy stays where it is.' : 'Disconnect GitHub? Nothing on GitHub is deleted.')) return; await srv(`/projects/${encodeURIComponent(pid())}/sync`, { method: 'DELETE' }).catch(e => toast(e.message)); closeSheet(); refresh(); }; }
     save.onclick = async () => { save.disabled = true; try { await f.save(); closeSheet(); toast('Saved.'); } catch (e) { save.disabled = false; const x = $('#lr-sync-err', s); x.textContent = e.message; x.hidden = false; } };
     return s;
   }
@@ -368,6 +400,7 @@
   const WAYS = [
     ['anywhere', 'net', 'Work with friends anywhere', 'A GitHub repo holds the code and TribeCode’s invite link brings friends in, from any network. Needs a GitHub repo.', true],
     ['network', 'users', 'Share on this network', 'Friends on the same Wi-Fi join this computer with a link or a QR code. No GitHub, but only while this computer is on.'],
+    ['folder', 'folder', 'Share through a folder you already sync', 'A Dropbox, OneDrive, Google Drive, iCloud, NAS or Syncthing folder holds a shared copy. No account or server; friends with the folder push and pull.'],
     ['solo', 'spark', 'Just me for now', 'It stays on this device or in its folder. Nothing is shared; switch any time.'],
   ];
   async function inviteLink(lan) {
@@ -384,7 +417,7 @@
   async function share() {
     if (!live()) {   // this device only: sharing needs a home first
       const s = sheet('lr-share', 'Share', `${head('Share', 'How should friends join?')}<div class="ph-list">${WAYS.map(([k, icn, t, sub, rec]) => `<button type="button" class="ph-row" data-share="${k}"><span class="ph-ic${rec ? ' live' : ''}">${ic(icn, 18)}</span><span class="ph-tt"><b>${esc(t)}${rec ? ' <em class="ph-tag">Recommended</em>' : ''}</b><small>${esc(sub)}</small></span></button>`).join('')}</div><div id="lr-share-detail"></div>`);
-      s.querySelectorAll('[data-share]').forEach(b => b.onclick = () => { closeSheet(true); if (b.dataset.share === 'anywhere') L() && L().choose('github'); else if (b.dataset.share === 'network') L() && L().choose('computer'); else toast('It stays on this device. Share any time from the pill at the top.'); });
+      s.querySelectorAll('[data-share]').forEach(b => b.onclick = () => { closeSheet(true); if (b.dataset.share === 'anywhere') L() && L().choose('github'); else if (b.dataset.share === 'network') L() && L().choose('computer'); else if (b.dataset.share === 'folder') sharedFolder(); else toast('It stays on this device. Share any time from the pill at the top.'); });
       return s;
     }
     await load(true).catch(() => {});
@@ -423,6 +456,13 @@
         try { const url = await inviteLink(true); det.innerHTML = `<p class="ph-lead">Friends on the same Wi-Fi open this link or scan the code. It works while this computer runs TribeCode.</p>${linkBox(url)}`; bindCopy(det); shared(); }
         catch (e) { det.innerHTML = ''; errf(e.message); }
       },
+      folder() {
+        const st = (cur.sync && cur.sync.status) || {}, pick = canPickFolder();
+        det.innerHTML = st.connected && st.kind === 'folder' ? `<p class="ph-lead">Sharing through <code>${esc(st.repo)}</code>. Friends who sync the same folder pick “Join from a shared folder” and choose it; Ship sends your changes, Pull brings theirs.</p>`
+          : `<p class="ph-lead">${esc(SHARED_LINE)}</p><div class="ph-acts"><button type="button" class="btn primary" id="lr-share-folder" ${pick.ok ? '' : `disabled title="${esc(pick.why)}"`}>Pick the shared folder</button></div>${pick.ok ? '' : `<p class="ph-note">${esc(pick.why)}</p>`}`;
+        const b = $('#lr-share-folder', det); if (b) b.onclick = () => { closeSheet(true); sharedFolder(() => share()); };
+        shared();
+      },
       solo() {
         det.innerHTML = `<p class="ph-lead" data-solo-done>It stays ${cur.folder ? `in <code>${esc(cur.folder.display)}</code>` : 'where it is'}. Nobody else sees it. Share any time from the pill at the top.</p><div class="ph-acts"><button type="button" class="btn primary" data-lr-close>Done</button></div>`;
         det.querySelector('[data-lr-close]').onclick = () => closeSheet(); shared();
@@ -434,8 +474,9 @@
   new MutationObserver(() => {
     const box = document.getElementById('tl-box'); if (!box || document.getElementById('lr-inv-ways') || !live()) return;
     const w = document.createElement('div'); w.id = 'lr-inv-ways'; w.className = 'lr-inv-ways';
-    w.innerHTML = `<span class="eyebrow">Ways to share</span><div>${WAYS.map(([k, , t, , rec]) => `<button type="button" class="btn sm${rec ? ' primary' : ''}" data-inv-way="${k}">${esc(t)}</button>`).join('')}</div>`;
+    w.innerHTML = `<span class="eyebrow">Ways to share</span><div>${WAYS.filter(x => x[0] !== 'solo').map(([k, , t, , rec]) => `<button type="button" class="btn sm${rec ? ' primary' : ''}" data-inv-way="${k}">${esc(t)}</button>`).join('')}${canPickFolder().ok ? '<button type="button" class="btn sm" data-inv-join>Join from a shared folder</button>' : ''}</div>`;
     box.parentNode.insertBefore(w, box);
+    const jb = w.querySelector('[data-inv-join]'); if (jb) jb.onclick = () => { const m = document.getElementById('invite-modal'); if (m) m.classList.add('hidden'); sharedFolder(); };
     w.querySelectorAll('[data-inv-way]').forEach(b => b.onclick = async () => { const m = document.getElementById('invite-modal'); if (m) m.classList.add('hidden'); const s = await share(); const r = s && s.querySelector(`[data-share="${b.dataset.invWay}"]`); if (r) r.click(); });
   }).observe(document.body, { childList: true, subtree: true });
 
@@ -449,10 +490,12 @@
       <div class="ph-list">
         <button type="button" class="ph-row" data-w="folder" ${pick.ok ? '' : 'aria-disabled="true"'}><span class="ph-ic">${ic('folder', 18)}</span><span class="ph-tt"><b>${cur.folder ? `Folder · ${esc(cur.folder.display)}` : 'A folder on this computer'}${desktop() ? ' <em class="ph-tag">Recommended</em>' : ''}</b><small>${pick.ok ? (cur.folder ? 'Move it to another folder' : 'Your own folder: edit here or in VS Code, both stay in step') : esc(pick.why)}</small></span></button>
         ${o.onHost ? `<button type="button" class="ph-row" data-w="host"><span class="ph-ic">${ic('box', 18)}</span><span class="ph-tt"><b>Here, on the tribe’s host</b><small>One click: a living repo in the tribe’s own folder, with every change saved</small></span></button>` : ''}
+        <button type="button" class="ph-row" data-w="shared" ${pick.ok ? '' : 'aria-disabled="true"'}><span class="ph-ic">${ic('net', 18)}</span><span class="ph-tt"><b>${st.connected && st.kind === 'folder' ? `Shared folder · ${esc(st.repo)}` : 'A shared folder'}</b><small>${pick.ok ? esc(SHARED_LINE) : esc(pick.why)}</small></span></button>
         <button type="button" class="ph-row" data-w="github"><span class="ph-ic live">${ic('git', 18)}</span><span class="ph-tt"><b>${st.connected ? `GitHub · ${esc(st.repo)}` : 'Connect a GitHub repo'}</b><small>${st.connected ? 'Ship / sync settings' : 'A synced copy friends can reach from anywhere. Manual or auto-ship'}</small></span></button>
       </div>`);
     s.querySelector('[data-w="folder"]').onclick = () => (pick.ok ? folder({ pid: pid() }) : toast(pick.why));
-    s.querySelector('[data-w="github"]').onclick = () => github();
+    s.querySelector('[data-w="github"]').onclick = () => (st.connected && st.kind === 'github' ? sync() : github(null, true));
+    s.querySelector('[data-w="shared"]').onclick = () => (pick.ok ? sharedFolder() : toast(pick.why));
     const h = s.querySelector('[data-w="host"]'); if (h) h.onclick = () => { closeSheet(); o.onHost(); };
     return s;
   }
@@ -480,5 +523,5 @@
   hook(); if (S() && S().on) S().on(soon);
   document.addEventListener('DOMContentLoaded', registerSettings);
 
-  window.TribeHome = { refresh, open, close, where, folder, pickFolder, canPickFolder, github, sync, renderSync, ship, share, statusText, closeSheet, state: () => ({ ...cur }) };
+  window.TribeHome = { refresh, open, close, where, folder, sharedFolder, connectShared, SHARED_LINE, pickFolder, canPickFolder, github, sync, renderSync, ship, share, statusText, closeSheet, state: () => ({ ...cur }) };
 })();
