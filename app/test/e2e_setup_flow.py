@@ -2,12 +2,12 @@
 setup.js role flows + Make the starter (server/setup.js), tasks.js type chips + "Who does it?", shell.js tab gating,
 sense.js Inspiration cards.
 
-  1. A project with no repo: the hero checklist has 4 steps (vision · task · AI · repo, no "A friend joins"); the Task
+  1. A project with no repo: the hero checklist has 5 steps (vision · task · AI · where it lives · share); the Task
      Board has no sub-tab row and the sidebar "+ Add" waits for the vision.
   2. Vision: category chips + "What's the gist?" fill VISION.md locally (what / for whom / done / out of scope); Save
      sets the sense kind (game).
   3. Role flows: the artist picks a palette, the engineer picks KAPLAY; each adds two typed starter tasks.
-  4. Create the repo in one click; the project is "going" and the Task Board shows its tabs.
+  4. Where it lives → here on the host: the living repo in one click; the project is "going" and the Task Board shows its tabs.
   5. Make the starter: files land in the repo (index.html, src/main.js, design/palette.css), one commit.
   6. Task Board: type chips on create, the "Who does it?" row (Flint only for text tasks), Suggested hidden at 3+ tasks.
   7. Header: rename inline (Enter saves, Esc cancels), the face opens an emoji grid with Upload a picture.
@@ -79,12 +79,13 @@ def main():
             host.wait_for_function("pid => TribeProjects.current() === pid", arg=pid, timeout=10000)
             host.evaluate("TribeApp.show('home')")
 
-            # 1. four steps, no friend step; the repo comes last
+            # 1. five steps (feat/folder-sync): where it lives is the code repository, one step; sharing comes last
             host.wait_for_selector("#pj-check.hero .ock-card", timeout=15000)
             steps = host.eval_on_selector_all("#pj-check .ock-row", "els => els.map(e => e.dataset.step)")
-            assert steps == ["vision", "task", "claude", "repo"], steps
-            assert "4 steps" in host.text_content("#pj-check .ock-hero-t")
-            assert "create the code repository" in host.text_content("#pj-check [data-step=repo]").lower() and host.locator("#pj-check [data-step=repo] .ock-ghm").count() == 1   # the GitHub mark
+            assert steps == ["vision", "task", "claude", "home", "share"], steps
+            assert "5 steps" in host.text_content("#pj-check .ock-hero-t")
+            assert "choose where it lives" in host.text_content("#pj-check [data-step=home]").lower()
+            assert "create the code repository" not in host.text_content("#pj-check").lower(), "no separate repo step"
             assert host.locator("#pj-check [data-step=friend]").count() == 0
             host.wait_for_function("document.body.dataset.stage === 'new' && document.body.dataset.vision === '0'", timeout=5000)
             host.wait_for_selector("#nest-add", state="visible", timeout=8000)   # v0.26: + Add is always there once a project is open (the user's ask)
@@ -136,8 +137,9 @@ def main():
             assert host.evaluate("document.body.dataset.stage") == "growing"
 
             # 4. Create the repo in one click -> going -> the Task Board gets its tabs
-            host.click("#pj-check [data-ck=repo]")
-            host.wait_for_selector("#pj-check [data-step=repo].on", timeout=20000)
+            host.click("#pj-check [data-ck=home]"); host.wait_for_selector("#lr-where [data-w=host]")
+            host.click("#lr-where [data-w=host]")
+            host.wait_for_selector("#pj-check [data-step=home].on", timeout=20000)
             repo = tmp / "tribe" / "workspaces" / pid
             assert (repo / ".git").exists() and (repo / "README.md").exists() and (repo / "VISION.md").exists()
             host.wait_for_function("document.body.dataset.stage === 'going'", timeout=10000)

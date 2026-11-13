@@ -143,6 +143,8 @@
   function step(k) {
     const p = curP(); if (!p) return;
     if (k === 'vision') writeVision(p); else if (k === 'invite') App().openInvite(); else if (k === 'claude') App().connectClaude();
+    else if (k === 'home' || (k === 'repo' && window.TribeHome && !p.hasRepo)) { if (window.TribeHome) window.TribeHome.where({ onHost: isHost() && !p.hasRepo ? () => createRepo(p) : null }); else if (!p.hasRepo && isHost()) createRepo(p); else App().show('repo'); }   // feat/folder-sync: where it lives = its living repo
+    else if (k === 'share') { if (window.TribeHome) window.TribeHome.share(); else App().openInvite(); }
     else if (k === 'repo') { if (p.hasRepo || !isHost()) App().show('repo'); else createRepo(p); }
     else if (k === 'github') connectGithub(p);   // sign in to GitHub inside the app   // feat/setup-flow: one click makes the code repository
     else { App().show('tasks'); setTimeout(() => { const nb = $('#task-new'); nb && nb.click(); }, 80); }
@@ -173,7 +175,7 @@
     const kindIco = { task: 'i-check', doc: 'i-doc', commit: 'i-git' };
     let plan = null; try { plan = (await C.api('/coord/plan')).plan; } catch {}
     let tasksAll = []; try { tasksAll = (await C.api('/tasks')).tasks || []; } catch {}   // simple-dashboard: the Tasks tile and Up next
-    let ghs = null; if (me().role !== 'spectator' && me().role !== 'agent') try { ghs = (await C.api('/github')).github || null; } catch {}   // the repo step: Connect GitHub first, then Create
+    let syn = null; try { syn = (await C.api(`/projects/${encodeURIComponent(p.id)}/sync`)).status || null; } catch {}   // feat/folder-sync: where it lives = the folder, the host's repo, GitHub
     if (!$('#pj-overview') || curP() !== p) return;   // switched away while loading
     stash();
     const sec = (id, title, inner) => `<section class="sec pj-sec" id="${id}"><h2 class="pj-sec-t">${title}</h2>${inner}</section>`;
@@ -192,10 +194,11 @@
       { id: 'task', emo: '📝', label: 'Add a first task', sub: 'One small thing to build first.', done: (d.taskCount || 0) > 0, below: canEdit ? '<button class="btn sm primary" data-ck="newtask">New task</button>' : '',
         inline: canEdit && d.vision && d.vision.has ? `<div class="ock-inline ock-sugg"><span class="eyebrow">Suggested from your vision</span><div class="ock-sugg-list" id="ock-sugg"><span class="faint">Thinking of first tasks…</span></div><form class="ock-own" data-ock-task><input class="input" maxlength="140" placeholder="Or write your own first task" aria-label="Your own first task"><button class="btn sm" type="submit">Add</button></form></div>` : '' },
       { id: 'claude', emo: '🤖', label: 'Connect your AI', sub: 'Claude Code, Codex, Gemini or Cursor can build with you.', done: myAgent || d.agents.length > 0, acts: canEdit ? '<button class="btn sm" data-ck="claude">Connect</button>' : '' },
-      { id: 'repo', emo: GH_MARK, label: ghs && ghs.signedIn ? 'Create the code repository on GitHub' : 'Connect GitHub and create the code repository',
-        sub: (d.repo || p.hasRepo) ? 'Your project’s code lives here, with every change saved.' : ghs && ghs.signedIn ? `Signed in as @${esc(ghs.login || 'you')}. One click makes a private GitHub repository for your code, with every change saved.` : 'Your code lives on GitHub (the shared online folder for code), with every change saved. Connect your GitHub account, then one click makes it.',
-        done: !!(d.repo || p.hasRepo), acts: isHost() ? `${ghs && !ghs.signedIn ? '<button class="btn sm ock-gh" data-ck="github">Connect GitHub</button>' : ''}<button class="btn sm" data-ck="repo">Create</button>` : (ghs && !ghs.signedIn ? '<button class="btn sm ock-gh" data-ck="github">Connect GitHub</button>' : '') },
-    ];   // feat/setup-flow: four steps (a friend joining is no longer one); the code repository comes last
+      { id: 'home', emo: '📁', label: 'Choose where it lives', sub: 'Its home is its living repo: a folder on this computer, the tribe’s host, or either one with GitHub as a synced copy.',
+        done: !!(p.hasFolder || p.hasRepo || d.repo || (syn && syn.connected)), acts: canEdit ? '<button class="btn sm" data-ck="home">Choose</button>' : '' },
+      { id: 'share', emo: '🤝', label: 'Share it', sub: 'Work with friends anywhere (GitHub + an invite link), share on this network, or keep it just you for now.',
+        done: team.length > 1 || lsg('shared') === '1', acts: canEdit ? '<button class="btn sm" data-ck="share">Share</button>' : '' },
+    ];   // feat/folder-sync: five steps; where it lives and the code repository are one step, sharing is the last
     const nDone = steps.filter(x => x.done).length, allDone = nDone === steps.length;
     // Until the tribe has really begun (a vision, a task or a friend; a pinned repo alone doesn't count), the checklist is
     // the hero of the page and the Living update stays hidden: there is nothing to report yet.
@@ -205,9 +208,9 @@
     const folded = !hero && lsg('ckFold') === '1';
     const tick = '<svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 12.5 4 4 8-9"/></svg>';
     const checklist = allDone && lsg('ckGone') === '1' ? ''
-      : allDone ? `<section class="pj-check done" id="pj-check"><span class="ock-allset">${tick}All set</span><span class="faint ock-allsub">${esc(p.name)} has a vision, a task, an AI and a code repository.</span><button class="ock-x" id="pj-check-x" title="Dismiss" aria-label="Dismiss the checklist">${ico('i-x', 14)}</button></section>`
+      : allDone ? `<section class="pj-check done" id="pj-check"><span class="ock-allset">${tick}All set</span><span class="faint ock-allsub">${esc(p.name)} has a vision, a task, an AI, a home and friends to share it with.</span><button class="ock-x" id="pj-check-x" title="Dismiss" aria-label="Dismiss the checklist">${ico('i-x', 14)}</button></section>`
       : `<section class="pj-check ${folded ? 'folded' : ''} ${hero ? 'hero' : ''}" id="pj-check">
-          ${hero ? `<span class="eyebrow ock-eyebrow">🚀 Getting started</span><h2 class="ock-hero-t">Set up ${esc(p.name)} in 4 steps</h2><p class="ock-hero-p">Say what you're making, add a first task, connect an AI helper, and create the code repository (the shared online folder for your code). The dashboard fills in as you go.</p>` : ''}
+          ${hero ? `<span class="eyebrow ock-eyebrow">🚀 Getting started</span><h2 class="ock-hero-t">Set up ${esc(p.name)} in ${steps.length} steps</h2><p class="ock-hero-p">Say what you're making, add a first task, connect an AI helper, choose where it lives (its living repo) and share it. The dashboard fills in as you go.</p>` : ''}
           <div class="ock-head"><h3>${hero ? 'Steps' : 'Getting started'}</h3><span class="ock-n">${nDone} of ${steps.length} done</span><button class="ock-fold" id="pj-check-fold" aria-expanded="${!folded}" title="Show or hide the checklist" aria-label="Show or hide the checklist">${ico('i-chev', 16)}</button></div>
           <div class="ock-bar" role="progressbar" aria-label="Checklist progress" aria-valuemin="0" aria-valuemax="${steps.length}" aria-valuenow="${nDone}"><span style="width:${Math.round(nDone / steps.length * 100)}%"></span></div>
           ${hero ? `<div class="ock-list ock-cards">${steps.map(x => `<div class="ock-row ock-card ${x.done ? 'on' : ''}" data-step="${x.id}"><span class="ock-box" role="checkbox" aria-checked="${x.done}" aria-label="${x.label}">${x.done ? tick : ''}</span>
@@ -287,7 +290,7 @@ ${canEdit && !started ? `      <section class="pj-context" id="pj-context"><div 
     const ctx = $('#pj-ctx-body'); if (ctx) [dzn, drops].forEach(n => n && ctx.appendChild(n));   // qa-pass: spectators get no drop zone   // the drop zone is a main point of the page: it gives everyone context
     el.querySelectorAll('[data-ck]').forEach(x => x.onclick = () => step(x.dataset.ck));
     // tell the room panel and Flint how far along this project is, so they can stay simple early on
-    window.TribeStage && window.TribeStage.set(p.id, { vision: steps[0].done, task: steps[1].done, agent: steps[2].done, repo: steps[3].done });
+    window.TribeStage && window.TribeStage.set(p.id, { vision: steps[0].done, task: steps[1].done, agent: steps[2].done, repo: steps[3].done });   // repo = where it lives
     const fold = $('#pj-check-fold');
     // the hero checklist: the next step gets the one solid button and a soft highlight; the rest stay calm
     const chk = $('#pj-check.hero');

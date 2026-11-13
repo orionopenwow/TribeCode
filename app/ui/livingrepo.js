@@ -384,6 +384,7 @@
       <div id="lr-share-detail" class="lr-share-detail"></div><p class="tn-err ph-err" id="lr-share-err" role="status" hidden></p>
       <p class="ph-foot">You can switch later from the pill at the top.</p>`);
     const det = $('#lr-share-detail', s), errf = t => { const e = $('#lr-share-err', s); e.textContent = t || ''; e.hidden = !t; };
+    const shared = () => { try { localStorage.setItem(`tribecode.ov.${pid()}.shared`, '1'); } catch {} };   // the steps card's "Share it"
     const pick = k => s.querySelectorAll('[data-share]').forEach(x => x.setAttribute('aria-checked', String(x.dataset.share === k)));
     s.querySelectorAll('[data-share]').forEach(b => b.onclick = () => { pick(b.dataset.share); errf(''); swap(det, () => paths[b.dataset.share]()); });
     const paths = {
@@ -404,18 +405,18 @@
             const fresh = await load(true); const on = fresh.sync && fresh.sync.status && fresh.sync.status.connected;
             if (!on) throw new Error('Connect the GitHub repo first (step 1).');
             if (can.edit && (fresh.sync.settings.mode !== mode || (mode === 'auto' && fresh.sync.settings.trigger !== 'done'))) await srv(`/projects/${encodeURIComponent(pid())}/sync`, { method: 'PUT', body: mode === 'auto' ? { mode, trigger: 'done' } : { mode } });
-            const url = await inviteLink(false); $('#lr-share-out', det).innerHTML = linkBox(url); bindCopy(det); refresh();
+            const url = await inviteLink(false); $('#lr-share-out', det).innerHTML = linkBox(url); bindCopy(det); refresh(); shared();
           } catch (e) { b.disabled = false; errf(e.message); }
         };
       },
       async network() {
         det.innerHTML = '<p class="faint">Making a link for this network…</p>';
-        try { const url = await inviteLink(true); det.innerHTML = `<p class="ph-lead">Friends on the same Wi-Fi open this link or scan the code. It works while this computer runs TribeCode.</p>${linkBox(url)}`; bindCopy(det); }
+        try { const url = await inviteLink(true); det.innerHTML = `<p class="ph-lead">Friends on the same Wi-Fi open this link or scan the code. It works while this computer runs TribeCode.</p>${linkBox(url)}`; bindCopy(det); shared(); }
         catch (e) { det.innerHTML = ''; errf(e.message); }
       },
       solo() {
         det.innerHTML = `<p class="ph-lead" data-solo-done>It stays ${cur.folder ? `in <code>${esc(cur.folder.display)}</code>` : 'where it is'}. Nobody else sees it. Share any time from the pill at the top.</p><div class="ph-acts"><button type="button" class="btn primary" data-lr-close>Done</button></div>`;
-        det.querySelector('[data-lr-close]').onclick = () => closeSheet();
+        det.querySelector('[data-lr-close]').onclick = () => closeSheet(); shared();
       },
     };
     return s;
@@ -430,7 +431,7 @@
   }).observe(document.body, { childList: true, subtree: true });
 
   // "Choose where it lives": the steps card and Flint open this; one sheet, folder or GitHub (or both)
-  async function where() {
+  async function where(o = {}) {
     if (solo()) return L() && L().where ? L().where() : null;
     await load(true).catch(() => {});
     const pick = canPickFolder(), st = (cur.sync && cur.sync.status) || {};
@@ -438,10 +439,12 @@
       <p class="ph-lead">The home holds the real files. GitHub is an optional synced copy on top, for any home.</p>
       <div class="ph-list">
         <button type="button" class="ph-row" data-w="folder" ${pick.ok ? '' : 'aria-disabled="true"'}><span class="ph-ic">${ic('folder', 18)}</span><span class="ph-tt"><b>${cur.folder ? `Folder · ${esc(cur.folder.display)}` : 'A folder on this computer'}${desktop() ? ' <em class="ph-tag">Recommended</em>' : ''}</b><small>${pick.ok ? (cur.folder ? 'Move it to another folder' : 'Your own folder: edit here or in VS Code, both stay in step') : esc(pick.why)}</small></span></button>
+        ${o.onHost ? `<button type="button" class="ph-row" data-w="host"><span class="ph-ic">${ic('box', 18)}</span><span class="ph-tt"><b>Here, on the tribe’s host</b><small>One click: a living repo in the tribe’s own folder, with every change saved</small></span></button>` : ''}
         <button type="button" class="ph-row" data-w="github"><span class="ph-ic live">${ic('git', 18)}</span><span class="ph-tt"><b>${st.connected ? `GitHub · ${esc(st.repo)}` : 'Connect a GitHub repo'}</b><small>${st.connected ? 'Ship / sync settings' : 'A synced copy friends can reach from anywhere. Manual or auto-ship'}</small></span></button>
       </div>`);
     s.querySelector('[data-w="folder"]').onclick = () => (pick.ok ? folder({ pid: pid() }) : toast(pick.why));
     s.querySelector('[data-w="github"]').onclick = () => github();
+    const h = s.querySelector('[data-w="host"]'); if (h) h.onclick = () => { closeSheet(); o.onHost(); };
     return s;
   }
 
