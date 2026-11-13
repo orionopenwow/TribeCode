@@ -124,6 +124,7 @@
           <button class="hpt-brand" id="hpt-brand" aria-label="Your projects"><img class="hpt-mark tc-mark" src="assets/icon.svg" alt="" width="26" height="26"><img class="brand-wm" src="assets/wordmark.svg" alt="TribeCode">${ico('i-chev', 16)}</button>
           <button class="hpt-btn" id="hpt-bell" aria-label="Notifications">${ico('i-bell', 26)}<span class="hpt-dot hidden" id="hpt-dot"></span></button></div>` : ''}
         ${idCard(on, tribe, pj, live, sub)}
+        <div id="hub-band-slot"></div><!-- feat/dash-preview: your most recent project's preview (dashband.js) -->
         ${gsHero(on)}
         <div id="hub-flint-slot"></div>
         ${isPhone() && on && pj.length ? phoneProjects(pj) : ''}
@@ -131,6 +132,7 @@
         ${isPhone() ? sec('AI insights', 'Worth a look', `<div class="ai-cards" id="hub-ins-phone">${insightCards()}</div>`, 'id="hub-insights"') : ''}
       </div>`;
       bind(el);
+      if (window.TribeDashBand) window.TribeDashBand.mountHome(el.querySelector('#hub-band-slot'));
       if (window.TribeFlint && window.TribeFlint.mountDashboard) window.TribeFlint.mountDashboard(el.querySelector('#hub-flint-slot'));   // feat/flint-ai: Flint on the Dashboard
     });
   }

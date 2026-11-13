@@ -224,9 +224,9 @@
     const plural = (n, a, b) => `${n} ${n === 1 ? a : b}`;
     const prevMore = document.querySelector('#pj-more'), moreOpen = prevMore ? prevMore.open : lsg('more') === '1';
     // v0.25: colour-coded tiles with a big number, what it means, and the one thing to do about it
-    const doneT = tasksAll.filter(t => t.status === 'done').length, unreadN = (N.unread || 0) + dmUnread, needN = (N.pending || 0) + reviewT.length;
+    const doneT = tasksAll.filter(t => t.status === 'done').length, unreadN = (N.unread || 0) + dmUnread;
     const tiles = [
-      { k: 'needs', label: 'Needs you', icon: 'i-bell', n: needN, line: N.pending ? plural(N.pending, 'approval waiting', 'approvals waiting') : reviewT.length ? plural(reviewT.length, 'task to review', 'tasks to review') : 'Nothing waiting on you', act: needN ? 'Review now' : 'All clear', go: N.pending ? 'inbox' : 'tasks', hot: needN > 0, c: '#F26B1D' },
+      // feat/dash-preview: "Needs you" moved up into Needs attention (dashband.js), which ranks it with the rest
       { k: 'unread', label: 'Unread', icon: 'i-chat', n: unreadN, line: unreadN ? plural(unreadN, 'new message', 'new messages') : 'All caught up', act: unreadN ? 'Catch up' : 'Open chat', go: 'chat', hot: unreadN > 0, c: '#6C7CFF' },
       { k: 'tasks', label: 'Tasks', icon: 'i-check', n: openT.length, line: openT.length ? `open${mineT.length ? ` · ${mineT.length} yours` : ''}${doneT ? ` · ${doneT} done` : ''}` : doneT ? `all ${doneT} done` : 'None yet', act: openT.length ? 'Open the board' : 'Add a task', go: 'tasks', hot: mineT.length > 0, c: '#38C6B1', pct: tasksAll.length ? Math.round(doneT / tasksAll.length * 100) : 0 },
       { k: 'files', label: 'New files', icon: 'i-doc', n: newFiles.length, line: newFiles.length ? 'added this week' : 'Nothing new this week', act: newFiles.length ? 'See them' : 'Add a file', go: 'docs', hot: false, c: '#FABD2F' },
@@ -240,6 +240,7 @@
           <button class="pj-inl pj-bio ${d.bio ? '' : 'empty'}" id="pj-bio" ${canEdit ? '' : 'disabled'} title="${canEdit ? 'Edit the bio' : ''}">${d.bio ? esc(d.bio) : canEdit ? `${ico('i-quill', 14)}Add a short description` : ''}</button>
           <span class="faint pj-meta">${team.length} ${team.length === 1 ? 'person' : 'people'}${r ? `<span class="pj-dot">·</span><span title="The code repository: the shared folder that holds this project's code">${esc(r.name)}</span><span class="pj-dot">·</span><span title="The branch: the version of the code you're looking at (main is the shared one)">${esc(r.branch)}</span>` : ''}<span id="pj-site-slot"></span></span></div>
         ${canEdit ? `<button class="btn" id="pj-invite" style="margin-left:auto">${ico('i-users', 15)}Invite to ${esc(p.name)}</button>` : ''}</div>
+      <div id="pj-band-slot"></div><div id="pj-crit-slot"></div><!-- feat/dash-preview: the main project's preview, then Needs attention (dashband.js) -->
       ${hero ? checklist : ''}
 ${canEdit && !started ? `      <section class="pj-context" id="pj-context"><div class="pj-ctx-head"><span class="pj-ctx-e" aria-hidden="true">📎</span><div><h3>Add files</h3><p>Drop docs, PDFs, pictures or notes. Flint and the AI helpers read them to understand ${esc(p.name)}.</p></div></div><div id="pj-ctx-body"></div></section>` : ''}
       ${started ? `<section class="card pj-living pj-glance" id="pj-living" aria-label="At a glance"><div class="pl-head"><span class="eyebrow">At a glance</span><button class="linkish pj-share" id="pj-share" type="button" title="Copy progress, the GitHub link and an invite link">📤 Share progress</button></div>
@@ -309,6 +310,7 @@ ${canEdit && !started ? `      <section class="pj-context" id="pj-context"><div 
     if (window.TribeInspo) window.TribeInspo.draw(p.id);
     if (window.TribeReco) window.TribeReco.draw(p.id);   // v0.27
     toolbox(p);
+    if (window.TribeDashBand) window.TribeDashBand.mountProject(p);   // feat/dash-preview: the band + Needs attention (kept live across redraws)
     if (window.TribeSense) window.TribeSense.card(p);   // feat/project-sense: the Inspiration card (sense.js)
     if (window.TribeSetup) window.TribeSetup.card(p, d);   // feat/setup-flow: role flows + Make the starter (setup.js)
     if (window.TribeWebsite) window.TribeWebsite.overviewLink(p);   // "· Website" once the page exists (app/ui/website.js)

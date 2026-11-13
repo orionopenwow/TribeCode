@@ -49,9 +49,11 @@ module.exports = function dashband({ P, base, preview, showcase, visuals, hubFor
     const home = pages[0] || {}, blocks = Array.isArray(home.blocks) ? home.blocks : [];
     const hero = blocks.find(b => b && /hero|header|cover/i.test(String(b.type || ''))) || blocks[0] || {};
     const f = (hero.props || hero.fields || hero.data || {});
-    const title = str((cfg && (cfg.site && cfg.site.name || cfg.name || cfg.title)) || f.title || f.headline || (st.fields && st.fields.headline) || '', 80);
+    const nm = cfg && cfg.name && cfg.name !== 'My site' ? cfg.name : '';
+    const title = str(f.title || f.headline || nm || (st.fields && st.fields.headline) || '', 80);
     const tagline = str(f.subtitle || f.tagline || f.text || (st.fields && st.fields.tagline) || '', 140);
-    const accent = /^#[0-9a-f]{3,8}$/i.test(String(cfg && cfg.theme && (cfg.theme.accent || cfg.theme.primary) || '')) ? (cfg.theme.accent || cfg.theme.primary) : null;
+    const ac = cfg && cfg.theme && ((cfg.theme.colors && cfg.theme.colors.accent) || cfg.theme.accent);
+    const accent = /^#[0-9a-f]{3,8}$/i.test(String(ac || '')) ? ac : null;
     const at = (cfg && cfg.savedAt) || (st.built && st.built.at) || (st.gen && st.gen.draft && st.gen.draft.updated) || null;
     const by = (cfg && cfg.savedBy) || (st.built && st.built.by) || null;
     return { title, tagline, accent, blocks: blocks.length, pages: pages.length, at, by, published: !!st.built };
