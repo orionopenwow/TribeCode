@@ -246,7 +246,7 @@ module.exports = function makeAuth3({ store, hash, id, limited, log = () => {}, 
     if (b !== 'two-step' && b !== 'passkeys' && b !== 'passkey') return false;
     const no = (status, error, code, more = {}) => { send(res, status, { error, ...(code ? { code } : {}), ...more }); return true; };
     const many = () => { res.setHeader('Retry-After', '60'); return no(429, 'too many tries in a row: wait a minute, then try again'); };
-    if (limited(req, 40, 60_000, 'a3')) return many();
+    if (limited(req, 90, 60_000, 'a3')) return many();
     const isPublic = (b === 'two-step' && !c && m === 'POST') || b === 'passkey';
     if (isPublic && limited(req, 20, 60_000, 'a3try')) return many();
     const who = isPublic ? null : fromToken(req);
