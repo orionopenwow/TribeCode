@@ -27,7 +27,7 @@ const THROTTLE = Number(process.env.TRIBE_DASH_THROTTLE_MS) || 4000;   // at mos
 const DEBOUNCE = 700;
 const STALE_MS = 60_000;          // a GET recomputes when the cached view is older than this, even without events
 const FEED_DAYS = 14, FEED_MAX = 60, PER_PROJECT = 24;
-const WATCH = new Set(['coord', 'repo', 'people', 'chat', 'chat-update', 'task', 'task-removed', 'gist', 'approval', 'doc', 'doc-removed', 'flow', 'secretary', 'proposal', 'projects', 'presence', 'milestones']);
+const WATCH = new Set(['coord', 'repo', 'people', 'chat', 'chat-update', 'task', 'task-removed', 'gist', 'approval', 'doc', 'doc-removed', 'flow', 'secretary', 'proposal', 'projects', 'presence', 'milestones', 'uploads']);   // uploads: feat/dropzone (a drop shows in Recent activity)
 
 const clip = (s, n = 140) => { s = String(s || '').replace(/\s+/g, ' ').trim(); return s.length > n ? s.slice(0, n - 1).trimEnd() + '…' : s; };
 const plain = s => String(s || '').replace(/\*\*|__|`|^>\s?/gm, '').replace(/\[([^\]]+)\]\([^)]*\)/g, '$1');

@@ -76,7 +76,7 @@ module.exports = function uploads({ store, P, nameOf, broadcast, can = (me) => m
       if (!size) { fs.rmSync(dir, { recursive: true, force: true }); return fail(res, 400, 'That file is empty.'); }
       const dirL = cleanDir(url.searchParams.get('dir')), batch = cleanBatch(url.searchParams.get('batch'));
       const f = { id, name, size, type: TYPES[ext] || 'application/octet-stream', kind: KIND(ext), by: me.id, byName: nameOf(me.id), at: new Date().toISOString(), scope, ...(scope === 'project' ? { project: pid } : {}), ...(dirL ? { dir: dirL } : {}), ...(batch ? { batch } : {}) };
-      list.push(f); write(owner, list);
+      const now = read(owner); now.push(f); write(owner, now);   // feat/dropzone: re-read after the bytes arrived, so uploads in parallel don't drop each other
       if (scope === 'project' && broadcast) broadcast({ type: 'uploads', project: pid });
       return send(res, 200, { file: f });
     }

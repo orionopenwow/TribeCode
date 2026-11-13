@@ -129,7 +129,7 @@
   const label = set => set.name || (set.items.length === 1 ? set.items[0].path.split('/').pop() : plural(set.items.length, 'file'));
   // bring the skipped folders back (the toggle): walk what was skipped, except .git (that needs the secrets box)
   async function expandSkipped(set) {
-    if (set.expanded) return; set.expanded = true;
+    if (set.expanded) return; set.expanded = true; set.skippedOrig = set.skipped.slice();
     const keep = [];
     for (const s of set.skipped) {
       if (s.why === 'git') { keep.push(s); continue; }
@@ -400,14 +400,16 @@
           <label class="dz-check"><input type="checkbox" id="dz-incsecret" ${set.includeSecrets ? 'checked' : ''}> Upload them anyway (I know what they are)</label></div>` : ''}
         ${dups.length ? `<div class="dz-dups"><b>${plural(dups.length, 'file')} already in ${esc(dest.label)}</b><div class="dz-seg" role="radiogroup" aria-label="Files that are already there">${[['rename', 'Keep both'], ['replace', 'Replace'], ['skip', 'Skip']].map(([k, l]) => `<button type="button" role="radio" data-dup="${k}" aria-checked="${(set.dupMode || 'rename') === k}">${l}</button>`).join('')}</div></div>` : ''}
         <footer class="dz-foot"><button type="button" class="btn" data-dz="close">Cancel</button><button type="button" class="btn primary" id="dz-go" data-autofocus ${s.list.length ? '' : 'disabled'}>${ico('up', 16)} Upload ${plural(s.list.length, 'file')}</button></footer>`;
-      const el = openSheet(html, 'dz-plan');
-      el.addEventListener('click', e => {
+      const prev = sh && sh.querySelector('.dz-sheet.dz-plan'), focusId = document.activeElement && document.activeElement.id;
+      const el = prev || openSheet(html, 'dz-plan');
+      if (prev) { prev.innerHTML = html; const f = focusId && prev.querySelector('#' + CSS.escape(focusId)); if (f) f.focus({ preventScroll: true }); }
+      if (!prev) el.addEventListener('click', e => {
         const b = e.target.closest('button'); if (!b) return;
         if (b.dataset.dz === 'close') return closeSheet();
         if (b.dataset.dup) { set.dupMode = b.dataset.dup; el.querySelectorAll('[data-dup]').forEach(x => x.setAttribute('aria-checked', String(x === b))); return; }
         if (b.id === 'dz-go') return upload(set, dest, selection(set).list);
       });
-      const inc = el.querySelector('#dz-incskip'); if (inc) inc.onchange = async () => { if (inc.checked) { inc.disabled = true; await expandSkipped(set); set.report = null; await markSecrets(set); } else { set.items = set.items.filter(x => !x.wasSkipped); set.expanded = false; } draw(); };
+      const inc = el.querySelector('#dz-incskip'); if (inc) inc.onchange = async () => { if (inc.checked) { inc.disabled = true; await expandSkipped(set); set.report = null; await markSecrets(set); } else { set.items = set.items.filter(x => !x.wasSkipped); set.skipped = set.skippedOrig || set.skipped; set.expanded = false; set.report = null; await markSecrets(set); } draw(); };
       const sec = el.querySelector('#dz-incsecret'); if (sec) sec.onchange = () => { set.includeSecrets = sec.checked; draw(); };
     };
     draw();
