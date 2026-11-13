@@ -722,6 +722,7 @@
     const m = /^tribecode:\/\/(working|dev|installed|stable)\b/i.exec(String(u || ''));
     if (m) return useUi(/working|dev/i.test(m[1]) ? 'working' : 'installed');
     if (/^tribecode:\/\/invite\b/i.test(String(u || ''))) return instantWhenReady();
+    if (/^tribecode:\/\/auth\b/i.test(String(u || ''))) return window.TribeAuth2 ? window.TribeAuth2.deepLink(u) : null;   // feat/auth2: the desktop sign-in handoff (a one-time code, PKCE)
     joinLink(u);
   };
   // tribecode://invite (Invite-A-Friend.bat) or ?invite=1: a fresh project and its link, copied, as soon as hosting is up.

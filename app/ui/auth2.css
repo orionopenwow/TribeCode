@@ -1,0 +1,50 @@
+/* feat/auth2: the steps after a provider or an email link (signin.html and the app's sheet), the desktop code sheet,
+   Settings › Account › Sign-in methods and the host's sign-in settings. Flat matte: 1px borders, luminance steps only. */
+.au-form { display: flex; flex-direction: column; gap: 10px; margin-top: 4px; }
+.au-f { display: flex; flex-direction: column; gap: 5px; font-size: 13px; font-weight: 600; color: var(--text); }
+.au-f .input { width: 100%; box-sizing: border-box; min-height: 42px; font-weight: 400; }
+.au-hint { margin: 0; font-size: 12.5px; line-height: 1.45; color: var(--faint); min-height: 1.45em; }
+.au-hint[data-kind="good"] { color: var(--online); }
+.au-hint[data-kind="bad"] { color: var(--alert); }
+.au-hint[data-kind="wait"] { color: var(--muted); }
+.au-sugs { display: flex; flex-wrap: wrap; gap: 6px; }
+.au-sugs[hidden] { display: none; }
+.au-err { margin: 0; color: var(--alert); font-size: 13px; line-height: 1.5; }
+.au-err:empty { display: none; }
+.au-err a { color: var(--text); }
+.au-go { min-height: 44px; width: 100%; justify-content: center; }
+.au-alt { margin: 16px 0 0; text-align: center; font-size: 13.5px; color: var(--muted); }
+.au-alt a { color: var(--text); }
+.au-row { display: flex; gap: 8px; justify-content: flex-end; flex-wrap: wrap; }
+.au-code { font-family: var(--mono); font-size: 22px; letter-spacing: .3em; text-transform: uppercase; text-align: center; }
+.au-sent { padding: 14px 16px; border: 1px solid var(--edge); border-radius: var(--r); background: var(--surface-2); font-size: 14px; line-height: 1.55; color: var(--muted); }
+.au-sent b { color: var(--text); }
+.au-or { display: flex; align-items: center; gap: 10px; margin: 16px 0 10px; font-family: var(--mono); font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: var(--faint); }
+.au-or::before, .au-or::after { content: ''; flex: 1; border-top: 1px solid var(--edge); }
+
+/* "Return to TribeCode": the handoff page in the browser */
+.au-handoff { display: flex; flex-direction: column; gap: 14px; }
+.au-bigcode { font-family: var(--mono); font-size: 34px; font-weight: 700; letter-spacing: .32em; text-align: center; padding: 14px 10px; border: 1px solid var(--edge); border-radius: var(--r); background: var(--surface-2); color: var(--text); user-select: all; }
+.au-handoff .btn { min-height: 46px; justify-content: center; text-decoration: none; }
+.au-timer { font-size: 12.5px; color: var(--faint); text-align: center; }
+
+/* Settings › Account */
+.au-mcol { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.au-mlist { margin-top: 0; }
+.au-mlist li:first-child { border-top: 0; }
+.ac-ses li > .au-mi { flex-direction: row; align-items: center; gap: 10px; }
+.au-mi > span { display: flex; flex-direction: column; min-width: 0; }
+.au-mlinks { display: flex; flex-wrap: wrap; gap: 8px; }
+.au-mlinks .btn { display: inline-flex; align-items: center; gap: 6px; }
+.au-inline { display: flex; gap: 8px; align-items: center; margin-top: 10px; }
+.au-inline .input { flex: 1; min-height: 36px; }
+.au-smtp { grid-column: 1 / -1; border: 1px solid var(--edge); border-radius: var(--r); background: var(--surface-2); padding: 10px 14px; }
+.au-smtp > summary { display: flex; align-items: center; gap: 10px; cursor: pointer; list-style: none; }
+.au-smtp > summary::-webkit-details-marker { display: none; }
+.au-smtp[open] > summary { margin-bottom: 8px; }
+.au-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.au-grid .au-row { grid-column: 1 / -1; }
+.au-host .toggle span:first-child { font-size: 13px; color: var(--muted); margin-right: 8px; }
+@media (max-width: 560px) { .au-grid { grid-template-columns: 1fr; } }
+.au-go, .au-handoff .btn { transition: background-color var(--dur-quick) var(--ease-out), border-color var(--dur-quick) var(--ease-out); }
+@media (prefers-reduced-motion: reduce) { .au-go, .au-handoff .btn { transition: none; } }

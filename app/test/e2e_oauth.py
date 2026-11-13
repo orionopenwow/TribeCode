@@ -371,7 +371,7 @@ def main():
                 m = ok(api("/oauth/finish", "POST", {"rc": loc.split("#oauth=")[1]}), f"{pid} finish")["member"]
                 assert m["name"] == name and m.get("avatar") == av, f"{pid}: {m}"
             google_auth = [a for a in state["authorize"] if a["provider"] == "google"][-1]
-            assert google_auth.get("nonce") and google_auth["scope"] == "openid profile", google_auth
+            assert google_auth.get("nonce") and google_auth["scope"] == "openid profile email", google_auth
             for pid in ("github", "google"):
                 ok(api(f"/oauth/config/{pid}", "PUT", {"enabled": False}, token=orion), f"{pid} off")
             print("  GitHub + Google: names from the profile, avatars only from the provider CDN")

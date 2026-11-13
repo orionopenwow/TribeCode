@@ -77,6 +77,7 @@ Pushing from the Claude cloud sandbox:
   - `router.js`: the one router (global dashboard vs a project, Back/Forward via history, no dead ends, one pane on screen). Route table: docs/NAVIGATION.md.
   - `accounts.js`: Log in / Log out / Continue as guest, the account switcher and TEST accounts (docs/ACCOUNTS.md). Server scaffold: `server/accounts.js` (off unless `TRIBE_ACCOUNTS=1`); clean-up: `scripts/dev/clean-accounts.js`.
   - `signup.js`: the sign-up sheet (guest, account, providers), Save your work nudges, Forgot password (docs/ACCOUNTS.md › Sign up). Test: `app/test/e2e_signup.py`.
+  - `auth2.js` + `server/smtp.js`: provider sign-up (username step, link offer, Ask for an invite), the desktop app's provider sign-in (system browser, `tribecode://auth` one-time code + PKCE, typed 6-character fallback), email links, Settings › Account › Sign-in methods, Open sign-up and Email (SMTP) (docs/SIGNUP-FLOWS.md, docs/ACCOUNTS.md › feat/auth2). Tests: `e2e_auth2.py`, `security5_test.py`.
   - `app.js`: core views; `hostHere` auto-hosts on desktop.
   - `settings.js`: zero-step setup and the Settings page.
   - `tribenew.js`: the one create-a-tribe flow every entry point opens (name and icon → where it lives: this device, this computer hosts it, free cloud, GitHub → invite → the new tribe's "Start your first project" card); it reuses setuplocal.js's hosting (`host.computer`, `host.importTo`, `github.connect`). Test: `e2e_tribe_flow.py`.
