@@ -826,5 +826,24 @@
     say(`Imported ${note || 'the pasted design'} as a new version. Undo puts the old one back.`);
     return true;
   }
-  window.TribeSiteDesigner = { importCfg, open, close, ask, download, undo, redo, flush, dirty, hasDraft, comments: () => st ? st.comments : [], state: () => st && { pid: st.pid, page: st.page, sel: st.sel, hist: st.hist.length, fut: st.fut.length, log: st.log, pending: st.pending || null, open: !!root && !root.hidden, dirty: st.dirty, rev: st.rev, dev: st.dev, panel: st.panel, cmode: st.cmode }, cfg: () => st && st.cfg, useTemplate, gallery: () => gal.list };
+  // feat/dropzone: files dropped on the designer. A page of HTML or a site config (.json) imports as a new version; pictures
+  // replace the selected picture, or wait in the log as a picker (click a picture on the page, then one of these).
+  async function dropFiles(files) {
+    files = [...(files || [])]; if (!files.length) return false;
+    if (!root || root.hidden || !st) await open({});
+    if (!st) return false;
+    const page = files.find(f => /\.html?$/i.test(f.name) || /^text\/html/.test(f.type)), cfgF = files.find(f => /\.json$/i.test(f.name));
+    if (cfgF) { let cfg = null; try { cfg = JSON.parse(await cfgF.text()); } catch {} if (!cfg || !Array.isArray(cfg.pages)) { say(`${cfgF.name} is not a website config.`); return false; } return importCfg(cfg, cfgF.name); }
+    if (page) { if (!window.TribeSiteImport) { say('The importer is not loaded here.'); return false; } const r = window.TribeSiteImport.fromHtml(await page.text(), { name: page.name.replace(/\.html?$/i, '') }); return importCfg(r.cfg, page.name); }
+    const pics = files.filter(f => /^image\//.test(f.type) || /\.(png|jpe?g|gif|webp|svg|avif)$/i.test(f.name)).slice(0, 12);
+    if (!pics.length) { say('Drop pictures, a page of HTML or a site config (.json) here.'); return false; }
+    const srcs = []; for (const f of pics) { if (f.size > 12 * 1024 * 1024) continue; srcs.push({ src: await shrink(f), alt: f.name.replace(/\.[a-z0-9]+$/i, '').replace(/[-_]+/g, ' ') }); }
+    if (!srcs.length) { say('Those pictures are over 12 MB. Try smaller ones.'); return false; }
+    const s0 = st.sel, b = s0 && pageNow().blocks.find(x => x.id === s0.block);
+    if (b && (s0.kind === 'image' || srcs.length === 1)) { commit(S().setImage(st.cfg, st.page, s0.block, s0.path || '', srcs[0].src, srcs[0].alt)); say(`Used ${pics[0].name}. Undo puts the old one back.`); if (srcs.length === 1) return true; srcs.shift(); }
+    st.drops = srcs;
+    say(`${srcs.length === 1 ? 'Here is your picture' : `Here are your ${srcs.length} pictures`}: click a picture on the page, then pick one.`, `<div class="wdz-bgrid">${srcs.map(p => `<button type="button" data-boardpick="${esc(p.src)}" data-alt="${esc(p.alt)}" aria-label="${esc(p.alt)}"><img src="${esc(p.src)}" alt=""></button>`).join('')}</div>`);
+    return true;
+  }
+  window.TribeSiteDesigner = { importCfg, dropFiles, open, close, ask, download, undo, redo, flush, dirty, hasDraft, comments: () => st ? st.comments : [], state: () => st && { pid: st.pid, page: st.page, sel: st.sel, hist: st.hist.length, fut: st.fut.length, log: st.log, pending: st.pending || null, open: !!root && !root.hidden, dirty: st.dirty, rev: st.rev, dev: st.dev, panel: st.panel, cmode: st.cmode }, cfg: () => st && st.cfg, useTemplate, gallery: () => gal.list };
 })();

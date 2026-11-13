@@ -46,6 +46,7 @@
 
   // ---------- actions (stored by name so buttons still work after a reload) ----------
   const ACTS = {
+    dz: a => window.TribeDropZone && window.TribeDropZone.run(a),   // feat/dropzone: a dropped folder's suggestions
     assets: o => window.TribeAssets && window.TribeAssets.open(o || {}),
     flintpage: q => window.TribeFlintPage && window.TribeFlintPage.open(q || ''),   // feat/flint-max: Flint's page (what I can do, levels)   // v0.25: the asset library
     inspoApply: to => window.TribeInspo && window.TribeInspo.apply(to || 'both'),
@@ -203,6 +204,7 @@
       window.TribeAIBridge.open({ fresh: true, tab: back ? 'back' : 'out', reply });
       return say(back ? (reply ? 'I read that answer in the AI bridge: check each file, keep what you like, then Apply. Nothing runs by itself.' : 'Paste the AI\'s whole answer in the box, then Read the answer. You pick what to keep; Undo puts it back.') : 'Pick what to send and copy the pack. Paste it into ChatGPT, Gemini, Claude, Copilot or Le Chat, then paste the answer back.');
     }
+    if (window.TribeDropZone) { const r = await window.TribeDropZone.flint(text); if (r) { if (r !== true) say(r.text, r.acts || [], r.extra); return null; } }   // feat/dropzone: questions about the folder Flint is reading (only when one is in context)
     if (/^(what can (you|flint) do( for free)?|what('?s| is) free|what do you do for free|what can you build( for free)?|(show )?(your|flint'?s) (free )?tiers?|are you free)\??$/.test(t)) return tiersReply();   // flint-free: the honest capability map
     // flint-local: Flint's own brain first (app/ui/flintnlu.js + flintlocal.js): many-step commands, typos, eight
     // languages, taught phrases, undo, how-to answers from the docs. It hands back to the routes below when they fit.
@@ -500,6 +502,7 @@
   function barHtml(id) {
     return `<form class="fl-bar" data-flbar autocomplete="off"><button type="button" class="fl-av fl-me" data-flme title="What Flint can do" aria-label="What Flint can do" aria-haspopup="menu">${flintIco(14)}</button>
       <input class="fl-in" ${id ? `id="${id}"` : ''} placeholder="Ask Flint…" aria-label="Ask Flint" maxlength="2000" enterkeyhint="send">
+      <button type="button" class="fl-ic fl-att" data-dzpick title="Add files or a folder (Ctrl Shift U)" aria-label="Add files or a folder"><svg class="i" viewBox="0 0 24 24" style="width:16px;height:16px" aria-hidden="true"><path d="M20 11.5 12.6 19a5 5 0 0 1-7.1-7.1l8-8a3.4 3.4 0 0 1 4.8 4.8l-8 8a1.7 1.7 0 0 1-2.4-2.4L15 7.2"/></svg></button>
       <button type="button" class="fl-ic fl-mic" data-flmic title="Dictate" aria-label="Dictate">${ico('i-mic', 16)}</button>
       <button type="submit" class="fl-ic fl-send" title="Send" aria-label="Send">${SEND}</button></form>`;
   }
@@ -713,5 +716,5 @@
   }
   { const slot = document.getElementById('hub-flint-slot'); if (slot) setTimeout(() => mountDashboard(slot), 0); }   // Home drew before Flint loaded
   window.TribeFlint = { mount, mounts: () => [...mounts], mountDashboard, redraw: () => { save(); draw(); }, prefill, focus, openFull, closeFull, ask: send, thread: () => thread.slice(), clear, status: () => ({ ...model }), nudge,
-    say: (text, acts) => say(text, acts || []), act, step: async t => { push('me', t); await route(t); }, think: async t => { await refreshModel(); if (!model.online) return false; await modelReply(t); return true; } };   // v0.27.1: flintmem.js uses say/act/step/think
+    say: (text, acts, extra) => say(text, acts || [], extra), act, step: async t => { push('me', t); await route(t); }, think: async t => { await refreshModel(); if (!model.online) return false; await modelReply(t); return true; } };   // v0.27.1: flintmem.js uses say/act/step/think
 })();

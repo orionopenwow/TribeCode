@@ -539,7 +539,7 @@
   }
 
   // Global stream, condensed: avatar, who, what, when, and the project (or "On this device").
-  const KIND = { gist: ['i-sparkle', 'Agent'], commit: ['i-git', 'Commit'], decision: ['i-vote', 'Decision'], proposal: ['i-vote', 'Proposal'], vote: ['i-vote', 'Vote'], doc: ['i-doc', 'Doc'], task: ['i-check', 'Task'], join: ['i-users', 'Joined'], chat: ['i-chat', 'Chat'], plan: ['i-flag', 'Plan'] };
+  const KIND = { gist: ['i-sparkle', 'Agent'], commit: ['i-git', 'Commit'], decision: ['i-vote', 'Decision'], proposal: ['i-vote', 'Proposal'], vote: ['i-vote', 'Vote'], doc: ['i-doc', 'Doc'], task: ['i-check', 'Task'], join: ['i-users', 'Joined'], chat: ['i-chat', 'Chat'], plan: ['i-flag', 'Plan'], drop: ['i-folder', 'Files'] };
   function chip(pid) {
     const p = projOf(pid); if (!p) return '';
     return `<span class="hub-chip" style="--pc:${esc(p.color || '#6C7CFF')}"><i></i>${esc(p.name)}</span>`;
@@ -736,7 +736,7 @@
     for (const f of [...(upCache.mine || []), ...(upCache.project || [])]) {
       const cat = FK_CAT[f.kind] || 'other', proj = f.scope === 'project';
       out.push({ src: 'up', id: f.id, f, cat, type: FK_LABEL[f.kind] || 'File', title: f.name, at: f.at, owner: ownerOf(f.by, f.byName), loc: proj ? pjLoc(f.project) : privLoc(), mine: !proj || f.by === meId,
-        thumb: f.kind === 'image' && f.size < 4 * 1048576 ? T.img('', `data-thumb="${esc(f.id)}"`) : T.icon(cat, `${FK_LABEL[f.kind] || 'File'} · ${fsize(f.size || 0)}`), attrs: `data-up="${esc(f.id)}"`, acts: ['open', 'download', ...(f.by === meId || me().role === 'host' ? ['delete'] : [])] });
+        thumb: f.kind === 'image' && f.size < 4 * 1048576 ? T.img('', `data-thumb="${esc(f.id)}"`) : T.icon(cat, `${FK_LABEL[f.kind] || 'File'} · ${fsize(f.size || 0)}`), attrs: `data-up="${esc(f.id)}" data-upname="${esc(f.name)}" data-uptype="${esc(f.type || "")}" draggable="true"`, acts: ['open', 'download', ...(f.by === meId || me().role === 'host' ? ['delete'] : [])] });
     }
     for (const c of designCache) out.push({ src: c.kind, id: `${c.pid}|${c.id}`, pid: c.pid, rid: c.id, cat: 'designs', type: c.kind === 'board' ? 'Whiteboard' : 'Design', title: c.name || 'Untitled', at: c.updated, loc: pjLoc(c.pid), mine: false,
       thumb: c.kind === 'board' ? T.board(c.elements) : T.design(c.nodes), attrs: `data-gdesign="${esc(c.pid)}|${esc(c.id)}"`, acts: ['open', 'rename', 'download', ...(c.id !== 'main' ? ['delete'] : [])], exportLabel: 'Download (.json)' });
@@ -1008,6 +1008,7 @@
       else if (ref.type === 'plan') { if (window.TribeFlow && window.TribeFlow.openUpdates) window.TribeFlow.openUpdates(); else App().show('home'); }
       else if (ref.type === 'secretary') { if (window.TribeSecretary) window.TribeSecretary.open(); }
       else if (ref.type === 'project') App().show('home');
+      else if (ref.type === 'files') { if (window.TribeHub) window.TribeHub.open('docs'); }   // feat/dropzone: a drop in the upload history
       else { App().show('chat'); if (ref.id) flash(`#chat-list [data-id="${CSS.escape(ref.id)}"]`); }
     });
   }
@@ -1298,7 +1299,7 @@
 
   setTimeout(() => { panel(); scratch.sync(); fromHash(); }, 0);
   if (document.body.dataset.view === 'hub') setTimeout(onShow, 0);   // app.js may have shown the hub before this file loaded
-  window.TribeHub = { open, onShow, onHide, mode: () => mode, last, remember, resume, scratch, refresh: () => load(true), data: () => data, panel,
+  window.TribeHub = { open, onShow, onHide, mode: () => mode, last, remember, resume, scratch, refresh: () => load(true), data: () => data, panel, reloadFiles: () => upList().then(() => { if (mode === 'docs') refreshFiles(); }),   // feat/dropzone
     openNote: id => { open('docs'); setTimeout(() => noteEditor(id), 60); }, jump,
     editText: src => noteEditor(null, false, src), openFile, newMenu: a => { if (mode !== 'docs' || !fv) open('docs'); setTimeout(() => fv && fv.studio(a && a.isConnected ? a : $('#dc-new')), mode === 'docs' ? 0 : 80); }, files: () => fv };   // feat/setup-local: localfiles.js opens local docs and files here   // feat/flint: Flint opens the note it captured
 })();
