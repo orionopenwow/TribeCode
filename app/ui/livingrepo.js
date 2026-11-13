@@ -45,7 +45,7 @@
   // ---------- state of the current project ----------
   let cur = { pid: null, folder: null, sync: null, can: {}, at: 0 };
   async function load(force) {
-    const p = pid(); if (!p || !live()) { cur = { pid: null }; return cur; }
+    const p = pid(); if (!p || !live() || !((C().state().projects || []).some(x => x.id === p))) { cur = { pid: null }; return cur; }   // a project the host knows (no 404s mid-switch)
     if (!force && cur.pid === p && Date.now() - cur.at < 1500) return cur;
     const [f, s] = await Promise.all([srv(`/projects/${encodeURIComponent(p)}/folder`).catch(() => null), srv(`/projects/${encodeURIComponent(p)}/sync`).catch(() => null)]);
     cur = { pid: p, folder: f && f.folder, folderCan: (f && f.can) || {}, sync: s, at: Date.now() };
@@ -69,7 +69,7 @@
   let rt = 0;
   async function refresh() {
     clearTimeout(rt);
-    const on = live() && !!pid();
+    const on = live() && !!pid() && (C().state().projects || []).some(x => x.id === pid());
     document.body.classList.toggle('lr-on', on);
     if (!on) { pill.classList.add('hidden'); close(); return; }
     place();
