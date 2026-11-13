@@ -134,7 +134,7 @@ def main():
             assert pg.locator(".set-l b .ti svg").count() >= 5, "Settings sections carry icons"
             pg.click("#set-plan-chip"); pg.wait_for_selector("#plans-pop[role=dialog]")
             t = pg.inner_text("#plans-pop")
-            for want in ["Free", "$0", "Premium", "$6", "$24", "1,000", "2,500", "5,000", "Use my AI", "AI credit"]: assert want in t, (want, t)
+            for want in ["Free", "$0", "Premium", "Price soon", "1,000", "2,500", "5,000", "Use my AI", "AI credit"]: assert want in t, (want, t)
             assert pg.get_attribute("#set-plan-chip", "aria-expanded") == "true"
             pg.screenshot(path=str(SHOTS / "plans-popout.png"))
             pg.keyboard.press("Escape"); pg.wait_for_selector("#plans-pop", state="detached")
