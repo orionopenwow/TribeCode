@@ -48,7 +48,7 @@
     on('#hpo-copy', async () => { try { await navigator.clipboard.writeText(addr.url); A().toast('Address copied.'); } catch {} });
     on('#hpo-invite', () => { close(); window.TribeFlow && window.TribeFlow.instant ? window.TribeFlow.instant() : A().openInvite(); });
     on('#hpo-share', () => { close(); A().openInvite(); });
-    on('#hpo-settings', () => { close(); window.TribeSettings && window.TribeSettings.open(); setTimeout(() => { const h = document.querySelector('#settings-body [data-sec="hosting"], #settings-body .set-host'); h && h.scrollIntoView({ block: 'start' }); }, 120); });
+    on('#hpo-settings', () => { close(); window.TribeSettings && window.TribeSettings.open('admin', 'set-host'); });   // feat/settings-tabs
     on('#hpo-sw', async () => { close(); await A().setHosting(false); refresh(); });
     setTimeout(() => document.addEventListener('click', outside, true), 0);
   }

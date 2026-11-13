@@ -103,7 +103,7 @@
   }
 
   if (window.TribePalette && window.TribePalette.register) window.TribePalette.register(() => [
-    { kind: 'Action', label: 'Sign in with GitHub', keys: 'github login sign in account push token oauth', run: () => window.TribeSettings ? window.TribeSettings.open().then(() => { const el = document.getElementById('set-github'); if (el) el.scrollIntoView({ block: 'center' }); }) : signIn() },
+    { kind: 'Action', label: 'Sign in with GitHub', keys: 'github login sign in account push token oauth', run: () => window.TribeSettings ? window.TribeSettings.open('projects', 'set-github') : signIn() },
   ]);
   window.TribeGitHub = { mount, signIn, status: () => gh };
 })();

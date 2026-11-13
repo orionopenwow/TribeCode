@@ -216,7 +216,7 @@ def main():
             host = hctx.new_page(); watch(host, "host")
             host.goto(BASE + "/?skipIntro=1")
             host.wait_for_function("() => window.TribeClient && window.TribeClient.connected()", timeout=20000)
-            host.evaluate("() => { localStorage.setItem('tribecode.set.more','1'); window.TribeSettings.open() }")
+            host.evaluate("() => { window.TribeSettings.open('account') }")
             prov = host.locator('#set-oauth .oa-prov[data-p="discord"]')
             prov.wait_for(timeout=10000)
             prov.locator("summary").click()
@@ -324,7 +324,7 @@ def main():
             v = vctx.new_page(); watch(v, "vega")
             v.goto(BASE + "/?skipIntro=1")
             v.wait_for_function("() => window.TribeClient && window.TribeClient.connected()", timeout=20000)
-            v.evaluate("() => { localStorage.setItem('tribecode.set.more','1'); window.TribeSettings.open() }")
+            v.evaluate("() => { window.TribeSettings.open('account') }")
             link = v.locator('#set-oauth .oa-link[data-p="discord"]')
             link.wait_for(timeout=10000)
             assert v.locator("#set-oauth .oa-prov").count() == 0, "members don't see the provider setup"
@@ -334,7 +334,7 @@ def main():
             mine = ok(api("/oauth/me", token=vega))
             assert mine["linked"] and mine["linked"][0]["provider"] == "discord" and mine["linked"][0]["name"] == 'Vega & "Co" ix/i', mine
             v.wait_for_function("() => window.TribeClient && window.TribeClient.connected()", timeout=20000)
-            v.evaluate("() => { localStorage.setItem('tribecode.set.more','1'); window.TribeSettings.open() }")
+            v.evaluate("() => { window.TribeSettings.open('account') }")
             v.wait_for_selector('#set-oauth .oa-link[data-p="discord"] [data-act="unlink"]', timeout=10000)
             txt = v.locator('#set-oauth .oa-link[data-p="discord"] small').inner_text()
             assert txt == 'Linked as Vega & "Co" ix/i', f"provider text is shown as text: {txt}"

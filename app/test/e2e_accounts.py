@@ -171,14 +171,14 @@ def main():
             host_now = pg.evaluate("TribeStore.get().server.token")   # the reclaim gave the host a fresh key
 
             # ---- Settings: Account (Switch account, Log out) and More settings › Test accounts
-            pg.click("#ub-gear"); pg.wait_for_selector("#settings-modal:not(.hidden) #set-account #set-logout")
-            pg.evaluate("document.querySelector('#set-more').open = true"); pg.wait_for_selector("#set-testacc[aria-checked='true']")
+            pg.click("#ub-gear"); pg.evaluate("TribeSettings.open('account')"); pg.wait_for_selector("#settings-modal:not(.hidden) #set-account #set-logout")
+            pg.wait_for_selector("#set-testacc[aria-checked='true']")
             pg.click("#set-testacc"); pg.wait_for_function("!TribeAccounts.list().some(a => a.kind === 'test')")
             pg.click("#set-testacc"); pg.wait_for_function("TribeAccounts.list().filter(a => a.kind === 'test').length === 4")
             pg.evaluate("TribeSettings.close()"); pg.click("#pf-btn"); pg.wait_for_selector("#pf-menu [data-acc='test:maya']", state="visible")
             assert pg.locator("#pf-menu .ac-test").count() == 4
             shot(pg, "accounts-menu"); pg.keyboard.press("Escape")
-            pg.click("#ub-gear"); pg.wait_for_selector("#settings-modal:not(.hidden) #set-account #set-logout")
+            pg.click("#ub-gear"); pg.evaluate("TribeSettings.open('account')"); pg.wait_for_selector("#settings-modal:not(.hidden) #set-account #set-logout")
             # Log out from Settings, forgetting this device's tribes
             pg.evaluate("localStorage.setItem('tribecode.pins:' + TribeClient.base(), '[\"x\"]')")
             pg.click("#set-logout"); pg.wait_for_selector("#ac-forget"); pg.check("#ac-forget"); nav_click(pg, "#ac-lo-go")
@@ -196,7 +196,7 @@ def main():
             phone.evaluate("TribeAccounts.login()"); phone.wait_for_selector("#ac-login [data-acc='test:maya']", state="visible")
             assert phone.evaluate("document.documentElement.scrollWidth <= innerWidth + 1")
             nav_click(phone, "#ac-login [data-acc='test:maya']"); wait_reloaded(phone, "TribeAccounts.current() && TribeAccounts.current().name === 'Maya'")
-            phone.evaluate("TribeSettings.open()"); phone.wait_for_selector("#set-account #set-logout", state="visible")
+            phone.evaluate("TribeSettings.open('account')"); phone.wait_for_selector("#set-account #set-logout", state="visible")
             ph.close()
 
             # ---- polish: with TRIBE_ACCOUNTS=1 the screens use the real accounts API
@@ -217,7 +217,7 @@ def main():
             st_, r = api("/accounts/me", token=acct); assert st_ == 200 and maya_id in r["account"]["members"], r
             assert len([a for a in mp.evaluate("TribeAccounts.list()") if a["kind"] in ("device", "server")]) == 1, "one row per person"
             # Settings › Account: signed-in devices from /api/accounts/sessions
-            mp.click("#ub-gear"); mp.wait_for_selector("#settings-modal:not(.hidden) #set-sessions .ac-ses li", timeout=10000)
+            mp.click("#ub-gear"); mp.evaluate("TribeSettings.open('account')"); mp.wait_for_selector("#settings-modal:not(.hidden) #set-sessions .ac-ses li", timeout=10000)
             assert "This device" in mp.inner_text("#set-sessions")
             mp.evaluate("TribeSettings.close()")
             # Log out ends the server session too

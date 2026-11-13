@@ -223,7 +223,7 @@ def main():
             except Exception: raise AssertionError(f"no admin badge: {pg.evaluate('document.querySelector(`#room-list`).outerHTML.slice(0, 3000)')} {pg.evaluate('JSON.stringify((TribeClient.state().members||[]).map(m=>[m.name,m.role]))')} {errors}")
             assert pg.locator("#room-list .role-pill.rp-mod").count() >= 1, "mod badge in Who is here"
             # Settings › Roles & privileges
-            pg.evaluate("localStorage.setItem('tribecode.set.more','1'); TribeSettings.open()"); pg.click("#set-roles")
+            pg.evaluate("TribeSettings.open('admin')"); pg.click("#set-roles")
             pg.wait_for_selector("#roles-modal:not(.hidden) .rl-matrix", timeout=10000)
             assert pg.locator(".rl-cell.locked[title='Host only']").count() == 4 * 3, "locked cells show a lock with 'Host only'"
             assert pg.locator(f"[data-role-for='{bo}'] option[value='admin']").count() == 1, "host can pick any role"

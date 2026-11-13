@@ -121,7 +121,7 @@ def main():
             m = ask("build me a habit tracker for our flat", "On it")
             assert "Still needed" in m["text"] and "AI helper" in m["text"], m["text"]
             # Settings › Flint shows and edits the notes
-            page.evaluate("TribeSettings.open()")
+            page.evaluate("TribeSettings.open('ai')")
             page.wait_for_selector("#set-flintmem .fm-notes li[data-id]", timeout=8000)
             txt = page.inner_text("#set-flintmem") + " " + " ".join(page.eval_on_selector_all("#set-flintmem input, #set-flintmem textarea", "els => els.map(e => e.value)"))
             assert "code examples" in txt and "/friday" in txt, txt[:400]

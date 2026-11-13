@@ -107,7 +107,7 @@ def main():
             assert len(ok(api("/moderation", token=htok))["reports"]) == 2
 
             # Settings › Privacy & safety: the blocked list, Unblock brings her back
-            pg.evaluate("TribeSettings.open()"); pg.wait_for_selector("#set-safety", timeout=8000)
+            pg.evaluate("TribeSettings.open('privacy')"); pg.wait_for_selector("#set-safety", timeout=8000)
             pg.click("#set-safety"); pg.wait_for_selector("#mod-dlg.mod-safety [data-modx='unblock']", timeout=8000)
             assert "Maya" in pg.inner_text("#mod-dlg") and "Reports" not in pg.inner_text("#mod-dlg"), "people don't see reports"
             assert pg.locator("#mod-dlg a[href='privacy.html']").count() == 1
@@ -118,7 +118,7 @@ def main():
             pg.wait_for_function(f"[...document.querySelectorAll('{sel}')].some(e => e.offsetParent)", timeout=8000)
 
             # the host: reports in Privacy & safety, resolve one
-            host.evaluate("TribeSettings.open()"); host.wait_for_selector("#set-safety", timeout=8000)
+            host.evaluate("TribeSettings.open('privacy')"); host.wait_for_selector("#set-safety", timeout=8000)
             host.wait_for_function("document.querySelector('#set-safety') && document.querySelector('#set-safety').innerText.includes('2')", timeout=8000)
             host.click("#set-safety"); host.wait_for_selector("#mod-reports [data-rep]", timeout=8000)
             assert "Harassment" in host.inner_text("#mod-reports") and "Keeps posting" in host.inner_text("#mod-reports")

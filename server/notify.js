@@ -19,10 +19,11 @@ const NTFY_TAGS = { approval: 'raising_hand', mention: 'speech_balloon', dm: 'en
 function defaultPrefs() {
   return {
     types: { approval: true, mention: true, dm: true, 'task-assigned': true, reminder: true, proposal: true, 'bug-critical': true, release: false, huddle: false, 'meeting-notes': false, repo: false, 'comment-reply': true, 'visual-diff': false },
-    channels: { ntfy: false, webpush: true, desktop: true },   // fix/security-review: ntfy (a third-party server, ntfy.sh by default) is opt-in
+    channels: { ntfy: false, webpush: true, desktop: true, email: false },   // fix/security-review: ntfy (a third-party server, ntfy.sh by default) is opt-in
     ntfy: { server: 'https://ntfy.sh', topic: 'tribe-' + crypto.randomBytes(12).toString('base64url').replace(/[-_]/g, '').slice(0, 14).toLowerCase() },
     when: { mode: 'away', awayMinutes: 5, quiet: { on: false, from: '22:00', to: '08:00' } },
     digest: { on: true, everyHours: 4, at: '' },
+    mutes: { channels: {}, projects: {} },   // feat/settings-tabs: per channel / project: 'all' (default), 'mentions' or 'none'
     tz: 'UTC',
     webpush: [],
   };
@@ -34,6 +35,7 @@ function mergePrefs(base, p) {
   if (p.when && p.when.quiet) out.when.quiet = { ...base.when.quiet, ...p.when.quiet };
   if (typeof p.tz === 'string') out.tz = p.tz;
   if (Array.isArray(p.webpush)) out.webpush = p.webpush;
+  if (p.mutes && typeof p.mutes === 'object') out.mutes = { channels: { ...((p.mutes || {}).channels || {}) }, projects: { ...((p.mutes || {}).projects || {}) } };
   return out;
 }
 // Only accept known shapes from clients.
@@ -41,7 +43,7 @@ function cleanPrefs(cur, body) {
   const p = mergePrefs(cur, {});
   const b = body || {};
   if (b.types) for (const [k, v] of Object.entries(b.types)) if (TYPES.includes(k) || /^[a-z][a-z-]{1,30}$/.test(k)) p.types[k] = !!v;
-  if (b.channels) for (const k of ['ntfy', 'webpush', 'desktop']) if (k in b.channels) p.channels[k] = !!b.channels[k];
+  if (b.channels) for (const k of ['ntfy', 'webpush', 'desktop', 'email']) if (k in b.channels) p.channels[k] = !!b.channels[k];
   if (b.ntfy) {
     if (typeof b.ntfy.server === 'string' && /^https?:\/\/[^\s]+$/.test(b.ntfy.server.trim())) p.ntfy.server = b.ntfy.server.trim().replace(/\/+$/, '');
     if (typeof b.ntfy.topic === 'string' && /^[A-Za-z0-9_-]{6,64}$/.test(b.ntfy.topic.trim())) p.ntfy.topic = b.ntfy.topic.trim();
@@ -62,6 +64,14 @@ function cleanPrefs(cur, body) {
     if (Number.isFinite(Number(b.digest.everyHours))) p.digest.everyHours = Math.min(Math.max(Number(b.digest.everyHours), 1), 24);
     if (b.digest.at === '' || hm(b.digest.at)) p.digest.at = b.digest.at;
   }
+  if (b.mutes && typeof b.mutes === 'object') for (const kind of ['channels', 'projects']) {
+    const m = b.mutes[kind]; if (!m || typeof m !== 'object') continue;
+    for (const [k, v] of Object.entries(m)) {
+      if (!/^[A-Za-z0-9][A-Za-z0-9_-]{0,119}$/.test(k)) continue;
+      if (v === 'all' || v === null) delete p.mutes[kind][k]; else if (v === 'mentions' || v === 'none') p.mutes[kind][k] = v;
+    }
+    const ks = Object.keys(p.mutes[kind]); if (ks.length > 200) for (const k of ks.slice(0, ks.length - 200)) delete p.mutes[kind][k];
+  }
   if (typeof b.tz === 'string' && validTz(b.tz)) p.tz = b.tz;
   return p;
 }
@@ -80,6 +90,12 @@ function inQuiet(now, prefs) {
   return q.from < q.to ? hm >= q.from && hm < q.to : hm >= q.from || hm < q.to;   // wraps past midnight
 }
 
+// Per channel / project mutes: 'none' silences everything from there, 'mentions' lets only mentions, DMs and approvals through.
+function mutedBy(prefs, n, project = n.project) {
+  const m = prefs.mutes || {}, lv = [(m.channels || {})[n.ref], (m.projects || {})[project]];
+  if (lv.includes('none') && n.type !== 'approval') return true;
+  return lv.includes('mentions') && !['mention', 'dm', 'approval'].includes(n.type);
+}
 // The decision table. Pure: (prefs, event, presence, time, last pushes) -> what to do.
 //   pocket: send to phone/desktop now · digest: queue for the next summary · collapse: counted into the next push
 function decide({ prefs, n, away, now, lastPush = {}, rateMs = RATE_MS }) {
@@ -114,7 +130,7 @@ function mentionsIn(text, members, byId) {
     w === m.id.toLowerCase() || w === m.name.toLowerCase().replace(/\s+/g, '') || w === m.name.toLowerCase().split(/\s+/)[0]))).map(m => m.id);
 }
 
-function makeNotify({ store, bus, getMembers, sendTo, publicUrl, postChat = () => {}, log = () => {}, now = () => Date.now(), fetchImpl = (...a) => globalThis.fetch(...a), tick = true, dnd = () => false, muted = () => false }) {
+function makeNotify({ store, bus, getMembers, sendTo, publicUrl, postChat = () => {}, log = () => {}, now = () => Date.now(), fetchImpl = (...a) => globalThis.fetch(...a), tick = true, dnd = () => false, muted = () => false, mail = () => false, canMail = () => false, projectOf = () => null }) {
   fs.mkdirSync(store.p('.tribe/inbox'), { recursive: true });
   const db = store.readJSON('.tribe/notify.json', null) || {};
   db.secret = db.secret || crypto.randomBytes(32).toString('base64url');
@@ -226,6 +242,7 @@ function makeNotify({ store, bus, getMembers, sendTo, publicUrl, postChat = () =
     if (prefs.channels.ntfy && prefs.ntfy.topic && prefs.ntfy.server) tries.push(viaNtfy(mid, prefs, item).then(ok => ok && used.push('ntfy')).catch(e => log('ntfy failed: ' + e.message)));
     if (prefs.channels.webpush && prefs.webpush.length) tries.push(viaWebPush(mid, prefs, item).then(ok => ok && used.push('webpush')));
     if (prefs.channels.desktop && viaDesktop(mid, item)) used.push('desktop');
+    if (prefs.channels.email && item.type !== 'test' && mail(mid, `TribeCode: ${item.title}`, `${item.title}\n\n${item.body || ''}\n\n${clickUrl(item)}\n\nChange what you get in Settings › Notifications.`)) used.push('email');
     await Promise.all(tries);
     return used;
   }
@@ -246,6 +263,7 @@ function makeNotify({ store, bus, getMembers, sendTo, publicUrl, postChat = () =
       const item = { id: 'n-' + crypto.randomBytes(6).toString('base64url'), at: n.at || new Date(now()).toISOString(), type: n.type, priority: n.priority || 'normal',
         title: String(n.title || n.type).slice(0, 160), body: String(n.body || '').slice(0, 600), view: n.view || null, ref: n.ref || null,
         from: n.from || null, approval: n.approval || null, actions: n.actions || undefined, ...(n.project ? { project: String(n.project).slice(0, 64) } : {}) };
+      if (!n.force && mutedBy(prefsOf(mid), item, item.project || (item.ref ? projectOf(item.ref) : null))) { note(mid, { at: item.at, type: item.type, title: item.title, pocket: false, digest: false, reason: 'muted' }); continue; }   // feat/settings-tabs
       if (!n.force) inboxAppend(mid, item);
       sendTo(mid, { type: 'notification', item, unread: unread(mid) });
       const prefs = prefsOf(mid);
@@ -303,7 +321,7 @@ function makeNotify({ store, bus, getMembers, sendTo, publicUrl, postChat = () =
     if (b === 'prefs' && m === 'GET') {
       const p = prefsOf(me.id);
       return send(res, 200, { prefs: { ...p, webpush: undefined }, webpushDevices: p.webpush.length, vapidPublicKey: keys().publicKey,
-        ntfyUrl: `${p.ntfy.server}/${p.ntfy.topic}`, types: TYPES, publicUrl: publicUrl() });
+        ntfyUrl: `${p.ntfy.server}/${p.ntfy.topic}`, types: TYPES, publicUrl: publicUrl(), emailAvailable: !!canMail(me.id) });
     }
     if (b === 'prefs' && (m === 'PUT' || m === 'PATCH')) {
       const body = await readBody(req);
@@ -367,4 +385,4 @@ function makeNotify({ store, bus, getMembers, sendTo, publicUrl, postChat = () =
 }
 
 module.exports = makeNotify;
-Object.assign(module.exports, { decide, inQuiet, digestDue, defaultPrefs, mergePrefs, cleanPrefs, mentionsIn, localParts, TYPES, RATE_MS });
+Object.assign(module.exports, { mutedBy, decide, inQuiet, digestDue, defaultPrefs, mergePrefs, cleanPrefs, mentionsIn, localParts, TYPES, RATE_MS });

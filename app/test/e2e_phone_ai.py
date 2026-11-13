@@ -166,7 +166,7 @@ def main():
             wait_until(lambda: "Local" in ph.inner_text("#chat-list") or "brain" in ph.inner_text("#chat-list").lower(), 15, "the local model answered in chat")
 
             # Settings shows the policy to the host
-            host.evaluate("TribeSettings.open()"); host.wait_for_selector("#set-askai")
+            host.evaluate("TribeSettings.open('ai')"); host.wait_for_selector("#set-askai")
             host.wait_for_function("document.querySelector('#set-askai').value === 'never'")
             b.close()
         bad = [e for e in errors if "ResizeObserver" not in e]

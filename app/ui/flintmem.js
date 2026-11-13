@@ -306,7 +306,7 @@
     const [k, a, b] = String(arg || '').split(':');
     const say = (r) => { if (r && r !== true) F().say(r.text, r.acts || []); };
     if (k === 'noop') return;
-    if (k === 'settings') { if (!window.TribeSettings) return; await window.TribeSettings.open(); return setTimeout(() => { const el = document.getElementById('set-flint'); if (el) el.scrollIntoView({ block: 'start', behavior: 'smooth' }); }, 300); }
+    if (k === 'settings') { if (!window.TribeSettings) return; return window.TribeSettings.open('ai', 'set-flint'); }   // feat/settings-tabs
     if (k === 'academy') return window.TribeAcademy && window.TribeAcademy.open({});
     if (k === 'teach') { if (STYLES.includes(b)) await setStyle(b); return say(lessonReply(a, b)); }
     if (k === 'quiz') { const q = L[a] && L[a].quiz; if (!q) return; return F().say(`Quick one: ${q[0]}`, q[1].map((o, i) => act(o, 'flintmem', `ans:${a}:${i}`))); }

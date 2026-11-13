@@ -1,0 +1,15 @@
+/* Personal preferences on <html> (prefs.js, Settings › Accessibility and Privacy). Overrides only, tokens only. */
+/* Increase contrast: brighter secondary text and borders on every theme */
+html[data-contrast="more"] body { --faint: var(--muted); --stroke: var(--edge-pop); --edge: var(--edge-pop); --border: var(--edge-pop); }
+/* Strong focus rings */
+html[data-focus="strong"] :focus-visible { outline: 3px solid var(--accent) !important; outline-offset: 3px !important; }
+/* Readable font: a plain wide system face with more letter and line spacing (no download) */
+html[data-readable="on"] body { --font: Verdana, Tahoma, 'Segoe UI', system-ui, sans-serif; --display: Verdana, Tahoma, 'Segoe UI', system-ui, sans-serif; letter-spacing: .02em; word-spacing: .08em; }
+html[data-readable="on"] body p, html[data-readable="on"] body li, html[data-readable="on"] .bubble { line-height: 1.7; }
+html[data-readable="on"] body, html[data-readable="on"] button, html[data-readable="on"] input, html[data-readable="on"] textarea, html[data-readable="on"] select { font-family: Verdana, Tahoma, 'Segoe UI', system-ui, sans-serif; }
+/* Read ticks and typing indicators off */
+html[data-ticks="off"] .mt .tk { display: none; }
+html[data-typing="off"] #typing-line { display: none !important; }
+/* Reduce motion from Settings: the same as the system setting */
+html[data-motion="off"] *, html[data-motion="off"] *::before, html[data-motion="off"] *::after { animation-duration: 1ms !important; animation-iteration-count: 1 !important; transition-duration: 1ms !important; scroll-behavior: auto !important; }
+#tc-announce { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }

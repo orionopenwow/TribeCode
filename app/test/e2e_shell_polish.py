@@ -167,7 +167,7 @@ def main():
             assert not pg.evaluate("document.querySelector('#rail-workshop').classList.contains('on')")
 
             # ---------- 5. the plans pop-out, from Settings › Plan ----------
-            pg.evaluate("TribeSettings.open()"); pg.wait_for_selector("#set-plan-chip")
+            pg.evaluate("TribeSettings.open('ai')"); pg.wait_for_selector("#set-plan-chip")
             assert pg.locator(".set-l b .ti svg").count() >= 5, "Settings sections carry icons"
             pg.click("#set-plan-chip"); pg.wait_for_selector("#plans-pop[role=dialog]")
             t = pg.inner_text("#plans-pop")
@@ -223,7 +223,7 @@ def main():
             pg.evaluate(f"TribeProjects.switchTo('{pq}', 'home')"); pg.wait_for_selector("#nest-overview.on")
             pg.click("#nest-docs", button="right"); pg.wait_for_selector(".ro-menu [data-ro='reset']"); pg.click(".ro-menu [data-ro='reset']")
             assert pg.evaluate(ORDER, "#pj-nav > .nest-row, #pj-nav > .nest-line") == first, "Reset order (menu) puts the rows back"
-            pg.evaluate("TribeSettings.open()"); pg.wait_for_selector("#set-reorder"); pg.click("#set-reorder"); pg.wait_for_timeout(300)
+            pg.evaluate("TribeSettings.open('workspace')"); pg.wait_for_selector("#set-reorder"); pg.click("#set-reorder"); pg.wait_for_timeout(300)
             assert pg.evaluate(ORDER, "#pj-rail > *")[0] != "rail-workshop" and pg.evaluate(ORDER, "#pj-rail > *")[-1] == "rail-workshop", "Settings › Reset order puts the rail back"
             pg.evaluate("TribeSettings.close ? TribeSettings.close() : document.querySelector('#set-close').click()")
 

@@ -161,7 +161,7 @@ def main():
             assert "Settings" in g.inner_text("#sg .ac-lead") and g.get_attribute("#sg-code", "autocomplete") == "one-time-code"
             assert api("/accounts/reset/request", "POST", {"username": "nobody here"}) == (200, {"ok": True, "via": "host"}), "no enumeration"
             assert api("/accounts/resets")[0] == 403, "only the host sees requests"
-            host.evaluate("TribeSettings.open()"); host.wait_for_selector("#set-resets [data-rs-make]", state="visible", timeout=10000)
+            host.evaluate("TribeSettings.open('admin')"); host.wait_for_selector("#set-resets [data-rs-make]", state="visible", timeout=10000)
             assert "Moon Gardener" in host.inner_text("#set-resets")
             host.click("#set-resets [data-rs-make]"); host.wait_for_selector("#ac-rs-code"); code = host.inner_text("#ac-rs-code").strip()
             assert len(code) == 9 and code[4] == "-", code

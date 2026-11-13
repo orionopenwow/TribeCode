@@ -86,7 +86,7 @@ def main():
             pg.click("#tn-x"); closed(pg, "rail +")
             pg.wait_for_selector("#view-hub:not(.hidden) #hub-host", timeout=8000); pg.click("#hub-host"); opened(pg, "empty Home")
             pg.keyboard.press("Escape"); closed(pg, "Esc")
-            pg.evaluate("TribeSettings.open()"); pg.wait_for_selector("#set-new", state="visible"); pg.click("#set-new"); opened(pg, "Settings")
+            pg.evaluate("TribeSettings.open('account')"); pg.wait_for_selector("#set-new", state="visible"); pg.click("#set-new"); opened(pg, "Settings")
             assert pg.evaluate("!document.querySelector('.modal:not(.hidden) #set-new')"), "Settings closed under the flow"
             pg.click("#tn-cancel"); closed(pg, "Settings")
             for how, js in [("TribeLocalSetup.start", "TribeLocalSetup.start()"), ("TribeProjects.openNew", "TribeProjects.openNew()"), ("TribeSetup.start", "TribeSetup.start && TribeSetup.start()")]:

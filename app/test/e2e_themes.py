@@ -74,7 +74,7 @@ def main():
 
             pg.evaluate("TribeSettings.open()"); pg.wait_for_selector("#settings-modal:not(.hidden) .th-chip")
             assert pg.locator(".th-chip").count() == len(themes)
-            assert pg.locator(".set-seg").count() == 0, "the old Dark/Light/System control is gone"
+            assert pg.locator("#settings-body .set-theme .set-seg").count() == 0, "the old Dark/Light/System control is gone"
             pg.locator("#settings-body .set-theme").screenshot(path=str(SHOTS / "picker.png"))
             seen = set()
             for t in themes:
@@ -126,7 +126,7 @@ def main():
             ph.add_init_script(f"if (!localStorage.getItem('tribecode.settings.v1')) localStorage.setItem('tribecode.settings.v1', JSON.stringify({{name: 'Orion', onboarded: true, server: {{url: '{BASE}', token: '{token}'}}}}))")
             mp = ph.new_page(); mp.on("pageerror", lambda e: errors.append("phone: " + str(e)))
             mp.goto(BASE + "/?skipIntro=1"); mp.wait_for_function("window.TribeSettings && TribeClient.connected()", timeout=15000)
-            mp.evaluate("TribeSettings.open()"); mp.wait_for_selector("#settings-modal:not(.hidden) .th-chip")
+            mp.evaluate("TribeSettings.open('profile')"); mp.wait_for_selector("#settings-modal:not(.hidden) .th-chip")
             for t in themes:
                 mp.locator(f".th-chip[data-theme-id='{t['id']}']").scroll_into_view_if_needed()
                 mp.tap(f".th-chip[data-theme-id='{t['id']}']")

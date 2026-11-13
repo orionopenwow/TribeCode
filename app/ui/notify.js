@@ -348,7 +348,8 @@
     if (m.pocket) { desktopNotify(m.item); return; }
     if (!items.some(x => x.id === m.item.id)) items.unshift(m.item);
     items = items.slice(0, 200);
-    if ($('#nf-panel').classList.contains('hidden') && !document.hidden && m.item.priority === 'high' && !meta.away) toast(m.item.title);
+    const loud = window.TribePrefs ? window.TribePrefs.onNotification(m.item) : true;   // feat/settings-tabs: sound, quiet hours, pop-ups (prefs.js)
+    if ($('#nf-panel').classList.contains('hidden') && !document.hidden && m.item.priority === 'high' && !meta.away && loud) toast(m.item.title);
     render();
   });
   C.on('approval', m => { if (m.approval) { approvals.set(m.approval.id, m.approval); render(); } });

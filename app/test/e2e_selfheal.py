@@ -101,7 +101,7 @@ def main():
             crash = [x for x in api("/bugs", token=tok)[1]["bugs"] if "dup boom" in x["title"]]
             assert len(crash) == 1 and crash[0].get("count", 1) == 1, crash   # filed once, not merged three times
             # ---------- 5c. Settings: crash reports off ----------
-            pg.evaluate("localStorage.setItem('tribecode.set.more','1'); TribeSettings.open()"); pg.wait_for_selector("#set-crash[aria-checked=true]")
+            pg.evaluate("TribeSettings.open('privacy')"); pg.wait_for_selector("#set-crash[aria-checked=true]")
             pg.click("#set-crash"); pg.wait_for_selector("#set-crash[aria-checked=false]")
             assert pg.evaluate("TribeSelfHeal.reportsOn()") is False
             pg.keyboard.press("Escape")

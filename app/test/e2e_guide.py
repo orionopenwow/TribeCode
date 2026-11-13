@@ -92,7 +92,7 @@ def main():
             host.click("#gd-close"); host.wait_for_selector("#guide.hidden", state="attached")
 
             # 5) Settings -> "? Guide"; deep link #/guide/<slug>
-            host.evaluate("TribeSettings.open()"); host.wait_for_selector("#set-guide")
+            host.evaluate("TribeSettings.open('about')"); host.wait_for_selector("#set-guide")
             host.click("#set-guide"); host.wait_for_selector("#guide:not(.hidden)")
             assert host.evaluate("document.querySelector('#settings-modal').classList.contains('hidden')")
             host.click("#gd-close")

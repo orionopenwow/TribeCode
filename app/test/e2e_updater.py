@@ -129,7 +129,7 @@ def main():
             assert pg.inner_text("#update-btn").strip() == "Restart to update"
             assert calls(pg).count("download") == 1
             # the Settings switch
-            pg.evaluate("TribeSettings.open()"); pg.wait_for_selector("#set-bgupdate")
+            pg.evaluate("TribeSettings.open('about')"); pg.wait_for_selector("#set-bgupdate")
             assert pg.get_attribute("#set-bgupdate", "aria-checked") == "false"
             pg.click("#set-bgupdate"); pg.wait_for_function("TribeStore.get().startup.autoUpdate === true")
             assert pg.get_attribute("#set-bgupdate", "aria-checked") == "true"

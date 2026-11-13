@@ -100,7 +100,7 @@ def main():
             host.evaluate("TribePalette.open()"); host.fill("#pal-input", "TribeCode MCP"); host.wait_for_timeout(150); host.keyboard.press("Enter")
             on_page(host); leave(host)
             host.evaluate("TribeAgentsHub.open()"); host.wait_for_selector("#view-agents-hub:not(.hidden) .ah-all", timeout=10000); host.click(".ah-all"); on_page(host); leave(host)
-            host.evaluate("localStorage.setItem('tribecode.set.more','1'); TribeSettings.open()"); host.wait_for_selector("#set-mcp", timeout=10000); host.click("#set-mcp"); on_page(host)
+            host.evaluate("TribeSettings.open('ai')"); host.wait_for_selector("#set-mcp", timeout=10000); host.click("#set-mcp"); on_page(host)
             assert host.evaluate("document.querySelector('#settings-modal').classList.contains('hidden')"), "Settings stays open"
             leave(host)
             host.evaluate("TribeApp.connectClaude({ fresh: true, tool: 'codex' })"); host.wait_for_selector("#invite-body .cai-all", timeout=10000)
