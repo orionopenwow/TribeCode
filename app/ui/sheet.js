@@ -180,6 +180,7 @@
       <div class="sx-bar"><span class="sx-ref" id="sx-ref">A1</span><span class="sx-fx" aria-hidden="true">fx</span><input class="sx-formula" id="sx-formula" spellcheck="false" aria-label="Cell contents" placeholder="Type a value, or = for a formula like =SUM(B2:B9)"></div>
       <div class="sx-ask hidden" id="sx-ask"><input class="input" id="sx-ask-in" placeholder="e.g. add a column for tax at 8%, or: make a weekly chores rota for 4 people"><button class="btn" id="sx-ask-go">Ask</button></div>
       <div class="sx-wrap" id="sx-wrap" tabindex="0" aria-label="Sheet grid"><table class="sx-grid" id="sx-grid"></table></div>
+      <div class="sx-chart" id="sx-chart" hidden></div>
       <div class="sx-foot faint" id="sx-foot"></div>
     </div>`;
     const $ = s => pane.querySelector(s), wrap = $('#sx-wrap'), fbar = $('#sx-formula');
@@ -198,7 +199,17 @@
         h += '</tr>';
       }
       $('#sx-grid').innerHTML = h + '</tbody>';
+      chart();
       paintSel();
+    }
+    // feat/flint-max: a chart Flint added (<!-- chart: bar x=A y=B --> under the table), drawn flat from the live values
+    function chart() {
+      const box = $('#sx-chart'), FM = window.TribeFlintMax, sp = FM && FM.sheet.readChart(sh.post); if (!box) return;
+      if (!sp) { box.hidden = true; box.innerHTML = ''; return; }
+      const xc = colIdx(sp.x), yc = colIdx(sp.y), vals = [];
+      for (let r = 1; r < bounds(sh.grid).r; r++) { const lab = String(ev.at(r, xc) ?? ''), v = ev.at(r, yc); if (/^\s*(?:total|sum)\b/i.test(lab) || !lab) continue; const n = typeof v === 'number' ? v : FM.sheet.isNum(String(v)) ? FM.sheet.toNum(v) : null; if (n != null) vals.push({ label: lab, v: n }); }
+      box.hidden = !vals.length; box.innerHTML = vals.length ? FM.sheet.chartSvg(sp, vals) + '<button class="btn ghost sm" id="sx-chart-x" title="Remove the chart">Remove chart</button>' : '';
+      const x = $('#sx-chart-x'); if (x) x.onclick = () => { sh.post = String(sh.post || '').replace(/\n?<!--\s*chart:[^>]*-->/g, '').trim(); draw(); queue(); };
     }
     function inSel(r, c) { return r >= Math.min(sel.r, sel.r2) && r <= Math.max(sel.r, sel.r2) && c >= Math.min(sel.c, sel.c2) && c <= Math.max(sel.c, sel.c2); }
     function paintSel() {
@@ -297,7 +308,7 @@
       const t = askIn.value.trim(); if (!t || !o.askFlint) return;
       const b = $('#sx-ask-go'); b.disabled = true; b.textContent = 'Flint is working…';
       try {
-        const out = await o.askFlint(t, serialize(sh));
+        const out = await o.askFlint(t, serialize(sh), { sel: { r: Math.min(sel.r, sel.r2), c: Math.min(sel.c, sel.c2) } });
         if (out) { const next = parse(out); if (next.grid.length) { sh = next; sh.grid.forEach((row, r) => row.forEach((v, c) => dirty.add(r + ',' + c))); draw(); await flush(); askIn.value = ''; askBox.classList.add('hidden'); } }
       } finally { b.disabled = false; b.textContent = 'Ask'; }
     };
@@ -305,7 +316,7 @@
     draw(); setTimeout(() => wrap.focus(), 30);
     return {
       update(d) { if (saveT || editing || !d || d.version <= doc.version) return; doc = d; sh = parse(d.body); draw(); status(`Updated by ${o.nameOf ? o.nameOf(d.updatedBy) : 'a teammate'} · v${d.version}`); },
-      flush: () => (saveT ? flush() : null), destroy() { clearTimeout(saveT); },
+      flush: () => (saveT ? flush() : null), destroy() { clearTimeout(saveT); }, sel: () => ({ r: sel.r, c: sel.c }),
     };
   }
 

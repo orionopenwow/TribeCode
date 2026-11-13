@@ -230,6 +230,29 @@ them, `app/ui/sitecfg.js` `command2`, `app/ui/canvas/flintpane.js` `MOVES` and `
   link", "clear our chat"
 - plus the ~170 earlier actions (tasks, notes, docs, chat and DMs, calendar, builds, themes, navigation, math…).
 
+**Design, copy, sheets, docs and slides** (feat/flint-max, `app/ui/flintmax.js`; research and the model plan:
+[FLINT-RESEARCH.md](FLINT-RESEARCH.md))
+- Several steps, one Undo: "add a pricing section with three plans, make the middle one highlighted, then switch to
+  dark mode"; "undo that" takes all three back. Pronouns: "make it bigger" (the selection), "do the same on the about page".
+- Palettes: "warm autumn palette", "ocean colors", "palette from #2a8c80", "brutalist" (30 moods, OKLCH, a light and a
+  dark variant, each checked against WCAG and fixed if it misses). "fix the contrast" measures and fixes the site's
+  colors (before → after ratios).
+- Type and style: "pick fonts that feel elegant", "make this more professional / elegant / friendly / brutalist /
+  luxury / calm / retro / techy / modern" (palette + fonts + corners + spacing in one step). "tidy this up" (one
+  spacing rhythm, one alignment, even corners).
+- Copy: "give me headline ideas" and "what should the button say" (tap one to use it), "how readable is this"
+  (Flesch, grade, tips), "title case the headings"; anywhere: "headline ideas for a candle shop", "title case: …".
+- Canvas: "add a navbar / footer / hero / sign up form / sidebar / tab bar / dialog", "turn these into a card grid",
+  "apply a sunset palette".
+- Sheets (Flint's chat or the sheet's Ask box, Undo there): "sum this column", "average of the price column", "sort by
+  sales, highest first", "format as currency", "add a total row", "make a chart of sales by month" (drawn under the table).
+- Docs: "make a table of contents", "turn this into a checklist", "fix capitalization", "add a tldr at the top",
+  "whats the reading level" (each one Undo).
+- Slides: "make a 5-slide pitch from the vision doc" (or any doc, or "turn the readme into a presentation").
+- Flint's page (`app/ui/flintpage.js`, ✦ menu › What can Flint do?, "what can you do", `#/flint`): Flint's levels (no
+  AI, local helper, your AI, credits) with the active one marked and "Set up a local model"; "What I can do", searchable
+  and grouped by editor, each with Try it (a demo on sample data, never your work) and Ask Flint; the lessons.
+
 ## Lessons
 
 `app/ui/flintlessons.js`: a short lesson for each feature (website designer, canvas, preview, tasks, work, templates,
@@ -242,7 +265,7 @@ Guide or the Academy where they exist. Tests: `app/test/flint_eval_test.js` (the
 `app/test/flint_eval.json` (written by `scripts/dev/flint-eval-cases.js`, run by `app/test/flint_eval_test.js`, fails
 under 98%): 1,003 phrasings for websites, the canvas, preview edits, lessons and global commands, with typos, slang and
 indirect wording, in five contexts (website designer, canvas, canvas with a selection, preview, anywhere). Before
-feat/flint-unify: 667/674 (99.0%). Now: 996/1,003 (99.3%), including 249 phrasings for the new commands (100%).
+feat/flint-unify: 667/674 (99.0%). Then (feat/flint-unify): 996/1,003 (99.3%), including 249 phrasings for the new commands (100%). Now (feat/flint-max): 1,189/1,196 (99.4%), including 143 tuning phrasings for the design, copy, sheet, doc and slide moves (100%).
 Held-out batches: 1 scored 22/32 (68.8%) when first run and was then tuned; 2 was never tuned against: 14/16 (87.5%);
 3: 27/32 (84.4%). Batch 4 (40, `scripts/dev/flint-held4.js`) was written before the new commands were built, so its
 phrasings shaped them: 0/40 before, 40/40 after. Batch 5 (40, `flint-held5.js`) was written after the matchers existed and
@@ -252,6 +275,17 @@ runs 45 commands end to end in the designer, the canvas, the preview and the mai
 ## Abilities log
 
 Agents: add a dated line whenever Flint learns something new. Newest first. Say which tier it runs in.
+
+- **2026-11-12** (feat/flint-max)
+  - Several steps in one message land as one Undo in the website designer; "do the same on the about page" and "make it bigger" (free · no AI).
+  - Palettes from 30 moods or one color, light and dark, WCAG-checked and fixed; "fix the contrast" (free · no AI).
+  - Font pairing by mood; style moves (professional, elegant, friendly, brutalist, luxury, calm, retro, techy, modern); tidy (free · no AI).
+  - Headline ideas, CTA picker, readability (Flesch), Title Case, tone word lists (free · no AI).
+  - Canvas recipes (navbar, footer, hero, forms, card grid, pricing, sidebar, tab bar, dialog), card grid from a selection, recolor with a palette (free · no AI).
+  - Sheets: sum/average/min/max/count, sort, currency and percent, a Total row, charts (free · no AI).
+  - Docs: table of contents, checklist, capitals, TL;DR, reading level (free · no AI).
+  - Slides: a pitch from the vision or any doc (free · no AI).
+  - Flint's page: levels, searchable abilities with Try it, lessons (free · no AI).
 
 - **2026-11-11** (feat/flint-site)
   - Understands websites by meaning: "link tree website", "something for my band", "i sell candles online", "we got engaged, need a page" pick the right one of the 16 templates (free · no AI).

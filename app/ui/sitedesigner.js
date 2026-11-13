@@ -698,6 +698,7 @@
     st.log = st.log.slice(-40); fui.set(st.log);
     const k = chipsNow().join('|'); if (k !== chipKey) { chipKey = k; fui.chips(chipsNow()); }
   }
+  const FMX = () => window.TribeFlintMax;
   const undoAct = () => ({ label: 'Undo', fn: () => { if (undo()) say('Undone.'); } });
   const chipActs = l => (l || []).map(c => /…$/.test(c) ? { label: c, act: 'fill', arg: c.replace(/…$/, '').replace(/^Paste the link$/, '') } : { label: c, act: 'ask', arg: c });
   const ctxNow = () => ({ view: 'site', site: true, start: !$('#wdz-start').hidden || (!st.hist.length && !st.log.some(m => m.who === 'flint' && m.text)), pages: st.cfg.pages.map(p => p.title), selection: !!st.sel });
@@ -737,12 +738,25 @@
   }
   async function runSteps(steps, text) {
     const before = JSON.stringify(st.cfg); let work = st.cfg; const said = []; let asked = null, chips = null, handed = false;
+    const done = [], acts = []; let html = '';   // feat/flint-max: what to repeat elsewhere, Flint's swatches and tappable ideas
     for (const s of steps) {
       if (s.intent === 'undo') { if (work !== st.cfg) { st.cfg = work; } undo(); work = st.cfg; said.push(st.hist.length || st.fut.length ? 'Undone.' : 'Nothing to undo.'); continue; }
       if (s.intent === 'redo') { redo(); work = st.cfg; said.push('Redone.'); continue; }
       if (s.intent === 'lesson' && window.TribeFlintLessons) { window.TribeFlintLessons.open(s.slots.feature); said.push('Opened the lesson.'); continue; }
       if (/^site\.(hours|autofill)$/.test(s.intent) && st.pid) await loadFacts();
-      const r = /^site\./.test(s.intent) ? S().command(work, s, { page: st.page, sel: st.sel, facts: st.facts }) : null;
+      // feat/flint-max: "do the same on the about page" replays the last edits there (one Undo with the rest)
+      if (s.intent === 'site.same') {
+        const want = String(s.slots.page || '').toLowerCase(), pgx = work.pages.find(p => p.title.toLowerCase() === want || p.slug === want) || work.pages.find(p => p.title.toLowerCase().includes(want));
+        if (!pgx) { said.push(`There is no ${s.slots.page} page. Say “add a page called ${s.slots.page}” first.`); continue; }
+        if (!(st.lastSteps || []).length) { said.push('Do what? Make a change first, then say “do the same on the ' + pgx.title + ' page”.'); continue; }
+        st.page = pgx.id; let n = 0;
+        for (const ls of st.lastSteps) { const rr = (FMX() && FMX().site(work, ls, { page: pgx.id, sel: null }, S())) || S().command(work, ls, { page: pgx.id, sel: null, facts: st.facts }); if (rr && rr.cfg) { work = S().normalize(rr.cfg); n++; } }
+        said.push(n ? `Did the same on ${pgx.title}: ${st.lastSteps.map(x => x.text).join(', then ')}.` : `Nothing to repeat on ${pgx.title}.`); continue;
+      }
+      const rx = FMX() && /^site\./.test(s.intent) ? FMX().site(work, s, { page: st.page, sel: st.sel }, S()) : undefined;
+      const r = rx !== undefined ? rx : /^site\./.test(s.intent) ? S().command(work, s, { page: st.page, sel: st.sel, facts: st.facts }) : null;
+      if (r && r.cfg && !/^site\.(?:same|headlines|cta|readability)$/.test(s.intent)) done.push(s);
+      if (r && r.html) html += r.html; if (r && r.acts) acts.push(...r.acts);
       if (!r) {
         // not a site edit: Flint's full brain does it (a task, a message, the theme, a question), replying right here
         if (!/^(build\.|canvas\.|edit\.)/.test(s.intent) && fui) { commitAll(before, work); if (said.length) { say(said.filter(Boolean).join(' ')); said.length = 0; } await fui.flint(s.text || text); work = st.cfg; handed = true; continue; }
@@ -772,7 +786,8 @@
     commitAll(before, work);
     if (asked) st.pending = asked;
     const reply = said.filter(Boolean).join(' ');
-    if (reply || !handed) say(reply || 'Done.', '', [...(changed ? [undoAct()] : []), ...chipActs(chips)]);
+    if (done.length) st.lastSteps = done;
+    if (reply || !handed) say(reply || 'Done.', html, [...(changed ? [undoAct()] : []), ...acts, ...chipActs(chips)]);
     paint(); postSel(true);
     return reply;
   }

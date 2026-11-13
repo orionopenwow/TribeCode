@@ -114,6 +114,25 @@
     'canvas.snap': () => { const ids = E.sel.length ? E.sel.slice() : E.S.kids('').map(n => n.id); if (!ids.length) return 'Nothing to snap yet.'; E.patchMany(ids, n => { if (Number.isFinite(n.x)) n.x = Math.round(n.x / 8) * 8; if (Number.isFinite(n.y)) n.y = Math.round(n.y / 8) * 8; if (Number.isFinite(n.w)) n.w = Math.max(8, Math.round(n.w / 8) * 8); if (Number.isFinite(n.h) && n.t !== 'text') n.h = Math.max(8, Math.round(n.h / 8) * 8); }); return `Snapped ${ids.length} layer${ids.length === 1 ? '' : 's'} to the 8px grid.`; },
     'canvas.delete': () => { if (!E.sel.length) return need(1, 'delete this'); const n = E.sel.length; E.removeSel(); return `Deleted ${n} layer${n === 1 ? '' : 's'}. Undo brings ${n === 1 ? 'it' : 'them'} back.`; },
     'canvas.selectall': () => { const ids = E.S.kids('').map(n => n.id); E.select(ids); return { say: `Selected ${ids.length} top-level layer${ids.length === 1 ? '' : 's'}.`, keep: true }; },
+    // feat/flint-max: component recipes ("add a navbar", "turn these into a card grid") and palettes ("apply a sunset palette")
+    'canvas.recipe': s => {
+      const FM = window.TribeFlintMax; if (!FM) return 'Recipes did not load. Reload the page.';
+      if (s.slots.kind === 'cardgrid' && E.sel.length >= 2) { const nodes = E.sel.map(id => E.S.get(id)).filter(Boolean), moves = FM.gridOf(nodes); const by = new Map(moves.map(m => [m.id, m.patch])); E.patchMany(nodes.map(n => n.id), n => Object.assign(n, by.get(n.id) || {})); return `Arranged ${nodes.length} layers into a card grid: 3 columns, 16px gaps, equal sizes.`; }
+      const f = E.sel.length === 1 && E.S.get(E.sel[0]), inFrame = f && (f.t === 'frame' || f.t === 'component'), w = inFrame ? (f.w || 390) : 390;
+      const at = inFrame ? { p: f.id, x: 0, y: s.slots.kind === 'footer' || s.slots.kind === 'tabbar' ? Math.max(0, (f.h || 844) - (s.slots.kind === 'footer' ? 120 : 72)) : 0, w } : Object.assign(spot(w, 320), { w });
+      const list = FM.recipe(s.slots.kind, at, nid); if (!list) return 'I don’t have that recipe yet.';
+      if (!inFrame) list[0].i = E.S.nextI(list[0].p);
+      E.addNodes(list);
+      return { say: `Added a ${({ cardgrid: 'card grid', navbar: 'navbar', tabbar: 'tab bar', modal: 'dialog', form: 'sign-up form' })[s.slots.kind] || s.slots.kind}: real layers you can move and edit, from a recipe (no AI).`, focus: list[0].id };
+    },
+    'canvas.palette': s => {
+      const FM = window.TribeFlintMax; if (!FM) return 'Palettes did not load. Reload the page.';
+      const P = FM.palette({ mood: s.slots.mood, color: s.slots.color && s.slots.color.hex }), k = P.colors;
+      const ids = E.sel.length ? E.sel.slice() : E.S.live().map(n => n.id), all = new Set(ids); if (E.sel.length) E.S.live().forEach(n => { let q = n, d = 0; while (q && q.p && d++ < 40) { if (all.has(q.p)) { all.add(n.id); break; } q = E.S.get(q.p); } });
+      const moves = FM.recolor([...all].map(id => E.S.get(id)).filter(Boolean), k); if (!moves.length) return 'Nothing to recolor yet.';
+      const by = new Map(moves.map(m => [m.id, m.patch])); E.patchMany(moves.map(m => m.id), n => Object.assign(n, by.get(n.id)));
+      return `Recolored ${moves.length} layer${moves.length === 1 ? '' : 's'} with the ${P.name} palette (${P.swatches.slice(0, 5).map(x => x.hex).join(' ')}), text at ${FM.contrast(k.ink, k.bg)}:1 contrast.`;
+    },
     'canvas.zoom': s => { const to = s.slots.to, z = (E.view && E.view.z) || 1; if (to === 'fit') E.fit(false); else if (to === 'selection') E.fit(true); else E.zoomTo(to === '100' ? 1 : to === 'in' ? Math.min(8, z * 1.5) : Math.max(0.1, z / 1.5)); return { say: to === 'fit' ? 'Zoomed to fit everything.' : to === 'selection' ? 'Zoomed to the selection.' : `Zoom ${Math.round(((E.view && E.view.z) || 1) * 100)}%.`, keep: true }; },
   };
   function move(s) {

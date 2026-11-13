@@ -7403,6 +7403,1531 @@
    "i": "settings.away",
    "ctx": "g",
    "v": "held5"
+  },
+  {
+   "t": "warm autumn palette",
+   "i": "site.palette",
+   "s": {
+    "mood": "autumn"
+   },
+   "ctx": "s",
+   "v": "max"
+  },
+  {
+   "t": "use an ocean color palette",
+   "i": "site.palette",
+   "s": {
+    "mood": "ocean"
+   },
+   "ctx": "s",
+   "v": "max"
+  },
+  {
+   "t": "make a palette from #2a8c80",
+   "i": "site.palette",
+   "s": {
+    "color": "#2a8c80"
+   },
+   "ctx": "s",
+   "v": "max"
+  },
+  {
+   "t": "give me a forest colour scheme",
+   "i": "site.palette",
+   "s": {
+    "mood": "forest"
+   },
+   "ctx": "s",
+   "v": "max"
+  },
+  {
+   "t": "neon palette pls",
+   "i": "site.palette",
+   "s": {
+    "mood": "neon"
+   },
+   "ctx": "s",
+   "v": "max"
+  },
+  {
+   "t": "colors inspired by the beach",
+   "i": "site.palette",
+   "s": {
+    "mood": "ocean"
+   },
+   "ctx": "s",
+   "v": "max"
+  },
+  {
+   "t": "try a pastel palette",
+   "i": "site.palette",
+   "s": {
+    "mood": "pastel"
+   },
+   "ctx": "s",
+   "v": "max"
+  },
+  {
+   "t": "a cozy coffee shop palette",
+   "i": "site.palette",
+   "s": {
+    "mood": "coffee"
+   },
+   "ctx": "s",
+   "v": "max"
+  },
+  {
+   "t": "switch to a midnight color scheme",
+   "i": "site.palette",
+   "s": {
+    "mood": "midnight"
+   },
+   "ctx": "s",
+   "v": "max"
+  },
+  {
+   "t": "palete for a wedding",
+   "i": "site.palette",
+   "s": {
+    "mood": "romantic"
+   },
+   "ctx": "s",
+   "v": "max"
+  },
+  {
+   "t": "generate a color scheme around #ff6f8e",
+   "i": "site.palette",
+   "s": {
+    "color": "#ff6f8e"
+   },
+   "ctx": "s",
+   "v": "max"
+  },
+  {
+   "t": "retro palette",
+   "i": "site.palette",
+   "s": {
+    "mood": "retro"
+   },
+   "ctx": "s",
+   "v": "max"
+  },
+  {
+   "t": "fix the contrast",
+   "i": "site.contrast",
+   "ctx": "s",
+   "v": "max"
+  },
+  {
+   "t": "is the text readable on this background",
+   "i": "site.contrast",
+   "ctx": "s",
+   "v": "max"
+  },
+  {
+   "t": "check accessibility",
+   "i": "site.contrast",
+   "ctx": "s",
+   "v": "max"
+  },
+  {
+   "t": "does it pass wcag",
+   "i": "site.contrast",
+   "ctx": "s",
+   "v": "max"
+  },
+  {
+   "t": "the grey text is hard to read on the background",
+   "i": "site.contrast",
+   "ctx": "s",
+   "v": "max"
+  },
+  {
+   "t": "make sure the colours are accessible",
+   "i": "site.contrast",
+   "ctx": "s",
+   "v": "max"
+  },
+  {
+   "t": "pick fonts that feel elegant",
+   "i": "site.fontpair",
+   "s": {
+    "mood": "elegant"
+   },
+   "ctx": "s",
+   "v": "max"
+  },
+  {
+   "t": "fonts for a friendly bakery",
+   "i": "site.fontpair",
+   "s": {
+    "mood": "friendly"
+   },
+   "ctx": "s",
+   "v": "max"
+  },
+  {
+   "t": "professional fonts please",
+   "i": "site.fontpair",
+   "s": {
+    "mood": "professional"
+   },
+   "ctx": "s",
+   "v": "max"
+  },
+  {
+   "t": "modern typography",
+   "i": "site.fontpair",
+   "s": {
+    "mood": "modern"
+   },
+   "ctx": "s",
+   "v": "max"
+  },
+  {
+   "t": "retro fonts",
+   "i": "site.fontpair",
+   "s": {
+    "mood": "retro"
+   },
+   "ctx": "s",
+   "v": "max"
+  },
+  {
+   "t": "playful font pairing",
+   "i": "site.fontpair",
+   "s": {
+    "mood": "playful"
+   },
+   "ctx": "s",
+   "v": "max"
+  },
+  {
+   "t": "make this more professional",
+   "i": "site.style",
+   "s": {
+    "style": "professional"
+   },
+   "ctx": "s",
+   "v": "max"
+  },
+  {
+   "t": "make it look more corporate",
+   "i": "site.style",
+   "s": {
+    "style": "professional"
+   },
+   "ctx": "s",
+   "v": "max"
+  },
+  {
+   "t": "more elegant",
+   "i": "site.style",
+   "s": {
+    "style": "elegant"
+   },
+   "ctx": "s",
+   "v": "max"
+  },
+  {
+   "t": "brutalist",
+   "i": "site.style",
+   "s": {
+    "style": "brutalist"
+   },
+   "ctx": "s",
+   "v": "max"
+  },
+  {
+   "t": "give it a luxury feel",
+   "i": "site.style",
+   "s": {
+    "style": "luxury"
+   },
+   "ctx": "s",
+   "v": "max"
+  },
+  {
+   "t": "make the site feel friendlier",
+   "i": "site.style",
+   "ctx": "s",
+   "v": "max"
+  },
+  {
+   "t": "make it feel calm",
+   "i": "site.style",
+   "s": {
+    "style": "calm"
+   },
+   "ctx": "s",
+   "v": "max"
+  },
+  {
+   "t": "go retro",
+   "i": "site.style",
+   "s": {
+    "style": "retro"
+   },
+   "ctx": "s",
+   "v": "max"
+  },
+  {
+   "t": "make it more modern",
+   "i": "site.style",
+   "s": {
+    "style": "modern"
+   },
+   "ctx": "s",
+   "v": "max"
+  },
+  {
+   "t": "techy vibe",
+   "i": "site.style",
+   "s": {
+    "style": "techy"
+   },
+   "ctx": "s",
+   "v": "max"
+  },
+  {
+   "t": "tidy this up",
+   "i": "site.tidy",
+   "ctx": "s",
+   "v": "max"
+  },
+  {
+   "t": "make it look balanced",
+   "i": "site.tidy",
+   "ctx": "s",
+   "v": "max"
+  },
+  {
+   "t": "fix the spacing",
+   "i": "site.tidy",
+   "ctx": "s",
+   "v": "max"
+  },
+  {
+   "t": "align everything",
+   "i": "site.tidy",
+   "ctx": "s",
+   "v": "max"
+  },
+  {
+   "t": "it looks cluttered",
+   "i": "site.tidy",
+   "ctx": "s",
+   "v": "max"
+  },
+  {
+   "t": "neaten the layout",
+   "i": "site.tidy",
+   "ctx": "s",
+   "v": "max"
+  },
+  {
+   "t": "give me headline ideas",
+   "i": "site.headlines",
+   "ctx": "s",
+   "v": "max"
+  },
+  {
+   "t": "suggest a headline",
+   "i": "site.headlines",
+   "ctx": "s",
+   "v": "max"
+  },
+  {
+   "t": "other tagline options",
+   "i": "site.headlines",
+   "ctx": "s",
+   "v": "max"
+  },
+  {
+   "t": "brainstorm some titles",
+   "i": "site.headlines",
+   "ctx": "s",
+   "v": "max"
+  },
+  {
+   "t": "suggest a better call to action",
+   "i": "site.cta",
+   "ctx": "s",
+   "v": "max"
+  },
+  {
+   "t": "what should the button say",
+   "i": "site.cta",
+   "ctx": "s",
+   "v": "max"
+  },
+  {
+   "t": "better button text ideas",
+   "i": "site.cta",
+   "ctx": "s",
+   "v": "max"
+  },
+  {
+   "t": "how readable is this",
+   "i": "site.readability",
+   "ctx": "s",
+   "v": "max"
+  },
+  {
+   "t": "readability score",
+   "i": "site.readability",
+   "ctx": "s",
+   "v": "max"
+  },
+  {
+   "t": "is it easy to read",
+   "i": "site.readability",
+   "ctx": "s",
+   "v": "max"
+  },
+  {
+   "t": "what grade level is the copy",
+   "i": "site.readability",
+   "ctx": "s",
+   "v": "max"
+  },
+  {
+   "t": "fix the capitalization",
+   "i": "site.titlecase",
+   "ctx": "s",
+   "v": "max"
+  },
+  {
+   "t": "title case the headings",
+   "i": "site.titlecase",
+   "ctx": "s",
+   "v": "max"
+  },
+  {
+   "t": "capitalise the titles",
+   "i": "site.titlecase",
+   "ctx": "s",
+   "v": "max"
+  },
+  {
+   "t": "add a pricing section with three plans",
+   "i": "site.price.plans",
+   "s": {
+    "n": 3
+   },
+   "ctx": "s",
+   "v": "max"
+  },
+  {
+   "t": "pricing with two tiers",
+   "i": "site.price.plans",
+   "s": {
+    "n": 2
+   },
+   "ctx": "s",
+   "v": "max"
+  },
+  {
+   "t": "i need 4 plans in the pricing",
+   "i": "site.price.plans",
+   "s": {
+    "n": 4
+   },
+   "ctx": "s",
+   "v": "max"
+  },
+  {
+   "t": "make the middle one highlighted",
+   "i": "site.price.highlight",
+   "s": {
+    "which": "middle"
+   },
+   "ctx": "s",
+   "v": "max"
+  },
+  {
+   "t": "highlight the middle plan",
+   "i": "site.price.highlight",
+   "s": {
+    "which": "middle"
+   },
+   "ctx": "s",
+   "v": "max"
+  },
+  {
+   "t": "make the pro plan stand out",
+   "i": "site.price.highlight",
+   "s": {
+    "which": "pro"
+   },
+   "ctx": "s",
+   "v": "max"
+  },
+  {
+   "t": "mark the last tier as most popular",
+   "i": "site.price.highlight",
+   "s": {
+    "which": "last"
+   },
+   "ctx": "s",
+   "v": "max"
+  },
+  {
+   "t": "recommended plan should be the second one",
+   "i": "site.price.highlight",
+   "s": {
+    "which": "second"
+   },
+   "ctx": "s",
+   "v": "max"
+  },
+  {
+   "t": "make it bigger",
+   "i": "site.size",
+   "s": {
+    "dir": "bigger"
+   },
+   "ctx": "s",
+   "v": "max"
+  },
+  {
+   "t": "make this a bit smaller",
+   "i": "site.size",
+   "s": {
+    "dir": "smaller"
+   },
+   "ctx": "s",
+   "v": "max"
+  },
+  {
+   "t": "bigger",
+   "i": "site.size",
+   "s": {
+    "dir": "bigger"
+   },
+   "ctx": "s",
+   "v": "max"
+  },
+  {
+   "t": "do the same on the about page",
+   "i": "site.same",
+   "s": {
+    "page": "about"
+   },
+   "ctx": "s",
+   "v": "max"
+  },
+  {
+   "t": "same on contact",
+   "i": "site.same",
+   "s": {
+    "page": "contact"
+   },
+   "ctx": "s",
+   "v": "max"
+  },
+  {
+   "t": "do that on the about page too",
+   "i": "site.same",
+   "s": {
+    "page": "about"
+   },
+   "ctx": "s",
+   "v": "max"
+  },
+  {
+   "t": "repeat that for the shop page",
+   "i": "site.same",
+   "s": {
+    "page": "shop"
+   },
+   "ctx": "s",
+   "v": "max"
+  },
+  {
+   "t": "undo that",
+   "i": "undo",
+   "ctx": "s",
+   "v": "max"
+  },
+  {
+   "t": "add a pricing section with three plans, make the middle one highlighted, then switch to dark mode",
+   "i": [
+    "site.price.plans",
+    "site.price.highlight",
+    "site.dark"
+   ],
+   "ctx": "s",
+   "v": "max"
+  },
+  {
+   "t": "warm autumn palette then pick elegant fonts",
+   "i": [
+    "site.palette",
+    "site.fontpair"
+   ],
+   "ctx": "s",
+   "v": "max"
+  },
+  {
+   "t": "make it more professional and then fix the contrast",
+   "i": [
+    "site.style",
+    "site.contrast"
+   ],
+   "ctx": "s",
+   "v": "max"
+  },
+  {
+   "t": "add a faq, tidy this up",
+   "i": [
+    "site.block.add",
+    "site.tidy"
+   ],
+   "ctx": "s",
+   "v": "max"
+  },
+  {
+   "t": "add a navbar",
+   "i": "canvas.recipe",
+   "s": {
+    "kind": "navbar"
+   },
+   "ctx": "c",
+   "v": "max"
+  },
+  {
+   "t": "put a navigation bar at the top",
+   "i": "canvas.recipe",
+   "s": {
+    "kind": "navbar"
+   },
+   "ctx": "c",
+   "v": "max"
+  },
+  {
+   "t": "add a footer",
+   "i": "canvas.recipe",
+   "s": {
+    "kind": "footer"
+   },
+   "ctx": "c",
+   "v": "max"
+  },
+  {
+   "t": "make a card grid",
+   "i": "canvas.recipe",
+   "s": {
+    "kind": "cardgrid"
+   },
+   "ctx": "c",
+   "v": "max"
+  },
+  {
+   "t": "turn this into a card grid",
+   "i": "canvas.recipe",
+   "s": {
+    "kind": "cardgrid"
+   },
+   "ctx": "cs",
+   "v": "max"
+  },
+  {
+   "t": "arrange these as cards",
+   "i": "canvas.recipe",
+   "s": {
+    "kind": "cardgrid"
+   },
+   "ctx": "cs",
+   "v": "max"
+  },
+  {
+   "t": "add a sign up form",
+   "i": "canvas.recipe",
+   "s": {
+    "kind": "form"
+   },
+   "ctx": "c",
+   "v": "max"
+  },
+  {
+   "t": "add a sidebar",
+   "i": "canvas.recipe",
+   "s": {
+    "kind": "sidebar"
+   },
+   "ctx": "c",
+   "v": "max"
+  },
+  {
+   "t": "drop in a tab bar",
+   "i": "canvas.recipe",
+   "s": {
+    "kind": "tabbar"
+   },
+   "ctx": "c",
+   "v": "max"
+  },
+  {
+   "t": "add a confirm dialog",
+   "i": "canvas.recipe",
+   "s": {
+    "kind": "modal"
+   },
+   "ctx": "c",
+   "v": "max"
+  },
+  {
+   "t": "add a hero section",
+   "i": "canvas.recipe",
+   "s": {
+    "kind": "hero"
+   },
+   "ctx": "c",
+   "v": "max"
+  },
+  {
+   "t": "insert a header bar",
+   "i": "canvas.recipe",
+   "s": {
+    "kind": "navbar"
+   },
+   "ctx": "c",
+   "v": "max"
+  },
+  {
+   "t": "apply a sunset palette",
+   "i": "canvas.palette",
+   "s": {
+    "mood": "sunset"
+   },
+   "ctx": "c",
+   "v": "max"
+  },
+  {
+   "t": "recolor it all with a forest palette",
+   "i": "canvas.palette",
+   "s": {
+    "mood": "forest"
+   },
+   "ctx": "c",
+   "v": "max"
+  },
+  {
+   "t": "color scheme from #3b82f6",
+   "i": "canvas.palette",
+   "s": {
+    "color": "#3b82f6"
+   },
+   "ctx": "c",
+   "v": "max"
+  },
+  {
+   "t": "make a login screen",
+   "i": "canvas.login",
+   "ctx": "c",
+   "v": "max"
+  },
+  {
+   "t": "sum this column",
+   "i": "sheet.sum",
+   "s": {
+    "fn": "sum"
+   },
+   "ctx": "sh",
+   "v": "max"
+  },
+  {
+   "t": "what is the total of column D",
+   "i": "sheet.sum",
+   "s": {
+    "col": "D"
+   },
+   "ctx": "sh",
+   "v": "max"
+  },
+  {
+   "t": "add up the sales",
+   "i": "sheet.sum",
+   "s": {
+    "col": "sales"
+   },
+   "ctx": "sh",
+   "v": "max"
+  },
+  {
+   "t": "average of the price column",
+   "i": "sheet.sum",
+   "s": {
+    "fn": "average",
+    "col": "price"
+   },
+   "ctx": "sh",
+   "v": "max"
+  },
+  {
+   "t": "whats the highest amount",
+   "i": "sheet.sum",
+   "s": {
+    "fn": "max"
+   },
+   "ctx": "sh",
+   "v": "max"
+  },
+  {
+   "t": "how many rows have a cost",
+   "i": "sheet.sum",
+   "s": {
+    "fn": "count"
+   },
+   "ctx": "sh",
+   "v": "max"
+  },
+  {
+   "t": "make a chart of sales by month",
+   "i": "sheet.chart",
+   "s": {
+    "y": "sales",
+    "x": "month"
+   },
+   "ctx": "sh",
+   "v": "max"
+  },
+  {
+   "t": "chart this",
+   "i": "sheet.chart",
+   "ctx": "sh",
+   "v": "max"
+  },
+  {
+   "t": "line chart of cost by week",
+   "i": "sheet.chart",
+   "s": {
+    "type": "line"
+   },
+   "ctx": "sh",
+   "v": "max"
+  },
+  {
+   "t": "visualize the data",
+   "i": "sheet.chart",
+   "ctx": "sh",
+   "v": "max"
+  },
+  {
+   "t": "sort by amount",
+   "i": "sheet.sort",
+   "s": {
+    "col": "amount"
+   },
+   "ctx": "sh",
+   "v": "max"
+  },
+  {
+   "t": "sort by name a to z",
+   "i": "sheet.sort",
+   "s": {
+    "dir": "asc"
+   },
+   "ctx": "sh",
+   "v": "max"
+  },
+  {
+   "t": "order it by price, highest first",
+   "i": "sheet.sort",
+   "s": {
+    "dir": "desc"
+   },
+   "ctx": "sh",
+   "v": "max"
+  },
+  {
+   "t": "sort descending by date",
+   "i": "sheet.sort",
+   "s": {
+    "dir": "desc"
+   },
+   "ctx": "sh",
+   "v": "max"
+  },
+  {
+   "t": "format as currency",
+   "i": "sheet.format",
+   "s": {
+    "fmt": "currency"
+   },
+   "ctx": "sh",
+   "v": "max"
+  },
+  {
+   "t": "show the prices in euros",
+   "i": "sheet.format",
+   "s": {
+    "sym": "€"
+   },
+   "ctx": "sh",
+   "v": "max"
+  },
+  {
+   "t": "make column C dollars",
+   "i": "sheet.format",
+   "s": {
+    "col": "C"
+   },
+   "ctx": "sh",
+   "v": "max"
+  },
+  {
+   "t": "format the rate as percent",
+   "i": "sheet.format",
+   "s": {
+    "fmt": "percent"
+   },
+   "ctx": "sh",
+   "v": "max"
+  },
+  {
+   "t": "add a total row",
+   "i": "sheet.total",
+   "ctx": "sh",
+   "v": "max"
+  },
+  {
+   "t": "totals at the bottom please",
+   "i": "sheet.total",
+   "ctx": "sh",
+   "v": "max"
+  },
+  {
+   "t": "add totals",
+   "i": "sheet.total",
+   "ctx": "sh",
+   "v": "max"
+  },
+  {
+   "t": "sort by amount then add a total row",
+   "i": [
+    "sheet.sort",
+    "sheet.total"
+   ],
+   "ctx": "sh",
+   "v": "max"
+  },
+  {
+   "t": "make a table of contents",
+   "i": "doc.toc",
+   "ctx": "d",
+   "v": "max"
+  },
+  {
+   "t": "add a toc",
+   "i": "doc.toc",
+   "ctx": "d",
+   "v": "max"
+  },
+  {
+   "t": "turn this into a checklist",
+   "i": "doc.checklist",
+   "ctx": "d",
+   "v": "max"
+  },
+  {
+   "t": "make it a to do list",
+   "i": "doc.checklist",
+   "ctx": "d",
+   "v": "max"
+  },
+  {
+   "t": "summarize",
+   "i": "doc.summary",
+   "ctx": "d",
+   "v": "max"
+  },
+  {
+   "t": "add a tldr at the top",
+   "i": "doc.summary",
+   "ctx": "d",
+   "v": "max"
+  },
+  {
+   "t": "sum this up",
+   "i": "doc.summary",
+   "ctx": "d",
+   "v": "max"
+  },
+  {
+   "t": "fix capitalization",
+   "i": "doc.caps",
+   "ctx": "d",
+   "v": "max"
+  },
+  {
+   "t": "title case the headings",
+   "i": "doc.caps",
+   "s": {
+    "mode": "title"
+   },
+   "ctx": "d",
+   "v": "max"
+  },
+  {
+   "t": "readability score",
+   "i": "doc.readability",
+   "ctx": "d",
+   "v": "max"
+  },
+  {
+   "t": "whats the reading level",
+   "i": "doc.readability",
+   "ctx": "d",
+   "v": "max"
+  },
+  {
+   "t": "add a table of contents and fix capitalization",
+   "i": [
+    "doc.toc",
+    "doc.caps"
+   ],
+   "ctx": "d",
+   "v": "max"
+  },
+  {
+   "t": "make a 5-slide pitch from the vision doc",
+   "i": "deck.pitch",
+   "s": {
+    "n": 5,
+    "from": "vision"
+   },
+   "ctx": "sl",
+   "v": "max"
+  },
+  {
+   "t": "make a 5-slide pitch from the vision doc",
+   "i": "deck.pitch",
+   "s": {
+    "n": 5
+   },
+   "ctx": "g",
+   "v": "max"
+  },
+  {
+   "t": "turn the vision into slides",
+   "i": "deck.pitch",
+   "s": {
+    "from": "vision"
+   },
+   "ctx": "g",
+   "v": "max"
+  },
+  {
+   "t": "build a pitch deck from our readme",
+   "i": "deck.pitch",
+   "s": {
+    "from": "readme"
+   },
+   "ctx": "g",
+   "v": "max"
+  },
+  {
+   "t": "turn this doc into a presentation",
+   "i": "deck.pitch",
+   "ctx": "d",
+   "v": "max"
+  },
+  {
+   "t": "make slides from the launch plan",
+   "i": "deck.pitch",
+   "s": {
+    "from": "launch plan"
+   },
+   "ctx": "sl",
+   "v": "max"
+  },
+  {
+   "t": "palette for warm autumn",
+   "i": "design.palette",
+   "s": {
+    "mood": "autumn"
+   },
+   "ctx": "g",
+   "v": "max"
+  },
+  {
+   "t": "show me an ocean palette",
+   "i": "design.palette",
+   "s": {
+    "mood": "ocean"
+   },
+   "ctx": "g",
+   "v": "max"
+  },
+  {
+   "t": "make me a color palette from #6c7cff",
+   "i": "design.palette",
+   "s": {
+    "color": "#6c7cff"
+   },
+   "ctx": "g",
+   "v": "max"
+  },
+  {
+   "t": "which fonts pair well for a law firm",
+   "i": "design.fonts",
+   "ctx": "g",
+   "v": "max"
+  },
+  {
+   "t": "fonts that feel playful",
+   "i": "design.fonts",
+   "s": {
+    "mood": "playful"
+   },
+   "ctx": "g",
+   "v": "max"
+  },
+  {
+   "t": "title case: how to train your dragon",
+   "i": "copy.titlecase",
+   "s": {
+    "text": "how to train your dragon"
+   },
+   "ctx": "g",
+   "v": "max"
+  },
+  {
+   "t": "headline ideas for my bakery",
+   "i": "copy.headlines",
+   "s": {
+    "about": "bakery"
+   },
+   "ctx": "g",
+   "v": "max"
+  },
+  {
+   "t": "cta ideas for a yoga studio",
+   "i": "copy.cta",
+   "ctx": "g",
+   "v": "max"
+  },
+  {
+   "t": "how readable is: we utilize synergies to facilitate outcomes",
+   "i": "copy.readability",
+   "ctx": "g",
+   "v": "max"
+  },
+  {
+   "t": "make it more playful",
+   "i": "site.theme",
+   "s": {
+    "preset": "playful"
+   },
+   "ctx": "s",
+   "v": "max"
+  },
+  {
+   "t": "make the accent teal",
+   "i": "site.color",
+   "ctx": "s",
+   "v": "max"
+  },
+  {
+   "t": "add a pricing section",
+   "i": "site.block.add",
+   "s": {
+    "block": "pricing"
+   },
+   "ctx": "s",
+   "v": "max"
+  },
+  {
+   "t": "build a pitch deck for investors",
+   "i": "deck.new",
+   "ctx": "g",
+   "v": "max"
+  },
+  {
+   "t": "give the site a sunset palette",
+   "i": "site.palette",
+   "s": {
+    "mood": "sunset"
+   },
+   "ctx": "s",
+   "v": "held6"
+  },
+  {
+   "t": "colors inspired by the forest please",
+   "i": "site.palette",
+   "s": {
+    "mood": "forest"
+   },
+   "ctx": "s",
+   "v": "held6"
+  },
+  {
+   "t": "build me a color scheme around #7c3aed",
+   "i": "site.palette",
+   "s": {
+    "color": "#7c3aed"
+   },
+   "ctx": "s",
+   "v": "held6"
+  },
+  {
+   "t": "can the text be easier to read on that background",
+   "i": "site.contrast",
+   "ctx": "s",
+   "v": "held6"
+  },
+  {
+   "t": "check if the colours pass accessibility",
+   "i": "site.contrast",
+   "ctx": "s",
+   "v": "held6"
+  },
+  {
+   "t": "fonts that look luxurious",
+   "i": "site.fontpair",
+   "s": {
+    "mood": "luxury"
+   },
+   "ctx": "s",
+   "v": "held6"
+  },
+  {
+   "t": "pair some friendly fonts for me",
+   "i": "site.fontpair",
+   "s": {
+    "mood": "friendly"
+   },
+   "ctx": "s",
+   "v": "held6"
+  },
+  {
+   "t": "make the whole thing feel more corporate",
+   "i": "site.style",
+   "s": {
+    "style": "professional"
+   },
+   "ctx": "s",
+   "v": "held6"
+  },
+  {
+   "t": "give it a brutalist vibe",
+   "i": "site.style",
+   "s": {
+    "style": "brutalist"
+   },
+   "ctx": "s",
+   "v": "held6"
+  },
+  {
+   "t": "more elegant pls",
+   "i": "site.style",
+   "s": {
+    "style": "elegant"
+   },
+   "ctx": "s",
+   "v": "held6"
+  },
+  {
+   "t": "clean up the spacing",
+   "i": "site.tidy",
+   "ctx": "s",
+   "v": "held6"
+  },
+  {
+   "t": "it looks messy, sort it out",
+   "i": "site.tidy",
+   "ctx": "s",
+   "v": "held6"
+  },
+  {
+   "t": "some alternative headlines?",
+   "i": "site.headlines",
+   "ctx": "s",
+   "v": "held6"
+  },
+  {
+   "t": "write me a few headline options",
+   "i": "site.headlines",
+   "ctx": "s",
+   "v": "held6"
+  },
+  {
+   "t": "what should my button say",
+   "i": "site.cta",
+   "ctx": "s",
+   "v": "held6"
+  },
+  {
+   "t": "readability score for this page",
+   "i": "site.readability",
+   "ctx": "s",
+   "v": "held6"
+  },
+  {
+   "t": "capitalize the section titles properly",
+   "i": "site.titlecase",
+   "ctx": "s",
+   "v": "held6"
+  },
+  {
+   "t": "pricing with 4 tiers",
+   "i": "site.price.plans",
+   "s": {
+    "n": 4
+   },
+   "ctx": "s",
+   "v": "held6"
+  },
+  {
+   "t": "feature the middle plan",
+   "i": "site.price.highlight",
+   "s": {
+    "which": "middle"
+   },
+   "ctx": "s",
+   "v": "held6"
+  },
+  {
+   "t": "highlight the pro plan",
+   "i": "site.price.highlight",
+   "s": {
+    "which": "pro"
+   },
+   "ctx": "s",
+   "v": "held6"
+  },
+  {
+   "t": "same thing on the contact page",
+   "i": "site.same",
+   "s": {
+    "page": "contact"
+   },
+   "ctx": "s",
+   "v": "held6"
+  },
+  {
+   "t": "make it smaller",
+   "i": "site.size",
+   "s": {
+    "dir": "smaller"
+   },
+   "ctx": "s",
+   "v": "held6"
+  },
+  {
+   "t": "add a pricing section with 2 plans and then make it dark",
+   "i": [
+    "site.price.plans",
+    "site.dark"
+   ],
+   "ctx": "s",
+   "v": "held6"
+  },
+  {
+   "t": "use a pastel palette, then pick playful fonts",
+   "i": [
+    "site.palette",
+    "site.fontpair"
+   ],
+   "ctx": "s",
+   "v": "held6"
+  },
+  {
+   "t": "put a nav bar at the top",
+   "i": "canvas.recipe",
+   "s": {
+    "kind": "navbar"
+   },
+   "ctx": "c",
+   "v": "held6"
+  },
+  {
+   "t": "add a footer to the screen",
+   "i": "canvas.recipe",
+   "s": {
+    "kind": "footer"
+   },
+   "ctx": "c",
+   "v": "held6"
+  },
+  {
+   "t": "drop in a sign up form",
+   "i": "canvas.recipe",
+   "s": {
+    "kind": "form"
+   },
+   "ctx": "c",
+   "v": "held6"
+  },
+  {
+   "t": "make these into a grid of cards",
+   "i": "canvas.recipe",
+   "s": {
+    "kind": "cardgrid"
+   },
+   "ctx": "cs",
+   "v": "held6"
+  },
+  {
+   "t": "recolor everything with an ocean palette",
+   "i": "canvas.palette",
+   "s": {
+    "mood": "ocean"
+   },
+   "ctx": "c",
+   "v": "held6"
+  },
+  {
+   "t": "add a sidebar menu",
+   "i": "canvas.recipe",
+   "s": {
+    "kind": "sidebar"
+   },
+   "ctx": "c",
+   "v": "held6"
+  },
+  {
+   "t": "total up column C",
+   "i": "sheet.sum",
+   "s": {
+    "col": "C"
+   },
+   "ctx": "sh",
+   "v": "held6"
+  },
+  {
+   "t": "whats the average of the price column",
+   "i": "sheet.sum",
+   "s": {
+    "fn": "average"
+   },
+   "ctx": "sh",
+   "v": "held6"
+  },
+  {
+   "t": "sort it by date, newest first",
+   "i": "sheet.sort",
+   "s": {
+    "dir": "desc"
+   },
+   "ctx": "sh",
+   "v": "held6"
+  },
+  {
+   "t": "order rows by name a to z",
+   "i": "sheet.sort",
+   "s": {
+    "dir": "asc"
+   },
+   "ctx": "sh",
+   "v": "held6"
+  },
+  {
+   "t": "show the amounts as dollars",
+   "i": "sheet.format",
+   "s": {
+    "fmt": "currency"
+   },
+   "ctx": "sh",
+   "v": "held6"
+  },
+  {
+   "t": "put a totals row at the bottom",
+   "i": "sheet.total",
+   "ctx": "sh",
+   "v": "held6"
+  },
+  {
+   "t": "bar chart of revenue by quarter",
+   "i": "sheet.chart",
+   "ctx": "sh",
+   "v": "held6"
+  },
+  {
+   "t": "graph this",
+   "i": "sheet.chart",
+   "ctx": "sh",
+   "v": "held6"
+  },
+  {
+   "t": "add a contents section at the top",
+   "i": "doc.toc",
+   "ctx": "d",
+   "v": "held6"
+  },
+  {
+   "t": "make these bullets into checkboxes",
+   "i": "doc.checklist",
+   "ctx": "d",
+   "v": "held6"
+  },
+  {
+   "t": "give me a tldr of this doc",
+   "i": "doc.summary",
+   "ctx": "d",
+   "v": "held6"
+  },
+  {
+   "t": "fix the caps in this",
+   "i": "doc.caps",
+   "ctx": "d",
+   "v": "held6"
+  },
+  {
+   "t": "how hard is this to read",
+   "i": "doc.readability",
+   "ctx": "d",
+   "v": "held6"
+  },
+  {
+   "t": "pitch deck from the vision, 6 slides",
+   "i": "deck.pitch",
+   "s": {
+    "n": 6
+   },
+   "ctx": "sl",
+   "v": "held6"
+  },
+  {
+   "t": "turn the readme into a presentation",
+   "i": "deck.pitch",
+   "ctx": "sl",
+   "v": "held6"
+  },
+  {
+   "t": "create a 5 slide pitch deck from our vision doc",
+   "i": "deck.pitch",
+   "s": {
+    "n": 5
+   },
+   "ctx": "g",
+   "v": "held6"
+  },
+  {
+   "t": "show me a palette for a cozy coffee shop",
+   "i": "design.palette",
+   "ctx": "g",
+   "v": "held6"
+  },
+  {
+   "t": "what fonts go well together for a tech startup",
+   "i": "design.fonts",
+   "ctx": "g",
+   "v": "held6"
+  },
+  {
+   "t": "title case this: the night we met the sea",
+   "i": "copy.titlecase",
+   "ctx": "g",
+   "v": "held6"
+  },
+  {
+   "t": "headline ideas for a candle shop",
+   "i": "copy.headlines",
+   "ctx": "g",
+   "v": "held6"
   }
  ]
 }

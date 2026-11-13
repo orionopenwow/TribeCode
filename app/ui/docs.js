@@ -275,19 +275,38 @@
     } catch { return null; }
   }
   // "Ask Flint" inside a sheet or deck: the tribe's brain rewrites the body (server/flint.js /api/flint/make)
-  async function craftAsk(kind, ask, body) {
+  // feat/flint-max: sums, sorts, currency, a total row, charts, a pitch from a doc: done here with no model, offline (one Undo each)
+  const craftUndo = [];
+  async function craftLocal(kind, ask, body, opt) {
+    const FM = window.TribeFlintMax; if (!FM || !FM.craft || !cur) return null;
+    if (/^(?:undo|undo that|take that back)$/i.test(String(ask).trim())) { const u = craftUndo.filter(x => x.slug === cur.slug).pop(); if (!u) return { say: 'Nothing to undo here.' }; craftUndo.splice(craftUndo.lastIndexOf(u), 1); return { body: u.body, say: 'Undone.' }; }
+    const r = await FM.craft(kind, String(ask).replace(/\n\(The person is looking at slide \d+\.\)$/, ''), body, opt || {}); if (!r) return null;
+    if (r.body != null && r.body !== body) craftUndo.push({ slug: cur.slug, body });
+    return r;
+  }
+  async function craftAsk(kind, ask, body, opt) {
+    const loc = await craftLocal(kind, ask, body, opt);
+    if (loc) { if (loc.say) window.TribeApp.toast(loc.say); return loc.body != null ? loc.body : null; }
     if (!remote()) { window.TribeApp.toast('Flint writes sheets and slides with the tribe\'s brain. Join or host a tribe first.'); return null; }
     try { const r = await C.api('/flint/make', { method: 'POST', body: { kind, ask, body, title: cur && cur.title } }); if (r.basic) window.TribeApp.toast(r.note || 'Flint is in basic mode, so he used a template. Give him a brain for smarter results.'); return r.body; }
     catch (e) { window.TribeApp.toast(e.status === 503 ? 'Flint needs a brain for that. Pick one in Settings › Flint\'s brain.' : 'Flint could not do that: ' + e.message); return null; }
   }
   const newCraft = k => create(k === 'sheet' ? 'Untitled sheet' : 'Untitled slides', k === 'sheet' ? '| Name | Amount |\n| --- | --- |\n|  |  |\n' : '<!-- theme: campfire -->\n\n# Untitled slides\n\nA one-line subtitle\n\n---\n\n## First point\n\n- \n', undefined, k);
+  // Flint's chat (anywhere) runs the same local moves on the open sheet or deck, and re-draws it
+  async function flintCraft(text) {
+    if (!cur || !isCraft(cur)) return null;
+    const opt = craft && craft.ctl && craft.ctl.sel ? { sel: craft.ctl.sel() } : {};
+    const r = await craftLocal(cur.kind, text, cur.body || '', opt); if (!r) return null;
+    if (r.body != null && r.body !== cur.body) { await craftSave({ body: r.body, title: cur.title, baseVersion: cur.version }); cur.body = r.body; const pane = $('#doc-pane'); if (pane) renderCraft(pane); }
+    return r;
+  }
   function renderCraft(pane) {
     wideMode(false);
     const M = cur.kind === 'sheet' ? window.TribeSheet : window.TribeDeck; if (!M) { pane.innerHTML = '<p class="faint">This editor did not load. Reload the app.</p>'; return; }
     if (craft) craft.ctl.destroy();
     pane.classList.add('craft-on'); { const g = $('#view-docs .docs-grid'); if (g) g.classList.add('craft-grid'); }
     craft = { slug: cur.slug, ctl: M.mount(pane, { doc: cur, save: craftSave, close: () => { pane.classList.remove('craft-on'); closeDoc(); }, del: () => { if (confirmDelete()) { pane.classList.remove('craft-on'); if (craft) { craft.ctl.destroy(); craft = null; } remove(); } }, nameOf,
-      askFlint: (ask, body) => craftAsk(cur.kind, ask, body) }) };
+      askFlint: (ask, body, opt) => craftAsk(cur.kind, ask, body, opt) }) };
     activity();
   }
 
@@ -570,7 +589,7 @@
   document.addEventListener('drop', e => { const w = e.target.closest && e.target.closest('#doc-list-wrap'); if (w) { e.preventDefault(); w.classList.remove('over'); importFiles([...e.dataTransfer.files]); } });
 
   async function refreshList() { if (remote()) { try { list = (await C.api('/docs')).docs; } catch {} } renderList(); }
-  window.TribeDocs = { shelf: () => { if (cur) closeDoc(); }, load, create, importFiles, open, saveNow: () => save(), isDirty: () => dirty || !!(sess && sess.pending()), setLive, live: () => inLive() && sess.joined,
+  window.TribeDocs = { flintCraft, shelf: () => { if (cur) closeDoc(); }, load, create, importFiles, open, saveNow: () => save(), isDirty: () => dirty || !!(sess && sess.pending()), setLive, live: () => inLive() && sess.joined,
     newSheet: () => newCraft('sheet'), newDeck: () => newCraft('deck'),
     current: () => cur, list: () => list, refreshList, renderList, changed, caretXY, mode: () => mode, setMode: m => { mode = m; renderEditor(); } };
 })();
