@@ -47,7 +47,7 @@ def main():
             pg.wait_for_function("document.querySelector('#lt').classList.contains('tc-loading')", timeout=3000)
             # hover flickers
             pg.wait_for_function("!document.querySelector('#rail-logo').classList.contains('is-busy')", timeout=25000)
-            assert pg.evaluate("getComputedStyle(document.querySelector('#rail-logo img.logo')).width") == "60px"   # feat/shell-polish: the mark fills its pressed tile (rail.css)
+            assert pg.evaluate("getComputedStyle(document.querySelector('#rail-logo img.logo')).width") == "56px"   # rail alignment: the mark fills its 48px pressed tile (rail.css)
             b.close()
         assert not errors, errors
         print("e2e_logo: OK (rests when idle, flickers for prompts in flight and on hover, Loading… gets the flame)")
