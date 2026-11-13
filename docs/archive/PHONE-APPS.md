@@ -1,6 +1,8 @@
+> Archived 2026-11-12: superseded by docs/APP-STORE.md (store rules, packaging, review checklist) and docs/PHONE-HOSTING.md.
+
 # Phone apps (plan)
 
-Status: planned, 2026-11-08. **Superseded in part by [APP-STORE.md](APP-STORE.md) (2026-11-10)**: store rules, the packaging pick and the review checklist; the browser app is in [BROWSER-APP.md](BROWSER-APP.md). Today phones use the web app: open a friend's invite link, then Add to Home Screen.
+Status: planned, 2026-11-08. **Superseded in part by [APP-STORE.md](../APP-STORE.md) (2026-11-10)**: store rules, the packaging pick and the review checklist; the browser app is in [BROWSER-APP.md](../BROWSER-APP.md). Today phones use the web app: open a friend's invite link, then Add to Home Screen.
 This plan turns that into a real Android APK first, then an iPhone app, without forking the UI.
 
 ## What a phone app is (and isn't)

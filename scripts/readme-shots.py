@@ -139,8 +139,8 @@ def make_og(shot_png):
     h1 span {{ color: #A8A29E; }} p {{ font: 400 15px/1 ui-monospace, monospace; color: #F26B1D; letter-spacing: .06em; text-transform: uppercase; position: absolute; left: 64px; bottom: 64px; margin: 0; }}
     .f {{ position: absolute; left: 590px; top: 72px; width: 900px; border: 1px solid #3C3836; border-radius: 16px; overflow: hidden; background: #282828; }}
     .f img {{ display: block; width: 100%; }}
-    </style><div class=l><img class=wm src="{a}/brand/wordmark.svg"><h1>Build one app together with friends. <span>Each with your own Claude.</span></h1></div>
-    <p>Open source · MIT · works with Claude Code</p>
+    </style><div class=l><img class=wm src="{a}/brand/wordmark.svg"><h1>Build apps, games and websites <span>with your friends.</span></h1></div>
+    <p>Open source · MIT · works with any AI</p>
     <div class=f><img src="{Path(shot_png).as_uri()}"></div>"""
     f = TMP / "og.html"; f.write_text(html)
     with sync_playwright() as p:
