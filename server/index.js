@@ -226,7 +226,7 @@ setInterval(() => { const now = Date.now(); for (const [k, e] of hits) if (!e.t.
 const ENDPOINT_LIMITS = [
   // [method or '*', /path after \/api\//, max per minute, bucket]
   ['GET', /^inspo\/search$/, 30, 'search-inspo'], ['POST', /^inspo\/link$/, 30, 'search-link'], ['GET', /^inspo\/freesound/, 30, 'search-sound'],
-  ['GET', /^gifs\/search$/, 30, 'search-gifs'], ['GET', /^assets\/search$/, 40, 'search-assets'], ['GET', /^code\/search$/, 90, 'search-code'],
+  ['GET', /^gifs\/search$/, 30, 'search-gifs'], ['GET', /^assets\/search$/, 40, 'search-assets'], ['GET', /^code\/search$/, 90, 'search-code'], ['GET', /^code\/list$/, 30, 'code-list'], ['DELETE', /^code\/file$/, 60, 'code-write'], ['PUT', /^code\/file$/, 120, 'code-write'],
   ['GET', /^(chat|channels)\/[^/]+\/search$/, 90, 'search-chat'], ['GET', /^captures(\/ask)?$/, 60, 'search-captures'], ['GET', /^talent\/public$/, 30, 'talent-public'],
   ['GET', /^thumb(\/|$)/, 60, 'thumb'], ['*', /^(export|flint\/proof\/save|flint\/blender|projects\/[^/]+\/site-config\/publish)(\/|$)/, 12, 'export'],
   ['POST', /^(ai\/(refine|extract|tags)|llm\/(ask|chat|stream)|askai|flint\/(ask|chat)|canvasai\/(ask|plan))(\/|$)/, 40, 'ai'],

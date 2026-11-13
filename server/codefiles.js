@@ -223,7 +223,11 @@ module.exports = function codefiles({ P, claims = null, identity = null, member 
   //   DELETE /api/code/lock?path=                      unlock (yours, or any as host/admin)
   // A file someone else has locked answers 423 with their name. Secrets, .env and hidden folders can't be written.
   // v0.27: an agent may save code when its owner may (it acts for its owner, never above them); people need builder or up
-  const personCan = m => !!m && m.role !== 'agent' && m.role !== 'spectator' && !m.guest;
+  // harden: write needs write permission on THIS project: a project-scoped friend who is a spectator here (invited to this
+  // project as a spectator, builder elsewhere) can't save, delete or lock, and nobody writes to a project they can't see.
+  const projRole = m => { const pid = P.current() || P.defaultId(), pr = ((P.get(pid) || {}).members || {})[m.id]; return P.scoped && P.scoped(m) ? pr || m.role : m.role; };
+  const seesProject = m => !P.canSee || P.canSee(m, P.current() || P.defaultId());
+  const personCan = m => !!m && m.role !== 'agent' && m.role !== 'spectator' && !m.guest && projRole(m) !== 'spectator' && seesProject(m);
   const canEdit = me => !!me && (me.role === 'agent' ? personCan(member && me.owner ? member(me.owner) : null) : personCan(me));
   const lockedBy = (rel, me) => { if (!claims) return null; const ov = (a, b) => a === b || (b.endsWith('/') && a.startsWith(b)) || (a.endsWith('/') && b.startsWith(a)); return claims.list().find(c => c.by !== me.id && ov(rel, c.path)) || null; };
   let chain = Promise.resolve();
@@ -257,6 +261,7 @@ module.exports = function codefiles({ P, claims = null, identity = null, member 
   async function remove(repo, rel, msg, me) {
     if (!rel || SECRET.test(rel.split('/').pop())) throw bad(403, 'that file can\'t be changed here');
     const lk = lockedBy(rel, me); if (lk) throw bad(423, `${lk.name || 'Someone'} has locked ${lk.path}. Ask them to unlock it.`);
+    if (rel.split('/').some(x => SKIP.has(x) || x === '.git')) throw bad(403, 'that file can\'t be changed here');   // harden
     const abs = path.join(repo, ...rel.split('/'));
     let st; try { st = fs.lstatSync(abs); } catch { return { removed: false }; }
     if (!st.isFile()) throw bad(400, 'not a file');
@@ -293,7 +298,7 @@ module.exports = function codefiles({ P, claims = null, identity = null, member 
       const at = await pick(repo, q.get('ref'));
       if (b === 'tree') return send(res, 200, await tree(repo, at, clean(q.get('path')), q.get('offset')));
       if (b === 'file') return send(res, 200, await file(repo, at, clean(q.get('path'))));
-      if (b === 'list') return send(res, 200, { paths: (await allPaths(repo, at)).filter(p => !SECRET.test(p.split('/').pop())).slice(0, 3000) });   // feat/agents-free: the AI bridge's file picker
+      if (b === 'list') return send(res, 200, { paths: (await allPaths(repo, at)).filter(p => { const sg = p.split('/'); return !SECRET.test(sg[sg.length - 1]) && !sg.some(x => SKIP.has(x)); }).slice(0, 3000) });   // harden: no secrets, no .git/node_modules/dist   // feat/agents-free: the AI bridge's file picker
       if (b === 'search') return send(res, 200, await search(repo, at, q.get('q')));
       if (b === 'log') return send(res, 200, await log(repo, at, clean(q.get('path'))));
       if (b === 'recent') return send(res, 200, await recent(repo, at));

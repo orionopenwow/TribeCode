@@ -11,6 +11,9 @@ R   agents can't start rituals (run now, the calendar, settings) until a lead al
 P   pending email links and desktop handoff codes survive a restart (hashes only, 0600), still work once, still expire.
 M   memory caps: the limiter map stays under its cap; a member keeps at most 24 sockets; presence floods are dropped.
 H   with a public https address, plain-http remote account routes are refused with the secure address; https passes.
+F   code files (PUT/DELETE /api/code/file, GET /api/code/list): write needs write permission on the project (a friend
+    who is a spectator in this project can't, even as a builder elsewhere); delete is path-safe (no .., no secrets, no
+    node_modules, no symlinked folder that leads outside); the list hides secrets and node_modules.
 Usage: python app/test/security6_test.py   (TRIBE_PORT_OFFSET to run beside other suites)
 """
 import base64, hashlib, http.server, io, json, os, re, secrets, socket, socketserver, stat, subprocess, sys, tempfile, threading, time, urllib.request, zipfile
@@ -22,7 +25,7 @@ import e2e_auth2 as a2   # the fake OAuth provider, the fake SMTP server and the
 
 ROOT = Path(__file__).resolve().parents[2]
 OFF = int(os.environ.get('TRIBE_PORT_OFFSET', '0'))
-PORT, MOCK_PORT, SMTP_PORT, AI_PORT, PORT2 = 5800 + OFF, 5801 + OFF, 5802 + OFF, 5803 + OFF, 5804 + OFF
+PORT, MOCK_PORT, SMTP_PORT, AI_PORT, PORT2, PORT3 = 5800 + OFF, 5801 + OFF, 5802 + OFF, 5803 + OFF, 5804 + OFF, 5805 + OFF
 BASE = f"http://localhost:{PORT}"
 a2.PORT, a2.MOCK_PORT, a2.SMTP_PORT = PORT, MOCK_PORT, SMTP_PORT
 a2.BASE, a2.MOCK = BASE, f"http://127.0.0.1:{MOCK_PORT}"
@@ -292,6 +295,52 @@ def main():
         assert st == 401, ("the public host name came through the tunnel", st, e)
         assert call2("/accounts/login", {})[0] == 401, "the host computer itself is fine"
         print("  H: plain-http remote account routes refused with the https address; https, the tunnel host and this computer pass")
+
+        # F: code files
+        srv2.terminate(); srv2.wait(10); srv2 = None
+        repo, outside = os.path.join(tmp, "repo"), os.path.join(tmp, "outside"); os.makedirs(repo); os.makedirs(outside)
+        Path(outside, "victim.txt").write_text("keep me")
+        g = lambda *a: subprocess.run(["git", "-C", repo, "-c", "user.email=t@t", "-c", "user.name=T", *a], check=True, capture_output=True)
+        g("init", "-q", "-b", "main")
+        for rel, t in {"README.md": "# r", ".env": "TOKEN=1", "node_modules/a.js": "x", "src/game.js": "let a = 1"}.items():
+            Path(repo, rel).parent.mkdir(parents=True, exist_ok=True); Path(repo, rel).write_text(t)
+        os.symlink(outside, os.path.join(repo, "out"))
+        g("add", "-f", "-A"); g("commit", "-q", "-m", "init")
+        tribe3 = os.path.join(tmp, "tribe3"); os.makedirs(tribe3)
+        srv2 = subprocess.Popen(["node", str(ROOT / "server" / "index.js"), "--port", str(PORT3), "--dir", tribe3, "--repo", repo, "--ollama", "http://localhost:9"], stdout=log, stderr=subprocess.STDOUT, env=env)
+        B3 = f"http://localhost:{PORT3}/api"
+        def c3(path, method="GET", body=None, token=None, project=None):
+            h = {"Content-Type": "application/json", **({"Authorization": "Bearer " + token} if token else {}), **({"X-Project": project} if project else {})}
+            req = urllib.request.Request(B3 + path, method=method, data=json.dumps(body).encode() if body is not None else None, headers=h)
+            try:
+                with a2.opener.open(req, timeout=30) as r: return r.status, json.loads(r.read() or b"{}")
+            except urllib.error.HTTPError as e: return e.code, json.loads(e.read() or b"{}")
+        for _ in range(150):
+            try:
+                if c3("/health")[0] == 200: break
+            except Exception: time.sleep(0.1)
+        h3 = c3("/bootstrap", "POST", {"name": "Host"})[1]["token"]
+        pa = [p for p in c3("/projects", token=h3)[1]["projects"] if p.get("repo") or p.get("hasRepo")][0]["id"] if any(p.get("repo") or p.get("hasRepo") for p in c3("/projects", token=h3)[1]["projects"]) else c3("/projects", token=h3)[1]["projects"][0]["id"]
+        pb = (lambda r: (r.get("project") or r)["id"])(c3("/projects", "POST", {"name": "Other game"}, token=h3)[1])
+        inv_b = c3("/invites", "POST", {"project": pb, "role": "builder"}, token=h3)[1]["invite"]["code"]
+        sam = c3("/join", "POST", {"code": inv_b, "name": "Sam"})[1]["token"]
+        inv_a = c3("/invites", "POST", {"project": pa, "role": "spectator"}, token=h3)[1]["invite"]["code"]
+        assert c3("/join", "POST", {"code": inv_a}, token=sam)[0] == 200
+        inv_t = c3("/invites", "POST", {"role": "builder"}, token=h3)[1]["invite"]["code"]
+        bo = c3("/join", "POST", {"code": inv_t, "name": "Bo"})[1]["token"]
+        st, e = c3("/code/file", "PUT", {"path": "src/new.js", "text": "x"}, token=sam, project=pa); assert st == 403, ("spectator here, builder elsewhere", st, e)
+        assert c3("/code/file?path=src/game.js", "DELETE", token=sam, project=pa)[0] == 403
+        assert Path(repo, "src/game.js").exists()
+        assert c3("/code/list", token=sam, project=pa)[0] == 200, "reading is fine"
+        ok_ = c3("/code/file", "PUT", {"path": "src/new.js", "text": "let b = 2"}, token=bo, project=pa); assert ok_[0] == 200, ok_
+        for bad, want in (("../outside/victim.txt", 400), ("/etc/passwd", 400), (".env", 403), ("node_modules/a.js", (403, 404)), ("out/victim.txt", 400), ("src/../../outside/victim.txt", 400)):
+            st, e = c3(f"/code/file?path={urllib.parse.quote(bad)}", "DELETE", token=bo, project=pa)
+            assert (st in want if isinstance(want, tuple) else st == want), (bad, st, e)
+        assert Path(outside, "victim.txt").read_text() == "keep me" and Path(repo, ".env").exists() and Path(repo, "node_modules/a.js").exists()
+        st, r = c3("/code/file?path=src/new.js", "DELETE", token=bo, project=pa); assert st == 200 and r["removed"], (st, r)
+        paths = c3("/code/list", token=bo, project=pa)[1]["paths"]
+        assert "README.md" in paths and ".env" not in paths and not any(p.startswith("node_modules/") for p in paths), paths
+        print("  F: code write needs write permission here; delete refuses .., absolute, secrets, node_modules and symlinked folders; list hides secrets")
         print("ok security6")
     except Exception:
         log.flush(); print(open(os.path.join(tmp, "server.log")).read()[-3000:]); raise
