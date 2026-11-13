@@ -144,8 +144,8 @@ module.exports = function flintRun({ P, root, tribe, getMembers, publicMember, v
   function capExports(keep, by, project) {
     const dir = exportsDir(), isZip = n => /\.zip$/i.test(n), own = owners(), removed = [];
     const gone = n => { delete own[n]; removed.push(n); };
-    DC.prune(dir, { match: isZip, keep, maxCount: CAP.userCount, maxBytes: CAP.userBytes, only: n => (own[n] || {}).by === by, onRemove: gone });
-    if (project) DC.prune(dir, { match: isZip, keep, maxCount: CAP.projectCount, maxBytes: CAP.projectBytes, only: n => (own[n] || {}).project === project, onRemove: gone });
+    DC.prune(dir, { match: n => isZip(n) && (own[n] || {}).by === by, keep, maxCount: CAP.userCount, maxBytes: CAP.userBytes, onRemove: gone });
+    if (project) DC.prune(dir, { match: n => isZip(n) && (own[n] || {}).project === project, keep, maxCount: CAP.projectCount, maxBytes: CAP.projectBytes, onRemove: gone });
     DC.prune(dir, { match: isZip, keep, maxCount: CAP.totalCount, maxBytes: CAP.totalBytes, onRemove: gone });
     if (removed.length) fs.writeFileSync(ownersFile(), JSON.stringify(own));
     return removed;

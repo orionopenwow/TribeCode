@@ -843,6 +843,7 @@ async function apiInProject(req, res, url) {
 
   if (a === 'host' && b === 'demo-tribe') return require('./demo')({ P, rooms, flow, shelf, docs, docsx, chatx, hubFor, resetHub, getMembers: () => members, newMember, saveMembers, pushPresence, devices, share, site, lanUrls, makeInvite, linkFor, isLocal, endpoints: agentEndpoints, id, hash, slug, postChat, str, port: PORT }).route(req, res, ctx());   // the demo tribe, local only (server/demo.js)
 
+  if (a === 'dev' && b === 'mem' && m === 'GET' && process.env.TRIBE_TEST === '1' && isLocal(req)) return send(res, 200, { hits: hits.size, hitsMax: HITS_MAX, sockets: Object.fromEntries([...online].map(([k, o]) => [k, o.sockets.size])), places: places ? places.size || null : null });   // harden: tests read the in-memory caps
   if (a === 'dev' && b === 'stamp' && m === 'GET' && args.dev) return send(res, 200, { stamp: devStamp, dev: true });   // feat/flint-runthrough: clean-slate live reload (no sign-in needed)
   if (a === 'bootstrap' && m === 'POST') {
     if (members.length) return fail(res, 409, 'tribe already has a host');
