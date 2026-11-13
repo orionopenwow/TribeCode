@@ -4,8 +4,9 @@
 //   real, local:  website designer (site-config, versions, autofill, comments, publish = "kept on this phone"),
 //                 task settings, Money (ledger entries, summary, runway, CSV), Work (profile, gigs), storage (this
 //                 device's usage), Academy (the bundled catalog, progress per member), captures/recipes/packs (empty),
-//                 TRIBE_CONTEXT.md (written from the project), the drift radar (an honest "needs a repository").
-//   needs a host: AI helpers (fleet, hub, MCP connections, Open Space), the git repository, the Secretary, phone-app
+//                 TRIBE_CONTEXT.md (written from the project), the drift radar (an honest "needs a repository"),
+//                 the Secretary without AI (today's summary, action items, decisions, questions, notes; secsum.js).
+//   needs a host: AI helpers (fleet, hub, MCP connections, Open Space), the git repository, the Secretary's journal + ideas, phone-app
 //                 builds, tribe links: a calm 409 with { needsHost } and TribeNextOpts.nudge(feature), never an error.
 // Installed as an offline.js route hook (TribeOffline._k.hooks.route), so it only runs while a local tribe is active.
 (function () {
@@ -264,6 +265,67 @@
     return ok({ text: md, markdown: md, path: 'TRIBE_CONTEXT.md', bytes: md.length });
   }
 
+  // ---------- the Secretary without AI (server/secretary.js summary + actions, app/ui/secsum.js), on this device ----------
+  // Today's chat, voice notes and notes -> summary, action items (one tap to a task), decisions, questions. The overnight
+  // journal, ideas and research requests still need a host (they read docs, files and code and run on a schedule).
+  const dayOf = at => { const t = new Date(at); return `${t.getFullYear()}-${String(t.getMonth() + 1).padStart(2, '0')}-${String(t.getDate()).padStart(2, '0')}`; };
+  const isDay = s => /^\d{4}-\d{2}-\d{2}$/.test(s || '');
+  function secTalk(pid, day) {
+    const db = K().db(), s = bag('secretary', pid), out = [];
+    for (const m of db.chat[pid] || []) {
+      if (!m.text || m.deleted || m.by === 'tribecode' || m.by === 'secretary' || dayOf(m.at) !== day || /^\/(task|decide|vote)\b|^@secretary\b/i.test(String(m.text).trim())) continue;
+      out.push({ at: m.at, kind: m.media && m.media.kind === 'voice' ? 'voice' : 'chat', by: m.by, who: K().nameOf(m.by), text: m.text });
+    }
+    for (const n of s.notes || []) if (dayOf(n.at) === day) out.push(n);
+    return out;
+  }
+  function secretary(method, b, c, d, B) {
+    const pid = K().cur(), s = bag('secretary', pid), today = dayOf(Date.now()), SS = window.TribeSecSum;
+    s.actions = s.actions || {};
+    const acts = day => (s.actions[day] = s.actions[day] || []);
+    const live = day => acts(day).filter(a => !a.dismissed);
+    const digest = day => {
+      const talk = secTalk(pid, day);
+      const dg = SS ? SS.digest(talk, { members: (K().db().members || []).map(m => ({ id: m.id, name: m.name })), now: new Date(day + 'T12:00:00') }) : { summary: [], actions: [], decisions: [], questions: [], people: [], links: [] };
+      const have = acts(day);
+      for (const a of dg.actions || []) if (!have.some(h => h.key === a.key)) have.push({ id: 'a-' + rid(8), ...a, task: null, dismissed: false });
+      if (have.length > 80) have.splice(0, have.length - 80);
+      save();
+      return { day, items: talk.length, ...dg, actions: live(day), local: true };
+    };
+    if (method === 'GET' && !b) return ok({ host: false, local: true, canAct: true, enabled: true, quiet: false, running: false, config: { enabled: true, model: '', quiet: { on: false } },
+      brain: { online: false, model: '', models: [] }, lastTick: null, inShort: null, actions: live(today), digest: { items: [], updated: null },
+      journal: { date: today, md: '' }, days: [], ideas: [], requests: [], repo: { path: '' } });
+    if (method === 'GET' && b === 'summary') return ok(digest(isDay(c) ? c : today));
+    if (method === 'GET' && b === 'actions') { const day = isDay(c) ? c : today; return ok({ day, actions: live(day) }); }
+    if (method === 'GET' && b === 'journal') return [404, { error: 'no journal for that day' }];
+    if (method === 'POST' && b === 'note') {
+      const text = String(B.text || '').trim().slice(0, 2000); if (!text) return [400, { error: 'text needed' }];
+      const it = { id: 'n-' + rid(), at: iso(), kind: B.kind === 'voice' ? 'voice' : 'note', by: 'me', who: meName(), text };
+      (s.notes = s.notes || []).push(it); if (s.notes.length > 300) s.notes.splice(0, s.notes.length - 300); save();
+      return ok({ item: it });
+    }
+    if (method === 'POST' && b === 'ask') {
+      const dg = digest(today), q = String(B.question || '').toLowerCase();
+      const txt = l => l.map(x => (typeof x === 'string' ? x : x.text || x.title || ''));
+      const lines = /decid/.test(q) && dg.decisions.length ? txt(dg.decisions) : /action|todo|to do|task/.test(q) && dg.actions.length ? txt(dg.actions) : /question/.test(q) && dg.questions.length ? txt(dg.questions) : dg.summary;
+      return ok({ answer: lines.length ? lines.map(x => '- ' + x).join('\n') : 'Nothing has been said today yet. Chat or record a voice note and ask again.', sources: [], local: true });
+    }
+    if (method === 'POST' && b === 'actions' && c && (d === 'task' || d === 'dismiss')) {
+      for (const day of Object.keys(s.actions).sort().reverse()) {
+        const a = s.actions[day].find(x => x.id === c); if (!a) continue;
+        if (d === 'dismiss') { a.dismissed = true; save(); return ok({ action: a }); }
+        if (a.task) return ok({ action: a, task: a.task });
+        const t = K().addTask(pid, { title: a.title, by: 'me', assignee: a.owner || null, body: `From the Secretary's notes (${day})${a.from ? `, said by ${a.from}` : ''}.` });
+        if (a.due) t.due = a.due;
+        a.task = t.id; save(); try { K().push({ type: 'task', task: t }); } catch {}
+        return ok({ action: a, task: t.id });
+      }
+      return [404, { error: 'action not found' }];
+    }
+    return needsHost('secretary');   // config, tick, research requests, ideas
+  }
+
   function route(method, parts, q, body) {
     if (!soloOnly()) return null;
     const [a, b, c, d, e, f] = parts, pid = K().cur(), B = body || {};
@@ -290,7 +352,7 @@
       case 'context': return context(pid);
       case 'agents': if (['fleet', 'hub'].includes(b)) return needsHost('agents'); return null;
       case 'openspace': case 'connections': return needsHost(a === 'openspace' ? 'agents' : 'connectors');
-      case 'secretary': return needsHost('secretary');
+      case 'secretary': return secretary(method, b, c, d, B);
       case 'repo': case 'changes': case 'integrations': return needsHost('repo');
       case 'ship': return method === 'GET' ? ok({ mode: 'host', modes: {}, turbo: { on: false }, current: null, commits: [], people: [], log: [], lastShip: null, canShip: false, local: true, reason: 'Shipping saves commits to a code repository on a host. On this phone, sync files with GitHub instead.' }) : needsHost('repo');
       case 'phoneapp': return method === 'GET' ? ok({ on: false, stack: null, available: false, reason: 'needs a computer' }) : needsHost('phoneapp');

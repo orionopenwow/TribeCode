@@ -28,11 +28,22 @@
     phoneapp: ['Native phone apps build on a computer', 'Expo needs a computer to install and run the dev server. Your phone then opens the app with Expo Go.'],
     publish: ['A public link needs a host', 'Download the site from here any time. A link other people can open needs a host or GitHub Pages.'],
     connectors: ['Connectors run on a host', 'Tools like MCP servers and integrations run next to the tribe on a computer or cloud host.'],
+    screenshare: ['Screen sharing starts on a computer', 'Phone browsers can watch a shared screen but can\'t start one (iPhones don\'t allow it at all). Share from a laptop, or show it with your camera.'],
+    relay: ['This call can\'t connect directly', 'Some networks, like cellular data or strict office Wi-Fi, block direct calls. Join the same Wi-Fi as the others, or ask the host to add a relay for calls.'],
     generic: ['This needs a computer or a host', 'This part runs on the tribe\'s host. Everything else keeps working on this phone.'],
   };
   const why = f => WHY[f] || WHY.generic;
 
-  function opts() {
+  // calls (app/ui/huddle.js, call.js): the next steps aren't about hosting, so these features list their own
+  const OWN = {
+    screenshare: [['qr', 'monitor', 'Share from a laptop', 'Open this tribe on a laptop, join the call there and share. Scan the code to open it.'],
+      ['camera', 'capture', 'Show it with your camera', 'Turn your camera on and point it at the other screen.']],
+    relay: [['wifi', 'globe', 'Join the same Wi-Fi', 'On the same network as the host, calls connect directly without a relay.'],
+      ['relay', 'external', 'Add a relay (host)', 'The host runs a TURN server such as coturn and adds it to the tribe. See how.']],
+  };
+  function opts(feature) {
+    const own = OWN[feature];
+    if (own) return own.map(([k, i, t, s]) => `<button type="button" class="nx-row" data-nx="${k}"${k === 'wifi' ? ' disabled' : ''}><span class="nx-ic">${ic(i)}</span><span class="nx-t"><b>${esc(T(t))}</b><small>${esc(T(s))}</small></span></button>`).join('');
     const rows = [
       ['move', 'arrow-right', 'Move to a host', 'Paste a friend\'s invite link and everything moves over in one tap.'],
       ['cloud', 'cloud', 'Free cloud', 'A free Render server that stays online without anyone\'s computer.'],
@@ -48,6 +59,17 @@
     if (k === 'cloud') return PH() && (PH().cloud ? PH().cloud() : PH().open());
     if (k === 'termux') return PH() && (PH().termux ? PH().termux() : PH().open());
     if (k === 'laptop') return laptop();
+    if (k === 'qr') return qrHere();
+    if (k === 'camera') return window.TribeHuddle && window.TribeHuddle.inCall() && !window.TribeHuddle.me().video && window.TribeHuddle.toggleCamera();
+    if (k === 'relay') return window.open(RELAY_DOC, '_blank', 'noopener');
+  }
+  const RELAY_DOC = 'https://github.com/orionopenwow/TribeCode/blob/main/docs/VOICE-VIDEO.md#relays-turn';
+  function qrHere() {
+    const url = location.href;
+    const qr = window.TribeQR ? window.TribeQR.svg(url) : '';
+    open(`<header class="nx-h"><div><span class="eyebrow">${esc(T('Next step'))}</span><h3>${esc(T('Share from a laptop'))}</h3></div><button type="button" class="nx-x" data-nx-x aria-label="${esc(T('Close'))}">${ic('x', 16)}</button></header>
+      <ol class="nx-steps"><li>${esc(T('Open this tribe on a laptop: scan the code or type the address.'))}</li><li>${esc(T('Join the call there and choose Share.'))}</li><li>${esc(T('Stay in the call on this phone to watch.'))}</li></ol>
+      ${qr ? `<div class="nx-qr" aria-label="${esc(T('Scan to open this page on your laptop'))}">${qr}</div>` : ''}<p class="nx-small"><code>${esc(url)}</code></p>`);
   }
 
   function laptop() {
@@ -79,7 +101,7 @@
   function sheet(feature) {
     const [t, w] = why(feature);
     open(`<header class="nx-h"><div><span class="eyebrow">${esc(T('Next options'))}</span><h3>${esc(T(t))}</h3></div><button type="button" class="nx-x" data-nx-x aria-label="${esc(T('Close'))}">${ic('x', 16)}</button></header>
-      <p class="nx-why">${esc(T(w))}</p><div class="nx-rows">${opts()}</div>`);
+      <p class="nx-why">${esc(T(w))}</p><div class="nx-rows">${opts(feature)}</div>`);
   }
   function card(feature) {
     const [t, w] = why(feature);

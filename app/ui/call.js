@@ -398,8 +398,9 @@
     if (e.key === 'Escape' && open && !e.defaultPrevented) { const pop = root() && !$('.cs-pop', root()).classList.contains('hidden'); if (pop) closePop(); else if (panel) { panel = null; renderSide(); } else closeStage(); }
     if (e.ctrlKey && e.shiftKey && !e.altKey) {
       const k = e.key.toLowerCase();
-      if (k === 'k') { e.preventDefault(); open ? closeStage() : openStage(); }
-      else if (k === 'h' && H() && H().inCall()) { e.preventDefault(); H().toggleHand(); }
+      // U: the stage (K is the repo's Context window); H only on the stage (the design canvas uses Ctrl Shift H to hide)
+      if (k === 'u') { e.preventDefault(); open ? closeStage() : openStage(); }
+      else if (k === 'h' && open && H() && H().inCall()) { e.preventDefault(); e.stopPropagation(); H().toggleHand(); }
     }
   });
   // presenting TribeCode: tell followers whenever I move to another screen

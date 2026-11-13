@@ -86,6 +86,11 @@
   function hero() {
     const d = data.digest || { items: [] };
     const img = `<img class="sy-flare" src="assets/illustrations/brain.svg" alt="" aria-hidden="true">`;
+    if (data.local) {   // a tribe that lives only on this phone (phonelocal.js): the no-AI part runs here
+      return `<section class="hero-card sy-hero">${img}<span class="eyebrow">On this phone</span><h2>Notes from today, no AI needed</h2>
+        <p>It reads today's chat and voice notes right here and pulls out the summary, action items, decisions and questions below. The overnight journal and ideas need a host.</p>
+        <div class="hero-acts"><button class="btn" data-sy-next>See options</button></div></section>`;
+    }
     if (!d.items.length) {
       return `<section class="hero-card sy-hero">${img}<span class="eyebrow">Digest</span><h2>${data.enabled ? 'Nothing to report yet' : 'A secretary for the tribe'}</h2>
         <p>${data.enabled ? 'It reads chat, voice notes, docs, files and code changes as they come in, then writes the ten things that matter here.' : 'It reads what everyone types, says and drops in, keeps a daily journal and a digest, dreams up ideas that connect people\'s work, and asks the agents to research what nobody knows yet. It runs on this computer and stays off until the host turns it on.'}</p>
@@ -114,7 +119,7 @@
     return `<section class="sec"><div class="sec-head"><span class="eyebrow">Ask</span><h2>What does the team know?</h2></div>
       <form class="sy-ask" id="sy-ask"><input class="input" id="sy-q" maxlength="500" placeholder="Ask anything, or start with note: to tell the secretary something" autocomplete="off"><button class="btn primary" type="submit"${busy ? ' disabled' : ''}>${busy ? 'Thinking…' : 'Ask'}</button></form>
       ${answer ? `<div class="sy-answer"><div class="sy-answer-t">${md(answer.answer)}</div>${answer.sources && answer.sources.length ? `<div class="sy-answer-s">${answer.sources.map(s => `<span>${esc(s)}</span>`).join('')}</div>` : ''}</div>` : ''}
-      <p class="faint sy-hint">In chat, write <code>@secretary</code> and a question, <code>@secretary note …</code> or <code>@secretary research …</code>.</p></section>`;
+      <p class="faint sy-hint"${data.local ? ' hidden' : ''}>In chat, write <code>@secretary</code> and a question, <code>@secretary note …</code> or <code>@secretary research …</code>.</p></section>`;
   }
   function ideasHtml() {
     const ideas = data.ideas || [];
@@ -164,7 +169,8 @@
   }
   function render() {
     const sec = section(); if (!sec || !data) return;
-    sec.innerHTML = `<div class="sy">${head()}${hero()}${todayHtml()}${askHtml()}${ideasHtml()}${researchHtml()}${journalHtml()}${settingsHtml()}</div>`;
+    sec.innerHTML = data.local ? `<div class="sy">${head()}${hero()}${todayHtml()}${askHtml()}</div>`   // ideas, research and the journal need a host
+      : `<div class="sy">${head()}${hero()}${todayHtml()}${askHtml()}${ideasHtml()}${researchHtml()}${journalHtml()}${settingsHtml()}</div>`;
     wire();
   }
 
@@ -200,10 +206,11 @@
       } catch (err) { answer = { answer: err.message, sources: [] }; }
       busy = false; await load(true); render();
     };
-    $('#sy-rq').onsubmit = async e => {
+    if ($('#sy-rq')) $('#sy-rq').onsubmit = async e => {   // not drawn on a phone-only tribe
       e.preventDefault(); const q = $('#sy-rq-q').value.trim(); if (!q) return;
       try { await C.api('/secretary/requests', { method: 'POST', body: { question: q } }); toast('Requested. The agents see it in secretary_inbox.'); $('#sy-rq-q').value = ''; load(true); } catch (err) { toast(err.message); }
     };
+    sec.querySelectorAll('[data-sy-next]').forEach(b => b.onclick = () => window.TribeNextOpts && window.TribeNextOpts.sheet('secretary'));
     sec.querySelectorAll('[data-act-task]').forEach(b => b.onclick = async () => { b.disabled = true; try { await C.api(`/secretary/actions/${b.dataset.actTask}/task`, { method: 'POST' }); toast('Made it a task.'); load(true); } catch (e) { toast(e.message); b.disabled = false; } });
     sec.querySelectorAll('[data-act-x]').forEach(b => b.onclick = async () => { try { await C.api(`/secretary/actions/${b.dataset.actX}/dismiss`, { method: 'POST' }); load(true); } catch (e) { toast(e.message); } });
     sec.querySelectorAll('[data-task]').forEach(b => b.onclick = async () => { b.disabled = true; try { await C.api(`/secretary/ideas/${b.dataset.task}/task`, { method: 'POST' }); toast('Made it a task.'); load(true); } catch (e) { toast(e.message); b.disabled = false; } });

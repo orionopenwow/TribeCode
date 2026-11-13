@@ -97,7 +97,11 @@
     pc.onconnectionstatechange = () => {
       // reconnect: try an ICE restart a few times before giving up on this peer (Wi-Fi hops, phone screen-lock)
       if (pc.connectionState === 'failed' && p.restarts < 3 && inCall) { p.restarts++; try { pc.restartIce(); } catch {} }
-      else if (pc.connectionState === 'failed' || pc.connectionState === 'closed') drop(id);
+      else if (pc.connectionState === 'failed' || pc.connectionState === 'closed') {
+        // still failing after the restarts and no relay configured: most likely cellular or a strict NAT
+        if (pc.connectionState === 'failed' && inCall && !ICE.some(s => [].concat(s.urls || s.url || []).some(u => /^turns?:/.test(u)))) { emit('relay-needed', { id }); if (window.TribeNextOpts) window.TribeNextOpts.nudge('relay'); }
+        drop(id);
+      }
       if (pc.connectionState === 'connected') p.restarts = 0;
       renderBar(); emit('peer', { id, state: pc.connectionState });
     };
@@ -183,6 +187,8 @@
     local.getAudioTracks().forEach(t => (t.enabled = !muted));
     local.stopMeter = meter(local, l => setLevel(meId(), muted ? 0 : l));
     C.send({ type: 'huddle-join', muted });
+    // a tribe that lives only on this phone has nobody to call yet (offline.js solo mode): say what would help
+    try { if (window.TribeOffline && window.TribeOffline.solo && window.TribeOffline.solo() && window.TribeNextOpts) setTimeout(() => window.TribeNextOpts.nudge('huddle'), 600); } catch {}
     sync(roster);
     if (opts.video) toggleCamera();
     emit('join');
@@ -248,7 +254,11 @@
   async function share(opts = {}) {
     if (!inCall) return;
     if (screen) return stopShare();
-    if (!canShare()) { emit('cant-share'); return toast('Screen sharing needs a computer: phones can watch a share but not start one. Open TribeCode on a laptop to present.', 'warn'); }
+    if (!canShare()) {   // phones (iPhones never) can't start a share: the next-options sheet, not a dead button
+      emit('cant-share');
+      if (window.TribeNextOpts) return window.TribeNextOpts.sheet('screenshare');
+      return toast('Screen sharing needs a computer: phones can watch a share but not start one. Open TribeCode on a laptop to present.', 'warn');
+    }
     try { screen = await navigator.mediaDevices.getDisplayMedia({ video: { frameRate: 15 }, audio: !!(opts.audio ?? pref('shareAudio', false)) }); }
     catch { return; }
     const [track] = screen.getVideoTracks(); track.onended = () => stopShare();
@@ -335,7 +345,7 @@
           <button class="hbtn ${muted || deaf ? 'on' : ''}" id="h-mute" title="${ptt ? 'Push to talk: hold Space' : 'Mute (Ctrl Shift M)'}" aria-pressed="${muted || deaf}">${muted || deaf ? '🔇' : '🎙️'}</button>
           <button class="hbtn ${cam ? 'on' : ''}" id="h-cam" title="Camera (Ctrl Shift E)" aria-pressed="${!!cam}">📷</button>
           <button class="hbtn ${screen ? 'on' : ''}" id="h-share" title="Share your screen" aria-pressed="${!!screen}">🖥</button>
-          <button class="hbtn" id="h-stage" title="Open the call (Ctrl Shift K)">⤢</button>
+          <button class="hbtn" id="h-stage" title="Open the call (Ctrl Shift U)">⤢</button>
           <button class="hbtn leave" id="h-leave" title="Leave the call">Leave</button>
         </div>`
       : `<button class="item" id="h-join"><svg class="i" style="width:16px;height:16px;color:var(--accent-2)"><use href="#i-mic"/></svg>${n ? 'Join huddle' : 'Start a huddle'}<span class="n">${n ? n + ' in' : ''}</span></button>${n ? `<div class="hrow small">${faces}</div>` : ''}`;

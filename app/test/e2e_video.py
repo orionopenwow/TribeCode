@@ -138,7 +138,10 @@ def main():
             ph.evaluate("TribeHuddle.join()"); ph.wait_for_function("TribeHuddle.inCall()", timeout=8000)
             ph.evaluate("TribeCall.open()"); ph.wait_for_selector("#call-stage:not(.hidden) .cs-bar [data-c='share'].na")
             ph.click("#call-stage .cs-bar [data-c='share']")
-            wait_text(ph, "body", "needs a computer", timeout=5000)
+            wait_text(ph, "#nx-sheet", "Share from a laptop", timeout=5000)   # next options (nextopts.js), not a dead button
+            assert ph.evaluate("!!document.querySelector('#nx-sheet [data-nx=camera]')"), "offers the camera instead"
+            ph.click("#nx-sheet [data-nx=qr]"); wait_text(ph, "#nx-sheet", "Join the call there", timeout=3000)
+            ph.keyboard.press("Escape")
             assert ph.evaluate("document.documentElement.scrollWidth <= innerWidth + 1")
             ph.screenshot(path=str(SHOTS / "phone-stage.png"))
             b.close()
