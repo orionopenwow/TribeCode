@@ -2,12 +2,14 @@
 // Flint's evaluation set (app/test/flint_eval.json, written by scripts/dev/flint-eval-cases.js): websites, the design
 // canvas, preview edits, lessons and global commands, with typos, slang and indirect wording. No AI: only
 // app/ui/flintnlu.js. Fails under 95%. Also checks the lesson index (app/ui/flintlessons.js) covers every feature.
-//   node app/test/flint_eval_test.js [-v]
+//   node app/test/flint_eval_test.js [-v] [--model app/test/fixtures/flint-model]
 'use strict';
 const path = require('path');
 const N = require(path.join(__dirname, '..', 'ui', 'flintnlu.js'));
 const data = require('./flint_eval.json');
 const verbose = process.argv.includes('-v');
+// --model <folder>: run with Flint's local helper (tier 1) present. It only re-ranks "did you mean", so the score must not move.
+{ const i = process.argv.indexOf('--model'); if (i > 0) { const fs = require('fs'), E = require(path.join(__dirname, '..', 'ui', 'flintembed.js')), d = process.argv[i + 1], b = fs.readFileSync(path.join(d, 'model.safetensors')); N.setSemantic(E.fromFiles({ model: b.buffer.slice(b.byteOffset, b.byteOffset + b.byteLength), tokenizer: fs.readFileSync(path.join(d, 'tokenizer.json'), 'utf8') })); console.log(`with the local helper: ${d}`); } }
 const CTX = {
   g: {}, s: { view: 'site', pages: ['Home', 'About', 'Contact'] }, p: { view: 'preview', site: true },
   c: { view: 'canvas' }, cs: { view: 'canvas', selection: true }, sh: { view: 'sheet' }, d: { view: 'doc' }, sl: { view: 'deck' },

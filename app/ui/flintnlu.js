@@ -1040,6 +1040,28 @@
   }
   const EXIDX = index(CAT.flatMap(x => x.ex.map(e => ({ id: x.id, text: e }))));
 
+  // ---------- tier 1: meaning (optional; app/ui/flintembed.js via flintmodel.js) ----------
+  // With a local embedding model installed, an unrecognized command's "did you mean" list is ranked by meaning as well
+  // as by shared words, so a paraphrase with none of the example's words still finds it. Nothing here decides a
+  // command: recognized commands and the fuzzy bar are exactly as without the model.
+  let SEM = null, SEMVEC = null;
+  function setSemantic(E) { SEM = E && typeof E.embed === 'function' ? E : null; SEMVEC = null; }
+  function semNear(q, k) {
+    if (!SEM) return [];
+    try {
+      if (!SEMVEC) SEMVEC = EXIDX.docs.map(d => SEM.embed(d.text));
+      const qv = SEM.embed(q), out = [];
+      for (let i = 0; i < SEMVEC.length; i++) { const sc = SEM.sim(qv, SEMVEC[i]); if (sc >= 0.3) out.push({ doc: EXIDX.docs[i], score: sc }); }
+      return out.sort((a, b) => b.score - a.score).slice(0, k);
+    } catch { return []; }
+  }
+  function blendAlts(near, sem, skip, ctx) {   // -> [{ intent, example, score, sem? }] best first
+    const by = new Map();
+    const put = (n, key) => { const tc = CAT.find(x => x.id === n.doc.id); if (n.doc.id === skip || (tc && tc.ctx && !tc.ctx(ctx))) return; const o = by.get(n.doc.id) || { intent: n.doc.id, example: n.doc.text, tf: 0, cos: 0 }; if (n.score > o[key]) { o[key] = n.score; if (key === 'cos' || !o.cos) o.example = n.doc.text; } by.set(n.doc.id, o); };
+    near.forEach(n => put(n, 'tf')); sem.forEach(n => put(n, 'cos'));
+    return [...by.values()].map(o => ({ intent: o.intent, example: o.example, score: Math.round((o.cos * 0.6 + o.tf * 0.4 + (o.cos && o.tf ? 0.05 : 0)) * 100) / 100, ...(o.cos ? { sem: true } : {}) })).sort((a, b) => b.score - a.score).slice(0, 3);
+  }
+
   // ---------- split a message into steps ----------
   const VERBS = 'tidy|fix|sort(?! it out| out| that out| this out)|pick|highlight|summarize|summarise|apply|recolor|format|add|make|build|create|tell|message|ping|text|dm|send|open|show|schedule|book|set|switch|change|invite|publish|ship|start|mark|assign|give|remind|post|announce|write|draft|turn|put|move|note|jot|delete|rename|export|reload|find|let';
   function split(raw) {
@@ -1110,6 +1132,7 @@
     const best = hits[0] || null;
     const near = search(EXIDX, c, 12), seen = new Set(), alts = [];
     for (const n of near) { if (seen.has(n.doc.id) || (best && n.doc.id === best.intent)) continue; seen.add(n.doc.id); alts.push({ intent: n.doc.id, example: n.doc.text, score: Math.round(n.score * 100) / 100 }); if (alts.length >= 3) break; }
+    if (!best && SEM) { const sem = semNear(c, 12); if (sem.length) { const bl = blendAlts(near, sem, null, ctx); if (bl.length) { alts.length = 0; alts.push(...bl); } } }
     if (!best) {
       const top = near[0];
       const tc = top && CAT.find(x => x.id === top.doc.id); if (top && top.score >= 0.62 && !(tc && tc.ctx && !tc.ctx(ctx)) && !(tc && Object.keys(tc.req).length)) return { intent: top.doc.id, area: (CAT.find(x => x.id === top.doc.id) || {}).area, slots: {}, conf: Math.min(0.7, top.score), text, c, alts, fuzzy: true, lang: P.lang };
@@ -1159,5 +1182,5 @@
   }
 
   const catalog = () => CAT.map(x => ({ id: x.id, area: x.area, label: x.label, examples: x.ex.slice() }));
-  return { needsAI, clarify, parse, one, split, prep, parseWhen, colorOf, person, taskRef, index, search, catalog, COLORS, THEMES, LANGS, detectLang, version: 1 };
+  return { needsAI, clarify, parse, one, split, prep, parseWhen, colorOf, person, taskRef, index, search, catalog, setSemantic, hasSemantic: () => !!SEM, COLORS, THEMES, LANGS, detectLang, version: 1 };
 });
