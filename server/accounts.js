@@ -538,6 +538,10 @@ module.exports = function makeAccounts({ store, getMembers, isLocal, limited, ha
     if (b === 'sessions' && m === 'GET') {
       send(res, 200, { sessions: who.account.sessions.map(s => ({ id: s.id, created: s.created, lastSeen: s.lastSeen, expires: s.expires, device: s.device, current: s === who.session })) }); return true;
     }
+    if (b === 'sessions' && c === 'others' && m === 'DELETE') {   // feat/settings-tabs: Sign out other devices
+      const before = who.account.sessions.length; who.account.sessions = who.account.sessions.filter(s => s === who.session); save();
+      send(res, 200, { ok: true, removed: before - who.account.sessions.length }); return true;
+    }
     if (b === 'sessions' && c && m === 'DELETE') {
       const before = who.account.sessions.length; who.account.sessions = who.account.sessions.filter(s => s.id !== c); save();
       send(res, 200, { ok: true, removed: before - who.account.sessions.length }); return true;
@@ -576,6 +580,10 @@ module.exports = function makeAccounts({ store, getMembers, isLocal, limited, ha
     const body = await readBody(req).catch(() => ({}));
     if (!body || body.confirm !== 'DELETE') return fail(res, 400, 'send { confirm: "DELETE" }');
     if (host) return fail(res, 403, 'the host can\'t delete themselves this way: Start fresh in Settings covers that');
+    return send(res, 200, removeMember(me));
+  }
+  // The deletion itself (also used after the grace period: server/mysettings.js)
+  function removeMember(me) {
     const ids = [me.id, ...getMembers().filter(x => x.role === 'agent' && x.owner === me.id).map(x => x.id)];
     const anon = 'deleted-' + id(6);
     if (forgetMembers) forgetMembers(ids);   // members.json, device links, project seats (server/index.js)
@@ -583,10 +591,17 @@ module.exports = function makeAccounts({ store, getMembers, isLocal, limited, ha
     d.accounts = d.accounts.filter(a => !(a.members || []).some(x => ids.includes(x))); save();
     const files = anonymise(ids, anon);
     log(`accounts: deleted member ${me.id} (${ids.length - 1} agent${ids.length === 2 ? '' : 's'}, ${before - d.accounts.length} account${before - d.accounts.length === 1 ? '' : 's'}, ${files} file${files === 1 ? '' : 's'} changed)`);
-    return send(res, 200, { ok: true, removed: ids.length, accounts: before - d.accounts.length });
+    return { ok: true, removed: ids.length, accounts: before - d.accounts.length };
+  }
+  // Notifications by email (server/notify.js): the member's verified account email, when the host set up SMTP
+  const mailFor = mid => { if (!emailOn()) return ''; const a = load().accounts.find(x => (x.members || []).includes(mid) && x.email && x.email.verified); return a ? a.email.address : ''; };
+  function mailMember(mid, subject, text) {
+    const to = mailFor(mid); if (!to || !mailBudget(to)) return false;
+    mailer.send(smtpConf(), { to, subject, text }).then(() => log('accounts: notification mailed'), e => log(`accounts: notification mail failed: ${e.message}`));
+    return true;
   }
 
-  return { route, account, enabled, syncMembers, oauthOutcome, accountFromReq, attachProvider, openSignup, emailOn, normalizeUsername, keyOf, uniqueName, list: () => load().accounts.map(pub), reload: () => { db = null; } };
+  return { route, account, removeMember, mailMember, canMail: mid => !!mailFor(mid), enabled, syncMembers, oauthOutcome, accountFromReq, attachProvider, openSignup, emailOn, normalizeUsername, keyOf, uniqueName, list: () => load().accounts.map(pub), reload: () => { db = null; } };
 };
 module.exports.normalizeUsername = normalizeUsername;
 module.exports.keyOf = keyOf;

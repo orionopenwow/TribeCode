@@ -443,7 +443,8 @@ const repoHub = {   // MCP tools run against the calling agent's project hub
 let mcpFlow = null;
 // Notification hub + approvals (server/notify.js, server/approvals.js)
 const pocket = makeNotify({ store, bus, getMembers: () => members, sendTo, postChat: (...x) => postChat(...x), log: m => console.error('  notify: ' + m),
-  dnd: mid => !!profiles && profiles.isDnd(mid), muted: (to, from) => (!!profiles && !!from && profiles.isMuted(to, from)) || (!!moderation && moderation.isBlocked(to, from)),   // feat/profiles: do not disturb, muted people
+  dnd: mid => !!profiles && profiles.isDnd(mid), mail: (mid, subj, text) => accounts.mailMember(mid, subj, text), canMail: mid => accounts.canMail(mid), projectOf: ref => (P.byChannel(ref) || {}).id || null,   // feat/settings-tabs: email, per-project mutes
+  muted: (to, from) => (!!profiles && !!from && profiles.isMuted(to, from)) || (!!moderation && moderation.isBlocked(to, from)),   // feat/profiles: do not disturb, muted people
   publicUrl: () => (args['public-url'] || process.env.TRIBE_PUBLIC_URL || share.publicUrl() || (lanUrls()[0] || {}).url || `http://localhost:${PORT}`).replace(/\/+$/, '') });
 let shipHub = null;   // feat/ship-flow: a ship vote decided from a phone (one-tap approval) counts as that person's vote
 let publishOnApproval = null;   // v0.27 publish: an approved "publish" request from an AI helper (server/publish.js)
@@ -508,6 +509,9 @@ const uploads = require('./uploads')({ store: baseStore, P, nameOf, broadcast, c
 const connections = require('./connections')({ P, store: baseStore, uploads, visuals, postChat, nameOf, broadcast, isLocal });   // feat/mcp-directory: special connections (ArtCraft…), host only
 profiles = require('./profiles')({ P, store: baseStore, getMembers: () => members, pushPresence: () => pushPresence() });   // feat/profiles
 moderation = require('./moderation')({ store: baseStore, getMembers: () => members, bus, id, limited, log: m => console.log('  moderation: ' + m) });   // feat/appstore (docs/APP-STORE.md)
+// feat/settings-tabs: settings sync, who can DM me, typing, my data, sign out other devices, deletion with a grace period (server/mysettings.js)
+const mine = require('./mysettings')({ store: baseStore, getMembers: () => members, memberById: mid => members.find(x => x.id === mid), hash, id, saveMembers: () => saveMembers(), devices,
+  sockets: mid => [...((online.get(mid) || {}).sockets || [])], removeMember: mem => accounts.removeMember(mem), isBlocked: (to, from) => !!moderation && moderation.isBlocked(to, from), publicMember, log: m => console.log('  settings: ' + m) });
 const pwaIn = require('./pwa')({ UI });   // feat/appstore: the share target without a service worker (docs/BROWSER-APP.md)
 const phoneapp = require('./phoneapp')({ P, store: baseStore, shelf, broadcast, isLocal, lanUrls, nameOf, log: m => console.log('  ' + m) });
 const people = makePeople({ P, store, getMembers: () => members, presenceFor, claims, coord, docs, loadTasks: () => loadTasks(), nameOf, emailOf: W.emailOf });
@@ -940,6 +944,7 @@ async function apiInProject(req, res, url) {
     return send(res, 200, { modes: next });
   }
   // Rename / recolor yourself: friends see it at once (Settings used to change it on this device only).
+  if (a === 'me' && ['settings', 'privacy', 'export', 'signout-others', 'deletion'].includes(b)) return mine.route(req, res, { b, m, me, th: tokenHashOf(req), readBody, send, fail });
   if (a === 'me' && !b && m === 'PATCH') {
     if (me.role === 'agent') return fail(res, 403, 'agents keep their names');
     const body = await readBody(req), mem = memberById(me.id);
@@ -1052,6 +1057,7 @@ async function apiInProject(req, res, url) {
     if (!chProject && !dms.isDm(b) && !chans.isCustom(b) && !(agentsOf && P.get(agentsOf[1]) && P.canSee(me, agentsOf[1]))) return fail(res, 404, 'no such conversation');
     if (m !== 'GET' && chans.archived(b) && !(c === 'react' || c === 'pin')) return fail(res, 403, 'this channel is archived');
     if (!dms.canRead(b, me)) return fail(res, 403, 'this conversation is private');
+    if (m === 'POST' && dms.isDm(b) && !(c === 'react' || c === 'pin' || c === 'read')) { const pr = dms.pair(b), other = pr && memberById(pr.find(x => x !== me.id)); if (other && !mine.canDm(me, other)) return fail(res, 403, `${other.name} only takes messages from some people`); }   // feat/settings-tabs: who can DM me
     if (c) return chatx.route(req, res, { m, ch: b, action: c, arg: parts[3], sub: parts[4], me, readBody, send, fail, url });   // voice, image, send, react, pin, forward, vote…
     if (m === 'GET') {   // ?before=<message id> pages back through history
       const limit = Math.min(Number(url.searchParams.get('limit')) || 100, 500), before = str(url.searchParams.get('before') || '', 40);
@@ -1260,6 +1266,7 @@ server.on('upgrade', (req, sock) => {
   const me = authed(req);
   if (!me) { sock.write('HTTP/1.1 401 Unauthorized\r\n\r\n'); return sock.destroy(); }
   const s = ws.accept(req, sock); if (!s) return;
+  s.th = tokenHashOf(req);   // feat/settings-tabs: which key this socket used (Sign out other devices)
   const o = online.get(me.id) || { sockets: new Set(), where: 'Home', since: new Date().toISOString() };
   // Which project room this socket is in (?project=…, else where this person last was).
   s.project = P.pick(me, url.searchParams.get('project') || null, o.project || me.project) || P.pick(me, null);
@@ -1298,6 +1305,7 @@ server.on('upgrade', (req, sock) => {
     if (msg.type === 'pin-view') { pinsHub.handle(s, me, msg); return; }   // P1-E: who's looking at the preview, follow a friend
     if (typeof msg.type === 'string' && msg.type.startsWith('wbd-')) { whiteboard.handle(s, me, msg); return; }   // feat/whiteboard: board edits + cursors
     if (typeof msg.type === 'string' && msg.type.startsWith('cnv-')) { designCanvas.handle(s, me, msg); return; }   // P1-A design canvas   // feat/whiteboard: board edits + cursors
+    if (msg.type === 'typing' && !mine.typingOn(me.id)) return;   // feat/settings-tabs: typing indicators off
     if (dms.handle(s, me, msg) || voice.handle(s, me, msg)) return;   // typing, captions, meeting capture
     if (msg.type === 'announce' && typeof msg.text === 'string' && me.role !== 'spectator' && me.role !== 'agent' && !perms.muteBlock(me)) postChat('general', me.id, msg.text.slice(0, 400));   // fix/security-review: same rules as posting
     if (msg.type === 'huddle-join' && me.role !== 'agent' && huddle.size && huddleProject && !P.canSee(me, huddleProject)) s.send({ type: 'huddle-error', error: 'A huddle is on in another project.' });   // fix/security-2
