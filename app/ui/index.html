@@ -29,6 +29,7 @@
 <link rel="stylesheet" href="inspo.css">
 <link rel="stylesheet" href="ledger.css"><!-- v0.27 company: Money + seat autopilot -->
 <link rel="stylesheet" href="talent.css"><!-- v0.27 company: Work -->
+<link rel="stylesheet" href="workfeeds.css"><!-- feat/build-feeds: other tribes' gig feeds -->
 <link rel="stylesheet" href="abilities.css"><!-- feat/company-gigs: abilities + gigs for yourself -->
 <link rel="stylesheet" href="workloop.css"><link rel="stylesheet" href="doctpl.css"><link rel="stylesheet" href="premium.css"><link rel="stylesheet" href="plans.css"><!-- feat/work-company: Work loop, templates, Premium -->
 <link rel="stylesheet" href="academy.css"><link rel="stylesheet" href="legal.css"><link rel="stylesheet" href="offload.css"><!-- v0.27 company: Academy, Legal, Offload -->
@@ -44,7 +45,7 @@
 <link rel="stylesheet" href="notify.css">
 <link rel="stylesheet" href="presence.css"><link rel="stylesheet" href="peoplepanel.css"><link rel="stylesheet" href="inviteclaude.css">
 <link rel="stylesheet" href="cropper.css">
-<link rel="stylesheet" href="flint.css"><!-- feat/flint --><link rel="stylesheet" href="flintpage.css"><!-- feat/flint-max -->
+<link rel="stylesheet" href="flint.css"><!-- feat/flint --><link rel="stylesheet" href="flintpage.css"><!-- feat/flint-max --><link rel="stylesheet" href="flintmodel.css"><!-- feat/build-feeds: Flint's local helper -->
 <link rel="stylesheet" href="aibasics.css"><link rel="stylesheet" href="aiconsent.css"><link rel="stylesheet" href="inspoboard.css"><!-- feat/flint-ai: ✦ basics + the inspiration board -->
 <link rel="stylesheet" href="flintrun.css"><!-- feat/flint-runthrough -->
 <link rel="stylesheet" href="assist.css"><!-- feat/assist -->
@@ -404,6 +405,7 @@
 <script src="companylinks.js"></script><!-- v0.27: Company view ↔ Money, Work, Academy, autopilot --><!-- v0.27: recommended next for this project -->
 <script src="ledger.js"></script><!-- v0.27 company: Money + seat autopilot (window.TribeLedger, window.TribeSeatPilot) -->
 <script src="talent.js"></script><!-- v0.27 company: Work (gigs, hiring, time bank, compute) -->
+<script src="workfeeds.js"></script><!-- feat/build-feeds: Gigs › Public from followed tribes, Request, the host's Feeds sheet -->
 <script src="abilities.js"></script><!-- feat/company-gigs: abilities, gigs for yourself, profile pages -->
 <script src="workcore.js"></script><script src="workloop.js"></script><script src="doctpl-data.js"></script><script src="doctpl.js"></script><script src="premium.js"></script><script src="plans.js"></script><!-- feat/work-company: Work loop + suggestions, company templates + rituals, Premium gates -->
 <script src="academy.js"></script><script src="legal.js"></script><script src="offload.js"></script><!-- v0.27 company: Academy, Legal, Offload -->
@@ -504,7 +506,7 @@
 <script src="agentsdash.js"></script><!-- feat/agents-dash: the Agents dashboard + pinned tabs -->
 <script src="brainpick.js"></script><!-- feat/any-llm: Flint's brain (built-in WebLLM / Ollama / your key / none) -->
 <script src="askagent.js"></script><!-- feat/any-llm: Ask an agent -->
-<script src="flintmax.js"></script><script src="flintpage.js"></script><script src="flintnlu.js"></script><script src="flintcmds.js"></script><script src="flintlocal.js"></script><!-- flint-local: Flint understands and acts with no model -->
+<script src="flintmax.js"></script><script src="flintpage.js"></script><script src="flintnlu.js"></script><script src="flintembed.js"></script><script src="flintmodel.js"></script><!-- feat/build-feeds: Flint tier 1, meaning-based matching on this device --><script src="flintcmds.js"></script><script src="flintlocal.js"></script><!-- flint-local: Flint understands and acts with no model -->
 <script src="aibasics-core.js"></script><script src="localdoc.js"></script><script src="flintgrow.js"></script><script src="inspoboard.js"></script><!-- feat/flint-ai: ✦ rules, grow your idea, the inspiration board -->
 <script src="flint.js"></script><!-- feat/flint: the built-in helper -->
 <script src="aiconsent.js"></script><script src="aibasics.js"></script><!-- feat/flint-ai: the ✦ affordances; polish: ask once before a cloud AI -->

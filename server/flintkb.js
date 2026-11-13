@@ -1,5 +1,5 @@
 // Flint's local knowledge base (flint-local): "how do I…" answered from TribeCode's own docs, with no model.
-//   GET /api/flint/kb?q=<question>&k=3 -> { answers: [{ title, heading, snippet, source, slug?, score }] }
+//   GET /api/flint/kb?q=<question>&k=3 -> { answers: [{ title, heading, snippet, source, slug?, score }] }   (k up to 8)
 // Reads the Guide (docs/guide/*.md, the same folder server/guide.js serves) and the repo's docs/*.md, splits them into
 // sections at their headings, and ranks sections by TF-IDF over words, word pairs and character trigrams (the retrieval
 // half of app/ui/flintnlu.js). The answer is the section's best paragraph, cited by file and heading. Long reports
@@ -71,7 +71,7 @@ module.exports = function flintkb({ ui, nlu } = {}) {
   async function route(req, res, { m, me, send, fail, url }) {
     if (!me) return fail(res, 401, 'not a member of this tribe');
     if (m !== 'GET') return fail(res, 405, 'GET only');
-    const u = url || new URL(req.url, 'http://x'), q = u.searchParams.get('q') || '', k = Math.max(1, Math.min(5, +u.searchParams.get('k') || 3));
+    const u = url || new URL(req.url, 'http://x'), q = u.searchParams.get('q') || '', k = Math.max(1, Math.min(8, +u.searchParams.get('k') || 3));   // up to 8: the browser's local helper re-ranks them by meaning
     return send(res, 200, { answers: ask(q, k) });
   }
   return { route, ask, build, files: () => { build(); return fileList.slice(); } };

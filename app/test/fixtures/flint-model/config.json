@@ -1,0 +1,7 @@
+{
+  "name": "tribecode-fixture-64",
+  "model_type": "model2vec",
+  "normalize": true,
+  "license": "MIT",
+  "note": "A generated test fixture (scripts/dev/flint-fixture-model.js). Not a trained model."
+}

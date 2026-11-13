@@ -1,4 +1,4 @@
-// Flint's page (feat/flint-max): who Flint is, "Flint's levels" (no AI, local helper, your AI, credits) with the active one
+// Flint's page (feat/flint-max): who Flint is, "Flint's levels" (no AI, local helper, local model, your AI, credits) with the active one
 // marked, and "What I can do": every free ability, searchable and grouped by editor, each with Try it (a safe demo on
 // sample data, or what Flint understood from the example, never a change to your work) and the lessons with Show me.
 // Open it from Flint's ✦ menu, "what can you do", a chip on Home, or #/flint.
@@ -62,7 +62,8 @@
   ];
   const LEVELS = [
     ['none', 'No AI', 'Always on. Rules, recipes, palettes and math: instant, offline, private.'],
-    ['local', 'Local helper', 'A small open model on this device (in the browser) or on the host (Ollama). Opt-in.'],
+    ['helper', 'Local helper', 'A tiny word-meaning model on this device, no GPU. Better “did you mean”, help answers and search by meaning. Opt-in, about 30 MB.'],
+    ['local', 'Local model', 'A small open model that can write, on this device (in the browser) or on the host (Ollama). Opt-in.'],
     ['yours', 'Your AI', 'Your own Claude, OpenAI or Gemini key, on the host only. For writing and code.'],
     ['credits', 'Credits', 'TribeCode credits when you have no key. The same requests, billed per use.'],
   ];
@@ -72,6 +73,8 @@
     if (!st.online) return 'none';
     return st.browser || /ollama|local|qwen|llama|gemma|phi|smol|browser/i.test(`${st.via || ''} ${st.model || ''}`) ? 'local' : 'yours';
   }
+  // level 1 adds to whatever else is active: it is on when the small model is installed on this device (flintmodel.js)
+  const helperOn = () => !!(window.TribeFlintModel && window.TribeFlintModel.installed());
   let root = null, lastFocus = null;
   function understood(text) {
     const N = window.TribeNLU; if (!N) return '';
@@ -89,7 +92,7 @@
         <p class="fpg-say">“${esc(c[2])}”</p><div class="fpg-acts"><button type="button" class="btn sm fpg-try" data-try="${i}">Try it</button><button type="button" class="btn ghost sm" data-ask="${i}" title="Put it in Flint's box">Ask Flint</button></div><div class="fpg-out" hidden></div></li>`).join('')}</ul></section>`).join('')
       : `<p class="faint fpg-none">Nothing matches “${esc(q)}”. Try “palette”, “sheet” or “undo”.</p>`;
     $('#fp-count', root).textContent = `${groups.reduce((a, [, l]) => a + l.length, 0)} of ${CAPS.length}`;
-    root.querySelectorAll('.fpg-lv').forEach(el => { const on = el.dataset.lv === lv; el.classList.toggle('on', on); const b = el.querySelector('.fpg-lv-on'); if (b) b.hidden = !on; });
+    root.querySelectorAll('.fpg-lv').forEach(el => { const on = el.dataset.lv === lv || (el.dataset.lv === 'helper' && helperOn()); el.classList.toggle('on', on); const b = el.querySelector('.fpg-lv-on'); if (b) b.hidden = !on; });
   }
   function tryIt(i, li) {
     const c = CAPS[i], FM = window.TribeFlintMax, out = li.querySelector('.fpg-out');
@@ -113,7 +116,7 @@
     root.innerHTML = `<div class="fpg-card">
       <header class="fpg-head"><img src="assets/flint.svg" alt="" width="40" height="40"><div><span class="eyebrow">Your tribe's helper</span><h1>Flint</h1><p class="faint">Most of what he does needs no AI: rules, recipes, palettes and math, instant and offline. Bigger jobs go to a model you choose.</p></div>
         <button type="button" class="btn ghost fpg-x" id="fp-close" aria-label="Close">✕</button></header>
-      <section class="fpg-sec" aria-label="Flint's levels"><h2>Flint's levels</h2><div class="fpg-levels">${LEVELS.map(([k, t, d], i) => `<div class="fpg-lv${k === lv ? ' on' : ''}" data-lv="${k}"><span class="fpg-lv-n">${i}</span><b>${esc(t)}</b><small>${esc(d)}</small><span class="fpg-lv-on"${k === lv ? '' : ' hidden'}>Active</span></div>`).join('')}</div>
+      <section class="fpg-sec" aria-label="Flint's levels"><h2>Flint's levels</h2><div class="fpg-levels">${LEVELS.map(([k, t, d], i) => `<div class="fpg-lv${k === lv || (k === 'helper' && helperOn()) ? ' on' : ''}" data-lv="${k}"><span class="fpg-lv-n">${i}</span><b>${esc(t)}</b><small>${esc(d)}</small><span class="fpg-lv-on"${k === lv || (k === 'helper' && helperOn()) ? '' : ' hidden'}>Active</span></div>`).join('')}</div>
         <p class="fpg-row"><button type="button" class="btn sm" id="fp-local">Set up a local model</button><a class="btn ghost sm" id="fp-plan" href="${PLAN}" target="_blank" rel="noopener">Read the model plan</a></p></section>
       <section class="fpg-sec" aria-label="What I can do"><div class="fpg-sh"><h2>What I can do</h2><span class="faint" id="fp-count"></span></div>
         <input class="input" id="fp-q" type="search" placeholder="Search: palette, sheet, undo, checklist…" aria-label="Search what Flint can do" value="${esc(q || '')}">
@@ -124,7 +127,7 @@
     draw(q);
     const qi = $('#fp-q', root); qi.oninput = () => draw(qi.value);
     $('#fp-close', root).onclick = close;
-    $('#fp-local', root).onclick = () => { if (window.TribeBrain && window.TribeBrain.open) { close(); window.TribeBrain.open(); } else window.open(PLAN, '_blank', 'noopener'); };
+    $('#fp-local', root).onclick = () => { if (window.TribeFlintModel) window.TribeFlintModel.open(); else if (window.TribeBrain && window.TribeBrain.open) { close(); window.TribeBrain.open(); } else window.open(PLAN, '_blank', 'noopener'); };
     root.onclick = e => {
       if (e.target === root) return close();
       const t = e.target.closest('[data-try]'); if (t) return tryIt(+t.dataset.try, t.closest('.fpg-cap'));
@@ -135,6 +138,7 @@
     setTimeout(() => qi.focus(), 30);
   }
   function close() { if (!root) return; root.hidden = true; document.body.classList.remove('fpg-open'); if (location.hash === '#/flint') history.replaceState(null, '', location.pathname + location.search); if (lastFocus && lastFocus.focus) try { lastFocus.focus(); } catch {} }
+  document.addEventListener('flintmodel', () => { if (root && !root.hidden) draw($('#fp-q', root) ? $('#fp-q', root).value : ''); });   // installed or removed: the level's "Active" follows
   addEventListener('hashchange', () => { if (location.hash === '#/flint') open(''); });
   if (location.hash === '#/flint') addEventListener('load', () => setTimeout(() => open(''), 300));
   window.TribeFlintPage = { open, close, CAPS, level, understood };

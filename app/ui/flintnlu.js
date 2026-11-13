@@ -495,6 +495,7 @@
   I('inspo.search', 'market', [/^(?:find|search|look for|get|show me|give me|pull up|collect)\s+(?:me\s+)?(?:some\s+)?(?:inspiration|inspo|references|reference pictures|reference images|mood pictures|moodboard pictures|ideas pictures)\s+(?:for|of|about|on|with)\s+(?<q>.+)$/, /^(?:inspiration|inspo)\s+(?:for|of)\s+(?<q>.+)$/, /^(?:add|pin|put)\s+(?<q>.+?)\s+(?:to|on)\s+(?:my\s+|the\s+)?(?:inspiration board|inspo board|moodboard|mood board|board)$/], { ex: ['find inspiration for a cozy cafe', 'inspo for neon arcade'] });
   I('nav.people', 'nav', [/^(?:open|show|show me|see|who is in|whos in|list)\s+(?:the\s+)?(?:people|people panel|everyone|members|the tribe|my tribe|friends|my friends|teammates|the team)(?:\s+(?:panel|list|here))?$/, /^(?:people|people panel|members list)$/], { p: 0.92, label: 'People', ex: ['open the people panel', 'show me everyone'] });
   I('nav.work', 'nav', [/^(?:open|show|show me|go to|see|browse|find)\s+(?:the\s+|my\s+|some\s+)?(?:work|gigs|gig board|work board|jobs|odd jobs|time bank)(?:\s+(?:page|board|tab))?$/, /^(?:any|are there any)\s+(?:gigs|jobs|work)(?:\s+(?:for me|going|open))?$/, /^(?:find|get)\s+(?:me\s+)?(?:a\s+)?(?:gig|job)$/], { p: 0.92, label: 'Work', ex: ['open work', 'any gigs for me', 'find me a gig'] });
+  I('checks.run', 'preview', [/^(?:run|start|do|kick off)\s+(?:the\s+|our\s+|my\s+)?(?:checks?|tests?|build checks?|test suite)(?:\s+(?:now|again|please))?$/, /^(?:check|test)\s+the\s+build$/, /^(?:is|are)\s+the\s+(?:build|checks?|tests?)\s+(?:passing|failing|green|red|ok|okay|broken)$/, /^(?:build|checks?)\s+status$/], { p: 0.93, ex: ['run the checks', 'run the tests', 'is the build passing'] });
   I('preview.open', 'preview', [/^(?:open|show|launch|start|run)\s+(?:the\s+)?(?:live\s+)?preview$/, /^(?:preview|test|try|play)\s+(?:it|the (?:app|game|site)|my (?:app|game|site)|our (?:app|game|site))$/, /^(?:let me see it|show me the app|run the app|run it)$/], { p: 0.93, ex: ['open the preview', 'run the app', 'try the game'] });
   I('preview.share', 'preview', [/^(?:copy|share|get|send|give me)\s+(?:a\s+|the\s+)?(?:preview|play|test|demo)\s+link$/, /^(?:share|send)\s+(?:the\s+)?(?:preview|demo)\s+(?:with|to)\s+(?:a\s+friend|friends|someone|the team)$/], { ex: ['copy the preview link', 'share the demo with a friend'] });
   I('settings.sound', 'look', [/^(?:turn|switch)\s+(?<on>on|off)\s+(?:the\s+|all\s+)?(?:sounds?|sound effects|ui sounds|clicks)$/, /^(?<off>mute|silence)\s+(?:the\s+|all\s+)?(?:sounds?|sound effects|ui sounds|app sounds)$/, /^(?<on2>unmute)\s+(?:the\s+)?(?:sounds?|app)$/], { fill: s => ({ on: s.on === 'on' || !!s.on2 }), ex: ['turn off sounds', 'mute sound effects'] });
@@ -1093,6 +1094,28 @@
   }
   const EXIDX = index(CAT.flatMap(x => x.ex.map(e => ({ id: x.id, text: e }))));
 
+  // ---------- tier 1: meaning (optional; app/ui/flintembed.js via flintmodel.js) ----------
+  // With a local embedding model installed, an unrecognized command's "did you mean" list is ranked by meaning as well
+  // as by shared words, so a paraphrase with none of the example's words still finds it. Nothing here decides a
+  // command: recognized commands and the fuzzy bar are exactly as without the model.
+  let SEM = null, SEMVEC = null;
+  function setSemantic(E) { SEM = E && typeof E.embed === 'function' ? E : null; SEMVEC = null; }
+  function semNear(q, k) {
+    if (!SEM) return [];
+    try {
+      if (!SEMVEC) SEMVEC = EXIDX.docs.map(d => SEM.embed(d.text));
+      const qv = SEM.embed(q), out = [];
+      for (let i = 0; i < SEMVEC.length; i++) { const sc = SEM.sim(qv, SEMVEC[i]); if (sc >= 0.3) out.push({ doc: EXIDX.docs[i], score: sc }); }
+      return out.sort((a, b) => b.score - a.score).slice(0, k);
+    } catch { return []; }
+  }
+  function blendAlts(near, sem, skip, ctx) {   // -> [{ intent, example, score, sem? }] best first
+    const by = new Map();
+    const put = (n, key) => { const tc = CAT.find(x => x.id === n.doc.id); if (n.doc.id === skip || (tc && tc.ctx && !tc.ctx(ctx))) return; const o = by.get(n.doc.id) || { intent: n.doc.id, example: n.doc.text, tf: 0, cos: 0 }; if (n.score > o[key]) { o[key] = n.score; if (key === 'cos' || !o.cos) o.example = n.doc.text; } by.set(n.doc.id, o); };
+    near.forEach(n => put(n, 'tf')); sem.forEach(n => put(n, 'cos'));
+    return [...by.values()].map(o => ({ intent: o.intent, example: o.example, score: Math.round((o.cos * 0.6 + o.tf * 0.4 + (o.cos && o.tf ? 0.05 : 0)) * 100) / 100, ...(o.cos ? { sem: true } : {}) })).sort((a, b) => b.score - a.score).slice(0, 3);
+  }
+
   // ---------- split a message into steps ----------
   const VERBS = 'tidy|fix|sort(?! it out| out| that out| this out)|pick|highlight|summarize|summarise|apply|recolor|format|add|make|build|create|tell|message|ping|text|dm|send|open|show|schedule|book|set|switch|change|invite|publish|ship|start|mark|assign|give|remind|post|announce|write|draft|turn|put|move|note|jot|delete|rename|export|reload|find|let';
   function split(raw) {
@@ -1163,6 +1186,7 @@
     const best = hits[0] || null;
     const near = search(EXIDX, c, 12), seen = new Set(), alts = [];
     for (const n of near) { if (seen.has(n.doc.id) || (best && n.doc.id === best.intent)) continue; seen.add(n.doc.id); alts.push({ intent: n.doc.id, example: n.doc.text, score: Math.round(n.score * 100) / 100 }); if (alts.length >= 3) break; }
+    if (!best && SEM) { const sem = semNear(c, 12); if (sem.length) { const bl = blendAlts(near, sem, null, ctx); if (bl.length) { alts.length = 0; alts.push(...bl); } } }
     if (!best) {
       const top = near[0];
       const tc = top && CAT.find(x => x.id === top.doc.id); if (top && top.score >= 0.62 && !(tc && tc.ctx && !tc.ctx(ctx)) && !(tc && Object.keys(tc.req).length)) return { intent: top.doc.id, area: (CAT.find(x => x.id === top.doc.id) || {}).area, slots: {}, conf: Math.min(0.7, top.score), text, c, alts, fuzzy: true, lang: P.lang };
@@ -1214,5 +1238,5 @@
   }
 
   const catalog = () => CAT.map(x => ({ id: x.id, area: x.area, label: x.label, examples: x.ex.slice() }));
-  return { needsAI, clarify, parse, one, split, prep, parseWhen, colorOf, person, taskRef, index, search, catalog, COLORS, THEMES, LANGS, detectLang, version: 1 };
+  return { needsAI, clarify, parse, one, split, prep, parseWhen, colorOf, person, taskRef, index, search, catalog, setSemantic, hasSemantic: () => !!SEM, COLORS, THEMES, LANGS, detectLang, version: 1 };
 });
