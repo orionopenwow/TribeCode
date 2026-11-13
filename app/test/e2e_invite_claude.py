@@ -76,35 +76,39 @@ def main():
             htok = pg.evaluate("TribeStore.get().server.token"); host_id = pg.evaluate("TribeClient.state().me.id")
             pg.evaluate("localStorage.removeItem('tribecode.inviteclaude.kind')")
             shut = lambda: pg.evaluate("TribeInviteClaude.close()")
-            opened = lambda: pg.wait_for_selector("#ic-modal:not(.hidden) #ic-status", timeout=10000)
+            opened = lambda: pg.wait_for_selector("#invite-modal:not(.hidden) #ic-body #ic-status", timeout=10000)   # the one invite sheet, on Your Claude
 
             # ---------- the sheet from the sidebar row ----------
             pg.click("#sf-claude"); opened()
-            pg.wait_for_selector("#ic-modal [data-ic-text='code']")
-            cmd = pg.text_content("#ic-modal [data-ic-text='code']")
+            pg.wait_for_selector("#ic-body [data-ic-text='code']")
+            # nothing is made when the sheet opens: the key is masked and there is no Claude member yet
+            assert "••••" in pg.text_content("#ic-body [data-ic-text='code']") and "Nothing is made yet" in pg.text_content("#ic-status")
+            assert not [x for x in ok(api("/members", token=htok))["members"] if x["role"] == "agent"], "no Claude before Copy"
+            pg.context.grant_permissions(["clipboard-read", "clipboard-write"], origin=BASE)
+            pg.click("#ic-body [data-ic-copy='code']")
+            pg.wait_for_function("!document.querySelector(\"#ic-body [data-ic-text='code']\").textContent.includes('••••')", timeout=10000)
+            cmd = pg.text_content("#ic-body [data-ic-text='code']")
             m = re.match(r'^claude mcp add --transport http tribecode (http://\S+/mcp) --header "Authorization: Bearer ([A-Za-z0-9_-]{20,})"$', cmd.strip())
             assert m, cmd
             assert m.group(1).endswith(f":{PORT}/mcp"), m.group(1)
             key = m.group(2); keys.append(key)
             assert "Waiting for your Claude" in pg.text_content("#ic-status")
-            assert "Campw's Claude" in pg.text_content("#ic-modal .lead")
+            assert "Campw's Claude" in pg.text_content("#ic-body .lead")
             # copy → "Copied — paste it in your terminal"
-            pg.context.grant_permissions(["clipboard-read", "clipboard-write"], origin=BASE)
-            pg.click("#ic-modal [data-ic-copy='code']")
-            pg.wait_for_selector("#ic-modal .ic-steps li.now")
-            assert "paste it in your terminal" in pg.text_content("#ic-modal .ic-steps").lower()
+            pg.wait_for_selector("#ic-body .ic-steps li.now")
+            assert "paste it in your terminal" in pg.text_content("#ic-body .ic-steps").lower()
             pg.screenshot(path=str(SHOTS / "invite-claude.png"))
             # Claude Desktop: the config carries the same URL and key, and can be downloaded
-            pg.click("#ic-modal [data-ic-kind='desktop']")
-            cfg = json.loads(pg.text_content("#ic-modal [data-ic-text='desktop']"))
+            pg.click("#ic-body [data-ic-kind='desktop']")
+            cfg = json.loads(pg.text_content("#ic-body [data-ic-text='desktop']"))
             srvc = cfg["mcpServers"]["tribecode"]
             assert srvc["env"]["TRIBE_TOKEN"] == key and srvc["args"][-1] == m.group(1), srvc
             with pg.expect_download() as dl: pg.click("#ic-dl")
             assert dl.value.suggested_filename == "claude_desktop_config.json"
             # Claude on the web: no public https address here, so it explains and offers "Work with friends anywhere"
-            pg.click("#ic-modal [data-ic-kind='web']")
-            assert "public https" in pg.text_content("#ic-modal .ic-need") and pg.locator("#ic-public").is_visible()
-            pg.click("#ic-modal [data-ic-kind='code']")
+            pg.click("#ic-body [data-ic-kind='web']")
+            assert "public https" in pg.text_content("#ic-body .ic-need") and pg.locator("#ic-public").is_visible()
+            pg.click("#ic-body [data-ic-kind='code']")
 
             # ---------- it connects: joined, hello in chat, People with the AI badge ----------
             st, j = mcp(key, "initialize", {"protocolVersion": "2025-06-18", "clientInfo": {"name": "claude-code"}})
@@ -127,10 +131,10 @@ def main():
             # ---------- the other entry points ----------
             pg.click("#ppl-claude"); opened(); shut()   # People panel
             pg.evaluate("document.getElementById('ppl-close') && document.getElementById('ppl-close').click()")
-            pg.click("#tour-invite"); pg.wait_for_selector("#inv-claude", state="visible"); pg.click("#inv-claude"); opened(); shut()   # Invite friends
+            pg.click("#tour-invite"); pg.wait_for_selector("#io-who-claude", state="visible"); pg.click("#io-who-claude"); opened(); shut()   # Invite friends
             pg.evaluate("document.getElementById('invite-modal').classList.add('hidden')")
             pg.evaluate("TribeFlow.inviteSheet({ name: 'Game', invite: { link: 'http://x/join/abc', kind: 'local' } })")   # a project's invite sheet
-            pg.click("#ii-myclaude"); opened(); shut()
+            pg.wait_for_selector(".modal-card.ii #ii-link"); pg.click("#io-who-claude"); opened(); shut()
             pg.evaluate("document.getElementById('invite-modal').classList.add('hidden')")
             # the empty chat: the room's real empty state (the history call answers with no messages)
             pg.evaluate("TribeApp.show('chat')")

@@ -153,9 +153,10 @@ module.exports = function mcp({ extra = {}, scope = (me, wanted, fn) => fn(), pr
     return { jsonrpc: '2.0', id, error: { code: -32601, message: `Method not found: ${method}` } };
   }
 
-  async function route(req, res, { me, readBody, send }) {
+  async function route(req, res, { me, readBody, send, challenge = null }) {
+    // No key, or one that stopped working: the 401 says where an MCP client can sign in (server/claudeauth.js, RFC 9728).
+    if (!me) return send(res, 401, { jsonrpc: '2.0', id: null, error: { code: -32001, message: 'Missing or invalid TribeCode token' } }, challenge ? { 'WWW-Authenticate': challenge() } : {});
     if (req.method !== 'POST') { res.writeHead(405, { Allow: 'POST' }); return res.end(); }
-    if (!me) return send(res, 401, { jsonrpc: '2.0', id: null, error: { code: -32001, message: 'Missing or invalid TribeCode token' } });
     const body = await readBody(req, 16 * 1024 * 1024);   // screenshots (add_visual) can be large
     const batch = Array.isArray(body) ? body : [body];
     AUTH.set(me, req.headers.authorization || '');   // tribe_api/code_* act with the caller's own token

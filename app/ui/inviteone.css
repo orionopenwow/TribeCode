@@ -1,0 +1,75 @@
+/* The one invite sheet (inviteone.js): "Who?" with three choices, then that choice's pane. Flat matte, theme variables only. */
+.modal-card.io { width: min(620px, calc(100vw - 32px)); max-height: calc(100vh - 32px); max-height: calc(100dvh - 32px); overflow: auto; }
+.io-who { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin: 4px 0 16px; }
+.io-opt { display: flex; align-items: center; gap: 10px; min-width: 0; padding: 10px 12px; text-align: left; font: inherit; color: var(--text); cursor: pointer;
+  border: 1px solid var(--edge); border-radius: var(--r-card, 12px); background: var(--surface); transition: border-color var(--dur-quick) var(--ease-out), background-color var(--dur-quick) var(--ease-out); }
+.io-opt:hover { border-color: var(--edge-pop, var(--edge)); }
+.io-opt.on { border-color: var(--brand); background: var(--raised, var(--surface-2)); }
+.io-opt:focus-visible, .io-sw:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
+.io-glyph { flex: none; width: 34px; height: 34px; border-radius: 10px; display: grid; place-items: center; font: 700 13px var(--mono); border: 1px solid var(--edge); background: var(--surface-2); }
+.io-glyph.k-ember { color: var(--brand); border-color: var(--brand); }
+.io-glyph.k-indigo { color: var(--peer); border-color: var(--peer); }
+.io-glyph.k-teal { color: var(--live); border-color: var(--live); }
+.io-ot { display: grid; min-width: 0; }
+.io-ot b { font-size: 13.5px; font-weight: 600; }
+.io-ot small { font-size: 12px; color: var(--muted); line-height: 1.4; }
+.io-pane { min-height: 120px; }
+.io-pane .tl-box[hidden], .io-kind[hidden], .io-manage[hidden] { display: none; }
+.io-pane .tl-box { grid-template-columns: minmax(0, 1fr); }
+.io-pane .tl-box > * { min-width: 0; }
+.io-pane .linkbox { margin-bottom: 0; min-width: 0; }
+.io-pane .linkbox code { min-width: 0; }
+.io-pane .linkbox code { user-select: all; }
+.io-manage > summary, .io-pane .cc-what > summary { cursor: pointer; color: var(--muted); font-size: 12.5px; padding: 2px 0; }
+.io-manage[open] > summary { margin-bottom: 8px; }
+.io-switches { display: grid; gap: 8px; margin: 0 0 4px; }
+.io-sw { display: flex; align-items: center; gap: 12px; width: 100%; padding: 10px 12px; text-align: left; font: inherit; color: var(--text); cursor: pointer; list-style: none;
+  border: 1px solid var(--edge); border-radius: var(--r-ctl, 8px); background: var(--surface); }
+.io-sw::-webkit-details-marker { display: none; }
+.io-sw:disabled { cursor: default; opacity: .75; }
+.io-swt { display: grid; flex: 1; min-width: 0; }
+.io-swt b { font-size: 13.5px; font-weight: 600; }
+.io-swt small { font-size: 12px; color: var(--muted); line-height: 1.45; }
+.modal-card.io .io-sw { border: 1px solid var(--edge); }
+.modal-card.io .io-once { margin: 0; padding: 0; border: 0; }
+.io-switches .share-pub { margin: 0; padding: 0 12px; background: var(--surface); border-radius: var(--r-ctl, 8px); }
+.io-switches .share-pub .toggle { padding-left: 0; padding-right: 0; }
+.io-ways { margin: 10px 0 0; }
+.io-ways .lr-inv-ways { margin: 0; }
+.modal-card.io > .eyebrow { display: block; }
+.modal-card.io > h2 { margin-bottom: 12px; }
+.io-once > summary.io-sw { padding: 10px 12px; color: var(--text); font-size: inherit; }
+.io-once[open] > summary.io-sw { margin-bottom: 8px; }
+.io-once[open] > summary .switch { background: var(--accent-2); border-color: var(--accent-2); }
+.io-once[open] > summary .switch::after { left: 18px; }
+.io-once .opts { display: flex; flex-wrap: wrap; gap: 8px; margin: 0; }
+.io-qr { text-align: center; }
+.io-qr.hidden { display: none; }
+.io-qr .qr { display: inline-block; width: 168px; padding: 10px; background: var(--white); border-radius: var(--r-ctl, 8px); }
+.io-qr .qr svg { width: 100%; height: auto; display: block; }
+.io-qr p, .io-net { margin: 4px 0 0; font-size: 12.5px; line-height: 1.5; }
+.io-net:empty { display: none; }
+.io-kind { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; font-size: 12.5px; color: var(--muted); }
+.io-kind::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--faint); flex: none; }
+.io-kind.ok::before { background: var(--live); }
+.io-kind.warn::before { background: var(--brand); }
+.io-acts { display: flex; gap: 8px; flex-wrap: wrap; }
+.io-calm { padding: 14px 16px; border: 1px solid var(--edge); border-radius: var(--r-card, 12px); background: var(--surface); font-size: 13.5px; line-height: 1.6; color: var(--text); max-width: 65ch; }
+.io-calm p { margin: 0 0 10px; }
+.io-flex { flex: 1; }
+/* the signed-out notice (app.js): one calm card with the way back */
+.so-note { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); z-index: 90; display: flex; align-items: center; gap: 12px; width: min(520px, calc(100vw - 24px));
+  padding: 12px 14px; border: 1px solid var(--edge); border-left: 3px solid var(--brand); border-radius: var(--r-card, 12px); background: var(--raised, var(--surface-2)); color: var(--text); font-size: 13.5px; line-height: 1.5; }
+.so-note span { flex: 1; min-width: 0; }
+.so-note b { display: block; }
+.so-note small { color: var(--muted); font-size: 12.5px; }
+@media (max-width: 820px) {
+  .io-who { gap: 6px; margin-bottom: 12px; }
+  .io-opt { flex-direction: column; gap: 6px; padding: 10px 6px; text-align: center; }
+  .io-ot b { font-size: 13px; line-height: 1.25; }
+  .io-ot small { display: none; }
+  .io-glyph { width: 30px; height: 30px; }
+  .io-once .opts select { flex: 1 1 140px; min-width: 0; }
+  .so-note { bottom: calc(76px + env(safe-area-inset-bottom, 0px)); flex-wrap: wrap; }
+}
+@media (prefers-reduced-motion: reduce) { .io-opt { transition: none; } }

@@ -222,9 +222,9 @@ def main():
             assert codes[:6] == [200] * 6 and codes[6] == 429, codes
 
             # ---------------- Share my hub link, Invite friends ----------------
-            host.click("#hub-instant"); host.wait_for_selector(".modal-card.ii #ii-link", timeout=20000)
-            assert "/join/" in host.inner_text("#ii-link")
-            host.click(".modal-card.ii [data-close]"); host.wait_for_selector("#invite-modal.hidden", state="attached")
+            host.click("#hub-instant"); host.wait_for_selector("#invite-modal:not(.hidden) .modal-card.io #io-pane[data-who='friend'] #tl-link", timeout=20000)   # the one invite sheet, on A friend
+            host.wait_for_function("/\\/t\\//.test(document.querySelector('#tl-link').textContent)", timeout=10000)
+            host.click(".modal-card.io [data-close]"); host.wait_for_selector("#invite-modal.hidden", state="attached")
             host.evaluate("TribeHub.open('home')"); host.wait_for_selector("#view-hub:not(.hidden) #hub-hero")
 
             # ---------------- AI Insights: collapsible (remembered), and fed by /api/insights when the host has it ----------------

@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="referrer" content="no-referrer">
+<meta name="robots" content="noindex">
+<title>Let your Claude join · TribeCode</title>
+<link rel="icon" href="/assets/icon-512.png">
+<link rel="stylesheet" href="/tokens.css">
+<link rel="stylesheet" href="/fonts.css">
+<link rel="stylesheet" href="/styles.css">
+<link rel="stylesheet" href="/themes.css">
+<link rel="stylesheet" href="/motion.css">
+<style>
+  /* The page a Claude app opens to sign in (server/claudeauth.js). Flat matte: luminance steps and 1px borders only. */
+  html, body { min-height: 100%; }
+  .cw { min-height: 100vh; min-height: 100dvh; display: grid; place-items: center; padding: 24px 16px; }
+  .ccard { width: min(460px, 100%); background: var(--surface); border: 1px solid var(--edge); border-radius: var(--r-panel); overflow: hidden; }
+  .ctop { display: flex; align-items: center; gap: 10px; padding: 16px 22px; border-bottom: 1px solid var(--edge); background: var(--canvas); }
+  .ctop img.icon { width: 28px; height: 28px; }
+  .ctop img.brand-wm { height: 15px; width: auto; }
+  .ctop .tag { margin-left: auto; font-family: var(--mono); font-size: 10.5px; letter-spacing: .08em; text-transform: uppercase; color: var(--faint); }
+  .cbody { padding: 26px 22px 22px; }
+  .cbody .eyebrow { display: block; font-family: var(--mono); font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); margin-bottom: 10px; }
+  .cbody h1 { font-family: var(--display); font-size: 26px; font-weight: 800; letter-spacing: -0.03em; line-height: 1.12; margin: 0 0 10px; overflow-wrap: anywhere; }
+  .cbody .lead { color: var(--muted); font-size: 14.5px; line-height: 1.6; margin: 0 0 16px; max-width: 65ch; }
+  .cbody .lead b { color: var(--text); }
+  .cfacts { list-style: none; margin: 0 0 18px; padding: 0; border: 1px solid var(--edge); border-radius: var(--r-card); background: var(--canvas); }
+  .cfacts li { display: flex; gap: 12px; padding: 10px 14px; font-size: 13.5px; line-height: 1.5; }
+  .cfacts li + li { border-top: 1px solid var(--edge); }
+  .cfacts span { flex: none; width: 92px; font-family: var(--mono); font-size: 10.5px; letter-spacing: .08em; text-transform: uppercase; color: var(--faint); padding-top: 3px; }
+  .cfacts b { font-weight: 600; overflow-wrap: anywhere; }
+  .cacts { display: flex; gap: 10px; }
+  .cacts .btn { flex: 1; height: 46px; font-size: 15px; }
+  .ccode { display: block; margin: 0 0 14px; padding: 14px; text-align: center; font-family: var(--mono); font-size: 28px; font-weight: 700; letter-spacing: .22em; color: var(--text); border: 1px solid var(--edge); border-radius: var(--r-card); background: var(--canvas); user-select: all; }
+  .cnote { color: var(--muted); font-size: 13px; line-height: 1.55; margin: 14px 0 0; }
+  .cerr { color: var(--alert); font-size: 13.5px; margin: 12px 0 0; }
+  .cerr:empty { display: none; }
+  [hidden] { display: none !important; }
+  @media (max-width: 520px) {
+    .cw { padding: 0; place-items: stretch; }
+    .ccard { border-radius: 0; border: 0; min-height: 100dvh; }
+    .cbody { padding: 26px 20px; }
+  }
+</style>
+</head>
+<body class="dark">
+<div class="cw"><main class="ccard">
+  <div class="ctop"><img class="icon" src="/assets/icon.svg" alt=""><img class="brand-wm" src="/assets/wordmark.svg" alt="TribeCode"><span class="tag">Sign-in</span></div>
+  <div class="cbody">
+    <span class="eyebrow" id="c-eyebrow">Your Claude</span>
+    <h1 id="c-title">One moment…</h1>
+    <p class="lead" id="c-lead"></p>
+    <ul class="cfacts" id="c-facts" hidden></ul>
+    <div id="c-signed" hidden>
+      <div class="cacts"><button type="button" class="btn" id="c-no">Not now</button><button type="button" class="btn primary" id="c-yes">Let it join</button></div>
+      <p class="cnote">It gets your access and never more. Narrow it, pause it or remove it any time in TribeCode: Invite › Your Claude.</p>
+    </div>
+    <div id="c-code" hidden>
+      <span class="ccode" id="c-usercode" aria-label="Approval code"></span>
+      <p class="cnote" style="margin-top:0">This browser isn't signed in to the tribe at this address. In TribeCode, open <b>Invite › Your Claude › Claude on the web</b> and type this code. This page moves on by itself once you approve.</p>
+    </div>
+    <p class="cerr" id="c-err" role="alert"></p>
+  </div>
+</main></div>
+<script src="/store.js"></script>
+<script src="/themes.js"></script>
+<script src="/claude-consent.js"></script>
+</body>
+</html>

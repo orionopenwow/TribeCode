@@ -240,8 +240,8 @@ def main():
             host.click("#wt-repo"); host.wait_for_selector("#pj-repo-ws")
 
             # ---- project-scoped invite: the friend only sees Pixel Quest
-            host.click("#tour-invite"); host.wait_for_selector("#tl-box"); host.evaluate("document.querySelectorAll('.tl-more').forEach(d => d.open = true)"); host.wait_for_selector("#inv-project")
-            assert host.input_value("#inv-project") == "pixel-quest"
+            host.click("#tour-invite"); host.wait_for_selector("#tl-box"); host.evaluate("document.querySelectorAll('.tl-more').forEach(d => d.open = true)"); host.wait_for_selector("#io-project")
+            host.click("#io-project"); assert host.get_attribute("#io-project", "aria-checked") == "true" and "Pixel Quest" in host.text_content("#io-project")   # feat/invite-one: "Just this project"
             link = invite_link(host); host.click("[data-close]")
             friend = b.new_context(viewport={"width": 1500, "height": 950}).new_page(); watch(friend, "friend")
             friend.goto(link); friend.wait_for_selector("#form:not(.hidden)")
@@ -323,8 +323,8 @@ def main():
             shot(host, "project-cascade")
 
             # ---- mobile: a whole-tribe invite, the project switcher sheet, tab bar scoped to the project
-            host.click("#tour-invite"); host.wait_for_selector("#tl-box"); host.evaluate("document.querySelectorAll('.tl-more').forEach(d => d.open = true)"); host.wait_for_selector("#inv-project")
-            host.select_option("#inv-project", "tribe")
+            host.click("#tour-invite"); host.wait_for_selector("#tl-box"); host.evaluate("document.querySelectorAll('.tl-more').forEach(d => d.open = true)"); host.wait_for_selector("#io-project")
+            assert host.get_attribute("#io-project", "aria-checked") == "false"   # a whole-tribe invite unless "Just this project" is on
             plink = invite_link(host); host.click("[data-close]")
             phone = b.new_context(viewport={"width": 390, "height": 844}, device_scale_factor=2, is_mobile=True, has_touch=True, user_agent=IPHONE_UA).new_page(); watch(phone, "phone")
             phone.goto(plink); phone.wait_for_selector("#form:not(.hidden)")

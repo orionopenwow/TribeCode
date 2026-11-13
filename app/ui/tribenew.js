@@ -6,7 +6,8 @@
 //      GitHub repo, each with a plain line and a recommended default (the folder on the desktop app; off with a reason on
 //      a phone or the public website). GitHub can also be connected later to any of the others (livingrepo.js). Inside a tribe you
 //      already have, the new one lives with it (or clones a GitHub repo there).
-//   3. Invite friends (optional): a real link once something hosts it; Skip is always there.
+//   3. Invite friends (optional): once something hosts it, Invite friends opens the one invite sheet (inviteone.js) in the
+//      new tribe; Skip is always there.
 //   Done: you land in the new tribe's Dashboard with a "Start your first project" card.
 // One sheet with a progress bar; screens swap inside it (no stacking, one scrim, gone on close). Back works on every
 // step, Esc closes. Errors are inline and calm. The hosting itself is setuplocal.js (host.computer, host.importTo,
@@ -268,47 +269,30 @@
   }
 
   // ---------- 3. invite friends (optional) ----------
-  async function inviteLink() {
-    const c = st.created || {};
-    if (c.server && c.token) {
-      const r = await realFetch(`${c.server}/api/invites`, { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + c.token }, body: JSON.stringify({ hours: 72, maxUses: 10, role: 'builder' }) });
-      const d = await r.json().catch(() => ({})); if (!r.ok || !d.invite) throw new Error(d.error || 'Couldn’t make a link right now.');
-      let base = c.server;   // Share on this network: a host on this computer gives friends its Wi-Fi address, not localhost
-      if (/^https?:\/\/(localhost|127\.0\.0\.1|\[::1\])(:|\/|$)/.test(base)) { try { const h = await (await realFetch(`${c.server}/api/health`)).json(); const l = (h.lan || []).find(x => x.kind === 'lan'); if (l) { base = l.url; st.lan = true; } } catch {} }
-      return `${String(base).replace(/\/+$/, '')}/join/${d.invite.code}`;
-    }
-    if (inTribe() && !solo()) {
-      const d = await C().api('/invites', { method: 'POST', body: { hours: 72, maxUses: 10, role: 'builder', ...(c.pid ? { project: c.pid } : {}) } });
-      const base = String((S().get().server || {}).url || location.origin).replace(/\/+$/, '');
-      return `${base}/join/${d.invite.code}`;
-    }
-    return null;
-  }
   function step3() {
     const c = st.created || {};
     const hosted = !!(c.server && c.token) || (inTribe() && !solo());
     el.innerHTML = `${head('Invite friends · optional', 'Who’s building with you?')}
-      ${hosted ? `<p class="ph-lead">Send this link. Anyone with it can join ${esc(st.name)} for the next 3 days.${c.where === 'folder' || c.where === 'computer' || c.where === 'shared' ? ' It works for friends on this network (Wi-Fi) while this computer runs TribeCode; to work with friends anywhere, connect GitHub or a shared folder from the pill at the top.' : ''}</p>
-        <div class="su-cmd tn-link"><input class="input" id="tn-link" readonly value="" placeholder="Making a link…" aria-label="Invite link"><button type="button" class="btn" id="tn-copy" disabled>Copy</button></div>`
+      ${hosted ? `<p class="ph-lead">Friends join ${esc(st.name)} with a link, a guest gets a pass for a day, and your Claude can come too. Invite them now, or any time from the sidebar.${c.where === 'folder' || c.where === 'computer' || c.where === 'shared' ? ' Links work for friends on this network (Wi-Fi) while this computer runs TribeCode; to work with friends anywhere, connect GitHub or a shared folder from the pill at the top.' : ''}</p>`
       : c.where === 'github' ? `<p class="ph-lead">Friends can follow it on GitHub right away. To build together live, give it a host later (This computer or Free cloud).</p>
         <div class="su-cmd tn-link"><input class="input" id="tn-link" readonly value="${esc(c.url || '')}" aria-label="Repository link"><button type="button" class="btn" id="tn-copy">Copy</button></div>`
       : `<p class="ph-lead">It lives on this device for now, so friends can join once it has a home. Pick one any time from the pill at the top; this step will be waiting.</p>`}
       <p class="tn-err" id="tn-err" role="status" hidden></p>
-      <div class="ph-acts"><button type="button" class="btn" id="tn-skip">Skip</button><button type="button" class="btn primary" id="tn-done">Open ${esc(st.name)}</button></div>`;
-    $('#tn-skip', el).onclick = finish; $('#tn-done', el).onclick = finish;
+      <div class="ph-acts"><button type="button" class="btn" id="tn-skip">Skip</button>${hosted ? `<button type="button" class="btn" id="tn-done">Open ${esc(st.name)}</button><button type="button" class="btn primary" id="tn-invite">Invite friends</button>` : `<button type="button" class="btn primary" id="tn-done">Open ${esc(st.name)}</button>`}</div>`;
+    $('#tn-skip', el).onclick = () => finish(); $('#tn-done', el).onclick = () => finish();
+    const iv = $('#tn-invite', el); if (iv) iv.onclick = () => finish({ invite: true });   // the one invite sheet (inviteone.js), once we're in the new tribe
     const copy = $('#tn-copy', el), inp = $('#tn-link', el);
     if (copy) copy.onclick = async () => { inp.select(); try { await navigator.clipboard.writeText(inp.value); copy.textContent = 'Copied'; } catch { toast(inp.value); } };
-    if (hosted) inviteLink().then(u => { if (!el || !u) return; inp.value = u; copy.disabled = false; }).catch(e => { if (!el) return; inp.placeholder = 'No link yet'; err(`${e.message} You can invite from the tribe any time.`); });
   }
 
   // ---------- done: land in the new tribe, with its first card ----------
-  async function finish() {
-    const c = st.created || {}, name = st.name;
+  async function finish(then) {
+    const c = st.created || {}, name = st.name, invite = !!(then && then.invite);
     lsSet(CARD, JSON.stringify({ pid: c.pid || null, name, at: Date.now() }));
     close();
     if (c.reload) {   // a new host: this device signs in to it on the next load
       S().set({ server: { url: c.server, token: c.token }, hosting: ['computer', 'folder', 'shared'].includes(c.where) && desktop(), name: S().get().name });
-      try { if (c.pid) localStorage.setItem('tribecode.project:' + c.server, c.pid); sessionStorage.setItem('tribecode.view', 'home'); } catch {}
+      try { if (c.pid) localStorage.setItem('tribecode.project:' + c.server, c.pid); sessionStorage.setItem('tribecode.view', 'home'); if (invite) sessionStorage.setItem('tribecode.invite.after', 'friend'); } catch {}
       if (OFF() && OFF().forget) try { OFF().forget(); } catch {}
       setTimeout(() => location.reload(), reduced() ? 0 : 180);
       return;
@@ -318,6 +302,7 @@
       else if (A() && A().show) A().show('home');
     } catch {}
     setTimeout(card, 120);
+    if (invite && A() && A().openInvite) setTimeout(() => A().openInvite({ who: 'friend' }), 200);
   }
   function card() {
     let want = null; try { want = JSON.parse(lsGet(CARD) || 'null'); } catch {}

@@ -7,6 +7,9 @@ P   Flint's proof-of-work ZIPs hold a project's code: only the member who saved 
     it; a friend can't overwrite someone else's ZIP by saving under the same name; the manifest only names the people
     this member can already see; the host folder path is only told to the host.
 B   the Blender bridge's copy-paste command carries no shell syntax ($( ), backticks, ;) from the model name.
+O   sign-in for the claude.ai connector (server/claudeauth.js): redirect URIs are validated (no open redirect), PKCE is
+    required, only a signed-in person approves, tokens are hashes at rest and never work from a URL, refresh tokens rotate
+    and a replay ends the grant, Pause and Remove end the sign-in, the endpoints are rate-limited.
 F   the Agent fleet: a friend can't give a task to an agent outside their project.
 H   folder homes and GitHub sync (feat/folder-sync): the folder picker is the host's, on the host computer only, under
     home only; a folder can't be a system folder, home, the data dir or overlap another project; writes can't leave the
@@ -154,6 +157,97 @@ def main():
         assert api("/tasks", token=ck, project=pa)[0] == 401, "removed: refused"
         assert ck not in Path(tmp, "server.log").read_text(errors="ignore"), "the key isn't logged"
         print("C ok: an invited Claude has its person's access and never more")
+        # ================= O: sign-in for the claude.ai connector (server/claudeauth.js) =================
+        import base64, hashlib, re, secrets, urllib.parse
+        class _NoRedirect(urllib.request.HTTPRedirectHandler):
+            def redirect_request(self, *a, **k): return None
+        _plain = urllib.request.build_opener(_NoRedirect)
+        def web(path, method="GET", body=None, form=None, token=None, headers=None):
+            h = dict(headers or {}); data = None
+            if form is not None: data = urllib.parse.urlencode(form).encode(); h["Content-Type"] = "application/x-www-form-urlencoded"
+            elif body is not None: data = json.dumps(body).encode(); h["Content-Type"] = "application/json"
+            if token: h["Authorization"] = "Bearer " + token
+            try:
+                with _plain.open(urllib.request.Request(BASE + path, method=method, data=data, headers=h), timeout=30) as r: raw, st, hd = r.read(), r.status, r.headers
+            except urllib.error.HTTPError as e: raw, st, hd = e.read(), e.code, e.headers
+            try: return st, json.loads(raw or b"{}"), hd
+            except Exception: return st, raw.decode("utf8", "replace"), hd
+        def pkce():
+            v = secrets.token_urlsafe(48); return v, base64.urlsafe_b64encode(hashlib.sha256(v.encode()).digest()).rstrip(b"=").decode()
+        CB = "https://claude.ai/api/mcp/auth_callback"
+        # discovery never repeats a Host header a stranger sent
+        for path in ("/.well-known/oauth-protected-resource", "/.well-known/oauth-authorization-server"):
+            st, d, _ = web(path, headers={"Host": "evil.example"}); assert st == 200 and "evil.example" not in json.dumps(d), d
+        # registration: only https (or http on this computer), no fragments, credentials, look-alike hosts or other schemes
+        for bad in (["http://evil.example/cb"], ["http://localhost@evil.example/cb"], ["http://127.0.0.1.evil.example/cb"], ["https://claude.ai/cb#x"], ["https://u:p@claude.ai/cb"], ["javascript:alert(1)"], ["data:text/html,x"], ["file:///etc/passwd"], ["//evil.example"], [CB] * 6, [CB, 7], [], None):
+            st, d, _ = web("/connect/register", "POST", {"redirect_uris": bad}); assert st == 400 and d.get("error") == "invalid_redirect_uri", (bad, st, d)
+        assert web("/connect/register", "POST", {"redirect_uris": [CB], "token_endpoint_auth_method": "client_secret_basic"})[0] == 400, "no confidential clients"
+        assert web("/connect/register", "POST", {"redirect_uris": [CB], "grant_types": ["client_credentials"]})[0] == 400, "no other grants"
+        st, reg, _ = web("/connect/register", "POST", {"redirect_uris": [CB], "client_name": "<img src=x onerror=alert(1)>\u0000Claude"}); assert st == 201 and "<" not in reg["client_name"] and ">" not in reg["client_name"], reg
+        cid = reg["client_id"]
+        def authz(**over):
+            q = {"response_type": "code", "client_id": cid, "redirect_uri": CB, "state": "s1", "code_challenge": over.pop("ch", pkce()[1]), "code_challenge_method": "S256"}; q.update(over)
+            return web("/connect/authorize?" + urllib.parse.urlencode({k: v for k, v in q.items() if v is not None}))
+        # an address that wasn't registered is never redirected to (no open redirect), and the page escapes what it shows
+        for r in ("https://evil.example/cb", CB + "/..", CB + "?next=https://evil.example", "https://claude.ai.evil.example/api/mcp/auth_callback", "http://localhost/api/mcp/auth_callback", ""):
+            st, body, hd = authz(redirect_uri=r) if r else web("/connect/authorize?" + urllib.parse.urlencode({"response_type": "code", "client_id": "tcc_<script>alert(1)</script>"}))
+            assert st == 400 and "Location" not in hd and "<script>" not in body, (r, st, hd.get("Location"))
+        for over in ({"code_challenge": None}, {"code_challenge_method": "plain"}, {"ch": "short"}):
+            st, _, hd = authz(**over); assert st == 302 and hd["Location"].startswith(CB + "?") and "error=invalid_request" in hd["Location"], (over, hd.get("Location"))
+        st, _, hd = authz(resource="https://other.example/mcp"); assert "error=invalid_target" in hd["Location"], "a token is only for this tribe's MCP address"
+        ver, ch = pkce(); st, _, hd = authz(ch=ch); assert st == 302 and hd["Location"].startswith("/claude-consent.html#rid="), hd.get("Location")
+        rid = hd["Location"].split("rid=")[1]
+        # only a signed-in person approves: nobody, a Claude, a spectator and a guest can't; nor someone guessing the rid
+        ck2 = ok(api("/invite-claude", "POST", {}, token=mt, project=pa))["token"]
+        assert api("/claude-auth", "POST", {"rid": rid})[0] == 401, "nobody"
+        assert api("/claude-auth", "POST", {"rid": rid}, token=ck2)[0] == 403, "a Claude can't approve a sign-in (for itself or anyone)"
+        assert api("/claude-auth?code=AAAAAA", token=ck2)[0] == 403
+        assert api("/claude-auth", "POST", {"rid": "x" * 32}, token=mt)[0] == 404, "an unknown request"
+        st, req, _ = web("/connect/request?rid=" + rid); assert st == 200 and not req.get("done") and "redirect" not in req, req
+        assert web("/connect/request?rid=" + "y" * 32)[0] == 404
+        # the token endpoint: no code, no token
+        tok = lambda **f: web("/connect/token", "POST", form={"grant_type": "authorization_code", "client_id": cid, "redirect_uri": CB, **f})
+        assert tok(code="nope", code_verifier=ver)[0] == 400 and tok(code=rid, code_verifier=ver)[0] == 400, "a request id is not a code"
+        done = ok(api("/claude-auth", "POST", {"rid": rid}, token=mt), "Maya approves")
+        code = urllib.parse.parse_qs(urllib.parse.urlparse(done["redirect"]).query)["code"][0]
+        assert done["redirect"].startswith(CB + "?") and "s1" in done["redirect"]
+        st, reg2, _ = web("/connect/register", "POST", {"redirect_uris": ["https://other.example/cb"]})
+        assert tok(code=code, code_verifier=ver, client_id=reg2["client_id"])[0] == 400, "a code belongs to its client"
+        assert tok(code=code)[0] == 400, "no verifier, no token (and the code is spent)"
+        assert tok(code=code, code_verifier=ver)[0] == 400, "one try per code"
+        ver, ch = pkce(); st, _, hd = authz(ch=ch); rid = hd["Location"].split("rid=")[1]
+        code = urllib.parse.parse_qs(urllib.parse.urlparse(ok(api("/claude-auth", "POST", {"rid": rid}, token=mt))["redirect"]).query)["code"][0]
+        st, t, hd = tok(code=code, code_verifier=ver); assert st == 200 and hd["Cache-Control"] == "no-store", t
+        at, rt_ = t["access_token"], t["refresh_token"]
+        # it is Maya's Claude and nothing more; tokens never work from a URL; a refresh token is not a key
+        assert api("/tasks", token=at, project=pa)[0] == 200 and api("/chat/general", token=at, project=pb)[0] == 403, "Maya's projects only"
+        assert api("/invites", "POST", {"maxUses": 1}, token=at, project=pa)[0] == 403 and api("/invite-claude", token=at)[0] == 403 and api("/claude-auth", "POST", {"rid": "x"}, token=at)[0] == 403
+        assert api("/tasks?token=" + at, project=pa)[0] == 401 and api("/tasks", token=rt_, project=pa)[0] == 401
+        assert web("/mcp?token=" + at, "POST", {"jsonrpc": "2.0", "id": 1, "method": "ping"})[0] == 401
+        st, _, hd = web("/mcp", "POST", {"jsonrpc": "2.0", "id": 1, "method": "ping"}, token=at + "x"); assert st == 401 and "resource_metadata=" in hd["WWW-Authenticate"]
+        # hashed at rest, not logged
+        store = Path(tmp, "tribe", ".tribe", "claude-oauth.json").read_text()
+        for secret in (at, rt_, code, ver): assert secret not in store and secret not in Path(tmp, "server.log").read_text(errors="ignore"), "a secret was written down"
+        # someone else can't end or see her Claude's sign-in
+        gid = ok(api("/invite-claude", token=mt))["claudes"][0]["connections"][0]["id"]
+        assert api("/invite-claude/connections/" + gid, "DELETE", token=bt)[0] in (403, 404), "Bob can't sign her Claude out"
+        assert api("/tasks", token=at, project=pa)[0] == 200
+        # rotation and reuse
+        ref = lambda r, c=cid: web("/connect/token", "POST", form={"grant_type": "refresh_token", "refresh_token": r, "client_id": c})
+        assert ref(rt_, reg2["client_id"])[0] == 400, "another client can't refresh it"
+        st, t2, _ = ref(rt_); assert st == 200 and api("/tasks", token=at, project=pa)[0] == 401 and api("/tasks", token=t2["access_token"], project=pa)[0] == 200
+        assert ref(rt_)[0] == 400 and api("/tasks", token=t2["access_token"], project=pa)[0] == 401 and ref(t2["refresh_token"])[0] == 400, "a replayed refresh token ends the grant"
+        # Pause and Remove reach the sign-in too
+        ver, ch = pkce(); st, _, hd = authz(ch=ch); rid = hd["Location"].split("rid=")[1]
+        code = urllib.parse.parse_qs(urllib.parse.urlparse(ok(api("/claude-auth", "POST", {"rid": rid}, token=mt))["redirect"]).query)["code"][0]
+        at = tok(code=code, code_verifier=ver)[1]["access_token"]
+        ok(api("/invite-claude", "PUT", {"paused": True}, token=mt)); assert api("/tasks", token=at, project=pa)[0] == 401, "paused"
+        ok(api("/invite-claude", "PUT", {"paused": False}, token=mt)); assert api("/tasks", token=at, project=pa)[0] == 200
+        ok(api("/invite-claude", "DELETE", token=mt)); assert api("/tasks", token=at, project=pa)[0] == 401 and api("/tasks", token=ck2, project=pa)[0] == 401, "removed"
+        # rate limits
+        got = [web("/connect/token", "POST", form={"grant_type": "refresh_token", "refresh_token": "x"})[0] for _ in range(45)]; assert 429 in got, got
+        got = [web("/connect/register", "POST", {"redirect_uris": [CB]})[0] for _ in range(24)]; assert 429 in got, got
+        print("O ok: the connector sign-in validates redirects, needs PKCE and a person, keeps hashes only, rotates, and ends with Pause/Remove")
         # ================= H: folder homes and sync =================
         def raw(path, method="GET", body=None, headers=None):
             req = urllib.request.Request(BASE + "/api" + path, method=method, data=json.dumps(body).encode() if body is not None else None, headers={"Content-Type": "application/json", **(headers or {})})

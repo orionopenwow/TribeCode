@@ -1,6 +1,6 @@
-/* Invite your Claude (inviteclaude.js): the sheet, the status line, the access checkboxes. Flat matte, theme variables only. */
-.ic-card { max-width: 620px; }
-.ic-card .lead b { color: var(--text); }
+/* Invite your Claude (inviteclaude.js): the "Your Claude" pane of the one invite sheet, the status line, the access checkboxes. Flat matte, theme variables only. */
+.ic-pane .lead b { color: var(--text); }
+.ic-pane .lead { margin-top: 0; }
 .ic-status { display: flex; align-items: center; gap: 8px; margin: 4px 0 14px; padding: 10px 12px; border: 1px solid var(--edge); border-radius: var(--r-ctl, 8px); background: var(--surface-2); font-size: 13.5px; color: var(--muted); }
 .ic-status.on { color: var(--text); border-color: color-mix(in srgb, var(--live) 45%, var(--edge)); }
 .ic-status.paused { color: var(--muted); border-style: dashed; }
@@ -34,4 +34,17 @@
 @media (prefers-reduced-motion: reduce) { .ic-scope { transition: none; } }
 .ppl-ai.k-teal { color: var(--live); border-color: var(--live); }
 .empty-room .ic-empty { display: block; margin: 10px auto 0; }
-.ic-card { width: min(620px, calc(100vw - 32px)); max-height: calc(100vh - 32px); overflow: auto; }
+.ic-status.ic-idle { border-style: dashed; }
+.ic-merge { margin: 0 0 14px; padding: 10px 12px; border: 1px solid var(--edge); border-left: 3px solid var(--brand); border-radius: var(--r-ctl, 8px); background: var(--surface); font-size: 13px; line-height: 1.55; color: var(--text); max-width: 65ch; }
+.ic-who { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; font-size: 14px; }
+.ic-who .ppl-ai { margin-left: 0; }
+.ic-conns { margin: 4px 0 10px; }
+.ic-connlist { list-style: none; margin: 6px 0 0; padding: 0; display: grid; gap: 6px; }
+.ic-connlist li { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border: 1px solid var(--edge); border-radius: var(--r-ctl, 8px); background: var(--surface); font-size: 13px; }
+.ic-connlist li span { flex: 1; min-width: 0; display: grid; }
+.ic-connlist small { color: var(--muted); font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ic-approve { margin: 10px 0 0; padding: 12px; border: 1px solid var(--edge); border-radius: var(--r-ctl, 8px); background: var(--surface); }
+.ic-approve .ic-row { margin: 0; }
+.ic-codelab, .ic-askline { display: block; margin: 0 0 8px; font-size: 13px; line-height: 1.5; color: var(--text); max-width: 65ch; }
+.ic-code { width: 130px; font-family: var(--mono); letter-spacing: .12em; text-transform: uppercase; }
+.ic-other { margin: 14px 0 0; }

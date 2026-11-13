@@ -149,8 +149,8 @@ def main():
             pg.evaluate("TribeNew.open({ name: 'Cloud Crew' })"); opened(pg, "cloud"); pg.click("#tn-next")
             pg.click("#tn [data-tn-where='cloud']"); pg.click("#tn-go"); assert "invite link" in pg.inner_text("#tn-err")
             pg.fill("#tn-cloud", CLOUD + "/join/abc12"); pg.click("#tn-go")
-            pg.wait_for_function("document.querySelector('#tn-link') && document.querySelector('#tn-link').value.length > 0", timeout=10000)
-            assert pg.input_value("#tn-link") == CLOUD + "/join/cl0ud"
+            pg.wait_for_selector("#tn[data-step='3'] #tn-invite", timeout=10000)   # feat/invite-one: the invite step opens the one invite sheet
+            assert pg.locator("#tn-link").count() == 0, "no invite link of its own"
             assert ("POST", "/api/join") in seen and ("POST", "/api/import/solo") in seen, seen
             assert pg.evaluate("TribeStore.get().server.url") == CLOUD
             pg.click("#tn-x"); closed(pg, "cloud")
@@ -166,10 +166,12 @@ def main():
             assert "index.html" in pg.inner_text("#tn-folder .lr-chips") and pg.is_visible("#lr-git-l"), "what was found; git init offered"
             pg.mouse.move(5, 5); pg.evaluate("document.querySelector('#tn').scrollTop = 1e4"); pg.wait_for_timeout(250); pg.screenshot(path=str(SHOTS / "folder-home.png"))
             pg.click("#tn-go")
-            pg.wait_for_function("document.querySelector('#tn-link') && /\\/join\\//.test(document.querySelector('#tn-link').value)", timeout=20000)
-            assert "/join/" in pg.input_value("#tn-link"), "the network link (Share on this network)"
+            pg.wait_for_selector("#tn[data-step='3'] #tn-invite", timeout=20000)
             assert api("/health")["members"] >= 1
-            with pg.expect_navigation(timeout=20000): pg.click("#tn-done")   # a new host: the page reloads into it
+            with pg.expect_navigation(timeout=20000): pg.click("#tn-invite")   # a new host: the page reloads into it, then the one invite sheet opens there
+            pg.wait_for_selector("#invite-modal:not(.hidden) .modal-card.io #io-pane[data-who='friend'] #tl-link", timeout=30000)
+            pg.wait_for_function("/\\/t\\//.test(document.querySelector('#tl-link').textContent)", timeout=10000)   # the new tribe's link
+            pg.evaluate("TribeInvite.close()")
             pg.wait_for_selector("#home-pill:not(.hidden)", timeout=20000)
             pg.wait_for_function("document.querySelector('#home-pill').textContent.includes('~/Games/HomeCrew')", timeout=10000)
             pg.wait_for_function("window.TribeClient && TribeClient.connected() && !TribeOffline.solo()", timeout=20000)
@@ -179,7 +181,7 @@ def main():
             pg.click("#tn-first-later"); pg.wait_for_selector("#tn-first", state="detached")
             pg.click("#pj-plus"); opened(pg, "rail + on a server"); pg.fill("#tn-name", "Second Crew"); pg.click("#tn-next")
             assert pg.evaluate("TribeNew.homes()") == ["tribe", "folder", "github", "shared"]
-            pg.click("#tn-go"); pg.wait_for_function("document.querySelector('#tn-link') && document.querySelector('#tn-link').value", timeout=10000)
+            pg.click("#tn-go"); pg.wait_for_selector("#tn[data-step='3'] #tn-invite", timeout=10000)
             pg.click("#tn-done"); closed(pg, "server tribe")
             pg.wait_for_function(f"TribeProjects.list().length === {n0 + 1} && (TribeProjects.cur() || {{}}).name === 'Second Crew'", timeout=10000)
             pg.wait_for_selector("#tn-first", state="visible", timeout=8000)

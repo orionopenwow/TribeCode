@@ -83,6 +83,3 @@ button.ppl-where:hover { text-decoration: underline; }
 .ppl-add .ppl-ai, .ic-hubcard .ppl-ai { flex: none; width: 34px; height: 34px; border-radius: 10px; display: grid; place-items: center; font: 700 14px var(--mono); border: 1px solid var(--edge); background: var(--surface-2); }
 .ppl-add .ppl-ai.k-ember { color: var(--brand); border-color: var(--brand); }
 .ppl-add .ppl-ai.k-indigo { color: var(--peer); border-color: var(--peer); }
-.ppl-link { margin-top: 4px; padding: 12px; border: 1px solid var(--edge); border-radius: 12px; background: var(--surface-2); }
-.ppl-lrow { display: flex; gap: 8px; margin-top: 8px; }
-.ppl-lrow .input { flex: 1; min-width: 0; font: 12px var(--mono); }

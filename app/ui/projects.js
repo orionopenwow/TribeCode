@@ -123,12 +123,7 @@
     if (!m.project || m.project === cur()) return '';
     const p = projects.find(x => x.id === m.project); return p ? `${label(p)} · ` : '';
   }
-  function invitePicker() {
-    if (projects.length < 2 && !scopedMe()) return '';   // one project: a tribe invite, nothing to choose
-    return `<div class="opts pj-inv"><label for="inv-project" class="faint">Invite to</label><select id="inv-project" title="A project invite only shows that project; a tribe invite shows them everything">
-      ${projects.map(p => `<option value="${esc(p.id)}" ${p.id === cur() ? 'selected' : ''}>${label(p)} only</option>`).join('')}
-      ${scopedMe() ? '' : '<option value="tribe">Whole tribe (every project)</option>'}</select></div>`;
-  }
+
 
   // ---------- Overview (pulse) ----------
   let ot; const overviewSoon = () => { clearTimeout(ot); ot = setTimeout(overview, 400); };
@@ -300,7 +295,7 @@ ${canEdit && !started ? `      <section class="pj-context" id="pj-context"><div 
     const shb = $('#pj-share'); if (shb) shb.onclick = () => window.TribeShip && window.TribeShip.share();   // feat/ship-flow
     if (fold) fold.onclick = () => { if ($('#pj-check').classList.contains('hero')) { lss('ckCompact', '1'); lss('ckFold', '1'); lastOv = ''; overview(); return; } const f = $('#pj-check').classList.toggle('folded'); lss('ckFold', f ? '1' : null); fold.setAttribute('aria-expanded', String(!f)); };
     const ckx = $('#pj-check-x'); if (ckx) ckx.onclick = () => { lss('ckGone', '1'); $('#pj-check').remove(); };
-    const inv = $('#pj-invite'); if (inv) inv.onclick = () => App().openInvite();
+    const inv = $('#pj-invite'); if (inv) inv.onclick = () => App().openInvite({ who: 'friend', project: cur() || undefined });
     const more = $('#pj-more'); if (more) more.addEventListener('toggle', () => lss('more', more.open ? '1' : null));   // re-renders keep the current open state (moreOpen)
     $('#pj-face').onclick = () => (canName ? pickFace(p) : pickImage(p));   // feat/setup-flow: emoji grid + Upload a picture
     const nm = $('#pj-name'); if (nm) nm.onclick = () => editName(p);
@@ -954,7 +949,7 @@ ${canEdit && !started ? `      <section class="pj-context" id="pj-context"><div 
       ${projects.map(p => { const k = p.counts || {}, n = here(p.id).length; return `<button class="pj-sheet-row ${p.id === cur() ? 'on' : ''}" data-sheet="${esc(p.id)}">${face(p)}<span class="pj-name">${esc(p.name)}<span class="faint">${n ? `${n} here` : ''}${k.tasks ? `${n ? ' · ' : ''}${k.tasks} open tasks` : ''}</span></span>${k.requests ? `<span class="pj-n hot">${k.requests}</span>` : ''}${p.id === cur() ? ico('i-tick', 16) : ''}</button>`; }).join('')}
       <div class="pj-sheet-foot"><button class="btn" id="pj-sheet-invite">${ico('i-users', 15)}Invite</button>${scopedMe() ? '' : `<button class="btn" id="pj-sheet-new">+ New project</button>`}</div></div>`;
     s.querySelectorAll('[data-sheet]').forEach(b => b.onclick = () => { s.classList.add('hidden'); switchTo(b.dataset.sheet); });
-    $('#pj-sheet-invite').onclick = () => { s.classList.add('hidden'); App().openInvite(); };
+    $('#pj-sheet-invite').onclick = () => { s.classList.add('hidden'); App().openInvite({ who: 'friend', project: cur() || undefined }); };
     const nw = $('#pj-sheet-new'); if (nw) nw.onclick = () => { s.classList.add('hidden'); openNew(); };
     return s;
   }
@@ -973,5 +968,5 @@ ${canEdit && !started ? `      <section class="pj-context" id="pj-context"><div 
     const tryIt = () => { if (!C.connected() || !me().id) return false; try { history.replaceState(null, '', location.pathname + location.hash); } catch {} if (isHost()) remix(r); else toastMsg('That starter needs the host to start it. Share the link with them: github.com/' + r); return true; };
     if (!tryIt()) C.on('hello', function once() { if (r && tryIt()) r = ''; });
   })();
-  window.TribeProjects = { gallery, createFromIdea, nameFromIdea, openStarters, remix, step, refresh, list: () => projects, current: cur, cur: curP, face, label, here, pulses: () => pulses, sheet, pickImage, workspacePanel, switchTo, onShow, whereLabel, invitePicker, openNew, startFromFiles, analyze, fromPath, fromFolder, overview, requests };
+  window.TribeProjects = { gallery, createFromIdea, nameFromIdea, openStarters, remix, step, refresh, list: () => projects, current: cur, cur: curP, face, label, here, pulses: () => pulses, sheet, pickImage, workspacePanel, switchTo, onShow, whereLabel, openNew, startFromFiles, analyze, fromPath, fromFolder, overview, requests };
 })();
