@@ -142,7 +142,7 @@ code { font: 0.9em/1 var(--mono); color: var(--text); background: var(--surface-
 .mk-logo { width: 44px; height: 44px; border-radius: 12px; background: var(--surface); border: 1px solid var(--edge); display: grid; place-items: center; overflow: hidden; }
 .mk-logo img { width: 42px; height: 42px; image-rendering: pixelated; }
 .mk-sep { width: 24px; height: 1px; background: var(--edge); margin: 2px 0; }
-.mk-circle { position: relative; width: 38px; height: 38px; border-radius: 50%; display: grid; place-items: center; background: var(--surface-2); border: 1px solid var(--edge); font-size: 17px; line-height: 1; }
+.mk-circle { position: relative; width: 38px; height: 38px; border-radius: 12px; display: grid; place-items: center; background: var(--surface-2); border: 1px solid var(--edge); font-size: 17px; line-height: 1; }
 .mk-circle.is-on { border-radius: 12px; background: var(--surface-3); }
 .mk-circle.is-on::before { content: ""; position: absolute; left: -12px; top: 9px; width: 4px; height: 20px; border-radius: 0 3px 3px 0; background: var(--ember); }
 .mk-circle--add { color: var(--live); background: transparent; border-style: dashed; font-size: 18px; font-weight: 400; }
@@ -179,8 +179,13 @@ code { font: 0.9em/1 var(--mono); color: var(--text); background: var(--surface-
 .mk-ic--chat { border-radius: 50% 50% 50% 2px; }
 .mk-ic--file { border-radius: 2px 5px 2px 2px; width: 12px; }
 .mk-ic--bot { border-radius: 4px; height: 11px; }
-.mk-side__foot { margin-top: auto; display: grid; gap: 10px; }
-.mk-invite { display: grid; place-items: center; height: 34px; border-radius: 9px; border: 1px solid var(--edge); color: var(--text); font-weight: 600; font-size: 12.5px; }
+.mk-side__foot { margin-top: auto; display: grid; gap: 2px; padding-top: 8px; border-top: 1px solid var(--stroke); }
+.mk-invite { display: flex; align-items: center; gap: 9px; height: 30px; padding: 0 8px; border-radius: 8px; color: var(--muted); font-weight: 500; font-size: 12.5px; }
+.mk-faces { display: inline-flex; padding-right: 6px; }
+.mk-faces i { flex: none; width: 13px; height: 13px; margin-right: -6px; border-radius: 50%; background: var(--c); border: 1px solid var(--surface); color: #12151A; font: 700 7px/11px var(--font); font-style: normal; text-align: center; }
+.mk-me__acts { margin-left: auto; display: inline-flex; gap: 10px; color: var(--faint); }
+.mk-people { color: var(--muted); }
+.mk-circle--tool { color: var(--muted); background: transparent; }
 .mk-me { display: flex; align-items: center; gap: 8px; padding: 8px 4px 0; border-top: 1px solid var(--stroke); }
 .mk-me div { display: grid; line-height: 1.25; }
 .mk-me b { color: var(--text); font-size: 12.5px; }
@@ -194,8 +199,8 @@ code { font: 0.9em/1 var(--mono); color: var(--text); background: var(--surface-
 .mk-head b { color: var(--text); font-size: 14.5px; }
 .mk-head span { font-size: 11px; color: var(--faint); }
 .mk-head__acts { margin-left: auto; display: inline-flex; gap: 12px; }
-.mk-head__acts i { width: 14px; height: 14px; border: 1.5px solid var(--muted); border-radius: 4px; }
-.mk-head__acts i:last-child { border-radius: 50%; }
+.mk-head__acts { color: var(--muted); }
+.mk-head__acts .mk-ic--ember { color: var(--ember); }
 .mk-convo { padding: 10px 14px; display: flex; flex-direction: column; justify-content: flex-end; gap: 12px; overflow: hidden; min-height: 0; }
 .mk-msg { display: grid; grid-template-columns: 30px 1fr; gap: 10px; align-items: start; animation: rise .35s var(--ease) both; flex: none; }
 .mk-msg > div { min-width: 0; display: grid; gap: 4px; }
@@ -733,7 +738,7 @@ button.mk-send { border: 0; padding: 0; cursor: pointer; }
 .mv-task.is-done em { color: var(--live); }
 /* v0.28 Task Board: counters + one row per task with one next-step button */
 .mk-ic--grid { border-radius: 2px; border-style: dashed; }
-.mk-invite--pv { color: var(--text); background: var(--surface-2); }
+.mk-invite--pv { color: var(--muted); }
 .mv-tiles { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; margin-bottom: 10px; }
 .mv-tile { display: grid; gap: 2px; padding: 7px 9px; border: 1px solid var(--edge); border-radius: 9px; background: var(--surface); color: var(--muted); font-size: 10.5px; }
 .mv-tile b { color: var(--text); font-size: 16px; font-weight: 600; }

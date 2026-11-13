@@ -13,7 +13,7 @@
   const PACE = 1.6;   // every story plays at this multiple of its scripted timings (calmer to read)
 
   /* ---------------- the app's views (Kombucha Empire) ---------------- */
-  const ROWS = [['dashboard', 'Dashboard', 'home'], ['messages', 'Messages', 'chat'], ['files', 'Files', 'file'], ['design', 'Design', 'board'], ['tasks', 'Task Board', 'check'], ['whiteboard', 'Whiteboard', 'board'], ['preview', 'Preview', 'play']];
+  const ROWS = [['dashboard', 'Dashboard', 'home'], ['messages', 'Messages', 'chat'], ['files', 'Files', 'file'], ['design', 'Design', 'grid'], ['tasks', 'Task Board', 'check'], ['whiteboard', 'Whiteboard', 'board'], ['preview', 'Preview', 'play']];
   const ROW_OF = { dashboard: 'dashboard', brief: 'dashboard', invite: 'dashboard', messages: 'messages', approval: 'messages', files: 'files', doc: 'files', design: 'design', tasks: 'tasks', whiteboard: 'whiteboard', preview: 'preview' };
   const NAME = { dashboard: 'Dashboard', messages: 'Messages', files: 'Files', tasks: 'Task Board', whiteboard: 'Whiteboard', preview: 'Preview' };
   const CMD = { dashboard: 'go home', messages: 'open messages', files: 'open files', tasks: 'open the task board', whiteboard: 'open the whiteboard', preview: 'open the preview' };
