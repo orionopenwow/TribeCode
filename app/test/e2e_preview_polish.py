@@ -237,7 +237,7 @@ console.log(JSON.stringify(t.map(x=>{const p=c.parse(x);return p&&p.ops[0]})))""
             host.click("#pvw .pvw-back"); host.wait_for_timeout(300)
             host.evaluate("location.hash = '#/docs/website'")
             host.wait_for_selector("#wb-versions .ssh-card", timeout=10000)
-            assert "Website versions" in host.inner_text("#wb-versions-sec") and "Before the launch" in host.inner_text("#wb-versions")
+            assert "Saved designs" in host.inner_text("#wb-versions-sec") and "Before the launch" in host.inner_text("#wb-versions")
 
             # the App side keeps working: back to the app, its own page
             host.evaluate("TribePreview.open()"); host.wait_for_selector("#pvw #pvw-iframe", timeout=8000)

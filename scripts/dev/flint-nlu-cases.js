@@ -77,6 +77,7 @@ const BASE = [
   C('switch the language to spanish', 'lang.set', { lang: 'es' }), C('speak french', 'lang.set', { lang: 'fr' }), C('german please', 'lang.set', { lang: 'de' }), C('change language to japanese', 'lang.set', { lang: 'ja' }), C('use korean', 'lang.set', { lang: 'ko' }),
   C('change my avatar', 'personalize.open'), C('personalize the app', 'personalize.open'), C('change my profile picture', 'personalize.open'),
   // ----- navigation -----
+  C('open versions', 'nav.versions'), C('show me the project history', 'nav.versions'), C('open saved designs', 'nav.designs'), C('where are the website designs', 'nav.designs'), C('show me earlier shots', 'nav.visuals'),
   C('open calendar', 'nav.calendar'), C('go to the task board', 'nav.tasks'), C('show me the files', 'nav.files'), C('take me to settings', 'nav.settings'), C('open the marketplace', 'nav.market'), C('where is the whiteboard', 'nav.whiteboard'), C('open design', 'nav.design'),
   C('open the canvas', 'nav.design'), C('go to chat', 'nav.chat'), C('open my inbox', 'nav.inbox'), C('show notifications', 'nav.inbox'), C('open studios', 'nav.studios'), C('go to the company page', 'nav.company'), C('open the asset library', 'nav.assets'), C('open the academy', 'nav.academy'),
   C('show me the agents hub', 'nav.agents'), C('open the repo', 'nav.repo'), C('open the guide', 'nav.guide'), C('open the website builder', 'nav.website'), C('show the preview', 'nav.preview'), C('open the secretary', 'nav.secretary'), C('go home', 'nav.home'), C('dashboard', 'nav.home'),

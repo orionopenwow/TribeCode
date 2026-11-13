@@ -90,7 +90,7 @@
     if (how === 'theirs') { st.hist.push(JSON.stringify(st.cfg)); st.cfg = S().normalize(d.config || st.cfg); st.rev = d.rev || st.rev; st.dirty = false; st.savedAt = Date.now(); writeDraft(); fixPage(); paint(); status(); return say('Using their version. Undo brings yours back.'); }
     if (how === 'both') { try { await C.api(`/projects/${encodeURIComponent(st.pid)}/website/versions`, { method: 'POST', body: { note: `Their version · ${d.by || 'someone'}` } }); } catch {} }
     st.dirty = true; await push({ force: true });
-    say(how === 'both' ? 'Kept both: their version is on the Saved shelf, yours is the design now.' : 'Kept yours.');
+    say(how === 'both' ? 'Kept both: their design is in Saved designs, yours is the design now.' : 'Kept yours.');
   }
 
   // ---------- open / close ----------
@@ -197,7 +197,7 @@
         <button type="button" class="btn ghost sm wdz-ic" data-wdz="keys" title="Keyboard shortcuts (?)" aria-label="Keyboard shortcuts">?</button>
         <button type="button" class="btn sm" data-wdz="templates">Templates</button>
         <button type="button" class="btn sm" data-wdz="freeai" id="wdz-freeai" title="Copy the design for ChatGPT, Gemini or another free AI, then paste its answer back">Ask a free AI</button>
-        <button type="button" class="btn sm" data-wdz="save">Save version</button>
+        <button type="button" class="btn sm" data-wdz="save" title="Keep this design in Saved designs (the project’s history is in Versions)">Save design</button>
         <span class="wdz-dl"><button type="button" class="btn sm primary" data-wdz="dl-html" id="wdz-dl">Download HTML</button><button type="button" class="btn sm primary wdz-dl-more" data-wdz="dlmenu" aria-label="More download options" aria-expanded="false">▾</button>
           <span class="wdz-menu" id="wdz-dlmenu" hidden role="menu"><button type="button" role="menuitem" data-wdz="dl-html"><b>index.html</b><small>One standalone file: every page, pictures inside, no scripts</small></button><button type="button" role="menuitem" data-wdz="dl-zip"><b>.zip with pages and assets</b><small>A file per page, assets/, fonts/ and site.json</small></button><button type="button" role="menuitem" data-wdz="publish"><b>Publish to the project</b><small>Writes it to the project's site/ folder</small></button></span></span>
       </header>
@@ -657,9 +657,9 @@
     await flush(); try { const r = await C.api(`/projects/${encodeURIComponent(st.pid)}/site-config/publish`, { method: 'POST', body: {} }); say(`Published ${r.files.filter(f => /\.html$/.test(f)).length} pages to ${r.dir}.`); } catch (e) { say(e.message); }
   }
   async function saveVersion() {
-    if (!st.pid || !connected()) { try { localStorage.setItem(LOCAL + '.v', JSON.stringify(st.cfg)); } catch {} return say('Saved a version on this device.'); }
+    if (!st.pid || !connected()) { try { localStorage.setItem(LOCAL + '.v', JSON.stringify(st.cfg)); } catch {} return say('Saved this design on this device.'); }
     st.dirty = true; if (!(await push())) return say('Not saved: sort out the newer version first.');
-    try { const r = await C.api(`/projects/${encodeURIComponent(st.pid)}/website/versions`, { method: 'POST', body: { note: `Designer · ${new Date().toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}` } }); say(r && r.device ? (r.saved ? 'Saved as a version on this device. Find it, compare it and bring it back in Versions.' : 'Nothing changed since the last version.') : 'Saved to the Saved shelf. Restore it any time from Preview › Saved or Files › Website.'); return r; } catch (e) { say(e.message); }
+    try { const r = await C.api(`/projects/${encodeURIComponent(st.pid)}/website/versions`, { method: 'POST', body: { note: `Designer · ${new Date().toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}` } }); say(r && r.device ? (r.saved ? 'Saved as a version on this device. Find it, compare it and bring it back in Versions.' : 'Nothing changed since the last version.') : 'Saved to Saved designs. Restore it any time from Preview › Saved or Files › Website.'); return r; } catch (e) { say(e.message); }
   }
 
   // ---------- the start screen: 16 templates or blank ----------

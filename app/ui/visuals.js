@@ -1,4 +1,4 @@
-// Visuals: screenshots tracked over time, grouped by screen. Pick two versions to compare them side by side,
+// Visuals: screenshots tracked over time, grouped by screen ("Earlier shots"; the project's history is Versions). Pick two to compare them side by side,
 // with a swipe slider, or as a pixel diff (changed pixels in Ember Orange, with a % changed readout).
 // Server: server/visuals.js (visuals/<screen>/<timestamp>.png + .json). Agents post with the add_visual MCP tool.
 (function () {
@@ -38,19 +38,19 @@
   function render() {
     const v = ensureView(); if (!v) return;
     const cur = st.screens.find(s => s.slug === st.screen);
-    v.innerHTML = `<div class="view-head"><h1>Visuals</h1><span class="faint">${st.screens.length ? `${st.screens.length} screen${st.screens.length === 1 ? '' : 's'} · drop images to add a version` : 'screenshots over time'}</span>
+    v.innerHTML = `<div class="view-head"><h1>Visuals</h1><span class="faint">${st.screens.length ? `${st.screens.length} screen${st.screens.length === 1 ? '' : 's'} · drop images to add a shot` : 'screenshots over time'}</span>
         <button class="btn primary" id="vis-up" style="margin-left:auto"><svg class="i" style="width:15px;height:15px"><use href="#i-upload"/></svg>Add screenshot</button>
         <input type="file" id="vis-file" accept="image/*" multiple hidden></div>
       <div class="vis-grid">
         <aside class="vis-side" id="vis-side">${st.screens.map(s => `<button class="vis-screen ${s.slug === st.screen ? 'on' : ''}" data-screen="${esc(s.slug)}">
-            <img alt="" loading="lazy" src="${esc(imgUrl(s.latest))}"><span><b>${esc(s.name)}</b><small>${s.count} version${s.count === 1 ? '' : 's'} · ${esc(ago(s.latest.at))}</small></span></button>`).join('')}
+            <img alt="" loading="lazy" src="${esc(imgUrl(s.latest))}"><span><b>${esc(s.name)}</b><small>${s.count} shot${s.count === 1 ? '' : 's'} · ${esc(ago(s.latest.at))}</small></span></button>`).join('')}
           <div class="vis-drop" id="vis-drop"><svg class="i"><use href="#i-image"/></svg><span>Drop screenshots here</span><small>or let your AI post them with <code>add_visual</code></small></div></aside>
         <div class="vis-main" id="vis-main">${cur ? mainHtml(cur) : emptyHtml()}</div></div>`;
     bind(v);
     if (cur && st.versions.length) drawStage();
   }
   const emptyHtml = () => `<div class="doc-empty vis-empty"><svg class="i"><use href="#i-image"/></svg><h2>Track how your screens change</h2>
-    <p>Drop screenshots here, grouped by screen name. Pick two versions to compare them side by side, with a swipe slider or a pixel diff.</p><button class="btn" id="vis-first">Add a screenshot</button></div>`;
+    <p>Drop screenshots here, grouped by screen name. Pick two shots to compare them side by side, with a swipe slider or a pixel diff.</p><button class="btn" id="vis-first">Add a screenshot</button></div>`;
   function verLabel(ts) { const i = st.versions.findIndex(v => v.ts === ts); const v = st.versions[i]; return v ? `v${i + 1} · ${when(v.at)}` : ''; }
   function mainHtml(cur) {
     const opts = sel => st.versions.map((v, i) => `<option value="${v.ts}" ${v.ts === sel ? 'selected' : ''}>v${i + 1} · ${esc(when(v.at))} · ${esc(nameOf(v.by))}</option>`).join('');
@@ -58,13 +58,15 @@
         <div class="vis-pick"><label>Before<select id="vis-a">${opts(st.a)}</select></label><svg class="i"><use href="#i-diff"/></svg><label>After<select id="vis-b">${opts(st.b)}</select></label></div>
         <div class="tabs" id="vis-mode">${[['side', 'Side by side'], ['swipe', 'Swipe'], ['diff', 'Diff']].map(([k, l]) => `<button data-vm="${k}" class="${st.mode === k ? 'on' : ''}">${l}</button>`).join('')}</div>
         <span class="vis-pct" id="vis-pct" title="Share of pixels that changed">…</span></div>
-      <div class="vis-strip" id="vis-strip">${st.versions.map((v, i) => `<button class="vis-thumb ${v.ts === st.a ? 'a' : ''} ${v.ts === st.b ? 'b' : ''}" data-ts="${v.ts}" title="v${i + 1} · ${esc(when(v.at))} · ${esc(nameOf(v.by))}${v.diffPrev !== null && v.diffPrev !== undefined ? ` · ${v.diffPrev}% vs previous` : ''}">
+      <div class="vis-strip-h"><span class="eyebrow" id="vis-strip-l">Earlier shots</span>${window.TribeVersions ? '<button type="button" class="linkish" id="vis-versions" title="The project’s whole history: Versions">All versions</button>' : ''}</div>
+      <div class="vis-strip" id="vis-strip" role="group" aria-labelledby="vis-strip-l">${st.versions.map((v, i) => `<button class="vis-thumb ${v.ts === st.a ? 'a' : ''} ${v.ts === st.b ? 'b' : ''}" data-ts="${v.ts}" title="v${i + 1} · ${esc(when(v.at))} · ${esc(nameOf(v.by))}${v.diffPrev !== null && v.diffPrev !== undefined ? ` · ${v.diffPrev}% vs previous` : ''}">
           <img alt="" loading="lazy" src="${esc(imgUrl(v))}"><span>v${i + 1}${v.ts === st.a ? ' <i>A</i>' : ''}${v.ts === st.b ? ' <i class="b">B</i>' : ''}</span></button>`).join('')}</div>
       <div class="vis-stage" id="vis-stage"></div>`;
   }
 
   function bind(v) {
     v.querySelector('#vis-up').onclick = () => pickFiles();
+    const allV = v.querySelector('#vis-versions'); if (allV) allV.onclick = () => window.TribeVersions.open();
     const first = v.querySelector('#vis-first'); if (first) first.onclick = () => pickFiles();
     v.querySelector('#vis-file').onchange = e => { const files = [...e.target.files]; e.target.value = ''; if (files.length) askScreen(files); };
     v.querySelectorAll('[data-screen]').forEach(b => {
@@ -81,7 +83,7 @@
     if (b) b.onchange = () => { st.b = b.value; render(); };
     v.querySelectorAll('[data-vm]').forEach(x => x.onclick = () => { st.mode = x.dataset.vm; localStorage.setItem('tribecode.visMode', st.mode); render(); });
     v.querySelectorAll('[data-ts]').forEach(x => x.onclick = e => {
-      // Click: compare this version (B) with the one before it. Alt/Shift-click: set the "before" (A) side.
+      // Click: compare this shot (B) with the one before it. Alt/Shift-click: set the "before" (A) side.
       const ts = x.dataset.ts, i = st.versions.findIndex(q => q.ts === ts);
       if (e.altKey || e.shiftKey) st.a = ts; else { st.b = ts; st.a = st.versions[Math.max(0, i - 1)].ts; }
       render();
@@ -153,7 +155,7 @@
     let ia, ib; try { [ia, ib] = await Promise.all([loadImg(va), loadImg(vb)]); } catch (e) { stage.textContent = e.message; return; }
     if (my !== drawSeq) return;
     const d = diff(ia, ib); st.pct = d.pct;
-    const pct = $('#vis-pct'); if (pct) { pct.textContent = va.ts === vb.ts ? 'same version' : `${d.pct}% changed`; pct.classList.toggle('hot', d.pct > 5); }
+    const pct = $('#vis-pct'); if (pct) { pct.textContent = va.ts === vb.ts ? 'same shot' : `${d.pct}% changed`; pct.classList.toggle('hot', d.pct > 5); }
     const lab = (t, v) => `<span class="vis-tag">${t} · ${esc(verLabel(v.ts))}</span>`;
     if (st.mode === 'side') {
       stage.innerHTML = `<div class="vis-side-by"><figure>${lab('A', va)}<img alt="Before" src="${esc(ia.src)}"></figure><figure>${lab('B', vb)}<img alt="After" src="${esc(ib.src)}"></figure></div>`;
@@ -161,7 +163,7 @@
       stage.innerHTML = `<div class="vis-swipe" id="vis-swipe" style="--pos:${st.swipe}%;aspect-ratio:${d.canvas.width}/${d.canvas.height}">
           <img class="vis-b" alt="After" src="${esc(ib.src)}"><img class="vis-a" alt="Before" src="${esc(ia.src)}">
           <div class="vis-handle"><span></span></div>${lab('A', va).replace('vis-tag', 'vis-tag l')}${lab('B', vb).replace('vis-tag', 'vis-tag r')}
-          <input type="range" min="0" max="100" step="0.5" value="${st.swipe}" aria-label="Swipe between versions" id="vis-range"></div>`;
+          <input type="range" min="0" max="100" step="0.5" value="${st.swipe}" aria-label="Swipe between shots" id="vis-range"></div>`;
       const box = $('#vis-swipe'), range = $('#vis-range');
       range.oninput = () => { st.swipe = +range.value; box.style.setProperty('--pos', st.swipe + '%'); };
     } else {

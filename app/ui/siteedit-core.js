@@ -69,8 +69,8 @@
     const one = (op, say) => ({ ops: [op], say });
 
     if (/^(undo|undo (that|it|this|the last (change|edit))|go back|revert( that)?)\.?$/.test(t)) return one({ op: 'undo' }, 'Undid the last change.');
-    let m = /^(?:save|keep|snapshot|bookmark)\b(?: (?:this|it|the site|a))?(?: version| snapshot| one)?(?: (?:as|called|named|:)\s*(.+))?$/i.exec(raw);
-    if (m && /^(save|keep|snapshot|bookmark)/i.test(raw) && !/\b(section|color|accent)\b/.test(t)) return one({ op: 'save', note: unq(m[1] || '') }, 'Saved this version to the shelf.');
+    let m = /^(?:save|keep|snapshot|bookmark)\b(?: (?:this|it|the site|a))?(?: version| design| snapshot| one)?(?: (?:as|called|named|:)\s*(.+))?$/i.exec(raw);
+    if (m && /^(save|keep|snapshot|bookmark)/i.test(raw) && !/\b(section|color|accent)\b/.test(t)) return one({ op: 'save', note: unq(m[1] || '') }, 'Saved this design.');
 
     // the logo
     if (/\b(add|use|upload|put|set|change|swap|replace)\b.*\b(my |our |a |the |new )?logo\b/.test(t)) return one({ op: 'logo' }, 'Pick your logo file (PNG, JPG or SVG, under 200 KB).');

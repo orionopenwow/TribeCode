@@ -87,6 +87,9 @@
     },
     async 'market.add'(s) { const M = window.TribeMarket; if (!M) return { text: 'The Marketplace isn’t available here.' }; M.open({ q: s.slots.name }); return { text: `Opened the Marketplace searching for “${s.slots.name}”. Press Add on the one you want; Remove takes it back.` }; },
     async 'inspo.search'(s) { const B = window.TribeInspoBoard; if (!B) return { text: 'The inspiration board isn’t available here.' }; B.open({ q: s.slots.q }); return { text: `Searching openly licensed pictures for “${s.slots.q}” on your inspiration board. Tap the ones you like to pin them.` }; },
+    // feat/calm-parity: one meaning for "Versions" (the project's history); the designer's list is Saved designs
+    async 'nav.versions'() { const V = window.TribeVersions; if (!V || !H.connected()) return { text: 'Versions belong to a project. Start or open one first.' }; V.open(); return { text: 'Here are this project’s versions. Saved designs (the website) and Earlier shots (Visuals) are linked at the top.' }; },
+    async 'nav.designs'() { const D = window.TribeSiteDesigner; if (!D) return { text: 'The website designer isn’t available here.' }; D.open({}); return { text: 'Opened the website designer. Its Saved designs are under Save design; the project’s whole history is in Versions.' }; },
     async 'nav.people'() { const P = window.TribePeoplePanel; if (!P) return { text: 'People live in a tribe. Host or join one first.' }; P.open({}); return { text: 'Here’s everyone and where they are.' }; },
     async 'nav.work'() { const W = window.TribeTalent; if (!W) return { text: 'Work isn’t available here.' }; W.open(); return { text: 'Opened Work: gigs, who’s free, and the time bank.' }; },
     async 'preview.open'() { const P = window.TribePreview; if (!P || !P.open) return { text: 'The preview needs a project. Start one first.' }; P.open(); return { text: 'Opened the preview, right next to the work.' }; },

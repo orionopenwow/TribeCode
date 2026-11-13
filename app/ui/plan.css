@@ -326,6 +326,8 @@ mark.cm-hl.resolved { background: none; border-bottom: 1px dashed var(--faint); 
 .vis-pick select { height: 28px; max-width: 210px; border-radius: var(--r-sm); border: 1px solid var(--edge); background: var(--surface-2); padding: 0 6px; font-family: var(--font); font-size: 12px; text-transform: none; letter-spacing: 0; color: var(--text); }
 .vis-pct { margin-left: auto; font-family: var(--mono); font-size: 12px; padding: 3px 9px; border-radius: 6px; background: var(--surface-2); color: var(--muted); border: 1px solid var(--edge); }
 .vis-pct.hot { background: var(--chip); color: var(--accent-ink); border-color: transparent; }
+.vis-strip-h { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin: 0 2px 4px; }
+.vis-strip-h .linkish { min-height: 32px; font-size: 12.5px; }
 .vis-strip { display: flex; gap: 6px; overflow-x: auto; padding: 2px 2px 10px; margin-bottom: 8px; border-bottom: 1px solid var(--edge); }
 .vis-thumb { flex: none; display: flex; flex-direction: column; gap: 3px; padding: 3px; border-radius: 7px; border: 1px solid transparent; }
 .vis-thumb:hover { background: var(--surface-2); }

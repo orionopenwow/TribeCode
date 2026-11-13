@@ -224,7 +224,7 @@
     picked = null; paintPick(); paintChips(); paintTier();
     if (s === 'site' && items.length === 1 && /^I’m watching/.test(items[0].text || '')) items = [];
     if (s === 'site' && !items.some(x => x.key === 'site-hello')) feed({ k: 'flint', key: 'site-hello', text: 'This is your website. Click anything on it, then say what to change, or tap one of these. Every change can be undone, and it all works without an AI.' });
-    const h = el.querySelector('[data-pvf="history"]'); if (h) h.textContent = s === 'site' ? 'Saved versions' : 'History';
+    const h = el.querySelector('[data-pvf="history"]'); if (h) h.textContent = s === 'site' ? 'Saved designs' : 'History';
   }
   async function freeBuild(text) {
     const pid = project(), FF = window.TribeFlintFly, tgt = document.querySelector('#pvw-frame') || document.querySelector('#pvw');

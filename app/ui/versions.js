@@ -32,14 +32,23 @@
     el.innerHTML = `<header class="ph-h vr-head"><div><span class="eyebrow">Versions</span><h3 id="vr-h">${esc(name)}’s history</h3></div>
         <span class="vr-sp"></span><button type="button" class="btn sm" id="vr-save">Save a version now</button><button type="button" class="su-x lr-x" id="vr-x" aria-label="Close">${ic('x')}</button></header>
       <p class="vr-sub ph-note" id="vr-sub">Loading…</p>
+      <nav class="vr-also" id="vr-also" aria-label="Kept elsewhere"><span class="faint">Kept separately:</span><button type="button" class="linkish" id="vr-designs" title="Designs of the website saved in the website designer">Saved designs</button><span class="faint" aria-hidden="true">·</span><button type="button" class="linkish" id="vr-shots" title="Earlier screenshots of each screen, in Visuals">Earlier shots</button></nav>
       <div class="vr-body"><ol class="vr-list" id="vr-list" aria-label="Versions"></ol><section class="vr-detail" id="vr-detail" aria-live="polite"><p class="faint">Pick a version to see what changed.</p></section></div>`;
     document.body.append(scrim, el);
     el.addEventListener('keydown', e => { if (e.key === 'Escape') { e.stopPropagation(); close(); } });
     $('#vr-x', el).onclick = () => close();
     st = { pid, cmp: [], data: null, site: [] };
+    $('#vr-designs', el).onclick = () => { close(); savedDesigns(pid); };
+    $('#vr-shots', el).onclick = () => { close(); A().show('visuals'); };
     $('#vr-save', el).onclick = async () => { try { const r = await api(`/projects/${encodeURIComponent(pid)}/versions`, { method: 'POST', body: {} }); toast(r.version ? 'Saved a version.' : r.note); load(); } catch (e) { toast(e.message); } };
     await load();
     return el;
+  }
+  // Saved designs live with the website: the preview's Saved panel on a host, the designer on this device
+  async function savedDesigns(pid) {
+    const P = window.TribePreview, dev = window.TribeDevice && window.TribeDevice.on();
+    if (dev || !P || !P.open) return window.TribeSiteDesigner ? window.TribeSiteDesigner.open({ pid }) : A().show('website');
+    try { await P.open(); if (P.setSource) P.setSource('site', true); setTimeout(() => { const b = document.querySelector('.pvw [data-act="shelf"]'); if (b && b.getAttribute('aria-pressed') !== 'true') b.click(); }, 350); } catch { A().show('website'); }
   }
   async function load(keep) {
     if (!el) return; const pid = st.pid;
@@ -49,14 +58,14 @@
     st.data = d; st.site = site;
     $('#vr-sub', el).textContent = d.kind === 'device' ? `Kept on this device: the vision, docs and website, saved a few seconds after you stop editing. The newest ${d.cap || 40} are kept.${d.dirty ? ` ${plural(d.dirty, 'file')} changed since the last version.` : ''} Pick two with Compare to see what changed between them.` : !d.kind ? 'No folder or code repository yet: choose where it lives and its history starts.' : `${d.kind === 'history' ? 'A plain folder: TribeCode keeps its history in .tribe/history, your folder isn’t touched.' : 'From the project’s git history.'}${d.dirty ? ` ${plural(d.dirty, 'file')} changed since the last version.` : ''} Pick two with Compare to see what changed between them.`;
     $('#vr-save', el).hidden = !d.kind;
-    const items = [...d.list.map(v => ({ ...v, k: 'code' })), ...site.map(v => ({ k: 'site', id: v.id, at: v.at || v.created, message: v.note || 'Website version', author: v.byName || v.by || '' }))].sort((a, b) => String(b.at).localeCompare(String(a.at)));
-    $('#vr-list', el).innerHTML = items.length ? items.map(v => v.k === 'site' ? `<li class="vr-item vr-site"><button type="button" class="vr-row" data-site="${esc(v.id)}"><span class="vr-dot" aria-hidden="true"></span><span class="vr-t"><b>${esc(v.message)}</b><small>Website · ${esc(v.author)} · ${when(v.at)}</small></span></button></li>`
+    const items = [...d.list.map(v => ({ ...v, k: 'code' })), ...site.map(v => ({ k: 'site', id: v.id, at: v.at || v.created, message: v.note || 'Saved design', author: v.byName || v.by || '' }))].sort((a, b) => String(b.at).localeCompare(String(a.at)));
+    $('#vr-list', el).innerHTML = items.length ? items.map(v => v.k === 'site' ? `<li class="vr-item vr-site"><button type="button" class="vr-row" data-site="${esc(v.id)}"><span class="vr-dot" aria-hidden="true"></span><span class="vr-t"><b>${esc(v.message)}</b><small>Saved design · ${esc(v.author)} · ${when(v.at)}</small></span></button></li>`
       : `<li class="vr-item${st.cmp.includes(v.sha) ? ' cmp' : ''}"><button type="button" class="vr-row" data-sha="${esc(v.sha)}"><span class="vr-dot${v.shipped ? ' shipped' : ''}" aria-hidden="true"></span>
         <span class="vr-t"><b>${esc(v.message)}</b><small>${esc(v.author)} · ${when(v.at)} · ${plural(v.files, 'file')}</small>
         <span class="vr-badges">${v.tags.map(t => `<em class="vr-tag">${esc(t)}</em>`).join('')}${v.shipped ? `<em class="vr-ship">${v.shipped.pr ? 'pull request' : 'shipped'}</em>` : ''}</span></span></button>
         <label class="vr-cmp" title="Compare"><input type="checkbox" data-cmp="${esc(v.sha)}" ${st.cmp.includes(v.sha) ? 'checked' : ''}> Compare</label></li>`).join('') : '<li class="faint vr-none">No versions yet.</li>';
     el.querySelectorAll('[data-sha]').forEach(b => b.onclick = () => show(b.dataset.sha));
-    el.querySelectorAll('[data-site]').forEach(b => b.onclick = () => { close(); if (window.TribeSiteShelf && window.TribeSiteShelf.open) window.TribeSiteShelf.open(); else A().show('website'); });
+    el.querySelectorAll('[data-site]').forEach(b => b.onclick = () => { close(); savedDesigns(st.pid); });
     el.querySelectorAll('[data-cmp]').forEach(x => x.onchange = () => {
       const s = x.dataset.cmp; st.cmp = x.checked ? [...st.cmp.filter(y => y !== s), s].slice(-2) : st.cmp.filter(y => y !== s);
       el.querySelectorAll('[data-cmp]').forEach(y => { y.checked = st.cmp.includes(y.dataset.cmp); y.closest('.vr-item').classList.toggle('cmp', y.checked); });
