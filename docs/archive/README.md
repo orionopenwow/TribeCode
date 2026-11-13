@@ -4,7 +4,7 @@ Plans, specs and assessments that have been built or replaced. They are kept for
 of them describes how TribeCode works today. Current docs are one folder up; start with `HANDOFF.md` and
 `docs/CONTEXT.md`.
 
-| File | What it was | Replaced by |
+| File | What it was | Where to look now |
 |---|---|---|
 | `FEATURE_SPEC.md` | The v0.0.1 feature spec (2026-11-06) | `docs/VISION.md`, `docs/CONTEXT.md` |
 | `NEXT-PHASE.md` | The plan written after v0.25 (2026-11-09) | `docs/LAUNCH.md`, `docs/CONTEXT.md` |

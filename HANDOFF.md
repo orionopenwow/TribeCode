@@ -20,7 +20,7 @@ node scripts/start-test-project.js   # Pixel Quest test project + project invite
 npm test                       # 15 suites (Python Playwright with /usr/bin/google-chrome, --no-proxy-server)
 npm run explore                # click-around smoke + intuitive + core-intent journeys → docs/EXPLORE-REPORT.md (--quick is in npm test)
 npm run milestone-report       # previous release vs this checkout → docs/milestones/<version>.md
-npm run readme-shots           # docs/screenshots/readme-*.png + site/assets/shots/*.webp from a seeded throwaway tribe
+npm run readme-shots           # docs/screenshots/readme-*.png + site/assets/og-image.png from a seeded throwaway tribe
 ```
 
 Every milestone: `npm run explore`, fix criticals, then readme-shots and release. In full: `npm run explore` (docs/EXPLORE-REPORT.md, docs/EXPLORER.md), fix the critical findings, `npm run milestone-report` (docs/milestones/<version>.md: before | after screens, findings delta, journeys), then `npm run readme-shots`, refresh README.md and the Pages site (`site/`, published at `/about/`), then release.
@@ -100,7 +100,14 @@ Pushing from the Claude cloud sandbox:
   - `main.rs`: sidecar `host_start`/`host_log`; reuses a server already on the port.
   - `tauri.conf.json`: frameless, resizable window, `deep-link tribecode://`, updater.
 - `templates/starter-game`: the Pixel Quest starter.
-- `docs/`: DESIGN-SYSTEM, PROJECTS, HOSTING, MOBILE, GAME-STUDIO (game plan), screenshots.
+- `templates/`: everything the server offers to start from (starters, `sites/`, `canvas/`, `legal/`, the marketplace, company and studio catalogs, the demo tribe's two projects).
+- `site/`: the marketing website (the front page on Pages; `app/ui` is published under `/app/`).
+- `scripts/`: run and build (`live.js`, `invite-friend.js`, `mcp-stdio.js`, `build-sidecar.js`, `bundle-server.js`, `setup-release.js`, `check-tauri-config.py`, `explore.py`, the shot and brand generators).
+  - `scripts/dev/`: the `npm run dev:*` tools, catalog and thumbnail generators, Flint's case files (`flint-eval-cases.js`, `flint-nlu-cases.js`, batches in `flint-eval/`).
+  - `scripts/desktop/`: the Windows Desktop kit users get. `scripts/pages-compat/`: redirects for old links. `scripts/phone/`: the Termux host script.
+- `Tools/`: double-click launchers for a source checkout (Clean-Slate-Dev, Live-Test, Invite-Friend, Start-Test-Project; `.bat` and `.command`).
+- `assets/brand/`: master logo and icon files. `design/inspiration/`: reference pictures. `promo/`: ad pages, stills and their soundtrack scripts (`promo/sound/`). `mobile/`: store packaging notes.
+- `docs/`: DESIGN-SYSTEM, PROJECTS, HOSTING, MOBILE, GAME-STUDIO (game plan); `guide/` ships in the app; `screenshots/`; `archive/` holds replaced plans. What was cleaned up and a full "what lives where" table: docs/REPO-CLEANUP.md.
 
 ## Design rules (decided by the user, keep them)
 - Flat matte "Tactile Matte Developer UI + Editorial Flat Vector": 1px borders, depth only from luminance steps, no glows, blur or gradients.
@@ -125,7 +132,7 @@ Pushing from the Claude cloud sandbox:
 - New since v0.7.0 (server modules): `openspace.js` (Office), `showcase.js` (project websites), `applink.js` + `export.js` + `github-auth.js` (app links, Desktop folders, GitHub device flow), `demo.js` (demo tribe), `oauth.js` (Discord/GitHub/Google sign-in), `huddlesum.js` (after-huddle summary), `files.js` + phone app mode (viewers, Expo starter). UI: `userbar.js` (desktop bottom-left bar), `chatlist.css` (chat as a list), `themes.js`/`themes.css`, `guide.js` (when merged).
 - Windows desktop: the page is http://tauri.localhost; the client must use the saved server (:4747). The server answers Private Network Access preflights. Host switch in Settings; the server only runs with a tribe + Host on.
 - In flight: the vision/research/guide agent (docs/VISION.md, docs/RESEARCH-2026-11.md, docs/guide/*.md).
-- The user's machine: Windows, `C:\Users\campw\Desktop\TribeCode` (TribeCode.bat reinstaller, Invite-A-Friend.bat, Start-Demo-Tribe.bat, Working\ dev lane on :4848, Tools\). Tailscale signed in. Leyline workspace at Desktop\Leyline (reference only).
+- The user's machine: Windows, `%USERPROFILE%\Desktop\TribeCode` (TribeCode.bat reinstaller, Invite-A-Friend.bat, Start-Demo-Tribe.bat, Working\ dev lane on :4848, Tools\). Tailscale signed in. Leyline workspace at Desktop\Leyline (reference only).
 
 ## Next steps (in order)
 1. Confirm v0.8.0 on the user's PC (Create your first project, GitHub client id, Office switch, Restart to update, installer art).
