@@ -106,7 +106,7 @@
         <button id="hp-sync">${ic('gear')}<span>Ship / sync settings</span></button>
         ${window.TribeVersions ? `<button id="hp-versions">${ic('refresh')}<span>Versions</span></button>` : ''}
         <button id="hp-share">${ic('users')}<span>Share</span></button>
-        ${hosting ? `<button id="hp-host">${ic('net')}<span>Host settings</span></button>` : ''}
+        ${hosting ? `<button id="hp-host">${ic('net')}<span>Hosting · who can reach you</span></button>` : ''}
       </div>`;
     document.body.appendChild(pop);
     const r = pill.getBoundingClientRect(); pop.style.top = (r.bottom + 8) + 'px'; pop.style.left = Math.max(8, Math.min(innerWidth - pop.offsetWidth - 8, r.left)) + 'px';
@@ -114,7 +114,11 @@
     const on = (id, f) => { const b = pop.querySelector(id); if (b) b.onclick = () => { close(); f(); }; };
     on('#hp-move', () => (pick.ok ? folder({ pid: pid() }) : toast(pick.why)));
     on('#hp-github', () => (st.kind === 'folder' ? github(null, true) : github())); on('#hp-shared', () => (gh && st.kind === 'folder' ? sync() : pick.ok ? sharedFolder() : toast(pick.why))); on('#hp-ship', () => ship()); on('#hp-fix', () => ship()); on('#hp-sync', () => sync()); on('#hp-versions', () => window.TribeVersions.open()); on('#hp-share', () => share());
-    on('#hp-host', () => { window.TribeSettings && window.TribeSettings.open(); });
+    on('#hp-host', async () => {   // the Hosting popout (hostpill.js), under this pill: invite, who can reach you, the Host switch
+      if (!window.TribeHostPill) return window.TribeSettings && window.TribeSettings.open();
+      await window.TribeHostPill.open(); const hp = document.getElementById('host-pop'), r = pill.getBoundingClientRect();
+      if (hp) { hp.style.top = (r.bottom + 8) + 'px'; hp.style.left = Math.max(8, r.left) + 'px'; }
+    });
     setTimeout(() => document.addEventListener('click', outside, true), 0);
   }
   pill.onclick = e => { e.stopPropagation(); open(); };
