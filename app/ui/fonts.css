@@ -8,7 +8,7 @@
 .wordmark .c { color: var(--accent); }
 .wordmark.stack span { display: block; }
 img.brand-wm { height: 17px; width: auto; display: block; }
-.hero-wm { margin: 0 0 14px; } .hero-wm img.brand-wm { height: 44px; }
+
 body.light img.brand-wm:not([data-wm]) { content: url('assets/wordmark-light.svg'); }   /* until themes.js redraws it in the theme's colors */
 .ob-top img.brand-wm { width: auto; height: 16px; border-radius: 0; }
-.ob-body h1.hero-wm { margin-bottom: 18px; }
+

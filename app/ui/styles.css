@@ -143,8 +143,7 @@ kbd, .kbd { font-family: var(--mono); font-size: 12px; line-height: 1.5; padding
 .swatches { display: flex; gap: 12px; flex-wrap: wrap; }
 .swatch { width: 30px; height: 30px; border-radius: 50%; }
 .swatch.on { outline: 2px solid var(--text); outline-offset: 3px; }
-.preview-me { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border-radius: var(--r); background: var(--canvas); border: 1px solid var(--edge); }
-.preview-me .avatar { width: 40px; height: 40px; font-size: 14px; }
+
 .choices { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
 .choice { border: 1px solid var(--edge); border-radius: var(--r); padding: 10px; text-align: left; background: var(--canvas); box-shadow: none; transition: border-color .15s var(--ease); }
 .choice:hover { border-color: var(--faint); }
@@ -162,8 +161,7 @@ kbd, .kbd { font-family: var(--mono); font-size: 12px; line-height: 1.5; padding
 .toggle[aria-checked="true"] .switch::after { left: 18px; background: #FFFFFF; }
 .folder { display: flex; gap: 10px; }
 .folder .input { font-family: var(--mono); font-size: 13px; }
-.folder-drop { margin-top: 12px; border: 1px dashed var(--edge); border-radius: var(--r); padding: 18px; text-align: center; font-size: 13px; color: var(--faint); }
-.folder-drop.over { border-color: var(--accent-2); color: var(--text); background: var(--live-tint); }
+
 .brain-status { display: flex; align-items: center; gap: 12px; padding: 14px 16px; border-radius: var(--r); background: var(--canvas); border: 1px solid var(--edge); margin-bottom: 14px; font-size: 13.5px; box-shadow: none; }
 .brain-status .ico { width: 34px; height: 34px; border-radius: var(--r-sm); display: grid; place-items: center; background: var(--chip); color: var(--accent-ink); flex: none; }
 .brain-status.ok .ico { background: var(--live-tint); color: var(--live-ink); }
@@ -255,9 +253,9 @@ body.tauri .win-ctl { display: flex; }
 /* touch: no blue flash or selection on taps; a soft press instead (not overt) */
 html { -webkit-tap-highlight-color: transparent; }
 @media (hover: none) and (pointer: coarse) {
-  button, .btn, [role="button"], .tabbar button, .rn-card, .ock-sg, .pl-cell, .wl-opt, .chip, a.btn, summary, label.toggle { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
-  button, .btn, [role="button"], .rn-card, .ock-sg, .pl-cell, .wl-opt, .chip, a.btn, summary { transition: transform .12s ease, filter .12s ease, background-color .12s ease; }
-  button:active, .btn:active, [role="button"]:active, .rn-card:active, .ock-sg:active, .pl-cell:active, .wl-opt:active, .chip:active, a.btn:active, summary:active { transform: scale(.97); filter: brightness(.9); }
+  button, .btn, [role="button"], .tabbar button, .rn-card, .ock-sg, .wl-opt, .chip, a.btn, summary, label.toggle { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+  button, .btn, [role="button"], .rn-card, .ock-sg, .wl-opt, .chip, a.btn, summary { transition: transform .12s ease, filter .12s ease, background-color .12s ease; }
+  button:active, .btn:active, [role="button"]:active, .rn-card:active, .ock-sg:active, .wl-opt:active, .chip:active, a.btn:active, summary:active { transform: scale(.97); filter: brightness(.9); }
   .tabbar button:active { transform: scale(.92); }
   input, textarea, [contenteditable="true"], .msg p, .doc-body, .rt-editor { -webkit-user-select: text; user-select: text; }
 }

@@ -40,7 +40,7 @@
 .ab-offer { display: flex; flex-direction: column; gap: 10px; padding: 18px; border: 1px solid var(--edge); border-left: 3px solid var(--live); border-radius: var(--r); background: var(--surface); min-width: 0; }
 .ab-o-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
 .ab-o-top .eyebrow { font-size: 12px; margin: 0; }
-.ab-o-time { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: var(--muted); }
+
 .ab-offer h3 { margin: 0; font-family: var(--display); font-size: 18px; font-weight: 700; letter-spacing: -0.01em; overflow-wrap: anywhere; }
 .ab-read { margin: 0; font-size: 14px; line-height: 1.6; color: var(--muted); max-width: 65ch; overflow-wrap: anywhere; }
 .ab-dl { margin: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 8px 16px; }
@@ -64,11 +64,9 @@
 
 /* Home › Work */
 .ab-home { display: flex; flex-direction: column; gap: 16px; margin: 0 0 32px; }
-.ab-h-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)); gap: 16px; }
+
 .ab-home .card { padding: 18px; border: 1px solid var(--edge); border-radius: var(--r); background: var(--surface); display: flex; flex-direction: column; gap: 12px; min-width: 0; }
-.ab-c-h { display: flex; gap: 12px; align-items: center; color: var(--muted); }
-.ab-c-h .eyebrow { font-size: 12px; margin: 0; }
-.ab-c-h h3 { margin: 2px 0 0; font-size: 17px; font-weight: 700; color: var(--text); }
+
 .ab-acts { display: flex; gap: 8px; flex-wrap: wrap; margin-top: auto; }
 .ab-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr)); gap: 16px; }
 

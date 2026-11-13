@@ -1,7 +1,7 @@
 /* Setup flow (feat/setup-flow): the streamlined vision composer, inline header edits, the "Shape it" role cards and
    their one-screen choosers, Make the starter, task type chips and the "Who does it?" row. Flat matte: 1px borders,
    depth from luminance steps only, no gradients, glows or shadows. Phones at 390px: everything wraps, nothing overflows. */
-.av-cat .emo, .tk-type .emo, .tk-do .emo, .tk-who-chip .emo, .tk-tchip .emo { font-family: 'Apple Color Emoji', 'Segoe UI Emoji', 'Noto Color Emoji', sans-serif; }
+.av-cat .emo, .tk-type .emo, .tk-do .emo, .tk-tchip .emo { font-family: 'Apple Color Emoji', 'Segoe UI Emoji', 'Noto Color Emoji', sans-serif; }
 
 /* ---------- vision composer: category chips + the gist ---------- */
 .av2 .av-cats { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 14px; }
@@ -90,12 +90,11 @@
 .tk-dl { display: none; }
 @container (min-width: 250px) { .tk-dl { display: inline; } }
 .tk-who { display: flex; align-items: center; flex-wrap: wrap; gap: 4px; margin: 6px 0 2px; }
-.tk-who-l { font-size: 12.5px; color: var(--faint); margin-right: 2px; }
+
 .tk-do { display: inline-flex; align-items: center; gap: 3px; height: 24px; padding: 0 7px; border-radius: 6px; border: 1px solid var(--edge); background: var(--surface-2); color: var(--muted); font-size: 12.5px; cursor: pointer; }
 .tk-do .emo { font-size: 11.5px; }
 .tk-do:hover { color: var(--text); border-color: var(--edge-pop); background: var(--surface); }
-.tk-who-chip { display: inline-flex; align-items: center; gap: 4px; height: 22px; margin: 6px 0 2px; padding: 0 8px; border-radius: 999px; border: 1px solid var(--edge); background: var(--surface); color: var(--text); font-size: 12.5px; cursor: pointer; }
-.tk-who-chip:hover { border-color: var(--edge-pop); }
+
 .tk-friend { height: 28px; max-width: 100%; font-size: 12.5px; }
 
 /* the Suggested box: compact, above the board, only while there are fewer than 3 tasks */
@@ -122,7 +121,7 @@
   /* phones: task rows stay one line; "Who does it?" wraps under the title */
   #board .task:has(.tk-who) { flex-wrap: wrap; }
   #board .task .tk-who { order: 4; flex: 1 0 100%; margin: 2px 0 0; }
-  #board .task .tk-who-chip { order: 2; flex: none; margin: 0; }
+
   .sx-item { min-height: 92px; }
   .sx-thumb { flex-basis: 48px; }
   .sx-body b { font-size: 16px; }

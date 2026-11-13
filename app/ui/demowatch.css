@@ -90,7 +90,7 @@ body.dw-on .toast { bottom: auto; top: 76px; }
   .dw-dot { min-width: 12px; padding: 0 1px; } .dw-dot.on i { width: 20px; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .dw-dim i, .dw-ring, .dw-b, .dw-dot i, .dw-hp i { transition: none; }
+  .dw-dim i, .dw-ring, .dw-b, .dw-dot i{ transition: none; }
   .dw-cap.in { animation: none; }
   .dw-ripple { display: none; }
 }

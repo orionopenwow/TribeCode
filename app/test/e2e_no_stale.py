@@ -30,6 +30,12 @@ LEGACY = {
     "the old Files grid and quick tiles": ".fg-grid, .fg-start, .fg-st",
     "the tour's old huddle and AI-boost cards": "#dw-huddle, #dw-boost, .dw-card",
     "the old Friends button and panel (friends.js; People › Friends now)": "#fr-btn, #fr-panel, #fr-scrim",
+    # audit 2026-11-13 (docs/APP-AUDIT-2026-11-13.md)
+    "the website designer's old chat log (Flint's one chat is mounted in #wdz-flint)": "#wdz-log",
+    "the old setup sheet's first step (the create-a-tribe flow #tn replaced it)": "#su-start, .su-seats, .su-seat-t",
+    "the rail's old camp button and the folding sidebar groups": "#rail-camp, .camp-btn, .nest-fold-head, .nest-fold-body, .pj-nav-legacy",
+    "the old assist question chips, Flint nudges and the preview/canvas Flint boxes' own buttons": ".av-chips, .av-qs, .fl-nudges, .pvf-btns, .cvf-acts",
+    "the old agents grid, invite pill and Work header": ".ag-grid, .invite-pill, .tl-head, .tl-cta",
 }
 
 

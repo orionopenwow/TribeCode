@@ -74,8 +74,3 @@
   }
   window.TribeStage = { set, level: () => level(by[pid()]), steps: () => by[pid()] || null, refresh: () => soon(0) };
 })();
-// ---------- the rail's top slot: Home (the camp). The flame moved next to the wordmark; both go Home. ----------
-(function () {
-  const btn = document.getElementById('rail-camp'); if (!btn) return;
-  btn.addEventListener('click', () => { const r = document.getElementById('rail-logo'); if (r) r.click(); });
-})();

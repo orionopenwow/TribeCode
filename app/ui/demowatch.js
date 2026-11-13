@@ -387,7 +387,7 @@
       await point('the site', ['#wdz-framewrap', '#wdz-frame'], { dx: 0.25, dy: 0.45 });
       await typeCmd('make the buttons work');
       await S.ask('link this to the contact page');
-      await point('what Flint did', ['#wdz-log', '#wdz-insp']);
+      await point('what Flint did', ['#wdz-flint .fl-thread', '#wdz-flint', '#wdz-insp']);
       await hold(700);
       await typeCmd('dark mode');
       await S.ask('dark mode');

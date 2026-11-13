@@ -73,8 +73,8 @@
   .modal-card { width: 100%; max-width: none; border-radius: var(--r-lg) var(--r-lg) 0 0; border-bottom: 0; padding: 20px 18px calc(20px + env(safe-area-inset-bottom)); max-height: 92dvh; overflow: auto; }
   .opts { flex-wrap: wrap; } .opts select { flex: 1 1 40%; }
   .ob-card { padding: 24px 20px 20px; border-radius: var(--r-lg); }
-  .perks, .choices { grid-template-columns: 1fr; }
-  .ob-body { min-height: 0; }
+  .choices { grid-template-columns: 1fr; }
+
   .update-pop { left: 12px !important; right: 12px; width: auto; }
   .update-pop::before { display: none; }
   .palette { padding-top: calc(10px + env(safe-area-inset-top)); }

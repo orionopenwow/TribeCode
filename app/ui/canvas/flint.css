@@ -20,8 +20,7 @@
 .cvf-say img { vertical-align: -2px; margin-right: 4px; }
 .cvf-say.is-wait { color: var(--muted); }
 .cvf-ask { color: var(--faint); }
-.cvf-honest { display: grid; gap: 8px; }
-.cvf-acts { display: flex; flex-wrap: wrap; gap: 8px; }
+
 .cvf-x { position: absolute; top: 6px; right: 6px; width: 24px; height: 24px; border: 0; border-radius: var(--r-sm); background: none; color: var(--faint); font-size: 16px; line-height: 1; cursor: pointer; }
 .cvf-x:hover { background: var(--surface-2); color: var(--text); }
 @media (max-width: 820px) {

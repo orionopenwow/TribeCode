@@ -32,7 +32,7 @@ body.light {
 .chat-col .chat-title.cb { display: flex; align-items: center; gap: 12px; min-height: 58px; margin: 0 0 4px; padding: 6px 2px 10px; border-bottom: 1px solid var(--edge); }
 .cb-av { width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center; flex: none; font-size: 13px; font-weight: 650; }
 .cb-av svg.i { width: 18px; height: 18px; }
-.cb-av.cb-tribe { background: var(--surface-3); color: var(--accent-ink); }
+
 .cb-tt { display: flex; flex-direction: column; align-items: flex-start; gap: 1px; min-width: 0; }
 .cb-tt .chan-switch, .cb-tt .dm-back { font-size: 15px; font-weight: 650; color: var(--text); height: 24px; }
 .cb-tt > span:not(.cb-sub) { font-size: 15px; }
@@ -233,7 +233,7 @@ body.light .mt .tk.read { color: var(--live-ink); }
 /* ---------- desktop chat header, cleaner: one 64px row, the channel as a plain title, quiet icon buttons ---------- */
 .chat-col .chat-title.cb { min-height: 64px; gap: 12px; margin: 0 0 6px; padding: 8px 4px 12px; }
 .cb-av { width: 40px; height: 40px; border-radius: 12px; }
-.cb-av.cb-tribe { background: var(--surface-2); border: 1px solid var(--edge); }
+
 .cb-tt { gap: 2px; }
 .cb-tt .chan-switch, .cb-tt .dm-back { height: 26px; padding: 0 8px; margin-left: -8px; border: 0; border-radius: 8px; font-size: 17px; font-weight: 700; letter-spacing: -0.01em; color: var(--text); }
 .cb-tt .chan-switch:hover, .cb-tt .chan-switch[aria-expanded="true"], .cb-tt .dm-back:hover { background: var(--surface-2); border: 0; }

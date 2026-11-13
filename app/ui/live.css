@@ -30,9 +30,6 @@
 .opts { display: flex; gap: 10px; margin-bottom: 16px; }
 .opts select { flex: 1; min-width: 0; height: 36px; border-radius: var(--r-sm); border: 1px solid var(--edge); background: var(--surface-2); padding: 0 10px; font-size: 13px; }
 .modal-foot { display: flex; gap: 8px; justify-content: flex-end; margin-top: 8px; }
-.steps-host { font-size: 13px; color: var(--muted); line-height: 1.6; }
-.steps-host li { margin-left: 18px; margin-bottom: 6px; }
-.steps-host code { font-family: var(--mono); font-size: 12px; color: var(--text); }
 
 .view-head { display: flex; align-items: center; flex-wrap: wrap; row-gap: 8px; gap: 12px; margin-bottom: 20px; }
 .view-head h1 { font-family: var(--display); font-size: 26px; font-weight: 800; letter-spacing: -0.025em; white-space: nowrap; }
@@ -44,7 +41,7 @@
 .col h5 .n { font-family: var(--mono); font-size: 12px; color: var(--faint); font-weight: 400; }
 .col h5 .add { margin-left: auto; width: 24px; height: 24px; border-radius: 6px; color: var(--faint); font-size: 16px; line-height: 1; }
 .col h5 .add:hover { background: var(--surface-2); color: var(--text); }
-.col .col-hint { margin: 4px 4px 0; font-size: 13px; line-height: 1.5; color: var(--muted); }   /* qa-qol-2: the empty board says what to do */
+   /* qa-qol-2: the empty board says what to do */
 .task { background: var(--canvas); border: 1px solid var(--edge); border-radius: var(--r-sm); padding: 11px 12px; margin-bottom: 8px; font-size: 13.5px; cursor: grab; box-shadow: none; position: relative; transition: border-color .15s var(--ease); }
 .task:hover { border-color: var(--faint); }
 .task:active { cursor: grabbing; }
@@ -80,10 +77,7 @@
 .votes { display: flex; align-items: center; gap: 10px; font-size: 12.5px; color: var(--muted); flex-wrap: wrap; }
 .vbar { flex: 1; min-width: 120px; height: 6px; border-radius: 3px; background: var(--surface-3); overflow: hidden; display: flex; }
 .vbar i { display: block; height: 100%; transition: width .2s var(--ease); }
-.vbtn { padding: 5px 12px; border-radius: var(--r-sm); font-size: 12.5px; font-weight: 600; border: 1px solid var(--edge); background: var(--surface); }
-.vbtn:hover { background: var(--surface-2); }
-.vbtn.yes.on { background: var(--live-tint); color: var(--live-ink); border-color: transparent; }
-.vbtn.no.on { background: var(--ember-tint); color: var(--ember-ink); border-color: transparent; }
+
 .chip.amber { background: var(--amber-tint); color: var(--amber-ink); } .chip.ember { background: var(--ember-tint); color: var(--ember-ink); }
 .vision { font-size: 13.5px; line-height: 1.55; color: var(--muted); white-space: pre-wrap; outline: none; border-radius: var(--r-sm); min-height: 60px; }
 .vision[contenteditable="true"] { background: var(--surface-2); box-shadow: 0 0 0 1px var(--accent); padding: 8px; color: var(--text); }
@@ -94,7 +88,6 @@
 .mile .btn { height: 28px; padding: 0 10px; font-size: 12px; }
 .prop-empty { color: var(--faint); font-size: 14px; padding: 30px; text-align: center; border: 1px dashed var(--edge); border-radius: var(--r); }
 textarea.input { height: 220px; padding: 12px 14px; font-family: var(--mono); font-size: 13px; line-height: 1.5; resize: vertical; }
-.vnote { font-size: 12.5px; color: var(--ember-ink); margin-top: 8px; }
 
 /* drift radar */
 .drow { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(60px, 1fr) auto; gap: 10px; align-items: center; padding: 8px 0; border-top: 1px solid var(--stroke); font-size: 12.5px; }
@@ -159,9 +152,7 @@ textarea.input { height: 220px; padding: 12px 14px; font-family: var(--mono); fo
 /* titlebar status pills: surface fill + colored dot, mono label */
 .titlebar .status.pill { background: var(--canvas); border: 1px solid var(--edge); border-radius: 999px; padding: 3px 10px; color: var(--muted); font-family: var(--mono); font-size: 12px; }
 /* invite: a secondary button with an orange glyph */
-.invite-pill { display: flex; width: calc(100% - 12px); align-items: center; justify-content: center; gap: 8px; margin: 16px 6px 0; height: 36px; padding: 0 14px; border-radius: var(--r-sm); border: 1px solid var(--edge); color: var(--text); font-size: 13.5px; font-weight: 600; background: var(--surface); transition: border-color .15s var(--ease), background .15s var(--ease); }
-.invite-pill span { color: var(--accent); font-size: 17px; font-weight: 500; line-height: 1; }
-.invite-pill:hover { background: var(--surface-2); border-color: var(--accent); }
+
 .cc-link { display: flex; align-items: center; gap: 8px; font-size: 12.5px; font-weight: 600; padding: 8px 12px; border-radius: var(--r-sm); border: 1px solid var(--edge); background: var(--surface-2); color: var(--text); transition: border-color .15s var(--ease); }
 .cc-link:hover { border-color: var(--accent); }
 .hbtn.leave { border-radius: var(--r-sm); }

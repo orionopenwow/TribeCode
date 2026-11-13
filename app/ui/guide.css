@@ -60,9 +60,6 @@ body.gd-open .ws-layer { visibility: hidden; }
 .gd-pn.next { text-align: right; grid-column: 2; }
 
 /* Settings: the small "? Guide" link sits at the end of the links row */
-.set-links { flex-wrap: wrap; row-gap: 8px; }
-.set-links .set-guide { margin-left: auto; }
-.set-links .set-guide span { display: inline-grid; place-items: center; width: 16px; height: 16px; border-radius: 50%; border: 1px solid currentColor; font-size: 12px; font-weight: 700; line-height: 1; margin-right: 3px; }
 
 /* ---------- phones: one list, then one page ---------- */
 @media (max-width: 820px) {

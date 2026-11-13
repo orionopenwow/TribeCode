@@ -53,7 +53,7 @@
   const busy = () => {
     const w = W(); if (w && w.active && w.active() && !(w.finished && w.finished())) return true;
     if (inDemo() && !(O().mode && O().mode() === 'watch' && w && w.finished && w.finished())) return true;
-    return !!($('#di') || $('#sg') || $('#pz') || $('.ac-scrim') || $('#su-start') || [...document.querySelectorAll('.ph-sheet, .modal:not(.hidden), [role="dialog"][aria-modal="true"]')].some(x => x.offsetParent !== null && !x.closest('#sn')));
+    return !!($('#di') || $('#sg') || $('#pz') || $('.ac-scrim') || $('#tn') || [...document.querySelectorAll('.ph-sheet, .modal:not(.hidden), [role="dialog"][aria-modal="true"]')].some(x => x.offsetParent !== null && !x.closest('#sn')));
   };
 
   // ---------- arm and wait ----------
