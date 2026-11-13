@@ -441,7 +441,7 @@
     const f = q('#set-folder'); if (f) f.onchange = () => S.set({ folder: f.value.trim() });
     click('#set-browse', async () => { const p = await window.TribeHost.pickFolder(); if (p) { S.set({ folder: p }); draw(); toast('Restart TribeCode to host from the new folder.'); } });
     const gh = q('#set-github'); if (gh) window.TribeGitHub.mount(gh);
-    for (const x of Object.values(EXTRA).flat()) { const el = box.querySelector(`[data-ext="${x.id}"]`); if (!el) continue; try { const out = x.render(el); if (typeof out === 'string') el.innerHTML = out; } catch (e) { console.warn('settings section', x.id, e); } }
+    for (const x of Object.values(EXTRA).flat()) { const el = box.querySelector(`[data-ext="${x.id}"]`); if (!el) continue; try { const out = x.render(el); if (typeof out === 'string') el.innerHTML = out; else if (out && out.catch) out.catch(e => console.warn('settings section', x.id, e)); } catch (e) { console.warn('settings section', x.id, e); } }
 
     // Tribe & admin
     click('#set-invite', () => { close(); window.TribeFlow ? window.TribeFlow.instant() : window.TribeApp.openInvite(); });
