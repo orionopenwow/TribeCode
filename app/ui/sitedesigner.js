@@ -659,7 +659,7 @@
   async function saveVersion() {
     if (!st.pid || !connected()) { try { localStorage.setItem(LOCAL + '.v', JSON.stringify(st.cfg)); } catch {} return say('Saved a version on this device.'); }
     st.dirty = true; if (!(await push())) return say('Not saved: sort out the newer version first.');
-    try { const r = await C.api(`/projects/${encodeURIComponent(st.pid)}/website/versions`, { method: 'POST', body: { note: `Designer · ${new Date().toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}` } }); say('Saved to the Saved shelf. Restore it any time from Preview › Saved or Files › Website.'); return r; } catch (e) { say(e.message); }
+    try { const r = await C.api(`/projects/${encodeURIComponent(st.pid)}/website/versions`, { method: 'POST', body: { note: `Designer · ${new Date().toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}` } }); say(r && r.device ? (r.saved ? 'Saved as a version on this device. Find it, compare it and bring it back in Versions.' : 'Nothing changed since the last version.') : 'Saved to the Saved shelf. Restore it any time from Preview › Saved or Files › Website.'); return r; } catch (e) { say(e.message); }
   }
 
   // ---------- the start screen: 16 templates or blank ----------

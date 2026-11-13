@@ -625,6 +625,13 @@
     try { const r = await realFetch(new URL('demo/data.json', location.href).href); demoD = await r.json(); } catch { demoD = null; }
     return demoD || { tiers: [], sites: { templates: [], categories: [] }, canvas: [] };
   }
+  // feat/calm-parity: what the server would answer, bundled into the app shell by scripts/dev/app-bundle.js
+  const bundles = {};
+  async function bundled(name) {
+    if (bundles[name]) return bundles[name];
+    try { const r = await realFetch(new URL(name, location.href).href); if (r.ok) bundles[name] = await r.json(); } catch {}
+    return bundles[name] || null;
+  }
   function demoTier(ask) {
     const a = String(ask || '').toLowerCase();
     if (/\b(multiplayer|database|login system|accounts?|payments?|server|refactor|port|debug|crash)\b/.test(a)) return { tier: 'agent', why: 'This needs real engineering: a job for a stronger AI, like a member’s own Claude Code, Codex or Gemini.' };
@@ -843,7 +850,7 @@
     const GET = method === 'GET', POST = method === 'POST', PUT = method === 'PUT', PATCH = method === 'PATCH', DEL = method === 'DELETE';
     switch (a) {
       case 'health': return ok({ ok: true, version: hello().version, tribe: db.tribe.name, members: db.members.length, lan: [], site: null, offlineDemo: true });
-      case 'guide': return ok({ pages: [] });
+      case 'guide': { const g = await bundled('guide-pages.json'); const pages = (g && g.pages) || []; if (!b) return ok({ pages }); const pg = pages.find(x => x.slug === b); return pg ? ok(pg) : no(404, 'no such page'); }   // feat/calm-parity: the Guide ships inside the app
       case 'me': if (GET && !b) return ok({ member: presence().find(m => m.id === 'me') });
         if (PATCH && !b) { const m = me(); if (body.name) m.name = String(body.name).slice(0, 32); if (body.color) m.color = String(body.color); save(); pushPresence(); return ok({ member: m }); } break;
       case 'projects': {
@@ -1178,7 +1185,7 @@
         break;
       case 'pins': return demoPins(method, b, c, body, q);
       case 'site-library':
-        if (GET && !b) { const s = (await demoData()).sites; return ok({ templates: s.templates.map(x => ({ ...x, thumb: x.thumb ? new URL(x.thumb, location.href).pathname : '' })), categories: s.categories }); }
+        if (GET && !b) { const s = (await bundled('site-library.json')) || (await demoData()).sites; return ok({ templates: s.templates.map(x => ({ ...x, thumb: x.thumb ? new URL(x.thumb, location.href).pathname : '' })), categories: s.categories }); }
         break;
       case 'assist': {   // app/ui/assist.js: the vision composer's basic draft and the game template's starter tasks
         const p = proj(pid), name = p.name;

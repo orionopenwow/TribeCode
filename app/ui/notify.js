@@ -401,7 +401,7 @@
     const m = $('#nf-settings'); m.classList.remove('hidden');
     const body = $('#nf-settings-body');
     body.innerHTML = '<div class="nf-set-head"><h2>Notifications</h2></div><p class="nf-faint">Loading…</p>';
-    try { const [r, rl] = await Promise.all([C.api('/notify/prefs'), C.api('/approvals/rules').catch(() => ({ rules: [] }))]); if (!r || !r.prefs || !r.prefs.when) throw new Error('Join or host a tribe to set up notifications.'); prefs = r.prefs; meta.ntfyUrl = r.ntfyUrl; meta.devices = r.webpushDevices; meta.vapid = r.vapidPublicKey; meta.rules = rl.rules; }
+    try { const [r, rl] = await Promise.all([C.api('/notify/prefs'), C.api('/approvals/rules').catch(() => ({ rules: [] }))]); if (!r || !r.prefs || !r.prefs.when) throw new Error('Join or host a tribe to set up notifications.'); prefs = r.prefs; meta.ntfyUrl = r.ntfyUrl; meta.devices = r.webpushDevices; meta.vapid = r.vapidPublicKey; meta.rules = rl.rules; meta.device = !!r.device; }
     catch (e) { body.innerHTML = `<div class="nf-set-head"><h2>Notifications</h2><button class="nf-icon" data-x title="Close" aria-label="Close">${ico('x')}</button></div><p class="nf-faint">${esc(C.connected() ? e.message : 'Join or host a tribe to set up notifications.')}</p>`; body.querySelector('[data-x]').onclick = closeSettings; return; }
     renderSettings();
   }
@@ -451,6 +451,8 @@
         </section>
       </div>
       <div class="nf-set-foot"><button class="btn" id="nf-test">Send test</button><span class="nf-faint" id="nf-test-out"></span><span style="flex:1"></span><button class="btn primary" data-x>Done</button></div>`;
+    // feat/calm-parity: a tribe on this device has no host to send pushes: what works here stays, the rest is one calm line
+    if (meta.device && window.TribeDevice) { const ph = body.querySelector('.nf-phone'); ph.innerHTML = `<h6>Phone and desktop</h6><p class="nf-faint nf-device-line">${window.TribeDevice.line('Phone push, the ntfy app and desktop notifications are sent by a host.')}</p><div hidden><span id="nf-qr"></span><code id="nf-topic"></code><button id="nf-copy"></button><button id="nf-newtopic"></button><input id="nf-server"><button id="nf-webpush"></button></div>`; const how = body.querySelector('[data-k="channels.ntfy"]'); if (how && how.closest('.nf-sec')) how.closest('.nf-sec').remove(); }
     $('#nf-qr').innerHTML = window.TribeQR ? window.TribeQR.svg(`${p.ntfy.server}/${p.ntfy.topic}`, { fg: '#12151A', bg: '#F8FAFC', border: 2 }) : '';
     body.querySelectorAll('[data-x]').forEach(b => b.onclick = closeSettings);
     body.querySelectorAll('.nf-tg').forEach(b => b.onclick = () => {

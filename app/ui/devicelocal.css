@@ -1,0 +1,5 @@
+/* A project on this device (devicelocal.js): the one calm line where something needs a host, with Choose where it lives. */
+.dv-line { color: var(--muted); font-size: 13px; line-height: 1.5; }
+.dv-where { min-height: 32px; padding: 0 2px; font-size: inherit; }
+.wgx-device { margin: 10px 2px 4px; }
+.nf-device-line { margin: 0; padding: 4px 0 2px; }

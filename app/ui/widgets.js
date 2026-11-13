@@ -297,7 +297,7 @@
     const have = new Set((st.widgets || []).filter(w => w.kind === 'builtin').map(w => w.key));
     if (autoSite()) have.add('website'); if (pid()) have.add('preview');
     const haveCard = new Set((s.widgets || []).filter(w => w.kind === 'card').map(w => w.key));
-    const cardKeys = TC ? TC.keys(home ? 'home' : 'project') : [];
+    const cardKeys = (TC ? TC.keys(home ? 'home' : 'project') : []).filter(k => !s.device || !Array.isArray(s.cards) || s.cards.includes(k));   // feat/calm-parity: on this device, the cards that need no host
     const P = ((window.TribeProjects && window.TribeProjects.list()) || []).find(x => x.id === pid()) || {};
     const added = '<em class="wgx-added">Added ✓</em>';
     const cardBtn = k => { const m = META[k], on = haveCard.has(k), dis = on && !m.multi; return `<button class="wgx-card wgx-live" data-wcard="${k}" data-cat="${m.cat}" data-k="${esc((m.label + ' ' + m.blurb + ' ' + k + ' ' + m.cat).toLowerCase())}" ${dis ? 'disabled aria-disabled="true"' : ''} aria-label="${esc(m.label)}: ${esc(m.blurb)}${on ? ' (added)' : ''}">
@@ -314,6 +314,7 @@
         </div>
         <h6 class="wgx-h" data-sec="cards">✦ Live widgets</h6>
         <div class="wgx-grid">${cardKeys.map(cardBtn).join('')}</div>
+        ${s.device && window.TribeDevice ? `<p class="wgx-device" id="wgx-device">${window.TribeDevice.line('Who’s here, build status, polls and the other live widgets read the tribe’s host.')}</p>` : ''}
         ${home ? '' : `<h6 class="wgx-h" data-sec="views">↗ Built into TribeCode</h6>
         <div class="wgx-grid">${ORDER.map(k => `<button class="wgx-card t-${LOOK[k].tint}" data-wadd="${k}" data-cat="views" data-k="${esc((BUILT[k].label + ' ' + LOOK[k].blurb + ' ' + k).toLowerCase())}" ${have.has(k) ? 'disabled aria-disabled="true"' : ''} aria-label="${esc(BUILT[k].label)}: ${esc(LOOK[k].blurb)}${have.has(k) ? ' (added)' : ''}">
             <span class="wgx-top"><b>${esc(BUILT[k].label)}</b>${have.has(k) ? added : ''}</span><small>${esc(LOOK[k].blurb)}</small>${mini(k)}</button>`).join('')}</div>
