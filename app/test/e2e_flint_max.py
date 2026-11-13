@@ -222,7 +222,8 @@ def main():
             pg.evaluate("ids => TribeCanvas._e.select(ids)", ids); pg.wait_for_timeout(200)
             out = fask(pg, "canvas", "turn these into a card grid")
             ns = {n["id"]: n for n in nodes()}
-            assert ns[ids[0]]["y"] == ns[ids[1]]["y"] == ns[ids[2]]["y"] and ns[ids[1]]["x"] - ns[ids[0]]["x"] == ns[ids[2]]["x"] - ns[ids[1]]["x"], out
+            xs = sorted(ns[i]["x"] for i in ids)   # the grid keeps the layers' left-to-right order, which the random start positions decide
+            assert ns[ids[0]]["y"] == ns[ids[1]]["y"] == ns[ids[2]]["y"] and xs[1] - xs[0] == xs[2] - xs[1] > 0, out
             pg.evaluate("TribeCanvas._e.select([])"); pg.wait_for_timeout(150)
             out = fask(pg, "canvas", "apply a sunset palette")
             assert "Recolored" in out, out
