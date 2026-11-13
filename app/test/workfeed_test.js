@@ -30,12 +30,13 @@ const call = async (fn, method, b, c, body, me) => { let out; await fn({}, {}, {
 (async () => {
   let r = await call(B.route, 'POST', 'import', null, { feed: f }, host); assert.strictEqual(r[0], 403, 'not subscribed');
   r = await call(B.route, 'POST', 'subscriptions', null, { name: 'Otters', key: f.tribe.key }, guest); assert.strictEqual(r[0], 403, 'builders cannot subscribe');
-  r = await call(B.route, 'POST', 'subscriptions', null, { name: 'Otters', key: f.tribe.key, url: 'http://x' }, host); assert.strictEqual(r[0], 200, JSON.stringify(r)); assert.ok(!r[1].subscription.url, 'https only');
+  r = await call(B.route, 'POST', 'subscriptions', null, { name: 'Otters', key: f.tribe.key, url: 'http://x' }, host); assert.strictEqual(r[0], 400, 'https only'); assert.ok(/https/.test(r[1].error));
+  r = await call(B.route, 'POST', 'subscriptions', null, { name: 'Otters', key: f.tribe.key }, host); assert.strictEqual(r[0], 200, JSON.stringify(r)); assert.ok(!r[1].subscription.url);
   r = await call(B.route, 'POST', 'import', null, { feed: f }, host); assert.strictEqual(r[0], 200); assert.ok(r[1].stored);
   r = await call(B.route, 'POST', 'import', null, { feed: f }, host); assert.strictEqual(r[1].stored, false, 'same seq is not stored twice');
   r = await call(B.route, 'GET', 'imported', null, null, guest); assert.strictEqual(r[1].gigs[0].tribe, 'Otters');
   r = await call(A.route, 'GET', 'feed.json', null, null, guest); assert.ok(makeWorkFeed.verify(r[1]).ok);
-  r = await call(A.route, 'GET', 'feed.json', null, null, null); assert.strictEqual(r[0], 401, 'members only for now');
+  r = await call(A.route, 'GET', 'feed.json', null, null, null); assert.strictEqual(r[0], 401, 'members only unless the host publishes it openly');
   fs.rmSync(dir, { recursive: true, force: true }); fs.rmSync(bdir, { recursive: true, force: true });
   console.log('workfeed_test ok');
 })().catch(e => { console.error(e); process.exit(1); });
