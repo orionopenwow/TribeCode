@@ -175,6 +175,29 @@ in four contexts (website designer, canvas, canvas with a selection, preview, an
 (14.3%). Now: 388/390 (99.5%). Held-out batch 1 scored 22/32 (68.8%) when first run and was then tuned; batch 2 was
 never tuned against: 14/16 (87.5%).
 
+**v0.31 features (feat/flint-cleanup, 2026-11-12).** The set is now 885 phrasings: 875/885 (98.9%).
+
+- **Batch 4 (`scripts/dev/flint-held4.js`, 163 phrasings).** Covers task offers, Design flow kinds, people and presence, abilities and gigs, the Marketplace's Installed tab, Files by kind, the demo, plans, settings and the sidebar order. It scored 95/163 (58.3%) on its first run, before any tuning. It was then tuned against: 162/163 (99.4%).
+- **Fresh held-out batch 5 (`scripts/dev/flint-held5.js`, 48 phrasings).** Written after that tuning and never tuned against: 45/48 (93.8%). This is the honest number for new wording.
+
+What Flint now does locally:
+
+| Ask | What happens |
+| --- | --- |
+| "accept the poster task" | Accepts a task offered to you (server/taskflow.js); it starts. |
+| "decline the flyer task, too busy" | Hands it back to whoever assigned it, with the reason. |
+| "claim the banner task", "grab an open task" | Claims an open task in Council mode. In Lead mode Flint starts it for you instead. "I'll do X" also accepts X when it was offered to you. |
+| "make a poster for our gig", "design a logo for Ember Socks" | Opens the Design flow on that kind: poster, logo, screen, app, game or whiteboard. |
+| "add drawing to my skills" | Opens your abilities with the skill ready to add. |
+| "what have I installed", "remove the timer widget" | Opens the Marketplace's Installed tab, or removes the item. |
+| "show my pictures" | Opens Files on that kind. |
+| "stop showing where I am" | Hides your place from the tribe. Undo works. |
+| "reset the sidebar order", "mute notifications", "start the demo", "how many credits do I have", "what is 12 times 9" | Each does what it says. |
+
+There are new lessons for inviting, People, the Marketplace and the Design flow.
+
+What still needs a model: open writing ("write a song about our cat", "write me a short story"), reasoning about code ("why does the build keep failing"), and judging a design.
+
 ## Abilities log
 
 Agents: add a dated line whenever Flint learns something new. Newest first. Say which tier it runs in.
