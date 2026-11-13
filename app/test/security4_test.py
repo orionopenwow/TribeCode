@@ -137,7 +137,8 @@ def main():
         ok(api(f"/agents/fleet/{cag}/task", "POST", {"title": "polish the title screen"}, token=ct, project=pb), "Cleo tasks her own agent")
         print("F ok: fleet tasks stay in the project")
 
-        # ================= C: an invited Claude (server/inviteclaude.js) ==========        ck = ok(api("/invite-claude", "POST", {}, token=mt, project=pa), "Maya invites her Claude")["token"]
+        # ================= C: an invited Claude (server/inviteclaude.js) =================
+        ck = ok(api("/invite-claude", "POST", {}, token=mt, project=pa), "Maya invites her Claude")["token"]
         assert ck not in Path(tmp, "tribe", ".tribe", "members.json").read_text(), "only the key's hash is stored"
         assert api(f"/chat/general", token=ck, project=pb)[0] == 403, "her Claude can't read project B"
         assert api("/invites", "POST", {"maxUses": 1}, token=ck, project=pa)[0] == 403, "her Claude can't invite people"
