@@ -107,7 +107,7 @@
   async function load() {
     const my = ++loadSeq; const [a, b] = range();
     if (C.connected()) {
-      try { const r = await C.api(`/calendar?from=${encodeURIComponent(a.toISOString())}&to=${encodeURIComponent(b.toISOString())}`); if (my !== loadSeq) return; cal.occ = r.occurrences; cal.events = r.events; cal.tasks = r.tasks; }
+      try { const r = await C.api(`/calendar?from=${encodeURIComponent(a.toISOString())}&to=${encodeURIComponent(b.toISOString())}`); if (my !== loadSeq) return; cal.occ = r.occurrences || []; cal.events = r.events || []; cal.tasks = r.tasks || []; }
       catch (e) { toast('Could not load the calendar: ' + e.message); }
     }
     cal.loaded = true; render();
