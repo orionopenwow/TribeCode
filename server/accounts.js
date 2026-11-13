@@ -92,7 +92,7 @@ module.exports = function makeAccounts({ store, getMembers, isLocal, limited, ha
   const taken = () => new Set(load().accounts.map(a => a.usernameKey));
   const pub = a => a && ({ id: a.id, username: a.username, displayName: a.displayName, created: a.created, status: a.status,
     providers: (a.providers || []).map(p => ({ provider: p.provider, linked: p.linked })), members: (a.members || []).slice(), hasPassword: !!a.password,
-    email: a.email ? { address: a.email.address, verified: !!a.email.verified } : null });
+    email: a.email ? { address: a.email.address, verified: !!a.email.verified } : null, twoStep: a3.totpOn(a.id), passkeys: a3.passkeyCount(a.id) });
   const byKey = k => load().accounts.find(a => a.usernameKey === k);
 
   // Existing tribe members -> accounts (once per member; idempotent). Agents are not people and get none.
@@ -199,6 +199,8 @@ module.exports = function makeAccounts({ store, getMembers, isLocal, limited, ha
   function issue(kind, ms, data) {
     const t = id(40); pend.set(hash(t), { kind, expires: Date.now() + ms, used: false, ...data }); return t;
   }
+  // feat/auth3: the same store under a key the caller made (a WebAuthn challenge, a two-step ticket)
+  function issueWith(t, kind, ms, data) { pend.set(hash(t), { kind, expires: Date.now() + ms, used: false, ...data }); return t; }
   // Look up (and with take, use up) a token of one of the kinds. Constant-time by construction: a map lookup of a sha256.
   function redeemTok(t, kinds, take) {
     if (typeof t !== 'string' || t.length < 20 || t.length > 120) return null;
@@ -220,16 +222,39 @@ module.exports = function makeAccounts({ store, getMembers, isLocal, limited, ha
   }
   // The account is signed in on this device; with proof of who it is (a password, a provider, an email link) the member it
   // belongs to in this tribe is signed in too (a device link, like login).
-  function signedIn(a, req, proven) {
-    const token = startSession(a, req, a.status === 'guest');
+  // feat/auth3: with two-step on, every sign-in stops at the gate first ({ need: 'two-step', ticket }); server/auth3.js
+  // finishes it (signedInNow, strong) once the code, recovery code, trusted device or passkey checks out.
+  const adminAccount = a => { const ids = new Set(a.members || []); return getMembers().some(x => ids.has(x.id) && (x.role === 'host' || x.role === 'admin')); };
+  const twoStepAdmins = () => !!readAuth().twoStepAdmins;
+  function signedInNow(a, req, proven, { strong = false, memberOnly = false } = {}) {
     const live = new Set(getMembers().filter(x => x.role !== 'agent').map(x => x.id)), mid = (a.members || []).find(x => live.has(x));
-    const sig = mid && proven && signInMember ? signInMember(mid, req) : null;
-    return { account: pub(a), token, ...(sig ? { member: sig.member, memberToken: sig.token } : {}) };
+    // the host can require two-step for admins: without it the account signs in, but the tribe key waits until it is on
+    const held = !!(mid && proven && twoStepAdmins() && adminAccount(a) && !strong && !isLocal(req));
+    const sig = mid && proven && !held && signInMember ? signInMember(mid, req) : null;
+    if (memberOnly) return sig ? { member: sig.member, memberToken: sig.token } : {};
+    const token = startSession(a, req, a.status === 'guest');
+    return { account: pub(a), token, ...(sig ? { member: sig.member, memberToken: sig.token } : {}), ...(held ? { twoStep: { required: true } } : {}) };
   }
+  function signedIn(a, req, proven) { return a3.gate(a) || signedInNow(a, req, proven); }
+  const a3 = require('./auth3')({ store, hash, id, limited, log, issueWith, redeemTok, pendSave: () => pend.save(), fromToken, accountById: x => load().accounts.find(a => a.id === x) || null,
+    usableCount: a => usableCount(a), finish: (a, req, o) => signedInNow(a, req, true, o), memberFinish: (mid, req) => (signInMember ? signInMember(mid, req) : null), isAdmin: adminAccount, required: twoStepAdmins });
+  // server/oauth.js: a provider signs a member of this tribe back in. Two-step on their account -> the same gate.
+  function memberGate(member, req, info = {}) {
+    if (!enabled() || !member) return null;
+    const a = load().accounts.find(x => (x.members || []).includes(member.id) && x.status !== 'disabled');
+    const g = a ? a3.gate(a, { member: member.id, provider: info.provider || '', providerName: info.providerName || '' }) : null;
+    if (g) return g;
+    if (twoStepAdmins() && (member.role === 'host' || member.role === 'admin') && !isLocal(req)) throw Object.assign(new Error('admins here sign in with two-step: sign in to your TribeCode account and turn it on in Settings › Account & sign-in'), { status: 403, code: 'two-step-required' });
+    return null;
+  }
+  // server/premium.js: the account a member really uses (a password, a provider, a verified email or a passkey), not the placeholder every member is mapped to
+  const claimed = a => !!(a && a.status === 'active' && (a.password || (a.providers || []).some(p => p.subject) || (a.email && a.email.verified) || a3.passkeyCount(a.id)));
+  function claimedAccountId(mid) { if (!enabled() || !mid) return null; const a = load().accounts.find(x => (x.members || []).includes(mid) && claimed(x)); return a ? a.id : null; }
   const methodsOf = a => [
     ...(a.password ? [{ id: 'password', kind: 'password' }] : []),
     ...(a.email && a.email.verified ? [{ id: 'email', kind: 'email', address: a.email.address, usable: emailOn() }] : []),
     ...(a.providers || []).filter(p => p.subject).map(p => ({ id: 'provider:' + p.provider, kind: 'provider', provider: p.provider, name: p.name || null, linked: p.linked })),
+    ...a3.passkeyMethods(a.id),   // feat/auth3
   ];
   const usableCount = a => methodsOf(a).filter(m => m.kind !== 'email' || m.usable).length;
 
@@ -247,7 +272,7 @@ module.exports = function makeAccounts({ store, getMembers, isLocal, limited, ha
     if (!enabled()) return null;
     syncMembers();
     const a = byProvider(provider, profile.id);
-    if (a) { if (a.status === 'disabled') return null; const p = a.providers.find(x => x.provider === provider); if (profile.name) p.name = profile.name; return { mode: 'account', ...signedIn(a, req, true) }; }
+    if (a) { if (a.status === 'disabled') return null; const p = a.providers.find(x => x.provider === provider); if (profile.name) p.name = profile.name; const s = signedIn(a, req, true); return s.need ? s : { mode: 'account', ...s }; }
     const data = { provider, subject: String(profile.id), name: profile.name || '', avatar: profile.avatar || null, email: profile.email || '', emailVerified: !!(profile.email && profile.emailVerified) };
     const owner = data.emailVerified ? byEmail(data.email) : null;
     if (owner) { const ticket = issue('oauth', 10 * 60_000, { ...data, offer: owner.id }); return { mode: 'link-offer', ticket, username: owner.username, email: data.email }; }
@@ -288,14 +313,15 @@ module.exports = function makeAccounts({ store, getMembers, isLocal, limited, ha
 
   async function auth2(req, res, { b, c, m, body, send, fail, tooMany }) {
     // public: what this TribeCode offers (the sign-up sheet, signin.html and the pop-up read it)
-    if (b === 'config' && m === 'GET') { send(res, 200, { on: true, openSignup: openSignup(), email: emailOn() }); return true; }
+    if (b === 'config' && m === 'GET') { send(res, 200, { on: true, openSignup: openSignup(), email: emailOn(), twoStep: true, passkeys: true }); return true; }
     // ---- the host's settings: on the host computer only ----
     if (b === 'admin') {
       if (!isHostAdmin(req)) { fail(res, 403, 'only the host changes sign-in settings, on the host computer'); return true; }
-      if (c === 'settings' && m === 'GET') { send(res, 200, { openSignup: openSignup(), smtp: viewSmtp() }); return true; }
+      if (c === 'settings' && m === 'GET') { send(res, 200, { openSignup: openSignup(), smtp: viewSmtp(), twoStepAdmins: twoStepAdmins() }); return true; }
       if (c === 'settings' && m === 'PUT') {
         const all = readAuth();
         if (body.openSignup !== undefined) all.openSignup = !!body.openSignup;
+        if (body.twoStepAdmins !== undefined) { all.twoStepAdmins = !!body.twoStepAdmins; log(`accounts: two-step for admins ${all.twoStepAdmins ? 'required' : 'not required'}`); }   // feat/auth3
         if (body.smtp !== undefined) {
           if (body.smtp === null || body.smtp.host === '') delete all.smtp;
           else {
@@ -308,7 +334,7 @@ module.exports = function makeAccounts({ store, getMembers, isLocal, limited, ha
           }
         }
         writeAuth(all); log(`accounts: sign-in settings changed (open sign-up ${openSignup() ? 'on' : 'off'}, email ${emailOn() ? 'on' : 'off'})`);
-        send(res, 200, { openSignup: openSignup(), smtp: viewSmtp() }); return true;
+        send(res, 200, { openSignup: openSignup(), smtp: viewSmtp(), twoStepAdmins: twoStepAdmins() }); return true;
       }
       if (c === 'smtp-test' && m === 'POST') {
         const cfg = smtpConf(); if (!cfg) { fail(res, 400, 'save the SMTP settings first'); return true; }
@@ -393,6 +419,7 @@ module.exports = function makeAccounts({ store, getMembers, isLocal, limited, ha
     syncMembers();
     const body = m === 'POST' || m === 'PUT' ? await readBody(req).catch(() => ({})) : {};
     if (await auth2(req, res, { b, c, m, body, send, fail, tooMany })) return true;
+    if (await a3.route(req, res, { b, c, m, body, send })) return true;   // feat/auth3: two-step and passkeys
     // feat/signup: is this username free? Only yes or no (plus free suggestions); nothing else about an account.
     if (b === 'check' && m === 'GET') {
       const username = normalizeUsername(new URL(req.url, 'http://x').searchParams.get('username'));
@@ -448,11 +475,9 @@ module.exports = function makeAccounts({ store, getMembers, isLocal, limited, ha
         : a.status === 'guest' && !!a.deviceKeyHash && typeof body.deviceKey === 'string' && crypto.timingSafeEqual(Buffer.from(hash(body.deviceKey), 'hex'), Buffer.from(a.deviceKeyHash, 'hex')));   // fix/review-4
       if (!ok) { failed(lk); fail(res, 401, 'that username and password do not match'); return true; }
       fails.delete(lk);
-      const token = startSession(a, req, a.status === 'guest');
-      // polish: an account that belongs to a member of this tribe signs that member in on this device (a device link)
-      const live = new Set(getMembers().filter(x => x.role !== 'agent').map(x => x.id)), mid = (a.members || []).find(x => live.has(x));
-      const sig = mid && a.password && signInMember ? signInMember(mid, req) : null;   // only with a password: auto-mapped accounts have none yet
-      send(res, 200, { account: pub(a), token, ...(sig ? { member: sig.member, memberToken: sig.token } : {}) }); return true;
+      // polish: an account that belongs to a member of this tribe signs that member in on this device (a device link),
+      // only with a password: auto-mapped accounts have none yet. feat/auth3: two-step first, when it is on.
+      send(res, 200, signedIn(a, req, !!a.password)); return true;
     }
     // feat/signup: forgot password. Until there is email the host completes it: they see the request in Settings › Accounts,
     // make a one-time code and give it to the person, who sets a new password with it.
@@ -476,7 +501,7 @@ module.exports = function makeAccounts({ store, getMembers, isLocal, limited, ha
       if (!a || a.status === 'disabled') { redeemTok(body.token, ['reset'], true); fail(res, 410, 'that reset link has expired or was already used: ask for a new one'); return true; }
       const weak = weakPassword(body.password, a.username); if (weak) { fail(res, 400, weak); return true; }   // the link stays good for a better password
       redeemTok(body.token, ['reset'], true);
-      a.password = scryptHash(body.password); a.resets = []; a.sessions = []; if (a.email) a.email.verified = true; fails.delete(a.usernameKey);
+      a.password = scryptHash(body.password); a.resets = []; a.sessions = []; if (a.email) a.email.verified = true; fails.delete(a.usernameKey); a3.forgetTrust(a.id);
       log(`accounts: ${a.username} set a new password (email link)`);
       send(res, 200, signedIn(a, req, true)); return true;
     }
@@ -491,9 +516,8 @@ module.exports = function makeAccounts({ store, getMembers, isLocal, limited, ha
       }
       const weak = weakPassword(body.password, a.username); if (weak) { fail(res, 400, weak); return true; }
       a.password = scryptHash(body.password); a.resets = []; a.sessions = [];   // a new password signs every other device out
-      log(`accounts: ${a.username} set a new password`);
-      const token = startSession(a, req, false);
-      send(res, 200, { account: pub(a), token }); return true;
+      log(`accounts: ${a.username} set a new password`); a3.forgetTrust(a.id); save();
+      send(res, 200, signedIn(a, req, false)); return true;   // feat/auth3: two-step still stands between a reset and a session
     }
     if (b === 'resets') {
       const mem = memberFromReq ? memberFromReq(req) : null;
@@ -534,7 +558,8 @@ module.exports = function makeAccounts({ store, getMembers, isLocal, limited, ha
       const a = who.account, has = methodsOf(a).find(x => x.id === c);
       if (!has) { fail(res, 404, 'that sign-in method is not on this account'); return true; }
       if (usableCount(a) - (has.kind !== 'email' || has.usable ? 1 : 0) < 1) { send(res, 409, { error: 'keep at least one way to sign in: add another before removing this one', code: 'last' }); return true; }
-      if (has.kind === 'password') delete a.password;
+      if (has.kind === 'passkey') a3.removePasskey(a.id, c.slice(8));
+      else if (has.kind === 'password') delete a.password;
       else if (has.kind === 'email') a.email.verified = false;
       else a.providers = (a.providers || []).filter(x => 'provider:' + x.provider !== c);
       save(); log(`accounts: ${a.username} removed ${c}`);
@@ -544,7 +569,7 @@ module.exports = function makeAccounts({ store, getMembers, isLocal, limited, ha
       const a = who.account;
       if (a.password && !(typeof body.current === 'string' && scryptCheck(body.current, a.password))) { failed(a.usernameKey); fail(res, 401, 'your current password does not match'); return true; }
       const weak = weakPassword(body.password, a.username); if (weak) { fail(res, 400, weak); return true; }
-      a.password = scryptHash(body.password); a.sessions = a.sessions.filter(s => s === who.session); save();
+      a.password = scryptHash(body.password); a.sessions = a.sessions.filter(s => s === who.session); a3.forgetTrust(a.id); save();
       send(res, 200, { methods: methodsOf(a), account: pub(a) }); return true;
     }
     if (b === 'sessions' && m === 'GET') {
@@ -600,8 +625,8 @@ module.exports = function makeAccounts({ store, getMembers, isLocal, limited, ha
     const ids = [me.id, ...getMembers().filter(x => x.role === 'agent' && x.owner === me.id).map(x => x.id)];
     const anon = 'deleted-' + id(6);
     if (forgetMembers) forgetMembers(ids);   // members.json, device links, project seats (server/index.js)
-    const d = load(), before = d.accounts.length;
-    d.accounts = d.accounts.filter(a => !(a.members || []).some(x => ids.includes(x))); save();
+    const d = load(), before = d.accounts.length, gone = d.accounts.filter(a => (a.members || []).some(x => ids.includes(x))).map(a => a.id);
+    d.accounts = d.accounts.filter(a => !gone.includes(a.id)); save(); a3.forget(gone);
     const files = anonymise(ids, anon);
     log(`accounts: deleted member ${me.id} (${ids.length - 1} agent${ids.length === 2 ? '' : 's'}, ${before - d.accounts.length} account${before - d.accounts.length === 1 ? '' : 's'}, ${files} file${files === 1 ? '' : 's'} changed)`);
     return { ok: true, removed: ids.length, accounts: before - d.accounts.length };
@@ -614,7 +639,7 @@ module.exports = function makeAccounts({ store, getMembers, isLocal, limited, ha
     return true;
   }
 
-  return { route, account, removeMember, mailMember, canMail: mid => !!mailFor(mid), enabled, syncMembers, oauthOutcome, accountFromReq, attachProvider, openSignup, emailOn, normalizeUsername, keyOf, uniqueName, list: () => load().accounts.map(pub), reload: () => { db = null; } };
+  return { route, account, removeMember, mailMember, canMail: mid => !!mailFor(mid), enabled, syncMembers, oauthOutcome, accountFromReq, attachProvider, openSignup, emailOn, memberGate, claimedAccountId, linkOrigin, twoStepAdmins, normalizeUsername, keyOf, uniqueName, list: () => load().accounts.map(pub), reload: () => { db = null; a3.reload(); } };
 };
 module.exports.normalizeUsername = normalizeUsername;
 module.exports.keyOf = keyOf;

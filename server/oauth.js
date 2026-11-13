@@ -306,6 +306,8 @@ module.exports = function makeOAuth({ store, getMembers, saveMembers, publicMemb
         const inv = findInvite(f.invite);
         if (inv) project = addToProject(owner, inv);
       }
+      // feat/auth3: two-step on this member's account -> a code (or a passkey) before the device key
+      if (acctsOn() && accounts.memberGate) { let g; try { g = accounts.memberGate(owner, req, { provider: f.provider, providerName: P.name }); } catch (e) { throw err(e.status || 403, e.message, e.code); } if (g) return { ...g, provider: f.provider, providerName: P.name }; }
       const { key } = devices.create(owner, req, `${P.name} sign-in`);
       const r = devices.redeem(key, req);
       log(`${owner.name} signed in with ${P.name}`);
