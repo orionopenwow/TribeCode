@@ -249,7 +249,14 @@ def main():
             st, red = api("/device-link/redeem", "POST", {"key": link["key"]}); assert st == 200; phone_tok = red["token"]
             assert api("/me", token=phone_tok)[0] == 200
             B.evaluate("TribeSettings.close(); TribeSettings.open('account')"); B.wait_for_selector("#set-devices [data-dev]", timeout=10000)
+            # audit 2026-11-13: a second browser signed in with the SAME key must lose its live connection too, and be told
+            Bx = page("Ben", btok); Bx.goto(BASE + "/?skipIntro=1"); Bx.wait_for_function("TribeClient.connected()", timeout=20000)
             B.click("#set-signout-others"); B.wait_for_function("!document.querySelector('#set-devices [data-dev]')", timeout=10000)
+            Bx.wait_for_function("!TribeClient.connected()", timeout=15000)
+            Bx.wait_for_function("document.body.innerText.includes('This device was signed out of the tribe')", timeout=40000)
+            assert Bx.evaluate("TribeClient.state().status") == "offline", "the signed-out browser stops reconnecting"
+            Bx.context.close()
+            B.wait_for_function("TribeClient.connected()", timeout=15000)   # this device reconnects with its new key
             assert api("/me", token=phone_tok)[0] == 401, "the phone is signed out"
             assert api("/me", token=btok)[0] == 401, "the old key is replaced"
             nb = B.evaluate("TribeStore.get().server.token"); assert nb != btok and api("/me", token=nb)[0] == 200, "this device keeps working"

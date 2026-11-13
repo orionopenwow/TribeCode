@@ -300,7 +300,7 @@ def walk(b, state, size, token, out, max_clicks, only):
                 pg.wait_for_timeout(800)
                 try: after = pg.evaluate("__aw.snap()")
                 except Exception: load(); enter(name, js); continue
-            changed = any(after[k] != before[k] for k in ("hash", "view", "clip", "opened", "dl", "checked", "scroll")) or after["muts"] - before["muts"] > 0 or rep["apiCalls"] > n_api or after["top"] != before["top"] or after["focus"] != before["focus"]
+            changed = any(after[k] != before[k] for k in ("hash", "view", "clip", "opened", "dl", "checked", "scroll")) or after["muts"] - before["muts"] > 0 or rep["apiCalls"] > n_api or after["top"] != before["top"]
             if not changed: r["noop"].append({"label": nxt["label"], "el": nxt["path"]})
             new_layers = [l for l in after["top"] if l not in before["top"]]
             if new_layers:

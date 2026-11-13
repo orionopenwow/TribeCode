@@ -855,6 +855,9 @@
     else { autoHub = !(v && VIEWS[v]) && !C.hasToken(); show(v && VIEWS[v] ? v : C.hasToken() ? 'home' : 'hub'); } }
   // Nothing to connect to (no tribe yet): the project home has nothing to show, the hub does.
   C.on('status', s => { if (s.status === 'offline' && !C.hasToken() && ['home', 'chat'].includes(current)) { autoHub = true; show('hub'); } });
+  // audit 2026-11-13: this device's key was ended (Sign out other devices, or removed from the tribe). One calm line
+  // instead of "Reconnecting…" for ever; logging in again or opening the invite link brings you back.
+  addEventListener('tribe-signed-out', () => toast('This device was signed out of the tribe. Log in again, or open your invite link, to come back.'));
   // The hub was only standing in for "no tribe yet": once connected (hosting or joined), open the project as usual.
   C.on('hello', () => { if (autoHub && current === 'hub') show('home'); autoHub = false; });
   setTimeout(iosHint, 1500);

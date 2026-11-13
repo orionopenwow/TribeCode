@@ -110,7 +110,10 @@ module.exports = function mySettings({ store, getMembers, memberById, hash, id, 
     list = list.filter(d => d.member !== me.id || (!usingMain && (d.tokens || []).includes(th))).map(d => d.member === me.id ? { ...d, tokens: [th] } : d);
     store.writeJSON('.tribe/devices.json', list); try { devices.reload(); } catch {}
     let closed = 0;
-    for (const s of sockets(me.id)) if (s.th !== th) { try { s.close(); closed++; } catch {} }
+    // Every other live connection ends. Two devices signed in with the same main key can't be told apart by key, so when
+    // the caller uses the main key ALL of this member's sockets close: the caller's reconnects by itself with the new
+    // key (audit 2026-11-13: another browser on the same key used to keep its live socket, and kept receiving chat).
+    for (const s of sockets(me.id)) if (usingMain || s.th !== th) { try { s.close(); closed++; } catch {} }
     log(`signed out ${me.id}'s other devices (${before} device link${before === 1 ? '' : 's'}, ${closed} socket${closed === 1 ? '' : 's'})`);
     return { token: usingMain ? token : null, ended: usingMain ? before : Math.max(0, before - 1), closed };
   }

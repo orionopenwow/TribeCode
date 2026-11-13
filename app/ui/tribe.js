@@ -59,7 +59,7 @@
 
   function setStatus(s) { state.status = s; emit('status', state); if (s === 'online') setTimeout(flush, 200); }
 
-  let retryTimer = null;
+  let retryTimer = null, revoked = '';   // revoked: the key the server refused (tribe-signed-out)
   // ---------- cloud save (server/cloudsave.js): this device keeps a sealed copy of the tribe ----------
   // A free cloud host wipes its files when it naps. Whoever comes back first puts the tribe back from their copy;
   // later arrivals add what they have. If nobody here has a copy yet, we wait calmly instead of signing you out.
@@ -151,6 +151,16 @@
       if (sock !== me) return;   // an old socket we already replaced
       setStatus(token() ? 'reconnecting' : 'offline');
       if (!token()) return;
+      // The key stopped working (signed out from another device, removed from the tribe): say so once and stop
+      // knocking, instead of "Reconnecting…" for ever. The server must answer 401 itself; a network error keeps retrying.
+      if (retry >= 2 && !cloud) {
+        const t = token();
+        fetch(base() + '/api/me', { headers: { Authorization: 'Bearer ' + t } }).then(r => {
+          if (r.status !== 401 || sock !== me || token() !== t) return;
+          clearTimeout(retryTimer); retryTimer = null; revoked = t; setStatus('offline');
+          try { window.dispatchEvent(new CustomEvent('tribe-signed-out')); } catch {}
+        }).catch(() => {});
+      }
       const wait = Math.min(15000, 500 * 2 ** retry++);
       retryTimer = setTimeout(() => (cloud ? cloudRevive().then(r => (r === 'empty' ? waitForTribe() : null)) : Promise.resolve()).finally(connect), wait);   // cloud: the host may have napped
     };

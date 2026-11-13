@@ -558,7 +558,7 @@
       const b = e.currentTarget; b.disabled = true;
       try {
         const r = await C().api('/me/signout-others', { method: 'POST' });
-        if (r.token) S.set({ server: { ...(S.get().server || {}), token: r.token } });
+        if (r.token) { S.set({ server: { ...(S.get().server || {}), token: r.token } }); try { C().connect(); } catch {} }   // the server closed every connection made with the old key, this one too
         if (window.TribeAccounts && window.TribeAccounts.signOutOthers) await window.TribeAccounts.signOutOthers().catch(() => {});
         toast('Every other device is signed out'); devicesRow(el); saved();
       } catch (err) { toast(err.message); b.disabled = false; }
