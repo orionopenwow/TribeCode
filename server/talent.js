@@ -27,6 +27,7 @@
 //   GET  /gigs   POST /gigs   PATCH|DELETE /gigs/:id   POST /gigs/:id/apply { note } | { name, contact, note }
 //   POST /gigs/:id/hire { applicant }        member -> seat + DM; outside person -> project invite, seat on join
 //   POST /gigs/:id/share { contact, pr? }    public bundle + GitHub links (+ PR with the poster's saved token)
+//   POST /gigs/:id/unshare                   back to this tribe only (leaves the signed feed, server/workfeed.js)
 //   GET  /public[?refresh=1]                 community gigs (read-only, jsDelivr)
 //   POST /gigs/:id/request { note, project? }   POST /gigs/:id/requests/:rid/accept | /decline { reason }   (offers)
 //   POST /gigs/:id/hide { hidden }   POST /profile/:id/hide { hidden }   leads hide spam (only you edit your own)
@@ -379,6 +380,18 @@ module.exports = function talent({ P, base, id, getMembers, nameOf, postChat, br
     const list = gigs(), gg = list.find(x => x.id === g.id); if (gg) { gg.shared = { id: pub.id, at: iso() }; saveGigs(list); }
     return out;
   }
+  // feat/work-v2: Public is a visibility choice on a gig. unshare takes it out of this tribe's signed feed
+  // (server/workfeed.js); a pull request already merged on the community board is the poster's to remove there.
+  function unshare(gid, me) {
+    const { list, g } = findGig(gid, me);
+    if (!canManageGig(me, g) || !human(me)) throw err(403, 'only the poster changes who sees a gig');
+    if (g.shared && /^[a-z0-9-]{1,80}$/.test(String(g.shared.id || ''))) { try { fs.rmSync(base.p('.tribe', 'talent', 'public', `${g.shared.id}.json`), { force: true }); } catch {} }
+    delete g.shared; g.updated = iso(); saveGigs(list); changed('gigs'); return { gig: gigView(g, me) };
+  }
+  // the bundles of open gigs their posters made Public: what this tribe's gig feed publishes
+  function publicBundles() {
+    return gigs().filter(g => g.shared && g.status === 'open' && /^[a-z0-9-]{1,80}$/.test(String(g.shared.id || ''))).map(g => base.readJSON(`.tribe/talent/public/${g.shared.id}.json`, null)).filter(Boolean);
+  }
   let pubCache = null;
   async function publicGigs(refresh) {
     if (!workshop || !workshop.repo) return { available: false, gigs: [], reason: 'missing' };
@@ -664,6 +677,7 @@ module.exports = function talent({ P, base, id, getMembers, nameOf, postChat, br
         if (c && d === 'apply' && m === 'POST') return send(res, 200, { gig: apply(c, await readBody(req) || {}, me) });
         if (c && d === 'hire' && m === 'POST') return send(res, 200, hire(c, await readBody(req) || {}, me));
         if (c && d === 'share' && m === 'POST') return send(res, 200, await share(c, await readBody(req) || {}, me));
+        if (c && d === 'unshare' && m === 'POST') return send(res, 200, unshare(c, me));
         if (c && d === 'matches' && m === 'GET') return send(res, 200, { matches: matches(c, me) });
         if (c && d === 'assign' && m === 'POST') return send(res, 200, assign(c, await readBody(req) || {}, me));
         if (c && d === 'progress' && m === 'POST') return send(res, 200, progress(c, await readBody(req) || {}, me));
@@ -746,5 +760,5 @@ module.exports = function talent({ P, base, id, getMembers, nameOf, postChat, br
     },
   };
 
-  return { route, mcpTools, onJoin, people, profileOf, listGigs, assignSeat, SEAT_KINDS, SEAT_COLORS };
+  return { route, mcpTools, onJoin, people, profileOf, listGigs, assignSeat, publicBundles, SEAT_KINDS, SEAT_COLORS };
 };

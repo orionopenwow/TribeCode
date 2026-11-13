@@ -249,6 +249,7 @@ function broadcast(msg, except) {
 }
 let dashboard = null;   // the Global Hub, server/hub.js (made below)
 let talent = null;   // v0.27 company: the Work view (server/talent.js, made below)
+let workFeed = null;   // feat/work-v2: this tribe's signed gig feed (server/workfeed.js, made below)
 let profiles = null;   // feat/profiles: avatar, name color, status, presence (server/profiles.js, made below)
 let moderation = null;   // feat/appstore: report, block, word filter (server/moderation.js, made below)
 let sense = null;   // feat/project-sense (server/sense.js, made below)
@@ -609,6 +610,7 @@ const soloImport = require('./soloimport')({ P, docs, postChat, store, str, save
 const siteTpl = require('./sitetemplates')({ P, base: baseStore, siteDir: pid => showcase.siteDir(pid), postChat, nameOf, isManager: (pid, me) => !!me && me.role !== 'agent' && (me.role === 'host' || ((P.get(pid) || {}).members || {})[me.id] === 'host') });   // v0.25: site templates
 talent = require('./talent')({ P, base: baseStore, id, getMembers: () => members, nameOf, postChat, broadcast, bus, dms, approvals, askai, workshop, perms, makeInvite, linkFor, tribeName: () => tribe.name, ledger, loadTasks: () => loadTasks(), saveTask: t => saveTask(t), createTask: o => createTask(o), taskFlow,   // v0.27 company: Work (gigs, hiring, time bank, compute)
   joinProject: (mid, pid) => { const mem = memberById(mid); if (!mem) return; if (Array.isArray(mem.projects) && !mem.projects.includes(pid)) mem.projects.push(pid); P.addMember(pid, mid, P.scoped(mem) ? 'builder' : mem.role); saveMembers(); pushPresence(); rooms.pushProjects(); } });
+workFeed = require('./workfeed')({ base: baseStore, tribeName: () => tribe.name, publicGigs: () => talent.publicBundles(), id });
 buildKit = require('./buildkit')({ P, root: require('./tpldir').root(), sense });   // build kit: the open-source stack + quality bar per project kind (server/buildkit.js)
 setupFlow = require('./setup')({ P, W, base: baseStore, sense, buildKit, readVision, createTask: o => createTask(o), broadcast, resetHub, getMembers: () => members, siteTpl: () => siteTpl, company: () => companyHub });   // v0.27 company: setup/business   // feat/setup-flow: role flows, Create the repo, Make the starter
 const siteDesign = require('./sitedesign')({ base: baseStore, root: require('./tpldir').root(), showcase, siteFlint, P, nameOf, members: () => members, inspo: inspoBoard, postChat: (...a) => postChat(...a), broadcast: m => broadcast(m), tasks: { create: a => createTask(a), save: t => saveTask(t), load: () => loadTasks(), flow: taskFlow } });   // the website designer (server/sitedesign.js, app/ui/sitecfg.js)
@@ -980,6 +982,7 @@ async function apiInProject(req, res, url) {
   if (a === 'assets') return assetLib.route(req, res, ctx());
   if (a === 'inspo') return inspoBoard.route(req, res, ctx());
   if (a === 'talent') return talent.route(req, res, ctx());   // v0.27 company: Work (server/talent.js)
+  if (a === 'work') return workFeed.route(req, res, ctx());   // feat/work-v2: signed gig feeds, Phase 2 groundwork (server/workfeed.js)
   if (a === 'academy') return academy.route(req, res, ctx());   // v0.27 company: Role Academy + Offload
   if (a === 'legal' || (a === 'projects' && c === 'legal')) return legalDocs.route(req, res, ctx());   // v0.27 company: Legal documents
   if (a === 'assist') return assist.route(req, res, ctx());   // feat/assist
