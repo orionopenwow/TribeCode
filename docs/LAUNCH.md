@@ -3,6 +3,7 @@
 What has to be true before TribeCode is called launched, what is done, and what is left. Owners: **you** (needs a person, an account or money), **agents** (can be built and tested here). Kept current at every milestone, alongside `HANDOFF.md` and `docs/CONTEXT.md`.
 
 Last updated: 2026-11-13 (the app audit, `docs/APP-AUDIT-2026-11-13.md`: every route walked in four roles at two sizes; what it changes here is marked *audit*). Before that: 2026-11-12 (v0.31.0: Design flow and starters, website designer v2, presence and People, Company v2 and gigs, Marketplace v2, the desktop demo; the v0.29 review items still open are listed under Backend).
+Last updated: 2026-11-12 (v0.31.2; journeys closed in docs/LOOPS-REPORT.md, prices hidden until payments exist). v0.31.0 brought the Design flow and starters, website designer v2, presence and People, Company v2 and gigs, Marketplace v2 and the desktop demo.
 
 ## 1. The product works end to end (no dead ends, no bugs)
 

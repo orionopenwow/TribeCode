@@ -2,12 +2,14 @@
 // Flint's evaluation set (app/test/flint_eval.json, written by scripts/dev/flint-eval-cases.js): websites, the design
 // canvas, preview edits, lessons and global commands, with typos, slang and indirect wording. No AI: only
 // app/ui/flintnlu.js. Fails under 95%. Also checks the lesson index (app/ui/flintlessons.js) covers every feature.
-//   node app/test/flint_eval_test.js [-v]
+//   node app/test/flint_eval_test.js [-v] [--model app/test/fixtures/flint-model]
 'use strict';
 const path = require('path');
 const N = require(path.join(__dirname, '..', 'ui', 'flintnlu.js'));
 const data = require('./flint_eval.json');
 const verbose = process.argv.includes('-v');
+// --model <folder>: run with Flint's local helper (tier 1) present. It only re-ranks "did you mean", so the score must not move.
+{ const i = process.argv.indexOf('--model'); if (i > 0) { const fs = require('fs'), E = require(path.join(__dirname, '..', 'ui', 'flintembed.js')), d = process.argv[i + 1], b = fs.readFileSync(path.join(d, 'model.safetensors')); N.setSemantic(E.fromFiles({ model: b.buffer.slice(b.byteOffset, b.byteOffset + b.byteLength), tokenizer: fs.readFileSync(path.join(d, 'tokenizer.json'), 'utf8') })); console.log(`with the local helper: ${d}`); } }
 const CTX = {
   g: {}, s: { view: 'site', pages: ['Home', 'About', 'Contact'] }, p: { view: 'preview', site: true },
   c: { view: 'canvas' }, cs: { view: 'canvas', selection: true }, sh: { view: 'sheet' }, d: { view: 'doc' }, sl: { view: 'deck' },
@@ -22,7 +24,7 @@ function slotOk(got, want) {
   }
   return '';
 }
-let pass = 0; const fails = [], byArea = {}, held = [0, 0], h1 = [0, 0], v2 = [0, 0], h3 = [0, 0], un = [0, 0], h4 = [0, 0], h5 = [0, 0], mx = [0, 0], h6 = [0, 0];
+let pass = 0; const fails = [], byArea = {}, held = [0, 0], h1 = [0, 0], v2 = [0, 0], h3 = [0, 0], un = [0, 0], h4 = [0, 0], h5 = [0, 0], mx = [0, 0], h6 = [0, 0], c4 = [0, 0], c5 = [0, 0];
 for (const c of data.cases) {
   const ctx = { ...BASE, ...CTX[c.ctx || 'g'] };
   const steps = N.parse(c.t, ctx).steps;
@@ -47,6 +49,8 @@ for (const c of data.cases) {
   if (c.v === 'held5') { h5[1]++; if (!why) h5[0]++; }
   if (c.v === 'max') { mx[1]++; if (!why) mx[0]++; }
   if (c.v === 'held6') { h6[1]++; if (!why) h6[0]++; }
+  if (c.v === 'c4') { c4[1]++; if (!why) c4[0]++; }
+  if (c.v === 'c5') { c5[1]++; if (!why) c5[0]++; }
   if (!why) { pass++; byArea[area][0]++; } else fails.push(`  ✗ [${c.ctx}] ${JSON.stringify(c.t)} → want ${JSON.stringify(c.i)} ${c.s ? JSON.stringify(c.s) : ''}: ${why}`);
 }
 const n = data.cases.length, pct = Math.round(pass / n * 1000) / 10;
@@ -60,6 +64,8 @@ if (h4[1]) console.log(`held-out batch 4 (written before the new commands were b
 if (h5[1]) console.log(`held-out batch 5 (written after, 34/40 = 85% on its first untuned run): ${h5[0]}/${h5[1]}`);
 if (mx[1]) console.log(`flint-max batch (design, copy, sheets, docs, slides, canvas recipes): ${mx[0]}/${mx[1]} = ${Math.round(mx[0] / mx[1] * 1000) / 10}%`);
 if (h6[1]) console.log(`held-out batch 6 (flint-max, written before the matchers, 48/50 = 96% on its first untuned run): ${h6[0]}/${h6[1]}`);
+if (c4[1]) console.log(`batch 4, v0.31 features (58.3% when first run, then tuned): ${c4[0]}/${c4[1]} = ${Math.round(c4[0] / c4[1] * 1000) / 10}%`);
+if (c5[1]) console.log(`held-out batch 5 (v0.31 features, never tuned against): ${c5[0]}/${c5[1]} = ${Math.round(c5[0] / c5[1] * 1000) / 10}%`);
 if (held[1]) console.log(`held-out (never tuned against): ${held[0]}/${held[1]} = ${Math.round(held[0] / held[1] * 1000) / 10}%`);
 console.log(`flint_eval: ${pass}/${n} = ${pct}%`);
 let bad = false;

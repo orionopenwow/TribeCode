@@ -13,6 +13,20 @@
     el.innerHTML = `<p class="faint">${T('st.loading', 'Checking…')}</p>`;
     let s; try { s = await C.api('/storage'); } catch (e) { el.innerHTML = `<p class="faint">${esc(e.message)}</p>`; return; }
     const desk = window.TribeHost && window.TribeHost.isDesktop, repos = s.projects.filter(p => p.hasRepo);
+    if (s.where === 'device') {   // feat/mobile-complete: a tribe that lives only on this phone: its usage, and where to grow
+      const mb = n => (n / 1048576).toFixed(n > 10485760 ? 0 : 1) + ' MB', u = (s.device || {}).used || 0, q = (s.device || {}).quota || 0, pct = q ? Math.round(u / q * 100) : 0;
+      el.innerHTML = `<div class="stg">
+        <div class="stg-t"><span class="stg-ico" aria-hidden="true">📱</span><div><span class="eyebrow">${T('st.runs', 'Where your tribe runs')}</span><b>${T('st.phone', 'On this phone')}</b><span>${T('st.phonetext', 'Chat, tasks, docs, designs and code files are kept in this browser. Move to a host to share them and keep a copy elsewhere.')}</span></div></div>
+        <div class="stg-t"><span class="stg-ico" aria-hidden="true">💾</span><div><span class="eyebrow">${T('st.used', 'Space used')}</span><b>${q ? `${mb(u)} of ${mb(q)} (${pct}%)` : mb(u)}</b>${pct >= 80 ? `<span class="stg-warn">${T('st.full', 'Almost full: move to a host or download a copy so nothing is lost.')}</span>` : ''}</div></div>
+        <div class="stg-t"><span class="stg-ico" aria-hidden="true">🐙</span><div><span class="eyebrow">${T('st.code', 'Code · GitHub')}</span><b>${s.github.signedIn ? `${T('st.signed', 'Signed in')}${s.github.login ? ' as ' + esc(s.github.login) : ''}` : T('st.ghphone', 'Not connected')}</b></div></div>
+        <div class="stg-acts"><button class="btn sm" data-stg="ghphone">${T('st.ghphoneb', 'GitHub on this phone')}</button><button class="btn sm" data-stg="move">${T('st.move', 'Move to a host')}</button><button class="btn sm" data-stg="copy">${T('st.copy', 'Save a copy')}</button></div></div>`;
+      el.querySelectorAll('[data-stg]').forEach(b => b.onclick = () => {
+        if (b.dataset.stg === 'ghphone') return window.TribeGhPhone && window.TribeGhPhone.open();
+        if (b.dataset.stg === 'move') return window.TribePhoneHost && window.TribePhoneHost.move();
+        const x = document.getElementById('set-copy'); if (x) x.click();
+      });
+      return;
+    }
     const runs = s.where === 'cloud'
       ? `<b>${T('st.cloud', 'A cloud host')}</b><span>${s.cloudSave ? T('st.cloudsave', 'Cloud save is on: every member\'s device keeps a sealed copy, so the tribe comes back if the host restarts.') : T('st.cloudoff', 'Cloud save is off. Set a fixed setup code on the host to turn it on.')}</span>`
       : `<b>${T('st.computer', 'The host\'s computer')}</b><span>${s.folder ? `${T('st.folder', 'Chat, tasks and docs are plain files in')} <code>${esc(s.folder)}</code>` : T('st.hostkeeps', 'The host keeps chat, tasks and docs as plain files on their computer.')}</span>`;

@@ -18,6 +18,8 @@ Run a TribeCode tribe on a free cloud host, so you and your friends can join fro
 - The seals use a key made from `TRIBE_SETUP_CODE`, so nobody can edit a copy to give themselves more power. Each copy holds only what that person could already see: no one else's DMs, and no server secrets.
 - Copies hold the last 1,500 messages per channel and stay under about 2 MB. **Your code is safest on GitHub.**
 - 750 free hours a month per Render workspace.
+- **Phone notifications after a sleep.** Push keys and phone subscriptions are server secrets, so cloud save never copies them. To keep push working, give the server fixed keys: on any computer with Node run `node scripts/dev/vapid-keys.js`, then paste the two lines into the service's **Environment** as `TRIBE_VAPID_PUBLIC` and `TRIBE_VAPID_PRIVATE` (render.yaml lists both). Each phone that already turned notifications on sends its subscription again by itself the next time it connects, so nobody has to switch push back on. Without the keys the server makes new ones after a wipe and phones quietly re-subscribe on their next visit.
+- **Live updates.** Everything live (chat, tasks, the preview reloading itself) works over the cloud address. On a Cloudflare quick-tunnel link, which doesn't stream Server-Sent Events, the preview falls back to checking every few seconds.
 
 ## Sign in with GitHub (accounts that follow you to any device)
 

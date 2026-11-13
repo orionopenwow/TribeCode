@@ -1,5 +1,64 @@
 # Changelog
 
+## v0.34.0
+- **Real build results**: the host runs a project's own checks after each ship, or when you press Run checks on the Build status card or tell Flint "run the checks". The dashboard shows pass or fail with the failing lines, and the person who shipped is told. Plain web projects get a safe check that runs nothing. Running a project's test scripts is off until a lead turns it on, because it runs members' code on the host computer.
+- **Gigs across tribes**: hosts can follow another tribe's signed gig list by address and key. Those gigs show under Gigs › Public with the tribe named. The fetcher refuses private addresses, cross-host redirects, oversized or unsigned lists and old copies. Hosts can pause or block a source and hide a gig.
+- **Flint's local helper (opt-in)**: "Set up a local model" on Flint's page downloads a small model (potion-base-8M, MIT, about 30 MB) that improves "did you mean", help answers and search by meaning across docs, tasks and chat. Everything works the same without it, and Remove deletes it.
+- **Fixes**: the Build status card shows its failure row; agents keep the ship tools alongside the new checks tools.
+- **Phones**: the checks log, the feeds manager and the local-model sheet fit at 390px.
+
+## v0.33.0
+- **One Flint chat everywhere**: the website designer, canvas and preview use Flint's normal chat. He follows hundreds more commands with no AI and asks a short question instead of "needs an AI" when a detail is missing.
+- **Flint does more on his own**:
+  - Chained steps in one message with one Undo, and follow-ups like "make it bigger".
+  - Palettes from a mood or one colour with contrast fixed, font pairs, "tidy this up", headline ideas.
+  - Sheets (sum, sort, chart, total row), docs (contents, checklist, summary) and slides (a pitch from the vision doc).
+  - Canvas pieces like a navbar or login form.
+  - A new Flint page lists what he can do, with Try it buttons.
+- **Create a tribe in one flow**: name and icon, where it lives, invite friends.
+- **Where it lives is one thing**:
+  - A project's home can be a folder on this computer, this device, the free cloud, GitHub or a shared folder (Dropbox, OneDrive, Drive, iCloud, a network drive).
+  - One pill shows its home and sync status.
+  - Ship by hand or automatically, with a ship history and Undo last ship.
+  - **Versions** shows every save and ship: see changes, restore, name, compare, download.
+- **Drag and drop**: drop files or whole folders anywhere, or paste. Secrets stay out unless you say so. Flint reads a folder at once, says what it is and offers next steps.
+- **Sign-in**:
+  - GitHub, Google or Discord can create an account.
+  - Friends sign up from their own browser.
+  - The desktop app finishes sign-in with a one-time code.
+  - Hosts can add their own mail server for sign-in links.
+- **Invite your Claude**: next to every Invite friends. One command or config, and your Claude joins with your access and never more. Pause or remove it any time.
+- **Use any free AI**: the Agents Hub has a copy-out, paste-back bridge for free AI chats. It shows each change to accept or reject, with Undo. The hub also opens correctly in Beginner mode.
+- **Settings has tabs** and search: 11 tabs, starting with Profile & look. New: notification switches, quiet hours and digest; sign out other devices; who can message you; download my data; delete account with a 7-day undo; custom shortcuts; accessibility options.
+- **Dashboard**: opens with a preview of the main project, then Needs attention, then the rest.
+- **Widgets**: every widget has the same menu and can be reordered. The + picker is a gallery with search and preview. 19 new live cards (my tasks, who's here, milestones, countdowns, checklist, poll, notes, bookmarks, build and sync status and more), on Home too.
+- **Work, redesigned**: one header, three actions (Get help, Offer help, Find people), four tabs, a three-step guide, and no endless loading. Tribes can publish a signed list of their public gigs.
+- **The tour** opens with intro slides. Guests see a calm sign-up prompt afterwards.
+- **Left bar and Plan**: every tile is the same size with centred icons. The Plan card is a small chip.
+- **Safer**:
+  - Plans and credits are enforced on the server.
+  - Every endpoint is rate limited.
+  - Exports and captures have size caps.
+  - Editing code checks your role in that project.
+  - Agents need a lead's say to start rituals.
+- **Fixes**:
+  - Projects on this device no longer crash opening templates, notification settings or the Agent fleet.
+  - Esc closes every sheet.
+  - A fresh open no longer bounces you Home.
+  - "Make it dark" in the preview changes your app, not TribeCode's theme.
+  - Agents keep their "request a ship" tool.
+- **Repo**: test launchers moved to `Tools/`, old plans to `docs/archive/` (docs/REPO-CLEANUP.md).
+- **Phones**: the new sheets (tribe flow, invite, drop, settings, versions, widgets picker, Work) fit at 390px; Settings drills in by tab; drops use file and folder pickers.
+## v0.32.0
+- **Voice notes and the Secretary, no AI**: record voice notes in chat, docs, tasks and the Secretary (pause, live waveform, live transcript, 1×/1.5×/2× playback). The Secretary pulls a summary, action items with owner and due date, decisions, questions, people and links out of today's talk and huddle captions; one tap turns an action into a task. Works in a phone-only tribe too.
+- **Calls, video and screen share**: ring someone (with a missed-call notice), a call stage with grid or speaker view, pin, picture in picture and speaking rings; mute, deafen, push to talk, raise hand; reactions, in-call chat and polls; recording everyone can see; lock with knock-to-join; call history; mic, camera and speaker picker; reconnects after a dropped connection; relay (TURN) settings. Camera with front/back flip, screen share with sound, laser and pen for viewers, and "Present TribeCode" so followers move with you. Up to 6 people, all on your own host.
+- **Phones do (almost) everything alone**: a phone-only tribe now keeps the website designer, calendar, Money, Work, Academy, code files and Design flow games and apps on the phone, with a storage card. **GitHub from the phone**: connect with a token kept on the phone, bring a repo in, edit, push and pull. Anything that truly needs a computer (AI helpers, hosting friends, shipping, public links) shows one calm "next options" card: Move to a host, Free cloud, My laptop (with a QR), My Android.
+- **Flint understands the v0.31 features**: accept, decline and claim tasks, "make a poster" (or logo, screen, game), abilities, Marketplace installed/remove, Files by kind, hiding where you are, call commands ("start a video call", "share my screen", "call Maya", "summarize my notes", "what did we decide today"). 93.8% on phrasings he was never tuned on; four new lessons; on a phone-only tribe his docs, drafts and builds are made on the phone.
+- **Loops closed**: phone push survives the free cloud host sleeping (push keys from the environment; phones re-subscribe), the live preview falls back to polling over tunnels that drop live streams, the invite dialog survives being closed early, faster typing in very long docs, "See all tools" stays in the Agents Hub.
+- **Website**: every app picture uses the app's real icons and current layout, a new link-preview card, Privacy and Terms links, and planned prices hidden until paid plans exist (also in the app's plans pop-out).
+- **Docs**: README, HANDOFF, CONTEXT and the Guide brought up to date, a docs index, outdated plans archived, and reports for loops, mobile, voice and video, auth and cleanup.
+- **Phones**: the phone-only tribe, GitHub sheet, next-options card, voice notes, the Secretary and the call stage are built for 390px; bigger tap targets, readable small text and a shorter iPhone install banner.
+
 ## v0.31.2
 - **Home's sidebar heading is gone**: the "Your Dashboard" line above Files, Design, Code, Work and Agent fleet is removed. The lit logo and the "Home ›" breadcrumb already say where you are.
 - **Phones**: the same, one less line above the rows.

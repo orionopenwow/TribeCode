@@ -47,8 +47,9 @@ The footer of Work says which plan you're on, with "What does Premium add?".
   cancel) or `premium`.
 - **There are no payments yet.** `TribePremium.checkout()` is the hook for Stripe Checkout or Paddle Billing and says
   so until it's wired (see the `TODO(payments)` in `app/ui/premium.js`). When it lands: create the checkout session on
-  the hosted service, verify the subscription server-side, then set the plan. Prices will be listed here before
-  anything is charged.
+  the hosted service, verify the subscription server-side, then set the plan. Until that backend exists, the site's pricing page and the
+  plans pop-out (`app/ui/plans.js`, `PRICES` in `premium.js`) say "Price soon" and show no amounts; the planned
+  prices stay in the owner's private plan, not in the repo.
 
 ## For developers
 

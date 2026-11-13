@@ -61,7 +61,11 @@ def main():
             host.evaluate("(() => { const b = document.querySelector('#pj-check-all'); if (b && b.getAttribute('aria-expanded') === 'false') b.click(); })()"); host.wait_for_selector("#pj-check:not(.one)", timeout=15000)   # feat/calm-parity: See all steps
             host.wait_for_selector("#pj-check.hero .ock-hero-t", timeout=10000)
             assert host.locator("#pj-living").count() == 0, "no Living update before the tribe has begun"
+<<<<<<< HEAD
             assert host.locator("#pj-check.hero .ock-card .ock-emo").count() == 5   # five steps since feat/folder-sync
+=======
+            assert host.locator("#pj-check.hero .ock-card .ock-emo").count() == 5   # vision, task, AI, where it lives, share
+>>>>>>> integ6
             assert host.evaluate("parseFloat(getComputedStyle(document.querySelector('#pj-check .ock-hero-t')).fontSize)") >= 24
             n0 = host.evaluate("+document.querySelector('#pj-check .ock-bar').getAttribute('aria-valuenow')")
             host.wait_for_selector("#pj-check [data-step=task]:not(.on) [data-ck=newtask]", state="attached")

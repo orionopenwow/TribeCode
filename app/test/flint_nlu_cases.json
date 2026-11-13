@@ -1892,7 +1892,7 @@
   },
   {
    "t": "who's online",
-   "i": "status"
+   "i": "people.online"
   },
   {
    "t": "what should i do next",
@@ -4269,7 +4269,7 @@
   },
   {
    "t": "flint who's online",
-   "i": "status",
+   "i": "people.online",
    "v": "wrap"
   },
   {
@@ -4611,7 +4611,7 @@
   },
   {
    "t": "who is around",
-   "i": "status",
+   "i": "people.online",
    "v": "held"
   },
   {

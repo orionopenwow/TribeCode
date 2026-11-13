@@ -57,7 +57,7 @@ One click makes a free TribeCode server on Render; the first person with its set
 
 ## Features
 
-Each project's sidebar has five sections: **Dashboard**, **Messages**, **Files**, **Task Board** and **Agents Hub**. Below them sit the Website once it's built, any widgets you've added, the repo, and **+ Add**, a gallery of more (Whiteboard, Calendar, Bugs, Proposals, Milestones, Visuals, Workshop, Daily plan, Secretary, a link or a pinned doc) with starter packs. **Preview game** and **Invite friends** sit at the bottom. The app opens at **Home**, your command center across every project.
+Each project's sidebar has **Dashboard**, **Messages**, **Files**, **Design**, **Task Board** and **Agents Hub**. Below them sit the Website once a draft exists, any widgets you've added, the repo, and **+ Add**, a gallery of more (Whiteboard, Calendar, Bugs, Proposals, Milestones, Visuals, Workshop, Daily plan, Secretary, a link or a pinned doc) with starter packs. **Preview** and **Invite friends** are rows with a small thumbnail and faces; drag rows into your own order. The app opens at **Home**, your dashboard across every project. A fresh install creates nothing: **Make it yours** asks for your name, icon and look, then Flint offers a quick tour.
 
 ### Dashboard
 
@@ -113,7 +113,7 @@ Code projects get a **Files · Code · Docs** switch: a folder tree with a branc
 
 ### Task Board
 
-A board with tabs: Board, Bugs, Proposals, Milestones, Calendar, the live Repo, Visuals and Roles. **New task** suggests 3–5 next tasks from the vision, the repo and recent chat. The bell holds Updates: the living plan and the gist feed.
+A dashboard first: counters that filter (Needs someone, In progress, Waiting for review, Done this week, Overdue), then full-width rows, each with one clear next-step button (Assign, Start, Send for review, Approve). A lead's assignment waits for Accept or Decline; Council mode lets anyone claim open tasks. A List | Board switch keeps the columns, and tabs hold Bugs, Proposals, Milestones, Calendar, the live Repo, Visuals and Roles. **New task** suggests 3–5 next tasks from the vision, the repo and recent chat. The bell holds Updates: the living plan and the gist feed.
 
 <table>
   <tr>
@@ -130,25 +130,29 @@ Many humans and many agents without collisions. The Hub opens on one dashboard o
 
 ### Flint, the built-in helper
 
-**Flint** lives at the bottom of the room panel ("Ask Flint…"). Its basic mode runs on the host with no model at all. For anything else it uses the host's Ollama, the built-in model in your browser (nothing leaves your device), or the AI provider the host picked (then your question goes to that provider). Even with no local model it connects your Claude Code, answers how-to questions from the Guide, captures notes ("note: …"), adds tasks ("task …"), invites a friend, starts or stops hosting and tells you what's happening. With a local model on, it answers anything else too. On phones it's the first row in *Talk to…*.
+**Flint** lives at the bottom of the room panel ("Ask Flint…"), beside the preview and beside the design canvas. With no model at all he understands about 170 actions across the app (typos, slang, dates, people, colors), runs several steps from one message, asks one tappable question when something is missing, undoes what he did, learns phrases you teach him on your device, and answers "how do I…" from the Guide and docs. He also builds for free from tested templates: a 3D game, a to-do app, a video editor, any of the website templates, or a screen on the canvas ("make a login screen for Ember"). Bigger jobs get an honest hand-off to your own AI helper. For open-ended work he uses the host's Ollama, the built-in model in your browser (nothing leaves your device), or the AI provider the host picked (then your question goes to that provider). See [docs/FLINT-TIERS.md](docs/FLINT-TIERS.md). On phones it's the first row in *Talk to…*.
+
+### Design
+
+Every project has a design canvas. Pick what you're making (website, app, game, screen, slides, poster, whiteboard, logo), start from a template or a sentence, and talk to Flint in the pane beside the canvas (Simple), or switch to **Advanced** for layers, properties with real flex auto layout, components, Inspect and export. **Send to app** turns a frame into HTML and CSS in your repo and the preview updates; **Open in canvas** turns anything in the preview into layers. Friends edit live with their own cursors, and members' Claude Code can edit designs through MCP. See [docs/EDITOR-PARITY.md](docs/EDITOR-PARITY.md) and [docs/STARTERS.md](docs/STARTERS.md).
 
 <p align="center"><img src="docs/screenshots/readme-flint.png" alt="Flint answering in the room panel" width="100%"></p>
 
 ### People
 
-Click anyone to see what they and their Claude are doing now, their context window, and a timeline of commits, prompts, chat and notes. Jump from any item to that moment in chat.
+The **People** button in the top bar lists this tribe and your friends with where each person is right now (a doc, the designer, a channel, a task, the canvas; a DM shows only as "in messages"), with Message, Jump to and Profile. Small avatars show on the places people are in. Turn off **Show where I am** in Settings. Click anyone to see what they and their Claude are doing now, their context window, and a timeline of commits, prompts, chat and notes.
 
 <p align="center"><img src="docs/screenshots/readme-person.png" alt="Maya's person panel: now, focus, timeline" width="100%"></p>
 
 ### Preview
 
-The app you're building runs in the right panel (desktop, tablet and phone widths), a browser tab or a friend's phone. Links are signed and the page is sandboxed; it reloads when files change, and a dev-server mode proxies your own server.
+The app you're building opens in a full-window workspace: the preview (desktop, tablet and phone widths) and Flint's pane, with Back to app and quick jumps to Chat, Tasks, Docs and Code. Click any element to edit it with no AI (spacing, size, colors, font, words) and the source file changes; Plan first, queued notes and a version History with restore are in the pane. Drop comment pins on the page for friends and their AI. It also runs in a browser tab or on a friend's phone. Links are signed and the page is sandboxed; it reloads when files change, and a dev-server mode proxies your own server.
 
 <p align="center"><img src="docs/screenshots/readme-preview.png" alt="Pixel Quest running in the preview panel" width="100%"></p>
 
 ### Customize and your website
 
-Settings › **Look**: a tribe accent, backgrounds (flat patterns, tints or a picture), spacing and font size, per-project themes, and a Dashboard cover (a color, a picture or your GitHub repo's preview). **Website › Design it for me** builds a project site from your own data (story, devlog from commits, roadmap from milestones, team, screenshots) in six editorial layouts, with Shuffle and an optional "Write it for me" from your AI or a local Qwen model.
+Settings › **Look**: a tribe accent, backgrounds (flat patterns, tints or a picture), spacing and font size, per-project themes, and a Dashboard cover (a color, a picture or your GitHub repo's preview). The **website designer** (modeled on OpenPage, MIT) builds a project site from blocks with themes that each have a real dark mode: 48 templates (link in bio, merch shop, portfolio, band, café, local service, wedding RSVP and more, several converted from open-source sets with their credits) that fill in from your project, comments that become tasks, autosave, and Download HTML. Customize at three levels: Easy (a short form), Comfortable (looks, fonts, sections) or Pro (the code). See [docs/WEBSITE.md](docs/WEBSITE.md) and [docs/SITE-TEMPLATES.md](docs/SITE-TEMPLATES.md).
 
 ### Home
 
@@ -168,7 +172,7 @@ A library of skills, recipes, templates, assets and scripts, shared across the t
 
 <p align="center"><img src="docs/screenshots/readme-secretary.png" alt="The Secretary digest" width="100%"></p>
 
-### Company mode (new in v0.27)
+### Company mode
 
 Turn a project into a small business, alone or with friends:
 
@@ -177,14 +181,14 @@ Turn a project into a small business, alone or with friends:
 - **Seat autopilot**: an AI-held seat works its charter on a schedule; anything outward or costly becomes an approval, with pause-all and an audit trail.
 - **Work**: work profiles, gigs and hiring straight into a seat, a time bank both sides confirm, compute sharing on your own terms, and an opt-in public gig board.
 - **Academy**: 62 plain-language lessons across ten tracks (founder basics and every seat). **Legal**: ten plain-English starting templates (NDA, contractor, co-founder, privacy, terms…), always marked *not legal advice*. **Offload**: send simple jobs to free models elsewhere and bring the result back.
-- **Marketplace**: 515 checked widgets, skills, libraries, connectors, studios, playbooks and templates, sorted Hot · Rising · New · Top by what your tribe uses.
+- **Marketplace**: 553 checked widgets, skills, libraries, connectors, studios, playbooks and templates with real source links, licenses and authors, a Trending on GitHub shelf refreshed daily, Add that does something real for every kind (with Undo), sorted Hot · Rising · New · Top by what your tribe uses.
 - **Recommended next** on the Dashboard senses what the project is and suggests what to do next; **experience modes** (Beginner, Intermediate, Advanced) stack these features as you grow, and any one can be turned on early.
 
 Anything outward or costly (money, publishing, customer emails, contracts, production deploys) waits for a person's approval. Guides: [Company](docs/guide/10-company-mode.md) · [Money and autopilot](docs/guide/11-money-and-autopilot.md) · [Work](docs/guide/12-work-and-hiring.md) · [Academy, Legal, Offload](docs/guide/13-academy-legal-offload.md) · [Marketplace](docs/guide/14-marketplace.md) · [Modes](docs/guide/15-modes-and-recommendations.md) · [docs/COMPANY.md](docs/COMPANY.md).
 
 ### Try it offline
 
-**Try a demo tribe** (on Home, the projects list, the ? menu or Settings) starts a pretend tribe that lives only on this device: no host, no network. You're the host of "Demo Tribe" with a game project, two pretend friends and a pretend Claude who answers `@claude` and picks up tasks. Chat, tasks, docs, files and the vision all work; leaving puts your real setup back exactly.
+The demo never starts on its own. **See how TribeCode works** (the ? menu, or Ctrl K › Start demo) starts from a blank dashboard and Flint builds a tribe, a project, tasks, a design and a website from nothing, one step at a time with Next and Back (or a slower auto-play). **Try a demo tribe** (the ? menu or Settings) starts a pretend tribe with two pretend friends and a pretend Claude who answers `@claude`. Both live only in that tab, work in the desktop app without touching your real server or sign-in, and clear everything they made when you leave.
 
 <p align="center"><img src="docs/screenshots/readme-demo.png" alt="The offline demo tribe: a pretend Claude answers in chat" width="100%"></p>
 
@@ -247,16 +251,14 @@ Everything a tribe makes lives in one folder on the host's computer (`~/TribeCod
 
 ## Roadmap
 
-From [docs/FEATURES-NEXT.md](docs/FEATURES-NEXT.md):
+The current list is in [HANDOFF.md › Next steps](HANDOFF.md#next-steps-in-order):
 
-1. Approvals from the lock screen and a morning digest push
-2. Play button and playtest sessions: the Game Studio MVP ([docs/GAME-STUDIO.md](docs/GAME-STUDIO.md))
-3. Recipes: save a finished feature from a gist and replay it before spending tokens
-4. Scheduled backups and restore inside the app
-5. "Catch me up" per project
-6. Offline send queue on phones, threads, a health page for the host, an agent budget meter, GitHub link unfurls
+1. Real-device checks: iPhone Home Screen and Web Push, Android, Tailscale Funnel, huddles on cellular (a TURN relay)
+2. Signed installers for Windows and macOS
+3. Design canvas Phase 2: project light/dark tokens, click-through prototypes, responsive rules, version history ([docs/EDITOR-PARITY.md](docs/EDITOR-PARITY.md))
+4. Hosted plans, once their backend exists ([docs/PREMIUM.md](docs/PREMIUM.md))
 
-Later: native iOS through Tauri and TestFlight, shared compute between friends, a tool scout, a level editor.
+Later: native iOS through Tauri and TestFlight, shared compute between friends, a level editor. The older idea list is in [docs/FEATURES-NEXT.md](docs/FEATURES-NEXT.md).
 
 ## Develop and test
 

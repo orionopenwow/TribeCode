@@ -92,6 +92,7 @@
     if (st.tab === 'trade' && st.trade === 'bank') jobs.push(C.api('/talent/timebank').then(d => { st.bank = d; }));
     if (st.tab === 'trade' && st.trade === 'compute') jobs.push(C.api('/talent/compute').then(d => { st.compute = d; }));
     if (st.tab === 'gigs' && st.where === 'public' && !st.pub) jobs.push(C.api('/talent/public').then(d => { st.pub = d; }).catch(() => { st.pub = { available: false, gigs: [], reason: 'offline' }; }));
+    if (st.tab === 'gigs' && st.where === 'public' && window.TribeWorkFeeds) jobs.push(window.TribeWorkFeeds.load());   // feat/build-feeds: gigs from the tribes this one follows
     try { await Promise.all(jobs); }
     catch (e) { const m = String((e && e.message) || ''); if (m === NOPE || /real tribe/i.test(m)) st.local = true; else st.err = m || 'no answer'; }
     st.busy = false;
@@ -266,12 +267,16 @@
     return seg + (st.trade === 'compute' ? computeTab() : bankTab());
   }
   function publicTab() {
-    const p = st.pub; if (!p) return '<p class="tl-none wk-loading" role="status">Looking at the community board…</p>';
-    if (!p.available || !p.gigs.length) return emptyCard({ id: 'wk-empty-public', icon: 'globe', title: p.available ? 'No public gigs yet' : 'The community board isn’t reachable', text: p.available ? 'When a tribe makes a gig public, it shows up here for every tribe. Make one of yours public from its page.' : 'Check your connection, then try again.',
+    const WF = window.TribeWorkFeeds, remote = WF ? WF.gigs() : [];   // feat/build-feeds: gigs from followed tribes' signed feeds (app/ui/workfeeds.js)
+    const p = st.pub; if (!p && !remote.length) return '<p class="tl-none wk-loading" role="status">Looking at the community board…</p>';
+    const board = (p && p.available && p.gigs) || [];
+    if (!board.length && !remote.length) return (WF && WF.canManage() ? WF.bar('') : '') + emptyCard({ id: 'wk-empty-public', icon: 'globe', title: !p || p.available ? 'No public gigs yet' : 'The community board isn’t reachable', text: !p || p.available ? 'When a tribe makes a gig public, it shows up here for every tribe. Make one of yours public from its page.' : (WF && WF.canManage() ? 'Check your connection, then try again. Tribes you follow in Feeds still show here.' : 'Check your connection, then try again.'),
       act: '<div class="tl-empty-acts"><button class="btn sm" data-pub-refresh="1">Retry</button></div>' });
-    const list = sorted(p.gigs.filter(g => passes(g)));
-    const card = g => { const href = safeHref(g.contact); return `<article class="tl-gig" style="--seat:${g.seatKind && SEATS[g.seatKind] ? SEATS[g.seatKind][1] : 'var(--edge)'}"><div class="tl-gig-top"><span class="eyebrow">${esc(g.kind)}${g.tribe ? ` · ${esc(g.tribe)}` : ''}</span>${seatChip(g.seatKind)}</div><h3>${esc(g.title)}</h3>${g.description ? `<p class="tl-desc">${esc(g.description)}</p>` : ''}<div class="tl-meta">${payChip(g.pay)}${g.hours ? `<i class="tl-h">${esc(g.hours)} h</i>` : ''}${skillChips(g.skills, 3)}</div><div class="tl-foot"><small>${esc(g.posted || '')}</small>${g.contact ? (href ? `<a class="btn sm tonal" href="${esc(href)}" target="_blank" rel="noopener noreferrer">Contact</a>` : `<span class="tl-contact">${esc(g.contact)}</span>`) : ''}</div></article>`; };
-    return `<p class="tl-fine">Read-only, from the community board (${esc(p.repo)}). Reach posters through the contact they chose.</p>${list.length ? `<div class="tl-grid">${list.map(card).join('')}</div>` : '<p class="tl-none">No public gigs match your filters.</p>'}`;
+    const list = sorted([...remote, ...board].filter(g => passes(g)));
+    const meta = g => `${payChip(g.pay)}${g.hours ? `<i class="tl-h">${esc(g.hours)} h</i>` : ''}${skillChips(g.skills, 3)}`, seat = g => (g.seatKind && SEATS[g.seatKind] ? SEATS[g.seatKind][1] : 'var(--edge)');
+    const card = g => { if (g.remote && WF) return WF.card(g, { meta: meta(g), seatColor: seat(g) }); const href = safeHref(g.contact); return `<article class="tl-gig" style="--seat:${seat(g)}"><div class="tl-gig-top"><span class="eyebrow">${esc(g.kind)}${g.tribe ? ` · ${esc(g.tribe)}` : ''}</span>${seatChip(g.seatKind)}</div><h3>${esc(g.title)}</h3>${g.description ? `<p class="tl-desc">${esc(g.description)}</p>` : ''}<div class="tl-meta">${meta(g)}</div><div class="tl-foot"><small>${esc(g.posted || '')}</small>${g.contact ? (href ? `<a class="btn sm tonal" href="${esc(href)}" target="_blank" rel="noopener noreferrer">Contact</a>` : `<span class="tl-contact">${esc(g.contact)}</span>`) : ''}</div></article>`; };
+    const head = WF ? WF.bar(board.length ? p.repo : '') : `<p class="tl-fine">Read-only, from the community board (${esc(p.repo)}). Reach posters through the contact they chose.</p>`;
+    return `${head}${list.length ? `<div class="tl-grid">${list.map(card).join('')}</div>` : '<p class="tl-none">No public gigs match your filters.</p>'}`;
   }
   function offersTab() { return '<div id="wk-offers"></div>'; }
 
@@ -587,5 +592,5 @@
 
   // Find people (Flint's "find someone who can draw"): the People tab with the skill filled in
   function find(q) { st.f.skills = String(q || ''); show('people'); if (mode() !== 'tribe') needsTribe(NEEDS.find); }
-  window.TribeTalent = { open: tab => show(tab), post, editProfile, hireSlot, openGig, find, reload: () => { tasks.at = 0; return load(); } };
+  window.TribeTalent = { open: tab => show(tab), post, editProfile, hireSlot, openGig, find, reload: () => { tasks.at = 0; return load(); }, redraw: () => { if (open_) draw(); }, _ui: { sheet, closeSheet } };
 })();

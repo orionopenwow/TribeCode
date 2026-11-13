@@ -124,3 +124,23 @@ shown and its acceptable-use policy linked. Model files stay out of the repo and
 - `app/ui/flintpage.js`: Flint's page (levels, searchable "What I can do" with Try it, lessons).
 - Eval: 1,196 phrasings at 99.4% (was 996/1,003 = 99.3%); held-out batch 6 (50, written before the matchers) scored
   48/50 = 96% on its first untuned run. `app/test/e2e_flint_max.py` runs 46 commands end to end.
+
+## 5. Tier 1 status (2026-11-13, feat/build-feeds)
+
+- **Built:** `app/ui/flintembed.js` (static word-embedding inference in plain JS: reads a Model2Vec model's own
+  `model.safetensors` + `tokenizer.json`, WordPiece lookup, mean pooling, cosine; browser and Node, about 0.06 ms per
+  sentence), `app/ui/flintmodel.js` (the opt-in sheet behind "Set up a local model": name, license, size, where it
+  comes from, a Wi-Fi hint, progress, kept in IndexedDB, Remove) and `server/flintmodel.js` (the model's address).
+  Tier 1 is **opt-in only**, not automatic as the table above first planned.
+- **Used for:** ranking "did you mean" for unrecognized commands (`flintnlu.js setSemantic`), re-ranking help answers,
+  and search by meaning over docs, tasks and chat in the Ctrl+K palette. It never decides a command, so the eval is
+  identical with and without it (1189/1196 = 99.4%; held-out batches unchanged).
+- **The model:** the default address is `minishlab/potion-base-8M` on Hugging Face (Model2Vec, MIT, about 30 MB). It
+  could not be downloaded from the build machine, so **the real model has not been run through this loader yet**:
+  check its size, license and file names on its model card before release. A host can instead put the two files in
+  `<tribe>/.tribe/flint-model/` and members download from their own host.
+- **Tested with a fixture** (`scripts/dev/flint-fixture-model.js`, 740 KB, not a trained model; its synonym list was
+  written by the same hand as the test phrases): did-you-mean top 3 on 16 unrecognized paraphrases went from 6/16 to
+  10/16 (`flint_embed_test.js`). Treat that as proof the wiring works, not as the real model's quality.
+- **Not built:** vectors stored per doc in `.tribe/` (the index is rebuilt in memory, at most once a minute), taught
+  phrases by meaning, tier 2.
