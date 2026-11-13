@@ -240,8 +240,9 @@ module.exports = function makeOAuth({ store, getMembers, saveMembers, publicMemb
     f.verifier = null;
     if (f.desktop) {   // feat/auth2: a one-time handoff code for the desktop app, never the session itself
       const hc = rnd(32); let short = ''; for (let i = 0; i < 6; i++) short += SHORT_ABC[crypto.randomInt(SHORT_ABC.length)];
-      const h = { flow: f, created: Date.now(), used: false, wrong: 0, hcHash: sha(hc), short };
-      handoffs.set(h.hcHash, h); handoffs.set('s:' + short, h);
+      const { fid, state, verifier, nonce, ...keep } = f;   // harden: what the exchange needs, never the provider's flow secrets
+      const h = { flow: keep, created: Date.now(), expires: Date.now() + HANDOFF_TTL, used: false, wrong: 0, hcHash: sha(hc), shortHash: sha('s:' + short) };
+      handoffs.set(h.hcHash, h); shortIdx.set(h.shortHash, h.hcHash);
       return redirect(res, `/signin.html#desktop=${hc}&short=${short}`, clear);
     }
     f.rc = rnd(32); byResult.set(f.rc, f);
@@ -256,16 +257,19 @@ module.exports = function makeOAuth({ store, getMembers, saveMembers, publicMemb
     return outcome(req, f, me);
   }
   // feat/auth2: the desktop app trades the handoff code (or the typed 6 characters) plus its PKCE verifier for the outcome
-  const handoffs = new Map();   // sha(code) | 's:' + short -> handoff
-  const dropHandoff = h => { handoffs.delete(h.hcHash); handoffs.delete('s:' + h.short); };
-  setInterval(() => { const n = Date.now(); for (const h of new Set(handoffs.values())) if (n - h.created > HANDOFF_TTL) dropHandoff(h); }, 30_000).unref();
+  // harden: kept in .tribe/pending-desktop.json (0600, hashes only: sha(code) and sha('s:' + short)), pruned on expiry, so a
+  // restart between the browser and the app doesn't lose the sign-in. One record per handoff; the short code is an index.
+  const handoffs = require('./pendstore')(store.p('.tribe', 'pending-desktop.json'), { max: 2000, log });   // sha(code) -> handoff
+  const shortIdx = new Map(); for (const [k, h] of handoffs) if (h.shortHash) shortIdx.set(h.shortHash, k);
+  const dropHandoff = h => { shortIdx.delete(h.shortHash); handoffs.delete(h.hcHash); };
+  setInterval(() => { for (const [k, hc] of shortIdx) if (!handoffs.get(hc)) shortIdx.delete(k); }, 30_000).unref();
   function exchange(req, body, me) {
     const code = str(body.code, 80), short = str(body.short, 12).toUpperCase().replace(/[^A-Z0-9]/g, ''), verifier = str(body.verifier, 200);
-    const h = code ? handoffs.get(sha(code)) : short.length === 6 ? handoffs.get('s:' + short) : null;
+    const h = code ? handoffs.get(sha(code)) : short.length === 6 ? handoffs.get(shortIdx.get(sha('s:' + short))) : null;
     if (!h || h.used) throw err(410, 'that code expired or was already used: sign in again from the app', 'expired');
     if (Date.now() - h.created > HANDOFF_TTL) { dropHandoff(h); throw err(410, 'that code expired (codes last 2 minutes): sign in again from the app', 'expired'); }
     const want = h.flow.desktop, got = /^[A-Za-z0-9_-]{43,128}$/.test(verifier) ? crypto.createHash('sha256').update(verifier).digest('base64url') : '';
-    if (!same(got, want)) { if (++h.wrong >= 3) dropHandoff(h); throw err(400, 'this code was started in another app: sign in again from TribeCode', 'mismatch'); }
+    if (!same(got, want)) { if (++h.wrong >= 3) dropHandoff(h); else handoffs.save(); throw err(400, 'this code was started in another app: sign in again from TribeCode', 'mismatch'); }
     h.used = true; dropHandoff(h);
     return outcome(req, h.flow, me);
   }
