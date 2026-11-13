@@ -113,7 +113,7 @@
   async function tasks(force) {
     if (!connected()) return [];
     if (!force && Date.now() - tasksAt < 8000) return tasksCache;
-    try { tasksCache = ((await C.api('/tasks')).tasks || []).map(t => ({ id: t.id, title: t.title, status: t.status, assignee: t.assignee, due: t.due, body: t.body, type: t.type })); tasksAt = Date.now(); } catch {}
+    try { tasksCache = ((await C.api('/tasks')).tasks || []).map(t => ({ id: t.id, title: t.title, status: t.status, assignee: t.assignee, due: t.due, body: t.body, type: t.type, accept: t.accept })); tasksAt = Date.now(); } catch {}
     return tasksCache;
   }
   const view = () => { const h = location.hash || ''; if (/^#\/canvas/.test(h) || document.body.dataset.view === 'canvas') return 'canvas'; if (document.body.classList.contains('pvw-on') || /^#\/preview/.test(h)) return 'preview'; return (document.body.dataset.view || h.replace(/^#\/?/, '').split('/')[0] || 'home'); };
@@ -187,6 +187,12 @@
     const sl = s.slots || {}, id = s.intent, area = s.area;
     const legacy = async (text, sum) => { await H.legacy(text); return { said: true, sum: sum || text }; };
     const needT = () => (connected() ? null : { text: T('needTribe'), acts: [['Host or join', 'invite']] });
+    if (id === 'nav.files' && sl.cat) {   // "show my pictures": Files on that kind's tab
+      const r = NAVLEGACY.files ? await legacy('open files', 'opened Files') : null;
+      let n = 0; const pick = () => { const b = [...document.querySelectorAll(`[data-dk="${sl.cat}"]`)].find(x => x.offsetParent); if (b) b.click(); else if (++n < 20) setTimeout(pick, 120); };
+      setTimeout(pick, 120);
+      return r || { text: T('opened', { x: 'Files' }) };
+    }
     if (id.startsWith('nav.')) {
       const k = id.slice(4);
       if (NAVLEGACY[k]) return legacy('open ' + NAVLEGACY[k], 'opened ' + (s.label || k));
@@ -214,11 +220,44 @@
         const L = (await tasks(true)).filter(x => x.status !== 'done' && !x.assignee);
         return { text: L.length ? T('unassigned', { list: L.slice(0, 6).map(x => `“${x.title}”`).join(', ') }) : T('tasksNone'), acts: [['Open Tasks', 'nav', 'tasks']] };
       }
+      if (id === 'task.claim' && sl.next) {   // "grab an open task": the first unassigned one, claimed (server/taskflow.js)
+        const open = (await tasks(true)).filter(x => x.status !== 'done' && !x.assignee);
+        if (!open.length) return { text: 'Nothing is open to claim right now.', acts: [['Open Tasks', 'nav', 'tasks']] };
+        try { await C.api('/tasks/' + encodeURIComponent(open[0].id) + '/claim', { method: 'POST', body: {} }); } catch (e) {
+          if (!/council/i.test(e.message || '')) return { text: e.message };   // Lead mode: no claiming, so take it with Start instead
+          await C.api('/tasks/' + encodeURIComponent(open[0].id), { method: 'PATCH', body: { status: 'doing', assignee: C.state().me && C.state().me.id } });
+        }
+        last.task = open[0]; tasksAt = 0; return { text: `You claimed “${open[0].title}”. It is yours and in progress.`, acts: [['Open Tasks', 'nav', 'tasks']], sum: `claimed “${open[0].title}”` };
+      }
       if (!t || !t.id) return { text: T('noTask'), acts: (await tasks()).filter(x => x.status !== 'done').slice(0, 3).map(x => [x.title, 'ask', rephrase(s, x.title)]) };
       const before = (await tasks()).find(x => x.id === t.id) || t;
       const patch = async (body, undoBody, label) => { await C.api('/tasks/' + encodeURIComponent(t.id), { method: 'PATCH', body }); last.task = t; tasksAt = 0; pushUndo(label, () => C.api('/tasks/' + encodeURIComponent(t.id), { method: 'PATCH', body: undoBody })); };
       try {
         if (id === 'task.done') { await patch({ status: 'done' }, { status: before.status || 'todo' }, `“${t.title}” done`); return { text: T('taskDone', { t: t.title }), sum: `marked “${t.title}” done` }; }
+        const me0 = C.state().me && C.state().me.id;
+        const offered = before.accept === 'pending' && before.assignee === me0;
+        // v0.30 task offers (server/taskflow.js): accept starts it, decline hands it back with a reason, claim takes an open one
+        if (id === 'task.accept' || (id === 'task.start' && offered)) {
+          if (!offered && before.assignee && before.assignee !== me0) return { text: `“${t.title}” isn’t offered to you.`, acts: [['Open Tasks', 'nav', 'tasks']] };
+          if (!offered) { await patch({ status: 'doing', ...(before.assignee ? {} : { assignee: me0 }) }, { status: before.status || 'todo', assignee: before.assignee || null }, `“${t.title}” started`); return { text: T('taskStart', { t: t.title }), sum: `started “${t.title}”` }; }
+          await C.api('/tasks/' + encodeURIComponent(t.id) + '/accept', { method: 'POST', body: {} }); last.task = t; tasksAt = 0;
+          return { text: `Accepted “${t.title}”. It’s yours and in progress.`, sum: `accepted “${t.title}”` };
+        }
+        if (id === 'task.decline') {
+          if (!offered) return { text: `“${t.title}” isn’t waiting on your answer.`, acts: [['Open Tasks', 'nav', 'tasks']] };
+          const reason = (/(?:too busy|busy|no time|not this week|this week|sorry)/i.exec(s.text || '') || [])[0] || '';
+          await C.api('/tasks/' + encodeURIComponent(t.id) + '/decline', { method: 'POST', body: { reason } }); last.task = t; tasksAt = 0;
+          return { text: `Declined “${t.title}”${reason ? ` (${reason})` : ''}. It goes back to whoever assigned it.`, sum: `declined “${t.title}”` };
+        }
+        if (id === 'task.claim') {
+          if (before.assignee && before.assignee !== me0) return { text: `“${t.title}” already has someone.`, acts: [['Open Tasks', 'nav', 'tasks']] };
+          try { await C.api('/tasks/' + encodeURIComponent(t.id) + '/claim', { method: 'POST', body: {} }); } catch (e) {
+            if (!/council/i.test(e.message || '')) throw e;   // Lead mode: take it with Start instead
+            await patch({ status: 'doing', assignee: me0 }, { status: before.status || 'todo', assignee: before.assignee || null }, `“${t.title}” started`); return { text: `“${t.title}” is yours and in progress. (Claiming is for Council mode, so I started it for you.)`, sum: `started “${t.title}”` };
+          }
+          last.task = t; tasksAt = 0;
+          return { text: `You claimed “${t.title}”. It is yours and in progress.`, sum: `claimed “${t.title}”` };
+        }
         if (id === 'task.start') { const me = C.state().me && C.state().me.id; await patch({ status: 'doing', ...(before.assignee ? {} : { assignee: me }) }, { status: before.status || 'todo', assignee: before.assignee || null }, `“${t.title}” started`); return { text: T('taskStart', { t: t.title }), sum: `started “${t.title}”` }; }
         if (id === 'task.review') { await patch({ status: 'review' }, { status: before.status || 'doing' }, `“${t.title}” to review`); return { text: T('taskReview', { t: t.title }), sum: `sent “${t.title}” to review` }; }
         if (id === 'task.assign') { if (!sl.who || !sl.who.id) return { text: Q('Who should do it?'), acts: (C.state().members || []).filter(m => m.role !== 'spectator').slice(0, 4).map(m => [first(m.name), 'ask', `assign ${t.title} to ${first(m.name)}`]) }; await patch({ assignee: sl.who.id }, { assignee: before.assignee || null }, `“${t.title}” → ${first(sl.who.name)}`); last.person = sl.who; return { text: T('taskAssign', { t: t.title, p: first(sl.who.name) }), sum: `gave “${t.title}” to ${first(sl.who.name)}` }; }
@@ -357,6 +396,33 @@
     if (id === 'status') return legacy("what's new");
     if (id === 'focus') return legacy('what should i do next');
     if (id === 'tiers') return legacy('what can you do');
+    // ---- v0.31 features (feat/flint-cleanup) ----
+    if (id === 'design.new') {   // the Design flow (app/ui/designflow.js) on that kind's gallery
+      const DF = window.TribeDesignFlow; if (!DF) return { text: T('noPlace', { x: 'Design' }) };
+      DF.open({ kind: sl.kind }); return { text: `Opened Design on ${sl.kind === 'poster' ? 'posters and graphics' : sl.kind === 'logo' ? 'logos and brand kits' : sl.kind === 'screen' ? 'app screens' : sl.kind + 's'}. Pick a starting point${sl.topic ? ` for ${sl.topic}` : ''}.`, sum: `opened Design (${sl.kind})` };
+    }
+    if (id === 'abilities.edit') { const A = window.TribeAbilities; if (!A || !A.edit) return { text: T('noPlace', { x: 'Abilities' }) }; await A.edit(); if (sl.skill) { const i = document.getElementById('ab-sk-in'); if (i) { i.value = String(sl.skill).slice(0, 24); i.focus(); } } return { text: sl.skill ? `Opened your abilities with “${sl.skill}” ready to add. Press Add, then Save.` : 'Opened your abilities: list what you can do and how you work.', sum: 'opened abilities' }; }
+    if (id === 'market.installed') { const M = window.TribeMarket; if (!M) return { text: T('noPlace', { x: 'Marketplace' }) }; M.page({ tab: 'installed' }); return { text: T('opened', { x: 'Marketplace › Installed' }), sum: 'opened Installed' }; }
+    if (id === 'market.remove') {
+      const M = window.TribeMarket; if (!M) return { text: T('noPlace', { x: 'Marketplace' }) };
+      const want = String(sl.name || '').toLowerCase().trim(), st = M.state ? M.state() : {}; const items = (st.items || []).filter(x => x.installed);
+      const hit = items.find(x => String(x.name || x.title || '').toLowerCase() === want) || items.find(x => String(x.name || x.title || '').toLowerCase().includes(want));
+      if (hit && M.remove) { await M.remove(hit.id); return { text: `Removed ${hit.name || hit.title}.`, sum: `removed ${hit.name || hit.title}` }; }
+      M.page({ tab: 'installed' }); return { text: `Here is what you have installed. Press Remove on ${sl.name || 'the one you want gone'}.`, sum: 'opened Installed' };
+    }
+    if (id === 'demo.start') {
+      const Dw = window.TribeDemoWatch, O = window.TribeOffline;
+      if (Dw && Dw.start) { Dw.start({ mode: 'step' }); return { text: 'Starting the demo. Press Next to go step by step. Everything it makes is cleared when it ends.', sum: 'started the demo' }; }
+      if (O && O.start) { O.start(); return { text: 'Starting the demo tribe.', sum: 'started the demo' }; }
+      return { text: T('noPlace', { x: 'Demo' }) };
+    }
+    if (id === 'presence.off' || id === 'presence.on') {
+      const Pz = window.TribePresence; if (!Pz || !Pz.setPrefs) return { text: T('noPlace', { x: 'Presence' }) };
+      const before = Pz.prefs ? Pz.prefs() : { show: true }; const show = id === 'presence.on';
+      await Pz.setPrefs({ show }); pushUndo('where you are', () => Pz.setPrefs({ show: before.show !== false }));
+      return { text: show ? 'Your tribe can see where you are again.' : 'Done: your tribe no longer sees where you are. You still show as online. (Settings › Show where I am)', sum: show ? 'shared presence' : 'hid presence' };
+    }
+    if (id === 'sidebar.reset') { const Ro = window.TribeReorder; if (!Ro || !Ro.reset) return { text: T('noPlace', { x: 'Sidebar order' }) }; Ro.reset(); return { text: 'The left bar and sidebar are back in their default order.', sum: 'reset the sidebar order' }; }
     if (id === 'hello') return sl.thanks ? { text: T('thanks') } : { text: T('hello', { n: C && C.state && C.state().me ? ' ' + first(C.state().me.name) : '' }) };
     if (id === 'calc') return sl.value == null ? null : { text: sl.each ? T('each', sl.value != null ? { e: sl.expr, v: sl.value } : {}) : sl.total ? T('tip', { e: sl.expr, v: sl.value, t: sl.total }) : T('calc', { e: sl.expr, v: sl.value }) };
     if (id === 'convert') return sl.value == null ? null : { text: `${sl.n} ${sl.from} = **${sl.value}** ${sl.to}` };
