@@ -703,8 +703,15 @@
   // ---------- the suggestions (each one does the thing) ----------
   const setNow = () => (ctx && ctx.set) || cur;
   async function itemsText(set, test) { const out = []; for (const it of set.items.filter(x => test(x.path))) out.push({ path: it.path, text: await (await it.get()).text() }); return out; }
+  // open the doc just made and make sure it stays open: Files may still be loading its own list (it used to win the
+  // race on a slow machine and leave you on the file grid)
+  function openDoc(slug) {
+    const D = window.TribeDocs; if (!D || !D.open) return; let n = 0;
+    const go = async () => { try { await D.open(slug); } catch {} setTimeout(() => { if (D.current && D.current() == null && ++n < 4) go(); }, 700); };   // only while nothing is open: never over a doc you opened since
+    setTimeout(go, 150);
+  }
   async function newDoc(title, body, kind) {
-    if (connected()) { const r = await C.api('/docs', { method: 'POST', body: { title, body, ...(kind ? { kind } : {}) } }); if (window.TribeApp) window.TribeApp.show('docs'); setTimeout(() => window.TribeDocs && window.TribeDocs.open && window.TribeDocs.open(r.doc.slug), 150); return { slug: r.doc.slug }; }
+    if (connected()) { const r = await C.api('/docs', { method: 'POST', body: { title, body, ...(kind ? { kind } : {}) } }); if (window.TribeApp) window.TribeApp.show('docs'); openDoc(r.doc.slug); return { slug: r.doc.slug }; }
     const LF = window.TribeLocalFiles; if (!LF) throw new Error('Files did not load');
     const it = await LF.create(kind === 'deck' ? 'slides' : kind || 'doc', { title, body }); if (LF.open) try { LF.open(it.id); } catch {} return { id: it.id };
   }

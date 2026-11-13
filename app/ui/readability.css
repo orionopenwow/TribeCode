@@ -38,7 +38,7 @@ body[data-mode="beginner"]:not([data-unlocked~="money"]) #co-ledger-slot, body[d
    ::after widens what a tap hits to at least 32px. */
 @media (pointer: coarse), (max-width: 820px) {
   .hub-crumb .hc-home, .swatch, .ppl-chip, .od-pill { position: relative; }
-  .hub-crumb .hc-home::after, .swatch::after, .ppl-chip::after, .od-pill::after { content: ''; position: absolute; inset: -5px 0; }
-  .swatch::after { inset: -4px; }
-  .od-pill::after { inset: -3px 0; }
+  .hub-crumb .hc-home::after, .swatch::after, .ppl-chip::after, .od-pill::after { content: ''; position: absolute; inset: -7px 0; }
+  .swatch::after { inset: -5px; }
+  .od-pill::after { inset: -5px 0; }
 }

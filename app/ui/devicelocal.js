@@ -118,7 +118,7 @@
     await putV(v);
     // capped: the oldest unnamed version goes first; named ones stay as long as there is anything else to drop
     const all = [v, ...list];
-    while (all.length > CAP) { let i = all.length - 1; while (i > 0 && all[i].tags.length) i--; if (i === 0) i = all.length - 1; const [gone] = all.splice(i, 1); await delV(gone.id); }
+    while (all.length > T.cap) { let i = all.length - 1; while (i > 0 && all[i].tags.length) i--; if (i === 0) i = all.length - 1; const [gone] = all.splice(i, 1); await delV(gone.id); }
     if (!opts.quiet) k.push({ type: 'versions', project: pid });
     return v;
   }

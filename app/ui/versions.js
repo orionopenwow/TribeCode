@@ -44,11 +44,12 @@
     await load();
     return el;
   }
-  // Saved designs live with the website: the preview's Saved panel on a host, the designer on this device
-  async function savedDesigns(pid) {
-    const P = window.TribePreview, dev = window.TribeDevice && window.TribeDevice.on();
-    if (dev || !P || !P.open) return window.TribeSiteDesigner ? window.TribeSiteDesigner.open({ pid }) : A().show('website');
-    try { await P.open(); if (P.setSource) P.setSource('site', true); setTimeout(() => { const b = document.querySelector('.pvw [data-act="shelf"]'); if (b && b.getAttribute('aria-pressed') !== 'true') b.click(); }, 350); } catch { A().show('website'); }
+  // Saved designs live with the website: Files › Website on a host (the preview's Saved button shows the same list),
+  // the designer on this device
+  function savedDesigns(pid) {
+    if ((window.TribeDevice && window.TribeDevice.on()) || !A().show) return window.TribeSiteDesigner ? window.TribeSiteDesigner.open({ pid }) : null;
+    location.hash = '#/docs/website';   // Files › Website (router.js)
+    let n = 0; const go = () => { const sec = document.querySelector('#wb-versions-sec'); if (sec && sec.offsetParent) sec.scrollIntoView({ block: 'start' }); else if (++n < 25) setTimeout(go, 200); }; setTimeout(go, 150);
   }
   async function load(keep) {
     if (!el) return; const pid = st.pid;

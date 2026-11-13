@@ -122,7 +122,7 @@
           <div class="wb-sugs" id="wb-sugs"></div>
         </section>
         <section class="wb-sec wb-versions" id="wb-versions-sec">
-          <div class="sec-head"><span class="eyebrow">Website</span><h2>Saved designs</h2></div>
+          <div class="sec-head"><span class="eyebrow">Website</span><h2>Saved designs</h2>${window.TribeVersions ? '<button type="button" class="linkish wb-allv" id="wb-allv" title="The project’s whole history: Versions">All versions</button>' : ''}</div>
           <div id="wb-versions"></div>
         </section>
       </div>
@@ -144,6 +144,7 @@
       try { data = (await api('', { method: 'PUT', body: { auto: on } })).website; toast(on ? 'The website now keeps itself up to date' : 'Automatic updates are off'); drawStatus(); drawPreview(); }
       catch (e) { toast(e.message); $('#wb-auto').setAttribute('aria-checked', String(!on)); }
     };
+    if ($('#wb-allv')) $('#wb-allv').onclick = () => window.TribeVersions.open();
     if ($('#wb-save')) $('#wb-save').onclick = () => save().then(ok => ok && toast('Saved'));
     const wd = $('#wb-design'); if (wd) wd.onclick = () => window.TribeSiteDesigner && window.TribeSiteDesigner.open({ pid: pid() });   // feat/flint-site: the website designer
     designs();

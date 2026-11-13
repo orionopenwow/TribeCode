@@ -1542,6 +1542,26 @@
    "i": "personalize.open"
   },
   {
+   "t": "open versions",
+   "i": "nav.versions"
+  },
+  {
+   "t": "show me the project history",
+   "i": "nav.versions"
+  },
+  {
+   "t": "open saved designs",
+   "i": "nav.designs"
+  },
+  {
+   "t": "where are the website designs",
+   "i": "nav.designs"
+  },
+  {
+   "t": "show me earlier shots",
+   "i": "nav.visuals"
+  },
+  {
    "t": "open calendar",
    "i": "nav.calendar"
   },
@@ -3853,251 +3873,262 @@
    "v": "wrap"
   },
   {
-   "t": "flint open calendar",
+   "t": "flint open versions",
+   "i": "nav.versions",
+   "v": "wrap"
+  },
+  {
+   "t": "can you open saved designs",
+   "i": "nav.designs",
+   "v": "wrap"
+  },
+  {
+   "t": "please where are the website designs",
+   "i": "nav.designs",
+   "v": "wrap"
+  },
+  {
+   "t": "opne calendar",
+   "i": "nav.calendar",
+   "v": "typo"
+  },
+  {
+   "t": "could you open calendar for me",
    "i": "nav.calendar",
    "v": "wrap"
   },
   {
-   "t": "go to the tsak board",
+   "t": "ok so go to the task board",
    "i": "nav.tasks",
-   "v": "typo"
-  },
-  {
-   "t": "can you show me the files",
-   "i": "nav.files",
    "v": "wrap"
   },
   {
-   "t": "take me to setings",
-   "i": "nav.settings",
-   "v": "typo"
-  },
-  {
-   "t": "please take me to settings",
+   "t": "flint take me to settings",
    "i": "nav.settings",
    "v": "wrap"
   },
   {
-   "t": "where is the whitboard",
-   "i": "nav.whiteboard",
+   "t": "opne the marketplace",
+   "i": "nav.market",
    "v": "typo"
   },
   {
-   "t": "could you where is the whiteboard for me",
-   "i": "nav.whiteboard",
+   "t": "hey flint, open the marketplace",
+   "i": "nav.market",
    "v": "wrap"
   },
   {
-   "t": "ok so open design",
-   "i": "nav.design",
-   "v": "wrap"
-  },
-  {
-   "t": "opne the canvas",
+   "t": "opne design",
    "i": "nav.design",
    "v": "typo"
   },
   {
-   "t": "flint go to chat",
-   "i": "nav.chat",
+   "t": "please open design",
+   "i": "nav.design",
    "v": "wrap"
   },
   {
-   "t": "opne my inbox",
+   "t": "open the canvas please",
+   "i": "nav.design",
+   "v": "wrap"
+  },
+  {
+   "t": "ok so open my inbox",
    "i": "nav.inbox",
-   "v": "typo"
+   "v": "wrap"
   },
   {
-   "t": "hey flint, open my inbox",
+   "t": "show notifications thanks",
    "i": "nav.inbox",
    "v": "wrap"
   },
   {
-   "t": "opne studios",
-   "i": "nav.studios",
-   "v": "typo"
-  },
-  {
-   "t": "please open studios",
-   "i": "nav.studios",
-   "v": "wrap"
-  },
-  {
-   "t": "go to the company page please",
+   "t": "hey flint, go to the company page",
    "i": "nav.company",
    "v": "wrap"
   },
   {
-   "t": "opne the asset library",
+   "t": "can you open the asset library",
    "i": "nav.assets",
-   "v": "typo"
-  },
-  {
-   "t": "ok so open the academy",
-   "i": "nav.academy",
    "v": "wrap"
   },
   {
-   "t": "show me the agents hub thanks",
+   "t": "opne the academy",
+   "i": "nav.academy",
+   "v": "typo"
+  },
+  {
+   "t": "show me the agents hub please",
    "i": "nav.agents",
    "v": "wrap"
   },
   {
-   "t": "opne the guide",
-   "i": "nav.guide",
+   "t": "opne the repo",
+   "i": "nav.repo",
    "v": "typo"
   },
   {
-   "t": "hey flint, open the guide",
-   "i": "nav.guide",
+   "t": "could you open the repo for me",
+   "i": "nav.repo",
    "v": "wrap"
   },
   {
-   "t": "can you open the website builder",
+   "t": "opne the website builder",
+   "i": "nav.website",
+   "v": "typo"
+  },
+  {
+   "t": "open the website builder thanks",
    "i": "nav.website",
    "v": "wrap"
   },
   {
-   "t": "show the preveiw",
+   "t": "flint show the preview",
    "i": "nav.preview",
-   "v": "typo"
-  },
-  {
-   "t": "open the secretary please",
-   "i": "nav.secretary",
    "v": "wrap"
   },
   {
-   "t": "could you go home for me",
+   "t": "opne the secretary",
+   "i": "nav.secretary",
+   "v": "typo"
+  },
+  {
+   "t": "can you go home",
    "i": "nav.home",
    "v": "wrap"
   },
   {
-   "t": "opne keyboard shortcuts",
-   "i": "nav.shortcuts",
-   "v": "typo"
-  },
-  {
-   "t": "open keyboard shortcuts thanks",
-   "i": "nav.shortcuts",
+   "t": "please dashboard",
+   "i": "nav.home",
    "v": "wrap"
   },
   {
-   "t": "flint open the bug list",
+   "t": "opne the bug list",
+   "i": "nav.bugs",
+   "v": "typo"
+  },
+  {
+   "t": "could you open the bug list for me",
    "i": "nav.bugs",
    "v": "wrap"
   },
   {
-   "t": "can you open my notes",
+   "t": "ok so show my dms",
+   "i": "nav.dms",
+   "v": "wrap"
+  },
+  {
+   "t": "opne my notes",
    "i": "nav.notes",
-   "v": "wrap"
-  },
-  {
-   "t": "opne money",
-   "i": "nav.money",
    "v": "typo"
   },
   {
-   "t": "please open money",
+   "t": "flint open money",
    "i": "nav.money",
    "v": "wrap"
   },
   {
-   "t": "opne trending repos",
-   "i": "nav.trending",
+   "t": "opne the command palette",
+   "i": "nav.search",
    "v": "typo"
   },
   {
-   "t": "could you open trending repos for me",
-   "i": "nav.trending",
+   "t": "hey flint, open the command palette",
+   "i": "nav.search",
    "v": "wrap"
   },
   {
-   "t": "ok so open the task board",
-   "i": "nav.tasks",
-   "v": "wrap"
-  },
-  {
-   "t": "opne my tasks",
+   "t": "opne the task board",
    "i": "nav.tasks",
    "v": "typo"
   },
   {
-   "t": "flint settings",
+   "t": "please open the task board",
+   "i": "nav.tasks",
+   "v": "wrap"
+  },
+  {
+   "t": "open my tasks please",
+   "i": "nav.tasks",
+   "v": "wrap"
+  },
+  {
+   "t": "setings",
    "i": "nav.settings",
-   "v": "wrap"
-  },
-  {
-   "t": "calender",
-   "i": "nav.calendar",
    "v": "typo"
   },
   {
-   "t": "hey flint, calendar",
+   "t": "ok so calendar",
    "i": "nav.calendar",
    "v": "wrap"
   },
   {
-   "t": "opne mcp",
-   "i": "nav.mcp",
+   "t": "where do i find the tempaltes",
+   "i": "nav.templates",
    "v": "typo"
   },
   {
-   "t": "please open mcp",
-   "i": "nav.mcp",
+   "t": "where do i find the templates thanks",
+   "i": "nav.templates",
    "v": "wrap"
   },
   {
-   "t": "invite a friend please",
-   "i": "invite",
-   "v": "wrap"
-  },
-  {
-   "t": "share the invte link",
+   "t": "invte a friend",
    "i": "invite",
    "v": "typo"
   },
   {
-   "t": "ok so invite maya",
+   "t": "hey flint, invite a friend",
    "i": "invite",
    "v": "wrap"
   },
   {
-   "t": "start hosting thanks",
+   "t": "can you share the invite link",
+   "i": "invite",
+   "v": "wrap"
+  },
+  {
+   "t": "invte maya",
+   "i": "invite",
+   "v": "typo"
+  },
+  {
+   "t": "start hosting please",
    "i": "host.start",
    "v": "wrap"
   },
   {
-   "t": "hey flint, stop hosting",
-   "i": "host.stop",
+   "t": "could you host here for me",
+   "i": "host.start",
    "v": "wrap"
   },
   {
-   "t": "can you connect my ai",
+   "t": "connect my ai thanks",
    "i": "connect.ai",
    "v": "wrap"
   },
   {
-   "t": "add codex please",
+   "t": "flint hook up claude code",
    "i": "connect.ai",
    "v": "wrap"
   },
   {
-   "t": "could you give flint a brain for me",
+   "t": "ad codex",
+   "i": "connect.ai",
+   "v": "typo"
+  },
+  {
+   "t": "can you give flint a brain",
    "i": "brain.pick",
    "v": "wrap"
   },
   {
-   "t": "turn on the secretary thanks",
-   "i": "helper.toggle",
-   "s": {
-    "what": "secretary",
-    "on": true
-   },
+   "t": "please use the local model",
+   "i": "brain.pick",
    "v": "wrap"
   },
   {
-   "t": "flint autopilot off",
+   "t": "could you autopilot off for me",
    "i": "helper.toggle",
    "s": {
     "what": "autopilot",
@@ -4106,42 +4137,47 @@
    "v": "wrap"
   },
   {
-   "t": "can you kick off a jam for 60 minutes",
+   "t": "ok so start a jam",
    "i": "jam.start",
    "v": "wrap"
   },
   {
-   "t": "please start a huddle",
+   "t": "flint start a huddle",
    "i": "huddle.start",
    "v": "wrap"
   },
   {
-   "t": "could you hang up for me",
-   "i": "huddle.leave",
+   "t": "hey flint, join the voice chat",
+   "i": "huddle.start",
    "v": "wrap"
   },
   {
-   "t": "ok so record meeting notes",
+   "t": "record meting notes",
+   "i": "capture.toggle",
+   "v": "typo"
+  },
+  {
+   "t": "please record meeting notes",
    "i": "capture.toggle",
    "v": "wrap"
   },
   {
-   "t": "flint rate tribecode",
+   "t": "give feedback please",
    "i": "feedback",
    "v": "wrap"
   },
   {
-   "t": "hey flint, show me around",
+   "t": "ok so show me around",
    "i": "tour",
    "v": "wrap"
   },
   {
-   "t": "please copy a prompt for my ai",
-   "i": "prompt.copy",
+   "t": "i'm new thanks",
+   "i": "tour",
    "v": "wrap"
   },
   {
-   "t": "find a ui library please",
+   "t": "hey flint, find a ui library",
    "i": "market.search",
    "s": {
     "q": "ui"
@@ -4149,30 +4185,46 @@
    "v": "wrap"
   },
   {
-   "t": "ok so search the marketplace for icons",
+   "t": "can you recommend a physics library for 3d games",
    "i": "market.search",
    "s": {
-    "q": "icons"
+    "q": "physics"
    },
    "v": "wrap"
   },
   {
-   "t": "what's trendng",
+   "t": "search the marketplce for icons",
+   "i": "market.search",
+   "s": {
+    "q": "icons"
+   },
+   "v": "typo"
+  },
+  {
+   "t": "what's trending please",
+   "i": "trending",
+   "v": "wrap"
+  },
+  {
+   "t": "show trendng repos",
    "i": "trending",
    "v": "typo"
   },
   {
-   "t": "what's trending thanks",
+   "t": "could you show trending repos for me",
    "i": "trending",
    "v": "wrap"
   },
   {
-   "t": "hey flint, any new tools",
-   "i": "trending",
-   "v": "wrap"
+   "t": "opne blender",
+   "i": "studio.open",
+   "s": {
+    "app": "blender"
+   },
+   "v": "typo"
   },
   {
-   "t": "can you open blender",
+   "t": "open blender thanks",
    "i": "studio.open",
    "s": {
     "app": "blender"
@@ -4180,25 +4232,30 @@
    "v": "wrap"
   },
   {
-   "t": "add a jump sound please",
-   "i": "asset.add",
-   "v": "wrap"
-  },
-  {
-   "t": "could you get me a coin sprite for me",
-   "i": "asset.add",
-   "v": "wrap"
-  },
-  {
-   "t": "find the boss notes thanks",
-   "i": "find",
+   "t": "flint download krita",
+   "i": "studio.open",
    "s": {
-    "q": "the boss notes"
+    "app": "krita"
    },
    "v": "wrap"
   },
   {
-   "t": "flint search for parking",
+   "t": "ad a jump sound",
+   "i": "asset.add",
+   "v": "typo"
+  },
+  {
+   "t": "can you get me a coin sprite",
+   "i": "asset.add",
+   "v": "wrap"
+  },
+  {
+   "t": "please find a heart icon",
+   "i": "asset.add",
+   "v": "wrap"
+  },
+  {
+   "t": "could you search for parking for me",
    "i": "find",
    "s": {
     "q": "parking"
@@ -4206,80 +4263,87 @@
    "v": "wrap"
   },
   {
-   "t": "can you catch me up",
+   "t": "ok so what's new",
    "i": "status",
    "v": "wrap"
   },
   {
-   "t": "please who's online",
+   "t": "flint who's online",
    "i": "status",
    "v": "wrap"
   },
   {
-   "t": "could you where was i for me",
+   "t": "hey flint, what should i do next",
    "i": "focus",
    "v": "wrap"
   },
   {
-   "t": "ok so what can you do",
+   "t": "please what can you do",
    "i": "tiers",
    "v": "wrap"
   },
   {
-   "t": "flint how do i invite a friend",
+   "t": "what is free please",
+   "i": "tiers",
+   "v": "wrap"
+  },
+  {
+   "t": "how do i invte a friend",
    "i": "invite",
-   "v": "wrap"
+   "v": "typo"
   },
   {
-   "t": "hey flint, how does publishing work",
+   "t": "ok so how does publishing work",
    "i": "help.kb",
    "v": "wrap"
   },
   {
-   "t": "please can i host on my phone",
+   "t": "what is the secretary thanks",
    "i": "help.kb",
    "v": "wrap"
   },
   {
-   "t": "why is the preview blank please",
+   "t": "why is the preveiw blank",
+   "i": "help.kb",
+   "v": "typo"
+  },
+  {
+   "t": "hey flint, why is the preview blank",
    "i": "help.kb",
    "v": "wrap"
   },
   {
-   "t": "ok so agrega tarea llamar a Sam",
-   "i": "task.add",
-   "s": {
-    "title": "Llamar a Sam"
-   },
+   "t": "can you explain how cloud save works",
+   "i": "help.kb",
    "v": "wrap"
   },
   {
-   "t": "abre el calendario thanks",
+   "t": "abre el calendario please",
    "i": "nav.calendar",
    "v": "wrap"
   },
   {
-   "t": "hey flint, abre ajustes",
-   "i": "nav.settings",
-   "v": "wrap"
-  },
-  {
-   "t": "can you modo escuro",
+   "t": "could you modo oscuro for me",
    "i": "theme.dark-mode",
    "v": "wrap"
   },
   {
-   "t": "mode sombre please",
+   "t": "modo escuro thanks",
    "i": "theme.dark-mode",
    "v": "wrap"
   },
   {
-   "t": "could you dunkles Thema for me",
+   "t": "flint ouvre le calendrier",
+   "i": "nav.calendar",
+   "v": "wrap"
+  },
+  {
+   "t": "can you dunkles Thema",
    "i": "theme.dark-mode",
    "v": "wrap"
   },
   {
-   "t": "is our pricing too high compared to competitors thanks",
+   "t": "please why does my shader flicker on safari when the canvas resizes",
    "i": "help.kb",
    "v": "wrap"
   },
