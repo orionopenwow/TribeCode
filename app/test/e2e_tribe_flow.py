@@ -4,7 +4,7 @@
      Closing leaves no sheet and no scrim behind; there is only ever one sheet and one scrim.
   2. Back works on every step and keeps what was typed.
   3. Each "where it lives" completes: This device, A GitHub repo (mocked GitHub), Free cloud (a mocked cloud tribe:
-     join, import, invite), This computer (the real server that serves the page). Inside a tribe, "With <tribe>" makes
+     join, import, invite), A folder on this computer (the real server that serves the page; screenshot folder-home.png). Inside a tribe, "With <tribe>" makes
      it there. Every path ends on step 3 (invite, skippable) and lands in the new tribe with "Start your first project".
   4. It fits a 390px phone at every step (a bottom sheet, nothing wider than the screen).
 Usage: python app/test/e2e_tribe_flow.py   (writes docs/screenshots/tribe-flow-1.png, tribe-flow-where.png)"""
@@ -53,7 +53,8 @@ def mock_cloud(ctx, seen):
 
 def main():
     tmp = Path(tempfile.mkdtemp(prefix="tribe-tf-", dir="/tmp")); errors = []
-    env = {**os.environ, "TRIBE_NO_GH": "1", "TRIBE_TEST": "1", "TRIBE_NO_DOWNLOAD": "1", "NO_PROXY": "127.0.0.1,localhost"}
+    home = tmp / "home"; (home / "Games" / "HomeCrew").mkdir(parents=True); (home / "Games" / "HomeCrew" / "index.html").write_text("<h1>Home Crew</h1>")
+    env = {**os.environ, "TRIBE_NO_GH": "1", "TRIBE_TEST": "1", "TRIBE_NO_DOWNLOAD": "1", "NO_PROXY": "127.0.0.1,localhost", "HOME": str(home)}
     srv = subprocess.Popen(["node", str(ROOT / "server" / "index.js"), "--port", str(PORT), "--dir", str(tmp / "tribe"), "--ollama", "http://localhost:9"], stdout=open(tmp / "log", "w"), stderr=subprocess.STDOUT, env=env)
     try:
         for _ in range(100):
@@ -102,9 +103,11 @@ def main():
             pg.click("#tn-next"); assert pg.is_visible("#tn-err") and pg.evaluate("TribeNew.state().step") == 1, "a calm inline note, no empty name"
             pg.fill("#tn-name", "Lantern Crew"); pg.click("#tn [data-tn-emo='🎮']"); pg.click("#tn-next")
             pg.wait_for_selector("#tn[data-step='2'] [data-tn-where]")
-            homes = pg.evaluate("TribeNew.homes()"); assert homes == ["device", "computer", "cloud", "github"], homes
-            assert pg.evaluate("TribeNew.recommended()") == "computer", "a page served by TribeCode: this computer hosts it"
-            assert pg.locator("#tn [data-tn-where='computer'] .ph-tag").text_content().strip() == "Recommended"
+            homes = pg.evaluate("TribeNew.homes()"); assert homes == ["folder", "device", "cloud", "github"], homes
+            assert pg.evaluate("TribeNew.recommended()") == "folder", "a page served by TribeCode: a folder on this computer"
+            assert pg.locator("#tn [data-tn-where='folder'] .ph-tag").text_content().strip() == "Recommended"
+            assert [t.strip() for t in pg.locator("#tn [data-tn-where] .ph-tt b").evaluate_all("els => els.map(e => e.firstChild.textContent)")] == ["A folder on this computer", "This device only", "Free cloud", "GitHub repo"]
+            assert "connect GitHub later to any of the others" in pg.inner_text("#tn [data-tn-where='github']")
             pg.click("#tn [data-tn-where='github']"); pg.wait_for_selector("#tn-repo"); pg.mouse.move(5, 5); pg.wait_for_timeout(300)
             pg.screenshot(path=str(SHOTS / "tribe-flow-where.png"))
             pg.click("#tn-back"); pg.wait_for_selector("#tn[data-step='1']")
@@ -153,22 +156,29 @@ def main():
             pg.click("#tn-x"); closed(pg, "cloud")
             pg.context.close()
 
-            # ---------- 3d. This computer (the real server here), then in that tribe ----------
+            # ---------- 3d. A folder on this computer (the real server here), then in that tribe ----------
             pg = page()
-            pg.evaluate("TribeNew.open({ name: 'Home Crew' })"); opened(pg, "computer"); pg.click("#tn-next")
-            assert pg.get_attribute("#tn [data-tn-where='computer']", "aria-checked") == "true", "recommended is chosen"
+            pg.evaluate("TribeNew.open({ name: 'Home Crew' })"); opened(pg, "folder"); pg.click("#tn-next")
+            assert pg.get_attribute("#tn [data-tn-where='folder']", "aria-checked") == "true", "recommended is chosen"
+            pg.wait_for_selector("#tn-folder .lr-dir"); pg.click("#tn-folder [data-open$='Games']")
+            pg.wait_for_selector("#tn-folder [data-dir$='HomeCrew']"); pg.click("#tn-folder [data-dir$='HomeCrew']")
+            pg.wait_for_function("document.querySelector('#tn-go').textContent.includes('Use what')", timeout=10000)
+            assert "index.html" in pg.inner_text("#tn-folder .lr-chips") and pg.is_visible("#lr-git-l"), "what was found; git init offered"
+            pg.mouse.move(5, 5); pg.evaluate("document.querySelector('#tn').scrollTop = 1e4"); pg.wait_for_timeout(250); pg.screenshot(path=str(SHOTS / "folder-home.png"))
             pg.click("#tn-go")
             pg.wait_for_function("document.querySelector('#tn-link') && /\\/join\\//.test(document.querySelector('#tn-link').value)", timeout=20000)
             assert pg.input_value("#tn-link").startswith(BASE + "/join/")
             assert api("/health")["members"] >= 1
             with pg.expect_navigation(timeout=20000): pg.click("#tn-done")   # a new host: the page reloads into it
+            pg.wait_for_selector("#home-pill:not(.hidden)", timeout=20000)
+            pg.wait_for_function("document.querySelector('#home-pill').textContent.includes('~/Games/HomeCrew')", timeout=10000)
             pg.wait_for_function("window.TribeClient && TribeClient.connected() && !TribeOffline.solo()", timeout=20000)
             pg.wait_for_selector("#tn-first", state="visible", timeout=10000)
             s = pg.evaluate(ONE); assert s["sheets"] == 0 and s["scrims"] == 0, s
             n0 = pg.evaluate("TribeProjects.list().length")
             pg.click("#tn-first-later"); pg.wait_for_selector("#tn-first", state="detached")
             pg.click("#pj-plus"); opened(pg, "rail + on a server"); pg.fill("#tn-name", "Second Crew"); pg.click("#tn-next")
-            assert pg.evaluate("TribeNew.homes()") == ["tribe", "github"]
+            assert pg.evaluate("TribeNew.homes()") == ["tribe", "folder", "github"]
             pg.click("#tn-go"); pg.wait_for_function("document.querySelector('#tn-link') && document.querySelector('#tn-link').value", timeout=10000)
             pg.click("#tn-done"); closed(pg, "server tribe")
             pg.wait_for_function(f"TribeProjects.list().length === {n0 + 1} && (TribeProjects.cur() || {{}}).name === 'Second Crew'", timeout=10000)

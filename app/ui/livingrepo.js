@@ -153,21 +153,25 @@
   // pickFolder: the sheet. o.pid: set that project's folder. o.onPick(choice) instead: hand back { path, display, summary, gitInit }.
   function pickFolder(o = {}) {
     const how = canPickFolder(); if (!how.ok) { toast(how.why); return null; }
-    const moving = !!o.moving;
-    const s = sheet('lr-folder', 'A folder on this computer', `${head('A folder on this computer', o.title || (moving ? 'Move it to another folder' : 'Pick its folder'))}
-      <p class="ph-lead">${moving ? 'Pick an empty folder: the project’s files are copied there, and the old folder stays as it is.' : 'Files you edit in TribeCode are written straight into this folder, and edits from VS Code or anything else show up live.'}</p>
-      ${how.how === 'native' ? '<button type="button" class="btn" id="lr-native">Choose a folder…</button>' : `<div class="lr-browse"><div class="lr-crumbs"><button type="button" class="ph-back lr-up" id="lr-up" aria-label="Up one folder">${ic('chev', 16)}</button><code id="lr-where">~</code></div>
+    const moving = !!o.moving, inline = !!o.mount;
+    const inner = `${how.how === 'native' ? '<button type="button" class="btn" id="lr-native">Choose a folder…</button>' : `<div class="lr-browse"><div class="lr-crumbs"><button type="button" class="ph-back lr-up" id="lr-up" aria-label="Up one folder">${ic('chev', 16)}</button><code id="lr-where">~</code></div>
         <div class="lr-dirs" id="lr-dirs" role="listbox" aria-label="Folders"></div>
         <form class="lr-mk" id="lr-mk"><input class="input" id="lr-mk-name" maxlength="80" placeholder="New folder name" aria-label="New folder name"><button class="btn sm" type="submit">New folder</button></form></div>`}
       <div class="lr-found" id="lr-found" hidden><code id="lr-chosen"></code><div id="lr-found-body"></div>
         <label class="lr-check" id="lr-git-l" hidden><input type="checkbox" id="lr-git" checked> Make it a git repo <small>optional: only GitHub sync needs it</small></label></div>
-      <p class="tn-err ph-err" id="lr-ferr" role="status" hidden></p>
+      <p class="tn-err ph-err" id="lr-ferr" role="status" hidden></p>`;
+    let s;
+    if (inline) { s = o.mount; s.innerHTML = `<div class="lr-inline-pick" id="lr-folder">${inner}</div>`; }
+    else s = sheet('lr-folder', 'A folder on this computer', `${head('A folder on this computer', o.title || (moving ? 'Move it to another folder' : 'Pick its folder'))}
+      <p class="ph-lead">${moving ? 'Pick an empty folder: the project’s files are copied there, and the old folder stays as it is.' : 'Files you edit in TribeCode are written straight into this folder, and edits from VS Code or anything else show up live.'}</p>
+      ${inner}
       <div class="ph-acts"><button type="button" class="btn" data-lr-close>Cancel</button><button type="button" class="btn primary" id="lr-folder-go" disabled>${moving ? 'Move here' : 'Use this folder'}</button></div>`);
     let chosen = null, browsing = '';
     const err = t => { const e = $('#lr-ferr', s); e.textContent = t || ''; e.hidden = !t; };
-    const go = $('#lr-folder-go', s);
+    const go = $('#lr-folder-go', s) || { disabled: true, textContent: '' };
+    const tell = () => { if (inline && o.onChange) o.onChange(chosen ? { path: chosen.path, display: chosen.display, summary: chosen.summary, gitInit: !$('#lr-git-l', s).hidden && $('#lr-git', s).checked } : null); };
     async function choose(path) {
-      err(''); go.disabled = true; chosen = null;
+      err(''); go.disabled = true; chosen = null; tell();
       let d = null;
       try { d = await srv('/folders/check', { method: 'POST', body: { path, project: o.pid || undefined }, auth: live() }); }
       catch (e) { if (how.how === 'native' && !base()) d = { path, display: path, summary: null }; else { $('#lr-found', s).hidden = true; return err(e.message); } }
@@ -176,8 +180,9 @@
       const noGit = d.summary && !d.summary.git; $('#lr-git-l', s).hidden = !noGit;
       if (moving && d.summary && !d.summary.empty) return err('Moving needs an empty folder. Make a new one, or pick an empty one.');
       go.textContent = moving ? 'Move here' : d.summary && !d.summary.empty ? 'Use what’s here' : 'Start fresh here';
-      go.disabled = false;
+      go.disabled = false; tell();
     }
+    $('#lr-git', s).onchange = tell;
     async function browse(path) {
       try {
         const d = await srv('/folders/browse' + (path ? '?path=' + encodeURIComponent(path) : ''), { auth: live() });
@@ -199,6 +204,7 @@
         catch (x) { err(x.message); }
       };
     }
+    if (inline) return s;
     go.onclick = async () => {
       if (!chosen) return;
       const choice = { path: chosen.path, display: chosen.display, summary: chosen.summary, gitInit: !$('#lr-git-l', s).hidden && $('#lr-git', s).checked };
