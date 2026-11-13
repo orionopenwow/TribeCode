@@ -192,6 +192,13 @@
   async function route(raw) {
     const text = String(raw || '').trim().replace(/\s+/g, ' '), t = text.toLowerCase();
     let m;
+    // feat/agents-free: "turn this answer into changes" (an answer from ChatGPT, Gemini…), "use a free AI": the AI bridge
+    if (window.TribeAIBridge && /\b(?:(?:turn|make)\s+(?:this|that|the|an?|my)\s+(?:ai\s+|chatgpt\s+|gemini\s+)?(?:answer|reply|response)\s+into\s+(?:code\s+)?changes|(?:paste|apply)\s+(?:an?|the|this|my)\s+(?:ai|chatgpt|gemini|claude|copilot)(?:'s)?\s+(?:answer|reply)|(?:use|ask)\s+(?:a\s+)?free\s+ai|copy\s+(?:this\s+)?(?:out\s+)?for\s+(?:chatgpt|gemini|a free ai))\b/.test(t)) {
+      const body = String(raw || ''), at = body.search(/```|^--- |^diff --git /m), reply = at >= 0 ? body.slice(at) : '';
+      const back = !!reply || /answer|reply|response/.test(t);
+      window.TribeAIBridge.open({ fresh: true, tab: back ? 'back' : 'out', reply });
+      return say(back ? (reply ? 'I read that answer in the AI bridge: check each file, keep what you like, then Apply. Nothing runs by itself.' : 'Paste the AI\'s whole answer in the box, then Read the answer. You pick what to keep; Undo puts it back.') : 'Pick what to send and copy the pack. Paste it into ChatGPT, Gemini, Claude, Copilot or Le Chat, then paste the answer back.');
+    }
     if (/^(what can (you|flint) do( for free)?|what('?s| is) free|what do you do for free|what can you build( for free)?|(show )?(your|flint'?s) (free )?tiers?|are you free)\??$/.test(t)) return tiersReply();   // flint-free: the honest capability map
     // flint-local: Flint's own brain first (app/ui/flintnlu.js + flintlocal.js): many-step commands, typos, eight
     // languages, taught phrases, undo, how-to answers from the docs. It hands back to the routes below when they fit.
@@ -245,7 +252,7 @@
       const ROW = { docs: '#nest-docs', tasks: '#nest-ws-tasks', chat: '#nest-chat', hub: '#rail-logo', home: '#nest-home', agents: '#nest-ws-agents', repo: '#pin-repo .nest-row', settings: '#ub-gear', calendar: '#nest-extra [data-wkey="calendar"]', bugs: '#nest-extra [data-wkey="bugs"]', website: '#nest-extra [data-wkey="website"]', whiteboard: '#wg-whiteboard' }, row = ROW[v] && document.querySelector(ROW[v]);
       const NAME = { docs: 'Files', tasks: 'Task Board', chat: 'Messages', hub: 'Home', home: 'The Dashboard', agents: 'Agents Hub', repo: 'Code repository', settings: 'Settings', calendar: 'Calendar', mcp: 'The MCP page', bugs: 'Bugs', website: 'Website', whiteboard: 'The whiteboard' };
       if (v === 'agents' || v === 'mcp') { if (FF()) { if (seen(row)) FF().done(row, 'Opening'); } else if (row && row.offsetParent && window.TribeFlintGuide && !matchMedia('(max-width: 820px)').matches) window.TribeFlintGuide.point(row, `${NAME[v]} lives here. Opening it for you.`, { next: 'Thanks' });
-        if (v === 'mcp' && window.TribeMcpDir && window.TribeMcpDir.open) window.TribeMcpDir.open(); else { const r = document.querySelector('#nest-ws-agents'); if (r) r.click(); }
+        if (v === 'mcp' && window.TribeMcpDir && window.TribeMcpDir.open) window.TribeMcpDir.open(); else { const inTribe = !!(C && C.hasToken && C.hasToken() && C.project && C.project()); if (inTribe && window.TribeShell) window.TribeShell.go('ws-agents'); else if (window.TribeAgentsHub) window.TribeAgentsHub.open({ global: true }); }   // feat/agents-free: never a dead end (no tribe: the Agent fleet)
         return say(`Opened ${NAME[v].replace(/^The /, 'the ')}.`); }
       if (FF()) { if (seen(row)) { FF().to(row, 'Opening'); await FF().beat(420); } }
       else if (row && row.offsetParent && window.TribeFlintGuide && !matchMedia('(max-width: 820px)').matches) window.TribeFlintGuide.point(row, `${NAME[v] || m[1]} lives here. Opening it for you.`, { next: 'Thanks' });

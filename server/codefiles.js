@@ -253,6 +253,24 @@ module.exports = function codefiles({ P, claims = null, identity = null, member 
       return { saved: true, committed: !r.code, sha: txt(h.out).trim() };
     });
   }
+  // feat/agents-free: DELETE /api/code/file?path=&message=  removes a file and commits it (the AI bridge's Undo of a new file)
+  async function remove(repo, rel, msg, me) {
+    if (!rel || SECRET.test(rel.split('/').pop())) throw bad(403, 'that file can\'t be changed here');
+    const lk = lockedBy(rel, me); if (lk) throw bad(423, `${lk.name || 'Someone'} has locked ${lk.path}. Ask them to unlock it.`);
+    const abs = path.join(repo, ...rel.split('/'));
+    let st; try { st = fs.lstatSync(abs); } catch { return { removed: false }; }
+    if (!st.isFile()) throw bad(400, 'not a file');
+    const realParent = fs.realpathSync(path.dirname(abs)); if (realParent !== repo && !realParent.startsWith(repo + path.sep)) throw bad(400, 'paths stay inside the repo');
+    return serial(async () => {
+      fs.unlinkSync(abs);
+      if (!(await isGit(repo))) return { removed: true, committed: false };
+      await git(repo, ['add', '-A', '--', rel]);
+      const who = identity && member ? identity(member(me.id) || me) : [];
+      const r = await git(repo, [...who, 'commit', '-q', '-m', String(msg || `Remove ${rel}`).slice(0, 200) + ' (via TribeCode)', '--', rel]);
+      broadcast({ type: 'repo', project: P.current() });
+      return { removed: true, committed: !r.code };
+    });
+  }
   async function route(req, res, { m, b, me, url, send, fail, readBody }) {
     if (!me) return fail(res, 401, 'not a member of this tribe');
     if (m !== 'GET') {
@@ -260,6 +278,7 @@ module.exports = function codefiles({ P, claims = null, identity = null, member 
       if (!canEdit(me)) return fail(res, 403, 'ask the host to make you a builder to edit code');
       try {
         if (b === 'file' && m === 'PUT') { const body = await readBody(req); return send(res, 200, await save(repo, clean(body.path), body.text, body.message, me)); }
+        if (b === 'file' && m === 'DELETE') return send(res, 200, await remove(repo, clean(url.searchParams.get('path')), url.searchParams.get('message'), me));   // feat/agents-free: Undo of a new file
         if (b === 'lock' && m === 'POST') { if (!claims) return fail(res, 501, 'locks are off'); const body = await readBody(req); const r = claims.claim(clean(body.path), body.note || 'editing in TribeCode', me); return r.conflict ? fail(res, 423, `${r.conflict.name || 'Someone'} already locked ${r.conflict.path}`) : send(res, 200, r); }
         if (b === 'lock' && m === 'DELETE') { if (!claims) return fail(res, 501, 'locks are off'); return send(res, 200, { released: !!claims.release(clean(url.searchParams.get('path')), me) }); }
       } catch (e) { return fail(res, e.status || 500, e.status ? e.message : 'could not save'); }
@@ -274,6 +293,7 @@ module.exports = function codefiles({ P, claims = null, identity = null, member 
       const at = await pick(repo, q.get('ref'));
       if (b === 'tree') return send(res, 200, await tree(repo, at, clean(q.get('path')), q.get('offset')));
       if (b === 'file') return send(res, 200, await file(repo, at, clean(q.get('path'))));
+      if (b === 'list') return send(res, 200, { paths: (await allPaths(repo, at)).filter(p => !SECRET.test(p.split('/').pop())).slice(0, 3000) });   // feat/agents-free: the AI bridge's file picker
       if (b === 'search') return send(res, 200, await search(repo, at, q.get('q')));
       if (b === 'log') return send(res, 200, await log(repo, at, clean(q.get('path'))));
       if (b === 'recent') return send(res, 200, await recent(repo, at));

@@ -256,7 +256,7 @@
     const waits = (d.pulse || []).filter(x => x.kind === 'wait' || x.kind === 'ship');
     const pulse = waits.length ? `<div class="sh-pulse ad-pulse" id="ad-pulse">${waits.slice(0, 4).map(x => `<span class="${esc(x.kind)}">${esc(x.text)}</span>`).join('')}</div>` : '';
     const top = F ? F.hero(d.fleet) : heroCard(d), rowsH = F ? F.rows(d.fleet, { after: pulse }) : '';
-    el.innerHTML = `<div class="ad-dash" id="ad-dash">${top}${needsCard(d)}${rowsH}${left || right ? `<div class="ad-cols ${left && right ? 'two' : ''}">${left ? `<div class="ad-col">${left}</div>` : ''}${right ? `<div class="ad-col">${right}</div>` : ''}</div>` : ''}${F ? F.how() : ''}</div>`;
+    el.innerHTML = `<div class="ad-dash" id="ad-dash">${top}${needsCard(d)}${rowsH}${left || right ? `<div class="ad-cols ${left && right ? 'two' : ''}">${left ? `<div class="ad-col">${left}</div>` : ''}${right ? `<div class="ad-col">${right}</div>` : ''}</div>` : ''}${F ? F.how() : ''}${window.TribeAIBridge ? window.TribeAIBridge.guideHtml() : ''}</div>`;
     if (F) F.wire(el, { scope: 'project', reload: () => { if (el.isConnected && onView()) render(el); } });
     const ni = el.querySelector('#talk-input'); if (ni && keep) ni.value = keep; if (ni && focused) ni.focus({ preventScroll: true });
     const form = el.querySelector('#talk-form');

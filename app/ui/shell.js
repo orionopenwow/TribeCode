@@ -100,7 +100,9 @@
   window.addEventListener('tribe:stage', () => { tabsSig = ''; drawTabs(); });
   function openWs(w) {
     const last = gated(w) ? 'tasks' : lsGet(TKEY(w)), list = adTabs(w, tabsOf(w), null);
-    const d = list.find(x => x.key === last) || list[0];
+    // feat/agents-free: a Beginner (modes.js) sees no Agents Hub tabs, and the row used to do nothing, leaving Files on
+    // screen. The row always opens its workspace: the first tab of the group, whatever the mode.
+    const d = list.find(x => x.key === last) || list[0] || DEST.find(x => x.group === w && (!x.when || x.when()));
     if (d) { lastDest = d.key; d.run(); }
   }
   // feat/agents-dash: the Agents Hub's top line shows only Dashboard, pinned tabs and the view on screen (app/ui/agentsdash.js)

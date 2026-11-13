@@ -415,6 +415,7 @@
         ${gh ? `<a class="btn" id="cf-gh" href="${esc(gh)}" target="_blank" rel="noopener noreferrer">${svg(I.out, 15)}Open on GitHub</a>` : ''}
         ${f.md && f.text ? `<button class="btn" id="cf-src">${f.source ? 'Show it rendered' : 'Show the source'}</button>` : ''}
         ${canAsk() ? `<button class="btn" id="cf-ask">${svg(I.robot, 15)}Ask an agent about this file</button>` : ''}
+        ${f.text != null && !f.hidden && !f.binary && window.TribeAIBridge ? `<button class="btn" id="cf-freeai" title="Copy this file for ChatGPT, Gemini or another free AI, then paste its answer back">${svg(I.copy, 15)}Ask a free AI</button>` : ''}
         ${editable(f) && !f.editing ? `<button class="btn primary" id="cf-edit">✏️ Edit</button>` : ''}
       </div>
       ${who.length ? `<div class="cf-owner" id="cf-owner">${who.map(w => `<span>${w.how === 'editing' ? '✋' : '🧭'} <b>${esc(w.name)}</b> ${w.how === 'editing' ? `is working on this${w.note ? `: ${esc(w.note)}` : ''}` : `looks after <code>${esc(w.note)}</code>`}</span>`).join('')}</div>` : ''}
@@ -432,6 +433,7 @@
     const sb = $('#cf-src'); if (sb) sb.onclick = () => { file.source = !file.source; drawView(); };
     const eb = $('#cf-edit'); if (eb) eb.onclick = () => { file.editing = true; file.draft = file.text || ''; drawView(); const ta = $('#cf-ed'); if (ta) ta.focus(); };
     if (f.editing) wireEditor(f);
+    const fa = $('#cf-freeai'); if (fa) fa.onclick = () => window.TribeAIBridge.open({ src: 'file', files: [{ path: f.path, text: f.editing ? f.draft : f.text }] });   // feat/agents-free
     const ab = $('#cf-ask'); if (ab) ab.onclick = () => window.TribeAskAgent ? window.TribeAskAgent.open({ text: `About \`${f.path}\`${ref ? ` (branch ${ref})` : ''}: ` }) : toast('Ask an agent is not available here.');
   }
   function closeFile() {
@@ -606,5 +608,11 @@
   C.on('repo', () => { if (isCode && seg === 'code') { recent = null; info = null; } });
   addEventListener('resize', () => { if (!isCode || seg !== 'code' || !$('#cf-tree')) return; const ph = isPhone(); if (ph !== drawTree.__ph) { drawTree.__ph = ph; drawTree(); drawView(); } });
 
-  window.TribeCodeFiles = { mode: () => (isCode ? seg : null), set, refresh: () => { resetRepo(); lastPid = pid(); drawn = ''; return check(); } };
+  // feat/agents-free: the AI bridge shows an applied change here at once (text null: the file is gone)
+  function showText(path, text) {
+    if (!file || file.path !== path || file.editing) return false;
+    if (text == null) { closeFile(); return true; }
+    file = { ...file, text, size: text.length, loading: false, error: '' }; drawView(); return true;
+  }
+  window.TribeCodeFiles = { current: () => (file && !file.loading && !file.error ? { path: file.path, text: file.editing ? file.draft : file.text } : null), show: showText, open: p => openFile(p), mode: () => (isCode ? seg : null), set, refresh: () => { resetRepo(); lastPid = pid(); drawn = ''; return check(); } };
 })();
