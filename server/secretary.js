@@ -48,10 +48,10 @@ const cap = s => s.charAt(0).toUpperCase() + s.slice(1);
 const words = s => (String(s || '').toLowerCase().replace(/[\u2019']/g, '').match(/[a-z][a-z0-9-]{3,}/g) || []).map(w => w.replace(/-+$/, '')).filter(w => w.length >= 4 && !STOP.has(w));
 const stem = w => (w.length > 5 && w.endsWith('es') && !w.endsWith('ses') ? w.slice(0, -2) : w.length > 4 && w.endsWith('s') && !w.endsWith('ss') ? w.slice(0, -1) : w);
 const kw = s => [...new Set(words(s).map(stem))];
-const KIND_LABEL = { chat: 'message', voice: 'voice note', image: 'image', doc: 'doc', file: 'file', commit: 'commit', decision: 'decision', vote: 'vote', agent: 'agent update', task: 'task', note: 'note', research: 'research' };
+const KIND_LABEL = { caption: 'huddle', chat: 'message', voice: 'voice note', image: 'image', doc: 'doc', file: 'file', commit: 'commit', decision: 'decision', vote: 'vote', agent: 'agent update', task: 'task', note: 'note', research: 'research' };
 const OUT_FILES = ['DIGEST.md', 'INSPIRATION.md'];
 
-module.exports = function secretary({ P, store, pstore, brain, docs, loadTasks, hubFor, getMembers, nameOf, postChat, createTask, votes, broadcast, str, id, log = () => {} }) {
+module.exports = function secretary({ secsum = null, P, store, pstore, brain, docs, loadTasks, hubFor, getMembers, nameOf, postChat, createTask, votes, broadcast, str, id, log = () => {} }) {
   const member = mid => getMembers().find(m => m.id === mid) || null;
   const who = mid => (mid === 'tribecode' ? 'TribeCode' : mid === 'secretary' ? 'Secretary' : mid === 'brain' ? 'Local Brain' : nameOf(mid));
   const err = (status, msg) => Object.assign(new Error(msg), { status });
@@ -98,6 +98,13 @@ module.exports = function secretary({ P, store, pstore, brain, docs, loadTasks, 
   const requestsOf = p => store.readJSON(`${dir(p)}/requests.json`, []);
   const saveRequests = (p, l) => { ensure(p); store.writeJSON(`${dir(p)}/requests.json`, l.slice(-200)); };
   const digestOf = p => store.readJSON(`${dir(p)}/digest.json`, { items: [], updated: null });
+  // action items found in a day's talk (secsum); a stable id per item keeps "Make it a task" one-tap and idempotent
+  const actionsOf = (p, day) => store.readJSON(`${dir(p)}/actions-${day}.json`, []);
+  function saveActions(p, day, found) {
+    const have = actionsOf(p, day);
+    for (const a of found || []) if (!have.some(h => h.key === a.key)) have.push({ id: 'a-' + id(8).replace(/[^A-Za-z0-9]/g, 'x'), ...a, task: null, dismissed: false });
+    ensure(p); store.writeJSON(`${dir(p)}/actions-${day}.json`, have.slice(-80));
+  }
   const noteRel = (p, f) => `${dir(p)}/notes/${f}`;
   const readNote = (p, f) => { try { return fs.readFileSync(store.p(noteRel(p, f)), 'utf8'); } catch { return ''; } };
   const writeNote = (p, f, text) => { ensure(p); const full = store.p(noteRel(p, f)), tmp = full + '.tmp'; fs.writeFileSync(tmp, text); fs.renameSync(tmp, full); };
@@ -195,6 +202,25 @@ module.exports = function secretary({ P, store, pstore, brain, docs, loadTasks, 
     // new tasks
     try { for (const t of loadTasks().filter(t => t.created > st.taskAt && t.source !== 'secretary')) out.push(mkItem({ at: t.created, kind: 'task', by: t.by, text: `New task: ${t.title}`, ref: { type: 'task', id: t.id } })); } catch {}
     const lastTask = loadTasks().map(t => t.created).sort().pop(); if (lastTask && lastTask > st.taskAt) st.taskAt = lastTask;
+    // huddle captions (meetings/<date>-<id>.jsonl, server/voice.js): only meetings of this project, only shared lines
+    try {
+      st.meetAt = st.meetAt || st.since || '';
+      let last = st.meetAt;
+      for (const f of fs.readdirSync(store.p('meetings')).filter(f => /\.jsonl$/.test(f)).sort().slice(-20)) {
+        const lines = store.readJSONL('meetings/' + f, 2000);
+        const fresh = lines.filter(l => l.text && l.at && l.at > st.meetAt && !SYS.has(l.by) && (l.project ? l.project === p : p === P.defaultId()));
+        // one item per speaker turn group keeps the journal readable
+        let cur = null;
+        for (const l of fresh) {
+          if (cur && cur.by === l.by && Date.parse(l.at) - Date.parse(cur.last) < 60_000) { cur.text += ' ' + l.text; cur.last = l.at; continue; }
+          if (cur) out.push(mkItem({ at: cur.at, kind: 'caption', by: cur.by, text: cur.text, ref: { type: 'meeting', id: f.replace(/\.jsonl$/, '') } }));
+          cur = { by: l.by, at: l.at, last: l.at, text: String(l.text) };
+          if (l.at > last) last = l.at;
+        }
+        if (cur) out.push(mkItem({ at: cur.at, kind: 'caption', by: cur.by, text: cur.text, ref: { type: 'meeting', id: f.replace(/\.jsonl$/, '') } }));
+      }
+      st.meetAt = last;
+    } catch {}
     // files people drop into the repo's notes/ and files/ folders
     for (const f of readRepoFiles(p, st.filesAt, budget)) out.push(mkItem({ at: f.at, kind: 'file', text: f.text, ref: { type: 'file', id: f.rel } }));
     st.filesAt = Date.now();
@@ -202,7 +228,7 @@ module.exports = function secretary({ P, store, pstore, brain, docs, loadTasks, 
   }
 
   // ---------- DISTILL ----------
-  const isQuestion = it => (it.kind === 'chat' || it.kind === 'voice') && Q_RE.test(it.text.trim());
+  const isQuestion = it => (it.kind === 'chat' || it.kind === 'voice' || it.kind === 'caption') && Q_RE.test(it.text.trim());
   const line = it => `- ${hhmm(it.at)} **${it.who || 'someone'}** · ${KIND_LABEL[it.kind] || it.kind}: ${clip(it.text, 180)}`;
   function topics(items, n = 3) {
     const freq = new Map(), people = new Map();
@@ -223,11 +249,20 @@ module.exports = function secretary({ P, store, pstore, brain, docs, loadTasks, 
     const short = inShort || (happened.length ? `${andList(names) || 'The team'} ${names.length > 1 ? 'were' : 'was'} at it${t.length ? `; talk centred on ${andList(t.map(x => x.word))}` : ''}.` : 'A quiet day so far.');
     const sec = (title, list, empty) => `## ${title}\n${list.length ? list.join('\n') : `_${empty}_`}\n`;
     const shown = happened.slice(-25);
+    // no-AI summary: TextRank sentences, action items with owners and dates, people, links (app/ui/secsum.js)
+    const talk = all.filter(it => ['chat', 'voice', 'caption', 'note', 'decision'].includes(it.kind));
+    const dg = secsum ? secsum.digest(talk, { members: getMembers().map(m => ({ id: m.id, name: m.name })), now: new Date(day + 'T12:00:00') }) : null;
+    if (dg) saveActions(p, day, dg.actions);
+    const acts = actionsOf(p, day);
     const md = [`# Secretary journal · ${day}`, `_${proj.name || p} · kept by the TribeCode secretary. Short gists, never code._`, '', '## In short', short, '',
+      ...(dg && dg.summary.length ? ['## Summary', dg.summary.map(x => `- ${x}`).join('\n'), ''] : []),
+      ...(acts.length ? [sec('Action items', acts.map(a => `- [${a.task ? 'x' : ' '}] ${a.title}${a.ownerName ? ` · **${a.ownerName}**` : ''}${a.due ? ` · due ${a.due}` : ''}${a.from ? ` _(from ${a.from})_` : ''}`), '')] : []),
       sec('What happened', [...(happened.length > shown.length ? [`- _…${happened.length - shown.length} earlier items in the tribe folder_`] : []), ...shown.map(line)], 'Nothing yet.'),
       sec('Decisions', decisions.map(line), 'None logged.'),
       sec('Open questions', questions.map(line), 'None.'),
       sec('Notes to the secretary', notes.map(line), 'None.'),
+      ...(dg && dg.people.length ? [sec('People mentioned', [dg.people.map(x => `${x.name} (${x.n})`).join(' · ')], '')] : []),
+      ...(dg && dg.links.length ? [sec('Links', dg.links.map(l => `- ${l.url}${l.from ? ` _(${l.from})_` : ''}`), '')] : []),
       sec('Research', reqs.map(r => r.status === 'answered' ? `- **${clip(r.question, 140)}** (filed by ${r.filedByName || 'an agent'})\n${r.findings.map(f => `  - ${f}`).join('\n')}${r.sources.length ? `\n  - Sources: ${r.sources.join(' · ')}` : ''}` : `- _Open:_ ${clip(r.question, 160)}`), 'No research today.'),
     ].join('\n');
     writeNote(p, `${day}.md`, md.trim() + '\n');
@@ -373,9 +408,9 @@ module.exports = function secretary({ P, store, pstore, brain, docs, loadTasks, 
     if (!answer || answer.length < 3) answer = `From the notes:\n${top.slice(0, 3).map(t => `- ${clip(t.text, 200)} _(${t.src})_`).join('\n')}`;
     return { answer, sources: [...new Set(top.map(t => t.src))] };
   }
-  function note(p, text, me) {
+  function note(p, text, me, kind = 'note', ref = null) {
     const t = clip(plain(text), 1000); if (!t) throw err(400, 'empty note');
-    const it = mkItem({ kind: 'note', by: me.id, text: t }); addItems(p, [it]);
+    const it = mkItem({ kind: kind === 'voice' ? 'voice' : 'note', by: me.id, text: t, ref }); addItems(p, [it]);
     journal(p, localDay());
     broadcast({ type: 'secretary', project: p, what: 'note' });
     return it;
@@ -494,6 +529,7 @@ module.exports = function secretary({ P, store, pstore, brain, docs, loadTasks, 
       host, canAct: me.role !== 'agent' && me.role !== 'spectator', enabled: cfg.enabled, quiet: isQuiet(), running: !!running, config: host ? publicCfg() : { enabled: cfg.enabled, model: cfg.model, quiet: { ...cfg.quiet } },
       brain: { online: !!brain.status().online, model: cfg.model || brain.status().model || '', models: brain.models() },
       lastTick: st.lastTick || null, inShort: st.inShort || null,
+      actions: actionsOf(p, today).filter(a => !a.dismissed),
       digest: digestOf(p), journal: { date: j ? today : list[0] || today, md: j || (list[0] ? readNote(p, `${list[0]}.md`) : '') }, days: list.slice(0, 30),
       ideas: ideasOf(p).filter(i => i.status !== 'dismissed').slice().reverse().slice(0, 24),
       requests: requestsOf(p).slice().reverse().slice(0, 40),
@@ -506,6 +542,20 @@ module.exports = function secretary({ P, store, pstore, brain, docs, loadTasks, 
     if (a !== 'secretary') return null;
     const p = pid(), host = me.role === 'host', human = me.role !== 'agent' && me.role !== 'spectator';
     if (m === 'GET' && !b) return send(res, 200, view(p, me));
+    if (m === 'GET' && b === 'actions') { const d = /^\d{4}-\d{2}-\d{2}$/.test(c || '') ? c : localDay(); return send(res, 200, { day: d, actions: actionsOf(p, d).filter(a => !a.dismissed) }); }
+    if (m === 'GET' && b === 'summary') {   // today's no-AI digest straight from the items, even before a tick
+      const d = /^\d{4}-\d{2}-\d{2}$/.test(c || '') ? c : localDay();
+      const talk = itemsOf(p).filter(it => localDay(new Date(it.at)) === d && ['chat', 'voice', 'caption', 'note', 'decision'].includes(it.kind));
+      // not read yet (the secretary is off, or between runs): today's chat and voice-note transcripts straight from the log
+      const seen = new Set(talk.filter(it => it.ref && it.ref.type === 'chat').map(it => it.ref.id));
+      for (const msg of pstore.readJSONL('chat/general.jsonl', 600)) {
+        if (msg.deleted || SYS.has(msg.by) || !msg.text || seen.has(msg.id) || localDay(new Date(msg.at)) !== d || /^\/(task|decide|vote)\b|^@secretary\b/i.test(msg.text.trim())) continue;
+        talk.push(mkItem({ at: msg.at, kind: msg.media && msg.media.kind === 'voice' ? 'voice' : 'chat', by: msg.by, text: msg.text, ref: { type: 'chat', id: msg.id } }));
+      }
+      const dg = secsum ? secsum.digest(talk, { members: getMembers().map(x => ({ id: x.id, name: x.name })), now: new Date(d + 'T12:00:00') }) : null;
+      if (dg) saveActions(p, d, dg.actions);
+      return send(res, 200, { day: d, items: talk.length, ...(dg || {}), actions: actionsOf(p, d).filter(a => !a.dismissed) });
+    }
     if (m === 'GET' && b === 'journal' && c) {
       if (!/^\d{4}-\d{2}-\d{2}$/.test(c)) return fail(res, 400, 'bad date');
       const md = readNote(p, `${c}.md`); return md ? send(res, 200, { date: c, md }) : fail(res, 404, 'no journal for that day');
@@ -524,7 +574,21 @@ module.exports = function secretary({ P, store, pstore, brain, docs, loadTasks, 
       const body = await readBody(req); return send(res, 200, await ask(p, str(body.question, 500), me.name));
     }
     if (!human) return fail(res, 403, me.role === 'agent' ? 'agents use the MCP tools (secretary_inbox, secretary_file, secretary_ask)' : 'spectators are read-only');
-    if (b === 'note' && m === 'POST') { const body = await readBody(req); return send(res, 200, { item: note(p, body.text, me) }); }
+    if (b === 'note' && m === 'POST') { const body = await readBody(req); return send(res, 200, { item: note(p, body.text, me, body.kind, body.ref && typeof body.ref === 'object' ? { type: str(body.ref.type, 20), id: str(body.ref.id, 120) } : null) }); }
+    if (b === 'actions' && m === 'POST' && c && (parts[3] === 'task' || parts[3] === 'dismiss')) {
+      const dayQ = /^\d{4}-\d{2}-\d{2}$/.test(String(req.url).split('day=')[1] || '') ? String(req.url).split('day=')[1].slice(0, 10) : null;
+      const daysToTry = dayQ ? [dayQ] : [localDay(), ...days(p).slice(0, 14)];
+      for (const d of daysToTry) {
+        const list = actionsOf(p, d), a = list.find(x => x.id === c); if (!a) continue;
+        if (parts[3] === 'dismiss') { a.dismissed = true; store.writeJSON(`${dir(p)}/actions-${d}.json`, list); journal(p, d); broadcast({ type: 'secretary', project: p, what: 'action' }); return send(res, 200, { action: a }); }
+        if (a.task) return send(res, 200, { action: a, task: a.task });
+        const t = createTask({ title: a.title, by: me.id, assignee: a.owner || undefined, due: a.due || undefined, source: 'secretary', body: `From the Secretary's notes (${d})${a.from ? `, said by ${a.from}` : ''}.` });
+        a.task = t.id; store.writeJSON(`${dir(p)}/actions-${d}.json`, list); journal(p, d);
+        broadcast({ type: 'secretary', project: p, what: 'action' });
+        return send(res, 200, { action: a, task: t.id });
+      }
+      return fail(res, 404, 'action not found');
+    }
     if (b === 'requests' && m === 'POST' && !c) { const body = await readBody(req); return send(res, 200, { request: addRequest(p, { question: str(body.question, 300), why: str(body.why, 300), by: me.id }) }); }
     if (b === 'ideas' && c && m === 'POST') {
       const list = ideasOf(p), idea = list.find(x => x.id === c); if (!idea) return fail(res, 404, 'idea not found');

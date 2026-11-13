@@ -3,6 +3,7 @@
 What has to be true before TribeCode is called launched, what is done, and what is left. Owners: **you** (needs a person, an account or money), **agents** (can be built and tested here). Kept current at every milestone, alongside `HANDOFF.md` and `docs/CONTEXT.md`.
 
 Last updated: 2026-11-13 (the app audit, `docs/APP-AUDIT-2026-11-13.md`: every route walked in four roles at two sizes; what it changes here is marked *audit*). Before that: 2026-11-12 (v0.31.0: Design flow and starters, website designer v2, presence and People, Company v2 and gigs, Marketplace v2, the desktop demo; the v0.29 review items still open are listed under Backend).
+Last updated: 2026-11-12 (v0.31.2; journeys closed in docs/LOOPS-REPORT.md, prices hidden until payments exist). v0.31.0 brought the Design flow and starters, website designer v2, presence and People, Company v2 and gigs, Marketplace v2 and the desktop demo.
 
 ## 1. The product works end to end (no dead ends, no bugs)
 
@@ -41,7 +42,7 @@ Gate: `npm test` green on `dev`, `e2e_truth` green, and a manual click-through o
 - The model is in `docs/PREMIUM.md`: everything local, open source and your-own-AI is free forever. Premium is the hosted relay and cloud, AI credits, bigger teams, premium templates and priority builds.
 - Gates are soft (`TribePremium.gate`), with "Not now" always available.
 - **Payments are wired but hidden** (Stripe; `e2e_payments`, `security8_test`). Until you open them (`TRIBE_PAYMENTS=1`, or `PUT /api/premium/admin { "enabled": true }` on the host computer) the plans pop-out is information only ("Paid plans are coming"), there is no checkout, billing or receipts anywhere, and the webhook answers 404. Opened: the buttons open Checkout, a signed webhook changes plans and credits, Manage billing opens Stripe's portal, Settings › Plan & AI shows receipts. Plans are per account where a person has one, per tribe otherwise; credits are priced by the size of the answer (docs/PREMIUM.md › What a credit buys).
-- **To go live** *you*: in Stripe, make the two recurring prices (Premium Hosted $6, Premium Tribe $24 a month) and the three one-time prices (1,000 credits $10, 2,500 $25, 5,000 $50); add the webhook `https://<your public address>/api/premium/webhook` with the eight events listed in docs/PREMIUM.md › Payments; turn on the customer portal; then give the server `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET` and the five `STRIPE_PRICE_…` ids, and set `TRIBE_PAYMENTS=1` last, when you are ready to receive. Try it with test keys first.
+- **To go live** *you*: in Stripe, make the two recurring monthly prices (Premium Hosted, Premium Tribe) and the three one-time prices (1,000, 2,500 and 5,000 credits) at the amounts in your plan; add the webhook `https://<your public address>/api/premium/webhook` with the eight events listed in docs/PREMIUM.md › Payments; turn on the customer portal; then give the server `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET` and the five `STRIPE_PRICE_…` ids, and set `TRIBE_PAYMENTS=1` last, when you are ready to receive. Try it with test keys first.
 - Not built: tax (Stripe Tax), invoices by email beyond Stripe's own, the weekly credit refill that the Tribe plan's copy promises, and seat-based plans.
 
 ## 4. Stores (iPhone and Android)

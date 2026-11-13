@@ -72,13 +72,13 @@ Opened but with no secret key, the buttons say "The host hasn't turned on paymen
 | `STRIPE_PRICE_HOSTED`, `STRIPE_PRICE_TRIBE` | recurring monthly prices for Premium Hosted and Premium Tribe |
 | `STRIPE_PRICE_CREDITS_10`, `_25`, `_50` | one-time prices for the 1,000, 2,500 and 5,000 credit packs |
 
-The prices people see still come from `site/pricing.html` (copied in `app/ui/premium.js` `PRICES`): keep the Stripe
-prices equal to them. An item with no price id isn't sold.
+The app and the pricing page show no amounts ("Price soon"): the planned prices stay in the owner's private plan, not in
+the repo. What people pay is whatever the Stripe prices say. An item with no price id isn't sold.
 
 **In Stripe** (Dashboard, once):
 
-1. Products: **Premium Hosted** ($6 a month, recurring), **Premium Tribe** ($24 a month, recurring), and three one-time
-   products or prices: **1,000 credits** $10, **2,500 credits** $25, **5,000 credits** $50. Copy each `price_…` id.
+1. Products: **Premium Hosted** and **Premium Tribe** (each a recurring monthly price), and three one-time prices for
+   the **1,000**, **2,500** and **5,000** credit packs, at the amounts in your plan. Copy each `price_…` id.
 2. Developers › Webhooks › Add endpoint: `https://<your public address>/api/premium/webhook`, with these events:
    `checkout.session.completed`, `checkout.session.async_payment_succeeded`, `checkout.session.async_payment_failed`,
    `customer.subscription.updated`, `customer.subscription.deleted`, `invoice.paid`, `invoice.payment_failed`,
@@ -105,7 +105,7 @@ prices equal to them. An item with no price id isn't sold.
 
 ## What a credit buys
 
-1 credit is $0.01 of AI. Only answers from the hosted "TribeCode credits" AI use credits; your own AI never does. An
+Only answers from the hosted "TribeCode credits" AI use credits; your own AI never does. An
 answer costs by its size: what was sent (the instructions and the conversation) plus what came back, counted as
 characters divided by 4.
 

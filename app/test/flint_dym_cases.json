@@ -1,0 +1,18 @@
+{ "note": "Paraphrases for Flint's did-you-mean (tier 1). Each uses everyday words that are NOT in the intent's example phrases. Only the ones the rules leave unrecognized are scored: is the wanted intent among the three suggestions?",
+  "cases": [
+    ["get rid of that todo", ["task.delete"]], ["erase the chore about milk", ["task.delete"]], ["discard my ticket", ["task.delete"]],
+    ["hop on a call with the team", ["huddle.start"]], ["lets have a voice sync", ["huddle.start"]], ["exit the call", ["huddle.leave"]],
+    ["bring a buddy into the tribe", ["invite"]], ["get my colleague in here", ["invite"]],
+    ["give me a recap of the conversation", ["chat.summarize"]], ["digest of what people said", ["chat.summarize"]],
+    ["night colors please", ["theme.dark-mode", "theme.dark", "theme.midnight"]], ["go bright", ["theme.light"]],
+    ["put it on the web", ["publish"]], ["launch it for everyone", ["publish"]], ["deploy", ["publish"]],
+    ["roll that back", ["undo"]], ["revert", ["undo"]],
+    ["show my agenda", ["cal.show"]], ["what appointments do i have", ["cal.show"]],
+    ["purchase more credits", ["premium.open"]], ["pay for premium", ["premium.open"]],
+    ["locate the logo", ["find"]], ["lookup the logo file", ["find"]],
+    ["create a spreadsheet for costs", ["sheet.new"]], ["presentation about the launch", ["deck.new"]],
+    ["whats popular right now", ["trending"]], ["walk me through the app", ["tour"]], ["larger lettering", ["textsize.set"]],
+    ["ping the whole team that its ready", ["chat.send"]], ["my todo list", ["task.list"]], ["whats on my plate", ["task.list", "focus"]],
+    ["share my computer as the server", ["host.start"]], ["i have a complaint", ["feedback"]], ["roll a dice", ["random"]],
+    ["test suite please", ["checks.run"]], ["is everything green", ["checks.run"]]
+  ] }

@@ -3,7 +3,7 @@
 Status: plan + first pieces built, 2026-11-10 (`feat/appstore`); 2026-11-11 (`feat/polish`): Sign in with Apple (config-gated), the cloud AI consent sheet, `support.html`, `delete-account.html` and `GET/DELETE /api/account`. Built so far: the browser app ([BROWSER-APP.md](BROWSER-APP.md)),
 report / block / word filter / delete-account entry point (`app/ui/moderation.js`, `server/moderation.js`), draft privacy
 policy and terms (`app/ui/privacy.html`, `app/ui/terms.html`), the Android TWA scaffold (`mobile/android/`) and the
-iPhone plan (`mobile/ios/README.md`). Earlier plan: [archive/PHONE-APPS.md](archive/PHONE-APPS.md). Nothing has been submitted yet.
+iPhone plan (`mobile/ios/README.md`). Earlier plan: [PHONE-APPS.md](archive/PHONE-APPS.md). Nothing has been submitted yet.
 
 The guidance below is paraphrased from Apple's and Google's own pages, read on 2026-11-10 (sources at the end). Store
 rules change; re-read them before each submission.

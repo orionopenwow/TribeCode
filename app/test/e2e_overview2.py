@@ -57,7 +57,7 @@ def main():
             # 0. a brand-new project: the checklist is the hero and there's no Living update yet
             host.wait_for_selector("#pj-check.hero .ock-hero-t", timeout=10000)
             assert host.locator("#pj-living").count() == 0, "no Living update before the tribe has begun"
-            assert host.locator("#pj-check.hero .ock-card .ock-emo").count() == 4
+            assert host.locator("#pj-check.hero .ock-card .ock-emo").count() == 5   # vision, task, AI, where it lives, share
             assert host.evaluate("parseFloat(getComputedStyle(document.querySelector('#pj-check .ock-hero-t')).fontSize)") >= 24
             n0 = host.evaluate("+document.querySelector('#pj-check .ock-bar').getAttribute('aria-valuenow')")
             host.wait_for_selector("#pj-check [data-step=task]:not(.on) [data-ck=newtask]")

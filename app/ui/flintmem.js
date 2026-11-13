@@ -197,6 +197,19 @@
   }
   async function build(what) {
     if (!on()) return { text: 'Connect to your tribe first, then I can start it.' };
+    // a phone-only tribe has no code repository: build from a starter in the Design flow, which runs on this phone
+    if (window.TribeOffline && window.TribeOffline.solo && window.TribeOffline.solo() && window.TribeDesignFlow && window.TribeDesignFlow.catalog) {
+      try {
+        const cat = await window.TribeDesignFlow.catalog(), t = ' ' + String(what || '').toLowerCase() + ' ';
+        const score = s => (s.tags || []).concat([s.id, s.title || '']).reduce((n, k) => n + (t.includes(' ' + String(k).toLowerCase()) ? 2 + String(k).length / 20 : 0), 0);
+        let pick = cat.map(s => ({ s, n: score(s) })).sort((a, b) => b.n - a.n)[0];
+        pick = pick && pick.n > 0 ? pick.s : cat.find(s => s.id === (/\b(game|play|level|3d|arcade)\b/.test(t) ? 'platformer' : 'todo'));
+        if (pick && await window.TribeDesignFlow.fromFlint(pick.id, what)) {
+          const near = /\b3d\b/.test(t) && pick.kind === 'game' ? ' 3D games need a computer for now, so I started the closest 2D one.' : '';
+          return { text: `On it: “${what}”. I started the ${pick.title || pick.id} starter on this phone; it runs right here, no AI needed.${near} Tell me what to change, or move to a host when your AI helpers should build more.`, acts: [act('Open Design', 'nav', 'canvas')] };
+        }
+      } catch {}
+    }
     const pid = C.project(), done = [], need = [];
     const bt = seen('#pvw') || seen('#nest-preview-slot') || seen('#view-home') || seen('#main'); if (FF() && bt) FF().work(bt, 'Building');
     // Flint's free tier first (server/flintfree.js): a recipe from the build kit, no AI needed; or an honest "this needs a stronger AI"

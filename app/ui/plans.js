@@ -21,6 +21,7 @@
 
   // ---------- the pop-out ----------
   let cur = null, note = '';
+  const ITEM = { 1000: 'credits-10', 2500: 'credits-25', 5000: 'credits-50' };   // a pack's size -> the item the server sells (server/stripe.js ITEMS); no amounts live in the app
   function body() {
     const T = P(), pl = T.plan(), pr = T.PRICES, cr = T.credits(), sell = !!(T.offered && T.offered()), pay = sell && T.payments && T.payments(), bill = (sell && T.billing && T.billing()) || null;   // sell: the host has opened payments; until then the plans are information
     const grace = bill && bill.graceUntil ? `Your last payment didn't go through. Premium stays on until ${esc(new Date(bill.graceUntil).toLocaleDateString())}; update your card in Manage billing.` : bill && bill.cancelAt ? `Your plan ends on ${esc(new Date(bill.cancelAt).toLocaleDateString())}.` : '';
@@ -33,7 +34,7 @@
         <ul class="plp-tiers">${pr.plans.map(t => `<li><span class="plp-tn"><b>${esc(t.name)}</b><span class="plp-price">${esc(t.price)} <small>${esc(t.per)}</small></span>${pl.plan === 'premium' && pl.tier === t.id ? '<span class="plp-tag is-on">Your plan</span>' : sell ? `<button type="button" class="btn sm plp-buy" data-plp-plan="${esc(t.id)}">Choose ${esc(t.name)}</button>` : ''}</span><span class="plp-ta">${esc(t.adds)}</span></li>`).join('')}</ul>
         ${grace ? `<p class="plp-note plp-grace" id="plp-grace">${grace}</p>` : ''}</section>
       <section class="plp-card" data-plp="credits"><div class="plp-top"><b>AI credits</b><span class="plp-tag">${pay ? 'Available' : 'Planned'}</span></div>
-        <div class="plp-packs" role="group" aria-label="Credit packs">${pr.credit.packs.map(k => sell ? `<button type="button" class="plp-pack" data-plp-pack="${k.usd}"><b>${n(k.credits)}</b><small>credits · $${k.usd}</small></button>` : `<div class="plp-pack is-info"><b>${n(k.credits)}</b><small>credits · $${k.usd}</small></div>`).join('')}</div>
+        <div class="plp-packs" role="group" aria-label="Credit packs">${pr.credit.packs.map(k => sell && ITEM[k.credits] ? `<button type="button" class="plp-pack" data-plp-pack="${ITEM[k.credits]}"><b>${n(k.credits)}</b><small>credits</small></button>` : `<div class="plp-pack is-info"><b>${n(k.credits)}</b><small>credits</small></div>`).join('')}</div>
         <p class="plp-note">${esc(pr.credit.terms)}</p></section>
       ${sell ? '' : '<p class="plp-note plp-coming" id="plp-coming">Paid plans are coming. Everything free keeps working, and the trial needs no card.</p>'}
       <p class="plp-msg" id="plp-msg" role="status" ${note ? '' : 'hidden'}>${esc(note)}</p>
@@ -68,7 +69,7 @@
       if (b.hasAttribute('data-plp-x')) return close();
       if (b.hasAttribute('data-plp-ai')) { close(); if (window.TribeBrain && window.TribeBrain.open) window.TribeBrain.open(); else if (window.TribeConnectAI && window.TribeConnectAI.open) window.TribeConnectAI.open(); return; }
       // feat/auth3-pay: the buttons are real. With payments off they say so, here and in a toast.
-      const buy = b.hasAttribute('data-plp-pack') ? 'credits-' + b.dataset.plpPack : b.hasAttribute('data-plp-plan') ? b.dataset.plpPlan : '';
+      const buy = b.hasAttribute('data-plp-pack') ? b.dataset.plpPack : b.hasAttribute('data-plp-plan') ? b.dataset.plpPlan : '';
       if (buy || b.hasAttribute('data-plp-manage')) {
         b.disabled = true;
         return (buy ? P().checkout(buy) : P().manage()).then(r => { b.disabled = false; say(r && !r.ok && r.message ? r.message : ''); }, () => { b.disabled = false; });

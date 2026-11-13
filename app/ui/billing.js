@@ -41,7 +41,7 @@
     const m = el.querySelector('#bl-manage'); if (m) m.onclick = async () => { m.disabled = true; await P().manage(); m.disabled = false; };
   }
 
-  const LABEL = { hosted: 'Premium Hosted (recurring, monthly)', tribe: 'Premium Tribe (recurring, monthly)', 'credits-10': '1,000 credits · $10 (one-time)', 'credits-25': '2,500 credits · $25 (one-time)', 'credits-50': '5,000 credits · $50 (one-time)' };
+  const LABEL = { hosted: 'Premium Hosted (recurring, monthly)', tribe: 'Premium Tribe (recurring, monthly)', 'credits-10': '1,000 credits (one-time)', 'credits-25': '2,500 credits (one-time)', 'credits-50': '5,000 credits (one-time)' };
   async function admin(el) {
     const me = C() && (C().state() || {}).me, sec = el.closest('.set-sec');
     const desk = !!(window.__TAURI__ || window.__TAURI_INTERNALS__) || /tauri\.localhost$/i.test(location.hostname);

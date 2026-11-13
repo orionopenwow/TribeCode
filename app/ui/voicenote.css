@@ -1,0 +1,47 @@
+/* Voice notes outside chat (voicenote.js) + the Secretary's "Notes from today's talk" + chat voice-note speed. */
+.vrec-scrim { position: fixed; inset: 0; z-index: 900; background: var(--scrim); display: grid; place-items: center; padding: 16px; }
+.vrec { width: min(440px, 100%); background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-lg); padding: 20px; display: grid; gap: 14px; }
+.vrec-h { display: grid; gap: 2px; }
+.vrec-h b { font-size: 18px; color: var(--text); }
+.vrec-wave { height: 56px; display: flex; align-items: center; gap: 3px; padding: 0 2px; border: 1px solid var(--border); border-radius: var(--r); background: var(--surface-2); }
+.vrec-wave i { flex: 1; min-height: 6%; height: 8%; background: var(--accent); border-radius: 2px; transition: height var(--dur-instant) var(--ease-out); }
+.vrec.paused .vrec-wave i, .vrec-scrim.paused .vrec-wave i { background: var(--faint); }
+.vrec-row { display: flex; align-items: center; gap: 8px; font-family: var(--mono); font-size: 13px; color: var(--muted); }
+.vrec-dot { width: 9px; height: 9px; border-radius: 50%; background: var(--alert); }
+.vrec-scrim.paused .vrec-dot { background: var(--faint); }
+.vrec-t { color: var(--text); font-size: 15px; }
+.vrec-max { margin-left: auto; }
+.vrec-tx { margin: 0; min-height: 3.2em; max-height: 9em; overflow: auto; font-size: 14px; line-height: 1.6; color: var(--text); }
+.vrec-ctl { display: flex; gap: 8px; justify-content: flex-end; }
+.vrec-ctl .btn { min-height: 40px; }
+.tkd-vn { margin: 0 0 6px; display: inline-flex; align-items: center; gap: 6px; }
+.tkd-vn .i, .sy-vn .i, [data-vnote] .i { width: 16px; height: 16px; }
+
+/* chat voice note: playback speed */
+.vn-speed { border: 1px solid var(--border); background: transparent; color: var(--muted); font: 600 11px/1 var(--mono); padding: 3px 6px; border-radius: var(--r-sm); cursor: pointer; min-width: 30px; }
+.vn-speed.on { color: var(--accent); border-color: var(--accent); }
+.vn-wave { cursor: pointer; }
+
+/* Secretary: today's notes */
+.sy-today .sy-sum { margin: 0 0 12px; padding-left: 18px; display: grid; gap: 6px; line-height: 1.6; max-width: 65ch; }
+.sy-today .sy-sum small { color: var(--faint); }
+.sy-h3 { margin: 14px 0 8px; font-size: 13px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); font-family: var(--mono); font-weight: 600; }
+.sy-acts { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.sy-act { display: grid; grid-template-columns: 1fr auto; gap: 4px 12px; align-items: center; padding: 10px 12px; border: 1px solid var(--border); border-radius: var(--r); background: var(--surface); }
+.sy-act.done .sy-act-t { color: var(--muted); }
+.sy-act-t { font-weight: 600; color: var(--text); }
+.sy-act-m { grid-column: 1; display: flex; flex-wrap: wrap; gap: 10px; font-size: 13px; color: var(--muted); }
+.sy-act-m b { color: var(--peer); font-weight: 600; }
+.sy-act-b { grid-column: 2; grid-row: 1 / span 2; display: flex; align-items: center; gap: 6px; }
+.sy-vn-row { margin-top: 12px; }
+.sy-vn { display: inline-flex; align-items: center; gap: 6px; }
+
+@media (max-width: 640px) {
+  .vrec-scrim { place-items: end center; padding: 0; }
+  .vrec { border-radius: var(--r-lg) var(--r-lg) 0 0; padding: 16px 16px calc(16px + env(safe-area-inset-bottom)); }
+  .vrec-ctl .btn { flex: 1; min-height: 44px; }
+  .sy-act { grid-template-columns: 1fr; }
+  .sy-act-b { grid-column: 1; grid-row: auto; }
+  .sy-act-b .btn { min-height: 40px; }
+}
+@media (prefers-reduced-motion: reduce) { .vrec-wave i { transition: none; } }

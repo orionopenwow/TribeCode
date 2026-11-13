@@ -1,6 +1,6 @@
 # Work: the backend plan
 
-Work is where people in TribeCode get help, offer help and trade time (`app/ui/talent.js`, `abilities.js`, `server/talent.js`). This document says what works today, what needs something shared between tribes, and a three-phase plan to get there. Phase 1 is done. Phase 2 has groundwork in the code (`server/workfeed.js`). Phase 3 is optional and needs the owner's decisions, listed at the end of each phase.
+Work is where people in TribeCode get help, offer help and trade time (`app/ui/talent.js`, `abilities.js`, `server/talent.js`). This document says what works today, what needs something shared between tribes, and a three-phase plan to get there. Phase 1 is done. Phase 2's feed half is built (2026-11-13, feat/build-feeds): signed feeds are fetched, stored and shown, with requests and moderation (`server/workfeed.js`, `server/workfetch.js`, `app/ui/workfeeds.js`); receipts, compute metering and the feeds directory are still to build. Phase 3 is optional and needs the owner's decisions, listed at the end of each phase.
 
 ## Where things stand
 
@@ -64,7 +64,20 @@ Each tribe publishes a signed JSON feed of the gigs its people made Public. Othe
 - Only the fields above survive import; each is length-capped and control characters are stripped. At most 200 gigs.
 - Feeds expire after 7 days; a feed dated more than 5 minutes ahead is refused. A newer `seq` replaces an older one, so a replayed old feed does nothing.
 
+### Built 2026-11-13 (feat/build-feeds)
+
+- **Fetching** (`server/workfetch.js`): https only (http for localhost only with `TRIBE_FEED_ALLOW_LOCAL=1`, for tests), every resolved address checked against private, loopback, link-local, CGNAT and metadata ranges, the connection pinned to the checked address (DNS rebinding), redirects only to the same host, 256 KB cap, 10 s limit, JSON or text/plain only, ETag, per-host backoff (5 min doubling to a day). About every 45 minutes (`TRIBE_WORK_FETCH_MS`), plus Fetch now. A wrong key, a bad signature, an expired feed or an older `seq` is refused and the stored copy stays.
+- **Follow by address + key fingerprint**, pause, block (stored gigs deleted, never fetched), remove, hide one gig. Hosts and admins only (Gigs › Public › Feeds).
+- **Publish**: Members only (default) or Open (`GET /api/work/feed.json` with no sign-in, 30 a minute per address).
+- **Gigs › Public** merges followed tribes' gigs with the community board; each card names the tribe and its key fingerprint.
+- **Request** on another tribe's gig: a note and a contact go into this tribe's signed feed (`requests`, addressed to their key). The other tribe's hosts see it only if they follow this tribe's feed; the person always gets a message to copy and send. The sheet says so.
+- Tests: `workfeed_fetch_test.js`, `e2e_work_feeds.py`, `security7_test.py` › W.
+- Not done: the fetcher has not had an outside security review; items 5, 6 below; the feeds directory and the shared blocklist; the keyword filter on import.
+
 ### Still to build in Phase 2
+
+Items 1, 2, 4, 7 (per-tribe) and 8 are built as described above; 3 is built without the feeds directory.
+
 
 1. **Fetching.** A scheduled pull of each subscription's `https` URL (every 30 to 60 minutes, `If-None-Match`/ETag, 256 KB cap, 10 s timeout, no redirects to private addresses, DNS resolved and checked against private and link-local ranges before connecting). This is the one SSRF-shaped part; it should go through the security owner's review (feat/harden) before it ships.
 2. **A public feed URL.** A tribe that wants to be found publishes its feed: either the host flips "Publish our gig feed" (then `GET /api/work/feed.json` answers without a token, rate-limited), or TribeCode writes the feed to the tribe's GitHub Pages site on each change, so the home computer can stay private.

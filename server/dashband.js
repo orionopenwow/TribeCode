@@ -108,7 +108,9 @@ module.exports = function dashband({ P, base, preview, showcase, visuals, hubFor
     const out = [], add = (k, o) => out.push({ k, rank: RANK[k] + (o.bump || 0), ...o });
     const d = read(), sig = d.signals[pid] || {};
     // 1. a failing build or preview errors
-    if (sig.build && sig.build.ok === false) add('build', { title: 'The build is failing', sub: sig.build.text || 'The last build reported an error.', act: 'Open the code', go: 'repo', tone: 'alert' });
+    if (sig.build && sig.build.ok === false) add('build', sig.build.source === 'checks'
+      ? { title: sig.build.state === 'timeout' ? 'The checks ran out of time' : 'The checks are failing', sub: (sig.build.lines || []).slice(0, 2).join(' · ') || sig.build.text || 'The last run failed.', act: 'Open the code', go: 'repo', tone: 'alert', run: sig.build.run, ms: sig.build.ms, lines: sig.build.lines || [] }
+      : { title: 'The build is failing', sub: sig.build.text || 'The last build reported an error.', act: 'Open the code', go: 'repo', tone: 'alert' });
     try { const ci = hubFor(pid).status(); const c = ci && ci.ci; if (c && c.conclusion === 'failure' && !(sig.build && sig.build.ok === false)) add('build', { title: 'The build is failing', sub: `${c.workflow || 'CI'} failed on main`, act: 'See the run', url: c.url, go: 'repo', tone: 'alert' }); } catch {}
     if (sig.preview && sig.preview.ok === false && Date.now() - Date.parse(sig.preview.at || 0) < 24 * 3600e3) add('build', { bump: 1, title: 'The preview has errors', sub: sig.preview.text || 'The app threw an error.', act: 'Open preview', go: 'preview', tone: 'alert' });
     // 2. approvals waiting on you
@@ -153,6 +155,19 @@ module.exports = function dashband({ P, base, preview, showcase, visuals, hubFor
     return { items: out, total: out.length };
   }
 
+  // A build or preview result: from an agent (POST /api/dash/signal) or from the host's own runner (server/checks.js,
+  // which adds the run's id, duration and failing lines).
+  function signal(pid, o) {
+    const k = o.kind === 'preview' ? 'preview' : 'build';
+    const d = read(), s = d.signals[pid] = d.signals[pid] || {};
+    const was = s[k] && s[k].ok;
+    s[k] = { ok: o.ok !== false, text: str(o.text, 200), at: new Date().toISOString(), by: o.by };
+    if (o.source === 'checks') Object.assign(s[k], { source: 'checks', run: str(o.run, 40), ms: Math.max(0, Number(o.ms) || 0), state: str(o.state, 12), lines: (Array.isArray(o.lines) ? o.lines : []).slice(0, 5).map(l => str(l, 200)) });
+    write(d);
+    if (was !== s[k].ok || o.source === 'checks') broadcast({ type: 'dashband', project: pid });
+    return s[k];
+  }
+
   // ---------- routes ----------
   async function route(req, res, { m, b, me, readBody, send, fail }) {
     if (!me) return fail(res, 401, 'not a member of this tribe');
@@ -177,16 +192,12 @@ module.exports = function dashband({ P, base, preview, showcase, visuals, hubFor
       }
       if (b === 'signal' && m === 'POST') {
         if (me.role === 'spectator') throw err(403, 'spectators can only look');
-        const body = await readBody(req), k = body.kind === 'preview' ? 'preview' : 'build';
-        const d = read(), s = d.signals[pid] = d.signals[pid] || {};
-        const was = s[k] && s[k].ok;
-        s[k] = { ok: body.ok !== false, text: str(body.text, 200), at: new Date().toISOString(), by: me.id };
-        write(d);
-        if (was !== s[k].ok) broadcast({ type: 'dashband', project: pid });
+        const body = await readBody(req);
+        signal(pid, { kind: body.kind, ok: body.ok, text: body.text, by: me.id });
         return send(res, 200, { ok: true });
       }
     } catch (e) { return fail(res, e.status || 500, e.message); }
     return null;
   }
-  return { route, band, criticals, mainFor };
+  return { route, band, criticals, mainFor, signal };
 };

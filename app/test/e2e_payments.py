@@ -300,7 +300,7 @@ def main():
             txt = pg.inner_text("#plans-pop"); assert "Choose Hosted" in txt and "Choose Tribe" in txt and "AVAILABLE" in txt.upper() and "PLANNED" not in txt.upper() and "Manage billing" in txt, txt
             pg.wait_for_timeout(400); SHOTS.mkdir(parents=True, exist_ok=True); pg.screenshot(path=str(SHOTS / "checkout.png"))
             n0 = len(CALLS)
-            pg.click("#plans-pop [data-plp-pack='10']"); pg.wait_for_url(FAKE + "/pay/**", timeout=15000); pg.wait_for_selector("#fake")
+            pg.click("#plans-pop [data-plp-pack='credits-10']"); pg.wait_for_url(FAKE + "/pay/**", timeout=15000); pg.wait_for_selector("#fake")
             assert CALLS[n0]["form"]["line_items[0][price]"] == PRICES["credits-10"] and CALLS[n0]["form"]["mode"] == "payment"
             go("&billing=success"); pg.wait_for_function("() => [...document.querySelectorAll('.toast')].some(t => /Thank you/.test(t.textContent))", timeout=10000)
             assert "billing=" not in pg.url, "the return marker leaves the address bar"
@@ -341,9 +341,9 @@ def main():
             # payments off again: the buttons say so and nothing opens
             ok(api("/premium/admin", "PUT", {"secretKey": "", "webhookSecret": ""}, token=host))
             go(); pg.wait_for_function("() => window.TribePremium.payments() === false", timeout=15000)
-            pg.evaluate("() => window.TribeSettings.open('ai')"); pg.click("#set-plan-chip"); pg.wait_for_selector("#plans-pop [data-plp-pack='25']")
+            pg.evaluate("() => window.TribeSettings.open('ai')"); pg.click("#set-plan-chip"); pg.wait_for_selector("#plans-pop [data-plp-pack='credits-25']")
             assert "PLANNED" in pg.inner_text("#plans-pop").upper()
-            n0 = len(CALLS); pg.click("#plans-pop [data-plp-pack='25']"); pg.wait_for_function("() => { const m = document.querySelector('#plp-msg'); return m && !m.hidden && /hasn't turned on payments/.test(m.textContent); }", timeout=10000)
+            n0 = len(CALLS); pg.click("#plans-pop [data-plp-pack='credits-25']"); pg.wait_for_function("() => { const m = document.querySelector('#plp-msg'); return m && !m.hidden && /hasn't turned on payments/.test(m.textContent); }", timeout=10000)
             pg.click("#plans-pop [data-plp-plan='hosted']"); pg.wait_for_timeout(500)
             assert len(CALLS) == n0 and pg.url.startswith(BASE), "nothing was opened"
             co = pg.evaluate("() => window.TribePremium.checkout('hosted')"); assert co["ok"] is False and co["reason"] == "no-provider", co
@@ -351,7 +351,7 @@ def main():
             ok(api("/premium/admin", "PUT", {"secretKey": SK, "webhookSecret": WH, "enabled": False}, token=host)); hidden("turned off again")
             go(); pg.wait_for_function("() => window.TribePremium.offered() === false", timeout=15000)
             pg.evaluate("() => window.TribeSettings.open('ai')"); pg.click("#set-plan-chip"); pg.wait_for_selector("#plans-pop #plp-coming", timeout=10000)
-            txt = pg.inner_text("#plans-pop"); assert "Paid plans are coming" in txt and "$6" in txt and "1,000" in txt and "Choose" not in txt and "Manage billing" not in txt, txt
+            txt = pg.inner_text("#plans-pop"); assert "Paid plans are coming" in txt and "1,000" in txt and "Choose" not in txt and "Manage billing" not in txt, txt
             assert pg.locator("#plans-pop [data-plp-plan], #plans-pop [data-plp-pack], #plans-pop [data-plp-manage], #plans-pop button.plp-pack").count() == 0, "nothing to buy with"
             pg.keyboard.press("Escape"); pg.wait_for_timeout(600)
             assert pg.locator("#set-billing").count() == 0 and pg.locator("#bl-receipts").count() == 0 and not pg.locator("#set-ext-billing").is_visible(), "no receipts section"

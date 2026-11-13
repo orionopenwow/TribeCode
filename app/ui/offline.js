@@ -143,7 +143,8 @@
   function seedSolo(draft) {
     const st = S.get(), now = Date.now(), name = st.name && st.name !== 'Me' ? st.name : 'You', first = name.split(' ')[0];
     const d = draft || {}, pname = String(d.name || 'My first project').slice(0, 48);
-    const tname = `${first}’s tribe`,   /* feat/demo-auto: never the pretend tribe's name from the welcome */ pid = d.name ? (slugify(pname) || 'first-project') : 'first-project';
+    const tname = /^(you|me)$/i.test(String(first || '').trim()) || !String(first || '').trim() ? 'My tribe' : `${first}’s tribe`,   // feat/mobile-complete: never "You’s tribe"
+        /* feat/demo-auto: never the pretend tribe's name from the welcome */ pid = d.name ? (slugify(pname) || 'first-project') : 'first-project';
     const where = phoneLike() ? 'this phone' : 'this device';
     const docs = d.notes && String(d.notes).trim() ? [{ slug: 'notes', title: 'Notes', by: 'me', created: iso(now), updated: iso(now), updatedBy: 'me', version: 1, project: pid, body: String(d.notes).slice(0, 400000) }] : [];
     return {

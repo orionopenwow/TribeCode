@@ -26,10 +26,10 @@
   const PRICES = {
     free: { name: 'Free', price: '$0', per: 'forever', status: 'Available now' },
     plans: [
-      { id: 'hosted', name: 'Hosted', price: '$6', per: '/month per tribe', status: 'Planned', adds: 'Always on: we host your tribe. Stays up when your laptop sleeps, a stable link, nightly backups.' },
-      { id: 'tribe', name: 'Tribe', price: '$24', per: '/month per tribe', status: 'Planned', adds: 'Everything in Hosted, and AI included for up to 8 people, keys or not, with a shared credit pool that refills weekly. 14-day free trial at launch, no card.' },
+      { id: 'hosted', name: 'Hosted', price: 'Price soon', per: '', status: 'Planned', adds: 'Always on: we host your tribe. Stays up when your laptop sleeps, a stable link, nightly backups.' },
+      { id: 'tribe', name: 'Tribe', price: 'Price soon', per: '', status: 'Planned', adds: 'Everything in Hosted, and AI included for up to 8 people, keys or not, with a shared credit pool that refills weekly. 14-day free trial at launch, no card.' },
     ],
-    credit: { cents: 1, line: '1 credit is $0.01 of AI', packs: [{ usd: 10, credits: 1000 }, { usd: 25, credits: 2500 }, { usd: 50, credits: 5000 }], terms: 'Shared by the tribe, good for 12 months, with a spending cap.' },
+    credit: { cents: 1, line: 'Credits pay for AI we run for you', packs: [{ id: 's', credits: 1000 }, { id: 'm', credits: 2500 }, { id: 'l', credits: 5000 }], terms: 'Shared by the tribe, good for 12 months, with a spending cap.' },
   };
   const FEATURES = {
     projects: { soft: true, eyebrow: 'Project 4', title: 'Lots going on. Nice.', body: 'Projects stay free and unlimited on your own devices. Premium keeps every one of them online in our cloud, so friends can join any time.', links: [['Keep it online yourself: Tailscale Funnel', 'https://tailscale.com/kb/1223/funnel'], ['Or a free Render server', 'https://render.com/docs/free']] },

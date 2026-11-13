@@ -43,7 +43,7 @@ const GRACE_MS = TEST && Number(process.env.TRIBE_TEST_GRACE_MS) > 0 ? Number(pr
 const PREMIUM_TEMPLATES = new Set(['board-meeting', 'fundraise']);   // app/ui/doctpl-data.js premium: true
 const AI_COST = 1;   // the smallest answer
 // Credits per hosted answer, by size. Size is in tokens, counted simply as characters / 4: what was sent (the
-// instructions and the conversation) plus what came back. 1 credit is $0.01 of AI (site/pricing.html).
+// instructions and the conversation) plus what came back.
 const COST_TABLE = [{ upTo: 2000, credits: 1 }, { upTo: 8000, credits: 3 }, { upTo: 32000, credits: 10 }, { upTo: Infinity, credits: 25 }];
 const tokensOf = chars => Math.ceil(Math.max(0, Number(chars) || 0) / 4);
 const costOf = tokens => COST_TABLE.find(r => tokens <= r.upTo).credits;
