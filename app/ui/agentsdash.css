@@ -33,6 +33,7 @@
 .ad-lead { margin: 0; max-width: 62ch; color: var(--muted); font-size: 15px; line-height: 1.6; }
 .ad-acts { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
 .ad-acts .btn.primary { height: 44px; padding: 0 20px; font-size: 15px; }
+.ad-acts-sm { margin-top: 10px; gap: 14px; }
 .ad-tools { font-size: 14px; }
 .ad-rows { display: flex; flex-direction: column; }
 .ad-rows > * + * { border-top: 1px solid var(--stroke); }
