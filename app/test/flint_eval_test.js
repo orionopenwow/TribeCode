@@ -22,7 +22,7 @@ function slotOk(got, want) {
   }
   return '';
 }
-let pass = 0; const fails = [], byArea = {}, held = [0, 0], h1 = [0, 0], v2 = [0, 0], h3 = [0, 0];
+let pass = 0; const fails = [], byArea = {}, held = [0, 0], h1 = [0, 0], v2 = [0, 0], h3 = [0, 0], un = [0, 0], h4 = [0, 0], h5 = [0, 0];
 for (const c of data.cases) {
   const ctx = { ...BASE, ...CTX[c.ctx || 'g'] };
   const steps = N.parse(c.t, ctx).steps;
@@ -42,6 +42,9 @@ for (const c of data.cases) {
   if (c.v === 'h1') { h1[1]++; if (!why) h1[0]++; }
   if (c.v === 'v2') { v2[1]++; if (!why) v2[0]++; }
   if (c.v === 'held3') { h3[1]++; if (!why) h3[0]++; }
+  if (c.v === 'unify') { un[1]++; if (!why) un[0]++; }
+  if (c.v === 'held4') { h4[1]++; if (!why) h4[0]++; }
+  if (c.v === 'held5') { h5[1]++; if (!why) h5[0]++; }
   if (!why) { pass++; byArea[area][0]++; } else fails.push(`  ✗ [${c.ctx}] ${JSON.stringify(c.t)} → want ${JSON.stringify(c.i)} ${c.s ? JSON.stringify(c.s) : ''}: ${why}`);
 }
 const n = data.cases.length, pct = Math.round(pass / n * 1000) / 10;
@@ -50,11 +53,14 @@ console.log(Object.entries(byArea).sort().map(([a, [p, t]]) => `${a} ${p}/${t}`)
 if (h1[1]) console.log(`held-out batch 1 (68.8% when first run, then tuned): ${h1[0]}/${h1[1]}`);
 if (v2[1]) console.log(`site v2 batch: ${v2[0]}/${v2[1]} = ${Math.round(v2[0] / v2[1] * 1000) / 10}%`);
 if (h3[1]) console.log(`held-out batch 3 (site v2, never tuned against): ${h3[0]}/${h3[1]} = ${Math.round(h3[0] / h3[1] * 1000) / 10}%`);
+if (un[1]) console.log(`flint-unify batch (new commands): ${un[0]}/${un[1]} = ${Math.round(un[0] / un[1] * 1000) / 10}%`);
+if (h4[1]) console.log(`held-out batch 4 (written before the new commands were built): ${h4[0]}/${h4[1]}`);
+if (h5[1]) console.log(`held-out batch 5 (written after, 34/40 = 85% on its first untuned run): ${h5[0]}/${h5[1]}`);
 if (held[1]) console.log(`held-out (never tuned against): ${held[0]}/${held[1]} = ${Math.round(held[0] / held[1] * 1000) / 10}%`);
 console.log(`flint_eval: ${pass}/${n} = ${pct}%`);
 let bad = false;
 if (n < 300) { console.error('fewer than 300 cases'); bad = true; }
-if (pct < 95) { console.error('below 95%'); bad = true; }
+if (pct < 98) { console.error('below 98%'); bad = true; }
 // the lesson index: every feature has a short lesson with steps and a "Show me"
 try {
   const L = require(path.join(__dirname, '..', 'ui', 'flintlessons.js'));
