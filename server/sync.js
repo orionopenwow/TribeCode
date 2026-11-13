@@ -69,7 +69,7 @@ module.exports = function sync({ P, W, base, getMembers, approvals, broadcast, p
   function protect(dir) {   // .tribe/ never ships: keep it out of git without touching tracked files
     try { const f = path.join(dir, '.git', 'info', 'exclude'); fs.mkdirSync(path.dirname(f), { recursive: true }); const t = fs.existsSync(f) ? fs.readFileSync(f, 'utf8') : ''; const add = ['/.tribe/', '/.trees/'].filter(x => !t.split('\n').includes(x)); if (add.length) fs.appendFileSync(f, (t && !t.endsWith('\n') ? '\n' : '') + add.join('\n') + '\n'); } catch {}
   }
-  const pathspec = s => ['--', '.', ':(exclude).tribe', ':(exclude).tribe/**', ...(s.settings.exclude || []).filter(Boolean).map(x => `:(exclude,glob)${String(x).replace(/^\/+/, '')}`)];
+  const pathspec = (s, add) => ['--', '.', ...(add ? [] : [':(exclude).tribe', ':(exclude).tribe/**']), ...(s.settings.exclude || []).filter(Boolean).map(x => `:(exclude,glob)${String(x).replace(/^\/+/, '')}`)];
 
   // ---------- what's waiting ----------
   async function remoteRef(dir, s) { const r = await git(dir, ['rev-parse', '--verify', '--quiet', `refs/remotes/${REMOTE}/${s.settings.branch}`]); return r.code ? null : r.out; }
@@ -118,7 +118,7 @@ module.exports = function sync({ P, W, base, getMembers, approvals, broadcast, p
       dir = base.p('workspaces', pid); fs.mkdirSync(dir, { recursive: true });
       P.update(pid, { repo: dir, workspace: true }); resetHub && resetHub(pid);
     }
-    if (!W.isRepo(dir)) await W.makeRepo(dir, me && me.role !== 'agent' ? me : { id: 'bot', name: BOT.name, email: BOT.email });
+    if (!W.isRepo(dir)) await must(dir, ['init', '-q', '-b', 'main']);   // nothing committed: what's here waits as changes not shipped
     protect(dir);
     return dir;
   }
@@ -198,7 +198,7 @@ module.exports = function sync({ P, W, base, getMembers, approvals, broadcast, p
   async function commitLocal(pid, dir, s, me, asked) {
     if (!dir || !W.isRepo(dir)) return null;
     protect(dir);
-    await must(dir, ['add', '-A', ...pathspec(s)]);
+    await must(dir, ['add', '-A', ...pathspec(s, true)]);   // .tribe/ is in info/exclude, and unstaged below whatever happens
     // belt and braces: nothing under .tribe/ is ever staged, whatever a .gitignore says
     const staged = (await git(dir, ['diff', '--cached', '--name-only'])).out.split('\n').filter(Boolean);
     const bad = staged.filter(f => /^\.tribe(\/|$)/.test(f)); if (bad.length) await git(dir, ['rm', '-r', '--cached', '--quiet', '--', ...bad]);

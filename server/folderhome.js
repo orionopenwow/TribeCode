@@ -196,6 +196,15 @@ module.exports = function folderHome({ P, W, baseStore, isLocal, broadcast, perm
   }
   const watchAll = () => { for (const p of P.all()) if (folderOf(p)) watch(p.id); };
 
+  // git init with nothing committed yet: what's here waits as "changes not shipped". .tribe/ is kept out from the start.
+  async function initRepo(dir) {
+    const r = await require('./gitutil').run('git', ['init', '-q', '-b', 'main'], { cwd: dir, env: { GIT_TERMINAL_PROMPT: '0' } });
+    if (r.code) throw fail(422, 'git init failed: ' + String(r.err || '').split('\n')[0]);
+    try { const f = path.join(dir, '.git', 'info', 'exclude'); fs.mkdirSync(path.dirname(f), { recursive: true }); fs.appendFileSync(f, '/.tribe/\n/.trees/\n'); } catch {}
+    const gi = path.join(dir, '.gitignore');
+    if (!fs.existsSync(gi)) fs.writeFileSync(gi, ['node_modules/', '.DS_Store', 'Thumbs.db', '.env', '.env.*', '.tribe/', ''].join('\n'));
+  }
+
   // ---------- choose or move a project's folder ----------
   function copyTree(from, to) {
     fs.cpSync(from, to, { recursive: true, errorOnExist: false, force: false, filter: src => { try { return !fs.lstatSync(src).isSymbolicLink() && path.basename(src) !== '.trees'; } catch { return false; } } });
@@ -212,7 +221,7 @@ module.exports = function folderHome({ P, W, baseStore, isLocal, broadcast, perm
       unwatch(pid); copyTree(before, target);
       moved = { from: display(before), kept: true };
     }
-    if (body.gitInit && !W.isRepo(target)) await W.makeRepo(target, me);
+    if (body.gitInit && !W.isRepo(target)) await initRepo(target);
     P.update(pid, { repo: target, workspace: false, folder: target });
     resetHub(pid); watch(pid);
     try { broadcast({ type: 'projects' }); } catch {}
@@ -275,5 +284,5 @@ module.exports = function folderHome({ P, W, baseStore, isLocal, broadcast, perm
     } catch (e) { return f(res, e.status || 500, e.message); }
   }
 
-  return { check, browse, summary, display, writeFile, readFile, resolveIn, list, watch, unwatch, watchAll, setFolder, info, route, folderOf, homeDir };
+  return { initRepo, check, browse, summary, display, writeFile, readFile, resolveIn, list, watch, unwatch, watchAll, setFolder, info, route, folderOf, homeDir };
 };
