@@ -715,7 +715,7 @@
       if (k === 'claude') return DM() && DM().open(ag.id);
       if (k === 'connect') return App().connectClaude ? App().connectClaude() : $('#cc-connect').click();
       if (k === 'invite') return App().openInvite();
-      if (k === 'notify') return window.TribeNotify && window.TribeNotify.openSettings();
+      if (k === 'notify') return window.TribeNotify && (window.TribeNotify.settingsTab || window.TribeNotify.openSettings)();
       if (k === 'settings') return window.TribeSettings && window.TribeSettings.open();
       if (k === 'guide') return window.TribeGuide && window.TribeGuide.open();
       if (k === 'ask' && ag) {

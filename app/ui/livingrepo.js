@@ -122,7 +122,7 @@
     setTimeout(() => document.addEventListener('click', outside, true), 0);
   }
   pill.onclick = e => { e.stopPropagation(); open(); };
-  document.addEventListener('keydown', e => { if (e.key === 'Escape' && pop) { close(); pill.focus(); } });
+  document.addEventListener('keydown', e => { if (e.key !== 'Escape') return; if (sh) return closeSheet();   /* a sheet opened from the pill closes on Esc even when focus is still outside it */ if (pop) { close(); pill.focus(); } });
 
   // ---------- one sheet at a time ----------
   let sh = null, scrim = null;
@@ -175,7 +175,7 @@
       ${inner}
       <div class="ph-acts"><button type="button" class="btn" data-lr-close>Cancel</button><button type="button" class="btn primary" id="lr-folder-go" disabled>${moving ? 'Move here' : 'Use this folder'}</button></div>`);
     let chosen = null, browsing = '';
-    const err = t => { const e = $('#lr-ferr', s); e.textContent = t || ''; e.hidden = !t; };
+    const err = t => { const e = $('#lr-ferr', s); if (/Failed to fetch|NetworkError|Load failed/i.test(t || '')) t = 'Couldn’t reach TribeCode on this computer to look at folders. Open the desktop app, or host the tribe here first.'; e.textContent = t || ''; e.hidden = !t; };
     const go = $('#lr-folder-go', s) || { disabled: true, textContent: '' };
     const pickOf = () => chosen && { path: chosen.path, display: chosen.display, summary: chosen.summary, gitInit: !$('#lr-git-l', s).hidden && $('#lr-git', s).checked, ...(o.shared ? { join: (s.querySelector('[data-join]:checked') || {}).value || '' } : {}) };
     const tell = () => { if (inline && o.onChange) o.onChange(pickOf()); };

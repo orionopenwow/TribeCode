@@ -67,6 +67,7 @@
     return st;
   }
   function close() { if (!el) return; el.hidden = true; document.body.classList.remove('aib-open'); }
+  document.addEventListener('keydown', e => { if (e.key === 'Escape' && el && !el.hidden && !e.defaultPrevented && !el.contains(e.target)) close(); });   // Esc closes it even when focus is still on the button that opened it
 
   // ---------- data for each source ----------
   async function loadFor(src) {

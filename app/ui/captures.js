@@ -134,6 +134,7 @@
     document.body.appendChild(m);
     const close = () => m.remove();
     m.addEventListener('click', e => { if (e.target === m) close(); });
+    m.addEventListener('keydown', e => { if (e.key === 'Escape') { e.stopPropagation(); close(); } });   // Esc closes the top layer (docs/NAVIGATION.md)
     m.querySelector('#cap-link-x').onclick = close;
     m.querySelector('form').onsubmit = e => { e.preventDefault(); const v = m.querySelector('#cap-link-in').value.trim(); close(); if (v) capture(v, { channel }); };
     setTimeout(() => m.querySelector('#cap-link-in').focus(), 30);

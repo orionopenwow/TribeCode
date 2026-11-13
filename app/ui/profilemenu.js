@@ -101,7 +101,7 @@
     else if (a === 'claude') click('#cc-connect');
     else if (a === 'agents') window.TribeAgentsHub.open();
     else if (a === 'invite') click('#tour-invite');
-    else if (a === 'notify') window.TribeNotify.openSettings ? window.TribeNotify.openSettings() : window.TribeNotify.openInbox();
+    else if (a === 'notify') (window.TribeNotify.settingsTab || window.TribeNotify.openSettings || window.TribeNotify.openInbox)();
     else if (a === 'guide') window.TribeGuide.open();
     else if (a === 'settings') window.TribeSettings ? window.TribeSettings.open() : click('#settings-btn');
     else if (a === 'working') window.TribeUi.useUi('working');

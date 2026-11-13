@@ -62,6 +62,7 @@
       const r = await fetch(base + '/api/guide', { headers: { Accept: 'application/json' } });
       if (!r.ok) throw new Error(String(r.status));
       pages = ((await r.json()).pages || []);
+      if (!pages.length) { pages = null; loadErr = 'empty'; }   // a project on this device has no guide pages: say where the guide is, not "Nothing about"
     } catch (e) { loadErr = e.message || 'offline'; pages = null; }
     return pages;
   }

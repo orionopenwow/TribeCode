@@ -52,7 +52,7 @@
       <div class="slx-cats" id="slx-cats" role="tablist" aria-label="${esc(t('Categories'))}"></div>
       <div class="slx-body"><ul class="slx-grid" id="slx-grid"><li class="slx-loading">${t('Loading…')}</li></ul><aside class="slx-pick" id="slx-pick" hidden></aside></div></div>`;
     el.querySelector('[data-slx=close]').onclick = close;
-    try { lib = lib || await C.api('/site-library'); } catch (e) { el.querySelector('#slx-grid').innerHTML = `<li class="slx-loading">${esc(e.message)}</li>`; return; }
+    try { lib = lib || await C.api('/site-library'); if (!lib || !Array.isArray(lib.templates)) { lib = null; throw new Error('Website templates open once this project has a home. The website designer has templates that work right here.'); } lib.categories = lib.categories || []; } catch (e) { el.querySelector('#slx-grid').innerHTML = `<li class="slx-loading">${esc(e.message)}</li>`; return; }
     let cat = 'all', q = '';
     const cats = el.querySelector('#slx-cats');
     cats.innerHTML = [{ id: 'all', label: 'All' }, ...lib.categories].map(c => `<button type="button" role="tab" data-cat="${c.id}" aria-selected="${c.id === 'all'}">${esc(t(c.label))}</button>`).join('');

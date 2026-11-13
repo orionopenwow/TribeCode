@@ -39,7 +39,7 @@
     },
     async 'settings.notify'(s, H) {
       const on = !!s.slots.on;
-      if (!H.connected()) { if (window.TribeNotify && window.TribeNotify.openSettings) window.TribeNotify.openSettings(); return { text: 'Notifications live in a tribe. Host or join one first.' }; }
+      if (!H.connected()) { if (window.TribeNotify && window.TribeNotify.openSettings) (window.TribeNotify.settingsTab || window.TribeNotify.openSettings)(); return { text: 'Notifications live in a tribe. Host or join one first.' }; }
       let prefs; try { prefs = (await C.api('/notify/prefs')).prefs; } catch (e) { return { text: `I couldn't reach the notification settings: ${e.message}` }; }
       const before = { ...(prefs.channels || {}) }, next = on ? { ...before, webpush: true, desktop: true } : { ...before, webpush: false, desktop: false, ntfy: false };
       await C.api('/notify/prefs', { method: 'PUT', body: { ...prefs, channels: next } });
@@ -53,7 +53,7 @@
       await P.setPrefs({ ...before, ...patch }); H.pushUndo('your status', () => P.setPrefs(before));
       return { text: 'show' in s.slots ? (s.slots.show ? 'Friends can see where you are in the app again.' : 'Hidden: friends see you online, but not where you are.') : s.slots.away ? 'You appear away. Say “I’m back” when you are.' : 'You’re back: online for everyone.' };
     },
-    async 'settings.sound'() { if (window.TribeNotify && window.TribeNotify.openSettings) window.TribeNotify.openSettings(); return { text: 'TribeCode plays no clicks or UI sounds; the only sounds are notification pings and huddles. I opened the notification settings, where pings can be muted.' }; },
+    async 'settings.sound'() { if (window.TribeNotify && window.TribeNotify.openSettings) (window.TribeNotify.settingsTab || window.TribeNotify.openSettings)(); return { text: 'TribeCode plays no clicks or UI sounds; the only sounds are notification pings and huddles. I opened the notification settings, where pings can be muted.' }; },
     async 'chat.pin'(s, H) {
       if (!H.connected()) return { text: 'Chat lives in a tribe. Host or join one first.' };
       const x = await lastMsg(); if (!x) return { text: 'The chat is empty: nothing to pin yet.' };

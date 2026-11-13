@@ -63,7 +63,7 @@
   };
   function addIcons() {
     const sprite = document.querySelector('svg[aria-hidden="true"]'); if (!sprite || sprite.querySelector('#i-reply')) return;
-    sprite.insertAdjacentHTML('beforeend', Object.entries(ICONS).map(([k, v]) => `<symbol id="${k}" viewBox="0 0 24 24">${v}</symbol>`).join(''));
+    sprite.insertAdjacentHTML('beforeend', Object.entries(ICONS).filter(([k]) => !document.getElementById(k)).map(([k, v]) => `<symbol id="${k}" viewBox="0 0 24 24">${v}</symbol>`).join(''));
   }
   const icon = (k, cls = '') => `<svg class="i ${cls}"><use href="#${k}"/></svg>`;
   const R = () => window.TribeChatRich;   // feat/chat2: pictures grid, previews, GIFs (app/ui/chatrich.js)

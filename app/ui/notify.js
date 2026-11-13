@@ -147,7 +147,7 @@
     }).join('')
       : `<div class="nf-empty"><span class="nf-empty-ic" aria-hidden="true">${filter === 'mentions' ? '💬' : '✨'}</span><b>${filter === 'needs' ? 'Nothing needs you right now' : filter === 'mentions' ? 'No mentions yet' : 'You’re all caught up'}</b><span>${filter === 'needs' ? 'Approvals and reviews show up here.' : filter === 'mentions' ? 'When someone @mentions you, it lands here.' : 'Approvals, mentions, bugs and DMs land here.'}</span><button class="btn sm" id="nf-empty-settings">Choose what pings you</button></div>`)
       + `<div class="nf-foot"><button class="linkish" id="nf-history">Approvals history</button>${countUnread() ? '<button class="linkish" id="nf-allread">Mark all read</button>' : ''}</div>`;
-    const es = $('#nf-empty-settings'); if (es) es.onclick = openSettings;
+    const es = $('#nf-empty-settings'); if (es) es.onclick = settingsTab;
     $('#nf-history').onclick = () => { meta.history = true; render(); };
     const ar = $('#nf-allread'); if (ar) ar.onclick = markAllRead;
     const ax = $('#nf-away-x'); if (ax) ax.onclick = () => { meta.away = null; render(); };
@@ -338,7 +338,7 @@
   }
   bell.onclick = () => ($('#nf-panel').classList.contains('hidden') ? openInbox() : closeInbox());
   $('#nf-close').onclick = closeInbox; $('#nf-scrim').onclick = closeInbox;
-  $('#nf-open-settings').onclick = () => openSettings();
+  $('#nf-open-settings').onclick = () => settingsTab();
   document.addEventListener('keydown', e => { if (e.key === 'Escape') { menu.classList.add('hidden'); closeSettings(); closeInbox(); } });
 
   // ---------- live updates ----------
@@ -393,12 +393,15 @@
   const toggle = (key, label, sub, on, extra = '') => `<button class="toggle nf-tg" role="switch" aria-checked="${on ? 'true' : 'false'}" data-k="${esc(key)}" ${extra}><span><span class="nf-tg-l">${esc(label)}</span>${sub ? `<small>${esc(sub)}</small>` : ''}</span><span class="switch"></span></button>`;
   const pushOk = () => 'serviceWorker' in navigator && 'PushManager' in window && window.isSecureContext;
 
+  // audit 2026-11-13: one place for notification settings. Every entry point (the inbox's gear, the profile menu, the
+  // phone's menu, Flint) opens Settings › Notifications; this older window stays as its "Advanced" (ntfy, away time).
+  function settingsTab() { closeInbox(); const T = window.TribeSettings; if (T && T.open && T.tabs && T.tabs().some(t => t.id === 'notifications')) return T.open('notifications'); return openSettings(); }
   async function openSettings() {
     closeInbox();
     const m = $('#nf-settings'); m.classList.remove('hidden');
     const body = $('#nf-settings-body');
     body.innerHTML = '<div class="nf-set-head"><h2>Notifications</h2></div><p class="nf-faint">Loading…</p>';
-    try { const [r, rl] = await Promise.all([C.api('/notify/prefs'), C.api('/approvals/rules').catch(() => ({ rules: [] }))]); prefs = r.prefs; meta.ntfyUrl = r.ntfyUrl; meta.devices = r.webpushDevices; meta.vapid = r.vapidPublicKey; meta.rules = rl.rules; }
+    try { const [r, rl] = await Promise.all([C.api('/notify/prefs'), C.api('/approvals/rules').catch(() => ({ rules: [] }))]); if (!r || !r.prefs || !r.prefs.when) throw new Error('Join or host a tribe to set up notifications.'); prefs = r.prefs; meta.ntfyUrl = r.ntfyUrl; meta.devices = r.webpushDevices; meta.vapid = r.vapidPublicKey; meta.rules = rl.rules; }
     catch (e) { body.innerHTML = `<div class="nf-set-head"><h2>Notifications</h2><button class="nf-icon" data-x title="Close" aria-label="Close">${ico('x')}</button></div><p class="nf-faint">${esc(C.connected() ? e.message : 'Join or host a tribe to set up notifications.')}</p>`; body.querySelector('[data-x]').onclick = closeSettings; return; }
     renderSettings();
   }
@@ -514,5 +517,5 @@
   }
   if ('serviceWorker' in navigator) navigator.serviceWorker.addEventListener('message', e => { if (e.data && e.data.type === 'tribe-open') go(e.data.view, e.data.ref); });
 
-  window.TribeNotify = { openInbox, closeInbox, openSettings, closeSettings, reload: load, enableWebPush, pushOk, markAllRead, markRead: id => setMark(id, { read: true }), isUnread: id => isUnread(items.find(i => i.id === id) || {}), state: () => ({ unread, items: items.length, pending: pendingForMe().length, idle }) };
+  window.TribeNotify = { openInbox, closeInbox, openSettings, settingsTab, closeSettings, reload: load, enableWebPush, pushOk, markAllRead, markRead: id => setMark(id, { read: true }), isUnread: id => isUnread(items.find(i => i.id === id) || {}), state: () => ({ unread, items: items.length, pending: pendingForMe().length, idle }) };
 })();

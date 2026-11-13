@@ -374,7 +374,7 @@
     return el;
   }
   function closeSheet() { const s = $('#tl-sheet'); if (s) s.remove(); document.querySelectorAll('.tl-scrim').forEach(x => x.remove()); }
-  document.addEventListener('keydown', e => { if (e.key === 'Escape') { if (pop) closePop(); else if ($('#tl-sheet')) closeSheet(); } });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') { if (pop) closePop(); else if ($('#tl-sheet')) closeSheet(); else needClose(); } });
 
   function segHtml(id, opts, cur) { return `<div class="tl-seg" role="radiogroup" id="${id}">${opts.map(([k, l]) => `<button type="button" role="radio" aria-checked="${cur === k}" class="${cur === k ? 'on' : ''}" data-v="${k}">${l}</button>`).join('')}</div>`; }
   const segVal = (el, id) => { const b = el.querySelector(`#${id} .on`); return b ? b.dataset.v : ''; };

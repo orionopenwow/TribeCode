@@ -219,7 +219,7 @@
   function officeHtml() {
     const o = office, k = COLOR.office;
     const intro = `<div class="ah-id"><b>Open Space</b><span>A pixel-art office where several Claude Code sessions work side by side, each at its own desk, on this tribe's repos. By Fantomiald, MIT.</span></div>`;
-    if (!o) return '';
+    if (!o || (!o.hostOnly && !o.tools && !o.installed && !o.need)) return '';   // no real answer (a project on this device): no "Needs Node undefined+"
     if (o.hostOnly) return `<div class="ah-office" style="--k:${k}"><span class="ah-glyph">${glyph('office')}</span>${intro}<span class="ah-st${o.running ? ' live' : ''}"><i></i>${o.running ? 'open on the host' : 'host only'}</span></div>`;
     const t = o.tools || {}, miss = [!t.git && 'Git (git-scm.com)', !t.nodeOk && `Node ${o.need}+ (nodejs.org${t.node ? `, you have ${t.node}` : ''})`, !t.npm && 'npm'].filter(Boolean);
     const st = o.busy ? `<span class="ah-st live"><i></i>${esc(o.busy)}…</span>` : o.running ? '<span class="ah-st live"><i></i>running</span>' : o.installed ? '<span class="ah-st"><i></i>stopped</span>' : '';

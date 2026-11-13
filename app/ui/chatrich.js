@@ -178,7 +178,7 @@
     const showMine = async () => {
       grid.innerHTML = '<p class="gp-empty">Loading…</p>';
       try {
-        const { gifs } = await C.api('/gifs/mine');
+        const gifs = (await C.api('/gifs/mine')).gifs || [];
         grid.innerHTML = gifs.length ? gifs.map(g => g.kind === 'file' ? cell(media(g.ch, g.file), 'file:' + g.ch + ':' + g.file, 'Send this GIF again') : cell(proxy(g.url), g.url)).join('') : '<p class="gp-empty">GIFs shared in this project show up here. Drop a .gif in the chat or paste a link below.</p>';
       } catch (e) { grid.innerHTML = `<p class="gp-empty">${esc(e.message)}</p>`; }
     };
@@ -186,7 +186,7 @@
     const search = async q => {
       if (!q) { grid.innerHTML = '<p class="gp-empty">Type to search.</p>'; return; }
       grid.innerHTML = '<p class="gp-empty">Searching…</p>';
-      try { const { gifs } = await C.api('/gifs/search?q=' + encodeURIComponent(q)); grid.innerHTML = gifs.length ? gifs.map(g => cell(proxy(g.preview), g.url, g.title)).join('') : '<p class="gp-empty">No GIFs for that.</p>'; }
+      try { const gifs = (await C.api('/gifs/search?q=' + encodeURIComponent(q))).gifs || []; grid.innerHTML = gifs.length ? gifs.map(g => cell(proxy(g.preview), g.url, g.title)).join('') : '<p class="gp-empty">No GIFs for that.</p>'; }
       catch (e) { grid.innerHTML = `<p class="gp-empty">${esc(e.message)}</p>`; }
     };
     const tab = k => { p.querySelectorAll('[data-gt]').forEach(b => b.setAttribute('aria-selected', String(b.dataset.gt === k))); const q = p.querySelector('#gp-q'); if (q) q.hidden = k !== 'search'; if (k === 'mine') showMine(); else search(q ? q.value.trim() : ''); };
