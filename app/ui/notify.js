@@ -288,7 +288,8 @@
     closeInbox();
     if (!view || view === 'inbox') return openInbox();
     if (view === 'chat') { window.TribeApp.show('chat'); return; }
-    if (view === 'pins') { if (window.TribePins) window.TribePins.openRef(ref); return; }   // P1-E: a comment pin on the preview (app/ui/pins.js)
+    if (view === 'pins') { if (window.TribePins) window.TribePins.openRef(ref); return; }
+    if (view === 'call') { if (window.TribeCall) window.TribeCall.open(); return; }   // voice-video: rung / missed huddle   // P1-E: a comment pin on the preview (app/ui/pins.js)
     if (window.TribeApp && window.TribeApp.show) window.TribeApp.show(view);
     if (view === 'docs' && ref && window.TribeDocs && window.TribeDocs.open) window.TribeDocs.open(ref);
   }
