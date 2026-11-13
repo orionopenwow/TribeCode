@@ -190,6 +190,7 @@ module.exports = function makeAccounts({ store, getMembers, isLocal, limited, ha
     const n = Date.now(); let f = fails.get(k); if (!f || n - f.first > LOCK_MS) f = { n: 0, first: n, until: 0 };
     if (++f.n >= LOCK_N) f.until = n + LOCK_MS; fails.set(k, f);
     if (fails.size > 20000) for (const [x, v] of fails) if (v.until < n && n - v.first > LOCK_MS) fails.delete(x);
+    if (fails.size > 20000) for (const x of fails.keys()) { if (fails.size <= 18000) break; fails.delete(x); }   // harden: a hard cap, oldest first
   }
 
   // One-time things kept only as their sha256: email links (15 min) and provider sign-up tickets (10 min). harden: kept in

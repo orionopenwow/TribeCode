@@ -333,6 +333,15 @@ function agentPlace(mid) {
 }
 let places = null;   // made below, once chans exists
 
+// harden: presence frames are cheap to send and expensive to fan out (each one re-sends presence to everyone), so each
+// socket gets 40 of them per 10 seconds; the rest are dropped. A person keeps at most 24 sockets (tabs, devices).
+const FLOODY = new Set(['place', 'activity', 'project', 'huddle-state', 'announce', 'huddle-join', 'huddle-leave']);
+const MAX_SOCKETS_PER_MEMBER = 24, FLOOD_N = 40, FLOOD_MS = 10_000;
+function flooding(s) {
+  const now = Date.now(); if (!s._fl || now - s._fl.t > FLOOD_MS) s._fl = { t: now, n: 0 };
+  return ++s._fl.n > FLOOD_N;
+}
+
 // ---------- huddles (WebRTC signaling only; audio/video flow peer to peer) ----------
 const huddle = new Map(); // memberId -> { muted, sharing, joined }
 let huddleProject = null;   // fix/security-2: the project the huddle started in; only people who can see it get its state, captions and audio
@@ -1294,6 +1303,7 @@ server.on('upgrade', (req, sock) => {
   s.project = P.pick(me, url.searchParams.get('project') || null, o.project || me.project) || P.pick(me, null);
   if (s.project && me.role !== 'agent') P.addMember(s.project, me.id, P.scoped(me) ? (P.get(s.project).members[me.id] || me.role) : me.role);
   o.project = s.project;
+  if (o.sockets.size >= MAX_SOCKETS_PER_MEMBER) { const oldest = o.sockets.values().next().value; o.sockets.delete(oldest); try { oldest.close ? oldest.close() : oldest.destroy && oldest.destroy(); } catch {} }   // harden: a tab flood can't grow without bound
   o.sockets.add(s); online.set(me.id, o);
   dashboard.seen(me.id, s.project);
   pocket.attach(me, s);   // idle/away tracking for notifications
@@ -1301,6 +1311,7 @@ server.on('upgrade', (req, sock) => {
   pushPresence();
   s.on('message', msg => P.inProject(s.project || P.defaultId(), () => onMessage(msg)));
   function onMessage(msg) {
+    if (msg && FLOODY.has(msg.type) && flooding(s)) return;   // harden: presence floods (place, activity, project, huddle-state, announce)
     if (msg.type === 'project' && typeof msg.id === 'string') {
       if (!P.canSee(me, msg.id)) return s.send({ type: 'project-error', id: msg.id, error: 'you are not in that project' });
       dashboard.seen(me.id, s.project); dashboard.seen(me.id, msg.id);   // leaving one project, entering another

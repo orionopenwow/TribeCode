@@ -453,7 +453,7 @@ h1{margin:4px 0 8px;font-size:18px;color:#F8FAFC}code{font:12.5px ui-monospace,m
         }
         const before = fs.readFileSync(f.file, 'utf8');
         const out = b === 'edit' ? textEdit(f, String(body.before || ''), String(body.after || ''), String(body.tag || '').toLowerCase()) : b === 'props' ? propsEdit(f, body) : await flintEdit(pid, f, body, me);
-        if (fs.readFileSync(f.file, 'utf8') !== before) { const st = undos.get(f.file) || []; st.push(before); if (st.length > 40) st.shift(); undos.set(f.file, st); }
+        if (fs.readFileSync(f.file, 'utf8') !== before) { const st = undos.get(f.file) || []; st.push(before); if (st.length > 40) st.shift(); undos.delete(f.file); undos.set(f.file, st); if (undos.size > 300) undos.delete(undos.keys().next().value); }   // harden: at most 300 files' undo stacks
         changed(pid, [f.rel]);
         return send(res, 200, { ok: true, file: f.rel, undo: (undos.get(f.file) || []).length, ...out });
       } catch (e) { return fail(res, e.status || 500, e.message); }
