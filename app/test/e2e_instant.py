@@ -65,14 +65,14 @@ def main():
             before = len(api("/projects", token=host.evaluate("TribeStore.get().server.token"))[1].get("projects", []))
 
             # ---- one tap ----
-            host.click("#hub-instant")
+            host.evaluate("TribeFlow.instant()")   # Home's Invite a friend opens the one invite sheet now; the instant project is tribecode://invite and Settings
             host.wait_for_selector(".modal-card.ii #ii-link", timeout=20000)
             link = host.inner_text("#ii-link").strip()
             assert re.search(r"/join/[A-Za-z0-9]+", link), f"instant invite link: {link!r}"
-            wait_text(host, ".modal-card.ii h2", "Link copied")
+            wait_text(host, "#io-made-title", "Link copied")
             clip = host.evaluate("navigator.clipboard.readText()")
             assert clip == link, f"the link is on the clipboard ({clip!r})"
-            for sel in ["#ii-copy", "#ii-qrbtn", "#ii-claude"]: host.wait_for_selector(sel, state="visible")
+            for sel in ["#ii-copy", "#ii-qrbtn", "#io-who-claude"]: host.wait_for_selector(sel, state="visible")
             host.click("#ii-qrbtn"); host.wait_for_selector("#ii-qr .qr svg")
             shot(host, "sheet")
             tok = host.evaluate("TribeStore.get().server.token")
@@ -94,8 +94,8 @@ def main():
             fr.wait_for_selector("#jw-card #jw-hi", timeout=15000)   # just joined: the dashboard, Say hi, Connect my AI
             assert fr.evaluate("document.body.dataset.view") in ("home", None) or fr.evaluate("TribeApp.view()") == "home", fr.evaluate("TribeApp.view()")
             fr.click("#jw-ai")
-            wait_text(fr, "#invite-body", "One line connects your Claude Code", 15000)
-            fr.wait_for_selector("#cc-cmd", timeout=10000)
+            wait_text(fr, "#invite-body", "It joins next to you as", 15000)
+            fr.wait_for_selector("#ic-body [data-ic-copy='code']", timeout=10000); fr.click("#ic-body [data-ic-copy='code']"); fr.wait_for_function("!document.querySelector('#cc-cmd').textContent.includes('••••')", timeout=10000)   # feat/invite-one: the key is made on Copy
             cmd = fr.inner_text("#cc-cmd")
             assert "claude mcp add" in cmd, f"Claude Code command: {cmd!r}"
             shot(fr, "friend-claude")

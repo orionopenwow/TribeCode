@@ -75,8 +75,9 @@ def main():
             assert "Sam" in host.text_content("#ppl-body")
             assert api("/friends", token=host_tok)[1]["friends"] == [sam["member"]["id"]]
             assert host.evaluate("TribeFriends.list()") == [sam["member"]["id"]]
-            host.click("#ppl-guest"); host.wait_for_selector("#ppl-link:not([hidden]) input", timeout=10000)
-            link = host.input_value("#ppl-link input"); code = link.rstrip("/").split("/")[-1].split("c=")[-1]
+            host.click("#ppl-guest"); host.wait_for_selector("#invite-modal:not(.hidden) #io-pane[data-who='guest'] #io-guest-make", timeout=10000)   # the one invite sheet, on A guest for a day
+            host.click("#io-guest-make"); host.wait_for_selector("#io-guest-link", timeout=10000)
+            link = host.text_content("#io-guest-link").strip(); host.evaluate("TribeInvite.close()"); code = link.rstrip("/").split("/")[-1].split("c=")[-1]
             assert "/join/" in link or "go.html" in link, link
             if "--shots" in sys.argv: host.screenshot(path=str(ROOT / "docs" / "screenshots" / "friends.png"))
             st, g = api("/join", "POST", {"code": code, "name": "Guest Gia"}); assert st == 200 and g["member"].get("guest"), g

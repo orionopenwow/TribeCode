@@ -311,7 +311,8 @@ def main():
             # ---- Claude Code joins over MCP ----
             host.evaluate("document.querySelector('#cc-connect').click()")   # v0.22: the helper card hides this button until setup is done
             wait_text(host, "#invite-body", "claude mcp add --transport http tribecode")
-            cmd = host.inner_text("#cc-cmd")
+            host.wait_for_selector("#ic-body [data-ic-copy='code']", timeout=10000); host.click("#ic-body [data-ic-copy='code']"); host.wait_for_function("!document.querySelector('#cc-cmd').textContent.includes('••••')", timeout=10000)   # feat/invite-one: the key is made on Copy
+            cmd = host.inner_text("#cc-cmd").strip()
             atok = cmd.split("Bearer ")[1].rstrip('"')
             assert f"{BASE}/mcp" in cmd
             host.click("[data-close]")
@@ -321,7 +322,7 @@ def main():
             names = [t["name"] for t in mcp(atok, "tools/list")[1]["result"]["tools"]]
             assert {"tribe_overview", "claim_file", "write_doc", "update_task", "propose"} <= set(names), names
             e, t = call(atok, "tribe_overview"); assert not e and "Campfire Crew" in t and "Never competitive" in t
-            wait_text(host, "#tour-room", "Claude · Orion")
+            wait_text(host, "#tour-room", "Orion's Claude")
             e, t = call(atok, "claim_file", {"path": "src/world/", "note": "refactoring saves"}); assert not e, t
             wait_text(friend, "#claims-list", "src/world/")
             st, d = api("/claims", "POST", {"path": "src/world/campfire.ts"}, token=friend.evaluate("TribeStore.get().server.token"))
@@ -367,7 +368,7 @@ def main():
             jay.click("#jn-go")
             wait_text(jay, "#sync-status", "connected")
             wait_text(host, "#room-list", "Jay")
-            wait_text(jay, "#tour-room", "Claude · Orion")
+            wait_text(jay, "#tour-room", "Orion's Claude")
             wait_text(jay, "#room-count", "4 online")
             # single-use invite is now spent
             assert api(f"/invites/{d['invite']['code']}")[0] == 410

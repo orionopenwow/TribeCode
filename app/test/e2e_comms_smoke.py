@@ -345,8 +345,8 @@ def main():
 
             # ================= 5. Claude Code connects and chats =================
             host.evaluate("TribeApp.connectClaude({ fresh: true })")
-            host.wait_for_selector("#cc-cmd")
-            cmd = host.text_content("#cc-cmd")
+            host.wait_for_selector("#ic-body [data-ic-copy='code']", timeout=10000); host.click("#ic-body [data-ic-copy='code']"); host.wait_for_function("!document.querySelector('#cc-cmd').textContent.includes('••••')", timeout=10000)   # feat/invite-one: the key is made on Copy
+            cmd = host.text_content("#cc-cmd").strip()
             m = re.fullmatch(r'claude mcp add --transport http tribecode (\S+) --header "Authorization: Bearer ([A-Za-z0-9_-]{20,})"', cmd)
             assert m, cmd
             url, atok = m.group(1), m.group(2)
@@ -357,7 +357,7 @@ def main():
             st, r = mcp(atok, {"jsonrpc": "2.0", "id": "server-discover-probe-1", "method": "server/discover", "params": {}}, {"MCP-Protocol-Version": "2026-07-28", "Mcp-Method": "server/discover"})
             assert st == 200 and r["error"]["code"] == -32601, r                      # "not that revision": Claude Code falls back
             st, r = mcp(atok, {"jsonrpc": "2.0", "id": 0, "method": "initialize", "params": {"protocolVersion": "2025-11-25", "capabilities": {"roots": {"listChanged": True}}, "clientInfo": {"name": "claude-code", "version": "2.1.319"}}})
-            assert st == 200 and r["result"]["protocolVersion"] == "2025-11-25" and r["result"]["capabilities"]["tools"] is not None and "Claude · Orion" in r["result"]["instructions"], r
+            assert st == 200 and r["result"]["protocolVersion"] == "2025-11-25" and r["result"]["capabilities"]["tools"] is not None and "Orion's Claude" in r["result"]["instructions"], r
             st, r = mcp(atok, {"jsonrpc": "2.0", "id": 1, "method": "initialize", "params": {"protocolVersion": "2026-07-28", "capabilities": {}, "clientInfo": {"name": "x", "version": "1"}}})
             assert r["result"]["protocolVersion"] == "2025-11-25", r                 # never claims a revision it doesn't speak
             assert mcp(atok, {"jsonrpc": "2.0", "method": "notifications/initialized"}, {"MCP-Protocol-Version": "2025-11-25"})[0] == 202
@@ -365,7 +365,7 @@ def main():
             assert mcp("not-a-key", {"jsonrpc": "2.0", "id": 2, "method": "tools/list"})[0] == 401
             # connected (initialize) is enough to show online, before any tool call
             host.wait_for_function(f"(TribeClient.state().members || []).some(m => m.id === '{agent['id']}' && m.online)", timeout=10000)
-            wait_text(host, "#cc-status", "Connected", timeout=15000)
+            wait_text(host, "#ic-status", "joined", timeout=15000)
             st, r = mcp(atok, {"jsonrpc": "2.0", "id": 3, "method": "tools/list"}, {"MCP-Protocol-Version": "2025-11-25"})
             names = {t["name"] for t in r["result"]["tools"]}
             assert {"tribe_overview", "read_chat", "post_chat", "check_messages", "reply", "list_tasks"} <= names, names
@@ -384,7 +384,7 @@ def main():
             else:
                 print("  (claude CLI not installed: skipped the real `claude mcp list` check)")
 
-            overview = tool(atok, "tribe_overview"); assert "Pixel Quest" in tool(atok, "list_projects") and "Claude · Orion" in overview
+            overview = tool(atok, "tribe_overview"); assert "Pixel Quest" in tool(atok, "list_projects") and "Orion's Claude" in overview
             recent = tool(atok, "read_chat", {"limit": 50})
             assert "hello from maya on desktop" in recent and "jay here, on my phone" in recent and "default-project secret" not in recent, recent
             tool(atok, "post_chat", {"text": "Claude Code here: I can see the board and the chat."})

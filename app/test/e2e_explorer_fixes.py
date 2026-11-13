@@ -99,10 +99,12 @@ def main():
             pg.wait_for_timeout(500)
             # connect: your Claude is working -> no new key by just opening the dialog
             mcp(ag1, "my_lane", {})
-            pg.evaluate("TribeApp.connectClaude()"); pg.wait_for_selector("#cc-new")
+            pg.evaluate("TribeApp.connectClaude()"); pg.wait_for_selector("#ic-new")   # the one invite sheet: this Claude shows as already connected
             assert "connected" in pg.inner_text("#invite-body").lower()
             assert not mcp(ag1, "my_lane", {})[0], "the running Claude keeps its key"
-            pg.click("#cc-new"); pg.wait_for_selector("#cc-cmd")
+            pg.click("#ic-new"); pg.wait_for_selector("#cc-cmd")
+            assert not mcp(ag1, "my_lane", {})[0], "asking for the setup changes nothing: the key is made on Copy"
+            pg.wait_for_selector("#ic-body [data-ic-copy='code']", timeout=10000); pg.click("#ic-body [data-ic-copy='code']"); pg.wait_for_function("!document.querySelector('#cc-cmd').textContent.includes('••••')", timeout=10000)   # feat/invite-one: the key is made on Copy
             assert mcp(ag1, "my_lane", {})[0], "New command made a new key (the old one stops)"
             pg.keyboard.press("Escape")
             # palette: hover keeps the same elements
