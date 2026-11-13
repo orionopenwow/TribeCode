@@ -92,6 +92,7 @@
 
   // A view that printed the reason as its error gets the card in its place instead (no extra note on top).
   function inline(feature) {
+    if ([...document.querySelectorAll(`.nx-card[data-nx-card="${feature}"]`)].some(c => c.offsetParent)) return true;   // the view already drew the card
     const w = why(feature)[1], main = document.querySelector('.main') || document.body;
     const hits = [...main.querySelectorAll('p, div, span, small')].filter(n => n.offsetParent && !n.closest('.nx-card, .toast, #toast') && n.children.length <= 2 && (n.textContent || '').includes(w));
     if (!hits.length) return false;
