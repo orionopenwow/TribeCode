@@ -198,6 +198,8 @@ def walk(b, state, size, token, out, max_clicks, only):
         u = r.url
         if "/api/" not in u and not u.endswith("/mcp"): return
         rep["apiCalls"] += 1
+        if r.status == 403 and cur.get("click"):   # a control this role can see but may not use
+            rep.setdefault("denied", []).append({"route": cur["route"], "after": cur["click"], "call": f"{r.request.method} {u.split(str(PORT), 1)[-1].split('?')[0][:90]}"})
         if r.status >= 500 or (r.status >= 400 and r.status not in OK_4XX):
             rep["apiFails"].append({"route": cur["route"], "after": cur.get("click", ""), "call": f"{r.request.method} {u.split(str(PORT), 1)[-1][:120]}", "status": r.status})
     pg.on("response", on_resp)
