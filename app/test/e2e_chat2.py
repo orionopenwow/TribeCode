@@ -185,7 +185,7 @@ def main():
                 # ---- header: tucked in, emoji instead of an icon tile, tight icons on the right ----
                 hd = page.evaluate("""() => { const h = document.querySelector('#chat-head').getBoundingClientRect(), m = document.querySelector('.main').getBoundingClientRect(),
                     acts = document.querySelector('#chat-head .cb-acts').getBoundingClientRect();
-                    return { h: h.height, gap: h.top - m.top, right: h.right - acts.right, emo: document.querySelector('#chat-head .cb-av').textContent.trim(), n: document.querySelectorAll('#chat-head .cb-btn').length }; }""")
+                    return { h: h.height, gap: h.top - m.top, right: h.right - acts.right, emo: document.querySelector('#chat-head .cb-av').textContent.trim(), n: document.querySelectorAll('#chat-head .cb-btn[data-cb]').length }; }""")   # the 4 chat buttons; aibasics.js may add its ✦ beside them
                 assert hd["h"] <= 52 and hd["gap"] <= 14 and hd["right"] <= 8 and hd["emo"] == "💬" and hd["n"] == 4, hd
                 page.screenshot(path=str(ROOT / "docs" / "screenshots" / "chat2-desktop.png"))
 
