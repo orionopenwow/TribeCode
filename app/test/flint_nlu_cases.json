@@ -4686,6 +4686,30 @@
   {
    "t": "action items",
    "i": "secretary.summary"
+  },
+  {
+   "t": "connect github",
+   "i": "github.connect"
+  },
+  {
+   "t": "push this to github",
+   "i": "github.connect"
+  },
+  {
+   "t": "import a repo from github",
+   "i": "github.connect"
+  },
+  {
+   "t": "meeting notes from today",
+   "i": "draft.readme"
+  },
+  {
+   "t": "minutes from the call",
+   "i": "draft.readme"
+  },
+  {
+   "t": "clean this up",
+   "i": "canvas.tidy"
   }
  ]
 }

@@ -326,8 +326,52 @@
     return needsHost('secretary');   // config, tick, research requests, ideas
   }
 
+  // ---------- Flint writes a doc, sheet or slides with no brain (server/flint.js template(), basic mode) ----------
+  const titleFrom = ask => { const t = String(ask || '').replace(/^(please\s+)?(make|write|create|draft|build|give me|start)\s+(me\s+)?(a|an|the|some)?\s*(new\s+)?(doc(ument)?|sheet|spreadsheet|table|slides?|deck|presentation|pitch deck)?\s*(about|for|on|of|with|called)?\s*/i, '').replace(/[.?!]+$/, '').trim(); return (t.charAt(0).toUpperCase() + t.slice(1)).slice(0, 80) || 'Untitled'; };
+  function makeTemplate(kind, ask) {
+    const title = titleFrom(ask), t = String(ask || '').toLowerCase();
+    if (kind === 'sheet') {
+      if (/budget|cost|expense|spend|money|price/.test(t)) return `| Item | Category | Cost | Paid |\n| --- | --- | --- | --- |\n| Example item | General | 25 | yes |\n| Another item | General | 40 | no |\n| | | | |\n| Total | | =SUM(C2:C4) | |\n`;
+      if (/rota|chore|schedule|shift|week/.test(t)) return `| Task | Mon | Tue | Wed | Thu | Fri |\n| --- | --- | --- | --- | --- | --- |\n| Example task | | | | | |\n| Another task | | | | | |\n`;
+      if (/score|leader|game|points/.test(t)) return `| Player | Round 1 | Round 2 | Round 3 | Total |\n| --- | --- | --- | --- | --- |\n| Player 1 | 0 | 0 | 0 | =SUM(B2:D2) |\n| Player 2 | 0 | 0 | 0 | =SUM(B3:D3) |\n`;
+      return `| Name | Owner | Status | Due |\n| --- | --- | --- | --- |\n| ${title} | | Not started | |\n| | | | |\n`;
+    }
+    if (kind === 'deck') return `<!-- theme: campfire -->\n\n# ${title}\n\nWhat we're making and why\n\n---\n\n## The idea\n\n- What it is, in one line\n- Who it's for\n\n---\n\n## How it works\n\n- Step one\n- Step two\n- Step three\n\n---\n\n## Who's doing what\n\n- Person: part\n- Agent: part\n\n---\n\n## Next steps\n\n- The first thing to ship\n- When we'll show it\n`;
+    return `# ${title}\n\n## Goal\n\nWhat this is for, in a sentence or two.\n\n## Notes\n\n- \n\n## Next steps\n\n- [ ] \n`;
+  }
+  function flintMake(B) {
+    const kind = B.kind, ask = String(B.ask || '').slice(0, 2000);
+    if (!['doc', 'sheet', 'deck'].includes(kind)) return [400, { error: 'kind must be doc, sheet or deck' }];
+    if (!ask) return [400, { error: 'tell Flint what to write' }];
+    if (B.body) return [503, { error: 'Changing a whole file needs Flint\'s brain. Pick the built-in model in Settings › Flint\'s brain, or edit it directly.', basic: true }];
+    return ok({ kind, title: titleFrom(ask), body: makeTemplate(kind, ask), basic: true, note: 'Flint started you from a template on this phone. Give him a brain (Settings › Flint\'s brain) and he writes the whole thing.' });
+  }
+
+  // Flint's launch doc / README / meeting notes / changelog drafts, from this phone's project (server/flintmem.js basic mode)
+  function flintDraft(B) {
+    const db = K().db(), pid = K().cur(), p = K().proj(pid) || { name: 'Our project' }, kind = ['launch', 'readme', 'notes', 'changelog'].includes(B.kind) ? B.kind : 'launch';
+    const tasks = db.tasks[pid] || [], open = tasks.filter(t => t.status !== 'done'), done = tasks.filter(t => t.status === 'done');
+    const vision = String((db.vision || {})[pid] || p.bio || '').replace(/^#.*\n/, '').trim() || 'What we are making and why, in a sentence or two.';
+    const li = (l, f) => l.length ? l.slice(0, 12).map(f).join('\n') : '- ';
+    const today = new Date().toISOString().slice(0, 10);
+    const title = { launch: `${p.name} launch plan`, readme: `${p.name} README`, notes: `Meeting notes ${today}`, changelog: `${p.name} changelog` }[kind];
+    const md = {
+      launch: `# ${title}\n\n## What we're launching\n\n${vision}\n\n## Done\n\n${li(done, t => `- ${t.title}`)}\n\n## Before launch\n\n${li(open, t => `- [ ] ${t.title}`)}\n\n## Launch day\n\n- Where we share it\n- Who posts what\n`,
+      readme: `# ${p.name}\n\n${vision}\n\n## How to run it\n\nOpen \`index.html\` in a browser.\n\n## What's next\n\n${li(open, t => `- ${t.title}`)}\n`,
+      notes: `# ${title}\n\n## Who was there\n\n- \n\n## Decisions\n\n- \n\n## Action items\n\n${li(open.slice(0, 6), t => `- [ ] ${t.title}`)}\n`,
+      changelog: `# ${title}\n\n## ${today}\n\n${li(done, t => `- ${t.title}`)}\n`,
+    }[kind];
+    const list = db.docs[pid] = db.docs[pid] || [], base = title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 60) || 'draft';
+    let slug = base, n = 2; while (list.some(d => d.slug === slug)) slug = `${base}-${n++}`;
+    const now = iso(), d = { slug, title, by: 'me', created: now, updated: now, updatedBy: 'me', version: 1, project: pid, body: md, flintDraft: true };
+    list.push(d); save(); try { K().push({ type: 'doc', doc: { slug, title, version: 1, updated: now, updatedBy: 'me' } }); } catch {}
+    return ok({ title, slug, basic: true, local: true });
+  }
+
   function route(method, parts, q, body) {
     if (!soloOnly()) return null;
+    if (parts[0] === 'flint' && parts[1] === 'make' && method === 'POST') return flintMake(body || {});
+    if (parts[0] === 'flint' && parts[1] === 'draft' && method === 'POST') return flintDraft(body || {});
     const [a, b, c, d, e, f] = parts, pid = K().cur(), B = body || {};
     switch (a) {
       case 'projects': {

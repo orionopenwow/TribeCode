@@ -384,13 +384,27 @@
     if (id === 'textsize.set') { const snap = lookSnap(); const cur = (S().get().look || {}).fontSize || '', order = ['s', '', 'l', 'xl']; let v = sl.size; if (v === 'l' && cur === 'l') v = 'xl'; if (v === 's' && cur === 's') v = 's'; setLook({ fontSize: v }); pushUndo('text size', () => lookRestore(snap)); return { text: T('textsize', { x: { s: 'Small', '': 'Default', l: 'Large', xl: 'Larger' }[v] || 'Default' }) }; }
     if (id === 'lang.set') { const I = window.TribeI18n; if (!I) return { text: T('noPlace', { x: sl.lang }) }; const before = I.lang(); I.set(sl.lang); pushUndo('language', () => I.set(before)); const name = (I.LANGS.find(x => x[0] === sl.lang) || [])[1] || sl.lang; return { text: T('langSet', { x: name }) }; }
     if (id === 'personalize.open') { go('personalize'); return { text: T('opened', { x: 'Personalize' }) }; }
+    if (id === 'invite' && window.TribeOffline && window.TribeOffline.solo && window.TribeOffline.solo()) {
+      if (window.TribeNextOpts) window.TribeNextOpts.sheet('friends');
+      return { text: 'Friends join a tribe on a host. Move this one to a host (a laptop, a free cloud server or an Android phone) and then invite them.' };
+    }
     if (id === 'invite') return legacy('invite a friend', 'opened the invite');
     if (id === 'host.start') return legacy('start hosting');
     if (id === 'host.stop') return legacy('stop hosting');
     if (id === 'connect.ai') return legacy('connect my ai');
+    if (id === 'github.connect') {
+      const solo = window.TribeOffline && window.TribeOffline.solo && window.TribeOffline.solo();
+      if (solo && window.TribeGhPhone) { window.TribeGhPhone.open(); return { text: 'Here is GitHub on this phone: paste a token once, then bring a repo in, push and pull. The token stays on this phone.' }; }
+      go('repo'); return { text: 'Opened the code repository. Connect GitHub there to push and pull with friends.' };
+    }
     if (id === 'brain.pick') { if (window.TribeBrain) window.TribeBrain.open(); return { text: T('opened', { x: "Flint's brain" }) }; }
     if (id === 'helper.toggle') return legacy(`turn ${sl.on ? 'on' : 'off'} the ${sl.what}`);
     if (id === 'jam.start') { const J = window.TribeJam; if (J) (J.start ? J.start() : J.open()); return { text: T('opened', { x: 'Jam' }), sum: 'started a jam' }; }
+    // a tribe that lives only on this phone has nobody to call: say so and show the next options instead of a lonely call
+    if ((id === 'huddle.start' || id === 'call.video' || id === 'call.share' || id === 'call.ring' || id === 'call.present') && window.TribeOffline && window.TribeOffline.solo && window.TribeOffline.solo()) {
+      if (window.TribeNextOpts) window.TribeNextOpts.sheet(id === 'call.share' || id === 'call.present' ? 'screenshare' : 'huddle');
+      return { text: 'Calls need friends in the tribe, and this tribe lives only on this phone. Move it to a host, or open TribeCode on a laptop, and then call.' };
+    }
     if (id === 'huddle.start') { const Hd = window.TribeHuddle; if (!Hd) return { text: T('noPlace', { x: 'Huddle' }) }; if (!Hd.inCall()) Hd.join(); pushUndo('huddle', () => Hd.leave()); return { text: T('huddleOn') }; }
     if (id.startsWith('call.') || id === 'secretary.summary') {
       const Hd = window.TribeHuddle, Cl = window.TribeCall;
