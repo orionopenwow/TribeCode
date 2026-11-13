@@ -217,7 +217,7 @@ def main():
 
             # ---- versions keep the config
             pg.click("[data-wdz='save']")
-            pg.wait_for_function("TribeSiteDesigner.state().log.slice(-1)[0].text.includes('Saved shelf')", timeout=5000)
+            pg.wait_for_function("TribeSiteDesigner.state().log.slice(-1)[0].text.includes('Saved designs')", timeout=5000)
             vs = ok(api(f"/projects/{pid}/website/versions", token=tok))
             vd = [x for x in vs["saved"] if x.get("designer")]
             assert vd and vd[0]["thumb"].startswith("data:image/svg+xml"), vs["saved"]

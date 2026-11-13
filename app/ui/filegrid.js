@@ -154,8 +154,8 @@
       const up = root.querySelector('[data-up]'); if (up) up.onclick = () => { at = pane.dataset.fgFolder = ''; draw(shots); };
     };
     draw(render.shots);
-    try { const u = await C.api('/uploads'); const ups = u.project || []; if (JSON.stringify(ups.map(x => x.id)) !== JSON.stringify((render.ups || []).map(x => x.id))) { render.ups = ups; if (pane.querySelector('.fx') && !pane.querySelector('#doc-title') && !pane.querySelector('#fx-rename')) draw(render.shots); } } catch {}   // feat/dropzone
-    try { const v = await C.api('/visuals'); const n = (v.screens || []).length; if (n !== (render.shots || []).length) { render.shots = v.screens || []; if (pane.querySelector('.fx') && !pane.querySelector('#doc-title') && !pane.querySelector('#fx-rename')) draw(render.shots); } } catch {}
+    try { const u = await C.api('/uploads'); const ups = u.project || []; if (JSON.stringify(ups.map(x => x.id)) !== JSON.stringify((render.ups || []).map(x => x.id))) { render.ups = ups; if (pane.querySelector(':scope > .fg .fx') && !pane.querySelector('#doc-title') && !pane.querySelector('#fx-rename')) draw(render.shots); } } catch {}   // feat/dropzone
+    try { const v = await C.api('/visuals'); const n = (v.screens || []).length; if (n !== (render.shots || []).length) { render.shots = v.screens || []; if (pane.querySelector(':scope > .fg .fx') && !pane.querySelector('#doc-title') && !pane.querySelector('#fx-rename')) draw(render.shots); } } catch {}
   }
   window.TribeFileGrid = { render, typeOf, folder: pane => (pane && pane.dataset.fgFolder) || '' };
 })();

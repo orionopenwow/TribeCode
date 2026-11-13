@@ -64,6 +64,9 @@
       pages = ((await r.json()).pages || []);
       if (!pages.length) { pages = null; loadErr = 'empty'; }   // a project on this device has no guide pages: say where the guide is, not "Nothing about"
     } catch (e) { loadErr = e.message || 'offline'; pages = null; }
+    // feat/calm-parity: no server to ask (a project on this device, no tribe yet, offline): the same pages ship inside
+    // the app as guide-pages.json (scripts/dev/app-bundle.js)
+    if (!pages) { try { const r = await fetch('guide-pages.json'); if (r.ok) { const b = (await r.json()).pages || []; if (b.length) { pages = b; loadErr = ''; } } } catch {} }
     return pages;
   }
 

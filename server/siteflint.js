@@ -168,7 +168,7 @@ module.exports = function siteflint({ P, base, showcase, nameOf = id => id, llm 
     // something picked and plain new words ("Fresh bread daily"): those are the new words
     if (!plan && ask && pick && pick.text && !/^(make|change|set|add|remove|delete|hide|move|swap|switch|use|turn|put|give|can|could|please|undo|show|try|let)\b/i.test(ask) && !/\?$/.test(ask)) plan = { ops: [{ op: 'text', before: pick.text, after: ask }], say: 'Changed the words.', via: 'rules' };
     if (plan && plan.ops.length === 1 && plan.ops[0].op === 'undo') return undo(pid, me);
-    if (plan && plan.ops.length === 1 && plan.ops[0].op === 'save') { const v = saveNamed(pid, me, plan.ops[0].note); return { say: `Saved “${v.note}” to the shelf.`, via: 'rules', ops: plan.ops, saved: v.id }; }
+    if (plan && plan.ops.length === 1 && plan.ops[0].op === 'save') { const v = saveNamed(pid, me, plan.ops[0].note); return { say: `Saved “${v.note}” to Saved designs.`, via: 'rules', ops: plan.ops, saved: v.id }; }
     if (plan && plan.ops.length === 1 && plan.ops[0].op === 'logo' && !plan.ops[0].clear && !body.logo) {
       if (!showcase.canManage(pid, me)) throw err(403, 'only the host or the project lead changes the logo; ask them, or suggest it in chat');
       return { need: 'logo', say: plan.say, via: 'rules', ops: plan.ops };

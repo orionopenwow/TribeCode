@@ -598,7 +598,7 @@
         const q = new URLSearchParams({ name, scope: pid() ? 'project' : 'me' });
         const r = await fetch(`${C.base()}/api/uploads?${q}`, { method: 'POST', headers: { ...authH(), 'Content-Type': 'application/octet-stream' }, body: await it.get() });
         const d = await r.json().catch(() => ({})); if (!r.ok) { toast(d.error || 'Upload failed'); continue; }
-        url = `${C.base()}/api/uploads/${encodeURIComponent(d.file.id)}/raw`; if (window.TribeMedia) url = window.TribeMedia.url(url);
+        url = `${C.base()}/api/uploads/${encodeURIComponent(d.file.id)}/raw`; if (window.TribeMedia && !pic) url = window.TribeMedia.url(url);   // a picture's link is signed each time the doc draws it (md.js), so it never expires in the doc
       } else if (pic && it.size < 1.5 * 1048576) url = (await shrink(await it.get(), 1200, 0.84)).src;
       else { toast(`${name}: connect to a tribe to link files in docs.`); continue; }
       lines.push(pic ? `![${name.replace(/[[\]]/g, '')}](${url})` : `[${name.replace(/[[\]]/g, '')}](${url})`);
@@ -703,8 +703,15 @@
   // ---------- the suggestions (each one does the thing) ----------
   const setNow = () => (ctx && ctx.set) || cur;
   async function itemsText(set, test) { const out = []; for (const it of set.items.filter(x => test(x.path))) out.push({ path: it.path, text: await (await it.get()).text() }); return out; }
+  // open the doc just made and make sure it stays open: Files may still be loading its own list (it used to win the
+  // race on a slow machine and leave you on the file grid)
+  function openDoc(slug) {
+    const D = window.TribeDocs; if (!D || !D.open) return; let n = 0;
+    const go = async () => { try { await D.open(slug); } catch {} setTimeout(() => { if (D.current && D.current() == null && ++n < 4) go(); }, 700); };   // only while nothing is open: never over a doc you opened since
+    setTimeout(go, 150);
+  }
   async function newDoc(title, body, kind) {
-    if (connected()) { const r = await C.api('/docs', { method: 'POST', body: { title, body, ...(kind ? { kind } : {}) } }); if (window.TribeApp) window.TribeApp.show('docs'); setTimeout(() => window.TribeDocs && window.TribeDocs.open && window.TribeDocs.open(r.doc.slug), 150); return { slug: r.doc.slug }; }
+    if (connected()) { const r = await C.api('/docs', { method: 'POST', body: { title, body, ...(kind ? { kind } : {}) } }); if (window.TribeApp) window.TribeApp.show('docs'); openDoc(r.doc.slug); return { slug: r.doc.slug }; }
     const LF = window.TribeLocalFiles; if (!LF) throw new Error('Files did not load');
     const it = await LF.create(kind === 'deck' ? 'slides' : kind || 'doc', { title, body }); if (LF.open) try { LF.open(it.id); } catch {} return { id: it.id };
   }
@@ -752,8 +759,11 @@
       const col = i => { let s = ''; i++; while (i > 0) { const m = (i - 1) % 26; s = String.fromCharCode(65 + m) + s; i = Math.floor((i - 1) / 26); } return s; };
       const n = rows.length, total = c.columns.map((x, i) => (i === 0 ? 'Total' : x.type === 'number' ? `=SUM(${col(i)}2:${col(i)}${n})` : ''));
       const md = [rows[0], rows[0].map(() => '---'), ...rows.slice(1), total].map(r => `| ${r.join(' | ')} |`).join('\n') + '\n';
-      await newDoc(c.path.split('/').pop().replace(/\.(csv|tsv)$/i, ''), md, 'sheet');
-      return say0(`Opened ${c.path.split('/').pop()} as a sheet: ${plural(n - 1, 'row')}, with totals for the number columns.`);
+      // feat/calm-parity: "Chart this CSV" draws the chart too, with Flint's own sheet chart (flintmax.js: a comment
+      // under the table that sheet.js draws flat from the live values)
+      const FM = window.TribeFlintMax, sp = FM && FM.sheet && FM.sheet.chartSpec ? FM.sheet.chartSpec(rows) : null;
+      await newDoc(c.path.split('/').pop().replace(/\.(csv|tsv)$/i, ''), md + (sp ? '\n' + FM.sheet.chartComment(sp) + '\n' : ''), 'sheet');
+      return say0(`Opened ${c.path.split('/').pop()} as a sheet: ${plural(n - 1, 'row')}, with totals for the number columns${sp ? ` and a chart of ${sp.title.toLowerCase()}` : ''}.`);
     },
     async deck(set, R) {
       const docs = await itemsText(set, p => /\.(md|markdown|txt)$/i.test(p));

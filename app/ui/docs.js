@@ -30,10 +30,13 @@
 
   // ---------- data ----------
   async function load(openSlug) {
-    const pj = C.project ? C.project() : null;
+    const pj = C.project ? C.project() : null, seq0 = openSeq;
     if (remote()) { try { const got = (await C.api('/docs')).docs; if (C.project && C.project() !== pj) return; list = got; } catch (e) { window.TribeApp.toast('Could not load docs: ' + e.message); } }   // a list for a project we already left: the next load has the right one
     else list = local.all().map(({ body, ...d }) => ({ ...d, words: (body || '').split(/\s+/).filter(Boolean).length }));
     loaded = true; renderList();
+    // a doc was opened while this list was on its way (a sheet made from a dropped CSV, a new doc): the list may be
+    // older than the doc, so it must not close it and put the file grid back
+    if (!openSlug && openSeq !== seq0) return;
     const keep = cur && list.some(d => d.slug === cur.slug) ? cur.slug : null;   // the open doc may belong to the project we just left
     if (cur && !keep) cur = null;   // …then don't ask the new project for its comments or backlinks either
     const want = openSlug || keep || (!(window.TribeFileGrid && desk()) && list[0] && list[0].slug);   // desktop opens on the file grid (feat/file-grid)

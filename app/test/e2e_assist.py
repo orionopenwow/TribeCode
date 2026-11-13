@@ -127,7 +127,7 @@ def main():
             # Save: VISION.md, the checklist ticks
             host.click("#pj-vsave")
             host.wait_for_selector("#invite-modal.hidden", state="attached")
-            host.wait_for_selector("#pj-check [data-step=vision].on", timeout=10000)
+            host.wait_for_selector("#pj-check [data-step=vision].on", timeout=10000, state="attached")
             assert "Three levels" in ok(api("/vision", token=htok, project=pid))["text"]
 
             # ---- suggested tasks: no duplicates, one tap adds, ✕ is remembered

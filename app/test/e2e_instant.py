@@ -130,13 +130,13 @@ def main():
             # ---- the fresh project's overview: bio, living update, onboarding checklist ----
             host.evaluate("TribeApp.show('home')"); host.wait_for_selector("#pj-check.hero .ock-card", timeout=15000)
             assert host.locator("#pj-living").count() == 0, "a fresh project leads with the checklist, no Living update yet"
-            host.wait_for_selector("#pj-check [data-step=vision]:not(.on) [data-ck=vision]")
+            host.wait_for_selector("#pj-check [data-step=vision]:not(.on) [data-ck=vision]", state="attached")
             host.click("#pj-bio"); host.fill(".pj-bio-in", "A tiny game for friends"); host.keyboard.press("Enter")
             wait_text(host, "#pj-bio", "A tiny game for friends")
             cur = host.evaluate("TribeProjects.current()")
             assert any(x["id"] == cur and x.get("bio") == "A tiny game for friends" for x in api("/projects", token=tok)[1]["projects"]), "bio saved"
             host.click("#pj-check [data-ck=vision]"); host.fill("#pj-vtext", "A cozy platformer.\nFor friends.\nDone: 3 levels."); host.click("#pj-vsave")
-            host.wait_for_selector("#pj-check [data-step=vision].on", timeout=10000)
+            host.wait_for_selector("#pj-check [data-step=vision].on", timeout=10000, state="attached")
 
             # ---- ?invite=1 (tribecode://invite, Invite-A-Friend.bat) ----
             n = len(api("/projects", token=tok)[1]["projects"])

@@ -118,7 +118,7 @@ def main():
             close_sheets(pg)
             pg.evaluate("TribeApp.show('home')"); pg.wait_for_selector("#pj-check.hero", timeout=15000); pg.wait_for_timeout(500)
             assert pg.locator("#room-next").count() == 0, "no Next steps copy next to Camp setup"
-            assert "living repo" in pg.inner_text("#pj-check")
+            assert "Choose where it lives" in pg.text_content("#pj-check")   # the home step (its wording changed with feat/folder-sync; text_content: one step shows at a time)
             pg.evaluate("TribeApp.show('tasks')"); pg.wait_for_selector("#room-next .rn-card", timeout=8000)
             x = pg.locator("#panel-close").bounding_box(); h = pg.locator("#room-next .rn-head").bounding_box()
             assert abs((x["y"] + x["height"] / 2) - (h["y"] + h["height"] / 2)) < 16, ("the x sits on the Next steps row", x, h)

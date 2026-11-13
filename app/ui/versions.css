@@ -3,7 +3,9 @@
 .vr-sheet [hidden] { display: none !important; }
 .vr-head { align-items: center; gap: 8px; }
 .vr-sp { flex: 1; }
-.vr-sub { margin: 0 2px 10px; font-size: 12.5px; }
+.vr-sub { margin: 0 2px 6px; font-size: 12.5px; }
+.vr-also { display: flex; align-items: center; flex-wrap: wrap; gap: 4px 8px; margin: 0 2px 10px; font-size: 12.5px; }
+.vr-also .linkish { min-height: 32px; font-size: 12.5px; }
 .vr-body { display: grid; grid-template-columns: minmax(240px, 340px) 1fr; gap: 12px; min-height: 0; flex: 1; }
 .vr-list { margin: 0; padding: 4px; list-style: none; overflow-y: auto; max-height: 64dvh; border: 1px solid var(--edge); border-radius: var(--r, 12px); }
 .vr-item { display: flex; align-items: flex-start; gap: 4px; border-radius: var(--r-sm, 8px); }
@@ -44,3 +46,4 @@
 .vr-diff .meta { color: var(--faint); }
 @media (max-width: 820px) { .vr-body { grid-template-columns: 1fr; } .vr-list, .vr-detail { max-height: 40dvh; } }
 @media (prefers-reduced-motion: reduce) { .vr-row { transition: none; } }
+.wb-allv { margin-left: 10px; min-height: 32px; font-size: 12.5px; }

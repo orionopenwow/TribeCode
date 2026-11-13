@@ -80,11 +80,13 @@
       <label class="slx-f"><span>${t('Your site name')}</span><input id="slx-name" value="${esc(nice(p.name || ''))}" maxlength="80" placeholder="${t('Your site name')}"></label>
       <fieldset class="slx-levels"><legend>${t('How do you want to customize it?')}</legend>${LEVELS.map(l => `<label class="slx-lv"><input type="radio" name="slx-lv" value="${l.id}" ${l.id === level ? 'checked' : ''}><span><b>${t(l.label)}</b><small>${t(l.sub)}</small></span></label>`).join('')}</fieldset>
       <button class="btn primary slx-use" type="button" id="slx-use">${t('Use this template')}</button>
-      <p class="slx-fine">${t('It goes into your project\'s code. Nothing you already have gets overwritten.')}</p>`;
+      <p class="slx-fine">${window.TribeDevice && window.TribeDevice.on() ? 'It opens in the website designer, kept on this device.' : t('It goes into your project\'s code. Nothing you already have gets overwritten.')}</p>`;
     box.querySelector('[data-slx=unpick]').onclick = () => { box.hidden = true; ov.classList.remove('has-pick'); };
     box.querySelectorAll('input[name=slx-lv]').forEach(r => { r.onchange = () => { level = r.value; lsSet('tribecode.sitelib.level', level); }; });
     box.querySelector('#slx-use').onclick = async e => {
       const b = e.currentTarget; b.disabled = true; b.textContent = t('Making it…');
+      // feat/calm-parity: a project on this device has no code folder to copy into; the same template opens in the website designer
+      if (window.TribeDevice && window.TribeDevice.on() && window.TribeSiteDesigner) { close(); return window.TribeSiteDesigner.open({ pid, template: id }); }
       try {
         const r = await C.api(`/projects/${encodeURIComponent(pid)}/site-library`, { method: 'POST', body: { template: id, name: box.querySelector('#slx-name').value.trim(), level } });
         toast(`✓ ${x.title}: ${r.files.length} files${r.dir ? ' in ' + r.dir + '/' : ''}`);

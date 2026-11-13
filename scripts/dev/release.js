@@ -70,6 +70,8 @@ const run = (label, cmd, args, env = {}) => {
   if (!ok) console.log(((r.stdout || '') + (r.stderr || '')).trim().split('\n').slice(-12).map(l => '        ' + l).join('\n'));
   return ok;
 };
+if (!CHECK) run('app bundle written (the Guide and the website template list inside the app)', process.execPath, ['scripts/dev/app-bundle.js']);
+run('app bundle is current (scripts/dev/app-bundle.js --check)', process.execPath, ['scripts/dev/app-bundle.js', '--check']);
 run('bundle_test (the desktop sidecar bundle builds and parses)', process.execPath, ['app/test/bundle_test.js']);
 run('Tauri config (scripts/check-tauri-config.py)', 'python3', ['scripts/check-tauri-config.py']);
 if (!argv.includes('--skip-tests')) {

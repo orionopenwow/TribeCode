@@ -66,13 +66,13 @@ and understands plain sentences with no AI (`app/ui/siteedit-core.js`, shared wi
 | add a pricing section · add testimonials · remove the FAQ · move the FAQ to the top | sections (pricing and testimonials start with honest placeholders) |
 | swap to the Studio template · use the Swiss layout · use the playful font | a look, a layout, a font pair |
 | add my logo | asks for the file (PNG, JPG or plain SVG, under 200 KB) |
-| undo · save this version as Before the launch | steps back · saves to the shelf |
+| undo · save this version as Before the launch | steps back · saves to Saved designs |
 
 Every change pushes an undo step and is kept as a version; the preview reloads in place (scroll kept). With an AI on
 (Claude via the host's key, or a local model through `server/llm.js`) a sentence the rules don't know becomes the same
 operations, checked the same way, and the reply says **✦ via …** instead of **Basic · no AI**.
 
-**The Saved shelf** (Saved in the bar; the Saved tab on phones; Files › Website › Website versions): save the draft with a
+**Saved designs** (Saved in the bar; the Saved tab on phones; Files › Website › Saved designs; the project's whole history is Versions): save the draft with a
 note, see a flat thumbnail of each version, compare one with now (both thumbnails and the changes in words), restore it.
 Stored in `.tribe/website/<id>.versions.json`. Phones: Page · Edit · Saved tabs (tap or swipe), the device toggle shows
 the desktop page shrunk to fit with pinch-to-zoom (double-tap fits it again). Test: `app/test/e2e_preview_polish.py`.
@@ -105,7 +105,7 @@ goes to Files › Website), "open the website designer" in Flint's chat, or `#/s
 - **Download HTML**: one standalone `index.html` with every page (CSS `:target`, no scripts, pictures inside). The ▾
   menu has a **zip** (a file per page, `assets/`, `fonts/`, `site.json`, README) and **Publish to the project** (writes
   the same files to `site/`, `POST …/site-config/publish`).
-- **Versions**: Save version puts the config on the Saved shelf with a thumbnail; Restore brings it back
+- **Saved designs**: Save design puts the config in Saved designs with a thumbnail; Restore brings it back
   (`server/siteflint.js` keeps `cfg` on each version).
 - **The 16 templates** open as configs (`GET /api/site-designer/template/:id`, pictures inlined).
 
@@ -126,7 +126,7 @@ favicon, logo, share image, language), Desktop · Tablet · Phone and keyboard s
   resolves its comments. `…/site-comments`, MCP `site_comments`, `site_comments_to_tasks`.
 - **Never loses edits**: each change goes to a local draft at once and to the host after 0.6 s with the rev it started
   from; switching tabs, routes, closing or reloading flushes it; opening restores a newer draft. "Saved · just now". A
-  stale save gets 409 and the choice Keep mine · Keep theirs · Keep both (theirs goes to the Saved shelf).
+  stale save gets 409 and the choice Keep mine · Keep theirs · Keep both (theirs goes to Saved designs).
 - **The Website row** shows in the project's sidebar as soon as a draft exists, with a dot while edits are not on the
   host, and opens the designer.
 - **Flint, anywhere**: "link tree website" (and every other website ask) opens the designer with the template, from
