@@ -2,18 +2,26 @@
    a slim Ember pill on the rail's far-left edge (Discord-style), plus a pressed tile: one luminance step below a hover,
    with an inset 1px border, still flat (no shadow, no glow). Hover shows a shorter grey pill. Loaded last, so it wins
    over the older rail rules in styles.css, shell.css, projects.css, hub.css and logo.css. */
-.window .rail { --rail-pill: 4px; }
+/* One tile for every rail item (Home, each tribe, +, the Workshop wrench): the same --rail-tile square, centred in the
+   rail, its mark centred in the tile by grid. Pressed = the tile steps down to the canvas with a 1px inset border on all
+   four sides (even, so the mark stays dead centre: no translate) and the mark settles a touch smaller; the pill is centred
+   on the tile and starts at the window's edge. The rail column is 72px with a 1px right border (shell.css). */
+.window .rail { --rail-pill: 4px; --rail-tile: 48px; --rail-pill-on: 32px; --rail-pill-hover: 16px; --rail-pill-x: calc((var(--rail-tile) - 71px) / 2); }
+.window .rail .logo-btn#rail-logo, .window .rail .pj-circle, .window .rail #pj-plus, .window .rail #rail-workshop {
+  width: var(--rail-tile); height: var(--rail-tile); flex: 0 0 var(--rail-tile); min-width: 0; padding: 0; box-sizing: border-box;
+  display: grid; place-items: center; position: relative; margin-left: 0; margin-right: 0; }
+.window .rail .pj-rail { width: var(--rail-tile); align-items: center; }
 
 /* ---------- Home: the flame at the top of the rail ---------- */
-.window .rail .logo-btn#rail-logo { width: 52px; height: 52px; flex: 0 0 52px; margin: 6px auto 6px; border-radius: var(--r); border: 0;
+.window .rail .logo-btn#rail-logo { margin-top: 6px; margin-bottom: 6px; border-radius: var(--r); border: 0;
   background: transparent; box-shadow: none; outline: 1px solid transparent; outline-offset: -1px; overflow: visible; position: relative;
   transition: background-color var(--dur-quick) var(--ease-out), outline-color var(--dur-quick) var(--ease-out); }
-.window .rail #rail-logo img.logo { width: 60px; height: 60px; margin: -4px; max-width: none; transition: transform var(--dur-instant) var(--ease-out); }
+.window .rail #rail-logo img.logo { width: 56px; height: 56px; margin: -4px; max-width: none; transition: transform var(--dur-instant) var(--ease-out); }
 .window .rail .logo-btn#rail-logo:hover { background: var(--hover); }
 .window .rail .logo-btn#rail-logo:hover img.logo { transform: none; }
 .window .rail .logo-btn#rail-logo.on { background: var(--canvas); outline-color: var(--edge); box-shadow: none; }
-.window .rail .logo-btn#rail-logo.on img.logo { transform: translateY(1px) scale(.96); }   /* pressed in */
-.window .rail .logo-btn#rail-logo:active img.logo { transform: translateY(1px) scale(.94); }
+.window .rail .logo-btn#rail-logo.on img.logo { transform: scale(.96); }   /* pressed in: smaller, still centred */
+.window .rail .logo-btn#rail-logo:active img.logo { transform: scale(.94); }
 .window .rail .logo-btn#rail-logo:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
 /* the pill: hugs the window's left edge (the button sits 10px in) */
@@ -21,25 +29,25 @@
 .window .rail .pj-circle::before { content: ''; position: absolute; top: 50%; width: var(--rail-pill); height: 0; border-radius: 0 var(--rail-pill) var(--rail-pill) 0;
   background: var(--faint); opacity: 0; transform: translateY(-50%);
   transition: height var(--dur-quick) var(--ease-out), opacity var(--dur-quick) var(--ease-out), background-color var(--dur-quick) var(--ease-out); }
-.window .rail .logo-btn#rail-logo::before { left: -10px; bottom: auto; }
-.window .rail .logo-btn#rail-logo:hover::before { height: 16px; opacity: 1; }
-.window .rail .logo-btn#rail-logo.on::before { height: 32px; opacity: 1; background: var(--accent); }
+.window .rail .logo-btn#rail-logo::before { left: var(--rail-pill-x); bottom: auto; }
+.window .rail .logo-btn#rail-logo:hover::before { height: var(--rail-pill-hover); opacity: 1; }
+.window .rail .logo-btn#rail-logo.on::before { height: var(--rail-pill-on); opacity: 1; background: var(--accent); }
 
 /* ---------- a tribe: its face presses into the same tile ---------- */
-.window .rail .pj-circle { width: 48px; height: 48px; flex: 0 0 48px; border-radius: var(--r); outline: 1px solid transparent; outline-offset: -1px;
+.window .rail .pj-circle { border-radius: var(--r); outline: 1px solid transparent; outline-offset: -1px;
   background: transparent; transition: background-color var(--dur-quick) var(--ease-out), outline-color var(--dur-quick) var(--ease-out); }
 .window .rail .pj-circle .pj-face { width: 44px; height: 44px; flex-basis: 44px; box-shadow: none;
   transition: border-radius var(--dur-quick) var(--ease-out), width var(--dur-quick) var(--ease-out), height var(--dur-quick) var(--ease-out); }
-.window .rail .pj-circle::before { left: -12px; }
-.window .rail .pj-circle:hover::before { height: 16px; opacity: 1; background: var(--faint); }
-.window .rail .pj-circle.on::before { height: 32px; opacity: 1; background: var(--accent); }
+.window .rail .pj-circle::before { left: var(--rail-pill-x); }
+.window .rail .pj-circle:hover::before { height: var(--rail-pill-hover); opacity: 1; background: var(--faint); }
+.window .rail .pj-circle.on::before { height: var(--rail-pill-on); opacity: 1; background: var(--accent); }
 .window .rail .pj-circle.on { background: var(--canvas); outline-color: var(--edge); }
-.window .rail .pj-circle.on .pj-face { width: 36px; height: 36px; flex-basis: 36px; border-radius: var(--r-sm); }
+.window .rail .pj-circle.on .pj-face { width: 36px; height: 36px; flex-basis: 36px; border-radius: var(--r-sm); }   /* pressed in */
 /* on Home the current tribe is remembered, not where you are: a short quiet pill, no tile */
 body.global .window .rail .pj-circle.on { background: transparent; outline-color: transparent; }
 body.global .window .rail .pj-circle.on .pj-face { width: 44px; height: 44px; border-radius: 50%; }
 body.global .window .rail .pj-circle.on::before { height: 8px; background: var(--faint); }
-body.global .window .rail .pj-circle.on:hover::before { height: 16px; }
+body.global .window .rail .pj-circle.on:hover::before { height: var(--rail-pill-hover); }
 body.global .window .rail .pj-circle.on:hover .pj-face { border-radius: 14px; }
 
 @media (prefers-reduced-motion: reduce) {
@@ -51,14 +59,22 @@ body.global .window .rail .pj-circle.on:hover .pj-face { border-radius: 14px; }
 .window .rail #rail-workshop { position: relative; overflow: visible; border-radius: var(--r); background: transparent; border: 0; box-shadow: none; outline: 1px solid var(--edge); outline-offset: -1px;
   color: var(--muted); transition: background-color var(--dur-quick) var(--ease-out), color var(--dur-quick) var(--ease-out), outline-color var(--dur-quick) var(--ease-out); }
 .window .rail #rail-workshop:hover { background: var(--hover); color: var(--text); }
-.window .rail #rail-workshop::before { content: ''; position: absolute; left: -14px; top: 50%; bottom: auto; width: var(--rail-pill); height: 0; border-radius: 0 var(--rail-pill) var(--rail-pill) 0;
+.window .rail #rail-workshop::before { content: ''; position: absolute; left: var(--rail-pill-x); top: 50%; bottom: auto; width: var(--rail-pill); height: 0; border-radius: 0 var(--rail-pill) var(--rail-pill) 0;
   background: var(--faint); opacity: 0; transform: translateY(-50%); transition: height var(--dur-quick) var(--ease-out), opacity var(--dur-quick) var(--ease-out); }
-.window .rail #rail-workshop:hover::before { height: 16px; opacity: 1; }
+.window .rail #rail-workshop:hover::before { height: var(--rail-pill-hover); opacity: 1; }
 .window .rail #rail-workshop.on { background: var(--canvas); color: var(--text); outline-color: var(--edge); }
-.window .rail #rail-workshop.on::before { height: 32px; opacity: 1; background: var(--accent); }
-.window .rail #rail-workshop.on svg.i { transform: translateY(1px); }
+.window .rail #rail-workshop.on::before { height: var(--rail-pill-on); opacity: 1; background: var(--accent); }
+.window .rail #rail-workshop svg.i, .window .rail #pj-plus svg.i { width: 20px; height: 20px; margin: 0; transition: transform var(--dur-instant) var(--ease-out); }
+.window .rail #rail-workshop:active svg.i, .window .rail #pj-plus:active svg.i { transform: scale(.92); }
 /* while the Workshop is on screen, the open tribe is remembered, not where you are */
 body.ws-open .window .rail .pj-circle.on { background: transparent; outline-color: transparent; }
 body.ws-open .window .rail .pj-circle.on .pj-face { width: 44px; height: 44px; border-radius: 50%; }
 body.ws-open .window .rail .pj-circle.on::before { height: 8px; background: var(--faint); }
 @media (prefers-reduced-motion: reduce) { .window .rail #rail-workshop, .window .rail #rail-workshop::before { transition: none; } }
+
+/* ---------- + : the same tile, its mark a stroke icon (a text "+" sits on the font's baseline, a little low) ---------- */
+.window .rail #pj-plus { border-radius: var(--r); font-size: 0; line-height: 0; color: var(--accent-2); }
+.window .rail #pj-plus::before { display: none; }
+/* initials: trim the line box to the capitals so the letters sit in the true middle on every font */
+.window .rail .pj-face .pj-ini { display: block; line-height: 1; text-box: trim-both cap alphabetic; }
+@media (prefers-reduced-motion: reduce) { .window .rail #rail-workshop svg.i, .window .rail #pj-plus svg.i { transition: none; } }

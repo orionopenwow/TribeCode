@@ -18,6 +18,9 @@
 .pj-circle.on::before { height: 30px; background: var(--accent); }
 .pj-circle:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .pj-face { width: 44px; height: 44px; border-radius: 50%; display: grid; place-items: center; overflow: hidden; background: var(--pc, var(--accent)); font-weight: 700; font-size: 14px; letter-spacing: .02em; transition: border-radius .15s var(--ease); }
+.pj-face .pj-ini { font-style: normal; }
+/* a face is never the inline ".emo" chip from shell.css (margin-right .4em pushed every emoji face ~5px left of its tile) */
+.pj-face.emo { margin: 0; display: grid; vertical-align: middle; }
 .pj-face.emo { background: var(--surface-2); box-shadow: inset 0 0 0 1px var(--edge), inset 0 -3px 0 var(--pc); font-size: 20px; }
 .pj-face.img { background: var(--surface-2); box-shadow: inset 0 0 0 1px var(--edge); }
 .pj-face img { width: 100%; height: 100%; object-fit: cover; display: block; }

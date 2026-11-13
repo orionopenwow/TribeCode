@@ -11,9 +11,12 @@ pop-out, Connect GitHub on Home › Code, the sidebar's foot rows, the Workshop 
   6. Home › Code: Connect GitHub, signed out (three ways in, Check again) and signed in (the account and the repos).
   7. Drag to reorder the rail and the sidebar rows; the order survives a reload and reaches the member's prefs;
      Alt+Up/Down moves the focused item and says so; Reset puts it back.
+  8. Rail alignment, measured in pixels from screenshots (feat/ui-tribeflow): Home, a lettered tribe, a ✦ tribe, + and
+     the Workshop wrench are one tile size; each mark's ink is centred in its tile (within 1px, the pressed 1px included)
+     and the pill is centred on its tile (within 1px); in every theme, at 100%, 125% and 150% zoom.
 Usage: python app/test/e2e_shell_polish.py   (writes docs/screenshots/rail-active.png, home-header.png, plans-popout.png,
-home-code-github.png)"""
-import json, os, subprocess, tempfile, time, urllib.request, urllib.error
+home-code-github.png, rail-aligned.png)"""
+import base64, json, os, subprocess, tempfile, time, urllib.request, urllib.error
 from pathlib import Path
 from playwright.sync_api import sync_playwright
 
@@ -41,6 +44,39 @@ PILL = """s => { const e = document.querySelector(s); const c = getComputedStyle
   return { shadow: c.boxShadow, h: parseFloat(b.height), op: b.opacity, bg: b.backgroundColor, left: e.getBoundingClientRect().left + parseFloat(b.left), on: e.classList.contains('on') }; }"""
 ROW = """s => { const e = document.querySelector(s); if (!e) return null; const c = getComputedStyle(e), r = e.getBoundingClientRect();
   return { h: Math.round(r.height), pl: c.paddingLeft, fs: c.fontSize, fw: c.fontWeight, ff: c.fontFamily, rad: c.borderRadius, bw: c.borderTopWidth, bg: c.backgroundColor, color: c.color, w: Math.round(r.width) }; }"""
+# the ink box of a screenshot: pixels that differ from the most common colour (the tile, or the face behind a glyph)
+INK = """async ([src, w, h]) => { const im = new Image(); im.src = 'data:image/png;base64,' + src; await im.decode();
+  const c = document.createElement('canvas'); c.width = im.width; c.height = im.height; const x = c.getContext('2d'); x.drawImage(im, 0, 0);
+  const d = x.getImageData(0, 0, c.width, c.height).data, key = i => (d[i] >> 3) + ',' + (d[i+1] >> 3) + ',' + (d[i+2] >> 3), n = {};
+  for (let i = 0; i < d.length; i += 4) n[key(i)] = (n[key(i)] || 0) + 1;
+  const m = Object.entries(n).sort((a, b) => b[1] - a[1])[0][0].split(',').map(v => +v * 8); let x0 = 1e9, y0 = 1e9, x1 = -1, y1 = -1;
+  for (let y = 0; y < c.height; y++) for (let X = 0; X < c.width; X++) { const i = (y * c.width + X) * 4;
+    if (Math.abs(d[i] - m[0]) + Math.abs(d[i+1] - m[1]) + Math.abs(d[i+2] - m[2]) > 90) { x0 = Math.min(x0, X); x1 = Math.max(x1, X); y0 = Math.min(y0, y); y1 = Math.max(y1, y); } }
+  const s = c.width / w; return x1 < 0 ? null : { x: (x0 + x1 + 1) / 2 / s, y: (y0 + y1 + 1) / 2 / s }; }"""
+TILE = """s => { const e = document.querySelector(s), r = e.getBoundingClientRect(), b = getComputedStyle(e, '::before');
+  return { x: r.left, y: r.top, w: r.width, h: r.height, pill: parseFloat(b.height) || 0, pillY: r.top + parseFloat(b.top), pillX: r.left + parseFloat(b.left) }; }"""
+
+
+def ink_centre(pg, sel, inset):
+    """The centre of the mark's ink, in page px, from a screenshot of the element (inset past its border and corners)."""
+    bb = pg.locator(sel).bounding_box(); w, h = bb["width"] - 2 * inset, bb["height"] - 2 * inset
+    png = pg.screenshot(clip={"x": bb["x"] + inset, "y": bb["y"] + inset, "width": w, "height": h}, animations="disabled")
+    c = pg.evaluate(INK, [base64.b64encode(png).decode(), w, h]); assert c, ("no ink in", sel)
+    return bb["x"] + inset + c["x"], bb["y"] + inset + c["y"]
+
+
+def rail_aligned(pg, where):
+    """Each lit rail tile: one size, its mark's ink centred (within 1px), the pill centred on it (within 1px)."""
+    out = {}
+    for name, tile, mark, inset in where:
+        t = pg.evaluate(TILE, tile); cx, cy = t["x"] + t["w"] / 2, t["y"] + t["h"] / 2
+        ix, iy = ink_centre(pg, mark or tile, inset)
+        assert abs(ix - cx) <= 1 and abs(iy - cy) <= 1, (name, "the mark is off the tile's centre", round(ix - cx, 2), round(iy - cy, 2), t)
+        if t["pill"]: assert t["pill"] == 32 and abs(t["pillY"] - cy) <= 1 and t["pillX"] <= 1, (name, "the pill", t)
+        out[name] = (round(t["w"]), round(t["h"]))
+    assert len(set(out.values())) == 1 and list(out.values())[0] == (48, 48), ("one tile size", out)
+
+
 ORDER = "s => [...document.querySelectorAll(s)].map(e => e.id || e.dataset.pjOpen || (e.querySelector('[data-pnav]') || e).dataset.pnav)"
 
 
@@ -56,6 +92,7 @@ def main():
             time.sleep(0.1)
         boot = ok(api("/bootstrap", "POST", {"name": "Orion"}), "bootstrap"); tok = boot["token"]
         pq = ok(api("/projects", "POST", {"name": "Pixel Quest"}, token=tok))["project"]["id"]
+        sp = ok(api("/projects", "POST", {"name": "Spark", "emoji": "✦"}, token=tok))["project"]["id"]
         ok(api("/projects", "POST", {"name": "Sketches"}, token=tok))
         inv = ok(api("/invites", "POST", {"hours": 1, "maxUses": 1, "role": "builder"}, token=tok))["invite"]
         ok(api("/join", "POST", {"code": inv["code"], "name": "Zed"}), "Zed joins")
@@ -221,6 +258,26 @@ def main():
             for k in ["h", "pl", "fs", "fw", "rad", "bw", "bg"]: assert r0[k] == r1[k], ("phone", k, r0, r1)
             assert r1["h"] >= 44, r1
             ph.context.close()
+
+            # ---------- 8. rail alignment, in pixels: every item, every theme, 100% / 125% / 150% ----------
+            themes = ["campfire", "dark", "light", "midnight", "nordic", "nightshade", "solar-dark", "solar-light", "contrast"]
+            for scale in (1, 1.25, 1.5):
+                pz = page(round(1440 / scale), round(900 / scale), scale=scale)
+                pz.goto(BASE + "/?skipIntro=1"); pz.wait_for_function("TribeClient.connected() && window.TribeHub && TribeProjects.list().length >= 3 && window.TribeThemes", timeout=20000)
+                pz.evaluate("TribeReorder.reset && TribeReorder.reset('rail')")
+                for th in (themes if scale == 1 else ["campfire", "light", "contrast"]):
+                    pz.evaluate(f"TribeThemes.apply({{theme: '{th}', themePicked: true}})")
+                    pz.evaluate("TribeHub.open('home')"); pz.wait_for_selector("#rail-logo.on"); pz.mouse.move(700, 600); pz.wait_for_timeout(350)
+                    rail_aligned(pz, [("home", "#rail-logo", None, 3), ("plus", "#pj-plus", None, 6)])
+                    for pid in (sp, pq):
+                        sel = f"#pj-rail .pj-circle[data-pj-open='{pid}']"
+                        pz.evaluate(f"TribeProjects.switchTo('{pid}', 'home')"); pz.wait_for_selector(sel + ".on"); pz.wait_for_function("!document.body.classList.contains('global')"); pz.mouse.move(700, 600); pz.wait_for_timeout(350)
+                        rail_aligned(pz, [(pid, sel, sel + " .pj-face", 4)])
+                        if scale == 1 and th == "campfire" and pid == sp: pz.screenshot(path=str(SHOTS / "rail-aligned.png"), clip={"x": 0, "y": 0, "width": 340, "height": 420})
+                    pz.click("#rail-workshop"); pz.wait_for_function("TribeWorkshop.isOpen()"); pz.mouse.move(700, 600); pz.wait_for_timeout(350)
+                    rail_aligned(pz, [("workshop", "#rail-workshop", None, 6)])
+                    pz.evaluate("TribeWorkshop.close()"); pz.wait_for_function("!TribeWorkshop.isOpen()")
+                pz.context.close()
             b.close()
         errs = [e for e in errors if "ERR_CONNECTION_REFUSED" not in e]
         assert not errs, errs
