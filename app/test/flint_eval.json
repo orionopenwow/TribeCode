@@ -1077,18 +1077,12 @@
   },
   {
    "t": "add a video",
-   "i": "site.block.add",
-   "s": {
-    "block": "embed"
-   },
+   "i": "site.video",
    "ctx": "s"
   },
   {
    "t": "embed my youtube video",
-   "i": "site.block.add",
-   "s": {
-    "block": "embed"
-   },
+   "i": "site.video",
    "ctx": "s"
   },
   {
@@ -2437,10 +2431,7 @@
   },
   {
    "t": "add a map",
-   "i": "site.block.add",
-   "s": {
-    "block": "embed"
-   },
+   "i": "site.map",
    "ctx": "s",
    "v": "h1"
   },
@@ -3820,10 +3811,7 @@
   },
   {
    "t": "add a map",
-   "i": "site.block.add",
-   "s": {
-    "block": "embed"
-   },
+   "i": "site.map",
    "ctx": "s",
    "v": "v2"
   },

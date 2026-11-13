@@ -71,8 +71,8 @@ add('s', [
   ['use pink for the buttons', 'site.color', { color: 'pink' }],
   // blocks
   ['add a gallery', 'site.block.add', { block: 'gallery' }], ['add a pricing section', 'site.block.add', { block: 'pricing' }], ['put some testimonials in', 'site.block.add', { block: 'testimonials' }],
-  ['add a faq', 'site.block.add', { block: 'faq' }], ['add a contact form', 'site.block.add', { block: 'contact' }], ['add a team section', 'site.block.add', { block: 'team' }], ['add a video', 'site.block.add', { block: 'embed' }],
-  ['embed my youtube video', 'site.block.add', { block: 'embed' }], ['add some features', 'site.block.add', { block: 'features' }], ['add a links list', 'site.block.add', { block: 'links' }], ['add a footer', 'site.block.add', { block: 'footer' }],
+  ['add a faq', 'site.block.add', { block: 'faq' }], ['add a contact form', 'site.block.add', { block: 'contact' }], ['add a team section', 'site.block.add', { block: 'team' }], ['add a video', 'site.video'],
+  ['embed my youtube video', 'site.video'], ['add some features', 'site.block.add', { block: 'features' }], ['add a links list', 'site.block.add', { block: 'links' }], ['add a footer', 'site.block.add', { block: 'footer' }],
   ['i want people to be able to email me', 'site.block.add', { block: 'contact' }], ['show reviews from customers', 'site.block.add', { block: 'testimonials' }], ['add a photo grid', 'site.block.add', { block: 'gallery' }],
   ['add a section with prices', 'site.block.add', { block: 'pricing' }], ['questions and answers section', 'site.block.add', { block: 'faq' }], ['add a hero', 'site.block.add', { block: 'hero' }], ['ad a galery', 'site.block.add', { block: 'gallery' }],
   ['add a text section', 'site.block.add', { block: 'text' }], ['add my spotify embed', 'site.block.add', { block: 'embed' }], ['who we are section', 'site.block.add', { block: 'team' }],
@@ -154,7 +154,7 @@ add('g', [['can u make me one of those link pages for my bio', 'site.linkbio'], 
   ['how do i use huddles', 'lesson', { feature: 'huddles' }], ['tutorial on exporting', 'lesson', { feature: 'export' }], ['night theme', 'theme.dark-mode']]);
 add('s', [['the signup button goes nowhere', 'site.wire'], ['make the order button link to the menu page', 'site.wire', { to: 'menu' }], ['new page: Workshops', 'site.page.add', { name: 'Workshops' }],
   ['swap in a photo from my board', 'site.image.replace', { source: 'board' }], ['circle crop the headshot', 'site.image.shape', { shape: 'round' }], ['flip it to dark', 'site.dark', { mode: 'dark' }],
-  ['dark theme for the site pls', 'site.dark', { mode: 'dark' }], ['add customer reviews', 'site.block.add', { block: 'testimonials' }], ['add a map', 'site.block.add', { block: 'embed' }], ['ditch the footer', 'site.block.remove', { block: 'footer' }],
+  ['dark theme for the site pls', 'site.dark', { mode: 'dark' }], ['add customer reviews', 'site.block.add', { block: 'testimonials' }], ['add a map', 'site.map'], ['ditch the footer', 'site.block.remove', { block: 'footer' }],
   ['move the team section above the faq', 'site.block.move', { block: 'team' }], ['download a zip', 'site.export', { fmt: 'zip' }], ['change the headline to Hand thrown in Tucson', 'site.text', { field: 'headline', text: 'Hand thrown in Tucson' }],
   ['make the accent orange', 'site.color', { color: 'orange' }], ['add an faq section', 'site.block.add', { block: 'faq' }], ['rename this page Menu', 'site.page.rename', { name: 'Menu' }]]);
 add('cs', [['link this one to the checkout screen', 'canvas.wire', { to: 'checkout' }], ['make the photo a circle', 'canvas.image', { action: 'round' }], ['dark version', 'canvas.dark', { mode: 'dark' }]]);
@@ -234,7 +234,7 @@ add('s', [
   // sections: add, remove, hide, duplicate, move, layout
   ['add a newsletter signup', 'site.block.add', { block: 'newsletter' }], ['add a call to action at the end', 'site.block.add', { block: 'cta' }], ['add some stats', 'site.block.add', { block: 'stats' }], ['add a logo cloud', 'site.block.add', { block: 'logos' }],
   ['add a banner announcing the sale', 'site.block.add', { block: 'banner' }], ['put a divider between sections', 'site.block.add', { block: 'divider' }], ['add a big image section', 'site.block.add', { block: 'image' }], ['add a team section', 'site.block.add', { block: 'team' }],
-  ['add a pricing table', 'site.block.add', { block: 'pricing' }], ['add testimonials', 'site.block.add', { block: 'testimonials' }], ['add a faq', 'site.block.add', { block: 'faq' }], ['add a map', 'site.block.add', { block: 'embed' }],
+  ['add a pricing table', 'site.block.add', { block: 'pricing' }], ['add testimonials', 'site.block.add', { block: 'testimonials' }], ['add a faq', 'site.block.add', { block: 'faq' }], ['add a map', 'site.map'],
   ['remove the pricing', 'site.block.remove', { block: 'pricing' }], ['get rid of the testimonials', 'site.block.remove', { block: 'testimonials' }], ['delete the newsletter section', 'site.block.remove', { block: 'newsletter' }],
   ['hide the faq for now', 'site.block.hide', { block: 'faq' }], ['hide this section', 'site.block.hide'], ['hide the pricing until launch', 'site.block.hide', { block: 'pricing' }], ['show the faq again', 'site.block.show', { block: 'faq' }], ['unhide the pricing', 'site.block.show', { block: 'pricing' }],
   ['duplicate this section', 'site.block.dup'], ['copy the pricing section', 'site.block.dup', { block: 'pricing' }], ['make another one of these', 'site.block.dup'], ['clone the features block', 'site.block.dup', { block: 'features' }],
