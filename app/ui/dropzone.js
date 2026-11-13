@@ -642,6 +642,7 @@
   }
   async function keep(set, readOnly) {
     const R = await analyze(set);
+    if (set.name && R.name === 'these files') R.name = set.name;
     ctx = { name: R.name, report: R, set, readOnly: !!readOnly, at: Date.now() };
     const { text, list, key, kind, summary, flags, files, folders, bytes, exts, cats, tree, suggestions } = R;
     await idbPut({ name: R.name, readOnly: !!readOnly, at: ctx.at, report: { name: R.name, text, list, key, kind, summary, flags, files, folders, bytes, exts, cats, tree, suggestions } });
@@ -798,7 +799,7 @@
     });
   }
   document.addEventListener('click', e => {
-    if (e.target.closest('[data-dzpick]')) { e.preventDefault(); return pick({ zone: e.target.closest('.flint-mount, #flint, .fl-full') ? { k: 'read' } : null }); }
+    if (e.target.closest('[data-dzpick]')) { e.preventDefault(); return pick({ zone: e.target.closest('.flint-mount, #flint, .fl-full, #hub-flint-slot, .fl-bar') ? { k: 'read' } : null }); }
     if (e.target.closest('[data-dz-forget]')) return forget();
   });
   document.addEventListener('keydown', e => { if ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === 'U' || e.key === 'u')) { e.preventDefault(); pick({ zone: zoneNow() }); } });

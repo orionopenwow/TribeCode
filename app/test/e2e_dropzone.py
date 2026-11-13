@@ -162,7 +162,7 @@ def main():
             s = pg.evaluate("TribeDropZone.state().set"); assert s["name"] == "recipe-site" and s["skipped"] == 2, s   # node_modules (a folder) + dist (a folder)
             assert pg.eval_on_selector_all("#dz-sheet [data-dz-choice]", "l => l.map(x => x.dataset.dzChoice)") == ["files", "read", "inspo", "newproj"]
             # keyboard: focus is in the sheet, Tab stays in it, Escape closes
-            assert pg.evaluate("document.activeElement.closest('#dz-sheet') !== null")
+            pg.wait_for_function("document.activeElement.closest('#dz-sheet') !== null")
             for _ in range(8): pg.keyboard.press("Tab")
             assert pg.evaluate("document.activeElement.closest('#dz-sheet') !== null")
 
@@ -338,8 +338,128 @@ def stage2(pg, host, pid, ups, tmp, b):
     stage3(pg, host, pid, ups, tmp, b)
 
 
+def chat_msgs(host, pid):
+    return ok(api("/chat/general", token=host, project=pid))["messages"]
+
+
 def stage3(pg, host, pid, ups, tmp, b):
-    pass
+    DOT = "@png:38C6B1"
+    # ---- 10. chat: a picture is attached at once; other files go to Files with a line in chat
+    pg.evaluate("TribeApp.show('chat')"); pg.wait_for_selector("#view-chat:not(.hidden)")
+    n0 = len(chat_msgs(host, pid))
+    pg.evaluate(f"__dropFiles('#view-chat', [['dot.png', '{DOT}']], 700, 400)")
+    for _ in range(40):
+        if len(chat_msgs(host, pid)) > n0: break
+        time.sleep(0.25)
+    m = chat_msgs(host, pid)[-1]; assert m.get("image") or m.get("images") or m.get("media"), m
+    pg.evaluate("__dropFiles('#view-chat', [['notes.txt', 'meeting notes']], 700, 400)"); pg.wait_for_selector("#dz-go"); pg.click("#dz-go"); upload_done(pg); pg.click("#dz-done")
+    for _ in range(40):
+        if "📎 Added notes.txt to Files." in (chat_msgs(host, pid)[-1].get("text") or ""): break
+        time.sleep(0.25)
+    assert "📎 Added notes.txt to Files." in chat_msgs(host, pid)[-1]["text"], chat_msgs(host, pid)[-1]
+    assert any(f["name"] == "notes.txt" for f in ups())
+
+    # ---- 11. paste: a picture in chat attaches; text anywhere else opens the choices
+    n0 = len(chat_msgs(host, pid))
+    pg.evaluate(f"""async () => {{ const dt = new DataTransfer(); dt.items.add(await __file('shot.png', '{DOT}')); document.body.dispatchEvent(new ClipboardEvent('paste', {{ clipboardData: dt, bubbles: true, cancelable: true }})); }}""")
+    for _ in range(40):
+        if len(chat_msgs(host, pid)) > n0: break
+        time.sleep(0.25)
+    assert len(chat_msgs(host, pid)) > n0, "the pasted picture went to chat"
+    pg.evaluate("TribeApp.show('home')"); pg.wait_for_timeout(300)
+    pg.evaluate("""() => { const dt = new DataTransfer(); dt.setData('text/plain', 'Ideas: a cozy farming game with seasons.'); document.body.dispatchEvent(new ClipboardEvent('paste', { clipboardData: dt, bubbles: true, cancelable: true })); }""")
+    pg.wait_for_selector("#dz-sheet.dz-choose"); assert "pasted" in sheet_text(pg).lower() and "pasted.txt" in sheet_text(pg)
+    pg.click("#dz-sheet [data-dz-choice=read]"); pg.wait_for_function("TribeDropZone.context() && TribeDropZone.context().readOnly")
+    assert not any(f["name"] == "pasted.txt" for f in ups()), "read only: nothing saved"
+    pg.evaluate("TribeDropZone.forget()")
+
+    # ---- 12. the inspiration board: pins
+    pg.evaluate("TribeInspoBoard.open({})"); pg.wait_for_selector("#ibd")
+    mine0 = len(ok(api("/inspo?board=me", token=host))["items"])
+    pg.evaluate(f"__dropFiles('#ibd', [['pin1.png', '{DOT}'], ['pin2.png', '@png:F26B1D'], ['readme.txt', 'x']], 600, 300)")
+    for _ in range(40):
+        if len(ok(api("/inspo?board=me", token=host))["items"]) == mine0 + 2: break
+        time.sleep(0.25)
+    assert len(ok(api("/inspo?board=me", token=host))["items"]) == mine0 + 2
+    pg.evaluate("TribeInspoBoard.close()")
+
+    # ---- 13. the website designer: an HTML page and a config import as versions; pictures replace the selection
+    pg.evaluate("TribeSiteDesigner.open({})"); pg.wait_for_selector("#wdz:not([hidden])")
+    h0 = pg.evaluate("TribeSiteDesigner.state().hist")
+    pg.evaluate("""__dropFiles('#wdz', [['about.html', '<!doctype html><title>Moss</title><header><h1>Moss Quest</h1><p>A tiny forest adventure.</p></header><section><h2>Features</h2><ul><li>Seasons</li></ul></section>']], 700, 400)""")
+    pg.wait_for_function("h => TribeSiteDesigner.state().hist > h && JSON.stringify(TribeSiteDesigner.cfg()).includes('Moss Quest')", arg=h0)
+    pg.evaluate("""async () => { const c = TribeSiteCfg.blank('Dropped Config'); await __dropFiles('#wdz', [['site.json', JSON.stringify(c)]], 700, 400); }""")
+    pg.wait_for_function("TribeSiteDesigner.cfg().name === 'Dropped Config'")
+    pg.click("#wdz-blocks [data-pick]")   # select the hero
+    pg.evaluate(f"__dropFiles('#wdz', [['hero.png', '{DOT}']], 700, 400)")
+    pg.wait_for_function("TribeSiteDesigner.cfg().pages[0].blocks[0].props.img && TribeSiteDesigner.cfg().pages[0].blocks[0].props.img.startsWith('data:image')")
+    pg.evaluate("TribeSiteDesigner.close()")
+
+    # ---- 14. the canvas: picture layers where they were dropped
+    cid = pg.evaluate("TribeClient.api('/canvas', { method: 'POST', body: { name: 'Drops' } }).then(r => r.file.id)")
+    pg.evaluate("id => { TribeApp.show('canvas'); setTimeout(() => TribeCanvas.open(id), 150); }", cid)
+    pg.wait_for_function("TribeCanvas.state().open && TribeCanvas.state().canEdit && document.querySelector('#cv')", timeout=15000); pg.wait_for_timeout(400)
+    n0 = pg.evaluate("TribeCanvas.state().nodes.length")
+    pg.evaluate(f"__dropFiles('#cv', [['a.png', '{DOT}'], ['b.svg', '<svg xmlns=\\'http://www.w3.org/2000/svg\\' width=\\'10\\' height=\\'10\\'/>']], 800, 450)")
+    pg.wait_for_function("n => TribeCanvas.state().nodes.length === n + 2", arg=n0)
+    imgs = pg.evaluate("TribeCanvas.state().nodes.filter(n => n.img).map(n => [n.name, n.img.slice(0, 22)])")
+    assert ["a.png", "data:image/png;base64,"] in imgs and any(n == "b.svg" and i.startswith("data:image/svg") for n, i in imgs), imgs
+    pg.evaluate("TribeApp.show('home')")
+
+    # ---- 15. Files: into the project's Files, then into the folder you are in; drag a file back out
+    pg.evaluate("TribeApp.show('docs')"); pg.wait_for_selector(".fg", timeout=15000)
+    pg.evaluate("__dropFiles('.fg', [['plan.md', '# Plan']], 700, 500)"); pg.wait_for_selector("#dz-go")
+    assert "To Pixel Garden’s files" in sheet_text(pg); pg.click("#dz-go"); upload_done(pg); pg.click("#dz-done")
+    assert any(f["name"] == "plan.md" and not f.get("dir") for f in ups())
+    pg.evaluate("document.querySelector('.fg').parentElement.dataset.fgFolder = 'inbox'")
+    pg.evaluate("__dropFiles('.fg', [['later.md', '# Later']], 700, 500)"); pg.wait_for_selector("#dz-go")
+    assert "› inbox" in sheet_text(pg); pg.click("#dz-go"); upload_done(pg); pg.click("#dz-done")
+    assert any(f["name"] == "later.md" and f.get("dir") == "inbox" for f in ups())
+    pg.evaluate("document.querySelector('.fg').parentElement.dataset.fgFolder = ''; TribeApp.show('home'); TribeApp.show('docs')")
+    pg.wait_for_selector(".fg [data-folder='inbox']", timeout=15000)   # the uploads' folders show up in Files
+    pg.wait_for_selector(".fg [data-up][draggable=true]", timeout=15000)
+    dl = pg.evaluate("""() => { const c = document.querySelector('.fg [data-up][draggable=true]'); const dt = new DataTransfer(); c.dispatchEvent(new DragEvent('dragstart', { bubbles: true, dataTransfer: dt })); return dt.getData('DownloadURL'); }""")
+    assert "/api/uploads/" in dl and "/raw?dl=1" in dl and ":" in dl, dl
+
+    # ---- 16. a doc: a picture goes in at the cursor
+    slug = pg.evaluate("TribeClient.api('/docs', { method: 'POST', body: { title: 'Drop notes', body: 'Hello' } }).then(r => r.doc.slug)")
+    pg.evaluate("s => TribeDocs.open(s)", slug); pg.wait_for_selector("#doc-body", timeout=15000); pg.wait_for_timeout(300)
+    pg.evaluate(f"__dropFiles('#doc-body', [['inline.png', '{DOT}']], 600, 400)")
+    pg.wait_for_function("(document.querySelector('#doc-body').value || '').includes('![inline.png](')")
+    pg.evaluate("TribeDocs.saveNow()"); time.sleep(1.2)
+    assert "![inline.png](" in ok(api("/docs/" + slug, token=host, project=pid))["doc"]["body"]
+    pg.evaluate("TribeApp.show('home')")
+
+    # ---- 17. the keyboard: Ctrl Shift U opens the picker; Recent drops has Undo; Escape closes
+    pg.keyboard.press("Control+Shift+U"); pg.wait_for_selector("#dz-pick-files")
+    pg.wait_for_function("document.activeElement && document.activeElement.id === 'dz-pick-files'"); assert "recent drops" in sheet_text(pg).lower()
+    pg.keyboard.press("Escape"); pg.wait_for_function("!document.querySelector('#dz-sheet')")
+    pg.locator("[data-dzpick]:visible").first.click(); pg.wait_for_selector("#dz-pick-folder")
+    pg.click("#dz-pick-files"); pg.set_input_files("#dz-in-files", [str(write_fixture("notes-docs", tmp / "fx") / "plan.md")])
+    pg.wait_for_function("TribeDropZone.context() && TribeDropZone.context().name === 'plan.md'")   # the paperclip in Flint's bar: he reads it
+    pg.evaluate("TribeDropZone.forget()")
+
+    # ---- 18. phones (390px): the picker is a bottom sheet; files and a whole folder
+    ph = b.new_context(viewport={"width": 390, "height": 844}, device_scale_factor=2, is_mobile=True, has_touch=True)
+    ph.add_init_script(f"try {{ if (!sessionStorage.getItem('seeded')) {{ sessionStorage.setItem('seeded', '1'); localStorage.setItem('tribecode.settings.v1', JSON.stringify({{name:'Orion', onboarded:true, theme:'dark', server:{{url:'{BASE}', token:'{host}'}}, checklist:{{setup:true}}, tour:{{done:true}}}})); localStorage.setItem('tribecode.project:{BASE}', '{pid}'); }} }} catch (e) {{}}")
+    mp = ph.new_page(); watch(mp, "phone")
+    mp.goto(BASE + "/?skipIntro=1"); mp.wait_for_function("window.TribeClient && TribeClient.connected() && window.TribeDropZone", timeout=20000); mp.wait_for_timeout(600)
+    mp.evaluate("TribeDropZone.pick()"); mp.wait_for_selector("#dz-pick-folder")
+    box = mp.eval_on_selector("#dz-sheet", "e => { const r = e.getBoundingClientRect(); return [r.left, r.right, r.bottom, innerHeight] }")
+    assert box[0] >= 0 and box[1] <= 390 and abs(box[2] - box[3]) < 2, box
+    assert mp.eval_on_selector("#dz-pick-files", "e => e.getBoundingClientRect().height") >= 44
+    mp.click("#dz-pick-folder"); mp.set_input_files("#dz-in-folder", str(write_fixture("lantern-site", tmp / "fx2")))
+    mp.wait_for_selector("#dz-sheet.dz-choose"); mp.wait_for_function("document.querySelector('#dz-sheet .dz-say').innerText.includes('static website')")
+    assert mp.evaluate("document.documentElement.scrollWidth <= innerWidth")
+    shot(mp, "drop-phone-sheet")
+    mp.click("#dz-sheet [data-dz-choice=files]"); mp.wait_for_selector("#dz-go"); mp.click("#dz-go"); mp.wait_for_selector("#dz-done", timeout=20000)
+    assert any(f["name"] == "style.css" and f.get("dir") == "lantern-site" for f in ups())
+    mp.click("#dz-done")
+    mp.evaluate("TribeDropZone.pick()"); mp.click("#dz-pick-files"); mp.set_input_files("#dz-in-files", [str(tmp / "fx2" / "lantern-site" / "img" / "cup.png")])
+    mp.wait_for_selector("#dz-sheet.dz-choose"); mp.click("#dz-sheet [data-dz-choice=read]")
+    mp.wait_for_selector("#dz-chip"); r = mp.eval_on_selector("#dz-chip", "e => { const r = e.getBoundingClientRect(); return [r.left, r.right] }"); assert r[0] >= 0 and r[1] <= 390, r
+    ph.close()
+    print("stage 3 ok")
 
 
 if __name__ == "__main__":
