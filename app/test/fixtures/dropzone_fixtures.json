@@ -1,0 +1,67 @@
+{
+ "recipe-site": {
+  "package.json": "{\n  \"name\": \"recipe-site\",\n  \"version\": \"0.1.0\",\n  \"scripts\": {\n    \"dev\": \"vite\",\n    \"build\": \"vite build\"\n  },\n  \"dependencies\": {\n    \"react\": \"^18.2.0\",\n    \"react-dom\": \"^18.2.0\"\n  },\n  \"devDependencies\": {\n    \"vite\": \"^5.0.0\",\n    \"@vitejs/plugin-react\": \"^4.0.0\"\n  }\n}",
+  "README.md": "# Pantry\n\n[![build](https://img.shields.io/badge/x)](x)\n\nPantry is a recipe site for busy cooks. Save what you cook and plan the week.\n\n## Run\n\n```\nnpm run dev\n```\n",
+  "index.html": "<!doctype html><html><head><title>Pantry</title></head><body><div id=\"root\"></div><script type=\"module\" src=\"/src/main.jsx\"></script></body></html>\n",
+  "src/main.jsx": "import React from 'react';\nimport { createRoot } from 'react-dom/client';\nimport App from './App.jsx';\ncreateRoot(document.getElementById('root')).render(<App />);\n",
+  "src/App.jsx": "import Login from './components/Login.jsx';\n// TODO: add a dark mode\nexport default function App() { return <Login />; }\n",
+  "src/components/Login.jsx": "// The sign-in form: checks the password and stores the session.\nexport function Login() {\n  const API_KEY = import.meta.env.VITE_API_KEY; // TODO: move the key server side\n  function submitLogin(e) { e.preventDefault(); fetch('/api/login', { headers: { 'x-api-key': API_KEY } }); }\n  return <form onSubmit={submitLogin}><input name=\"user\"/></form>;\n}\nexport default Login;\n",
+  "src/components/RecipeCard.jsx": "export default function RecipeCard({ r }) { return <article>{r.title}</article>; }\n",
+  "src/components/RecipeList.jsx": "import RecipeCard from './RecipeCard.jsx';\n// FIXME: empty state\nexport default function RecipeList({ list }) { return list.map(r => <RecipeCard r={r} />); }\n",
+  "src/api.js": "export const API_URL = '/api';\nexport async function getRecipes() { return fetch(API_URL + '/recipes').then(r => r.json()); }\n",
+  ".env": "VITE_API_KEY=sk-proj-AbCdEfGhIjKlMnOpQrStUvWx0123456789\n",
+  "node_modules/react/index.js": "module.exports = {};\n",
+  "node_modules/react/package.json": "{\"name\":\"react\"}\n",
+  "dist/index.html": "<!doctype html><p>built</p>\n",
+  ".gitignore": "node_modules\ndist\n.env\n",
+  "public/logo.png": "@png:F26B1D"
+ },
+ "weather-py": {
+  "requirements.txt": "flask==3.0.0\nrequests>=2\n",
+  "README.md": "# Skies\n\nSkies is a small weather dashboard for your city.\n",
+  "app.py": "from flask import Flask\napp = Flask(__name__)\n# TODO: cache the forecast\n@app.route('/')\ndef home():\n    return 'ok'\n",
+  "weather/fetch.py": "import requests\ndef forecast(city):\n    return requests.get('https://api.example.com', params={'q': city}).json()\n",
+  "tests/test_app.py": "def test_home():\n    assert True\n",
+  "__pycache__/app.cpython-311.pyc": "xx"
+ },
+ "lantern-site": {
+  "index.html": "<!doctype html><html><head><link rel=\"stylesheet\" href=\"style.css\"><title>Lantern Cafe</title></head><body><h1>Lantern Cafe</h1><img src=\"img/room.png\"><a href=\"menu.html\">Menu</a><script>window.__ran = 1</script></body></html>\n",
+  "menu.html": "<!doctype html><title>Menu</title><h1>Menu</h1>\n",
+  "style.css": "body { font-family: serif; }\n",
+  "img/room.png": "@png:3A6EA5",
+  "img/cup.png": "@png:C08040"
+ },
+ "beach-photos": {
+  "IMG_0001.jpg": "@png:2B7BB9",
+  "IMG_0002.jpg": "@png:E8C07D",
+  "IMG_0003.jpg": "@png:2B7BB9",
+  "IMG_0004.png": "@png:F4E1C1",
+  "IMG_0005.png": "@png:1E5A8A"
+ },
+ "sales-data": {
+  "sales.csv": "date,region,units,price,total\n2026-01-01,North,12,3.5,42\n2026-01-02,South,8,3.5,28\n2026-01-03,North,15,3.5,52.5\n2026-01-04,East,4,3.5,14\n",
+  "regions.csv": "region,manager\nNorth,Ada\nSouth,Lin\n",
+  "notes.txt": "Q1 numbers.\n"
+ },
+ "moss-quest": {
+  "project.godot": "config_version=5\n\n[application]\n\nconfig/name=\"Moss Quest\"\nrun/main_scene=\"res://scenes/main.tscn\"\nconfig/features=PackedStringArray(\"4.2\")\n",
+  "scenes/main.tscn": "[gd_scene format=3]\n",
+  "scenes/player.tscn": "[gd_scene format=3]\n",
+  "scripts/player.gd": "extends CharacterBody2D\n# TODO: double jump\nfunc _physics_process(delta):\n    pass\n",
+  "scripts/enemy.gd": "extends Node2D\n",
+  ".godot/imported/x.ctex": "xx",
+  "icon.svg": "<svg xmlns=\"http://www.w3.org/2000/svg\"/>\n"
+ },
+ "star-unity": {
+  "Assets/Scenes/Main.unity": "%YAML 1.1\n",
+  "Assets/Scripts/Player.cs": "using UnityEngine;\npublic class Player : MonoBehaviour { }\n",
+  "Assets/Scripts/Player.cs.meta": "guid: 1\n",
+  "ProjectSettings/ProjectVersion.txt": "m_EditorVersion: 2022.3.10f1\n",
+  "Library/cache.bin": "xx"
+ },
+ "notes-docs": {
+  "plan.md": "# Launch plan\n\nWe launch in May.\n\n## Steps\n\n- Write the post\n- Record the demo\n",
+  "story.md": "# Our story\n\nIt started at a campfire.\n",
+  "faq.txt": "Is it free? Yes.\n"
+ }
+}

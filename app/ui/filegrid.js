@@ -67,6 +67,14 @@
       return { src: 'doc', id: d.slug, slug: d.slug, cat, type: d.kind === 'sheet' ? 'Sheet' : TYPE_L[d.kind === 'deck' ? 'deck' : type] || 'Doc', title: d.title || 'Untitled', at: d.updated, owner: who ? { name: who.name, color: who.color } : (d.updatedBy && o.nameOf ? { name: o.nameOf(d.updatedBy), color: 'var(--peer)' } : null),
         loc: here, mine: true, text: d.excerpt || '', thumb: th, cls: 'fg-card', attrs: `data-slug="${esc(d.slug)}" data-type="${type}"`, acts: ['open', 'rename', 'move', 'duplicate', 'download', 'delete'] };
     });
+    // feat/dropzone: the project's uploaded files, in the folder they were dropped from (draggable out to the desktop)
+    const UPCAT = { image: 'pics', audio: 'media', video: 'media', code: 'code', text: 'docs', pdf: 'other' };
+    for (const f of (render.ups || []).filter(x => (x.dir || '') === at)) {
+      const who = memberOf(f.by), u = media(`/api/uploads/${encodeURIComponent(f.id)}/raw`);
+      out.push({ src: 'up', id: 'up:' + f.id, f, cat: UPCAT[f.kind] || 'other', type: f.kind === 'image' ? 'Picture' : f.kind === 'code' ? 'Code' : 'File', title: f.name, at: f.at, loc: here, mine: true,
+        owner: who ? { name: who.name, color: who.color } : null, thumb: f.kind === 'image' && f.size < 4 * 1048576 && !/svg/.test(f.type) ? T.img(u) : T.icon(UPCAT[f.kind] || 'other', `${f.kind || 'file'} · ${Math.max(1, Math.round(f.size / 1024))} KB`),
+        cls: 'fg-card', attrs: `data-up="${esc(f.id)}" data-upname="${esc(f.name)}" data-uptype="${esc(f.type || '')}" draggable="true"`, acts: ['open', 'download', 'delete'] });
+    }
     if (!at) for (const s of (shots || []).slice(0, 24)) { const u = media(`/api/visuals/${s.latest.screen}/${s.latest.ts}.png`);
       out.push({ src: 'shot', id: 'shot:' + s.name, url: u, cat: 'pics', type: `Screenshot · ${s.count} version${s.count === 1 ? '' : 's'}`, title: s.name, at: s.latest.at || '', loc: { key: 'shots', label: 'Screenshots of the app' }, mine: true, thumb: T.img(u), cls: 'fg-card', attrs: `data-shot="${esc(u)}"`, acts: ['open', 'download'] }); }
     return out;
@@ -95,6 +103,12 @@
   async function act(k, it, anchor, arg) {
     try {
       if (it.src === 'shot') { if (k === 'download') { const r = await fetch(it.url); return saveBlob(`${it.title}.png`, await r.blob()); } return; }
+      if (it.src === 'up') {   // feat/dropzone
+        if (k === 'delete') { await C.api('/uploads/' + encodeURIComponent(it.f.id), { method: 'DELETE' }); render.ups = (render.ups || []).filter(x => x.id !== it.f.id); toast('Deleted.'); return; }
+        if (k === 'download' || k === 'open') { const r = await fetch(media(`/api/uploads/${encodeURIComponent(it.f.id)}/raw${k === 'download' ? '?dl=1' : ''}`)); if (!r.ok) throw new Error('Could not open that file.'); const b = await r.blob();
+          if (k === 'open' && /^(image\/(png|jpeg|gif|webp)|application\/pdf|text\/plain)/.test(it.f.type || '')) { const w = window.open(URL.createObjectURL(b), '_blank', 'noopener'); if (w) return; } return saveBlob(it.f.name, b); }
+        return;
+      }
       const path = '/docs/' + encodeURIComponent(it.slug);
       if (k === 'rename') { await C.api(path, { method: 'PUT', body: { title: arg, force: true } }); return toast('Renamed.'); }
       if (k === 'delete') { await C.api(path, { method: 'DELETE' }); return toast('Deleted.'); }
@@ -116,10 +130,11 @@
   }
   async function render(pane, list, o) {
     if (!FV()) return;
-    const folders = [...new Set(list.map(folderOf).filter(Boolean))].sort();
     let at = pane.dataset.fgFolder || '';
+    const upDirs = (render.ups || []).map(f => f.dir || '').filter(Boolean).flatMap(d => d.split('/').map((_, i, a) => a.slice(0, i + 1).join('/')));
+    const folders = [...new Set([...list.map(folderOf).filter(Boolean), ...upDirs])].sort().filter(f => at ? f.startsWith(at + '/') && !f.slice(at.length + 1).includes('/') : !upDirs.includes(f) || !f.includes('/'));
     const top = () => `${at ? `<div class="fg-crumb"><button class="fg-up" data-up type="button">${FV().icon('tribe', 14)} Files</button><span aria-hidden="true">›</span><b>${esc(at.split('/').pop())}</b></div>` : ''}${!at ? '<div class="fg-repo"></div>' : ''}
-      ${!at && folders.length ? `<div class="fg-folders">${folders.map(f => `<button type="button" class="fg-folder" data-folder="${esc(f)}">${FV().icon('tribe', 16)}<span>${esc(f.split('/').pop())}</span><span class="fg-fn">${list.filter(d => folderOf(d) === f).length}</span></button>`).join('')}</div>` : ''}`;
+      ${folders.length ? `<div class="fg-folders">${folders.map(f => `<button type="button" class="fg-folder" data-folder="${esc(f)}">${FV().icon('tribe', 16)}<span>${esc(f.split('/').pop())}</span><span class="fg-fn">${list.filter(d => folderOf(d) === f).length + (render.ups || []).filter(x => (x.dir || '') === f || (x.dir || '').startsWith(f + '/')).length}</span></button>`).join('')}</div>` : ''}`;
     const draw = shots => {
       { const h = document.getElementById('doc-repo-hero'), w = document.getElementById('doc-list-wrap'); if (h && w && pane.contains(h)) { const x = h.nextElementSibling && h.nextElementSibling.classList.contains('vw-assets') ? h.nextElementSibling : null; w.prepend(h); if (x) h.after(x); } }   // keep the code repository strip alive across redraws
       pane.innerHTML = '<div class="fg"></div>';
@@ -129,7 +144,7 @@
         ids: { create: 'fg-new-menu', menu: 'fg-newmenu', grid: 'fg-items' },
         studio: { ids: { doc: 'doc-first', sheet: 'fg-new-sheet', slides: 'fg-new-deck' }, extra: [{ k: 'assets', ic: 'assets', t: 'Assets', s: 'Sounds, models, sprites, icons', id: 'fg-assets' }], note: 'Everyone in the project sees what you make here.' },
         top, create: (k, a) => create(k, a, o), make: (k, d) => make(k, d, o), act,
-        open: it => (it.src === 'shot' ? (window.TribePreview && window.TribePreview.image ? window.TribePreview.image(it.url, it.title) : window.open(it.url, '_blank', 'noopener')) : o.open(it.slug)),
+        open: it => (it.src === 'up' ? act('open', it) : it.src === 'shot' ? (window.TribePreview && window.TribePreview.image ? window.TribePreview.image(it.url, it.title) : window.open(it.url, '_blank', 'noopener')) : o.open(it.slug)),
         search: v => { q = v; },
       });
       fv.set(items(list, shots, at, o));
@@ -139,7 +154,8 @@
       const up = root.querySelector('[data-up]'); if (up) up.onclick = () => { at = pane.dataset.fgFolder = ''; draw(shots); };
     };
     draw(render.shots);
+    try { const u = await C.api('/uploads'); const ups = u.project || []; if (JSON.stringify(ups.map(x => x.id)) !== JSON.stringify((render.ups || []).map(x => x.id))) { render.ups = ups; if (pane.querySelector('.fx') && !pane.querySelector('#doc-title') && !pane.querySelector('#fx-rename')) draw(render.shots); } } catch {}   // feat/dropzone
     try { const v = await C.api('/visuals'); const n = (v.screens || []).length; if (n !== (render.shots || []).length) { render.shots = v.screens || []; if (pane.querySelector('.fx') && !pane.querySelector('#doc-title') && !pane.querySelector('#fx-rename')) draw(render.shots); } } catch {}
   }
-  window.TribeFileGrid = { render, typeOf };
+  window.TribeFileGrid = { render, typeOf, folder: pane => (pane && pane.dataset.fgFolder) || '' };
 })();

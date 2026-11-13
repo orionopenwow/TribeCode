@@ -5,7 +5,10 @@
 //   GET    /api/uploads/<id>/raw[?token=&dl=1]   -> the bytes. Pictures, audio, video, PDF and plain text open inline
 //                                                 (nosniff + a sandbox CSP, so nothing runs as a page); the rest download.
 //   DELETE /api/uploads/<id>                     -> the uploader or the host
-//   file = { id, name, size, type, kind, by, byName, at, scope, project? }
+//   feat/dropzone (app/ui/dropzone.js): POST also takes &dir=a/b (the folder it came from, cleaned: no "..", no hidden or
+//   empty parts; it is only a label, the bytes still live under <id>/) and &batch=<id> (one drop). DELETE
+//   /api/uploads?batch=<id>&scope=me|project removes your files of that drop (Undo) -> { removed }.
+//   file = { id, name, size, type, kind, by, byName, at, scope, project?, dir?, batch? }
 'use strict';
 const fs = require('node:fs');
 const path = require('node:path');
@@ -37,6 +40,9 @@ module.exports = function uploads({ store, P, nameOf, broadcast, can = (me) => m
   const write = (owner, list) => { fs.mkdirSync(dirOf(owner), { recursive: true }); store.writeJSON(idxOf(owner), list); };
   const pjOwner = pid => 'pj-' + String(pid).replace(/[^\w-]/g, '');
   const safeName = n => (String(n || 'file').normalize('NFC').replace(/[\\/:*?"<>|\x00-\x1f]/g, '_').replace(/^\.+/, '').trim() || 'file').slice(0, 120);
+  // a folder label: plain names only, at most 8 deep (never "..", ".git" or any hidden part)
+  const cleanDir = d => String(d || '').split(/[\\/]+/).map(x => x.normalize('NFC').replace(/[:*?"<>|\x00-\x1f]/g, '_').trim()).filter(x => x && !x.startsWith('.')).slice(0, 8).map(x => x.slice(0, 60)).join('/').slice(0, 240);
+  const cleanBatch = b => (/^[\w-]{4,40}$/.test(String(b || '')) ? String(b) : '');
   const find = (me, id) => { for (const o of [me.id, ...P.visibleTo(me).map(p => pjOwner(p.id))]) { const f = read(o).find(x => x.id === id); if (f) return { o, f }; } return null; };
 
   async function receive(req, file) {
@@ -68,10 +74,22 @@ module.exports = function uploads({ store, P, nameOf, broadcast, can = (me) => m
       fs.mkdirSync(dir, { recursive: true });
       let size; try { size = await receive(req, path.join(dir, name)); } catch (e) { fs.rmSync(dir, { recursive: true, force: true }); return fail(res, e.status || 500, e.message); }
       if (!size) { fs.rmSync(dir, { recursive: true, force: true }); return fail(res, 400, 'That file is empty.'); }
-      const f = { id, name, size, type: TYPES[ext] || 'application/octet-stream', kind: KIND(ext), by: me.id, byName: nameOf(me.id), at: new Date().toISOString(), scope, ...(scope === 'project' ? { project: pid } : {}) };
-      list.push(f); write(owner, list);
+      const dirL = cleanDir(url.searchParams.get('dir')), batch = cleanBatch(url.searchParams.get('batch'));
+      const f = { id, name, size, type: TYPES[ext] || 'application/octet-stream', kind: KIND(ext), by: me.id, byName: nameOf(me.id), at: new Date().toISOString(), scope, ...(scope === 'project' ? { project: pid } : {}), ...(dirL ? { dir: dirL } : {}), ...(batch ? { batch } : {}) };
+      const now = read(owner); now.push(f); write(owner, now);   // feat/dropzone: re-read after the bytes arrived, so uploads in parallel don't drop each other
       if (scope === 'project' && broadcast) broadcast({ type: 'uploads', project: pid });
       return send(res, 200, { file: f });
+    }
+    if (!b && m === 'DELETE') {   // feat/dropzone: Undo a drop (only your own files of that batch)
+      const batch = cleanBatch(url.searchParams.get('batch')); if (!batch) return fail(res, 400, 'which drop?');
+      const scope = url.searchParams.get('scope') === 'project' && pid && P.canSee(me, pid) ? 'project' : 'me';
+      const owner = scope === 'project' ? pjOwner(pid) : me.id, list = read(owner);
+      const gone = list.filter(x => x.batch === batch && x.by === me.id);
+      if (!gone.length) return send(res, 200, { removed: 0 });
+      write(owner, list.filter(x => !gone.includes(x)));
+      for (const x of gone) fs.rmSync(path.join(dirOf(owner), x.id), { recursive: true, force: true });
+      if (scope === 'project' && broadcast) broadcast({ type: 'uploads', project: pid });
+      return send(res, 200, { removed: gone.length });
     }
     if (b && c === 'raw' && m === 'GET') {
       const hit = find(me, b); if (!hit) return fail(res, 404, 'not found');
