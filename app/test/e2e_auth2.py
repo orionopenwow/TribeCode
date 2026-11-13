@@ -423,12 +423,13 @@ def main():
             hp = hx.new_page(); hp.on("pageerror", lambda e: errors.append(f"host: {e}"))
             hp.goto(BASE + "/?skipIntro=1")
             hp.wait_for_function("() => window.TribeClient && window.TribeClient.connected()", timeout=20000)
-            hp.evaluate("() => window.TribeSettings.open()")
+            hp.evaluate("() => window.TribeSettings.open('account')")   # Settings › Account & sign-in: sign-in methods
             hp.wait_for_selector("#set-methods li[data-m='password']", timeout=15000)
-            hp.wait_for_selector("#set-signin-host #au-open", timeout=15000)
+            hp.wait_for_selector("#set-signin-host #au-open", state="attached", timeout=15000)
             assert hp.locator("#set-methods [data-unlink='password']").is_disabled(), "the only method can't be removed"
             assert hp.locator("#set-methods [data-link='discord']").count() == 1
             assert hp.get_attribute("#au-open", "aria-checked") == "true"
+            hp.evaluate("() => window.TribeSettings.open('admin', 'set-signin-host')"); hp.wait_for_selector("#au-open", state="visible")   # Settings › Tribe & admin: open sign-up, SMTP
             hp.click("#au-open")
             hp.wait_for_function("document.querySelector('#au-open') && document.querySelector('#au-open').getAttribute('aria-checked') === 'false'", timeout=10000)
             assert ok(api("/accounts/config"))["openSignup"] is False
@@ -439,7 +440,7 @@ def main():
             n2 = len(MAIL)
             hp.fill("#au-test-to", "orion@example.test"); hp.click("#au-test-go")
             wait_mail(n2 + 1, "test email from Settings")
-            hp.locator("#set-methods").scroll_into_view_if_needed()
+            hp.evaluate("() => window.TribeSettings.open('account', 'set-methods')"); hp.wait_for_selector("#set-methods", state="visible")
             hp.wait_for_timeout(400)
             hp.screenshot(path=str(SHOTS / "auth-settings.png"))
             b.close()
