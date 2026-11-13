@@ -17,7 +17,7 @@ Checked 2026-11-12 against v0.31.2 (the showcase demo at 1440×900 and 390×844)
 | Hero mock top bar | v0.31 People button | Help only | People icon before Help |
 | Flint page mock (rail, top bar, you-bar, chat header, Design row icon) | Same as above | Same drift, Design used the whiteboard icon | Same fixes; Design uses the app's design icon |
 | "Whole studio" Docs mock file tree | `filesview.js` line icons | Emoji per file | App line icons (docs, checklist, notes, sheets, slides, whiteboard, spark) |
-| Widgets tab and Docs page count | Marketplace v2: 553 items | "575 add-ons" | "550+ add-ons" |
+| Widgets tab count | Marketplace v2: 553 items | "575 add-ons" | "550+ add-ons" (the Docs page now says 553 from the docs pass) |
 | Flint chat panel and button on the site | Flat matte rule (no shadows) | Drop shadows | Shadows removed |
 | Social card (`assets/og-image.png`) | Current app shell and the site's headline | v0.2x app (bordered footer buttons) and the old "Each with your own Claude" line | Rebuilt from a current app screenshot with the current headline; `scripts/readme-shots.py` writes the same layout next time |
 | Phone mock rack (Home · Chat · Docs · Tasks · Agents) | `mobile2.js` rack | Matches | None |
