@@ -30,7 +30,7 @@
     const r = await fetch(base + '/api' + path, { method, credentials: 'omit', headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: 'Bearer ' + token } : {}) }, body: body ? JSON.stringify(body) : undefined });
     const d = await r.json().catch(() => ({}));
     if (!r.ok) throw Object.assign(new Error(r.status === 429 && !d.code ? 'That is a lot of tries in a row. Take a breather and try again in a minute.' : (d.error || r.statusText || 'That did not work')), { status: r.status, code: d.code, data: d });
-    return d;
+    return window.TribeAuth3 ? window.TribeAuth3.after(d, base) : d;   // feat/auth3: two-step, when the account has it on
   }
   const say = s => { const t = String(s || ''); return t ? t.replace(/^./, c => c.toUpperCase()) + (/[.!?]$/.test(t) ? '' : '.') : ''; };
   async function config(base = baseUrl()) { try { return await api(base, '/accounts/config'); } catch { return { on: false, openSignup: false, email: false }; } }
@@ -252,7 +252,7 @@
     if (!el) { el = document.createElement('div'); el.className = 'set-row au-methods'; el.id = 'set-methods'; row.after(el); }
     const list = d.methods || [], linked = new Set(list.filter(m => m.kind === 'provider').map(m => m.provider)), only = list.filter(m => m.kind !== 'email' || m.usable).length <= 1;
     const glyph = p => (OA() ? OA().glyph(p) : '');
-    const item = m => `<li data-m="${esc(m.id)}"><span class="au-mi">${m.kind === 'provider' ? glyph(m.provider) : ''}<span><b>${esc(m.kind === 'password' ? 'Password' : m.kind === 'email' ? 'Email link' : NAMES[m.provider] || m.provider)}</b><small>${esc(m.kind === 'email' ? m.address + (m.usable ? '' : ' · email is off on this TribeCode') : m.kind === 'provider' ? (m.name ? 'as ' + m.name : 'linked') : 'set')}</small></span></span>
+    const item = m => `<li data-m="${esc(m.id)}"><span class="au-mi">${m.kind === 'provider' ? glyph(m.provider) : ''}<span><b>${esc(m.kind === 'password' ? 'Password' : m.kind === 'email' ? 'Email link' : m.kind === 'passkey' ? 'Passkey' : NAMES[m.provider] || m.provider)}</b><small>${esc(m.kind === 'email' ? m.address + (m.usable ? '' : ' · email is off on this TribeCode') : m.kind === 'provider' ? (m.name ? 'as ' + m.name : 'linked') : m.kind === 'passkey' ? m.name || 'on this account' : 'set')}</small></span></span>
       <button class="btn sm" data-unlink="${esc(m.id)}" ${only ? 'disabled title="Keep at least one way to sign in"' : ''}>${m.kind === 'provider' ? 'Unlink' : 'Remove'}</button></li>`;
     el.innerHTML = `<div class="set-l"><b>Sign-in methods</b><small>${only ? 'Add another way in before removing this one.' : 'Any of these signs you in to ' + esc(a.username || a.name) + '.'}</small></div>
       <div class="au-mcol"><ul class="ac-ses au-mlist">${list.map(item).join('')}</ul>

@@ -6,8 +6,10 @@
 //                 "Not now" continues and the sheet stays quiet for a week. Local work is never stopped.
 //     extras      'template' (a premium template), 'cloud' (hosted relay/cloud), 'credits' (hosted AI credits):
 //                 "Not now" just closes; nothing local depends on them.
-//   TribePremium.plan()  { plan: 'free' | 'trial' | 'premium', until? }   a LOCAL state: no payments exist yet.
-//   TribePremium.checkout(plan)  the Stripe / Paddle hook: a stub (see the TODO) that says so.
+//   TribePremium.plan()  { plan: 'free' | 'trial' | 'premium', until?, tier? }   a mirror of the server's (server/premium.js).
+//   TribePremium.checkout(item)  hosted | tribe | credits-10 | credits-25 | credits-50: Stripe Checkout through the host
+//     (POST /api/premium/checkout), or one calm line when the host hasn't turned on payments.
+//   TribePremium.manage()  Stripe's customer portal;  payments()  is checkout on here;  billing()  the mirror of billing.
 //   TribePremium.open()  the plan sheet;  footHtml()  a one-line "Free plan · What's Premium?" for views.
 (function () {
   'use strict';
@@ -43,18 +45,34 @@
   function plan() {
     const x = read();
     if (x.plan === 'trial' && x.until && Date.now() > Date.parse(x.until)) { x.plan = 'free'; delete x.until; write(x); }
-    return { plan: x.plan || 'free', until: x.until || null };
+    return { plan: x.plan || 'free', until: x.until || null, tier: x.tier || null };
   }
   const active = () => plan().plan !== 'free';
   let setPlan = function (p) { const x = read(); x.plan = p; if (p === 'trial') x.until = new Date(Date.now() + TRIAL).toISOString(); else delete x.until; write(x); window.dispatchEvent(new CustomEvent('tribe-plan', { detail: plan() })); return plan(); }
 
-  // The payments hook. TODO(payments): wire Stripe Checkout (or Paddle Billing) here: create a checkout session on the
-  // hosted service, open it, and on return verify the subscription server-side before setPlan('premium'). Until then
-  // there is nothing to buy, and this says so.
-  const PROVIDER = null;   // 'stripe' | 'paddle'
-  async function checkout(p = 'premium') {
-    if (!PROVIDER) { toast('Payments aren\'t live yet. Try Premium free meanwhile.'); return { ok: false, reason: 'no-provider', plan: p }; }
-    return { ok: false, reason: 'todo' };
+  // Payments (feat/auth3-pay, docs/PREMIUM.md › Payments): the host turns Stripe on; the server makes the Checkout
+  // session and this opens it (the system browser from the desktop app). The plan and credits change only when
+  // Stripe's signed webhook reaches the server; coming back from Stripe just looks again.
+  const OFF_MSG = 'The host hasn\'t turned on payments yet. Everything free keeps working, and the 14-day trial needs no card.';
+  const payments = () => read().payments === true;
+  const billing = () => read().billing || null;
+  function openPay(url) {
+    const desk = !!(window.__TAURI__ || window.__TAURI_INTERNALS__) || /tauri\.localhost$/i.test(location.hostname);
+    if (desk) { try { const sh = window.__TAURI__ && window.__TAURI__.shell; if (sh && sh.open) sh.open(url); else window.open(url, '_blank', 'noopener'); } catch { window.open(url, '_blank', 'noopener'); } toast('Checkout is open in your browser. Come back here when you\'re done.'); return; }
+    location.assign(url);
+  }
+  async function checkout(item = 'tribe') {
+    if (item === 'premium') item = 'tribe';
+    const c = window.TribeClient, off = (message, reason = 'no-provider') => { toast(message); return { ok: false, reason, plan: item, message }; };
+    if (!c || !c.api || !c.connected || !c.connected()) return off('Payments go through a tribe\'s host. Open or join a tribe first; everything on this device stays free.');
+    if (read().payments === false) return off(OFF_MSG);
+    try { const r = await c.api('/premium/checkout', { method: 'POST', body: { item } }); openPay(r.url); return { ok: true, url: r.url, item }; }
+    catch (e) { const code = e.data && e.data.code; return off(code === 'payments-off' ? OFF_MSG : e.message || 'That did not work. Try again in a moment.', code === 'payments-off' ? 'no-provider' : code || 'error'); }
+  }
+  async function manage() {
+    const c = window.TribeClient; if (!c || !c.connected || !c.connected()) return { ok: false };
+    try { const r = await c.api('/premium/portal', { method: 'POST', body: {} }); openPay(r.url); return { ok: true, url: r.url }; }
+    catch (e) { const message = (e.data && e.data.code) === 'payments-off' ? OFF_MSG : e.message; toast(message); return { ok: false, message }; }
   }
 
   function overThreshold(feature, ctx = {}) {
@@ -112,7 +130,7 @@
   const Cn = () => window.TribeClient;
   async function sync() {
     const c = Cn(); if (!c || !c.api || !c.connected || !c.connected()) return;
-    try { const v = await c.api('/premium'); const x = read(); x.plan = v.plan; if (v.until) x.until = v.until; else delete x.until; x.credits = v.credits; write(x); window.dispatchEvent(new CustomEvent('tribe-plan', { detail: plan() })); } catch {}
+    try { const v = await c.api('/premium'); const x = read(); x.plan = v.plan; if (v.until) x.until = v.until; else delete x.until; x.credits = v.credits; x.tier = v.tier || null; x.payments = !!(v.payments && v.payments.on); x.billing = v.billing || null; x.scope = v.scope || 'tribe'; write(x); window.dispatchEvent(new CustomEvent('tribe-plan', { detail: plan() })); } catch {}
   }
   const setLocal = setPlan;
   setPlan = function (p) {
@@ -122,5 +140,13 @@
   };
   addEventListener('tribe-402', e => { const d = (e && e.detail) || {}; if (window.TribePlans && window.TribePlans.open) window.TribePlans.open(null); else sheet(d.need === 'credits' ? 'credits' : d.feature === 'template' ? 'template' : 'overview'); });
   setTimeout(sync, 1500); addEventListener('focus', () => sync());
-  window.TribePremium = { gate, plan, setPlan, checkout, credits, open: () => sheet('overview'), footHtml, LIMITS, FEATURES: Object.keys(FEATURES), FREE, ADDS, PRICES, PRICING, DOCS };
+  // back from Stripe: say what happened, and look again (the webhook can land a moment after the redirect)
+  (function back() {
+    let q; try { q = new URLSearchParams(location.search); } catch { return; }
+    const b = q.get('billing'); if (!b) return;
+    q.delete('billing'); try { history.replaceState(null, '', location.pathname + (q.toString() ? '?' + q : '') + location.hash); } catch {}
+    setTimeout(() => toast(b === 'success' ? 'Thank you. Your plan and credits update here in a moment.' : b === 'cancel' ? 'No charge was made. Nothing changed.' : 'Billing is up to date.'), 1200);
+    if (b !== 'cancel') [2500, 6000, 15000].forEach(ms => setTimeout(sync, ms));
+  })();
+  window.TribePremium = { gate, plan, setPlan, checkout, manage, payments, billing, sync, OFF_MSG, credits, open: () => sheet('overview'), footHtml, LIMITS, FEATURES: Object.keys(FEATURES), FREE, ADDS, PRICES, PRICING, DOCS };
 })();

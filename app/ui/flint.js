@@ -444,6 +444,14 @@
       const res = await fetch(C.base() + '/api/flint/ask', { method: 'POST', headers: { 'Content-Type': 'application/json', ...(tok ? { Authorization: 'Bearer ' + tok } : {}), ...(pid ? { 'X-Project': pid } : {}) },
         body: JSON.stringify({ text, history, room: (r ? roomText(r) : '') + (extra ? `\n\nRecent chat:\n${extra}` : '') }) });
       if (res.status === 403 || res.status === 429) { const j = await res.json().catch(() => ({})); msg.text = (j.error || 'The host\'s AI is not available to you right now.') + ' I can still do notes, tasks and the Guide, or use the built-in model.'; msg.acts = [act('Flint\'s brain', 'brain')]; delete msg.streaming; save(); draw(); return; }
+      if (res.status === 402) {   // feat/auth3-pay: out of AI credits. Once per session: a calm line and the plans; after that the basic answer, quietly.
+        const j = await res.json().catch(() => ({})); let told = false; try { told = sessionStorage.getItem('tribecode.flint.402') === '1'; sessionStorage.setItem('tribecode.flint.402', '1'); } catch {}
+        if (j.need === 'credits' && !told) {
+          msg.text = 'The AI credits have run out, so I\'m answering in basic mode for now. The plans are open if you want more, and your own AI is always free.'; msg.acts = [act('Flint\'s brain', 'brain')]; msg.noCredits = true; delete msg.streaming; save(); draw();
+          if (window.TribePlans && window.TribePlans.open && !window.TribePlans.isOpen()) window.TribePlans.open(null);
+          return;
+        }
+      }
       if (!res.ok || !res.body) { thread = thread.filter(m => m !== msg); draw(); return fallback(text, true, true); }
       try { msg.via = decodeURIComponent(res.headers.get('X-Flint-Via') || ''); } catch {}
       const rd = res.body.getReader(), dec = new TextDecoder(); let out = '';

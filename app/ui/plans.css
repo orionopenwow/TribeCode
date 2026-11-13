@@ -54,3 +54,11 @@
 .plp.is-sheet ~ .plp-scrim, .plp-scrim:has(+ .plp.is-sheet) { background: var(--scrim); }
 @media (max-width: 520px) { .plp-scrim { background: var(--scrim); } .plp-f .btn, .plp-own .btn, .plp-x { min-height: 44px; } .plp-x { width: 44px; } .plp-pack { min-height: 52px; } }
 @media (prefers-reduced-motion: reduce) { .plp { animation: none; } .plan-chip, .plan-chip-up, .plp-pack { transition: none; } }
+
+/* feat/auth3-pay: the buttons are real */
+.plp-tn .plp-buy, .plp-tn .plp-tag { margin-left: auto; }
+.plp-buy { white-space: nowrap; }
+.plp-msg { padding: 9px 11px; border: 1px solid var(--edge); border-radius: var(--r-sm); background: var(--surface-2); color: var(--text); font-size: 12.5px; line-height: 1.5; }
+.plp-msg[hidden] { display: none; }
+.plp-grace { color: var(--text); }
+@media (max-width: 520px) { .plp-buy { min-height: 44px; } }
