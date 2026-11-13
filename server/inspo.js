@@ -31,6 +31,7 @@
 //   GET    /api/inspo/freesound                    { configured }     PUT { key } (the host; '' removes it)
 // Search endpoints are configurable for tests and mirrors: TRIBE_OPENVERSE_URL, TRIBE_WIKIMEDIA_URL, TRIBE_FREESOUND_URL.
 'use strict';
+const DC = require('./diskcap');
 const fs = require('node:fs');
 const path = require('node:path');
 
@@ -287,6 +288,8 @@ button, .btn { background: var(--insp-accent); color: ${contrast('#FFFFFF', pal.
     if (!/^image\/(png|jpe?g|gif|webp|avif)$|^audio\//.test(type)) throw err(415, 'not a picture or a sound');
     if (r.body.length >= u.cap) throw err(413, 'too big to keep');
     fs.mkdirSync(dir, { recursive: true }); fs.writeFileSync(f, r.body); fs.writeFileSync(meta, JSON.stringify({ type, from: u.url, at: new Date().toISOString() }));
+    // harden: the cache keeps the newest 3000 files / 300 MB (TRIBE_INSPO_CACHE_MAX / _MB); a dropped one is fetched again on view
+    DC.prune(dir, { match: n => /^[a-f0-9]{40}$/.test(n), keep: h, maxCount: DC.envNum('TRIBE_INSPO_CACHE_MAX', 3000), maxBytes: DC.envNum('TRIBE_INSPO_CACHE_MB', 300) * 1048576, onRemove: n => { try { fs.unlinkSync(path.join(dir, n + '.json')); } catch {} } });
     return { file: f, type };
   }
   async function cache(req, res, h) {

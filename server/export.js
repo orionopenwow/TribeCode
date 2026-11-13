@@ -235,7 +235,14 @@ module.exports = function exporter({ P, W, store, applink, isLocal, port, getMem
         const dir = path.join(projectsDir(), safeName(p.name, pid), 'Exports'); fs.mkdirSync(dir, { recursive: true });
         let file = path.join(dir, name); for (let i = 2; fs.existsSync(file); i++) file = path.join(dir, name.replace(/(\.[^.]+)$/, ` (${i})$1`));
         fs.writeFileSync(file, buf);
-        return send(res, 200, { path: file, revealed: body.reveal ? reveal(dir) : false });
+        // harden: the Exports folder keeps the newest 200 files / 1 GB this server wrote (a ledger, so a file you put there
+        // yourself is never touched); the oldest go first and the answer names them.
+        const led = path.join(dir, '.tribecode-exports.json'); let mine = []; try { mine = JSON.parse(fs.readFileSync(led, 'utf8')); } catch {}
+        mine = [...new Set([...(Array.isArray(mine) ? mine : []), path.basename(file)])];
+        const DC = require('./diskcap'), set = new Set(mine);
+        const removed = DC.prune(dir, { match: n => set.has(n), keep: path.basename(file), maxCount: DC.envNum('TRIBE_DESKTOP_EXPORTS_MAX', 200), maxBytes: DC.envNum('TRIBE_DESKTOP_EXPORTS_MB', 1024) * 1048576 });
+        mine = mine.filter(n => !removed.includes(n) && fs.existsSync(path.join(dir, n))); try { fs.writeFileSync(led, JSON.stringify(mine)); } catch {}
+        return send(res, 200, { path: file, revealed: body.reveal ? reveal(dir) : false, ...(removed.length ? { removed, note: `Exports keeps the newest ${DC.envNum('TRIBE_DESKTOP_EXPORTS_MAX', 200)} files, so the oldest were removed: ${removed.join(', ')}.` } : {}) });
       }
       if (b === 'mirror' && !c && (m === 'PUT' || m === 'POST')) { const body = await readBody(req); return send(res, 200, { mirror: body.enabled ? await enableMirror(pid) : disableMirror(pid) }); }
       if (b === 'mirror' && c === 'sync' && m === 'POST') return send(res, 200, { mirror: await sync(pid) });

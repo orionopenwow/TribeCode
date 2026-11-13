@@ -23,6 +23,7 @@
 // extracted text is plain text (escaped when written as Markdown); thumbnails are PNG/JPEG/GIF/WebP/AVIF only; packs
 // run with argument arrays only; DM captures stay inside the DM; agents can capture but never make tasks.
 'use strict';
+const DC = require('./diskcap');
 const fs = require('node:fs');
 const path = require('node:path');
 const os = require('node:os');
@@ -218,6 +219,7 @@ module.exports = function captures({ P, store, base, embeds, packs, llm, docs, d
       if (!ext || !sniff(r.body, ext)) return;   // never SVG, never a mislabeled file
       fs.mkdirSync(store.p(DIR, 'thumbs'), { recursive: true });
       const name = `${c.id}.${ext}`; fs.writeFileSync(store.p(DIR, 'thumbs', name), r.body); c.thumbnail = name;
+      DC.prune(store.p(DIR, 'thumbs'), { keep: name, maxCount: DC.envNum('TRIBE_CAPTURE_THUMBS_MAX', 2000), maxBytes: DC.envNum('TRIBE_CAPTURE_THUMBS_MB', 200) * 1048576 });   // harden: a cache of the page's picture; an old one just shows no picture
     } catch {}
   }
   function sniff(b, ext) {
@@ -396,6 +398,7 @@ module.exports = function captures({ P, store, base, embeds, packs, llm, docs, d
     const c = { id: uniqueId(title), key: null, url: '', source: off || 'voice note', kind: off ? 'note' : 'voice', site: off ? 'Offload' : 'Voice note', title, author: me.name, published: new Date().toISOString(), duration: dur || null, thumbnail: null,
       transcript: lines, text: '', summary: '', points: [], actions: [], decisions: [], tags: [], recipe: r.id, project: pid, dm: channel && dms.isDm(channel) ? channel : null,
       links: channel ? { channel, message } : null, by: me.id, byName: me.name, created: new Date().toISOString(), status: 'ready', note: '', edited: {}, transcriptVia: off ? 'pasted' : lines.length ? 'your browser' : '', ...(off ? { tags: ['offload'] } : {}) };
+    if (audio) { const AMB = DC.envNum('TRIBE_CAPTURE_AUDIO_MB', 2048); if (DC.usage(store.p(DIR, 'audio')).bytes + audio.length > AMB * 1048576) throw Object.assign(new Error(`Voice notes are full (${AMB} MB for the tribe). Delete a few old voice captures, then try again.`), { status: 507 }); }   // harden: voice notes are people's work, so they are never removed for space: new ones wait
     if (audio) { fs.mkdirSync(store.p(DIR, 'audio'), { recursive: true }); c.audio = `${c.id}.${AUDIO_EXT[mime] || 'webm'}`; fs.writeFileSync(store.p(DIR, 'audio', c.audio), audio); c.audioMime = mime; }
     const whisper = audio && packs.whisper();
     if (whisper) { c.status = 'working'; c.note = 'Transcribing on the host…'; }

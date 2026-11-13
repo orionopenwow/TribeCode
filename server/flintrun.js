@@ -19,6 +19,12 @@ const path = require('node:path');
 const SKIP = new Set(['node_modules', 'bower_components', '__pycache__', 'venv', 'dist', 'target', 'Pods']);
 const SECRET = /^(\.env(\..*)?|id_(rsa|dsa|ecdsa|ed25519)(\.pub)?|.*\.(pem|key|p12|pfx|keystore|jks|kdbx|asc|gpg)|credentials(\..*)?|secrets?(\..*)?|\.npmrc|\.netrc)$/i;
 const MAX_FILES = 600, MAX_TOTAL = 40 * 1024 * 1024, MAX_FILE = 8 * 1024 * 1024, MAX_ZIP = 120 * 1024 * 1024;
+const DC = require('./diskcap');
+const CAP = {   // harden: TRIBE_EXPORT_* override (tests use small numbers)
+  userCount: DC.envNum('TRIBE_EXPORT_USER_MAX', 10), userBytes: DC.envNum('TRIBE_EXPORT_USER_MB', 500) * 1048576,
+  projectCount: DC.envNum('TRIBE_EXPORT_PROJECT_MAX', 20), projectBytes: DC.envNum('TRIBE_EXPORT_PROJECT_MB', 1024) * 1048576,
+  totalCount: DC.envNum('TRIBE_EXPORT_TOTAL_MAX', 60), totalBytes: DC.envNum('TRIBE_EXPORT_TOTAL_MB', 3072) * 1048576, blender: 50,
+};
 const okName = n => /^[\w][\w .()-]{0,118}\.(zip|py)$/i.test(String(n || '')) && !/\.\./.test(n);
 
 // ---------- the Blender bridge stub: a turntable render script the person runs themselves ----------
@@ -134,6 +140,16 @@ module.exports = function flintRun({ P, root, tribe, getMembers, publicMember, v
   const owners = () => { try { return JSON.parse(fs.readFileSync(ownersFile(), 'utf8')) || {}; } catch { return {}; } };
   const mayRead = (me, name) => { if (boss(me)) return true; const o = owners()[name]; return !!o && o.by === me.id && (!o.project || !P.canSee || P.canSee(me, o.project)); };
 
+  // harden: proof ZIPs are capped per person, per project and in total; the oldest go first (never the one just saved).
+  function capExports(keep, by, project) {
+    const dir = exportsDir(), isZip = n => /\.zip$/i.test(n), own = owners(), removed = [];
+    const gone = n => { delete own[n]; removed.push(n); };
+    DC.prune(dir, { match: isZip, keep, maxCount: CAP.userCount, maxBytes: CAP.userBytes, only: n => (own[n] || {}).by === by, onRemove: gone });
+    if (project) DC.prune(dir, { match: isZip, keep, maxCount: CAP.projectCount, maxBytes: CAP.projectBytes, only: n => (own[n] || {}).project === project, onRemove: gone });
+    DC.prune(dir, { match: isZip, keep, maxCount: CAP.totalCount, maxBytes: CAP.totalBytes, onRemove: gone });
+    if (removed.length) fs.writeFileSync(ownersFile(), JSON.stringify(own));
+    return removed;
+  }
   function repoFiles(pid) {
     const p = P.get(pid || P.current() || P.defaultId()); if (!p || !p.repo) return { files: [], skipped: 0, total: 0 };
     let base; try { base = fs.realpathSync(p.repo); } catch { return { files: [], skipped: 0, total: 0 }; }
@@ -177,6 +193,7 @@ module.exports = function flintRun({ P, root, tribe, getMembers, publicMember, v
         const script = blenderScript({ ...body, name });
         const dir = path.join(exportsDir(), 'blender'); fs.mkdirSync(dir, { recursive: true });
         const file = `${name}-turntable.py`; fs.writeFileSync(path.join(dir, file), script);
+        DC.prune(dir, { match: n => /\.py$/i.test(n), keep: file, maxCount: CAP.blender });   // harden: the newest 50 scripts
         log(`flint blender bridge: wrote exports/blender/${file}`);
         return send(res, 200, { name: file, path: path.join(dir, file), script, run: `blender -b -P "${path.join(dir, file)}"${body.model ? ` -- --model "${String(body.model).replace(/[^\w .\/:~+-]/g, '')}"` : ''}` });   // review-2026-11-11: no $( ) or backticks in a command people paste into a shell
       }
@@ -202,11 +219,15 @@ module.exports = function flintRun({ P, root, tribe, getMembers, publicMember, v
         const buf = await readRaw(req, MAX_ZIP);
         if (buf.length < 22 || buf.readUInt32LE(0) !== 0x04034b50) return fail(res, 400, 'that is not a ZIP');
         fs.mkdirSync(exportsDir(), { recursive: true });
+        if (buf.length > CAP.userBytes) return fail(res, 413, `That ZIP is ${DC.mb(buf.length)}; proof ZIPs can be at most ${DC.mb(CAP.userBytes)} each. Leave out big assets and try again.`);
         const f = path.join(exportsDir(), name), tmp = f + '.tmp'; fs.writeFileSync(tmp, buf); fs.renameSync(tmp, f);
-        const own = owners(); own[name] = { by: me.id, project: /^tribe-/.test(name) ? null : (url.searchParams.get('project') || (P.current && P.current()) || null), at: new Date().toISOString() };
+        const project = /^tribe-/.test(name) ? null : (url.searchParams.get('project') || (P.current && P.current()) || null);
+        const own = owners(); own[name] = { by: me.id, project, at: new Date().toISOString() };
         fs.writeFileSync(ownersFile(), JSON.stringify(own));
-        log(`flint proof: exports/${name} (${buf.length} bytes)`);
-        return send(res, 200, { name, path: boss(me) ? f : null, size: buf.length });
+        const removed = capExports(name, me.id, project);
+        log(`flint proof: exports/${name} (${buf.length} bytes)${removed.length ? `, removed the oldest: ${removed.join(', ')}` : ''}`);
+        return send(res, 200, { name, path: boss(me) ? f : null, size: buf.length, removed, limits: { perPerson: CAP.userCount, perPersonBytes: CAP.userBytes, perProject: CAP.projectCount },
+          ...(removed.length ? { note: `Saved. Proof ZIPs are kept to ${CAP.userCount} per person and ${CAP.projectCount} per project, so the oldest ${removed.length === 1 ? 'one was' : removed.length + ' were'} removed: ${removed.join(', ')}.` } : {}) });
       }
     } catch (e) { return fail(res, e.status || 500, e.message); }
     return fail(res, 404, 'no such route');
