@@ -496,7 +496,9 @@
   async function notifTab(el) {
     if (!on()) { el.innerHTML = sec('Notifications', row('Sound', sw('set-nf-sound', P().get().sound !== false, 'Notification sound'), 'A soft tone for new notifications.', { id: 'set-nf-sound-row' })) + '<p class="set-note">Join or start a tribe to choose what you hear about.</p>'; wireNfLocal(el); return; }
     let d; try { d = await C().api('/notify/prefs'); } catch (e) { el.innerHTML = `<p class="set-note">Couldn't load notification settings: ${esc(e.message)}</p>`; el.dataset.done = ''; return; }
-    const p = d.prefs, pr = P().get(), types = (d.types || Object.keys(NT)).filter(t => NT[t]);
+    const D = { channels: {}, types: {}, when: { mode: 'away', awayMinutes: 5, quiet: { on: false, from: '22:00', to: '08:00' } }, digest: { on: true, everyHours: 4, at: '' }, mutes: { channels: {}, projects: {} }, tz: 'UTC' };
+    const p = Object.assign({}, D, (d && d.prefs) || {}); p.when = Object.assign({}, D.when, p.when || {}); p.when.quiet = Object.assign({}, D.when.quiet, p.when.quiet || {}); p.digest = Object.assign({}, D.digest, p.digest || {}); p.channels = p.channels || {}; p.types = p.types || {};   // the offline demo answers with less
+    const pr = P().get(), types = ((d && d.types) || Object.keys(NT)).filter(t => NT[t]);
     const state = C().state(), chans = channelsList(state), projs = (state.projects || []);
     const lvl = (kind, k) => (p.mutes && p.mutes[kind] && p.mutes[kind][k]) || 'all';
     const muteSel = (kind, k, label) => `<select class="input set-select" data-mute-kind="${kind}" data-mute="${esc(k)}" aria-label="${esc(label)}"><option value="all" ${lvl(kind, k) === 'all' ? 'selected' : ''}>Everything</option><option value="mentions" ${lvl(kind, k) === 'mentions' ? 'selected' : ''}>Mentions only</option><option value="none" ${lvl(kind, k) === 'none' ? 'selected' : ''}>Nothing</option></select>`;
