@@ -190,7 +190,14 @@
   }
 
   // ---------- Needs attention ----------
+  // feat/calm-parity: while a project is young its setup gaps (no GitHub, no backup) wait in the getting-started
+  // list (projects.js) instead of here. fold(pid, on) is set by the Dashboard on each redraw.
+  const isGap = x => x && x.k === 'setup' && (x.go === 'github' || x.go === 'backup');
+  let foldFor = {};
+  function fold(pid, on) { const was = !!foldFor[pid]; foldFor[pid] = !!on; if (was !== !!on && S.pj.pid === pid && S.pj.crits) drawCrit(); }
+  function gaps(pid) { return S.pj.pid === pid && foldFor[pid] && S.pj.crits ? (S.pj.crits.items || []).filter(isGap) : []; }
   function clientCrits(list) {
+    list = foldFor[S.pj.pid] ? list.filter(x => !isGap(x)) : list.slice();
     const st = (window.TribeStore && window.TribeStore.get()) || {}, me = (C().state().me || {});
     if (st.hostOff && window.TribeHost && window.TribeHost.isDesktop && me.role === 'host') list.push({ k: 'setup', rank: 72, title: 'Hosting is off', sub: 'Friends can’t reach the tribe while this computer isn’t hosting it.', act: 'Turn it on', go: 'host' });
     return list.sort((a, b) => a.rank - b.rank);
@@ -224,7 +231,8 @@
   }
   function drawCrit() {
     const slot = $('#pj-crit-slot'); if (!slot) return;
-    const sig = JSON.stringify([S.pj.crits, S.pj.all]);
+    const sig = JSON.stringify([S.pj.crits, S.pj.all, !!foldFor[S.pj.pid]]);
+    try { dispatchEvent(new CustomEvent('tribe:dash-gaps', { detail: { pid: S.pj.pid } })); } catch {}
     if (S.pj.crit && S.pj.crit.__sig === sig) { if (S.pj.crit.parentNode !== slot) slot.replaceChildren(S.pj.crit); return; }
     const box = document.createElement('div'); box.className = 'db-crit-wrap'; box.innerHTML = critHtml(S.pj.crits, S.pj.all); box.__sig = sig;
     bindCrit(box, S.pj.crits); S.pj.crit = box; slot.replaceChildren(box);
@@ -316,5 +324,5 @@
   hook();
   addEventListener('focus', () => { if (document.querySelector('.db-band')) refresh(); });
 
-  window.TribeDashBand = { mountProject, mountHome, refresh, state: () => ({ project: S.pj.data, crits: S.pj.crits, home: S.home.data }) };
+  window.TribeDashBand = { mountProject, mountHome, refresh, fold, gaps, go: critGo, state: () => ({ project: S.pj.data, crits: S.pj.crits, home: S.home.data }) };
 })();

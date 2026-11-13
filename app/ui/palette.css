@@ -312,3 +312,23 @@ body:not(.global)[data-stage="new"] #cc-connect, body:not(.global)[data-stage="n
 .stg-ico { width: 34px; height: 34px; flex: none; display: grid; place-items: center; font-size: 18px; border-radius: 10px; background: var(--raised, var(--canvas)); border: 1px solid var(--edge); }
 .stg-list { margin: 2px 0 4px; padding: 0; list-style: none; display: grid; gap: 2px; font-size: 13px; }
 .stg-acts { display: flex; flex-wrap: wrap; gap: 8px; }
+
+/* ---- feat/calm-parity: a calmer first dashboard. One card (the next step) with "2 of 5" and See all steps; the same
+   components as the full list, only fewer of them on screen. ---- */
+.ock-all { margin-left: auto; min-height: 32px; padding: 0 4px; font-size: 13px; }
+#pj-check.hero .ock-all + .ock-fold { margin-left: 4px; }
+#pj-check.hero.one { padding-top: 20px; padding-bottom: 20px; }
+#pj-check.hero.one .ock-hero-t, #pj-check.hero.one .ock-hero-p, #pj-check.hero.one .ock-bar, #pj-check.hero.one .ock-fold,
+#pj-check.hero.one .ock-head h3, #pj-check.hero.one .ock-card:not(.ock-next), #pj-check.hero.one .ock-gaps { display: none; }
+#pj-check.hero.one .ock-eyebrow { margin: 0; }
+#pj-check.hero.one .ock-head { margin: -22px 0 12px; justify-content: flex-end; min-height: 32px; }
+#pj-check.hero.one .ock-n { margin-left: auto; }
+#pj-check.hero.one .ock-all { margin-left: 6px; }
+.ock-gaps:empty { display: none; }
+.ock-gaps { display: grid; gap: 0; margin-top: 6px; }
+.ock-gaps-e { display: block; margin: 8px 0 2px; }
+.ock-gap .ock-sub { margin: 2px 0 0; color: var(--muted); font-size: 13px; }
+.ock-gap .ock-box { border-style: dashed; }
+#pj-check.hero .ock-gap .btn.sm { height: 32px; min-width: 0; padding: 0 12px; font-size: 13px; border-radius: 8px; }
+/* Connect your AI waits in the right panel until its step comes up (projects.js sets body[data-calm-ai]) */
+body:not(.global)[data-calm-ai="wait"] #cc-connect { display: none !important; }

@@ -61,6 +61,8 @@
     // v0.21: a brand-new project (no tasks, no part of the code, nothing to ship) has nothing to focus on yet: Next steps
     // says what to do, and new docs, sheets and slides start from Files or the + menu. So the card stays out of the way.
     if (!d.openCount && !d.lanes.length && !(d.ship && d.ship.request && d.ship.request.status === 'pending')) { box.innerHTML = ''; return; }
+    // feat/calm-parity: while the getting-started steps are unfinished, the card waits until something is assigned to you
+    if (document.body.dataset.calm && !d.mine.length) { box.innerHTML = ''; return; }
     box.querySelectorAll('[data-fc]').forEach(b => b.onclick = () => act(b.dataset.fc, d));
     const f = box.querySelector('[data-fc-claim]'); if (f) f.onsubmit = async e => {
       e.preventDefault(); const area = f.querySelector('input').value.trim(); if (!area) return;
