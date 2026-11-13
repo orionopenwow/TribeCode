@@ -804,7 +804,7 @@
       || /\b(?:code|coding|javascript|typescript|python|functions?|api|database|backend|server|login system|authentication|auth flow|payments?|stripe|checkout flow|animate|animations? (?:for|on|when)|shader|algorithm|refactor|debug|fix (?:the|this|a) bug|multiplayer|ai enemies|leaderboard|save system|physics)\b/.test(t)
       || /\b(?:make it look like|in the style of|look like (?:apple|stripe|airbnb|google|notion|linear)|like (?:apple|stripe|airbnb|notion)s? site)\b/.test(t)
       || /\b(?:translate|critique|what do you think|is (?:this|it) good|review my|give me feedback|rate my|improve (?:the|my|this) (?:design|copy|writing|text))\b/.test(t)
-      || /\b(?:poem|haiku|limerick|joke|bedtime story)\b/.test(t);
+      || /\b(?:poems?|haikus?|limericks?|sonnets?|odes?|verses?|rhymes?|riddles?|raps?|jokes?|bedtime story|short story|fan fiction)\b/.test(t);
   }
   // clarify(text, { view }): one short question with chips that do something real ({ label, say, fill })
   function clarify(text, ctx) {

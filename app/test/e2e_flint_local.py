@@ -128,9 +128,9 @@ def main():
             chip.click(); host.wait_for_timeout(900)
             assert len(ok(api("/flint/learned", token=tok))["items"]) == n_learned + 1, "tapping a 'did you mean' teaches Flint"; done.append(f"did you mean ({label})")
             # 15 · the honest card for what needs a model
-            last = ask(host, "write me a sonnet about our bug tracker", "basic mode")
+            last = ask(host, "write me a sonnet about our bug tracker", "needs an AI")
             last_msg = host.locator("#flint .fl-msg.fl").last   # feat/flint-site: the one AI-boost pair (aiboost.js)
-            assert last_msg.locator(".fl-act", has_text="Use my AI").count() == 1 and last_msg.locator(".fl-act", has_text="Get credits / Premium").count() == 1 and "This one needs an AI" in last; done.append("honest card")
+            assert last_msg.locator("[data-boost='ai']", has_text="Use my AI").count() == 1 and last_msg.locator("[data-boost='credits']", has_text="Get credits / Premium").count() == 1 and "This one needs an AI" in last; done.append("honest card")
             if take: host.wait_for_timeout(300); host.locator("#flint").screenshot(path=str(SHOTS / "flint-local-desktop.png"))
 
             # ---- the phone at 390px
