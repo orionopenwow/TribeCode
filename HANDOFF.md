@@ -125,6 +125,7 @@ Pushing from the Claude cloud sandbox:
 - Simplicity first: zero-step setup (no wizard), sleek and bare UI, no repeated labels.
 
 ## State right now
+- **v0.32.0** (2026-11-13): one Flint chat and flintmax, the tribe flow, folder homes with sync and Versions, drag and drop, auth2, Invite your Claude, the free-AI bridge, tabbed Settings, the dashboard band, widget cards, Work v2, hardening; see CHANGELOG.
 - **v0.31.0** (2026-11-12): Design flow + starters, website designer v2, presence/People, Company v2 + gigs, Marketplace v2, shell polish, blank-slate desktop demo, stale-UI cleanup; see CHANGELOG.
 - **v0.30.0** (2026-11-12): Flint eval + website designer + Files rebuild + task Accept/Council + the hands-off tour; see CHANGELOG.
 - **v0.29.0** (2026-11-11): see CHANGELOG and docs/CONTEXT.md. Launch checklist: docs/LAUNCH.md. Owner's one-pager: docs/ONE-PAGER.md. Quick local edits: `Tools\Clean-Slate-Dev.bat`. Truth test: `python3 app/test/e2e_truth.py` → docs/TRUTH-TEST.md.

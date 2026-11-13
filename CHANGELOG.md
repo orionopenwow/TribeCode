@@ -1,5 +1,48 @@
 # Changelog
 
+## v0.32.0
+- **One Flint chat everywhere**: the website designer, canvas and preview use Flint's normal chat. He follows hundreds more commands with no AI and asks a short question instead of "needs an AI" when a detail is missing.
+- **Flint does more on his own**:
+  - Chained steps in one message with one Undo, and follow-ups like "make it bigger".
+  - Palettes from a mood or one colour with contrast fixed, font pairs, "tidy this up", headline ideas.
+  - Sheets (sum, sort, chart, total row), docs (contents, checklist, summary) and slides (a pitch from the vision doc).
+  - Canvas pieces like a navbar or login form.
+  - A new Flint page lists what he can do, with Try it buttons.
+- **Create a tribe in one flow**: name and icon, where it lives, invite friends.
+- **Where it lives is one thing**:
+  - A project's home can be a folder on this computer, this device, the free cloud, GitHub or a shared folder (Dropbox, OneDrive, Drive, iCloud, a network drive).
+  - One pill shows its home and sync status.
+  - Ship by hand or automatically, with a ship history and Undo last ship.
+  - **Versions** shows every save and ship: see changes, restore, name, compare, download.
+- **Drag and drop**: drop files or whole folders anywhere, or paste. Secrets stay out unless you say so. Flint reads a folder at once, says what it is and offers next steps.
+- **Sign-in**:
+  - GitHub, Google or Discord can create an account.
+  - Friends sign up from their own browser.
+  - The desktop app finishes sign-in with a one-time code.
+  - Hosts can add their own mail server for sign-in links.
+- **Invite your Claude**: next to every Invite friends. One command or config, and your Claude joins with your access and never more. Pause or remove it any time.
+- **Use any free AI**: the Agents Hub has a copy-out, paste-back bridge for free AI chats. It shows each change to accept or reject, with Undo. The hub also opens correctly in Beginner mode.
+- **Settings has tabs** and search: 11 tabs, starting with Profile & look. New: notification switches, quiet hours and digest; sign out other devices; who can message you; download my data; delete account with a 7-day undo; custom shortcuts; accessibility options.
+- **Dashboard**: opens with a preview of the main project, then Needs attention, then the rest.
+- **Widgets**: every widget has the same menu and can be reordered. The + picker is a gallery with search and preview. 19 new live cards (my tasks, who's here, milestones, countdowns, checklist, poll, notes, bookmarks, build and sync status and more), on Home too.
+- **Work, redesigned**: one header, three actions (Get help, Offer help, Find people), four tabs, a three-step guide, and no endless loading. Tribes can publish a signed list of their public gigs.
+- **The tour** opens with intro slides. Guests see a calm sign-up prompt afterwards.
+- **Left bar and Plan**: every tile is the same size with centred icons. The Plan card is a small chip.
+- **Safer**:
+  - Plans and credits are enforced on the server.
+  - Every endpoint is rate limited.
+  - Exports and captures have size caps.
+  - Editing code checks your role in that project.
+  - Agents need a lead's say to start rituals.
+- **Fixes**:
+  - Projects on this device no longer crash opening templates, notification settings or the Agent fleet.
+  - Esc closes every sheet.
+  - A fresh open no longer bounces you Home.
+  - "Make it dark" in the preview changes your app, not TribeCode's theme.
+  - Agents keep their "request a ship" tool.
+- **Repo**: test launchers moved to `Tools/`, old plans to `docs/archive/` (docs/REPO-CLEANUP.md).
+- **Phones**: the new sheets (tribe flow, invite, drop, settings, versions, widgets picker, Work) fit at 390px; Settings drills in by tab; drops use file and folder pickers.
+
 ## v0.31.2
 - **Home's sidebar heading is gone**: the "Your Dashboard" line above Files, Design, Code, Work and Agent fleet is removed. The lit logo and the "Home ›" breadcrumb already say where you are.
 - **Phones**: the same, one less line above the rows.

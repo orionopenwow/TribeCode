@@ -758,7 +758,7 @@
       if (/\b(?:checklist|check list|checkboxes|checkbox|check boxes|tick boxes|to do list|todo list|todos)\b/.test(c)) return H('doc.checklist', {});
       if (/\b(?:readab\w*|reading level|grade level|flesch|(?:hard|easy) (?:is (?:this|it) )?to read|how (?:hard|easy) is (?:this|it) to read)\b/.test(c)) return H('doc.readability', {});
       if (/\b(?:capitali[sz]\w*|caps|capital letters|title case|sentence case|uppercase the)\b/.test(c)) return H('doc.caps', { mode: /\btitle case\b/.test(c) ? 'title' : 'sentence' });
-      if (/\b(?:summari[sz]e|summary|tldr|tl dr|sum (?:it|this) up|gist|recap)\b/.test(c)) return H('doc.summary', {});
+      if (/\b(?:summari[sz]e|summary|tldr|tl dr|sum (?:it|this) up|gist|recap)\b/.test(c) && !/\b(?:chat|channel|thread|conversation|messages?|tasks?|standup)\b/.test(c)) return H('doc.summary', {});   // "summarize the chat" stays the chat's summary even with a doc open
     }
     // ---- slides: a pitch from a doc, the vision or the readme (here, in the deck, or anywhere) ----
     {
@@ -798,7 +798,7 @@
       const K = [['cardgrid', 'card grid|grid of cards|cards grid|card layout|grid of card|cards'], ['navbar', 'nav bar|navbar|navigation bar|navigation|top bar|header bar|menu bar|top nav|header'], ['footer', 'footer'], ['sidebar', 'sidebar|side bar|side menu|side nav'],
         ['tabbar', 'tab bar|tabbar|bottom nav|bottom navigation|bottom bar'], ['modal', 'modal|dialog|popup|pop up|confirm box'], ['form', 'sign up form|signup form|registration form|contact form|form'], ['hero', 'hero section|hero']];
       if (/\b(?:add|put|insert|drop|make|create|turn|give|place|stick|throw|need|want|build|draw|convert|arrange)\b/.test(c) && !/\b(?:screen|page|website|site)\b(?!.*\b(?:top|bottom)\b)/.test(c.replace(/\bto the screen\b|\bon the screen\b/, ''))) {
-        for (const [k, w] of K) if (new RegExp(`\\b(?:${w})\\b`).test(c)) return H('canvas.recipe', { kind: k, ...(k === 'cardgrid' && ctx.selection && /\b(?:this|these|them|those|it)\b/.test(c) ? { from: 'selection' } : {}) });
+        for (const [k, w] of K) if (new RegExp(`\\b(?:${w})\\b`).test(c) && !(k === 'hero' && /\blanding\b|\bhero for\b/.test(c))) return H('canvas.recipe', { kind: k, ...(k === 'cardgrid' && ctx.selection && /\b(?:this|these|them|those|it)\b/.test(c) ? { from: 'selection' } : {}) });
       }
     }
     // ---- anywhere ----
