@@ -263,7 +263,7 @@
 .tkp-mode[aria-pressed="true"] { border-color: var(--brand); }
 .tkp-mode:disabled { cursor: default; opacity: .8; }
 .tkp-lim { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; margin: 8px 4px 0; font-size: 13px; color: var(--text); }
-.tkp-lim small { flex-basis: 100%; color: var(--faint); font-size: 11px; }
+.tkp-lim small { flex-basis: 100%; color: var(--faint); font-size: 12px; }
 .tkp-lim input[type="number"] { width: 64px; }
 .tkd-offer { display: grid; gap: 8px; padding: 10px 12px; border: 1px solid var(--brand); border-radius: 12px; background: var(--surface); }
 .tkd-offer p { margin: 0; font-size: 13px; line-height: 1.5; color: var(--text); }

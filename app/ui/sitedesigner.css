@@ -82,7 +82,7 @@ body.wdz-open { overflow: hidden; }
 .wdz-tpl { display: grid; gap: 4px; text-align: left; padding: 8px; border: 1px solid var(--border); border-radius: var(--r); background: var(--surface); color: var(--text); cursor: pointer; font: 600 13.5px var(--font); transition: border-color var(--dur-quick) var(--ease-out); }
 .wdz-tpl:hover, .wdz-tpl:focus-visible { border-color: var(--accent); }
 .wdz-tpl img { width: 100%; aspect-ratio: 16 / 10; object-fit: cover; border-radius: var(--r-sm); border: 1px solid var(--border); background: var(--surface-2); }
-.wdz-tpl small { font-weight: 400; color: var(--muted); line-height: 1.4; }
+.wdz-tpl small { font-weight: 400; font-size: 12px; color: var(--muted); line-height: 1.4; }   /* audit: a description, 12px like the rest (was 11.25px by inheritance) */
 /* feat/site-v2: saved state, notes, panel tabs, picker thumbnails, comments, settings, the gallery, peek, shortcuts */
 .wdz-saved.is-dirty { color: var(--muted); }
 .wdz-n { display: inline-grid; place-items: center; min-width: 18px; height: 18px; margin-left: 6px; padding: 0 5px; border-radius: 999px; background: var(--accent); color: var(--canvas); font: 700 10.5px/1 var(--mono); }
