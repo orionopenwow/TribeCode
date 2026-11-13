@@ -24,7 +24,7 @@
     invite: { title: 'Inviting friends', steps: ['Invite friends in the sidebar copies your tribe link: anyone with it picks a name and they are in, on a phone or a laptop.', 'People in the top bar also has the link, a QR code and one-time guest passes.', 'Ask Flint: “invite a friend”.'], show: { go: 'chat', sel: '#tour-invite, #ppl-btn', say: 'Copy the tribe link here.' }, guide: 'working-together' },
     people: { title: 'People and presence', steps: ['People in the top bar lists the tribe and your friends: who is online and where (a doc, the designer, a task).', 'Click someone to message them, jump to where they are, or see their profile.', 'Settings › Show where I am turns it off. Or tell Flint “go invisible”.'], show: { go: 'chat', sel: '#ppl-btn', say: 'Who is here, and where.' } },
     market: { title: 'The Marketplace', steps: ['Widgets, skills, libraries, connectors, studios and asset packs, each with its source and license.', 'Add does something real for every kind, with Undo. The Installed tab lists what you added.', 'Ask Flint: “find a physics library” or “what have I installed”.'], show: { go: 'market', sel: '#mk-q, .mk-search input, [data-mk-search]', say: 'Search everything here.' } },
-    design: { title: 'The Design flow', steps: ['Design asks what you are making: a website, app, game, screen, slides, poster, whiteboard or logo.', 'Pick a template (or describe it), and a Plan card ticks off as it becomes tasks.', 'Ask Flint: “make a poster for our gig” or “design a logo for Ember Socks”.'], show: { go: 'canvas', sel: '.dfl-kinds, #nest-canvas, [data-pnav="canvas"]', say: 'Start any kind of design here.' } },
+    design: { title: 'The Design flow', steps: ['Design asks what you are making: a website, app, game, screen, slides, poster, whiteboard or logo.', 'Pick a template (or describe it), and a Plan card ticks off as it becomes tasks.', 'Ask Flint: “make a poster for our gig” or “design a logo for Ember Socks”.'], show: { go: 'designflow', sel: '.dfl-kinds, .dfl-kind, .dfl-page', say: 'Start any kind of design here.' } },
   };
   const FEATURES = Object.keys(LESSONS);
   if (typeof document === 'undefined') return { LESSONS, FEATURES };
@@ -51,8 +51,10 @@
   function go(key) {
     const W = window, sh = W.TribeShell;
     try {
+      if (key !== 'market' && W.TribeMarket && W.TribeMarket.unpage) W.TribeMarket.unpage();   // the full-page Marketplace would cover the place we show
       if (key === 'designer') return W.TribeSiteDesigner && W.TribeSiteDesigner.open({});
       if (key === 'templates') { if (W.TribeSiteDesigner) { W.TribeSiteDesigner.open({}).then(() => { const b = document.querySelector('#wdz [data-wdz="templates"]'); if (b) b.click(); }); return; } return W.TribeSiteLib && W.TribeSiteLib.open({}); }
+      if (key === 'designflow' && W.TribeDesignFlow) return W.TribeDesignFlow.open({});
       if (key === 'canvas' && W.TribeCanvas) return W.TribeCanvas.open();
       if (key === 'preview' && W.TribePreview) return W.TribePreview.open();
       if (key === 'inspo' && W.TribeInspoBoard) return W.TribeInspoBoard.open({});
