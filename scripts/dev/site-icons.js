@@ -13,12 +13,17 @@ const MAP = {
   home: 'home', chat: 'chat', file: 'files', grid: 'design', check: 'tasks', bot: 'agent', board: 'whiteboard',
   play: 'preview', people: 'people', bell: 'bell', gear: 'gear', plus: 'plus', search: 'search', help: 'book',
   store: 'store', company: 'company', monitor: 'monitor', phone: 'phone', link: 'link', sites: 'sites', spark: 'spark',
+  docs: 'docs', sheets: 'sheets', slides: 'slides', notes: 'notes',
+  wrench: '#i-wrench',   // '#id' = a <symbol> in app/ui/index.html (the rail's Workshop tile)
 };
 
 function paths() {
   const sandbox = { window: {}, document: undefined };
   vm.runInNewContext(fs.readFileSync(path.join(ROOT, 'app', 'ui', 'icons.js'), 'utf8'), sandbox);
-  return sandbox.window.TribeIcons.paths;
+  const P = Object.assign({}, sandbox.window.TribeIcons.paths);
+  const html = fs.readFileSync(path.join(ROOT, 'app', 'ui', 'index.html'), 'utf8');
+  for (const m of html.matchAll(/<symbol id="([^"]+)" viewBox="0 0 24 24">([\s\S]*?)<\/symbol>/g)) P['#' + m[1]] = m[2];
+  return P;
 }
 
 function build() {

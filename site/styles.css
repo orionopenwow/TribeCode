@@ -1037,7 +1037,7 @@ button.mk-send { border: 0; padding: 0; cursor: pointer; }
 .pr-fine { max-width: 760px; margin: 16px auto 0; color: var(--faint); font-size: 13px; line-height: 1.5; text-align: center; }
 
 /* Flint's panel, dressed up: bigger, ember frame, a soft shadow so it sits above the page */
-.flint-panel { width: 380px; max-height: min(620px, calc(100vh - 110px)); border: 2px solid var(--ember); box-shadow: 0 18px 48px rgba(0, 0, 0, .55), 0 2px 8px rgba(0, 0, 0, .35); }
+.flint-panel { width: 380px; max-height: min(620px, calc(100vh - 110px)); border: 2px solid var(--ember); box-shadow: none; }
 .flint-panel__head { padding: 14px 14px 14px 16px; background: #2A2320; border-bottom-color: #4A3326; }
 .flint-panel__head img { width: 28px; }
 .flint-panel__head b { font-size: 15.5px; display: flex; align-items: center; gap: 6px; }
@@ -1050,7 +1050,7 @@ button.mk-send { border: 0; padding: 0; cursor: pointer; }
 .flint-chip:hover { border-color: var(--ember); color: var(--text); }
 .flint-chip[data-q="tour"] { border-color: #D4561A; color: var(--text); }
 .flint-form { padding: 12px 14px; }
-.flint-fab { box-shadow: 0 8px 22px rgba(0, 0, 0, .45); }
+.flint-fab { box-shadow: none; }
 .flint-float.is-open .flint-fab { border-color: var(--ember); }
 @media (max-width: 640px) { .flint-panel { width: calc(100vw - 24px); } }
 @media (prefers-reduced-motion: reduce) { .flint-wave { animation: none; } }
