@@ -115,7 +115,7 @@
     const info = [dur(m.media.dur), m.media.size ? kb(m.media.size) : ''].filter(Boolean).join(' · ');
     return `<div class="vn" data-src="${esc(mediaUrl(ch, m.media.file))}"><button class="vn-play" aria-label="Play voice note">${icon('i-play')}</button>
       <div class="vn-col"><div class="vn-wave" aria-hidden="true">${w.map(v => `<i style="height:${18 + Math.min(9, v) * 9}%"></i>`).join('')}</div>
-      <div class="vn-meta"><span class="vn-dur">${esc(info)}</span>${META}</div></div></div>`;
+      <div class="vn-meta"><span class="vn-dur">${esc(info)}</span><button type="button" class="vn-speed" aria-label="Playback speed" title="Playback speed">1×</button>${META}</div></div></div>`;
   }
   // Reaction chips inside the bubble: emoji + up to 3 tiny reactor faces (else the count), yours highlighted,
   // names in the tooltip, a quiet "+" to add one. Only chips whose count went up since the last draw pop.
@@ -573,11 +573,23 @@
   }, true);
 
   // ---------- media: voice player, image lightbox, paste ----------
-  let player = null, playing = null;
+  let player = null, playing = null, rate = 1;
+  const RATES = [1, 1.5, 2];
+  function cycleSpeed(vn) {
+    rate = RATES[(RATES.indexOf(rate) + 1) % RATES.length];
+    document.querySelectorAll('.vn-speed').forEach(b => { b.textContent = rate + '×'; b.classList.toggle('on', rate !== 1); });
+    if (player) player.playbackRate = rate;
+  }
+  // tap the waveform to jump there (starts playing that note if it wasn't)
+  function seek(vn, e) {
+    const w = vn.querySelector('.vn-wave'), r = w.getBoundingClientRect(), frac = Math.max(0, Math.min(1, (e.clientX - r.left) / (r.width || 1)));
+    const go = () => { if (player && player.duration) { player.currentTime = frac * player.duration; paint(vn, frac, !player.paused); } };
+    if (playing !== vn) { togglePlay(vn); player.addEventListener('loadedmetadata', go, { once: true }); } else go();
+  }
   function togglePlay(vn) {
     if (playing === vn) { player.paused ? player.play() : player.pause(); return; }
     if (player) { player.pause(); if (playing) paint(playing, 0, false); }
-    player = new Audio(vn.dataset.src); playing = vn;
+    player = new Audio(vn.dataset.src); playing = vn; player.playbackRate = rate;
     player.ontimeupdate = () => paint(vn, player.duration ? player.currentTime / player.duration : 0, !player.paused);
     player.onplay = player.onpause = () => paint(vn, player.duration ? player.currentTime / player.duration : 0, !player.paused);
     player.onended = () => { paint(vn, 0, false); playing = null; };
@@ -690,6 +702,8 @@
     const rx = t.closest('.rx'); if (rx) { const x = msgs.get(el.dataset.id); if (x) react(x.ch, x.m.id, rx.dataset.rx); return; }
     const q = t.closest('.quote[data-jump]'); if (q) return jump(q.dataset.jump);
     const play = t.closest('.vn-play'); if (play) return togglePlay(play.closest('.vn'));
+    const spd = t.closest('.vn-speed'); if (spd) return cycleSpeed(spd.closest('.vn'));
+    const wv = t.closest('.vn-wave'); if (wv) return seek(wv.closest('.vn'), e);
     const th = t.closest('.thumb[data-full]'); if (th) return R() ? R().open(th) : lightbox(th.dataset.full);
   });
   let press = null;

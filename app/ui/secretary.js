@@ -17,7 +17,7 @@
   const KIND = { chat: 'chat', voice: 'voice note', image: 'image', doc: 'doc', file: 'file', commit: 'commit', decision: 'decision', vote: 'vote', agent: 'agent', task: 'task', note: 'note', research: 'research', idea: 'idea', question: 'question', topic: 'topic' };
   const DOT = { decision: '#3BD16F', question: '#FFB86B', research: '#38C6B1', task: '#6C7CFF', topic: '#F26B1D', idea: '#F26B1D', doc: '#94A3B8', file: '#94A3B8', commit: '#38C6B1', voice: '#E86A92', image: '#E86A92' };
 
-  let data = null, open = false, day = null, answer = null, busy = false;
+  let data = null, open = false, day = null, answer = null, busy = false, today = null;
   const section = () => document.getElementById('view-' + NAME);
 
   // ---------- mounting (beside app.js views) ----------
@@ -66,6 +66,7 @@
     if (!C.hasToken || !C.hasToken()) { sec.innerHTML = `<div class="sy">${head()}<p class="faint">Start or join a tribe first.</p></div>`; return; }
     try {
       data = await C.api('/secretary');
+      try { today = await C.api('/secretary/summary'); } catch { today = null; }
       if (day && day !== data.journal.date) { try { const j = await C.api('/secretary/journal/' + day); data.journal = j; } catch { day = null; } }
     } catch (e) { if (!quiet) sec.innerHTML = `<div class="sy">${head()}<p class="faint">${esc(e.message)}</p></div>`; return; }
     if (quiet && document.activeElement && document.activeElement.closest && document.activeElement.closest('#view-secretary input, #view-secretary textarea, #view-secretary select')) return;
@@ -93,6 +94,21 @@
     return `<section class="hero-card sy-hero">${img}<span class="eyebrow">Digest · ${esc(ago(d.updated))}</span><h2>${esc(data.inShort || 'The ten things that matter now')}</h2>
       <ol class="sy-digest">${d.items.map(x => `<li style="--dot:${DOT[x.kind] || 'var(--faint)'}"><span class="sy-dot"></span><span class="sy-t">${inl(x.text)}</span>${srcBtn(x.ref, x.text)}</li>`).join('')}</ol>
       ${data.host ? `<div class="hero-acts"><button class="btn" data-run>Read everything now</button></div>` : ''}</section>`;
+  }
+  // Today, without an AI: the sentences that matter, action items (one tap to a task), decisions and questions
+  // straight from chat, voice notes and huddle captions (server: /api/secretary/summary, app/ui/secsum.js).
+  function todayHtml() {
+    const t = today || {}; const acts = t.actions || [];
+    const row = a => `<li class="sy-act${a.task ? ' done' : ''}" data-act="${esc(a.id)}"><span class="sy-act-t">${esc(a.title)}</span>
+      <span class="sy-act-m">${a.ownerName ? `<b>${esc(a.ownerName)}</b>` : ''}${a.due ? `<span>due ${esc(new Date(a.due + 'T12:00').toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric' }))}</span>` : ''}${a.from ? `<span>from ${esc(a.from)}</span>` : ''}</span>
+      ${a.task ? '<span class="sy-tag task">task</span>' : data.canAct !== false ? `<span class="sy-act-b"><button class="btn sm" data-act-task="${esc(a.id)}">Make it a task</button><button class="sy-x" data-act-x="${esc(a.id)}" title="Not an action" aria-label="Dismiss">×</button></span>` : ''}</li>`;
+    return `<section class="sec sy-today"><div class="sec-head"><span class="eyebrow">Today · no AI needed</span><h2>Notes from today's talk</h2></div>
+      ${t.items ? `${(t.summary || []).length ? `<ul class="sy-sum">${t.summary.map(x => `<li>${inl(x)}</li>`).join('')}</ul>` : ''}
+        ${acts.length ? `<h3 class="sy-h3">Action items</h3><ul class="sy-acts">${acts.map(row).join('')}</ul>` : ''}
+        ${(t.decisions || []).length ? `<h3 class="sy-h3">Decisions</h3><ul class="sy-sum">${t.decisions.map(x => `<li>${inl(x.text)}${x.from ? ` <small>· ${esc(x.from)}</small>` : ''}</li>`).join('')}</ul>` : ''}
+        ${(t.questions || []).length ? `<h3 class="sy-h3">Open questions</h3><ul class="sy-sum">${t.questions.slice(0, 6).map(x => `<li>${inl(x.text)}${x.from ? ` <small>· ${esc(x.from)}</small>` : ''}</li>`).join('')}</ul>` : ''}`
+        : '<div class="sy-empty">Talk in chat, send voice notes or caption a huddle, and the summary, decisions and action items show up here.</div>'}
+      <div class="sy-vn-row"></div></section>`;
   }
   function askHtml() {
     return `<section class="sec"><div class="sec-head"><span class="eyebrow">Ask</span><h2>What does the team know?</h2></div>
@@ -148,7 +164,7 @@
   }
   function render() {
     const sec = section(); if (!sec || !data) return;
-    sec.innerHTML = `<div class="sy">${head()}${hero()}${askHtml()}${ideasHtml()}${researchHtml()}${journalHtml()}${settingsHtml()}</div>`;
+    sec.innerHTML = `<div class="sy">${head()}${hero()}${todayHtml()}${askHtml()}${ideasHtml()}${researchHtml()}${journalHtml()}${settingsHtml()}</div>`;
     wire();
   }
 
@@ -188,6 +204,8 @@
       e.preventDefault(); const q = $('#sy-rq-q').value.trim(); if (!q) return;
       try { await C.api('/secretary/requests', { method: 'POST', body: { question: q } }); toast('Requested. The agents see it in secretary_inbox.'); $('#sy-rq-q').value = ''; load(true); } catch (err) { toast(err.message); }
     };
+    sec.querySelectorAll('[data-act-task]').forEach(b => b.onclick = async () => { b.disabled = true; try { await C.api(`/secretary/actions/${b.dataset.actTask}/task`, { method: 'POST' }); toast('Made it a task.'); load(true); } catch (e) { toast(e.message); b.disabled = false; } });
+    sec.querySelectorAll('[data-act-x]').forEach(b => b.onclick = async () => { try { await C.api(`/secretary/actions/${b.dataset.actX}/dismiss`, { method: 'POST' }); load(true); } catch (e) { toast(e.message); } });
     sec.querySelectorAll('[data-task]').forEach(b => b.onclick = async () => { b.disabled = true; try { await C.api(`/secretary/ideas/${b.dataset.task}/task`, { method: 'POST' }); toast('Made it a task.'); load(true); } catch (e) { toast(e.message); b.disabled = false; } });
     sec.querySelectorAll('[data-vote]').forEach(b => b.onclick = async () => { b.disabled = true; try { await C.api(`/secretary/ideas/${b.dataset.vote}/vote`, { method: 'POST' }); toast('Vote posted in chat.'); load(true); } catch (e) { toast(e.message); b.disabled = false; } });
     sec.querySelectorAll('[data-dismiss]').forEach(b => b.onclick = async () => { try { await C.api(`/secretary/ideas/${b.dataset.dismiss}/dismiss`, { method: 'POST' }); load(true); } catch (e) { toast(e.message); } });

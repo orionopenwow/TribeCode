@@ -511,7 +511,7 @@ require('./mcp-people').bind(people);   // share_prompt, report_context + the ag
 const workshop = makeWorkshop({ store: baseStore, P, approvals, getMembers: () => members, nameOf, postChat, broadcast, slug, id, hasToken: W.hasToken, readSecret: W.readSecret });
 const guide = makeGuide({ ui: UI });   // feat/vision-guide
 // Solo mode: the Secretary (background notes, digest, inspiration, research) and the agents hub.
-const secretary = makeSecretary({ P, store: baseStore, pstore: store, brain, docs, loadTasks: () => loadTasks(), hubFor, getMembers: () => members, nameOf, postChat, createTask: o => createTask(o),
+const secretary = makeSecretary({ secsum: require(path.join(UI, 'secsum.js')), P, store: baseStore, pstore: store, brain, docs, loadTasks: () => loadTasks(), hubFor, getMembers: () => members, nameOf, postChat, createTask: o => createTask(o),
   votes: chatx.votes, broadcast, str, id, log: m => console.error('  ' + m) });
 require('./mcp-secretary').bind(secretary);
 chatHook = (...x) => secretary.onChat(...x);
