@@ -623,6 +623,7 @@ const canvasAI = require('./canvasai')({ P, canvas: designCanvas, nameOf, member
 const canvasChat = require('./canvaschat')({ P, base: baseStore, broadcast, canvas: designCanvas, nameOf, memberColor: mid => (memberById(mid) || {}).color || '#F26B1D' });   // Flint's Make-style chat beside the Design canvas (server/canvaschat.js)
 const company = companyHub = require('./company')({ P, base: baseStore, store, broadcast, postChat, nameOf, perms, getMembers: () => members, approvals, bus, coord, createTask: o => createTask(o), saveTask: t => saveTask(t), loadTasks: () => loadTasks(), docs });   // v0.27 company: seats, goals, decisions, rhythms (server/company.js)
 company.useLedger(pid => { const w = ledger.aiWeek(pid); return w.seats.some(x => x.events) ? { spentWeek: w.total, currency: w.currency } : null; });   // v0.27 company: real AI spend from Money (ledger.js) in the weekly review
+const dashBand = require('./dashband')({ P, base: baseStore, preview, showcase, visuals, hubFor, approvals, loadTasks: () => loadTasks(), canvas: designCanvas, company, notify: pocket, nameOf, broadcast, perms });   // feat/dash-preview: the dashboard's preview band + Needs attention
 mcpFlow = makeMcpFlow({ flow, P });
 // MCP calls run in the agent's project, or in `project` when the tool call names one it can see.
 function agentProject(me) { return P.pick(me, null, me.project || (online.get(me.owner) || {}).project); }
@@ -1186,6 +1187,7 @@ async function apiInProject(req, res, url) {
   if (a === 'publish') { const h = await publishHub.route(req, res, ctx()); if (h !== null) return; }   // v0.27 publish: play links
   if (a === 'jam') { const h = await jamHub.route(req, res, ctx()); if (h !== null) return; }   // v0.27 jams
   if (a === 'applink' || a === 'export' || a === 'shortcut' || a === 'github') { const h = await (a === 'applink' ? applink : a === 'github' ? githubAuth : exporter).route(req, res, ctx()); if (h !== null) return; }   // Home Screen app links, Desktop folders, GitHub sign-in
+  if (a === 'dash') { const h = await dashBand.route(req, res, ctx()); if (h !== null) return; }   // feat/dash-preview (server/dashband.js)
   if (a === 'thumb') { const h = await thumb.route(req, res, { m, b, me, url, send, fail }); if (h !== null) return; }   // pinned repo thumbnail (server/thumb.js)
   if (a === 'templates' && m === 'GET') return send(res, 200, { templates: docsx.templates() });
   if (a === 'debug' && b === 'bus-log' && m === 'GET' && DEBUG) return send(res, 200, { events: busLog.log(url.searchParams.get('type')) });
