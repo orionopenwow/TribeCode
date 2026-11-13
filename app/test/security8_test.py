@@ -15,7 +15,7 @@ W  WebAuthn: registration checks the challenge (ours, single use, this account's
 P  payments: checkout and the portal need a member (not an agent's key, not no key), are rate-limited, and never echo a
    key; the webhook refuses GET, an oversized body, a v0-only signature; 12 copies of one event at once are applied
    once; settings and by-hand changes stay on the host computer; the fake-Stripe override does nothing without TRIBE_TEST.
-Usage: python app/test/security7_test.py   (TRIBE_PORT_OFFSET to run beside other suites)
+Usage: python app/test/security8_test.py   (TRIBE_PORT_OFFSET to run beside other suites)
 """
 import base64, hashlib, hmac, http.server, json, os, struct, subprocess, sys, tempfile, threading, time, urllib.parse, urllib.request
 from concurrent.futures import ThreadPoolExecutor
@@ -289,7 +289,7 @@ def main():
         out2 = subprocess.run(out.args, capture_output=True, text=True, env={k: v for k, v in env.items() if k != "TRIBE_PAYMENTS"}); assert out2.stdout.strip().endswith("false"), "keys alone turn nothing on: payments need TRIBE_PAYMENTS=1 or the host's setting"
         logtxt = open(logf).read(); assert SK not in logtxt and WH not in logtxt
         print("  P: checkout/portal need a member and are rate-limited; return address is ours; the webhook: POST, v1, size, one event at once applied once; settings host-local; no fake Stripe without TRIBE_TEST")
-        print("ok security7_test")
+        print("ok security8_test")
     finally:
         srv.terminate()
         try: srv.wait(timeout=5)

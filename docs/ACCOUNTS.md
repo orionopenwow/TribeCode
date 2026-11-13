@@ -120,7 +120,7 @@ Store: `.tribe/accounts.json` = `{ version: 1, accounts: [{ id, username, userna
 ## feat/auth3: two-step sign-in and passkeys
 
 Code: `server/auth3.js` (with `server/cbor.js` and `server/sealbox.js`), `app/ui/auth3.js`. Tests: `e2e_auth3.py`,
-`security7_test.py`. No dependencies: TOTP is HMAC-SHA1, WebAuthn is checked with Node's crypto.
+`security8_test.py`. No dependencies: TOTP is HMAC-SHA1, WebAuthn is checked with Node's crypto.
 
 **Two-step sign-in is off by default** (the owner turns it on later). Turn it on with `TRIBE_TWO_STEP=1`, or on the host
 computer with `PUT /api/accounts/admin/settings { "twoStep": true }` (kept in `.tribe/auth.json`; there is no switch in

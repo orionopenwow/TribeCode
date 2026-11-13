@@ -137,4 +137,4 @@ Rules for a new gate:
 1. Never gate something that runs locally and worked before. Soft gates inform; they don't stop.
 2. Gate at the moment of value (the 4th project, a bigger team), not on first run.
 3. "Not now" first, a week of quiet after it, and a free do-it-yourself link on the sheet.
-4. Test it in `app/test/e2e_premium.py` (payments: `e2e_payments.py`, `security7_test.py`).
+4. Test it in `app/test/e2e_premium.py` (payments: `e2e_payments.py`, `security8_test.py`).

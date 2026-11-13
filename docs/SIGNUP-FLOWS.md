@@ -3,7 +3,7 @@
 This is the map of every path into TribeCode after the tour with Flint, and how each one ends. Each path ends with a next step and never at a dead end.
 The code is in `app/ui/signupnudge.js` (the pop-up after the tour), `app/ui/signup.js` (the sign-up sheet), `app/ui/accounts.js` (Log in, guest, switcher), `app/ui/oauth.js` + `app/ui/signin.html` (providers), `app/ui/auth2.js` (the steps after a provider or an email link, the desktop sign-in, Settings › Account › Sign-in methods), `server/accounts.js`, `server/oauth.js` and `server/smtp.js`.
 Two-step sign-in and passkeys: `app/ui/auth3.js`, `server/auth3.js`.
-Tests: `e2e_signup_nudge.py`, `e2e_signup.py`, `e2e_accounts.py`, `e2e_oauth.py`, `e2e_auth2.py`, `e2e_auth3.py`, `security5_test.py`, `security7_test.py`, `e2e_demo_intro.py`.
+Tests: `e2e_signup_nudge.py`, `e2e_signup.py`, `e2e_accounts.py`, `e2e_oauth.py`, `e2e_auth2.py`, `e2e_auth3.py`, `security5_test.py`, `security8_test.py`, `e2e_demo_intro.py`.
 
 ## What a host can turn on
 
