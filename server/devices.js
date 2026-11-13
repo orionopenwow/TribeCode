@@ -27,6 +27,17 @@ module.exports = function makeDevices({ store, id, hash, str, getMembers, public
     return str(given, 40) || auto;
   }
 
+  // feat/invite-one: the browser and system of the device that signed in, read from its user agent once (at sign-in),
+  // so Settings can say "Chrome on Windows" instead of a bare label. Nothing else from the user agent is kept.
+  function agentOf(req) {
+    const ua = String((req && req.headers && req.headers['user-agent']) || '').slice(0, 400);
+    const browser = /TribeCode|Tauri/i.test(ua) ? 'TribeCode app' : /Edg(e|A|iOS)?\//.test(ua) ? 'Edge' : /OPR\/|Opera/.test(ua) ? 'Opera' : /SamsungBrowser\//.test(ua) ? 'Samsung Internet'
+      : /Firefox\/|FxiOS\//.test(ua) ? 'Firefox' : /Chrome\/|CriOS\//.test(ua) ? 'Chrome' : /Safari\//.test(ua) && /Version\//.test(ua) ? 'Safari' : '';
+    const os = /iPhone|iPod/.test(ua) ? 'iPhone' : /iPad/.test(ua) ? 'iPad' : /Android/.test(ua) ? 'Android' : /Windows/.test(ua) ? 'Windows' : /CrOS/.test(ua) ? 'ChromeOS'
+      : /Mac OS X|Macintosh/.test(ua) ? 'macOS' : /Linux|X11/.test(ua) ? 'Linux' : '';
+    return { browser, os };
+  }
+
   // fix/security-2: expired = past its fixed end, or unused for idleDays (counted from the last use, else from when it was made)
   const lastAt = d => Date.parse(d.lastUsed || d.created) || 0;
   const endsAt = d => Math.min(d.expires ? Date.parse(d.expires) || Infinity : Infinity, lastAt(d) + (d.idleDays || IDLE_DAYS) * DAY);
@@ -54,6 +65,7 @@ module.exports = function makeDevices({ store, id, hash, str, getMembers, public
     const token = id(32);
     d.tokens = [...d.tokens, hash(token)].slice(-MAX_TOKENS);
     d.lastUsed = new Date().toISOString();
+    const ag = agentOf(req); if (ag.browser) d.browser = ag.browser; if (ag.os) d.os = ag.os;
     save();
     return { token, member: m, device: d };
   }
@@ -69,7 +81,7 @@ module.exports = function makeDevices({ store, id, hash, str, getMembers, public
   }
   const deviceForToken = th => devices.find(x => x.tokens.includes(th)) || null;
 
-  const view = (d, th) => ({ id: d.id, label: d.label, created: d.created, lastUsed: d.lastUsed, redeemed: d.tokens.length > 0, current: !!th && d.tokens.includes(th),
+  const view = (d, th) => ({ id: d.id, label: d.label, browser: d.browser || '', os: d.os || '', created: d.created, lastUsed: d.lastUsed, redeemed: d.tokens.length > 0, current: !!th && d.tokens.includes(th),
     expires: d.expires || null, idleDays: d.idleDays || IDLE_DAYS, endsAt: new Date(endsAt(d)).toISOString() });   // fix/security-2
 
   // ---- API: returns null when the route isn't ours ----
@@ -132,5 +144,5 @@ module.exports = function makeDevices({ store, id, hash, str, getMembers, public
   }
 
   const reload = () => { devices = store.readJSON('.tribe/devices.json', []); };   // cloud save put the file back
-  return { route, serveApp, memberForToken, deviceForToken, create, redeem, reload, list: () => devices };
+  return { route, serveApp, memberForToken, deviceForToken, create, redeem, reload, agentOf, list: () => devices };
 };

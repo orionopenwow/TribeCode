@@ -13,11 +13,20 @@
 //   Alongside you: presence says where it is ("in Launch plan doc"), @mentions reach inbox_next, its messages are
 //     labelled with its name and you can edit or delete them (server/chatx.js).
 //
+//   One Claude per person (feat/invite-one): this is the only way a person's Claude joins. A Claude that person already
+//     connected through Connect your AI (POST /api/agents, a Claude kind) counts as theirs: GET lists it as "already
+//     connected", POST re-keys it instead of minting a second member, and Pause / narrowing / Remove work on it too.
+//     Someone who ended up with two (one from each feature, before this) keeps both working; `merge` says so.
+//   Nothing is made when the sheet opens: GET carries a `preview` of the setup with the key masked, and POST (the sheet's
+//     Copy or Download) makes the member. A Claude that never connected is taken out again after 24 hours (sweep).
+//   Claude on the web signs in through server/claudeauth.js (OAuth), so no key rides in a link; `connections` lists them.
+//
 // HTTP (people only, your own Claude only):
-//   GET    /api/invite-claude          status: agent, online, joined, scopes, paused, adminAsMe, what you can give it
-//   POST   /api/invite-claude          { scopes? } makes (or re-keys) it: { token, code, desktop, web } setup blocks
-//   PUT    /api/invite-claude          { scopes?, paused?, adminAsMe? }
-//   DELETE /api/invite-claude          Remove: the key stops working at once
+//   GET    /api/invite-claude          status: agent, online, joined, scopes, paused, adminAsMe, claudes[], merge, preview
+//   POST   /api/invite-claude          { scopes?, id? } makes (or re-keys) it: { token, code, desktop, web } setup blocks
+//   PUT    /api/invite-claude          { id?, scopes?, paused?, adminAsMe? }
+//   DELETE /api/invite-claude[?id=]    Remove: the key and every sign-in stop working at once
+//   DELETE /api/invite-claude/connections/<id>   end one claude.ai sign-in
 'use strict';
 
 const SCOPES = ['chat', 'docs', 'tasks', 'files', 'website', 'approvals'];
@@ -48,16 +57,26 @@ function scopeOfPath(p) {
   return 'general';
 }
 // Never for an invited Claude, whatever its owner may do: keys, invites, hosting, accounts, its own permissions.
-const NEVER = /^(invite-claude|agents$|agents\/mine|invites|tribe-link|share|devices|host|backup|account|accounts|oauth|session|cloud|bootstrap|join|claim$|reclaim|fresh|github|connections|openspace|brain|settings\/secrets)/;
+const NEVER = /^(invite-claude|claude-auth|agents$|agents\/mine|invites|tribe-link|share|devices|host|backup|account|accounts|oauth|session|cloud|bootstrap|join|claim$|reclaim|fresh|github|connections|openspace|brain|settings\/secrets)/;
 // Admin-level areas: only with "act as me for admin" (and then perms.js still checks the owner's own role).
 const ADMIN = /^(perms|modes|members\/[^/]+\/role|projects\/[^/]+\/(delete|settings)|widgets)/;
 // Read-only tools that stay on when the owner can only watch (spectator).
 const READ_TOOL = /^(list_|read_|check_|search_|get_|tribe_overview|where_is|inbox_next|my_lane|agents_read|market_(list|search|read))/;
 
 module.exports = function inviteClaude({ P, getMembers, saveMembers, pushPresence, perms, hash, id, slug, str, endpoints, agentsHub, publicBase = () => null,
-  postChat, sendTo, agentSeen, idleMs, publicMember, docs, store, chans, nameOf, rate = Number(process.env.TRIBE_CLAUDE_RATE) || 120, now = () => Date.now() }) {
+  postChat, sendTo, agentSeen, idleMs, publicMember, docs, store, chans, nameOf, rate = Number(process.env.TRIBE_CLAUDE_RATE) || 120, now = () => Date.now(),
+  auth = () => null, staleMs = 24 * 3600_000 }) {
   const member = mid => getMembers().find(m => m.id === mid) || null;
   const mine = me => getMembers().find(x => x.role === 'agent' && x.owner === me.id && x.invited) || null;
+  const signedIn = ag => { const a = auth(); return !!(a && a.active(ag.id)); };
+  // In the tribe right now: it has a key, or a claude.ai sign-in.
+  const on = ag => !!ag && !ag.removed && (!!ag.tokenHash || signedIn(ag));
+  // A Claude the person connected with Connect your AI before this sheet existed (or with POST /api/agents).
+  const CLAUDE_KINDS = new Set(['claude-code', 'claude-desktop', 'claude-ai']);
+  const legacy = me => getMembers().filter(x => x.role === 'agent' && x.owner === me.id && !x.invited && x.tokenHash && CLAUDE_KINDS.has(x.kind || 'claude-code'));
+  const claudesOf = me => { const inv = mine(me); return [...(on(inv) ? [inv] : []), ...legacy(me)]; };
+  const primary = me => claudesOf(me)[0] || null;
+  const pick = (me, cid) => (cid ? claudesOf(me).find(x => x.id === cid) || null : primary(me));
   const nameFor = owner => `${String(owner.name || 'Your').slice(0, 22)}'s Claude`.slice(0, 32);
   const scopesOf = ag => (Array.isArray(ag.scopes) ? ag.scopes.filter(s => SCOPES.includes(s)) : SCOPES.slice());
   const live = ag => { const s = agentSeen.get(ag.id); return !!s && now() - s.at < idleMs; };
@@ -78,10 +97,13 @@ module.exports = function inviteClaude({ P, getMembers, saveMembers, pushPresenc
     return o;
   }
   // Valid at all? (server/index.js stillValid: paused, removed or owner gone = the key doesn't work.)
-  const usable = ag => !ag || !ag.invited || (!ag.paused && !ag.removed && !!member(ag.owner));
+  const usable = ag => !ag || (!ag.invited && !ag.paused) || (!ag.paused && !ag.removed && !!member(ag.owner));
+  // A Connect-your-AI Claude its owner narrowed from the sheet: only the scopes apply (Pause is `usable`).
+  const narrowed = ag => !!ag && !ag.invited && Array.isArray(ag.scopes);
   const ownerWatchOnly = ag => perms.actingRole(ag) === 'spectator';
   // An MCP tool call: null when allowed, else the reason.
   function gateTool(ag, name, args) {
+    if (narrowed(ag)) { if (name === 'tribe_api') { const a = args || {}; return gatePath(ag, String(a.method || 'GET').toUpperCase(), String(a.path || ''), true); } const sc0 = scopeOfTool(name); return sc0 !== 'general' && !scopesOf(ag).includes(sc0) ? `Your owner turned off ${LABEL[sc0] || sc0} for you.` : null; }
     if (!ag || !ag.invited) return null;
     if (!usable(ag)) return 'Paused by your owner.';
     if (!sync(ag)) return 'Your owner left the tribe.';
@@ -95,6 +117,7 @@ module.exports = function inviteClaude({ P, getMembers, saveMembers, pushPresenc
   }
   // An API request (also what tribe_api calls): null when allowed, else the reason.
   function gatePath(ag, method, pth, counted) {
+    if (narrowed(ag)) { const sc0 = scopeOfPath(String(pth || '')); return sc0 !== 'general' && !scopesOf(ag).includes(sc0) ? `Your owner turned off ${LABEL[sc0] || sc0} for you.` : null; }
     if (!ag || !ag.invited) return null;
     if (!usable(ag)) return 'Paused by your owner.';
     if (!sync(ag)) return 'Your owner left the tribe.';
@@ -109,7 +132,7 @@ module.exports = function inviteClaude({ P, getMembers, saveMembers, pushPresenc
     return null;
   }
   // Tools it sees in tools/list (the rest are refused anyway).
-  const listable = (ag, name) => !ag || !ag.invited || name === 'tribe_api' || scopeOfTool(name) === 'general' || scopesOf(ag).includes(scopeOfTool(name));
+  const listable = (ag, name) => !ag || (!ag.invited && !narrowed(ag)) || name === 'tribe_api' || scopeOfTool(name) === 'general' || scopesOf(ag).includes(scopeOfTool(name));
 
   // ---------- presence: "in Launch plan doc" ----------
   function whereFor(tool, args) {
@@ -223,58 +246,108 @@ module.exports = function inviteClaude({ P, getMembers, saveMembers, pushPresenc
         steps: ['Copy this command.', 'Paste it in your terminal and press Enter.', 'Start claude (or type /mcp in a running one): it joins as ' + ag.name + '.'] },
       desktop: { json: desk.json, files: desk.files, steps: ['Open Claude Desktop › Settings › Developer › Edit Config.', 'Paste this (or Download it and replace the file). Already have servers? Add the tribecode entry inside mcpServers.', 'Restart Claude Desktop: TribeCode shows up in its tools.'],
         ...(webUrl ? { connector: webUrl } : {}) },
-      web: webUrl ? { available: true, url: `${webUrl}?token=${encodeURIComponent(token)}`, plain: webUrl, header: `Authorization: Bearer ${token}`,
-        steps: ['On claude.ai, open Settings › Connectors and choose Add custom connector.', 'Name it TribeCode, paste this URL, and leave the sign-in fields empty.', 'In a chat, turn TribeCode on from the tools menu.'] }
+      // Claude on the web signs in (server/claudeauth.js), so the address carries no key. Old ?token= links keep working.
+      web: webUrl ? { available: true, oauth: true, plain: webUrl,
+        steps: ['On claude.ai, open Settings › Connectors and choose Add custom connector.', 'Name it TribeCode and paste this address. Leave the other fields empty.', 'Press Connect. A TribeCode page opens: approve it there, and your Claude joins as ' + ag.name + '.'] }
         : { available: false, why: 'Claude on the web connects from Anthropic\'s cloud, so your tribe needs a public https address first. Turn on "Work with friends anywhere" (a free secure tunnel) and come back.' },
     };
   }
+  const MASK = '••••••••';   // where the key will be, before Copy makes it
+  function claudeView(ag, me) {
+    const inv = !!ag.invited, a = auth();
+    return { ...publicMember(ag), via: inv ? 'invite' : 'connect', kind: ag.kind || 'claude-code', online: live(ag), joined: inv ? ag.firstSeen || null : ag.firstSeen || ag.joined || null,
+      paused: !!ag.paused, scopes: scopesOf(ag), adminAsMe: !!(inv && ag.adminAsMe), key: !!ag.tokenHash, ownerName: me.name, connections: a ? a.connections(ag.id) : [] };
+  }
   function view(req, me) {
-    const ag = mine(me), on = ag && ag.tokenHash && !ag.removed;
+    const list = claudesOf(me), ag = list[0] || null;
     const ownerRole = perms.roleIn(me, P.current());
     return {
-      agent: on ? { ...publicMember(ag), invited: true, ownerName: me.name } : null, online: !!(on && live(ag)), joined: on ? ag.firstSeen || null : null,
-      scopes: on ? scopesOf(ag) : SCOPES.slice(), paused: !!(on && ag.paused), adminAsMe: !!(on && ag.adminAsMe),
+      agent: ag ? { ...publicMember(ag), invited: !!ag.invited, ownerName: me.name } : null, online: !!(ag && live(ag)), joined: ag ? (ag.invited ? ag.firstSeen || null : ag.firstSeen || ag.joined || null) : null,
+      scopes: ag ? scopesOf(ag) : SCOPES.slice(), paused: !!(ag && ag.paused), adminAsMe: !!(ag && ag.invited && ag.adminAsMe),
+      claudes: list.map(x => claudeView(x, me)), merge: list.length > 1, name: ag ? ag.name : nameFor(me), preview: setup(req, MASK, { name: ag ? ag.name : nameFor(me) }),
       all: SCOPES.map(k => ({ id: k, label: LABEL[k] })), canAdmin: ownerRole === 'host' || ownerRole === 'admin', public: !!publicBase() || !!endpoints(req, null).public, rate,
     };
   }
+  // The person's one Claude, made if there is none yet (no key: a claude.ai sign-in is about to give it its access).
+  function make(me) {
+    let ag = mine(me);
+    if (ag) Object.assign(ag, { name: nameFor(me), paused: false, removed: false, project: P.current() || ag.project, keyedAt: new Date(now()).toISOString() });
+    else {
+      ag = { id: 'claude-' + slug(me.name).slice(0, 10) + '-' + id(4), name: nameFor(me), color: '#38C6B1', role: 'agent', owner: me.id, invited: true, kind: 'claude-code', label: 'Invited Claude',
+        joined: new Date(now()).toISOString(), keyedAt: new Date(now()).toISOString(), tokenHash: null, project: P.current(), adminAsMe: false };
+      getMembers().push(ag);
+    }
+    return ag;
+  }
+  function ensure(me) {
+    if (!me || me.role === 'agent' || me.role === 'spectator' || me.guest || me.guestUntil) return null;
+    let ag = primary(me);
+    if (!ag) { ag = make(me); perms.audit(me, 'invite-claude', ag); }
+    sync(ag); saveMembers(); pushPresence();
+    return ag;
+  }
+  // A Claude that was made (Copy, or an approved sign-in) but never connected: gone after a day. Nothing it wrote can
+  // exist, so the member is taken out entirely. Connect-your-AI Claudes have no "first seen", so they are left alone.
+  function sweep() {
+    const all = getMembers(), t = now(), a = auth(); let n = 0;
+    for (let i = all.length - 1; i >= 0; i--) {
+      const x = all[i];
+      if (x.role !== 'agent' || !x.invited || x.firstSeen) continue;
+      const at = Date.parse(x.keyedAt || x.joined) || 0;
+      if (t - at < staleMs) continue;
+      all.splice(i, 1); agentSeen.delete(x.id); hits.delete(x.id); if (a) a.revokeAgent(x.id); n++;
+    }
+    if (n) { saveMembers(); pushPresence(); }
+    return n;
+  }
+  const sweeper = setInterval(() => { try { sweep(); } catch (e) { console.error('invite-claude sweep: ' + e.message); } }, Math.min(staleMs, 3600_000)); if (sweeper.unref) sweeper.unref();
+  setTimeout(() => { try { sweep(); } catch {} }, 5000).unref();
 
-  async function route(req, res, { m, me, readBody, send, fail }) {
+  async function route(req, res, { m, b, c, me, url, readBody, send, fail }) {
     if (!me) return fail(res, 401, 'not a member of this tribe');
     if (me.role === 'agent') return fail(res, 403, 'people only');
     if (me.role === 'spectator' || me.guest || me.guestUntil) { if (m !== 'GET') return fail(res, 403, 'spectators and guests can\'t invite an AI'); }
     if (m === 'GET') return send(res, 200, view(req, me));
     const body = m === 'DELETE' ? {} : await readBody(req).catch(() => ({}));
     const pickScopes = v => (Array.isArray(v) ? [...new Set(v.filter(s => SCOPES.includes(s)))] : null);
+    const wanted = str(body.id, 64) || (url && url.searchParams.get('id')) || '';
+    if (m === 'DELETE' && b === 'connections') {
+      const a = auth(); if (!a || !c || !a.revokeGrant(claudesOf(me).map(x => x.id), c)) return fail(res, 404, 'not one of your Claude\'s connections');
+      pushPresence(); perms.audit(me, 'claude-oauth-revoke', primary(me));
+      return send(res, 200, view(req, me));
+    }
+    if (b) return fail(res, 404, 'not found');
     if (m === 'POST') {
-      let ag = mine(me); const token = id(32);
-      if (ag) Object.assign(ag, { tokenHash: hash(token), name: nameFor(me), paused: false, removed: false, project: P.current() || ag.project });
-      else {
-        ag = { id: 'claude-' + slug(me.name).slice(0, 10) + '-' + id(4), name: nameFor(me), color: '#38C6B1', role: 'agent', owner: me.id, invited: true, kind: 'claude-code', label: 'Invited Claude',
-          joined: new Date(now()).toISOString(), tokenHash: hash(token), project: P.current(), adminAsMe: false };
-        getMembers().push(ag);
-      }
+      const token = id(32);
+      // One Claude per person: the one they have gets the new key (also a Connect-your-AI Claude); only without one is a member made.
+      let ag = pick(me, wanted); if (wanted && !ag) return fail(res, 404, 'not one of your Claudes');
+      if (ag && !ag.invited) Object.assign(ag, { tokenHash: hash(token), project: P.current() || ag.project });
+      else { ag = make(me); ag.tokenHash = hash(token); }
       const sc = pickScopes(body.scopes); if (sc) ag.scopes = sc;
-      sync(ag); saveMembers(); pushPresence();
+      if (ag.invited) sync(ag); else if (Array.isArray(me.projects)) ag.projects = [...me.projects]; else delete ag.projects;
+      saveMembers(); pushPresence();
       perms.audit(me, 'invite-claude', ag);
       return send(res, 200, { ...view(req, me), token, ...setup(req, token, ag) });
     }
-    const ag = mine(me); if (!ag || !ag.tokenHash || ag.removed) return fail(res, 404, 'you have not invited your Claude yet');
+    const ag = pick(me, wanted); if (!ag) return fail(res, 404, 'you have not invited your Claude yet');
     if (m === 'PUT') {
       const sc = pickScopes(body.scopes); if (sc) ag.scopes = sc;
       if (typeof body.paused === 'boolean') ag.paused = body.paused;
-      if (typeof body.adminAsMe === 'boolean') ag.adminAsMe = body.adminAsMe;
+      if (typeof body.adminAsMe === 'boolean' && ag.invited) ag.adminAsMe = body.adminAsMe;
       if (ag.paused) agentSeen.delete(ag.id);
       saveMembers(); pushPresence(); perms.audit(me, 'claude-access', ag, { scopes: scopesOf(ag), paused: !!ag.paused, adminAsMe: !!ag.adminAsMe });
       return send(res, 200, view(req, me));
     }
     if (m === 'DELETE') {
-      ag.tokenHash = null; ag.removed = true; ag.paused = false; agentSeen.delete(ag.id); delete ag.firstSeen;
+      const a = auth(); if (a) a.revokeAgent(ag.id);
+      ag.tokenHash = null; ag.paused = false; agentSeen.delete(ag.id);
+      if (ag.invited) { ag.removed = true; delete ag.firstSeen; } else delete ag.scopes;
       saveMembers(); pushPresence(); perms.audit(me, 'claude-removed', ag);
       return send(res, 200, { ok: true, remove: 'claude mcp remove tribecode' });
     }
     return fail(res, 405, 'method not allowed');
   }
 
-  return { route, gateTool, gatePath, listable, usable, whereFor, seen, inbox, mcpTools, SCOPES, scopeOfTool, scopeOfPath };
+  return { route, gateTool, gatePath, listable, usable, ensure, sweep, view, claudesOf, whereFor, seen, inbox, mcpTools, SCOPES, scopeOfTool, scopeOfPath };
 };
 module.exports.SCOPES = SCOPES;

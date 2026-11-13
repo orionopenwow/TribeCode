@@ -160,13 +160,15 @@ function authed(req) {
   const u = new URL(req.url, 'http://x');
   const t = h.startsWith('Bearer ') ? h.slice(7) : u.searchParams.get('token');   // ?token= is deprecated for media (fix/security-2), still needed by /ws
   if (!t) return u.searchParams.get('mt') && media ? stillValid(media.verify(req, u, u.searchParams.get('mt'))) : null;   // fix/security-2: signed media link
+  // feat/invite-one: a claude.ai sign-in (server/claudeauth.js). Header only: an access token never rides in a URL.
+  if (claudeAuth && claudeAuth.isAccessToken(t)) return h.startsWith('Bearer ') ? stillValid(claudeAuth.memberForToken(t)) : null;
   const th = hash(t);
   return stillValid(members.find(x => x.tokenHash === th) || (devices && devices.memberForToken(th)) || null);
 }
 function stillValid(m) {
   if (m && m.guestUntil && Date.parse(m.guestUntil) < Date.now()) return null;   // a one-time guest pass that ran out (any of its keys)
   if (m && m.role === 'agent') { const o = members.find(x => x.id === m.owner); if (o && o.guestUntil && Date.parse(o.guestUntil) < Date.now()) return null; }   // fix/security-review: …and its agents
-  if (m && m.invited && inviteClaude && !inviteClaude.usable(m)) return null;   // an invited Claude that its owner paused (or who left)
+  if (m && (m.invited || m.paused) && inviteClaude && !inviteClaude.usable(m)) return null;   // an invited Claude that its owner paused (or who left)
   return m;
 }
 const tokenHashOf = req => { const h = req.headers.authorization || ''; const t = h.startsWith('Bearer ') ? h.slice(7) : new URL(req.url, 'http://x').searchParams.get('token'); return t ? hash(t) : null; };
@@ -336,6 +338,7 @@ function agentPlace(mid) {
 }
 let places = null;   // made below, once chans exists
 let inviteClaude = null;   // made below (server/inviteclaude.js)
+let claudeAuth = null;     // made below (server/claudeauth.js): sign-in for the claude.ai connector
 
 // harden: presence frames are cheap to send and expensive to fan out (each one re-sends presence to everyone), so each
 // socket gets 40 of them per 10 seconds; the rest are dropped. A person keeps at most 24 sockets (tabs, devices).
@@ -580,7 +583,21 @@ const agentsHub = makeAgentsHub({ P, store: baseStore, pstore: store, brain, get
   approvals, loadTasks: () => loadTasks(), createTask: o => createTask(o), saveTask: t => saveTask(t) });   // + the Agent fleet (feat/fleet)
 // Invite your Claude (server/inviteclaude.js): your own Claude as a member, with your access and never more.
 inviteClaude = require('./inviteclaude')({ P, getMembers: () => members, saveMembers, pushPresence, perms, hash, id, slug, str, endpoints: (req, t) => agentEndpoints(req, t), agentsHub,
-  publicBase: () => args['public-url'] || process.env.TRIBE_PUBLIC_URL || share.publicUrl(), postChat, sendTo, agentSeen, idleMs: AGENT_IDLE, publicMember, docs, store, chans, nameOf });
+  publicBase: () => args['public-url'] || process.env.TRIBE_PUBLIC_URL || share.publicUrl(), postChat, sendTo, agentSeen, idleMs: AGENT_IDLE, publicMember, docs, store, chans, nameOf,
+  auth: () => claudeAuth, ...(process.env.TRIBE_TEST === '1' && Number(process.env.TRIBE_CLAUDE_STALE_MS) ? { staleMs: Number(process.env.TRIBE_CLAUDE_STALE_MS) } : {}) });
+// Sign-in for the claude.ai connector (server/claudeauth.js): OAuth 2.1 + PKCE on this host, so the key leaves the link.
+// The address a client sees: the one it asked on when it is one of ours (public link, network, this computer), else the public one.
+function oauthBases(req) {
+  const trim = u => String(u || '').replace(/\/+$/, '');
+  const pub = trim(args['public-url'] || process.env.TRIBE_PUBLIC_URL || share.publicUrl());
+  const known = [pub, ...lanUrls().map(u => trim(u.url)), `http://localhost:${PORT}`, `http://127.0.0.1:${PORT}`].filter(Boolean);
+  const proto = String(req.headers['x-forwarded-proto'] || '').split(',')[0].trim() || (req.socket.encrypted ? 'https' : 'http');
+  const asked = /^[A-Za-z0-9.\-:[\]]{1,255}$/.test(String(req.headers.host || '')) ? `${proto === 'https' ? 'https' : 'http'}://${req.headers.host}` : '';
+  const issuer = known.includes(asked) ? asked : pub || asked || known[known.length - 2];
+  return { issuer, mcp: `${issuer}/mcp`, resources: [...new Set([issuer, ...known])].flatMap(b => [b, `${b}/mcp`]) };
+}
+claudeAuth = require('./claudeauth')({ store: baseStore, hash, id, limited, member: mid => members.find(x => x.id === mid) || null, ensureClaude: me => inviteClaude.ensure(me), bases: oauthBases, tribe,
+  pushPresence: () => pushPresence(), audit: (...x) => perms.audit(...x) });
 // The Global Hub (server/hub.js): what you see with no project selected. Member-scoped, rolling.
 dashboard = makeHub({ P, base: baseStore, getMembers: () => members, presenceFor, loadTasks: () => loadTasks(), docs, approvals, flow: null, secretary, workshop, pocket, sendTo,
   isOnline: mid => online.has(mid), nameOf, str, slug, brain, coord, people, hubFor, preview, agentSeen, idleMs: AGENT_IDLE });
@@ -748,7 +765,7 @@ async function standup() {
 // Every API request runs in one project: X-Project header (or ?project=), else where the person last was.
 async function api(req, res, url) {
   const who = authed(req);
-  if (who && who.invited && inviteClaude) { const no = inviteClaude.gatePath(who, req.method, url.pathname); if (no) return fail(res, /Slow down/.test(no) ? 429 : 403, no); }   // invited Claudes: scopes, admin, rate
+  if (who && (who.invited || Array.isArray(who.scopes)) && who.role === 'agent' && inviteClaude) { const no = inviteClaude.gatePath(who, req.method, url.pathname); if (no) return fail(res, /Slow down/.test(no) ? 429 : 403, no); }   // invited Claudes: scopes, admin, rate
   const wanted = String(req.headers['x-project'] || url.searchParams.get('project') || '').trim();
   let pid = P.defaultId();
   if (who) {
@@ -1201,7 +1218,8 @@ async function apiInProject(req, res, url) {
   }
   if ((a === 'agents' && b === 'channel') || (a === 'coord' && ['delegations', 'recommendations'].includes(b))) { const h = await agentnet.route(req, res, ctx()); if (h !== null) return; }
   if (a === 'agents' && (b === 'hub' || b === 'fleet')) { const h = await agentsHub.route(req, res, ctx()); if (h !== null) return; }   // + the Agent fleet (feat/fleet)   // solo mode: "Your agents" (server/agentshub.js)
-  if (a === 'invite-claude') return inviteClaude.route(req, res, ctx());   // Invite your Claude (server/inviteclaude.js)
+  if (a === 'invite-claude') return inviteClaude.route(req, res, ctx());
+  if (a === 'claude-auth') return claudeAuth.route(req, res, ctx());   // approve a claude.ai sign-in (server/claudeauth.js)   // Invite your Claude (server/inviteclaude.js)
   if (a === 'agents' && m === 'POST' && !b) {
     if (me.role === 'spectator' || me.role === 'agent') return fail(res, 403, 'only members can connect agents');
     // Default (no kind/label): the person's one Claude Code agent, as before. With { kind, label }: one more
@@ -1322,7 +1340,9 @@ const server = http.createServer(async (req, res) => {
   // JSON to a loopback server (Private Network Access); without this header the app's sign-in POSTs were refused.
   if (req.method === 'OPTIONS') return send(res, 204, '', { 'Access-Control-Allow-Private-Network': 'true', 'Access-Control-Max-Age': '600' });
   try {
-    if (url.pathname === '/mcp') return await mcp.route(req, res, { me: authed(req), readBody, send });
+    if (url.pathname === '/mcp') return await mcp.route(req, res, { me: authed(req), readBody, send, challenge: () => claudeAuth.challenge(req) });
+    if (claudeAuth.matches(url)) return await claudeAuth.serve(req, res, url, { send, page: (r, status, text) => { r.writeHead(status, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store', ...SAFE_HEADERS('x.html') });
+      r.end(`<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>TribeCode</title><body style="font:16px system-ui;background:#12151A;color:#E6E9EE;display:grid;place-items:center;min-height:90vh;margin:0;padding:16px"><div style="max-width:420px"><h1 style="font-size:22px">This sign-in can't continue</h1><p style="color:#9AA4B2;line-height:1.6">${String(text).replace(/[&<>"']/g, ch => `&#${ch.charCodeAt(0)};`)}</p></div>`); } });
     if (url.pathname.startsWith('/api/')) return await api(req, res, url);
     if (preview.match(req, url)) return preview.serve(req, res, url);   // /preview/<project>/<pt>/… (server/preview.js)
     if (publishHub.match(req, url)) return publishHub.serve(req, res, url);   // /play/<slug>/… public play links (server/publish.js)
