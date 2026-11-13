@@ -68,12 +68,12 @@ def open_canvas(page):
 
 
 def ask(page, text):
-    n = page.evaluate("document.querySelectorAll('#fp-log .fp-flint:not(.is-wait)').length")
-    page.fill("#fp-in", text)
-    page.press("#fp-in", "Enter")
-    page.wait_for_function("n => !document.querySelector('#fp-log .is-wait') && document.querySelectorAll('#fp-log .fp-flint:not(.is-wait)').length > n", arg=n, timeout=15000)
+    n = page.evaluate("document.querySelectorAll('#cv-fpane .fl-thread .fl-msg.fl:not(.streaming)').length")
+    page.fill("#flm-in-canvas", text)
+    page.press("#flm-in-canvas", "Enter")
+    page.wait_for_function("n => !document.querySelector('#cv-fpane .fl-thread .streaming') && document.querySelectorAll('#cv-fpane .fl-thread .fl-msg.fl:not(.streaming)').length > n", arg=n, timeout=15000)
     page.wait_for_timeout(250)
-    return page.locator("#fp-log .fp-flint").last.inner_text()
+    return page.locator("#cv-fpane .fl-thread .fl-msg.fl").last.inner_text()
 
 
 def main():
@@ -100,10 +100,10 @@ def main():
             open_canvas(o)
 
             # ---- Simple by default: canvas + Flint, no layers or properties
-            assert o.is_visible("#cv-fpane") and o.is_visible("#fp-in"), "Flint's pane is beside the canvas"
+            assert o.is_visible("#cv-fpane") and o.is_visible("#flm-in-canvas"), "Flint's pane is beside the canvas"
             assert o.is_hidden("#cv-left") and o.is_hidden("#cv-right"), "no layers or properties in Simple"
             assert o.get_attribute("#cv-mode [data-mode='simple']", "aria-checked") == "true"
-            assert o.is_visible(".fp-hello"), "a first hint"
+            assert o.is_visible("#cv-fpane .fl-empty"), "a first hint"
             sb, pb = o.eval_on_selector("#cv-stage", "e => e.getBoundingClientRect().toJSON()"), o.eval_on_selector("#cv-fpane", "e => e.getBoundingClientRect().toJSON()")
             assert sb["width"] > 900 and abs(sb["right"] - pb["left"]) < 2, (sb, pb)
             shot(o, "simple-empty")
@@ -116,9 +116,9 @@ def main():
             out = ask(o, "make a login screen for Ember")
             assert "sign in screen for Ember" in out, out
             assert "Ember · Sign in" in names(o), "Flint built the frame"
-            assert "You" in o.locator("#fp-log .fp-me").last.inner_text()
-            m.wait_for_function("[...document.querySelectorAll('#fp-log .fp-me')].some(e => /Orion/.test(e.textContent) && /login screen for Ember/.test(e.textContent))", timeout=8000)
-            m.wait_for_function("[...document.querySelectorAll('#fp-log .fp-flint')].some(e => /sign in screen for Ember/.test(e.textContent))", timeout=8000)
+            assert "You" in o.locator("#cv-fpane .fl-thread .fl-msg.me").last.inner_text()
+            m.wait_for_function("[...document.querySelectorAll('#cv-fpane .fl-thread .fl-msg.me')].some(e => /Orion/.test(e.textContent) && /login screen for Ember/.test(e.textContent))", timeout=8000)
+            m.wait_for_function("[...document.querySelectorAll('#cv-fpane .fl-thread .fl-msg.fl')].some(e => /sign in screen for Ember/.test(e.textContent))", timeout=8000)
             m.wait_for_function("TribeCanvas.state().nodes.some(n => n.name === 'Ember · Sign in')", timeout=8000)
             shot(o, "simple-built")
             o.set_viewport_size({"width": 1235, "height": 776}); o.wait_for_timeout(300); shot(o, "simple-1235"); o.set_viewport_size({"width": 1440, "height": 900})
@@ -134,10 +134,10 @@ def main():
             o.wait_for_function("([id, w]) => TribeCanvas.state().nodes.find(n => n.id === id).w === w", arg=[fid, w0], timeout=3000)
 
             # ---- the message's own Undo
-            o.locator("#fp-log .fp-flint").last.locator("[data-fp='undo']").click()
+            o.locator("#cv-fpane .fl-thread .fl-msg.fl").last.locator(".fl-act", has_text="Undo").click()
             o.wait_for_function("!TribeCanvas.state().nodes.some(n => n.name === 'Ember · Sign in')", timeout=5000)
-            o.wait_for_selector("#fp-log .fp-flint.is-undone", timeout=5000)
-            m.wait_for_selector("#fp-log .fp-flint.is-undone", timeout=8000)
+            o.wait_for_selector("#cv-fpane .fl-thread .fl-msg.fl.undone", timeout=5000)
+            m.wait_for_selector("#cv-fpane .fl-thread .fl-msg.fl.undone", timeout=8000)
             m.wait_for_function("!TribeCanvas.state().nodes.some(n => n.name === 'Ember · Sign in')", timeout=8000)
             ask(o, "a pricing section")   # something on the canvas for the screenshots
             # ---- the local brain: a non-design ask (a task) is done right here in the pane, no model
@@ -157,8 +157,8 @@ def main():
             assert o.is_visible(".cv-rtabs [data-rtab='flint']") and o.is_hidden("#cv-fpane"), "Flint is a tab"
             shot(o, "advanced")
             o.click(".cv-rtabs [data-rtab='flint']")
-            o.wait_for_selector("#cv-right #cv-fpane #fp-in", state="visible", timeout=3000)
-            assert o.locator("#fp-log .fp-flint").count() >= 2, "same thread in the tab"
+            o.wait_for_selector("#cv-right #cv-fpane #flm-in-canvas", state="visible", timeout=3000)
+            assert o.locator("#cv-fpane .fl-thread .fl-msg.fl").count() >= 2, "same thread in the tab"
             shot(o, "advanced-flint")
             o.set_viewport_size({"width": 1235, "height": 776}); o.wait_for_timeout(300); shot(o, "advanced-1235"); o.set_viewport_size({"width": 1440, "height": 900})
             o.reload()

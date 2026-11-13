@@ -48,9 +48,9 @@ def v028(page, tag):
     page.wait_for_function("window.TribeCanvas && TribeCanvas.state().open && document.querySelector('#cv-file-t').textContent.length > 0", timeout=15000)
     page.wait_for_selector("#cv-mode [data-mode=simple]", timeout=10000)
     page.click("#cv-mode [data-mode=simple]")
-    page.wait_for_selector("#fp-in", state="visible", timeout=8000)
-    page.fill("#fp-in", "make a login screen for Ember")
-    page.press("#fp-in", "Enter")
+    page.wait_for_selector("#flm-in-canvas", state="visible", timeout=8000)
+    page.fill("#flm-in-canvas", "make a login screen for Ember")
+    page.press("#flm-in-canvas", "Enter")
     page.wait_for_function("TribeCanvas.state().nodes.some(n => /Ember/.test(n.name || ''))", timeout=15000)
     page.wait_for_function("TribeClient.api('/canvas/main').then(r => Object.values(r.file.nodes).some(n => /Ember/.test(n.name || '')))", timeout=8000)   # the edit was kept
     page.wait_for_function("TribeClient.api('/canvaschat/main').then(r => r.items.some(i => i.role === 'flint'))", timeout=8000)

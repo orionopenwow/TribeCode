@@ -114,7 +114,7 @@ def main():
             # ---- a freeform ask: the one AI-boost card
             o.evaluate("TribeCanvas._e.select([])")
             ask(o, "draw a moody watercolor of lanterns over a lake")
-            card = o.locator("#fp-log .boost").last
+            card = o.locator("#cv-fpane .fl-thread .boost").last
             assert card.is_visible(), "the AI-boost card"
             t = card.inner_text()
             assert "Use my AI" in t and "Get credits / Premium" in t, t

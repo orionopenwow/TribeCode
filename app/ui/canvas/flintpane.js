@@ -13,9 +13,9 @@
   'use strict';
   const C = window.TribeClient;
   const MODE_KEY = 'tribecode.canvas.mode';
-  const START = ['A login screen', 'A pricing section', 'Add a screen', 'Make the buttons work', 'Make a dark mode'];
-  const WITH_SEL = ['Dark mode version', 'Make a dark mode', 'Wire this to a sign up screen', 'Make variants', 'Tidy up', 'Rename layers'];
-  let E = null, pane = null, quick = null, items = [], loadedFor = '', busy = false, notes = [];
+  const START = ['A login screen', 'A pricing section', 'Add a text that says…', 'Add a button that says…', 'Make the buttons work', 'Make a dark mode'];
+  const WITH_SEL = ['Align these to the left', 'Group them', 'Duplicate this', 'Bring it to the front', 'Dark mode version', 'Tidy up', 'Rename layers'];
+  let fui = null, E = null, pane = null, quick = null, items = [], loadedFor = '', busy = false, notes = [];
   const snaps = new Map();   // Flint message id -> that undo step (this browser only)
   const T = k => (E && E.T ? E.T(k) : k);
   const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -58,19 +58,71 @@
       window.TribeSiteDesigner.open(isTpl ? { template: tpl } : {});
       return { r: { kind: 'note', say: isTpl ? T(`That is a website, so I opened the website designer with the ${s.label || tpl} template: real pages, buttons that go somewhere, dark mode and Download HTML. Your canvas stays as it is.`) : T('Opened the website designer: pages, working buttons, themes with a dark variant, and Download HTML.') } };
     }
+    if (sure && MOVES[s.intent]) return move(s);
     if (sure && s.intent === 'lesson' && window.TribeFlintLessons) { window.TribeFlintLessons.open(s.slots.feature); return { r: { kind: 'note', say: T('Here is a short lesson. Show me points at the real thing.') } }; }
-    if (sure && L && L.handle && !/^(canvas\.|edit\.picked|build\.|site\.)/.test(s.intent)) {
-      const said = [];
-      const H = {
-        say: t => { said.push(String(t || '').replace(/<[^>]+>/g, '')); return true; },
-        act: l => l,
-        legacy: async t => { if (window.TribeFlint && window.TribeFlint.ask) window.TribeFlint.ask(t); said.push(T('Done in Flint\'s chat.')); return true; },
-        special: async () => false, legacyHit: () => false, modelOnline: () => false,
-        task: async (title, extra) => { try { const { task } = await C.api('/tasks', { method: 'POST', body: { title: String(title).charAt(0).toUpperCase() + String(title).slice(1, 200), ...(extra || {}) } }); return task; } catch (e) { said.push(e.message); return null; } },
-      };
-      try { const ok = await L.handle(text, H); if (ok && said.length) return { r: { kind: 'note', say: said.join(' ') } }; } catch {}
+    if (sure && !/^(canvas\.|edit\.picked|build\.|site\.)/.test(s.intent) && fui) {   // feat/flint-unify: anything else goes to Flint's full brain; its replies land in this thread
+      const out = await fui.capture(text); const said = out.map(m => String(m.text || '').replace(/<[^>]+>/g, '')).filter(Boolean);
+      if (said.length) return { r: { kind: 'note', say: said.join(' ') } };
     }
-    return CF.run(text);
+    const out = await CF.run(text);
+    if (out && out.r && out.r.kind === 'freeform' && window.TribeNLU && window.TribeNLU.needsAI && !window.TribeNLU.needsAI(text) && /^(?:please\s+|can you\s+|could you\s+)?(?:align|move|put|group|ungroup|lock|unlock|resize|rename|select|zoom|snap|fix|change|set|turn|swap|duplicate|copy|delete|remove|hide|show|bring|send|line|spread|space|nudge|shift|flip|rotate|center|centre|tidy|sort|arrange|order)\b/i.test(text.trim())) {   // a command it didn't get (a description of something to draw is generation: the AI card)   // not understood, and nothing to generate: one question with chips
+      const q = window.TribeNLU.clarify(text, { view: 'canvas' }); return { r: { kind: 'ask', say: q.q, chips: q.chips } };
+    }
+    return out;
+  }
+
+
+  // ---------- feat/flint-unify: free canvas moves (align, spread, group, duplicate, lock, order, resize, add, snap…) ----------
+  // Each lands as this person's own change (Ctrl Z works) and returns the before/after pairs so the message's Undo works.
+  const nid = () => Array.from(crypto.getRandomValues(new Uint8Array(6)), b => b.toString(16).padStart(2, '0')).join('');
+  const snapAll = () => new Map(E.S.live().map(n => [n.id, JSON.stringify(n)]));
+  function pairsSince(before) {
+    const out = [], now = new Map(E.S.live().map(n => [n.id, n]));
+    now.forEach((n, id) => { const b = before.get(id); if (!b) out.push({ id, before: null }); else if (b !== JSON.stringify(n)) out.push({ id, before: JSON.parse(b) }); });
+    before.forEach((b, id) => { if (!now.has(id)) out.push({ id, before: JSON.parse(b) }); });
+    return out;
+  }
+  const need = (n, what) => ({ r: { kind: 'note', say: n === 1 ? T(`Select a layer first, then say "${what}".`) : T(`Select ${n} or more layers first, then say "${what}".`) } });
+  const ALN = { left: 'l', center: 'ch', right: 'r', top: 't', middle: 'cv', bottom: 'b' };
+  function place(w, h) {   // inside the selected frame, else the middle of the view
+    const f = E.sel.length === 1 && E.S.get(E.sel[0]); if (f && (f.t === 'frame' || f.t === 'component')) return { p: f.id, x: Math.max(16, Math.round(((f.w || 390) - w) / 2)), y: Math.max(16, Math.round(((f.h || 400) - h) / 2)) };
+    const v = E.view || { x: 0, y: 0, z: 1 }, st = E.stage.getBoundingClientRect(), z = v.z || 1;
+    return { p: '', x: Math.round((st.width / 2 - (v.x || 0)) / z - w / 2), y: Math.round((st.height / 2 - (v.y || 0)) / z - h / 2) };
+  }
+  function shape(kind, text, col) {
+    const id = nid(), c = col && col.hex;
+    const S0 = { rect: [160, 100, { t: 'rect', fill: c || '#D9DEE7', r: 8, name: 'Rectangle' }], ellipse: [100, 100, { t: 'ellipse', fill: c || '#38C6B1', name: 'Circle' }], line: [240, 2, { t: 'rect', fill: c || '#2A313C', name: 'Line' }],
+      image: [240, 160, { t: 'rect', fill: '#C7CCD6', r: 8, name: 'Image' }], frame: [390, 844, { t: 'frame', fill: '#FFFFFF', clip: true, name: 'Frame' }], card: [280, 160, { t: 'frame', fill: c || '#FFFFFF', r: 12, clip: true, name: 'Card' }],
+      text: [240, 32, { t: 'text', name: (text || 'Text').slice(0, 40), tx: { c: text || 'Text', f: 'Inter', s: 20, wt: 500, lh: 1.3, al: 'left', col: c || '#16181D' }, sz: { h: 'fixed', v: 'hug' } }],
+      button: [160, 44, { t: 'frame', fill: c || '#F26B1D', r: 10, name: 'Button' }] }[kind] || [160, 100, { t: 'rect', fill: '#D9DEE7', name: 'Rectangle' }];
+    const [w, h, base] = S0, at = place(w, h), n = Object.assign({ id, p: at.p, i: E.S.nextI(at.p), v: 1, x: at.x, y: at.y, w, h }, base), out = [n];
+    if (kind === 'button') out.push({ id: nid(), t: 'text', p: id, i: 1, v: 1, x: 16, y: 11, w: w - 32, h: 22, name: 'Label', tx: { c: text || 'Button', f: 'Inter', s: 15, wt: 600, lh: 1.4, al: 'center', col: '#FFFFFF' }, sz: { h: 'fixed', v: 'hug' } });
+    return out;
+  }
+  const MOVES = {
+    'canvas.align': s => { if (E.sel.length < 2) return need(2, 'align these to the left'); window.TribeCanvasExtras.align(ALN[s.slots.dir] || 'l'); return `Aligned ${E.sel.length} layers to the ${s.slots.dir}.`; },
+    'canvas.distribute': s => { if (E.sel.length < 3) return need(3, 'distribute evenly'); window.TribeCanvasExtras.align(s.slots.axis === 'v' ? 'dv' : 'dh'); return `Spread ${E.sel.length} layers evenly ${s.slots.axis === 'v' ? 'top to bottom' : 'left to right'}.`; },
+    'canvas.group': () => { if (E.sel.length < 2) return need(2, 'group them'); const n = E.sel.length; E.group(); return `Grouped ${n} layers.`; },
+    'canvas.ungroup': () => { if (!E.sel.length) return need(1, 'ungroup'); E.ungroup(); return 'Ungrouped.'; },
+    'canvas.duplicate': () => { if (!E.sel.length) return need(1, 'duplicate this'); E.duplicate(); return `Duplicated. The copy is selected.`; },
+    'canvas.lock': s => { if (!E.sel.length) return need(1, 'lock this'); const on = s.slots.on !== false; E.patchMany(E.sel, n => { if (on) n.lock = true; else delete n.lock; }); return on ? 'Locked: it can’t be moved or resized until you say "unlock".' : 'Unlocked.'; },
+    'canvas.hide': s => { if (!E.sel.length) return need(1, 'hide this'); const on = s.slots.on !== false; E.patchMany(E.sel, n => { if (on) n.hide = true; else delete n.hide; }); return on ? 'Hidden. Say "show it" or use the eye in Layers to bring it back.' : 'Showing it again.'; },
+    'canvas.order': s => { if (!E.sel.length) return need(1, 'bring it to the front'); E.order(s.slots.dir); return { front: 'Brought it to the front.', back: 'Sent it to the back.', up: 'Brought it forward one step.', down: 'Sent it back one step.' }[s.slots.dir] || 'Done.'; },
+    'canvas.resize': s => { if (!E.sel.length) return need(1, 'resize it to 320 by 200'); const sl = s.slots; E.patchMany(E.sel, n => { if (sl.scale) { if (n.t === 'text' && n.tx) { n.tx = Object.assign({}, n.tx, { s: Math.max(6, Math.round((n.tx.s || 16) * sl.scale)) }); } if (Number.isFinite(n.w)) n.w = Math.max(1, Math.round(n.w * sl.scale)); if (Number.isFinite(n.h)) n.h = Math.max(1, Math.round(n.h * sl.scale)); } else { if (sl.w) n.w = sl.w; if (sl.h) n.h = sl.h; if (n.sz && (sl.w || sl.h)) n.sz = Object.assign({}, n.sz, sl.w ? { h: 'fixed' } : {}, sl.h ? { v: 'fixed' } : {}); } }); return sl.scale ? `Made it ${sl.scale > 1 ? 'twice as big' : 'half the size'}.` : `Resized to ${sl.w || '…'} × ${sl.h || '…'}.`.replace(' × …', ' wide').replace('… × ', '').replace(/^Resized to (\d+)\.$/, 'Resized to $1 tall.'); },
+    'canvas.layer.rename': s => { if (!E.sel.length) return need(1, 'rename this to Header'); E.rename(E.sel[0], s.slots.name); return `Renamed it to “${s.slots.name}”.`; },
+    'canvas.add': s => { const list = shape(s.slots.kind, s.slots.text, s.slots.color); E.addNodes(list); return { say: `Added ${s.slots.kind === 'ellipse' ? 'a circle' : s.slots.kind === 'image' ? 'an image placeholder' : 'a ' + s.slots.kind}${s.slots.text ? ` that says “${s.slots.text}”` : ''}. It’s selected: drag it where you want it.`, focus: list[0].id }; },
+    'canvas.snap': () => { const ids = E.sel.length ? E.sel.slice() : E.S.kids('').map(n => n.id); if (!ids.length) return 'Nothing to snap yet.'; E.patchMany(ids, n => { if (Number.isFinite(n.x)) n.x = Math.round(n.x / 8) * 8; if (Number.isFinite(n.y)) n.y = Math.round(n.y / 8) * 8; if (Number.isFinite(n.w)) n.w = Math.max(8, Math.round(n.w / 8) * 8); if (Number.isFinite(n.h) && n.t !== 'text') n.h = Math.max(8, Math.round(n.h / 8) * 8); }); return `Snapped ${ids.length} layer${ids.length === 1 ? '' : 's'} to the 8px grid.`; },
+    'canvas.delete': () => { if (!E.sel.length) return need(1, 'delete this'); const n = E.sel.length; E.removeSel(); return `Deleted ${n} layer${n === 1 ? '' : 's'}. Undo brings ${n === 1 ? 'it' : 'them'} back.`; },
+    'canvas.selectall': () => { const ids = E.S.kids('').map(n => n.id); E.select(ids); return { say: `Selected ${ids.length} top-level layer${ids.length === 1 ? '' : 's'}.`, keep: true }; },
+    'canvas.zoom': s => { const to = s.slots.to, z = (E.view && E.view.z) || 1; if (to === 'fit') E.fit(false); else if (to === 'selection') E.fit(true); else E.zoomTo(to === '100' ? 1 : to === 'in' ? Math.min(8, z * 1.5) : Math.max(0.1, z / 1.5)); return { say: to === 'fit' ? 'Zoomed to fit everything.' : to === 'selection' ? 'Zoomed to the selection.' : `Zoom ${Math.round(((E.view && E.view.z) || 1) * 100)}%.`, keep: true }; },
+  };
+  function move(s) {
+    if (!E.canEdit) return { r: { kind: 'note', say: T('View only: ask the host to make you a builder to design here.') } };
+    const before = snapAll(); let out;
+    try { out = MOVES[s.intent](s); } catch (e) { return { r: { kind: 'note', say: e.message || String(e) } }; }
+    if (out && out.r) return out;
+    const o = typeof out === 'string' ? { say: out } : out || {}, pairs = o.keep ? [] : pairsSince(before);
+    return { r: { kind: pairs.length ? 'move' : 'note', say: T(o.say || 'Done.'), focus: o.focus || '', create: pairs.filter(p => !p.before).map(p => ({ id: p.id })) }, pairs: pairs.length ? pairs : null };
   }
 
   function mount(editor) {
@@ -78,23 +130,13 @@
     const cv = $('#cv'), body = cv && cv.querySelector('.cv-body'); if (!body || $('#cv-fpane')) return;
     pane = document.createElement('aside');
     pane.className = 'cv-fpane'; pane.id = 'cv-fpane'; pane.setAttribute('aria-label', 'Flint');
-    pane.innerHTML = `
-      <div class="fp-head">${flame()}<b>Flint</b><span class="fp-sub">${esc(T('designs with you'))}</span>
-        <button type="button" class="fp-x" data-fp="hide" title="${esc(T('Hide Flint'))}" aria-label="${esc(T('Hide Flint'))}">✕</button></div>
-      <p class="fp-free"><span class="fp-chip">${esc(T('Free'))}</span><span>${esc(T('Screens, tidy, rename, themes and variants need no AI'))}</span></p>
-      <div class="fp-log" id="fp-log" aria-live="polite"></div>
-      <div class="fp-chips" id="fp-chips"></div>
-      <div class="fp-notes" id="fp-notes" hidden></div>
-      <form class="fp-comp" id="fp-form" autocomplete="off">
-        <textarea id="fp-in" rows="2" maxlength="600" placeholder="${esc(T('Describe a screen or a change…'))}" aria-label="${esc(T('Ask Flint to design'))}"></textarea>
-        <div class="fp-row">
-          <button type="button" class="fp-ib" data-fp="mic" data-dictate="fp-in" title="${esc(T('Dictate'))} (Ctrl Shift D)" aria-label="${esc(T('Dictate'))}"><svg class="fp-svg" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-mic"/></svg></button>
-          <button type="button" class="btn sm" data-fp="note" title="${esc(T('Add a note and send several together'))}">+ ${esc(T('Note'))}</button>
-          <span class="fp-sp"></span>
-          <button type="submit" class="btn sm primary fp-send">${esc(T('Send'))}</button>
-        </div>
-      </form>`;
     body.appendChild(pane);
+    // feat/flint-unify: the one Flint chat (TribeFlint.mount, ctx canvas). The thread is this design file's, shared live.
+    fui = window.TribeFlint && window.TribeFlint.mount ? window.TribeFlint.mount(pane, { ctx: 'canvas', echo: false, onSay: () => {}, run: async t => { await send(t); return true; },
+      hello: T('Tell me what to design: a screen, a section, or a change to what you select (align, group, duplicate, add a text…). Every step can be undone.'), chips: () => chipList(),
+      onEscape: u => { u.input.blur(); E.focus(); }, onAI: async t => { if (t) { const msg = await window.TribeCanvasFlint.sendToHelpers(t); await post({ role: 'flint', kind: 'note', text: msg }); paintLog(); } else if (window.TribeBrain) window.TribeBrain.open(); },
+      tools: [{ label: '+ ' + T('Note'), html: '<span class="flm-note">+ ' + esc(T('Note')) + '</span>', title: T('Add what you typed as a note and send several together'), attrs: { 'data-fp': 'note' }, fn: () => {} }, { html: '✕', title: T('Hide Flint'), attrs: { 'data-fp': 'hide' }, fn: () => {} }] }) : null;
+    if (fui) { const nb = document.createElement('div'); nb.className = 'fp-notes'; nb.id = 'fp-notes'; nb.hidden = true; fui.extra.appendChild(nb); }
     // the mode switch, in the top bar beside the file name
     const head = cv.querySelector('.cv-head'), acts = head && head.querySelector('.cv-head-acts');
     if (head && acts && !$('#cv-mode')) {
@@ -106,16 +148,8 @@
       sw.addEventListener('click', e => { const b = e.target.closest('[data-mode]'); if (b) setMode(b.dataset.mode); });
     }
     // events
-    pane.querySelector('#fp-form').addEventListener('submit', e => { e.preventDefault(); submit(); });
-    const inp = pane.querySelector('#fp-in');
-    inp.addEventListener('keydown', e => {
-      e.stopPropagation();
-      if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) { e.preventDefault(); submit(); }
-      if (e.key === 'Escape') { e.preventDefault(); inp.blur(); E.focus(); }
-      if (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === 'd' && window.TribeSpeech) { e.preventDefault(); window.TribeSpeech.dictate(inp); }
-    });
     pane.addEventListener('click', onClick);
-    if (window.TribeBoost) window.TribeBoost.bind(pane, { onAI: async t => { if (t) { const msg = await window.TribeCanvasFlint.sendToHelpers(t); await post({ role: 'flint', kind: 'note', text: msg }); paintLog(); } else if (window.TribeBrain) window.TribeBrain.open(); } });   // feat/flint-site: the one AI-boost card
+    // the AI-boost card's Use my AI: the mount's onAI above
     window.TribeCanvasFlint && window.TribeCanvasFlint.use({ open, toggle, send: t => { open(); return send(t); } });
     // Ctrl Shift \ switches Simple / Advanced
     addEventListener('keydown', e => {
@@ -196,10 +230,7 @@
     else if (mode() === 'simple') { if (cv.classList.contains('no-right')) { const b = $('#cv-tog-right'); if (b) b.click(); } }
     else { if (cv.classList.contains('no-right')) { const b = $('#cv-tog-right'); if (b) b.click(); } const t = cv.querySelector('.cv-rtabs [data-rtab="flint"]'); if (t && !t.classList.contains('on')) t.click(); }
     paintLog();
-    const i = pane.querySelector('#fp-in');
-    if (typeof prefill === 'string') { i.value = prefill; }
-    // phones: no auto focus (the keyboard would jump up and scroll the page); desktop: focus without scrolling
-    if (!isPhone() || typeof prefill === 'string') setTimeout(() => { i.focus({ preventScroll: true }); i.setSelectionRange(i.value.length, i.value.length); }, 30);
+    if (fui) { if (typeof prefill === 'string') fui.fill(prefill); else if (!isPhone()) setTimeout(() => fui.input.focus({ preventScroll: true }), 30); }
     flameBtn(true);
   }
   function close() {
@@ -234,32 +265,40 @@
   }
   function upsert(it) { const i = items.findIndex(x => x.id === it.id); if (i >= 0) items[i] = it; else items.push(it); }
   const ago = iso => { try { return new Date(iso).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }); } catch { return ''; } };
+  const chipsBy = new Map();   // Flint message id -> its chips (a clarifying question), this browser only
   function paintLog() {
-    const log = pane && pane.querySelector('#fp-log'); if (!log) return;
-    if (!items.length && !busy) {
-      log.innerHTML = `<div class="fp-hello">${flame(22, 28)}<b>${esc(T('Tell me what to design'))}</b><span>${esc(T('A screen, a section or a change to what you select. I build real frames with auto layout that you can edit, and every step can be undone.'))}</span></div>`;
-      return;
-    }
+    if (!fui) return;
     const meId = (C.state && C.state().me && C.state().me.id) || '';
-    log.innerHTML = items.map(it => {
-      if (it.role === 'me') return `<div class="fp-msg fp-me"><span class="fp-av" style="--a:${esc(it.color || '#6C7CFF')}">${esc((it.name || '?').slice(0, 1).toUpperCase())}</span><div><p class="fp-who">${esc(it.by === meId ? T('You') : it.name)} <time>${esc(ago(it.at))}</time></p><p class="fp-t">${esc(it.text)}</p></div></div>`;
-      const canUndo = !it.undone && it.kind && it.kind !== 'tier' && it.kind !== 'freeform' && it.kind !== 'note' && (snaps.has(it.id) || (it.ids && it.ids.length)) && E.canEdit;
+    fui.busy = busy;
+    fui.set(items.map(it => {
+      if (it.role === 'me') return { who: 'me', text: it.text, name: !it.by || it.by === meId ? T('You') : it.name };
+      const canUndo = !it.undone && it.kind && it.kind !== 'tier' && it.kind !== 'freeform' && it.kind !== 'note' && it.kind !== 'ask' && (snaps.has(it.id) || (it.ids && it.ids.length)) && E.canEdit;
       const honest = it.kind === 'tier' || it.kind === 'freeform';
-      return `<div class="fp-msg fp-flint${it.undone ? ' is-undone' : ''}">${flame(13, 16)}<div>${honest && window.TribeBoost ? window.TribeBoost.html({ did: `Nothing changed on the canvas. ${it.text || ''}`.trim(), would: 'An AI draws what you described as real layers here, and Undo takes it back.', ask: it.ref }) : `<p class="fp-t">${esc(it.text)}</p>`}
-        <p class="fp-acts">${it.undone ? `<span class="fp-undone">${esc(T('Undone'))}</span>` : ''}${it.focus && !it.undone ? `<button type="button" class="fp-link" data-fp="show" data-id="${esc(it.focus)}">${esc(T('Show'))}</button>` : ''}${canUndo ? `<button type="button" class="fp-link" data-fp="undo" data-id="${esc(it.id)}">${esc(T('Undo'))}</button>` : ''}<time>${esc(ago(it.at))}</time></p></div></div>`;
-    }).join('') + (busy ? `<div class="fp-msg fp-flint is-wait">${flame(13, 16)}<div><p class="fp-t">${esc(T('On it…'))}</p></div></div>` : '');
-    scrollLog();
+      const acts = [];
+      if (it.focus && !it.undone) acts.push({ label: T('Show'), fn: () => { if (E.S.get(it.focus)) { E.select([it.focus]); E.fit(true); } } });
+      if (canUndo) acts.push({ label: T('Undo'), fn: () => undoItem(it.id) });
+      (chipsBy.get(it.id) || []).forEach(c => acts.push(c.fill ? { label: c.label, act: 'fill', arg: c.say } : { label: c.label, act: 'ask', arg: c.say }));
+      return honest && window.TribeBoost ? { who: 'flint', text: '', html: window.TribeBoost.html({ did: `Nothing changed on the canvas. ${it.text || ''}`.trim(), would: 'An AI draws what you described as real layers here, and Undo takes it back.', ask: it.ref }) }
+        : { who: 'flint', text: it.undone ? `${it.text} (${T('Undone')})` : it.text, undone: !!it.undone, acts };
+    }));
   }
-  function scrollLog() { const log = pane && pane.querySelector('#fp-log'); if (log) log.scrollTop = log.scrollHeight; }
+  async function undoItem(id) {
+    const it = items.find(x => x.id === id); if (!it) return;
+    const pairs = snaps.get(it.id) || (it.ids || []).map(i => ({ id: i, before: null }));
+    E.revert(pairs); snaps.delete(it.id); it.undone = true; paintLog();
+    try { const r = await C.api('/canvaschat/' + encodeURIComponent(E.file) + '/undo', { method: 'POST', body: { id: it.id } }); upsert(r.item); paintLog(); } catch {}
+  }
+  function addNote() { if (!fui) return; const v = fui.input.value.trim(); if (!v) { fui.input.focus(); return; } notes.push({ text: v, sel: E.sel.slice() }); fui.input.value = ''; paintNotes(); fui.input.focus(); }
+  function scrollLog() { if (fui) fui.draw(); }
   let chipKey = '';
+  const chipList = () => (E && E.sel.length ? WITH_SEL : START).map(c => T(c));
   function chips() {
-    const box = pane && pane.querySelector('#fp-chips'); if (!box || !E) return;
-    const list = E.sel.length ? WITH_SEL : START, k = list.join('|') + mode();
-    if (k === chipKey) return; chipKey = k;
-    box.innerHTML = list.map(c => `<button type="button" class="fp-chipb" data-fp="chip" data-text="${esc(c)}">${esc(T(c))}</button>`).join('');
+    if (!fui || !E) return;
+    const k = chipList().join('|') + mode();
+    if (k === chipKey) return; chipKey = k; fui.chips(chipList());
   }
   function paintNotes() {
-    const box = pane.querySelector('#fp-notes');
+    const box = pane.querySelector('#fp-notes'); if (!box) return;
     box.hidden = !notes.length;
     box.innerHTML = notes.length ? `<ol>${notes.map((n, i) => `<li><span>${esc(n.text)}</span><button type="button" class="fp-x sm" data-fp="unnote" data-i="${i}" aria-label="${esc(T('Remove'))}">✕</button></li>`).join('')}</ol>
       <p class="fp-row"><button type="button" class="btn sm primary" data-fp="applynotes">${esc(T('Send all'))} (${notes.length})</button><button type="button" class="btn sm" data-fp="clearnotes">${esc(T('Clear'))}</button></p>` : '';
@@ -267,10 +306,6 @@
 
   // ---------- asking ----------
   async function post(body) { try { const r = await C.api('/canvaschat/' + encodeURIComponent(E.file), { method: 'POST', body }); upsert(r.item); return r.item; } catch { const it = Object.assign({ id: 'l' + Date.now(), at: new Date().toISOString(), name: T('You') }, body); upsert(it); return it; } }
-  function submit() {
-    const i = pane.querySelector('#fp-in'); const v = i.value.trim();
-    if (!v) return; i.value = ''; send(v);
-  }
   async function send(text, keepSel) {
     if (!E || busy) return;
     if (!E.canEdit) { await post({ role: 'flint', kind: 'note', text: T('View only: ask the host to make you a builder to design here.') }); paintLog(); return; }
@@ -283,6 +318,7 @@
     try {
       const { r, pairs } = await askFlint(text, { sel: E.sel.slice(), file: E.file, frame: frameOfSel() });
       if (r.kind === 'tier' || r.kind === 'freeform') { if (ff) ff.home(); item = await post({ role: 'flint', kind: r.kind, text: r.why || r.say || '', ref: text }); }
+      else if (r.kind === 'ask') { if (ff) ff.home(); item = await post({ role: 'flint', kind: 'note', text: r.say }); if (r.chips) chipsBy.set(item.id, r.chips); }
       else {
         const ids = (r.create || []).map(n => n.id).filter(Boolean);
         item = await post({ role: 'flint', kind: r.kind || 'done', text: r.say || T('Done.'), focus: r.focus || '', ids });
@@ -296,20 +332,10 @@
     const b = e.target.closest('[data-fp]'); if (!b) return;
     const a = b.dataset.fp;
     if (a === 'hide') return close();
-    if (a === 'chip') return send(b.dataset.text);
-    if (a === 'mic') { if (window.TribeSpeech) window.TribeSpeech.dictate(pane.querySelector('#fp-in')); return; }
-    if (a === 'note') { const i = pane.querySelector('#fp-in'); const v = i.value.trim(); if (!v) { i.focus(); return; } notes.push({ text: v, sel: E.sel.slice() }); i.value = ''; paintNotes(); i.focus(); return; }
+    if (a === 'note') return addNote();
     if (a === 'unnote') { notes.splice(+b.dataset.i, 1); paintNotes(); return; }
     if (a === 'clearnotes') { notes = []; paintNotes(); return; }
     if (a === 'applynotes') { const list = notes; notes = []; paintNotes(); for (const n of list) { await send(n.text, n.sel.length ? n.sel : null); } return; }
-    if (a === 'show') { const id = b.dataset.id; if (E.S.get(id)) { E.select([id]); E.fit(true); } return; }
-    if (a === 'undo') {
-      const it = items.find(x => x.id === b.dataset.id); if (!it) return;
-      const pairs = snaps.get(it.id) || (it.ids || []).map(id => ({ id, before: null }));
-      E.revert(pairs); snaps.delete(it.id); it.undone = true; paintLog();
-      try { const r = await C.api('/canvaschat/' + encodeURIComponent(E.file) + '/undo', { method: 'POST', body: { id: it.id } }); upsert(r.item); paintLog(); } catch {}
-      return;
-    }
     if (a === 'hand') {
       b.disabled = true;
       const msg = await window.TribeCanvasFlint.sendToHelpers(b.dataset.text);

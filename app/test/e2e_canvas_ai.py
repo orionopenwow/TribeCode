@@ -86,13 +86,13 @@ def open_canvas(page):
 def ask(page, text):
     # Flint lives in the pane beside the canvas now (app/ui/canvas/flintpane.js); in Advanced it's the Flint tab
     page.evaluate("TribeCanvasFlintPane.open()")
-    page.wait_for_selector("#cv-fpane #fp-in", state="visible", timeout=5000)
-    n = page.evaluate("document.querySelectorAll('#fp-log .fp-flint:not(.is-wait)').length")
-    page.fill("#fp-in", text)
-    page.press("#fp-in", "Enter")
-    page.wait_for_function("n => !document.querySelector('#fp-log .is-wait') && document.querySelectorAll('#fp-log .fp-flint:not(.is-wait)').length > n", arg=n, timeout=15000)
+    page.wait_for_selector("#cv-fpane #flm-in-canvas", state="visible", timeout=5000)
+    n = page.evaluate("document.querySelectorAll('#cv-fpane .fl-thread .fl-msg.fl:not(.streaming)').length")
+    page.fill("#flm-in-canvas", text)
+    page.press("#flm-in-canvas", "Enter")
+    page.wait_for_function("n => !document.querySelector('#cv-fpane .fl-thread .streaming') && document.querySelectorAll('#cv-fpane .fl-thread .fl-msg.fl:not(.streaming)').length > n", arg=n, timeout=15000)
     page.wait_for_timeout(250)
-    return page.locator("#fp-log .fp-flint").last.inner_text()
+    return page.locator("#cv-fpane .fl-thread .fl-msg.fl").last.inner_text()
 
 
 def select(page, ids):
@@ -200,8 +200,8 @@ def main():
 
             # ---- dark mode version and variants
             select(o, [ember["id"]])
-            o.wait_for_selector("#fp-chips [data-text='Dark mode version']", timeout=5000)
-            o.click("#fp-chips [data-text='Dark mode version']")
+            o.wait_for_selector("#cv-fpane .flm-chips .fl-chip:text-is('Dark mode version')", timeout=5000)
+            o.click("#cv-fpane .flm-chips .fl-chip:text-is('Dark mode version')")
             o.wait_for_function("TribeCanvas.state().nodes.some(n => n.name === 'Ember · Sign in · Dark')", timeout=8000)
             dark = nodes(o, name="Ember · Sign in · Dark")[0]
             assert dark["fill"] == "#111318", dark
@@ -218,12 +218,12 @@ def main():
 
             # ---- honest cards
             out = ask(o, "rewrite the whole app in react with a database")
-            card = o.locator("#fp-log .fp-flint").last.locator(".boost")   # feat/flint-site: the one AI-boost card (aiboost.js)
+            card = o.locator("#cv-fpane .fl-thread .fl-msg.fl").last.locator(".boost")   # feat/flint-site: the one AI-boost card (aiboost.js)
             assert "This one needs an AI" in out and card.locator("[data-boost='ai']").is_visible() and card.locator("[data-boost='credits']").is_visible(), out
             out = ask(o, "a cat wearing a tiny hat")
             assert "needs an AI" in out and "Nothing changed" in out, out
-            o.locator("#fp-log [data-boost='ai']").last.click()
-            o.wait_for_function("/Sent to your AI helpers/.test(document.querySelector('#fp-log').textContent)", timeout=8000)
+            o.locator("#cv-fpane .fl-thread [data-boost='ai']").last.click()
+            o.wait_for_function("/Sent to your AI helpers/.test(document.querySelector('#cv-fpane .fl-thread').textContent)", timeout=8000)
             o.click("#cv-flint-btn"); o.wait_for_timeout(200); assert o.is_hidden("#cv-fpane"), "the flame button closes Flint's pane"
 
             # ---- phone
