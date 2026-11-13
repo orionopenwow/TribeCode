@@ -144,6 +144,7 @@ def main():
             host.wait_for_function("!document.querySelector('#ad-needs') || !document.querySelector('#ad-needs').innerText.includes('Speed boots')", timeout=8000)
             st = [x for x in ok(api("/coord/reviews", token=token, project=pid))["reviews"] if x["title"] == "Speed boots"][0]["status"]
             assert st == "approved", st
+            host.wait_for_timeout(900)   # the approve repaints the dashboard (~350 ms, then the live refresh); let the layout settle before the next tap
             host.click("#ad-needs .ad-need:has-text('Campfire save points') [data-ad-take]")
             host.wait_for_selector("#ad-needs", state="detached", timeout=8000)
             assert [h for h in ok(api("/coord/handoffs", token=token, project=pid))["handoffs"] if h["title"] == "Campfire save points"][0]["status"] == "taken"
