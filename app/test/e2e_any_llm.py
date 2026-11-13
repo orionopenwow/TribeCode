@@ -131,6 +131,7 @@ def main():
                     except Exception: pass
             mp.on("response", grab)
             mp.evaluate("TribeApp.connectClaude({ fresh: true })")
+            mp.wait_for_selector("#invite-modal:not(.hidden) #ic-body #ic-other", timeout=10000); mp.click("#ic-other")   # feat/invite-one: a Claude joins from the one invite sheet; the other tools are one link away
             mp.wait_for_selector("#invite-body .cai-chip[data-cai-tool='codex']", timeout=10000)
             assert "Connect your AI" in mp.text_content("#invite-body h2")
             mp.click("#invite-body .cai-chip[data-cai-tool='codex']")

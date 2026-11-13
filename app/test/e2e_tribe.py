@@ -342,7 +342,7 @@ def main():
             assert api(f"/proposals/{pid}/vote", "POST", {"vote": "yes"}, token=atok)[0] == 403
             assert api("/invites", "POST", {}, token=atok)[0] == 403
             e, t = call(atok, "release_file", {"path": "src/world/"}); assert not e
-            wait_text(host, "#room-agents", "using release file")
+            wait_text(host, "#room-agents", "in src/world/")   # an invited Claude says where it is
             shot(host, "agents-live")
 
             # ---- follow mode ----

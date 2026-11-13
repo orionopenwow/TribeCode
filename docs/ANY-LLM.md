@@ -102,25 +102,52 @@ with `ask: true`. Connected agents get a note; any agent sees it in `my_lane` an
 
 ## 4. Invite your Claude
 
-As simple as inviting a friend. **Invite your Claude** sits next to every **Invite friends**: the sidebar's foot row,
-the People panel (top and Friends › Add someone new), the Invite friends sheet, a project's invite sheet, the empty
-chat and the chat's info panel. Flint opens it too ("invite my claude"). Code: `server/inviteclaude.js`,
-`app/ui/inviteclaude.js` (`TribeInviteClaude.open()`, `.access(el)` for Settings, `.card()` for the Agents Hub).
+The one way a person's Claude joins. It is the **Your Claude** choice of the one invite sheet (`app/ui/inviteone.js`:
+"Who?" → A friend · A guest for a day · Your Claude), which every invite entry opens: the sidebar rows, People, Home,
+a project's menu, the create-a-tribe flow, the empty chat, Flint ("invite my claude") and Connect your AI's Claude
+choices. Code: `server/inviteclaude.js`, `server/claudeauth.js`, `app/ui/inviteclaude.js`
+(`TribeInviteClaude.open()`, `.mount(el)`, `.access(el)` for Settings, `.card()` for the Agents Hub).
 
-![Invite your Claude](screenshots/invite-claude.png)
+![The one invite sheet](screenshots/invite-one.png)
 
-1. One click opens the sheet. It guesses which Claude (a phone gets Claude on the web, else Claude Code; your last
-   pick is remembered) and shows three tabs:
+1. It guesses which Claude (a phone gets Claude on the web, else Claude Code; your last pick is remembered):
    - **Claude Code**: one command, `claude mcp add --transport http tribecode <url>/mcp --header "Authorization: Bearer …"`.
-     Copy, and the step reads **Copied — paste it in your terminal**. The stdio bridge form is under a fold.
+     The stdio bridge form is under a fold.
    - **Claude Desktop**: the `claude_desktop_config.json` snippet (the stdio bridge, `scripts/mcp-stdio.js`), Copy and
      **Download config**.
-   - **Claude on the web**: with a public https address, the connector URL for claude.ai › Settings › Connectors ›
-     Add custom connector. Without one it explains why and offers **Work with friends anywhere** (the tunnel).
-2. **Waiting for your Claude…** turns into **✓ Campw's Claude joined** when it first connects (MCP `initialize`). It
+   - **Claude on the web**: with a public https address, the connector address for claude.ai › Settings › Connectors ›
+     Add custom connector. The address has **no key in it**: claude.ai signs in (below). Without a public address it
+     explains why and offers **Work with friends anywhere** (the tunnel).
+2. **Nothing is made when the sheet opens.** The setup shows with the key masked; the Claude member is made when you
+   press **Copy** or **Download** (or approve a sign-in). A Claude that never connects is taken out again after 24 hours.
+3. **Waiting for your Claude…** turns into **✓ Campw's Claude joined** when it first connects (MCP `initialize`). It
    posts a hello in chat and shows in People with the AI badge and "invited by Campw".
 
-![Joined](screenshots/invite-claude-joined.png)
+**One Claude per person.** A Claude you connected earlier with Connect your AI counts as yours: the sheet shows it as
+*already connected* with its controls (narrow, Pause, Remove, New key) and never makes a second member; a new key goes
+to that same member. If you have two from before (one from each feature), both keep working and show together with a
+hint: **Keep only this one** on the one you use removes the other (it asks first).
+
+**Sign-in for the claude.ai connector** (`server/claudeauth.js`). The tribe host is its own small authorization server,
+following the MCP authorization spec (2025-11-25): OAuth 2.1 authorization code with PKCE (S256 only), public clients,
+dynamic client registration, and the two discovery documents.
+
+- `/mcp` without a valid key answers `401` with `WWW-Authenticate: Bearer resource_metadata="…"`.
+- `GET /.well-known/oauth-protected-resource` (also `…/mcp`) and `GET /.well-known/oauth-authorization-server`.
+- `POST /connect/register` (redirect URIs: https, or http on localhost; no fragments), `GET /connect/authorize`,
+  `POST /connect/token` (form-encoded), `POST /connect/revoke`.
+- The consent page is TribeCode's own (`app/ui/claude-consent.html`): the member signed in on that address approves
+  **Let your Claude join as <name>'s Claude**. It shows the app's name and where it returns to. If that browser isn't
+  signed in there (you use the app on localhost, claude.ai opened the public address), the page shows a short code;
+  type it under Invite › Your Claude › Claude on the web and approve in the app.
+- Access tokens last an hour, refresh tokens 30 days and rotate on every use (using an old one again ends the whole
+  sign-in). Only sha256 hashes are stored (`.tribe/claude-oauth.json`). A token only works in the `Authorization`
+  header, signs in as your invited Claude, and so follows every rule below. The sheet lists each sign-in with
+  **Sign out**; Pause and Remove reach them too. The endpoints are rate-limited.
+- The header key stays for Claude Code and Desktop (Claude Code can also sign in this way: loopback redirects on any
+  port are accepted). An old `…/mcp?token=…` link keeps working for whoever has one; the sheet no longer offers it.
+- Not built: Client ID Metadata Documents (the server would have to fetch a URL a stranger names). claude.ai falls
+  back to dynamic registration, which is what this implements.
 
 **Access: everything you can, never more.**
 
@@ -131,18 +158,19 @@ chat and the chat's info panel. Flint opens it too ("invite my claude"). Code: `
 - **Let it act as me for admin** (off by default, shown to hosts and admins) lifts the cap to admin: it may moderate
   (mute, remove from a project). Roles, hosting, keys, backups, invites and its own permissions stay human-only.
 - It never reads DMs other than its private line with you, never decides approvals (it can ask for them), never
-  invites people or mints keys. The Marketplace is read-only for it.
+  invites people, mints keys or approves a sign-in. The Marketplace is read-only for it.
 - **What it can do**: Chat, Docs and notes, Tasks, Files and code, Website, Ask for approvals. Unticked areas vanish
-  from its `tools/list` and their tools and `/api` paths are refused. **Pause** refuses its key at once (401);
-  **Remove** wipes the key and takes it out of People.
+  from its `tools/list` and their tools and `/api` paths are refused. **Pause** refuses its key and its sign-ins at
+  once (401); **Remove** wipes them and takes it out of People.
 - Rate-limited: `TRIBE_CLAUDE_RATE` actions a minute (default 120), MCP calls and API calls alike.
-- Keys never go in logs or the tribe folder. The one URL that carries a key is the claude.ai connector URL, because
-  that form has no header field; the sheet says to keep it private, and the header form is offered under a fold.
+- Keys and tokens never go in logs or the tribe folder.
 
 **Alongside you.** Presence says where it is ("Campw's Claude · in Launch plan doc"). Its messages carry its name, and
 you can edit or delete them like your own. MCP tools it gets on top of the usual ones: `inbox_next` (new @mentions of
 it in channels it can see, plus your private messages; `@Campw's Claude` from anyone, `@claude` from you), `reply_chat`,
 `react_chat`, `comment_task`, `where_is`.
 
-HTTP: `GET|POST|PUT|DELETE /api/invite-claude` (status · make or re-key · `{scopes, paused, adminAsMe}` · remove).
-Test: `app/test/e2e_invite_claude.py`; security: `security4_test.py` › C.
+HTTP: `GET|POST|PUT|DELETE /api/invite-claude` (status with `claudes`, `merge` and a masked `preview` · make or re-key ·
+`{id, scopes, paused, adminAsMe}` · remove), `DELETE /api/invite-claude/connections/<id>`, `GET|POST /api/claude-auth`
+(what a typed code is asking · approve or decline).
+Tests: `app/test/e2e_invite_one.py`, `app/test/e2e_invite_claude.py`; security: `security4_test.py` › C and O.
