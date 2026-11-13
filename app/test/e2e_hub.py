@@ -247,7 +247,7 @@ def main():
             host.click("#home-ai-cards .ai-card.k-optimization [data-ai-card-go]")
             host.wait_for_selector("#view-docs:not(.hidden)")
             host.wait_for_function("lan => TribeClient.project() === lan", arg=lan, timeout=8000)
-            host.unroute("**/api/insights"); host.unroute_all()
+            host.unroute_all(behavior="ignoreErrors")   # an in-flight /api/hub fetch may still be finishing
             host.click("#rail-logo"); host.wait_for_selector("#view-hub:not(.hidden) #hub-hero")
             # live: a new doc in Lantern shows up without a reload
             ok(api("/docs", "POST", {"title": "Glow shader notes", "body": "Bloom off, flat rings."}, token=orion, project=lan))

@@ -45,3 +45,5 @@
   .rt { font-size: 16px; }   /* no iOS zoom on focus */
   .rt > .rt-table th, .rt > .rt-table td { min-width: 3em; padding: 5px 8px; }
 }
+/* loops: offscreen paragraphs of a long doc skip layout until scrolled near, so a keystroke stays fast in 20k words */
+.rt > .rt-b { content-visibility: auto; contain-intrinsic-size: auto 1.75em; }
