@@ -216,7 +216,7 @@
   // the specific phrases the routes below handle well on their own (flintlocal.js lets them keep those)
   const LEGACY = ['status', 'summarize', 'helper', 'connect', 'hosting', 'website', 'focus', 'prompt', 'preview', 'inspo', 'dress', 'asset', 'make', 'customize', 'task', 'note', 'doStep', 'nav'];
   const legacyHit = raw => { const text = String(raw || '').trim().replace(/\s+/g, ' '), t = text.toLowerCase(); return LEGACY.some(k => { const m = RX[k].exec(k === 'inspo' ? text : t); return m && (k !== 'task' || (m[1] && m[1].trim())); }); };
-  const LH = { say: (text, acts) => say(text, acts || []), act, legacy: text => legacyRoute(text, false, true), special, legacyHit, task: (title, extra, quiet) => task(title, extra, quiet), guide: async t => { const g = await guideSearch(t); return g ? guideReply(g) : null; }, modelOnline: () => !!model.online && !(B() && B().choice() === 'none') };
+  const LH = { clear: () => (sink && sink.clearAll ? sink.clearAll() : clear()), say: (text, acts) => say(text, acts || []), act, legacy: text => legacyRoute(text, false, true), special, legacyHit, task: (title, extra, quiet) => task(title, extra, quiet), guide: async t => { const g = await guideSearch(t); return g ? guideReply(g) : null; }, modelOnline: () => !!model.online && !(B() && B().choice() === 'none') };
   async function legacyRoute(raw, specialsDone, viaLocal) {
     const text = String(raw || '').trim().replace(/\s+/g, ' '), t = text.toLowerCase();
     let m;
@@ -663,6 +663,7 @@
       },
       fill(t) { input.value = String(t || '').replace(/…$/, ''); input.focus(); try { input.setSelectionRange(input.value.length, input.value.length); } catch {} },
       focus(prefillText) { if (typeof prefillText === 'string') ui.fill(prefillText); else if (!phone()) input.focus({ preventScroll: true }); },
+      clearAll() { if (o.onClear) o.onClear(ui); else { list = []; keep(); ui.draw(); } },
       async flint(text) { const prev = sink; sink = ui; try { await route(text); } finally { sink = prev; } },
       async capture(text) { const out = []; const cap = { ctx, add: m => { out.push(m); return m; }, draw() {} }; const prev = sink; sink = cap; try { await route(text); } finally { sink = prev; } return out; },
       async send(text) {

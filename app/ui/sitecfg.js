@@ -108,7 +108,7 @@
     c.theme.base = t.base || (isDark(c.theme.colors) ? 'dark' : 'light');
     if (!Array.isArray(c.pages) || !c.pages.length) c.pages = [page('Home')];
     const seen = new Set();
-    c.pages.forEach((pg, i) => { pg.id = pg.id || uid('p'); pg.title = String(pg.title || 'Page').slice(0, 40); pg.slug = i === 0 ? 'index' : (pg.slug && pg.slug !== 'index' ? pg.slug : slugify(pg.title)); while (seen.has(pg.slug)) pg.slug += '-2'; seen.add(pg.slug); pg.blocks = (pg.blocks || []).filter(b => b && BLOCKS[b.type]).map(b => { const o = { id: b.id || uid('b'), type: b.type, variant: BLOCKS[b.type].variants.includes(b.variant) ? b.variant : BLOCKS[b.type].variants[0], props: b.props || BLOCKS[b.type].make() }; if (b.hidden) o.hidden = true; const st = b.style || {}; if (st.bg || st.pad) o.style = { bg: /^(card|accent|ink)$/.test(st.bg) ? st.bg : '', pad: /^(s|l)$/.test(st.pad) ? st.pad : '' }; return o; }); });
+    c.pages.forEach((pg, i) => { pg.id = pg.id || uid('p'); pg.title = String(pg.title || 'Page').slice(0, 40); pg.slug = i === 0 ? 'index' : (pg.slug && pg.slug !== 'index' ? pg.slug : slugify(pg.title)); while (seen.has(pg.slug)) pg.slug += '-2'; seen.add(pg.slug); pg.blocks = (pg.blocks || []).filter(b => b && BLOCKS[b.type]).map(b => { const o = { id: b.id || uid('b'), type: b.type, variant: BLOCKS[b.type].variants.includes(b.variant) ? b.variant : BLOCKS[b.type].variants[0], props: b.props || BLOCKS[b.type].make() }; if (b.hidden) o.hidden = true; const st = b.style || {}; if (st.bg || st.pad || st.al || st.tint) o.style = { bg: /^(card|accent|ink)$/.test(st.bg) ? st.bg : '', pad: /^(s|l)$/.test(st.pad) ? st.pad : '', ...(/^(left|center|right)$/.test(st.al) ? { al: st.al } : {}), ...(/^#[0-9a-f]{3,8}$/i.test(st.tint || '') ? { tint: st.tint } : {}) }; return o; }); });
     c.theme.space = /^(compact|roomy)$/.test(t.space) ? t.space : 'normal';
     const so = c.seo || {}; c.seo = { title: String(so.title || '').slice(0, 120), description: String(so.description || '').slice(0, 320), image: String(so.image || ''), favicon: String(so.favicon || ''), lang: /^[a-z]{2}(-[A-Za-z]{2})?$/.test(so.lang || '') ? so.lang : 'en' };
     if (c.logo && !/^(data:image\/|https:\/\/)/.test(c.logo)) delete c.logo;
@@ -367,8 +367,8 @@
   function answer(c, ask, text) {
     const t = String(text || '').trim(); if (!ask || !t) return null;
     const pg = pageOf(c, ask.page), b = ask.block && pg.blocks.find(x => x.id === ask.block);
-    const url = (/(?:https?:\/\/|www\.)\S+|[\w-]+(?:\.[\w-]+)*\.(?:com|org|net|io|co|app|dev|me|studio|shop|store|link|page|site|xyz|uk|de|fr|ca|au|us|tv|fm|art|band|club|blog)(?:\/\S*)?/i.exec(t) || [])[0];
     const email = (/[\w.+-]+@[\w-]+(?:\.[\w-]+)+/.exec(t) || [])[0];
+    const url = (/(?:https?:\/\/|www\.)\S+|[\w-]+(?:\.[\w-]+)*\.(?:com|org|net|io|co|app|dev|me|studio|shop|store|link|page|site|xyz|uk|de|fr|ca|au|us|tv|fm|art|band|club|blog)(?:\/\S*)?/i.exec(email ? t.replace(email, ' ') : t) || [])[0];
     if (ask.kind === 'linklabel') return { relabel: t };
     if (!b && ask.kind !== 'linklabel') return null;
     if (ask.kind === 'url' || ask.kind === 'handle' || ask.kind === 'email' || ask.kind === 'phone') {

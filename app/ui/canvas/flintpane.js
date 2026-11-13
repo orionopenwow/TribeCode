@@ -84,7 +84,7 @@
   }
   const need = (n, what) => ({ r: { kind: 'note', say: n === 1 ? T(`Select a layer first, then say "${what}".`) : T(`Select ${n} or more layers first, then say "${what}".`) } });
   const ALN = { left: 'l', center: 'ch', right: 'r', top: 't', middle: 'cv', bottom: 'b' };
-  function place(w, h) {   // inside the selected frame, else the middle of the view
+  function spot(w, h) {   // inside the selected frame, else the middle of the view
     const f = E.sel.length === 1 && E.S.get(E.sel[0]); if (f && (f.t === 'frame' || f.t === 'component')) return { p: f.id, x: Math.max(16, Math.round(((f.w || 390) - w) / 2)), y: Math.max(16, Math.round(((f.h || 400) - h) / 2)) };
     const v = E.view || { x: 0, y: 0, z: 1 }, st = E.stage.getBoundingClientRect(), z = v.z || 1;
     return { p: '', x: Math.round((st.width / 2 - (v.x || 0)) / z - w / 2), y: Math.round((st.height / 2 - (v.y || 0)) / z - h / 2) };
@@ -95,7 +95,7 @@
       image: [240, 160, { t: 'rect', fill: '#C7CCD6', r: 8, name: 'Image' }], frame: [390, 844, { t: 'frame', fill: '#FFFFFF', clip: true, name: 'Frame' }], card: [280, 160, { t: 'frame', fill: c || '#FFFFFF', r: 12, clip: true, name: 'Card' }],
       text: [240, 32, { t: 'text', name: (text || 'Text').slice(0, 40), tx: { c: text || 'Text', f: 'Inter', s: 20, wt: 500, lh: 1.3, al: 'left', col: c || '#16181D' }, sz: { h: 'fixed', v: 'hug' } }],
       button: [160, 44, { t: 'frame', fill: c || '#F26B1D', r: 10, name: 'Button' }] }[kind] || [160, 100, { t: 'rect', fill: '#D9DEE7', name: 'Rectangle' }];
-    const [w, h, base] = S0, at = place(w, h), n = Object.assign({ id, p: at.p, i: E.S.nextI(at.p), v: 1, x: at.x, y: at.y, w, h }, base), out = [n];
+    const [w, h, base] = S0, at = spot(w, h), n = Object.assign({ id, p: at.p, i: E.S.nextI(at.p), v: 1, x: at.x, y: at.y, w, h }, base), out = [n];
     if (kind === 'button') out.push({ id: nid(), t: 'text', p: id, i: 1, v: 1, x: 16, y: 11, w: w - 32, h: 22, name: 'Label', tx: { c: text || 'Button', f: 'Inter', s: 15, wt: 600, lh: 1.4, al: 'center', col: '#FFFFFF' }, sz: { h: 'fixed', v: 'hug' } });
     return out;
   }

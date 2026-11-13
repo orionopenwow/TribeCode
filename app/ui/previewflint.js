@@ -174,6 +174,9 @@
     if (isSite()) return siteSend(text, pickNow);
     feed({ k: 'you', who: 'You', text });
     try {
+      // feat/flint-unify: Flint's everyday commands (a timer, a task, a message, the theme…) run here with no AI
+      { const NL = window.TribeNLU; const P = NL && NL.parse(text, { view: 'preview', picked: pickNow }); const st = P && P.steps && P.steps.length === 1 && P.steps[0];
+        if (st && st.intent && st.conf >= 0.6 && !/^(edit\.|build\.|site\.|canvas\.|help\.kb|find$|asset\.)/.test(st.intent) && !(pickNow && LOOK.test(text))) return askFlint(text); }
       // Flint's free tier: a recipe build, or an honest "this needs a stronger AI" (server/flintfree.js)
       let tier = null;
       if (!(pickNow && LOOK.test(text)) && !QUESTION.test(text)) { try { tier = await C.api('/flint/tier', { method: 'POST', body: { ask: text, picked: !!pickNow } }); } catch {} }

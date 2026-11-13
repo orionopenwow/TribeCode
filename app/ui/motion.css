@@ -39,3 +39,10 @@
   .tm-rise, .toast { animation: none; }
   ::view-transition-old(root), ::view-transition-new(root) { animation: none; }
 }
+/* feat/flint-unify: "turn off animations" (Flint, app/ui/flintcmds.js) does the same on this device, whatever the OS says */
+:root[data-motion="off"] { --dur-instant: 0ms; --dur-quick: 0ms; --dur-base: 0ms; --dur-slow: 0ms; --rise: 0px; }
+/* feat/flint-unify: "turn off animations" (Flint, app/ui/flintcmds.js) does the same on this device, whatever the OS says */
+:root[data-motion="off"] { --dur-instant: 0ms; --dur-quick: 0ms; --dur-base: 0ms; --dur-slow: 0ms; --rise: 0px; }
+:root[data-motion="off"] .tm-rise, :root[data-motion="off"] .toast { animation: none; }
+:root[data-motion="off"]::view-transition-old(root), :root[data-motion="off"]::view-transition-new(root) { animation: none; }
+

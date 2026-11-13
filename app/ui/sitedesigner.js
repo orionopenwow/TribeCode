@@ -117,6 +117,7 @@
     if (rest && !tpl && window.TribeNLU) { const P = window.TribeNLU.parse(rest, {}); const s = (P.steps || [])[0]; if (s && /^site\./.test(s.intent) && s.conf >= 0.6 && S().TEMPLATES.includes(s.intent.slice(5))) { tpl = s.intent.slice(5); if (s.slots && s.slots.name) o.name = s.slots.name; rest = ''; } }
     if (tpl) await useTemplate(tpl, !cfg, { name: o.name });
     else if (!cfg) showStart(); else paint();
+    chipKey = ''; logPaint();   // feat/flint-unify: this design's thread and chips
     status(); await loadComments();
     if (o.comment) commentMode(true);
     const ask2 = o.ask || rest; if (ask2) setTimeout(() => ask(ask2), 60);

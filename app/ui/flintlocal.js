@@ -185,6 +185,7 @@
   };
   async function step(s, H, prev) {
     const sl = s.slots || {}, id = s.intent, area = s.area;
+    if (window.TribeFlintCmds && window.TribeFlintCmds.has(id)) return window.TribeFlintCmds.run(s, { pushUndo, connected, tasks: () => tasks(true), clear: H.clear });   // feat/flint-unify: timers, motion, notifications, pins, reactions, more task moves…
     const legacy = async (text, sum) => { await H.legacy(text); return { said: true, sum: sum || text }; };
     const needT = () => (connected() ? null : { text: T('needTribe'), acts: [['Host or join', 'invite']] });
     if (id.startsWith('nav.')) {
@@ -400,7 +401,7 @@
 
   // ---------- the entry point ----------
   const LOCAL_ONLY = new Set(['undo', 'teach', 'meant', 'unteach', 'taught', 'lesson', 'redo']);   // feat/flint-site: lessons before Flint's "teach me what X is"
-  const LOCAL_FIRST = /^(task\.|chat\.send|dm\.|event\.add|cal\.show|theme\.|accent\.set|textsize\.set|lang\.set|calc|convert|time\.now|date\.calc|random|canvas\.|edit\.picked|preview\.(device|reload|edit)|comment\.mode|trending|market\.search|studio\.open|jam\.start|huddle\.|publish|site\.gallery|personalize\.open|feedback|tour|brain\.pick|build\.|site\.|premium\.)/;
+  const LOCAL_FIRST = /^(timer|settings\.|chat\.(?:pin|react)|file\.whiteboard|flint\.clear|doc\.template|market\.add|inspo\.search|nav\.(?:people|work)|preview\.(?:open|share)|task\.|chat\.send|dm\.|event\.add|cal\.show|theme\.|accent\.set|textsize\.set|lang\.set|calc|convert|time\.now|date\.calc|random|canvas\.|edit\.picked|preview\.(device|reload|edit)|comment\.mode|trending|market\.search|studio\.open|jam\.start|huddle\.|publish|site\.gallery|personalize\.open|feedback|tour|brain\.pick|build\.|site\.|premium\.)/;
   let lastMiss = null;
   async function handle(text, H) {
     // the preview shows the website: its edits ("make the headline say …", "add a pricing section") go to the preview's Flint
