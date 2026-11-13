@@ -136,8 +136,10 @@ One-shot and idempotent. It normalizes names and usernames (trim, collapse space
    methods). Member-level links (`identities` on members) still work for tribes without accounts.
 4. ~~Account deletion~~ (done: `DELETE /api/account`) and **export** (a JSON of the account, its sessions and its member records).
 5. ~~Remote access~~ (done, feat/auth2): sign-up and sign-in answer remote browsers, admin routes stay local, same-origin
-   JSON only, per-client limits and the per-username lockout. Still to do: refuse remote account routes over plain http
-   when a public https URL is set.
+   JSON only, per-client limits and the per-username lockout. With a public https URL set, remote account routes over plain
+   http answer `403 { code: 'https', secure }` (feat/harden). Pending email links, sign-up tickets and desktop codes
+   survive a restart (`.tribe/pending-*.json`, hashes only, 0600), and `tribe_s` holds only member keys, never `tca_…`.
+   Not built: a desktop loopback fallback (it needs Rust in `app/src-tauri`). See docs/REVIEW-2026-11-12.md.
 6. ~~Front end~~ (done): with `GET /api/accounts/me` answering 401 (on) instead of 404 (off), the Log in sheet has a
    username + password form (Log in, Create account), Log out ends the account session, and Delete my account uses
    `/api/account`. With the flag off nothing changes: TEST accounts and the local behaviour stay.
