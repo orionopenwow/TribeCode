@@ -56,7 +56,10 @@ Sketch (not started; the gists and plan work now lays the groundwork):
 Restraint: numbers only where they answer a question; few sidebar rows (4 pillars), depth lives in tabs and the right panel, not in long lists; color carries meaning (role colors on people, folders, gists, plan items).
 Flat matte, 1px borders, depth from luminance only, no glows/blur/gradients. Ember #F26B1D, Teal #38C6B1, Indigo #6C7CFF, canvas #12151A, surface #1B2028, raised #1E242D, border #2A313C, approve #3BD16F, deny #FF6F8E. Section clarity (mono eyebrow + clear title, one hero card per screen, reading layout). Phone: Discord-mobile flow, no header outside Chat, bottom rack, top bar in Chat. Simplicity first: zero-step setup, no repeated labels.
 
-## State (v0.8.0 on `main`)
+## State
+Now: v0.31.2 released (see the top of this file and HANDOFF.md › State right now). The table below is the v0.8.0 snapshot, kept for history.
+
+### State at v0.8.0
 Released: everything in CHANGELOG.md through v0.6.0. Every milestone now runs `npm run explore` (fix criticals), `npm run milestone-report` (before/after against the last release, docs/milestones/), `npm run readme-shots`, then the release.
 | Area | Status |
 |---|---|
@@ -138,7 +141,14 @@ Released: everything in CHANGELOG.md through v0.6.0. Every milestone now runs `n
 - 2026-11-06: Emoji reactions on chat bubbles; votes Claude can suggest ("team should vote to approve a feature"); related quality-of-life features.
 - Earlier: everything in CHANGELOG.md v0.2.0–v0.3.1.
 
-## Next up
+## Next up (2026-11-12, v0.31.2)
+1. Owner tasks only the user can do: back up the updater key; verify tribecode.org on GitHub and Enforce HTTPS; review the privacy and terms pages (`app/ui/privacy.html`, `terms.html`); turn on Tailscale Funnel once; register OAuth apps per host; Windows signing (SignPath Foundation or Azure Artifact Signing) and an Apple Developer account for notarization.
+2. Real devices and accounts, from docs/LOOPS-REPORT.md: iPhone Home Screen, Web Push, speech and huddle voice; Android (Termux host, push); Funnel with a real friend; a Cloudflare quick tunnel end to end; Render with the push keys, a sleep and a push; real OAuth and a real GitHub repo; Stripe sync; a TURN relay for huddles on cellular.
+3. Editor parity Phase 2 (docs/EDITOR-PARITY.md) and the open items in docs/POLISH-AUDIT.md.
+4. Payments only once the backend exists (docs/PREMIUM.md); prices stay out of the repo until then.
+5. Decide with the user: disable WebView2's Local Network Access check in the app window.
+
+## Older next-up list (v0.8 era, kept for history)
 - The feature roadmap lives in docs/FEATURES-NEXT.md (now with Part 3 from the Explorer). Storage, backups and persistence are in docs/DATA.md.
 1. The user updates to v0.8.0 and confirms on Windows: Create your first project signs in; Settings › GitHub (OAuth App client id); Agent fleet › Office switch; Restart to update reopens straight into the new version; the new installer art.
 1b. Build VISION.md's Now items: one-tap Ship (commit, tag, push, release notes), organized project folders, dependency installs, a Featured strip, Jam mode. Then Next: repo importer with SPDX license checks → templates/skills/recipes, skills/MCP catalog, engine packs.

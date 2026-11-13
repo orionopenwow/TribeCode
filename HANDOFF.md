@@ -125,15 +125,15 @@ Pushing from the Claude cloud sandbox:
 ## State right now
 - **v0.31.2** is on `main` and released (2026-11-12): installers for Windows x64, Apple Silicon and Linux plus a signed `latest.json`; the in-app updater works. Recent releases: v0.31.1 tour step mode; v0.31.0 the Design creation flow, website designer v2, People and presence, Company v2 and gigs, Marketplace v2, the blank-slate desktop demo; v0.30 Flint's understanding and the OpenPage-style designer; v0.28 the design canvas, focused Preview and Design, Flint's local brain, comment pins, phone tribes, Make it yours. See CHANGELOG.md.
 - After v0.31.2 on main: planned prices are hidden on the site and in the plans pop-out until paid plans exist (no prices in the repo).
-- Launch checklist: docs/LAUNCH.md. Owner's one-pager: docs/ONE-PAGER.md. Truth test: `python3 app/test/e2e_truth.py` → docs/TRUTH-TEST.md. Journey QA: docs/LOOPS-REPORT.md (once `fix/close-loops` is merged).
+- Launch checklist: docs/LAUNCH.md. Owner's one-pager: docs/ONE-PAGER.md. Truth test: `python3 app/test/e2e_truth.py` → docs/TRUTH-TEST.md. Journey QA: docs/LOOPS-REPORT.md (journeys walked, what was fixed, what still needs real devices). Render push keys come from `TRIBE_VAPID_PUBLIC`/`TRIBE_VAPID_PRIVATE` (docs/CLOUD.md, `node scripts/dev/vapid-keys.js`).
 - Windows desktop: the page is http://tauri.localhost; the client must use the saved server (:4747). The server answers Private Network Access preflights. The server only runs with a tribe and Host on; a fresh open creates nothing.
 - Scheduled: "TribeCode daily trending repos" (5:17 Phoenix) updates templates/trending.json on main.
 - The user's machine: Windows, `C:\Users\campw\Desktop\TribeCode` (TribeCode.bat reinstaller, Invite-A-Friend.bat, Start-Demo-Tribe.bat, Working\ dev lane on :4848 following `dev`, Stable\, Tools\, Ads\, Private\). Tailscale signed in.
 
 ## Next steps (in order)
 1. Owner tasks (only the user can do these; see the doc "TribeCode: your critical to-dos"): back up the updater key (`~/.tauri/*.key` and its password); verify tribecode.org on GitHub (TXT record) and turn on Enforce HTTPS; review the privacy and terms pages; turn on Tailscale Funnel once; register OAuth apps per host; Windows signing (SignPath Foundation or Azure Artifact Signing) and an Apple Developer account for Mac notarization.
-2. Real devices: iPhone Safari join, Home Screen and Web Push, speech, Android, Tailscale Funnel, huddles on cellular (needs a TURN relay).
-3. Render and tunnels: push keys must survive a sleep (VAPID from env) and live updates must fall back when SSE fails over a quick tunnel (in progress on `fix/close-loops`).
+2. Real devices and accounts (docs/LOOPS-REPORT.md › What remains): iPhone (Home Screen, Web Push from the Home Screen app, speech, huddle voice), Android (Termux host, push), Tailscale Funnel with a real friend, a Cloudflare quick tunnel end to end (the polling fallback is tested locally only), Render one-click with `TRIBE_VAPID_PUBLIC`/`TRIBE_VAPID_PRIVATE` set then a sleep and a push, real GitHub/Discord/Google OAuth and a real GitHub repo, Stripe sync with a read-only key, huddles on cellular (needs a TURN relay).
+3. Code signing: Windows and macOS installers are unsigned (SmartScreen and Gatekeeper warn on first open).
 4. Editor parity Phase 2 (docs/EDITOR-PARITY.md): project light/dark tokens, prototypes, responsive rules, version history. Open polish items: docs/POLISH-AUDIT.md.
 5. Payments only once the backend exists (docs/PREMIUM.md, `TODO(payments)`); the accounts backend stays behind `TRIBE_ACCOUNTS=1` (docs/ACCOUNTS.md).
 6. Decide with the user: disable WebView2's Local Network Access check in the app window.
