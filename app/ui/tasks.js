@@ -597,7 +597,7 @@
   C.on('status', s => { if (s.status === 'online' && loaded) load(); });
   C.on('presence', () => { if (!loaded) return; const a = document.activeElement; if (a && a.classList && (a.classList.contains('quick-add') || (a.closest && a.closest('#tk-drawer, #tk-pop')))) return; render(); });   // a presence blip never wipes what you're typing
   document.addEventListener('click', e => { if (e.target.closest('#task-new')) { const i = $('#tk-add'); if (i) i.focus(); } });
-  document.addEventListener('keydown', e => { if (e.key === 'Escape' && openId && !e.defaultPrevented) close(); });
+  document.addEventListener('keydown', e => { if (e.key !== 'Escape' || e.defaultPrevented) return; if (document.getElementById('tk-pop')) return closeMenu();   /* the small menus (How work is shared, assign, ⋯) close first */ if (openId) close(); });
   document.addEventListener('pointerdown', e => {   // a click outside closes the menu, and outside the drawer (and outside a row) the drawer
     if (!e.target.closest('#tk-pop') && !e.target.closest('[data-qa="more"], [data-qa="assign"]')) closeMenu();
     if (!openId) return; const d = document.getElementById('tk-drawer');

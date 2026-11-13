@@ -261,7 +261,9 @@ def walk(b, state, size, token, out, max_clicks, only):
         err = enter(name, js)
         if err: r["openError"] = err
         if not is_layer:
-            pg.evaluate("__aw.baseline()")   # whatever is on screen now is the page, not a layer
+            tops = pg.evaluate("__aw.snap().top")
+            if tops: is_layer = True; r["opened"] = tops   # this destination is itself a sheet (Versions, Customize, project settings…): walk it and close it
+        if not is_layer: pass
         else:
             r["opened"] = pg.evaluate("__aw.snap().top")
             if not r["opened"]: r["didNotOpen"] = True
