@@ -164,6 +164,7 @@ function authed(req) {
 function stillValid(m) {
   if (m && m.guestUntil && Date.parse(m.guestUntil) < Date.now()) return null;   // a one-time guest pass that ran out (any of its keys)
   if (m && m.role === 'agent') { const o = members.find(x => x.id === m.owner); if (o && o.guestUntil && Date.parse(o.guestUntil) < Date.now()) return null; }   // fix/security-review: …and its agents
+  if (m && m.invited && inviteClaude && !inviteClaude.usable(m)) return null;   // an invited Claude that its owner paused (or who left)
   return m;
 }
 const tokenHashOf = req => { const h = req.headers.authorization || ''; const t = h.startsWith('Bearer ') ? h.slice(7) : new URL(req.url, 'http://x').searchParams.get('token'); return t ? hash(t) : null; };
@@ -256,8 +257,8 @@ let setupFlow = null;   // feat/setup-flow (server/setup.js, made below)
 const agentSeen = new Map(); // agent id -> { at, where, project }
 const AGENT_IDLE = 3 * 60_000;
 function presence() {
-  return members.map(m => {
-    if (m.role === 'agent') { const a = agentSeen.get(m.id); const on = !!a && Date.now() - a.at < AGENT_IDLE; return { ...publicMember(m), owner: m.owner, online: on, where: on ? a.where : null, since: a ? new Date(a.at).toISOString() : null, project: on ? a.project || null : null }; }
+  return members.filter(m => !(m.invited && m.removed)).map(m => {
+    if (m.role === 'agent') { const a = agentSeen.get(m.id); const on = !!a && Date.now() - a.at < AGENT_IDLE; return { ...publicMember(m), owner: m.owner, ...(m.invited ? { invited: true, ownerName: nameOf(m.owner), paused: !!m.paused } : {}), online: on, where: on ? a.where : null, since: a ? new Date(a.at).toISOString() : null, project: on ? a.project || null : null }; }
     const o = online.get(m.id); return { ...publicMember(m), online: !!o, where: o ? o.where : null, since: o ? o.since : null, project: o ? o.project || null : null };
   }).map(e => (profiles ? profiles.decorate(e, memberById(e.id) || e, idleAll(e.id)) : e));   // feat/profiles
 }
@@ -280,10 +281,11 @@ function presenceForRaw(viewer) {
   };
   return all.filter(shares).map(m => (m.project && !mine.has(m.project) ? { ...m, project: null, where: m.online ? 'another project' : null } : m));
 }
-function touchAgent(me, tool) {
+function touchAgent(me, tool, args) {
   if (me.role !== 'agent') return;
+  if (me.invited && inviteClaude) inviteClaude.seen(me);   // first connect: the hello in chat
   const prev = agentSeen.get(me.id), project = P.current();
-  const where = tool === 'connected' ? (prev && Date.now() - prev.at < AGENT_IDLE ? prev.where : 'connected') : `using ${tool.replace(/_/g, ' ')}`;   // comms-smoke: MCP initialize/tools/list (server/mcp.js)
+  const where = tool === 'connected' ? (prev && Date.now() - prev.at < AGENT_IDLE ? prev.where : 'connected') : ((me.invited && inviteClaude && inviteClaude.whereFor(tool, args)) || `using ${tool.replace(/_/g, ' ')}`);   // comms-smoke: MCP initialize/tools/list (server/mcp.js)
   const changed = !prev || Date.now() - prev.at > AGENT_IDLE || prev.where !== where || prev.project !== project;
   agentSeen.set(me.id, { at: Date.now(), where, project });
   if (changed) { pushPresence(); if (places) places.agentMoved(me.id); }
@@ -304,6 +306,7 @@ function agentPlace(mid) {
   return t ? { k: 'task', id: t.id, l: String(t.title || 'a task').slice(0, 60), pr: pid || '' } : { k: 'agent', id: '', l: String(a.where || 'working').slice(0, 60), pr: pid || '' };
 }
 let places = null;   // made below, once chans exists
+let inviteClaude = null;   // made below (server/inviteclaude.js)
 
 // ---------- huddles (WebRTC signaling only; audio/video flow peer to peer) ----------
 const huddle = new Map(); // memberId -> { muted, sharing, joined }
@@ -522,6 +525,9 @@ require('./mcp-secretary').bind(secretary);
 chatHook = (...x) => secretary.onChat(...x);
 const agentsHub = makeAgentsHub({ P, store: baseStore, pstore: store, brain, getMembers: () => members, presenceFor, agentSeen, idleMs: AGENT_IDLE, nameOf, people, coord, claims, endpoints: (req, t) => agentEndpoints(req, t), secretary,
   approvals, loadTasks: () => loadTasks(), createTask: o => createTask(o), saveTask: t => saveTask(t) });   // + the Agent fleet (feat/fleet)
+// Invite your Claude (server/inviteclaude.js): your own Claude as a member, with your access and never more.
+inviteClaude = require('./inviteclaude')({ P, getMembers: () => members, saveMembers, pushPresence, perms, hash, id, slug, str, endpoints: (req, t) => agentEndpoints(req, t), agentsHub,
+  publicBase: () => args['public-url'] || process.env.TRIBE_PUBLIC_URL || share.publicUrl(), postChat, sendTo, agentSeen, idleMs: AGENT_IDLE, publicMember, docs, store, chans, nameOf });
 // The Global Hub (server/hub.js): what you see with no project selected. Member-scoped, rolling.
 dashboard = makeHub({ P, base: baseStore, getMembers: () => members, presenceFor, loadTasks: () => loadTasks(), docs, approvals, flow: null, secretary, workshop, pocket, sendTo,
   isOnline: mid => online.has(mid), nameOf, str, slug, brain, coord, people, hubFor, preview, agentSeen, idleMs: AGENT_IDLE });
@@ -653,7 +659,7 @@ const mcp = makeMcp({
       t.updated = new Date().toISOString(); t.updatedBy = me.id; return saveTask(t);
     },
   },
-  docs, claims, extraTools: { ...agentTools, ...visuals.mcpTools, ...mcpFlow.tools, ...makeWorkshopMcp(workshop, { current: () => P.current() }), ...require('./mcp-preview')(preview, P), ...whiteboard.mcpTools, ...showcase.mcpTools, ...siteDesign.mcpTools, ...captures.mcpTools, ...assetLib.mcpTools, ...company.mcpTools, ...taskFlow.mcpTools, ...ledger.mcpTools, ...seatpilot.mcpTools, ...talent.mcpTools /* v0.27 company */, ...market.mcpTools, ...academy.mcpTools, ...flintMem.mcpTools, ...publishHub.mcpTools, ...jamHub.mcpTools, ...pinsHub.mcpTools, ...buildKit.mcpTools, ...canvasAI.mcpTools }, port: PORT, coordTools: h => ({ ...coord.mcpTools(h), ...agentnet.mcpTools(h), ...ship.mcpTools(h) }),
+  docs, claims, extraTools: { ...agentTools, ...visuals.mcpTools, ...mcpFlow.tools, ...makeWorkshopMcp(workshop, { current: () => P.current() }), ...require('./mcp-preview')(preview, P), ...whiteboard.mcpTools, ...showcase.mcpTools, ...siteDesign.mcpTools, ...captures.mcpTools, ...assetLib.mcpTools, ...company.mcpTools, ...taskFlow.mcpTools, ...ledger.mcpTools, ...seatpilot.mcpTools, ...talent.mcpTools /* v0.27 company */, ...market.mcpTools, ...academy.mcpTools, ...flintMem.mcpTools, ...publishHub.mcpTools, ...jamHub.mcpTools, ...pinsHub.mcpTools, ...buildKit.mcpTools, ...canvasAI.mcpTools, ...inviteClaude.mcpTools() }, port: PORT, gate: { tool: (me, n, a) => inviteClaude.gateTool(me, n, a), listable: (me, n) => inviteClaude.listable(me, n) }, coordTools: h => ({ ...coord.mcpTools(h), ...agentnet.mcpTools(h), ...ship.mcpTools(h) }),
   chat: {
     post(me, text, channel) {   // feat/chat2: optional channel ("design", "#design"); #general by default
       const tx = str(text, 4000); if (!tx) return; const muted = perms.muteBlock(me); if (muted) throw new Error(muted);   /* feat/roles */
@@ -688,6 +694,7 @@ async function standup() {
 // Every API request runs in one project: X-Project header (or ?project=), else where the person last was.
 async function api(req, res, url) {
   const who = authed(req);
+  if (who && who.invited && inviteClaude) { const no = inviteClaude.gatePath(who, req.method, url.pathname); if (no) return fail(res, /Slow down/.test(no) ? 429 : 403, no); }   // invited Claudes: scopes, admin, rate
   const wanted = String(req.headers['x-project'] || url.searchParams.get('project') || '').trim();
   let pid = P.defaultId();
   if (who) {
@@ -1129,6 +1136,7 @@ async function apiInProject(req, res, url) {
   }
   if ((a === 'agents' && b === 'channel') || (a === 'coord' && ['delegations', 'recommendations'].includes(b))) { const h = await agentnet.route(req, res, ctx()); if (h !== null) return; }
   if (a === 'agents' && (b === 'hub' || b === 'fleet')) { const h = await agentsHub.route(req, res, ctx()); if (h !== null) return; }   // + the Agent fleet (feat/fleet)   // solo mode: "Your agents" (server/agentshub.js)
+  if (a === 'invite-claude') return inviteClaude.route(req, res, ctx());   // Invite your Claude (server/inviteclaude.js)
   if (a === 'agents' && m === 'POST' && !b) {
     if (me.role === 'spectator' || me.role === 'agent') return fail(res, 403, 'only members can connect agents');
     // Default (no kind/label): the person's one Claude Code agent, as before. With { kind, label }: one more

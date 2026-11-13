@@ -55,6 +55,7 @@
     newnote: () => { const b = $('#room-note-new'); if (b) b.click(); else if (Hub()) Hub().open('docs'); },
     nav: v => { if (v === 'hub') return Hub() ? Hub().open('home') : App().show('hub'); if (v === 'guide') return ACTS.guide(); if (v === 'settings') return window.TribeSettings && window.TribeSettings.open(); if (v === 'whiteboard') return window.TribeWhiteboard && window.TribeWhiteboard.open();   /* feat/whiteboard */ App().show(v); },
     invite: () => App() && App().openInvite(),
+    inviteclaude: () => window.TribeInviteClaude && window.TribeInviteClaude.open(),   // Invite your Claude
     host: () => App() && (App().hostHere ? App().hostHere() : App().openInvite()),
     stophost: () => App() && App().setHosting && App().setHosting(false),
     secretary: () => window.TribeSecretary && window.TribeSecretary.open(),
@@ -152,6 +153,7 @@
     asset: /^(?:please\s+|can you\s+|could you\s+)?(?:add|get|find|grab|give me|i need|we need|use|put in|drop in|pick)\s+(?:me\s+|us\s+)?(?:an?\s+|some\s+|the\s+)?(.*?)\b(sound effects?|sounds?|sfx|3d models?|models?|glb|rigged|animated character|sprites?|pixel art|icons?|fonts?|textures?|hdris?|motion|animations?)\b(.*)$/,
     find: /^(?:find|search(?: for)?|look for|where(?:'s| is))\s+(.+)$/,
     help: /^(how|what|why|where|when|can i|could i|help|guide|explain|is there|do i)\b|\?$/,
+    inviteClaude: /\b(invite|add|bring) (in )?(my|our) (own )?claude\b|\binvite claude\b/,   // Invite your Claude (inviteclaude.js)
     invite: /\binvite\b|\badd (a )?friend\b|\bshare (the|a) link\b/,
     hello: /^(hi|hey|hello|yo|hiya|good (morning|afternoon|evening))\b|^(thanks|thank you|thx|cheers)\b/,
     website: /\b(make|build|generate|create|design|redo|refresh|write|shuffle)\b.*\b(web ?site|home ?page|landing page|site)\b|^(our |the )?web ?site$/,   // feat/customize
@@ -221,13 +223,14 @@
     return false;
   }
   // the specific phrases the routes below handle well on their own (flintlocal.js lets them keep those)
-  const LEGACY = ['status', 'summarize', 'helper', 'connect', 'hosting', 'website', 'focus', 'prompt', 'preview', 'inspo', 'dress', 'asset', 'make', 'customize', 'task', 'note', 'doStep', 'nav'];
+  const LEGACY = ['inviteClaude', 'status', 'summarize', 'helper', 'connect', 'hosting', 'website', 'focus', 'prompt', 'preview', 'inspo', 'dress', 'asset', 'make', 'customize', 'task', 'note', 'doStep', 'nav'];
   const legacyHit = raw => { const text = String(raw || '').trim().replace(/\s+/g, ' '), t = text.toLowerCase(); return LEGACY.some(k => { const m = RX[k].exec(k === 'inspo' ? text : t); return m && (k !== 'task' || (m[1] && m[1].trim())); }); };
   const LH = { clear: () => (sink && sink.clearAll ? sink.clearAll() : clear()), say: (text, acts) => say(text, acts || []), act, legacy: text => legacyRoute(text, false, true), special, legacyHit, task: (title, extra, quiet) => task(title, extra, quiet), guide: async t => { const g = await guideSearch(t); return g ? guideReply(g) : null; }, modelOnline: () => !!model.online && !(B() && B().choice() === 'none') };
   async function legacyRoute(raw, specialsDone, viaLocal) {
     const text = String(raw || '').trim().replace(/\s+/g, ' '), t = text.toLowerCase();
     let m;
     if (!specialsDone && await special(text)) return null;
+    if (RX.inviteClaude.test(t)) return inviteClaude();
     if (RX.status.test(t)) return status();
     if (RX.summarize.test(t)) return summarize();
     if (RX.helper.test(t)) return helper(t);
@@ -333,6 +336,7 @@
     } catch (e) { msg.text = `I could not write that ${name}: ${e.message}`; if (FF()) FF().home(); }
     delete msg.streaming; save(); draw(); return msg;
   }
+  function inviteClaude() { if (!connected()) return say('Your Claude joins a tribe. Host one on this computer or join a friend first.', [act('Host or join', 'invite')]); ACTS.inviteclaude(); return say('Here\'s your Claude\'s invite. Copy the command into your terminal and it joins next to you, with your access and never more.', [act('Open it again', 'inviteclaude')]); }
   function invite() { ACTS.invite(); if (FF()) later(300, () => { const ib = seen('#invite-body'); if (ib) FF().done(ib, 'Invite ready'); }); return say(connected() ? 'Here\'s your invite. Send the link to a friend: they tap it, type a name, and they\'re in.' : 'Invites come from a tribe. Host one on this computer first, then invite friends.', [act('Open invite again', 'invite'), act('How invites work', 'guide', 'projects-and-invites')]); }
   function hosting(t) {
     const desk = !!(window.TribeHost && window.TribeHost.isDesktop);

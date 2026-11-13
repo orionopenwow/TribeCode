@@ -99,3 +99,50 @@ the host's model or a key. The model runs entirely in the browser.
 **Ask an agent** (composer + menu, the robot on a task card, Requests): `POST /api/coord/asks` queues an open hand-off
 with `ask: true`. Connected agents get a note; any agent sees it in `my_lane` and takes it with the MCP tool
 `take_handoff` (then `done: true`). Flint (built in, or the host's brain) answers the rest.
+
+## 4. Invite your Claude
+
+As simple as inviting a friend. **Invite your Claude** sits next to every **Invite friends**: the sidebar's foot row,
+the People panel (top and Friends › Add someone new), the Invite friends sheet, a project's invite sheet, the empty
+chat and the chat's info panel. Flint opens it too ("invite my claude"). Code: `server/inviteclaude.js`,
+`app/ui/inviteclaude.js` (`TribeInviteClaude.open()`, `.access(el)` for Settings, `.card()` for the Agents Hub).
+
+![Invite your Claude](screenshots/invite-claude.png)
+
+1. One click opens the sheet. It guesses which Claude (a phone gets Claude on the web, else Claude Code; your last
+   pick is remembered) and shows three tabs:
+   - **Claude Code**: one command, `claude mcp add --transport http tribecode <url>/mcp --header "Authorization: Bearer …"`.
+     Copy, and the step reads **Copied — paste it in your terminal**. The stdio bridge form is under a fold.
+   - **Claude Desktop**: the `claude_desktop_config.json` snippet (the stdio bridge, `scripts/mcp-stdio.js`), Copy and
+     **Download config**.
+   - **Claude on the web**: with a public https address, the connector URL for claude.ai › Settings › Connectors ›
+     Add custom connector. Without one it explains why and offers **Work with friends anywhere** (the tunnel).
+2. **Waiting for your Claude…** turns into **✓ Campw's Claude joined** when it first connects (MCP `initialize`). It
+   posts a hello in chat and shows in People with the AI badge and "invited by Campw".
+
+![Joined](screenshots/invite-claude-joined.png)
+
+**Access: everything you can, never more.**
+
+- Its key is its own member key: one per person, shown once, only its hash stored, revoked in one click.
+- Every request runs as the Claude. `perms.actingRole()` derives its role from yours on every call, capped at builder,
+  so it can't do admin or host things even when you are the host. If your role drops (say to spectator), it can only
+  read. Its projects follow yours on every call.
+- **Let it act as me for admin** (off by default, shown to hosts and admins) lifts the cap to admin: it may moderate
+  (mute, remove from a project). Roles, hosting, keys, backups, invites and its own permissions stay human-only.
+- It never reads DMs other than its private line with you, never decides approvals (it can ask for them), never
+  invites people or mints keys. The Marketplace is read-only for it.
+- **What it can do**: Chat, Docs and notes, Tasks, Files and code, Website, Ask for approvals. Unticked areas vanish
+  from its `tools/list` and their tools and `/api` paths are refused. **Pause** refuses its key at once (401);
+  **Remove** wipes the key and takes it out of People.
+- Rate-limited: `TRIBE_CLAUDE_RATE` actions a minute (default 120), MCP calls and API calls alike.
+- Keys never go in logs or the tribe folder. The one URL that carries a key is the claude.ai connector URL, because
+  that form has no header field; the sheet says to keep it private, and the header form is offered under a fold.
+
+**Alongside you.** Presence says where it is ("Campw's Claude · in Launch plan doc"). Its messages carry its name, and
+you can edit or delete them like your own. MCP tools it gets on top of the usual ones: `inbox_next` (new @mentions of
+it in channels it can see, plus your private messages; `@Campw's Claude` from anyone, `@claude` from you), `reply_chat`,
+`react_chat`, `comment_task`, `where_is`.
+
+HTTP: `GET|POST|PUT|DELETE /api/invite-claude` (status · make or re-key · `{scopes, paused, adminAsMe}` · remove).
+Test: `app/test/e2e_invite_claude.py`; security: `security4_test.py` › C.

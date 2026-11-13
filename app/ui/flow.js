@@ -423,13 +423,14 @@
       <div class="linkbox ii-link"><code id="ii-link" title="${esc(link)}">${esc(link)}</code><button class="btn sm primary" id="ii-copy">${copied ? 'Copied' : 'Copy'}</button></div>
       <div class="ii-kind ${kind === 'public' ? 'ok' : 'warn'}">${esc(KIND[kind] || '')}${kind === 'public' ? '' : ' · <button class="linkish" id="ii-public">Make it work from anywhere</button>'}</div>
       <div class="ii-qr hidden" id="ii-qr"></div>
-      <div class="ii-acts">${navigator.share ? '<button class="btn" id="ii-share">Share…</button>' : ''}<button class="btn" id="ii-qrbtn">QR code</button><button class="btn" id="ii-claude">Connect my AI</button></div>
+      <div class="ii-acts">${navigator.share ? '<button class="btn" id="ii-share">Share…</button>' : ''}<button class="btn" id="ii-qrbtn">QR code</button><button class="btn" id="ii-claude">Connect my AI</button><button class="btn" id="ii-myclaude">Invite your Claude</button></div>
       <div class="modal-foot"><span class="faint" style="font-size:13px;align-self:center">Good for 3 days · up to 10 people</span><span style="flex:1"></span><button class="btn primary" data-close>Done</button></div>`;
     body.querySelector('[data-close]').onclick = close;
     $('#ii-copy').onclick = async () => { if (await copyText(link)) { $('#ii-copy').textContent = 'Copied'; toast('Invite link copied'); } else { getSelection().selectAllChildren($('#ii-link')); toast('Press Ctrl+C to copy'); } };
     if ($('#ii-share')) $('#ii-share').onclick = () => navigator.share({ title: `Join ${f.name} on TribeCode`, text, url: link }).catch(() => {});
     $('#ii-qrbtn').onclick = () => { const q = $('#ii-qr'); if (q.classList.toggle('hidden')) return; q.innerHTML = `<div class="qr">${window.TribeQR.svg(link)}</div><p class="faint">Scan with a phone camera to join.</p>`; };
     $('#ii-claude').onclick = () => { close(); App().connectClaude && App().connectClaude(); };
+    $('#ii-myclaude').onclick = () => { close(); window.TribeInviteClaude && window.TribeInviteClaude.open(); };
     const pub = $('#ii-public'); if (pub) pub.onclick = async () => {   // turn on Tailscale Funnel / cloudflared, then swap in the public link
       pub.disabled = true; pub.textContent = 'Turning it on…';
       try {

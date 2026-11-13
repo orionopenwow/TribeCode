@@ -42,7 +42,7 @@
 <link rel="stylesheet" href="repo.css">
 <link rel="stylesheet" href="ship.css">
 <link rel="stylesheet" href="notify.css">
-<link rel="stylesheet" href="presence.css"><link rel="stylesheet" href="peoplepanel.css">
+<link rel="stylesheet" href="presence.css"><link rel="stylesheet" href="peoplepanel.css"><link rel="stylesheet" href="inviteclaude.css">
 <link rel="stylesheet" href="cropper.css">
 <link rel="stylesheet" href="flint.css"><!-- feat/flint -->
 <link rel="stylesheet" href="aibasics.css"><link rel="stylesheet" href="aiconsent.css"><link rel="stylesheet" href="inspoboard.css"><!-- feat/flint-ai: ✦ basics + the inspiration board -->
@@ -248,6 +248,7 @@
         <button class="nest-row" id="nest-settings" data-pnav="settings"><svg class="i"><use href="#i-gear"/></svg><span>Settings</span></button>
         <div class="nest-preview-slot" id="nest-preview-slot"></div><!-- Preview game / app: its own button at the bottom (widgets.js) -->
         <button class="nest-row sf-invite" id="tour-invite" title="Invite friends to this tribe"><i class="sf-thumb sf-faces" id="sf-faces" aria-hidden="true"></i><span>Invite friends</span></button>
+        <button class="nest-row sf-claude" id="sf-claude" data-ic-open title="Invite your own Claude: it joins next to you, with your access"><i class="sf-thumb" aria-hidden="true"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v3M12 18v3M3 12h3M18 12h3M6 6l2 2M16 16l2 2M18 6l-2 2M8 16l-2 2"/></svg></i><span>Invite your Claude</span></button>
         <button class="item local-folder hidden" id="folder-item" title="Workspace folder"><span id="folder-label"></span></button>
       </div>
     </aside>
@@ -436,7 +437,7 @@
 <script src="helpersetup.js" defer></script><!-- right panel: Meet Flint, give him an AI, bring your own AI --><!-- Word, Excel, PowerPoint, Google: exports for docs, sheets and slides --><!-- @ picker: people, agents (public commands), @ai --><!-- Beginner · Intermediate · Advanced: how much each person sees -->
 <script src="keyboard.js" defer></script><!-- phones: the message bar rides up with the keyboard -->
 <script src="notify.js"></script>
-<script src="presence.js" defer></script><script src="peoplepanel.js" defer></script><!-- feat/presence: where everyone is, the People panel -->
+<script src="presence.js" defer></script><script src="peoplepanel.js" defer></script><script src="inviteclaude.js" defer></script><!-- Invite your Claude --><!-- feat/presence: where everyone is, the People panel -->
 <script src="cropper.js"></script>
 <script src="userbar.js"></script>
 <script src="stage.js"></script>
