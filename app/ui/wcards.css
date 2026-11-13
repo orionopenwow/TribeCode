@@ -1,0 +1,106 @@
+/* Live widget cards (feat/widgets-v2, app/ui/wcards.js): one shell for every card (icon · title · ⋯), the same width and
+   paddings, at most 240px tall with its own scroll, text that ellipsizes instead of clipping. Flat matte: 1px borders,
+   depth from luminance steps, theme variables only, motion tokens only. */
+.wg-cards { display: flex; flex-direction: column; gap: 8px; padding: 6px 10px 2px; }
+.wg-cards.empty { display: none; }
+.wg-cards > .wg-row { position: relative; }
+.wg-cards .wg-more { margin-left: auto; width: 26px; height: 26px; border-radius: 7px; display: grid; place-items: center; font-size: 16px; color: var(--faint); opacity: 0; flex: none; }
+.wg-cards .wg-row:hover .wg-more, .wg-cards .wg-row:focus-visible .wg-more { opacity: 1; }
+@media (hover: none) { .wg-cards .wg-more { opacity: 1; } }
+
+.wgc { display: flex; flex-direction: column; min-width: 0; background: var(--surface); border: 1px solid var(--edge); border-radius: var(--r-card, 12px);
+  transition: border-color var(--dur-quick) var(--ease-out), opacity var(--dur-quick) var(--ease-out); }
+.wgc:hover, .wgc:focus-within { border-color: var(--edge-pop, var(--edge)); }
+.wgc.is-err { border-color: color-mix(in srgb, var(--alert) 45%, var(--edge)); }
+.wgc.ro-dragging { opacity: .6; }
+.wgc-h { display: flex; align-items: center; gap: 8px; height: 36px; padding: 0 4px 0 10px; border-bottom: 1px solid var(--edge); cursor: grab; touch-action: pan-y; }
+.wgc-h > svg.i { width: 16px; height: 16px; color: var(--muted); flex: none; }
+.wgc-t { flex: 1; min-width: 0; margin: 0; font: 600 13px/1.2 var(--font); color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.wgc-more { width: 28px; height: 28px; border-radius: var(--r-sm, 7px); display: grid; place-items: center; color: var(--faint); flex: none; }
+.wgc-more:hover, .wgc-more:focus-visible { background: var(--hover); color: var(--text); }
+.wgc-b { max-height: 240px; overflow: auto; overscroll-behavior: contain; padding: 6px 0; font-size: 13px; color: var(--muted); }
+
+.wgc-list { list-style: none; margin: 0; padding: 0 6px; display: flex; flex-direction: column; }
+.wgc-list > li { display: flex; align-items: center; gap: 8px; min-height: 30px; padding: 2px 4px; border-radius: var(--r-sm, 7px); min-width: 0; }
+.wgc-list > li:hover { background: var(--hover); }
+.wgc-txt { flex: 1; min-width: 0; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.wgc-txt.done { color: var(--faint); text-decoration: line-through; }
+.wgc-txt > svg.i { width: 14px; height: 14px; vertical-align: -2px; color: var(--muted); }
+.wgc-sub { font-size: 12.5px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 55%; }
+.wgc-pad { display: block; padding: 2px 10px; max-width: none; }
+.wgc-num { font-family: var(--mono); font-weight: 600; color: var(--text); font-variant-numeric: tabular-nums; }
+.wgc-tag { font-family: var(--mono); font-size: 11.5px; color: var(--muted); border: 1px solid var(--edge); border-radius: 999px; padding: 0 7px; line-height: 18px; flex: none; }
+.wgc-why .wgc-sub { max-width: 100%; }
+.wgc-foot { display: flex; flex-wrap: wrap; gap: 6px; padding: 6px 10px 2px; }
+.wgc-empty, .wgc-err { display: flex; flex-direction: column; align-items: flex-start; gap: 8px; padding: 6px 10px 4px; }
+.wgc-empty p, .wgc-err p { margin: 0; line-height: 1.45; color: var(--muted); }
+.wgc-err p { color: var(--text); }
+.wgc .btn.sm { height: 30px; font-size: 13px; padding: 0 12px; max-width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.wgc-loading { color: var(--faint); }
+
+/* small states: a dot for people, a square for build/site/sync status */
+.wgc-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--who, var(--peer)); flex: none; outline: 1.5px solid var(--online); outline-offset: 1.5px; margin: 0 2px; }
+.wgc-dot.away { outline-color: var(--edge-pop, var(--edge)); }
+.wgc-state { width: 8px; height: 8px; border-radius: 2px; flex: none; background: var(--edge-pop, var(--edge)); }
+.wgc-state.ok { background: var(--online); } .wgc-state.bad { background: var(--alert); } .wgc-state.warn { background: var(--accent); }
+
+/* progress (milestones) and votes: flat bars */
+.wgc-ms > li { flex-wrap: wrap; row-gap: 4px; padding-top: 4px; padding-bottom: 6px; }
+.wgc-bar { flex-basis: 100%; height: 4px; border-radius: 2px; background: var(--surface-2); overflow: hidden; }
+.wgc-bar > i { display: block; height: 100%; background: var(--live); }
+.wgc-big { display: flex; flex-direction: column; gap: 2px; padding: 4px 10px; min-width: 0; }
+.wgc-big .wgc-num { font-size: 22px; line-height: 1.2; }
+.wgc-big .wgc-sub { max-width: 100%; }
+.wgc-q { margin: 2px 10px 6px; color: var(--text); font-weight: 500; line-height: 1.4; overflow-wrap: anywhere; }
+.wgc-poll { display: flex; flex-direction: column; gap: 4px; padding: 0 8px; }
+.wgc-opt { position: relative; display: flex; align-items: center; gap: 8px; min-height: 32px; padding: 0 10px; border: 1px solid var(--edge); border-radius: var(--r-ctl, 8px); background: var(--canvas); text-align: left; overflow: hidden; }
+.wgc-opt > i { position: absolute; inset: 0 auto 0 0; background: var(--live-tint, var(--surface-2)); transition: width var(--dur-base) var(--ease-out); }
+.wgc-opt > span, .wgc-opt > b { position: relative; }
+.wgc-opt.on { border-color: var(--live); }
+.wgc-opt:hover:not([disabled]) { border-color: var(--edge-pop, var(--edge)); }
+.wgc-opt[disabled] { cursor: default; }
+
+/* the note, the add rows, checklists, links */
+.wgc-note { display: block; width: calc(100% - 16px); margin: 2px 8px; min-height: 84px; resize: vertical; padding: 8px 10px; border: 1px solid var(--edge); border-radius: var(--r-ctl, 8px); background: var(--canvas); color: var(--text); font: 13.5px/1.5 var(--font); }
+.wgc-note:focus { outline: none; border-color: var(--accent-ink, var(--accent)); }
+.wgc-add { padding: 4px 8px 0; }
+.wgc-add .input { width: 100%; height: 32px; font-size: 13px; }
+.wgc-check label { flex: 1; min-width: 0; display: flex; align-items: center; gap: 8px; cursor: pointer; }
+.wgc-check input[type="checkbox"] { width: 15px; height: 15px; accent-color: var(--live); flex: none; margin: 0; }
+.wgc-x { width: 24px; height: 24px; border-radius: 6px; display: grid; place-items: center; color: var(--faint); opacity: 0; flex: none; }
+.wgc-list > li:hover .wgc-x, .wgc-x:focus-visible { opacity: 1; }
+.wgc-x:hover { background: var(--surface-2); color: var(--text); }
+@media (hover: none) { .wgc-x { opacity: 1; } }
+.wgc-link { flex: 1; min-width: 0; display: flex; align-items: center; gap: 8px; color: var(--text); text-decoration: none; text-align: left; }
+.wgc-link > svg.i { width: 14px; height: 14px; color: var(--muted); flex: none; }
+.wgc-link:hover .wgc-txt { text-decoration: underline; text-underline-offset: 2px; }
+.wgc-tip { margin: 2px 10px 4px; line-height: 1.5; color: var(--text); }
+
+/* pictures: the preview shot and the inspiration strip */
+.wgc-shot { display: block; width: calc(100% - 16px); margin: 2px 8px 4px; aspect-ratio: 16 / 9; border: 1px solid var(--edge); border-radius: var(--r-ctl, 8px); overflow: hidden; background: var(--canvas); padding: 0; }
+.wgc-shot img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.wgc-tile { display: grid; place-items: center; width: 100%; height: 100%; background: var(--tile); color: var(--canvas); font: 700 22px var(--display, var(--font)); }
+.wgc-strip { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; padding: 2px 8px; }
+.wgc-pic { aspect-ratio: 1; border: 1px solid var(--edge); border-radius: 6px; overflow: hidden; padding: 0; background: var(--canvas); }
+.wgc-pic img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+/* the settings popover (countdown, poll) */
+.wgc-set label { display: flex; flex-direction: column; gap: 4px; font-size: 12.5px; color: var(--muted); }
+.wgc-set .wgc-sub { max-width: none; white-space: normal; }
+
+/* the picker's small drawing of a card */
+.wgc-mini { display: flex; flex-direction: column; gap: 6px; }
+.wgc-mini > b { display: flex; align-items: center; gap: 6px; }
+.wgc-mini > b svg.i { width: 14px; height: 14px; color: var(--muted); }
+.wgc-mini > span { font-family: var(--mono); font-size: 11.5px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* phones: the cards sit in the side panel; a little bigger to tap */
+@media (max-width: 820px) {
+  .wg-cards { padding: 6px 8px 2px; }
+  .wgc-h { height: 40px; }
+  .wgc-more { width: 36px; height: 36px; }
+  .wgc-list > li { min-height: 36px; }
+  .wgc-note { font-size: 16px; }
+  .wgc-add .input { height: 40px; font-size: 16px; }
+}
+@media (prefers-reduced-motion: reduce) { .wgc, .wgc-opt > i { transition: none; } }
