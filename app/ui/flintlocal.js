@@ -170,8 +170,8 @@
   function go(key) {
     const W = window;
     const map = {
-      design: ['TribeCanvas', g => g.open()], preview: ['TribePreview', g => g.open()], market: ['TribeMarket', g => g.open()], trending: ['TribeMarket', g => g.open()],
-      studios: ['TribeStudios', g => g.open()], company: ['TribeCompany', g => g.go()], assets: ['TribeAssets', g => g.open({})], academy: ['TribeAcademy', g => g.open({})],
+      design: ['TribeDesignFlow', g => g.open({})], canvas: ['TribeCanvas', g => g.open()], preview: ['TribePreview', g => g.open()], market: ['TribeMarket', g => g.open()], trending: ['TribeMarket', g => g.open()],
+      studios: ['TribeStudios', g => g.open()], company: ['TribeCompany', g => g.open()], assets: ['TribeAssets', g => g.open({})], academy: ['TribeAcademy', g => g.open({})],
       secretary: ['TribeSecretary', g => g.open()], personalize: ['TribePersonalize', g => g.open('you')], profile: ['TribePersonalize', g => g.open('you')], customize: ['TribeLook', g => g.open('tribe')],
       jam: ['TribeJam', g => g.open()], publish: ['TribePublish', g => g.open()], search: ['TribePalette', g => g.open()], shortcuts: ['TribeHelp', g => g.shortcuts()], notes: ['TribeCaptures', g => g.open()],
       inbox: ['TribeNotify', g => g.openInbox()], inspo: ['TribeInspoBoard', g => g.open({})], dms: ['TribeDM', g => g.open && g.open()], brainpick: ['TribeBrain', g => g.open()], templates: ['TribeSiteLib', g => g.open({ pid: C && C.project && C.project() })],
@@ -187,6 +187,7 @@
     const sl = s.slots || {}, id = s.intent, area = s.area;
     const legacy = async (text, sum) => { await H.legacy(text); return { said: true, sum: sum || text }; };
     const needT = () => (connected() ? null : { text: T('needTribe'), acts: [['Host or join', 'invite']] });
+    if (id === 'nav.settings' && sl.section === 'notifications' && window.TribeNotify && window.TribeNotify.openSettings) { window.TribeNotify.openSettings(); return { text: T('opened', { x: 'Notification settings' }), sum: 'opened notification settings' }; }
     if (id === 'nav.files' && sl.cat) {   // "show my pictures": Files on that kind's tab
       const r = NAVLEGACY.files ? await legacy('open files', 'opened Files') : null;
       let n = 0; const pick = () => { const b = [...document.querySelectorAll(`[data-dk="${sl.cat}"]`)].find(x => x.offsetParent); if (b) b.click(); else if (++n < 20) setTimeout(pick, 120); };
