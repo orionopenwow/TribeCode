@@ -48,7 +48,7 @@ function scopeOfPath(p) {
   return 'general';
 }
 // Never for an invited Claude, whatever its owner may do: keys, invites, hosting, accounts, its own permissions.
-const NEVER = /^(invite-claude|agents$|agents\/mine|invites|tribe-link|share|devices|host|backup|account|accounts|oauth|session|cloud|bootstrap|join|claim|reclaim|fresh|github|perms\/(assign|overrides|reset|mute|remove)|connections|openspace|brain|settings\/secrets)/;
+const NEVER = /^(invite-claude|agents$|agents\/mine|invites|tribe-link|share|devices|host|backup|account|accounts|oauth|session|cloud|bootstrap|join|claim$|reclaim|fresh|github|connections|openspace|brain|settings\/secrets)/;
 // Admin-level areas: only with "act as me for admin" (and then perms.js still checks the owner's own role).
 const ADMIN = /^(perms|modes|members\/[^/]+\/role|projects\/[^/]+\/(delete|settings)|widgets)/;
 // Read-only tools that stay on when the owner can only watch (spectator).

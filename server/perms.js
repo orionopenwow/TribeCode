@@ -276,7 +276,7 @@ function perms({ P, store, getMembers, saveMembers, bus, broadcast, pushPresence
         labels: LABEL, roles: ROLES, columns: COLUMNS, ranks: RANK,
         ...(manager ? { matrix: matrix(me), members: membersView(me, pid), canReset: me.role === 'host' || atLeast(me, 'admin') } : {}) });
     }
-    if (me.role === 'agent') return fail(res, 403, 'agents don\'t manage roles');
+    if (me.role === 'agent' && !(me.invited && me.adminAsMe && ['mute', 'remove'].includes(b))) return fail(res, 403, 'agents don\'t manage roles');   // an invited Claude acting as its admin may moderate, never change roles
     const body = m === 'GET' || m === 'DELETE' ? {} : await readBody(req).catch(() => ({}));
     if (m === 'PUT' && b === 'overrides') return wrap(() => ({ matrix: setOverride(me, str(body.cap, 60), str(body.role, 20), !!body.on) }));
     if (m === 'POST' && b === 'reset') return wrap(() => ({ matrix: reset(me) }));

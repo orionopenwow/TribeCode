@@ -326,7 +326,7 @@
     try {
       const { messages } = await C.api(`/chat/general?limit=${PAGE}`);
       $('#chat-list').classList.remove('from-cache'); chatCache.set(messages);
-      $('#chat-list').innerHTML = messages.length ? (messages.length >= PAGE ? moreBtn() : '') + messages.map(chatHtml).join('') : '<div class="empty-room">Say hi 👋</div>';
+      $('#chat-list').innerHTML = messages.length ? (messages.length >= PAGE ? moreBtn() : '') + messages.map(chatHtml).join('') : '<div class="empty-room">Say hi 👋<button type="button" class="btn sm ic-empty" data-ic-open>Invite your Claude</button></div>';
       $('#chat-list').scrollTop = 1e9;
       for (const it of (C.outbox ? C.outbox() : [])) if (it.kind === 'chat' && it.ch === 'general' && !messages.some(x => x.cid === it.body.cid)) pendingBubble(it.body.text, it.body.cid, C.connected() ? 'sending' : 'waiting');
     } catch {}
@@ -477,6 +477,7 @@
         ${window.TribeProjects ? window.TribeProjects.invitePicker() : ''}
         <div class="linkbox"><code id="inv-link">Creating link…</code><button class="btn primary" id="inv-copy" disabled>Copy</button></div>
         <div class="qr-wrap"><div class="qr" id="inv-qr"></div><p>Scan to join from a phone.<br><span class="faint" id="inv-net"></span></p></div></details>
+        <section class="tl-box ic-inv"><span class="eyebrow">Your own AI</span><p class="faint tl-sub">Your Claude joins next to you, with your access and never more. One command, or a config to paste.</p><button type="button" class="btn" id="inv-claude" data-ic-open>Invite your Claude</button></section>
         <div class="modal-foot"><button class="btn" data-close>Done</button></div>`;
       // v0.26 tribe link: <host>/t/<name>, permanent until the host renames, renews or turns it off
       const tl = async (patch) => {
