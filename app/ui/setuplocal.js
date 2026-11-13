@@ -1,8 +1,7 @@
 // Optimistic setup (feat/setup-local, docs/LIGHT-HOSTING.md): a project starts instantly on this device, and where it
 // lives is the last step, optional, and can be chosen any time later.
-//   start()   "Start a project": a name, one line about it, optional notes and first tasks, and optional Company basics
-//             (company name, mission, the four lean seats as Me / AI / Later). Create makes a local draft at once
-//             (offline.js solo mode: tasks, docs, notes, chat and Company all work with no server), then offers where().
+//   start()   opens the one create flow (tribenew.js: name and icon · where it lives · invite · done); the hosting
+//             it uses is here: host.computer() and host.importTo() (This computer, Free cloud) and github.connect().
 //   where()   "Where should it live?" (optional, last): a GitHub repo · This computer · Free cloud · Phone · Decide later.
 //     GitHub repo    the project lives in a repo anyone can see: the live repo state shows on the project, and with a
 //                    token kept only on this device, suggestions (tasks, the project page, docs) are mirrored as plain
