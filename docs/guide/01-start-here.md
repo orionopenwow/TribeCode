@@ -1,21 +1,21 @@
 # Start here
 
-TribeCode lets a few friends, or one person with AI helpers, build apps, games and websites together, and run the business around them. Each friend can bring their own AI (Claude Code, Codex, Gemini CLI, Cursor…). The work lives in your shared GitHub repo, and friends join with a link. Host it in the desktop app, on your own server or in the cloud.
+TribeCode lets a few friends, or one person with AI helpers, build apps, games and websites together, and run the business around them. Each friend can bring their own AI (Claude Code, Codex, Gemini CLI, Cursor…). The work lives in your shared GitHub repo, and friends join with a link.
 
 ## The idea in one minute
 
-- **Your tribe, your files.** Chat, docs and tasks are plain files in the tribe's folder (`TribeCode` in your home folder on the desktop app); the code lives in your GitHub repo.
-- **Friends join with a link.** On a phone or a computer. They type a name and they're in.
-- **People decide, agents do the work.** Your AI can read the board, claim files and propose changes. You approve with one tap.
+- **Your tribe, your files.** Chat, docs and tasks are plain files in the tribe's folder; the code lives in your GitHub repo.
+- **Friends join with a link**, on a phone or a computer.
+- **People decide, agents do the work.** Your AI proposes; you approve with one tap.
 
 ## Your first two minutes
 
-1. **Open the app.** It sets itself up: your name comes from your computer and a color is picked for you. You can change both in **Settings**.
-2. **On Home, tap Create a project.** Pick **Create my own** or a template, give it a name and tap **Create**. Your computer hosts it.
-3. **Invite a friend.** The invite sheet opens right after, with the link already copied. Text it to someone.
-4. **Connect your AI** (optional): Claude Code, Codex CLI, Gemini CLI, Cursor or another MCP tool. Copy what it shows and paste it.
+1. **Open the app.** Nothing is created for you. **Make it yours** asks for your name, icon, theme and language (skip any of it), then Flint offers a quick look around.
+2. **On Home, tap Start your first project** (or **Join with a link**). It starts on this device; choose where it lives any time later.
+3. **Invite a friend.** The invite sheet copies the link.
+4. **Connect your AI** (optional). Flint works without one.
 
-Each project's **Dashboard** shows **Set up**: four steps (the vision, a first task, your AI, the repo) that tick off as you go.
+**See how TribeCode works** in the **?** menu runs a demo one step at a time and clears itself afterwards.
 
 ## Where things are
 
@@ -23,23 +23,26 @@ Each project's **Dashboard** shows **Set up**: four steps (the vision, a first t
 | --- | --- |
 | See the project at a glance | **Dashboard** |
 | Talk | **Messages** |
-| Write notes or share any file | **Files** |
+| Notes and any file | **Files** |
+| Design a screen, site, game or slides | **Design** (Flint beside the canvas; **Advanced** for layers) |
 | See what needs doing | **Task Board** |
+| Try what you built | **Preview** |
+| See who's here and where | **People**, top right |
 | See what the agents do | **Agents Hub** |
 | Approve things | The **bell**, top right |
 | Run a business, hire, learn, add tools | **Company**, **Work**, **Academy**, **Marketplace** ([guides](10-company-mode.md)) |
-| Anything else | Press **Ctrl K** and type |
+| Anything else | **Ctrl K** |
 
 The circles on the far left are your projects. The flame logo takes you Home.
 
 ## Words you'll see
 
-- **Tribe**: your group and everything it makes. It lives on the host's computer.
+- **Tribe**: your group and everything it makes.
 - **Project**: one thing you build. A tribe can have several.
-- **Host**: the friend whose computer runs the tribe.
-- **Agent**: someone's AI (Claude Code, Codex…) working in the project.
-- **Lane**: an area of the code that one person owns, so nobody steps on each other.
+- **Host**: the computer (or cloud) that keeps the tribe online.
+- **Agent**: someone's AI working in the project.
+- **Lane**: an area of the code one person owns, so nobody steps on each other.
 
 ## Where this guide lives
 
-Open it from the **?** at the top right, from **Ctrl K**, or under **Settings**. It stays out of the way the rest of the time.
+Open it from the **?** at the top right, from **Ctrl K**, or under **Settings**.
