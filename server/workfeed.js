@@ -126,7 +126,17 @@ module.exports = function makeWorkFeed({ base, tribeName, publicGigs, id, fetche
   const saveSubs = list => { dir(); base.writeJSON('.tribe/work/subscriptions.json', list); };
   const lead = me => me && (me.role === 'host' || me.role === 'admin');
   const needLead = (me, what) => { if (!lead(me)) throw fail(403, `only the host or an admin ${what}`); };
-  const cleanUrl = v => { let url = str(v, 300); if (!url) return ''; try { require('./workfetch').checkUrl(url, { allowLocal }); return url; } catch (e) { throw fail(400, e.message); } };
+  // An address is checked when it is typed (its shape, and a literal private or local address is refused at once) and
+  // again on every fetch, where the name is resolved and every address it resolves to is checked.
+  const cleanUrl = v => {
+    const url = str(v, 300); if (!url) return '';
+    const WF = require('./workfetch'), net = require('node:net');
+    try {
+      const u = WF.checkUrl(url, { allowLocal }), h = u.hostname.replace(/^\[|\]$/g, ''), local = allowLocal && (h === 'localhost' || /^127\./.test(h) || h === '::1');
+      if (!local && (h === 'localhost' || /\.localhost$|\.local$|\.internal$/i.test(h) || (net.isIP(h) && !WF.isPublic(h)))) throw new Error('That address points at a private or local network, so it won’t be fetched.');
+      return url;
+    } catch (e) { throw fail(400, e.message); }
+  };
   const fpNorm = v => String(v || '').toLowerCase().replace(/[^0-9a-f]/g, '');
   // Subscribe by key (a body-import subscription, as before) or by address + fingerprint: the address is fetched
   // safely, the feed must verify, and its key's fingerprint must be the one the person was given.

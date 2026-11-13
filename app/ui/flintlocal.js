@@ -385,7 +385,9 @@
 
   async function kbAnswer(q, H) {
     let ans = [];
-    if (connected()) { try { ans = (await C.api('/flint/kb?q=' + encodeURIComponent(q) + '&k=2')).answers || []; } catch {} }
+    const FM = window.TribeFlintModel, sem = FM && FM.ready() ? FM : null;   // tier 1: with the local helper, more candidates, re-ranked by meaning
+    if (connected()) { try { ans = (await C.api('/flint/kb?q=' + encodeURIComponent(q) + '&k=' + (sem ? 8 : 2))).answers || []; } catch {} }
+    if (sem && ans.length > 1) ans = sem.rerank(q, ans, a => `${a.title} ${a.heading} ${a.snippet}`, a => a.score);
     if (!ans.length && N()) {   // offline: the Guide pages the app can see
       try { const r = await fetch((C ? C.base() : '') + '/api/guide'); if (r.ok) { const pages = (await r.json()).pages || []; const docs = []; pages.forEach(p => String(p.body || '').split(/\n(?=#{2,3}\s)/).forEach(sec => { const h = (/^#{2,3}\s+(.+)$/m.exec(sec) || [])[1] || p.title; docs.push({ id: docs.length, text: `${p.title} ${h} ${sec}`, p, h, sec }); })); const hit = N().search(N().index(docs), q, 1)[0]; if (hit && hit.score > 0.08) ans = [{ title: hit.doc.p.title, heading: hit.doc.h, snippet: hit.doc.sec.replace(/^#.*$/gm, '').replace(/\s+/g, ' ').trim().slice(0, 260), source: 'Guide', slug: hit.doc.p.slug }]; } } catch {}
     }
@@ -396,7 +398,7 @@
     const qw = String(q).toLowerCase().split(/[^\p{L}\p{N}]+/u).filter(w => w.length >= 4 && !GEN.has(w)).map(w => w.replace(/(ing|ed|es|s)$/, ''));
     const hay = `${a.title} ${a.heading} ${a.snippet}`.toLowerCase();
     const hit = qw.filter(w => hay.includes(w)).length;
-    if (!qw.length || hit < Math.max(1, Math.ceil(qw.length / 3))) return null;
+    if (!(a.cos >= 0.6) && (!qw.length || hit < Math.max(1, Math.ceil(qw.length / 3)))) return null;   // close in meaning is enough when the local helper says so
     const src = a.source === 'Guide' ? `the Guide › ${a.title}` : `${a.file || a.title}`;
     return { text: T('kb', { src, h: a.heading || a.title, s: a.snippet }), acts: a.slug ? [['Open in Guide', 'guide', a.slug]] : [], kb: true };
   }

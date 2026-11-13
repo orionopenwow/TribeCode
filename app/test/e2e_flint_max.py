@@ -285,7 +285,7 @@ def main():
             # ================= Flint's page =================
             pg.evaluate("TribeFlintPage.open()"); pg.wait_for_selector("#flint-page:not([hidden]) .fpg-cap", timeout=5000)
             assert pg.locator(".fpg-lv.on").count() == 1 and pg.locator(".fpg-lv.on").get_attribute("data-lv") == "none", "no AI is the active level"
-            assert pg.locator(".fpg-lv").count() == 4 and pg.is_visible("#fp-local") and "FLINT-RESEARCH" in pg.get_attribute("#fp-plan", "href")
+            assert pg.locator(".fpg-lv").count() == 5 and pg.is_visible("#fp-local") and "FLINT-RESEARCH" in pg.get_attribute("#fp-plan", "href")
             n_all = pg.locator(".fpg-cap").count(); assert n_all >= 40, n_all
             groups = pg.locator(".fpg-grp h3").all_inner_texts()
             for g in ["Website designer", "Design canvas", "Docs", "Sheets", "Slides", "Your tribe"]:
