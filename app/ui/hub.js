@@ -736,7 +736,7 @@
     for (const f of [...(upCache.mine || []), ...(upCache.project || [])]) {
       const cat = FK_CAT[f.kind] || 'other', proj = f.scope === 'project';
       out.push({ src: 'up', id: f.id, f, cat, type: FK_LABEL[f.kind] || 'File', title: f.name, at: f.at, owner: ownerOf(f.by, f.byName), loc: proj ? pjLoc(f.project) : privLoc(), mine: !proj || f.by === meId,
-        thumb: f.kind === 'image' && f.size < 4 * 1048576 ? T.img('', `data-thumb="${esc(f.id)}"`) : T.icon(cat, `${FK_LABEL[f.kind] || 'File'} · ${fsize(f.size || 0)}`), attrs: `data-up="${esc(f.id)}"`, acts: ['open', 'download', ...(f.by === meId || me().role === 'host' ? ['delete'] : [])] });
+        thumb: f.kind === 'image' && f.size < 4 * 1048576 ? T.img('', `data-thumb="${esc(f.id)}"`) : T.icon(cat, `${FK_LABEL[f.kind] || 'File'} · ${fsize(f.size || 0)}`), attrs: `data-up="${esc(f.id)}" data-upname="${esc(f.name)}" data-uptype="${esc(f.type || "")}" draggable="true"`, acts: ['open', 'download', ...(f.by === meId || me().role === 'host' ? ['delete'] : [])] });
     }
     for (const c of designCache) out.push({ src: c.kind, id: `${c.pid}|${c.id}`, pid: c.pid, rid: c.id, cat: 'designs', type: c.kind === 'board' ? 'Whiteboard' : 'Design', title: c.name || 'Untitled', at: c.updated, loc: pjLoc(c.pid), mine: false,
       thumb: c.kind === 'board' ? T.board(c.elements) : T.design(c.nodes), attrs: `data-gdesign="${esc(c.pid)}|${esc(c.id)}"`, acts: ['open', 'rename', 'download', ...(c.id !== 'main' ? ['delete'] : [])], exportLabel: 'Download (.json)' });
@@ -1330,7 +1330,7 @@
 
   setTimeout(() => { panel(); scratch.sync(); fromHash(); }, 0);
   if (document.body.dataset.view === 'hub') setTimeout(onShow, 0);   // app.js may have shown the hub before this file loaded
-  window.TribeHub = { open, onShow, onHide, mode: () => mode, last, remember, resume, scratch, refresh: () => load(true), data: () => data, panel,
+  window.TribeHub = { open, onShow, onHide, mode: () => mode, last, remember, resume, scratch, refresh: () => load(true), data: () => data, panel, reloadFiles: () => upList().then(() => { if (mode === 'docs') refreshFiles(); }),   // feat/dropzone
     openNote: id => { open('docs'); setTimeout(() => noteEditor(id), 60); }, jump,
     editText: src => noteEditor(null, false, src), openFile, newMenu: a => { if (mode !== 'docs' || !fv) open('docs'); setTimeout(() => fv && fv.studio(a && a.isConnected ? a : $('#dc-new')), mode === 'docs' ? 0 : 80); }, files: () => fv };   // feat/setup-local: localfiles.js opens local docs and files here   // feat/flint: Flint opens the note it captured
 })();

@@ -840,6 +840,13 @@ ${canEdit && !started ? `      <section class="pj-context" id="pj-context"><div 
     $('#np-git').onclick = async () => { $('#np-git').disabled = true; try { await C.api(`/projects/${encodeURIComponent(p.id)}/git-init`, { method: 'POST' }); toast('It’s a code repository now'); } catch (e) { toast(e.message); } close(); await refresh(); switchTo(p.id, 'home'); };
   }
   const fromPath = path => create({ path }, 'Opening the folder…').catch(() => {});
+  // feat/dropzone: "Start a new project from this folder" (and "Make it a project"): the new-project sheet, already read
+  async function fromFolder(name, items, path) {
+    if (!isHost()) { toast('Only the host can bring a folder in. Ask them, or start an empty project with +.'); return null; }
+    gallery(); openAdvanced();
+    if (path) { const inp = $('#np-input'); if (inp) { inp.value = path; hint(); } return { name, path }; }
+    return analyze(name, items.map(x => ({ path: x.path, file: x.file })));
+  }
 
   // Folder reading: drag and drop (webkitGetAsEntry), showDirectoryPicker, or <input webkitdirectory>.
   function wireDrop(dz) {
@@ -933,7 +940,7 @@ ${canEdit && !started ? `      <section class="pj-context" id="pj-context"><div 
   document.addEventListener('drop', async e => { if (!(e.target.closest && e.target.closest(DROP)) || !isHost()) return; e.preventDefault(); $('#pj-plus').classList.remove('over'); gallery(); try { await fromDataTransfer(e.dataTransfer); } catch (err) { status(`<div class="np-err">${esc(err.message)}</div>`); } });
   (async () => {   // Tauri v2: a dropped folder comes with its real path (guarded: the desktop shell only)
     const ev = window.__TAURI__ && window.__TAURI__.event; if (!ev || !ev.listen) return;
-    try { await ev.listen('tauri://drag-drop', e => { const paths = e.payload && e.payload.paths; if (paths && paths[0] && C.connected() && isHost()) fromPath(paths[0]); }); } catch {}
+    try { await ev.listen('tauri://drag-drop', e => { if (window.TribeDropZone) return; const paths = e.payload && e.payload.paths; if (paths && paths[0] && C.connected() && isHost()) fromPath(paths[0]); }); } catch {}
   })();
 
   // ---------- mobile: project switcher sheet ----------
@@ -963,5 +970,5 @@ ${canEdit && !started ? `      <section class="pj-context" id="pj-context"><div 
     const tryIt = () => { if (!C.connected() || !me().id) return false; try { history.replaceState(null, '', location.pathname + location.hash); } catch {} if (isHost()) remix(r); else toastMsg('That starter needs the host to start it. Share the link with them: github.com/' + r); return true; };
     if (!tryIt()) C.on('hello', function once() { if (r && tryIt()) r = ''; });
   })();
-  window.TribeProjects = { gallery, createFromIdea, nameFromIdea, openStarters, remix, step, refresh, list: () => projects, current: cur, cur: curP, face, label, here, pulses: () => pulses, sheet, pickImage, workspacePanel, switchTo, onShow, whereLabel, invitePicker, openNew, startFromFiles, analyze, fromPath, overview, requests };
+  window.TribeProjects = { gallery, createFromIdea, nameFromIdea, openStarters, remix, step, refresh, list: () => projects, current: cur, cur: curP, face, label, here, pulses: () => pulses, sheet, pickImage, workspacePanel, switchTo, onShow, whereLabel, invitePicker, openNew, startFromFiles, analyze, fromPath, fromFolder, overview, requests };
 })();
