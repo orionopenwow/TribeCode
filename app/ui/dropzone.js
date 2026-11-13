@@ -598,7 +598,7 @@
         const q = new URLSearchParams({ name, scope: pid() ? 'project' : 'me' });
         const r = await fetch(`${C.base()}/api/uploads?${q}`, { method: 'POST', headers: { ...authH(), 'Content-Type': 'application/octet-stream' }, body: await it.get() });
         const d = await r.json().catch(() => ({})); if (!r.ok) { toast(d.error || 'Upload failed'); continue; }
-        url = `${C.base()}/api/uploads/${encodeURIComponent(d.file.id)}/raw`; if (window.TribeMedia) url = window.TribeMedia.url(url);
+        url = `${C.base()}/api/uploads/${encodeURIComponent(d.file.id)}/raw`; if (window.TribeMedia && !pic) url = window.TribeMedia.url(url);   // a picture's link is signed each time the doc draws it (md.js), so it never expires in the doc
       } else if (pic && it.size < 1.5 * 1048576) url = (await shrink(await it.get(), 1200, 0.84)).src;
       else { toast(`${name}: connect to a tribe to link files in docs.`); continue; }
       lines.push(pic ? `![${name.replace(/[[\]]/g, '')}](${url})` : `[${name.replace(/[[\]]/g, '')}](${url})`);
@@ -752,8 +752,11 @@
       const col = i => { let s = ''; i++; while (i > 0) { const m = (i - 1) % 26; s = String.fromCharCode(65 + m) + s; i = Math.floor((i - 1) / 26); } return s; };
       const n = rows.length, total = c.columns.map((x, i) => (i === 0 ? 'Total' : x.type === 'number' ? `=SUM(${col(i)}2:${col(i)}${n})` : ''));
       const md = [rows[0], rows[0].map(() => '---'), ...rows.slice(1), total].map(r => `| ${r.join(' | ')} |`).join('\n') + '\n';
-      await newDoc(c.path.split('/').pop().replace(/\.(csv|tsv)$/i, ''), md, 'sheet');
-      return say0(`Opened ${c.path.split('/').pop()} as a sheet: ${plural(n - 1, 'row')}, with totals for the number columns.`);
+      // feat/calm-parity: "Chart this CSV" draws the chart too, with Flint's own sheet chart (flintmax.js: a comment
+      // under the table that sheet.js draws flat from the live values)
+      const FM = window.TribeFlintMax, sp = FM && FM.sheet && FM.sheet.chartSpec ? FM.sheet.chartSpec(rows) : null;
+      await newDoc(c.path.split('/').pop().replace(/\.(csv|tsv)$/i, ''), md + (sp ? '\n' + FM.sheet.chartComment(sp) + '\n' : ''), 'sheet');
+      return say0(`Opened ${c.path.split('/').pop()} as a sheet: ${plural(n - 1, 'row')}, with totals for the number columns${sp ? ` and a chart of ${sp.title.toLowerCase()}` : ''}.`);
     },
     async deck(set, R) {
       const docs = await itemsText(set, p => /\.(md|markdown|txt)$/i.test(p));

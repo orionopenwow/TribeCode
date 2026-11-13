@@ -29,3 +29,16 @@ body[data-mode="intermediate"] [data-mode-min="advanced"] { display: none !impor
 body[data-mode="beginner"]:not([data-unlocked~="autopilot"]) #co-autopilot-slot, body[data-mode="intermediate"]:not([data-unlocked~="autopilot"]) #co-autopilot-slot,
 body[data-mode="beginner"]:not([data-unlocked~="autopilot"]) #co-seat-autopilot-slot, body[data-mode="intermediate"]:not([data-unlocked~="autopilot"]) #co-seat-autopilot-slot,
 body[data-mode="beginner"]:not([data-unlocked~="money"]) #co-ledger-slot, body[data-mode="beginner"]:not([data-unlocked~="money"]) #co-seat-ledger-slot { display: none !important; }
+
+/* feat/calm-parity: pictures in a doc (md.js) */
+.md-img { display: block; max-width: 100%; height: auto; margin: 8px 0; border: 1px solid var(--edge); border-radius: 8px; }
+
+/* feat/calm-parity: phone tap targets. These four looked right but were under 28px to the finger (the audit's list):
+   the Home breadcrumb, colour swatches, People's filter chips and the demo pill. They keep their size; an unseen
+   ::after widens what a tap hits to at least 32px. */
+@media (pointer: coarse), (max-width: 820px) {
+  .hub-crumb .hc-home, .swatch, .ppl-chip, .od-pill { position: relative; }
+  .hub-crumb .hc-home::after, .swatch::after, .ppl-chip::after, .od-pill::after { content: ''; position: absolute; inset: -5px 0; }
+  .swatch::after { inset: -4px; }
+  .od-pill::after { inset: -3px 0; }
+}

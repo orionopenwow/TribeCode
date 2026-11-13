@@ -1,10 +1,24 @@
 // Small, safe Markdown renderer (escapes all HTML first). Supports headings, lists, task lists,
-// quotes, code blocks, tables, hr, bold/italic/strike/code, and http(s) links.
+// quotes, code blocks, tables, hr, bold/italic/strike/code, http(s) links and pictures.
+// Pictures (feat/calm-parity): ![alt](url) shows only for a safe address: the tribe's own /api links (signed again
+// each time they are drawn, so a picture dropped in a doc keeps showing), a small data:image (png, jpeg, gif, webp)
+// and https. Anything else (javascript:, http: elsewhere, SVG data, a relative path) stays as the text you typed.
 (function () {
   const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const DATA_MAX = 2000000;
+  function imgSrc(raw) {
+    const u = String(raw).replace(/&amp;/g, '&');
+    if (/^data:image\/(?:png|jpe?g|gif|webp);base64,[A-Za-z0-9+/=]+$/.test(u)) return u.length <= DATA_MAX ? u : null;
+    let x; try { x = new URL(u); } catch { return null; }
+    const C = window.TribeClient; let own = [location.origin];
+    try { if (C && C.base) own.push(new URL(C.base(), location.href).origin); } catch {}
+    if (own.includes(x.origin) && /^\/api\/[\w./%~-]+$/.test(x.pathname) && !/(^|\/)\.\.(\/|$)/.test(x.pathname)) { x.searchParams.delete('mt'); x.searchParams.delete('token'); return window.TribeMedia ? window.TribeMedia.url(x.href) : x.href; }
+    return x.protocol === 'https:' && !x.username && !x.password ? x.href : null;
+  }
   function inline(t) {
-    const codes = [];
+    const codes = [], imgs = [];
     t = esc(t).replace(/`([^`]+)`/g, (_, c) => `\u0000${codes.push(c) - 1}\u0000`);
+    t = t.replace(/!\[([^\]]*)\]\(([^\s)]+)\)/g, (all, alt, u) => { const src = imgSrc(u); return src ? `\u0001${imgs.push(`<img class="md-img" src="${esc(src)}" alt="${alt}" loading="lazy" decoding="async" referrerpolicy="no-referrer">`) - 1}\u0001` : all; });
     t = t.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
       .replace(/(^|[^*])\*([^*\s][^*]*?)\*/g, '$1<em>$2</em>')
       .replace(/~~(.+?)~~/g, '<del>$1</del>')
@@ -21,7 +35,7 @@
         }
         return /^https?:\/\/[^/?#]/.test(u) ? `${pre}<a href="${u}" target="_blank" rel="noopener noreferrer">${u}</a>${tail}` : all;
       });
-    return t.replace(/\u0000(\d+)\u0000/g, (_, i) => `<code>${codes[i]}</code>`);
+    return t.replace(/\u0001(\d+)\u0001/g, (_, i) => imgs[i]).replace(/\u0000(\d+)\u0000/g, (_, i) => `<code>${codes[i]}</code>`);
   }
   const align = t => { const m = /^\{(left|center|right|justify)\} (.*)$/.exec(t); return m ? [m[1] === 'left' ? '' : ` class="md-al-${m[1]}"`, m[2]] : ['', t]; };
   function render(src) {
