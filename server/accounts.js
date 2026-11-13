@@ -313,7 +313,7 @@ module.exports = function makeAccounts({ store, getMembers, isLocal, limited, ha
 
   async function auth2(req, res, { b, c, m, body, send, fail, tooMany }) {
     // public: what this TribeCode offers (the sign-up sheet, signin.html and the pop-up read it)
-    if (b === 'config' && m === 'GET') { send(res, 200, { on: true, openSignup: openSignup(), email: emailOn(), twoStep: true, passkeys: true }); return true; }
+    if (b === 'config' && m === 'GET') { send(res, 200, { on: true, openSignup: openSignup(), email: emailOn() }); return true; }
     // ---- the host's settings: on the host computer only ----
     if (b === 'admin') {
       if (!isHostAdmin(req)) { fail(res, 403, 'only the host changes sign-in settings, on the host computer'); return true; }
@@ -444,7 +444,7 @@ module.exports = function makeAccounts({ store, getMembers, isLocal, limited, ha
         const own = load().accounts.find(a => (a.members || []).includes(mem.id));
         const clash = byKey(keyOf(username));
         if (clash && clash !== own) { fail(res, 409, 'that username is taken'); return true; }
-        if (own && own.password) { fail(res, 409, 'you already have an account: log in with it'); return true; }
+        if (own && (own.password || a3.totpOn(own.id))) { fail(res, 409, 'you already have an account: log in with it'); return true; }   // feat/auth3: a tribe key alone never steps around two-step
         if (body.password == null) { fail(res, 400, 'pick a password of at least 8 characters'); return true; }   // fix/review-4
         const a = own || { id: 'acct-' + id(10), created: now(), providers: [], sessions: [], members: [mem.id] };
         Object.assign(a, { username, usernameKey: keyOf(username), displayName: normalizeUsername(body.displayName) || a.displayName || username, status: 'active', ...mail, ...(body.password != null ? { password: scryptHash(body.password) } : {}) });

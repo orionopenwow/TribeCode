@@ -43,18 +43,85 @@ The footer of Work says which plan you're on, with "What does Premium add?".
 
 ## How it works today
 
-- The plan is a **local state** (`localStorage`, `tribecode.plan.v1`): `free`, `trial` (14 days, no card, nothing to
-  cancel) or `premium`.
-- **There are no payments yet.** `TribePremium.checkout()` is the hook for Stripe Checkout or Paddle Billing and says
-  so until it's wired (see the `TODO(payments)` in `app/ui/premium.js`). When it lands: create the checkout session on
-  the hosted service, verify the subscription server-side, then set the plan. Prices will be listed here before
-  anything is charged.
+- The server keeps the plan (`server/premium.js`, `.tribe/premium.json`): `free`, `trial` (14 days, no card, nothing to
+  cancel) or `premium` (tier `hosted` or `tribe`). The browser's copy (`tribecode.plan.v1`) is only a mirror.
+- **Whose plan.** A person with a real account (a password, a provider, a verified email or a passkey) has their own
+  plan, trial, credits and receipts. Everyone else shares the tribe's, as before. A feature is open when either one is
+  active, and credits come out of your own first, then the tribe's pool.
+- **By hand.** On the host computer, `PUT /api/premium { plan?, until?, tier?, addCredits?, account? }` sets a plan or
+  credits (`account` is an account id; without it the tribe's). It works with or without Stripe.
+
+## Payments (Stripe)
+
+Off until the host turns it on. With it off, the plans pop-out's buttons say "The host hasn't turned on payments yet"
+and nothing else changes.
+
+**Turn it on** with the environment, or on the host computer in Settings › Tribe & admin › Payments (kept in
+`.tribe/stripe.json`, 0600, the two secrets sealed with `.tribe/secret.key`; never sent back to a browser):
+
+| Setting | What it is |
+| --- | --- |
+| `STRIPE_SECRET_KEY` | the secret key (`sk_live_…`, or `sk_test_…` to try it) |
+| `STRIPE_WEBHOOK_SECRET` | the webhook's signing secret (`whsec_…`) |
+| `STRIPE_PRICE_HOSTED`, `STRIPE_PRICE_TRIBE` | recurring monthly prices for Premium Hosted and Premium Tribe |
+| `STRIPE_PRICE_CREDITS_10`, `_25`, `_50` | one-time prices for the 1,000, 2,500 and 5,000 credit packs |
+
+The prices people see still come from `site/pricing.html` (copied in `app/ui/premium.js` `PRICES`): keep the Stripe
+prices equal to them. An item with no price id isn't sold.
+
+**In Stripe** (Dashboard, once):
+
+1. Products: **Premium Hosted** ($6 a month, recurring), **Premium Tribe** ($24 a month, recurring), and three one-time
+   products or prices: **1,000 credits** $10, **2,500 credits** $25, **5,000 credits** $50. Copy each `price_…` id.
+2. Developers › Webhooks › Add endpoint: `https://<your public address>/api/premium/webhook`, with these events:
+   `checkout.session.completed`, `checkout.session.async_payment_succeeded`, `checkout.session.async_payment_failed`,
+   `customer.subscription.updated`, `customer.subscription.deleted`, `invoice.paid`, `invoice.payment_failed`,
+   `charge.refunded`. Copy the signing secret.
+3. Settings › Billing › Customer portal: turn it on (update card, cancel, invoices) so **Manage billing** has somewhere to go.
+
+**What happens**
+
+| Route | What it does |
+| --- | --- |
+| `POST /api/premium/checkout { item }` | `hosted`, `tribe` (a subscription) or `credits-10`, `-25`, `-50` (one-time). Makes a Checkout Session with the scope (the tribe, or the buyer's account) and the item in its metadata, and answers `{ url }`. People only. `409 payments-off`, `409 no-price`, `409 has-plan`. |
+| `POST /api/premium/webhook` | Stripe's events. No sign-in: the `Stripe-Signature` header is checked against the raw body (HMAC-SHA256, constant time, 5 minutes of tolerance). Each event id is applied once. It changes plans and credits through the same `change()` that `PUT /api/premium` uses. |
+| `POST /api/premium/portal` | `{ url }` for Stripe's customer portal (**Manage billing**). |
+| `GET /api/premium/history` | receipts and recent credit use (Settings › Plan & AI). The tribe's receipts are for the host and admins. |
+| `GET/PUT /api/premium/admin` | the host's settings, on the host computer. |
+
+- A paid Checkout upgrades the plan or adds the pack's credits. Coming back from Stripe (`/?billing=success`) only looks
+  again: nothing is granted by the browser.
+- **Subscription updated**: the tier follows the price; "cancel at period end" shows the end date and the plan stays on.
+- **Canceled** (`customer.subscription.deleted`, which Stripe sends when the paid time is over): back to free.
+- **Payment failed**: the plan stays for a 7-day grace, then goes back to free. A payment inside the grace keeps it.
+- **Refund of a credit pack** (`charge.refunded`): its credits come back out, a partial refund its share, never below zero.
+- Events from another TribeCode on the same Stripe account are ignored (the metadata carries this install's id).
+
+## What a credit buys
+
+1 credit is $0.01 of AI. Only answers from the hosted "TribeCode credits" AI use credits; your own AI never does. An
+answer costs by its size: what was sent (the instructions and the conversation) plus what came back, counted as
+characters divided by 4.
+
+| Size of the answer | Credits |
+| --- | --- |
+| up to 2,000 tokens | 1 |
+| up to 8,000 tokens | 3 |
+| up to 32,000 tokens | 10 |
+| more | 25 |
+
+The most an answer can cost (what is sent plus its length limit) is held before the call; what it didn't use comes
+back when the answer is in, and all of it when the call fails without an answer. The table is `COST_TABLE` in
+`server/premium.js`, and `GET /api/premium` sends it (`gated.aiCostTable`). Flint says once per session when credits
+have run out, opens the plans, and after that answers in basic mode quietly.
 
 ## For developers
 
 ```js
 const go = await TribePremium.gate('projects', { count: 4 });   // true = go ahead (soft gates always resolve true)
-TribePremium.plan();       // { plan: 'free' | 'trial' | 'premium', until }
+TribePremium.plan();       // { plan: 'free' | 'trial' | 'premium', until, tier }
+TribePremium.checkout('credits-10');   // opens Stripe Checkout, or says payments aren't on ({ ok: false, reason: 'no-provider' })
+TribePremium.manage();     // Stripe's customer portal
 TribePremium.open();       // the plan sheet
 TribePremium.footHtml();   // "Free plan · … What does Premium add?"
 ```
@@ -64,4 +131,4 @@ Rules for a new gate:
 1. Never gate something that runs locally and worked before. Soft gates inform; they don't stop.
 2. Gate at the moment of value (the 4th project, a bigger team), not on first run.
 3. "Not now" first, a week of quiet after it, and a free do-it-yourself link on the sheet.
-4. Test it in `app/test/e2e_premium.py`.
+4. Test it in `app/test/e2e_premium.py` (payments: `e2e_payments.py`, `security7_test.py`).

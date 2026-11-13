@@ -2,7 +2,8 @@
 
 This is the map of every path into TribeCode after the tour with Flint, and how each one ends. Each path ends with a next step and never at a dead end.
 The code is in `app/ui/signupnudge.js` (the pop-up after the tour), `app/ui/signup.js` (the sign-up sheet), `app/ui/accounts.js` (Log in, guest, switcher), `app/ui/oauth.js` + `app/ui/signin.html` (providers), `app/ui/auth2.js` (the steps after a provider or an email link, the desktop sign-in, Settings › Account › Sign-in methods), `server/accounts.js`, `server/oauth.js` and `server/smtp.js`.
-Tests: `e2e_signup_nudge.py`, `e2e_signup.py`, `e2e_accounts.py`, `e2e_oauth.py`, `e2e_auth2.py`, `security5_test.py`, `e2e_demo_intro.py`.
+Two-step sign-in and passkeys: `app/ui/auth3.js`, `server/auth3.js`.
+Tests: `e2e_signup_nudge.py`, `e2e_signup.py`, `e2e_accounts.py`, `e2e_oauth.py`, `e2e_auth2.py`, `e2e_auth3.py`, `security5_test.py`, `security7_test.py`, `e2e_demo_intro.py`.
 
 ## What a host can turn on
 
@@ -41,6 +42,9 @@ Tests: `e2e_signup_nudge.py`, `e2e_signup.py`, `e2e_accounts.py`, `e2e_oauth.py`
 | **Email sign-in link** (email on) | Log in › Email me a sign-in link, the sheet, `/signin.html` | `POST /api/accounts/email/request { email }` → always `{ ok, via: 'email' }`. A **verified** address gets a sign-in link; an unknown one gets a sign-up link when sign-up is open (or with an invite). `/signin.html#magic=<token>` (fragment cleared at once) → `POST email/complete` | Signed in (and the member, when the account has one in this tribe). A sign-up link asks for the username first. | Used or older than 15 minutes: "That link has run out", with the email form again. Nothing arrives: "Check spam, or try again in a minute." | `/` |
 | **Forgot password** | Forgot password? | Email on: a reset link to the account's address (`#reset=`, 15 minutes, once), new password, every other device signs out. Email off, or no address on the account: the host's one-time code (30 min, 5 tries). | Signed in with the new password | A weak password keeps the link good. Used or old: "Ask for a new link". | `/` |
 | **Returning user** | "Have an account? Log in" in the pop-up or the sheet | Recent accounts on this device (one click), username and password, the providers, Join with an invite link | Signed in | Wrong password: plain words plus Forgot password | the tribe |
+| **Two-step sign-in** (the account has it on) | after any row above that signs in to an account: password, provider, email link, reset, the desktop handoff | The answer is `need: 'two-step'`; a small sheet asks for the 6-digit code. Also there: Use a recovery code, Use a passkey (when the account has one and the address allows it), Trust this device for 30 days. A trusted device skips the sheet. | The sign-in the person started, as if there had been no second step. | A wrong or already used code says so and can be retried (5 tries, then start again). Too many wrong codes: wait 15 minutes. Cancel or Esc: nothing is signed in. | where that path lands |
+| **Passkey** | **Sign in with a passkey** on Log in and `/signin.html` | The browser shows its own passkey prompt (`POST passkey/start`, `passkey/finish`). No username or password; it counts as two-step. | Signed in to the account (and the member, when it has one in this tribe). | No passkey chosen: "No passkey was used." An unknown passkey: sign in another way, then add it in Settings. Where passkeys can't work (plain http on a network address, an IP address, the desktop app on a Mac): one plain line instead of the button. | `/` |
+| **Admin without two-step** (the host requires it) | an admin's account sign-in | The account signs in; a sheet says admins here use two-step and walks through turning it on (QR, code, recovery codes). | The tribe key arrives when it is on. | Cancel: signed in to the account only, with a line saying where to turn it on. | the tribe |
 | **Continue as guest** | the pop-up or sheet | `mode: guest`, local only | A toast with the next step ("Start a project or join one") | none | Home |
 | **Not now** | the pop-up | Snoozed for 7 days | none | none | where they were |
 
@@ -67,7 +71,9 @@ Sign-up, sign-in, sign-in links, resets and the provider steps answer every brow
 
 ## Settings › Account
 
-- **Sign-in methods** (everyone with an account): password, email link (a verified address), each linked provider. Link Discord/GitHub/Google, Set a password, Remove/Unlink. The last way in can't be removed (`409 last`, and the button is disabled).
+- **Two-step sign-in and passkeys** (everyone with an account): Turn on two-step sign-in (a QR and a key for the authenticator app, one code to confirm, ten recovery codes to copy or download), New recovery codes, Forget trusted devices, Turn off (needs a current code); Passkeys: Add a passkey, Rename, Remove. Details: docs/ACCOUNTS.md › feat/auth3.
+- **Sign-in rules** (the host, on the host computer, in Tribe & admin): Require two-step for admins.
+- **Sign-in methods** (everyone with an account): password, email link (a verified address), each linked provider, each passkey. Link Discord/GitHub/Google, Set a password, Remove/Unlink. The last way in can't be removed (`409 last`, and the button is disabled).
 - **Who can sign up** (the host, on the host computer): the Open sign-up switch.
 - **Email** (the host, on the host computer): SMTP server, port, security (STARTTLS, TLS, or none for a relay on this computer), username, password (stored in `.tribe/auth.json`, 0600, never sent back), From, Save, Turn off, **Send test email**.
 

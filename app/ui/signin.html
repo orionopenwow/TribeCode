@@ -106,7 +106,7 @@
     const [list, cfg] = await Promise.all([OA.providers(), AU.config(location.origin)]);
     if (cfg.on) $('#lead').textContent = cfg.openSignup ? 'New here or back again: one tap signs you in, and makes your account if you have none.' : 'Signing back in? One tap. New here? Sign-up is by invite: have your invite code ready.';
     if (cfg.email) { $('#mail-sec').hidden = false; AU.emailForm($('#mail-box'), { base: location.origin }); }
-    if (cfg.on && cfg.passkeys && window.TribeAuth3) {   // feat/auth3: sign in with a passkey (or one plain line where the browser can't offer them)
+    if (cfg.on && window.TribeAuth3) {   // feat/auth3: sign in with a passkey (or one plain line where the browser can't offer them)
       $('#pk-sec').hidden = false; $('#pk-or').hidden = !list.length;
       window.TribeAuth3.passkeyButton($('#pk-box'), { base: location.origin, onDone: d => { done('Signed in', `Welcome back, ${d.account.displayName || d.account.username}`, 'Opening TribeCode…'); AU.enter(d, location.origin); } });
     }
