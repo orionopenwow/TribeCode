@@ -2,7 +2,7 @@
    Flat matte: 1px borders, luminance steps, tokens only. */
 .wl-sug { padding: 16px 18px; display: flex; flex-direction: column; gap: 10px; }
 .wl-sug-h { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
-.wl-via { font-family: var(--mono); font-size: 11px; color: var(--faint); }
+.wl-via { font-family: var(--mono); font-size: 12px; color: var(--faint); }
 .wl-sug-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
 .wl-sug-row { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-top: 1px solid var(--edge); }
 .wl-sug-row:first-child { border-top: 0; padding-top: 2px; }
@@ -14,7 +14,7 @@
 .wl-sug-t small { color: var(--faint); font-size: 12.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
 .wl-track { list-style: none; margin: 4px 0 0; padding: 0; display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px; }
-.wl-track li { font-family: var(--mono); font-size: 10.5px; text-transform: uppercase; letter-spacing: .06em; color: var(--faint); padding-top: 7px; border-top: 2px solid var(--edge); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.wl-track li { font-family: var(--mono); font-size: 12px; text-transform: uppercase; letter-spacing: .06em; color: var(--faint); padding-top: 7px; border-top: 2px solid var(--edge); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .wl-track li.done { color: var(--muted); border-top-color: var(--live); }
 .wl-track li.now { color: var(--text); border-top-color: var(--accent); }
 .wl-who, .tl-gig .wl-who { margin: 6px 0 0; color: var(--muted); font-family: inherit; font-size: 12.5px; font-weight: 500; text-transform: none; letter-spacing: normal; }
@@ -23,7 +23,7 @@
 .wl-match-list { list-style: none; margin: 6px 0 0; padding: 0; display: flex; flex-direction: column; gap: 2px; }
 .wl-m { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border: 1px solid var(--edge); border-radius: 8px; background: var(--surface); }
 .wl-m .tl-tx-t { flex: 1; min-width: 0; }
-.wl-ai, .wl-best { font-style: normal; font-family: var(--mono); font-size: 10.5px; padding: 0 6px; border-radius: 999px; border: 1px solid var(--live); color: var(--live); margin-left: 4px; }
+.wl-ai, .wl-best { font-style: normal; font-family: var(--mono); font-size: 12px; padding: 0 6px; border-radius: 999px; border: 1px solid var(--live); color: var(--live); margin-left: 4px; }
 .wl-best { border-color: var(--accent); color: var(--accent); }
 .wl-up, .wl-rev, .wl-credit { display: flex; flex-direction: column; gap: 8px; }
 .wl-up-row { display: flex; gap: 8px; align-items: flex-end; flex-wrap: wrap; justify-content: flex-end; }
