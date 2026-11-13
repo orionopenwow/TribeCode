@@ -237,7 +237,8 @@
         <form id="ac-acct-form" class="ac-form" autocomplete="on"><input class="input" id="ac-user" autocomplete="username" placeholder="Username" maxlength="32" aria-label="Username">
           <input class="input" id="ac-pass" type="password" autocomplete="current-password" placeholder="Password" maxlength="200" aria-label="Password">
           <p class="ac-err" id="ac-err" role="alert" hidden></p>
-          <div class="ac-form-acts"><button class="linkish ac-forgot" type="button" data-ac="forgot" id="ac-forgot">Forgot password?</button><button class="btn" type="button" data-acf="signup">Create account</button><button class="btn primary" type="submit" id="ac-acct-go">Log in</button></div></form></div>
+          <div class="ac-form-acts"><button class="linkish ac-forgot" type="button" data-ac="forgot" id="ac-forgot">Forgot password?</button><button class="btn" type="button" data-acf="signup">Create account</button><button class="btn primary" type="submit" id="ac-acct-go">Log in</button></div></form>
+        <div id="ac-mail" hidden><button class="linkish" type="button" data-ac="mail" id="ac-mail-open">Email me a sign-in link instead</button><div id="ac-mail-box"></div></div></div>
       <div class="ac-sec" id="ac-ways"><span class="ac-eye">Sign in</span>
         <div id="ac-oa" hidden></div>
         ${local() ? `<button class="ac-way" data-ac="host">${ico('i-home', 18)}<span><b>Sign in on this computer</b><small>As the host of the tribe that runs here</small></span></button>` : ''}
@@ -251,6 +252,7 @@
     const sh = sheet; serverOn(true).then(on => {
       const x = sh.querySelector('#ac-acct'); if (!x || sheet !== sh) return; x.hidden = !on;
       if (on && prefill) { sh.querySelector('#ac-user').value = prefill; sh.querySelector('#ac-pass').focus(); }
+      if (on && window.TribeAuth2) window.TribeAuth2.config(base()).then(c => { const mx = sheet === sh && sh.querySelector('#ac-mail'); if (mx) mx.hidden = !c.email; });   // feat/auth2: email links when the host set up email
     });
     sheet.addEventListener('click', e => {
       if (e.target === sheet) return closeSheet();
@@ -262,15 +264,17 @@
       else if (k === 'test') { mountTests(true); login({ add }); }
       else if (k === 'join') { st.mode = 'signedin'; write(); closeSheet(); window.TribeSettings && window.TribeSettings.joinPrompt(); }
       else if (k === 'host') hostSignIn(b);
+      else if (k === 'mail') { b.remove(); window.TribeAuth2.emailForm(sheet.querySelector('#ac-mail-box'), { base: base() }); const i = sheet.querySelector('#au-email'); if (i) i.focus(); }
       else if (k === 'signup') { closeSheet(); window.TribeSignup.open('create'); }
       else if (k === 'forgot') { const u = (sheet.querySelector('#ac-user') || {}).value || ''; closeSheet(); window.TribeSignup.open('forgot', { username: u }); }
     });
     // the existing providers, where they work (a page served by a TribeCode server)
-    if (window.TribeOAuth && /^https?:$/.test(location.protocol)) {
-      fetch('/api/oauth/providers').then(r => r.ok ? r.json() : { providers: [] }).then(d => {
+    const AU = window.TribeAuth2, desk = !!(AU && AU.desktop());   // feat/auth2: the desktop app signs in through the system browser
+    if (window.TribeOAuth && (desk || /^https?:$/.test(location.protocol))) {
+      net((desk ? base() : '') + '/api/oauth/providers', { credentials: 'omit' }).then(r => r.ok ? r.json() : { providers: [] }).then(d => {
         const el = sheet && sheet.querySelector('#ac-oa'); if (!el) return;
         const ps = d.providers || [];
-        if (ps.length) window.TribeOAuth.buttons(el, ps, 'Sign in with', p => { st.mode = 'signedin'; write(); window.TribeOAuth.begin(p, 'signin').catch(e => toast(e.message)); });
+        if (ps.length) window.TribeOAuth.buttons(el, ps, 'Sign in with', p => { if (desk) { closeSheet(); return AU.desktopSignIn(p); } st.mode = 'signedin'; write(); window.TribeOAuth.begin(p, 'signin').catch(e => toast(e.message)); });
         else { const n = sheet.querySelector('#ac-oa-none'); if (n) n.hidden = false; }
       }).catch(() => {});
     }
@@ -392,6 +396,7 @@
     }
     if (a && a.kind === 'server' && a.acct && m !== 'signedout') sessions(acc, a);
     const me = (C.state() || {}).me; if (me && me.role === 'host' && C.hasToken()) resets(acc);
+    if (window.TribeAuth2) window.TribeAuth2.settings(acc).catch(() => {});   // feat/auth2: sign-in methods; the host's open sign-up and email
     box.querySelectorAll('[data-ac-set]').forEach(b => b.onclick = () => {
       const k = b.dataset.acSet; if (window.TribeSettings) window.TribeSettings.close();
       if (k === 'login') login(); else if (k === 'switch') login({ add: true }); else if (k === 'logout') confirmLogout();

@@ -13,6 +13,7 @@
 <link rel="stylesheet" href="/fonts.css">
 <link rel="stylesheet" href="/styles.css">
 <link rel="stylesheet" href="/oauth.css">
+<link rel="stylesheet" href="/auth2.css">
 <style>
   /* Sign back in on a new device with a linked Discord / GitHub / Google account (oauth.js). Same card as join.html. */
   html, body { min-height: 100%; }
@@ -57,6 +58,7 @@
     <h1 id="title">Welcome back</h1>
     <p class="lead" id="lead">Use the account you linked in Settings › Sign-in. No invite needed.</p>
     <div id="oa-box" hidden></div>
+    <div id="mail-sec" hidden><div class="au-or">or by email</div><div id="mail-box"></div></div>
     <div class="err" id="err" role="alert"></div>
     <div class="next" id="next"></div>
     <a class="alt" href="/">Open the tribe</a>
@@ -66,10 +68,11 @@
 <script src="/inapp.js"></script>
 <script src="/store.js"></script>
 <script src="/oauth.js"></script>
+<script src="/auth2.js"></script>
 <script>
 (function () {
   const $ = s => document.querySelector(s);
-  const OA = window.TribeOAuth;
+  const OA = window.TribeOAuth, AU = window.TribeAuth2;
   const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const st = window.TribeStore.get();
   document.body.className = st.theme === 'light' ? 'light' : 'dark';
@@ -97,8 +100,10 @@
 
   async function show() {
     try { const h = await (await fetch('/api/health')).json(); if (h.tribe) { $('#title').textContent = `Welcome back to ${h.tribe}`; document.title = `Sign in · ${h.tribe} · TribeCode`; } } catch {}
-    const list = await OA.providers();
-    if (!list.length) { $('#lead').textContent = "This tribe hasn't turned on Discord, GitHub or Google sign-in. Ask a friend for a fresh invite link."; return; }
+    const [list, cfg] = await Promise.all([OA.providers(), AU.config(location.origin)]);
+    if (cfg.on) $('#lead').textContent = cfg.openSignup ? 'New here or back again: one tap signs you in, and makes your account if you have none.' : 'Signing back in? One tap. New here? Sign-up is by invite: have your invite code ready.';
+    if (cfg.email) { $('#mail-sec').hidden = false; AU.emailForm($('#mail-box'), { base: location.origin }); }
+    if (!list.length) { if (!cfg.email) $('#lead').textContent = cfg.on ? "This TribeCode hasn't turned on Discord, GitHub or Google sign-in yet. Use Other ways in below." : "This tribe hasn't turned on Discord, GitHub or Google sign-in. Ask a friend for a fresh invite link."; else $('#mail-sec .au-or').hidden = true; return; }
     const draw = () => OA.buttons($('#oa-box'), list, 'Sign in with', p => { try { sessionStorage.setItem(TRY, p); } catch {} OA.begin(p, 'signin').catch(e => { $('#err').textContent = e.message; draw(); }); });
     draw();
   }
@@ -107,6 +112,8 @@
     $('#eyebrow').innerHTML = '<span class="dot"></span>Signing you in'; $('#title').textContent = 'One moment…'; $('#lead').textContent = '';
     const d = await OA.finish();
     if (d && !d.error) {
+      if (d.mode === 'account-link') { ss.set('tribecode.oauth.acct', null); done('Linked', `${d.providerName || 'Your account'} is linked`, 'Either one signs you in from now on.'); setTimeout(() => location.replace('/'), 1500); return; }
+      if (['new', 'invite', 'link-offer', 'account'].includes(d.mode)) { ss.set(TRY, null); return AU.render($('#jbody'), d, { base: location.origin }); }
       if (d.mode === 'link') { done('Linked', `${d.providerName || 'Your account'} is linked`, 'Next time, sign in on any device with one tap.'); setTimeout(() => location.replace('/'), 1500); return; }
       ss.set(TRY, null);
       const linkNext = ss.get(LINK); ss.set(LINK, null);
@@ -127,7 +134,61 @@
     $('#err').textContent = (d && d.error) || 'Sign-in failed';
     nextSteps(d && d.code);
   }
-  OA.landed() ? back() : show();
+  // feat/auth2: the desktop app's handoff, and the emailed links. Every one-time code is read once from the fragment, which
+  // is cleared at once (it never reaches a server log, and Back can't replay it).
+  const frag = new URLSearchParams(location.hash.slice(1));
+  const clearFrag = () => history.replaceState(null, '', location.pathname + location.search);
+  async function handoff(hc, short) {
+    clearFrag();
+    const deep = 'tribecode://auth?code=' + encodeURIComponent(hc);
+    $('#jbody').innerHTML = `<div class="eyebrow"><span class="dot"></span>Almost there</div><h1 id="title">Return to TribeCode</h1>
+      <p class="lead">You're signed in with your provider. Go back to the TribeCode app to finish. This works once, for 2 minutes.</p>
+      <div class="au-handoff"><a class="btn primary" id="return-app" href="${esc(deep)}">Return to TribeCode</a>
+        <p class="lead" style="margin:0">Nothing happened? Type this code in the app:</p><div class="au-bigcode" id="hand-code" aria-label="Your code">${esc(short)}</div>
+        <p class="au-timer" id="hand-timer">Good for 2:00</p></div>
+      <a class="alt" href="/signin.html">Start again</a>`;
+    const end = Date.now() + 120_000, tm = $('#hand-timer');
+    const tick = () => { const s = Math.max(0, Math.round((end - Date.now()) / 1000)); tm.textContent = s ? `Good for ${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}` : 'This code ran out. Start again from the app.'; if (s) setTimeout(tick, 1000); };
+    tick();
+  }
+  async function magic(tok) {
+    clearFrag();
+    $('#eyebrow').innerHTML = '<span class="dot"></span>Signing you in'; $('#title').textContent = 'One moment…'; $('#lead').textContent = '';
+    try {
+      const d = await AU.api(location.origin, '/accounts/email/complete', { method: 'POST', body: { token: tok } });
+      if (d.need === 'username') return AU.render($('#jbody'), { ...d, token: tok }, { base: location.origin });
+      done('Signed in', `Welcome back, ${d.account.displayName || d.account.username}`, 'Opening TribeCode…');
+      return AU.enter(d, location.origin);
+    } catch (e) { linkFailed(e, 'sign-in'); }
+  }
+  function linkFailed(e, what) {
+    $('#eyebrow').innerHTML = '<span class="dot"></span>Sign in'; $('#title').textContent = 'That link has run out';
+    $('#lead').textContent = e.status === 410 ? `Each ${what} link works once, for 15 minutes. Ask for a fresh one below.` : (e.message || 'Something went wrong.');
+    show();
+  }
+  async function verify(tok) {
+    clearFrag();
+    try { const d = await AU.api(location.origin, '/accounts/email/complete', { method: 'POST', body: { token: tok } }); done('Email confirmed', 'Your email is confirmed', `${d.verified || 'It'} can now get sign-in links and password resets.`); }
+    catch (e) { linkFailed(e, 'confirmation'); }
+  }
+  function resetForm(tok) {
+    clearFrag();
+    $('#jbody').innerHTML = `<div class="eyebrow"><span class="dot"></span>Reset password</div><h1 id="title">Pick a new password</h1><p class="lead">At least 8 characters. A short phrase is easy to remember and hard to guess. Every other device signs out.</p>
+      <form class="au-form" id="rs-form"><label class="au-f">New password<input class="input" id="rs-pass" type="password" autocomplete="new-password" minlength="8" maxlength="200" required></label>
+      <p class="au-err" id="rs-err" role="alert"></p><button class="btn primary au-go" id="rs-go" type="submit">Save and sign in</button></form><a class="alt" href="/signin.html">Back to sign in</a>`;
+    const f = $('#rs-form');
+    f.onsubmit = async e => {
+      e.preventDefault(); $('#rs-err').textContent = ''; $('#rs-go').disabled = true;
+      try { const d = await AU.api(location.origin, '/accounts/reset/complete', { method: 'POST', body: { token: tok, password: $('#rs-pass').value } }); done('Password saved', 'You’re back in', 'Opening TribeCode…'); AU.enter(d, location.origin); }
+      catch (e2) { $('#rs-go').disabled = false; $('#rs-err').innerHTML = esc(e2.message.replace(/^./, c => c.toUpperCase())) + (e2.status === 410 ? ' <a href="/?signup=forgot">Ask for a new link</a>' : ''); }
+    };
+    setTimeout(() => $('#rs-pass').focus(), 30);
+  }
+  if (frag.get('desktop')) handoff(frag.get('desktop'), frag.get('short') || '');
+  else if (frag.get('magic')) magic(frag.get('magic'));
+  else if (frag.get('reset')) resetForm(frag.get('reset'));
+  else if (frag.get('verify')) verify(frag.get('verify'));
+  else OA.landed() ? back() : show();
 })();
 </script>
 </body>

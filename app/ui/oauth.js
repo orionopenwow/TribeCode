@@ -60,7 +60,7 @@
     const l = landed(); if (!l) return null;
     history.replaceState(null, '', location.pathname + location.search);
     if (l.error) return { error: ERRS[l.error] || ERRS.provider, code: ERRS[l.error] ? l.error : 'provider' };
-    const t = myToken();
+    let t = myToken(); try { t = sessionStorage.getItem('tribecode.oauth.acct') || t; sessionStorage.removeItem('tribecode.oauth.acct'); } catch {}   // feat/auth2: linking to an account (Settings › Account)
     try {
       const r = await fetch('/api/oauth/finish', { method: 'POST', headers: { 'Content-Type': 'application/json', ...(t ? { Authorization: 'Bearer ' + t } : {}) }, body: JSON.stringify({ rc: l.rc }) });
       const d = await r.json().catch(() => ({}));

@@ -38,27 +38,28 @@ const fs = require('node:fs');
 
 const PROVIDERS = {
   discord: {
-    name: 'Discord', scope: 'identify', base: 'https://discord.com',
+    name: 'Discord', scope: 'identify email', base: 'https://discord.com',
     env: 'TRIBE_OAUTH_DISCORD_BASE', register: 'https://discord.com/developers/applications',
     where: 'Discord Developer Portal › New Application › OAuth2: add the redirect, copy the client id and reset the secret.',
     authorize: b => b + '/oauth2/authorize', token: b => b + '/api/oauth2/token', user: b => b + '/api/users/@me',
-    profile: u => ({ id: u.id, name: u.global_name || u.username,
+    profile: u => ({ id: u.id, name: u.global_name || u.username, email: u.email || '', emailVerified: u.verified === true,
       avatar: u.avatar && /^\d{5,25}$/.test(String(u.id)) && /^(a_)?[0-9a-f]{32}$/.test(String(u.avatar)) ? `https://cdn.discordapp.com/avatars/${u.id}/${u.avatar}.png?size=128` : null }),
   },
   github: {
-    name: 'GitHub', scope: 'read:user', base: 'https://github.com', api: 'https://api.github.com',
+    name: 'GitHub', scope: 'read:user user:email', base: 'https://github.com', api: 'https://api.github.com',
     env: 'TRIBE_OAUTH_GITHUB_BASE', register: 'https://github.com/settings/developers',
     where: 'GitHub › Settings › Developer settings › OAuth Apps › New OAuth App: paste the redirect as the callback URL.',
     authorize: b => b + '/login/oauth/authorize', token: b => b + '/login/oauth/access_token', user: (b, mock) => (mock ? b : 'https://api.github.com') + '/user',
+    emails: (b, mock) => (mock ? b : 'https://api.github.com') + '/user/emails',   // feat/auth2: the primary, verified address
     profile: u => ({ id: u.id, name: u.name || u.login, avatar: u.avatar_url }),
   },
   google: {
-    name: 'Google', scope: 'openid profile', base: 'https://accounts.google.com',
+    name: 'Google', scope: 'openid profile email', base: 'https://accounts.google.com',
     env: 'TRIBE_OAUTH_GOOGLE_BASE', register: 'https://console.cloud.google.com/apis/credentials',
     where: 'Google Cloud console › APIs & Services › Credentials › Create OAuth client ID › Web application: add the redirect.',
     authorize: b => b + '/o/oauth2/v2/auth', token: (b, mock) => (mock ? b + '/token' : 'https://oauth2.googleapis.com/token'),
     user: (b, mock) => (mock ? b + '/v1/userinfo' : 'https://openidconnect.googleapis.com/v1/userinfo'),
-    profile: u => ({ id: u.sub, name: u.name || u.given_name, avatar: u.picture }),
+    profile: u => ({ id: u.sub, name: u.name || u.given_name, avatar: u.picture, email: u.email || '', emailVerified: u.email_verified === true || u.email_verified === 'true' }),
   },
   // Sign in with Apple (App Store 4.8): off until the host sets an Apple Services ID (client id) and its client secret in
   // Settings › Sign-in (or TRIBE_OAUTH_APPLE_ID / _SECRET). Apple has no profile endpoint: the token answer's id_token
@@ -81,6 +82,9 @@ const AVATAR_HOSTS = { discord: /^cdn\.discordapp\.com$/, github: /^avatars\.git
 const TTL = 10 * 60_000, MAX_FLOWS = 500;
 const CID_RE = /^[A-Za-z0-9._-]{6,200}$/, SECRET_RE = /^[\x21-\x7e]{6,300}$/;
 const ERRORS = ['denied', 'expired', 'mismatch', 'provider', 'invite', 'unknown', 'taken', 'busy', 'off'];
+// feat/auth2: the desktop app's handoff code (tribecode://auth?code=…, or the 6 characters typed in the app): 2 minutes, once, PKCE
+const HANDOFF_TTL = process.env.TRIBE_TEST === '1' && Number(process.env.TRIBE_TEST_HANDOFF_MS) > 0 ? Number(process.env.TRIBE_TEST_HANDOFF_MS) : 2 * 60_000, SHORT_ABC = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
+const cleanEmail = e => { const x = String(e || '').trim().slice(0, 254); return /^[^\s@<>]{1,64}@[^\s@<>]{1,253}\.[^\s@<>]{2,}$/.test(x) ? x : ''; };
 
 const rnd = (n = 32) => crypto.randomBytes(n).toString('base64url');
 const sha = s => crypto.createHash('sha256').update(String(s)).digest('hex');
@@ -98,7 +102,8 @@ function cookieOf(req, name) {
   return null;
 }
 
-module.exports = function makeOAuth({ store, getMembers, saveMembers, publicMember, isLocal, str, limited, publicBase, findInvite, joinByInvite, addToProject, devices, tribe, log = () => {} }) {
+module.exports = function makeOAuth({ store, getMembers, saveMembers, publicMember, isLocal, str, limited, publicBase, findInvite, joinByInvite, addToProject, devices, tribe, accounts = null, log = () => {} }) {
+  const acctsOn = () => !!(accounts && accounts.enabled());
   const CONF = '.tribe/oauth.json';
   // Cloud hosts (docs/CLOUD.md) set providers in their environment, which survives restarts:
   // TRIBE_OAUTH_GITHUB_ID / TRIBE_OAUTH_GITHUB_SECRET (and _DISCORD_, _GOOGLE_). The file still works on a host computer.
@@ -143,8 +148,20 @@ module.exports = function makeOAuth({ store, getMembers, saveMembers, publicMemb
 
   function start(req, p, body, me) {
     if (!isOn(p)) throw err(404, `${PROVIDERS[p].name} sign-in is off in this tribe`);
-    const mode = ['join', 'signin', 'link'].includes(body.mode) ? body.mode : null;
-    if (!mode) throw err(400, 'mode must be join, signin or link');
+    const mode = ['join', 'signin', 'link', 'account'].includes(body.mode) ? body.mode : null;
+    if (!mode) throw err(400, 'mode must be join, signin, link or account');
+    let account = null, desktop = null;
+    if (mode === 'account') {   // feat/auth2: link a provider to the signed-in account (Settings › Account)
+      const a = acctsOn() ? accounts.accountFromReq(req) : null;
+      if (!a) throw err(401, 'sign in to your account first');
+      account = a.id;
+    }
+    if (body.desktop !== undefined) {   // feat/auth2: the desktop app finishes this itself (PKCE S256 challenge from the app)
+      const ch = body.desktop && typeof body.desktop.challenge === 'string' ? body.desktop.challenge : '';
+      if (!/^[A-Za-z0-9_-]{43}$/.test(ch) || (body.desktop.method && body.desktop.method !== 'S256')) throw err(400, 'the desktop sign-in needs a PKCE S256 challenge');
+      if (mode === 'join' || mode === 'link') throw err(400, 'the desktop app signs in or links an account; join from an invite in the browser');
+      desktop = ch;
+    }
     let invite = null, member = null;
     if (mode === 'join') {
       invite = str(body.code, 16);
@@ -158,7 +175,7 @@ module.exports = function makeOAuth({ store, getMembers, saveMembers, publicMemb
     sweep();
     if (flows.size >= MAX_FLOWS) throw err(429, 'too many sign-ins in progress, try again in a few minutes');
     const verifier = rnd(48), nonce = rnd(24), base = originOf(req);
-    const f = { fid: rnd(18), state: rnd(32), provider: p, mode, invite, member, verifier, nonceHash: sha(nonce), nonce, base, redirectUri: `${base}/api/oauth/${p}/callback`,
+    const f = { fid: rnd(18), state: rnd(32), provider: p, mode, invite, member, account, desktop, verifier, nonceHash: sha(nonce), nonce, base, redirectUri: `${base}/api/oauth/${p}/callback`,
       created: Date.now(), launched: false, used: false, profile: null, rc: null, done: false };
     flows.set(f.fid, f); byState.set(f.state, f);
     return { url: `${base}/api/oauth/go/${f.fid}`, expiresIn: TTL / 1000 };
@@ -211,12 +228,22 @@ module.exports = function makeOAuth({ store, getMembers, saveMembers, publicMemb
       else { const me = await call(P.user(baseOf(p), mocked(p)), { token: at }); if (me.status >= 300 || !me.data) throw new Error(`profile HTTP ${me.status}`); data = me.data; }
       const raw = P.profile(data), pid = String(raw.id == null ? '' : raw.id);
       if (!/^[A-Za-z0-9_-]{1,64}$/.test(pid)) throw new Error('profile has no usable id');
-      f.profile = { id: pid, name: cleanName(raw.name), avatar: cleanAvatar(p, raw.avatar) };
+      if (P.emails && !raw.email) {   // GitHub: the primary verified address, when the user shares it (optional: a failure is no email)
+        try { const em = await call(P.emails(baseOf(p), mocked(p)), { token: at }); const x = Array.isArray(em.data) ? em.data.find(e => e && e.primary && e.verified) : null; if (em.status < 300 && x) { raw.email = x.email; raw.emailVerified = true; } } catch {}
+      }
+      const email = cleanEmail(raw.email);
+      f.profile = { id: pid, name: cleanName(raw.name), avatar: cleanAvatar(p, raw.avatar), email, emailVerified: !!(email && raw.emailVerified) };
     } catch (e) {
       log(`Sign in with ${P.name}: ${e.message}`); drop(f);
       return redirect(res, oops(f, 'provider'), clear);
     }
     f.verifier = null;
+    if (f.desktop) {   // feat/auth2: a one-time handoff code for the desktop app, never the session itself
+      const hc = rnd(32); let short = ''; for (let i = 0; i < 6; i++) short += SHORT_ABC[crypto.randomInt(SHORT_ABC.length)];
+      const h = { flow: f, created: Date.now(), used: false, wrong: 0, hcHash: sha(hc), short };
+      handoffs.set(h.hcHash, h); handoffs.set('s:' + short, h);
+      return redirect(res, `/signin.html#desktop=${hc}&short=${short}`, clear);
+    }
     f.rc = rnd(32); byResult.set(f.rc, f);
     return redirect(res, `${landing(f)}#oauth=${f.rc}`, clear);
   }
@@ -226,7 +253,30 @@ module.exports = function makeOAuth({ store, getMembers, saveMembers, publicMemb
     const rc = str(body.rc, 80), f = rc ? byResult.get(rc) : null;
     if (!live(f) || f.done || !f.profile) throw err(410, 'this sign-in expired: try again', 'expired');
     f.done = true; drop(f);
+    return outcome(req, f, me);
+  }
+  // feat/auth2: the desktop app trades the handoff code (or the typed 6 characters) plus its PKCE verifier for the outcome
+  const handoffs = new Map();   // sha(code) | 's:' + short -> handoff
+  const dropHandoff = h => { handoffs.delete(h.hcHash); handoffs.delete('s:' + h.short); };
+  setInterval(() => { const n = Date.now(); for (const h of new Set(handoffs.values())) if (n - h.created > HANDOFF_TTL) dropHandoff(h); }, 30_000).unref();
+  function exchange(req, body, me) {
+    const code = str(body.code, 80), short = str(body.short, 12).toUpperCase().replace(/[^A-Z0-9]/g, ''), verifier = str(body.verifier, 200);
+    const h = code ? handoffs.get(sha(code)) : short.length === 6 ? handoffs.get('s:' + short) : null;
+    if (!h || h.used) throw err(410, 'that code expired or was already used: sign in again from the app', 'expired');
+    if (Date.now() - h.created > HANDOFF_TTL) { dropHandoff(h); throw err(410, 'that code expired (codes last 2 minutes): sign in again from the app', 'expired'); }
+    const want = h.flow.desktop, got = /^[A-Za-z0-9_-]{43,128}$/.test(verifier) ? crypto.createHash('sha256').update(verifier).digest('base64url') : '';
+    if (!same(got, want)) { if (++h.wrong >= 3) dropHandoff(h); throw err(400, 'this code was started in another app: sign in again from TribeCode', 'mismatch'); }
+    h.used = true; dropHandoff(h);
+    return outcome(req, h.flow, me);
+  }
+  function outcome(req, f, me) {
     const { id: pid, name, avatar } = f.profile, P = PROVIDERS[f.provider];
+    if (f.mode === 'account') {   // feat/auth2: link to the signed-in account (the same account must finish it)
+      const a = acctsOn() ? accounts.accountFromReq(req) : null;
+      if (!a || a.id !== f.account) throw err(403, 'finish linking where you are signed in to your account', 'mismatch');
+      try { return { mode: 'account-link', provider: f.provider, providerName: P.name, account: accounts.attachProvider(a, f.provider, f.profile) }; }
+      catch (e) { throw err(e.status || 409, `that ${P.name} account already belongs to another account`, 'taken'); }
+    }
     const identity = { provider: f.provider, id: pid, name: name || null, at: new Date().toISOString() };
     const owner = memberFor(f.provider, pid);
     if (f.mode === 'link') {
@@ -241,7 +291,12 @@ module.exports = function makeOAuth({ store, getMembers, saveMembers, publicMemb
     }
     if (f.mode === 'signin' || owner) {
       // Sign back in (or a join by someone who is already in): a new device token for that member.
-      if (!owner) throw err(404, `no one in this tribe has linked that ${P.name} account yet: ask for an invite, or link it in Settings first`, 'unknown');
+      if (!owner) {
+        // feat/auth2: accounts on -> sign in to the account with this identity, offer a link, or start a new account
+        const out = f.mode === 'signin' && acctsOn() ? accounts.oauthOutcome(f.provider, f.profile, req) : null;
+        if (out) { log(`Sign in with ${P.name}: ${out.mode}`); return { ...out, provider: f.provider, providerName: P.name, tribe }; }
+        throw err(404, `no one in this tribe has linked that ${P.name} account yet: ask for an invite, or link it in Settings first`, 'unknown');
+      }
       let project = null;
       if (f.mode === 'join') {
         const inv = findInvite(f.invite);
@@ -271,7 +326,7 @@ module.exports = function makeOAuth({ store, getMembers, saveMembers, publicMemb
   }
 
   // index.js limited(), with one bucket per endpoint and address, so a sign-in doesn't eat the invite page's budget.
-  const tooMany = (req, what, n) => limited({ socket: { remoteAddress: `oauth-${what}:${req.socket.remoteAddress}` } }, n);
+  const tooMany = (req, what, n) => limited(req, n, 60_000, `oauth-${what}`);   // feat/auth2: per client (the tunnel's client address too), per endpoint
   async function route(req, res, { m, b, c, me, url, readBody, send, fail }) {
     try {
       if (b === 'providers' && m === 'GET') {
@@ -321,6 +376,10 @@ module.exports = function makeOAuth({ store, getMembers, saveMembers, publicMemb
       if (b === 'go' && m === 'GET' && c) {
         if (tooMany(req, 'go', 30)) return redirect(res, '/signin.html#oauth_error=busy');
         return go(req, res, str(c, 40));
+      }
+      if (b === 'desktop' && c === 'exchange' && m === 'POST') {
+        if (tooMany(req, 'exchange', 10)) return fail(res, 429, 'slow down: wait a minute, then try again');
+        return send(res, 200, exchange(req, await readBody(req), me));
       }
       if (b === 'finish' && m === 'POST') {
         if (tooMany(req, 'finish', 20)) return fail(res, 429, 'slow down');

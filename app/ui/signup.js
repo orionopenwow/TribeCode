@@ -20,6 +20,13 @@
   const lsGet = k => { try { return localStorage.getItem(k); } catch { return null; } };
   const lsSet = (k, v) => { try { v == null ? localStorage.removeItem(k) : localStorage.setItem(k, v); } catch {} };
 
+  // feat/auth2: what the host offers (open sign-up or invite-only, email links), asked once per sheet
+  let cfg = { on: false, openSignup: true, email: false };
+  const local = () => /^(localhost|127\.0\.0\.1|\[::1\])$/.test(location.hostname) || !!(window.TribeAuth2 && window.TribeAuth2.desktop() && /\/\/(localhost|127\.0\.0\.1)[:/]/.test(acctBase()));
+  const loadCfg = () => (window.TribeAuth2 ? window.TribeAuth2.config(acctBase()).then(c => { cfg = c; return c; }) : Promise.resolve(cfg));
+  const acctBase = () => { const b = (C.base ? C.base() : '') || ''; return b && !/\.invalid(:\d+)?$/.test(b) ? b : /^https?:$/.test(location.protocol) && !/tauri\.localhost$/i.test(location.hostname) ? location.origin : 'http://localhost:4747'; };
+  const inviteOnly = () => cfg.on && !cfg.openSignup && !local();
+
   // ---------- the rules, the same as server/accounts.js ----------
   const norm = raw => String(raw == null ? '' : raw).normalize('NFC').replace(/[\u0000-\u001f\u007f]/g, '').replace(/\s+/g, ' ').trim().slice(0, 32);
   const validName = u => u.length >= 2 && /^[\p{L}\p{N} ._-]+$/u.test(u);
@@ -94,6 +101,7 @@
         <button class="sg-path sg-main" data-sg="create" id="sg-create">${ico('i-users')}<span><b>Create an account</b><small id="sg-create-sub">A username and password. Keeps your projects and tribes.</small></span>${ico('i-chev', 14).replace('class="i"', 'class="i sg-chev"')}</button>
       </div>
       <div class="ac-sec" id="sg-oa-sec" hidden><span class="ac-eye">Or sign in with</span><div id="sg-oa"></div></div>
+      <div class="ac-sec" id="sg-mail-sec" hidden><span class="ac-eye">Or with an email link</span><div id="sg-mail"></div></div>
       <p class="sg-alt">Have an account? <button class="linkish" data-sg="login" id="sg-login">Log in</button></p>`;
   }
   function wireStart() {
@@ -104,10 +112,17 @@
       b.disabled = true; b.setAttribute('aria-disabled', 'true');
       sub.textContent = 'Not on for this TribeCode yet: the host turns accounts on (TRIBE_ACCOUNTS=1).';
     });
-    if (window.TribeOAuth && /^https?:$/.test(location.protocol)) {
-      fetch('/api/oauth/providers').then(r => r.ok ? r.json() : { providers: [] }).then(d => {
+    loadCfg().then(c => {   // feat/auth2
+      if (el !== sh || !c.on) return;
+      if (inviteOnly()) { const sub = sh.querySelector('#sg-create-sub'); if (sub) sub.textContent = 'By invite on this TribeCode: have your invite code ready.'; }
+      if (c.email && window.TribeAuth2) { sh.querySelector('#sg-mail-sec').hidden = false; window.TribeAuth2.emailForm(sh.querySelector('#sg-mail'), { base: acctBase() }); }
+    });
+    const AU = window.TribeAuth2, desk = !!(AU && AU.desktop());   // feat/auth2: the desktop app signs in through the system browser
+    if (window.TribeOAuth && (desk || /^https?:$/.test(location.protocol))) {
+      fetch((desk ? acctBase() : '') + '/api/oauth/providers').then(r => r.ok ? r.json() : { providers: [] }).then(d => {
         const box = el === sh && sh.querySelector('#sg-oa'); if (!box) return;
         window.TribeOAuth.buttons(box, (d.providers || []).filter(p => p && p.id), 'Continue with', p => {
+          if (desk) { close(); return AU.desktopSignIn(p); }
           const st = JSON.parse(lsGet('tribecode.accounts.v1') || '{}'); st.mode = 'signedin'; lsSet('tribecode.accounts.v1', JSON.stringify(st));
           window.TribeOAuth.begin(p, 'signin').catch(e => { toast(e.message); draw(); });
         });
@@ -137,7 +152,10 @@
           <p class="sg-hint" id="sg-pass-hint" aria-live="polite">At least 8 characters. A short phrase is easy to remember and hard to guess.</p></div>
         <div class="sg-f"><label for="sg-email">Email <small>optional, for getting back in</small></label>
           <input class="input" id="sg-email" name="email" type="email" inputmode="email" autocomplete="email" autocapitalize="none" spellcheck="false" maxlength="254" enterkeyhint="done" aria-describedby="sg-email-hint" aria-invalid="false">
-          <p class="sg-hint" id="sg-email-hint" aria-live="polite">You can verify it later: TribeCode doesn't send email yet.</p></div>
+          <p class="sg-hint" id="sg-email-hint" aria-live="polite">${cfg.email ? 'We’ll send a link to confirm it.' : 'You can verify it later: TribeCode doesn\'t send email yet.'}</p></div>
+        <div class="sg-f" id="sg-invite-f" ${inviteOnly() ? '' : 'hidden'}><label for="sg-invite">Invite code <small>sign-up here is by invite</small></label>
+          <input class="input" id="sg-invite" name="invite" type="text" autocomplete="off" autocapitalize="none" spellcheck="false" maxlength="80" placeholder="From your invite link">
+          <p class="sg-hint">No code? Ask the host or a friend for an invite link: the code is the last part of it.</p></div>
         <p class="ac-err" id="sg-err" role="alert" hidden></p>
         <button class="btn primary sg-go" id="sg-submit" type="submit" disabled>Create account</button>
       </form>
@@ -161,10 +179,15 @@
     });
     n.addEventListener('input', () => { nameTouched = true; });
     p.addEventListener('input', validate); em.addEventListener('input', validate);
-    em.addEventListener('blur', () => { const e = em.value.trim(); const bad = e && !validEmail(e); invalid(em, bad); hint('#sg-email-hint', bad ? 'That address looks off. Check it, or leave it empty.' : "You can verify it later: TribeCode doesn't send email yet.", bad ? 'bad' : ''); });
+    em.addEventListener('blur', () => { const e = em.value.trim(); const bad = e && !validEmail(e); invalid(em, bad); hint('#sg-email-hint', bad ? 'That address looks off. Check it, or leave it empty.' : cfg.email ? 'We’ll send a link to confirm it.' : "You can verify it later: TribeCode doesn't send email yet.", bad ? 'bad' : ''); });
     f.querySelector('#sg-eye').onclick = e => { const b = e.currentTarget, show = p.type === 'password'; p.type = show ? 'text' : 'password'; b.textContent = show ? 'Hide' : 'Show'; b.setAttribute('aria-pressed', String(show)); b.setAttribute('aria-label', show ? 'Hide password' : 'Show password'); };
     f.onsubmit = e => { e.preventDefault(); submit(); };
     if (opts.username) { u.value = opts.username; u.dispatchEvent(new Event('input')); }
+    loadCfg().then(() => {   // feat/auth2: invite-only hosts ask for the code; with email on the address gets a confirm link
+      if (!el || !f.isConnected) return;
+      const fi = f.querySelector('#sg-invite-f'); if (fi && inviteOnly()) fi.hidden = false;
+      const h = f.querySelector('#sg-email-hint'); if (h && cfg.email && !h.dataset.kind) h.textContent = 'We’ll send a link to confirm it.';
+    });
     setTimeout(() => { if (el) u.focus(); }, 40);
   }
   async function check(v) {
@@ -208,7 +231,9 @@
     busy = true; btn.disabled = true; btn.textContent = 'Creating…'; say('');
     const tok = memberKey();
     try {
-      const d = await A().api('/signup', { method: 'POST', token: tok, body: { username, displayName, password, ...(email ? { email } : {}), ...(tok ? { link: true } : {}) } });
+      const iv = (f.querySelector('#sg-invite') || {}).value || '', invite = iv.trim().replace(/^.*\/join\//, '').replace(/[^A-Za-z0-9]/g, '');
+      const d = await A().api('/signup', { method: 'POST', token: tok, body: { username, displayName, password, ...(email ? { email } : {}), ...(tok ? { link: true } : {}), ...(invite ? { invite } : {}) } });
+      if (d.memberToken) { A().adopt(d.account, d.token, d.memberToken); S.set({ name: displayName, server: { url: acctBase(), token: d.memberToken } }); close(); location.reload(); return; }
       const wasTest = A().mode() === 'test';
       A().adopt(d.account, d.token, d.linked ? tok : '');
       if (!d.linked || wasTest) S.set({ name: displayName });
@@ -216,6 +241,7 @@
     } catch (e) {
       busy = false; btn.textContent = 'Create account';
       if (e.status === 409) { ck.state = 'taken'; check(username); }
+      if (e.status === 403 && /invite/.test(e.message)) { const fi = f.querySelector('#sg-invite-f'); if (fi) { fi.hidden = false; f.querySelector('#sg-invite').focus(); } }
       say(e.status === 409 ? 'Someone just took that username. Pick another one.' : e.status === 404 ? 'Accounts are off on this TribeCode: the host turns them on.' : e.message.replace(/^./, c => c.toUpperCase()) + (/[.!?]$/.test(e.message) ? '' : '.'));
       validate();
     }
@@ -261,7 +287,7 @@
     const sent = !!opts.sent;
     return `<button class="sg-back" data-sg="login" aria-label="Back to Log in">${ico('i-chev', 16)}</button>
       <span class="eyebrow">Forgot password</span><h2 id="sg-title">${sent ? 'Ask your host for a code' : 'Get back in'}</h2>
-      <p class="ac-lead">${sent ? 'Your host sees your request in Settings › Account › Password resets and can give you a one-time code. TribeCode doesn\'t send email yet.' : 'Tell us your username. Your host gives you a one-time code to set a new password.'}</p>
+      <p class="ac-lead" id="sg-fp-lead">${sent ? (opts.via === 'email' ? 'If that account has an email address, a reset link is on its way (it works once, for 15 minutes). No email on the account? Your host sees your request in Settings › Account › Password resets and can give you a one-time code to type below.' : 'Your host sees your request in Settings › Account › Password resets and can give you a one-time code. TribeCode doesn\'t send email yet.') : cfg.email ? 'Tell us your username or email. We email a reset link; without an email on the account, your host gives you a one-time code.' : 'Tell us your username. Your host gives you a one-time code to set a new password.'}</p>
       <form id="sg-fp" class="sg-form" method="post" action="#" autocomplete="on" novalidate>
         <div class="sg-f"><label for="sg-fp-user">Username</label>
           <input class="input" id="sg-fp-user" name="username" type="text" autocomplete="username" autocapitalize="none" autocorrect="off" spellcheck="false" maxlength="40" required value="${esc(opts.username || '')}"></div>
@@ -279,13 +305,14 @@
     const f = el.querySelector('#sg-fp'), err = f.querySelector('#sg-fp-err'), go = f.querySelector('#sg-fp-go'), u = f.querySelector('#sg-fp-user');
     const say = t => { err.textContent = t; err.hidden = !t; };
     const np = f.querySelector('#sg-newpass');
+    if (!opts.sent) loadCfg().then(() => { const l = el && el.querySelector('#sg-fp-lead'); if (l && cfg.email && !opts.sent) { l.textContent = 'Tell us your username or email. We email a reset link; without an email on the account, your host gives you a one-time code.'; const lab = el.querySelector('label[for="sg-fp-user"]'); if (lab) lab.textContent = 'Username or email'; } });
     if (np) np.addEventListener('input', () => { const st = strength(np.value, u.value), h = f.querySelector('#sg-np-hint'); f.querySelector('#sg-np-meter').dataset.score = String(np.value ? Math.max(1, st.score) : 0); h.textContent = np.value ? `${st.label}. ${st.tip}` : 'At least 8 characters.'; h.dataset.kind = !np.value ? '' : st.ok ? 'good' : 'bad'; });
     f.onsubmit = async e => {
       e.preventDefault(); say('');
-      const username = norm(u.value); if (!validName(username)) { say('Type your username.'); u.focus(); return; }
+      const username = norm(u.value); if (!validName(username) && !(cfg.email && /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(u.value.trim()))) { say('Type your username.'); u.focus(); return; }
       go.disabled = true;
       try {
-        if (!opts.sent) { await A().api('/reset/request', { method: 'POST', body: { username } }); opts = { ...opts, username, sent: true }; draw(); setTimeout(() => { const c = el && el.querySelector('#sg-code'); if (c) c.focus(); }, 40); return; }
+        if (!opts.sent) { const r = await A().api('/reset/request', { method: 'POST', body: { username } }); opts = { ...opts, username, sent: true, via: r.via }; draw(); setTimeout(() => { const c = el && el.querySelector('#sg-code'); if (c) c.focus(); }, 40); return; }
         const code = f.querySelector('#sg-code').value, password = np.value, st = strength(password, username);
         if (!st.ok) { say(`${st.label}. ${st.tip}`); go.disabled = false; np.focus(); return; }
         await A().api('/reset/complete', { method: 'POST', body: { username, code, password } });
@@ -361,7 +388,7 @@
     const C = window.TribeClient, probe = () => { if (A() && A().upgradable()) A().serverOn(); };
     if (C && C.connected && C.connected()) probe(); else if (C && C.on) C.on('hello', probe);
     const q = new URLSearchParams(location.search).get('signup');
-    if (q) setTimeout(() => open(q === 'create' ? 'create' : 'start'), 250);
+    if (q) setTimeout(() => open(q === 'create' ? 'create' : q === 'forgot' ? 'forgot' : 'start'), 250);
   });
 
   window.TribeSignup = { open, close, nudge, strength, isOpen: () => !!el };

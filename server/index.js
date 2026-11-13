@@ -409,9 +409,14 @@ const accounts = require('./accounts')({ store: baseStore, getMembers: () => mem
     const mem = members.find(x => x.id === mid); if (!mem) return null;
     const { key } = devices.create(mem, req, 'Account sign-in'); const r = devices.redeem(key, req);
     return r ? { token: r.token, member: publicMember(mem) } : null;
-  } });   // feat/nav-accounts: accounts scaffold, off unless TRIBE_ACCOUNTS=1 (docs/ACCOUNTS.md)
+  },
+  // feat/auth2: open sign-up off -> an invite; a new account with an invite also joins the tribe as a member
+  inviteOk: c => /^[A-Za-z0-9]{4,16}$/.test(String(c || '')) && !!findInvite(String(c)),
+  joinWithInvite: (c, name, extra) => { const inv = findInvite(String(c || '')); if (!inv) return null; const out = joinByInvite(inv, { name, extra }); return { member: publicMember(out.member), memberId: out.member.id, token: out.token, project: out.project }; },
+  publicBase: () => args['public-url'] || process.env.TRIBE_PUBLIC_URL || share.publicUrl(), lanOrigins: () => lanUrls().map(u => u.url), port: PORT,
+  });   // feat/nav-accounts: accounts scaffold, off unless TRIBE_ACCOUNTS=1 (docs/ACCOUNTS.md)
 const oauth = require('./oauth')({ store: baseStore, getMembers: () => members, saveMembers, publicMember, isLocal, str, limited, devices, tribe,
-  publicBase: () => args['public-url'] || process.env.TRIBE_PUBLIC_URL || share.publicUrl(), findInvite, joinByInvite, addToProject, log: m => console.log('  ' + m) });
+  publicBase: () => args['public-url'] || process.env.TRIBE_PUBLIC_URL || share.publicUrl(), findInvite, joinByInvite, addToProject, accounts, log: m => console.log('  ' + m) });
 const githubAuth = require('./github-auth')({ W, store: baseStore, getMembers: () => members, isLocal, str, log: m => console.log('  ' + m) });
 const hubs = new Map();
 function hubFor(pid) {
