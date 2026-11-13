@@ -76,7 +76,7 @@
         if (e.key === 'Escape') { done(); mount(el, opts); return; }
         const c = combo(e); if (!c) return;
         if (!/^(Ctrl|Alt)\+/.test(c)) { msg('Use Ctrl or Alt with a key, so typing never triggers it.'); return; }
-        try { set(id, c); done(); mount(el, opts); if (opts.saved) opts.saved(); } catch (err) { msg(err.message); }
+        try { set(id, c); done(); mount(el, opts); const nb = el.querySelector(`[data-key-change="${id}"]`); if (nb) nb.focus(); if (opts.saved) opts.saved(); } catch (err) { msg(err.message); }
       };
       addEventListener('keydown', capture, true);
     });

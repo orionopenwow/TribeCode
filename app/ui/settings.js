@@ -91,7 +91,7 @@
     modal().addEventListener('click', e => { if (e.target === modal()) close(); });
     document.addEventListener('keydown', e => {
       if (e.key !== 'Escape' || modal().classList.contains('hidden')) return;
-      if (document.querySelector('#mod-dlg, #plans-pop, #brain-modal:not(.hidden), .lk-modal:not(.hidden)') && !e.target.closest('#settings-body')) return;   // a dialog opened from Settings closes first
+      if ([...document.querySelectorAll('#mod-dlg, #plans-pop, #brain-modal:not(.hidden), .lk-modal:not(.hidden)')].some(x => x.getClientRects().length) && !(e.target.closest && e.target.closest('#settings-body'))) return;   // a dialog opened from Settings closes first
       if (capturing) return;
       const s = $('#set-search'); if (s && s.value) { s.value = ''; query = ''; showResults(); s.focus(); return; }
       close();
