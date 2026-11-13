@@ -84,17 +84,33 @@ def main():
             pg.evaluate("TribeFlint.ask('add a task: sketch the home screen')")
             pg.wait_for_function("(TribeOffline.state().tasks['first-project'] || []).some(t => /sketch the home screen/i.test(t.title))", timeout=10000)
             pg.wait_for_function("TribeFlint.thread().slice(-1)[0].who === 'flint' && /Added to Tasks/.test(TribeFlint.thread().slice(-1)[0].text)", timeout=8000)
+            # v0.32 holes pass: Flint's other free work on a phone-only tribe never hits "This needs a real tribe"
+            def flint_says(text, pattern, timeout=12000):
+                n0 = pg.evaluate("TribeFlint.thread().length")
+                pg.evaluate("t => TribeFlint.ask(t)", text)
+                pg.wait_for_function("([n, re]) => { const t = TribeFlint.thread(); return t.length > n + 1 && !t[t.length - 1].streaming && new RegExp(re, 'i').test(t[t.length - 1].text || ''); }", arg=[n0, pattern], timeout=timeout)
+                last = pg.evaluate("TribeFlint.thread().slice(-1)[0].text")
+                assert "needs a real tribe" not in last.lower(), (text, last)
+                return last
+            flint_says("make slides about our game jam", "template")
+            assert any(d.get("kind") == "deck" for d in pg.evaluate("TribeOffline.state().docs['first-project'] || []")), "slides saved on the phone"
+            flint_says("make a doc about our launch", "is in Files")
+            flint_says("what did we decide today", "nothing said today|decided")
+            flint_says("build a to-do app", "on this phone")
+            flint_says("invite a friend", "host")
+            pg.evaluate("location.hash = '#/home'"); pg.keyboard.press("Escape")
             # a doc and a chat message through the same API the app uses
             pg.evaluate("TribeClient.api('/docs', { method: 'POST', body: { title: 'Ideas', body: '# Ideas\\n\\n- a calm home screen' } })")
             pg.evaluate("TribeClient.api('/chat/general', { method: 'POST', body: { text: 'first thought from the bus' } })")
-            pg.wait_for_function("(TribeOffline.state().docs['first-project'] || []).length === 1", timeout=8000)
+            pg.wait_for_function("(TribeOffline.state().docs['first-project'] || []).some(d => d.title === 'Ideas')", timeout=8000)
             time.sleep(1.2)
             assert not any(m["by"] in ("maya", "claude") for m in pg.evaluate("TribeOffline.state().chat['first-project']")), "a pretend person answered in solo mode"
 
             # 4. a reload keeps everything
+            before = pg.evaluate("[(TribeOffline.state().tasks['first-project'] || []).length, (TribeOffline.state().docs['first-project'] || []).length]")
             pg.reload(); pg.wait_for_function("window.TribeOffline && TribeOffline.solo() && TribeClient.connected()", timeout=15000)
             st = pg.evaluate("TribeOffline.state()")
-            assert len(st["tasks"]["first-project"]) == 1 and len(st["docs"]["first-project"]) == 1, "reload lost the phone tribe"
+            assert [len(st["tasks"]["first-project"]), len(st["docs"]["first-project"])] == before and before[0] >= 1 and before[1] >= 3, ("reload lost the phone tribe", before)
 
             # 5. inviting asks to move first
             r = pg.evaluate("TribeClient.api('/invites', { method: 'POST', body: {} }).then(() => 'ok', e => e.message)")

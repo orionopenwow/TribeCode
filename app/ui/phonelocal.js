@@ -207,7 +207,12 @@
     const day = t => new Date(t).toISOString().slice(0, 10);
     const due = (from, to) => Object.values(K().db().tasks || {}).flat().filter(t => /^\d{4}-\d{2}-\d{2}$/.test(t.due || '') && t.due >= day(from - DAY) && t.due <= day(to + DAY)).map(t => ({ id: t.id, title: t.title, due: t.due, status: t.status, assignee: t.assignee || null }));
     if (!b && method === 'GET') { const from = Date.parse(q.get('from')) || Date.now() - 7 * DAY, to = Date.parse(q.get('to')) || Date.now() + 30 * DAY; return ok({ events: c.events, occurrences: view(from, to), tasks: due(from, to) }); }
-    if (b === 'upcoming' && method === 'GET') { const n = Number(q.get('n')) || 3; return ok({ items: view(Date.now(), Date.now() + 60 * DAY).slice(0, n) }); }
+    if (b === 'upcoming' && method === 'GET') {   // the same shape as server/plan.js upcoming(): events (kind 'event') and due tasks (kind 'task'), overdue first
+      const n = Number(q.get('n')) || 3, now = Date.now(), t0 = new Date(), today = `${t0.getFullYear()}-${String(t0.getMonth() + 1).padStart(2, '0')}-${String(t0.getDate()).padStart(2, '0')}`;
+      const evs = view(now, now + 60 * DAY).filter(e => Date.parse(e.end) > now).map(e => ({ kind: 'event', at: e.start, ...e }));
+      const tasks = (K().db().tasks[K().cur()] || []).filter(t => /^\d{4}-\d{2}-\d{2}$/.test(t.due || '') && t.status !== 'done').map(t => ({ kind: 'task', at: t.due + 'T23:59:00', id: t.id, title: t.title, due: t.due, status: t.status, assignee: t.assignee || null, overdue: t.due < today }));
+      return ok({ items: [...tasks.filter(t => t.overdue), ...[...evs, ...tasks.filter(t => !t.overdue)].sort((a, b) => Date.parse(a.at) - Date.parse(b.at))].slice(0, n) });
+    }
     if (!b && method === 'POST') {
       if (!Date.parse(body.start)) return [400, { error: 'start required' }];
       const s = Date.parse(body.start), end = body.end && Date.parse(body.end) ? body.end : new Date(s + (Number(body.duration) || 30) * 60000).toISOString();

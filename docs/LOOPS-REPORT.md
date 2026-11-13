@@ -65,3 +65,20 @@ were walked on desktop (1280) and phone (390) through the Playwright suites name
   repos as remotes).
 - Code signing: Windows and macOS installers are unsigned, so SmartScreen and Gatekeeper warn on first open.
 - Stripe sync for Money with a real read-only key.
+
+## v0.32 holes pass (fix/holes-v032)
+
+Suite: first full run 170/185 with two lanes in parallel. Every failure was rerun alone; all 185 now pass.
+
+Real fixes:
+- Phone-only Flint: "make a doc/sheet/slides" and launch/readme/notes drafts said "This needs a real tribe". `phonelocal.js` now answers `/flint/make` (the same templates as the server) and `/flint/draft` (from the project's tasks and vision) on the phone. "Build a to-do app / make a website" starts a matching Design starter on the phone. Calls, screen share and invites on a solo tribe open the nextopts sheet instead of a dead "Camera on.". "Connect github" is a new intent (phone: the GitHub sheet; host: Repo).
+- "What did we decide today" crashed on a phone (captures returned no quotes); it now needs a topic to go to captures and answers plainly when nothing is found. "Meeting notes from today" was read as a calendar event; NLU fixed. "Clean this up" eval regression fixed. NLU cases 760/768.
+- Phone calendar `upcoming` now returns the server's shape (kind, at, due, overdue), which fixed a pageerror in plan.js on the mobile Home.
+- i18n: 58 app strings from the call, huddle, voice-note, nextopts, GitHub-phone and Flint merges added in all 7 languages; 20 site strings added to every site/lang file.
+- Stale tests: e2e_flint (invite answer moved), e2e_chat2 (chat head buttons), e2e_agents_dash (wait for the repaint before the next tap). e2e_phone_solo now checks phone-only Flint make, draft, decide, build and invite.
+
+Checked and clean: sw.js SHELL covers every file index.html loads and CACHE is intact; call shortcuts and the help sheet agree; offline demo and showcase open all 17 areas at 1280 and 390 with no console errors; fresh desktop, phone-only and joined-phone opens have no console errors.
+
+Flaky only under parallel load (pass alone): e2e_rooms, e2e_preview, e2e_instant, e2e_updater, e2e_overview2, e2e_modes, e2e_openspace, e2e_selfheal, e2e_themes, e2e_first_run.
+
+Not fixed: a 3D build on a phone-only tribe has no 3D starter, so Flint starts the platformer starter and says so.
