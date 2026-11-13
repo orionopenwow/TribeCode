@@ -134,9 +134,30 @@ def on_this_device(b):
     pg.click(".dfl-tpl[data-tpl=cafe]")
     pg.wait_for_function("TribeSiteDesigner.state() && TribeSiteDesigner.state().open", timeout=15000)
     assert pg.evaluate("TribeDesignFlow.plan().kind") == "website" and pg.evaluate("TribeDesignFlow.plan().template") == "cafe"
+    # the plan is a calm "Plan 0/n" chip in the designer's own toolbar; the very first plan opens once by itself, as a side
+    # panel the designer makes room for (nothing covered)
+    pg.wait_for_selector("#wdz .wdz-top #dfl-chip:not([hidden])", timeout=5000)
+    n = len(pg.evaluate("TribeDesignFlow.plan().steps")); web_key = pg.evaluate("TribeDesignFlow.plan().key")
+    assert pg.inner_text("#dfl-chip").replace("\n", " ").split() == ["Plan", f"0/{n}"], pg.inner_text("#dfl-chip")
     pg.wait_for_selector("#dfl-dock:not([hidden]) #dfl-dock-plan", timeout=5000)
-    assert "plan · website" in pg.inner_text("#dfl-dock").lower()
+    assert "plan · website" in pg.inner_text("#dfl-dock").lower() and pg.get_attribute("#dfl-chip", "aria-expanded") == "true"
+    pg.wait_for_timeout(300)
+    R = "s => { const r = document.querySelector(s).getBoundingClientRect(); return { l: r.left, r: r.right, t: r.top, b: r.bottom, w: r.width }; }"
+    dk, wz = pg.evaluate(R, "#dfl-dock"), pg.evaluate(R, "#wdz")
+    assert dk["w"] <= 300 and wz["r"] <= dk["l"] + 0.5, ("the panel sits beside the designer, not over it", dk, wz)
+    for q in ["#wdz .wdz-top [data-wdz='save']", "#wdz-dl"]:
+        c = pg.evaluate(R, q); assert c["r"] <= dk["l"], ("the designer's controls stay uncovered", q, c, dk)
+    # tick a step and add the steps as tasks, right from the panel
+    first = pg.evaluate("TribeDesignFlow.plan().steps[0].id")
+    pg.click(f"#dfl-dock [data-step={first}] .dfl-tick"); pg.wait_for_selector(f"#dfl-dock [data-step={first}].done")
+    assert pg.inner_text("#dfl-chip").replace("\n", " ").split()[-1] == f"1/{n}"
+    assert pg.is_visible("#dfl-dock-addtasks")
+    # Esc folds it back to the chip; it stays folded for this design
+    pg.keyboard.press("Escape"); pg.wait_for_selector("#dfl-dock", state="hidden")
+    assert pg.get_attribute("#dfl-chip", "aria-expanded") == "false" and not pg.evaluate("document.body.classList.contains('dfl-side')")
+    assert web_key not in pg.evaluate("JSON.parse(localStorage.getItem('tribecode.designflow.open') || '{}')")
     pg.wait_for_function("TribeSiteDesigner.cfg().name === 'Sunrise Bakery'", timeout=5000)   # the prompt names the site
+    if SHOTS: pg.evaluate("document.activeElement && document.activeElement.blur()"); shot(pg, "plan-chip")
     pg.evaluate("TribeSiteDesigner.close()")
 
     # A screen template: the canvas opens with the screen on it, plan docked
@@ -144,8 +165,16 @@ def on_this_device(b):
     pg.click("[data-kind=screen]"); pg.wait_for_selector(".dfl-tpl[data-tpl=login]")
     pg.click(".dfl-tpl[data-tpl=login]")
     pg.wait_for_function("TribeCanvas.state().open && TribeCanvas.state().nodes.some(n => n.t === 'frame' && !n.p)", timeout=15000)
-    pg.wait_for_selector("#dfl-dock:not([hidden])", timeout=5000)
+    # never opens by itself after the first time: just the chip, in the canvas's toolbar
+    pg.wait_for_selector("#dfl-chip:not([hidden])", timeout=5000); pg.wait_for_timeout(400)
+    assert pg.is_hidden("#dfl-dock") and pg.evaluate("!!document.querySelector('#cv #dfl-chip') || !!document.querySelector('.titlebar #dfl-chip')"), "folded, in a toolbar"
+    pg.click("#dfl-chip"); pg.wait_for_selector("#dfl-dock:not([hidden]) #dfl-dock-plan", timeout=5000)
     assert "plan · screen / ui mockup" in pg.inner_text("#dfl-dock").lower()
+    pg.wait_for_timeout(300); dk, cv = pg.evaluate(R, "#dfl-dock"), pg.evaluate(R, "#cv")
+    assert cv["r"] <= dk["l"] + 0.5, ("the canvas makes room", cv, dk)
+    opened = pg.evaluate("JSON.parse(localStorage.getItem('tribecode.designflow.open') || '{}')")
+    assert pg.evaluate("TribeDesignFlow.plan().key") in opened and web_key not in opened, "open or closed is kept per design"
+    if SHOTS: shot(pg, "plan-panel")
     ctx.close()
 
     # Phone 390px: no sideways scroll
@@ -157,6 +186,14 @@ def on_this_device(b):
     pp.click("[data-kind=app]"); pp.wait_for_selector(".dfl-tpl[data-tpl=kanban]"); no_sideways(pp, "phone gallery")
     pp.click(".dfl-tpl[data-tpl=kanban]"); pp.wait_for_selector("#dfl[data-step=workspace] #dfl-plan", timeout=15000)
     pp.wait_for_timeout(400); no_sideways(pp, "phone workspace")
+    # away from the workspace the plan is a small chip; a bottom sheet only on tap
+    pp.evaluate("TribeHub.open('home')"); pp.wait_for_selector("#dfl-chip.float:not([hidden])", timeout=8000); pp.wait_for_timeout(300)
+    assert pp.is_hidden("#dfl-dock"), "phones: never opens by itself"
+    pp.click("#dfl-chip"); pp.wait_for_selector("#dfl-dock.sheet:not([hidden])"); pp.wait_for_selector("#dfl-scrim:not([hidden])"); pp.wait_for_timeout(350)
+    sh = pp.evaluate("(() => { const r = document.querySelector('#dfl-dock').getBoundingClientRect(); return { b: r.bottom, w: r.width, h: innerHeight }; })()")
+    assert abs(sh["b"] - sh["h"]) <= 1 and sh["w"] <= 390, sh
+    no_sideways(pp, "phone plan sheet")
+    pp.click("#dfl-scrim", position={"x": 20, "y": 20}); pp.wait_for_selector("#dfl-dock", state="hidden")
     ph.close()
 
 

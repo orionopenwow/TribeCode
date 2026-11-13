@@ -414,15 +414,15 @@
     const done = p.steps.filter(s => s.done).length, k = D().KINDS.find(x => x.id === p.kind) || {};
     box.innerHTML = `<div class="dfl-plan${o.inline ? ' inline' : ''}" id="${o.inline ? 'dfl-plan' : 'dfl-dock-plan'}" data-plan="${esc(p.key)}">
       <div class="dfl-plan-h"><span class="dfl-ki sm">${icon(k.icon || 'tasks', 16)}</span><div><span class="eyebrow">Plan · ${esc(k.t || p.kind)}</span><b>${esc(p.title)}</b></div><span class="dfl-prog" aria-label="${done} of ${p.steps.length} done">${done}/${p.steps.length}</span>
-        ${o.inline ? '' : `<button type="button" class="dfl-x" data-pl="min" aria-label="Fold the plan">${icon('back', 14)}</button><button type="button" class="dfl-x" data-pl="close" aria-label="Close the plan">${icon('x', 14)}</button>`}</div>
+        ${o.inline ? '' : `<button type="button" class="dfl-x" data-pl="min" aria-label="Fold the plan">${icon('x', 14)}</button>`}</div>
       <div class="dfl-bar" aria-hidden="true"><i style="width:${Math.round(done / Math.max(1, p.steps.length) * 100)}%"></i></div>
-      <ol class="dfl-steps">${p.steps.map((s, i) => `<li class="${s.done ? 'done' : ''}" data-step="${esc(s.id)}"><label class="dfl-tick"><input type="checkbox" data-tick="${esc(s.id)}" ${s.done ? 'checked' : ''} aria-label="Done: ${esc(s.t)}"><span class="dfl-box">${icon('check', 12)}</span></label>
+      <ol class="dfl-steps">${p.steps.map((s, i) => `<li class="${s.done ? 'done' : ''}${s === p.steps.find(x => !x.done) ? ' next' : ''}" data-step="${esc(s.id)}"><label class="dfl-tick"><input type="checkbox" data-tick="${esc(s.id)}" ${s.done ? 'checked' : ''} aria-label="Done: ${esc(s.t)}"><span class="dfl-box">${icon('check', 12)}</span></label>
         <div class="dfl-st"><b><span class="dfl-n">${i + 1}</span>${esc(s.t)}</b><small>${esc(s.d)}</small>${s.act ? `<button type="button" class="dfl-go" data-act="${esc(s.id)}">${icon(ACT_ICON[s.act.k] || 'chev', 13)}${esc(s.act.label || 'Open')}</button>` : ''}</div></li>`).join('')}</ol>
-      <div class="dfl-plan-f"><button type="button" class="btn sm" id="${o.inline ? 'dfl-addtasks' : 'dfl-dock-addtasks'}" data-addtasks>${icon('tasks', 14)}Add these steps as tasks</button></div></div>`;
-    box.querySelectorAll('[data-tick]').forEach(c => c.onchange = async () => { const np = await tick(p, c.dataset.tick, c.checked); Object.assign(p, np || {}); active = p; planCard(box, p, o); });
+      <div class="dfl-plan-f"><button type="button" class="btn sm" id="${o.inline ? 'dfl-addtasks' : 'dfl-dock-addtasks'}" data-addtasks>${icon('tasks', 14)}Add these steps as tasks</button>${o.inline ? '' : '<button type="button" class="linkish dfl-stop" data-pl="close">Stop showing this plan</button>'}</div></div>`;
+    box.querySelectorAll('[data-tick]').forEach(c => c.onchange = async () => { const np = await tick(p, c.dataset.tick, c.checked); Object.assign(p, np || {}); active = p; if (o.inline) planCard(box, p, o); else dock(); });
     box.querySelectorAll('[data-act]').forEach(b => b.onclick = () => act(p, p.steps.find(s => s.id === b.dataset.act)));
     box.querySelector('[data-addtasks]').onclick = () => addTasks(p);
-    box.querySelectorAll('[data-pl]').forEach(b => b.onclick = () => { if (b.dataset.pl === 'close') { setActive(null); } else { const d = $('#dfl-dock'); if (d) { d.classList.toggle('min'); ls.set('tribecode.designflow.fold', d.classList.contains('min')); } } });
+    box.querySelectorAll('[data-pl]').forEach(b => b.onclick = () => { if (b.dataset.pl === 'close') { setActive(null); } else { setOpen(p.key, false); dock(); const c = $('#dfl-chip'); if (c) c.focus(); } });
   }
   const ACT_ICON = { open: 'chev', play: 'play', tweak: 'sliders', inspo: 'image', canvas: 'canvas', whiteboard: 'whiteboard', flint: 'flame', tribe: 'people', tasks: 'tasks', publish: 'upload' };
   async function act(p, s) {
@@ -452,15 +452,50 @@
     document.dispatchEvent(new CustomEvent('tribe-design-tasks', { detail: { key: p.key, n: left.length } }));
   }
 
-  // ---------- the dock: the active plan beside whatever editor is open ----------
-  function dock() {
-    let d = $('#dfl-dock');
-    const flowShown = !!(host && host.isConnected && view === 'workspace' && host.offsetParent !== null);
-    if (!active || flowShown) { if (d) d.hidden = true; return; }
-    if (!d) { d = document.createElement('aside'); d.id = 'dfl-dock'; d.className = 'dfl-dock'; d.setAttribute('aria-label', 'Plan'); d.classList.toggle('min', !!ls.get('tribecode.designflow.fold', isPhone())); document.body.appendChild(d); }
-    d.hidden = false;
-    planCard(d, active, {});
+  // ---------- the dock: a calm "Plan 2/7" chip; the plan opens only on click (feat/ui-tribeflow) ----------
+  // Desktop: the chip sits in the open editor's own toolbar (the website designer's, the canvas's, the whiteboard's) or
+  // the top bar, and opens the plan as a slim side panel: the app (and a full-window editor) makes room for it, so it
+  // never covers the canvas or an editor's controls. Phones: a small chip above the bottom rack, a bottom sheet on tap.
+  // Open or closed is remembered per design. It opens by itself once, for your very first plan, and never again.
+  const OKEY = 'tribecode.designflow.open', SEEN = 'tribecode.designflow.seen';
+  const isOpen = key => !!(ls.get(OKEY, {}) || {})[key];
+  function setOpen(key, on) { const m = ls.get(OKEY, {}) || {}; if (on) m[key] = 1; else delete m[key]; ls.set(OKEY, m); }
+  const watched = new WeakSet();
+  function chipEl() {
+    let c = $('#dfl-chip');
+    const wdz = $('#wdz'); if (wdz && !watched.has(wdz)) { watched.add(wdz); new MutationObserver(() => rehome()).observe(wdz, { attributes: true, attributeFilter: ['hidden'] }); }
+    const vis = e => !!(e && e.offsetParent !== null && e.getClientRects().length);
+    const bar = isPhone() ? null : [['#wdz:not([hidden]) .wdz-top', 'wdz'], ['#cv .cv-head-acts', 'cv'], ['.wbd-head', 'wbd'], ['.titlebar .tb-right', 'tb']].map(([q, k]) => [$(q), k]).find(([e]) => vis(e)) || null;
+    if (!c) { c = document.createElement('button'); c.type = 'button'; c.id = 'dfl-chip'; c.className = 'dfl-chip'; c.setAttribute('aria-controls', 'dfl-dock'); c.setAttribute('aria-haspopup', 'dialog'); c.onclick = () => { if (!active) return; setOpen(active.key, !isOpen(active.key)); dock(); if (isOpen(active.key)) { const f = $('#dfl-dock .dfl-x'); if (f) f.focus(); } }; }
+    const want = bar ? bar[0] : document.body;
+    if (c.parentElement !== want) { if (!bar) document.body.appendChild(c); else if (bar[1] === 'wdz') { const sp = want.querySelector('.wdz-sp'); if (sp) sp.after(c); else want.append(c); } else if (bar[1] === 'wbd') want.append(c); else want.prepend(c); }
+    c.classList.toggle('float', !bar);
+    return c;
   }
+  function dock() {
+    let d = $('#dfl-dock'), sc = $('#dfl-scrim');
+    const flowShown = !!(host && host.isConnected && view === 'workspace' && host.offsetParent !== null);
+    if (!active || flowShown) { if (d) d.hidden = true; if (sc) sc.hidden = true; const c = $('#dfl-chip'); if (c) c.hidden = true; document.body.classList.remove('dfl-side'); return; }
+    const inline = ['local-site', 'build', 'code'].includes((active.target || {}).type);   // apps and games show their plan in the workspace
+    if (!inline && !ls.get(SEEN, false)) { ls.set(SEEN, true); if (!isPhone()) setOpen(active.key, true); }   // the first docked plan ever: shown once
+    const open = isOpen(active.key), done = active.steps.filter(x => x.done).length;
+    const c = chipEl(); c.hidden = false;
+    c.innerHTML = `${icon('tasks', 14)}<span>Plan</span><b>${done}/${active.steps.length}</b>`;
+    c.setAttribute('aria-expanded', String(open)); c.setAttribute('aria-label', `Plan: ${active.title}, ${done} of ${active.steps.length} done`);
+    if (!d) { d = document.createElement('aside'); d.id = 'dfl-dock'; d.className = 'dfl-dock'; d.setAttribute('role', 'dialog'); d.setAttribute('aria-label', 'Plan'); document.body.appendChild(d); }
+    d.classList.toggle('sheet', isPhone());
+    if (isPhone()) { if (!sc) { sc = document.createElement('div'); sc.id = 'dfl-scrim'; sc.className = 'dfl-scrim'; sc.onclick = () => { if (active) setOpen(active.key, false); dock(); }; document.body.appendChild(sc); } sc.hidden = !open; }
+    else if (sc) sc.hidden = true;
+    d.hidden = !open;
+    document.body.classList.toggle('dfl-side', open && !isPhone());   // the app and a full-window editor make room
+    if (open) planCard(d, active, {});
+  }
+  // editors open and close their own toolbars: keep the chip in the one on screen
+  let reT = 0; const rehome = () => { clearTimeout(reT); reT = setTimeout(() => { if (active) dock(); }, 120); };
+  new MutationObserver(muts => { if (active && muts.some(m => [...m.addedNodes, ...m.removedNodes].some(n => n.nodeType === 1 && (n.id === 'wdz' || n.id === 'cv' || (n.classList && n.classList.contains('wbd'))))) || muts.some(m => m.type === 'attributes')) rehome(); })
+    .observe(document.body, { childList: true, attributes: true, attributeFilter: ['class'] });
+  addEventListener('keydown', e => { if (e.key !== 'Escape' || !active) return; const d = $('#dfl-dock'); if (!d || d.hidden) return; if (document.querySelector('.ph-sheet, .modal:not(.hidden)')) return; e.stopPropagation(); setOpen(active.key, false); dock(); const c = $('#dfl-chip'); if (c) c.focus(); }, true);
+  matchMedia('(max-width: 820px)').addEventListener('change', () => dock());
   // the dock follows the view: hidden while the workspace shows the plan inline, back when you leave it
   new MutationObserver(() => dock()).observe(document.body, { attributes: true, attributeFilter: ['data-view'] });
   addEventListener('hashchange', () => setTimeout(dock, 50));
