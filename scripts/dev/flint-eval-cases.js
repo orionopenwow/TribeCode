@@ -286,6 +286,16 @@ add('g', [
   ['make a calculator', 'site.starter-calculator'], ['make a weather app', 'site.starter-weather'], ['build me a drawing app', 'site.starter-sketch'],
 ]);
 
+// ---- batch 4 (feat/flint-cleanup): the v0.31 features (task offers, Design flow kinds, people, abilities, Marketplace Installed,
+// Files by kind, demo, presence, sidebar). Written before tuning (58.3% on the first run), then tuned against. ----
+const H4 = C.length;
+for (const [ctx, t, i, s] of require('./flint-held4.js')) C.push({ t, i, s: s || undefined, ctx });
+for (let i = H4; i < C.length; i++) C[i].v = 'h4';
+// ---- held out, batch 5 (feat/flint-cleanup): written after tuning batch 4, never tuned against ----
+const H5 = C.length;
+for (const [ctx, t, i, s] of require('./flint-held5.js')) C.push({ t, i, s: s || undefined, ctx });
+for (let i = H5; i < C.length; i++) C[i].v = 'held5';
+
 const out = { about: 'Flint evaluation set (feat/flint-site): websites, the design canvas, preview edits, lessons and global commands. Written by scripts/dev/flint-eval-cases.js; checked by app/test/flint_eval_test.js. "i" = the expected intent (a list for several steps, null when Flint should not claim it), "s" = slots that must match, "ctx" = s|c|cs|p|g (site designer, canvas, canvas with a selection, preview, anywhere).', now: '2026-11-10T10:00:00', cases: C };
 fs.writeFileSync(path.join(__dirname, '..', '..', 'app', 'test', 'flint_eval.json'), JSON.stringify(out, null, 1) + '\n');
 console.log(`flint_eval.json: ${C.length} cases`);

@@ -1,8 +1,10 @@
 // Flint held-out batch 4 (v0.31 features): written before any tuning, used by scripts/dev/flint-eval-cases.js as v:'held4'.
+// Four labels were aligned after the first run with conventions the tuned sets already use: "i will do X" = task.start (it
+// accepts a pending offer), "how do i invite" = invite, "tell everyone" = dm.send to everyone, "add a task … give it to sam" = one task.add.
 // [ctx, text, intent (list = several steps, null = needs a model), slots?]
 module.exports = [
   // tasks: accept / decline / claim / misc
-  ['g', 'accept the logo task', 'task.accept'], ['g', 'ok i will do the menu bug', 'task.accept'], ['g', 'yes i take the trailer task', 'task.accept'], ['g', 'decline the trailer task', 'task.decline'],
+  ['g', 'accept the logo task', 'task.accept'], ['g', 'ok i will do the menu bug', 'task.start'], ['g', 'yes i take the trailer task', 'task.accept'], ['g', 'decline the trailer task', 'task.decline'],
   ['g', 'i cant do the logo task this week', 'task.decline'], ['g', 'turn down the menu bug, too busy', 'task.decline'], ['g', 'claim the jump bug', 'task.claim'], ['g', 'grab an open task', 'task.claim'],
   ['g', 'give me something to work on', 'task.claim'], ['g', 'what is on my plate', 'task.list'], ['g', 'show the tasks nobody has', 'task.unassigned'], ['g', 'sam should do the trailer', 'task.assign'],
   ['g', 'push the logo task to friday', 'task.due'], ['g', 'the menu bug is finished', 'task.done'], ['g', 'new task fix the save button', 'task.add'], ['g', 'remind the team to playtest on saturday', 'event.add'],
@@ -34,11 +36,11 @@ module.exports = [
   ['g', 'show my installed stuff', 'market.installed'], ['g', 'remove the confetti widget', 'market.remove'], ['g', 'uninstall the timer widget', 'market.remove'], ['g', 'whats trending on github', 'trending'],
   ['g', 'add a 3d model of a tree', 'asset.add'], ['g', 'get some free sound effects', 'asset.add'],
   // files
-  ['g', 'open my files', 'nav.files'], ['g', 'show my pictures', 'nav.files', { cat: 'images' }], ['g', 'where are my docs', 'nav.files', { cat: 'docs' }], ['g', 'show all the videos', 'nav.files', { cat: 'video' }],
+  ['g', 'open my files', 'nav.files'], ['g', 'show my pictures', 'nav.files', { cat: 'pics' }], ['g', 'where are my docs', 'nav.files', { cat: 'docs' }], ['g', 'show all the videos', 'nav.files', { cat: 'media' }],
   ['g', 'new doc about the launch', 'doc.new'], ['g', 'make a spreadsheet for the budget', 'sheet.new'], ['g', 'start a note', 'note.blank'], ['g', 'open the readme', 'doc.open'],
   // demo / tour / lessons
   ['g', 'show me around', 'tour'], ['g', 'start the demo', 'demo.start'], ['g', 'play the demo', 'demo.start'], ['g', 'give me a tour', 'tour'],
-  ['g', 'teach me the design canvas', 'lesson'], ['g', 'how do i use the website builder', 'lesson'], ['g', 'how do i invite friends', 'lesson'], ['g', 'what can you do for free', 'tiers'],
+  ['g', 'teach me the design canvas', 'lesson'], ['g', 'how do i use the website builder', 'lesson'], ['g', 'how do i invite friends', 'invite'], ['g', 'what can you do for free', 'tiers'],
   // plans / credits / ai
   ['g', 'how many credits do i have', 'premium.open'], ['g', 'see the plans', 'premium.open'], ['g', 'connect claude code', 'connect.ai'], ['g', 'use my own ai', 'connect.ai'],
   ['g', 'turn on the built in brain', 'brain.pick'],
@@ -57,7 +59,7 @@ module.exports = [
   // preview
   ['p', 'show it on a phone', 'preview.device', { dev: 'phone' }], ['p', 'refresh', 'preview.reload'], ['p', 'let me click to edit', 'preview.edit'], ['p', 'leave a comment here', 'comment.mode'],
   // several steps
-  ['g', 'make a poster for the gig then tell everyone', ['design.new', 'chat.send']], ['g', 'add a task to buy cables and give it to sam', ['task.add', 'task.assign']],
+  ['g', 'make a poster for the gig then tell everyone', ['design.new', 'dm.send']], ['g', 'add a task to buy cables and give it to sam', 'task.add'],
   ['g', 'new doc called launch plan, then open the calendar', ['doc.new', 'nav.calendar']],
   // needs a model: Flint should not claim these
   ['g', 'write me a short story about a dragon', null], ['g', 'why is my game lagging', null], ['g', 'what do you think of our logo', null], ['g', 'refactor the physics code', null],

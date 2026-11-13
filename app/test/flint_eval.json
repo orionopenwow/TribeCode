@@ -4746,6 +4746,1377 @@
    "t": "build me a drawing app",
    "i": "site.starter-sketch",
    "ctx": "g"
+  },
+  {
+   "t": "accept the logo task",
+   "i": "task.accept",
+   "ctx": "g",
+   "v": "h4"
+  },
+  {
+   "t": "ok i will do the menu bug",
+   "i": "task.start",
+   "ctx": "g",
+   "v": "h4"
+  },
+  {
+   "t": "yes i take the trailer task",
+   "i": "task.accept",
+   "ctx": "g",
+   "v": "h4"
+  },
+  {
+   "t": "decline the trailer task",
+   "i": "task.decline",
+   "ctx": "g",
+   "v": "h4"
+  },
+  {
+   "t": "i cant do the logo task this week",
+   "i": "task.decline",
+   "ctx": "g",
+   "v": "h4"
+  },
+  {
+   "t": "turn down the menu bug, too busy",
+   "i": "task.decline",
+   "ctx": "g",
+   "v": "h4"
+  },
+  {
+   "t": "claim the jump bug",
+   "i": "task.claim",
+   "ctx": "g",
+   "v": "h4"
+  },
+  {
+   "t": "grab an open task",
+   "i": "task.claim",
+   "ctx": "g",
+   "v": "h4"
+  },
+  {
+   "t": "give me something to work on",
+   "i": "task.claim",
+   "ctx": "g",
+   "v": "h4"
+  },
+  {
+   "t": "what is on my plate",
+   "i": "task.list",
+   "ctx": "g",
+   "v": "h4"
+  },
+  {
+   "t": "show the tasks nobody has",
+   "i": "task.unassigned",
+   "ctx": "g",
+   "v": "h4"
+  },
+  {
+   "t": "sam should do the trailer",
+   "i": "task.assign",
+   "ctx": "g",
+   "v": "h4"
+  },
+  {
+   "t": "push the logo task to friday",
+   "i": "task.due",
+   "ctx": "g",
+   "v": "h4"
+  },
+  {
+   "t": "the menu bug is finished",
+   "i": "task.done",
+   "ctx": "g",
+   "v": "h4"
+  },
+  {
+   "t": "new task fix the save button",
+   "i": "task.add",
+   "ctx": "g",
+   "v": "h4"
+  },
+  {
+   "t": "remind the team to playtest on saturday",
+   "i": "event.add",
+   "ctx": "g",
+   "v": "h4"
+  },
+  {
+   "t": "make a poster for our gig",
+   "i": "design.new",
+   "s": {
+    "kind": "poster"
+   },
+   "ctx": "g",
+   "v": "h4"
+  },
+  {
+   "t": "design a logo for ember socks",
+   "i": "design.new",
+   "s": {
+    "kind": "logo"
+   },
+   "ctx": "g",
+   "v": "h4"
+  },
+  {
+   "t": "i need a flyer for the bake sale",
+   "i": "design.new",
+   "s": {
+    "kind": "poster"
+   },
+   "ctx": "g",
+   "v": "h4"
+  },
+  {
+   "t": "start a new design for an app screen",
+   "i": "design.new",
+   "s": {
+    "kind": "screen"
+   },
+   "ctx": "g",
+   "v": "h4"
+  },
+  {
+   "t": "make slides for friday",
+   "i": "deck.new",
+   "ctx": "g",
+   "v": "h4"
+  },
+  {
+   "t": "new whiteboard",
+   "i": "nav.whiteboard",
+   "ctx": "g",
+   "v": "h4"
+  },
+  {
+   "t": "design a mobile app",
+   "i": "design.new",
+   "s": {
+    "kind": "app"
+   },
+   "ctx": "g",
+   "v": "h4"
+  },
+  {
+   "t": "start designing a game",
+   "i": "design.new",
+   "s": {
+    "kind": "game"
+   },
+   "ctx": "g",
+   "v": "h4"
+  },
+  {
+   "t": "make an instagram post graphic",
+   "i": "design.new",
+   "s": {
+    "kind": "poster"
+   },
+   "ctx": "g",
+   "v": "h4"
+  },
+  {
+   "t": "open the design flow",
+   "i": "nav.design",
+   "ctx": "g",
+   "v": "h4"
+  },
+  {
+   "t": "take me to design",
+   "i": "nav.design",
+   "ctx": "g",
+   "v": "h4"
+  },
+  {
+   "t": "make a breakout game for my brother",
+   "i": "site.starter-breakout",
+   "ctx": "g",
+   "v": "h4"
+  },
+  {
+   "t": "build a little snake game",
+   "i": "site.starter-snake",
+   "ctx": "g",
+   "v": "h4"
+  },
+  {
+   "t": "i want a pomodoro app",
+   "i": "site.starter-pomodoro",
+   "ctx": "g",
+   "v": "h4"
+  },
+  {
+   "t": "quick budget dashboard please",
+   "i": "site.starter-dashboard",
+   "ctx": "g",
+   "v": "h4"
+  },
+  {
+   "t": "add a pricing table",
+   "i": "site.block.add",
+   "s": {
+    "block": "pricing"
+   },
+   "ctx": "s",
+   "v": "h4"
+  },
+  {
+   "t": "put some customer quotes on the page",
+   "i": "site.block.add",
+   "s": {
+    "block": "testimonials"
+   },
+   "ctx": "s",
+   "v": "h4"
+  },
+  {
+   "t": "i want a photo grid",
+   "i": "site.block.add",
+   "s": {
+    "block": "gallery"
+   },
+   "ctx": "s",
+   "v": "h4"
+  },
+  {
+   "t": "drop the team part",
+   "i": "site.block.remove",
+   "s": {
+    "block": "team"
+   },
+   "ctx": "s",
+   "v": "h4"
+  },
+  {
+   "t": "move the faq above the footer",
+   "i": "site.block.move",
+   "s": {
+    "block": "faq"
+   },
+   "ctx": "s",
+   "v": "h4"
+  },
+  {
+   "t": "make it dark",
+   "i": "site.dark",
+   "ctx": "s",
+   "v": "h4"
+  },
+  {
+   "t": "use a calmer theme",
+   "i": "site.theme",
+   "ctx": "s",
+   "v": "h4"
+  },
+  {
+   "t": "change the font to something more playful",
+   "i": "site.font",
+   "ctx": "s",
+   "v": "h4"
+  },
+  {
+   "t": "make the main color green",
+   "i": "site.color",
+   "s": {
+    "color": "green"
+   },
+   "ctx": "s",
+   "v": "h4"
+  },
+  {
+   "t": "page title for google should be Ember Socks",
+   "i": "site.seo",
+   "s": {
+    "field": "title"
+   },
+   "ctx": "s",
+   "v": "h4"
+  },
+  {
+   "t": "add a contact page",
+   "i": "site.page.add",
+   "ctx": "s",
+   "v": "h4"
+  },
+  {
+   "t": "rename the about page to story",
+   "i": "site.page.rename",
+   "ctx": "s",
+   "v": "h4"
+  },
+  {
+   "t": "delete the contact page",
+   "i": "site.page.delete",
+   "ctx": "s",
+   "v": "h4"
+  },
+  {
+   "t": "swap the hero picture",
+   "i": "site.image.replace",
+   "ctx": "s",
+   "v": "h4"
+  },
+  {
+   "t": "make the picture a circle",
+   "i": "site.image.shape",
+   "s": {
+    "shape": "round"
+   },
+   "ctx": "s",
+   "v": "h4"
+  },
+  {
+   "t": "show me how it looks on my phone",
+   "i": "site.device",
+   "s": {
+    "dev": "phone"
+   },
+   "ctx": "s",
+   "v": "h4"
+  },
+  {
+   "t": "export the whole site as a zip",
+   "i": "site.export",
+   "ctx": "s",
+   "v": "h4"
+  },
+  {
+   "t": "publish this",
+   "i": "site.publish",
+   "ctx": "s",
+   "v": "h4"
+  },
+  {
+   "t": "make the headline shorter",
+   "i": "site.copy",
+   "s": {
+    "field": "headline"
+   },
+   "ctx": "s",
+   "v": "h4"
+  },
+  {
+   "t": "the button should go to the shop page",
+   "i": "site.wire",
+   "ctx": "s",
+   "v": "h4"
+  },
+  {
+   "t": "fill it in from my project",
+   "i": "site.autofill",
+   "ctx": "s",
+   "v": "h4"
+  },
+  {
+   "t": "turn the comments into tasks",
+   "i": "site.comments.tasks",
+   "ctx": "s",
+   "v": "h4"
+  },
+  {
+   "t": "tighten the spacing",
+   "i": "site.spacing",
+   "ctx": "s",
+   "v": "h4"
+  },
+  {
+   "t": "add our socials",
+   "i": "site.block.add",
+   "ctx": "s",
+   "v": "h4"
+  },
+  {
+   "t": "put a newsletter signup at the bottom",
+   "i": "site.block.add",
+   "s": {
+    "block": "newsletter"
+   },
+   "ctx": "s",
+   "v": "h4"
+  },
+  {
+   "t": "link in bio for my pottery",
+   "i": "site.linkbio",
+   "ctx": "g",
+   "v": "h4"
+  },
+  {
+   "t": "a site for my food truck",
+   "i": "site.cafe",
+   "ctx": "g",
+   "v": "h4"
+  },
+  {
+   "t": "website for my dog grooming business",
+   "i": "site.service",
+   "ctx": "g",
+   "v": "h4"
+  },
+  {
+   "t": "make my resume into a website",
+   "i": "site.resume",
+   "ctx": "g",
+   "v": "h4"
+  },
+  {
+   "t": "i sell stickers online, make me a shop",
+   "i": "site.merch",
+   "ctx": "g",
+   "v": "h4"
+  },
+  {
+   "t": "open the website designer",
+   "i": "site.open",
+   "ctx": "g",
+   "v": "h4"
+  },
+  {
+   "t": "where is maya right now",
+   "i": "people.where",
+   "ctx": "g",
+   "v": "h4"
+  },
+  {
+   "t": "who is online",
+   "i": "people.online",
+   "ctx": "g",
+   "v": "h4"
+  },
+  {
+   "t": "whos working on what",
+   "i": "people.working",
+   "ctx": "g",
+   "v": "h4"
+  },
+  {
+   "t": "is sam around",
+   "i": "people.where",
+   "ctx": "g",
+   "v": "h4"
+  },
+  {
+   "t": "what is maya up to",
+   "i": "people.where",
+   "ctx": "g",
+   "v": "h4"
+  },
+  {
+   "t": "find someone who knows blender",
+   "i": "people.find",
+   "ctx": "g",
+   "v": "h4"
+  },
+  {
+   "t": "anyone here good at music",
+   "i": "people.find",
+   "ctx": "g",
+   "v": "h4"
+  },
+  {
+   "t": "who can draw pixel art",
+   "i": "people.find",
+   "ctx": "g",
+   "v": "h4"
+  },
+  {
+   "t": "message maya",
+   "i": "dm.open",
+   "ctx": "g",
+   "v": "h4"
+  },
+  {
+   "t": "dm sam saying the build is up",
+   "i": "dm.send",
+   "ctx": "g",
+   "v": "h4"
+  },
+  {
+   "t": "tell everyone lunch is here",
+   "i": "chat.send",
+   "ctx": "g",
+   "v": "h4"
+  },
+  {
+   "t": "show people",
+   "i": "people.online",
+   "ctx": "g",
+   "v": "h4"
+  },
+  {
+   "t": "open the company dashboard",
+   "i": "nav.company",
+   "ctx": "g",
+   "v": "h4"
+  },
+  {
+   "t": "turn this project into a company",
+   "i": "nav.company",
+   "ctx": "g",
+   "v": "h4"
+  },
+  {
+   "t": "show me the money",
+   "i": "nav.money",
+   "ctx": "g",
+   "v": "h4"
+  },
+  {
+   "t": "how much did we make this month",
+   "i": "nav.money",
+   "ctx": "g",
+   "v": "h4"
+  },
+  {
+   "t": "offer my logo design as a gig",
+   "i": "gig.self",
+   "ctx": "g",
+   "v": "h4"
+  },
+  {
+   "t": "i can make music for people",
+   "i": "gig.self",
+   "ctx": "g",
+   "v": "h4"
+  },
+  {
+   "t": "add drawing to my skills",
+   "i": "abilities.edit",
+   "ctx": "g",
+   "v": "h4"
+  },
+  {
+   "t": "edit my abilities",
+   "i": "abilities.edit",
+   "ctx": "g",
+   "v": "h4"
+  },
+  {
+   "t": "list what i am good at",
+   "i": "abilities.edit",
+   "ctx": "g",
+   "v": "h4"
+  },
+  {
+   "t": "find gigs",
+   "i": "nav.company",
+   "ctx": "g",
+   "v": "h4"
+  },
+  {
+   "t": "open the marketplace",
+   "i": "nav.market",
+   "ctx": "g",
+   "v": "h4"
+  },
+  {
+   "t": "find a physics library",
+   "i": "market.search",
+   "ctx": "g",
+   "v": "h4"
+  },
+  {
+   "t": "search the marketplace for icons",
+   "i": "market.search",
+   "ctx": "g",
+   "v": "h4"
+  },
+  {
+   "t": "what have i installed",
+   "i": "market.installed",
+   "ctx": "g",
+   "v": "h4"
+  },
+  {
+   "t": "show my installed stuff",
+   "i": "market.installed",
+   "ctx": "g",
+   "v": "h4"
+  },
+  {
+   "t": "remove the confetti widget",
+   "i": "market.remove",
+   "ctx": "g",
+   "v": "h4"
+  },
+  {
+   "t": "uninstall the timer widget",
+   "i": "market.remove",
+   "ctx": "g",
+   "v": "h4"
+  },
+  {
+   "t": "whats trending on github",
+   "i": "trending",
+   "ctx": "g",
+   "v": "h4"
+  },
+  {
+   "t": "add a 3d model of a tree",
+   "i": "asset.add",
+   "ctx": "g",
+   "v": "h4"
+  },
+  {
+   "t": "get some free sound effects",
+   "i": "asset.add",
+   "ctx": "g",
+   "v": "h4"
+  },
+  {
+   "t": "open my files",
+   "i": "nav.files",
+   "ctx": "g",
+   "v": "h4"
+  },
+  {
+   "t": "show my pictures",
+   "i": "nav.files",
+   "s": {
+    "cat": "pics"
+   },
+   "ctx": "g",
+   "v": "h4"
+  },
+  {
+   "t": "where are my docs",
+   "i": "nav.files",
+   "s": {
+    "cat": "docs"
+   },
+   "ctx": "g",
+   "v": "h4"
+  },
+  {
+   "t": "show all the videos",
+   "i": "nav.files",
+   "s": {
+    "cat": "media"
+   },
+   "ctx": "g",
+   "v": "h4"
+  },
+  {
+   "t": "new doc about the launch",
+   "i": "doc.new",
+   "ctx": "g",
+   "v": "h4"
+  },
+  {
+   "t": "make a spreadsheet for the budget",
+   "i": "sheet.new",
+   "ctx": "g",
+   "v": "h4"
+  },
+  {
+   "t": "start a note",
+   "i": "note.blank",
+   "ctx": "g",
+   "v": "h4"
+  },
+  {
+   "t": "open the readme",
+   "i": "doc.open",
+   "ctx": "g",
+   "v": "h4"
+  },
+  {
+   "t": "show me around",
+   "i": "tour",
+   "ctx": "g",
+   "v": "h4"
+  },
+  {
+   "t": "start the demo",
+   "i": "demo.start",
+   "ctx": "g",
+   "v": "h4"
+  },
+  {
+   "t": "play the demo",
+   "i": "demo.start",
+   "ctx": "g",
+   "v": "h4"
+  },
+  {
+   "t": "give me a tour",
+   "i": "tour",
+   "ctx": "g",
+   "v": "h4"
+  },
+  {
+   "t": "teach me the design canvas",
+   "i": "lesson",
+   "ctx": "g",
+   "v": "h4"
+  },
+  {
+   "t": "how do i use the website builder",
+   "i": "lesson",
+   "ctx": "g",
+   "v": "h4"
+  },
+  {
+   "t": "how do i invite friends",
+   "i": "invite",
+   "ctx": "g",
+   "v": "h4"
+  },
+  {
+   "t": "what can you do for free",
+   "i": "tiers",
+   "ctx": "g",
+   "v": "h4"
+  },
+  {
+   "t": "how many credits do i have",
+   "i": "premium.open",
+   "ctx": "g",
+   "v": "h4"
+  },
+  {
+   "t": "see the plans",
+   "i": "premium.open",
+   "ctx": "g",
+   "v": "h4"
+  },
+  {
+   "t": "connect claude code",
+   "i": "connect.ai",
+   "ctx": "g",
+   "v": "h4"
+  },
+  {
+   "t": "use my own ai",
+   "i": "connect.ai",
+   "ctx": "g",
+   "v": "h4"
+  },
+  {
+   "t": "turn on the built in brain",
+   "i": "brain.pick",
+   "ctx": "g",
+   "v": "h4"
+  },
+  {
+   "t": "switch to light mode",
+   "i": "theme.light",
+   "ctx": "g",
+   "v": "h4"
+  },
+  {
+   "t": "dark mode please",
+   "i": "theme.dark-mode",
+   "ctx": "g",
+   "v": "h4"
+  },
+  {
+   "t": "make the text bigger",
+   "i": "textsize.set",
+   "ctx": "g",
+   "v": "h4"
+  },
+  {
+   "t": "change language to spanish",
+   "i": "lang.set",
+   "ctx": "g",
+   "v": "h4"
+  },
+  {
+   "t": "set my accent to teal",
+   "i": "accent.set",
+   "ctx": "g",
+   "v": "h4"
+  },
+  {
+   "t": "change my profile picture",
+   "i": "personalize.open",
+   "ctx": "g",
+   "v": "h4"
+  },
+  {
+   "t": "open settings",
+   "i": "nav.settings",
+   "ctx": "g",
+   "v": "h4"
+  },
+  {
+   "t": "stop showing where i am",
+   "i": "presence.off",
+   "ctx": "g",
+   "v": "h4"
+  },
+  {
+   "t": "hide my location from others",
+   "i": "presence.off",
+   "ctx": "g",
+   "v": "h4"
+  },
+  {
+   "t": "show keyboard shortcuts",
+   "i": "nav.shortcuts",
+   "ctx": "g",
+   "v": "h4"
+  },
+  {
+   "t": "reset the sidebar order",
+   "i": "sidebar.reset",
+   "ctx": "g",
+   "v": "h4"
+  },
+  {
+   "t": "turn off notifications",
+   "i": "nav.settings",
+   "ctx": "g",
+   "v": "h4"
+  },
+  {
+   "t": "go home",
+   "i": "nav.home",
+   "ctx": "g",
+   "v": "h4"
+  },
+  {
+   "t": "open the task board",
+   "i": "nav.tasks",
+   "ctx": "g",
+   "v": "h4"
+  },
+  {
+   "t": "open chat",
+   "i": "nav.chat",
+   "ctx": "g",
+   "v": "h4"
+  },
+  {
+   "t": "open the calendar",
+   "i": "nav.calendar",
+   "ctx": "g",
+   "v": "h4"
+  },
+  {
+   "t": "show the agents",
+   "i": "nav.agents",
+   "ctx": "g",
+   "v": "h4"
+  },
+  {
+   "t": "open the preview",
+   "i": "nav.preview",
+   "ctx": "g",
+   "v": "h4"
+  },
+  {
+   "t": "publish the game",
+   "i": "publish",
+   "ctx": "g",
+   "v": "h4"
+  },
+  {
+   "t": "invite a friend",
+   "i": "invite",
+   "ctx": "g",
+   "v": "h4"
+  },
+  {
+   "t": "start a huddle",
+   "i": "huddle.start",
+   "ctx": "g",
+   "v": "h4"
+  },
+  {
+   "t": "jam mode",
+   "i": "jam.start",
+   "ctx": "g",
+   "v": "h4"
+  },
+  {
+   "t": "undo that",
+   "i": "undo",
+   "ctx": "g",
+   "v": "h4"
+  },
+  {
+   "t": "redo",
+   "i": "redo",
+   "ctx": "g",
+   "v": "h4"
+  },
+  {
+   "t": "what time is it",
+   "i": "time.now",
+   "ctx": "g",
+   "v": "h4"
+  },
+  {
+   "t": "what is 12 times 9",
+   "i": "calc",
+   "ctx": "g",
+   "v": "h4"
+  },
+  {
+   "t": "flip a coin",
+   "i": "random",
+   "ctx": "g",
+   "v": "h4"
+  },
+  {
+   "t": "make a sign up screen",
+   "i": "canvas.login",
+   "ctx": "c",
+   "v": "h4"
+  },
+  {
+   "t": "a pricing page for my app",
+   "i": "canvas.pricing",
+   "ctx": "c",
+   "v": "h4"
+  },
+  {
+   "t": "make a profile screen",
+   "i": "canvas.profile",
+   "ctx": "c",
+   "v": "h4"
+  },
+  {
+   "t": "checkout page",
+   "i": "canvas.checkout",
+   "ctx": "c",
+   "v": "h4"
+  },
+  {
+   "t": "make this dark",
+   "i": "canvas.dark",
+   "ctx": "cs",
+   "v": "h4"
+  },
+  {
+   "t": "clean this up",
+   "i": "canvas.tidy",
+   "ctx": "cs",
+   "v": "h4"
+  },
+  {
+   "t": "name the layers properly",
+   "i": "canvas.rename",
+   "ctx": "cs",
+   "v": "h4"
+  },
+  {
+   "t": "give me a few versions of this button",
+   "i": "canvas.variants",
+   "ctx": "cs",
+   "v": "h4"
+  },
+  {
+   "t": "send this to the app",
+   "i": "canvas.send",
+   "ctx": "c",
+   "v": "h4"
+  },
+  {
+   "t": "export as png",
+   "i": "canvas.export",
+   "ctx": "c",
+   "v": "h4"
+  },
+  {
+   "t": "show it on a phone",
+   "i": "preview.device",
+   "s": {
+    "dev": "phone"
+   },
+   "ctx": "p",
+   "v": "h4"
+  },
+  {
+   "t": "refresh",
+   "i": "preview.reload",
+   "ctx": "p",
+   "v": "h4"
+  },
+  {
+   "t": "let me click to edit",
+   "i": "preview.edit",
+   "ctx": "p",
+   "v": "h4"
+  },
+  {
+   "t": "leave a comment here",
+   "i": "comment.mode",
+   "ctx": "p",
+   "v": "h4"
+  },
+  {
+   "t": "make a poster for the gig then tell everyone",
+   "i": [
+    "design.new",
+    "dm.send"
+   ],
+   "ctx": "g",
+   "v": "h4"
+  },
+  {
+   "t": "add a task to buy cables and give it to sam",
+   "i": "task.add",
+   "ctx": "g",
+   "v": "h4"
+  },
+  {
+   "t": "new doc called launch plan, then open the calendar",
+   "i": [
+    "doc.new",
+    "nav.calendar"
+   ],
+   "ctx": "g",
+   "v": "h4"
+  },
+  {
+   "t": "write me a short story about a dragon",
+   "i": null,
+   "ctx": "g",
+   "v": "h4"
+  },
+  {
+   "t": "why is my game lagging",
+   "i": null,
+   "ctx": "g",
+   "v": "h4"
+  },
+  {
+   "t": "what do you think of our logo",
+   "i": null,
+   "ctx": "g",
+   "v": "h4"
+  },
+  {
+   "t": "refactor the physics code",
+   "i": null,
+   "ctx": "g",
+   "v": "h4"
+  },
+  {
+   "t": "accept the poster task",
+   "i": "task.accept",
+   "ctx": "g",
+   "v": "held5"
+  },
+  {
+   "t": "i will pass on the trailer task, sorry",
+   "i": "task.decline",
+   "ctx": "g",
+   "v": "held5"
+  },
+  {
+   "t": "say no to the menu bug",
+   "i": "task.decline",
+   "ctx": "g",
+   "v": "held5"
+  },
+  {
+   "t": "claim an unassigned task",
+   "i": "task.claim",
+   "ctx": "g",
+   "v": "held5"
+  },
+  {
+   "t": "maya can take the logo",
+   "i": "task.assign",
+   "ctx": "g",
+   "v": "held5"
+  },
+  {
+   "t": "which tasks have no owner",
+   "i": "task.unassigned",
+   "ctx": "g",
+   "v": "held5"
+  },
+  {
+   "t": "make a flyer for the open mic",
+   "i": "design.new",
+   "s": {
+    "kind": "poster"
+   },
+   "ctx": "g",
+   "v": "held5"
+  },
+  {
+   "t": "i want a logo for my band",
+   "i": "design.new",
+   "s": {
+    "kind": "logo"
+   },
+   "ctx": "g",
+   "v": "held5"
+  },
+  {
+   "t": "design a banner for the stream",
+   "i": "design.new",
+   "s": {
+    "kind": "poster"
+   },
+   "ctx": "g",
+   "v": "held5"
+  },
+  {
+   "t": "mock up an app screen for a gym",
+   "i": "design.new",
+   "s": {
+    "kind": "screen"
+   },
+   "ctx": "g",
+   "v": "held5"
+  },
+  {
+   "t": "start a new whiteboard",
+   "i": "nav.whiteboard",
+   "ctx": "g",
+   "v": "held5"
+  },
+  {
+   "t": "make a mood board",
+   "i": "design.new",
+   "s": {
+    "kind": "whiteboard"
+   },
+   "ctx": "g",
+   "v": "held5"
+  },
+  {
+   "t": "is maya online",
+   "i": "people.where",
+   "ctx": "g",
+   "v": "held5"
+  },
+  {
+   "t": "where did sam go",
+   "i": "people.where",
+   "ctx": "g",
+   "v": "held5"
+  },
+  {
+   "t": "anyone around who knows godot",
+   "i": "people.find",
+   "ctx": "g",
+   "v": "held5"
+  },
+  {
+   "t": "chat with sam",
+   "i": "dm.open",
+   "ctx": "g",
+   "v": "held5"
+  },
+  {
+   "t": "update my skills",
+   "i": "abilities.edit",
+   "ctx": "g",
+   "v": "held5"
+  },
+  {
+   "t": "put animation on my skills",
+   "i": "abilities.edit",
+   "ctx": "g",
+   "v": "held5"
+  },
+  {
+   "t": "offer my editing as a service",
+   "i": "gig.self",
+   "ctx": "g",
+   "v": "held5"
+  },
+  {
+   "t": "show the company report",
+   "i": "nav.company",
+   "ctx": "g",
+   "v": "held5"
+  },
+  {
+   "t": "browse gigs",
+   "i": "nav.company",
+   "ctx": "g",
+   "v": "held5"
+  },
+  {
+   "t": "what did we spend this month",
+   "i": "nav.money",
+   "ctx": "g",
+   "v": "held5"
+  },
+  {
+   "t": "list my installed widgets",
+   "i": "market.installed",
+   "ctx": "g",
+   "v": "held5"
+  },
+  {
+   "t": "uninstall the confetti pack",
+   "i": "market.remove",
+   "ctx": "g",
+   "v": "held5"
+  },
+  {
+   "t": "find a charting library",
+   "i": "market.search",
+   "ctx": "g",
+   "v": "held5"
+  },
+  {
+   "t": "open my photos",
+   "i": "nav.files",
+   "s": {
+    "cat": "pics"
+   },
+   "ctx": "g",
+   "v": "held5"
+  },
+  {
+   "t": "show my spreadsheets",
+   "i": "nav.files",
+   "s": {
+    "cat": "sheets"
+   },
+   "ctx": "g",
+   "v": "held5"
+  },
+  {
+   "t": "where are my recordings",
+   "i": "nav.files",
+   "s": {
+    "cat": "media"
+   },
+   "ctx": "g",
+   "v": "held5"
+  },
+  {
+   "t": "run the demo",
+   "i": "demo.start",
+   "ctx": "g",
+   "v": "held5"
+  },
+  {
+   "t": "watch the demo tribe",
+   "i": "demo.start",
+   "ctx": "g",
+   "v": "held5"
+  },
+  {
+   "t": "compare plans",
+   "i": "premium.open",
+   "ctx": "g",
+   "v": "held5"
+  },
+  {
+   "t": "my credits",
+   "i": "premium.open",
+   "ctx": "g",
+   "v": "held5"
+  },
+  {
+   "t": "appear offline",
+   "i": "presence.off",
+   "ctx": "g",
+   "v": "held5"
+  },
+  {
+   "t": "show where i am again",
+   "i": "presence.on",
+   "ctx": "g",
+   "v": "held5"
+  },
+  {
+   "t": "put the sidebar back to normal",
+   "i": "sidebar.reset",
+   "ctx": "g",
+   "v": "held5"
+  },
+  {
+   "t": "mute notifications",
+   "i": "nav.settings",
+   "ctx": "g",
+   "v": "held5"
+  },
+  {
+   "t": "teach me the marketplace",
+   "i": "lesson",
+   "ctx": "g",
+   "v": "held5"
+  },
+  {
+   "t": "how does the people panel work",
+   "i": "lesson",
+   "ctx": "g",
+   "v": "held5"
+  },
+  {
+   "t": "what is 8 times 7",
+   "i": "calc",
+   "ctx": "g",
+   "v": "held5"
+  },
+  {
+   "t": "put a faq at the end",
+   "i": "site.block.add",
+   "s": {
+    "block": "faq"
+   },
+   "ctx": "s",
+   "v": "held5"
+  },
+  {
+   "t": "move the team section to the top",
+   "i": "site.block.move",
+   "s": {
+    "block": "team"
+   },
+   "ctx": "s",
+   "v": "held5"
+  },
+  {
+   "t": "rename the home page to welcome",
+   "i": "site.page.rename",
+   "ctx": "s",
+   "v": "held5"
+  },
+  {
+   "t": "add my social links",
+   "i": "site.block.add",
+   "s": {
+    "block": "links"
+   },
+   "ctx": "s",
+   "v": "held5"
+  },
+  {
+   "t": "a checkout page for the shop",
+   "i": "canvas.checkout",
+   "ctx": "c",
+   "v": "held5"
+  },
+  {
+   "t": "remind everyone to vote on friday",
+   "i": "event.add",
+   "ctx": "g",
+   "v": "held5"
+  },
+  {
+   "t": "new doc about the jam rules",
+   "i": "doc.new",
+   "ctx": "g",
+   "v": "held5"
+  },
+  {
+   "t": "write a song about our cat",
+   "i": null,
+   "ctx": "g",
+   "v": "held5"
+  },
+  {
+   "t": "why does the build keep failing",
+   "i": null,
+   "ctx": "g",
+   "v": "held5"
   }
  ]
 }
