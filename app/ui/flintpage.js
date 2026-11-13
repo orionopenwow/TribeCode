@@ -7,7 +7,7 @@
   'use strict';
   const $ = (s, r = document) => r.querySelector(s);
   const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-  const PLAN = 'https://github.com/orionopenwow/TribeCode/blob/dev/docs/FLINT-RESEARCH.md#the-model-plan';
+  const PLAN = 'https://github.com/orionopenwow/TribeCode/blob/dev/docs/FLINT-RESEARCH.md#3-the-model-plan';
   // [group, title, the example people can say, demo key (flintmax DEMOS) or '', tier]
   const G = { site: 'Website designer', canvas: 'Design canvas', docs: 'Docs', sheets: 'Sheets', slides: 'Slides', tasks: 'Tasks and chat', any: 'Anywhere', tribe: 'Your tribe' };
   const CAPS = [
