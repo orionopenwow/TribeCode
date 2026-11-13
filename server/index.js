@@ -508,6 +508,7 @@ const assist = require('./assist')({ P, store, brain, docs, loadTasks: () => loa
 const assetFiles = require('./files')({ P });
 const codeFiles = require('./codefiles')({ P, claims, identity: W.identity, member: id => members.find(x => x.id === id), broadcast });   // feat/files-code: the read-only Code view of Files (server/codefiles.js)
 const uploads = require('./uploads')({ store: baseStore, P, nameOf, broadcast, can: (me, cap) => perms.can(me, cap) });   // the Files center: any file type, yours or the project's
+const dropzone = require('./dropzone')({ isLocal });   // feat/dropzone: the desktop app's dropped paths (host, this computer only)
 const connections = require('./connections')({ P, store: baseStore, uploads, visuals, postChat, nameOf, broadcast, isLocal });   // feat/mcp-directory: special connections (ArtCraft…), host only
 profiles = require('./profiles')({ P, store: baseStore, getMembers: () => members, pushPresence: () => pushPresence() });   // feat/profiles
 moderation = require('./moderation')({ store: baseStore, getMembers: () => members, bus, id, limited, log: m => console.log('  moderation: ' + m) });   // feat/appstore (docs/APP-STORE.md)
@@ -984,6 +985,7 @@ async function apiInProject(req, res, url) {
   if (a === 'legal' || (a === 'projects' && c === 'legal')) return legalDocs.route(req, res, ctx());   // v0.27 company: Legal documents
   if (a === 'assist') return assist.route(req, res, ctx());   // feat/assist
   if (a === 'uploads') return uploads.route(req, res, ctx());
+  if (a === 'dropzone') return dropzone.route(req, res, ctx());   // feat/dropzone
   if (a === 'connections') return connections.route(req, res, ctx());   // feat/mcp-directory: special connections (server/connections.js)
   if (a === 'code') return codeFiles.route(req, res, ctx());   // feat/files-code
   if (a === 'moderation') return moderation.route(req, res, ctx());   // feat/appstore: report, block, filter

@@ -539,7 +539,7 @@
   }
 
   // Global stream, condensed: avatar, who, what, when, and the project (or "On this device").
-  const KIND = { gist: ['i-sparkle', 'Agent'], commit: ['i-git', 'Commit'], decision: ['i-vote', 'Decision'], proposal: ['i-vote', 'Proposal'], vote: ['i-vote', 'Vote'], doc: ['i-doc', 'Doc'], task: ['i-check', 'Task'], join: ['i-users', 'Joined'], chat: ['i-chat', 'Chat'], plan: ['i-flag', 'Plan'] };
+  const KIND = { gist: ['i-sparkle', 'Agent'], commit: ['i-git', 'Commit'], decision: ['i-vote', 'Decision'], proposal: ['i-vote', 'Proposal'], vote: ['i-vote', 'Vote'], doc: ['i-doc', 'Doc'], task: ['i-check', 'Task'], join: ['i-users', 'Joined'], chat: ['i-chat', 'Chat'], plan: ['i-flag', 'Plan'], drop: ['i-folder', 'Files'] };
   function chip(pid) {
     const p = projOf(pid); if (!p) return '';
     return `<span class="hub-chip" style="--pc:${esc(p.color || '#6C7CFF')}"><i></i>${esc(p.name)}</span>`;
@@ -1039,6 +1039,7 @@
       else if (ref.type === 'plan') { if (window.TribeFlow && window.TribeFlow.openUpdates) window.TribeFlow.openUpdates(); else App().show('home'); }
       else if (ref.type === 'secretary') { if (window.TribeSecretary) window.TribeSecretary.open(); }
       else if (ref.type === 'project') App().show('home');
+      else if (ref.type === 'files') { if (window.TribeHub) window.TribeHub.open('docs'); }   // feat/dropzone: a drop in the upload history
       else { App().show('chat'); if (ref.id) flash(`#chat-list [data-id="${CSS.escape(ref.id)}"]`); }
     });
   }

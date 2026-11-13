@@ -100,6 +100,12 @@ module.exports = function hub({ P, base, getMembers, presenceFor, loadTasks, doc
       // finished tasks
       try { for (const k of loadTasks()) if (k.status === 'done' && k.updated) add({ id: `done:${k.id}:${t(k.updated)}`, kind: 'task', at: k.updated, title: k.title, by: k.updatedBy || k.assignee, byName: nameOf(k.updatedBy || k.assignee), sub: 'Done', ref: { type: 'task', id: k.id } }); } catch {}
     });
+    // feat/dropzone: files dropped into the project, one line per drop (the upload history)
+    try {
+      const ups = base.readJSON(`.tribe/uploads/pj-${String(p.id).replace(/[^\w-]/g, '')}/index.json`, []), drops = new Map();
+      for (const f of Array.isArray(ups) ? ups : []) { if (!f || !f.batch) continue; const d = drops.get(f.batch) || { n: 0, at: f.at, by: f.by, byName: f.byName, dir: (f.dir || '').split('/')[0], name: f.name }; d.n++; if (t(f.at) > t(d.at)) d.at = f.at; drops.set(f.batch, d); }
+      for (const [id, d] of drops) add({ id: `drop:${id}`, kind: 'drop', at: d.at, title: d.n === 1 ? `Added ${d.name}` : `Added ${d.n} files${d.dir ? ` from ${d.dir}` : ''}`, by: d.by, byName: d.byName || nameOf(d.by), sub: 'Files', ref: { type: 'files', id } });
+    } catch {}
     // people joining the project, and the latest human chat lines
     for (const mid of Object.keys(p.members || {})) { const m = member(mid); if (m && m.role !== 'agent' && m.joined) add({ id: `join:${p.id}:${mid}`, kind: 'join', at: m.joined, title: `${m.name} joined`, by: mid, byName: m.name, ref: { type: 'chat' } }); }
     const chat = base.readJSONL(`chat/${p.channel}.jsonl`, 300);
