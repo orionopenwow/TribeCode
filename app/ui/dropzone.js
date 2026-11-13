@@ -165,7 +165,7 @@
   // ---------- where am I: the zone under a point ----------
   // places with their own drop handling (left alone): the new-project drop zones, the project rail, the AI bridge's box,
   // the old Home drop zone, flows, the whiteboard, the deck strip, the calendar, the task board, ledger and offload.
-  const PASS = '#np-drop, #dropzone, #flow-drop, #pj-dropzone, #pj-rail, #pj-plus, #aib-drop, #ib-drop, .wb-stage, #wb, .dk-strip, #dk-strip, .plan-cell, .bug-col, .task-col, .col[data-status], [data-dz-pass]';
+  const PASS = '#np-drop, #dropzone, #flow-drop, #pj-dropzone, #pj-rail, #pj-plus, #aib-drop, #ib-drop, #wbd, .dk-strip, #dk-strip, .plan-cell, .bug-col, .task-col, .col[data-status], [data-dz-pass]';
   const ZONES = [
     ['choice', '#dz-ov [data-dz-choice]'],
     ['pass', PASS],
@@ -243,7 +243,7 @@
   }, true);
   addEventListener('drop', e => {
     if (!isFiles(e) || e.defaultPrevented) return;
-    const z = zoneAt(e.target); if (!z) return;
+    const z = zoneAt(e.target); if (!z) { e.preventDefault(); return; }   // a place with its own drops that didn't want this one: at least never navigate to the file
     e.preventDefault(); const g = grab(e.dataTransfer);
     collect(g).then(set => take(set, { k: 'any' })).catch(err => toast(err.message));
   });
@@ -274,6 +274,7 @@
   const editable = el => el && (el.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(el.tagName));
   addEventListener('paste', e => {
     if (e.defaultPrevented) return;
+    const own = document.querySelector('#wbd, #sx-wrap'); if (own && own.offsetParent !== null) return;   // the whiteboard and sheets paste for themselves
     const t = e.target, dt = e.clipboardData; if (!dt) return;
     const files = [...(dt.files || [])];
     if (editable(t) && !files.length) return;
@@ -651,9 +652,9 @@
   }
   async function read(set) {
     closeSheet();
-    try { await keep(set, true); } catch (e) { return toast('Flint could not read it: ' + e.message); }
+    let R; try { R = await keep(set, true); } catch (e) { return toast('Flint could not read it: ' + e.message); }
     say(set);
-    return ctx.report;
+    return R;
   }
   function forget() {
     const had = !!ctx; ctx = null; idbPut(null); chip();
@@ -673,7 +674,7 @@
   const FOLDERISH = /\b(the|this|that) (folder|project|drop|files?|code|repo|readme|csv|data|pictures|photos|images)\b|\bin (it|there|here)\b|\b(these|those) (files|photos|pictures|images)\b/;
   async function flint(text) {
     const t = String(text || '').toLowerCase().trim();
-    if (/^(add|upload|attach|drop|read|open) (some |a |my )?(files?|folder|pictures|photos)\b|^(read|let flint read) a folder\b/.test(t)) { pick(); return { text: 'Pick files or a whole folder. I read it before anything is saved.', acts: [] }; }
+    if (/^(upload|attach|drop) (some |a |my )?(files?|folder|pictures|photos)$|^(read|let flint read) (a |my |this )?folder$|^add (some |a |my )?(files|folder)$/.test(t)) { pick(); return { text: 'Pick files or a whole folder. I read it before anything is saved.', acts: [] }; }
     if (!ctx) return null;
     if (/^(forget|drop|clear) (it|that|the folder|this folder|the files|what you read)\b/.test(t) || (ctx.name && t === `forget ${ctx.name.toLowerCase()}`)) { forget(); return { text: `Forgot ${ctx ? ctx.name : 'it'}.`, acts: [] }; }
     const R = ctx.report, mentions = FOLDERISH.test(t) || (R.name && t.includes(R.name.toLowerCase()));
