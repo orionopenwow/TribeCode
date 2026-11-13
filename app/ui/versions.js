@@ -114,5 +114,7 @@
   }
   const hook = () => { const c = C(); if (!c || !c.on) return setTimeout(hook, 300); c.on('ws', m => { if (el && m && m.type === 'versions' && m.project === st.pid) load(true); }); };
   hook();
+  // Esc closes it wherever focus is (opened from the palette or Ctrl K, focus is still outside the sheet)
+  document.addEventListener('keydown', e => { if (e.key === 'Escape' && el && !e.defaultPrevented && !el.contains(e.target)) close(); });
   window.TribeVersions = { open, close, isOpen: () => !!el };
 })();

@@ -114,6 +114,9 @@ def main():
             h.evaluate("TribeProfileMenu.open()"); h.wait_for_timeout(300)
             h.evaluate("(() => { const b = [...document.querySelectorAll('[data-pm], [data-act], button')].find(x => x.offsetParent && /^Notifications$/.test(x.innerText.trim())); b.click(); })()")
             h.wait_for_function("TribeSettings.isOpen() && TribeSettings.current() === 'notifications'", timeout=8000); h.evaluate("TribeSettings.close()")
+            # Versions opened from the palette (focus still outside the sheet) closes on Esc
+            h.evaluate("TribeShell.go('versions')"); h.wait_for_selector("#vr"); h.evaluate("document.activeElement && document.activeElement.blur()")
+            h.keyboard.press("Escape"); h.wait_for_selector("#vr", state="detached", timeout=4000)
             # no icon symbol is defined twice by chat's sprite
             h.evaluate("TribeShell.go('chat')"); h.wait_for_timeout(800)
             dup = h.evaluate("(() => { const n = {}; document.querySelectorAll('symbol[id]').forEach(s => n[s.id] = (n[s.id] || 0) + 1); return Object.keys(n).filter(k => n[k] > 1 && ['i-image', 'i-more', 'i-reply', 'i-smile', 'i-info'].includes(k)); })()")
