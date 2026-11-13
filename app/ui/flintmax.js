@@ -232,8 +232,8 @@
     const head = (g[0] || []).map(h => String(h || '').toLowerCase().trim()), r = String(ref || '').toLowerCase().trim().replace(/^(?:the|a|my)\s+/, '').replace(/\s+column$/, '');
     if (r && /^[a-z]{1,2}$/.test(r) && !head.includes(r)) { const i = L2I(r); if (i < width(g)) return i; }
     if (r) { let i = head.findIndex(h => h === r); if (i < 0) i = head.findIndex(h => h && (h.includes(r) || r.includes(h))); if (i < 0) i = head.findIndex(h => h && h.replace(/s$/, '') === r.replace(/s$/, '')); if (i >= 0) return i; }
-    if (sel && Number.isFinite(sel.c) && sel.c < width(g)) return sel.c;
-    const n = numCols(g); return n.length ? n[n.length - 1] : -1;
+    const n = numCols(g);
+    if (sel && Number.isFinite(sel.c) && sel.c < width(g) && n.includes(sel.c)) return sel.c; return n.length ? n[n.length - 1] : -1;
   }
   const fmt = (v, cur) => cur ? cur + (Math.round(v * 100) / 100).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : (Math.round(v * 100) / 100).toLocaleString('en-US');
   function aggregate(g, c, fn = 'sum') {
@@ -348,7 +348,7 @@
   // at = { p, x, y, w } (inside the selected frame or the middle of the view); nid() -> a new id; th = a palette's colors
   function recipe(kind, at, nid, th) {
     const k = th || palette({ mood: 'tech' }).light, W = Math.max(320, at.w || 390), out = [];
-    const N = (o) => { const n = Object.assign({ id: nid(), p: at.p || '', v: 1 }, o); out.push(n); return n; };
+    const N = (o) => { const n = Object.assign({ id: nid(), p: at.p || '', v: 1 }, o); if (n.stroke && !n.sw) n.sw = 1; out.push(n); return n; };
     const T = (p, x, y, w, c, s, wt, col, al) => N({ p, t: 'text', x, y, w, h: Math.round(s * 1.4), i: out.length, name: String(c).slice(0, 30), tx: { c, f: 'Inter', s, wt: wt || 400, lh: 1.4, al: al || 'left', col: col || k.ink }, sz: { h: 'fixed', v: 'hug' } });
     const box = (name, w, h, fill, r, extra) => N(Object.assign({ t: 'frame', x: at.x || 0, y: at.y || 0, w, h, fill, r: r || 0, clip: true, name, i: 0 }, extra || {}));
     const btn = (p, x, y, label, w = 120) => { const b = N({ p, t: 'frame', x, y, w, h: 40, fill: k.accent, r: 8, name: 'Button', i: out.length }); T(b.id, 12, 10, w - 24, label, 15, 600, k.on || '#FFFFFF', 'center'); return b; };
@@ -491,7 +491,83 @@
     recipe: () => ({ text: 'Navbar · footer · hero · sign-up form · login · card grid · pricing (middle plan highlighted) · sidebar · tab bar · dialog: each is real layers you can move.' }),
   };
 
-  return { palette, contrast, fixContrast, audit, toOklch, oklch, moodOf, MOODS, fontsFor, PAIRS, STYLES, styleOf, headlines, ctas, readability, syllables, titleCase, sentenceCase, tone,
+  const api = { palette, contrast, fixContrast, audit, toOklch, oklch, moodOf, MOODS, fontsFor, PAIRS, STYLES, styleOf, headlines, ctas, readability, syllables, titleCase, sentenceCase, tone,
     sheet: { col, aggregate, sort, currency, total, chartSpec, chartComment, readChart, chartSvg, numCols, dataRows, isNum, toNum, I2L, L2I, fmt },
     doc: { toc, checklist, caps, summary: summaryBlock }, pitch, recipe, gridOf, recolor, site, siteFacts, applyPalette, swatchHtml, DEMOS, SAMPLE_SHEET, SAMPLE_DOC };
+
+  // ---------- doing it in the app (browser only): the open sheet or deck, the open doc, and Flint's chat anywhere ----------
+  const NLU = () => (typeof module === 'object' && module.exports ? require('./flintnlu.js') : root && root.TribeNLU);
+  const C = () => root && root.TribeClient;
+  const on = () => { const c = C(); return !!(c && c.connected && c.connected()); };
+  // the text a pitch is made from: "the vision", a doc by name, "this" (the open doc)
+  async function sourceText(from) {
+    const f = String(from || '').toLowerCase().trim(), D = root && root.TribeDocs, cur = D && D.current && D.current();
+    if ((!f || /^(?:this|it)$/.test(f)) && cur && cur.kind !== 'deck' && cur.kind !== 'sheet') { const ta = root.document && root.document.querySelector('#doc-body'); return { text: ta ? ta.value : cur.body || '', from: `“${cur.title}”` }; }
+    const list = (D && D.list && D.list()) || [], want = f.replace(/\s+(?:doc|document|file|notes)$/, '');
+    const d = want && !/^vision$/.test(want) && list.find(x => String(x.title || '').toLowerCase().includes(want) && x.kind !== 'deck' && x.kind !== 'sheet');
+    if (d) { if (d.body) return { text: d.body, from: `“${d.title}”` }; if (on()) { try { const r = await C().api('/docs/' + encodeURIComponent(d.slug)); if (r && r.doc) return { text: r.doc.body || '', from: `“${d.title}”` }; } catch {} } }
+    if (on()) { try { const v = await C().api('/vision'); if (v && String(v.text || '').trim()) return { text: v.text, from: 'the vision' }; } catch {} }
+    return null;
+  }
+  async function craft(kind, text, body, opt = {}) {
+    const N = NLU(); if (!N) return null;
+    const P = N.parse(text, { view: kind === 'sheet' ? 'sheet' : 'deck', now: new Date() }), steps = (P.steps || []).filter(x => x.intent && x.conf >= 0.6);
+    if (!steps.length || steps.some(x => !/^(?:sheet\.|deck\.pitch$)/.test(x.intent))) return null;
+    if (kind === 'deck') {
+      const s0 = steps.find(x => x.intent === 'deck.pitch'); if (!s0) return null;
+      const src = await sourceText(s0.slots.from === 'this' ? 'vision' : s0.slots.from); if (!src) return { say: 'I could not find that text. Name a doc (“from the launch plan”) or write the vision first.' };
+      return { body: pitch(src.text, { n: s0.slots.n || 5, from: src.from }), say: `Made a ${s0.slots.n || 5}-slide pitch from ${src.from} (no AI): the strongest sentences, sorted into problem, what we’re building, the plan and the ask.` };
+    }
+    const Sh = root && root.TribeSheet; if (!Sh) return null;
+    const sh = Sh.parse(body); let g = sh.grid.map(r => r.slice()); const said = []; let changed = false;
+    if (!g.length) return { say: 'This sheet is empty. Put a header row and some numbers in first.' };
+    const head = c => String((g[0] || [])[c] || I2L(c));
+    for (const s of steps) {
+      const sl = s.slots || {};
+      if (s.intent === 'sheet.chart') { const sp = chartSpec(g, sl); if (!sp) { said.push('I need a column of numbers to chart.'); continue; } sh.post = (String(sh.post || '').replace(/\n?<!--\s*chart:[^>]*-->/g, '').trim() + '\n\n' + chartComment(sp)).trim(); changed = true; said.push(`Charted ${sp.title.toLowerCase()} (a ${sp.type} chart under the table).`); continue; }
+      if (s.intent === 'sheet.total') { const t = total(g); if (!t) { said.push('There are no rows to total.'); continue; } g = t.grid; changed = true; said.push(`Added a Total row with =SUM for ${t.cols.join(', ')}.`); continue; }
+      const c = col(g, sl.col, opt.sel); if (c < 0) { said.push('Which column? Click a cell in it, or say “column C”.'); continue; }
+      if (s.intent === 'sheet.sum') { const v = aggregate(g, c, sl.fn || 'sum'); said.push(v == null ? `${head(c)} has no numbers.` : `${{ sum: 'Sum', average: 'Average', min: 'Lowest', max: 'Highest', count: 'Count' }[sl.fn || 'sum']} of ${head(c)}: ${fmt(v)}.`); continue; }
+      if (s.intent === 'sheet.sort') { g = sort(g, c, sl.dir); changed = true; said.push(`Sorted by ${head(c)}, ${sl.dir === 'desc' ? 'highest first' : 'lowest first'} (the total stays at the bottom).`); continue; }
+      if (s.intent === 'sheet.format') { g = sl.fmt === 'percent' ? g.map((r, i) => i && isNum(r[c]) && !String(r[c]).includes('%') ? r.map((v, j) => j === c ? `${Math.round(toNum(v) * (toNum(v) <= 1 ? 100 : 1) * 10) / 10}%` : v) : r) : currency(g, c, sl.sym || '$'); changed = true; said.push(`${head(c)} shows as ${sl.fmt === 'percent' ? 'percentages' : `money (${sl.sym || '$'})`} now; formulas still add it up.`); continue; }
+    }
+    sh.grid = g; return { body: changed ? Sh.serialize(sh) : body, say: said.join(' ') || 'Done.' };
+  }
+  // the open doc: Markdown in #doc-body (Edit mode); every change is one Undo in Flint's list
+  function docEdit(fn, label, H) {
+    const ta = root.document && root.document.querySelector('#doc-body'); if (!ta) return { text: 'Open the doc in Edit mode first, then ask again.' };
+    const old = ta.value, a = ta.selectionStart, b = ta.selectionEnd, part = b > a ? old.slice(a, b) : old, r = fn(part);
+    if (!r || r.md == null || r.md === part) return { text: r && r.say ? r.say : 'Nothing to change.' };
+    const next = b > a ? old.slice(0, a) + r.md + old.slice(b) : r.md;
+    const put = v => { ta.value = v; ta.dispatchEvent(new Event('input', { bubbles: true })); };
+    put(next); if (H && H.pushUndo) H.pushUndo(label, () => put(old));
+    return { text: r.say };
+  }
+  const RUN = {
+    'design.palette': s => { const P = palette({ mood: s.slots.mood, color: s.slots.color && s.slots.color.hex, text: s.slots.text }); return { text: `${P.name} palette: ${P.swatches.map(x => `${x.key} ${x.hex}`).join(', ')}. Text ${contrast(P.colors.ink, P.colors.bg)}:1, muted ${contrast(P.colors.muted, P.colors.bg)}:1, accent ${contrast(P.colors.accent, P.colors.bg)}:1${P.fixes.length ? ` (I fixed ${P.fixes.length} to pass WCAG)` : ' (all pass WCAG AA)'}. In the website designer, say “${P.mood === 'custom' ? 'palette from ' + (s.slots.color || {}).hex : P.mood + ' palette'}” to use it.`, html: swatchHtml(P), acts: [['More palettes', 'flintpage', 'palette']] }; },
+    'design.fonts': s => { const F = fontsFor(s.slots.text || s.slots.mood); return { text: `${F.display} for headings with ${F.body} for text: ${F.why}. All open (SIL OFL) and built into the website designer.` }; },
+    'copy.titlecase': s => ({ text: titleCase(s.slots.text), acts: [] }),
+    'copy.headlines': s => { const about = String(s.slots.about || ''), kind = Object.keys(CTAS).find(k => about.includes(k)) || (/shop|store|candle|print|shirt/.test(about) ? 'merch' : /cafe|bakery|coffee|restaurant|food/.test(about) ? 'cafe' : /app|saas|software|startup/.test(about) ? 'saas' : /band|music/.test(about) ? 'band' : 'default'); const what = about.replace(/\b(?:shop|store|business|company|startup|page|site|website)\b/g, '').trim() || about; return { text: headlines({ name: cap(about), what: /s$/.test(what) ? what : what, kind }, 5).map(x => `• ${x}`).join('\n') + '\n(From templates, no AI. An AI writes ones that sound like you.)' }; },
+    'copy.cta': s => { const about = String(s.slots.about || ''), kind = Object.keys(CTAS).find(k => about.includes(k)) || (/cafe|bakery|coffee|restaurant/.test(about) ? 'cafe' : /yoga|studio|salon|plumb|clean|repair/.test(about) ? 'service' : /shop|store/.test(about) ? 'merch' : 'default'); return { text: `Start with a verb and say what happens next: ${ctas(kind).map(x => `“${x}”`).join(', ')}.` }; },
+    'copy.readability': s => { const R = readability(s.slots.text); return { text: `${R.label}: Flesch ${R.score}/100, about grade ${R.grade}. ${R.tips.join(' ')}` }; },
+    'deck.pitch': async (s, H) => {
+      const D = root.TribeDocs, cur = D && D.current && D.current();
+      if (cur && cur.kind === 'deck' && D.flintCraft) { const r = await D.flintCraft(s.text); if (r) return { text: r.say }; }
+      const src = await sourceText(s.slots.from); if (!src) return { text: 'I could not find that text. Name a doc (“from the launch plan”), open one, or write the vision first.' };
+      const body = pitch(src.text, { n: s.slots.n || 5, from: src.from }), title = `${(/^#\s+(.+)$/m.exec(body) || [])[1] || 'Our'} pitch`;
+      if (!D || !D.create) return { text: 'Docs did not load here.' };
+      if (root.TribeApp && root.TribeApp.show) root.TribeApp.show('docs');
+      await D.create(title, body, undefined, 'deck');
+      return { text: `Made “${title}”: ${s.slots.n || 5} slides from ${src.from}, with no AI (the strongest sentences sorted into a pitch). It is open in Files; ▶ Present when ready.` };
+    },
+    'doc.toc': (s, H) => docEdit(t => { const r = toc(t); return r ? { md: r.md, say: `Added a table of contents with ${r.n} heading${r.n === 1 ? '' : 's'}.` } : { say: 'The doc has no ## headings to list yet.' }; }, 'the table of contents', H),
+    'doc.checklist': (s, H) => docEdit(t => { const r = checklist(t); return r ? { md: r.md, say: `Turned ${r.n} line${r.n === 1 ? '' : 's'} into checkboxes.` } : { say: 'Nothing to turn into a checklist.' }; }, 'the checklist', H),
+    'doc.caps': (s, H) => docEdit(t => { const r = caps(t); return { md: r.md, say: r.n ? `Fixed the capitals on ${r.n} line${r.n === 1 ? '' : 's'}: sentence starts, “I”, days and months, and Title Case headings.` : 'The capitals already look right.' }; }, 'the capitals', H),
+    'doc.summary': (s, H) => docEdit(t => { const r = summaryBlock(t); return r ? { md: r.md, say: `Added a TL;DR at the top (picked from your own sentences, no AI): ${r.text}` } : { say: 'Nothing to sum up yet.' }; }, 'the TL;DR', H),
+    'doc.readability': () => { const ta = root.document && root.document.querySelector('#doc-body'), cur = root.TribeDocs && root.TribeDocs.current && root.TribeDocs.current(); const R = readability(ta ? ta.value : cur ? cur.body : ''); return { text: `${R.label}: Flesch ${R.score}/100, about grade ${R.grade}, ${R.words} words, ${R.avg} per sentence. ${R.tips.join(' ')}` }; },
+  };
+  ['sheet.sum', 'sheet.sort', 'sheet.format', 'sheet.total', 'sheet.chart'].forEach(id => { RUN[id] = async s => { const D = root.TribeDocs; const r = D && D.flintCraft ? await D.flintCraft(s.text) : null; return { text: r ? r.say : 'Open a sheet first, then ask again.' }; }; });
+  Object.assign(api, { craft, sourceText, has: id => Object.prototype.hasOwnProperty.call(RUN, id), run: (s, H) => RUN[s.intent](s, H) });
+
+  return api;
 });

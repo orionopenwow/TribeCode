@@ -725,6 +725,7 @@
   function sheetCol(c, r) {
     let m = /\bcol(?:umn)?\s+([a-z]{1,2})\b(?!\s+(?:column|row))/i.exec(r); if (m && !/^(?:of|in|is|by|to|as|at|on)$/i.test(m[1])) return m[1].toUpperCase();
     m = /\b(?:the|my)\s+([a-z][a-z ]{1,24}?)\s+col(?:umn)?s?\b/i.exec(r); if (m && !/^(?:this|that|last|first|next|whole)$/i.test(m[1])) return m[1].toLowerCase();
+    m = /\b(?:format|show|make|display|turn|put)\s+(?:the\s+|all\s+(?:the\s+)?)?([a-z][a-z ]{1,20}?)\s+(?:as|in|into)\s+(?:currency|money|dollars?|euros?|pounds?|percent|percentages?|%)/i.exec(r); if (m && !/^(?:this|it|them|column|everything|numbers|values|cells)$/i.test(m[1].trim())) return m[1].trim().toLowerCase();
     m = /\b(?:add up|sum up|tally up|total up|sum|total|average|avg)\s+(?:of\s+)?(?:the\s+|all\s+(?:the\s+)?)([a-z][a-z ]{1,24}?)(?:\s+column)?$/i.exec(r); if (m && !/^(?:this|it|them|column)$/i.test(m[1].trim())) return m[1].trim().toLowerCase();
     m = /\b(?:of|for)\s+(?:the\s+|all\s+(?:the\s+)?)?([a-z][a-z ]{1,24}?)(?:\s+column)?(?:\s+by\b|$|[?.,])/i.exec(r); if (m && !/^(?:this|it|them|that|these|everything|column|the column|rows?)$/i.test(m[1].trim())) return m[1].trim().toLowerCase();
     return '';
@@ -801,7 +802,7 @@
       }
     }
     // ---- anywhere ----
-    if (!view && !/^(?:sheet|doc|deck)$/.test(v || '')) {
+    if (!view) {
       let m;
       if (PAL.test(c) && (mood || hex || /\b(?:show|make|give|generate|suggest|need|want|create)\b/.test(c))) return H('design.palette', { ...(mood ? { mood } : {}), ...(hex ? { color: { name: '', hex: hex.toLowerCase() } } : {}), text: r }, 0.975);
       if (/\b(?:fonts?|typefaces?)\b/.test(c) && /\b(?:pair|pairs|pairing|go (?:well )?together|match|for (?:a|an|my|our)|that (?:feel|look)|feel|look)\b/.test(c)) return H('design.fonts', { mood: fontWord(c) || 'modern', text: r }, 0.975);
