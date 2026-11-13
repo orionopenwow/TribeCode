@@ -5,7 +5,7 @@ and a next step on every screen (no dead ends).
 
   1. Fresh install: Home -> Create a project -> Create my own -> name -> Create (double-clicked: one project) ->
      the invite sheet shows a link.
-  2. Set up (4 steps): the vision (category chip + the gist), a first task, Create the repo, Make the starter ->
+  2. Set up (5 steps): the vision (category chip + the gist), a first task, Where it lives → here on the host, Make the starter ->
      Preview.
   3. The friend opens the invite link on a phone (390), types a name, joins, skips Add to Home Screen.
   4. Chat: the host makes a channel (double-clicked Save: one channel); the friend posts a link and a picture there.
@@ -220,7 +220,7 @@ def main():
             host.evaluate("TribeApp.show('home')"); host.wait_for_selector("#pj-check", timeout=15000)
             shot(host, "04-dashboard"); audit(host, "dashboard (new)"); no_dead_end(host, "dashboard")
             steps = host.eval_on_selector_all("#pj-check .ock-row", "els => els.map(e => e.dataset.step)")
-            assert steps == ["vision", "task", "claude", "repo"], steps
+            assert steps == ["vision", "task", "claude", "home", "share"], steps
             host.click("#pj-check [data-ck=vision]"); host.wait_for_selector("#av-cats .av-cat")
             # reload mid-flow: the composer is gone, nothing is half-saved, the checklist is still there
             host.reload(); host.wait_for_function("window.TribeClient && TribeClient.connected()", timeout=20000)
@@ -236,14 +236,14 @@ def main():
             host.wait_for_function("TribeTasks.all().some(t => t.title === 'Light the first lantern')", timeout=10000)
             host.keyboard.press("Escape")
             host.evaluate("TribeApp.show('home')")
-            if host.locator("#pj-check [data-ck=repo]").count():
-                host.dblclick("#pj-check [data-ck=repo]")
-                host.wait_for_selector("#pj-check [data-step=repo].on, #pj-check.done", timeout=25000)
+            if host.locator("#pj-check [data-ck=home]").count():   # feat/folder-sync: where it lives = the living repo
+                host.click("#pj-check [data-ck=home]"); host.wait_for_selector("#lr-where [data-w=host]"); host.click("#lr-where [data-w=host]")
+                host.wait_for_selector("#pj-check [data-step=home].on, #pj-check.done", timeout=25000)
             host.wait_for_selector("#su-starter", timeout=15000); host.wait_for_timeout(400)
             shot(host, "06-starter"); audit(host, "dashboard (starter)")
             host.click("#su-starter")
-            host.wait_for_selector("#su-preview", timeout=25000)
-            host.click("#su-preview")
+            host.wait_for_selector("#su-preview", state="attached", timeout=25000); host.wait_for_timeout(600)
+            if not host.evaluate("document.body.classList.contains('pvw-focus')"): host.click("#su-preview")   # Make the starter opens the preview by itself (setup.js); click only if it didn't
             host.wait_for_function("(() => { const p = document.querySelector('#preview-pane'); return (p && p.offsetParent) || !!document.querySelector('iframe[src*=preview]'); })()", timeout=15000)
             shot(host, "07-preview"); audit(host, "preview")
             host.keyboard.press("Escape")

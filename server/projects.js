@@ -73,6 +73,7 @@ module.exports = function projects({ store, tribe, slug, defaultRepo }) {
     if (typeof patch.bio === 'string') { const b = patch.bio.replace(/\s+/g, ' ').trim().slice(0, 200); if (b) p.bio = b; else delete p.bio; }
     if (patch.repo !== undefined) p.repo = patch.repo;
     if (patch.workspace !== undefined) p.workspace = !!patch.workspace;
+    if (patch.folder !== undefined) { if (patch.folder) p.folder = patch.folder; else delete p.folder; }   // feat/folder-sync: a folder on the host is the project's home (server/folderhome.js)
     if (typeof patch.hidden === 'boolean') { if (patch.hidden) p.hidden = true; else delete p.hidden; }
     if (typeof patch.huddleSummary === 'boolean') { if (patch.huddleSummary) p.huddleSummary = true; else delete p.huddleSummary; }   // server/huddlesum.js
     save(); return p;
@@ -153,7 +154,7 @@ module.exports = function projects({ store, tribe, slug, defaultRepo }) {
     return n;
   }
 
-  const view = (p, extra = {}) => p && ({ id: p.id, name: p.name, emoji: p.emoji || '', image: p.image || null, bio: p.bio || '', color: p.color, channel: p.channel, hasRepo: !!p.repo, workspace: !!p.workspace, huddleSummary: !!p.huddleSummary,
+  const view = (p, extra = {}) => p && ({ id: p.id, name: p.name, emoji: p.emoji || '', image: p.image || null, bio: p.bio || '', color: p.color, channel: p.channel, hasRepo: !!p.repo, workspace: !!p.workspace, hasFolder: !!p.folder, huddleSummary: !!p.huddleSummary,
     members: Object.entries(p.members || {}).map(([id, role]) => ({ id, role })), created: p.created, default: p.id === defaultId(), ...extra });
 
   const reload = () => { list = store.readJSON(FILE, []); ensureFirst(); };   // cloud save put the files back

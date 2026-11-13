@@ -2,8 +2,9 @@
 // welcome's "Start my real tribe", Settings, the phone's projects sheet, Files' "move to a tribe", Flint and the Work
 // page (they all call TribeProjects.openNew or TribeLocalSetup.start, which land here).
 //   1. Name and icon.
-//   2. Where it lives (the same homes as setuplocal's "Where should it live?"): This device · This computer hosts it ·
-//      Free cloud · GitHub, each with a plain line and a recommended default for this platform. Inside a tribe you
+//   2. Where it lives, its living repo (feat/folder-sync): A folder on this computer · This device only · Free cloud ·
+//      GitHub repo, each with a plain line and a recommended default (the folder on the desktop app; off with a reason on
+//      a phone or the public website). GitHub can also be connected later to any of the others (livingrepo.js). Inside a tribe you
 //      already have, the new one lives with it (or clones a GitHub repo there).
 //   3. Invite friends (optional): a real link once something hosts it; Skip is always there.
 //   Done: you land in the new tribe's Dashboard with a "Start your first project" card.
@@ -33,26 +34,33 @@
   const STEPS = ['Name', 'Home', 'Friends'];
 
   // ---------- where it can live ----------
+  // feat/folder-sync: the home is the living repo. "A folder on this computer" (this computer hosts it, the files live
+  // in your folder) is the desktop's pick; GitHub is also a synced copy any home can connect later (livingrepo.js).
+  const folderOk = () => (window.TribeHome && window.TribeHome.canPickFolder ? window.TribeHome.canPickFolder() : { ok: false, why: 'Folders need the TribeCode app on your computer.' });
   function homes() {
     if (inTribe()) {
       const t = ((C().state && C().state()) || {}).tribe || {}, tn = t.name || 'your tribe';
       return [
         { k: 'tribe', icon: 'users', t: `With ${tn}`, s: solo() ? 'On this device, next to your other projects. Pick a home for them any time' : 'Where your tribe already lives. Everyone in it can see it right away' },
+        ...(solo() || !folderOk().ok || !isHostHere() ? [] : [{ k: 'folder', icon: 'folder', t: 'A folder on this computer', s: 'With your tribe, its files in a folder of yours: edit here or in VS Code, both stay in step' }]),
         ...(solo() ? [] : [{ k: 'github', icon: 'git', t: 'From a GitHub repo', s: 'Bring code you already have: the tribe keeps a copy and works on it with you' }]),
+        ...(solo() || !folderOk().ok || !isHostHere() ? [] : [{ k: 'shared', icon: 'net', t: 'A shared folder', s: 'Share or join through a Dropbox, OneDrive, Drive, iCloud, NAS or Syncthing folder you already sync' }]),
       ];
     }
+    const f = folderOk();
     return [
-      { k: 'device', icon: 'spark', t: phone() ? 'This phone' : 'This device', s: 'Starts right away and works offline. Only you see it until you give it a home' },
-      { k: 'computer', icon: 'box', t: 'This computer hosts it', s: desktop() ? 'The desktop app keeps it online while this computer is on. Friends join with a link' : 'The TribeCode app or server on this computer keeps it online. Friends join with a link' },
-      { k: 'cloud', icon: 'net', t: 'Free cloud', s: 'Always online on a free Render server, even when your computer is off' },
-      { k: 'github', icon: 'git', t: 'A GitHub repo', s: 'Anyone can see the live repo and suggested changes. No server needs to stay on' },
+      { k: 'folder', icon: 'folder', t: 'A folder on this computer', s: f.ok ? 'Your own folder holds the files; this computer hosts it and friends join with a link. Edit here or in VS Code' : f.why, off: !f.ok },
+      { k: 'device', icon: 'spark', t: phone() ? 'This phone only' : 'This device only', s: 'Starts right away and works offline. Only you see it until you give it a home' },
+      { k: 'cloud', icon: 'zap', t: 'Free cloud', s: 'Always online on a free Render server, even when your computer is off' },
+      { k: 'github', icon: 'git', t: 'GitHub repo', s: 'Anyone can see the live repo and suggested changes. No server needs to stay on', note: 'You can also connect GitHub later to any of the others.' },
+      { k: 'shared', icon: 'net', t: 'A shared folder', s: f.ok ? 'A Dropbox, OneDrive, Google Drive, iCloud, NAS or Syncthing folder you already sync holds a shared copy. No account; friends with it join from it' : f.why, off: !f.ok },
     ];
   }
-  // The recommended home: the tribe you are in; the desktop app or a page its server serves hosts; else this device.
+  const isHostHere = () => { const m = ((C() && C().state && C().state()) || {}).me || {}; return m.role === 'host'; };
+  // The recommended home: the tribe you are in; a folder on the desktop app (or a page its own server serves); else this device.
   function recommended() {
     if (inTribe()) return 'tribe';
-    if (desktop()) return 'computer';
-    if (!phone() && !staticWeb()) return 'computer';
+    if (folderOk().ok && (desktop() || (!phone() && !staticWeb()))) return 'folder';
     return 'device';
   }
 
@@ -120,12 +128,13 @@
         <p class="tn-err" id="tn-err" role="status" hidden></p>
         <div class="ph-acts"><button type="button" class="btn" id="tn-cancel">Cancel</button><button class="btn primary" id="tn-next" type="submit">Next</button></div>
       </form>
-      <p class="ph-foot">${host ? '<button type="button" class="linkish" id="tn-more">Start from an idea, a template or my code</button><span aria-hidden="true">·</span>' : ''}<button type="button" class="linkish" id="tn-join">Join a friend’s tribe instead</button></p>`;
+      <p class="ph-foot">${host ? '<button type="button" class="linkish" id="tn-more">Start from an idea, a template or my code</button><span aria-hidden="true">·</span>' : ''}<button type="button" class="linkish" id="tn-join">Join a friend’s tribe instead</button>${folderOk().ok ? '<span aria-hidden="true">·</span><button type="button" class="linkish" id="tn-join-shared">Join from a shared folder</button>' : ''}</p>`;
     const n = $('#tn-name', el);
     n.oninput = () => { st.name = n.value; err(''); };
     el.querySelectorAll('[data-tn-emo]').forEach(b => b.onclick = () => { st.emoji = b.dataset.tnEmo; el.querySelectorAll('[data-tn-emo]').forEach(x => x.setAttribute('aria-checked', String(x === b))); });
     $('#tn-cancel', el).onclick = () => close();
     $('#tn-join', el).onclick = () => { close(true); window.TribeSettings && window.TribeSettings.joinPrompt && window.TribeSettings.joinPrompt(); };
+    const js = $('#tn-join-shared', el); if (js) js.onclick = () => { st.name = n.value.trim() || 'Shared tribe'; st.where = 'shared'; st.step = 2; draw(); };
     const more = $('#tn-more', el); if (more) more.onclick = () => { close(true); PJ().gallery(); };
     $('#tn-f1', el).onsubmit = e => {
       e.preventDefault(); st.name = n.value.trim();
@@ -140,9 +149,9 @@
     const list = homes(), rec = recommended(), done = st.created;
     if (!list.some(h => h.k === st.where)) st.where = rec;
     el.innerHTML = `${head('Where it lives', done ? `${st.name} is ready` : `Where should ${st.name} live?`)}
-      <p class="ph-lead">${done ? 'It already has a home. You can move it any time from its settings.' : 'Pick one. You can move it later, nothing is lost.'}</p>
-      <div class="tn-where" role="radiogroup" aria-label="Where it lives">${list.map(h => `<button type="button" class="ph-row tn-row" role="radio" data-tn-where="${h.k}" aria-checked="${h.k === st.where}"${done ? ' disabled' : ''}>
-        <span class="ph-ic">${ic(h.icon)}</span><span class="ph-tt"><b>${esc(h.t)}${h.k === rec ? ' <em class="ph-tag">Recommended</em>' : ''}</b><small>${esc(h.s)}</small></span><span class="tn-dot" aria-hidden="true"></span></button>`).join('')}</div>
+      <p class="ph-lead">${done ? 'It already has a home. You can move it any time from the pill at the top.' : 'Its home is its living repo. Pick one; you can move it later and nothing is lost.'}</p>
+      <div class="tn-where" role="radiogroup" aria-label="Where it lives">${list.map(h => `<button type="button" class="ph-row tn-row" role="radio" data-tn-where="${h.k}" aria-checked="${h.k === st.where}"${done || h.off ? ' disabled' : ''}${h.off ? ' data-off="1"' : ''}>
+        <span class="ph-ic">${ic(h.icon)}</span><span class="ph-tt"><b>${esc(h.t)}${h.k === rec ? ' <em class="ph-tag">Recommended</em>' : ''}</b><small>${esc(h.s)}</small>${h.note ? `<small class="tn-later">${esc(h.note)}</small>` : ''}</span><span class="tn-dot" aria-hidden="true"></span></button>`).join('')}</div>
       <div class="tn-more-box" id="tn-detail"></div>
       <div class="tn-prog-line" id="tn-run" role="status" aria-live="polite" hidden><span class="su-spin" aria-hidden="true"></span><span id="tn-run-t"></span></div>
       <p class="tn-err" id="tn-err" role="status" hidden></p>
@@ -157,7 +166,15 @@
     const box = $('#tn-detail', el); if (!box) return;
     if (st.created) { box.innerHTML = ''; return; }
     const w = st.where;
-    if (w === 'github') {
+    if (w === 'folder') {
+      box.innerHTML = `<div id="tn-folder"></div>${inTribe() ? '' : '<p class="ph-note">Optional: skip it and the tribe keeps the files in TribeCode’s own folder on this computer. Pick a folder any time from the pill at the top.</p>'}`;
+      if (window.TribeHome) window.TribeHome.pickFolder({ mount: $('#tn-folder', box), onChange: c => { st.folder = c; err(''); const go = $('#tn-go', el); if (go && !st.created) go.textContent = c && c.summary && !c.summary.empty ? 'Use what’s here' : 'Create'; } });
+      if (st.folder) { /* a choice made before Back: the picker asks again (it re-checks the folder) */ st.folder = null; }
+    } else if (w === 'shared') {
+      box.innerHTML = `<p class="ph-note tn-note">Pick the folder your sync app keeps (Dropbox, OneDrive, Google Drive, iCloud, a NAS or Syncthing). Shared copies already in it can be joined; otherwise a new one starts there.</p><div id="tn-folder"></div>`;
+      if (window.TribeHome) window.TribeHome.pickFolder({ shared: true, mount: $('#tn-folder', box), onChange: c => { st.shared = c; err(''); const go = $('#tn-go', el); if (go && !st.created) go.textContent = c && c.join ? 'Join it' : 'Create'; } });
+      st.shared = null;
+    } else if (w === 'github') {
       box.innerHTML = `<label class="ph-lab" for="tn-repo">Repository</label><input class="input" id="tn-repo" placeholder="owner/name or https://github.com/owner/name" spellcheck="false" value="${esc(st.repo || '')}">
         ${inTribe() ? '' : `<details class="su-more"><summary>Token to write suggestions <span class="su-opt">optional</span></summary><input class="input" id="tn-tok" type="password" autocomplete="off" placeholder="github_pat_…" aria-label="GitHub token">
         <p class="ph-note">Without one, the tribe shows the live repo read-only. A token stays on this device only.</p></details>`}`;
@@ -175,7 +192,7 @@
   const running = t => { const r = $('#tn-run', el); if (!r) return; r.hidden = !t; const x = $('#tn-run-t', el); if (x) x.textContent = t || ''; };
   function busy(on) {
     st.busy = on; if (!el) return;
-    el.querySelectorAll('#tn-go, #tn-b2, [data-tn-where], #tn-detail input').forEach(b => { b.disabled = on; });
+    el.querySelectorAll('#tn-go, #tn-b2, [data-tn-where]:not([data-off]), #tn-detail input, #tn-detail button').forEach(b => { b.disabled = on; });
     const back = $('#tn-back', el); if (back) back.hidden = on;
   }
   const parseRepo = v => { const m = String(v || '').trim().replace(/\.git$/, '').match(/(?:github\.com[/:])?([\w.-]+)\/([\w.-]+)\/?$/); return m ? `${m[1]}/${m[2]}` : ''; };
@@ -192,13 +209,19 @@
     let inv = null;
     if (w === 'cloud') { inv = A() && A().parseInvite ? A().parseInvite(st.cloud || '') : null; if (!inv) { err('Paste the whole invite link from your cloud tribe, like https://…/join/abc12.'); const c = $('#tn-cloud', el); if (c) c.focus(); return; } }
     if (w === 'computer' && !desktop() && staticWeb()) { err('This needs the TribeCode app on this computer. Start on this device for now and move it later.'); return; }
+    if ((w === 'folder' || w === 'shared') && !folderOk().ok) { err(folderOk().why); return; }
+    if (w === 'shared' && !(st.shared && st.shared.path)) { err('Pick the shared folder first.'); return; }
+    if (w === 'folder' && inTribe() && !(st.folder && st.folder.path)) { err('Pick the folder first: an empty one starts fresh, one with files keeps them.'); return; }
+    // A first tribe with no folder picked yet: this computer hosts it in TribeCode's own folder; a folder can come later (the pill).
     busy(true);
     try {
-      if (w === 'tribe' || (w === 'github' && inTribe())) {
+      if (w === 'tribe' || (w === 'github' && inTribe()) || ((w === 'folder' || w === 'shared') && inTribe())) {
         running('Making it…');
         const body = { name: st.name, emoji: st.emoji, ...(w === 'github' ? { url: `https://github.com/${repo}` } : {}) };
         const r = await C().api('/projects', { method: 'POST', body });
         const p = r.project || r; st.created = { where: w, pid: p.id, server: (S().get().server || {}).url, repo };
+        if (w === 'folder') { running('Setting up the folder…'); await C().api(`/projects/${encodeURIComponent(p.id)}/folder`, { method: 'PUT', body: { path: st.folder.path, gitInit: st.folder.gitInit } }).catch(e => toast(`${st.name} is made, but the folder didn’t take: ${e.message} Pick it again from the pill at the top.`)); }
+        if (w === 'shared') { running(st.shared.join ? 'Joining the shared copy…' : 'Starting the shared copy…'); await window.TribeHome.connectShared(p.id, st.shared, (path, o) => C().api(path, o)).catch(e => toast(`${st.name} is made, but the shared folder didn’t take: ${e.message}`)); }
         if (PJ() && PJ().refresh) await PJ().refresh();
       } else {
         running(w === 'device' ? 'Making it on this device…' : 'Making it on this device first…');
@@ -209,11 +232,22 @@
           const tok = ($('#tn-tok', el) || {}).value || undefined;
           const r = await L().github.connect(repo, tok && tok.trim() ? tok.trim() : undefined);
           st.created = { where: w, pid: L().pid(), repo, url: (r.live && r.live.url) || `https://github.com/${repo}` };
-        } else if (w === 'computer') {
+        } else if (w === 'computer' || w === 'folder' || w === 'shared') {
           const r = await L().host.computer({ step: running, noReload: true });
           if (r && r.noApp) throw Object.assign(new Error('TribeCode isn’t running on this computer. Your tribe is safe on this device; get the app to host it, or pick This device.'), { soft: true, keep: 'device' });
           if (r && r.alreadyTribe) throw Object.assign(new Error('This computer already hosts a tribe. Ask its host for an invite link and pick Free cloud’s link box, or keep it on this device.'), { soft: true, keep: 'device' });
           st.created = { where: w, server: r.server, token: r.token, pid: ((r.projects || [])[0] || {}).id, reload: true };
+          if (w === 'folder' && st.created.pid && st.folder && st.folder.path) {
+            running('Setting up the folder…');
+            const fr = await realFetch(`${r.server}/api/projects/${encodeURIComponent(st.created.pid)}/folder`, { method: 'PUT', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + r.token }, body: JSON.stringify({ path: st.folder.path, gitInit: st.folder.gitInit }) });
+            if (!fr.ok) { const fd = await fr.json().catch(() => ({})); toast(`Your tribe is ready on this computer, but the folder didn’t take: ${fd.error || fr.status}. Pick it again from the pill at the top.`); }
+            else st.created.folder = (await fr.json().catch(() => ({}))).folder;
+          }
+          if (w === 'shared' && st.created.pid) {
+            running(st.shared.join ? 'Joining the shared copy…' : 'Starting the shared copy…');
+            const call = async (path, o) => { const x = await realFetch(`${r.server}/api${path}`, { method: o.method, headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + r.token }, body: JSON.stringify(o.body) }); const d = await x.json().catch(() => ({})); if (!x.ok) throw new Error(d.error || x.status); return d; };
+            await window.TribeHome.connectShared(st.created.pid, st.shared, call).catch(e => toast(`Your tribe is ready on this computer, but the shared folder didn’t take: ${e.message}. Try again from the pill at the top.`));
+          }
         } else if (w === 'cloud') {
           running('Joining your cloud tribe…');
           const me = S().get(), nm = me.name && me.name !== 'Me' ? me.name : 'Host';
@@ -239,7 +273,9 @@
     if (c.server && c.token) {
       const r = await realFetch(`${c.server}/api/invites`, { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + c.token }, body: JSON.stringify({ hours: 72, maxUses: 10, role: 'builder' }) });
       const d = await r.json().catch(() => ({})); if (!r.ok || !d.invite) throw new Error(d.error || 'Couldn’t make a link right now.');
-      return `${c.server}/join/${d.invite.code}`;
+      let base = c.server;   // Share on this network: a host on this computer gives friends its Wi-Fi address, not localhost
+      if (/^https?:\/\/(localhost|127\.0\.0\.1|\[::1\])(:|\/|$)/.test(base)) { try { const h = await (await realFetch(`${c.server}/api/health`)).json(); const l = (h.lan || []).find(x => x.kind === 'lan'); if (l) { base = l.url; st.lan = true; } } catch {} }
+      return `${String(base).replace(/\/+$/, '')}/join/${d.invite.code}`;
     }
     if (inTribe() && !solo()) {
       const d = await C().api('/invites', { method: 'POST', body: { hours: 72, maxUses: 10, role: 'builder', ...(c.pid ? { project: c.pid } : {}) } });
@@ -252,7 +288,7 @@
     const c = st.created || {};
     const hosted = !!(c.server && c.token) || (inTribe() && !solo());
     el.innerHTML = `${head('Invite friends · optional', 'Who’s building with you?')}
-      ${hosted ? `<p class="ph-lead">Send this link. Anyone with it can join ${esc(st.name)} for the next 3 days.</p>
+      ${hosted ? `<p class="ph-lead">Send this link. Anyone with it can join ${esc(st.name)} for the next 3 days.${c.where === 'folder' || c.where === 'computer' || c.where === 'shared' ? ' It works for friends on this network (Wi-Fi) while this computer runs TribeCode; to work with friends anywhere, connect GitHub or a shared folder from the pill at the top.' : ''}</p>
         <div class="su-cmd tn-link"><input class="input" id="tn-link" readonly value="" placeholder="Making a link…" aria-label="Invite link"><button type="button" class="btn" id="tn-copy" disabled>Copy</button></div>`
       : c.where === 'github' ? `<p class="ph-lead">Friends can follow it on GitHub right away. To build together live, give it a host later (This computer or Free cloud).</p>
         <div class="su-cmd tn-link"><input class="input" id="tn-link" readonly value="${esc(c.url || '')}" aria-label="Repository link"><button type="button" class="btn" id="tn-copy">Copy</button></div>`
@@ -271,7 +307,7 @@
     lsSet(CARD, JSON.stringify({ pid: c.pid || null, name, at: Date.now() }));
     close();
     if (c.reload) {   // a new host: this device signs in to it on the next load
-      S().set({ server: { url: c.server, token: c.token }, hosting: c.where === 'computer' && desktop(), name: S().get().name });
+      S().set({ server: { url: c.server, token: c.token }, hosting: ['computer', 'folder', 'shared'].includes(c.where) && desktop(), name: S().get().name });
       try { if (c.pid) localStorage.setItem('tribecode.project:' + c.server, c.pid); sessionStorage.setItem('tribecode.view', 'home'); } catch {}
       if (OFF() && OFF().forget) try { OFF().forget(); } catch {}
       setTimeout(() => location.reload(), reduced() ? 0 : 180);

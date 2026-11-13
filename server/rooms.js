@@ -15,7 +15,7 @@
 const fs = require('node:fs');
 const path = require('node:path');
 
-module.exports = function rooms({ P, W, store, brain = null, getMembers, saveMembers, isLocal, presenceFor, loadTasks, hubFor, resetHub, plan, approvals, docs, broadcast, postChat, nameOf, str, perms = null }) {
+module.exports = function rooms({ checkFolder = null, watchFolder = null, P, W, store, brain = null, getMembers, saveMembers, isLocal, presenceFor, loadTasks, hubFor, resetHub, plan, approvals, docs, broadcast, postChat, nameOf, str, perms = null }) {
   const err = (status, msg) => Object.assign(new Error(msg), { status });
   const host = me => me && me.role === 'host';
   const can = (me, cap, pid) => (perms ? perms.can(me, cap, pid) : host(me));   // feat/roles (server/perms.js)
@@ -44,12 +44,14 @@ module.exports = function rooms({ P, W, store, brain = null, getMembers, saveMem
     const name = str(body.name, 48);
     if (body.path) {
       if (!isLocal(req)) throw err(403, 'local paths only work on the host machine itself');
-      const abs = path.resolve(String(body.path).replace(/^~(?=$|\/|\\)/, require('node:os').homedir()));
+      let abs = path.resolve(String(body.path).replace(/^~(?=$|\/|\\)/, require('node:os').homedir()));
+      let home = false;   // feat/folder-sync: the same path safety as a folder home; a folder that passes it all becomes the project's home
+      if (checkFolder) { try { abs = checkFolder(String(body.path), { legacy: true }).real; } catch (e) { throw err(400, e.message); } try { checkFolder(abs); home = true; } catch {} }
       const d = await W.describe(abs);
       if (!d.exists) throw err(400, d.error === 'not a folder' ? 'That path is a file, not a folder' : 'No folder at that path on the host');
       const dup = P.all().find(p => p.repo && path.resolve(p.repo) === abs);
       if (dup) return { project: dup, existed: true, needsGit: !d.git };
-      const p = P.create({ name: name || d.name, emoji: body.emoji, by: me.id, repo: abs });
+      const p = P.create({ name: name || d.name, emoji: body.emoji, by: me.id, repo: abs }); if (home) { P.update(p.id, { folder: abs }); if (watchFolder) watchFolder(p.id); }
       if (!d.git && body.init) await W.makeRepo(abs, me);
       return { project: p, needsGit: !W.isRepo(abs), remote: d.remote };
     }

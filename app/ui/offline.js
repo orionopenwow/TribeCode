@@ -1346,7 +1346,7 @@
     if (solo()) pill.classList.add('solo');
     pill.title = wt ? 'A demo that plays by itself in this tab. Exit returns to your own app.' : sc ? 'Showcase: a pretend tribe that runs by itself' : solo() ? 'On this phone only: friends can join once it moves to a host' : 'Offline demo: nothing leaves this device';
     pill.innerHTML = wt ? '<span class="od-dot" aria-hidden="true"></span><span class="od-l">Demo</span><span class="od-s"> · See how TribeCode works</span>' : sc ? '<span class="od-dot" aria-hidden="true"></span><span class="od-l">Showcase</span><span class="od-s"> · pretend tribe</span><span class="sc-state" id="sc-pill-state"></span>'
-      : solo() ? (phoneLike() ? '<span class="od-dot" aria-hidden="true"></span><span class="od-l">On this phone</span><span class="od-s"> · move to a host for friends</span>' : `<span class="od-dot" aria-hidden="true"></span><span class="od-l">On this device</span><span class="od-s"> · ${(db.homes && Object.values(db.homes).some(h => h && h.github)) ? 'live on GitHub' : 'choose where it lives'}</span>`)
+      : solo() ? (phoneLike() ? '<span class="od-dot" aria-hidden="true"></span><span class="od-l">On this phone</span><span class="od-s"> · move to a host for friends</span>' : (db.homes && Object.values(db.homes).some(h => h && h.github)) ? '<span class="od-dot" aria-hidden="true"></span><span class="od-l">On this device + GitHub</span><span class="od-s"> · mirrored</span>' : '<span class="od-dot" aria-hidden="true"></span><span class="od-l">On this device</span><span class="od-s"> · choose where it lives</span>')
       : '<span class="od-dot" aria-hidden="true"></span><span class="od-l">Offline demo</span><span class="od-s"> · nothing leaves this device</span>';
     place();
     pill.onclick = e => { e.stopPropagation(); pop ? closePop() : openPop(); };
@@ -1373,14 +1373,22 @@
       pop = document.createElement('div'); pop.className = 'od-pop'; pop.id = 'demo-pop'; pop.setAttribute('role', 'dialog'); pop.setAttribute('aria-label', phoneLike() ? 'On this phone' : 'On this device');
       const dev = phoneLike() ? 'this phone' : 'this device', p0 = db.projects[0] || {}, gh = ((db.homes || {})[p0.id] || {}).github;
       pop.innerHTML = `<header><span class="od-dot" aria-hidden="true"></span><div><span class="eyebrow">On ${dev} only</span><b>${esc(p0.name && p0.name !== 'My first project' ? p0.name : db.tribe.name)} lives on ${dev}</b></div></header>
-        <p>It's real: tasks, notes, docs and chat are kept here and survive reloads. ${gh ? `It is mirrored to <b>${esc(gh.repo)}</b> on GitHub, so anyone can see the live repo and the suggested changes.` : 'Choose where it lives (a GitHub repo, this computer, a free cloud or a phone) and friends can join.'}</p>
+        <p>It's real: tasks, notes, docs and chat are kept here and survive reloads. ${gh ? `It is mirrored to <b>${esc(gh.repo)}</b> on GitHub, so anyone can see the live repo and the suggested changes.` : `Choose where it lives (${phoneLike() ? 'a GitHub repo, a computer, a free cloud or a phone' : 'a folder on this computer, a free cloud or a phone, with GitHub as a synced copy'}) and friends can join.`}</p>
         <div class="od-acts">
+          ${!phoneLike() && window.TribeHome ? `<button id="od-folder"${window.TribeHome.canPickFolder().ok ? '' : ` aria-disabled="true" title="${esc(window.TribeHome.canPickFolder().why)}"`}><svg class="i"><use href="#i-folder"/></svg><span>Move to a folder</span></button>` : ''}
           <button id="od-move"><svg class="i"><use href="#i-zap"/></svg><span>${window.TribeLocalSetup ? 'Choose where it lives' : 'Move to a host'}</span></button>
-          <button id="od-del"><svg class="i"><use href="#i-x"/></svg><span>Delete this phone tribe</span></button>
+          ${window.TribeLocalSetup ? `<button id="od-gh"><svg class="i"><use href="#i-git"/></svg><span>${gh ? `GitHub · ${esc(gh.repo)}` : 'Connect GitHub'}</span></button>` : ''}
+          ${window.TribeHome ? '<button id="od-sync"><svg class="i"><use href="#i-gear"/></svg><span>Ship / sync settings</span></button><button id="od-share"><svg class="i"><use href="#i-users"/></svg><span>Share</span></button>' : ''}
+          <button id="od-del"><svg class="i"><use href="#i-x"/></svg><span>${phoneLike() ? 'Delete this phone tribe' : 'Delete this tribe'}</span></button>
         </div>`;
       document.body.appendChild(pop);
+      const odOn = (id, fn) => { const b = pop.querySelector(id); if (b) b.onclick = () => { closePop(); fn(); }; };
+      odOn('#od-folder', () => { const h = window.TribeHome; const c = h.canPickFolder(); if (c.ok) h.folder(); else toast(c.why); });
+      odOn('#od-gh', () => window.TribeLocalSetup.choose('github'));
+      odOn('#od-sync', () => window.TribeLocalSetup.choose('github'));   // this device: GitHub is a mirror; ship settings come with a host
+      odOn('#od-share', () => window.TribeHome.share());
       pop.querySelector('#od-move').onclick = () => { closePop(); if (window.TribeLocalSetup) window.TribeLocalSetup.where(); else if (window.TribePhoneHost) window.TribePhoneHost.move(); };
-      pop.querySelector('#od-del').onclick = () => { if (confirm(`Delete ${db.tribe.name} from this phone? Its tasks, notes and chat are gone for good unless you moved it to a host first.`)) leave(); };
+      pop.querySelector('#od-del').onclick = () => { if (confirm(`Delete ${db.tribe.name} from ${dev}? Its tasks, notes and chat are gone for good unless you moved it to a host first.`)) leave(); };
       placePop(); return;
     }
     pop = document.createElement('div'); pop.className = 'od-pop'; pop.id = 'demo-pop'; pop.setAttribute('role', 'dialog'); pop.setAttribute('aria-label', 'Offline demo');

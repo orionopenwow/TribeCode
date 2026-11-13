@@ -122,7 +122,7 @@ def main():
             host.click("#fl-start")
             host.wait_for_selector("#tn #tn-name", state="visible", timeout=8000)   # the one create flow (tribenew.js)
             host.fill("#tn-name", "Fleet test"); host.click("#tn-next")
-            host.click("#tn [data-tn-where='computer']"); host.click("#tn-go")
+            host.click("#tn [data-tn-where='folder']"); host.click("#tn-go")
             host.wait_for_selector("#tn[data-step='3'] #tn-done", timeout=20000)
             with host.expect_navigation(timeout=20000): host.click("#tn-done")   # a new host: the page reloads into it
             for _ in range(80):   # the page reloads into the tribe on this computer

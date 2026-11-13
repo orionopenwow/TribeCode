@@ -237,7 +237,9 @@ module.exports = function codefiles({ P, claims = null, identity = null, member 
     if (typeof text !== 'string' || text.length > MAX_VIEW) throw bad(413, 'too big to save here (1 MB max)');
     const lk = lockedBy(rel, me); if (lk) throw bad(423, `${lk.name || 'Someone'} has locked ${lk.path}${lk.note ? ' (' + lk.note + ')' : ''}. Ask them to unlock it.`);
     const abs = path.join(repo, ...rel.split('/'));
-    const parent = path.dirname(abs); fs.mkdirSync(parent, { recursive: true });
+    const parent = path.dirname(abs);
+    { let up = parent; while (!fs.existsSync(up) && up !== path.dirname(up)) up = path.dirname(up); const ru = fs.realpathSync(up); if (ru !== repo && !ru.startsWith(repo + path.sep)) throw bad(400, 'paths stay inside the repo'); }   // feat/folder-sync: no mkdir through a link out
+    fs.mkdirSync(parent, { recursive: true });
     const realParent = fs.realpathSync(parent); if (realParent !== repo && !realParent.startsWith(repo + path.sep)) throw bad(400, 'paths stay inside the repo');
     try { if (fs.lstatSync(abs).isSymbolicLink()) throw bad(403, 'links can\'t be edited here'); } catch (e) { if (e.status) throw e; }
     return serial(async () => {
