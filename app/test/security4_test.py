@@ -8,6 +8,10 @@ P   Flint's proof-of-work ZIPs hold a project's code: only the member who saved 
     this member can already see; the host folder path is only told to the host.
 B   the Blender bridge's copy-paste command carries no shell syntax ($( ), backticks, ;) from the model name.
 F   the Agent fleet: a friend can't give a task to an agent outside their project.
+H   folder homes and GitHub sync (feat/folder-sync): the folder picker is the host's, on the host computer only, under
+    home only; a folder can't be a system folder, home, the data dir or overlap another project; writes can't leave the
+    folder (.., absolute, .git, a symlink); only leads change sync settings; other projects' sync and folders are 404;
+    branch and repo values can't smuggle git options.
 Usage: python app/test/security4_test.py   (TRIBE_PORT_OFFSET to run beside other suites)
 """
 import json, os, tempfile, urllib.error, urllib.request
@@ -51,7 +55,8 @@ def zip_bytes():
 def main():
     import subprocess, time
     tmp = tempfile.mkdtemp(prefix="tribe-sec4-", dir="/tmp")
-    env = {**os.environ, "TRIBE_NO_DOWNLOAD": "1", "TRIBE_TEST": "1", "TRIBE_NO_GH": "1", "NO_PROXY": "127.0.0.1,localhost"}
+    home = Path(tmp) / "home"; (home / "code" / "game").mkdir(parents=True)
+    env = {**os.environ, "TRIBE_NO_DOWNLOAD": "1", "TRIBE_TEST": "1", "TRIBE_NO_GH": "1", "NO_PROXY": "127.0.0.1,localhost", "HOME": str(home)}
     srv = subprocess.Popen(["node", str(ROOT / "server" / "index.js"), "--port", str(PORT), "--dir", str(Path(tmp) / "tribe"), "--ollama", "http://localhost:9"],
                            stdout=open(Path(tmp) / "server.log", "a"), stderr=subprocess.STDOUT, env=env)
     try:
@@ -149,6 +154,41 @@ def main():
         assert api("/tasks", token=ck, project=pa)[0] == 401, "removed: refused"
         assert ck not in Path(tmp, "server.log").read_text(errors="ignore"), "the key isn't logged"
         print("C ok: an invited Claude has its person's access and never more")
+        # ================= H: folder homes and sync =================
+        def raw(path, method="GET", body=None, headers=None):
+            req = urllib.request.Request(BASE + "/api" + path, method=method, data=json.dumps(body).encode() if body is not None else None, headers={"Content-Type": "application/json", **(headers or {})})
+            try:
+                with urllib.request.urlopen(req, timeout=30) as r: return r.status
+            except urllib.error.HTTPError as e: return e.code
+        assert raw("/folders/browse", headers={"Origin": "https://evil.example"}) == 403, "a web page elsewhere can't list your folders"
+        assert raw("/folders/browse", headers={"Origin": "https://evil.example", "Authorization": "Bearer " + host}) == 403, "not even with the host's key"
+        assert raw("/folders/browse", headers={"X-Forwarded-For": "8.8.8.8"}) == 403, "not through a proxy"
+        assert api("/folders/browse", token=mt)[0] == 403, "a builder doesn't browse the host's disk"
+        assert api("/folders/browse?path=/etc", token=host)[0] == 403, "browsing stays under home"
+        assert api("/folders/browse?path=" + str(home) + "/../..", token=host)[0] == 400
+        for bad in ["/", "/etc", str(home), str(home / ".ssh"), "~/code/../code/game", str(Path(tmp) / "tribe"), str(Path(tmp) / "tribe" / "docs"), str(ROOT)]:
+            r = api(f"/projects/{pa}/folder", "PUT", {"path": bad}, token=host)
+            assert r[0] == 400, f"folder {bad}: {r}"
+        assert api(f"/projects/{pa}/folder", "PUT", {"path": "~/code/game"}, token=mt)[0] == 403, "only leads pick the folder"
+        ok(api(f"/projects/{pa}/folder", "PUT", {"path": "~/code/game"}, token=host), "the host picks A's folder")
+        r = api(f"/projects/{pb}/folder", "PUT", {"path": "~/code/game/sub", "create": True}, token=host); assert r[0] == 400 and "overlaps" in r[1]["error"], r
+        r = api(f"/projects/{pb}/folder", "PUT", {"path": "~/code", "create": True}, token=host); assert r[0] == 400, r
+        assert api(f"/projects/{pa}/folder", token=ct)[0] == 404 and api(f"/projects/{pa}/folder/file", "PUT", {"path": "x.txt", "content": "x"}, token=ct)[0] == 404, "Cleo can't see A"
+        assert "path" not in ok(api(f"/projects/{pa}/folder", token=mt))["folder"], "the host path is only told to the host"
+        os.symlink("/etc", home / "code" / "game" / "out")
+        for bad in ["../escape.txt", "/etc/x", "out/x.txt", ".git/config", "a/../../b", "C:/x"]:
+            r = api(f"/projects/{pa}/folder/file", "PUT", {"path": bad, "content": "x"}, token=mt)
+            assert r[0] == 400, f"write {bad}: {r}"
+        assert not (home / "code" / "escape.txt").exists()
+        ok(api(f"/projects/{pa}/folder/file", "PUT", {"path": "src/ok.js", "content": "ok"}, token=mt), "a builder writes inside")
+        assert (home / "code" / "game" / "src" / "ok.js").read_text() == "ok"
+        assert api(f"/projects/{pa}/folder/file?path=out/passwd", token=mt)[0] == 400, "no reading through a link out"
+        assert api(f"/projects/{pa}/sync", "PUT", {"repo": "camp/game"}, token=mt)[0] == 403, "only leads change sync"
+        assert api(f"/projects/{pa}/sync", token=ct)[0] == 404 and api(f"/projects/{pa}/sync/ship", "POST", {}, token=ct)[0] == 404, "Cleo can't see A's sync"
+        for body in [{"branch": "--upload-pack=touch /tmp/x"}, {"branch": "a..b"}, {"repo": "--help"}, {"repo": "evil/../x y"}, {"exclude": "x"} if False else {"mode": "yolo"}]:
+            assert api(f"/projects/{pa}/sync", "PUT", body, token=host)[0] == 400, body
+        assert api(f"/projects/{pa}/sync/undo", "POST", {}, token=mt)[0] == 403, "only leads undo"
+        print("H ok: folders stay safe and sync is the leads'")
         print("security4: all passed")
     finally:
         srv.kill()

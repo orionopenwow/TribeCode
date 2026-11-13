@@ -90,6 +90,12 @@
     phone: '<rect x="7" y="3" width="10" height="18" rx="2"/><path d="M11 17.5h2"/>',
     tablet: '<rect x="5" y="3" width="14" height="18" rx="2"/><path d="M11 17.5h2"/>',
     bolt: '<path d="M13 3L5 13.5h6L10 21l8-10.5h-6z"/>',
+    clock: '<circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/>',   // feat/widgets-v2
+    timer: '<circle cx="12" cy="13.5" r="7"/><path d="M12 10v3.5l2 1.5M10 3h4M18.5 6.5l1.2-1.2"/>',
+    pulse: '<path d="M3 12h4l2.5-5 4 10 2.5-5H21"/>',
+    checklist: '<path d="M4 6.5l1.5 1.5L8 5.5M4 12.5l1.5 1.5L8 11.5M4 18.5l1.5 1.5L8 17.5M11 7h9M11 13h9M11 19h9"/>',
+    gauge: '<path d="M4.5 17a8 8 0 1 1 15 0"/><path d="M12 13l3.5-3.5"/>',
+    poll: '<path d="M5 20V10M10 20V4M15 20v-7M20 20v-4"/>',
     sparkle: '<path d="M12 4l1.6 4.8L18.5 10l-4.9 1.4L12 16l-1.6-4.6L5.5 10l4.9-1.2z"/>',
     mic: '<rect x="9" y="3.5" width="6" height="11" rx="3"/><path d="M5.5 11.5a6.5 6.5 0 0 0 13 0M12 18v3"/>',
     pin: '<path d="M9 4h6l-1 5 3 3v2H7v-2l3-3zM12 14v6.5"/>',

@@ -265,6 +265,7 @@ Made with TribeCode (MIT, self-hosted): https://github.com/orionopenwow/TribeCod
     const tok = ((S().get().server) || {}).token || '';
     const r = await fetch(`${C().base()}/api/flint/proof/save?name=${encodeURIComponent(name)}`, { method: 'POST', headers: { 'Content-Type': 'application/zip', ...(tok ? { Authorization: 'Bearer ' + tok } : {}) }, body: blob });
     const j = await r.json().catch(() => ({})); if (!r.ok) throw new Error(j.error || r.statusText);
+    if (j.note && window.TribeApp && window.TribeApp.toast) window.TribeApp.toast(j.note);   // harden: the export caps removed old ZIPs
     return j;
   }
   const blobs = {};

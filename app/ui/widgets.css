@@ -13,8 +13,6 @@ body.global #nest-extra { display: none; }
 .nest-extra .wg-more:hover { background: var(--hover); color: var(--text); }
 .nest-extra .wg-add, .nest-extra .wg-add svg.i { color: var(--faint); }
 .nest-extra .wg-add:hover, .nest-extra .wg-add:hover svg.i { color: var(--text); }
-.nest-extra .wg-row.dragging { opacity: .5; }
-.nest-extra .wg-row.drop { box-shadow: inset 0 2px 0 var(--accent); }
 @media (hover: none) { .nest-extra .wg-more { opacity: 1; } }
 
 /* the picker, the custom form, the ⋯ menu */
@@ -117,16 +115,39 @@ body.global #tour-room .room-head h6 { display: none; }
 
 /* ---- + Add gallery (#wg-picker): search, quick starts, tinted "Built into TribeCode" cards with a flat mini preview,
    starter packs. Flat matte: 1px borders, tints are luminance steps of one hue, no gradients or shadows. ---- */
-.wgx-scrim { position: fixed; inset: 0; z-index: 400; background: color-mix(in srgb, #000 45%, transparent); display: grid; place-items: center; padding: 28px; }
+.wgx-scrim { position: fixed; inset: 0; z-index: 400; background: color-mix(in srgb, var(--canvas) 70%, transparent); display: grid; place-items: center; padding: 28px; }
 .wgx { width: min(1000px, 100%); max-height: min(86vh, 860px); display: flex; flex-direction: column; background: var(--surface); border: 1px solid var(--edge); border-radius: 16px; overflow: hidden; }
 .wgx-head { display: grid; grid-template-columns: auto auto 1fr; align-items: center; gap: 12px; padding: 14px 18px; border-bottom: 1px solid var(--edge); }
 .wgx-x { width: 30px; height: 30px; border-radius: 8px; display: grid; place-items: center; color: var(--muted); }
 .wgx-x:hover { background: var(--hover); color: var(--text); }
 .wgx-to { color: var(--muted); font-size: 14px; white-space: nowrap; } .wgx-to b { color: var(--text); font-weight: 600; }
 .wgx-search { justify-self: center; width: min(360px, 100%); display: flex; align-items: center; gap: 8px; height: 38px; padding: 0 12px; border: 1px solid var(--edge); border-radius: 10px; background: var(--canvas); color: var(--faint); margin-right: 120px; }
+.wgx-search input::placeholder { color: var(--faint); }
 .wgx-search:focus-within { border-color: var(--accent-ink, var(--accent)); }
 .wgx-search input { flex: 1; min-width: 0; background: none; border: 0; outline: 0; color: var(--text); font: inherit; font-size: 15px; }
-.wgx-body { overflow: auto; padding: 22px 28px 28px; }
+.wgx-body { overflow: auto; padding: 22px 28px 28px; min-width: 0; }
+/* feat/widgets-v2: categories, a preview beside the gallery, "Added ✓" */
+.wgx-head { flex: none; }
+.wgx-cats { flex: none; display: flex; gap: 4px; padding: 8px 18px; border-bottom: 1px solid var(--edge); overflow-x: auto; scrollbar-width: none; }
+.wgx-cats::-webkit-scrollbar { display: none; }
+.wgx-cats button { flex: none; height: 30px; padding: 0 12px; border-radius: 999px; border: 1px solid transparent; font-size: 13px; color: var(--muted); }
+.wgx-cats button:hover { background: var(--hover); color: var(--text); }
+.wgx-cats button[aria-selected="true"] { border-color: var(--edge); background: var(--surface-2); color: var(--text); }
+.wgx-main { flex: 1; min-height: 0; display: grid; grid-template-columns: minmax(0, 1fr) 280px; }
+.wgx-pv { border-left: 1px solid var(--edge); padding: 22px 20px; display: flex; flex-direction: column; gap: 8px; overflow: auto; background: var(--canvas); }
+.wgx-pv h4 { margin: 0; font: 700 18px/1.25 var(--display, var(--font)); color: var(--text); }
+.wgx-pv p { margin: 0; color: var(--muted); font-size: 13.5px; line-height: 1.5; }
+.wgx-pv .wgx-pv-hint { color: var(--faint); }
+.wgx-pv-art { margin: 6px 0 6px; }
+.wgx-pv-art .wgx-mini { margin: 0; border: 1px solid var(--edge); border-radius: 10px; min-height: 120px; }
+.wgx-pv .btn { align-self: flex-start; }
+.wgx-added { margin-left: auto; font-style: normal; font-size: 12px; color: var(--live-ink, var(--live)); border: 1px solid color-mix(in srgb, var(--live) 40%, var(--edge)); border-radius: 999px; padding: 1px 8px; white-space: nowrap; }
+.wgx-card.wgx-live { --h: 220 10% 60%; height: 164px; }
+.wgx-card > * { flex-shrink: 0; } .wgx-card > .wgx-mini { flex: 1 1 auto; min-height: 0; overflow: hidden; }
+.wgx-card.wgx-live .wgx-top svg.i { color: var(--muted); flex: none; }
+.wgx-card:focus-visible, .wgx-q:focus-visible, .wgx-pack:focus-visible, .wgx-cats button:focus-visible { outline: 2px solid var(--accent-ink, var(--accent)); outline-offset: 2px; }
+.wgx-top { min-width: 0; } .wgx-top b { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.wgx-card > small { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .wgx-quick, .wgx-grid, .wgx-packs { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
 .wgx-q { text-align: left; display: grid; grid-template-columns: auto 1fr; column-gap: 10px; row-gap: 2px; align-items: center; padding: 16px 18px; border: 1px solid var(--edge); border-radius: 12px; background: var(--raised); color: var(--text); }
 .wgx-q svg.i { grid-row: span 2; color: var(--muted); } .wgx-q b { font-size: 15px; } .wgx-q small { color: var(--muted); font-size: 13px; }
@@ -146,8 +167,8 @@ body.global #tour-room .room-head h6 { display: none; }
 .wgx-tr { height: 18px; }
 .wgx-bar { display: inline-block; height: 5px; border-radius: 3px; background: color-mix(in srgb, var(--text) 16%, transparent); vertical-align: middle; } .wgx-bar.s { width: 40%; margin-left: 6px; }
 .wgx-av { display: inline-block; width: 10px; height: 10px; border-radius: 50%; background: color-mix(in srgb, var(--text) 30%, transparent); vertical-align: middle; }
-.wgx-pill { justify-self: start; font-size: 12px; line-height: 1; padding: 3px 6px; border-radius: 4px; color: #fff; white-space: nowrap; }
-.wgx-pill.p0 { background: color-mix(in srgb, hsl(var(--h)) 70%, #000); } .wgx-pill.p1 { background: color-mix(in srgb, hsl(var(--h)) 50%, #3a3a3a); } .wgx-pill.p2 { background: color-mix(in srgb, hsl(var(--h)) 32%, #3a3a3a); }
+.wgx-pill { justify-self: start; font-size: 12px; line-height: 1; padding: 3px 6px; border-radius: 4px; color: var(--white, var(--text)); white-space: nowrap; }
+.wgx-pill.p0 { background: color-mix(in srgb, hsl(var(--h)) 70%, var(--canvas)); } .wgx-pill.p1 { background: color-mix(in srgb, hsl(var(--h)) 50%, var(--surface-2)); } .wgx-pill.p2 { background: color-mix(in srgb, hsl(var(--h)) 32%, var(--surface-2)); }
 .t-indigo { --h: 233 100% 71%; } .t-rose { --h: 347 100% 72%; } .t-amber { --h: 41 95% 58%; } .t-teal { --h: 171 56% 50%; }
 .t-green { --h: 140 52% 52%; } .t-violet { --h: 268 70% 70%; } .t-blue { --h: 205 80% 60%; } .t-ember { --h: 22 89% 53%; }
 .wgx-pack { text-align: left; display: flex; align-items: center; gap: 12px; padding: 14px 16px; border: 1px solid var(--edge); border-radius: 12px; background: var(--raised); color: var(--text); }
@@ -162,6 +183,10 @@ body.global #tour-room .room-head h6 { display: none; }
   .wgx-body { padding: 16px 14px 24px; }
   .wgx-quick, .wgx-grid, .wgx-packs { grid-template-columns: 1fr; gap: 10px; }
   .wgx-card { height: 150px; }
+  .wgx-main { grid-template-columns: 1fr; }
+  .wgx-pv { display: none; }
+  .wgx-cats { padding: 8px 14px; }
+  .wgx-card.wgx-live { height: 144px; }
 }
 .wgx [hidden] { display: none !important; }
 .nest-extra #nest-website .wg-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--accent); margin-left: auto; flex: none; }   /* feat/site-v2: edits not on the host yet */

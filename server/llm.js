@@ -31,9 +31,12 @@ const PROVIDERS = {
   openrouter: { label: 'OpenRouter', base: 'https://openrouter.ai/api/v1', model: 'openrouter/auto', kind: 'openai', key: true, keys: 'https://openrouter.ai/keys' },
   groq:       { label: 'Groq', base: 'https://api.groq.com/openai/v1', model: 'llama-3.3-70b-versatile', kind: 'openai', key: true, keys: 'https://console.groq.com/keys' },
   custom:     { label: 'OpenAI-compatible (custom URL)', kind: 'openai', key: false, model: '' },
+  hosted:     { label: 'TribeCode credits (Premium)', kind: 'openai', key: false, model: '', hosted: true },   // harden: AI on our account, 1 credit per answer (server/premium.js)
   none:       { label: 'None (basic mode)' },
 };
-const CLOUD = new Set(['openai', 'anthropic', 'gemini', 'openrouter', 'groq', 'custom']);
+const CLOUD = new Set(['openai', 'anthropic', 'gemini', 'openrouter', 'groq', 'custom', 'hosted']);
+// The hosted provider's address and key come from the environment of a hosted TribeCode (never from a browser).
+const HOSTED = () => ({ base: String(process.env.TRIBE_HOSTED_AI_BASE || '').replace(/\/+$/, ''), key: String(process.env.TRIBE_HOSTED_AI_KEY || ''), model: String(process.env.TRIBE_HOSTED_AI_MODEL || 'tribecode-hosted') });
 const FRIEND_PER_MIN = 12;
 
 // "gemini-2.5-flash" -> "Gemini 2.5 Flash", "claude-haiku-5-5" -> "Claude Haiku 5.5", "gpt-5-mini" -> "GPT-5 Mini"
@@ -69,14 +72,14 @@ async function eachLine(body, fn) {
 }
 const sseData = line => (line.startsWith('data:') ? line.slice(5).trim() : null);
 
-module.exports = function makeLLM({ brain, store, log = () => {}, canUseHost = () => true }) {   // canUseHost(me): feat/roles ai.use_host_brain
+module.exports = function makeLLM({ brain, store, log = () => {}, canUseHost = () => true, credits = null }) {   // canUseHost(me): feat/roles ai.use_host_brain
   const als = new AsyncLocalStorage();
   const CFG = '.tribe/llm.json', SECRET = '.tribe/secrets/llm.json';
   let cfg = Object.assign({ provider: 'ollama', model: '', baseUrl: '', friends: true, cap: 50 }, store.readJSON(CFG, {}) || {});
   if (!PROVIDERS[cfg.provider]) cfg.provider = 'ollama';
 
   // ---------- the key: host only, 0600, never logged ----------
-  function readKey() { try { return String(JSON.parse(fs.readFileSync(store.p(SECRET), 'utf8')).key || ''); } catch { return ''; } }
+  function readKey() { if (cfg.provider === 'hosted') return HOSTED().key; try { return String(JSON.parse(fs.readFileSync(store.p(SECRET), 'utf8')).key || ''); } catch { return ''; } }
   function writeKey(key) {
     const file = store.p(SECRET), dir = path.dirname(file);
     fs.mkdirSync(dir, { recursive: true, mode: 0o700 }); try { fs.chmodSync(dir, 0o700); } catch {}
@@ -87,8 +90,8 @@ module.exports = function makeLLM({ brain, store, log = () => {}, canUseHost = (
   const save = () => store.writeJSON(CFG, cfg);
 
   const P = () => PROVIDERS[cfg.provider] || PROVIDERS.none;
-  const modelId = () => cfg.model || P().model || '';
-  const baseUrl = () => String(cfg.provider === 'custom' ? cfg.baseUrl : P().base || '').replace(/\/+$/, '');
+  const modelId = () => cfg.model || (cfg.provider === 'hosted' ? HOSTED().model : P().model) || '';
+  const baseUrl = () => String(cfg.provider === 'custom' ? cfg.baseUrl : cfg.provider === 'hosted' ? HOSTED().base : P().base || '').replace(/\/+$/, '');
   const cloudReady = () => CLOUD.has(cfg.provider) && !!baseUrl() && !!modelId() && (!P().key || !!readKey());
   const cloudLabel = () => (cfg.provider === 'custom' ? `${modelId() || 'model'} (custom)` : pretty(modelId()));
 
@@ -167,7 +170,7 @@ module.exports = function makeLLM({ brain, store, log = () => {}, canUseHost = (
   // The order to try, for this caller. Each entry: { id, via, cloud }.
   function chain(me) {
     const out = [], ost = brain.ollamaStatus();
-    if (CLOUD.has(cfg.provider) && cloudReady() && !cloudBlock(me)) out.push({ id: P().kind, provider: cfg.provider, via: cloudLabel(), cloud: true });
+    if (CLOUD.has(cfg.provider) && cloudReady() && !cloudBlock(me)) out.push({ id: P().kind, provider: cfg.provider, via: cfg.provider === 'hosted' ? 'TribeCode credits' : cloudLabel(), cloud: true, hosted: cfg.provider === 'hosted' });
     if (cfg.provider !== 'none') out.push({ id: 'ollama', provider: 'ollama', via: `${ost.model || 'Ollama'} on the host`, cloud: false, maybe: !ost.online });
     return out;
   }
@@ -176,8 +179,11 @@ module.exports = function makeLLM({ brain, store, log = () => {}, canUseHost = (
   async function stream({ system = '', prompt = '', messages, maxTokens = 300, temperature = 0.3, model = '', timeoutMs = 90_000, signal, me = caller(), onStart } = {}, onText = () => {}) {
     const msgs = messages && messages.length ? messages : [{ role: 'user', content: String(prompt) }];
     const steps = chain(me);
-    let lastErr = null;
+    let lastErr = null, noCredits = false;
     for (const step of steps) {
+      // harden: the hosted provider spends one credit per answer, taken before the call (atomic: no await between the
+      // check and the take), given back when it fails without an answer. Out of credits: the free chain carries on.
+      if (step.hosted && !(credits && credits.reserve(me, credits.AI_COST, 'ai'))) { noCredits = true; continue; }
       if (step.id === 'ollama' && step.maybe) { const st = await brain.ollamaRefresh().catch(() => ({ online: false })); if (!st.online) continue; step.via = `${st.model} on the host`; }
       const ctl = new AbortController(); const t = setTimeout(() => ctl.abort(), timeoutMs);
       const stop = () => ctl.abort(); if (signal) { if (signal.aborted) stop(); else signal.addEventListener('abort', stop, { once: true }); }
@@ -190,12 +196,14 @@ module.exports = function makeLLM({ brain, store, log = () => {}, canUseHost = (
         return { via: step.via, provider: step.provider, cloud: step.cloud, text: text.trim() };
       } catch (e) {
         clearTimeout(t); f.end();
+        if (step.hosted && !started && credits) credits.refund(me, credits.AI_COST, 'ai failed');
         lastErr = e.name === 'AbortError' ? Object.assign(new Error(`${step.cloud ? P().label : 'Ollama'} took too long`), { status: 504 }) : e;
         log(`llm: ${step.provider} failed: ${scrub(lastErr.message)}`);
         if (started) return { via: step.via, provider: step.provider, cloud: step.cloud, text: text.trim(), partial: true };
         if (signal && signal.aborted) break;
       }
     }
+    if (noCredits) throw Object.assign(new Error('You are out of AI credits. Connect your own AI for free, or get credits.'), { status: 402, need: 'credits', basic: true });
     const block = CLOUD.has(cfg.provider) && cloudReady() ? cloudBlock(me) : '';
     if (block) throw Object.assign(new Error(block), { status: 403, basic: true });
     throw Object.assign(new Error(lastErr ? scrub(lastErr.message) : cfg.provider === 'none' ? 'The tribe\'s brain is off (basic mode)' : 'No model is available'), { status: 503, basic: true });
@@ -222,7 +230,7 @@ module.exports = function makeLLM({ brain, store, log = () => {}, canUseHost = (
       friends: !!cfg.friends, cap: cfg.cap, ollama: { online: !!ost.online, model: ost.model || '' },
       you: { host, block: CLOUD.has(cfg.provider) && cloudReady() ? cloudBlock(me) : '', used: me ? used(me.id) : 0 } };
     if (host) Object.assign(out, { baseUrl: cfg.provider === 'custom' ? cfg.baseUrl : '', hasKey: !!readKey(),
-      providers: Object.entries(PROVIDERS).map(([id, p]) => ({ id, label: p.label, model: p.model || '', key: !!p.key, keys: p.keys || '', cloud: CLOUD.has(id) })) });
+      providers: Object.entries(PROVIDERS).filter(([id]) => id !== 'hosted' || !!HOSTED().base).map(([id, p]) => ({ id, label: p.label, model: p.model || '', key: !!p.key, keys: p.keys || '', cloud: CLOUD.has(id) })) });
     return out;
   }
   function configure(b) {
@@ -252,7 +260,7 @@ module.exports = function makeLLM({ brain, store, log = () => {}, canUseHost = (
       open(r.via); res.end();
     } catch (e) {
       if (head) return res.end();
-      return send(res, e.status || 503, { error: e.message, basic: !!e.basic });
+      return send(res, e.status || 503, { error: e.message, basic: !!e.basic, ...(e.need ? { need: e.need, feature: 'credits' } : {}) });
     }
   }
 

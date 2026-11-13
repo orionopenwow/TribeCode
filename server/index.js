@@ -118,14 +118,16 @@ const MIME = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; cha
 // an HttpOnly cookie that pages can't read. GET /api/session swaps the cookie back for the key when storage comes up empty.
 const SESSION_COOKIE = 'tribe_s';
 function sessionCookie(res, token) {
-  const req = res.req; if (!req || typeof token !== 'string') return;
+  const req = res.req; if (!req || typeof token !== 'string' || token.startsWith('tca_')) return;   // harden: never an account token
   const secure = req.socket.encrypted || /https/i.test(String(req.headers['x-forwarded-proto'] || '')) || /^https:/i.test(String(req.headers.origin || ''));
   res.setHeader('Set-Cookie', `${SESSION_COOKIE}=${encodeURIComponent(token)}; Path=/; HttpOnly; SameSite=Lax; Max-Age=34560000${secure ? '; Secure' : ''}`);
 }
 const cookieToken = req => { const m = String(req.headers.cookie || '').match(new RegExp(`(?:^|;\\s*)${SESSION_COOKIE}=([^;]+)`)); try { return m ? decodeURIComponent(m[1]) : null; } catch { return null; } };
 function send(res, status, body, headers = {}) {
   const isObj = typeof body === 'object' && !Buffer.isBuffer(body);
-  if (isObj && body && status === 200 && typeof body.token === 'string' && body.member && !res.headersSent) sessionCookie(res, body.token);
+  // harden: the cookie only ever holds a MEMBER key. An account sign-in (token tca_…) puts the member key it came with
+  // (memberToken) there, or nothing: the account token stays in the page's own storage.
+  if (isObj && body && status === 200 && body.member && !res.headersSent) { const k = typeof body.token === 'string' && !body.token.startsWith('tca_') ? body.token : typeof body.memberToken === 'string' ? body.memberToken : null; if (k) sessionCookie(res, k); }
   res.writeHead(status, { 'Content-Type': isObj ? 'application/json' : 'text/plain; charset=utf-8', 'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Headers': 'Authorization, Content-Type, Mcp-Session-Id, MCP-Protocol-Version, X-Project', 'Access-Control-Allow-Methods': 'GET, POST, PATCH, PUT, DELETE, OPTIONS', ...headers });
   res.end(isObj ? JSON.stringify(body) : body);
@@ -207,12 +209,38 @@ function clientKey(req) {
   const cf = req.headers['cf-connecting-ip'], xff = String(req.headers['x-forwarded-for'] || '').split(',').map(x => x.trim()).filter(Boolean).pop();
   return String(cf || xff || ra).slice(0, 64);
 }
+// harden: each key remembers its own window (a 15-minute mail bucket used to be forgotten after a minute), keeps at most
+// max+1 stamps, and the map itself is capped (a flood of new addresses drops the oldest keys, not the server).
+const HITS_MAX = Number(process.env.TRIBE_TEST === '1' && process.env.TRIBE_TEST_HITS_MAX) || 50_000;
 function limited(req, max = 20, windowMs = 60_000, bucket = '') {   // bucket: a route's own count (accounts), else shared
   const k = (bucket ? bucket + ':' : '') + clientKey(req), now = Date.now();
-  const h = (hits.get(k) || []).filter(t => now - t < windowMs); h.push(now); hits.set(k, h);
-  return h.length > max;
+  const e = hits.get(k) || { w: windowMs, t: [] };
+  e.w = Math.max(e.w, windowMs); e.t = e.t.filter(t => now - t < windowMs); e.t.push(now); if (e.t.length > max + 1) e.t.splice(0, e.t.length - max - 1);
+  hits.delete(k); hits.set(k, e);   // re-insert: the map's order is least recently used first
+  if (hits.size > HITS_MAX) for (const x of hits.keys()) { hits.delete(x); if (hits.size <= HITS_MAX * 0.9) break; }
+  return e.t.length > max;
 }
-setInterval(() => { const now = Date.now(); for (const [k, h] of hits) if (!h.length || now - h[h.length - 1] > 60_000) hits.delete(k); }, 60_000).unref();   // forget idle addresses
+setInterval(() => { const now = Date.now(); for (const [k, e] of hits) if (!e.t.length || now - e.t[e.t.length - 1] > e.w) hits.delete(k); }, 60_000).unref();   // forget idle addresses
+// harden: the expensive routes, per endpoint and per client (and per member when signed in). Search and outbound fetches,
+// thumbnails, exports, AI, uploads and invites. The host's own computer gets four times the room.
+const ENDPOINT_LIMITS = [
+  // [method or '*', /path after \/api\//, max per minute, bucket]
+  ['GET', /^inspo\/search$/, 30, 'search-inspo'], ['POST', /^inspo\/link$/, 30, 'search-link'], ['GET', /^inspo\/freesound/, 30, 'search-sound'],
+  ['GET', /^gifs\/search$/, 30, 'search-gifs'], ['GET', /^assets\/search$/, 40, 'search-assets'], ['GET', /^code\/search$/, 90, 'search-code'], ['GET', /^code\/list$/, 30, 'code-list'], ['DELETE', /^code\/file$/, 60, 'code-write'], ['PUT', /^code\/file$/, 120, 'code-write'],
+  ['GET', /^(chat|channels)\/[^/]+\/search$/, 90, 'search-chat'], ['GET', /^captures(\/ask)?$/, 60, 'search-captures'], ['GET', /^talent\/public$/, 30, 'talent-public'],
+  ['GET', /^thumb(\/|$)/, 60, 'thumb'], ['*', /^(export|flint\/proof\/save|flint\/blender|projects\/[^/]+\/site-config\/publish)(\/|$)/, 12, 'export'],
+  ['POST', /^(ai\/(refine|extract|tags)|llm\/(ask|chat|stream)|askai|flint\/(ask|chat)|canvasai\/(ask|plan))(\/|$)/, 40, 'ai'],
+  ['POST', /^(uploads|visuals|captures|media)(\/|$)/, 40, 'upload'], ['POST', /^invites?(\/|$)/, 20, 'invite'],
+];
+function endpointLimited(req, sub, me) {
+  for (const [meth, rx, max, bucket] of ENDPOINT_LIMITS) {
+    if ((meth !== '*' && meth !== req.method) || !rx.test(sub)) continue;
+    const local = isLocal(req);
+    if (limited(req, local ? max * 4 : max, 60_000, `ep-${bucket}${me ? ':' + me.id : ''}`)) return bucket;
+    return '';
+  }
+  return '';
+}
 
 // ---------- realtime ----------
 const online = new Map(); // memberId -> { sockets:Set, where, since, project }
@@ -308,6 +336,15 @@ function agentPlace(mid) {
 let places = null;   // made below, once chans exists
 let inviteClaude = null;   // made below (server/inviteclaude.js)
 
+// harden: presence frames are cheap to send and expensive to fan out (each one re-sends presence to everyone), so each
+// socket gets 40 of them per 10 seconds; the rest are dropped. A person keeps at most 24 sockets (tabs, devices).
+const FLOODY = new Set(['place', 'activity', 'project', 'huddle-state', 'announce', 'huddle-join', 'huddle-leave']);
+const MAX_SOCKETS_PER_MEMBER = 24, FLOOD_N = 40, FLOOD_MS = 10_000;
+function flooding(s) {
+  const now = Date.now(); if (!s._fl || now - s._fl.t > FLOOD_MS) s._fl = { t: now, n: 0 };
+  return ++s._fl.n > FLOOD_N;
+}
+
 // ---------- huddles (WebRTC signaling only; audio/video flow peer to peer) ----------
 const huddle = new Map(); // memberId -> { muted, sharing, joined }
 let huddleProject = null;   // fix/security-2: the project the huddle started in; only people who can see it get its state, captions and audio
@@ -363,6 +400,7 @@ function saveTask(t) {
   try { if (t.site) siteDesign.onTask(t); } catch {}   // feat/site-v2: a finished website task resolves its comments
   if (flow) flow.onTask(t);   // the living plan checks items off (server/flow.js)
   if (t.status === 'done' && was && was !== 'done' && askai) try { askai.taskDone(t, 'general'); } catch {}   // agents' finished work in the channel
+  if (t.status === 'done' && was && was !== 'done' && syncHub) try { syncHub.onTaskDone(t); } catch {}   // feat/folder-sync: auto-ship on task Done
   return t;
 }
 function createTask({ title, by, status = 'backlog', assignee = null, body = '', source, due, type }) {
@@ -378,7 +416,8 @@ const taskFlow = require('./taskflow')({ P, store, getMembers: () => members, pe
 // ---------- brain, board, docs ----------
 let flow = null;   // server/flow.js: one-click project flow, gists, living plan (made below)
 const brain = makeBrain({ host: args.ollama || process.env.OLLAMA_HOST || 'http://localhost:11434', model: args.model || process.env.TRIBE_MODEL || '' });
-const llm = require('./llm')({ brain, store: baseStore, log: m => console.error('  ' + m), canUseHost: me => perms.can(me, 'ai.use_host_brain') });   // feat/any-llm: the tribe's brain (cloud key / Ollama / basic), routes brain.generate
+const premium = require('./premium')({ store: baseStore, isLocal, log: m => console.log('  ' + m) });   // harden: Premium and AI credits, enforced here
+const llm = require('./llm')({ brain, store: baseStore, credits: premium, log: m => console.error('  ' + m), canUseHost: me => perms.can(me, 'ai.use_host_brain') });   // feat/any-llm: the tribe's brain (cloud key / Ollama / basic), routes brain.generate
 const flint = makeFlint({ brain, str, llm });   // feat/flint
 brain.refresh().then(st => console.log(st.online ? `  Brain:    ${st.model} ${st.cloud ? "(the host's key)" : "via Ollama"}` : `  Brain:    off (${st.error})`));
 const readVision = () => { try { return fs.readFileSync(store.p('VISION.md'), 'utf8'); } catch { return ''; } };
@@ -449,10 +488,10 @@ const pocket = makeNotify({ store, bus, getMembers: () => members, sendTo, postC
   dnd: mid => !!profiles && profiles.isDnd(mid), mail: (mid, subj, text) => accounts.mailMember(mid, subj, text), canMail: mid => accounts.canMail(mid), projectOf: ref => (P.byChannel(ref) || {}).id || null,   // feat/settings-tabs: email, per-project mutes
   muted: (to, from) => (!!profiles && !!from && profiles.isMuted(to, from)) || (!!moderation && moderation.isBlocked(to, from)),   // feat/profiles: do not disturb, muted people
   publicUrl: () => (args['public-url'] || process.env.TRIBE_PUBLIC_URL || share.publicUrl() || (lanUrls()[0] || {}).url || `http://localhost:${PORT}`).replace(/\/+$/, '') });
-let shipHub = null;   // feat/ship-flow: a ship vote decided from a phone (one-tap approval) counts as that person's vote
+let shipHub = null, syncHub = null, folderHome = null, versionsHub = null;   // feat/ship-flow: a ship vote decided from a phone (one-tap approval) counts as that person's vote
 let publishOnApproval = null;   // v0.27 publish: an approved "publish" request from an AI helper (server/publish.js)
 let companyHub = null;   // v0.27 company: decided approvals land in the company's decision log (server/company.js)
-const approvals = makeApprovals({ store, id, str, bus, getMembers: () => members, postChat, broadcast: m => { broadcast(m); if (shipHub && m && m.type === 'approval') try { shipHub.onApproval(m.approval); } catch (e) { console.error('ship:', e.message); } if (companyHub && m && m.type === 'approval') try { companyHub.onApproval(m.approval); } catch (e) { console.error('company:', e.message); } if (publishOnApproval && m && m.type === 'approval') try { publishOnApproval(m.approval); } catch (e) { console.error('publish:', e.message); } }, hub: pocket, project: () => P.current(), canSee: (m, pid) => !pid || P.canSee(m, pid),
+const approvals = makeApprovals({ store, id, str, bus, getMembers: () => members, postChat, broadcast: m => { broadcast(m); if (shipHub && m && m.type === 'approval') try { shipHub.onApproval(m.approval); } catch (e) { console.error('ship:', e.message); } if (syncHub && m && m.type === 'approval') try { syncHub.onApproval(m.approval); } catch (e) { console.error('sync:', e.message); } if (companyHub && m && m.type === 'approval') try { companyHub.onApproval(m.approval); } catch (e) { console.error('company:', e.message); } if (publishOnApproval && m && m.type === 'approval') try { publishOnApproval(m.approval); } catch (e) { console.error('publish:', e.message); } }, hub: pocket, project: () => P.current(), canSee: (m, pid) => !pid || P.canSee(m, pid),
   canDecideAny: (who, a) => who.role === 'host' || ((!a.project || P.canSee(who, a.project)) && (perms.can(who, 'approvals.approve', a.project) || (a.risk === 'low' && perms.can(who, 'approvals.approve_low', a.project)))) });   // feat/roles
 const canSeeCh = (me, ch) => {   // fix/security-2: typing only in channels you can read
   if (ch === 'general') return true;
@@ -482,7 +521,8 @@ huddleSum.setSink(x => captures.fromHuddle(x));
 captureHook = (...x) => captures.onChat(...x);
 const voice = makeVoice({ canSeeHuddle: me => !huddleProject || P.canSee(me, huddleProject), store, id, str, huddle, sendTo, broadcast, postChat, createTask: o => createTask(o), getMembers: () => members, nameOf, brain, docs, bus, P, summary: huddleSum });
 const plan = makePlan({ store, id, str, broadcast, postChat, getMembers: () => members, loadTasks: () => loadTasks(), nameOf });
-rituals = require('./rituals')({ store, docs, plan, postChat, broadcast, getMembers: () => members, nameOf, str });   // feat/work-company: standup/retro rituals on the calendar
+rituals = require('./rituals')({ store, docs, plan, postChat, broadcast, getMembers: () => members, nameOf, str, isLead: me => taskFlow.isLead(me) });
+plan.guardRitual(me => rituals.mayStart(me), rituals.NO_AGENTS);   // harden: agents start rituals only when a lead allowed it   // feat/work-company: standup/retro rituals on the calendar
 const docsx = makeDocsX({ store, id, str, slug, broadcast, docs, getMembers: () => members, nameOf });
 const visuals = makeVisuals({ store, slug, str, broadcast, nameOf });
 const thumb = require('./thumb')({ P, visuals });
@@ -492,12 +532,19 @@ const applink = require('./applink')({ P, store: baseStore, getMembers: () => me
 const exporter = require('./export')({ P, W, store: baseStore, applink, isLocal, port: PORT, getMembers: () => members, log: m => console.log('  ' + m) });
 const busLog = makeBusLog({ broadcast, sendTo });
 const DEBUG = !!(args.dev || process.env.TRIBE_TEST === '1');
-const rooms = makeRooms({ P, W, store, brain, getMembers: () => members, saveMembers, isLocal, presenceFor, loadTasks: () => loadTasks(), hubFor, resetHub, plan, approvals, docs,
+const rooms = makeRooms({ checkFolder: (p, o) => folderHome.check(p, o), watchFolder: pid => folderHome.watch(pid), P, W, store, brain, getMembers: () => members, saveMembers, isLocal, presenceFor, loadTasks: () => loadTasks(), hubFor, resetHub, plan, approvals, docs,
   broadcast, postChat, nameOf, str, perms });
 const coord = makeCoord({ P, store, id, str, broadcast, postChat, bus, getMembers: () => members, presenceFor, loadTasks: () => loadTasks(), saveTask: t => saveTask(t), claims, hubFor, approvals, brain, nameOf });
 // feat/ship-flow: Ship it (review what changed, vote to push), Turbo (ships on its own at calm moments), Share, Pulse, Split (server/ship.js)
 const ship = shipHub = require('./ship')({ P, store, hubFor, approvals, getMembers: () => members, loadTasks: () => loadTasks(), createTask: o => createTask(o), postChat, broadcast, bus, str, nameOf,
   can: (m, cap) => m.role === 'host' || perms.can(m, cap, P.current()), pushAuth: () => githubAuth.pushAuth(), coord, claims, id, brain });
+// feat/folder-sync: a folder on this computer as the project's home (server/folderhome.js), GitHub as its synced copy (server/sync.js)
+syncHub = require('./sync')({ P, W, base: baseStore, getMembers: () => members, approvals, broadcast, postChat, nameOf, perms, pushAuth: () => githubAuth.pushAuth(), brain, resetHub,
+  checkShared: (p, pid) => folderHome.checkShared(p, pid), display: p => folderHome.display(p), tribeName: () => tribe.name, log: m => console.error('  ' + m) });
+folderHome = require('./folderhome')({ P, W, baseStore, isLocal, broadcast, perms, resetHub, postChat, nameOf, str, appRoot: path.join(__dirname, '..'), onSave: (pid, files) => { syncHub.onSave(pid); versionsHub.onSave(pid, files); }, log: m => console.error('  ' + m) });
+versionsHub = require('./versions')({ P, W, perms, broadcast, nameOf, syncLog: pid => syncHub.load(pid).log, log: m => console.error('  ' + m) });   // feat/folder-sync: Versions (server/versions.js)
+folderHome.watchAll();
+bus.on('notify', n => { if (n && n.type === 'release') syncHub.onRelease(P.current() || P.defaultId(), n.ref).catch(() => {}); });
 const agentnet = makeAgentNet({ P, store, id, str, broadcast, bus, getMembers: () => members, presenceFor, loadTasks: () => loadTasks(), saveTask: t => saveTask(t), createTask: o => createTask(o), approvals, coord, nameOf });
 askai = require('./askai')({ store: baseStore, id, str, P, getMembers: () => members, presenceFor, postChat, coord, approvals, brain, askBrain: (c, mem, t) => chatx.askBrain(c, mem, t), createTask: o => createTask(o), bus, nameOf });
 const compute = require('./compute')({ store: baseStore, str, getMembers: () => members, isOnline: mid => online.has(mid), broadcast });   // shared compute (Helpers list)
@@ -663,7 +710,7 @@ const mcp = makeMcp({
       t.updated = new Date().toISOString(); t.updatedBy = me.id; return saveTask(t);
     },
   },
-  docs, claims, extraTools: { ...agentTools, ...visuals.mcpTools, ...mcpFlow.tools, ...makeWorkshopMcp(workshop, { current: () => P.current() }), ...require('./mcp-preview')(preview, P), ...whiteboard.mcpTools, ...showcase.mcpTools, ...siteDesign.mcpTools, ...captures.mcpTools, ...assetLib.mcpTools, ...company.mcpTools, ...taskFlow.mcpTools, ...ledger.mcpTools, ...seatpilot.mcpTools, ...talent.mcpTools /* v0.27 company */, ...market.mcpTools, ...academy.mcpTools, ...flintMem.mcpTools, ...publishHub.mcpTools, ...jamHub.mcpTools, ...pinsHub.mcpTools, ...buildKit.mcpTools, ...canvasAI.mcpTools, ...inviteClaude.mcpTools() }, port: PORT, gate: { tool: (me, n, a) => inviteClaude.gateTool(me, n, a), listable: (me, n) => inviteClaude.listable(me, n) }, coordTools: h => ({ ...coord.mcpTools(h), ...agentnet.mcpTools(h), ...ship.mcpTools(h) }),
+  docs, claims, extraTools: { ...agentTools, ...visuals.mcpTools, ...mcpFlow.tools, ...makeWorkshopMcp(workshop, { current: () => P.current() }), ...require('./mcp-preview')(preview, P), ...whiteboard.mcpTools, ...showcase.mcpTools, ...siteDesign.mcpTools, ...captures.mcpTools, ...assetLib.mcpTools, ...company.mcpTools, ...taskFlow.mcpTools, ...ledger.mcpTools, ...seatpilot.mcpTools, ...talent.mcpTools /* v0.27 company */, ...market.mcpTools, ...academy.mcpTools, ...flintMem.mcpTools, ...publishHub.mcpTools, ...jamHub.mcpTools, ...pinsHub.mcpTools, ...buildKit.mcpTools, ...canvasAI.mcpTools, ...inviteClaude.mcpTools() }, port: PORT, gate: { tool: (me, n, a) => inviteClaude.gateTool(me, n, a), listable: (me, n) => inviteClaude.listable(me, n) }, coordTools: h => ({ ...coord.mcpTools(h), ...agentnet.mcpTools(h), ...canvasAI.mcpTools, ...syncHub.mcpTools(h, ship.mcpTools(h)) }),
   chat: {
     post(me, text, channel) {   // feat/chat2: optional channel ("design", "#design"); #general by default
       const tx = str(text, 4000); if (!tx) return; const muted = perms.muteBlock(me); if (muted) throw new Error(muted);   /* feat/roles */
@@ -714,6 +761,7 @@ async function apiInProject(req, res, url) {
   const ctx = () => ({ m, a, b, c, parts, me, url, readBody, send, fail });
   const me = authed(req);
   const need = () => { if (!me) { fail(res, 401, 'not a member of this tribe'); return false; } return true; };
+  { const hit = endpointLimited(req, parts.join('/'), me); if (hit) { res.setHeader('Retry-After', '60'); return fail(res, 429, hit.startsWith('search') ? 'Searching a lot: give it a minute, then try again.' : 'slow down: too many of those in a minute'); } }   // harden: per endpoint and client
 
   if (!req.headers['x-tribe-ping']) lastActivity = Date.now();
   // the sign-in backup: the cookie set when this browser joined or signed in becomes the key again
@@ -815,6 +863,7 @@ async function apiInProject(req, res, url) {
 
   if (a === 'host' && b === 'demo-tribe') return require('./demo')({ P, rooms, flow, shelf, docs, docsx, chatx, hubFor, resetHub, getMembers: () => members, newMember, saveMembers, pushPresence, devices, share, site, lanUrls, makeInvite, linkFor, isLocal, endpoints: agentEndpoints, id, hash, slug, postChat, str, port: PORT }).route(req, res, ctx());   // the demo tribe, local only (server/demo.js)
 
+  if (a === 'dev' && b === 'mem' && m === 'GET' && process.env.TRIBE_TEST === '1' && isLocal(req)) return send(res, 200, { hits: hits.size, hitsMax: HITS_MAX, sockets: Object.fromEntries([...online].map(([k, o]) => [k, o.sockets.size])), places: places ? places.size || null : null });   // harden: tests read the in-memory caps
   if (a === 'dev' && b === 'stamp' && m === 'GET' && args.dev) return send(res, 200, { stamp: devStamp, dev: true });   // feat/flint-runthrough: clean-slate live reload (no sign-in needed)
   if (a === 'bootstrap' && m === 'POST') {
     if (members.length) return fail(res, 409, 'tribe already has a host');
@@ -930,7 +979,11 @@ async function apiInProject(req, res, url) {
   if (a === 'oauth') { const h = await oauth.route(req, res, { m, b, c, me, url, readBody, send, fail }); if (h !== null) return; }   // Sign in with Discord/GitHub/Google (server/oauth.js)
   if (a === 'site-library' && parts[2] === 'thumb.png') return siteLib.route(req, res, ctx());   // template thumbnails are public (gallery <img> tags carry no key)
   if (a === 'github' && b === 'detect' && m === 'GET' && !me) { const h = await githubAuth.route(req, res, ctx()); if (h !== null) return; }   // feat/tasks-company: setup on the host computer, before a tribe exists
+  if (a === 'folders') return folderHome.route(req, res, ctx());   // feat/folder-sync: the folder picker (host computer only, server/folderhome.js)
   if (!need()) return;
+  if (a === 'projects' && c === 'sync') return syncHub.route(req, res, ctx());   // feat/folder-sync: GitHub sync (server/sync.js)
+  if (a === 'projects' && c === 'folder') return folderHome.route(req, res, ctx());
+  if (a === 'projects' && c === 'versions') return versionsHub.route(req, res, ctx());
   if (a === 'notify') { const h = await pocket.route(req, res, { m, b, c, me, readBody, send, fail }); if (h !== null) return; }
 
   // One-click backup of the whole tribe folder (server/backup.js): host only; secrets stay on the host.
@@ -1023,7 +1076,8 @@ async function apiInProject(req, res, url) {
   if (a === 'canvas') return designCanvas.route(req, res, ctx());   // P1-A design canvas   // feat/whiteboard (server/whiteboard.js)
   if (a === 'canvascode') return canvasCode.route(req, res, ctx());   // P1-C send a frame to the app
   if (a === 'market') return market.route(req, res, ctx());   // v0.27 company: the Marketplace (server/market.js)
-  if (a === 'projects' && c === 'widgets') { const h = await widgets.route(req, res, ctx()); if (h !== null) return; }   // feat/sidebar-widgets: the sidebar's extra rows (server/widgets.js)
+  if (a === 'projects' && c === 'widgets') { const h = await widgets.route(req, res, ctx()); if (h !== null) return; }
+  if (a === 'widgets') { const h = await widgets.routeAll(req, res, ctx()); if (h !== null) return; }   // feat/widgets-v2: Home's cards and the cards' own state (server/widgets.js)   // feat/sidebar-widgets: the sidebar's extra rows (server/widgets.js)
   if (a === 'projects' || (a === 'me' && b === 'git')) { const h = await rooms.route(req, res, { m, a, b, c, parts, me, readBody, send, fail }); if (h !== null) return; }
 
   if (a === 'invites' && !b && m === 'POST') {
@@ -1212,6 +1266,13 @@ async function apiInProject(req, res, url) {
   if (a === 'debug' && b === 'bus-log' && m === 'GET' && DEBUG) return send(res, 200, { events: busLog.log(url.searchParams.get('type')) });
   if (a === 'debug' && b === 'reminders' && m === 'POST' && DEBUG) { plan.tick(); return send(res, 200, { ok: true }); }
   if (a === 'docs' && c) { const h = await docsx.route(req, res, ctx()); if (h !== null) return; }
+  if (a === 'docs' && !b && m === 'POST' && me) {   // harden: a premium template's doc needs the plan (server/premium.js)
+    let body; try { body = await readBody(req); } catch (e) { return fail(res, e.status || 400, e.message); }
+    if (premium.docBlocked(body)) return premium.refuse(send, res, 'plan', 'template');
+    const handled = await docs.route(req, res, { m, b, c, me, readBody: async () => body, send, fail });
+    if (handled !== null) return;
+  }
+  if (a === 'premium') return premium.route(req, res, ctx());   // harden: plan and credits on the server
   if (a === 'docs') {
     const handled = await docs.route(req, res, { m, b, c, me, readBody, send, fail });
     if (handled !== null) return;
@@ -1282,6 +1343,7 @@ server.on('upgrade', (req, sock) => {
   s.project = P.pick(me, url.searchParams.get('project') || null, o.project || me.project) || P.pick(me, null);
   if (s.project && me.role !== 'agent') P.addMember(s.project, me.id, P.scoped(me) ? (P.get(s.project).members[me.id] || me.role) : me.role);
   o.project = s.project;
+  if (o.sockets.size >= MAX_SOCKETS_PER_MEMBER) { const oldest = o.sockets.values().next().value; o.sockets.delete(oldest); try { oldest.close ? oldest.close() : oldest.destroy && oldest.destroy(); } catch {} }   // harden: a tab flood can't grow without bound
   o.sockets.add(s); online.set(me.id, o);
   dashboard.seen(me.id, s.project);
   pocket.attach(me, s);   // idle/away tracking for notifications
@@ -1289,6 +1351,7 @@ server.on('upgrade', (req, sock) => {
   pushPresence();
   s.on('message', msg => P.inProject(s.project || P.defaultId(), () => onMessage(msg)));
   function onMessage(msg) {
+    if (msg && FLOODY.has(msg.type) && flooding(s)) return;   // harden: presence floods (place, activity, project, huddle-state, announce)
     if (msg.type === 'project' && typeof msg.id === 'string') {
       if (!P.canSee(me, msg.id)) return s.send({ type: 'project-error', id: msg.id, error: 'you are not in that project' });
       dashboard.seen(me.id, s.project); dashboard.seen(me.id, msg.id);   // leaving one project, entering another

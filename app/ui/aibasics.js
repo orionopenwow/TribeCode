@@ -189,7 +189,7 @@
   function scan() {
     const head = document.querySelector('#chat-head .cb-acts');
     if (head && !head.querySelector('[data-ab="chat"]')) { const b = spark('chat', '✦ Summarize or turn into tasks'); b.classList.add('cb-btn'); b.onclick = () => menu(b, 'chat', chatCtx); head.prepend(b); }
-    document.querySelectorAll('#board .task[data-id]').forEach(row => { if (row.querySelector(':scope > [data-ab="task"]')) return; const id = row.dataset.id, b = spark('task', '✦ Split, estimate or suggest an owner'); b.classList.add('ab-corner'); b.draggable = false; b.onclick = e => { e.stopPropagation(); menu(b, 'task', () => taskCtx(id)); }; b.addEventListener('keydown', e => e.stopPropagation()); b.addEventListener('pointerdown', e => e.stopPropagation()); row.appendChild(b); });   // in the row's top-right corner: it never moves the row's own buttons
+    document.querySelectorAll('#board .task[data-id]:not([data-ab-on])').forEach(row => { row.dataset.abOn = '1'; if (row.querySelector(':scope > [data-ab="task"]')) return; const id = row.dataset.id, b = spark('task', '✦ Split, estimate or suggest an owner'); b.classList.add('ab-corner'); b.draggable = false; b.onclick = e => { e.stopPropagation(); menu(b, 'task', () => taskCtx(id)); }; b.addEventListener('keydown', e => e.stopPropagation()); b.addEventListener('pointerdown', e => e.stopPropagation()); row.appendChild(b); });   // in the row's top-right corner: it never moves the row's own buttons
     const dt = document.querySelector('#view-docs .doc-toolbar');
     if (dt && document.querySelector('#doc-body') && !dt.querySelector('[data-ab="doc"]')) { const b = spark('doc', '✦ Tidy, outline or continue'); b.onclick = () => menu(b, 'doc', () => docCtx(document.querySelector('#view-docs'))); dt.appendChild(b); }
     const na = document.querySelector('.note-ed .ne-acts');
@@ -198,11 +198,22 @@
     const sb = document.querySelector('.co-sheet .co-sh-body, .co-sh-body');
     if (sb && sb.querySelector('#cs-goal') && !sb.querySelector('[data-ab="seat"]')) { const row = document.createElement('div'); row.className = 'ab-row'; const b = spark('seat', '✦ Fill in the charter'); b.innerHTML = '<span aria-hidden="true">✦</span><span class="ab-l">Fill in the charter</span>'; b.classList.add('wide'); b.onclick = () => run('seat.charter', () => seatCtx(sb), b); row.appendChild(b); sb.prepend(row); }
   }
-  // No MutationObserver on the whole page (it made typing in a 20k-word doc slow): a light poll while the tab is visible,
-  // plus a scan right after clicks and key presses that usually open one of these places.
-  let pend = 0; const soon = () => { if (!pend) pend = setTimeout(() => { pend = 0; try { scan(); } catch {} }, 60); };
-  setInterval(() => { if (document.visibilityState === 'visible') soon(); }, 700);
-  addEventListener('click', soon, true); addEventListener('hashchange', soon);
+  // No MutationObserver on the whole page (it made typing in a 20k-word doc slow). harden: no fixed 700 ms poll either. A
+  // scan runs right after clicks, keys, navigation and live updates, then backs off (0.7 s, 1.4 s … 10 s) while nothing new
+  // turns up, and stops altogether while the tab is hidden; an idle tab does no work.
+  let timer = 0, delay = 700; const MAXD = 10_000;
+  function tick() {
+    timer = 0; if (document.visibilityState !== 'visible') return;
+    const n0 = document.querySelectorAll('[data-ab]').length; try { scan(); } catch {}
+    delay = document.querySelectorAll('[data-ab]').length > n0 ? 700 : Math.min(MAXD, delay * 2);
+    timer = setTimeout(tick, delay);
+  }
+  const soon = () => { delay = 700; if (timer) clearTimeout(timer); timer = document.visibilityState === 'visible' ? setTimeout(tick, 60) : 0; };
+  addEventListener('click', soon, true); addEventListener('keydown', soon, true); addEventListener('hashchange', soon); addEventListener('popstate', soon);
+  document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') soon(); else if (timer) { clearTimeout(timer); timer = 0; } });
+  try { const c = C(); if (c && c.on) ['task', 'tasks', 'hello', 'project', 'doc'].forEach(t => c.on(t, soon)); } catch {}
+  timer = setTimeout(tick, delay);
+  window.TribeAIBasicsPoll = { delay: () => delay, active: () => !!timer };   // harden: tests read the backoff
   scan();
   // ---------- Flint commands for the same features (flint.js special() asks here first) ----------
   //   "summarize this doc", "summarize the doc called launch plan", "summarize the file notes/brief.pdf", "summarize: <text>",

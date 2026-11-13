@@ -121,7 +121,8 @@
     const st = C && C.state ? C.state() : {};
     const PF = window.TribePreviewFlint, CV = window.TribeCanvas;
     let picked = null, selection = null; try { picked = PF && PF.picked && PF.picked(); } catch {} try { const s = CV && CV.state && CV.state(); if (s && s.open && s.selected && s.selected.length) selection = s.selected; } catch {}
-    return { now: new Date(), view: view(), picked, selection, members: (st.members || []).filter(m => m.id !== (st.me && st.me.id)).map(m => ({ id: m.id, name: m.name, role: m.role })), tasks: tasksCache, last, learned: learnedList() };
+    let vw = view(); try { const D = window.TribeDocs, d = D && D.current && D.current(); if (vw === 'docs' && d) vw = d.kind === 'sheet' ? 'sheet' : d.kind === 'deck' ? 'deck' : 'doc'; } catch {}   // feat/flint-max: the open editor
+    return { now: new Date(), view: vw, picked, selection, members: (st.members || []).filter(m => m.id !== (st.me && st.me.id)).map(m => ({ id: m.id, name: m.name, role: m.role })), tasks: tasksCache, last, learned: learnedList() };
   }
 
   // ---------- taught phrases ----------
@@ -185,6 +186,7 @@
   };
   async function step(s, H, prev) {
     const sl = s.slots || {}, id = s.intent, area = s.area;
+    if (window.TribeFlintMax && window.TribeFlintMax.has && window.TribeFlintMax.has(id)) return window.TribeFlintMax.run(s, { pushUndo, connected });   // feat/flint-max: palettes, fonts, copy, sheets, docs, slides
     if (window.TribeFlintCmds && window.TribeFlintCmds.has(id)) return window.TribeFlintCmds.run(s, { pushUndo, connected, tasks: () => tasks(true), clear: H.clear });   // feat/flint-unify: timers, motion, notifications, pins, reactions, more task moves…
     const legacy = async (text, sum) => { await H.legacy(text); return { said: true, sum: sum || text }; };
     const needT = () => (connected() ? null : { text: T('needTribe'), acts: [['Host or join', 'invite']] });
@@ -401,7 +403,7 @@
 
   // ---------- the entry point ----------
   const LOCAL_ONLY = new Set(['undo', 'teach', 'meant', 'unteach', 'taught', 'lesson', 'redo']);   // feat/flint-site: lessons before Flint's "teach me what X is"
-  const LOCAL_FIRST = /^(timer|settings\.|chat\.(?:pin|react)|file\.whiteboard|flint\.clear|doc\.template|market\.add|inspo\.search|nav\.(?:people|work)|preview\.(?:open|share)|task\.|chat\.send|dm\.|event\.add|cal\.show|theme\.|accent\.set|textsize\.set|lang\.set|calc|convert|time\.now|date\.calc|random|canvas\.|edit\.picked|preview\.(device|reload|edit)|comment\.mode|trending|market\.search|studio\.open|jam\.start|huddle\.|publish|site\.gallery|personalize\.open|feedback|tour|brain\.pick|build\.|site\.|premium\.)/;
+  const LOCAL_FIRST = /^(design\.palette|design\.fonts|copy\.|sheet\.(?:sum|sort|format|total|chart)|doc\.(?:toc|checklist|caps|summary|readability)|deck\.pitch|timer|settings\.|chat\.(?:pin|react)|file\.whiteboard|flint\.clear|doc\.template|market\.add|inspo\.search|nav\.(?:people|work)|preview\.(?:open|share)|task\.|chat\.send|dm\.|event\.add|cal\.show|theme\.|accent\.set|textsize\.set|lang\.set|calc|convert|time\.now|date\.calc|random|canvas\.|edit\.picked|preview\.(device|reload|edit)|comment\.mode|trending|market\.search|studio\.open|jam\.start|huddle\.|publish|site\.gallery|personalize\.open|feedback|tour|brain\.pick|build\.|site\.|premium\.)/;
   let lastMiss = null;
   async function handle(text, H) {
     // the preview shows the website: its edits ("make the headline say …", "add a pricing section") go to the preview's Flint
@@ -410,7 +412,7 @@
     const NL = N(); if (!NL) return (await H.special(text)) ? true : null;
     syncLearned(); await tasks();
     const ctx = ctxNow(), P = NL.parse(text, ctx), steps = P.steps;
-    const sayR = r => { if (!r || r.said) return true; return H.say(r.text, (r.acts || []).map(a => H.act(a[0], a[1], a[2]))); };
+    const sayR = r => { if (!r || r.said) return true; return H.say(r.text, (r.acts || []).map(a => H.act(a[0], a[1], a[2])), r.html ? { html: r.html } : undefined); };
     if (steps.length === 1) {
       const s = steps[0];
       if (s.intent && LOCAL_ONLY.has(s.intent)) return sayR(await localOnly(s));

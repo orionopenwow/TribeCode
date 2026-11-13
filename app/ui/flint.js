@@ -46,7 +46,8 @@
 
   // ---------- actions (stored by name so buttons still work after a reload) ----------
   const ACTS = {
-    assets: o => window.TribeAssets && window.TribeAssets.open(o || {}),   // v0.25: the asset library
+    assets: o => window.TribeAssets && window.TribeAssets.open(o || {}),
+    flintpage: q => window.TribeFlintPage && window.TribeFlintPage.open(q || ''),   // feat/flint-max: Flint's page (what I can do, levels)   // v0.25: the asset library
     inspoApply: to => window.TribeInspo && window.TribeInspo.apply(to || 'both'),
     connect: () => App() && App().connectClaude && App().connectClaude(),
     brain: () => (B() ? B().open() : ACTS.guide('agents-and-office')),
@@ -186,11 +187,11 @@
   async function tiersReply() {
     let T = null; try { T = connected() ? await C.api('/flint/tiers') : null; } catch {}
     const list = (T && T.tiers) || [];
-    if (!list.length) return say('With no AI at all I answer from the Guide, add tasks and notes, open anything, and edit pages you pick in the preview. Connect to your tribe and I can also build first versions from recipes, free.');
+    if (!list.length) return say('With no AI at all I make palettes and fix contrast, pair fonts, tidy layouts, write headline ideas, sum and chart sheets, add a table of contents, make a pitch from your vision, add tasks and notes, and edit your website and designs. All of it is on my page, with Try it.', [act('See everything I can do', 'flintpage')]);
     const host = (T.now && T.now.host) || {};
     const lines = list.map(x => `**${esc(x.label)}** (${esc(x.where)}): ${x.can.map(esc).join(', ')}.`);
     return say(`${lines.join('\n\n')}\n\nRight now: ${host.online ? `the tribe's AI is on (${esc(host.via || 'ready')})` : 'no AI is on, so I use the free tiers'}.`,
-      [act('Build something free', 'ask', 'Build a to-do app'), act('Choose Flint\'s AI', 'brain')]);
+      [act('See everything I can do', 'flintpage'), act('Build something free', 'ask', 'Build a to-do app'), act('Choose Flint\'s AI', 'brain')]);
   }
   async function route(raw) {
     const text = String(raw || '').trim().replace(/\s+/g, ' '), t = text.toLowerCase();
@@ -226,7 +227,7 @@
   // the specific phrases the routes below handle well on their own (flintlocal.js lets them keep those)
   const LEGACY = ['inviteClaude', 'status', 'summarize', 'helper', 'connect', 'hosting', 'website', 'focus', 'prompt', 'preview', 'inspo', 'dress', 'asset', 'make', 'customize', 'task', 'note', 'doStep', 'nav'];
   const legacyHit = raw => { const text = String(raw || '').trim().replace(/\s+/g, ' '), t = text.toLowerCase(); return LEGACY.some(k => { const m = RX[k].exec(k === 'inspo' ? text : t); return m && (k !== 'task' || (m[1] && m[1].trim())); }); };
-  const LH = { clear: () => (sink && sink.clearAll ? sink.clearAll() : clear()), say: (text, acts) => say(text, acts || []), act, legacy: text => legacyRoute(text, false, true), special, legacyHit, task: (title, extra, quiet) => task(title, extra, quiet), guide: async t => { const g = await guideSearch(t); return g ? guideReply(g) : null; }, modelOnline: () => !!model.online && !(B() && B().choice() === 'none') };
+  const LH = { clear: () => (sink && sink.clearAll ? sink.clearAll() : clear()), say: (text, acts, extra) => say(text, acts || [], extra), act, legacy: text => legacyRoute(text, false, true), special, legacyHit, task: (title, extra, quiet) => task(title, extra, quiet), guide: async t => { const g = await guideSearch(t); return g ? guideReply(g) : null; }, modelOnline: () => !!model.online && !(B() && B().choice() === 'none') };
   async function legacyRoute(raw, specialsDone, viaLocal) {
     const text = String(raw || '').trim().replace(/\s+/g, ' '), t = text.toLowerCase();
     let m;
@@ -532,7 +533,7 @@
       ['🎞️', 'Make slides', 'A deck you can present', () => fill('make slides about ')],
       ['🔎', 'What did we decide?', 'Searches chat, notes and captures', () => fill('what did we decide about ')],
       ['🧭', 'Show me around', 'A 30-second tour of the app', () => window.TribeFlintGuide && window.TribeFlintGuide.tour()],
-      ['✨', 'What can Flint do?', 'His guide, in one screen', () => window.TribeFlintGuide && window.TribeFlintGuide.intro(input)],
+      ['✨', 'What can Flint do?', 'Search everything he does, and try it', () => (window.TribeFlintPage ? window.TribeFlintPage.open() : window.TribeFlintGuide && window.TribeFlintGuide.intro(input))],   // feat/flint-max: his page
       ['🧠', "Pick Flint's brain", 'Choose the model he thinks with', () => window.TribeBrain && window.TribeBrain.open()],
       ['⭐', 'Rate TribeCode', 'Tell us how it went, good or bad', () => window.TribeFeedback && window.TribeFeedback.open()],
     ];

@@ -84,6 +84,8 @@ module.exports = function visuals({ store, slug, str, broadcast, nameOf }) {
     let pct = null;
     if (prev && img) { try { pct = diffPct(decodePng(fs.readFileSync(path.join(root, s, prev.ts + '.png'))), img); } catch {} }
     fs.writeFileSync(path.join(root, s, ts + '.png'), buf);
+    // harden: each screen keeps its newest 60 versions (TRIBE_VISUALS_MAX); the oldest PNG and its .json go first
+    require('./diskcap').prune(path.join(root, s), { match: n => /^\d+(-\d+)?\.png$/.test(n), keep: ts + '.png', maxCount: require('./diskcap').envNum('TRIBE_VISUALS_MAX', 60), onRemove: n => { try { fs.unlinkSync(path.join(root, s, n.replace(/\.png$/, '.json'))); } catch {} } });
     const meta = { ts, screen: s, name, at: new Date().toISOString(), by, w: img ? img.w : null, h: img ? img.h : null, bytes: buf.length, note: str(note, 300) || undefined, diffPrev: pct };
     store.writeJSON(`visuals/${s}/${ts}.json`, meta);
     broadcast({ type: 'visual', visual: meta });

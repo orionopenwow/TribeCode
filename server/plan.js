@@ -30,7 +30,7 @@ function occurrences(ev, from, to) {
 }
 
 module.exports = function plan({ store, id, str, broadcast, postChat, getMembers, loadTasks, nameOf }) {
-  let ritualHook = null;   // server/rituals.js: a ritual event (standup…) starting -> collect answers in chat, write the doc
+  let ritualHook = null, ritualGuard = null, ritualGuardMsg = '';   // harden: who may put a ritual on the calendar (server/rituals.js mayStart)   // server/rituals.js: a ritual event (standup…) starting -> collect answers in chat, write the doc
   const rel = eid => `calendar/${eid}.md`;
   const okId = v => /^e-[a-z0-9-]{3,40}$/i.test(v);
   try { require('node:fs').mkdirSync(store.p('calendar'), { recursive: true }); } catch {}
@@ -149,10 +149,11 @@ module.exports = function plan({ store, id, str, broadcast, postChat, getMembers
     }
     if (m === 'GET' && b) { const ev = get(b); return ev ? send(res, 200, { event: ev }) : fail(res, 404, 'event not found'); }
     if (me.role === 'spectator') return fail(res, 403, 'spectators are read-only');
-    if (m === 'POST' && !b) { const r = create(await readBody(req), me.id); return r.error ? fail(res, 400, r.error) : send(res, 200, r); }
+    if (m === 'POST' && !b) { const body = await readBody(req); if (body && body.ritual && ritualGuard && !ritualGuard(me)) return fail(res, 403, ritualGuardMsg); const r = create(body, me.id); return r.error ? fail(res, 400, r.error) : send(res, 200, r); }
     const ev = b && get(b); if (!ev) return fail(res, 404, 'event not found');
     if (m === 'PATCH') {
-      const c = clean(await readBody(req), ev); if (c.error) return fail(res, 400, c.error);
+      const pb = await readBody(req); if (pb && pb.ritual && ritualGuard && !ritualGuard(me)) return fail(res, 403, ritualGuardMsg);
+      const c = clean(pb, ev); if (c.error) return fail(res, 400, c.error);
       const next = { ...ev, ...c, updated: new Date().toISOString(), updatedBy: me.id };
       if (c.start && c.start !== ev.start) for (const k of Object.keys(sent)) if (k.includes(ev.id + '@')) delete sent[k];   // moved: remind again
       return send(res, 200, { event: save(next) });
@@ -161,6 +162,6 @@ module.exports = function plan({ store, id, str, broadcast, postChat, getMembers
     return null;
   }
 
-  return { route, all, get, create, expand, upcoming, tick, occurrences, onRitual: fn => { ritualHook = fn; } };
+  return { route, all, get, create, expand, upcoming, tick, occurrences, onRitual: fn => { ritualHook = fn; }, guardRitual: (fn, msg) => { ritualGuard = fn; ritualGuardMsg = msg; } };
 };
 module.exports.occurrences = occurrences;

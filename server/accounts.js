@@ -169,6 +169,17 @@ module.exports = function makeAccounts({ store, getMembers, isLocal, limited, ha
     const mine = `${proto}://${String(req.headers['x-forwarded-host'] || req.headers.host || '')}`.toLowerCase();
     return allowed.has(mine) ? mine : pub || `http://localhost:${port}`;
   }
+  // harden: when the host has a public https address, a remote account request over plain http (the home network address,
+  // or a proxy that says it spoke http) is refused, so a password never crosses a network in the clear. A request that
+  // reached the public host name came through the TLS tunnel. Returns the secure address to use, or ''.
+  function plainHttpRemote(req) {
+    const pub = String(publicBase() || ''); if (!/^https:\/\//i.test(pub) || isLocal(req) || (req.socket && req.socket.encrypted)) return '';
+    const xfp = String(req.headers['x-forwarded-proto'] || '').split(',')[0].trim().toLowerCase();
+    if (xfp) return xfp === 'https' ? '' : pub.replace(/\/+$/, '');
+    let ph = ''; try { ph = new URL(pub).host.toLowerCase(); } catch {}
+    const host = String(req.headers['x-forwarded-host'] || req.headers.host || '').toLowerCase();
+    return host && host === ph ? '' : pub.replace(/\/+$/, '');
+  }
   const isHostAdmin = req => { const mem = memberFromReq ? memberFromReq(req) : null; return !!(mem && mem.role === 'host' && isLocal(req)); };
 
   // Lockout: 10 wrong passwords for one username within 15 minutes lock that username for 15 minutes. Unknown usernames
@@ -179,14 +190,14 @@ module.exports = function makeAccounts({ store, getMembers, isLocal, limited, ha
     const n = Date.now(); let f = fails.get(k); if (!f || n - f.first > LOCK_MS) f = { n: 0, first: n, until: 0 };
     if (++f.n >= LOCK_N) f.until = n + LOCK_MS; fails.set(k, f);
     if (fails.size > 20000) for (const [x, v] of fails) if (v.until < n && n - v.first > LOCK_MS) fails.delete(x);
+    if (fails.size > 20000) for (const x of fails.keys()) { if (fails.size <= 18000) break; fails.delete(x); }   // harden: a hard cap, oldest first
   }
 
-  // One-time things kept only as their sha256, in memory: email links (15 min) and provider sign-up tickets (10 min).
-  const pend = new Map();   // hash(token) -> { kind, expires, used, ... }
+  // One-time things kept only as their sha256: email links (15 min) and provider sign-up tickets (10 min). harden: kept in
+  // .tribe/pending-auth.json (0600, hashes only, pruned on expiry) so a restart doesn't break a link someone was opening.
+  const pend = require('./pendstore')(store.p('.tribe', 'pending-auth.json'), { max: 5000, log });   // hash(token) -> { kind, expires, used, ... }
   function issue(kind, ms, data) {
-    const now = Date.now(); for (const [k, v] of pend) if (v.expires < now) pend.delete(k);
-    if (pend.size > 5000) throw Object.assign(new Error('too many sign-ins in progress: try again in a few minutes'), { status: 429 });
-    const t = id(40); pend.set(hash(t), { kind, expires: now + ms, used: false, ...data }); return t;
+    const t = id(40); pend.set(hash(t), { kind, expires: Date.now() + ms, used: false, ...data }); return t;
   }
   // Look up (and with take, use up) a token of one of the kinds. Constant-time by construction: a map lookup of a sha256.
   function redeemTok(t, kinds, take) {
@@ -370,6 +381,7 @@ module.exports = function makeAccounts({ store, getMembers, isLocal, limited, ha
     // feat/auth2: sign-up and sign-in answer friends' browsers too (a tunnel, the cloud); the host's routes (resets, admin)
     // stay on the host computer. Every change is same-origin JSON (CSRF), and every guessable route is rate-limited.
     if (!csrfOk(req)) { fail(res, 403, 'that request came from another site: open TribeCode itself and try again'); return true; }
+    const insecure = plainHttpRemote(req); if (insecure) { send(res, 403, { error: `Passwords and sign-in links only travel over the secure address. Open ${insecure} and sign in there.`, code: 'https', secure: insecure }); return true; }
     const tooMany = () => { res.setHeader('Retry-After', '60'); fail(res, 429, 'too many tries in a row: wait a minute, then try again'); return true; };
     if ((b === 'signup' || b === 'login' || b === 'reset') && limited(req, 30, 60_000, 'accounts')) return tooMany();   // the guessable routes, in their own bucket
     if (b === 'check' && limited(req, 60, 60_000, 'acheck')) return tooMany();   // typing a name: its own, roomier bucket
@@ -572,6 +584,7 @@ module.exports = function makeAccounts({ store, getMembers, isLocal, limited, ha
   }
   async function account(req, res, { m, me, readBody, send, fail }) {
     if (!enabled()) return fail(res, 404, 'account deletion is off on this server (TRIBE_ACCOUNTS=1 turns it on)');
+    { const insecure = plainHttpRemote(req); if (insecure) return send(res, 403, { error: `Open ${insecure} to change your account.`, code: 'https', secure: insecure }); }
     if (!me) return fail(res, 401, 'not a member of this tribe');
     if (me.role === 'agent') return fail(res, 403, 'agents have no account to delete');
     const host = me.role === 'host';

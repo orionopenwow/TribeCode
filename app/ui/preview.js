@@ -147,15 +147,16 @@
     moreMenu(false);
     const to = backTo; backTo = null;
     if (PREV_RE.test(location.hash)) {
-      if (pushed && history.state && history.state.pvw) { returning = true; history.back(); }
+      if (pushed && history.state && history.state.pvw) { returning = true; document.body.dataset.pvwBack = '1'; history.back(); }   // router.js: this Back is the preview's own
       else { try { history.replaceState(null, '', location.pathname + location.search + ((to && to.hash) || '')); } catch {} }
     }
     pushed = false;
   }
   function exit() { close(); }
+  const clearBack = () => setTimeout(() => { delete document.body.dataset.pvwBack; }, 0);   // only for this one popstate
   addEventListener('popstate', () => {
-    if (returning) { returning = false; return; }
-    if (document.body.classList.contains('pvw-focus') && !PREV_RE.test(location.hash)) { pushed = false; close(); }
+    if (returning) { returning = false; clearBack(); return; }
+    if (document.body.classList.contains('pvw-focus') && !PREV_RE.test(location.hash)) { pushed = false; document.body.dataset.pvwBack = '1'; clearBack(); close(); }
     else if (!document.body.classList.contains('pvw-focus') && PREV_RE.test(location.hash)) fromHash();
   });
   // deep link: #/preview/<project>

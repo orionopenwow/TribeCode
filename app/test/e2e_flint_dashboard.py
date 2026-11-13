@@ -96,7 +96,7 @@ def main():
             pg.wait_for_selector("#tn #tn-name", state="visible", timeout=8000)   # the one create flow (tribenew.js)
             pg.fill("#tn-name", "Flint's project"); pg.click("#tn-next")
             assert health()["members"] == 0, "nothing goes to the server before a home is chosen"
-            pg.click("#tn [data-tn-where='computer']"); pg.click("#tn-go")
+            pg.click("#tn [data-tn-where='folder']"); pg.click("#tn-go")
             for _ in range(60):
                 if health()["members"] >= 1: break
                 time.sleep(0.25)
