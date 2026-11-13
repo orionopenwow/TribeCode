@@ -25,7 +25,7 @@
   const ASSET = /\b(sound|sfx|sprite|3d model|model|icon|font|texture)s?\b/i;
   const QUESTION = /^(how|what|why|where|when|who|can|could|should|is|are|do|does)\b|\?$/i;
 
-  let el = null, ctx = null, picked = null, items = [], seen = new Set(), pending = null, tiers = null, notes = [], plans = new Map(), planSeq = 0;
+  let fui = null, el = null, ctx = null, picked = null, items = [], seen = new Set(), pending = null, tiers = null, notes = [], plans = new Map(), planSeq = 0;
   const KPLAN = 'tribecode.pvf.plan';
   const planOn = () => lsGet(KPLAN, '0') === '1';
   const nameOf = id => ((C.state().members || []).find(m => m.id === id) || {}).name || 'Someone';
@@ -48,32 +48,29 @@
     el = document.createElement('aside');
     el.className = 'pvf'; el.id = 'pvf'; el.setAttribute('aria-label', 'Flint');
     el.innerHTML = `<div class="pvf-grip" role="separator" aria-orientation="vertical" aria-label="Resize Flint" tabindex="0"></div>
-      <header class="pvf-head"><button type="button" class="pvf-handle" aria-label="Show or hide Flint"><i></i></button>
-        <img src="assets/flint.svg" alt="" width="18" height="18"><b>Flint</b><span class="pvf-sub faint">builds with you, live</span>
-        <button type="button" class="pvf-x" data-pvf="hide" title="Hide Flint" aria-label="Hide Flint">✕</button></header>
-      <p class="pvf-tier" id="pvf-tier"><span class="pvf-free">Free</span><span id="pvf-tier-t">Edits and first builds need no AI</span></p>
-      <ol class="pvf-feed" id="pvf-feed" aria-live="polite"></ol>
+      <div class="pvf-pull"><button type="button" class="pvf-handle" aria-label="Show or hide Flint"><i></i></button></div>`;
+    body.appendChild(el);
+    // feat/flint-unify: the one Flint chat (TribeFlint.mount, ctx preview); the preview's own tools sit above the composer
+    fui = window.TribeFlint.mount(el, { ctx: 'preview', echo: false, onSay: () => {}, run: async t => { await send(t); return true; }, chips: () => chips(),
+      hello: 'I’m watching the preview. Describe a change, or pick something on the page with Edit.',
+      onAI: () => { if (pending) { const p = pending; pending = null; askAgents(p.text, p.pick); } else if (window.TribeBrain) window.TribeBrain.open(); },
+      tools: [{ html: '<span class="flm-note">+ Note</span>', title: 'Add what you typed to the list and apply them all together', attrs: { id: 'pvf-add' }, fn: () => addNote() }, { html: '✕', title: 'Hide Flint', attrs: { 'data-pvf': 'hide' }, fn: () => {} }] });
+    fui.extra.innerHTML = `<p class="pvf-tier" id="pvf-tier"><span class="pvf-free">Free</span><span id="pvf-tier-t">Edits and first builds need no AI</span></p>
       <div class="pvf-hist hidden" id="pvf-hist" aria-label="Build history"></div>
       <div class="pvf-pick hidden" id="pvf-pick"><span></span><button type="button" class="pvf-tocanvas" data-open-canvas title="Edit this on the design canvas (P1-C)">Open in canvas</button><button type="button" data-pvf="unpick" aria-label="Clear the picked element">✕</button></div>
       <section class="pvf-props hidden" id="pvf-props" aria-label="Properties"></section>
       <div class="pvf-queue hidden" id="pvf-queue" aria-label="Notes to apply"></div>
-      <div class="pvf-chips" id="pvf-chips"></div>
       <input type="file" id="pvf-logo" class="hidden" accept="image/png,image/jpeg,image/svg+xml" aria-label="Logo file">
       <div class="pvf-tools"><label class="pvf-plan" title="Flint shows the steps first; you can edit them before anything goes to your AI helpers"><input type="checkbox" id="pvf-plan"> Plan first</label>
-        <button type="button" class="pvf-tool" data-pvf="history" aria-expanded="false">History</button></div>
-      <form class="pvf-form" id="pvf-form" autocomplete="off"><textarea class="input" id="pvf-in" rows="2" maxlength="800" placeholder="Ask Flint to change…" aria-label="Ask Flint to change something"></textarea>
-        <span class="pvf-btns"><button type="button" class="btn sm" id="pvf-add" title="Add to the list and apply them all together">+ Note</button><button class="btn primary sm" id="pvf-go">Send</button></span></form>`;
-    body.appendChild(el);
+        <button type="button" class="pvf-tool" data-pvf="history" aria-expanded="false">History</button></div>`;
     const w = Math.max(240, Math.min(520, Number(lsGet(KW, '320')) || 320));
     pane.style.setProperty('--pvf-w', w + 'px');
     setOpen(lsGet(KOFF, '0') !== '1' && !isPhone(), true);
     if (isPhone()) setOpen(false, true);
     paintChips(); paintPick(); paintFeed(); paintTier(); paintQueue();
     const pl = el.querySelector('#pvf-plan'); pl.checked = planOn(); pl.onchange = () => lsSet(KPLAN, pl.checked ? '1' : '0');
-    el.querySelector('#pvf-add').onclick = () => { const ta2 = el.querySelector('#pvf-in'), t = ta2.value.trim(); if (!t) return ta2.focus(); notes.push({ text: t, pick: picked }); ta2.value = ''; paintQueue(); ta2.focus(); };
     wireProps();
-    if (!items.length) feed({ k: 'flint', text: 'I’m watching the preview. Describe a change, or pick something on the page with Edit.' });
-    if (window.TribeBoost) window.TribeBoost.bind(el, { onAI: () => { if (pending) { const p = pending; pending = null; el.querySelectorAll('#pvf-feed .boost button').forEach(b => { b.disabled = true; }); askAgents(p.text, p.pick); } else if (window.TribeBrain) window.TribeBrain.open(); } });   // the brief waits in #agents until an AI helper connects   // feat/flint-site: the one AI-boost card
+    // the AI-boost card's Use my AI: the mount's onAI above
     el.addEventListener('click', e => {
       const a = e.target.closest('[data-pvf]'); if (!a) return;
       if (a.dataset.pvf === 'hide') setOpen(false);
@@ -96,19 +93,11 @@
       if (a.dataset.pvf === 'tribeai' && pending) { const p = pending; pending = null; a.closest('.pvf-t').querySelectorAll('button').forEach(b => { b.disabled = true; }); if (window.TribeFlint && window.TribeFlint.ask) askFlint(p.text); }
     });
     el.querySelector('.pvf-handle').onclick = () => setOpen(!el.classList.contains('is-open'));
-    el.querySelector('#pvf-chips').addEventListener('click', e => {
-      const b = e.target.closest('[data-chip]'); if (!b) return;
-      if (/…$/.test(b.dataset.chip)) { const ta2 = el.querySelector('#pvf-in'); ta2.value = b.dataset.chip.replace(/…$/, ''); ta2.focus(); try { ta2.setSelectionRange(ta2.value.length, ta2.value.length); } catch {} return; }
-      send(b.dataset.chip);
-    });
     el.querySelector('#pvf-logo').addEventListener('change', e => {
       const f = e.target.files && e.target.files[0]; e.target.value = ''; if (!f) return;
       if (f.size > 200 * 1024) return feed({ k: 'flint', text: 'That file is over 200 KB. Export a smaller PNG or a plain SVG and try again.' });
       const r = new FileReader(); r.onload = () => siteSend('add my logo', null, { logo: String(r.result || '') }, true); r.readAsDataURL(f);
     });
-    const form = el.querySelector('#pvf-form'), ta = el.querySelector('#pvf-in');
-    form.onsubmit = e => { e.preventDefault(); const t = ta.value.trim(); if (t) { ta.value = ''; send(t); } };
-    ta.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); form.requestSubmit(); } });
     el.addEventListener('keydown', e => { if (e.key === 'Escape' && isPhone() && el.classList.contains('is-open')) { e.stopPropagation(); setOpen(false); } });
     grip(pane);
     // the toolbar's Flint toggle
@@ -127,7 +116,7 @@
     document.body.classList.toggle('pvf-on', on && !isPhone());
     const t = pane && pane.querySelector('[data-pvf-toggle]'); if (t) t.setAttribute('aria-pressed', String(on));
     if (!isPhone() && !quiet) lsSet(KOFF, on ? '0' : '1');
-    if (on && !quiet) setTimeout(() => { const i = el.querySelector('#pvf-in'); if (i && !isPhone()) i.focus(); }, 30);
+    if (on && !quiet) setTimeout(() => { if (fui && !isPhone()) fui.input.focus({ preventScroll: true }); }, 30);
     if (ctx && ctx.relayout) setTimeout(ctx.relayout, 0);
     if (isPhone() && ctx && ctx.onPhoneOpen) ctx.onPhoneOpen(on);
   }
@@ -153,23 +142,22 @@
     if (isSite()) { t.textContent = host.online ? `Website edits are free · anything else goes to ${host.via || 'the tribe’s AI'}` : 'Website edits are free and need no AI'; return; }
     t.textContent = dev ? 'Edits and first builds free · small model on this device' : host.online ? `Edits and first builds free · tribe AI: ${host.via || 'on'}` : 'Edits and first builds need no AI · bigger jobs need an AI (yours, or credits)';
   }
-  function paintChips() { const c = el && el.querySelector('#pvf-chips'); if (c) c.innerHTML = chips().map(t => `<button type="button" class="chip" data-chip="${esc(t)}">${esc(t)}</button>`).join(''); }
+  function paintChips() { if (fui) fui.chips(chips()); }
+  function addNote() { if (!fui) return; const t = fui.input.value.trim(); if (!t) return fui.input.focus(); notes.push({ text: t, pick: picked }); fui.input.value = ''; paintQueue(); fui.input.focus(); }
   function paintPick() {
     paintProps();
-    const inp = el && el.querySelector('#pvf-in');
+    const inp = fui && fui.input;
     if (inp) inp.placeholder = picked && isSite() ? `Type new words for “${String(picked.text || '').slice(0, 28)}”, or say what to change` : 'Ask Flint to change…';
     const p = el && el.querySelector('#pvf-pick'); if (!p) return;
     p.classList.toggle('hidden', !picked);
     if (picked) p.querySelector('span').innerHTML = `Editing: <b>${esc(picked.text ? '“' + picked.text.slice(0, 48) + (picked.text.length > 48 ? '…' : '') + '”' : '<' + picked.tag + '>')}</b> <span class="faint">&lt;${esc(picked.tag)}&gt;</span>`;
   }
   const ICON = { you: '🗨', flint: '', agent: '✦', file: '✎', reload: '↻', task: '☑', error: '⚠', commit: '◆', ask: '→' };
+  const EVK = { agent: 'agent', file: 'file', reload: 'reload', task: 'info', error: 'error', commit: 'build', ask: 'ask' };
   function paintFeed() {
-    const f = el && el.querySelector('#pvf-feed'); if (!f) return;
-    f.innerHTML = items.map(x => `<li class="pvf-it pvf-${x.k}">${x.k === 'flint' ? '<img src="assets/flint.svg" alt="" width="14" height="14">' : `<span class="pvf-ic" aria-hidden="true">${ICON[x.k] || '•'}</span>`}
-      <div class="pvf-t">${x.who ? `<b>${esc(x.who)}</b> ` : ''}${x.html || esc(x.text)}${x.add != null ? ` <span class="pvf-diff"><ins>+${x.add}</ins> <del>−${x.del || 0}</del></span>` : ''}
-      ${x.k === 'error' ? `<button type="button" class="btn sm" data-pvf="fix" data-msg="${esc(x.text)}">Fix it</button>` : ''}</div>
-      <time>${new Date(x.at).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}</time></li>`).join('');
-    f.scrollTop = f.scrollHeight;
+    if (!fui) return;
+    fui.set(items.map(x => x.k === 'you' ? { who: 'me', text: x.text } : x.k === 'flint' ? { who: 'flint', text: x.html ? '' : x.text || '', html: x.html || '', acts: x.acts || [] }
+      : { who: 'ev', k: EVK[x.k] || 'info', who2: x.who || '', text: x.text || '', html: x.html || '', add: x.add, del: x.del, acts: x.k === 'error' ? [{ label: 'Fix it', fn: () => fix(x.text || '') }] : [] }));
   }
   function feed(x) {
     x.at = x.at || Date.now();
@@ -251,19 +239,10 @@
     const agents = (C.state().members || []).some(m => m.role === 'agent');
     feed({ k: 'flint', html: window.TribeBoost ? window.TribeBoost.html({ did: `Nothing changed yet. ${tier.why || ''}`.trim(), would: 'An AI makes this change in your code, and the preview reloads as it saves.', ask: text }) : esc(tier.why) });
   }
-  async function askFlint(text) {
-    const T = window.TribeFlint, before = (T.thread() || []).length;
-    T.ask(text);
-    const t0 = Date.now();
-    while (Date.now() - t0 < 8000) {
-      await new Promise(r => setTimeout(r, 200));
-      const th = T.thread() || [], last = th[th.length - 1];
-      if (th.length >= before + 2 && last && last.who === 'flint') {
-        const d = document.createElement('div'); d.innerHTML = String(last.text || '').replace(/\*\*|`/g, '');
-        return feed({ k: 'flint', text: (d.textContent || '').trim().slice(0, 400) || 'Done.' });
-      }
-    }
-    feed({ k: 'flint', text: 'Asked Flint: the answer is in the Flint panel.' });
+  async function askFlint(text) {   // feat/flint-unify: Flint's full brain answers right here
+    const out = fui ? await fui.capture(text) : [];
+    if (!out.length) return feed({ k: 'flint', text: 'Done.' });
+    out.forEach(m => feed({ k: 'flint', text: m.text || '', html: m.html || '', acts: m.acts || [] }));
   }
   const kitCache = {};
   async function kitHint() {
@@ -293,7 +272,7 @@
     const kit = await kitHint();   // the project's open-source stack + quality bar (server/buildkit.js)
     const plan = steps && steps.length ? ` Plan to follow: ${steps.map((x, i) => `${i + 1}. ${x}`).join(' ')}` : '';
     const msg = `@agents In the live preview${where}: ${text}.${about}${plan} Save the change in the project's code; the preview reloads by itself.${kit ? ' ' + kit : ''}`;
-    if (window.TribeFlintFly) window.TribeFlintFly.done(document.querySelector('#pvf-feed') || document.querySelector('#pvw'), 'Sent to your AI');
+    if (window.TribeFlintFly) window.TribeFlintFly.done(document.querySelector('#pvf .flm-thread') || document.querySelector('#pvw'), 'Sent to your AI');
     try { await C.api('/agents/channel', { method: 'POST', body: { text: msg } }); }
     catch { await C.api('/chat/general', { method: 'POST', body: { text: 'Claude, ' + msg.replace(/^@agents /, '') } }); }
     const online = (C.state().members || []).some(m => m.role === 'agent' && m.online);

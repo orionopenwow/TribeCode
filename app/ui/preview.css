@@ -178,10 +178,10 @@ body.pvw-focus .pvw-wc { display: inline-flex; gap: 6px; margin-left: 6px; paddi
   body.pvw-focus .pvw-jump .pvw-btn { width: 30px; height: 28px; border-radius: 7px; }
   body.pvw-focus .pin-bar { padding-right: 2px; }
   /* Flint's stack: the log scrolls; the pick card + properties keep to the lower part and scroll on their own */
-  body.pvw-focus .pvf-feed { min-height: 140px; }
+  body.pvw-focus .pvf .flm-thread { min-height: 140px; }
   body.pvw-focus .pvf-props { flex: none; }
-  body.pvw-focus .pvf-chips { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; }
-  body.pvw-focus .pvf-chips .chip { flex: none; }
+  body.pvw-focus .pvf .flm-chips { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; }
+  body.pvw-focus .pvf .flm-chips .fl-chip { flex: none; }
   body.pvw-focus .pvf-tier #pvf-tier-t { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
 }
 @media (max-width: 820px) {

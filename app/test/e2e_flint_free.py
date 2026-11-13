@@ -66,14 +66,14 @@ def shot(page, name):
 
 
 def send(page, text):
-    page.fill("#pvf-in", text)
-    page.press("#pvf-in", "Enter")
+    page.fill("#flm-in-preview", text)
+    page.press("#flm-in-preview", "Enter")
 
 
 def feed_has(page, rx, timeout=12000):
-    try: page.wait_for_function("rx => [...document.querySelectorAll('#pvf-feed .pvf-it')].some(li => new RegExp(rx, 'i').test(li.innerText))", arg=rx, timeout=timeout)
+    try: page.wait_for_function("rx => [...document.querySelectorAll('#pvf .fl-thread > :not(.streaming)')].some(li => new RegExp(rx, 'i').test(li.innerText))", arg=rx, timeout=timeout)
     except Exception:
-        raise AssertionError(f"the Flint feed never said {rx!r}; it says: {page.evaluate('[...document.querySelectorAll(`#pvf-feed .pvf-it`)].map(li => li.innerText.replace(/\\s+/g, ` `)).slice(-4)')}")
+        raise AssertionError(f"the Flint feed never said {rx!r}; it says: {page.evaluate('[...document.querySelectorAll(`#pvf .fl-thread > :not(.streaming)`)].map(li => li.innerText.replace(/\\s+/g, ` `)).slice(-4)')}")
 
 
 def main():
@@ -121,7 +121,7 @@ def main():
             # ---- 2: free builds in the panel beside the preview ----
             host.evaluate("TribePreview.open()")
             host.wait_for_selector("#pvw.is-empty", timeout=10000)
-            host.wait_for_selector("#pvf.is-open #pvf-in", timeout=5000)
+            host.wait_for_selector("#pvf.is-open #flm-in-preview", timeout=5000)
             host.wait_for_function("/no AI/i.test((document.querySelector('#pvf-tier') || {}).innerText || '')", timeout=5000)
             send(host, "make a 3D game called Gem Rush")
             feed_has(host, "Built a 3D game for Gem Rush")
@@ -174,7 +174,7 @@ def main():
             src = LP.read_text()
             assert "padding: 24px 32px" in src and "background-color: #222222" in src and "text-align: center" in src, src[src.find("<h1"):src.find("<h1") + 300]
             fr.locator("h1", has_text="Fresh bread").wait_for(timeout=8000)
-            host.wait_for_function("() => [...document.querySelectorAll('#pvf-feed .pvf-reload')].length > 0", timeout=8000)   # the preview reloaded with the new styles
+            host.wait_for_function("() => [...document.querySelectorAll('#pvf .fl-thread .fl-ev-reload')].length > 0", timeout=8000)   # the preview reloaded with the new styles
             r = api("/preview/props", "POST", {"href": host.evaluate("TribePreview.info().path") + "builds/sunrise-bakery/", "pick": {"tag": "h1", "text": "Fresh bread every morning"}, "set": {"color": "red; } body { display:none"}}, token=camp, project=gp)
             assert r[0] == 400, f"bad values are refused: {r}"
             shot(host, "props")
@@ -184,7 +184,7 @@ def main():
             assert "text-align: center" not in src and "background-color: #222222" in src, "Undo took back only the last change"
 
             # ---- 3c: notes applied together (P1-F) ----
-            send_note = lambda t: (host.fill("#pvf-in", t), host.click("#pvf-add"))
+            send_note = lambda t: (host.fill("#flm-in-preview", t), host.click("#pvf-add"))
             send_note("make it bold")
             host.evaluate("TribePreviewFlint.pick(null)")
             send_note("add a score counter to the header")
@@ -206,16 +206,16 @@ def main():
             # ---- 4: bigger than free → an honest card; Plan first → editable steps → hand-off ----
             host.check("#pvf-plan")
             send(host, "add multiplayer and a leaderboard")
-            host.wait_for_selector("#pvf-feed .boost", timeout=8000)   # feat/flint-site: the one AI-boost card
-            assert "Get credits / Premium" in host.inner_text("#pvf-feed .boost")
-            assert host.locator("#pvf-feed [data-pvf='tribeai']").count() == 0, "no tribe-AI button when the tribe has no AI"
+            host.wait_for_selector("#pvf .fl-thread .boost", timeout=8000)   # feat/flint-site: the one AI-boost card
+            assert "Get credits / Premium" in host.inner_text("#pvf .fl-thread .boost")
+            assert host.locator("#pvf .fl-thread [data-pvf='tribeai']").count() == 0, "no tribe-AI button when the tribe has no AI"
             shot(host, "honest")
-            host.click("#pvf-feed [data-boost='ai']")
-            host.wait_for_selector("#pvf-feed .pvf-plancard textarea", timeout=5000)
-            ta = host.locator("#pvf-feed .pvf-plancard textarea").last
+            host.click("#pvf .fl-thread [data-boost='ai']")
+            host.wait_for_selector("#pvf .fl-thread .pvf-plancard textarea", timeout=5000)
+            ta = host.locator("#pvf .fl-thread .pvf-plancard textarea").last
             ta.fill(ta.input_value() + "\nTest it with two players")
             shot(host, "plan")
-            host.click("#pvf-feed [data-pvf='runplan']")
+            host.click("#pvf .fl-thread [data-pvf='runplan']")
             feed_has(host, "Sent to your AI helpers")
             for _ in range(30):
                 if reached("multiplayer"): break
@@ -254,9 +254,9 @@ def main():
             ph.evaluate("TribePreview.open()")
             ph.wait_for_selector("#pvf", state="attached", timeout=8000)   # phones open on the Page tab; the sheet waits behind Edit
             ph.evaluate("TribePreviewFlint.open()")
-            ph.wait_for_selector("#pvf.is-open #pvf-in", timeout=5000)
+            ph.wait_for_selector("#pvf.is-open #flm-in-preview", timeout=5000)
             ph.wait_for_timeout(450)   # the sheet slides up
-            box = ph.evaluate("(() => { const r = document.querySelector('#pvf').getBoundingClientRect(); const i = document.querySelector('#pvf-in').getBoundingClientRect(); const t = document.querySelector('#pvf-tier').getBoundingClientRect(); return [r.left, r.right, i.width, i.bottom, t.height, document.documentElement.scrollWidth]; })()")
+            box = ph.evaluate("(() => { const r = document.querySelector('#pvf').getBoundingClientRect(); const i = document.querySelector('#flm-in-preview').getBoundingClientRect(); const t = document.querySelector('#pvf-tier').getBoundingClientRect(); return [r.left, r.right, i.width, i.bottom, t.height, document.documentElement.scrollWidth]; })()")
             shot(ph, "phone-open")
             assert box[0] >= -1 and box[1] <= 391 and box[2] > 200 and box[3] <= 845 and box[4] > 0 and box[5] <= 391, f"the phone sheet fits: {box}"
             send(ph, "build a todo app for our chores")
