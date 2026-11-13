@@ -122,6 +122,13 @@ Store: `.tribe/accounts.json` = `{ version: 1, accounts: [{ id, username, userna
 Code: `server/auth3.js` (with `server/cbor.js` and `server/sealbox.js`), `app/ui/auth3.js`. Tests: `e2e_auth3.py`,
 `security7_test.py`. No dependencies: TOTP is HMAC-SHA1, WebAuthn is checked with Node's crypto.
 
+**Two-step sign-in is off by default** (the owner turns it on later). Turn it on with `TRIBE_TWO_STEP=1`, or on the host
+computer with `PUT /api/accounts/admin/settings { "twoStep": true }` (kept in `.tribe/auth.json`; there is no switch in
+the app while it is off). While it is off: nobody is asked for a code, enrolled or not; the rule for admins does
+nothing; every `two-step` route answers `404 { code: 'off' }`; Settings shows **Passkeys** only; `GET
+/api/accounts/config` has no `twoStep`. An enrolment made while it was on is kept and counts again when it comes back.
+Passkeys work either way, as a normal sign-in method. Everything below about codes describes it turned on.
+
 - **One gate.** Every account sign-in that proves who you are (password, provider, email link, password reset, the
   desktop handoff, and a provider that signs a tribe member back in) passes one gate before a session exists. With
   two-step on, the answer is `{ need: 'two-step', ticket, methods }` and no token. `POST /api/accounts/two-step

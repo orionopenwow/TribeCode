@@ -53,10 +53,16 @@ The footer of Work says which plan you're on, with "What does Premium add?".
 
 ## Payments (Stripe)
 
-Off until the host turns it on. With it off, the plans pop-out's buttons say "The host hasn't turned on payments yet"
-and nothing else changes.
+**Hidden by default**, even with Stripe keys set. Open it with `TRIBE_PAYMENTS=1`, or on the host computer with
+`PUT /api/premium/admin { "enabled": true }` (there is no switch in the app while it is hidden). While hidden: the plans
+pop-out shows the plans and packs as information with "Paid plans are coming" and no buy or Manage billing buttons;
+Settings has no Billing and receipts or Payments section; `checkout`, `portal` and `history` answer `404 { code:
+'payments-hidden' }` and the webhook 404. Plans, credits, the 402s, the trial and `PUT /api/premium` on the host
+computer work the same, and Flint's out-of-credits line doesn't mention buying.
 
-**Turn it on** with the environment, or on the host computer in Settings › Tribe & admin › Payments (kept in
+Opened but with no secret key, the buttons say "The host hasn't turned on payments yet" and nothing else changes.
+
+**Set the keys** with the environment, or (once payments are open) on the host computer in Settings › Tribe & admin › Payments, or with `PUT /api/premium/admin` (kept in
 `.tribe/stripe.json`, 0600, the two secrets sealed with `.tribe/secret.key`; never sent back to a browser):
 
 | Setting | What it is |
