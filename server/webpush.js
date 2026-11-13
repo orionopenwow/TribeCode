@@ -13,7 +13,14 @@ function generateVapid() {
   const ecdh = crypto.createECDH('prime256v1'); ecdh.generateKeys();
   return { publicKey: b64u(ecdh.getPublicKey()), privateKey: b64u(ecdh.getPrivateKey()), created: new Date().toISOString() };
 }
-function loadVapid(store) {
+function loadVapid(store, env = process.env) {
+  // loops: hosts whose files are wiped (Render's free plan) set the keys as environment variables, so phones that turned
+  // push on keep getting notifications after every sleep. Make a pair with `node scripts/dev/vapid-keys.js`.
+  const pub = env.TRIBE_VAPID_PUBLIC, priv = env.TRIBE_VAPID_PRIVATE;
+  if (pub && priv) {
+    try { const k = { publicKey: String(pub).trim(), privateKey: String(priv).trim(), from: 'env' }; privateKeyObject(k); return k; }
+    catch (e) { console.error('  TRIBE_VAPID_PUBLIC / TRIBE_VAPID_PRIVATE are not a valid P-256 key pair; using the saved keys instead.'); }
+  }
   let k = store.readJSON('.tribe/vapid.json', null);
   if (!k || !k.publicKey || !k.privateKey) { k = generateVapid(); store.writeJSON('.tribe/vapid.json', k); }
   return k;
