@@ -4642,6 +4642,50 @@
    "t": "optimize our database queries",
    "i": null,
    "v": "held"
+  },
+  {
+   "t": "start a video call",
+   "i": "call.video"
+  },
+  {
+   "t": "turn on my camera",
+   "i": "call.video"
+  },
+  {
+   "t": "share my screen",
+   "i": "call.share"
+  },
+  {
+   "t": "stop sharing",
+   "i": "call.share"
+  },
+  {
+   "t": "present tribecode",
+   "i": "call.present"
+  },
+  {
+   "t": "raise my hand",
+   "i": "call.hand"
+  },
+  {
+   "t": "mute me",
+   "i": "call.mute"
+  },
+  {
+   "t": "call history",
+   "i": "call.stage"
+  },
+  {
+   "t": "summarize my notes",
+   "i": "secretary.summary"
+  },
+  {
+   "t": "what did we decide today",
+   "i": "secretary.summary"
+  },
+  {
+   "t": "action items",
+   "i": "secretary.summary"
   }
  ]
 }

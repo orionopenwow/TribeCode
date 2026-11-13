@@ -78,6 +78,15 @@
     multi: ['Done: {list}', 'Hecho: {list}', 'Feito: {list}', 'Fait : {list}', 'Erledigt: {list}', '完了: {list}', '完成：{list}', '완료: {list}'],
     stopped: ['I stopped at “{s}”: I’m not sure what that part means.', 'Me detuve en “{s}”: no entendí esa parte.', 'Parei em “{s}”: não entendi essa parte.', 'Je me suis arrêté à « {s} » : je n’ai pas compris.', 'Bei „{s}“ habe ich aufgehört: das verstehe ich nicht.', '「{s}」で止まりました。その部分がわかりません。', '在“{s}”停下了：那部分我不明白。', '“{s}”에서 멈췄어요. 그 부분을 모르겠어요.'],
     building: ['On it: {x}.', 'En marcha: {x}.', 'Fazendo: {x}.', 'C’est parti : {x}.', 'Mache ich: {x}.', '作業中: {x}。', '马上：{x}。', '진행 중: {x}.'],
+    callVideo: ['Camera on.', 'Cámara encendida.', 'Câmera ligada.', 'Caméra allumée.', 'Kamera an.', 'カメラをオンにしました。', '摄像头已打开。', '카메라를 켰어요.'],
+    callVideoOff: ['Camera off.', 'Cámara apagada.', 'Câmera desligada.', 'Caméra éteinte.', 'Kamera aus.', 'カメラをオフにしました。', '摄像头已关闭。', '카메라를 껐어요.'],
+    callShare: ['Pick what to share.', 'Elige qué compartir.', 'Escolha o que compartilhar.', 'Choisissez quoi partager.', 'Wähle aus, was du teilst.', '共有するものを選んでください。', '选择要共享的内容。', '공유할 화면을 고르세요.'],
+    callShareOff: ['Stopped sharing.', 'Dejé de compartir.', 'Parei de compartilhar.', 'Partage arrêté.', 'Teilen beendet.', '共有を止めました。', '已停止共享。', '공유를 멈췄어요.'],
+    callHand: ['Hand raised.', 'Mano levantada.', 'Mão levantada.', 'Main levée.', 'Hand gehoben.', '手を挙げました。', '已举手。', '손을 들었어요.'],
+    callHandDown: ['Hand lowered.', 'Mano bajada.', 'Mão abaixada.', 'Main baissée.', 'Hand gesenkt.', '手を下げました。', '已放下手。', '손을 내렸어요.'],
+    callRing: ['Ringing {p}…', 'Llamando a {p}…', 'Chamando {p}…', 'J’appelle {p}…', 'Rufe {p} an…', '{p}を呼び出しています…', '正在呼叫{p}…', '{p}님에게 거는 중…'],
+    callPresent: ['Presenting TribeCode: everyone can follow you.', 'Presentando TribeCode: todos pueden seguirte.', 'Apresentando o TribeCode: todos podem te seguir.', 'Vous présentez TribeCode : tout le monde peut vous suivre.', 'Du präsentierst TribeCode: alle können dir folgen.', 'TribeCodeを発表中：みんながフォローできます。', '正在演示 TribeCode：大家可以跟随你。', 'TribeCode를 발표 중이에요: 모두 따라올 수 있어요.'],
+    callNotIn: ['Join a huddle first.', 'Primero únete a una llamada.', 'Entre numa chamada primeiro.', 'Rejoignez d’abord un appel.', 'Tritt zuerst einem Huddle bei.', '先にハドルに参加してください。', '请先加入语音。', '먼저 허들에 참여하세요.'],
     huddleOn: ['Joined the huddle.', 'Entré a la llamada.', 'Entrei na chamada.', 'J’ai rejoint l’appel.', 'Dem Huddle beigetreten.', 'ハドルに参加しました。', '已加入语音。', '허들에 참여했어요.'],
     huddleOff: ['Left the huddle.', 'Salí de la llamada.', 'Saí da chamada.', 'J’ai quitté l’appel.', 'Huddle verlassen.', 'ハドルを抜けました。', '已离开语音。', '허들에서 나왔어요.'],
     device: ['Showing the {x} view.', 'Vista de {x}.', 'Vista de {x}.', 'Vue {x}.', 'Ansicht: {x}.', '{x}表示にしました。', '已切换到{x}视图。', '{x} 화면으로 보여요.'],
@@ -383,6 +392,27 @@
     if (id === 'helper.toggle') return legacy(`turn ${sl.on ? 'on' : 'off'} the ${sl.what}`);
     if (id === 'jam.start') { const J = window.TribeJam; if (J) (J.start ? J.start() : J.open()); return { text: T('opened', { x: 'Jam' }), sum: 'started a jam' }; }
     if (id === 'huddle.start') { const Hd = window.TribeHuddle; if (!Hd) return { text: T('noPlace', { x: 'Huddle' }) }; if (!Hd.inCall()) Hd.join(); pushUndo('huddle', () => Hd.leave()); return { text: T('huddleOn') }; }
+    if (id.startsWith('call.') || id === 'secretary.summary') {
+      const Hd = window.TribeHuddle, Cl = window.TribeCall;
+      if (id === 'secretary.summary') {
+        try {
+          const t = await C.api('/secretary/summary');
+          const parts = [];
+          if ((t.summary || []).length) parts.push(t.summary.map(x => '- ' + x).join('\n'));
+          if ((t.decisions || []).length) parts.push('Decided: ' + t.decisions.slice(0, 3).map(d => d.text).join(' · '));
+          if ((t.actions || []).length) parts.push('Action items:\n' + t.actions.slice(0, 6).map(a => `- ${a.title}${a.ownerName ? ' (' + a.ownerName + ')' : ''}${a.due ? ' · due ' + a.due : ''}`).join('\n'));
+          return { text: parts.length ? parts.join('\n\n') : 'Nothing said today yet. Chat, voice notes and shared huddle captions show up here.' };
+        } catch (e) { return { text: e.message }; }
+      }
+      if (id === 'call.ring') { const p = sl.who; if (!p || !p.id) return { text: Q('Who should I ring?') }; if (!Hd.inCall()) await Hd.join(); if (Cl) Cl.ring(p.id); return { text: T('callRing', { p: first(p.name) }) }; }
+      if (id === 'call.stage') { if (Cl) { if (sl.history) { if (Hd.inCall()) Cl.open(); Cl.history(); } else Cl.open(); } return { text: sl.history ? 'Here are your recent calls.' : T('huddleOn') }; }
+      if (id === 'call.video') { if (!Hd.inCall() && sl.off) return { text: T('callNotIn') }; if (!Hd.inCall()) await Hd.join({ video: true }); else if (Hd.me().video === !!sl.off) await Hd.toggleCamera(); if (Cl && !sl.off) Cl.open(); return { text: T(sl.off ? 'callVideoOff' : 'callVideo') }; }
+      if (!Hd || !Hd.inCall()) return { text: T('callNotIn') };
+      if (id === 'call.share') { if (sl.off) { Hd.stopShare(); return { text: T('callShareOff') }; } Hd.share(); return { text: T('callShare') }; }
+      if (id === 'call.present') { C.send({ type: 'call-present', on: true, view: document.body.dataset.view || '' }); return { text: T('callPresent') }; }
+      if (id === 'call.hand') { if (Hd.me().hand === !sl.down) return { text: T(sl.down ? 'callHandDown' : 'callHand') }; Hd.toggleHand(); return { text: T(sl.down ? 'callHandDown' : 'callHand') }; }
+      if (id === 'call.mute') { const me = Hd.me(); if (sl.what === 'deaf') { if (me.deaf !== sl.on) Hd.toggleDeaf(); } else if ((me.muted && !me.deaf) !== sl.on) Hd.toggleMute(); return { text: sl.on ? (sl.what === 'deaf' ? 'Deafened.' : 'Muted.') : 'You’re live.' }; }
+    }
     if (id === 'huddle.leave') { const Hd = window.TribeHuddle; if (Hd && Hd.inCall()) Hd.leave(); return { text: T('huddleOff') }; }
     if (id === 'capture.toggle') { if (window.TribeCapture) window.TribeCapture.toggle(); return { text: T('opened', { x: 'Capture' }) }; }
     if (id === 'feedback') { if (window.TribeFeedback) window.TribeFeedback.open(); return { text: T('opened', { x: 'Feedback' }) }; }
@@ -467,7 +497,7 @@
 
   // ---------- the entry point ----------
   const LOCAL_ONLY = new Set(['undo', 'teach', 'meant', 'unteach', 'taught', 'lesson', 'redo']);   // feat/flint-site: lessons before Flint's "teach me what X is"
-  const LOCAL_FIRST = /^(task\.|chat\.send|dm\.|event\.add|cal\.show|theme\.|accent\.set|textsize\.set|lang\.set|calc|convert|time\.now|date\.calc|random|canvas\.|edit\.picked|preview\.(device|reload|edit)|comment\.mode|trending|market\.search|studio\.open|jam\.start|huddle\.|publish|site\.gallery|personalize\.open|feedback|tour|brain\.pick|build\.|site\.|premium\.)/;
+  const LOCAL_FIRST = /^(task\.|chat\.send|dm\.|event\.add|cal\.show|theme\.|accent\.set|textsize\.set|lang\.set|calc|convert|time\.now|date\.calc|random|canvas\.|edit\.picked|preview\.(device|reload|edit)|comment\.mode|trending|market\.search|studio\.open|jam\.start|huddle\.|call\.|secretary\.summary|publish|site\.gallery|personalize\.open|feedback|tour|brain\.pick|build\.|site\.|premium\.)/;
   let lastMiss = null;
   async function handle(text, H) {
     // the preview shows the website: its edits ("make the headline say …", "add a pricing section") go to the preview's Flint
