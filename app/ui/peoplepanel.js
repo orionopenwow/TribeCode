@@ -30,6 +30,7 @@
     <aside class="ppl-panel" id="ppl-panel" role="dialog" aria-label="People" hidden tabindex="-1">
       <header class="ppl-head"><div><span class="eyebrow">People</span><h2 id="ppl-title">Who's around</h2></div>
         <button class="btn primary sm" id="ppl-invite" type="button">Invite</button>
+        <button class="btn sm" id="ppl-claude" type="button" data-ic-open title="Invite your own Claude: it joins next to you, with your access">Invite your Claude</button>
         <button class="btn ghost sm" id="ppl-close" type="button" aria-label="Close">Done</button></header>
       <div class="ppl-tabs" role="tablist"><button role="tab" data-tab="tribe" type="button">This tribe</button><button role="tab" data-tab="friends" type="button">Friends</button></div>
       <div class="ppl-tools"><input class="input ppl-q" id="ppl-q" type="search" placeholder="Search people" aria-label="Search people" autocomplete="off">
@@ -80,7 +81,7 @@
     const star = !isAI(m) && !you ? `<button type="button" class="ppl-act ppl-star${friends.has(m.id) ? ' on' : ''}" data-star="${esc(m.id)}" aria-pressed="${friends.has(m.id)}" title="${friends.has(m.id) ? 'Starred friend' : 'Star as friend'}" aria-label="${friends.has(m.id) ? 'Unstar' : 'Star'} ${esc(m.name)}">${STAR(friends.has(m.id))}</button>` : '';
     return `<div class="ppl-row${focusId === m.id ? ' focus' : ''}" data-mid="${esc(m.id)}">
       ${face(m)}
-      <div class="ppl-t"><b>${esc(m.name)}${you ? ' <span class="ppl-you">you</span>' : ''}${isAI(m) ? ' <span class="ppl-ai">AI</span>' : ''}</b>
+      <div class="ppl-t"><b>${esc(m.name)}${you ? ' <span class="ppl-you">you</span>' : ''}${isAI(m) ? ' <span class="ppl-ai">AI</span>' : ''}</b>${isAI(m) && m.invited && m.ownerName ? `<small class="ppl-by">invited by ${esc(m.ownerName)}</small>` : ''}
         <small class="ppl-st st-${s.k}">${line}${where ? ' · ' : ''}${where}</small>
         ${wk.length ? `<small class="ppl-wk">Working on ${wk.slice(0, 2).map(t => `“${esc(t.title)}”`).join(', ')}${wk.length > 2 ? ` +${wk.length - 2}` : ''}</small>` : ''}</div>
       ${you ? '' : `<div class="ppl-acts">
@@ -118,6 +119,7 @@
         + sec('Pending invites', inv.length || null, inv.length ? inv.map(i => `<div class="ppl-row ppl-inv"><span class="ppl-face"><span class="pf-av ppl-av ppl-inv-av">+</span></span><div class="ppl-t"><b>${i.guest ? 'Guest pass' : 'Invite link'} · ${esc(i.uses || 0)}/${esc(i.maxUses)} used</b><small>expires ${esc(new Date(i.expires).toLocaleDateString([], { month: 'short', day: 'numeric' }))}${i.project ? ' · this project' : ''}</small></div></div>`).join('') : '<p class="ppl-empty">No open invites. <button type="button" class="linkish" data-invite>Invite someone</button></p>')
         + (canInvite() ? sec('Add someone new', null, `<button type="button" class="ppl-add" id="ppl-new-invite"><span class="ppl-ai k-ember" aria-hidden="true">+</span><span class="ppl-t"><b>Invite a friend</b><small>A link for this project. They join with a name, on a computer or a phone.</small></span></button>
           <button type="button" class="ppl-add" id="ppl-guest"><span class="ppl-ai k-indigo" aria-hidden="true">1×</span><span class="ppl-t"><b>One-time guest pass</b><small>Works once. Their account stops working after a day. Good for a quick look or a playtest.</small></span></button>
+          <button type="button" class="ppl-add" id="ppl-new-claude" data-ic-open><span class="ppl-ai k-teal" aria-hidden="true">AI</span><span class="ppl-t"><b>Invite your Claude</b><small>Your own Claude joins next to you, with your access and never more.</small></span></button>
           <div id="ppl-link" class="ppl-link" hidden></div>`) : '');
     }
     wire(body);

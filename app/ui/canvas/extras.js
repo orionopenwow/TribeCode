@@ -159,6 +159,7 @@
   }
 
   function mount(editor) {
+    if (!editor || E === editor) return;   // once per editor: canvas.js and the self-mount below may both call this
     E = editor;
     const root = document.getElementById('cv-props');
     if (root) {
@@ -198,4 +199,6 @@
   }, true);
 
   window.TribeCanvasExtras = { mount, context, align, replaceColor, presets: PRESETS, addPreset };
+  // canvas.js loads first: if it already built (the app opened straight on #/canvas) it found no extras to mount, so mount now
+  if (document.getElementById('cv') && window.TribeCanvas && window.TribeCanvas._e) mount(window.TribeCanvas._e);
 })();

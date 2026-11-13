@@ -5,7 +5,7 @@
 //   2. else the latest screenshot of the running app (server/visuals.js).
 //   3. else a flat generated tile: the repo's initials on the project color.
 // Cached per project; the cache key is the README's mtime + the newest screenshot, so it refreshes when either changes.
-//   GET /api/thumb                  -> { thumb: { kind: 'readme'|'github'|'screenshot'|'tile', src?, initials, color, name } }
+//   GET /api/thumb[?prefer=shot]    -> (prefer=shot: the app's latest screenshot first, for the dashboard band) { thumb: { kind: 'readme'|'github'|'screenshot'|'tile', src?, initials, color, name } }
 //   GET /api/thumb/file?p=<path>    -> the README image (image files inside the repo only)
 'use strict';
 const fs = require('fs');
@@ -47,10 +47,11 @@ module.exports = function thumb({ P, visuals }) {
   }
   const initials = name => String(name || '?').replace(/[-_.]+/g, ' ').split(/\s+/).filter(Boolean).map(w => w[0]).join('').slice(0, 2).toUpperCase() || '?';
 
-  function compute(p, rd, shot) {
+  function compute(p, rd, shot, prefer) {
     const repo = p.repo, gh = repo ? githubOf(repo) : null;
     const name = gh ? `${gh.owner}/${gh.repo}` : repo ? path.basename(repo) : p.name;
     const base = { name, initials: initials(gh ? gh.repo : repo ? path.basename(repo) : p.name), color: p.color || '#F26B1D' };
+    if (prefer === 'shot' && shot) return { ...base, kind: 'screenshot', src: `/api/visuals/${encodeURIComponent(shot.screen)}/${encodeURIComponent(shot.ts)}.png` };   // feat/dash-preview: the running app first
     if (rd) {
       for (const ref of images(rd.text)) {
         if (/^https?:\/\//i.test(ref)) return { ...base, kind: 'readme', src: ref };
@@ -63,20 +64,20 @@ module.exports = function thumb({ P, visuals }) {
     if (shot) return { ...base, kind: 'screenshot', src: `/api/visuals/${encodeURIComponent(shot.screen)}/${encodeURIComponent(shot.ts)}.png` };
     return { ...base, kind: 'tile' };
   }
-  function get(pid) {
+  function get(pid, prefer) {
     const p = P.get(pid || P.current() || P.defaultId()) || P.get(P.defaultId()); if (!p) return null;
     const rd = readmeOf(p.repo), shot = latestShot();
-    const key = `${p.repo || ''}|${rd ? rd.mtime : 0}|${shot ? shot.screen + '/' + shot.ts : ''}|${p.name}|${p.color}`;
-    const hit = cache.get(p.id); if (hit && hit.key === key) return hit.thumb;
-    const t = { ...compute(p, rd, shot), at: new Date().toISOString() };
-    cache.set(p.id, { key, thumb: t });
+    const key = `${prefer || ''}|${p.repo || ''}|${rd ? rd.mtime : 0}|${shot ? shot.screen + '/' + shot.ts : ''}|${p.name}|${p.color}`;
+    const ck = p.id + '|' + (prefer || ''), hit = cache.get(ck); if (hit && hit.key === key) return hit.thumb;
+    const t = { ...compute(p, rd, shot, prefer), at: new Date().toISOString() };
+    cache.set(ck, { key, thumb: t });
     return t;
   }
 
   async function route(req, res, { m, b, me, url, send, fail }) {
     if (m !== 'GET') return null;
     if (!me) return fail(res, 401, 'not a member of this tribe');
-    if (!b) return send(res, 200, { thumb: get() });
+    if (!b) return send(res, 200, { thumb: get(null, url.searchParams.get('prefer') === 'shot' ? 'shot' : '') });
     if (b === 'file') {
       const p = P.get(P.current() || P.defaultId()); const repo = p && p.repo;
       const rel = String(url.searchParams.get('p') || ''), f = repo ? path.resolve(repo, rel) : '';

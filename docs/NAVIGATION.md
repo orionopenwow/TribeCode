@@ -26,7 +26,8 @@ Where every button goes, and the one router that keeps it continuous on desktop 
 | Global: Code (`#nest-repos-all`, key `repos-all` kept) | `TribeHub.open('repos')`: the repos you're in, then your code files | global | `#/hub/repos` |
 | Global: Work (`#nest-work`) | `TribeTalent.open()`; with no tribe, its empty state (Start your first project · Join with a link · Back to Home) | global | `#/hub/work` |
 | Global: Agent fleet (`#nest-fleet`) | `TribeAgentsHub.open({ global: true })` | global | `#/fleet` |
-| Project: Dashboard (`#nest-overview`) | `App.show('home')` | project | |
+| Project: Dashboard (`#nest-overview`) | `App.show('home')`: the preview band of the project (app · website · design, `app/ui/dashband.js`), Needs attention under it, then the rest | project | |
+| Dashboard band actions | Open preview (`TribePreview`), Open code (`App.show('repo')`) / Open designer (`TribeSiteDesigner`) / Open design (`TribeCanvas`), Share link (copies), Switch App · Website · Design, ⋯ Pin as main project (leads). Each Needs attention row has one action (inbox, Accept in place, tasks, designer, Company, GitHub, backup) | project | |
 | Project: Messages (`#nest-chat`), streams | `App.show('chat')`, DMs, channels | project | |
 | Project: Files (`#nest-docs`) | Files tabs (stroke icons): Files · Code · Docs · Website · Captures · Academy; the Files tab is the shared Files dashboard | project | `#/docs/<tab>` |
 | Project: Design (`#nest-canvas`) | The design canvas | project | |

@@ -3,7 +3,7 @@
 // Agents show up in the room, read/update tasks and docs, chat, and claim files.
 'use strict';
 
-module.exports = function mcp({ extra = {}, scope = (me, wanted, fn) => fn(), projects = () => [], VERSION, tribe, presence, touchAgent, tasks, docs, chat, claims, board, readVision, approvals, extraTools = {}, coordTools = null, port = 4747 }) {
+module.exports = function mcp({ extra = {}, scope = (me, wanted, fn) => fn(), projects = () => [], VERSION, tribe, presence, touchAgent, tasks, docs, chat, claims, board, readVision, approvals, extraTools = {}, coordTools = null, port = 4747, gate = null }) {   // gate: invited Claudes (server/inviteclaude.js)
   const text = (t) => ({ content: [{ type: 'text', text: typeof t === 'string' ? t : JSON.stringify(t, null, 2) }] });
   const err = (t) => ({ content: [{ type: 'text', text: t }], isError: true });
   const S = (props, required = []) => ({ type: 'object', properties: props, required, additionalProperties: false });
@@ -139,14 +139,15 @@ module.exports = function mcp({ extra = {}, scope = (me, wanted, fn) => fn(), pr
     if (method === 'initialize' || method === 'tools/list') connected(me);
     if (method === 'initialize') return reply({ protocolVersion: negotiate(params.protocolVersion), capabilities: { tools: { listChanged: false } },
       serverInfo: { name: 'tribecode', title: `TribeCode · ${tribe.name}`, version: VERSION },
-      instructions: `You are ${me.name}, working in the TribeCode tribe "${tribe.name}" alongside humans and other agents. Call tribe_overview first, then my_lane (and again between steps: it carries pause/stop requests). Claim files before editing them, keep the board current (take a task, move it to review when done), respect VISION.md, and use propose for scope changes. When you finish, request_review; to pass work on, handoff; with nothing to do, suggest_task. Friends without an AI of their own ask the tribe's agents for help: those requests show in my_lane (handoffsForYou), take one with take_handoff and answer in chat. Other agents work here too: read #agents (agents_read) when you start, coordinate there (agents_post, message_agent), hand tasks to the right agent with delegate, and answer delegations with accept_delegation/decline_delegation. Suggest work to humans with recommend; when the team should decide something together (a feature, a direction), suggest_vote posts a vote card in chat (only humans vote) and check_vote reads the result.${extra.instructions ? extra.instructions(me) : ''}` });
+      instructions: `You are ${me.name}, working in the TribeCode tribe "${tribe.name}" alongside humans and other agents. Call tribe_overview first, then my_lane (and again between steps: it carries pause/stop requests). Claim files before editing them, keep the board current (take a task, move it to review when done), respect VISION.md, and use propose for scope changes. When you finish, request_review; to pass work on, handoff; with nothing to do, suggest_task. Friends without an AI of their own ask the tribe's agents for help: those requests show in my_lane (handoffsForYou), take one with take_handoff and answer in chat. Other agents work here too: read #agents (agents_read) when you start, coordinate there (agents_post, message_agent), hand tasks to the right agent with delegate, and answer delegations with accept_delegation/decline_delegation. Suggest work to humans with recommend; when the team should decide something together (a feature, a direction), suggest_vote posts a vote card in chat (only humans vote) and check_vote reads the result.${me.invited ? ` You were invited by a person in this tribe and act with their access, never more. Call inbox_next between steps: @mentions of you land there; answer with reply_chat.` : ''}${extra.instructions ? extra.instructions(me) : ''}` });
     if (method === 'ping') return reply({});
-    if (method === 'tools/list') return reply({ tools: Object.entries(TOOLS).map(([name, t]) => ({ name, description: t.description, inputSchema: withProject(t.inputSchema) })) });
+    if (method === 'tools/list') return reply({ tools: Object.entries(TOOLS).filter(([name]) => !gate || gate.listable(me, name)).map(([name, t]) => ({ name, description: t.description, inputSchema: withProject(t.inputSchema) })) });
     if (method === 'tools/call') {
       const tool = TOOLS[params.name];
       if (!tool) return { jsonrpc: '2.0', id, error: { code: -32602, message: `Unknown tool: ${params.name}` } };
       const { project, ...args } = params.arguments || {};
-      try { return reply(await scope(me, project, async () => { touchAgent(me, params.name); require('./mcp-people').log(me, params.name, args); return tool.run(args, me, { auth: AUTH.get(me), project }); })); } catch (e) { return reply(err(e.message || String(e))); }
+      const no = gate && gate.tool(me, params.name, args); if (no) return reply(err(no));
+      try { return reply(await scope(me, project, async () => { touchAgent(me, params.name, args); require('./mcp-people').log(me, params.name, args); return tool.run(args, me, { auth: AUTH.get(me), project, port }); })); } catch (e) { return reply(err(e.message || String(e))); }
     }
     if (method && method.startsWith('notifications/')) return null;
     return { jsonrpc: '2.0', id, error: { code: -32601, message: `Method not found: ${method}` } };

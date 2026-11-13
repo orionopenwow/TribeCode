@@ -83,7 +83,7 @@
     let root = sec.querySelector('#fl-root');
     if (!root) { sec.innerHTML = `<div class="ah ah-fleet">${head()}<div id="fl-root"></div></div>`; root = sec.querySelector('#fl-root'); }
     const officeSec = () => (C.hasToken && C.hasToken() ? `<section class="fl-sec" id="ah-office-sec"><div class="sec-head"><span class="eyebrow">Optional</span><h2><span class="emo" aria-hidden="true">🪑</span>Office</h2></div><div id="ah-office">${officeHtml()}</div></section>` : '');
-    return window.TribeFleet.render(root, { scope: 'all', alive: () => open, extra: officeSec, after: () => { wireOffice(); if (C.hasToken && C.hasToken()) C.api('/openspace').then(o => { office = o; drawOffice(); }).catch(() => {}); } });
+    return window.TribeFleet.render(root, { scope: 'all', alive: () => open, extra: () => officeSec() + (window.TribeAIBridge ? window.TribeAIBridge.guideHtml() : ''), after: () => { wireOffice(); if (C.hasToken && C.hasToken()) C.api('/openspace').then(o => { office = o; drawOffice(); }).catch(() => {}); } });
   }
   const head = () => fleet ? `<header class="sec-head ah-head"><span class="eyebrow">Every project</span><h1>Agent fleet</h1></header>` : `<header class="sec-head ah-head"><span class="eyebrow">Solo mode</span><h1>Your agents</h1></header>`;
 
@@ -150,6 +150,7 @@
       <section class="sec" id="ah-connect-sec"><div class="sec-head"><span class="eyebrow">Connect</span><h2>Add an agent</h2>${window.TribeMcpDir ? '<button class="linkish ah-all" data-mcpdir-open>Claude.ai, ChatGPT, VS Code and more →</button>' : ''}</div>
         <div class="ah-tiles">${TILES.map(([k, t, d]) => `<button class="ah-tile${connectKind === k ? ' on' : ''}" style="--k:${COLOR[k]}" data-connect="${k}" aria-expanded="${connectKind === k}"><span class="ah-glyph">${glyph(k)}</span><b>${t}</b><span>${d}</span></button>`).join('')}</div>
         <div class="ah-connect${connectKind ? '' : ' hidden'}" id="ah-connect">${connectKind ? connectPanel() : ''}</div></section>
+      ${window.TribeAIBridge ? window.TribeAIBridge.guideHtml() : ''}
       <section class="sec"><div class="sec-head"><span class="eyebrow">At home</span><h2><span class="emo" aria-hidden="true">🏠</span>Local models</h2></div>${modelsHtml(models, s)}</section>
       <section class="sec" id="ah-office-sec"><div class="sec-head"><span class="eyebrow">Optional</span><h2><span class="emo" aria-hidden="true">🪑</span>Office</h2></div><div id="ah-office">${officeHtml()}</div></section>
     </div>`;

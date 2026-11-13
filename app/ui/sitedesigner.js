@@ -196,6 +196,7 @@
         <button type="button" class="btn sm" data-wdz="comment" id="wdz-cmode" aria-pressed="false" title="Click a section to leave a comment (C)">Comment<span class="wdz-n" id="wdz-cn" hidden></span></button>
         <button type="button" class="btn ghost sm wdz-ic" data-wdz="keys" title="Keyboard shortcuts (?)" aria-label="Keyboard shortcuts">?</button>
         <button type="button" class="btn sm" data-wdz="templates">Templates</button>
+        <button type="button" class="btn sm" data-wdz="freeai" id="wdz-freeai" title="Copy the design for ChatGPT, Gemini or another free AI, then paste its answer back">Ask a free AI</button>
         <button type="button" class="btn sm" data-wdz="save">Save version</button>
         <span class="wdz-dl"><button type="button" class="btn sm primary" data-wdz="dl-html" id="wdz-dl">Download HTML</button><button type="button" class="btn sm primary wdz-dl-more" data-wdz="dlmenu" aria-label="More download options" aria-expanded="false">▾</button>
           <span class="wdz-menu" id="wdz-dlmenu" hidden role="menu"><button type="button" role="menuitem" data-wdz="dl-html"><b>index.html</b><small>One standalone file: every page, pictures inside, no scripts</small></button><button type="button" role="menuitem" data-wdz="dl-zip"><b>.zip with pages and assets</b><small>A file per page, assets/, fonts/ and site.json</small></button><button type="button" role="menuitem" data-wdz="publish"><b>Publish to the project</b><small>Writes it to the project's site/ folder</small></button></span></span>
@@ -590,6 +591,7 @@
     if (k === 'dlmenu') { const m = $('#wdz-dlmenu'); m.hidden = !m.hidden; a.setAttribute('aria-expanded', String(!m.hidden)); return; }
     if (k === 'dl-html' || k === 'dl-zip') { $('#wdz-dlmenu').hidden = true; return download(k === 'dl-zip' ? 'zip' : 'html'); }
     if (k === 'publish') { $('#wdz-dlmenu').hidden = true; return publish(); }
+    if (k === 'freeai') return window.TribeAIBridge && window.TribeAIBridge.open({ src: 'site', goal: 'Improve this website' });   // feat/agents-free
     if (k === 'save') return saveVersion();
     if (k === 'comment') return commentMode(!st.cmode);
     if (k === 'keys') return shortcuts();
@@ -799,5 +801,15 @@
   // dirty(pid): edits not on the host yet (the sidebar's Website row shows a dot); hasDraft(pid): a design exists here
   const dirty = pid => { if (st && (pid == null || st.pid === pid)) return !!st.dirty; const d = readDraft(pid); return !!(d && d.dirty); };
   const hasDraft = pid => !!(st && st.pid === pid) || !!readDraft(pid);
-  window.TribeSiteDesigner = { open, close, ask, download, undo, redo, flush, dirty, hasDraft, comments: () => st ? st.comments : [], state: () => st && { pid: st.pid, page: st.page, sel: st.sel, hist: st.hist.length, fut: st.fut.length, log: st.log, pending: st.pending || null, open: !!root && !root.hidden, dirty: st.dirty, rev: st.rev, dev: st.dev, panel: st.panel, cmode: st.cmode }, cfg: () => st && st.cfg, useTemplate, gallery: () => gal.list };
+  // feat/agents-free: a site config (or a page of HTML) from a free AI chat, imported as a new version (one Undo away)
+  async function importCfg(cfg, note) {
+    if (!root || root.hidden || !st) await open({});
+    if (!st || !cfg) return false;
+    commit(S().normalize(JSON.parse(JSON.stringify(cfg))));
+    if (st.pid && connected()) { st.dirty = true; if (await push()) { try { await C.api(`/projects/${encodeURIComponent(st.pid)}/website/versions`, { method: 'POST', body: { note: String(note || 'From a free AI (pasted)').slice(0, 80) } }); } catch {} } }
+    else { try { localStorage.setItem(LOCAL + '.v', JSON.stringify(st.cfg)); } catch {} }
+    say(`Imported ${note || 'the pasted design'} as a new version. Undo puts the old one back.`);
+    return true;
+  }
+  window.TribeSiteDesigner = { importCfg, open, close, ask, download, undo, redo, flush, dirty, hasDraft, comments: () => st ? st.comments : [], state: () => st && { pid: st.pid, page: st.page, sel: st.sel, hist: st.hist.length, fut: st.fut.length, log: st.log, pending: st.pending || null, open: !!root && !root.hidden, dirty: st.dirty, rev: st.rev, dev: st.dev, panel: st.panel, cmode: st.cmode }, cfg: () => st && st.cfg, useTemplate, gallery: () => gal.list };
 })();

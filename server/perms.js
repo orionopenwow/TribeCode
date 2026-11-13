@@ -77,6 +77,7 @@ function perms({ P, store, getMembers, saveMembers, bus, broadcast, pushPresence
     if (r !== 'agent') return r;
     const o = member(m.owner); if (!o || o.role === 'agent') return 'spectator';
     const or = roleIn(o, pid);
+    if (m.invited && m.adminAsMe && (or === 'admin' || or === 'host')) return 'admin';   // "Let it act as me for admin" (server/inviteclaude.js); host-only rows stay locked
     return RANK[or] >= RANK.builder ? 'builder' : or;
   }
   const rank = (m, pid) => RANK[actingRole(m, pid)] || 0;
@@ -275,7 +276,7 @@ function perms({ P, store, getMembers, saveMembers, bus, broadcast, pushPresence
         labels: LABEL, roles: ROLES, columns: COLUMNS, ranks: RANK,
         ...(manager ? { matrix: matrix(me), members: membersView(me, pid), canReset: me.role === 'host' || atLeast(me, 'admin') } : {}) });
     }
-    if (me.role === 'agent') return fail(res, 403, 'agents don\'t manage roles');
+    if (me.role === 'agent' && !(me.invited && me.adminAsMe && ['mute', 'remove'].includes(b))) return fail(res, 403, 'agents don\'t manage roles');   // an invited Claude acting as its admin may moderate, never change roles
     const body = m === 'GET' || m === 'DELETE' ? {} : await readBody(req).catch(() => ({}));
     if (m === 'PUT' && b === 'overrides') return wrap(() => ({ matrix: setOverride(me, str(body.cap, 60), str(body.role, 20), !!body.on) }));
     if (m === 'POST' && b === 'reset') return wrap(() => ({ matrix: reset(me) }));

@@ -800,7 +800,7 @@
     p.innerHTML = `<header><b># ${esc(ch === 'general' ? 'general' : ch)}</b><button type="button" class="pp-x" aria-label="Close">✕</button></header>
       <div class="ip-body"><span class="eyebrow">People · ${people.filter(m => m.online).length} online</span>${people.map(row).join('') || '<p class="faint">Just you so far.</p>'}
       ${agents.length ? `<span class="eyebrow">AI helpers</span>${agents.map(row).join('')}` : ''}
-      <button type="button" class="btn sm ip-inv">👋 Invite someone</button></div>`;
+      <button type="button" class="btn sm ip-inv">👋 Invite someone</button><button type="button" class="btn sm ip-claude" data-ic-open>Invite your Claude</button></div>`;
     document.body.appendChild(p);
     const r = anchor.getBoundingClientRect(), phone = matchMedia('(max-width: 820px)').matches;
     if (!phone) { p.style.top = (r.bottom + 6) + 'px'; p.style.right = Math.max(12, innerWidth - r.right) + 'px'; }

@@ -137,7 +137,7 @@ def main():
             # 6) "Show where I am" off (Settings): Ben sees Ana online, without a place
             A.evaluate("TribeApp.show('chat'); TribeDM.back && TribeDM.back()")
             B.wait_for_function(f"(TribePresence.of('{aid}') || {{}}).k === 'chat'", timeout=10000)
-            A.evaluate("TribeSettings.open()"); A.wait_for_selector("#pz-show", timeout=10000)
+            A.evaluate("TribeSettings.open('privacy')"); A.wait_for_selector("#pz-show", timeout=10000)
             assert A.is_checked("#pz-show"), "on by default"
             A.click("#pz-show")
             B.wait_for_function(f"TribePresence.of('{aid}') === null", timeout=10000)
