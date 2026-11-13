@@ -147,13 +147,26 @@ def main():
             shot(pg, "drop-overlay")
             pg.evaluate("""() => { const dt = new DataTransfer(); dt.items.add(new File(['x'], 'x.txt')); document.body.dispatchEvent(new DragEvent('dragleave', { bubbles: true, dataTransfer: dt })); }""")
             pg.wait_for_function("!document.querySelector('#dz-ov.on')")
-            pg.evaluate("window.TribeFolderHome = { use: o => { window.__home = o.name; } }")
+            # "Make it the project's folder" is wired to the folder-home API (TribeHome.folder, livingrepo.js). A browser has no
+            # real path, so the choice is not offered there, even on a page that can browse folders
+            assert pg.evaluate("typeof TribeHome.folder === 'function' && typeof TribeHome.canPickFolder === 'function'") and pg.evaluate("typeof window.TribeFolderHome") == "undefined"
+            # the desktop app (native picker, real paths): the choice shows, and one dropped folder opens the folder picker on its path
+            pg.evaluate("window.__realHome = { can: TribeHome.canPickFolder, folder: TribeHome.folder }; TribeHome.canPickFolder = () => ({ ok: true, how: 'native' }); TribeHome.folder = o => { window.__home = o; }; 0")
             pg.evaluate("""() => { const dt = new DataTransfer(); dt.items.add(new File(['x'], 'x.txt')); document.body.dispatchEvent(new DragEvent('dragenter', { bubbles: true, cancelable: true, dataTransfer: dt })); }""")
             assert pg.eval_on_selector_all("#dz-ov [data-dz-choice]", "l => l.map(x => x.dataset.dzChoice)") == ["files", "read", "inspo", "home", "newproj"]
             # dropping on an overlay choice does it: "Make it the project's folder" calls the folder-homes API
-            pg.evaluate("__dropTree('#dz-ov [data-dz-choice=home]', 'weather-py')")
-            pg.wait_for_function("window.__home === 'weather-py'")
-            pg.evaluate("delete window.TribeFolderHome"); assert not pg.evaluate("TribeDropZone.state().overlay")
+            pg.evaluate("__dropTree('#dz-ov [data-dz-choice=home]', 'weather-py')"); pg.wait_for_timeout(700)
+            assert pg.evaluate("window.__home === undefined"), "a browser drop has no path: nothing is sent to the folder-home API"
+            assert not pg.evaluate("TribeDropZone.state().overlay")
+            pg.evaluate("TribeDropZone.take({ id: 'd1', name: 'weather-py', items: [{ path: 'weather-py/app.py', name: 'app.py', size: 3 }], skipped: [], folder: true, source: 'desktop', paths: ['/home/me/code/weather-py'] }, { k: 'choice', v: 'home' })")
+            pg.wait_for_function("window.__home && window.__home.path === '/home/me/code/weather-py'")
+            pg.evaluate("window.__home = undefined; TribeDropZone.take({ id: 'd2', name: '', items: [{ path: 'a.txt', name: 'a.txt', size: 1 }], skipped: [], folder: false, source: 'desktop', paths: ['/home/me/a.txt'] }, { k: 'choice', v: 'home' })"); pg.wait_for_timeout(300)
+            assert pg.evaluate("window.__home === undefined"), "a loose file is not a folder home"
+            pg.evaluate("TribeHome.canPickFolder = window.__realHome.can; TribeHome.folder = window.__realHome.folder; 0")
+            pg.evaluate("() => { const dt = new DataTransfer(); dt.items.add(new File(['x'], 'x.txt')); document.body.dispatchEvent(new DragEvent('dragenter', { bubbles: true, cancelable: true, dataTransfer: dt })); }")
+            assert "home" not in pg.eval_on_selector_all("#dz-ov [data-dz-choice]", "l => l.map(x => x.dataset.dzChoice)"), "a browser: no folder-home choice"
+            pg.evaluate("() => { const dt = new DataTransfer(); dt.items.add(new File(['x'], 'x.txt')); document.body.dispatchEvent(new DragEvent('dragleave', { bubbles: true, dataTransfer: dt })); }")
+            pg.wait_for_function("!document.querySelector('#dz-ov.on')")
 
             # ---- 2. dropping anywhere: the sheet with Flint's read, the walk skipped node_modules + dist (.gitignore)
             pg.evaluate("__dropTree(document.body, 'recipe-site', 700, 400)")

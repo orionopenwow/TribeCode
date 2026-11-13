@@ -198,7 +198,10 @@
   // ---------- the overlay while dragging ----------
   let ov = null, depth = 0, hideT = null, dragKind = null;
   const isFiles = e => { const t = [...((e.dataTransfer && e.dataTransfer.types) || [])]; return t.includes('Files'); };
-  function folderHomes() { const F = window.TribeFolderHome || window.TribeFolderHomes; return F && (F.use || F.set || F.setHome) ? F : null; }
+  // "Make it the project's folder" goes through the folder-home API (livingrepo.js: TribeHome.folder). It needs the
+  // folder's real path, which only the desktop app has (its native drop); a browser drop has none, so no choice there.
+  function folderHomes() { const H = window.TribeHome; if (!H || !H.folder || !H.canPickFolder) return null; let c = null; try { c = H.canPickFolder(); } catch {} return c && c.ok && c.how === 'native' ? H : null; }
+  const homeFor = set => !!(folderHomes() && set && set.folder && set.paths && set.paths.length === 1);
   function choices() {
     const p = connected() && pid(), out = [];
     out.push({ k: 'files', i: 'up', t: p ? `Add to ${projName() || 'this project'}’s files` : connected() ? 'Add to my files' : 'Keep it on this device', s: 'Uploads, keeps the folders' });
@@ -304,7 +307,10 @@
     if (k === 'files') return planUpload(set, destFor(null));
     if (k === 'read') return read(set);
     if (k === 'inspo') return pins(set, pid() && connected() ? 'project' : 'me');
-    if (k === 'home') { const F = folderHomes(); if (!F) return; closeSheet(); try { await (F.use || F.set || F.setHome).call(F, { name: set.name, paths: set.paths || null, items: set.items }); } catch (e) { toast(e.message); } return; }
+    if (k === 'home') {   // the picker opens on that folder, shows what is in it and asks once; the server checks the path (server/folderhome.js)
+      if (!homeFor(set)) return toast(folderHomes() ? 'Drop one folder from this computer to make it the project’s folder.' : 'A folder home needs the TribeCode app on your computer.');
+      closeSheet(); try { await folderHomes().folder({ pid: pid() || undefined, path: set.paths[0] }); } catch (e) { toast(e.message); } return;
+    }
     if (k === 'newproj') return newProject(set);
   }
   function destFor(el) {
@@ -338,7 +344,7 @@
     cur = set;
     const el = openSheet(`${head(set.source === 'paste' ? 'Pasted' : 'Dropped', label(set), metaOf(set))}
       <div class="dz-flint" id="dz-read"><span class="dz-fl" aria-hidden="true"><img src="assets/flint.svg" alt="" width="18" height="18"></span><p class="dz-say">Reading it…</p></div>
-      <div class="dz-list" role="list">${choices().filter(c => set.folder || c.k !== 'home').map(c => choiceHtml(c, 'button')).join('')}${set.url ? `<button type="button" class="dz-choice" data-dz-link>${ico('pin', 20)}<span><b>Pin the link on the board</b><small>${esc(set.url.slice(0, 60))}</small></span></button>` : ''}</div>`, 'dz-choose');
+      <div class="dz-list" role="list">${choices().filter(c => c.k !== 'home' || homeFor(set)).map(c => choiceHtml(c, 'button')).join('')}${set.url ? `<button type="button" class="dz-choice" data-dz-link>${ico('pin', 20)}<span><b>Pin the link on the board</b><small>${esc(set.url.slice(0, 60))}</small></span></button>` : ''}</div>`, 'dz-choose');
     wireSheet(el, set);
     el.querySelector('.dz-choice').setAttribute('data-autofocus', '');
     try { const R = await analyze(set); const p = el.querySelector('.dz-say'); if (p) p.textContent = R.summary; } catch (e) { const p = el.querySelector('.dz-say'); if (p) p.textContent = 'I could not read it: ' + e.message; }

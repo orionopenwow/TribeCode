@@ -225,6 +225,7 @@
         catch (x) { err(x.message); }
       };
     }
+    if (o.path) choose(o.path);   // opened on a folder already picked (a folder dropped on the desktop app: dropzone.js)
     if (inline) return s;
     go.onclick = async () => {
       if (!chosen) return;
@@ -240,12 +241,12 @@
     return s;
   }
   async function folder(o = {}) {
-    if (solo()) return soloToFolder();
+    if (solo()) return soloToFolder(o.path);
     const p = o.pid || pid(); await load(true).catch(() => {});
-    return pickFolder({ pid: p, moving: !!cur.folder || !!(cur.sync && cur.sync.status && cur.sync.status.hasFolder && !cur.folder && false) });
+    return pickFolder({ pid: p, path: o.path, moving: !!cur.folder || !!(cur.sync && cur.sync.status && cur.sync.status.hasFolder && !cur.folder && false) });
   }
   // A project on this device only: pick the folder, then this computer hosts it (setuplocal's host.computer) and it moves in.
-  function soloToFolder() { return pickFolder({ title: 'Pick its folder', onPick: choice => soloTo(choice, 'folder') }); }
+  function soloToFolder(path) { return pickFolder({ title: 'Pick its folder', path, onPick: choice => soloTo(choice, 'folder') }); }
   async function soloTo(choice, kind) {
     {
       const s = sheet('lr-moving', 'Moving it', `${head('A folder on this computer', 'Moving it to your folder')}<div class="su-prog" role="status" aria-live="polite"><span class="su-spin" aria-hidden="true"></span><span id="lr-mv-t">Starting…</span></div><p class="tn-err ph-err" id="lr-mv-e" hidden></p>`);
