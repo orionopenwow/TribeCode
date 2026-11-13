@@ -73,6 +73,15 @@ def main():
             # ---------- 1. no tribe: one header, tiles, no endless Loading, exact needs-a-tribe notice ----------
             fr = page("Orion", q="&freshopen=1"); assert not fr.evaluate("TribeClient.connected()"), "no tribe here"; fr.evaluate("TribeTalent.open()"); fr.wait_for_selector("#wk-head", state="visible", timeout=10000)
             hs = fr.evaluate(HEADERS)
+            # audit 2026-11-13: a slow first answer from the server (the "no tribe yet" check) must not throw you back to
+            # Home after you've already opened Work (app.js announceFresh used to reopen Home whenever it arrived)
+            slow = b.new_context(viewport={"width": 1280, "height": 900})
+            slow.add_init_script("localStorage.setItem('tribecode.settings.v1', JSON.stringify({name: 'Slow', onboarded: true, tour: {done: true}})); const f = window.fetch; window.fetch = function (u, o) { return String(u).includes('/api/health') ? new Promise(r => setTimeout(r, 2500)).then(() => f.call(window, u, o)) : f.call(window, u, o); }")
+            sl = slow.new_page(); sl.goto(BASE + "/?skipIntro=1&freshopen=1", wait_until="domcontentloaded")
+            sl.wait_for_function("window.TribeTalent && window.TribeRouter && window.TribeHub", timeout=20000); sl.evaluate("TribeTalent.open()")
+            sl.wait_for_selector("#wk-head", state="visible"); sl.wait_for_timeout(4000)
+            assert sl.is_visible("#wk-head") and sl.evaluate("location.hash") == "#/hub/work", "a late 'no tribe' answer pulled Work back to Home"
+            slow.close()
             assert hs.count("Work") == 1 and not any("Company" in h or "Your tasks" in h for h in hs), hs
             assert fr.locator("#view-work h1").count() == 1 and fr.inner_text(".wk-sub") == "Find help, offer help, trade time."
             assert [fr.inner_text(f"#wk-{k} b") for k in ("get", "offer", "find")] == ["Get help", "Offer help", "Find people"]

@@ -579,7 +579,11 @@
 
   // ---- fresh open: no tribe yet. The Dashboard stands in until "Start your first project" ----
   function announceFresh() {
-    if (window.TribeHub) { try { window.TribeHub.open('home'); } catch {} }   // (re)draw it: it can now offer Start your first project
+    // (Re)draw Home: it can now offer Start your first project. The answer can arrive late (a slow network): someone who
+    // has already moved to another page of their dashboard (Work, Files, Agent fleet…) stays there.
+    let w = null; try { w = window.TribeRouter && window.TribeRouter.where(); } catch {}
+    const elsewhere = w && (w.place === 'workshop' || (w.place === 'global' && w.section && w.section !== 'home'));
+    if (window.TribeHub && !elsewhere) { try { window.TribeHub.open('home'); } catch {} }
     window.dispatchEvent(new CustomEvent('tribe-fresh'));
   }
   // The one way to make your first tribe: the desktop app starts its server; a local server page claims it (host).
