@@ -231,6 +231,7 @@ const ENDPOINT_LIMITS = [
   ['GET', /^thumb(\/|$)/, 60, 'thumb'], ['*', /^(export|flint\/proof\/save|flint\/blender|projects\/[^/]+\/site-config\/publish)(\/|$)/, 12, 'export'],
   ['POST', /^(ai\/(refine|extract|tags)|llm\/(ask|chat|stream)|askai|flint\/(ask|chat)|canvasai\/(ask|plan))(\/|$)/, 40, 'ai'],
   ['POST', /^(uploads|visuals|captures|media)(\/|$)/, 40, 'upload'], ['POST', /^invites?(\/|$)/, 20, 'invite'],
+  ['POST', /^premium\/(checkout|portal)$/, 10, 'pay'], ['POST', /^premium\/webhook$/, 240, 'pay-hook'], ['*', /^premium\/(admin|history)$/, 30, 'pay-admin'],   // feat/auth3-pay
 ];
 function endpointLimited(req, sub, me) {
   for (const [meth, rx, max, bucket] of ENDPOINT_LIMITS) {
@@ -417,7 +418,9 @@ const taskFlow = require('./taskflow')({ P, store, getMembers: () => members, pe
 // ---------- brain, board, docs ----------
 let flow = null;   // server/flow.js: one-click project flow, gists, living plan (made below)
 const brain = makeBrain({ host: args.ollama || process.env.OLLAMA_HOST || 'http://localhost:11434', model: args.model || process.env.TRIBE_MODEL || '' });
-const premium = require('./premium')({ store: baseStore, isLocal, log: m => console.log('  ' + m) });   // harden: Premium and AI credits, enforced here
+const stripe = require('./stripe')({ store: baseStore, log: m => console.log('  ' + m) });   // feat/auth3-pay: payments (env or host-only settings)
+const premium = require('./premium')({ store: baseStore, isLocal, log: m => console.log('  ' + m), stripe, accountFor: mid => accounts.claimedAccountId(mid), origin: req => accounts.linkOrigin(req),
+  webhookBase: req => args['public-url'] || process.env.TRIBE_PUBLIC_URL || share.publicUrl() || accounts.linkOrigin(req) });   // harden: Premium and AI credits, enforced here
 const llm = require('./llm')({ brain, store: baseStore, credits: premium, log: m => console.error('  ' + m), canUseHost: me => perms.can(me, 'ai.use_host_brain') });   // feat/any-llm: the tribe's brain (cloud key / Ollama / basic), routes brain.generate
 const flint = makeFlint({ brain, str, llm });   // feat/flint
 brain.refresh().then(st => console.log(st.online ? `  Brain:    ${st.model} ${st.cloud ? "(the host's key)" : "via Ollama"}` : `  Brain:    off (${st.error})`));
@@ -774,6 +777,7 @@ async function apiInProject(req, res, url) {
     return send(res, 200, { ok: true });
   }
   if (a === 'accounts') return accounts.route(req, res, { b, c, m, readBody, send, fail });
+  if (a === 'premium' && b === 'webhook') return premium.webhook(req, res, { send, fail });   // feat/auth3-pay: Stripe's signed events (no sign-in: the signature is the proof)
   if (a === 'account' && !b) return accounts.account(req, res, { m, me, readBody, send, fail });   // delete my account (docs/APP-STORE.md), flag-gated   // feature-flagged scaffold (server/accounts.js)
   if (a === 'session' && m === 'GET') {
     const t = cookieToken(req); if (!t) return send(res, 200, { member: null });
@@ -1273,7 +1277,7 @@ async function apiInProject(req, res, url) {
   if (a === 'docs' && c) { const h = await docsx.route(req, res, ctx()); if (h !== null) return; }
   if (a === 'docs' && !b && m === 'POST' && me) {   // harden: a premium template's doc needs the plan (server/premium.js)
     let body; try { body = await readBody(req); } catch (e) { return fail(res, e.status || 400, e.message); }
-    if (premium.docBlocked(body)) return premium.refuse(send, res, 'plan', 'template');
+    if (premium.docBlocked(body, me)) return premium.refuse(send, res, 'plan', 'template', me);
     const handled = await docs.route(req, res, { m, b, c, me, readBody: async () => body, send, fail });
     if (handled !== null) return;
   }
