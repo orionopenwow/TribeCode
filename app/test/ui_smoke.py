@@ -40,7 +40,7 @@ def main():
         page.wait_for_selector("#rail-logo .logo", state="visible")
 
         # ---- Settings: one calm page ----
-        page.evaluate("TribeSettings.open()")   # Settings: the profile menu (and the sidebar inside a project)
+        page.evaluate("TribeSettings.open('profile')")   # Settings: the profile menu (and the sidebar inside a project)
         page.wait_for_selector("#settings-modal:not(.hidden) #set-name")
         page.fill("#set-name", "Riley Park"); page.press("#set-name", "Tab")
         page.click('#settings-body [data-color="#FFB86B"]')
@@ -51,7 +51,7 @@ def main():
         assert page.evaluate("TribeStore.get().color") == "#FFB86B"
 
         # ---- the tour is optional, from Settings: Flint flies you round (flinttour.js) ----
-        page.click("#set-tour")
+        page.click("#set-tab-about"); page.click("#set-tour")   # About & help
         page.wait_for_selector("#fg-bubble.on .fg-steps", timeout=8000)
         assert page.inner_text(".fg-steps").replace(" ", "").startswith("1/")
         shot(page, "tour")

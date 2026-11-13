@@ -61,7 +61,7 @@ def main():
             cp = api("/cloud/copy", token=tok)[1]
             assert any("keep me safe" in v for k, v in cp["files"].items() if k.endswith(".jsonl")), list(cp["files"])[:10]
             assert not any(k.startswith(".tribe/members") for k in cp["files"]), "no member tokens in a copy"
-            pg.evaluate("TribeSettings.open()"); pg.wait_for_selector("#set-copy")
+            pg.evaluate("TribeSettings.open('storage')"); pg.wait_for_selector("#set-copy")
             with pg.expect_download() as dl2: pg.click("#set-copy")
             assert dl2.value.suggested_filename.endswith(".zip")
             import zipfile; zf = zipfile.ZipFile(dl2.value.path()); assert "README.txt" in zf.namelist() and any("keep me safe" in zf.read(n).decode() for n in zf.namelist() if n.endswith(".jsonl"))

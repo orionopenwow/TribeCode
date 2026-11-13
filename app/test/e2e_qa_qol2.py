@@ -144,11 +144,10 @@ def main():
             pg.click("#invite-body details.cc-what > summary"); assert "PowerShell" in pg.inner_text("#invite-body details.cc-what")
             close_sheets(pg)
 
-            # ---- Settings: advanced rows fold away, remembered
-            pg.evaluate("localStorage.removeItem('tribecode.set.more'); TribeSettings.open()"); pg.wait_for_selector("#set-more", timeout=8000)
-            assert not pg.evaluate("document.querySelector('#set-more').open")
-            assert not pg.locator("#set-backup").is_visible(), "Backup waits under More settings"
-            pg.click("#set-more > summary"); pg.wait_for_selector("#set-backup", state="visible")
+            # ---- Settings: advanced rows live in their own tab (feat/settings-tabs), the last tab is remembered
+            pg.evaluate("TribeSettings.open('profile')"); pg.wait_for_selector("#set-tab-admin", timeout=8000)
+            assert not pg.locator("#set-backup").is_visible(), "Backup waits in Tribe & admin"
+            pg.click("#set-tab-admin"); pg.wait_for_selector("#set-backup", state="visible")
             pg.evaluate("TribeSettings.close(); TribeSettings.open()"); pg.wait_for_selector("#set-backup", state="visible")
             close_sheets(pg)
 

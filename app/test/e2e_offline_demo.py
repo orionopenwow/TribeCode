@@ -214,7 +214,7 @@ def main():
             flow(pg, "desktop", False, tmp)
             # the entry points: Help and Settings
             pg.click("#tb-help"); pg.wait_for_selector("#help-menu [data-help=demo]"); pg.keyboard.press("Escape")
-            pg.evaluate("TribeSettings.open()"); pg.wait_for_selector("#set-demo"); assert "Leave" in pg.text_content("#set-demo"); pg.evaluate("TribeSettings.close()")
+            pg.evaluate("TribeSettings.open('about')"); pg.wait_for_selector("#set-demo"); assert "Leave" in pg.text_content("#set-demo"); pg.evaluate("TribeSettings.close()")
             leave_and_reset(pg, "desktop")
             pg.click("#tb-help"); pg.click("#help-menu [data-help=demo]")   # Help starts it too (through the chooser)
             pg.click("#od-pick-quiet")

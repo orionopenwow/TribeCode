@@ -462,7 +462,7 @@ def main():
             pg.screenshot(path=str(ROOT / "docs" / "screenshots" / "captures-desktop.png"))
             # message menu: Read & summarize
             # Settings › Packs (host)
-            pg.evaluate("localStorage.setItem('tribecode.set.more','1'); TribeSettings.open()"); pg.wait_for_selector("#set-packs .pk-row")
+            pg.evaluate("TribeSettings.open('storage')"); pg.wait_for_selector("#set-packs .pk-row")
             assert pg.locator("#set-packs [data-pk-rm]").count() >= 1 and pg.locator("#set-packs").inner_text().count("MB") + pg.locator("#set-packs").inner_text().count("KB") >= 1
             pg.evaluate("TribeSettings.close()")
             # Flint

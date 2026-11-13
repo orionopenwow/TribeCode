@@ -673,6 +673,7 @@
     if (!t) { try { t = (was ? localStorage.getItem(LS_TAB) : tab) || 'profile'; } catch { t = 'profile'; } }
     if (!tabOf(t)) t = 'profile';
     tab = t; inPane = !phone() || explicit || (!was && inPane);
+    try { localStorage.setItem(LS_TAB, tab); } catch {}
     modal().classList.remove('hidden');
     draw(); if (was) probeBrain();
     hashFor(tab);

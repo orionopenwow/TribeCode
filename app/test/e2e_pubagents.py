@@ -100,7 +100,7 @@ def main():
             pg.keyboard.press("Enter")
             assert pg.input_value("#chat-input") == "@my-claude "
             # Settings › Agents in chat for the host
-            pg.evaluate("TribeSettings.open()"); pg.wait_for_selector("#pa-on", state="attached"); pg.evaluate("document.querySelector('#set-more').open = true"); pg.wait_for_selector("#pa-on")
+            pg.evaluate("TribeSettings.open('ai')"); pg.wait_for_selector("#pa-on", state="attached"); pg.evaluate("0"); pg.wait_for_selector("#pa-on")
             b.close()
         assert not [e for e in errors if "ResizeObserver" not in e], errors
         print("ok e2e_pubagents")

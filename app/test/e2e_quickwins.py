@@ -150,7 +150,7 @@ def main():
             wait_text(mp, "#chat-list", "fixed message")
 
             # ---- Rename yourself: Settings -> server -> friends
-            mp.evaluate("TribeSettings.open()"); mp.wait_for_selector("#set-name")
+            mp.evaluate("TribeSettings.open('profile')"); mp.wait_for_selector("#set-name")
             mp.fill("#set-name", "Maya Q"); mp.press("#set-name", "Tab")
             wait_until(lambda: ok(api("/me", token=mtok))["member"]["name"] == "Maya Q", what="name on the server")
             hp.wait_for_function("id => (TribeClient.state().members || []).some(m => m.id === id && m.name === 'Maya Q')", arg=mid)
@@ -179,7 +179,7 @@ def main():
             assert api(f"/chat/general/media/{z['media']['file']}", token=htok, raw=True)[1] == bytes([80, 75, 3, 4, 1, 2])
 
             # ---- Backup from Settings (host), then restore it into a fresh server
-            hp.evaluate("localStorage.setItem('tribecode.set.more','1'); TribeSettings.open()"); hp.wait_for_selector("#set-backup")
+            hp.evaluate("TribeSettings.open('admin')"); hp.wait_for_selector("#set-backup")
             with hp.expect_download() as dl: hp.click("#set-backup")
             path = dl.value.path(); assert dl.value.suggested_filename.endswith(".tar.gz"), dl.value.suggested_filename
             assert api("/backup", token=mtok)[0] == 403, "only the host downloads backups"

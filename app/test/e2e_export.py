@@ -252,7 +252,7 @@ def main():
             host.wait_for_function("window.TribeClient && TribeClient.connected() && TribeClient.project() === %r" % hp, timeout=15000)
 
             # ---------------- Sign in with GitHub (device flow), end to end ----------------
-            host.evaluate("TribeSettings.open()")
+            host.evaluate("TribeSettings.open('projects')")
             host.wait_for_selector("#set-github [data-gh='start']", timeout=10000)
             assert host.locator("#set-github [data-gh='cli']").is_visible(), "Use my GitHub CLI login is offered on the host"
             with ctx.expect_page(timeout=10000) as popup:

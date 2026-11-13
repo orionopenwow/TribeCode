@@ -180,7 +180,7 @@ def main():
                 st, d, _ = api(path, token=mtok, raw=True); assert KEY not in d and "SECRET" not in d, path
             st, d, _ = api("/llm", token=htok, raw=True); assert KEY not in d, "not even the host gets it back"
             # Maya's browser: open Settings › Flint's brain, then check every response and WebSocket frame
-            mp.evaluate("TribeSettings.open()")
+            mp.evaluate("TribeSettings.open('ai')")
             mp.wait_for_selector("#set-flintbrain [data-bp-open]", timeout=10000); mp.click("#set-flintbrain [data-bp-open]")
             mp.wait_for_selector("#brain-modal:not(.hidden) [data-bp='host']", timeout=10000)
             wait_text(mp, "#brain-modal", "tiny-model (custom)")
@@ -238,7 +238,7 @@ def main():
             ph.wait_for_selector("#form:not(.hidden)"); ph.fill("#name", "Jay"); ph.click("#go")
             ph.wait_for_url("**/m/*/"); ph.wait_for_selector("#install-sheet"); ph.click("#ins-later")
             ph.wait_for_function("TribeClient.connected()", timeout=15000)
-            ph.evaluate("TribeSettings.open()"); ph.wait_for_selector("#set-flintbrain [data-bp-open]", timeout=10000)
+            ph.evaluate("TribeSettings.open('ai')"); ph.wait_for_selector("#set-flintbrain [data-bp-open]", timeout=10000)
             assert ph.evaluate("document.documentElement.scrollWidth <= innerWidth + 1"), "Settings: sideways scroll"
             assert ph.evaluate("document.querySelector('#settings-body').scrollWidth <= document.querySelector('#settings-body').clientWidth + 1")
             ph.click("#set-flintbrain [data-bp-open]"); ph.wait_for_selector("#brain-modal:not(.hidden) [data-bp='none']")

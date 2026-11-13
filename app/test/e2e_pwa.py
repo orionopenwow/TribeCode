@@ -134,7 +134,7 @@ def main():
             pg.evaluate("window.__inCall = false"); assert pg.evaluate("TribePWA.wake()") is False and pg.evaluate("window.__pwa.released") == 1
 
             # Settings › This device: the quota and "Keep it on this device"
-            pg.evaluate("TribeSettings.open()"); pg.wait_for_selector("#set-device .pwa-store", timeout=8000)
+            pg.evaluate("TribeSettings.open('storage')"); pg.wait_for_selector("#set-device .pwa-store", timeout=8000)
             assert "used on this device" in pg.inner_text("#set-device")
             pg.evaluate("TribeSettings.close()")
 
