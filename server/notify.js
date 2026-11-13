@@ -362,7 +362,8 @@ function makeNotify({ store, bus, getMembers, sendTo, publicUrl, postChat = () =
     return null;
   }
 
-  return { attach, route, chat, isAway, prefsOf, actionUrl, verifyAction, flushDigests, inbox, unread, keys, settle: () => Promise.all([...pending]), off: () => bus.off('notify', onNotify) };
+  const unreadItems = mid => { const r = rec(mid); return inbox(mid).filter(i => isUnread(r, i)); };   // feat/dash-preview: unread mentions in Needs attention
+  return { attach, route, chat, isAway, prefsOf, actionUrl, verifyAction, flushDigests, inbox, unread, unreadItems, keys, settle: () => Promise.all([...pending]), off: () => bus.off('notify', onNotify) };
 }
 
 module.exports = makeNotify;

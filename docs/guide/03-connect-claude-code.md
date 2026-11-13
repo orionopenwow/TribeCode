@@ -19,6 +19,13 @@ What each tool gets:
 
 Formats checked against each tool's docs on 2026-11-07: [Codex](https://developers.openai.com/codex/mcp), [Gemini CLI](https://github.com/google-gemini/gemini-cli/blob/main/docs/tools/mcp-server.md), [Qwen Code](https://github.com/QwenLM/qwen-code/blob/main/docs/users/features/mcp.md), [Cursor](https://cursor.com/docs/context/mcp).
 
+## Invite your Claude
+
+The quickest way for Claude: **Invite your Claude**, next to every **Invite friends** (or ask Flint "invite my claude").
+Pick Claude Code, Claude Desktop or Claude on the web, copy one thing, and **Waiting for your Claude…** turns into
+**✓ Your Claude joined**. It works next to you with your access and never more, and you choose what it may touch (chat,
+docs, tasks, files, website, approvals), pause it or remove it in one click. Details: docs/ANY-LLM.md › 4.
+
 ## Disconnect or move it
 
 Open **Connect your AI** again, or revoke any key in **Your agents**. The key stops working at once.

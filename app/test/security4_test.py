@@ -131,6 +131,24 @@ def main():
         assert r[0] == 404, f"Maya gives a task to an agent outside her project: {r}"
         ok(api(f"/agents/fleet/{cag}/task", "POST", {"title": "polish the title screen"}, token=ct, project=pb), "Cleo tasks her own agent")
         print("F ok: fleet tasks stay in the project")
+
+        # ================= C: an invited Claude (server/inviteclaude.js) =================
+        ck = ok(api("/invite-claude", "POST", {}, token=mt, project=pa), "Maya invites her Claude")["token"]
+        assert ck not in Path(tmp, "tribe", ".tribe", "members.json").read_text(), "only the key's hash is stored"
+        assert api(f"/chat/general", token=ck, project=pb)[0] == 403, "her Claude can't read project B"
+        assert api("/invites", "POST", {"maxUses": 1}, token=ck, project=pa)[0] == 403, "her Claude can't invite people"
+        assert api("/invite-claude", "PUT", {"adminAsMe": True}, token=ck)[0] == 403, "her Claude can't change its own access"
+        assert api("/agents", "POST", {}, token=ck, project=pa)[0] == 403, "her Claude can't mint keys"
+        assert api("/perms/mute", "POST", {"member": bob["member"]["id"], "minutes": 5}, token=ck, project=pa)[0] == 403, "no admin"
+        bm = "dm-" + "-".join(sorted([bob["member"]["id"], maya["member"]["id"]]))
+        ok(api(f"/chat/{bm}", "POST", {"text": "just us"}, token=bt))
+        assert api(f"/chat/{bm}", token=ck)[0] == 403, "her Claude can't read her DMs with Bob"
+        ok(api("/invite-claude", "PUT", {"paused": True}, token=mt))
+        assert api("/tasks", token=ck, project=pa)[0] == 401, "paused: refused at once"
+        ok(api("/invite-claude", "DELETE", token=mt))
+        assert api("/tasks", token=ck, project=pa)[0] == 401, "removed: refused"
+        assert ck not in Path(tmp, "server.log").read_text(errors="ignore"), "the key isn't logged"
+        print("C ok: an invited Claude has its person's access and never more")
         print("security4: all passed")
     finally:
         srv.kill()

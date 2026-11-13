@@ -42,7 +42,7 @@
 <link rel="stylesheet" href="repo.css">
 <link rel="stylesheet" href="ship.css">
 <link rel="stylesheet" href="notify.css">
-<link rel="stylesheet" href="presence.css"><link rel="stylesheet" href="peoplepanel.css">
+<link rel="stylesheet" href="presence.css"><link rel="stylesheet" href="peoplepanel.css"><link rel="stylesheet" href="inviteclaude.css">
 <link rel="stylesheet" href="cropper.css">
 <link rel="stylesheet" href="flint.css"><!-- feat/flint -->
 <link rel="stylesheet" href="aibasics.css"><link rel="stylesheet" href="aiconsent.css"><link rel="stylesheet" href="inspoboard.css"><!-- feat/flint-ai: ✦ basics + the inspiration board -->
@@ -87,7 +87,7 @@
 <link rel="stylesheet" href="preview.css">
 <link rel="stylesheet" href="pins.css"><!-- P1-E comment pins -->
 <link rel="stylesheet" href="previewflint.css">
-<link rel="stylesheet" href="siteshelf.css"><link rel="stylesheet" href="sitedesigner.css"><link rel="stylesheet" href="aiboost.css"><link rel="stylesheet" href="flintlessons.css"><!-- feat/flint-site -->
+<link rel="stylesheet" href="siteshelf.css"><link rel="stylesheet" href="sitedesigner.css"><link rel="stylesheet" href="aiboost.css"><link rel="stylesheet" href="aibridge.css"><link rel="stylesheet" href="flintlessons.css"><!-- feat/flint-site -->
 <link rel="stylesheet" href="hub.css">
 <link rel="stylesheet" href="folders.css">
 <link rel="stylesheet" href="website.css">
@@ -99,6 +99,7 @@
 <link rel="stylesheet" href="widgets.css"><!-- feat/sidebar-widgets: sidebar widgets + the calmer right panel -->
 <link rel="stylesheet" href="whiteboard.css"><!-- feat/whiteboard -->
 <link rel="stylesheet" href="canvas/canvas.css"><!-- P1-A design canvas --><link rel="stylesheet" href="canvas/code.css"><!-- P1-C canvas <-> code --><link rel="stylesheet" href="canvas/flint.css"><link rel="stylesheet" href="canvas/flintpane.css"><link rel="stylesheet" href="canvas/extras.css"><!-- P1-F Flint on the canvas -->
+<link rel="stylesheet" href="dashband.css"><!-- feat/dash-preview: the dashboard preview band + Needs attention -->
 <link rel="stylesheet" href="sense.css"><!-- feat/project-sense: Inspiration card -->
 <link rel="stylesheet" href="setup.css"><link rel="stylesheet" href="firstrun.css"><link rel="stylesheet" href="personalize.css"><link rel="stylesheet" href="sitelib.css"><!-- feat/setup-flow: vision chips, role cards, task types -->
 <link rel="stylesheet" href="oauth.css">
@@ -247,6 +248,7 @@
         <button class="nest-row" id="nest-settings" data-pnav="settings"><svg class="i"><use href="#i-gear"/></svg><span>Settings</span></button>
         <div class="nest-preview-slot" id="nest-preview-slot"></div><!-- Preview game / app: its own button at the bottom (widgets.js) -->
         <button class="nest-row sf-invite" id="tour-invite" title="Invite friends to this tribe"><i class="sf-thumb sf-faces" id="sf-faces" aria-hidden="true"></i><span>Invite friends</span></button>
+        <button class="nest-row sf-claude" id="sf-claude" data-ic-open title="Invite your own Claude: it joins next to you, with your access"><i class="sf-thumb" aria-hidden="true"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v3M12 18v3M3 12h3M18 12h3M6 6l2 2M16 16l2 2M18 6l-2 2M8 16l-2 2"/></svg></i><span>Invite your Claude</span></button>
         <button class="item local-folder hidden" id="folder-item" title="Workspace folder"><span id="folder-label"></span></button>
       </div>
     </aside>
@@ -435,7 +437,7 @@
 <script src="helpersetup.js" defer></script><!-- right panel: Meet Flint, give him an AI, bring your own AI --><!-- Word, Excel, PowerPoint, Google: exports for docs, sheets and slides --><!-- @ picker: people, agents (public commands), @ai --><!-- Beginner · Intermediate · Advanced: how much each person sees -->
 <script src="keyboard.js" defer></script><!-- phones: the message bar rides up with the keyboard -->
 <script src="notify.js"></script>
-<script src="presence.js" defer></script><script src="peoplepanel.js" defer></script><!-- feat/presence: where everyone is, the People panel -->
+<script src="presence.js" defer></script><script src="peoplepanel.js" defer></script><script src="inviteclaude.js" defer></script><!-- Invite your Claude --><!-- feat/presence: where everyone is, the People panel -->
 <script src="cropper.js"></script>
 <script src="userbar.js"></script>
 <script src="stage.js"></script>
@@ -466,7 +468,7 @@
 <script src="profilemenu.js"></script>
 <script src="plusmenu.js"></script>
 <script src="siteedit-core.js"></script>
-<script src="siteshelf.js"></script><script src="sitecfg.js"></script><script src="siteimport.js"></script><script src="sitedesigner.js"></script><script src="aiboost.js"></script><script src="flintlessons.js"></script><!-- feat/flint-site: the website designer, the AI-boost card, Flint's lessons -->
+<script src="siteshelf.js"></script><script src="sitecfg.js"></script><script src="siteimport.js"></script><script src="sitedesigner.js"></script><script src="aiboost.js"></script><script src="aibridge-core.js"></script><script src="aibridge.js"></script><script src="flintlessons.js"></script><!-- feat/flint-site: the website designer, the AI-boost card, Flint's lessons -->
 <script src="previewflint.js"></script>
 <script src="preview.js"></script>
 <script src="pins.js"></script><!-- P1-E comment pins + preview presence -->
@@ -501,6 +503,7 @@
 <script src="widgets.js"></script><!-- feat/sidebar-widgets -->
 <script src="whiteboard.js"></script><!-- feat/whiteboard -->
 <script src="canvas/scene.js"></script><script src="canvas/layers.js"></script><script src="canvas/props.js"></script><script src="canvas/code.js"></script><script src="canvas/canvas.js"></script><!-- P1-A/B/D design canvas, P1-C code.js --><script src="canvas/flint.js"></script><script src="canvas/flintpane.js"></script><script src="canvas/extras.js"></script><!-- P1-F -->
+<script src="dashband.js"></script><!-- feat/dash-preview -->
 <script src="sense.js"></script><!-- feat/project-sense: what the project is + Inspiration -->
 <script src="setup.js"></script><!-- feat/setup-flow: role flows + Make the starter -->
 <script src="viewers.js"></script><!-- feat/viewers: 3D + pixel-art viewers -->

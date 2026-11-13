@@ -334,7 +334,8 @@ module.exports = function chatx({ store, id, str, getMembers, postChat, dms, sen
     }
     if (action === 'msg' && (m === 'PATCH' || m === 'DELETE')) {
       const mod = target.by !== me.id && m === 'DELETE' && !dms.isDm(ch) && canModerate(me, target, ch);   // feat/roles: "Delete for everyone" by a mod/admin/host
-      if (target.by !== me.id && !mod) return fail(res, 403, 'you can only change your own messages');
+      const mineAI = target.by !== me.id && me.role !== 'agent' && ((member(target.by) || {}).owner === me.id);   // your Claude's messages are yours to fix or undo
+      if (target.by !== me.id && !mod && !mineAI) return fail(res, 403, 'you can only change your own messages');
       if (target.deleted) return fail(res, 400, 'message was deleted');
       if (m === 'PATCH') {
         const text = str(body.text, 4000); if (!text) return fail(res, 400, 'empty message');

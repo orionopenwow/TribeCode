@@ -67,12 +67,12 @@ def main():
             host.wait_for_selector("#pj-check.hero [data-step=task].on", timeout=10000)
             assert host.locator("#pj-check.hero").count() == 1
 
-            # 1-2. identity row, then the Living update: a pill and 4 equal tiles, no long sentence
+            # 1-2. identity row, then the Living update: a pill and 3 equal tiles, no long sentence
             assert "Add a short description" in host.text_content("#pj-bio") and "1 person" in host.text_content(".pj-meta")
             assert "Invite to My Tribe" in host.text_content("#pj-invite")
             assert "At a glance" in host.text_content("#pj-living .eyebrow")
             labels = host.eval_on_selector_all("#pj-living .gl-tile .gl-top small", "els => els.map(e => e.textContent.trim().toUpperCase())")
-            assert labels == ["NEEDS YOU", "UNREAD", "TASKS", "NEW FILES"], labels
+            assert labels == ["UNREAD", "TASKS", "NEW FILES"], labels   # feat/dash-preview: Needs you moved into Needs attention
             widths = host.eval_on_selector_all("#pj-living .gl-tile", "els => els.map(e => Math.round(e.getBoundingClientRect().width))")
             assert max(widths) - min(widths) <= 2, f"equal tiles {widths}"
             assert host.locator("#pj-living .pl-sum").count() == 0, "no duplicate sentence"

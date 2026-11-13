@@ -1,0 +1,117 @@
+/* The free AI bridge (app/ui/aibridge.js) and the "Use any free AI" guide in the Agents Hub.
+   Flat matte: 1px borders, luminance steps, no shadows, glows, blur or gradients. Motion from motion.css tokens. */
+
+/* ---------- the guide ---------- */
+.aib-guide { margin-top: 28px; }
+.aib-lead { color: var(--muted); max-width: 65ch; line-height: 1.6; margin: 4px 0 14px; }
+.aib-steps { list-style: none; counter-reset: aib; margin: 0 0 16px; padding: 0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+.aib-steps li { counter-increment: aib; border: 1px solid var(--border); border-radius: var(--r); background: var(--surface); padding: 12px; display: grid; gap: 4px; align-content: start; }
+.aib-steps li::before { content: counter(aib); font: 600 11px/20px var(--mono); width: 20px; height: 20px; text-align: center; border-radius: 50%; background: var(--chip); color: var(--accent-ink); }
+.aib-steps b { color: var(--text); font-size: 14px; }
+.aib-steps span { color: var(--muted); font-size: 13px; line-height: 1.5; }
+.aib-provs { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 10px; margin-bottom: 14px; }
+.aib-prov { border: 1px solid var(--border); border-radius: var(--r); background: var(--surface); padding: 12px; display: grid; gap: 4px; align-content: start; text-decoration: none; color: inherit; transition: border-color var(--dur-quick) var(--ease-out), background-color var(--dur-quick) var(--ease-out); }
+.aib-prov:hover, .aib-prov:focus-visible { border-color: var(--edge-pop); background: var(--surface-2); }
+.aib-prov b { color: var(--text); font-size: 14px; }
+.aib-prov span { color: var(--muted); font-size: 12.5px; line-height: 1.45; }
+.aib-prov .aib-ext { font: 11px/1.4 var(--mono); color: var(--faint); display: inline-flex; gap: 4px; align-items: center; margin-top: 2px; }
+.aib-fine { font-size: 12px; margin: 8px 0 0; }
+@media (max-width: 1100px) { .aib-steps { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.aib-guide .hero-acts { display: flex; flex-wrap: wrap; gap: 8px; }
+.aib-prov .aib-ext { overflow-wrap: anywhere; }
+@media (max-width: 600px) { .aib-provs, .aib-steps { grid-template-columns: 1fr; } .aib-guide .hero-acts .btn { flex: 1; min-height: 44px; } }
+
+/* ---------- the sheet ---------- */
+.aib-scrim { position: fixed; inset: 0; z-index: 9000; background: var(--scrim); display: flex; justify-content: flex-end; }
+.aib-scrim[hidden] { display: none; }
+.aib { width: min(720px, 100vw); height: 100%; background: var(--canvas); border-left: 1px solid var(--border); display: flex; flex-direction: column; animation: tm-rise var(--dur-base) var(--ease-out) both; }
+.aib-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; padding: 18px 22px 10px; }
+.aib-head h2 { margin: 2px 0 0; font: 800 22px/1.2 var(--display); color: var(--text); letter-spacing: -.01em; }
+.aib-x { border: 1px solid var(--border); background: var(--surface); color: var(--muted); border-radius: var(--r-sm); width: 36px; height: 36px; display: grid; place-items: center; cursor: pointer; }
+.aib-x:hover { color: var(--text); background: var(--surface-2); }
+.aib-tabs { display: flex; gap: 4px; padding: 0 22px; border-bottom: 1px solid var(--border); }
+.aib-tab { border: 0; background: none; color: var(--muted); font: 600 14px/1 var(--font); padding: 12px 10px; border-bottom: 2px solid transparent; margin-bottom: -1px; cursor: pointer; display: inline-flex; gap: 8px; align-items: center; }
+.aib-tab.on { color: var(--text); border-bottom-color: var(--accent); }
+.aib-n { font: 600 11px/18px var(--mono); width: 18px; height: 18px; border-radius: 50%; text-align: center; background: var(--surface-2); color: var(--faint); }
+.aib-tab.on .aib-n { background: var(--chip); color: var(--accent-ink); }
+.aib-body { flex: 1; overflow: auto; padding: 18px 22px 28px; }
+.aib-pane { display: grid; gap: 14px; }
+.aib-field { display: grid; gap: 6px; }
+.aib-row { grid-template-columns: auto 1fr; align-items: center; max-width: 360px; }
+.aib-k { font: 600 10.5px/1.4 var(--mono); text-transform: uppercase; letter-spacing: .08em; color: var(--faint); }
+.aib-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.aib-chip { border: 1px solid var(--border); background: var(--surface); color: var(--muted); border-radius: 999px; padding: 6px 12px; font: 500 13px/1.2 var(--font); cursor: pointer; display: inline-flex; gap: 6px; align-items: center; transition: background-color var(--dur-quick) var(--ease-out), border-color var(--dur-quick) var(--ease-out); }
+.aib-chip:hover { background: var(--surface-2); color: var(--text); }
+.aib-chip.on { border-color: var(--accent); background: var(--chip); color: var(--text); }
+.aib-detail { display: grid; gap: 8px; }
+#aib .aib-goal { width: 100%; resize: vertical; min-height: 56px; height: 64px; max-height: 160px; font: 14px/1.45 var(--font); }
+.aib-list { max-height: 210px; overflow: auto; border: 1px solid var(--border); border-radius: var(--r-sm); background: var(--surface); }
+.aib-li { display: flex; gap: 8px; align-items: center; padding: 6px 10px; border-bottom: 1px solid var(--border); cursor: pointer; font-size: 13px; }
+.aib-li:last-child { border-bottom: 0; }
+.aib-li:hover { background: var(--surface-2); }
+.aib-li code, .aib-sel code { font: 12px/1.4 var(--mono); color: var(--text); overflow-wrap: anywhere; }
+.aib-sel { margin: 0; color: var(--muted); font-size: 13px; }
+.aib-note { margin: 0; color: var(--muted); font-size: 13px; line-height: 1.5; display: flex; gap: 8px; align-items: flex-start; }
+.aib-strip { border: 1px solid var(--border); border-radius: var(--r-sm); background: var(--live-tint); padding: 8px 10px; color: var(--text); }
+.aib-strip svg { color: var(--live-ink); flex: none; margin-top: 2px; }
+.aib-err { margin: 0; border: 1px solid var(--border); border-left: 3px solid var(--alert); border-radius: var(--r-sm); background: var(--surface); padding: 8px 10px; font: 12px/1.5 var(--mono); color: var(--text); white-space: pre-wrap; max-height: 160px; overflow: auto; }
+.aib-meter { display: grid; gap: 6px; font-size: 12.5px; color: var(--muted); }
+.aib-bar { height: 6px; border-radius: 999px; background: var(--surface-2); overflow: hidden; }
+.aib-bar i { display: block; height: 100%; background: var(--live); transition: width var(--dur-base) var(--ease-out); }
+.aib-meter.over .aib-bar i { background: var(--amber); }
+.aib-meter.over span { color: var(--amber-ink); }
+.aib-acts { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.aib-acts .btn { display: inline-flex; gap: 6px; align-items: center; }
+.aib-parts { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; border: 1px solid var(--border); border-radius: var(--r-sm); background: var(--surface); padding: 10px; }
+.aib-parts .aib-k { width: 100%; margin: 0 0 2px; }
+.aib-how { margin: 0; font-size: 12.5px; }
+.aib-peek summary { cursor: pointer; color: var(--muted); font-size: 13px; }
+.aib-peek pre { margin: 8px 0 0; max-height: 260px; overflow: auto; border: 1px solid var(--border); border-radius: var(--r-sm); background: var(--surface); padding: 10px; font: 11.5px/1.5 var(--mono); color: var(--muted); white-space: pre-wrap; overflow-wrap: anywhere; }
+.aib-next { display: flex; gap: 10px; align-items: center; justify-content: space-between; border-top: 1px solid var(--border); padding-top: 12px; color: var(--muted); font-size: 13px; flex-wrap: wrap; }
+
+.aib-drop { border: 1px dashed var(--edge-pop); border-radius: var(--r); padding: 4px; transition: border-color var(--dur-quick) var(--ease-out), background-color var(--dur-quick) var(--ease-out); }
+.aib-drop.drag { border-color: var(--accent); background: var(--chip); }
+.aib-paste { width: 100%; min-height: 180px; resize: vertical; font: 12px/1.5 var(--mono); border: 0; background: var(--surface); }
+.aib-msg { border: 1px solid var(--border); border-radius: var(--r-sm); background: var(--surface); padding: 10px 12px; display: grid; gap: 4px; font-size: 13px; line-height: 1.5; color: var(--muted); }
+.aib-msg b { color: var(--text); }
+.aib-msg.ok { border-left: 3px solid var(--live); }
+.aib-msg.calm { border-left: 3px solid var(--amber); }
+.aib-risks { border: 1px solid var(--border); border-left: 3px solid var(--alert); border-radius: var(--r-sm); background: var(--ember-tint); padding: 10px 12px; font-size: 13px; color: var(--text); display: grid; gap: 4px; }
+.aib-risks b { display: inline-flex; gap: 6px; align-items: center; }
+.aib-risks ul { margin: 0; padding-left: 18px; }
+.aib-risks code { font: 12px var(--mono); }
+.aib-site { display: flex; gap: 12px; align-items: center; justify-content: space-between; border: 1px solid var(--border); border-left: 3px solid var(--accent); border-radius: var(--r-sm); background: var(--surface); padding: 12px; flex-wrap: wrap; }
+.aib-site div { display: grid; gap: 2px; font-size: 13px; color: var(--muted); max-width: 46ch; }
+.aib-site b { color: var(--text); }
+.aib-changes { display: grid; gap: 10px; }
+.aib-file { border: 1px solid var(--border); border-radius: var(--r); background: var(--surface); overflow: hidden; }
+.aib-file.off { opacity: .6; }
+.aib-file header { display: flex; gap: 8px; align-items: center; padding: 8px 12px; border-bottom: 1px solid var(--border); background: var(--surface-2); }
+.aib-fl { display: flex; gap: 8px; align-items: center; min-width: 0; flex: 1; cursor: pointer; }
+.aib-fl code { font: 600 12.5px/1.3 var(--mono); color: var(--text); overflow-wrap: anywhere; }
+.aib-b { font: 600 10.5px/1.6 var(--mono); text-transform: uppercase; letter-spacing: .05em; padding: 0 6px; border-radius: 4px; background: var(--surface-3); color: var(--muted); white-space: nowrap; }
+.aib-b.new { background: var(--live-tint); color: var(--live-ink); }
+.aib-b.del, .aib-b.err { background: var(--ember-tint); color: var(--ember-ink); }
+.aib-pm { font: 12px var(--mono); white-space: nowrap; }
+.aib-pm .add { color: var(--live-ink); } .aib-pm .del { color: var(--ember-ink); }
+.aib-file > .aib-note { padding: 10px 12px; }
+.aib-hunk { border-top: 1px solid var(--border); }
+.aib-hunk:first-of-type { border-top: 0; }
+.aib-hunk.off .aib-diff { opacity: .45; }
+.aib-hh { display: flex; justify-content: space-between; align-items: center; padding: 4px 12px; font-size: 12px; }
+.aib-hk { display: inline-flex; gap: 6px; align-items: center; cursor: pointer; color: var(--muted); }
+.aib-diff { margin: 0; padding: 4px 0 8px; font: 11.5px/1.5 var(--mono); overflow-x: auto; max-height: 320px; }
+.aib-diff span { display: block; padding: 0 12px; white-space: pre; color: var(--muted); }
+.aib-diff .a { background: var(--live-tint); color: var(--text); }
+.aib-diff .d { background: var(--ember-tint); color: var(--text); }
+.aib-foot { position: sticky; bottom: -28px; display: flex; gap: 8px; flex-wrap: wrap; padding: 12px 0; background: var(--canvas); border-top: 1px solid var(--border); }
+
+@media (max-width: 600px) {
+  .aib { width: 100vw; border-left: 0; }
+  .aib-head { padding: 14px 16px 8px; }
+  .aib-tabs { padding: 0 16px; }
+  .aib-body { padding: 14px 16px 24px; }
+  .aib-acts .btn, .aib-foot .btn { min-height: 44px; flex: 1 1 auto; justify-content: center; }
+  .aib-chip { min-height: 36px; }
+}
+@media (prefers-reduced-motion: reduce) { .aib { animation: none; } }
