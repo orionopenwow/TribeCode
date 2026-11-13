@@ -28,7 +28,9 @@ Agents are the AI teammates: each person's AI (Claude Code, Codex…), plus a fe
 
 - Try **connect my AI**, **note: buy lanterns**, **task fix the bridge**, **invite**, **find** a doc, or **what's new**.
 - Ask **how do I…** and it answers from this Guide.
-- With no model it runs in **basic mode** and still does all of that. With a model it answers anything and writes summaries and standups. **Helpers** › **Flint** shows which.
+- With no model it still understands about 170 actions across the app, typos and all, can run several steps from one message ("make a dark merch store for Ember Socks, then add a task to order samples by Friday"), asks one short question when something is missing, and undoes what it did. Teach it your own phrases: **when I say X, do Y**.
+- It builds for free from templates: "make a 3D game", "a to-do app", "a link in bio", "make a login screen" on the Design canvas. Bigger jobs (many files, new game systems, accounts or payments) get an honest hand-off to your own AI helper.
+- With a model it answers anything and writes summaries and standups. **Helpers** › **Flint** shows which. Ask **what can you do for free?** to see the split.
 - **Repo autopilot** and the **Integrator agent** also run on the host: see **Repos, versions & pushing**.
 
 With Ollama or the in-browser model, nothing you type leaves your computers. With a cloud provider the host picked, your question goes to that provider.

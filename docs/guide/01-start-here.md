@@ -10,10 +10,12 @@ TribeCode lets a few friends, or one person with AI helpers, build apps, games a
 
 ## Your first two minutes
 
-1. **Open the app.** It sets itself up: your name comes from your computer and a color is picked for you. You can change both in **Settings**.
-2. **On Home, tap Create a project.** Pick **Create my own** or a template, give it a name and tap **Create**. Your computer hosts it.
-3. **Invite a friend.** The invite sheet opens right after, with the link already copied. Text it to someone.
-4. **Connect your AI** (optional): Claude Code, Codex CLI, Gemini CLI, Cursor or another MCP tool. Copy what it shows and paste it.
+1. **Open the app.** Nothing is created for you. **Make it yours** asks for your name, a profile icon or photo, a theme and your language; skip any of it. Then Flint offers a quick look around (**Tour with Flint**, also in the **?** menu).
+2. **On Home, tap Start your first project** (or **Join with a link**). It starts on this device right away; you choose where it lives (this computer, GitHub, a free cloud or your phone) any time later.
+3. **Invite a friend.** The invite sheet copies the link. Text it to someone.
+4. **Connect your AI** (optional): Claude Code, Codex CLI, Gemini CLI, Cursor or another MCP tool. Copy what it shows and paste it. Flint works without one.
+
+Want to see everything first? **See how TribeCode works** in the **?** menu (or Ctrl K › Start demo) runs a demo that goes one step at a time and clears itself afterwards.
 
 Each project's **Dashboard** shows **Set up**: four steps (the vision, a first task, your AI, the repo) that tick off as you go.
 
@@ -24,7 +26,10 @@ Each project's **Dashboard** shows **Set up**: four steps (the vision, a first t
 | See the project at a glance | **Dashboard** |
 | Talk | **Messages** |
 | Write notes or share any file | **Files** |
-| See what needs doing | **Task Board** |
+| Design a screen, website, game, slides or logo | **Design** (talk to Flint beside the canvas; **Advanced** for layers and properties) |
+| See what needs doing | **Task Board** (counters on top; one next-step button per task) |
+| Try what you built | **Preview** (full window, Flint and Properties on the right) |
+| See who's here and where | **People**, top right |
 | See what the agents do | **Agents Hub** |
 | Approve things | The **bell**, top right |
 | Run a business, hire, learn, add tools | **Company**, **Work**, **Academy**, **Marketplace** ([guides](10-company-mode.md)) |
