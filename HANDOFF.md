@@ -79,6 +79,7 @@ Pushing from the Claude cloud sandbox:
   - `devices.js`: phone device links.
 - `app/ui`:
   - `shell.js`: project circles, the calm sidebar, breadcrumbs, the right panel.
+  - `widgets.js` + `wcards.js` + `server/widgets.js`: the sidebar's + Add picker (categories, search, preview, Added ✓, keys) and widgets: built-in view rows, links, pinned docs and 19 live cards (My tasks, Who's here, Milestones timeline, Next standup, Build status, Ship & sync, Quick note, Checklist, Poll…), in a project (the tribe's) and on Home (yours); shared card state in `.tribe/widget-data.json` via `POST /api/widgets/act`. Audit: docs/WIDGETS-AUDIT.md. Test: `e2e_widgets_v2.py`.
   - `router.js`: the one router (global dashboard vs a project, Back/Forward via history, no dead ends, one pane on screen). Route table: docs/NAVIGATION.md.
   - `accounts.js`: Log in / Log out / Continue as guest, the account switcher and TEST accounts (docs/ACCOUNTS.md). Server scaffold: `server/accounts.js` (off unless `TRIBE_ACCOUNTS=1`); clean-up: `scripts/dev/clean-accounts.js`.
   - `signup.js`: the sign-up sheet (guest, account, providers), Save your work nudges, Forgot password (docs/ACCOUNTS.md › Sign up). Test: `app/test/e2e_signup.py`.

@@ -5,9 +5,12 @@
 //   the tribe's added widgets              built-in views (Calendar, Bugs…), custom links and pinned docs
 //   + Add                                  a small picker; host and builders only
 // Added widgets are saved per project for the whole tribe (server/widgets.js); a change reaches everyone live.
-// Remove from the ⋯ on hover or a right-click; drag to re-order (desktop). Phones: the same rows sit in the side
+// Remove from the ⋯ on hover or a right-click; drag to re-order (reorder.js). Phones: the same rows sit in the side
 // panel (the drawer), and the picker opens as a bottom sheet.
-// Public: window.TribeWidgets = { refresh(), state(), openPicker() }.
+// feat/widgets-v2: live cards (wcards.js) under the pinned rows, in a project and on Home (Home's are yours alone);
+// every widget has a ⋯ menu (Open or Settings, Refresh, Rename, Move up/down, Remove; Esc closes it); the picker is a
+// gallery with search, categories, a preview of each widget, "Added ✓", and arrow keys. Re-order with reorder.js.
+// Public: window.TribeWidgets = { refresh(), state(), home(), scope(), openPicker(), menu(), move(), reorder(), pop(), closePop() }.
 (function () {
   const C = window.TribeClient;
   const $ = s => document.querySelector(s);
@@ -42,8 +45,15 @@
   const ORDER = ['whiteboard', 'calendar', 'bugs', 'board', 'milestones', 'repo', 'visuals', 'website', 'preview', 'workshop', 'plan', 'secretary', 'captures', 'assets', 'mcp', 'market'];
 
   let st = { widgets: [], canEdit: false, preview: { show: false, label: 'Preview' }, website: { show: false } }, forPid = '', seq = 0;
+  // feat/widgets-v2: Home has its own cards (one list per member, GET /api/widgets/home); a project's cards sit with its rows
+  let hs = { widgets: [], canEdit: false, home: true, data: {} }, hseq = 0;
+  const isGlobal = () => !!(window.TribeRouter ? window.TribeRouter.isGlobal() : document.body.classList.contains('global'));
+  const scope = () => (isGlobal() || !pid()) ? 'home' : pid();
+  const cur = () => (scope() === 'home' ? hs : st);
   async function refresh() {
-    const p = pid(); if (!p || !C.connected()) { st = { ...st, widgets: [], canEdit: false, preview: { show: false }, website: { show: false } }; return draw(); }
+    const p = pid();
+    if (C.connected()) { const n = ++hseq; C.api('/widgets/home').then(r => { if (n === hseq) { hs = r; draw(); } }).catch(() => {}); }
+    if (!p || !C.connected()) { st = { ...st, widgets: [], canEdit: false, preview: { show: false }, website: { show: false } }; return draw(); }
     const n = ++seq;
     try { const r = await C.api(`/projects/${encodeURIComponent(p)}/widgets`); if (n !== seq) return; st = r; forPid = p; }
     catch { if (n !== seq) return; st = { widgets: [], canEdit: false, preview: { show: false }, website: { show: false } }; }
@@ -60,21 +70,23 @@
   const siteIcon = () => (window.TribeIcons && window.TribeIcons.svg ? window.TribeIcons.svg('website', 18) : `<svg class="ico" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.7 3.6 5.7 3.6 9s-1.1 6.3-3.6 9c-2.5-2.7-3.6-5.7-3.6-9S9.5 5.7 12 3z"/></svg>`);
   addEventListener('tribe:site-draft', e => { const d = e.detail || {}; if (d.pid && d.pid === pid()) { if (!document.getElementById('nest-website')) draw(); const dot = document.querySelector('#nest-website .wg-dot'); if (dot) dot.hidden = !d.dirty; } });
   document.addEventListener('click', e => { const r = e.target.closest && e.target.closest('#nest-website[data-wdz-open]'); if (!r || !SD()) return; e.preventDefault(); e.stopPropagation(); SD().open({ pid: pid() }); }, true);
-  function rowOf(w) {
+  const nameOf = w => w.title || w.name || (BUILT[w.key] || {}).label || ((window.TribeCards && window.TribeCards.META[w.key]) || {}).label || 'this widget';
+  function rowOf(w, can) {
     if (w.kind === 'builtin') {
       const b = BUILT[w.key]; if (!b) return '';
       if ((w.key === 'website' && autoSite()) || (w.key === 'preview' && pid())) return '';   // already a row of its own
-      return `<button class="nest-row wg-row" draggable="${st.canEdit && !isPhone()}" data-wid="${esc(w.id)}" ${b.go ? `data-pnav="${esc(b.go)}"` : `data-wrun="${esc(w.key)}"`} id="wg-${esc(w.key)}">${ico(b.icon)}<span>${esc(b.label)}</span>${more(w)}</button>`;
+      return `<button class="nest-row wg-row" data-wid="${esc(w.id)}" ${b.go ? `data-pnav="${esc(b.go)}"` : `data-wrun="${esc(w.key)}"`} id="wg-${esc(w.key)}">${ico(b.icon)}<span>${esc(b.label)}</span>${more(w, can)}</button>`;
     }
+    if (w.kind !== 'link' && w.kind !== 'doc') return '';
     const glyph = w.emoji ? `<span class="wg-emo" aria-hidden="true">${esc(w.emoji)}</span>` : ico(w.kind === 'doc' ? 'i-doc' : 'i-link');
-    return `<button class="nest-row wg-row" draggable="${st.canEdit && !isPhone()}" data-wid="${esc(w.id)}" data-wopen="${esc(w.id)}" title="${esc(w.kind === 'link' ? w.url : 'Pinned doc')}">${glyph}<span>${esc(w.name)}</span>${more(w)}</button>`;
+    return `<button class="nest-row wg-row" data-wid="${esc(w.id)}" id="wgr-${esc(w.id)}" data-wopen="${esc(w.id)}" title="${esc(w.kind === 'link' ? w.url : 'Pinned doc')}">${glyph}<span>${esc(w.name)}</span>${more(w, can)}</button>`;
   }
-  const more = w => st.canEdit ? `<span class="wg-more" role="button" tabindex="-1" data-wmore="${esc(w.id)}" title="More" aria-label="More for ${esc(w.name || (BUILT[w.key] || {}).label || 'this widget')}">⋯</span>` : '';
+  const more = (w, can) => can ? `<span class="wg-more" role="button" tabindex="-1" data-wmore="${esc(w.id)}" title="More" aria-label="More for ${esc(nameOf(w))}">⋯</span>` : '';
   function draw() {
     const box = $('#nest-extra'); if (!box) return;
     const rows = [];
     if (autoSite()) { const dirty = !!(SD() && SD().dirty && SD().dirty(pid())); rows.push(`<button class="nest-row wg-auto" id="nest-website" data-wdz-open="1" title="The project's website: open the designer">${siteIcon()}<span>Website</span><span class="wg-dot" title="Not saved to the host yet"${dirty ? '' : ' hidden'}></span></button>`); }
-    (st.widgets || []).forEach(w => rows.push(rowOf(w)));
+    (st.widgets || []).forEach(w => { const r = rowOf(w, st.canEdit); if (r) rows.push(r); });
     const html = rows.join('');
     if (box.innerHTML !== html) box.innerHTML = html;
     box.classList.toggle('empty', !rows.length);
@@ -86,9 +98,26 @@
     const game = pk === 'game' || pk === '3d', short = game ? 'Preview game' : 'Preview';
     const pslot = $('#nest-preview-slot'), prev = pid() ? `<button class="nest-row wg-preview" id="nest-preview" data-wrun="preview" data-kind="${esc(pk)}" title="${esc(plabel)}: run the project's code and see it live" aria-label="${esc(plabel)}"><i class="sf-thumb sf-pv" aria-hidden="true">${window.TribeIcons ? window.TribeIcons.svg('preview', 20, 'i') : ico('i-play')}</i><span>${esc(short)}</span></button>` : '';
     if (pslot && pslot.innerHTML !== prev) pslot.innerHTML = prev;
-    // + Add sits below the Repo row, in a bordered pill (the user's ask), not among the rows
-    const slot = $('#nest-add-slot') || box, add = st.canEdit ? `<button class="nest-row wg-add" id="nest-add" title="Add a widget to this project's sidebar" aria-haspopup="menu">${ico('i-plus')}<span>Add</span></button>` : '';
+    drawCards();
+    // + Add sits below the Repo row, in a bordered pill (the user's ask), not among the rows; on Home it adds Home's cards
+    const slot = $('#nest-add-slot') || box, home = scope() === 'home', add = cur().canEdit ? `<button class="nest-row wg-add" id="nest-add" title="${home ? 'Add a widget to your Home' : "Add a widget to this project's sidebar"}" aria-haspopup="dialog">${ico('i-plus')}<span>Add</span></button>` : '';
     if (slot !== box && slot.innerHTML !== add) slot.innerHTML = add; else if (slot === box && add) box.insertAdjacentHTML('beforeend', add);
+  }
+  // feat/widgets-v2: the live cards (wcards.js), and on Home its link rows, in #wg-cards under the pinned rows
+  function cardsBox() {
+    let b = $('#wg-cards'); if (b) return b;
+    const slot = $('#nest-add-slot'); if (!slot) return null;
+    b = document.createElement('div'); b.id = 'wg-cards'; b.className = 'wg-cards empty'; b.setAttribute('role', 'group'); b.setAttribute('aria-label', 'Widgets');
+    slot.before(b); return b;
+  }
+  function drawCards() {
+    const b = cardsBox(); if (!b || !window.TribeCards) return;
+    const s = cur(), sc = scope();
+    window.TribeCards.mount(b, s.widgets || [], { scope: sc, canEdit: !!s.canEdit, canVote: !!(s.canVote || s.canEdit), data: s.data || {} });
+    const links = sc === 'home' ? (s.widgets || []).filter(w => w.kind === 'link').map(w => rowOf(w, s.canEdit)).join('') : '';
+    const have = [...b.querySelectorAll(':scope > .wg-row')].map(e => e.outerHTML).join('');
+    if (have !== links) { b.querySelectorAll(':scope > .wg-row').forEach(e => e.remove()); if (links) b.insertAdjacentHTML('beforeend', links); }
+    b.classList.toggle('empty', !b.children.length);
   }
 
   // ---------- clicks ----------
@@ -101,26 +130,28 @@
         actions: [{ label: 'Open in a new tab', run: () => window.open(w.url, '_blank', 'noopener') }] });
     }
   }
+  const findW = id => (cur().widgets || []).find(x => x.id === id) || (st.widgets || []).find(x => x.id === id);
   document.addEventListener('click', e => {
     if (!e.target.closest) return;
-    const m = e.target.closest('#nest-extra [data-wmore]'); if (m) { e.preventDefault(); e.stopPropagation(); return menu(m, m.dataset.wmore); }
+    const m = e.target.closest('#nest-extra [data-wmore], #wg-cards [data-wmore]'); if (m) { e.preventDefault(); e.stopPropagation(); return menu(m, m.dataset.wmore); }
     const add = e.target.closest('#nest-add'); if (add) { e.preventDefault(); return openPicker(add); }
     const r = e.target.closest('#nest-extra [data-wrun], #nest-preview-slot [data-wrun]'); if (r) { e.preventDefault(); closeDrawer(); const b = BUILT[r.dataset.wrun]; return b && b.run && b.run(); }
-    const o = e.target.closest('#nest-extra [data-wopen]'); if (o) { e.preventDefault(); const w = (st.widgets || []).find(x => x.id === o.dataset.wopen); if (w) openWidget(w); }
+    const o = e.target.closest('#nest-extra [data-wopen], #wg-cards [data-wopen]'); if (o) { e.preventDefault(); const w = findW(o.dataset.wopen); if (w) openWidget(w); }
   }, true);
   document.addEventListener('contextmenu', e => {
-    const r = e.target.closest && e.target.closest('#nest-extra [data-wid]'); if (!r || !st.canEdit) return;
+    const r = e.target.closest && e.target.closest('#nest-extra [data-wid], #wg-cards [data-wid]'); if (!r) return;
+    if (e.target.closest('textarea, input, a')) return;   // a card's own fields keep the browser's menu
     e.preventDefault(); menu(r, r.dataset.wid);
   });
 
-  // ---------- a small popover (flat, 1px border; a bottom sheet on phones) ----------
-  let popEl = null;
-  function closePop() { if (popEl) { popEl.remove(); popEl = null; } }
+  // ---------- a small popover (flat, 1px border; a bottom sheet on phones); Esc closes it and gives focus back ----------
+  let popEl = null, popFrom = null;
+  function closePop() { if (popEl) { popEl.remove(); popEl = null; if (popFrom && popFrom.isConnected) try { popFrom.focus({ preventScroll: true }); } catch {} popFrom = null; } }
   function pop(anchor, html, id) {
     closePop();
-    const el = document.createElement('div'); el.className = `sh-pop wg-pop ${isPhone() ? 'sheet' : ''}`; el.id = id; el.setAttribute('role', 'menu');
+    const el = document.createElement('div'); el.className = `sh-pop wg-pop ${isPhone() ? 'sheet' : ''}`; el.id = id; el.setAttribute('role', /wg-menu/.test(id) ? 'menu' : 'dialog');
     el.innerHTML = (isPhone() ? '<div class="pj-grab"></div>' : '') + html;
-    document.body.appendChild(el); popEl = el;
+    document.body.appendChild(el); popEl = el; popFrom = anchor;
     if (!isPhone()) {
       const r = anchor.getBoundingClientRect(), w = el.offsetWidth, h = el.offsetHeight;
       el.style.left = Math.min(Math.max(8, r.right + 8), innerWidth - w - 8) + 'px';
@@ -128,17 +159,81 @@
     }
     return el;
   }
-  document.addEventListener('mousedown', e => { if (popEl && !popEl.contains(e.target) && !e.target.closest('#nest-add, [data-wmore]')) closePop(); });
-  document.addEventListener('keydown', e => { if (e.key === 'Escape' && popEl) { closePop(); e.stopPropagation(); } }, true);
+  document.addEventListener('mousedown', e => { if (popEl && !popEl.contains(e.target) && !e.target.closest('#nest-add, [data-wmore], [data-wgc-more]')) closePop(); });
+  document.addEventListener('keydown', e => {
+    if (!popEl) return;
+    if (e.key === 'Escape') { closePop(); e.stopPropagation(); e.preventDefault(); return; }
+    if ((e.key === 'ArrowDown' || e.key === 'ArrowUp') && popEl.getAttribute('role') === 'menu') {   // a menu walks with the arrows
+      const items = [...popEl.querySelectorAll('button:not([disabled])')], i = items.indexOf(document.activeElement);
+      e.preventDefault(); const n = items[(i + (e.key === 'ArrowDown' ? 1 : -1) + items.length) % items.length]; if (n) n.focus();
+    }
+  }, true);
 
-  async function save(list) {
-    try { st = await C.api(`/projects/${encodeURIComponent(pid())}/widgets`, { method: 'PUT', body: { widgets: list } }); draw(); return true; }
-    catch (e) { toast(e.message); return false; }
+  async function save(list, sc = scope()) {
+    try {
+      if (sc === 'home') hs = await C.api('/widgets/home', { method: 'PUT', body: { widgets: list } });
+      else st = await C.api(`/projects/${encodeURIComponent(sc)}/widgets`, { method: 'PUT', body: { widgets: list } });
+      draw(); return true;
+    } catch (e) { toast(e.message); return false; }
+  }
+  // which list a widget lives in, and its neighbours there (rows and cards are moved apart: they sit in two places)
+  function where(id) {
+    const inProj = (st.widgets || []).some(x => x.id === id) && scope() !== 'home';
+    const s = inProj ? st : cur(), list = (s.widgets || []).slice(), w = list.find(x => x.id === id);
+    const isCard = w && (w.kind === 'card' || s === hs), group = list.filter(x => (x.kind === 'card' || s === hs) === isCard);
+    return { s, sc: s === hs ? 'home' : pid(), list, w, group };
+  }
+  function move(id, delta) {
+    const { list, w, group, sc } = where(id); if (!w) return false;
+    const i = group.indexOf(w), j = i + delta; if (j < 0 || j >= group.length) { toast(`${nameOf(w)} is already ${delta < 0 ? 'first' : 'last'}`); return false; }
+    const other = group[j], a = list.indexOf(w), b = list.indexOf(other); list[a] = other; list[b] = w;
+    save(list, sc).then(ok => { if (ok) { const el = document.querySelector(`[data-wid="${CSS.escape(id)}"]`); const f = el && (el.matches('button') ? el : el.querySelector('.wgc-more')); if (f) f.focus({ preventScroll: true }); } });
+    return true;
+  }
+  // reorder.js hands over a dragged (or Alt+arrowed) order: the tribe's order, saved for everyone
+  function reorder(els) {
+    const ids = els.map(e => e.dataset.wid).filter(Boolean); if (!ids.length) return;
+    const { list, sc } = where(ids[0]), pos = list.map((w, i) => ids.includes(w.id) ? i : -1).filter(i => i >= 0).sort((a, b) => a - b);
+    const out = list.slice(); ids.forEach((id, k) => { const w = list.find(x => x.id === id); if (w && pos[k] !== undefined) out[pos[k]] = w; });
+    if (out.some((w, i) => w !== list[i])) save(out, sc);
   }
   function menu(anchor, id) {
-    const w = (st.widgets || []).find(x => x.id === id); if (!w) return;
-    const el = pop(anchor, `<div class="sh-menu"><button data-wm="remove">${ico('i-x', 16)}<span>Remove from the sidebar</span></button></div>`, 'wg-menu');
-    el.querySelector('[data-wm="remove"]').onclick = async () => { closePop(); if (await save(st.widgets.filter(x => x.id !== id))) toast('Removed'); };
+    const { w, s, group } = where(id); if (!w) return;
+    const can = !!s.canEdit, isCard = w.kind === 'card', TC = window.TribeCards, i = group.indexOf(w);
+    const b = (k, icon, label, dis) => `<button type="button" role="menuitem" data-wm="${k}"${dis ? ' disabled' : ''}>${window.TribeIcons ? window.TribeIcons.svg(icon, 16, 'i') : ''}<span>${label}</span></button>`;
+    const items = [
+      !isCard ? b('open', 'open', 'Open') : '',
+      isCard && can && TC && TC.hasSettings(w.key) ? b('settings', 'sliders', 'Settings') : '',
+      !isCard && can && (w.kind === 'link' || w.kind === 'doc') ? b('edit', 'sliders', 'Settings') : '',
+      isCard ? b('refresh', 'refresh', 'Refresh') : '',
+      isCard && can ? b('rename', 'rename', 'Rename') : '',
+      can ? b('up', 'chev', 'Move up', i <= 0) + b('down', 'chev', 'Move down', i >= group.length - 1) : '',
+      can ? `<hr>${b('remove', 'x', s === hs ? 'Remove from Home' : 'Remove from the sidebar')}` : '',
+    ].join('');
+    const el = pop(anchor, `<div class="sh-menu">${items}</div>`, 'wg-menu');
+    const f = el.querySelector('button:not([disabled])'); if (f) setTimeout(() => f.focus({ preventScroll: true }), 0);
+    el.addEventListener('click', async ev => {
+      const x = ev.target.closest('[data-wm]'); if (!x || x.disabled) return;
+      const k = x.dataset.wm;
+      if (k === 'settings') { closePop(); return TC.settings(id, anchor); }
+      if (k === 'rename') return rename(anchor, w);
+      if (k === 'edit') return custom(anchor, w.kind === 'doc', w);
+      closePop();
+      if (k === 'open') return openWidget(w), (w.kind === 'builtin' && anchor.closest('.wg-row') && anchor.closest('.wg-row').click());
+      if (k === 'refresh') return TC && TC.reload(id);
+      if (k === 'up' || k === 'down') return move(id, k === 'up' ? -1 : 1);
+      if (k === 'remove') { const { list, sc } = where(id); if (await save(list.filter(x => x.id !== id), sc)) toast('Removed'); }
+    });
+  }
+  function rename(anchor, w) {
+    const el = pop(anchor, `<form class="wg-form" autocomplete="off"><h6>Rename</h6><input class="input" id="wg-rename" maxlength="40" value="${esc(nameOf(w))}" aria-label="Name"><div class="wg-acts"><button type="button" class="btn" data-cancel>Cancel</button><button class="btn primary">Save</button></div></form>`, 'wg-rename-pop');
+    const f = el.querySelector('form'), i = f.querySelector('input'); setTimeout(() => { i.focus(); i.select(); }, 20);
+    f.querySelector('[data-cancel]').onclick = closePop;
+    f.onsubmit = async e => {
+      e.preventDefault(); const sc = where(w.id).sc;
+      try { await C.api('/widgets/act', { method: 'POST', body: { scope: sc, wid: w.id, op: 'title', title: i.value.trim() } }); closePop(); refresh(); }
+      catch (er) { toast(er.message); }
+    };
   }
 
   // ---------- + Add: a gallery, like a "new page" picker, in TribeCode's own style ----------
@@ -169,60 +264,116 @@
   ];
   function mini(k) {
     const L = LOOK[k], dot = '<i class="wgx-av"></i>';
-    if (L.art === 'board') return `<div class="wgx-mini wgx-board" aria-hidden="true"><b>${L.emo} ${esc(BUILT[k].label)}</b><svg viewBox="0 0 200 70" preserveAspectRatio="xMinYMin meet"><path d="M8 52c14-22 26-30 38-18s20 8 30-6" fill="none" stroke="#38C6B1" stroke-width="3" stroke-linecap="round"/><rect x="92" y="10" width="38" height="24" rx="3" fill="none" stroke="#6C7CFF" stroke-width="2"/><path d="M98 50h34M126 44l6 6-6 6" fill="none" stroke="#F8FAFC" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><rect x="146" y="6" width="40" height="40" rx="3" fill="#FFB86B"/><rect x="152" y="16" width="26" height="3" rx="1.5" fill="#12151A" opacity=".5"/><rect x="152" y="24" width="18" height="3" rx="1.5" fill="#12151A" opacity=".5"/></svg></div>`;   // feat/whiteboard
+    if (L.art === 'board') return `<div class="wgx-mini wgx-board" aria-hidden="true"><b>${L.emo} ${esc(BUILT[k].label)}</b><svg viewBox="0 0 200 70" preserveAspectRatio="xMinYMin meet"><path d="M8 52c14-22 26-30 38-18s20 8 30-6" fill="none" style="stroke:var(--live)" stroke-width="3" stroke-linecap="round"/><rect x="92" y="10" width="38" height="24" rx="3" fill="none" style="stroke:var(--peer)" stroke-width="2"/><path d="M98 50h34M126 44l6 6-6 6" fill="none" style="stroke:var(--text)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><rect x="146" y="6" width="40" height="40" rx="3" style="fill:var(--accent)"/><rect x="152" y="16" width="26" height="3" rx="1.5" style="fill:var(--canvas)" opacity=".5"/><rect x="152" y="24" width="18" height="3" rx="1.5" style="fill:var(--canvas)" opacity=".5"/></svg></div>`;   // feat/whiteboard
     const row = i => `<div class="wgx-tr"><span class="wgx-bar" style="width:${[62, 48, 70][i]}%"></span><span class="wgx-pill p${i}">${esc(L.pills[i])}</span><span>${dot}<span class="wgx-bar s"></span></span></div>`;
     return `<div class="wgx-mini" aria-hidden="true"><b>${L.emo} ${esc(BUILT[k].label)}</b><div class="wgx-th">${L.cols.map(c => `<span>${esc(c)}</span>`).join('')}</div>${[0, 1, 2].map(row).join('')}</div>`;
   }
-  function closeGallery() { const g = $('#wg-picker'); if (g) { g.closest('.wgx-scrim').remove(); document.removeEventListener('keydown', galleryKey, true); } }
-  function galleryKey(e) { if (e.key === 'Escape') { e.stopPropagation(); closeGallery(); } }
+  let galleryFrom = null;
+  function closeGallery() { const g = $('#wg-picker'); if (g) { g.closest('.wgx-scrim').remove(); document.removeEventListener('keydown', galleryKey, true); if (galleryFrom && galleryFrom.isConnected) try { galleryFrom.focus({ preventScroll: true }); } catch {} galleryFrom = null; } }
+  function galleryKey(e) {
+    const g = $('#wg-picker'); if (!g) return;
+    if (e.key === 'Escape') { if (popEl) return; e.stopPropagation(); e.preventDefault(); return closeGallery(); }
+    if (e.key === 'Tab') {   // focus stays inside the dialog
+      const f = [...g.querySelectorAll('button:not([disabled]), input, a[href]')].filter(x => x.offsetParent !== null); if (!f.length) return;
+      const i = f.indexOf(document.activeElement);
+      if (e.shiftKey && i <= 0) { e.preventDefault(); f[f.length - 1].focus(); } else if (!e.shiftKey && i === f.length - 1) { e.preventDefault(); f[0].focus(); }
+      return;
+    }
+    // the arrows walk the gallery's cards (left/right in a row, up/down by a row)
+    const k = e.key; if (!['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(k)) return;
+    const a = document.activeElement; if (!a || !a.closest || !a.closest('.wgx-grid, .wgx-quick, .wgx-packs')) return;
+    const items = [...g.querySelectorAll('.wgx-grid > button, .wgx-quick > button, .wgx-packs > button')].filter(x => !x.hidden && x.offsetParent !== null);
+    const i = items.indexOf(a); if (i < 0) return;
+    const cols = Math.max(1, Math.round(a.parentElement.clientWidth / (a.offsetWidth + 10)));
+    const j = k === 'ArrowLeft' ? i - 1 : k === 'ArrowRight' ? i + 1 : k === 'ArrowUp' ? i - cols : i + cols;
+    if (items[j]) { e.preventDefault(); items[j].focus(); }
+  }
+  // the catalogue the picker shows: built-in views (rows) and live cards (wcards.js); Home only holds cards and links
+  const CATS = [['all', 'All'], ['Team', 'Team'], ['Plan', 'Plan'], ['Build', 'Build'], ['Notes', 'Notes'], ['You', 'You'], ['views', 'Views'], ['links', 'Links']];
   function openPicker(anchor) {
-    if (!st.canEdit) return;
-    closePop(); closeGallery();
+    const s = cur(), home = scope() === 'home'; if (!s.canEdit) return;
+    closePop(); closeGallery(); galleryFrom = anchor || $('#nest-add');
+    const TC = window.TribeCards, META = TC ? TC.META : {};
     const have = new Set((st.widgets || []).filter(w => w.kind === 'builtin').map(w => w.key));
     if (autoSite()) have.add('website'); if (pid()) have.add('preview');
+    const haveCard = new Set((s.widgets || []).filter(w => w.kind === 'card').map(w => w.key));
+    const cardKeys = TC ? TC.keys(home ? 'home' : 'project') : [];
     const P = ((window.TribeProjects && window.TribeProjects.list()) || []).find(x => x.id === pid()) || {};
+    const added = '<em class="wgx-added">Added ✓</em>';
+    const cardBtn = k => { const m = META[k], on = haveCard.has(k), dis = on && !m.multi; return `<button class="wgx-card wgx-live" data-wcard="${k}" data-cat="${m.cat}" data-k="${esc((m.label + ' ' + m.blurb + ' ' + k + ' ' + m.cat).toLowerCase())}" ${dis ? 'disabled aria-disabled="true"' : ''} aria-label="${esc(m.label)}: ${esc(m.blurb)}${on ? ' (added)' : ''}">
+        <span class="wgx-top">${window.TribeIcons ? window.TribeIcons.svg(m.icon, 16, 'i') : ''}<b>${esc(m.label)}</b>${on ? (m.multi ? '<em class="wgx-added">Added ✓ · add another</em>' : added) : ''}</span><small>${esc(m.blurb)}</small>${TC.mini(k)}</button>`; };
     const scrim = document.createElement('div'); scrim.className = 'wgx-scrim';
-    scrim.innerHTML = `<div class="wgx ${isPhone() ? 'sheet' : ''}" id="wg-picker" role="dialog" aria-modal="true" aria-label="Add to this project">
-      <header class="wgx-head"><button class="wgx-x" data-wclose aria-label="Close">${ico('i-x', 16)}</button><span class="wgx-to">Add to <b>${esc(P.emoji ? P.emoji + ' ' : '')}${esc(P.name || 'this project')}</b></span>
-        <label class="wgx-search">${ico('i-search', 16)}<input id="wgx-q" placeholder="Search" autocomplete="off" aria-label="Search widgets"></label></header>
-      <div class="wgx-body">
-        <div class="wgx-quick">
-          <button class="wgx-q" data-wcustom data-k="link custom url website">${ico('i-link', 18)}<b>A link</b><small>Any page, opened right here</small></button>
-          <button class="wgx-q" data-wcustom data-doc data-k="doc pin file notes">${ico('i-doc', 18)}<b>Pin a doc</b><small>One of the project's files</small></button>
+    scrim.innerHTML = `<div class="wgx ${isPhone() ? 'sheet' : ''}" id="wg-picker" role="dialog" aria-modal="true" aria-label="${home ? 'Add to your Home' : 'Add to this project'}">
+      <header class="wgx-head"><button class="wgx-x" data-wclose aria-label="Close">${ico('i-x', 16)}</button><span class="wgx-to">Add to <b>${home ? 'your Home' : esc(P.emoji ? P.emoji + ' ' : '') + esc(P.name || 'this project')}</b></span>
+        <label class="wgx-search">${ico('i-search', 16)}<input id="wgx-q" placeholder="Search widgets" autocomplete="off" aria-label="Search widgets"></label></header>
+      <nav class="wgx-cats" role="tablist" aria-label="Categories">${CATS.filter(([c]) => !home || (c !== 'views' && cardKeys.some(k => META[k].cat === c)) || c === 'all' || c === 'links').map(([c, l], i) => `<button type="button" role="tab" data-wcat="${c}" aria-selected="${i === 0}" tabindex="${i === 0 ? 0 : -1}">${l}</button>`).join('')}</nav>
+      <div class="wgx-main"><div class="wgx-body">
+        <div class="wgx-quick" data-cat="links">
+          <button class="wgx-q" data-wcustom data-cat="links" data-k="link custom url website">${ico('i-link', 18)}<b>A link</b><small>Any page, opened right here</small></button>
+          ${home ? '' : `<button class="wgx-q" data-wcustom data-doc data-cat="links" data-k="doc pin file notes">${ico('i-doc', 18)}<b>Pin a doc</b><small>One of the project's files</small></button>`}
         </div>
-        <div class="wgx-mk-head"><h6 class="wgx-h">🛍️ From the Marketplace</h6><div class="mk-seg" role="tablist" aria-label="Sort">${[['hot', 'Hot'], ['new', 'New'], ['top', 'Top']].map(([k, l]) => `<button role="tab" data-wmk="${k}">${l}</button>`).join('')}</div><a class="wgx-mk-all" href="#/market" id="wgx-mk-all">Browse all</a></div>
-        <div class="wgx-mk" id="wgx-mk"></div>
-        <h6 class="wgx-h">↗ Built into TribeCode</h6>
-        <div class="wgx-grid">${ORDER.map(k => `<button class="wgx-card t-${LOOK[k].tint}" data-wadd="${k}" data-k="${esc((BUILT[k].label + ' ' + LOOK[k].blurb + ' ' + k).toLowerCase())}" ${have.has(k) ? 'disabled aria-disabled="true"' : ''}>
-            <span class="wgx-top"><b>${esc(BUILT[k].label)}</b>${have.has(k) ? '<em>Added</em>' : ''}</span><small>${esc(LOOK[k].blurb)}</small>${mini(k)}</button>`).join('')}</div>
-        <h6 class="wgx-h">🧩 Starter packs</h6>
-        <div class="wgx-packs">${PACKS.map(p => { const left = p.keys.filter(k => !have.has(k)); return `<button class="wgx-pack" data-wpack="${p.id}" data-k="${esc((p.name + ' ' + p.blurb).toLowerCase())}" ${left.length ? '' : 'disabled'}><span class="wgx-pe">${p.emo}</span><span><b>${esc(p.name)}</b><small>${left.length ? esc(p.blurb) : 'All added'}</small></span></button>`; }).join('')}</div>
-        <p class="wgx-none" hidden>Nothing matches. Try “calendar”, “bugs” or add <button class="linkish" data-wcustom>a link</button>.</p>
-      </div></div>`;
+        <h6 class="wgx-h" data-sec="cards">✦ Live widgets</h6>
+        <div class="wgx-grid">${cardKeys.map(cardBtn).join('')}</div>
+        ${home ? '' : `<h6 class="wgx-h" data-sec="views">↗ Built into TribeCode</h6>
+        <div class="wgx-grid">${ORDER.map(k => `<button class="wgx-card t-${LOOK[k].tint}" data-wadd="${k}" data-cat="views" data-k="${esc((BUILT[k].label + ' ' + LOOK[k].blurb + ' ' + k).toLowerCase())}" ${have.has(k) ? 'disabled aria-disabled="true"' : ''} aria-label="${esc(BUILT[k].label)}: ${esc(LOOK[k].blurb)}${have.has(k) ? ' (added)' : ''}">
+            <span class="wgx-top"><b>${esc(BUILT[k].label)}</b>${have.has(k) ? added : ''}</span><small>${esc(LOOK[k].blurb)}</small>${mini(k)}</button>`).join('')}</div>
+        <h6 class="wgx-h" data-sec="views">🧩 Starter packs</h6>
+        <div class="wgx-packs">${PACKS.map(p => { const left = p.keys.filter(k => !have.has(k)); return `<button class="wgx-pack" data-wpack="${p.id}" data-cat="views" data-k="${esc((p.name + ' ' + p.blurb).toLowerCase())}" ${left.length ? '' : 'disabled'}><span class="wgx-pe">${p.emo}</span><span><b>${esc(p.name)}</b><small>${left.length ? esc(p.blurb) : 'All added'}</small></span></button>`; }).join('')}</div>
+        <div class="wgx-mk-head" data-sec="links"><h6 class="wgx-h">🛍️ From the Marketplace</h6><div class="mk-seg" role="tablist" aria-label="Sort">${[['hot', 'Hot'], ['new', 'New'], ['top', 'Top']].map(([k, l]) => `<button role="tab" data-wmk="${k}">${l}</button>`).join('')}</div><a class="wgx-mk-all" href="#/market" id="wgx-mk-all">Browse all</a></div>
+        <div class="wgx-mk" id="wgx-mk" data-cat="links"></div>`}
+        <p class="wgx-none" hidden>Nothing matches. Try “tasks”, “note” or add <button class="linkish" data-wcustom>a link</button>.</p>
+      </div>
+      <aside class="wgx-pv" id="wgx-pv" aria-live="polite"><p class="wgx-pv-hint">Point at a widget to see it here before you add it.</p></aside></div></div>`;
     document.body.appendChild(scrim);
-    const g = scrim.querySelector('#wg-picker'), q = g.querySelector('#wgx-q');
+    const g = scrim.querySelector('#wg-picker'), q = g.querySelector('#wgx-q'), pv = g.querySelector('#wgx-pv');
     if (!isPhone()) setTimeout(() => q.focus(), 30);
     document.addEventListener('keydown', galleryKey, true);
     scrim.addEventListener('mousedown', e => { if (e.target === scrim) closeGallery(); });
     g.querySelector('[data-wclose]').onclick = closeGallery;
-    q.oninput = () => {
+    let cat = 'all';
+    const filter = () => {
       const t = q.value.trim().toLowerCase(); let n = 0;
-      g.querySelectorAll('[data-k]').forEach(el => { const on = !t || el.dataset.k.includes(t); el.hidden = !on; n += on; });
-      g.querySelectorAll('.wgx-h').forEach(h => { const box = h.nextElementSibling; h.hidden = ![...box.children].some(c => !c.hidden); });
+      g.querySelectorAll('[data-k]').forEach(el => { const on = (!t || el.dataset.k.includes(t)) && (cat === 'all' || el.dataset.cat === cat); el.hidden = !on; n += on; });
+      g.querySelectorAll('.wgx-h').forEach(h => { const box = h.closest('.wgx-mk-head') ? g.querySelector('#wgx-mk') : h.nextElementSibling; const vis = box && [...box.children].some(c => !c.hidden); (h.closest('.wgx-mk-head') || h).hidden = !vis; });
+      const qk = g.querySelector('.wgx-quick'); qk.hidden = ![...qk.children].some(c => !c.hidden);
       g.querySelector('.wgx-none').hidden = n > 0;
     };
-    q.onkeydown = e => { if (e.key === 'Enter') { const f = g.querySelector('[data-wadd]:not([hidden]):not([disabled]), [data-wpack]:not([hidden]):not([disabled])'); if (f) f.click(); } };
+    q.oninput = filter;
+    const tabs = [...g.querySelectorAll('[data-wcat]')];
+    const pick = b => { cat = b.dataset.wcat; tabs.forEach(x => { const on = x === b; x.setAttribute('aria-selected', on); x.tabIndex = on ? 0 : -1; }); filter(); };
+    tabs.forEach((b, i) => { b.onclick = () => pick(b); b.onkeydown = e => { if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') { e.preventDefault(); const n = tabs[(i + (e.key === 'ArrowRight' ? 1 : -1) + tabs.length) % tabs.length]; n.focus(); pick(n); } }; });
+    q.onkeydown = e => { if (e.key === 'Enter') { const f = g.querySelector('[data-wcard]:not([hidden]):not([disabled]), [data-wadd]:not([hidden]):not([disabled]), [data-wpack]:not([hidden]):not([disabled])'); if (f) f.click(); } if (e.key === 'ArrowDown') { const f = g.querySelector('.wgx-body button:not([hidden]):not([disabled])'); if (f) { e.preventDefault(); f.focus(); } } };
+    // the preview: what the focused or hovered widget looks like, with its own Add button
+    const show = b => {
+      if (!b || isPhone()) return;
+      const card = b.dataset.wcard, key = b.dataset.wadd; if (!card && !key) return;
+      const m = card ? META[card] : { label: BUILT[key].label, blurb: LOOK[key].blurb, cat: 'View' }, on = card ? haveCard.has(card) : have.has(key), dis = b.disabled;
+      pv.innerHTML = `<span class="eyebrow">${esc(card ? m.cat : 'View')}${card && m.multi ? ' · add as many as you like' : ''}</span><h4>${esc(m.label)}</h4><p>${esc(m.blurb)}</p><div class="wgx-pv-art">${card ? TC.mini(card) : mini(key)}</div>
+        <button type="button" class="btn ${dis ? '' : 'primary'}" id="wgx-pv-add" ${dis ? 'disabled' : ''}>${dis ? 'Added ✓' : on ? 'Add another' : 'Add'}</button>`;
+      const x = pv.querySelector('#wgx-pv-add'); if (!dis) x.onclick = () => b.click();
+    };
+    g.addEventListener('mouseover', e => { const b = e.target.closest && e.target.closest('[data-wcard], [data-wadd]'); if (b) show(b); });
+    g.addEventListener('focusin', e => { const b = e.target.closest && e.target.closest('[data-wcard], [data-wadd]'); if (b) show(b); });
+    const keysOf = w => w.kind === 'card' ? w.key : '';
+    g.querySelectorAll('[data-wcard]:not([disabled])').forEach(b => b.onclick = async () => {
+      const k = b.dataset.wcard, m = META[k]; closeGallery();
+      if (await save([...(cur().widgets || []), { kind: 'card', key: k }])) {
+        toast(`${m.label} added`);
+        const last = [...(cur().widgets || [])].reverse().find(w => keysOf(w) === k);
+        setTimeout(() => { const el = last && document.getElementById('wgc-' + last.id); if (el) { el.scrollIntoView({ block: 'nearest' }); if ((k === 'countdown' || k === 'poll') && TC) TC.settings(last.id, el.querySelector('.wgc-more')); } }, 60);
+      }
+    });
     g.querySelectorAll('[data-wadd]:not([disabled])').forEach(b => b.onclick = async () => {
       closeGallery();
-      if (await save([...(st.widgets || []), { kind: 'builtin', key: b.dataset.wadd }])) toast(`${LOOK[b.dataset.wadd].emo} ${BUILT[b.dataset.wadd].label} added`);
+      if (await save([...(st.widgets || []), { kind: 'builtin', key: b.dataset.wadd }], pid())) toast(`${LOOK[b.dataset.wadd].emo} ${BUILT[b.dataset.wadd].label} added`);
     });
     g.querySelectorAll('[data-wpack]:not([disabled])').forEach(b => b.onclick = async () => {
       const p = PACKS.find(x => x.id === b.dataset.wpack), add = p.keys.filter(k => !have.has(k)).map(k => ({ kind: 'builtin', key: k }));
       closeGallery();
-      if (await save([...(st.widgets || []), ...add])) toast(`${p.emo} ${p.name}: ${add.length} added`);
+      if (await save([...(st.widgets || []), ...add], pid())) toast(`${p.emo} ${p.name}: ${add.length} added`);
     });
     g.querySelectorAll('[data-wcustom]').forEach(b => b.onclick = () => { const doc = b.hasAttribute('data-doc'); closeGallery(); custom($('#nest-add') || anchor, doc); });
-    marketStrip(g);
+    if (!home) marketStrip(g);
   }
   // v0.27 company: a few link widgets from the Marketplace (market.js / server/market.js), with quick sorts and a way to all of it
   let mkSort = 'hot';
@@ -234,49 +385,52 @@
       const r = await window.TribeMarket.quick(mkSort, 'widget', 6, 'link');
       all.textContent = `Browse all (${r.catalog})`;
       const have = new Set((st.widgets || []).filter(w => w.kind === 'link').map(w => w.url));
-      box.innerHTML = r.items.map(it => `<button class="wgx-mk-row" data-wmkid="${esc(it.id)}" data-k="${esc((it.title + ' ' + it.summary + ' ' + (it.tags || []).join(' ')).toLowerCase())}" ${have.has(it.url) ? 'disabled' : ''}><span class="mk-emo" aria-hidden="true">${esc(it.emoji || '🔗')}</span><span><b>${esc(it.title)}</b><small>${esc(it.summary)}</small></span>${have.has(it.url) ? '<em>Added</em>' : ''}</button>`).join('');
+      box.innerHTML = r.items.map(it => `<button class="wgx-mk-row" data-wmkid="${esc(it.id)}" data-cat="links" data-k="${esc((it.title + ' ' + it.summary + ' ' + (it.tags || []).join(' ')).toLowerCase())}" ${have.has(it.url) ? 'disabled' : ''}><span class="mk-emo" aria-hidden="true">${esc(it.emoji || '🔗')}</span><span><b>${esc(it.title)}</b><small>${esc(it.summary)}</small></span>${have.has(it.url) ? '<em class="wgx-added">Added ✓</em>' : ''}</button>`).join('');
       box.querySelectorAll('[data-wmkid]:not([disabled])').forEach(b => b.onclick = async () => { closeGallery(); await window.TribeMarket.use(b.dataset.wmkid); });
     } catch { box.innerHTML = ''; }
   }
-  async function custom(anchor, preferDoc) {
+  // A link or a pinned doc: add one, or (from the ⋯ menu's Settings) change one
+  async function custom(anchor, preferDoc, edit) {
+    const home = scope() === 'home', E = edit || {};
     const el = pop(anchor, `<form class="wg-form" id="wg-form" autocomplete="off">
-        <h6>${preferDoc ? 'Pin a doc' : 'Add a link'}</h6>
-        <div class="wg-two"><input class="input wg-emoji" id="wg-emoji" maxlength="4" placeholder="🔗" aria-label="Emoji"><input class="input" id="wg-name" maxlength="40" placeholder="Name" aria-label="Name" required></div>
-        <input class="input" id="wg-url" placeholder="https://…" aria-label="Link" inputmode="url">
-        <select class="input" id="wg-doc" aria-label="Or pin a doc"><option value="">…or pin a doc</option></select>
-        <div class="wg-acts"><button type="button" class="btn" id="wg-cancel">Cancel</button><button class="btn primary" id="wg-save">Add</button></div></form>`, 'wg-custom');
+        <h6>${edit ? 'Settings' : preferDoc ? 'Pin a doc' : 'Add a link'}</h6>
+        <div class="wg-two"><input class="input wg-emoji" id="wg-emoji" maxlength="4" placeholder="🔗" aria-label="Emoji" value="${esc(E.emoji || '')}"><input class="input" id="wg-name" maxlength="40" placeholder="Name" aria-label="Name" required value="${esc(E.name || '')}"></div>
+        <input class="input" id="wg-url" placeholder="https://…" aria-label="Link" inputmode="url" value="${esc(E.url || '')}"${E.kind === 'doc' ? ' hidden' : ''}>
+        ${home ? '' : `<select class="input" id="wg-doc" aria-label="Or pin a doc"${E.kind === 'link' ? ' hidden' : ''}><option value="">…or pin a doc</option></select>`}
+        <div class="wg-acts"><button type="button" class="btn" id="wg-cancel">Cancel</button><button class="btn primary" id="wg-save">${edit ? 'Save' : 'Add'}</button></div></form>`, 'wg-custom');
     const f = el.querySelector('form'), name = el.querySelector('#wg-name'), url = el.querySelector('#wg-url'), doc = el.querySelector('#wg-doc');
-    if (!isPhone()) (preferDoc ? doc : name).focus();
-    C.api('/docs').then(({ docs }) => { doc.innerHTML += (docs || []).slice(0, 60).map(d => `<option value="${esc(d.slug)}">${esc(d.title)}</option>`).join(''); }).catch(() => {});
-    doc.onchange = () => { if (doc.value && !name.value.trim()) name.value = doc.selectedOptions[0].textContent.slice(0, 40); };
+    if (!isPhone()) setTimeout(() => (preferDoc && doc ? doc : name).focus(), 20);
+    if (doc) C.api('/docs').then(({ docs }) => { doc.innerHTML += (docs || []).slice(0, 60).map(d => `<option value="${esc(d.slug)}"${d.slug === E.doc ? ' selected' : ''}>${esc(d.title)}</option>`).join(''); }).catch(() => {});
+    if (doc) doc.onchange = () => { if (doc.value && !name.value.trim()) name.value = doc.selectedOptions[0].textContent.slice(0, 40); };
     el.querySelector('#wg-cancel').onclick = closePop;
     f.onsubmit = async e => {
       e.preventDefault();
       const nm = name.value.trim(), emoji = el.querySelector('#wg-emoji').value.trim();
       let u = url.value.trim(); if (u && !/^https?:\/\//i.test(u)) u = 'https://' + u;
       if (!nm) return name.focus();
-      if (!u && !doc.value) { toast('Add a link or pick a doc'); return url.focus(); }
-      const w = u ? { kind: 'link', name: nm, emoji, url: u } : { kind: 'doc', name: nm, emoji, doc: doc.value };
-      if (await save([...(st.widgets || []), w])) { closePop(); toast(`${nm} added`); }
+      const dv = doc ? doc.value : '';
+      if (!u && !dv) { toast('Add a link or pick a doc'); return url.focus(); }
+      const w = u ? { kind: 'link', name: nm, emoji, url: u } : { kind: 'doc', name: nm, emoji, doc: dv };
+      const { list, sc } = edit ? where(edit.id) : { list: (cur().widgets || []).slice(), sc: scope() };
+      const out = edit ? list.map(x => x.id === edit.id ? { ...w, id: edit.id } : x) : [...list, w];
+      if (await save(out, sc)) { closePop(); toast(edit ? 'Saved' : `${nm} added`); }
     };
   }
 
-  // ---------- drag to re-order (desktop) ----------
-  let dragId = null;
-  document.addEventListener('dragstart', e => { const r = e.target.closest && e.target.closest('#nest-extra [data-wid]'); if (!r || !st.canEdit) return; dragId = r.dataset.wid; r.classList.add('dragging'); try { e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('text/plain', dragId); } catch {} });
-  document.addEventListener('dragover', e => { if (!dragId) return; const r = e.target.closest && e.target.closest('#nest-extra [data-wid]'); if (r) { e.preventDefault(); document.querySelectorAll('#nest-extra .drop').forEach(x => x !== r && x.classList.remove('drop')); r.classList.add('drop'); } });
-  document.addEventListener('dragend', () => { dragId = null; document.querySelectorAll('#nest-extra .dragging, #nest-extra .drop').forEach(x => x.classList.remove('dragging', 'drop')); });
-  document.addEventListener('drop', e => {
-    if (!dragId) return; const r = e.target.closest && e.target.closest('#nest-extra [data-wid]'); if (!r) return;
-    e.preventDefault();
-    const list = (st.widgets || []).slice(), from = list.findIndex(x => x.id === dragId), to = list.findIndex(x => x.id === r.dataset.wid);
-    dragId = null; if (from < 0 || to < 0 || from === to) return draw();
-    const [m] = list.splice(from, 1); list.splice(to, 0, m); save(list);
-  });
+  // ---------- re-order: reorder.js drags rows and cards (mouse, touch, pen) and Alt+↑/↓; the order is the tribe's ----------
+  // (the old HTML5 drag here is gone: two drag systems on one row fought each other)
 
   // ---------- keep in step ----------
   C.on('hello', soon); C.on('project', soon); C.on('projects', soon);
-  C.on('ws', m => { if (m && ['widgets', 'website', 'preview', 'project', 'sense'].includes(m.type) && (!m.project || m.project === pid())) soon(); });
+  C.on('ws', m => {
+    if (!m) return;
+    if (m.type === 'widgets' && m.home) { if (m.home === ((C.state().me || {}).id)) soon(); return; }
+    if (['widgets', 'website', 'preview', 'project', 'sense'].includes(m.type) && (!m.project || m.project === pid())) soon();
+    if (window.TribeCards) window.TribeCards.live(m);
+  });
+  // Home and a project hold different cards: redraw when the sidebar switches between them
+  let wasHome = null;
+  new MutationObserver(() => { const h = scope() === 'home'; if (h !== wasHome) { wasHome = h; draw(); } }).observe(document.body, { attributes: true, attributeFilter: ['class'] });
   setTimeout(refresh, 0);
-  window.TribeWidgets = { refresh, state: () => ({ ...st, project: forPid }), openPicker };
+  window.TribeWidgets = { refresh, state: () => ({ ...st, project: forPid }), home: () => ({ ...hs }), scope, openPicker, menu, move, reorder, pop, closePop, canEdit: () => !!cur().canEdit };
 })();
