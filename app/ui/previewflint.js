@@ -157,7 +157,7 @@
   function paintFeed() {
     if (!fui) return;
     fui.set(items.map(x => x.k === 'you' ? { who: 'me', text: x.text } : x.k === 'flint' ? { who: 'flint', text: x.html ? '' : x.text || '', html: x.html || '', acts: x.acts || [] }
-      : { who: 'ev', k: EVK[x.k] || 'info', who2: x.who || '', text: x.text || '', html: x.html || '', add: x.add, del: x.del, acts: x.k === 'error' ? [{ label: 'Fix it', fn: () => fix(x.text || '') }] : [] }));
+      : { who: 'ev', k: EVK[x.k] || 'info', who2: x.who || '', text: x.text || '', html: x.html || '', add: x.add, del: x.del, acts: x.k === 'error' ? [{ label: 'Fix it', fn: () => fix(x.text || '') }, ...(window.TribeAIBridge ? [{ label: 'Ask a free AI', fn: () => window.TribeAIBridge.open({ src: 'error', error: x.text || '', goal: 'Fix the error the preview shows.' }) }] : [])] : [] }));
   }
   function feed(x) {
     x.at = x.at || Date.now();
