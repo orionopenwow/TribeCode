@@ -6,7 +6,7 @@
 .dz-ov { position: fixed; inset: 0; z-index: 9000; pointer-events: none; opacity: 0; visibility: hidden;
   transition: opacity var(--dur-quick) var(--ease-out), visibility 0s linear var(--dur-quick); }
 .dz-ov.on { opacity: 1; visibility: visible; transition: opacity var(--dur-quick) var(--ease-out), visibility 0s; }
-.dz-frame { position: absolute; inset: 8px; border: 1px dashed var(--accent); border-radius: var(--r-lg); background: var(--chip); }
+.dz-frame { position: absolute; inset: 8px; border: 1px dashed var(--accent); border-radius: var(--r-lg); }
 .dz-hint { position: absolute; top: 20px; left: 50%; transform: translateX(-50%); display: inline-flex; align-items: center; gap: 8px; padding: 8px 14px;
   background: var(--surface); border: 1px solid var(--border); border-radius: 999px; color: var(--text); font-size: 13px; font-weight: 600; white-space: nowrap; max-width: calc(100vw - 40px); overflow: hidden; text-overflow: ellipsis; }
 .dz-hint .dz-i { color: var(--accent); }
@@ -88,6 +88,7 @@ body.dz-on .fx-drop, body.dz-on .dc-drop { display: none !important; }
 /* ---- "Flint is reading" ---- */
 .dz-chip { position: fixed; left: 50%; bottom: 16px; transform: translateX(-50%); z-index: 8000; display: inline-flex; align-items: center; gap: 8px; max-width: calc(100vw - 32px);
   padding: 6px 6px 6px 12px; background: var(--surface); border: 1px solid var(--border); border-radius: 999px; font-size: 12.5px; color: var(--muted); animation: dz-fade var(--dur-base) var(--ease-out); }
+.dz-chip.in-dock { position: static; transform: none; margin: 6px 10px 2px; align-self: flex-start; width: max-content; max-width: calc(100% - 20px); z-index: auto; }
 .dz-chip b { color: var(--text); font-weight: 600; }
 .dz-chip > span:nth-child(2) { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .dz-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--live); flex: none; }

@@ -663,7 +663,10 @@
   function chip() {
     let c = $('#dz-chip');
     if (!ctx) { if (c) swap(() => c.remove()); return; }
-    if (!c) { c = document.createElement('div'); c.id = 'dz-chip'; c.className = 'dz-chip'; c.setAttribute('role', 'status'); document.body.appendChild(c); }
+    if (!c) { c = document.createElement('div'); c.id = 'dz-chip'; c.className = 'dz-chip'; c.setAttribute('role', 'status'); }
+    const dock = $('#flint'), bar = dock && dock.querySelector('.fl-bar'), inDock = !!(bar && dock.offsetParent !== null && !phone());   // beside Flint when his panel is open, else a small chip at the bottom
+    c.classList.toggle('in-dock', inDock);
+    if (inDock && c.nextSibling !== bar) dock.insertBefore(c, bar); else if (!inDock && c.parentNode !== document.body) document.body.appendChild(c);
     c.innerHTML = `<span class="dz-dot" aria-hidden="true"></span><span>Flint is reading: <b>${esc(ctx.name)}</b></span><button type="button" class="dz-chip-x" data-dz-forget>Forget</button>`;
   }
   idbGet().then(v => { if (v && v.report && !ctx) { ctx = { name: v.name, report: v.report, set: null, readOnly: v.readOnly, at: v.at }; chip(); } });

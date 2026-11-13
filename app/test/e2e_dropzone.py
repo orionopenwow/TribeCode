@@ -283,6 +283,7 @@ def stage2(pg, host, pid, ups, tmp, b):
         return [d for d in ok(api("/docs", token=host, project=pid))["docs"] if d["slug"] not in docs0]
 
     read(pg, "recipe-site"); assert set(kinds["recipe-site"]["suggestions"]) >= {"preview", "project", "todos", "bug"}
+    pg.evaluate("() => { const t = document.querySelector('#fl-thread'), m = t && [...t.querySelectorAll('.fl-msg')].pop(); if (m) t.scrollTop = m.offsetTop - t.offsetTop - 8; }")
     shot(pg, "drop-flint-summary")
     run_s(pg, "preview"); pg.wait_for_selector("#dz-pv")
     assert pg.get_attribute("#dz-pv", "sandbox") == "" and "root" in pg.get_attribute("#dz-pv", "srcdoc"); pg.click("#dz-sheet [data-dz=close]")
