@@ -109,7 +109,7 @@ def main():
             host.click("#av-cats [data-cat=game]"); shot(host, "vision")
             assert host.locator(".av-imp[data-helper=flint]").count() == 1 and host.locator("[data-close]").first.text_content().strip() == "Later"
             host.click("#pj-vsave")
-            host.wait_for_selector("#pj-check [data-step=vision].on", timeout=10000)
+            host.wait_for_selector("#pj-check [data-step=vision].on", timeout=10000, state="attached")
             sense = api(f"/projects/{pid}/sense", token=tok)[1]
             assert sense["override"] == "game" and sense["kind"] == "game", sense.get("kind")
             st, vis = api("/vision", token=tok, project=pid)
@@ -133,13 +133,14 @@ def main():
             host.click(".su-flow [data-opt=kaplay]"); host.wait_for_selector("#pj-setup [data-role=engineer].on", timeout=10000)
             tasks = api("/tasks", token=tok, project=pid)[1]["tasks"]
             assert len(tasks) == 4 and any(t["title"] == "Set up KAPLAY" and t.get("type") == "build" for t in tasks), [t["title"] for t in tasks]
-            host.wait_for_selector("#pj-check [data-step=task].on", timeout=10000)
+            host.wait_for_selector("#pj-check [data-step=task].on", timeout=10000, state="attached")
             assert host.evaluate("document.body.dataset.stage") == "growing"
 
             # 4. Create the repo in one click -> going -> the Task Board gets its tabs
+            host.evaluate("(() => { const b = document.querySelector('#pj-check-all'); if (b && b.getAttribute('aria-expanded') === 'false') b.click(); })()"); host.wait_for_selector("#pj-check:not(.one)", timeout=15000)   # feat/calm-parity: See all steps
             host.click("#pj-check [data-ck=home]"); host.wait_for_selector("#lr-where [data-w=host]")
             host.click("#lr-where [data-w=host]")
-            host.wait_for_selector("#pj-check [data-step=home].on", timeout=20000)
+            host.wait_for_selector("#pj-check [data-step=home].on", timeout=20000, state="attached")
             repo = tmp / "tribe" / "workspaces" / pid
             assert (repo / ".git").exists() and (repo / "README.md").exists() and (repo / "VISION.md").exists()
             host.wait_for_function("document.body.dataset.stage === 'going'", timeout=10000)

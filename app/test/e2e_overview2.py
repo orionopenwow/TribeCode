@@ -55,16 +55,20 @@ def main():
             host.evaluate("TribeApp.show('home')"); host.wait_for_selector("#pj-more", state="attached", timeout=15000); host.evaluate("document.querySelector('#pj-more').open = true"); host.wait_for_selector("#pj-sec-repo", timeout=15000)
 
             # 0. a brand-new project: the checklist is the hero and there's no Living update yet
+            # feat/calm-parity: one card first (the next step), then See all steps shows the five as before
+            host.wait_for_selector("#pj-check.hero.one .ock-next", timeout=10000)
+            assert host.eval_on_selector_all("#pj-check .ock-card", "els => els.filter(e => e.offsetParent).length") == 1
+            host.evaluate("(() => { const b = document.querySelector('#pj-check-all'); if (b && b.getAttribute('aria-expanded') === 'false') b.click(); })()"); host.wait_for_selector("#pj-check:not(.one)", timeout=15000)   # feat/calm-parity: See all steps
             host.wait_for_selector("#pj-check.hero .ock-hero-t", timeout=10000)
             assert host.locator("#pj-living").count() == 0, "no Living update before the tribe has begun"
-            assert host.locator("#pj-check.hero .ock-card .ock-emo").count() == 4
+            assert host.locator("#pj-check.hero .ock-card .ock-emo").count() == 5   # five steps since feat/folder-sync
             assert host.evaluate("parseFloat(getComputedStyle(document.querySelector('#pj-check .ock-hero-t')).fontSize)") >= 24
             n0 = host.evaluate("+document.querySelector('#pj-check .ock-bar').getAttribute('aria-valuenow')")
-            host.wait_for_selector("#pj-check [data-step=task]:not(.on) [data-ck=newtask]")
+            host.wait_for_selector("#pj-check [data-step=task]:not(.on) [data-ck=newtask]", state="attached")
             assert host.locator("#pj-check .ock-next .btn.primary").count() == 1 and host.locator("#pj-check .btn.primary").count() == 1, "one solid button: the next step"
             st, _ = api("/tasks", "POST", {"title": "Draw the title screen"}, token=tok, headers={"X-Project": pid}); assert st in (200, 201), st
             # v0.24: the step cards stay until every step is done, so nobody skips the AI and the repository
-            host.wait_for_selector("#pj-check.hero [data-step=task].on", timeout=10000)
+            host.wait_for_selector("#pj-check.hero [data-step=task].on", timeout=10000, state="attached")
             assert host.locator("#pj-check.hero").count() == 1
 
             # 1-2. identity row, then the Living update: a pill and 3 equal tiles, no long sentence
@@ -89,12 +93,12 @@ def main():
 
             # 3. Onboarding checklist: ticks itself
             assert host.text_content("#pj-check h3").strip() in ("Set up", "Steps", "Getting started")   # v0.16.x: "Set up", not "Onboarding Checklist"
-            host.wait_for_selector("#pj-check [data-step=vision]:not(.on) [data-ck=vision]")
-            host.wait_for_selector("#pj-check [data-step=task].on", timeout=10000)
+            host.wait_for_selector("#pj-check [data-step=vision]:not(.on) [data-ck=vision]", state="attached")
+            host.wait_for_selector("#pj-check [data-step=task].on", timeout=10000, state="attached")
             assert host.evaluate("+document.querySelector('#pj-check .ock-bar').getAttribute('aria-valuenow')") == n0 + 1
             assert host.get_attribute("#pj-check [data-step=task] .ock-box", "aria-checked") == "true"
             # collapse, remembered across a reload
-            host.click("#pj-check-fold"); host.wait_for_selector("#pj-check.folded")
+            host.click("#pj-check-fold"); host.wait_for_selector("#pj-check.folded", timeout=30000)
             assert host.locator("#pj-check .ock-list").is_hidden() and host.locator("#pj-check .ock-bar").is_visible()
             host.reload(); host.wait_for_function("window.TribeClient && TribeClient.connected()", timeout=15000)
             host.evaluate("TribeApp.show('home')"); host.wait_for_selector("#pj-check.folded", timeout=15000)
@@ -111,7 +115,7 @@ def main():
             assert "Draw the title screen" in host.text_content("#pj-upcoming")   # simple-dashboard: Up next lists open tasks first
             # 6. Repo & Tools: repo empty state + standup button top right + the drop zone, wired as before
             wait_text("#pj-repo", "Code repository"); host.wait_for_function("document.querySelector('#pj-repo .pj-repo-sum, #pj-repo [data-go=repo]')")   # a summary + Open, or the empty state with Set up the repo
-            assert host.locator("#pj-sf h3 #standup-go").is_visible(), "standup button in the card head"
+            host.wait_for_selector("#pj-sf h3 #standup-go", state="visible", timeout=15000)   # standup button in the card head (a redraw may be moving it back in)
             host.wait_for_selector("#pj-context #dropzone", state="visible", timeout=8000)   # drop zone moved in (after the overview settles)
             assert host.evaluate("getComputedStyle(document.querySelector('#pj-context #dropzone')).borderStyle") == "dashed"
             # a redraw keeps the live nodes (they are moved, not copied)
