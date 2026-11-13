@@ -19,7 +19,8 @@
   const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const toast = m => window.TribeApp && window.TribeApp.toast ? window.TribeApp.toast(m) : console.log(m);
   const phone = () => matchMedia('(max-width: 820px)').matches;
-  const on = () => !!(C && C.connected && C.connected());
+  // feat/work-v2: a tribe that lives in this tab (offline.js) has no Work backend, so abilities stay on this device there
+  const on = () => !!(C && C.connected && C.connected()) && !(window.TribeOffline && window.TribeOffline.active && window.TribeOffline.active());
   const st = () => (C && C.state ? C.state() : {}) || {};
   const me = () => st().me || {};
   const projects = () => st().projects || [];
@@ -46,6 +47,7 @@
   let syncing = false;
   async function sync() {
     if (!on() || syncing || !me().id || me().role === 'agent' || me().role === 'spectator') return;
+    if (window.TribeOffline && window.TribeOffline.active && window.TribeOffline.active()) return;   // a tribe in this tab has no Work backend: keep it on this device
     syncing = true;
     try {
       const L = local(), k = tribeKey(), s = L.synced[k] || { gigs: {} };
@@ -226,31 +228,39 @@
     if (a === 'local-del') { const L = local(); L.gigs = L.gigs.filter(g => g.lid !== t.dataset.lid); saveLocal(L); refresh(); }
   }, true);
 
-  // ---------- Home › Work: your abilities + My gigs ----------
-  let mountEl = null;
+  // ---------- Work (feat/work-v2): a compact "Your abilities" strip, and the My offers tab ----------
+  let mountEl = null, offersEl = null;
+  const ti = (n, s) => (window.TribeIcons && window.TribeIcons.has && window.TribeIcons.has(n) ? window.TribeIcons.svg(n, s) : icon(n, s));
   async function mount(el) {
     if (!el) return; mountEl = el;
-    const L = local(); let p = L.profile, gigs = [];
-    if (on()) { const c = await loadMine(); if (c && c.me) p = c.me; gigs = ((c && c.gigs) || []).filter(g => g.by === me().id && g.kind === 'offer'); }
+    const L = local(); let p = L.profile;
+    if (on()) { const c = await loadMine(); if (c && c.me) p = c.me; }
     if (!el.isConnected) return;
-    const pend = gigs.reduce((n, g) => n + (g.requests || []).filter(r => r.status === 'requested').length, 0);
-    const localOnly = on() ? [] : L.gigs;
-    const sk = (p.skills || []).slice(0, 8).map(s => `<span>${esc(s)}${(p.levels || {})[s] ? ` <i>${esc(LEVEL[p.levels[s]])}</i>` : ''}</span>`).join('');
-    el.innerHTML = `<section class="ab-home" aria-label="Your abilities and gigs">
-      <div class="ab-h-grid">
-        <article class="card ab-me"><div class="ab-c-h">${icon('star', 18)}<div><span class="eyebrow">You</span><h3>Your abilities</h3></div></div>
-          ${sk ? `<div class="ab-tags">${sk}</div><p class="ab-fine">${p.hours ? `${esc(p.hours)} h/week` : 'Hours not set'}${p.tz ? ` · ${esc(p.tz)}` : ''} · ${payLine(p.rate)}${p.open === false ? ' · not open to work' : ''}</p>`
-            : '<p class="ab-fine">List your skills, the roles you’d take and your hours, so friends can find you.</p>'}
-          <div class="ab-acts"><button class="btn sm ${sk ? '' : 'primary'}" data-ab="edit" id="ab-edit">${sk ? 'Edit abilities' : 'List your abilities'}</button>${sk && on() ? '<button class="btn sm ghost" data-ab="me">View profile</button>' : ''}</div></article>
-        <article class="card ab-mine"><div class="ab-c-h">${icon('briefcase', 18)}<div><span class="eyebrow">My gigs</span><h3>${gigs.length + localOnly.length ? `${gigs.length + localOnly.length} offer${gigs.length + localOnly.length === 1 ? '' : 's'}${pend ? ` · ${pend} request${pend === 1 ? '' : 's'}` : ''}` : 'Offer what you can do'}</h3></div></div>
-          ${gigs.length || localOnly.length ? '' : '<p class="ab-fine">“I’ll design your logo”, “I can build a landing page this weekend”. Friends request it; you accept.</p>'}
-          <div class="ab-acts"><button class="btn sm primary" data-ab="post" id="ab-post">Create a gig for yourself</button></div></article>
-      </div>
+    const tags = (p.skills || []).slice(0, 4).map(s => `<span>${esc(s)}${(p.levels || {})[s] === 3 ? ' <i>Expert</i>' : ''}</span>`).join('');
+    const more = (p.skills || []).length > 4 ? `<span class="ab-more">+${p.skills.length - 4}</span>` : '';
+    const line = tags ? `${p.hours ? `${esc(p.hours)} h/week` : 'Hours not set'} · ${payLine(p.rate)}${p.open === false ? ' · not open to work' : ''}` : '';
+    el.innerHTML = `<div class="ab-home wk-row ab-strip" aria-label="Your abilities"><span class="wk-row-ic">${ti('star', 18)}</span>
+      <span class="wk-row-t"><b>Your abilities</b>${tags ? `<span class="ab-tags">${tags}${more}</span><span class="wk-row-v">${line}</span>` : '<span class="wk-row-v">Not listed yet. Add skills so friends can find you.</span>'}</span>
+      <span class="ab-strip-b">${tags && on() ? '<button class="linkish" data-ab="me">Profile</button>' : ''}<button class="${tags ? 'linkish' : 'btn sm primary'}" data-ab="edit" id="ab-edit">${tags ? 'Edit' : 'Add abilities'}</button></span></div>`;
+  }
+  const HOW = [['gift', 'Say what you can do, like “I’ll draw your sprites”.'], ['hand', 'Friends ask for it.'], ['check', 'Accept and it lands on your task board.']];
+  async function mountOffers(el) {
+    if (!el) return; offersEl = el;
+    const L = local(); let gigs = [];
+    if (on()) { const c = await loadMine(); gigs = ((c && c.gigs) || []).filter(g => g.by === me().id && g.kind === 'offer'); }
+    if (!el.isConnected) return;
+    const localOnly = on() ? [] : L.gigs, n = gigs.length + localOnly.length;
+    const pend = gigs.reduce((k, g) => k + (g.requests || []).filter(r => r.status === 'requested').length, 0);
+    el.innerHTML = `<section class="ab-home ab-offers" aria-label="My offers">
+      ${n ? `<div class="tl-bar"><span class="ab-count">${n} offer${n === 1 ? '' : 's'}${pend ? ` · <b>${pend} request${pend === 1 ? '' : 's'} to answer</b>` : ''}</span><button class="btn sm primary" data-ab="post" id="ab-post">${ti('gift', 14)} Offer help</button></div>` : `
+      <section class="wk-empty" id="ab-empty"><span class="wk-empty-ic">${ti('gift', 24)}</span><h3>Offer what you can do</h3><p>Post a gig for yourself. Friends ask for it; you choose yes or no.${on() ? '' : ' It waits on this device and posts when you join a tribe.'}</p>
+        <div class="tl-empty-acts"><button class="btn primary" data-ab="post" id="ab-post">${ti('gift', 16)} Offer help</button></div>
+        <span class="wk-how-h">How it works</span><ol class="wk-how" aria-label="How it works">${HOW.map(([i, t], k) => `<li><span class="wk-how-ic">${ti(i, 18)}</span><span><b>${k + 1}.</b> ${esc(t)}</span></li>`).join('')}</ol></section>`}
       ${gigs.length ? `<div class="ab-list" id="ab-mygigs">${gigs.map(g => offerCard(g, { manage: true })).join('')}</div>` : ''}
       ${localOnly.length ? `<div class="ab-list" id="ab-local">${localOnly.map(g => `<article class="ab-offer card"><div class="ab-o-top"><span class="eyebrow">On this device · posts when you join a tribe</span></div><h3>${esc(g.title)}</h3>${offerBody(g)}<div class="ab-o-f"><span></span><button class="btn sm ghost" data-ab="local-del" data-lid="${esc(g.lid)}">Remove</button></div></article>`).join('')}</div>` : ''}
     </section>`;
   }
-  function refresh() { cache.at = 0; if (mountEl && mountEl.isConnected) mount(mountEl); if (window.TribeTalent && window.TribeTalent.reload) window.TribeTalent.reload(); if ($('#ab-page')) profile($('#ab-page').dataset.id); }
+  function refresh() { cache.at = 0; if (mountEl && mountEl.isConnected) mount(mountEl); if (offersEl && offersEl.isConnected) mountOffers(offersEl); if (window.TribeTalent && window.TribeTalent.reload) window.TribeTalent.reload(); if ($('#ab-page')) profile($('#ab-page').dataset.id); }
 
   // ---------- the profile page ----------
   async function profile(id) {
@@ -291,7 +301,7 @@
     return q ? `Here are people who can ${q}. Tap one to see their profile.` : 'Here’s Find people. Type a skill to narrow it.';
   }
 
-  if (C && C.on) { C.on('hello', () => setTimeout(sync, 400)); C.on('ws', m => { if (m && m.type === 'talent') { cache.at = 0; if (mountEl && mountEl.isConnected) { clearTimeout(mount.t); mount.t = setTimeout(() => mount(mountEl), 250); } } }); }
+  if (C && C.on) { C.on('hello', () => setTimeout(sync, 400)); C.on('ws', m => { if (m && m.type === 'talent') { cache.at = 0; if (mountEl && mountEl.isConnected) { clearTimeout(mount.t); mount.t = setTimeout(() => mount(mountEl), 250); } if (offersEl && offersEl.isConnected) { clearTimeout(mountOffers.t); mountOffers.t = setTimeout(() => mountOffers(offersEl), 250); } } }); }
   if (on()) setTimeout(sync, 800);
-  window.TribeAbilities = { edit, post, profile, mount, offerCard, request, answer, local, sync, flintPost, flintFind, close };
+  window.TribeAbilities = { edit, post, profile, mount, mountOffers, offerCard, request, answer, local, sync, flintPost, flintFind, close };
 })();

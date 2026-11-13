@@ -69,7 +69,7 @@ def main():
 
             # ---------- 1. no tribe: guided standup saved on this device ----------
             fr = page("Orion"); fr.goto(BASE + "/?skipIntro=1&freshopen=1"); fr.wait_for_function("window.TribeTalent && window.TribeTemplates && window.TribeLocalFiles", timeout=15000)
-            fr.evaluate("TribeTalent.open()"); fr.click("#dt-lib .dt-card[data-tpl='standup']")
+            fr.evaluate("TribeTalent.open('templates')"); fr.click("#dt-lib .dt-card[data-tpl='standup']")
             fr.wait_for_selector("#dt-q[data-key='done']"); assert fr.text_content("#dt-eyebrow").startswith("Guided · 1 of 3"), fr.inner_text("#dt-eyebrow")
             guided_answer(fr, "Fixed the double jump bug")
             fr.wait_for_selector("#dt-q[data-key='next']"); fr.click("#dt-skip")

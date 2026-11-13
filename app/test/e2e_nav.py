@@ -128,7 +128,7 @@ def global_nav(page, tribe):
     if not tribe:
         page.wait_for_selector("#tl-empty #tl-e-start", state="visible"); page.wait_for_selector("#tl-e-join", state="visible")
         shot(page, "nav-work-empty")
-        page.click("#tl-e-home"); page.wait_for_function("TribeRouter.where().key === 'hub'")
+        page.click("#view-work [data-hc-home]"); page.wait_for_function("TribeRouter.where().key === 'hub'")
         page.click("#nest-work"); page.wait_for_selector("#tl-empty")
     else:
         page.wait_for_selector("#view-work .tl-tabs", timeout=8000)

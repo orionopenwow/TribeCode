@@ -48,9 +48,10 @@ def main():
 
             # ---------- 1. no tribe: empty state with next steps + templates ----------
             fresh = page("Orion"); fresh.goto(BASE + "/?skipIntro=1&freshopen=1"); fresh.wait_for_function("window.TribeTalent && window.TribeTemplates", timeout=15000)
-            fresh.evaluate("TribeTalent.open()"); fresh.wait_for_selector("#tl-empty #tl-e-start", state="visible", timeout=10000)
-            for sel in ["#tl-e-join", "#tl-e-home", "#tl-e-steps", "#dt-lib .dt-card[data-tpl='standup']", "#pm-foot"]: fresh.wait_for_selector(sel, state="visible")
-            assert "Post a need" in fresh.inner_text("#tl-e-steps")
+            fresh.evaluate("TribeTalent.open('gigs')"); fresh.wait_for_selector("#tl-empty #tl-e-start", state="visible", timeout=10000)
+            for sel in ["#tl-e-join", "#tl-empty .wk-how", "#view-work [data-hc-home]", "#pm-foot"]: fresh.wait_for_selector(sel, state="visible")
+            assert "Say what you need" in fresh.inner_text("#tl-empty .wk-how")
+            fresh.click("#tl-e-tpl"); fresh.wait_for_selector("#dt-lib .dt-card[data-tpl='standup']", state="visible")
             fresh.context.close()
 
             # ---------- the tribe ----------

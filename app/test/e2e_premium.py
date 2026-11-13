@@ -48,7 +48,7 @@ def main():
 
             # ---------- 4 first: no tribe, nothing gated ----------
             fr = page("Orion"); fr.goto(BASE + "/?skipIntro=1&freshopen=1"); fr.wait_for_function("window.TribePremium && window.TribeTemplates && window.TribeLocalFiles", timeout=15000)
-            fr.evaluate("TribeTalent.open()"); fr.wait_for_selector("#pm-foot"); assert "Free plan" in fr.inner_text("#pm-foot")
+            fr.evaluate("TribeTalent.open('templates')"); fr.wait_for_selector("#pm-foot"); assert "Free plan" in fr.inner_text("#pm-foot")
             fr.click(".dt-card[data-tpl='okrs']"); fr.wait_for_selector("#dt-q"); assert fr.locator("#pm-sheet").count() == 0
             assert fr.evaluate("TribeLocalFiles.create('doc', { title: 'Local note', body: 'hi' }).then(d => !!d.id)")
             assert fr.evaluate("TribePremium.gate('projects', { count: 2 })") is True and fr.locator("#pm-sheet").count() == 0

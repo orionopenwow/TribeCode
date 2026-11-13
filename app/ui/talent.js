@@ -1,10 +1,13 @@
-// v0.27 Company mode, the work side (server/talent.js): the "Work" view. Tabs: Gigs (hero), People (open to work),
-// Time bank (hours, no money), Compute (offers of AI / computer time, asked for, never taken), Public (the community
-// repository's shared gigs, read-only). One "Filters" popover, Hot / New sort, a Post-a-gig sheet and a small work
-// profile sheet (opened from the profile editor's Work section).
-// Public: window.TribeTalent = { open(tab?), post(prefill?), editProfile(), hireSlot(el, pid, seatId), find(skill) }.
-// feat/company-gigs: offers (gigs people post for themselves) render with TribeAbilities.offerCard; People is "Find people"
-// (skill + hours free); #ab-mount holds Your abilities + My gigs (abilities.js), also with no tribe.
+// Work (server/talent.js), redesigned in feat/work-v2 (docs/WORK-BACKEND.md for what comes next). One page, top to bottom:
+//   the header "Work" + one line · three action tiles (Get help = post a gig, Offer help = your own gig, Find people) ·
+//   the "you" strip (Your abilities from abilities.js + Your tasks across your tribes, one line when there are none) ·
+//   the three-step guide with Show me (Flint's lesson director, flintlessons.js) · four tabs with icons:
+//   Gigs (This tribe | Public), My offers (abilities.js mountOffers), Find people, Trade (Time bank | AI time).
+// Every tab has an empty state with one action and "How it works" in three steps. Nothing waits on "Loading…" forever:
+// no tribe (or a tribe that lives in this tab, offline.js) shows what this device has and says exactly what needs a
+// tribe, with Create a tribe (tribenew.js); a network error is a calm card with Retry.
+// Public: window.TribeTalent = { open(tab?), post(prefill?), editProfile(), hireSlot(el, pid, seatId), openGig(id), find(skill), reload() }.
+//   Old tab names still work: templates -> Get help's templates, bank/compute -> Trade, public -> Gigs › Public.
 // Every string from a person or the community repository is escaped; links are http(s) / mailto only.
 (function () {
   'use strict';
@@ -23,14 +26,28 @@
   const SEATS = { ceo: ['CEO', '#F26B1D'], cto: ['Build', '#38C6B1'], design: ['Design', '#E86A92'], growth: ['Grow', '#FABD2F'], sales: ['Sales', '#6C7CFF'], support: ['Support', '#3BD16F'], ops: ['Run', '#94A3B8'], finance: ['Finance', '#2DD4BF'], legal: ['Legal', '#A78BFA'], custom: ['Custom', '#9AA7B8'] };
   const PAY = { free: 'Free', time: 'Time exchange', paid: 'Paid' };
   const WHAT = { 'claude-code': 'Claude Code', 'local-model': 'Local model', gpu: 'GPU', other: 'Other' };
-  const TABS = [['gigs', 'Gigs'], ['templates', 'Templates'], ['people', 'Find people'], ['bank', 'Time bank'], ['compute', 'Compute'], ['public', 'Public']];
+  // feat/work-v2: four tabs, each with an icon. Templates fold into Get help, Time bank + Compute are Trade, Public is a
+  // "Where" switch on Gigs (and a visibility choice on each gig). Old names still open the right place (LEGACY).
+  const TABS = [['gigs', 'work', 'Gigs'], ['offers', 'gift', 'My offers'], ['people', 'people', 'Find people'], ['trade', 'swap', 'Trade']];
+  const LEGACY = { templates: ['gigs', { tpl: true }], bank: ['trade', { trade: 'bank' }], compute: ['trade', { trade: 'compute' }], public: ['gigs', { where: 'public' }] };
+  const NOPE = 'This needs a real tribe';   // offline.js answers this for anything a tribe-in-this-tab can't do
   const LS = 'tribecode.work.v1';
   const saved = (() => { try { return JSON.parse(localStorage.getItem(LS) || '{}') || {}; } catch { return {}; } })();
-  const remember = () => { try { localStorage.setItem(LS, JSON.stringify({ tab: st.tab, sort: st.sort })); } catch {} };
+  const remember = () => { try { localStorage.setItem(LS, JSON.stringify({ tab: st.tab, sort: st.sort, trade: st.trade })); } catch {} };
+  const svg = (n, s = 16) => (window.TribeIcons && window.TribeIcons.svg ? window.TribeIcons.svg(n, s) : '');
 
-  const st = { tab: TABS.some(t => t[0] === saved.tab) ? saved.tab : 'gigs', sort: saved.sort === 'new' ? 'new' : 'hot', f: { skills: '', seat: '', pay: '', hours: 0, free: 0 },
-    data: null, bank: null, compute: null, pub: null, busy: false };
+  const st = { tab: TABS.some(t => t[0] === saved.tab) ? saved.tab : 'gigs', sort: saved.sort === 'new' ? 'new' : 'hot', trade: saved.trade === 'compute' ? 'compute' : 'bank', where: 'tribe', tpl: false,
+    f: { skills: '', seat: '', pay: '', hours: 0, free: 0 }, data: null, bank: null, compute: null, pub: null, busy: false, err: '', local: false };
   let open_ = false;
+
+  // Where Work's data comes from: 'tribe' (a real tribe answers /api/talent), 'waiting' (a tribe is reconnecting) or
+  // 'local' (no tribe, or a tribe that lives in this tab: offline.js has no Work backend). Local never calls the API.
+  const inTab = () => !!(window.TribeOffline && window.TribeOffline.active && window.TribeOffline.active());
+  function mode() {
+    if (C.connected() && !inTab() && !st.local) return 'tribe';
+    if (!C.connected() && !inTab() && C.hasToken && C.hasToken()) return 'waiting';
+    return 'local';
+  }
 
   // ---------- the view (beside app.js views, like captures.js) ----------
   function section() {
@@ -38,33 +55,70 @@
     if (!s) { const main = $('#main') || $('.main'); if (!main) return null; s = document.createElement('section'); s.id = 'view-' + NAME; s.className = 'hidden tl-view'; s.setAttribute('aria-label', 'Work'); main.appendChild(s); }
     return s;
   }
+  function pick(tab) {
+    if (!tab) return;
+    if (LEGACY[tab]) { const [t, extra] = LEGACY[tab]; st.tab = t; Object.assign(st, extra); }
+    else if (TABS.some(t => t[0] === tab)) st.tab = tab;
+    remember();
+  }
   function show(tab) {
     const sec = section(); if (!sec) return;
-    if (tab && TABS.some(t => t[0] === tab)) { st.tab = tab; remember(); }
-    document.querySelectorAll('.main > section[id^="view-"]').forEach(s => { if (s !== sec) s.classList.add('hidden'); });
-    sec.classList.remove('hidden');
-    document.body.classList.remove('mobile-chat', 'drawer-open');
-    document.body.dataset.view = NAME; open_ = true;
-    document.querySelectorAll('[data-nav].on, [data-go].on').forEach(b => b.classList.remove('on'));
-    // Work is part of your dashboard (router.js): the global sidebar stays, the crumb and the link say Work
-    const cl = $('#crumb-label'); if (cl) cl.textContent = 'Work';
-    if (location.hash !== '#/hub/work') history.replaceState(null, '', location.pathname + location.search + '#/hub/work');
+    pick(tab);
+    const wasOpen = open_ && !sec.classList.contains('hidden');
+    const swap = fn => (!wasOpen && window.TribeMotion && window.TribeMotion.swap ? window.TribeMotion.swap(fn) : fn());
+    swap(() => {
+      document.querySelectorAll('.main > section[id^="view-"]').forEach(s => { if (s !== sec) s.classList.add('hidden'); });
+      sec.classList.remove('hidden');
+      document.body.classList.remove('mobile-chat', 'drawer-open');
+      document.body.dataset.view = NAME; open_ = true;
+      document.querySelectorAll('[data-nav].on, [data-go].on').forEach(b => b.classList.remove('on'));
+      // Work is part of your dashboard (router.js): the global sidebar stays, the crumb and the link say Work
+      const cl = $('#crumb-label'); if (cl) cl.textContent = 'Work';
+      if (location.hash !== '#/hub/work') history.replaceState(null, '', location.pathname + location.search + '#/hub/work');
+      draw();
+    });
     try { C.sendActivity && C.sendActivity('Work'); } catch {}
-    draw(); load();
+    load();
   }
-  function hide() { const sec = section(); if (sec) sec.classList.add('hidden'); open_ = false; closePop(); if (location.hash === '#/hub/work') history.replaceState(null, '', location.pathname + location.search); }
+  function hide() { const sec = section(); if (sec) sec.classList.add('hidden'); open_ = false; closePop(); needClose(); if (location.hash === '#/hub/work') history.replaceState(null, '', location.pathname + location.search); }
   new MutationObserver(() => { if (open_ && document.body.dataset.view !== NAME) hide(); }).observe(document.body, { attributes: true, attributeFilter: ['data-view'] });
 
+  // One load per open. A failure never leaves "Loading…" on screen: it becomes a calm message with Retry, and a tribe
+  // that lives in this tab (NOPE) switches Work to what this device has.
   async function load() {
-    if (!C.connected()) return;
-    try {
-      const jobs = [C.api('/talent').then(d => { st.data = d; })];
-      if (st.tab === 'bank') jobs.push(C.api('/talent/timebank').then(d => { st.bank = d; }));
-      if (st.tab === 'compute') jobs.push(C.api('/talent/compute').then(d => { st.compute = d; }));
-      if (st.tab === 'public' && !st.pub) jobs.push(C.api('/talent/public').then(d => { st.pub = d; }).catch(() => { st.pub = { available: false, gigs: [], reason: 'offline' }; }));
-      await Promise.all(jobs);
-    } catch (e) { toast(e.message); }
+    if (mode() !== 'tribe') { st.busy = false; if (open_) draw(); return; }
+    st.busy = true; st.err = '';
+    const jobs = [C.api('/talent').then(d => { st.data = d; })];
+    if (st.tab === 'trade' && st.trade === 'bank') jobs.push(C.api('/talent/timebank').then(d => { st.bank = d; }));
+    if (st.tab === 'trade' && st.trade === 'compute') jobs.push(C.api('/talent/compute').then(d => { st.compute = d; }));
+    if (st.tab === 'gigs' && st.where === 'public' && !st.pub) jobs.push(C.api('/talent/public').then(d => { st.pub = d; }).catch(() => { st.pub = { available: false, gigs: [], reason: 'offline' }; }));
+    try { await Promise.all(jobs); }
+    catch (e) { const m = String((e && e.message) || ''); if (m === NOPE || /real tribe/i.test(m)) st.local = true; else st.err = m || 'no answer'; }
+    st.busy = false;
     if (open_) draw();
+    loadTasks();
+  }
+
+  // ---------- your tasks across your tribes (was hub.js's own header; now one compact row in the "you" strip) ----------
+  let tasks = { at: 0, list: [] };
+  async function loadTasks(force) {
+    if (mode() !== 'tribe') { tasks = { at: 0, list: [] }; return paintTasks(); }
+    if (!force && Date.now() - tasks.at < 15000) return paintTasks();
+    const meId = me().id, mine = ((C.state() || {}).members || []).filter(m => m.role === 'agent' && m.owner === meId).map(m => m.id), out = [];
+    await Promise.all(projects().slice(0, 12).map(async p => { try { const r = await C.api('/tasks', { project: p.id }); for (const k of r.tasks || []) if (k.status !== 'done' && (k.assignee === meId || mine.includes(k.assignee))) out.push({ ...k, pid: p.id, pname: p.name }); } catch {} }));
+    const rank = { doing: 0, review: 1, backlog: 2 };
+    tasks = { at: Date.now(), list: out.sort((a, b) => (rank[a.status] ?? 3) - (rank[b.status] ?? 3) || String(a.due || '9').localeCompare(String(b.due || '9'))) };
+    paintTasks();
+  }
+  function tasksHtml() {
+    const l = tasks.list || [];
+    if (!l.length) return `<div class="wk-row" id="hub-mytasks"><span class="wk-row-ic">${svg('tasks', 18)}</span><span class="wk-row-t"><b>Your tasks</b><span class="wk-row-v">Nothing assigned to you</span></span></div>`;
+    const rows = l.slice(0, 3).map(k => `<button type="button" class="hmt-row" data-mytask="${esc(k.pid)}|${esc(k.id)}"><span class="hmt-st s-${esc(k.status)}">${esc(k.status === 'doing' ? 'Doing' : k.status === 'review' ? 'Review' : 'To do')}</span><b>${esc(k.title)}</b>${k.due ? `<small>Due ${esc(k.due)}</small>` : ''}<span class="hmt-pj">${esc(k.pname || 'A tribe')}</span></button>`).join('');
+    return `<div class="wk-row has" id="hub-mytasks"><span class="wk-row-ic">${svg('tasks', 18)}</span><span class="wk-row-t"><b>Your tasks</b><span class="wk-row-v">${l.length} across your tribes${l.length > 3 ? ` · showing 3` : ''}</span></span><div class="hmt-list">${rows}</div></div>`;
+  }
+  function paintTasks() {
+    const old = document.querySelector('#view-work #hub-mytasks'); if (!old) return;
+    const html = tasksHtml(); if (old.outerHTML !== html) old.outerHTML = html;
   }
 
   // ---------- filters + sort ----------
@@ -86,10 +140,11 @@
   const payChip = p => p ? `<i class="tl-pay" data-pay="${esc(p.type)}">${esc(PAY[p.type] || 'Free')}${p.text ? ` · ${esc(p.text)}` : ''}</i>` : '';
   const seatChip = k => k && SEATS[k] ? `<i class="tl-seat" style="--seat:${SEATS[k][1]}">${esc(SEATS[k][0])}</i>` : '';
   const skillChips = (l, n = 5) => (l || []).length ? `<span class="tl-skills">${l.slice(0, n).map(s => `<i>${esc(s)}</i>`).join('')}${l.length > n ? `<i>+${l.length - n}</i>` : ''}</span>` : '';
-  function toolbar(withSort) {
+  function toolbar(withSort, withWhere) {
     const n = fCount();
-    return `<div class="tl-bar">${withSort ? `<div class="tl-seg" role="group" aria-label="Sort"><button class="${st.sort === 'hot' ? 'on' : ''}" data-sort="hot" aria-pressed="${st.sort === 'hot'}">Hot</button><button class="${st.sort === 'new' ? 'on' : ''}" data-sort="new" aria-pressed="${st.sort === 'new'}">New</button></div>` : '<span></span>'}
-      <button class="btn ghost sm tl-fbtn" id="tl-filters" aria-haspopup="dialog">${ico('i-list', 14)} Filters${n ? ` <b class="tl-fn">${n}</b>` : ''}</button></div>`;
+    const where = withWhere ? `<div class="tl-seg wk-where" role="group" aria-label="Where">${[['tribe', 'This tribe'], ['public', 'Public']].map(([k, l]) => `<button type="button" class="${st.where === k ? 'on' : ''}" data-where="${k}" aria-pressed="${st.where === k}">${l}</button>`).join('')}</div>` : '';
+    const sort = withSort ? `<div class="tl-seg" role="group" aria-label="Sort"><button class="${st.sort === 'hot' ? 'on' : ''}" data-sort="hot" aria-pressed="${st.sort === 'hot'}">Hot</button><button class="${st.sort === 'new' ? 'on' : ''}" data-sort="new" aria-pressed="${st.sort === 'new'}">New</button></div>` : '';
+    return `<div class="tl-bar">${where || sort || '<span></span>'}<span class="tl-bar-r">${where ? sort : ''}<button class="btn ghost sm tl-fbtn" id="tl-filters" aria-haspopup="dialog">${svg('sliders', 14)} Filters${n ? ` <b class="tl-fn">${n}</b>` : ''}</button></span></div>`;
   }
   function gigCard(g, hero) {
     if (g.kind === 'offer' && window.TribeAbilities) return window.TribeAbilities.offerCard(g);   // a gig someone posted for themselves
@@ -104,16 +159,42 @@
         ${g.canManage ? `<button class="btn sm tonal" data-open="${esc(g.id)}">${g.stage === 'review' ? 'Review' : g.stage === 'done' ? 'Credit' : g.status === 'open' ? (g.applicantCount ? 'Pick someone' : 'Match') : 'Track'}</button>` : g.mine ? `<button class="btn sm primary" data-open="${esc(g.id)}">${g.stage === 'review' ? 'Handed in' : 'Update'}</button>` : g.applied ? '<span class="tl-ok">Applied ✓</span>' : g.status === 'open' && human() ? `<button class="btn sm primary" data-apply="${esc(g.id)}">I'm interested</button>` : ''}</div>
     </article>`;
   }
+  // An empty tab: what it is, one action, and "How it works" in three steps.
+  const HOW = {
+    gigs: [['quill', 'Say what you need and roughly how long it takes.'], ['people', 'Friends and AI helpers say they are interested.'], ['check', 'Pick one. It becomes their task.']],
+    people: [['user', 'Add your skills and free hours.'], ['search', 'Search by skill, like “draw” or “javascript”.'], ['chat', 'Message them, or post a gig they can take.']],
+    trade: [['clock', 'Help a friend for an hour.'], ['check', 'You both confirm the hours.'], ['swap', 'Spend your hours when you need help. No money.']],
+  };
+  const how = k => `<ol class="wk-how" aria-label="How it works">${HOW[k].map(([i, t], n) => `<li><span class="wk-how-ic">${svg(i, 18)}</span><span><b>${n + 1}.</b> ${esc(t)}</span></li>`).join('')}</ol>`;
+  function emptyCard({ id, icon, title, text, act, k, extra }) {
+    return `<section class="wk-empty${id === 'tl-empty' ? ' tl-empty' : ''}"${id ? ` id="${id}"` : ''}><span class="wk-empty-ic">${svg(icon, 24)}</span>
+      <h3>${esc(title)}</h3><p>${esc(text)}</p>${act || ''}${extra || ''}${k ? `<span class="wk-how-h">How it works</span>${how(k)}` : ''}</section>`;
+  }
+  const needAct = (id = 'tl-e-start') => `<div class="tl-empty-acts"><button class="btn primary" id="${id}" data-wk="tribe">${svg('plus', 16)} Create a tribe</button></div>`;
+  function errCard() {
+    return `<section class="wk-err" id="wk-err" role="status"><span class="wk-empty-ic">${svg('refresh', 20)}</span><div><b>Work didn’t load.</b><p>Your tribe didn’t answer. Check the connection, then try again.</p></div><button class="btn sm" data-retry="1" id="wk-retry">Retry</button></section>`;
+  }
+  const loading = () => '<p class="tl-none wk-loading" role="status">Loading…</p>';
+  const pending = () => (st.err ? '' : loading());   // with an error, draw() already shows the Retry card
+
   function gigsTab() {
-    const all = (st.data && st.data.gigs) || [];
-    const sug = window.TribeWorkLoop && st.data && st.data.canPost ? window.TribeWorkLoop.suggestHtml() : '';
+    const m = mode();
+    if (m === 'local') return emptyCard({ id: 'tl-empty', icon: 'work', title: 'Gigs live in a tribe', k: 'gigs',
+      text: 'Posting a gig and answering one needs a tribe your friends can reach. Your abilities and offers already work on this device.',
+      act: needAct(), extra: `<p class="wk-alt"><button class="linkish" id="tl-e-join" data-wk="join">Join a friend’s tribe with a link</button><span aria-hidden="true">·</span><button class="linkish" id="tl-e-tpl" data-wk="tpl">Plan it first with a template</button></p>` });
+    if (m === 'waiting') return emptyCard({ id: 'tl-empty', icon: 'refresh', title: 'Reconnecting to your tribe', text: 'Gigs come back as soon as your tribe does.', act: '<div class="tl-empty-acts"><button class="btn" data-retry="1" id="wk-retry">Retry</button></div>' });
+    if (!st.data) return pending(true);
+    if (st.where === 'public') return toolbar(true, true) + publicTab();
+    const all = st.data.gigs || [];
+    const sug = window.TribeWorkLoop && st.data.canPost ? window.TribeWorkLoop.suggestHtml() : '';
     const active = g => g.status === 'open' || g.status === 'draft' || (g.status === 'filled' && !['done', 'credited'].includes(g.stage));
     const list = sorted(all.filter(g => g.status === 'open' || g.status === 'draft' || g.canManage || g.mine).filter(g => passes(g)));
     const live = list.filter(active), done = list.filter(g => !active(g));
-    if (!all.length) return `${sug}${toolbar(true)}<section class="card tl-empty"><span class="eyebrow">Nothing posted yet</span><h3>Post the first gig</h3><p>A seat in your company, a task or a bounty. Friends in this tribe see it here; you choose if it goes public.</p>${st.data && st.data.canPost ? '<button class="btn primary" data-post="1">Post a gig</button>' : ''}</section>`;
-    return `${sug}${toolbar(true)}${live.length ? gigCard(live[0], true) : `<p class="tl-none">No open gigs match your filters.</p>`}
+    if (!all.length) return `${toolbar(true, true)}${emptyCard({ id: 'wk-empty-gigs', icon: 'work', title: 'No gigs yet', k: 'gigs', text: 'Post what you need. Everyone in this tribe sees it here.',
+      act: st.data.canPost ? `<div class="tl-empty-acts"><button class="btn primary" data-post="1">${svg('hand', 16)} Get help</button></div>` : '' })}${sug}`;
+    return `${toolbar(true, true)}${live.length ? gigCard(live[0], true) : `<p class="tl-none">No open gigs match your filters.</p>`}
       ${live.length > 1 ? `<div class="tl-grid">${live.slice(1).map(g => gigCard(g)).join('')}</div>` : ''}
-      ${done.length ? `<details class="tl-done"><summary>Finished and closed (${done.length})</summary><div class="tl-grid">${done.map(g => gigCard(g)).join('')}</div></details>` : ''}`;
+      ${done.length ? `<details class="tl-done"><summary>Finished and closed (${done.length})</summary><div class="tl-grid">${done.map(g => gigCard(g)).join('')}</div></details>` : ''}${sug}`;
   }
   function personCard(p) {
     const mine = p.id === me().id;
@@ -127,97 +208,130 @@
     </article>`;
   }
   function peopleTab() {
-    const mp = (st.data && st.data.me) || {}, list = ((st.data && st.data.people) || []).filter(p => passes(p, true));
+    const m = mode();
+    if (m === 'local') return emptyCard({ icon: 'people', title: 'Finding people needs a tribe', k: 'people', text: 'You can only search people who share a tribe with you. Make one and invite friends.', act: needAct('wk-need-people') });
+    if (m === 'waiting') return emptyCard({ icon: 'refresh', title: 'Reconnecting to your tribe', text: 'People come back as soon as your tribe does.' });
+    if (!st.data) return pending(true);
+    const all = (st.data.people || []), list = all.filter(p => passes(p, true));
     const findbar = `<div class="ab-findbar" role="search"><input class="input" id="tl-find-skill" placeholder="Find someone who can… (draw, javascript)" value="${esc(st.f.skills)}" aria-label="Skill">
       <select class="input" id="tl-find-hours" aria-label="Availability">${[[0, 'Any availability'], [5, '5+ h/week'], [10, '10+ h/week'], [20, '20+ h/week']].map(([v, l]) => `<option value="${v}" ${st.f.free === v ? 'selected' : ''}>${l}</option>`).join('')}</select></div>`;
+    if (!all.length) return findbar + emptyCard({ id: 'wk-empty-people', icon: 'people', title: 'Nobody listed yet', k: 'people', text: 'People show up here once they add their abilities. Start with yours.',
+      act: human() ? `<div class="tl-empty-acts"><button class="btn primary" ${window.TribeAbilities ? 'data-ab-edit="1"' : 'data-edit-prof="1"'}>${svg('user', 16)} Add your abilities</button></div>` : '' });
     return `${findbar}${toolbar(false)}
-      ${human() && !mp.open ? `<section class="card tl-cta"><div><span class="eyebrow">You</span><h3>Open to work?</h3><p>Show your skills, the seats you can fill and how many hours you have. Only people in this tribe see it.</p></div><button class="btn primary" data-edit-prof="1">Set up my work profile</button></section>` : ''}
-      ${list.length ? `<div class="tl-grid">${list.map(personCard).join('')}</div>` : `<p class="tl-none">${fCount() ? 'Nobody open to work matches your filters.' : 'Nobody here is open to work yet.'}</p>`}`;
+      ${list.length ? `<div class="tl-grid">${list.map(personCard).join('')}</div>` : `<p class="tl-none">${fCount() || st.f.free ? 'Nobody matches. Try fewer filters.' : 'Nobody here is open to work yet.'}</p>`}`;
   }
   function memberOptions(sel) {
     const ms = ((C.state() || {}).members || []).filter(m => m.role !== 'agent' && m.role !== 'spectator' && m.id !== me().id);
     return ms.map(m => `<option value="${esc(m.id)}" ${sel === m.id ? 'selected' : ''}>${esc(m.name)}</option>`).join('');
   }
   function bankTab() {
-    const b = st.bank; if (!b) return '<p class="tl-none">Loading…</p>';
+    const b = st.bank; if (!b) return pending(false);
     const row = e => {
       const gave = e.from === me().id, other = gave ? e.toName : e.fromName, mineOk = e.ok && e.ok[gave ? 'from' : 'to'];
       return `<li class="tl-tx" data-tx="${esc(e.id)}"><span class="tl-tx-h ${gave ? 'plus' : 'minus'}">${gave ? '+' : '−'}${esc(e.hours)} h</span>
         <span class="tl-tx-t"><b>${gave ? `You helped ${esc(other)}` : `${esc(other)} helped you`}</b><small>${e.note ? esc(e.note) + ' · ' : ''}${esc(ago(e.at))}${e.status === 'proposed' ? (mineOk ? ` · waiting for ${esc(other)}` : '') : ` · ${esc(e.status)}`}</small></span>
         ${e.status === 'proposed' && !mineOk && human() ? `<span class="tl-tx-b"><button class="btn sm ok" data-tx-ok="${esc(e.id)}">Confirm</button><button class="btn sm ghost" data-tx-no="${esc(e.id)}">Not right</button></span>` : ''}</li>`;
     };
-    return `<section class="card tl-bal hero"><span class="eyebrow">Your time bank</span>
+    return `<section class="card tl-bal"><span class="eyebrow">Your hours</span>
         <div class="tl-bal-n"><b>${b.balance.net > 0 ? '+' : ''}${esc(b.balance.net)}</b><span>hours</span></div>
-        <div class="tl-bal-s"><span>Given <b>${esc(b.balance.given)} h</b></span><span>Received <b>${esc(b.balance.received)} h</b></span>${b.waiting ? `<span class="tl-wait">${b.waiting} to confirm</span>` : ''}</div>
-        <p class="tl-fine">Hours, not money. An entry counts once both people confirm it.</p></section>
+        <div class="tl-bal-s"><span>Given <b>${esc(b.balance.given)} h</b></span><span>Received <b>${esc(b.balance.received)} h</b></span>${b.waiting ? `<span class="tl-wait">${b.waiting} to confirm</span>` : ''}</div></section>
       ${human() ? `<form class="tl-log" id="tl-log"><span class="eyebrow">Log hours</span>
         <div class="tl-log-row"><select class="input" id="tl-log-dir" aria-label="Direction"><option value="gave">I helped</option><option value="got">I was helped by</option></select>
         <select class="input" id="tl-log-who" aria-label="Person" required>${memberOptions()}</select>
         <input class="input" id="tl-log-h" type="number" min="0.25" max="80" step="0.25" value="1" aria-label="Hours"><span class="tl-unit">h</span></div>
         <div class="tl-log-row"><input class="input" id="tl-log-note" maxlength="200" placeholder="What was it? (optional)"><button class="btn primary" type="submit">Log</button></div></form>` : ''}
-      <section><div class="sec-head"><span class="eyebrow">History</span><h2>Hours with friends</h2></div>
-        ${b.entries.length ? `<ul class="tl-txs">${b.entries.map(row).join('')}</ul>` : '<p class="tl-none">No hours logged yet.</p>'}</section>`;
+      ${b.entries.length ? `<section><div class="sec-head"><span class="eyebrow">History</span><h2>Hours with friends</h2></div><ul class="tl-txs">${b.entries.map(row).join('')}</ul></section>` : `<div class="wk-howonly"><span class="wk-how-h">How it works</span>${how('trade')}</div>`}`;
   }
   function computeTab() {
-    const c = st.compute; if (!c) return '<p class="tl-none">Loading…</p>';
+    const c = st.compute; if (!c) return pending(false);
     const mine = c.offers.filter(o => o.mine), others = c.offers.filter(o => !o.mine && o.on);
     const offerRow = o => `<article class="tl-offer card" data-offer="${esc(o.id)}"><div class="tl-p-head"><span class="tl-av" style="background:${esc(o.color || '#38C6B1')}">${esc((o.name || '?').slice(0, 1).toUpperCase())}</span><div><b>${esc(o.name)} · ${esc(WHAT[o.what] || o.what)}</b><small>${esc(o.usedThisWeek || 0)} of ${esc(o.hoursPerWeek)} h used this week${o.what === 'claude-code' ? ` · ${esc({ ask: 'asks before each use', always: 'says yes on its own', never: 'kept private for now' }[o.askPolicy] || '')}` : ''}</small></div></div>
       ${o.rules ? `<p class="tl-desc">${esc(o.rules)}</p>` : ''}
       <div class="tl-foot"><span></span>${o.mine ? `<span class="tl-tx-b"><button class="btn sm ghost" data-off-edit="${esc(o.id)}">Edit</button><button class="btn sm ghost" data-off-del="${esc(o.id)}">Remove</button></span>` : human() ? `<button class="btn sm tonal" data-off-ask="${esc(o.id)}">Ask for time</button>` : ''}</div></article>`;
     const reqRow = r => { const theirs = r.offerer === me().id; return `<li class="tl-tx"><span class="tl-tx-h">${esc(r.hours)} h</span><span class="tl-tx-t"><b>${theirs ? `${esc(r.byName)} asked for your ${esc(WHAT[r.what] || '')}` : `You asked ${esc(r.offererName)}`}</b><small>${r.note ? esc(r.note) + ' · ' : ''}${esc(r.status)}${r.used ? ` · ${esc(r.used)} h used` : ''} · ${esc(ago(r.at))}</small></span>
       ${theirs && r.status === 'pending' ? '<button class="btn sm tonal" data-inbox="1">Answer in your inbox</button>' : theirs && r.status === 'approved' ? `<span class="tl-tx-b"><button class="btn sm ghost" data-used="${esc(r.id)}">Log 1 h used</button></span>` : ''}</li>`; };
-    return `<section class="card tl-cnote"><span class="eyebrow">How sharing works</span><p>${esc(c.note)}</p></section>
+    if (!c.offers.length && !c.requests.length) return emptyCard({ id: 'wk-empty-ai', icon: 'spark', title: 'Nobody is sharing AI time yet', text: 'Have spare Claude Code or a strong computer? Offer a few hours a week. People ask; you say yes or no each time.',
+      act: human() ? '<div class="tl-empty-acts"><button class="btn primary" data-off-new="1">Offer my AI time</button></div>' : '' });
+    return `<p class="tl-fine">${esc(c.note)}</p>
       <section><div class="tl-sh"><div class="sec-head"><span class="eyebrow">Offered to the tribe</span><h2>AI and computer time</h2></div>${human() && mine.length < 4 ? '<button class="btn sm primary" data-off-new="1">Offer mine</button>' : ''}</div>
         ${mine.length ? `<div class="tl-grid">${mine.map(offerRow).join('')}</div>` : ''}
-        ${others.length ? `<div class="tl-grid">${others.map(offerRow).join('')}</div>` : `<p class="tl-none">${mine.length ? 'Nobody else is offering yet.' : 'Nobody is offering yet. Offer your own when you have spare hours.'}</p>`}</section>
+        ${others.length ? `<div class="tl-grid">${others.map(offerRow).join('')}</div>` : `<p class="tl-none">${mine.length ? 'Nobody else is offering yet.' : 'Nobody is offering yet.'}</p>`}</section>
       ${c.requests.length ? `<section><div class="sec-head"><span class="eyebrow">Requests</span><h2>Asked and answered</h2></div><ul class="tl-txs">${c.requests.map(reqRow).join('')}</ul></section>` : ''}`;
   }
+  function tradeTab() {
+    const m = mode();
+    if (m === 'local') return emptyCard({ icon: 'swap', title: 'Trading time needs a tribe', k: 'trade', text: 'Hours and AI time are traded between people in one tribe, so both of you can confirm them.', act: needAct('wk-need-trade') });
+    if (m === 'waiting') return emptyCard({ icon: 'refresh', title: 'Reconnecting to your tribe', text: 'Your hours come back as soon as your tribe does.' });
+    const seg = `<div class="tl-seg wk-trade" role="group" aria-label="Trade">${[['bank', 'clock', 'Time bank'], ['compute', 'spark', 'AI time']].map(([k, i, l]) => `<button type="button" class="${st.trade === k ? 'on' : ''}" data-trade="${k}" aria-pressed="${st.trade === k}">${svg(i, 14)} ${l}</button>`).join('')}</div>`;
+    return seg + (st.trade === 'compute' ? computeTab() : bankTab());
+  }
   function publicTab() {
-    const p = st.pub; if (!p) return '<p class="tl-none">Looking at the community board…</p>';
-    if (!p.available || !p.gigs.length) return `<section class="card tl-empty"><span class="eyebrow">Community board</span><h3>${p.available ? 'No public gigs yet' : 'The community board isn\'t reachable right now'}</h3>
-      <p>There's no central TribeCode marketplace. When a tribe shares a gig, it goes to the community repository on GitHub (${esc(p.repo || 'the Workshop\'s')}) and shows up here for every tribe.${p.available ? ' Share one of yours from its gig page.' : ' Check your connection and try again later.'}</p><button class="btn ghost sm" data-pub-refresh="1">Try again</button></section>`;
+    const p = st.pub; if (!p) return '<p class="tl-none wk-loading" role="status">Looking at the community board…</p>';
+    if (!p.available || !p.gigs.length) return emptyCard({ id: 'wk-empty-public', icon: 'globe', title: p.available ? 'No public gigs yet' : 'The community board isn’t reachable', text: p.available ? 'When a tribe makes a gig public, it shows up here for every tribe. Make one of yours public from its page.' : 'Check your connection, then try again.',
+      act: '<div class="tl-empty-acts"><button class="btn sm" data-pub-refresh="1">Retry</button></div>' });
     const list = sorted(p.gigs.filter(g => passes(g)));
     const card = g => { const href = safeHref(g.contact); return `<article class="tl-gig" style="--seat:${g.seatKind && SEATS[g.seatKind] ? SEATS[g.seatKind][1] : 'var(--edge)'}"><div class="tl-gig-top"><span class="eyebrow">${esc(g.kind)}${g.tribe ? ` · ${esc(g.tribe)}` : ''}</span>${seatChip(g.seatKind)}</div><h3>${esc(g.title)}</h3>${g.description ? `<p class="tl-desc">${esc(g.description)}</p>` : ''}<div class="tl-meta">${payChip(g.pay)}${g.hours ? `<i class="tl-h">${esc(g.hours)} h</i>` : ''}${skillChips(g.skills, 3)}</div><div class="tl-foot"><small>${esc(g.posted || '')}</small>${g.contact ? (href ? `<a class="btn sm tonal" href="${esc(href)}" target="_blank" rel="noopener noreferrer">Contact</a>` : `<span class="tl-contact">${esc(g.contact)}</span>`) : ''}</div></article>`; };
-    return `${toolbar(true)}<p class="tl-fine">From the community repository ${esc(p.repo)}. Read-only; reach posters through the contact they chose.</p>${list.length ? `<div class="tl-grid">${list.map(card).join('')}</div>` : '<p class="tl-none">No public gigs match your filters.</p>'}`;
+    return `<p class="tl-fine">Read-only, from the community board (${esc(p.repo)}). Reach posters through the contact they chose.</p>${list.length ? `<div class="tl-grid">${list.map(card).join('')}</div>` : '<p class="tl-none">No public gigs match your filters.</p>'}`;
   }
-  // No tribe on this device yet: Work stays on your dashboard with one clear next step (never a blank or a dead end).
-  function empty(sec) {
-    const waiting = C.hasToken && C.hasToken();
-    sec.innerHTML = `<div class="tl-wrap"><header class="tl-head"><div class="sec-head"><span class="eyebrow">Your dashboard</span><h2>Work</h2></div></header>
-      <section class="card tl-empty" id="tl-empty"><span class="eyebrow">${waiting ? 'Reconnecting' : 'No tribe yet'}</span>
-        <h3>${waiting ? 'Work comes back when your tribe does' : 'Work happens inside a tribe'}</h3>
-        <p>${waiting ? 'Your tribe is reconnecting. Gigs, people and the time bank show up here as soon as it is back.' : 'Gigs, people open to work, the time bank and shared AI time all live in a tribe. Start your first project to make one, or join a friend with their link.'}</p>
-        <div class="tl-empty-acts">${waiting ? '' : '<button class="btn primary" id="tl-e-start">Start your first project</button><button class="btn" id="tl-e-join">Join with a link</button>'}<button class="btn ghost" id="tl-e-home">Back to Home</button></div>
-        ${waiting ? '' : `<ol class="tl-steps" id="tl-e-steps"><li><b>Write the plan.</b> A product brief or a launch plan from Templates below, saved on this device.</li><li><b>Start a project.</b> Your docs move in with one tap.</li><li><b>Post a need.</b> Friends or your Claude pick it up, you track it here and credit them.</li></ol>`}</section>
-      <div id="ab-mount"></div>
-      ${waiting ? '' : `<section class="tl-e-tpl"><div class="sec-head"><span class="eyebrow">Works offline</span><h2>Company templates</h2></div><div id="tl-tpl"></div></section>`}
-      ${window.TribePremium ? window.TribePremium.footHtml() : ''}</div>`;
-    const tp = sec.querySelector('#tl-tpl'); if (tp && window.TribeTemplates) window.TribeTemplates.mount(tp);
-    const am = sec.querySelector('#ab-mount'); if (am && window.TribeAbilities) window.TribeAbilities.mount(am);
-    const on = (id, fn) => { const b = sec.querySelector('#' + id); if (b) b.onclick = fn; };
-    on('tl-e-start', () => { if (window.TribeProjects && window.TribeProjects.openNew) window.TribeProjects.openNew(); });
-    on('tl-e-join', () => window.TribeSettings && window.TribeSettings.joinPrompt());
-    on('tl-e-home', () => { if (window.TribeHub) window.TribeHub.open('home'); });
-  }
+  function offersTab() { return '<div id="wk-offers"></div>'; }
+
+  // ---------- the page: one header, three actions, you, the guide, four tabs ----------
+  const TILES = [['get', 'hand', 'Get help', 'Post what you need'], ['offer', 'gift', 'Offer help', 'Say what you can do'], ['find', 'search', 'Find people', 'By skill and free hours']];
+  const GUIDE = [['quill', 'Say what you need.'], ['people', 'Friends or AIs offer.'], ['check', 'Accept and it becomes a task.']];
   function draw() {
     const sec = section(); if (!sec) return;
-    if (!C.connected()) return empty(sec);
-    const body = st.tab === 'templates' ? '<div id="tl-tpl"></div>' : st.tab === 'people' ? peopleTab() : st.tab === 'bank' ? bankTab() : st.tab === 'compute' ? computeTab() : st.tab === 'public' ? publicTab() : gigsTab();
-    sec.innerHTML = `<div class="tl-wrap">
-      <header class="tl-head"><div class="sec-head"><span class="eyebrow">Company · Work</span><h2>Work</h2></div>${st.data && st.data.canPost ? '<button class="btn primary" data-post="1" id="tl-post">Post a gig</button>' : ''}</header>
-      <div id="ab-mount"></div>
-      <p class="tl-lead">Find help, hire friends into a seat, trade hours and share spare AI time. It all stays in this tribe unless you share a gig publicly.</p>
-      <nav class="tl-tabs" role="tablist">${TABS.map(([k, l]) => `<button role="tab" class="${st.tab === k ? 'on' : ''}" aria-selected="${st.tab === k}" data-tab="${k}">${l}${k === 'bank' && st.data && st.data.balance && st.data.balance.net ? ` <small>${st.data.balance.net > 0 ? '+' : ''}${esc(st.data.balance.net)}</small>` : ''}</button>`).join('')}</nav>
-      <div class="tl-body" id="tl-body">${st.data || st.tab === 'templates' ? body : '<p class="tl-none">Loading…</p>'}</div>
+    const m = mode(), canPost = m !== 'tribe' || !st.data || st.data.canPost !== false;
+    const body = st.tab === 'people' ? peopleTab() : st.tab === 'trade' ? tradeTab() : st.tab === 'offers' ? offersTab() : gigsTab();
+    const crumb = '<nav class="hub-crumb" aria-label="Breadcrumb"><button type="button" class="hc-home" data-hc-home>' + svg('home', 13) + 'Home</button><span class="hc-sep" aria-hidden="true">›</span><span class="hc-here" aria-current="page">Work</span></nav>';
+    const keepScroll = sec.scrollTop;
+    sec.innerHTML = `<div class="tl-wrap wk" data-mode="${m}">
+      ${crumb}
+      <header class="wk-head" id="wk-head"><h1 class="wk-title">Work</h1><p class="wk-sub">Find help, offer help, trade time.</p></header>
+      <div class="wk-tiles" id="wk-tiles" role="group" aria-label="Start here">${TILES.map(([k, i, t, s]) => `<button type="button" class="wk-tile" id="wk-${k}" data-wk="${k}"${k === 'get' && !canPost ? ' disabled' : ''}><span class="wk-tile-ic">${svg(i, 24)}</span><span class="wk-tile-t"><b>${t}</b><small>${s}</small></span></button>`).join('')}</div>
+      <section class="wk-me" id="wk-me" aria-label="You"><div id="ab-mount"></div>${tasksHtml()}</section>
+      <section class="wk-guide" id="wk-guide" aria-label="How Work works"><ol>${GUIDE.map(([i, t], n) => `<li data-step="${n + 1}"><span class="wk-n">${n + 1}</span><span class="wk-g-ic">${svg(i, 16)}</span><span>${esc(t)}</span></li>`).join('')}</ol><button type="button" class="btn sm" id="wk-show">${svg('eye', 14)} Show me</button></section>
+      ${st.tpl ? `<section class="wk-tpl" id="wk-tpl" aria-label="Templates"><header><div><span class="eyebrow">Get help</span><h2>Start from a template</h2></div><button class="fwin-btn" data-tpl-x="1" aria-label="Close templates">${ico('i-x')}</button></header><div id="tl-tpl"></div></section>` : ''}
+      <nav class="tl-tabs wk-tabs" id="wk-tabs" role="tablist" aria-label="Work">${TABS.map(([k, i, l]) => `<button role="tab" class="${st.tab === k ? 'on' : ''}" aria-selected="${st.tab === k}" data-tab="${k}" id="wk-tab-${k}">${svg(i, 16)}<span>${l}</span>${k === 'trade' && st.data && st.data.balance && st.data.balance.net ? ` <small>${st.data.balance.net > 0 ? '+' : ''}${esc(st.data.balance.net)} h</small>` : ''}</button>`).join('')}</nav>
+      <div class="tl-body" id="tl-body" role="tabpanel" aria-labelledby="wk-tab-${st.tab}">${st.err && m === 'tribe' ? errCard() : ''}${body}</div>
       ${window.TribePremium ? window.TribePremium.footHtml() : ''}</div>`;
+    sec.scrollTop = keepScroll;
     afterDraw(sec);
   }
   function afterDraw(sec) {
     const am = sec.querySelector('#ab-mount'); if (am && window.TribeAbilities) window.TribeAbilities.mount(am);
+    const ao = sec.querySelector('#wk-offers'); if (ao && window.TribeAbilities && window.TribeAbilities.mountOffers) window.TribeAbilities.mountOffers(ao);
     const fs = sec.querySelector('#tl-find-skill'); if (fs) { fs.oninput = () => { st.f.skills = fs.value; clearTimeout(fs.t); fs.t = setTimeout(() => { const pos = fs.selectionStart; draw(); const n = $('#tl-find-skill'); if (n) { n.focus(); try { n.setSelectionRange(pos, pos); } catch {} } }, 250); }; }
+    if (fs && st.focusFind) { fs.focus(); try { fs.scrollIntoView({ block: 'nearest' }); } catch {} if (!st.busy) st.focusFind = false; }
     const fh = sec.querySelector('#tl-find-hours'); if (fh) fh.onchange = () => { st.f.free = +fh.value || 0; draw(); };
     const tp = sec.querySelector('#tl-tpl'); if (tp && window.TribeTemplates) window.TribeTemplates.mount(tp);
     const sg = sec.querySelector('#wl-suggest'); if (sg && window.TribeWorkLoop) window.TribeWorkLoop.mountSuggest(sg, (st.data && st.data.gigs) || [], () => load());
+    sec.querySelectorAll('[data-mytask]').forEach(b => b.onclick = () => { const [pid, id] = b.dataset.mytask.split('|'); if (window.TribeHub && window.TribeHub.jump) window.TribeHub.jump({ project: pid, ref: { type: 'task', id } }); });
+  }
+
+  // ---------- "This needs a tribe", said exactly, with the one-tap fix ----------
+  const NEEDS = { get: 'Posting a gig', find: 'Finding people', trade: 'Trading time', apply: 'Answering a gig' };
+  function needClose() { const n = document.getElementById('wk-need'); if (n) n.remove(); }
+  function needsTribe(what) {
+    let n = document.getElementById('wk-need');
+    if (!n) { n = document.createElement('div'); n.id = 'wk-need'; n.className = 'wk-need'; n.setAttribute('role', 'status'); document.body.appendChild(n); }
+    const waiting = mode() === 'waiting';
+    n.innerHTML = `<span class="wk-need-ic">${svg('tribe', 18)}</span><div class="wk-need-t"><b>${esc(what)} needs a tribe.</b><small>${waiting ? 'Your tribe is reconnecting. Try again in a moment.' : 'Only people in a tribe you share can see it. Make one in a minute; it can live on this device.'}</small></div>${waiting ? '<button class="btn sm" data-retry="1">Retry</button>' : '<button class="btn sm primary" id="wk-need-go" data-wk="tribe">Create a tribe</button>'}<button class="wk-need-x" aria-label="Close" data-need-x="1">${ico('i-x', 14)}</button>`;
+    clearTimeout(needsTribe.t); needsTribe.t = setTimeout(needClose, 9000);
+  }
+  function newTribe() {
+    needClose();
+    if (window.TribeNew && window.TribeNew.open) return window.TribeNew.open();
+    if (window.TribeProjects && window.TribeProjects.openNew) return window.TribeProjects.openNew();
+  }
+  function tile(k) {
+    const m = mode();
+    if (k === 'offer') return window.TribeAbilities ? window.TribeAbilities.post() : null;
+    if (m !== 'tribe') return needsTribe(NEEDS[k]);
+    if (k === 'get') return post();
+    if (k === 'find') { st.tab = 'people'; st.focusFind = true; remember(); const p = load(); draw(); return p; }
+  }
+  function showMe() {
+    if (window.TribeFlintLessons && window.TribeFlintLessons.showMe) return window.TribeFlintLessons.showMe('work');
   }
 
   // ---------- popover + sheets ----------
@@ -267,10 +381,11 @@
   function wireSegs(el) { el.querySelectorAll('.tl-seg[role=radiogroup]').forEach(g => g.addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; g.querySelectorAll('button').forEach(x => { x.classList.toggle('on', x === b); x.setAttribute('aria-checked', x === b); }); g.dispatchEvent(new Event('seg')); })); }
 
   async function post(pre = {}) {
-    if (!C.connected()) return toast('Connect to your tribe first.');
+    if (mode() !== 'tribe') return needsTribe(NEEDS.get);
     const kind = pre.kind || 'task';
     const pj = projects();
-    const el = sheet('Post a gig', 'Work', `<form id="tl-pf" class="tl-form">
+    const el = sheet('Get help', 'Post a gig', `<form id="tl-pf" class="tl-form">
+      <p class="tl-fine wk-pf-tpl">Big ask? <button type="button" class="linkish" id="tl-p-tpl">Start from a template</button> to plan it first.</p>
       <label class="tl-lbl">What do you need?<input class="input" id="tl-p-title" maxlength="100" required placeholder="Someone to run our launch posts" value="${esc(pre.title || '')}"></label>
       <div class="tl-lbl">Kind${segHtml('tl-p-kind', [['task', 'Task'], ['seat', 'Seat'], ['bounty', 'Bounty']], kind)}</div>
       <div class="tl-two"><label class="tl-lbl">Project<select class="input" id="tl-p-proj"><option value="">The whole tribe</option>${pj.map(p => `<option value="${esc(p.id)}" ${(pre.project || '') === p.id ? 'selected' : ''}>${esc(p.name)}</option>`).join('')}</select></label>
@@ -285,13 +400,14 @@
       const sync = () => { const k = segVal(el, 'tl-p-kind'); el.querySelector('#tl-p-seatl').hidden = k !== 'seat'; const pt = segVal(el, 'tl-p-pay'); el.querySelector('#tl-p-paytext').hidden = pt === 'free'; };
       el.querySelectorAll('.tl-seg').forEach(g => g.addEventListener('seg', sync)); sync();
       el.querySelector('[data-x2]').onclick = closeSheet;
+      el.querySelector('#tl-p-tpl').onclick = () => { closeSheet(); if (!open_) show('templates'); else { st.tpl = true; draw(); } };
       el.querySelector('#tl-pf').onsubmit = async e => {
         e.preventDefault();
         const k = segVal(el, 'tl-p-kind'), body = { title: el.querySelector('#tl-p-title').value, kind: k, project: el.querySelector('#tl-p-proj').value || null,
           description: el.querySelector('#tl-p-desc').value, skills: el.querySelector('#tl-p-skills').value.split(','), hours: +el.querySelector('#tl-p-hours').value || 0,
           pay: { type: segVal(el, 'tl-p-pay'), text: el.querySelector('#tl-p-paytext').value }, tasks: pre.tasks || [] };
         if (k === 'seat') { body.seatKind = el.querySelector('#tl-p-seat').value; if (pre.seat && body.project === pre.project) body.seat = pre.seat; }
-        try { await C.api('/talent/gigs', { method: 'POST', body }); closeSheet(); toast('Posted on Work'); if (open_) { st.tab = 'gigs'; load(); } else show('gigs'); } catch (er) { toast(er.message); }
+        try { await C.api('/talent/gigs', { method: 'POST', body }); closeSheet(); toast('Posted on Work'); if (open_) { st.tab = 'gigs'; st.where = 'tribe'; load(); } else show('gigs'); } catch (er) { toast(er.message); }
       };
     });
     return el;
@@ -309,10 +425,20 @@
       ${loop}
       <section><span class="eyebrow">Interested (${apps.length})</span>${apps.length ? `<ul class="tl-txs">${apps.map(appRow).join('')}</ul>` : '<p class="tl-none">Nobody yet. Share it in chat, or publicly below.</p>'}</section>
       <div id="tl-invite-out"></div>
-      ${g.status === 'open' ? `<details class="tl-more"><summary>Add someone from outside the tribe</summary><form class="tl-form" id="tl-ext"><div class="tl-two"><input class="input" id="tl-ext-n" maxlength="40" placeholder="Their name" required><input class="input" id="tl-ext-c" maxlength="120" placeholder="How to reach them (kept private)"></div><button class="btn tonal sm" type="submit">Add</button></form></details>
-      <details class="tl-more"><summary>Share publicly${g.shared ? ' (prepared ✓)' : ''}</summary><form class="tl-form" id="tl-share"><p class="tl-fine">Goes to the community repository on GitHub through a pull request; every tribe can then see it in Public. Nothing personal is added: write the contact you want people to use.</p><input class="input" id="tl-share-c" maxlength="120" placeholder="Public contact: a link, an email, or @you on Discord" required><button class="btn tonal sm" type="submit">Prepare</button><div id="tl-share-out"></div></form></details>` : ''}
+      ${g.status === 'open' ? `<details class="tl-more"><summary>Add someone from outside the tribe</summary><form class="tl-form" id="tl-ext"><div class="tl-two"><input class="input" id="tl-ext-n" maxlength="40" placeholder="Their name" required><input class="input" id="tl-ext-c" maxlength="120" placeholder="How to reach them (kept private)"></div><button class="btn tonal sm" type="submit">Add</button></form></details>` : ''}
+      <section class="wk-vis" id="tl-vis-box"><span class="eyebrow">Who sees it</span>${segHtml('tl-vis', [['tribe', 'This tribe'], ['public', 'Public']], g.shared ? 'public' : 'tribe')}
+        <p class="tl-fine" id="tl-vis-note">${g.shared ? 'Public: in your tribe’s signed gig feed and ready for the community board.' : 'Only people in this tribe see it.'}</p>
+        <form class="tl-form" id="tl-share" ${g.shared || g.status !== 'open' ? 'hidden' : ''}><p class="tl-fine">Public gigs go in your tribe’s signed gig feed and, through a pull request, the community board. Nothing personal is added: write the contact you want people to use.</p><input class="input" id="tl-share-c" maxlength="120" placeholder="Public contact: a link, an email, or @you on Discord" required><button class="btn tonal sm" type="submit">Make public</button><div id="tl-share-out"></div></form></section>
       <div class="tl-sh-foot">${g.status === 'open' ? '<button class="btn ghost" data-gclose="1">Close gig</button>' : '<button class="btn ghost" data-gopen="1">Reopen</button>'}<button class="btn ghost" data-gdel="1">Delete</button></div>`, el => {
       if (window.TribeWorkLoop) window.TribeWorkLoop.wireLoop(el, g, reopen);
+      wireSegs(el);
+      const vis = el.querySelector('#tl-vis');
+      if (vis) vis.addEventListener('seg', async () => {
+        const v = segVal(el, 'tl-vis'), form = el.querySelector('#tl-share'), note = el.querySelector('#tl-vis-note');
+        if (v === 'public' && !g.shared) { if (g.status !== 'open') { toast('Only open gigs can be public'); return; } form.hidden = false; const c = el.querySelector('#tl-share-c'); if (c) c.focus(); return; }
+        form.hidden = true;
+        if (v === 'tribe' && g.shared) { try { await C.api(`/talent/gigs/${encodeURIComponent(gid)}/unshare`, { method: 'POST', body: {} }); g.shared = null; note.textContent = 'Only people in this tribe see it. It left your gig feed.'; toast('Back to this tribe only'); load(); } catch (er) { toast(er.message); } }
+      });
       el.addEventListener('click', async e => {
         const t = e.target.closest('button'); if (!t) return;
         try {
@@ -331,7 +457,8 @@
       const sh = el.querySelector('#tl-share'); if (sh) sh.onsubmit = async e => {
         e.preventDefault();
         try { const r = await C.api(`/talent/gigs/${encodeURIComponent(gid)}/share`, { method: 'POST', body: { contact: el.querySelector('#tl-share-c').value } });
-          el.querySelector('#tl-share-out').innerHTML = `<p class="tl-fine">Ready for ${esc(r.repo)}.</p><a class="btn sm primary" href="${esc(safeHref(r.links.file))}" target="_blank" rel="noopener noreferrer" id="tl-share-link">Open the pull request page on GitHub</a>`;
+          g.shared = { id: r.bundle && r.bundle.id }; const nt = el.querySelector('#tl-vis-note'); if (nt) nt.textContent = 'Public: in your tribe’s signed gig feed and ready for the community board.'; load();
+          el.querySelector('#tl-share-out').innerHTML = `<p class="tl-fine">In your feed. To list it on ${esc(r.repo)} too:</p><a class="btn sm primary" href="${esc(safeHref(r.links.file))}" target="_blank" rel="noopener noreferrer" id="tl-share-link">Open the pull request page on GitHub</a>`;
         } catch (er) { toast(er.message); }
       };
     });
@@ -400,11 +527,22 @@
   document.addEventListener('click', async e => {
     const sec = document.getElementById('view-' + NAME);
     if (pop && !pop.contains(e.target) && !e.target.closest('#tl-filters')) closePop();
+    const nb = e.target.closest && e.target.closest('#wk-need button');
+    if (nb) { if (nb.dataset.needX) return needClose(); if (nb.dataset.wk === 'tribe') return newTribe(); if (nb.dataset.retry) { needClose(); return load(); } }
     if (!sec || !sec.contains(e.target)) return;
     const t = e.target.closest('button, [data-gig]'); if (!t) return;
     const d = t.dataset;
     try {
-      if (d.tab) { st.tab = d.tab; remember(); closePop(); draw(); return load(); }
+      if (d.tab) { if (d.tab === st.tab) return; st.tab = d.tab; remember(); closePop(); (window.TribeMotion ? window.TribeMotion.swap : f => f())(draw); return load(); }
+      if (d.wk === 'tribe') return newTribe();
+      if (d.wk === 'join') return window.TribeSettings && window.TribeSettings.joinPrompt && window.TribeSettings.joinPrompt();
+      if (d.wk === 'tpl') { st.tpl = true; draw(); const x = $('#wk-tpl'); if (x) try { x.scrollIntoView({ block: 'start' }); } catch {} return; }
+      if (d.wk) return tile(d.wk);
+      if (t.id === 'wk-show') return showMe();
+      if (d.tplX) { st.tpl = false; return draw(); }
+      if (d.retry) { st.err = ''; st.local = false; draw(); return load(); }
+      if (d.where) { st.where = d.where; draw(); return load(); }
+      if (d.trade) { st.trade = d.trade; remember(); draw(); return load(); }
       if (d.sort) { st.sort = d.sort; remember(); return draw(); }
       if (t.id === 'tl-filters') return pop ? closePop() : filtersPop(t);
       if (d.post) return post();
@@ -431,8 +569,8 @@
     try { await C.api('/talent/timebank', { method: 'POST', body: { from: dir === 'gave' ? me().id : who, to: dir === 'gave' ? who : me().id, hours: +$('#tl-log-h').value, note: $('#tl-log-note').value } }); toast('Logged. They confirm it next.'); load(); } catch (er) { toast(er.message); }
   });
   document.addEventListener('keydown', e => { if ((e.key === 'Enter' || e.key === ' ') && e.target.matches && e.target.matches('#view-work [data-gig]')) { e.preventDefault(); e.target.click(); } });
-  if (C && C.on) C.on('ws', m => { if (open_ && m && (m.type === 'talent' || m.type === 'approval')) load(); });
-  if (C && C.on) C.on('hello', () => { if (open_) { draw(); load(); } });   // the tribe came back (or was just made): Work fills in
+  if (C && C.on) C.on('ws', m => { if (open_ && m && (m.type === 'talent' || m.type === 'approval')) load(); if (open_ && m && m.type === 'task') { clearTimeout(loadTasks.t); loadTasks.t = setTimeout(() => loadTasks(true), 400); } });
+  if (C && C.on) C.on('hello', () => { if (!inTab()) st.local = false; tasks.at = 0; if (open_) { draw(); load(); } });   // the tribe came back (or was just made): Work fills in
 
   // ---------- Company seats (Agent A's #co-hire-slot): an empty seat -> "Hire someone for this seat" ----------
   async function hireSlot(el, pid, seatId) {
@@ -448,6 +586,6 @@
   }
 
   // Find people (Flint's "find someone who can draw"): the People tab with the skill filled in
-  function find(q) { st.f.skills = String(q || ''); show('people'); }
-  window.TribeTalent = { open: tab => show(tab), post, editProfile, hireSlot, openGig, find, reload: () => load() };
+  function find(q) { st.f.skills = String(q || ''); show('people'); if (mode() !== 'tribe') needsTribe(NEEDS.find); }
+  window.TribeTalent = { open: tab => show(tab), post, editProfile, hireSlot, openGig, find, reload: () => { tasks.at = 0; return load(); } };
 })();

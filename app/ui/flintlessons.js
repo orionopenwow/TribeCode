@@ -3,7 +3,8 @@
 // opens it from Flint's chat, the canvas, the preview or the website designer. Longer reading points to the Guide
 // (docs/guide, TribeGuide) or the Academy where they exist. No AI. Shared with node for the lesson index test.
 //   LESSONS[feature] = { title, steps: [..], show: { go, sel, say }, guide?, academy? }
-//   window.TribeFlintLessons = { LESSONS, open(feature), close(), showMe(feature) }
+//   window.TribeFlintLessons = { LESSONS, open(feature), close(), showMe(feature), tour(steps), ring(el, text), unring() }
+//   A lesson may have tour: [{ sel, say }]: Show me rings each in turn (Work's guide uses it).
 (function (root, factory) { const api = factory(); if (typeof module === 'object' && module.exports) module.exports = api; else root.TribeFlintLessons = api; })(typeof self !== 'undefined' ? self : this, function () {
   'use strict';
   const LESSONS = {
@@ -11,7 +12,8 @@
     canvas: { title: 'Design (the canvas)', steps: ['Ask Flint for a screen: “a login screen for Ember”. It is real layers with auto layout.', 'Select a frame and say “dark mode”: the layers are recolored in place, Ctrl Z undoes it.', '“Wire this button to the login screen” links a layer to another screen.', '“Send to app” turns a frame into code in the project.'], show: { go: 'canvas', sel: '#cv-flint-btn, #flm-in-canvas, #nest-canvas', say: 'Talk to Flint here, or draw with the tools.' } },
     preview: { title: 'The live preview', steps: ['Preview runs your app, game or site beside everything else.', 'App | Website switches what it shows. Website opens the designer with “Design”.', 'Edit lets you click an element and change it in plain words, free.', 'Saved keeps versions you can compare and restore.'], show: { go: 'preview', sel: '#pvw, #nest-preview-slot .nest-row', say: 'Your project runs here, live.' } },
     tasks: { title: 'Tasks', steps: ['Say “add a task to fix the menu for Maya by friday”, or type /task in chat.', 'Every card has one clear button for the next step.', '“Mark it done”, “push it to monday”, “what needs someone” all work without AI.'], show: { go: 'ws-tasks', sel: '#nest-ws-tasks, #view-tasks', say: 'The Task Board: who does what.' }, guide: 'working-together' },
-    work: { title: 'Work and gigs', steps: ['Work lists gigs: paid or traded jobs friends can pick up.', 'Post one from a task; people who match are suggested.', 'Credit and the time bank keep track of who helped.'], show: { go: 'work', sel: '#nest-work, #view-work', say: 'Gigs, people open to work and the time bank.' }, guide: 'work-and-hiring' },
+    work: { title: 'Work: get help, offer help', steps: ['Say what you need: Work › Get help posts a gig.', 'Friends or AIs offer: they say they are interested, or you find people by skill.', 'Accept one and it becomes a task on their board. Hours can go in the time bank.'], show: { go: 'work', sel: '#wk-tiles', say: 'Start here: Get help, Offer help or Find people.' },
+      tour: [{ sel: '#wk-get', say: '1 · Say what you need: Get help posts a gig.' }, { sel: '#wk-tabs [data-tab="gigs"], #tl-body', say: '2 · Friends or AIs offer: they show up on your gig.' }, { sel: '#hub-mytasks', say: '3 · Accept one and it becomes a task, listed here.' }], guide: 'work-and-hiring' },
     templates: { title: 'Website templates', steps: ['Sixteen real templates: link in bio, band, café, shop, portfolio, wedding, podcast and more.', 'Say what the site is for and Flint picks one: “a page for my bakery”.', 'Every template opens in the designer as blocks you can change, wire and export.'], show: { go: 'templates', sel: '.wdz-tpls, #slx', say: 'Pick one; you can switch later.' } },
     files: { title: 'Files', steps: ['Files holds docs, sheets, decks and anything you drop in.', 'Drag a file onto the window to add it; AI helpers read it before they build.', 'Website lives here too, with its versions.'], show: { go: 'docs', sel: '#nest-docs, #view-docs', say: 'Everything the project knows.' }, guide: 'working-together' },
     chat: { title: 'Chat', steps: ['One chat for friends and their AI helpers, with channels and DMs.', 'Type /task to make a task, @ai to ask an AI, or just talk.', 'Flint can post for you: “tell everyone the build is up”.'], show: { go: 'chat', sel: '#nest-chat, #view-chat', say: 'Messages for the whole tribe.' }, guide: 'working-together' },
@@ -59,9 +61,19 @@
   }
   const visible = el => { if (!el) return false; const r = el.getBoundingClientRect(); return r.width > 0 && r.height > 0; };
   function find(sel) { for (const one of String(sel).split(',')) { const el = [...document.querySelectorAll(one.trim())].find(visible); if (el) return el; } return null; }
+  // feat/work-v2: a lesson with a tour rings each real control in turn (about 2.6 s each); any tap ends it.
+  let tourN = 0;
+  function tour(steps) {
+    const id = ++tourN; let i = 0;
+    const next = () => { if (id !== tourN || i >= steps.length) return; const s = steps[i++]; let n = 0;
+      const tick = () => { if (id !== tourN) return; const el = find(s.sel); if (el) { place(el, s.say); if (ring) ring.dataset.step = String(i); return setTimeout(() => { if (id === tourN && ring) next(); }, 2600); } if (++n < 25) setTimeout(tick, 120); else next(); };
+      tick(); };
+    next();
+  }
   function showMe(f) {
     const L = LESSONS[f]; if (!L) return;
     go(L.show.go);
+    if (L.tour) { if (card) card.hidden = true; return setTimeout(() => tour(L.tour), 200); }
     let n = 0; const tick = () => { const el = find(L.show.sel); if (el) return place(el, L.show.say); if (++n < 30) setTimeout(tick, 120); else say('Open a project first, then try Show me again.'); };
     setTimeout(tick, 150);
   }
@@ -80,5 +92,5 @@
   function say(t) { if (window.TribeApp && window.TribeApp.toast) window.TribeApp.toast(t); }
   function unring() { if (ring) { if (ring._tip) ring._tip.remove(); ring.remove(); ring = null; } }
   addEventListener('pointerdown', e => { if (ring && !e.target.closest('.fls-tip')) unring(); }, true);
-  return { LESSONS, FEATURES, open, close, showMe };
+  return { LESSONS, FEATURES, open, close, showMe, tour, ring: (el, text) => place(el, text), unring };
 });
