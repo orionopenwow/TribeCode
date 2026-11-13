@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.34.0
+- **Real build results**: the host runs a project's own checks after each ship, or when you press Run checks on the Build status card or tell Flint "run the checks". The dashboard shows pass or fail with the failing lines, and the person who shipped is told. Plain web projects get a safe check that runs nothing. Running a project's test scripts is off until a lead turns it on, because it runs members' code on the host computer.
+- **Gigs across tribes**: hosts can follow another tribe's signed gig list by address and key. Those gigs show under Gigs › Public with the tribe named. The fetcher refuses private addresses, cross-host redirects, oversized or unsigned lists and old copies. Hosts can pause or block a source and hide a gig.
+- **Flint's local helper (opt-in)**: "Set up a local model" on Flint's page downloads a small model (potion-base-8M, MIT, about 30 MB) that improves "did you mean", help answers and search by meaning across docs, tasks and chat. Everything works the same without it, and Remove deletes it.
+- **Fixes**: the Build status card shows its failure row; agents keep the ship tools alongside the new checks tools.
+- **Phones**: the checks log, the feeds manager and the local-model sheet fit at 390px.
+
 ## v0.33.0
 - **One Flint chat everywhere**: the website designer, canvas and preview use Flint's normal chat. He follows hundreds more commands with no AI and asks a short question instead of "needs an AI" when a detail is missing.
 - **Flint does more on his own**:
