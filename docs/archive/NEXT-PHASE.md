@@ -1,3 +1,5 @@
+> Archived 2026-11-12: the plan written after v0.25. Most of it shipped in v0.26–v0.31; the current next steps are in HANDOFF.md and docs/CONTEXT.md.
+
 # TribeCode: next phase plan (after v0.25)
 
 Written 2026-11-09. v0.23.0 and v0.24.0 are released (v0.24 with all three installers). v0.25 is on `next/v0.25`, not released yet. No prices in this doc; the money plan stays private on Camp's machine.
