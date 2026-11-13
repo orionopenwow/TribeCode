@@ -1,7 +1,8 @@
 /* The project's living repo (livingrepo.js): the one home pill, its popover, and the folder / GitHub / sync / ship /
-.lr-sheet [hidden], .lr-pop [hidden] { display: none !important; }
    share sheets. Flat matte: 1px borders, luminance steps only. Reuses hostpill.css (.host-pill, .host-pop) and
    phonehost.css (.ph-sheet, .ph-row…) for everything they already draw. */
+/* [hidden] wins over the flex rows below */
+.lr-sheet [hidden], .lr-pop [hidden], .lr-inline-pick [hidden] { display: none !important; }
 body.lr-on #host-pill { display: none !important; }   /* one pill: the home pill carries the hosting row */
 .lr-pill.hidden { display: none; }
 .lr-pill { max-width: 360px; }
@@ -104,5 +105,5 @@ body.lr-on #host-pill { display: none !important; }   /* one pill: the home pill
   .lr-trig { grid-template-columns: 1fr; }
 }
 @media (prefers-reduced-motion: reduce) { .lr-dir, .lr-seg button { transition: none; } }
-.lr-inline-pick [hidden] { display: none !important; }
+/* end */
 .lr-check input, .lr-radio input { accent-color: var(--accent); }
