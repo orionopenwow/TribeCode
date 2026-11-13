@@ -98,7 +98,7 @@ Built in-house (the differentiators): proposal + approval board, drift radar, vi
 
 ## UI direction
 
-Rounded frosted-glass window: 64 px icon rail · 248 px sidebar (projects, workspace shortcuts, huddles, *Invite friends*) · Notion-style canvas · 300 px room panel (presence + chat). See [`docs/screenshots/`](screenshots/) and [BRAND.md](BRAND.md).
+Rounded frosted-glass window: 64 px icon rail · 248 px sidebar (projects, workspace shortcuts, huddles, *Invite friends*) · Notion-style canvas · 300 px room panel (presence + chat). See [`docs/screenshots/`](../screenshots/) and [BRAND.md](../BRAND.md).
 
 ## Architecture
 

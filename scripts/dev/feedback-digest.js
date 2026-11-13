@@ -23,7 +23,7 @@ const gh = path => JSON.parse(execFileSync('gh', ['api', '-H', 'Accept: applicat
 // facet -> where it lives in the code and the usual first step
 const AREAS = {
   'Bug': { area: 'whatever the note names; reproduce first', step: 'Reproduce it, add a failing e2e check, fix, and reply with the version that has the fix.' },
-  'Idea': { area: 'docs/NEXT-PHASE plan', step: 'Group with similar ideas; if three or more people ask, plan it for the next release.' },
+  'Idea': { area: 'docs/archive/NEXT-PHASE plan', step: 'Group with similar ideas; if three or more people ask, plan it for the next release.' },
   'Company mode': { area: 'server/company.js, app/ui/company.js', step: 'Check it against the Companies plan phases; small wording or flow fixes can ship in the next patch.' },
   'Work and hiring': { area: 'server/talent.js, app/ui/talent.js', step: 'Check gigs, time bank and compute flows; confirm nothing personal is shared publicly by default.' },
   'Learn and Academy': { area: 'site/learn.html, templates/academy.json', step: 'Fix the lesson text or add the missing topic; keep the plain words.' },
