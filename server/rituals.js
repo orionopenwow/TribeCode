@@ -17,10 +17,14 @@ const KINDS = {
 };
 const REPEATS = ['weekdays', 'daily', 'weekly'];
 
-module.exports = function rituals({ store, docs, plan, postChat, broadcast, getMembers, nameOf, str }) {
+module.exports = function rituals({ store, docs, plan, postChat, broadcast, getMembers, nameOf, str, isLead = me => !!me && ['host', 'admin'].includes(me.role) }) {
   const FILE = '.tribe/rituals.json';
-  const load = () => { const d = store.readJSON(FILE, {}); return { runs: Array.isArray(d.runs) ? d.runs : [] }; };
-  const saveAll = d => store.writeJSON(FILE, { runs: d.runs.slice(-60) });
+  const load = () => { const d = store.readJSON(FILE, {}); return { runs: Array.isArray(d.runs) ? d.runs : [], agents: d.agents === true }; };
+  const saveAll = d => { const cur = store.readJSON(FILE, {}) || {}; store.writeJSON(FILE, { ...cur, runs: d.runs.slice(-60) }); };
+  // harden: agents start company rituals (a run now, or a ritual on the calendar) only when a lead turned it on for the project
+  const agentsAllowed = () => load().agents;
+  const mayStart = me => !me || me.role !== 'agent' || agentsAllowed();
+  const NO_AGENTS = 'Agents can\'t start rituals here. A lead can allow it with PUT /api/rituals/settings { agents: true }.';
   const err = (status, msg) => Object.assign(new Error(msg), { status });
   const iso = () => new Date().toISOString();
   const humans = () => getMembers().filter(m => m.role !== 'agent' && m.role !== 'spectator');
@@ -86,7 +90,9 @@ module.exports = function rituals({ store, docs, plan, postChat, broadcast, getM
       const key = lab && k.qs.some(q => q[0] === map[lab[1].toLowerCase()]) ? map[lab[1].toLowerCase()] : (k.qs[i] || [])[0];
       if (key) answers[key] = lab && key === map[lab[1].toLowerCase()] ? p.slice(lab[0].length) : p;
     });
-    const run = start(kind);
+    const today = load().runs.find(r => r.kind === kind && r.day === localDay(Date.now()));
+    if (!today && !mayStart(member)) { postChat(channel, 'tribecode', NO_AGENTS); return true; }   // harden: an agent answers a run, it doesn't start one
+    const run = today || start(kind);
     try { answer(run.id, { answers }, member); } catch (e) { postChat(channel, 'tribecode', e.message); }
     return true;
   }
@@ -96,8 +102,15 @@ module.exports = function rituals({ store, docs, plan, postChat, broadcast, getM
   async function route(req, res, { m, b, c, parts, me, readBody, send, fail }) {
     if (!me) return fail(res, 401, 'not a member');
     try {
-      if (!b && m === 'GET') return send(res, 200, { events: plan.all().filter(e => e.ritual), runs: load().runs.slice(-14).reverse().map(view), kinds: Object.entries(KINDS).map(([id, k]) => ({ id, title: k.title, questions: k.qs.map(([key, q]) => ({ key, q })) })) });
+      if (b === 'settings' && m === 'GET') return send(res, 200, { agents: agentsAllowed(), canEdit: isLead(me) });
+      if (b === 'settings' && m === 'PUT') {
+        if (!isLead(me) || me.role === 'agent') return fail(res, 403, 'only a lead decides whether agents may start rituals');
+        const body = await readBody(req) || {}, cur = store.readJSON(FILE, {}) || {}; cur.agents = body.agents === true; store.writeJSON(FILE, cur);
+        return send(res, 200, { agents: cur.agents, canEdit: true });
+      }
+      if (!b && m === 'GET') return send(res, 200, { agentsAllowed: agentsAllowed(), events: plan.all().filter(e => e.ritual), runs: load().runs.slice(-14).reverse().map(view), kinds: Object.entries(KINDS).map(([id, k]) => ({ id, title: k.title, questions: k.qs.map(([key, q]) => ({ key, q })) })) });
       if (me.role === 'spectator') return fail(res, 403, 'spectators are read-only');
+      if (((!b && m === 'POST') || (b === 'run' && m === 'POST')) && !mayStart(me)) return fail(res, 403, NO_AGENTS);
       if (!b && m === 'POST') {
         const body = await readBody(req) || {}, kind = String(body.kind || '');
         if (!KINDS[kind]) return fail(res, 400, 'unknown ritual');
@@ -110,5 +123,5 @@ module.exports = function rituals({ store, docs, plan, postChat, broadcast, getM
       return fail(res, 404, 'no such rituals route');
     } catch (e) { return fail(res, e.status || 500, e.message); }
   }
-  return { route, start, answer, onCommand, KINDS };
+  return { route, start, answer, onCommand, KINDS, mayStart, NO_AGENTS };
 };

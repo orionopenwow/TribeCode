@@ -515,7 +515,8 @@ huddleSum.setSink(x => captures.fromHuddle(x));
 captureHook = (...x) => captures.onChat(...x);
 const voice = makeVoice({ canSeeHuddle: me => !huddleProject || P.canSee(me, huddleProject), store, id, str, huddle, sendTo, broadcast, postChat, createTask: o => createTask(o), getMembers: () => members, nameOf, brain, docs, bus, P, summary: huddleSum });
 const plan = makePlan({ store, id, str, broadcast, postChat, getMembers: () => members, loadTasks: () => loadTasks(), nameOf });
-rituals = require('./rituals')({ store, docs, plan, postChat, broadcast, getMembers: () => members, nameOf, str });   // feat/work-company: standup/retro rituals on the calendar
+rituals = require('./rituals')({ store, docs, plan, postChat, broadcast, getMembers: () => members, nameOf, str, isLead: me => taskFlow.isLead(me) });
+plan.guardRitual(me => rituals.mayStart(me), rituals.NO_AGENTS);   // harden: agents start rituals only when a lead allowed it   // feat/work-company: standup/retro rituals on the calendar
 const docsx = makeDocsX({ store, id, str, slug, broadcast, docs, getMembers: () => members, nameOf });
 const visuals = makeVisuals({ store, slug, str, broadcast, nameOf });
 const thumb = require('./thumb')({ P, visuals });
