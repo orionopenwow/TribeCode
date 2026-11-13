@@ -707,11 +707,117 @@
     return null;
   }
 
+  // ---------- feat/flint-max: design intelligence, copy, sheets, docs and slides with no model ----------
+  // The doing lives in app/ui/flintmax.js (palettes, type pairs, style moves, copy helpers, sheet/doc/slide ops); this
+  // only reads what people mean. Views: site (website designer), canvas, sheet, doc, deck (ctx.view), else anywhere.
+  let FMX = null;
+  const FM = () => FMX || (FMX = (typeof module === 'object' && module.exports) ? require('./flintmax.js') : (typeof self !== 'undefined' && self.TribeFlintMax) || null);
+  const NUMX = { one: 1, two: 2, three: 3, four: 4, five: 5, six: 6, seven: 7, eight: 8, nine: 9, ten: 10, a: 1, single: 1 };
+  const numOf = s => (s == null ? 0 : /^\d+$/.test(s) ? +s : NUMX[String(s).toLowerCase()] || 0);
+  const FONT_WORDS = [['luxury', 'luxur\\w*|premium|high end|upscale|expensive'], ['elegant', 'elegant|classy|sophisticated|refined|fancy|chic'], ['friendly', 'friendly|approachable|warm|welcoming'],
+    ['playful', 'playful|fun|bubbly|quirky|kids|cute'], ['professional', 'professional|corporate|business|serious|trustworthy'], ['techy', 'developer|hacker|coder|code|terminal'], ['modern', 'modern|tech|techy|startup|saas|futuristic|sleek'],
+    ['minimal', 'minimal|clean|simple|neutral|plain'], ['retro', 'retro|vintage|8 bit|arcade|gaming'], ['bookish', 'bookish|literary|cozy|cosy|blog|bakery|cafe'], ['classic', 'classic|timeless|traditional|heritage'], ['bold', 'bold|loud|punchy']];
+  const fontWord = c => { for (const [k, w] of FONT_WORDS) if (new RegExp(`\\b(?:${w})\\b`).test(c)) return k; return ''; };
+  const STYLE_W = [['professional', 'professional|corporate|businesslike|business like|serious|trustworthy|polished|grown up|formal'], ['elegant', 'elegant|classy|sophisticated|refined|fancy|chic'], ['friendly', 'friendly|friendlier|approachable|welcoming|human|cozy|cosy|warmer'],
+    ['brutalist', 'brutalist|brutal|brutalism|raw'], ['techy', 'techy|futuristic|high tech|hi tech|startupy'], ['luxury', 'luxury|luxurious|premium|high end|upscale|expensive'], ['retro', 'retro|vintage|old school|groovy'], ['calm', 'calm|zen|peaceful|serene|airy|relaxed'], ['modern', 'modern|contemporary|sleek|fresh']];
+  const styleWord = c => { for (const [k, w] of STYLE_W) if (new RegExp(`\\b(?:${w})\\b`).test(c)) return k; return ''; };
+  const HEX = /#[0-9a-f]{3}(?:[0-9a-f]{3})?\b/i;
+  function sheetCol(c, r) {
+    let m = /\bcol(?:umn)?\s+([a-z]{1,2})\b(?!\s+(?:column|row))/i.exec(r); if (m && !/^(?:of|in|is|by|to|as|at|on)$/i.test(m[1])) return m[1].toUpperCase();
+    m = /\b(?:the|my)\s+([a-z][a-z ]{1,24}?)\s+col(?:umn)?s?\b/i.exec(r); if (m && !/^(?:this|that|last|first|next|whole)$/i.test(m[1])) return m[1].toLowerCase();
+    m = /\b(?:add up|sum up|tally up|total up|sum|total|average|avg)\s+(?:of\s+)?(?:the\s+|all\s+(?:the\s+)?)([a-z][a-z ]{1,24}?)(?:\s+column)?$/i.exec(r); if (m && !/^(?:this|it|them|column)$/i.test(m[1].trim())) return m[1].trim().toLowerCase();
+    m = /\b(?:of|for)\s+(?:the\s+|all\s+(?:the\s+)?)?([a-z][a-z ]{1,24}?)(?:\s+column)?(?:\s+by\b|$|[?.,])/i.exec(r); if (m && !/^(?:this|it|them|that|these|everything|column|the column|rows?)$/i.test(m[1].trim())) return m[1].trim().toLowerCase();
+    return '';
+  }
+  function maxNew(c, r, ctx, hit, view) {
+    const F = FM(); if (!F) return null;
+    const H = (intent, slots, conf) => hit(intent, slots || {}, conf || 0.986), v = ctx.view, rl = r.toLowerCase();
+    const DO = /\b(?:make|turn|give|use|apply|try|pick|choose|set|switch|change|build|create|generate|show|want|need|get|suggest|find|do|add|put|could|can|recolor|recolour|paint)\b/;
+    const PAL = /\b(?:palette|palettes|color scheme|colour scheme|colors? scheme|scheme|color palette|colors? (?:inspired by|like|from|based on|around|for)|colou?rs? (?:inspired by|like|based on|around|for))\b/;
+    const mood = F.moodOf(c), hex = (HEX.exec(r) || [])[0];
+    // ---- sheets ----
+    if (v === 'sheet') {
+      if (/\b(?:chart|charts|graph|plot|visuali[sz]e|bar chart|line chart|diagram)\b/.test(c) && !/\b(?:remove|delete|no)\b/.test(c)) { const m = /\b(?:of|for|showing)\s+(?:the\s+)?([a-z][a-z ]*?)\s+(?:by|per|over|across)\s+(?:the\s+)?([a-z]+)/i.exec(r); return H('sheet.chart', { ...(m ? { y: m[1].toLowerCase(), x: m[2].toLowerCase() } : {}), type: /\bline\b/.test(c) ? 'line' : 'bar' }); }
+      if (/\b(?:total|totals|sum)\s+row\b|\bsums? at the bottom\b|\btotals?\s+(?:at|on)\s+the\s+bottom\b|^add\s+(?:a\s+|the\s+)?totals?$|\b(?:add|put|insert|need|want)\b.*\btotals?\b(?!\s+(?:up|of|for))/.test(c) && !/\bcolumn\b/.test(c)) return H('sheet.total', {});
+      if (/\b(?:sort|sorted|order|reorder|arrange|rank)\b/.test(c) && /\b(?:by|from|a to z|z to a|alphabetical|alphabetically|ascending|descending|highest|lowest|biggest|smallest|newest|oldest|it|rows|them)\b/.test(c)) {
+        const m = /\bby\s+(?:the\s+)?([a-z][a-z ]*?)(?:\s+(?:column|newest|oldest|highest|lowest|biggest|smallest|ascending|descending|first|a to z|z to a|desc|asc))?(?:[,.]|\s*$|\s+(?:newest|oldest|highest|lowest|biggest|smallest|ascending|descending|a to z|z to a))/i.exec(r);
+        const dir = /\b(?:desc|descending|newest|latest|highest|biggest|largest|most|z to a|reverse|top first|big to small|high to low)\b/.test(c) ? 'desc' : 'asc';
+        return H('sheet.sort', { dir, ...(m && !/^(?:it|them|this)$/i.test(m[1].trim()) ? { col: m[1].trim().toLowerCase() } : {}) });
+      }
+      if (/\b(?:currency|dollars?|euros?|pounds?|money|usd|eur|gbp|yen|prices?|percent|percentage|percentages)\b|\$|€|£/.test(rl) && /\b(?:format|show|display|as|make|turn|into|in|use|currency|style)\b/.test(c) && !/\b(?:sum|total|average|chart|sort)\b/.test(c)) {
+        const pct = /\b(?:percent|percentage|percentages|%)\b/.test(rl), sym = /\beuros?\b|€|\beur\b/.test(rl) ? '€' : /\bpounds?\b|£|\bgbp\b/.test(rl) ? '£' : /\byen\b|¥/.test(rl) ? '¥' : '$';
+        return H('sheet.format', { fmt: pct ? 'percent' : 'currency', sym, ...(sheetCol(c, r) ? { col: sheetCol(c, r) } : {}) });
+      }
+      const fn = /\b(?:average|avg|mean)\b/.test(c) ? 'average' : /\b(?:min|minimum|lowest|smallest)\b/.test(c) ? 'min' : /\b(?:max|maximum|highest|biggest|largest)\b/.test(c) ? 'max' : /\b(?:count|how many)\b/.test(c) ? 'count' : /\b(?:sum|total|totals|add up|tally|add together)\b/.test(c) ? 'sum' : '';
+      if (fn) { const col = sheetCol(c, r); return H('sheet.sum', { fn, ...(col ? { col } : {}) }); }
+    }
+    // ---- docs ----
+    if (v === 'doc') {
+      if (/\b(?:table of contents|toc|contents)\b/.test(c)) return H('doc.toc', {});
+      if (/\b(?:checklist|check list|checkboxes|checkbox|check boxes|tick boxes|to do list|todo list|todos)\b/.test(c)) return H('doc.checklist', {});
+      if (/\b(?:readab\w*|reading level|grade level|flesch|(?:hard|easy) (?:is (?:this|it) )?to read|how (?:hard|easy) is (?:this|it) to read)\b/.test(c)) return H('doc.readability', {});
+      if (/\b(?:capitali[sz]\w*|caps|capital letters|title case|sentence case|uppercase the)\b/.test(c)) return H('doc.caps', { mode: /\btitle case\b/.test(c) ? 'title' : 'sentence' });
+      if (/\b(?:summari[sz]e|summary|tldr|tl dr|sum (?:it|this) up|gist|recap)\b/.test(c)) return H('doc.summary', {});
+    }
+    // ---- slides: a pitch from a doc, the vision or the readme (here, in the deck, or anywhere) ----
+    {
+      const slideW = /\b(?:pitch|deck|slides|slide|presentation|keynote|slideshow)\b/;
+      const from = /\b(?:from|out of|based on|using)\s+(?:the\s+|our\s+|my\s+|this\s+)?([a-z][\w .-]*?)(?:\s+(?:doc|document|file|page|notes))?(?:\s*,|\s+with\b|$)/i.exec(r) || /\bturn\s+(?:the\s+|our\s+|my\s+|this\s+)?([a-z][\w .-]*?)\s+(?:doc\s+|document\s+)?into\s+(?:a\s+)?(?:pitch|deck|slides|presentation)/i.exec(r);
+      if (slideW.test(c) && from && (v === 'deck' || /\b(?:make|create|build|turn|generate|draft|give|do)\b/.test(c))) {
+        const nm = /\b(\d+|three|four|five|six|seven|eight|nine|ten)[ -]?slides?\b/i.exec(r) || /\bslides?\s*[:=]?\s*(\d+)\b|,\s*(\d+)\s+slides\b/i.exec(r);
+        const n = nm ? numOf(nm[1] || nm[2]) : 0, src = from ? from[1].trim().toLowerCase().replace(/\s+\d+\s+slides?$/, '') : '';
+        if (src || /\bpitch\b/.test(c)) return H('deck.pitch', { ...(n ? { n } : {}), ...(src && !/^(?:this|it)$/.test(src) ? { from: src } : v === 'doc' || v === 'deck' ? { from: 'this' } : {}) }, 0.975);
+      }
+    }
+    // ---- the website designer ----
+    if (view === 'site') {
+      if (PAL.test(c) || (/\bcolou?rs?\b/.test(c) && mood && DO.test(c)) || (/^(?:a\s+)?(?:\w+\s+){0,2}(?:palette|colou?r scheme)$/.test(c))) return H('site.palette', { ...(mood ? { mood } : {}), ...(hex ? { color: { name: '', hex: hex.toLowerCase() } } : {}) });
+      if (/\b(?:fonts?|typefaces?|type pairing|font pairing|typography)\b/.test(c) && !/\b(?:fraunces|grotesk|inter|jetbrains|silkscreen|bricolage|instrument|serif|sans|mono|monospace|bigger|smaller|size)\b/.test(c) && fontWord(c) && !/\b(?:pixel|different|another|other)\b/.test(c)) return H('site.fontpair', { mood: fontWord(c) || 'modern' });
+      if (/\b(?:contrast|accessib\w*|wcag|a11y|legib\w*|colorblind)\b/.test(c) || /\b(?:easier|hard|harder|easy) to read on\b|\bread(?:able)? (?:on|against) (?:the|that|this) background\b/.test(c)) return H('site.contrast', {});
+      if (/\b(?:readab\w*|reading level|grade level|flesch)\b/.test(c) || /\bhow (?:hard|easy) is (?:it|this|the (?:page|site|copy|text)) to read\b|\b(?:hard|easy) to read\b/.test(c)) return H('site.readability', {});
+      if (/\b(?:title case|capitali[sz]\w*|caps)\b/.test(c)) return H('site.titlecase', {});
+      if (/\b(?:headlines?|titles?|taglines?)\b/.test(c) && /\b(?:ideas?|options?|alternatives?|alternative|variants?|variations?|suggest\w*|some|few|other|another|different|brainstorm)\b/.test(c) && !/\b(?:change|set|rename|to say|should say|make the)\b/.test(c)) return H('site.headlines', {});
+      if (/\bwhat should (?:my|the|this|our) (?:button|cta|call to action) say\b|\b(?:call to action|cta|button text|button copy|button words?)\b.*\b(?:ideas?|options?|suggest\w*|better|alternatives?)\b|\b(?:suggest|better|ideas? for)\b.*\b(?:call to action|cta|button text)\b/.test(c)) return H('site.cta', {});
+      let m;
+      if ((m = /\b(\d|one|two|three|four|five|single)\s+(?:plans?|tiers?|options?|packages?|columns?|levels?)\b/.exec(c)) && /\b(?:pricing|prices?|price|plans?|tiers?|packages?)\b/.test(c) && !/\b(?:highlight|feature)\b/.test(c) && !/[$€£]\s?\d/.test(r)) return H('site.price.plans', { n: numOf(m[1]) });
+      if ((/\b(?:highlight\w*|featured|emphasi[sz]e|stand out|pop|recommended|most popular|spotlight)\b/.test(c) || /\bfeature (?:the|that|this|our)\b/.test(c)) && !/\b(?:called|named|titled)\b/.test(c) && /\b(?:plan|tier|one|package|option|middle|pro|basic|starter|team|free|business|premium)\b/.test(c) && !/\bsection\b(?!.*\bplan)/.test(c)) {
+        const w = /\b(middle|center|centre|first|second|third|last)\b/.exec(c) || /\b(?:the\s+)?([a-z]+)\s+(?:plan|tier|package|option)\b/.exec(c);
+        const which = w ? (w[1] === 'centre' || w[1] === 'center' ? 'middle' : w[1]) : 'middle';
+        return H('site.price.highlight', { which: /^(?:this|that|one|the)$/.test(which) ? 'middle' : which });
+      }
+      if ((m = /^(?:(?:now\s+|and\s+|ok\s+)?(?:do\s+)?(?:the\s+)?same(?:\s+thing|\s+again)?|do (?:that|it|this)(?: again)?|repeat (?:that|it|this))\s+(?:on|for|to|in|with)\s+(?:the\s+|my\s+)?([a-z][a-z ]*?)(?:\s+page)?(?:\s+too)?$/.exec(c))) return H('site.same', { page: m[1] });
+      if (/^(?:make\s+)?(?:it|this|that|this section|the section)\s+(?:a\s+(?:bit|little|lot)\s+|much\s+)?(?:bigger|larger|smaller|tinier)(?:\s+please)?$|^(?:bigger|smaller|larger)(?:\s+please)?$|^make\s+(?:it|this|that)\s+(?:a\s+(?:bit|little|lot)\s+)?(?:bigger|larger|smaller)\b/.test(c)) return H('site.size', { dir: /\b(?:smaller|tinier)\b/.test(c) ? 'smaller' : 'bigger' });
+      if (/\b(?:tidy|tidy up|neaten|clean up the (?:spacing|layout)|fix the (?:spacing|layout|alignment)|even (?:out|up) the spacing|messy|cluttered|^align everything$|^line everything up$|balanced|consistent spacing|spacing rhythm|sort it out)\b/.test(c) && !/\b(?:text|words|copy)\b/.test(c)) return H('site.tidy', {});
+      const st = styleWord(c);
+      if (st && (/\b(?:more|less|feel|look|vibe|style|make|give|go|bit)\b/.test(c) || c.split(' ').length <= 3) && !/\b(?:fonts?|palette|colou?rs?|text|words|copy|wording|tone|headline|tagline|button)\b/.test(c)) return H('site.style', { style: st });
+    }
+    // ---- the design canvas ----
+    if (view === 'canvas') {
+      if (PAL.test(c) || /\b(?:recolou?r|repaint)\b/.test(c) && (mood || hex)) return H('canvas.palette', { ...(mood ? { mood } : {}), ...(hex ? { color: { name: '', hex: hex.toLowerCase() } } : {}) });
+      const K = [['cardgrid', 'card grid|grid of cards|cards grid|card layout|grid of card|cards'], ['navbar', 'nav bar|navbar|navigation bar|navigation|top bar|header bar|menu bar|top nav|header'], ['footer', 'footer'], ['sidebar', 'sidebar|side bar|side menu|side nav'],
+        ['tabbar', 'tab bar|tabbar|bottom nav|bottom navigation|bottom bar'], ['modal', 'modal|dialog|popup|pop up|confirm box'], ['form', 'sign up form|signup form|registration form|contact form|form'], ['hero', 'hero section|hero']];
+      if (/\b(?:add|put|insert|drop|make|create|turn|give|place|stick|throw|need|want|build|draw|convert|arrange)\b/.test(c) && !/\b(?:screen|page|website|site)\b(?!.*\b(?:top|bottom)\b)/.test(c.replace(/\bto the screen\b|\bon the screen\b/, ''))) {
+        for (const [k, w] of K) if (new RegExp(`\\b(?:${w})\\b`).test(c)) return H('canvas.recipe', { kind: k, ...(k === 'cardgrid' && ctx.selection && /\b(?:this|these|them|those|it)\b/.test(c) ? { from: 'selection' } : {}) });
+      }
+    }
+    // ---- anywhere ----
+    if (!view && !/^(?:sheet|doc|deck)$/.test(v || '')) {
+      let m;
+      if (PAL.test(c) && (mood || hex || /\b(?:show|make|give|generate|suggest|need|want|create)\b/.test(c))) return H('design.palette', { ...(mood ? { mood } : {}), ...(hex ? { color: { name: '', hex: hex.toLowerCase() } } : {}), text: r }, 0.975);
+      if (/\b(?:fonts?|typefaces?)\b/.test(c) && /\b(?:pair|pairs|pairing|go (?:well )?together|match|for (?:a|an|my|our)|that (?:feel|look)|feel|look)\b/.test(c)) return H('design.fonts', { mood: fontWord(c) || 'modern', text: r }, 0.975);
+      if ((m = /^(?:title ?case|capitali[sz]e)(?:\s+(?:this|these|the words|it))?\s*:?\s+(.+)$/i.exec(r))) return H('copy.titlecase', { text: m[1].trim() }, 0.975);
+      if ((m = /\bheadlines?\s+(?:ideas?|options?)?\s*(?:for|about)\s+(?:a\s+|an\s+|my\s+|our\s+)?(.+)$/i.exec(r)) || (m = /\b(?:ideas?|options?)\s+for\s+(?:a\s+)?headlines?\s+(?:for|about)\s+(?:a\s+|an\s+|my\s+|our\s+)?(.+)$/i.exec(r))) return H('copy.headlines', { about: m[1].replace(/[?.!]+$/, '').trim() }, 0.975);
+      if ((m = /\b(?:call to action|cta|button text)\s+(?:ideas?|options?)?\s*for\s+(?:a\s+|an\s+|my\s+|our\s+)?(.+)$/i.exec(r))) return H('copy.cta', { about: m[1].replace(/[?.!]+$/, '').trim() }, 0.975);
+      if ((m = /^(?:how readable is|readability (?:of|score for|check)|check (?:the )?readability of)\s*:?\s+(.{12,})$/i.exec(r))) return H('copy.readability', { text: m[1].trim() }, 0.975);
+    }
+    return null;
+  }
   function design(c, raw, ctx) {
     const view = ctx.view === 'canvas' ? 'canvas' : (ctx.view === 'site' || (ctx.view === 'preview' && ctx.site)) ? 'site' : '';
     const out = [], hit = (intent, slots, conf) => { out.push({ intent, area: intent === 'lesson' ? 'help' : intent.startsWith('canvas.') ? 'canvas' : 'build', slots: slots || {}, conf: conf || (view === 'canvas' ? 0.98 : 0.97), req: {}, label: '' }); return out; };
     const r = String(raw || '').trim(), rl = r.toLowerCase();
     const lf = lessonOf(c); if (lf) return hit('lesson', { feature: lf }, 0.97);
+    { const z = maxNew(c, r, ctx, hit, view); if (z) return z; }   // feat/flint-max
     const IMG = /\b(?:image|images|picture|pictures|photo|photos|avatar|img|headshot|portrait|cover|pfp)\b/;
     if (view) {
       const cv = view === 'canvas';
@@ -902,6 +1008,12 @@
   // feat/flint-unify: words the new site and canvas commands read (so spelling tolerance never "fixes" them away)
   'trailer trailers swap swaps dupe dup ungroup unlock unhide distribute evenly lock freeze rectangle rect ellipse oval circle artboard placeholder snap grid zoom resize width height wide tall twice halve front back forward backward behind underneath instagram insta tiktok youtube spotify twitter github linkedin facebook twitch soundcloud bandcamp pinterest threads bluesky mastodon discord patreon substack kofi behance dribbble snapchat whatsapp telegram vimeo etsy social socials icon icons handle email phone call map directions address countdown copyright footer announcement banner bio menu nav navigation navbar align alignment justify corners rounder rounding radius sharper language logo testimonial quote review plan tier package team stat metric feature perk dish drink episode gig tour faq question clear empty wipe timer animations motion notifications notifs mute unmute snooze pin unpin react thumbs heart reopen unassign priority urgent prioritize whiteboard inspiration inspo template templates marketplace gigs away offline invisible afk brb sounds'.split(' ').forEach(w => { VOCAB.add(w); KEEP.add(w); });
   'noon midnight morning afternoon evening night tonight weekend week weeks month months day days hour hours minute minutes mins today tomorrow eod eow sept'.split(' ').forEach(w => { VOCAB.add(w); KEEP.add(w); });
+  // feat/flint-max: design, copy, sheet, doc and slide words (kept, and typos of them corrected toward them)
+  ('palette palettes scheme colours colors colour color mood vibe vibes brutalist brutal brutalism corporate professional elegant classy luxury luxurious premium friendly techy retro vintage calm zen modern autumn sunset ocean forest earthy desert coffee pastel candy '
+    + 'spring summer winter nordic lavender berry mint neon cyberpunk midnight cozy cosy contrast accessible accessibility wcag readable readability legible tidy messy spacing balanced neaten headline headlines '
+    + 'tagline taglines cta ctas capitalize capitalise capitalization capitalisation caps titlecase pricing tiers tier plans highlight highlighted feature featured popular recommended navbar sidebar tabbar '
+    + 'footer hero modal dialog popup card cards grid form signup recolor recolour chart charts graph plot sort sorted order currency dollars dollar euros euro pounds percent percentage total totals '
+    + 'reading brainstorm titles title friendlier hard easy harder easier average avg mean minimum maximum column columns row rows contents checklist checkboxes checkbox tldr summary summarize summarise pitch deck presentation slides slide vision readme fonts font pair pairing pairs typeface typefaces').split(' ').forEach(w => { VOCAB.add(w); KEEP.add(w); });
 
   // ---------- TF-IDF (examples for "did you mean", taught phrases, and the knowledge base) ----------
   function feats(s) {
@@ -927,9 +1039,9 @@
   const EXIDX = index(CAT.flatMap(x => x.ex.map(e => ({ id: x.id, text: e }))));
 
   // ---------- split a message into steps ----------
-  const VERBS = 'add|make|build|create|tell|message|ping|text|dm|send|open|show|schedule|book|set|switch|change|invite|publish|ship|start|mark|assign|give|remind|post|announce|write|draft|turn|put|move|note|jot|delete|rename|export|reload|find|let';
+  const VERBS = 'tidy|fix|sort(?! it out| out| that out| this out)|pick|highlight|summarize|summarise|apply|recolor|format|add|make|build|create|tell|message|ping|text|dm|send|open|show|schedule|book|set|switch|change|invite|publish|ship|start|mark|assign|give|remind|post|announce|write|draft|turn|put|move|note|jot|delete|rename|export|reload|find|let';
   function split(raw) {
-    let s = String(raw || '').trim().replace(/[.!?]+$/, '').replace(/^(?:(?:hey|hi|ok|okay|yo|so)\s*,?\s*)?(?:flint\s*[,:]\s*|flint\s+(?=\p{L}))?/iu, '').replace(/^(?:hey|ok|okay|so|um)\s*,\s*/i, '');
+    let s = String(raw || '').trim().replace(/[.!?]+$/, '').replace(/^(?:(?:hey|hi|ok|okay|yo|so)\b\s*,?\s*)?(?:flint\s*[,:]\s*|flint\s+(?=\p{L}))?/iu, '').replace(/^(?:hey|ok|okay|so|um)\s*,\s*/i, '');
     if (/\b(?:when(?:ever)?|if)\s+i\s+say\b|\bi\s+meant\b/i.test(s)) return [s];
     const parts = s.split(new RegExp(`\\s*(?:[;\\n]+|,?\\s+(?:and\\s+then|then|after that|afterwards|and also|also|plus)\\s+|\\.\\s+(?=\\p{L})|,\\s*(?=(?:${VERBS})\\b))\\s*`, 'iu')).map(x => x.trim()).filter(Boolean);
     const out = [];
