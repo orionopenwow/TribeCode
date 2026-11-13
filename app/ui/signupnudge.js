@@ -33,7 +33,7 @@
 
   // ---------- who is this ----------
   // the sign-in really saved on this device (a demo never rewrites it: offline.js)
-  const saved = () => { try { return JSON.parse(lsGet('tribecode.settings.v1') || '{}') || {}; } catch { return {}; } };
+  const saved = () => { try { const k = 'tribecode.settings.v1'; return JSON.parse((O() && O().saved ? O().saved(k) : lsGet(k)) || '{}') || {}; } catch { return {}; } };   // the tour masks it from ordinary reads
   const realKey = () => { const s = saved().server || {}; return s.token && s.token !== 'offline-demo' ? s : null; };
   const acctMode = () => { try { return (JSON.parse(lsGet('tribecode.accounts.v1') || '{}') || {}).mode || ''; } catch { return ''; } };
   const inDemo = () => !!(O() && O().active && O().active() && !(O().solo && O().solo()));
@@ -44,9 +44,9 @@
   }
   function blocked() {
     if (navigator.webdriver && !forced()) return 'test';
+    if (signedIn()) return 'signed-in';
     if (ssGet(SHOWN)) return 'shown';
     if (Number(lsGet(SNOOZE)) > Date.now()) return 'snoozed';
-    if (signedIn()) return 'signed-in';
     return '';
   }
   // the tour is playing, another demo is on, or a sheet is open: wait
@@ -157,8 +157,12 @@
   }
   function run(k, p) {
     const toast = m => window.TribeApp && window.TribeApp.toast && window.TribeApp.toast(m);
-    if (k === 'create') { if (window.TribeSignup) window.TribeSignup.open('create', realKey() || acctMode() === 'guest' ? { upgrade: 'demo' } : {}); }
-    else if (k === 'oauth' && OA()) OA().begin(p, linkMode()).catch(e => { toast(e.message); if (window.TribeSignup) window.TribeSignup.open('start'); });
+    if (k === 'create') { if (window.TribeSignup) window.TribeSignup.open('create', realKey() || acctMode() === 'guest' || (A() && A().upgradable && A().upgradable()) ? { upgrade: 'demo' } : {}); }
+    else if (k === 'oauth' && OA()) {
+      const mode = linkMode();
+      if (mode === 'signin') { try { const a = JSON.parse(lsGet('tribecode.accounts.v1') || '{}') || {}; a.mode = 'signedin'; lsSet('tribecode.accounts.v1', JSON.stringify(a)); } catch {} }   // like signup.js: the key it brings back signs this device in
+      OA().begin(p, mode).catch(e => { toast(e.message); if (window.TribeSignup) window.TribeSignup.open('start'); });
+    }
     else if (k === 'guest') { if (acctMode() !== 'guest' && !realKey() && A()) A().guest(); else toast('You’re a guest on this device. Start a project whenever you like.'); }
     else if (k === 'login' && A()) A().login();
     else if (k === 'host') {
