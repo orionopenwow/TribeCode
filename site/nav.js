@@ -28,7 +28,6 @@
   const ITEMS = [
     ['Build', [
       ['make', '#make', 'What you can make', 'Games, sites and tools for the people around you', '#F26B1D'],
-      ['gallery', '#gallery', 'Made with TribeCode', 'Real apps, sites, docs and designs to start from', '#E86A92'],
       ['kit', '#kit', 'The whole studio', 'Docs, widgets, studios and assets in one app', '#38C6B1'],
       ['starters', '#starters', 'Starters', 'Working first versions to play with and remix', '#FABD2F'],
     ]],
