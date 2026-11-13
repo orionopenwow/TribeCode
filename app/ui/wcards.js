@@ -30,7 +30,7 @@
     ritual: { label: 'Next standup', icon: 'timer', cat: 'Plan', blurb: 'Countdown to the next ritual', live: ['event', 'event-removed', 'ritual'] },
     countdown: { label: 'Countdown', icon: 'calendar', cat: 'Plan', blurb: 'Days left until a date', multi: 1, own: 1, home: 1 },
     checklist: { label: 'Checklist', icon: 'checklist', cat: 'Plan', blurb: 'A short shared list to tick off', multi: 1, own: 1, home: 1 },
-    build: { label: 'Build status', icon: 'bolt', cat: 'Build', blurb: 'Passing or failing, from agents and CI', live: ['dashband'] },
+    build: { label: 'Build status', icon: 'bolt', cat: 'Build', blurb: 'Passing or failing: real checks, agents and CI', live: ['dashband', 'checks'] },
     ship: { label: 'Ship & sync', icon: 'git', cat: 'Build', blurb: 'Saved changes not shipped yet', live: ['ship', 'repo'] },
     thumb: { label: 'Preview', icon: 'preview', cat: 'Build', blurb: 'A picture of the running app', live: ['visual', 'preview'] },
     sitestatus: { label: 'Website status', icon: 'globe', cat: 'Build', blurb: 'Draft or built, with comments', live: ['website', 'site-comments', 'publish'] },
@@ -72,8 +72,8 @@
     },
     async ritual() { const r = await api('/calendar/upcoming?n=20'); return (r.items || []).find(x => x.kind === 'event' && x.ritual) || null; },
     async build() {
-      const [b, c] = await Promise.all([api('/dash/band'), api('/dash/criticals').catch(() => ({ items: [] }))]);
-      return { sig: ((b.band || {}).signals) || {}, fail: (c.items || []).filter(x => x.kind === 'build') };
+      const [b, c, k] = await Promise.all([api('/dash/band'), api('/dash/criticals').catch(() => ({ items: [] })), api('/checks').catch(() => null)]);
+      return { sig: ((b.band || {}).signals) || {}, fail: (c.items || []).filter(x => x.k === 'build'), checks: k };
     },
     async ship() { return api('/ship'); },
     async thumb() { return (await api('/thumb?prefer=shot')).thumb || null; },
@@ -115,10 +115,18 @@
       return `<div class="wgc-big"><b class="wgc-num" data-wgc-until="${at}">${esc(span(at - Date.now()))}</b><span class="wgc-txt">${esc(d.title)}</span><small class="wgc-sub">${esc(new Date(at).toLocaleString([], { weekday: 'short', hour: 'numeric', minute: '2-digit' }))}</small></div>`;
     },
     build(d) {
-      const b = d.sig.build, p = d.sig.preview, fail = d.fail[0];
-      if (!b && !p && !fail) return empty('No builds reported yet. Agents report them as they work.', 'preview', 'Run the preview');
+      const b = d.sig.build, p = d.sig.preview, fail = d.fail[0], k = d.checks, last = k && k.last, mine = b && b.source === 'checks';
+      const dur = ms => (ms < 1000 ? `${ms} ms` : ms < 60000 ? `${Math.round(ms / 100) / 10} s` : `${Math.floor(ms / 60000)}m ${Math.round((ms % 60000) / 1000)}s`);
       const row = (name, s) => s ? `<li><i class="wgc-state ${s.ok ? 'ok' : 'bad'}" aria-hidden="true"></i><span class="wgc-txt">${esc(name)}: ${s.ok ? 'passing' : 'failing'}</span><small class="wgc-sub">${esc(ago(s.at))}</small></li>${s.text ? `<li class="wgc-why"><small class="wgc-sub" title="${esc(s.text)}">${esc(s.text)}</small></li>` : ''}` : '';
-      return `<ul class="wgc-list">${row('Build', b)}${row('Preview', p)}${fail && !(b && b.ok === false) ? `<li><i class="wgc-state bad" aria-hidden="true"></i><span class="wgc-txt">${esc(fail.title)}</span></li>` : ''}</ul>`;
+      // the host's own checks (server/checks.js): pass or fail, how long, and the lines that failed
+      let ck = '';
+      if (k && k.running) ck = `<li data-wgc-checks="running"><i class="wgc-state warn" aria-hidden="true"></i><span class="wgc-txt">Checks: running…</span><small class="wgc-sub">${esc(k.what.label || '')}</small></li>`;
+      else if (last) ck = `<li data-wgc-checks="${esc(last.state)}"><i class="wgc-state ${last.ok ? 'ok' : 'bad'}" aria-hidden="true"></i><span class="wgc-txt">Checks: ${last.ok ? 'passing' : last.state === 'timeout' ? 'timed out' : 'failing'}</span><small class="wgc-sub" title="${esc(last.label || '')} · ${esc(ago(last.at))}">${esc(dur(last.ms || 0))}</small></li>${!last.ok && (last.lines || []).length ? `<li class="wgc-why wgc-lines"><ul>${last.lines.slice(0, 4).map(l => `<li title="${esc(l)}">${esc(l)}</li>`).join('')}</ul></li>` : ''}`;
+      const gh = k && k.github ? `<li><i class="wgc-state ${k.github.state === 'pass' ? 'ok' : k.github.state === 'fail' ? 'bad' : 'warn'}" aria-hidden="true"></i><span class="wgc-txt">GitHub: ${k.github.state === 'pass' ? 'passing' : k.github.state === 'fail' ? `${k.github.failing} failing` : 'running'}</span><small class="wgc-sub">${k.github.total} check${k.github.total === 1 ? '' : 's'}</small></li>` : '';
+      const off = k && k.off ? `<p class="wgc-sub wgc-pad wgc-note-off" data-wgc-checks-off>${k.needsLead ? 'Checks are off: others can change this code.' : 'Checks are turned off.'}</p>` : '';
+      const foot = k && (k.can.run || k.can.set || k.runs.length) ? `<div class="wgc-foot">${k.can.run ? `<button type="button" class="btn sm" data-wgc-act="checks-run" ${k.running || k.queued ? 'disabled' : ''}>${k.running || k.queued ? 'Running…' : 'Run checks'}</button>` : ''}${last ? '<button type="button" class="btn sm ghost" data-wgc-act="checks-log">Log</button>' : ''}${k.can.set && k.what.runsCode ? `<button type="button" class="btn sm ghost" data-wgc-act="checks-set">${k.off ? 'Turn on…' : 'Settings'}</button>` : ''}</div>` : '';
+      if (!b && !p && !fail && !ck && !gh) return (k && k.what.kind !== 'none') ? `<div class="wgc-empty"><p>${esc(k.off ? '' : `Nothing has run yet. This project's check: ${k.what.label}.`)}</p></div>${off}${foot}` : empty('No builds reported yet. Agents report them as they work.', 'preview', 'Run the preview');
+      return `<ul class="wgc-list">${ck}${mine ? '' : row('Build', b)}${gh}${row('Preview', p)}${fail && !(b && b.ok === false) ? `<li><i class="wgc-state bad" aria-hidden="true"></i><span class="wgc-txt">${esc(fail.title)}</span></li>` : ''}</ul>${off}${foot}`;
     },
     ship(d) {
       if (!d || d.enabled === false) return empty('This project has no code repository yet.', 'go:repo', 'Set one up');
@@ -277,6 +285,27 @@
       if (await act(w, 'set', body)) { W.closePop(); toast('Saved'); }
     };
   }
+  // Build status: the last run's log, and the lead's switch (with what turning it on means, in plain words)
+  async function checksLog(w, anchor) {
+    const W = window.TribeWidgets; if (!W) return;
+    try {
+      const k = await api('/checks'), last = k.last; if (!last) return;
+      const r = (await api('/checks/runs/' + encodeURIComponent(last.id))).run;
+      W.pop(anchor, `<div class="wg-form wgc-set wgc-log"><h6>${r.ok ? 'Checks passed' : r.state === 'timeout' ? 'Checks timed out' : 'Checks failed'}</h6><p class="wgc-sub">${esc(r.label || '')} · ${esc(r.byName || '')} · ${esc(ago(r.at))}</p><pre tabindex="0">${esc(r.log || '(no output)')}</pre>${k.runs.length > 1 ? `<p class="wgc-sub">Earlier: ${k.runs.slice(1, 6).map(x => `${x.ok ? '✓' : '✗'} ${esc(ago(x.at))}`).join(' · ')}</p>` : ''}</div>`, 'wgc-settings');
+    } catch (e) { toast(e.message); }
+  }
+  async function checksSet(w, anchor) {
+    const W = window.TribeWidgets; if (!W) return;
+    let k; try { k = await api('/checks'); } catch (e) { return toast(e.message); }
+    const on = k.settings.on === true || (k.settings.on === null && !k.shared);
+    const el = W.pop(anchor, `<form class="wg-form wgc-set" autocomplete="off"><h6>Run checks on the host</h6>
+      <p class="wgc-sub">This project's check is <b>${esc(k.what.label)}</b>. It runs after each ship and when someone presses Run checks.</p>
+      <p class="wgc-sub wgc-warn" id="wgc-checks-warn">Turning this on runs this project's scripts on the host computer. Anyone who can change the project's code can change what runs there. Only turn it on if you trust everyone who can write to this project.</p>
+      <label class="wgc-row"><input type="checkbox" name="on" ${on ? 'checked' : ''}> Run this project's checks on the host</label>
+      <div class="wg-acts"><button type="button" class="btn" data-cancel>Cancel</button><button class="btn primary">Save</button></div></form>`, 'wgc-settings');
+    const f = el.querySelector('form'); f.querySelector('[data-cancel]').onclick = () => W.closePop();
+    f.onsubmit = async e => { e.preventDefault(); try { await api('/checks', { method: 'PUT', body: { on: f.elements.on.checked } }); W.closePop(); toast(f.elements.on.checked ? 'Checks are on for this project' : 'Checks are off for this project'); load(w); } catch (er) { toast(er.message); } };
+  }
   async function run(w, a, btn) {
     if (a === 'retry') { const it = inst.get(w.id); it.err = null; it.data = undefined; paint(w); return load(w); }
     if (a.startsWith('go:')) return go(a.slice(3));
@@ -289,6 +318,9 @@
     if (a === 'clear') return act(w, 'clear');
     if (a === 'tipnext') { const it = inst.get(w.id); it.tip = (it.tip ?? tipIndex()) + 1; return paint(w); }
     if (a === 'tipgo') { const it = inst.get(w.id), t = TIPS[(((it.tip ?? tipIndex()) % TIPS.length) + TIPS.length) % TIPS.length]; return t[2] && t[2](); }
+    if (a === 'checks-run') { try { btn.disabled = true; btn.textContent = 'Running…'; await api('/checks/run', { method: 'POST', body: {} }); } catch (e) { toast(e.message); load(w); } return; }
+    if (a === 'checks-log') return checksLog(w, btn);
+    if (a === 'checks-set') return checksSet(w, btn);
     if (a === 'tz') {
       const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
       try { await api('/profile', { method: 'PATCH', body: { tz } }); toast('Time zone shared'); load(w); } catch (e) { toast(e.message); }

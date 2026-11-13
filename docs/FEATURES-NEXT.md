@@ -1,5 +1,7 @@
 # Features next
 
+> Historical idea list (2026-11-06); many items have shipped since. `scripts/explore.py` still reads it to mark repeat suggestions. Current next steps: HANDOFF.md › Next steps.
+
 Written during the v0.4 audit (2026-11-06). The ideas follow the vision in docs/CONTEXT.md: multiplayer vibecoding, humans deciding and agents doing, phones as first-class, Game Studio, the Workshop and the Tribe Brain, and the Secretary.
 
 The doc has two parts:

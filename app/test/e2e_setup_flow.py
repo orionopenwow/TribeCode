@@ -149,12 +149,14 @@ def main():
             host.evaluate("TribeApp.show('home')"); host.wait_for_selector("#su-starter", timeout=10000); shot(host, "dashboard")
             host.wait_for_timeout(500)
             host.click("#su-starter")
-            try: host.wait_for_selector("#su-preview, #pj-setup:not(:has(#su-starter))", timeout=20000)
+            # v0.28: making the starter opens the focused Preview, which covers the dashboard, so wait on the state itself
+            try: host.wait_for_function("() => { const s = window.TribeSetup && TribeSetup.get(); return !!(s && s.starter && s.starter.made) || !!document.querySelector('#su-preview') }", timeout=20000)
             except Exception: raise AssertionError("starter: " + str(host.evaluate("[(document.querySelector('.toast') || {}).textContent, (document.querySelector('#pj-setup') || {}).outerHTML]")) + json.dumps(api(f"/projects/{pid}/setup", token=tok)[1].get("starter")))
             for f in ["index.html", "src/main.js", "design/palette.css"]: assert (repo / f).exists(), f
             assert pal.split()[0].lower() in (repo / "design" / "palette.css").read_text().lower()
             logs = subprocess.run(["git", "log", "--oneline"], cwd=repo, capture_output=True, text=True).stdout
             assert "starter" in logs, logs
+            host.wait_for_timeout(400); host.evaluate("window.TribePreview && TribePreview.close && TribePreview.close()")
 
             # 6. Task Board: type chips, Who does it?, Suggested only under 3 tasks
             host.evaluate("TribeApp.show('tasks')"); host.wait_for_selector("#board .task", timeout=10000)

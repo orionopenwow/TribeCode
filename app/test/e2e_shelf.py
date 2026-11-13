@@ -73,7 +73,9 @@ def main():
             assert any(x["id"] in ("pixelfx", "pixelfx-skill", "phaser", "kaplay") for x in d["picks"]), [x["id"] for x in d["picks"]]
             # the overview's Toolbox
             host.click("#nest-overview"); host.wait_for_selector("#pj-more", state="attached", timeout=15000); host.evaluate("document.querySelector('#pj-more').open = true"); host.wait_for_selector("#pj-tools .pt-tile", timeout=15000)   # simple-dashboard: tools live under More
-            assert "picks for a game" in host.text_content("#pj-tools .pt-head")
+            # the heading names the project's first sensed kind (game, 3d, site…), once the shelf has loaded
+            host.wait_for_function("() => /picks for a /.test((document.querySelector('#pj-tools .pt-head') || {}).textContent || '')", timeout=15000)
+            head = host.text_content("#pj-tools .pt-head"); assert any(f"picks for a {t}" in head for t in d["types"]), (head, d["types"])
             if host.locator("#pj-tools [data-shelf-add='pixelfx-skill']").count(): host.click("#pj-tools [data-shelf-add='pixelfx-skill']")
             else: assert api("/shelf/pixelfx-skill/add", "POST", {"project": pid}, token=tok)[0] == 200
             for _ in range(60):

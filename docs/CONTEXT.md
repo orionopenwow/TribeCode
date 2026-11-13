@@ -2,15 +2,24 @@
 
 The one document that remembers the greater vision and everything in flight. Updated at every milestone and whenever the user gives new direction. HANDOFF.md says *how* to run, test and ship; this says *what and why*.
 
-Last updated: 2026-11-11 (v0.29.0)
+Last updated: 2026-11-12 (v0.31.2)
 
-Latest: **v0.31.0** (2026-11-12). Shell polish (rail.css active state, icons.js, plans.js, reorder.js, sidefoot.js, Workshop at #/workshop, homegit.js); the Design creation flow (designflow.js, starters in app/ui/starters/, docs/STARTERS.md); website designer v2 (48 templates, autofill, comments→tasks, autosave, docs/OPENPAGE-PORT.md); presence and the People panel (server/places.js, presence.js, peoplepanel.js); Company v2 and abilities/self gigs (abilities.js); Marketplace v2 (real links, licenses, thumbnails, Add/Remove per kind); the blank-slate demo that works on desktop; stale-UI cleanup (network-first SW, docs/UI-CLEANUP.md). Still open from the review: export ZIP caps, server-side Premium, search rate limits.
+Latest: **v0.34.0** (2026-11-13). The build runner (server/checks.js), gig feeds across tribes (server/workfetch.js, app/ui/workfeeds.js) and Flint's opt-in local helper (flintembed.js, flintmodel.js).
+
+Earlier: **v0.33.0** (2026-11-13). One Flint chat (TribeFlint.mount), flintmax and Flint's page; tribenew.js create flow; folder homes, sync and Versions (server/folderhome.js, sync.js, versions.js, livingrepo.js); dropzone.js and folderread.js; auth2 sign-in; Invite your Claude; the free-AI bridge; tabbed Settings (server/mysettings.js); the dashboard band; widget cards (wcards.js); Work v2 and server/workfeed.js; hardening (server/premium.js, diskcap.js, limits). See CHANGELOG and docs/APP-AUDIT-2026-11-13.md (draft).
+
+Previous: **v0.31.0** (2026-11-12). Shell polish (rail.css active state, icons.js, plans.js, reorder.js, sidefoot.js, Workshop at #/workshop, homegit.js); the Design creation flow (designflow.js, starters in app/ui/starters/, docs/STARTERS.md); website designer v2 (48 templates, autofill, comments→tasks, autosave, docs/OPENPAGE-PORT.md); presence and the People panel (server/places.js, presence.js, peoplepanel.js); Company v2 and abilities/self gigs (abilities.js); Marketplace v2 (real links, licenses, thumbnails, Add/Remove per kind); the blank-slate demo that works on desktop; stale-UI cleanup (network-first SW, docs/UI-CLEANUP.md). Still open from the review: export ZIP caps, server-side Premium, search rate limits.
+Earlier: **v0.31.2** (2026-11-12). v0.31.1: the tour "See how TribeCode works" goes one step at a time (Next/Back) with an optional slower auto-play; v0.31.2: Home's "Your Dashboard" heading removed. After v0.31.2 on main: planned prices are hidden on the site and in the plans pop-out until paid plans exist.
+
+**v0.31.0** (2026-11-12). Shell polish (rail.css active state, icons.js, plans.js, reorder.js, sidefoot.js, Workshop at #/workshop, homegit.js); the Design creation flow (designflow.js, starters in app/ui/starters/, docs/STARTERS.md); website designer v2 (48 templates, autofill, comments→tasks, autosave, docs/OPENPAGE-PORT.md); presence and the People panel (server/places.js, presence.js, peoplepanel.js); Company v2 and abilities/self gigs (abilities.js); Marketplace v2 (real links, licenses, thumbnails, Add/Remove per kind); the blank-slate demo that works on desktop; stale-UI cleanup (network-first SW, docs/UI-CLEANUP.md). Still open from the review: export ZIP caps, server-side Premium, search rate limits.
 
 Previous: **v0.30.0** (2026-11-12). Flint's understanding rebuilt (app/test/flint_eval.json, 99.5% with no AI) and a block-based website designer modeled on OpenPage (sitecfg.js, sitedesigner.js, Download HTML; docs/WEBSITE.md); one AI-boost card (Use my AI / Get credits); Flint lessons for every feature (flintlessons.js); Files rebuilt (filesview.js) with Home parity and a clear Home state; tasks with Accept/Decline and Council claim (server/taskflow.js); the Company infographic; GitHub sign-in detection; the hands-off tour "See how TribeCode works" (demowatch.js) with demo isolation; the website in 7 languages with a varied gallery and Why TribeCode. Sign-up flow from v0.29.x. Launch: docs/LAUNCH.md; owner's one-pager: docs/ONE-PAGER.md. Still open from the review: export ZIP caps, server-side Premium, search rate limits.
 
 Previous: **v0.29.0** (2026-11-11). One router (docs/NAVIGATION.md), accounts with TEST accounts and a flagged backend (docs/ACCOUNTS.md), instant local setup with "where should it live" last (docs/LIGHT-HOSTING.md), All files without a tribe, ✦ "basic features supercharged by AI" (DESIGN-SYSTEM §11), Flint on Home + Grow my idea + Watch Flint build with proof ZIPs, inspiration board, preview App | Website with sentence edits and a Saved shelf, Work loop + templates + rituals, soft Premium gates (docs/PREMIUM.md), friendly Agent fleet, full PWA + store safety pieces (docs/APP-STORE.md), clean-slate dev copy, truth test. Launch: docs/LAUNCH.md; owner's one-pager: docs/ONE-PAGER.md. Next (queued by the user): translate more of the website, a wider showcase (not game-heavy), stand-out features, a smoother sign-up, a code-gap sweep and a second review.
 
-Latest: v0.17.1 (2026-11-08). Flint's welcome (app/ui/welcome.js) runs before first use when arriving from the site (app/?welcome=1): pretend tribe → features → auto demo / explore / real. Desktop installers fixed (tauri resources copy app/ui as a folder). See CHANGELOG.md for v0.9–v0.17.
+Also shipped since v0.27: v0.28.0 (2026-11-10) the design canvas with a Flint pane (Simple/Advanced), canvas ↔ code, focused Preview and Design workspaces, Flint's local brain (app/ui/flintnlu.js, flintlocal.js, server/flintkb.js) and free builds, 16 website templates, comment pins, phone tribes, Make it yours, the Task Board dashboard, the build kit and the Trending on GitHub feed; then the fresh first open (no demo, nothing created, Flint's tour in app/ui/flinttour.js).
+
+Earlier: v0.17.1 (2026-11-08). Flint's welcome (app/ui/welcome.js) runs before first use when arriving from the site (app/?welcome=1): pretend tribe → features → auto demo / explore / real. Desktop installers fixed (tauri resources copy app/ui as a folder). See CHANGELOG.md for v0.9–v0.17.
 
 ## The vision
 Multiplayer vibecoding. A group of friends, each with their own Claude Code agents, build one app together, and it feels like a Discord server that ships software. The work lives in the tribe's shared GitHub repo; someone's desktop app or own server keeps it online for speed (no cloud bill). Friends join with one link from any phone or computer. Humans decide and agents do the work: agents propose, humans approve with one tap. Everything stays in plain Markdown/JSONL in the tribe folder and in git.
@@ -52,7 +61,10 @@ Sketch (not started; the gists and plan work now lays the groundwork):
 Restraint: numbers only where they answer a question; few sidebar rows (4 pillars), depth lives in tabs and the right panel, not in long lists; color carries meaning (role colors on people, folders, gists, plan items).
 Flat matte, 1px borders, depth from luminance only, no glows/blur/gradients. Ember #F26B1D, Teal #38C6B1, Indigo #6C7CFF, canvas #12151A, surface #1B2028, raised #1E242D, border #2A313C, approve #3BD16F, deny #FF6F8E. Section clarity (mono eyebrow + clear title, one hero card per screen, reading layout). Phone: Discord-mobile flow, no header outside Chat, bottom rack, top bar in Chat. Simplicity first: zero-step setup, no repeated labels.
 
-## State (v0.8.0 on `main`)
+## State
+Now: v0.31.2 released (see the top of this file and HANDOFF.md › State right now). The table below is the v0.8.0 snapshot, kept for history.
+
+### State at v0.8.0
 Released: everything in CHANGELOG.md through v0.6.0. Every milestone now runs `npm run explore` (fix criticals), `npm run milestone-report` (before/after against the last release, docs/milestones/), `npm run readme-shots`, then the release.
 | Area | Status |
 |---|---|
@@ -134,7 +146,14 @@ Released: everything in CHANGELOG.md through v0.6.0. Every milestone now runs `n
 - 2026-11-06: Emoji reactions on chat bubbles; votes Claude can suggest ("team should vote to approve a feature"); related quality-of-life features.
 - Earlier: everything in CHANGELOG.md v0.2.0–v0.3.1.
 
-## Next up
+## Next up (2026-11-12, v0.31.2)
+1. Owner tasks only the user can do: back up the updater key; verify tribecode.org on GitHub and Enforce HTTPS; review the privacy and terms pages (`app/ui/privacy.html`, `terms.html`); turn on Tailscale Funnel once; register OAuth apps per host; Windows signing (SignPath Foundation or Azure Artifact Signing) and an Apple Developer account for notarization.
+2. Real devices and accounts, from docs/LOOPS-REPORT.md: iPhone Home Screen, Web Push, speech and huddle voice; Android (Termux host, push); Funnel with a real friend; a Cloudflare quick tunnel end to end; Render with the push keys, a sleep and a push; real OAuth and a real GitHub repo; Stripe sync; a TURN relay for huddles on cellular.
+3. Editor parity Phase 2 (docs/EDITOR-PARITY.md) and the open items in docs/POLISH-AUDIT.md.
+4. Payments only once the backend exists (docs/PREMIUM.md); prices stay out of the repo until then.
+5. Decide with the user: disable WebView2's Local Network Access check in the app window.
+
+## Older next-up list (v0.8 era, kept for history)
 - The feature roadmap lives in docs/FEATURES-NEXT.md (now with Part 3 from the Explorer). Storage, backups and persistence are in docs/DATA.md.
 1. The user updates to v0.8.0 and confirms on Windows: Create your first project signs in; Settings › GitHub (OAuth App client id); Agent fleet › Office switch; Restart to update reopens straight into the new version; the new installer art.
 1b. Build VISION.md's Now items: one-tap Ship (commit, tag, push, release notes), organized project folders, dependency installs, a Featured strip, Jam mode. Then Next: repo importer with SPDX license checks → templates/skills/recipes, skills/MCP catalog, engine packs.

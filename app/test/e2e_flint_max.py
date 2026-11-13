@@ -222,7 +222,8 @@ def main():
             pg.evaluate("ids => TribeCanvas._e.select(ids)", ids); pg.wait_for_timeout(200)
             out = fask(pg, "canvas", "turn these into a card grid")
             ns = {n["id"]: n for n in nodes()}
-            assert ns[ids[0]]["y"] == ns[ids[1]]["y"] == ns[ids[2]]["y"] and ns[ids[1]]["x"] - ns[ids[0]]["x"] == ns[ids[2]]["x"] - ns[ids[1]]["x"], out
+            xs = sorted(ns[i]["x"] for i in ids)   # the grid keeps the layers' left-to-right order, which the random start positions decide
+            assert ns[ids[0]]["y"] == ns[ids[1]]["y"] == ns[ids[2]]["y"] and abs((xs[1] - xs[0]) - (xs[2] - xs[1])) < 0.01 and xs[1] > xs[0], (out, [(ns[i]["x"], ns[i]["y"], ns[i].get("w"), ns[i].get("h")) for i in ids])
             pg.evaluate("TribeCanvas._e.select([])"); pg.wait_for_timeout(150)
             out = fask(pg, "canvas", "apply a sunset palette")
             assert "Recolored" in out, out
@@ -285,7 +286,7 @@ def main():
             # ================= Flint's page =================
             pg.evaluate("TribeFlintPage.open()"); pg.wait_for_selector("#flint-page:not([hidden]) .fpg-cap", timeout=5000)
             assert pg.locator(".fpg-lv.on").count() == 1 and pg.locator(".fpg-lv.on").get_attribute("data-lv") == "none", "no AI is the active level"
-            assert pg.locator(".fpg-lv").count() == 4 and pg.is_visible("#fp-local") and "FLINT-RESEARCH" in pg.get_attribute("#fp-plan", "href")
+            assert pg.locator(".fpg-lv").count() == 5 and pg.is_visible("#fp-local") and "FLINT-RESEARCH" in pg.get_attribute("#fp-plan", "href")
             n_all = pg.locator(".fpg-cap").count(); assert n_all >= 40, n_all
             groups = pg.locator(".fpg-grp h3").all_inner_texts()
             for g in ["Website designer", "Design canvas", "Docs", "Sheets", "Slides", "Your tribe"]:

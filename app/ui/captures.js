@@ -431,11 +431,13 @@
       } catch (e) { return { text: e.message }; }
     }
     m = /\b(?:what|when|how)\b.*\b(?:did|have)\s+(?:we|you|they|i)\s+(?:decide|agree|say|plan|settle)\b/i.exec(t) || /^(?:what was (?:the )?decision|what's the decision)\b/i.exec(t);
+    // "what did we decide (today | so far)?" has no topic: the Secretary's summary answers that (flintlocal secretary.summary)
+    if (m && !/\b(?:about|on|for|regarding|with)\s+\S/i.test(t)) m = null;
     if (m) {
       if (!C.connected()) return { text: 'I search the tribe\'s captures and notes. Join a tribe first.' };
       try {
         const r = await C.api('/captures/ask?q=' + encodeURIComponent(t));
-        if (!r.quotes.length) return { text: `I didn't find anything about "${r.topic}" in captures or notes yet.` };
+        if (!r || !Array.isArray(r.quotes) || !r.quotes.length) return { text: `I didn't find anything about "${(r && r.topic) || t}" in captures or notes yet.` };
         const q = r.quotes[0];
         const when = q.when ? new Date(q.when).toLocaleDateString([], { month: 'short', day: 'numeric' }) : '';
         const more = r.quotes.slice(1).map(x => `“${x.text}” (${x.title}${x.at ? ' ' + x.at : ''})`).join(' · ');

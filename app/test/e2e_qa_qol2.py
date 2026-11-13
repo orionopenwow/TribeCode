@@ -98,7 +98,7 @@ def main():
             pg.click("#home-ai-cards details.ai-dev > summary"); pg.wait_for_selector("#home-ai-cards details.ai-dev[open] .ai-card")
             assert [t.strip() for t in pg.locator("#grp-global .nest-row span").all_inner_texts()] == ["Home", "Files", "Design", "Code", "Work", "Agent fleet"]
             assert "Starts a new project for the two of you" in pg.inner_text("#view-hub")
-            pg.unroute_all()
+            pg.unroute_all(behavior="ignoreErrors")
 
             # ---- New project -> the chat's Getting started: the steps once (in the bar)
             pg.evaluate("TribeProjects.gallery()"); pg.wait_for_selector("[data-ns=own]"); pg.click("[data-ns=own]"); pg.wait_for_selector("#np-input")
@@ -118,7 +118,7 @@ def main():
             close_sheets(pg)
             pg.evaluate("TribeApp.show('home')"); pg.wait_for_selector("#pj-check.hero", timeout=15000); pg.wait_for_timeout(500)
             assert pg.locator("#room-next").count() == 0, "no Next steps copy next to Camp setup"
-            assert "shared online folder" in pg.inner_text("#pj-check")
+            assert "living repo" in pg.inner_text("#pj-check")
             pg.evaluate("TribeApp.show('tasks')"); pg.wait_for_selector("#room-next .rn-card", timeout=8000)
             x = pg.locator("#panel-close").bounding_box(); h = pg.locator("#room-next .rn-head").bounding_box()
             assert abs((x["y"] + x["height"] / 2) - (h["y"] + h["height"] / 2)) < 16, ("the x sits on the Next steps row", x, h)

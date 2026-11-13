@@ -1,6 +1,6 @@
 # The Marketplace
 
-515 checked add-ons for your project: sidebar widgets (Figma, Notion, Stripe, Plausible, Calendly and 100 more), Claude Code skills, libraries, connectors for your AI, creative studios like ArtCraft, playbooks, asset packs, site and company templates, legal templates and Academy tracks. Every link and license was checked; anything bundled is permissively licensed.
+553 checked add-ons for your project: sidebar widgets (Figma, Notion, Stripe, Plausible, Calendly and 100 more), Claude Code skills, libraries, connectors for your AI, creative studios like ArtCraft, playbooks, asset packs, site and company templates, legal templates and Academy tracks. Every link and license was checked; anything bundled is permissively licensed.
 
 ## Find things
 

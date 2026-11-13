@@ -9,7 +9,7 @@
 .fpg-sec { padding: 24px 0; border-bottom: 1px solid var(--border); }
 .fpg-sec h2 { margin: 0 0 14px; font: 600 18px/1.3 var(--font); }
 .fpg-sh { display: flex; align-items: baseline; gap: 12px; }
-.fpg-levels { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+.fpg-levels { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 12px; }
 .fpg-lv { position: relative; display: flex; flex-direction: column; gap: 4px; padding: 14px; border: 1px solid var(--border); border-radius: var(--r-card, 12px); background: var(--surface); }
 .fpg-lv small { color: var(--faint); }
 .fpg-lv.on { border-color: var(--accent); background: var(--surface-2); }

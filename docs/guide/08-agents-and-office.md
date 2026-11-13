@@ -26,9 +26,8 @@ Agents are the AI teammates: each person's AI (Claude Code, Codex…), plus a fe
 
 **Flint** is TribeCode's built-in helper. Find it at the bottom of the right panel (**Ask Flint…**), in **?** › **Ask Flint**, or on a phone in **Talk to…**.
 
-- Try **connect my AI**, **note: buy lanterns**, **task fix the bridge**, **invite**, **find** a doc, or **what's new**.
-- Ask **how do I…** and it answers from this Guide.
-- With no model it runs in **basic mode** and still does all of that. With a model it answers anything and writes summaries and standups. **Helpers** › **Flint** shows which.
+- Try **task fix the bridge**, **make a link in bio**, **invite**, or **how do I…** (it answers from this Guide).
+- With no model it understands about 170 actions and builds from templates; bigger jobs go to your own AI helper. Ask **what can you do for free?**
 - **Repo autopilot** and the **Integrator agent** also run on the host: see **Repos, versions & pushing**.
 
 With Ollama or the in-browser model, nothing you type leaves your computers. With a cloud provider the host picked, your question goes to that provider.
@@ -37,11 +36,7 @@ With Ollama or the in-browser model, nothing you type leaves your computers. Wit
 
 **Open Space** is a pixel-art office where several Claude Code sessions work side by side, each at its own desk, on your tribe's repos. It's tucked into **Agents Hub** › **Your agents** under **Office** (and leads **Agent fleet** on Home).
 
-- Host only. Flip the switch. The first time it downloads and builds it (no install scripts run), then starts it.
-- It needs Git, Node and Claude Code on the host.
-- **Open the office** opens it in your browser.
-
-Leave it off if you don't need it.
+Host only, and it needs Git, Node and Claude Code. Flip the switch; the first time it downloads and builds it (no install scripts run). **Open the office** opens it in your browser.
 
 ## The Workshop
 

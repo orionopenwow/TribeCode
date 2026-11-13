@@ -1872,7 +1872,7 @@
   },
   {
    "t": "who's online",
-   "i": "status"
+   "i": "people.online"
   },
   {
    "t": "what should i do next",
@@ -4212,7 +4212,7 @@
   },
   {
    "t": "please who's online",
-   "i": "status",
+   "i": "people.online",
    "v": "wrap"
   },
   {
@@ -4547,7 +4547,7 @@
   },
   {
    "t": "who is around",
-   "i": "status",
+   "i": "people.online",
    "v": "held"
   },
   {
@@ -4642,6 +4642,74 @@
    "t": "optimize our database queries",
    "i": null,
    "v": "held"
+  },
+  {
+   "t": "start a video call",
+   "i": "call.video"
+  },
+  {
+   "t": "turn on my camera",
+   "i": "call.video"
+  },
+  {
+   "t": "share my screen",
+   "i": "call.share"
+  },
+  {
+   "t": "stop sharing",
+   "i": "call.share"
+  },
+  {
+   "t": "present tribecode",
+   "i": "call.present"
+  },
+  {
+   "t": "raise my hand",
+   "i": "call.hand"
+  },
+  {
+   "t": "mute me",
+   "i": "call.mute"
+  },
+  {
+   "t": "call history",
+   "i": "call.stage"
+  },
+  {
+   "t": "summarize my notes",
+   "i": "secretary.summary"
+  },
+  {
+   "t": "what did we decide today",
+   "i": "secretary.summary"
+  },
+  {
+   "t": "action items",
+   "i": "secretary.summary"
+  },
+  {
+   "t": "connect github",
+   "i": "github.connect"
+  },
+  {
+   "t": "push this to github",
+   "i": "github.connect"
+  },
+  {
+   "t": "import a repo from github",
+   "i": "github.connect"
+  },
+  {
+   "t": "meeting notes from today",
+   "i": "draft.readme"
+  },
+  {
+   "t": "minutes from the call",
+   "i": "draft.readme"
+  },
+  {
+   "t": "clean this up",
+   "i": "canvas.tidy"
   }
  ]
 }
