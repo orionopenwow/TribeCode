@@ -77,6 +77,7 @@ function perms({ P, store, getMembers, saveMembers, bus, broadcast, pushPresence
     if (r !== 'agent') return r;
     const o = member(m.owner); if (!o || o.role === 'agent') return 'spectator';
     const or = roleIn(o, pid);
+    if (m.invited && m.adminAsMe && (or === 'admin' || or === 'host')) return 'admin';   // "Let it act as me for admin" (server/inviteclaude.js); host-only rows stay locked
     return RANK[or] >= RANK.builder ? 'builder' : or;
   }
   const rank = (m, pid) => RANK[actingRole(m, pid)] || 0;
