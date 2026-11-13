@@ -191,7 +191,7 @@ def main():
                 if not ups(): break
                 time.sleep(0.25)
             assert not ups(), "Undo removed the drop"
-            assert pg.evaluate("TribeDropZone.history()[0].undone") is True
+            pg.wait_for_function("TribeDropZone.history()[0].undone === true")
 
             # ---- 4. secrets go up only when the box is ticked (and the upload history is in Recent activity)
             pg.evaluate("__dropTree(document.body, 'recipe-site', 700, 400)"); pg.wait_for_selector("#dz-sheet.dz-choose")
@@ -204,6 +204,7 @@ def main():
             pg.click("#dz-undo"); time.sleep(1); assert not ups()
             print("stage 1 ok")
             if os.environ.get("DZ_STAGE") == "1": return
+            pg.on("dialog", lambda d: d.dismiss())
             stage2(pg, host, pid, ups, tmp, b)
             assert not errors, "\n".join(errors)
             print("e2e_dropzone: all good")
@@ -211,7 +212,133 @@ def main():
         srv.terminate()
 
 
+def drop_to_files(pg, name, mode=None):
+    pg.evaluate(f"__dropTree(document.body, '{name}', 700, 400)"); pg.wait_for_selector("#dz-sheet.dz-choose")
+    pg.click("#dz-sheet [data-dz-choice=files]"); pg.wait_for_selector("#dz-go")
+    if mode: pg.click(f"[data-dup={mode}]")
+    pg.click("#dz-go"); upload_done(pg)
+
+
+def flint_say(pg, text):
+    pg.evaluate("TribeFlint.say('·')")   # a marker (the thread keeps the last 40)
+    pg.evaluate("t => TribeFlint.ask(t)", text)
+    try: pg.wait_for_function("t => { const l = TribeFlint.thread(), n = l.length; return n > 2 && l[n - 3].text === '·' && l[n - 2].who === 'me' && l[n - 2].text === t && l[n - 1].who === 'flint'; }", arg=text, timeout=12000)
+    except Exception: raise AssertionError(f"Flint did not answer {text!r}: " + json.dumps(pg.evaluate("TribeFlint.thread().slice(-4).map(m => [m.who, m.text.slice(0, 80)])")))
+    return pg.evaluate("__flintLast()")
+
+
+def read(pg, name):
+    pg.evaluate("TribeDropZone.forget(); TribeFlint.say('·')")
+    pg.evaluate(f"__dropTree('#flint', '{name}')")   # dropping on Flint: he reads it
+    pg.wait_for_function(f"TribeDropZone.context() && TribeDropZone.context().name === '{name}'")
+    pg.wait_for_function(f"(__flintLast() || {{}}).html && __flintLast().html.includes('dz-card') && __flintLast().text === TribeDropZone.context().summary")
+    return pg.evaluate("TribeDropZone.context()")
+
+
+def run_s(pg, sid):
+    pg.evaluate(f"TribeDropZone.run('s:{sid}')")
+
+
 def stage2(pg, host, pid, ups, tmp, b):
+    # ---- 5. duplicates: keep both (renamed), skip, replace
+    drop_to_files(pg, "sales-data"); pg.click("#dz-done")
+    assert len(ups()) == 3
+    pg.evaluate("__dropTree(document.body, 'sales-data', 700, 400)"); pg.wait_for_selector("#dz-sheet.dz-choose"); pg.click("#dz-sheet [data-dz-choice=files]"); pg.wait_for_selector("#dz-go")
+    assert "3 files already in Pixel Garden’s files" in sheet_text(pg), sheet_text(pg)
+    pg.click("[data-dup=skip]"); pg.click("#dz-go"); upload_done(pg); assert "3 skipped" in pg.inner_text("#dz-count") and len(ups()) == 3; pg.click("#dz-done")
+    drop_to_files(pg, "sales-data", "rename"); pg.click("#dz-done")
+    names = sorted(f["name"] for f in ups()); assert "sales (2).csv" in names and len(names) == 6, names
+    before = {f["id"] for f in ups() if f["name"] == "sales.csv"}
+    drop_to_files(pg, "sales-data", "replace"); pg.click("#dz-done")
+    after = [f for f in ups() if f["name"] == "sales.csv"]; assert len(after) == 1 and after[0]["id"] not in before and len(ups()) == 6
+    for h in pg.evaluate("TribeDropZone.history()"):
+        if not h.get("undone"): pg.evaluate("b => TribeDropZone.undo(b)", h["batch"])
+    time.sleep(0.8); assert not ups(), [f["name"] for f in ups()]
+
+    # ---- 6. a file fails: Retry; the drop resumes where it stopped (done files are not sent again)
+    pg.route("**/api/uploads?*name=app.py*", lambda r: r.fulfill(status=500, body='{"error":"disk hiccup"}') if r.request.method == "POST" else r.continue_())
+    drop_to_files(pg, "weather-py")
+    assert "1 failed" in pg.inner_text("#dz-count") and "disk hiccup" in pg.inner_text("#dz-files")
+    assert pg.is_visible("#dz-retryall") and pg.is_visible("[data-retry]:not([hidden])")
+    pg.unroute("**/api/uploads?*name=app.py*")
+    pg.click("[data-retry]:not([hidden])"); pg.wait_for_function("document.querySelector('#dz-count').innerText.startsWith('5 of 5')")
+    assert len(ups()) == 5; pg.click("#dz-undo"); time.sleep(0.8); assert not ups()
+    pg.route("**/api/uploads?*name=fetch.py*", lambda r: r.fulfill(status=500, body='{"error":"offline"}') if r.request.method == "POST" else r.continue_())
+    drop_to_files(pg, "weather-py"); pg.click("#dz-done"); pg.unroute("**/api/uploads?*name=fetch.py*")
+    assert len(ups()) == 4
+    drop_to_files(pg, "weather-py", "skip")   # the same drop again: the 4 done earlier are not sent twice
+    t = pg.inner_text("#dz-files"); assert t.count("Done earlier") == 4, t
+    assert len(ups()) == 5 and len({f["batch"] for f in ups()}) == 1, "one batch, resumed"
+    pg.click("#dz-undo"); time.sleep(0.8); assert not ups()
+
+    # ---- 7. Flint reads 7 kinds; each kind's suggestions run
+    kinds = {}
+    for name, want in [("recipe-site", "web-react"), ("weather-py", "python"), ("lantern-site", "static"), ("beach-photos", "photos"), ("sales-data", "data"), ("moss-quest", "godot"), ("star-unity", "unity"), ("notes-docs", "docs")]:
+        c = read(pg, name); kinds[name] = c; assert c["kind"] == want, (name, c)
+        last = pg.evaluate("__flintLast()"); assert last["text"] == c["summary"] and [a["arg"] for a in last["acts"] if a["act"] == "dz"][:len(c["suggestions"])] == ["s:" + x for x in c["suggestions"]], last
+    assert pg.is_visible("#dz-chip") and "notes-docs" in pg.inner_text("#dz-chip")
+    tasks0 = len(ok(api("/tasks", token=host, project=pid))["tasks"])
+    docs0 = {d["slug"] for d in ok(api("/docs", token=host, project=pid))["docs"]}
+    def new_docs():
+        return [d for d in ok(api("/docs", token=host, project=pid))["docs"] if d["slug"] not in docs0]
+
+    read(pg, "recipe-site"); assert set(kinds["recipe-site"]["suggestions"]) >= {"preview", "project", "todos", "bug"}
+    shot(pg, "drop-flint-summary")
+    run_s(pg, "preview"); pg.wait_for_selector("#dz-pv")
+    assert pg.get_attribute("#dz-pv", "sandbox") == "" and "root" in pg.get_attribute("#dz-pv", "srcdoc"); pg.click("#dz-sheet [data-dz=close]")
+    run_s(pg, "todos"); pg.wait_for_function(f"(__flintLast() || {{}}).text && __flintLast().text.startsWith('Made 3 tasks')")
+    tl = ok(api("/tasks", token=host, project=pid))["tasks"]; assert len(tl) == tasks0 + 3 and any("dark mode (App.jsx:2)" in x["title"] for x in tl), [x["title"] for x in tl]
+    run_s(pg, "bug"); pg.wait_for_function("TribeAIBridge.state() && TribeAIBridge.state().open")
+    assert pg.evaluate("document.querySelector('#aib-pack') ? document.querySelector('#aib-pack').textContent : ''").count("### src/") >= 2
+    pg.evaluate("TribeAIBridge.close()")
+    run_s(pg, "project"); pg.wait_for_function("document.querySelector('#np-status') && document.querySelector('#np-status').innerText.includes('recipe-site')")
+    assert "env" not in pg.inner_text("#np-status").replace("environment", "")
+    pg.keyboard.press("Escape"); pg.evaluate("document.querySelectorAll('.modal-wrap').forEach(m => m.classList.add('hidden'))")
+
+    read(pg, "weather-py"); run_s(pg, "todos"); pg.wait_for_function("__flintLast().text.startsWith('Made 1 task')")
+    read(pg, "lantern-site"); run_s(pg, "preview"); pg.wait_for_selector("#dz-pv")
+    src = pg.get_attribute("#dz-pv", "srcdoc"); assert "font-family: serif" in src and 'src="data:image/png' in src and "<script" not in src and "__ran" not in src and "Lantern Cafe" in src; pg.click("#dz-sheet [data-dz=close]")
+    read(pg, "beach-photos")
+    run_s(pg, "moodboard"); pg.wait_for_function(f"fetch('{BASE}/api/inspo?project={pid}', {{ headers: {{ Authorization: 'Bearer {host}' }} }}).then(r => r.json()).then(d => (d.items || []).length === 5)", polling=500)
+    pg.evaluate("TribeInspoBoard.close && TribeInspoBoard.close()")
+    run_s(pg, "gallery"); pg.wait_for_function("TribeSiteDesigner.cfg() && TribeSiteDesigner.cfg().pages[0].blocks.some(b => b.type === 'gallery' && b.props.items.length === 5)", timeout=15000)
+    pg.evaluate("TribeSiteDesigner.close()")
+    read(pg, "sales-data"); run_s(pg, "sheet"); pg.wait_for_function("__flintLast().text.startsWith('Opened sales.csv as a sheet')")
+    sh = [d for d in new_docs() if d.get("kind") == "sheet"]; assert sh, new_docs()
+    body = ok(api("/docs/" + sh[0]["slug"], token=host, project=pid))["doc"]["body"]; assert "| date | region | units | price | total |" in body and "=SUM(C2:C5)" in body, body
+    read(pg, "moss-quest"); run_s(pg, "readme"); pg.wait_for_function("__flintLast().text.startsWith('Drafted a README for moss-quest')")
+    assert any(d["title"] == "README · moss-quest" for d in new_docs())
+    read(pg, "star-unity"); assert "readme" in pg.evaluate("TribeDropZone.context().suggestions")
+    read(pg, "notes-docs"); run_s(pg, "deck"); pg.wait_for_function("__flintLast().text.startsWith('Started a deck')")
+    dk = [d for d in new_docs() if d.get("kind") == "deck"]; assert dk and "Launch plan" in ok(api("/docs/" + dk[0]["slug"], token=host, project=pid))["doc"]["body"]
+    pg.evaluate("TribeApp.show('home')")
+
+    # ---- 8. follow-ups answered here; real reasoning offers an AI with the context pack
+    read(pg, "recipe-site")
+    a = flint_say(pg, "where is the API key used?"); assert "src/components/Login.jsx:3" in a["text"] and "sk-proj" not in a["text"], a
+    a = flint_say(pg, "how many components are there?"); assert "4 components" in a["text"], a
+    a = flint_say(pg, "what does the login code do?"); assert "Login.jsx" in a["text"] and [x["label"] for x in a["acts"]] == ["Ask my AI", "Ask a free AI"], a
+    free = a["acts"][1]["arg"]
+    a = flint_say(pg, "what is in the readme?"); assert "recipe site" in a["text"], a
+    pg.evaluate("a => TribeDropZone.run(a)", free); pg.wait_for_function("TribeAIBridge.state() && TribeAIBridge.state().open")
+    pack = pg.evaluate("document.querySelector('#aib-pack').textContent"); assert "Login.jsx" in pack and "sk-proj" not in pack
+    pg.evaluate("TribeAIBridge.close()")
+    read(pg, "beach-photos"); a = flint_say(pg, "how many images are there?"); assert "5 pictures" in a["text"], a
+
+    # ---- 9. kept across a reload (IndexedDB), Forget clears it
+    pg.reload(); pg.wait_for_function("window.TribeDropZone && TribeClient.connected()", timeout=20000); setup(pg)
+    pg.wait_for_selector("#dz-chip"); assert "beach-photos" in pg.inner_text("#dz-chip")
+    a = flint_say(pg, "how many photos are there?"); assert "5 pictures" in a["text"], a
+    pg.click("#dz-chip [data-dz-forget]"); pg.wait_for_function("!document.querySelector('#dz-chip')")
+    assert pg.evaluate("TribeDropZone.context()") is None
+    pg.reload(); pg.wait_for_function("window.TribeDropZone && TribeClient.connected()", timeout=20000); setup(pg); pg.wait_for_timeout(800)
+    assert not pg.query_selector("#dz-chip") and pg.evaluate("TribeDropZone.context()") is None
+    print("stage 2 ok")
+    if os.environ.get("DZ_STAGE") == "2": return
+    stage3(pg, host, pid, ups, tmp, b)
+
+
+def stage3(pg, host, pid, ups, tmp, b):
     pass
 
 
