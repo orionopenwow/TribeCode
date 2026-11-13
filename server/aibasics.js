@@ -26,7 +26,7 @@ module.exports = function aibasics({ llm, base, P, str }) {
     if (!st.online) return { error: 'no AI is on: the basic answer stands', status: 503, basic: true };
     const prompt = core.promptFor(kind, input, draft);
     let out; try { out = await llm.stream({ system: SYSTEM, prompt, maxTokens: k[1], temperature: 0.3, timeoutMs: 60_000, me }); }
-    catch (e) { return { error: 'the AI did not answer: the basic answer stands', status: 503, basic: true }; }
+    catch (e) { if (e.need) return { error: e.message, status: 402, basic: true, need: e.need }; return { error: 'the AI did not answer: the basic answer stands', status: 503, basic: true }; }   // harden: out of credits -> the plans pop-out
     const text = String(out.text || '').trim(); if (!text) return { error: 'the AI had nothing to add', status: 502, basic: true };
     return { text, parsed: /^doc.(summary|points|title|tags|read|glossary)$/.test(kind) ? localdoc.parse(kind, text) : core.parse(kind, text), via: out.via || st.via || st.model || 'AI' };
   }
@@ -38,7 +38,7 @@ module.exports = function aibasics({ llm, base, P, str }) {
       if (me.role === 'agent') return fail(res, 403, 'agents have their own model');
       const body = await readBody(req, 256 * 1024);
       const r = await refine({ kind: String(body.kind || ''), input: body.input, draft: body.draft, me });
-      return r.error ? send(res, r.status || 400, { error: r.error, basic: !!r.basic }) : send(res, 200, r);
+      return r.error ? send(res, r.status || 400, { error: r.error, basic: !!r.basic, ...(r.need ? { need: r.need, feature: 'credits' } : {}) }) : send(res, 200, r);
     }
     if (b === 'extract' && m === 'GET') {   // feat/flint-runthrough: a repo file's text (txt, md, html, pdf, json) for the local summarizer
       const p = P && P.get && P.get(String((url && url.searchParams.get('project')) || (P.current && P.current()) || (P.defaultId && P.defaultId()) || ''));
