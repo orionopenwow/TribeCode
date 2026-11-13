@@ -210,12 +210,7 @@
         <aside class="wdz-right" aria-label="Edit and Flint">
           <div class="wdz-ptabs" role="tablist" aria-label="Panel"><button type="button" role="tab" data-panel="edit" aria-selected="true">Edit</button><button type="button" role="tab" data-panel="comments" aria-selected="false">Comments<span class="wdz-n" id="wdz-cn2" hidden></span></button><button type="button" role="tab" data-panel="site" aria-selected="false">Site</button></div>
           <div class="wdz-insp" id="wdz-insp"></div>
-          <section class="wdz-flint" aria-label="Flint">
-            <p class="wdz-fhead"><img src="assets/flint.svg" alt="" width="12" height="15"><b>Flint</b><span class="wdz-free">Free · no AI</span></p>
-            <div class="wdz-log" id="wdz-log" aria-live="polite"></div>
-            <div class="wdz-chips" id="wdz-chips">${['Make the buttons work', 'Add a page called About', 'Dark mode', 'Add a gallery', 'Make the picture round'].map(c => `<button type="button" class="wdz-chip" data-chip="${esc(c)}">${esc(c)}</button>`).join('')}</div>
-            <form class="wdz-form" id="wdz-form" autocomplete="off"><input class="input" id="wdz-in" maxlength="400" placeholder="Tell Flint: wire this button to the contact page…" aria-label="Tell Flint what to change"><button type="submit" class="btn sm primary">Send</button></form>
-          </section>
+          <section class="wdz-flint" id="wdz-flint" aria-label="Flint"></section>
         </aside>
       </div>
       <div class="wdz-start" id="wdz-start" hidden></div>
@@ -223,7 +218,7 @@
       <div class="wdz-peek" id="wdz-peek" hidden role="dialog" aria-label="Template preview"></div><div class="wdz-cpop" id="wdz-cpop" hidden></div><div class="wdz-keys" id="wdz-keys" hidden role="dialog" aria-label="Keyboard shortcuts"></div>`;
     document.body.appendChild(root);
     root.addEventListener('click', onClick);
-    root.querySelector('#wdz-form').addEventListener('submit', e => { e.preventDefault(); const i = $('#wdz-in'), v = i.value.trim(); if (v) { i.value = ''; ask(v); } });
+    mountFlint();
     root.querySelector('#wdz-theme').addEventListener('change', e => commit(S().setTheme(st.cfg, e.target.value)));
     root.querySelector('#wdz-file').addEventListener('change', onFile);
     root.querySelector('#wdz-import').addEventListener('change', onImport);
@@ -237,7 +232,6 @@
       keys(e);
     });
     addEventListener('message', onFrame);
-    if (window.TribeBoost) window.TribeBoost.bind(root);
     dragList();
   }
 
@@ -548,7 +542,6 @@
   // ---------- clicks ----------
   async function onClick(e) {
     const t = e.target, a = t.closest('[data-wdz]'), pg = pageNow();
-    if (t.closest('[data-chip]')) return ask(t.closest('[data-chip]').dataset.chip);
     if (t.closest('[data-peek]')) { peek(t.closest('[data-peek]').dataset.peek); return; }
     if (t.closest('[data-tpl]')) { const x = t.closest('[data-tpl]'); const pk = $('#wdz-peek'); if (pk) pk.hidden = true; await useTemplate(x.dataset.tpl); say(`Started from the ${x.dataset.title || 'chosen'} template. Undo brings back what you had.`); return; }
     if (t.closest('[data-start="blank"]')) { hideStart(); paint(); return; }
@@ -671,7 +664,7 @@
     const box = $('#wdz-start'); box.hidden = false;
     box.innerHTML = `<div class="wdz-start-in"><p class="wdz-eyebrow">Website</p><h2>Start from a template</h2><p class="wdz-hint">Every template is blocks you can change, wire and export.${st.pid ? ' Inside a project it fills in what TribeCode knows: the name, the team, hours from chat, your board’s colors.' : ''} Or tell Flint what the site is for.</p>
       <div class="wdz-gbar"><input class="input" id="wdz-gq" type="search" placeholder="Search templates: bakery, portfolio, link in bio…" aria-label="Search templates" value="${esc(gal.q)}"><span class="wdz-hint" id="wdz-gcount"></span><button type="button" class="btn sm" data-start="blank">${fromBar ? 'Keep my design' : 'Start blank'}</button><button type="button" class="btn sm ghost" data-import="1">Import HTML…</button></div>
-      <div class="wdz-chips wdz-gcats" id="wdz-gcats" role="group" aria-label="Categories"></div>
+      <div class="wdz-gcats" id="wdz-gcats" role="group" aria-label="Categories"></div>
       <div class="wdz-tpls" id="wdz-gal"><p class="wdz-hint">Loading templates…</p></div>
       <p class="wdz-hint">Templates from Start Bootstrap and Tailwind Toolbox (MIT) and HTML5 UP (CC BY 3.0, credited in the footer) are converted into blocks; see docs/SITE-TEMPLATES.md.</p></div>`;
     await loadGallery(); galPaint();
@@ -679,35 +672,83 @@
   function hideStart() { const b = $('#wdz-start'); if (b) b.hidden = true; }
 
   // ---------- Flint ----------
-  function say(text, extra) { st.log.push({ who: 'flint', text, html: extra || '' }); logPaint(); return text; }
-  function logPaint() {
-    const box = $('#wdz-log'); if (!box) return;
-    box.innerHTML = st.log.slice(-30).map(m => m.who === 'me' ? `<p class="wdz-me">${esc(m.text)}</p>` : `<div class="wdz-fl"><img src="assets/flint.svg" alt="" width="11" height="14"><div>${m.text ? `<p>${esc(m.text)}</p>` : ''}${m.html || ''}</div></div>`).join('') || `<p class="wdz-hint">Say what you want: “make the buttons work”, “add a page called About”, “replace the image”, “dark mode”, “download the html”. No AI needed.</p>`;
-    box.scrollTop = box.scrollHeight;
+  // feat/flint-unify: Flint here is the same chat as everywhere (TribeFlint.mount, ctx designer): the thread is this
+  // design's log (st.log), so it follows the design's undo history; anything that is not a site edit goes to Flint's
+  // full brain and its reply lands in this thread too.
+  let fui = null, chipKey = '';
+  function mountFlint() {
+    const host = $('#wdz-flint'); if (!host || fui || !window.TribeFlint || !window.TribeFlint.mount) return;
+    fui = window.TribeFlint.mount(host, { ctx: 'designer', echo: false, run: text => ask(text).then(() => true), onSay: m => { if (st) { st.log.push(m); logPaint(); } }, onClear: () => { if (st) { st.log = []; st.pending = null; logPaint(); } },
+      hello: 'Say what to change: “add a link for my book club”, “make the buttons work”, “add a page called About”, “dark mode”. No AI needed, and Undo takes back any step.', chips: chipsNow, onEscape: () => escape() });
   }
+  function chipsNow() {
+    if (!st) return [];
+    const links = st.cfg.pages.some(p => p.blocks.some(b => b.type === 'links')), sel = st.sel && pageNow().blocks.find(b => b.id === st.sel.block);
+    if (sel && st.sel.kind === 'image') return ['Replace the picture', 'Make the picture round', 'Add a gallery'];
+    if (sel) return [`Move this section up`, `Make this section teal`, 'Center the text in this section', 'Hide this section'];
+    if (links) return ['Add a link for…', 'Add my Instagram', 'Make the buttons work', 'Dark mode', 'Rounder corners'];
+    return ['Make the buttons work', 'Add a page called About', 'Add a link for…', 'Dark mode', 'Add a gallery', 'Make the picture round'];
+  }
+  function say(text, extra, acts) { st.log.push({ who: 'flint', text, html: extra || '', acts: acts || [] }); logPaint(); return text; }
+  function logPaint() {
+    if (!fui) mountFlint(); if (!fui || !st) return;
+    st.log = st.log.slice(-40); fui.set(st.log);
+    const k = chipsNow().join('|'); if (k !== chipKey) { chipKey = k; fui.chips(chipsNow()); }
+  }
+  const undoAct = () => ({ label: 'Undo', fn: () => { if (undo()) say('Undone.'); } });
+  const chipActs = l => (l || []).map(c => /…$/.test(c) ? { label: c, act: 'fill', arg: c.replace(/…$/, '').replace(/^Paste the link$/, '') } : { label: c, act: 'ask', arg: c });
   const ctxNow = () => ({ view: 'site', site: true, start: !$('#wdz-start').hidden || (!st.hist.length && !st.log.some(m => m.who === 'flint' && m.text)), pages: st.cfg.pages.map(p => p.title), selection: !!st.sel });
+  const LEAVE = /^(?:leave it(?: for now)?|skip(?: it)?|later|not now|never ?mind|no thanks|nah|no)\b/i;
+  // the one question asked after an edit ("What’s the address?"): a link, an email, a handle, a page or words
+  async function answerPending(text, NL) {
+    const pend = st.pending; st.pending = null;
+    if (LEAVE.test(text)) { say(`OK, “${pend.label || 'it'}” stays without ${pend.kind === 'text' ? 'an answer' : 'an address'} for now. Click it in the preview any time.`); return true; }
+    const P0 = NL ? NL.parse(text, ctxNow()) : { steps: [] }, sure = (P0.steps || []).some(x => x.intent && x.conf >= 0.6 && !/^(?:help\.kb|find)$/.test(x.intent));
+    const looks = /(?:https?:\/\/|www\.|@|\.[a-z]{2,6}\b|^\+?\d[\d\s().-]{5,}$)/i.test(text) || /^(?:link it to|to)\s+the\s+\w+/i.test(text);
+    if (sure && !looks) return false;
+    const r = S().answer(st.cfg, pend, text);
+    if (r && r.relabel) { await runSteps([{ intent: 'site.link.add', slots: { label: r.relabel.replace(/^./, ch => ch.toUpperCase()) }, conf: 1, text }], text); return true; }
+    if (r && r.cfg) { const before = JSON.stringify(st.cfg); commitAll(before, S().normalize(r.cfg)); if (r.sel) st.sel = { block: r.sel.block, path: r.sel.path || '', kind: 'block' }; say(r.say, '', [undoAct()]); paint(); postSel(true); return true; }
+    if (!sure) { st.pending = pend; say(pend.kind === 'email' ? 'That doesn’t look like an email address. Type one like hello@example.com, or say “leave it”.' : pend.kind === 'phone' ? 'Type the number with its digits, or say “leave it”.' : pend.kind === 'handle' ? `Type the ${pend.label} handle, like @yourname, or paste the link.` : `Paste a link (like https://…), an email, or say a page, like “the contact page”. Or “leave it”.`, '', chipActs(['Leave it for now'])); return true; }
+    return false;
+  }
   async function ask(text) {
     if (!st) return '';
     st.log.push({ who: 'me', text }); logPaint();
     const startShown = !$('#wdz-start').hidden;
-    const NL = window.TribeNLU; const P = NL ? NL.parse(text, ctxNow()) : { steps: [] };
+    const NL = window.TribeNLU;
+    if (st.pending && await answerPending(text, NL)) return st.log[st.log.length - 1].text || '';
+    const P = NL ? NL.parse(text, ctxNow()) : { steps: [] };
     const steps = (P.steps || []).filter(s => s.intent && s.conf >= 0.6);
     if (startShown) hideStart();
-    if (!steps.length) return boost(text);
-    const before = JSON.stringify(st.cfg); let work = st.cfg; const said = [];
+    if (!steps.length || steps.length < (P.steps || []).length && !steps.some(s => /^site\./.test(s.intent))) {
+      if (NL && NL.needsAI && !NL.needsAI(text) && NL.clarify) {   // feat/flint-unify: ask, don't shrug
+        const alts = ((P.steps[0] || {}).alts || P.alts || []).map(a => a.example).filter(Boolean);
+        const q = NL.clarify(text, { view: 'designer' });
+        const chips = q.chips.map(c => c.fill ? { label: c.label, act: 'fill', arg: c.say } : { label: c.label, act: 'ask', arg: c.say });
+        return say(q.q, '', chips.slice(0, 4));
+      }
+      return boost(text);
+    }
+    return runSteps(steps, text);
+  }
+  async function runSteps(steps, text) {
+    const before = JSON.stringify(st.cfg); let work = st.cfg; const said = []; let asked = null, chips = null, handed = false;
     for (const s of steps) {
       if (s.intent === 'undo') { if (work !== st.cfg) { st.cfg = work; } undo(); work = st.cfg; said.push(st.hist.length || st.fut.length ? 'Undone.' : 'Nothing to undo.'); continue; }
       if (s.intent === 'redo') { redo(); work = st.cfg; said.push('Redone.'); continue; }
       if (s.intent === 'lesson' && window.TribeFlintLessons) { window.TribeFlintLessons.open(s.slots.feature); said.push('Opened the lesson.'); continue; }
       if (/^site\.(hours|autofill)$/.test(s.intent) && st.pid) await loadFacts();
-      const r = S().command(work, s, { page: st.page, sel: st.sel, facts: st.facts });
+      const r = /^site\./.test(s.intent) ? S().command(work, s, { page: st.page, sel: st.sel, facts: st.facts }) : null;
       if (!r) {
-        if (window.TribeFlintLocal && !/^(build\.|canvas\.|edit\.)/.test(s.intent)) { const out = []; try { await window.TribeFlintLocal.handle(s.text || text, { say: t => { out.push(String(t || '').replace(/<[^>]+>/g, '')); return true; }, act: l => l, legacy: async t => { if (window.TribeFlint && window.TribeFlint.ask) window.TribeFlint.ask(t); out.push('Done in Flint’s chat.'); return true; }, special: async () => false, legacyHit: () => false, modelOnline: () => false, task: async (title, extra) => { try { return (await C.api('/tasks', { method: 'POST', body: { title, ...(extra || {}) } })).task; } catch { return null; } } }); } catch {} if (out.length) { said.push(out.join(' ')); continue; } }
+        // not a site edit: Flint's full brain does it (a task, a message, the theme, a question), replying right here
+        if (!/^(build\.|canvas\.|edit\.)/.test(s.intent) && fui) { commitAll(before, work); if (said.length) { say(said.filter(Boolean).join(' ')); said.length = 0; } await fui.flint(s.text || text); work = st.cfg; handed = true; continue; }
         said.push(''); return boost(text);
       }
       if (r.cfg) work = S().normalize(r.cfg);
       if (r.page) st.page = r.page;
       if (r.sel) st.sel = { block: r.sel.block, path: r.sel.path || '', kind: /\.$/.test(r.sel.path || '') || /^site\.image/.test(s.intent) ? 'image' : 'block' };
+      if (r.ask) asked = r.ask; if (r.chips) chips = r.chips;
       said.push(r.say);
       if (r.need === 'html' || r.need === 'zip') { if (work !== st.cfg) { commitAll(before, work); } await download(r.need); st.log.pop(); continue; }
       if (r.need === 'template') { commitAll(before, work); await useTemplate(r.template); work = st.cfg; continue; }
@@ -717,16 +758,19 @@
       if (r.need === 'comments-tasks') { commitAll(before, work); await turnIntoTasks(); said.pop(); continue; }
       if (r.need === 'autofill') { commitAll(before, work); const f = await autofill(st.cfg); commit(f.cfg); fillNote(f.used); work = st.cfg; said.pop(); said.push(f.used.length ? `Filled from the project: ${f.used.join(', ')}. Undo brings back what you had.` : 'The project has nothing to fill in yet: give it a bio, a vision doc, members or tasks.'); continue; }
       if (r.need === 'blank') { commitAll(before, work); commit(st.unfilled ? JSON.parse(st.unfilled) : S().blank(st.cfg.name)); work = st.cfg; said.pop(); said.push(st.unfilled ? 'Started from the template as it is, nothing filled in. Undo brings it back.' : 'Started blank. Undo brings back what you had.'); continue; }
-      if (r.need === 'repo') { commitAll(before, work); await flush(); if (window.TribeFlint && window.TribeFlint.ask) { window.TribeFlint.ask('build me a landing page'); said.pop(); said.push('Building it into the repo as code in Flint’s chat. The design here stays as it is.'); } continue; }
+      if (r.need === 'repo') { commitAll(before, work); await flush(); if (fui) { said.pop(); say('Building it into the repo as code. The design here stays as it is.'); await fui.flint('build me a landing page'); handed = true; } continue; }
       if (r.need === 'settings') { st.panel = 'site'; continue; }
       if (r.need === 'logo' || r.need === 'favicon' || r.need === 'seoimage') { commitAll(before, work); paint(); picFor = r.need === 'seoimage' ? 'share' : r.need; const f = $('#wdz-file'); f.value = ''; f.click(); continue; }
       if (r.need === 'upload') { commitAll(before, work); paint(); pickFile(); }
       if (r.need === 'board') { commitAll(before, work); paint(); board(); }
       if (r.need === 'alt') { commitAll(before, work); paint(); setTimeout(() => { const i = $('#wdz-alt'); if (i) i.focus(); }, 30); }
     }
+    const changed = JSON.stringify(work) !== before || JSON.stringify(st.cfg) !== before;
     commitAll(before, work);
+    if (asked) st.pending = asked;
     const reply = said.filter(Boolean).join(' ');
-    say(reply); paint(); postSel(true);
+    if (reply || !handed) say(reply || 'Done.', '', [...(changed ? [undoAct()] : []), ...chipActs(chips)]);
+    paint(); postSel(true);
     return reply;
   }
   function commitAll(before, work) { if (JSON.stringify(work) === before || work === st.cfg && JSON.stringify(st.cfg) === before) return; if (work !== st.cfg) { st.hist.push(before); st.fut = []; st.cfg = work; fixPage(); save(); } }
@@ -738,11 +782,11 @@
         const j = r && r.text ? JSON.parse((/\{[\s\S]*\}/.exec(r.text) || ['{}'])[0]) : null;
         let c = st.cfg, n = 0;
         for (const op of (j && j.ops) || []) { if (op.block && op.path && typeof op.value === 'string' && pg.blocks.some(b => b.id === op.block)) { c = S().setProp(c, st.page, op.block, op.path, op.value.slice(0, 600)); n++; } else if (op.add && S().BLOCKS[op.add]) { c = S().addBlock(c, st.page, op.add).cfg; n++; } }
-        if (n) { commit(c); return say(`${j.say || 'Done.'} ✦ via ${r.via}`); }
+        if (n) { commit(c); return say(`${j.say || 'Done.'} ✦ via ${r.via}`, '', [undoAct()]); }
       } catch {}
     }
-    const did = 'Nothing changed: that is not one of my free edits. For free I wire buttons, add and rename pages, add, move and remove blocks, swap and crop pictures, switch themes and dark mode, change words, and export HTML.';
-    const would = 'An AI reads the request the way you said it and turns it into the same edits here, each one undoable.';
+    const did = 'Nothing changed: that needs new writing or pictures. For free I add links, socials, buttons, pages and sections, change any words, colors and layouts, wire buttons, swap pictures and export HTML.';
+    const would = 'An AI writes the copy or makes the picture you asked for and turns it into the same edits here, each one undoable.';
     st.log.push({ who: 'flint', text: '', html: B ? B.html({ did, would, ask: text }) : esc(did) }); logPaint();
     return 'boost';
   }
@@ -754,5 +798,5 @@
   // dirty(pid): edits not on the host yet (the sidebar's Website row shows a dot); hasDraft(pid): a design exists here
   const dirty = pid => { if (st && (pid == null || st.pid === pid)) return !!st.dirty; const d = readDraft(pid); return !!(d && d.dirty); };
   const hasDraft = pid => !!(st && st.pid === pid) || !!readDraft(pid);
-  window.TribeSiteDesigner = { open, close, ask, download, undo, redo, flush, dirty, hasDraft, comments: () => st ? st.comments : [], state: () => st && { pid: st.pid, page: st.page, sel: st.sel, hist: st.hist.length, fut: st.fut.length, log: st.log, open: !!root && !root.hidden, dirty: st.dirty, rev: st.rev, dev: st.dev, panel: st.panel, cmode: st.cmode }, cfg: () => st && st.cfg, useTemplate, gallery: () => gal.list };
+  window.TribeSiteDesigner = { open, close, ask, download, undo, redo, flush, dirty, hasDraft, comments: () => st ? st.comments : [], state: () => st && { pid: st.pid, page: st.page, sel: st.sel, hist: st.hist.length, fut: st.fut.length, log: st.log, pending: st.pending || null, open: !!root && !root.hidden, dirty: st.dirty, rev: st.rev, dev: st.dev, panel: st.panel, cmode: st.cmode }, cfg: () => st && st.cfg, useTemplate, gallery: () => gal.list };
 })();

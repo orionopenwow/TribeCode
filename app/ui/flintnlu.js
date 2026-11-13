@@ -590,7 +590,7 @@
   const PHONE_RX = /(\+?\d[\d\s().-]{5,}\d)/;
   const urlOf = r => { const e = EMAIL_RX.exec(r); const m = URL_RX.exec(e ? r.replace(e[0], ' ') : r); return m ? m[1].replace(/[.)]+$/, '') : ''; };
   const capFirst = s => { s = String(s || '').trim(); return s ? s.charAt(0).toUpperCase() + s.slice(1) : s; };
-  const tidyLabel = s => capFirst(String(s || '').replace(/^["“'\s]+|["”'.!?\s]+$/g, '').replace(/^(?:my|our|the|a|an|this|that)\s+/i, '').replace(/\s+(?:please|pls|plz|too|thanks|thx|on (?:there|it|the (?:page|site))|here|for me)$/i, '').trim());
+  const tidyLabel = s => /^(?:a|an|the|new|another|one|some|my|our)$/i.test(String(s || '').trim()) ? '' : capFirst(String(s || '').replace(/^["“'\s]+|["”'.!?\s]+$/g, '').replace(/^(?:my|our|the|a|an|this|that)\s+/i, '').replace(/\s+(?:please|pls|plz|too|thanks|thx|on (?:there|it|the (?:page|site))|here|for me)$/i, '').trim());
   const AWORD = '(?:add|put|insert|include|create|make|need|want|give me|stick|throw|drop|new|chuck|slap|pop|get|i want|i need|we need|can we get|could we get|lets add|let us add)';
   function linkLabel(r) {
     const s = r.replace(EMAIL_RX, ' ').replace(URL_RX, ' ').replace(/\s+/g, ' ').trim();
@@ -661,6 +661,11 @@
     if ((m = /^(?:go to|open|show|show me|switch to|take me to|jump to|edit|view|see|back to)\s+(?:the\s+|my\s+|our\s+)?([\w' -]+?)\s+page$/i.exec(c)) && !/^(?:website|site|home ?page|landing)$/.test(m[1]) || (m = /^(?:go to|open|switch to|take me to|jump to|back to)\s+(?:the\s+)?(home ?page|homepage|home)$/.test(c) ? ['', 'home'] : null)) return H('site.page.go', { name: m[1].replace(/\s+/g, ' ') });
     if (/\b(?:clear|empty|wipe|reset)\s+(?:this|the|my)\s+page\b/.test(c)) return H('site.page.clear', {});
     // look per section: align, a color, rounder corners, the site's language, the logo
+    if (/\b(?:this|that|the selected|selected)\s+(?:section|block|part|bit)\b/.test(c)) {
+      const dir = /\b(?:to the top|at the top|first)\b/.test(c) ? 'top' : /\b(?:to the bottom|at the bottom|last)\b/.test(c) ? 'bottom' : /\b(?:up|higher|above)\b/.test(c) ? 'up' : /\b(?:down|lower|below)\b/.test(c) ? 'down' : '';
+      if (dir && /\b(?:move|put|shift|bump|push|place)\b/.test(c)) return H('site.block.move', { dir });
+      const col = colorOf(c); if (col && !/\b(?:accent|brand|primary)\b/.test(c) && !/\b(?:background|bg)\b/.test(c) && /\b(?:make|turn|paint|color|set|change|use|give|in)\b/.test(c)) return H('site.block.color', { color: col });
+    }
     if (/\b(?:align|aligned|alignment|justify|center|left|right)\b/.test(c) && /\b(?:text|words|everything|content|copy|it all|all of it|stuff|things|alignment|aligned|align)\b/.test(c) && ALIGN_W(c) && !/\b(?:picture|image|photo|button)\b/.test(c)) { const b = blockOf(c.replace(/\b(?:the\s+)?(?:text|words|copy)\b/g, ' ')); return H('site.align', { align: ALIGN_W(c), ...(b ? { block: b } : {}) }); }
     if (/^(?:left|right)\s+align\b|\balign\b.*\b(?:left|right)\b/.test(c)) { const b = blockOf(c); return H('site.align', { align: ALIGN_W(c), ...(b ? { block: b } : {}) }); }
     { const b = blockOf(c), col = colorOf(c); if (b && b !== 'footer' && col && !/\b(?:accent|brand|primary|main colou?r|buttons?|theme)\b/.test(c) && !(/\b(?:background|bg|backdrop)\b/.test(c) && /^(?:gray|grey|black|white|dark|light|silver)$/.test(col.name)) && /\b(?:make|turn|paint|color|set|change|use|give|in)\b/.test(c)) return H('site.block.color', { block: b, color: col }); }

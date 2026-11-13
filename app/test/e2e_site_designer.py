@@ -53,11 +53,11 @@ def watch(page, who):
 
 def ask(page, text):
     n = page.evaluate("TribeSiteDesigner.state().log.length")
-    page.fill("#wdz-in", text)
-    page.press("#wdz-in", "Enter")
+    page.fill("#flm-in-designer", text)
+    page.press("#flm-in-designer", "Enter")
     page.wait_for_function("n => TribeSiteDesigner.state().log.length >= n + 2", arg=n, timeout=10000)
     page.wait_for_timeout(250)
-    return page.locator("#wdz-log > *").last.inner_text()
+    return page.locator("[data-flctx=designer] .fl-thread > *").last.inner_text()
 
 
 def cfg(page):
@@ -176,7 +176,7 @@ def main():
 
             # ---- the one AI-boost card for what needs an AI
             ask(pg, "write me a heartfelt paragraph about why my pottery matters")
-            card = pg.locator("#wdz-log .boost").last
+            card = pg.locator("[data-flctx=designer] .boost").last
             assert card.is_visible(), "the boost card"
             t = card.inner_text()
             assert "Use my AI" in t and "Get credits / Premium" in t and "Free · no AI" in t.replace("FREE · NO AI", "Free · no AI") or "free" in t.lower(), t

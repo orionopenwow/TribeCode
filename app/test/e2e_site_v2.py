@@ -55,11 +55,11 @@ def watch(page, who):
 
 def dask(page, text):
     n = page.evaluate("TribeSiteDesigner.state().log.length")
-    page.fill("#wdz-in", text)
-    page.press("#wdz-in", "Enter")
+    page.fill("#flm-in-designer", text)
+    page.press("#flm-in-designer", "Enter")
     page.wait_for_function("n => TribeSiteDesigner.state().log.length >= n + 2", arg=n, timeout=15000)
     page.wait_for_timeout(250)
-    return page.locator("#wdz-log > *").last.inner_text()
+    return page.locator("[data-flctx=designer] .fl-thread > *").last.inner_text()
 
 
 def cfg(page): return page.evaluate("TribeSiteDesigner.cfg()")
@@ -253,7 +253,7 @@ def main():
             fr.locator(".wdz-pin").first.wait_for(timeout=5000)
             assert fr.locator(".wdz-pin").count() == 3, "three pins"
             assert pg.locator(".wdz-clist .wdz-c").count() == 3
-            assert "turn them into tasks" in pg.inner_text("#wdz-log"), "Flint suggests tasks after 3 comments"
+            assert "turn them into tasks" in pg.inner_text("[data-flctx=designer] .fl-thread"), "Flint suggests tasks after 3 comments"
             shot(pg, "site-comments.png")
             # a teammate sees them too (server)
             assert len(ok(api(f"/projects/{pid}/site-comments", token=tok))["comments"]) == 3

@@ -652,7 +652,7 @@
       draw() {
         const empty = !list.length && !ui.busy;
         box.innerHTML = empty ? `<div class="fl-empty"><p class="fl-hi"><b>Hi, I'm Flint.</b> ${esc(o.hello || 'Say what you want. Everything I do here can be undone.')}</p></div>`
-          : list.map(msgHtml).join('') + (ui.busy ? `<div class="fl-msg fl streaming"><span class="fl-av sm">${flintIco(12)}</span><div class="fl-b"><div class="fl-t">On it…</div></div></div>` : '');
+          : list.map(msgHtml).join('') + (ui.busy && (!list.length || list[list.length - 1].who === 'me') ? `<div class="fl-msg fl streaming"><span class="fl-av sm">${flintIco(12)}</span><div class="fl-b"><div class="fl-t">On it…</div></div></div>` : '');
         box.scrollTop = box.scrollHeight;
         const c = root.querySelector('[data-flm="clear"]'); if (c && !o.onSay) c.hidden = !list.length;
       },
