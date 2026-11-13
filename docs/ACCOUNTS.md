@@ -41,7 +41,7 @@ Settings › More settings › **Test accounts**, or open the app with `?account
 
 ## Server scaffold (server/accounts.js)
 
-Off by default. `TRIBE_ACCOUNTS=1` turns the routes on; they answer only requests from this computer (like `/api/host/reclaim`) and are signup and login are rate-limited (30 a minute per address, their own bucket).
+Off by default. `TRIBE_ACCOUNTS=1` turns the routes on. Since feat/auth2 they answer remote browsers too (a friend's browser, a tunnel, the cloud); the host's routes (`resets`, `admin/*`) answer only the host on this computer. Every POST/PUT/DELETE must be same-origin JSON (CSRF). Signup, login and reset are rate-limited (30 a minute per client address, their own bucket); see feat/auth2 below for the rest.
 
 | Route | Body | Answer |
 | --- | --- | --- |
@@ -56,6 +56,19 @@ Off by default. `TRIBE_ACCOUNTS=1` turns the routes on; they answer only request
 | `POST /api/accounts/reset/complete` | `{ username, code, password }` | `{ account, token }`; ends every other session |
 | `POST /api/accounts/link` | Bearer `tca_…`, `{ member: <member key> }` | `{ account, linked }`: that member joins the account (a passwordless placeholder is dropped) |
 | `POST /api/accounts/signup` + `link: true` | the member's own tribe key as Bearer | claims the account that member was mapped to (if it has no password yet): new username + password, `{ account, token, linked }` |
+| `GET /api/accounts/config` | | `{ on, openSignup, email }` (public) |
+| `GET/PUT /api/accounts/admin/settings` | the host's member key, on this computer | `{ openSignup, smtp: { host, port, secure, user, from, hasPass, on } }`; PUT `{ openSignup?, smtp?: {…} \| null }` |
+| `POST /api/accounts/admin/smtp-test` | the host, on this computer, `{ to }` | `{ ok }` or `502` with the SMTP server's answer |
+| `POST /api/accounts/oauth/confirm` | `{ ticket, username, displayName?, invite? }` | `{ account, token, member?, memberToken? }`; `403 invite`, `409 taken` (+ suggestions), `409 link`, `410` |
+| `POST /api/accounts/oauth/link` | Bearer `tca_…`, `{ ticket }` | `{ account, linked }` |
+| `POST /api/accounts/email/request` | `{ email, invite? }` | `{ ok, via: 'email' }` for every address; `400 no-email` when email is off |
+| `POST /api/accounts/email/complete` | `{ token, username? }` | sign-in: `{ account, token, … }`; sign-up without a username: `{ need: 'username', email, suggested }`; verify: `{ ok, verified }` |
+| `POST /api/accounts/reset/complete` | `{ token, password }` (the emailed link) | `{ account, token, … }`; every other session ends |
+| `GET /api/accounts/methods` | Bearer `tca_…` | `{ methods: [{ id: password \| email \| provider:<p>, … }], email }`; `DELETE methods/<id>` (`409 last`) |
+| `POST /api/accounts/password` | Bearer `tca_…`, `{ password, current? }` | sets or changes the password (the current one when there is one) |
+| `POST /api/oauth/<p>/start` + `mode: 'account'` | Bearer `tca_…` | links the provider to the account (the same account must finish) |
+| `POST /api/oauth/<p>/start` + `desktop: { challenge }` | the app's PKCE S256 challenge | the callback hands back `/signin.html#desktop=<code>&short=<6>` instead of a result |
+| `POST /api/oauth/desktop/exchange` | `{ code \| short, verifier }` | the same outcome as `oauth/finish`; 2 minutes, once, three wrong verifiers kill it |
 | `GET /api/account` | the member's tribe key | `{ canDelete, keeps, account? }` (the host: `canDelete: false`) |
 | `DELETE /api/account` | `{ confirm: "DELETE" }`, the member's tribe key | removes the member and their agents, device links, project seats, linked accounts and sessions, files named by their id; every `"<member id>"` in the tribe's JSON/JSONL becomes `"deleted-…"` |
 
@@ -79,6 +92,31 @@ Store: `.tribe/accounts.json` = `{ version: 1, accounts: [{ id, username, userna
   sha256, good for 30 minutes and 5 tries. The rate-limited bucket covers signup, login and reset.
 - **Members**: every person in `members.json` gets an account mapped by member id (`account.members`). Member keys are never changed, so every link, device and agent key that works today keeps working.
 
+## feat/auth2: open sign-up, remote access, providers, email
+
+- **Open sign-up** (`.tribe/auth.json` `openSignup`, default on; `TRIBE_OPEN_SIGNUP=0` flips the default). Off: password
+  sign-up, provider sign-up and email sign-up need an invite code (`invite`), which also makes the person a member of the
+  tribe. The host computer can always make accounts.
+- **Providers make accounts.** With accounts on, a provider identity no member has linked goes to accounts
+  (`oauthOutcome` in server/accounts.js): an account with that identity signs in; an account whose **verified** email
+  equals the provider's **verified** email gets a link offer (sign in to it, then `oauth/link`; no duplicate); otherwise a
+  ticket (10 minutes, once, kept as a sha256 in memory) for the username step. Accounts keep
+  `providers: [{ provider, subject, name, linked }]`. Scopes now ask for the email (Discord `identify email`, GitHub
+  `read:user user:email` with `/user/emails`, Google `openid profile email`).
+- **Desktop handoff**: see docs/SIGNUP-FLOWS.md › Platforms. The app keeps the PKCE verifier; the browser only ever sees a
+  one-time code.
+- **Email** (`server/smtp.js`, Node's net and tls): STARTTLS (587) or TLS (465), certificates always checked; plain only to
+  a relay on this computer; AUTH PLAIN/LOGIN only over TLS or locally; CR/LF stripped from every header; dot-stuffing.
+  Links: sign-in and sign-up (`#magic=`, 15 minutes), reset (`#reset=`, 15 minutes), confirm (`#verify=`, 24 hours), all
+  once, kept as a sha256 in memory, in the URL **fragment** (cleared by signin.html at once). Only verified addresses get
+  sign-in links or link offers. At most 5 mails per address per 15 minutes, and 5 requests a minute per client.
+- **Lockout**: 10 wrong passwords for one username within 15 minutes lock it for 15 minutes (`429 locked`). Unknown
+  usernames are counted the same way, so a lockout reveals nothing.
+- **No enumeration**: login, `email/request` and `reset/request` answer the same for known and unknown names and
+  addresses (`via` depends only on whether the host set up email).
+- **Mail links** point only at an allowed origin (the public URL, `http://localhost:<port>`, the home network), never at
+  a request's `Host`.
+
 ## Refresh the username database / clean the backend
 
 ```
@@ -92,10 +130,14 @@ One-shot and idempotent. It normalizes names and usernames (trim, collapse space
 
 1. **Passwords required** on the API for non-guest accounts (the sheet already requires one and checks strength); keep
    scrypt and raise N as hardware allows. ~~Reset flow~~ (done, host-completed: `reset/*`, Settings › Account).
-2. **Email verification** and sending (the welcome mail and the reset mail; TODO(email) in server/accounts.js): an optional, verified email per account (signup sends a one-time code; unverified accounts stay `guest`).
-3. **OAuth linking**: move Discord/GitHub/Google links from members (`server/oauth.js`) to accounts, so one account signs in to every tribe it belongs to.
+2. ~~Email verification and sending~~ (done, feat/auth2, when the host sets up SMTP): confirm links, sign-in links, reset links.
+   Without SMTP nothing is sent and the host's code path stays.
+3. ~~OAuth linking~~ (done, feat/auth2): providers make, sign in to and link to accounts (Settings › Account › Sign-in
+   methods). Member-level links (`identities` on members) still work for tribes without accounts.
 4. ~~Account deletion~~ (done: `DELETE /api/account`) and **export** (a JSON of the account, its sessions and its member records).
-5. **Remote access**: lift the local-only rule behind HTTPS, add CSRF protection for cookie sessions, and per-account rate limits.
+5. ~~Remote access~~ (done, feat/auth2): sign-up and sign-in answer remote browsers, admin routes stay local, same-origin
+   JSON only, per-client limits and the per-username lockout. Still to do: refuse remote account routes over plain http
+   when a public https URL is set.
 6. ~~Front end~~ (done): with `GET /api/accounts/me` answering 401 (on) instead of 404 (off), the Log in sheet has a
    username + password form (Log in, Create account), Log out ends the account session, and Delete my account uses
    `/api/account`. With the flag off nothing changes: TEST accounts and the local behaviour stay.

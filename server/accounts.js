@@ -25,7 +25,7 @@
 //   GET  resets  (the host's member key)                         -> { resets }  POST resets/<id> makes a one-time code, DELETE dismisses
 //   POST link    (Bearer tca_…) { member: <member key> }         -> { account, linked }  a guest's member joins their new account
 // Reset codes: 8 characters, shown once to the host, only their sha256 kept, 30 minutes, 5 tries. Requests last 24 hours.
-// There is no email yet: TODO(email) marks where a welcome/verification mail and the reset mail will be sent.
+// feat/auth2: email (server/smtp.js) when the host sets up SMTP: confirm, sign-in, sign-up and reset links. Without it, the host code path.
 // And, for the signed-in member (their tribe key, like every other route), the account deletion contract of
 // docs/APP-STORE.md (also flag-gated; with it off the app clears only the device):
 //   GET    /api/account                       -> { canDelete, keeps, account? }   (the host: canDelete false, Start fresh)
@@ -397,7 +397,7 @@ module.exports = function makeAccounts({ store, getMembers, isLocal, limited, ha
       if (weak) { fail(res, 400, weak); return true; }
       const email = String(body.email || '').trim().slice(0, 254);
       if (email && !validEmail(email)) { fail(res, 400, 'that email address looks off: check it, or leave it empty'); return true; }
-      const mail = email ? { email: { address: email, verified: false, added: now() } } : {};   // TODO(email): send a welcome mail with a verification code
+      const mail = email ? { email: { address: email, verified: false, added: now() } } : {};   // feat/auth2: a confirm link goes out below when email is on
       // polish: { link: true } with the member's own tribe key (Bearer) claims the account this member was mapped to
       // (syncMembers) when it has no password yet: it takes the new username and password, keeps the member link
       const mem = body.link && memberFromReq ? memberFromReq(req) : null;
@@ -453,7 +453,7 @@ module.exports = function makeAccounts({ store, getMembers, isLocal, limited, ha
       } else if (a && a.password && a.status !== 'disabled') {
         a.resets = (a.resets || []).filter(r => Date.parse(r.expires) > Date.now()).slice(-2);
         if (!a.resets.some(r => r.status === 'requested')) a.resets.push({ id: 'rst-' + id(8), requested: now(), expires: new Date(Date.now() + 86400_000).toISOString(), status: 'requested' });
-        save(); log(`accounts: password reset asked for ${a.username}`);   // TODO(email): mail the code to a verified address instead
+        save(); log(`accounts: password reset asked for ${a.username}`);   // no email on the account (or email off): the host makes the code
       }
       send(res, 200, { ok: true, via: emailOn() ? 'email' : 'host' }); return true;   // the same answer for every name: nothing to probe
     }
