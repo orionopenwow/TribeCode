@@ -118,14 +118,16 @@ const MIME = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; cha
 // an HttpOnly cookie that pages can't read. GET /api/session swaps the cookie back for the key when storage comes up empty.
 const SESSION_COOKIE = 'tribe_s';
 function sessionCookie(res, token) {
-  const req = res.req; if (!req || typeof token !== 'string') return;
+  const req = res.req; if (!req || typeof token !== 'string' || token.startsWith('tca_')) return;   // harden: never an account token
   const secure = req.socket.encrypted || /https/i.test(String(req.headers['x-forwarded-proto'] || '')) || /^https:/i.test(String(req.headers.origin || ''));
   res.setHeader('Set-Cookie', `${SESSION_COOKIE}=${encodeURIComponent(token)}; Path=/; HttpOnly; SameSite=Lax; Max-Age=34560000${secure ? '; Secure' : ''}`);
 }
 const cookieToken = req => { const m = String(req.headers.cookie || '').match(new RegExp(`(?:^|;\\s*)${SESSION_COOKIE}=([^;]+)`)); try { return m ? decodeURIComponent(m[1]) : null; } catch { return null; } };
 function send(res, status, body, headers = {}) {
   const isObj = typeof body === 'object' && !Buffer.isBuffer(body);
-  if (isObj && body && status === 200 && typeof body.token === 'string' && body.member && !res.headersSent) sessionCookie(res, body.token);
+  // harden: the cookie only ever holds a MEMBER key. An account sign-in (token tca_…) puts the member key it came with
+  // (memberToken) there, or nothing: the account token stays in the page's own storage.
+  if (isObj && body && status === 200 && body.member && !res.headersSent) { const k = typeof body.token === 'string' && !body.token.startsWith('tca_') ? body.token : typeof body.memberToken === 'string' ? body.memberToken : null; if (k) sessionCookie(res, k); }
   res.writeHead(status, { 'Content-Type': isObj ? 'application/json' : 'text/plain; charset=utf-8', 'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Headers': 'Authorization, Content-Type, Mcp-Session-Id, MCP-Protocol-Version, X-Project', 'Access-Control-Allow-Methods': 'GET, POST, PATCH, PUT, DELETE, OPTIONS', ...headers });
   res.end(isObj ? JSON.stringify(body) : body);
@@ -206,12 +208,38 @@ function clientKey(req) {
   const cf = req.headers['cf-connecting-ip'], xff = String(req.headers['x-forwarded-for'] || '').split(',').map(x => x.trim()).filter(Boolean).pop();
   return String(cf || xff || ra).slice(0, 64);
 }
+// harden: each key remembers its own window (a 15-minute mail bucket used to be forgotten after a minute), keeps at most
+// max+1 stamps, and the map itself is capped (a flood of new addresses drops the oldest keys, not the server).
+const HITS_MAX = Number(process.env.TRIBE_TEST === '1' && process.env.TRIBE_TEST_HITS_MAX) || 50_000;
 function limited(req, max = 20, windowMs = 60_000, bucket = '') {   // bucket: a route's own count (accounts), else shared
   const k = (bucket ? bucket + ':' : '') + clientKey(req), now = Date.now();
-  const h = (hits.get(k) || []).filter(t => now - t < windowMs); h.push(now); hits.set(k, h);
-  return h.length > max;
+  const e = hits.get(k) || { w: windowMs, t: [] };
+  e.w = Math.max(e.w, windowMs); e.t = e.t.filter(t => now - t < windowMs); e.t.push(now); if (e.t.length > max + 1) e.t.splice(0, e.t.length - max - 1);
+  hits.delete(k); hits.set(k, e);   // re-insert: the map's order is least recently used first
+  if (hits.size > HITS_MAX) for (const x of hits.keys()) { hits.delete(x); if (hits.size <= HITS_MAX * 0.9) break; }
+  return e.t.length > max;
 }
-setInterval(() => { const now = Date.now(); for (const [k, h] of hits) if (!h.length || now - h[h.length - 1] > 60_000) hits.delete(k); }, 60_000).unref();   // forget idle addresses
+setInterval(() => { const now = Date.now(); for (const [k, e] of hits) if (!e.t.length || now - e.t[e.t.length - 1] > e.w) hits.delete(k); }, 60_000).unref();   // forget idle addresses
+// harden: the expensive routes, per endpoint and per client (and per member when signed in). Search and outbound fetches,
+// thumbnails, exports, AI, uploads and invites. The host's own computer gets four times the room.
+const ENDPOINT_LIMITS = [
+  // [method or '*', /path after \/api\//, max per minute, bucket]
+  ['GET', /^inspo\/search$/, 30, 'search-inspo'], ['POST', /^inspo\/link$/, 30, 'search-link'], ['GET', /^inspo\/freesound/, 30, 'search-sound'],
+  ['GET', /^gifs\/search$/, 30, 'search-gifs'], ['GET', /^assets\/search$/, 40, 'search-assets'], ['GET', /^code\/search$/, 90, 'search-code'],
+  ['GET', /^(chat|channels)\/[^/]+\/search$/, 90, 'search-chat'], ['GET', /^captures(\/ask)?$/, 60, 'search-captures'], ['GET', /^talent\/public$/, 30, 'talent-public'],
+  ['GET', /^thumb(\/|$)/, 60, 'thumb'], ['*', /^(export|flint\/proof\/save|flint\/blender|projects\/[^/]+\/site-config\/publish)(\/|$)/, 12, 'export'],
+  ['POST', /^(ai\/(refine|extract|tags)|llm\/(ask|chat|stream)|askai|flint\/(ask|chat)|canvasai\/(ask|plan))(\/|$)/, 40, 'ai'],
+  ['POST', /^(uploads|visuals|captures|media)(\/|$)/, 40, 'upload'], ['POST', /^invites?(\/|$)/, 20, 'invite'],
+];
+function endpointLimited(req, sub, me) {
+  for (const [meth, rx, max, bucket] of ENDPOINT_LIMITS) {
+    if ((meth !== '*' && meth !== req.method) || !rx.test(sub)) continue;
+    const local = isLocal(req);
+    if (limited(req, local ? max * 4 : max, 60_000, `ep-${bucket}${me ? ':' + me.id : ''}`)) return bucket;
+    return '';
+  }
+  return '';
+}
 
 // ---------- realtime ----------
 const online = new Map(); // memberId -> { sockets:Set, where, since, project }
@@ -702,6 +730,7 @@ async function apiInProject(req, res, url) {
   const ctx = () => ({ m, a, b, c, parts, me, url, readBody, send, fail });
   const me = authed(req);
   const need = () => { if (!me) { fail(res, 401, 'not a member of this tribe'); return false; } return true; };
+  { const hit = endpointLimited(req, parts.join('/'), me); if (hit) { res.setHeader('Retry-After', '60'); return fail(res, 429, hit.startsWith('search') ? 'Searching a lot: give it a minute, then try again.' : 'slow down: too many of those in a minute'); } }   // harden: per endpoint and client
 
   if (!req.headers['x-tribe-ping']) lastActivity = Date.now();
   // the sign-in backup: the cookie set when this browser joined or signed in becomes the key again
