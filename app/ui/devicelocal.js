@@ -4,7 +4,7 @@
 //     project, oldest unnamed pruned first), shown in the usual Versions panel (versions.js) with the diff, restore a
 //     file, restore the project as a new version, a name, compare and a zip. Edits save a version by themselves a few
 //     seconds after you stop, like a plain folder's history on a host.
-//   * The website designer's config (site-config), so a design saves cleanly here and is part of each version.
+//     The website designer itself is served by phonelocal.js (feat/mobile-complete); its config is read from there.
 //   * Widgets: the picker and the cards that need no host (note, checklist, bookmarks, countdown, my tasks, quick docs),
 //     in the project and on Home, with their state.
 //   * Notification settings (what pings, quiet hours, digest, mutes) kept on this device.
@@ -47,11 +47,12 @@
   // ---------- what a version holds: the project as plain text files ----------
   const EXT = { sheet: 'sheet', deck: 'deck' };
   const docPath = d => `docs/${d.slug}.${EXT[d.kind] || 'md'}`;
+  const siteBag = (pid, make) => { const db = K().db(); if (make) { db.local = db.local || {}; db.local.site = db.local.site || {}; db.local.site[pid] = db.local.site[pid] || {}; } return ((db.local || {}).site || {})[pid] || null; };
   function tree(pid) {
     const db = K().db(), files = {}, meta = { docs: {} };
     const vis = (db.vision || {})[pid]; if (vis) files['VISION.md'] = String(vis);
     for (const d of (db.docs[pid] || [])) { const p = docPath(d); files[p] = String(d.body || ''); meta.docs[p] = { slug: d.slug, title: d.title, kind: d.kind || '' }; }
-    const cfg = (db.siteCfg || {})[pid]; if (cfg && cfg.config) files['site/site.json'] = JSON.stringify(cfg.config, null, 2) + '\n';
+    const cfg = siteBag(pid); if (cfg && cfg.config) files['site/site.json'] = JSON.stringify(cfg.config, null, 2) + '\n';   // the designer's config, kept by phonelocal.js
     return { files, meta };
   }
   const same = (a, b) => { const ka = Object.keys(a), kb = Object.keys(b); return ka.length === kb.length && ka.every(k => a[k] === b[k]); };
@@ -130,7 +131,7 @@
   function applyFile(pid, v, path) {
     const k = K(), db = k.db(), text = v.files[path], now = k.iso();
     if (path === 'VISION.md') { db.vision[pid] = text || ''; return; }
-    if (path === 'site/site.json') { db.siteCfg = db.siteCfg || {}; if (text == null) delete db.siteCfg[pid]; else { let c = null; try { c = JSON.parse(text); } catch {} if (c) db.siteCfg[pid] = { config: c, rev: ((db.siteCfg[pid] || {}).rev || 0) + 1, savedAt: now }; } try { localStorage.removeItem('tribecode.sitedesigner.draft.' + pid); } catch {} k.push({ type: 'site-config', project: pid }); return; }
+    if (path === 'site/site.json') { const sb = siteBag(pid, true); if (text == null) { delete sb.config; } else { let c = null; try { c = JSON.parse(text); } catch {} if (c) { sb.config = c; sb.rev = (sb.rev || 0) + 1; sb.at = now; } } try { localStorage.removeItem('tribecode.sitedesigner.draft.' + pid); } catch {} k.push({ type: 'site-config', project: pid }); return; }
     const m = (v.meta.docs || {})[path], list = db.docs[pid] = db.docs[pid] || [];
     const slug = m ? m.slug : path.replace(/^docs\//, '').replace(/\.(md|sheet|deck)$/, ''), d = list.find(x => x.slug === slug);
     if (text == null) { if (d) { db.docs[pid] = list.filter(x => x !== d); k.push({ type: 'doc-removed', slug }); } return; }
@@ -176,16 +177,6 @@
     return null;
   }
 
-  // ---------- the website designer's config ----------
-  function siteConfig(M, pid, sub, body) {
-    const k = K(), db = k.db(); db.siteCfg = db.siteCfg || {};
-    const cur = db.siteCfg[pid] || null;
-    if (!sub && M === 'GET') return ok({ config: cur ? cur.config : null, rev: cur ? cur.rev : 0, savedAt: cur ? cur.savedAt : null, canEdit: true });
-    if (!sub && M === 'PUT') { const config = body.config || null; if (!config || typeof config !== 'object') return no(400, 'No design to save.'); db.siteCfg[pid] = { config, rev: (cur ? cur.rev : 0) + 1, savedAt: k.iso() }; k.save(); soon(pid); return ok({ ok: true, rev: db.siteCfg[pid].rev, savedAt: db.siteCfg[pid].savedAt }); }
-    if (sub === 'publish') return no(409, 'Publishing writes the pages into the project’s code, so it needs a home. Download HTML works right here.');
-    return null;
-  }
-
   // ---------- widgets: the picker's lists and the cards' own state ----------
   const CARDS = ['mytasks', 'note', 'checklist', 'bookmarks', 'countdown', 'quickdocs'];
   const MULTI = new Set(['note', 'checklist', 'bookmarks', 'countdown']);
@@ -217,7 +208,7 @@
     const db = K().db(), list = (db.widgets || {})[scope] || [], data = {};
     for (const w of list) if (w.kind === 'card' && (db.wdata || {})[scope + '|' + w.id]) data[w.id] = db.wdata[scope + '|' + w.id];
     const base = { widgets: list, canEdit: true, canVote: true, cards: CARDS, data, device: true };
-    return scope === HOME ? { ...base, home: true } : { ...base, builtin: BUILTIN, preview: { show: false, label: '' }, website: { show: !!((db.siteCfg || {})[scope]) } };
+    return scope === HOME ? { ...base, home: true } : { ...base, builtin: BUILTIN, preview: { show: false, label: '' }, website: { show: !!(siteBag(scope) && siteBag(scope).config) } };
   }
   function wput(scope, body) {
     const k = K(), db = k.db(); db.widgets = db.widgets || {}; db.wdata = db.wdata || {};
@@ -289,10 +280,8 @@
     try {
       if (a === 'projects' && b && k.proj(b)) {
         if (c === 'versions') return versionsRoute(M, b, d, e, q, body || {}).then(r => r || no(404, 'not found')).catch(er => no(er.status || 500, er.message || 'Versions hit a snag.'));
-        if (c === 'site-config') { const r = siteConfig(M, b, d, body || {}); if (r) return r; }
-        if (c === 'website' && d === 'versions' && M === 'POST' && !e) return snapshot(b, str((body || {}).note, 80) || 'Website design').then(v => ok({ id: v ? v.id : '', note: v ? v.message : 'Nothing changed since the last version.', device: true, saved: !!v }));
+        if (c === 'site-config' && M === 'PUT' && !d) soon(b);   // phonelocal.js saves the design; it belongs in the history too
         if (c === 'widgets') { if (M === 'GET') return ok(wview(b)); if (M === 'PUT' || M === 'POST') return ok(wput(b, body || {})); }
-        if (c === 'site-library' && M === 'POST') return no(409, 'On this device a template opens in the website designer.');
       }
       if (a === 'widgets') { if (b === 'home' && M === 'GET') return ok(wview(HOME)); if (b === 'home' && (M === 'PUT' || M === 'POST')) return ok(wput(HOME, body || {})); if (b === 'act' && M === 'POST') return ok(wact(body || {})); }
       if (a === 'notify') { const r = notifyRoute(M, b, body || {}); if (r) return r; }

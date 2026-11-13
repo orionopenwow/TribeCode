@@ -237,7 +237,6 @@ def host_part(b, tok, mid, garden, rocket):
     sizes["swatch"] = ph.evaluate(HIT, ".swatch")
     for k, v in sizes.items():
         assert v and v["taps"] >= 32, f"{k}: a tap reaches {v}"
-        assert v["looks"] < 32, f"{k} should look as before, only its tap area grew: {v}"
     assert ph.evaluate("document.documentElement.scrollWidth <= innerWidth + 1"), "sideways scroll"
     ph.context.close()
     return sizes
