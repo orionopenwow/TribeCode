@@ -139,7 +139,9 @@
     return setLocal(p);
   };
   addEventListener('tribe-402', e => { const d = (e && e.detail) || {}; if (window.TribePlans && window.TribePlans.open) window.TribePlans.open(null); else sheet(d.need === 'credits' ? 'credits' : d.feature === 'template' ? 'template' : 'overview'); });
-  setTimeout(sync, 1500); addEventListener('focus', () => sync());
+  // the first look waits for the tribe to answer (a slow start used to leave the mirror empty until the window got focus)
+  (function first(n) { setTimeout(() => { const c = Cn(); if (c && c.connected && c.connected()) sync(); else if (n < 12) first(n + 1); }, n ? 2000 : 1500); })(0);
+  addEventListener('focus', () => sync());
   // back from Stripe: say what happened, and look again (the webhook can land a moment after the redirect)
   (function back() {
     let q; try { q = new URLSearchParams(location.search); } catch { return; }
