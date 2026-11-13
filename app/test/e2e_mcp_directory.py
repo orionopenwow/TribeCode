@@ -136,8 +136,15 @@ def main():
                 # one atomic click: revoking the previous key can redraw the grid between Playwright's locate and click
                 host.wait_for_selector(f".mcd-row[data-kind='{k}'] [data-enable]")
                 host.evaluate("k => document.querySelector(`.mcd-row[data-kind='${k}'] [data-enable]`).click()", k)
-                if k == "claude-code":
-                    host.wait_for_selector("#cc-cmd", timeout=10000); text = host.text_content("#cc-cmd")
+                if k in ("claude-code", "claude-desktop"):
+                    # feat/invite-one: a Claude joins one way, Invite your Claude in the one invite sheet; the key is made on Copy
+                    block = "code" if k == "claude-code" else "desktop"
+                    host.wait_for_selector(f"#invite-modal:not(.hidden) #ic-body [data-ic-kind='{block}'].on", timeout=10000)
+                    if host.locator("#ic-new").count(): host.click("#ic-new")   # it already has its Claude: a new key is asked for
+                    host.wait_for_selector(f"#ic-body [data-ic-text='{block}']"); assert "••••" in host.text_content(f"#ic-body [data-ic-text='{block}']")
+                    host.click(f"#ic-body [data-ic-copy='{block}']")
+                    host.wait_for_function("b => !document.querySelector(`#ic-body [data-ic-text='${b}']`).textContent.includes('••••')", arg=block, timeout=10000)
+                    text = host.text_content(f"#ic-body [data-ic-text='{block}']")
                 else:
                     try: host.wait_for_function("k => { const s = document.querySelector('#cc-setup'); return s && s.dataset.kind === k && s.querySelector('.cai-pre'); }", arg=k, timeout=10000)
                     except Exception: raise AssertionError((k, host.text_content("#invite-body")[:400]))
@@ -148,7 +155,7 @@ def main():
                 st, init = mcp_init(m.group(1)); assert st == 200 and "result" in init, (k, st, init)
                 tokens[k] = m.group(1)
                 close_sheet(host)
-                if k not in KEEP:   # up to 8 keys per person: revoke the ones the Connected checks don't need
+                if k not in KEEP and not k.startswith("claude-"):   # up to 8 keys per person: revoke the ones the Connected checks don't need (the one Claude stays)
                     ag = next(a for a in api("/agents/mine", token=htok)[1]["agents"] if a["kind"] == k)
                     assert api(f"/agents/mine?id={ag['id']}", "DELETE", token=htok)[0] == 200
             st, init = mcp_init(path="/mcp?token=" + tokens["codex"]); assert st == 200 and "result" in init, "token in the URL works too"

@@ -593,7 +593,7 @@ function oauthBases(req) {
   const known = [pub, ...lanUrls().map(u => trim(u.url)), `http://localhost:${PORT}`, `http://127.0.0.1:${PORT}`].filter(Boolean);
   const proto = String(req.headers['x-forwarded-proto'] || '').split(',')[0].trim() || (req.socket.encrypted ? 'https' : 'http');
   const asked = /^[A-Za-z0-9.\-:[\]]{1,255}$/.test(String(req.headers.host || '')) ? `${proto === 'https' ? 'https' : 'http'}://${req.headers.host}` : '';
-  const issuer = known.includes(asked) ? asked : pub || asked || known[known.length - 2];
+  const issuer = known.includes(asked) ? asked : pub || `http://localhost:${PORT}`;   // never an address a stranger put in the Host header
   return { issuer, mcp: `${issuer}/mcp`, resources: [...new Set([issuer, ...known])].flatMap(b => [b, `${b}/mcp`]) };
 }
 claudeAuth = require('./claudeauth')({ store: baseStore, hash, id, limited, member: mid => members.find(x => x.id === mid) || null, ensureClaude: me => inviteClaude.ensure(me), bases: oauthBases, tribe,
