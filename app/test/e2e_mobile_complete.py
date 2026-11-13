@@ -122,8 +122,8 @@ def phone_only(b, errors):
     # 5. the website designer on this phone: a template via Flint, persists over a reload, Download is one HTML file
     pg.evaluate("TribeShell.go('website')"); pg.wait_for_selector("#wb-design", timeout=10000)
     pg.click("#wb-design"); pg.wait_for_selector("#wdz:not([hidden])", timeout=10000)
-    pg.wait_for_selector("#wdz-in", state="attached", timeout=8000)
-    form_visible = pg.is_visible("#wdz-in")
+    pg.wait_for_selector("#wdz-flint input.fl-in", state="attached", timeout=8000)
+    form_visible = pg.is_visible("#wdz-flint input.fl-in")
     pg.evaluate("TribeSiteDesigner.ask('link tree website')")
     pg.wait_for_function("TribeSiteDesigner.cfg() && TribeSiteDesigner.cfg().template === 'linkbio'", timeout=10000)
     pg.evaluate("TribeSiteDesigner.flush()")   # the designer saves to the "host" (phonelocal.js on this phone)
