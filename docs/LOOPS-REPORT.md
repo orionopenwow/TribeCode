@@ -1,4 +1,4 @@
-# Loops report (2026-11-10)
+# Loops report (2026-11-12, against v0.31.2)
 
 A pass to close the loops: every core journey works end to end, and the full `npm test` list is green. Journeys
 were walked on desktop (1280) and phone (390) through the Playwright suites named below.
@@ -7,8 +7,15 @@ were walked on desktop (1280) and phone (390) through the Playwright suites name
 
 - Before: 110 of 135 passed when run three at a time. Most of the 25 failures were load or port collisions between
   parallel runs, but 8 were real (below).
-- After: all 135 pass when run one at a time. Under parallel load a few long suites can still time out (e2e_tribe,
-  e2e_setup_flow, e2e_flint_free, e2e_loops); they pass alone and in `npm test`, which runs one after another.
+- After (on v0.28): all 135 passed when run one at a time. Under parallel load a few long suites can still time out
+  (e2e_tribe, e2e_setup_flow, e2e_flint_free, e2e_loops, e2e_agents_dash); they pass alone and in `npm test`, which
+  runs one after another.
+- Re-checked after merging v0.31.2: e2e_loops, e2e_tribe, e2e_setup_flow, e2e_nav, e2e_sidebar_widgets,
+  e2e_offline_demo, e2e_mobile, e2e_hub, e2e_qa_qol2, e2e_shelf, e2e_richtext, e2e_coedit, e2e_notify, e2e_company,
+  e2e_showcase, e2e_crafts and e2e_agents_dash pass (crafts and agents_dash needed a second run: timing, not a bug).
+- v0.31.2 had already fixed four of the same things independently (the cursor layer drawn once per frame, no autosize
+  on the rich editor, slides winning over the build recipe, and the stale company/showcase/agents-dash tests); this
+  branch keeps main's versions of those.
 
 ## Journeys
 
