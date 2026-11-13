@@ -83,7 +83,7 @@
   async function offer() {
     let accounts = false, providers = [];
     try { await A().api('/me'); accounts = true; } catch (e) { accounts = e && e.status === 401; }
-    if (!desktop()) {
+    if (!desktop() || window.TribeAuth2) {   // feat/auth2: the desktop app signs in with providers through the system browser
       try { const r = await net(base() + '/api/oauth/providers', { credentials: 'omit' }); if (r.ok) providers = ((await r.json()).providers || []).filter(p => p && p.id); } catch {}
       if (OA() && OA().forPlatform) providers = OA().forPlatform(providers);
     }
@@ -116,7 +116,7 @@
     return `<span class="eyebrow">Your turn</span><h2 id="sn-title">Ready to make your own?</h2>
       <p class="sn-lead" id="sn-lead">${link ? 'Save your spot: link an account and everything you made here stays yours, on every device.' : 'Make an account so your projects, tribes and friends follow you to every device. It takes a minute.'}</p>
       <div class="sn-ways">${o.accounts ? `<button type="button" class="btn primary sn-main" data-sn="create" id="sn-create">${ico('i-users', 16)}Create an account</button>` : ''}${prov}</div>
-      ${desktop() && o.accounts ? '<p class="sn-note">GitHub, Google and Discord sign-in work from TribeCode in your browser.</p>' : ''}
+      ${desktop() && o.accounts && !o.providers.length && !window.TribeAuth2 ? '<p class="sn-note">GitHub, Google and Discord sign-in work from TribeCode in your browser.</p>' : ''}
       <div class="sn-acts"><button type="button" class="btn" data-sn="guest" id="sn-guest">${guestNow ? 'Keep going as a guest' : 'Continue as guest'}</button><button type="button" class="btn ghost" data-sn="later" id="sn-later">Not now</button></div>
       <p class="sn-alt">Have an account? <button type="button" class="linkish" data-sn="login" id="sn-login">Log in</button></p>`;
   }
@@ -158,6 +158,7 @@
   function run(k, p) {
     const toast = m => window.TribeApp && window.TribeApp.toast && window.TribeApp.toast(m);
     if (k === 'create') { if (window.TribeSignup) window.TribeSignup.open('create', realKey() || acctMode() === 'guest' || (A() && A().upgradable && A().upgradable()) ? { upgrade: 'demo' } : {}); }
+    else if (k === 'oauth' && desktop() && window.TribeAuth2 && linkMode() === 'signin') window.TribeAuth2.desktopSignIn(p);
     else if (k === 'oauth' && OA()) {
       const mode = linkMode();
       if (mode === 'signin') { try { const a = JSON.parse(lsGet('tribecode.accounts.v1') || '{}') || {}; a.mode = 'signedin'; lsSet('tribecode.accounts.v1', JSON.stringify(a)); } catch {} }   // like signup.js: the key it brings back signs this device in

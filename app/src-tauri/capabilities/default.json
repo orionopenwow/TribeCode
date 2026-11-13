@@ -15,6 +15,7 @@
     "autostart:allow-disable",
     "autostart:allow-is-enabled",
     "deep-link:default",
+    "shell:allow-open",
     "core:window:allow-start-dragging",
     "core:window:allow-minimize",
     "core:window:allow-toggle-maximize",
