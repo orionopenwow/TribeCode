@@ -3,7 +3,8 @@
 //   rail      the tribe's projects and the Workshop wrench, under the Home logo (Home stays first)   per tribe
 //   home      Home's sidebar rows: Home, Files, Design, Code, Work, Agent fleet                     per tribe
 //   project   a project's rows: Dashboard, Messages, Files, Design, Task Board, Agents Hub…        per project
-//   extra     a project's added rows: Website and widgets                                          per project
+//   extra     a project's added rows: Website and widgets                                          the tribe's (widgets.js)
+//   cards     the live widget cards, in a project or on Home                                       the tribe's / yours (widgets.js)
 // Pointer events cover mouse, touch and pen (touch and pen need a long-press, so scrolling still scrolls). A flat 2px
 // line shows where it will land. The order is saved per person in localStorage and, with a tribe, in the member's
 // prefs (PUT /api/hub/prefs { order }). Items the order doesn't know yet go at the end. "Reset order" is in the
@@ -24,8 +25,13 @@
     rail: { label: 'the rail', box: () => $('#pj-rail'), sel: ':scope > [data-pj-open], :scope > #rail-workshop', key: el => (el.id === 'rail-workshop' ? 'workshop' : 'p:' + el.dataset.pjOpen), scope: () => tribeKey(), name: el => el.getAttribute('aria-label') || el.title || 'item' },
     home: { label: 'Home\'s sidebar', box: () => $('#grp-global'), sel: ':scope > .nest-row', key: keyOfRow, scope: () => tribeKey() },
     project: { label: 'the project\'s sidebar', box: () => $('#pj-nav'), sel: ':scope > .nest-row, :scope > .nest-line', key: keyOfRow, scope: () => tribeKey() + '.' + projKey(), fixed: true, tail: () => $('#nest-extra'), glue: { 'chat': () => $('#nest-streams') } },
-    extra: { label: 'the project\'s added rows', box: () => $('#nest-extra'), sel: ':scope > .nest-row', key: keyOfRow, scope: () => tribeKey() + '.' + projKey() },
+    extra: { label: 'the project\'s added rows', box: () => $('#nest-extra'), sel: ':scope > .nest-row', key: keyOfRow, scope: () => tribeKey() + '.' + projKey(), shared: W },
+    // feat/widgets-v2: the live cards (and Home's link rows); dragged by their header
+    cards: { label: 'the widgets', box: () => $('#wg-cards'), sel: ':scope > [data-wid]', key: el => el.dataset.wid, scope: () => tribeKey() + '.' + projKey(), shared: W, name: el => el.getAttribute('aria-label') || ((el.querySelector('span') || el).textContent || '').trim() || 'widget' },
   };
+  // A list with "shared" is the tribe's order (widgets.js saves it for everyone), not a per-person one; only editors move it.
+  function W() { return window.TribeWidgets && window.TribeWidgets.reorder ? window.TribeWidgets : null; }
+  const movable = id => { const L = LISTS[id]; if (!L.shared) return true; const w = L.shared(); return !!(w && w.canEdit()); };
   const nameOf = (L, el) => (L.name ? L.name(el) : ((el.querySelector('span') || el).textContent || '').trim() || 'item');
   const listOf = el => { for (const [id, L] of Object.entries(LISTS)) { const b = L.box(); if (b && el.parentElement === b && el.matches(L.sel.replace(/:scope > /g, ''))) return id; } return null; };
   const itemsOf = L => { const b = L.box(); return b ? [...b.querySelectorAll(L.sel)].filter(e => !e.classList.contains('hidden')) : []; };
@@ -35,7 +41,7 @@
   const read = () => { try { return JSON.parse(localStorage.getItem(LS) || '{}') || {}; } catch { return {}; } };
   const write = x => { try { localStorage.setItem(LS, JSON.stringify(x)); } catch {} };
   const fullKey = id => `${id}:${LISTS[id].scope()}`;
-  const order = id => read()[fullKey(id)] || null;
+  const order = id => (LISTS[id].shared ? null : read()[fullKey(id)] || null);
   let pushT = null, pending = {};
   function sync(k, v) {
     if (!(C() && C().connected && C().connected())) return;
@@ -74,7 +80,7 @@
     applying = false;
   }
   function apply(id) {
-    const L = LISTS[id]; if (!L.box()) return;
+    const L = LISTS[id]; if (!L.box() || L.shared) return;   // a shared list is in the order its renderer drew (the tribe's)
     if (id === 'rail') placeWrench();
     const cur = allItems(L).map(L.key); if (!cur.length) return;
     if (!defaults[id]) defaults[id] = cur;
@@ -105,12 +111,14 @@
   const live = () => { let r = $('#ro-live'); if (!r) { r = document.createElement('div'); r.id = 'ro-live'; r.className = 'ro-live'; r.setAttribute('aria-live', 'polite'); r.setAttribute('role', 'status'); document.body.appendChild(r); } return r; };
   const say = t => { const r = live(); r.textContent = ''; setTimeout(() => { r.textContent = t; }, 30); };
   function commit(id, keys, el, how) {
-    save(id, keys); arrange(id, keys); flush();
+    const L0 = LISTS[id], sh = L0.shared && L0.shared();
+    if (sh) { arrange(id, keys); flush(); const by = new Map(allItems(L0).map(e => [L0.key(e), e])); sh.reorder(keys.map(k => by.get(k)).filter(Boolean)); }
+    else { save(id, keys); arrange(id, keys); flush(); }
     const L = LISTS[id], i = keys.indexOf(L.key(el));
     say(`${nameOf(L, el)} moved${how ? ' ' + how : ''}: ${i + 1} of ${keys.length} in ${L.label}.`);
   }
   function move(el, delta) {
-    const id = listOf(el); if (!id) return false;
+    const id = listOf(el); if (!id || !movable(id)) return false;
     const L = LISTS[id], vis = itemsOf(L).map(L.key), all = allItems(L).map(L.key), k = L.key(el);
     const i = vis.indexOf(k), j = i + delta; if (i < 0 || j < 0 || j >= vis.length) { say(`${nameOf(L, el)} is already ${delta < 0 ? 'first' : 'last'}.`); return false; }
     const target = vis[j], out = all.filter(x => x !== k); out.splice(out.indexOf(target) + (delta > 0 ? 1 : 0), 0, k);
@@ -130,13 +138,13 @@
   // keyboard: Alt+↑ / Alt+↓ (before projects.js's arrow keys and the router's Alt+← / Alt+→)
   addEventListener('keydown', e => {
     if (!e.altKey || e.ctrlKey || e.metaKey || (e.key !== 'ArrowUp' && e.key !== 'ArrowDown')) return;
-    const t = e.target && e.target.closest && e.target.closest('#pj-rail > *, #grp-global > .nest-row, #pj-nav > .nest-row, #pj-nav > .nest-line, #nest-extra > .nest-row'); if (!t) return;
+    const t = e.target && e.target.closest && e.target.closest('#pj-rail > *, #grp-global > .nest-row, #pj-nav > .nest-row, #pj-nav > .nest-line, #nest-extra > .nest-row, #wg-cards > [data-wid]'); if (!t || t.matches('#wg-cards > .wgc') && e.target.closest('textarea, input')) return;
     e.preventDefault(); e.stopPropagation(); move(t, e.key === 'ArrowUp' ? -1 : 1);
   }, true);
 
   // pointer: mouse drags after 5px; touch and pen after a 400ms press (moving first means scrolling)
   let drag = null, dragging = false, line = null, swallow = 0;
-  const ITEMS = '#pj-rail > [data-pj-open], #pj-rail > #rail-workshop, #grp-global > .nest-row, #pj-nav > .nest-row, #pj-nav > .nest-line, #nest-extra > .nest-row';
+  const ITEMS = '#pj-rail > [data-pj-open], #pj-rail > #rail-workshop, #grp-global > .nest-row, #pj-nav > .nest-row, #pj-nav > .nest-line, #nest-extra > .nest-row, #wg-cards > [data-wid]';
   function indicator() { if (!line) { line = document.createElement('div'); line.className = 'ro-line'; line.setAttribute('aria-hidden', 'true'); document.body.appendChild(line); } return line; }
   function slot(L, y, self) {
     const vis = itemsOf(L).filter(e => e !== self);
@@ -168,7 +176,8 @@
   document.addEventListener('pointerdown', e => {
     if (e.button !== 0 || drag || !e.isTrusted) return;   // a scripted pointerdown (the tour's ghost clicks) has no pointerup: it would arm a drag that never ends and eat Esc
     const el = e.target.closest && e.target.closest(ITEMS); if (!el) return;
-    const id = listOf(el); if (!id || itemsOf(LISTS[id]).length < 2) return;
+    if (el.matches('#wg-cards > .wgc') && !e.target.closest('.wgc-h')) return;   // a card moves by its header; its body is for typing and ticking
+    const id = listOf(el); if (!id || itemsOf(LISTS[id]).length < 2 || !movable(id)) return;
     drag = { el, id, x: e.clientX, y: e.clientY, pid: e.pointerId, type: e.pointerType, slot: null, timer: 0 };
     if (e.pointerType !== 'mouse') { el.classList.add('ro-armed'); drag.timer = setTimeout(() => { if (drag && drag.el === el) { startDrag(); track(drag.y); } }, 400); }
   });
