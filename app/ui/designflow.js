@@ -67,7 +67,9 @@
 
   // ---------- scope: Home (this device) or a project ----------
   let host = null, scope = 'home', view = 'kinds', kindNow = '';
-  const projectScope = () => scope === 'project' && connected() && !!(C.project && C.project());
+  // feat/mobile-complete: a tribe that lives only on this phone builds on the device too (inlined, played in a sandboxed frame)
+  const phoneOnly = () => !!(window.TribeOffline && window.TribeOffline.solo && window.TribeOffline.solo());
+  const projectScope = () => scope === 'project' && connected() && !!(C.project && C.project()) && !phoneOnly();
   const pidNow = () => (projectScope() ? C.project() : '');
 
   // ---------- plans: in the project (server/designplans.js) or on this device ----------

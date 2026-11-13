@@ -1,6 +1,6 @@
 /* Next options (nextopts.js): "this needs a computer or a host" + the next best steps. Same look as phonehost.css. */
-.nx-scrim { position: fixed; inset: 0; z-index: 90; background: var(--scrim); animation: nx-fade var(--dur-base, 200ms) var(--ease-out, ease-out); }
-.nx-sheet { position: fixed; z-index: 91; left: 50%; top: 50%; transform: translate(-50%, -50%); width: min(460px, calc(100vw - 32px)); max-height: 86dvh; overflow-y: auto;
+.nx-scrim { position: fixed; inset: 0; z-index: 990; background: var(--scrim); animation: nx-fade var(--dur-base, 200ms) var(--ease-out, ease-out); }
+.nx-sheet { position: fixed; z-index: 991; left: 50%; top: 50%; transform: translate(-50%, -50%); width: min(460px, calc(100vw - 32px)); max-height: 86dvh; overflow-y: auto;
   padding: 18px 18px 16px; border: 1px solid var(--edge); border-radius: 16px; background: var(--surface); color: var(--text);
   animation: nx-fade var(--dur-base, 200ms) var(--ease-out, ease-out); }
 .nx-h { display: flex; align-items: flex-start; gap: 10px; padding: 0 2px 8px; }
@@ -48,3 +48,12 @@
 @keyframes nx-fade { from { opacity: 0; } }
 @keyframes nx-up { from { transform: translateY(100%); } }
 @media (prefers-reduced-motion: reduce) { .nx-scrim, .nx-sheet, .nx-nudge { animation: none; } }
+/* GitHub on this phone (ghphone.js) */
+.gp-sheet .input { width: 100%; }
+.gp-gap { margin-top: 8px; }
+.gp-stat { display: flex; align-items: center; gap: 8px; margin: 0 2px 12px; font-size: 14px; color: var(--muted); }
+.gp-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--live-ink); }
+.gp-dot.on { background: var(--ember-ink); }
+.gp-err { margin: 10px 0 0; padding: 8px 10px; border: 1px solid var(--edge); border-left: 3px solid var(--ember-ink); border-radius: 8px; font-size: 13px; color: var(--text); }
+.nx-card .nx-acts { display: flex; gap: 8px; flex: none; }
+@media (max-width: 820px) { .nx-card .nx-acts { width: 100%; flex-direction: column; } .nx-card .nx-acts .btn { width: 100%; min-height: 44px; } }

@@ -783,7 +783,7 @@
     const ios = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
     if (!ios || navigator.standalone || localStorage.getItem('tribecode.iosHint') || !S.get().onboarded) return;
     const d = document.createElement('div'); d.className = 'ios-hint';
-    d.innerHTML = `<img src="assets/apple-touch-icon.png" alt=""><div><b>Get the TribeCode app</b><br>Tap <b>Share</b> <span aria-hidden="true">⬆︎</span> then <b>Add to Home Screen</b>. It opens full screen, like a real app.</div><button aria-label="Dismiss">✕</button>`;
+    d.innerHTML = `<img src="assets/apple-touch-icon.png" alt=""><div><b>Get the TribeCode app</b><br>Tap <b>Share</b> <span aria-hidden="true">⬆︎</span> then <b>Add to Home Screen</b>.</div><button aria-label="Dismiss">✕</button>`;
     d.querySelector('button').onclick = () => { d.remove(); try { localStorage.setItem('tribecode.iosHint', '1'); } catch {} };
     document.body.appendChild(d);
   }

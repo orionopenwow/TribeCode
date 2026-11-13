@@ -227,6 +227,35 @@
     return null;
   }
 
+  // ---------- code files on this device (the shapes of server/codefiles.js; GitHub sync in ghphone.js) ----------
+  function codeStore(pid) { const c = bag('code', pid); c.files = c.files || {}; c.log = c.log || []; return c; }
+  const HIDE = /(^|\/)(\.git|node_modules|dist)(\/|$)|(^|\/)\.env|\.(pem|key)$/i;
+  function code(method, b, q, body) {
+    const pid = K().cur(), c = codeStore(pid), paths = Object.keys(c.files).filter(p => !HIDE.test(p)).sort();
+    const gh = c.github || null;
+    if (!b && method === 'GET') return ok({ hasRepo: paths.length > 0 || !!gh, git: false, branch: gh ? gh.branch : 'main', github: gh ? `https://github.com/${gh.repo}` : null, name: gh ? gh.repo.split('/')[1] : (project(pid).name || 'project'), local: true });
+    if (b === 'branches') return ok({ current: gh ? gh.branch : 'main', branches: [{ name: gh ? gh.branch : 'main', current: true, sha: gh ? gh.head : '', subject: (c.log[0] || {}).subject || '', author: meName(), at: (c.log[0] || {}).at || null }] });
+    if (b === 'tree') {
+      const base = String(q.get('path') || '').replace(/^\/+|\/+$/g, ''), pre = base ? base + '/' : '', seen = new Map();
+      for (const p of paths) { if (!p.startsWith(pre)) continue; const rest = p.slice(pre.length), i = rest.indexOf('/'); const name = i < 0 ? rest : rest.slice(0, i); if (!seen.has(name)) seen.set(name, i < 0 ? { name, path: pre + name, type: 'file', size: (c.files[p].text || '').length } : { name, path: pre + name, type: 'dir' }); }
+      const entries = [...seen.values()].sort((x, y) => (x.type === y.type ? x.name.localeCompare(y.name) : x.type === 'dir' ? -1 : 1));
+      return ok({ ref: '', path: base, entries, total: entries.length, more: false });
+    }
+    if (b === 'file' && method === 'GET') { const p = q.get('path'), f = c.files[p]; if (!f || HIDE.test(p)) return [404, { error: 'file not found' }]; return ok({ ref: '', path: p, size: (f.text || '').length, binary: !!f.binary, tooBig: false, hidden: false, text: f.binary ? '' : f.text }); }
+    if (b === 'file' && method === 'PUT') {
+      const p = String(body.path || '').replace(/^\/+/, ''); if (!p || /(^|\/)\.\.(\/|$)/.test(p) || HIDE.test(p)) return [400, { error: 'pick a file path inside the project' }];
+      const f = c.files[p] = c.files[p] || {}; f.text = String(body.text || ''); f.at = iso(); f.dirty = true;
+      c.log.unshift({ sha: 'local-' + rid(7), author: meName(), at: iso(), subject: String(body.message || `Edit ${p}`).slice(0, 120), path: p }); c.log = c.log.slice(0, 200);
+      save(); return ok({ ok: true, path: p, commit: c.log[0], local: true });
+    }
+    if (b === 'search') { const s = String(q.get('q') || '').toLowerCase(); return ok({ results: paths.filter(p => p.toLowerCase().includes(s)).slice(0, 50).map(path => ({ path })), more: false }); }
+    if (b === 'log') { const p = q.get('path'); return ok({ commits: c.log.filter(x => !p || x.path === p).slice(0, 30) }); }
+    if (b === 'recent') return ok({ files: c.log.slice(0, 5).map(x => ({ path: x.path, sha: x.sha, author: x.author, at: x.at, subject: x.subject })) });
+    if (b === 'docs') return ok({ files: paths.filter(p => /^[^/]+\.md$/i.test(p) || /^docs\/.*\.md$/i.test(p)).map(path => ({ path, title: path.split('/').pop().replace(/\.md$/i, '') })) });
+    if (b === 'lock') return ok({ ok: true });
+    return null;
+  }
+
   function context(pid) {
     const p = project(pid), db = K().db(), tasks = (db.tasks || {})[pid] || [];
     const md = [`# ${p.name || 'Project'} · TRIBE_CONTEXT.md`, '', p.bio ? p.bio : '', '', '## Vision', (db.vision || {})[pid] || '_Not written yet._', '', '## Open tasks',
@@ -249,6 +278,7 @@
       }
       case 'tasks': if (b === 'settings') { const s = bag('tasks'); s.settings = s.settings || { mode: 'lead', claimLimit: 0, agentAutoAccept: false }; if (method === 'PUT') { if (B.mode) s.settings.mode = B.mode === 'council' ? 'council' : 'lead'; save(); } return ok({ settings: s.settings, canEdit: true, lead: true }); } return null;
       case 'calendar': return calendar(method, b, q, B);
+      case 'code': return code(method, b, q, B);
       case 'drift': return ok({ enabled: false, reason: 'The drift radar compares the branches of a code repository, which lives on a computer or host. On this phone, sync files with GitHub instead.' });
       case 'talent': return talent(method, b, c, B);
       case 'academy': return academy(method, b, B);
@@ -276,5 +306,5 @@
     K().hooks.route.push(route); return true;
   }
   if (!install()) { const t = setInterval(() => { if (install()) clearInterval(t); }, 200); setTimeout(() => clearInterval(t), 15000); }
-  window.TribePhoneLocal = { route, needsHost, summary };
+  window.TribePhoneLocal = { route, needsHost, summary, code: pid => (K() && K().db() ? codeStore(pid || K().cur()) : null), save: () => K() && K().save() };
 })();

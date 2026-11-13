@@ -83,9 +83,12 @@
   }
   function card(feature) {
     const [t, w] = why(feature);
-    return `<div class="nx-card" data-nx-card="${esc(feature || 'generic')}"><span class="nx-ic">${ic('info')}</span><div class="nx-t"><b>${esc(T(t))}</b><small>${esc(T(w))}</small></div><button type="button" class="btn sm primary" data-nx-open="${esc(feature || 'generic')}">${esc(T('See options'))}</button></div>`;
+    return `<div class="nx-card" data-nx-card="${esc(feature || 'generic')}"><span class="nx-ic">${ic('info')}</span><div class="nx-t"><b>${esc(T(t))}</b><small>${esc(T(w))}</small></div><span class="nx-acts">${feature === 'repo' && window.TribeGhPhone ? `<button type="button" class="btn sm" data-gp-open>${esc(T('Use GitHub from this phone'))}</button>` : ''}<button type="button" class="btn sm primary" data-nx-open="${esc(feature || 'generic')}">${esc(T('See options'))}</button></span></div>`;
   }
-  document.addEventListener('click', e => { const b = e.target.closest('[data-nx-open]'); if (b) { e.preventDefault(); sheet(b.dataset.nxOpen); } });
+  document.addEventListener('click', e => {
+    const b = e.target.closest('[data-nx-open]'); if (b) { e.preventDefault(); sheet(b.dataset.nxOpen); return; }
+    const g = e.target.closest('[data-gp-open]'); if (g && window.TribeGhPhone) { e.preventDefault(); close(); window.TribeGhPhone.open(); }
+  });
 
   // A view that printed the reason as its error gets the card in its place instead (no extra note on top).
   function inline(feature) {

@@ -54,7 +54,19 @@
       st = r; changes = cr.changes; integrations = ints.integrations;
       renderAll();
       loadBranches();
-    } catch (e) { toast('Could not load the code repository: ' + e.message); }
+    } catch (e) {
+      // feat/mobile-complete: a tribe that lives only on this phone has no git; say so calmly, with GitHub-from-the-phone and the next options
+      if (window.TribeOffline && window.TribeOffline.solo && window.TribeOffline.solo() && window.TribeNextOpts) return renderLocal();
+      toast('Could not load the code repository: ' + e.message);
+    }
+  }
+  function renderLocal() {
+    $('#repo-sub').textContent = '';
+    $('#repo-strip').innerHTML = window.TribeNextOpts.card('repo');
+    // the cards that need git (shared workspace, shipping, change requests) step aside on a phone-only tribe
+    document.querySelectorAll('#view-repo .card, #view-repo section').forEach(c => { if (!c.contains($('#repo-strip')) && !c.querySelector('#repo-strip')) c.hidden = true; });
+    if ($('#repo-send')) $('#repo-send').hidden = true;
+    for (const id of ['#cr-list', '#br-list', '#int-list', '#ap-body', '#act-list', '#cm-list']) $(id).innerHTML = '';
   }
   let brTimer = null;
   async function loadBranches() {
