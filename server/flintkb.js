@@ -3,12 +3,18 @@
 // Reads the Guide (docs/guide/*.md, the same folder server/guide.js serves) and the repo's docs/*.md, splits them into
 // sections at their headings, and ranks sections by TF-IDF over words, word pairs and character trigrams (the retrieval
 // half of app/ui/flintnlu.js). The answer is the section's best paragraph, cited by file and heading. Long reports
-// (test runs, research dumps, ad scripts) are left out so answers stay about using the app.
+// (test runs, research dumps, audits, plans, ad scripts) are left out: see HELP_DOCS so answers stay about using the app.
 'use strict';
 const fs = require('node:fs');
 const path = require('node:path');
 
-const SKIP = /^(COMMS-SMOKE|DEV-TOOLS|NEXT-PHASE|FEATURES-NEXT|BUILD-KIT|PHONE-REPORT|TEST-REPORT|EXPLORE-REPORT|RESEARCH|AD-PLAYBOOK|FEATURE-ASSESSMENT|EDITOR-PARITY|GROK-SCOPE|FEATURE_SPEC|STUDIO-SCOPING|NIGHTLY)/i;
+// Only user-facing help is indexed (audit 2026-11-13). An allow-list, so a new internal doc (an audit, a review, a plan,
+// a launch checklist) can never surface in Flint's answers by being dropped into docs/. Add a file here when it
+// explains how to USE the app.
+const HELP_DOCS = new Set(['ACCOUNTS', 'ANY-LLM', 'ASSETS', 'BROWSER-APP', 'CLOUD', 'COMPANY', 'CRAFTS', 'DATA', 'DEMO-TRIBE', 'EXPORT', 'FLINT-CREATORS', 'FLINT-TIERS',
+  'GITHUB-AND-FOLDERS', 'HOSTING', 'LIGHT-HOSTING', 'LINK-READER', 'MARKETPLACE', 'MOBILE', 'MOBILE-TRIBES', 'OPEN-SPACE', 'PHONE-APP-MODE', 'PHONE-APPS', 'PHONE-HOSTING',
+  'PREMIUM', 'PROJECTS', 'SHARED-COMPUTE', 'SIGN-IN', 'SITE-TEMPLATES', 'SOLO', 'STARTERS', 'UPDATES', 'VIEWERS', 'WEB-AND-DESKTOP', 'WEBSITE', 'WORKSHOP']);
+const indexed = f => HELP_DOCS.has(String(f).replace(/\.md$/i, '').toUpperCase());
 const MAX = 200 * 1024;
 
 module.exports = function flintkb({ ui, nlu } = {}) {
@@ -17,7 +23,7 @@ module.exports = function flintkb({ ui, nlu } = {}) {
   const isDir = d => { try { return fs.statSync(d).isDirectory(); } catch { return false; } };
   const plain = s => String(s).replace(/```[\s\S]*?```/g, ' ').replace(/<[^>]+>/g, ' ').replace(/^#+\s*/gm, '').replace(/\*\*|__|`/g, '').replace(/\[([^\]]+)\]\([^)]*\)/g, '$1').replace(/^\s*[-*]\s+/gm, '').replace(/^\s*\|.*\|\s*$/gm, ' ').replace(/\s+/g, ' ').trim();
 
-  let idx = null, at = 0;
+  let idx = null, at = 0, fileList = [];
   function sections(file, body, meta) {
     const out = [], lines = body.replace(/\r/g, '').split('\n'); let title = '', heading = '', buf = [];
     const flush = () => { const text = buf.join('\n').trim(); if (plain(text).length >= 40) out.push({ ...meta, title: title || meta.name, heading, body: text }); buf = []; };
@@ -37,10 +43,11 @@ module.exports = function flintkb({ ui, nlu } = {}) {
       try { const full = path.join(gd, f), st = fs.lstatSync(full); if (!st.isFile() || st.size > MAX) continue; seen.add(full); secs.push(...sections(f, fs.readFileSync(full, 'utf8'), { source: 'Guide', slug: f.replace(/\.md$/, '').replace(/^\d+-/, ''), file: `docs/guide/${f}`, name: f, w: 1.3 })); } catch {}
     }
     const dd = docDirs.find(isDir);
-    if (dd) for (const f of fs.readdirSync(dd).filter(f => /\.md$/i.test(f) && !SKIP.test(f)).sort()) {
+    if (dd) for (const f of fs.readdirSync(dd).filter(f => /\.md$/i.test(f) && indexed(f)).sort()) {
       try { const full = path.join(dd, f), st = fs.lstatSync(full); if (!st.isFile() || st.size > MAX) continue; secs.push(...sections(f, fs.readFileSync(full, 'utf8'), { source: 'Docs', file: `docs/${f}`, name: f.replace(/\.md$/i, ''), w: 1 })); } catch {}
     }
     const docs = secs.map((s, i) => ({ id: i, text: `${s.title} ${s.heading} ${s.heading} ${plain(s.body).slice(0, 1800)}`, s }));
+    fileList = [...new Set(secs.map(x => x.file).filter(Boolean))];
     idx = nlu.index(docs); at = Date.now(); return idx;
   }
   const STOP = new Set('a an the to of in on at for and or is are be do does did how what why where when can could should i me my we our you your it this that with get use'.split(' '));
@@ -67,5 +74,7 @@ module.exports = function flintkb({ ui, nlu } = {}) {
     const u = url || new URL(req.url, 'http://x'), q = u.searchParams.get('q') || '', k = Math.max(1, Math.min(5, +u.searchParams.get('k') || 3));
     return send(res, 200, { answers: ask(q, k) });
   }
-  return { route, ask, build };
+  return { route, ask, build, files: () => { build(); return fileList.slice(); } };
 };
+module.exports.HELP_DOCS = HELP_DOCS;
+module.exports.indexed = indexed;

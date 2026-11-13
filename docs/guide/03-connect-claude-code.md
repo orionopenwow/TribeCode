@@ -1,6 +1,6 @@
 # Connect your AI
 
-Bring the coding agent you already use: **Claude Code**, **Codex CLI**, **Gemini CLI**, **Qwen Code**, **Cursor** or any other MCP client (Windsurf, VS Code Copilot, Goose, OpenCode…). It joins as a teammate named after you, like **Maya's Codex**. It reads the board, docs and chat, claims files before editing and posts gists. It can't vote, approve or invite people. TribeCode works with these tools; it isn't made by their vendors.
+Bring the coding agent you already use: **Claude Code**, **Codex CLI**, **Gemini CLI**, **Qwen Code**, **Cursor** or any other MCP client (Windsurf, VS Code Copilot, Goose, OpenCode…). It joins as a teammate named after you, like **Maya's Codex**. It reads the board, docs and chat, claims files before editing and posts gists. It can't vote, approve or invite people.
 
 ## Connect
 
@@ -22,9 +22,8 @@ Formats checked against each tool's docs on 2026-11-07: [Codex](https://develope
 ## Invite your Claude
 
 The quickest way for Claude: **Invite your Claude**, next to every **Invite friends** (or ask Flint "invite my claude").
-Pick Claude Code, Claude Desktop or Claude on the web, copy one thing, and **Waiting for your Claude…** turns into
-**✓ Your Claude joined**. It works next to you with your access and never more, and you choose what it may touch (chat,
-docs, tasks, files, website, approvals), pause it or remove it in one click. Details: docs/ANY-LLM.md › 4.
+Pick Claude Code, Claude Desktop or Claude on the web and copy one thing. **Waiting for your Claude…** turns into
+**✓ Your Claude joined**. It has your access and never more. You choose what it may touch, and can pause or remove it.
 
 ## Disconnect or move it
 
@@ -38,7 +37,7 @@ Open **Connect your AI** again, or revoke any key in **Your agents**. The key st
 
 ## Flint's brain
 
-- **Built in**: Qwen3 runs in your browser with WebGPU (Chrome, Edge). A one-time download of about 500 MB (or 1 GB on bigger GPUs), cached. The WebLLM script loads from a CDN only when you pick it. No WebGPU (Safari, iPhone, Firefox)? Use the host's model or a key.
+- **Built in**: Qwen3 runs in your browser with WebGPU (Chrome, Edge) after a one-time download of about 500 MB. No WebGPU (Safari, iPhone, Firefox)? Use the host's model or a key.
 - **This computer**: Ollama on the host.
-- **A cloud model with your own key**: OpenAI, Anthropic, Google Gemini, OpenRouter, Groq, or any OpenAI-compatible URL. The key stays on the host, never in a friend's browser. The host decides whether friends may use it, with a daily limit.
+- **A cloud model with your own key**: OpenAI, Anthropic, Google Gemini, OpenRouter, Groq, or any OpenAI-compatible URL. The key stays on the host. The host decides whether friends may use it, with a daily limit.
 - **None**: basic mode.
