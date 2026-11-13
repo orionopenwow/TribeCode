@@ -117,6 +117,56 @@ Store: `.tribe/accounts.json` = `{ version: 1, accounts: [{ id, username, userna
 - **Mail links** point only at an allowed origin (the public URL, `http://localhost:<port>`, the home network), never at
   a request's `Host`.
 
+## feat/auth3: two-step sign-in and passkeys
+
+Code: `server/auth3.js` (with `server/cbor.js` and `server/sealbox.js`), `app/ui/auth3.js`. Tests: `e2e_auth3.py`,
+`security8_test.py`. No dependencies: TOTP is HMAC-SHA1, WebAuthn is checked with Node's crypto.
+
+**Two-step sign-in is off by default** (the owner turns it on later). Turn it on with `TRIBE_TWO_STEP=1`, or on the host
+computer with `PUT /api/accounts/admin/settings { "twoStep": true }` (kept in `.tribe/auth.json`; there is no switch in
+the app while it is off). While it is off: nobody is asked for a code, enrolled or not; the rule for admins does
+nothing; every `two-step` route answers `404 { code: 'off' }`; Settings shows **Passkeys** only; `GET
+/api/accounts/config` has no `twoStep`. An enrolment made while it was on is kept and counts again when it comes back.
+Passkeys work either way, as a normal sign-in method. Everything below about codes describes it turned on.
+
+- **One gate.** Every account sign-in that proves who you are (password, provider, email link, password reset, the
+  desktop handoff, and a provider that signs a tribe member back in) passes one gate before a session exists. With
+  two-step on, the answer is `{ need: 'two-step', ticket, methods }` and no token. `POST /api/accounts/two-step
+  { ticket, code | recovery | trust, remember? }` trades the ticket for the sign-in it stood for. A ticket lasts 5
+  minutes, works once and dies after 5 wrong codes; 10 wrong codes for one account in 15 minutes lock its second step
+  for 15 minutes (`429 locked`).
+- **Codes**: 6 digits, 30 seconds, the step before and after accepted; a step that was used is never accepted again.
+- **Recovery codes**: ten, shown once (copy or download), each works once. New ones need a current code.
+- **Trust this device for 30 days**: a token only that device keeps (`tribecode.trust.v1`); a reset or a new password
+  forgets every trusted device.
+- **Turning it off** needs a current code (or a recovery code).
+- **Required for admins** (the host, on the host computer: Settings › Tribe & admin › Sign-in rules, `PUT
+  admin/settings { twoStepAdmins }`): an admin's account sign-in without two-step gets the account session but no
+  tribe key (`twoStep: { required: true }`); the app asks them to turn it on, and `two-step/confirm` hands the key
+  over. A passkey sign-in counts. Sign-ins on the host computer are not held back, and member keys already on a
+  device (invite links, device links) keep working: this gates account sign-ins.
+- **Passkeys**: add, rename and remove in Settings › Account & sign-in; **Sign in with a passkey** on the Log in sheet
+  and `signin.html` (discoverable, user verification preferred); also offered as the second step. A passkey sign-in
+  counts as two-step. The relying party id is the host name of the page: `localhost`, `tauri.localhost` (the desktop
+  app on Windows) or the public https name; a passkey works only where it was made. Plain http on a network address,
+  an IP address (`127.0.0.1` too) and the `tauri://` scheme (the desktop app on macOS and Linux) can't have passkeys,
+  and the app says so in one line. Checked on every ceremony: the challenge (ours, single use, 5 minutes), the origin
+  it was issued for, the rpIdHash, user presence, the signature (ES256 or RS256) and the counter. Attestation is
+  never required (`none` passes, `packed` is verified when present). A passkey is a sign-in method: the last way in
+  can't be removed (`409 last`).
+- **At rest**: `.tribe/auth3.json` (0600). TOTP secrets are sealed with AES-256-GCM (the key is `.tribe/secret.key`,
+  0600: losing it means setting two-step up again); recovery codes, trust tokens, tickets and challenges are kept only
+  as sha256; passkeys are public keys.
+
+| Route (under `/api/accounts`) | Body | Answer |
+| --- | --- | --- |
+| `GET two-step` | Bearer `tca_…` | `{ on, since, recoveryLeft, trusted, passkeys, required }` |
+| `POST two-step/setup`, `two-step/confirm` | Bearer; `{ code }` | `{ secret, uri }`; `{ ok, recovery: [10] }` |
+| `POST two-step/disable`, `two-step/recovery`; `DELETE two-step/trusted` | Bearer; `{ code }` | `{ ok }`; `{ recovery }` |
+| `POST two-step` | `{ ticket, code \| recovery \| trust, remember? }` | the sign-in (`+ trust`); `401 wrong \| replay \| untrusted`, `410`, `429 locked` |
+| `GET passkeys`, `POST passkeys/options`, `POST passkeys`, `PUT/DELETE passkeys/<id>` | Bearer | list, registration options, the new passkey; `409 last` |
+| `POST passkey/start`, `passkey/finish` | `{ ticket? }`; `{ credential, ticket?, remember? }` | options; the sign-in |
+
 ## Refresh the username database / clean the backend
 
 ```

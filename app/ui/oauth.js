@@ -65,6 +65,7 @@
       const r = await fetch('/api/oauth/finish', { method: 'POST', headers: { 'Content-Type': 'application/json', ...(t ? { Authorization: 'Bearer ' + t } : {}) }, body: JSON.stringify({ rc: l.rc }) });
       const d = await r.json().catch(() => ({}));
       if (!r.ok) return { error: (d.code && ERRS[d.code] && d.code !== 'unknown' && d.code !== 'taken' ? ERRS[d.code] : d.error) || 'Sign-in failed', code: d.code || 'provider' };
+      if (window.TribeAuth3 && (d.need === 'two-step' || d.twoStep)) { try { return await window.TribeAuth3.after(d, location.origin); } catch (e) { return { error: e.message || 'Sign-in failed', code: 'expired' }; } }   // feat/auth3
       return d;
     } catch { return { error: "Can't reach the tribe right now.", code: 'offline' }; }
   }

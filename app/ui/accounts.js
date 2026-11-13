@@ -96,7 +96,8 @@
   }
   async function acctApi(path, { method = 'GET', body, token } = {}) {
     const r = await net(base() + '/api/accounts' + path, { method, credentials: 'omit', headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: 'Bearer ' + token } : {}) }, body: body ? JSON.stringify(body) : undefined });
-    const d = await r.json().catch(() => ({})); if (!r.ok) throw Object.assign(new Error(r.status === 429 ? 'That is a lot of tries in a row. Take a breather and try again in a minute.' : (d.error || r.statusText)), { status: r.status }); return d;
+    const d = await r.json().catch(() => ({})); if (!r.ok) throw Object.assign(new Error(r.status === 429 && !d.code ? 'That is a lot of tries in a row. Take a breather and try again in a minute.' : (d.error || r.statusText)), { status: r.status, code: d.code });
+    return window.TribeAuth3 && method !== 'GET' ? window.TribeAuth3.after(d, base()) : d;   // feat/auth3: two-step, when the account has it on
   }
   // a fresh account (sign-up, a reset) becomes this device's current one; with a member key it is signed in to the tribe too
   function adopt(account, acct, memberToken) {
@@ -110,7 +111,10 @@
   // Log in with a username and password. A member of this tribe is signed in on this device (the page reloads: 'member');
   // otherwise the account is kept and returned.
   async function signIn(username, password) {
-    const d = await acctApi('/login', { method: 'POST', body: { username, password: password || undefined } });
+    return entered(await acctApi('/login', { method: 'POST', body: { username, password: password || undefined } }));
+  }
+  // feat/auth3: the same landing for a password and a passkey sign-in
+  async function entered(d) {
     const a = keepServer(d.account, d.token, d.memberToken || undefined);
     if (d.memberToken) {
       const s = S.get();
@@ -238,6 +242,7 @@
           <input class="input" id="ac-pass" type="password" autocomplete="current-password" placeholder="Password" maxlength="200" aria-label="Password">
           <p class="ac-err" id="ac-err" role="alert" hidden></p>
           <div class="ac-form-acts"><button class="linkish ac-forgot" type="button" data-ac="forgot" id="ac-forgot">Forgot password?</button><button class="btn" type="button" data-acf="signup">Create account</button><button class="btn primary" type="submit" id="ac-acct-go">Log in</button></div></form>
+        <div id="ac-passkey" class="ac-passkey"></div>
         <div id="ac-mail" hidden><button class="linkish" type="button" data-ac="mail" id="ac-mail-open">Email me a sign-in link instead</button><div id="ac-mail-box"></div></div></div>
       <div class="ac-sec" id="ac-ways"><span class="ac-eye">Sign in</span>
         <div id="ac-oa" hidden></div>
@@ -253,6 +258,10 @@
       const x = sh.querySelector('#ac-acct'); if (!x || sheet !== sh) return; x.hidden = !on;
       if (on && prefill) { sh.querySelector('#ac-user').value = prefill; sh.querySelector('#ac-pass').focus(); }
       if (on && window.TribeAuth2) window.TribeAuth2.config(base()).then(c => { const mx = sheet === sh && sh.querySelector('#ac-mail'); if (mx) mx.hidden = !c.email; });   // feat/auth2: email links when the host set up email
+      if (on && window.TribeAuth3) window.TribeAuth3.passkeyButton(sh.querySelector('#ac-passkey'), { base: base(), onDone: async d => {   // feat/auth3: a passkey signs in with no password (and counts as two-step)
+        const a = await entered(d); if (a === 'member') return;
+        st.current = a.id; st.mode = C.hasToken() && !(OFF() && OFF().active && OFF().active()) ? mode() || 'signedin' : 'account'; write(); closeSheet(); paint(); banner(); toast(`Signed in as ${a.username}`);
+      } });
     });
     sheet.addEventListener('click', e => {
       if (e.target === sheet) return closeSheet();

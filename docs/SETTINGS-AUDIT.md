@@ -122,6 +122,8 @@ Account, sign-in methods and providers, account sessions, test accounts, plan ch
 | Flint preferences | Flint's tips on/off, Flint reads aloud (the device's voice) |
 | Check for updates, version, Restart to update, licenses | About & help |
 | Default home for new projects | stored for the folder-sync flow |
+| Two-step sign-in (TOTP) and passkeys | Account & sign-in › Two-step sign-in and passkeys; Tribe & admin › Sign-in rules (`auth3.js`) |
+| Billing: receipts, Manage billing, the host's Stripe settings | Plan & AI › Billing and receipts; Tribe & admin › Payments (`billing.js`); cards and invoices live in Stripe's portal |
 
 ### Later, and why
 
@@ -130,9 +132,7 @@ Account, sign-in methods and providers, account sessions, test accounts, plan ch
 | Push to closed apps on iPhone and Android beyond Web Push | needs Apple/Google push services (APNs, FCM) and their keys |
 | Email when the host has no SMTP | needs an outside mail service; TribeCode only uses the host's own SMTP |
 | SMS / phone number sign-in | needs an SMS provider |
-| Billing management (cards, invoices) | needs a payment processor; the plans pop-out stays informational |
 | SSO (SAML / company OIDC) | needs an outside identity provider to test against |
 | A bundled dyslexia font (OpenDyslexic, OFL) | it is license-compatible but adds ~300 KB of fonts to the offline shell; the Readable font setting uses wide system faces instead and needs no download |
-| Two-factor sign-in (TOTP) and passkeys | buildable without outside services, but they change the sign-in flow that feat/auth2 owns and deserve their own security review; next in line |
 | Human read receipts | a new chat feature (who read what), not a setting; the toggle covers the agent ticks that exist |
 | Time zone and date format, per-device notification settings, scheduled status, streamer mode, connected apps list, admin audit log view, data retention | buildable; lower value than the list above, left for a follow-up |

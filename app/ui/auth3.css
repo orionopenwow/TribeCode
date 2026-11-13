@@ -1,0 +1,65 @@
+/* feat/auth3: the second step of a sign-in, turning two-step on, passkeys (the app, signin.html, join.html).
+   Flat matte: 1px borders, luminance steps only. Tokens only. */
+.a3-scrim { position: fixed; inset: 0; z-index: 960; background: var(--scrim); display: grid; place-items: center; padding: 20px; animation: tm-fade-in var(--dur-base) var(--ease-out); }
+.a3-sheet { width: min(420px, 100%); max-height: calc(100vh - 40px); overflow-y: auto; box-sizing: border-box; background: var(--surface); border: 1px solid var(--edge); border-radius: var(--r-lg); padding: 24px 22px 20px; display: flex; flex-direction: column; gap: 12px; color: var(--text); }
+#a3-required .a3-sheet { width: min(520px, 100%); }
+.a3-sheet h2 { margin: 0; font-family: var(--display); font-size: 22px; font-weight: 800; letter-spacing: -0.02em; line-height: 1.15; color: var(--text); }
+.a3-eye { font-family: var(--mono); font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+.a3-lead { margin: 0; color: var(--muted); font-size: 13.5px; line-height: 1.6; }
+.a3-lead b { color: var(--text); }
+.a3-form { display: flex; flex-direction: column; gap: 10px; margin: 0; }
+.a3-f { font-size: 13px; color: var(--muted); }
+.a3-f b { color: var(--text); font-weight: 600; }
+.a3-code.input { font-family: var(--mono); font-size: 22px; letter-spacing: .28em; text-align: center; min-height: 48px; width: 100%; box-sizing: border-box; }
+.a3-code.a3-rec { font-size: 18px; letter-spacing: .12em; text-transform: uppercase; }
+.a3-inline { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.a3-inline .a3-code.input { width: 170px; min-height: 40px; font-size: 18px; letter-spacing: .2em; }
+.a3-inline .input { min-height: 36px; }
+.a3-check { display: flex; align-items: center; gap: 8px; font-size: 13.5px; color: var(--muted); cursor: pointer; min-height: 28px; }
+.a3-check input { width: 16px; height: 16px; accent-color: var(--accent); margin: 0; }
+.a3-err { margin: 0; color: var(--alert); font-size: 13px; line-height: 1.5; }
+.a3-err:empty { display: none; }
+.a3-note { margin: 0; color: var(--faint); font-size: 12.5px; line-height: 1.5; max-width: 60ch; }
+.a3-row { display: flex; gap: 8px; justify-content: flex-end; flex-wrap: wrap; }
+.a3-row-l { justify-content: flex-start; }
+.a3-alt { margin: 2px 0 0; font-size: 13px; color: var(--faint); text-align: center; }
+.a3-pk { display: inline-flex; align-items: center; justify-content: center; gap: 8px; width: 100%; min-height: 44px; }
+.a3-ico { flex: none; }
+
+/* turning it on */
+.a3-enrol { display: flex; flex-direction: column; gap: 12px; }
+.a3-steps { margin: 0; padding: 0; list-style: none; font-size: 13.5px; line-height: 1.55; color: var(--muted); }
+.a3-steps b { color: var(--text); }
+.a3-qrrow { display: flex; gap: 16px; align-items: center; flex-wrap: wrap; }
+.a3-qr { width: 168px; height: 168px; flex: none; padding: 8px; box-sizing: border-box; background: var(--white); border: 1px solid var(--edge); border-radius: var(--r); }
+.a3-qr svg { width: 100%; height: 100%; display: block; }
+.a3-secret { display: flex; flex-direction: column; align-items: flex-start; gap: 8px; min-width: 0; }
+.a3-secret code { font-family: var(--mono); font-size: 13.5px; letter-spacing: .06em; color: var(--text); background: var(--surface-2); border: 1px solid var(--edge); border-radius: var(--r-sm); padding: 8px 10px; overflow-wrap: anywhere; user-select: all; }
+.a3-recs { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; padding: 12px; border: 1px solid var(--edge); border-radius: var(--r); background: var(--surface-2); max-width: 340px; }
+.a3-recs code { font-family: var(--mono); font-size: 14px; letter-spacing: .08em; color: var(--text); user-select: all; text-align: center; padding: 3px 0; }
+
+/* Settings › Account & sign-in */
+.a3-setnote { padding: 12px 18px 14px; }
+.a3-acts { justify-content: flex-start; }
+.set-sec .a3-acts[hidden], .a3-panel[hidden] { display: none; }
+.a3-panel { padding: 14px; border: 1px solid var(--edge); border-radius: var(--r); background: var(--surface); }
+.a3-req { color: var(--text); font-weight: 600; }
+.a3-pkc { flex-direction: column; align-items: stretch !important; gap: 10px; }
+.a3-pkc > .btn { align-self: flex-start; display: inline-flex; align-items: center; gap: 8px; }
+.a3-pklist { margin: 0; padding: 0; list-style: none; }
+.a3-pklist li { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 0; border-top: 1px solid var(--stroke); flex-wrap: wrap; }
+.a3-pklist li:first-child { border-top: 0; padding-top: 0; }
+.a3-pkname { display: flex; align-items: center; gap: 10px; min-width: 0; color: var(--faint); }
+.a3-pkname > span { display: flex; flex-direction: column; min-width: 0; }
+.a3-pkname b { color: var(--text); font-size: 13.5px; font-weight: 600; overflow-wrap: anywhere; }
+.a3-pkname small { color: var(--faint); font-size: 12px; }
+.a3-pkbtns { display: flex; gap: 6px; }
+.a3-rename .input { width: 180px; }
+
+@media (max-width: 520px) {
+  .a3-scrim { place-items: end center; padding: 0; }
+  .a3-sheet, #a3-required .a3-sheet { width: 100%; border-radius: var(--r-lg) var(--r-lg) 0 0; border-bottom: 0; padding: 22px 18px calc(18px + env(safe-area-inset-bottom)); }
+  .a3-row .btn { min-height: 44px; flex: 1; justify-content: center; }
+  .a3-qrrow { justify-content: center; }
+}
+@media (prefers-reduced-motion: reduce) { .a3-scrim { animation: none; } }

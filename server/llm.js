@@ -31,7 +31,7 @@ const PROVIDERS = {
   openrouter: { label: 'OpenRouter', base: 'https://openrouter.ai/api/v1', model: 'openrouter/auto', kind: 'openai', key: true, keys: 'https://openrouter.ai/keys' },
   groq:       { label: 'Groq', base: 'https://api.groq.com/openai/v1', model: 'llama-3.3-70b-versatile', kind: 'openai', key: true, keys: 'https://console.groq.com/keys' },
   custom:     { label: 'OpenAI-compatible (custom URL)', kind: 'openai', key: false, model: '' },
-  hosted:     { label: 'TribeCode credits (Premium)', kind: 'openai', key: false, model: '', hosted: true },   // harden: AI on our account, 1 credit per answer (server/premium.js)
+  hosted:     { label: 'TribeCode credits (Premium)', kind: 'openai', key: false, model: '', hosted: true },   // harden: AI on our account, credits per answer by size (server/premium.js)
   none:       { label: 'None (basic mode)' },
 };
 const CLOUD = new Set(['openai', 'anthropic', 'gemini', 'openrouter', 'groq', 'custom', 'hosted']);
@@ -183,7 +183,12 @@ module.exports = function makeLLM({ brain, store, log = () => {}, canUseHost = (
     for (const step of steps) {
       // harden: the hosted provider spends one credit per answer, taken before the call (atomic: no await between the
       // check and the take), given back when it fails without an answer. Out of credits: the free chain carries on.
-      if (step.hosted && !(credits && credits.reserve(me, credits.AI_COST, 'ai'))) { noCredits = true; continue; }
+      // feat/auth3-pay: priced by size (server/premium.js COST_TABLE). The most this answer can cost (what is sent plus
+      // maxTokens) is held; what it didn't use comes back when the answer is in.
+      const sent = step.hosted && credits ? credits.tokensOf(String(system).length + msgs.reduce((n, x) => n + String(x.content || '').length, 0)) : 0;
+      const hold = step.hosted ? (credits ? credits.reserve(me, credits.costOf(sent + maxTokens), 'ai') : false) : null;
+      if (step.hosted && !hold) { noCredits = true; continue; }
+      const settle = out => { if (!hold) return; const used = credits.costOf(sent + credits.tokensOf(String(out).length)); if (used < hold.n) credits.refund(me, hold.n - used, 'ai: smaller than held', hold); };
       if (step.id === 'ollama' && step.maybe) { const st = await brain.ollamaRefresh().catch(() => ({ online: false })); if (!st.online) continue; step.via = `${st.model} on the host`; }
       const ctl = new AbortController(); const t = setTimeout(() => ctl.abort(), timeoutMs);
       const stop = () => ctl.abort(); if (signal) { if (signal.aborted) stop(); else signal.addEventListener('abort', stop, { once: true }); }
@@ -193,10 +198,11 @@ module.exports = function makeLLM({ brain, store, log = () => {}, canUseHost = (
         await ADAPTERS[step.id]({ system, messages: msgs, maxTokens, temperature, signal: ctl.signal, model }, s => f.feed(s));
         f.end(); clearTimeout(t);
         if (step.cloud) count(me);
+        settle(text);
         return { via: step.via, provider: step.provider, cloud: step.cloud, text: text.trim() };
       } catch (e) {
         clearTimeout(t); f.end();
-        if (step.hosted && !started && credits) credits.refund(me, credits.AI_COST, 'ai failed');
+        if (hold && !started) credits.refund(me, hold.n, 'ai failed', hold); else if (hold) settle(text);
         lastErr = e.name === 'AbortError' ? Object.assign(new Error(`${step.cloud ? P().label : 'Ollama'} took too long`), { status: 504 }) : e;
         log(`llm: ${step.provider} failed: ${scrub(lastErr.message)}`);
         if (started) return { via: step.via, provider: step.provider, cloud: step.cloud, text: text.trim(), partial: true };
