@@ -47,6 +47,7 @@
     const m = modal(), b = body(); if (!m || !b) return;
     if (b.classList.contains('io')) { m.classList.add('hidden'); b.classList.remove('io', 'ii'); }
     if (window.TribeInviteClaude && window.TribeInviteClaude.unmount) window.TribeInviteClaude.unmount();
+    if (tidying) { tidying.disconnect(); tidying = null; }
     st = null;
   }
 
@@ -127,7 +128,8 @@
             <select id="inv-hours" title="Link expires after" aria-label="Link expires after"><option value="24">Lasts 24 hours</option><option value="168">Lasts 7 days</option><option value="1">Lasts 1 hour</option></select>
             <select id="inv-role" title="Builders can edit; spectators can only watch" aria-label="What they can do"><option value="builder">They can build</option><option value="spectator">They can only watch</option></select></div></details>
         ${scope ? sw('io-project', st.proj, 'Just this project', `They only see ${projName(st.pid)}, not the rest of the tribe.`, scoped()) : ''}
-      </div>`;
+      </div>
+      <details class="io-manage io-ways" id="io-ways" hidden><summary>Friends somewhere else? More ways to share</summary><div id="io-ways-body"></div></details>`;
     const box = $('#io-once-box');
     box.addEventListener('toggle', () => { st.once = box.open; $('#io-once').setAttribute('aria-checked', String(box.open)); if (st.preset && box.open) st.preset = ''; sync(); });
     const pj = $('#io-project'); if (pj) pj.onclick = () => { st.proj = !st.proj; pj.setAttribute('aria-checked', String(st.proj)); if (st.preset && !st.proj) st.preset = ''; sync(); };
@@ -140,6 +142,21 @@
     const sh = $('#io-share'); if (sh) sh.onclick = () => navigator.share({ title: 'Join me on TribeCode', text: `Build ${st.name || 'this'} with me on TribeCode: ${linkOf()}`, url: linkOf() }).catch(() => {});
     tribeLink();
     sync();
+    tidy();
+  }
+  // Two older helpers add themselves to this sheet (web.js: "Share beyond my Wi-Fi", for the host; livingrepo.js: "Ways
+  // to share"). They belong to A friend only, below the link: the switch joins the other switches, the ways go in a fold.
+  let tidying = null;
+  function tidy() {
+    const b = body(); if (!b) return;
+    if (tidying) tidying.disconnect();
+    const run = () => {
+      if (!st) return;
+      const pub = $('#share-pub'), ways = $('#lr-inv-ways'), sws = $('#invite-body .io-switches'), wb = $('#io-ways-body');
+      if (pub) { if (st.who !== 'friend' || !sws) pub.remove(); else if (pub.parentNode !== sws) sws.appendChild(pub); }
+      if (ways) { if (st.who !== 'friend' || !wb) ways.remove(); else if (ways.parentNode !== wb) { wb.appendChild(ways); $('#io-ways').hidden = false; } }
+    };
+    tidying = new MutationObserver(run); tidying.observe(b, { childList: true, subtree: true }); run();
   }
   const qr = (el, link) => { if (el && link && /^https?:/.test(link) && window.TribeQR) el.innerHTML = `<div class="qr">${window.TribeQR.svg(link)}</div><p class="faint">Scan with a phone camera to join.</p>`; };
   const done = () => { try { if (window.TribeStore) window.TribeStore.set({ checklist: { invite: true } }); } catch {} };

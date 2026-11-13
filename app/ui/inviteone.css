@@ -15,7 +15,10 @@
 .io-ot small { font-size: 12px; color: var(--muted); line-height: 1.4; }
 .io-pane { min-height: 120px; }
 .io-pane .tl-box[hidden], .io-kind[hidden], .io-manage[hidden] { display: none; }
-.io-pane .linkbox { margin-bottom: 0; }
+.io-pane .tl-box { grid-template-columns: minmax(0, 1fr); }
+.io-pane .tl-box > * { min-width: 0; }
+.io-pane .linkbox { margin-bottom: 0; min-width: 0; }
+.io-pane .linkbox code { min-width: 0; }
 .io-pane .linkbox code { user-select: all; }
 .io-manage > summary, .io-pane .cc-what > summary { cursor: pointer; color: var(--muted); font-size: 12.5px; padding: 2px 0; }
 .io-manage[open] > summary { margin-bottom: 8px; }
@@ -27,7 +30,14 @@
 .io-swt { display: grid; flex: 1; min-width: 0; }
 .io-swt b { font-size: 13.5px; font-weight: 600; }
 .io-swt small { font-size: 12px; color: var(--muted); line-height: 1.45; }
-.io-once { margin: 0; }
+.modal-card.io .io-sw { border: 1px solid var(--edge); }
+.modal-card.io .io-once { margin: 0; padding: 0; border: 0; }
+.io-switches .share-pub { margin: 0; padding: 0 12px; background: var(--surface); border-radius: var(--r-ctl, 8px); }
+.io-switches .share-pub .toggle { padding-left: 0; padding-right: 0; }
+.io-ways { margin: 10px 0 0; }
+.io-ways .lr-inv-ways { margin: 0; }
+.modal-card.io > .eyebrow { display: block; }
+.modal-card.io > h2 { margin-bottom: 12px; }
 .io-once > summary.io-sw { padding: 10px 12px; color: var(--text); font-size: inherit; }
 .io-once[open] > summary.io-sw { margin-bottom: 8px; }
 .io-once[open] > summary .switch { background: var(--accent-2); border-color: var(--accent-2); }
@@ -54,9 +64,12 @@
 .so-note b { display: block; }
 .so-note small { color: var(--muted); font-size: 12.5px; }
 @media (max-width: 820px) {
-  .io-who { grid-template-columns: 1fr; gap: 6px; margin-bottom: 12px; }
-  .io-opt { padding: 8px 10px; }
+  .io-who { gap: 6px; margin-bottom: 12px; }
+  .io-opt { flex-direction: column; gap: 6px; padding: 10px 6px; text-align: center; }
+  .io-ot b { font-size: 13px; line-height: 1.25; }
+  .io-ot small { display: none; }
   .io-glyph { width: 30px; height: 30px; }
+  .io-once .opts select { flex: 1 1 140px; min-width: 0; }
   .so-note { bottom: calc(76px + env(safe-area-inset-bottom, 0px)); flex-wrap: wrap; }
 }
 @media (prefers-reduced-motion: reduce) { .io-opt { transition: none; } }

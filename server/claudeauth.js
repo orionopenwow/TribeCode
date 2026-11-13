@@ -161,14 +161,14 @@ module.exports = function claudeAuth({ store, hash, id, limited, member, ensureC
   function token(req, f) {
     const type = f.grant_type;
     if (type === 'authorization_code') {
-      const rec = codes.get(hash(String(f.code || '')));
+      const ck = hash(String(f.code || '')), rec = codes.get(ck);
       if (!rec) return bad('invalid_grant', 'unknown or expired code');
       if (rec.used) { const g = db.grants.find(x => x.id === rec.grant); if (g) dropGrant(g); return bad('invalid_grant', 'this code was already used'); }   // a replayed code also ends what it made
       if (now() > rec.exp) return bad('invalid_grant', 'unknown or expired code');
       if (f.client_id !== rec.client) return bad('invalid_grant', 'this code belongs to another client');
       if (f.redirect_uri && f.redirect_uri !== rec.redirect) return bad('invalid_grant', 'redirect_uri differs from the authorization request');
       const v = String(f.code_verifier || '');
-      if (!/^[A-Za-z0-9._~-]{43,128}$/.test(v) || !same(s256(v), rec.challenge)) return bad('invalid_grant', 'code_verifier does not match the code_challenge');
+      if (!/^[A-Za-z0-9._~-]{43,128}$/.test(v) || !same(s256(v), rec.challenge)) { codes.delete(ck); return bad('invalid_grant', 'code_verifier does not match the code_challenge'); }   // one try: the code is spent
       if (f.resource && String(f.resource).replace(/\/+$/, '') !== rec.resource && (rec.resource || !resourceOk(req, f.resource))) return bad('invalid_target', 'resource differs from the authorization request');
       const ag = member(rec.agent), owner = member(rec.owner);
       if (!ag || !owner || ag.owner !== owner.id || ag.removed) return bad('invalid_grant', 'that Claude is no longer in this tribe');
