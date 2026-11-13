@@ -48,7 +48,7 @@ def main():
             host.goto(BASE + "/?skipIntro=1"); host.wait_for_function("window.TribeClient && TribeClient.connected()", timeout=15000)
             tok = host.evaluate("TribeStore.get().server.token")
             # a fresh project, like Discord's "Create my own"
-            host.evaluate("TribeProjects.openNew()")
+            host.evaluate("TribeProjects.gallery()")
             host.click(".np-setup [data-ns='own']"); host.wait_for_selector("#np-input"); host.fill("#np-input", "My Tribe"); host.click("#np-create")
             host.wait_for_selector(".modal-card.ii #ii-link", timeout=20000); host.click(".modal-card.ii [data-close]")
             pid = host.evaluate("TribeProjects.current()")

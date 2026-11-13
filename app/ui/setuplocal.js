@@ -34,13 +34,15 @@
   }
   function sheet(html, id, label) {
     if (PH() && PH().close) try { PH().close(); } catch {}
-    if (el) { el.remove(); scrim.remove(); }
-    scrim = document.createElement('div'); scrim.className = 'ph-scrim'; scrim.onclick = close;
+    if (window.TribeNew && window.TribeNew.isOpen && window.TribeNew.isOpen()) try { window.TribeNew.close(true); } catch {}
+    const keep = el && scrim && scrim.isConnected ? scrim : null;   // screen to screen: the same scrim, no flash
+    if (el) el.remove();
+    scrim = keep || document.createElement('div'); scrim.className = 'ph-scrim'; scrim.onclick = close;
     el = document.createElement('div'); el.className = 'ph-sheet su-sheet'; el.id = id; el.setAttribute('role', 'dialog'); el.setAttribute('aria-modal', 'true'); el.setAttribute('aria-label', label);
     el.innerHTML = `<div class="ph-grab" aria-hidden="true"></div>${html}`;
     const h = el.querySelector('.ph-h');   // every sheet has a close X (docs/NAVIGATION.md: the create sheet always has a way out)
     if (h) h.insertAdjacentHTML('beforeend', '<button type="button" class="su-x" data-su-close aria-label="Close"><svg class="i" width="16" height="16" aria-hidden="true"><use href="#i-x"/></svg></button>');
-    document.body.append(scrim, el);
+    if (keep) document.body.append(el); else document.body.append(scrim, el);
     el.querySelectorAll('[data-su-close]').forEach(b => { b.onclick = close; });
     el.querySelectorAll('[data-su-back]').forEach(b => { b.onclick = () => where(); });
     el.querySelectorAll('[data-su-join]').forEach(b => { b.onclick = () => { close(); if (window.TribeSettings && window.TribeSettings.joinPrompt) window.TribeSettings.joinPrompt(); }; });   // polish: joining a friend is one tap from Start and Where
@@ -49,52 +51,8 @@
   document.addEventListener('keydown', e => { if (e.key === 'Escape' && el) { close(); e.stopPropagation(); } }, true);
   const back = '<button class="ph-back" data-su-back aria-label="Back"><svg class="i" width="16" height="16" aria-hidden="true"><use href="#i-chev"/></svg></button>';
 
-  // ---------- 1. Start a project (instant, on this device) ----------
-  const SEATS = [['ceo', 'CEO', 'where it is going'], ['cto', 'Build', 'making it'], ['growth', 'Grow', 'finding people'], ['ops', 'Run', 'keeping it working']];
-  function start(o = {}) {
-    const st = S().get(), first = (st.name && st.name !== 'Me' ? st.name : '').split(' ')[0];
-    const seatRow = ([k, t, sub]) => `<div class="su-seat" role="group" aria-label="${t} seat"><span class="su-seat-t"><b>${t}</b><small>${sub}</small></span>
-      <span class="su-seg">${[['me', 'Me'], ['ai', 'AI'], ['later', 'Later']].map(([v, l]) => `<button type="button" data-seat="${k}" data-v="${v}" aria-pressed="${(k === 'ceo' ? 'me' : 'later') === v}">${l}</button>`).join('')}</span></div>`;
-    const s = sheet(`<header class="ph-h"><div><span class="eyebrow">Start a project</span><h3>What are you making?</h3></div></header>
-      <form id="su-form" autocomplete="off">
-        <label class="ph-lab" for="su-name">Name</label>
-        <input class="input" id="su-name" maxlength="48" required placeholder="e.g. Pixel Quest" value="${esc(o.name || '')}">
-        <label class="ph-lab" for="su-bio">In one line <span class="su-opt">optional</span></label>
-        <input class="input" id="su-bio" maxlength="300" placeholder="e.g. A cozy pixel game we build on weekends" value="${esc(o.bio || '')}">
-        <details class="su-more" id="su-notes-d"><summary>Notes and first tasks <span class="su-opt">optional</span></summary>
-          <label class="ph-lab" for="su-notes">Notes</label><textarea class="input" id="su-notes" rows="3" maxlength="4000" placeholder="Anything you already know: ideas, links, who's in"></textarea>
-          <label class="ph-lab" for="su-tasks">First tasks, one per line</label><textarea class="input" id="su-tasks" rows="3" maxlength="3000" placeholder="Sketch the title screen&#10;Pick a color palette"></textarea>
-        </details>
-        <details class="su-more" id="su-co-d"><summary>Run it like a company <span class="su-opt">optional</span></summary>
-          <p class="ph-note su-co-note">Seats for the jobs a business needs. Leave anything for later; Company keeps every section to fill in when you're ready.</p>
-          <label class="ph-lab" for="su-co-name">Company name</label><input class="input" id="su-co-name" maxlength="60" placeholder="Later is fine">
-          <label class="ph-lab" for="su-co-mission">Mission</label><input class="input" id="su-co-mission" maxlength="400" placeholder="One or two sentences, or later">
-          <span class="ph-lab">Seats</span><div class="su-seats">${SEATS.map(seatRow).join('')}</div>
-        </details>
-        <p class="ph-note">It starts right here${first ? `, ${esc(first)}` : ''}: nothing waits on a server. You choose where it lives at the end, or any time later.</p>
-        <div class="ph-acts"><button type="button" class="btn" data-su-close>Cancel</button><button class="btn primary" id="su-create" type="submit">Create</button></div>
-      </form>
-      <p class="ph-foot"><button type="button" class="linkish" data-su-join>Join with a link</button></p>`, 'su-start', 'Start a project');
-    s.querySelectorAll('[data-seat]').forEach(b => b.onclick = () => { s.querySelectorAll(`[data-seat="${b.dataset.seat}"]`).forEach(x => x.setAttribute('aria-pressed', String(x === b))); });
-    s.querySelector('#su-form').onsubmit = e => { e.preventDefault(); create(s); };
-    const n = s.querySelector('#su-name'); n.focus(); n.select();
-    return s;
-  }
-  function create(s) {
-    const v = id => (s.querySelector(id) || {}).value || '';
-    const name = v('#su-name').trim(); if (!name) return s.querySelector('#su-name').focus();
-    const co = s.querySelector('#su-co-d').open || v('#su-co-name').trim() || v('#su-co-mission').trim();
-    const seats = {}; s.querySelectorAll('[data-seat][aria-pressed="true"]').forEach(b => { seats[b.dataset.seat] = b.dataset.v; });
-    const draft = { name, bio: v('#su-bio').trim(), notes: v('#su-notes'), tasks: v('#su-tasks').split('\n').map(x => x.trim()).filter(Boolean),
-      company: co ? { name: v('#su-co-name').trim(), mission: v('#su-co-mission').trim(), seats } : null };
-    if (!OFF() || !OFF().start) return toast('Setup did not load. Reload the app.');
-    close();
-    OFF().start('solo', draft);   // instant: the local backend answers the app from here on
-    window.dispatchEvent(new CustomEvent('tribe-project-created', { detail: { name, local: true } }));   // signup.js: "Save your work"
-    try { localStorage.setItem('tribecode.setup.wherePending', '1'); } catch {}
-    const offer = () => { if (window.TribeClient && window.TribeClient.connected()) where({ first: true }); else setTimeout(offer, 120); };
-    setTimeout(offer, 700);
-  }
+  // ---------- 1. Start: the one create flow (tribenew.js: name and icon · where it lives · invite · done) ----------
+  function start(o = {}) { close(); return window.TribeNew ? window.TribeNew.open(o) : null; }
 
   // ---------- 2. Where should it live? (optional, last; also from the pill any time) ----------
   const pid = () => { const o = OFF(); const db = o && o.solo && o.solo() ? o.state() : null; return db ? (db.current || (db.projects[0] || {}).id) : null; };
@@ -148,41 +106,47 @@
     box.querySelector('#su-offline').onclick = () => { close(); toast('Still on this device. Choose a home any time from the pill at the top.'); };
   }
   async function computer() {
-    const s = syncing('Moving it to this computer');
-    try {
-      if (desktopApp()) {
-        step('Starting the tribe server on this computer…');
-        const r = A() && A().hostHere ? await A().hostHere({ silent: true }) : { ok: false, error: 'The app did not load. Reload it.' };
-        if (!r || !r.ok) throw new Error((r && r.error) || 'The tribe server did not start.');
-        const st = S().get();
-        return await importTo(r.url, st.server.token, { hosting: true });
-      }
-      // A browser page served by a TribeCode server (npm start, the Working version): that server is "this computer".
-      const served = /^https?:$/.test(location.protocol) && !/(^|\.)tauri\.localhost$/i.test(location.hostname);
-      let h = null;
-      if (served) { step('Looking for TribeCode on this computer…'); h = await realFetch(location.origin + '/api/health', { cache: 'no-store' }).then(r => (r.ok ? r.json() : null)).catch(() => null); }
-      if (!h || h.offlineDemo) { close(); return getApp(); }
-      if (h.cloud) throw new Error('This page comes from a cloud server. Use Free cloud and its invite link instead.');
+    syncing('Moving it to this computer');
+    try { const r = await hostComputer({ step }); if (r && r.noApp) { close(); return getApp(); } if (r && r.alreadyTribe) { close(); toast('This computer already has a tribe. Paste an invite link from its host to move your project in.'); return PH() && PH().move(); } }
+    catch (e) { failed(e && e.message || String(e), computer); }
+  }
+  // The headless part, shared with the one create flow (tribenew.js): start or find the server on this computer and
+  // move the draft in. o.step(text) reports progress; o.noReload leaves the reload to the caller.
+  // Answers { noApp } (no TribeCode here: get the app), { alreadyTribe }, or the import's answer { server, token, … }.
+  async function hostComputer(o = {}) {
+    const say = o.step || (() => {});
+    if (desktopApp()) {
+      say('Starting the tribe server on this computer…');
+      const r = A() && A().hostHere ? await A().hostHere({ silent: true }) : { ok: false, error: 'The app did not load. Reload it.' };
+      if (!r || !r.ok) throw new Error((r && r.error) || 'The tribe server did not start.');
       const st = S().get();
-      let token = '';
-      if (!h.members) {
-        step('Making your tribe on this computer…');
-        const r = await realFetch(location.origin + '/api/bootstrap', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name: st.name && st.name !== 'Me' ? st.name : 'Host', color: st.color }) });
-        const d = await r.json().catch(() => ({})); if (!r.ok || !d.token) throw new Error(d.error || `The server said ${r.status}.`);
-        token = d.token;
-      } else {
-        step('Signing in to the tribe on this computer…');
-        const ss = await realFetch(location.origin + '/api/session', { credentials: 'include' }).then(r => (r.ok ? r.json() : null)).catch(() => null);
-        token = (ss && ss.token) || ((st.staleServer && st.staleServer.url === location.origin && st.staleServer.token) || '');
-        if (!token) { close(); toast('This computer already has a tribe. Paste an invite link from its host to move your project in.'); return PH() && PH().move(); }
-      }
-      return await importTo(location.origin, token, { hosting: false });
-    } catch (e) { failed(e && e.message || String(e), computer); }
+      return await importTo(r.url, st.server.token, { hosting: true, step: say, noReload: o.noReload });
+    }
+    // A browser page served by a TribeCode server (npm start, the Working version): that server is "this computer".
+    const served = /^https?:$/.test(location.protocol) && !/(^|\.)tauri\.localhost$/i.test(location.hostname);
+    let h = null;
+    if (served) { say('Looking for TribeCode on this computer…'); h = await realFetch(location.origin + '/api/health', { cache: 'no-store' }).then(r => (r.ok ? r.json() : null)).catch(() => null); }
+    if (!h || h.offlineDemo) return { noApp: true };
+    if (h.cloud) throw new Error('This page comes from a cloud server. Use Free cloud and its invite link instead.');
+    const st = S().get();
+    let tok = '';
+    if (!h.members) {
+      say('Making your tribe on this computer…');
+      const r = await realFetch(location.origin + '/api/bootstrap', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name: st.name && st.name !== 'Me' ? st.name : 'Host', color: st.color }) });
+      const d = await r.json().catch(() => ({})); if (!r.ok || !d.token) throw new Error(d.error || `The server said ${r.status}.`);
+      tok = d.token;
+    } else {
+      say('Signing in to the tribe on this computer…');
+      const ss = await realFetch(location.origin + '/api/session', { credentials: 'include' }).then(r => (r.ok ? r.json() : null)).catch(() => null);
+      tok = (ss && ss.token) || ((st.staleServer && st.staleServer.url === location.origin && st.staleServer.token) || '');
+      if (!tok) return { alreadyTribe: true };
+    }
+    return await importTo(location.origin, tok, { hosting: false, step: say, noReload: o.noReload });
   }
   // Send the draft (idempotent: the host remembers draftId), then switch this device over to the host. The local copy
   // is forgotten only after the host answered that it has everything.
-  async function importTo(server, token, { hosting }) {
-    step('Bringing your project over…');
+  async function importTo(server, token, { hosting, step: say = step, noReload } = {}) {
+    say('Bringing your project over…');
     const data = OFF().exportSolo();
     let r, d;
     for (let i = 0; i < 3; i++) {   // a dropped connection retries the same draft; the host makes no second copy
@@ -194,7 +158,8 @@
     OFF().forget();
     S().set({ server: { url: server, token }, hosting: !!hosting, ...(hosting ? { hostOff: false, tribeHere: true } : {}), name });
     try { if (first && first.id) localStorage.setItem('tribecode.project:' + server, first.id); sessionStorage.setItem('tribecode.view', 'home'); } catch {}
-    step('Done. Opening it…');
+    say('Done. Opening it…');
+    if (noReload) return { ...d, server, token };
     toast(d.again ? 'It was already there. Opening it.' : `${(first && first.name) || 'Your project'} now lives on this computer.`);
     setTimeout(() => location.reload(), 300);
     return d;
@@ -465,7 +430,7 @@
   // A reload right after Create (before choosing) offers the last step again.
   addEventListener('load', () => { let p = null; try { p = localStorage.getItem('tribecode.setup.wherePending'); } catch {} if (p && OFF() && OFF().solo && OFF().solo()) setTimeout(() => { if (!el) where({ first: true }); }, 1200); });
 
-  const api = { start, where, choose, close, github: { connect, live, mirror, files, guide: { detect: detectGitHub, html: guideWays, bind: bindWays, checks: guideSheetChecks } }, state: () => ({ open: el ? el.id : null, pid: pid(), home: homeOf() }), pid };
+  const api = { start, where, choose, close, host: { computer: hostComputer, importTo, desktopApp, phoneLike }, github: { connect, live, mirror, files, guide: { detect: detectGitHub, html: guideWays, bind: bindWays, checks: guideSheetChecks } }, state: () => ({ open: el ? el.id : null, pid: pid(), home: homeOf() }), pid };
   window.TribeLocalSetup = api;
   // Also on window.TribeSetup (setup.js owns that name for the role cards): TribeSetup.start() / .where() for other screens.
   const alias = () => { const t = window.TribeSetup; if (!t) return; if (!t.start) t.start = start; if (!t.where) t.where = where; };

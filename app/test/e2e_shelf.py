@@ -61,7 +61,7 @@ def main():
             host.goto(BASE + "/?skipIntro=1"); host.wait_for_function("window.TribeClient && TribeClient.connected()", timeout=15000)
             tok = host.evaluate("TribeStore.get().server.token")
             # a game project from the setup flow
-            host.evaluate("document.getElementById('pj-plus').click()"); host.click(".np-setup [data-ns='tpl:game']"); host.fill("#np-input", "Lantern Run"); host.click("#np-create")
+            host.evaluate("TribeProjects.gallery()"); host.click(".np-setup [data-ns='tpl:game']"); host.fill("#np-input", "Lantern Run"); host.click("#np-create")
             host.wait_for_selector(".modal-card.ii #ii-link", timeout=25000); host.click(".modal-card.ii [data-close]")
             pid = host.evaluate("TribeProjects.current()")
             repo = Path(tmp, "workspaces", pid)

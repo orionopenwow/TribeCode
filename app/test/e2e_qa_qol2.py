@@ -101,7 +101,7 @@ def main():
             pg.unroute_all()
 
             # ---- New project -> the chat's Getting started: the steps once (in the bar)
-            pg.evaluate("TribeProjects.openNew()"); pg.wait_for_selector("[data-ns=own]"); pg.click("[data-ns=own]"); pg.wait_for_selector("#np-input")
+            pg.evaluate("TribeProjects.gallery()"); pg.wait_for_selector("[data-ns=own]"); pg.click("[data-ns=own]"); pg.wait_for_selector("#np-input")
             pg.fill("#np-input", "Lantern Garden"); pg.click("#np-create")
             pg.wait_for_function("document.querySelector('#invite-body') && /\\/join\\//.test(document.querySelector('#invite-body').innerText)", timeout=25000)
             pg.wait_for_timeout(900)

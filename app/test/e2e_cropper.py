@@ -40,7 +40,7 @@ def main():
             fc.value.set_files(str(tiny)); pg.wait_for_selector(".toast:has-text('too small')", timeout=5000)
             assert pg.locator("#crop-wrap").count() == 0
             # new project setup: upload -> frame -> Apply -> the setup shows the framed picture
-            pg.evaluate("TribeProjects.openNew()"); pg.wait_for_selector("[data-ns='tpl:game']", timeout=10000); pg.click("[data-ns='tpl:game']")
+            pg.evaluate("TribeProjects.gallery()"); pg.wait_for_selector("[data-ns='tpl:game']", timeout=10000); pg.click("[data-ns='tpl:game']")
             pg.wait_for_selector("#np-pic", timeout=10000)
             pg.fill("#np-input", "Glow Garden")
             with pg.expect_file_chooser() as fc: pg.click("#np-pic")

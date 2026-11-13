@@ -89,29 +89,19 @@ def main():
 
             # ---------- 2. create a project optimistically: instant, no server call ----------
             pg.on("request", lambda r: f":{PORT}/api/" in r.url and server_calls.append(r.method + " " + r.url))
-            pg.click("#hub-host")
-            pg.wait_for_selector("#su-start", state="visible")
-            pg.fill("#su-name", "Pixel Quest"); pg.fill("#su-bio", "A cozy pixel game we build on weekends")
-            pg.click("#su-co-d summary")
-            pg.fill("#su-co-name", "Campfire Games")   # mission left for later, seats left as they are (CEO: me, the rest later)
+            pg.click("#hub-host")   # the one create flow (tribenew.js): name and icon, then This device
+            pg.wait_for_selector("#tn #tn-name", state="visible")
+            pg.fill("#tn-name", "Pixel Quest")
             if SHOTS: pg.screenshot(path=str(SHOT_DIR / "setup-optimistic.png"))
-            t0 = time.time(); pg.click("#su-create")
+            pg.click("#tn-next"); pg.wait_for_selector("#tn[data-step='2']")
+            if SHOTS: time.sleep(0.3); pg.screenshot(path=str(SHOT_DIR / "setup-where.png"))
+            t0 = time.time(); pg.click("#tn [data-tn-where='device']"); pg.click("#tn-go")
             pg.wait_for_function("TribeOffline.solo() && TribeClient.connected()", timeout=5000)
             assert time.time() - t0 < 3, "creating is instant"
             st = pg.evaluate("TribeOffline.state()")
             pid = st["projects"][0]["id"]
             assert st["projects"][0]["name"] == "Pixel Quest", st["projects"]
-            co = st["company"][pid]
-            assert co["name"] == "Campfire Games" and co["mission"] == "" and co["seats"] == {"ceo": "me", "cto": "later", "growth": "later", "ops": "later"}, co
-            # the last step (optional) is offered, and Decide later closes it
-            pg.wait_for_selector("#su-where", state="visible", timeout=8000)
-            rows = pg.eval_on_selector_all("#su-where .ph-row b", "els => els.map(e => e.childNodes[0].textContent.trim())")
-            assert rows == ["A GitHub repo", "This computer", "Free cloud", "Phone"], rows
-            if SHOTS: time.sleep(0.3); pg.screenshot(path=str(SHOT_DIR / "setup-where.png"))
-            pg.click("#su-later"); pg.wait_for_selector("#su-where", state="detached", timeout=5000)
-            # Company shows the basics, with the rest for later
-            cv = pg.evaluate(f"TribeClient.api('/projects/{pid}/company')")
-            assert cv["company"]["name"] == "Campfire Games" and [s["who"]["person"] is not None for s in cv["company"]["seats"]] == [True, False, False, False], cv
+            pg.wait_for_selector("#tn[data-step='3'] #tn-skip", timeout=8000); pg.click("#tn-skip"); pg.wait_for_selector("#tn", state="detached", timeout=5000)
 
             # ---------- 3. a note and a task, offline (nothing reaches the server) ----------
             pg.evaluate("TribeClient.api('/tasks', { method: 'POST', body: { title: 'Sketch the title screen' } })")
@@ -139,7 +129,7 @@ def main():
             assert {".tribe/README.md", ".tribe/project.md", ".tribe/tasks.md", ".tribe/docs/ideas.md"} <= paths, paths
             tasks_md = base64.b64decode(gh_files[("tribe/suggestions", ".tribe/tasks.md")]["content"]).decode()
             assert "- [ ] Sketch the title screen" in tasks_md, tasks_md
-            assert "Campfire Games" in base64.b64decode(gh_files[("tribe/suggestions", ".tribe/project.md")]["content"]).decode()
+            assert "Pixel Quest" in base64.b64decode(gh_files[("tribe/suggestions", ".tribe/project.md")]["content"]).decode()
             n_put = sum(1 for m, _ in gh_log if m == "PUT")
             pg.evaluate("TribeLocalSetup.github.mirror()")   # unchanged files are not written again
             assert sum(1 for m, _ in gh_log if m == "PUT") == n_put, "mirroring again writes nothing new"
@@ -170,10 +160,6 @@ def main():
             assert any(t["title"] == "Sketch the title screen" for t in tasks), tasks
             docs = api("GET", "/docs", token=token, project=ppid)["docs"]
             assert any(d["title"] == "Ideas" for d in docs), docs
-            co = api("GET", f"/projects/{ppid}/company", token=token, project=ppid)["company"]
-            assert co and co["name"] == "Campfire Games", co
-            seats = {s["kind"]: bool(s["holder"]["person"]) for s in co["seats"]}
-            assert seats.get("ceo") and not seats.get("cto") and not seats.get("growth"), seats
             # idempotent: the same draft again returns the first result, no second copy
             again = api("POST", "/import/solo", {"draftId": "d-repeatme12", "projects": [{"name": "Twice"}]}, token=token)
             again2 = api("POST", "/import/solo", {"draftId": "d-repeatme12", "projects": [{"name": "Twice"}]}, token=token)
@@ -184,7 +170,7 @@ def main():
             ctx.close(); b.close()
         bad = [e for e in errors if "ResizeObserver" not in e and "api.github.com" not in e]
         assert not bad, bad
-        print("ok e2e_setup_local (fresh profile calm, instant project with company for later, offline note + task, GitHub mirror + live state (mocked), This computer sync, idempotent import)")
+        print("ok e2e_setup_local (fresh profile calm, instant project from the one create flow, offline note + task, GitHub mirror + live state (mocked), This computer sync, idempotent import)")
     finally:
         srv.terminate()
         try: srv.wait(timeout=5)

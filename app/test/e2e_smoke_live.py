@@ -61,7 +61,7 @@ def main():
             n0 = len(api("/projects", token=tok)[1]["projects"])
 
             # ---- create: Discord-style ----
-            host.evaluate("document.getElementById('pj-plus').click()"); host.wait_for_selector(".np-setup [data-ns='tpl:game']")
+            host.evaluate("TribeProjects.gallery()"); host.wait_for_selector(".np-setup [data-ns='tpl:game']")
             host.click(".np-setup [data-ns='tpl:game']"); host.wait_for_selector("#np-input")
             host.fill("#np-input", "Lantern Run"); host.fill("#np-bio", "A tiny platformer about lanterns")
             host.click("#np-create"); host.wait_for_selector(".modal-card.ii #ii-link", timeout=25000)

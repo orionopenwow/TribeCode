@@ -128,7 +128,7 @@ def main():
             assert api("/me/git", "PUT", {"githubToken": TOKEN}, token=token)[0] == 200
 
             # ---- one click: the name is prefilled, Create does everything and opens the chat
-            host.evaluate("document.getElementById('pj-plus').click()"); host.click(".np-setup [data-ns='own']"); host.wait_for_selector("#np-input")
+            host.evaluate("TribeProjects.gallery()"); host.click(".np-setup [data-ns='own']"); host.wait_for_selector("#np-input")
             name = host.input_value("#np-input"); assert name.startswith("Orion's"), name
             host.click("#np-create")
             host.wait_for_selector(".modal-card.ii #ii-link", timeout=25000); host.click(".modal-card.ii [data-close]")   # step 3: invite friends

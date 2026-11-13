@@ -115,10 +115,11 @@ def main():
 
         # 8. Move to… a project: the menu offers to start one when there is none
         pg.click("#hub-docs [data-lk='doc'] .fx-more"); pg.click("#fx-more-menu [data-act=move]"); pg.wait_for_selector("#lf-movemenu [data-to='__setup']")
-        pg.click("#lf-movemenu [data-to='__setup']"); pg.wait_for_selector("#su-start")
-        pg.fill("#su-name", "Lantern Town"); pg.click("#su-create")
+        pg.click("#lf-movemenu [data-to='__setup']"); pg.wait_for_selector("#tn #tn-name")   # the one create flow (tribenew.js)
+        pg.fill("#tn-name", "Lantern Town"); pg.click("#tn-next")
+        pg.click("#tn [data-tn-where='device']"); pg.click("#tn-go")
         pg.wait_for_function("TribeOffline.solo() && TribeClient.connected()", timeout=8000)
-        pg.wait_for_selector("#su-where", timeout=8000); pg.click("#su-later")
+        pg.wait_for_selector("#tn[data-step='3'] #tn-skip", timeout=8000); pg.click("#tn-skip")
         pid = pg.evaluate("TribeOffline.state().projects[0].id")
         for it in items(pg):
             pg.evaluate(f"TribeLocalFiles.moveTo('{it['id']}', '{pid}')")

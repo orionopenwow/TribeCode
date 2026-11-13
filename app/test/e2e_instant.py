@@ -121,7 +121,7 @@ def main():
             assert ph.is_hidden("#invite-modal") or "Claude Code" not in ph.inner_text("#invite-body"), "phones skip the Claude Code sheet"
 
             # ---- the + window, like Discord: Create my own -> name -> Create -> Invite friends (link copied) ----
-            host.evaluate("TribeProjects.openNew()")
+            host.evaluate("TribeProjects.gallery()")
             host.click(".np-setup [data-ns='own']"); host.wait_for_selector("#np-input"); host.click("#np-create")
             host.wait_for_selector(".modal-card.ii #ii-link", timeout=20000)
             assert host.evaluate("TribeProjects.current()") != fresh, "another fresh project"

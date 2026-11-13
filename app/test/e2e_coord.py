@@ -345,7 +345,7 @@ def ui_host(b, host, orion, maya, pq, b1):
         shot(host, "bugs-board")
         host.click("#preview-close"); host.wait_for_selector("#tour-room:not(.previewing)")
         # + opens one simple dialog
-        host.evaluate("document.getElementById('pj-plus').click()"); host.wait_for_selector(".np-setup [data-ns='own']")   # like Discord: Create my own · templates · Join
+        host.evaluate("TribeProjects.gallery()"); host.wait_for_selector(".np-setup [data-ns='own']")   # like Discord: Create my own · templates · Join
         wait_text(host, ".np-setup", "A blank project"); wait_text(host, ".np-setup", "Have an invite already")
         shot(host, "shell-new-project")
         host.keyboard.press("Escape")

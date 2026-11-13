@@ -69,11 +69,11 @@ def main():
             assert pg.evaluate("document.activeElement && document.activeElement.hasAttribute('data-pm-notnow')"), "Not now has focus"
             SHOTS.mkdir(parents=True, exist_ok=True); pg.screenshot(path=str(SHOTS / "premium-sheet.png"))
             pg.click("[data-pm-notnow]"); pg.wait_for_selector("#pm-sheet", state="detached")
-            pg.wait_for_selector("#np-prompt, #np-idea", state="visible", timeout=8000)   # the new-project sheet goes on
+            pg.wait_for_selector("#tn #tn-name, #np-prompt, #np-idea", state="visible", timeout=8000)   # the new-project sheet goes on
             pg.keyboard.press("Escape"); pg.wait_for_timeout(300)
             p4 = ok(api("/projects", "POST", {"name": "Fourth"}, token=tok), "the server never limits projects")
             pg.evaluate("TribeProjects.refresh()"); pg.wait_for_function("TribeProjects.list().length === 4", timeout=10000)
-            pg.evaluate("TribeProjects.openNew(); 0"); pg.wait_for_selector("#np-prompt, #np-idea", state="visible", timeout=8000)
+            pg.evaluate("TribeProjects.openNew(); 0"); pg.wait_for_selector("#tn #tn-name, #np-prompt, #np-idea", state="visible", timeout=8000)
             assert pg.locator("#pm-sheet").count() == 0, "snoozed for a week after Not now"
             pg.keyboard.press("Escape")
 

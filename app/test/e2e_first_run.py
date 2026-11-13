@@ -200,7 +200,7 @@ def main():
             tok = host.evaluate("TribeStore.get().server.token")
             host.evaluate("window.TribeHub && TribeHub.open('home')"); host.wait_for_selector("#hub-new", timeout=15000)
             shot(host, "01-home"); audit(host, "home 1440"); no_dead_end(host, "home")
-            host.click("#hub-new"); host.wait_for_selector("[data-ns=own]")
+            host.evaluate("TribeProjects.gallery()"); host.wait_for_selector("[data-ns=own]")
             shot(host, "02-create"); audit(host, "create project")
             host.click("[data-ns=own]"); host.wait_for_selector("#np-input")
             host.fill("#np-input", "Lantern Garden"); host.fill("#np-bio", "A cozy game about lanterns")

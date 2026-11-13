@@ -308,17 +308,16 @@
       try { if (window.TribeHub) swap(() => window.TribeHub.open('home')); } catch {}
       const go1 = await point('Start your first project', ['#hub-host', '#hub-hero .he-go']);
       await press(go1);
-      if (!$('#su-start') && window.TribeLocalSetup) { try { window.TribeLocalSetup.start(); } catch {} }
-      await point('the start sheet', ['#su-start', '#su-form'], { ms: 2500 });
-      const nm = await find('#su-name', 1500);
-      await glide('me', nm); await typeInto(nm, NAME);
-      const bio = await find('#su-bio', 1000);
-      if (bio) { await glide('me', bio); await typeInto(bio, BIO); }
+      if (!$('#tn') && window.TribeNew) { try { window.TribeNew.open(); } catch {} }   // the one create flow (tribenew.js)
+      await point('the start sheet', ['#tn', '#tn-f1'], { ms: 2500 });
+      const nm = await find('#tn-name', 1500);
+      if (nm) { await glide('me', nm); await typeInto(nm, NAME); }
       await hold(400);
     } },
     { id: 'project', title: 'Start a project', dur: 10000, say: 'A project is one thing the tribe makes. Ember Café: a friend’s café that needs a website.', async run() {
-      const btn = $('#su-start') ? await point('Create', ['#su-create']) : null;
+      const btn = $('#tn') ? await point('Next', ['#tn-next']) : null;
       if (btn) await press(btn, 'me', false);
+      try { if (window.TribeNew && window.TribeNew.isOpen()) window.TribeNew.close(true); } catch {}
       try { if (window.TribeLocalSetup && window.TribeLocalSetup.state().open) window.TribeLocalSetup.close(); } catch {}
       create({ name: NAME, bio: BIO });
       await inProject(); show('home'); await real(350);

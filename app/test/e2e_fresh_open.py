@@ -103,11 +103,13 @@ def main():
             assert not pg.evaluate("TribeOffline.active()"), "choosing nothing starts nothing"
             # 5. Start your first project makes the project at once on this device (feat/setup-local); choosing
             #    "This computer" as its home then makes the tribe, with you as host
-            pg.click("#hub-host"); pg.wait_for_selector("#su-start", timeout=5000)
-            pg.fill("#su-name", "Fox Den"); pg.click("#su-create")
-            pg.wait_for_selector("#su-where", timeout=10000)
+            pg.click("#hub-host"); pg.wait_for_selector("#tn #tn-name", timeout=5000)   # the one create flow (tribenew.js)
+            pg.fill("#tn-name", "Fox Den"); pg.click("#tn-next")
+            pg.wait_for_selector("#tn[data-step='2']", timeout=10000)
             assert health()["members"] == 0, "making the project waits on no server"
-            pg.click("#su-where [data-su='computer']")
+            pg.click("#tn [data-tn-where='computer']"); pg.click("#tn-go")
+            pg.wait_for_selector("#tn[data-step='3'] #tn-done", timeout=20000)
+            with pg.expect_navigation(timeout=20000): pg.click("#tn-done")   # a new host: the page reloads into it
             for _ in range(80):   # the page reloads into the tribe on this computer
                 try:
                     if pg.evaluate("!!(window.TribeClient && TribeClient.connected() && !(window.TribeOffline && TribeOffline.active()) && (TribeClient.state().me || {}).role === 'host')"): break

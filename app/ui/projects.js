@@ -588,8 +588,15 @@ ${canEdit && !started ? `      <section class="pj-context" id="pj-context"><div 
     if (C.connected() && window.TribePremium && n > window.TribePremium.LIMITS.projects) return window.TribePremium.gate('projects', { count: n }).then(() => openNew0());
     return openNew0();
   }
-  function openNew0() {
-    if (!C.connected() && window.TribeLocalSetup) return window.TribeLocalSetup.start();   // feat/setup-local: no tribe yet: an instant project on this device, its home chosen last
+  // feat/ui-tribeflow: every way to start a tribe is the one flow (tribenew.js: name and icon · where · invite · done).
+  // The idea / template / starter / my-code gallery below stays reachable from it ("Start from an idea…") as gallery().
+  function openNew0(o) {
+    if (window.TribeNew) return window.TribeNew.open(o || {});
+    if (!C.connected() && window.TribeLocalSetup) return window.TribeLocalSetup.start();
+    return gallery();
+  }
+  function gallery() {
+    if (window.TribeNew && window.TribeNew.isOpen()) window.TribeNew.close(true);
     dropped = null; setup.tpl = null; setup.image = null;
     modal().classList.remove('hidden'); body().classList.add('np-setup');
     const on = C.connected(), host = on && isHost(), desk = !!window.TribeHost.isDesktop, scoped = scopedMe();
@@ -663,7 +670,7 @@ ${canEdit && !started ? `      <section class="pj-context" id="pj-context"><div 
     body().classList.add('np-setup');
     body().innerHTML = `<button class="ns-x" data-close aria-label="Close">${ico('i-x', 16)}</button><div class="ns-head"><h2>Remix a starter</h2><p class="lead">Open-source projects you can build on. Each one keeps its authors' license and credit.</p></div>${window.TribeDesignFlow ? '<div class="ns-sub">Built in, ready to play</div><div class="st-row"><span class="st-t"><b>Small app and game starters</b><small>Breakout, snake, a platformer, kanban, notes, a dashboard and more: no build step, with knobs and a plan (Design › App or Game).</small></span><button class="btn sm primary" id="st-builtin">Open</button></div>' : ''}<div class="st-list" id="st-list"><p class="faint">Loading…</p></div>
       <div class="ns-btns"><button class="linkish" id="np-back">Back</button></div>`;
-    body().querySelector('[data-close]').onclick = close; $('#np-back').onclick = openNew;
+    body().querySelector('[data-close]').onclick = close; $('#np-back').onclick = gallery;
     const bi = $('#st-builtin'); if (bi) bi.onclick = () => { close(); window.TribeDesignFlow.open({ kind: 'game' }); };   // feat/design-flow
     let items = []; try { items = (await C.api('/shelf/starters')).items || []; } catch {}
     const box = $('#st-list'); if (!box) return;
@@ -700,7 +707,7 @@ ${canEdit && !started ? `      <section class="pj-context" id="pj-context"><div 
       <label class="ns-lab" for="np-bio">About it <span class="faint">optional</span></label><input class="input" id="np-bio" maxlength="200" value="${esc(t ? t.bio : '')}" placeholder="A one-line bio" autocomplete="off">
       <div class="np-status" id="np-status"></div>
       <div class="ns-btns"><button class="linkish" id="np-back">Back</button><span style="flex:1"></span><button class="btn primary" id="np-create">Create</button></div>`;
-    $('#np-back').onclick = openNew;
+    $('#np-back').onclick = gallery;
     $('#np-pic').onclick = async () => {   // Discord-style: upload, then frame it before it's used
       const keep = { n: $('#np-input').value, b: $('#np-bio').value };
       const url = await window.TribeCropper.pick({ title: 'Your project picture' }); if (!url) return;
@@ -921,7 +928,7 @@ ${canEdit && !started ? `      <section class="pj-context" id="pj-context"><div 
   const DROP = '#pj-rail, #pj-plus';   // drop a folder on the circles (or +) to start a project
   document.addEventListener('dragover', e => { if (e.target.closest && e.target.closest(DROP) && isHost()) { e.preventDefault(); $('#pj-plus').classList.add('over'); } });
   document.addEventListener('dragleave', e => { if (e.target.closest && e.target.closest(DROP)) $('#pj-plus').classList.remove('over'); });
-  document.addEventListener('drop', async e => { if (!(e.target.closest && e.target.closest(DROP)) || !isHost()) return; e.preventDefault(); $('#pj-plus').classList.remove('over'); openNew(); try { await fromDataTransfer(e.dataTransfer); } catch (err) { status(`<div class="np-err">${esc(err.message)}</div>`); } });
+  document.addEventListener('drop', async e => { if (!(e.target.closest && e.target.closest(DROP)) || !isHost()) return; e.preventDefault(); $('#pj-plus').classList.remove('over'); gallery(); try { await fromDataTransfer(e.dataTransfer); } catch (err) { status(`<div class="np-err">${esc(err.message)}</div>`); } });
   (async () => {   // Tauri v2: a dropped folder comes with its real path (guarded: the desktop shell only)
     const ev = window.__TAURI__ && window.__TAURI__.event; if (!ev || !ev.listen) return;
     try { await ev.listen('tauri://drag-drop', e => { const paths = e.payload && e.payload.paths; if (paths && paths[0] && C.connected() && isHost()) fromPath(paths[0]); }); } catch {}
@@ -954,5 +961,5 @@ ${canEdit && !started ? `      <section class="pj-context" id="pj-context"><div 
     const tryIt = () => { if (!C.connected() || !me().id) return false; try { history.replaceState(null, '', location.pathname + location.hash); } catch {} if (isHost()) remix(r); else toastMsg('That starter needs the host to start it. Share the link with them: github.com/' + r); return true; };
     if (!tryIt()) C.on('hello', function once() { if (r && tryIt()) r = ''; });
   })();
-  window.TribeProjects = { createFromIdea, nameFromIdea, openStarters, remix, step, refresh, list: () => projects, current: cur, cur: curP, face, label, here, pulses: () => pulses, sheet, pickImage, workspacePanel, switchTo, onShow, whereLabel, invitePicker, openNew, startFromFiles, analyze, fromPath, overview, requests };
+  window.TribeProjects = { gallery, createFromIdea, nameFromIdea, openStarters, remix, step, refresh, list: () => projects, current: cur, cur: curP, face, label, here, pulses: () => pulses, sheet, pickImage, workspacePanel, switchTo, onShow, whereLabel, invitePicker, openNew, startFromFiles, analyze, fromPath, overview, requests };
 })();

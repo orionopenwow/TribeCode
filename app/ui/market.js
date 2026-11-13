@@ -393,7 +393,7 @@
     side.querySelectorAll('[data-pick]').forEach(b => b.onclick = () => pick(it, b.dataset.pick));
   }
   async function second2(it, k) {
-    if (k === 'remix') { leave(); window.TribeProjects.openNew && window.TribeProjects.openNew(); setTimeout(() => window.TribeProjects.remix(it.repo), 60); }
+    if (k === 'remix') { leave(); (window.TribeProjects.gallery || window.TribeProjects.openNew)(); setTimeout(() => window.TribeProjects.remix(it.repo), 60); }
     else if (k === 'company') {
       if (window.TribeCompany && window.TribeCompany.create) { leave(); await window.TribeCompany.create(it.ref || it.id.replace(/^co-/, '')); window.TribeCompany.open && window.TribeCompany.open(); }
       else { try { await C.api(`/projects/${encodeURIComponent(pid())}/company`, { method: 'PUT', body: { on: true, template: it.ref } }); result(`${it.title}: Company mode is on`); } catch { result('Company mode isn’t ready on this tribe yet'); } }

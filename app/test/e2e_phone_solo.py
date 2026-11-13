@@ -55,8 +55,8 @@ def main():
             # 1. the chooser: four homes, one row each
             # polish: the phone "+" opens the instant Start sheet (setuplocal.js), with Join with a link; the old chooser stays for move/hosting steps
             pg.evaluate("TribeMobile.startTribe()")
-            pg.wait_for_selector("#su-start #su-name", state="visible"); assert pg.locator("#su-start [data-su-join]").count() == 1
-            pg.click("#su-start [data-su-close]")
+            pg.wait_for_selector("#tn #tn-name", state="visible"); assert pg.locator("#tn #tn-join").count() == 1   # the one create flow
+            pg.click("#tn #tn-x"); pg.wait_for_selector("#tn", state="detached")
             pg.evaluate("TribePhoneHost.open()")
             pg.wait_for_selector("#ph-start", state="visible")
             rows = pg.eval_on_selector_all("#ph-start .ph-row b", "els => els.map(e => e.childNodes[0].textContent.trim())")

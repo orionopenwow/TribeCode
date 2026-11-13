@@ -104,7 +104,7 @@
       ${isHost() ? row('Backup', '<button class="btn" id="set-backup">Download backup</button>', 'The whole tribe folder as one .tar.gz. GitHub keys stay on this computer.') : ''}
       ${isHost() && C() && C().connected() ? row('Freesound sounds', '<form class="set-fs" id="set-fs" autocomplete="off"><input class="input" id="set-fs-key" type="password" placeholder="API key" aria-label="Freesound API key" maxlength="80"><button class="btn" type="submit" id="set-fs-save">Save</button></form>', 'With a free key from freesound.org/apiv2/apply, the inspiration board also searches Freesound. The key stays on this server and is never sent to anyone\'s browser. <span id="set-fs-st"></span>') : ''}
       </details>
-      <div class="set-links"><button class="linkish" id="set-tour">Tour with Flint</button><button class="linkish" id="set-join">Join another tribe with a link</button>${window.TribeOffline ? `<button class="linkish" id="set-demo">${esc(window.TribeOffline.label())}</button>` : ''}${window.TribeGuide ? '<button class="linkish set-guide" id="set-guide" title="How to TribeCode"><span aria-hidden="true">?</span> Guide</button>' : ''}</div>`;
+      <div class="set-links"><button class="linkish" id="set-tour">Tour with Flint</button><button class="linkish" id="set-new">Start a new tribe</button><button class="linkish" id="set-join">Join another tribe with a link</button>${window.TribeOffline ? `<button class="linkish" id="set-demo">${esc(window.TribeOffline.label())}</button>` : ''}${window.TribeGuide ? '<button class="linkish set-guide" id="set-guide" title="How to TribeCode"><span aria-hidden="true">?</span> Guide</button>' : ''}</div>`;
     $('#set-close').onclick = close;
     { const ro = $('#set-reorder'); if (ro) ro.onclick = () => { window.TribeReorder.reset(); ro.textContent = 'Done'; setTimeout(() => { ro.textContent = 'Reset order'; }, 1500); }; }
     if (window.TribeAccounts) window.TribeAccounts.settings(box);   // Account (Switch, Log out) and More settings › Test accounts (accounts.js)
@@ -179,6 +179,7 @@
     const lg = $('#set-login'); if (lg) lg.onclick = () => { const on = !S.get().startup.launchAtLogin; S.set({ startup: { launchAtLogin: on } }); window.TribeHost.setAutostart(on); draw(); };
     $('#set-tour').onclick = () => { close(); window.TribeFlintTour && window.TribeFlintTour.start(); };
     $('#set-join').onclick = () => { close(); joinPrompt(); };
+    const sn = $('#set-new'); if (sn) sn.onclick = () => { close(); if (window.TribeNew) window.TribeNew.open({ from: 'settings' }); };
     const sd = $('#set-demo'); if (sd) sd.onclick = () => { close(); window.TribeOffline.toggle(); };   // feat/offline-demo
     const lk = $('#set-look'); if (lk) lk.onclick = () => { close(); window.TribeLook.open(C().connected() ? 'tribe' : 'me'); };   // feat/customize (app/ui/look.js)
     const sg = $('#set-guide'); if (sg) sg.onclick = () => { close(); window.TribeGuide.open(); };   // feat/vision-guide

@@ -149,8 +149,8 @@ def global_nav(page, tribe):
         page.evaluate("TribeShell.go('ws-tasks')"); st = settled(page); assert st["view"] == "hub", st
         # the + sheet always has a way out
         # (feat/setup-local: with no tribe, + is the instant Start sheet on this device)
-        page.click("#pj-plus"); page.wait_for_selector("#su-start .su-x", state="visible")
-        page.click("#su-start .su-x"); page.wait_for_selector("#su-start", state="detached")
+        page.click("#pj-plus"); page.wait_for_selector("#tn #tn-x", state="visible")   # the one create flow (tribenew.js)
+        page.click("#tn #tn-x"); page.wait_for_selector("#tn", state="detached")
         return
     # with a tribe: into a project from the rail, Back returns to the global section you came from
     page.click("#nest-work"); page.wait_for_function("TribeRouter.where().key === 'work'"); settled(page)
@@ -318,7 +318,7 @@ def main():
             host.keyboard.press("Escape")
 
             # ---- Roles: only for flow projects, a tab in Tasks & Board
-            host.evaluate("document.getElementById('pj-plus').click()"); host.click(".np-setup [data-ns='own']"); host.wait_for_selector("#np-input"); host.click("#np-create")
+            host.evaluate("TribeProjects.gallery()"); host.click(".np-setup [data-ns='own']"); host.wait_for_selector("#np-input"); host.click("#np-create")
             host.wait_for_selector(".modal-card.ii #ii-link", timeout=25000); host.click(".modal-card.ii [data-close]")
             host.wait_for_selector("#view-chat:not(.hidden)", timeout=20000)
             host.click("#nest-ws-tasks"); host.wait_for_selector("#wt-roles", timeout=15000)
