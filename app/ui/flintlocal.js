@@ -78,6 +78,15 @@
     multi: ['Done: {list}', 'Hecho: {list}', 'Feito: {list}', 'Fait : {list}', 'Erledigt: {list}', '完了: {list}', '完成：{list}', '완료: {list}'],
     stopped: ['I stopped at “{s}”: I’m not sure what that part means.', 'Me detuve en “{s}”: no entendí esa parte.', 'Parei em “{s}”: não entendi essa parte.', 'Je me suis arrêté à « {s} » : je n’ai pas compris.', 'Bei „{s}“ habe ich aufgehört: das verstehe ich nicht.', '「{s}」で止まりました。その部分がわかりません。', '在“{s}”停下了：那部分我不明白。', '“{s}”에서 멈췄어요. 그 부분을 모르겠어요.'],
     building: ['On it: {x}.', 'En marcha: {x}.', 'Fazendo: {x}.', 'C’est parti : {x}.', 'Mache ich: {x}.', '作業中: {x}。', '马上：{x}。', '진행 중: {x}.'],
+    callVideo: ['Camera on.', 'Cámara encendida.', 'Câmera ligada.', 'Caméra allumée.', 'Kamera an.', 'カメラをオンにしました。', '摄像头已打开。', '카메라를 켰어요.'],
+    callVideoOff: ['Camera off.', 'Cámara apagada.', 'Câmera desligada.', 'Caméra éteinte.', 'Kamera aus.', 'カメラをオフにしました。', '摄像头已关闭。', '카메라를 껐어요.'],
+    callShare: ['Pick what to share.', 'Elige qué compartir.', 'Escolha o que compartilhar.', 'Choisissez quoi partager.', 'Wähle aus, was du teilst.', '共有するものを選んでください。', '选择要共享的内容。', '공유할 화면을 고르세요.'],
+    callShareOff: ['Stopped sharing.', 'Dejé de compartir.', 'Parei de compartilhar.', 'Partage arrêté.', 'Teilen beendet.', '共有を止めました。', '已停止共享。', '공유를 멈췄어요.'],
+    callHand: ['Hand raised.', 'Mano levantada.', 'Mão levantada.', 'Main levée.', 'Hand gehoben.', '手を挙げました。', '已举手。', '손을 들었어요.'],
+    callHandDown: ['Hand lowered.', 'Mano bajada.', 'Mão abaixada.', 'Main baissée.', 'Hand gesenkt.', '手を下げました。', '已放下手。', '손을 내렸어요.'],
+    callRing: ['Ringing {p}…', 'Llamando a {p}…', 'Chamando {p}…', 'J’appelle {p}…', 'Rufe {p} an…', '{p}を呼び出しています…', '正在呼叫{p}…', '{p}님에게 거는 중…'],
+    callPresent: ['Presenting TribeCode: everyone can follow you.', 'Presentando TribeCode: todos pueden seguirte.', 'Apresentando o TribeCode: todos podem te seguir.', 'Vous présentez TribeCode : tout le monde peut vous suivre.', 'Du präsentierst TribeCode: alle können dir folgen.', 'TribeCodeを発表中：みんながフォローできます。', '正在演示 TribeCode：大家可以跟随你。', 'TribeCode를 발표 중이에요: 모두 따라올 수 있어요.'],
+    callNotIn: ['Join a huddle first.', 'Primero únete a una llamada.', 'Entre numa chamada primeiro.', 'Rejoignez d’abord un appel.', 'Tritt zuerst einem Huddle bei.', '先にハドルに参加してください。', '请先加入语音。', '먼저 허들에 참여하세요.'],
     huddleOn: ['Joined the huddle.', 'Entré a la llamada.', 'Entrei na chamada.', 'J’ai rejoint l’appel.', 'Dem Huddle beigetreten.', 'ハドルに参加しました。', '已加入语音。', '허들에 참여했어요.'],
     huddleOff: ['Left the huddle.', 'Salí de la llamada.', 'Saí da chamada.', 'J’ai quitté l’appel.', 'Huddle verlassen.', 'ハドルを抜けました。', '已离开语音。', '허들에서 나왔어요.'],
     device: ['Showing the {x} view.', 'Vista de {x}.', 'Vista de {x}.', 'Vue {x}.', 'Ansicht: {x}.', '{x}表示にしました。', '已切换到{x}视图。', '{x} 화면으로 보여요.'],
@@ -113,7 +122,7 @@
   async function tasks(force) {
     if (!connected()) return [];
     if (!force && Date.now() - tasksAt < 8000) return tasksCache;
-    try { tasksCache = ((await C.api('/tasks')).tasks || []).map(t => ({ id: t.id, title: t.title, status: t.status, assignee: t.assignee, due: t.due, body: t.body, type: t.type })); tasksAt = Date.now(); } catch {}
+    try { tasksCache = ((await C.api('/tasks')).tasks || []).map(t => ({ id: t.id, title: t.title, status: t.status, assignee: t.assignee, due: t.due, body: t.body, type: t.type, accept: t.accept })); tasksAt = Date.now(); } catch {}
     return tasksCache;
   }
   const view = () => { const h = location.hash || ''; if (/^#\/canvas/.test(h) || document.body.dataset.view === 'canvas') return 'canvas'; if (document.body.classList.contains('pvw-on') || /^#\/preview/.test(h)) return 'preview'; return (document.body.dataset.view || h.replace(/^#\/?/, '').split('/')[0] || 'home'); };
@@ -171,8 +180,8 @@
   function go(key) {
     const W = window;
     const map = {
-      design: ['TribeCanvas', g => g.open()], preview: ['TribePreview', g => g.open()], market: ['TribeMarket', g => g.open()], trending: ['TribeMarket', g => g.open()],
-      studios: ['TribeStudios', g => g.open()], company: ['TribeCompany', g => g.go()], assets: ['TribeAssets', g => g.open({})], academy: ['TribeAcademy', g => g.open({})],
+      design: ['TribeDesignFlow', g => g.open({})], canvas: ['TribeCanvas', g => g.open()], preview: ['TribePreview', g => g.open()], market: ['TribeMarket', g => g.open()], trending: ['TribeMarket', g => g.open()],
+      studios: ['TribeStudios', g => g.open()], company: ['TribeCompany', g => g.open()], assets: ['TribeAssets', g => g.open({})], academy: ['TribeAcademy', g => g.open({})],
       secretary: ['TribeSecretary', g => g.open()], personalize: ['TribePersonalize', g => g.open('you')], profile: ['TribePersonalize', g => g.open('you')], customize: ['TribeLook', g => g.open('tribe')],
       jam: ['TribeJam', g => g.open()], publish: ['TribePublish', g => g.open()], search: ['TribePalette', g => g.open()], shortcuts: ['TribeHelp', g => g.shortcuts()], notes: ['TribeCaptures', g => g.open()],
       inbox: ['TribeNotify', g => g.openInbox()], inspo: ['TribeInspoBoard', g => g.open({})], dms: ['TribeDM', g => g.open && g.open()], brainpick: ['TribeBrain', g => g.open()], templates: ['TribeSiteLib', g => g.open({ pid: C && C.project && C.project() })],
@@ -190,6 +199,13 @@
     if (window.TribeFlintCmds && window.TribeFlintCmds.has(id)) return window.TribeFlintCmds.run(s, { pushUndo, connected, tasks: () => tasks(true), clear: H.clear });   // feat/flint-unify: timers, motion, notifications, pins, reactions, more task moves…
     const legacy = async (text, sum) => { await H.legacy(text); return { said: true, sum: sum || text }; };
     const needT = () => (connected() ? null : { text: T('needTribe'), acts: [['Host or join', 'invite']] });
+    if (id === 'nav.settings' && sl.section === 'notifications' && window.TribeNotify && window.TribeNotify.openSettings) { window.TribeNotify.openSettings(); return { text: T('opened', { x: 'Notification settings' }), sum: 'opened notification settings' }; }
+    if (id === 'nav.files' && sl.cat) {   // "show my pictures": Files on that kind's tab
+      const r = NAVLEGACY.files ? await legacy('open files', 'opened Files') : null;
+      let n = 0; const pick = () => { const b = [...document.querySelectorAll(`[data-dk="${sl.cat}"]`)].find(x => x.offsetParent); if (b) b.click(); else if (++n < 20) setTimeout(pick, 120); };
+      setTimeout(pick, 120);
+      return r || { text: T('opened', { x: 'Files' }) };
+    }
     if (id.startsWith('nav.')) {
       const k = id.slice(4);
       if (NAVLEGACY[k]) return legacy('open ' + NAVLEGACY[k], 'opened ' + (s.label || k));
@@ -217,11 +233,44 @@
         const L = (await tasks(true)).filter(x => x.status !== 'done' && !x.assignee);
         return { text: L.length ? T('unassigned', { list: L.slice(0, 6).map(x => `“${x.title}”`).join(', ') }) : T('tasksNone'), acts: [['Open Tasks', 'nav', 'tasks']] };
       }
+      if (id === 'task.claim' && sl.next) {   // "grab an open task": the first unassigned one, claimed (server/taskflow.js)
+        const open = (await tasks(true)).filter(x => x.status !== 'done' && !x.assignee);
+        if (!open.length) return { text: 'Nothing is open to claim right now.', acts: [['Open Tasks', 'nav', 'tasks']] };
+        try { await C.api('/tasks/' + encodeURIComponent(open[0].id) + '/claim', { method: 'POST', body: {} }); } catch (e) {
+          if (!/council/i.test(e.message || '')) return { text: e.message };   // Lead mode: no claiming, so take it with Start instead
+          await C.api('/tasks/' + encodeURIComponent(open[0].id), { method: 'PATCH', body: { status: 'doing', assignee: C.state().me && C.state().me.id } });
+        }
+        last.task = open[0]; tasksAt = 0; return { text: `You claimed “${open[0].title}”. It is yours and in progress.`, acts: [['Open Tasks', 'nav', 'tasks']], sum: `claimed “${open[0].title}”` };
+      }
       if (!t || !t.id) return { text: T('noTask'), acts: (await tasks()).filter(x => x.status !== 'done').slice(0, 3).map(x => [x.title, 'ask', rephrase(s, x.title)]) };
       const before = (await tasks()).find(x => x.id === t.id) || t;
       const patch = async (body, undoBody, label) => { await C.api('/tasks/' + encodeURIComponent(t.id), { method: 'PATCH', body }); last.task = t; tasksAt = 0; pushUndo(label, () => C.api('/tasks/' + encodeURIComponent(t.id), { method: 'PATCH', body: undoBody })); };
       try {
         if (id === 'task.done') { await patch({ status: 'done' }, { status: before.status || 'todo' }, `“${t.title}” done`); return { text: T('taskDone', { t: t.title }), sum: `marked “${t.title}” done` }; }
+        const me0 = C.state().me && C.state().me.id;
+        const offered = before.accept === 'pending' && before.assignee === me0;
+        // v0.30 task offers (server/taskflow.js): accept starts it, decline hands it back with a reason, claim takes an open one
+        if (id === 'task.accept' || (id === 'task.start' && offered)) {
+          if (!offered && before.assignee && before.assignee !== me0) return { text: `“${t.title}” isn’t offered to you.`, acts: [['Open Tasks', 'nav', 'tasks']] };
+          if (!offered) { await patch({ status: 'doing', ...(before.assignee ? {} : { assignee: me0 }) }, { status: before.status || 'todo', assignee: before.assignee || null }, `“${t.title}” started`); return { text: T('taskStart', { t: t.title }), sum: `started “${t.title}”` }; }
+          await C.api('/tasks/' + encodeURIComponent(t.id) + '/accept', { method: 'POST', body: {} }); last.task = t; tasksAt = 0;
+          return { text: `Accepted “${t.title}”. It’s yours and in progress.`, sum: `accepted “${t.title}”` };
+        }
+        if (id === 'task.decline') {
+          if (!offered) return { text: `“${t.title}” isn’t waiting on your answer.`, acts: [['Open Tasks', 'nav', 'tasks']] };
+          const reason = (/(?:too busy|busy|no time|not this week|this week|sorry)/i.exec(s.text || '') || [])[0] || '';
+          await C.api('/tasks/' + encodeURIComponent(t.id) + '/decline', { method: 'POST', body: { reason } }); last.task = t; tasksAt = 0;
+          return { text: `Declined “${t.title}”${reason ? ` (${reason})` : ''}. It goes back to whoever assigned it.`, sum: `declined “${t.title}”` };
+        }
+        if (id === 'task.claim') {
+          if (before.assignee && before.assignee !== me0) return { text: `“${t.title}” already has someone.`, acts: [['Open Tasks', 'nav', 'tasks']] };
+          try { await C.api('/tasks/' + encodeURIComponent(t.id) + '/claim', { method: 'POST', body: {} }); } catch (e) {
+            if (!/council/i.test(e.message || '')) throw e;   // Lead mode: take it with Start instead
+            await patch({ status: 'doing', assignee: me0 }, { status: before.status || 'todo', assignee: before.assignee || null }, `“${t.title}” started`); return { text: `“${t.title}” is yours and in progress. (Claiming is for Council mode, so I started it for you.)`, sum: `started “${t.title}”` };
+          }
+          last.task = t; tasksAt = 0;
+          return { text: `You claimed “${t.title}”. It is yours and in progress.`, sum: `claimed “${t.title}”` };
+        }
         if (id === 'task.start') { const me = C.state().me && C.state().me.id; await patch({ status: 'doing', ...(before.assignee ? {} : { assignee: me }) }, { status: before.status || 'todo', assignee: before.assignee || null }, `“${t.title}” started`); return { text: T('taskStart', { t: t.title }), sum: `started “${t.title}”` }; }
         if (id === 'task.review') { await patch({ status: 'review' }, { status: before.status || 'doing' }, `“${t.title}” to review`); return { text: T('taskReview', { t: t.title }), sum: `sent “${t.title}” to review` }; }
         if (id === 'task.assign') { if (!sl.who || !sl.who.id) return { text: Q('Who should do it?'), acts: (C.state().members || []).filter(m => m.role !== 'spectator').slice(0, 4).map(m => [first(m.name), 'ask', `assign ${t.title} to ${first(m.name)}`]) }; await patch({ assignee: sl.who.id }, { assignee: before.assignee || null }, `“${t.title}” → ${first(sl.who.name)}`); last.person = sl.who; return { text: T('taskAssign', { t: t.title, p: first(sl.who.name) }), sum: `gave “${t.title}” to ${first(sl.who.name)}` }; }
@@ -338,14 +387,49 @@
     if (id === 'textsize.set') { const snap = lookSnap(); const cur = (S().get().look || {}).fontSize || '', order = ['s', '', 'l', 'xl']; let v = sl.size; if (v === 'l' && cur === 'l') v = 'xl'; if (v === 's' && cur === 's') v = 's'; setLook({ fontSize: v }); pushUndo('text size', () => lookRestore(snap)); return { text: T('textsize', { x: { s: 'Small', '': 'Default', l: 'Large', xl: 'Larger' }[v] || 'Default' }) }; }
     if (id === 'lang.set') { const I = window.TribeI18n; if (!I) return { text: T('noPlace', { x: sl.lang }) }; const before = I.lang(); I.set(sl.lang); pushUndo('language', () => I.set(before)); const name = (I.LANGS.find(x => x[0] === sl.lang) || [])[1] || sl.lang; return { text: T('langSet', { x: name }) }; }
     if (id === 'personalize.open') { go('personalize'); return { text: T('opened', { x: 'Personalize' }) }; }
+    if (id === 'invite' && window.TribeOffline && window.TribeOffline.solo && window.TribeOffline.solo()) {
+      if (window.TribeNextOpts) window.TribeNextOpts.sheet('friends');
+      return { text: 'Friends join a tribe on a host. Move this one to a host (a laptop, a free cloud server or an Android phone) and then invite them.' };
+    }
     if (id === 'invite') return legacy('invite a friend', 'opened the invite');
     if (id === 'host.start') return legacy('start hosting');
     if (id === 'host.stop') return legacy('stop hosting');
     if (id === 'connect.ai') return legacy('connect my ai');
+    if (id === 'github.connect') {
+      const solo = window.TribeOffline && window.TribeOffline.solo && window.TribeOffline.solo();
+      if (solo && window.TribeGhPhone) { window.TribeGhPhone.open(); return { text: 'Here is GitHub on this phone: paste a token once, then bring a repo in, push and pull. The token stays on this phone.' }; }
+      go('repo'); return { text: 'Opened the code repository. Connect GitHub there to push and pull with friends.' };
+    }
     if (id === 'brain.pick') { if (window.TribeBrain) window.TribeBrain.open(); return { text: T('opened', { x: "Flint's brain" }) }; }
     if (id === 'helper.toggle') return legacy(`turn ${sl.on ? 'on' : 'off'} the ${sl.what}`);
     if (id === 'jam.start') { const J = window.TribeJam; if (J) (J.start ? J.start() : J.open()); return { text: T('opened', { x: 'Jam' }), sum: 'started a jam' }; }
+    // a tribe that lives only on this phone has nobody to call: say so and show the next options instead of a lonely call
+    if ((id === 'huddle.start' || id === 'call.video' || id === 'call.share' || id === 'call.ring' || id === 'call.present') && window.TribeOffline && window.TribeOffline.solo && window.TribeOffline.solo()) {
+      if (window.TribeNextOpts) window.TribeNextOpts.sheet(id === 'call.share' || id === 'call.present' ? 'screenshare' : 'huddle');
+      return { text: 'Calls need friends in the tribe, and this tribe lives only on this phone. Move it to a host, or open TribeCode on a laptop, and then call.' };
+    }
     if (id === 'huddle.start') { const Hd = window.TribeHuddle; if (!Hd) return { text: T('noPlace', { x: 'Huddle' }) }; if (!Hd.inCall()) Hd.join(); pushUndo('huddle', () => Hd.leave()); return { text: T('huddleOn') }; }
+    if (id.startsWith('call.') || id === 'secretary.summary') {
+      const Hd = window.TribeHuddle, Cl = window.TribeCall;
+      if (id === 'secretary.summary') {
+        try {
+          const t = await C.api('/secretary/summary');
+          const parts = [];
+          if ((t.summary || []).length) parts.push(t.summary.map(x => '- ' + x).join('\n'));
+          if ((t.decisions || []).length) parts.push('Decided: ' + t.decisions.slice(0, 3).map(d => d.text).join(' · '));
+          if ((t.actions || []).length) parts.push('Action items:\n' + t.actions.slice(0, 6).map(a => `- ${a.title}${a.ownerName ? ' (' + a.ownerName + ')' : ''}${a.due ? ' · due ' + a.due : ''}`).join('\n'));
+          return { text: parts.length ? parts.join('\n\n') : 'Nothing said today yet. Chat, voice notes and shared huddle captions show up here.' };
+        } catch (e) { return { text: e.message }; }
+      }
+      if (id === 'call.ring') { const p = sl.who; if (!p || !p.id) return { text: Q('Who should I ring?') }; if (!Hd.inCall()) await Hd.join(); if (Cl) Cl.ring(p.id); return { text: T('callRing', { p: first(p.name) }) }; }
+      if (id === 'call.stage') { if (Cl) { if (sl.history) { if (Hd.inCall()) Cl.open(); Cl.history(); } else Cl.open(); } return { text: sl.history ? 'Here are your recent calls.' : T('huddleOn') }; }
+      if (id === 'call.video') { if (!Hd.inCall() && sl.off) return { text: T('callNotIn') }; if (!Hd.inCall()) await Hd.join({ video: true }); else if (Hd.me().video === !!sl.off) await Hd.toggleCamera(); if (Cl && !sl.off) Cl.open(); return { text: T(sl.off ? 'callVideoOff' : 'callVideo') }; }
+      if (!Hd || !Hd.inCall()) return { text: T('callNotIn') };
+      if (id === 'call.share') { if (sl.off) { Hd.stopShare(); return { text: T('callShareOff') }; } Hd.share(); return { text: T('callShare') }; }
+      if (id === 'call.present') { C.send({ type: 'call-present', on: true, view: document.body.dataset.view || '' }); return { text: T('callPresent') }; }
+      if (id === 'call.hand') { if (Hd.me().hand === !sl.down) return { text: T(sl.down ? 'callHandDown' : 'callHand') }; Hd.toggleHand(); return { text: T(sl.down ? 'callHandDown' : 'callHand') }; }
+      if (id === 'call.mute') { const me = Hd.me(); if (sl.what === 'deaf') { if (me.deaf !== sl.on) Hd.toggleDeaf(); } else if ((me.muted && !me.deaf) !== sl.on) Hd.toggleMute(); return { text: sl.on ? (sl.what === 'deaf' ? 'Deafened.' : 'Muted.') : 'You’re live.' }; }
+    }
     if (id === 'huddle.leave') { const Hd = window.TribeHuddle; if (Hd && Hd.inCall()) Hd.leave(); return { text: T('huddleOff') }; }
     if (id === 'capture.toggle') { if (window.TribeCapture) window.TribeCapture.toggle(); return { text: T('opened', { x: 'Capture' }) }; }
     if (id === 'feedback') { if (window.TribeFeedback) window.TribeFeedback.open(); return { text: T('opened', { x: 'Feedback' }) }; }
@@ -360,6 +444,33 @@
     if (id === 'status') return legacy("what's new");
     if (id === 'focus') return legacy('what should i do next');
     if (id === 'tiers') return legacy('what can you do');
+    // ---- v0.31 features (feat/flint-cleanup) ----
+    if (id === 'design.new') {   // the Design flow (app/ui/designflow.js) on that kind's gallery
+      const DF = window.TribeDesignFlow; if (!DF) return { text: T('noPlace', { x: 'Design' }) };
+      DF.open({ kind: sl.kind }); return { text: `Opened Design on ${sl.kind === 'poster' ? 'posters and graphics' : sl.kind === 'logo' ? 'logos and brand kits' : sl.kind === 'screen' ? 'app screens' : sl.kind + 's'}. Pick a starting point${sl.topic ? ` for ${sl.topic}` : ''}.`, sum: `opened Design (${sl.kind})` };
+    }
+    if (id === 'abilities.edit') { const A = window.TribeAbilities; if (!A || !A.edit) return { text: T('noPlace', { x: 'Abilities' }) }; await A.edit(); if (sl.skill) { const i = document.getElementById('ab-sk-in'); if (i) { i.value = String(sl.skill).slice(0, 24); i.focus(); } } return { text: sl.skill ? `Opened your abilities with “${sl.skill}” ready to add. Press Add, then Save.` : 'Opened your abilities: list what you can do and how you work.', sum: 'opened abilities' }; }
+    if (id === 'market.installed') { const M = window.TribeMarket; if (!M) return { text: T('noPlace', { x: 'Marketplace' }) }; M.page({ tab: 'installed' }); return { text: T('opened', { x: 'Marketplace › Installed' }), sum: 'opened Installed' }; }
+    if (id === 'market.remove') {
+      const M = window.TribeMarket; if (!M) return { text: T('noPlace', { x: 'Marketplace' }) };
+      const want = String(sl.name || '').toLowerCase().trim(), st = M.state ? M.state() : {}; const items = (st.items || []).filter(x => x.installed);
+      const hit = items.find(x => String(x.name || x.title || '').toLowerCase() === want) || items.find(x => String(x.name || x.title || '').toLowerCase().includes(want));
+      if (hit && M.remove) { await M.remove(hit.id); return { text: `Removed ${hit.name || hit.title}.`, sum: `removed ${hit.name || hit.title}` }; }
+      M.page({ tab: 'installed' }); return { text: `Here is what you have installed. Press Remove on ${sl.name || 'the one you want gone'}.`, sum: 'opened Installed' };
+    }
+    if (id === 'demo.start') {
+      const Dw = window.TribeDemoWatch, O = window.TribeOffline;
+      if (Dw && Dw.start) { Dw.start({ mode: 'step' }); return { text: 'Starting the demo. Press Next to go step by step. Everything it makes is cleared when it ends.', sum: 'started the demo' }; }
+      if (O && O.start) { O.start(); return { text: 'Starting the demo tribe.', sum: 'started the demo' }; }
+      return { text: T('noPlace', { x: 'Demo' }) };
+    }
+    if (id === 'presence.off' || id === 'presence.on') {
+      const Pz = window.TribePresence; if (!Pz || !Pz.setPrefs) return { text: T('noPlace', { x: 'Presence' }) };
+      const before = Pz.prefs ? Pz.prefs() : { show: true }; const show = id === 'presence.on';
+      await Pz.setPrefs({ show }); pushUndo('where you are', () => Pz.setPrefs({ show: before.show !== false }));
+      return { text: show ? 'Your tribe can see where you are again.' : 'Done: your tribe no longer sees where you are. You still show as online. (Settings › Show where I am)', sum: show ? 'shared presence' : 'hid presence' };
+    }
+    if (id === 'sidebar.reset') { const Ro = window.TribeReorder; if (!Ro || !Ro.reset) return { text: T('noPlace', { x: 'Sidebar order' }) }; Ro.reset(); return { text: 'The left bar and sidebar are back in their default order.', sum: 'reset the sidebar order' }; }
     if (id === 'hello') return sl.thanks ? { text: T('thanks') } : { text: T('hello', { n: C && C.state && C.state().me ? ' ' + first(C.state().me.name) : '' }) };
     if (id === 'calc') return sl.value == null ? null : { text: sl.each ? T('each', sl.value != null ? { e: sl.expr, v: sl.value } : {}) : sl.total ? T('tip', { e: sl.expr, v: sl.value, t: sl.total }) : T('calc', { e: sl.expr, v: sl.value }) };
     if (id === 'convert') return sl.value == null ? null : { text: `${sl.n} ${sl.from} = **${sl.value}** ${sl.to}` };
@@ -403,7 +514,7 @@
 
   // ---------- the entry point ----------
   const LOCAL_ONLY = new Set(['undo', 'teach', 'meant', 'unteach', 'taught', 'lesson', 'redo']);   // feat/flint-site: lessons before Flint's "teach me what X is"
-  const LOCAL_FIRST = /^(design\.palette|design\.fonts|copy\.|sheet\.(?:sum|sort|format|total|chart)|doc\.(?:toc|checklist|caps|summary|readability)|deck\.pitch|timer|settings\.|chat\.(?:pin|react)|file\.whiteboard|flint\.clear|doc\.template|market\.add|inspo\.search|nav\.(?:people|work)|preview\.(?:open|share)|task\.|chat\.send|dm\.|event\.add|cal\.show|theme\.|accent\.set|textsize\.set|lang\.set|calc|convert|time\.now|date\.calc|random|canvas\.|edit\.picked|preview\.(device|reload|edit)|comment\.mode|trending|market\.search|studio\.open|jam\.start|huddle\.|publish|site\.gallery|personalize\.open|feedback|tour|brain\.pick|build\.|site\.|premium\.)/;
+  const LOCAL_FIRST = /^(design\.palette|design\.fonts|copy\.|sheet\.(?:sum|sort|format|total|chart)|doc\.(?:toc|checklist|caps|summary|readability)|deck\.pitch|timer|settings\.|chat\.(?:pin|react)|file\.whiteboard|flint\.clear|doc\.template|market\.add|inspo\.search|nav\.(?:people|work)|preview\.(?:open|share)|task\.|chat\.send|dm\.|event\.add|cal\.show|theme\.|accent\.set|textsize\.set|lang\.set|calc|convert|time\.now|date\.calc|random|canvas\.|edit\.picked|preview\.(device|reload|edit)|comment\.mode|trending|market\.search|studio\.open|jam\.start|huddle\.|call\.|secretary\.summary|publish|site\.gallery|personalize\.open|feedback|tour|brain\.pick|build\.|site\.|premium\.)/;
   let lastMiss = null;
   async function handle(text, H) {
     // the preview shows the website: its edits ("make the headline say …", "add a pricing section") go to the preview's Flint

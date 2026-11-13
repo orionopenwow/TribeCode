@@ -349,8 +349,8 @@ function flooding(s) {
 // ---------- huddles (WebRTC signaling only; audio/video flow peer to peer) ----------
 const huddle = new Map(); // memberId -> { muted, sharing, joined }
 let huddleProject = null;   // fix/security-2: the project the huddle started in; only people who can see it get its state, captions and audio
-const huddleState = () => [...huddle].map(([mid, h]) => ({ id: mid, muted: h.muted, sharing: h.sharing, joined: h.joined }));
-const pushHuddle = () => { broadcast({ type: 'huddle', members: huddleState() }); voice.huddleChanged(); if (!huddle.size) huddleProject = null; };
+const huddleState = () => [...huddle].map(([mid, h]) => ({ id: mid, muted: h.muted, sharing: h.sharing, joined: h.joined, deaf: !!h.deaf, hand: h.hand || null, video: !!h.video, cam: h.cam || null, scr: h.scr || null }));
+const pushHuddle = () => { broadcast({ type: 'huddle', members: huddleState() }); voice.huddleChanged(); calls.changed(); if (!huddle.size) huddleProject = null; };
 function sendTo(mid, msg) { const o = online.get(mid); if (o) for (const s of o.sockets) s.send(msg); }
 
 // ---------- chat ----------
@@ -520,6 +520,9 @@ const packs = require('./packs')({ store: baseStore, broadcast: m => broadcast(m
 const captures = require('./captures')({ P, store, base: baseStore, embeds, packs, llm, docs, dms, perms, postChat: (...x) => postChat(...x), broadcast: m => broadcast(m), sendTo: (...x) => sendTo(...x), createTask: o => createTask(o), getMembers: () => members, nameOf, log: m => console.error('  ' + m) });
 huddleSum.setSink(x => captures.fromHuddle(x));
 captureHook = (...x) => captures.onChat(...x);
+// voice-video: reactions, laser pointer, in-call chat and polls, recording notices, ring/missed, lobby, ICE/TURN config, history
+const calls = require('./calls')({ store, id, str, huddle, sendTo, broadcast, postChat, bus, nameOf, getProject: () => huddleProject,
+  canSee: (mid, pid) => { const m = memberById(mid); return !!m && P.canSee(m, pid || huddleProject || P.current() || P.defaultId()); } });
 const voice = makeVoice({ canSeeHuddle: me => !huddleProject || P.canSee(me, huddleProject), store, id, str, huddle, sendTo, broadcast, postChat, createTask: o => createTask(o), getMembers: () => members, nameOf, brain, docs, bus, P, summary: huddleSum });
 const plan = makePlan({ store, id, str, broadcast, postChat, getMembers: () => members, loadTasks: () => loadTasks(), nameOf });
 rituals = require('./rituals')({ store, docs, plan, postChat, broadcast, getMembers: () => members, nameOf, str, isLead: me => taskFlow.isLead(me) });
@@ -572,7 +575,7 @@ require('./mcp-people').bind(people);   // share_prompt, report_context + the ag
 const workshop = makeWorkshop({ store: baseStore, P, approvals, getMembers: () => members, nameOf, postChat, broadcast, slug, id, hasToken: W.hasToken, readSecret: W.readSecret });
 const guide = makeGuide({ ui: UI });   // feat/vision-guide
 // Solo mode: the Secretary (background notes, digest, inspiration, research) and the agents hub.
-const secretary = makeSecretary({ P, store: baseStore, pstore: store, brain, docs, loadTasks: () => loadTasks(), hubFor, getMembers: () => members, nameOf, postChat, createTask: o => createTask(o),
+const secretary = makeSecretary({ secsum: require(path.join(UI, 'secsum.js')), P, store: baseStore, pstore: store, brain, docs, loadTasks: () => loadTasks(), hubFor, getMembers: () => members, nameOf, postChat, createTask: o => createTask(o),
   votes: chatx.votes, broadcast, str, id, log: m => console.error('  ' + m) });
 require('./mcp-secretary').bind(secretary);
 chatHook = (...x) => secretary.onChat(...x);
@@ -1249,7 +1252,8 @@ async function apiInProject(req, res, url) {
   if (a === 'drift' && m === 'GET') { const r = await hubFor(P.current()).drift.radar(); if (r.branches) r.branches = r.branches.map(({ allFiles, ...x }) => x); return send(res, 200, r); }
   if (a === 'coord') { const h = await coord.route(req, res, ctx()); if (h !== null) return; }
   if (a === 'people') { const h = await people.route(req, res, ctx()); if (h !== null) return; }   // person view (server/people.js)
-  if (a === 'secretary') { const h = await secretary.route(req, res, ctx()); if (h !== null) return; }   // the Secretary (server/secretary.js)
+  if (a === 'secretary') { const h = await secretary.route(req, res, ctx()); if (h !== null) return; }
+  if (a === 'calls') { const h = await calls.route(req, res, ctx()); if (h !== null) return; }   // voice-video   // the Secretary (server/secretary.js)
   if (a === 'hub' || a === 'dashboard') { const h = await dashboard.route(req, res, ctx()); if (h !== null) return; }   // the Global Hub (server/hub.js)
   if (a === 'scratch') { const h = await scratch.route(req, res, ctx()); if (h !== null) return; }   // private scratchpad (server/scratch.js)
   if (a === 'insights') { const h = await insights.route(req, res, ctx()); if (h !== null) return; }   // AI Insights feed (server/insights.js)
@@ -1384,9 +1388,10 @@ server.on('upgrade', (req, sock) => {
     if (typeof msg.type === 'string' && msg.type.startsWith('wbd-')) { whiteboard.handle(s, me, msg); return; }   // feat/whiteboard: board edits + cursors
     if (typeof msg.type === 'string' && msg.type.startsWith('cnv-')) { designCanvas.handle(s, me, msg); return; }   // P1-A design canvas   // feat/whiteboard: board edits + cursors
     if (msg.type === 'typing' && !mine.typingOn(me.id)) return;   // feat/settings-tabs: typing indicators off
-    if (dms.handle(s, me, msg) || voice.handle(s, me, msg)) return;   // typing, captions, meeting capture
+    if (dms.handle(s, me, msg) || voice.handle(s, me, msg) || calls.handle(s, me, msg)) return;   // typing, captions, meeting capture
     if (msg.type === 'announce' && typeof msg.text === 'string' && me.role !== 'spectator' && me.role !== 'agent' && !perms.muteBlock(me)) postChat('general', me.id, msg.text.slice(0, 400));   // fix/security-review: same rules as posting
     if (msg.type === 'huddle-join' && me.role !== 'agent' && huddle.size && huddleProject && !P.canSee(me, huddleProject)) s.send({ type: 'huddle-error', error: 'A huddle is on in another project.' });   // fix/security-2
+    else if (msg.type === 'huddle-join' && me.role !== 'agent' && !huddle.has(me.id) && !calls.canJoin(me)) s.send({ type: 'call-lobby', waiting: true });   // voice-video: a locked call
     else if (msg.type === 'huddle-join' && me.role !== 'agent') {
       const first = huddle.size === 0;
       if (first || !huddleProject) huddleProject = s.project || P.current() || P.defaultId();   // fix/security-2
@@ -1395,7 +1400,13 @@ server.on('upgrade', (req, sock) => {
       if (first) bus.notify({ type: 'huddle', priority: 'low', from: me.id, title: `${me.name} started a huddle`, body: 'Jump in from the sidebar.', view: 'home' });
     }
     if (msg.type === 'huddle-leave' && huddle.has(me.id)) { huddle.delete(me.id); pushHuddle(); }
-    if (msg.type === 'huddle-state' && huddle.has(me.id)) { const h = huddle.get(me.id); h.muted = !!msg.muted; h.sharing = !!msg.sharing; pushHuddle(); }
+    if (msg.type === 'huddle-state' && huddle.has(me.id)) {
+      const h = huddle.get(me.id); h.muted = !!msg.muted; h.sharing = !!msg.sharing;
+      if ('deaf' in msg) h.deaf = !!msg.deaf; if ('video' in msg) h.video = !!msg.video;
+      if ('hand' in msg) h.hand = msg.hand ? new Date().toISOString() : null;
+      if ('cam' in msg) h.cam = str(msg.cam || '', 80) || null; if ('scr' in msg) h.scr = str(msg.scr || '', 80) || null;
+      pushHuddle();
+    }
     if (msg.type === 'rtc' && typeof msg.to === 'string' && huddle.has(me.id) && huddle.has(msg.to)) {
       const target = huddle.get(msg.to).socket;   // signal only the socket that is in the huddle
       if (target && target.open) target.send({ type: 'rtc', from: me.id, data: msg.data });

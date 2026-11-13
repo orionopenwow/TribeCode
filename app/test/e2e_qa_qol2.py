@@ -98,7 +98,7 @@ def main():
             pg.click("#home-ai-cards details.ai-dev > summary"); pg.wait_for_selector("#home-ai-cards details.ai-dev[open] .ai-card")
             assert [t.strip() for t in pg.locator("#grp-global .nest-row span").all_inner_texts()] == ["Home", "Files", "Design", "Code", "Work", "Agent fleet"]
             assert "Starts a new project for the two of you" in pg.inner_text("#view-hub")
-            pg.unroute_all()
+            pg.unroute_all(behavior="ignoreErrors")
 
             # ---- New project -> the chat's Getting started: the steps once (in the bar)
             pg.evaluate("TribeProjects.gallery()"); pg.wait_for_selector("[data-ns=own]"); pg.click("[data-ns=own]"); pg.wait_for_selector("#np-input")

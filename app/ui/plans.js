@@ -31,7 +31,7 @@
       <section class="plp-card" data-plp="premium"><div class="plp-top"><b>Premium</b><span class="plp-tag">${pl.plan === 'free' ? 'Planned' : 'Yours'}</span></div>
         <ul class="plp-tiers">${pr.plans.map(t => `<li><span class="plp-tn"><b>${esc(t.name)}</b><span class="plp-price">${esc(t.price)} <small>${esc(t.per)}</small></span></span><span class="plp-ta">${esc(t.adds)}</span></li>`).join('')}</ul></section>
       <section class="plp-card" data-plp="credits"><div class="plp-top"><b>AI credits</b><span class="plp-tag">Planned</span></div>
-        <div class="plp-packs" role="group" aria-label="Credit packs">${pr.credit.packs.map(k => `<button type="button" class="plp-pack" data-plp-pack="${k.usd}"><b>${n(k.credits)}</b><small>credits · $${k.usd}</small></button>`).join('')}</div>
+        <div class="plp-packs" role="group" aria-label="Credit packs">${pr.credit.packs.map(k => `<button type="button" class="plp-pack" data-plp-pack="${k.id}"><b>${n(k.credits)}</b><small>credits</small></button>`).join('')}</div>
         <p class="plp-note">${esc(pr.credit.terms)}</p></section>
       <section class="plp-card plp-own" data-plp="own"><div class="plp-top"><b>Use my AI</b><span class="plp-tag is-free">Free</span></div>
         <p class="plp-note">Connect your own: Claude Code, an API key, Ollama or the built-in model. No credits needed, ever.</p>

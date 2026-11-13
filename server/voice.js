@@ -38,7 +38,7 @@ module.exports = function voice({ store, id, str, huddle, sendTo, broadcast, pos
     if (!cap || !cap.on || !inHuddle(me) || !cap.sharing.has(me.id)) return;
     const text = str(msg.text, 600); if (!text) return;
     const at = new Date().toISOString();
-    const line = { at, by: me.id, name: me.name, text };
+    const line = { at, by: me.id, name: me.name, text, project: cap.project || null };
     store.appendJSONL(cap.file, line);
     cap.lines++; cap.people.add(me.id);
     for (const [mid] of huddle) sendTo(mid, { type: 'caption', meeting: cap.id, ...line });

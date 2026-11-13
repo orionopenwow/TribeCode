@@ -510,10 +510,12 @@
           catch {}
           // Public hosts get the friendly GitHub Pages link (device-aware, says when the host is offline).
           const link = site && /^https:/.test(base) ? `${site}/app/go.html#s=${encodeURIComponent(base)}&c=${encodeURIComponent(invite.code)}` : `${base}/join/${invite.code}`;
-          $('#inv-link').textContent = link; $('#inv-copy').disabled = false;
-          $('#inv-qr').innerHTML = window.TribeQR.svg(link); $('#inv-net').textContent = note;
+          // loops: the dialog may have closed or been redrawn (another sheet) while the invite was being made
           S.set({ checklist: { invite: true } }); refresh();
-        } catch (e) { $('#inv-link').textContent = 'Could not create invite: ' + e.message; }
+          const out = $('#inv-link'); if (!out) return;
+          out.textContent = link; if ($('#inv-copy')) $('#inv-copy').disabled = false;
+          if ($('#inv-qr')) $('#inv-qr').innerHTML = window.TribeQR.svg(link); if ($('#inv-net')) $('#inv-net').textContent = note;
+        } catch (e) { const out = $('#inv-link'); if (out) out.textContent = 'Could not create invite: ' + e.message; }
       };
       ['#inv-hours', '#inv-uses', '#inv-role', '#inv-project'].forEach(s => $(s) && $(s).addEventListener('change', make));
       $('#inv-copy').onclick = async () => { try { await navigator.clipboard.writeText($('#inv-link').textContent); toast('Invite link copied'); } catch { getSelection().selectAllChildren($('#inv-link')); toast('Press Ctrl+C to copy'); } };
@@ -787,7 +789,7 @@
     const ios = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
     if (!ios || navigator.standalone || localStorage.getItem('tribecode.iosHint') || !S.get().onboarded) return;
     const d = document.createElement('div'); d.className = 'ios-hint';
-    d.innerHTML = `<img src="assets/apple-touch-icon.png" alt=""><div><b>Get the TribeCode app</b><br>Tap <b>Share</b> <span aria-hidden="true">⬆︎</span> then <b>Add to Home Screen</b>. It opens full screen, like a real app.</div><button aria-label="Dismiss">✕</button>`;
+    d.innerHTML = `<img src="assets/apple-touch-icon.png" alt=""><div><b>Get the TribeCode app</b><br>Tap <b>Share</b> <span aria-hidden="true">⬆︎</span> then <b>Add to Home Screen</b>.</div><button aria-label="Dismiss">✕</button>`;
     d.querySelector('button').onclick = () => { d.remove(); try { localStorage.setItem('tribecode.iosHint', '1'); } catch {} };
     document.body.appendChild(d);
   }

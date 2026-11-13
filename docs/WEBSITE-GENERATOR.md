@@ -48,9 +48,11 @@ field with a hype word keeps the template.
 A connected Claude uses the MCP tools `website_draft`, `website_edit_section` and `website_request_publish`.
 Agents never publish: the host or the project lead presses Publish.
 
-## The site builder (three levels, one draft)
+## The site builder (three levels, one draft) — retired
 
-The builder sits on top of the generator. Every level edits the same draft, and nothing is live until the host or
+> Archived section: the builder's UI (`app/ui/sitegen.js`) was removed in v0.31 (docs/UI-CLEANUP.md). Websites are now made in the website designer (docs/WEBSITE.md › The website designer) and from the template gallery (docs/SITE-TEMPLATES.md). The generator API below (`server/sitegen.js`) is still used by Flint and the website view. This section is kept for history.
+
+The builder sat on top of the generator. Every level edits the same draft, and nothing is live until the host or
 the project lead presses Publish.
 
 | Level | Who it suits | What it shows |

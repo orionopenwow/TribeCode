@@ -97,7 +97,8 @@ def main():
             # ---- the thread opens upward and stays within ~45% of the panel
             th = host.locator("#flint").bounding_box(); assert th["height"] <= panel["height"] * 0.47, (th, panel)
             # ---- a Guide answer with Open in Guide
-            ask(host, "how do invites work", "invite")
+            # (invites now have a Flint lesson; hosting is answered from the Guide)
+            ask(host, "how does hosting work", "host")
             host.locator("#flint .fl-act", has_text="Open in Guide").last.click()
             host.wait_for_function("TribeGuide.isOpen()", timeout=10000)
             host.evaluate("TribeGuide.close()")

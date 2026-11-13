@@ -82,6 +82,7 @@
       ['Ctrl G / Ctrl Shift G', 'Group, ungroup'], ['Ctrl D', 'Duplicate'], ['Alt drag', 'Duplicate while dragging'], ['Alt A · D · W · S', 'Align left, right, top, bottom'], ['Alt H · V', 'Align centers (Shift: spread evenly)'], ['Shift drag', 'Keep the angle or the ratio'], ['Ctrl ] / [', 'Bring forward, send backward'],
       ['Ctrl Shift H / L', 'Hide, lock'], ['Ctrl R', 'Rename'], ['Enter / Esc', 'Select children, select parent'], ['Arrows', 'Nudge 1 px (Shift: 10 px)'], ['Shift 1 / 2 / 0', 'Zoom to fit, to selection, to 100%'],
       ['Space drag', 'Pan'], ['C', 'Comment'], ['Shift I', 'Ask Flint'], ['Right-click', 'Layer menu: copy, order, align, presets']]],
+    ['Calls', [['Ctrl Shift M', 'Join a call, then mute or unmute'], ['Ctrl Shift E', 'Camera on or off'], ['Ctrl Shift U', 'Open or close the call stage'], ['Ctrl Shift H', 'Raise or lower your hand (on the stage)'], ['Hold Space', 'Talk, with push to talk on'], ['Shift drag', 'Draw on a shared screen (click: laser)']]],
     ['Preview', [['Esc', 'Close the innermost thing, then leave'], ['C', 'Comment on the page'], ['Double-click text', 'Edit the words in place'], ['Ctrl Z', 'Undo the last edit']]],
   ];
   // the section for where you are comes first

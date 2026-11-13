@@ -1,6 +1,6 @@
 # Changelog
 
-## v0.32.0
+## v0.33.0
 - **One Flint chat everywhere**: the website designer, canvas and preview use Flint's normal chat. He follows hundreds more commands with no AI and asks a short question instead of "needs an AI" when a detail is missing.
 - **Flint does more on his own**:
   - Chained steps in one message with one Undo, and follow-ups like "make it bigger".
@@ -42,6 +42,15 @@
   - Agents keep their "request a ship" tool.
 - **Repo**: test launchers moved to `Tools/`, old plans to `docs/archive/` (docs/REPO-CLEANUP.md).
 - **Phones**: the new sheets (tribe flow, invite, drop, settings, versions, widgets picker, Work) fit at 390px; Settings drills in by tab; drops use file and folder pickers.
+## v0.32.0
+- **Voice notes and the Secretary, no AI**: record voice notes in chat, docs, tasks and the Secretary (pause, live waveform, live transcript, 1×/1.5×/2× playback). The Secretary pulls a summary, action items with owner and due date, decisions, questions, people and links out of today's talk and huddle captions; one tap turns an action into a task. Works in a phone-only tribe too.
+- **Calls, video and screen share**: ring someone (with a missed-call notice), a call stage with grid or speaker view, pin, picture in picture and speaking rings; mute, deafen, push to talk, raise hand; reactions, in-call chat and polls; recording everyone can see; lock with knock-to-join; call history; mic, camera and speaker picker; reconnects after a dropped connection; relay (TURN) settings. Camera with front/back flip, screen share with sound, laser and pen for viewers, and "Present TribeCode" so followers move with you. Up to 6 people, all on your own host.
+- **Phones do (almost) everything alone**: a phone-only tribe now keeps the website designer, calendar, Money, Work, Academy, code files and Design flow games and apps on the phone, with a storage card. **GitHub from the phone**: connect with a token kept on the phone, bring a repo in, edit, push and pull. Anything that truly needs a computer (AI helpers, hosting friends, shipping, public links) shows one calm "next options" card: Move to a host, Free cloud, My laptop (with a QR), My Android.
+- **Flint understands the v0.31 features**: accept, decline and claim tasks, "make a poster" (or logo, screen, game), abilities, Marketplace installed/remove, Files by kind, hiding where you are, call commands ("start a video call", "share my screen", "call Maya", "summarize my notes", "what did we decide today"). 93.8% on phrasings he was never tuned on; four new lessons; on a phone-only tribe his docs, drafts and builds are made on the phone.
+- **Loops closed**: phone push survives the free cloud host sleeping (push keys from the environment; phones re-subscribe), the live preview falls back to polling over tunnels that drop live streams, the invite dialog survives being closed early, faster typing in very long docs, "See all tools" stays in the Agents Hub.
+- **Website**: every app picture uses the app's real icons and current layout, a new link-preview card, Privacy and Terms links, and planned prices hidden until paid plans exist (also in the app's plans pop-out).
+- **Docs**: README, HANDOFF, CONTEXT and the Guide brought up to date, a docs index, outdated plans archived, and reports for loops, mobile, voice and video, auth and cleanup.
+- **Phones**: the phone-only tribe, GitHub sheet, next-options card, voice notes, the Secretary and the call stage are built for 390px; bigger tap targets, readable small text and a shorter iPhone install banner.
 
 ## v0.31.2
 - **Home's sidebar heading is gone**: the "Your Dashboard" line above Files, Design, Code, Work and Agent fleet is removed. The lit logo and the "Home ›" breadcrumb already say where you are.
