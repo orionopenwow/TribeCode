@@ -29,7 +29,7 @@ const POSIX_SYSTEM = ['/etc', '/usr', '/bin', '/sbin', '/lib', '/lib32', '/lib64
   '/root', '/System', '/Library', '/Applications', '/private', '/cores'];
 const POSIX_EXACT = ['/', '/tmp', '/mnt', '/media', '/Volumes', '/home', '/Users'];   // fine to be inside, never the folder itself
 const WIN_SYSTEM = ['windows', 'program files', 'program files (x86)', 'programdata', '$recycle.bin', 'system volume information', 'recovery', 'perflogs'];
-const SKIP = new Set(['.git', 'node_modules', '.trees', '.DS_Store', 'Thumbs.db']);
+const SKIP = new Set(['.git', '.tribe', 'node_modules', '.trees', '.DS_Store', 'Thumbs.db']);
 const DEBOUNCE_MS = Number(process.env.TRIBE_WATCH_DEBOUNCE_MS) || 300;
 const FILE_CAP = 2 * 1024 * 1024;
 const fail = (status, msg) => Object.assign(new Error(msg), { status });

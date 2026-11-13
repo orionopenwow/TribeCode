@@ -102,6 +102,7 @@
         <button id="hp-github">${ic('git')}<span>${gh ? `GitHub · ${esc(st.repo)}` : 'Connect GitHub'}</span></button>
         ${gh && can.ship ? `<button id="hp-ship">${ic('upload')}<span>Ship now${st.pending ? ` · ${plural(st.pending, 'change')}` : ''}</span></button>` : ''}
         <button id="hp-sync">${ic('gear')}<span>Ship / sync settings</span></button>
+        ${window.TribeVersions ? `<button id="hp-versions">${ic('refresh')}<span>Versions</span></button>` : ''}
         <button id="hp-share">${ic('users')}<span>Share</span></button>
         ${hosting ? `<button id="hp-host">${ic('net')}<span>Host settings</span></button>` : ''}
       </div>`;
@@ -110,7 +111,7 @@
     pill.setAttribute('aria-expanded', 'true');
     const on = (id, f) => { const b = pop.querySelector(id); if (b) b.onclick = () => { close(); f(); }; };
     on('#hp-move', () => (pick.ok ? folder({ pid: pid() }) : toast(pick.why)));
-    on('#hp-github', () => github()); on('#hp-ship', () => ship()); on('#hp-fix', () => ship()); on('#hp-sync', () => sync()); on('#hp-share', () => share());
+    on('#hp-github', () => github()); on('#hp-ship', () => ship()); on('#hp-fix', () => ship()); on('#hp-sync', () => sync()); on('#hp-versions', () => window.TribeVersions.open()); on('#hp-share', () => share());
     on('#hp-host', () => { window.TribeSettings && window.TribeSettings.open(); });
     setTimeout(() => document.addEventListener('click', outside, true), 0);
   }

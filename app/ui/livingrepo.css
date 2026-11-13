@@ -23,7 +23,7 @@ body.lr-on #host-pill { display: none !important; }   /* one pill: the home pill
 .lr-sheet .lr-warn { margin: 0 0 10px; }
 .lr-ok { margin: 0 0 4px; font-size: 13px; color: var(--live-ink); }
 
-.lr-sheet { width: min(520px, calc(100vw - 32px)); }
+.ph-sheet.lr-sheet { width: min(520px, calc(100vw - 32px)); }
 .lr-sheet .ph-h { justify-content: space-between; }
 .lr-x { flex: none; width: 30px; height: 30px; display: grid; place-items: center; border: 0; border-radius: var(--r-sm, 8px); background: none; color: var(--muted); cursor: pointer; }
 .lr-x:hover { background: var(--surface-2); color: var(--text); }

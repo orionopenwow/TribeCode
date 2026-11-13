@@ -441,7 +441,7 @@ let mcpFlow = null;
 const pocket = makeNotify({ store, bus, getMembers: () => members, sendTo, postChat: (...x) => postChat(...x), log: m => console.error('  notify: ' + m),
   dnd: mid => !!profiles && profiles.isDnd(mid), muted: (to, from) => (!!profiles && !!from && profiles.isMuted(to, from)) || (!!moderation && moderation.isBlocked(to, from)),   // feat/profiles: do not disturb, muted people
   publicUrl: () => (args['public-url'] || process.env.TRIBE_PUBLIC_URL || share.publicUrl() || (lanUrls()[0] || {}).url || `http://localhost:${PORT}`).replace(/\/+$/, '') });
-let shipHub = null, syncHub = null, folderHome = null;   // feat/ship-flow: a ship vote decided from a phone (one-tap approval) counts as that person's vote
+let shipHub = null, syncHub = null, folderHome = null, versionsHub = null;   // feat/ship-flow: a ship vote decided from a phone (one-tap approval) counts as that person's vote
 let publishOnApproval = null;   // v0.27 publish: an approved "publish" request from an AI helper (server/publish.js)
 let companyHub = null;   // v0.27 company: decided approvals land in the company's decision log (server/company.js)
 const approvals = makeApprovals({ store, id, str, bus, getMembers: () => members, postChat, broadcast: m => { broadcast(m); if (shipHub && m && m.type === 'approval') try { shipHub.onApproval(m.approval); } catch (e) { console.error('ship:', e.message); } if (syncHub && m && m.type === 'approval') try { syncHub.onApproval(m.approval); } catch (e) { console.error('sync:', e.message); } if (companyHub && m && m.type === 'approval') try { companyHub.onApproval(m.approval); } catch (e) { console.error('company:', e.message); } if (publishOnApproval && m && m.type === 'approval') try { publishOnApproval(m.approval); } catch (e) { console.error('publish:', e.message); } }, hub: pocket, project: () => P.current(), canSee: (m, pid) => !pid || P.canSee(m, pid),
@@ -493,7 +493,8 @@ const ship = shipHub = require('./ship')({ P, store, hubFor, approvals, getMembe
 // feat/folder-sync: a folder on this computer as the project's home (server/folderhome.js), GitHub as its synced copy (server/sync.js)
 syncHub = require('./sync')({ P, W, base: baseStore, getMembers: () => members, approvals, broadcast, postChat, nameOf, perms, pushAuth: () => githubAuth.pushAuth(), brain, resetHub,
   checkShared: (p, pid) => folderHome.checkShared(p, pid), display: p => folderHome.display(p), tribeName: () => tribe.name, log: m => console.error('  ' + m) });
-folderHome = require('./folderhome')({ P, W, baseStore, isLocal, broadcast, perms, resetHub, postChat, nameOf, str, appRoot: path.join(__dirname, '..'), onSave: pid => syncHub.onSave(pid), log: m => console.error('  ' + m) });
+folderHome = require('./folderhome')({ P, W, baseStore, isLocal, broadcast, perms, resetHub, postChat, nameOf, str, appRoot: path.join(__dirname, '..'), onSave: (pid, files) => { syncHub.onSave(pid); versionsHub.onSave(pid, files); }, log: m => console.error('  ' + m) });
+versionsHub = require('./versions')({ P, W, perms, broadcast, nameOf, syncLog: pid => syncHub.load(pid).log, log: m => console.error('  ' + m) });   // feat/folder-sync: Versions (server/versions.js)
 folderHome.watchAll();
 bus.on('notify', n => { if (n && n.type === 'release') syncHub.onRelease(P.current() || P.defaultId(), n.ref).catch(() => {}); });
 const agentnet = makeAgentNet({ P, store, id, str, broadcast, bus, getMembers: () => members, presenceFor, loadTasks: () => loadTasks(), saveTask: t => saveTask(t), createTask: o => createTask(o), approvals, coord, nameOf });
@@ -924,6 +925,7 @@ async function apiInProject(req, res, url) {
   if (!need()) return;
   if (a === 'projects' && c === 'sync') return syncHub.route(req, res, ctx());   // feat/folder-sync: GitHub sync (server/sync.js)
   if (a === 'projects' && c === 'folder') return folderHome.route(req, res, ctx());
+  if (a === 'projects' && c === 'versions') return versionsHub.route(req, res, ctx());
   if (a === 'notify') { const h = await pocket.route(req, res, { m, b, c, me, readBody, send, fail }); if (h !== null) return; }
 
   // One-click backup of the whole tribe folder (server/backup.js): host only; secrets stay on the host.
