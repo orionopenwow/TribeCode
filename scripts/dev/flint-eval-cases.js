@@ -366,19 +366,19 @@ add('g', [
 for (let i = U; i < C.length; i++) C[i].v = 'unify';
 // ---- held out, batch 4 (feat/flint-unify): written BEFORE the new commands were implemented (so its phrasings informed them); then never tuned against ----
 const H4 = C.length;
-for (const [cx, t, i, s] of require('./flint-held4.js')) add(cx === 'c' ? 'cs' : cx, [[t, i, s]]);
+for (const [cx, t, i, s] of require('./flint-eval/held4.js')) add(cx === 'c' ? 'cs' : cx, [[t, i, s]]);
 for (let i = H4; i < C.length; i++) C[i].v = 'held4';
 // ---- held out, batch 5: written after the matchers existed, run once untuned (34/40 = 85% on that first run), then the six misses were fixed ----
 const H5 = C.length;
-for (const [cx, t, i, s] of require('./flint-held5.js')) add(cx === 'c' ? 'cs' : cx, [[t, i, s]]);
+for (const [cx, t, i, s] of require('./flint-eval/held5.js')) add(cx === 'c' ? 'cs' : cx, [[t, i, s]]);
 for (let i = H5; i < C.length; i++) C[i].v = 'held5';
 
 // ---- feat/flint-max: the tuning batch, then held-out batch 6 (written before the matchers; scored once untuned) ----
 const MX = C.length;
-for (const [cx, t, i, s] of require('./flint-max-cases.js')) add(cx, [[t, i, s]]);
+for (const [cx, t, i, s] of require('./flint-eval/max-cases.js')) add(cx, [[t, i, s]]);
 for (let i = MX; i < C.length; i++) C[i].v = 'max';
 const H6 = C.length;
-for (const [cx, t, i, s] of require('./flint-held6.js')) add(cx, [[t, i, s]]);
+for (const [cx, t, i, s] of require('./flint-eval/held6.js')) add(cx, [[t, i, s]]);
 for (let i = H6; i < C.length; i++) C[i].v = 'held6';
 
 const out = { about: 'Flint evaluation set (feat/flint-site): websites, the design canvas, preview edits, lessons and global commands. Written by scripts/dev/flint-eval-cases.js; checked by app/test/flint_eval_test.js. "i" = the expected intent (a list for several steps, null when Flint should not claim it), "s" = slots that must match, "ctx" = s|c|cs|p|g (site designer, canvas, canvas with a selection, preview, anywhere).', now: '2026-11-10T10:00:00', cases: C };

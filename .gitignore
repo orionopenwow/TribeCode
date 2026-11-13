@@ -1,19 +1,45 @@
+# Dependencies
 node_modules/
+
+# Build outputs
+# dist: scripts/bundle-server.js (server bundle + SEA files). _site: the Pages site as CI assembles it.
 dist/
+_site/
 target/
-.env
-.env.*
-*.log
-.DS_Store
-Thumbs.db
-__pycache__/
 app/src-tauri/target/
 app/src-tauri/gen/
-app/node_modules/
-dist/
+# The sidecar built by scripts/build-sidecar.js
 app/src-tauri/binaries/tribecode-server-*
 
-# local agent worktrees
+# Local settings and secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Local tribe data (the launchers in scripts/desktop/Working keep a test tribe beside themselves)
+tribe-data/
+
+# Logs, caches, test leftovers
+*.log
+*.tmp
+__pycache__/
+*.pyc
+.pytest_cache/
+test-results/
+playwright-report/
+
+# OS and editor files
+.DS_Store
+Thumbs.db
+desktop.ini
+.vscode/
+.idea/
+*.swp
+*~
+
+# Local agent worktrees
 .claude/
 
 # Explorer raw dumps (findings.json is kept: the Insights feed and the nightly run read it)

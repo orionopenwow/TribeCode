@@ -267,8 +267,8 @@ under 98%): 1,003 phrasings for websites, the canvas, preview edits, lessons and
 indirect wording, in five contexts (website designer, canvas, canvas with a selection, preview, anywhere). Before
 feat/flint-unify: 667/674 (99.0%). Then (feat/flint-unify): 996/1,003 (99.3%), including 249 phrasings for the new commands (100%). Now (feat/flint-max): 1,189/1,196 (99.4%), including 143 tuning phrasings for the design, copy, sheet, doc and slide moves (100%).
 Held-out batches: 1 scored 22/32 (68.8%) when first run and was then tuned; 2 was never tuned against: 14/16 (87.5%);
-3: 27/32 (84.4%). Batch 4 (40, `scripts/dev/flint-held4.js`) was written before the new commands were built, so its
-phrasings shaped them: 0/40 before, 40/40 after. Batch 5 (40, `flint-held5.js`) was written after the matchers existed and
+3: 27/32 (84.4%). Batch 4 (40, `scripts/dev/flint-eval/held4.js`) was written before the new commands were built, so its
+phrasings shaped them: 0/40 before, 40/40 after. Batch 5 (40, `flint-eval/held5.js`) was written after the matchers existed and
 scored 34/40 (85%) on its first, untuned run; its six misses were then fixed (40/40). `app/test/e2e_flint_unify.py`
 runs 45 commands end to end in the designer, the canvas, the preview and the main chat.
 

@@ -8,7 +8,7 @@ No samples, no loops from anywhere else: every sound here is synthesized with nu
   on the end card that fades out.
 The beat and event times match BEATS / the timeline in promo/ad-slow.html.
 
-Usage:  python3 scripts/dev/ad-soundtrack.py OUT.wav      (48 kHz stereo, 16-bit, peak-limited)
+Usage:  python3 promo/sound/ad-soundtrack.py OUT.wav      (48 kHz stereo, 16-bit, peak-limited)
 Then loudness-normalise with ffmpeg (two-pass loudnorm to -16 LUFS), as scripts/dev comments in the playbook show.
 """
 import sys, wave
