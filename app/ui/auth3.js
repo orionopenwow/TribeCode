@@ -206,18 +206,22 @@
   const when = t => { try { return new Date(t).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' }); } catch { return ''; } };
   async function settings(el) {
     const a = acct(), base = baseUrl();
-    if (!a) { el.innerHTML = '<p class="set-note a3-setnote" id="a3-noacct">Two-step sign-in and passkeys protect a TribeCode account. Log in to one, or create one, and they appear here.</p>'; return; }
+    // two-step is off for the whole TribeCode until the host turns it on (config.twoStep): then only passkeys show here
+    let cfg = {}; try { cfg = await call(base, '/accounts/config'); } catch {}
+    const two = cfg.twoStep === true, h3 = el.closest('.set-sec') && el.closest('.set-sec').querySelector('.set-sec-h');
+    if (h3) h3.textContent = two ? 'Two-step sign-in and passkeys' : 'Passkeys';
+    if (!a) { el.innerHTML = `<p class="set-note a3-setnote" id="a3-noacct">${two ? 'Two-step sign-in and passkeys protect' : 'Passkeys sign you in to'} a TribeCode account. Log in to one, or create one, and they appear here.</p>`; return; }
     let st, keys;
-    try { [st, keys] = await Promise.all([call(base, '/accounts/two-step', { token: a.acct }), call(base, '/accounts/passkeys', { token: a.acct })]); }
+    try { [st, keys] = await Promise.all([two ? call(base, '/accounts/two-step', { token: a.acct }) : Promise.resolve(null), call(base, '/accounts/passkeys', { token: a.acct })]); }
     catch (e) { el.innerHTML = e.status === 404 ? '' : `<p class="set-note a3-setnote">${esc(say(e.message))}</p>`; return; }
     if (!el.isConnected) return;
     const av = available(), list = keys.passkeys || [];
-    el.innerHTML = `<div class="set-row set-row-wide" id="set-twostep" data-keys="2fa two-factor totp authenticator code otp mfa two-step">
+    el.innerHTML = `${!st ? '' : `<div class="set-row set-row-wide" id="set-twostep" data-keys="2fa two-factor totp authenticator code otp mfa two-step">
         <div class="set-l"><b>Two-step sign-in <span class="oa-st ${st.on ? 'on' : ''}" id="a3-state">${st.on ? 'On' : 'Off'}</span></b><small>${st.on ? `On since ${esc(when(st.since))}. Signing in asks for a code from your authenticator app. ${st.recoveryLeft} recovery code${st.recoveryLeft === 1 ? '' : 's'} left${st.trusted ? `, ${st.trusted} trusted device${st.trusted === 1 ? '' : 's'}` : ''}.` : 'After your password, provider or email link, signing in also asks for a 6-digit code from an app on your phone.'}${st.required ? ' <b class="a3-req">The host requires it for admins.</b>' : ''}</small></div>
         <div class="set-c a3-acts" id="a3-acts">${st.on ? `<button class="btn" data-a3="new-recs">New recovery codes</button>${st.trusted ? '<button class="btn" data-a3="untrust">Forget trusted devices</button>' : ''}<button class="btn" data-a3="off" id="a3-off">Turn off</button>` : '<button class="btn primary" data-a3="on" id="a3-on">Turn on two-step sign-in</button>'}</div>
-        <div class="a3-panel" id="a3-panel" hidden></div></div>
+        <div class="a3-panel" id="a3-panel" hidden></div></div>`}
       <div class="set-row set-row-wide" id="set-passkeys" data-keys="passkey webauthn fido security key biometric face id touch id fingerprint">
-        <div class="set-l"><b>Passkeys</b><small>Sign in with your fingerprint, face or screen lock instead of a password. A passkey sign-in counts as two-step.</small></div>
+        <div class="set-l"><b>Passkeys</b><small>Sign in with your fingerprint, face or screen lock instead of a password.${st ? ' A passkey sign-in counts as two-step.' : ''}</small></div>
         <div class="set-c a3-pkc">${list.length ? `<ul class="a3-pklist" id="a3-pklist">${list.map(k => `<li data-pk="${esc(k.id)}"><span class="a3-pkname">${KEY_SVG}<span><b>${esc(k.name)}</b><small>Added ${esc(when(k.created))}${k.lastUsed ? ' · last used ' + esc(when(k.lastUsed)) : ''} · ${esc(k.where)}${k.synced ? ' · synced' : ''}</small></span></span><span class="a3-pkbtns"><button class="btn sm" data-pk-rename="${esc(k.id)}">Rename</button><button class="btn sm" data-pk-del="${esc(k.id)}">Remove</button></span></li>`).join('')}</ul>` : ''}
           ${av.ok ? `<button class="btn" id="a3-add-pk" ${list.length >= keys.max ? 'disabled' : ''}>${KEY_SVG}<span>Add a passkey</span></button>` : `<p class="a3-note" id="a3-pk-off">${esc(av.why)}</p>`}<p class="a3-err" id="a3-pk-msg" role="alert"></p></div></div>`;
     const panel = el.querySelector('#a3-panel'), redraw = () => settings(el);
@@ -269,6 +273,7 @@
     if (!(me && me.role === 'host' && local && C().hasToken())) { el.closest('.set-sec') && (el.closest('.set-sec').hidden = true); return; }
     const base = baseUrl(), tok = (S().get().server || {}).token || '';
     let d; try { d = await call(base, '/accounts/admin/settings', { token: tok }); } catch { el.closest('.set-sec') && (el.closest('.set-sec').hidden = true); return; }
+    if (!d.twoStep) { el.innerHTML = ''; if (el.closest('.set-sec')) el.closest('.set-sec').hidden = true; return; }   // two-step is off: no rule to show
     if (!el.isConnected) return;
     el.innerHTML = `<div class="set-row" id="set-twostep-admins" data-keys="2fa two-factor admins require mfa"><div class="set-l"><b>Require two-step for admins</b><small>${d.twoStepAdmins ? 'On: an admin who signs in to their account gets into the tribe only with two-step sign-in (or a passkey). Until they turn it on, they are asked to.' : 'Admins can sign in with a password, a provider or an email link alone. Turn this on to ask every admin for two-step sign-in.'} Sign-ins on this computer are not held back.</small></div>
       <div class="set-c"><button class="toggle set-toggle" role="switch" id="a3-admins" aria-label="Require two-step for admins" aria-checked="${!!d.twoStepAdmins}"><span class="switch"></span></button></div></div>`;
@@ -278,7 +283,7 @@
   function boot() {
     const T = window.TribeSettings; if (!T || !T.addSection) return;
     try {
-      T.addSection('account', { id: 'twostep', title: 'Two-step sign-in and passkeys', render: el => settings(el) });
+      T.addSection('account', { id: 'twostep', title: 'Passkeys', render: el => settings(el) });   // the title grows to "Two-step sign-in and passkeys" when the host has two-step on
       T.addSection('admin', { id: 'twostep-admins', title: 'Sign-in rules', render: el => adminSettings(el) });
     } catch {}
   }

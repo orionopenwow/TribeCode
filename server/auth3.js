@@ -17,6 +17,10 @@
 //   presence, the signature (ES256 or RS256) and the signature counter (it must go up when the authenticator counts).
 //   A passkey sign-in counts as two-step.
 //
+// The switch: two-step is OFF until the host turns it on (TRIBE_TWO_STEP=1 or the host's sign-in settings, see
+// server/accounts.js twoStepOn). Off: gate() never challenges, every two-step route answers 404, enrolments are kept.
+// Passkeys work either way, as a sign-in method.
+//
 // At rest: .tribe/auth3.json (0600, written atomically). TOTP secrets are sealed (server/sealbox.js: AES-256-GCM, the
 // key in .tribe/secret.key, 0600); recovery codes and trust tokens are kept only as sha256; passkeys are public keys.
 //
@@ -98,7 +102,7 @@ function parseAuthData(ad, wantCred) {
   return out;
 }
 
-module.exports = function makeAuth3({ store, hash, id, limited, log = () => {}, issueWith, redeemTok, pendSave, fromToken, accountById, usableCount, finish, memberFinish, isAdmin, required, forgetOnDelete = () => [] }) {
+module.exports = function makeAuth3({ store, hash, id, limited, log = () => {}, enabled = () => true, issueWith, redeemTok, pendSave, fromToken, accountById, usableCount, finish, memberFinish, isAdmin, required, forgetOnDelete = () => [] }) {
   const box = sealbox(store);
   let db = null;
   const load = () => { if (!db) { db = store.readJSON(FILE, null) || { v: 1, accounts: {} }; if (!db.accounts || typeof db.accounts !== 'object') db.accounts = {}; } return db; };
@@ -165,7 +169,7 @@ module.exports = function makeAuth3({ store, hash, id, limited, log = () => {}, 
 
   // The gate (server/accounts.js calls it before every proven sign-in): null = go on, else the challenge to answer.
   function gate(a, extra = {}) {
-    if (!a || !totpOn(a.id)) return null;
+    if (!enabled() || !a || !totpOn(a.id)) return null;   // off for the whole TribeCode: nobody is gated, enrolments wait
     const t = crypto.randomBytes(30).toString('base64url');
     issueWith(t, 'twostep', TICKET_MS, { account: a.id, tries: 0, ...extra });
     const r = peek(a.id);
@@ -247,6 +251,7 @@ module.exports = function makeAuth3({ store, hash, id, limited, log = () => {}, 
     const no = (status, error, code, more = {}) => { send(res, status, { error, ...(code ? { code } : {}), ...more }); return true; };
     const many = () => { res.setHeader('Retry-After', '60'); return no(429, 'too many tries in a row: wait a minute, then try again'); };
     if (limited(req, 90, 60_000, 'a3')) return many();
+    if (!enabled() && (b === 'two-step' || body.ticket != null)) return no(404, 'two-step sign-in is not available on this TribeCode', 'off');
     const isPublic = (b === 'two-step' && !c && m === 'POST') || b === 'passkey';
     if (isPublic && limited(req, 20, 60_000, 'a3try')) return many();
     const who = isPublic ? null : fromToken(req);

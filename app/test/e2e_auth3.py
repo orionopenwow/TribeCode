@@ -1,6 +1,6 @@
 """End-to-end: feat/auth3, two-step sign-in (TOTP) and passkeys (docs/ACCOUNTS.md, docs/SIGNUP-FLOWS.md).
 
-The server runs with TRIBE_ACCOUNTS=1 and a 2-second TOTP step (TRIBE_TEST_TOTP_STEP_MS), so a fresh code is never far
+The server runs with TRIBE_ACCOUNTS=1, TRIBE_TWO_STEP=1 (two-step is off by default) and a 2-second TOTP step (TRIBE_TEST_TOTP_STEP_MS), so a fresh code is never far
 away. The fake provider and SMTP server come from e2e_auth2. Passkeys use Chrome's virtual authenticator over CDP
 (WebAuthn.enable / addVirtualAuthenticator).
 
@@ -15,6 +15,8 @@ Checks
   Passkeys  register in Settings, sign in from signin.html and from the Log in sheet, as the second step; a wrong
          challenge, a challenge issued for another origin, a replayed answer and a counter that went backwards are
          refused; rename, remove, the last sign-in method is protected; the plain line where passkeys can't work.
+  Off    the default, with no TRIBE_TWO_STEP: nobody is gated (enrolled or not), the two-step routes answer 404, Settings
+         shows passkeys only, the enrolment is kept; the host's setting turns it back on.
   UI     Settings › Account & sign-in: turn on (QR, key, code), recovery codes (copy, download), the code sheet with
          "Trust this device", turn off with a code. Screenshots: docs/screenshots/two-step.png, passkey.png.
 Usage: python app/test/e2e_auth3.py   (TRIBE_PORT_OFFSET to run beside other suites)
@@ -107,16 +109,18 @@ def main():
     socketserver.ThreadingTCPServer.allow_reuse_address = True
     smtp = socketserver.ThreadingTCPServer(("127.0.0.1", SMTP_PORT), a2.Smtp); threading.Thread(target=smtp.serve_forever, daemon=True).start()
     env = {**os.environ, "HOME": home, "USERPROFILE": home, "TRIBE_TEST": "1", "TRIBE_NO_DOWNLOAD": "1", "TRIBE_NO_GH": "1", "TRIBE_ACCOUNTS": "1",
-           "TRIBE_TEST_TOTP_STEP_MS": str(STEP * 1000), "TRIBE_OAUTH_DISCORD_BASE": a2.MOCK, "TRIBE_OAUTH_GITHUB_BASE": a2.MOCK, "NO_PROXY": "localhost,127.0.0.1", "no_proxy": "localhost,127.0.0.1"}
+           "TRIBE_TWO_STEP": "1", "TRIBE_TEST_TOTP_STEP_MS": str(STEP * 1000), "TRIBE_OAUTH_DISCORD_BASE": a2.MOCK, "TRIBE_OAUTH_GITHUB_BASE": a2.MOCK, "NO_PROXY": "localhost,127.0.0.1", "no_proxy": "localhost,127.0.0.1"}
     for k in ("TRIBE_PUBLIC_URL", "TRIBE_OPEN_SIGNUP"): env.pop(k, None)
     log = open(os.path.join(tmp, "server.log"), "w+")
-    srv = subprocess.Popen(["node", str(ROOT / "server" / "index.js"), "--port", str(PORT), "--dir", tribe, "--ollama", "http://localhost:9", "--name", "Step Crew"], stdout=log, stderr=subprocess.STDOUT, env=env)
-    try:
+    def wait_up():
         for _ in range(150):
             try:
-                if api("/health")[0] == 200: break
+                if api("/health")[0] == 200: return
             except Exception: pass
             time.sleep(0.1)
+    srv = subprocess.Popen(["node", str(ROOT / "server" / "index.js"), "--port", str(PORT), "--dir", tribe, "--ollama", "http://localhost:9", "--name", "Step Crew"], stdout=log, stderr=subprocess.STDOUT, env=env)
+    try:
+        wait_up()
         host = ok(api("/bootstrap", "POST", {"name": "Orion"}), "bootstrap")["token"]
         for p in ("discord", "github"): ok(api(f"/oauth/config/{p}", "PUT", {"clientId": a2.CLIENT_ID, "clientSecret": a2.SECRET, "enabled": True}, token=host), p)
         ok(api("/accounts/admin/settings", "PUT", {"smtp": {"host": "127.0.0.1", "port": SMTP_PORT, "secure": "none", "user": "tribe", "pass": "smtp-pass", "from": "tribe@example.test"}}, token=host), "smtp")
@@ -125,7 +129,7 @@ def main():
         # ---------------- TOTP: enrol ----------------
         tess = ok(api("/accounts/signup", "POST", {"username": "Tess", "password": PW, "email": "tess@example.test", "invite": invite()}, headers=remote()), "Tess")
         tt = tess["token"]
-        assert ok(api("/accounts/two-step", token=tt))["on"] is False
+        assert ok(api("/accounts/two-step", token=tt))["on"] is False and ok(api("/accounts/config"))["twoStep"] is True
         assert api("/accounts/two-step")[0] == 401 and api("/accounts/two-step/setup", "POST", {})[0] == 401, "settings need the account"
         s = ok(api("/accounts/two-step/setup", "POST", {}, token=tt), "setup")
         assert re.fullmatch(r"[A-Z2-7]{32}", s["secret"]) and s["uri"].startswith("otpauth://totp/TribeCode%3ATess?secret=" + s["secret"]) and "issuer=TribeCode" in s["uri"], s
@@ -345,7 +349,9 @@ def main():
             fp.click("#a3-swap"); assert "recovery" in fp.inner_text("#a3-title").lower(); fp.click("#a3-swap")
             fp.check("#a3-remember"); fp.fill("#a3-code", code(usec)); fp.click("#a3-go")
             fp.wait_for_function("() => { try { const a = JSON.parse(localStorage.getItem('tribecode.accounts.v1')); return a && a.mode === 'signedin' && a.accounts[0].username === 'Pia' && Object.values(JSON.parse(localStorage.getItem('tribecode.trust.v1') || '{}'))[0].startsWith('tct_'); } catch { return false; } }", timeout=20000)
-            tr = list(fp.evaluate("() => JSON.parse(localStorage.getItem('tribecode.trust.v1'))").values())[0]
+            for _ in range(5):   # the page reloads once it is signed in: read after it settles
+                try: fp.wait_for_load_state("load"); tr = list(fp.evaluate("() => JSON.parse(localStorage.getItem('tribecode.trust.v1'))").values())[0]; break
+                except Exception: fp.wait_for_timeout(700)
             st, d = login("Pia"); assert step2(d["ticket"], trust=tr)[0] == 200, "the device the sheet trusted is trusted"
             print("  the code sheet: a wrong code says so, a recovery-code view, Trust this device keeps a token")
 
@@ -368,6 +374,54 @@ def main():
             w = pg.evaluate(PK_JS, {}); assert w["status"] == 401 and w["data"]["code"] == "unknown", "a removed passkey signs nobody in"
             print("  remove: never the last way in (passkeys and methods routes), not someone else's; a removed passkey is dead; plain line at 127.0.0.1")
             b.close()
+
+        # =============================== the default: two-step is off ===============================
+        # The same tribe, started without TRIBE_TWO_STEP. Ada, Nelly and Maya are still enrolled from above.
+        srv.terminate(); srv.wait(timeout=10)
+        env2 = {k: v for k, v in env.items() if k != "TRIBE_TWO_STEP"}
+        srv = subprocess.Popen(["node", str(ROOT / "server" / "index.js"), "--port", str(PORT), "--dir", tribe, "--ollama", "http://localhost:9", "--name", "Step Crew"], stdout=log, stderr=subprocess.STDOUT, env=env2); wait_up()
+        assert "twoStep" not in ok(api("/accounts/config")), "the public config says nothing about two-step"
+        st, d = login("Ada"); assert st == 200 and d["token"].startswith("tca_") and d["memberToken"] and "need" not in d and "twoStep" not in d and d["account"]["twoStep"] is False, d
+        adt = d["token"]
+        st, d = a2.oauth_finish("discord", "nelly", headers=remote()); assert st == 200 and d["mode"] == "account" and d["token"] and "need" not in d, d
+        st, d = a2.oauth_finish("github", "maya", headers=remote()); assert st == 200 and d["mode"] == "signin" and d["token"] and "need" not in d, d
+        for path, m, body, tok in (("/accounts/two-step", "GET", None, adt), ("/accounts/two-step/setup", "POST", {}, adt), ("/accounts/two-step/confirm", "POST", {"code": "123456"}, adt), ("/accounts/two-step/disable", "POST", {"code": "123456"}, adt),
+                                   ("/accounts/two-step/recovery", "POST", {"code": "123456"}, adt), ("/accounts/two-step/trusted", "DELETE", None, adt), ("/accounts/two-step", "POST", {"ticket": "t" * 40, "code": "123456"}, None)):
+            st, e = api(path, m, body, token=tok, headers=remote()); assert st == 404 and e.get("code") == "off", (path, st, e)
+        assert api("/accounts/passkey/start", "POST", {"ticket": "t" * 40}, headers={"Origin": BASE})[0] == 404
+        s_ = ok(api("/accounts/admin/settings", token=host)); assert s_["twoStep"] is False and s_["twoStepAdmins"] is False, s_
+        ok(api("/accounts/admin/settings", "PUT", {"twoStepAdmins": True}, token=host)); st, d = login("Ada"); assert d.get("memberToken") and "twoStep" not in d, "no rule for admins while two-step is off"
+        assert ok(api("/accounts/passkeys/options", "POST", {}, token=adt, headers={"Origin": BASE}))["publicKey"]["rp"]["id"] == "localhost", "passkeys stay"
+        kept = json.load(open(os.path.join(tribe, ".tribe", "auth3.json")))["accounts"]; assert kept[ada["account"]["id"]].get("totp") and len(kept[ada["account"]["id"]]["recovery"]) == 10, "the enrolment is kept for later"
+        with sync_playwright() as p:
+            b = p.chromium.launch(executable_path="/usr/bin/google-chrome", args=["--no-proxy-server"])
+            bx = b.new_context(viewport={"width": 1280, "height": 1000}); bx.add_init_script(init_script("Bob", bob, bob["memberToken"]))
+            bp = bx.new_page(); bp.on("pageerror", lambda e: errors.append(f"bob: {e}"))
+            bp.goto(BASE + "/?skipIntro=1"); bp.wait_for_function("() => window.TribeClient && window.TribeClient.connected() && window.TribeAuth3", timeout=20000)
+            bp.evaluate("() => window.TribeSettings.open('account')"); bp.wait_for_selector("#set-passkeys #a3-add-pk", timeout=15000)
+            assert bp.locator("#set-twostep").count() == 0 and bp.locator("#a3-on").count() == 0
+            txt = bp.inner_text("#set-pane-account").lower(); assert "two-step" not in txt and "passkeys" in txt, "Settings › Account says nothing about two-step"
+            hx = b.new_context(viewport={"width": 1280, "height": 1000}); hx.add_init_script(init_script("Orion", None, host))
+            hp = hx.new_page(); hp.on("pageerror", lambda e: errors.append(f"host: {e}"))
+            hp.goto(BASE + "/?skipIntro=1"); hp.wait_for_function("() => window.TribeClient && window.TribeClient.connected() && window.TribeAuth3", timeout=20000)
+            hp.evaluate("() => window.TribeSettings.open('admin')"); hp.wait_for_selector("#set-signin-host #au-open", state="attached", timeout=15000); hp.wait_for_timeout(1200)
+            assert hp.locator("#set-twostep-admins").count() == 0 and "two-step" not in hp.inner_text("#set-pane-admin").lower(), "no rule for admins in Tribe & admin"
+            # the Log in sheet: an enrolled account signs in with its password alone
+            fx = b.new_context(viewport={"width": 1100, "height": 860}, extra_http_headers={"X-Forwarded-For": "198.51.100.91"})
+            fx.add_init_script("try { localStorage.setItem('tribecode.intro.v1','seen'); if (!localStorage.getItem('tribecode.settings.v1')) { localStorage.setItem('tribecode.settings.v1', JSON.stringify({name:'Ada', onboarded:true, tour:{done:true}})); localStorage.setItem('tribecode.accounts.v1', JSON.stringify({ mode: 'signedout', accounts: [] })); } } catch (e) {}")
+            fp = fx.new_page(); fp.on("pageerror", lambda e: errors.append(f"ada: {e}"))
+            fp.goto(BASE + "/?skipIntro=1"); fp.wait_for_function("() => window.TribeAccounts && window.TribeAuth3", timeout=20000)
+            fp.evaluate("() => window.TribeAccounts.login()"); fp.wait_for_selector("#ac-user", state="visible", timeout=15000)
+            fp.fill("#ac-user", "Ada"); fp.fill("#ac-pass", PW); fp.click("#ac-acct-go")
+            fp.wait_for_function("() => { try { const a = JSON.parse(localStorage.getItem('tribecode.accounts.v1')); return a && a.mode === 'signedin' && a.accounts[0].username === 'Ada'; } catch { return false; } }", timeout=20000)
+            assert fp.locator("#a3-step").count() == 0, "no code sheet"
+            b.close()
+        # the host's setting turns it back on without the environment; Ada's enrolment counts again
+        assert api("/accounts/admin/settings", "PUT", {"twoStep": True}, token=host, headers=remote())[0] == 403
+        assert ok(api("/accounts/admin/settings", "PUT", {"twoStep": True, "twoStepAdmins": False}, token=host))["twoStep"] is True
+        st, d = login("Ada"); assert d.get("need") == "two-step" and "token" not in d, d
+        assert step2(d["ticket"], code=code(asec))[0] == 200
+        print("  default (no TRIBE_TWO_STEP): nobody is gated, the two-step routes are 404, no rows in Settings, passkeys stay, enrolments are kept; the host's setting turns it back on")
         assert not errors, errors
         print("ok e2e_auth3")
     finally:

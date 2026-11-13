@@ -1,7 +1,8 @@
 """Security checks for feat/auth3-pay: two-step sign-in, passkeys and payments (docs/ACCOUNTS.md, docs/PREMIUM.md).
 
 No browser: a software authenticator in this file (ES256 and RS256 keys, CBOR by hand) speaks WebAuthn to the server, so
-every check of a registration and an assertion can be bent one at a time. Stripe is configured through the environment
+every check of a registration and an assertion can be bent one at a time. Both features are off by default, so the
+server runs with TRIBE_TWO_STEP=1 and TRIBE_PAYMENTS=1 (e2e_auth3 and e2e_payments check the defaults). Stripe is configured through the environment
 here (e2e_payments covers the host's settings) and points at a local fake.
 
 T  two-step: one answer for a wrong password whether or not two-step is on (no enumeration); a ticket is bound to its
@@ -154,7 +155,7 @@ def main():
     tribe, home = os.path.join(tmp, "tribe"), os.path.join(tmp, "home")
     os.makedirs(tribe); os.makedirs(home)
     fake = http.server.ThreadingHTTPServer(("127.0.0.1", STRIPE_PORT), FakeStripe); threading.Thread(target=fake.serve_forever, daemon=True).start()
-    env = {**os.environ, "HOME": home, "USERPROFILE": home, "TRIBE_TEST": "1", "TRIBE_NO_DOWNLOAD": "1", "TRIBE_NO_GH": "1", "TRIBE_ACCOUNTS": "1", "TRIBE_TEST_TOTP_STEP_MS": str(STEP * 1000),
+    env = {**os.environ, "HOME": home, "USERPROFILE": home, "TRIBE_TEST": "1", "TRIBE_NO_DOWNLOAD": "1", "TRIBE_NO_GH": "1", "TRIBE_ACCOUNTS": "1", "TRIBE_TWO_STEP": "1", "TRIBE_PAYMENTS": "1", "TRIBE_TEST_TOTP_STEP_MS": str(STEP * 1000),
            "STRIPE_SECRET_KEY": SK, "STRIPE_WEBHOOK_SECRET": WH, "STRIPE_PRICE_CREDITS_10": "price_s7c10", "STRIPE_PRICE_HOSTED": "price_s7hosted", "TRIBE_STRIPE_BASE": FAKE,
            "NO_PROXY": "localhost,127.0.0.1", "no_proxy": "localhost,127.0.0.1"}
     for k in ("TRIBE_PUBLIC_URL", "TRIBE_OPEN_SIGNUP"): env.pop(k, None)
@@ -285,6 +286,7 @@ def main():
         # the override is a test hook only
         out = subprocess.run(["node", "-e", "const os=require('os'),fs=require('fs'),p=require('path');const d=fs.mkdtempSync(p.join(os.tmpdir(),'s7-'));const {Store}=require(%s);const st=new Store(d);delete process.env.TRIBE_TEST;const x=require(%s)({store:st});console.log(x.isTest(), x.on())" % (json.dumps(str(ROOT / 'server' / 'store.js')), json.dumps(str(ROOT / 'server' / 'stripe.js')))],
                              capture_output=True, text=True, env={**env, "TRIBE_TEST": ""}); assert out.stdout.strip() == "false true", (out.stdout, out.stderr)
+        out2 = subprocess.run(out.args, capture_output=True, text=True, env={k: v for k, v in env.items() if k != "TRIBE_PAYMENTS"}); assert out2.stdout.strip().endswith("false"), "keys alone turn nothing on: payments need TRIBE_PAYMENTS=1 or the host's setting"
         logtxt = open(logf).read(); assert SK not in logtxt and WH not in logtxt
         print("  P: checkout/portal need a member and are rate-limited; return address is ours; the webhook: POST, v1, size, one event at once applied once; settings host-local; no fake Stripe without TRIBE_TEST")
         print("ok security7_test")

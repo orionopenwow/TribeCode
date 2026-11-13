@@ -92,7 +92,7 @@ module.exports = function makeAccounts({ store, getMembers, isLocal, limited, ha
   const taken = () => new Set(load().accounts.map(a => a.usernameKey));
   const pub = a => a && ({ id: a.id, username: a.username, displayName: a.displayName, created: a.created, status: a.status,
     providers: (a.providers || []).map(p => ({ provider: p.provider, linked: p.linked })), members: (a.members || []).slice(), hasPassword: !!a.password,
-    email: a.email ? { address: a.email.address, verified: !!a.email.verified } : null, twoStep: a3.totpOn(a.id), passkeys: a3.passkeyCount(a.id) });
+    email: a.email ? { address: a.email.address, verified: !!a.email.verified } : null, twoStep: twoStepOn() && a3.totpOn(a.id), passkeys: a3.passkeyCount(a.id) });
   const byKey = k => load().accounts.find(a => a.usernameKey === k);
 
   // Existing tribe members -> accounts (once per member; idempotent). Agents are not people and get none.
@@ -225,7 +225,11 @@ module.exports = function makeAccounts({ store, getMembers, isLocal, limited, ha
   // feat/auth3: with two-step on, every sign-in stops at the gate first ({ need: 'two-step', ticket }); server/auth3.js
   // finishes it (signedInNow, strong) once the code, recovery code, trusted device or passkey checks out.
   const adminAccount = a => { const ids = new Set(a.members || []); return getMembers().some(x => ids.has(x.id) && (x.role === 'host' || x.role === 'admin')); };
-  const twoStepAdmins = () => !!readAuth().twoStepAdmins;
+  // Two-step sign-in is OFF until the host turns it on: TRIBE_TWO_STEP=1, or { twoStep: true } in the host's sign-in settings
+  // (PUT admin/settings on the host computer). Off: no gate, no rule for admins, the two-step routes answer 404; an
+  // enrolment made earlier is kept and counts again when it comes back on. Passkeys are a sign-in method either way.
+  const twoStepOn = () => process.env.TRIBE_TWO_STEP === '1' || readAuth().twoStep === true;
+  const twoStepAdmins = () => twoStepOn() && !!readAuth().twoStepAdmins;
   function signedInNow(a, req, proven, { strong = false, memberOnly = false } = {}) {
     const live = new Set(getMembers().filter(x => x.role !== 'agent').map(x => x.id)), mid = (a.members || []).find(x => live.has(x));
     // the host can require two-step for admins: without it the account signs in, but the tribe key waits until it is on
@@ -237,7 +241,7 @@ module.exports = function makeAccounts({ store, getMembers, isLocal, limited, ha
   }
   function signedIn(a, req, proven) { return a3.gate(a) || signedInNow(a, req, proven); }
   const a3 = require('./auth3')({ store, hash, id, limited, log, issueWith, redeemTok, pendSave: () => pend.save(), fromToken, accountById: x => load().accounts.find(a => a.id === x) || null,
-    usableCount: a => usableCount(a), finish: (a, req, o) => signedInNow(a, req, true, o), memberFinish: (mid, req) => (signInMember ? signInMember(mid, req) : null), isAdmin: adminAccount, required: twoStepAdmins });
+    enabled: twoStepOn, usableCount: a => usableCount(a), finish: (a, req, o) => signedInNow(a, req, true, o), memberFinish: (mid, req) => (signInMember ? signInMember(mid, req) : null), isAdmin: adminAccount, required: twoStepAdmins });
   // server/oauth.js: a provider signs a member of this tribe back in. Two-step on their account -> the same gate.
   function memberGate(member, req, info = {}) {
     if (!enabled() || !member) return null;
@@ -313,14 +317,15 @@ module.exports = function makeAccounts({ store, getMembers, isLocal, limited, ha
 
   async function auth2(req, res, { b, c, m, body, send, fail, tooMany }) {
     // public: what this TribeCode offers (the sign-up sheet, signin.html and the pop-up read it)
-    if (b === 'config' && m === 'GET') { send(res, 200, { on: true, openSignup: openSignup(), email: emailOn() }); return true; }
+    if (b === 'config' && m === 'GET') { send(res, 200, { on: true, openSignup: openSignup(), email: emailOn(), ...(twoStepOn() ? { twoStep: true } : {}) }); return true; }
     // ---- the host's settings: on the host computer only ----
     if (b === 'admin') {
       if (!isHostAdmin(req)) { fail(res, 403, 'only the host changes sign-in settings, on the host computer'); return true; }
-      if (c === 'settings' && m === 'GET') { send(res, 200, { openSignup: openSignup(), smtp: viewSmtp(), twoStepAdmins: twoStepAdmins() }); return true; }
+      if (c === 'settings' && m === 'GET') { send(res, 200, { openSignup: openSignup(), smtp: viewSmtp(), twoStep: twoStepOn(), twoStepAdmins: twoStepAdmins() }); return true; }
       if (c === 'settings' && m === 'PUT') {
         const all = readAuth();
         if (body.openSignup !== undefined) all.openSignup = !!body.openSignup;
+        if (body.twoStep !== undefined) { all.twoStep = !!body.twoStep; log(`accounts: two-step sign-in ${all.twoStep ? 'on' : 'off'}`); }
         if (body.twoStepAdmins !== undefined) { all.twoStepAdmins = !!body.twoStepAdmins; log(`accounts: two-step for admins ${all.twoStepAdmins ? 'required' : 'not required'}`); }   // feat/auth3
         if (body.smtp !== undefined) {
           if (body.smtp === null || body.smtp.host === '') delete all.smtp;
@@ -334,7 +339,7 @@ module.exports = function makeAccounts({ store, getMembers, isLocal, limited, ha
           }
         }
         writeAuth(all); log(`accounts: sign-in settings changed (open sign-up ${openSignup() ? 'on' : 'off'}, email ${emailOn() ? 'on' : 'off'})`);
-        send(res, 200, { openSignup: openSignup(), smtp: viewSmtp(), twoStepAdmins: twoStepAdmins() }); return true;
+        send(res, 200, { openSignup: openSignup(), smtp: viewSmtp(), twoStep: twoStepOn(), twoStepAdmins: twoStepAdmins() }); return true;
       }
       if (c === 'smtp-test' && m === 'POST') {
         const cfg = smtpConf(); if (!cfg) { fail(res, 400, 'save the SMTP settings first'); return true; }
@@ -444,7 +449,7 @@ module.exports = function makeAccounts({ store, getMembers, isLocal, limited, ha
         const own = load().accounts.find(a => (a.members || []).includes(mem.id));
         const clash = byKey(keyOf(username));
         if (clash && clash !== own) { fail(res, 409, 'that username is taken'); return true; }
-        if (own && (own.password || a3.totpOn(own.id))) { fail(res, 409, 'you already have an account: log in with it'); return true; }   // feat/auth3: a tribe key alone never steps around two-step
+        if (own && (own.password || (twoStepOn() && a3.totpOn(own.id)))) { fail(res, 409, 'you already have an account: log in with it'); return true; }   // feat/auth3: a tribe key alone never steps around two-step
         if (body.password == null) { fail(res, 400, 'pick a password of at least 8 characters'); return true; }   // fix/review-4
         const a = own || { id: 'acct-' + id(10), created: now(), providers: [], sessions: [], members: [mem.id] };
         Object.assign(a, { username, usernameKey: keyOf(username), displayName: normalizeUsername(body.displayName) || a.displayName || username, status: 'active', ...mail, ...(body.password != null ? { password: scryptHash(body.password) } : {}) });
