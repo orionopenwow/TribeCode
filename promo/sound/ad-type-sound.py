@@ -9,7 +9,7 @@ no samples, no outside music. 120 BPM, 48 kHz stereo. The hits line up with the 
              roll into each exhibit, a busier hat in the second half, and small blips on what happens inside each exhibit
   37.0-37.75 a second riser, then one big chord at 38.0 that rings out to the end (41.0)
 
-Usage: python3 scripts/dev/ad-type-sound.py out.wav    (then loudnorm with ffmpeg to about -16 LUFS)
+Usage: python3 promo/sound/ad-type-sound.py out.wav    (then loudnorm with ffmpeg to about -16 LUFS)
 """
 import sys
 import wave

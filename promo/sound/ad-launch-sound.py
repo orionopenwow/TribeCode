@@ -4,7 +4,7 @@ numpy: no samples, no outside music. An unhurried, warm piece: soft pad chords, 
 percussion that enters when the tribe gathers (~21 s), tiny UI clicks on the cursor taps, soft chimes on the status
 cards, and a resolve on the end card.
 
-    python3 scripts/dev/ad-launch-sound.py out.wav        # then: ffmpeg -i out.wav -af loudnorm=I=-16:TP=-1.5:LRA=11 ...
+    python3 promo/sound/ad-launch-sound.py out.wav        # then: ffmpeg -i out.wav -af loudnorm=I=-16:TP=-1.5:LRA=11 ...
 """
 import sys, wave
 import numpy as np
