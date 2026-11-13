@@ -204,7 +204,7 @@
   // and disconnect in one click. Claude Code keeps its one-line flow; the other tools get their exact setup (connectai.js).
   const CAI = () => window.TribeConnectAI;
   const aiChips = (sel) => (CAI() ? CAI().chipsHtml(sel) : '');
-  function wireChips(opts) { $('#invite-body').querySelectorAll('[data-cai-tool]').forEach(b => b.onclick = () => connectClaude({ ...(opts || {}), fresh: true, tool: b.dataset.caiTool })); }
+  function wireChips(opts) { $('#invite-body').querySelectorAll('[data-cai-tool]').forEach(b => b.onclick = () => connectClaude({ ...(opts || {}), tool: b.dataset.caiTool })); }
   async function connectTool(kind, opts) {
     const body = $('#invite-body'), T = CAI().tool(kind);
     body.innerHTML = `<h2><span class="emo" aria-hidden="true">🔌</span>Connect your AI</h2>${aiChips(kind)}<p class="lead">Creating a key for ${esc(T[1])}…</p>`; wireChips(opts);
@@ -228,74 +228,16 @@
     };
     draw();
   }
-  const CC_WHERE = { anywhere: 'For Claude Code on any computer, anywhere (uses the tribe\'s public link)', wifi: 'For a computer on the same Wi-Fi as the host', here: 'For Claude Code on this computer' };   // qa-qol-2
+  // feat/invite-one: a person's Claude joins one way, Invite your Claude, in the one invite sheet. Connect your AI keeps
+  // the other tools (Codex CLI, Gemini CLI, Qwen Code, Cursor, any MCP client).
+  const CLAUDE_TOOLS = ['claude-code', 'claude-desktop', 'claude-ai'];
   async function connectClaude(opts) {
     if (!C.connected()) return openInvite();
-    const body = $('#invite-body'); $('#invite-modal').classList.remove('hidden');
-    if (opts && opts.tool && opts.tool !== 'claude-code' && CAI()) return connectTool(opts.tool, opts);
-    // Opening this used to mint a new key at once, which silently cut off a Claude Code that was already working.
-    // When yours is online, say so first; a new command (and key) is one deliberate tap away.
-    if (!(opts && opts.fresh)) {
-      body.innerHTML = '<h2><span class="emo" aria-hidden="true">🔌</span>Connect your AI</h2><p class="lead">Checking…</p>';
-      let mine = null; try { mine = await C.api('/agents/mine'); } catch {}
-      if (mine && mine.online && mine.agent) {
-        body.innerHTML = `<h2>Your AI is connected</h2>${aiChips('claude-code')}
-          <div class="cc-status"><span class="cc-dot on"></span>Connected · ${esc(mine.agent.name)}</div>
-          <p class="faint" style="font-size:13px;line-height:1.5">To connect it from another computer, make a new command. The new key replaces this one, so the session that is running now stops until you paste the new command there.</p>
-          <div class="modal-foot"><button class="btn" id="cc-out">Disconnect</button><span style="flex:1"></span><button class="btn" data-close>Done</button><button class="btn primary" id="cc-new">New command</button></div>`;
-        body.querySelector('[data-close]').onclick = closeInvite; wireChips(opts);
-        $('#cc-new').onclick = () => connectClaude({ fresh: true });
-        $('#cc-out').onclick = async () => { try { await C.api('/agents/mine', { method: 'DELETE' }); toast('Disconnected. The key stopped working.'); closeInvite(); } catch (err) { toast(err.message); } };
-        return;
-      }
-    }
-    body.innerHTML = '<h2><span class="emo" aria-hidden="true">🔌</span>Connect your AI</h2><p class="lead">Creating a key…</p>';
-    let r, where, timer;
-    const isHost = (C.state().me || {}).role === 'host';
-    const copy = async (t, msg) => { try { await navigator.clipboard.writeText(t); toast(msg); } catch { toast('Select the command and copy it.'); } };
-    const status = async () => {
-      const el = $('#cc-status'); if (!el || $('#cc-setup') || $('#invite-modal').classList.contains('hidden')) return clearInterval(timer);   // closed with Esc or the backdrop
-      try { const s = await C.api('/agents/mine'); el.innerHTML = s.online ? `<span class="cc-dot on"></span>Connected · ${esc(s.agent.name)}` : `<span class="cc-dot"></span>Waiting for Claude Code…`; } catch {}
-    };
-    const draw = () => {
-      const cmd = r.commands[where];
-      const tabs = [['anywhere', 'Anywhere'], ['wifi', 'Same Wi-Fi'], ['here', 'This computer']].filter(([k]) => k !== 'wifi' || r.commands.wifi);
-      body.innerHTML = `${opts && opts.welcome ? `<span class="eyebrow">You're in</span>` : ''}<h2><span class="emo" aria-hidden="true">🔌</span>Connect your AI</h2>${aiChips('claude-code')}
-        <p class="lead">One line connects your Claude Code. Run it once in a terminal, on any computer: at home, at work, or a remote session. It joins as <b>${esc(r.agent.name)}</b>, sees the board, docs and chat, and claims files before editing.</p>
-        <div class="cc-tabs" role="tablist">${tabs.map(([k, l]) => `<button role="tab" class="cc-tab ${k === where ? 'on' : ''}" aria-selected="${k === where}" data-where="${k}" title="${esc(CC_WHERE[k] || '')}">${l}</button>`).join('')}</div>
-        ${cmd ? `<div class="linkbox"><code id="cc-cmd" title="${esc(cmd)}">${esc(cmd)}</code><button class="btn primary" id="cc-copy">Copy</button></div>`
-          : `<p class="faint" style="font-size:13px;line-height:1.5">Anywhere needs this tribe's public link.</p>${isHost ? '<button class="btn primary" id="cc-public">Turn on the public link</button>' : '<p class="faint" style="font-size:13px">Ask the host to turn on the public link.</p>'}`}
-        <details class="cc-what"><summary>What's a terminal?</summary><p>The window where you type commands. On Windows, open the Start menu, type <b>PowerShell</b> and press Enter. On a Mac, open <b>Terminal</b> (Applications › Utilities). Paste the line, press Enter, and Claude Code joins. No Claude Code yet? Install it first, then come back to this line.</p></details>
-        <div class="cc-status" id="cc-status"><span class="cc-dot"></span>Waiting for Claude Code…</div>
-        ${opts && opts.welcome ? '<p class="cc-skip">No AI of your own? Skip this: ask Flint, or type <b>@ai</b> in the chat and the tribe\'s agents help.</p>' : ''}
-        <p class="faint" style="font-size:13px;line-height:1.5">A new key replaces the old one. Agents can't vote, approve or invite people.${window.TribeAgentsHub ? ' <a href="#/agents-hub" id="cc-hub">Claude Desktop, more agents and models →</a>' : ''}</p>
-        <div class="modal-foot">${opts && opts.welcome ? '<span style="flex:1"></span><button class="btn" data-close>Later</button>' : '<button class="btn" id="cc-out">Disconnect</button><button class="btn" data-close>Done</button>'}</div>`;
-      body.querySelectorAll('[data-where]').forEach(b => b.onclick = () => { where = b.dataset.where; draw(); });
-      wireChips(opts);
-      if ($('#cc-hub')) $('#cc-hub').onclick = e => { e.preventDefault(); clearInterval(timer); closeInvite(); window.TribeAgentsHub.open(); };
-      if ($('#cc-copy')) $('#cc-copy').onclick = () => copy(cmd, 'Command copied. Paste it in your terminal.');
-      if ($('#cc-public')) $('#cc-public').onclick = async e => {
-        e.target.disabled = true; e.target.textContent = 'Turning on…';
-        try { await C.api('/share/public', { method: 'POST', body: {} }); r = await C.api('/agents', { method: 'POST' }); where = r.commands.anywhere ? 'anywhere' : where; draw(); }
-        catch (err) { toast(err.message); e.target.disabled = false; e.target.textContent = 'Turn on the public link'; }
-      };
-      if ($('#cc-out')) $('#cc-out').onclick = async () => {
-        try { const o = await C.api('/agents/mine', { method: 'DELETE' }); clearInterval(timer);
-          body.innerHTML = `<h2>Disconnected</h2><p class="lead">The key stopped working. To remove it from Claude Code too, run:</p>
-            <div class="linkbox"><code>${esc(o.remove)}</code><button class="btn primary" id="cc-rm">Copy</button></div>
-            <div class="modal-foot"><button class="btn" id="cc-again">Connect again</button><button class="btn" data-close>Done</button></div>`;
-          $('#cc-rm').onclick = () => copy(o.remove, 'Copied.'); $('#cc-again').onclick = () => connectClaude({ fresh: true });
-          body.querySelector('[data-close]').onclick = closeInvite;
-        } catch (err) { toast(err.message); }
-      };
-      body.querySelector('[data-close]').onclick = () => { clearInterval(timer); closeInvite(); };
-      status();
-    };
-    try {
-      r = await C.api('/agents', { method: 'POST' });
-      where = r.commands.anywhere ? 'anywhere' : (location.hostname === 'localhost' || location.hostname === '127.0.0.1') ? 'here' : (r.commands.wifi ? 'wifi' : 'here');
-      draw(); clearInterval(timer); timer = setInterval(status, 3000);
-    } catch (e) { body.innerHTML = `<h2>Couldn't create a key</h2><p class="lead">${esc(e.message)}</p><div class="modal-foot"><button class="btn" data-close>Close</button></div>`; body.querySelector('[data-close]').onclick = closeInvite; }
+    const tool = opts && opts.tool;
+    if ((!tool || CLAUDE_TOOLS.includes(tool) || !CAI()) && window.TribeInvite) return window.TribeInvite.open({ who: 'claude', kind: tool || undefined, fresh: !!(opts && opts.fresh && tool), welcome: !!(opts && opts.welcome) });
+    if (window.TribeInvite) window.TribeInvite.close();
+    $('#invite-modal').classList.remove('hidden');
+    return connectTool(tool, opts);
   }
   $('#cc-connect').addEventListener('click', () => connectClaude());
   C.on('claims', renderClaims);
@@ -453,10 +395,17 @@
   C.on('status', st => { if (st.status === 'online') document.querySelectorAll('.msg.pending:not(.failed) .msg-state').forEach(x => { x.textContent = 'Sending…'; }); });
 
   // ---- invites ----
-  async function openInvite() {
+  // Every way to invite opens the one sheet (inviteone.js): opts { who: 'friend' | 'guest' | 'claude', project }.
+  function openInvite(opts) {
+    if (!C.connected()) return joinOrHost();
+    return window.TribeInvite.open(opts && typeof opts === 'object' && !(opts instanceof Event) ? opts : {});
+  }
+  // No tribe on this device yet: join one with a link, or (the desktop app) host one here.
+  function joinOrHost() {
     const body = $('#invite-body');
+    if (window.TribeInvite) window.TribeInvite.close();
     $('#invite-modal').classList.remove('hidden');
-    if (!C.connected()) {
+    {
       const desktop = window.TribeHost.isDesktop;
       body.innerHTML = desktop ? `<h2>${window.__hostError ? 'Your tribe did not start' : 'Starting your tribe…'}</h2>
           ${window.__hostError ? `<pre class="host-err">${esc(window.__hostError)}</pre>` : ''}
@@ -467,68 +416,10 @@
           <div class="modal-foot"><button class="btn" data-close>Close</button></div>`;
       if (desktop) { $('#host-here').onclick = hostHere; $('#join-instead').onclick = () => window.TribeSettings.joinPrompt(); }
       else { $('#join-go').onclick = () => joinLink($('#join-link').value); $('#join-link').onkeydown = e => { if (e.key === 'Enter') joinLink($('#join-link').value); }; }
-    } else {
-      body.innerHTML = `<h2>Invite friends</h2>
-        <section class="tl-box" id="tl-box"><span class="eyebrow">Your tribe link</span><p class="faint tl-sub">One link for your whole tribe, like a Discord server invite. Anyone with it picks a name and they're in. No AI needed.</p><div class="linkbox"><code id="tl-link">…</code><button class="btn" id="tl-qrb" title="Show a QR code to scan with a phone" aria-label="Show QR code">QR</button><button class="btn primary" id="tl-copy" disabled>Copy</button></div><div class="qr tl-qr hidden" id="tl-qr"></div><div class="tl-row" id="tl-row"></div></section>
-        <details class="tl-more"><summary>Or make a one-time invite</summary>
-        <div class="opts"><select id="inv-hours" title="Link expires after" aria-label="Link expires after"><option value="24">Lasts 24 hours</option><option value="168">Lasts 7 days</option><option value="1">Lasts 1 hour</option></select>
-          <select id="inv-uses" title="How many people can use it" aria-label="How many people can use it"><option value="5">Up to 5 people</option><option value="1">Just 1 person</option><option value="20">Up to 20 people</option></select>
-          <select id="inv-role" title="Builders can edit; spectators can only watch" aria-label="What they can do"><option value="builder">They can build</option><option value="spectator">They can only watch</option></select></div>
-        ${window.TribeProjects ? window.TribeProjects.invitePicker() : ''}
-        <div class="linkbox"><code id="inv-link">Creating link…</code><button class="btn primary" id="inv-copy" disabled>Copy</button></div>
-        <div class="qr-wrap"><div class="qr" id="inv-qr"></div><p>Scan to join from a phone.<br><span class="faint" id="inv-net"></span></p></div></details>
-        <section class="tl-box ic-inv"><span class="eyebrow">Your own AI</span><p class="faint tl-sub">Your Claude joins next to you, with your access and never more. One command, or a config to paste.</p><button type="button" class="btn" id="inv-claude" data-ic-open>Invite your Claude</button></section>
-        <div class="modal-foot"><button class="btn" data-close>Done</button></div>`;
-      // v0.26 tribe link: <host>/t/<name>, permanent until the host renames, renews or turns it off
-      const tl = async (patch) => {
-        try {
-          const r = patch ? await C.api('/tribe-link', { method: 'PUT', body: patch }) : await C.api('/tribe-link');
-          const host = (C.state().me || {}).role === 'host', on = r.on !== false;
-          $('#tl-link').textContent = on ? r.short : 'The tribe link is off'; $('#tl-copy').disabled = !on; $('#tl-copy').dataset.v = r.short || '';
-          $('#tl-row').innerHTML = host ? `<label class="tl-name">${esc((r.short || '').replace(/\/t\/[^/]*$/, '/t/'))}<input class="input" id="tl-slug" value="${esc(r.slug || '')}" maxlength="32" aria-label="Tribe link name" spellcheck="false"></label><button class="btn sm" id="tl-save">Rename</button><button class="btn sm" id="tl-renew" title="The old link stops working">New link</button><button class="btn sm" id="tl-onoff">${on ? 'Turn off' : 'Turn on'}</button>` : '';
-          if (host) {
-            $('#tl-save').onclick = () => tl({ slug: $('#tl-slug').value });
-            $('#tl-slug').onkeydown = e => { if (e.key === 'Enter') tl({ slug: $('#tl-slug').value }); };
-            $('#tl-renew').onclick = () => tl({ renew: true }).then(() => toast('New tribe link made. The old one stopped working.'));
-            $('#tl-onoff').onclick = () => tl({ on: !on });
-          }
-        } catch (e) { $('#tl-link').textContent = e.message; }
-      };
-      $('#tl-qrb').onclick = () => { const q = $('#tl-qr'), v = $('#tl-copy').dataset.v; if (!v) return; q.innerHTML = window.TribeQR.svg(v); q.classList.toggle('hidden'); };
-      $('#tl-copy').onclick = async () => { try { await navigator.clipboard.writeText($('#tl-copy').dataset.v); toast('Tribe link copied'); } catch { getSelection().selectAllChildren($('#tl-link')); } };
-      tl();
-      const make = async () => {
-        $('#inv-copy').disabled = true; $('#inv-link').textContent = 'Creating link…';
-        try {
-          const { invite } = await C.api('/invites', { method: 'POST', body: { hours: +$('#inv-hours').value, maxUses: +$('#inv-uses').value, role: $('#inv-role').value, ...($('#inv-project') ? { project: $('#inv-project').value } : {}) } });
-          // localhost links only work on this computer: share the network address instead
-          let base = C.base(), note = '';
-          // a public https address ("Share beyond my Wi-Fi") always wins; it comes first in /api/health lan
-          let site = null;
-          try { const h = await C.api('/health'); const pick = (h.lan || [])[0]; site = h.site || null;
-            if (pick && (pick.kind === 'public' || /\/\/(localhost|127\.0\.0\.1)(:|$)/.test(base))) { base = pick.url; note = pick.kind === 'public' ? 'Public https address: works from anywhere, and voice works on phones.' : pick.kind === 'tailscale' ? 'Tailscale address: works from anywhere your friend is signed in to Tailscale.' : 'Wi-Fi address: your friend needs to be on the same network (or use Tailscale).'; } }
-          catch {}
-          // Public hosts get the friendly GitHub Pages link (device-aware, says when the host is offline).
-          const link = site && /^https:/.test(base) ? `${site}/app/go.html#s=${encodeURIComponent(base)}&c=${encodeURIComponent(invite.code)}` : `${base}/join/${invite.code}`;
-          $('#inv-link').textContent = link; $('#inv-copy').disabled = false;
-          $('#inv-qr').innerHTML = window.TribeQR.svg(link); $('#inv-net').textContent = note;
-          S.set({ checklist: { invite: true } }); refresh();
-        } catch (e) { $('#inv-link').textContent = 'Could not create invite: ' + e.message; }
-      };
-      ['#inv-hours', '#inv-uses', '#inv-role', '#inv-project'].forEach(s => $(s) && $(s).addEventListener('change', make));
-      $('#inv-copy').onclick = async () => { try { await navigator.clipboard.writeText($('#inv-link').textContent); toast('Invite link copied'); } catch { getSelection().selectAllChildren($('#inv-link')); toast('Press Ctrl+C to copy'); } };
-      // A project that lives only on this device can't make an invite yet: say so here, with the way on, instead of
-      // asking for one (the refusal would open Where should it live? a moment later, over whatever is on screen by then)
-      const O = window.TribeOffline;
-      if (O && O.solo && O.solo()) {
-        $('#inv-link').textContent = 'This project lives on this device. Choose where it lives first, then friends can join.';
-        $('#inv-copy').textContent = 'Choose'; $('#inv-copy').disabled = false;
-        $('#inv-copy').onclick = () => { closeInvite(); const L = window.TribeLocalSetup, P = window.TribePhoneHost; if (L && L.where && !matchMedia('(max-width: 820px)').matches) L.where(); else if (P && P.move) P.move(); };
-      } else make();
     }
     body.querySelectorAll('[data-close]').forEach(b => b.onclick = closeInvite);
   }
-  const closeInvite = () => { $('#invite-modal').classList.add('hidden'); $('#invite-body').classList.remove('np-setup', 'ii'); };   // sheets that restyle the card drop their class too
+  const closeInvite = () => { if (window.TribeInvite && window.TribeInvite.isOpen()) return window.TribeInvite.close(); $('#invite-modal').classList.add('hidden'); $('#invite-body').classList.remove('np-setup', 'ii', 'io'); };   // sheets that restyle the card drop their class too
 
   // ---- join from a link (pasted, or a tribecode:// deep link) without leaving the app ----
   function parseInvite(raw) {
@@ -857,9 +748,38 @@
   C.on('status', s => { if (s.status === 'offline' && !C.hasToken() && ['home', 'chat'].includes(current)) { autoHub = true; show('hub'); } });
   // audit 2026-11-13: this device's key was ended (Sign out other devices, or removed from the tribe). One calm line
   // instead of "Reconnecting…" for ever; logging in again or opening the invite link brings you back.
-  addEventListener('tribe-signed-out', () => toast('This device was signed out of the tribe. Log in again, or open your invite link, to come back.'));
+  // feat/invite-one: the notice stays until it is answered and has the way back in it. Log in again opens sign-in and,
+  // once this device is in again (also after a reload), returns to the project and place the person was in.
+  const RETURN = 'tribecode.return';
+  function signedOutNote() {
+    if ($('#so-note')) return;
+    const n = document.createElement('div'); n.id = 'so-note'; n.className = 'so-note'; n.setAttribute('role', 'alert');
+    n.innerHTML = '<span><b>This device was signed out of the tribe.</b><small>Log in again, or open your invite link, to come back where you were.</small></span><button type="button" class="btn primary sm" id="so-login">Log in again</button><button type="button" class="btn ghost sm" id="so-x" aria-label="Dismiss">Not now</button>';
+    document.body.appendChild(n);
+    n.querySelector('#so-x').onclick = () => n.remove();
+    n.querySelector('#so-login').onclick = () => {
+      const w = (window.TribeRouter && window.TribeRouter.where()) || {};
+      try { sessionStorage.setItem(RETURN, JSON.stringify({ at: Date.now(), project: w.project || (C.project && C.project()) || null, key: w.key || current, hash: location.hash || '' })); } catch {}
+      if (window.TribeAccounts && window.TribeAccounts.login) window.TribeAccounts.login(); else joinOrHost();
+    };
+  }
+  async function returnAfterLogin() {
+    let r = null; try { r = JSON.parse(sessionStorage.getItem(RETURN) || 'null'); sessionStorage.removeItem(RETURN); } catch {}
+    const n = $('#so-note'); if (n) n.remove();
+    if (!r || Date.now() - (r.at || 0) > 30 * 60_000) return;
+    if (window.TribeAccounts && window.TribeAccounts.close) window.TribeAccounts.close();
+    try {
+      const PJ = window.TribeProjects;
+      if (r.project && PJ && PJ.switchTo && PJ.current && PJ.current() !== r.project && (PJ.list() || []).some(p => p.id === r.project)) await PJ.switchTo(r.project);
+      if (r.key && window.TribeRouter) window.TribeRouter.go(r.key);
+      if (r.hash && /^#\/settings/.test(r.hash)) location.hash = r.hash;
+      toast('Welcome back. You\'re where you left off.', 'ok');
+    } catch {}
+  }
+  addEventListener('tribe-signed-out', signedOutNote);
+  C.on('hello', () => setTimeout(returnAfterLogin, 150));
   // The hub was only standing in for "no tribe yet": once connected (hosting or joined), open the project as usual.
   C.on('hello', () => { if (autoHub && current === 'hub') show('home'); autoHub = false; });
   setTimeout(iosHint, 1500);
-  Object.assign(window.TribeApp, { sendQueued, pendingBubble, show, hostHere, startFirst, fresh: () => !!window.__tribeFresh && !C.hasToken(), setHosting, stopHost, view: () => current, reloadChat: loadChat, openInvite, joinLink, parseInvite, connectClaude, refreshRoom: () => renderRoom(C.state().members) });
+  Object.assign(window.TribeApp, { sendQueued, pendingBubble, show, hostHere, startFirst, fresh: () => !!window.__tribeFresh && !C.hasToken(), setHosting, stopHost, view: () => current, reloadChat: loadChat, openInvite, joinOrHost, joinLink, parseInvite, connectClaude, refreshRoom: () => renderRoom(C.state().members) });
 })();

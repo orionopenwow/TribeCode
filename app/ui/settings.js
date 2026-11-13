@@ -550,7 +550,13 @@
   async function devicesRow(el) {
     let list = []; try { list = (await C().api('/devices')).devices || []; } catch {}
     const when = t => { try { return t ? new Date(t).toLocaleDateString([], { month: 'short', day: 'numeric' }) : '—'; } catch { return ''; } };
-    el.innerHTML = `<ul class="set-list">${list.length ? list.map(d => `<li><span><b>${esc(d.current ? 'This device' : d.label || 'A device')}</b><small>linked ${esc(when(d.created))} · last used ${esc(when(d.lastUsed))}</small></span>${d.current ? '' : `<button class="btn sm" data-dev="${esc(d.id)}">End</button>`}</li>`).join('') : '<li><span><b>This device</b><small>No other device links.</small></span></li>'}</ul>
+    // feat/invite-one: each session names its browser and system ("Chrome on Windows"), read from the user agent when it
+    // signed in (server/devices.js). A sign-in that isn't a device link (this browser's own key) is named from here.
+    const named = d => (d && (d.browser || d.os) ? `${[d.browser, d.os].filter(Boolean).join(' on ')} · ` : '');
+    const here = () => { const ua = navigator.userAgent; return { browser: window.TribeHost && window.TribeHost.isDesktop ? 'TribeCode app' : /Edg(e|A|iOS)?\//.test(ua) ? 'Edge' : /OPR\//.test(ua) ? 'Opera' : /Firefox\/|FxiOS\//.test(ua) ? 'Firefox' : /Chrome\/|CriOS\//.test(ua) ? 'Chrome' : /Safari\//.test(ua) ? 'Safari' : '',
+      os: /iPhone|iPod/.test(ua) ? 'iPhone' : /iPad/.test(ua) ? 'iPad' : /Android/.test(ua) ? 'Android' : /Windows/.test(ua) ? 'Windows' : /CrOS/.test(ua) ? 'ChromeOS' : /Mac OS X|Macintosh/.test(ua) ? 'macOS' : /Linux|X11/.test(ua) ? 'Linux' : '' }; };
+    list = list.map(d => (d.current && !d.browser && !d.os ? { ...d, ...here() } : d));
+    el.innerHTML = `<ul class="set-list">${list.length ? list.map(d => `<li><span><b>${esc(d.current ? 'This device' : d.label || 'A device')}</b><small class="set-dev-agent">${esc(named(d))}linked ${esc(when(d.created))} · last used ${esc(when(d.lastUsed))}</small></span>${d.current ? '' : `<button class="btn sm" data-dev="${esc(d.id)}">End</button>`}</li>`).join('') : `<li><span><b>This device</b><small class="set-dev-agent">${esc(named(here()))}No other device links.</small></span></li>`}</ul>
       <div class="set-acts"><button class="btn" id="set-signout-others">Sign out other devices</button></div>`;
     el.querySelectorAll('[data-dev]').forEach(b => b.onclick = async () => { b.disabled = true; try { await C().api('/devices/' + encodeURIComponent(b.dataset.dev), { method: 'DELETE' }); devicesRow(el); saved(); } catch (e) { toast(e.message); b.disabled = false; } });
     el.querySelector('#set-signout-others').onclick = async e => {

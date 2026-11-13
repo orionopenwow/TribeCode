@@ -30,7 +30,7 @@
     <aside class="ppl-panel" id="ppl-panel" role="dialog" aria-label="People" hidden tabindex="-1">
       <header class="ppl-head"><div><span class="eyebrow">People</span><h2 id="ppl-title">Who's around</h2></div>
         <button class="btn primary sm" id="ppl-invite" type="button">Invite</button>
-        <button class="btn sm" id="ppl-claude" type="button" data-ic-open title="Invite your own Claude: it joins next to you, with your access">Invite your Claude</button>
+        <button class="btn sm" id="ppl-claude" type="button" title="Invite your own Claude: it joins next to you, with your access">Invite your Claude</button>
         <button class="btn ghost sm" id="ppl-close" type="button" aria-label="Close">Done</button></header>
       <div class="ppl-tabs" role="tablist"><button role="tab" data-tab="tribe" type="button">This tribe</button><button role="tab" data-tab="friends" type="button">Friends</button></div>
       <div class="ppl-tools"><input class="input ppl-q" id="ppl-q" type="search" placeholder="Search people" aria-label="Search people" autocomplete="off">
@@ -119,8 +119,8 @@
         + sec('Pending invites', inv.length || null, inv.length ? inv.map(i => `<div class="ppl-row ppl-inv"><span class="ppl-face"><span class="pf-av ppl-av ppl-inv-av">+</span></span><div class="ppl-t"><b>${i.guest ? 'Guest pass' : 'Invite link'} · ${esc(i.uses || 0)}/${esc(i.maxUses)} used</b><small>expires ${esc(new Date(i.expires).toLocaleDateString([], { month: 'short', day: 'numeric' }))}${i.project ? ' · this project' : ''}</small></div></div>`).join('') : '<p class="ppl-empty">No open invites. <button type="button" class="linkish" data-invite>Invite someone</button></p>')
         + (canInvite() ? sec('Add someone new', null, `<button type="button" class="ppl-add" id="ppl-new-invite"><span class="ppl-ai k-ember" aria-hidden="true">+</span><span class="ppl-t"><b>Invite a friend</b><small>A link for this project. They join with a name, on a computer or a phone.</small></span></button>
           <button type="button" class="ppl-add" id="ppl-guest"><span class="ppl-ai k-indigo" aria-hidden="true">1×</span><span class="ppl-t"><b>One-time guest pass</b><small>Works once. Their account stops working after a day. Good for a quick look or a playtest.</small></span></button>
-          <button type="button" class="ppl-add" id="ppl-new-claude" data-ic-open><span class="ppl-ai k-teal" aria-hidden="true">AI</span><span class="ppl-t"><b>Invite your Claude</b><small>Your own Claude joins next to you, with your access and never more.</small></span></button>
-          <div id="ppl-link" class="ppl-link" hidden></div>`) : '');
+          <button type="button" class="ppl-add" id="ppl-new-claude"><span class="ppl-ai k-teal" aria-hidden="true">AI</span><span class="ppl-t"><b>Invite your Claude</b><small>Your own Claude joins next to you, with your access and never more.</small></span></button>
+`) : '');
     }
     wire(body);
   }
@@ -129,9 +129,10 @@
     body.querySelectorAll('[data-dm]').forEach(b => b.onclick = () => { const id = b.dataset.dm; close(); if (window.TribeApp) window.TribeApp.show('chat'); setTimeout(() => window.TribeDM && window.TribeDM.open(id), 120); });
     body.querySelectorAll('[data-prof]').forEach(b => b.onclick = () => { const id = b.dataset.prof, m = all().find(x => x.id === id); close(); if (window.TribeAbilities && m && !isAI(m)) window.TribeAbilities.profile(id); else if (window.TribeProfiles) window.TribeProfiles.open(id, btn); });
     body.querySelectorAll('[data-star]').forEach(b => b.onclick = () => star(b.dataset.star));
-    body.querySelectorAll('[data-invite]').forEach(b => b.onclick = invite);
-    const ni = body.querySelector('#ppl-new-invite'); if (ni) ni.onclick = () => mint(false);
-    const gp = body.querySelector('#ppl-guest'); if (gp) gp.onclick = () => mint(true);
+    body.querySelectorAll('[data-invite]').forEach(b => b.onclick = () => invite());
+    const nc = body.querySelector('#ppl-new-claude'); if (nc) nc.onclick = () => invite({ who: 'claude' });
+    const ni = body.querySelector('#ppl-new-invite'); if (ni) ni.onclick = () => invite({ who: 'friend', project: proj() || undefined });
+    const gp = body.querySelector('#ppl-guest'); if (gp) gp.onclick = () => invite({ who: 'guest' });
   }
   async function star(id) {
     const on = !friends.has(id);
@@ -139,22 +140,8 @@
     draw();
   }
   const canInvite = () => !['spectator', 'agent'].includes(me().role) && !me().guest;
-  // an invite link or a one-time guest pass, shown here with Copy (fix/batch-fixes: moved from the old Friends panel)
-  async function mint(guest) {
-    const box = $('#ppl-link'); if (!box) return;
-    try {
-      const r = await C.api('/invites', { method: 'POST', body: { project: proj() || null, ...(guest ? { guest: true, hours: 24 } : { maxUses: 5, hours: 72 }) } });
-      let base = C.base(), site = null;   // localhost only works here: share the public (or network) address, and the Pages link when public
-      try { const h = await C.api('/health'); const pick = (h.lan || [])[0]; site = h.site || null; if (pick && (pick.kind === 'public' || /\/\/(localhost|127\.0\.0\.1)(:|$)/.test(base))) base = pick.url; } catch {}
-      const share = site && /^https:/.test(base) ? `${site}/app/go.html#s=${encodeURIComponent(base)}&c=${encodeURIComponent(r.invite.code)}` : `${base}/join/${r.invite.code}`;
-      box.hidden = false;
-      box.innerHTML = `<span class="eyebrow">${guest ? 'Guest pass · one use · 24 h' : 'Invite link · 3 days'}</span><div class="ppl-lrow"><input class="input" readonly value="${esc(share)}" aria-label="Link"><button type="button" class="btn primary sm" id="ppl-copy">Copy</button></div>`;
-      const copy = async () => { try { await navigator.clipboard.writeText(share); toast('Link copied.'); } catch { box.querySelector('input').select(); } };
-      $('#ppl-copy').onclick = copy; copy();
-      if (!['spectator', 'agent'].includes(me().role)) C.api('/invites').then(x => { invites = x.invites || []; }).catch(() => {});
-    } catch (e) { toast(e.message); }
-  }
-  function invite() { close(); if (window.TribeApp && window.TribeApp.openInvite) window.TribeApp.openInvite(); }
+  // Every invite here opens the one sheet (inviteone.js) on the right choice: a friend, a guest for a day, your Claude.
+  function invite(opts) { close(); if (window.TribeApp && window.TribeApp.openInvite) window.TribeApp.openInvite(opts && opts.who ? opts : { who: 'friend' }); }
   function badge() {
     const n = all().filter(m => m.online && m.id !== me().id).length, el = $('#ppl-n');
     if (el) { el.textContent = n; el.hidden = !n; }
@@ -177,7 +164,7 @@
     btn.setAttribute('aria-expanded', 'false'); document.body.classList.remove('ppl-on');
   }
   btn.onclick = () => (open ? close() : show());
-  $('#ppl-scrim').onclick = close; $('#ppl-close').onclick = close; $('#ppl-invite').onclick = invite;
+  $('#ppl-scrim').onclick = close; $('#ppl-close').onclick = close; $('#ppl-invite').onclick = () => invite(); $('#ppl-claude').onclick = () => invite({ who: 'claude' });
   document.querySelectorAll('#ppl-panel [data-tab]').forEach(b => b.onclick = () => { tab = b.dataset.tab; focusId = null; draw(); load(); });
   document.querySelectorAll('#ppl-panel [data-f]').forEach(b => b.onclick = () => { const f = b.dataset.f; flt.has(f) ? flt.delete(f) : flt.add(f); draw(); });
   let qT = null; $('#ppl-q').oninput = e => { q = e.target.value; clearTimeout(qT); qT = setTimeout(draw, 80); };

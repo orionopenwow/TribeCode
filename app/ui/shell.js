@@ -418,7 +418,7 @@
       if (k === 'reset-order') { window.TribeReorder.reset('rail'); return; }   // feat/shell-polish (reorder.js)
       if (k === 'pin') { await togglePin(id); PJ().refresh && PJ().refresh(); return; }
       if (PJ().current() !== id) await PJ().switchTo(id, k === 'chat' ? 'chat' : 'home');
-      if (k === 'open') App().show('home'); else if (k === 'chat') App().show('chat'); else if (k === 'invite') App().openInvite(); else if (k === 'settings') projectSettings(); else if (k === 'versions' && window.TribeVersions) window.TribeVersions.open(); else if (k === 'customize' && window.TribeLook) window.TribeLook.open('project');
+      if (k === 'open') App().show('home'); else if (k === 'chat') App().show('chat'); else if (k === 'invite') App().openInvite({ who: 'friend', project: id }); else if (k === 'settings') projectSettings(); else if (k === 'versions' && window.TribeVersions) window.TribeVersions.open(); else if (k === 'customize' && window.TribeLook) window.TribeLook.open('project');
     });
   });
   // The nest header and the core rows with no project selected: the tribe is the header, the rows dim and say
