@@ -100,12 +100,12 @@
 
 /* phones: the tab list, then one tab with Back */
 @media (max-width: 720px) {
-  .modal-card.set-card { width: 100vw; height: 100dvh; max-width: none; border-radius: 0; border: 0; }
+  .modal-card.set-card { position: fixed; inset: 0; width: auto; height: auto; max-width: 100vw; min-width: 0; border-radius: 0; border: 0; }
   #settings-modal { padding: 0; }
   .set-card .set-head { padding: calc(10px + env(safe-area-inset-top)) 12px 10px; gap: 10px; flex-wrap: wrap; }
   .set-search { order: 5; flex-basis: 100%; max-width: none; margin-left: 0; }
   .set-saved { margin-left: auto; }
-  .set-body { grid-template-columns: 1fr; }
+  .set-body { grid-template-columns: minmax(0, 1fr); }
   .set-card:not(.in-pane) .set-main { display: none; }
   .set-card.in-pane .set-nav { display: none; }
   .set-card.in-pane .set-back { display: inline-grid; }
@@ -113,6 +113,7 @@
   .set-tab { height: 52px; font-size: 15px; border-bottom: 1px solid var(--stroke); border-radius: 0; }
   .set-tab.on { background: transparent; border-color: transparent; border-bottom-color: var(--stroke); }
   .set-tab-go { display: inline-flex !important; color: var(--faint); }
+  .set-tab.on [data-icon] { color: var(--faint); }
   .set-main { padding: 16px 12px calc(32px + env(safe-area-inset-bottom)); }
   .set-sec .set-row, .set-slot > .set-row, .set-slot > #pz-set > .set-row { grid-template-columns: 1fr; gap: 10px; padding: 12px 14px; }
   .set-sec .set-c { justify-content: flex-start; }

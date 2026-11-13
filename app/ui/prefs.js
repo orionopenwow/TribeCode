@@ -55,12 +55,12 @@
   }
   let ac = null;
   function ding() {
+    window.__tcDings = (window.__tcDings || 0) + 1;
     try {
       ac = ac || new (window.AudioContext || window.webkitAudioContext)();
       const t = ac.currentTime, g = ac.createGain(); g.connect(ac.destination);
       g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.07, t + 0.02); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.38);
       [660, 880].forEach((f, i) => { const o = ac.createOscillator(); o.type = 'sine'; o.frequency.value = f; o.connect(g); o.start(t + i * 0.09); o.stop(t + 0.4); });
-      window.__tcDings = (window.__tcDings || 0) + 1;
     } catch {}
   }
   // notify.js calls this for each new in-app notification: returns false when it should stay silent (no pop-up either)
@@ -110,10 +110,11 @@
   async function syncNow(pull) {
     if (!C() || !C().connected()) return;
     try {
-      if (pull) {
-        const r = await C().api('/me/settings'), mine = S.get().syncAt || '';
-        if (r.settings && r.at && r.at > mine) { importSettings({ kind: 'settings', settings: r.settings }, true); S.set({ syncAt: r.at }); lastSig = JSON.stringify(pick(S.get())); return; }
+      if (pull) {   // a new device picks up synced settings when the account turned sync on somewhere
+        const r = await C().api('/me/settings'), mine = S.get().syncAt || '', on = get().sync || !!(r.settings && r.settings.prefs && r.settings.prefs.sync);
+        if (r.settings && r.at && r.at > mine && on) { importSettings({ kind: 'settings', settings: r.settings }, true); S.set({ syncAt: r.at }); lastSig = JSON.stringify(pick(S.get())); return; }
       }
+      if (!get().sync) return;
       const body = pick(S.get()); lastSig = JSON.stringify(body);
       const r = await C().api('/me/settings', { method: 'PUT', body: { settings: body } }); applying = true; S.set({ syncAt: r.at }); applying = false;
     } catch (e) { applying = false; console.warn('settings sync', e); }
@@ -177,7 +178,7 @@
     S.on(() => schedulePush());
     const hook = (n = 0) => {
       const c = C(); if (!c || !c.on) { if (n < 100) setTimeout(() => hook(n + 1), 150); return; }
-      c.on('hello', () => { notifyPrefs(true); goHome(); if (get().sync) syncNow(true); });
+      c.on('hello', () => { notifyPrefs(true); goHome(); syncNow(true); });
       if (c.connected && c.connected()) { notifyPrefs(true); goHome(); }
     };
     hook();

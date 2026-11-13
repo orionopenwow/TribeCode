@@ -72,6 +72,8 @@
   // They land anywhere in #settings-body; place() moves each into its slot. Ids are the rows' own ids.
   const PLACE = { 'set-account': 'account', 'set-methods': 'account', 'set-sessions': 'account', 'set-testacc-row': 'account', 'set-signin-host': 'admin', 'set-resets': 'admin',
     'pz-set': 'privacy', 'set-safety-row': 'privacy', 'set-device-row': 'storage' };
+  const INJ_KEYS = { 'set-account': 'switch account log in log out logout sign out', 'set-methods': 'password email passkey link unlink', 'set-sessions': 'devices sessions sign out',
+    'set-signin-host': 'open sign-up smtp email invite only', 'set-resets': 'password reset forgot', 'set-safety-row': 'report block delete data', 'set-device-row': 'offline install storage cache', 'set-testacc-row': 'test accounts orion maya jay' };
   const EXTRA = {};   // tab -> [{ id, title, render }] from addSection
   const LS_TAB = 'tribecode.set.tab';
   let tab = null, inPane = false, query = '', lastScroll = {}, prevHash = null;
@@ -290,6 +292,9 @@
       for (const el of all) if (el !== keep) el.remove();
       if (keep.parentNode !== sl) sl.appendChild(keep);
     }
+    // rows other features add: an id to jump to, and words to find them by
+    box.querySelectorAll('.set-pane .set-row:not([id])').forEach(r => { const l = r.querySelector('.set-l b'); if (l) r.id = 'sr-' + slug(l.textContent); });
+    for (const [id, k] of Object.entries(INJ_KEYS)) { const r = box.querySelector('#' + id); if (r && !r.dataset.keys) r.dataset.keys = k; }
     const off = box.querySelector('#set-signup-off'); if (off) off.hidden = !!box.querySelector('[data-slot="set-signin-host"] > *, [data-slot="set-resets"] > *');
   }
   function select(id, opts = {}) {
@@ -320,7 +325,8 @@
     box.querySelectorAll('.set-pane .set-row').forEach(r => {
       if (r.hidden || r.closest('[hidden]:not(.set-pane)')) return;
       const lab = r.querySelector('.set-l b'), hint = r.querySelector('.set-l small'); if (!lab) return;
-      const hay = (lab.textContent + ' ' + (hint ? hint.textContent : '') + ' ' + (r.dataset.keys || '') + ' ' + r.closest('.set-pane').querySelector('.set-pane-h h2').textContent).toLowerCase();
+      const btns = [...r.querySelectorAll('.set-c > button, .set-c > a, .set-c > span > button')].map(x => x.textContent).join(' ');
+      const hay = (lab.textContent + ' ' + (hint ? hint.textContent : '') + ' ' + (r.dataset.keys || '') + ' ' + btns + ' ' + r.closest('.set-pane').querySelector('.set-pane-h h2').textContent).toLowerCase();
       if (!words.every(w => hay.includes(w))) return;
       const score = lab.textContent.toLowerCase().includes(q) ? 0 : 1;
       hits.push({ id: r.id, tab: r.closest('.set-pane').dataset.tab, label: lab.textContent.trim(), hint: hint ? hint.textContent.trim() : '', score });
@@ -388,7 +394,7 @@
     // Account & sign-in
     if (window.TribeAccounts) window.TribeAccounts.settings(box);   // Account (Switch, Log out), sessions, sign-in methods, Test accounts (accounts.js, auth2.js)
     const oa = q('#set-oauth'); if (oa && window.TribeOAuth) window.TribeOAuth.mount(oa);
-    click('#set-sync', e => { const v = !P().get().sync; P().set({ sync: v }); e.currentTarget.setAttribute('aria-checked', String(v)); if (v) P().syncNow(true); });
+    click('#set-sync', e => { const v = !P().get().sync; P().set({ sync: v }); e.currentTarget.setAttribute('aria-checked', String(v)); if (v) P().syncNow(false); });
     click('#set-new', () => { close(); if (window.TribeNew) window.TribeNew.open({ from: 'settings' }); });
     click('#set-join', () => { close(); joinPrompt(); });
     if (q('#set-devices')) devicesRow(q('#set-devices'));
@@ -480,10 +486,10 @@
     click('#set-keysheet', () => { close(); window.TribeHelp ? window.TribeHelp.shortcuts() : null; });
     click('#set-bug', () => { close(); window.TribeBugs ? window.TribeBugs.capture() : (window.TribeSelfHeal && window.TribeSelfHeal.report({ kind: 'user', message: 'Reported from Settings' })); });
     click('#set-feedback', () => { close(); window.TribeFeedback.open(); });
-    lazy(tab);
+    lazy('notifications');   // search finds its rows too
   }
   // The Notifications tab asks the server for its prefs only when you open it.
-  function lazy(id) { if (id === 'notifications') { const el = $('#set-nf'); if (el && !el.dataset.done) { el.dataset.done = '1'; notifTab(el); } } }
+  function lazy(id) { if (id === 'notifications') { const el = $('#set-nf'); if (el && !el.dataset.done) { el.dataset.done = '1'; notifTab(el); } } }   // loads once per draw
 
   // ---------- Notifications ----------
   const NT = { mention: ['Mentions', '@you and @everyone'], dm: ['Direct messages', ''], 'task-assigned': ['Tasks for you', 'Assigned to you, accepted or declined'], approval: ['Approvals', 'Something waits for your yes or no'], 'comment-reply': ['Comments', 'Replies to your comments'], release: ['Ships and releases', ''], huddle: ['Huddles', 'Someone starts a call'], reminder: ['Reminders', ''], proposal: ['Proposals', 'New proposals and votes'], 'bug-critical': ['Critical bugs', ''], 'meeting-notes': ['Meeting notes', 'Notes after a huddle'], repo: ['Repository', 'Pushes and merges'], 'visual-diff': ['Visual changes', 'Screenshots that changed'] };
