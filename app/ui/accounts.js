@@ -451,6 +451,8 @@
   if (C.on) { C.on('status', () => setTimeout(paint, 0)); C.on('presence', () => setTimeout(paint, 0)); }
   addEventListener('tribe-local-profile', () => setTimeout(paint, 0));
 
-  window.TribeAccounts = { state: () => JSON.parse(JSON.stringify(st)), list, current, mode, login, logout, confirmLogout, switchTo, guest, setTest, status, menuHtml, menuAct, settings, close: closeSheet, serverOn,
+  // feat/settings-tabs: Settings › Account › Sign out other devices also ends this account's other sessions
+  async function signOutOthers() { const a = current(); if (!a || a.kind !== 'server' || !a.acct) return 0; const r = await acctApi('/sessions/others', { method: 'DELETE', token: a.acct }); return r.removed || 0; }
+  window.TribeAccounts = { signOutOthers, state: () => JSON.parse(JSON.stringify(st)), list, current, mode, login, logout, confirmLogout, switchTo, guest, setTest, status, menuHtml, menuAct, settings, close: closeSheet, serverOn,
     api: acctApi, adopt, signIn, signedAs, upgradable, paint };
 })();

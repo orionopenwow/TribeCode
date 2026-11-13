@@ -158,7 +158,7 @@
   document.addEventListener('focusin', e => {
     const i = e.target.closest && e.target.closest('.fl-in'); if (!i) return;
     let seen = null; try { seen = localStorage.getItem(INTRO); } catch {}
-    if (seen || /[?&](skipIntro|demo=showcase|notour)/.test(location.search) || navigator.webdriver) return;
+    if (seen || /[?&](skipIntro|demo=showcase|notour)/.test(location.search) || navigator.webdriver || (window.TribePrefs && window.TribePrefs.get().flintTips === false)) return;
     i.blur(); intro(i);
   });
 

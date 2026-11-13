@@ -110,7 +110,7 @@
     sec.querySelectorAll('[data-rec-ok],[data-rec-no]').forEach(b => b.onclick = async () => { const ok = !!b.dataset.recOk, id = b.dataset.recOk || b.dataset.recNo; try { await C.api(`/captures/recipes/${encodeURIComponent(id)}${ok ? '/approve' : ''}`, { method: ok ? 'POST' : 'DELETE' }); toast(ok ? 'Recipe approved' : 'Recipe discarded'); load(); } catch (e) { toast(e.message); } });
     const tg = (id, key) => { const el = sec.querySelector('#' + id); if (el) el.onclick = async () => { try { const r = await C.api('/captures/settings', { method: 'PATCH', body: { [key]: el.getAttribute('aria-checked') !== 'true' } }); state.settings = r.settings; el.setAttribute('aria-checked', String(!!r.settings[key])); } catch (e) { toast(e.message); } }; };
     tg('cap-auto', 'auto'); tg('cap-vid', 'videoTools');
-    const pk = sec.querySelector('#cap-packs'); if (pk) pk.onclick = () => window.TribeSettings && window.TribeSettings.open().then(() => setTimeout(() => { const el = $('#set-packs'); if (el) el.scrollIntoView({ block: 'center' }); }, 150));
+    const pk = sec.querySelector('#cap-packs'); if (pk) pk.onclick = () => window.TribeSettings && window.TribeSettings.open('storage', 'set-packs');   // feat/settings-tabs
     const rs = sec.querySelector('#cap-reset'); if (rs) rs.onclick = async () => { try { await C.api('/captures/weights', { method: 'DELETE' }); toast('Reset. Flint starts fresh.'); } catch (e) { toast(e.message); } };
   }
 

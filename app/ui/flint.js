@@ -40,7 +40,8 @@
   const B = () => window.TribeBrain;   // feat/any-llm: Flint's brain (built in / host / none)
   const mounts = new Set();
   let sink = null;   // feat/flint-unify: while a mounted chat (designer, canvas, preview) runs a command, Flint's replies go there
-  function push(who, text, acts, extra) { const m = { who, text: String(text || ''), acts: acts || [], at: new Date().toISOString(), ...(extra || {}) }; if (sink) { sink.add(m); return m; } thread.push(m); thread = thread.slice(-MAX); save(); draw(); return m; }
+  function push(who, text, acts, extra) { const m = { who, text: String(text || ''), acts: acts || [], at: new Date().toISOString(), ...(extra || {}) }; if (who === 'flint' && window.TribePrefs) window.TribePrefs.speak(m.text);   // feat/settings-tabs: Settings › Plan & AI › Flint reads aloud
+    if (sink) { sink.add(m); return m; } thread.push(m); thread = thread.slice(-MAX); save(); draw(); return m; }
   const say = (text, acts, extra) => push('flint', text, acts, extra);
 
   // ---------- actions (stored by name so buttons still work after a reload) ----------
