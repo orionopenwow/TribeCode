@@ -360,6 +360,7 @@ function saveTask(t) {
   try { if (t.site) siteDesign.onTask(t); } catch {}   // feat/site-v2: a finished website task resolves its comments
   if (flow) flow.onTask(t);   // the living plan checks items off (server/flow.js)
   if (t.status === 'done' && was && was !== 'done' && askai) try { askai.taskDone(t, 'general'); } catch {}   // agents' finished work in the channel
+  if (t.status === 'done' && was && was !== 'done' && syncHub) try { syncHub.onTaskDone(t); } catch {}   // feat/folder-sync: auto-ship on task Done
   return t;
 }
 function createTask({ title, by, status = 'backlog', assignee = null, body = '', source, due, type }) {
@@ -440,10 +441,10 @@ let mcpFlow = null;
 const pocket = makeNotify({ store, bus, getMembers: () => members, sendTo, postChat: (...x) => postChat(...x), log: m => console.error('  notify: ' + m),
   dnd: mid => !!profiles && profiles.isDnd(mid), muted: (to, from) => (!!profiles && !!from && profiles.isMuted(to, from)) || (!!moderation && moderation.isBlocked(to, from)),   // feat/profiles: do not disturb, muted people
   publicUrl: () => (args['public-url'] || process.env.TRIBE_PUBLIC_URL || share.publicUrl() || (lanUrls()[0] || {}).url || `http://localhost:${PORT}`).replace(/\/+$/, '') });
-let shipHub = null;   // feat/ship-flow: a ship vote decided from a phone (one-tap approval) counts as that person's vote
+let shipHub = null, syncHub = null, folderHome = null;   // feat/ship-flow: a ship vote decided from a phone (one-tap approval) counts as that person's vote
 let publishOnApproval = null;   // v0.27 publish: an approved "publish" request from an AI helper (server/publish.js)
 let companyHub = null;   // v0.27 company: decided approvals land in the company's decision log (server/company.js)
-const approvals = makeApprovals({ store, id, str, bus, getMembers: () => members, postChat, broadcast: m => { broadcast(m); if (shipHub && m && m.type === 'approval') try { shipHub.onApproval(m.approval); } catch (e) { console.error('ship:', e.message); } if (companyHub && m && m.type === 'approval') try { companyHub.onApproval(m.approval); } catch (e) { console.error('company:', e.message); } if (publishOnApproval && m && m.type === 'approval') try { publishOnApproval(m.approval); } catch (e) { console.error('publish:', e.message); } }, hub: pocket, project: () => P.current(), canSee: (m, pid) => !pid || P.canSee(m, pid),
+const approvals = makeApprovals({ store, id, str, bus, getMembers: () => members, postChat, broadcast: m => { broadcast(m); if (shipHub && m && m.type === 'approval') try { shipHub.onApproval(m.approval); } catch (e) { console.error('ship:', e.message); } if (syncHub && m && m.type === 'approval') try { syncHub.onApproval(m.approval); } catch (e) { console.error('sync:', e.message); } if (companyHub && m && m.type === 'approval') try { companyHub.onApproval(m.approval); } catch (e) { console.error('company:', e.message); } if (publishOnApproval && m && m.type === 'approval') try { publishOnApproval(m.approval); } catch (e) { console.error('publish:', e.message); } }, hub: pocket, project: () => P.current(), canSee: (m, pid) => !pid || P.canSee(m, pid),
   canDecideAny: (who, a) => who.role === 'host' || ((!a.project || P.canSee(who, a.project)) && (perms.can(who, 'approvals.approve', a.project) || (a.risk === 'low' && perms.can(who, 'approvals.approve_low', a.project)))) });   // feat/roles
 const canSeeCh = (me, ch) => {   // fix/security-2: typing only in channels you can read
   if (ch === 'general') return true;
@@ -483,12 +484,17 @@ const applink = require('./applink')({ P, store: baseStore, getMembers: () => me
 const exporter = require('./export')({ P, W, store: baseStore, applink, isLocal, port: PORT, getMembers: () => members, log: m => console.log('  ' + m) });
 const busLog = makeBusLog({ broadcast, sendTo });
 const DEBUG = !!(args.dev || process.env.TRIBE_TEST === '1');
-const rooms = makeRooms({ P, W, store, brain, getMembers: () => members, saveMembers, isLocal, presenceFor, loadTasks: () => loadTasks(), hubFor, resetHub, plan, approvals, docs,
+const rooms = makeRooms({ checkFolder: (p, o) => folderHome.check(p, o), watchFolder: pid => folderHome.watch(pid), P, W, store, brain, getMembers: () => members, saveMembers, isLocal, presenceFor, loadTasks: () => loadTasks(), hubFor, resetHub, plan, approvals, docs,
   broadcast, postChat, nameOf, str, perms });
 const coord = makeCoord({ P, store, id, str, broadcast, postChat, bus, getMembers: () => members, presenceFor, loadTasks: () => loadTasks(), saveTask: t => saveTask(t), claims, hubFor, approvals, brain, nameOf });
 // feat/ship-flow: Ship it (review what changed, vote to push), Turbo (ships on its own at calm moments), Share, Pulse, Split (server/ship.js)
 const ship = shipHub = require('./ship')({ P, store, hubFor, approvals, getMembers: () => members, loadTasks: () => loadTasks(), createTask: o => createTask(o), postChat, broadcast, bus, str, nameOf,
   can: (m, cap) => m.role === 'host' || perms.can(m, cap, P.current()), pushAuth: () => githubAuth.pushAuth(), coord, claims, id, brain });
+// feat/folder-sync: a folder on this computer as the project's home (server/folderhome.js), GitHub as its synced copy (server/sync.js)
+syncHub = require('./sync')({ P, W, base: baseStore, getMembers: () => members, approvals, broadcast, postChat, nameOf, perms, pushAuth: () => githubAuth.pushAuth(), brain, resetHub, log: m => console.error('  ' + m) });
+folderHome = require('./folderhome')({ P, W, baseStore, isLocal, broadcast, perms, resetHub, postChat, nameOf, str, appRoot: path.join(__dirname, '..'), onSave: pid => syncHub.onSave(pid), log: m => console.error('  ' + m) });
+folderHome.watchAll();
+bus.on('notify', n => { if (n && n.type === 'release') syncHub.onRelease(P.current() || P.defaultId(), n.ref).catch(() => {}); });
 const agentnet = makeAgentNet({ P, store, id, str, broadcast, bus, getMembers: () => members, presenceFor, loadTasks: () => loadTasks(), saveTask: t => saveTask(t), createTask: o => createTask(o), approvals, coord, nameOf });
 askai = require('./askai')({ store: baseStore, id, str, P, getMembers: () => members, presenceFor, postChat, coord, approvals, brain, askBrain: (c, mem, t) => chatx.askBrain(c, mem, t), createTask: o => createTask(o), bus, nameOf });
 const compute = require('./compute')({ store: baseStore, str, getMembers: () => members, isOnline: mid => online.has(mid), broadcast });   // shared compute (Helpers list)
@@ -647,7 +653,7 @@ const mcp = makeMcp({
       t.updated = new Date().toISOString(); t.updatedBy = me.id; return saveTask(t);
     },
   },
-  docs, claims, extraTools: { ...agentTools, ...visuals.mcpTools, ...mcpFlow.tools, ...makeWorkshopMcp(workshop, { current: () => P.current() }), ...require('./mcp-preview')(preview, P), ...whiteboard.mcpTools, ...showcase.mcpTools, ...siteDesign.mcpTools, ...captures.mcpTools, ...assetLib.mcpTools, ...company.mcpTools, ...taskFlow.mcpTools, ...ledger.mcpTools, ...seatpilot.mcpTools, ...talent.mcpTools /* v0.27 company */, ...market.mcpTools, ...academy.mcpTools, ...flintMem.mcpTools, ...publishHub.mcpTools, ...jamHub.mcpTools, ...pinsHub.mcpTools, ...buildKit.mcpTools, ...canvasAI.mcpTools }, port: PORT, coordTools: h => ({ ...coord.mcpTools(h), ...agentnet.mcpTools(h), ...ship.mcpTools(h) }),
+  docs, claims, extraTools: { ...agentTools, ...visuals.mcpTools, ...mcpFlow.tools, ...makeWorkshopMcp(workshop, { current: () => P.current() }), ...require('./mcp-preview')(preview, P), ...whiteboard.mcpTools, ...showcase.mcpTools, ...siteDesign.mcpTools, ...captures.mcpTools, ...assetLib.mcpTools, ...company.mcpTools, ...taskFlow.mcpTools, ...ledger.mcpTools, ...seatpilot.mcpTools, ...talent.mcpTools /* v0.27 company */, ...market.mcpTools, ...academy.mcpTools, ...flintMem.mcpTools, ...publishHub.mcpTools, ...jamHub.mcpTools, ...pinsHub.mcpTools, ...buildKit.mcpTools, ...canvasAI.mcpTools }, port: PORT, coordTools: h => ({ ...coord.mcpTools(h), ...agentnet.mcpTools(h), ...syncHub.mcpTools(h, ship.mcpTools(h)) }),
   chat: {
     post(me, text, channel) {   // feat/chat2: optional channel ("design", "#design"); #general by default
       const tx = str(text, 4000); if (!tx) return; const muted = perms.muteBlock(me); if (muted) throw new Error(muted);   /* feat/roles */
@@ -913,7 +919,10 @@ async function apiInProject(req, res, url) {
   if (a === 'oauth') { const h = await oauth.route(req, res, { m, b, c, me, url, readBody, send, fail }); if (h !== null) return; }   // Sign in with Discord/GitHub/Google (server/oauth.js)
   if (a === 'site-library' && parts[2] === 'thumb.png') return siteLib.route(req, res, ctx());   // template thumbnails are public (gallery <img> tags carry no key)
   if (a === 'github' && b === 'detect' && m === 'GET' && !me) { const h = await githubAuth.route(req, res, ctx()); if (h !== null) return; }   // feat/tasks-company: setup on the host computer, before a tribe exists
+  if (a === 'folders') return folderHome.route(req, res, ctx());   // feat/folder-sync: the folder picker (host computer only, server/folderhome.js)
   if (!need()) return;
+  if (a === 'projects' && c === 'sync') return syncHub.route(req, res, ctx());   // feat/folder-sync: GitHub sync (server/sync.js)
+  if (a === 'projects' && c === 'folder') return folderHome.route(req, res, ctx());
   if (a === 'notify') { const h = await pocket.route(req, res, { m, b, c, me, readBody, send, fail }); if (h !== null) return; }
 
   // One-click backup of the whole tribe folder (server/backup.js): host only; secrets stay on the host.
