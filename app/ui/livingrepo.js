@@ -154,7 +154,8 @@
   function pickFolder(o = {}) {
     const how = canPickFolder(); if (!how.ok) { toast(how.why); return null; }
     const moving = !!o.moving, inline = !!o.mount;
-    const inner = `${how.how === 'native' ? '<button type="button" class="btn" id="lr-native">Choose a folder…</button>' : `<div class="lr-browse"><div class="lr-crumbs"><button type="button" class="ph-back lr-up" id="lr-up" aria-label="Up one folder">${ic('chev', 16)}</button><code id="lr-where">~</code></div>
+    const lazy = inline && how.how === 'browse';   // inline (create-a-tribe): nothing asks the host until you open the browser
+    const inner = `${lazy ? '<button type="button" class="btn" id="lr-browse-go">Choose a folder…</button>' : ''}${how.how === 'native' ? '<button type="button" class="btn" id="lr-native">Choose a folder…</button>' : `<div class="lr-browse"${lazy ? ' hidden' : ''}><div class="lr-crumbs"><button type="button" class="ph-back lr-up" id="lr-up" aria-label="Up one folder">${ic('chev', 16)}</button><code id="lr-where">~</code></div>
         <div class="lr-dirs" id="lr-dirs" role="listbox" aria-label="Folders"></div>
         <form class="lr-mk" id="lr-mk"><input class="input" id="lr-mk-name" maxlength="80" placeholder="New folder name" aria-label="New folder name"><button class="btn sm" type="submit">New folder</button></form></div>`}
       <div class="lr-found" id="lr-found" hidden><code id="lr-chosen"></code><div id="lr-found-body"></div>
@@ -197,7 +198,8 @@
       try { const p = await window.__TAURI__.dialog.open({ directory: true, multiple: false, title: 'Pick a folder for the project' }); if (p) choose(Array.isArray(p) ? p[0] : p); } catch (e) { err(String(e && e.message || e)); }
     };
     else {
-      browse(o.start || '');
+      if (lazy) $('#lr-browse-go', s).onclick = () => { $('#lr-browse-go', s).hidden = true; $('.lr-browse', s).hidden = false; browse(o.start || ''); };
+      else browse(o.start || '');
       $('#lr-mk', s).onsubmit = async e => {
         e.preventDefault(); const n = $('#lr-mk-name', s).value.trim(); if (!n) return;
         try { const d = await srv('/folders/mkdir', { method: 'POST', body: { parent: browsing, name: n }, auth: live() }); $('#lr-mk-name', s).value = ''; await browse(browsing); const row = s.querySelector(`[data-dir="${CSS.escape(d.path)}"]`); if (row) row.click(); else choose(d.path); }

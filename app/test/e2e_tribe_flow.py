@@ -160,7 +160,7 @@ def main():
             pg = page()
             pg.evaluate("TribeNew.open({ name: 'Home Crew' })"); opened(pg, "folder"); pg.click("#tn-next")
             assert pg.get_attribute("#tn [data-tn-where='folder']", "aria-checked") == "true", "recommended is chosen"
-            pg.wait_for_selector("#tn-folder .lr-dir"); pg.click("#tn-folder [data-open$='Games']")
+            pg.click("#tn-folder #lr-browse-go"); pg.wait_for_selector("#tn-folder .lr-dir"); pg.click("#tn-folder [data-open$='Games']")
             pg.wait_for_selector("#tn-folder [data-dir$='HomeCrew']"); pg.click("#tn-folder [data-dir$='HomeCrew']")
             pg.wait_for_function("document.querySelector('#tn-go').textContent.includes('Use what')", timeout=10000)
             assert "index.html" in pg.inner_text("#tn-folder .lr-chips") and pg.is_visible("#lr-git-l"), "what was found; git init offered"
