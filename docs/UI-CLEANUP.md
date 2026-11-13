@@ -40,3 +40,22 @@ at 1440 and 390.
 - The website designer's preview helper is `app/ui/sitedesigner-frame.js`, loaded by src from the app's origin, so click-to-edit works under the desktop CSP (no `'unsafe-inline'`). Starters played on this device run their inline scripts through `app/ui/framerun.js` (blob: scripts made inside the frame). Test: `e2e_desktop_csp.py`.
 - Files' empty state fits where you are (a project, a tribe picked in Where, or this device).
 - Files › Website lists the project's site design with Open designer (or Start a design).
+
+## Audit clean-up (feat/audit, 2026-11-13)
+
+Found by the app walk and the leftover scan in `docs/APP-AUDIT-2026-11-13.md`.
+
+| Removed or changed | Why | Now |
+| --- | --- | --- |
+| About 15 KB of CSS in 25 stylesheets: rules whose every selector names a class that no script, page, server file or test mentions (the old assist question chips `.av-*`, the first setup sheet's seats `.su-seat-t`, `.su-seats`, `.su-seg`, the rail's camp button `.camp-*`, the folding sidebar groups `.nest-fold-head/body`, `.pj-nav-legacy`, the old agents grid `.ag-*`, the invite pill, Work's old header `.tl-head`, `.tl-cta`, `.tl-lead`, the preview and canvas Flint boxes' own buttons `.pvf-btns`, `.pvf-honest`, `.cvf-acts`, `.cvf-honest`, Flint's nudges `.fl-nudge(s)`, and about 40 single classes) | leftovers of layouts that were replaced this month | only rules where every selector was dead were removed; a mixed selector list lost just the dead part. `motion.css` and anything built from a prefix in code (`k-*`, `t-*`, `cbg-*`) was left alone |
+| `stage.js`: the `#rail-camp` click hook | the rail's camp button is gone; the logo is the way Home | removed |
+| `demowatch.js`: the tour pointed at `#wdz-log` | the website designer's own chat log was replaced by Flint's one chat (`#wdz-flint`) | points at Flint's thread in the designer |
+| `selfheal.js`, `signupnudge.js`: checks for `#su-start` | the old setup sheet's first step; the create-a-tribe flow (`#tn`) replaced it | check `#tn` |
+| The older Notification settings window (`#nf-settings`) as a second front door | Settings › Notifications is the one place; the profile menu, the inbox's gear, the phone's menu and Flint used to open the older window | they open Settings › Notifications (`TribeNotify.settingsTab()`); the older window stays as that tab's **Advanced** (ntfy, away time) |
+| `peoplepanel.css`: a second `.ppl-ai` rule | written for the Add tiles, it also turned the small "AI" tag after a name into a 34px box | scoped to `.ppl-add` and `.ic-hubcard` |
+| `chatx.js`: icon symbols added a second time | `i-image`, `i-more`… were already in the page's sprite, so the document had duplicate ids | only missing symbols are added |
+| `dropzone.js`: `window.TribeFolderHome` / `TribeFolderHomes` | an API that never existed | `TribeHome.folder({ path })` (livingrepo.js), desktop app only |
+
+`e2e_no_stale.py` now also guards: `#wdz-log`, `#su-start`, `.su-seats`, `#rail-camp`, `.camp-btn`, `.nest-fold-head/body`, `.pj-nav-legacy`, `.av-chips`, `.av-qs`, `.fl-nudges`, `.pvf-btns`, `.cvf-acts`, `.ag-grid`, `.invite-pill`, `.tl-head`, `.tl-cta`.
+
+Left in place on purpose (they look old but are in use): `hostpill.js` (the Hosting pop-out opens under the home pill's "Hosting · who can reach you"), `previewflint.js` and `canvas/flintpane.js` (they mount the one Flint chat and add each editor's tools), `setup.js` (the starter row inside a project), the `su-sheet` class (the create-a-tribe sheet reuses its styles).
