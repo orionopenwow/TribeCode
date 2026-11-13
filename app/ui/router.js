@@ -101,14 +101,13 @@
     if (has) SH().go(l.key); else if (App() && App().show) App().show(l.view);
   }
   // The full-screen preview (preview.js) pushes its own entry and steps back off it when it closes: that Back is its own,
-  // not a move between places, so the place on screen stays.
-  let pvwOn = document.body.classList.contains('pvw-focus'), pvwLeft = 0;
+  // not a move between places, so the place on screen stays. harden (REVIEW-2026-11-11 #11): preview.js marks that Back
+  // (body[data-pvw-back], cleared right after the event) instead of a 1.5 s window, so a quick real Back is never eaten.
   let wsOn = document.body.classList.contains('ws-open');
-  new MutationObserver(() => { const on = document.body.classList.contains('pvw-focus'); if (pvwOn && !on) pvwLeft = Date.now(); pvwOn = on;
-    const w = document.body.classList.contains('ws-open'); if (w !== wsOn) { wsOn = w; soon(); } }).observe(document.body, { attributes: true, attributeFilter: ['class'] });
+  new MutationObserver(() => { const w = document.body.classList.contains('ws-open'); if (w !== wsOn) { wsOn = w; soon(); } }).observe(document.body, { attributes: true, attributeFilter: ['class'] });
   addEventListener('popstate', e => {
     const l = e.state && e.state.tribeRoute; if (!l) return;
-    if (Date.now() - pvwLeft < 1500) { pvwLeft = 0; last = sig(where()); lastLoc = where(); lastUrl = location.href; stamp(lastLoc); return; }
+    if (document.body.dataset.pvwBack === '1' || document.body.classList.contains('pvw-focus')) { delete document.body.dataset.pvwBack; last = sig(where()); lastLoc = where(); lastUrl = location.href; stamp(lastLoc); return; }
     if (sig(l) === sig(where())) { last = sig(l); return; }
     if (l.place !== 'workshop') closeLayers();
     apply(l);
