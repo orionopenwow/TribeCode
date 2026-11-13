@@ -412,7 +412,8 @@ const taskFlow = require('./taskflow')({ P, store, getMembers: () => members, pe
 // ---------- brain, board, docs ----------
 let flow = null;   // server/flow.js: one-click project flow, gists, living plan (made below)
 const brain = makeBrain({ host: args.ollama || process.env.OLLAMA_HOST || 'http://localhost:11434', model: args.model || process.env.TRIBE_MODEL || '' });
-const llm = require('./llm')({ brain, store: baseStore, log: m => console.error('  ' + m), canUseHost: me => perms.can(me, 'ai.use_host_brain') });   // feat/any-llm: the tribe's brain (cloud key / Ollama / basic), routes brain.generate
+const premium = require('./premium')({ store: baseStore, isLocal, log: m => console.log('  ' + m) });   // harden: Premium and AI credits, enforced here
+const llm = require('./llm')({ brain, store: baseStore, credits: premium, log: m => console.error('  ' + m), canUseHost: me => perms.can(me, 'ai.use_host_brain') });   // feat/any-llm: the tribe's brain (cloud key / Ollama / basic), routes brain.generate
 const flint = makeFlint({ brain, str, llm });   // feat/flint
 brain.refresh().then(st => console.log(st.online ? `  Brain:    ${st.model} ${st.cloud ? "(the host's key)" : "via Ollama"}` : `  Brain:    off (${st.error})`));
 const readVision = () => { try { return fs.readFileSync(store.p('VISION.md'), 'utf8'); } catch { return ''; } };
@@ -1235,6 +1236,13 @@ async function apiInProject(req, res, url) {
   if (a === 'debug' && b === 'bus-log' && m === 'GET' && DEBUG) return send(res, 200, { events: busLog.log(url.searchParams.get('type')) });
   if (a === 'debug' && b === 'reminders' && m === 'POST' && DEBUG) { plan.tick(); return send(res, 200, { ok: true }); }
   if (a === 'docs' && c) { const h = await docsx.route(req, res, ctx()); if (h !== null) return; }
+  if (a === 'docs' && !b && m === 'POST' && me) {   // harden: a premium template's doc needs the plan (server/premium.js)
+    let body; try { body = await readBody(req); } catch (e) { return fail(res, e.status || 400, e.message); }
+    if (premium.docBlocked(body)) return premium.refuse(send, res, 'plan', 'template');
+    const handled = await docs.route(req, res, { m, b, c, me, readBody: async () => body, send, fail });
+    if (handled !== null) return;
+  }
+  if (a === 'premium') return premium.route(req, res, ctx());   // harden: plan and credits on the server
   if (a === 'docs') {
     const handled = await docs.route(req, res, { m, b, c, me, readBody, send, fail });
     if (handled !== null) return;

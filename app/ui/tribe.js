@@ -25,6 +25,7 @@
       body: text, ...(keepalive && (!text || text.length < 60000) ? { keepalive: true } : {}),   // feat/site-v2: a save that outlives the page
     });
     const data = await res.json().catch(() => ({}));
+    if (res.status === 402 && data && data.need) { try { window.dispatchEvent(new CustomEvent('tribe-402', { detail: data })); } catch {} }   // harden: the server's plan/credits gate -> the plans pop-out (premium.js)
     if (!res.ok) throw Object.assign(new Error(data.error || res.statusText), { status: res.status, data });
     return data;
   }

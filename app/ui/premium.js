@@ -46,7 +46,7 @@
     return { plan: x.plan || 'free', until: x.until || null };
   }
   const active = () => plan().plan !== 'free';
-  function setPlan(p) { const x = read(); x.plan = p; if (p === 'trial') x.until = new Date(Date.now() + TRIAL).toISOString(); else delete x.until; write(x); window.dispatchEvent(new CustomEvent('tribe-plan', { detail: plan() })); return plan(); }
+  let setPlan = function (p) { const x = read(); x.plan = p; if (p === 'trial') x.until = new Date(Date.now() + TRIAL).toISOString(); else delete x.until; write(x); window.dispatchEvent(new CustomEvent('tribe-plan', { detail: plan() })); return plan(); }
 
   // The payments hook. TODO(payments): wire Stripe Checkout (or Paddle Billing) here: create a checkout session on the
   // hosted service, open it, and on return verify the subscription server-side before setPlan('premium'). Until then
@@ -107,5 +107,20 @@
 
   // AI credits on this device (feat/shell-polish). There is no credit store yet, so this is honest: 0 until payments open.
   const credits = () => { const n = Number(read().credits); return Number.isFinite(n) && n > 0 ? Math.floor(n) : 0; };
+  // harden: the server keeps the tribe's plan and credits (server/premium.js); this mirrors it. The trial starts there, once
+  // per tribe, and a 402 from any route opens the plans pop-out.
+  const Cn = () => window.TribeClient;
+  async function sync() {
+    const c = Cn(); if (!c || !c.api || !c.connected || !c.connected()) return;
+    try { const v = await c.api('/premium'); const x = read(); x.plan = v.plan; if (v.until) x.until = v.until; else delete x.until; x.credits = v.credits; write(x); window.dispatchEvent(new CustomEvent('tribe-plan', { detail: plan() })); } catch {}
+  }
+  const setLocal = setPlan;
+  setPlan = function (p) {
+    const c = Cn();
+    if (p === 'trial' && c && c.connected && c.connected()) c.api('/premium/trial', { method: 'POST', body: {} }).then(sync, e => { toast(e.message); sync(); });
+    return setLocal(p);
+  };
+  addEventListener('tribe-402', e => { const d = (e && e.detail) || {}; if (window.TribePlans && window.TribePlans.open) window.TribePlans.open(null); else sheet(d.need === 'credits' ? 'credits' : d.feature === 'template' ? 'template' : 'overview'); });
+  setTimeout(sync, 1500); addEventListener('focus', () => sync());
   window.TribePremium = { gate, plan, setPlan, checkout, credits, open: () => sheet('overview'), footHtml, LIMITS, FEATURES: Object.keys(FEATURES), FREE, ADDS, PRICES, PRICING, DOCS };
 })();
