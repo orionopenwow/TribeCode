@@ -1018,7 +1018,8 @@ async function apiInProject(req, res, url) {
   if (a === 'canvas') return designCanvas.route(req, res, ctx());   // P1-A design canvas   // feat/whiteboard (server/whiteboard.js)
   if (a === 'canvascode') return canvasCode.route(req, res, ctx());   // P1-C send a frame to the app
   if (a === 'market') return market.route(req, res, ctx());   // v0.27 company: the Marketplace (server/market.js)
-  if (a === 'projects' && c === 'widgets') { const h = await widgets.route(req, res, ctx()); if (h !== null) return; }   // feat/sidebar-widgets: the sidebar's extra rows (server/widgets.js)
+  if (a === 'projects' && c === 'widgets') { const h = await widgets.route(req, res, ctx()); if (h !== null) return; }
+  if (a === 'widgets') { const h = await widgets.routeAll(req, res, ctx()); if (h !== null) return; }   // feat/widgets-v2: Home's cards and the cards' own state (server/widgets.js)   // feat/sidebar-widgets: the sidebar's extra rows (server/widgets.js)
   if (a === 'projects' || (a === 'me' && b === 'git')) { const h = await rooms.route(req, res, { m, a, b, c, parts, me, readBody, send, fail }); if (h !== null) return; }
 
   if (a === 'invites' && !b && m === 'POST') {
