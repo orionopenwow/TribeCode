@@ -85,7 +85,7 @@ def main():
             assert api(f"/talent/profile", "PUT", {"skills": ["spam"]}, token=ag_t)[0] == 403, "agents have no work profile"
 
             # ---- 2. Maya posts a gig for herself ----
-            mp.wait_for_selector("#ab-post"); mp.click("#ab-post"); mp.wait_for_selector("#ab-sheet #ab-gf")
+            mp.evaluate("TribeTalent.open('offers')"); mp.wait_for_selector("#ab-post"); mp.click("#ab-post"); mp.wait_for_selector("#ab-sheet #ab-gf")
             mp.fill("#ab-g-title", "I'll draw your game's sprites"); mp.fill("#ab-g-desc", "Small pixel characters with a walk cycle.")
             mp.fill("#ab-g-deliver", "4 characters, 8 frames each, PNG + Aseprite files"); mp.fill("#ab-g-time", "This weekend")
             mp.fill("#ab-g-tags", "pixel art, drawing"); mp.click("#ab-g-pay [data-v=fun]")
@@ -131,7 +131,7 @@ def main():
             jp = page("Jo", jo); jp.evaluate("TribeTalent.open('gigs')"); jp.wait_for_selector(f"#view-work .ab-offer[data-offer='{gid}'] [data-request]", timeout=10000)
 
             # ---- 5. Maya accepts: a task assigned to her, accepted through the board's flow ----
-            mp.evaluate("TribeAbilities.mount(document.querySelector('#ab-mount'))")
+            mp.evaluate("TribeTalent.open('offers')")
             mp.wait_for_selector(f"#ab-mygigs [data-accept^='{gid}|']", timeout=10000)
             mp.evaluate("document.querySelector('#ab-mygigs .ab-offer').scrollIntoView({block: 'center'})"); mp.wait_for_timeout(300)
             mp.screenshot(path=str(SHOTS / "gig-self.png"))
@@ -179,7 +179,7 @@ def main():
             op.evaluate("TribeTalent.open()"); op.wait_for_selector("#tl-empty", timeout=10000); op.wait_for_selector("#ab-mount #ab-edit", timeout=10000)
             op.click("#ab-edit"); op.wait_for_selector("#ab-sheet.phone #ab-pf")
             op.fill("#ab-sk-in", "copywriting"); op.click("#ab-sk-add"); op.fill("#ab-hours", "6"); op.click("#ab-save"); op.wait_for_selector("#ab-sheet", state="detached")
-            op.click("#ab-post"); op.wait_for_selector("#ab-sheet #ab-gf"); op.fill("#ab-g-title", "I'll write your landing page copy"); op.click("#ab-g-go"); op.wait_for_selector("#ab-sheet", state="detached")
+            op.click("#wk-tabs [data-tab=offers]"); op.click("#ab-post"); op.wait_for_selector("#ab-sheet #ab-gf"); op.fill("#ab-g-title", "I'll write your landing page copy"); op.click("#ab-g-go"); op.wait_for_selector("#ab-sheet", state="detached")
             op.wait_for_selector("#ab-local .ab-offer", timeout=8000)
             sw = op.evaluate("document.documentElement.scrollWidth"); assert sw <= 390, f"phone overflow {sw}"
             L = op.evaluate("TribeAbilities.local()"); assert L["profile"]["skills"] == ["copywriting"] and len(L["gigs"]) == 1, L

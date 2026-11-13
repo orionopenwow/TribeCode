@@ -179,16 +179,16 @@ def main():
             pg.click("#view-work [data-apply]"); pg.wait_for_selector("#tl-af"); pg.fill("#tl-a-note", "I love breaking things"); pg.click("#tl-a-go")
             pg.wait_for_selector("#view-work .tl-ok", timeout=8000)
             # time bank: confirm the half hour Camp logged
-            pg.click("[data-tab=bank]"); pg.wait_for_selector(f"[data-tx-ok='{t2['id']}']"); pg.click(f"[data-tx-ok='{t2['id']}']")
+            pg.click("[data-tab=trade]"); pg.click("[data-trade=bank]"); pg.wait_for_selector(f"[data-tx-ok='{t2['id']}']"); pg.click(f"[data-tx-ok='{t2['id']}']")
             pg.wait_for_function("!document.querySelector(\"[data-tx-ok='%s']\")" % t2["id"], timeout=8000)
             assert "1.5" in pg.inner_text(".tl-bal-n"), pg.inner_text(".tl-bal-n")
             pg.screenshot(path=str(SHOTS / "talent-bank-desktop.png"))
             # people + compute + public tabs render
             pg.click("[data-tab=people]"); pg.wait_for_selector(f"[data-person='{maya_id}']")
-            pg.click("[data-tab=compute]"); pg.wait_for_selector("[data-off-ask]"); pg.screenshot(path=str(SHOTS / "talent-compute-desktop.png"))
-            pg.click("[data-tab=public]"); pg.wait_for_function("document.querySelector('#tl-body').innerText.includes('Pixel artist')", timeout=10000)
+            pg.click("[data-tab=trade]"); pg.click("[data-trade=compute]"); pg.wait_for_selector("[data-off-ask]"); pg.screenshot(path=str(SHOTS / "talent-compute-desktop.png"))
+            pg.click("[data-tab=gigs]"); pg.click("[data-where=public]"); pg.wait_for_function("document.querySelector('#tl-body').innerText.includes('Pixel artist')", timeout=10000)
             # post a gig from the sheet, and the profile editor's Work section opens the work profile
-            pg.click("#tl-post"); pg.wait_for_selector("#tl-pf"); pg.fill("#tl-p-title", "Trailer voice-over"); pg.click("#tl-p-go")
+            pg.click("[data-where=tribe]"); pg.click("#wk-get"); pg.wait_for_selector("#tl-pf"); pg.fill("#tl-p-title", "Trailer voice-over"); pg.click("#tl-p-go")
             pg.wait_for_function("document.querySelector('#view-work') && document.querySelector('#view-work').innerText.includes('Trailer voice-over')", timeout=8000)
             pg.evaluate("TribeProfiles.edit()"); pg.wait_for_selector("#pf-work", timeout=8000)
             pg.click("#pf-work"); pg.wait_for_selector("#tl-wf"); assert pg.is_checked("#tl-w-open") and pg.locator("#tl-w-roles .on").count() == 1
