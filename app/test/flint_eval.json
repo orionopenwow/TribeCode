@@ -1077,18 +1077,12 @@
   },
   {
    "t": "add a video",
-   "i": "site.block.add",
-   "s": {
-    "block": "embed"
-   },
+   "i": "site.video",
    "ctx": "s"
   },
   {
    "t": "embed my youtube video",
-   "i": "site.block.add",
-   "s": {
-    "block": "embed"
-   },
+   "i": "site.video",
    "ctx": "s"
   },
   {
@@ -2437,10 +2431,7 @@
   },
   {
    "t": "add a map",
-   "i": "site.block.add",
-   "s": {
-    "block": "embed"
-   },
+   "i": "site.map",
    "ctx": "s",
    "v": "h1"
   },
@@ -3820,10 +3811,7 @@
   },
   {
    "t": "add a map",
-   "i": "site.block.add",
-   "s": {
-    "block": "embed"
-   },
+   "i": "site.map",
    "ctx": "s",
    "v": "v2"
   },
@@ -4746,6 +4734,2675 @@
    "t": "build me a drawing app",
    "i": "site.starter-sketch",
    "ctx": "g"
+  },
+  {
+   "t": "add a link for my book club",
+   "i": "site.link.add",
+   "s": {
+    "label": "Book club"
+   },
+   "ctx": "s",
+   "v": "unify"
+  },
+  {
+   "t": "add a link to my etsy shop",
+   "i": "site.link.add",
+   "s": {
+    "label": "Etsy shop"
+   },
+   "ctx": "s",
+   "v": "unify"
+  },
+  {
+   "t": "new link: Merch",
+   "i": "site.link.add",
+   "s": {
+    "label": "Merch"
+   },
+   "ctx": "s",
+   "v": "unify"
+  },
+  {
+   "t": "add a link called Tickets to https://tix.example.com",
+   "i": "site.link.add",
+   "s": {
+    "label": "Tickets",
+    "url": "https://tix.example.com"
+   },
+   "ctx": "s",
+   "v": "unify"
+  },
+  {
+   "t": "add a link to https://mara.studio",
+   "i": "site.link.add",
+   "s": {
+    "url": "https://mara.studio"
+   },
+   "ctx": "s",
+   "v": "unify"
+  },
+  {
+   "t": "put a link in for my newsletter",
+   "i": "site.link.add",
+   "s": {
+    "label": "Newsletter"
+   },
+   "ctx": "s",
+   "v": "unify"
+  },
+  {
+   "t": "i want a link for the zine shop",
+   "i": "site.link.add",
+   "s": {
+    "label": "Zine shop"
+   },
+   "ctx": "s",
+   "v": "unify"
+  },
+  {
+   "t": "add anothr link for the podcast",
+   "i": "site.link.add",
+   "s": {
+    "label": "Podcast"
+   },
+   "ctx": "s",
+   "v": "unify"
+  },
+  {
+   "t": "can we get a link to the tour dates",
+   "i": "site.link.add",
+   "s": {
+    "label": "Tour dates"
+   },
+   "ctx": "s",
+   "v": "unify"
+  },
+  {
+   "t": "add a link button for donations",
+   "i": "site.link.add",
+   "s": {
+    "label": "Donations"
+   },
+   "ctx": "s",
+   "v": "unify"
+  },
+  {
+   "t": "add link: Shop",
+   "i": "site.link.add",
+   "s": {
+    "label": "Shop"
+   },
+   "ctx": "s",
+   "v": "unify"
+  },
+  {
+   "t": "pls add a link for my reading list",
+   "i": "site.link.add",
+   "s": {
+    "label": "Reading list"
+   },
+   "ctx": "s",
+   "v": "unify"
+  },
+  {
+   "t": "add a new link",
+   "i": "site.link.add",
+   "ctx": "s",
+   "v": "unify"
+  },
+  {
+   "t": "add a link that says Book a call",
+   "i": "site.link.add",
+   "s": {
+    "label": "Book a call"
+   },
+   "ctx": "s",
+   "v": "unify"
+  },
+  {
+   "t": "remove the book club link",
+   "i": "site.link.remove",
+   "s": {
+    "label": "book club"
+   },
+   "ctx": "s",
+   "v": "unify"
+  },
+  {
+   "t": "delete the shop link",
+   "i": "site.link.remove",
+   "s": {
+    "label": "shop"
+   },
+   "ctx": "s",
+   "v": "unify"
+  },
+  {
+   "t": "get rid of the last link",
+   "i": "site.link.remove",
+   "s": {
+    "label": "last"
+   },
+   "ctx": "s",
+   "v": "unify"
+  },
+  {
+   "t": "ditch the podcast link",
+   "i": "site.link.remove",
+   "s": {
+    "label": "podcast"
+   },
+   "ctx": "s",
+   "v": "unify"
+  },
+  {
+   "t": "move the shop link to the top",
+   "i": "site.link.move",
+   "s": {
+    "dir": "top"
+   },
+   "ctx": "s",
+   "v": "unify"
+  },
+  {
+   "t": "move the tickets link down",
+   "i": "site.link.move",
+   "s": {
+    "dir": "down"
+   },
+   "ctx": "s",
+   "v": "unify"
+  },
+  {
+   "t": "bump the merch link up",
+   "i": "site.link.move",
+   "s": {
+    "dir": "up"
+   },
+   "ctx": "s",
+   "v": "unify"
+  },
+  {
+   "t": "put the newsletter link last",
+   "i": "site.link.move",
+   "s": {
+    "dir": "bottom"
+   },
+   "ctx": "s",
+   "v": "unify"
+  },
+  {
+   "t": "the shop link should go to https://shop.example.com",
+   "i": "site.link.url",
+   "s": {
+    "url": "https://shop.example.com"
+   },
+   "ctx": "s",
+   "v": "unify"
+  },
+  {
+   "t": "change the merch link to merch.example.com",
+   "i": "site.link.url",
+   "s": {
+    "url": "merch.example.com"
+   },
+   "ctx": "s",
+   "v": "unify"
+  },
+  {
+   "t": "point the podcast link at https://pod.example.com",
+   "i": "site.link.url",
+   "s": {
+    "url": "https://pod.example.com"
+   },
+   "ctx": "s",
+   "v": "unify"
+  },
+  {
+   "t": "add my instagram",
+   "i": "site.social.add",
+   "s": {
+    "net": "instagram"
+   },
+   "ctx": "s",
+   "v": "unify"
+  },
+  {
+   "t": "add my insta @mara.makes",
+   "i": "site.social.add",
+   "s": {
+    "net": "instagram",
+    "handle": "mara.makes"
+   },
+   "ctx": "s",
+   "v": "unify"
+  },
+  {
+   "t": "add a tiktok icon",
+   "i": "site.social.add",
+   "s": {
+    "net": "tiktok"
+   },
+   "ctx": "s",
+   "v": "unify"
+  },
+  {
+   "t": "add my youtube",
+   "i": "site.social.add",
+   "s": {
+    "net": "youtube"
+   },
+   "ctx": "s",
+   "v": "unify"
+  },
+  {
+   "t": "link my spotify",
+   "i": "site.social.add",
+   "s": {
+    "net": "spotify"
+   },
+   "ctx": "s",
+   "v": "unify"
+  },
+  {
+   "t": "add github and linkedin icons",
+   "i": "site.social.add",
+   "s": {
+    "net": "github"
+   },
+   "ctx": "s",
+   "v": "unify"
+  },
+  {
+   "t": "add my twitch",
+   "i": "site.social.add",
+   "s": {
+    "net": "twitch"
+   },
+   "ctx": "s",
+   "v": "unify"
+  },
+  {
+   "t": "put my soundcloud on there",
+   "i": "site.social.add",
+   "s": {
+    "net": "soundcloud"
+   },
+   "ctx": "s",
+   "v": "unify"
+  },
+  {
+   "t": "add a bandcamp link",
+   "i": "site.social.add",
+   "s": {
+    "net": "bandcamp"
+   },
+   "ctx": "s",
+   "v": "unify"
+  },
+  {
+   "t": "add my pinterest",
+   "i": "site.social.add",
+   "s": {
+    "net": "pinterest"
+   },
+   "ctx": "s",
+   "v": "unify"
+  },
+  {
+   "t": "add patreon",
+   "i": "site.social.add",
+   "s": {
+    "net": "patreon"
+   },
+   "ctx": "s",
+   "v": "unify"
+  },
+  {
+   "t": "add my bluesky handle @mara",
+   "i": "site.social.add",
+   "s": {
+    "net": "bluesky",
+    "handle": "mara"
+   },
+   "ctx": "s",
+   "v": "unify"
+  },
+  {
+   "t": "add my facebook page",
+   "i": "site.social.add",
+   "s": {
+    "net": "facebook"
+   },
+   "ctx": "s",
+   "v": "unify"
+  },
+  {
+   "t": "add a kofi button",
+   "i": "site.social.add",
+   "s": {
+    "net": "kofi"
+   },
+   "ctx": "s",
+   "v": "unify"
+  },
+  {
+   "t": "add my substack",
+   "i": "site.social.add",
+   "s": {
+    "net": "substack"
+   },
+   "ctx": "s",
+   "v": "unify"
+  },
+  {
+   "t": "add whatsapp",
+   "i": "site.social.add",
+   "s": {
+    "net": "whatsapp"
+   },
+   "ctx": "s",
+   "v": "unify"
+  },
+  {
+   "t": "remove the twitter icon",
+   "i": "site.social.remove",
+   "s": {
+    "net": "twitter"
+   },
+   "ctx": "s",
+   "v": "unify"
+  },
+  {
+   "t": "delete my facebook",
+   "i": "site.social.remove",
+   "s": {
+    "net": "facebook"
+   },
+   "ctx": "s",
+   "v": "unify"
+  },
+  {
+   "t": "get rid of the tiktok link",
+   "i": "site.social.remove",
+   "s": {
+    "net": "tiktok"
+   },
+   "ctx": "s",
+   "v": "unify"
+  },
+  {
+   "t": "add an email button",
+   "i": "site.button.email",
+   "ctx": "s",
+   "v": "unify"
+  },
+  {
+   "t": "add an email me button hello@mara.studio",
+   "i": "site.button.email",
+   "s": {
+    "email": "hello@mara.studio"
+   },
+   "ctx": "s",
+   "v": "unify"
+  },
+  {
+   "t": "add a button to email us",
+   "i": "site.button.email",
+   "ctx": "s",
+   "v": "unify"
+  },
+  {
+   "t": "add an email link",
+   "i": "site.button.email",
+   "ctx": "s",
+   "v": "unify"
+  },
+  {
+   "t": "add a call button",
+   "i": "site.button.phone",
+   "ctx": "s",
+   "v": "unify"
+  },
+  {
+   "t": "add a button to call us at 555 0134",
+   "i": "site.button.phone",
+   "s": {
+    "phone": "555 0134"
+   },
+   "ctx": "s",
+   "v": "unify"
+  },
+  {
+   "t": "add a phone number button",
+   "i": "site.button.phone",
+   "ctx": "s",
+   "v": "unify"
+  },
+  {
+   "t": "send the contact form to hi@cafe.com",
+   "i": "site.contact.email",
+   "s": {
+    "email": "hi@cafe.com"
+   },
+   "ctx": "s",
+   "v": "unify"
+  },
+  {
+   "t": "contact email is orders@bakery.co",
+   "i": "site.contact.email",
+   "s": {
+    "email": "orders@bakery.co"
+   },
+   "ctx": "s",
+   "v": "unify"
+  },
+  {
+   "t": "add a button that says Book now",
+   "i": "site.button.add",
+   "s": {
+    "label": "Book now"
+   },
+   "ctx": "s",
+   "v": "unify"
+  },
+  {
+   "t": "add another button called Menu",
+   "i": "site.button.add",
+   "s": {
+    "label": "Menu"
+   },
+   "ctx": "s",
+   "v": "unify"
+  },
+  {
+   "t": "add a button",
+   "i": "site.button.add",
+   "ctx": "s",
+   "v": "unify"
+  },
+  {
+   "t": "remove the second button",
+   "i": "site.button.remove",
+   "s": {
+    "which": "second"
+   },
+   "ctx": "s",
+   "v": "unify"
+  },
+  {
+   "t": "delete the last button",
+   "i": "site.button.remove",
+   "s": {
+    "which": "last"
+   },
+   "ctx": "s",
+   "v": "unify"
+  },
+  {
+   "t": "add a map",
+   "i": "site.map",
+   "ctx": "s",
+   "v": "unify"
+  },
+  {
+   "t": "add a map to 12 Main Street",
+   "i": "site.map",
+   "s": {
+    "address": "12 Main Street"
+   },
+   "ctx": "s",
+   "v": "unify"
+  },
+  {
+   "t": "add directions to 4 mill lane",
+   "i": "site.map",
+   "s": {
+    "address": "4 mill lane"
+   },
+   "ctx": "s",
+   "v": "unify"
+  },
+  {
+   "t": "show where we are",
+   "i": "site.map",
+   "ctx": "s",
+   "v": "unify"
+  },
+  {
+   "t": "add our address: 88 High St",
+   "i": "site.map",
+   "s": {
+    "address": "88 High St"
+   },
+   "ctx": "s",
+   "v": "unify"
+  },
+  {
+   "t": "add a faq: do you deliver?",
+   "i": "site.faq.add",
+   "s": {
+    "q": "Do you deliver?"
+   },
+   "ctx": "s",
+   "v": "unify"
+  },
+  {
+   "t": "add a question: are dogs allowed?",
+   "i": "site.faq.add",
+   "ctx": "s",
+   "v": "unify"
+  },
+  {
+   "t": "new faq: can i return it? yes within 30 days",
+   "i": "site.faq.add",
+   "s": {
+    "q": "Can i return it?"
+   },
+   "ctx": "s",
+   "v": "unify"
+  },
+  {
+   "t": "add a pro plan for $19",
+   "i": "site.price.add",
+   "s": {
+    "name": "Pro",
+    "price": "$19"
+   },
+   "ctx": "s",
+   "v": "unify"
+  },
+  {
+   "t": "add a pricing tier called Team for $49",
+   "i": "site.price.add",
+   "s": {
+    "name": "Team",
+    "price": "$49"
+   },
+   "ctx": "s",
+   "v": "unify"
+  },
+  {
+   "t": "add a basic plan",
+   "i": "site.price.add",
+   "s": {
+    "name": "Basic"
+   },
+   "ctx": "s",
+   "v": "unify"
+  },
+  {
+   "t": "add a $5 tier",
+   "i": "site.price.add",
+   "s": {
+    "price": "$5"
+   },
+   "ctx": "s",
+   "v": "unify"
+  },
+  {
+   "t": "add maya to the team",
+   "i": "site.team.add",
+   "s": {
+    "name": "Maya"
+   },
+   "ctx": "s",
+   "v": "unify"
+  },
+  {
+   "t": "add sam to the team as our baker",
+   "i": "site.team.add",
+   "s": {
+    "name": "Sam",
+    "role": "Baker"
+   },
+   "ctx": "s",
+   "v": "unify"
+  },
+  {
+   "t": "add a team member called Jo",
+   "i": "site.team.add",
+   "s": {
+    "name": "Jo"
+   },
+   "ctx": "s",
+   "v": "unify"
+  },
+  {
+   "t": "add a testimonial from Priya saying lovely service",
+   "i": "site.quote.add",
+   "s": {
+    "name": "Priya",
+    "quote": "Lovely service"
+   },
+   "ctx": "s",
+   "v": "unify"
+  },
+  {
+   "t": "add a review: best tacos ever",
+   "i": "site.quote.add",
+   "s": {
+    "quote": "Best tacos ever"
+   },
+   "ctx": "s",
+   "v": "unify"
+  },
+  {
+   "t": "add a quote from Sam",
+   "i": "site.quote.add",
+   "s": {
+    "name": "Sam"
+   },
+   "ctx": "s",
+   "v": "unify"
+  },
+  {
+   "t": "add a stat: 300 customers",
+   "i": "site.stat.add",
+   "s": {
+    "value": "300",
+    "label": "customers"
+   },
+   "ctx": "s",
+   "v": "unify"
+  },
+  {
+   "t": "add a number 12 years open",
+   "i": "site.stat.add",
+   "s": {
+    "value": "12"
+   },
+   "ctx": "s",
+   "v": "unify"
+  },
+  {
+   "t": "add a feature called Free delivery",
+   "i": "site.feature.add",
+   "s": {
+    "title": "Free delivery"
+   },
+   "ctx": "s",
+   "v": "unify"
+  },
+  {
+   "t": "add a service: Wedding cakes",
+   "i": "site.feature.add",
+   "s": {
+    "title": "Wedding cakes"
+   },
+   "ctx": "s",
+   "v": "unify"
+  },
+  {
+   "t": "add a menu item Latte $4",
+   "i": "site.item.add",
+   "s": {
+    "kind": "menu",
+    "title": "Latte",
+    "meta": "$4"
+   },
+   "ctx": "s",
+   "v": "unify"
+  },
+  {
+   "t": "add a tour date: Leeds Jun 3",
+   "i": "site.item.add",
+   "s": {
+    "kind": "date",
+    "title": "Leeds"
+   },
+   "ctx": "s",
+   "v": "unify"
+  },
+  {
+   "t": "add an episode called Birds of the north",
+   "i": "site.item.add",
+   "s": {
+    "kind": "episode",
+    "title": "Birds of the north"
+   },
+   "ctx": "s",
+   "v": "unify"
+  },
+  {
+   "t": "add a dish: Ramen $12",
+   "i": "site.item.add",
+   "s": {
+    "kind": "menu",
+    "title": "Ramen"
+   },
+   "ctx": "s",
+   "v": "unify"
+  },
+  {
+   "t": "add a photo to the gallery",
+   "i": "site.gallery.add",
+   "ctx": "s",
+   "v": "unify"
+  },
+  {
+   "t": "upload more pictures to the gallery",
+   "i": "site.gallery.add",
+   "ctx": "s",
+   "v": "unify"
+  },
+  {
+   "t": "embed my youtube video https://youtu.be/abc",
+   "i": "site.video",
+   "s": {
+    "url": "https://youtu.be/abc"
+   },
+   "ctx": "s",
+   "v": "unify"
+  },
+  {
+   "t": "add a video",
+   "i": "site.video",
+   "ctx": "s",
+   "v": "unify"
+  },
+  {
+   "t": "put a vimeo clip in",
+   "i": "site.video",
+   "ctx": "s",
+   "v": "unify"
+  },
+  {
+   "t": "add our trailer",
+   "i": "site.video",
+   "ctx": "s",
+   "v": "unify"
+  },
+  {
+   "t": "add a countdown to june 5",
+   "i": "site.countdown",
+   "ctx": "s",
+   "v": "unify"
+  },
+  {
+   "t": "count down to launch on friday",
+   "i": "site.countdown",
+   "ctx": "s",
+   "v": "unify"
+  },
+  {
+   "t": "countdown to the wedding",
+   "i": "site.countdown",
+   "ctx": "s",
+   "v": "unify"
+  },
+  {
+   "t": "change the faq title to Good questions",
+   "i": "site.section.title",
+   "s": {
+    "block": "faq",
+    "text": "Good questions"
+   },
+   "ctx": "s",
+   "v": "unify"
+  },
+  {
+   "t": "set the pricing heading to Plans",
+   "i": "site.section.title",
+   "s": {
+    "block": "pricing",
+    "text": "Plans"
+   },
+   "ctx": "s",
+   "v": "unify"
+  },
+  {
+   "t": "rename the gallery section to Our work",
+   "i": "site.section.title",
+   "s": {
+    "block": "gallery",
+    "text": "Our work"
+   },
+   "ctx": "s",
+   "v": "unify"
+  },
+  {
+   "t": "the team title should say The crew",
+   "i": "site.section.title",
+   "s": {
+    "block": "team",
+    "text": "The crew"
+   },
+   "ctx": "s",
+   "v": "unify"
+  },
+  {
+   "t": "footer should say made in leeds",
+   "i": "site.footer",
+   "s": {
+    "text": "made in leeds"
+   },
+   "ctx": "s",
+   "v": "unify"
+  },
+  {
+   "t": "change the footer text to all rights reserved",
+   "i": "site.footer",
+   "s": {
+    "text": "all rights reserved"
+   },
+   "ctx": "s",
+   "v": "unify"
+  },
+  {
+   "t": "update the copyright year",
+   "i": "site.copyright",
+   "ctx": "s",
+   "v": "unify"
+  },
+  {
+   "t": "copyright 2027",
+   "i": "site.copyright",
+   "s": {
+    "year": "2027"
+   },
+   "ctx": "s",
+   "v": "unify"
+  },
+  {
+   "t": "fix the year in the footer",
+   "i": "site.copyright",
+   "ctx": "s",
+   "v": "unify"
+  },
+  {
+   "t": "add an announcement: free shipping this week",
+   "i": "site.announce",
+   "s": {
+    "text": "Free shipping this week"
+   },
+   "ctx": "s",
+   "v": "unify"
+  },
+  {
+   "t": "add a banner saying we are closed monday",
+   "i": "site.announce",
+   "ctx": "s",
+   "v": "unify"
+  },
+  {
+   "t": "change my bio to potter and dj",
+   "i": "site.bio",
+   "s": {
+    "text": "Potter and dj"
+   },
+   "ctx": "s",
+   "v": "unify"
+  },
+  {
+   "t": "my bio should say I make mugs",
+   "i": "site.bio",
+   "ctx": "s",
+   "v": "unify"
+  },
+  {
+   "t": "add Shop to the menu",
+   "i": "site.nav.add",
+   "s": {
+    "name": "Shop"
+   },
+   "ctx": "s",
+   "v": "unify"
+  },
+  {
+   "t": "put blog in the nav",
+   "i": "site.nav.add",
+   "s": {
+    "name": "Blog"
+   },
+   "ctx": "s",
+   "v": "unify"
+  },
+  {
+   "t": "move this page left",
+   "i": "site.page.move",
+   "s": {
+    "dir": "up"
+   },
+   "ctx": "s",
+   "v": "unify"
+  },
+  {
+   "t": "move the about page first",
+   "i": "site.page.move",
+   "s": {
+    "dir": "first",
+    "name": "about"
+   },
+   "ctx": "s",
+   "v": "unify"
+  },
+  {
+   "t": "go to the about page",
+   "i": "site.page.go",
+   "s": {
+    "name": "about"
+   },
+   "ctx": "s",
+   "v": "unify"
+  },
+  {
+   "t": "open the contact page",
+   "i": "site.page.go",
+   "s": {
+    "name": "contact"
+   },
+   "ctx": "s",
+   "v": "unify"
+  },
+  {
+   "t": "back to the home page",
+   "i": "site.page.go",
+   "s": {
+    "name": "home"
+   },
+   "ctx": "s",
+   "v": "unify"
+  },
+  {
+   "t": "clear this page",
+   "i": "site.page.clear",
+   "ctx": "s",
+   "v": "unify"
+  },
+  {
+   "t": "center the text in the hero",
+   "i": "site.align",
+   "s": {
+    "align": "center",
+    "block": "hero"
+   },
+   "ctx": "s",
+   "v": "unify"
+  },
+  {
+   "t": "left align everything",
+   "i": "site.align",
+   "s": {
+    "align": "left"
+   },
+   "ctx": "s",
+   "v": "unify"
+  },
+  {
+   "t": "right align the text",
+   "i": "site.align",
+   "s": {
+    "align": "right"
+   },
+   "ctx": "s",
+   "v": "unify"
+  },
+  {
+   "t": "make the pricing section teal",
+   "i": "site.block.color",
+   "s": {
+    "block": "pricing"
+   },
+   "ctx": "s",
+   "v": "unify"
+  },
+  {
+   "t": "make this section navy",
+   "i": "site.block.color",
+   "ctx": "s",
+   "v": "unify"
+  },
+  {
+   "t": "turn the faq section pink",
+   "i": "site.block.color",
+   "s": {
+    "block": "faq"
+   },
+   "ctx": "s",
+   "v": "unify"
+  },
+  {
+   "t": "rounder corners",
+   "i": "site.radius",
+   "s": {
+    "size": "more"
+   },
+   "ctx": "s",
+   "v": "unify"
+  },
+  {
+   "t": "square corners",
+   "i": "site.radius",
+   "s": {
+    "size": "none"
+   },
+   "ctx": "s",
+   "v": "unify"
+  },
+  {
+   "t": "less rounded corners",
+   "i": "site.radius",
+   "s": {
+    "size": "less"
+   },
+   "ctx": "s",
+   "v": "unify"
+  },
+  {
+   "t": "set the site language to spanish",
+   "i": "site.lang",
+   "s": {
+    "lang": "es"
+   },
+   "ctx": "s",
+   "v": "unify"
+  },
+  {
+   "t": "remove the logo",
+   "i": "site.logo.remove",
+   "ctx": "s",
+   "v": "unify"
+  },
+  {
+   "t": "move this section up",
+   "i": "site.block.move",
+   "s": {
+    "dir": "up"
+   },
+   "ctx": "s",
+   "v": "unify"
+  },
+  {
+   "t": "align these to the left",
+   "i": "canvas.align",
+   "s": {
+    "dir": "left"
+   },
+   "ctx": "cs",
+   "v": "unify"
+  },
+  {
+   "t": "align them to the top",
+   "i": "canvas.align",
+   "s": {
+    "dir": "top"
+   },
+   "ctx": "cs",
+   "v": "unify"
+  },
+  {
+   "t": "center them",
+   "i": "canvas.align",
+   "s": {
+    "dir": "center"
+   },
+   "ctx": "cs",
+   "v": "unify"
+  },
+  {
+   "t": "line them up on the right",
+   "i": "canvas.align",
+   "s": {
+    "dir": "right"
+   },
+   "ctx": "cs",
+   "v": "unify"
+  },
+  {
+   "t": "align bottom",
+   "i": "canvas.align",
+   "s": {
+    "dir": "bottom"
+   },
+   "ctx": "cs",
+   "v": "unify"
+  },
+  {
+   "t": "aling these left",
+   "i": "canvas.align",
+   "s": {
+    "dir": "left"
+   },
+   "ctx": "cs",
+   "v": "unify"
+  },
+  {
+   "t": "distribute evenly",
+   "i": "canvas.distribute",
+   "s": {
+    "axis": "h"
+   },
+   "ctx": "cs",
+   "v": "unify"
+  },
+  {
+   "t": "space them evenly vertically",
+   "i": "canvas.distribute",
+   "s": {
+    "axis": "v"
+   },
+   "ctx": "cs",
+   "v": "unify"
+  },
+  {
+   "t": "spread these out evenly",
+   "i": "canvas.distribute",
+   "ctx": "cs",
+   "v": "unify"
+  },
+  {
+   "t": "group them",
+   "i": "canvas.group",
+   "ctx": "cs",
+   "v": "unify"
+  },
+  {
+   "t": "group these together",
+   "i": "canvas.group",
+   "ctx": "cs",
+   "v": "unify"
+  },
+  {
+   "t": "make a group",
+   "i": "canvas.group",
+   "ctx": "cs",
+   "v": "unify"
+  },
+  {
+   "t": "ungroup",
+   "i": "canvas.ungroup",
+   "ctx": "cs",
+   "v": "unify"
+  },
+  {
+   "t": "break apart",
+   "i": "canvas.ungroup",
+   "ctx": "cs",
+   "v": "unify"
+  },
+  {
+   "t": "ungroup this",
+   "i": "canvas.ungroup",
+   "ctx": "cs",
+   "v": "unify"
+  },
+  {
+   "t": "duplicate this",
+   "i": "canvas.duplicate",
+   "ctx": "cs",
+   "v": "unify"
+  },
+  {
+   "t": "dupe it",
+   "i": "canvas.duplicate",
+   "ctx": "cs",
+   "v": "unify"
+  },
+  {
+   "t": "make a copy of this",
+   "i": "canvas.duplicate",
+   "ctx": "cs",
+   "v": "unify"
+  },
+  {
+   "t": "clone it",
+   "i": "canvas.duplicate",
+   "ctx": "cs",
+   "v": "unify"
+  },
+  {
+   "t": "lock it",
+   "i": "canvas.lock",
+   "s": {
+    "on": true
+   },
+   "ctx": "cs",
+   "v": "unify"
+  },
+  {
+   "t": "lock this layer",
+   "i": "canvas.lock",
+   "s": {
+    "on": true
+   },
+   "ctx": "cs",
+   "v": "unify"
+  },
+  {
+   "t": "unlock it",
+   "i": "canvas.lock",
+   "s": {
+    "on": false
+   },
+   "ctx": "cs",
+   "v": "unify"
+  },
+  {
+   "t": "hide this layer",
+   "i": "canvas.hide",
+   "s": {
+    "on": true
+   },
+   "ctx": "cs",
+   "v": "unify"
+  },
+  {
+   "t": "unhide it",
+   "i": "canvas.hide",
+   "s": {
+    "on": false
+   },
+   "ctx": "cs",
+   "v": "unify"
+  },
+  {
+   "t": "bring it to the front",
+   "i": "canvas.order",
+   "s": {
+    "dir": "front"
+   },
+   "ctx": "cs",
+   "v": "unify"
+  },
+  {
+   "t": "send this to the back",
+   "i": "canvas.order",
+   "s": {
+    "dir": "back"
+   },
+   "ctx": "cs",
+   "v": "unify"
+  },
+  {
+   "t": "bring forward",
+   "i": "canvas.order",
+   "s": {
+    "dir": "up"
+   },
+   "ctx": "cs",
+   "v": "unify"
+  },
+  {
+   "t": "send it backward",
+   "i": "canvas.order",
+   "s": {
+    "dir": "down"
+   },
+   "ctx": "cs",
+   "v": "unify"
+  },
+  {
+   "t": "put it on top",
+   "i": "canvas.order",
+   "s": {
+    "dir": "front"
+   },
+   "ctx": "cs",
+   "v": "unify"
+  },
+  {
+   "t": "resize it to 320 by 200",
+   "i": "canvas.resize",
+   "s": {
+    "w": 320,
+    "h": 200
+   },
+   "ctx": "cs",
+   "v": "unify"
+  },
+  {
+   "t": "make it 400x300",
+   "i": "canvas.resize",
+   "s": {
+    "w": 400,
+    "h": 300
+   },
+   "ctx": "cs",
+   "v": "unify"
+  },
+  {
+   "t": "set the width to 250",
+   "i": "canvas.resize",
+   "s": {
+    "w": 250
+   },
+   "ctx": "cs",
+   "v": "unify"
+  },
+  {
+   "t": "make it 120 tall",
+   "i": "canvas.resize",
+   "s": {
+    "h": 120
+   },
+   "ctx": "cs",
+   "v": "unify"
+  },
+  {
+   "t": "make it twice as big",
+   "i": "canvas.resize",
+   "s": {
+    "scale": 2
+   },
+   "ctx": "cs",
+   "v": "unify"
+  },
+  {
+   "t": "half the size",
+   "i": "canvas.resize",
+   "s": {
+    "scale": 0.5
+   },
+   "ctx": "cs",
+   "v": "unify"
+  },
+  {
+   "t": "rename this to Header",
+   "i": "canvas.layer.rename",
+   "s": {
+    "name": "Header"
+   },
+   "ctx": "cs",
+   "v": "unify"
+  },
+  {
+   "t": "call this layer Hero image",
+   "i": "canvas.layer.rename",
+   "s": {
+    "name": "Hero image"
+   },
+   "ctx": "cs",
+   "v": "unify"
+  },
+  {
+   "t": "name it Logo",
+   "i": "canvas.layer.rename",
+   "s": {
+    "name": "Logo"
+   },
+   "ctx": "cs",
+   "v": "unify"
+  },
+  {
+   "t": "snap to grid",
+   "i": "canvas.snap",
+   "ctx": "cs",
+   "v": "unify"
+  },
+  {
+   "t": "snap it to the grid",
+   "i": "canvas.snap",
+   "ctx": "cs",
+   "v": "unify"
+  },
+  {
+   "t": "delete this",
+   "i": "canvas.delete",
+   "ctx": "cs",
+   "v": "unify"
+  },
+  {
+   "t": "get rid of these",
+   "i": "canvas.delete",
+   "ctx": "cs",
+   "v": "unify"
+  },
+  {
+   "t": "add a rectangle",
+   "i": "canvas.add",
+   "s": {
+    "kind": "rect"
+   },
+   "ctx": "c",
+   "v": "unify"
+  },
+  {
+   "t": "draw a box",
+   "i": "canvas.add",
+   "s": {
+    "kind": "rect"
+   },
+   "ctx": "c",
+   "v": "unify"
+  },
+  {
+   "t": "add a circle",
+   "i": "canvas.add",
+   "s": {
+    "kind": "ellipse"
+   },
+   "ctx": "c",
+   "v": "unify"
+  },
+  {
+   "t": "add a text that says hello",
+   "i": "canvas.add",
+   "s": {
+    "kind": "text",
+    "text": "hello"
+   },
+   "ctx": "c",
+   "v": "unify"
+  },
+  {
+   "t": "add a heading saying Welcome",
+   "i": "canvas.add",
+   "s": {
+    "kind": "text",
+    "text": "Welcome"
+   },
+   "ctx": "c",
+   "v": "unify"
+  },
+  {
+   "t": "add a button that says Sign up",
+   "i": "canvas.add",
+   "s": {
+    "kind": "button",
+    "text": "Sign up"
+   },
+   "ctx": "c",
+   "v": "unify"
+  },
+  {
+   "t": "add a frame",
+   "i": "canvas.add",
+   "s": {
+    "kind": "frame"
+   },
+   "ctx": "c",
+   "v": "unify"
+  },
+  {
+   "t": "add a line",
+   "i": "canvas.add",
+   "s": {
+    "kind": "line"
+   },
+   "ctx": "c",
+   "v": "unify"
+  },
+  {
+   "t": "add a card",
+   "i": "canvas.add",
+   "s": {
+    "kind": "card"
+   },
+   "ctx": "c",
+   "v": "unify"
+  },
+  {
+   "t": "add an image placeholder",
+   "i": "canvas.add",
+   "s": {
+    "kind": "image"
+   },
+   "ctx": "c",
+   "v": "unify"
+  },
+  {
+   "t": "draw a red circle",
+   "i": "canvas.add",
+   "s": {
+    "kind": "ellipse",
+    "color": "red"
+   },
+   "ctx": "c",
+   "v": "unify"
+  },
+  {
+   "t": "select all",
+   "i": "canvas.selectall",
+   "ctx": "c",
+   "v": "unify"
+  },
+  {
+   "t": "select everything",
+   "i": "canvas.selectall",
+   "ctx": "c",
+   "v": "unify"
+  },
+  {
+   "t": "zoom to fit",
+   "i": "canvas.zoom",
+   "s": {
+    "to": "fit"
+   },
+   "ctx": "c",
+   "v": "unify"
+  },
+  {
+   "t": "zoom in",
+   "i": "canvas.zoom",
+   "s": {
+    "to": "in"
+   },
+   "ctx": "c",
+   "v": "unify"
+  },
+  {
+   "t": "zoom out",
+   "i": "canvas.zoom",
+   "s": {
+    "to": "out"
+   },
+   "ctx": "c",
+   "v": "unify"
+  },
+  {
+   "t": "show everything",
+   "i": "canvas.zoom",
+   "s": {
+    "to": "fit"
+   },
+   "ctx": "c",
+   "v": "unify"
+  },
+  {
+   "t": "set a timer for 10 minutes",
+   "i": "timer",
+   "ctx": "g",
+   "v": "unify"
+  },
+  {
+   "t": "timer 25 min",
+   "i": "timer",
+   "ctx": "g",
+   "v": "unify"
+  },
+  {
+   "t": "remind me in 5 minutes to stretch",
+   "i": "timer",
+   "ctx": "g",
+   "v": "unify"
+  },
+  {
+   "t": "start a 3 minute timer",
+   "i": "timer",
+   "ctx": "g",
+   "v": "unify"
+  },
+  {
+   "t": "set a timer for 1 hour",
+   "i": "timer",
+   "ctx": "g",
+   "v": "unify"
+  },
+  {
+   "t": "turn off animations",
+   "i": "settings.motion",
+   "s": {
+    "on": false
+   },
+   "ctx": "g",
+   "v": "unify"
+  },
+  {
+   "t": "reduce motion",
+   "i": "settings.motion",
+   "s": {
+    "on": false
+   },
+   "ctx": "g",
+   "v": "unify"
+  },
+  {
+   "t": "no animations",
+   "i": "settings.motion",
+   "s": {
+    "on": false
+   },
+   "ctx": "g",
+   "v": "unify"
+  },
+  {
+   "t": "bring back animations",
+   "i": "settings.motion",
+   "s": {
+    "on": true
+   },
+   "ctx": "g",
+   "v": "unify"
+  },
+  {
+   "t": "turn animations on",
+   "i": "settings.motion",
+   "s": {
+    "on": true
+   },
+   "ctx": "g",
+   "v": "unify"
+  },
+  {
+   "t": "animations are too much",
+   "i": "settings.motion",
+   "s": {
+    "on": false
+   },
+   "ctx": "g",
+   "v": "unify"
+  },
+  {
+   "t": "mute notifications",
+   "i": "settings.notify",
+   "s": {
+    "on": false
+   },
+   "ctx": "g",
+   "v": "unify"
+  },
+  {
+   "t": "turn off notifications",
+   "i": "settings.notify",
+   "s": {
+    "on": false
+   },
+   "ctx": "g",
+   "v": "unify"
+  },
+  {
+   "t": "do not disturb",
+   "i": "settings.notify",
+   "s": {
+    "on": false
+   },
+   "ctx": "g",
+   "v": "unify"
+  },
+  {
+   "t": "unmute notifications",
+   "i": "settings.notify",
+   "s": {
+    "on": true
+   },
+   "ctx": "g",
+   "v": "unify"
+  },
+  {
+   "t": "turn on notifications",
+   "i": "settings.notify",
+   "s": {
+    "on": true
+   },
+   "ctx": "g",
+   "v": "unify"
+  },
+  {
+   "t": "snooze alerts",
+   "i": "settings.notify",
+   "s": {
+    "on": false
+   },
+   "ctx": "g",
+   "v": "unify"
+  },
+  {
+   "t": "appear away",
+   "i": "settings.away",
+   "s": {
+    "away": true
+   },
+   "ctx": "g",
+   "v": "unify"
+  },
+  {
+   "t": "set me as away",
+   "i": "settings.away",
+   "s": {
+    "away": true
+   },
+   "ctx": "g",
+   "v": "unify"
+  },
+  {
+   "t": "im back",
+   "i": "settings.away",
+   "s": {
+    "away": false
+   },
+   "ctx": "g",
+   "v": "unify"
+  },
+  {
+   "t": "afk",
+   "i": "settings.away",
+   "s": {
+    "away": true
+   },
+   "ctx": "g",
+   "v": "unify"
+  },
+  {
+   "t": "hide where i am",
+   "i": "settings.away",
+   "s": {
+    "show": false
+   },
+   "ctx": "g",
+   "v": "unify"
+  },
+  {
+   "t": "show where i am",
+   "i": "settings.away",
+   "s": {
+    "show": true
+   },
+   "ctx": "g",
+   "v": "unify"
+  },
+  {
+   "t": "pin the last message",
+   "i": "chat.pin",
+   "s": {
+    "on": true
+   },
+   "ctx": "g",
+   "v": "unify"
+  },
+  {
+   "t": "pin that",
+   "i": "chat.pin",
+   "s": {
+    "on": true
+   },
+   "ctx": "g",
+   "v": "unify"
+  },
+  {
+   "t": "unpin the last message",
+   "i": "chat.pin",
+   "s": {
+    "on": false
+   },
+   "ctx": "g",
+   "v": "unify"
+  },
+  {
+   "t": "react thumbs up to the last message",
+   "i": "chat.react",
+   "s": {
+    "emoji": "👍"
+   },
+   "ctx": "g",
+   "v": "unify"
+  },
+  {
+   "t": "heart the last message",
+   "i": "chat.react",
+   "s": {
+    "emoji": "❤️"
+   },
+   "ctx": "g",
+   "v": "unify"
+  },
+  {
+   "t": "react with fire",
+   "i": "chat.react",
+   "s": {
+    "emoji": "🔥"
+   },
+   "ctx": "g",
+   "v": "unify"
+  },
+  {
+   "t": "like that message",
+   "i": "chat.react",
+   "s": {
+    "emoji": "👍"
+   },
+   "ctx": "g",
+   "v": "unify"
+  },
+  {
+   "t": "give a tada to the last message",
+   "i": "chat.react",
+   "s": {
+    "emoji": "🎉"
+   },
+   "ctx": "g",
+   "v": "unify"
+  },
+  {
+   "t": "reopen the logo task",
+   "i": "task.reopen",
+   "ctx": "g",
+   "v": "unify"
+  },
+  {
+   "t": "mark the menu task as not done",
+   "i": "task.reopen",
+   "ctx": "g",
+   "v": "unify"
+  },
+  {
+   "t": "the logo task is not done yet",
+   "i": "task.reopen",
+   "ctx": "g",
+   "v": "unify"
+  },
+  {
+   "t": "uncheck buy milk",
+   "i": "task.reopen",
+   "ctx": "g",
+   "v": "unify"
+  },
+  {
+   "t": "unassign the logo task",
+   "i": "task.unassign",
+   "ctx": "g",
+   "v": "unify"
+  },
+  {
+   "t": "take me off the menu task",
+   "i": "task.unassign",
+   "ctx": "g",
+   "v": "unify"
+  },
+  {
+   "t": "make the logo task urgent",
+   "i": "task.priority",
+   "s": {
+    "level": "high"
+   },
+   "ctx": "g",
+   "v": "unify"
+  },
+  {
+   "t": "prioritize the menu task",
+   "i": "task.priority",
+   "s": {
+    "level": "high"
+   },
+   "ctx": "g",
+   "v": "unify"
+  },
+  {
+   "t": "mark buy milk low priority",
+   "i": "task.priority",
+   "s": {
+    "level": "low"
+   },
+   "ctx": "g",
+   "v": "unify"
+  },
+  {
+   "t": "start a fresh whiteboard",
+   "i": "file.whiteboard",
+   "ctx": "g",
+   "v": "unify"
+  },
+  {
+   "t": "new whiteboard",
+   "i": "file.whiteboard",
+   "ctx": "g",
+   "v": "unify"
+  },
+  {
+   "t": "lets sketch it out",
+   "i": "file.whiteboard",
+   "ctx": "g",
+   "v": "unify"
+  },
+  {
+   "t": "clear our chat",
+   "i": "flint.clear",
+   "ctx": "g",
+   "v": "unify"
+  },
+  {
+   "t": "start over",
+   "i": "flint.clear",
+   "ctx": "g",
+   "v": "unify"
+  },
+  {
+   "t": "reset flint",
+   "i": "flint.clear",
+   "ctx": "g",
+   "v": "unify"
+  },
+  {
+   "t": "new doc from the meeting notes template",
+   "i": "doc.template",
+   "s": {
+    "tpl": "meeting notes"
+   },
+   "ctx": "g",
+   "v": "unify"
+  },
+  {
+   "t": "use the retro template",
+   "i": "doc.template",
+   "s": {
+    "tpl": "retro"
+   },
+   "ctx": "g",
+   "v": "unify"
+  },
+  {
+   "t": "open the doc templates",
+   "i": "doc.template",
+   "ctx": "g",
+   "v": "unify"
+  },
+  {
+   "t": "add three js from the marketplace",
+   "i": "market.add",
+   "s": {
+    "name": "three js"
+   },
+   "ctx": "g",
+   "v": "unify"
+  },
+  {
+   "t": "install the github mcp",
+   "i": "market.add",
+   "ctx": "g",
+   "v": "unify"
+  },
+  {
+   "t": "find inspiration for a cozy cafe",
+   "i": "inspo.search",
+   "s": {
+    "q": "a cozy cafe"
+   },
+   "ctx": "g",
+   "v": "unify"
+  },
+  {
+   "t": "inspo for neon arcade",
+   "i": "inspo.search",
+   "s": {
+    "q": "neon arcade"
+   },
+   "ctx": "g",
+   "v": "unify"
+  },
+  {
+   "t": "pin sunsets to my moodboard",
+   "i": "inspo.search",
+   "s": {
+    "q": "sunsets"
+   },
+   "ctx": "g",
+   "v": "unify"
+  },
+  {
+   "t": "open the people panel",
+   "i": "nav.people",
+   "ctx": "g",
+   "v": "unify"
+  },
+  {
+   "t": "show me everyone",
+   "i": "nav.people",
+   "ctx": "g",
+   "v": "unify"
+  },
+  {
+   "t": "open work",
+   "i": "nav.work",
+   "ctx": "g",
+   "v": "unify"
+  },
+  {
+   "t": "any gigs for me",
+   "i": "nav.work",
+   "ctx": "g",
+   "v": "unify"
+  },
+  {
+   "t": "find me a gig",
+   "i": "nav.work",
+   "ctx": "g",
+   "v": "unify"
+  },
+  {
+   "t": "open the preview",
+   "i": "nav.preview",
+   "ctx": "g",
+   "v": "unify"
+  },
+  {
+   "t": "run the app",
+   "i": "preview.open",
+   "ctx": "g",
+   "v": "unify"
+  },
+  {
+   "t": "try the game",
+   "i": "preview.open",
+   "ctx": "g",
+   "v": "unify"
+  },
+  {
+   "t": "copy the preview link",
+   "i": "preview.share",
+   "ctx": "g",
+   "v": "unify"
+  },
+  {
+   "t": "turn off sounds",
+   "i": "settings.sound",
+   "s": {
+    "on": false
+   },
+   "ctx": "g",
+   "v": "unify"
+  },
+  {
+   "t": "add a link for my book club",
+   "i": "site.link.add",
+   "s": {
+    "label": "Book club"
+   },
+   "ctx": "s",
+   "v": "held4"
+  },
+  {
+   "t": "can u put a link to my etsy shop",
+   "i": "site.link.add",
+   "s": {
+    "label": "Etsy shop"
+   },
+   "ctx": "s",
+   "v": "held4"
+  },
+  {
+   "t": "add a link called Tickets to https://tix.example.com",
+   "i": "site.link.add",
+   "s": {
+    "label": "Tickets",
+    "url": "https://tix.example.com"
+   },
+   "ctx": "s",
+   "v": "held4"
+  },
+  {
+   "t": "get rid of the book club link",
+   "i": "site.link.remove",
+   "s": {
+    "label": "book club"
+   },
+   "ctx": "s",
+   "v": "held4"
+  },
+  {
+   "t": "move the shop link to the top",
+   "i": "site.link.move",
+   "s": {
+    "dir": "top"
+   },
+   "ctx": "s",
+   "v": "held4"
+  },
+  {
+   "t": "add my instagram @mara.makes",
+   "i": "site.social.add",
+   "s": {
+    "net": "instagram"
+   },
+   "ctx": "s",
+   "v": "held4"
+  },
+  {
+   "t": "put a tiktok icon on there",
+   "i": "site.social.add",
+   "s": {
+    "net": "tiktok"
+   },
+   "ctx": "s",
+   "v": "held4"
+  },
+  {
+   "t": "add a spotify link",
+   "i": "site.social.add",
+   "s": {
+    "net": "spotify"
+   },
+   "ctx": "s",
+   "v": "held4"
+  },
+  {
+   "t": "add an email me button",
+   "i": "site.button.email",
+   "ctx": "s",
+   "v": "held4"
+  },
+  {
+   "t": "add a button to call us at 555 0134",
+   "i": "site.button.phone",
+   "ctx": "s",
+   "v": "held4"
+  },
+  {
+   "t": "show where we are on a map, 12 harbor st",
+   "i": "site.map",
+   "ctx": "s",
+   "v": "held4"
+  },
+  {
+   "t": "add a faq: do you ship abroad?",
+   "i": "site.faq.add",
+   "ctx": "s",
+   "v": "held4"
+  },
+  {
+   "t": "add a pro plan for $19",
+   "i": "site.price.add",
+   "s": {
+    "name": "Pro"
+   },
+   "ctx": "s",
+   "v": "held4"
+  },
+  {
+   "t": "add maya to the team as our designer",
+   "i": "site.team.add",
+   "s": {
+    "name": "Maya"
+   },
+   "ctx": "s",
+   "v": "held4"
+  },
+  {
+   "t": "add a testimonial from sam saying best tacos in town",
+   "i": "site.quote.add",
+   "ctx": "s",
+   "v": "held4"
+  },
+  {
+   "t": "embed my youtube video https://youtu.be/abc123",
+   "i": "site.video",
+   "ctx": "s",
+   "v": "held4"
+  },
+  {
+   "t": "add a countdown to june 5",
+   "i": "site.countdown",
+   "ctx": "s",
+   "v": "held4"
+  },
+  {
+   "t": "change the faq title to Good questions",
+   "i": "site.section.title",
+   "s": {
+    "block": "faq",
+    "text": "Good questions"
+   },
+   "ctx": "s",
+   "v": "held4"
+  },
+  {
+   "t": "footer should say made with love in leeds",
+   "i": "site.footer",
+   "ctx": "s",
+   "v": "held4"
+  },
+  {
+   "t": "update the copyright year",
+   "i": "site.copyright",
+   "ctx": "s",
+   "v": "held4"
+  },
+  {
+   "t": "center everything in the hero",
+   "i": "site.align",
+   "s": {
+    "align": "center"
+   },
+   "ctx": "s",
+   "v": "held4"
+  },
+  {
+   "t": "make the pricing section teal",
+   "i": "site.block.color",
+   "s": {
+    "block": "pricing"
+   },
+   "ctx": "s",
+   "v": "held4"
+  },
+  {
+   "t": "rounder corners pls",
+   "i": "site.radius",
+   "s": {
+    "size": "more"
+   },
+   "ctx": "s",
+   "v": "held4"
+  },
+  {
+   "t": "go to the about page",
+   "i": "site.page.go",
+   "s": {
+    "name": "about"
+   },
+   "ctx": "s",
+   "v": "held4"
+  },
+  {
+   "t": "change my bio to potter and part time dj",
+   "i": "site.bio",
+   "ctx": "s",
+   "v": "held4"
+  },
+  {
+   "t": "align these to the left",
+   "i": "canvas.align",
+   "s": {
+    "dir": "left"
+   },
+   "ctx": "cs",
+   "v": "held4"
+  },
+  {
+   "t": "group them",
+   "i": "canvas.group",
+   "ctx": "cs",
+   "v": "held4"
+  },
+  {
+   "t": "dupe this",
+   "i": "canvas.duplicate",
+   "ctx": "cs",
+   "v": "held4"
+  },
+  {
+   "t": "lock this layer",
+   "i": "canvas.lock",
+   "ctx": "cs",
+   "v": "held4"
+  },
+  {
+   "t": "send it to the back",
+   "i": "canvas.order",
+   "s": {
+    "dir": "back"
+   },
+   "ctx": "cs",
+   "v": "held4"
+  },
+  {
+   "t": "add a text that says hello",
+   "i": "canvas.add",
+   "s": {
+    "kind": "text"
+   },
+   "ctx": "cs",
+   "v": "held4"
+  },
+  {
+   "t": "resize it to 320 by 200",
+   "i": "canvas.resize",
+   "ctx": "cs",
+   "v": "held4"
+  },
+  {
+   "t": "turn off animations",
+   "i": "settings.motion",
+   "ctx": "g",
+   "v": "held4"
+  },
+  {
+   "t": "mute notifications",
+   "i": "settings.notify",
+   "ctx": "g",
+   "v": "held4"
+  },
+  {
+   "t": "pin the last message",
+   "i": "chat.pin",
+   "ctx": "g",
+   "v": "held4"
+  },
+  {
+   "t": "reopen the logo task",
+   "i": "task.reopen",
+   "ctx": "g",
+   "v": "held4"
+  },
+  {
+   "t": "set a timer for 10 minutes",
+   "i": "timer",
+   "ctx": "g",
+   "v": "held4"
+  },
+  {
+   "t": "start a fresh whiteboard",
+   "i": "file.whiteboard",
+   "ctx": "g",
+   "v": "held4"
+  },
+  {
+   "t": "appear away",
+   "i": "settings.away",
+   "ctx": "g",
+   "v": "held4"
+  },
+  {
+   "t": "clear our chat flint",
+   "i": "flint.clear",
+   "ctx": "g",
+   "v": "held4"
+  },
+  {
+   "t": "i want a link to my newsletter signup",
+   "i": "site.link.add",
+   "s": {
+    "label": "Newsletter signup"
+   },
+   "ctx": "s",
+   "v": "held5"
+  },
+  {
+   "t": "stick a link in for the zine shop",
+   "i": "site.link.add",
+   "s": {
+    "label": "Zine shop"
+   },
+   "ctx": "s",
+   "v": "held5"
+  },
+  {
+   "t": "new link: Merch",
+   "i": "site.link.add",
+   "s": {
+    "label": "Merch"
+   },
+   "ctx": "s",
+   "v": "held5"
+  },
+  {
+   "t": "ditch the merch link",
+   "i": "site.link.remove",
+   "s": {
+    "label": "merch"
+   },
+   "ctx": "s",
+   "v": "held5"
+  },
+  {
+   "t": "bump the tickets link up",
+   "i": "site.link.move",
+   "s": {
+    "dir": "up"
+   },
+   "ctx": "s",
+   "v": "held5"
+  },
+  {
+   "t": "the shop link should go to https://shop.mara.studio",
+   "i": "site.link.url",
+   "s": {
+    "url": "https://shop.mara.studio"
+   },
+   "ctx": "s",
+   "v": "held5"
+  },
+  {
+   "t": "link my youtube channel",
+   "i": "site.social.add",
+   "s": {
+    "net": "youtube"
+   },
+   "ctx": "s",
+   "v": "held5"
+  },
+  {
+   "t": "add soundcloud and bandcamp icons",
+   "i": "site.social.add",
+   "s": {
+    "net": "soundcloud"
+   },
+   "ctx": "s",
+   "v": "held5"
+  },
+  {
+   "t": "take the facebook icon off",
+   "i": "site.social.remove",
+   "s": {
+    "net": "facebook"
+   },
+   "ctx": "s",
+   "v": "held5"
+  },
+  {
+   "t": "add a contact email button for hi@band.com",
+   "i": "site.button.email",
+   "s": {
+    "email": "hi@band.com"
+   },
+   "ctx": "s",
+   "v": "held5"
+  },
+  {
+   "t": "can we get a call button",
+   "i": "site.button.phone",
+   "ctx": "s",
+   "v": "held5"
+  },
+  {
+   "t": "add directions to 4 mill lane",
+   "i": "site.map",
+   "s": {
+    "address": "4 mill lane"
+   },
+   "ctx": "s",
+   "v": "held5"
+  },
+  {
+   "t": "new faq question: are dogs allowed?",
+   "i": "site.faq.add",
+   "ctx": "s",
+   "v": "held5"
+  },
+  {
+   "t": "add a team member called Jo as head chef",
+   "i": "site.team.add",
+   "s": {
+    "name": "Jo"
+   },
+   "ctx": "s",
+   "v": "held5"
+  },
+  {
+   "t": "add a review from Priya: lovely service",
+   "i": "site.quote.add",
+   "s": {
+    "name": "Priya"
+   },
+   "ctx": "s",
+   "v": "held5"
+  },
+  {
+   "t": "add a basic tier at $5",
+   "i": "site.price.add",
+   "s": {
+    "name": "Basic"
+   },
+   "ctx": "s",
+   "v": "held5"
+  },
+  {
+   "t": "put a vimeo video in",
+   "i": "site.video",
+   "ctx": "s",
+   "v": "held5"
+  },
+  {
+   "t": "rename the testimonials section to Kind words",
+   "i": "site.section.title",
+   "s": {
+    "block": "testimonials",
+    "text": "Kind words"
+   },
+   "ctx": "s",
+   "v": "held5"
+  },
+  {
+   "t": "make the footer say all rights reserved",
+   "i": "site.footer",
+   "ctx": "s",
+   "v": "held5"
+  },
+  {
+   "t": "left align the text in the features",
+   "i": "site.align",
+   "s": {
+    "align": "left",
+    "block": "features"
+   },
+   "ctx": "s",
+   "v": "held5"
+  },
+  {
+   "t": "paint the faq section pink",
+   "i": "site.block.color",
+   "s": {
+    "block": "faq"
+   },
+   "ctx": "s",
+   "v": "held5"
+  },
+  {
+   "t": "sharper corners",
+   "i": "site.radius",
+   "s": {
+    "size": "less"
+   },
+   "ctx": "s",
+   "v": "held5"
+  },
+  {
+   "t": "set the site language to french",
+   "i": "site.lang",
+   "s": {
+    "lang": "fr"
+   },
+   "ctx": "s",
+   "v": "held5"
+  },
+  {
+   "t": "add a menu item flat white $3.50",
+   "i": "site.item.add",
+   "s": {
+    "title": "Flat white"
+   },
+   "ctx": "s",
+   "v": "held5"
+  },
+  {
+   "t": "add Shop to the menu",
+   "i": "site.nav.add",
+   "s": {
+    "name": "Shop"
+   },
+   "ctx": "s",
+   "v": "held5"
+  },
+  {
+   "t": "line them up on the top",
+   "i": "canvas.align",
+   "s": {
+    "dir": "top"
+   },
+   "ctx": "cs",
+   "v": "held5"
+  },
+  {
+   "t": "space these out evenly",
+   "i": "canvas.distribute",
+   "ctx": "cs",
+   "v": "held5"
+  },
+  {
+   "t": "ungroup this",
+   "i": "canvas.ungroup",
+   "ctx": "cs",
+   "v": "held5"
+  },
+  {
+   "t": "bring it forward",
+   "i": "canvas.order",
+   "s": {
+    "dir": "up"
+   },
+   "ctx": "cs",
+   "v": "held5"
+  },
+  {
+   "t": "draw a circle",
+   "i": "canvas.add",
+   "s": {
+    "kind": "ellipse"
+   },
+   "ctx": "cs",
+   "v": "held5"
+  },
+  {
+   "t": "make it 400 x 300",
+   "i": "canvas.resize",
+   "ctx": "cs",
+   "v": "held5"
+  },
+  {
+   "t": "rename this layer to Header",
+   "i": "canvas.layer.rename",
+   "s": {
+    "name": "Header"
+   },
+   "ctx": "cs",
+   "v": "held5"
+  },
+  {
+   "t": "snap everything to the grid",
+   "i": "canvas.snap",
+   "ctx": "cs",
+   "v": "held5"
+  },
+  {
+   "t": "stop all the animations",
+   "i": "settings.motion",
+   "ctx": "g",
+   "v": "held5"
+  },
+  {
+   "t": "turn notifications back on",
+   "i": "settings.notify",
+   "ctx": "g",
+   "v": "held5"
+  },
+  {
+   "t": "heart the last message",
+   "i": "chat.react",
+   "ctx": "g",
+   "v": "held5"
+  },
+  {
+   "t": "make the logo task urgent",
+   "i": "task.priority",
+   "ctx": "g",
+   "v": "held5"
+  },
+  {
+   "t": "remind me in 20 minutes to check the oven",
+   "i": "timer",
+   "ctx": "g",
+   "v": "held5"
+  },
+  {
+   "t": "find inspiration for a cozy cafe",
+   "i": "inspo.search",
+   "ctx": "g",
+   "v": "held5"
+  },
+  {
+   "t": "brb",
+   "i": "settings.away",
+   "ctx": "g",
+   "v": "held5"
   }
  ]
 }

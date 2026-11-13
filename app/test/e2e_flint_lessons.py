@@ -85,7 +85,7 @@ def main():
             assert pg.evaluate("TribeSiteDesigner.state().open"), "Show me opened the designer"
 
             # ---- in the designer: "teach me export"
-            pg.fill("#wdz-in", "teach me export"); pg.press("#wdz-in", "Enter")
+            pg.fill("#flm-in-designer", "teach me export"); pg.press("#flm-in-designer", "Enter")
             pg.wait_for_function("document.querySelector('#fls h3').textContent === 'Export' && !document.querySelector('#fls').hidden", timeout=5000)
             pg.click("#fls [data-fls='show']")
             ring_on(pg)

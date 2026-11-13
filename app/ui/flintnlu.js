@@ -415,6 +415,38 @@
   I('people.online', 'people', [/^(?:who is|who are|whos|anyone|anybody|is anyone|is anybody|who else is)\s+(?:online|on|here|around|active|on right now|in the tribe right now)(?:\s+(?:right now|right|now|today))?$/, /^(?:show|list|see)\s+(?:me\s+)?(?:who is|whos|everyone|people|the people|everybody)\s+(?:online|here|around)(?:\s+(?:right now|right|now))?$/, /^(?:who is online|online people|people online|whos online)$/], { p: 0.94, ex: ["who's online", 'is anyone around'] });
   I('people.working', 'people', [/^(?:who is|whos|is anyone|anyone|is anybody|who else is|who are)\s+(?:working on|editing|building|in|looking at|doing|on)\s+(?<what>.+)$/, /^(?:who is|whos)\s+(?:in charge of|handling)\s+(?<what>.+)$/], { p: 0.96, ex: ["who's working on the website", 'is anyone editing the launch plan'] });
 
+  // feat/flint-unify: more everyday commands anywhere (app/ui/flintcmds.js runs them)
+  const TUNIT = '(?<u>seconds?|secs?|minutes?|mins?|min|hours?|hrs?|h|m|s)';
+  I('timer', 'local', [new RegExp(`^(?:set|start|put on|run|make)\\s+(?:me\\s+)?(?:a\\s+|an\\s+)?(?:(?<n>\\d+)\\s*${TUNIT}\\s+)?timer(?:\\s+for\\s+(?<n2>\\d+)\\s*(?<u2>seconds?|secs?|minutes?|mins?|min|hours?|hrs?|h|m|s))?(?:\\s+(?:for|to|called)\\s+(?<what>.+))?$`),
+    new RegExp(`^(?:timer|countdown)\\s+(?:for\\s+)?(?<n>\\d+)\\s*${TUNIT}$`), new RegExp(`^(?:remind|ping|nudge|tell)\\s+me\\s+in\\s+(?<n>\\d+)\\s*${TUNIT}(?:\\s+(?:to|about|that)\\s+(?<what>.+))?$`)],
+    { req: { n: 'For how long?' }, fill: s => { const n = +(s.n || s.n2 || 0), u = String(s.u || s.u2 || 'm').toLowerCase(); if (!n && (s.n || s.n2)) return null; return { n: n || '', secs: n * (/^h/.test(u) ? 3600 : /^s/.test(u) ? 1 : 60), what: s.what || '' }; }, ex: ['set a timer for 10 minutes', 'remind me in 5 minutes to stretch', 'timer 25 min'] });
+  I('settings.motion', 'look', [/^(?:turn|switch)\s+(?<on>on|off)\s+(?:the\s+|all\s+)?(?:animations?|motion|transitions|movement|effects)$/, /^(?:turn|switch)\s+(?:the\s+|all\s+)?(?:animations?|motion|transitions)\s+(?<on>on|off)$/, /^(?:reduce|less|no|stop|disable|kill|calm down|tone down|cut)\s+(?:all\s+)?(?:the\s+)?(?:motion|animations?|transitions|movement|moving stuff|effects)$/, /^(?:reduced motion|reduce motion)(?:\s+(?<on>on|off))?$/, /^(?<en>enable|bring back|restore|allow)\s+(?:the\s+)?(?:animations?|motion|transitions)$/, /^(?:animations? (?:are )?(?:too much|annoying|distracting|make me (?:dizzy|sick)))$/],
+    { fill: (s, c) => ({ on: s.on === 'on' || !!s.en || (s.on !== 'off' && !/\boff\b|\breduce|\bless\b|\bno\b|\bstop|\bdisable|\bkill|\bcalm|\btone|\bcut|too much|annoying|distracting|dizzy|sick/.test(c)) }), ex: ['turn off animations', 'reduce motion', 'bring back animations'] });
+  I('settings.notify', 'team', [/^(?<off>mute|silence|turn off|disable|stop|pause|snooze|hush|quiet)\s+(?:all\s+|the\s+|my\s+)?(?:notifications|notification|notifs|alerts|pings|push notifications|buzzing)(?:\s+(?:for (?:now|a while|today)))?$/, /^(?:turn|switch)\s+(?:the\s+|my\s+)?(?:notifications|notifs|alerts|pings)\s+(?<on>on|off)$/, /^(?<on2>unmute|turn on|enable|resume|start)\s+(?:the\s+|my\s+)?(?:notifications|notification|notifs|alerts|pings|push notifications)$/, /^(?:do not disturb|dnd)(?:\s+(?<on3>on|off))?$/, /^(?:stop|no more)\s+(?:the\s+)?(?:pings|buzzing)$/],
+    { fill: (s, c) => ({ on: !!s.on2 || s.on === 'on' || s.on3 === 'off' }), ex: ['mute notifications', 'turn on notifications', 'do not disturb'] });
+  I('settings.away', 'people', [/^(?:appear|go|set (?:me|my status) (?:to|as)?|mark me(?: as)?|show me as|i am|im)\s+(?<st>away|offline|invisible|online|back|available|here|around|busy|afk)$/, /^(?<st2>afk|brb|going afk|be right back|back online)$/, /^(?<hide>hide|stop showing)\s+where i am$/, /^(?<show>show|share)\s+where i am$/],
+    { fill: (s, c) => { const st = String(s.st || s.st2 || '').toLowerCase(); if (s.hide) return { show: false }; if (s.show) return { show: true }; return { away: /away|offline|invisible|busy|afk|brb|be right back/.test(st) && !/back online/.test(st) }; }, ex: ['appear away', "i'm back", 'hide where i am'] });
+  I('chat.pin', 'chat', [/^(?<un>un)?pin\s+(?:the\s+|that\s+|this\s+|my\s+)?(?:last\s+|latest\s+|previous\s+|newest\s+|most recent\s+)?(?:message|msg|post|one)?(?:\s+in\s+(?:the\s+)?chat)?$/, /^(?<un2>un)?pin\s+(?:it|that)$/], { fill: (s, c) => ({ on: !s.un && !s.un2 }), ex: ['pin the last message', 'unpin that'] });
+  const EMO = { 'thumbs up': '👍', thumbsup: '👍', like: '👍', heart: '❤️', love: '❤️', laugh: '😂', lol: '😂', haha: '😂', fire: '🔥', tada: '🎉', party: '🎉', celebrate: '🎉', clap: '👏', eyes: '👀', check: '✅', tick: '✅', 'check mark': '✅', rocket: '🚀', '100': '💯', pray: '🙏', thanks: '🙏', wow: '😮', sad: '😢', pin: '📌' };
+  I('chat.react', 'chat', [new RegExp(`^(?:react|respond)\\s+(?:with\\s+)?(?:an?\\s+)?(?<e>${Object.keys(EMO).join('|')})(?:\\s+(?:emoji|reaction))?(?:\\s+(?:to|on)\\s+(?:the\\s+|that\\s+|this\\s+)?(?:last\\s+|latest\\s+)?(?:message|msg|post|one))?$`), new RegExp(`^(?:give|put|add|leave|drop)\\s+(?:an?\\s+)?(?<e>${Object.keys(EMO).join('|')})(?:\\s+(?:emoji|reaction))?\\s+(?:on|to)\\s+(?:the\\s+|that\\s+)?(?:last\\s+|latest\\s+)?(?:message|msg|post|one)$`), /^(?<e>like|heart|love)\s+(?:the\s+|that\s+)?(?:last\s+|latest\s+)?(?:message|msg|post)$/],
+    { fill: s => ({ emoji: EMO[String(s.e).toLowerCase()] || '👍' }), ex: ['react thumbs up to the last message', 'heart the last message', 'like that message'] });
+  I('task.reopen', 'tasks', [/^(?:reopen|re open|unfinish|undo done on|uncheck|un check|un complete|uncomplete)\s+(?:the\s+)?(?:task\s+)?(?<ref>.+)$/, /^(?:mark|set|move|put)\s+(?<ref>.+?)\s+(?:as\s+)?(?:not done|undone|open again|incomplete|unfinished|back to (?:to do|todo|open|the backlog|backlog))$/, /^(?<ref>.+?)\s+(?:is not|isnt|is not actually|wasnt|was not)\s+(?:done|finished)(?:\s+yet)?$/], { p: 0.97, req: { ref: 'Which task?' }, fill: (s, c, ctx) => refFill(s, ctx), ex: ['reopen the logo task', 'mark buy milk as not done', 'the menu task is not done'] });
+  I('task.unassign', 'tasks', [/^(?:unassign|un assign|take (?:me|myself) off|remove (?:me|myself|the assignee|the owner) from|drop)\s+(?:the\s+)?(?:task\s+)?(?<ref>.+)$/, /^(?:nobody|no one)\s+(?:owns|has)\s+(?<ref>.+)$/], { p: 0.92, req: { ref: 'Which task?' }, fill: (s, c, ctx) => { if (/^(?:the\s+)?(?:call|meeting|huddle|ball)$/.test(String(s.ref))) return null; return refFill(s, ctx); }, ex: ['unassign the logo task', 'take me off the menu task'] });
+  I('task.priority', 'tasks', [/^(?:make|mark|set|flag|bump|tag)\s+(?<ref>.+?)\s+(?:as\s+|to\s+)?(?<lvl>urgent|high priority|top priority|important|a priority|priority one|p1|low priority|not urgent|normal priority|p3)$/, /^(?<lvl>prioriti[sz]e|deprioriti[sz]e)\s+(?:the\s+)?(?:task\s+)?(?<ref>.+)$/],
+    { req: { ref: 'Which task?' }, fill: (s, c, ctx) => { const r = refFill(s, ctx); if (!r) return null; return { ...r, level: /low|not urgent|normal|p3|depriorit/.test(String(s.lvl)) ? 'low' : 'high' }; }, ex: ['make the logo task urgent', 'prioritize buy milk', 'mark the menu task low priority'] });
+  I('file.whiteboard', 'docs', [/^(?:new|start|create|make|open|give me|draw on)\s+(?:a\s+|an\s+)?(?:fresh\s+|new\s+|blank\s+|empty\s+|clean\s+)+(?:whiteboard|white board|drawing board|sketch board)$/, /^(?:new|start|create|make)\s+(?:a\s+)?(?:whiteboard|white board)(?:\s+(?:called|named|for)\s+(?<name>.+))?$/, /^(?:lets|let us)\s+(?:sketch|draw|whiteboard)(?:\s+(?:it|this|something))?(?:\s+out)?$/], { ex: ['start a fresh whiteboard', 'new whiteboard', 'lets sketch it out'] });
+  I('flint.clear', 'local', [/^(?:clear|wipe|reset|empty|clean)\s+(?:out\s+)?(?:our|the|this|my|your)?\s*(?:chat|thread|conversation|history|messages)(?:\s+(?:with you|with flint))?(?:\s+flint)?$/, /^(?:clear|reset)\s+flint(?:s chat)?$/, /^(?:start (?:over|fresh|a new chat)|new conversation|fresh start)$/], { ex: ['clear our chat', 'start over', 'reset flint'] });
+  I('doc.template', 'docs', [/^(?:new|start|make|create|write|open|use|draft)\s+(?:a\s+|an\s+|the\s+)?(?:doc\s+|page\s+)?(?:from|with|using|off)\s+(?:the\s+|a\s+|our\s+)?(?<tpl>.+?)\s+template$/, /^(?:use|open|pick|start|fill in|fill out)\s+(?:the\s+|a\s+|our\s+)(?<tpl>.+?)\s+template$/, /^(?:show|open|browse|see)\s+(?:the\s+|all\s+|my\s+)?(?:doc\s+|company\s+)?templates(?<tpl>)$/],
+    { p: 0.94, fill: (s, c) => (/\b(?:website|site|landing)\b/.test(String(s.tpl)) ? null : { tpl: String(s.tpl || '').trim() }), ex: ['new doc from the meeting notes template', 'use the nda template', 'open the doc templates'] });
+  I('market.add', 'market', [/^(?:add|install|get|use|grab)\s+(?<name>.+?)\s+(?:from|off|via|through)\s+(?:the\s+)?(?:marketplace|market|store|catalog)$/, /^(?:add|install)\s+(?:the\s+)?(?<name>.+?)\s+(?:plugin|extension|add on|addon|integration|mcp server|mcp)$/], { ex: ['add three js from the marketplace', 'install the github mcp'] });
+  I('inspo.search', 'market', [/^(?:find|search|look for|get|show me|give me|pull up|collect)\s+(?:me\s+)?(?:some\s+)?(?:inspiration|inspo|references|reference pictures|reference images|mood pictures|moodboard pictures|ideas pictures)\s+(?:for|of|about|on|with)\s+(?<q>.+)$/, /^(?:inspiration|inspo)\s+(?:for|of)\s+(?<q>.+)$/, /^(?:add|pin|put)\s+(?<q>.+?)\s+(?:to|on)\s+(?:my\s+|the\s+)?(?:inspiration board|inspo board|moodboard|mood board|board)$/], { ex: ['find inspiration for a cozy cafe', 'inspo for neon arcade'] });
+  I('nav.people', 'nav', [/^(?:open|show|show me|see|who is in|whos in|list)\s+(?:the\s+)?(?:people|people panel|everyone|members|the tribe|my tribe|friends|my friends|teammates|the team)(?:\s+(?:panel|list|here))?$/, /^(?:people|people panel|members list)$/], { p: 0.92, label: 'People', ex: ['open the people panel', 'show me everyone'] });
+  I('nav.work', 'nav', [/^(?:open|show|show me|go to|see|browse|find)\s+(?:the\s+|my\s+|some\s+)?(?:work|gigs|gig board|work board|jobs|odd jobs|time bank)(?:\s+(?:page|board|tab))?$/, /^(?:any|are there any)\s+(?:gigs|jobs|work)(?:\s+(?:for me|going|open))?$/, /^(?:find|get)\s+(?:me\s+)?(?:a\s+)?(?:gig|job)$/], { p: 0.92, label: 'Work', ex: ['open work', 'any gigs for me', 'find me a gig'] });
+  I('preview.open', 'preview', [/^(?:open|show|launch|start|run)\s+(?:the\s+)?(?:live\s+)?preview$/, /^(?:preview|test|try|play)\s+(?:it|the (?:app|game|site)|my (?:app|game|site)|our (?:app|game|site))$/, /^(?:let me see it|show me the app|run the app|run it)$/], { p: 0.93, ex: ['open the preview', 'run the app', 'try the game'] });
+  I('preview.share', 'preview', [/^(?:copy|share|get|send|give me)\s+(?:a\s+|the\s+)?(?:preview|play|test|demo)\s+link$/, /^(?:share|send)\s+(?:the\s+)?(?:preview|demo)\s+(?:with|to)\s+(?:a\s+friend|friends|someone|the team)$/], { ex: ['copy the preview link', 'share the demo with a friend'] });
+  I('settings.sound', 'look', [/^(?:turn|switch)\s+(?<on>on|off)\s+(?:the\s+|all\s+)?(?:sounds?|sound effects|ui sounds|clicks)$/, /^(?<off>mute|silence)\s+(?:the\s+|all\s+)?(?:sounds?|sound effects|ui sounds|app sounds)$/, /^(?<on2>unmute)\s+(?:the\s+)?(?:sounds?|app)$/], { fill: s => ({ on: s.on === 'on' || !!s.on2 }), ex: ['turn off sounds', 'mute sound effects'] });
+
+
   // ---------- websites and the design canvas: meaning, not just commands (feat/flint-site) ----------
   // design(c, raw, ctx) reads what people mean about a site or a design: wire buttons, pages, images, dark mode, blocks,
   // layouts, words, export; a template from what the site is FOR ("something for my band"); a lesson ("teach me tasks").
@@ -545,6 +577,136 @@
     if (/\b(?:add|put|insert|include|want|need|stick|give me)\b/.test(c) && /\b(?:big|wide|full width|large|huge)\s+(?:image|picture|photo)\b|\b(?:image|picture|photo)\s+(?:section|block|banner)\b/.test(c)) return hit('site.block.add', { block: 'image' });
     return null;
   }
+  // ---------- feat/flint-unify: many more free commands in the website designer and on the canvas ----------
+  // Text that people type (labels, URLs, handles, prices, quotes) is read from the raw words r, never the canonical c.
+  const NETS = [['instagram', 'instagram|insta|ig'], ['tiktok', 'tiktok|tik tok'], ['youtube', 'youtube|yt'], ['spotify', 'spotify'], ['twitter', 'twitter'], ['github', 'github'], ['linkedin', 'linkedin|linked in'],
+    ['facebook', 'facebook|fb'], ['twitch', 'twitch'], ['soundcloud', 'soundcloud|sound cloud'], ['bandcamp', 'bandcamp|band camp'], ['pinterest', 'pinterest'], ['threads', 'threads'], ['bluesky', 'bluesky|bsky'],
+    ['mastodon', 'mastodon'], ['discord', 'discord'], ['patreon', 'patreon'], ['substack', 'substack'], ['kofi', 'ko fi|kofi'], ['behance', 'behance'], ['dribbble', 'dribbble|dribble'], ['snapchat', 'snapchat'],
+    ['whatsapp', 'whatsapp|whats app'], ['telegram', 'telegram'], ['vimeo', 'vimeo'], ['apple music', 'apple music'], ['etsy', 'etsy']];
+  const netOf = c => { for (const [k, w] of NETS) if (new RegExp(`\\b(?:${w})\\b`).test(c)) return k; return ''; };
+  const netsOf = c => NETS.filter(([, w]) => new RegExp(`\\b(?:${w})\\b`).test(c)).map(([k]) => k);
+  const URL_RX = /\b((?:https?:\/\/|www\.)[^\s,;]+|[a-z0-9-]+(?:\.[a-z0-9-]+)*\.(?:com|org|net|io|co|app|dev|me|studio|shop|store|link|page|site|xyz|uk|de|fr|ca|au|us|tv|fm|art|band|club|blog)(?:\/[^\s,;]*)?)/i;
+  const EMAIL_RX = /\b([\w.+-]+@[\w-]+(?:\.[\w-]+)+)\b/;
+  const PHONE_RX = /(\+?\d[\d\s().-]{5,}\d)/;
+  const urlOf = r => { const e = EMAIL_RX.exec(r); const m = URL_RX.exec(e ? r.replace(e[0], ' ') : r); return m ? m[1].replace(/[.)]+$/, '') : ''; };
+  const capFirst = s => { s = String(s || '').trim(); return s ? s.charAt(0).toUpperCase() + s.slice(1) : s; };
+  const tidyLabel = s => /^(?:a|an|the|new|another|one|some|my|our)$/i.test(String(s || '').trim()) ? '' : capFirst(String(s || '').replace(/^["“'\s]+|["”'.!?\s]+$/g, '').replace(/^(?:my|our|the|a|an|this|that)\s+/i, '').replace(/\s+(?:please|pls|plz|too|thanks|thx|on (?:there|it|the (?:page|site))|here|for me)$/i, '').trim());
+  const AWORD = '(?:add|put|insert|include|create|make|need|want|give me|stick|throw|drop|new|chuck|slap|pop|get|i want|i need|we need|can we get|could we get|lets add|let us add)';
+  function linkLabel(r) {
+    const s = r.replace(EMAIL_RX, ' ').replace(URL_RX, ' ').replace(/\s+/g, ' ').trim();
+    let m = /\b(?:called|named|titled|labell?ed|that says|saying)\s+["“]?(.+?)["”]?(?:\s+(?:to|at|for|that goes to|linking to|pointing to)\s*)?$/i.exec(s);
+    if (m) return tidyLabel(m[1]);
+    m = /\blinks?\b\s*:\s*(.+)$/i.exec(s) || /\blinks?\b(?:\s+button)?(?:\s+in)?\s+(?:for|to|about|of|on)\s+(.+)$/i.exec(s) || /\b(?:add|put|need|want|insert|include|stick|get)\s+(?:a\s+|an\s+|my\s+|our\s+|the\s+)?(.+?)\s+links?\b/i.exec(s);
+    return m ? tidyLabel(m[1].replace(/\s+(?:to|at|for)$/i, '')) : '';
+  }
+  const ALIGN_W = c => /\b(?:left)\b/.test(c) ? 'left' : /\bright\b/.test(c) ? 'right' : /\b(?:center|centered|middle)\b/.test(c) ? 'center' : '';
+  function siteNew(c, r, ctx, hit) {
+    let m; const H = (intent, slots) => hit(intent, slots, 0.985);
+    const rl = r.toLowerCase(), url = urlOf(r), email = (EMAIL_RX.exec(r) || [])[1] || '';
+    const isAdd = new RegExp(`^(?:please\\s+)?${AWORD}\\b|\\b(?:add|put|insert|include|stick|throw|chuck|slap|pop)\\b`).test(c);
+    const isDel = (/\b(?:delete|get rid of|drop|take out|take off|kill|lose|ditch|scrap|nix|no more|cut)\b/.test(c) || /^take\b.*\b(?:off|out|away)$/.test(c)) && !/\bdrop in\b/.test(c);
+    const net = netOf(c);
+    // video and map before links and socials ("embed my youtube video", "a map with directions")
+    if (/\b(?:video|videos|clip|trailer|reel|vlog)\b/.test(c) && (isAdd || /\b(?:embed|show|play|feature)\b/.test(c)) && !isDel && !/\b(?:editor|editing)\b/.test(c)) return H('site.video', url ? { url } : {});
+    if (/\b(?:map|directions|how to find us|find us|where we are|our location|our address)\b/.test(c) && !isDel && !/\bsite ?map\b/.test(c)) { const am = /(?:\bmap\b|\baddress\b|\bdirections\b|\bfind us\b|\bwhere we are\b|\blocation\b)[^,:]*?(?:\s+(?:to|for|of|at|is)\s+|\s*[,:]\s*)(.+)$/i.exec(r); const addr = am && /\d|\b(?:street|st|road|rd|ave|avenue|lane|ln|square|sq|way|blvd)\b/i.test(am[1]) ? am[1].replace(/[.!]+$/, '').trim() : ''; return H('site.map', addr ? { address: addr } : {}); }
+    // socials: "add my instagram @mara", "tiktok icon", "remove the twitter link"
+    const linkVerb = /^(?:link|wire|hook|connect|point)\b/.test(c) && !/^link\s+(?:up\s+)?(?:my|our)\s+[a-z ]+?(?:channel|account|profile|page|handle)?$/.test(c) && /\bto\b|\bbutton/.test(c) || /\bbuttons?\b/.test(c) && /\b(?:link|links|linked|go|goes|point|wire)\b/.test(c) && !/^(?:add|put|insert|new|need|want|i want|i need)\b/.test(c) || /\blinks?\s+(?:work|go|point|lead|do)\b/.test(c);
+    if (net && net !== 'etsy' && !linkVerb && !/\b(?:video|embed|playlist|track|episode|album)\b/.test(c)) {
+      if (isDel) return H('site.social.remove', { net });
+      if (isAdd || /\b(?:icon|icons|handle|account|profile|socials?|link)\b/.test(c)) { const nets = netsOf(c).filter(n => n !== 'etsy'); const hm = /@([\w.]{2,40})/.exec(r) || /\b(?:handle|username|user name|account)\s+(?:is\s+)?@?([\w.]{2,40})/i.exec(r); return H('site.social.add', { net, ...(nets.length > 1 ? { nets } : {}), ...(hm ? { handle: hm[1].replace(/\.$/, '') } : {}), ...(url ? { url } : {}) }); }
+    }
+    // email and phone buttons
+    if (/\b(?:email|e mail|mail)\b/.test(c) && /\b(?:button|link|cta)\b/.test(c) && (isAdd || /^(?:an?\s+)?(?:email|e mail)/.test(c)) && !/\b(?:form|signup|sign up|newsletter|subscribe|list)\b/.test(c)) return H('site.button.email', email ? { email } : {});
+    if ((/\b(?:call|phone|ring|telephone|tel)\s+(?:button|us|me|number|link)\b|\bbutton\s+to\s+(?:call|ring|phone)\b|\bphone number\b/.test(c)) && isAdd && !/\b(?:says|saying|called|labell?ed)\b/.test(c)) { const pm = PHONE_RX.exec(r); return H('site.button.phone', pm ? { phone: pm[1].trim() } : {}); }
+    // contact email: "send the form to x@y", "contact email is x@y"
+    if (email && /\b(?:form|contact|messages?|enquiries|inquiries)\b/.test(c) && /\b(?:send|go|goes|email|set|use|is|change|deliver|forward)\b/.test(c) && !/\bbutton\b/.test(c)) return H('site.contact.email', { email });
+    // links (link-in-bio items, otherwise hero buttons or footer links)
+    if (/\blinks?\b/.test(c) && !linkVerb && !/\b(?:links? (?:list|section|block)|link in bio|linktree|link tree|links page)\b/.test(c)) {
+      if (isDel) { const lm = /\b(?:the\s+|my\s+|that\s+)?(.+?)\s+links?\b/i.exec(r.replace(/^.*?\b(?:delete|remove|get rid of|drop|take out|take off|kill|lose|ditch|scrap|nix|cut)\s+/i, '')); const lab = lm ? tidyLabel(lm[1]) : ''; return H('site.link.remove', lab && !/^(?:this|that|it|the)$/i.test(lab) ? { label: lab.toLowerCase() } : {}); }
+      const dir = /\b(?:to the top|at the top|first|to the start|top)\b/.test(c) ? 'top' : /\b(?:to the bottom|at the bottom|last|to the end|bottom)\b/.test(c) ? 'bottom' : /\bup\b|\bhigher\b|\babove\b/.test(c) ? 'up' : /\bdown\b|\blower\b|\bbelow\b/.test(c) ? 'down' : '';
+      if (dir && /\b(?:move|put|bump|push|shift|place|swap)\b/.test(c)) { const lm = /\b(?:move|put|bump|push|shift|place)\s+(?:the\s+|my\s+)?(.+?)\s+links?\b/i.exec(r); return H('site.link.move', { dir, ...(lm ? { label: tidyLabel(lm[1]).toLowerCase() } : {}) }); }
+      if ((url || email) && /\b(?:change|set|update|point|make|fix|should go|goes|go to|send)\b/.test(c) && !isAdd) { const lm = /\b(?:the\s+|my\s+)?([\w' -]+?)\s+link(?:'s)?\b/i.exec(r.replace(/^.*?\b(?:change|set|update|point|make|fix)\s+/i, '')); return H('site.link.url', { url: email ? 'mailto:' + email : url, ...(lm && !/^(?:the|this|that|a)$/i.test(lm[1]) ? { label: tidyLabel(lm[1]).toLowerCase() } : {}) }); }
+      if (isAdd || /^(?:an?\s+)?(?:new\s+)?link\b/.test(c)) { const label = linkLabel(r); return H('site.link.add', { ...(label ? { label } : {}), ...(url || email ? { url: email ? 'mailto:' + email : url } : {}) }); }
+    }
+    // buttons: "add a button that says Book now", "remove the second button"
+    if (/\bbuttons?\b/.test(c) && !/\b(?:work|wire|clickable|functional|go|goes|point|link it|lead)\b/.test(c)) {
+      if (isDel) { const ord = /\b(first|second|third|last|1st|2nd|3rd)\b/.exec(c); return H('site.button.remove', ord ? { which: ord[1] } : {}); }
+      if (/\b(?:add|put|insert|include|stick|throw|need|want|another|second|extra|new)\b/.test(c) && !linkVerb && !/\b(?:email|mail|call|phone)\b/.test(c)) { const lm = /\b(?:called|that says|saying|labell?ed|reading|:)\s*["“]?(.+?)["”]?(?:\s+(?:to|that goes to|linking to|pointing to)\s+.+)?$/i.exec(r.replace(URL_RX, ' ').trim()) || /\bbutton\s+(?:for|to)\s+(.+)$/i.exec(r.replace(URL_RX, ' ').trim()); return H('site.button.add', { ...(lm ? { label: tidyLabel(lm[1]) } : {}), ...(url ? { url } : {}) }); }
+    }
+    // list items: faq, pricing, team, testimonials, stats, features, menu / dates / episodes, gallery photos
+    if ((m = /\b(?:faq|question)\b(?:\s+(?:item|entry))?\s*(?::|-|,|asking|that asks|saying)?\s+(.+)$/i.exec(r)) && isAdd && /\?|\b(?:do|does|can|how|what|is|are|when|where|why|will)\b/i.test(m[1])) { const [q, a] = m[1].split(/\s*(?:\?\s*|\b(?:answer|answered|reply)\s*:?\s*)/i); return H('site.faq.add', { q: capFirst(q.replace(/^(?:the\s+)?question\s+/i, '').trim()) + '?', ...(a && a.trim() ? { a: capFirst(a.trim()) } : {}) }); }
+    if (/\b(?:plan|tier|package|pricing option|price option)\b/.test(c) && isAdd && !/\b(?:pricing table|pricing section|price table|prices section|plans section)\b/.test(c)) { const nm = /\b(?:called|named)\s+["“]?([\w' -]+?)["”]?(?:\s+(?:for|at)\b|$)/i.exec(r) || /\b(?:an?|another|new)\s+([\w'-]+)\s+(?:plan|tier|package)\b/i.exec(r); const pr = /([$€£¥]\s?\d[\d.,]*|\d[\d.,]*\s?(?:dollars|euros|pounds|usd|eur|gbp|\/mo|a month|per month))/i.exec(r); if (nm || pr) return H('site.price.add', { ...(nm && !/^(?:new|pricing|price|another)$/i.test(nm[1]) ? { name: capFirst(nm[1]) } : {}), ...(pr ? { price: pr[1].replace(/\s+/g, '') } : {}) }); }
+    if (/\bteam\b/.test(c) && isAdd && !/\bteam (?:section|block|page)\b|^(?:add|put|insert|include)\s+(?:a\s+|the\s+|our\s+)?team$/.test(c)) { const nm = /\b(?:add|put|include)\s+([\p{L}][\p{L}'-]*(?:\s+[\p{L}][\p{L}'-]*)?)\s+(?:to|on|in)\s+(?:the\s+|our\s+)?team/iu.exec(r) || /\bteam member\s+(?:called|named)?\s*([\p{L}][\p{L}'-]*)/iu.exec(r); const rm = /\bas\s+(?:our\s+|the\s+|a\s+|an\s+)?(.+)$/i.exec(r); if (nm && !/^(?:a|an|the|someone|somebody|people)$/i.test(nm[1])) return H('site.team.add', { name: capFirst(nm[1]), ...(rm ? { role: capFirst(rm[1].replace(/[.!]+$/, '')) } : {}) }); }
+    if (/\b(?:testimonial|review|quote)\b/.test(c) && isAdd && /\b(?:from|by|saying|says|that says|:)\b|:/.test(rl)) { const fm = /\b(?:from|by)\s+([\p{L}][\p{L}'-]*(?:\s+[\p{L}][\p{L}'-]*)?)/iu.exec(r); const qm = /\b(?:saying|says|that says|reading)\s+["“]?(.+?)["”]?$/i.exec(r) || /:\s*["“]?(.+?)["”]?$/.exec(r); return H('site.quote.add', { ...(fm ? { name: capFirst(fm[1].replace(/\s+(?:saying|says|that).*$/i, '')) } : {}), ...(qm ? { quote: capFirst(qm[1]) } : {}) }); }
+    if (/\b(?:stat|statistic|number|metric|counter)\b/.test(c) && isAdd && /\d/.test(r) && !/\bphone\b/.test(c)) { const sm = /([\d.,]+[%+kKmM]?)\s+(.+)$/.exec(r.replace(/^.*?\b(?:stat|statistic|number|metric|counter)s?\s*(?::|-|of|saying)?\s*/i, '')); if (sm) return H('site.stat.add', { value: sm[1], label: sm[2].replace(/[.!]+$/, '') }); }
+    if (/\b(?:feature|service|benefit|perk)\b/.test(c) && isAdd && (m = /\b(?:feature|service|benefit|perk)s?(?:\s*[:-]|\s+(?:called|named|titled))\s*["“]?(.+?)["”]?$/i.exec(r))) return H('site.feature.add', { title: capFirst(m[1]) });
+    if ((m = /\b(?:menu item|dish|drink|tour date|show date|gig|show|date|episode|event|item|product)\s*(?::|-|,|called|named)?\s+(.+)$/i.exec(r)) && isAdd && !/\b(?:to (?:the |my |our )?calendar|section|block|page|gallery|list section)\b/.test(c)) {
+      const kind = /menu|dish|drink/i.test(m[0]) ? 'menu' : /episode/i.test(m[0]) ? 'episode' : /tour|show|gig|date|event/i.test(m[0]) ? 'date' : 'item';
+      const pr = /\s+([$€£¥]\s?\d[\d.,]*)$/.exec(m[1]); const dt = !pr && /\s+((?:on\s+)?(?:jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\.?\s+\d{1,2}(?:st|nd|rd|th)?|\d{1,2}\/\d{1,2})$/i.exec(m[1]);
+      const title = (pr || dt ? m[1].slice(0, (pr || dt).index) : m[1]).replace(/[.!]+$/, '').trim(); if (title) return H('site.item.add', { kind, title: capFirst(title), ...(pr ? { meta: pr[1] } : dt ? { meta: capFirst(dt[1].replace(/^on\s+/i, '')) } : {}) });
+    }
+    if (/\b(?:photo|photos|picture|pictures|image|images|pic|pics)\b/.test(c) && /\b(?:to|in|into)\s+(?:the\s+|my\s+|our\s+)?gallery\b/.test(c) && /\b(?:add|upload|put|stick|drop|more|another)\b/.test(c)) return H('site.gallery.add', {});
+    // a countdown / a date
+    if (/\b(?:countdown|count down|days (?:left|to go|until))\b/.test(c) && !isDel) { const w = parseWhen(c, ctx && ctx.now); return H('site.countdown', { ...(w && w.date ? { date: w.date } : {}), ...((m = /\b(?:to|until|till|for)\s+(?:the\s+|our\s+)?([a-z][a-z ]+?)(?:\s+on\b|$)/i.exec(r)) && !(w && w.text && m[1].toLowerCase().includes(w.text)) && !/^(?:jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec|mon|tue|wed|thu|fri|sat|sun|next|this|tomorrow)/i.test(m[1]) ? { what: m[1].trim() } : {}) }); }
+    // words by section: "change the faq title to …", "footer should say …", "copyright", "announcement: …", "my bio …"
+    if (/\bcopyright\b|©/.test(rl) || /\b(?:update|fix|change)\s+(?:the\s+)?year\b.*\bfooter\b|\bfooter\b.*\byear\b/.test(c)) { const y = /\b(20\d\d)\b/.exec(r); return H('site.copyright', y ? { year: y[1] } : {}); }
+    if (/\bfooter\b/.test(c) && (m = /\bfooter(?:\s+(?:text|line|words|note))?\s*(?:should\s+(?:say|read)|to\s+say|to\s+read|says|reads|say|to|:|=)\s*["“]?(.+?)["”]?$/i.exec(r))) return H('site.footer', { text: m[1].replace(/[.!]+$/, '') });
+    if (/\b(?:bio|about me line|tagline about me)\b/.test(c) && (m = /\bbio\s*(?:should\s+(?:say|read)|to\s+say|to\s+read|says|reads|say|to|:|=|as)\s*["“]?(.+?)["”]?$/i.exec(r))) return H('site.bio', { text: capFirst(m[1].replace(/[.!]+$/, '')) });
+    if (/\b(?:announcement|announcement bar|notice|alert bar|top bar|banner)\b/.test(c) && (m = /\b(?:announcement|notice|banner|bar)\s*(?::|saying|that says|reading|to say|with)\s*["“]?(.+?)["”]?$/i.exec(r))) return H('site.announce', { text: capFirst(m[1].replace(/[.!]+$/, '')) });
+    { const tm = /\b(?:title|heading|header|headline|name)\b/.exec(c), b = tm && !/\bpages?\b/.test(c) ? blockOf(c.slice(0, tm.index)) : null; if (b && b !== 'hero' && b !== 'footer' && (m = /\b(?:title|heading|header|headline|name)\b\s*(?:should\s+(?:say|read|be)|to\s+say|to\s+read|to|say|says|reads|:|=)\s*["“]?(.+?)["”]?$/i.exec(r)) && /\b(?:change|set|rename|make|update|edit|call|retitle)\b|\bshould\b|:/.test(rl)) return H('site.section.title', { block: b, text: m[1].replace(/[.!]+$/, '') });
+      const b2 = blockOf(c); if (b2 && b2 !== 'hero' && (m = /\b(?:rename|retitle|call)\s+(?:the\s+|this\s+)?[\w ]+?\s+(?:section|block)\s+(?:to\s+)?["“]?(.+?)["”]?$/i.exec(r))) return H('site.section.title', { block: b2, text: m[1] }); }
+    // the menu (nav) and pages
+    if ((m = /\b(?:add|put)\s+(?:a\s+|an\s+)?["“]?([\w' -]+?)["”]?\s+(?:to|in|into|on)\s+(?:the\s+)?(?:menu|nav|navigation|navbar|nav bar|top menu|header menu)\b/i.exec(r)) && !/^(?:link|page)$/i.test(m[1])) return H('site.nav.add', { name: titleCase(m[1].replace(/\s+(?:page|link)$/i, '')) });
+    if (/\bpages?\b/.test(c) && /\b(?:move|put|shift|bump|reorder)\b/.test(c) && (m = /\b(up|down|left|right|first|last|to the (?:front|start|end|top|bottom))\b/.exec(c))) { const nm = /\bthe\s+([\w' -]+?)\s+page\b/i.exec(r); return H('site.page.move', { dir: /up|left|first|front|start|top/.test(m[1]) ? (/first|front|start|top/.test(m[1]) ? 'first' : 'up') : (/last|end|bottom/.test(m[1]) ? 'last' : 'down'), ...(nm && !/^this$/i.test(nm[1]) ? { name: nm[1].toLowerCase() } : {}) }); }
+    if ((m = /^(?:go to|open|show|show me|switch to|take me to|jump to|edit|view|see|back to)\s+(?:the\s+|my\s+|our\s+)?([\w' -]+?)\s+page$/i.exec(c)) && !/^(?:website|site|home ?page|landing)$/.test(m[1]) || (m = /^(?:go to|open|switch to|take me to|jump to|back to)\s+(?:the\s+)?(home ?page|homepage|home)$/.test(c) ? ['', 'home'] : null)) return H('site.page.go', { name: m[1].replace(/\s+/g, ' ') });
+    if (/\b(?:clear|empty|wipe|reset)\s+(?:this|the|my)\s+page\b/.test(c)) return H('site.page.clear', {});
+    // look per section: align, a color, rounder corners, the site's language, the logo
+    if (/\b(?:this|that|the selected|selected)\s+(?:section|block|part|bit)\b/.test(c)) {
+      const dir = /\b(?:to the top|at the top|first)\b/.test(c) ? 'top' : /\b(?:to the bottom|at the bottom|last)\b/.test(c) ? 'bottom' : /\b(?:up|higher|above)\b/.test(c) ? 'up' : /\b(?:down|lower|below)\b/.test(c) ? 'down' : '';
+      if (dir && /\b(?:move|put|shift|bump|push|place)\b/.test(c)) return H('site.block.move', { dir });
+      const col = colorOf(c); if (col && !/\b(?:accent|brand|primary)\b/.test(c) && !/\b(?:background|bg)\b/.test(c) && /\b(?:make|turn|paint|color|set|change|use|give|in)\b/.test(c)) return H('site.block.color', { color: col });
+    }
+    if (/\b(?:align|aligned|alignment|justify|center|left|right)\b/.test(c) && /\b(?:text|words|everything|content|copy|it all|all of it|stuff|things|alignment|aligned|align)\b/.test(c) && ALIGN_W(c) && !/\b(?:picture|image|photo|button)\b/.test(c)) { const b = blockOf(c.replace(/\b(?:the\s+)?(?:text|words|copy)\b/g, ' ')); return H('site.align', { align: ALIGN_W(c), ...(b ? { block: b } : {}) }); }
+    if (/^(?:left|right)\s+align\b|\balign\b.*\b(?:left|right)\b/.test(c)) { const b = blockOf(c); return H('site.align', { align: ALIGN_W(c), ...(b ? { block: b } : {}) }); }
+    { const b = blockOf(c), col = colorOf(c); if (b && b !== 'footer' && col && !/\b(?:accent|brand|primary|main colou?r|buttons?|theme)\b/.test(c) && !(/\b(?:background|bg|backdrop)\b/.test(c) && /^(?:gray|grey|black|white|dark|light|silver)$/.test(col.name)) && /\b(?:make|turn|paint|color|set|change|use|give|in)\b/.test(c)) return H('site.block.color', { block: b, color: col }); }
+    if (/\b(?:corners?|rounding|radius|rounded|rounder|sharper|squarer)\b/.test(c) && !/\b(?:picture|image|photo|avatar|pic)\b/.test(c)) return H('site.radius', { size: /\b(?:no|square|sharp|sharper|squarer|straight|none|less|remove)\b/.test(c) ? (/\b(?:no|none|square|straight|remove)\b/.test(c) && !/\bless\b/.test(c) ? 'none' : 'less') : 'more' });
+    if (/\b(?:language|lang)\b/.test(c) && /\b(?:site|website|page|pages|html)\b/.test(c) && (m = new RegExp(`\\b(${Object.keys(LANGS).join('|')})\\b`).exec(c))) return H('site.lang', { lang: LANGS[m[1]] });
+    if (/\blogo\b/.test(c) && isDel && !/\blogos\b/.test(c)) return H('site.logo.remove', {});
+    return null;
+  }
+
+  // the canvas: align, spread, group, duplicate, lock, order, resize, rename one layer, add shapes, snap, delete, zoom
+  const CDIR = c => /\bleft\b/.test(c) ? 'l' : /\bright\b/.test(c) ? 'r' : /\btop\b/.test(c) ? 't' : /\bbottom\b/.test(c) ? 'b' : /\b(?:middle|vertical(?:ly)?)\b/.test(c) ? 'cv' : /\b(?:center|centered|horizontal(?:ly)?)\b/.test(c) ? 'ch' : '';
+  const CNAME = { l: 'left', r: 'right', t: 'top', b: 'bottom', cv: 'middle', ch: 'center' };
+  function canvasNew(c, r, ctx, hit) {
+    let m; const H = (intent, slots) => hit(intent, slots, 0.985);
+    const OBJ = '(?:it|this|that|these|those|them|the selection|selection|selected|everything|all|all of them|the layers|layers|the layer|this layer|these layers|the frame|this frame|the boxes|the shapes|the items|things|stuff)';
+    if (/\b(?:distribute|evenly|equal spacing|same spacing|equal gaps|spread)\b/.test(c) && !/\btidy\b/.test(c)) return H('canvas.distribute', { axis: /\b(?:vertical(?:ly)?|top to bottom|up and down|column)\b/.test(c) ? 'v' : 'h' });
+    if ((/\b(?:align|line up|line them up|line these up)\b/.test(c) || new RegExp(`^(?:left|right|center|centre|top|bottom)\\s+align(?:\\s+${OBJ})?$`).test(c) || new RegExp(`^(?:center|centre)\\s+${OBJ}$`).test(c)) && CDIR(c)) { const d = CDIR(c); return H('canvas.align', { dir: CNAME[d] }); }
+    if (new RegExp(`^(?:ungroup|un group|break apart|break up|split up|explode)(?:\\s+(?:the\\s+)?(?:group|${OBJ}))?$`).test(c)) return H('canvas.ungroup', {});
+    if (new RegExp(`^(?:group|group up)(?:\\s+${OBJ})?(?:\\s+together)?$|^(?:make|put)\\s+(?:a\\s+group|${OBJ}\\s+(?:in|into)\\s+a\\s+group)(?:\\s+(?:of|with)\\s+${OBJ})?$`).test(c)) return H('canvas.group', {});
+    if (new RegExp(`^(?:duplicate|dupe|dup|clone|copy paste|copy and paste|double)(?:\\s+${OBJ})?$|^(?:make|give me)\\s+(?:a\\s+)?(?:copy|duplicate|clone)\\s+(?:of\\s+)?${OBJ}$|^(?:another one|one more)(?:\\s+of\\s+(?:these|this|those))?$`).test(c)) return H('canvas.duplicate', {});
+    if ((m = new RegExp(`^(?:un ?lock|lock|freeze|unfreeze)(?:\\s+${OBJ})?(?:\\s+(?:layer|layers|in place|down))?$`).exec(c))) return H('canvas.lock', { on: !/^un/.test(c) });
+    if ((m = new RegExp(`^(?:hide|unhide|show)\\s+(?:${OBJ}|this layer|that layer)(?:\\s+(?:layer|again))?$`).exec(c)) && !/\bshow (?:me|everything)\b/.test(c)) return H('canvas.hide', { on: /^hide/.test(c) });
+    if (/\b(?:bring|send|move|put|push|pull|place)\b/.test(c) && (m = /\b(to the front|to front|front|forward|forwards|on top|to the top|to the back|to back|back|backward|backwards|behind|below everything|underneath|to the bottom)\b/.exec(c)) && !/\b(?:page|screen|app|code)\b/.test(c)) return H('canvas.order', { dir: /front|on top|to the top/.test(m[1]) ? 'front' : /^forward/.test(m[1]) ? 'up' : /backward/.test(m[1]) ? 'down' : 'back' });
+    if ((m = /\b(\d{1,4})\s*(?:px\s*)?(?:x|by|×|\*)\s*(\d{1,4})\b/.exec(c)) && /\b(?:resize|size|make|set|scale|change)\b/.test(c)) return H('canvas.resize', { w: +m[1], h: +m[2] });
+    if ((m = /\b(width|height|wide|tall)\b\s*(?:to|of|=|:)?\s*(\d{1,4})|\b(\d{1,4})\s*(?:px\s+)?(wide|tall|width|height)\b/.exec(c)) && /\b(?:resize|size|make|set|change|width|height)\b/.test(c)) { const k = (m[1] || m[4]), v = +(m[2] || m[3]); return H('canvas.resize', /width|wide/.test(k) ? { w: v } : { h: v }); }
+    if (/\b(?:twice as big|double the size|double size|2x bigger|half the size|half as big|halve)\b/.test(c)) return H('canvas.resize', { scale: /half|halve/.test(c) ? 0.5 : 2 });
+    if ((m = /^(?:rename|name|call|label|retitle)\s+(?:this layer|the layer|that layer|the selection|this frame|the frame|it|this|that)\s+(?:to\s+|as\s+)?["“]?(.+?)["”]?$/i.exec(r))) return H('canvas.layer.rename', { name: m[1].trim() });
+    const SH = [['rect', 'rectangle|rect|box|square'], ['ellipse', 'circle|ellipse|oval|dot'], ['text', 'text box|text|label|heading|title|caption|paragraph'], ['button', 'button|cta'], ['frame', 'frame|artboard|container'], ['line', 'line|divider|rule'], ['card', 'card'], ['image', 'image placeholder|picture placeholder|placeholder|image box|photo placeholder']];
+    if (/^(?:add|draw|insert|make|create|put|drop|place|give me|i need|we need|stick|throw)\b/.test(c) && !/\b(?:screen|page|section|variants?|version|dark|light|login|pricing|dashboard)\b/.test(c)) {
+      for (const [k, w] of SH) if ((m = new RegExp(`^(?:add|draw|insert|make|create|put|drop|place|give me|i need|we need|stick|throw)\\s+(?:me\\s+)?(?:an?\\s+|another\\s+|one more\\s+|some\\s+|the\\s+)?(?:new\\s+|big\\s+|small\\s+|little\\s+|red\\s+|blue\\s+|round\\s+)?(?:${w})\\b(.*)$`).exec(c))) {
+        const tm = /\b(?:that says|saying|reading|with the (?:text|words)|with text|labell?ed|called|:)\s*["“]?(.+?)["”]?$/i.exec(r); const col = colorOf(c);
+        return H('canvas.add', { kind: k, ...(tm ? { text: tm[1] } : {}), ...(col ? { color: col } : {}) });
+      }
+    }
+    if (/\b(?:snap|stick|round)\b.*\b(?:to (?:the\s+)?grid|grid)\b|^(?:grid snap|snap to grid|align to (?:the )?grid)$/.test(c) || /\balign\b.*\bto (?:the )?grid\b/.test(c)) return H('canvas.snap', {});
+    if (new RegExp(`^(?:delete|erase|get rid of|kill|nuke|bin)\\s+${OBJ}$`).test(c) || /^(?:delete|erase)$/.test(c)) return H('canvas.delete', {});
+    if (/^(?:select all|select everything|select all (?:the )?layers|pick everything|grab everything)$/.test(c)) return H('canvas.selectall', {});
+    if (/^(?:zoom|zoom in|zoom out|zoom to fit|fit to screen|fit (?:it|everything|all)|show (?:me )?everything|show the whole (?:canvas|thing)|zoom to (?:the )?selection|zoom to 100|actual size|100%?)\b/.test(c) && /\b(?:zoom|fit|everything|whole|actual|100)\b/.test(c)) return H('canvas.zoom', { to: /\bin\b/.test(c) ? 'in' : /\bout\b/.test(c) ? 'out' : /\bselection\b/.test(c) ? 'selection' : /\b(?:100|actual)\b/.test(c) ? '100' : 'fit' });
+    return null;
+  }
+
   function design(c, raw, ctx) {
     const view = ctx.view === 'canvas' ? 'canvas' : (ctx.view === 'site' || (ctx.view === 'preview' && ctx.site)) ? 'site' : '';
     const out = [], hit = (intent, slots, conf) => { out.push({ intent, area: intent === 'lesson' ? 'help' : intent.startsWith('canvas.') ? 'canvas' : 'build', slots: slots || {}, conf: conf || (view === 'canvas' ? 0.98 : 0.97), req: {}, label: '' }); return out; };
@@ -553,7 +715,8 @@
     const IMG = /\b(?:image|images|picture|pictures|photo|photos|avatar|img|headshot|portrait|cover|pfp)\b/;
     if (view) {
       const cv = view === 'canvas';
-      if (!cv) { const x = siteMore(c, r, ctx, hit, false); if (x) return x; }
+      if (!cv) { const y = siteNew(c, r, ctx, hit); if (y) return y; const x = siteMore(c, r, ctx, hit, false); if (x) return x; }
+      else { const y = canvasNew(c, r, ctx, hit); if (y) return y; }
       // export (the website designer)
       if (!cv && /\b(?:export|download|zip|html|webpage file|web page file|save it as|get the code|code for this|source code|static files?)\b/.test(c) && !IMG.test(c)) return hit('site.export', { fmt: /\bzip\b/.test(c) ? 'zip' : /\b(?:html|webpage|web page)\b/.test(c) ? 'html' : '' });
       // words: "change the headline to …", "the button should say …", "rename the site to …"
@@ -631,6 +794,44 @@
     return out;
   }
 
+  // ---------- feat/flint-unify: when nothing fits, ask instead of shrugging ----------
+  // needsAI(text): only a request that really needs generation (long copy, pictures, code, judging) gets the AI card.
+  function needsAI(text) {
+    const t = ' ' + String(text || '').toLowerCase().replace(/[’']/g, '') + ' ';
+    return /\b(?:write|compose|draft|generate|come up with|invent|brainstorm|rewrite|reword)\b.*\b(?:copy|paragraphs?|story|stories|blog posts?|articles?|essays?|poems?|songs?|lyrics|scripts?|descriptions?|bio|about (?:us|section|page)|slogans?|taglines?|headlines?|names|jokes?|emails?|newsletters?|press release|captions?|tweets?|posts?)\b/.test(t)
+      || /\b(?:generate|create|draw|paint|illustrate|render|imagine)\s+(?:me\s+|us\s+)?(?:an?\s+|some\s+|the\s+)?(?:new\s+|ai\s+|cool\s+|cute\s+)?(?:images?|pictures?|illustrations?|logos?|photos?|icons?|artwork|art|mascots?|drawings?|3d models?|portraits?|banners?)\b/.test(t)
+      || /\b(?:make|design)\s+(?:me\s+|us\s+)?(?:an?\s+|some\s+)(?:new\s+|ai\s+|cool\s+|cute\s+)?(?:images?|pictures?|illustrations?|logos?|photos?|icons?|artwork|mascots?|drawings?|portraits?)\b/.test(t)
+      || /\b(?:code|coding|javascript|typescript|python|functions?|api|database|backend|server|login system|authentication|auth flow|payments?|stripe|checkout flow|animate|animations? (?:for|on|when)|shader|algorithm|refactor|debug|fix (?:the|this|a) bug|multiplayer|ai enemies|leaderboard|save system|physics)\b/.test(t)
+      || /\b(?:make it look like|in the style of|look like (?:apple|stripe|airbnb|google|notion|linear)|like (?:apple|stripe|airbnb|notion)s? site)\b/.test(t)
+      || /\b(?:translate|critique|what do you think|is (?:this|it) good|review my|give me feedback|rate my|improve (?:the|my|this) (?:design|copy|writing|text))\b/.test(t)
+      || /\b(?:poems?|haikus?|limericks?|sonnets?|odes?|verses?|rhymes?|riddles?|raps?|jokes?|bedtime story|short story|fan fiction)\b/.test(t);
+  }
+  // clarify(text, { view }): one short question with chips that do something real ({ label, say, fill })
+  function clarify(text, ctx) {
+    const c = prep(text, {}).c, v = (ctx && ctx.view) || 'app', raw = String(text || '').trim(), short = raw.length > 48 ? raw.slice(0, 46) + '…' : raw;
+    const ch = l => l.map(x => typeof x === 'string' ? { label: x, say: x.replace(/…$/, ''), fill: /…$/.test(x) } : x);
+    const Q = (q, l) => ({ q, chips: ch(l) });
+    if (v === 'designer' || v === 'site') {
+      if (/\blinks?\b|\burl\b|\bhref\b/.test(c)) return Q('Add a link: what should it say, and where does it go?', [{ label: 'Add a link called…', say: 'add a link called ', fill: true }, 'Make the buttons work', 'Add my instagram']);
+      if (/\b(?:pictures?|images?|photos?|pics?|avatar)\b/.test(c)) return Q('Which picture, and what should change?', ['Replace the picture', 'Make the picture round', 'Add a gallery']);
+      if (/\b(?:colou?rs?|accent|palette|teal|red|blue|green|pink|purple|orange|brand)\b/.test(c) || colorOf(c)) return Q('Which color should change: the accent, one section, or the whole theme?', ['Make the accent teal', 'Make this section teal', 'Use the ocean theme']);
+      if (/\bpages?\b/.test(c)) return Q('Something about pages: which one?', ['Add a page called About', 'Rename this page to…', 'Delete this page']);
+      if (/\bbuttons?\b/.test(c)) return Q('Which button, and what should it do?', ['Make the buttons work', 'Add a button that says…', 'Remove the second button']);
+      if (/\b(?:sections?|blocks?|parts?)\b/.test(c)) return Q('Which section? Click it in the preview, or pick one:', ['Add a section…', 'Move this section up', 'Hide this section']);
+      if (/\b(?:text|words|title|heading|headline|says?|wording|copy)\b/.test(c)) return Q('Which words? Say it like “change the headline to …”.', ['Change the headline to…', 'Footer should say…', 'Change the FAQ title to…']);
+      if (/\b(?:fonts?|type|typeface|letters)\b/.test(c)) return Q('Which fonts?', ['Use a serif font', 'Different fonts', 'Use a mono font']);
+      return Q(`I'm not sure which edit you mean by “${short}”. Pick one, or say it another way.`, ['Add a link for…', 'Add a section…', 'Change the headline to…', 'Make the buttons work']);
+    }
+    if (v === 'canvas') {
+      if (/\b(?:align|line up|left|right|center|centre)\b/.test(c)) return Q('Align which way? Select two or more layers first.', ['Align these to the left', 'Center them', 'Distribute evenly']);
+      if (/\b(?:add|draw|insert|shape|box|circle|text|button)\b/.test(c)) return Q('What should I add?', ['Add a rectangle', 'Add a text that says…', 'Add a button that says…']);
+      return Q(`I'm not sure what to do with “${short}” on the canvas. Pick one, or say it another way.`, ['A login screen', 'Tidy up', 'Group them', 'Add a text that says…']);
+    }
+    if (v === 'preview') return Q(`I'm not sure what to change for “${short}”. Pick something on the page with Edit, or try one of these:`, ['Make the title bigger', 'Reload the preview', 'Show it on a phone', 'Leave a comment']);
+    const body = raw.replace(/^(?:please|pls|can you|could you)\s+/i, '');
+    return Q(`I'm not sure what to do with “${short}”. Should I…`, [{ label: 'Add it as a task', say: `add a task to ${body}` }, { label: 'Save it as a note', say: `note: ${body}` }, { label: 'Search for it', say: `find ${body}` }, { label: 'What can you do?', say: 'what can you do' }]);
+  }
+
   // ---------- slot helpers used by the catalog ----------
   function refFill(s, ctx, strict) {
     const t = taskRef(s.ref, ctx);
@@ -698,6 +899,8 @@
   const FUNC = ['could', 'would', 'should', 'there', 'their', 'about', 'with', 'what', 'when', 'where', 'which', 'this', 'that', 'them', 'they', 'have', 'from', 'your', 'into', 'than', 'then', 'also', 'just', 'some', 'more', 'most', 'very', 'much', 'many', 'such', 'does', 'made', 'like', 'here', 'were', 'will', 'works', 'many', 'look', 'need', 'want', 'know', 'take', 'make', 'work', 'have', 'done', 'left', 'find'];
   ['ack', 'abc', 'ing'].concat(FUNC.filter(w => !['make', 'look', 'need', 'want', 'know', 'take', 'work', 'done', 'left', 'find', 'many', 'have', 'here', 'does', 'what', 'when', 'where', 'which', 'this', 'that', 'with', 'will'].includes(w))).forEach(w => VOCAB.delete(w));
   FUNC.forEach(w => KEEP.add(w));
+  // feat/flint-unify: words the new site and canvas commands read (so spelling tolerance never "fixes" them away)
+  'trailer trailers swap swaps dupe dup ungroup unlock unhide distribute evenly lock freeze rectangle rect ellipse oval circle artboard placeholder snap grid zoom resize width height wide tall twice halve front back forward backward behind underneath instagram insta tiktok youtube spotify twitter github linkedin facebook twitch soundcloud bandcamp pinterest threads bluesky mastodon discord patreon substack kofi behance dribbble snapchat whatsapp telegram vimeo etsy social socials icon icons handle email phone call map directions address countdown copyright footer announcement banner bio menu nav navigation navbar align alignment justify corners rounder rounding radius sharper language logo testimonial quote review plan tier package team stat metric feature perk dish drink episode gig tour faq question clear empty wipe timer animations motion notifications notifs mute unmute snooze pin unpin react thumbs heart reopen unassign priority urgent prioritize whiteboard inspiration inspo template templates marketplace gigs away offline invisible afk brb sounds'.split(' ').forEach(w => { VOCAB.add(w); KEEP.add(w); });
   'noon midnight morning afternoon evening night tonight weekend week weeks month months day days hour hours minute minutes mins today tomorrow eod eow sept'.split(' ').forEach(w => { VOCAB.add(w); KEEP.add(w); });
 
   // ---------- TF-IDF (examples for "did you mean", taught phrases, and the knowledge base) ----------
@@ -842,5 +1045,5 @@
   }
 
   const catalog = () => CAT.map(x => ({ id: x.id, area: x.area, label: x.label, examples: x.ex.slice() }));
-  return { parse, one, split, prep, parseWhen, colorOf, person, taskRef, index, search, catalog, COLORS, THEMES, LANGS, detectLang, version: 1 };
+  return { needsAI, clarify, parse, one, split, prep, parseWhen, colorOf, person, taskRef, index, search, catalog, COLORS, THEMES, LANGS, detectLang, version: 1 };
 });

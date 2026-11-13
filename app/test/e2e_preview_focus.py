@@ -151,7 +151,7 @@ def main():
             host.keyboard.press("Escape")
             host.wait_for_function("document.querySelector('#pvw .pvw-edit').getAttribute('aria-pressed') === 'false'", timeout=3000)
             assert host.evaluate(FOCUS), "Esc left edit mode, not the workspace"
-            host.focus("#pvf-in"); host.keyboard.press("Escape")
+            host.focus("#flm-in-preview"); host.keyboard.press("Escape")
             assert host.evaluate(FOCUS), "Esc in Flint's box only leaves the box"
             # ---- 5: the ⋯ menu ----
             assert not host.locator("#pvw [data-act='shot']").is_visible(), "screenshot is tucked into ⋯"
@@ -171,9 +171,9 @@ def main():
             # ---- screenshots with a real build picked ----
             if take:
                 host.evaluate("TribePreview.open()"); host.wait_for_function(FOCUS, timeout=8000)
-                host.wait_for_selector("#pvf.is-open #pvf-in", timeout=5000)
-                host.fill("#pvf-in", "make a landing page for Sunrise Bakery in green"); host.press("#pvf-in", "Enter")
-                host.wait_for_function("[...document.querySelectorAll('#pvf-feed .pvf-it')].some(li => /Built a landing page/i.test(li.innerText))", timeout=15000)
+                host.wait_for_selector("#pvf.is-open #flm-in-preview", timeout=5000)
+                host.fill("#flm-in-preview", "make a landing page for Sunrise Bakery in green"); host.press("#flm-in-preview", "Enter")
+                host.wait_for_function("[...document.querySelectorAll('#pvf .fl-thread > :not(.streaming)')].some(li => /Built a landing page/i.test(li.innerText))", timeout=15000)
                 host.evaluate("TribePreview.close()"); host.wait_for_timeout(300)
                 for (vw, vh, nm) in ((1440, 900, "1440"), (1235, 776, "1235")):
                     host.set_viewport_size({"width": vw, "height": vh})

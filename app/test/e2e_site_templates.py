@@ -176,15 +176,15 @@ def main():
 
             # ---- 4: Flint builds the merch template for free ----
             host.evaluate("TribePreview.open()")
-            host.wait_for_selector("#pvf.is-open #pvf-in", timeout=10000)
-            host.fill("#pvf-in", "make a merch store for Ember Socks")
-            host.press("#pvf-in", "Enter")
-            host.wait_for_function("[...document.querySelectorAll('#pvf-feed .pvf-it')].some(li => /Built a merch shop for Ember Socks/.test(li.innerText))", timeout=15000)
+            host.wait_for_selector("#pvf.is-open #flm-in-preview", timeout=10000)
+            host.fill("#flm-in-preview", "make a merch store for Ember Socks")
+            host.press("#flm-in-preview", "Enter")
+            host.wait_for_function("[...document.querySelectorAll('#pvf .fl-thread > :not(.streaming)')].some(li => /Built a merch shop for Ember Socks/.test(li.innerText))", timeout=15000)
             mp = Path(repo, "builds", "ember-socks", "index.html")
             assert mp.exists(), "the shop went into builds/, not over the link page"
             assert "Ember Socks" in mp.read_text() and "Mara O. Ceramics" in Path(repo, "index.html").read_text()
-            assert host.locator("#pvf-feed [data-pvf=customize]").count() >= 1, "Flint offers Customize"
-            host.locator("#pvf-feed [data-pvf=customize]").last.click()
+            assert host.locator("#pvf .fl-thread [data-pvf=customize]").count() >= 1, "Flint offers Customize"
+            host.locator("#pvf .fl-thread [data-pvf=customize]").last.click()
             host.wait_for_selector("#slx.slx--edit #slx-form input[data-path=name]", timeout=10000)
             assert host.input_value("#slx-form input[data-path=name]") == "Ember Socks"
             host.keyboard.press("Escape")

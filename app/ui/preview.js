@@ -688,7 +688,7 @@
   function phoneGestures() {
     const sw = (el, onLeft, onRight) => {
       if (!el) return; let x0 = null, y0 = 0;
-      el.addEventListener('pointerdown', e => { if (!isPhone() || e.target.closest('input, textarea, select, .pvf-props, .pvf-chips')) return; x0 = e.clientX; y0 = e.clientY; }, { passive: true });
+      el.addEventListener('pointerdown', e => { if (!isPhone() || e.target.closest('input, textarea, select, .pvf-props, .flm-chips, .flm-thread')) return; x0 = e.clientX; y0 = e.clientY; }, { passive: true });
       el.addEventListener('pointerup', e => { if (x0 === null) return; const dx = e.clientX - x0, dy = e.clientY - y0; x0 = null; if (Math.abs(dx) < 50 || Math.abs(dx) < Math.abs(dy) * 1.4) return; (dx < 0 ? onLeft : onRight)(); });
       el.addEventListener('pointercancel', () => { x0 = null; });
     };

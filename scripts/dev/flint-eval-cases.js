@@ -71,8 +71,8 @@ add('s', [
   ['use pink for the buttons', 'site.color', { color: 'pink' }],
   // blocks
   ['add a gallery', 'site.block.add', { block: 'gallery' }], ['add a pricing section', 'site.block.add', { block: 'pricing' }], ['put some testimonials in', 'site.block.add', { block: 'testimonials' }],
-  ['add a faq', 'site.block.add', { block: 'faq' }], ['add a contact form', 'site.block.add', { block: 'contact' }], ['add a team section', 'site.block.add', { block: 'team' }], ['add a video', 'site.block.add', { block: 'embed' }],
-  ['embed my youtube video', 'site.block.add', { block: 'embed' }], ['add some features', 'site.block.add', { block: 'features' }], ['add a links list', 'site.block.add', { block: 'links' }], ['add a footer', 'site.block.add', { block: 'footer' }],
+  ['add a faq', 'site.block.add', { block: 'faq' }], ['add a contact form', 'site.block.add', { block: 'contact' }], ['add a team section', 'site.block.add', { block: 'team' }], ['add a video', 'site.video'],
+  ['embed my youtube video', 'site.video'], ['add some features', 'site.block.add', { block: 'features' }], ['add a links list', 'site.block.add', { block: 'links' }], ['add a footer', 'site.block.add', { block: 'footer' }],
   ['i want people to be able to email me', 'site.block.add', { block: 'contact' }], ['show reviews from customers', 'site.block.add', { block: 'testimonials' }], ['add a photo grid', 'site.block.add', { block: 'gallery' }],
   ['add a section with prices', 'site.block.add', { block: 'pricing' }], ['questions and answers section', 'site.block.add', { block: 'faq' }], ['add a hero', 'site.block.add', { block: 'hero' }], ['ad a galery', 'site.block.add', { block: 'gallery' }],
   ['add a text section', 'site.block.add', { block: 'text' }], ['add my spotify embed', 'site.block.add', { block: 'embed' }], ['who we are section', 'site.block.add', { block: 'team' }],
@@ -154,7 +154,7 @@ add('g', [['can u make me one of those link pages for my bio', 'site.linkbio'], 
   ['how do i use huddles', 'lesson', { feature: 'huddles' }], ['tutorial on exporting', 'lesson', { feature: 'export' }], ['night theme', 'theme.dark-mode']]);
 add('s', [['the signup button goes nowhere', 'site.wire'], ['make the order button link to the menu page', 'site.wire', { to: 'menu' }], ['new page: Workshops', 'site.page.add', { name: 'Workshops' }],
   ['swap in a photo from my board', 'site.image.replace', { source: 'board' }], ['circle crop the headshot', 'site.image.shape', { shape: 'round' }], ['flip it to dark', 'site.dark', { mode: 'dark' }],
-  ['dark theme for the site pls', 'site.dark', { mode: 'dark' }], ['add customer reviews', 'site.block.add', { block: 'testimonials' }], ['add a map', 'site.block.add', { block: 'embed' }], ['ditch the footer', 'site.block.remove', { block: 'footer' }],
+  ['dark theme for the site pls', 'site.dark', { mode: 'dark' }], ['add customer reviews', 'site.block.add', { block: 'testimonials' }], ['add a map', 'site.map'], ['ditch the footer', 'site.block.remove', { block: 'footer' }],
   ['move the team section above the faq', 'site.block.move', { block: 'team' }], ['download a zip', 'site.export', { fmt: 'zip' }], ['change the headline to Hand thrown in Tucson', 'site.text', { field: 'headline', text: 'Hand thrown in Tucson' }],
   ['make the accent orange', 'site.color', { color: 'orange' }], ['add an faq section', 'site.block.add', { block: 'faq' }], ['rename this page Menu', 'site.page.rename', { name: 'Menu' }]]);
 add('cs', [['link this one to the checkout screen', 'canvas.wire', { to: 'checkout' }], ['make the photo a circle', 'canvas.image', { action: 'round' }], ['dark version', 'canvas.dark', { mode: 'dark' }]]);
@@ -234,7 +234,7 @@ add('s', [
   // sections: add, remove, hide, duplicate, move, layout
   ['add a newsletter signup', 'site.block.add', { block: 'newsletter' }], ['add a call to action at the end', 'site.block.add', { block: 'cta' }], ['add some stats', 'site.block.add', { block: 'stats' }], ['add a logo cloud', 'site.block.add', { block: 'logos' }],
   ['add a banner announcing the sale', 'site.block.add', { block: 'banner' }], ['put a divider between sections', 'site.block.add', { block: 'divider' }], ['add a big image section', 'site.block.add', { block: 'image' }], ['add a team section', 'site.block.add', { block: 'team' }],
-  ['add a pricing table', 'site.block.add', { block: 'pricing' }], ['add testimonials', 'site.block.add', { block: 'testimonials' }], ['add a faq', 'site.block.add', { block: 'faq' }], ['add a map', 'site.block.add', { block: 'embed' }],
+  ['add a pricing table', 'site.block.add', { block: 'pricing' }], ['add testimonials', 'site.block.add', { block: 'testimonials' }], ['add a faq', 'site.block.add', { block: 'faq' }], ['add a map', 'site.map'],
   ['remove the pricing', 'site.block.remove', { block: 'pricing' }], ['get rid of the testimonials', 'site.block.remove', { block: 'testimonials' }], ['delete the newsletter section', 'site.block.remove', { block: 'newsletter' }],
   ['hide the faq for now', 'site.block.hide', { block: 'faq' }], ['hide this section', 'site.block.hide'], ['hide the pricing until launch', 'site.block.hide', { block: 'pricing' }], ['show the faq again', 'site.block.show', { block: 'faq' }], ['unhide the pricing', 'site.block.show', { block: 'pricing' }],
   ['duplicate this section', 'site.block.dup'], ['copy the pricing section', 'site.block.dup', { block: 'pricing' }], ['make another one of these', 'site.block.dup'], ['clone the features block', 'site.block.dup', { block: 'features' }],
@@ -285,6 +285,93 @@ add('g', [
   ['build a chat app', 'site.starter-chat'], ['make a survey', 'site.starter-survey'], ['make a feedback form', 'site.starter-survey'], ['build a pomodoro timer', 'site.starter-pomodoro'],
   ['make a calculator', 'site.starter-calculator'], ['make a weather app', 'site.starter-weather'], ['build me a drawing app', 'site.starter-sketch'],
 ]);
+
+// ---- feat/flint-unify: the new free commands (designer, canvas, anywhere), with typos, slang and indirect wording ----
+const U = C.length;
+add('s', [
+  ['add a link for my book club', 'site.link.add', { label: 'Book club' }], ['add a link to my etsy shop', 'site.link.add', { label: 'Etsy shop' }], ['new link: Merch', 'site.link.add', { label: 'Merch' }],
+  ['add a link called Tickets to https://tix.example.com', 'site.link.add', { label: 'Tickets', url: 'https://tix.example.com' }], ['add a link to https://mara.studio', 'site.link.add', { url: 'https://mara.studio' }],
+  ['put a link in for my newsletter', 'site.link.add', { label: 'Newsletter' }], ['i want a link for the zine shop', 'site.link.add', { label: 'Zine shop' }], ['add anothr link for the podcast', 'site.link.add', { label: 'Podcast' }],
+  ['can we get a link to the tour dates', 'site.link.add', { label: 'Tour dates' }], ['add a link button for donations', 'site.link.add', { label: 'Donations' }], ['add link: Shop', 'site.link.add', { label: 'Shop' }],
+  ['pls add a link for my reading list', 'site.link.add', { label: 'Reading list' }], ['add a new link', 'site.link.add'], ['add a link that says Book a call', 'site.link.add', { label: 'Book a call' }],
+  ['remove the book club link', 'site.link.remove', { label: 'book club' }], ['delete the shop link', 'site.link.remove', { label: 'shop' }], ['get rid of the last link', 'site.link.remove', { label: 'last' }], ['ditch the podcast link', 'site.link.remove', { label: 'podcast' }],
+  ['move the shop link to the top', 'site.link.move', { dir: 'top' }], ['move the tickets link down', 'site.link.move', { dir: 'down' }], ['bump the merch link up', 'site.link.move', { dir: 'up' }], ['put the newsletter link last', 'site.link.move', { dir: 'bottom' }],
+  ['the shop link should go to https://shop.example.com', 'site.link.url', { url: 'https://shop.example.com' }], ['change the merch link to merch.example.com', 'site.link.url', { url: 'merch.example.com' }], ['point the podcast link at https://pod.example.com', 'site.link.url', { url: 'https://pod.example.com' }],
+  ['add my instagram', 'site.social.add', { net: 'instagram' }], ['add my insta @mara.makes', 'site.social.add', { net: 'instagram', handle: 'mara.makes' }], ['add a tiktok icon', 'site.social.add', { net: 'tiktok' }], ['add my youtube', 'site.social.add', { net: 'youtube' }],
+  ['link my spotify', 'site.social.add', { net: 'spotify' }], ['add github and linkedin icons', 'site.social.add', { net: 'github' }], ['add my twitch', 'site.social.add', { net: 'twitch' }], ['put my soundcloud on there', 'site.social.add', { net: 'soundcloud' }],
+  ['add a bandcamp link', 'site.social.add', { net: 'bandcamp' }], ['add my pinterest', 'site.social.add', { net: 'pinterest' }], ['add patreon', 'site.social.add', { net: 'patreon' }], ['add my bluesky handle @mara', 'site.social.add', { net: 'bluesky', handle: 'mara' }],
+  ['add my facebook page', 'site.social.add', { net: 'facebook' }], ['add a kofi button', 'site.social.add', { net: 'kofi' }], ['add my substack', 'site.social.add', { net: 'substack' }], ['add whatsapp', 'site.social.add', { net: 'whatsapp' }],
+  ['remove the twitter icon', 'site.social.remove', { net: 'twitter' }], ['delete my facebook', 'site.social.remove', { net: 'facebook' }], ['get rid of the tiktok link', 'site.social.remove', { net: 'tiktok' }],
+  ['add an email button', 'site.button.email'], ['add an email me button hello@mara.studio', 'site.button.email', { email: 'hello@mara.studio' }], ['add a button to email us', 'site.button.email'], ['add an email link', 'site.button.email'],
+  ['add a call button', 'site.button.phone'], ['add a button to call us at 555 0134', 'site.button.phone', { phone: '555 0134' }], ['add a phone number button', 'site.button.phone'],
+  ['send the contact form to hi@cafe.com', 'site.contact.email', { email: 'hi@cafe.com' }], ['contact email is orders@bakery.co', 'site.contact.email', { email: 'orders@bakery.co' }],
+  ['add a button that says Book now', 'site.button.add', { label: 'Book now' }], ['add another button called Menu', 'site.button.add', { label: 'Menu' }], ['add a button', 'site.button.add'], ['remove the second button', 'site.button.remove', { which: 'second' }], ['delete the last button', 'site.button.remove', { which: 'last' }],
+  ['add a map', 'site.map'], ['add a map to 12 Main Street', 'site.map', { address: '12 Main Street' }], ['add directions to 4 mill lane', 'site.map', { address: '4 mill lane' }], ['show where we are', 'site.map'], ['add our address: 88 High St', 'site.map', { address: '88 High St' }],
+  ['add a faq: do you deliver?', 'site.faq.add', { q: 'Do you deliver?' }], ['add a question: are dogs allowed?', 'site.faq.add'], ['new faq: can i return it? yes within 30 days', 'site.faq.add', { q: 'Can i return it?' }],
+  ['add a pro plan for $19', 'site.price.add', { name: 'Pro', price: '$19' }], ['add a pricing tier called Team for $49', 'site.price.add', { name: 'Team', price: '$49' }], ['add a basic plan', 'site.price.add', { name: 'Basic' }], ['add a $5 tier', 'site.price.add', { price: '$5' }],
+  ['add maya to the team', 'site.team.add', { name: 'Maya' }], ['add sam to the team as our baker', 'site.team.add', { name: 'Sam', role: 'Baker' }], ['add a team member called Jo', 'site.team.add', { name: 'Jo' }],
+  ['add a testimonial from Priya saying lovely service', 'site.quote.add', { name: 'Priya', quote: 'Lovely service' }], ['add a review: best tacos ever', 'site.quote.add', { quote: 'Best tacos ever' }], ['add a quote from Sam', 'site.quote.add', { name: 'Sam' }],
+  ['add a stat: 300 customers', 'site.stat.add', { value: '300', label: 'customers' }], ['add a number 12 years open', 'site.stat.add', { value: '12' }],
+  ['add a feature called Free delivery', 'site.feature.add', { title: 'Free delivery' }], ['add a service: Wedding cakes', 'site.feature.add', { title: 'Wedding cakes' }],
+  ['add a menu item Latte $4', 'site.item.add', { kind: 'menu', title: 'Latte', meta: '$4' }], ['add a tour date: Leeds Jun 3', 'site.item.add', { kind: 'date', title: 'Leeds' }], ['add an episode called Birds of the north', 'site.item.add', { kind: 'episode', title: 'Birds of the north' }], ['add a dish: Ramen $12', 'site.item.add', { kind: 'menu', title: 'Ramen' }],
+  ['add a photo to the gallery', 'site.gallery.add'], ['upload more pictures to the gallery', 'site.gallery.add'],
+  ['embed my youtube video https://youtu.be/abc', 'site.video', { url: 'https://youtu.be/abc' }], ['add a video', 'site.video'], ['put a vimeo clip in', 'site.video'], ['add our trailer', 'site.video'],
+  ['add a countdown to june 5', 'site.countdown'], ['count down to launch on friday', 'site.countdown'], ['countdown to the wedding', 'site.countdown'],
+  ['change the faq title to Good questions', 'site.section.title', { block: 'faq', text: 'Good questions' }], ['set the pricing heading to Plans', 'site.section.title', { block: 'pricing', text: 'Plans' }], ['rename the gallery section to Our work', 'site.section.title', { block: 'gallery', text: 'Our work' }], ['the team title should say The crew', 'site.section.title', { block: 'team', text: 'The crew' }],
+  ['footer should say made in leeds', 'site.footer', { text: 'made in leeds' }], ['change the footer text to all rights reserved', 'site.footer', { text: 'all rights reserved' }], ['update the copyright year', 'site.copyright'], ['copyright 2027', 'site.copyright', { year: '2027' }], ['fix the year in the footer', 'site.copyright'],
+  ['add an announcement: free shipping this week', 'site.announce', { text: 'Free shipping this week' }], ['add a banner saying we are closed monday', 'site.announce'],
+  ['change my bio to potter and dj', 'site.bio', { text: 'Potter and dj' }], ['my bio should say I make mugs', 'site.bio'],
+  ['add Shop to the menu', 'site.nav.add', { name: 'Shop' }], ['put blog in the nav', 'site.nav.add', { name: 'Blog' }],
+  ['move this page left', 'site.page.move', { dir: 'up' }], ['move the about page first', 'site.page.move', { dir: 'first', name: 'about' }], ['go to the about page', 'site.page.go', { name: 'about' }], ['open the contact page', 'site.page.go', { name: 'contact' }], ['back to the home page', 'site.page.go', { name: 'home' }],
+  ['clear this page', 'site.page.clear'], ['center the text in the hero', 'site.align', { align: 'center', block: 'hero' }], ['left align everything', 'site.align', { align: 'left' }], ['right align the text', 'site.align', { align: 'right' }],
+  ['make the pricing section teal', 'site.block.color', { block: 'pricing' }], ['make this section navy', 'site.block.color'], ['turn the faq section pink', 'site.block.color', { block: 'faq' }],
+  ['rounder corners', 'site.radius', { size: 'more' }], ['square corners', 'site.radius', { size: 'none' }], ['less rounded corners', 'site.radius', { size: 'less' }],
+  ['set the site language to spanish', 'site.lang', { lang: 'es' }], ['remove the logo', 'site.logo.remove'], ['move this section up', 'site.block.move', { dir: 'up' }],
+]);
+add('cs', [
+  ['align these to the left', 'canvas.align', { dir: 'left' }], ['align them to the top', 'canvas.align', { dir: 'top' }], ['center them', 'canvas.align', { dir: 'center' }], ['line them up on the right', 'canvas.align', { dir: 'right' }], ['align bottom', 'canvas.align', { dir: 'bottom' }], ['aling these left', 'canvas.align', { dir: 'left' }],
+  ['distribute evenly', 'canvas.distribute', { axis: 'h' }], ['space them evenly vertically', 'canvas.distribute', { axis: 'v' }], ['spread these out evenly', 'canvas.distribute'],
+  ['group them', 'canvas.group'], ['group these together', 'canvas.group'], ['make a group', 'canvas.group'], ['ungroup', 'canvas.ungroup'], ['break apart', 'canvas.ungroup'], ['ungroup this', 'canvas.ungroup'],
+  ['duplicate this', 'canvas.duplicate'], ['dupe it', 'canvas.duplicate'], ['make a copy of this', 'canvas.duplicate'], ['clone it', 'canvas.duplicate'],
+  ['lock it', 'canvas.lock', { on: true }], ['lock this layer', 'canvas.lock', { on: true }], ['unlock it', 'canvas.lock', { on: false }], ['hide this layer', 'canvas.hide', { on: true }], ['unhide it', 'canvas.hide', { on: false }],
+  ['bring it to the front', 'canvas.order', { dir: 'front' }], ['send this to the back', 'canvas.order', { dir: 'back' }], ['bring forward', 'canvas.order', { dir: 'up' }], ['send it backward', 'canvas.order', { dir: 'down' }], ['put it on top', 'canvas.order', { dir: 'front' }],
+  ['resize it to 320 by 200', 'canvas.resize', { w: 320, h: 200 }], ['make it 400x300', 'canvas.resize', { w: 400, h: 300 }], ['set the width to 250', 'canvas.resize', { w: 250 }], ['make it 120 tall', 'canvas.resize', { h: 120 }], ['make it twice as big', 'canvas.resize', { scale: 2 }], ['half the size', 'canvas.resize', { scale: 0.5 }],
+  ['rename this to Header', 'canvas.layer.rename', { name: 'Header' }], ['call this layer Hero image', 'canvas.layer.rename', { name: 'Hero image' }], ['name it Logo', 'canvas.layer.rename', { name: 'Logo' }],
+  ['snap to grid', 'canvas.snap'], ['snap it to the grid', 'canvas.snap'], ['delete this', 'canvas.delete'], ['get rid of these', 'canvas.delete'],
+]);
+add('c', [
+  ['add a rectangle', 'canvas.add', { kind: 'rect' }], ['draw a box', 'canvas.add', { kind: 'rect' }], ['add a circle', 'canvas.add', { kind: 'ellipse' }], ['add a text that says hello', 'canvas.add', { kind: 'text', text: 'hello' }],
+  ['add a heading saying Welcome', 'canvas.add', { kind: 'text', text: 'Welcome' }], ['add a button that says Sign up', 'canvas.add', { kind: 'button', text: 'Sign up' }], ['add a frame', 'canvas.add', { kind: 'frame' }], ['add a line', 'canvas.add', { kind: 'line' }],
+  ['add a card', 'canvas.add', { kind: 'card' }], ['add an image placeholder', 'canvas.add', { kind: 'image' }], ['draw a red circle', 'canvas.add', { kind: 'ellipse', color: 'red' }],
+  ['select all', 'canvas.selectall'], ['select everything', 'canvas.selectall'], ['zoom to fit', 'canvas.zoom', { to: 'fit' }], ['zoom in', 'canvas.zoom', { to: 'in' }], ['zoom out', 'canvas.zoom', { to: 'out' }], ['show everything', 'canvas.zoom', { to: 'fit' }],
+]);
+add('g', [
+  ['set a timer for 10 minutes', 'timer'], ['timer 25 min', 'timer'], ['remind me in 5 minutes to stretch', 'timer'], ['start a 3 minute timer', 'timer'], ['set a timer for 1 hour', 'timer'],
+  ['turn off animations', 'settings.motion', { on: false }], ['reduce motion', 'settings.motion', { on: false }], ['no animations', 'settings.motion', { on: false }], ['bring back animations', 'settings.motion', { on: true }], ['turn animations on', 'settings.motion', { on: true }], ['animations are too much', 'settings.motion', { on: false }],
+  ['mute notifications', 'settings.notify', { on: false }], ['turn off notifications', 'settings.notify', { on: false }], ['do not disturb', 'settings.notify', { on: false }], ['unmute notifications', 'settings.notify', { on: true }], ['turn on notifications', 'settings.notify', { on: true }], ['snooze alerts', 'settings.notify', { on: false }],
+  ['appear away', 'settings.away', { away: true }], ['set me as away', 'settings.away', { away: true }], ['im back', 'settings.away', { away: false }], ['afk', 'settings.away', { away: true }], ['hide where i am', 'settings.away', { show: false }], ['show where i am', 'settings.away', { show: true }],
+  ['pin the last message', 'chat.pin', { on: true }], ['pin that', 'chat.pin', { on: true }], ['unpin the last message', 'chat.pin', { on: false }],
+  ['react thumbs up to the last message', 'chat.react', { emoji: '👍' }], ['heart the last message', 'chat.react', { emoji: '❤️' }], ['react with fire', 'chat.react', { emoji: '🔥' }], ['like that message', 'chat.react', { emoji: '👍' }], ['give a tada to the last message', 'chat.react', { emoji: '🎉' }],
+  ['reopen the logo task', 'task.reopen'], ['mark the menu task as not done', 'task.reopen'], ['the logo task is not done yet', 'task.reopen'], ['uncheck buy milk', 'task.reopen'],
+  ['unassign the logo task', 'task.unassign'], ['take me off the menu task', 'task.unassign'],
+  ['make the logo task urgent', 'task.priority', { level: 'high' }], ['prioritize the menu task', 'task.priority', { level: 'high' }], ['mark buy milk low priority', 'task.priority', { level: 'low' }],
+  ['start a fresh whiteboard', 'file.whiteboard'], ['new whiteboard', 'file.whiteboard'], ['lets sketch it out', 'file.whiteboard'],
+  ['clear our chat', 'flint.clear'], ['start over', 'flint.clear'], ['reset flint', 'flint.clear'],
+  ['new doc from the meeting notes template', 'doc.template', { tpl: 'meeting notes' }], ['use the retro template', 'doc.template', { tpl: 'retro' }], ['open the doc templates', 'doc.template'],
+  ['add three js from the marketplace', 'market.add', { name: 'three js' }], ['install the github mcp', 'market.add'],
+  ['find inspiration for a cozy cafe', 'inspo.search', { q: 'a cozy cafe' }], ['inspo for neon arcade', 'inspo.search', { q: 'neon arcade' }], ['pin sunsets to my moodboard', 'inspo.search', { q: 'sunsets' }],
+  ['open the people panel', 'nav.people'], ['show me everyone', 'nav.people'], ['open work', 'nav.work'], ['any gigs for me', 'nav.work'], ['find me a gig', 'nav.work'],
+  ['open the preview', 'nav.preview'], ['run the app', 'preview.open'], ['try the game', 'preview.open'], ['copy the preview link', 'preview.share'], ['turn off sounds', 'settings.sound', { on: false }],
+]);
+for (let i = U; i < C.length; i++) C[i].v = 'unify';
+// ---- held out, batch 4 (feat/flint-unify): written BEFORE the new commands were implemented (so its phrasings informed them); then never tuned against ----
+const H4 = C.length;
+for (const [cx, t, i, s] of require('./flint-held4.js')) add(cx === 'c' ? 'cs' : cx, [[t, i, s]]);
+for (let i = H4; i < C.length; i++) C[i].v = 'held4';
+// ---- held out, batch 5: written after the matchers existed, run once untuned (34/40 = 85% on that first run), then the six misses were fixed ----
+const H5 = C.length;
+for (const [cx, t, i, s] of require('./flint-held5.js')) add(cx === 'c' ? 'cs' : cx, [[t, i, s]]);
+for (let i = H5; i < C.length; i++) C[i].v = 'held5';
 
 const out = { about: 'Flint evaluation set (feat/flint-site): websites, the design canvas, preview edits, lessons and global commands. Written by scripts/dev/flint-eval-cases.js; checked by app/test/flint_eval_test.js. "i" = the expected intent (a list for several steps, null when Flint should not claim it), "s" = slots that must match, "ctx" = s|c|cs|p|g (site designer, canvas, canvas with a selection, preview, anywhere).', now: '2026-11-10T10:00:00', cases: C };
 fs.writeFileSync(path.join(__dirname, '..', '..', 'app', 'test', 'flint_eval.json'), JSON.stringify(out, null, 1) + '\n');

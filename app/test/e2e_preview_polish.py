@@ -107,10 +107,10 @@ def wait_text(page, want, gone=False, timeout=10000):
 
 
 def flint(page, text):
-    n = page.locator("#pvf-feed .pvf-it").count()
-    page.fill("#pvf-in", text); page.press("#pvf-in", "Enter")
-    page.wait_for_function(f"document.querySelectorAll('#pvf-feed .pvf-it').length >= {n + 2}", timeout=10000)
-    return page.locator("#pvf-feed .pvf-it").last.inner_text()
+    n = page.locator("#pvf .fl-thread > :not(.streaming)").count()
+    page.fill("#flm-in-preview", text); page.press("#flm-in-preview", "Enter")
+    page.wait_for_function(f"document.querySelectorAll('#pvf .fl-thread > :not(.streaming)').length >= {n + 2}", timeout=10000)
+    return page.locator("#pvf .fl-thread > :not(.streaming)").last.inner_text()
 
 
 def main():
@@ -179,7 +179,7 @@ console.log(JSON.stringify(t.map(x=>{const p=c.parse(x);return p&&p.ops[0]})))""
             assert host.locator(f"{bar} .pvw-saved").is_visible() and host.get_attribute(f"{bar} .pvw-edit", "aria-pressed") == "true", "the website starts in select mode"
             assert host.locator("#pvw-path").is_hidden()
             assert host.locator("#pvf.is-open").count() == 1 and "Website edits are free" in host.inner_text("#pvf-tier")
-            chips = host.locator("#pvf-chips .chip").all_inner_texts()
+            chips = host.locator("#pvf .flm-chips .fl-chip").all_inner_texts()
             assert "Add a pricing section" in chips and "Swap to the Studio template" in chips, chips
             shot(host, "preview-desktop")
 
@@ -201,17 +201,17 @@ console.log(JSON.stringify(t.map(x=>{const p=c.parse(x);return p&&p.ops[0]})))""
             f.locator("h1").click()
             host.wait_for_function("document.querySelector('#pvf-pick') && !document.querySelector('#pvf-pick').classList.contains('hidden')", timeout=5000)
             assert "Fresh bread daily" in host.inner_text("#pvf-pick")
-            assert "Type new words" in host.get_attribute("#pvf-in", "placeholder")
+            assert "Type new words" in host.get_attribute("#flm-in-preview", "placeholder")
             flint(host, "Warm bread, every morning")
             wait_text(host, "Warm bread, every morning")
             shot(host, "preview-flint-edit")
             # undo, from the feed's button
-            host.locator("#pvf-feed [data-pvf='siteundo']").last.click()
+            host.locator("#pvf .fl-thread [data-pvf='siteundo']").last.click()
             wait_text(host, "Fresh bread daily")
             # the chips: a "…" chip fills the box instead of sending
-            host.click("#pvf-chips [data-chip='Make the headline say …']")
-            assert host.input_value("#pvf-in") == "Make the headline say "
-            host.fill("#pvf-in", "")
+            host.click("#pvf .flm-chips .fl-chip:text-is('Make the headline say …')")
+            assert host.input_value("#flm-in-preview") == "Make the headline say "
+            host.fill("#flm-in-preview", "")
 
             # ======== 4: the Saved shelf ========
             host.click(f"{bar} .pvw-saved")
@@ -271,8 +271,8 @@ console.log(JSON.stringify(t.map(x=>{const p=c.parse(x);return p&&p.ops[0]})))""
             r = ph.evaluate("(() => { const b = document.querySelector('#pvf').getBoundingClientRect(); return [b.left, b.width]; })()")
             assert abs(r[0]) < 2 and r[1] >= 380, f"the edit sheet fills the screen: {r}"
             assert ph.get_attribute("#pvw-ph [data-ph='edit']", "aria-pressed") == "true"
-            ph.locator("#pvf-chips [data-chip='Add a pricing section']").tap()
-            ph.wait_for_function("[...document.querySelectorAll('#pvf-feed .pvf-it')].some(x => /pricing/i.test(x.textContent))", timeout=8000)
+            ph.locator("#pvf .flm-chips .fl-chip:text-is('Add a pricing section')").tap()
+            ph.wait_for_function("[...document.querySelectorAll('#pvf .fl-thread > :not(.streaming)')].some(x => /pricing/i.test(x.textContent))", timeout=8000)
             ph.locator("#pvw-ph [data-ph='page']").tap(); ph.wait_for_timeout(300)
             assert not ph.evaluate("document.querySelector('#pvf').classList.contains('is-open')")
             wait_text(ph, "Set a price")

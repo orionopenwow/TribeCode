@@ -108,7 +108,7 @@
     c.theme.base = t.base || (isDark(c.theme.colors) ? 'dark' : 'light');
     if (!Array.isArray(c.pages) || !c.pages.length) c.pages = [page('Home')];
     const seen = new Set();
-    c.pages.forEach((pg, i) => { pg.id = pg.id || uid('p'); pg.title = String(pg.title || 'Page').slice(0, 40); pg.slug = i === 0 ? 'index' : (pg.slug && pg.slug !== 'index' ? pg.slug : slugify(pg.title)); while (seen.has(pg.slug)) pg.slug += '-2'; seen.add(pg.slug); pg.blocks = (pg.blocks || []).filter(b => b && BLOCKS[b.type]).map(b => { const o = { id: b.id || uid('b'), type: b.type, variant: BLOCKS[b.type].variants.includes(b.variant) ? b.variant : BLOCKS[b.type].variants[0], props: b.props || BLOCKS[b.type].make() }; if (b.hidden) o.hidden = true; const st = b.style || {}; if (st.bg || st.pad) o.style = { bg: /^(card|accent|ink)$/.test(st.bg) ? st.bg : '', pad: /^(s|l)$/.test(st.pad) ? st.pad : '' }; return o; }); });
+    c.pages.forEach((pg, i) => { pg.id = pg.id || uid('p'); pg.title = String(pg.title || 'Page').slice(0, 40); pg.slug = i === 0 ? 'index' : (pg.slug && pg.slug !== 'index' ? pg.slug : slugify(pg.title)); while (seen.has(pg.slug)) pg.slug += '-2'; seen.add(pg.slug); pg.blocks = (pg.blocks || []).filter(b => b && BLOCKS[b.type]).map(b => { const o = { id: b.id || uid('b'), type: b.type, variant: BLOCKS[b.type].variants.includes(b.variant) ? b.variant : BLOCKS[b.type].variants[0], props: b.props || BLOCKS[b.type].make() }; if (b.hidden) o.hidden = true; const st = b.style || {}; if (st.bg || st.pad || st.al || st.tint) o.style = { bg: /^(card|accent|ink)$/.test(st.bg) ? st.bg : '', pad: /^(s|l)$/.test(st.pad) ? st.pad : '', ...(/^(left|center|right)$/.test(st.al) ? { al: st.al } : {}), ...(/^#[0-9a-f]{3,8}$/i.test(st.tint || '') ? { tint: st.tint } : {}) }; return o; }); });
     c.theme.space = /^(compact|roomy)$/.test(t.space) ? t.space : 'normal';
     const so = c.seo || {}; c.seo = { title: String(so.title || '').slice(0, 120), description: String(so.description || '').slice(0, 320), image: String(so.image || ''), favicon: String(so.favicon || ''), lang: /^[a-z]{2}(-[A-Za-z]{2})?$/.test(so.lang || '') ? so.lang : 'en' };
     if (c.logo && !/^(data:image\/|https:\/\/)/.test(c.logo)) delete c.logo;
@@ -235,8 +235,161 @@
   // ---------- Flint: one understood step -> a change ----------
   // at = { page: id, sel: { block, path } }. Returns { cfg?, say, page?, sel?, need? ('upload'|'board'|'pick'), boost? }
   const TYPEW = { newsletter: 'newsletter', cta: 'cta', stats: 'stats', logos: 'logos', banner: 'banner', divider: 'divider', image: 'image', gallery: 'gallery', pricing: 'pricing', testimonials: 'testimonials', faq: 'faq', contact: 'contact', team: 'team', embed: 'embed', features: 'features', links: 'links', footer: 'footer', hero: 'hero', text: 'text' };
+  // ---------- feat/flint-unify: more free edits (links, socials, buttons, list items, words by section, looks) ----------
+  // at.pending (set by the designer after a question) is not used here; command2 returns ask: { kind, block, path }
+  // when one detail is missing, and the designer asks it with chips.
+  const SOCIAL = { instagram: ['Instagram', h => `https://instagram.com/${h}`], tiktok: ['TikTok', h => `https://www.tiktok.com/@${h}`], youtube: ['YouTube', h => `https://www.youtube.com/@${h}`], spotify: ['Spotify', null], twitter: ['X (Twitter)', h => `https://x.com/${h}`],
+    github: ['GitHub', h => `https://github.com/${h}`], linkedin: ['LinkedIn', h => `https://www.linkedin.com/in/${h}`], facebook: ['Facebook', h => `https://www.facebook.com/${h}`], twitch: ['Twitch', h => `https://www.twitch.tv/${h}`], soundcloud: ['SoundCloud', h => `https://soundcloud.com/${h}`],
+    bandcamp: ['Bandcamp', h => `https://${h}.bandcamp.com`], pinterest: ['Pinterest', h => `https://www.pinterest.com/${h}`], threads: ['Threads', h => `https://www.threads.net/@${h}`], bluesky: ['Bluesky', h => `https://bsky.app/profile/${/\./.test(h) ? h : h + '.bsky.social'}`], mastodon: ['Mastodon', null],
+    discord: ['Discord', null], patreon: ['Patreon', h => `https://www.patreon.com/${h}`], substack: ['Substack', h => `https://${h}.substack.com`], kofi: ['Ko-fi', h => `https://ko-fi.com/${h}`], behance: ['Behance', h => `https://www.behance.net/${h}`], dribbble: ['Dribbble', h => `https://dribbble.com/${h}`],
+    snapchat: ['Snapchat', h => `https://www.snapchat.com/add/${h}`], whatsapp: ['WhatsApp', h => `https://wa.me/${h.replace(/\D/g, '')}`], telegram: ['Telegram', h => `https://t.me/${h}`], vimeo: ['Vimeo', h => `https://vimeo.com/${h}`], 'apple music': ['Apple Music', null] };
+  const toLink = u => { u = String(u || '').trim(); if (!u) return { kind: '', to: '' }; if (/^mailto:/i.test(u)) return { kind: 'email', to: u.slice(7) }; if (/^[\w.+-]+@[\w-]+\.[\w.-]+$/.test(u)) return { kind: 'email', to: u }; if (/^tel:/i.test(u)) return { kind: 'url', to: u }; return { kind: 'url', to: /^https?:\/\//i.test(u) ? u : 'https://' + u.replace(/^\/+/, '') }; };
+  const where = c => c.pages.map(p => ({ p, b: p.blocks.find(x => x.type === 'links') })).find(x => x.b) || null;
+  const homeOf = (c, pg) => ({ hero: pg.blocks.find(b => b.type === 'hero') || c.pages.map(p => p.blocks.find(b => b.type === 'hero')).find(Boolean), foot: pg.blocks.find(b => b.type === 'footer') });
+  const pageWith = (c, b) => c.pages.find(p => p.blocks.includes(b));
+  const short = s => String(s || '').length > 40 ? String(s).slice(0, 38) + '…' : String(s || '');
+  const findItem = (list, label, key) => { const l = String(label || '').toLowerCase().trim(); if (!l || !list.length) return -1; if (/^(?:last|latest|newest|bottom)$/.test(l)) return list.length - 1; if (/^(?:first|top)$/.test(l)) return 0; let i = list.findIndex(x => String(x[key || 'label'] || '').toLowerCase() === l); if (i < 0) i = list.findIndex(x => String(x[key || 'label'] || '').toLowerCase().includes(l) || l.includes(String(x[key || 'label'] || '').toLowerCase())); return i; };
+  // ensure a block of type t exists (on this page, else anywhere); returns { cfg, block, page }
+  function ensure(c, pg, t, variant) { let b = pg.blocks.find(x => x.type === t); if (b) return { cfg: c, block: b, page: pg }; for (const p of c.pages) { b = p.blocks.find(x => x.type === t); if (b) return { cfg: c, block: b, page: p }; } const r = addBlock(c, pg.id, t, variant); return { cfg: r.cfg, block: pageOf(r.cfg, pg.id).blocks.find(x => x.id === r.block.id), page: pageOf(r.cfg, pg.id), made: true }; }
+  function pushItem(c, pageId, blockId, key, item, fresh) { c = clone(c); const b = pageOf(c, pageId).blocks.find(x => x.id === blockId); const list = (fresh ? [] : (b.props[key] || []).slice()); list.push(item); b.props[key] = list; return { cfg: c, i: list.length - 1 }; }
+  function command2(c, s, at) {
+    const sl = s.slots || {}, id = s.intent, pg = pageOf(c, at.page), sel = at.sel || {};
+    const selBlock = sel.block && pg.blocks.find(b => b.id === sel.block);
+    const blkT = t => (selBlock && selBlock.type === t ? selBlock : pg.blocks.find(b => b.type === t) || c.pages.map(p => p.blocks.find(b => b.type === t)).find(Boolean)) || null;
+    const lbl = b => BLOCKS[b.type].label.toLowerCase().replace(/ \(.*/, '').replace(/\bfaq\b/, 'FAQ');
+    if (id === 'site.link.add') {
+      const label = String(sl.label || '').trim() || (sl.url ? String(sl.url).replace(/^(?:https?:\/\/|mailto:)/, '').replace(/^www\./, '').replace(/\/.*$/, '') : '');
+      if (!label) return { say: 'Add a link: what should it say?', ask: { kind: 'linklabel' }, chips: ['My shop', 'Latest video', 'Book a call'] };
+      const link = sl.url ? toLink(sl.url) : { kind: '', to: '' }, w = where(c);
+      let cfg, bid, path, pid, kind;
+      if (w) { const r = pushItem(c, w.p.id, w.b.id, 'items', { label, note: '', link }); cfg = r.cfg; bid = w.b.id; path = `items.${r.i}`; pid = w.p.id; kind = 'link'; }
+      else { const h = homeOf(c, pg); const hb = h.hero; if (hb && (hb.props.buttons || []).length < 4) { const hp = pageWith(c, hb); const r = pushItem(c, hp.id, hb.id, 'buttons', L(label, link.kind, link.to)); cfg = r.cfg; bid = hb.id; path = `buttons.${r.i}`; pid = hp.id; kind = 'button'; } else { const e = ensure(c, pg, 'footer'); const r = pushItem(e.cfg, e.page.id, e.block.id, 'links', L(label, link.kind, link.to)); cfg = r.cfg; bid = e.block.id; path = `links.${r.i}`; pid = e.page.id; kind = 'footer link'; } }
+      const placed = kind === 'link' ? 'to your links' : kind === 'button' ? 'as a button in the hero' : 'to the footer';
+      if (link.to) return { cfg, page: pid, sel: { block: bid, path }, say: `Added “${label}” ${placed}, going to ${link.kind === 'email' ? 'an email to ' + link.to : short(link.to)}.` };
+      return { cfg, page: pid, sel: { block: bid, path }, say: `Added “${label}” ${placed}. What’s the address?`, ask: { kind: 'url', block: bid, path, page: pid, label }, chips: ['Paste the link…', 'Link it to the contact page', 'Leave it for now'] };
+    }
+    if (id === 'site.link.url') {
+      const w = where(c); let b = w && w.b, key = 'items', p = w && w.p;
+      if (!b || (sl.label && findItem(b.props.items || [], sl.label) < 0)) { const all = []; c.pages.forEach(pp => buttons(pp).forEach(x => all.push({ ...x, p: pp }))); const hit = all.find(x => sl.label && String(x.label || '').toLowerCase().includes(String(sl.label).toLowerCase())) || (!sl.label && all.find(x => !x.link || !x.link.to)); if (!hit && sl.label) return { say: `I can't find a “${sl.label}” link. Which one?`, chips: all.slice(0, 3).map(x => `The ${x.label} link should go to ${short(sl.url)}`) }; if (!hit) return { say: 'Which link? Click it in the preview first.' }; const cfg = setLink(c, hit.p.id, hit.block.id, hit.path, toLink(sl.url)); return { cfg, sel: { block: hit.block.id, path: hit.path }, say: `“${hit.label}” goes to ${short(sl.url.replace(/^mailto:/, ''))} now.` }; }
+      const i = sl.label ? findItem(b.props.items || [], sl.label) : (b.props.items || []).findIndex(x => !x.link || !x.link.to); const j = i < 0 ? (b.props.items || []).length - 1 : i; if (j < 0) return { say: 'There are no links yet. Say "add a link for …".' };
+      return { cfg: setLink(c, p.id, b.id, `${key}.${j}`, toLink(sl.url)), sel: { block: b.id, path: `${key}.${j}` }, say: `“${b.props.items[j].label}” goes to ${short(sl.url.replace(/^mailto:/, ''))} now.` };
+    }
+    if (id === 'site.link.remove' || id === 'site.link.move') {
+      const w = where(c); let host = w ? { b: w.b, p: w.p, key: 'items' } : null;
+      if (!host) { const h = homeOf(c, pg); if (h.foot && (h.foot.props.links || []).length) host = { b: h.foot, p: pageWith(c, h.foot), key: 'links' }; else if (h.hero && (h.hero.props.buttons || []).length) host = { b: h.hero, p: pageWith(c, h.hero), key: 'buttons' }; }
+      if (!host) return { say: 'There are no links on the site yet.' };
+      const list = host.b.props[host.key] || []; let i = sl.label ? findItem(list, sl.label) : (sel.block === host.b.id && /\.(\d+)$/.test(sel.path || '') ? +/\.(\d+)$/.exec(sel.path)[1] : -1);
+      if (i < 0 && !sl.label && id === 'site.link.remove') i = list.length - 1;
+      if (i < 0) return { say: `Which link? ${list.length ? 'They are: ' + list.map(x => `“${x.label}”`).join(', ') + '.' : ''}`, chips: list.slice(0, 3).map(x => (id === 'site.link.remove' ? 'Remove the ' : 'Move the ') + x.label + ' link' + (id === 'site.link.move' ? ' ' + (sl.dir === 'top' ? 'to the top' : sl.dir || 'up') : '')) };
+      const cfg = clone(c), b = pageOf(cfg, host.p.id).blocks.find(x => x.id === host.b.id), arr = b.props[host.key], [it] = arr.splice(i, 1);
+      if (id === 'site.link.remove') return { cfg, say: `Removed the “${it.label}” link. Undo brings it back.` };
+      const j = sl.dir === 'top' ? 0 : sl.dir === 'bottom' ? arr.length : sl.dir === 'down' ? Math.min(arr.length, i + 1) : Math.max(0, i - 1); arr.splice(j, 0, it);
+      return { cfg, sel: { block: b.id, path: `${host.key}.${j}` }, say: `Moved “${it.label}” ${sl.dir === 'top' ? 'to the top' : sl.dir === 'bottom' ? 'to the bottom' : sl.dir || 'up'}.` };
+    }
+    if (id === 'site.social.add') {
+      const nets = (sl.nets && sl.nets.length ? sl.nets : [sl.net]).filter(n => SOCIAL[n]); if (!nets.length) return { say: 'Which one: Instagram, TikTok, YouTube, Spotify…?', chips: ['Add my Instagram', 'Add my TikTok', 'Add my YouTube'] };
+      const w = where(c), h = homeOf(c, pg); let cfg = c, bid, pid, key, added = [], need = null;
+      const target = w ? { p: w.p, b: w.b, key: 'socials' } : (() => { const e = ensure(c, pg, 'footer'); cfg = e.cfg; return { p: e.page, b: e.block, key: 'links' }; })();
+      for (const n of nets) {
+        const [name, mk] = SOCIAL[n], handle = nets.length === 1 ? String(sl.handle || '').replace(/^@/, '') : '';
+        const url = sl.url && nets.length === 1 ? sl.url : handle && mk ? mk(handle) : '';
+        const cur = (pageOf(cfg, target.p.id).blocks.find(x => x.id === target.b.id).props[target.key] || []);
+        if (cur.some(x => String(x.label).toLowerCase() === name.toLowerCase() && !url)) continue;
+        const r = pushItem(cfg, target.p.id, target.b.id, target.key, L(name, url ? 'url' : '', url ? toLink(url).to : '')); cfg = r.cfg; bid = target.b.id; pid = target.p.id; key = `${target.key}.${r.i}`; added.push(name);
+        if (!url) need = { kind: mk ? 'handle' : 'url', block: bid, path: key, page: pid, label: name, net: n };
+      }
+      if (!added.length) return { say: `${SOCIAL[nets[0]][0]} is already there. Say "@yourname" to set the address.` };
+      const placed = w ? 'to your links' : 'to the footer';
+      if (need && added.length === 1) return { cfg, page: pid, sel: { block: bid, path: key }, say: `Added ${added[0]} ${placed}. ${need.kind === 'handle' ? `What’s your ${added[0]} handle?` : `What’s the ${added[0]} link?`}`, ask: need, chips: need.kind === 'handle' ? ['@…'] : ['Paste the link…'] };
+      return { cfg, page: pid, say: `Added ${added.join(', ')} ${placed}${need ? '. Click each one to put in your address' : ''}.` };
+    }
+    if (id === 'site.social.remove') {
+      const name = (SOCIAL[sl.net] || [sl.net])[0]; const hosts = []; c.pages.forEach(p => p.blocks.forEach(b => ['socials', 'links', 'items', 'buttons'].forEach(k => { if (Array.isArray(b.props[k])) b.props[k].forEach((x, i) => { if (x && (String(x.label || '').toLowerCase() === String(name).toLowerCase() || new RegExp(String(sl.net).replace(/\s+/g, ''), 'i').test(((x.link || {}).to) || ''))) hosts.push({ p, b, k, i }); }); })));
+      if (!hosts.length) return { say: `There is no ${name} link on the site.` };
+      const cfg = clone(c); hosts.reverse().forEach(h => { pageOf(cfg, h.p.id).blocks.find(x => x.id === h.b.id).props[h.k].splice(h.i, 1); });
+      return { cfg, say: `Removed ${name}. Undo brings it back.` };
+    }
+    if (id === 'site.button.email' || id === 'site.button.phone') {
+      const isMail = id === 'site.button.email', val = isMail ? sl.email : sl.phone, label = isMail ? 'Email me' : 'Call us';
+      const link = val ? (isMail ? { kind: 'email', to: val } : { kind: 'url', to: 'tel:' + String(val).replace(/[^\d+]/g, '') }) : { kind: '', to: '' };
+      const w = where(c), h = homeOf(c, pg); let cfg, bid, path, pid;
+      if (w) { const r = pushItem(c, w.p.id, w.b.id, 'items', { label, note: '', link }); cfg = r.cfg; bid = w.b.id; path = `items.${r.i}`; pid = w.p.id; }
+      else if (h.hero) { const hp = pageWith(c, h.hero); const r = pushItem(c, hp.id, h.hero.id, 'buttons', { label, link }); cfg = r.cfg; bid = h.hero.id; path = `buttons.${r.i}`; pid = hp.id; }
+      else { const e = ensure(c, pg, 'cta'); const r = pushItem(e.cfg, e.page.id, e.block.id, 'buttons', { label, link }); cfg = r.cfg; bid = e.block.id; path = `buttons.${r.i}`; pid = e.page.id; }
+      if (val) return { cfg, page: pid, sel: { block: bid, path }, say: `Added ${/^[aeiou]/i.test(label) ? 'an' : 'a'} “${label}” button that ${isMail ? 'opens an email to ' + val : 'calls ' + val}.` };
+      return { cfg, page: pid, sel: { block: bid, path }, say: `Added ${/^[aeiou]/i.test(label) ? 'an' : 'a'} “${label}” button. ${isMail ? 'Which email address?' : 'Which number?'}`, ask: { kind: isMail ? 'email' : 'phone', block: bid, path, page: pid, label }, chips: [isMail ? 'hello@…' : '+1 …'] };
+    }
+    if (id === 'site.contact.email') { const e = ensure(c, pg, 'contact'); return { cfg: setProp(e.cfg, e.page.id, e.block.id, 'email', sl.email), sel: { block: e.block.id }, say: `The contact form sends to ${sl.email} now${e.made ? ' (I added a contact form for it)' : ''}.` }; }
+    if (id === 'site.button.add') {
+      const h = homeOf(c, pg), hb = selBlock && Array.isArray(selBlock.props.buttons) ? selBlock : h.hero || pg.blocks.find(b => Array.isArray(b.props.buttons)); const label = sl.label || 'Learn more', link = sl.url ? toLink(sl.url) : guess(c, pg, label) || { kind: '', to: '' };
+      if (!hb) { const e = ensure(c, pg, 'cta'); const r = pushItem(e.cfg, e.page.id, e.block.id, 'buttons', { label, link }); return { cfg: r.cfg, sel: { block: e.block.id, path: `buttons.${r.i}` }, say: `Added a call to action with a “${label}” button.` }; }
+      const hp = pageWith(c, hb), r = pushItem(c, hp.id, hb.id, 'buttons', { label, link });
+      return { cfg: r.cfg, page: hp.id, sel: { block: hb.id, path: `buttons.${r.i}` }, say: `Added a “${label}” button${link.to ? '' : '. Say where it goes, like "link it to the contact page"'}.`, ...(sl.label ? {} : { chips: ['Rename it to …', 'Link it to the contact page'] }) };
+    }
+    if (id === 'site.button.remove') {
+      const hb = selBlock && Array.isArray(selBlock.props.buttons) && selBlock.props.buttons.length ? selBlock : pg.blocks.find(b => Array.isArray(b.props.buttons) && b.props.buttons.length); if (!hb) return { say: 'There are no buttons on this page.' };
+      const n = hb.props.buttons.length, w = String(sl.which || ''), i = /first|1st/.test(w) ? 0 : /second|2nd/.test(w) ? 1 : /third|3rd/.test(w) ? 2 : sel.block === hb.id && /\.(\d+)$/.test(sel.path || '') ? +/\.(\d+)$/.exec(sel.path)[1] : n - 1;
+      if (i >= n) return { say: `There ${n === 1 ? 'is only one button' : `are only ${n} buttons`} there.` };
+      const cfg = clone(c), arr = pageOf(cfg, pg.id).blocks.find(x => x.id === hb.id).props.buttons, [x] = arr.splice(i, 1); return { cfg, say: `Removed the “${x.label}” button. Undo brings it back.` };
+    }
+    if (id === 'site.map') {
+      const addr = sl.address || ''; const e = addBlock(c, pg.id, 'cta', 'simple');
+      let cfg = setProp(e.cfg, pg.id, e.block.id, 'title', 'Find us'); cfg = setProp(cfg, pg.id, e.block.id, 'text', addr || 'Your address here.'); cfg = setProp(cfg, pg.id, e.block.id, 'buttons', [L('Open in Maps', addr ? 'url' : '', addr ? 'https://www.openstreetmap.org/search?query=' + encodeURIComponent(addr) : '')]);
+      return addr ? { cfg, sel: { block: e.block.id }, say: `Added a Find us section with ${addr} and an Open in Maps button (OpenStreetMap, no tracking).` } : { cfg, sel: { block: e.block.id }, say: 'Added a Find us section. What’s the address?', ask: { kind: 'address', block: e.block.id, page: pg.id }, chips: ['12 Main Street…'] };
+    }
+    if (id === 'site.faq.add') { const e = ensure(c, pg, 'faq'); const fresh = e.made; const r = pushItem(e.cfg, e.page.id, e.block.id, 'items', { q: sl.q, a: sl.a || 'Write the answer here.' }, fresh); return { cfg: r.cfg, page: e.page.id, sel: { block: e.block.id, path: `items.${r.i}.a` }, say: `Added “${sl.q}” to the FAQ${sl.a ? '' : '. What’s the answer?'}`, ...(sl.a ? {} : { ask: { kind: 'text', block: e.block.id, path: `items.${r.i}.a`, page: e.page.id } }) }; }
+    if (id === 'site.price.add') { const e = ensure(c, pg, 'pricing'); const name = sl.name || 'New plan', r = pushItem(e.cfg, e.page.id, e.block.id, 'plans', { name, price: sl.price || '$0', per: /\/mo|month/i.test(sl.price || '') ? '' : '/mo', features: ['Say what is included'], button: L('Choose ' + name, 'section', 'contact') }); return { cfg: r.cfg, page: e.page.id, sel: { block: e.block.id }, say: `Added the ${name} plan${sl.price ? ` at ${sl.price}` : ''}. Click its features to fill them in.` }; }
+    if (id === 'site.team.add') { const e = ensure(c, pg, 'team'); const r = pushItem(e.cfg, e.page.id, e.block.id, 'items', { name: sl.name, role: sl.role || 'What they do', img: '', alt: sl.name }, e.made); return { cfg: r.cfg, page: e.page.id, sel: { block: e.block.id, path: `items.${r.i}.` }, say: `Added ${sl.name}${sl.role ? `, ${sl.role},` : ''} to the team. Click the circle to add a photo.` }; }
+    if (id === 'site.quote.add') { const e = ensure(c, pg, 'testimonials'); const r = pushItem(e.cfg, e.page.id, e.block.id, 'items', { quote: sl.quote || 'Add their words here.', name: sl.name || 'A happy customer', role: '' }, e.made); return { cfg: r.cfg, page: e.page.id, sel: { block: e.block.id }, say: `Added a testimonial${sl.name ? ' from ' + sl.name : ''}${sl.quote ? '' : ': click it to type their words'}.` }; }
+    if (id === 'site.stat.add') { const e = ensure(c, pg, 'stats'); const r = pushItem(e.cfg, e.page.id, e.block.id, 'items', { value: sl.value, label: sl.label }, e.made); return { cfg: r.cfg, page: e.page.id, sel: { block: e.block.id }, say: `Added the stat ${sl.value} ${sl.label}.` }; }
+    if (id === 'site.feature.add') { const e = ensure(c, pg, 'features'); const r = pushItem(e.cfg, e.page.id, e.block.id, 'items', { title: sl.title, text: 'Say one plain thing people get.' }, e.made); return { cfg: r.cfg, page: e.page.id, sel: { block: e.block.id }, say: `Added “${sl.title}” to the features. Click its line to say more.` }; }
+    if (id === 'site.item.add') { const e = ensure(c, pg, 'list', sl.kind === 'menu' ? 'menu' : 'rows'); let cfg = e.cfg; if (e.made) cfg = setProp(cfg, e.page.id, e.block.id, 'title', sl.kind === 'menu' ? 'Menu' : sl.kind === 'episode' ? 'Episodes' : sl.kind === 'date' ? 'Dates' : 'List'); const r = pushItem(cfg, e.page.id, e.block.id, 'items', { title: sl.title, meta: sl.meta || '', text: '', link: { kind: '', to: '' } }, e.made); return { cfg: r.cfg, page: e.page.id, sel: { block: e.block.id }, say: `Added “${sl.title}”${sl.meta ? ` (${sl.meta})` : ''} to the ${sl.kind === 'menu' ? 'menu' : sl.kind === 'date' ? 'dates' : sl.kind === 'episode' ? 'episodes' : 'list'}.` }; }
+    if (id === 'site.gallery.add') { const e = ensure(c, pg, 'gallery'); const r = pushItem(e.cfg, e.page.id, e.block.id, 'items', { img: '', alt: 'A picture', caption: '' }); return { cfg: r.cfg, page: e.page.id, sel: { block: e.block.id, path: `items.${r.i}.` }, need: 'upload', say: 'Added a spot in the gallery. Choose the picture from your computer.' }; }
+    if (id === 'site.video') { const ex = pg.blocks.find(b => b.type === 'embed' && !b.props.url); let cfg = c, bid; if (ex) bid = ex.id; else { const r = addBlock(c, pg.id, 'embed', 'wide'); cfg = r.cfg; bid = r.block.id; } if (sl.url) cfg = setProp(cfg, pg.id, bid, 'url', /^https?:/.test(sl.url) ? sl.url : 'https://' + sl.url); return sl.url ? { cfg, sel: { block: bid }, say: 'Added the video. It plays right on the page.' } : { cfg, sel: { block: bid }, say: 'Added a video section. Paste the YouTube, Vimeo, Spotify or SoundCloud link.', ask: { kind: 'video', block: bid, page: pg.id }, chips: ['Paste the link…'] }; }
+    if (id === 'site.countdown') { if (!sl.date) return { say: 'Count down to when?', chips: ['Count down to next friday', 'Count down to june 1'] }; const d = new Date(sl.date + 'T12:00'), when = d.toLocaleDateString('en', { weekday: 'short', month: 'long', day: 'numeric' }), what = capF(sl.what || 'Launch'); const ex = pg.blocks.find(b => b.type === 'banner'); let cfg = c, bid; if (ex) bid = ex.id; else { const r = addBlock(c, pg.id, 'banner', 'bar', 0); cfg = r.cfg; bid = r.block.id; } cfg = setProp(cfg, pg.id, bid, 'text', `${what}: ${when}`); return { cfg, sel: { block: bid }, say: `Added a banner at the top: “${what}: ${when}”. A live ticking clock needs a script, and exported sites stay script-free, so it shows the date.` }; }
+    if (id === 'site.section.title') { const b = blkT(sl.block); if (!b) return { say: `There is no ${sl.block} section yet. Say "add ${sl.block}" first.` }; const p = pageWith(c, b); return { cfg: setProp(c, p.id, b.id, 'title', sl.text), page: p.id, sel: { block: b.id }, say: `The ${lbl(b)} title says “${sl.text}”.` }; }
+    if (id === 'site.footer' || id === 'site.copyright') { const e = ensure(c, pg, 'footer'); const y = sl.year || String(new Date().getFullYear()); const text = id === 'site.footer' ? sl.text : `© ${y} ${c.name}`; let cfg = clone(e.cfg); cfg.pages.forEach(p => p.blocks.filter(b => b.type === 'footer').forEach(b => { b.props.text = text; })); return { cfg, sel: { block: e.block.id }, say: id === 'site.footer' ? `The footer says “${text}” on every page.` : `The footer says “${text}” on every page.` }; }
+    if (id === 'site.bio') { const w = where(c); if (w) return { cfg: setProp(c, w.p.id, w.b.id, 'bio', sl.text), page: w.p.id, sel: { block: w.b.id }, say: `Your bio says “${sl.text}”.` }; const h = homeOf(c, pg).hero; if (!h) return { say: 'There is no bio on this page. Click the words you want to change and type.' }; const hp = pageWith(c, h); return { cfg: setProp(c, hp.id, h.id, 'text', sl.text), page: hp.id, sel: { block: h.id }, say: `The line under the headline says “${sl.text}”.` }; }
+    if (id === 'site.announce') { const ex = pg.blocks.find(b => b.type === 'banner'); let cfg = c, bid; if (ex) bid = ex.id; else { const r = addBlock(c, pg.id, 'banner', 'bar', 0); cfg = r.cfg; bid = r.block.id; } return { cfg: setProp(cfg, pg.id, bid, 'text', sl.text), sel: { block: bid }, say: `Announcement at the top: “${sl.text}”.` }; }
+    if (id === 'site.nav.add') { const p = findPage(c, sl.name); if (p) return { page: p.id, say: `${p.title} is already in the menu.` }; const r = addPage(c, sl.name); return { cfg: r.cfg, page: r.page.id, say: `Added ${r.page.title} to the menu, with a starter page behind it.` }; }
+    if (id === 'site.page.move') { const p = sl.name ? findPage(c, sl.name) : pg; if (!p) return { say: `There is no ${sl.name} page.` }; const cfg = clone(c), i = cfg.pages.findIndex(x => x.id === p.id); if (i === 0) return { say: 'The home page stays first. Move another page.' }; const [x] = cfg.pages.splice(i, 1); const j = sl.dir === 'first' ? 1 : sl.dir === 'last' ? cfg.pages.length : sl.dir === 'down' ? Math.min(cfg.pages.length, i + 1) : Math.max(1, i - 1); cfg.pages.splice(j, 0, x); return { cfg: normalize(cfg), page: x.id, say: `Moved ${x.title} ${sl.dir === 'first' ? 'to the front of the menu (after Home)' : sl.dir === 'last' ? 'to the end of the menu' : sl.dir === 'down' ? 'right in the menu' : 'left in the menu'}.` }; }
+    if (id === 'site.page.go') { const p = /^home/.test(sl.name || '') ? c.pages[0] : findPage(c, sl.name); if (!p) return { say: `There is no ${sl.name} page. Say "add a page called ${capF(sl.name)}" to make it.`, chips: [`Add a page called ${capF(sl.name)}`] }; return { page: p.id, say: `On the ${p.title} page.` }; }
+    if (id === 'site.page.clear') { const cfg = clone(c), p = pageOf(cfg, pg.id); const n = p.blocks.filter(b => b.type !== 'footer').length; p.blocks = p.blocks.filter(b => b.type === 'footer'); return { cfg, say: `Cleared ${n} section${n === 1 ? '' : 's'} from ${p.title}. Undo brings them back.` }; }
+    if (id === 'site.align') { const b = sl.block ? blkT(sl.block) : selBlock || pg.blocks.find(x => x.type === 'hero'); if (!b) return { say: 'Which section? Click it in the preview first.' }; const p = pageWith(c, b); return { cfg: setStyle(c, p.id, b.id, { al: sl.align === 'left' ? 'left' : sl.align === 'right' ? 'right' : 'center' }), page: p.id, sel: { block: b.id }, say: `The ${lbl(b)} is ${sl.align === 'center' ? 'centered' : sl.align + '-aligned'} now.` }; }
+    if (id === 'site.block.color') { const b = blkT(sl.block) || selBlock; if (!b) return { say: 'Which section? Click it in the preview first.' }; const p = pageWith(c, b), hx = sl.color && sl.color.hex; if (!hx) return { say: 'Which color?' }; return { cfg: setStyle(c, p.id, b.id, { bg: '', tint: hx }), page: p.id, sel: { block: b.id }, say: `The ${lbl(b)} sits on ${sl.color.name || hx} now, with the text color picked for contrast.` }; }
+    if (id === 'site.radius') { const cur = c.theme.radius || 0, next = sl.size === 'none' ? 0 : sl.size === 'less' ? Math.max(0, Math.round(cur / 2)) : Math.min(28, Math.max(8, cur * 2)); const cfg = clone(c); cfg.theme.radius = next; return { cfg, say: next === cur ? `Corners are already at ${cur}px.` : `Corners are ${next}px now (were ${cur}px).` }; }
+    if (id === 'site.lang') return { cfg: setSeo(c, { lang: sl.lang }), say: `The site is marked as ${({ en: 'English', es: 'Spanish', pt: 'Portuguese', fr: 'French', de: 'German', ja: 'Japanese', zh: 'Chinese', ko: 'Korean', it: 'Italian', nl: 'Dutch' })[sl.lang] || sl.lang} now, so browsers and screen readers read it right. Your words stay as you wrote them.` };
+    if (id === 'site.logo.remove') return c.logo ? { cfg: setLogo(c, ''), say: 'Removed the logo from the header.' } : { say: 'There is no logo on the site.' };
+    return undefined;
+  }
+  const capF = s => { s = String(s || '').trim(); return s ? s.charAt(0).toUpperCase() + s.slice(1) : s; };
+  // answer the one question asked after an edit ("What’s the address?"): the designer passes the reply here
+  function answer(c, ask, text) {
+    const t = String(text || '').trim(); if (!ask || !t) return null;
+    const pg = pageOf(c, ask.page), b = ask.block && pg.blocks.find(x => x.id === ask.block);
+    const email = (/[\w.+-]+@[\w-]+(?:\.[\w-]+)+/.exec(t) || [])[0];
+    const url = (/(?:https?:\/\/|www\.)\S+|[\w-]+(?:\.[\w-]+)*\.(?:com|org|net|io|co|app|dev|me|studio|shop|store|link|page|site|xyz|uk|de|fr|ca|au|us|tv|fm|art|band|club|blog)(?:\/\S*)?/i.exec(email ? t.replace(email, ' ') : t) || [])[0];
+    if (ask.kind === 'linklabel') return { relabel: t };
+    if (!b && ask.kind !== 'linklabel') return null;
+    if (ask.kind === 'url' || ask.kind === 'handle' || ask.kind === 'email' || ask.kind === 'phone') {
+      let link = null;
+      if (ask.kind === 'phone') { const d = t.replace(/[^\d+]/g, ''); if (d.length >= 6) link = { kind: 'url', to: 'tel:' + d }; }
+      else if (email && !url) link = { kind: 'email', to: email };
+      else if (url) link = toLink(url);
+      else if (ask.kind === 'handle' && /^@?[\w.]{2,40}$/.test(t)) { const mk = SOCIAL[ask.net] && SOCIAL[ask.net][1]; if (mk) link = { kind: 'url', to: mk(t.replace(/^@/, '')) }; }
+      else { const p = findPage(c, t.replace(/^(?:the\s+|to\s+the\s+|link it to the\s+)/i, '').replace(/\s+page$/i, '')); if (p && ask.kind === 'url') link = { kind: 'page', to: p.slug }; }
+      if (!link) return null;
+      return { cfg: setLink(c, pg.id, b.id, ask.path, link), sel: { block: b.id, path: ask.path }, say: `“${ask.label || 'It'}” goes to ${link.kind === 'page' ? 'the ' + (findPage(c, link.to) || {}).title + ' page' : link.kind === 'email' ? 'an email to ' + link.to : short(link.to.replace(/^tel:/, ''))} now.` };
+    }
+    if (ask.kind === 'address') { let cfg = setProp(c, pg.id, b.id, 'text', t); cfg = setProp(cfg, pg.id, b.id, 'buttons', [L('Open in Maps', 'url', 'https://www.openstreetmap.org/search?query=' + encodeURIComponent(t))]); return { cfg, sel: { block: b.id }, say: `Find us: ${t}, with an Open in Maps button.` }; }
+    if (ask.kind === 'video') { if (!url) return null; return { cfg: setProp(c, pg.id, b.id, 'url', /^https?:/.test(url) ? url : 'https://' + url), sel: { block: b.id }, say: 'Added the video. It plays right on the page.' }; }
+    if (ask.kind === 'text') return { cfg: setProp(c, pg.id, b.id, ask.path, capF(t)), sel: { block: b.id }, say: 'Done.' };
+    return null;
+  }
+
   // feat/site-v2: the newer steps; anything else goes to command0. at.facts = what the project knows (fill()), if loaded.
   function command(c, s, at) {
+    at = at || {}; { const r2 = command2(c, s, at); if (r2 !== undefined) return r2; }
     at = at || {}; const sl = s.slots || {}, id = s.intent, pg = pageOf(c, at.page), sel = at.sel || {};
     const selBlock = sel.block && pg.blocks.find(b => b.id === sel.block);
     const blk = t => (t ? (selBlock && selBlock.type === t ? selBlock : pg.blocks.find(b => b.type === t)) : selBlock) || null;
@@ -328,7 +481,7 @@
   // ---------- feat/site-v2: more ops (each returns a new cfg) ----------
   function duplicateBlock(c, pageId, id) { c = clone(c); const p = pageOf(c, pageId), i = p.blocks.findIndex(b => b.id === id); if (i < 0) return { cfg: c, block: null }; const b = clone(p.blocks[i]); b.id = uid('b'); p.blocks.splice(i + 1, 0, b); return { cfg: c, block: b }; }
   function setHidden(c, pageId, id, on) { c = clone(c); const b = pageOf(c, pageId).blocks.find(x => x.id === id); if (b) { if (on) b.hidden = true; else delete b.hidden; } return c; }
-  function setStyle(c, pageId, id, patch) { c = clone(c); const b = pageOf(c, pageId).blocks.find(x => x.id === id); if (b) { b.style = { bg: '', pad: '', ...(b.style || {}), ...patch }; if (!b.style.bg && !b.style.pad) delete b.style; } return normalize(c); }
+  function setStyle(c, pageId, id, patch) { c = clone(c); const b = pageOf(c, pageId).blocks.find(x => x.id === id); if (b) { b.style = { bg: '', pad: '', ...(b.style || {}), ...patch }; if (patch.bg) delete b.style.tint; Object.keys(b.style).forEach(k => { if (!b.style[k]) delete b.style[k]; }); if (!Object.keys(b.style).length) delete b.style; } return normalize(c); }
   function setSpace(c, space) { c = clone(c); c.theme.space = /^(compact|roomy)$/.test(space) ? space : 'normal'; return c; }
   function setFonts(c, pair) { c = clone(c); const f = FONT_PAIRS[pair]; if (f) c.theme.fonts = { display: f.display, body: f.body }; else if (FONT[pair]) c.theme.fonts.display = pair; return c; }
   function setSeo(c, patch) { c = clone(c); c.seo = { ...(c.seo || {}), ...patch }; return normalize(c); }
@@ -431,7 +584,7 @@ form.cf{display:grid;gap:12px;max-width:560px}form.cf input,form.cf textarea{fon
 .embed{aspect-ratio:16/9;width:100%;border:1px solid var(--line);border-radius:var(--r);background:var(--card)}.e-inline .embed{max-width:640px}.t-two .wrap{display:grid;grid-template-columns:1fr 2fr;gap:40px}
 footer{padding:40px 0;color:var(--muted)}footer .wrap{display:flex;gap:20px;flex-wrap:wrap;align-items:center}footer nav{display:flex;gap:16px;flex-wrap:wrap;margin-left:auto}
 .pg{display:none}.pg-home,.pg:target,.pg:has(:target){display:block}body:has(.pg:not(.pg-home):target) .pg-home,body:has(.pg:not(.pg-home) :target) .pg-home{display:none}
-section.pad-s{padding:calc(var(--pad) * .5) 0}section.pad-l{padding:calc(var(--pad) * 1.6) 0}.bg-card{background:var(--card)}.bg-accent{background:var(--accent);color:var(--on)}.bg-ink{background:var(--ink);color:var(--bg)}.bg-accent .muted,.bg-accent .lead,.bg-accent .eyebrow,.bg-ink .muted,.bg-ink .lead,.bg-ink .eyebrow{color:inherit;opacity:.82}.bg-accent .btn{background:var(--on);color:var(--accent);border-color:var(--on)}.bg-accent .btn.alt,.bg-ink .btn.alt{background:transparent;color:inherit;border-color:currentColor}.bg-accent .card,.bg-ink .card{background:transparent;border-color:currentColor}
+.al-center .wrap,.al-center{text-align:center}.al-center .btns,.al-center .soc{justify-content:center}.al-center .lead{margin-left:auto;margin-right:auto}.al-left .wrap{text-align:left}.al-left .btns{justify-content:flex-start}.al-right .wrap{text-align:right}.al-right .btns{justify-content:flex-end}.al-right .lead{margin-left:auto}.tinted .muted,.tinted .lead,.tinted .eyebrow{color:inherit;opacity:.82}section.pad-s{padding:calc(var(--pad) * .5) 0}section.pad-l{padding:calc(var(--pad) * 1.6) 0}.bg-card{background:var(--card)}.bg-accent{background:var(--accent);color:var(--on)}.bg-ink{background:var(--ink);color:var(--bg)}.bg-accent .muted,.bg-accent .lead,.bg-accent .eyebrow,.bg-ink .muted,.bg-ink .lead,.bg-ink .eyebrow{color:inherit;opacity:.82}.bg-accent .btn{background:var(--on);color:var(--accent);border-color:var(--on)}.bg-accent .btn.alt,.bg-ink .btn.alt{background:transparent;color:inherit;border-color:currentColor}.bg-accent .card,.bg-ink .card{background:transparent;border-color:currentColor}
 .hero-accent{background:var(--accent);color:var(--on)}.hero-accent .lead,.hero-accent .eyebrow{color:inherit;opacity:.85}.hero-accent .btn{background:var(--on);color:var(--accent);border-color:var(--on)}.hero-accent .btn.alt{background:transparent;color:inherit;border-color:currentColor}.hero-accent .wrap{text-align:center}.hero-accent .lead{margin:0 auto}.hero-accent .btns{justify-content:center}.hero-accent .pic{max-width:720px;margin:40px auto 0}
 .hero-cover{padding-top:0}.hero-cover .pic{border-radius:0;border:0;border-bottom:1px solid var(--line);margin:0 0 40px}.hero-cover .pic img{aspect-ratio:21/9}.hero-cover .wrap{display:block}
 .f-alternating .alt-row{display:grid;grid-template-columns:1fr 1fr;gap:40px;align-items:center;padding:28px 0;border-top:1px solid var(--line)}.f-alternating .alt-row:nth-child(even) .pic{order:2}.f-alternating .num{font:700 3rem/1 var(--display);color:var(--accent)}
@@ -484,7 +637,7 @@ section.pad-s{padding:calc(var(--pad) * .5) 0}section.pad-l{padding:calc(var(--p
   }
   function renderPage(c, pg, o) {
     const XC = { footer: 'foot-', newsletter: 'nl-', cta: 'cta-', stats: 'st-', logos: 'lg-', banner: 'bn bn-', divider: 'dv dv-', image: 'im-', text: 't-' };
-    return (pg.blocks || []).filter(b => o.edit || !b.hidden).map(b => { const tag = b.type === 'footer' ? 'footer' : b.type === 'banner' ? 'div' : 'section', st = b.style || {}; return `<${tag} id="b-${b.id}" class="${b.type}-${b.variant} b-${b.type}${XC[b.type] ? ' ' + XC[b.type] + b.variant : ''}${st.bg ? ' bg-' + st.bg : ''}${st.pad ? ' pad-' + st.pad : ''}${b.hidden ? ' is-hidden' : ''}"${o.edit ? ` data-block="${b.id}"` : ''}>${renderBlock(c, b, pg, o)}</${tag}>`; }).join('\n');
+    return (pg.blocks || []).filter(b => o.edit || !b.hidden).map(b => { const tag = b.type === 'footer' ? 'footer' : b.type === 'banner' ? 'div' : 'section', st = b.style || {}; return `<${tag} id="b-${b.id}" class="${b.type}-${b.variant} b-${b.type}${XC[b.type] ? ' ' + XC[b.type] + b.variant : ''}${st.bg ? ' bg-' + st.bg : ''}${st.pad ? ' pad-' + st.pad : ''}${st.al ? ' al-' + st.al : ''}${st.tint && /^#[0-9a-f]{3,8}$/i.test(st.tint) ? ' tinted' : ''}${b.hidden ? ' is-hidden' : ''}"${st.tint && /^#[0-9a-f]{3,8}$/i.test(st.tint) ? ` style="background:${st.tint};color:${contrast(st.tint, '#FFFFFF') >= 4.5 ? '#FFFFFF' : '#111111'}"` : ''}${o.edit ? ` data-block="${b.id}"` : ''}>${renderBlock(c, b, pg, o)}</${tag}>`; }).join('\n');
   }
   function nav(c, pg, o) {
     if (c.pages.length < 2 && !o.edit && !c.logo) return '';
@@ -519,5 +672,5 @@ section.pad-s{padding:calc(var(--pad) * .5) 0}section.pad-l{padding:calc(var(--p
   }
   const dataToBytes = src => { const m = /^data:[^;,]+(;base64)?,(.*)$/.exec(src || ''); if (!m) return null; if (m[1]) { const bin = typeof atob === 'function' ? atob(m[2]) : Buffer.from(m[2], 'base64').toString('binary'); const u = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) u[i] = bin.charCodeAt(i); return u; } return new TextEncoder().encode(decodeURIComponent(m[2])); };
 
-  return { FONT_PAIRS, CATS, duplicateBlock, setHidden, setStyle, setSpace, setFonts, setSeo, setLogo, rewrite, fill, md, BLOCKS, TYPES, PRESETS, TEMPLATES, blank, normalize, colors, fromTemplate, render, exportFiles, dataToBytes, buttons, images, href, autoWire, addPage, renamePage, deletePage, addBlock, removeBlock, moveBlock, setVariant, setProp, setTheme, setMode, setColor, setLink, setImage, imageShape, command, getAt, slugify, contrast };
+  return { answer, command2, FONT_PAIRS, CATS, duplicateBlock, setHidden, setStyle, setSpace, setFonts, setSeo, setLogo, rewrite, fill, md, BLOCKS, TYPES, PRESETS, TEMPLATES, blank, normalize, colors, fromTemplate, render, exportFiles, dataToBytes, buttons, images, href, autoWire, addPage, renamePage, deletePage, addBlock, removeBlock, moveBlock, setVariant, setProp, setTheme, setMode, setColor, setLink, setImage, imageShape, command, getAt, slugify, contrast };
 });

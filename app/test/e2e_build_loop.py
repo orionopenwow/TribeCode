@@ -178,7 +178,7 @@ def main():
             assert any("kombucha" in (m.get("text") or "") for m in msgs), "the brief reached the AI helpers"
 
             # the Flint panel is open beside the preview
-            host.wait_for_selector("#pvf.is-open #pvf-in", timeout=5000)
+            host.wait_for_selector("#pvf.is-open #flm-in-preview", timeout=5000)
             pw = host.evaluate("[document.querySelector('#pvf').getBoundingClientRect().width, document.querySelector('#pvw-stage').getBoundingClientRect().width]")
             assert 240 <= pw[0] <= 520 and pw[1] > 300, pw
             host.click("#pvw [data-dev='desktop']")
@@ -194,8 +194,8 @@ def main():
             mcp(atok, kp, "code_write", {"path": "index.html", "text": page_html("v2 from the agent"), "message": "Kombucha batches page"}); t0 = time.time()
             d2 = wait_mark(host, "v2 from the agent", "agent code_write (desktop)", t0=t0)
             wait_mark(ph, "v2 from the agent", "agent code_write (phone)", t0=t0)
-            host.wait_for_function("[...document.querySelectorAll('#pvf-feed .pvf-file')].some(li => /saved index\\.html/.test(li.innerText) && /\\+\\d+/.test(li.innerText))", timeout=5000)
-            host.wait_for_function("[...document.querySelectorAll('#pvf-feed .pvf-reload')].length > 0", timeout=5000)
+            host.wait_for_function("[...document.querySelectorAll('#pvf .fl-thread .fl-ev-file')].some(li => /saved index\\.html/.test(li.innerText) && /\\+\\d+/.test(li.innerText))", timeout=5000)
+            host.wait_for_function("[...document.querySelectorAll('#pvf .fl-thread .fl-ev-reload')].length > 0", timeout=5000)
             mcp(atok, kp, "code_write", {"path": "index.html", "text": page_html("v3 again"), "message": "again"}); t0 = time.time()
             wait_mark(host, "v3 again", "second agent write (desktop)", t0=t0); wait_mark(ph, "v3 again", "second agent write (phone)", t0=t0)
 
@@ -219,21 +219,21 @@ def main():
             while "1.25" not in v and time.time() - t0 < LIMIT + 2: time.sleep(0.1); v = fz()
             assert "1.25" in v, v
             # the Flint panel: a prompt makes a feed line, and the preview reloads with the change
-            host.fill("#pvf-in", "Make the title bigger"); t0 = time.time(); host.press("#pvf-in", "Enter")
-            host.wait_for_function("[...document.querySelectorAll('#pvf-feed .pvf-flint')].some(li => /bigger/i.test(li.innerText))", timeout=6000)
+            host.fill("#flm-in-preview", "Make the title bigger"); t0 = time.time(); host.press("#flm-in-preview", "Enter")
+            host.wait_for_function("[...document.querySelectorAll('#pvf .fl-thread .fl-msg.fl')].some(li => /bigger/i.test(li.innerText))", timeout=6000)
             v = fz()
             while "1.56" not in v and time.time() - t0 < LIMIT + 4: time.sleep(0.1); v = fz()
             assert "1.56" in v, f"the panel's change reached the preview: {v}"
             # a build request goes to the AI helpers
-            host.click("#pvf-chips [data-chip='Make it dark']")
-            host.wait_for_function("[...document.querySelectorAll('#pvf-feed .pvf-ask')].some(li => /AI helpers/.test(li.innerText))", timeout=6000)
+            host.click("#pvf .flm-chips .fl-chip:text-is('Make it dark')")
+            host.wait_for_function("[...document.querySelectorAll('#pvf .fl-thread .fl-ev-ask')].some(li => /AI helpers/.test(li.innerText))", timeout=6000)
             assert any("Make it dark" in (m.get("text") or "") for m in ok(api("/agents/channel", token=camp, project=kp))["messages"]), "the ask reached #agents"
             # the agent answers in #agents → a feed line
             mcp(atok, kp, "agents_post", {"text": "Dark theme: on it, editing style.css"})
-            host.wait_for_function("[...document.querySelectorAll('#pvf-feed .pvf-agent')].some(li => /Dark theme/.test(li.innerText))", timeout=6000)
+            host.wait_for_function("[...document.querySelectorAll('#pvf .fl-thread .fl-ev-agent')].some(li => /Dark theme/.test(li.innerText))", timeout=6000)
             # "add a jump sound": Flint's asset library → files land → reload
-            host.fill("#pvf-in", "add a jump sound"); host.press("#pvf-in", "Enter")
-            host.wait_for_function("[...document.querySelectorAll('#pvf-feed .pvf-flint')].some(li => /jump/i.test(li.innerText))", timeout=10000)
+            host.fill("#flm-in-preview", "add a jump sound"); host.press("#flm-in-preview", "Enter")
+            host.wait_for_function("[...document.querySelectorAll('#pvf .fl-thread .fl-msg.fl')].some(li => /jump/i.test(li.innerText))", timeout=10000)
             assert any(Path(kom).rglob("jump*.wav")), "the jump sound is in the repo"
             # picking an element in edit mode shows it as context
             host.click("#pvw .pvw-edit") if host.locator("#pvw .pvw-edit").count() else host.evaluate("document.querySelector('[data-act=\"edit\"]').click()")
