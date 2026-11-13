@@ -43,7 +43,7 @@ const fail = (status, msg) => Object.assign(new Error(msg), { status });
 // Anything that looks like a credential is cut out of every message that leaves this module.
 const scrub = s => String(s || '').replace(/(gh[pousr]_|github_pat_)[A-Za-z0-9_]+/g, '[token]').replace(/\/\/[^/@\s]+@/g, '//').replace(/password=\S+/gi, 'password=[token]');
 
-module.exports = function sync({ P, W, base, getMembers, approvals, broadcast, postChat, nameOf, perms, pushAuth, brain = null, resetHub, checkShared = null, display = p => p, tribeName = () => 'tribe', log = () => {} }) {
+module.exports = function sync({ P, W, base, getMembers, approvals, broadcast, postChat, nameOf, perms, pushAuth, brain = null, resetHub, checkShared = null, onShipped = null, display = p => p, tribeName = () => 'tribe', log = () => {} }) {
   const file = pid => `.tribe/sync/${String(pid).replace(/[^\w-]/g, '_')}.json`;
   const load = pid => { const d = base.readJSON(file(pid), null) || {}; return { settings: { ...DEFAULTS(), ...(d.settings || {}) }, log: d.log || [], conflict: d.conflict || null, lastShip: d.lastShip || null, lastPull: d.lastPull || null, lastAuto: d.lastAuto || 0, pending: d.pending || null, remote: d.remote || null }; };
   const save = (pid, s) => { fs.mkdirSync(base.p('.tribe/sync'), { recursive: true }); s.log = (s.log || []).slice(0, 50); base.writeJSON(file(pid), s); };
@@ -296,6 +296,7 @@ module.exports = function sync({ P, W, base, getMembers, approvals, broadcast, p
       }
       const ss = load(pid); ss.lastShip = { at: entry.at, sha: entry.short, by: entry.byName, pr: entry.pr || null }; ss.log.unshift(entry); ss.lastAuto = why === 'manual' ? ss.lastAuto : Date.now(); ss.pending = null; save(pid, ss);
       try { P.inProject(pid, () => postChat('general', 'tribecode', entry.pr ? `🚀 ${entry.byName} shipped to a pull request on **${s.settings.repo}**: ${entry.pr.url}` : `🚀 ${why === 'manual' ? entry.byName : 'Auto-ship'} shipped **${msg}** to ${s.settings.repo} (${s.settings.branch}).`)); } catch {}
+      if (onShipped) try { onShipped(pid, me, entry); } catch {}   // feat/build-feeds: the host's checks run after a ship (server/checks.js)
       return { shipped: true, entry, status: await status(pid) };
     });
   }

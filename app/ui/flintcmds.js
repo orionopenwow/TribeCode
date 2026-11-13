@@ -89,6 +89,16 @@
     async 'inspo.search'(s) { const B = window.TribeInspoBoard; if (!B) return { text: 'The inspiration board isn’t available here.' }; B.open({ q: s.slots.q }); return { text: `Searching openly licensed pictures for “${s.slots.q}” on your inspiration board. Tap the ones you like to pin them.` }; },
     async 'nav.people'() { const P = window.TribePeoplePanel; if (!P) return { text: 'People live in a tribe. Host or join one first.' }; P.open({}); return { text: 'Here’s everyone and where they are.' }; },
     async 'nav.work'() { const W = window.TribeTalent; if (!W) return { text: 'Work isn’t available here.' }; W.open(); return { text: 'Opened Work: gigs, who’s free, and the time bank.' }; },
+    async 'checks.run'(s) {   // feat/build-feeds: the host's real checks (server/checks.js)
+      if (!C.connected || !C.connected()) return { text: 'Checks run on your tribe’s host. Connect to a tribe first.' };
+      let k; try { k = await C.api('/checks'); } catch (e) { return { text: e.message }; }
+      const dur = ms => (ms < 60000 ? `${Math.round(ms / 100) / 10} s` : `${Math.round(ms / 6000) / 10} min`);
+      const lastLine = k.last ? (k.last.ok ? `The last run passed in ${dur(k.last.ms)}.` : `The last run failed: ${(k.last.lines || []).slice(0, 2).join(' · ')}`) : '';
+      if (/^(is|are)\b|status$/i.test(String(s.text || '').trim())) return { text: lastLine || (k.what.kind === 'none' ? k.what.why : 'The checks have not run yet.'), acts: k.can.run ? [['Run the checks', 'ask', 'run the checks']] : [] };
+      if (!k.can.run) return { text: k.reason || 'You can only read this project, so I can’t start its checks.' };
+      try { await C.api('/checks/run', { method: 'POST', body: {} }); } catch (e) { return { text: e.message }; }
+      return { text: `Running ${k.what.label} on the host. The result shows on the Build status card and under Needs attention.` };
+    },
     async 'preview.open'() { const P = window.TribePreview; if (!P || !P.open) return { text: 'The preview needs a project. Start one first.' }; P.open(); return { text: 'Opened the preview, right next to the work.' }; },
     async 'preview.share'() { const P = window.TribePublish; if (P && P.open) { P.open(); return { text: 'Opened Publish: make a play link anyone can open, then copy it.' }; } return { text: 'Say “publish it” to make a play link first.' }; },
   };

@@ -277,6 +277,7 @@ function broadcast(msg, except) {
 }
 let dashboard = null;   // the Global Hub, server/hub.js (made below)
 let talent = null;   // v0.27 company: the Work view (server/talent.js, made below)
+let checksHub = null;   // feat/build-feeds: the host's check runner (server/checks.js, made below)
 let workFeed = null;   // feat/work-v2: this tribe's signed gig feed (server/workfeed.js, made below)
 let profiles = null;   // feat/profiles: avatar, name color, status, presence (server/profiles.js, made below)
 let moderation = null;   // feat/appstore: report, block, word filter (server/moderation.js, made below)
@@ -540,7 +541,7 @@ const coord = makeCoord({ P, store, id, str, broadcast, postChat, bus, getMember
 const ship = shipHub = require('./ship')({ P, store, hubFor, approvals, getMembers: () => members, loadTasks: () => loadTasks(), createTask: o => createTask(o), postChat, broadcast, bus, str, nameOf,
   can: (m, cap) => m.role === 'host' || perms.can(m, cap, P.current()), pushAuth: () => githubAuth.pushAuth(), coord, claims, id, brain });
 // feat/folder-sync: a folder on this computer as the project's home (server/folderhome.js), GitHub as its synced copy (server/sync.js)
-syncHub = require('./sync')({ P, W, base: baseStore, getMembers: () => members, approvals, broadcast, postChat, nameOf, perms, pushAuth: () => githubAuth.pushAuth(), brain, resetHub,
+syncHub = require('./sync')({ onShipped: (pid, me, entry) => checksHub && checksHub.onShipped(pid, me, entry), P, W, base: baseStore, getMembers: () => members, approvals, broadcast, postChat, nameOf, perms, pushAuth: () => githubAuth.pushAuth(), brain, resetHub,
   checkShared: (p, pid) => folderHome.checkShared(p, pid), display: p => folderHome.display(p), tribeName: () => tribe.name, log: m => console.error('  ' + m) });
 folderHome = require('./folderhome')({ P, W, baseStore, isLocal, broadcast, perms, resetHub, postChat, nameOf, str, appRoot: path.join(__dirname, '..'), onSave: (pid, files) => { syncHub.onSave(pid); versionsHub.onSave(pid, files); }, log: m => console.error('  ' + m) });
 versionsHub = require('./versions')({ P, W, perms, broadcast, nameOf, syncLog: pid => syncHub.load(pid).log, log: m => console.error('  ' + m) });   // feat/folder-sync: Versions (server/versions.js)
@@ -689,6 +690,7 @@ const canvasChat = require('./canvaschat')({ P, base: baseStore, broadcast, canv
 const company = companyHub = require('./company')({ P, base: baseStore, store, broadcast, postChat, nameOf, perms, getMembers: () => members, approvals, bus, coord, createTask: o => createTask(o), saveTask: t => saveTask(t), loadTasks: () => loadTasks(), docs });   // v0.27 company: seats, goals, decisions, rhythms (server/company.js)
 company.useLedger(pid => { const w = ledger.aiWeek(pid); return w.seats.some(x => x.events) ? { spentWeek: w.total, currency: w.currency } : null; });   // v0.27 company: real AI spend from Money (ledger.js) in the weekly review
 const dashBand = require('./dashband')({ P, base: baseStore, preview, showcase, visuals, hubFor, approvals, loadTasks: () => loadTasks(), canvas: designCanvas, company, notify: pocket, nameOf, broadcast, perms });   // feat/dash-preview: the dashboard's preview band + Needs attention
+checksHub = require('./checks')({ P, base: baseStore, getMembers: () => members, signal: (pid, o) => dashBand.signal(pid, o), broadcast, bus, nameOf, perms, pushAuth: () => githubAuth.pushAuth(), syncLoad: pid => syncHub.load(pid), log: m => console.error('  ' + m) });   // feat/build-feeds: real build results
 mcpFlow = makeMcpFlow({ flow, P });
 // MCP calls run in the agent's project, or in `project` when the tool call names one it can see.
 function agentProject(me) { return P.pick(me, null, me.project || (online.get(me.owner) || {}).project); }
@@ -713,7 +715,7 @@ const mcp = makeMcp({
       t.updated = new Date().toISOString(); t.updatedBy = me.id; return saveTask(t);
     },
   },
-  docs, claims, extraTools: { ...agentTools, ...visuals.mcpTools, ...mcpFlow.tools, ...makeWorkshopMcp(workshop, { current: () => P.current() }), ...require('./mcp-preview')(preview, P), ...whiteboard.mcpTools, ...showcase.mcpTools, ...siteDesign.mcpTools, ...captures.mcpTools, ...assetLib.mcpTools, ...company.mcpTools, ...taskFlow.mcpTools, ...ledger.mcpTools, ...seatpilot.mcpTools, ...talent.mcpTools /* v0.27 company */, ...market.mcpTools, ...academy.mcpTools, ...flintMem.mcpTools, ...publishHub.mcpTools, ...jamHub.mcpTools, ...pinsHub.mcpTools, ...buildKit.mcpTools, ...canvasAI.mcpTools, ...inviteClaude.mcpTools() }, port: PORT, gate: { tool: (me, n, a) => inviteClaude.gateTool(me, n, a), listable: (me, n) => inviteClaude.listable(me, n) }, coordTools: h => ({ ...coord.mcpTools(h), ...agentnet.mcpTools(h), ...canvasAI.mcpTools, ...syncHub.mcpTools(h, ship.mcpTools(h)) }),
+  docs, claims, extraTools: { ...agentTools, ...visuals.mcpTools, ...mcpFlow.tools, ...makeWorkshopMcp(workshop, { current: () => P.current() }), ...require('./mcp-preview')(preview, P), ...whiteboard.mcpTools, ...showcase.mcpTools, ...siteDesign.mcpTools, ...captures.mcpTools, ...assetLib.mcpTools, ...company.mcpTools, ...taskFlow.mcpTools, ...ledger.mcpTools, ...seatpilot.mcpTools, ...talent.mcpTools /* v0.27 company */, ...market.mcpTools, ...academy.mcpTools, ...flintMem.mcpTools, ...publishHub.mcpTools, ...jamHub.mcpTools, ...pinsHub.mcpTools, ...buildKit.mcpTools, ...canvasAI.mcpTools, ...inviteClaude.mcpTools() }, port: PORT, gate: { tool: (me, n, a) => inviteClaude.gateTool(me, n, a), listable: (me, n) => inviteClaude.listable(me, n) }, coordTools: h => ({ ...coord.mcpTools(h), ...agentnet.mcpTools(h), ...canvasAI.mcpTools, ...syncHub.mcpTools(h, ship.mcpTools(h)), ...checksHub.mcpTools(h) }),
   chat: {
     post(me, text, channel) {   // feat/chat2: optional channel ("design", "#design"); #general by default
       const tx = str(text, 4000); if (!tx) return; const muted = perms.muteBlock(me); if (muted) throw new Error(muted);   /* feat/roles */
@@ -1265,6 +1267,7 @@ async function apiInProject(req, res, url) {
   if (a === 'publish') { const h = await publishHub.route(req, res, ctx()); if (h !== null) return; }   // v0.27 publish: play links
   if (a === 'jam') { const h = await jamHub.route(req, res, ctx()); if (h !== null) return; }   // v0.27 jams
   if (a === 'applink' || a === 'export' || a === 'shortcut' || a === 'github') { const h = await (a === 'applink' ? applink : a === 'github' ? githubAuth : exporter).route(req, res, ctx()); if (h !== null) return; }   // Home Screen app links, Desktop folders, GitHub sign-in
+  if (a === 'checks') return checksHub.route(req, res, ctx());   // feat/build-feeds (server/checks.js)
   if (a === 'dash') { const h = await dashBand.route(req, res, ctx()); if (h !== null) return; }   // feat/dash-preview (server/dashband.js)
   if (a === 'thumb') { const h = await thumb.route(req, res, { m, b, me, url, send, fail }); if (h !== null) return; }   // pinned repo thumbnail (server/thumb.js)
   if (a === 'templates' && m === 'GET') return send(res, 200, { templates: docsx.templates() });

@@ -30,7 +30,7 @@ function scopeOfTool(name) {
   if (/approv|^propose$/.test(n)) return 'approvals';
   if (/chat|message|^reply|inbox|vote|^agents_|mention|react/.test(n)) return 'chat';
   if (/doc|note|sheet|deck|whiteboard|journal|secretary|scratch/.test(n)) return 'docs';
-  if (/^code_|file|claim|repo|commit|branch|merge|visual|asset|capture|canvas|context/.test(n)) return 'files';
+  if (/^code_|^checks_|file|claim|repo|commit|branch|merge|visual|asset|capture|canvas|context/.test(n)) return 'files';
   if (/site|preview|showcase|website|publish|design/.test(n)) return 'website';
   if (/task|lane|handoff|delegat|review|recommend|gig|work|bug|plan|calendar|ship|jam/.test(n)) return 'tasks';
   return 'general';
@@ -43,7 +43,7 @@ function scopeOfPath(p) {
   if (/^(chat|dm|channels|votes|gists|pins|notify|mentions)$/.test(a)) return 'chat';
   if (/^(docs|docsx|live|notes|scratch|whiteboard|secretary|doc-templates)$/.test(a)) return 'docs';
   if (/^(tasks|bugs|calendar|coord|plan|talent|work|ship|jam|rituals)$/.test(a)) return 'tasks';
-  if (/^(code|files|repo|uploads|claims|visuals|assets|captures|canvas|drift|codefiles|export)$/.test(a)) return 'files';
+  if (/^(code|checks|files|repo|uploads|claims|visuals|assets|captures|canvas|drift|codefiles|export)$/.test(a)) return 'files';
   if (/^(site|sites|showcase|sitedesign|site-design|site-designer|site-templates|preview|publish|website|sitelib)$/.test(a)) return 'website';
   return 'general';
 }
@@ -52,7 +52,7 @@ const NEVER = /^(invite-claude|agents$|agents\/mine|invites|tribe-link|share|dev
 // Admin-level areas: only with "act as me for admin" (and then perms.js still checks the owner's own role).
 const ADMIN = /^(perms|modes|members\/[^/]+\/role|projects\/[^/]+\/(delete|settings)|widgets)/;
 // Read-only tools that stay on when the owner can only watch (spectator).
-const READ_TOOL = /^(list_|read_|check_|search_|get_|tribe_overview|where_is|inbox_next|my_lane|agents_read|market_(list|search|read))/;
+const READ_TOOL = /^(list_|read_|check_|checks_status|search_|get_|tribe_overview|where_is|inbox_next|my_lane|agents_read|market_(list|search|read))/;
 
 module.exports = function inviteClaude({ P, getMembers, saveMembers, pushPresence, perms, hash, id, slug, str, endpoints, agentsHub, publicBase = () => null,
   postChat, sendTo, agentSeen, idleMs, publicMember, docs, store, chans, nameOf, rate = Number(process.env.TRIBE_CLAUDE_RATE) || 120, now = () => Date.now() }) {
