@@ -181,7 +181,9 @@
   });
 
   // ---------- clicks ----------
+  var noClick = 0;
   document.addEventListener('click', function (e) {
+    if (Date.now() - noClick < 300) { e.preventDefault(); e.stopPropagation(); return; }   // the end of a drag is not a click
     var t = e.target, a = t.closest('a'); if (a || t.closest('form button, form input[type=submit]')) e.preventDefault();
     if (t.closest('.wdz-bar,.wdz-tb')) return;
     var pn = t.closest('.wdz-pin'); if (pn) { e.preventDefault(); return post({ t: 'pinopen', id: pn.dataset.id }); }
@@ -207,6 +209,22 @@
   }, true);
   document.addEventListener('mousedown', function (e) { if (e.target.closest('[data-ph]')) e.preventDefault(); }, true);   // the box is part of the design here, not a form to fill in
   document.addEventListener('submit', function (e) { e.preventDefault(); }, true);
+  // (round 2) drag a selected picture inside its frame to choose what stays in view; the focus point is saved in percent
+  var pdrag = null;
+  document.addEventListener('dragstart', function (e) { e.preventDefault(); }, true);   // a picture is moved inside its frame here, never dragged out of the page
+  document.addEventListener('pointercancel', function () { if (pdrag) { pdrag.box.classList.remove('wdz-panning'); pdrag = null; } }, true);
+  document.addEventListener('pointerdown', function (e) {
+    var box = e.target.closest && e.target.closest('[data-img]'); if (!box || CM || !SEL || SEL.kind !== 'image' || box.dataset.img !== SEL.key || SEL.key.charAt(0) === '@' || e.button) return;
+    var im = box.querySelector('img'); if (!im || !im.naturalWidth) return; var cs = getComputedStyle(im); if (cs.objectFit !== 'cover') return;
+    var p = cs.objectPosition.split(' '); pdrag = { box: box, im: im, x0: e.clientX, y0: e.clientY, fx: parseFloat(p[0]) || 50, fy: parseFloat(p[1]) || 50, moved: false };
+  }, true);
+  document.addEventListener('pointermove', function (e) {
+    if (!pdrag) return; var dx = e.clientX - pdrag.x0, dy = e.clientY - pdrag.y0; if (!pdrag.moved && Math.abs(dx) + Math.abs(dy) < 5) return; pdrag.moved = true; e.preventDefault();
+    var r = pdrag.im.getBoundingClientRect(), k = Math.max(r.width / pdrag.im.naturalWidth, r.height / pdrag.im.naturalHeight), ox = pdrag.im.naturalWidth * k - r.width, oy = pdrag.im.naturalHeight * k - r.height;
+    pdrag.nx = Math.max(0, Math.min(100, pdrag.fx - (ox > 1 ? dx / ox * 100 : 0))); pdrag.ny = Math.max(0, Math.min(100, pdrag.fy - (oy > 1 ? dy / oy * 100 : 0)));
+    pdrag.im.style.objectPosition = pdrag.nx + '% ' + pdrag.ny + '%'; pdrag.box.classList.add('wdz-panning');
+  }, true);
+  document.addEventListener('pointerup', function () { if (!pdrag) return; var d = pdrag; pdrag = null; d.box.classList.remove('wdz-panning'); if (d.moved) { noClick = Date.now(); post({ t: 'focus', key: d.box.dataset.img, x: Math.round(d.nx), y: Math.round(d.ny) }); } }, true);
 
   // ---------- words ----------
   document.addEventListener('input', function (e) {
@@ -272,6 +290,7 @@
     if (d.pins) pins(d.pins);
     if ('sel' in d) { var s = d.sel; if (typeof s === 'string') { var el = s ? q(s) : null; s = el ? target(el) : null; } select(s); if (selEl && d.scroll) { var r = selEl.getBoundingClientRect(); if (r.top < 0 || r.bottom > innerHeight) selEl.scrollIntoView({ block: 'center' }); } }
     if (d.type) { var te = find({ kind: 'text', key: d.type }); if (te) typeIn(te, true); }
+    if (d.play) { var pb = q('[data-block="' + esc(d.play) + '"]'); if (pb) { pb.classList.remove('an-play-fade', 'an-play-rise'); void pb.offsetWidth; pb.classList.add('an-play-' + (d.anim === 'rise' ? 'rise' : 'fade')); pb.scrollIntoView({ block: 'nearest' }); setTimeout(function () { pb.classList.remove('an-play-fade', 'an-play-rise'); }, 900); } }
     if ('linkset' in d) { var na = q('a[data-new]'); if (na) { var hostE = na.closest('[data-e]'); if (d.linkset) { na.setAttribute('href', d.linkset); na.removeAttribute('data-new'); } else { while (na.firstChild) na.parentNode.insertBefore(na.firstChild, na); na.remove(); } if (hostE) { hostE.normalize(); post({ t: 'commit', key: hostE.dataset.e, value: words(hostE) }); } } }
     if (d.y != null) scrollTo(0, d.y);
   });

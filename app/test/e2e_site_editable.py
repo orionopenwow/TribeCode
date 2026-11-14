@@ -292,7 +292,7 @@ def live(pw):
         pg.mouse.up()
         pg.wait_for_function(f"TribeSiteDesigner.cfg().pages[0].blocks[0].props.items[2].label === {json.dumps(first)}", timeout=4000)
         pg.wait_for_timeout(300); assert sel(pg)["path"].startswith("items.2") and f.locator(".wdz-idrop").count() == 0, sel(pg)
-        pg.wait_for_timeout(300); f.locator("body").press("Control+z"); pg.wait_for_function(f"TribeSiteDesigner.cfg().pages[0].blocks[0].props.items[0].label === {json.dumps(first)}", timeout=4000); pg.wait_for_timeout(300)
+        pg.wait_for_timeout(300); pg.evaluate("TribeSiteDesigner.undo()"); pg.wait_for_function(f"TribeSiteDesigner.cfg().pages[0].blocks[0].props.items[0].label === {json.dumps(first)}", timeout=4000); pg.wait_for_timeout(300)
         n0 = len(cfg(pg)["pages"][0]["blocks"][0]["props"]["items"])
         f.locator("small[data-e]").first.click(); esc_to(pg, f, "item")
         f.locator(".wdz-tb [data-a=dup]").click(); pg.wait_for_function(f"TribeSiteDesigner.cfg().pages[0].blocks[0].props.items.length === {n0 + 1}", timeout=4000)
@@ -405,9 +405,26 @@ def live(pw):
         assert "an-rise" in pg.evaluate("TribeSiteCfg.exportFiles(TribeSiteDesigner.cfg(), 'html')['index.html']")
         pg.click("#wdz-insp .sp-li [data-sp=entry][data-val=down] >> nth=0"); pg.wait_for_timeout(400)
         assert block(pg, "pricing")["props"]["plans"][1]["name"] == pb["props"]["plans"][0]["name"]
+        # the entrance can be played in the editor; where a browser has no scroll timelines it plays once on opening
+        f.locator(f"[data-block='{pb['id']}'] h2").click(); esc_to(pg, f, "block")
+        pg.click("#wdz-insp [data-sp=play]"); pg.wait_for_timeout(120)
+        assert f.locator(f"[data-block='{pb['id']}'].an-play-rise").count() == 1, "Play it shows the entrance right here"
+        assert "@supports not (animation-timeline:view()){.an-fade{animation:an-fade .7s" in pg.evaluate("TribeSiteCfg.exportFiles(TribeSiteDesigner.cfg(), 'html')['index.html']")
+        # drag a selected picture inside its frame: what stays in view is saved
+        im = f.locator(".b-hero [data-img]").first; im.scroll_into_view_if_needed(); im.click(); pg.wait_for_function("(TribeSiteDesigner.state().sel || {}).kind === 'image'", timeout=3000)
+        ib = im.bounding_box(); pg.mouse.move(ib["x"] + ib["width"] / 2, ib["y"] + ib["height"] / 2); pg.mouse.down(); pg.mouse.move(ib["x"] + ib["width"] / 2 - 60, ib["y"] + ib["height"] / 2 + 10, steps=5); pg.mouse.up()
+        pg.wait_for_function("typeof TribeSiteDesigner.cfg().pages[0].blocks.find(b => b.type === 'hero').props.fx === 'number'", timeout=3000)
+        assert (sel(pg) or {}).get("kind") == "image", "the end of a drag is not a click on something else"
+        assert "object-position:" in pg.evaluate("TribeSiteCfg.exportFiles(TribeSiteDesigner.cfg(), 'html')['index.html']")
+        # a section can move to another page (above its footer); Undo brings it back
+        f.locator(f"[data-block='{pb['id']}'] h2").click(); esc_to(pg, f, "block"); other = cfg(pg)["pages"][1]["id"]
+        pg.select_option(f"#wdz-insp [data-sp-moveto='{pb['id']}']", other)
+        pg.wait_for_function(f"TribeSiteDesigner.cfg().pages[1].blocks.some(b => b.id === '{pb['id']}') && !TribeSiteDesigner.cfg().pages[0].blocks.some(b => b.id === '{pb['id']}')", timeout=3000)
+        pg.evaluate("TribeSiteDesigner.undo()"); pg.wait_for_function(f"TribeSiteDesigner.cfg().pages[0].blocks.some(b => b.id === '{pb['id']}')", timeout=3000); pg.wait_for_timeout(300)
         pg.click("[data-panel=site]"); assert pg.locator("#wdz-insp .sp-pages .sp-li").count() == len(cfg(pg)["pages"]) >= 2
         pg.fill("#wdz-insp [data-pgseo=title]", "Maras Kitchen, open daily"); pg.locator("#wdz-insp [data-pgseo=title]").press("Tab")
         pg.wait_for_function("(TribeSiteDesigner.cfg().pages[0].seo || {}).title === 'Maras Kitchen, open daily'", timeout=3000)
+        assert pg.locator("#wdz-insp [data-site=pageshare]").count() == 1, "each page can have its own share picture"
         files = pg.evaluate("Object.fromEntries(Object.entries(TribeSiteCfg.exportFiles(TribeSiteDesigner.cfg(), 'zip').files).filter(([k]) => /html$/.test(k)).map(([k, v]) => [k, /<title>([^<]*)/.exec(v)[1]]))")
         assert files["index.html"] == "Maras Kitchen, open daily" and "Whats on" in files[[k for k in files if k != "index.html"][0]], files
         shot(pg, "site-editor2-pages-1440.png")
