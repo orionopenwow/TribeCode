@@ -439,7 +439,7 @@
     const s = sheet({ title: 'Ask AI', html, anchor, keepFocus: false });
     const out = s.box.querySelector('#dl-ai-out');
     const ask = async (kind, q) => {
-      if (!C || !C.connected()) return void (out.innerHTML = '<p class="dl-ai-note">Ask AI uses the tribe\'s local model. Join or host a tribe first.</p>');
+      if (!C || !C.connected()) return void (out.innerHTML = '<p class="dl-ai-note">Ask AI uses the tribe\'s local model. Join or start a tribe first.</p>');
       const text = ta.value, sel = ta.value.slice(ta.selectionStart, ta.selectionEnd);
       out.innerHTML = '<p class="dl-ai-note">Thinking…</p>';
       try {

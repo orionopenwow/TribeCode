@@ -223,20 +223,20 @@
         ${isHost() ? '<button class="btn sm" id="ap-cmd-save">Save</button>' : ''}</div>
         <span class="faint">Runs in a temporary worktree, never in your working tree. Timeout ${Math.round(s.checkTimeoutSec / 60)} min.</span></div>`;
   }
-  // v0.26: where the repo stands against GitHub, in one line, plus "Sync now"
+  // v0.26: where the repo stands against GitHub, in one line, plus "Update now"
   function syncLine() {
     const x = st.status || {}, s = st.settings || {}, A = s.autopilot || {};
     const state = !x.upstream ? 'Not connected to GitHub yet' : x.behind && x.ahead ? `${x.ahead} to push · ${x.behind} to pull (both changed)` : x.behind ? `${x.behind} new on GitHub to pull` : x.ahead ? `${x.ahead} saved commit${x.ahead > 1 ? 's' : ''} to push` : 'In sync with GitHub';
     const mode = !A.enabled ? 'Autopilot off: sync by hand' : A.autoPull && A.autoPush ? 'Autopilot: pull + push' : A.autoPull ? 'Autopilot: pull only' : A.autoPush ? 'Autopilot: push only' : 'Autopilot on, sync off';
     const when = s.lastSync || s.lastPush;
     return `<div class="ap-sync-t"><span class="eyebrow">Sync</span><b>${esc(state)}</b><span class="faint">${esc(mode)}${when ? ' · last synced ' + esc(ago(when)) : ''}${x.dirtyCount ? ` · ${x.dirtyCount} unsaved change${x.dirtyCount > 1 ? 's' : ''}` : ''}</span></div>
-      ${isHost() && x.upstream ? '<button class="btn sm primary" id="ap-sync-now">Sync now</button>' : ''}`;
+      ${isHost() && x.upstream ? '<button class="btn sm primary" id="ap-sync-now">Update now</button>' : ''}`;
   }
   document.addEventListener('click', async e => {
     const b = e.target.closest && e.target.closest('#ap-sync-now'); if (!b) return;
-    b.disabled = true; b.textContent = 'Syncing…';
+    b.disabled = true; b.textContent = 'Updating…';
     try { const r = await C.api('/repo/sync', { method: 'POST' }); st.status = r.status; if (st.settings) st.settings.lastSync = r.lastSync; toast(r.note || (r.done && r.done.length ? 'Synced: ' + r.done.join(', ') : 'Already up to date')); renderAutopilot(); renderStrip(); }
-    catch (err) { toast(err.message); b.disabled = false; b.textContent = 'Sync now'; }
+    catch (err) { toast(err.message); b.disabled = false; b.textContent = 'Update now'; }
   });
   async function setSetting(key, value) {
     const body = key.startsWith('autopilot.') ? { autopilot: { [key.split('.')[1]]: value } } : { [key]: value };

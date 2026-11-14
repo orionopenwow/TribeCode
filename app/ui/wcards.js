@@ -31,7 +31,7 @@
     countdown: { label: 'Countdown', icon: 'calendar', cat: 'Plan', blurb: 'Days left until a date', multi: 1, own: 1, home: 1 },
     checklist: { label: 'Checklist', icon: 'checklist', cat: 'Plan', blurb: 'A short shared list to tick off', multi: 1, own: 1, home: 1 },
     build: { label: 'Build status', icon: 'bolt', cat: 'Build', blurb: 'Passing or failing: real checks, agents and CI', live: ['dashband', 'checks'] },
-    ship: { label: 'Ship & sync', icon: 'git', cat: 'Build', blurb: 'Saved changes not shipped yet', live: ['ship', 'repo'] },
+    ship: { label: 'Backup', icon: 'git', cat: 'Build', blurb: 'Saved changes not backed up yet', live: ['ship', 'repo'] },
     thumb: { label: 'Preview', icon: 'preview', cat: 'Build', blurb: 'A picture of the running app', live: ['visual', 'preview'] },
     sitestatus: { label: 'Website status', icon: 'globe', cat: 'Build', blurb: 'Draft or built, with comments', live: ['website', 'site-comments', 'publish'] },
     note: { label: 'Quick note', icon: 'notes', cat: 'Notes', blurb: 'A scratchpad everyone shares', multi: 1, own: 1, home: 1 },

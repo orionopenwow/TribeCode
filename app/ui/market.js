@@ -217,7 +217,7 @@
       <div class="mk-trow">${list.map(it => `<article class="mk-tcard" data-id="${esc(it.id)}" tabindex="0" aria-label="${esc(it.title)}">
         <div class="mk-card-top"><span class="mk-kind k-${esc(it.kind)}">${esc(KIND_LABEL[it.kind] || it.kind)}</span>${it.stars != null ? `<span class="mk-stars" title="Stars reported by the trend source">★ ${fmtStars(it.stars)}</span>` : ''}</div>
         <b class="mk-t">${esc(it.title)}</b><p class="mk-s">${esc(it.why || it.summary)}</p>
-        <div class="mk-card-foot"><span class="mk-lic">${esc(String(it.license || ''))}</span><span class="mk-sp"></span>${addBtn(it)}</div></article>`).join('') || '<div class="mk-empty faint">Nothing trending in this topic today.</div>'}</div>`;
+        <div class="mk-card-foot"><span class="mk-lic">${esc(String(it.license || ''))}</span><span class="mk-sp"></span>${addBtn(it)}</div></article>`).join('') || window.TribeUI.emptyHTML({ cls: 'mk-empty', bare: true, line: 'Nothing trending in this topic today.' })}</div>`;
   }
 
   function chrome() {
@@ -252,7 +252,7 @@
       const swap = () => draw(reset);
       if (reset && window.TribeMotion && window.TribeMotion.swap) window.TribeMotion.swap(swap); else swap();
       if (filtersOpen()) openFilters(true);
-    } catch { if (n === st.seq) grid.innerHTML = '<div class="mk-empty"><b>The marketplace is resting</b><span>The saved list didn’t open either. Reload the app to try again.</span></div>'; }
+    } catch { if (n === st.seq) grid.innerHTML = window.TribeUI.emptyHTML({ cls: 'mk-empty', center: true, title: 'The marketplace is resting', line: 'The saved list didn’t open either. Reload the app to try again.' }); }
   }
   function thumb(it, big) {
     const tile = `<span class="mk-tile" aria-hidden="true"><span class="mk-tile-i">${icon(KIND_ICON[it.kind] || 'all', big ? 18 : 14)}</span><b>${esc(monogram(it.title))}</b></span>`;
@@ -288,8 +288,8 @@
     const ob = root.querySelector('[data-open-studios]'); if (ob) ob.onclick = () => window.TribeStudios.open();
     if (!st.items.length) {
       grid.innerHTML = st.tab === 'installed'
-        ? `<div class="mk-empty">${icon('installed', 22)}<b>Nothing added yet</b><span>${localMode() ? 'Add something and its setup lands in your Files on this device.' : 'What you add to this project shows up here, each with Remove.'}</span><button class="btn sm" data-goto-browse>Browse the Marketplace</button></div>`
-        : `<div class="mk-empty">${icon('search', 22)}<b>Nothing matches</b><span>Try fewer words${st.kind.length || active() ? ', another category or clear a filter' : ''}.</span>${st.kind.length || active() || st.q ? '<button class="btn sm" data-reset-all>Show everything</button>' : ''}</div>`;
+        ? window.TribeUI.emptyHTML({ kind: 'market-installed', cls: 'mk-empty', center: true, icon: icon('installed', 22), title: 'Nothing added yet', line: localMode() ? 'Add something and its setup lands in your Files on this device.' : 'What you add to this project shows up here, each with Remove.', action: { label: 'Browse the Marketplace', attr: 'data-goto-browse' } })
+        : window.TribeUI.emptyHTML({ kind: 'no-results', cls: 'mk-empty', center: true, icon: icon('search', 22), title: 'Nothing matches', line: `Try fewer words${st.kind.length || active() ? ', another category or clear a filter' : ''}.`, action: st.kind.length || active() || st.q ? { label: 'Show everything', quiet: true, attr: 'data-reset-all' } : null });
       const gb = grid.querySelector('[data-goto-browse]'); if (gb) gb.onclick = () => { st.tab = 'browse'; load(true); };
       const ra = grid.querySelector('[data-reset-all]'); if (ra) ra.onclick = () => { st.q = ''; root.querySelector('#mk-q').value = ''; st.kind = []; st.for = []; st.seat = []; st.tag = []; load(true); };
     } else if (reset) grid.innerHTML = st.items.map(card).join('');

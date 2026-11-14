@@ -170,7 +170,7 @@ def host_part(b, tok, mid, garden, rocket):
 
     # ---- 3. one meaning for "Versions"
     host.evaluate("TribeVersions.open()"); host.wait_for_selector("#vr #vr-designs")
-    assert host.inner_text("#vr .eyebrow >> nth=0").strip().lower() == "versions"
+    assert host.inner_text("#vr .eyebrow >> nth=0").strip().lower() == "history"   # feat/ui-consistent: the project's versions are called History
     assert host.inner_text("#vr-designs").strip() == "Saved designs" and host.inner_text("#vr-shots").strip() == "Earlier shots"
     host.click("#vr-shots"); host.wait_for_selector("#vis-strip-l", timeout=45000)
     assert host.inner_text("#vis-strip-l").strip().lower() == "earlier shots"

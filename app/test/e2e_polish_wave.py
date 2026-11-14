@@ -129,7 +129,7 @@ def main():
             hp.wait_for_selector("#nest-company.co-subtle:not(.hidden)", timeout=10000)
             assert hp.inner_text("#nest-company").strip() == "Set up company"
             hp.click("#nest-company"); hp.wait_for_selector("#view-company #co-make", timeout=10000)   # feat/company3: setup starts with questions
-            hp.wait_for_function("document.querySelector('#ub-st').textContent === 'Hosting'", timeout=8000)   # 5: hosting for real
+            hp.wait_for_function("document.querySelector('#ub-st').textContent === 'On this computer'", timeout=8000)   # 5: hosting for real
             assert hp.locator("#ub-st.ub-where").count() == 0
             # 9: the board offers Freesound for sounds; Settings shows the key is set, never the key itself
             hp.evaluate("TribeInspoBoard.open({ type: 'audio' })"); hp.wait_for_selector("#ibd #ibd-src option[value='freesound']", state="attached", timeout=8000)

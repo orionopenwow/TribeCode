@@ -119,7 +119,7 @@
     view = ALIAS[view] || view;
     if (!VIEWS[view]) return;
     // Chat needs a tribe: with none yet, the Global Hub (quick launch, scratchpad, host or join) instead of a dead box.
-    if (view === 'chat' && !C.hasToken()) { view = 'hub'; setTimeout(() => toast('Chat lives in a tribe. Start hosting or join with a link, right here.'), 0); }
+    if (view === 'chat' && !C.hasToken()) { view = 'hub'; setTimeout(() => toast('Chat lives in a tribe. Start one or join with a link, right here.'), 0); }
     const leaving = current;
     document.body.classList.remove('mobile-chat', 'drawer-open');
     Object.keys(VIEWS).forEach(v => { const el = $('#view-' + v); if (el) el.classList.toggle('hidden', v !== view); });
@@ -541,8 +541,8 @@
       if (!role && !keep) { const m = `A TribeCode server is running here but this app could not sign in to it.\n${window.__authError || ''}`.trim(); if (silent) { S.set({ server: before, hosting: false }); return { ok: false, error: m }; } showHostError(m); return { ok: false, error: m }; }
       S.set({ tribeHere: true });   // a tribe exists on this computer: the next launch may start it (when Host is on)
       if (silent) return { ok: true, url, role: role || 'member' };
-      if (role === 'reclaimed') toast('Welcome back: you are the host on this computer again.');
-      else if (!quiet) { closeInvite(); toast(role === 'host' ? "You're hosting! Now invite your friends." : 'Hosting again on this computer.'); setTimeout(openInvite, 600); }
+      if (role === 'reclaimed') toast('Welcome back. Your tribe runs on this computer again.');
+      else if (!quiet) { closeInvite(); toast(role === 'host' ? "Your tribe is online. Now invite your friends." : 'Online again on this computer.'); setTimeout(openInvite, 600); }
       return { ok: true, url, role };
     } catch (e) {
       reset();
@@ -560,7 +560,7 @@
   async function setHosting(on) {
     if (on) { S.set({ hostOff: false }); return hostHere(); }
     S.set({ hostOff: true, server: { url: (S.get().server || {}).url || '', token: (S.get().server || {}).token || '' } });
-    await stopHost(); refresh(); toast('Hosting is off. Your tribe stays in its folder; switch Host back on to bring it back.');
+    await stopHost(); refresh(); toast('Your tribe is offline now. It stays in its folder; switch it back on to bring it back.');
   }
   function showHostError(msg) {
     toast(msg.split('\n')[0] + ' Details are on Home.');

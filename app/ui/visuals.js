@@ -58,7 +58,7 @@
         <div class="vis-pick"><label>Before<select id="vis-a">${opts(st.a)}</select></label><svg class="i"><use href="#i-diff"/></svg><label>After<select id="vis-b">${opts(st.b)}</select></label></div>
         <div class="tabs" id="vis-mode">${[['side', 'Side by side'], ['swipe', 'Swipe'], ['diff', 'Diff']].map(([k, l]) => `<button data-vm="${k}" class="${st.mode === k ? 'on' : ''}">${l}</button>`).join('')}</div>
         <span class="vis-pct" id="vis-pct" title="Share of pixels that changed">…</span></div>
-      <div class="vis-strip-h"><span class="eyebrow" id="vis-strip-l">Earlier shots</span>${window.TribeVersions ? '<button type="button" class="linkish" id="vis-versions" title="The project’s whole history: Versions">All versions</button>' : ''}</div>
+      <div class="vis-strip-h"><span class="eyebrow" id="vis-strip-l">Earlier shots</span>${window.TribeVersions ? '<button type="button" class="linkish" id="vis-versions" title="The project’s whole history">History</button>' : ''}</div>
       <div class="vis-strip" id="vis-strip" role="group" aria-labelledby="vis-strip-l">${st.versions.map((v, i) => `<button class="vis-thumb ${v.ts === st.a ? 'a' : ''} ${v.ts === st.b ? 'b' : ''}" data-ts="${v.ts}" title="v${i + 1} · ${esc(when(v.at))} · ${esc(nameOf(v.by))}${v.diffPrev !== null && v.diffPrev !== undefined ? ` · ${v.diffPrev}% vs previous` : ''}">
           <img alt="" loading="lazy" src="${esc(imgUrl(v))}"><span>v${i + 1}${v.ts === st.a ? ' <i>A</i>' : ''}${v.ts === st.b ? ' <i class="b">B</i>' : ''}</span></button>`).join('')}</div>
       <div class="vis-stage" id="vis-stage"></div>`;

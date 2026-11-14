@@ -145,7 +145,7 @@
         <span class="nf-g-title">${esc(GROUP[g.type](g.items.length))}${un ? ` <span class="nf-g-new">${un} new</span>` : ''}</span><time>${ago(g.items[0].at)}</time><span class="nf-caret">${open ? '−' : '+'}</span></button>
         ${open ? g.items.map(i => itemHtml(i, 'sub')).join('') : ''}</div>`;
     }).join('')
-      : `<div class="nf-empty"><span class="nf-empty-ic" aria-hidden="true">${filter === 'mentions' ? '💬' : '✨'}</span><b>${filter === 'needs' ? 'Nothing needs you right now' : filter === 'mentions' ? 'No mentions yet' : 'You’re all caught up'}</b><span>${filter === 'needs' ? 'Approvals and reviews show up here.' : filter === 'mentions' ? 'When someone @mentions you, it lands here.' : 'Approvals, mentions, bugs and DMs land here.'}</span><button class="btn sm" id="nf-empty-settings">Choose what pings you</button></div>`)
+      : window.TribeUI.emptyHTML({ kind: 'inbox', cls: 'nf-empty', center: true, title: filter === 'needs' ? 'Nothing needs you right now' : filter === 'mentions' ? 'No mentions yet' : 'You’re all caught up', line: filter === 'needs' ? 'Approvals and reviews show up here.' : filter === 'mentions' ? 'When someone @mentions you, it lands here.' : 'Approvals, mentions, bugs and DMs land here.', action: { label: 'Choose what pings you', quiet: true, attr: 'id="nf-empty-settings"' } }))
       + `<div class="nf-foot"><button class="linkish" id="nf-history">Approvals history</button>${countUnread() ? '<button class="linkish" id="nf-allread">Mark all read</button>' : ''}</div>`;
     const es = $('#nf-empty-settings'); if (es) es.onclick = settingsTab;
     $('#nf-history').onclick = () => { meta.history = true; render(); };
@@ -165,7 +165,7 @@
       <div class="nf-hrow"><span class="nf-mark ${esc(a.status)}">${a.status === 'approved' ? '✓' : '✕'}</span>
         <div><div><b>${esc(a.decidedByName || 'someone')}</b> ${esc(a.status)} <span class="nf-ht">${esc(a.title)}</span></div>
         <div class="nf-faint">for ${esc(a.byName)} · ${esc(a.risk)} risk${a.auto ? ' · rule' : ''}${a.note ? ` · “${esc(a.note)}”` : ''}</div></div>
-        <time title="${esc(a.decidedAt || '')}">${a.decidedAt ? ago(a.decidedAt) : ''}</time></div>`).join('')}</div>` : '<div class="nf-empty">No decisions yet.</div>');
+        <time title="${esc(a.decidedAt || '')}">${a.decidedAt ? ago(a.decidedAt) : ''}</time></div>`).join('')}</div>` : window.TribeUI.emptyHTML({ cls: 'nf-empty', bare: true, line: 'No decisions yet.' }));
     $('#nf-back').onclick = () => { meta.history = false; render(); };
   }
   async function markAllRead() {
@@ -402,8 +402,8 @@
     const m = $('#nf-settings'); m.classList.remove('hidden');
     const body = $('#nf-settings-body');
     body.innerHTML = '<div class="nf-set-head"><h2>Notifications</h2></div><p class="nf-faint">Loading…</p>';
-    try { const [r, rl] = await Promise.all([C.api('/notify/prefs'), C.api('/approvals/rules').catch(() => ({ rules: [] }))]); if (!r || !r.prefs || !r.prefs.when) throw new Error('Join or host a tribe to set up notifications.'); prefs = r.prefs; meta.ntfyUrl = r.ntfyUrl; meta.devices = r.webpushDevices; meta.vapid = r.vapidPublicKey; meta.rules = rl.rules; meta.device = !!r.device; }
-    catch (e) { body.innerHTML = `<div class="nf-set-head"><h2>Notifications</h2><button class="nf-icon" data-x title="Close" aria-label="Close">${ico('x')}</button></div><p class="nf-faint">${esc(C.connected() ? e.message : 'Join or host a tribe to set up notifications.')}</p>`; body.querySelector('[data-x]').onclick = closeSettings; return; }
+    try { const [r, rl] = await Promise.all([C.api('/notify/prefs'), C.api('/approvals/rules').catch(() => ({ rules: [] }))]); if (!r || !r.prefs || !r.prefs.when) throw new Error('Join or start a tribe to set up notifications.'); prefs = r.prefs; meta.ntfyUrl = r.ntfyUrl; meta.devices = r.webpushDevices; meta.vapid = r.vapidPublicKey; meta.rules = rl.rules; meta.device = !!r.device; }
+    catch (e) { body.innerHTML = `<div class="nf-set-head"><h2>Notifications</h2><button class="nf-icon" data-x title="Close" aria-label="Close">${ico('x')}</button></div><p class="nf-faint">${esc(C.connected() ? e.message : 'Join or start a tribe to set up notifications.')}</p>`; body.querySelector('[data-x]').onclick = closeSettings; return; }
     renderSettings();
   }
   function closeSettings() { $('#nf-settings').classList.add('hidden'); }

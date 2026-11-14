@@ -1,4 +1,4 @@
-// Connect GitHub, on Home › Code (feat/shell-polish). A clear panel above "Repos you're in": why GitHub (repos, pushes,
+// Connect GitHub, on Home › Code (feat/shell-polish). A clear panel above "Code you're in": why GitHub (repos, pushes,
 // pull requests, agents), what TribeCode found right now (GET /api/github/detect, through setuplocal.js), and, until you're
 // connected, the three ways in: Sign in with GitHub, a fine-grained token (exact permissions), or git + the GitHub CLI
 // (`gh auth login`, per-OS commands). The guide itself is setuplocal.js's (TribeLocalSetup.github.guide), not a copy.

@@ -442,7 +442,7 @@
       <div class="od-acts">
         ${window.TribeDirector ? '<button id="sc-tour"><svg class="i"><use href="#i-play"/></svg><span>Guided tour with Flint</span></button><button id="sc-watch"><svg class="i"><use href="#i-play"/></svg><span>Just watch it play</span></button>' : ''}<!-- feat/demo-tour -->
         <button id="sc-quiet"><svg class="i"><use href="#i-zap"/></svg><span>Explore quietly</span></button>
-        <button id="od-real" data-od="real"><svg class="i"><use href="#i-play"/></svg><span>Host this for real</span></button>
+        <button id="od-real" data-od="real"><svg class="i"><use href="#i-play"/></svg><span>Make this a real tribe</span></button>
         <button id="od-leave"><svg class="i"><use href="#i-x"/></svg><span>Leave showcase</span></button>
       </div>`;
     pop.querySelector('#sc-play').onclick = () => (sc().paused ? play() : pause());

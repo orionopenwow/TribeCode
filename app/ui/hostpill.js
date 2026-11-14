@@ -39,7 +39,7 @@
       <div class="hpo-acts">
         <button id="hpo-invite">${ico('i-users')}<span>Invite a friend</span></button>
         ${kind !== 'public https address' ? `<button id="hpo-share">${ico('i-net')}<span>Share beyond my Wi-Fi</span></button>` : ''}
-        <button id="hpo-settings">${ico('i-gear')}<span>Host settings</span></button>
+        <button id="hpo-settings">${ico('i-gear')}<span>Settings for this computer</span></button>
       </div>`;
     document.body.appendChild(pop);
     const r = pill.getBoundingClientRect(); pop.style.top = (r.bottom + 8) + 'px'; pop.style.left = Math.max(8, r.left) + 'px';

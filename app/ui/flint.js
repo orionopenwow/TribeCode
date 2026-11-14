@@ -308,7 +308,7 @@
   }
   // feat/customize: the site generator (server/sitegen.js). A draft only; the host or the project lead publishes.
   async function website(t) {
-    if (!connected()) return say('Websites belong to a project. Host or join a tribe first.', [act('Host or join', 'invite')]);
+    if (!connected()) return say('Websites belong to a project. Start or join a tribe first.', [act('Host or join', 'invite')]);
     const pid = PJ() && PJ().current && PJ().current(); if (!pid) return say('Open a project first, then ask me again.');
     const how = /\b(shuffle|another|different|new layout)\b/.test(t) ? 'shuffle' : /\b(redo|refresh|regenerate)\b/.test(t) ? 'regenerate' : 'generate';
     try {
@@ -330,7 +330,7 @@
   }
   // feat/focus: what you're on, what's next, and a prompt that keeps your AI helper in your part of the code
   async function focusReply() {
-    if (!connected()) return say('Join or host a tribe and I can tell you what to work on next.', [act('Host or join', 'invite')]);
+    if (!connected()) return say('Join or start a tribe and I can tell you what to work on next.', [act('Host or join', 'invite')]);
     const r = await room(), mine = r.mine || [], meId = r.meId;
     let tasks = []; try { tasks = (await C.api('/tasks')).tasks || []; } catch {}
     const open = tasks.filter(x => x.status !== 'done'), now = open.find(x => x.assignee === meId && x.status === 'doing') || open.find(x => x.assignee === meId);
@@ -342,7 +342,7 @@
   async function makeFile(kind, text) {
     const D = window.TribeDocs, name = { doc: 'doc', sheet: 'sheet', deck: 'slides' }[kind];
     if (!D) return say('Files are not ready yet. Try again in a moment.');
-    if (!connected()) return say(`I write ${name} with the tribe's brain. Host or join a tribe first.`, [act('Host or join', 'invite')]);
+    if (!connected()) return say(`I write ${name} with the tribe's brain. Start or join a tribe first.`, [act('Host or join', 'invite')]);
     const msg = say(`Writing the ${name}…`, [], { streaming: true });
     const fd = seen('#nest-docs') || curView(); if (FF() && fd) FF().work(fd, 'Writing…');
     try {
@@ -375,12 +375,12 @@
   async function helper(t) {
     const off = /\b(stop|off|disable)\b|turn\s+off|switch\s+off/.test(t), on = !off;
     if (/secretary/.test(t)) {
-      if (!connected()) return say('The Secretary runs on the tribe host. Host or join a tribe first.', [act('Host or join', 'invite')]);
+      if (!connected()) return say('The Secretary runs on the tribe host. Start or join a tribe first.', [act('Host or join', 'invite')]);
       try { await C.api('/secretary/config', { method: 'PUT', body: { enabled: on } }); return say(on ? 'The Secretary is on. It turns chat, voice notes and files into a journal and ideas.' : 'The Secretary is off.', [act('Open Secretary', 'secretary')]); }
       catch (e) { ACTS.secretary(); return say(e.status === 403 ? 'Only the host can switch the Secretary. I opened it so you can see what it does.' : 'I could not switch the Secretary: ' + e.message, [act('Open Secretary', 'secretary')]); }
     }
     if (/auto-?pilot/.test(t)) {
-      if (!connected()) return say('Autopilot runs on the tribe host. Host or join a tribe first.', [act('Host or join', 'invite')]);
+      if (!connected()) return say('Autopilot runs on the tribe host. Start or join a tribe first.', [act('Host or join', 'invite')]);
       try { await C.api('/repo/settings', { method: 'PUT', body: { autopilot: { enabled: on } } }); return say(on ? 'Autopilot is on. Every change it makes is listed under Code repository.' : 'Autopilot is off.', [act('Open the code repository', 'repo')]); }
       catch (e) { return say(e.status === 403 ? 'Only the host can switch autopilot.' : 'Autopilot needs a project with a code repository: ' + e.message, [act('Open the code repository', 'repo')]); }
     }

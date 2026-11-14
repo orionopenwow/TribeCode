@@ -118,7 +118,7 @@
     lastFocus = document.activeElement;
     if (!root) {
       root = document.createElement('div'); root.id = 'flint-page'; root.className = 'fpg'; root.setAttribute('role', 'dialog'); root.setAttribute('aria-modal', 'true'); root.setAttribute('aria-label', 'Flint');
-      document.body.appendChild(root);
+      document.body.appendChild(root); root.classList.add('ui-sheet');   // the shared way in and out (uikit.css)
     }
     const lv = level();
     root.innerHTML = `<div class="fpg-card">
@@ -150,7 +150,7 @@
     root.onkeydown = e => { if (e.key === 'Escape') close(); };
     if (focus !== 'device') setTimeout(() => qi.focus(), 30);
   }
-  function close() { if (!root) return; root.hidden = true; document.body.classList.remove('fpg-open'); if (location.hash === '#/flint') history.replaceState(null, '', location.pathname + location.search); if (lastFocus && lastFocus.focus) try { lastFocus.focus(); } catch {} }
+  function close() { if (!root || root.hidden) return; const n = root; document.body.classList.remove('fpg-open'); if (window.TribeUI) window.TribeUI.dismiss(n, () => { if (!document.body.classList.contains('fpg-open')) n.hidden = true; }); else n.hidden = true; if (location.hash === '#/flint') history.replaceState(null, '', location.pathname + location.search); if (lastFocus && lastFocus.focus) try { lastFocus.focus(); } catch {} }
   document.addEventListener('flintmodel', () => { if (root && !root.hidden) { draw($('#fp-q', root) ? $('#fp-q', root).value : ''); const b = $('#fp-local', root); if (b) b.textContent = helperOn() ? 'Local brain: manage' : 'Give Flint a local brain'; } });
   document.addEventListener('flintllm', () => { if (root && !root.hidden) draw($('#fp-q', root) ? $('#fp-q', root).value : ''); });   // installed or removed: the level's "Active" follows
   addEventListener('hashchange', () => { if (location.hash === '#/flint') open(''); });

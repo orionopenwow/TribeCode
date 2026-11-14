@@ -303,7 +303,7 @@
         let [t, s, k, a] = st.q ? ['Nothing matches that', 'Try another word, or look in Everything.', '', ''] : EMPTY[st.cat] || EMPTY.all;
         if (!st.q && s === EMPTY.all[1]) s = emptyWhere();   // fix/batch-fixes: the wording fits where you are
         body.innerHTML = `${st.loading ? '<div class="fx-empty dc-empty fg-empty"><span class="fx-spin"></span><b>Gathering your files…</b></div>'
-          : `<div class="fx-empty dc-empty fg-empty" id="${o.idp}-empty"><span class="fx-empty-ic">${icon(CATS.find(c => c[0] === st.cat)[2], 28)}</span><b>${esc(t)}</b><p>${esc(s)}</p>${k ? `<button class="btn primary" type="button" data-empty-new="${k}">${icon(k === 'upload' ? 'upload' : 'plus', 14)}${esc(a)}</button>` : ''}</div>`}`;
+          : window.TribeUI.emptyHTML({ kind: 'files', cls: 'fg-empty', center: true, id: `${o.idp}-empty`, icon: icon(CATS.find(c => c[0] === st.cat)[2], 22), title: t, line: s, action: k ? { label: a, attr: `data-empty-new="${k}"` } : null })}`;
         const eb = body.querySelector('[data-empty-new]'); if (eb) eb.onclick = e => o.create(eb.dataset.emptyNew, e.currentTarget);
       } else {
         const gs = groups(list), one = gs.length === 1 && !o.alwaysHeads;

@@ -56,7 +56,7 @@
   }
 
   function renderOffline() {
-    $('#prop-list').innerHTML = '<div class="prop-empty">The approval board is shared, so it needs a tribe. Click <b>Invite friends</b> to start or join one.</div>';
+    window.TribeUI.empty($('#prop-list'), { kind: 'needs-tribe', bare: true, title: 'Proposals are shared with your tribe', line: 'Start a tribe or join one, and what people propose shows up here for a vote.', action: { label: 'Start a tribe', run: () => (window.TribeNew ? window.TribeNew.open() : window.TribeApp.openInvite()) } });
     $('#ms-list').innerHTML = ''; $('#vision-text').textContent = '';
   }
 

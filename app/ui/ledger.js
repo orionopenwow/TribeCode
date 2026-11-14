@@ -170,9 +170,9 @@
   function connSheet(inst, c, L) {
     if (!c) return '';
     const st = c.status || {}, host = L.isHost;
-    const stripe = c.id === 'stripe' ? `<div class="lg-way"><p class="eyebrow">Sync now</p>${st.key ? `<p>Key ${esc(st.hint || 'added')}${st.last ? ` · last sync ${esc(when(st.last))} (${st.added} new)` : ''}.</p><div class="lg-row-acts">${L.canWrite ? '<button class="btn primary" id="lg-sync">Sync now</button>' : ''}${host ? '<button class="btn ghost" id="lg-unkey">Remove key</button>' : ''}</div>`
+    const stripe = c.id === 'stripe' ? `<div class="lg-way"><p class="eyebrow">Update now</p>${st.key ? `<p>Key ${esc(st.hint || 'added')}${st.last ? ` · last sync ${esc(when(st.last))} (${st.added} new)` : ''}.</p><div class="lg-row-acts">${L.canWrite ? '<button class="btn primary" id="lg-sync">Update now</button>' : ''}${host ? '<button class="btn ghost" id="lg-unkey">Remove key</button>' : ''}</div>`
       : host ? `<p>Paste a <a href="${esc(c.api.docs)}" target="_blank" rel="noopener">restricted key</a> with read access to Balance transactions. It stays on this computer, in the tribe's secrets, and is never shown again.</p><form class="lg-keyform" id="lg-keyform"><input class="input" name="key" placeholder="rk_live_…" autocomplete="off" spellcheck="false" required><button class="btn primary">Save key</button></form>`
-      : '<p>The host adds a Stripe key on their computer to turn on Sync now. Until then, import a CSV export.</p>'}</div>` : '';
+      : '<p>The host adds a Stripe key on their computer to turn on Update now. Until then, import a CSV export.</p>'}</div>` : '';
     return `<div class="lg-scrim" id="lg-scrim"></div><div class="lg-sheet" role="dialog" aria-modal="true" aria-label="Connect ${esc(c.name)}" style="--c:${esc(c.color)}">
       <div class="lg-sheet-head"><span class="lg-conn-ic" aria-hidden="true">${esc(c.name[0])}</span><div><p class="eyebrow">Connect</p><h3>${esc(c.name)}</h3><small>${esc(c.gives)}</small></div><button class="btn ghost lg-ic" id="lg-sheet-x" aria-label="Close">×</button></div>
       ${stripe}
@@ -243,7 +243,7 @@
     const kf = $('#lg-keyform', el);
     if (kf) kf.onsubmit = async e => { e.preventDefault(); try { await api(pid, '/ledger/connectors/stripe/key', { method: 'PUT', body: { key: kf.key.value } }); kf.key.value = ''; toast('Stripe key saved on this computer'); refresh(inst); } catch (er) { toast(er.message); } };
     const sy = $('#lg-sync', el);
-    if (sy) sy.onclick = async () => { sy.disabled = true; sy.textContent = 'Syncing…'; try { const r = await api(pid, '/ledger/connectors/stripe/sync', { method: 'POST', body: {} }); toast(`Stripe: ${r.added} new${r.skipped ? `, ${r.skipped} already here` : ''}`); refresh(inst); } catch (e) { toast(e.message); sy.disabled = false; sy.textContent = 'Sync now'; } };
+    if (sy) sy.onclick = async () => { sy.disabled = true; sy.textContent = 'Updating…'; try { const r = await api(pid, '/ledger/connectors/stripe/sync', { method: 'POST', body: {} }); toast(`Stripe: ${r.added} new${r.skipped ? `, ${r.skipped} already here` : ''}`); refresh(inst); } catch (e) { toast(e.message); sy.disabled = false; sy.textContent = 'Update now'; } };
     const uk = $('#lg-unkey', el);
     if (uk) uk.onclick = async () => { try { await api(pid, '/ledger/connectors/stripe/key', { method: 'DELETE' }); toast('Key removed'); refresh(inst); } catch (e) { toast(e.message); } };
     el.onkeydown = e => { if (e.key === 'Escape' && inst.connOpen) close(); };

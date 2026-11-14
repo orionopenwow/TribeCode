@@ -166,7 +166,7 @@ def main():
             pg.wait_for_selector("#ac-login [data-ac='host']"); nav_click(pg, "#ac-login [data-ac='host']")
             wait_reloaded(pg, "TribeAccounts.mode() === 'signedin'", timeout=20000)
             pg.wait_for_function("TribeClient.connected()", timeout=20000)
-            st = state(pg); assert st["token"] and st["status"] == "Hosting", st
+            st = state(pg); assert st["token"] and st["status"] == "On this computer", st
             assert pg.evaluate("TribeClient.state().me.role") == "host"
             host_now = pg.evaluate("TribeStore.get().server.token")   # the reclaim gave the host a fresh key
 

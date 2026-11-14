@@ -7,7 +7,7 @@
 - Palette: hovering moves the highlight without rebuilding the list.
 - Phone: Settings fits a 390px screen; the closed drawer is inert; the Updates badge counts the inbox;
   the profile sheet can connect Claude again ("Connect from another computer").
-- No tribe: Agents Hub offers "Host or join a tribe".
+- No tribe: Agents Hub offers "Start or join a tribe".
 Usage: python app/test/e2e_explorer_fixes.py
 """
 import json, os, subprocess, tempfile, time, urllib.request, urllib.error

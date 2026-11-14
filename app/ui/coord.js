@@ -34,7 +34,7 @@
   const empty = (title, line) => `<div class="coord-empty"><b>${title}</b><span>${line}</span></div>`;
   async function draw() {
     const el = body(); if (!el) return;
-    if (!C.connected()) { el.innerHTML = empty('Needs a tribe', 'Coordination is shared, so it lives on the tribe host.') + '<div class="coord-empty-acts"><button class="btn primary" data-coord-join>Host or join a tribe</button></div>'; el.querySelector('[data-coord-join]').onclick = () => window.TribeApp.openInvite(); return; }
+    if (!C.connected()) { el.innerHTML = empty('Needs a tribe', 'Coordination is shared, so it lives on the tribe host.') + '<div class="coord-empty-acts"><button class="btn primary" data-coord-join>Start or join a tribe</button></div>'; el.querySelector('[data-coord-join]').onclick = () => window.TribeApp.openInvite(); return; }
     el.onclick = null; el.onkeydown = null;   // the dashboard delegates clicks on the body
     try { await ({ agents, ownership, conflicts, handoffs, reviews, plan })[tab](el); }
     catch (e) { el.innerHTML = empty('Could not load this', esc(e.message)); }
@@ -84,7 +84,7 @@
     el.innerHTML = `<p class="coord-lead">${d.branches} branch${d.branches === 1 ? '' : 'es'} compared with <code>${esc(d.main)}</code>. Pairs that change the same files will collide when they merge.</p>
       ${d.pairs.length ? d.pairs.map(p => `<article class="cf-card"><div class="cf-pair"><span><code>${esc(p.a.branch)}</code><small>${esc(p.a.ownerName || '')}${p.a.behind ? ` · ${p.a.behind} behind` : ''}</small></span>${ico('i-merge', 18)}<span><code>${esc(p.b.branch)}</code><small>${esc(p.b.ownerName || '')}${p.b.behind ? ` · ${p.b.behind} behind` : ''}</small></span></div>
           <div class="cf-files">${p.files.map(f => `<code>${esc(f)}</code>`).join('')}${p.count > p.files.length ? `<span class="faint">+${p.count - p.files.length} more</span>` : ''}</div>
-          <footer>${p.asked ? `<span class="faint">Asked ${esc(ago(p.asked))}</span>` : ''}<button class="btn ${p.asked ? '' : 'primary'}" data-sync data-a="${esc(p.a.branch)}" data-b="${esc(p.b.branch)}">Ask both to sync</button></footer></article>`).join('')
+          <footer>${p.asked ? `<span class="faint">Asked ${esc(ago(p.asked))}</span>` : ''}<button class="btn ${p.asked ? '' : 'primary'}" data-sync data-a="${esc(p.a.branch)}" data-b="${esc(p.b.branch)}">Ask both to catch up</button></footer></article>`).join('')
         : empty('No overlaps', 'No two branches touch the same files right now.')}`;
     act(el, '[data-sync]', async b => { const r = await C.api('/coord/conflicts/sync', { method: 'POST', body: { a: b.dataset.a, b: b.dataset.b } }); toast(`Asked ${r.asked.join(' and ')} to sync`); draw(); });
   }

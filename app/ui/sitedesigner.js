@@ -444,7 +444,7 @@
   async function turnIntoTasks() {
     const open = st.comments.filter(c => c.status === 'open');
     if (!open.length) return say('No open comments to turn into tasks.');
-    if (!tribeComments()) return say('Tasks belong to a tribe. Host or join one and the comments here become tasks for the team; for now they stay on this device.');
+    if (!tribeComments()) return say('Tasks belong to a tribe. Start or join one and the comments here become tasks for the team; for now they stay on this device.');
     await flush();
     let titles = null;
     const B = window.TribeBoost;   // with an AI on, it writes the task titles; the grouping per section stays the same
