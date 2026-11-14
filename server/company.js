@@ -70,7 +70,7 @@ module.exports = function company({ P, base, store, broadcast, postChat = () => 
   // ---------- templates ----------
   let TPLS = null;
   const templates = () => { if (!TPLS) { const j = readJ(TPL_FILE, { templates: [] }); TPLS = Array.isArray(j.templates) ? j.templates : []; } return TPLS; };
-  const tplList = () => templates().map(t => ({ id: t.id, name: t.name, emoji: t.emoji, blurb: t.blurb, seats: (t.seats || []).map(x => x.title) }));
+  const tplList = () => templates().map(t => ({ id: t.id, name: t.name, emoji: t.emoji, blurb: t.blurb, seats: (t.seats || []).map(x => x.title), roles: (t.seats || []).map(x => ({ kind: x.kind, title: x.title, goal: s((x.charter || {}).goal, 200) })) }));
 
   // ---------- shape ----------
   const list12 = (v, n = 60) => (Array.isArray(v) ? v.map(x => s(x, n)).filter(Boolean).slice(0, MAX_LIST) : []);
@@ -189,7 +189,7 @@ module.exports = function company({ P, base, store, broadcast, postChat = () => 
     const ceo = c.seats.find(x => x.kind === 'ceo');
     if (!isLead(me, pid) && !holds(ceo, me.id)) throw err(403, 'only the CEO seat or a project lead makes a CEO call');
     const id = writeDecision(pid, { title, why, kind: 'ceo-call', by: me.id });
-    P.inProject(pid, () => postChat('general', 'tribecode', `📌 CEO call by ${me.name}: **${title}**${why ? ` · ${why.slice(0, 200)}` : ''}`));
+    P.inProject(pid, () => postChat('general', 'tribecode', `Decision by ${me.name}: **${title}**${why ? ` · ${why.slice(0, 200)}` : ''}`));
     return { id, title, why, kind: 'ceo-call' };
   }
   // Decided approvals in a company project land in the log; an AI's proposed CEO call becomes a CEO call when approved.
@@ -215,7 +215,7 @@ module.exports = function company({ P, base, store, broadcast, postChat = () => 
     saveLog(pid, l);
     seat.last = { text: s(done || next || blocked, 200), at: now() };
     seat.status = blocked ? 'blocked' : seat.status === 'blocked' || seat.status === 'idle' ? 'on-track' : seat.status;
-    if (blocked) bus && bus.notify({ type: 'company-blocked', priority: 'normal', to: leads(pid).filter(x => x !== who.id), from: who.id, title: `${seat.title} is blocked`, body: blocked.slice(0, 200), view: 'company', project: pid });
+    if (blocked) bus && bus.notify({ type: 'company-blocked', priority: 'normal', to: leads(pid).filter(x => x !== who.id), from: who.id, title: `${seat.title} is stuck`, body: blocked.slice(0, 200), view: 'company', project: pid });
     save(pid, c);
     return { seat: seat.id, day: d, ...l.standups[d][seat.id] };
   }
@@ -283,7 +283,7 @@ module.exports = function company({ P, base, store, broadcast, postChat = () => 
         if (x.holder.person && !people.includes(x.holder.person) && member(x.holder.person)) people.push(x.holder.person);
         if (x.holder.agent && coord && coord.tell) { try { coord.tell(x.holder.agent, 'standup', `Daily standup for ${x.title}: call seat_standup with done / next / blocked.`, 'tribecode'); agentsAsked.push(x.holder.agent); } catch {} }
       }
-      if (people.length && bus) bus.notify({ type: 'company-standup', priority: 'normal', to: people, from: 'tribecode', title: `Standup for ${c.name}`, body: 'One tap: what got done, what\'s next, anything blocking?', view: 'company', project: pid });
+      if (people.length && bus) bus.notify({ type: 'company-standup', priority: 'normal', to: people, from: 'tribecode', title: `Today’s check-in for ${c.name}`, body: 'One tap: what got done, what\'s next, anything blocking?', view: 'company', project: pid });
       out = { asked: people.length, agents: agentsAsked.length };
       l.runs.standup = day(at);
     } else if (kind === 'weekly') {
@@ -343,7 +343,7 @@ module.exports = function company({ P, base, store, broadcast, postChat = () => 
       made.push(task.id); const g = c.goals.find(x => x.seat === sid); if (g) (g.tasks = g.tasks || []).push(task.id);
     } });
     save(pid, c);
-    P.inProject(pid, () => postChat('general', 'tribecode', `🏢 ${c.name} is now a company: ${c.seats.map(x => x.title).join(', ')}.${helper ? ` ${helper.name} holds the open seats.` : ''} Open Company from the sidebar.`));
+    P.inProject(pid, () => postChat('general', 'tribecode', `${c.name} is now set up as a company. Roles: ${c.seats.map(x => x.title).join(', ')}.${helper ? ` ${helper.name} does the roles nobody has yet.` : ''} Open Company from the sidebar.`));
     return { company: c, tasks: made, helper: helper ? { id: helper.id, name: helper.name } : null };
   }
 
@@ -395,11 +395,11 @@ module.exports = function company({ P, base, store, broadcast, postChat = () => 
     const tone = stuck ? 'blocked' : need || v.waiting ? 'attention' : open ? 'gaps' : 'good';
     const bits = [];
     bits.push(avg == null ? 'No goals set yet' : `Goals are ${avg}% done`);
-    if (stuck) bits.push(`${stuck} seat${stuck === 1 ? ' is' : 's are'} blocked`);
-    if (v.waiting) bits.push(`${v.waiting} approval${v.waiting === 1 ? '' : 's'} waiting`);
-    else if (need) bits.push(`${need} seat${need === 1 ? ' needs' : 's need'} you`);
-    if (open) bits.push(`${open} seat${open === 1 ? ' is' : 's are'} open`);
-    if (bits.length === 1) bits.push(tone === 'good' ? 'every seat is on track' : 'nothing is waiting on you');
+    if (stuck) bits.push(`${stuck} role${stuck === 1 ? ' is' : 's are'} stuck`);
+    if (v.waiting) bits.push(`${v.waiting} thing${v.waiting === 1 ? ' needs' : 's need'} a person’s OK`);
+    else if (need) bits.push(`${need} role${need === 1 ? ' needs' : 's need'} you`);
+    if (open) bits.push(`${open} role${open === 1 ? ' has' : 's have'} nobody yet`);
+    if (bits.length === 1) bits.push(tone === 'good' ? 'everyone is on track' : 'nothing is waiting on you');
     const text = bits.length > 2 ? `${bits.slice(0, -1).join(', ')} and ${bits[bits.length - 1]}.` : `${bits.join(' and ')}.`;
     return { tone, text, goals: avg, open, blocked: stuck, waiting: v.waiting };
   }
@@ -439,7 +439,7 @@ module.exports = function company({ P, base, store, broadcast, postChat = () => 
     if (!seat.holder.person && !seat.holder.agent) seat.status = 'idle';
     save(pid, c);
     const to = [seat.holder.person].filter(x => x && x !== me.id);
-    if (to.length && bus) bus.notify({ type: 'company-seat', priority: 'normal', to, from: me.id, title: `${me.name} gave you the ${seat.title} seat`, body: seat.charter.goal || c.name, view: 'company', project: pid });
+    if (to.length && bus) bus.notify({ type: 'company-seat', priority: 'normal', to, from: me.id, title: `${me.name} gave you the ${seat.title} role`, body: seat.charter.goal || c.name, view: 'company', project: pid });
     if (seat.holder.agent && coord && coord.tell && 'agent' in body && body.agent) { try { coord.tell(seat.holder.agent, 'seat', `You now hold the ${seat.title} seat in ${c.name}. Call my_seat for your charter.`, me.id); } catch {} }
     return seat;
   }
