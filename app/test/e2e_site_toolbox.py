@@ -52,7 +52,7 @@ def main():
         assert set(shots) == {"godot", "penpot"}, list(shots)
         assert pg.locator("#tb-grid img, #tb-feature img").count() == len(shots), "every other card is a drawing"
         credits = {c["tool"]: c for c in json.load(open(os.path.join(ROOT, "site", "assets", "toolbox", "credits.json"), encoding="utf8"))["images"]}
-        assert set(credits) == set(shots)
+        assert set(shots) <= set(credits), "every screenshot on the page has a credit record (the app shows a few more)"
         for sid, h in shots.items():
             card = pg.locator(f"#tool-{sid}"); im = card.locator(".tb-shot img")
             assert card.locator("svg.tb-art").count() == 0 and im.count() == 1, sid
@@ -63,8 +63,9 @@ def main():
             assert links == [[h["by"], h["source"]], [h["license"], h["licenseUrl"]]], links
             c = credits[sid]
             assert c["author"] == h["by"] and c["licence"] == h["license"] and c["sourceUrl"] == h["source"] and c["date"] and c["attribution"], c
+            assert any(f.startswith("site/assets/toolbox/") for f in c["files"]), c["files"]
             for f in c["files"]:
-                assert os.path.getsize(os.path.join(ROOT, "site", "assets", "toolbox", f)) <= 120 * 1024, f
+                assert os.path.getsize(os.path.join(ROOT, f)) <= 120 * 1024, f
             im.scroll_into_view_if_needed(); pg.wait_for_function("el => el.complete && el.naturalWidth > 0", arg=im.element_handle(), timeout=8000)
             r = pg.evaluate("el => { const b = el.getBoundingClientRect(); return b.width / b.height; }", im.element_handle())
             assert abs(r - h["w"] / h["h"]) < 0.03, "shown whole, not cropped"

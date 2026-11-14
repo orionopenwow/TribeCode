@@ -489,6 +489,7 @@ def run(srv_dir, work):
         def prep_plan():
             host.reload(); wait_text(host, "#sync-status", "connected"); chat(host); host.wait_for_timeout(500)   # a fresh page: the doc editor can leave Updates half-drawn
             host.evaluate("TribeFlow.openUpdates()"); host.wait_for_selector("#view-flow-updates:not(.hidden) #plan-hero .pi")
+            host.wait_for_function("(() => { const f = document.querySelector('#gx-feed'); return f && f.children.length > 0; })()", timeout=15000)   # the feed loads after the plan
         shoot(host, "plan", prep_plan)
 
         # ---------- Flint, in the room panel ----------

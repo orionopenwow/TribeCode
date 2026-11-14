@@ -30,9 +30,12 @@
   // cropped, in a box of the picture's own shape so nothing shifts when it loads, with its credit under it. Links to
   // the source and the licence are in the detail pane (a card is one big button).
   const tr = k => (window.TribeI18n && TribeI18n.t ? TribeI18n.t(k, k) : k);
-  const shot = (s, links) => { const h = s.shot; if (!h || !h.file) return ''; const f = 'assets/studios/' + encodeURIComponent(h.file) + '-640';
+  const shot = (s, links) => { const h = s.shot; if (!h || !h.file) return ''; const f = 'assets/studios/' + encodeURIComponent(h.file) + '-' + (+h.app || 640);
     return `<figure class="sto-shot"><picture><source type="image/webp" srcset="${f}.webp"><img src="${f}.jpg" width="${+h.w}" height="${+h.h}" loading="lazy" decoding="async" alt="${esc(tr(h.alt))}"></picture>
       <figcaption class="sto-credit"><span>Screenshot:</span> ${links ? `<a href="${esc(h.source)}" target="_blank" rel="noopener noreferrer" translate="no">${esc(h.by)}</a>, <a href="${esc(h.licenseUrl)}" target="_blank" rel="noopener noreferrer license" translate="no">${esc(h.license)}</a>` : `<span translate="no">${esc(h.by)}, ${esc(h.license)}</span>`}</figcaption></figure>`; };
+  // Every card in the grid starts with a picture area of one shape (16:9), so a row of cards is one height: the real
+  // screenshot when there is one (shown whole inside the box), otherwise the drawn tile on a wash of the tool's colour.
+  const media = s => s.shot && s.shot.file ? shot(s) : `<figure class="sto-shot sto-drawn" style="--c:${esc(s.color)}" aria-hidden="true"><span class="sto-art">${thumb(s)}</span><figcaption class="sto-credit">Drawn by TribeCode</figcaption></figure>`;
   const dl = (s, cls = 'btn sm') => `<a class="${cls} sto-dl" href="${esc(s.url)}" target="_blank" rel="noopener noreferrer" data-dl="${esc(s.id)}" aria-label="Download ${esc(s.title)} (opens its official page)">Download ↗</a>`;
   const plats = s => `<span class="sto-plats">${(s.platforms || []).map(p => `<span class="sto-plat">${esc(p)}</span>`).join('')}</span>`;
   const byId = id => (data && data.studios || []).find(s => s.id === id);
@@ -40,7 +43,7 @@
   function card(s, opts = {}) {
     const pinned = data.pinned.includes(s.id);
     return `<article class="sto-card${opts.wide ? ' wide' : ''}" data-id="${esc(s.id)}" tabindex="0" role="button" aria-label="${esc(s.title)}: ${esc(s.what)}">
-      ${shot(s)}${thumb(s, opts.wide)}
+      ${opts.wide ? '' : media(s)}${thumb(s, opts.wide)}
       <div class="sto-body"><div class="sto-t"><b>${esc(s.title)}</b>${pinned ? '<span class="sto-pin" title="Your tribe uses this">We use</span>' : ''}</div>
         <p class="sto-what">${esc(s.what)}</p>
         <div class="sto-meta"><span class="sto-lic">${esc(s.license)}</span>${plats(s)}</div>

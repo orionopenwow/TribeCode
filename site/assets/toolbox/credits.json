@@ -4,10 +4,12 @@
   {
    "tool": "godot",
    "files": [
-    "godot-640.webp",
-    "godot-640.jpg",
-    "godot-1280.webp",
-    "godot-1280.jpg"
+    "site/assets/toolbox/godot-640.webp",
+    "site/assets/toolbox/godot-640.jpg",
+    "site/assets/toolbox/godot-1280.webp",
+    "site/assets/toolbox/godot-1280.jpg",
+    "app/ui/assets/studios/godot-640.webp",
+    "app/ui/assets/studios/godot-640.jpg"
    ],
    "sourceUrl": "https://github.com/godotengine/godot-design/blob/master/screenshots/editor_tps_demo_1920x1080.jpg",
    "originalFile": "https://raw.githubusercontent.com/godotengine/godot-design/master/screenshots/editor_tps_demo_1920x1080.jpg",
@@ -22,10 +24,12 @@
   {
    "tool": "penpot",
    "files": [
-    "penpot-640.webp",
-    "penpot-640.jpg",
-    "penpot-1066.webp",
-    "penpot-1066.jpg"
+    "site/assets/toolbox/penpot-640.webp",
+    "site/assets/toolbox/penpot-640.jpg",
+    "site/assets/toolbox/penpot-1066.webp",
+    "site/assets/toolbox/penpot-1066.jpg",
+    "app/ui/assets/studios/penpot-640.webp",
+    "app/ui/assets/studios/penpot-640.jpg"
    ],
    "sourceUrl": "https://github.com/penpot/penpot-docs/blob/main/img/inspect/inspect-workspace.webp",
    "originalFile": "https://raw.githubusercontent.com/penpot/penpot-docs/main/img/inspect/inspect-workspace.webp",
@@ -36,6 +40,54 @@
    "date": "2026-11-14",
    "changes": "Resized and recompressed. Nothing else changed.",
    "attribution": "Screenshot: Penpot contributors, MPL-2.0 (https://www.mozilla.org/MPL/2.0/). Source: https://github.com/penpot/penpot-docs/blob/main/img/inspect/inspect-workspace.webp. Resized and recompressed. Nothing else changed."
+  },
+  {
+   "tool": "fyrox",
+   "files": [
+    "app/ui/assets/studios/fyrox-640.webp",
+    "app/ui/assets/studios/fyrox-640.jpg"
+   ],
+   "sourceUrl": "https://github.com/FyroxEngine/Fyrox/blob/master/pics/editor.png",
+   "originalFile": "https://raw.githubusercontent.com/FyroxEngine/Fyrox/master/pics/editor.png",
+   "author": "Dmitry Stepanov and Fyrox Engine contributors",
+   "licence": "MIT",
+   "licenceUrl": "https://github.com/FyroxEngine/Fyrox/blob/master/LICENSE.md",
+   "terms": "The picture is a file in the engine's repository, whose LICENSE.md (MIT) covers the files in it.",
+   "date": "2026-11-14",
+   "changes": "Resized and recompressed. Nothing else changed.",
+   "attribution": "Screenshot: Dmitry Stepanov and Fyrox Engine contributors, MIT (https://github.com/FyroxEngine/Fyrox/blob/master/LICENSE.md). Source: https://github.com/FyroxEngine/Fyrox/blob/master/pics/editor.png. Resized and recompressed. Nothing else changed."
+  },
+  {
+   "tool": "material-maker",
+   "files": [
+    "app/ui/assets/studios/material-maker-640.webp",
+    "app/ui/assets/studios/material-maker-640.jpg"
+   ],
+   "sourceUrl": "https://github.com/RodZill4/material-maker/blob/master/material_maker/doc/images/screenshot.png",
+   "originalFile": "https://raw.githubusercontent.com/RodZill4/material-maker/master/material_maker/doc/images/screenshot.png",
+   "author": "Rodolphe Suescun and contributors",
+   "licence": "MIT",
+   "licenceUrl": "https://github.com/RodZill4/material-maker/blob/master/LICENSE.md",
+   "terms": "The picture is a file in the project's repository (its documentation), whose LICENSE.md (MIT) covers the files in it.",
+   "date": "2026-11-14",
+   "changes": "Resized and recompressed. Nothing else changed.",
+   "attribution": "Screenshot: Rodolphe Suescun and contributors, MIT (https://github.com/RodZill4/material-maker/blob/master/LICENSE.md). Source: https://github.com/RodZill4/material-maker/blob/master/material_maker/doc/images/screenshot.png. Resized and recompressed. Nothing else changed."
+  },
+  {
+   "tool": "pyxel",
+   "files": [
+    "app/ui/assets/studios/pyxel-480.webp",
+    "app/ui/assets/studios/pyxel-480.jpg"
+   ],
+   "sourceUrl": "https://github.com/kitao/pyxel/blob/main/docs/images/image_editor.gif",
+   "originalFile": "https://raw.githubusercontent.com/kitao/pyxel/main/docs/images/image_editor.gif",
+   "author": "Takashi Kitao",
+   "licence": "MIT",
+   "licenceUrl": "https://github.com/kitao/pyxel/blob/main/LICENSE",
+   "terms": "The picture is a file in the project's repository (its documentation), whose LICENSE (MIT) covers the files in it.",
+   "date": "2026-11-14",
+   "changes": "The first frame of the animation, recompressed. Nothing else changed.",
+   "attribution": "Screenshot: Takashi Kitao, MIT (https://github.com/kitao/pyxel/blob/main/LICENSE). Source: https://github.com/kitao/pyxel/blob/main/docs/images/image_editor.gif. The first frame of the animation, recompressed. Nothing else changed."
   }
  ]
 }

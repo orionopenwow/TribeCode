@@ -76,8 +76,10 @@ def main():
                 print(" ", ask(q)[:90])
             pg.goto(B + "/?skipIntro=1"); pg.wait_for_function("TribeClient.connected() && window.TribeTemplates", timeout=20000)
             for tid, name in [("standup", "doc-standup"), ("launch", "doc-launch"), ("brand", "doc-brand")]:
-                pg.evaluate("TribeTalent.open('templates')"); pg.wait_for_timeout(500)
-                pg.evaluate(f"TribeTemplates.open({tid!r})"); pg.wait_for_timeout(700)
+                # Work loads its lists first and redraws, so wait for the template cards, then open one and wait for its questions
+                pg.evaluate("TribeTemplates.close(); TribeTalent.open('templates')"); pg.wait_for_selector(f".dt-card[data-tpl='{tid}']", timeout=15000); pg.wait_for_timeout(600)
+                pg.click(f".dt-card[data-tpl='{tid}']"); pg.wait_for_selector(f"[data-tpl-open='{tid}'] .dt-in", timeout=15000)
+                pg.evaluate("(() => { const el = document.querySelector('[data-tpl-open]'); el.scrollIntoView({block: 'start'}); let p = el.parentElement; while (p && p.scrollHeight <= p.clientHeight + 1) p = p.parentElement; if (p) p.scrollTop -= 90; })()"); pg.wait_for_timeout(500)   # the template sits under Work's other sections
                 pg.evaluate("document.querySelectorAll('.toast').forEach(e => e.remove())")
                 pg.screenshot(path=str(shots / f"{name}.png"))
             pg.goto(B + "/?skipIntro=1"); pg.wait_for_function("TribeClient.connected() && window.TribeApp", timeout=20000); pg.wait_for_timeout(800)

@@ -118,9 +118,9 @@ def g_toolbox():
     studios = {s["id"] for s in json.loads(text("templates/studios.json"))["studios"]}
     out = {}
     for sid, r in rec.items():
-        for w in (640, r["w"]):
+        for w in (r["small"], r["w"]) if r.get("site", True) else ():
             for e in ("webp", "jpg"): out[f"site/assets/toolbox/{r['file']}-{w}.{e}"] = sid
-        for e in ("webp", "jpg"): out[f"app/ui/assets/studios/{r['file']}-640.{e}"] = sid
+        for e in ("webp", "jpg"): out[f"app/ui/assets/studios/{r['file']}-{r['app']}.{e}"] = sid
     for folder in ("site/assets/toolbox", "app/ui/assets/studios"):
         for p in sorted((ROOT / folder).glob("*")) if (ROOT / folder).is_dir() else []:
             if p.suffix in IMG: out.setdefault(f"{folder}/{p.name}", p.stem.rsplit("-", 1)[0])
@@ -234,7 +234,7 @@ def sheet(out, ref):
         seen = set()
         for path in sorted(thumbs):
             if g == "sites" and not path.startswith("templates/"): continue   # the small copies are the same picture
-            if g == "toolbox" and not path.startswith("site/") or g == "toolbox" and "-640." not in path or g == "toolbox" and path.endswith(".jpg"): continue
+            if g == "toolbox" and (not path.startswith("app/") or path.endswith(".jpg")): continue
             key = (g, thumbs[path], Path(path).parent.as_posix())
             if key in seen: continue
             seen.add(key); cells.append((g, Path(path).stem, load_ref(path), load_now(path)))

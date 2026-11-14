@@ -14,6 +14,9 @@ where it is shown.
 | --- | --- | --- |
 | Godot | The editor with the third-person shooter demo, from `godotengine/godot-design` | CC BY 4.0 |
 | Penpot | Inspect mode, from `penpot/penpot-docs` | MPL-2.0 |
+| Fyrox | The editor, from `FyroxEngine/Fyrox` (`pics/editor.png`) | MIT |
+| Material Maker | The main window, from `RodZill4/material-maker` (its documentation pictures) | MIT |
+| Pyxel | The image editor, from `kitao/pyxel` (its documentation pictures) | MIT |
 
 ## Ask for permission
 
@@ -56,24 +59,33 @@ Contact: the contact on https://obsproject.com/, or https://github.com/obsprojec
 > linking to obsproject.com for downloads. May we show one screenshot of OBS Studio there, unchanged except for
 > resizing, credited to the OBS Project with a link? If yes, which one, and what credit line would you like?
 
-## Needs checking and fetching from a normal network
+## Fetch on a normal network
 
-These probably have a usable picture, but the licence text could not be read from the build sandbox (those sites are
-blocked there), so nothing was used. On a normal network: open the page, confirm the licence in the project's own
-words, then add a record to `templates/studio-shots.json` and run `python3 -I scripts/dev/toolbox-shots.py`.
-A share-alike picture (CC BY-SA) must be shown unmodified apart from resizing and credited with the licence link,
-which is what the cards already do.
+The licence was read (2026-11-14) and allows reuse with credit, but the pictures could not be downloaded from the
+build sandbox: the sites are blocked for downloads there and no mirror of the manuals is reachable by git. On a normal
+network: open the page, pick the picture, add a record to `templates/studio-shots.json` (copy the Godot one), put the
+file where `python3 -I scripts/dev/toolbox-shots.py --from DIR` can find it or let the script download it, then run
+`node scripts/dev/site-toolbox.js`. A share-alike picture (CC BY-SA) must be shown whole, changed only by resizing,
+and credited with the licence link, which is what the cards already do.
 
-| Tool | Where to look | Believed licence (not verified) |
-| --- | --- | --- |
-| Blender | The Blender Manual, https://docs.blender.org/manual/en/latest/copyright.html (pictures of the interface in the manual) | CC BY-SA 4.0 |
-| Kdenlive | The Kdenlive manual, https://docs.kdenlive.org/ (licence in its footer); app screenshots at https://cdn.kde.org/screenshots/kdenlive/ have no stated terms | CC BY-SA 4.0 for the manual |
-| Audacity | The Audacity manual, https://manual.audacityteam.org/ (licence in its footer) | CC BY 3.0 |
+| Tool | Licence, in the project's words | Picture to take | Credit line to show |
+| --- | --- | --- | --- |
+| Blender | CC BY-SA 4.0. https://docs.blender.org/manual/en/latest/copyright.html : "Except where otherwise noted, the content of the Blender Manual is available under a Creative Commons Attribution-ShareAlike 4.0 International License or any later version. Excluded from the CC-BY-SA license are any logos, trademarks, icons, source code and Python scripts used in this manual." It asks to "attribute the 'Blender Documentation Team' and include a hyperlink" to the manual. | The default screen on https://docs.blender.org/manual/en/latest/interface/window_system/introduction.html (expected file: `https://docs.blender.org/manual/en/latest/_images/interface_window-system_introduction_default-startup.png`; confirm the name on the page). Do not use the splash screen: it is artwork with its own terms and shows the logo. | Screenshot: The Blender Manual, by the Blender Documentation Team, CC BY-SA 4.0 (link the manual and https://creativecommons.org/licenses/by-sa/4.0/) |
+| Kdenlive | CC BY-SA 4.0. The footer of https://docs.kdenlive.org/en/ : "licensed under the Creative Commons License SA 4.0 unless stated otherwise". The wording is loose ("SA 4.0"), so check that the page or its repository (invent.kde.org/documentation/docs-kdenlive-org) names CC BY-SA 4.0 before using a picture. | A picture of the whole window from the manual's user interface chapter (https://docs.kdenlive.org/en/user_interface/ ; the picture's address is under `https://docs.kdenlive.org/en/_images/`). The app-store pictures at https://cdn.kde.org/screenshots/kdenlive/ have no stated terms: do not use those. | Screenshot: The Kdenlive Manual, KDE, CC BY-SA 4.0 (link the manual and the licence) |
+| Audacity | CC BY 3.0 for the manual's pages. The footer of https://manual.audacityteam.org/ : "Pages in this Manual are available under the terms of the Creative Commons Attribution 3.0 license." It names pages, not pictures, so this is the weakest of the three: use a picture that is plainly part of a manual page. | The dark theme window on https://manual.audacityteam.org/man/audacity_tour_guide.html : `https://manual.audacityteam.org/m/images/f/f4/theme_dark_3_6_0.png` | Screenshot: The Audacity Manual, the Audacity Team, CC BY 3.0 (link the manual and https://creativecommons.org/licenses/by/3.0/) |
 
-If a licence turns out different from the one believed here, or does not cover the pictures, move the tool to
-"Ask for permission".
+If a licence turns out not to cover the pictures, move the tool to "Ask for permission".
 
 ## The other tools in the Workshop
 
-LMMS, Material Maker, BeepBox, Shotcut, GDevelop, LÖVE, raylib, Bevy, Fyrox, Stride, Pyxel, TIC-80 and Twine keep
-their drawn tiles. They are not on the website's toolbox page and were not checked in this pass.
+Checked briefly on 2026-11-14 (they are in the app's Workshop, not on the website's toolbox page). A picture was taken
+only when it is a file in the project's own repository and the repository's licence covers its files.
+
+| Tool | Result |
+| --- | --- |
+| Fyrox | In use: `pics/editor.png`, MIT (`LICENSE.md`) |
+| Material Maker | In use: `material_maker/doc/images/screenshot.png`, MIT (`LICENSE.md`) |
+| Pyxel | In use: the first frame of `docs/images/image_editor.gif`, MIT (`LICENSE`) |
+| TIC-80 | Drawn tile. The repository (MIT) holds only icons, no screenshot of the app. |
+| LMMS, Shotcut, Twine | Drawn tiles. GPL code; no screenshot with stated terms was found in a quick look. Ask the project (their GitHub discussions or forum) before using one from their sites. |
+| BeepBox, GDevelop, LÖVE, raylib, Bevy, Stride | Drawn tiles. Not checked file by file: their repositories mix code with example art under other terms, so a picture needs a closer look than this pass gave. |

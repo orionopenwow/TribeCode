@@ -6,9 +6,10 @@ allow reuse; see site/assets/toolbox/CREDITS.md and docs/SCREENSHOT-PERMISSIONS.
   python3 -I scripts/dev/toolbox-shots.py --from DIR      use DIR/<id>.<ext> instead of downloading (a blocked network)
   python3 -I scripts/dev/toolbox-shots.py --check         exit 1 when a file is missing, too big, or belongs to no record
 
-Each picture is only resized and recompressed: no crop, no retouching, no watermark removed. Per record it writes
-<file>-640.webp/.jpg and <file>-<w>.webp/.jpg (w from the record, never larger than the original), every file at most
-120 KB, to site/assets/toolbox/ (the website) and the small size to app/ui/assets/studios/ (the app's Workshop).
+Each picture is only resized and recompressed (an animation: its first frame): no crop, no retouching, no watermark
+removed. Per record it writes <file>-<small>.webp/.jpg and <file>-<w>.webp/.jpg (never larger than the original) to
+site/assets/toolbox/ for tools on the website's toolbox page, and <file>-<app>.webp/.jpg to app/ui/assets/studios/
+for the app's Workshop. Every file is at most 120 KB.
 """
 import io, json, os, sys, urllib.request
 from pathlib import Path
@@ -17,18 +18,18 @@ ROOT = Path(__file__).resolve().parents[2]
 REC = json.loads((ROOT / "templates" / "studio-shots.json").read_text(encoding="utf8"))
 SITE, APP = ROOT / "site" / "assets" / "toolbox", ROOT / "app" / "ui" / "assets" / "studios"
 MAX = 120 * 1024
-SMALL = 640
 args = sys.argv[1:]
 
 
 def names(rec):
     """(folder, file name, width) for every file a record owns."""
     out = []
-    for w in (SMALL, rec["w"]):
-        for ext in ("webp", "jpg"):
-            out.append((SITE, f"{rec['file']}-{w}.{ext}", w))
+    if rec.get("site", True):   # only tools on the website's toolbox page get website files
+        for w in (rec["small"], rec["w"]):
+            for ext in ("webp", "jpg"):
+                out.append((SITE, f"{rec['file']}-{w}.{ext}", w))
     for ext in ("webp", "jpg"):
-        out.append((APP, f"{rec['file']}-{SMALL}.{ext}", SMALL))
+        out.append((APP, f"{rec['file']}-{rec['app']}.{ext}", rec["app"]))
     return out
 
 
@@ -37,7 +38,7 @@ def check():
     studios = {s["id"] for s in json.loads((ROOT / "templates" / "studios.json").read_text(encoding="utf8"))["studios"]}
     for sid, rec in REC["shots"].items():
         if sid not in studios: bad.append(f"{sid}: has a screenshot record but is no longer in templates/studios.json")
-        for k in ("file", "w", "h", "alt", "by", "license", "licenseUrl", "source", "original", "terms", "fetched", "changes"):
+        for k in ("file", "w", "h", "small", "app", "alt", "by", "license", "licenseUrl", "source", "original", "terms", "fetched", "changes"):
             if not rec.get(k): bad.append(f"{sid}: the record has no '{k}'")
         for folder, name, _ in names(rec):
             want[folder].add(name); p = folder / name

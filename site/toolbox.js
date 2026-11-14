@@ -42,9 +42,9 @@
 
   // A real screenshot: only resized, never cropped (the box takes the picture's own shape, so nothing shifts when it
   // loads), lazy, WebP with a JPEG fallback, and its credit right under it. Names and licences are not translated.
-  const shot = t => { const h = t.shot, f = BASE + 'assets/toolbox/' + encodeURIComponent(h.file), set = e => `${f}-640.${e} 640w, ${f}-${h.w}.${e} ${h.w}w`;
+  const shot = t => { const h = t.shot, f = BASE + 'assets/toolbox/' + encodeURIComponent(h.file), set = e => `${f}-${+h.small}.${e} ${+h.small}w, ${f}-${+h.w}.${e} ${+h.w}w`;
     return `<figure class="tb-shot"><picture><source type="image/webp" srcset="${set('webp')}" sizes="(max-width: 720px) 92vw, 420px">
-      <img src="${f}-640.jpg" srcset="${set('jpg')}" sizes="(max-width: 720px) 92vw, 420px" width="${+h.w}" height="${+h.h}" loading="lazy" decoding="async" alt="${esc(h.alt)}"></picture>
+      <img src="${f}-${+h.small}.jpg" srcset="${set('jpg')}" sizes="(max-width: 720px) 92vw, 420px" width="${+h.w}" height="${+h.h}" loading="lazy" decoding="async" alt="${esc(h.alt)}"></picture>
       <figcaption class="tb-shot__credit"><span>Screenshot:</span> <a href="${esc(h.source)}" rel="noopener" translate="no">${esc(h.by)}</a>, <a href="${esc(h.licenseUrl)}" rel="noopener license" translate="no">${esc(h.license)}</a></figcaption></figure>`; };
   const li = a => a.map(f => `<li>${esc(f)}</li>`).join('');
   const meta = t => `<p class="tb-meta mono" translate="no"><span>${esc(t.license)}</span><span>${t.platforms.map(esc).join(' · ')}</span></p>`;

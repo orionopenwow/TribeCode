@@ -17,7 +17,7 @@ module.exports = function studios({ P, base, root, sense, broadcast = () => {}, 
   const cat = (() => { try { return JSON.parse(fs.readFileSync(path.join(root, 'templates', 'studios.json'), 'utf8')); } catch { return { studios: [], helps: {}, recommend: {} }; } })();
   // real screenshots with their credit, only for tools whose terms allow it (templates/studio-shots.json)
   const shots = (() => { try { return JSON.parse(fs.readFileSync(path.join(root, 'templates', 'studio-shots.json'), 'utf8')).shots || {}; } catch { return {}; } })();
-  const shotOf = id => { const r = shots[id]; return r && r.file && /^https:\/\//.test(r.source || '') && /^https:\/\//.test(r.licenseUrl || '') ? { file: String(r.file).replace(/[^a-z0-9-]/g, ''), w: +r.w || 0, h: +r.h || 0, alt: r.alt, by: r.by, license: r.license, licenseUrl: r.licenseUrl, source: r.source } : null; };
+  const shotOf = id => { const r = shots[id]; return r && r.file && /^https:\/\//.test(r.source || '') && /^https:\/\//.test(r.licenseUrl || '') ? { file: String(r.file).replace(/[^a-z0-9-]/g, ''), w: +r.w || 0, h: +r.h || 0, app: +r.app || 640, alt: r.alt, by: r.by, license: r.license, licenseUrl: r.licenseUrl, source: r.source } : null; };
   const list = (cat.studios || []).filter(s => /^https:\/\//.test(s.url || '')).map(s => { const shot = shotOf(s.id); return shot ? Object.assign({}, s, { shot }) : s; });
   const ids = new Set(list.map(s => s.id));
   const FILE = '.tribe/studios.json';
