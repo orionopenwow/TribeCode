@@ -3,6 +3,7 @@
 Read these before you change code:
 
 - `HANDOFF.md`: what TribeCode is, how to run, test and ship, and a map of the code.
+- `docs/SESSION-HANDOFF.md`: the current state, work in flight, how releases are done, and how two sessions share this repo.
 - `docs/DESIGN-SYSTEM.md`: the design rules. `docs/design-tokens.json` is the same system in machine-readable form (colors with dark and light values, radii, fonts, motion, and the core rules).
 
 Building UI:
