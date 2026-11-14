@@ -615,7 +615,7 @@ footer{padding:40px 0;color:var(--muted)}footer .wrap{display:flex;gap:20px;flex
 .is-hidden{opacity:.45;outline:1px dashed var(--muted);outline-offset:-6px}.is-hidden::before{content:'Hidden: not on the published site';display:block;font:600 11px/1 ui-monospace,monospace;padding:8px 24px;color:var(--muted)}
 @media (max-width:760px){.f-alternating .alt-row,.im-side .wrap,.foot-columns .wrap{grid-template-columns:1fr}.f-alternating .alt-row:nth-child(even) .pic{order:0}.st-bar .st>div+div{border-left:0;padding-left:0}}
 @media (max-width:760px){.hero-split .wrap,.t-two .wrap,.faq-columns{grid-template-columns:1fr}.f-list .item{grid-template-columns:1fr;gap:4px}section{padding:44px 0}}
-button,input,textarea,select{font:inherit}body{font-size:17px;line-height:1.65}h1,h2,h3{text-wrap:balance}p,li{text-wrap:pretty}h2{margin-bottom:.7em}
+button,input,textarea,select{font:inherit}body{font-size:17px;line-height:1.65}h1,h2,h3{text-wrap:balance;overflow-wrap:anywhere}p,li{text-wrap:pretty}h2{margin-bottom:.7em}
 section{border-bottom:0}.zebra{background:var(--alt)}.zebra .card,.zebra form.cf input,.zebra form.cf textarea,.zebra .nl input{background:var(--bg)}footer{border-top:1px solid var(--line)}
 .btn{cursor:pointer;line-height:1.2}.btn:hover{opacity:.88}.nav a.btn.sm{padding:8px 14px;font-size:.95rem;color:var(--on)}.nav .wrap{flex-wrap:nowrap}.nav b{white-space:nowrap}.nav nav{flex-wrap:nowrap;overflow-x:auto;white-space:nowrap;scrollbar-width:none;align-items:center}
 .ic{width:24px;height:24px;flex:none}.f-icons .card{display:grid;gap:10px;align-content:start}.f-icons .ib{width:44px;height:44px;border-radius:var(--r);display:grid;place-items:center;background:var(--accent);color:var(--on)}.f-icons .card h3{margin:4px 0 0}
@@ -707,5 +707,125 @@ section{border-bottom:0}.zebra{background:var(--alt)}.zebra .card,.zebra form.cf
   }
   const dataToBytes = src => { const m = /^data:[^;,]+(;base64)?,(.*)$/.exec(src || ''); if (!m) return null; if (m[1]) { const bin = typeof atob === 'function' ? atob(m[2]) : Buffer.from(m[2], 'base64').toString('binary'); const u = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) u[i] = bin.charCodeAt(i); return u; } return new TextEncoder().encode(decodeURIComponent(m[2])); };
 
-  return { ICONS, ICON_NAMES, icon: ic, iconFor, answer, command2, FONT_PAIRS, CATS, duplicateBlock, setHidden, setStyle, setSpace, setFonts, setSeo, setLogo, rewrite, fill, md, BLOCKS, TYPES, PRESETS, TEMPLATES, blank, normalize, colors, fromTemplate, render, exportFiles, dataToBytes, buttons, images, href, autoWire, addPage, renamePage, deletePage, addBlock, removeBlock, moveBlock, setVariant, setProp, setTheme, setMode, setColor, setLink, setImage, imageShape, command, getAt, slugify, contrast };
+  // ================= v3 (feat/design-site2): whole-site style, Check my site, safe change lists, the brand kit =================
+  // accent swatches: Open Color (github.com/yeun/open-color, MIT, see NOTICE), shades 4 / 7 / 9 of each hue
+  const ACCENTS = {"gray":["#ced4da","#495057","#212529"],"red":["#ff8787","#f03e3e","#c92a2a"],"pink":["#f783ac","#d6336c","#a61e4d"],"grape":["#da77f2","#ae3ec9","#862e9c"],"violet":["#9775fa","#7048e8","#5f3dc4"],"indigo":["#748ffc","#4263eb","#364fc7"],"blue":["#4dabf7","#1c7ed6","#1864ab"],"cyan":["#3bc9db","#1098ad","#0b7285"],"teal":["#38d9a9","#0ca678","#087f5b"],"green":["#69db7c","#37b24d","#2b8a3e"],"lime":["#a9e34b","#74b816","#5c940d"],"yellow":["#ffd43b","#f59f00","#e67700"],"orange":["#ffa94d","#f76707","#d9480f"]};
+  function setRadius(c, r) { c = clone(c); c.theme.radius = Math.max(0, Math.min(28, Math.round(+r) || 0)); return c; }
+  // colours only, from a preset: the fonts, corners and layout stay
+  function setPalette(c, preset) { c = clone(c); const p = PRESETS[preset]; if (!p) return c; const mode = c.theme.mode; c.theme.colors = { ...p.colors }; c.theme.base = isDark(p.colors) ? 'dark' : 'light'; c.theme.mode = c.theme.base; delete c.theme.alt; return mode === c.theme.mode ? c : setMode(c, mode); }
+  const blockAt = (c, id) => { for (const pg of c.pages) { const b = pg.blocks.find(x => x.id === id); if (b) return { pg, b }; } return null; };
+  const OKPATH = /^[a-zA-Z]+(\.(\d{1,3}|[a-zA-Z]+)){0,5}$/, BADKEY = /(^|\.)(__proto__|constructor|prototype)(\.|$)/;
+  const cleanStr = (v, n) => String(v == null ? '' : v).replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g, '').slice(0, n || 2000);
+  // props an outside helper may hand over: words and lists of words only (no pictures, no markup, no deep trees)
+  function cleanProps(v, depth) {
+    if (depth > 4) return undefined;
+    if (typeof v === 'string') return /^data:|^javascript:/i.test(v.trim()) ? '' : cleanStr(v, 2000);
+    if (typeof v === 'number' || typeof v === 'boolean') return v;
+    if (Array.isArray(v)) return v.slice(0, 24).map(x => cleanProps(x, depth + 1)).filter(x => x !== undefined);
+    if (v && typeof v === 'object') { const o = {}; Object.keys(v).slice(0, 24).forEach(k => { if (/^[a-zA-Z]{1,20}$/.test(k) && !BADKEY.test(k) && k !== 'img') { const x = cleanProps(v[k], depth + 1); if (x !== undefined) o[k] = x; } }); return o; }
+    return undefined;
+  }
+  const short2 = (t, n) => { t = String(t || ''); return t.length > (n || 48) ? t.slice(0, (n || 48) - 1) + '…' : t; };
+  const blockName = b => `${BLOCKS[b.type].label.replace(/ \(.*/, '')}${b.props && b.props.title ? ` “${short2(b.props.title, 28)}”` : ''}`;
+  // A change list ({ op, … } steps) applied one by one; anything unknown or unsafe is skipped and named. Used for what an
+  // invited agent or a local model proposes (server/sitedesign.js MCP site_propose) and for Check my site's fixes: the
+  // result is one new cfg, so the designer commits it as a single undo step. -> { cfg, done: [words], skipped: [words] }
+  function applyOps(cfg, ops) {
+    let c = normalize(clone(cfg)); const done = [], skipped = [];
+    (Array.isArray(ops) ? ops.slice(0, 60) : []).forEach((o, i) => {
+      const skip = why => skipped.push(`Step ${i + 1}${o && o.op ? ` (${cleanStr(o.op, 20)})` : ''}: ${why}`);
+      if (!o || typeof o !== 'object') return skip('not a step');
+      const at = o.block ? blockAt(c, String(o.block)) : null, path = String(o.path || '');
+      const needBlock = () => { if (!at) skip('that section is not on the site'); return !!at; };
+      const okPath = () => { if (!OKPATH.test(path) || BADKEY.test(path)) { skip('that is not a part that can be changed'); return false; } return true; };
+      try {
+        switch (o.op) {
+          case 'text': { if (!needBlock() || !okPath()) return; const old = getAt(at.b.props, path); if (old != null && typeof old !== 'string') return skip('that part is not words'); if (/(^|\.)(img|link|to|kind)$/.test(path)) return skip('pictures and links have their own steps'); c = setProp(c, at.pg.id, at.b.id, path, cleanStr(o.value)); done.push(`${blockName(at.b)}: ${old ? `“${short2(old)}” becomes ` : 'adds '}“${short2(o.value)}”`); return; }
+          case 'alt': { if (!needBlock()) return; const pth = path ? path.replace(/\.?alt$/, '') : ''; if (pth && (!OKPATH.test(pth) || BADKEY.test(pth))) return skip('that is not a picture'); c = setProp(c, at.pg.id, at.b.id, (pth ? pth + '.' : '') + 'alt', cleanStr(o.value, 200)); done.push(`${blockName(at.b)}: the picture is described as “${short2(o.value)}”`); return; }
+          case 'add': { const type = String(o.type || ''); if (!BLOCKS[type]) return skip(`there is no “${cleanStr(type, 20)}” section`); const pg = c.pages.find(x => x.id === o.page || x.slug === o.page || x.title === o.page) || (o.after && (blockAt(c, String(o.after)) || {}).pg) || c.pages[0]; const variant = BLOCKS[type].variants.includes(o.variant) ? o.variant : undefined; const ai = o.after ? pg.blocks.findIndex(b => b.id === o.after) : -1; const r = addBlock(c, pg.id, type, variant, ai >= 0 ? ai + 1 : undefined); c = r.cfg; const props = cleanProps(o.props, 0); if (props && typeof props === 'object') { const nb = blockAt(c, r.block.id).b; Object.keys(props).forEach(k => { if (k in nb.props && typeof props[k] === typeof nb.props[k] && Array.isArray(props[k]) === Array.isArray(nb.props[k])) nb.props[k] = props[k]; }); c = normalize(c); } done.push(`Adds a ${BLOCKS[type].label.replace(/ \(.*/, '').toLowerCase()} section${props && props.title ? ` “${short2(props.title, 28)}”` : ''} to ${pg.title}`); return; }
+          case 'remove': if (!needBlock()) return; c = removeBlock(c, at.pg.id, at.b.id); done.push(`Removes ${blockName(at.b)}`); return;
+          case 'move': { if (!needBlock()) return; const to = /^(up|down|top|bottom)$/.test(o.to) ? o.to : Math.max(0, Math.min(at.pg.blocks.length - 1, Math.round(+o.to) || 0)); c = moveBlock(c, at.pg.id, at.b.id, to); done.push(`Moves ${blockName(at.b)} ${typeof to === 'number' ? `to place ${to + 1}` : to}`); return; }
+          case 'variant': if (!needBlock()) return; if (!BLOCKS[at.b.type].variants.includes(o.variant)) return skip('that layout does not exist for this section'); c = setVariant(c, at.pg.id, at.b.id, o.variant); done.push(`${blockName(at.b)}: the “${o.variant}” layout`); return;
+          case 'style': { if (!needBlock()) return; const patch = {}; if (/^(|card|accent|ink)$/.test(o.bg == null ? 'x' : o.bg)) patch.bg = o.bg; if (/^(|s|l)$/.test(o.pad == null ? 'x' : o.pad)) patch.pad = o.pad; if (!Object.keys(patch).length) return skip('nothing to restyle'); c = setStyle(c, at.pg.id, at.b.id, patch); done.push(`${blockName(at.b)}: ${[patch.bg != null ? `background ${patch.bg || 'none'}` : '', patch.pad != null ? `spacing ${patch.pad === 's' ? 'tight' : patch.pad === 'l' ? 'roomy' : 'normal'}` : ''].filter(Boolean).join(', ')}`); return; }
+          case 'link': { if (!needBlock() || !okPath()) return; const kind = /^(page|section|url|email|)$/.test(o.kind || '') ? o.kind || '' : null, to = cleanStr(o.to, 400); if (kind == null) return skip('that kind of link is not known'); if (kind === 'url' && !/^https:\/\//i.test(to)) return skip('web links must start with https://'); if (kind === 'email' && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(to)) return skip('that is not an email address'); const r2 = setLink(c, at.pg.id, at.b.id, path, { kind, to }); c = r2 && r2.cfg ? r2.cfg : r2 || c; done.push(`${blockName(at.b)}: a button now goes to ${kind === 'email' ? to : kind === 'url' ? short2(to) : `the ${kind} ${short2(to, 24)}`}`); return; }
+          case 'theme': if (!PRESETS[o.preset]) return skip('that look does not exist'); c = setTheme(c, o.preset); done.push(`The whole site gets the ${PRESETS[o.preset].name} look`); return;
+          case 'palette': if (!PRESETS[o.preset]) return skip('those colours do not exist'); c = setPalette(c, o.preset); done.push(`The ${PRESETS[o.preset].name} colours`); return;
+          case 'accent': if (!/^#[0-9a-f]{6}$/i.test(o.color || '')) return skip('the colour must look like #2A8C80'); c = setColor(c, o.color); done.push(`The main colour becomes ${c.theme.colors.accent}`); return;
+          case 'fonts': if (!FONT_PAIRS[o.pair]) return skip('that font pair does not exist'); c = setFonts(c, o.pair); done.push(`The ${FONT_PAIRS[o.pair].name} fonts`); return;
+          case 'space': if (!/^(compact|normal|roomy)$/.test(o.value)) return skip('spacing is compact, normal or roomy'); c = setSpace(c, o.value); done.push(`Spacing: ${o.value}`); return;
+          case 'radius': c = setRadius(c, o.value); done.push(`Corners: ${c.theme.radius}px`); return;
+          case 'mode': c = setMode(c, o.value === 'dark' ? 'dark' : 'light'); done.push(`The ${c.theme.mode} version`); return;
+          case 'page': { const r = addPage(c, cleanStr(o.title, 40)); c = r.cfg; done.push(`Adds a page called ${r.page.title}`); return; }
+          case 'rename': { const pg = c.pages.find(x => x.id === o.page || x.slug === o.page || x.title === o.page); if (!pg) return skip('that page is not on the site'); c = renamePage(c, pg.id, cleanStr(o.title, 40)); done.push(`Renames the page ${pg.title} to ${cleanStr(o.title, 40)}`); return; }
+          case 'seo': { const patch = {}; if (typeof o.title === 'string') patch.title = cleanStr(o.title, 120); if (typeof o.description === 'string') patch.description = cleanStr(o.description, 320); if (!Object.keys(patch).length) return skip('nothing to set'); c = setSeo(c, patch); done.push(`Search and link previews: ${Object.keys(patch).map(k => `${k} “${short2(patch[k])}”`).join(', ')}`); return; }
+          default: return skip('that kind of step is not known');
+        }
+      } catch (e) { skip('could not be applied'); }
+    });
+    return { cfg: normalize(c), done, skipped };
+  }
+  // the site as an outline for a helper to read: ids, kinds, layouts and the words (pictures left out)
+  function outline(cfg) {
+    const c = normalize(clone(cfg)), words = (v, d) => typeof v === 'string' ? (/^data:/.test(v) ? '[picture]' : short2(v, 240)) : Array.isArray(v) ? v.slice(0, 12).map(x => words(x, d + 1)) : v && typeof v === 'object' && d < 4 ? Object.fromEntries(Object.entries(v).filter(([k]) => k !== 'img').map(([k, x]) => [k, words(x, d + 1)])) : v;
+    return { name: c.name, theme: { preset: c.theme.preset, mode: c.theme.mode, accent: colors(c).accent, fonts: c.theme.fonts, radius: c.theme.radius, space: c.theme.space || 'normal' }, seo: { title: c.seo.title || '', description: c.seo.description || '' },
+      pages: c.pages.map(p => ({ id: p.id, title: p.title, blocks: p.blocks.map(b => ({ id: b.id, type: b.type, variant: b.variant, ...(b.hidden ? { hidden: true } : {}), props: words(b.props, 0) })) })),
+      can: { blocks: Object.fromEntries(TYPES.map(t => [t, BLOCKS[t].variants])), looks: Object.keys(PRESETS), fonts: Object.keys(FONT_PAIRS) } };
+  }
+
+  // ---------- Check my site: what a careful friend would point out before it goes live ----------
+  // -> [{ id, level: 'fix' (should be fixed) | 'tip', title, text, page, block, fix?: { label, ops } }]   (no network, no AI)
+  function check(cfg) {
+    const c = normalize(clone(cfg)), out = [], k = colors(c), add = (level, id, title, text, x) => out.push({ id: `${id}${x && x.block ? ':' + x.block : ''}${x && x.n != null ? ':' + x.n : ''}`, level, title, text, page: x && x.page, block: x && x.block, ...(x && x.fix ? { fix: x.fix } : {}) });
+    const S = c.seo || {};
+    // colours
+    if (contrast(k.ink, k.bg) < 4.5) add('fix', 'contrast-ink', 'The words are hard to read', `The text colour on the background has a contrast of ${contrast(k.ink, k.bg).toFixed(1)} to 1. Readable text needs 4.5 to 1.`, { fix: { label: 'Use a look that reads well', ops: [{ op: 'palette', preset: isDark(k) ? 'night' : 'clean' }] } });
+    else if (contrast(k.muted, k.bg) < 4.5) add('tip', 'contrast-muted', 'The grey words are faint', `Captions and small print have a contrast of ${contrast(k.muted, k.bg).toFixed(1)} to 1 (4.5 to 1 reads well).`);
+    if (contrast(k.accent, k.bg) < 3) add('fix', 'contrast-accent', 'The main colour fades into the background', 'Buttons and links in this colour are hard to spot.', { fix: { label: 'Pick a stronger shade', ops: [{ op: 'accent', color: readable(k.accent, k.bg) }] } });
+    // search and sharing
+    const hero = c.pages[0].blocks.find(b => b.type === 'hero' || b.type === 'links'), lead = hero && (hero.props.text || hero.props.bio || '');
+    if (!S.description) add('fix', 'seo-desc', 'No description for search results', 'Search engines and link previews show a sentence about the site. Yours is empty.', lead ? { fix: { label: 'Use the opening line', ops: [{ op: 'seo', description: short2(lead, 155) }] } } : undefined);
+    if (S.description && S.description.length > 170) add('tip', 'seo-long', 'The description is long', 'Search results cut it off after about 160 characters.');
+    if (!S.favicon && !c.logo) add('tip', 'seo-icon', 'No icon for the browser tab', 'Add a logo or a favicon under Site.');
+    if (!S.image) add('tip', 'seo-share', 'No share picture', 'Links to the site in chats and on social media look better with a picture. Add one under Site.');
+    c.pages.forEach(pg => {
+      const vis = pg.blocks.filter(b => !b.hidden);
+      if (!vis.length) add('fix', 'empty-page', `The page “${pg.title}” is empty`, 'Add a section to it or remove the page.', { page: pg.id, n: pg.id });
+      // buttons and links
+      buttons({ blocks: vis }).forEach((x, n) => { if (!x.label) return; const h = href(c, x.link, pg, 'pages'); if (!h) { const g = guess(c, pg, x.label); add('fix', 'link', `The button “${short2(x.label, 30)}” goes nowhere`, 'Clicking it does nothing yet.', { page: pg.id, block: x.block.id, n, fix: g ? { label: g.kind === 'page' ? 'Link it to that page' : 'Link it to the matching section', ops: [{ op: 'link', block: x.block.id, path: x.path, kind: g.kind, to: g.to }] } : undefined }); } else if (/^http:\/\//i.test(h)) add('tip', 'link-http', `The button “${short2(x.label, 30)}” uses http`, 'Use an https:// address so browsers do not warn people.', { page: pg.id, block: x.block.id, n }); });
+      vis.forEach(b => {
+        const P = b.props || {}, here = { page: pg.id, block: b.id }, name = blockName(b);
+        // pictures
+        const pics = []; if ('img' in P && !(b.type === 'hero' && /^(minimal|accent|center)$/.test(b.variant) && !P.img)) pics.push(['', P]); (P.items || []).forEach((x, i) => { if (x && typeof x === 'object' && 'img' in x) pics.push([`items.${i}`, x]); });
+        const noAlt = pics.filter(([, x]) => x.img && !String(x.alt || '').trim()), noPic = pics.filter(([, x]) => !x.img && !/^(team|logos)$/.test(b.type));
+        if (noAlt.length) add('fix', 'alt', `${noAlt.length === 1 ? 'A picture has' : `${noAlt.length} pictures have`} no description`, `In ${name}. People who cannot see the picture hear its description read out.`, { ...here, fix: { label: 'Describe from the words nearby', ops: noAlt.map(([pth, x]) => ({ op: 'alt', block: b.id, path: pth, value: x.caption || x.title || x.name || P.title || c.name })) } });
+        if (noPic.length) add('tip', 'pic', `${noPic.length === 1 ? 'A picture is' : `${noPic.length} pictures are`} still a grey placeholder`, `In ${name}. Click it in the preview to add yours, or hide the section.`, here);
+        // forms and embeds that do nothing
+        if (b.type === 'contact' && b.variant !== 'simple' && !P.email && !/^https?:/.test(P.action || '')) add('fix', 'form', 'The contact form sends nowhere', 'Give it your email address or a form link, or people will write into nothing.', here);
+        if (b.type === 'contact' && b.variant === 'simple' && !P.email && !/^https?:/.test(P.action || '') && !P.text) add('tip', 'form', 'The contact section says nothing', 'Add an email address or a line on how to reach you.', here);
+        if (b.type === 'newsletter' && !/^https?:/.test(P.action || '')) add('fix', 'nl', 'The newsletter signup collects nothing', 'Paste a signup link (Buttondown, Mailchimp, a Google Form).', here);
+        if (b.type === 'embed' && !P.url) add('fix', 'embed', 'The video section has no video', 'Paste a YouTube, Vimeo, Spotify or SoundCloud link, or remove the section.', { ...here, fix: { label: 'Remove the section', ops: [{ op: 'remove', block: b.id }] } });
+        // nothing in it, or still the example words
+        const items = Array.isArray(P.items) ? P.items : Array.isArray(P.plans) ? P.plans : null;
+        if (items && !items.length && !/^(links|footer)$/.test(b.type)) add('fix', 'empty', `${name} is empty`, 'It shows a heading with nothing under it.', { ...here, fix: { label: 'Remove the section', ops: [{ op: 'remove', block: b.id }] } });
+        const ex = BLOCKS[b.type].make(''), flat = o => typeof o === 'string' ? [o] : Array.isArray(o) ? o.flatMap(flat) : o && typeof o === 'object' ? Object.entries(o).filter(([key]) => !/^(link|kind|to|img|alt|shape)$/.test(key)).flatMap(([, v]) => flat(v)) : [];
+        const mine = new Set(flat(P).filter(t => t.length > 14)), left = flat(ex).filter(t => t.length > 14 && mine.has(t));
+        if (left.length) add('tip', 'example', `${name} still has example words`, `Like “${short2(left[0], 44)}”. Replace them with your own.`, here);
+        // long unbroken words overflow on phones
+        const longw = flat(P).find(t => /\S{34,}/.test(t) && !/^https?:/.test(t));
+        if (longw) add('tip', 'longword', `A very long word in ${name}`, 'On phones a word this long is broken across lines. A shorter word or a space reads better.', here);
+        if (b.type === 'pricing' && b.variant === 'table' && (P.plans || []).length > 4) add('tip', 'table', 'The price table is wide for phones', 'More than four rows with buttons gets cramped. The cards layout stacks better.', { ...here, fix: { label: 'Use cards', ops: [{ op: 'variant', block: b.id, variant: 'cards' }] } });
+      });
+      if (vis.length && !vis.some(b => b.type === 'footer') && pg === c.pages[0]) add('tip', 'footer', 'No footer', 'A footer gives the page an ending: a name, a year, a couple of links.', { page: pg.id, fix: { label: 'Add a footer', ops: [{ op: 'add', type: 'footer', page: pg.id }] } });
+    });
+    return out;
+  }
+
+  // ---------- the brand kit: one small record shared by the website designer and the Design canvas ----------
+  //   kit = { name, logo (data URL or ''), colors: { accent, ink, bg, more: [hex…] }, fonts: { display, body }, voice }
+  const HEXC = v => /^#[0-9a-f]{6}$/i.test(v || '') ? v.toUpperCase() : '';
+  function kitNormalize(k) { k = k && typeof k === 'object' ? k : {}; const col = k.colors || {}, f = k.fonts || {}; return { name: cleanStr(k.name, 60), logo: /^data:image\/(png|jpeg|webp|gif|svg\+xml)[;,]/.test(k.logo || '') && String(k.logo).length < 400000 ? k.logo : '', colors: { accent: HEXC(col.accent), ink: HEXC(col.ink), bg: HEXC(col.bg), more: (Array.isArray(col.more) ? col.more : []).map(HEXC).filter(Boolean).slice(0, 8) }, fonts: { display: cleanStr(f.display, 40), body: cleanStr(f.body, 40) }, voice: cleanStr(k.voice, 400) }; }
+  function kitFromSite(cfg) { const c = normalize(clone(cfg)), k = colors(c); return kitNormalize({ name: c.name, logo: c.logo || '', colors: { accent: k.accent, ink: k.ink, bg: k.bg, more: [k.card, k.line, k.muted] }, fonts: { ...c.theme.fonts }, voice: '' }); }
+  function kitToSite(cfg, kit) { kit = kitNormalize(kit); let c = normalize(clone(cfg)); const col = kit.colors; if (col.bg && col.ink && contrast(col.ink, col.bg) >= 4.5) { const dark = lum(col.bg) < 0.2, base = c.theme.colors; c.theme.colors = { ...base, bg: col.bg, ink: col.ink, muted: mix(col.ink, col.bg, 0.38), card: mix(col.bg, dark ? '#FFFFFF' : '#000000', 0.04), line: mix(col.bg, col.ink, 0.16) }; c.theme.base = dark ? 'dark' : 'light'; c.theme.mode = c.theme.base; delete c.theme.alt; } if (col.accent) c.theme.colors.accent = readable(col.accent, c.theme.colors.bg); if (kit.fonts.display && (FONT[kit.fonts.display] || /^System/.test(kit.fonts.display))) c.theme.fonts.display = kit.fonts.display; if (kit.fonts.body && (FONT[kit.fonts.body] || /^System/.test(kit.fonts.body))) c.theme.fonts.body = kit.fonts.body; if (kit.logo) c = setLogo(c, kit.logo); return normalize(c); }
+
+  return { ACCENTS, setRadius, setPalette, applyOps, outline, check, kitNormalize, kitFromSite, kitToSite, FONT, ICONS, ICON_NAMES, icon: ic, iconFor, answer, command2, FONT_PAIRS, CATS, duplicateBlock, setHidden, setStyle, setSpace, setFonts, setSeo, setLogo, rewrite, fill, md, BLOCKS, TYPES, PRESETS, TEMPLATES, blank, normalize, colors, fromTemplate, render, exportFiles, dataToBytes, buttons, images, href, autoWire, addPage, renamePage, deletePage, addBlock, removeBlock, moveBlock, setVariant, setProp, setTheme, setMode, setColor, setLink, setImage, imageShape, command, getAt, slugify, contrast };
 });
