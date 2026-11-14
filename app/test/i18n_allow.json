@@ -1,0 +1,5 @@
+{
+  "_": "Language audit allow-list. brand: names that are never translated (matched inside a string). same: whole strings that are the same in every language on purpose (proper nouns, formats, code).",
+  "brand": ["TribeCode", "Tribecode", "Flint", "Claude Code", "Claude", "GitHub", "Github", "Tailscale", "Cloudflare", "cloudflared", "Ollama", "LM Studio", "Qwen", "Discord", "Google", "Apple", "Windows", "macOS", "Linux", "Android", "iOS", "iPhone", "Safari", "Chrome", "Netlify", "Vercel", "Stripe", "PayPal", "MIT", "MCP", "API", "URL", "HTML", "CSS", "JavaScript", "JSON", "PDF", "PNG", "SVG", "CSV", "QR", "Wi-Fi", "WiFi", "OK", "AI", "Pixel Quest", "Markdown", "OpenAI", "Anthropic", "Gemini", "Figma", "Inter", "JetBrains Mono", "Silkscreen", "Bluetooth", "Pages", "TestFlight", "ChatGPT", "Codex", "Cursor", "DM", "Email", "Web", "Beta"],
+  "same": ["English", "Español", "Português", "Français", "Deutsch", "日本語", "中文", "한국어", "Aa", "Abc", "px", "ms", "MB", "GB", "KB", "@", "#", "Ctrl", "Esc", "Tab", "Enter", "Shift", "Alt", "Cmd", "Space", "localhost", "main", "README", "Hex", "RGB", "H1", "H2", "H3", "B", "I", "U"]
+}

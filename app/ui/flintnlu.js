@@ -1295,9 +1295,14 @@
     return r && r.score >= 0.8 ? { means: L[r.doc.id].means, say: L[r.doc.id].say, score: r.score } : null;
   }
 
+  let FLX = null;
+  const FLANG = () => FLX || (FLX = (typeof module === 'object' && module.exports) ? require('./flintlang.js') : (typeof self !== 'undefined' && self.TribeFlintLang) || null);
   // ---------- public parse ----------
   function parse(text, ctx) {
     ctx = ctx || {};
+    // feat/languages: an everyday request in another language is handed over in the words these rules know (flintlang.js)
+    const FL = FLANG(), fr = FL && FL.rewrite(text);
+    if (fr && !learnedHit(text, ctx)) { const s = one(fr.text, ctx); if (s.intent && s.conf >= 0.6) { s.text = text; s.lang = fr.lang; return { steps: [s], lang: fr.lang, alts: s.alts || [] }; } }
     const pieces = split(text);
     if (pieces.length === 1) {
       const lh = learnedHit(text, ctx); if (lh) { const inner = parse(lh.means, { ...ctx, learned: [] }); inner.learned = lh; return inner; }
