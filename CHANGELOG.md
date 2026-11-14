@@ -1,5 +1,18 @@
 # Changelog
 
+## v0.38.0
+- **Website editor, overhauled**: every word, picture and button on all 52 templates can be selected and edited. One small toolbar, right-click, drag to reorder, a section library, and a Full width view. Sign-up forms on your site reach your project chat while the tribe's computer is online.
+- **Suggestions from your tribe**: the website designer reads your chats, tasks, docs and notes and offers one-tap changes with who said it. Nothing changes until you press Apply, and Undo takes it back.
+- **Moving backgrounds**: 13 backgrounds, some in 3D, that pause off screen and show a still picture for reduced motion. Ten are ports from ThreeUI Community by Meng To (MIT, credited in NOTICE).
+- **How your group decides**: one lead, a council, everyone equal, or your own roles. The app says who can do a thing and offers to ask them. "Change the website" is a new permission.
+- **Learn**: 51 quick guides with a button that does the thing and Show me. The lessons are under Skills.
+- **Invite an AI helper**: the default is "Help build, ask before big changes", and the helper waits for your OK.
+- **Languages**: change language from the ? menu, the first screen or Settings. Flint understands requests in eight languages; the menus are only partly translated so far.
+- **Flint**: trained on the new editor, backgrounds and group styles (about 220 everyday actions with no AI). Searching by meaning ignores filler words like "much" and "very".
+- **Website, checked against the product**: every claim on the site is listed with its evidence in docs/CLAIMS.md, numbers on the site are counted from the app, and features not yet confirmed on real devices carry a beta tag. Screenshots are taken from the live app.
+- **Fixes**: a pretend helper no longer picks up tasks in a tribe kept on your device; a project with no code no longer shows an error in the code list; small text and tap targets on phones meet the size floors.
+- **Phones**: the editor toolbar, Suggestions, the background picker, group styles and Learn fit at 390px; task buttons have 36px hit areas.
+
 ## v0.36.0
 - **Invite your agent**: the invite sheet's third choice is "Your AI agent". Pick Claude Code, Claude Desktop, Claude on the web, Cursor, Codex CLI, ChatGPT, Gemini CLI, VS Code, Windsurf, Cline, Zed or Something else; each has its own copy-paste setup. You can have one of each kind, each with its own access, Pause and Remove, named like "Maya's Cursor". Same rules as before: an agent gets your access and never more. Setups come from each tool's documentation (docs/ANY-LLM.md §4 says which were confirmed).
 - **Task board, redesigned**: the status tiles are one compact strip that filters on click, the add line is the focus, chips are grouped with line icons, an empty board shows one welcome, and rows read title, kind, who, due, next step.
