@@ -35,7 +35,8 @@
   const findingRow = f => `<li class="pb-f pb-f--${f.level}"><span class="pb-f__lv">${f.level === 'block' ? 'Must fix' : 'Warning'}</span><div><b>${esc(f.kind)}</b>${f.file ? ` <code>${esc(f.file)}${f.line ? ':' + f.line : ''}</code>` : ''}<small>${esc(f.why)}</small></div>
     <button type="button" class="btn sm" data-fix="${esc(JSON.stringify({ k: f.kind, f: f.file, l: f.line, w: f.why }))}">Fix it</button></li>`;
 
-  async function open(pid = pidNow()) {
+  let FOCUS = '';
+  async function open(pid = pidNow(), focus = '') {
     if (!pid) return toast('Open a project first');
     const p = (C.state().projects || []).find(x => x.id === pid) || { name: 'this project' };
     const s = sheet(`<p class="eyebrow">Publish</p><h2 class="pb-h">Share ${esc(p.name)} with a link</h2><p class="faint pb-sub">Checking the files before anything goes public…</p><div class="pb-body" id="pb-body"><div class="pb-spin" aria-label="Checking"></div></div>
@@ -44,7 +45,7 @@
     const st = await state(pid, true), cur = (st.published || [])[0];
     if (!st.canPublish && !cur) { $('#pb-body').innerHTML = `<p class="faint">${me().role === 'spectator' ? 'Spectators can watch, not publish. Ask the host for builder access.' : 'You can\'t publish this project.'}</p>`; return; }
     let ch; try { ch = await C.api('/publish/check', { method: 'POST', body: { project: pid } }); } catch (e) { $('#pb-body').innerHTML = `<p class="pb-err">${esc(e.message)}</p>`; return; }
-    render(s, pid, p, cur, ch, st);
+    FOCUS = focus || ''; render(s, pid, p, cur, ch, st);
   }
   function render(s, pid, p, cur, ch, st) {
     const agent = me().role === 'agent';
@@ -58,7 +59,7 @@
         <label class="pb-l">One line about it<input class="input" id="pb-desc" maxlength="240" placeholder="What is it? Who is it for?" value="${esc((cur && cur.desc) || p.bio || '')}"></label>
         <label class="pb-tg"><input type="checkbox" id="pb-remix" ${!cur || cur.allowRemix ? 'checked' : ''}> <span>Allow remix <small class="faint">People can start their own copy with your name on it.</small></span></label>
       </form><div id="pb-real" class="pb-real"></div>`;
-    if (window.TribePublishReal) window.TribePublishReal.mount($('#pb-real'), pid, { title: () => ($('#pb-title') || {}).value, desc: () => ($('#pb-desc') || {}).value });
+    if (window.TribePublishReal) window.TribePublishReal.mount($('#pb-real'), pid, { title: () => ($('#pb-title') || {}).value, desc: () => ($('#pb-desc') || {}).value, focus: FOCUS }); FOCUS = '';
     const foot = s.body.querySelector('.modal-foot');
     foot.innerHTML = `${cur ? '<button class="linkish pb-down" id="pb-down">Unpublish</button>' : ''}<span style="flex:1"></span><button class="btn" data-close>Close</button>
       <button class="btn primary" id="pb-go" ${blocks.length ? 'disabled' : ''}>${blocks.length ? 'Fix the issues first' : agent ? 'Ask to publish' : warns.length ? (cur ? 'Update anyway' : 'Publish anyway') : cur ? 'Update the link' : 'Publish'}</button>`;

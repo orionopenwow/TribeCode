@@ -36,7 +36,7 @@
   }
   async function brandColor(pid) { try { const b = await C.api(`/projects/${encodeURIComponent(pid)}/brand`); const k = b && (b.kit || b); const c = k && (k.color || (k.colors && (k.colors.main || k.colors[0]))); return /^#[0-9a-fA-F]{6}$/.test(c || '') ? c : null; } catch { return null; } }
 
-  const row = (id, icon, title, sub, body, state) => `<li class="pbr-row" data-dest="${id}"><span class="pbr-i" aria-hidden="true">${ico(icon, 18)}</span><div class="pbr-t"><b>${esc(T(title))}</b>${state ? ` <span class="pbr-tag">${esc(T(state))}</span>` : ''}<small>${sub}</small>${body ? `<div class="pbr-b">${body}</div>` : ''}</div></li>`;
+  const row = (id, icon, title, sub, body, state) => `<li class="pbr-row" data-dest="${id}"><span class="pbr-i" aria-hidden="true">${ico(icon, 18)}</span><div class="pbr-t"><div class="pbr-hd"><b>${esc(T(title))}</b>${state ? `<span class="pbr-tag">${esc(T(state))}</span>` : ''}</div><small>${sub}</small>${body ? `<div class="pbr-b">${body}</div>` : ''}</div></li>`;
   const linkbox = (id, url) => `<div class="linkbox pb-link pbr-link"><code>${esc(url)}</code><button class="btn" type="button" data-qr="${esc(url)}" aria-label="${esc(T('Show QR code'))}">QR</button><button class="btn" type="button" data-openurl="${esc(url)}">${esc(T('Open'))}</button><button class="btn primary" type="button" data-copy="${esc(url)}">${esc(T('Copy'))}</button></div><div class="qr pb-qr hidden" data-qrbox></div>`;
 
   async function mount(host, pid, form) {
@@ -46,6 +46,8 @@
     const s = await status(pid, true);
     if (s.offline) { host.innerHTML = ''; return; }
     draw(host, pid, s, form);
+    const f = form && form.focus, r = f && host.querySelector(`[data-dest="${f === 'install' ? 'install' : f}"]`);
+    if (r) { r.classList.add('is-focus'); try { r.scrollIntoView({ block: 'center' }); } catch {} }
   }
   function draw(host, pid, s, form) {
     const d = s.dest || {}, pg = d.pages, gh = s.github || {}, can = s.canSend, game = s.kind === 'game', site = s.kind === 'site';
@@ -55,11 +57,13 @@
 
     const rows = [];
     rows.push(row('zip', 'download', 'Download it', esc(T('A zip with everything in it. Drop it on any web place and it works.')), `<button class="btn" type="button" data-zip="web">${esc(T('Download the zip'))}</button>`));
-    const ghBody = !gh.signedIn
-      ? `<button class="btn primary" type="button" data-gh-signin>${esc(T('Sign in to GitHub'))}</button><small class="faint">${esc(T('Free. Your page lives in your own GitHub account.'))}</small>`
-      : pg ? `${linkbox('pages', pg.url)}${pg.pagesEnabled ? `<small class="faint">${esc(T('The first time, GitHub takes about a minute before the link opens.'))}</small>` : `<p class="pbr-warn">${esc(T('One more step: turn the page on. Open the settings, pick "Deploy from a branch", branch main, and Save.'))} <a href="${esc(pg.settingsUrl)}" target="_blank" rel="noopener">${esc(T('Open the settings'))}</a></p>`}<button class="btn" type="button" data-pages>${esc(T('Update it'))}</button>`
+    const ghLink = !pg ? '' : `${linkbox('pages', pg.url)}${pg.pagesEnabled ? `<small class="faint">${esc(T('The first time, GitHub takes about a minute before the link opens.'))}</small>` : `<p class="pbr-warn">${esc(T('One more step: turn the page on. Open the settings, pick "Deploy from a branch", branch main, and Save.'))} <a href="${esc(pg.settingsUrl)}" target="_blank" rel="noopener">${esc(T('Open the settings'))}</a></p>`}`;
+    const ghAct = !can ? (pg ? '' : `<small class="faint">${esc(T('Ask a builder to publish it.'))}</small>`)
+      : !gh.signedIn ? `<button class="btn${pg ? '' : ' primary'}" type="button" data-gh-signin>${esc(T('Sign in to GitHub'))}</button><small class="faint">${esc(T(pg ? 'Sign in to update it.' : 'Free. Your page lives in your own GitHub account.'))}</small>`
+      : pg ? `<button class="btn" type="button" data-pages>${esc(T('Update it'))}</button>`
         : `<label class="pb-l pbr-name">${esc(T('Its name in the link'))}<input class="input" id="pbr-name" maxlength="40" value="${esc(s.slug)}" autocomplete="off" spellcheck="false"></label><button class="btn primary" type="button" data-pages>${esc(T('Publish to GitHub'))}</button>`;
-    rows.push(row('pages', 'github', 'A link that stays up', esc(T('A live page on GitHub, free. It stays up when your tribe is offline, and updates when you publish again.')) + (gh.login ? ` <span class="faint">@${esc(gh.login)}</span>` : ''), can ? ghBody : `<small class="faint">${esc(T('Ask a builder to publish it.'))}</small>`, pg ? 'Live' : ''));
+    const ghBody = ghLink + ghAct;
+    rows.push(row('pages', 'github', 'A link that stays up', esc(T('A live page on GitHub, free. It stays up when your tribe is offline, and updates when you publish again.')) + (gh.login ? ` <span class="faint">@${esc(gh.login)}</span>` : ''), ghBody, pg ? 'Live' : ''));
     if (game) rows.push(row('itch', 'gift', 'itch.io', esc(T('The place people find small games. Free to list.')), s.itch && !s.itch.ok ? `<p class="pbr-warn">${esc(T(s.itch.problems[0]))}</p>`
       : `<button class="btn" type="button" data-zip="itch">${esc(T('Get the itch.io zip'))}</button><ol class="pbr-steps"><li>${esc(T('On itch.io, choose Upload new project.'))}</li><li>${esc(T('Kind of project: HTML. Upload the zip and tick "This file will be played in the browser".'))}</li><li>${esc(T('Save and view the page. Set it to Public when you are happy.'))}</li></ol>`));
     if (!site) {
@@ -109,7 +113,7 @@
       busy(b, 'Packing…');
       try {
         const base = (C.base && C.base()) || '', st0 = window.TribeStore && window.TribeStore.get(), key = (st0 && st0.server && st0.server.token) || '';
-        const r = await fetch(`${base}/api/publish/real/zip?project=${encodeURIComponent(pid)}&for=${b.dataset.zip}`, { headers: key ? { Authorization: 'Bearer ' + key } : {} });
+        const r = await fetch(`${base}/api/publish/real/zip?project=${encodeURIComponent(pid)}&for=${b.dataset.zip}${form && form.title && form.title() ? '&title=' + encodeURIComponent(form.title()) : ''}${form && form.desc && form.desc() ? '&desc=' + encodeURIComponent(form.desc()) : ''}`, { headers: key ? { Authorization: 'Bearer ' + key } : {} });
         if (!r.ok) { const j = await r.json().catch(() => ({})); throw new Error(j.error || 'Could not make the zip'); }
         const blob = await r.blob(), a = document.createElement('a'), cd = r.headers.get('Content-Disposition') || '';
         a.href = URL.createObjectURL(blob); a.download = (/filename="([^"]+)"/.exec(cd) || [])[1] || 'site.zip'; document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 2000);

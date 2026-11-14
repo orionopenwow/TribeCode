@@ -75,9 +75,9 @@
 .pbr-row { display: grid; grid-template-columns: 36px minmax(0, 1fr); gap: 12px; padding: 12px; border: 1px solid var(--edge); border-radius: 12px; background: var(--surface-2); }
 .pbr-i { width: 36px; height: 36px; border-radius: 10px; display: grid; place-items: center; border: 1px solid var(--edge); background: var(--surface); color: var(--muted); }
 .pbr-t { min-width: 0; display: grid; gap: 4px; }
-.pbr-t > b { font-size: 14.5px; }
+.pbr-hd { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; min-width: 0; } .pbr-hd b { font-size: 14.5px; }
 .pbr-t > small { color: var(--muted); font-size: 13px; line-height: 1.5; }
-.pbr-tag { font: 600 11px/1.6 var(--mono); text-transform: uppercase; letter-spacing: .05em; padding: 1px 7px; border-radius: 999px; border: 1px solid var(--edge); color: var(--live); margin-left: 6px; }
+.pbr-tag { font: 600 11px/1.6 var(--mono); text-transform: uppercase; letter-spacing: .05em; padding: 1px 7px; border-radius: 999px; border: 1px solid var(--edge); color: var(--live); }
 .pbr-b { display: grid; gap: 8px; justify-items: start; margin-top: 6px; min-width: 0; }
 .pbr-b .pbr-link, .pbr-b .pbr-name, .pbr-b .pbr-gh, .pbr-b .pbr-build, .pbr-b .pbr-dl { justify-self: stretch; min-width: 0; }
 .pbr-b small { font-size: 12.5px; line-height: 1.45; }
@@ -96,3 +96,4 @@
   .pbr-row { grid-template-columns: minmax(0, 1fr); } .pbr-i { display: none; }
   .pbr-b .btn { min-height: 40px; }
 }
+.pbr-row.is-focus { border-color: var(--accent); }

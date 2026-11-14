@@ -2215,6 +2215,48 @@
    "ctx": "g"
   },
   {
+   "t": "publish my site",
+   "i": "publish.to",
+   "ctx": "g"
+  },
+  {
+   "t": "make an Android app from this",
+   "i": "publish.to",
+   "s": {
+    "dest": "android"
+   },
+   "ctx": "g"
+  },
+  {
+   "t": "put my game on itch",
+   "i": "publish.to",
+   "s": {
+    "dest": "itch"
+   },
+   "ctx": "g"
+  },
+  {
+   "t": "publish my game online",
+   "i": "publish.to",
+   "ctx": "g"
+  },
+  {
+   "t": "make an iphone app",
+   "i": "publish.to",
+   "s": {
+    "dest": "ios"
+   },
+   "ctx": "g"
+  },
+  {
+   "t": "put it on my phone",
+   "i": "publish.to",
+   "s": {
+    "dest": "install"
+   },
+   "ctx": "g"
+  },
+  {
    "t": "make a 3d game called orb run",
    "i": "build.3d",
    "ctx": "g"

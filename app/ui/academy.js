@@ -33,6 +33,7 @@
   const go = k => { if (window.TribeShell && window.TribeShell.go && dests().includes(k)) { window.TribeShell.go(k); return true; } return false; };
   function run(action) {
     const [k, arg] = String(action || '').split(':');
+    if (k === 'publish') { if (window.TribePublish) return window.TribePublish.open(undefined, arg || ''); return toast('Open a project first'); }
     if (k === 'legal') return show({ tab: 'legal', template: arg || null });
     if (k === 'offload') return show({ tab: 'offload', task: arg || null });
     if (['company', 'goal', 'seat', 'money'].includes(k)) {   // Company mode (Agent A / the Money view) when it is here

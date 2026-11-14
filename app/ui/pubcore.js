@@ -320,7 +320,7 @@ jobs:
     }
     const t = await gh(`/repos/${repo}/git/trees`, 'POST', { tree });
     const c = await gh(`/repos/${repo}/git/commits`, 'POST', { message: o.message || 'Publish', tree: t.d.sha, parents: [head] });
-    await gh(`/repos/${repo}/git/refs/heads/${encodeURIComponent(branch)}`, 'PATCH', { sha: c.d.sha, force: true });
+    await gh(`/repos/${repo}/git/refs/heads/${encodeURIComponent(branch)}`, 'PATCH', { sha: c.d.sha, force: false });
     step('Turning the page on');
     let pagesEnabled = false, url = `https://${login.toLowerCase()}.github.io/${name}/`;
     const pg = await gh(`/repos/${repo}/pages`, 'GET', null, [404, 403]);

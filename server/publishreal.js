@@ -127,9 +127,9 @@ module.exports = function publishReal({ P, W, base, publish, getMembers, broadca
       github: { signedIn: !!tokenOf(me), login: loginOf(me) || null }, canSend: canSend(me, pid) };
   }
 
-  function zipFor(pid, what) {
+  function zipFor(pid, what, body = {}) {
     const ch = publish.check(pid); if (ch.blocked) throw err(409, 'The safety check found something that must be fixed first.', { findings: ch.findings });
-    const { files, meta } = finished(pid, {}); let list = files;
+    const { files, meta } = finished(pid, body); let list = files;
     if (what === 'itch') { list = core.finish(bundle(pid), { ...meta, pwa: false }).map(x => ({ ...x, dirty: x.text != null })); const it = core.itch(list); if (!it.ok) throw err(409, it.problems[0]); }
     const src = new Map(bundle(pid).map(x => [x.path, x]));
     const entries = list.map(x => { const o = src.get(x.path); return { path: x.path, data: x.b64 != null ? Buffer.from(x.b64, 'base64') : (o && o.text === x.text && o.abs) ? fs.readFileSync(o.abs) : x.text != null ? Buffer.from(x.text, 'utf8') : o && o.abs ? fs.readFileSync(o.abs) : Buffer.alloc(0) }; });
@@ -202,7 +202,8 @@ module.exports = function publishReal({ P, W, base, publish, getMembers, broadca
       }
       if (m === 'GET' && c === 'zip') {
         const pid = pidOf(url.searchParams.get('project')); if (!publish.canPublish(me, pid)) return fail(res, 403, 'you can\'t download this project');
-        const z = zipFor(pid, url.searchParams.get('for') === 'itch' ? 'itch' : 'web');
+        const q = k => { const v = url.searchParams.get(k); return v == null ? undefined : String(v).slice(0, 240); };
+        const z = zipFor(pid, url.searchParams.get('for') === 'itch' ? 'itch' : 'web', { title: q('title'), desc: q('desc') });
         res.writeHead(200, { 'Content-Type': 'application/zip', 'Content-Length': z.data.length, 'Content-Disposition': `attachment; filename="${z.name.replace(/[^\w.-]/g, '')}"`, 'X-Content-Type-Options': 'nosniff', 'Cache-Control': 'no-store' });
         res.end(z.data); return true;
       }

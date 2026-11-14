@@ -483,6 +483,57 @@
             "hint": "Tasks: \"Debt: …\" with why it matters and when to fix it."
           },
           "id": "cto-6"
+        },
+        {
+          "title": "Publish your first site",
+          "minutes": 4,
+          "body": [
+            "A page is finished when someone who is not you can open it. Until then it is a draft. Putting a site on the web sounds like a big step, but it is small: the files you already have get copied to a place that answers when someone types the address.",
+            "Open Publish. TribeCode looks at your project first and tells you what a visitor would notice: does the page open without errors, does it fit a phone, does it have a name and one line that says what it is. That line matters more than it looks, because it is what shows up when you paste the link into a chat.",
+            "Then pick where it goes. The quickest free place is GitHub Pages. You sign in to your own GitHub account once, press Publish, and get a link that starts with https and works on any phone. The page lives in your account, not ours, so it stays up even if you stop using TribeCode. When you change something, press Publish again and the same link shows the new version.",
+            "No account? Download the zip instead. It holds the whole site, and any web place will take it.",
+            "Finish line: send the link to one person and ask what they think the page is for. If they can't say, fix the first line and publish again."
+          ],
+          "try": {
+            "label": "Publish your site",
+            "do": "publish:pages",
+            "hint": "Publish: check the list, sign in to GitHub, press Publish, send the link to one person."
+          },
+          "id": "cto-7"
+        },
+        {
+          "title": "Put your game where players are",
+          "minutes": 4,
+          "body": [
+            "A game gets better the moment a stranger plays it. They get stuck where you never did, and that tells you what to fix next. So the goal of this lesson is one real player, not a perfect game.",
+            "Open Publish and say it is a game. The check list changes: it now looks for the place the game draws, for sounds and pictures that are missing, and for a size that loads fast on a phone. Fix what is marked. Things marked as filled in for you, like the icon, can wait.",
+            "For games, itch.io is the friendly front door. It is free, it is where people go to find small games, and each game gets its own page with comments. Press the itch.io button to get a zip made the way itch wants it, with the start page at the top. Then follow the three steps on screen: make a new game page, choose HTML as the kind, upload the zip and tick the box that says it is played in the browser.",
+            "Also turn on Install on a phone. Your game then opens full screen from the home screen, like any other app, and keeps working without a connection.",
+            "Finish line: one person you did not sit next to has played it, and you wrote down the first place they got stuck."
+          ],
+          "try": {
+            "label": "Put your game on itch.io",
+            "do": "publish:itch",
+            "hint": "Publish: choose Game, download the itch.io zip, follow the three steps."
+          },
+          "id": "cto-8"
+        },
+        {
+          "title": "Turn it into a phone app",
+          "minutes": 5,
+          "body": [
+            "An app on a phone is usually a web page in a thin wrapper. That is good news: if your project works in a phone browser, most of the work is done. There are three levels, and each one is a real finish.",
+            "Level one is the installable page. Publish with Install on a phone turned on, open the link on your phone and choose Add to Home Screen. It gets an icon, opens full screen and works offline. No store, no fee, done today.",
+            "Level two is an Android app file. Turn on Android app in Publish. A ready recipe is added to your own GitHub project, and GitHub's computers build the app for you in a few minutes. You get a download link and a code to scan. The app is signed with a test key, which is fine for you and your friends. For Google Play you add your own key as a secret in GitHub. TribeCode never sees it or keeps it.",
+            "Level three is the iPhone. Be ready for this one: Apple needs a Mac and a paid developer account before any app can be installed. TribeCode prepares the recipe so it works once you have both.",
+            "Finish line: your project's icon is on a real phone's home screen and it opens with no address bar."
+          ],
+          "try": {
+            "label": "Make an app from this project",
+            "do": "publish:android",
+            "hint": "Publish: turn on Install on a phone first, then Android app."
+          },
+          "id": "cto-9"
         }
       ],
       "glossary": [
