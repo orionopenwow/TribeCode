@@ -71,7 +71,7 @@ def main():
             # navigate: click a page in the list, then Next
             host.click("#gd-list [data-gd=phones]"); host.wait_for_function("document.querySelector('#gd-page h1').textContent === 'Phones'")
             assert host.evaluate("document.querySelector('#gd-list .gd-item.on').dataset.gd") == "phones"
-            host.click("#gd-page .gd-pn.next"); host.wait_for_function("document.querySelector('#gd-page h1').textContent.startsWith('Hosting')")
+            host.click("#gd-page .gd-pn.next"); host.wait_for_function("document.querySelector('#gd-page h1').textContent.startsWith('The tribe')")
             # search over titles and text
             host.fill("#gd-q", "tailscale")
             host.wait_for_function("document.querySelector('#gd-list .gd-eye').textContent.includes('match')")

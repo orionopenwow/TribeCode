@@ -1,4 +1,4 @@
-# Make a project & invite friends
+# Make a project and invite friends
 
 ## Make a project
 
@@ -6,13 +6,13 @@ Tap **Create a project** on Home, or the **+** under the project circles. Then p
 
 - **Create my own**: a blank project.
 - **A template**: Game, Website, App, Tool or Notes & research.
-- **Bring my code** (host): a folder on this computer or a GitHub repo.
+- **Bring my code** (host): a folder on this computer or a project on GitHub.
 
 Give it a name (and a picture or a one-line bio if you like) and tap **Create**. The invite sheet opens next.
 
 In a hurry? **Invite a friend** on Home makes a fresh project and copies a link in one go.
 
-Each project gets its own chat, files, tasks and repo. Change its name, emoji, color or picture in **Project settings** (Ctrl K, or the project menu at the top of the sidebar).
+Each project gets its own chat, files, tasks and code. Change its name, emoji, color or picture in **Project settings** (Ctrl K, or the project menu at the top of the sidebar).
 
 ## Invite someone
 
@@ -28,7 +28,7 @@ A link is good for 3 days and up to 10 people. A one-time guest pass works once 
 
 ## Make the link work from anywhere
 
-Under the link it says where it works: **Works from anywhere**, **Same Wi-Fi only** or **This computer only**. If it isn't "anywhere", tap **Make it work from anywhere**. That turns on a public https address for your computer (see **Hosting & the Host switch**).
+Under the link it says where it works: **Works from anywhere**, **Same Wi-Fi only** or **This computer only**. If it isn't "anywhere", tap **Make it work from anywhere**. That turns on a public https address for your computer (see **The tribe's computer and sharing**).
 
 ## What your friend does
 

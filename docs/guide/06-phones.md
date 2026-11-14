@@ -30,7 +30,7 @@ Opened the link inside Messenger, Instagram or another app? A banner offers to o
 
 ## Voice and notifications need https
 
-Mic and push notifications only work over a secure link. If they don't, ask the host to turn on **Share beyond my Wi-Fi** (see **Hosting & the Host switch**) and send a fresh invite.
+Mic and push notifications only work over a secure link. If they don't, ask the host to turn on **Share beyond my Wi-Fi** (see **The tribe's computer and sharing**) and send a fresh invite.
 
 ## Sign a phone out
 
