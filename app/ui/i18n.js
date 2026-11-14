@@ -743,7 +743,20 @@
     // preview + code
     'What should it be?': ['¿Qué debería ser?', 'O que deve ser?', 'Qu’est-ce que ce sera ?', 'Was soll es werden?', '何を作りますか？', '要做成什么？', '무엇을 만들까요?'],
     'Build it': ['Constrúyelo', 'Construir', 'Construire', 'Bauen', '作る', '开始构建', '만들기'],
-    'Sync now': ['Sincronizar ahora', 'Sincronizar agora', 'Synchroniser', 'Jetzt synchronisieren', '今すぐ同期', '立即同步', '지금 동기화'],
+    'Update now': ['Actualizar ahora', 'Atualizar agora', 'Mettre à jour', 'Jetzt aktualisieren', '今すぐ更新', '立即更新', '지금 업데이트'],
+    // feat/ui-consistent, wording sweep: plain words in buttons, titles and toasts
+    'Back up': ['Copia de seguridad', 'Fazer backup', 'Sauvegarder', 'Sichern', 'バックアップ', '备份', '백업'],
+    'Backup': ['Copia de seguridad', 'Backup', 'Sauvegarde', 'Sicherung', 'バックアップ', '备份', '백업'],
+    'Backup settings': ['Ajustes de copia de seguridad', 'Ajustes de backup', 'Réglages de sauvegarde', 'Sicherungseinstellungen', 'バックアップ設定', '备份设置', '백업 설정'],
+    'Undo last backup': ['Deshacer la última copia', 'Desfazer o último backup', 'Annuler la dernière sauvegarde', 'Letzte Sicherung rückgängig', '最後のバックアップを取り消す', '撤销上次备份', '마지막 백업 취소'],
+    'Projects and backup': ['Proyectos y copia de seguridad', 'Projetos e backup', 'Projets et sauvegarde', 'Projekte und Sicherung', 'プロジェクトとバックアップ', '项目和备份', '프로젝트 및 백업'],
+    'Start or join a tribe': ['Crea una tribu o únete a una', 'Crie uma tribo ou entre em uma', 'Créez une tribu ou rejoignez-en une', 'Tribe starten oder beitreten', 'トライブを始めるか参加する', '创建或加入部落', '트라이브를 시작하거나 참여'],
+    'Start a tribe here': ['Crear una tribu aquí', 'Criar uma tribo aqui', 'Créer une tribu ici', 'Hier einen Tribe starten', 'ここでトライブを始める', '在这里创建部落', '여기서 트라이브 시작'],
+    'Settings for this computer': ['Ajustes de este ordenador', 'Ajustes deste computador', 'Réglages de cet ordinateur', 'Einstellungen für diesen Computer', 'このコンピューターの設定', '此电脑的设置', '이 컴퓨터 설정'],
+    'Ask both to catch up': ['Pedir a ambos que se pongan al día', 'Pedir aos dois que se atualizem', 'Demander aux deux de se mettre à jour', 'Beide bitten, aufzuholen', '両方に追いつくよう頼む', '请双方同步进度', '둘 다 따라잡도록 요청'],
+    'Nothing matches': ['Nada coincide', 'Nada corresponde', 'Aucun résultat', 'Nichts passt', '一致するものがありません', '没有匹配项', '일치하는 항목 없음'],
+    'Try another word.': ['Prueba con otra palabra.', 'Tente outra palavra.', 'Essayez un autre mot.', 'Versuch ein anderes Wort.', '別の言葉を試してください。', '换个词试试。', '다른 단어를 시도해 보세요.'],
+    'No agents connected yet': ['Aún no hay agentes conectados', 'Nenhum agente conectado ainda', 'Aucun agent connecté pour l’instant', 'Noch keine Agenten verbunden', 'まだエージェントが接続されていません', '还没有连接代理', '아직 연결된 에이전트 없음'],
     'Autopilot': ['Piloto automático', 'Piloto automático', 'Pilote automatique', 'Autopilot', 'オートパイロット', '自动驾驶', '자동 조종'],
     // dashboard + right panel
     'Write the vision': ['Escribe la visión', 'Escreva a visão', 'Écrire la vision', 'Vision schreiben', 'ビジョンを書く', '写下愿景', '비전 작성'],

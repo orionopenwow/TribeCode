@@ -1252,7 +1252,7 @@
       const body = document.querySelector('#invite-modal:not(.hidden) #invite-body') || document.querySelector('.ii, #fl-instant');
       if (!body || body.querySelector('.od-note')) return;
       const n = document.createElement('p'); n.className = 'od-note';
-      n.innerHTML = '<b>Pretend link.</b> The offline demo lives only in this browser, so nobody else can open it. A pretend friend will "join" in a few seconds. <button class="linkish" data-od="real">Host for real</button>';
+      n.innerHTML = '<b>Pretend link.</b> The offline demo lives only in this browser, so nobody else can open it. A pretend friend will "join" in a few seconds. <button class="linkish" data-od="real">Start a real tribe</button>';
       const foot = body.querySelector('.modal-foot'); foot ? foot.before(n) : body.appendChild(n);
     }, 120);
   }

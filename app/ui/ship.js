@@ -26,7 +26,7 @@
   function mount() {
     const view = $('#view-repo'); if (!view) return null;
     let card = $('#ship-card');
-    if (!card) { const strip = $('#repo-strip'); if (!strip) return null; card = document.createElement('section'); card.className = 'card ship-card'; card.id = 'ship-card'; card.setAttribute('aria-label', 'Ready to ship'); strip.after(card); }
+    if (!card) { const strip = $('#repo-strip'); if (!strip) return null; card = document.createElement('section'); card.className = 'card ship-card'; card.id = 'ship-card'; card.setAttribute('aria-label', 'Ready to go live'); strip.after(card); }
     return card;
   }
   const lines = st => { const a = +((String(st || '').match(/(\d+) insertion/) || [])[1] || 0), r = +((String(st || '').match(/(\d+) deletion/) || [])[1] || 0); return a || r ? ` · <span class="faint">+${a} / −${r} lines</span>` : ''; };
@@ -39,7 +39,7 @@
     card.hidden = false;
     const rq = d.request && ['pending', 'shipping'].includes(d.request.status) ? d.request : null;
     const turbo = d.turbo && d.turbo.on ? `<span class="sh-turbo" title="${esc(d.turbo.state || 'Watching for a calm moment')}">⚡ Turbo is on</span>` : '';
-    const head = `<div class="sh-head"><h3>🚀 Ready to ship</h3>${turbo}<span class="sh-sp"></span><button class="btn sm" id="ship-share" type="button" title="Copy a progress summary, the GitHub link and an invite link">📤 Share progress</button></div>`;
+    const head = `<div class="sh-head"><h3>🚀 Ready to go live</h3>${turbo}<span class="sh-sp"></span><button class="btn sm" id="ship-share" type="button" title="Copy a progress summary, the GitHub link and an invite link">📤 Share progress</button></div>`;
     if (!d.enabled) { card.innerHTML = `${head}<p class="sh-note">${esc(d.blocker)}</p>`; bind(card); return; }
     const sub = d.count ? `<b>${plural(d.count, 'saved change')}</b> · ${plural(d.fileCount, 'file')}${lines(d.stat)} since the last push to GitHub`
       : '';
@@ -93,7 +93,7 @@
       } else if (k === 'yes' || k === 'no') {
         const r = (await C.api(`/ship/${data.request.id}/vote`, { method: 'POST', body: { vote: k, comment: note } })).request;
         draft = ''; toast(r.status === 'denied' ? 'Not shipping this time.' : r.status === 'shipping' || r.status === 'shipped' ? '🚀 Approved. Shipping…' : 'Vote counted.', k === 'yes' ? 'ok' : 'info');
-      } else if (k === 'cancel') { await C.api(`/ship/${data.request.id}/cancel`, { method: 'POST' }); toast('Ship request cancelled.', 'info'); }
+      } else if (k === 'cancel') { await C.api(`/ship/${data.request.id}/cancel`, { method: 'POST' }); toast('Request cancelled.', 'info'); }
       else if (k === 'turbo') { const on = !(data.turbo && data.turbo.on); await C.api('/ship/settings', { method: 'PUT', body: { turbo: { on } } }); toast(on ? '⚡ Turbo is on: approved work ships by itself at calm moments.' : 'Turbo is off.', on ? 'ok' : 'info'); }
     } catch (e) { toast(e.message, 'err'); }
     busy = false; await refresh();

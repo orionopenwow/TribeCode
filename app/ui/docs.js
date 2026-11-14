@@ -92,7 +92,7 @@
       onChange(text, isRemote) { if (!cur) return; cur.body = text; if (isRemote && mode === 'read') { clearTimeout(readTimer); readTimer = setTimeout(() => { if (mode === 'read' && $('#doc-read')) renderRead(); }, 150); } },
       onStatus(st) {
         if (!inLive()) return;
-        setStatus(st === 'offline' ? 'Offline · your edits sync when you reconnect' : st === 'syncing' ? 'Syncing…' : `Live · synced${cur && cur.version ? ` · v${cur.version}` : ''}`);
+        setStatus(st === 'offline' ? 'Offline · your edits sync when you reconnect' : st === 'syncing' ? 'Updating…' : `Live · synced${cur && cur.version ? ` · v${cur.version}` : ''}`);
       },
       onTitle(title, by) {
         if (!cur || !title) return; cur.title = title;
@@ -291,7 +291,7 @@
   async function craftAsk(kind, ask, body, opt) {
     const loc = await craftLocal(kind, ask, body, opt);
     if (loc) { if (loc.say) window.TribeApp.toast(loc.say); return loc.body != null ? loc.body : null; }
-    if (!remote()) { window.TribeApp.toast('Flint writes sheets and slides with the tribe\'s brain. Join or host a tribe first.'); return null; }
+    if (!remote()) { window.TribeApp.toast('Flint writes sheets and slides with the tribe\'s brain. Join or start a tribe first.'); return null; }
     try { const r = await C.api('/flint/make', { method: 'POST', body: { kind, ask, body, title: cur && cur.title } }); if (r.basic) window.TribeApp.toast(r.note || 'Flint is in basic mode, so he used a template. Give him a brain for smarter results.'); return r.body; }
     catch (e) { window.TribeApp.toast(e.status === 503 ? 'Flint needs a brain for that. Pick one in Settings › Flint\'s brain.' : 'Flint could not do that: ' + e.message); return null; }
   }

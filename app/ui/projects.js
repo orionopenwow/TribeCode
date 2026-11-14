@@ -803,7 +803,7 @@ ${canEdit && !started ? `      <section class="pj-context" id="pj-context"><div 
           <span class="eyebrow">Start a new tribe</span>
           <h3>${desk ? 'Host it on this computer' : 'Host it with the desktop app'}</h3>
           <p class="faint">${desk ? 'Your work lives in a shared GitHub repository; friends join with a link.' : 'Your work lives in a shared GitHub repository. Get the app to start a tribe.'}</p>
-          <div class="np-row">${desk ? '<button class="btn primary" id="np-host">Start hosting</button>' : '<a class="btn primary" href="https://github.com/orionopenwow/TribeCode/releases/latest" target="_blank" rel="noopener">Get TribeCode</a>'}</div>
+          <div class="np-row">${desk ? '<button class="btn primary" id="np-host">Start a tribe here</button>' : '<a class="btn primary" href="https://github.com/orionopenwow/TribeCode/releases/latest" target="_blank" rel="noopener">Get TribeCode</a>'}</div>
         </div>`;
     body().innerHTML = `<div class="np-stack">${top}
         <div class="np-card np-join">

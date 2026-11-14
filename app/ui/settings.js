@@ -62,7 +62,7 @@
     { id: 'notifications', label: 'Notifications', icon: 'bell', eyebrow: 'Notifications' },
     { id: 'privacy', label: 'Privacy & presence', icon: 'eye', eyebrow: 'Privacy' },
     { id: 'workspace', label: 'Workspace', icon: 'sliders', eyebrow: 'Workspace' },
-    { id: 'projects', label: 'Projects & sync', icon: 'cloud', eyebrow: 'Projects' },
+    { id: 'projects', label: 'Projects and backup', icon: 'cloud', eyebrow: 'Projects' },
     { id: 'admin', label: 'Tribe & admin', icon: 'shield', eyebrow: 'Host and admins', admin: true },
     { id: 'a11y', label: 'Accessibility', icon: 'hand', eyebrow: 'Accessibility' },
     { id: 'storage', label: 'Storage & data', icon: 'device', eyebrow: 'Storage' },
@@ -441,7 +441,7 @@
     const ph = q('#set-projhome'); if (ph) ph.onchange = () => P().set({ projectHome: ph.value });
     const stg = q('#set-storage'); if (stg) window.TribeStorage.mount(stg);
     const f = q('#set-folder'); if (f) f.onchange = () => S.set({ folder: f.value.trim() });
-    click('#set-browse', async () => { const p = await window.TribeHost.pickFolder(); if (p) { S.set({ folder: p }); draw(); toast('Restart TribeCode to host from the new folder.'); } });
+    click('#set-browse', async () => { const p = await window.TribeHost.pickFolder(); if (p) { S.set({ folder: p }); draw(); toast('Restart TribeCode to use the new folder.'); } });
     const gh = q('#set-github'); if (gh) window.TribeGitHub.mount(gh);
     for (const x of Object.values(EXTRA).flat()) { const el = box.querySelector(`[data-ext="${x.id}"]`); if (!el) continue; try { const out = x.render(el); if (typeof out === 'string') el.innerHTML = out; else if (out && out.catch) out.catch(e => console.warn('settings section', x.id, e)); } catch (e) { console.warn('settings section', x.id, e); } }
 

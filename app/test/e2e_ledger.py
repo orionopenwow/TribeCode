@@ -2,7 +2,7 @@
 and the summary math (revenue, costs by category, net, runway, users, other currencies), who may write, CSV import
 (a Stripe balance export, re-import skips duplicates, a plain file, Plausible), the accountant CSV export (no formulas),
 AI spend per seat vs the charter budget (HTTP + MCP report_spend), MCP ledger_add (finance seat agent only) and
-ledger_summary, Stripe "Sync now" against a local mock (key stays on the host, 0600), seat autopilot runs (a job in
+ledger_summary, Stripe "Update now" against a local mock (key stays on the host, 0600), seat autopilot runs (a job in
 #agents, approvals for needsApproval items, compliance topics -> high risk, outreach footer + do-not-contact list),
 pause-all blocks runs, the budget cap blocks runs, the weekly digest, and the Money view on desktop and phone.
 Usage: python app/test/e2e_ledger.py
@@ -191,7 +191,7 @@ def main():
         stc, body = api(f"{SP}/run", "POST", {"seat": "growth"}, token=bo, project=pid); assert stc == 409 and "budget" in body["error"].lower(), body
         st2 = ok(api(SP, token=host, project=pid)); assert any(a["action"] == "run-blocked" for a in st2["audit"]) and any(a["action"] == "pause-all" for a in st2["audit"])
 
-        # ---- Stripe "Sync now": no key, the host's key (0600, never logged), sync, again ----
+        # ---- Stripe "Update now": no key, the host's key (0600, never logged), sync, again ----
         stc, body = api(f"{L}/connectors/stripe/sync", "POST", {}, token=fin, project=pid); assert stc == 400 and "key" in body["error"], body
         key = "rk_test_" + "A1b2C3d4E5f6G7h8"
         assert api(f"{L}/connectors/stripe/key", "PUT", {"key": key}, token=fin, project=pid)[0] == 403

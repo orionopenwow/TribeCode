@@ -6,7 +6,7 @@ plays GitHub (TRIBE_GITHUB_GIT) and a tiny local server plays the GitHub API for
   - excludes are respected and .tribe/ is never shipped
   - a pull conflict stops and shows; Keep mine resolves it
   - pause stops auto-ship and manual ship
-  - Undo last ship pushes a revert
+  - Undo last backup pushes a revert
   - only leads change settings; builders can ship; spectators can't
   - tokens never appear in logs or responses
   - a shared folder as the remote (a temp dir plays Dropbox): two clients push and pull, a conflict stops, a
@@ -145,7 +145,7 @@ def main():
         st, d = call(f"/projects/{pid}/sync", token=host); assert d["status"]["state"] == "paused"
         call(f"/projects/{pid}/sync", "PUT", {"paused": False, "mode": "manual"}, token=host)
 
-        # ---------- Undo last ship ----------
+        # ---------- Undo last backup ----------
         st, d = call(f"/projects/{pid}/sync/ship", "POST", {"message": "Add e"}, token=host); assert d["shipped"], d
         assert "e.js" in git("ls-tree", "-r", "--name-only", "main", cwd=bare)
         st, d = call(f"/projects/{pid}/sync/undo", "POST", {}, token=builder); assert st == 403, d
@@ -246,7 +246,7 @@ def main():
             for t in ["Move to", "GitHub", "Back up now", "Backup settings", "Share"]: assert t in acts, (t, acts)
             assert "phone" not in acts.lower(), "desktop wording: no phone"
             pg.click("#hp-sync"); pg.wait_for_selector("#lr-sync #lr-repo")
-            for t in ["Manual", "Auto-ship", "pull request", "Commit message", "Pull before ship", "Pause sync", "Undo last ship"]: assert t in pg.inner_text("#lr-sync"), t
+            for t in ["Manual", "Automatic", "pull request", "Commit message", "Pull before backup", "Pause sync", "Undo last backup"]: assert t in pg.inner_text("#lr-sync"), t
             pg.click("#lr-sync [data-mode='auto']"); pg.wait_for_selector("#lr-sync [data-trigger='save']")
             assert "warning" in pg.inner_text("#lr-sync [data-trigger-note]").lower() or pg.locator("#lr-sync [data-trigger='save']").is_visible()
             pg.wait_for_timeout(300); SHOTS.mkdir(parents=True, exist_ok=True); pg.screenshot(path=str(SHOTS / "ship-settings.png"))

@@ -261,7 +261,7 @@
     const ag = myAgent(), tgt = askTarget();
     const to = ag ? `<div class="ask-to" role="group" aria-label="Ask who"><button type="button" data-ask-to="claude" class="${tgt === 'claude' ? 'on' : ''}" aria-pressed="${tgt === 'claude'}">${esc(ag.name || 'Your AI')}</button><button type="button" data-ask-to="brain" class="${tgt === 'brain' ? 'on' : ''}" aria-pressed="${tgt === 'brain'}">Local model</button></div>`
       : `<span class="ask-who">${on ? 'Local model' : 'Not connected'}</span>`;
-    const ph = !on ? 'Host or join a tribe, then ask your agent or local model…' : tgt === 'claude' ? `Ask ${ag.name || 'your AI'} anything, or give it a task…` : 'Ask your hub anything: what changed, what is next…';
+    const ph = !on ? 'Start or join a tribe, then ask your agent or local model…' : tgt === 'claude' ? `Ask ${ag.name || 'your AI'} anything, or give it a task…` : 'Ask your hub anything: what changed, what is next…';
     return `<div class="hh-panel hh-ask" id="hub-ask"><div class="hh-head"><span class="eyebrow">Ask</span>${to}</div>
       <form class="ask-box" id="hub-ask-form" autocomplete="off"><textarea id="hub-ask-in" rows="3" placeholder="${esc(ph)}" aria-label="Ask">${esc(ask.draft)}</textarea>
         <div class="ask-row"><span class="ask-hint">${on ? 'Enter to send · Shift Enter for a new line' : 'Answers come from the tribe\'s host'}</span><button class="ask-send" id="hub-ask-send" type="submit" aria-label="Send" title="Send">${SEND}</button></div></form>
@@ -333,7 +333,7 @@
       if (!(window.TribeHost && window.TribeHost.isDesktop)) return join();
       await host();
       for (let i = 0; i < 60 && !connected(); i++) await new Promise(r => setTimeout(r, 250));
-      if (!connected()) return toast('Hosting did not start. Settings has the log.');
+      if (!connected()) return toast('Your tribe did not start. Settings has the log.');
     }
     App().openInvite({ who: 'friend' });   // the one invite sheet (inviteone.js)
   }
@@ -652,7 +652,7 @@
   async function renderRepos(el) {
     el.innerHTML = `<div class="hub hub-code"><header class="hub-head">${hubCrumb('Code')}<h1>Code</h1><p class="faint">The repos of every tribe you're in (what changed last and whether everything is saved), then the code files you keep here.</p></header>
       ${window.TribeHomeGit ? '<section class="sec hub-sec" id="hub-github"></section>' : ''}
-      <section class="sec hub-sec"><div class="sec-head"><div><span class="eyebrow">Repos</span><h2>Repos you're in</h2></div></div><div class="hub-repos" id="hub-repos">${reposCache && connected() ? reposHtml(reposCache) : connected() ? '<div class="hub-empty faint">Loading…</div>' : noTribe('Repos live in tribes', 'Each tribe keeps its code in a shared repo. Start a project or join a friend’s, and it shows up here.')}</div></section>
+      <section class="sec hub-sec"><div class="sec-head"><div><span class="eyebrow">Repos</span><h2>Code you're in</h2></div></div><div class="hub-repos" id="hub-repos">${reposCache && connected() ? reposHtml(reposCache) : connected() ? '<div class="hub-empty faint">Loading…</div>' : noTribe('Repos live in tribes', 'Each tribe keeps its code in a shared repo. Start a project or join a friend’s, and it shows up here.')}</div></section>
       <section class="sec hub-sec" id="hub-codefiles"></section></div>`;
     { const gb = el.querySelector('#hub-github'); if (gb) window.TribeHomeGit.mount(gb, { repos: reposCache }); }   // feat/shell-polish: Connect GitHub
     subset(el.querySelector('#hub-codefiles'), { idp: 'hc', cat: 'code', title: 'Code files', eyebrow: 'On this device and in your tribes', kinds: ['code', 'site', 'upload'] });
@@ -1185,7 +1185,7 @@
   const shareState = { link: '' };
   async function shareLink() {
     if (!connected()) {
-      toast('Your hub link appears once you are in a tribe: host one on this computer or join a friend.');
+      toast('Your hub link appears once you are in a tribe: start one on this computer or join a friend.');
       return window.TribeHost && window.TribeHost.isDesktop ? host() : join();
     }
     try {
@@ -1229,7 +1229,7 @@
     function remove(id) { notes = notes.filter(n => n.id !== id); draw(); persist(true); }
     function picker(anchor, title, cb) {
       const list = projects();
-      if (!remote()) return toast('Join or host a tribe to file notes into a project.');
+      if (!remote()) return toast('Join or start a tribe to file notes into a project.');
       if (!list.length) return toast('No project yet. Start one with New project.');
       const pop = document.createElement('div'); pop.className = 'sh-pop scratch-pick' + (isPhone() ? ' sheet' : ''); pop.setAttribute('role', 'menu');
       pop.innerHTML = `<div class="sh-menu sh-projects"><h6>${esc(title)}</h6>${list.map(p => `<button data-pick="${esc(p.id)}">${PJ().face(p, 'sm')}<span>${esc(p.name)}</span></button>`).join('')}</div>`;
