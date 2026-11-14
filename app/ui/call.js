@@ -355,7 +355,7 @@
     const fmt = iso => new Date(iso).toLocaleString([], { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
     const len = c => Math.max(1, Math.round((Date.parse(c.ended) - Date.parse(c.started)) / 60000));
     side.innerHTML = `<div class="cs-sh"><b>Call history</b><button class="cs-ib" data-c="side-x" title="Close">${ico('x', 16)}</button></div>
-      <ul class="cs-hist">${(d.calls || []).map(c => `<li><b>${esc(fmt(c.started))}</b><span>${len(c)} min · ${esc((c.names || []).join(', '))}</span>${(c.chat || []).length ? `<small>${c.chat.length} chat message${c.chat.length === 1 ? '' : 's'}</small>` : ''}${(c.recordings || []).some(x => x.file) ? '<small>Recorded · in Files</small>' : ''}</li>`).join('') || '<li class="cs-empty">No calls yet.</li>'}</ul>`;
+      <ul class="cs-hist">${(d.calls || []).map(c => `<li><b>${esc(fmt(c.started))}</b><span>${len(c)} min · ${esc((c.names || []).join(', '))}</span>${(c.chat || []).length ? `<small>${c.chat.length} chat message${c.chat.length === 1 ? '' : 's'}</small>` : ''}${(c.recordings || []).some(x => x.file) ? '<small>Recorded · in Files</small>' : ''}</li>`).join('') || window.TribeUI.emptyHTML({ tag: 'li', bare: true, cls: 'cs-empty', line: 'No calls yet.' })}</ul>`;
   }
 
   // ---------- ringing (outside a call too) ----------

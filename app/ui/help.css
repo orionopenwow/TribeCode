@@ -14,7 +14,7 @@
 .help-menu .hm-t b { font-size: 14px; font-weight: 600; }
 .help-menu .hm-t small { color: var(--faint); font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .help-menu .kbd, .help-keys .kbd { font: 11px var(--mono); padding: 2px 6px; border: 1px solid var(--edge); border-radius: 5px; color: var(--muted); white-space: nowrap; }
-.help-menu .hm-foot { display: flex; justify-content: space-between; padding: 10px 10px 6px; border-top: 1px solid var(--edge); font: 11.5px var(--mono); color: var(--muted); }
+.help-menu .hm-foot { display: flex; justify-content: space-between; padding: 10px 10px 6px; border-top: 1px solid var(--edge); font: 12px var(--mono); color: var(--muted); }
 .help-keys-wrap { position: fixed; inset: 0; z-index: 130; display: grid; place-items: center; background: var(--scrim, rgba(8,10,13,.6)); }
 .help-keys { width: min(560px, calc(100vw - 32px)); max-height: calc(100dvh - 48px); overflow-y: auto; border: 1px solid var(--edge); border-radius: 14px; background: var(--surface); }
 .help-keys header { display: flex; align-items: center; justify-content: space-between; padding: 16px 18px; border-bottom: 1px solid var(--edge); }
@@ -28,3 +28,12 @@
 .help-scrim { position: fixed; inset: 0; z-index: 119; background: rgba(6, 8, 11, .45); opacity: 0; transition: opacity .16s ease; }
 .help-scrim.on { opacity: 1; }
 @media (prefers-reduced-motion: reduce) { .help-scrim { transition: none; } }
+
+/* feat/help-next: six entries by intent; the first is the main one; "Something's wrong" opens a short second list */
+.help-menu .hm-primary b { color: var(--text); font-weight: 700; }
+.help-menu .hm-primary svg.i:first-child { color: var(--accent); }
+.help-menu .hm-back { display: flex; align-items: center; gap: 8px; width: 100%; min-height: 36px; padding: 6px 10px; border: 0; background: none; color: var(--muted); font: inherit; font-size: 13px; cursor: pointer; border-radius: var(--r-sm, 8px); }
+.help-menu .hm-back:hover, .help-menu .hm-back:focus-visible { background: var(--surface-2); color: var(--text); }
+.help-menu .hm-back svg { transform: rotate(180deg); }
+.help-menu .hm-site { border: 0; background: none; padding: 0; color: var(--muted); font: inherit; cursor: pointer; text-decoration: underline; text-underline-offset: 2px; }
+.help-menu .hm-site:hover, .help-menu .hm-site:focus-visible { color: var(--text); }

@@ -122,7 +122,7 @@
           <div class="wb-sugs" id="wb-sugs"></div>
         </section>
         <section class="wb-sec wb-versions" id="wb-versions-sec">
-          <div class="sec-head"><span class="eyebrow">Website</span><h2>Saved designs</h2>${window.TribeVersions ? '<button type="button" class="linkish wb-allv" id="wb-allv" title="The project’s whole history: Versions">All versions</button>' : ''}</div>
+          <div class="sec-head"><span class="eyebrow">Website</span><h2>Saved designs</h2>${window.TribeVersions ? '<button type="button" class="linkish wb-allv" id="wb-allv" title="The project’s whole history: Versions">History</button>' : ''}</div>
           <div id="wb-versions"></div>
         </section>
       </div>

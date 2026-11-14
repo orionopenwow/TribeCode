@@ -75,6 +75,7 @@ def main():
             b = p.chromium.launch(executable_path="/usr/bin/google-chrome", args=["--no-proxy-server"])
             ctx = b.new_context(viewport={"width": 1440, "height": 900})
             ctx.add_init_script(f"if (!localStorage.getItem('tribecode.settings.v1')) localStorage.setItem('tribecode.settings.v1', JSON.stringify({{name: 'Orion', onboarded: true, tour: {{done: true}}, server: {{url: '{BASE}', token: '{tok}'}}}})); localStorage.setItem('tribecode.helpers.v1', JSON.stringify({{flint:1,brain:1,ai:1}})); localStorage.setItem('tribecode.brain', JSON.stringify('none')); localStorage.setItem('tribecode.flint.brain', 'none')")
+            ctx.add_init_script("localStorage.setItem('tribecode.meaning', 'off')")   # feat/flint-meaning: this test is the helper by itself; the built-in word table has its own (e2e_flint_meaning.py)
             pg = ctx.new_page(); pg.on("pageerror", lambda e: errors.append(str(e)))
             pg.on("request", lambda r: (not r.url.startswith(BASE) and not r.url.startswith("data:") and not r.url.startswith("blob:")) and outside.append(r.url))
             files = []; pg.on("request", lambda r: "/api/flint/model/file/" in r.url and files.append(r.url.rsplit("/", 1)[1]))

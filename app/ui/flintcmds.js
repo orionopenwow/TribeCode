@@ -39,7 +39,7 @@
     },
     async 'settings.notify'(s, H) {
       const on = !!s.slots.on;
-      if (!H.connected()) { if (window.TribeNotify && window.TribeNotify.openSettings) (window.TribeNotify.settingsTab || window.TribeNotify.openSettings)(); return { text: 'Notifications live in a tribe. Host or join one first.' }; }
+      if (!H.connected()) { if (window.TribeNotify && window.TribeNotify.openSettings) (window.TribeNotify.settingsTab || window.TribeNotify.openSettings)(); return { text: 'Notifications live in a tribe. Start or join one first.' }; }
       let prefs; try { prefs = (await C.api('/notify/prefs')).prefs; } catch (e) { return { text: `I couldn't reach the notification settings: ${e.message}` }; }
       const before = { ...(prefs.channels || {}) }, next = on ? { ...before, webpush: true, desktop: true } : { ...before, webpush: false, desktop: false, ntfy: false };
       await C.api('/notify/prefs', { method: 'PUT', body: { ...prefs, channels: next } });
@@ -47,7 +47,7 @@
       return { text: on ? 'Notifications are on again: phone and desktop.' : 'Muted: no phone or desktop pings. Everything still lands in your inbox and digest. Say “undo” to bring them back.', acts: [['Notification settings', 'nav', 'settings']] };
     },
     async 'settings.away'(s, H) {
-      const P = window.TribePresence; if (!P || !P.setPrefs) return { text: 'Presence isn’t on here yet. Host or join a tribe first.' };
+      const P = window.TribePresence; if (!P || !P.setPrefs) return { text: 'Presence isn’t on here yet. Start or join a tribe first.' };
       const before = P.prefs ? { ...P.prefs() } : { show: true, away: false };
       const patch = 'show' in s.slots ? { show: s.slots.show } : { away: !!s.slots.away };
       await P.setPrefs({ ...before, ...patch }); H.pushUndo('your status', () => P.setPrefs(before));
@@ -55,14 +55,14 @@
     },
     async 'settings.sound'() { if (window.TribeNotify && window.TribeNotify.openSettings) (window.TribeNotify.settingsTab || window.TribeNotify.openSettings)(); return { text: 'TribeCode plays no clicks or UI sounds; the only sounds are notification pings and huddles. I opened the notification settings, where pings can be muted.' }; },
     async 'chat.pin'(s, H) {
-      if (!H.connected()) return { text: 'Chat lives in a tribe. Host or join one first.' };
+      if (!H.connected()) return { text: 'Chat lives in a tribe. Start or join one first.' };
       const x = await lastMsg(); if (!x) return { text: 'The chat is empty: nothing to pin yet.' };
       const on = s.slots.on !== false; await C.api(`/chat/${encodeURIComponent(x.ch)}/pin`, { method: 'POST', body: { id: x.m.id, on } });
       H.pushUndo(on ? 'the pin' : 'the unpin', () => C.api(`/chat/${encodeURIComponent(x.ch)}/pin`, { method: 'POST', body: { id: x.m.id, on: !on } }));
       return { text: `${on ? 'Pinned' : 'Unpinned'} “${String(x.m.text || 'the message').slice(0, 80)}” in #${x.ch}.`, acts: [['Open the chat', 'nav', 'chat']] };
     },
     async 'chat.react'(s, H) {
-      if (!H.connected()) return { text: 'Chat lives in a tribe. Host or join one first.' };
+      if (!H.connected()) return { text: 'Chat lives in a tribe. Start or join one first.' };
       const x = await lastMsg(); if (!x) return { text: 'The chat is empty: nothing to react to yet.' };
       const e = s.slots.emoji || '👍'; await C.api(`/chat/${encodeURIComponent(x.ch)}/react`, { method: 'POST', body: { id: x.m.id, emoji: e, on: true } });
       H.pushUndo(`the ${e}`, () => C.api(`/chat/${encodeURIComponent(x.ch)}/react`, { method: 'POST', body: { id: x.m.id, emoji: e } }));
@@ -90,7 +90,7 @@
     // feat/calm-parity: one meaning for "Versions" (the project's history); the designer's list is Saved designs
     async 'nav.versions'() { const V = window.TribeVersions; if (!V || !H.connected()) return { text: 'Versions belong to a project. Start or open one first.' }; V.open(); return { text: 'Here are this project’s versions. Saved designs (the website) and Earlier shots (Visuals) are linked at the top.' }; },
     async 'nav.designs'() { const D = window.TribeSiteDesigner; if (!D) return { text: 'The website designer isn’t available here.' }; D.open({}); return { text: 'Opened the website designer. Its Saved designs are under Save design; the project’s whole history is in Versions.' }; },
-    async 'nav.people'() { const P = window.TribePeoplePanel; if (!P) return { text: 'People live in a tribe. Host or join one first.' }; P.open({}); return { text: 'Here’s everyone and where they are.' }; },
+    async 'nav.people'() { const P = window.TribePeoplePanel; if (!P) return { text: 'People live in a tribe. Start or join one first.' }; P.open({}); return { text: 'Here’s everyone and where they are.' }; },
     async 'nav.work'() { const W = window.TribeTalent; if (!W) return { text: 'Work isn’t available here.' }; W.open(); return { text: 'Opened Work: gigs, who’s free, and the time bank.' }; },
     async 'checks.run'(s) {   // feat/build-feeds: the host's real checks (server/checks.js)
       if (!C.connected || !C.connected()) return { text: 'Checks run on your tribe’s host. Connect to a tribe first.' };
@@ -106,7 +106,7 @@
     async 'preview.share'() { const P = window.TribePublish; if (P && P.open) { P.open(); return { text: 'Opened Publish: make a play link anyone can open, then copy it.' }; } return { text: 'Say “publish it” to make a play link first.' }; },
   };
   async function taskPatch(s, H, body, say) {
-    if (!H.connected()) return { text: 'Tasks live in a tribe. Host or join one first.' };
+    if (!H.connected()) return { text: 'Tasks live in a tribe. Start or join one first.' };
     const t = s.slots.task; if (!t || !t.id) { const open = (await H.tasks()).slice(0, 3); return { text: 'Which task?', acts: open.map(x => [x.title, 'ask', `${s.text.replace(/\s+\S+$/, '')} ${x.title}`]) }; }
     const before = (await H.tasks()).find(x => x.id === t.id) || t, b = body(before), undo = {}; Object.keys(b).forEach(k => { undo[k] = before[k] == null ? null : before[k]; });
     await C.api('/tasks/' + encodeURIComponent(t.id), { method: 'PATCH', body: b });

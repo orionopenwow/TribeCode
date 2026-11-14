@@ -300,10 +300,7 @@
     if ((m = /^(?:please\s+|can you\s+|could you\s+)?build\s+(?:me\s+|us\s+)?(?:an?\s+|the\s+|our\s+)?(.{3,200})$/.exec(t)) && !/\b(doc|document|sheet|spreadsheet|slides?|deck|presentation|web ?site|home ?page|landing page)\b/.test(m[1])) return build(text.replace(/^(?:please\s+|can you\s+|could you\s+)?build\s+(?:me\s+|us\s+)?/i, ''));
     // morning brief
     if (/^(hi|hey|hello|hiya|yo|morning|good (morning|afternoon|evening)|brief me|daily brief|my brief|catch me up on me)( flint)?$/.test(t) && (myName() || on())) return morning();
-    if (/^(what should i do( next)?|what'?s next for me|what next)$/.test(t) && window.TribeReco && C.project && C.project()) {
-      const r = await window.TribeReco.list(C.project()); recoCache = r;
-      if (r.length) return { text: `Here's what I'd do next:\n${r.map((x, i) => `${i + 1}. **${(x.t)}**: ${(x.why)}`).join('\n')}`, acts: r.map(x => act(x.b, 'flintmem', `reco:${x.id}`)) };
-    }
+    // feat/help-next: "what should I do next" is answered by the one engine (nextstep.js), ahead of this router
     return null;
   }
   async function rememberIt(textIn, kind, reply) {

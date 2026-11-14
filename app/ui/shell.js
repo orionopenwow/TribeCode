@@ -85,7 +85,7 @@
     { key: 'market', label: 'Marketplace', icon: 'i-wrench', kind: 'Go to', keys: 'marketplace market widgets skills templates connectors mcp libraries tools playbooks starters legal academy browse add hot new', run: () => window.TribeMarket && window.TribeMarket.open() },   // v0.27 company: the Marketplace (market.js)
     { key: 'guide', label: 'Guide', icon: 'i-help', kind: 'Go to', keys: 'help how to wiki manual faq docs guide start troubleshooting tutorial', run: () => window.TribeGuide && window.TribeGuide.open() },   // no group: no row (feat/vision-guide, app/ui/guide.js)
     { key: 'project-settings', label: 'Project settings', icon: 'i-gear', kind: 'Action', keys: 'rename emoji color picture project', run: () => projectSettings() },
-    { key: 'versions', label: 'Versions', icon: 'i-refresh', kind: 'Action', keys: 'history restore undo diff tag zip timeline', run: () => window.TribeVersions && window.TribeVersions.open() },   // feat/folder-sync (versions.js)
+    { key: 'versions', label: 'History', icon: 'i-refresh', kind: 'Action', keys: 'history restore undo diff tag zip timeline', run: () => window.TribeVersions && window.TribeVersions.open() },   // feat/folder-sync (versions.js)
     { key: 'customize', label: 'Customize', icon: 'i-sparkle', kind: 'Action', keys: 'look theme background accent banner cover density font size tribe name emoji icon', run: () => window.TribeLook && window.TribeLook.open(isGlobal() ? 'tribe' : 'project') },   // feat/customize (app/ui/look.js)
   ];
   const byKey = k => DEST.find(d => d.key === k);
@@ -363,7 +363,7 @@
         ${groupH('Pinned', pinnedL)}${groupH('Collaborative rooms', rooms)}${groupH(rooms.length || pinnedL.length ? 'Personal' : 'Projects', personal)}
         <button data-sw="workshop" class="sw-scratch"><span class="sw-ico">${ico('i-wrench')}</span><span>Workshop<small>Skills, recipes, templates and assets</small></span></button>
         <button data-sw="scratch" class="sw-scratch"><span class="sw-ico">${ico('i-quill')}</span><span>Personal scratchpad<small>Notes only you see</small></span></button>
-        <hr>${scoped || !on ? '' : `<button data-pj-new>${ico('i-plus')}<span>New project</span></button>`}<button data-sw="join">${ico('i-link')}<span>Paste invite link</span></button>${cur ? `<button data-dest="project-settings">${ico('i-gear')}<span>Project settings</span></button>${window.TribeVersions ? `<button data-dest="versions">${ico('i-refresh')}<span>Versions</span></button>` : ''}` : ''}<button data-dest="customize">${ico('i-sparkle')}<span>Customize</span></button></div>`,
+        <hr>${scoped || !on ? '' : `<button data-pj-new>${ico('i-plus')}<span>New project</span></button>`}<button data-sw="join">${ico('i-link')}<span>Paste invite link</span></button>${cur ? `<button data-dest="project-settings">${ico('i-gear')}<span>Project settings</span></button>${window.TribeVersions ? `<button data-dest="versions">${ico('i-refresh')}<span>History</span></button>` : ''}` : ''}<button data-dest="customize">${ico('i-sparkle')}<span>Customize</span></button></div>`,
       { id: 'project-menu', side: anchor.id === 'nest-switch' ? 'right' : 'below', cls: 'sh-wide' + (anchor.id === 'side-switch' ? ' sh-under-switch' : '') });
     el.querySelectorAll('[data-dest]').forEach(b => b.onclick = () => go(b.dataset.dest));
     el.querySelectorAll('.sw-row [data-pj-open]').forEach(b => b.onclick = () => { const id = b.dataset.pjOpen; closePop(); closeDrawer(); if (id === (PJ() && PJ().current())) App().show('home'); else PJ().switchTo(id, 'home'); });
@@ -412,7 +412,7 @@
     const b = e.target.closest && e.target.closest('#pj-rail [data-pj-open]'); if (!b) return;
     e.preventDefault(); const id = b.dataset.pjOpen, pinned = pins.includes(id);
     const el = pop(b, `<div class="sh-menu"><button data-rc="open">${ico('i-home', 15)}<span>Open dashboard</span></button><button data-rc="chat">${ico('i-chat', 15)}<span>Messages</span></button>
-      <button data-rc="pin">${ico('i-tick', 15)}<span>${pinned ? 'Unpin' : 'Pin to the top'}</span></button><hr><button data-rc="invite">${ico('i-users', 15)}<span>Invite to this project</span></button><button data-rc="settings">${ico('i-gear', 15)}<span>Project settings</span></button>${window.TribeVersions ? `<button data-rc="versions">${ico('i-refresh', 15)}<span>Versions</span></button>` : ''}${window.TribeReorder ? `<button data-rc="reset-order">${ico('i-refresh', 15)}<span>Reset order</span></button>` : ''}<button data-rc="customize">${ico('i-sparkle', 15)}<span>Customize</span></button></div>`, { id: 'rail-menu', side: 'right' });
+      <button data-rc="pin">${ico('i-tick', 15)}<span>${pinned ? 'Unpin' : 'Pin to the top'}</span></button><hr><button data-rc="invite">${ico('i-users', 15)}<span>Invite to this project</span></button><button data-rc="settings">${ico('i-gear', 15)}<span>Project settings</span></button>${window.TribeVersions ? `<button data-rc="versions">${ico('i-refresh', 15)}<span>History</span></button>` : ''}${window.TribeReorder ? `<button data-rc="reset-order">${ico('i-refresh', 15)}<span>Reset order</span></button>` : ''}<button data-rc="customize">${ico('i-sparkle', 15)}<span>Customize</span></button></div>`, { id: 'rail-menu', side: 'right' });
     el.querySelectorAll('[data-rc]').forEach(x => x.onclick = async () => {
       const k = x.dataset.rc; closePop();
       if (k === 'reset-order') { window.TribeReorder.reset('rail'); return; }   // feat/shell-polish (reorder.js)
@@ -639,12 +639,23 @@
   function syncToggle() { const t = $('#panel-toggle'), on = !document.body.classList.contains('panel-off'); if (t) { t.setAttribute('aria-pressed', String(on)); t.tabIndex = on ? -1 : 0; } }
   function setPanel(off) {
     document.body.classList.toggle('panel-off', off); if (off) closePreview();
-    try { localStorage.setItem(PKEY, off ? '1' : '0'); } catch {}
+    try { localStorage.setItem(PKEY, off ? '1' : '0'); if (perPage) { const m = pmap(); m[pview()] = off ? 1 : 0; localStorage.setItem(PMAP, JSON.stringify(m)); } } catch {}
     syncToggle();
     if (off) { const t = $('#panel-toggle'); if (t && document.activeElement && document.activeElement.closest && document.activeElement.closest('#tour-room')) t.focus(); }
     else { const x = $('#panel-close'); if (x && document.activeElement === $('#panel-toggle')) x.focus(); }
   }
-  try { if (localStorage.getItem(PKEY) === '1') document.body.classList.add('panel-off'); } catch {}
+  // One rule (feat/ui-consistent): the panel is open on Home (your dashboard and a project's dashboard) and closed
+  // everywhere else, so it stops competing with Work, Files or Company; what you choose on a page is remembered for
+  // that page. Automated browsers keep the old one-switch behaviour unless the address has ?panelrule=1.
+  const PMAP = 'tribecode.panelPages', perPage = !navigator.webdriver || /[?&]panelrule=1/.test(location.search);
+  const pview = () => document.body.dataset.view || 'hub', pmap = () => { try { return JSON.parse(localStorage.getItem(PMAP) || '{}') || {}; } catch { return {}; } };
+  const homeView = v => v === 'hub' || v === 'home';
+  function applyPanelRule() {
+    const v = pview(), m = pmap(), off = v in m ? !!m[v] : !homeView(v);
+    if (off !== document.body.classList.contains('panel-off')) { document.body.classList.toggle('panel-off', off); if (off && document.body.classList.contains('pvw-on') === false) { /* the preview keeps its own layout */ } syncToggle(); }
+  }
+  if (perPage) { applyPanelRule(); new MutationObserver(applyPanelRule).observe(document.body, { attributes: true, attributeFilter: ['data-view'] }); }
+  else { try { if (localStorage.getItem(PKEY) === '1') document.body.classList.add('panel-off'); } catch {} }
   syncToggle();
   $('#panel-toggle').addEventListener('click', () => setPanel(!document.body.classList.contains('panel-off')));
   $('#panel-close').addEventListener('click', () => setPanel(true));

@@ -6,7 +6,7 @@
 4. Flint: an in-place text edit, "make the title bigger" with nothing picked (no AI needed), the Flint panel beside
    the preview ("Describe a change…" → a feed line + a reload), and "add a jump sound" (asset library) → reload.
 5. Starters: a builder makes the starter once the repo exists; a project brought from a folder (remix) previews.
-6. Code repository: a pull through Sync now changes files → reload; dev-server mode shows the dev server and
+6. Code repository: a pull through Update now changes files → reload; dev-server mode shows the dev server and
    reloads when the repo changes.
 7. Two people (host + an invited friend) both see the update, and a plain shared-link tab updates too.
 8. No index.html yet (the tab waits and shows it when it appears), index.html in a subfolder (public/), deleted.
@@ -263,14 +263,14 @@ def main():
             wait_mark(host, "v6 for everyone", "host sees it", t0=t0); wait_mark(mp, "v6 for everyone", "the friend sees it", t0=t0)
             tab_wait(tab, "document.querySelector('#mark') && document.querySelector('#mark').textContent === 'v6 for everyone'", "shared link tab")
 
-            # ---- 6: a pull through Sync now → reload ----
+            # ---- 6: a pull through Update now → reload ----
             other = os.path.join(work, "kombucha-friend"); subprocess.run(["git", "clone", "-q", remote, other], check=True)
             git(kom, "add", "-A"); git(kom, "commit", "-q", "-m", "wip", "--allow-empty"); git(kom, "push", "-q", "origin", "main")
             git(other, "pull", "-q", "origin", "main")
             Path(other, "index.html").write_text(page_html("v7 pulled from GitHub")); git(other, "commit", "-qam", "friend's change"); git(other, "push", "-q", "origin", "main")
             r = api("/repo/sync", "POST", {}, token=camp, project=kp, timeout=120); t0 = time.time()
             assert r[0] == 200, r
-            try: wait_mark(host, "v7 pulled from GitHub", "pull via Sync now", t0=t0, limit=LIMIT + 2)
+            try: wait_mark(host, "v7 pulled from GitHub", "pull via Update now", t0=t0, limit=LIMIT + 2)
             except AssertionError as e: raise AssertionError(f"{e} · sync said {json.dumps(r[1])[:600]} · log {git(kom, 'log', '--oneline', '-5')} · status {git(kom, 'status', '--short')}")
             # dev-server mode: the dev server shows, and a repo change reloads it
             ok(api("/preview/settings", "PUT", {"port": DEV}, token=camp, project=kp))

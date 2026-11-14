@@ -146,7 +146,7 @@
         <div class="hero-acts"><button class="btn primary" data-connect="claude-code">${glyph('claude-code', 15)}Connect an agent</button>${s ? '<button class="btn ah-open-sec">Secretary</button>' : ''}</div></div>
         <div class="ah-hero-v">${constellation(nodes)}</div></section>
       <section class="sec"><div class="sec-head"><span class="eyebrow">Connected</span><h2>Agents</h2></div>
-        <div class="ah-grid">${secretaryCard(s)}${ag.map(card).join('')}${ag.length ? '' : '<div class="ah-empty">Connect your AI below: Claude Code, Codex CLI, Gemini CLI, Qwen Code, Cursor or any MCP client. Each gets its own key you can revoke.</div>'}</div></section>
+        <div class="ah-grid">${secretaryCard(s)}${ag.map(card).join('')}${ag.length ? '' : window.TribeUI.emptyHTML({ kind: 'agents', cls: 'ah-empty', title: 'No agents connected yet', line: 'Connect your AI below: Claude Code, Codex CLI, Gemini CLI, Qwen Code, Cursor or any MCP client. Each gets its own key you can revoke.' })}</div></section>
       <section class="sec" id="ah-connect-sec"><div class="sec-head"><span class="eyebrow">Connect</span><h2>Add an agent</h2>${window.TribeMcpDir ? '<button class="linkish ah-all" data-mcpdir-open>Claude.ai, ChatGPT, VS Code and more →</button>' : ''}</div>
         ${window.TribeInviteAgent && window.TribeInviteAgent.card ? `<div class="ah-invite" id="ah-invite">${window.TribeInviteAgent.card()}</div>` : ''}
         <div class="ah-tiles">${TILES.map(([k, t, d]) => `<button class="ah-tile${connectKind === k ? ' on' : ''}" style="--k:${COLOR[k]}" data-connect="${k}" aria-expanded="${connectKind === k}"><span class="ah-glyph">${glyph(k)}</span><b>${t}</b><span>${d}</span></button>`).join('')}</div>

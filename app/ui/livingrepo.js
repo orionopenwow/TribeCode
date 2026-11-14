@@ -53,7 +53,7 @@
   }
   function statusText(folder, sync) {
     const st = sync && sync.status, gh = !!(st && st.connected);
-    const tail = !gh ? '' : st.state === 'conflict' ? 'conflict needs you' : st.paused ? 'Paused' : st.pending ? `${plural(st.pending, 'change')} not shipped` : st.lastShip ? `synced ${ago(st.lastShip.at)}` : 'not shipped yet';
+    const tail = !gh ? '' : st.state === 'conflict' ? 'conflict needs you' : st.paused ? 'Paused' : st.pending ? `${plural(st.pending, 'change')} not backed up` : st.lastShip ? `backed up ${ago(st.lastShip.at)}` : 'not backed up yet';
     const remote = st && st.kind === 'folder' ? 'shared folder' : 'GitHub';
     if (folder && gh) return { l: `Folder + ${remote}`, s: tail, tone: st.state };
     if (gh) return { l: remote === 'GitHub' ? 'GitHub' : 'Shared folder', s: tail, tone: st.state };
@@ -99,7 +99,7 @@
       <div class="hpo-rows">
         <div class="hpo-row"><span>Home</span><b>${cur.folder ? `<code title="${esc(cur.folder.display)}">${esc(cur.folder.display)}</code>` : hosting ? 'This computer' : 'The tribe’s host'}</b></div>
         <div class="hpo-row"><span>GitHub</span><b>${gh ? esc(st.repo) : 'Not connected'}</b></div>
-        ${gh ? `<div class="hpo-row"><span>Sync</span><b>${esc(st.mode === 'auto' ? 'Auto-ship' : 'Manual')} · ${esc(t.s)}</b></div>` : ''}
+        ${gh ? `<div class="hpo-row"><span>Backup</span><b>${esc(st.mode === 'auto' ? 'Automatic' : 'Manual')} · ${esc(t.s)}</b></div>` : ''}
         ${hosting ? '<div class="hpo-row"><span>Hosting</span><b>This computer</b></div>' : ''}
       </div>
       ${st.state === 'conflict' ? `<p class="lr-warn">GitHub and this folder changed the same lines (${esc((st.conflict.files || []).slice(0, 2).join(', '))}). Nothing was lost. <button class="linkish" id="hp-fix">Sort it out</button></p>` : ''}
@@ -109,7 +109,7 @@
         <button id="hp-shared" ${pick.ok ? '' : `aria-disabled="true" title="${esc(pick.why)}"`}>${ic('net')}<span>${gh && st.kind === 'folder' ? `Shared folder · ${esc(st.repo)}` : 'Share through a synced folder'}</span></button>
         ${gh && can.ship ? `<button id="hp-ship">${ic('upload')}<span>Back up now${st.pending ? ` · ${plural(st.pending, 'change')}` : ''}</span></button>` : ''}
         <button id="hp-sync">${ic('gear')}<span>Backup settings</span></button>
-        ${window.TribeVersions ? `<button id="hp-versions">${ic('refresh')}<span>Versions</span></button>` : ''}
+        ${window.TribeVersions ? `<button id="hp-versions">${ic('refresh')}<span>History</span></button>` : ''}
         <button id="hp-share">${ic('users')}<span>Share</span></button>
         ${hosting ? `<button id="hp-host">${ic('net')}<span>Who can reach this computer</span></button>` : ''}
       </div>`;
@@ -277,7 +277,7 @@
     const how = canPickFolder(); if (!how.ok) { toast(how.why); return null; }
     return pickFolder({ shared: true, title: 'Share through a folder you already sync', onPick: async choice => {
       if (!live()) return soloTo(choice, 'shared');
-      try { await connectShared(pid(), choice); refresh(); toast(choice.join ? 'Joined the shared copy: its files are here now.' : `Sharing through ${choice.display}. Ship to send changes; friends pull them.`); if (after) after(); }
+      try { await connectShared(pid(), choice); refresh(); toast(choice.join ? 'Joined the shared copy: its files are here now.' : `Sharing through ${choice.display}. Back up to send changes; friends pull them.`); if (after) after(); }
       catch (e) { toast(e.message); }
     } });
   }
@@ -288,12 +288,12 @@
     await load(true).catch(() => {});
     const can = (cur.sync && cur.sync.can) || {}, st = (cur.sync && cur.sync.status) || {};
     if (st.connected && !replace) return sync();
-    const s = sheet('lr-gh', 'Connect GitHub', `${head('Connect a GitHub repo', 'Give it a synced copy on GitHub')}
-      <p class="ph-lead">The home stays the real thing. GitHub gets a copy when you ship, by hand or by itself. You can disconnect any time.</p>
+    const s = sheet('lr-gh', 'Connect GitHub', `${head('Connect GitHub', 'Give it a synced copy on GitHub')}
+      <p class="ph-lead">The home stays the real thing. GitHub gets a copy when you back up, by hand or by itself. You can disconnect any time.</p>
       <div id="lr-gh-sign" class="lr-gh-sign"><span class="faint">Checking for a GitHub sign-in…</span></div>
       <label class="ph-lab" for="lr-gh-repo">Repository</label><input class="input" id="lr-gh-repo" placeholder="owner/name or https://github.com/owner/name" spellcheck="false">
       <label class="ph-lab" for="lr-gh-branch">Branch</label><input class="input" id="lr-gh-branch" value="main" spellcheck="false">
-      <p class="ph-note">Nothing leaves this computer until you press Ship. Pick auto-ship in the settings after.</p>
+      <p class="ph-note">Nothing leaves this computer until you press Back up. Pick automatic backup in the settings after.</p>
       <p class="tn-err ph-err" id="lr-gh-err" role="status" hidden></p>
       <div class="ph-acts"><button type="button" class="btn" data-lr-close>Cancel</button><button type="button" class="btn primary" id="lr-gh-go" ${can.edit ? '' : 'disabled title="Only the host or the project lead connects GitHub"'}>Connect</button></div>`);
     const G = L() && L().github && L().github.guide;
@@ -315,43 +315,43 @@
     let d; try { d = await srv(`/projects/${encodeURIComponent(p)}/sync`); } catch (e) { el.innerHTML = `<p class="faint">${esc(e.message)}</p>`; return null; }
     const v = d.settings, st = d.status, ro = !d.can.edit, dis = ro ? 'disabled' : '';
     const seg = (name, val, opts) => `<div class="lr-seg" role="radiogroup">${opts.map(([k, t]) => `<button type="button" role="radio" data-${name}="${k}" aria-checked="${val === k}" ${dis}>${esc(t)}</button>`).join('')}</div>`;
-    el.innerHTML = `${!st.connected ? `<p class="lr-warn">Nothing to ship to yet. <button type="button" class="linkish" id="lr-s-connect">Connect a GitHub repo</button> or <button type="button" class="linkish" id="lr-s-shared">share through a synced folder</button>. Until then nothing ships.</p>` : ''}
-      ${ro ? '<p class="ph-note">Only the host or the project lead changes these. You can still ship by hand.</p>' : ''}
+    el.innerHTML = `${!st.connected ? `<p class="lr-warn">Nowhere to back up to yet. <button type="button" class="linkish" id="lr-s-connect">Connect GitHub</button> or <button type="button" class="linkish" id="lr-s-shared">share through a shared folder</button>. Until then nothing leaves this computer.</p>` : ''}
+      ${ro ? '<p class="ph-note">Only the host or the project lead changes these. You can still back up by hand.</p>' : ''}
       <div class="lr-grid">
         <div><label class="ph-lab" for="lr-repo">${v.kind === 'folder' ? 'Shared folder copy' : 'Repository'}</label><input class="input" id="lr-repo" value="${esc(v.repo)}" placeholder="owner/name" ${v.kind === 'folder' ? 'readonly title="Pick another shared folder from the pill"' : dis}></div>
         <div><label class="ph-lab" for="lr-branch">Branch</label><input class="input" id="lr-branch" value="${esc(v.branch)}" ${dis}></div>
       </div>
-      <span class="ph-lab">Shipping</span>${seg('mode', v.mode, [['manual', 'Manual'], ['auto', 'Auto-ship']])}
-      <p class="ph-note" id="lr-mode-note">${v.mode === 'manual' ? 'Manual: a Ship button with what changed, a message and a target. Nothing leaves this computer until you press it.' : 'Auto-ship pushes by itself when the trigger below happens.'}</p>
+      <span class="ph-lab">Backing up</span>${seg('mode', v.mode, [['manual', 'Manual'], ['auto', 'Automatic']])}
+      <p class="ph-note" id="lr-mode-note">${v.mode === 'manual' ? 'Manual: a Back up button with what changed, a message and a target. Nothing leaves this computer until you press it.' : 'Automatic backs up by itself when the trigger below happens.'}</p>
       <div class="lr-auto" id="lr-auto" ${v.mode === 'auto' ? '' : 'hidden'}>
         <div class="lr-trig">${TRIG.map(([k, t, sub]) => `<label class="lr-radio"><input type="radio" name="lr-trig" data-trigger="${k}" ${v.trigger === k ? 'checked' : ''} ${dis}><span><b>${esc(t)}</b><small ${k === 'save' ? 'data-trigger-note' : ''}>${esc(sub)}</small></span></label>`).join('')}</div>
         <label class="lr-inline">Every <input class="input lr-num" id="lr-int" type="number" min="1" max="1440" value="${v.intervalMin}" ${dis}> minutes (for “every few minutes”)</label>
-        <label class="lr-check"><input type="checkbox" id="lr-appr" ${v.requireApproval ? 'checked' : ''} ${dis}> Ask for approval before an auto-ship</label>
+        <label class="lr-check"><input type="checkbox" id="lr-appr" ${v.requireApproval ? 'checked' : ''} ${dis}> Ask for approval before an automatic backup</label>
       </div>
-      <span class="ph-lab">Where it goes</span>${v.kind === 'folder' ? '<p class="ph-note">Straight to the shared copy’s branch (pull requests are a GitHub thing).</p>' : seg('target', v.target, [['push', 'Push to the branch'], ['pr', 'A pull request per ship']])}
+      <span class="ph-lab">Where it goes</span>${v.kind === 'folder' ? '<p class="ph-note">Straight to the shared copy’s branch (pull requests are a GitHub thing).</p>' : seg('target', v.target, [['push', 'Push to the branch'], ['pr', 'A pull request per backup']])}
       <label class="ph-lab" for="lr-prt" ${v.target === 'pr' ? '' : 'hidden'} id="lr-prt-l">Pull request title</label><input class="input" id="lr-prt" value="${esc(v.prTitle)}" ${v.target === 'pr' ? '' : 'hidden'} ${dis}>
       <label class="ph-lab" for="lr-msg">Commit message</label>
       <select class="input" id="lr-msg" ${dis}><option value="auto" ${v.message === 'auto' ? 'selected' : ''}>Auto-summary of the changed files</option><option value="flint" ${v.message === 'flint' ? 'selected' : ''}>Flint writes it (needs an AI; else the auto-summary)</option><option value="own" ${v.message === 'own' ? 'selected' : ''}>My own</option></select>
       <input class="input" id="lr-own" placeholder="Your commit message" value="${esc(v.ownMessage)}" ${v.message === 'own' ? '' : 'hidden'} ${dis}>
-      <label class="ph-lab" for="lr-ex">Also leave out <small class="faint">one pattern per line · .gitignore is respected · .tribe/ never ships</small></label>
+      <label class="ph-lab" for="lr-ex">Also leave out <small class="faint">one pattern per line · .gitignore is respected · .tribe/ is never backed up</small></label>
       <textarea class="input" id="lr-ex" rows="2" placeholder="*.psd&#10;drafts/" ${dis}>${esc((v.exclude || []).join('\n'))}</textarea>
-      <label class="lr-check"><input type="checkbox" id="lr-pull" ${v.pullFirst ? 'checked' : ''} ${dis}> Pull before ship</label>
+      <label class="lr-check"><input type="checkbox" id="lr-pull" ${v.pullFirst ? 'checked' : ''} ${dis}> Pull before backup</label>
       <label class="lr-inline">When GitHub changed the same lines: <select class="input" id="lr-conf" ${dis}><option value="stop" ${v.conflict === 'stop' ? 'selected' : ''}>Stop and show me</option><option value="mine" ${v.conflict === 'mine' ? 'selected' : ''}>Prefer mine</option><option value="theirs" ${v.conflict === 'theirs' ? 'selected' : ''}>Prefer GitHub’s</option></select></label>
       <label class="lr-inline">Pull from GitHub every <input class="input lr-num" id="lr-ap" type="number" min="0" max="1440" value="${v.autoPullMin}" ${dis}> minutes (0 is off)</label>
       <label class="lr-check"><input type="checkbox" id="lr-tag" ${v.tagMilestones ? 'checked' : ''} ${dis}> Tag a release on GitHub when a milestone is released</label>
       <label class="lr-inline">Sign commits as <select class="input" id="lr-sign" ${dis}><option value="member" ${v.signAs === 'member' ? 'selected' : ''}>each member</option><option value="bot" ${v.signAs === 'bot' ? 'selected' : ''}>the tribe bot</option></select></label>
-      <label class="lr-check lr-pause"><input type="checkbox" id="lr-pause" ${v.paused ? 'checked' : ''} ${dis}> Pause sync <small>nothing ships or pulls until you turn it back on</small></label>
-      <section class="lr-log"><div class="lr-log-h"><span class="eyebrow">Ship log</span>${d.can.undo && d.log.some(e => !e.undone && !e.revert && !e.pr) ? '<button type="button" class="btn sm" id="lr-undo">Undo last ship</button>' : '<button type="button" class="btn sm" id="lr-undo" disabled title="Nothing to undo yet">Undo last ship</button>'}</div>
-        ${d.log.length ? `<ol>${d.log.slice(0, 8).map(e => `<li class="${e.undone ? 'undone' : ''}"><code>${esc(e.short || '')}</code><span>${esc(e.message || '')}</span><small>${esc(e.byName || '')} · ${esc(e.why)} · ${ago(e.at)}${e.pr ? ` · <a href="${esc(e.pr.url)}" target="_blank" rel="noopener">PR #${esc(e.pr.number)}</a>` : ''}${e.undone ? ' · undone' : ''}</small></li>`).join('')}</ol>` : '<p class="faint">No ships yet.</p>'}</section>`;
+      <label class="lr-check lr-pause"><input type="checkbox" id="lr-pause" ${v.paused ? 'checked' : ''} ${dis}> Pause sync <small>nothing is backed up or pulled until you turn it back on</small></label>
+      <section class="lr-log"><div class="lr-log-h"><span class="eyebrow">Backup log</span>${d.can.undo && d.log.some(e => !e.undone && !e.revert && !e.pr) ? '<button type="button" class="btn sm" id="lr-undo">Undo last backup</button>' : '<button type="button" class="btn sm" id="lr-undo" disabled title="Nothing to undo yet">Undo last backup</button>'}</div>
+        ${d.log.length ? `<ol>${d.log.slice(0, 8).map(e => `<li class="${e.undone ? 'undone' : ''}"><code>${esc(e.short || '')}</code><span>${esc(e.message || '')}</span><small>${esc(e.byName || '')} · ${esc(e.why)} · ${ago(e.at)}${e.pr ? ` · <a href="${esc(e.pr.url)}" target="_blank" rel="noopener">PR #${esc(e.pr.number)}</a>` : ''}${e.undone ? ' · undone' : ''}</small></li>`).join('')}</ol>` : '<p class="faint">No backups yet.</p>'}</section>`;
     const q = s => el.querySelector(s);
     const pickSeg = (name, cb) => el.querySelectorAll(`[data-${name}]`).forEach(b => b.onclick = () => { el.querySelectorAll(`[data-${name}]`).forEach(x => x.setAttribute('aria-checked', String(x === b))); cb && cb(b.dataset[name]); });
-    pickSeg('mode', m => { q('#lr-auto').hidden = m !== 'auto'; q('#lr-mode-note').textContent = m === 'manual' ? 'Manual: a Ship button with what changed, a message and a target. Nothing leaves this computer until you press it.' : 'Auto-ship pushes by itself when the trigger below happens.'; });
+    pickSeg('mode', m => { q('#lr-auto').hidden = m !== 'auto'; q('#lr-mode-note').textContent = m === 'manual' ? 'Manual: a Back up button with what changed, a message and a target. Nothing leaves this computer until you press it.' : 'Automatic backs up by itself when the trigger below happens.'; });
     pickSeg('target', t => { q('#lr-prt').hidden = q('#lr-prt-l').hidden = t !== 'pr'; });
     q('#lr-msg').onchange = () => { q('#lr-own').hidden = q('#lr-msg').value !== 'own'; };
     const c = q('#lr-s-connect'); if (c) c.onclick = () => { closeSheet(true); github(); };
     const c2 = q('#lr-s-shared'); if (c2) c2.onclick = () => { closeSheet(true); sharedFolder(); };
     const u = q('#lr-undo'); if (u && !u.disabled) u.onclick = async () => {
-      if (!confirm('Undo the last ship? TribeCode adds a commit that reverses it and pushes that.')) return;
+      if (!confirm('Undo the last backup? TribeCode adds a commit that reverses it and pushes that.')) return;
       u.disabled = true; try { await srv(`/projects/${encodeURIComponent(p)}/sync/undo`, { method: 'POST' }); toast('Undone: a revert commit is on GitHub.'); renderSync(el, p); refresh(); } catch (e) { u.disabled = false; toast(e.message); }
     };
     const read = () => ({ ...(v.kind === 'folder' ? {} : { repo: q('#lr-repo').value.trim() }), branch: q('#lr-branch').value.trim() || 'main', mode: (el.querySelector('[data-mode][aria-checked="true"]') || {}).dataset?.mode || 'manual',
@@ -362,7 +362,7 @@
   }
   async function sync() {
     if (solo()) return L() && L().choose ? L().choose('github') : null;
-    const s = sheet('lr-sync', 'Ship and sync settings', `${head('Ship / sync settings', 'How it ships and syncs')}<div id="lr-sync-body" class="lr-sync-body"><p class="faint">Loading…</p></div>
+    const s = sheet('lr-sync', 'Backup settings', `${head('Backup settings', 'How it backs up')}<div id="lr-sync-body" class="lr-sync-body"><p class="faint">Loading…</p></div>
       <p class="tn-err ph-err" id="lr-sync-err" role="status" hidden></p>
       <div class="ph-acts"><button type="button" class="btn lr-disc" id="lr-disc" hidden>Disconnect GitHub</button><span class="lr-sp"></span><button type="button" class="btn" data-lr-close>Cancel</button><button type="button" class="btn primary" id="lr-save">Save</button></div>`);
     const f = await renderSync($('#lr-sync-body', s)); if (!f || !sh) return s;
@@ -378,7 +378,7 @@
     await load(true).catch(() => {});
     const st = (cur.sync && cur.sync.status) || {}, v = (cur.sync && cur.sync.settings) || {};
     if (!st.connected) return github(() => ship());
-    const s = sheet('lr-ship', 'Ship', `${head(`Ship to ${st.repo}`, st.state === 'conflict' ? 'GitHub changed the same lines' : 'Ship what changed')}<div id="lr-ship-body"><p class="faint">Looking at what changed…</p></div>
+    const s = sheet('lr-ship', 'Back up', `${head(`Back up to ${st.repo}`, st.state === 'conflict' ? 'GitHub changed the same lines' : 'Back up what changed')}<div id="lr-ship-body"><p class="faint">Looking at what changed…</p></div>
       <p class="tn-err ph-err" id="lr-ship-err" role="status" hidden></p><div class="ph-acts" id="lr-ship-acts"></div>`);
     const body = $('#lr-ship-body', s), acts = $('#lr-ship-acts', s), errf = t => { const e = $('#lr-ship-err', s); e.textContent = t || ''; e.hidden = !t; };
     if (st.state === 'conflict') {
@@ -386,22 +386,22 @@
         <p class="ph-note">Keep mine uses this folder’s lines where they clash; Take GitHub’s uses GitHub’s. Everything else from both sides is kept.</p>`;
       acts.innerHTML = '<button type="button" class="btn" data-lr-close>Later</button><button type="button" class="btn" data-use="theirs">Take GitHub’s</button><button type="button" class="btn primary" data-use="mine">Keep mine</button>';
       acts.querySelector('[data-lr-close]').onclick = () => closeSheet();
-      acts.querySelectorAll('[data-use]').forEach(b => b.onclick = async () => { b.disabled = true; try { await srv(`/projects/${encodeURIComponent(pid())}/sync/resolve`, { method: 'POST', body: { use: b.dataset.use } }); closeSheet(); refresh(); toast('Sorted. Ship when you’re ready.'); } catch (e) { b.disabled = false; errf(e.message); } });
+      acts.querySelectorAll('[data-use]').forEach(b => b.onclick = async () => { b.disabled = true; try { await srv(`/projects/${encodeURIComponent(pid())}/sync/resolve`, { method: 'POST', body: { use: b.dataset.use } }); closeSheet(); refresh(); toast('Sorted. Back up when you’re ready.'); } catch (e) { b.disabled = false; errf(e.message); } });
       return s;
     }
     let ch; try { ch = await srv(`/projects/${encodeURIComponent(pid())}/sync/changes`); } catch (e) { body.innerHTML = ''; errf(e.message); return s; }
     const n = ch.files.length;
-    body.innerHTML = `<p class="ph-lead">${n ? `${plural(n, 'file')} changed${ch.ahead ? ` and ${plural(ch.ahead, 'saved change')} waiting` : ''}.` : ch.ahead ? `${plural(ch.ahead, 'saved change')} waiting.` : 'Nothing new since the last ship.'}</p>
+    body.innerHTML = `<p class="ph-lead">${n ? `${plural(n, 'file')} changed${ch.ahead ? ` and ${plural(ch.ahead, 'saved change')} waiting` : ''}.` : ch.ahead ? `${plural(ch.ahead, 'saved change')} waiting.` : 'Nothing new since the last backup.'}</p>
       ${n ? `<ul class="lr-files">${ch.files.slice(0, 8).map(f => `<li><span class="lr-st">${esc(f.state)}</span><code>${esc(f.path)}</code></li>`).join('')}${n > 8 ? `<li class="faint">and ${n - 8} more</li>` : ''}</ul>` : ''}
       <label class="ph-lab" for="lr-ship-msg">Message</label><input class="input" id="lr-ship-msg" maxlength="300" placeholder="${esc(v.message === 'own' && v.ownMessage ? v.ownMessage : ch.summary)}">
       <label class="ph-lab" for="lr-ship-tgt">Target</label><select class="input" id="lr-ship-tgt"><option value="push" ${v.target !== 'pr' ? 'selected' : ''}>Push to ${esc(v.branch)}</option><option value="pr" ${v.target === 'pr' ? 'selected' : ''}>Open a pull request into ${esc(v.branch)}</option></select>
-      ${v.paused ? '<p class="lr-warn">Sync is paused. Resume it in the settings to ship.</p>' : ''}`;
-    acts.innerHTML = `<button type="button" class="btn" data-lr-close>Cancel</button><button type="button" class="btn primary" id="lr-ship-go" ${n || ch.ahead ? '' : 'disabled'} ${v.paused ? 'disabled' : ''}>Ship</button>`;
+      ${v.paused ? '<p class="lr-warn">Backup is paused. Resume it in the settings to back up.</p>' : ''}`;
+    acts.innerHTML = `<button type="button" class="btn" data-lr-close>Cancel</button><button type="button" class="btn primary" id="lr-ship-go" ${n || ch.ahead ? '' : 'disabled'} ${v.paused ? 'disabled' : ''}>Back up</button>`;
     acts.querySelector('[data-lr-close]').onclick = () => closeSheet();
     $('#lr-ship-go', s).onclick = async () => {
-      const b = $('#lr-ship-go', s); b.disabled = true; b.textContent = 'Shipping…'; errf('');
-      try { const r = await srv(`/projects/${encodeURIComponent(pid())}/sync/ship`, { method: 'POST', body: { message: $('#lr-ship-msg', s).value.trim() || undefined, target: $('#lr-ship-tgt', s).value } }); closeSheet(); refresh(); toast(r.shipped ? (r.entry.pr ? `Opened pull request #${r.entry.pr.number}.` : `Shipped ${r.entry.short} to ${st.repo}.`) : r.note); }
-      catch (e) { b.disabled = false; b.textContent = 'Ship'; errf(e.message); if (e.status === 409) refresh(); }
+      const b = $('#lr-ship-go', s); b.disabled = true; b.textContent = 'Backing up…'; errf('');
+      try { const r = await srv(`/projects/${encodeURIComponent(pid())}/sync/ship`, { method: 'POST', body: { message: $('#lr-ship-msg', s).value.trim() || undefined, target: $('#lr-ship-tgt', s).value } }); closeSheet(); refresh(); toast(r.shipped ? (r.entry.pr ? `Opened pull request #${r.entry.pr.number}.` : `Backed up ${r.entry.short} to ${st.repo}.`) : r.note); }
+      catch (e) { b.disabled = false; b.textContent = 'Back up'; errf(e.message); if (e.status === 409) refresh(); }
     };
     return s;
   }
@@ -445,7 +445,7 @@
         const st = (cur.sync && cur.sync.status) || {}, v = (cur.sync && cur.sync.settings) || {}, can = (cur.sync && cur.sync.can) || {};
         det.innerHTML = `<ol class="ph-steps lr-steps">
           <li data-step="repo"><b>The GitHub repo.</b> ${st.connected ? `Connected: <code>${esc(st.repo)}</code> ✓` : `<span class="lr-row"><input class="input" id="lr-sh-repo" placeholder="owner/name" spellcheck="false" ${can.edit ? '' : 'disabled'}><button type="button" class="btn sm" id="lr-sh-conn" ${can.edit ? '' : 'disabled'}>Connect</button></span><small class="faint">Make an empty repo on github.com first, or use one you have.</small>`}</li>
-          <li data-step="ship"><b>How it ships.</b> <span class="lr-seg" role="radiogroup"><button type="button" role="radio" data-ship-pick="manual" aria-checked="${v.mode !== 'auto'}" ${can.edit ? '' : 'disabled'}>Manual</button><button type="button" role="radio" data-ship-pick="auto" aria-checked="${v.mode === 'auto'}" ${can.edit ? '' : 'disabled'}>Auto-ship on task Done</button></span></li>
+          <li data-step="ship"><b>How it backs up.</b> <span class="lr-seg" role="radiogroup"><button type="button" role="radio" data-ship-pick="manual" aria-checked="${v.mode !== 'auto'}" ${can.edit ? '' : 'disabled'}>Manual</button><button type="button" role="radio" data-ship-pick="auto" aria-checked="${v.mode === 'auto'}" ${can.edit ? '' : 'disabled'}>Automatic when a task is Done</button></span></li>
           <li data-step="invite"><b>Invite friends.</b> <button type="button" class="btn primary sm" id="lr-share-go">Make the invite link</button></li></ol><div id="lr-share-out"></div>`;
         let mode = v.mode === 'auto' ? 'auto' : 'manual';
         det.querySelectorAll('[data-ship-pick]').forEach(b => b.onclick = () => { mode = b.dataset.shipPick; det.querySelectorAll('[data-ship-pick]').forEach(x => x.setAttribute('aria-checked', String(x === b))); });
@@ -468,7 +468,7 @@
       },
       folder() {
         const st = (cur.sync && cur.sync.status) || {}, pick = canPickFolder();
-        det.innerHTML = st.connected && st.kind === 'folder' ? `<p class="ph-lead">Sharing through <code>${esc(st.repo)}</code>. Friends who sync the same folder pick “Join from a shared folder” and choose it; Ship sends your changes, Pull brings theirs.</p>`
+        det.innerHTML = st.connected && st.kind === 'folder' ? `<p class="ph-lead">Sharing through <code>${esc(st.repo)}</code>. Friends who sync the same folder pick “Join from a shared folder” and choose it; Back up sends your changes, Pull brings theirs.</p>`
           : `<p class="ph-lead">${esc(SHARED_LINE)}</p><div class="ph-acts"><button type="button" class="btn primary" id="lr-share-folder" ${pick.ok ? '' : `disabled title="${esc(pick.why)}"`}>Pick the shared folder</button></div>${pick.ok ? '' : `<p class="ph-note">${esc(pick.why)}</p>`}`;
         const b = $('#lr-share-folder', det); if (b) b.onclick = () => { closeSheet(true); sharedFolder(() => share()); };
         shared();
@@ -501,7 +501,7 @@
         <button type="button" class="ph-row" data-w="folder" ${pick.ok ? '' : 'aria-disabled="true"'}><span class="ph-ic">${ic('folder', 18)}</span><span class="ph-tt"><b>${cur.folder ? `Folder · ${esc(cur.folder.display)}` : 'A folder on this computer'}${desktop() ? ' <em class="ph-tag">Recommended</em>' : ''}</b><small>${pick.ok ? (cur.folder ? 'Move it to another folder' : 'Your own folder: edit here or in VS Code, both stay in step') : esc(pick.why)}</small></span></button>
         ${o.onHost ? `<button type="button" class="ph-row" data-w="host"><span class="ph-ic">${ic('box', 18)}</span><span class="ph-tt"><b>Here, on the tribe’s host</b><small>One click: a living repo in the tribe’s own folder, with every change saved</small></span></button>` : ''}
         <button type="button" class="ph-row" data-w="shared" ${pick.ok ? '' : 'aria-disabled="true"'}><span class="ph-ic">${ic('net', 18)}</span><span class="ph-tt"><b>${st.connected && st.kind === 'folder' ? `Shared folder · ${esc(st.repo)}` : 'A shared folder'}</b><small>${pick.ok ? esc(SHARED_LINE) : esc(pick.why)}</small></span></button>
-        <button type="button" class="ph-row" data-w="github"><span class="ph-ic live">${ic('git', 18)}</span><span class="ph-tt"><b>${st.connected ? `GitHub · ${esc(st.repo)}` : 'Connect a GitHub repo'}</b><small>${st.connected ? 'Ship / sync settings' : 'A synced copy friends can reach from anywhere. Manual or auto-ship'}</small></span></button>
+        <button type="button" class="ph-row" data-w="github"><span class="ph-ic live">${ic('git', 18)}</span><span class="ph-tt"><b>${st.connected ? `GitHub · ${esc(st.repo)}` : 'Connect GitHub'}</b><small>${st.connected ? 'Backup settings' : 'A synced copy friends can reach from anywhere. Manual or automatic'}</small></span></button>
       </div>`);
     s.querySelector('[data-w="folder"]').onclick = () => (pick.ok ? folder({ pid: pid() }) : toast(pick.why));
     s.querySelector('[data-w="github"]').onclick = () => (st.connected && st.kind === 'github' ? sync() : github(null, true));
@@ -514,7 +514,7 @@
   function registerSettings() {
     const T = window.TribeSettings; if (!T || !T.addSection || registerSettings.done) return;
     registerSettings.done = true;
-    try { T.addSection('projects', { id: 'ship-sync', title: 'Ship & sync', render: async el => { if (!live()) { el.innerHTML = '<p class="faint">Ship and sync settings belong to a project in a tribe.</p>'; return; } const f = await renderSync(el); if (f && f.can.edit) { const b = document.createElement('button'); b.className = 'btn primary'; b.textContent = 'Save'; b.onclick = () => f.save().then(() => toast('Saved.')).catch(e => toast(e.message)); el.appendChild(b); } } }); } catch {}
+    try { T.addSection('projects', { id: 'ship-sync', title: 'Backup', render: async el => { if (!live()) { el.innerHTML = '<p class="faint">Backup settings belong to a project in a tribe.</p>'; return; } const f = await renderSync(el); if (f && f.can.edit) { const b = document.createElement('button'); b.className = 'btn primary'; b.textContent = 'Save'; b.onclick = () => f.save().then(() => toast('Saved.')).catch(e => toast(e.message)); el.appendChild(b); } } }); } catch {}
   }
 
   // ---------- live updates ----------

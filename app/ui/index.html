@@ -76,6 +76,7 @@
 <link rel="stylesheet" href="versions.css">
 <link rel="stylesheet" href="offline.css"><!-- feat/offline-demo -->
 <link rel="stylesheet" href="phonehost.css"><!-- phone hosting: where should your tribe live? -->
+<link rel="stylesheet" href="nextstep.css"><!-- what should I do next (feat/help-next) -->
 <link rel="stylesheet" href="nextopts.css"><!-- needs a computer or a host: the next options (feat/mobile-complete) -->
 <link rel="stylesheet" href="setuplocal.css"><link rel="stylesheet" href="tribenew.css"><link rel="stylesheet" href="homegit.css"><link rel="stylesheet" href="localfiles.css"><!-- feat/setup-local: instant setup on this device, files with no tribe -->
 <link rel="stylesheet" href="showcase.css"><!-- feat/showcase-demo -->
@@ -131,6 +132,7 @@
 <link rel="stylesheet" href="pwa.css"><link rel="stylesheet" href="moderation.css"><!-- feat/appstore -->
 <link rel="stylesheet" href="dropzone.css"><!-- feat/dropzone -->
 <link rel="stylesheet" href="rail.css"><link rel="stylesheet" href="sidefoot.css"><link rel="stylesheet" href="reorder.css"><!-- feat/shell-polish: the rail's you-are-here (pill + pressed tile); keep last -->
+<link rel="stylesheet" href="uikit.css"><!-- feat/ui-consistent: the shared rules (sheets, type floors, phone targets, empty states); keep last -->
 </head>
 <body class="dark">
 <svg style="display:none" aria-hidden="true">
@@ -386,6 +388,7 @@
 <script src="offline.js"></script><script src="devicelocal.js"></script><!-- feat/calm-parity: Versions, widgets and notification settings for a project on this device --><!-- feat/offline-demo: the offline demo tribe (before tribe.js) -->
 <script src="phonehost.js"></script><!-- phone hosting chooser + move to a host (docs/PHONE-HOSTING.md) -->
 <script src="demointro.js"></script><!-- feat/demo-intro: the slides before the tour -->
+<script src="nextstep.js"></script><!-- what should I do next (feat/help-next) -->
 <script src="nextopts.js"></script><!-- needs a computer or a host: the next options (feat/mobile-complete) -->
 <script src="ghphone.js"></script><!-- GitHub from a phone with a token: bring a repo in, push commits (no server) -->
 <script src="phonelocal.js"></script><!-- phone-only tribes: the rest of the API on this device (docs/MOBILE-COMPLETE.md) -->
@@ -422,6 +425,7 @@
 <script src="feedback.js"></script><!-- feat/reviews -->
 <script src="focus.js"></script><!-- feat/focus -->
 <script src="docs.js"></script>
+<script src="uikit.js"></script><!-- feat/ui-consistent: TribeUI.empty + the one Esc rule -->
 <script src="board.js"></script>
 <script src="bugs.js"></script>
 <script src="palette.js"></script>
@@ -510,7 +514,7 @@
 <script src="agentsdash.js"></script><!-- feat/agents-dash: the Agents dashboard + pinned tabs -->
 <script src="brainpick.js"></script><!-- feat/any-llm: Flint's brain (built-in WebLLM / Ollama / your key / none) -->
 <script src="askagent.js"></script><!-- feat/any-llm: Ask an agent -->
-<script src="flintmax.js"></script><script src="flintpage.js"></script><script src="flintnlu.js"></script><script src="flintembed.js"></script><script src="flintmodel.js"></script><script src="flintsem.js"></script><script src="flintconv.js"></script><script src="flintplan.js"></script><script src="flintfacts.js"></script><script src="flintllm.js"></script><script src="flintsetup.js"></script><script src="flintdevice.js"></script><!-- feat/flint-local --><!-- feat/build-feeds: Flint tier 1, meaning-based matching on this device --><script src="flintcmds.js"></script><script src="flintlocal.js"></script><!-- flint-local: Flint understands and acts with no model -->
+<script src="flintmax.js"></script><script src="flintpage.js"></script><script src="flintnlu.js"></script><script src="flintembed.js"></script><script src="flintmodel.js"></script><script src="flintsem.js"></script><script src="flintmeaning.js"></script><!-- feat/flint-meaning: the built-in word table, search by meaning with nothing to download --><script src="flintconv.js"></script><script src="flintplan.js"></script><script src="flintfacts.js"></script><script src="flintllm.js"></script><script src="flintsetup.js"></script><script src="flintdevice.js"></script><!-- feat/flint-local --><!-- feat/build-feeds: Flint tier 1, meaning-based matching on this device --><script src="flintcmds.js"></script><script src="flintlocal.js"></script><!-- flint-local: Flint understands and acts with no model -->
 <script src="aibasics-core.js"></script><script src="localdoc.js"></script><script src="flintgrow.js"></script><script src="inspoboard.js"></script><!-- feat/flint-ai: ✦ rules, grow your idea, the inspiration board -->
 <script src="flint.js"></script><!-- feat/flint: the built-in helper -->
 <script src="aiconsent.js"></script><script src="aibasics.js"></script><!-- feat/flint-ai: the ✦ affordances; polish: ask once before a cloud AI -->
@@ -521,6 +525,7 @@
 <script src="captures.js"></script><!-- feat/captures: Files › Captures, link reader, voice notes -->
 <script src="companysetup.js"></script><!-- feat/company3: setup by questions -->
 <script src="company.js"></script><!-- v0.27 company: Company view, seats, goals, decisions -->
+<script src="pubcore.js"></script><script src="publishreal.js"></script><script src="publishphone.js"></script><!-- feat/publish-real: a zip, a GitHub page, itch.io, an installable app, app packages -->
 <script src="publish.js"></script><!-- v0.27 publish: one-click play links with a safety check -->
 <script src="jam.js"></script><!-- v0.27 jams: countdown, entries, voting -->
 <script src="look.js"></script><!-- feat/customize: Settings > Look, the project menu's Customize -->

@@ -28,11 +28,17 @@ def main():
             pg.wait_for_selector("#tb-help", state="visible")
             assert pg.evaluate("document.querySelector('#tb-help').getBoundingClientRect().right <= document.querySelector('#win-ctl .tl-max').getBoundingClientRect().left"), "? sits left of the window buttons (left of the green one)"
             assert pg.evaluate("document.querySelector('#tb-help').getBoundingClientRect().top < 60"), "? is in the title bar"
-            pg.click("#tb-help"); pg.wait_for_selector("#help-menu [data-help=guide]")
-            for k in ["guide", "start", "claude", "keys", "bug", "update", "new", "docs", "gh"]: assert pg.locator(f"#help-menu [data-help={k}]").count() == 1, k
+            # feat/help-next: six entries by intent; "Something's wrong" opens a short second list; the rest is in the Help center
+            pg.click("#tb-help"); pg.wait_for_selector("#help-menu [data-help=next]")
+            assert pg.evaluate("[...document.querySelectorAll('#help-menu .hm-sec [data-help]')].map(b => b.dataset.help).join()") == "next,learn,flint,wrong,keys,new"
+            pg.click("#help-menu [data-help=wrong]"); pg.wait_for_selector("#help-menu [data-help=bug]")
+            for k in ["trouble", "bug", "update"]: assert pg.locator(f"#help-menu [data-help={k}]").count() == 1, k
+            pg.click("#help-menu [data-help-back]"); pg.wait_for_selector("#help-menu [data-help=keys]")
             pg.click("[data-help=keys]"); pg.wait_for_selector("#help-keys .hk-row"); pg.keyboard.press("Escape"); pg.wait_for_selector("#help-keys", state="detached")
             pg.keyboard.press("Control+/"); pg.wait_for_selector("#help-keys"); pg.click("#hk-close")
-            pg.click("#tb-help"); pg.click("[data-help=guide]"); pg.wait_for_function("TribeGuide.isOpen()", timeout=8000)
+            pg.click("#tb-help"); pg.click("[data-help=learn]"); pg.wait_for_function("TribeGuide.isOpen()", timeout=8000)
+            pg.wait_for_selector("#guide .gd-paths .gd-path")
+            for k in ["tour", "watch", "demo", "start", "claude", "phones", "docs", "gh"]: assert pg.locator(f"#guide [data-help={k}]").count() == 1, k
             # an old device with theme 'dark' saved by default gets Campfire; picking TribeCode Dark sticks
             old = b.new_page(); old.add_init_script("if (!sessionStorage.getItem('seeded')) { sessionStorage.setItem('seeded', '1'); localStorage.setItem('tribecode.settings.v1', JSON.stringify({name: 'Orion', theme: 'dark', themeDark: 'dark'})); }")
             old.goto(BASE + "/?skipIntro=1"); old.wait_for_function("window.TribeThemes", timeout=15000)

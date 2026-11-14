@@ -55,16 +55,18 @@
   // the text an index sees: its own words plus each word's concept name
   const expand = t => { const w = words(t); return `${t} ${w.map(canon).join(' ')}`; };
 
+  const IDX = new WeakMap();   // the word index of a docs list is kept while that list is (search-as-you-type asks again and again)
   function rank(q, docs, { nlu, model, k = 5 } = {}) {
     const lex = new Map(); let top = 0;
-    if (nlu) { const idx = nlu.index(docs.map((d, i) => ({ id: i, text: expand(d.text) }))); for (const h of nlu.search(idx, expand(q), docs.length)) { lex.set(h.doc.id, h.score); if (h.score > top) top = h.score; } }
+    if (nlu) { let idx = IDX.get(docs); if (!idx) { idx = nlu.index(docs.map((d, i) => ({ id: i, text: expand(d.text) }))); IDX.set(docs, idx); } for (const h of nlu.search(idx, expand(q), docs.length)) { lex.set(h.doc.id, h.score); if (h.score > top) top = h.score; } }
     const qc = new Set(concepts(q));
-    const qv = model ? model.embed(q) : null, out = [];
+    const qv = model && !model.cover ? model.embed(q) : null, out = [];
+    const many = model && model.coverMany ? model.coverMany(q, docs.map(d => String(d.text).slice(0, 600))) : null;
     docs.forEach((d, i) => {
       const dc = new Set(concepts(d.text)); let shared = 0; qc.forEach(c => { if (dc.has(c)) shared++; });
       const l = (top ? (lex.get(i) || 0) / top : 0) * 0.5 + (qc.size ? shared / qc.size : 0) * 0.5;
-      const cos = qv ? Math.max(0, model.sim(qv, model.embed(String(d.text).slice(0, 600)))) : 0;
-      const score = qv ? l * 0.6 + cos * 0.4 : l;
+      const cos = !model ? 0 : many ? many[i] : model.cover ? model.cover(q, String(d.text).slice(0, 600)) : Math.max(0, model.sim(qv, model.embed(String(d.text).slice(0, 600))));
+      const score = model ? (model.cover ? l * 0.2 + cos * 0.8 : l * 0.6 + cos * 0.4) : l;   // the word table carries its own exact-word matching, so it leads
       if (score > 0.08) out.push({ id: d.id, score, doc: d, lex: l, cos });
     });
     return out.sort((a, b) => b.score - a.score).slice(0, k);

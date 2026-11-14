@@ -294,7 +294,7 @@
     const m = document.createElement('div'); m.className = 'dc-menu lf-menu'; m.id = 'lf-movemenu'; m.setAttribute('role', 'menu');
     m.innerHTML = `<div class="lf-mh"><span class="eyebrow">Move to…</span></div>` + (list.length
       ? list.map(p => `<button role="menuitem" data-to="${esc(p.id)}"><span class="lf-pf" style="background:${esc(p.color || '#F26B1D')}">${esc(p.emoji || (p.name || '?')[0].toUpperCase())}</span><span><b>${esc(p.name)}</b><small>Everyone in the project</small></span></button>`).join('')
-      : `<button role="menuitem" data-to="__setup">${ico('i-plus', 16)}<span><b>Start a project</b><small>Instant, on this device. Choose where it lives later.</small></span></button>`);
+      : `<button role="menuitem" data-to="__setup">${ico('i-plus', 16)}<span><b>Start a project</b><small>Instant, on this device. Set up sharing and backup later.</small></span></button>`);
     document.body.appendChild(m);
     const r = (anchor && anchor.getBoundingClientRect && anchor.getBoundingClientRect()) || { left: innerWidth / 2 - 130, bottom: innerHeight / 3 };
     m.style.top = Math.min(innerHeight - m.offsetHeight - 8, r.bottom + 6) + 'px'; m.style.left = Math.max(8, Math.min(innerWidth - m.offsetWidth - 8, r.left)) + 'px';

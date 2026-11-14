@@ -1,6 +1,6 @@
 # Money and autopilot
 
-**Money** shows the business's numbers in plain words, and **autopilot** lets an AI-held seat work its charter on a schedule. Money appears once a project is a company (Intermediate mode, or turn it on from *Recommended next*).
+**Money** shows the business's numbers in plain words, and **autopilot** lets an AI-held seat work its charter on a schedule. Money appears once a project is a company (Intermediate mode, or turn it on from the *Next step* card).
 
 ## The books, plainly
 

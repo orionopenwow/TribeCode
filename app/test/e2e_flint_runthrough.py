@@ -59,8 +59,8 @@ def main():
             pg.goto(BASE + "/?skipIntro=1")
             pg.wait_for_function("TribeClient.connected() && window.TribeFlintRun && window.TribeExport", timeout=20000)
             tok = pg.evaluate("TribeStore.get().server.token")
-            pg.click("#tb-help"); pg.wait_for_selector("#help-menu [data-help='flintrun']", timeout=5000)
-            assert "Watch Flint build" in pg.inner_text("#help-menu [data-help='flintrun']")
+            pg.click("#tb-help"); pg.click("[data-help=learn]"); pg.wait_for_selector("#guide [data-help='flintrun']", timeout=8000)
+            assert "Watch Flint build" in pg.inner_text("#guide [data-help='flintrun']")
             pg.keyboard.press("Escape"); pg.evaluate("document.getElementById('help-menu') && document.getElementById('tb-help').click()")
             # every caption the bar shows, as it shows it
             pg.evaluate("""window.__caps = []; new MutationObserver(() => { const c = document.querySelector('#frun-cap'), s = document.querySelector('#frun-steps [data-state="now"]');

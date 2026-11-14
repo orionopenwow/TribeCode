@@ -200,7 +200,7 @@
     d.delegations.filter(x => x.status === 'awaiting-approval' && x.approval).forEach(x => out.push({ kind: 'Approval', view: 'agents', title: `${x.fromName} → ${x.toName}`, sub: `Wants to hand over "${x.taskTitle}"`,
       acts: `<button class="btn ad-btn ok" data-ad-ap="approve" data-id="${esc(x.approval)}">Approve</button><button class="btn ad-btn no" data-ad-ap="deny" data-id="${esc(x.approval)}">Deny</button>` }));
     if (d.conflicts && d.conflicts.enabled) d.conflicts.pairs.filter(p => !p.asked).forEach(p => out.push({ kind: 'Conflict', view: 'conflicts', title: `${p.a.branch} and ${p.b.branch}`, sub: `Both change ${p.files.slice(0, 2).join(', ')}${p.count > 2 ? ` and ${p.count - 2} more` : ''}`,
-      acts: `<button class="btn ad-btn" data-ad-sync data-a="${esc(p.a.branch)}" data-b="${esc(p.b.branch)}">Ask both to sync</button>` }));
+      acts: `<button class="btn ad-btn" data-ad-sync data-a="${esc(p.a.branch)}" data-b="${esc(p.b.branch)}">Ask both to catch up</button>` }));
     d.agents.filter(a => a.tokens && a.budget && a.tokens / a.budget > 0.85).forEach(a => out.push({ kind: 'Budget', view: 'agents-hub', title: a.name, sub: `Used ${Math.round(a.tokens / a.budget * 100)}% of its token budget`,
       acts: canSteer(a) && !(a.control && a.control.action !== 'resume') ? `<button class="btn ad-btn agent" data-ad-ctl="pause" data-id="${esc(a.id)}">Pause</button>` : '' }));
     return out;

@@ -52,3 +52,49 @@
   .pb-link { flex-wrap: wrap; } .pb-link code { flex-basis: 100%; }
   .pb-dash { grid-template-columns: auto minmax(0, 1fr); } .pb-dash__a { grid-column: 1 / -1; }
 }
+/* feat/publish-real: "Where it goes" inside the Publish sheet (publishreal.js). Flat matte, tokens only. */
+.pb-real { display: grid; gap: 12px; }
+.pbr { display: grid; gap: 12px; }
+.pbr-kind { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.pbr-kind .eyebrow { margin: 0 6px 0 0; }
+.pbr-kind .chip { display: inline-flex; align-items: center; gap: 6px; min-height: 36px; padding: 0 12px; border: 1px solid var(--edge); border-radius: 999px; background: var(--surface-2); color: var(--muted); font: 500 13px var(--font); cursor: pointer; }
+.pbr-kind .chip.is-on { color: var(--text); border-color: var(--accent); background: var(--surface-3); }
+.pbr-kind .chip:disabled { cursor: default; opacity: .7; }
+.pbr-checks { border: 1px solid var(--edge); border-radius: 12px; background: var(--surface-2); padding: 10px 12px; }
+.pbr-checks__h { margin: 0 0 6px; font-weight: 600; font-size: 13.5px; }
+.pbr-checks ul { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 4px 14px; }
+.pbr-checks li { display: flex; gap: 8px; align-items: flex-start; font-size: 13px; color: var(--muted); }
+.pbr-checks li svg { flex: none; margin-top: 3px; }
+.pbr-checks li.is-ok svg { color: var(--live); }
+.pbr-checks li.is-auto svg { color: var(--faint); }
+.pbr-checks li.is-bad { color: var(--text); } .pbr-checks li.is-bad svg { color: var(--accent); }
+.pbr-checks li b { font-weight: 500; } .pbr-checks li small { display: block; font-size: 12px; line-height: 1.45; color: var(--muted); }
+.pbr-auto { margin: 8px 0 0; font-size: 12px; }
+.pbr-h { margin: 4px 0 0; }
+.pbr-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.pbr-row { display: grid; grid-template-columns: 36px minmax(0, 1fr); gap: 12px; padding: 12px; border: 1px solid var(--edge); border-radius: 12px; background: var(--surface-2); }
+.pbr-i { width: 36px; height: 36px; border-radius: 10px; display: grid; place-items: center; border: 1px solid var(--edge); background: var(--surface); color: var(--muted); }
+.pbr-t { min-width: 0; display: grid; gap: 4px; }
+.pbr-hd { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; min-width: 0; } .pbr-hd b { font-size: 14.5px; }
+.pbr-t > small { color: var(--muted); font-size: 13px; line-height: 1.5; }
+.pbr-tag { font: 600 11px/1.6 var(--mono); text-transform: uppercase; letter-spacing: .05em; padding: 1px 7px; border-radius: 999px; border: 1px solid var(--edge); color: var(--live); }
+.pbr-b { display: grid; gap: 8px; justify-items: start; margin-top: 6px; min-width: 0; }
+.pbr-b .pbr-link, .pbr-b .pbr-name, .pbr-b .pbr-gh, .pbr-b .pbr-build, .pbr-b .pbr-dl { justify-self: stretch; min-width: 0; }
+.pbr-b small { font-size: 12.5px; line-height: 1.45; }
+.pbr-b .btn { min-height: 36px; }
+.pbr-steps { margin: 0; padding-left: 18px; display: grid; gap: 3px; font-size: 13px; color: var(--muted); line-height: 1.5; }
+.pbr-warn { margin: 0; padding: 8px 10px; border: 1px solid var(--edge); border-left: 3px solid var(--accent); border-radius: 8px; font-size: 13px; line-height: 1.5; }
+.pbr-ok { margin: 0; display: flex; gap: 8px; align-items: flex-start; font-size: 13px; line-height: 1.5; }
+.pbr-ok svg { flex: none; margin-top: 3px; color: var(--live); }
+.pbr-build { display: grid; gap: 8px; font-size: 13px; color: var(--muted); }
+.pbr-build .pb-spin { display: inline-block; width: 14px; height: 14px; vertical-align: -2px; }
+.pbr-more summary { cursor: pointer; font-size: 13px; color: var(--muted); }
+.pbr-more p { margin: 6px 0 0; font-size: 12.5px; line-height: 1.5; color: var(--muted); }
+.pbr-foot { margin: 0; font-size: 12px; }
+@media (max-width: 820px) {
+  .pbr-checks ul { grid-template-columns: minmax(0, 1fr); }
+  .pbr-row { grid-template-columns: minmax(0, 1fr); } .pbr-i { display: none; }
+  .pbr-b .btn { min-height: 40px; }
+}
+.pbr-row.is-focus { border-color: var(--accent); }
+.pb-tg[hidden], .pb-sheet .btn[hidden] { display: none; }

@@ -851,7 +851,7 @@
     const GET = method === 'GET', POST = method === 'POST', PUT = method === 'PUT', PATCH = method === 'PATCH', DEL = method === 'DELETE';
     switch (a) {
       case 'health': return ok({ ok: true, version: hello().version, tribe: db.tribe.name, members: db.members.length, lan: [], site: null, offlineDemo: true });
-      case 'guide': { const g = await bundled('guide-pages.json'); const pages = (g && g.pages) || []; if (!b) return ok({ pages }); const pg = pages.find(x => x.slug === b); return pg ? ok(pg) : no(404, 'no such page'); }   // feat/calm-parity: the Guide ships inside the app
+      case 'guide': { const g = await bundled('guide-pages.json'); const pages = (g && g.pages) || []; if (!b) return ok({ pages, paths: (g && g.paths) || [] }); const pg = pages.find(x => x.slug === b) || ((g && g.paths) || []).find(x => x.slug === b); return pg ? ok(pg) : no(404, 'no such page'); }   // feat/calm-parity: the Guide ships inside the app
       case 'me': if (GET && !b) return ok({ member: presence().find(m => m.id === 'me') });
         if (PATCH && !b) { const m = me(); if (body.name) m.name = String(body.name).slice(0, 32); if (body.color) m.color = String(body.color); save(); pushPresence(); return ok({ member: m }); } break;
       case 'projects': {
@@ -1252,7 +1252,7 @@
       const body = document.querySelector('#invite-modal:not(.hidden) #invite-body') || document.querySelector('.ii, #fl-instant');
       if (!body || body.querySelector('.od-note')) return;
       const n = document.createElement('p'); n.className = 'od-note';
-      n.innerHTML = '<b>Pretend link.</b> The offline demo lives only in this browser, so nobody else can open it. A pretend friend will "join" in a few seconds. <button class="linkish" data-od="real">Host for real</button>';
+      n.innerHTML = '<b>Pretend link.</b> The offline demo lives only in this browser, so nobody else can open it. A pretend friend will "join" in a few seconds. <button class="linkish" data-od="real">Start a real tribe</button>';
       const foot = body.querySelector('.modal-foot'); foot ? foot.before(n) : body.appendChild(n);
     }, 120);
   }

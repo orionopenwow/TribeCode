@@ -25,7 +25,7 @@
   const currentView = () => (document.querySelector('#crumb-label') || {}).textContent || '';
 
   async function load() {
-    if (!C.connected()) { $('#bug-list').innerHTML = '<div class="prop-empty">The bug inbox is shared, so it needs a tribe. Press <span class="kbd">Ctrl Shift B</span> any time to report a bug.</div>'; return; }
+    if (!C.connected()) { window.TribeUI.empty($('#bug-list'), { kind: 'needs-tribe', bare: true, title: 'Bugs are shared with your tribe', line: 'Start a tribe or join one to collect bug reports here. Ctrl Shift B reports a bug any time.', action: { label: 'Start a tribe', run: () => (window.TribeNew ? window.TribeNew.open() : window.TribeApp.openInvite()) } }); return; }
     try { bugs = (await C.api('/bugs')).bugs; loaded = true; render(); } catch (e) { window.TribeApp.toast(e.message); }
   }
 

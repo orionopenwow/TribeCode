@@ -189,7 +189,7 @@
       { id: 'task', emo: '📝', label: 'Add a first task', sub: 'One small thing to build first.', done: (d.taskCount || 0) > 0, below: canEdit ? '<button class="btn sm primary" data-ck="newtask">New task</button>' : '',
         inline: canEdit && d.vision && d.vision.has ? `<div class="ock-inline ock-sugg"><span class="eyebrow">Suggested from your vision</span><div class="ock-sugg-list" id="ock-sugg"><span class="faint">Thinking of first tasks…</span></div><form class="ock-own" data-ock-task><input class="input" maxlength="140" placeholder="Or write your own first task" aria-label="Your own first task"><button class="btn sm" type="submit">Add</button></form></div>` : '' },
       { id: 'claude', emo: '🤖', label: 'Connect your AI', sub: 'Claude Code, Codex, Gemini or Cursor can build with you.', done: myAgent || d.agents.length > 0, acts: canEdit ? '<button class="btn sm" data-ck="claude">Connect</button>' : '' },
-      { id: 'home', emo: '📁', label: 'Choose where it lives', sub: 'Keep its files in a folder on this computer, and add GitHub as a backup copy if you like.',
+      { id: 'home', emo: '📁', label: 'Set up sharing and backup', sub: 'Keep its files in a folder on this computer, and add GitHub as a backup copy if you like.',
         done: !!(p.hasFolder || p.hasRepo || d.repo || (syn && syn.connected)), acts: canEdit ? '<button class="btn sm" data-ck="home">Choose</button>' : '' },
       { id: 'share', emo: '🤝', label: 'Share it', sub: 'Work with friends anywhere (GitHub + an invite link), share on this network, or keep it just you for now.',
         done: team.length > 1 || lsg('shared') === '1', acts: canEdit ? '<button class="btn sm" data-ck="share">Share</button>' : '' },
@@ -255,6 +255,7 @@ ${canEdit && !started ? `      <section class="pj-context" id="pj-context"><div 
             <span class="gl-num">${t.n}</span><span class="gl-line">${esc(t.line)}</span>
             ${t.pct != null && (tasksAll.length || t.k === 'company') ? `<span class="gl-bar" aria-hidden="true"><i style="width:${t.pct}%"></i></span>` : ''}
             <span class="gl-act">${t.act}<span aria-hidden="true">→</span></span></button>`).join('')}</div></section>` : ''}
+      ${hero ? '' : '<div id="pj-next-slot"></div>'}<!-- feat/help-next: one next step on the way to a published link (nextstep.js); the setup steps above come first -->
       <div id="pj-share-slot"></div><!-- feat/real-tribe: Sharing and backup, one plain card in place of the header pills (sharecard.js) -->
       <div id="pj-reco-slot"></div><!-- v0.27: recommended next for this project (reco.js) -->
       ${canEdit ? '<div id="pj-board-slot"></div>' : ''}<!-- v0.25: the inspiration board (inspo.js) -->
@@ -326,6 +327,7 @@ ${canEdit && !started ? `      <section class="pj-context" id="pj-context"><div 
     toolbox(p);
     if (window.TribeDashBand) window.TribeDashBand.mountProject(p);   // feat/dash-preview: the band + Needs attention (kept live across redraws)
     if (window.TribeSense) window.TribeSense.card(p);   // feat/project-sense: the Inspiration card (sense.js)
+    if (window.TribeNextStep) window.TribeNextStep.mount();   // feat/help-next: the Next chip in the header and the one-step card
     if (window.TribeSetup) window.TribeSetup.card(p, d);   // feat/setup-flow: role flows + Make the starter (setup.js)
     if (window.TribeWebsite) window.TribeWebsite.overviewLink(p);   // "· Website" once the page exists (app/ui/website.js)
   }
@@ -803,7 +805,7 @@ ${canEdit && !started ? `      <section class="pj-context" id="pj-context"><div 
           <span class="eyebrow">Start a new tribe</span>
           <h3>${desk ? 'Host it on this computer' : 'Host it with the desktop app'}</h3>
           <p class="faint">${desk ? 'Your work lives in a shared GitHub repository; friends join with a link.' : 'Your work lives in a shared GitHub repository. Get the app to start a tribe.'}</p>
-          <div class="np-row">${desk ? '<button class="btn primary" id="np-host">Start hosting</button>' : '<a class="btn primary" href="https://github.com/orionopenwow/TribeCode/releases/latest" target="_blank" rel="noopener">Get TribeCode</a>'}</div>
+          <div class="np-row">${desk ? '<button class="btn primary" id="np-host">Start a tribe here</button>' : '<a class="btn primary" href="https://github.com/orionopenwow/TribeCode/releases/latest" target="_blank" rel="noopener">Get TribeCode</a>'}</div>
         </div>`;
     body().innerHTML = `<div class="np-stack">${top}
         <div class="np-card np-join">

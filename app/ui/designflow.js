@@ -460,7 +460,7 @@
     if (a.k === 'tribe') { if (connected() && window.TribeShell) return window.TribeShell.go('chat'); return toast('Share it with your tribe: start a project from Home (it begins on this device), then invite friends.'); }
     if (a.k === 'tasks') return addTasks(p);
     if (a.k === 'publish') {
-      if (t.type === 'local-site' && LF()) { LF().download(t.id); return toast('Downloaded the HTML: it runs anywhere, or host it free on GitHub Pages.'); }
+      if (t.type === 'local-site' && LF()) { LF().download(t.id); return toast('Downloaded the HTML: it runs anywhere, or put it online free with GitHub Pages.'); }
       if (t.type === 'build' || t.type === 'code') { if (window.TribePublish && window.TribePublish.open) return window.TribePublish.open(); if (window.TribeShell) return window.TribeShell.go('website'); }
       if (t.type === 'site') { await openTarget(p); return toast('Use Download HTML in the website designer, or publish it with the project.'); }
       return openTarget(p);

@@ -101,7 +101,7 @@
     root.querySelector('#ws-add').classList.toggle('hidden', !(me().role && me().role !== 'spectator') || tab !== 'library');
     const body = root.querySelector('#ws-body');
     if (!C.hasToken() && tab === 'market' && window.TribeMarket) { window.TribeMarket.mount(body); return; }   // feat/files-dash: the Marketplace works with no tribe (the saved list)
-    if (!C.hasToken()) { body.innerHTML = empty('Needs a tribe', 'The Workshop is shared, so it lives on the tribe host. Host or join a tribe first.'); return; }
+    if (!C.hasToken()) { body.innerHTML = empty('Needs a tribe', 'The Workshop is shared, so it lives on the tribe host. Start or join a tribe first.'); return; }
     try {
       if (tab === 'studios') { if (window.TribeStudios) window.TribeStudios.mount(body); else body.innerHTML = empty('Studios unavailable', 'Reload the app.'); return; }   // v0.27: Studios (studios.js)
       if (tab === 'market') { if (window.TribeMarket) window.TribeMarket.mount(body); else body.innerHTML = empty('Marketplace unavailable', 'Reload the app.'); return; }   // v0.27 company (market.js)

@@ -34,7 +34,7 @@
     return isPhone() ? { ...SMALL, phone: true } : { ...DEFAULT };
   }
   function activate(model, meta) {
-    M = model; corpus = null;
+    M = model; if (corpus) corpus.forEach(it => { it.vec = null; });
     if (window.TribeNLU && window.TribeNLU.setSemantic) window.TribeNLU.setSemantic(model);
     if (meta) setFlag(meta);
     try { document.dispatchEvent(new CustomEvent('flintmodel', { detail: { ready: !!model } })); } catch {}
@@ -102,25 +102,31 @@
 
   // ---------- using it ----------
   const ready = () => !!M;
+  // feat/flint-meaning: what ranks by meaning. The built-in word table (flintmeaning.js) is always there; this helper,
+  // when installed, is stacked on top of it. M alone is only the helper.
+  const cur = () => (window.TribeMeaning && window.TribeMeaning.model()) || M;
   const embed = t => (M ? M.embed(t) : null);
   // Re-rank a short list by meaning, blended with the score it came with. Each item gets .cos.
   function rerank(q, items, textOf, baseOf) {
+    if (window.TribeMeaning && window.TribeMeaning.model() && window.TribeMeaning.model().cover) return window.TribeMeaning.rerank(q, items, textOf, baseOf);
     if (!M || !items || !items.length) return items || [];
     const qv = M.embed(q), top = Math.max(1e-6, ...items.map(a => (baseOf ? baseOf(a) : 0) || 0));
     return items.map(a => { const cos = M.sim(qv, M.embed(textOf(a))); return { ...a, cos, blend: cos * 0.6 + ((baseOf ? baseOf(a) : 0) || 0) / top * 0.4 }; }).sort((a, b) => b.blend - a.blend);
   }
   // Search by meaning across docs, tasks and recent chat (what this person can already see).
   let corpus = null, corpusAt = 0, building = null;
-  async function build() {
+  async function build(fresh) {
     if (!C || !C.connected || !C.connected()) return null;
-    if (corpus && Date.now() - corpusAt < 60000) return corpus;
+    if (corpus && !fresh && Date.now() - corpusAt < 60000) return corpus;
     if (building) return building;
     building = (async () => {
-      const items = [], add = (kind, label, text, run, hint) => { const t = `${label} ${text || ''}`.trim(); if (t.length > 2) items.push({ kind, label: String(label).slice(0, 90), hint, run, text: t.slice(0, 600), vec: M ? M.embed(t.slice(0, 600)) : null }); };
+      // incremental: an item whose words did not change keeps its vector, so only new or edited things are embedded again
+      const old = new Map((corpus || []).map(it => [it.kind + '\n' + it.text, it.vec]));
+      const items = [], add = (kind, label, text, run, hint) => { const t = `${label} ${text || ''}`.trim(); if (t.length > 2) { const tx = t.slice(0, 600); items.push({ kind, label: String(label).slice(0, 90), hint, run, text: tx, vec: M ? old.get(kind + '\n' + tx) || M.embed(tx) : null }); } };
       const [docs, tasks, chans] = await Promise.all([C.api('/docs').catch(() => ({})), C.api('/tasks').catch(() => ({})), C.api('/channels').catch(() => ({}))]);
       for (const d of docs.docs || []) add('Doc', d.title || d.slug, d.summary || '', () => { window.TribeApp.show('docs'); setTimeout(() => window.TribeDocs && window.TribeDocs.open(d.slug), 80); });
       for (const t of tasks.tasks || []) add('Task', t.title, t.body || '', () => window.TribeApp.show('tasks'), t.status);
-      const names = [...new Set(['general', ...((chans.channels || []).map(c => c.name || c.id).filter(Boolean))])].slice(0, 6);
+      const names = [...new Set(['general', ...((chans.channels || []).map(c => c.name || c.id).filter(Boolean))])].filter(n => !/^dm-/.test(n)).slice(0, 6);   // private messages are never indexed
       for (const ch of names) { let r = {}; try { r = await C.api('/chat/' + encodeURIComponent(ch)); } catch {} for (const m of (r.messages || []).filter(x => !x.deleted && x.text && x.by !== 'tribecode').slice(-150)) add('Chat', String(m.text).replace(/\s+/g, ' ').slice(0, 90), m.text, () => { window.TribeApp.show('chat'); if (window.TribeChannels && window.TribeChannels.open) try { window.TribeChannels.open(ch); } catch {} }, `#${ch}${m.byName || m.name ? ' · ' + (m.byName || m.name) : ''}`); }
       // feat/flint-local: files in the repo (by path) and saved Versions (by what they say changed)
       const pid = C.project && C.project();
@@ -141,14 +147,15 @@
   let lastHits = [];
   async function find(q, k = 4) {
     const items = await build(), SM = window.TribeFlintSem; if (!items || !SM) return [];
-    lastHits = SM.rank(q, items.map((it, i) => ({ id: i, text: it.text })), { nlu: window.TribeNLU, model: M, k }).filter(r => r.score >= 0.2).map(r => ({ ...items[r.id], score: r.score }));
+    lastHits = SM.rank(q, items.map((it, i) => ({ id: i, text: it.text })), { nlu: window.TribeNLU, model: cur(), k }).filter(r => r.score >= (cur() && cur().cover ? 0.3 : 0.2)).map(r => ({ ...items[r.id], score: r.score }));
     return lastHits;
   }
   const openHit = i => { const h = lastHits[+i]; if (h && h.run) try { h.run(); } catch {} };
   // docs about the same thing as this one (the doc view asks)
-  async function relatedTo(text, k = 3) { const items = await build(), SM = window.TribeFlintSem; if (!items || !SM) return []; return SM.related(text, items.filter(it => it.kind === 'Doc').map((it, i) => ({ id: i, text: it.text, it })), { nlu: window.TribeNLU, model: M, k }).map(r => r.doc.it); }
+  async function relatedTo(text, k = 3) { const items = await build(), SM = window.TribeFlintSem; if (!items || !SM) return []; return SM.related(text, items.filter(it => it.kind === 'Doc').map((it, i) => ({ id: i, text: it.text, it })), { nlu: window.TribeNLU, model: cur(), k }).map(r => r.doc.it); }
   // The palette: rows found by meaning sit under exact matches and above loose letter matches.
   function paletteRows(q) {
+    if (window.TribeMeaning && !window.TribeMeaning.off) return [];   // feat/flint-meaning: flintmeaning.js lists the rows (built-in table, plus this helper when installed)
     if (!M || !q || q.length < 3) return [];
     if (!corpus || Date.now() - corpusAt > 60000) { build().then(c => { const i = document.getElementById('pal-input'); if (c && i && !document.getElementById('palette').classList.contains('hidden') && i.value.trim().toLowerCase() === q) i.dispatchEvent(new Event('input', { bubbles: true })); }); if (!corpus) return []; }
     return searchNow(q, 4).filter(it => !it.label.toLowerCase().includes(q)).map(it => ({ kind: it.kind, label: it.label, hint: `by meaning${it.hint ? ' · ' + it.hint : ''}`, score: 30 + it.score * 20, run: it.run, sem: true }));
@@ -173,7 +180,7 @@
     if (!root) return;
     root.innerHTML = `<div class="fmd-card">
       <header class="fmd-head"><div><span class="eyebrow">Flint · level 1</span><h2>Local helper</h2></div><button type="button" class="btn ghost" id="fmd-x" aria-label="Close">✕</button></header>
-      <p class="fmd-lead">A small model that knows which words mean similar things. With it, Flint finds what you meant even when you use different words: better “did you mean”, better help answers, and search by meaning across docs, tasks and chat.</p>
+      <p class="fmd-lead">Flint already matches by meaning with a word list that ships with the app. This small model adds to it: it reads whole phrases, so “did you mean”, help answers and search across docs, tasks and chat get sharper.</p>
       <ul class="fmd-facts">
         <li><span>Model</span><b id="fmd-name">${esc(i.name)}</b><small>${esc(i.license)} license${i.card ? ` · <a href="${esc(i.card)}" target="_blank" rel="noopener noreferrer">model card</a>` : ''}</small></li>
         <li><span>Size</span><b id="fmd-size">${esc(size)}</b><small>Downloaded once, kept on this device.</small></li>
@@ -209,5 +216,5 @@
 
   const whenReady = () => boot();
   if (flag()) (window.requestIdleCallback || (f => setTimeout(f, 800)))(() => boot());
-  window.TribeFlintModel = { stop: () => { if (abort) abort.abort(); }, find, openHit, relatedTo, partial, model: () => M, isPhone, SMALL, open, close, install, remove, ready, installed: () => !!flag(), status: () => ({ ready: !!M, installed: flag() }), info, embed, rerank, search, whenReady, DEFAULT };
+  window.TribeFlintModel = { corpus: fresh => build(fresh === true), stop: () => { if (abort) abort.abort(); }, find, openHit, relatedTo, partial, model: () => M, isPhone, SMALL, open, close, install, remove, ready, installed: () => !!flag(), status: () => ({ ready: !!M, installed: flag() }), info, embed, rerank, search, whenReady, DEFAULT };
 })();

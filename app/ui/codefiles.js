@@ -281,7 +281,7 @@
     if (el.dataset.up) return goFolder(cwd.split('/').slice(0, -1).join('/'), true);
     const path = el.dataset.path, type = el.dataset.type;
     if (type === 'dir') { if (isPhone()) return goFolder(path, false); sel = path; cwd = path; toggle(path, true); file = null; drawView(); return; }
-    if (type === 'module') return toast('That folder is a git submodule. It lives in its own repo.');
+    if (type === 'module') return toast('That folder is a git submodule. It has its own code folder.');
     openFile(path);
   }
   async function toggle(path, keepFocus) {

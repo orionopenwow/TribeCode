@@ -96,3 +96,51 @@ and associated documentation files (the "Software"), to deal in the Software wit
 limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software,
 subject to the following conditions: the above copyright notice and this permission notice shall be included in all
 copies or substantial portions of the Software. THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND.
+
+--------------------------------------------------------------------------------
+Flint's word table (app/ui/flintwords.bin): GloVe and WordNet
+--------------------------------------------------------------------------------
+Flint's built-in search by meaning reads a table of about 21,000 English words, 64 numbers each. It is made by
+scripts/dev/flint-words.py from two sources and is a modified, much reduced derivative of both:
+
+GloVe: Global Vectors for Word Representation (https://nlp.stanford.edu/projects/glove/), Jeffrey Pennington, Richard
+Socher and Christopher D. Manning, Stanford University. The "Wikipedia 2014 + Gigaword 5" vectors (100 dimensions) are
+made available under the Public Domain Dedication and License v1.0 (PDDL-1.0,
+https://opendatacommons.org/licenses/pddl/1-0/). The vectors were filtered to common words, re-centred, pulled toward
+WordNet's related words, reduced to 64 dimensions and stored as 8-bit numbers.
+
+WordNet (https://wordnet.princeton.edu/), Princeton University. Synonyms, broader terms and related word forms were
+read from the WordNet database files to adjust the vectors above; the database itself is not shipped.
+
+WordNet Release 3.0
+
+This software and database is being provided to you, the LICENSEE, by
+Princeton University under the following license.  By obtaining, using
+and/or copying this software and database, you agree that you have
+read, understood, and will comply with these terms and conditions.:
+
+Permission to use, copy, modify and distribute this software and
+database and its documentation for any purpose and without fee or
+royalty is hereby granted, provided that you agree to comply with
+the following copyright notice and statements, including the disclaimer,
+and that the same appear on ALL copies of the software, database and
+documentation, including modifications that you make for internal
+use or for distribution.
+
+WordNet 3.0 Copyright 2006 by Princeton University.  All rights reserved.
+
+THIS SOFTWARE AND DATABASE IS PROVIDED "AS IS" AND PRINCETON
+UNIVERSITY MAKES NO REPRESENTATIONS OR WARRANTIES, EXPRESS OR
+IMPLIED.  BY WAY OF EXAMPLE, BUT NOT LIMITATION, PRINCETON
+UNIVERSITY MAKES NO REPRESENTATIONS OR WARRANTIES OF MERCHANT-
+ABILITY OR FITNESS FOR ANY PARTICULAR PURPOSE OR THAT THE USE
+OF THE LICENSED SOFTWARE, DATABASE OR DOCUMENTATION WILL NOT
+INFRINGE ANY THIRD PARTY PATENTS, COPYRIGHTS, TRADEMARKS OR
+OTHER RIGHTS.
+
+The name of Princeton University or Princeton may not be used in
+advertising or publicity pertaining to distribution of the software
+and/or database.  Title to copyright in this software, database and
+any associated documentation shall at all times remain with
+Princeton University and LICENSEE agrees to preserve same.
+

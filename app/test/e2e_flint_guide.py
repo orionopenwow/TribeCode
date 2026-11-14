@@ -40,7 +40,7 @@ def main():
             pg.click("#fg-skip"); pg.wait_for_function("!document.querySelector('#flint-guide').classList.contains('on')", timeout=5000)
             st = pg.evaluate("TribeFlintTour.state()"); assert st.get("paused") and st.get("i") == 1, ("Pause keeps your place", st)   # v0.28.1: flinttour.js
             # the ? menu replays it
-            pg.click("#tb-help"); pg.click("[data-help=tour]"); pg.wait_for_selector("#fg-bubble.on .fg-steps", timeout=5000); pg.keyboard.press("Escape")
+            pg.click("#tb-help"); pg.click("[data-help=learn]"); pg.click("#guide [data-help=tour]"); pg.wait_for_selector("#fg-bubble.on .fg-steps", timeout=5000); pg.keyboard.press("Escape")
             pg.wait_for_function("!document.querySelector('#flint-guide').classList.contains('on')", timeout=5000)
             # asking Flint to open Files: v0.27.2 he flies to the Files row as the small "at work" flame (flintfly.js), then Files opens
             # (the Home card keeps its own Flint bar in the hidden Home view, feat/flint-ai: type in the one on screen)

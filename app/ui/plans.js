@@ -60,6 +60,7 @@
     el.innerHTML = body();
     document.body.append(scrim, el);
     cur = { el, scrim, anchor };
+    window.TribeUI.adopt(el, { scrim, kind: 'decision', onClose: () => close() });   // shared scrim, way in, Esc, focus trap
     if (P().sync) P().sync();   // the newest plan, credits and whether the host sells here
     if (anchor && anchor.setAttribute) anchor.setAttribute('aria-expanded', 'true');
     place(el, anchor);
@@ -87,7 +88,7 @@
   function say(t) { note = t || ''; const m = cur && cur.el.querySelector('#plp-msg'); if (m) { m.textContent = note; m.hidden = !note; } }
   function close() {
     if (!cur) return; const c = cur; cur = null; note = '';
-    c.el.remove(); c.scrim.remove();
+    window.TribeUI.dismiss([c.el, c.scrim], () => { c.el.remove(); c.scrim.remove(); });   // the shared way out (uikit.js)
     if (c.anchor && c.anchor.setAttribute) { c.anchor.setAttribute('aria-expanded', 'false'); if (document.contains(c.anchor)) c.anchor.focus({ preventScroll: true }); }
   }
   addEventListener('keydown', e => { if (e.key === 'Escape' && cur) { e.stopPropagation(); e.preventDefault(); close(); } }, true);

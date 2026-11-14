@@ -26,4 +26,4 @@ Offer your AI helper or your computer's local model to the tribe: what it is, ho
 
 ## Public gigs
 
-**Share publicly** prepares the gig for the community board (a public GitHub repository, through a pull request you review). Only the contact you choose is shared. **Public** shows gigs from other tribes.
+**Share publicly** prepares the gig for the community board (a public page on GitHub; you review the change before it goes up). Only the contact you choose is shared. **Public** shows gigs from other tribes.

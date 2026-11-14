@@ -4,7 +4,7 @@ TribeCode lets a few friends, or one person with AI helpers, build apps, games a
 
 ## The idea in one minute
 
-- **Your tribe, your files.** Chat, docs and tasks are plain files in the tribe's folder; the code lives in your GitHub repo.
+- **Your tribe, your files.** Chat, docs and tasks are plain files in the tribe's folder; the code is saved to your own GitHub.
 - **Friends join with a link**, on a phone or a computer.
 - **People decide, agents do the work.** Your AI proposes; you approve with one tap.
 

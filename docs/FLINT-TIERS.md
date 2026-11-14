@@ -323,6 +323,10 @@ What still needs a model: open writing ("write a song about our cat", "write me 
 
 Agents: add a dated line whenever Flint learns something new. Newest first. Say which tier it runs in.
 
+- **2026-11-13** (feat/flint-meaning, [FLINT-MEANING.md](FLINT-MEANING.md))
+  - Search by meaning with nothing to download: Ctrl K and "find …" match docs, tasks, chat, files, Versions and Guide pages by a built-in word table (free · no AI).
+  - A command in your own words gets one "Did you mean this?" chip when one command is well clear of the rest; nothing runs until it is tapped (free · no AI).
+  - Help answers and taught phrases are matched by meaning too. The local helper, when installed, stacks on top (free · no AI).
 - **2026-11-12** (feat/flint-max)
   - Several steps in one message land as one Undo in the website designer; "do the same on the about page" and "make it bigger" (free · no AI).
   - Palettes from 30 moods or one color, light and dark, WCAG-checked and fixed; "fix the contrast" (free · no AI).

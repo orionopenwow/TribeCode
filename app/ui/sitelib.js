@@ -30,7 +30,7 @@
   const get = (o, p) => String(p).split('.').reduce((a, k) => (a == null ? a : a[k]), o);
   function set(o, p, v) { const ks = String(p).split('.'); let cur = o; ks.slice(0, -1).forEach(k => { if (cur[k] == null || typeof cur[k] !== 'object') cur[k] = {}; cur = cur[k]; }); cur[ks[ks.length - 1]] = v; }
   function overlay(cls) {
-    close();
+    close(true);
     ov = document.createElement('div');
     ov.className = 'slx ' + (cls || ''); ov.id = 'slx';
     ov.setAttribute('role', 'dialog'); ov.setAttribute('aria-modal', 'true'); ov.setAttribute('aria-label', t('Website templates'));
@@ -38,7 +38,7 @@
     ov.tabIndex = -1; setTimeout(() => { if (ov && !ov.contains(document.activeElement)) ov.focus(); }, 0);
     return ov;
   }
-  function close() { if (ov) ov.remove(); ov = null; st = null; clearTimeout(saveT); }
+  function close(now) { const n = ov; ov = null; st = null; clearTimeout(saveT); if (n) { if (window.TribeUI && now !== true) window.TribeUI.dismiss(n, () => n.remove()); else n.remove(); } }   // the shared way out (uikit.js)
   // Esc closes the gallery, or leaves Customize (saving first), wherever focus is
   document.addEventListener('keydown', e => { if (e.key !== 'Escape' || !ov) return; e.stopPropagation(); e.preventDefault(); if (st) done(false); else close(); }, true);
 
