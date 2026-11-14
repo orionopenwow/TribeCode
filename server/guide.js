@@ -1,5 +1,6 @@
 // The Guide (app/ui/guide.js): short how-to pages kept as Markdown in docs/guide/*.md, served read-only.
-//   GET /api/guide         -> { pages: [{ slug, title, summary, body }], paths: [same shape] } in file order (01-…, 02-…)
+//   GET /api/guide         -> { pages: [{ slug, title, summary, body }], paths: [same shape], quick } in file order (01-…, 02-…)
+//                             quick = templates/quickguides.json (the one-screen "How do I…" cards, app/ui/quickguides.js)
 //   GET /api/guide/<slug>  -> { slug, title, summary, body }
 // Only that folder is read. A slug is [a-z0-9-] and must match a file that was listed, so nothing like
 // "..%2f..%2fpackage.json" can reach another path (400 for a bad slug, 404 for an unknown one).
@@ -44,11 +45,22 @@ module.exports = function makeGuide({ ui } = {}) {
 
   async function route(req, res, { m, b, parts, send, fail }) {
     if (m !== 'GET') return fail(res, 405, 'the guide is read-only');
-    if (!b) return send(res, 200, { pages: pages(), paths: paths() });
+    if (!b) return send(res, 200, { pages: pages(), paths: paths(), quick: quick() });
     if (parts.length > 2 || !SLUG.test(b)) return fail(res, 400, 'bad page name');
     const p = pages().find(x => x.slug === b) || paths().find(x => x.slug === b);
     return p ? send(res, 200, p) : fail(res, 404, 'no such page');
   }
   const paths = () => { pages(); return pathCache; };
-  return { route, pages, paths, dir };
+  // feat/learn: the quick guides, one file for the app, Flint's knowledge base and the website. Next to the server in a
+  // checkout (templates/), beside ui/ in the desktop app (resources/templates/).
+  let qCache = null, qAt = 0;
+  function quick() {
+    if (qCache && Date.now() - qAt < 5000) return qCache;
+    const files = [path.join(__dirname, '..', 'templates', 'quickguides.json'), ui && path.join(ui, '..', 'templates', 'quickguides.json'), ui && path.join(ui, '..', '..', 'templates', 'quickguides.json')].filter(Boolean);
+    let q = null;
+    for (const f of files) { try { const j = JSON.parse(fs.readFileSync(f, 'utf8')); if (j && Array.isArray(j.guides)) { q = { version: j.version, groups: j.groups || [], labels: j.labels || {}, guides: j.guides }; break; } } catch {} }
+    qCache = q || { version: 0, groups: [], labels: {}, guides: [] }; qAt = Date.now();
+    return qCache;
+  }
+  return { route, pages, paths, quick, dir };
 };

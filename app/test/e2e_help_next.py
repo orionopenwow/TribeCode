@@ -34,7 +34,7 @@ def main():
 
             # 1. the ? menu: six entries by intent, the first one is the main one
             pg.click("#tb-help"); pg.wait_for_selector("#help-menu [data-help=next]")
-            assert pg.evaluate("[...document.querySelectorAll('#help-menu .hm-sec [data-help]')].map(b => b.dataset.help).join()") == "next,learn,flint,wrong,keys,new"
+            assert pg.evaluate("[...document.querySelectorAll('#help-menu .hm-sec [data-help]')].map(b => b.dataset.help).join()") == "next,quick,learn,flint,wrong,keys,new"
             assert pg.locator("#help-menu .hm-primary").get_attribute("data-help") == "next"
             pg.screenshot(path=str(SHOTS / "help-next-menu.png"))
             pg.keyboard.press("Tab"); pg.keyboard.press("Enter") if pg.evaluate("document.activeElement && document.activeElement.dataset.help === 'next'") else pg.click("#help-menu [data-help=next]")

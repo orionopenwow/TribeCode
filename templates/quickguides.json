@@ -1,0 +1,1173 @@
+{
+ "version": 1,
+ "updated": "2026-11-14",
+ "note": "Quick guides: one-screen answers to 'How do I…'. ONE source of truth. The app (app/ui/quickguides.js via /api/guide and guide-pages.json), Flint's knowledge base (server/flintkb.js) and the website (site/quick-guides.json, written by scripts/dev/site-quick.js) all read this file. Each card: 3 to 5 steps, 60 to 120 words, one 'do' (Do it for me) and one 'show' (Show me). 'do' is runner:arg (next, help, go, settings, call, click, ask, path). 'show' is { lesson } (app/ui/flintlessons.js) or { go | settings, sel, say }. 'needs' names a window global: without it the card is not listed. {tokens} in steps come from 'labels' (the live control's own words when it is on screen, else the text here).",
+ "groups": [
+  [
+   "start",
+   "Start"
+  ],
+  [
+   "people",
+   "Friends"
+  ],
+  [
+   "ai",
+   "AI helpers"
+  ],
+  [
+   "make",
+   "Make things"
+  ],
+  [
+   "publish",
+   "Put it online"
+  ],
+  [
+   "safe",
+   "Stay safe"
+  ],
+  [
+   "talk",
+   "Talk"
+  ],
+  [
+   "plan",
+   "Plan the work"
+  ],
+  [
+   "settings",
+   "Make it yours"
+  ],
+  [
+   "fix",
+   "Fix a problem"
+  ]
+ ],
+ "labels": {
+  "invite": {
+   "sel": "#tour-invite",
+   "text": "Invite friends"
+  },
+  "ai": {
+   "sel": "#sf-claude",
+   "text": "Bring an AI helper"
+  },
+  "newtask": {
+   "sel": "#task-new",
+   "text": "New task"
+  },
+  "newvote": {
+   "sel": "#prop-new",
+   "text": "New proposal"
+  },
+  "backuptab": {
+   "tab": "projects",
+   "text": "Projects and backup"
+  },
+  "looktab": {
+   "tab": "profile",
+   "text": "Profile & look"
+  },
+  "notiftab": {
+   "tab": "notifications",
+   "text": "Notifications"
+  }
+ },
+ "guides": [
+  {
+   "id": "start-project",
+   "group": "start",
+   "title": "Start a project",
+   "intro": "A project is one thing you are making, with its own chat, tasks and files. You end with an open project and a first step.",
+   "asks": [
+    "make a new project",
+    "create a project",
+    "begin something new",
+    "new project"
+   ],
+   "steps": [
+    "Press the plus in the left rail.",
+    "Pick what you are making: a website, a game, an app or something else.",
+    "Give it a name. You can change it later.",
+    "The project opens with a first step waiting for you."
+   ],
+   "do": "next:start",
+   "doLabel": "Start one now",
+   "show": {
+    "go": "home",
+    "sel": "#pj-plus",
+    "say": "New projects start here."
+   }
+  },
+  {
+   "id": "write-idea",
+   "group": "start",
+   "title": "Write down the idea",
+   "intro": "One or two clear sentences keep everyone, people and AI helpers alike, building the same thing. You end with a saved idea on the front page.",
+   "asks": [
+    "write the vision",
+    "say what the project is for",
+    "describe my idea"
+   ],
+   "steps": [
+    "Open your project.",
+    "Say what it is and who it is for, in one or two sentences.",
+    "Save it. Friends and AI helpers read this before they build.",
+    "Change it any time the idea changes."
+   ],
+   "do": "next:vision",
+   "doLabel": "Write it now",
+   "show": {
+    "go": "home",
+    "sel": "#pj-next-slot, #pj-overview",
+    "say": "The idea lives on the project's front page."
+   }
+  },
+  {
+   "id": "whats-next",
+   "group": "start",
+   "title": "See what to do next",
+   "intro": "When you are not sure what to do, TribeCode looks at your project and picks one useful step, so you never face a blank page.",
+   "asks": [
+    "what should i do next",
+    "i am stuck",
+    "what now"
+   ],
+   "steps": [
+    "Press the ? in the top bar.",
+    "Choose What should I do next?",
+    "You get one step for where this project is, and why.",
+    "Press the button to do it, or Not now for a different one."
+   ],
+   "do": "next:open",
+   "doLabel": "Show my next step",
+   "show": {
+    "sel": "#tb-help",
+    "say": "Help and your next step are always here."
+   }
+  },
+  {
+   "id": "take-tour",
+   "group": "start",
+   "title": "Take the tour",
+   "intro": "A two minute look around, so you know where chat, tasks, files and design live before you start making something.",
+   "asks": [
+    "show me around",
+    "tutorial",
+    "look around the app"
+   ],
+   "steps": [
+    "Press the ? in the top bar, then Learn.",
+    "Choose Take the tour with Flint.",
+    "Flint flies to each main place and says what it is for.",
+    "Tap anywhere to stop. You can run it again any time."
+   ],
+   "do": "help:tour",
+   "doLabel": "Start the tour",
+   "show": {
+    "sel": "#tb-help",
+    "say": "The tour starts from here."
+   }
+  },
+  {
+   "id": "invite-friend",
+   "group": "people",
+   "title": "Invite a friend",
+   "intro": "Friends join with one link, on a laptop or a phone. You end with their name in your group, ready to chat and build.",
+   "asks": [
+    "add a person",
+    "add a friend to my group",
+    "send an invite link",
+    "get someone to join",
+    "share the link with a friend"
+   ],
+   "steps": [
+    "Press {invite} in the sidebar.",
+    "Copy the link, or show the QR code.",
+    "Send it any way you like: text, email, chat.",
+    "Your friend opens it, picks a name and is in. No account needed."
+   ],
+   "do": "next:invite",
+   "doLabel": "Open the invite",
+   "show": {
+    "lesson": "invite"
+   }
+  },
+  {
+   "id": "join-phone",
+   "group": "people",
+   "title": "Join from a phone",
+   "intro": "TribeCode works on a phone like an app, with nothing to install from a store. You end with its icon on the Home Screen.",
+   "asks": [
+    "use it on my phone",
+    "open on iphone",
+    "open on android phone",
+    "add to home screen",
+    "phone app"
+   ],
+   "steps": [
+    "On the computer, open the invite and show the QR code.",
+    "Point the phone's camera at it and tap the link.",
+    "Pick a name and tap Join.",
+    "Tap Add to Home Screen so it opens like an app."
+   ],
+   "do": "next:invite",
+   "doLabel": "Show the QR code",
+   "show": {
+    "lesson": "invite"
+   }
+  },
+  {
+   "id": "message-person",
+   "group": "people",
+   "title": "Message one person",
+   "intro": "Use a private message when something is only for one friend and not for the whole group. It works the same way for AI helpers, and you can come back to it later.",
+   "asks": [
+    "send a direct message",
+    "dm someone",
+    "private message",
+    "talk to one friend"
+   ],
+   "steps": [
+    "Open People in the top bar.",
+    "Click the person you want.",
+    "Choose Message. Only the two of you see it.",
+    "Your messages stay under Chat."
+   ],
+   "do": "click:#ppl-btn",
+   "doLabel": "Open People",
+   "show": {
+    "lesson": "people"
+   }
+  },
+  {
+   "id": "set-roles",
+   "group": "people",
+   "title": "Set who can do what",
+   "intro": "Roles decide who may change settings, who may build and who may only look. Set them when new people join your group, so everyone has the right access.",
+   "asks": [
+    "set roles",
+    "make someone an admin",
+    "change permissions",
+    "let a friend only look",
+    "who is allowed"
+   ],
+   "needs": "TribeRoles",
+   "steps": [
+    "Open People in the top bar.",
+    "Click a person, then choose their role.",
+    "Admins can change settings. Members can build. Guests can look and chat.",
+    "The change applies right away."
+   ],
+   "do": "call:TribeRoles.open",
+   "doLabel": "Open roles",
+   "show": {
+    "go": "chat",
+    "sel": "#ppl-btn",
+    "say": "Roles are set from People."
+   }
+  },
+  {
+   "id": "bring-ai",
+   "group": "ai",
+   "title": "Bring your own AI",
+   "intro": "Use the AI you already have, such as Claude, ChatGPT, Codex, Gemini or Cursor. You end with it listed beside your friends, ready for a task.",
+   "asks": [
+    "connect my ai",
+    "connect claude",
+    "add an ai helper",
+    "use chatgpt",
+    "use codex or gemini",
+    "add an agent"
+   ],
+   "steps": [
+    "Press {ai}.",
+    "Pick the AI you already use.",
+    "Copy the one line it shows and paste it into that AI.",
+    "The AI joins like a friend, with your access and never more."
+   ],
+   "do": "next:ai",
+   "doLabel": "Bring one in",
+   "show": {
+    "lesson": "agents"
+   }
+  },
+  {
+   "id": "ask-flint",
+   "group": "ai",
+   "title": "Ask Flint to do something",
+   "intro": "Flint is the helper built into TribeCode. It works with no AI account at all and runs on your own device.",
+   "asks": [
+    "talk to flint",
+    "use the built in helper",
+    "what can flint do",
+    "give flint a command"
+   ],
+   "steps": [
+    "Click Flint's box at the bottom of the sidebar.",
+    "Type what you want in plain words: add a task to fix the menu.",
+    "Flint does it, or asks one short question first.",
+    "Say undo if it was not what you meant."
+   ],
+   "do": "call:TribeFlint.focus",
+   "doLabel": "Open Flint",
+   "show": {
+    "sel": "#flint, #flint-home",
+    "say": "Flint is here. Type in plain words."
+   }
+  },
+  {
+   "id": "flint-device",
+   "group": "ai",
+   "title": "Make Flint smarter on this device",
+   "intro": "A small free download lets Flint understand what you mean, not only exact commands. It stays on your computer and works offline.",
+   "asks": [
+    "download the local brain",
+    "offline ai",
+    "run ai on my computer",
+    "flint levels"
+   ],
+   "needs": "TribeFlintPage",
+   "steps": [
+    "Open Flint's page.",
+    "Look at On this device: it shows what your computer can run.",
+    "Choose the small download if it is offered.",
+    "Flint then understands by meaning, with nothing sent anywhere."
+   ],
+   "do": "call:TribeFlintPage.open",
+   "doLabel": "Open Flint's page",
+   "show": {
+    "lesson": "local"
+   }
+  },
+  {
+   "id": "ai-watch",
+   "group": "ai",
+   "title": "See what the AI helpers are doing",
+   "intro": "AI helpers work in the open, so you can always see what each one is doing and stop anything you do not want.",
+   "asks": [
+    "watch my agents",
+    "what is the ai working on",
+    "agents hub",
+    "check on the ai"
+   ],
+   "steps": [
+    "Open AI helpers in the sidebar.",
+    "Each helper shows what it is working on right now.",
+    "Click one to see its changes and anything waiting for your yes.",
+    "Costly or public actions always wait for a person."
+   ],
+   "do": "go:ws-agents",
+   "doLabel": "Open AI helpers",
+   "show": {
+    "lesson": "agents"
+   }
+  },
+  {
+   "id": "make-site",
+   "group": "make",
+   "title": "Make a website",
+   "intro": "You can have a good looking page in a few minutes without writing code. You end with a site you can see in the preview.",
+   "asks": [
+    "build a web page",
+    "create a site",
+    "link in bio page",
+    "landing page",
+    "start a website"
+   ],
+   "steps": [
+    "Open Website templates.",
+    "Pick one, or tell Flint what the site is for.",
+    "Click any words in the preview and type over them.",
+    "Add a block from the left when you need a new section."
+   ],
+   "do": "call:TribeSiteLib.open",
+   "doLabel": "Pick a template",
+   "show": {
+    "lesson": "site"
+   }
+  },
+  {
+   "id": "change-site",
+   "group": "make",
+   "title": "Change words and pictures on your site",
+   "intro": "Everything on the page can be changed by clicking it, so the site says what you want in your own words and pictures.",
+   "asks": [
+    "edit my site text",
+    "replace a photo",
+    "change a button",
+    "edit the website"
+   ],
+   "needs": "TribeSiteDesigner",
+   "steps": [
+    "Open the website designer.",
+    "Click the words and type. Click a picture to swap it.",
+    "Click a button to choose where it goes.",
+    "Every change is saved. Ctrl Z takes the last one back."
+   ],
+   "do": "call:TribeSiteDesigner.open",
+   "doLabel": "Open the designer",
+   "show": {
+    "lesson": "site"
+   }
+  },
+  {
+   "id": "make-design",
+   "group": "make",
+   "title": "Design a screen, poster or logo",
+   "intro": "Design is for anything visual. What you draw is made of layers, so every part can be changed later by you or by Flint.",
+   "asks": [
+    "draw a mockup",
+    "make a logo",
+    "design an app screen",
+    "open the canvas",
+    "make slides"
+   ],
+   "steps": [
+    "Open Design.",
+    "Pick what you are making: a screen, slides, a poster, a logo.",
+    "Choose a template or describe it to Flint.",
+    "Select anything and say what to change: make it dark."
+   ],
+   "do": "next:design",
+   "doLabel": "Open Design",
+   "show": {
+    "lesson": "design"
+   }
+  },
+  {
+   "id": "make-game",
+   "group": "make",
+   "title": "Start a game",
+   "intro": "A starter gives you a small game that already plays, so you learn by changing it. You end with something you can play.",
+   "asks": [
+    "build a game",
+    "make a platformer",
+    "pixel game",
+    "game starter"
+   ],
+   "steps": [
+    "Start a project and choose Game.",
+    "Pick a starter so you have something that already runs.",
+    "Open the preview and play it.",
+    "Change one thing at a time: the hero, the level, the speed."
+   ],
+   "do": "path:game",
+   "doLabel": "Open the game path",
+   "show": {
+    "lesson": "preview"
+   }
+  },
+  {
+   "id": "see-running",
+   "group": "make",
+   "title": "See it running",
+   "intro": "The preview shows your site, app or game working live beside your work, so you see every change as soon as it is made.",
+   "asks": [
+    "open the preview",
+    "test my app",
+    "try my site",
+    "play my game",
+    "see my changes"
+   ],
+   "steps": [
+    "Open the preview beside your work.",
+    "Click around the way a visitor would.",
+    "Switch between App and Website at the top.",
+    "If something looks wrong, tell Flint or your AI helper what you saw."
+   ],
+   "do": "call:TribePreview.open",
+   "doLabel": "Open the preview",
+   "show": {
+    "lesson": "preview"
+   }
+  },
+  {
+   "id": "add-files",
+   "group": "make",
+   "title": "Add files and docs",
+   "intro": "Files holds everything the project knows: notes, sheets, pictures and code. Put things here so friends and helpers can use them.",
+   "asks": [
+    "upload a file",
+    "add a document",
+    "drop a folder in",
+    "import my files",
+    "write a doc",
+    "where do i put files",
+    "add a file"
+   ],
+   "steps": [
+    "Open Files in the sidebar.",
+    "Drag a file or a folder onto the window.",
+    "Or press New doc to write one here.",
+    "AI helpers read what is in Files before they build."
+   ],
+   "do": "go:docs",
+   "doLabel": "Open Files",
+   "show": {
+    "lesson": "files"
+   }
+  },
+  {
+   "id": "collect-ideas",
+   "group": "make",
+   "title": "Collect inspiration",
+   "intro": "A board of things you like gives your project a look of its own. You end with colors and fonts picked from your own taste.",
+   "asks": [
+    "save pictures i like",
+    "mood board",
+    "pick colors and fonts",
+    "inspiration board"
+   ],
+   "needs": "TribeInspoBoard",
+   "steps": [
+    "Open the inspiration board.",
+    "Drop in pictures, links, sounds or fonts you like.",
+    "TribeCode reads the colors and suggests a look.",
+    "Say use my board's style to apply it to your site or design."
+   ],
+   "do": "call:TribeInspoBoard.open",
+   "doLabel": "Open the board",
+   "show": {
+    "lesson": "inspo"
+   }
+  },
+  {
+   "id": "add-tool",
+   "group": "make",
+   "title": "Add a tool or widget",
+   "intro": "The Marketplace has free add-ons made by other people: widgets, skills, art packs and connections to other apps. You end with a new tool in your project.",
+   "asks": [
+    "find a widget",
+    "marketplace",
+    "install a skill",
+    "add an asset pack"
+   ],
+   "steps": [
+    "Open the Marketplace.",
+    "Search for what you need.",
+    "Press Add. It shows where it came from and its license.",
+    "Undo removes it. Installed lists what you have."
+   ],
+   "do": "go:market",
+   "doLabel": "Open the Marketplace",
+   "show": {
+    "lesson": "market"
+   }
+  },
+  {
+   "id": "publish",
+   "group": "publish",
+   "title": "Publish it",
+   "intro": "Publishing puts your site on the internet so anyone with the address can see it. You end with a link you can send to people, and you stay in control of it.",
+   "asks": [
+    "put my site online",
+    "go live",
+    "make it public",
+    "launch my website",
+    "get a web address",
+    "deploy"
+   ],
+   "needs": "TribePublish",
+   "steps": [
+    "Open Publish.",
+    "Check the name and the short description.",
+    "Press Publish. You get a web address to share.",
+    "Publish again any time to update what people see."
+   ],
+   "do": "next:publish",
+   "doLabel": "Open Publish",
+   "show": {
+    "go": "home",
+    "sel": "#pj-next-slot, #pj-overview",
+    "say": "Publish from your project's front page."
+   }
+  },
+  {
+   "id": "check-first",
+   "group": "publish",
+   "title": "Check it before you publish",
+   "intro": "A quick check before you publish catches the small things visitors notice first. You end with a clean list, ready to go public.",
+   "asks": [
+    "safety check",
+    "is my site ready",
+    "test before launch",
+    "find broken links"
+   ],
+   "steps": [
+    "Open the check from your next step.",
+    "It looks for broken links, missing pictures and private things left in.",
+    "Fix what it lists, or ask Flint to fix it.",
+    "Run it again until it is clear."
+   ],
+   "do": "next:check",
+   "doLabel": "Run the check",
+   "show": {
+    "lesson": "preview"
+   }
+  },
+  {
+   "id": "download-site",
+   "group": "publish",
+   "title": "Download your site as a file",
+   "intro": "Your site is yours. You can take it out of TribeCode as plain files at any time and put it anywhere you like.",
+   "asks": [
+    "export html",
+    "save my website to my computer",
+    "get a zip of my site",
+    "take my site elsewhere"
+   ],
+   "needs": "TribeSiteDesigner",
+   "steps": [
+    "Open the website designer.",
+    "Press Download HTML for one file that works anywhere.",
+    "Or open the menu beside it for a zip with every page.",
+    "Put the file on any web service you like."
+   ],
+   "do": "call:TribeSiteDesigner.open",
+   "doLabel": "Open the designer",
+   "show": {
+    "lesson": "export"
+   }
+  },
+  {
+   "id": "share-preview",
+   "group": "publish",
+   "title": "Share a preview before it is public",
+   "intro": "Show a few people your work before the whole world sees it, and get their thoughts while it is still easy to change.",
+   "asks": [
+    "send a preview link",
+    "let a friend try it first",
+    "show my work in progress"
+   ],
+   "steps": [
+    "Open the preview.",
+    "Ask Flint: share the preview.",
+    "Send the link to the people you choose.",
+    "It shows your work as it is now. Publishing is still a separate step."
+   ],
+   "do": "ask:share the preview",
+   "doLabel": "Ask Flint to share it",
+   "show": {
+    "lesson": "preview"
+   }
+  },
+  {
+   "id": "android-app",
+   "group": "publish",
+   "title": "Make it a phone app",
+   "intro": "Your project can open on a phone like an app, on Android and iPhone alike, with its own icon. No store account is needed to try it.",
+   "asks": [
+    "android app",
+    "iphone app",
+    "phone app mode",
+    "install my app on a phone",
+    "apk"
+   ],
+   "needs": "TribePhoneApp",
+   "steps": [
+    "Open your project's settings.",
+    "Turn on Phone app mode.",
+    "Open the preview and choose the phone view.",
+    "Friends open the link on a phone and tap Add to Home Screen."
+   ],
+   "do": "path:app",
+   "doLabel": "Open the app path",
+   "show": {
+    "lesson": "preview"
+   }
+  },
+  {
+   "id": "back-up",
+   "group": "safe",
+   "title": "Back up everything",
+   "intro": "A backup is one file that holds your whole group. Make one before big changes, and from time to time, so that nothing you made can ever be lost.",
+   "asks": [
+    "save a backup",
+    "download my data",
+    "keep a copy safe",
+    "export everything",
+    "back up",
+    "backup my group",
+    "make a backup"
+   ],
+   "steps": [
+    "Open Settings, then {backuptab}.",
+    "Press Download backup.",
+    "You get one file with every project, doc and message.",
+    "Keep it somewhere safe, like another drive."
+   ],
+   "do": "settings:projects",
+   "doLabel": "Open backups",
+   "show": {
+    "settings": "projects",
+    "sel": "#set-backup, #settings-body",
+    "say": "One file with everything."
+   }
+  },
+  {
+   "id": "undo",
+   "group": "safe",
+   "title": "Undo a mistake",
+   "intro": "Almost everything can be taken back, so try things freely. You end exactly where you were before the change, with nothing lost along the way.",
+   "asks": [
+    "take that back",
+    "revert my last change",
+    "i broke something",
+    "ctrl z",
+    "undo"
+   ],
+   "steps": [
+    "Press Ctrl Z right after the change.",
+    "Or tell Flint: undo.",
+    "Flint says what it took back.",
+    "For anything older, open an earlier version instead."
+   ],
+   "do": "ask:undo",
+   "doLabel": "Undo the last change",
+   "show": {
+    "sel": "#flint, #flint-home",
+    "say": "Say undo here."
+   }
+  },
+  {
+   "id": "older-version",
+   "group": "safe",
+   "title": "Go back to an older version",
+   "intro": "TribeCode keeps saved moments of your project as you work, so you can look back in time and return to one.",
+   "asks": [
+    "restore yesterday's version",
+    "version history",
+    "see previous versions",
+    "roll back"
+   ],
+   "needs": "TribeVersions",
+   "steps": [
+    "Open Versions for your project.",
+    "Pick a moment from the list to see what changed.",
+    "Press Restore to go back to it.",
+    "Nothing is lost: today's version is kept in the list too."
+   ],
+   "do": "call:TribeVersions.open",
+   "doLabel": "Open Versions",
+   "show": {
+    "call": "TribeVersions.open",
+    "sel": "#vr-list, #vr",
+    "say": "Every saved moment is here."
+   }
+  },
+  {
+   "id": "start-call",
+   "group": "talk",
+   "title": "Start a call",
+   "intro": "A call is the quickest way to decide something together. Everyone in the project can talk, and anyone can share a screen while you do.",
+   "asks": [
+    "voice chat",
+    "join the huddle",
+    "talk out loud",
+    "start a meeting",
+    "video call"
+   ],
+   "needs": "TribeHuddle",
+   "steps": [
+    "Open Chat.",
+    "Press the huddle button, or Ctrl Shift M from anywhere.",
+    "Allow the microphone when the browser asks.",
+    "Friends who are online can join with one click."
+   ],
+   "do": "call:TribeHuddle.join",
+   "doLabel": "Start the call",
+   "show": {
+    "lesson": "huddles"
+   }
+  },
+  {
+   "id": "share-screen",
+   "group": "talk",
+   "title": "Share your screen",
+   "intro": "Show friends exactly what you see. It is the fastest way to explain a problem, to teach someone a step, or to show off what you made today.",
+   "asks": [
+    "present my screen",
+    "screenshare",
+    "show my window to friends"
+   ],
+   "needs": "TribeHuddle",
+   "steps": [
+    "Join the call first.",
+    "Press Share screen.",
+    "Pick the window or the whole screen.",
+    "Press it again to stop sharing."
+   ],
+   "do": "call:TribeHuddle.share",
+   "doLabel": "Share my screen",
+   "show": {
+    "lesson": "huddles"
+   }
+  },
+  {
+   "id": "tell-everyone",
+   "group": "talk",
+   "title": "Tell everyone something",
+   "intro": "Chat is where the whole group talks, people and AI helpers together. Use it for news, questions and quick decisions that everyone should see.",
+   "asks": [
+    "post an update",
+    "announce to the group",
+    "send a message to all"
+   ],
+   "steps": [
+    "Open Chat.",
+    "Type your message and press Enter.",
+    "Or ask Flint: tell everyone the new page is up.",
+    "Type @ and a name to get one person's attention."
+   ],
+   "do": "go:chat",
+   "doLabel": "Open Chat",
+   "show": {
+    "lesson": "chat"
+   }
+  },
+  {
+   "id": "add-task",
+   "group": "plan",
+   "title": "Add a task",
+   "intro": "A task is one small job that someone can finish. Small tasks are easier to share out. You end with a card on the board.",
+   "asks": [
+    "make a to do",
+    "create a task",
+    "new todo",
+    "write down a job"
+   ],
+   "steps": [
+    "Open Tasks and press {newtask}.",
+    "Say what needs doing in a few words.",
+    "Or type /task in chat, or ask Flint: add a task to fix the menu.",
+    "The card shows one button for its next step."
+   ],
+   "do": "next:task",
+   "doLabel": "Add one now",
+   "show": {
+    "lesson": "tasks"
+   }
+  },
+  {
+   "id": "give-task",
+   "group": "plan",
+   "title": "Give a task to someone",
+   "intro": "Every task should have one owner, so nothing is forgotten. The owner can be a friend, an AI helper, or you yourself.",
+   "asks": [
+    "assign a task",
+    "who does what",
+    "hand a job to a friend",
+    "give work to an ai"
+   ],
+   "steps": [
+    "Open Tasks.",
+    "Open the card and choose a person or an AI helper.",
+    "Or ask Flint: assign fix the menu to Maya.",
+    "They see it at the top of their own list."
+   ],
+   "do": "go:ws-tasks",
+   "doLabel": "Open Tasks",
+   "show": {
+    "lesson": "tasks"
+   }
+  },
+  {
+   "id": "vote",
+   "group": "plan",
+   "title": "Vote on an idea",
+   "intro": "When the group needs to choose, a vote is fairer and faster than a long chat. You end with a clear decision everyone can see.",
+   "asks": [
+    "make a proposal",
+    "decide together",
+    "start a poll",
+    "ask the group to choose"
+   ],
+   "steps": [
+    "Open the board and press {newvote}.",
+    "Write the idea in a sentence.",
+    "Everyone votes yes or no and can add a comment.",
+    "The result stays on the board so the decision is remembered."
+   ],
+   "do": "go:board",
+   "doLabel": "Open the board",
+   "show": {
+    "go": "board",
+    "sel": "#prop-new, #view-board",
+    "say": "New ideas to vote on start here."
+   }
+  },
+  {
+   "id": "add-date",
+   "group": "plan",
+   "title": "Put a date on the calendar",
+   "intro": "The calendar shows calls, deadlines and plans for the whole group in one place, so nobody has to ask when something is happening. You end with a date everyone can see.",
+   "asks": [
+    "schedule a meeting",
+    "add an event",
+    "set a deadline",
+    "plan a day"
+   ],
+   "needs": "TribePlan",
+   "steps": [
+    "Open the calendar.",
+    "Press a day, or the new button.",
+    "Give it a title and a time.",
+    "Tasks with a due date show up here too."
+   ],
+   "do": "go:calendar",
+   "doLabel": "Open the calendar",
+   "show": {
+    "go": "calendar",
+    "sel": "#cal-new, #view-calendar",
+    "say": "Add dates here."
+   }
+  },
+  {
+   "id": "run-company",
+   "group": "plan",
+   "title": "Run it like a small business",
+   "intro": "Company gives your project the jobs a small business has, so selling, support and money get done as well as the building.",
+   "asks": [
+    "company mode",
+    "set up jobs for everyone",
+    "give people roles in the business",
+    "start a company"
+   ],
+   "steps": [
+    "Open Company.",
+    "Answer four short questions about what you are building.",
+    "Each job goes to a friend, an AI helper, or both.",
+    "A short daily plan says what each one should do."
+   ],
+   "do": "next:company",
+   "doLabel": "Open Company",
+   "show": {
+    "lesson": "company"
+   }
+  },
+  {
+   "id": "get-help",
+   "group": "plan",
+   "title": "Ask the group for help",
+   "intro": "Work is where people in your group offer their skills and ask for a hand. Use it when a job needs someone else, or when you have time to give.",
+   "asks": [
+    "post a gig",
+    "find someone with a skill",
+    "i need help with something",
+    "offer help"
+   ],
+   "steps": [
+    "Open Work.",
+    "Choose Get help and say what you need.",
+    "Friends or AI helpers say they are interested.",
+    "Accept one and it becomes a task on their list."
+   ],
+   "do": "go:work",
+   "doLabel": "Open Work",
+   "show": {
+    "lesson": "work"
+   }
+  },
+  {
+   "id": "language",
+   "group": "settings",
+   "title": "Change the language",
+   "intro": "TribeCode speaks eight languages, and each person picks their own. Changing yours does not change it for anyone else in your group, and you can switch back whenever you like.",
+   "asks": [
+    "switch to spanish",
+    "use french",
+    "translate the app",
+    "change language to japanese"
+   ],
+   "steps": [
+    "Open Settings, then {looktab}.",
+    "Find Language.",
+    "Pick yours from the list.",
+    "The app changes right away, on this device."
+   ],
+   "do": "settings:profile",
+   "doLabel": "Open the setting",
+   "show": {
+    "settings": "profile",
+    "sel": "#set-lang",
+    "say": "Pick your language here."
+   }
+  },
+  {
+   "id": "look",
+   "group": "settings",
+   "title": "Change the look",
+   "intro": "Make TribeCode comfortable for your eyes. Your choices are yours alone, and they can follow you to your other devices if you want them to.",
+   "asks": [
+    "dark mode",
+    "light mode",
+    "change the theme",
+    "bigger text",
+    "change colors"
+   ],
+   "steps": [
+    "Open Settings, then {looktab}.",
+    "Pick a theme and an accent color.",
+    "Set the text size that reads well for you.",
+    "Ctrl Shift L switches dark and light from anywhere."
+   ],
+   "do": "settings:profile",
+   "doLabel": "Open the setting",
+   "show": {
+    "settings": "profile",
+    "sel": "#set-personalize, #settings-body",
+    "say": "Theme, color and text size."
+   }
+  },
+  {
+   "id": "notify",
+   "group": "settings",
+   "title": "Get told when something happens",
+   "intro": "Hear about the things that matter, such as a message for you or a task that was finished, and stay quiet about everything else.",
+   "asks": [
+    "turn on notifications",
+    "phone alerts",
+    "push notifications",
+    "mute notifications",
+    "notifications on my phone",
+    "get notified"
+   ],
+   "steps": [
+    "Open Settings, then {notiftab}.",
+    "Turn on the kinds you want.",
+    "Allow notifications when the browser asks.",
+    "On a phone, add TribeCode to the Home Screen first."
+   ],
+   "do": "settings:notifications",
+   "doLabel": "Open the setting",
+   "show": {
+    "settings": "notifications",
+    "sel": "#settings-body",
+    "say": "Choose what you hear about."
+   }
+  },
+  {
+   "id": "shortcuts",
+   "group": "settings",
+   "title": "Use the keyboard",
+   "intro": "A few keys save a lot of clicking. Ctrl K alone can take you to any place, person, file or action in the app.",
+   "asks": [
+    "keyboard shortcuts",
+    "hotkeys",
+    "what does ctrl k do",
+    "search everything"
+   ],
+   "steps": [
+    "Press Ctrl K to search and run anything.",
+    "Press Ctrl / to see every shortcut.",
+    "Ctrl Shift M starts a call. Ctrl Shift B reports a bug.",
+    "On a Mac, use Cmd in place of Ctrl."
+   ],
+   "do": "help:keys",
+   "doLabel": "Show the shortcuts",
+   "show": {
+    "sel": "#tour-search, #tb-help",
+    "say": "Ctrl K opens this from anywhere."
+   }
+  },
+  {
+   "id": "cant-connect",
+   "group": "fix",
+   "title": "Fix \"can't connect\"",
+   "intro": "TribeCode runs on one person's computer, so most connection trouble is that computer being asleep, closed, or off the internet.",
+   "asks": [
+    "it will not connect",
+    "connection failed",
+    "stuck on starting",
+    "offline error",
+    "server not reachable",
+    "cant connect",
+    "cannot connect"
+   ],
+   "steps": [
+    "Check that the computer running the group is on and TribeCode is open.",
+    "Check your own internet, then reload the page.",
+    "Ask the person who invited you for a fresh link.",
+    "Still stuck? Open Troubleshooting for more."
+   ],
+   "do": "help:trouble",
+   "doLabel": "Open Troubleshooting",
+   "show": {
+    "sel": "#tb-help",
+    "say": "Something's wrong is in here."
+   }
+  },
+  {
+   "id": "friend-cant-join",
+   "group": "fix",
+   "title": "A friend can't open the link",
+   "intro": "Invite links fail most often inside chat apps, which open pages in their own small browser. These steps fix nearly every case.",
+   "asks": [
+    "invite link not working",
+    "my friend cannot join",
+    "link expired",
+    "link opens a blank page"
+   ],
+   "steps": [
+    "Ask them to open the link in their normal browser, not inside a chat app.",
+    "Make sure your computer is on and TribeCode is open.",
+    "Copy a fresh link from the invite and send it again.",
+    "On a phone, the QR code is the surest way."
+   ],
+   "do": "next:invite",
+   "doLabel": "Get a fresh link",
+   "show": {
+    "lesson": "invite"
+   }
+  },
+  {
+   "id": "report-bug",
+   "group": "fix",
+   "title": "Report a bug",
+   "intro": "If something breaks, a short report helps get it fixed. You do not need to explain the technical details, because they are attached.",
+   "asks": [
+    "something is broken",
+    "send feedback about a problem",
+    "tell the makers about an error"
+   ],
+   "steps": [
+    "Press Ctrl Shift B, or ? then Something's wrong.",
+    "Say what you did and what happened.",
+    "A picture of the screen and the recent log are attached for you.",
+    "Send it. You can follow it under Bugs."
+   ],
+   "do": "help:bug",
+   "doLabel": "Report one now",
+   "show": {
+    "sel": "#tb-help",
+    "say": "Report a bug from here."
+   }
+  },
+  {
+   "id": "update",
+   "group": "fix",
+   "title": "Get the newest version",
+   "intro": "New versions arrive often, with fixes and new things to try. Updating keeps your projects and settings exactly as they are now, and it only takes a moment.",
+   "asks": [
+    "update the app",
+    "check for updates",
+    "am i on the latest version",
+    "upgrade"
+   ],
+   "steps": [
+    "Press ? then Something's wrong.",
+    "Choose Check for updates.",
+    "If there is one, press Restart to update.",
+    "What's new lists what changed."
+   ],
+   "do": "help:update",
+   "doLabel": "Check now",
+   "show": {
+    "sel": "#tb-help",
+    "say": "Check for updates is in here."
+   }
+  }
+ ]
+}

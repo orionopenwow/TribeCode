@@ -1,5 +1,6 @@
 // Flint's local knowledge base (flint-local): "how do I…" answered from TribeCode's own docs, with no model.
-//   GET /api/flint/kb?q=<question>&k=3 -> { answers: [{ title, heading, snippet, source, slug?, score }] }   (k up to 8)
+//   GET /api/flint/kb?q=<question>&k=3 -> { answers: [{ title, heading, snippet, source, slug?, score }], quick }   (k up to 8)
+//     quick: the quick guide that answers it, if one does: { id, title, intro, steps, score } (templates/quickguides.json)
 // Reads the Guide (docs/guide/*.md, the same folder server/guide.js serves) and the repo's docs/*.md, splits them into
 // sections at their headings, and ranks sections by TF-IDF over words, word pairs and character trigrams (the retrieval
 // half of app/ui/flintnlu.js). The answer is the section's best paragraph, cited by file and heading. Long reports
@@ -82,13 +83,23 @@ module.exports = function flintkb({ ui, nlu, model } = {}) {
     for (const h of hits) { const s = h.doc.s; if (files.has(s.file + s.heading)) continue; files.add(s.file + s.heading); out.push({ title: s.title, heading: s.heading, snippet: snippet(s.body, q), source: s.source, file: s.file, slug: s.slug, score: Math.round(h.score * 100) / 100 }); if (out.length >= k) break; }
     return out.filter(a => a.snippet);
   }
+  // feat/learn: the quick guides (templates/quickguides.json) answer first when one fits: the same cards and the same
+  // matcher the app uses (app/ui/quickguides.js), so Flint, the app and the website never say different things.
+  let QG = null, qgAt = 0;
+  function quick(q) {
+    try {
+      if (!QG || Date.now() - qgAt > 60000) { const g = require('./guide')({ ui }); QG = { guides: g.quick().guides, core: require(path.resolve(ui || path.join(__dirname, '..', 'app', 'ui'), 'quickguides.js')) }; qgAt = Date.now(); }
+      const m = QG.core.match(QG.guides, q); if (!m) return null;
+      const g = m.guide; return { id: g.id, title: g.title, intro: g.intro || '', steps: g.steps, score: +m.score.toFixed(3), source: 'Quick guide' };
+    } catch { return null; }
+  }
   async function route(req, res, { m, me, send, fail, url }) {
     if (!me) return fail(res, 401, 'not a member of this tribe');
     if (m !== 'GET') return fail(res, 405, 'GET only');
     const u = url || new URL(req.url, 'http://x'), q = u.searchParams.get('q') || '', k = Math.max(1, Math.min(8, +u.searchParams.get('k') || 3));   // up to 8: the browser's local helper re-ranks them by meaning
-    return send(res, 200, { answers: ask(q, k) });
+    return send(res, 200, { answers: ask(q, k), quick: quick(q) });
   }
-  return { route, ask, build, files: () => { build(); return fileList.slice(); } };
+  return { route, ask, quick, build, files: () => { build(); return fileList.slice(); } };
 };
 module.exports.HELP_DOCS = HELP_DOCS;
 module.exports.indexed = indexed;

@@ -1,0 +1,58 @@
+/* Quick guides and "My progress" (app/ui/quickguides.js). Flat matte: 1px borders, depth from luminance steps only.
+   One card shape everywhere: the sheet, the Learn home, Flint's reply. Type floors 12px; 36px targets on phones. */
+.qg-card, .qg-list { display: flex; flex-direction: column; gap: 12px; }
+.qg-intro { margin: 0; color: var(--muted); font-size: 14px; line-height: 1.6; max-width: 65ch; }
+.qg-steps { list-style: none; counter-reset: qg; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.qg-steps li { counter-increment: qg; display: grid; grid-template-columns: 24px minmax(0, 1fr); gap: 10px; align-items: start; font-size: 14.5px; line-height: 1.5; color: var(--text); }
+.qg-steps li::before { content: counter(qg); width: 24px; height: 24px; border-radius: 12px; border: 1px solid var(--edge); background: var(--surface-2); display: grid; place-items: center; font-family: var(--mono); font-size: 12px; color: var(--muted); }
+.qg-note { margin: 0; display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--live-ink, var(--live)); }
+.qg-foot { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; width: 100%; }
+.qg-foot .btn.primary { order: 0; }
+.qg-foot .linkish { margin-left: auto; font-size: 13px; min-height: 36px; }
+
+.qg-search { height: 40px; display: flex; align-items: center; gap: 9px; padding: 0 12px; border-radius: var(--r-sm, 8px); border: 1px solid var(--edge); background: var(--canvas); color: var(--faint); }
+.qg-search:focus-within { border-color: var(--faint); }
+.qg-search input { flex: 1; min-width: 0; background: none; border: 0; outline: 0; color: var(--text); font: inherit; font-size: 14px; }
+.qg-count { margin: 0; font-family: var(--mono); font-size: 12px; color: var(--faint); }
+.qg-g { margin: 14px 0 6px; font-family: var(--mono); font-size: 12px; font-weight: 500; letter-spacing: .08em; text-transform: uppercase; color: var(--faint); }
+.qg-rows { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.qg-row { display: flex; align-items: center; gap: 10px; min-height: 52px; padding: 10px 14px; border: 1px solid var(--edge); border-radius: var(--r, 12px); background: var(--surface); color: var(--text); font: inherit; text-align: left; cursor: pointer; }
+.qg-row:hover { background: var(--surface-2); }
+.qg-row:focus-visible, .qg-search input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.qg-rt { display: flex; flex-direction: column; gap: 2px; min-width: 0; flex: 1; }
+.qg-rt b { font-size: 14.5px; font-weight: 600; line-height: 1.3; }
+.qg-rt small { font-size: 12px; color: var(--muted); }
+.qg-done { flex: none; width: 22px; height: 22px; border-radius: 11px; display: grid; place-items: center; border: 1px solid var(--live); color: var(--live-ink, var(--live)); background: var(--live-tint, transparent); }
+.qg-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+.qg-none { margin: 4px 0; color: var(--muted); font-size: 14px; }
+
+/* on the Learn home (guide.js) */
+.qg-home { display: flex; flex-direction: column; gap: 10px; margin: 26px 0 8px; }
+.qg-hh { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+.qg-hh h2 { margin: 0; }
+.qg-lead { margin: 0; color: var(--muted); font-size: 14px; line-height: 1.6; }
+.qg-more { align-self: flex-start; min-height: 36px; font-size: 13.5px; }
+.qg-prog { display: flex; flex-direction: column; gap: 10px; padding: 16px; margin: 18px 0 6px; border: 1px solid var(--edge); border-radius: var(--r, 12px); background: var(--surface); }
+.qg-prog .eyebrow { font-family: var(--mono); font-size: 12px; font-weight: 500; letter-spacing: .08em; text-transform: uppercase; color: var(--faint); }
+.qg-stats { display: flex; gap: 28px; flex-wrap: wrap; }
+.qg-stats > div { display: flex; flex-direction: column; gap: 2px; }
+.qg-stats b { font-size: 22px; font-weight: 800; letter-spacing: -0.01em; line-height: 1.1; }
+.qg-stats b i { font-style: normal; font-size: 14px; font-weight: 500; color: var(--faint); }
+.qg-stats small { font-size: 12px; color: var(--muted); }
+.qg-bar { height: 6px; border-radius: 3px; background: var(--surface-3, var(--surface-2)); border: 1px solid var(--edge); overflow: hidden; }
+.qg-bar span { display: block; height: 100%; background: var(--live); }
+.qg-prog .btn { align-self: flex-start; }
+.qg-skills { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.qg-skill small i { font-style: normal; font-family: var(--mono); color: var(--faint); }
+.gd-journey li.done .gd-jn { border-color: var(--live); color: var(--live-ink, var(--live)); background: var(--live-tint, transparent); }
+
+/* in Flint's reply */
+.qg-inline { margin-top: 6px; padding: 10px 12px; border: 1px solid var(--edge); border-radius: var(--r-sm, 8px); background: var(--surface); }
+.qg-inline .qg-steps li { font-size: 13.5px; }
+
+@media (max-width: 720px) {
+  .qg-rows, .qg-skills { grid-template-columns: 1fr; }
+  .qg-foot .btn { min-height: 40px; flex: 1; }
+  .qg-foot .linkish { flex-basis: 100%; margin-left: 0; text-align: center; }
+  .qg-stats { gap: 18px; }
+}
