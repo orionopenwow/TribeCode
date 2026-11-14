@@ -241,7 +241,7 @@ def main():
             err, txt = tool(atok, "post_gist", {"kind": "progress", "title": "Lava tiles drafted", "bullets": ["Six tiles in assets/lava", "Next: animate the glow"]})
             assert not err, txt
             wait_text(host, "#chat-list", "Lava tiles drafted")
-            err, txt = tool(atok, "post_chat", {"text": "Claude here: tiles are in"}); assert not err, txt
+            err, txt = tool(atok, "post_update", {"kind": "finished", "text": "Claude here: tiles are in"}); assert not err, txt   # v0.37: a one-line update card
             wait_text(host, "#chat-list", "Claude here: tiles are in")
             # Claude Desktop stdio bridge round-trip
             pr = subprocess.run(["node", str(ROOT / "scripts" / "mcp-stdio.js"), BASE + "/mcp"], capture_output=True, text=True, timeout=30, env={**os.environ, "TRIBE_TOKEN": atok},

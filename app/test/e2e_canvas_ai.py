@@ -223,7 +223,7 @@ def main():
             out = ask(o, "a cat wearing a tiny hat")
             assert "needs an AI" in out and "Nothing changed" in out, out
             o.locator("#cv-fpane .fl-thread [data-boost='ai']").last.click()
-            o.wait_for_function("/Sent to your AI helpers/.test(document.querySelector('#cv-fpane .fl-thread').textContent)", timeout=8000)
+            o.wait_for_function("/Sent to your|waits for the tribe/.test(document.querySelector('#cv-fpane .fl-thread').textContent)", timeout=8000)   # v0.37: privately to your own agent
             o.click("#cv-flint-btn"); o.wait_for_timeout(200); assert o.is_hidden("#cv-fpane"), "the flame button closes Flint's pane"
 
             # ---- phone

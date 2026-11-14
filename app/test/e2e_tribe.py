@@ -336,8 +336,10 @@ def main():
             e, t = call(atok, "write_doc", {"name": "Agent notes", "body": "overwrite"}); assert e and "base_version" in t
             e, t = call(atok, "read_doc", {"name": "agent-notes"}); assert "version 1" in t
             e, t = call(atok, "write_doc", {"name": "agent-notes", "body": "# Agent notes\n\nv2", "base_version": 1}); assert not e and "version 2" in t
-            e, t = call(atok, "post_chat", {"text": "Taking the save-file migration, claimed src/world/"}); assert not e
-            wait_text(friend, "#chat-list", "Taking the save-file migration")
+            # v0.37 chat is for people: an agent nobody addressed speaks to its owner, and tells the tribe with a one-line update card
+            e, t = call(atok, "post_chat", {"text": "Taking the save-file migration, claimed src/world/"}); assert not e and "privately" in t, t
+            e, t = call(atok, "post_update", {"kind": "finished", "text": "The save-file migration is in"}); assert not e and "update card" in t, t
+            wait_text(friend, "#chat-list", "The save-file migration is in")
             e, t = call(atok, "propose", {"title": "Split world saves per player", "body": "## Tasks\n- [ ] Per-player save"}); assert not e
             assert api("/proposals", token=atok)[1]["proposals"][0]["tally"]["yes"] == 0, "agents don't vote"
             pid = api("/proposals", token=atok)[1]["proposals"][0]["id"]

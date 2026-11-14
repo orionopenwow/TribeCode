@@ -86,7 +86,7 @@ def main():
             t = ok(api("/tasks", "POST", {"title": f"[{label}] First version"}, token=host, project=pid))["task"]
             aid = [m for m in ok(api("/members", token=host))["members"] if m.get("role") == "agent"][0]["id"]
             ok(api(f"/tasks/{t['id']}", "PATCH", {"assignee": aid}, token=host, project=pid))
-            err, txt = mcp(agent, "post_chat", {"text": f"Working on the first version of {label}.", "channel": "general", "project": pid})
+            err, txt = mcp(agent, "post_update", {"kind": "finished", "text": f"A first version of {label} is in.", "project": pid})   # v0.37: agents tell the tribe with a one-line update card
             assert not err, txt
             ok(api(f"/tasks/{t['id']}", "PATCH", {"status": "done"}, token=host, project=pid))
             wait_until(lambda: any("finished **[" + label + "]" in x for x in chat(host, pid)), 10, f"{label}: finished task announced")

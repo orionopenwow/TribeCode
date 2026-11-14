@@ -327,6 +327,7 @@ def main():
         # two kinds, separate access: Sam's Codex loses chat and is paused; Sam's Claude is untouched
         ok(api("/invite-agent", "PUT", {"kind": "codex", "scopes": ["docs", "tasks"]}, token=smt))
         good, t = tool(sam_keys["codex"], "post_chat", {"text": "should not post"}); assert not good and "turned off" in t, t
+        ok(api("/chat/general", "POST", {"text": "@agents are you both still here?"}, token=smt))   # v0.37: agents speak in a channel when asked there
         good, t = tool(sam_keys["claude"], "post_chat", {"text": "Sam's Claude still talks"}); assert good, t
         good, t = tool(sam_keys["cursor"], "post_chat", {"text": "so does Sam's Cursor"}); assert good, t
         last = ok(api("/chat/general", token=smt))["messages"][-2:]
@@ -387,6 +388,7 @@ def main():
         print("Sign-in: the app's registered name picks the kind; Pause and Remove reach its sign-ins")
 
         # everything Maya can do, in her project
+        ok(api("/chat/general", "POST", {"text": "@agents say hi"}, token=mt, project=A))   # v0.37: agents speak in a channel when asked there
         good, t = tool(mk, "post_chat", {"text": "Hi from Maya's Claude", "project": A}); assert good, t
         good, t = tool(mk, "write_doc", {"name": "Launch plan", "body": "# Launch plan\n\n- ship it", "project": A}); assert good, t
         good, t = tool(mk, "read_doc", {"name": "Launch plan", "project": A}); assert good and "ship it" in t, t

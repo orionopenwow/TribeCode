@@ -402,7 +402,7 @@
     if (m.type === 'chat' && m.message) {
       const by = m.message.by;
       if (roleOf(by) !== 'agent') return;
-      if (m.channel !== 'agents' && m.channel && !String(m.channel).includes(pid) && m.channel !== 'general') return;
+      if (m.channel !== 'agents' && m.channel && !String(m.channel).includes(pid) && m.channel !== 'general' && !String(m.channel).startsWith('dm-')) return;   // dm-: your own agent's private reply to a request from here
       feed({ k: 'agent', who: nameOf(by), text: String(m.message.text || '').replace(/\s+/g, ' ').slice(0, 220), key: 'c' + m.message.id });
     }
     if (m.type === 'code-saved') feed({ k: 'file', who: nameOf(m.by), text: `saved ${m.path}`, add: m.add, del: m.del, key: 's' + m.path + m.sha });

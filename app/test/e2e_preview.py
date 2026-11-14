@@ -324,8 +324,11 @@ def main():
             assert host.input_value("#pvw-bprompt") == "A pixel platformer game"
             host.click("#pvw-bgo")
             host.wait_for_function("/(Asked|running)/.test((document.querySelector('#pvw-bstat') ? document.querySelector('#pvw-bstat').innerText : '') + [...document.querySelectorAll('.toast')].map(t => t.innerText).join(' '))", timeout=15000)   # the start screen can give way to the app before this looks
+            # v0.37 chat is for people: the brief goes to your own agent privately, or waits for the tribe's agents; never into a channel
+            asks = ok(api("/ask/mine", token=orion, project=ep))["requests"] + ok(api("/coord/asks", token=orion, project=ep))["asks"]
+            assert any("pixel platformer" in ((m.get("text") or "") + (m.get("context") or "")).lower() for m in asks), asks[-3:]
             msgs = ok(api("/chat/general", token=orion, project=ep))["messages"] + ok(api("/agents/channel", token=orion, project=ep))["messages"]
-            assert any("index.html" in (m.get("text") or "") for m in msgs), msgs[-3:]
+            assert not any("index.html at the top folder" in (m.get("text") or "") for m in msgs), msgs[-3:]
             shot(host, "empty")
             Path(empty, "index.html").write_text("<!doctype html><title>New</title><h1 id=new>brand new page</h1>")
             host.wait_for_selector("#pvw:not(.is-empty) #pvw-iframe", timeout=10000)
