@@ -90,7 +90,9 @@ async () => {
 # things to say to Flint that change nothing: a sum, the time, a missing place, a conversion, small talk
 FLINT_ASK = ["what time is it", "12 * 8", "open the tasks", "convert 5 km to miles", "what can you do", "thanks", "show me the calendar", "undo"]
 
-BRAND = re.compile("|".join(re.escape(x) for x in ALLOW["brand"]))
+# names, as whole words, longest first ("GitHub Pages" before "GitHub"). Whole words matter: without the boundaries
+# "Web" matched inside "Website" and a label that only said "Email" was taken for a name and never counted.
+BRAND = re.compile(r"(?<![A-Za-z])(?:" + "|".join(re.escape(x) for x in sorted(ALLOW["brand"], key=len, reverse=True)) + r")(?![A-Za-z])")
 NOT_WORDS = re.compile(r"^[\W\d_]*$|^[\d\W]*[A-Za-z]?[\d\W]*$")
 CODEISH = re.compile(r"^(https?://|[\w.-]+@[\w.-]+|[\w./-]+\.(js|css|html|json|md|png|svg)|[A-Z0-9_]{2,}|v?\d+(\.\d+)+.*|#[0-9a-fA-F]{3,8}|[⌘⌥⇧^]?(Ctrl|Cmd|Alt|Shift|Esc|Enter|Tab)([ +].*)?)$")
 CJK = re.compile(r"[぀-ヿ㐀-鿿가-힯]")
@@ -114,21 +116,13 @@ def api(path, method="GET", body=None, token=None):
 
 
 def static_checks():
-    """Checks on the tables themselves: no browser needed."""
-    src = (APP_ROOT / "app" / "ui" / "i18n.js").read_text()
-    table = src[src.index("const D = {"):src.index("const KEY = 'tribecode.lang';")]
-    keys = {}; dup_diff = []; short = []
-    for m in re.finditer(r'^\s*("(?:[^"\\]|\\.)*"|\'(?:[^\'\\]|\\.)*\')\s*:\s*(\[.*?\]),?\s*$', table, re.M):
-        try: k = json.loads(m.group(1)) if m.group(1)[0] == '"' else m.group(1)[1:-1]
-        except Exception: continue
-        row = m.group(2)
-        if k in keys and keys[k] != row: dup_diff.append(k)
-        keys[k] = row
-        try:
-            cells = json.loads(row)
-            if len(cells) != 7 or any(not c for c in cells): short.append(k)
-        except Exception: pass
-    return {"rows": len(keys), "dup_diff": sorted(set(dup_diff)), "short": sorted(short)}
+    """Checks on the tables themselves: no browser needed. One implementation, in scripts/dev/i18n-audit.js: it reads
+    every row and checks its own coverage against the evaluated table (an earlier copy here matched only rows alone on
+    a line, saw 704 of 1,324, and reported 2 conflicting keys where there were 15)."""
+    r = subprocess.run(["node", str(ROOT / "scripts" / "dev" / "i18n-audit.js"), "--static", "--json"], capture_output=True, text=True, env={**os.environ, "TRIBE_I18N_ROOT": str(APP_ROOT)})
+    try: d = json.loads(r.stdout)
+    except Exception: return {"rows": 0, "dup_diff": [], "short": [], "fails": ["the static check did not run: " + (r.stderr or r.stdout)[:200]]}
+    return {"rows": d.get("rows", 0), "keys": d.get("tableKeys", 0), "repeats": d.get("repeats", 0), "dup_diff": sorted(d.get("dupDiff", [])), "short": sorted(d.get("short", [])), "bad_placeholders": d.get("badPlaceholders", []), "fails": d.get("fails", [])}
 
 
 def main():
@@ -201,6 +195,18 @@ def main():
                 routes = [r for r in routes if r[0] not in SKIP_PLACES]
                 return [r for r in routes if not last(r[0])] + [r for r in routes if last(r[0])]
 
+            def settle(pg, cap=4.0):
+                # Wait until the place has finished drawing: the amount of text is the same on three looks in a row
+                # (150 ms apart), or 4 seconds at most (a clock never stops). A fixed wait caught some places in the
+                # middle of a redraw: the agents hub showed 48 still-English strings on one full run and 74 on the next.
+                last, same, t0 = None, 0, time.time()
+                while time.time() - t0 < cap:
+                    try: n = pg.evaluate("document.body.innerText.length")
+                    except Exception: return
+                    same = same + 1 if n == last else 0; last = n
+                    if same >= 2: return
+                    pg.wait_for_timeout(150)
+
             def walk(size, vp, lang):
                 print(f"  walking {size} {lang}", flush=True)
                 where["at"] = f"{size} {lang} opening"; signal.alarm(90)
@@ -212,7 +218,7 @@ def main():
                     where["at"] = f"{size} {lang} asking Flint"; signal.alarm(90)
                     try: flint = pg.evaluate(FLINT, FLINT_ASK)
                     except Exception as e: errors.append(f"{size} {lang} flint: {str(e)[:120]}")
-                got = {"text": {}, "attr": {}, "over": {}}
+                got = {"text": {}, "attr": {}, "over": {}, "places": {}}
                 for name, js in routes:
                     t0 = time.time(); where["at"] = f"{size} {lang} {name}"; signal.alarm(45)
                     if TIMING: print(f"    {name}", flush=True)
@@ -222,10 +228,10 @@ def main():
                         if lang == "en": errors.append(f"{size} {name}: {str(e)[:120]}")
                         continue
                     if name.endswith(":close"): pg.keyboard.press("Escape"); pg.wait_for_timeout(250); continue
-                    pg.wait_for_timeout(400)
+                    settle(pg)
                     try: r = pg.evaluate(COLLECT, {})
                     except Exception as e: errors.append(f"{size} {name} collect: {str(e)[:120]}"); continue
-                    for x in r["text"]: got["text"].setdefault(x["t"], (name, x["sig"]))
+                    for x in r["text"]: got["text"].setdefault(x["t"], (name, x["sig"])); got["places"].setdefault(x["t"], set()).add(name)
                     for x in r["attr"]: got["attr"].setdefault(x["a"] + ":" + x["t"], (name, x["sig"]))
                     for x in r["over"]: got["over"].setdefault(name + " | " + x["sig"], (x["how"], x["t"]))
                     if name in ("people", "help", "shortcuts"): pg.keyboard.press("Escape"); pg.wait_for_timeout(200)
@@ -254,40 +260,43 @@ def main():
                     dates = sorted(t for t in g["text"] if ENDATE.search(t) and not skip_string(t, seeded) and (t in en["text"] or lang in ("ja", "zh", "ko")))
                     mixed = sorted(t for t in g["text"] if lang in ("ja", "zh", "ko") and CJK.search(t) and t not in en["text"] and re.search(r"[A-Za-z]{4,}", " ".join(w for w in re.split(r"\s+", BRAND.sub("", t)))) and not any(s2 in t for s2 in seeded if s2))
                     L[size] = {"untranslated": un, "attrs": una, "overflow": [f"{k} [{g['over'][k][0]}] {g['over'][k][1]}" for k in over], "dates": dates, "mixed": mixed,
-                               "where": {t: g["text"][t][0] for t in un}, "held": [f"{h.get('el')} {json.dumps(h.get('en'), ensure_ascii=False)}" for h in g.get("held", [])], "storm": g.get("storm")}
+                               "where": {t: g["text"][t][0] for t in un}, "places": {t: sorted(g["places"].get(t, [])) for t in un}, "held": [f"{h.get('el')} {json.dumps(h.get('en'), ensure_ascii=False)}" for h in g.get("held", [])], "storm": g.get("storm")}
                     if size == "desktop" and en_flint and fl:
                         L["flint_english"] = [FLINT_ASK[i] + " → " + r[:80] for i, r in enumerate(fl) if r and i < len(en_flint) and r == en_flint[i] and re.search(r"[A-Za-z]{3,}", BRAND.sub("", r))]
                         L["flint_asked"] = len([r for r in fl if r])
             b.close()
     finally:
         srv.terminate()
+    res["errors"] = errors[:20]
+    out_path = Path(OUT) if OUT else tmp / "walk.json"
+    out_path.write_text(json.dumps(res, ensure_ascii=False, indent=1))
+    # The numbers come from ONE place, scripts/dev/i18n-audit.js --counts: the report and the "before" column use the
+    # same counting (what is a date label, which rows are English on purpose), so columns always compare like with like.
+    r = subprocess.run(["node", str(ROOT / "scripts" / "dev" / "i18n-audit.js"), "--counts", str(out_path)], capture_output=True, text=True, env={**os.environ, "TRIBE_I18N_ROOT": str(APP_ROOT)})
+    try: per_lang = json.loads(r.stdout)
+    except Exception:
+        print("i18n audit: could not count the walk:", (r.stderr or r.stdout)[:300]); sys.exit(1)
     counts = {"static": {"dup_diff": len(res["static"]["dup_diff"]), "short": len(res["static"]["short"])}}
-    for lang, L in res["langs"].items():
-        for size in ("desktop", "phone"):
-            if size in L: counts[f"{lang}.{size}"] = {k: len(L[size][k]) for k in ("untranslated", "attrs", "overflow", "dates", "mixed")}
-        if "flint_english" in L: counts[f"{lang}.flint_english"] = len(L["flint_english"])
-    res["counts"] = counts; res["errors"] = errors[:20]
-    if OUT: Path(OUT).write_text(json.dumps(res, ensure_ascii=False, indent=1))
+    for lang, c in per_lang.items(): counts[lang] = {k: v for k, v in c.items() if v is not None and k not in ("flintAsked", "held")}
     mode = "full" if FULL else "quick"
     base = json.loads(BASELINE.read_text()) if BASELINE.exists() else {}
     if UPDATE:
         base[mode] = counts; BASELINE.write_text(json.dumps(base, indent=1, sort_keys=True) + "\n"); print("baseline updated:", mode)
-    bad = []
-    want = base.get(mode, {})
+    bad = []; lower = []
+    want = base.get(mode)
     for key, val in counts.items():
-        if isinstance(val, dict):
-            for k, v in val.items():
-                lim = (want.get(key) or {}).get(k)
-                if lim is not None and v > lim + (0 if key == "static" else SLACK): bad.append(f"{key}.{k}: {v} (baseline {lim})")
-        else:
-            lim = want.get(key)
-            if lim is not None and val > lim: bad.append(f"{key}: {val} (baseline {lim})")
+        for k, v in val.items():
+            lim = ((want or {}).get(key) or {}).get(k)
+            if lim is None: continue
+            if v > lim + (0 if key == "static" else SLACK): bad.append(f"{key}.{k}: {v} (baseline {lim})")
+            elif v < lim - SLACK: lower.append(f"{key}.{k}: {v} (baseline {lim})")
     for key, val in counts.items(): print(f"  {key}: {json.dumps(val)}")
-    if errors: print("  page errors:", errors[:5])
-    # two things are never baselined. A held label means other code and the translator were rewriting each other: that
-    # froze Files in every language before the guard existed. And a seed that failed means the walk saw emptier screens.
+    if errors: print("  page errors:", sorted(set(errors))[:5])
+    # Never baselined: a held label (other code and the translator were rewriting each other: that froze Files in every
+    # language before the guard existed), a seed that failed (the walk saw emptier screens), a table check that fails.
     hard = [f"{lang} {size}: {h}" for lang, L in res["langs"].items() for size in ("desktop", "phone") if size in L for h in L[size].get("held", [])]
     hard += [e for e in errors if e.startswith("seed ")]
+    hard += ["table: " + f for f in res["static"].get("fails", [])]
     for lang, L in res["langs"].items():
         st = (L.get("desktop") or {}).get("storm")
         if st is None or st.get("skipped"): continue   # a build without the guard (the "before" column)
@@ -297,13 +306,16 @@ def main():
         print("i18n audit: FAILED\n  " + "\n  ".join(hard))
         print("A held label: find the code that writes it (often `if (el.textContent !== text) el.textContent = text` with a watcher on the same element) and compare with TribeI18n.t(text) too. See app/ui/shell.js, the breadcrumb.")
         sys.exit(1)
+    if want is None and not UPDATE:
+        print(f"i18n audit: no baseline for the {mode} walk in {BASELINE.name}. Run once with --update."); sys.exit(1)
     if bad and not UPDATE:
         print("i18n audit: counts rose above the baseline:\n  " + "\n  ".join(bad))
         for lang, L in res["langs"].items():
             for size in ("desktop", "phone"):
-                if size in L and L[size]["untranslated"]: print(f"  {lang} {size} untranslated, first 15:", L[size]["untranslated"][:15])
+                if size in L and L[size]["untranslated"]: print(f"  {lang} {size} still English, first 15:", L[size]["untranslated"][:15])
         print("Add rows to app/ui/i18n-more.js (or a name to app/test/i18n_allow.json), or run with --update if the rise is meant.")
         sys.exit(1)
+    if lower and not UPDATE: print("  better than the baseline (run with --update to keep the gain):\n    " + "\n    ".join(lower[:8]))
     print(f"i18n audit ({mode}): ok, {res['routes']} places walked per language")
 
 

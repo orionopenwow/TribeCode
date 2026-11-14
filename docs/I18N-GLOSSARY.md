@@ -43,6 +43,7 @@ Never translated: TribeCode, Flint, Claude, GitHub, Tailscale, Ollama, product n
 | Lead | Líder | Líder | Responsable | Leitung | リーダー | 负责人 | 리더 |
 | Company | Empresa | Empresa | Entreprise | Firma | 会社 | 公司 | 회사 |
 | Work | Trabajo | Trabalho | Travail | Arbeit | 仕事 | 工作 | 일 |
+| Gig | Encargo | Serviço | Mission | Auftrag | 仕事の依頼 | 零工 | 일거리 |
 | Helper (an AI) | Ayudante | Ajudante | Assistant | Helfer | ヘルパー | 助手 | 도우미 |
 | Agent | Agente | Agente | Agent | Agent | エージェント | 智能体 | 에이전트 |
 | Call | Llamada | Chamada | Appel | Anruf | 通話 | 通话 | 통화 |

@@ -1435,27 +1435,42 @@
     Object.entries(rows || {}).forEach(([en, row]) => {
       MORE.patterns[en] = row;
       const keys = []; let lit = 0;
-      const src = en.split(/(\{\w+\})/).map(part => { const m = /^\{(\w+)\}$/.exec(part); if (m) { keys.push(m[1]); return /^(n|count|num)\d*$/.test(m[1]) ? '([\\d.,]+)' : '(.+?)'; } lit += part.length; return esc(part); }).join('');
+      // {n} {count} {num} {total} match digits only, so "{n} of {total}" never matches "Best of show"
+      const src = en.split(/(\{\w+\})/).map(part => { const m = /^\{(\w+)\}$/.exec(part); if (m) { keys.push(m[1]); return /^(n|count|num|total)\d*$/.test(m[1]) ? '([\\d.,]+)' : '(.+?)'; } lit += part.length; return esc(part); }).join('');
       if (!keys.length) { if (!D[en]) D[en] = row; return; }
       PAT.push({ en, re: new RegExp('^' + src + '$', 's'), keys, row, lit });
     });
     PAT.sort((x, y) => y.lit - x.lit); patCache.clear();
   }
+  // {name} {who} {title} {project} {tribe} {file} {text} {q}: what a person wrote. Kept as written, never translated.
+  const RAW = /^(name|who|title|project|tribe|file|text|q)\d*$/;
   function matchPattern(s) {
     if (!PAT.length || s.length > 400) return null;
     if (patCache.has(s)) return patCache.get(s);
     let hit = null;
-    for (const p of PAT) { const m = p.re.exec(s); if (m) { const vars = {}; p.keys.forEach((k, i) => { vars[k] = m[i + 1]; }); hit = { p, vars }; break; } }
+    for (const p of PAT) {
+      const m = p.re.exec(s); if (!m) continue;
+      // "Invite to {name}" must not catch "Invite to this project": a name slot filled with words that start in lower
+      // case is ordinary English, and a half-translated sentence is worse than an English one. So: no match.
+      if (p.keys.some((k, i) => RAW.test(k) && /^\p{Ll}/u.test(m[i + 1]))) continue;
+      const vars = {}; p.keys.forEach((k, i) => { vars[k] = m[i + 1]; }); hit = { p, vars }; break;
+    }
     if (patCache.size > 4000) patCache.clear();
     patCache.set(s, hit); return hit;
   }
-  // a captured value may itself be a UI word ("Give the Lead role…"): translate it too when it has a row
+  // a captured value may itself be a UI word ("Give the Lead role…"): translate it too when it has a row.
+  // Not a name, though (RAW above): a tribe called "My Tribe" is not renamed inside "Invite to My Tribe".
   const trVal = v => { const row = D[v]; return row && cur !== 'en' ? row[col()] || v : v; };
   function trPattern(h) {
     const out = cur === 'en' ? h.p.en : (h.p.row[col()] || h.p.en); const vars = {};
-    Object.keys(h.vars).forEach(k => { const v = h.vars[k]; vars[k] = /^\d[\d,]*(\.\d+)?$/.test(v) && cur !== 'en' ? num(Number(v.replace(/,/g, ''))) : trVal(v); });
+    Object.keys(h.vars).forEach(k => { const v = h.vars[k]; vars[k] = RAW.test(k) ? v : /^\d[\d,]*(\.\d+)?$/.test(v) && cur !== 'en' ? num(Number(v.replace(/,/g, ''))) : trVal(v); });
     return fill(out, vars);
   }
+  // "🚀 Getting started", "+ Add block", "Pictures…": the words of a row with a mark in front or an ellipsis after.
+  // Looked up without the decoration and put back around the translation (exact rows only).
+  const DECO = /^([^\p{L}\p{N}]+\s)?(.+?)(…)?$/su;
+  function undecorate(s) { const m = DECO.exec(s); if (!m || (!m[1] && !m[3]) || !D[m[2]]) return null; return { pre: m[1] || '', mid: m[2], post: m[3] || '' }; }
+  const decorated = u => u.pre + (tr(u.mid) || u.mid) + u.post;
   // t(english) · t(english, vars) · t(key, english) · t(key, english, vars)
   function t(a, b, c) {
     const vars = (b && typeof b === 'object') ? b : (c && typeof c === 'object' ? c : null);
@@ -1463,7 +1478,7 @@
     let out = tr(en);
     if (!out && cur !== 'en') {
       if (vars) { const h = PAT.find(p => p.en === en); if (h) out = h.row[col()]; }
-      else { const h = matchPattern(en); if (h) return withTerms(trPattern(h)); }   // a sentence built elsewhere ("Opened Tasks.")
+      else { const u = undecorate(en); if (u) return withTerms(decorated(u)); const h = matchPattern(en); if (h) return withTerms(trPattern(h)); }   // a sentence built elsewhere ("Opened Tasks.")
     }
     return withTerms(fill(out || en, vars));
   }
@@ -1480,7 +1495,7 @@
     const en = count === 1 && f.one ? f.one : f.other;
     return withTerms(fill(cur === 'en' ? en : (tr(en) || en), v));
   }
-  const has = en => !!(D[en] || matchPattern(en));
+  const has = en => !!(D[en] || undecorate(en) || matchPattern(en));
   const orig = new WeakMap();   // text node -> English
   const ATTRS = ['placeholder', 'title', 'aria-label'];
   // #ss-name is the tribe or project name in the sidebar switcher: a name, like .pj-name and .pc-name (a project called "Tasks" stays "Tasks")
@@ -1488,6 +1503,7 @@
   // English for a shown string: an exact row, or a pattern row. Returns { en, out } or null.
   function resolve(s) {
     if (D[s]) return { en: s, out: withTerms(tr(s) || s) };
+    const u = undecorate(s); if (u) return { en: s, out: withTerms(decorated(u)) };
     const h = matchPattern(s); if (h) return { en: s, out: withTerms(trPattern(h)) };
     if (termRe && cur === 'en') { const w = withTerms(s); if (w !== s) return { en: s, out: w }; }
     return null;
@@ -1555,8 +1571,11 @@
     apply(); window.dispatchEvent(new CustomEvent('tribe-lang', { detail: { lang: cur } }));
   }
   // one language picker for every place that offers it: TribeI18n.picker() gives the markup, any [data-lang-pick] works
-  const picker = (cls) => `<label class="lang-pick${cls ? ' ' + cls : ''}" data-i18n-skip><svg class="ti-svg" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.6 3.8 5.6 3.8 9s-1.3 6.4-3.8 9c-2.5-2.6-3.8-5.6-3.8-9S9.5 5.6 12 3z"/></svg><select data-lang-pick aria-label="${t('Language')}">${LANGS.map(([k, n]) => `<option value="${k}"${k === cur ? ' selected' : ''}>${n}</option>`).join('')}</select></label>`;
-  document.addEventListener('change', e => { const el = e.target; if (el && el.matches && el.matches('[data-lang-pick]')) set(el.value); });
+  // The select's name is the hidden word "Language" in the label: plain text, so it follows the language like any
+  // other label. The language names themselves are never translated (each is written in its own language).
+  // picker(cls, { reload: true }): for the first screen, where text drawn through t() is redrawn by loading again.
+  const picker = (cls, opts) => `<label class="lang-pick${cls ? ' ' + cls : ''}"${opts && opts.reload ? ' data-lang-reload' : ''}><svg class="ti-svg" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.6 3.8 5.6 3.8 9s-1.3 6.4-3.8 9c-2.5-2.6-3.8-5.6-3.8-9S9.5 5.6 12 3z"/></svg><span class="lang-pick-name">Language</span><select data-lang-pick data-i18n-skip>${LANGS.map(([k, n]) => `<option value="${k}"${k === cur ? ' selected' : ''}>${n}</option>`).join('')}</select></label>`;
+  document.addEventListener('change', e => { const el = e.target; if (!(el && el.matches && el.matches('[data-lang-pick]'))) return; set(el.value); if (el.closest('[data-lang-reload]')) { try { location.reload(); } catch {} } });
   window.addEventListener('tribe-lang', () => document.querySelectorAll('[data-lang-pick],#set-lang').forEach(el => { if (el.value !== cur) el.value = cur; }));
   function start() { apply(); observe(); }
   if (document.body) start(); else document.addEventListener('DOMContentLoaded', start);

@@ -1,0 +1,68 @@
+{
+ "full": {
+  "de": {
+   "attrs": 388,
+   "dates": 43,
+   "flint": 1,
+   "mixed": 0,
+   "overflow": 7,
+   "phoneOverflow": 3,
+   "phoneUntranslated": 1244,
+   "untranslated": 1247
+  },
+  "es": {
+   "attrs": 388,
+   "dates": 44,
+   "flint": 1,
+   "mixed": 0,
+   "overflow": 5,
+   "untranslated": 1248
+  },
+  "fr": {
+   "attrs": 388,
+   "dates": 43,
+   "flint": 1,
+   "mixed": 0,
+   "overflow": 3,
+   "untranslated": 1247
+  },
+  "ja": {
+   "attrs": 388,
+   "dates": 44,
+   "flint": 1,
+   "mixed": 0,
+   "overflow": 2,
+   "phoneOverflow": 1,
+   "phoneUntranslated": 1244,
+   "untranslated": 1247
+  },
+  "ko": {
+   "attrs": 388,
+   "dates": 44,
+   "flint": 1,
+   "mixed": 0,
+   "overflow": 0,
+   "untranslated": 1247
+  },
+  "pt": {
+   "attrs": 388,
+   "dates": 43,
+   "flint": 1,
+   "mixed": 0,
+   "overflow": 6,
+   "untranslated": 1247
+  },
+  "static": {
+   "dup_diff": 0,
+   "short": 0
+  },
+  "zh": {
+   "attrs": 388,
+   "dates": 44,
+   "flint": 1,
+   "mixed": 0,
+   "overflow": 0,
+   "untranslated": 1247
+  }
+ }
+}

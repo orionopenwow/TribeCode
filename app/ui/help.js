@@ -63,7 +63,9 @@
     menu = document.createElement('div'); menu.className = 'help-menu'; menu.id = 'help-menu'; menu.setAttribute('role', 'menu'); menu.setAttribute('aria-label', 'Help');
     const row = (k, primary) => { const [icon, t, sub, , kbd] = ALL[k];
       return `<button role="menuitem" data-help="${k}"${primary ? ' class="hm-primary"' : ''}${k === 'wrong' ? ' aria-haspopup="menu"' : ''}>${ico(icon)}<span class="hm-t"><b>${esc(t)}</b>${sub ? `<small>${esc(sub)}</small>` : ''}</span>${kbd ? `<span class="kbd">${esc(kbd)}</span>` : ''}${k === 'wrong' ? ico('i-chev') : ''}</button>`; };
-    const main = () => `<div class="hm-sec">${MAIN.map((k, i) => row(k, i === 0)).join('')}</div>`
+    // feat/languages: the language is one tap from the ? menu (the same picker as Settings and the first screen)
+    const lang = () => (window.TribeI18n && window.TribeI18n.picker ? `<div class="hm-lang">${window.TribeI18n.picker()}</div>` : '');
+    const main = () => `<div class="hm-sec">${MAIN.map((k, i) => row(k, i === 0)).join('')}</div>` + lang()
       + `<div class="hm-foot"><span>TribeCode${ver() ? ` v${esc(ver())}` : ''}</span><button type="button" class="hm-site" data-help="site">${esc(ALL.site[1])}</button></div>`;
     const wrong = () => `<div class="hm-sec"><button role="menuitem" class="hm-back" data-help-back>${ico('i-chev')}<span class="hm-t"><b>Back</b></span></button><span class="eyebrow">Something's wrong</span>${WRONG.map(k => row(k)).join('')}</div>`;
     const wire = () => {
@@ -85,7 +87,8 @@
   btn.onclick = e => { e.stopPropagation(); open(); };
   document.addEventListener('keydown', e => {
     if (e.key === 'Escape' && menu) { close(); btn.focus(); return; }
-    if (menu && (e.key === 'ArrowDown' || e.key === 'ArrowUp')) { const bs = [...menu.querySelectorAll('button')], i = bs.indexOf(document.activeElement); bs[(i + (e.key === 'ArrowDown' ? 1 : -1) + bs.length) % bs.length].focus(); e.preventDefault(); }
+    // arrows move between the menu's buttons; inside the language picker they change the language instead
+    if (menu && (e.key === 'ArrowDown' || e.key === 'ArrowUp') && !(document.activeElement && document.activeElement.tagName === 'SELECT')) { const bs = [...menu.querySelectorAll('button')], i = bs.indexOf(document.activeElement); bs[(i + (e.key === 'ArrowDown' ? 1 : -1) + bs.length) % bs.length].focus(); e.preventDefault(); }
     if ((e.ctrlKey || e.metaKey) && e.key === '/') { e.preventDefault(); shortcuts(); }
   });
 

@@ -51,6 +51,22 @@ const ok = (cond, what) => { n++; if (!cond) { fails++; console.error(`  ✗ ${w
   eq(I.t('Welcome to Pixel Quest'), 'Te damos la bienvenida a Pixel Quest', 'a name is kept as written');
   eq(I.t('3 of 12 done'), '3 de 12 hechas', 'numbers in a pattern');
   ok(I.has('Welcome to Anything'), 'has() knows patterns');
+  // a name inside a sentence stays as the person wrote it, even when it equals a UI word that has a row
+  eq(I.t('Welcome to My Tribe'), 'Te damos la bienvenida a My Tribe', 'a tribe called "My Tribe" is not renamed inside a sentence');
+  eq(I.t('Welcome to Tasks'), 'Te damos la bienvenida a Tasks', 'a project called "Tasks" keeps its name');
+  // a name slot filled with ordinary lower-case words is not a name: the sentence stays whole, never half-translated
+  eq(I.t('Welcome to this place'), 'Welcome to this place', 'a pattern does not catch ordinary English in its name slot');
+  eq(I.t('Welcome to ça va'), 'Welcome to ça va', 'lower case in any script');
+  // a mark in front, an ellipsis after: the same row
+  eq(I.t('🚀 Save'), '🚀 Guardar', 'an emoji in front of a row');
+  eq(I.t('+ Save'), '+ Guardar', 'a plus sign in front of a row');
+  eq(I.t('Save…'), 'Guardar…', 'an ellipsis after a row');
+  eq(I.t('✨ Save…'), '✨ Guardar…', 'both');
+  ok(I.has('🚀 Save') && !I.has('🚀 Nope nope'), 'has() knows decorated rows, and only those with a row');
+  eq(I.t('(Save'), '(Save', 'a bracket without a space is not a decoration');
+  eq(I.t('Saver'), 'Saver', 'a longer word with no row of its own is not matched by the shorter row');
+  eq(I.t('Saved'), 'Guardado', 'and one with its own row uses it');
+  eq(I.t('🚀 A string nobody translated'), '🚀 A string nobody translated', 'a decoration around no row changes nothing');
   I.addPlurals({ '{n} tasks': [{ one: '{n} tarea', other: '{n} tareas' }, { one: '{n} tarefa', other: '{n} tarefas' }, { one: '{n} tâche', other: '{n} tâches' }, { one: '{n} Aufgabe', other: '{n} Aufgaben' }, '{n} 件のタスク', '{n} 个任务', '작업 {n}개'] });
   eq(I.n(1, { one: '{n} task', other: '{n} tasks' }), '1 tarea', 'Spanish plural: one');
   eq(I.n(5, { one: '{n} task', other: '{n} tasks' }), '5 tareas', 'Spanish plural: other');
@@ -58,6 +74,23 @@ const ok = (cond, what) => { n++; if (!cond) { fails++; console.error(`  ✗ ${w
   eq(I.list(['a', 'b', 'c']), 'a, b y c', 'a list in Spanish');
   ok(/2026/.test(I.date('2026-11-14T10:00:00')) && /nov/i.test(I.date('2026-11-14T10:00:00')), 'a date in Spanish');
   ok(/hace 2 horas|hace 2 h/.test(I.rel(new Date(Date.now() - 2 * 36e5))), 'relative time in Spanish: ' + I.rel(new Date(Date.now() - 2 * 36e5)));
+}
+// ---- the shipped rows (i18n-more.js): the real strings that sit next to a pattern, and names kept as written
+{ const I = load('es');
+  if (I._more && Object.keys(I._more().patterns).some(k => k === 'Invite to {name}')) {
+    eq(I.t('Invite to this project'), 'Invitar a este proyecto', 'shell.js "Invite to this project" has its own row');
+    eq(I.t('Give it a task'), 'Dale una tarea', 'fleet.js "Give it a task" has its own row');
+    eq(I.t('Give one a task'), 'Dale una tarea a uno', 'fleet.js "Give one a task" has its own row');
+    eq(I.t('Invite to Pixel Quest'), 'Invitar a Pixel Quest', 'a real name goes through the pattern');
+    eq(I.t('Invite to My Tribe'), 'Invitar a My Tribe', 'the tribe keeps its name inside the sentence');
+    eq(I.t('Give Claude · Orion a task'), 'Dar una tarea a Claude · Orion', 'a helper’s name is kept');
+    eq(I.t('Invite to the moon'), 'Invite to the moon', 'no row and no name: the English stays whole');
+    eq(I.t('Good morning, Orion'), 'Buenos días, Orion', 'a greeting');
+    eq(I.t('1 of 5'), '1 de 5', 'a count');
+    eq(I.t('Best of show'), 'Best of show', '"{n} of {total}" only matches digits');
+    eq(I.t('🚀 Getting started'), '🚀 ' + I.t('Getting started'), 'an emoji-led label uses the table’s own row');
+    ok(I.t('Getting started') !== 'Getting started', 'and that row exists');
+  } else ok(false, 'app/ui/i18n-more.js did not load its patterns');
 }
 // ---- French and Japanese: plural rules differ (French 0 is "one"; Japanese has one form)
 { const I = load('fr');
