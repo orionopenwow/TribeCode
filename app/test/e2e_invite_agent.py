@@ -109,7 +109,7 @@ def main():
             htok = pg.evaluate("TribeStore.get().server.token"); host_id = pg.evaluate("TribeClient.state().me.id")
             pg.evaluate("localStorage.removeItem('tribecode.inviteclaude.kind')")
             shut = lambda: pg.evaluate("TribeInviteClaude.close()")   # the first name of TribeInviteAgent still works
-            opened = lambda: pg.wait_for_selector("#invite-modal:not(.hidden) #ic-body .ic-kinds", timeout=10000)   # the one invite sheet, on An AI helper
+            opened = lambda: pg.wait_for_selector("#invite-modal:not(.hidden) #ic-body .ic-q", timeout=10000)   # the one invite sheet, on An AI helper
             on_pick = lambda k: pg.wait_for_selector(f"#invite-modal:not(.hidden) #ic-body [data-ic-kind='{k}'].on", timeout=10000)
 
             # ---------- the sheet from the sidebar row ----------

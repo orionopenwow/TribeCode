@@ -149,7 +149,9 @@ def main():
             lb, qb = pg.locator("#tl-box .linkbox").bounding_box(), pg.locator("#tl-qr").bounding_box()
             assert qb["x"] > lb["x"] + lb["width"] - 4, "the QR should sit beside the link"
             pg.screenshot(path=str(SHOTS / "cp-invite.png"))
-            pg.click("#io-who-agent"); pg.wait_for_selector(".modal-card.io .ic-kinds .ic-chip")
+            pg.click("#io-who-agent"); pg.wait_for_selector(".modal-card.io .ic-q"); pg.wait_for_timeout(300)
+            if pg.locator(".modal-card.io #ic-change").count(): pg.click(".modal-card.io #ic-change")   # a helper is here already: Change shows the cards
+            pg.wait_for_selector(".modal-card.io .ic-kinds .ic-chip")
             assert pg.locator(".modal-card.io .ic-kinds").evaluate("e => getComputedStyle(e).display") == "grid"
             pg.evaluate("document.querySelector(\"#ic-body .ic-kinds [data-ic-kind='code']\").click()"); pg.wait_for_selector(".modal-card.io .ic-steps li")
             assert pg.locator(".modal-card.io .ic-steps li").first.evaluate("e => getComputedStyle(e, '::before').content") not in ("none", "normal")
