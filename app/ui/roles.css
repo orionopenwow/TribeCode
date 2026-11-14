@@ -2,12 +2,12 @@
 
 /* role badges: small tonal pills */
 .role-pill { display: inline-flex; align-items: center; gap: 3px; height: 17px; padding: 0 7px; margin-left: 6px; border: 1px solid; border-radius: 999px;
-  font: 600 10.5px/1 var(--font); letter-spacing: .02em; vertical-align: 1px; white-space: nowrap; flex: none; }
+  font: 600 12px/1 var(--font); letter-spacing: .01em; vertical-align: 1px; white-space: nowrap; flex: none; }   /* fix/integ8: 12px, the text floor */
 .role-pill .rp-e { font-size: 10px; filter: saturate(.8) contrast(.95); }
 .rp-host { background: var(--rust-soft, var(--chip)); border-color: color-mix(in srgb, #F26B1D 38%, var(--edge)); color: var(--rust-ink, var(--accent-ink)); }
 .rp-admin { background: var(--people-soft, var(--peer-tint)); border-color: color-mix(in srgb, #6C7CFF 38%, var(--edge)); color: var(--people-ink, var(--peer-ink)); }
 .rp-mod { background: var(--agents-soft, var(--live-tint)); border-color: color-mix(in srgb, #38C6B1 38%, var(--edge)); color: var(--agents-ink, var(--live-ink)); }
-.msg.dx .nm .role-pill { margin-left: 5px; height: 16px; font-size: 10px; }
+.msg.dx .nm .role-pill { margin-left: 5px; height: 17px; font-size: 12px; padding: 0 6px; }
 .pp-head h2 .role-pill { vertical-align: 3px; }
 .m2-pf-id small .role-pill { margin-left: 8px; }
 

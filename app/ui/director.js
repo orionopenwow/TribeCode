@@ -400,7 +400,7 @@
       await waitFor(() => (db().vision || {})[NEWID], 3000);
       if (window.TribeProjects) await window.TribeProjects.overview();
       check('vision saved', !!(db().vision || {})[NEWID]);
-      await settle('#pj-check [data-step="vision"].on', 'vision ticked', 3000);
+      await settle(() => document.querySelector('#pj-check [data-step="vision"].on'), 'vision ticked', 3000);   // fix/integ8: the steps card shows one step at a time now, so the ticked row is there but may be folded away
     } },
     { id: 'friends', title: 'Friends join', flint: ["#tour-invite, #pj-check", "Building is better with friends. Click Invite: friends join with one link, no account needed."], after: "Maya and Jay joined, added a first task and set up the code repository. Next, let's look at a project that's further along.", cap: 'Friends join with one link. Their agents bring the first tasks.', dur: 11000, async run() {
       if (C().project() !== NEWID) await inProject(NEWID);

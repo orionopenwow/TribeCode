@@ -94,6 +94,7 @@ def main():
             fr.wait_for_selector("#jw-card #jw-hi", timeout=15000)   # just joined: the dashboard, Say hi, Connect my AI
             assert fr.evaluate("document.body.dataset.view") in ("home", None) or fr.evaluate("TribeApp.view()") == "home", fr.evaluate("TribeApp.view()")
             fr.click("#jw-ai")
+            fr.wait_for_selector("#ic-body .ic-kinds [data-ic-kind='code']", state="attached", timeout=10000); fr.evaluate("document.querySelector(\"#ic-body .ic-kinds [data-ic-kind='code']\").click()")   # fix/integ8: the question comes first; pick Claude Code
             wait_text(fr, "#invite-body", "It joins next to you as", 15000)
             fr.wait_for_selector("#ic-body [data-ic-copy='code']", timeout=10000); fr.click("#ic-body [data-ic-copy='code']"); fr.wait_for_function("!document.querySelector('#cc-cmd').textContent.includes('••••')", timeout=10000)   # feat/invite-one: the key is made on Copy
             cmd = fr.inner_text("#cc-cmd")

@@ -210,8 +210,8 @@ def main():
             assert ph.evaluate("document.documentElement.scrollWidth <= innerWidth + 1")
             ph.click("#tn-options"); ph.wait_for_selector("#tn[data-step='2']", state="visible", timeout=10000)
             homes = ph.eval_on_selector_all("#tn [data-tn-where]", "els => els.map(e => e.dataset.tnWhere)")
-            assert homes == ["folder", "device", "cloud", "github", "shared"], homes   # feat/folder-sync: the folder home, off on a phone
-            assert ph.get_attribute("#tn [data-tn-where='folder']", "disabled") is not None, "a phone: no folder home"
+            assert homes == ["device", "bfolder", "github", "cloud"], homes   # fix/integ8: the setup now lists this device first, then a folder you pick (off on a phone), GitHub, a free cloud spot
+            assert "Folders need a computer" in ph.inner_text("#tn [data-tn-where='bfolder']"), "a phone: the folder row says it needs a computer"
             assert ph.get_attribute("#tn [data-tn-where='device']", "aria-checked") == "true", "a phone: this phone is recommended"
             ph.click("#tn #tn-x"); ph.wait_for_selector("#tn", state="detached")
             px.close()
