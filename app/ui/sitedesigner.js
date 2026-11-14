@@ -20,6 +20,10 @@
   const EDIT_CSS = `<style>[data-e]{cursor:text;border-radius:2px}[data-e]:hover{outline:1px dashed var(--muted);outline-offset:2px}[data-e]:focus{outline:2px solid var(--accent);outline-offset:2px}
 [data-block]{position:relative}[data-block]:hover{outline:1px dashed var(--line);outline-offset:-1px}.wdz-sel{outline:2px solid var(--accent)!important;outline-offset:-2px}
 [data-img]{cursor:pointer}.wdz-pin{position:absolute;z-index:5;width:24px;height:24px;margin:-12px 0 0 -12px;border-radius:50% 50% 50% 0;border:2px solid #fff;background:#F26B1D;color:#fff;font:700 11px/1 system-ui;cursor:pointer;padding:0}.wdz-pin.done{background:#6b7280}.wdz-cm [data-block]{cursor:crosshair}.wdz-cm [data-block]:hover{outline:2px dashed #F26B1D!important}[data-unwired]{outline:1px dashed var(--muted);outline-offset:3px}[data-unwired]::after{content:'not linked';font:600 10px/1 ui-monospace,monospace;margin-left:8px;opacity:.7}
+[data-e]:empty{display:inline-block;min-width:5em;min-height:1em}[data-e]:empty::before{content:attr(data-hint);opacity:.55;font-style:italic;font-weight:400}[data-item]:hover{outline:1px dashed var(--muted);outline-offset:3px}[data-sys]{cursor:help}[data-ph],[data-icon]{cursor:pointer}[data-icon]:hover,[data-ph]:hover,[data-img]:hover{outline:1px dashed var(--muted);outline-offset:2px}
+[data-e].wdz-sel,[data-btn].wdz-sel,[data-item].wdz-sel,[data-icon].wdz-sel,[data-ph].wdz-sel,[data-img].wdz-sel{outline-offset:2px!important}.tk[data-icon]{display:inline-grid}
+.wdz-tb{position:absolute;z-index:8;display:flex;align-items:center;background:#16181D;border:1px solid #3A3F4A;border-radius:8px;overflow:hidden;font:600 13px/1 system-ui,sans-serif;color:#F2F3F5;text-align:left;white-space:nowrap}.wdz-tb button{all:unset;box-sizing:border-box;min-width:30px;height:30px;display:grid;place-items:center;cursor:pointer;padding:0 6px;color:#F2F3F5}.wdz-tb button:hover,.wdz-tb button:focus-visible{background:#2A2F39}.wdz-tb i{width:1px;height:18px;background:#3A3F4A}.wdz-bar svg{display:block}
+@media (max-width:640px){.ehide-phone{opacity:.35;outline:1px dashed var(--muted);outline-offset:-3px}}@media (min-width:641px) and (max-width:1024px){.ehide-tablet{opacity:.35;outline:1px dashed var(--muted);outline-offset:-3px}}@media (min-width:1025px){.ehide-desktop{opacity:.35;outline:1px dashed var(--muted);outline-offset:-3px}}
 .wdz-bar{position:absolute;top:8px;right:8px;z-index:6;display:flex;gap:0;background:#16181D;border:1px solid #3A3F4A;border-radius:8px;overflow:hidden;font:600 13px/1 system-ui,sans-serif;text-align:left}.wdz-bar button{all:unset;box-sizing:border-box;min-width:30px;height:30px;display:grid;place-items:center;color:#F2F3F5;cursor:pointer;padding:0 6px}.wdz-bar button+button{border-left:1px solid #3A3F4A}.wdz-bar button:hover,.wdz-bar button:focus-visible{background:#2A2F39}.wdz-bar [data-a=grip]{cursor:grab;touch-action:none;letter-spacing:-2px}.wdz-dragging,.wdz-dragging *{cursor:grabbing!important;user-select:none}.wdz-moving{opacity:.45}.wdz-drop{position:absolute;left:0;right:0;height:4px;background:var(--accent);z-index:7;pointer-events:none}.wdz-cm .wdz-bar{display:none}[data-icon]{cursor:pointer}[data-icon]:hover{outline:2px dashed var(--muted);outline-offset:2px}@media (max-width:480px){.wdz-bar button{min-width:36px;height:36px}}</style>`;
   // the frame's helper is a real file loaded from the app's origin, never an inline script: the srcdoc frame inherits the
   // page's CSP, and the desktop app's has no 'unsafe-inline' (app/src-tauri/tauri.conf.json)
@@ -47,7 +51,7 @@
   }
   function undo() { if (!st.hist.length) return false; st.fut.push(JSON.stringify(st.cfg)); st.cfg = JSON.parse(st.hist.pop()); fixPage(); save(); paint(); return true; }
   function redo() { if (!st.fut.length) return false; st.hist.push(JSON.stringify(st.cfg)); st.cfg = JSON.parse(st.fut.pop()); fixPage(); save(); paint(); return true; }
-  function fixPage() { if (!st.cfg.pages.some(p => p.id === st.page)) st.page = st.cfg.pages[0].id; if (st.sel && !pageNow().blocks.some(b => b.id === st.sel.block)) st.sel = null; }
+  function fixPage() { if (!st.cfg.pages.some(p => p.id === st.page)) st.page = st.cfg.pages[0].id; if (st.sel && st.sel.block !== '@' && !pageNow().blocks.some(b => b.id === st.sel.block)) st.sel = null; }
   const ago = t => { if (!t) return ''; const s = Math.round((Date.now() - t) / 1000); return s < 20 ? 'just now' : s < 60 ? `${s}s ago` : s < 3600 ? `${Math.round(s / 60)} min ago` : new Date(t).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }); };
   function status(text) { const el = $('#wdz-saved'); if (!el) return; el.textContent = text != null ? text : st.dirty ? 'Saving…' : st.savedAt ? `Saved${st.pid && connected() ? '' : ' on this device'} · ${ago(st.savedAt)}` : ''; el.classList.toggle('is-dirty', !!st.dirty); }
   setInterval(() => { if (st && root && !root.hidden && !st.dirty) status(); }, 15000);
@@ -241,7 +245,8 @@
   }
 
   // ---------- paint ----------
-  function paint() {
+  function paint() { if (!root || !st) return; chrome(); frame(); panelPaint(); logPaint(); status(); }
+  function chrome() {
     if (!root || !st) return;
     const c = st.cfg, pg = pageNow();
     $('#wdz-name').textContent = c.name;
@@ -250,7 +255,6 @@
     const m = $('#wdz-mode'); m.setAttribute('aria-pressed', String(c.theme.mode === 'dark')); m.textContent = c.theme.mode === 'dark' ? 'Light' : 'Dark'; m.title = `Switch to the ${c.theme.mode === 'dark' ? 'light' : 'dark'} variant`;
     root.querySelector('[data-wdz="undo"]').disabled = !st.hist.length; root.querySelector('[data-wdz="redo"]').disabled = !st.fut.length;
     $('#wdz-blocks').innerHTML = pg.blocks.map((b, i) => `<li class="wdz-blk${st.sel && st.sel.block === b.id ? ' is-sel' : ''}${b.hidden ? ' is-hidden' : ''}" draggable="true" data-blk="${b.id}" data-i="${i}"><span class="wdz-grip" aria-hidden="true">⋮⋮</span><button type="button" class="wdz-blk-t" data-pick="${b.id}">${esc(S().BLOCKS[b.type].label.replace(/ \(.*/, ''))}<small>${esc(b.variant)}</small></button><span class="wdz-blk-acts"><button type="button" data-move="up" data-id="${b.id}" aria-label="Move up"${i ? '' : ' disabled'}>↑</button><button type="button" data-move="down" data-id="${b.id}" aria-label="Move down"${i < pg.blocks.length - 1 ? '' : ' disabled'}>↓</button><button type="button" data-dup="${b.id}" aria-label="Duplicate block" title="Duplicate (Ctrl D)">⧉</button><button type="button" data-hide="${b.id}" aria-label="${b.hidden ? 'Show' : 'Hide'} block" aria-pressed="${!!b.hidden}" title="${b.hidden ? 'Show on the site' : 'Hide from the site'} (H)">${b.hidden ? '◌' : '◉'}</button><button type="button" data-del="${b.id}" aria-label="Delete block">×</button></span></li>`).join('');
-    frame(); panelPaint(); logPaint(); status();
     const wrap = $('#wdz-framewrap'); wrap.dataset.dev = st.dev; root.querySelectorAll('[data-dev]').forEach(b => b.matches('button') && b.setAttribute('aria-pressed', String(b.dataset.dev === st.dev)));
   }
   // the site's fonts as data: URLs: the sandboxed preview has no origin, so it cannot fetch them itself
@@ -263,7 +267,7 @@
   }
   // the live preview: one render per tick; if the frame does not say "ready" soon, a fresh frame gets it (Chrome can leave
   // a sandboxed srcdoc frame blank when it is re-navigated quickly, e.g. right after the designer was hidden)
-  let frameT = 0, frameWd = 0, frameReady = false;
+  let frameT = 0, frameWd = 0, frameReady = false, softPage = null;
   function frame() {
     if (!$('#wdz-frame')) return;
     if (!fontsAsked) loadFonts();
@@ -271,7 +275,14 @@
     frameT = setTimeout(() => {
       const f = $('#wdz-frame'); if (!f || !st) return;
       const fonts = file => FONTS.get(file) || '';
-      const html = S().render(st.cfg, { page: st.page, edit: true, mode: 'single', fonts, extraHead: EDIT_CSS, extraBody: EDIT_JS() });
+      const full = S().render(st.cfg, { page: st.page, edit: true, mode: 'single', fonts, extraHead: EDIT_CSS });
+      // feat/site-editor2: split it into the site's own CSS and the page; a frame that is already up gets them as a
+      // message and swaps them in place (no reload, no flash, scroll and caret stay)
+      const a = full.indexOf('<style>'), b = full.indexOf('</style>', a), c = full.indexOf('<body>', b), d = full.lastIndexOf('</body>');
+      const ok = a >= 0 && b > a && c > b && d > c, cssText = ok ? full.slice(a + 7, b) : '', inner = ok ? full.slice(c + 6, d) : '';
+      if (ok && frameReady && softPage === st.page && f.contentWindow && f.getAttribute('srcdoc')) { f.contentWindow.postMessage({ html: inner, css: cssText }, '*'); return; }
+      const html = ok ? `${full.slice(0, a)}<style id="wdz-css">${cssText}</style>${full.slice(b + 8, c + 6)}<div id="wdz-root">${inner}</div>${EDIT_JS()}</body></html>` : full.replace('</body>', EDIT_JS() + '</body>');
+      softPage = st.page;
       frameReady = false; f.srcdoc = html;
       clearTimeout(frameWd);
       frameWd = setTimeout(() => { if (frameReady || !root || root.hidden) return; const g = $('#wdz-frame'); if (!g) return; const n = g.cloneNode(false); n.removeAttribute('srcdoc'); g.replaceWith(n); n.srcdoc = html; }, 1500);
@@ -279,19 +290,26 @@
   }
   function postSel(scroll) {
     const f = $('#wdz-frame'); if (!f || !f.contentWindow) return;
-    const s = st.sel, sel = !s ? '' : s.kind === 'button' ? `[data-btn="${s.block}|${s.path}"]` : s.kind === 'image' ? `[data-img="${s.block}|${s.path}"]` : `[data-block="${s.block}"]`;
-    f.contentWindow.postMessage({ sel, scroll }, '*');
+    const s = st.sel;
+    f.contentWindow.postMessage({ sel: s ? { kind: s.kind || 'block', key: `${s.block}|${s.path || ''}` } : null, scroll }, '*');
   }
   function onFrame(e) {
     const d = e.data; if (!d || !d.sd || !root || root.hidden) return;
     const f = $('#wdz-frame'); if (!f || e.source !== f.contentWindow) return;
-    if (d.t === 'ready') { frameReady = true; f.contentWindow.postMessage({ y: frameScroll }, '*'); postSel(false); postPins(); return; }
+    if (d.t === 'ready') { frameReady = true; if (d.soft) { postSel(false); postPins(); return; } f.contentWindow.postMessage({ y: frameScroll, labels: frameLabels() }, '*'); postSel(false); postPins(); return; }
     if (d.t === 'scroll') { frameScroll = d.y; return; }
     if (d.t === 'esc') return escape();   // Esc pressed inside the preview
-    if (d.t === 'page') { st.page = d.id; st.sel = null; frameScroll = 0; paint(); return; }
+    if (d.t === 'page') { if (d.id === st.page) { if (d.key) { st.sel = { block: '@', path: String(d.key).split('|')[1] || '', kind: 'text' }; st.panel = 'edit'; panelPaint(); } return; } flushText(); st.page = d.id; st.sel = null; frameScroll = 0; paint(); return; }
+    if (d.t === 'tb' || d.t === 'menu' || d.t === 'sys' || d.t === 'key') { if (d.t !== 'key') flushText(); if (d.t === 'key') return keys({ key: d.key, ctrlKey: d.ctrl, metaKey: d.meta, altKey: d.alt, shiftKey: d.shift, preventDefault() {}, target: null }); return SP() && SP().frame(d, spApi, f.getBoundingClientRect()); }
     if (d.t === 'undo') return undo();
     if (d.t === 'redo') return redo();
-    if (d.t === 'select') { const [block, path] = String(d.key).split('|'); st.sel = { block, path: path || '', kind: d.kind }; inspector(); postSel(false); $('#wdz-blocks').querySelectorAll('.wdz-blk').forEach(li => li.classList.toggle('is-sel', li.dataset.blk === block)); return; }
+    if (d.t === 'select') {
+      if (SP()) SP().closeMenu();
+      if (!d.key) { if (st.sel) { st.sel = null; if (st.panel === 'edit') panelPaint(); chipKey = ''; logPaint(); $('#wdz-blocks').querySelectorAll('.wdz-blk.is-sel').forEach(li => li.classList.remove('is-sel')); } return; }
+      const k = String(d.key), i = k.indexOf('|'), block = k.slice(0, i), path = k.slice(i + 1);
+      st.sel = { block, path, kind: d.kind || 'block' }; st.panel = 'edit'; panelPaint(); logPaint();   // a click in the page always shows what was clicked
+      $('#wdz-blocks').querySelectorAll('.wdz-blk').forEach(li => li.classList.toggle('is-sel', li.dataset.blk === block)); return;
+    }
     if (d.t === 'text') { liveText = d; clearTimeout(liveT); liveT = setTimeout(() => { if (liveText) { const l = liveText; commitText(l); } }, 900); return; }
     if (d.t === 'commit') return commitText(d);
     if (d.t === 'pin') return commentAt(d);
@@ -309,12 +327,24 @@
 
   function commitText(d) {
     liveText = null;
-    const [block, path] = String(d.key).split('|'), b = pageNow().blocks.find(x => x.id === block); if (!b) return;
+    const [block, path] = String(d.key).split('|');
+    if (block === '@') { const next = S().setSiteText(st.cfg, path, String(d.value || '')); if (JSON.stringify(next) === JSON.stringify(st.cfg)) return; st.hist.push(JSON.stringify(st.cfg)); st.fut = []; st.cfg = S().normalize(next); save(); chrome(); if (st.panel === 'edit' || st.panel === 'site') panelPaint(); return; }
+    const b = pageNow().blocks.find(x => x.id === block); if (!b) return;
     const v = String(d.value || '').replace(/\u00a0/g, ' ').trim();
     if (String(S().getAt(b.props, path) ?? '') === v) return;
     st.hist.push(JSON.stringify(st.cfg)); st.fut = []; st.cfg = S().setProp(st.cfg, st.page, block, path, v);
-    save(); const u = root.querySelector('[data-wdz="undo"]'); if (u) u.disabled = false; inspector();
+    save(); const u = root.querySelector('[data-wdz="undo"]'); if (u) u.disabled = false; const r2 = root.querySelector('[data-wdz="redo"]'); if (r2) r2.disabled = true;
+    const live = root.querySelector('#wdz-insp [data-etext]'); if (st.panel === 'edit') { if (live && document.activeElement !== live && st.sel && st.sel.block === block) live.value = v; else if (!live) inspector(); }
   }
+  const flushText = () => { if (liveText) commitText(liveText); };
+  // feat/site-editor2: the element tools (app/ui/siteparts.js): one element's look, list entries, the right-click menu,
+  // the pages list, the path of what is selected
+  const SP = () => window.TribeSiteParts;
+  const tr = t => (window.TribeI18n && window.TribeI18n.t ? window.TribeI18n.t(t, t) : t);
+  const frameLabels = () => ({ smaller: tr('Smaller'), bigger: tr('Bigger'), bold: tr('Bold'), color: tr('Colour'), align: tr('Align'), link: tr('Where it goes'), up: tr('Move up'), down: tr('Move down'), dup: tr('Duplicate'), add: tr('Add another'), del: tr('Remove'), flint: tr('Ask Flint about this'), more: tr('More'), replace: tr('Replace the picture'), fit: tr('Fill or fit'), swap: tr('Swap the icon'), words: tr('Edit the words'), grip: tr('Drag to move this section'), sadd: tr('Add a section below') });
+  const spApi = { sel: () => st.sel, setSel: s => { st.sel = s; }, cfg: () => st.cfg, commit: (c, o) => commit(c, o), page: () => st.page, setPage: id => { st.page = id; st.sel = null; frameScroll = 0; }, pageNow: () => pageNow(), say: (t, h, a) => say(t, h, a), ask: t => ask(t), pid: () => st.pid, connected: () => connected(),
+    paint: () => paint(), panel: p => { if (p) st.panel = p; panelPaint(); }, postSel: sc => postSel(sc), post: m => { const f = $('#wdz-frame'); if (f && f.contentWindow) f.contentWindow.postMessage(m, '*'); }, root: () => root, box: () => $('#wdz-insp'),
+    pickFile: () => pickFile(), iconPicker: key => STU() && STU().iconPicker(stuApi, key), comment: () => commentMode(true), fillFlint: t => { if (fui) fui.fill(t); }, undo: () => undo(), canEdit: () => st.canEdit !== false, dev: () => st.dev, comments: () => st.comments, tr };
   // ---------- feat/design-site2: Style, Check and "Have my agent do it" live in app/ui/sitestudio.js ----------
   const STU = () => window.TribeSiteStudio;
   const stuApi = { sel: () => st.sel, cfg: () => st.cfg, commit: c => commit(c), say: (t, h, a) => say(t, h, a), undo: () => undo(), pid: () => st.pid, page: () => st.page, connected: () => connected(), ask: t => ask(t),
@@ -335,7 +365,9 @@
       const sty = b.style || {}, B = (k, v, l) => `<button type="button" class="btn sm" data-sty="${k}" data-val="${v}" aria-pressed="${(sty[k] || '') === v}">${l}</button>`;
       box.insertAdjacentHTML('beforeend', `<p class="wdz-f"><span>Background</span></p><p class="wdz-row" role="group" aria-label="Background">${B('bg', '', 'None')}${B('bg', 'card', 'Tint')}${B('bg', 'accent', 'Accent')}${B('bg', 'ink', 'Dark')}</p>
         <p class="wdz-f"><span>Spacing</span></p><p class="wdz-row" role="group" aria-label="Spacing">${B('pad', 's', 'Tight')}${B('pad', '', 'Normal')}${B('pad', 'l', 'Roomy')}</p>
+        ${SP() ? SP().section(b, spApi) : ''}
         <p class="wdz-row"><button type="button" class="btn sm" data-dup="${b.id}">Duplicate</button><button type="button" class="btn sm" data-hide="${b.id}" aria-pressed="${!!b.hidden}">${b.hidden ? 'Show on the site' : 'Hide from the site'}</button><button type="button" class="btn sm" data-wdz="comment">Comment here</button></p>`);
+      if (SP()) SP().said(spApi);
     }
   }
   // a tiny schematic of each block (flat shapes in the app's own tokens), so the picker shows what you get
@@ -367,14 +399,15 @@
     S().TYPES.forEach(t => { const g = C2[t] || 'More'; (groups[g] = groups[g] || []).push(t); });
     return Object.entries(groups).map(([g, ts]) => `<p class="wdz-eyebrow">${esc(g)}</p>${ts.map(ty => `<div class="wdz-pk"><b>${esc(S().BLOCKS[ty].label)}</b><span class="wdz-pkv">${S().BLOCKS[ty].variants.map(v => `<button type="button" class="wdz-pkb" data-add="${ty}" data-v="${v}" title="Add ${esc(S().BLOCKS[ty].label.toLowerCase())}: ${esc(v)}">${schem(ty, v)}<small>${esc(v)}</small></button>`).join('')}</span></div>`).join('')}`).join('');
   }
-  const KEYS = [['?', 'These shortcuts'], ['Ctrl Z · Ctrl Shift Z', 'Undo · Redo'], ['Ctrl D', 'Duplicate the selected block'], ['Delete', 'Remove the selected block'], ['H', 'Hide or show the selected block'], ['Alt ↑ · Alt ↓', 'Move the selected block'], ['C', 'Comment mode'], ['1 · 2 · 3', 'Desktop · Tablet · Phone'], ['Ctrl S', 'Save a version'], ['Esc', 'Deselect, close']];
+  const KEYS = [['?', 'These shortcuts'], ['Ctrl Z · Ctrl Shift Z', 'Undo · Redo'], ['Ctrl D', 'Duplicate the selected section or entry'], ['Delete', 'Remove the selected section or entry'], ['H', 'Hide or show the selected block'], ['Alt ↑ · Alt ↓', 'Move the selected section or entry'], ['C', 'Comment mode'], ['1 · 2 · 3', 'Desktop · Tablet · Phone'], ['Ctrl S', 'Save a version'], ['Enter', 'Type in the selected words'], ['Right-click', 'Everything you can do with it'], ['Esc', 'Stop typing, step out, close']];
   function shortcuts() { const k = $('#wdz-keys'); k.hidden = !k.hidden; k.innerHTML = `<div class="wdz-keys-in"><p class="wdz-eyebrow">Keyboard shortcuts</p><dl>${KEYS.map(([a, b]) => `<dt><kbd>${esc(a)}</kbd></dt><dd>${esc(b)}</dd>`).join('')}</dl><button type="button" class="btn sm" data-wdz="keys">Close</button></div>`; }
   // Esc peels one layer: a popover, comment mode, the selection, then the designer itself (like the other full panes)
   function escape() {
     if (!root || root.hidden) return;
     for (const id of ['#wdz-dlmenu', '#wdz-keys', '#wdz-peek', '#wdz-picker']) { const x = $(id); if (x && !x.hidden) { x.hidden = true; return; } }
     if (st && st.cmode) return commentMode(false);
-    if (st && st.sel) { st.sel = null; paint(); return; }
+    if (SP() && SP().closeMenu()) return;
+    if (st && st.sel) { flushText(); st.sel = SP() ? SP().parentOf(st.sel) : null; st.panel = 'edit'; panelPaint(); postSel(false); chipKey = ''; logPaint(); $('#wdz-blocks').querySelectorAll('.wdz-blk').forEach(li => li.classList.toggle('is-sel', !!st.sel && li.dataset.blk === st.sel.block)); return; }
     close();
   }
   function keys(e) {
@@ -383,9 +416,11 @@
     if (e.key === '?') { e.preventDefault(); return shortcuts(); }
     if (e.key === 'Escape') return escape();
     if (mod && e.key.toLowerCase() === 's') { e.preventDefault(); return saveVersion(); }
-    if (!mod && !e.altKey && /^[123]$/.test(e.key)) { st.dev = ['desktop', 'tablet', 'phone'][+e.key - 1]; return paint(); }
+    if (!mod && !e.altKey && /^[123]$/.test(e.key)) { st.dev = ['desktop', 'tablet', 'phone'][+e.key - 1]; return chrome(); }
     if (!mod && e.key.toLowerCase() === 'c') return commentMode(!st.cmode);
     if (!sb) return;
+    if (SP() && st.sel.kind !== 'block' && SP().key(e, spApi)) return;   // an entry, a picture, an element: its own shortcuts
+    if (st.sel.kind !== 'block' && !mod && !e.altKey && e.key.toLowerCase() !== 'h') return;   // Delete with words selected never removes the whole section
     if (mod && e.key.toLowerCase() === 'd') { e.preventDefault(); const r = S().duplicateBlock(st.cfg, st.page, sb.id); commit(r.cfg); st.sel = { block: r.block.id, path: '', kind: 'block' }; return paint(); }
     if (e.key === 'Delete' || e.key === 'Backspace') { e.preventDefault(); st.sel = null; return commit(S().removeBlock(st.cfg, st.page, sb.id)); }
     if (!mod && e.key.toLowerCase() === 'h') return commit(S().setHidden(st.cfg, st.page, sb.id, !sb.hidden));
@@ -468,6 +503,7 @@
       <label class="wdz-f"><span>Site name</span><input class="input" data-seo="name" value="${esc(c.name)}"></label>
       <label class="wdz-f"><span>Page title (tab and search results)</span><input class="input" data-seo="title" maxlength="120" value="${esc(seo.title)}" placeholder="${esc(c.name)}"></label>
       <label class="wdz-f"><span>Description (search and link previews)</span><textarea class="input" rows="2" data-seo="description" maxlength="320" placeholder="One or two sentences about the site">${esc(seo.description)}</textarea></label>
+      ${SP() ? SP().pages(spApi) : ''}
       <p class="wdz-gprev" aria-label="Search preview"><b>${esc(seo.title || c.name)}</b><small>${esc(seo.description || 'Add a description so search results say what the site is.')}</small></p>
       <p class="wdz-row"><span class="wdz-lab">Logo</span>${c.logo ? `<img class="wdz-mini" src="${esc(c.logo)}" alt="">` : ''}<button type="button" class="btn sm" data-site="logo">${c.logo ? 'Change' : 'Add logo'}</button>${c.logo ? '<button type="button" class="btn sm ghost" data-site="nologo">Remove</button>' : ''}</p>
       <p class="wdz-row"><span class="wdz-lab">Favicon</span>${seo.favicon ? `<img class="wdz-mini" src="${esc(seo.favicon)}" alt="">` : ''}<button type="button" class="btn sm" data-site="favicon">${seo.favicon ? 'Change' : 'Add'}</button>${c.logo && seo.favicon !== c.logo ? '<button type="button" class="btn sm ghost" data-site="logofav">Use the logo</button>' : ''}</p>
@@ -480,6 +516,7 @@
       <p class="wdz-hint">No analytics or trackers are added to your site.</p>`;
     box.querySelectorAll('[data-seo]').forEach(i => i.addEventListener('change', () => { const k = i.dataset.seo; commit(k === 'name' ? { ...st.cfg, name: i.value.trim() || st.cfg.name } : S().setSeo(st.cfg, { [k]: i.value.trim() })); }));
     const fs = box.querySelector('[data-site="fonts"]'); fs.addEventListener('change', () => fs.value && commit(S().setFonts(st.cfg, fs.value)));
+    if (SP()) SP().wire(box, spApi);
   }
   let picFor = null;
   async function siteAction(el) {
@@ -530,14 +567,17 @@
   function inspector() {
     const box = $('#wdz-insp'); if (!box) return;
     const s = st.sel, pg = pageNow(), b = s && pg.blocks.find(x => x.id === s.block);
-    if (!b) { box.innerHTML = `<p class="wdz-eyebrow">Edit</p><p class="wdz-hint">Click anything in the preview. Words: click and type. Buttons: pick where they go. Pictures: replace, round or square.</p>`; return; }
+    if (s && s.block === '@' && SP()) return SP().siteSel(box, spApi);
+    if (!b) { box.innerHTML = `<p class="wdz-eyebrow">Edit</p><p class="wdz-hint">Click anything in the preview. Words: click and type. Buttons: pick where they go. Pictures: replace, round or square.</p><p class="wdz-hint">Right-click anything for more. Esc steps out to what holds it.</p>`; return; }
     const BL = S().BLOCKS[b.type];
+    if (SP() && /^(text|item|icon|field)$/.test(s.kind)) return SP().element(box, b, spApi);
     if (s.kind === 'button') {
       const h = S().getAt(b.props, s.path) || {}, l = h.link || {}, val = l.kind === 'page' ? `page:${l.to}` : l.kind === 'section' ? `section:${l.to}` : l.kind || '';
       box.innerHTML = `<p class="wdz-eyebrow">Button</p><label class="wdz-f"><span>Text</span><input class="input" data-lab="${esc(s.path)}" value="${esc(h.label || '')}"></label>
         <label class="wdz-f"><span>Goes to</span><select class="input" id="wdz-link"><option value="">Not linked yet</option><optgroup label="Pages">${st.cfg.pages.map(p => `<option value="page:${p.slug}"${val === 'page:' + p.slug ? ' selected' : ''}>${esc(p.title)}</option>`).join('')}</optgroup><optgroup label="Sections">${sectionOptions().map(([v, t]) => `<option value="${v}"${val === v ? ' selected' : ''}>${esc(t)}</option>`).join('')}</optgroup><option value="url"${val === 'url' ? ' selected' : ''}>A web address…</option><option value="email"${val === 'email' ? ' selected' : ''}>An email address…</option></select></label>
         <label class="wdz-f" id="wdz-link-to-w"${/^(url|email)$/.test(val) ? '' : ' hidden'}><span>${val === 'email' ? 'Email' : 'Address'}</span><input class="input" id="wdz-link-to" value="${esc(/^(url|email)$/.test(val) ? l.to : '')}" placeholder="${val === 'email' ? 'you@example.com' : 'https://'}"></label>
-        <p class="wdz-hint">Or tell Flint: “link this button to the contact page”.</p>`;
+        <p class="wdz-hint">Or tell Flint: “link this button to the contact page”.</p>${SP() ? SP().looks(b, s, spApi) : ''}`;
+      if (SP()) box.insertAdjacentHTML('afterbegin', SP().crumbs(b, s, spApi));
       box.querySelector('#wdz-link').addEventListener('change', e => { const v = e.target.value; if (v === 'url' || v === 'email') { box.querySelector('#wdz-link-to-w').hidden = false; box.querySelector('#wdz-link-to').focus(); return; } const [k, to] = v ? [v.split(':')[0], v.slice(v.indexOf(':') + 1)] : ['', '']; commit(S().setLink(st.cfg, st.page, b.id, s.path, { kind: k, to })); });
       box.querySelector('#wdz-link-to').addEventListener('change', e => commit(S().setLink(st.cfg, st.page, b.id, s.path, { kind: box.querySelector('#wdz-link').value, to: e.target.value.trim() })));
       box.querySelector('[data-lab]').addEventListener('change', e => commit(S().setProp(st.cfg, st.page, b.id, s.path + '.label', e.target.value)));
@@ -548,7 +588,8 @@
       box.innerHTML = `<p class="wdz-eyebrow">Picture</p>${src ? `<img class="wdz-thumb${shape === 'round' ? ' round' : ''}" src="${esc(src)}" alt="">` : '<p class="wdz-hint">No picture yet: a placeholder shows.</p>'}
         <p class="wdz-row"><button type="button" class="btn sm primary" data-img="upload">Upload</button><button type="button" class="btn sm" data-img="board">From my board</button></p>
         <p class="wdz-row" role="group" aria-label="Shape"><button type="button" class="btn sm" data-img="round" aria-pressed="${shape === 'round'}">Round</button><button type="button" class="btn sm" data-img="square" aria-pressed="${shape === 'square'}">Square</button><button type="button" class="btn sm ghost" data-img="none">Original</button></p>
-        <label class="wdz-f"><span>Alt text (what it shows)</span><input class="input" id="wdz-alt" value="${esc(alt)}" placeholder="Mara at the wheel, glazing a mug"></label><div id="wdz-board" class="wdz-board" hidden></div>${STU() && STU().illusRow ? STU().illusRow(stuApi) : ''}`;
+        <label class="wdz-f"><span>Alt text (what it shows)</span><input class="input" id="wdz-alt" value="${esc(alt)}" placeholder="Mara at the wheel, glazing a mug"></label><div id="wdz-board" class="wdz-board" hidden></div>${STU() && STU().illusRow ? STU().illusRow(stuApi) : ''}${SP() ? SP().picture(b, s, spApi) : ''}`;
+      if (SP()) box.insertAdjacentHTML('afterbegin', SP().crumbs(b, s, spApi));
       box.querySelector('#wdz-alt').addEventListener('change', e => commit(S().setImage(st.cfg, st.page, b.id, s.path, src, e.target.value.trim())));
       return;
     }
@@ -557,9 +598,10 @@
     box.innerHTML = `<p class="wdz-eyebrow">${esc(BL.label)}</p>
       <p class="wdz-f"><span>Layout</span></p><p class="wdz-row wdz-vars" role="group" aria-label="Layout">${BL.variants.map(v => `<button type="button" class="btn sm" data-var="${v}" aria-pressed="${v === b.variant}">${esc(v)}</button>`).join('')}</p>
       ${strings.map(([k, v]) => `<label class="wdz-f"><span>${esc(k === 'url' ? 'Video or embed link' : k === 'action' ? 'Form link (Formspree, Google Forms…)' : k)}</span>${v.length > 70 || k === 'text' || k === 'bio' ? `<textarea class="input" rows="3" data-prop="${k}">${esc(v)}</textarea>` : `<input class="input" data-prop="${k}" value="${esc(v)}">`}</label>`).join('')}
-      ${lists.map(([k, v]) => `<p class="wdz-row wdz-list"><span>${esc(k)}: ${v.length}</span><button type="button" class="btn sm" data-item="add" data-k="${k}">+ Add</button><button type="button" class="btn sm ghost" data-item="del" data-k="${k}"${v.length ? '' : ' disabled'}>− Remove last</button></p>`).join('')}
+      ${lists.map(([k, v]) => SP() ? SP().list(b, k, v, spApi) : `<p class="wdz-row wdz-list"><span>${esc(k)}: ${v.length}</span><button type="button" class="btn sm" data-item="add" data-k="${k}">+ Add</button><button type="button" class="btn sm ghost" data-item="del" data-k="${k}"${v.length ? '' : ' disabled'}>− Remove last</button></p>`).join('')}
       ${'img' in b.props ? `<p class="wdz-row"><button type="button" class="btn sm" data-selimg="1">Picture…</button></p>` : ''}`;
     box.querySelectorAll('[data-prop]').forEach(i => i.addEventListener('change', () => commit(S().setProp(st.cfg, st.page, b.id, i.dataset.prop, i.value))));
+    if (SP()) box.insertAdjacentHTML('afterbegin', SP().crumbs(b, s, spApi));
   }
   function itemTemplate(b, k) { const d = S().BLOCKS[b.type].make(st.cfg.name)[k]; const last = (b.props[k] || []).slice(-1)[0]; return JSON.parse(JSON.stringify(last || (d && d[0]) || { label: 'New', link: { kind: '', to: '' } })); }
 
@@ -570,7 +612,7 @@
     if (t.closest('[data-tpl]')) { const x = t.closest('[data-tpl]'); const pk = $('#wdz-peek'); if (pk) pk.hidden = true; await useTemplate(x.dataset.tpl); say(`Started from the ${x.dataset.title || 'chosen'} template. Undo brings back what you had.`); return; }
     if (t.closest('[data-start="blank"]')) { hideStart(); paint(); return; }
     if (t.closest('[data-page]') && !a) { st.page = t.closest('[data-page]').dataset.page; st.sel = null; frameScroll = 0; paint(); return; }
-    if (t.closest('[data-dev]') && t.closest('.wdz-devs')) { st.dev = t.closest('[data-dev]').dataset.dev; paint(); return; }
+    if (t.closest('[data-dev]') && t.closest('.wdz-devs')) { st.dev = t.closest('[data-dev]').dataset.dev; chrome(); return; }   // only the frame's width changes: the page itself is not drawn again
     if (t.closest('[data-pick]')) { st.sel = { block: t.closest('[data-pick]').dataset.pick, path: '', kind: 'block' }; paint(); postSel(true); return; }
     if (t.closest('[data-move]')) { const x = t.closest('[data-move]'); commit(S().moveBlock(st.cfg, st.page, x.dataset.id, x.dataset.move)); return; }
     if (t.closest('[data-del]')) { commit(S().removeBlock(st.cfg, st.page, t.closest('[data-del]').dataset.del)); return; }
@@ -598,6 +640,7 @@
     if (t.closest('[data-cact]')) return commentAction(t.closest('[data-cact]'));
     if (t.closest('[data-site]')) return siteAction(t.closest('[data-site]'));
     if (t.closest('[data-stu]') && STU()) return STU().click(t.closest('[data-stu]'), stuApi);
+    if (t.closest('[data-sp]') && SP()) return SP().click(t.closest('[data-sp]'), spApi);
     if (t.closest('[data-gcat]')) { gal.cat = t.closest('[data-gcat]').dataset.gcat; galPaint(); return; }
     if (t.closest('[data-peek]')) { peek(t.closest('[data-peek]').dataset.peek); return; }
     if (t.closest('[data-peekclose]')) { const pk = $('#wdz-peek'); if (pk) pk.hidden = true; return; }

@@ -1,0 +1,46 @@
+/* The website designer's element tools (app/ui/siteparts.js) and suggestions (app/ui/sitesuggest.js). Flat matte:
+   1px borders, depth from luminance steps, tokens only. */
+.sp-crumbs { display: flex; flex-wrap: wrap; align-items: center; gap: 2px 4px; margin: 0 0 4px; font: 500 12px var(--font); color: var(--faint); }
+.sp-crumbs button { border: 0; background: none; color: var(--muted); font: inherit; padding: 2px 4px; border-radius: var(--r-sm); cursor: pointer; }
+.sp-crumbs button:hover:not(:disabled), .sp-crumbs button:focus-visible { background: var(--surface-3); color: var(--text); }
+.sp-crumbs button[aria-current="true"] { color: var(--text); font-weight: 600; cursor: default; }
+.sp-looks { display: grid; gap: 8px; }
+.wdz-insp textarea[data-etext] { min-height: 0; height: auto; max-height: 160px; resize: vertical; field-sizing: content; }
+.sp-col i { display: inline-block; width: 10px; height: 10px; border-radius: 50%; border: 1px solid var(--border); margin-right: 6px; vertical-align: -1px; }
+.sp-list, .sp-pages { display: grid; gap: 4px; }
+.sp-li { display: grid; grid-template-columns: 1fr max-content; align-items: center; gap: 4px; border: 1px solid var(--border); border-radius: var(--r-sm); background: var(--surface-2); padding: 0 2px 0 0; }
+.sp-li.is-cur { border-color: var(--faint); }
+.sp-li-t { border: 0; background: none; color: var(--text); font: 500 12.5px var(--font); text-align: left; padding: 6px 8px; cursor: pointer; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sp-li-t:hover, .sp-li-t:focus-visible { color: var(--accent); }
+.sp-li .input { border: 0; background: none; min-width: 0; height: 30px; }
+.sp-li-a { display: flex; }
+.sp-li-a button { width: 24px; height: 28px; border: 0; background: none; color: var(--muted); cursor: pointer; border-radius: var(--r-sm); }
+.sp-li-a button:hover:not(:disabled), .sp-li-a button:focus-visible { background: var(--surface-3); color: var(--text); }
+.sp-li-a button:disabled { opacity: .3; cursor: default; }
+.sp-menu { position: fixed; z-index: 60; display: grid; min-width: 220px; max-width: 300px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--r); padding: 4px; }
+.sp-menu[hidden] { display: none; }
+.sp-menu button { display: flex; justify-content: space-between; align-items: center; gap: 16px; text-align: left; padding: 8px 10px; border: 0; border-radius: var(--r-sm); background: none; color: var(--text); font: 500 13px var(--font); cursor: pointer; }
+.sp-menu button:hover, .sp-menu button:focus-visible { background: var(--surface-2); outline: 0; }
+.sp-menu kbd { font: 400 11px var(--mono); color: var(--faint); }
+.sp-menu hr { border: 0; border-top: 1px solid var(--border); margin: 4px 0; width: 100%; }
+.sp-said:empty { display: none; }
+.sp-said { display: grid; gap: 6px; border-top: 1px solid var(--border); padding-top: 8px; margin-top: 4px; }
+
+/* suggestions drawn from the tribe */
+.sg-list { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.sg { display: grid; gap: 6px; border: 1px solid var(--border); border-radius: var(--r); background: var(--surface-2); padding: 10px; }
+.sg-t { font: 600 13px var(--font); color: var(--text); margin: 0; }
+.sg-ba { display: grid; gap: 2px; font-size: 12.5px; margin: 0; }
+.sg-ba del { color: var(--faint); text-decoration: line-through; }
+.sg-ba ins { color: var(--text); text-decoration: none; border-left: 2px solid var(--teal, var(--accent)); padding-left: 6px; }
+.sg-src { font-size: 12px; color: var(--muted); margin: 0; line-height: 1.45; }
+.sg-src button { border: 0; background: none; padding: 0; color: var(--muted); font: inherit; text-decoration: underline; cursor: pointer; }
+.sg-src button:hover { color: var(--text); }
+.sg-src q { quotes: "“" "”"; }
+.sg-said { display: grid; gap: 4px; }
+.sg-said-i { font-size: 12px; color: var(--muted); line-height: 1.45; margin: 0; border-left: 2px solid var(--border); padding-left: 8px; }
+.sg-said-i b { color: var(--text); font-weight: 600; }
+@media (max-width: 820px) {
+  .sp-li-a button, .sp-crumbs button { min-height: 40px; min-width: 32px; }
+  .wdz .wdz-saved { display: inline; order: 9; font-size: 11px; }
+}

@@ -93,8 +93,229 @@ def main():
     print("e2e_site_editable: OK")
 
 
+def api(path, method="GET", body=None, token=None, project=None):
+    h = {"Content-Type": "application/json"}
+    if token: h["Authorization"] = "Bearer " + token
+    if project: h["X-Project"] = project
+    req = urllib.request.Request(BASE + "/api" + path, method=method, data=json.dumps(body).encode() if body is not None else None, headers=h)
+    try:
+        with urllib.request.urlopen(req, timeout=30) as r: return r.status, json.loads(r.read() or b"{}")
+    except urllib.error.HTTPError as e: return e.code, json.loads(e.read() or b"{}")
+
+
+def settings_js(name, token, pid):
+    return (f"try {{ localStorage.setItem('tribecode.settings.v1', JSON.stringify({{name:'{name}', onboarded:true, theme:'dark', server:{{url:'{BASE}', token:'{token}'}}, checklist:{{setup:true}}, tour:{{done:true}}}}));"
+            f"localStorage.setItem('tribecode.project:{BASE}', '{pid}'); }} catch (e) {{}}")
+
+
+def watch(page, who):
+    page.on("pageerror", lambda e: errors.append(f"{who} pageerror: {e}"))
+    page.on("console", lambda m: m.type == "error" and "ERR_" not in m.text and "Failed to load resource" not in m.text and errors.append(f"{who} console: {m.text}"))
+
+
+def cfg(pg): return pg.evaluate("TribeSiteDesigner.cfg()")
+def sel(pg): return pg.evaluate("TribeSiteDesigner.state().sel")
+
+
+def fr(pg):
+    pg.wait_for_timeout(250)
+    return next(f for f in pg.frames if f.parent_frame and f.frame_element().get_attribute("id") == "wdz-frame")
+
+
+def block(pg, t, page=0): return next(b for b in cfg(pg)["pages"][page]["blocks"] if b["type"] == t)
+
+
+def shot(pg, name):
+    if SHOTS:
+        out = ROOT / "docs" / "screenshots"; out.mkdir(parents=True, exist_ok=True); pg.wait_for_timeout(500)
+        pg.evaluate("document.querySelectorAll('.toast').forEach(t => t.classList.add('hidden'))"); pg.screenshot(path=str(out / name))
+
+
+def open_tpl(pg, pid, tpl):
+    pg.evaluate(f"TribeSiteDesigner.open({{ pid: '{pid}', template: '{tpl}' }})")
+    pg.wait_for_selector("#wdz:not([hidden]) #wdz-frame"); pg.wait_for_function("TribeSiteDesigner.cfg() && TribeSiteDesigner.cfg().pages[0].blocks.length > 0")
+    pg.wait_for_timeout(700)
+    f = fr(pg); f.wait_for_selector("[data-block]", timeout=8000); return f
+
+
+def esc_to(pg, f, kind):
+    """Press Esc until the selection is of this kind (stop typing, then step out)."""
+    for _ in range(5):
+        s = sel(pg)
+        if (s or {}).get("kind") == kind or (kind is None and not s): return
+        f.locator("body").press("Escape"); pg.wait_for_timeout(150)
+    raise AssertionError(f"Esc never reached {kind}: {sel(pg)}")
+
+
 def live(pw):
-    pass
+    """The real editor with a tribe: the things that used to be dead ends, and that nothing glitches while you work."""
+    tmp = tempfile.mkdtemp(prefix="tribe-se2-", dir="/tmp")
+    env = {**os.environ, "TRIBE_NO_GH": "1", "TRIBE_TEST": "1", "TRIBE_NO_DOWNLOAD": "1"}
+    log = open(os.path.join(tmp, "server.log"), "w+")
+    srv = subprocess.Popen(["node", str(ROOT / "server" / "index.js"), "--port", str(PORT), "--dir", tmp, "--ollama", "http://localhost:9", "--name", "Site Crew"], stdout=log, stderr=subprocess.STDOUT, env=env)
+    try:
+        for _ in range(80):
+            try:
+                if api("/health")[0] == 200: break
+            except Exception: pass
+            time.sleep(0.2)
+        tok = api("/bootstrap", "POST", {"name": "Mara"})[1]["token"]
+        pid = api("/projects", token=tok)[1]["projects"][0]["id"]
+        b = pw.chromium.launch(executable_path=CHROME, args=["--no-proxy-server"])
+        ctx = b.new_context(viewport={"width": 1440, "height": 900}); ctx.add_init_script(settings_js("Mara", tok, pid))
+        pg = ctx.new_page(); watch(pg, "mara")
+        pg.goto(BASE + "/?skipIntro=1")
+        pg.wait_for_function("window.TribeSiteDesigner && window.TribeSiteParts && window.TribeClient && TribeClient.connected()", timeout=20000)
+
+        # ---- the line from the report: a link with a small note under it ("Opens Friday at 10am")
+        f = open_tpl(pg, pid, "linkbio")
+        note = f.locator("small[data-e]").first
+        assert "Opens Friday" in note.inner_text(), note.inner_text()
+        f.evaluate("window.__same = 1")   # if the preview reloads, this is gone
+        note.click()
+        pg.wait_for_function("(TribeSiteDesigner.state().sel || {}).kind === 'text'", timeout=4000)
+        assert sel(pg)["path"] == "items.0.note", sel(pg)
+        assert f.locator(".wdz-tb").is_visible() and f.locator(".wdz-sel").count() == 1, "one outline and one toolbar"
+        assert pg.locator("#wdz-insp .sp-crumbs").is_visible() and pg.locator("#wdz-insp [data-etext]").input_value().startswith("Opens Friday")
+        note.press("Control+a"); note.type("Opens Saturday at 9am")
+        pg.wait_for_function("TribeSiteDesigner.cfg().pages[0].blocks[0].props.items[0].note === 'Opens Saturday at 9am'", timeout=4000)
+        assert pg.locator("#wdz-insp [data-etext]").input_value() == "Opens Saturday at 9am", "the panel follows what is typed on the page"
+        print("  ok  the note under a link is selected with one click and typed over in place")
+
+        # ---- the small toolbar: bigger, bold; the page is swapped in place (no reload), the outline and toolbar stay
+        note.press("Escape")
+        f.locator(".wdz-tb [data-a=bigger]").click()
+        pg.wait_for_function("((TribeSiteDesigner.cfg().pages[0].blocks[0].es || {})['items.0.note'] || {}).sz === 'l'", timeout=4000)
+        pg.wait_for_timeout(300)
+        assert f.evaluate("window.__same") == 1, "the preview was not reloaded for a style change"
+        assert "e-sz-l" in f.locator("small[data-e]").first.get_attribute("class") and f.locator(".wdz-sel").count() == 1 and f.locator(".wdz-tb").is_visible()
+        f.locator(".wdz-tb [data-a=bold]").click()
+        pg.wait_for_function("((TribeSiteDesigner.cfg().pages[0].blocks[0].es || {})['items.0.note'] || {}).b === 1", timeout=4000)
+        print("  ok  bigger and bold from the toolbar; the preview does not reload or lose the selection")
+
+        # ---- Esc steps out: the entry, the section, nothing
+        pg.wait_for_timeout(200); f.locator("small[data-e]").first.click()
+        esc_to(pg, f, "item")
+        assert sel(pg)["path"] == "items.0" and f.locator("[data-item].wdz-sel").count() == 1, sel(pg)
+        first = cfg(pg)["pages"][0]["blocks"][0]["props"]["items"][0]["label"]
+        f.locator("body").press("Alt+ArrowDown")
+        pg.wait_for_function(f"TribeSiteDesigner.cfg().pages[0].blocks[0].props.items[1].label === {json.dumps(first)}", timeout=4000)
+        assert sel(pg)["path"] == "items.1", "the selection follows the entry"
+        assert ((cfg(pg)["pages"][0]["blocks"][0].get("es") or {}).get("items.1.note") or {}).get("sz") == "l", "its look moved with it"
+        pg.wait_for_timeout(300)
+        f.locator("body").press("Control+z"); pg.wait_for_function(f"TribeSiteDesigner.cfg().pages[0].blocks[0].props.items[0].label === {json.dumps(first)}", timeout=4000)
+        f.locator("body").press("Control+Shift+z"); pg.wait_for_function(f"TribeSiteDesigner.cfg().pages[0].blocks[0].props.items[1].label === {json.dumps(first)}", timeout=4000)
+        f.locator("body").press("Control+z"); pg.wait_for_timeout(300)
+        n0 = len(cfg(pg)["pages"][0]["blocks"][0]["props"]["items"])
+        f.locator("small[data-e]").first.click(); esc_to(pg, f, "item")
+        f.locator(".wdz-tb [data-a=dup]").click(); pg.wait_for_function(f"TribeSiteDesigner.cfg().pages[0].blocks[0].props.items.length === {n0 + 1}", timeout=4000)
+        pg.wait_for_timeout(300)
+        f.locator("body").press("Delete"); pg.wait_for_function(f"TribeSiteDesigner.cfg().pages[0].blocks[0].props.items.length === {n0}", timeout=4000)
+        assert sel(pg)["kind"] == "block"
+        esc_to(pg, f, None)
+        assert pg.is_visible("#wdz"), "stepping out never closes the editor by surprise"
+        print("  ok  Esc steps out to the entry, the section, then nothing; an entry moves, copies and goes by toolbar and keys; undo and redo cover it")
+
+        # ---- right-click: the same actions as a menu; hide on phones shows in the phone preview and the export
+        f.locator("h1[data-e]").first.click(button="right")
+        pg.wait_for_selector(".sp-menu:not([hidden])", timeout=3000)
+        assert pg.locator(".sp-menu [data-val=hidephone]").inner_text().startswith("Hide on phones")
+        pg.click(".sp-menu [data-val=hidephone]")
+        pg.wait_for_function("((TribeSiteDesigner.cfg().pages[0].blocks[0].es || {}).name || {}).hide === 'phone'", timeout=4000)
+        assert pg.is_hidden(".sp-menu")
+        html = pg.evaluate("TribeSiteCfg.exportFiles(TribeSiteDesigner.cfg(), 'html')['index.html']")
+        assert "hide-phone" in html and "@media (max-width:640px){.hide-phone{display:none!important}}" in html
+        pg.click("[data-dev=phone]"); pg.wait_for_timeout(600)
+        assert f.evaluate("window.__same") == 1 and "ehide-phone" in f.locator("h1").first.get_attribute("class")
+        assert float(f.evaluate("getComputedStyle(document.querySelector('h1')).opacity")) < 0.5, "dimmed in the phone preview, not gone, so it can be brought back"
+        pg.click("[data-dev=desktop]"); pg.wait_for_timeout(400)
+        print("  ok  right-click menu; Hide on phones is one tap, shows dimmed in the phone preview and is really hidden in the export")
+
+        # ---- on another tab, a click in the page still shows what was clicked
+        pg.click("[data-panel=style]"); f.locator("[data-btn]").first.click()
+        try: pg.wait_for_function("TribeSiteDesigner.state().panel === 'edit' && (TribeSiteDesigner.state().sel || {}).kind === 'button'", timeout=3000)
+        except Exception: print('DEBUG', pg.evaluate("JSON.stringify(TribeSiteDesigner.state())")[:300], f.evaluate("document.activeElement && document.activeElement.outerHTML.slice(0,200)")); raise
+        assert pg.is_visible("#wdz-link") and pg.locator("[data-panel=edit]").get_attribute("aria-selected") == "true"
+        nb = len(cfg(pg)["pages"][0]["blocks"])
+        f.locator("[data-img]").first.click(); pg.wait_for_function("(TribeSiteDesigner.state().sel || {}).kind === 'image'", timeout=3000)
+        f.locator(".wdz-tb [data-a=fit]").click(); pg.wait_for_function("TribeSiteDesigner.cfg().pages[0].blocks[0].props.fit === 'contain'", timeout=3000)
+        pg.wait_for_timeout(300)
+        f.locator("body").press("Delete"); pg.wait_for_timeout(400)
+        assert len(cfg(pg)["pages"][0]["blocks"]) == nb and cfg(pg)["pages"][0]["blocks"][0]["props"]["img"] == "", "Delete on a picture takes the picture out, not the section"
+        f.locator("body").press("Control+z"); pg.wait_for_function("TribeSiteDesigner.cfg().pages[0].blocks[0].props.img !== ''", timeout=3000)
+        print("  ok  a click on the page always opens Edit; Delete on a picture is safe and undoable")
+
+        # ---- reload: nothing is lost
+        pg.evaluate("TribeSiteDesigner.flush()"); pg.wait_for_function("!TribeSiteDesigner.state().dirty", timeout=8000)
+        assert "Saved" in pg.inner_text("#wdz-saved")
+        pg.reload(); pg.wait_for_function("window.TribeSiteDesigner && TribeClient.connected()", timeout=20000)
+        pg.evaluate(f"TribeSiteDesigner.open({{ pid: '{pid}' }})"); pg.wait_for_function("TribeSiteDesigner.cfg() && TribeSiteDesigner.cfg().pages[0].blocks.length > 0")
+        c = cfg(pg); b0 = c["pages"][0]["blocks"][0]
+        assert b0["props"]["items"][0]["note"] == "Opens Saturday at 9am" and b0["es"]["items.0.note"] == {"sz": "l", "b": 1} and b0["es"]["name"]["hide"] == "phone", b0.get("es")
+        print("  ok  after a reload the words, the look and the phone setting are all still there")
+
+        # ---- a site with a menu, a form and a price list: the name, page names, form labels
+        f = open_tpl(pg, pid, "cafe")
+        for q in ["add a contact form", "add a pricing section", "add a page called Events"]:
+            pg.evaluate(f"TribeSiteDesigner.ask({json.dumps(q)})"); pg.wait_for_timeout(600)
+        pg.click("#wdz-pages .wdz-tab >> nth=0"); f = fr(pg); f.wait_for_selector("header.nav [data-e='@|name']")
+        nm = f.locator("header.nav [data-e='@|name']"); nm.click(); nm.press("Control+a"); nm.type("Maras Kitchen"); nm.press("Enter")
+        pg.wait_for_function("TribeSiteDesigner.cfg().name === 'Maras Kitchen'", timeout=4000)
+        assert pg.inner_text("#wdz-name") == "Maras Kitchen", "the top bar follows"
+        home = cfg(pg)["pages"][0]["id"]
+        link = f.locator("header.nav [data-e='@|pages.1.title']"); link.dblclick(); pg.wait_for_timeout(200)
+        assert pg.evaluate("TribeSiteDesigner.state().page") == home, "a double-click types in the name; it does not leave the page"
+        link.press("Control+a"); link.type("Whats on"); link.press("Enter")
+        pg.wait_for_function("TribeSiteDesigner.cfg().pages[1].title === 'Whats on'", timeout=4000)
+        assert pg.locator("#wdz-pages .wdz-tab").nth(1).inner_text() == "Whats on"
+        lab = f.locator("form.cf label[data-e]").first; lab.scroll_into_view_if_needed(); lab.click(); lab.press("Control+a"); lab.type("Your name"); lab.press("Enter")
+        pg.wait_for_function("(TribeSiteDesigner.cfg().pages[0].blocks.find(b => b.type === 'contact') || {props:{}}).props.lName === 'Your name'", timeout=4000)
+        sb = f.locator("form.cf button [data-e]"); sb.click(); sb.press("Control+a"); sb.type("Send it"); sb.press("Enter")
+        pg.wait_for_function("TribeSiteDesigner.cfg().pages[0].blocks.find(b => b.type === 'contact').props.button === 'Send it'", timeout=4000)
+        f.locator("form.cf [data-sys]").click(); pg.wait_for_function("(TribeSiteDesigner.state().sel || {}).kind === 'block'", timeout=3000)
+        assert "only for you" in pg.locator("[data-flctx=designer] .fl-thread > *").last.inner_text()
+        html = pg.evaluate("TribeSiteCfg.exportFiles(TribeSiteDesigner.cfg(), 'html')['index.html']")
+        assert ">Your name</label>" in html and "data-e=" not in html and "contenteditable" not in html, "the export carries the words and none of the editing marks"
+        print("  ok  the site name, a page name in the menu, a form label and its button are typed over in place; notes meant for you explain themselves")
+
+        # ---- section settings: lists by name, width, entrance; site settings: pages
+        pb = block(pg, "pricing"); f.locator(f"[data-block='{pb['id']}'] h2").click(); esc_to(pg, f, "block")
+        assert pg.locator("#wdz-insp .sp-list .sp-li").count() >= 2
+        pg.click("#wdz-insp [data-sp=sty][data-k=w][data-val=narrow]"); pg.wait_for_function("(TribeSiteDesigner.cfg().pages[0].blocks.find(b => b.type === 'pricing').style || {}).w === 'narrow'", timeout=3000)
+        pg.click("#wdz-insp [data-sp=sty][data-k=anim][data-val=rise]"); pg.wait_for_timeout(300)
+        assert "an-rise" in pg.evaluate("TribeSiteCfg.exportFiles(TribeSiteDesigner.cfg(), 'html')['index.html']")
+        pg.click("#wdz-insp .sp-li [data-sp=entry][data-val=down] >> nth=0"); pg.wait_for_timeout(400)
+        assert block(pg, "pricing")["props"]["plans"][1]["name"] == pb["props"]["plans"][0]["name"]
+        pg.click("[data-panel=site]"); assert pg.locator("#wdz-insp .sp-pages .sp-li").count() == len(cfg(pg)["pages"]) >= 2
+        pg.fill("#wdz-insp [data-pgseo=title]", "Maras Kitchen, open daily"); pg.locator("#wdz-insp [data-pgseo=title]").press("Tab")
+        pg.wait_for_function("(TribeSiteDesigner.cfg().pages[0].seo || {}).title === 'Maras Kitchen, open daily'", timeout=3000)
+        files = pg.evaluate("Object.fromEntries(Object.entries(TribeSiteCfg.exportFiles(TribeSiteDesigner.cfg(), 'zip').files).filter(([k]) => /html$/.test(k)).map(([k, v]) => [k, /<title>([^<]*)/.exec(v)[1]]))")
+        assert files["index.html"] == "Maras Kitchen, open daily" and "Whats on" in files[[k for k in files if k != "index.html"][0]], files
+        shot(pg, "site-editor2-pages-1440.png")
+        print("  ok  entries by name in a section's settings; width and a quiet entrance; each page has its own title for search")
+
+        if SHOTS:
+            pg.click("[data-panel=edit]"); f = fr(pg); f.locator("h1[data-e]").first.click(); pg.wait_for_timeout(300); shot(pg, "site-editor2-words-1440.png")
+            f.locator("h1[data-e]").first.click(button="right"); pg.wait_for_selector(".sp-menu:not([hidden])"); shot(pg, "site-editor2-menu-1440.png"); pg.keyboard.press("Escape")
+
+        # ---- a phone: tap words, the toolbar stays on screen, nothing scrolls sideways
+        pg.evaluate("TribeSiteDesigner.flush()"); pg.wait_for_function("!TribeSiteDesigner.state().dirty", timeout=8000)
+        ph = b.new_context(viewport={"width": 390, "height": 844}, device_scale_factor=2, is_mobile=True, has_touch=True)
+        ph.add_init_script(settings_js("Mara", tok, pid)); m = ph.new_page(); watch(m, "phone")
+        m.goto(BASE + "/?skipIntro=1"); m.wait_for_function("window.TribeSiteDesigner && TribeClient.connected()", timeout=20000)
+        m.evaluate(f"TribeSiteDesigner.open({{ pid: '{pid}' }})"); m.wait_for_selector("#wdz:not([hidden]) #wdz-frame"); m.wait_for_timeout(900)
+        mf = fr(m); mf.wait_for_selector("h1[data-e]"); mf.locator("h1[data-e]").first.tap()
+        m.wait_for_function("(TribeSiteDesigner.state().sel || {}).kind === 'text'", timeout=4000)
+        box = mf.locator(".wdz-tb").bounding_box(); assert box and box["x"] >= 0 and box["x"] + box["width"] <= 391, box
+        assert m.evaluate("document.documentElement.scrollWidth <= innerWidth + 1"), "no sideways scroll on a phone"
+        assert m.locator("#wdz-saved").is_visible(), "the saved state shows on a phone too"
+        shot(m, "site-editor2-words-390.png")
+        print("  ok  phone: tap words, the toolbar fits the screen, nothing scrolls sideways, the saved state is visible")
+        b.close()
+    finally:
+        srv.terminate()
+        try: srv.wait(timeout=5)
+        except Exception: srv.kill()
 
 
 if __name__ == "__main__":

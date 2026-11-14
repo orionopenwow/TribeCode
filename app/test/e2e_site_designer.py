@@ -246,8 +246,12 @@ def main():
             # Esc: deselects first, then closes the designer like the other full panes (also from inside the preview)
             pg.evaluate(f"TribeSiteDesigner.open({{ pid: '{pid}' }})"); pg.wait_for_selector("#wdz:not([hidden]) #wdz-frame")
             frame(pg).locator("[data-block]").first.click(); pg.wait_for_function("!!TribeSiteDesigner.state().sel", timeout=4000)
-            pg.keyboard.press("Escape"); pg.wait_for_function("!TribeSiteDesigner.state().sel", timeout=4000)
-            assert not pg.is_hidden("#wdz"), "the first Esc only deselects"
+            # feat/site-editor2: Esc steps out one layer at a time (stop typing, the entry, the section, nothing), never straight to closing
+            for _ in range(5):
+                if not pg.evaluate("!!TribeSiteDesigner.state().sel"): break
+                pg.keyboard.press("Escape"); pg.wait_for_timeout(150)
+            pg.wait_for_function("!TribeSiteDesigner.state().sel", timeout=4000)
+            assert not pg.is_hidden("#wdz"), "Esc steps out of the selection before it closes anything"
             pg.wait_for_timeout(600)   # the preview repaints after a deselect; Esc from the designer's own controls
             pg.focus("#wdz [data-wdz='close']"); pg.keyboard.press("Escape"); pg.wait_for_selector("#wdz", state="hidden", timeout=4000)
             pg.evaluate("TribePreview.open()")
