@@ -1,4 +1,6 @@
-// Task Board (v0.28, dashboard pass): a strip of stat tiles that filter (Needs someone · In progress · Waiting for
+// Task Board (v0.28 dashboard pass; v0.36 design pass: a compact summary strip, the add line as the one focal point,
+// stroke icons instead of emoji, column-aligned rows, one welcoming empty state, quiet empty sections, motion tokens).
+// A strip of status counts that filter (Needs someone · In progress · Waiting for
 // review · Done this week · Overdue), one full-width "Add a task" line with type / "for me" / due chips, and full-width
 // horizontal task rows grouped by what has to happen next: Needs someone (nobody on it yet), In progress, Waiting for
 // review, Up next (someone has it, not started) and Done (collapsed to the latest three). Every row shows its title in
@@ -17,15 +19,18 @@
   const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   let lastSig = '', tasks = [], dragId = null, loaded = false, openId = null, justDragged = 0, draggedId = null;
   let work = { mode: 'lead', claimLimit: 0, agentAutoAccept: false }, workLead = false;   // feat/tasks-company: how work is shared (server/taskflow.js)
+  let calm = true;   // true: the next redraw is a whole new picture (first paint, a filter, List | Board), so rows don't animate in
   let filter = '', allDone = false, view = (() => { try { return localStorage.getItem(VKEY) === 'board' ? 'board' : 'list'; } catch { return 'list'; } })();
   const TYPES = [['build', '🔨', 'Build'], ['fix', '🩹', 'Fix'], ['design', '🎨', 'Design'], ['write', '✍️', 'Write'], ['research', '🔎', 'Research']];
+  const TYPE_ICON = { build: 'wrench', fix: 'bug', design: 'palette', write: 'quill', research: 'search' };   // stroke icons (icons.js); TYPES keeps its emoji for older callers
+  const ico = (n, size = 16) => (window.TribeIcons ? window.TribeIcons.svg(n, size) : '');
   const typeOf = k => TYPES.find(t => t[0] === k);
   const textTask = t => t.type === 'write' || t.type === 'research';
   const meId = () => (C.state().me || {}).id;
   const members = () => C.state().members || [];
   const mem = id => members().find(m => m.id === id);
   const phone = () => matchMedia('(max-width: 820px)').matches;
-  const typeChips = (sel, cls = '') => `<div class="tk-types ${cls}" role="radiogroup" aria-label="Task type">${TYPES.map(([k, e, l]) => `<button type="button" role="radio" class="tk-type" data-type="${k}" aria-checked="${k === sel}"><span class="emo" aria-hidden="true">${e}</span>${l}</button>`).join('')}</div>`;
+  const typeChips = (sel, cls = '') => `<div class="tk-types ${cls}" role="radiogroup" aria-label="Task type">${TYPES.map(([k, , l]) => `<button type="button" role="radio" class="tk-type" data-type="${k}" aria-checked="${k === sel}"><span class="tk-ic" aria-hidden="true">${ico(TYPE_ICON[k], 14)}</span>${l}</button>`).join('')}</div>`;
   const initials = n => String(n || '?').trim().split(/\s+/).map(w => w[0]).slice(0, 2).join('').toUpperCase();
   const ink = c => { const h = String(c || '').replace('#', ''); if (h.length !== 6) return '#fff'; const r = parseInt(h.slice(0, 2), 16), g = parseInt(h.slice(2, 4), 16), b = parseInt(h.slice(4, 6), 16); return (r * 299 + g * 587 + b * 114) / 1000 > 150 ? '#12151A' : '#fff'; };
   const av = (m, cls = '') => !m ? `<span class="tk-av tk-av--none ${cls}" title="Unassigned" aria-label="Unassigned"></span>`
@@ -55,7 +60,7 @@
       try { const w = await C.api('/tasks/settings'); work = w.settings; workLead = !!w.lead; } catch {}
     }
     else tasks = local.all();
-    loaded = true; render();
+    loaded = true; calm = true; render();   // a fresh load is a new picture: nothing animates in
   }
 
   async function create(title, status, extra = {}) {
@@ -139,16 +144,28 @@
   function shell(board) {
     if (board.querySelector('.tk-cols')) return;
     board.classList.add('tkb');
-    board.innerHTML = `<div class="tk-stats" id="tk-seg" role="toolbar" aria-label="Filter tasks">${STATS.map(([k, l, s]) => `<button type="button" class="tk-stat" data-seg="${k}" aria-pressed="false"><span class="tk-stat__n" data-segn="${k}">0</span><span class="tk-stat__l">${l}</span><span class="tk-stat__s">${s}</span></button>`).join('')}</div>
+    board.innerHTML = `<div class="tk-stats" id="tk-seg" role="toolbar" aria-label="Filter tasks">${STATS.map(([k, l, s]) => `<button type="button" class="tk-stat" data-seg="${k}" aria-pressed="false" title="Show only: ${l}"><span class="tk-stat__dot" aria-hidden="true"></span><span class="tk-stat__n" data-segn="${k}">0</span><span class="tk-stat__l">${l}</span><span class="tk-stat__s">${s}</span></button>`).join('')}</div>
       <div class="tk-top quick-wrap">
-        <label class="tk-add"><span class="tk-add__plus" aria-hidden="true">+</span><input id="tk-add" class="quick-add" placeholder="Add a task… press Enter" maxlength="200" aria-label="Add a task" autocomplete="off"><kbd class="tk-add__kbd" aria-hidden="true">Enter</kbd></label>
-        <div class="tk-top__more">${typeChips('', 'sm')}<span class="tk-top__sep" aria-hidden="true"></span>
-          <button type="button" class="tk-pill" data-forme aria-pressed="false">${IC.user}<span>For me</span></button>
-          <label class="tk-pill tk-pill--due">${IC.cal}<span>Due</span><input type="date" id="tk-add-due" aria-label="Due date"></label>
-          <button type="button" class="tk-pill tk-pill--mode" id="tk-mode" aria-haspopup="dialog" title="How work is shared"></button><span class="tk-top__flint" id="tk-flint"></span><div class="tk-views" role="radiogroup" aria-label="View"><button type="button" role="radio" data-view="list" aria-checked="true">${IC.list}<span>List</span></button><button type="button" role="radio" data-view="board" aria-checked="false">${IC.board}<span>Board</span></button></div></div>
+        <label class="tk-add"><span class="tk-add__plus" aria-hidden="true">${ico('plus', 18)}</span><input id="tk-add" class="quick-add" placeholder="Add a task… press Enter" maxlength="200" aria-label="Add a task" autocomplete="off"><kbd class="tk-add__kbd" aria-hidden="true">Enter</kbd></label>
+        <div class="tk-top__more">
+          <div class="tk-grp tk-grp--kinds">${typeChips('', 'sm')}</div>
+          <div class="tk-grp tk-grp--for"><button type="button" class="tk-pill" data-forme aria-pressed="false">${IC.user}<span>For me</span></button>
+            <label class="tk-pill tk-pill--due">${IC.cal}<span>Due</span><input type="date" id="tk-add-due" aria-label="Due date"></label></div>
+          <div class="tk-grp tk-grp--mode"><button type="button" class="tk-pill tk-pill--mode" id="tk-mode" aria-haspopup="dialog" title="How work is shared"></button></div>
+          <div class="tk-grp tk-grp--flint tk-top__flint" id="tk-flint"></div>
+        </div>
       </div>
       <div class="tk-bar"><p class="tk-bar__f" id="tk-filter" hidden></p></div>
       <div class="tk-cols"></div>`;
+    // List | Board sits in the page header, beside New task (it stays a child of the Tasks view, so #view-tasks [data-view] finds it)
+    const head = document.querySelector('#view-tasks .view-head');
+    if (head && !head.querySelector('.tk-views')) {
+      const v = document.createElement('div'); v.className = 'tk-views'; v.setAttribute('role', 'radiogroup'); v.setAttribute('aria-label', 'View');
+      v.innerHTML = `<button type="button" role="radio" data-view="list" aria-checked="true">${IC.list}<span>List</span></button><button type="button" role="radio" data-view="board" aria-checked="false">${IC.board}<span>Board</span></button>`;
+      head.insertBefore(v, head.querySelector('#task-new'));
+      v.querySelectorAll('[data-view]').forEach(b => b.addEventListener('click', () => setView(b.dataset.view)));
+      const h1 = head.querySelector('h1'); if (h1 && !h1.querySelector('.tk-h1i')) h1.insertAdjacentHTML('afterbegin', `<span class="tk-h1i" aria-hidden="true">${ico('tasks', 22)}</span>`);
+    }
     const inp = board.querySelector('#tk-add'), top = board.querySelector('.tk-top'), dueIn = board.querySelector('#tk-add-due'), forMe = board.querySelector('[data-forme]');
     let topType = '';
     top.querySelectorAll('[data-type]').forEach(b => {
@@ -168,7 +185,6 @@
       if (e.key === 'Escape') inp.blur();
     });
     board.querySelectorAll('[data-seg]').forEach(b => b.addEventListener('click', () => setFilter(filter === b.dataset.seg ? '' : b.dataset.seg)));
-    board.querySelectorAll('[data-view]').forEach(b => b.addEventListener('click', () => setView(b.dataset.view)));
     board.querySelector('#tk-mode').addEventListener('click', e => modePop(e.currentTarget));
     board.addEventListener('click', e => { if (e.target.closest('[data-flint-plan]')) planWeek(board); });   // one delegated handler: the button is redrawn
     board.querySelector('#tk-filter').addEventListener('click', e => { if (e.target.closest('[data-clear-filter]')) setFilter(''); });
@@ -181,18 +197,18 @@
     let box = board.querySelector('#tk-plan');
     if (box) { box.remove(); return; }
     box = document.createElement('div'); box.id = 'tk-plan'; box.className = 'tk-plan';
-    box.innerHTML = '<p class="tk-empty tk-empty--sm">🔥 Flint is looking at the board…</p>';
+    box.innerHTML = '<p class="tk-empty tk-empty--sm">Flint is looking at the board…</p>';
     board.querySelector('.tk-bar').after(box);
-    A.ideas(box, { always: true, force: true, closable: true, eyebrow: '🔥 Flint · this week', title: 'A plan for this week: tap to add' }).then(() => { const w = box.querySelector(':scope > p'); if (w) w.remove(); if (!box.querySelector('.as-ideas')) box.innerHTML = '<p class="tk-empty tk-empty--sm">Flint has no new ideas right now. Write the vision (Dashboard) and it can suggest more.</p>'; });
+    A.ideas(box, { always: true, force: true, closable: true, eyebrow: 'Flint · this week', title: 'A plan for this week: tap to add' }).then(() => { const w = box.querySelector(':scope > p'); if (w) w.remove(); if (!box.querySelector('.as-ideas')) box.innerHTML = '<p class="tk-empty tk-empty--sm">Flint has no new ideas right now. Write the vision (Dashboard) and it can suggest more.</p>'; });
   }
-  function setFilter(k) { filter = statOf(k) ? k : ''; if (filter === 'done') allDone = true; lastSig = ''; render(); }
-  function setView(v) { view = v === 'board' ? 'board' : 'list'; try { localStorage.setItem(VKEY, view); } catch {} lastSig = ''; render(); }
+  function setFilter(k) { filter = statOf(k) ? k : ''; if (filter === 'done') allDone = true; lastSig = ''; calm = true; render(); }
+  function setView(v) { view = v === 'board' ? 'board' : 'list'; try { localStorage.setItem(VKEY, view); } catch {} lastSig = ''; calm = true; const M = window.TribeMotion; if (M && M.swap) M.swap(render); else render(); }
 
   /* ---------------- a row ---------------- */
   function whoCell(t) {
     const a = t.assignee && mem(t.assignee);
     if (a) return `<span class="tk-own" title="${esc(a.name)}">${av(a)}<span class="tk-own__n">${esc(a.id === meId() ? 'Me' : a.name)}</span></span>`;
-    if (t.doer === 'flint') return '<span class="tk-own"><span class="tk-av tk-av--flint" title="Flint" aria-label="Flint">🔥</span><span class="tk-own__n">Flint</span></span>';
+    if (t.doer === 'flint') return `<span class="tk-own"><span class="tk-av tk-av--flint" title="Flint" aria-label="Flint">${ico('flame', 14)}</span><span class="tk-own__n">Flint</span></span>`;
     if (t.doer === 'agent') return '<span class="tk-own"><span class="tk-av tk-av--ai" title="An AI helper" aria-label="An AI helper">✦</span><span class="tk-own__n">AI helper</span></span>';
     if (t.status === 'backlog') return '<span class="tk-own tk-own--none">' + av(null) + '<span class="tk-own__n">Nobody yet</span></span>';
     return `<button type="button" class="tk-own tk-own--btn" data-qa="assign">${IC.user}<span>Assign</span></button>`;
@@ -202,21 +218,22 @@
     const subs = Array.isArray(t.subtasks) ? t.subtasks : [], sd = subs.filter(s => s.done).length;
     const due = t.due && window.TribePlan ? window.TribePlan.dueChip(t) : '';
     const done = t.status === 'done';
-    return `<div class="task tk-row${done ? ' is-done' : ''}${overdue(t) ? ' is-late' : ''}" draggable="true" tabindex="0" data-id="${esc(t.id)}" data-st="${esc(t.status)}" role="button" aria-label="${esc(t.title)}. Open details">
+    const mine = mineToAnswer(t);
+    const xtra = [
+      subs.length ? `<span class="tk-cnt${sd === subs.length ? ' is-full' : ''}" title="Checklist"><span class="tk-bar-mini" aria-hidden="true"><i style="width:${Math.round(sd / subs.length * 100)}%"></i></span>${sd}/${subs.length}</span>` : '',
+      t.body ? `<span class="tk-cnt" title="Has notes">${IC.notes}</span>` : '',
+      (t.labels || []).slice(0, 3).map(l => `<span class="tk-lab">${esc(l)}</span>`).join(''),
+      t.source === 'chat' ? '<span class="tk-lab tk-lab--src">from chat</span>' : '',
+      mine && t.assignedBy ? `<span class="tk-offer">Assigned to ${t.assignee === meId() ? 'you' : esc(firstName(t.assignee))} by ${esc(firstName(t.assignedBy))}</span>` : pending(t) ? `<span class="tk-offer tk-offer--wait">Waiting for ${esc(firstName(t.assignee))} to accept</span>` : '',
+      t.claimed ? `<span class="tk-offer tk-offer--claim">${ico('hand', 12)}<span>Claimed by ${esc(firstName(t.claimed.by))}</span></span>` : '',
+      t.declined && !t.assignee ? `<span class="tk-offer tk-offer--no" title="${esc(t.declined.reason)}">${esc(t.declined.byName || 'Someone')} declined: ${esc(t.declined.reason)}</span>` : '',
+    ].join('');
+    // title first, then the facts in a fixed order: kind · who · due · the next step (columns on a wide board, one line under the title on a narrow one)
+    return `<div class="task tk-row${done ? ' is-done' : ''}${overdue(t) ? ' is-late' : ''}${mine ? ' is-mine' : ''}" draggable="true" tabindex="0" data-id="${esc(t.id)}" data-st="${esc(t.status)}" role="button" aria-label="${esc(t.title)}. Open details">
       <button type="button" class="tk-check" data-qa="${done ? 'undone' : 'done'}" aria-label="${done ? 'Mark not done' : 'Mark done'}" title="${done ? 'Mark not done' : 'Mark done'}">${IC.check}</button>
       <div class="tk-main">
         <div class="t" data-title>${esc(t.title)}</div>
-        <div class="tk-meta">
-          ${ty ? `<span class="tk-ty"><span aria-hidden="true">${ty[1]}</span><span>${ty[2]}</span></span>` : ''}
-          ${due}
-          ${subs.length ? `<span class="tk-cnt${sd === subs.length ? ' is-full' : ''}" title="Checklist"><span class="tk-bar-mini" aria-hidden="true"><i style="width:${Math.round(sd / subs.length * 100)}%"></i></span>${sd}/${subs.length}</span>` : ''}
-          ${t.body ? `<span class="tk-cnt" title="Has notes">${IC.notes}</span>` : ''}
-          ${(t.labels || []).slice(0, 3).map(l => `<span class="tk-lab">${esc(l)}</span>`).join('')}
-          ${t.source === 'chat' ? '<span class="tk-lab tk-lab--src">from chat</span>' : ''}
-          ${mineToAnswer(t) && t.assignedBy ? `<span class="tk-offer">Assigned to ${t.assignee === meId() ? 'you' : esc(firstName(t.assignee))} by ${esc(firstName(t.assignedBy))}</span>` : pending(t) ? `<span class="tk-offer tk-offer--wait">Waiting for ${esc(firstName(t.assignee))} to accept</span>` : ''}
-          ${t.claimed ? `<span class="tk-offer tk-offer--claim">🙋 Claimed by ${esc(firstName(t.claimed.by))}</span>` : ''}
-          ${t.declined && !t.assignee ? `<span class="tk-offer tk-offer--no" title="${esc(t.declined.reason)}">${esc(t.declined.byName || 'Someone')} declined: ${esc(t.declined.reason)}</span>` : ''}
-        </div>
+        <div class="tk-meta">${ty ? `<span class="tk-ty" title="${ty[2]}">${ico(TYPE_ICON[ty[0]], 14)}<span>${ty[2]}</span></span>` : ''}${due}${xtra ? `<span class="tk-xtra">${xtra}</span>` : ''}</div>
       </div>
       ${whoCell(t)}
       <div class="tk-acts">
@@ -237,14 +254,26 @@
     const F = window.TribeFlint;
     if (key === 'needs' && council()) { label = 'Open to claim'; hint = `Anyone can claim one. It's yours right away${work.claimLimit ? ` (up to ${work.claimLimit} open at a time)` : ''}.`; }
     const isDone = status === 'done', n = list.length, shown = isDone ? doneList(list.slice()) : sorted(list.slice());
-    const empty = !n ? (key === 'needs' && !totalAll
-      ? `<div class="tk-empty"><p>No tasks yet. Write one small thing to build.</p><button type="button" class="tk-chip" data-focus-add>Add a task</button>${F && F.ask ? '<button type="button" class="tk-chip" data-flint-plan>🔥 Ask Flint to plan tasks</button>' : ''}</div>`
-      : `<p class="tk-empty tk-empty--sm">${key === 'needs' ? 'Everything has someone on it.' : key === 'doing' ? 'Nothing in progress. Press Start on a task.' : key === 'review' ? 'Nothing waiting for review.' : key === 'done' ? 'Finished work lands here.' : 'Nothing waiting.'}</p>`) : '';
+    const quiet = key === 'needs' ? 'Everything has someone on it.' : key === 'doing' ? 'Nothing in progress. Press Start on a task.' : key === 'review' ? 'Nothing waiting for review.' : key === 'done' ? 'Finished work lands here.' : 'Nothing waiting.';
+    const empty = !n ? `<p class="tk-empty tk-empty--sm">${quiet}</p>` : '';
     const more = isDone && n > 3 ? `<button type="button" class="tk-showall" data-done-toggle aria-expanded="${allDone}">${allDone ? '<span>Show less</span>' : `<span>Show all</span> <span class="mono">${n}</span>`}</button>` : '';
-    const add = status !== 'done' && key !== 'ready' && key !== 'offer' ? `<button class="add" data-add="${status}" title="Add a task to ${label}" aria-label="Add a task to ${label}">+</button>` : '';
-    return `<section class="col tk-sec" data-col="${status}" data-sec="${key}" aria-label="${label}">
-        <h5><span class="dot"></span><span class="tk-sec__l">${label}</span> <span class="n">${n}</span>${hint && view === 'list' ? `<span class="tk-sec__h">${hint}</span>` : ''}${add}</h5>
+    const add = status !== 'done' && key !== 'ready' && key !== 'offer' ? `<button class="add" data-add="${status}" title="Add a task to ${label}" aria-label="Add a task to ${label}">${ico('plus', 14)}</button>` : '';
+    return `<section class="col tk-sec${n ? '' : ' is-empty'}" data-col="${status}" data-sec="${key}" aria-label="${label}">
+        <h5><span class="dot"></span><span class="tk-sec__l">${label}</span> <span class="n">${n}</span>${hint && n && view === 'list' ? `<span class="tk-sec__h">${hint}</span>` : ''}${add}</h5>
         <div class="tk-list">${shown.map(row).join('')}${empty}</div>${more}
+      </section>`;
+  }
+  // Nothing on the board at all: one welcome instead of four empty boxes. It is still the "needs someone" drop zone,
+  // and its Add a task opens the same inline add line a section's + does.
+  function welcomeHtml() {
+    const F = window.TribeFlint, flow = [['needs', council() ? 'Open to claim' : 'Needs someone'], ['doing', 'In progress'], ['review', 'Waiting for review'], ['done', 'Done']];
+    return `<section class="col tk-sec tk-welcome" data-col="backlog" data-sec="needs" aria-label="No tasks yet">
+        <div class="tk-empty tk-welcome__in">
+          <span class="tk-welcome__i" aria-hidden="true">${ico('tasks', 22)}</span>
+          <div class="tk-welcome__t"><h4>No tasks yet</h4><p>Write one small thing to build.</p></div>
+          <div class="tk-welcome__b" data-colq><button type="button" class="tk-btn tk-btn--go" data-add="backlog">${ico('plus', 14)}<span>Add a task</span></button>${F && F.ask ? `<button type="button" class="tk-btn" data-flint-plan>${ico('flame', 14)}<span>Ask Flint to plan</span></button>` : ''}</div>
+          <ol class="tk-welcome__flow" aria-label="How a task moves">${flow.map(([k, l]) => `<li data-k="${k}"><span class="dot" aria-hidden="true"></span><span>${l}</span></li>`).join('')}</ol>
+        </div>
       </section>`;
   }
   function render() {
@@ -252,21 +281,23 @@
     shell(board);
     const total = tasks.length, done = tasks.filter(t => t.status === 'done').length;
     const sub = $('#tasks-sub'); if (sub) sub.textContent = `${total} task${total === 1 ? '' : 's'} · ${done} done · ${remote() ? 'shared with your tribe' : 'saved on this device'}`;
-    const md = board.querySelector('#tk-mode'); if (md) { md.hidden = !remote(); const l = work.mode === 'council' ? '🙋 Council' : '👑 Lead assigns'; if (md.textContent !== l) md.textContent = l; }
+    const md = board.querySelector('#tk-mode'); if (md) { md.hidden = !remote(); const l = work.mode === 'council' ? 'Council' : 'Lead assigns'; if (md.dataset.l !== l) { md.dataset.l = l; md.innerHTML = `${ico(work.mode === 'council' ? 'hand' : 'flag', 14)}<span>${l}</span>${IC.chev}`; } }
     const F = window.TribeFlint, fl = board.querySelector('#tk-flint');
-    if (fl) { const h = F && F.ask ? `<button type="button" class="tk-chip" data-flint-plan>🔥 Plan this week with Flint</button>` : ''; if (fl.innerHTML !== h) fl.innerHTML = h; }   // feat/tasks-company: redrawn only when it changes (it lost its click handler on every presence blip)
+    if (fl) { const h = F && F.ask ? `<button type="button" class="tk-chip" data-flint-plan>${ico('flame', 14)}<span>Plan this week with Flint</span></button>` : ''; if (fl.innerHTML !== h) fl.innerHTML = h; }   // feat/tasks-company: redrawn only when it changes (it lost its click handler on every presence blip)
     STATS.forEach(([k, , , fn]) => {
       const n = tasks.filter(fn).length, el = board.querySelector(`[data-segn="${k}"]`); if (el) el.textContent = n;
       const b = board.querySelector(`[data-seg="${k}"]`); if (b) { b.setAttribute('aria-pressed', String(filter === k)); b.classList.toggle('is-zero', !n); }
     });
-    board.dataset.view = phone() ? 'list' : view; board.dataset.filter = filter;
-    board.querySelectorAll('[data-view]').forEach(b => b.setAttribute('aria-checked', String(b.dataset.view === view)));
+    const seg = board.querySelector('#tk-seg'); if (seg) seg.classList.toggle('is-quiet', !STATS.some(([, , , fn]) => tasks.some(fn)));
+    board.dataset.view = phone() ? 'list' : view; board.dataset.filter = filter; board.classList.toggle('is-blank', !total);
+    const vt = document.getElementById('view-tasks'); if (vt) vt.dataset.tkview = board.dataset.view;
+    document.querySelectorAll('#view-tasks .tk-views [data-view]').forEach(b => b.setAttribute('aria-checked', String(b.dataset.view === view)));
     const fp = board.querySelector('#tk-filter'), st = statOf(filter);
     fp.hidden = !st; if (st) fp.innerHTML = `<span class="tkf-k">Showing</span> <b>${st[1]}</b> <button type="button" class="tkd-link" data-clear-filter>Show everything</button>`;
     const pass = st ? st[3] : () => true, vis = tasks.filter(pass);
     const asBoard = view === 'board' && !phone();
     const secs = asBoard ? COLS.map(([k, l]) => [k, k, l, '', t => t.status === k]) : SECTIONS;
-    const html = secs.map(([key, status, label, hint, fn]) => {
+    const html = !total ? welcomeHtml() : secs.map(([key, status, label, hint, fn]) => {
       const list = vis.filter(fn);
       if (st && !list.length && !asBoard) return '';
       if (!asBoard && (key === 'ready' || key === 'offer') && !list.length) return '';
@@ -277,7 +308,17 @@
     if (lastSig !== sig || !cols.firstElementChild) {   // nothing changed (a presence blip): leave the DOM alone, so a click in progress or an open add line survives
       const oq = cols.querySelector('.tk-colq .quick-add'), keepQ = oq ? { sec: oq.closest('.col').dataset.sec, v: oq.value, f: document.activeElement === oq } : null;
       const keepF = document.activeElement && document.activeElement.closest && document.activeElement.closest('#board .task') ? document.activeElement.closest('#board .task').dataset.id : null;
+      // motion: remember where every row was, so a new row rises in and a row that changed section arrives from the side it came from
+      const was = new Map(); if (!calm) cols.querySelectorAll('.task').forEach(el => was.set(el.dataset.id, [el.closest('.col').dataset.sec, el.getBoundingClientRect().top, el.dataset.st]));
       cols.innerHTML = html; lastSig = sig; bind();
+      if (!calm) cols.querySelectorAll('.task').forEach(el => {
+        const w = was.get(el.dataset.id);
+        if (!w) return el.classList.add('is-new');
+        if (w[0] === el.closest('.col').dataset.sec) return;
+        el.style.setProperty('--tk-from', (w[1] < el.getBoundingClientRect().top ? -6 : 6) + 'px'); el.classList.add('is-moved');
+        if (el.dataset.st === 'done' && w[2] !== 'done') el.classList.add('just-done');
+      });
+      calm = !loaded;
       if (keepQ) { quickAdd(keepQ.sec, keepQ.f); const n = cols.querySelector('.tk-colq .quick-add'); if (n) n.value = keepQ.v; }
       if (keepF) { const n = cols.querySelector(`.task[data-id="${CSS.escape(keepF)}"]`); if (n) n.focus({ preventScroll: true }); }
     }
@@ -352,7 +393,7 @@
     const wrap = document.createElement('div'); wrap.className = 'quick-wrap tk-colq';
     wrap.innerHTML = `<input class="quick-add" placeholder="Task title, Enter to add" maxlength="200" aria-label="Task title">${typeChips(lastType, 'sm')}`;
     const inp = wrap.querySelector('input');
-    col.querySelector('h5').after(wrap); if (focus) inp.focus();
+    const at = col.querySelector('h5') || col.querySelector('[data-colq]'); if (!at) return; at.after(wrap); if (focus) inp.focus();
     wrap.querySelectorAll('[data-type]').forEach(b => {
       b.addEventListener('mousedown', e => e.preventDefault());   // keep the focus in the title
       b.addEventListener('click', () => { lastType = lastType === b.dataset.type ? '' : b.dataset.type; wrap.querySelectorAll('[data-type]').forEach(x => x.setAttribute('aria-checked', String(x.dataset.type === lastType))); inp.focus(); });
@@ -385,17 +426,17 @@
       html = `<p class="tkp-h">Who does it?</p>${item('who:' + (me || 'me'), 'Me', av(meM))}`
         + ms.filter(m => m.role !== 'agent' && m.id !== me && pickable(m)).map(m => item('who:' + m.id, m.name + (remote() ? ' · asks them' : ''), av(m))).join('')
         + ms.filter(m => m.role === 'agent' && pickable(m)).map(m => item('who:' + m.id, m.name, av(m))).join('')
-        + (council() && !hasOwner(t) ? item('claim', '🙋 Claim it myself') : '') + assignNote()
+        + (council() && !hasOwner(t) ? item('claim', 'Claim it myself', ico('hand', 16)) : '') + assignNote()
         + (remote() ? item('who:ask-agent', 'Ask an AI helper', '<span class="tk-av tk-av--ai">✦</span>') : '')
-        + (textTask(t) ? item('who:flint', 'Flint', '<span class="tk-av tk-av--flint">🔥</span>') : '')
+        + (textTask(t) ? item('who:flint', 'Flint', `<span class="tk-av tk-av--flint">${ico('flame', 14)}</span>`) : '')
         + (hasOwner(t) ? item('who:', 'Nobody yet', av(null)) : '')
-        + (F ? '<hr>' + item('flint-pick', '🔥 Ask Flint to pick') : '');
+        + (F ? '<hr>' + item('flint-pick', 'Ask Flint to pick', ico('flame', 16)) : '');
     } else {
       html = `<p class="tkp-h">Move to</p>${COLS.filter(([k]) => k !== t.status).map(([k, l]) => item('move:' + k, l, `<span class="tkp-dot" style="--c:var(--tk-${k})"></span>`)).join('')}<hr>`
         + item('open', 'Open details') + item('assign', 'Assign…')
         + (remote() ? item('ask-agent', 'Ask an AI helper') : '')
-        + (F ? item('flint-pick', '🔥 Ask Flint to pick') : '')
-        + (remote() && t.status !== 'done' ? item('split', '✂️ Split into smaller tasks') : '')
+        + (F ? item('flint-pick', 'Ask Flint to pick', ico('flame', 16)) : '')
+        + (remote() && t.status !== 'done' ? item('split', 'Split into smaller tasks') : '')
         + '<hr>' + item('delete', 'Delete', '', 'tkp-i--danger');
     }
     const p = document.createElement('div'); p.id = 'tk-pop'; p.className = 'tk-pop'; p.setAttribute('role', 'menu'); p.dataset.kind = kind; p._anchor = anchor;
@@ -469,7 +510,7 @@
   }
   async function split(id, btn) {
     if (btn) btn.disabled = true;
-    try { const r = await C.api(`/tasks/${encodeURIComponent(id)}/split`, { method: 'POST', body: {} }); window.TribeApp && window.TribeApp.toast(`✂️ Split into ${r.tasks.length} smaller tasks`, 'ok'); }
+    try { const r = await C.api(`/tasks/${encodeURIComponent(id)}/split`, { method: 'POST', body: {} }); window.TribeApp && window.TribeApp.toast(`Split into ${r.tasks.length} smaller tasks`, 'ok'); }
     catch (err) { if (btn) btn.disabled = false; window.TribeApp && window.TribeApp.toast(err.message, 'err'); }
   }
 
@@ -511,14 +552,14 @@
     const offer = mineToAnswer(t) ? `<div class="tkd-offer" role="group" aria-label="Assigned to you"><p><b>Assigned to ${t.assignee === me ? 'you' : esc(firstName(t.assignee))}</b>${t.assignedBy ? ` by ${esc(firstName(t.assignedBy))}` : ''}. Accept to make it yours and start it.</p><div class="tkd-offer__b"><button type="button" class="tk-btn tk-btn--back" data-step="decline">Decline…</button><button type="button" class="tk-btn tk-btn--go" data-step="accept">Accept</button></div></div>`
       : pending(t) ? `<div class="tkd-offer tkd-offer--wait"><p>Waiting for <b>${esc(firstName(t.assignee))}</b> to accept. It shows in their board and inbox.</p></div>`
       : t.declined && !t.assignee ? `<div class="tkd-offer tkd-offer--no"><p><b>${esc(t.declined.byName || 'Someone')} declined</b> ${esc(rel(t.declined.at))}: “${esc(t.declined.reason)}”</p></div>`
-      : t.claimed ? `<div class="tkd-offer tkd-offer--claim"><p>🙋 Claimed by <b>${esc(firstName(t.claimed.by))}</b> ${esc(rel(t.claimed.at))}</p></div>`
+      : t.claimed ? `<div class="tkd-offer tkd-offer--claim"><p>Claimed by <b>${esc(firstName(t.claimed.by))}</b> ${esc(rel(t.claimed.at))}</p></div>`
       : council() && !hasOwner(t) && t.status !== 'done' ? `<div class="tkd-offer"><p><b>Open to claim.</b> Anyone can take it; it's theirs right away.</p><div class="tkd-offer__b"><button type="button" class="tk-btn tk-btn--assign" data-step="claim">Claim</button></div></div>` : '';
     const opt = (key, label, avatar, on) => `<button type="button" class="tkd-who" data-who="${esc(key)}" aria-pressed="${on}">${avatar}<span>${esc(label)}</span></button>`;
     const whoNow = a ? a.id : t.doer === 'flint' ? 'flint' : t.doer === 'agent' ? 'ask-agent' : '';
     const subs = Array.isArray(t.subtasks) ? t.subtasks : [];
     const by = t.by && mem(t.by), upBy = t.updatedBy && mem(t.updatedBy);
     const [act, label, kind] = step(t);
-    d.innerHTML = `<div class="tkd-head"><span class="tkd-k mono">Task</span><button type="button" class="tkd-x" data-tkclose aria-label="Close">✕</button></div>
+    d.innerHTML = `<div class="tkd-head"><span class="tkd-k mono">Task</span><button type="button" class="tkd-x" data-tkclose aria-label="Close">${ico('x', 16)}</button></div>
       <div class="tkd-body">
         <textarea id="tkd-title" class="tkd-title" rows="2" maxlength="200" data-keep="title" aria-label="Title">${esc(t.title)}</textarea>
         ${offer}
@@ -530,10 +571,10 @@
             ${friends.map(m => opt(m.id, m.name, av(m), whoNow === m.id)).join('')}
             ${agents.map(m => opt(m.id, m.name, av(m), whoNow === m.id)).join('')}
             ${remote() ? opt('ask-agent', 'Ask an AI helper', '<span class="tk-av tk-av--ai">✦</span>', whoNow === 'ask-agent') : ''}
-            ${textTask(t) ? opt('flint', 'Flint', '<span class="tk-av tk-av--flint">🔥</span>', whoNow === 'flint') : ''}
+            ${textTask(t) ? opt('flint', 'Flint', `<span class="tk-av tk-av--flint">${ico('flame', 14)}</span>`, whoNow === 'flint') : ''}
             ${opt('', 'Nobody yet', av(null), !whoNow)}${assignNote()}
             ${!ms.some(m => m.role !== 'agent' && m.id !== me) && remote() ? '<button type="button" class="tkd-link" data-invite>Invite a friend</button>' : ''}
-            ${window.TribeFlint ? '<button type="button" class="tkd-link" data-flint-pick>🔥 Ask Flint to pick</button>' : ''}
+            ${window.TribeFlint ? `<button type="button" class="tkd-link" data-flint-pick>${ico('flame', 14)}<span>Ask Flint to pick</span></button>` : ''}
           </div></div>
         <div class="tkd-row"><span class="tkd-l">Type</span>${typeChips(t.type || '', 'sm tkd-types')}</div>
         <div class="tkd-row"><span class="tkd-l">Due</span><div class="tkd-due"><input type="date" class="tkd-in" id="tkd-due" data-keep="due" value="${esc(t.due || '')}">${t.due ? '<button type="button" class="tkd-link" data-clear-due>Clear</button>' : ''}</div></div>
@@ -549,7 +590,7 @@
           ${t.updated ? `<p>Changed ${upBy ? 'by ' + esc(upBy.name) + ' ' : ''}${esc(rel(t.updated))}</p>` : ''}
         </div>
       </div>
-      <div class="tkd-foot">${remote() && t.status !== 'done' ? '<button type="button" class="btn sm" data-split>✂️ Split into smaller tasks</button>' : ''}<button type="button" class="btn sm danger" data-del>Delete</button></div>`;
+      <div class="tkd-foot">${remote() && t.status !== 'done' ? '<button type="button" class="btn sm" data-split>Split into smaller tasks</button>' : ''}<button type="button" class="btn sm danger" data-del>Delete</button></div>`;
     wireDrawer(d, t);
   }
   function syncDrawer(d, t) {
@@ -606,5 +647,5 @@
   addEventListener('resize', () => { closeMenu(); const b = $('#board'); if (b && b.classList.contains('tkb') && b.dataset.view !== (phone() ? 'list' : view)) { lastSig = ''; render(); } });
   addEventListener('wheel', e => { if (!(e.target && e.target.closest && e.target.closest('#tk-pop'))) closeMenu(); }, { passive: true });   // scrolling the page closes the menu (it's fixed in place)
 
-  window.TribeTasks = { load, render, create, patch, all: () => tasks, open, close, typeChips, TYPES, filter: setFilter, view: setView, current: () => openId };   // current: feat/presence
+  window.TribeTasks = { load, render, create, patch, all: () => tasks, open, close, typeChips, TYPES, TYPE_ICON, filter: setFilter, view: setView, current: () => openId };   // current: feat/presence
 })();

@@ -944,6 +944,8 @@
     'Reset this override': ['Restablecer este cambio', 'Redefinir esta alteração', 'Réinitialiser ce remplacement', 'Diese Überschreibung zurücksetzen', 'このオーバーライドをリセット', '重置此覆盖', '이 재정의 초기화'],
   };
   // Storage card keys (storage.js asks t('st.*', English)): translated by the same English text.
+  // Tasks design pass: the board draws stroke icons where it had a leading emoji, so the same phrases are also found without one.
+  ['🔥 Ask Flint to pick', '✂️ Split into smaller tasks', '🔥 Ask Flint to plan tasks', '🔥 Plan this week with Flint'].forEach(k => { const bare = k.replace(/^\S+\s/, ''); if (D[k] && !D[bare]) D[bare] = D[k].map(x => x.replace(/^(🔥|✂️)\s*/, '')); });
   const KEY = 'tribecode.lang';
   const supported = c => LANGS.some(([k]) => k === c);
   function detect() { const n = String((navigator.languages && navigator.languages[0]) || navigator.language || 'en').slice(0, 2).toLowerCase(); return supported(n) ? n : 'en'; }
