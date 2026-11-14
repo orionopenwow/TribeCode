@@ -1,5 +1,14 @@
 # Changelog
 
+## v0.36.0
+- **Invite your agent**: the invite sheet's third choice is "Your AI agent". Pick Claude Code, Claude Desktop, Claude on the web, Cursor, Codex CLI, ChatGPT, Gemini CLI, VS Code, Windsurf, Cline, Zed or Something else; each has its own copy-paste setup. You can have one of each kind, each with its own access, Pause and Remove, named like "Maya's Cursor". Same rules as before: an agent gets your access and never more. Setups come from each tool's documentation (docs/ANY-LLM.md §4 says which were confirmed).
+- **Task board, redesigned**: the status tiles are one compact strip that filters on click, the add line is the focus, chips are grouped with line icons, an empty board shows one welcome, and rows read title, kind, who, due, next step.
+- **Give Flint a local brain (recommended)**: offered after sign-up, in Getting started and in Settings. It says the size, runs on your device, waits on metered connections or low storage, and resumes if interrupted.
+- **Running on your device**: Flint's page shows what this device can do, which levels are on, a self-test with real numbers, and what does and doesn't leave the device.
+- **Flint, upgraded with no model**: he follows a conversation across turns; a goal ("launch page for our bake sale by Friday") becomes a plan card he runs step by step with Undo; "where did we talk about pricing?" searches docs, tasks, chat, files and Versions; he warns about duplicate tasks; and "What Flint knows about this project" is a local, editable memory.
+- **A local language model, opt-in**: Flint can use a model server on your computer or the host (Ollama and similar). Its answers are checked and become the same undoable edits; it never acts on its own. Nothing leaves the device.
+- **Phones**: the agent picker, the task board (44px buttons, chips in one scroller), the local-brain step and the plan card fit at 390px.
+
 ## v0.35.0
 - **One invite sheet**: every Invite button opens the same sheet and asks who you're inviting: a friend (tribe link with QR, or a one-time link, or just this project), a guest for a day, or your Claude.
 - **One Claude per person**: your Claude is made when you press Copy or Download, not when the sheet opens, and an unused one is cleaned up after a day. A Claude you already connected shows as "already connected" with narrow, Pause and Remove.

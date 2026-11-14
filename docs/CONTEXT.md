@@ -4,7 +4,9 @@ The one document that remembers the greater vision and everything in flight. Upd
 
 Last updated: 2026-11-12 (v0.31.2)
 
-Latest: **v0.35.0** (2026-11-13). The one invite sheet (inviteone.js), one Claude per person and the claude.ai connector sign-in (server/claudeauth.js); the calm first dashboard and on-device parity (devicelocal.js, scripts/dev/app-bundle.js); passkeys, with two-step sign-in and Stripe payments built but off by default (server/auth3.js, stripe.js; TRIBE_TWO_STEP, TRIBE_PAYMENTS).
+Latest: **v0.36.0** (2026-11-13). Invite your agent (inviteagent.js, server/agentauth.js, setupFor in server/agentshub.js); the Tasks page redesign; Flint's local setup step, device panel, planner, conversation memory, project memory and the opt-in local LLM (flintsetup.js, flintdevice.js, flintplan.js, flintconv.js, flintfacts.js, flintllm.js; docs/FLINT-CAPABILITY.md).
+
+Earlier: **v0.35.0** (2026-11-13). The one invite sheet (inviteone.js), one Claude per person and the claude.ai connector sign-in (server/claudeauth.js); the calm first dashboard and on-device parity (devicelocal.js, scripts/dev/app-bundle.js); passkeys, with two-step sign-in and Stripe payments built but off by default (server/auth3.js, stripe.js; TRIBE_TWO_STEP, TRIBE_PAYMENTS).
 
 Earlier: **v0.34.0** (2026-11-13). The build runner (server/checks.js), gig feeds across tribes (server/workfetch.js, app/ui/workfeeds.js) and Flint's opt-in local helper (flintembed.js, flintmodel.js).
 

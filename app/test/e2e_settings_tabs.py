@@ -207,8 +207,8 @@ def main():
 
             # 10) custom shortcuts: move "Search" to Alt+K; Ctrl+K stops opening it
             B.evaluate("TribeSettings.open('workspace')"); B.wait_for_selector("[data-key-change='palette']")
-            B.click("[data-key-change='palette']"); B.keyboard.press("Alt+k")
-            B.wait_for_function("TribeShortcuts.keyOf('palette') === 'Alt+K' && document.querySelector('#set-key-palette').textContent === 'Alt K'")
+            B.wait_for_timeout(400); B.click("[data-key-change='palette']"); B.wait_for_timeout(300); B.keyboard.press("Alt+k")   # the row re-renders once as prefs sync in: press after it has settled
+            B.wait_for_timeout(400); B.wait_for_function("TribeShortcuts.keyOf('palette') === 'Alt+K' && document.querySelector('#set-key-palette').textContent === 'Alt K'")
             B.keyboard.press("Escape"); B.wait_for_function("!TribeSettings.isOpen()")
             B.keyboard.press("Control+k"); B.wait_for_timeout(300); assert B.evaluate("document.querySelector('#palette').classList.contains('hidden')"), "Ctrl K moved away"
             B.keyboard.press("Alt+k"); B.wait_for_function("!document.querySelector('#palette').classList.contains('hidden')", timeout=5000)
