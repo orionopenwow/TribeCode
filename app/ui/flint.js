@@ -46,6 +46,7 @@
 
   // ---------- actions (stored by name so buttons still work after a reload) ----------
   const ACTS = {
+    nextstep: a => window.TribeNextStep && window.TribeNextStep.act(a),   // feat/help-next: what should I do next (nextstep.js)
     dz: a => window.TribeDropZone && window.TribeDropZone.run(a),   // feat/dropzone: a dropped folder's suggestions
     assets: o => window.TribeAssets && window.TribeAssets.open(o || {}),
     flintpage: q => window.TribeFlintPage && window.TribeFlintPage.open(q || ''),   // feat/flint-max: Flint's page (what I can do, levels)   // v0.25: the asset library
@@ -230,6 +231,7 @@
   }
   let localBusy = false, llmBusy = false;
   async function special(text) {   // the feature routers that know their own phrases (memory, company, academy, captures)
+    if (window.TribeNextStep && window.TribeNextStep.flint) { const r = await window.TribeNextStep.flint(text); if (r) { say(r.text, (r.acts || []).map(x => act(x[0], x[1], x[2]))); return true; } }   // feat/help-next: what should I do next, I'm stuck, what can I make, how do I ship this
     if (window.TribeFlintGrow && await window.TribeFlintGrow.flint(text)) return true;   // feat/flint-ai: grow your idea, resources, today's plan, the inspiration board, your style
     if (window.TribeFlintRun) { const r = await window.TribeFlintRun.flint(text); if (r) { if (r !== true) say(r.text, r.acts || []); return true; } }   // feat/flint-runthrough: tribe/project/vision/proposal/standup/presentation/proof/Blender
     if (window.TribeAIBasics && window.TribeAIBasics.flint) { const r = await window.TribeAIBasics.flint(text); if (r) { if (r !== true) say(r.text, r.acts || []); return true; } }   // feat/flint-runthrough: summarize / key points / title / tags / reading time / glossary of any doc, note or file   // feat/flint-ai: grow your idea, resources, today's plan, the inspiration board, your style
