@@ -109,7 +109,7 @@
         <button id="hp-shared" ${pick.ok ? '' : `aria-disabled="true" title="${esc(pick.why)}"`}>${ic('net')}<span>${gh && st.kind === 'folder' ? `Shared folder · ${esc(st.repo)}` : 'Share through a synced folder'}</span></button>
         ${gh && can.ship ? `<button id="hp-ship">${ic('upload')}<span>Back up now${st.pending ? ` · ${plural(st.pending, 'change')}` : ''}</span></button>` : ''}
         <button id="hp-sync">${ic('gear')}<span>Backup settings</span></button>
-        ${window.TribeVersions ? `<button id="hp-versions">${ic('refresh')}<span>Versions</span></button>` : ''}
+        ${window.TribeVersions ? `<button id="hp-versions">${ic('refresh')}<span>History</span></button>` : ''}
         <button id="hp-share">${ic('users')}<span>Share</span></button>
         ${hosting ? `<button id="hp-host">${ic('net')}<span>Who can reach this computer</span></button>` : ''}
       </div>`;

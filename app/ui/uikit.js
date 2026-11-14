@@ -12,7 +12,7 @@
 (function () {
   'use strict';
   const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-  const tr = s => (window.TribeI18n && window.TribeI18n.t ? window.TribeI18n.t(s) : s);
+  const tr = s => (window.TribeI18n && window.TribeI18n.t ? window.TribeI18n.t(s, s) || s : s);
 
   function emptyHTML(o) {
     o = o || {};

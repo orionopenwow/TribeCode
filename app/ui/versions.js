@@ -24,12 +24,12 @@
   }
   async function open(pid) {
     pid = pid || (C() && C().project && C().project());
-    if (!pid || !(C() && C().connected && C().connected())) return toast('Versions belong to a project in a tribe.');
+    if (!pid || !(C() && C().connected && C().connected())) return toast('History belongs to a project in a tribe.');
     close(true);
     const name = ((C().state().projects || []).find(x => x.id === pid) || {}).name || 'This project';
     scrim = document.createElement('div'); scrim.className = 'ph-scrim vr-scrim'; scrim.onclick = () => close();
     el = document.createElement('div'); el.className = 'ph-sheet vr-sheet'; el.id = 'vr'; el.setAttribute('role', 'dialog'); el.setAttribute('aria-modal', 'true'); el.setAttribute('aria-labelledby', 'vr-h');
-    el.innerHTML = `<header class="ph-h vr-head"><div><span class="eyebrow">Versions</span><h3 id="vr-h">${esc(name)}’s history</h3></div>
+    el.innerHTML = `<header class="ph-h vr-head"><div><span class="eyebrow">History</span><h3 id="vr-h">${esc(name)}’s history</h3></div>
         <span class="vr-sp"></span><button type="button" class="btn sm" id="vr-save">Save a version now</button><button type="button" class="su-x lr-x" id="vr-x" aria-label="Close">${ic('x')}</button></header>
       <p class="vr-sub ph-note" id="vr-sub">Loading…</p>
       <nav class="vr-also" id="vr-also" aria-label="Kept elsewhere"><span class="faint">Kept separately:</span><button type="button" class="linkish" id="vr-designs" title="Designs of the website saved in the website designer">Saved designs</button><span class="faint" aria-hidden="true">·</span><button type="button" class="linkish" id="vr-shots" title="Earlier screenshots of each screen, in Visuals">Earlier shots</button></nav>

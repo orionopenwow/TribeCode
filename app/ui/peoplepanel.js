@@ -108,7 +108,7 @@
     const ppl = all();
     if (tab === 'tribe') {
       const list = sort(filtered(ppl)), on = list.filter(m => m.online && m.id !== me().id).length;
-      body.innerHTML = list.length ? sec('Everyone', `${on} online`, list.map(row).join('')) : '<p class="ppl-empty">No one matches. Clear the search or a filter.</p>';
+      body.innerHTML = list.length ? sec('Everyone', on ? `${on + 1} online` : 'Just you here', list.map(row).join('')) : '<p class="ppl-empty">No one matches. Clear the search or a filter.</p>';
     } else {
       const people = ppl.filter(m => !isAI(m) && m.id !== me().id);
       const starred = sort(filtered(people.filter(m => friends.has(m.id))));

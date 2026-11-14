@@ -141,7 +141,34 @@ def main():
                     try: pg.evaluate("window.TribeSettings && TribeSettings.isOpen && TribeSettings.isOpen() && TribeSettings.close(); window.TribePeoplePanel && TribePeoplePanel.close && TribePeoplePanel.close(); window.TribeHelp && TribeHelp.close && TribeHelp.close()")
                     except Exception: pass
                     pg.keyboard.press("Escape"); pg.wait_for_timeout(150)
+                if size == "desktop":
+                    # the shared rules that need code (uikit.js, shell.js)
+                    assert pg.evaluate("!!(window.TribeUI && TribeUI.empty && TribeUI.layers)"), "TribeUI is loaded"
+                    pg.evaluate("TribeShell.go('chat')"); pg.wait_for_timeout(900)
+                    if pg.locator("#chat-head [data-cb='info']").count() and pg.locator("#chat-head [data-cb='info']").first.is_visible():
+                        pg.click("#chat-head [data-cb='info']"); pg.wait_for_selector("#info-panel"); pg.keyboard.press("Escape"); pg.wait_for_timeout(300)
+                        assert not pg.locator("#info-panel").count(), "Esc closes the chat's Who is here panel"
+                    pg.evaluate("(() => { const p = document.createElement('div'); p.id = 'info-panel'; p.style.cssText = 'position:fixed;left:20px;top:20px;width:200px;height:100px'; p.textContent = 'who'; document.body.appendChild(p); })()")
+                    pg.keyboard.press("Escape"); pg.wait_for_timeout(300); assert not pg.locator("#info-panel").count(), "one Esc rule: a panel with no handler of its own still closes"
+                    pg.evaluate("TribeUI.empty(document.createElement('div'), { title: 'T', line: 'L' })")
+                    html = pg.evaluate("TribeUI.emptyHTML({ title: 'Nothing here yet', line: 'One line.', action: { label: 'Do it', run() {} }, how: { label: 'How it works', run() {} } })")
+                    assert "ui-empty" in html and html.count("<button") == 2 and "btn primary" in html, html
+                    assert pg.evaluate("(() => { TribeUI.emptyAction = k => k === 'x' ? { label: 'Next step', run() {} } : null; const h = TribeUI.emptyHTML({ kind: 'x', title: 'A' }); TribeUI.emptyAction = null; return h.includes('Next step'); })()"), "a provider can fill an empty state's action"
                 c.close()
+            # the right panel: open on Home, closed elsewhere, remembered per page (?panelrule=1 turns the rule on for automated browsers)
+            c = b.new_context(viewport={"width": 1280, "height": 860})
+            s = {"name": "Orion", "onboarded": True, "tour": {"done": True}, "server": {"url": BASE, "token": host}}
+            c.add_init_script("if (!localStorage.getItem('tribecode.settings.v1')) localStorage.setItem('tribecode.settings.v1', %s); localStorage.setItem('tribecode.helpers.v1', JSON.stringify({flint:1,brain:1,ai:1}))" % json.dumps(json.dumps(s)))
+            pg = c.new_page(); pg.on("pageerror", lambda e: errors.append(str(e)))
+            pg.goto(BASE + "/?skipIntro=1&panelrule=1", wait_until="domcontentloaded")
+            pg.wait_for_function("window.TribeRouter && window.TribeShell", timeout=40000); pg.wait_for_function("TribeClient.connected()", timeout=45000); pg.wait_for_timeout(1200)
+            off = lambda: pg.evaluate("document.body.classList.contains('panel-off')")
+            pg.evaluate("TribeShell.go('home')"); pg.wait_for_timeout(600); assert not off(), "the panel is open on a project's dashboard"
+            pg.evaluate("TribeShell.go('ws-tasks')"); pg.wait_for_timeout(600); assert off(), "the panel is closed outside Home"
+            pg.click("#panel-toggle"); pg.wait_for_timeout(200); assert not off()
+            pg.evaluate("TribeShell.go('home')"); pg.wait_for_timeout(500); pg.evaluate("TribeShell.go('ws-tasks')"); pg.wait_for_timeout(600)
+            assert not off(), "what you chose on a page is remembered for that page"
+            c.close()
             b.close()
     finally:
         srv.terminate()
@@ -151,8 +178,9 @@ def main():
     nt = sum(1 for k in found if k[0] == "text"); ng = sum(1 for k in found if k[0] == "target")
     if REPORT:
         print(f"e2e_ui_lint report: {nt} small-text rules, {ng} small phone targets"); return
+    assert not errors, errors[:5]
     assert not found, f"UI lint: {nt} places with text under the floor and {ng} phone targets under 36px (list above)"
-    print("e2e_ui_lint: OK (text floors 11/12px at 1280 and 390, phone targets 36px, on the main places)")
+    print("e2e_ui_lint: OK (text floors 11/12px at 1280 and 390, phone targets 36px, one Esc rule, shared empty state, right panel per page)")
 
 
 if __name__ == "__main__":

@@ -542,7 +542,7 @@
       S.set({ tribeHere: true });   // a tribe exists on this computer: the next launch may start it (when Host is on)
       if (silent) return { ok: true, url, role: role || 'member' };
       if (role === 'reclaimed') toast('Welcome back: you are the host on this computer again.');
-      else if (!quiet) { closeInvite(); toast(role === 'host' ? "You're hosting! Now invite your friends." : 'Hosting again on this computer.'); setTimeout(openInvite, 600); }
+      else if (!quiet) { closeInvite(); toast(role === 'host' ? "Your tribe is online. Now invite your friends." : 'Online again on this computer.'); setTimeout(openInvite, 600); }
       return { ok: true, url, role };
     } catch (e) {
       reset();
@@ -560,7 +560,7 @@
   async function setHosting(on) {
     if (on) { S.set({ hostOff: false }); return hostHere(); }
     S.set({ hostOff: true, server: { url: (S.get().server || {}).url || '', token: (S.get().server || {}).token || '' } });
-    await stopHost(); refresh(); toast('Hosting is off. Your tribe stays in its folder; switch Host back on to bring it back.');
+    await stopHost(); refresh(); toast('Your tribe is offline now. It stays in its folder; switch it back on to bring it back.');
   }
   function showHostError(msg) {
     toast(msg.split('\n')[0] + ' Details are on Home.');
