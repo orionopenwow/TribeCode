@@ -56,7 +56,7 @@
     root.innerHTML = `
       <header class="gd-top">
         <button class="gd-icon gd-back" id="gd-back" aria-label="Back">${I.back}</button>
-        <div class="gd-brand"><span class="eyebrow">Guide</span><h1 id="gd-h">How to TribeCode</h1></div>
+        <div class="gd-brand"><span class="eyebrow">Learn</span><h1 id="gd-h">How to TribeCode</h1></div>
         <label class="gd-search">${I.search}<input id="gd-q" type="search" placeholder="Search the guide" autocomplete="off" aria-label="Search the guide"></label>
         <button class="gd-icon" id="gd-close" title="Close (Esc)" aria-label="Close the guide">${I.x}</button>
       </header>
@@ -71,12 +71,13 @@
     root.querySelector('#gd-q').addEventListener('keydown', e => { if (e.key === 'Enter') { const first = matches()[0]; if (first) { show(first.slug); } } });
     root.addEventListener('click', e => {
       const a = e.target.closest('[data-gd]'); if (a) { e.preventDefault(); show(a.dataset.gd); return; }
-      const t = e.target.closest('[data-gdp], [data-gdh], [data-gd-next], [data-gd-show], [data-gd-run], [data-help], [data-gd-ask]'); if (!t) return;
+      const t = e.target.closest('[data-gdp], [data-gdh], [data-gd-next], [data-gd-show], [data-gd-run], [data-help], [data-gd-ask], [data-gd-track]'); if (!t) return;
       e.preventDefault();
       if (t.dataset.gdp) return path(t.dataset.gdp, t.dataset.gdl);
       if (t.hasAttribute('data-gdh')) return home();
       if (t.hasAttribute('data-gd-next')) { close(); return window.TribeNextStep && window.TribeNextStep.open(); }
-      if (t.dataset.gdShow) { close(); const L = window.TribeFlintLessons; return L && L.open && L.open(t.dataset.gdShow); }
+      if (t.dataset.gdTrack) { close(); return window.TribeAcademy && window.TribeAcademy.open({ tab: 'learn', track: t.dataset.gdTrack }); }   // feat/learn: the skills lessons open in their reader
+      if (t.dataset.gdShow) { close(); const L = window.TribeFlintLessons; if (window.TribeLearn) window.TribeLearn.mark('lesson', t.dataset.gdShow, 'seen'); return L && L.open && L.open(t.dataset.gdShow); }
       if (t.dataset.gdRun) { close(); return window.TribeNextStep && window.TribeNextStep.act(t.dataset.gdRun); }
       if (t.dataset.help) { close(); return window.TribeHelp && window.TribeHelp.run(t.dataset.help); }
       if (t.dataset.gdAsk) { close(); const F = window.TribeFlint; return F && F.prefill && F.prefill(t.dataset.gdAsk); }
@@ -121,9 +122,11 @@
     }
     const list = matches();
     const dhits = q ? deepMatches() : [];
-    const nav = q ? (dhits.length ? `<span class="eyebrow gd-eye">${T('In the paths')}</span><div class="gd-navs">${dhits.slice(0, 6).map(d => { const [id, lv] = splitDeep(d.slug), P = pathOf(id); return P ? `<a href="#/guide/path/${id}/${lv}" class="gd-nav" data-gdp="${id}" data-gdl="${lv}"><b>${esc(T(P[1]))}</b><small>${esc(T((LEVELS.find(l => l[0] === lv) || [])[1] || ''))} · ${snippet(d)}</small></a>` : ''; }).join('')}</div>` : '')
-      : `<div class="gd-navs"><a href="#/guide/home" class="gd-nav ${cur === '@home' ? 'on' : ''}" data-gdh><b>${T('Help center')}</b><small>${T('Search, paths, tours and demos')}</small></a></div>
-        <span class="eyebrow gd-eye">${T('Paths')}</span><div class="gd-navs">${PATHS.map(([id, t]) => `<a href="#/guide/path/${id}" class="gd-nav ${cur === '@' + id ? 'on' : ''}" data-gdp="${id}"><b>${esc(T(t))}</b></a>`).join('')}</div>`;
+    const qhits = q && window.TribeQuick ? window.TribeQuick.search(q).slice(0, 5) : [];
+    const qnav = qhits.length ? `<span class="eyebrow gd-eye">${T('Quick guides')}</span><div class="gd-navs">${qhits.map(g => `<a href="#" class="gd-nav" data-qg="${esc(g.id)}"><b>${esc(T(g.title))}</b><small>${g.steps.length} ${T('steps')}</small></a>`).join('')}</div>` : '';
+    const nav = qnav + (q ? (dhits.length ? `<span class="eyebrow gd-eye">${T('In the paths')}</span><div class="gd-navs">${dhits.slice(0, 6).map(d => { const [id, lv] = splitDeep(d.slug), P = pathOf(id); return P ? `<a href="#/guide/path/${id}/${lv}" class="gd-nav" data-gdp="${id}" data-gdl="${lv}"><b>${esc(T(P[1]))}</b><small>${esc(T((LEVELS.find(l => l[0] === lv) || [])[1] || ''))} · ${snippet(d)}</small></a>` : ''; }).join('')}</div>` : '')
+      : `<div class="gd-navs"><a href="#/guide/home" class="gd-nav ${cur === '@home' ? 'on' : ''}" data-gdh><b>${T('Learn')}</b><small>${T('Quick guides, paths, skills and tours')}</small></a></div>
+        <span class="eyebrow gd-eye">${T('Paths')}</span><div class="gd-navs">${PATHS.map(([id, t]) => `<a href="#/guide/path/${id}" class="gd-nav ${cur === '@' + id ? 'on' : ''}" data-gdp="${id}"><b>${esc(T(t))}</b></a>`).join('')}</div>`);
     box.innerHTML = nav + `<span class="eyebrow gd-eye">${q ? `${list.length} match${list.length === 1 ? '' : 'es'}` : 'Pages'}</span>` + (list.length ? `<ol class="gd-items">${list.map(p => {
       const n = pages.indexOf(p) + 1;
       return `<li><a href="#/guide/${esc(p.slug)}" class="gd-item ${p.slug === cur ? 'on' : ''}" data-gd="${esc(p.slug)}" ${p.slug === cur ? 'aria-current="page"' : ''}><span class="gd-n">${String(n).padStart(2, '0')}</span><span class="gd-t"><b>${esc(p.title)}</b><small>${snippet(p)}</small></span></a></li>`;
@@ -144,17 +147,36 @@
 
   // ---------- the Help center home ----------
   function home() {
-    const root = frame(), H = window.TribeHelp, all = H && H.all ? H.all() : {}, groups = H && H.groups ? H.groups() : [];
+    const root = frame(), H = window.TribeHelp, all = H && H.all ? H.all() : {}, groups = H && H.groups ? H.groups() : [], Q = window.TribeQuick;
     cur = '@home';
     const ico = id => `<svg class="i"><use href="#${id}"/></svg>`;
-    root.querySelector('#gd-page').innerHTML = `<span class="eyebrow gd-pg-eye">${T('Help center')}</span><h1>${T('What do you want to do?')}</h1>
-      <p class="gd-lead">${T('Pick a goal for a short path from idea to a published link. Each one has a 60-second Show me and goes as deep as you need.')}</p>
+    root.querySelector('#gd-page').innerHTML = `<span class="eyebrow gd-pg-eye">${T('Learn')}</span><h1>${T('What do you want to do?')}</h1>
+      <p class="gd-lead">${T('Quick guides answer one question on one screen. Paths take you from an idea to a published link. Skills cover running what you made.')}</p>
+      ${Q && window.TribeLearn ? window.TribeLearn.summaryHTML('<div id="gd-stage"></div><div id="gd-skilln"></div>') : ''}
       <button type="button" class="gd-next" data-gd-next>${ico('i-flag')}<span><b>${T('What should I do next?')}</b><small>${T('One step for where your project is right now')}</small></span></button>
+      ${Q ? Q.homeHTML() : ''}
+      <h2>${T('Paths: build something, start to finish')}</h2>
       <div class="gd-paths">${PATHS.map(([id, t, line]) => `<a href="#/guide/path/${id}" class="gd-path" data-gdp="${id}"><b>${esc(T(t))}</b><small>${esc(T(line))}</small><span class="gd-lv">${LEVELS.map(l => T(l[1])).join(' · ')}</span></a>`).join('')}</div>
+      <div id="gd-skills"></div>
       ${groups.map(([title, keys]) => `<h2>${esc(T(title))}</h2><div class="gd-acts">${keys.filter(k => all[k]).map(k => `<button type="button" class="gd-act" data-help="${k}">${ico(all[k][0])}<span><b>${esc(T(all[k][1]))}</b>${all[k][2] ? `<small>${esc(T(all[k][2]))}</small>` : ''}</span></button>`).join('')}</div>`).join('')}
       <h2>${T('Things you can ask Flint')}</h2><div class="gd-asks">${(window.TribeNextStep ? window.TribeNextStep.prompts('home') : []).map(x => `<button type="button" class="ns-ask" data-gd-ask="${esc(x)}">${esc(T(x))}</button>`).join('')}</div>`;
     root.classList.add('reading'); root.querySelector('#gd-read').scrollTop = 0; drawList();
     if (location.hash !== '#/guide/home') history.replaceState(null, '', location.pathname + location.search + '#/guide/home');
+    homeExtras(root);
+  }
+  // feat/learn: ONE learning place. The project's stage (nextstep.js) and the skills lessons (the Academy's tracks, by
+  // role) show here with their progress; the lessons themselves still open in the Academy's reader.
+  async function homeExtras(root) {
+    const NS = window.TribeNextStep, C = window.TribeClient, live = C && C.connected && C.connected();
+    try { if (NS && NS.next && live) { const n = await NS.next(), box = root.querySelector('#gd-stage'); if (box && n && n.stages) box.innerHTML = `<b>${n.stages.filter(s => s.done).length}<i>/${n.stages.length}</i></b><small>${T('Project steps done')}</small>`; } } catch {}
+    if (!live || !window.TribeAcademy) return;
+    try {
+      const a = await C.api('/academy'), tracks = a.tracks || [], box = root.querySelector('#gd-skills'); if (!box || cur !== '@home' || !tracks.length) return;
+      const doneN = t => (((a.progress || {})[t.id] || {}).done || []).length, total = tracks.reduce((n, t) => n + (t.lessons || t.count || 0), 0), got = tracks.reduce((n, t) => n + doneN(t), 0);
+      const sn = root.querySelector('#gd-skilln'); if (sn) sn.innerHTML = `<b>${got}<i>/${total}</i></b><small>${T('Skills lessons done')}</small>`;
+      box.innerHTML = `<h2>${T('Skills: run what you made')}</h2><p class="qg-lead">${T('Short lessons by job, each with a Try it step in your own project: finding people, selling, support, money and the legal basics.')}</p>
+        <div class="qg-skills">${tracks.map(t => `<button type="button" class="qg-row qg-skill" data-gd-track="${esc(t.id)}"><span class="qg-rt"><b>${esc(T(t.title))}</b><small><i>${doneN(t)}/${t.lessons || t.count || 0}</i> ${T('lessons')}</small></span></button>`).join('')}</div>`;
+    } catch {}
   }
   // ---------- a path: the journey, Show me, and one page at three depths ----------
   function path(id, level) {
@@ -169,10 +191,18 @@
       <div class="gd-deep md" data-level="${level}">${body}</div>`;
     root.querySelector('#gd-page').querySelectorAll('input[type=checkbox]').forEach(x => { x.disabled = true; });
     root.classList.add('reading'); root.querySelector('#gd-read').scrollTop = 0; drawList();
+    journeyDone(root);
     const want = `#/guide/path/${id}${level === 'basics' ? '' : '/' + level}`;
     if (location.hash !== want) history.replaceState(null, '', location.pathname + location.search + want);
   }
 
+  // feat/learn: a journey step that is already true for this project is ticked (the next-step engine knows), so a path
+  // never asks you to do again what you did.
+  async function journeyDone(root) {
+    const NS = window.TribeNextStep, C = window.TribeClient; if (!NS || !NS.state || !NS.steps || !(C && C.connected && C.connected())) return;
+    try { const st = await NS.state(), by = {}; NS.steps(st).forEach(s => { by[s.run] = by[s.run] || s.done; });
+      root.querySelectorAll('.gd-journey li').forEach(li => { const b = li.querySelector('[data-gd-run]'); if (b && by[b.dataset.gdRun]) { li.classList.add('done'); b.textContent = T('Done · do again'); } }); } catch {}
+  }
   function show(slug, { keepFocus } = {}) {
     const root = frame(), p = (pages || []).find(x => x.slug === slug) || (pages || [])[0];
     if (!p) return;
@@ -198,6 +228,7 @@
     if (window.TribeWorkshop && window.TribeWorkshop.close && document.body.classList.contains('ws-open')) window.TribeWorkshop.close();
     root.classList.remove('hidden'); document.body.classList.add('gd-open'); document.body.classList.remove('drawer-open');
     await load();
+    if (window.TribeQuick) await window.TribeQuick.load();   // feat/learn: the quick guides sit on the Learn home and in search
     if (!open_) return;
     if (typeof slug !== 'string' || !slug) slug = null;
     if (slug === '@home') { if (pages) return home(); slug = null; }

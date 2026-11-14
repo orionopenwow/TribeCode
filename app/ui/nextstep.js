@@ -194,17 +194,19 @@
     const mine = el, n = await next(); if (el !== mine) return;
     draw(n);
   }
+  // feat/learn: the quick guide for this step, offered until you have done it once (never re-taught after that)
+  const howId = b => { const L = window.TribeLearn, Q = window.TribeQuick, id = L && L.STEP_GUIDE && L.STEP_GUIDE[b.id]; return id && Q && Q.get(id) && !L.done('quick', id) ? id : ''; };
   function draw(n) {
     const b = n.best, body = el.querySelector('.ns-body'), by = {};
     [b, ...n.alts].forEach(s => { by[s.id] = s; });
     body.innerHTML = `${proj() && connected() ? strip(n) : ''}
       <section class="ns-best" data-ns-step="${esc(b.id)}"><span class="eyebrow">${esc(T(n.done ? 'All six done' : 'Do this next'))}</span><h4>${esc(T(b.title))}</h4><p>${esc(T(b.why))}</p>
-        <div class="ns-acts"><button type="button" class="btn primary" data-ns-run="${esc(b.id)}">${esc(T(b.act))}</button>${b.id !== 'start' && b.id !== 'keepgoing' ? `<button type="button" class="btn ghost" data-ns-not="${esc(b.id)}">${esc(T('Not now'))}</button>` : ''}</div></section>
+        <div class="ns-acts"><button type="button" class="btn primary" data-ns-run="${esc(b.id)}">${esc(T(b.act))}</button>${b.id !== 'start' && b.id !== 'keepgoing' ? `<button type="button" class="btn ghost" data-ns-not="${esc(b.id)}">${esc(T('Not now'))}</button>` : ''}${howId(b) ? `<button type="button" class="linkish ns-how" data-qg="${esc(howId(b))}">${esc(T('How do I do this?'))}</button>` : ''}</div></section>
       ${n.alts.length ? `<span class="eyebrow ns-e">${esc(T('Or'))}</span><div class="nx-rows">${n.alts.map(a => `<button type="button" class="nx-row" data-ns-run="${esc(a.id)}"><span class="nx-t"><b>${esc(T(a.title))}</b><small>${esc(T(a.why))}</small></span></button>`).join('')}</div>` : ''}
       <span class="eyebrow ns-e">${esc(T('Things you can ask Flint'))}</span><div class="ns-asks">${prompts().map(p => `<button type="button" class="ns-ask" data-ns-ask="${esc(p)}">${esc(T(p))}</button>`).join('')}</div>
-      <footer class="ns-foot"><button type="button" class="linkish" data-ns-learn>${esc(T('Open the Help center'))}</button><label class="ns-sw"><input type="checkbox" data-ns-nudge${nudges() ? ' checked' : ''}> <span>${esc(T('Offer a next step when I look stuck'))}</span></label></footer>`;
+      <footer class="ns-foot"><button type="button" class="linkish" data-ns-learn>${esc(T('Open Learn'))}</button><label class="ns-sw"><input type="checkbox" data-ns-nudge${nudges() ? ' checked' : ''}> <span>${esc(T('Offer a next step when I look stuck'))}</span></label></footer>`;
     el.onclick = e => {
-      if (e.target.closest('[data-ns-x]')) return close();
+      if (e.target.closest('[data-ns-x]') || e.target.closest('[data-qg]')) return close();
       const r = e.target.closest('[data-ns-run]'); if (r) return run(by[r.dataset.nsRun]);
       const no = e.target.closest('[data-ns-not]'); if (no) { snooze(no.dataset.nsNot); next().then(x => el && draw(x)); refreshAll(); return; }
       const a = e.target.closest('[data-ns-ask]'); if (a) { close(); const F = window.TribeFlint; if (F && F.prefill) F.prefill(a.dataset.nsAsk); return; }

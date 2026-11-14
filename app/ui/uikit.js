@@ -20,9 +20,11 @@
     // Optional, for places that already have hooks: cls (extra classes), id, icon (trusted svg), tag ('li' inside a
     // list), action.attr (extra attributes on the button, e.g. 'data-goto-browse'), action.quiet (not the page's main action).
     const tag = o.tag === 'li' ? 'li' : 'div';
+    // feat/learn: a place with no "How it works" of its own gets the quick guide for its kind (quickguides.js sets TribeUI.emptyHow)
+    const how = o.how || (o.how !== false && typeof TribeUI.emptyHow === 'function' ? TribeUI.emptyHow(o.kind || '') : null);
     return `<${tag} class="ui-empty${o.center ? ' center' : ''}${o.bare ? ' bare' : ''}${o.cls ? ' ' + esc(o.cls) : ''}"${o.id ? ` id="${esc(o.id)}"` : ''} data-ui-kind="${esc(o.kind || '')}">
       ${o.icon ? `<span class="ui-empty-ic" aria-hidden="true">${o.icon}</span>` : ''}${o.title ? `<b>${esc(tr(o.title))}</b>` : ''}${o.line ? `<p>${esc(tr(o.line))}</p>` : ''}
-      ${act || o.how ? `<div class="ui-empty-acts">${act ? `<button type="button" class="btn ${act.quiet ? 'sm' : 'primary'}" data-ui-empty="act"${act.attr ? ' ' + act.attr : ''}>${esc(tr(act.label))}</button>` : ''}${o.how ? `<button type="button" class="linkish" data-ui-empty="how">${esc(tr(o.how.label || 'How it works'))}</button>` : ''}</div>` : ''}
+      ${act || how ? `<div class="ui-empty-acts">${act ? `<button type="button" class="btn ${act.quiet ? 'sm' : 'primary'}" data-ui-empty="act"${act.attr ? ' ' + act.attr : ''}>${esc(tr(act.label))}</button>` : ''}${how ? `<button type="button" class="linkish" data-ui-empty="how"${how.attr ? ' ' + how.attr : ''}>${esc(tr(how.label || 'How it works'))}</button>` : ''}</div>` : ''}
     </${tag}>`;
   }
   function bindEmpty(el, o) {
@@ -124,5 +126,5 @@
     setTimeout(() => { if (shown(top.el) && document.contains(top.el)) top.close(top.el); }, 0);
   });
 
-  const TribeUI = window.TribeUI = { empty, emptyHTML, bindEmpty, layers, sheet, adopt, dismiss, emptyAction: null };
+  const TribeUI = window.TribeUI = { empty, emptyHTML, bindEmpty, layers, sheet, adopt, dismiss, emptyAction: null, emptyHow: (window.TribeUI && window.TribeUI.emptyHow) || null };
 })();
