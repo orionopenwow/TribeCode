@@ -212,7 +212,7 @@ html[data-dev=phone] .ehide-phone,html[data-dev=tablet] .ehide-tablet,html[data-
         <button type="button" class="btn ghost sm wdz-ic wdz-more" data-wdz="more" aria-expanded="false" aria-label="More" title="More">⋯</button>
         <button type="button" class="btn sm" data-wdz="mode" id="wdz-mode" aria-pressed="false">Dark</button>
         <label class="wdz-sel-wrap"><span class="sr">Theme</span><select id="wdz-theme" class="input sm" aria-label="Theme">${Object.entries(P).map(([k, p]) => `<option value="${k}">${esc(p.name)}</option>`).join('')}</select></label>
-        <span class="wdz-devs" role="group" aria-label="Preview size"><button type="button" class="btn ghost sm" data-dev="desktop" aria-pressed="true">Desktop</button><button type="button" class="btn ghost sm" data-dev="tablet" aria-pressed="false">Tablet</button><button type="button" class="btn ghost sm" data-dev="phone" aria-pressed="false">Phone</button></span>
+        <span class="wdz-devs" role="group" aria-label="Preview size"><button type="button" class="btn ghost sm" data-dev="desktop" aria-pressed="true">Desktop</button><button type="button" class="btn ghost sm" data-dev="tablet" aria-pressed="false">Tablet</button><button type="button" class="btn ghost sm" data-dev="phone" aria-pressed="false">Phone</button><button type="button" class="btn ghost sm" data-wdz="wide" id="wdz-wide" aria-pressed="false" title="Show the page at a full computer width (1280). Scroll sideways to see all of it.">Full width</button></span>
         <button type="button" class="btn sm" data-wdz="comment" id="wdz-cmode" aria-pressed="false" title="Click a section to leave a comment (C)">Comment<span class="wdz-n" id="wdz-cn" hidden></span></button>
         <button type="button" class="btn ghost sm wdz-ic" data-wdz="keys" title="Keyboard shortcuts (?)" aria-label="Keyboard shortcuts">?</button>
         <button type="button" class="btn sm" data-wdz="templates">Templates</button>
@@ -270,7 +270,8 @@ html[data-dev=phone] .ehide-phone,html[data-dev=tablet] .ehide-tablet,html[data-
     root.querySelector('[data-wdz="undo"]').disabled = !st.hist.length; root.querySelector('[data-wdz="redo"]').disabled = !st.fut.length;
     $('#wdz-blocks').innerHTML = pg.blocks.map((b, i) => `<li class="wdz-blk${st.sel && st.sel.block === b.id ? ' is-sel' : ''}${b.hidden ? ' is-hidden' : ''}" draggable="true" data-blk="${b.id}" data-i="${i}"><span class="wdz-grip" aria-hidden="true">⋮⋮</span><button type="button" class="wdz-blk-t" data-pick="${b.id}">${esc(S().BLOCKS[b.type].label.replace(/ \(.*/, ''))}<small>${esc(b.variant)}</small></button><span class="wdz-blk-acts"><button type="button" data-move="up" data-id="${b.id}" aria-label="Move up"${i ? '' : ' disabled'}>↑</button><button type="button" data-move="down" data-id="${b.id}" aria-label="Move down"${i < pg.blocks.length - 1 ? '' : ' disabled'}>↓</button><button type="button" data-dup="${b.id}" aria-label="Duplicate block" title="Duplicate (Ctrl D)">⧉</button><button type="button" data-hide="${b.id}" aria-label="${b.hidden ? 'Show' : 'Hide'} block" aria-pressed="${!!b.hidden}" title="${b.hidden ? 'Show on the site' : 'Hide from the site'} (H)">${b.hidden ? '◌' : '◉'}</button><button type="button" data-del="${b.id}" aria-label="Delete block">×</button></span></li>`).join('');
     { const f0 = $('#wdz-frame'); if (f0 && f0.contentWindow && frameReady) f0.contentWindow.postMessage({ dev: st.dev }, '*'); }
-    const wrap = $('#wdz-framewrap'); wrap.dataset.dev = st.dev; root.querySelectorAll('[data-dev]').forEach(b => b.matches('button') && b.setAttribute('aria-pressed', String(b.dataset.dev === st.dev)));
+    const wrap = $('#wdz-framewrap'); wrap.dataset.dev = st.dev;
+    { const wb = $('#wdz-wide'), on = st.dev === 'desktop' && !!st.wide; wrap.classList.toggle('is-wide', on); if (wb) { wb.setAttribute('aria-pressed', String(on)); wb.hidden = st.dev !== 'desktop'; } }   // round 3: Desktop at a real computer width, scrolled sideways (no scaling, so every click lands where it looks) root.querySelectorAll('[data-dev]').forEach(b => b.matches('button') && b.setAttribute('aria-pressed', String(b.dataset.dev === st.dev)));
   }
   // the site's fonts as data: URLs: the sandboxed preview has no origin, so it cannot fetch them itself
   const FONTS = new Map(); let fontsAsked = false;
@@ -690,6 +691,7 @@ html[data-dev=phone] .ehide-phone,html[data-dev=tablet] .ehide-tablet,html[data-
     const k = a.dataset.wdz;
     if (k === 'more') { const on = !root.querySelector('.wdz-top').classList.contains('is-more'); root.querySelector('.wdz-top').classList.toggle('is-more', on); a.setAttribute('aria-expanded', String(on)); return; }
     if (k !== 'dlmenu') { const tp = root.querySelector('.wdz-top'); if (tp.classList.contains('is-more')) { tp.classList.remove('is-more'); const mb = tp.querySelector('[data-wdz="more"]'); if (mb) mb.setAttribute('aria-expanded', 'false'); } }
+    if (k === 'wide') { st.wide = !st.wide; return chrome(); }
     if (k === 'close') return close();
     if (k === 'undo') return undo();
     if (k === 'redo') return redo();

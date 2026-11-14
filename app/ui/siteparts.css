@@ -4,6 +4,8 @@
 .sp-crumbs button { border: 0; background: none; color: var(--muted); font: inherit; padding: 2px 4px; border-radius: var(--r-sm); cursor: pointer; }
 .sp-crumbs button:hover:not(:disabled), .sp-crumbs button:focus-visible { background: var(--surface-3); color: var(--text); }
 .sp-crumbs button[aria-current="true"] { color: var(--text); font-weight: 600; cursor: default; }
+.wdz-frame.is-wide { overflow-x: auto; overflow-y: hidden; }
+.wdz-frame.is-wide iframe { width: 1280px; max-width: none; }
 .sp-looks { display: grid; gap: 8px; }
 .wdz-insp .sp-looks .wdz-f span, .wdz-insp .sp-list .wdz-f span, .wdz-insp .sp-pages .wdz-f span, .wdz-insp .sp-said .wdz-f span, .wdz-insp .sp-crumbs + .wdz-eyebrow ~ .wdz-f span { text-transform: none; }
 /* a box for words is as tall as its words, not a fixed block that pushes everything else off the panel */

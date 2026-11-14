@@ -256,6 +256,12 @@ def live(pw):
         note.press("Control+a"); note.type("Opens Saturday at 9am")
         pg.wait_for_function("TribeSiteDesigner.cfg().pages[0].blocks[0].props.items[0].note === 'Opens Saturday at 9am'", timeout=4000)
         assert pg.locator("#wdz-insp [data-etext]").input_value() == "Opens Saturday at 9am", "the panel follows what is typed on the page"
+        # Desktop at a real computer width (round 3): Full width lays the page out 1280 wide and scrolls sideways; clicks still land
+        assert f.evaluate("innerWidth") < 1100
+        pg.click("#wdz-wide"); pg.wait_for_function("document.querySelector('#wdz-framewrap').classList.contains('is-wide')"); pg.wait_for_timeout(300)
+        assert f.evaluate("innerWidth") == 1280 and pg.evaluate("document.querySelector('#wdz-framewrap').scrollWidth > document.querySelector('#wdz-framewrap').clientWidth")
+        f.locator("h1[data-e]").first.click(); pg.wait_for_function("(TribeSiteDesigner.state().sel || {}).path === 'name'", timeout=3000)
+        pg.click("#wdz-wide"); pg.wait_for_timeout(300); assert f.evaluate("innerWidth") < 1100
         print("  ok  the note under a link is selected with one click and typed over in place")
 
         # ---- the small toolbar: bigger, bold; the page is swapped in place (no reload), the outline and toolbar stay
