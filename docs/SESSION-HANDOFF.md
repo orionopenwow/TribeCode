@@ -45,9 +45,10 @@ Another Claude session also releases to this repo. On 2026-11-13 both released a
 1. Work on a feature branch in its own worktree; merge into the integration branch (`integ6`, worktree `/home/claude/wt-int6`).
 2. Merge conflicts in `app/ui/sw.js` (SHELL list) and `package.json` (`test` chain) are unions: `python3 /home/claude/resolve.py app/ui/sw.js package.json`, with CACHE set above both sides.
 3. Run the tests for what changed, then the smoke set: `bundle_test`, `ui_smoke`, `e2e_truth`, `e2e_no_stale`, the security tests (`security_test`, `security2`–`8`), `flint_eval_test`, `flint_nlu_test`.
-4. Add a `## vX.Y.Z` entry to `CHANGELOG.md` with a `**Phones**` line. Update the "Latest" line in `docs/CONTEXT.md`.
-5. `node scripts/dev/release.js X.Y.Z --skip-tests`, commit, then push the same commit to `dev` and `main`.
-6. The Release workflow publishes when the version changes on `main`. Watch it. The Mac build sometimes gets no machine from GitHub; the release still publishes, and "rerun failed jobs" attaches the Mac installer later.
+4. Refresh the thumbnails: `npm run dev:thumbs` (`scripts/dev/live-thumbs.py`) re-renders every thumbnail the Workshop and the website show from the real templates, starters and app screens, and puts back the ones that did not really change. Look at what `git status` lists, then commit it. `python3 scripts/dev/live-thumbs.py --check` (in `npm test`) fails when a thumbnail's source item is gone or the website points at a missing picture; `--sheet out.png --ref <last release>` makes a before/after contact sheet. Other makers' screenshots are only used where their terms allow it: `templates/studio-shots.json`, `docs/SCREENSHOT-PERMISSIONS.md`.
+5. Add a `## vX.Y.Z` entry to `CHANGELOG.md` with a `**Phones**` line. Update the "Latest" line in `docs/CONTEXT.md`.
+6. `node scripts/dev/release.js X.Y.Z --skip-tests`, commit, then push the same commit to `dev` and `main`.
+7. The Release workflow publishes when the version changes on `main`. Watch it. The Mac build sometimes gets no machine from GitHub; the release still publishes, and "rerun failed jobs" attaches the Mac installer later.
 
 Commit messages end with a `Co-Authored-By` line for the model and a `Claude-Session` line with the session link.
 
