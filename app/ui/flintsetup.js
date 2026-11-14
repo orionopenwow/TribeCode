@@ -46,6 +46,7 @@
         <div class="fsu-acts"><button type="button" class="btn sm" data-fs="device">What this device can do</button>${where === 'settings' ? '<button type="button" class="btn ghost sm" data-fs="manage">Manage or remove</button>' : '<button type="button" class="btn ghost sm" data-fs="dismiss">Got it</button>'}</div></div>`;
       return;
     }
+    const calm = where === 'steps';   // in the Getting started list the next step keeps the one primary button
     const pct = running && running.total ? Math.min(100, Math.round(running.got / running.total * 100)) : part && part.total ? Math.round(part.got / part.total * 100) : 0;
     el.innerHTML = `<div class="fsu${adv.wait ? ' fsu-wait' : ''}" data-fs-card="${esc(where)}" role="group" aria-label="Give Flint a local brain">
       <img class="fsu-face" src="assets/flint.svg" alt="" width="36" height="36" aria-hidden="true">
@@ -55,7 +56,7 @@
         ${lastErr && !running ? `<small class="fsu-err" role="alert">${esc(lastErr)}</small>` : ''}
         ${running || part ? `<div class="fsu-prog"><span class="fmd-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${pct}" aria-label="Download"><i style="width:${pct}%"></i></span><small class="fsu-pct">${running ? `${mb(running.got)}${running.total ? ` of ${mb(running.total)}` : ''}` : `Paused at ${mb(part.got)}${part.total ? ` of ${mb(part.total)}` : ''}`}</small></div>` : ''}</div>
       <div class="fsu-acts">${running ? '<button type="button" class="btn sm" data-fs="cancel">Pause</button>'
-        : `<button type="button" class="btn sm${adv.wait ? '' : ' primary'}" data-fs="get">${part ? 'Resume' : adv.wait ? 'Download anyway' : 'Download now'}</button><button type="button" class="btn sm${adv.wait ? ' primary' : ' ghost'}" data-fs="later">Later</button>`}</div></div>`;
+        : `<button type="button" class="btn sm${adv.wait || calm ? '' : ' primary'}" data-fs="get">${part ? 'Resume' : adv.wait ? 'Download anyway' : 'Download now'}</button><button type="button" class="btn sm${adv.wait && !calm ? ' primary' : ' ghost'}" data-fs="later">Later</button>`}</div></div>`;
   }
   const redraw = () => cards.forEach(el => draw(el));
   function progress(p) { cards.forEach(el => { const bar = el.querySelector('.fmd-bar'), t = el.querySelector('.fsu-pct'); if (!bar || !t) return draw(el); const pct = p.total ? Math.min(100, Math.round(p.got / p.total * 100)) : 0; bar.setAttribute('aria-valuenow', pct); bar.firstElementChild.style.width = pct + '%'; t.textContent = `${mb(p.got)}${p.total ? ` of ${mb(p.total)}` : ''}`; }); }
@@ -95,7 +96,7 @@
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot); else setTimeout(boot, 0);
 
   // ---------- the project dashboard: an extra row under Getting started (projects.js) ----------
-  const stepRow = () => { const s = state(); return !FM() || s.choice === 'later' || (s.installed && s.choice === 'done' && !ls.get(OFFER)) ? '' : '<div class="ock-row ock-card ock-flint" data-step="flint" data-fs-slot="steps"></div>'; };
+  const stepRow = () => { const s = state(); return !FM() || s.choice === 'later' || (s.installed && s.choice === 'done' && !ls.get(OFFER)) ? '' : '<div class="ock-row ock-flint" data-step="flint" data-fs-slot="steps"></div>'; };
   new MutationObserver(() => { document.querySelectorAll('[data-fs-slot]:not(.fsu-mount)').forEach(el => mount(el, el.dataset.fsSlot)); }).observe(document.documentElement, { childList: true, subtree: true });
 
   // ---------- Flint's chat: one re-offer, the first time he misses something ----------

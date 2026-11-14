@@ -18,3 +18,4 @@
 .ock-row.ock-flint .fsu { border-radius: var(--r); }
 #set-flintsetup { margin-bottom: 8px; }
 @media (max-width: 720px) { .fs-step { width: calc(100% - 28px); } .fsu { flex-wrap: wrap; } .fsu-acts { width: 100%; } .fsu-acts .btn { flex: 1; min-height: 40px; } }
+#pj-check.hero.one .ock-flint { display: none; }   /* the calm first dashboard shows one step; this row waits under "See all steps" */
