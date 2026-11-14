@@ -98,7 +98,7 @@
   const snoozeKey = () => `tribecode.next.snooze.${(proj() || {}).id || 'none'}.${day()}`;
   const snoozed = () => { try { return JSON.parse(ls.get(snoozeKey()) || '[]'); } catch { return []; } };
   const snooze = id => { const a = snoozed(); if (!a.includes(id)) a.push(id); ls.set(snoozeKey(), JSON.stringify(a)); };
-  async function next() { return pick(await state(), snoozed()); }
+  async function next() { const n = pick(await state(), snoozed()); lastBest = n.best; return n; }
 
   // ---------- what one tap does ----------
   const RUN = {
@@ -230,15 +230,30 @@
   }
   let rt; const refreshAll = () => { clearTimeout(rt); rt = setTimeout(() => { cards.forEach(b => (b.isConnected ? card(b) : cards.delete(b))); }, 500); };
 
-  // ---------- one empty-state pattern: title, one line, one action ----------
-  const empty = ({ icon = 'flag', title, line, act: label, run: r, id = '' }) => `<div class="ns-empty" data-ns-empty="${esc(id)}"><span class="ns-empty-i" aria-hidden="true">${ic(icon, 22)}</span><b>${esc(T(title))}</b><p>${esc(T(line))}</p>${label ? `<button type="button" class="btn primary" data-ns-emp="${esc(r || 'open')}">${esc(T(label))}</button>` : ''}</div>`;
+  // ---------- empty states: ONE pattern, TribeUI.empty (uikit.js). This engine is its action provider ----------
+  // TribeUI.emptyAction(kind, el) -> { label, run }: the step that fills that kind of empty place, else the last best step.
+  const EMPTY_RUN = { tasks: 'task', task: 'task', board: 'task', design: 'design', canvas: 'design', files: 'build', preview: 'build', site: 'design', website: 'design', publish: 'publish', people: 'invite', friends: 'invite', agents: 'ai', company: 'company', vision: 'vision' };
+  const EMPTY_LABEL = { task: 'New task', design: 'Open Design', build: 'Ask Flint to build it', publish: 'Publish', invite: 'Invite', ai: 'Add an AI helper', company: 'Open Company', vision: 'Write it' };
+  let lastBest = null;
+  function emptyAction(kind) {
+    const r = EMPTY_RUN[String(kind || '').toLowerCase()];
+    if (r) return { label: T(EMPTY_LABEL[r]), run: () => act(r) };
+    if (lastBest && lastBest.id !== 'keepgoing') { const b = lastBest; return { label: T(b.act), run: () => run(b) }; }
+    return { label: T('What should I do next?'), run: open };
+  }
+  function provide() { const U = window.TribeUI; if (U && U.emptyAction !== emptyAction) U.emptyAction = emptyAction; return !!U; }
+  if (!provide()) { addEventListener('DOMContentLoaded', provide); addEventListener('load', provide); }
+  // TribeNextStep.empty is only an alias of TribeUI.emptyHTML now (a plain fallback until uikit.js is on this branch)
+  const empty = o => { const U = window.TribeUI, a = o.action || (o.act ? { label: o.act, run: () => (o.run && o.run !== 'open' ? act(o.run) : open()) } : null);
+    if (U && U.emptyHTML) return U.emptyHTML({ title: o.title, line: o.line, kind: o.kind || o.id || '', action: a, how: o.how });
+    return `<div class="ui-empty ns-empty" data-ui-kind="${esc(o.kind || o.id || '')}"><b>${esc(T(o.title))}</b><p>${esc(T(o.line))}</p>${a ? `<button type="button" class="btn primary" data-ns-emp="${esc(o.run || 'open')}">${esc(T(a.label))}</button>` : ''}</div>`; };
   document.addEventListener('click', e => { const b = e.target.closest && e.target.closest('[data-ns-emp]'); if (!b) return; e.preventDefault(); const r = b.dataset.nsEmp; if (r === 'open') open(); else act(r); });
 
   // ---------- stuck, gently: offer the next step once, never nag ----------
   const NUDGE = 'tribecode.next.nudges';
   function nudges(on) { if (on === undefined) return ls.get(NUDGE) !== '0'; ls.set(NUDGE, on ? null : '0'); return !!on; }
   let offered = false, idleT = null, fails = [], lastFail = '';
-  const emptyOnScreen = () => [...document.querySelectorAll('.ns-empty, .pj-empty, .empty, [class*="-empty"]:not(.hidden)')].some(n => n.offsetParent && n.getBoundingClientRect().height > 40 && !n.closest('#guide, .nx-sheet, .help-menu'));
+  const emptyOnScreen = () => [...document.querySelectorAll('.ui-empty, .ns-empty, .pj-empty, .empty, [class*="-empty"]:not(.hidden)')].some(n => n.offsetParent && n.getBoundingClientRect().height > 40 && !n.closest('#guide, .nx-sheet, .help-menu'));
   function offer(reason) {
     if (offered || !nudges() || el || navigator.webdriver && !window.__nsNudgeTest) return;
     if (document.querySelector('.nx-sheet, .modal:not(.hidden), #guide:not(.hidden), #fg-bubble.on, .pz-layer:not(.hidden)')) return;
@@ -272,5 +287,5 @@
   hook();
   document.addEventListener('tribe:nextstep', () => setTimeout(refreshAll, 1500));
 
-  window.TribeNextStep = { state, next, open, close, card, chip, mount: mountCard, flint, act, prompts, ideas, empty, nudges, pick, steps, STAGES, _failed: failed, _offer: offer, refresh: refreshAll };
+  window.TribeNextStep = { state, next, open, close, card, chip, mount: mountCard, flint, act, prompts, ideas, empty, emptyAction, _provide: provide, nudges, pick, steps, STAGES, _failed: failed, _offer: offer, refresh: refreshAll };
 })();
