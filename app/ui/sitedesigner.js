@@ -257,7 +257,7 @@
   const FONTS = new Map(); let fontsAsked = false;
   async function loadFonts() {
     fontsAsked = true;
-    const files = ['fraunces-latin-700-normal', 'instrument-serif-latin-400-normal', 'space-grotesk-latin-700-normal', 'bricolage-grotesque-latin-800-normal', 'jetbrains-mono-latin-700-normal', 'silkscreen-latin-400-normal', 'inter-latin-400-normal'];
+    const files = ['fraunces-latin-700-normal', 'instrument-serif-latin-400-normal', 'space-grotesk-latin-700-normal', 'bricolage-grotesque-latin-800-normal', 'jetbrains-mono-latin-700-normal', 'silkscreen-latin-400-normal', 'inter-latin-400-normal', 'dm-serif-display-latin-400-normal', 'outfit-latin-700-normal'];
     await Promise.all(files.map(async n => { try { const r = await fetch('assets/site-fonts/' + n + '.woff2'); if (!r.ok) return; const b = await r.blob(); FONTS.set(n, await new Promise(res => { const fr = new FileReader(); fr.onload = () => res(fr.result); fr.readAsDataURL(b); })); } catch {} }));
     if (FONTS.size && root && !root.hidden) frame();
   }

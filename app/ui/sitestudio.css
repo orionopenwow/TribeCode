@@ -26,6 +26,8 @@ button.stu-sw[aria-pressed="true"] { outline: 2px solid var(--text); outline-off
 .stu-kitrow { display: flex; align-items: center; gap: 6px; margin: 0; flex-wrap: wrap; }
 .stu-kitrow img { height: 24px; width: auto; max-width: 72px; border-radius: 4px; }
 .stu-kitrow small { color: var(--muted); font-size: 12px; margin-left: 4px; }
+.stu-voice { display: grid; gap: 4px; font-size: 12px; color: var(--muted); }
+.stu-voice input { width: 100%; }
 .stu-kitrow .stu-sw { cursor: default; width: 20px; height: 20px; }
 
 .stu-sum { margin: 0; font-size: 13px; color: var(--text); display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }

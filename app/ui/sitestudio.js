@@ -30,6 +30,7 @@
       <p class="wdz-hint">Every choice here changes all pages at once. Undo takes it back.</p>
       <div class="stu-kit" id="stu-kit"><p class="stu-h">${I('palette')}<b>Brand kit</b><small>${hasKit ? 'Shared with Design' : 'One look for your website and your designs'}</small></p>
         ${hasKit ? `<p class="stu-kitrow">${K.logo ? `<img src="${esc(K.logo)}" alt="">` : ''}${[K.colors.accent, K.colors.ink, K.colors.bg, ...K.colors.more].filter(Boolean).slice(0, 6).map(h => `<span class="stu-sw" style="background:${h}" title="${h}"></span>`).join('')}<small>${esc([K.fonts.display, K.fonts.body].filter(Boolean).filter((x, i, a) => a.indexOf(x) === i).join(' + '))}</small></p>` : ''}
+        ${hasKit ? `<label class="stu-voice"><span>How we sound</span><input type="text" id="stu-voice" maxlength="200" value="${esc(K.voice || '')}" placeholder="Warm, plain, a little funny"></label>` : ''}
         <p class="wdz-row">${hasKit ? '<button type="button" class="btn sm" data-stu="kit-use">Use the brand kit here</button>' : ''}<button type="button" class="btn sm${hasKit ? ' ghost' : ''}" data-stu="kit-save">${hasKit ? 'Update it from this site' : 'Save this look as the brand kit'}</button></p></div>
       <p class="stu-h"><b>Look</b><small>colours, fonts and corners together</small></p>
       <div class="stu-looks" role="group" aria-label="Look">${Object.entries(P).map(([id, p]) => look(id, p)).join('')}</div>
@@ -43,6 +44,7 @@
       <p class="wdz-row" role="group" aria-label="Spacing">${[['compact', 'Compact'], ['normal', 'Normal'], ['roomy', 'Roomy']].map(([v, l]) => `<button type="button" class="btn sm" data-stu="space" data-val="${v}" aria-pressed="${(c.theme.space || 'normal') === v}">${l}</button>`).join('')}</p>
       <p class="stu-h"><b>Light or dark</b></p>
       <p class="wdz-row" role="group" aria-label="Light or dark">${[['light', 'Light'], ['dark', 'Dark']].map(([v, l]) => `<button type="button" class="btn sm" data-stu="mode" data-val="${v}" aria-pressed="${c.theme.mode === v}">${l}</button>`).join('')}</p>`;
+    const vi = box.querySelector('#stu-voice'); if (vi) vi.addEventListener('change', async () => { if (!kitApi() || !kit) return; kit = await kitApi().set(api.pid(), { ...kit, voice: vi.value.trim() }); });
     const ci = box.querySelector('#stu-color'); if (ci) ci.addEventListener('change', () => api.commit(S().setColor(api.cfg(), ci.value)));
     if (kitPid !== (api.pid() || 'me')) loadKit(api).then(() => { if (box.isConnected && box.querySelector('#stu-kit')) stylePanel(box, api); });
   }
@@ -157,7 +159,7 @@
     if (k === 'radius') return api.commit(S().setRadius(c, +v));
     if (k === 'space') return api.commit(S().setSpace(c, v));
     if (k === 'mode') return api.commit(S().setMode(c, v));
-    if (k === 'kit-save') { if (!kitApi()) return; kit = await kitApi().set(api.pid(), S().kitFromSite(c)); kitPid = api.pid() || 'me'; api.say('Saved this look as the brand kit. Design uses the same colours, fonts and logo.'); if (box) stylePanel(box, api); return; }
+    if (k === 'kit-save') { if (!kitApi()) return; kit = await kitApi().set(api.pid(), { ...S().kitFromSite(c), voice: (kit && kitPid === (api.pid() || 'me') && kit.voice) || '' }); kitPid = api.pid() || 'me'; api.say('Saved this look as the brand kit. Design uses the same colours, fonts and logo.'); if (box) stylePanel(box, api); return; }
     if (k === 'kit-use') { if (!kit) await loadKit(api); if (!kit) return; api.commit(S().kitToSite(c, kit)); api.say('Used the brand kit: its colours, fonts and logo are on every page.', '', [{ label: 'Undo', fn: () => { if (api.undo()) api.say('Undone.'); } }]); return; }
     if (k === 'check') return runCheck(api, box);
     if (k === 'fix' || k === 'fixall') { const list = (lastIssues || []).filter(x => x.fix && (k === 'fixall' || x.id === el.dataset.id)); if (list.length && applyFix(api, list, k === 'fixall' ? 'Fixed' : list[0].title)) await runCheck(api, document.getElementById('wdz-insp')); return; }

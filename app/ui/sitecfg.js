@@ -37,7 +37,7 @@
     if (toDark) { const bg = mix('#121316', c.accent, 0.05); return { bg, card: mix(bg, '#FFFFFF', 0.06), ink: mix('#F3F0EA', c.bg, 0.1), muted: mix('#A8A39A', c.bg, 0.1), line: mix(bg, '#FFFFFF', 0.14), accent: readable(c.accent, bg) }; }
     const bg = mix('#FAF8F4', c.accent, 0.03); return { bg, card: '#FFFFFF', ink: mix('#1B1A17', c.bg, 0.1), muted: '#625E57', line: mix(bg, '#000000', 0.1), accent: readable(c.accent, bg) };
   }
-  const FONT = { 'Fraunces': ['fraunces-latin-700-normal', 700, 'Georgia, serif'], 'Instrument Serif': ['instrument-serif-latin-400-normal', 400, 'Georgia, serif'], 'Space Grotesk': ['space-grotesk-latin-700-normal', 700, 'system-ui, sans-serif'], 'Bricolage Grotesque': ['bricolage-grotesque-latin-800-normal', 800, 'system-ui, sans-serif'], 'JetBrains Mono': ['jetbrains-mono-latin-700-normal', 700, 'ui-monospace, monospace'], 'Silkscreen': ['silkscreen-latin-400-normal', 400, 'ui-monospace, monospace'], 'Inter': ['inter-latin-400-normal', 400, 'system-ui, sans-serif'] };
+  const FONT = { 'Fraunces': ['fraunces-latin-700-normal', 700, 'Georgia, serif'], 'Instrument Serif': ['instrument-serif-latin-400-normal', 400, 'Georgia, serif'], 'Space Grotesk': ['space-grotesk-latin-700-normal', 700, 'system-ui, sans-serif'], 'Bricolage Grotesque': ['bricolage-grotesque-latin-800-normal', 800, 'system-ui, sans-serif'], 'JetBrains Mono': ['jetbrains-mono-latin-700-normal', 700, 'ui-monospace, monospace'], 'Silkscreen': ['silkscreen-latin-400-normal', 400, 'ui-monospace, monospace'], 'Inter': ['inter-latin-400-normal', 400, 'system-ui, sans-serif'], 'DM Serif Display': ['dm-serif-display-latin-400-normal', 400, 'Georgia, serif'], 'Outfit': ['outfit-latin-700-normal', 700, 'system-ui, sans-serif'] };
   const stack = f => FONT[f] ? `'${f}', ${FONT[f][2]}` : /mono/i.test(f || '') ? 'ui-monospace, SFMono-Regular, Menlo, monospace' : /serif/i.test(f || '') && !/sans/i.test(f || '') ? 'Georgia, "Times New Roman", serif' : 'system-ui, -apple-system, "Segoe UI", Roboto, sans-serif';
 
   // ---------- theme presets ----------
@@ -65,7 +65,8 @@
   // font pairs (display + body), all SIL OFL families in app/ui/assets/site-fonts
   const FONT_PAIRS = { classic: { name: 'Classic serif', display: 'Fraunces', body: 'Inter' }, editorial: { name: 'Editorial', display: 'Instrument Serif', body: 'Inter' }, modern: { name: 'Modern grotesk', display: 'Space Grotesk', body: 'Inter' },
     loud: { name: 'Loud display', display: 'Bricolage Grotesque', body: 'Inter' }, plain: { name: 'Plain sans', display: 'Inter', body: 'Inter' }, code: { name: 'Code', display: 'JetBrains Mono', body: 'JetBrains Mono' }, pixel: { name: 'Pixel', display: 'Silkscreen', body: 'Inter' },
-    book: { name: 'Book', display: 'Fraunces', body: 'System serif' } };
+    book: { name: 'Book', display: 'Fraunces', body: 'System serif' },
+    elegant: { name: 'Elegant serif', display: 'DM Serif Display', body: 'Inter' }, friendly: { name: 'Friendly round', display: 'Outfit', body: 'Inter' } };
 
   // ---------- blocks: what tribecode.org's own site has, each with layout variants ----------
   // ---------- icons (v3): a subset of Lucide (lucide.dev, ISC License, see NOTICE), inlined so the export loads nothing ----------

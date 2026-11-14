@@ -156,6 +156,9 @@ console.log(JSON.stringify({ done: r.done.length, skipped: r.skipped.length, tit
             kit = ok(api(f"/projects/{pid}/brand", token=tok))["kit"]
             assert kit["colors"]["accent"].lower() == want.lower() and kit["fonts"]["display"], kit
             assert pg.evaluate("pid => TribeBrandKit.colors(TribeBrandKit.cached(pid)).length >= 3", pid), "the canvas reads the same kit"
+            pg.fill("#stu-voice", "Warm and plain"); pg.press("#stu-voice", "Tab"); pg.wait_for_timeout(500)
+            assert ok(api(f"/projects/{pid}/brand", token=tok))["kit"]["voice"] == "Warm and plain", "how we sound is part of the kit"
+            assert pg.locator("[data-stu=fonts][data-val=elegant]").count() == 1 and pg.locator("[data-stu=fonts][data-val=friendly]").count() == 1, "the two new font pairs"
             assert api(f"/projects/{pid}/brand")[0] == 401, "members only"
 
             # ---- Check my site: plain problems, one-tap fixes, one undo
@@ -230,6 +233,7 @@ console.log(JSON.stringify({ done: r.done.length, skipped: r.skipped.length, tit
             err, txt = mcp(key, "site_read", {}, project=pid); assert not err, txt
             o = json.loads(txt)
             assert o["pages"] and o["pages"][0]["blocks"][0]["id"] and "data:image" not in txt, "the outline has ids and words, no pictures"
+            assert o["brand"]["voice"] == "Warm and plain", "the agent reads the brand kit too"
             bid = o["pages"][0]["blocks"][0]["id"]
             err, txt = mcp(key, "site_propose", {"note": "A warmer headline and a short how-it-works.", "ops": [
                 {"op": "text", "block": bid, "path": "title", "value": "Coffee worth the walk"},

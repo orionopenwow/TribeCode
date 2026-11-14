@@ -13,6 +13,10 @@
   const WEIGHTS = [[300, 'Light'], [400, 'Regular'], [500, 'Medium'], [600, 'Semibold'], [700, 'Bold'], [800, 'Extra bold']];
   const POS = ['start', 'center', 'end'];
   const hex = v => { const m = /^#([0-9a-f]{6})/i.exec(String(v || '').trim()); if (m) return '#' + m[1].toUpperCase(); const r = /rgba?\((\d+),\s*(\d+),\s*(\d+)/.exec(v || ''); return r ? '#' + [r[1], r[2], r[3]].map(x => (+x).toString(16).padStart(2, '0')).join('').toUpperCase() : ''; };
+  // feat/design-site2: the brand kit (app/ui/brandkit.js) is shared with the website designer. Its colours come first.
+  const BK = () => window.TribeBrandKit, bkPid = () => { try { return (window.TribeProjects && window.TribeProjects.current && window.TribeProjects.current()) || ''; } catch { return ''; } };
+  let bkAsked = null, bkHook = false;
+  const brandColors = () => { const B = BK(); if (!B) return []; const pid = bkPid(); if (!bkHook) { bkHook = true; B.onChange(() => { try { render(); } catch {} }); } if (bkAsked !== pid) { bkAsked = pid; B.get(pid).then(k => { if (B.colors(k).length) { try { render(); } catch {} } }).catch(() => {}); } return B.colors(B.cached(pid)).map(c => c.toUpperCase()).slice(0, 6); };
   const tokenColors = () => { const cs = getComputedStyle(document.documentElement); return TOKENS.map(t => hex(cs.getPropertyValue(t))).filter(Boolean); };
   const r1 = v => Math.round((Number(v) || 0) * 100) / 100;
 
@@ -36,7 +40,7 @@
       <input class="cv-hex" data-k="${k}" data-hex="1" value="${E.esc(hex(v) || '')}" maxlength="9" aria-label="${T('Hex color')}" spellcheck="false"${opts.dis ? ' disabled' : ''}>
       ${opts.remove ? `<button class="cv-pbtn icon" data-act="${opts.remove}" title="${T('Remove')}" aria-label="${T('Remove')}">−</button>` : ''}
     </div>
-    <div class="cv-tokens" role="group" aria-label="${T('Design tokens')}">${[...tokenColors(), ...NEUTRALS].map(c => `<button class="cv-tok" data-tok="${k}" data-c="${c}" style="--c:${c}" title="${c}" aria-label="${c}"${opts.dis ? ' disabled' : ''}></button>`).join('')}</div>`;
+    <div class="cv-tokens" role="group" aria-label="${T('Design tokens')}">${(() => { const bc = brandColors(); return [...bc.map(c => [c, 1]), ...[...tokenColors(), ...NEUTRALS].filter(c => !bc.includes(String(c).toUpperCase())).map(c => [c, 0])]; })().map(([c, br]) => `<button class="cv-tok${br ? ' brand' : ''}" data-tok="${k}" data-c="${c}" style="--c:${c}" title="${br ? T('Brand kit') + ' ' : ''}${c}" aria-label="${br ? T('Brand kit') + ' ' : ''}${c}"${opts.dis ? ' disabled' : ''}></button>`).join('')}</div>`;
   }
 
   // ---------- render ----------
