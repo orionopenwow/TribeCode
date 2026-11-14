@@ -273,6 +273,10 @@ def live(pw):
         assert "e-sz-l" in f.locator("small[data-e]").first.get_attribute("class") and f.locator(".wdz-sel").count() == 1 and f.locator(".wdz-tb").is_visible()
         f.locator(".wdz-tb [data-a=bold]").click()
         pg.wait_for_function("((TribeSiteDesigner.cfg().pages[0].blocks[0].es || {})['items.0.note'] || {}).b === 1", timeout=4000)
+        # Undo selects the exact thing it changed (round 3), even after the selection moved elsewhere
+        f.locator("h1[data-e]").first.click(); pg.wait_for_function("(TribeSiteDesigner.state().sel || {}).path === 'name'"); f.locator("h1[data-e]").first.press("Escape")
+        pg.evaluate("TribeSiteDesigner.undo()"); pg.wait_for_function("(s => s && s.kind === 'text' && s.path === 'items.0.note')(TribeSiteDesigner.state().sel)", timeout=3000)
+        pg.evaluate("TribeSiteDesigner.redo()"); pg.wait_for_timeout(300); assert sel(pg)["path"] == "items.0.note"
         print("  ok  bigger and bold from the toolbar; the preview does not reload or lose the selection")
 
         # ---- Esc steps out: the entry, the section, nothing
@@ -309,7 +313,7 @@ def live(pw):
         f.locator("body").press("Escape"); pg.wait_for_timeout(250)   # with nothing left to step out of, Esc in the page asks first
         assert pg.is_visible("#wdz") and "Press Esc again" in pg.inner_text("body"), "stepping out never closes the editor by surprise"
         # Undo shows what it changed: the section is selected again
-        pg.evaluate("TribeSiteDesigner.undo()"); pg.wait_for_function("(TribeSiteDesigner.state().sel || {}).kind === 'block'", timeout=3000)
+        pg.evaluate("TribeSiteDesigner.undo()"); pg.wait_for_function("!!TribeSiteDesigner.state().sel", timeout=3000)
         pg.evaluate("TribeSiteDesigner.redo()"); pg.wait_for_timeout(300); esc_to(pg, f, None)
         print("  ok  Esc steps out to the entry, the section, then nothing; an entry moves, copies and goes by toolbar and keys; undo and redo cover it")
 

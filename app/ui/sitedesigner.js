@@ -56,8 +56,23 @@ html[data-dev=phone] .ehide-phone,html[data-dev=tablet] .ehide-tablet,html[data-
       const A = JSON.parse(before), B = after, pgB = B.pages.find(p => p.id === st.page) || B.pages[0], pgA = A.pages.find(p => p.id === pgB.id);
       if (!pgA) return; const byId = Object.fromEntries(pgA.blocks.map(b => [b.id, JSON.stringify(b)]));
       const hit = pgB.blocks.find(b => byId[b.id] !== JSON.stringify(b));
-      if (hit && !(st.sel && st.sel.block === hit.id)) st.sel = { block: hit.id, path: '', kind: 'block' };
-      if (hit) setTimeout(() => postSel(true), 60);
+      if (hit) {
+        // round 3: the exact thing that changed, not just its section: the first words, picture, button or look that differs
+        const old = byId[hit.id] ? JSON.parse(byId[hit.id]) : null; let sel = { block: hit.id, path: '', kind: 'block' };
+        if (old && old.type === hit.type) {
+          const first = (x, y, p) => { if (JSON.stringify(x) === JSON.stringify(y)) return null; if (Array.isArray(x) && Array.isArray(y)) { if (x.length !== y.length) return null; for (let i = 0; i < x.length; i++) { const r = first(x[i], y[i], p ? `${p}.${i}` : String(i)); if (r) return r; } return null; } if (x && y && typeof x === 'object' && typeof y === 'object') { for (const k of new Set([...Object.keys(x), ...Object.keys(y)])) { const r = first(x[k], y[k], p ? `${p}.${k}` : k); if (r) return r; } return null; } return p; };
+          let p = first(old.props, hit.props, '') || (() => { const a = old.es || {}, b2 = hit.es || {}; return [...new Set([...Object.keys(a), ...Object.keys(b2)])].find(k => JSON.stringify(a[k]) !== JSON.stringify(b2[k])) || ''; })();
+          if (p) {
+            const m = /^(.*?)(?:\.)?(img|alt|shape|fit|pos|fx|fy)$/.exec(p), lk = /^(.*)\.(?:label|link(?:\..*)?)$/.exec(p);
+            if (m) sel = { block: hit.id, path: m[1] ? m[1] + '.' : '', kind: 'image' };
+            else if (lk && S().getAt(hit.props, lk[1]) && typeof S().getAt(hit.props, lk[1]) === 'object') sel = { block: hit.id, path: lk[1], kind: 'button' };
+            else if (typeof S().getAt(hit.props, p) === 'string') sel = { block: hit.id, path: p, kind: 'text' };
+            else if (S().getAt(hit.props, p) && typeof S().getAt(hit.props, p) === 'object' && 'label' in S().getAt(hit.props, p)) sel = { block: hit.id, path: p, kind: 'button' };
+          }
+        }
+        st.sel = sel; st.multi = [];
+        setTimeout(() => postSel(true), 60);
+      }
     } catch {}
   }
   function undo() { if (!st.hist.length) return false; const was = JSON.stringify(st.cfg); st.fut.push(was); st.cfg = JSON.parse(st.hist.pop()); fixPage(); showChange(was, st.cfg); save(); paint(); return true; }
