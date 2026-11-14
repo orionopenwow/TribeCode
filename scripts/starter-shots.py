@@ -4,6 +4,8 @@ scripts/starter-shots/ for the other starters (their real UI, real code and real
     python3 scripts/starter-shots.py
 """
 import functools, http.server, shutil, tempfile, threading, time
+import sys; sys.path.insert(0, str(__import__('pathlib').Path(__file__).resolve().parent / 'dev'))
+import fixedclock   # a fixed clock and seeded randomness: the same frame every run
 from pathlib import Path
 from playwright.sync_api import sync_playwright
 
@@ -28,8 +30,9 @@ SHOTS = {
 with sync_playwright() as p:
     b = p.chromium.launch(executable_path="/usr/bin/google-chrome", args=["--no-proxy-server"])
     pg = b.new_page(viewport={"width": 800, "height": 500}, device_scale_factor=1)
+    fixedclock.freeze(pg); pg.wait_for_timeout = lambda ms: fixedclock.step(pg, ms)   # time moves only in these steps, so games stop on a fixed frame
     for slug, (path, wait) in SHOTS.items():
-        pg.goto(B + path); pg.wait_for_timeout(wait)
+        pg.goto(B + path, wait_until="networkidle"); pg.wait_for_timeout(wait)
         if slug == "pixel-platformer":   # play a moment so the hero is mid-jump on the first level
             pg.keyboard.down("ArrowRight"); pg.wait_for_timeout(500); pg.keyboard.press("Space"); pg.wait_for_timeout(250); pg.keyboard.up("ArrowRight")
         if slug == "portfolio":

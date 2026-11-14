@@ -13,6 +13,8 @@
 The catalog is what the gallery shows offline (no server needed), and what GET /api/site-designer/templates serves.
 """
 import json, os, re, sys, random, base64, io, urllib.parse
+import sys; sys.path.insert(0, str(__import__('pathlib').Path(__file__).resolve().parent))
+import fixedclock   # a fixed clock and seeded randomness, for this script and everything it starts
 from pathlib import Path
 from playwright.sync_api import sync_playwright
 from PIL import Image
@@ -94,7 +96,7 @@ def main():
     cat = []
     with sync_playwright() as p:
         br = p.chromium.launch(executable_path='/usr/bin/google-chrome' if os.path.exists('/usr/bin/google-chrome') else None, args=['--no-proxy-server', '--allow-file-access-from-files'])
-        page = br.new_page(viewport={'width': 1280, 'height': 960})
+        page = br.new_page(viewport={'width': 1280, 'height': 960}); fixedclock.apply(page)
         page.goto('about:blank'); page.add_script_tag(path=str(UI / 'sitecfg.js'))
         # 1. ours
         for tid in json.loads(page.evaluate('JSON.stringify(TribeSiteCfg.TEMPLATES)')):
@@ -123,7 +125,7 @@ def main():
             cands = [SRC / f"{t['src']}-{t['name']}" / repo['file'], SRC / f"{t['src']}-{t['name'].lower()}" / repo['file'], SRC / 'zce' / t['name'] / repo['file']]
             f = next((c for c in cands if c.exists()), None)
             if not f: print('missing source', t['id']); continue
-            pg = br.new_page(viewport={'width': 1280, 'height': 960}); pg.route('http*://**', lambda r: r.abort())
+            pg = br.new_page(viewport={'width': 1280, 'height': 960}); fixedclock.apply(pg); pg.route('http*://**', lambda r: r.abort())
             pg.goto(f.as_uri(), wait_until='domcontentloaded')
             pg.add_script_tag(path=str(UI / 'sitecfg.js')); pg.add_script_tag(path=str(UI / 'siteimport.js'))
             r = pg.evaluate('(name) => TribeSiteImport.fromDocument(document, { styles: false, name })', t['title']); pg.close()
@@ -175,7 +177,7 @@ def main():
             for c in cat:
                 cfg = json.loads((OUT / f"{c['id']}.json").read_text())
                 html = page.evaluate('([c, f]) => TribeSiteCfg.render(c, { fonts: f, mode: "pages" })', [cfg, fonts])
-                tp = br.new_page(viewport={'width': 1280, 'height': 960}); tp.route('http*://**', lambda r: r.abort())
+                tp = br.new_page(viewport={'width': 1280, 'height': 960}); fixedclock.apply(tp); tp.route('http*://**', lambda r: r.abort())
                 tmp = OUT / '_thumb.html'; tmp.write_text(html); tp.goto(tmp.as_uri()); tp.wait_for_timeout(250)
                 png = tp.screenshot(); tp.close()
                 im = Image.open(io.BytesIO(png)).convert('RGB').resize((480, 360), Image.LANCZOS)

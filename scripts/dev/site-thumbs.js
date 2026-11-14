@@ -30,6 +30,9 @@ const MIME = { '.html': 'text/html', '.css': 'text/css', '.js': 'text/javascript
   const b = await chromium.launch();
   const vp = phone ? { width: 390, height: 844 } : { width: 1280, height: 800 };
   const pg = await b.newPage({ viewport: vp, deviceScaleFactor: 1 });
+  // a fixed clock and seeded randomness (scripts/dev/fixed-clock.js): the same picture every run
+  const FIX = { now: +process.env.TRIBE_FIXED_NOW || 1781535600000, real0: +process.env.TRIBE_FIXED_REAL0 || 0, seed: 20260615 };
+  await pg.addInitScript(`window.__TRIBE_FIXED = ${JSON.stringify(FIX)};\n` + fs.readFileSync(path.join(__dirname, 'fixed-clock.js'), 'utf8'));
   const errs = [];
   pg.on('pageerror', e => errs.push(`${pg.url()}: ${e.message}`));
   pg.on('console', m => { if (m.type() === 'error') errs.push(`${pg.url()}: ${m.text()}`); });

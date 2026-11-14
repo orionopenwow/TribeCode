@@ -12,6 +12,8 @@ e2e_inspo_board.py), and the docs/screenshots they rewrite are put back with git
 Usage: python3 scripts/dev/showcase-thumbs.py   (TRIBE_PORT_OFFSET shifts the ports)
 """
 import functools, http.server, json, os, shutil, subprocess, sys, tempfile, threading, time, urllib.request, zipfile
+import sys; sys.path.insert(0, str(__import__('pathlib').Path(__file__).resolve().parent))
+import fixedclock   # a fixed clock and seeded randomness, for this script and everything it starts
 from pathlib import Path
 from PIL import Image
 from playwright.sync_api import sync_playwright
@@ -54,7 +56,7 @@ def main():
             except Exception: time.sleep(0.15)
         with sync_playwright() as p:
             b = p.chromium.launch(executable_path="/usr/bin/google-chrome", args=["--no-proxy-server"])
-            pg = b.new_context(viewport={"width": 1440, "height": 900}).new_page()
+            pg = fixedclock.apply(b.new_context(viewport={"width": 1440, "height": 900})).new_page()
             pg.add_init_script("if (!localStorage.getItem('tribecode.settings.v1')) localStorage.setItem('tribecode.settings.v1', JSON.stringify({name: 'Orion'})); localStorage.setItem('tribecode.flint.brain', 'none');")
             pg.goto(B + "/?skipIntro=1"); pg.wait_for_function("TribeClient.connected() && window.TribeFlintRun", timeout=20000)
             print("Watch Flint build…")
@@ -100,7 +102,7 @@ def main():
               (pick("todo"), "app-todo", "index.html"), (pick("video"), "app-video", "index.html"), (ROOT / "templates" / "lantern-run", "game-lantern", "index.html")]
     with sync_playwright() as p:
         b = p.chromium.launch(executable_path="/usr/bin/google-chrome", args=["--no-proxy-server", "--use-gl=swiftshader", "--enable-unsafe-swiftshader"])
-        pg = b.new_page(viewport={"width": 1280, "height": 800})
+        pg = b.new_page(viewport={"width": 1280, "height": 800}); fixedclock.apply(pg)
         for i, (folder, name, page) in enumerate(static):
             s = serve(folder, PORT + 1 + i)
             pg.goto(f"http://127.0.0.1:{PORT + 1 + i}/{page}"); pg.wait_for_timeout(1800)

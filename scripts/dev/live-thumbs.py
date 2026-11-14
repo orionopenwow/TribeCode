@@ -23,13 +23,17 @@ Groups (each is rendered from the real template, starter or app screen, with fix
   readme     the README screenshots and the website's social card: docs/screenshots/readme-*.png, site/assets/og-image.png
   toolbox    real, credited screenshots of other makers' tools (templates/studio-shots.json), only where their terms allow
 
-Deterministic: fixed time zone (UTC) and locale (en-US), throwaway seeded tribes, no downloads. After a run, every
-regenerated picture is compared with the committed one and put back when under --threshold percent of its pixels
-moved (a clock, a caret, anti-aliasing), so `git status` shows only thumbnails that really changed.
+Deterministic: a fixed clock (scripts/dev/fixedclock.py: the run starts at 2026-06-15 15:00 UTC for the tribe server
+and every page, and games are stepped to a fixed frame), seeded Math.random, a fixed time zone (UTC) and locale
+(en-US), throwaway seeded tribes, no downloads. After a run, every regenerated picture is compared with the
+committed one and put back when under --threshold percent of its pixels moved (a caret, anti-aliasing, "2m ago"
+against "3m ago"), so `git status` shows only thumbnails that really changed.
 """
 import json, os, re, subprocess, sys
 from io import BytesIO
 from pathlib import Path
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import fixedclock   # sets the fixed clock for every generator this starts
 
 ROOT = Path(__file__).resolve().parents[2]
 args = sys.argv[1:]
@@ -184,7 +188,7 @@ def diff_pct(path):
     return 100.0 * d.histogram()[255] / (a.size[0] * a.size[1])
 
 def run():
-    env = {**os.environ, "TZ": "UTC", "LANG": "en_US.UTF-8", "LC_ALL": "en_US.UTF-8", "TRIBE_NO_DOWNLOAD": "1", "TRIBE_TEST": "1",
+    env = {**os.environ, "TRIBE_NO_DOWNLOAD": "1", "TRIBE_TEST": "1",
            "TRIBE_PORT_OFFSET": os.environ.get("TRIBE_PORT_OFFSET", "6900"), "NO_PROXY": "127.0.0.1,localhost"}
     ok, owned = True, set()
     for g in ONLY:
@@ -194,6 +198,7 @@ def run():
             if subprocess.run(cmd, cwd=ROOT, env=env).returncode: ok = False; print("  (failed)")
         for by in BYPRODUCTS.get(g, []): git("checkout", "--", by)
         owned |= set(GROUPS[g][0]()[0])
+    every = set().union(*(set(GROUPS[g][0]()[0]) for g in GROUPS))
     changed, restored, new = [], [], []
     for line in git("status", "--porcelain", "-uall").splitlines():
         st, path = line[:2], line[3:].strip('"')
@@ -201,9 +206,9 @@ def run():
         if st.strip() == "??": new.append(path); continue
         pct = diff_pct(path)
         if pct < THRESH: git("checkout", "--", path); restored.append(path)
-        else: changed.append((path, pct, path in owned))
+        else: changed.append((path, pct, path in every))
     print(f"\nlive-thumbs: {len(changed)} changed, {len(new)} new, {len(restored)} unchanged (put back: under {THRESH}% of pixels moved)")
-    for p, pct, mine in sorted(changed, key=lambda x: -x[1]): print(f"  {pct:5.1f}%  {p}" + ("" if mine else "   (not a thumbnail of these groups: a by-product, put it back unless you meant it)"))
+    for p, pct, mine in sorted(changed, key=lambda x: -x[1]): print(f"  {pct:5.1f}%  {p}" + ("" if mine else "   (not a thumbnail of any group: a by-product, put it back unless you meant it)"))
     for p in new: print(f"   new    {p}")
     sys.exit(0 if ok else 1)
 
