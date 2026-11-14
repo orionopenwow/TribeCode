@@ -1097,18 +1097,87 @@
   }
   const EXIDX = index(CAT.flatMap(x => x.ex.map(e => ({ id: x.id, text: e }))));
 
+  // ---------- meaning cues: other everyday words for what each command does ----------
+  // Only read when a word table is loaded and nothing matched: the "did you mean" list then finds a command by the
+  // words a person might use instead of ours. Written from plain usage, not from any test set. They never run anything.
+  const CUES = {
+    'task.add': 'add new task todo to-do chore job item list remember need should must put onto create ticket',
+    'task.done': 'done finished completed complete wrapped ticked check off sorted task chore job crossed',
+    'task.start': 'start starting begin working on taking doing tackle task chore job mine',
+    'task.claim': 'claim take grab mine something work pick up task job',
+    'task.assign': 'assign give hand delegate let handle responsible owner task job chore person someone look after',
+    'task.unassign': 'unassign take off remove owner free release task nobody',
+    'task.review': 'review ready check look over feedback approve task',
+    'task.delete': 'delete remove scrap bin trash erase drop cancel discard rid task chore job',
+    'task.due': 'due deadline by date push move postpone delay until handed finish before task',
+    'task.rename': 'rename retitle call name change title task',
+    'task.list': 'tasks list todo to-do chores jobs mine left remaining outstanding overdue still plate have do',
+    'task.unassigned': 'unassigned unowned nobody no-one free unclaimed open tasks jobs without owner up grabs',
+    'task.reopen': 'reopen not done unfinished again back undo task still open',
+    'task.priority': 'priority urgent important top high low critical first matter task',
+    'task.accept': 'accept yes agree take on offered task', 'task.decline': 'decline refuse reject pass no offered task',
+    'note.add': 'note memo jot write down remember record scribble reminder myself',
+    'doc.new': 'doc document page write new draft paper article', 'sheet.new': 'sheet spreadsheet table grid rows columns numbers budget scores tally',
+    'deck.new': 'deck slides presentation slideshow pitch talk', 'doc.open': 'open doc document read show page',
+    'chat.send': 'tell say announce post message everyone group all team broadcast shout let know chat',
+    'dm.send': 'dm private message direct tell whisper text ping person privately',
+    'chat.summarize': 'summarize summary recap catch up gist digest short version boil down missed chat conversation talk',
+    'chat.pin': 'pin stick keep top message', 'chat.react': 'react emoji thumbs like heart message',
+    'event.add': 'event meeting calendar schedule book plan appointment lunch call date time put',
+    'cal.show': 'calendar schedule agenda today week coming up happening planned events on',
+    'timer': 'timer remind reminder minutes alarm countdown nudge later', 'time.now': 'time date today clock day now',
+    'theme.dark-mode': 'dark night dim black lights off darker theme mode colours', 'theme.light': 'light bright white day lights on lighter theme mode',
+    'textsize.set': 'text font size bigger larger smaller tiny enlarge zoom letters read', 'lang.set': 'language speak translate french spanish german english tongue',
+    'settings.motion': 'motion movement animation animations moving still calm reduce less', 'settings.sound': 'sound sounds noise audio mute quiet silence beep volume',
+    'settings.notify': 'notifications notify alerts pings quiet disturb fewer down off', 'settings.away': 'away busy offline invisible status break back',
+    'accent.set': 'accent colour color highlight tint', 'personalize.open': 'personalize customise look appearance my style',
+    'huddle.start': 'call voice huddle talk speak ring phone audio start join', 'huddle.leave': 'leave hang up end quit exit call huddle',
+    'call.video': 'video camera webcam face cam call on', 'call.share': 'share screen show display present screenshare', 'call.present': 'present show demo screen everyone',
+    'call.mute': 'mute unmute microphone mic silent quiet', 'call.hand': 'raise hand question turn speak',
+    'secretary.summary': 'meeting notes minutes action items decisions decided agreed summary recap secretary',
+    'invite': 'invite add bring friend person member someone join tribe people cousin brother sister link',
+    'invite.agent': 'invite agent ai assistant bot coding connect join', 'connect.ai': 'connect link hook plug ai agent assistant coding claude codex model',
+    'host.start': 'host hosting server online live start share computer others join reach open up', 'host.stop': 'stop hosting offline shut close server down',
+    'github.connect': 'github sign log in connect account repo git', 'premium.open': 'plans premium upgrade pricing subscription paid pro tiers buy credits',
+    'publish': 'publish ship release launch deploy live public go out world put website site game',
+    'preview.open': 'preview live look see open result running app', 'preview.device': 'phone mobile tablet device small screen preview check',
+    'preview.reload': 'reload refresh again preview', 'preview.share': 'share preview link send show friend', 'checks.run': 'checks tests run check verify test quality works',
+    'build.3d': '3d three dimensional game world build make', 'build.2d': '2d game platformer build make arcade', 'design.new': 'design poster logo banner flyer graphic picture create make art',
+    'nav.files': 'files folders documents open browse my', 'nav.settings': 'settings preferences options config setup', 'nav.guide': 'guide handbook manual help docs instructions how-to learn',
+    'nav.market': 'marketplace market store shop plugins extensions browse', 'nav.company': 'company business firm organisation our', 'nav.versions': 'versions history earlier older previous past changes snapshots',
+    'nav.tasks': 'tasks board todo list open show', 'nav.chat': 'chat messages conversation open show', 'nav.calendar': 'calendar schedule open show', 'nav.people': 'people members team everyone who tribe',
+    'nav.money': 'money earnings income payments finances revenue', 'nav.work': 'work jobs gigs find paid', 'nav.search': 'search look find everywhere', 'nav.notes': 'notes memos my open', 'nav.inbox': 'inbox notifications mentions unread waiting',
+    'undo': 'undo reverse revert take back cancel last oops mistake', 'redo': 'redo again put back restore repeat', 'tour': 'tour walkthrough show around introduction intro tutorial start guide me',
+    'feedback': 'feedback report problem bug complaint suggestion tell makers rate', 'status': 'status progress how doing going update overview news new', 'focus': 'focus next should now priority what work recommend',
+    'find': 'find search look where locate hunt track down dig', 'random': 'random pick choose coin flip dice roll draw lots who should', 'calc': 'calculate sum plus minus times divided math percent total', 'convert': 'convert units miles kilometres pounds kilos celsius',
+    'people.online': 'online here around active now who present available', 'people.working': 'working doing busy up to who what editing', 'people.where': 'where person is looking at now page', 'people.find': 'find someone who knows skill expert good at can',
+    'market.search': 'find plugin extension tool marketplace search for', 'trending': 'trending popular hot top new', 'jam.start': 'jam together session live build collaborate', 'teach': 'teach when say means learn shortcut phrase', 'hello': 'hello hi hey greetings morning',
+  };
+
   // ---------- tier 1: meaning (optional; app/ui/flintembed.js via flintmodel.js) ----------
   // With a local embedding model installed, an unrecognized command's "did you mean" list is ranked by meaning as well
   // as by shared words, so a paraphrase with none of the example's words still finds it. Nothing here decides a
   // command: recognized commands and the fuzzy bar are exactly as without the model.
-  let SEM = null, SEMVEC = null;
+  let SEM = null, SEMVEC = null, SEMDOCS = null, SEMCUES = null;
+  const PA = 0.7, PC = 0.8, PQ = 0.8;   // blends for the word-table path, set on the tuning sets (docs/FLINT-MEANING.md)
   function setSemantic(E) { SEM = E && typeof E.embed === 'function' ? E : null; SEMVEC = null; }
+  // what to match by meaning: the corrected text, except that a real word the spell-fixer "corrected" toward a
+  // command word ("brother" -> "browser", "shout" -> "short") goes back to what the person typed
+  const meant = (toks, c) => SEM && SEM.knows && toks.some(t => t.fixed) ? toks.map(t => { const o = String(t.o || '').toLowerCase().replace(/[^a-z]/g, ''); return t.fixed && o && SEM.knows(o) ? o : t.w; }).join(' ') : c;
   function semNear(q, k) {
     if (!SEM) return [];
     try {
-      if (!SEMVEC) SEMVEC = EXIDX.docs.map(d => SEM.embed(d.text));
-      const qv = SEM.embed(q), out = [];
-      for (let i = 0; i < SEMVEC.length; i++) { const sc = SEM.sim(qv, SEMVEC[i]); if (sc >= 0.3) out.push({ doc: EXIDX.docs[i], score: sc }); }
+      if (!SEMVEC && !SEM.cover) SEMVEC = EXIDX.docs.map(d => SEM.embed(d.text));
+      const out = [];
+      if (SEM.cover) {   // the built-in word table: the examples and each command's name, matched word by word, both ways
+        if (!SEMDOCS) SEMDOCS = EXIDX.docs.concat(CAT.filter(x => x.label && x.ex.length).map(x => ({ id: x.id, text: x.ex[0], match: x.label })));
+        if (!SEMCUES) SEMCUES = CAT.filter(x => CUES[x.id] && x.ex.length).map(x => ({ id: x.id, text: x.ex[0], match: CUES[x.id] }));
+        const by = new Map();
+        for (const d of SEMDOCS) { const t = d.match || d.text, c1 = SEM.cover(q, t); if (!c1) continue; const sc = c1 * PA + SEM.cover(t, q) * (1 - PA); const o = by.get(d.id); if (!o || sc > o.score) by.set(d.id, { doc: d, score: sc }); }
+        for (const d of SEMCUES) { const cu = SEM.cover(q, d.match); if (!cu) continue; const o = by.get(d.id); if (o) o.score = o.score * (1 - PQ) + cu * PQ; else by.set(d.id, { doc: d, score: cu * PQ }); }
+        by.forEach(o => { if (o.score >= 0.3) out.push(o); });
+      }
+      else { const qv = SEM.embed(q); for (let i = 0; i < SEMVEC.length; i++) { const sc = SEM.sim(qv, SEMVEC[i]); if (sc >= 0.3) out.push({ doc: EXIDX.docs[i], score: sc }); } }
       return out.sort((a, b) => b.score - a.score).slice(0, k);
     } catch { return []; }
   }
@@ -1116,7 +1185,7 @@
     const by = new Map();
     const put = (n, key) => { const tc = CAT.find(x => x.id === n.doc.id); if (n.doc.id === skip || (tc && tc.ctx && !tc.ctx(ctx))) return; const o = by.get(n.doc.id) || { intent: n.doc.id, example: n.doc.text, tf: 0, cos: 0 }; if (n.score > o[key]) { o[key] = n.score; if (key === 'cos' || !o.cos) o.example = n.doc.text; } by.set(n.doc.id, o); };
     near.forEach(n => put(n, 'tf')); sem.forEach(n => put(n, 'cos'));
-    return [...by.values()].map(o => ({ intent: o.intent, example: o.example, score: Math.round((o.cos * 0.6 + o.tf * 0.4 + (o.cos && o.tf ? 0.05 : 0)) * 100) / 100, ...(o.cos ? { sem: true } : {}) })).sort((a, b) => b.score - a.score).slice(0, 3);
+    return [...by.values()].map(o => ({ intent: o.intent, example: o.example, score: Math.round((SEM && SEM.cover ? o.cos * PC + o.tf * (1 - PC) : o.cos * 0.6 + o.tf * 0.4) * 100 + (o.cos && o.tf ? 5 : 0)) / 100, ...(o.cos ? { sem: true } : {}) })).sort((a, b) => b.score - a.score).slice(0, 3);
   }
 
   // ---------- split a message into steps ----------
@@ -1189,7 +1258,7 @@
     const best = hits[0] || null;
     const near = search(EXIDX, c, 12), seen = new Set(), alts = [];
     for (const n of near) { if (seen.has(n.doc.id) || (best && n.doc.id === best.intent)) continue; seen.add(n.doc.id); alts.push({ intent: n.doc.id, example: n.doc.text, score: Math.round(n.score * 100) / 100 }); if (alts.length >= 3) break; }
-    if (!best && SEM) { const sem = semNear(c, 12); if (sem.length) { const bl = blendAlts(near, sem, null, ctx); if (bl.length) { alts.length = 0; alts.push(...bl); } } }
+    if (!best && SEM) { const sem = semNear(meant(P.toks, c), 12); if (sem.length) { const bl = blendAlts(near, sem, null, ctx); if (bl.length) { alts.length = 0; alts.push(...bl); } } }
     if (!best) {
       const top = near[0];
       const tc = top && CAT.find(x => x.id === top.doc.id); if (top && top.score >= 0.62 && !(tc && tc.ctx && !tc.ctx(ctx)) && !(tc && Object.keys(tc.req).length)) return { intent: top.doc.id, area: (CAT.find(x => x.id === top.doc.id) || {}).area, slots: {}, conf: Math.min(0.7, top.score), text, c, alts, fuzzy: true, lang: P.lang };
