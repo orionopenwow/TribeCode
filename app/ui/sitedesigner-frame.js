@@ -16,7 +16,7 @@
   var q = function (s) { return document.querySelector(s); };
   var esc = function (s) { return window.CSS && CSS.escape ? CSS.escape(s) : String(s).replace(/["\\]/g, '\\$&'); };
   var L = { smaller: 'Smaller', bigger: 'Bigger', bold: 'Bold', color: 'Colour', align: 'Align', link: 'Where it goes', up: 'Move up', down: 'Move down', dup: 'Duplicate', add: 'Add another', del: 'Remove', flint: 'Ask Flint about this', more: 'More', replace: 'Replace the picture', fit: 'Fill or fit', swap: 'Swap the icon', words: 'Edit the words',
-    grip: 'Drag to move this section', sadd: 'Add a section below' };
+    grip: 'Drag to move this section', sadd: 'Add a section below', igrip: 'Drag to move it' };
   var I = function (d) { return '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + d + '</svg>'; };
   var IC = { up: I('<path d="M12 19V5M6 11l6-6 6 6"/>'), down: I('<path d="M12 5v14M6 13l6 6 6-6"/>'), dup: I('<rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a1 1 0 0 1 1-1h10"/>'), add: I('<path d="M12 5v14M5 12h14"/>'),
     del: I('<path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14"/>'), link: I('<path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/>'),
@@ -82,7 +82,7 @@
     if (s.kind === 'image') h += B('replace') + (site ? '' : B('fit'));
     if (s.kind === 'icon') h += B('swap');
     if (s.kind === 'field') h += B('words');
-    if (s.kind === 'item' || inList(s)) h += '<i></i>' + B('up') + B('down') + B('dup') + (s.kind === 'item' ? B('add') : '') + B('del');
+    if (s.kind === 'item' || inList(s)) h += '<i></i>' + '<button type="button" data-a="igrip" title="' + L.igrip + '" aria-label="' + L.igrip + '">\u22EE\u22EE</button>' + B('up') + B('down') + B('dup') + (s.kind === 'item' ? B('add') : '') + B('del');
     if (!site) h += '<i></i>' + B('flint');
     return h + B('more');
   }
@@ -91,10 +91,21 @@
     if (tb.dataset.for !== SEL.kind + SEL.key) { tb.innerHTML = tbHtml(SEL); tb.dataset.for = SEL.kind + SEL.key; }
     if (tb.parentNode !== document.body) document.body.appendChild(tb);
     var r = selEl.getBoundingClientRect(), w = tb.offsetWidth, h = tb.offsetHeight, dw = document.documentElement.clientWidth;
-    var top = r.top + scrollY - h - 8; if (r.top - h - 8 < 0 && r.bottom + h + 8 < innerHeight) top = r.bottom + scrollY + 8; if (top < 4) top = 4;
-    var left = Math.max(4, Math.min(r.left + scrollX, dw - w - 4));
-    if (bar.parentNode) { var br = bar.getBoundingClientRect(), ty = top - scrollY, lx = left - scrollX; if (ty < br.bottom + 2 && ty + h > br.top - 2 && lx < br.right + 2 && lx + w > br.left - 2) top = r.bottom + scrollY + 8; }   // never on top of the section's own bar
-    tb.style.top = Math.round(top) + 'px'; tb.style.left = Math.round(left) + 'px';
+    var left = Math.max(4, Math.min(r.left, dw - w - 4));
+    // feat/site-editor2 round 2: it never sits on words, a picture or the section's bar. Places tried in order: above,
+    // below, above at the right edge, below at the right edge; if all are taken it docks at the top of the screen.
+    var others = [].filter.call(document.querySelectorAll('[data-e],[data-btn],[data-img],[data-icon],[data-ph],.wdz-bar'), function (e) { return e !== selEl && !e.contains(selEl) && !selEl.contains(e); }).map(function (e) { return e.getBoundingClientRect(); }).filter(function (b) { return b.width > 0 && b.height > 0 && b.bottom > 0 && b.top < innerHeight; });
+    var free = function (x, y) { if (y < 2 || y + h > innerHeight - 2) return false; for (var i = 0; i < others.length; i++) { var b = others[i]; if (x < b.right + 2 && x + w > b.left - 2 && y < b.bottom + 2 && y + h > b.top - 2) return false; } return true; };
+    others.push(r);   // nor on the thing itself
+    var rx = Math.max(4, Math.min(r.right - w, dw - w - 4)), tries = [[left, r.top - h - 8], [left, r.bottom + 8], [rx, r.top - h - 8], [rx, r.bottom + 8]], at = null;
+    for (var t = 0; t < tries.length && !at; t++) if (free(tries[t][0], tries[t][1])) at = tries[t];
+    tb.classList.toggle('is-docked', !at);
+    if (!at) {   // docked: the free spot on screen nearest to the thing, so it is clear of every word
+      var xs = [left, rx, Math.max(4, (dw - w) / 2), 4, dw - w - 4], best = null, cy = (r.top + r.bottom) / 2;
+      for (var y = 4; y + h <= innerHeight - 2; y += 10) for (var k = 0; k < xs.length; k++) if (free(xs[k], y)) { var dist = Math.abs(y + h / 2 - cy) + Math.abs(xs[k] - left) / 4; if (!best || dist < best[2]) best = [xs[k], y, dist]; }
+      at = best || [Math.max(4, (dw - w) / 2), Math.max(4, innerHeight - h - 6)];
+    }
+    tb.style.top = Math.round(at[1] + scrollY) + 'px'; tb.style.left = Math.round(at[0] + scrollX) + 'px';
   }
   function select(s) {
     if (selEl) selEl.classList.remove('wdz-sel');
@@ -118,9 +129,39 @@
   if (window.ResizeObserver) new ResizeObserver(placeTb).observe(document.documentElement);
   document.addEventListener('load', placeTb, true);   // a picture arriving moves what is under it
   tb.addEventListener('mousedown', function (e) { e.preventDefault(); });   // keep the caret where it is
+  // ---- drag an entry of a list (round 2): hold its grip, a line shows where it lands among its own kind ----
+  var idrag = null, iline = null;
+  function entryKey(s) { var k = String(s.key), b = k.slice(0, k.indexOf('|')), ls = lists(k.slice(k.indexOf('|') + 1)); return ls.length ? b + '|' + ls[ls.length - 1] : ''; }
+  function siblings(key) { var pre = key.replace(/\.\d+$/, '.'); return [].filter.call(document.querySelectorAll('[data-item]'), function (e) { var k = e.dataset.item; return k.indexOf(pre) === 0 && /^\d+$/.test(k.slice(pre.length)); }).sort(function (a, b) { return +a.dataset.item.slice(pre.length) - +b.dataset.item.slice(pre.length); }); }
+  function igap(x, y) {   // where the pointer would drop it: the entry under (or nearest to) the pointer, before or after by its middle
+    var el = idrag.sibs, best = 0, bd = Infinity, i, r;
+    for (i = 0; i < el.length; i++) { r = el[i].getBoundingClientRect(); var dx = Math.max(r.left - x, 0, x - r.right), dy = Math.max(r.top - y, 0, y - r.bottom), d = dx * dx + dy * dy; if (d < bd) { bd = d; best = i; } }
+    r = el[best].getBoundingClientRect(); var row = idrag.row, after = row ? x > r.left + r.width / 2 : y > r.top + r.height / 2;
+    return { i: best + (after ? 1 : 0), r: r, after: after };
+  }
+  function ilineAt(g) {
+    if (!iline) { iline = document.createElement('div'); iline.className = 'wdz-idrop'; document.body.appendChild(iline); }
+    var r = g.r, st = iline.style;
+    if (idrag.row) { st.width = '3px'; st.height = Math.round(r.height) + 'px'; st.top = Math.round(r.top + scrollY) + 'px'; st.left = Math.round((g.after ? r.right + 3 : r.left - 6) + scrollX) + 'px'; }
+    else { st.height = '3px'; st.width = Math.round(r.width) + 'px'; st.left = Math.round(r.left + scrollX) + 'px'; st.top = Math.round((g.after ? r.bottom + 3 : r.top - 6) + scrollY) + 'px'; }
+  }
+  function iend(ok) {
+    if (!idrag) return; var d = idrag; idrag = null; d.el.classList.remove('wdz-moving'); document.documentElement.classList.remove('wdz-dragging'); if (iline) { iline.remove(); iline = null; }
+    if (!ok || d.gap < 0) return; var to = d.gap > d.from ? d.gap - 1 : d.gap; if (to !== d.from) post({ t: 'imove', key: d.key, from: d.from, to: to });
+  }
+  tb.addEventListener('pointerdown', function (e) {
+    var g = e.target.closest('[data-a="igrip"]'); if (!g || !SEL) return; var key = SEL.kind === 'item' ? SEL.key : entryKey(SEL); if (!key) return;
+    var sibs = siblings(key), el = q('[data-item="' + esc(key) + '"]'), from = sibs.indexOf(el); if (from < 0 || sibs.length < 2) return;
+    e.preventDefault(); var a = sibs[0].getBoundingClientRect(), b = sibs[1].getBoundingClientRect();
+    idrag = { key: key, el: el, sibs: sibs, from: from, gap: -1, row: Math.abs(a.top - b.top) < Math.min(a.height, b.height) / 2 };
+    el.classList.add('wdz-moving'); document.documentElement.classList.add('wdz-dragging'); try { g.setPointerCapture(e.pointerId); } catch (x) {}
+  });
+  tb.addEventListener('pointermove', function (e) { if (!idrag) return; var g = igap(e.clientX, e.clientY); idrag.gap = g.i; ilineAt(g); if (e.clientY < 60) scrollBy(0, -18); else if (e.clientY > innerHeight - 60) scrollBy(0, 18); });
+  tb.addEventListener('pointerup', function () { iend(true); }); tb.addEventListener('pointercancel', function () { iend(false); });
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && idrag) { e.stopPropagation(); iend(false); } }, true);
   tb.addEventListener('click', function (e) {
     var b = e.target.closest('[data-a]'); if (!b || !SEL) return; e.preventDefault(); e.stopPropagation();
-    var a = b.dataset.a;
+    var a = b.dataset.a; if (a === 'igrip') return;
     if (a === 'words') { if (SEL.kind === 'field') return post({ t: 'tb', act: 'words', key: SEL.key, kind: SEL.kind }); return typeIn(selEl.matches('[data-e]') ? selEl : selEl.querySelector('[data-e]'), true); }
     if (a === 'more') { var r = b.getBoundingClientRect(); return post({ t: 'menu', x: r.left, y: r.bottom + 4, key: SEL.key, kind: SEL.kind }); }
     var ed = editing(); if (ed) ed.blur();
@@ -170,7 +211,7 @@
   });
   document.addEventListener('keydown', function (e) {
     var el = editing(), mod = e.ctrlKey || e.metaKey;
-    if (e.key === 'Escape') { if (drag) return; if (el) { e.preventDefault(); el.blur(); return; } return post({ t: 'esc' }); }
+    if (e.key === 'Escape') { if (drag || idrag) return; if (el) { e.preventDefault(); el.blur(); return; } return post({ t: 'esc' }); }
     if (el) { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); el.blur(); } return; }
     if (e.target.closest && e.target.closest('input,textarea,select')) return;
     if (mod && /^[zy]$/i.test(e.key)) { e.preventDefault(); return post({ t: (e.key.toLowerCase() === 'y' || e.shiftKey) ? 'redo' : 'undo' }); }
@@ -221,7 +262,7 @@
     if (d.type) { var te = find({ kind: 'text', key: d.type }); if (te) typeIn(te, true); }
     if (d.y != null) scrollTo(0, d.y);
   });
-  addEventListener('scroll', function () { post({ t: 'scroll', y: scrollY }); }, { passive: true });
+  addEventListener('scroll', function () { post({ t: 'scroll', y: scrollY }); if (tb.classList.contains('is-docked') || SEL) placeTb(); }, { passive: true });
   markItems();
   var w0 = wide(); post({ t: 'ready', sw: w0.sw, iw: w0.iw, wide: w0.wide });
 })();

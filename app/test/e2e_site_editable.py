@@ -217,6 +217,11 @@ def walk(pw):
     return res
 
 
+# what the toolbar covers besides the thing it belongs to (must be nothing)
+CLEAR_JS = """(() => { const tb = document.querySelector('.wdz-tb'), sel = document.querySelector('.wdz-sel'); if (!tb || !sel) return ['no toolbar'];
+  const t = tb.getBoundingClientRect(); return [...document.querySelectorAll('[data-e],[data-btn],[data-img],[data-icon],.wdz-bar')].filter(e => e !== sel && !e.contains(sel) && !sel.contains(e)).filter(e => { const b = e.getBoundingClientRect(); return b.width > 0 && b.height > 0 && t.left < b.right && t.right > b.left && t.top < b.bottom && t.bottom > b.top; }).map(e => (e.dataset.e || e.dataset.btn || e.className).slice(0, 40)); })()"""
+
+
 def live(pw):
     """The real editor with a tribe: the things that used to be dead ends, and that nothing glitches while you work."""
     tmp = tempfile.mkdtemp(prefix="tribe-se2-", dir="/tmp")
@@ -246,6 +251,7 @@ def live(pw):
         pg.wait_for_function("(TribeSiteDesigner.state().sel || {}).kind === 'text'", timeout=4000)
         assert sel(pg)["path"] == "items.0.note", sel(pg)
         assert f.locator(".wdz-tb").is_visible() and f.locator(".wdz-sel").count() == 1, "one outline and one toolbar"
+        assert f.evaluate(CLEAR_JS) == [], "the toolbar never sits on words, a picture or the section's bar"
         assert pg.locator("#wdz-insp .sp-crumbs").is_visible() and pg.locator("#wdz-insp [data-etext]").input_value().startswith("Opens Friday")
         note.press("Control+a"); note.type("Opens Saturday at 9am")
         pg.wait_for_function("TribeSiteDesigner.cfg().pages[0].blocks[0].props.items[0].note === 'Opens Saturday at 9am'", timeout=4000)
@@ -277,6 +283,16 @@ def live(pw):
         f.locator("body").press("Control+z"); pg.wait_for_function(f"TribeSiteDesigner.cfg().pages[0].blocks[0].props.items[0].label === {json.dumps(first)}", timeout=4000)
         f.locator("body").press("Control+Shift+z"); pg.wait_for_function(f"TribeSiteDesigner.cfg().pages[0].blocks[0].props.items[1].label === {json.dumps(first)}", timeout=4000)
         f.locator("body").press("Control+z"); pg.wait_for_timeout(300)
+        # drag the entry by its grip: a line shows where it lands; it drops as the third link
+        f.locator("small[data-e]").first.click(); esc_to(pg, f, "item")
+        fb = pg.locator("#wdz-frame").bounding_box(); grip = f.locator(".wdz-tb [data-a=igrip]").bounding_box(); third = f.locator("a.lk").nth(2).bounding_box()
+        pg.mouse.move(grip["x"] + grip["width"] / 2, grip["y"] + grip["height"] / 2); pg.mouse.down()
+        pg.mouse.move(third["x"] + 40, third["y"] + third["height"] * 0.8, steps=6); pg.wait_for_timeout(120)
+        assert f.locator(".wdz-idrop").count() == 1 and f.locator(".wdz-idrop").bounding_box()["width"] > 100, "a clear line shows where it will land"
+        pg.mouse.up()
+        pg.wait_for_function(f"TribeSiteDesigner.cfg().pages[0].blocks[0].props.items[2].label === {json.dumps(first)}", timeout=4000)
+        assert sel(pg) == {"block": sel(pg)["block"], "path": "items.2", "kind": "item"} and f.locator(".wdz-idrop").count() == 0
+        pg.wait_for_timeout(300); f.locator("body").press("Control+z"); pg.wait_for_function(f"TribeSiteDesigner.cfg().pages[0].blocks[0].props.items[0].label === {json.dumps(first)}", timeout=4000); pg.wait_for_timeout(300)
         n0 = len(cfg(pg)["pages"][0]["blocks"][0]["props"]["items"])
         f.locator("small[data-e]").first.click(); esc_to(pg, f, "item")
         f.locator(".wdz-tb [data-a=dup]").click(); pg.wait_for_function(f"TribeSiteDesigner.cfg().pages[0].blocks[0].props.items.length === {n0 + 1}", timeout=4000)
@@ -392,6 +408,12 @@ def live(pw):
         box = mf.locator(".wdz-tb").bounding_box(); assert box and box["x"] >= 0 and box["x"] + box["width"] <= 391, box
         assert m.evaluate("document.documentElement.scrollWidth <= innerWidth + 1"), "no sideways scroll on a phone"
         assert m.locator("#wdz-saved").is_visible(), "the saved state shows on a phone too"
+        assert mf.evaluate(CLEAR_JS) == [], "on a phone too the toolbar is clear of the words"
+        bar = m.locator(".wdz-top").bounding_box(); assert bar["height"] <= 60, f"the phone's top bar is one row, not {bar['height']}px"
+        assert not m.locator("[data-wdz='dl-html']").first.is_visible()
+        shot(m, "site-editor2-words-390.png")
+        m.locator("[data-wdz='more']").tap(); m.wait_for_selector("#wdz-dl", state="visible"); shot(m, "site-editor2-more-390.png")
+        m.locator("[data-wdz='more']").tap(); m.wait_for_timeout(150); assert m.locator(".wdz-top").bounding_box()["height"] <= 60
         shot(m, "site-editor2-words-390.png")
         print("  ok  phone: tap words, the toolbar fits the screen, nothing scrolls sideways, the saved state is visible")
         b.close()
