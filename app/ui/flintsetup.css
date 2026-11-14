@@ -1,6 +1,6 @@
 /* "Give Flint a local brain (recommended)" (app/ui/flintsetup.js): one flat card, used on Home, in the project's
    Getting started list and in Settings › Plan & AI. 1px border, no shadow; the progress bar is flintmodel.css's. */
-.fs-step { margin: 12px auto; max-width: 980px; width: calc(100% - 48px); }
+.fs-step { margin: 12px auto 32px; max-width: 980px; width: calc(100% - 48px); }
 .fsu { display: flex; align-items: flex-start; gap: 14px; padding: 14px 16px; background: var(--surface); border: 1px solid var(--edge); border-left: 3px solid var(--accent); border-radius: var(--r); color: var(--text); }
 .fsu.fsu-on { border-left-color: var(--live); }
 .fsu.fsu-wait { border-left-color: var(--amber); }
