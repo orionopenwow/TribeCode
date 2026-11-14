@@ -9,6 +9,7 @@
   const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const toast = m => window.TribeApp && window.TribeApp.toast && window.TribeApp.toast(m);
   const icon = (n, s = 16) => (window.TribeIcons && window.TribeIcons.svg && window.TribeIcons.has && window.TribeIcons.has(n) ? window.TribeIcons.svg(n, s) : '');
+  const T = x => (window.TribeI18n && window.TribeI18n.t ? window.TribeI18n.t(x, x) : x);   // long lines: the exact-text swap only handles short ones
   const DEF = { group: 'Company', lead: 'Lead', role: 'Role', checkin: 'Check-in' };
   const COLORS = ['#F26B1D', '#38C6B1', '#6C7CFF', '#3BD16F', '#FF6F8E', '#FFB86B'];
   const NEED_T = { majority: 'More than half', two: 'Any two', all: 'Everyone' };
@@ -32,7 +33,7 @@
 
   // ---------- the sheet ----------
   function styleHtml() {
-    const opts = V.styles.map(s => `<button type="button" class="gs-opt${D.style === s.id ? ' on' : ''}" role="radio" aria-checked="${D.style === s.id}" data-style="${esc(s.id)}"><b>${esc(s.name)}</b><small>${esc(s.line)}</small></button>`).join('');
+    const opts = V.styles.map(s => `<button type="button" class="gs-opt${D.style === s.id ? ' on' : ''}" role="radio" aria-checked="${D.style === s.id}" data-style="${esc(s.id)}"><b>${esc(s.name)}</b><small>${esc(T(s.line))}</small></button>`).join('');
     let more = '';
     if (D.style === 'council') {
       const on = new Set(D.council.members.length ? D.council.members : V.people.map(p => p.id));
@@ -63,7 +64,7 @@
         <div class="gs-row"><label class="gs-f"><span class="gs-fl">Name</span><input class="input" data-rname="${i}" maxlength="40" value="${esc(r.name)}"></label>
         <label class="gs-f gs-grow"><span class="gs-fl">What it is for</span><input class="input" data-rpurpose="${i}" maxlength="160" value="${esc(r.purpose)}" placeholder="One line"></label></div>
         <div class="gs-swatches" role="radiogroup" aria-label="Colour">${COLORS.map(c => `<button type="button" class="gs-sw${r.color.toLowerCase() === c.toLowerCase() ? ' on' : ''}" role="radio" aria-checked="${r.color.toLowerCase() === c.toLowerCase()}" data-rcolor="${i}" data-c="${c}" style="--sw:${c}" aria-label="${c}"></button>`).join('')}</div>
-        <span class="gs-fl">Looks after</span><div class="gs-checks col">${V.caps.map(c => `<label class="gs-ck"><input type="checkbox" data-rcap="${i}" value="${esc(c.id)}" ${r.caps.includes(c.id) ? 'checked' : ''}><span>${esc(c.label)}</span></label>`).join('')}</div>
+        <span class="gs-fl">Looks after</span><div class="gs-checks col">${V.caps.map(c => `<label class="gs-ck"><input type="checkbox" data-rcap="${i}" value="${esc(c.id)}" ${r.caps.includes(c.id) ? 'checked' : ''}><span>${esc(T(c.label))}</span></label>`).join('')}</div>
         <span class="gs-fl">Who has this role</span><div class="gs-checks">${V.people.map(p => `<label class="gs-ck"><input type="checkbox" data-rmem="${i}" value="${esc(p.id)}" ${r.members.includes(p.id) ? 'checked' : ''}><span>${esc(p.name)}</span></label>`).join('')}</div>
         <p class="gs-note">Things only the computer’s owner can do are never part of a role. AI helpers follow their owner.</p>
         <button type="button" class="linkish gs-danger" data-rdel="${i}">Remove this role</button></div>`;
@@ -76,12 +77,12 @@
   function whoHtml() {
     const rows = V.who.rows.map(r => {
       const custom = D.style === 'custom' && !r.locked;
-      const rule = custom ? `<select class="input sm gs-rule" data-rule="${esc(r.id)}" aria-label="How it is decided">${V.ruleChoices.map(x => `<option value="${x.id}"${(D.rules[r.id] || 'one') === x.id ? ' selected' : ''}>${esc(x.text)}</option>`).join('')}</select>` : `<span class="gs-rt">${esc(r.ruleText)}</span>`;
+      const rule = custom ? `<select class="input sm gs-rule" data-rule="${esc(r.id)}" aria-label="How it is decided">${V.ruleChoices.map(x => `<option value="${x.id}"${(D.rules[r.id] || 'one') === x.id ? ' selected' : ''}>${esc(x.text)}</option>`).join('')}</select>` : `<span class="gs-rt">${esc(T(r.ruleText))}</span>`;
       const ppl = r.people.length ? esc(names(r.people)) : 'Nobody yet';
-      return `<li class="gs-w${r.me ? ' me' : ''}${r.locked ? ' locked' : ''}" data-cap="${esc(r.id)}"><div class="gs-w-t"><b>${esc(r.label)}</b><small>${ppl}</small></div>${rule}
+      return `<li class="gs-w${r.me ? ' me' : ''}${r.locked ? ' locked' : ''}" data-cap="${esc(r.id)}"><div class="gs-w-t"><b>${esc(T(r.label))}</b><small>${ppl}</small></div>${rule}
         ${r.me ? `<span class="gs-you">${icon('check', 14)}You can</span>` : r.locked ? '' : `<button type="button" class="btn sm" data-ask="${esc(r.id)}">Ask</button>`}</li>`;
     }).join('');
-    const every = V.who.everyone.map(r => `<li class="gs-w me"><div class="gs-w-t"><b>${esc(r.label)}</b><small>${esc(r.ruleText)}</small></div></li>`).join('');
+    const every = V.who.everyone.map(r => `<li class="gs-w me"><div class="gs-w-t"><b>${esc(T(r.label))}</b><small>${esc(T(r.ruleText))}</small></div></li>`).join('');
     const passes = V.permits.length ? `<p class="gs-note" id="gs-passes">${V.permits.map(p => `They said yes: you can ${esc(p.label.charAt(0).toLowerCase() + p.label.slice(1))} until ${esc(new Date(p.until).toLocaleString([], { weekday: 'short', hour: '2-digit', minute: '2-digit' }))}.`).join(' ')}</p>` : '';
     return `<section class="gs-sec" aria-labelledby="gs-h-who"><span class="eyebrow">Right now</span><h4 id="gs-h-who">Who can do what here</h4>${passes}
       <ul class="gs-who" id="gs-who">${rows}${every}</ul>
@@ -169,7 +170,7 @@
     el = document.createElement('div'); el.id = 'gs-askbar'; el.className = 'gs-askbar'; el.setAttribute('role', 'status');
     const who = names(need.who);
     const line = need.locked ? `Only the computer’s owner${who ? ` (${who})` : ''} can do this.` : need.rule === 'council' ? `The council decides this here${who ? `: ${who}` : ''}.` : need.rule === 'all' ? 'Everyone decides this together here.' : who ? `${who} can do this here.` : 'Nobody here can do this yet.';
-    el.innerHTML = `<span class="gs-askbar-t"><b>${esc(need.label)}</b><small>${esc(line)}</small></span>${need.ask ? '<button type="button" class="btn sm primary" id="gs-askbar-go">Ask them</button>' : ''}<button type="button" class="gs-askbar-x" aria-label="Close">${icon('x', 14) || '×'}</button>`;
+    el.innerHTML = `<span class="gs-askbar-t"><b>${esc(T(need.label))}</b><small>${esc(line)}</small></span>${need.ask ? '<button type="button" class="btn sm primary" id="gs-askbar-go">Ask them</button>' : ''}<button type="button" class="gs-askbar-x" aria-label="Close">${icon('x', 14) || '×'}</button>`;
     document.body.appendChild(el);
     const done = () => { clearTimeout(barTimer); el.remove(); };
     el.querySelector('.gs-askbar-x').onclick = done;
