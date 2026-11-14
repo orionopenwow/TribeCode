@@ -860,6 +860,8 @@ async function apiInProject(req, res, url) {
     try { const r = cloudsave.merge(await readBody(req, 6_000_000)); if (r.added || r.files) reloadAfterRestore(); return send(res, 200, r); }
     catch (e) { return fail(res, e.status || 400, e.message); }
   }
+  // a website's own contact form posting into its project (server/sitedesign.js form): the visitor has no sign-in
+  if (a === 'site-form' && b && m === 'POST') { if (limited(req, 6)) { res.writeHead(429, { 'Content-Type': 'text/plain; charset=utf-8' }); return res.end('Too many messages just now. Please try again in a while.'); } return siteDesign.form(req, res, b, { send, postInProject: (pid, text) => P.inProject(pid, () => postChat('general', 'tribecode', text)) }); }
   if (a === 'health') return send(res, 200, { ok: true, cloud: CLOUD, cloudSave: cloudsave.enabled, version: VERSION, tribe: tribe.name, members: members.length, startedAt: new Date(makePeople.STARTED).toISOString(), uptime: Math.round((Date.now() - makePeople.STARTED) / 1000), site: site.url(),
     ...(me || isLocal(req) ? { lan: [...share.lanEntry(), ...lanUrls()] } : {}),   // fix/security-review: home network and Tailscale addresses only for members and this machine
     ...(isLocal(req) ? { user: (() => { try { return os.userInfo().username; } catch { return undefined; } })() } : {}) });   // the OS user name, only for this machine (zero-step setup)

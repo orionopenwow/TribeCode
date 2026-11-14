@@ -398,6 +398,7 @@ html[data-dev=phone] .ehide-phone,html[data-dev=tablet] .ehide-tablet,html[data-
       box.insertAdjacentHTML('beforeend', `<p class="wdz-f"><span>Background</span></p><p class="wdz-row" role="group" aria-label="Background">${B('bg', '', 'None')}${B('bg', 'card', 'Tint')}${B('bg', 'accent', 'Accent')}${B('bg', 'ink', 'Dark')}</p>
         <p class="wdz-f"><span>Spacing</span></p><p class="wdz-row" role="group" aria-label="Spacing">${B('pad', 's', 'Tight')}${B('pad', '', 'Normal')}${B('pad', 'l', 'Roomy')}</p>
         ${SP() ? SP().section(b, spApi) : ''}
+        ${SP() && SP().formRow ? SP().formRow(b, spApi) : ''}
         <p class="wdz-row"><button type="button" class="btn sm" data-dup="${b.id}">Duplicate</button><button type="button" class="btn sm" data-hide="${b.id}" aria-pressed="${!!b.hidden}">${b.hidden ? 'Show on the site' : 'Hide from the site'}</button><button type="button" class="btn sm" data-wdz="comment">Comment here</button></p>`);
       if (SP()) SP().said(spApi);
     }

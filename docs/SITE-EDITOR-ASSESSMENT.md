@@ -94,26 +94,33 @@ general knowledge of their editors. Nothing of theirs (text, logos, assets) is u
 | CMS collections, password pages, custom domains | Framer, Squarespace | missing | missing (out of scope here) |
 | Changes suggested from the team's own chat, tasks and docs | none found | missing | have |
 
+## Round 2 (same day): closed from the list below
+
+- The toolbar never sits on words, a picture or the section's bar: it tries above, below, the right edge, then the nearest free spot on screen.
+- On a phone the editor's top bar is one row (Back, pages, saved, undo, redo, More).
+- Drag an entry of a list by the grip on its toolbar; a line shows where it lands. Sections already dragged by their bar.
+- Bold, slanted or a link on some of the words (select them, press B, I or the link). Kept in the words as `**bold**`, `*slanted*`, `[words](https://…)`.
+- Any colour for one element (a picker next to the palette), space around it, and its font.
+- Avatars and logo-cloud pictures obey "Show it on".
+- Drag a selected picture inside its frame to choose what stays in view.
+- "Play it" shows a section's entrance in the editor; browsers without scroll timelines play it once when the page opens.
+- A share picture per page; a section can move to another page.
+- A contact form or signup can deliver into the project's chat with no outside service (`POST /api/site-form/<project>`): off until switched on in the form's settings; a hidden field, a link limit and rate limits guard it; it only works while the tribe's computer can be reached from where the site is, and the panel says so.
+- "Change the website" is a row in the permissions table (`site.edit`), so a group's own roles can hold it and a refusal offers Ask.
+
 ## Still open, most important first
 
-1. **Drag an entry** to reorder it (cards, links, plans). Today: toolbar arrows, the panel, Alt ↑ ↓.
-2. **Rich text inside one element**: bold or link one word of a paragraph. Today the whole element is styled.
-3. **A true desktop preview.** "Desktop" is as wide as the stage (about 850 px on a 1440 screen). The templates switch at 760 px so the layout is right, but very wide layouts are not shown at full width.
-4. **Forms into the tribe**: a built-in inbox so a contact form works with no outside service.
-5. **Multi-select** (change several things at once).
-6. **Per-element colour beyond the palette, own spacing, own font.** Today: three palette roles, four sizes.
-7. **Drag-to-crop** a picture (today: fill or fit, five focus positions).
-8. **Avatars and logo-cloud pictures** do not take "Show it on" (they do not use the shared picture box).
-9. **Suggestions read English sentences only**, and only the project's main chat (not its other channels); price lists in docs are not parsed; with an AI on they do not yet get better.
-10. **Flint's replies and suggestion titles are English**; the fixed labels are translated (8 languages), the made-up sentences are not. The new Flint sentences are matched in English only.
-11. **Esc with nothing selected closes the editor at once.** A short "Press Esc again to close" would be kinder.
-12. **Undo does not bring the selection back** to what was changed.
-13. **Entrance is not previewed in the editor** and needs a browser with scroll timelines on the published site (others show the section as usual).
-14. **The toolbar can sit over the line above.** It never covers the section bar; it could fade while the pointer is elsewhere.
-15. **On a phone the editor's top bar is three rows of buttons.**
-16. **Menu links on a one-page site are made from the sections**: they cannot be reordered or hidden one by one.
-17. **Move a section to another page**, copy and paste between pages.
-18. **JSON view of the design** for people who want it (OpenPage has one).
+1. **A true desktop preview.** Tried (the page laid out at 1280 and drawn smaller): clicks from the test tool did not land through the scaled frame, so it was taken out again rather than shipped unverified.
+2. **Multi-select** (shift-click several things, then move, hide, style or remove them).
+3. **Suggestions in other languages and with an AI.** The rules read English sentences and the project's main chat only.
+4. **Flint's replies and suggestion titles are English**; the fixed labels are translated. The new Flint sentences are matched in English only (not yet through `app/ui/flintlang.js`).
+5. **Rich text is three marks** (bold, slanted, link); no lists or headings inside one element, and the panel's words box shows the marks as typed.
+6. **The form's inbox is the chat**: no list of past messages in the editor, no reply from the app, no CAPTCHA.
+7. **Per-breakpoint layouts** (only show/hide per size).
+8. **Undo does not bring back the exact selection** (it selects the section that changed).
+9. **Menu links on a one-page site are made from the sections**: they cannot be reordered or hidden one by one.
+10. **Copy and paste a section between pages or sites; JSON view of the design.**
+11. **Under a council, "change the website" is not voted by default** (it is a row any role can hold; add it to what the council decides if a group wants every edit voted).
 
 ## Files
 

@@ -161,6 +161,34 @@ module.exports = function siteDesign({ perms = null, base, root, showcase, siteF
   }
   // feat/site-editor2: suggested changes drawn from what the tribe said (server/sitesuggest.js)
   const suggest = require('./sitesuggest.js')({ base, P, tasks, nameOf, loadCfg: pid => load(pid), loadComments: pid => loadC(pid), log });
+  // ---------- feat/site-editor2 round 2: a contact form that delivers into the project, with no outside service ----------
+  // POST /api/site-form/<pid> (no sign-in: it is the visitor's browser posting the form). Accepted only when the saved
+  // design has a form pointed at this address. Fields are plain text, cut to size; a hidden field real people leave
+  // empty catches simple bots; a message stuffed with links is dropped. The message lands in the project's main chat
+  // and in .tribe/website/<pid>.inbox.jsonl. It only works while this computer can be reached from where the site is.
+  const FORM_RX = /\/api\/site-form\/([\w-]+)$/;
+  const formOn = pid => { const c = load(pid); return !!(c && (c.pages || []).some(p => (p.blocks || []).some(b => (b.type === 'contact' || b.type === 'newsletter') && FORM_RX.test(String((b.props || {}).action || '')) && FORM_RX.exec(b.props.action)[1] === safe(pid)))); };
+  const formSeen = new Map();   // pid -> [times], at most 40 an hour per project
+  async function form(req, res, pid, { send, postInProject }) {
+    const page = (title, text, code) => { res.writeHead(code || 200, { 'Content-Type': 'text/html; charset=utf-8', 'X-Content-Type-Options': 'nosniff', 'Cache-Control': 'no-store', 'Content-Security-Policy': "default-src 'none'; style-src 'unsafe-inline'" }); res.end(`<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${title}</title><body style="font:17px/1.6 system-ui,sans-serif;max-width:32rem;margin:15vh auto;padding:0 24px"><h1 style="font-size:1.6rem">${title}</h1><p>${text}</p><p>Use your browser’s Back button to return to the site.</p>`); };
+    pid = safe(pid);
+    if (!pid || !formOn(pid)) return page('This form is not switched on', 'The owner of this site has not connected the form yet.', 404);
+    let raw = ''; try { raw = await new Promise((ok, no) => { let n = 0; const ch = []; req.on('data', d => { n += d.length; if (n > 8192) { no(new Error('too big')); req.destroy(); } else ch.push(d); }); req.on('end', () => ok(Buffer.concat(ch).toString('utf8'))); req.on('error', no); }); } catch { return page('That message was too long', 'Please go back and make it shorter.', 413); }
+    let f = {}; try { if (/json/i.test(req.headers['content-type'] || '')) f = JSON.parse(raw || '{}'); else if (/text\/plain/i.test(req.headers['content-type'] || '')) raw.split(/\r?\n/).forEach(l => { const i = l.indexOf('='); if (i > 0) f[l.slice(0, i)] = l.slice(i + 1); }); else new URLSearchParams(raw).forEach((v, k) => { f[k] = v; }); } catch { f = {}; }
+    const one = (v, n) => String(v == null ? '' : v).replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g, '').replace(/\s+/g, ' ').trim().slice(0, n);
+    const name = one(f.name, 80), email = one(f.email, 120), msg = String(f.message == null ? '' : f.message).replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g, '').trim().slice(0, 2000);
+    const thanks = () => page('Thank you', 'Your message was sent.');
+    if (one(f.website, 10)) return thanks();   // the hidden field was filled in: a bot. It gets the same answer and nothing is kept.
+    if (!msg && !email) return page('Nothing to send yet', 'Please go back and write a message or your email address.', 400);
+    if (email && !/^[^\s@<>"']+@[^\s@<>"']+\.[a-z]{2,}$/i.test(email)) return page('That email address looks wrong', 'Please go back and check it.', 400);
+    if ((msg.match(/https?:\/\//gi) || []).length > 3) return thanks();
+    const t = Date.now(), seen = (formSeen.get(pid) || []).filter(x => t - x < 3600e3); if (seen.length >= 40) return page('Too many messages just now', 'Please try again in a while.', 429); seen.push(t); formSeen.set(pid, seen);
+    const rec = { id: 'f' + t.toString(36) + Math.floor(Math.random() * 1296).toString(36), at: new Date(t).toISOString(), name, email, message: msg };
+    try { base.appendJSONL(`.tribe/website/${pid}.inbox.jsonl`, rec); } catch (e) { log('site-form store: ' + e.message); }
+    const quote = s => s.split('\n').map(l => '> ' + l).join('\n');
+    try { postInProject(pid, `📬 From the website form${name ? `: **${name.replace(/[*_\`\[\]<>]/g, '')}**` : ''}${email ? ` (${email})` : ''}${msg ? `\n${quote(msg.replace(/[<>]/g, ''))}` : ' asked to be kept up to date.'}`); } catch (e) { log('site-form chat: ' + e.message); }
+    return thanks();
+  }
   // saveTask hook: a website task marked done resolves its comments (and reopening it reopens them)
   function onTask(t) {
     if (!t || !t.site || !t.site.project) return;
@@ -253,5 +281,5 @@ module.exports = function siteDesign({ perms = null, base, root, showcase, siteF
       run: async (a = {}, me) => { try { const r = await toTasks(cur(a), me || { id: 'agent', role: 'agent' }); return text(r.say); } catch (e) { return text(e.message, true); } },
     },
   };
-  return { propose, proposals: loadP, brandGet, brandSet, route, load, save: (pid, cfg) => save(pid, cfg).config, template, templates, publish, facts, onTask, toTasks, mcpTools, comments: loadC, exists: pid => !!loadRaw(pid) };
+  return { form, formOn, propose, proposals: loadP, brandGet, brandSet, route, load, save: (pid, cfg) => save(pid, cfg).config, template, templates, publish, facts, onTask, toTasks, mcpTools, comments: loadC, exists: pid => !!loadRaw(pid) };
 };

@@ -97,6 +97,15 @@
   let _cfgNow = null, _pageNow = null;
   const pagesOther = b => { const c = _cfgNow; if (!c || c.pages.length < 2 || b.type === 'footer') return ''; return `<label class="wdz-f"><span>Move it to another page</span><select class="input" data-sp-moveto="${esc(b.id)}"><option value="">Stays on this page</option>${c.pages.filter(p => p.id !== _pageNow).map(p => `<option value="${esc(p.id)}">${esc(p.title)}</option>`).join('')}</select></label>`; };
   document.addEventListener('change', e => { const i = e.target; if (!i || !i.matches || !i.matches('[data-sp-moveto]') || !i.value) return; const api = window.TribeSiteParts && window.TribeSiteParts._api; if (!api) return; const to = i.value, pg = api.cfg().pages.find(p => p.id === to); const c = S().moveBlockToPage(api.cfg(), api.page(), i.dataset.spMoveto, to); api.setSel(null); api.commit(c); api.say(`Moved the section to ${pg ? pg.title : 'the other page'}. Undo brings it back.`, '', [{ label: 'Undo', fn: () => api.undo() }]); });
+  // a contact form or signup can deliver into this project's chat, with no outside service (server/sitedesign.js form)
+  const FORM_RX = /\/api\/site-form\/[\w-]+$/;
+  function formRow(b, api) {
+    if (b.type !== 'contact' && b.type !== 'newsletter') return '';
+    const on = FORM_RX.test(String(b.props.action || '')), C = window.TribeClient, base = C && C.base ? C.base() : '', local = /^https?:\/\/(localhost|127\.|\[::1\]|192\.168\.|10\.)/i.test(base);
+    if (!api.pid() || !api.connected()) return '<p class="wdz-hint">In a tribe, this form can send its messages straight into the project’s chat.</p>';
+    return `<p class="wdz-f"><span>Where the messages go</span></p><p class="wdz-row"><button type="button" class="btn sm${on ? '' : ' primary'}" data-sp="formin" aria-pressed="${on}">${on ? 'Into this project’s chat: on' : 'Send them into this project’s chat'}</button>${on ? '<button type="button" class="btn sm ghost" data-sp="formoff">Switch off</button>' : ''}</p>
+      <p class="wdz-hint">${on ? 'Messages arrive in the project’s main chat.' : 'No outside service needed.'} It works while this tribe’s computer is on and can be reached from where the site is${local ? ': right now its address is only this computer or this home network, so visitors elsewhere cannot send yet. Share the tribe with a public link first, then switch this on again' : ''}. A hidden field stops simple bots.</p>`;
+  }
   // a section's own look beyond background and spacing
   function section(b, api) { if (api) { _cfgNow = api.cfg(); _pageNow = api.page(); window.TribeSiteParts && (window.TribeSiteParts._api = api); }
     const st = b.style || {}, hide = String(st.hide || '').split(',').filter(Boolean), B = (k, v, l) => `<button type="button" class="btn sm" data-sp="sty" data-k="${k}" data-val="${v}" aria-pressed="${(st[k] || '') === v}">${l}</button>`;
@@ -211,6 +220,8 @@
     if (k === 'pgdel') { const c = S().deletePage(api.cfg(), el.dataset.id); if (!c) return; const pg = api.cfg().pages.find(p => p.id === el.dataset.id); api.commit(c); return api.say(`Removed the page ${pg ? pg.title : ''}. Undo brings it back.`, '', [{ label: 'Undo', fn: () => api.undo() }]); }
     if (k === 'nav') { const c = JSON.parse(JSON.stringify(api.cfg())); if (v) c.nav = v; else delete c.nav; return api.commit(c); }
     if (k === 'panel') return api.panel(v);
+    if (k === 'formin') { const C = window.TribeClient; return api.commit(S().setProp(api.cfg(), api.page(), sel.block, 'action', `${String(C.base()).replace(/\/$/, '')}/api/site-form/${api.pid()}`)); }
+    if (k === 'formoff') return api.commit(S().setProp(api.cfg(), api.page(), sel.block, 'action', ''));
     if (k === 'play') { const b = sel && blockOf(api, sel.block); return b && api.post({ play: b.id, anim: (b.style || {}).anim }); }
     if (k === 'wlink-cancel') { const f = api.root().querySelector('#sp-wlink'); if (f) f.remove(); return api.post({ linkset: '' }); }
     return act(api, k);
@@ -268,5 +279,5 @@
   function said(api) { window.TribeSiteParts._api = api; const box = api.root().querySelector('#wdz-said'); if (box && window.TribeSiteSuggest && window.TribeSiteSuggest.said) window.TribeSiteSuggest.said(box, api); }
 
   const menuOpen = () => !!(menuEl && !menuEl.hidden);
-  window.TribeSiteParts = { menuOpen, crumbs, looks, element, list, section, picture, siteSel, pages, wire, click, key, frame, menu, closeMenu, parentOf, entryOf, act, said };
+  window.TribeSiteParts = { formRow, menuOpen, crumbs, looks, element, list, section, picture, siteSel, pages, wire, click, key, frame, menu, closeMenu, parentOf, entryOf, act, said };
 })();
