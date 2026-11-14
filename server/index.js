@@ -291,7 +291,7 @@ const agentSeen = new Map(); // agent id -> { at, where, project }
 const AGENT_IDLE = 3 * 60_000;
 function presence() {
   return members.filter(m => !(m.invited && m.removed)).map(m => {
-    if (m.role === 'agent') { const a = agentSeen.get(m.id); const on = !!a && Date.now() - a.at < AGENT_IDLE; return { ...publicMember(m), owner: m.owner, ...(m.invited ? { invited: true, ownerName: nameOf(m.owner), paused: !!m.paused } : {}), online: on, where: on ? a.where : null, since: a ? new Date(a.at).toISOString() : null, project: on ? a.project || null : null }; }
+    if (m.role === 'agent') { const a = agentSeen.get(m.id); const on = !!a && Date.now() - a.at < AGENT_IDLE; return { ...publicMember(m), owner: m.owner, ...(m.invited ? { invited: true, ownerName: nameOf(m.owner), paused: !!m.paused } : {}), ...(inviteClaude ? { agentKind: inviteClaude.kindOf(m) } : {}), online: on, where: on ? a.where : null, since: a ? new Date(a.at).toISOString() : null, project: on ? a.project || null : null }; }
     const o = online.get(m.id); return { ...publicMember(m), online: !!o, where: o ? o.where : null, since: o ? o.since : null, project: o ? o.project || null : null };
   }).map(e => (profiles ? profiles.decorate(e, memberById(e.id) || e, idleAll(e.id)) : e));   // feat/profiles
 }
@@ -588,8 +588,9 @@ require('./mcp-secretary').bind(secretary);
 chatHook = (...x) => secretary.onChat(...x);
 const agentsHub = makeAgentsHub({ P, store: baseStore, pstore: store, brain, getMembers: () => members, presenceFor, agentSeen, idleMs: AGENT_IDLE, nameOf, people, coord, claims, endpoints: (req, t) => agentEndpoints(req, t), secretary,
   approvals, loadTasks: () => loadTasks(), createTask: o => createTask(o), saveTask: t => saveTask(t) });   // + the Agent fleet (feat/fleet)
-// Invite your Claude (server/inviteclaude.js): your own Claude as a member, with your access and never more.
-inviteClaude = require('./inviteclaude')({ P, getMembers: () => members, saveMembers, pushPresence, perms, hash, id, slug, str, endpoints: (req, t) => agentEndpoints(req, t), agentsHub,
+// Invite your agent (server/inviteagent.js): your own AI agent (Claude, Cursor, Codex…) as a member, with your access and never more.
+// The variable keeps its first name, inviteClaude; an invited Claude is the kind "claude".
+inviteClaude = require('./inviteagent')({ P, getMembers: () => members, saveMembers, pushPresence, perms, hash, id, slug, str, endpoints: (req, t) => agentEndpoints(req, t), agentsHub,
   publicBase: () => args['public-url'] || process.env.TRIBE_PUBLIC_URL || share.publicUrl(), postChat, sendTo, agentSeen, idleMs: AGENT_IDLE, publicMember, docs, store, chans, nameOf,
   auth: () => claudeAuth, ...(process.env.TRIBE_TEST === '1' && Number(process.env.TRIBE_CLAUDE_STALE_MS) ? { staleMs: Number(process.env.TRIBE_CLAUDE_STALE_MS) } : {}) });
 // Sign-in for the claude.ai connector (server/claudeauth.js): OAuth 2.1 + PKCE on this host, so the key leaves the link.
@@ -603,7 +604,7 @@ function oauthBases(req) {
   const issuer = known.includes(asked) ? asked : pub || `http://localhost:${PORT}`;   // never an address a stranger put in the Host header
   return { issuer, mcp: `${issuer}/mcp`, resources: [...new Set([issuer, ...known])].flatMap(b => [b, `${b}/mcp`]) };
 }
-claudeAuth = require('./claudeauth')({ store: baseStore, hash, id, limited, member: mid => members.find(x => x.id === mid) || null, ensureClaude: me => inviteClaude.ensure(me), bases: oauthBases, tribe,
+claudeAuth = require('./agentauth')({ store: baseStore, hash, id, limited, member: mid => members.find(x => x.id === mid) || null, ensureAgent: (me, kind) => inviteClaude.ensure(me, kind), bases: oauthBases, tribe,
   pushPresence: () => pushPresence(), audit: (...x) => perms.audit(...x) });
 // The Global Hub (server/hub.js): what you see with no project selected. Member-scoped, rolling.
 dashboard = makeHub({ P, base: baseStore, getMembers: () => members, presenceFor, loadTasks: () => loadTasks(), docs, approvals, flow: null, secretary, workshop, pocket, sendTo,
@@ -1230,8 +1231,8 @@ async function apiInProject(req, res, url) {
   }
   if ((a === 'agents' && b === 'channel') || (a === 'coord' && ['delegations', 'recommendations'].includes(b))) { const h = await agentnet.route(req, res, ctx()); if (h !== null) return; }
   if (a === 'agents' && (b === 'hub' || b === 'fleet')) { const h = await agentsHub.route(req, res, ctx()); if (h !== null) return; }   // + the Agent fleet (feat/fleet)   // solo mode: "Your agents" (server/agentshub.js)
-  if (a === 'invite-claude') return inviteClaude.route(req, res, ctx());
-  if (a === 'claude-auth') return claudeAuth.route(req, res, ctx());   // approve a claude.ai sign-in (server/claudeauth.js)   // Invite your Claude (server/inviteclaude.js)
+  if (a === 'invite-agent' || a === 'invite-claude') return inviteClaude.route(req, res, ctx());   // invite-claude: the old name, still answering
+  if (a === 'agent-auth' || a === 'claude-auth') return claudeAuth.route(req, res, ctx());   // approve a claude.ai sign-in (server/claudeauth.js)   // Invite your Claude (server/inviteclaude.js)
   if (a === 'agents' && m === 'POST' && !b) {
     if (me.role === 'spectator' || me.role === 'agent') return fail(res, 403, 'only members can connect agents');
     // Default (no kind/label): the person's one Claude Code agent, as before. With { kind, label }: one more

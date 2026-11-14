@@ -16,32 +16,12 @@
   const lsSet = (k, v) => { try { localStorage.setItem(k, v); } catch {} };
   const isPhone = () => matchMedia('(max-width: 820px)').matches;
 
-  // kind, name, one line, remote (needs the public https link). TribeCode works with these tools; it isn't made by
-  // their vendors, and the marks below are simple original glyphs, not their logos.
-  const CLIENTS = [
-    ['claude-code', 'Claude Code', 'Anthropic\'s terminal agent. One command.'],
-    ['claude-ai', 'Claude.ai', 'Claude chat on the web and phone, as a custom connector.', true],
-    ['chatgpt', 'ChatGPT', 'ChatGPT chat in developer mode, as an app.', true],
-    ['codex', 'Codex CLI', 'OpenAI\'s terminal agent. One block in config.toml.'],
-    ['cursor', 'Cursor', 'The AI code editor. One .cursor/mcp.json file.'],
-    ['vscode', 'VS Code', 'GitHub Copilot in Agent mode. One .vscode/mcp.json file.'],
-    ['gemini', 'Gemini CLI', 'Google\'s terminal agent. One command.'],
-    ['claude-desktop', 'Claude Desktop', 'The desktop app, through a tiny bridge on this computer.'],
-    ['windsurf', 'Windsurf', 'The agentic editor. One mcp_config.json entry.'],
-    ['zed', 'Zed', 'The Agent Panel in Zed. One settings entry.'],
-    ['cline', 'Cline', 'The open-source coding agent. One settings entry.'],
-    ['goose', 'Goose', 'The open-source local agent. One config.yaml entry.'],
-    ['continue', 'Continue', 'The open-source IDE assistant. One YAML file.'],
-    ['qwen', 'Qwen Code', 'Qwen\'s terminal agent. One command.'],
-    ['mcp', 'Any MCP client', 'Anything else that speaks MCP: a URL and a key.'],
-  ];
+  // kind, name, one line, remote (needs the public https link): the one list in connectai.js. TribeCode works with
+  // these tools; it isn't made by their vendors, and the marks below are simple original glyphs, not their logos.
+  const CLIENTS = (window.TribeConnectAI && window.TribeConnectAI.directory ? window.TribeConnectAI.directory() : [['claude-code', 'Claude Code', 'Anthropic\'s terminal agent. One command.', false], ['mcp', 'Any MCP client', 'Anything else that speaks MCP: a URL and a key.', false]]);
   const COLOR = { 'claude-code': '#38C6B1', codex: '#10A37F', gemini: '#4C8DF6', qwen: '#7C5CFF', cursor: '#8A8F98', 'claude-desktop': '#FFB86B', mcp: '#E86A92',
     vscode: '#3E8EDE', windsurf: '#2BB5A0', zed: '#8C9BFF', cline: '#C7CDD6', goose: '#E8C15A', continue: '#B58CFF', 'claude-ai': '#D9825B', chatgpt: '#5BBF8E', artcraft: '#F2A65A', custom: '#8A8F98' };
   const MARK = {
-    vscode: '<path d="M9 7 4 12l5 5M15 7l5 5-5 5"/>',
-    windsurf: '<path d="M3 16c2.5 0 3.5-3 6-3s3.5 3 6 3 3.5-3 6-3M3 10c2.5 0 3.5-3 6-3s3.5 3 6 3 3.5-3 6-3"/>',
-    zed: '<path d="M6 6h12L6 18h12"/>',
-    cline: '<rect x="4" y="6" width="16" height="13" rx="4"/><path d="M9.5 12v2M14.5 12v2M12 3v3"/>',
     goose: '<path d="M7 20c0-5 3-7 7-8 2-.5 3-2 3-4a3 3 0 0 0-6 0"/><path d="M17 8h3"/>',
     continue: '<path d="M5 6l6 6-6 6M13 6l6 6-6 6"/>',
     'claude-ai': '<path d="M4 5h16v11H9l-5 4z"/><path d="M12 8v5M9.5 10.5h5"/>',
@@ -50,7 +30,8 @@
     search: '<circle cx="11" cy="11" r="6.5"/><path d="m16 16 4.5 4.5"/>',
   };
   const svg = (inner, size) => `<svg viewBox="0 0 24 24" width="${size}" height="${size}" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">${inner}</svg>`;
-  const mark = (k, size = 22) => MARK[k] ? svg(MARK[k], size) : window.TribeAgentsHub && window.TribeAgentsHub.glyph ? window.TribeAgentsHub.glyph(k, size) : svg('<circle cx="12" cy="12" r="7"/>', size);
+  const SHARED = { vscode: 1, windsurf: 1, zed: 1, cline: 1, cursor: 1 };   // the same glyphs an invited agent of that kind wears (icons.js)
+  const mark = (k, size = 22) => MARK[k] ? svg(MARK[k], size) : SHARED[k] && window.TribeIcons && window.TribeIcons.agent ? window.TribeIcons.agent(k, size) : window.TribeAgentsHub && window.TribeAgentsHub.glyph ? window.TribeAgentsHub.glyph(k, size) : svg('<circle cx="12" cy="12" r="7"/>', size);
   const tile = (k, emoji) => `<span class="mcd-tile" style="--k:${COLOR[k] || COLOR.custom}">${emoji ? `<span class="mcd-emo" aria-hidden="true">${esc(emoji)}</span>` : mark(k)}</span>`;
   const nameOf = k => (CLIENTS.find(c => c[0] === k) || [k, k])[1];
 

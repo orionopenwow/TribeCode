@@ -3,12 +3,13 @@
 //   A friend           the tribe link with a QR. "A one-time link instead" swaps it for a link that runs out; inside a
 //                      project, "Just this project" makes the link show them only that project.
 //   A guest for a day  a guest pass: works once, and the account it makes stops after 24 hours.
-//   Your Claude        Invite your Claude (inviteclaude.js draws this part).
+//   Your AI agent      Invite your agent: Claude, Cursor, Codex, ChatGPT, Gemini… (inviteagent.js draws this part).
 // It lives in the shared modal (#invite-modal). Nothing is made on the server until the person asks for it: the tribe
 // link already exists, a one-time or project link is made when its switch goes on, a guest pass when its button is
-// pressed, and the Claude member on Copy or Download. The server APIs are unchanged (/api/tribe-link, /api/invites).
+// pressed, and the agent member on Copy or Download. The server APIs are unchanged (/api/tribe-link, /api/invites).
 //   window.TribeInvite = { open({ who, project, once, link, name, kind, fresh }), close(), isOpen(), state() }
-//     who:     'friend' (default) | 'guest' | 'claude'
+//     who:     'friend' (default) | 'guest' | 'agent'   ('claude', its first name, still works and lands on Claude)
+//     kind:    with who 'agent': which agent the picker starts on ('cursor', 'codex', 'claude'…)
 //     project: a project id (or true for the current one): "Just this project" starts on
 //     link:    a link that already exists (a new project's invite, from flow.js); name: what it is for
 (function () {
@@ -18,8 +19,9 @@
   const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const toast = (m, k) => (window.TribeApp && window.TribeApp.toast ? window.TribeApp.toast(m, k) : null);
   const swap = fn => (window.TribeMotion && window.TribeMotion.swap ? window.TribeMotion.swap(fn) : fn());
-  const WHO = [['friend', 'A friend', 'A link they open to join'], ['guest', 'A guest for a day', 'A pass that works once'], ['claude', 'Your Claude', 'Your own AI, next to you']];
-  const GLYPH = { friend: '+', guest: '1×', claude: 'AI' }, TONE = { friend: 'k-ember', guest: 'k-indigo', claude: 'k-teal' };
+  const WHO = [['friend', 'A friend', 'A link they open to join'], ['guest', 'A guest for a day', 'A pass that works once'], ['agent', 'Your AI agent', 'Claude, Cursor, Codex and more']];
+  const GLYPH = { friend: '+', guest: '1×', agent: 'AI' }, TONE = { friend: 'k-ember', guest: 'k-indigo', agent: 'k-teal' };
+  const IA = () => window.TribeInviteAgent;
   const KIND = { public: 'Works from anywhere', tailscale: 'Works on your Tailscale network', wifi: 'Same Wi-Fi only', local: 'This computer only' };
   let st = null;   // { who, once, proj, pid, preset, name, made, guest, seq }
 
@@ -46,7 +48,7 @@
   function close() {
     const m = modal(), b = body(); if (!m || !b) return;
     if (b.classList.contains('io')) { m.classList.add('hidden'); b.classList.remove('io', 'ii'); }
-    if (window.TribeInviteClaude && window.TribeInviteClaude.unmount) window.TribeInviteClaude.unmount();
+    if (IA() && IA().unmount) IA().unmount();
     if (tidying) { tidying.disconnect(); tidying = null; }
     st = null;
   }
@@ -58,8 +60,9 @@
     if (!C || !C.connected || !C.connected()) { if (App && App.joinOrHost) App.joinOrHost(); return; }
     const m = modal(), b = body(); if (!m || !b) return;
     const pid = typeof opts.project === 'string' ? opts.project : curPid();
-    const who = WHO.some(w => w[0] === opts.who) ? opts.who : 'friend';
-    st = { who, once: !!opts.once, proj: !!opts.project || scoped(), pid, preset: opts.link || '', presetKind: opts.linkKind || '', name: opts.name || '', made: null, guest: null, seq: 0, claude: { kind: opts.kind, fresh: !!opts.fresh, welcome: !!opts.welcome } };
+    const asked = opts.who === 'claude' ? 'agent' : opts.who;   // 'claude': what the third choice was called first
+    const who = WHO.some(w => w[0] === asked) ? asked : 'friend';
+    st = { who, once: !!opts.once, proj: !!opts.project || scoped(), pid, preset: opts.link || '', presetKind: opts.linkKind || '', name: opts.name || '', made: null, guest: null, seq: 0, agent: { kind: opts.kind || (opts.who === 'claude' ? 'claude' : undefined), fresh: !!opts.fresh, welcome: !!opts.welcome } };
     if (window.TribeOffline && window.TribeOffline.active && window.TribeOffline.active() && !solo()) st.once = true;   // the offline demo has no tribe link: its pretend link is a one-time one
     b.className = 'modal-card io' + (st.preset ? ' ii' : '');
     m.classList.remove('hidden'); m.setAttribute('aria-label', 'Invite');
@@ -84,7 +87,7 @@
   }
   function pick(who) {
     if (!st) return;
-    if (st.who === 'claude' && window.TribeInviteClaude && window.TribeInviteClaude.unmount) window.TribeInviteClaude.unmount();
+    if (st.who === 'agent' && IA() && IA().unmount) IA().unmount();
     st.who = who;
     swap(() => {
       document.querySelectorAll('#invite-body [data-io-who]').forEach(x => { const on = x.dataset.ioWho === who; x.classList.toggle('on', on); x.setAttribute('aria-selected', String(on)); });
@@ -94,9 +97,9 @@
   }
   function pane() {
     const p = $('#io-pane'); if (!p || !st) return;
-    if (st.who === 'claude') {
+    if (st.who === 'agent') {
       p.innerHTML = '<div class="ic-pane" id="ic-body"></div>';
-      if (window.TribeInviteClaude && window.TribeInviteClaude.mount) window.TribeInviteClaude.mount($('#ic-body'), st.claude);
+      if (IA() && IA().mount) IA().mount($('#ic-body'), st.agent);
       return;
     }
     const role = me().role;

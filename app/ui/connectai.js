@@ -3,33 +3,38 @@
 // Each tool gets its own key from POST /api/agents { kind } and comes back with `setup`: per place (anywhere / wifi /
 // here) 2-3 steps and copy-ready blocks with the real URL and key (server/agentshub.js setupFor). TribeCode works with
 // these tools; it isn't made by their vendors.
-//   window.TribeConnectAI = { TOOLS, MORE, ALL, tool(kind), chipsHtml(sel), setupHtml(setup), wire(root, setup, toast), watch(agentId, el, alive) }
+//   window.TribeConnectAI = { TOOLS, MORE, ALL, directory(), tool(kind), chipsHtml(sel), setupHtml(setup), wire(root, setup, toast), watch(agentId, el, alive) }
 (function () {
   'use strict';
   const C = window.TribeClient;
   const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-  // kind, name, one line
+  // The one list of tools (kind, name, one line, the directory's line, remote: it connects from its maker's cloud and
+  // needs the public https link). The Connect your AI sheet, the Agents Hub and the TribeCode MCP page (mcpdir.js) all
+  // read it. How each tool is set up is not here: that text comes from the server (server/agentshub.js setupFor), the
+  // same source the invite sheet (inviteagent.js) uses.
   const TOOLS = [
-    ['claude-code', 'Claude Code', 'Anthropic\'s terminal agent'],
-    ['codex', 'Codex CLI', 'OpenAI\'s terminal agent'],
-    ['gemini', 'Gemini CLI', 'Google\'s terminal agent'],
-    ['qwen', 'Qwen Code', 'Qwen\'s terminal agent'],
-    ['cursor', 'Cursor', 'The AI code editor'],
-    ['mcp', 'Any MCP client', 'MCP is the plug AI tools use to talk to TribeCode: Windsurf, VS Code Copilot, Goose, OpenCode…'],
+    ['claude-code', 'Claude Code', 'Anthropic\'s terminal agent', 'Anthropic\'s terminal agent. One command.'],
+    ['codex', 'Codex CLI', 'OpenAI\'s terminal agent', 'OpenAI\'s terminal agent. One block in config.toml.'],
+    ['gemini', 'Gemini CLI', 'Google\'s terminal agent', 'Google\'s terminal agent. One command.'],
+    ['qwen', 'Qwen Code', 'Qwen\'s terminal agent', 'Qwen\'s terminal agent. One command.'],
+    ['cursor', 'Cursor', 'The AI code editor', 'The AI code editor. One .cursor/mcp.json file.'],
+    ['mcp', 'Any MCP client', 'MCP is the plug AI tools use to talk to TribeCode: Windsurf, VS Code Copilot, Goose, OpenCode…', 'Anything else that speaks MCP: a URL and a key.'],
   ];
-  // feat/mcp-directory: the rest of the clients on the TribeCode MCP page (mcpdir.js). Not chips: the sheet keeps six,
-  // plus the one picked on the page, and a "See all" chip that opens the page.
+  // feat/mcp-directory: the rest of the clients on the TribeCode MCP page. Not chips: the sheet keeps six, plus the one
+  // picked on the page, and a "See all" chip that opens the page.
   const MORE = [
-    ['claude-desktop', 'Claude Desktop', 'Anthropic\'s desktop app, through a tiny bridge'],
-    ['vscode', 'VS Code', 'GitHub Copilot in Agent mode'],
-    ['windsurf', 'Windsurf', 'The agentic editor'],
-    ['zed', 'Zed', 'The fast editor\'s Agent Panel'],
-    ['cline', 'Cline', 'The open-source coding agent'],
-    ['goose', 'Goose', 'The open-source local agent'],
-    ['continue', 'Continue', 'The open-source IDE assistant'],
-    ['claude-ai', 'Claude.ai', 'Claude chat, as a custom connector'],
-    ['chatgpt', 'ChatGPT', 'ChatGPT chat, in developer mode'],
+    ['claude-desktop', 'Claude Desktop', 'Anthropic\'s desktop app, through a tiny bridge', 'The desktop app, through a tiny bridge on this computer.'],
+    ['vscode', 'VS Code', 'GitHub Copilot in Agent mode', 'GitHub Copilot in Agent mode. One .vscode/mcp.json file.'],
+    ['windsurf', 'Windsurf', 'The agentic editor', 'The agentic editor. One mcp_config.json entry.'],
+    ['zed', 'Zed', 'The fast editor\'s Agent Panel', 'The Agent Panel in Zed. One settings entry.'],
+    ['cline', 'Cline', 'The open-source coding agent', 'The open-source coding agent. One settings entry.'],
+    ['goose', 'Goose', 'The open-source local agent', 'The open-source local agent. One config.yaml entry.'],
+    ['continue', 'Continue', 'The open-source IDE assistant', 'The open-source IDE assistant. One YAML file.'],
+    ['claude-ai', 'Claude.ai', 'Claude chat, as a custom connector', 'Claude chat on the web and phone, as a custom connector.', true],
+    ['chatgpt', 'ChatGPT', 'ChatGPT chat, as a custom MCP server', 'ChatGPT chat on the web, as a custom MCP server.', true],
   ];
+  // The order the TribeCode MCP page lists them in.
+  const DIRECTORY = ['claude-code', 'claude-ai', 'chatgpt', 'codex', 'cursor', 'vscode', 'gemini', 'claude-desktop', 'windsurf', 'zed', 'cline', 'goose', 'continue', 'qwen', 'mcp'];
   const ALL = [...TOOLS, ...MORE];
   const tool = k => ALL.find(t => t[0] === k) || TOOLS[0];
   const chipsHtml = sel => {
@@ -68,5 +73,6 @@
     const onP = () => tick(); if (C.on) C.on('presence', onP);
     return () => { stop = true; clearInterval(t); };
   }
-  window.TribeConnectAI = { TOOLS, MORE, ALL, tool, chipsHtml, setupHtml, wire, watch };
+  const directory = () => DIRECTORY.map(k => ALL.find(t => t[0] === k)).filter(Boolean).map(t => [t[0], t[1], t[3] || t[2], !!t[4]]);
+  window.TribeConnectAI = { TOOLS, MORE, ALL, directory, tool, chipsHtml, setupHtml, wire, watch };
 })();

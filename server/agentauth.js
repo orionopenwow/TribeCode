@@ -1,4 +1,6 @@
-// Sign-in for MCP clients that can't send a header (the claude.ai custom-connector form), so no key rides in a URL.
+// Sign-in for MCP clients that sign in instead of sending a key (the claude.ai connector form, ChatGPT's custom MCP
+// server, an editor or CLI set up with only the address), so no key rides in a URL. It is standard MCP authorization
+// and assumes no particular product: any client that follows the spec can use it.
 // The tribe host is both the MCP server (resource server) and its own small authorization server, following the MCP
 // authorization spec (2025-11-25): OAuth 2.1 authorization code + PKCE (S256 only), public clients, Dynamic Client
 // Registration (RFC 7591), Protected Resource Metadata (RFC 9728), Authorization Server Metadata (RFC 8414),
@@ -8,21 +10,30 @@
 //   GET  /.well-known/oauth-authorization-server       endpoints, code_challenge_methods_supported: ['S256']
 //   POST /connect/register    { redirect_uris, client_name }  -> { client_id }   (https, or http on localhost; no fragments)
 //   GET  /connect/authorize   checks the client, the exact redirect URI and PKCE, then shows TribeCode's own consent page
-//                             (app/ui/claude-consent.html): "Let your Claude join as <name>'s Claude".
+//                             (app/ui/agent-consent.html): "Let Cursor join as <name>'s Cursor".
 //   GET  /connect/request     what the consent page shows; once approved, where to send the browser
 //   POST /connect/token       authorization_code (+ code_verifier) | refresh_token (rotating; reuse revokes the grant)
 //   POST /connect/revoke      { token }
-//   /api/claude-auth          the signed-in person approves: GET ?code= (what is asking), POST { rid | code, allow }
+//   /api/agent-auth           the signed-in person approves: GET ?code= (what is asking), POST { rid | code, allow }
+//                             (/api/claude-auth is the old name of the same route)
 //
+// Which agent it becomes: the name the app registered under (client_name) picks the kind (server/agentshub.js
+// agentKindOfClient: "Claude" -> claude, "Cursor" -> cursor, "ChatGPT" -> chatgpt…; a name nobody knows is "other",
+// "<name>'s agent"). The name is only a label: it changes what the agent is called, never what it may do.
+// Redirects: any https address, or http on this computer (any port: RFC 8252 §7.3). No list of vendors' addresses, so
+// nothing here assumes claude.ai. Custom app schemes (cursor://, vscode://) are refused; the tools listed in
+// docs/ANY-LLM.md all document an https or a loopback redirect.
 // Who approves: the member signed in on the consent page's own address. A host who uses the app on localhost while
-// claude.ai opens the public address isn't signed in there, so the page also shows a short code to type in the app
-// (Invite › Your Claude › Claude on the web); the app shows who is asking before Approve.
+// the app opens the public address isn't signed in there, so the page also shows a short code to type in the app
+// (Invite › Your AI agent); the app shows who is asking before Approve.
 // What a token is: an access token (1 hour) and a refresh token (30 days, rotated on every use), random, kept only as
-// sha256 hashes in .tribe/claude-oauth.json. An access token signs in as the person's invited Claude member, so every
-// rule in server/inviteclaude.js applies (their access and never more, scopes, Pause, Remove, the rate limit).
-// Revoking: the sheet's "Connections" list, Remove, a new key, or POST /connect/revoke.
+// sha256 hashes in .tribe/claude-oauth.json (the file keeps its name). An access token signs in as the person's invited
+// agent of that kind, so every rule in server/inviteagent.js applies (their access and never more, scopes, Pause,
+// Remove, the rate limit).
+// Revoking: the sheet's "Signed in" list, Remove, a new key, or POST /connect/revoke.
 'use strict';
 const crypto = require('node:crypto');
+const { AGENT_KINDS, agentKindOfClient } = require('./agentshub');
 
 const ACCESS_MS = 3600_000, REFRESH_MS = 30 * 86400_000, CODE_MS = 120_000, REQ_MS = 600_000;
 const FILE = '.tribe/claude-oauth.json';
@@ -49,7 +60,7 @@ function redirectMatches(registered, asked) {
 const s256 = v => crypto.createHash('sha256').update(v).digest('base64url');
 const same = (a, b) => { const x = Buffer.from(String(a)), y = Buffer.from(String(b)); return x.length === y.length && crypto.timingSafeEqual(x, y); };
 
-module.exports = function claudeAuth({ store, hash, id, limited, member, ensureClaude, bases, tribe, pushPresence = () => {}, audit = () => {}, now = () => Date.now() }) {
+module.exports = function agentAuth({ store, hash, id, limited, member, ensureAgent, bases, tribe, pushPresence = () => {}, audit = () => {}, now = () => Date.now() }) {
   let db = store.readJSON(FILE, null) || {};
   if (!Array.isArray(db.clients)) db.clients = [];
   if (!Array.isArray(db.grants)) db.grants = [];
@@ -128,7 +139,8 @@ module.exports = function claudeAuth({ store, hash, id, limited, member, ensureC
     return { rid };
   }
   const hostOf = u => { try { return new URL(u).host; } catch { return ''; } };
-  const describe = p => { const c = client(p.client) || {}; return { client: c.name || 'An MCP client', host: hostOf(p.redirect), loopback: LOOPBACK.test((() => { try { return new URL(p.redirect).hostname; } catch { return ''; } })()), tribe: tribe.name, expires: iso(p.at + REQ_MS) }; };
+  const kindOfClient = c => agentKindOfClient(c && c.name);
+  const describe = p => { const c = client(p.client) || {}, k = kindOfClient(c); return { client: c.name || 'An MCP client', kind: k, kindLabel: AGENT_KINDS[k].label, short: AGENT_KINDS[k].short, host: hostOf(p.redirect), loopback: LOOPBACK.test((() => { try { return new URL(p.redirect).hostname; } catch { return ''; } })()), tribe: tribe.name, expires: iso(p.at + REQ_MS) }; };
   const live = p => (p && now() - p.at <= REQ_MS ? p : null);
   // The consent page (it holds the rid): what to show, or where to go once someone approved or declined.
   function request(rid) {
@@ -139,9 +151,9 @@ module.exports = function claudeAuth({ store, hash, id, limited, member, ensureC
   // The signed-in person decides. -> { redirect } for the consent page in this browser, or just { ok } for the code path.
   function decide(me, { rid, code, allow }) {
     const p = rid ? live(pending.get(String(rid))) : byCode(code);
-    if (!p || p.done) return { status: 404, error: 'That request ran out. Start again from Claude.' };
+    if (!p || p.done) return { status: 404, error: 'That request ran out. Start again from the app you are connecting.' };
     if (!allow) { p.done = back(p.redirect, { error: 'access_denied', state: p.state, iss: p.iss }); return { ok: true, denied: true, ...(rid ? { redirect: p.done } : {}) }; }
-    const ag = ensureClaude(me); if (!ag) return { status: 403, error: 'Your role can\'t bring an AI in.' };
+    const ag = ensureAgent(me, kindOfClient(client(p.client))); if (!ag) return { status: 403, error: 'Your role can\'t bring an AI in.' };
     const raw = id(40);
     codes.set(hash(raw), { client: p.client, redirect: p.redirect, challenge: p.challenge, resource: p.resource, agent: ag.id, owner: me.id, exp: now() + CODE_MS, used: false, grant: null });
     p.done = back(p.redirect, { code: raw, state: p.state, iss: p.iss });
@@ -171,7 +183,7 @@ module.exports = function claudeAuth({ store, hash, id, limited, member, ensureC
       if (!/^[A-Za-z0-9._~-]{43,128}$/.test(v) || !same(s256(v), rec.challenge)) { codes.delete(ck); return bad('invalid_grant', 'code_verifier does not match the code_challenge'); }   // one try: the code is spent
       if (f.resource && String(f.resource).replace(/\/+$/, '') !== rec.resource && (rec.resource || !resourceOk(req, f.resource))) return bad('invalid_target', 'resource differs from the authorization request');
       const ag = member(rec.agent), owner = member(rec.owner);
-      if (!ag || !owner || ag.owner !== owner.id || ag.removed) return bad('invalid_grant', 'that Claude is no longer in this tribe');
+      if (!ag || !owner || ag.owner !== owner.id || ag.removed) return bad('invalid_grant', 'that agent is no longer in this tribe');
       rec.used = true;
       const mine = db.grants.filter(x => x.agent === ag.id);
       if (mine.length >= MAX_GRANTS_PER_AGENT) db.grants = db.grants.filter(x => !mine.slice(0, mine.length - MAX_GRANTS_PER_AGENT + 1).includes(x));
@@ -187,7 +199,7 @@ module.exports = function claudeAuth({ store, hash, id, limited, member, ensureC
       const g = db.grants.find(x => x.refresh === th);
       if (!g || now() > g.refreshExp) return bad('invalid_grant', 'unknown or expired refresh token');
       if (f.client_id && f.client_id !== g.client) return bad('invalid_grant', 'this refresh token belongs to another client');
-      const ag = member(g.agent); if (!ag || ag.removed || !member(g.owner)) { dropGrant(g); return bad('invalid_grant', 'that Claude is no longer in this tribe'); }
+      const ag = member(g.agent); if (!ag || ag.removed || !member(g.owner)) { dropGrant(g); return bad('invalid_grant', 'that agent is no longer in this tribe'); }
       return { status: 200, body: issue(g) };
     }
     return bad('unsupported_grant_type', 'authorization_code or refresh_token');
@@ -197,7 +209,7 @@ module.exports = function claudeAuth({ store, hash, id, limited, member, ensureC
     const g = db.grants.find(x => x.access === th || x.refresh === th || x.prev === th);
     if (g) dropGrant(g);
   }
-  // server/index.js authed(): an access token signs in as the Claude member it was issued for.
+  // server/index.js authed(): an access token signs in as the agent member it was issued for.
   let touched = 0;
   function memberForToken(raw) {
     if (typeof raw !== 'string' || !raw.startsWith(ACCESS_PREFIX)) return null;
@@ -208,7 +220,7 @@ module.exports = function claudeAuth({ store, hash, id, limited, member, ensureC
     return ag;
   }
   const isAccessToken = raw => typeof raw === 'string' && (raw.startsWith(ACCESS_PREFIX) || raw.startsWith(REFRESH_PREFIX));
-  // For the sheet: which apps hold a sign-in for this Claude, and ending one or all.
+  // For the sheet: which apps hold a sign-in for this agent, and ending one or all.
   const connections = agentId => db.grants.filter(g => g.agent === agentId && now() < g.refreshExp).map(g => ({ id: g.id, client: (client(g.client) || {}).name || 'An MCP client', host: g.host || '', created: g.created, used: g.used || g.created }));
   const active = agentId => db.grants.some(g => g.agent === agentId && now() < g.refreshExp);
   function revokeGrant(agentIds, gid) { const g = db.grants.find(x => x.id === gid && agentIds.includes(x.agent)); if (!g) return false; dropGrant(g); return true; }
@@ -242,11 +254,11 @@ module.exports = function claudeAuth({ store, hash, id, limited, member, ensureC
       if (slow(40, 'authorize')) return;
       const r = authorize(req, url.searchParams);
       if (r.error) return page(res, 400, r.error);
-      res.writeHead(302, { Location: r.redirect || `/claude-consent.html#rid=${r.rid}`, ...NO_STORE, 'Referrer-Policy': 'no-referrer' }); return res.end();
+      res.writeHead(302, { Location: r.redirect || `/agent-consent.html#rid=${r.rid}`, ...NO_STORE, 'Referrer-Policy': 'no-referrer' }); return res.end();
     }
     if (p === '/connect/request' && m === 'GET') {
       if (slow(120, 'request')) return;
-      const r = request(url.searchParams.get('rid')); return r ? send(res, 200, r, NO_STORE) : send(res, 404, { error: 'That request ran out. Start again from Claude.' }, NO_STORE);
+      const r = request(url.searchParams.get('rid')); return r ? send(res, 200, r, NO_STORE) : send(res, 404, { error: 'That request ran out. Start again from the app you are connecting.' }, NO_STORE);
     }
     if (p === '/connect/token' && m === 'POST') {
       if (slow(40, 'token')) return;
@@ -263,7 +275,7 @@ module.exports = function claudeAuth({ store, hash, id, limited, member, ensureC
     if (!me) return fail(res, 401, 'not a member of this tribe');
     if (me.role === 'agent') return fail(res, 403, 'people only');
     if (limited(req, 30, 60_000, 'claude-oauth-approve:' + me.id)) return fail(res, 429, 'slow down: too many tries in a minute');
-    if (m === 'GET') { const p = byCode(url.searchParams.get('code')); return p ? send(res, 200, describe(p)) : fail(res, 404, 'No request with that code. Check it, or start again from Claude.'); }
+    if (m === 'GET') { const p = byCode(url.searchParams.get('code')); return p ? send(res, 200, describe(p)) : fail(res, 404, 'No request with that code. Check it, or start again from the app you are connecting.'); }
     if (m === 'POST') {
       if (me.role === 'spectator' || me.guest || me.guestUntil) return fail(res, 403, 'spectators and guests can\'t bring an AI in');
       const body = await readBody(req).catch(() => ({}));

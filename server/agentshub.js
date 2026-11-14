@@ -39,24 +39,66 @@ const KINDS = {
 };
 const kindOf = m => (m && KINDS[m.kind] ? m.kind : 'claude-code');
 
-// How to connect each tool: 2-3 steps and copy-ready blocks with the real URL and key. Formats checked against each
-// tool's own docs on 2026-11-07 (docs/guide/03-connect-claude-code.md lists the links):
-//   Codex CLI   ~/.codex/config.toml [mcp_servers.<name>] url + http_headers / bearer_token_env_var;
-//               `codex mcp add <name> --url <url> --bearer-token-env-var <VAR>`
-//   Gemini CLI  `gemini mcp add -s user -t http -H "Authorization: Bearer …" <name> <url>`; settings.json httpUrl + headers
-//   Qwen Code   `qwen mcp add --scope user --transport http <name> <url> --header "…"`; settings.json httpUrl + headers
-//   Cursor      .cursor/mcp.json (project) or ~/.cursor/mcp.json: mcpServers.<name>.url + headers
-// feat/mcp-directory (checked 2026-11-07, links in docs/ANY-LLM.md):
-//   VS Code     .vscode/mcp.json: servers.<name> { type: "http", url, headers }
-//   Windsurf    ~/.codeium/windsurf/mcp_config.json: mcpServers.<name> { serverUrl, headers }
-//   Zed         settings.json: context_servers.<name> { url, headers }
-//   Cline       cline_mcp_settings.json: mcpServers.<name> { type: "streamableHttp", url, headers }
-//   Goose       ~/.config/goose/config.yaml: extensions.<name> { type: streamable_http, uri, headers }
-//   Continue    .continue/mcpServers/*.yaml: mcpServers[] { type: streamable-http, url, requestOptions.headers }
-//   Claude.ai   Customize › Connectors › Add custom connector: URL, "No sign-in" (key in the URL: /mcp takes ?token=)
-//   ChatGPT     Settings › Apps › Advanced settings › Developer mode › Create app: URL, "No Authentication"
+// Invite your agent (server/inviteagent.js): the kinds a person can invite, one of each. short: how it is named
+// ("Maya's Cursor"); "other" is "<Name>'s agent" and can be renamed.
+const AGENT_KINDS = {
+  claude: { label: 'Claude', short: 'Claude' }, cursor: { label: 'Cursor', short: 'Cursor' }, codex: { label: 'Codex', short: 'Codex' },
+  chatgpt: { label: 'ChatGPT', short: 'ChatGPT' }, gemini: { label: 'Gemini', short: 'Gemini' }, vscode: { label: 'VS Code', short: 'VS Code' },
+  windsurf: { label: 'Windsurf', short: 'Windsurf' }, cline: { label: 'Cline', short: 'Cline' }, zed: { label: 'Zed', short: 'Zed' },
+  other: { label: 'Another agent', short: 'agent' },
+};
+// The invite sheet's picker, in order. id: what the sheet calls the choice; kind: whose agent it becomes; tool: its
+// setup in setupFor below; behaves: 'own' (a session that is working reads its inbox between steps) or 'ask' (it looks
+// at TribeCode when its person asks it to); signin: it signs in on a TribeCode page (server/agentauth.js), no key.
+const PICKS = [
+  { id: 'code', kind: 'claude', tool: 'claude-code', name: 'Claude Code', sub: 'In your terminal', behaves: 'own' },
+  { id: 'desktop', kind: 'claude', tool: 'claude-desktop', name: 'Claude Desktop', sub: 'The desktop app', behaves: 'ask' },
+  { id: 'web', kind: 'claude', tool: 'claude-ai', name: 'Claude on the web', sub: 'claude.ai', behaves: 'ask', signin: true },
+  { id: 'cursor', kind: 'cursor', tool: 'cursor', name: 'Cursor', sub: 'The AI code editor', behaves: 'ask' },
+  { id: 'codex', kind: 'codex', tool: 'codex', name: 'Codex CLI', sub: 'OpenAI\'s terminal agent', behaves: 'own' },
+  { id: 'chatgpt', kind: 'chatgpt', tool: 'chatgpt', name: 'ChatGPT', sub: 'A custom MCP server, on the web', behaves: 'ask', signin: true },
+  { id: 'gemini', kind: 'gemini', tool: 'gemini', name: 'Gemini CLI', sub: 'Google\'s terminal agent', behaves: 'own' },
+  { id: 'vscode', kind: 'vscode', tool: 'vscode', name: 'VS Code', sub: 'Copilot in Agent mode', behaves: 'ask' },
+  { id: 'windsurf', kind: 'windsurf', tool: 'windsurf', name: 'Windsurf', sub: 'Cascade', behaves: 'ask' },
+  { id: 'cline', kind: 'cline', tool: 'cline', name: 'Cline', sub: 'The open-source coding agent', behaves: 'own' },
+  { id: 'zed', kind: 'zed', tool: 'zed', name: 'Zed', sub: 'The Agent Panel', behaves: 'ask' },
+  { id: 'other', kind: 'other', tool: 'mcp', name: 'Something else', sub: 'Any agent that speaks MCP', behaves: 'ask' },
+];
+const BEHAVES = { own: 'Answers @mentions on its own while a session is running.', ask: 'Checks TribeCode when you ask it.' };
+// Which kind a connected tool counts as (a Connect-your-AI key, or the name an app registered under when it signed in).
+const agentKindOf = tool => (PICKS.find(p => p.tool === tool) || { kind: 'other' }).kind;
+function agentKindOfClient(name) {
+  const n = String(name || '').toLowerCase();
+  if (/claude|anthropic/.test(n)) return 'claude';
+  if (/cursor/.test(n)) return 'cursor';
+  if (/codex/.test(n)) return 'codex';
+  if (/chatgpt|openai/.test(n)) return 'chatgpt';
+  if (/gemini/.test(n)) return 'gemini';
+  if (/visual studio code|vs ?code|copilot/.test(n)) return 'vscode';
+  if (/windsurf|cascade|codeium|devin/.test(n)) return 'windsurf';
+  if (/cline/.test(n)) return 'cline';
+  if (/\bzed\b/.test(n)) return 'zed';
+  return 'other';
+}
+
+// The one place setup text lives: 2-3 steps and copy-ready blocks with the real URL and key, for the invite sheet
+// (server/inviteagent.js), Connect your AI and the TribeCode MCP page. A block may carry `file` (Download saves it
+// under that name), `alt` (shown in a fold) and `nokey` (nothing secret in it: the tool signs in instead).
+// Checked against each tool's own documentation on 2026-11-13 (links and what could not be confirmed: docs/ANY-LLM.md):
+//   Claude Code     `claude mcp add --transport http <name> <url> --header "Authorization: Bearer …"`; stdio with --env … -- <command>
+//   Claude Desktop  claude_desktop_config.json (Settings › Developer › Edit Config): mcpServers.<name> { command, args, env }; stdio only
+//   Claude (web)    Customize › Connectors › + › Add custom connector: a URL; it signs in with OAuth (dynamic registration)
+//   Cursor          .cursor/mcp.json or ~/.cursor/mcp.json: mcpServers.<name> { url, headers }; OAuth when there is no header
+//   Codex CLI       ~/.codex/config.toml [mcp_servers.<name>] url + http_headers / bearer_token_env_var; `codex mcp login` for OAuth
+//   ChatGPT         chatgpt.com/plugins › + › Add custom MCP server: a URL; OAuth (dynamic registration) or no authentication
+//   Gemini CLI      `gemini mcp add -s user -t http -H "Authorization: Bearer …" <name> <url>`; settings.json httpUrl + headers
+//   VS Code         .vscode/mcp.json: servers.<name> { type: "http", url, headers }; a root .mcp.json uses mcpServers
+//   Windsurf        mcp_config.json (Cascade › Open MCP config file): mcpServers.<name> { serverUrl, headers }
+//   Cline           cline_mcp_settings.json: mcpServers.<name> { type: "streamableHttp", url, headers }
+//   Zed             settings.json: context_servers.<name> { url, headers }; OAuth when there is no header
+// Checked on 2026-11-07 and not looked at again: Qwen Code, Goose, Continue.
 const withToken = (url, key) => `${url}${url.includes('?') ? '&' : '?'}token=${encodeURIComponent(key)}`;
-function setupFor(kind, url, token, name = 'tribecode') {
+function setupFor(kind, url, token, name = 'tribecode', opts = {}) {
   const key = token || '<key>', auth = `Bearer ${key}`;
   const json = o => JSON.stringify(o, null, 2);
   const httpJson = field => json({ mcpServers: { [name]: { [field]: url, headers: { Authorization: auth } } } });
@@ -64,7 +106,8 @@ function setupFor(kind, url, token, name = 'tribecode') {
     case 'codex': return {
       steps: ['Open ~/.codex/config.toml (on Windows: %USERPROFILE%\\.codex\\config.toml). Create it if it is not there.', 'Paste this at the end and save.', 'Start codex: it joins the tribe. Type /mcp to check that tribecode is listed.'],
       blocks: [{ label: 'config.toml', lang: 'toml', text: `[mcp_servers.${name}]\nurl = "${url}"\nhttp_headers = { "Authorization" = "${auth}" }\n` },
-        { label: 'Or keep the key in an environment variable', lang: 'sh', alt: true, text: `export TRIBECODE_KEY=${key}\ncodex mcp add ${name} --url ${url} --bearer-token-env-var TRIBECODE_KEY` }],
+        { label: 'Or keep the key in an environment variable', lang: 'sh', alt: true, text: `export TRIBECODE_KEY=${key}\ncodex mcp add ${name} --url ${url} --bearer-token-env-var TRIBECODE_KEY` },
+        { label: 'Or sign in instead of pasting a key', lang: 'sh', alt: true, signin: true, nokey: true, text: `codex mcp add ${name} --url ${url}\ncodex mcp login ${name}` }],
       docs: 'https://developers.openai.com/codex/mcp' };
     case 'gemini': return {
       steps: ['Run this once in a terminal (it saves to ~/.gemini/settings.json).', 'Start gemini: it joins the tribe.', 'Type /mcp to check that tribecode is connected.'],
@@ -78,22 +121,26 @@ function setupFor(kind, url, token, name = 'tribecode') {
       docs: 'https://github.com/QwenLM/qwen-code/blob/main/docs/users/features/mcp.md' };
     case 'cursor': return {
       steps: ['In your project, create .cursor/mcp.json (or ~/.cursor/mcp.json for every project).', 'Paste this and save. Already have servers there? Add the tribecode entry inside mcpServers.', 'Open Cursor Settings › MCP: tribecode turns green, and the agent can use it.'],
-      blocks: [{ label: '.cursor/mcp.json', lang: 'json', text: httpJson('url') }],
-      docs: 'https://cursor.com/docs/context/mcp' };
+      blocks: [{ label: '.cursor/mcp.json', lang: 'json', file: 'mcp.json', text: httpJson('url') },
+        { label: 'Or sign in instead of pasting a key', lang: 'json', alt: true, signin: true, nokey: true, text: json({ mcpServers: { [name]: { url } } }) }],
+      docs: 'https://cursor.com/docs/mcp' };
     case 'vscode': return {
       steps: ['In your project, create .vscode/mcp.json (or run "MCP: Add Server" from the Command Palette and pick HTTP).', 'Paste this and save. Already have servers there? Add the tribecode entry inside servers.', 'Open Copilot Chat in Agent mode: the tribecode tools are listed under the tools button.'],
-      blocks: [{ label: '.vscode/mcp.json', lang: 'json', text: json({ servers: { [name]: { type: 'http', url, headers: { Authorization: auth } } } }) }],
+      blocks: [{ label: '.vscode/mcp.json', lang: 'json', file: 'mcp.json', text: json({ servers: { [name]: { type: 'http', url, headers: { Authorization: auth } } } }) },
+        { label: 'Or .mcp.json at the workspace root (newer Copilot sessions)', lang: 'json', alt: true, text: json({ mcpServers: { [name]: { type: 'http', url, headers: { Authorization: auth } } } }) }],
       docs: 'https://code.visualstudio.com/docs/agents/reference/mcp-configuration' };
     case 'windsurf': return {
-      steps: ['Open ~/.codeium/windsurf/mcp_config.json (Cascade › MCP servers › View raw config).', 'Paste this and save. Already have servers there? Add the tribecode entry inside mcpServers.', 'Refresh the MCP servers in Cascade: tribecode turns on.'],
-      blocks: [{ label: 'mcp_config.json', lang: 'json', text: json({ mcpServers: { [name]: { serverUrl: url, headers: { Authorization: auth } } } }) }],
-      docs: 'https://docs.windsurf.com/windsurf/cascade/mcp' };
+      steps: ['In Cascade, open the MCP servers list and choose Open MCP config file (mcp_config.json).', 'Paste this and save. Already have servers there? Add the tribecode entry inside mcpServers.', 'Press the refresh button in the MCP servers list: tribecode turns on.'],
+      blocks: [{ label: 'mcp_config.json', lang: 'json', file: 'mcp_config.json', text: json({ mcpServers: { [name]: { serverUrl: url, headers: { Authorization: auth } } } }) }],
+      note: 'The file is ~/.config/devin/mcp_config.json (Windows: %AppData%\\devin\\mcp_config.json); older builds use ~/.codeium/windsurf/mcp_config.json.',
+      docs: 'https://docs.devin.ai/windsurf/plugins/cascade/mcp' };
     case 'zed': return {
-      steps: ['In Zed, open your settings (zed: open settings).', 'Add this inside the top-level object and save.', 'Open the Agent Panel: tribecode shows a green dot in its settings.'],
-      blocks: [{ label: 'settings.json', lang: 'json', text: json({ context_servers: { [name]: { url, headers: { Authorization: auth } } } }) }],
+      steps: ['In Zed, open your settings file (zed: open settings file).', 'Add this inside the top-level object and save.', 'Open Settings › AI › MCP Servers: tribecode shows a green dot.'],
+      blocks: [{ label: 'settings.json', lang: 'json', text: json({ context_servers: { [name]: { url, headers: { Authorization: auth } } } }) },
+        { label: 'Or sign in instead of pasting a key', lang: 'json', alt: true, signin: true, nokey: true, text: json({ context_servers: { [name]: { url } } }) }],
       docs: 'https://zed.dev/docs/ai/mcp' };
     case 'cline': return {
-      steps: ['In Cline, open MCP Servers and choose Configure (it opens cline_mcp_settings.json).', 'Add the tribecode entry inside mcpServers and save. Keep "type": "streamableHttp".', 'Cline reloads the servers: tribecode turns green.'],
+      steps: ['In Cline, open MCP Servers › Configure and choose Configure MCP Servers (it opens cline_mcp_settings.json).', 'Add the tribecode entry inside mcpServers and save. Keep "type": "streamableHttp".', 'Cline reloads the servers: tribecode turns green.'],
       blocks: [{ label: 'cline_mcp_settings.json', lang: 'json', text: json({ mcpServers: { [name]: { type: 'streamableHttp', url, headers: { Authorization: auth }, disabled: false, autoApprove: [] } } }) }],
       docs: 'https://docs.cline.bot/mcp/configuring-mcp-servers' };
     case 'goose': return {
@@ -104,24 +151,31 @@ function setupFor(kind, url, token, name = 'tribecode') {
       steps: ['In your project, create .continue/mcpServers/tribecode.yaml.', 'Paste this and save.', 'Switch Continue to Agent mode: the tribecode tools are there.'],
       blocks: [{ label: '.continue/mcpServers/tribecode.yaml', lang: 'yaml', text: `name: TribeCode\nversion: 0.0.1\nschema: v1\nmcpServers:\n  - name: ${name}\n    type: streamable-http\n    url: ${url}\n    requestOptions:\n      headers:\n        Authorization: ${auth}\n` }],
       docs: 'https://docs.continue.dev/customize/deep-dives/mcp' };
-    // Chat apps that connect from their own cloud: they get the public https URL with the key in it (?token=), because
-    // their "add a connector" forms take a URL and either OAuth (TribeCode doesn't do it) or no sign-in.
-    case 'claude-ai': return {
-      steps: ['On claude.ai, open Customize › Connectors and choose Add custom connector.', 'Name it TribeCode, paste this URL and choose No sign-in. Leave the OAuth fields empty.', 'In a chat, open + › Connectors and turn TribeCode on.'],
+    // Chat apps that connect from their own cloud. opts.signin (the invite sheet): the plain address, and the app signs
+    // in on a TribeCode page, so no key is in it. Without it (a Connect-your-AI key): the key rides in the URL (?token=).
+    case 'claude-ai': return opts.signin ? {
+      steps: ['On claude.ai, open Customize › Connectors, press + and choose Add custom connector.', 'Name it TribeCode and paste this address. If it asks how to sign in, choose Register automatically.', `Press Connect. A TribeCode page opens: approve it there, and it joins${opts.as ? ' as ' + opts.as : ''}.`],
+      blocks: [{ label: 'Connector address (no key in it)', lang: 'text', nokey: true, text: url }],
+      docs: 'https://support.claude.com/en/articles/11175166-getting-started-with-custom-connectors-using-remote-mcp' } : {
+      steps: ['On claude.ai, open Customize › Connectors, press + and choose Add custom connector.', 'Name it TribeCode, paste this URL and choose No sign in.', 'In a chat, open + › Connectors and turn TribeCode on.'],
       blocks: [{ label: 'Connector URL (the key is inside it: keep it private)', lang: 'text', text: withToken(url, key) },
         { label: 'Your dialog has Request headers? Use the plain URL and this header', lang: 'text', alt: true, text: `${url}\nAuthorization: ${auth}` }],
-      docs: 'https://claude.com/docs/connectors/custom' };
-    case 'chatgpt': return {
-      steps: ['In ChatGPT on the web, open Settings › Apps › Advanced settings and turn on Developer mode (Plus, Pro, Business, Enterprise or Edu).', 'Choose Create app: name it TribeCode, paste this URL and pick No Authentication.', 'In a chat, open + › Developer mode and select TribeCode.'],
+      docs: 'https://support.claude.com/en/articles/11175166-getting-started-with-custom-connectors-using-remote-mcp' };
+    case 'chatgpt': return opts.signin ? {
+      steps: ['In ChatGPT on the web, open chatgpt.com/plugins, press + and choose Add custom MCP server.', 'Name it TribeCode, paste this address as the Server URL and choose OAuth. Then Create as a plugin and install it.', `A TribeCode page opens: approve it there, and it joins${opts.as ? ' as ' + opts.as : ''}. In a chat, type @ and pick TribeCode.`],
+      blocks: [{ label: 'Server URL (no key in it)', lang: 'text', nokey: true, text: url }],
+      docs: 'https://developers.openai.com/api/docs/guides/developer-mode' } : {
+      steps: ['In ChatGPT on the web, open chatgpt.com/plugins, press + and choose Add custom MCP server.', 'Name it TribeCode, paste this URL as the Server URL and pick No authentication. Then Create as a plugin and install it.', 'In a chat, type @ and pick TribeCode.'],
       blocks: [{ label: 'Server URL (the key is inside it: keep it private)', lang: 'text', text: withToken(url, key) }],
       docs: 'https://developers.openai.com/api/docs/guides/developer-mode' };
     case 'mcp': return {
-      steps: ['Add an MCP server named tribecode in your tool: Streamable HTTP, this URL, this header.', 'Field names differ between tools (Windsurf, VS Code Copilot, Goose, OpenCode…): check its MCP docs. Many accept the JSON below.', 'Restart the tool or reload its MCP servers: it joins the tribe.'],
-      blocks: [{ label: 'URL', lang: 'text', text: url }, { label: 'Header', lang: 'text', text: `Authorization: ${auth}` },
-        { label: 'Typical JSON', lang: 'json', alt: true, text: json({ mcpServers: { [name]: { type: 'http', url, headers: { Authorization: auth } } } }) }] };
+      steps: ['Add an MCP server named tribecode in your tool: Streamable HTTP, this URL, this header.', 'Field names differ between tools (Goose, OpenCode, Continue…): check its MCP docs. Many accept the JSON below.', 'Restart the tool or reload its MCP servers: it joins the tribe.'],
+      blocks: [{ label: 'URL', lang: 'text', nokey: true, text: url }, { label: 'Header', lang: 'text', text: `Authorization: ${auth}` },
+        { label: 'Typical JSON', lang: 'json', alt: true, file: 'tribecode-mcp.json', text: json({ mcpServers: { [name]: { type: 'http', url, headers: { Authorization: auth } } } }) }] };
     default: return {
-      steps: ['Run this once in a terminal, on any computer.', 'Start claude: it joins the tribe, sees the board, docs and chat, and claims files before editing.'],
-      blocks: [{ label: 'Terminal', lang: 'sh', text: `claude mcp add --transport http ${name} ${url} --header "Authorization: ${auth}"` }] };
+      steps: ['Run this once in a terminal, on any computer.', `Start claude (or type /mcp in one that's running): it joins the tribe${opts.as ? ' as ' + opts.as : ''}, sees the board, docs and chat, and claims files before editing.`],
+      blocks: [{ label: 'Terminal', lang: 'sh', text: `claude mcp add --transport http ${name} ${url} --header "Authorization: ${auth}"` }],
+      docs: 'https://code.claude.com/docs/en/mcp' };
   }
 }
 
@@ -346,20 +400,23 @@ module.exports = function agentsHub({ P, store, pstore, brain, getMembers, prese
   // bridge config as steps + one copy block, so the one-tap sheet works for it too.
   const setups = (kind, ep, token) => Object.fromEntries(Object.entries(ep.urls || { here: ep.url })
     .filter(([w, u]) => u && (!(KINDS[kind] && KINDS[kind].remote) || (w === 'anywhere' && /^https:/.test(u))))
-    .map(([w, u]) => [w, kind === 'claude-desktop' ? desktopSetup(u, token) : setupFor(kind, u, token)]));
+    .map(([w, u]) => [w, kind === 'claude-desktop' ? desktopSetup(u, token) : keyOnly(setupFor(kind, u, token))]));
+  // A Connect-your-AI key is the way in there: the "sign in instead" folds belong to the invite sheet (they make an invited agent).
+  const keyOnly = s => ({ ...s, blocks: (s.blocks || []).filter(b => !b.signin) });
   function desktopSetup(url, token) {
     const d = desktopConfig(url, token), os = process.platform === 'win32' ? 'windows' : process.platform === 'darwin' ? 'mac' : 'linux';
     return { steps: [`Open Claude Desktop's config file: ${d.files[os]} (Settings › Developer › Edit Config).`, 'Paste this and save. Already have servers there? Add the tribecode entry inside mcpServers.', 'Restart Claude Desktop: tribecode shows up in its tools. The bridge runs on this computer with Node.'],
-      blocks: [{ label: 'claude_desktop_config.json', lang: 'json', text: d.json }] };
+      blocks: [{ label: 'claude_desktop_config.json', lang: 'json', file: 'claude_desktop_config.json', text: d.json }], docs: 'https://modelcontextprotocol.io/docs/develop/connect-local-servers' };
   }
-  return { route, desktopConfig, kindOf, KINDS, bridgePath, bridgeSource, setups, setupFor, fleet: fleetData };
+  return { route, desktopConfig, desktopSetup, removeFor: k => module.exports.removeFor(k), kindOf, KINDS, bridgePath, bridgeSource, setups, setupFor, fleet: fleetData };
 };
 module.exports.runBridge = runBridge;
 module.exports.KINDS = KINDS;
 module.exports.setupFor = setupFor;
+Object.assign(module.exports, { AGENT_KINDS, PICKS, BEHAVES, agentKindOf, agentKindOfClient });
 // How to take the server out of each tool after its key is revoked.
 module.exports.removeFor = kind => ({ 'claude-desktop': 'Remove "tribecode" from claude_desktop_config.json', codex: 'codex mcp remove tribecode', gemini: 'gemini mcp remove -s user tribecode',
   qwen: 'qwen mcp remove --scope user tribecode', cursor: 'Remove "tribecode" from .cursor/mcp.json',
   vscode: 'Remove "tribecode" from .vscode/mcp.json', windsurf: 'Remove "tribecode" from mcp_config.json', zed: 'Remove "tribecode" from context_servers in Zed settings',
   cline: 'Remove "tribecode" from cline_mcp_settings.json', goose: 'Remove the tribecode extension from goose config.yaml', continue: 'Delete .continue/mcpServers/tribecode.yaml',
-  'claude-ai': 'Remove TribeCode in claude.ai › Customize › Connectors', chatgpt: 'Delete the TribeCode app in ChatGPT › Settings › Apps', mcp: 'Remove the tribecode server from your tool\'s MCP settings' }[kind] || 'claude mcp remove tribecode');
+  'claude-ai': 'Remove TribeCode in claude.ai › Customize › Connectors', chatgpt: 'Remove the TribeCode plugin at chatgpt.com/plugins', mcp: 'Remove the tribecode server from your tool\'s MCP settings' }[kind] || 'claude mcp remove tribecode');

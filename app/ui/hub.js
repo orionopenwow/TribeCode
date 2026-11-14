@@ -203,7 +203,7 @@
     const tiles = (lp || p1
           ? tile('hub-resume', lp ? 'Pick up where you left off' : `Open ${esc(p1.name)}`, lp ? `${esc(lp.name)} · ${esc(l.label)} · ${esc(ago(l.at))}` : 'Its chat, files and tasks, all in one place.', `<span class="gs-ic gs-face">${PJ().face(lp || p1, 'sm')}</span>`, '', lp ? 'Resume' : 'Open', 'ember')
           : tile('hub-new', 'Create a project', 'A room, a link and a code repository, in one click.', '', 'plus', 'Start a project', 'ember'))
-        + tile('hub-instant', 'Invite a friend', 'A link they open to join you, a guest pass for a day, or your own Claude.', '', 'link', 'Invite', 'teal');
+        + tile('hub-instant', 'Invite a friend', 'A link they open to join you, a guest pass for a day, or your own AI agent.', '', 'link', 'Invite', 'teal');
     const links = `<div class="gs-links">${lp || p1 ? `<button class="linkish" id="hub-new">${ico('i-plus', 13)}New project</button><span aria-hidden="true">·</span>` : ''}<button class="linkish" id="hub-join">${ico('i-users', 13)}Paste invite link</button></div>`;
     return `<section class="hero-card hub-hero hub-gs" id="hub-hero"><div class="gs-band"><span class="eyebrow">Quick start</span><span class="gs-band-r">Pick up, or bring someone in</span></div>
       ${err}<div class="gs-grid">${tiles}</div>${links}</section>`;

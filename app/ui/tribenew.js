@@ -273,7 +273,7 @@
     const c = st.created || {};
     const hosted = !!(c.server && c.token) || (inTribe() && !solo());
     el.innerHTML = `${head('Invite friends · optional', 'Who’s building with you?')}
-      ${hosted ? `<p class="ph-lead">Friends join ${esc(st.name)} with a link, a guest gets a pass for a day, and your Claude can come too. Invite them now, or any time from the sidebar.${c.where === 'folder' || c.where === 'computer' || c.where === 'shared' ? ' Links work for friends on this network (Wi-Fi) while this computer runs TribeCode; to work with friends anywhere, connect GitHub or a shared folder from the pill at the top.' : ''}</p>`
+      ${hosted ? `<p class="ph-lead">Friends join ${esc(st.name)} with a link, a guest gets a pass for a day, and your AI agent can come too. Invite them now, or any time from the sidebar.${c.where === 'folder' || c.where === 'computer' || c.where === 'shared' ? ' Links work for friends on this network (Wi-Fi) while this computer runs TribeCode; to work with friends anywhere, connect GitHub or a shared folder from the pill at the top.' : ''}</p>`
       : c.where === 'github' ? `<p class="ph-lead">Friends can follow it on GitHub right away. To build together live, give it a host later (This computer or Free cloud).</p>
         <div class="su-cmd tn-link"><input class="input" id="tn-link" readonly value="${esc(c.url || '')}" aria-label="Repository link"><button type="button" class="btn" id="tn-copy">Copy</button></div>`
       : `<p class="ph-lead">It lives on this device for now, so friends can join once it has a home. Pick one any time from the pill at the top; this step will be waiting.</p>`}
