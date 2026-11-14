@@ -59,18 +59,25 @@
     ['tribe', 'The free-AI bridge', 'pick flint\'s brain', '', 'Local'],
     ['tribe', 'Settings by saying so', 'turn off animations', '', 'No AI'],
     ['tribe', 'Watch Flint build', 'watch flint build', '', 'No AI'],
+    ['any', 'A plan from a goal, step by step', 'launch page for our bake sale by friday', '', 'No AI'],
+    ['any', 'Follow-ups: “tell Sam too”, “make that 15”', 'and another one to book the hall', '', 'No AI'],
+    ['any', 'What I know about this project', 'when is the bake sale', '', 'No AI'],
+    ['any', 'Where something was said', 'where did we talk about pricing', '', 'No AI'],
+    ['tasks', 'Spots a task you already have', 'add a task to buy milk and eggs', '', 'No AI'],
+    ['any', 'Rewrite in a tone, with a local model', 'rewrite this friendly: We regret to inform you the shop is closed.', '', 'Local'],
+    ['any', 'Explain an error, with a local model', 'explain this error: TypeError: x is undefined', '', 'Local'],
   ];
   const LEVELS = [
     ['none', 'No AI', 'Always on. Rules, recipes, palettes and math: instant, offline, private.'],
-    ['helper', 'Local helper', 'A tiny word-meaning model on this device, no GPU. Better “did you mean”, help answers and search by meaning. Opt-in, about 30 MB.'],
-    ['local', 'Local model', 'A small open model that can write, on this device (in the browser) or on the host (Ollama). Opt-in.'],
+    ['helper', 'Local brain', 'Recommended. A small word-meaning model on this device, no GPU needed: Flint understands your own words, finds things by meaning and spots duplicate tasks. One download, about 30 MB (8 MB on phones).'],
+    ['local', 'Local model', 'Opt-in. A small language model on a computer you control (Ollama or LM Studio on this computer or the host, or in this browser with WebGPU). It writes summaries, rewrites and drafts, and turns loose requests into Flint’s own commands, checked and undoable.'],
     ['yours', 'Your AI', 'Your own Claude, OpenAI or Gemini key, on the host only. For writing and code.'],
     ['credits', 'Credits', 'TribeCode credits when you have no key. The same requests, billed per use.'],
   ];
   function level() {
     try { const P = window.TribePremium && window.TribePremium.plan && window.TribePremium.plan(); if (P && P.plan && P.plan !== 'free') return 'credits'; } catch {}
     const st = (window.TribeFlint && window.TribeFlint.status && window.TribeFlint.status()) || {};
-    if (!st.online) return 'none';
+    if (!st.online) return window.TribeFlintLLM && window.TribeFlintLLM.ready() ? 'local' : 'none';
     return st.browser || /ollama|local|qwen|llama|gemma|phi|smol|browser/i.test(`${st.via || ''} ${st.model || ''}`) ? 'local' : 'yours';
   }
   // level 1 adds to whatever else is active: it is on when the small model is installed on this device (flintmodel.js)
@@ -106,7 +113,7 @@
     const L = window.TribeFlintLessons; if (!L || !L.LESSONS) return '';
     return `<section class="fpg-sec" aria-label="Lessons"><h2>Lessons</h2><div class="fpg-lessons">${Object.entries(L.LESSONS).map(([k, l]) => `<button type="button" class="fpg-lesson" data-lesson="${esc(k)}"><b>${esc(l.title)}</b><small>${(l.steps || []).length} steps · Show me</small></button>`).join('')}</div></section>`;
   }
-  function open(q) {
+  function open(q, focus) {
     lastFocus = document.activeElement;
     if (!root) {
       root = document.createElement('div'); root.id = 'flint-page'; root.className = 'fpg'; root.setAttribute('role', 'dialog'); root.setAttribute('aria-modal', 'true'); root.setAttribute('aria-label', 'Flint');
@@ -117,7 +124,8 @@
       <header class="fpg-head"><img src="assets/flint.svg" alt="" width="40" height="40"><div><span class="eyebrow">Your tribe's helper</span><h1>Flint</h1><p class="faint">Most of what he does needs no AI: rules, recipes, palettes and math, instant and offline. Bigger jobs go to a model you choose.</p></div>
         <button type="button" class="btn ghost fpg-x" id="fp-close" aria-label="Close">✕</button></header>
       <section class="fpg-sec" aria-label="Flint's levels"><h2>Flint's levels</h2><div class="fpg-levels">${LEVELS.map(([k, t, d], i) => `<div class="fpg-lv${k === lv || (k === 'helper' && helperOn()) ? ' on' : ''}" data-lv="${k}"><span class="fpg-lv-n">${i}</span><b>${esc(t)}</b><small>${esc(d)}</small><span class="fpg-lv-on"${k === lv || (k === 'helper' && helperOn()) ? '' : ' hidden'}>Active</span></div>`).join('')}</div>
-        <p class="fpg-row"><button type="button" class="btn sm" id="fp-local">Set up a local model</button><a class="btn ghost sm" id="fp-plan" href="${PLAN}" target="_blank" rel="noopener">Read the model plan</a></p></section>
+        <p class="fpg-row"><button type="button" class="btn sm" id="fp-local">${helperOn() ? 'Local brain: manage' : 'Give Flint a local brain'}</button><button type="button" class="btn sm" id="fp-llm">Choose a local model</button><button type="button" class="btn sm" id="fp-facts">What Flint knows about this project</button><a class="btn ghost sm" id="fp-plan" href="${PLAN}" target="_blank" rel="noopener">Read the model plan</a></p></section>
+      ${window.TribeFlintDevice ? window.TribeFlintDevice.html() : ''}
       <section class="fpg-sec" aria-label="What I can do"><div class="fpg-sh"><h2>What I can do</h2><span class="faint" id="fp-count"></span></div>
         <input class="input" id="fp-q" type="search" placeholder="Search: palette, sheet, undo, checklist…" aria-label="Search what Flint can do" value="${esc(q || '')}">
         <div id="fp-list" class="fpg-list"></div></section>
@@ -127,6 +135,10 @@
     draw(q);
     const qi = $('#fp-q', root); qi.oninput = () => draw(qi.value);
     $('#fp-close', root).onclick = close;
+    if (window.TribeFlintDevice) window.TribeFlintDevice.bind(root);
+    $('#fp-llm', root).onclick = () => { if (window.TribeFlintLLM) window.TribeFlintLLM.open(); else if (window.TribeBrain) { close(); window.TribeBrain.open(); } };
+    $('#fp-facts', root).onclick = () => window.TribeFlintFacts && window.TribeFlintFacts.open();
+    if (focus === 'device') setTimeout(() => { const d = $('#fp-device', root); if (d) d.scrollIntoView({ block: 'start' }); }, 60);
     $('#fp-local', root).onclick = () => { if (window.TribeFlintModel) window.TribeFlintModel.open(); else if (window.TribeBrain && window.TribeBrain.open) { close(); window.TribeBrain.open(); } else window.open(PLAN, '_blank', 'noopener'); };
     root.onclick = e => {
       if (e.target === root) return close();
@@ -135,10 +147,11 @@
       const l = e.target.closest('[data-lesson]'); if (l && window.TribeFlintLessons) { close(); window.TribeFlintLessons.open(l.dataset.lesson); }
     };
     root.onkeydown = e => { if (e.key === 'Escape') close(); };
-    setTimeout(() => qi.focus(), 30);
+    if (focus !== 'device') setTimeout(() => qi.focus(), 30);
   }
   function close() { if (!root) return; root.hidden = true; document.body.classList.remove('fpg-open'); if (location.hash === '#/flint') history.replaceState(null, '', location.pathname + location.search); if (lastFocus && lastFocus.focus) try { lastFocus.focus(); } catch {} }
-  document.addEventListener('flintmodel', () => { if (root && !root.hidden) draw($('#fp-q', root) ? $('#fp-q', root).value : ''); });   // installed or removed: the level's "Active" follows
+  document.addEventListener('flintmodel', () => { if (root && !root.hidden) { draw($('#fp-q', root) ? $('#fp-q', root).value : ''); const b = $('#fp-local', root); if (b) b.textContent = helperOn() ? 'Local brain: manage' : 'Give Flint a local brain'; } });
+  document.addEventListener('flintllm', () => { if (root && !root.hidden) draw($('#fp-q', root) ? $('#fp-q', root).value : ''); });   // installed or removed: the level's "Active" follows
   addEventListener('hashchange', () => { if (location.hash === '#/flint') open(''); });
   if (location.hash === '#/flint') addEventListener('load', () => setTimeout(() => open(''), 300));
   window.TribeFlintPage = { open, close, CAPS, level, understood };

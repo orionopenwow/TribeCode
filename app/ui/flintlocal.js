@@ -547,6 +547,8 @@
         if (r) { lastMiss = null; if (MEM) { MEM.done([s]); if (last.task) MEM.task(last.task); } if (FX && FX.learn) FX.learn(text, 'Flint'); if (P.learned) r.text = (r.text || '') + ''; return sayR(r); }
       }
       if (legacyHit) { lastMiss = null; return H.legacy(text); }
+      // feat/flint-local: a plain statement with a fact in it ("the bake sale is on Saturday 14 June") goes into the project's memory
+      if (FX && FX.learn && !FX.paused() && (!s.intent || s.conf < 0.6) && !/\?\s*$/.test(text)) { const facts = FX.extract(text); if (facts.length) { await FX.learn(text, 'you'); lastMiss = null; return H.say(`Noted: ${facts.map(f => `${f.key} → ${f.value}`).join(' · ')}. I’ll use it in answers and plans.`, [H.act('What Flint knows', 'flintfacts', '')]); } }
       // nothing local was sure: a question gets the docs; with a brain, the model; otherwise "did you mean" or the honest card
       if (/^(how|why|where|when|what|can|could|is|are|do|does|explain|help|tell me about)\b|\?$/i.test(text.trim()) && !H.modelOnline()) { if (H.guide && await H.guide(text)) { lastMiss = null; return true; } const kb = await kbAnswer(text, H); if (kb) { lastMiss = null; return sayR(kb); } }
       if (H.modelOnline() || (window.TribeFlintLLM && window.TribeFlintLLM.ready())) return null;   // a model (the tribe's, or the local one this person chose) reads it next

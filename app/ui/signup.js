@@ -250,6 +250,7 @@
   function done(account, email) {
     close();
     lsSet(NEXT, JSON.stringify({ name: account.displayName || account.username, username: account.username, email, at: Date.now() }));
+    try { window.dispatchEvent(new CustomEvent('tribe-account-created')); } catch {}   // feat/flint-local: Home then offers "Give Flint a local brain (recommended)"
     const home = () => { if (window.TribeHub && window.TribeHub.open) window.TribeHub.open('home'); else location.hash = '#/hub'; setTimeout(nextCard, 60); };
     const P = window.TribePersonalize;
     if (P && P.afterSignup) {

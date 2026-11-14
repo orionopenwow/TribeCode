@@ -209,6 +209,7 @@
     const foldGaps = !allDone && !activity;
     const gapsBox = foldGaps ? '<div class="ock-gaps" id="ock-gaps"></div>' : '';
     const tick = '<svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 12.5 4 4 8-9"/></svg>';
+    const flintRow = window.TribeFlintSetup && window.TribeFlintSetup.stepRow ? window.TribeFlintSetup.stepRow() : '';   // feat/flint-local: "Give Flint a local brain (recommended)", an extra row, not a counted step
     const checklist = allDone && lsg('ckGone') === '1' ? ''
       : allDone ? `<section class="pj-check done" id="pj-check"><span class="ock-allset">${tick}All set</span><span class="faint ock-allsub">${esc(p.name)} has a vision, a task, an AI, a home and friends to share it with.</span><button class="ock-x" id="pj-check-x" title="Dismiss" aria-label="Dismiss the checklist">${ico('i-x', 14)}</button></section>`
       : `<section class="pj-check ${folded ? 'folded' : ''} ${hero ? 'hero' : ''} ${one ? 'one' : ''}" id="pj-check">
@@ -218,9 +219,9 @@
           ${hero ? `<div class="ock-list ock-cards">${steps.map((x, i) => `<div class="ock-row ock-card ${x.done ? 'on' : ''}${i === nextIx ? ' ock-next' : ''}" data-step="${x.id}"><span class="ock-box" role="checkbox" aria-checked="${x.done}" aria-label="${x.label}">${x.done ? tick : ''}</span>
             <span class="ock-emo" aria-hidden="true">${x.emo}${x.done ? `<i class="ock-emo-ok">${tick}</i>` : ''}</span>
             <div class="ock-main"><span class="ock-l">${x.label}</span><p class="ock-sub">${x.done ? 'Done' : esc(x.sub || '')}</p></div>
-            ${!x.done && (x.acts || x.below) ? `<span class="ock-acts">${x.acts || ''}${x.below || ''}</span>` : ''}${!x.done && x.inline ? x.inline : ''}</div>`).join('')}${gapsBox}</div>` : ''}
+            ${!x.done && (x.acts || x.below) ? `<span class="ock-acts">${x.acts || ''}${x.below || ''}</span>` : ''}${!x.done && x.inline ? x.inline : ''}</div>`).join('')}${flintRow}${gapsBox}</div>` : ''}
           ${hero ? '' : `<div class="ock-list">${steps.map(x => `<div class="ock-row ${x.done ? 'on' : ''}" data-step="${x.id}"><span class="ock-box" role="checkbox" aria-checked="${x.done}" aria-label="${x.label}">${x.done ? tick : ''}</span>
-            <div class="ock-main"><div class="ock-line"><span class="ock-l">${x.label}</span>${!x.done && x.acts ? `<span class="ock-acts">${x.acts}</span>` : ''}</div>${!x.done && x.below ? `<div class="ock-below">${x.below}</div>` : ''}${!x.done && x.inline ? x.inline : ''}</div></div>`).join('')}${gapsBox}</div>`}</section>`;
+            <div class="ock-main"><div class="ock-line"><span class="ock-l">${x.label}</span>${!x.done && x.acts ? `<span class="ock-acts">${x.acts}</span>` : ''}</div>${!x.done && x.below ? `<div class="ock-below">${x.below}</div>` : ''}${!x.done && x.inline ? x.inline : ''}</div></div>`).join('')}${flintRow}${gapsBox}</div>`}</section>`;
     // simple-dashboard: four tiles that answer "what needs me?" at a glance, each one click from where it's handled
     const N = window.TribeNotify && window.TribeNotify.state ? window.TribeNotify.state() : {};
     const dmUnread = window.TribeDM && window.TribeDM.unread ? Object.values(window.TribeDM.unread()).reduce((a, n) => a + (Number(n) || 0), 0) : 0;

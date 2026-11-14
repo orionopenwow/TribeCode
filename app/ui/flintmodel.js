@@ -209,5 +209,5 @@
 
   const whenReady = () => boot();
   if (flag()) (window.requestIdleCallback || (f => setTimeout(f, 800)))(() => boot());
-  window.TribeFlintModel = { find, openHit, relatedTo, partial, model: () => M, isPhone, SMALL, open, close, install, remove, ready, installed: () => !!flag(), status: () => ({ ready: !!M, installed: flag() }), info, embed, rerank, search, whenReady, DEFAULT };
+  window.TribeFlintModel = { stop: () => { if (abort) abort.abort(); }, find, openHit, relatedTo, partial, model: () => M, isPhone, SMALL, open, close, install, remove, ready, installed: () => !!flag(), status: () => ({ ready: !!M, installed: flag() }), info, embed, rerank, search, whenReady, DEFAULT };
 })();
