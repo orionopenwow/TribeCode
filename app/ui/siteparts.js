@@ -52,6 +52,9 @@
     return `<div class="sp-looks">
       <p class="wdz-f"><span>Size</span></p><p class="wdz-row" role="group" aria-label="Size">${P('sz', 's', 'Small', e.sz)}${P('sz', '', 'Normal', e.sz)}${P('sz', 'l', 'Large', e.sz)}${P('sz', 'xl', 'Huge', e.sz)}</p>
       <p class="wdz-f"><span>Colour</span></p><p class="wdz-row" role="group" aria-label="Colour">${P('col', '', 'As it is', e.col)}${sw('accent', k.accent, 'Main colour')}${sw('muted', k.muted, 'Quiet')}${sw('ink', k.ink, 'Strong')}</p>
+      <p class="wdz-row"><label class="sp-pick"><span>Any colour</span><input type="color" data-escolor="1" value="${esc(e.c || k.accent)}" aria-label="Any colour"></label>${e.c ? '<button type="button" class="btn sm ghost" data-sp="es" data-k="c" data-val="">Back to the palette</button>' : ''}</p>
+      <p class="wdz-f"><span>Space around it</span></p><p class="wdz-row" role="group" aria-label="Space around it">${P('sp', 's', 'Tight', e.sp)}${P('sp', '', 'Normal', e.sp)}${P('sp', 'l', 'Roomy', e.sp)}</p>
+      <p class="wdz-f"><span>Font</span></p><p class="wdz-row" role="group" aria-label="Font">${P('f', '', 'As it is', e.f)}${P('f', 'display', 'Heading font', e.f)}${P('f', 'body', 'Text font', e.f)}${P('f', 'mono', 'Typewriter', e.f)}</p>
       <p class="wdz-f"><span>Line up</span></p><p class="wdz-row" role="group" aria-label="Line up">${P('al', '', 'As it is', e.al)}${P('al', 'left', 'Left', e.al)}${P('al', 'center', 'Middle', e.al)}${P('al', 'right', 'Right', e.al)}<button type="button" class="btn sm" data-sp="es" data-k="b" data-val="1" aria-pressed="${!!e.b}">Bold</button><button type="button" class="btn sm" data-sp="es" data-k="i" data-val="1" aria-pressed="${!!e.i}">Slanted</button></p>
       ${showOn(hide, 'el')}${en ? entryRow(b, en) : ''}${foot()}</div>`;
   }
@@ -254,7 +257,9 @@
     }
   }
   // "What the tribe said about this" is filled by the suggestions (app/ui/sitesuggest.js) when it is there
-  function said(api) { const box = api.root().querySelector('#wdz-said'); if (box && window.TribeSiteSuggest && window.TribeSiteSuggest.said) window.TribeSiteSuggest.said(box, api); }
+  // the colour picker under "Colour": any colour for this one element (a change event, so one Undo per pick)
+  document.addEventListener('change', e => { const i = e.target; if (!i || !i.matches || !i.matches('[data-escolor]') || !window.TribeSiteDesigner) return; const api = window.TribeSiteParts && window.TribeSiteParts._api; if (api) setEs(api, { c: i.value, col: '' }); });
+  function said(api) { window.TribeSiteParts._api = api; const box = api.root().querySelector('#wdz-said'); if (box && window.TribeSiteSuggest && window.TribeSiteSuggest.said) window.TribeSiteSuggest.said(box, api); }
 
   const menuOpen = () => !!(menuEl && !menuEl.hidden);
   window.TribeSiteParts = { menuOpen, crumbs, looks, element, list, section, picture, siteSel, pages, wire, click, key, frame, menu, closeMenu, parentOf, entryOf, act, said };

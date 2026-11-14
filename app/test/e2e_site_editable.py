@@ -380,6 +380,13 @@ def live(pw):
         pg.wait_for_timeout(300); f = fr(pg); assert f.locator(".b-hero p.lead b").inner_text() == "Bread" and f.locator(".b-hero p.lead a").get_attribute("href") == "https://example.com/menu"
         assert f.evaluate(PICK, "Bread"); f.locator(".wdz-tb [data-a=bold]").click()   # again takes it off
         pg.wait_for_function("TribeSiteDesigner.cfg().pages[0].blocks.find(b => b.type === 'hero').props.text.startsWith('Bread from 7')", timeout=4000)
+        # any colour, space around and font for this one element (round 2)
+        f.locator(".b-hero h1[data-e]").first.click(); pg.wait_for_selector("#wdz-insp [data-escolor]")
+        pg.click("#wdz-insp [data-sp=es][data-k=sp][data-val=l]"); pg.wait_for_function("((TribeSiteDesigner.cfg().pages[0].blocks.find(b => b.type === 'hero').es || {}).title || {}).sp === 'l'", timeout=3000)
+        pg.click("#wdz-insp [data-sp=es][data-k=f][data-val=mono]"); pg.wait_for_timeout(250)
+        pg.evaluate("(() => { const i = document.querySelector('#wdz-insp [data-escolor]'); i.value = '#12ab34'; i.dispatchEvent(new Event('change', { bubbles: true })); })()")
+        pg.wait_for_function("((TribeSiteDesigner.cfg().pages[0].blocks.find(b => b.type === 'hero').es || {}).title || {}).c === '#12AB34'", timeout=3000)
+        assert 'class="e-sp-l e-f-mono" style="color:#12AB34"' in pg.evaluate("TribeSiteCfg.exportFiles(TribeSiteDesigner.cfg(), 'html')['index.html']")
         # a label the site shows in capitals is saved as it was typed, not in capitals
         cap = f.locator(".in h3[data-e]").first; cap.scroll_into_view_if_needed(); cap.click(); cap.press("Control+a"); cap.type("Where we are"); cap.press("Enter")
         pg.wait_for_function("TribeSiteDesigner.cfg().pages[0].blocks.find(b => b.type === 'info').props.items[0].label === 'Where we are'", timeout=4000)

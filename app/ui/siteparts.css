@@ -8,6 +8,8 @@
 .wdz-insp .sp-looks .wdz-f span, .wdz-insp .sp-list .wdz-f span, .wdz-insp .sp-pages .wdz-f span, .wdz-insp .sp-said .wdz-f span, .wdz-insp .sp-crumbs + .wdz-eyebrow ~ .wdz-f span { text-transform: none; }
 /* a box for words is as tall as its words, not a fixed block that pushes everything else off the panel */
 .wdz-insp textarea.input { min-height: 0; height: auto; max-height: 160px; resize: vertical; field-sizing: content; }
+.sp-pick { display: inline-flex; align-items: center; gap: 8px; font-size: 12px; color: var(--muted); }
+.sp-pick input { width: 32px; height: 28px; padding: 0; border: 1px solid var(--border); border-radius: var(--r-sm); background: none; }
 .sp-col i { display: inline-block; width: 10px; height: 10px; border-radius: 50%; border: 1px solid var(--border); margin-right: 6px; vertical-align: -1px; }
 .sp-list, .sp-pages { display: grid; gap: 4px; }
 .sp-li { display: grid; grid-template-columns: 1fr max-content; align-items: center; gap: 4px; border: 1px solid var(--border); border-radius: var(--r-sm); background: var(--surface-2); padding: 0 2px 0 0; }
