@@ -3,7 +3,8 @@
 // task), warnings can be published past. Then: the play link with Copy, a QR code, a share card preview, Remix on/off,
 // Update and Unpublish. Entry points: a 🚀 button in the preview toolbar (added from outside preview.js), a "Share it"
 // card on the project dashboard, Ctrl K, and ?remixPlay=<slug> (from a play page's "Remix this") starts a remix.
-// Public: window.TribePublish = { open(pid?), state(pid?) }.
+// Public: window.TribePublish = { open(pid?), state(pid?), status(pid?) }. The sheet also holds "Where it goes" (publishreal.js):
+// a zip, a GitHub page, itch.io, an installable app and app packages.
 (function () {
   const C = window.TribeClient; if (!C) return;
   const $ = s => document.querySelector(s);
@@ -56,7 +57,8 @@
         <label class="pb-l">Title<input class="input" id="pb-title" maxlength="80" value="${esc((cur && cur.title) || p.name)}"></label>
         <label class="pb-l">One line about it<input class="input" id="pb-desc" maxlength="240" placeholder="What is it? Who is it for?" value="${esc((cur && cur.desc) || p.bio || '')}"></label>
         <label class="pb-tg"><input type="checkbox" id="pb-remix" ${!cur || cur.allowRemix ? 'checked' : ''}> <span>Allow remix <small class="faint">People can start their own copy with your name on it.</small></span></label>
-      </form>`;
+      </form><div id="pb-real" class="pb-real"></div>`;
+    if (window.TribePublishReal) window.TribePublishReal.mount($('#pb-real'), pid, { title: () => ($('#pb-title') || {}).value, desc: () => ($('#pb-desc') || {}).value });
     const foot = s.body.querySelector('.modal-foot');
     foot.innerHTML = `${cur ? '<button class="linkish pb-down" id="pb-down">Unpublish</button>' : ''}<span style="flex:1"></span><button class="btn" data-close>Close</button>
       <button class="btn primary" id="pb-go" ${blocks.length ? 'disabled' : ''}>${blocks.length ? 'Fix the issues first' : agent ? 'Ask to publish' : warns.length ? (cur ? 'Update anyway' : 'Publish anyway') : cur ? 'Update the link' : 'Publish'}</button>`;
@@ -153,5 +155,7 @@
     setTimeout(go, 800);
   })();
 
-  window.TribePublish = { open, state };
+  // status(pid): what is published where and the one next step (publishreal.js), for the guide and Flint
+  const status = (pid, fresh) => (window.TribePublishReal ? window.TribePublishReal.status(pid, fresh) : state(pid, fresh).then(st => ({ kind: 'site', dest: {}, play: (st.published || [])[0] || null, next: (st.published || [])[0] ? 'share' : 'publish' })));
+  window.TribePublish = { open, state, status };
 })();

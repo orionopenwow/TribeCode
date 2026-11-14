@@ -310,6 +310,6 @@ module.exports = function publish({ P, W, base, preview, setupFlow, getMembers, 
     },
   };
 
-  return { route, match, serve, check, onApproval, entriesOf: pid => entriesOf(pid).map(view), entry: s => view(db.entries[s]), urlOf, mcpTools };
+  return { route, match, serve, check, files, canPublish, onApproval, entriesOf: pid => entriesOf(pid).map(view), entry: s => view(db.entries[s]), urlOf, mcpTools };
 };
 module.exports.CSP = CSP;
