@@ -14,6 +14,7 @@
     make: '<path d="M4 7l8-4 8 4-8 4z"/><path d="M4 7v10l8 4 8-4V7"/><path d="M12 11v10"/>',
     gallery: '<rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="2"/><path d="M21 16l-5-5-9 9"/>',
     kit: '<rect x="3" y="3" width="8" height="8" rx="2"/><rect x="13" y="3" width="8" height="8" rx="2"/><rect x="3" y="13" width="8" height="8" rx="2"/><path d="M17 13v8M13 17h8"/>',
+    toolbox: '<rect x="3" y="8" width="18" height="12" rx="2"/><path d="M9 8V5h6v3M3 13h18M10 13v2h4v-2"/>',
     starters: '<path d="M5 19c1-4 3-6 7-7"/><path d="M12 12c2-5 5-8 9-9-1 4-4 7-9 9z"/><circle cx="16" cy="8" r="1.5"/><path d="M5 19l-1 2 2-1"/>',
     room: '<path d="M4 5h12v9H8l-4 3z"/><path d="M16 9h4v8l-3-2h-6v-1"/>',
     flint: 'FLINT',
@@ -30,6 +31,7 @@
       ['make', '#make', 'What you can make', 'Games, sites and tools for the people around you', '#F26B1D'],
       ['kit', '#kit', 'The whole studio', 'Docs, widgets, studios and assets in one app', '#38C6B1'],
       ['starters', '#starters', 'Starters', 'Working first versions to play with and remix', '#FABD2F'],
+      ['toolbox', 'toolbox.html', 'The free toolbox', 'ArtCraft, Blender, Godot and more, all free', '#3BD16F'],
     ]],
     ['Together', [
       ['room', '#room', 'One chat for everyone', 'Friends and their AI helpers in one room', '#6C7CFF'],
@@ -52,6 +54,7 @@
     make: '<div class="sp-tiles"><span style="--c:#F26B1D">🎮<b>Lantern Run</b><i>game</i></span><span style="--c:#38C6B1">🧁<b>Oak St. Bakers</b><i>site</i></span><span style="--c:#6C7CFF">✅<b>Chore wheel</b><i>tool</i></span></div>',
     gallery: '<div class="sp-shots"><img src="assets/showcase/site-cafe.webp" alt="" loading="lazy" width="160" height="100"><img src="assets/showcase/app-dashboard.webp" alt="" loading="lazy" width="160" height="100"></div>',
     kit: '<div class="sp-grid"><span>📄 Docs</span><span>🔥 Flint</span><span>🧩 515 widgets</span><span>🎨 Studios</span></div>',
+    toolbox: '<div class="sp-grid"><span>ArtCraft</span><span>Blender</span><span>Godot</span><span>Krita</span></div>',
     starters: '<div class="sp-shots"><img src="assets/remix/kenney.jpg" alt="" loading="lazy" width="160" height="100"><img src="assets/remix/2048.jpg" alt="" loading="lazy" width="160" height="100"></div>',
     room: '<div class="sp-chat"><p><i style="--c:#6C7CFF">M</i><span>Can we get a title screen?</span></p><p><i class="ai">✦</i><span>On it. <em>Edited title +42</em></span></p><p><i class="ai2">◎</i><span>Adding a creak sound 🔔</span></p></div>',
     flint: '<div class="sp-flint"><p class="me">add a jump sound</p><p class="fl"><img src="assets/brand/flint.svg" alt="" width="18" height="23">Done: <code>jump.wav</code>, credited.</p><p class="me">teach me what an API is</p></div>',

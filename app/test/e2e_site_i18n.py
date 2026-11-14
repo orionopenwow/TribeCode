@@ -12,7 +12,7 @@ from playwright.sync_api import sync_playwright
 
 ROOT = Path(__file__).resolve().parents[2]
 PORT = 5580 + int(os.environ.get("TRIBE_PORT_OFFSET", "0"))
-PAGES = ["index.html", "flint.html", "learn.html", "mission.html", "pricing.html", "docs.html", "play/habit-tracker.html", "play/shared-list.html", "play/portfolio/index.html"]
+PAGES = ["index.html", "flint.html", "learn.html", "mission.html", "pricing.html", "docs.html", "toolbox.html", "play/habit-tracker.html", "play/shared-list.html", "play/portfolio/index.html"]
 LANGS = ["es", "pt", "fr", "de", "ja", "zh", "ko"]
 DUMP = sys.argv[sys.argv.index("--dump") + 1] if "--dump" in sys.argv else None
 
@@ -43,7 +43,7 @@ def main():
             pg.evaluate("TribeLang.set('en')")
         if not DUMP:
             ph = ctx.new_page(); ph.set_viewport_size({"width": 390, "height": 844})
-            for page in PAGES[:6]:
+            for page in PAGES[:7]:
                 for lang in ("ja", "de"):
                     ph.goto(base + page); ph.wait_for_function("window.TribeLang && TribeLang.ready"); ph.evaluate(f"TribeLang.set('{lang}')")
                     sw = ph.evaluate("[document.documentElement.scrollWidth, innerWidth]"); assert sw[0] <= sw[1] + 1, (page, lang, sw)

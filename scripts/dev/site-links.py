@@ -10,7 +10,7 @@ from playwright.sync_api import sync_playwright
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
 SITE, UI = os.path.join(ROOT, 'site'), os.path.join(ROOT, 'app', 'ui')
 PORT = 5590 + int(os.environ.get('TRIBE_PORT_OFFSET', '0'))
-PAGES = ['index.html', 'flint.html', 'docs.html', 'learn.html', 'mission.html', 'pricing.html']
+PAGES = ['index.html', 'flint.html', 'docs.html', 'learn.html', 'mission.html', 'pricing.html', 'toolbox.html']
 
 class H(http.server.SimpleHTTPRequestHandler):
     def log_message(self, *a): pass

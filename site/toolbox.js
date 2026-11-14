@@ -45,7 +45,7 @@
   const stands = t => `<p class="tb-kind"><span class="tb-kind__l mono">Stands in for a paid</span><b>${esc(t.kind)}</b></p>`;
 
   function feature(t) {
-    return `<div class="tb-feature__art" style="--c:${esc(t.color)}">${HERO}<p class="tb-note mono">An illustration, not a screenshot</p></div>
+    return `<div class="tb-feature__art" style="--c:${esc(t.color)}">${HERO}<p class="tb-note"><span>A drawing, not a screenshot.</span> <a href="${esc(t.url)}" rel="noopener">See the real thing on its site</a></p></div>
       <div class="tb-feature__tx" id="tool-${esc(t.id)}"><p class="eyebrow mono">// featured</p><h2 id="tb-feature-title" translate="no">${esc(t.name)}</h2>${stands(t)}<p class="tb-what">${esc(t.what)}</p>
         <ul class="tb-list tb-list--two">${li(t.features.concat(t.more || []))}</ul>${meta(t)}${links(t, true)}</div>`;
   }
