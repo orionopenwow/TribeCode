@@ -238,7 +238,7 @@ module.exports = function askai({ store, id, str, P, getMembers, presenceFor, po
         if (!m || m.deleted) continue;
         if (m.by === me.id && m.ask) { cur = { id: m.id, at: m.at, text: str(m.ask.say || m.text, 600), src: m.ask.src || null, agent: x.a.id, agentName: x.a.name, channel: dmName(me.id, x.a.id), replies: [] }; requests.push(cur); }
         else if (m.by === me.id) cur = null;   // an ordinary private message: later replies belong to it, not to a request
-        else if (cur && m.by === x.a.id && m.text) cur.replies.push({ id: m.id, at: m.at, text: str(m.text, 2000) });
+        else if (cur && m.by === x.a.id && m.text && !m.aside && !m.approval) cur.replies.push({ id: m.id, at: m.at, text: str(m.text, 2000) });   // asides: things it meant for a channel, approval asks
       }
     }
     requests.sort((a, b) => (a.at < b.at ? 1 : -1));

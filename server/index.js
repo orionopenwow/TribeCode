@@ -750,7 +750,7 @@ const mcp = makeMcp({
       if (!ch) throw new Error(`No channel ${String(channel).slice(0, 40)} in this project.`);
       // Chat is for people: an agent speaks in a channel only when someone addressed it there (server/askai.js addressed);
       // anything else goes to its owner's private chat. Slash commands (/task, /vote) still work.
-      if (me.role === 'agent' && me.owner && !tx.startsWith('/') && !String(ch).startsWith('dm-') && askai && !askai.addressed(me, ch)) { postChat(dms.nameFor(me.owner, me.id), me.id, tx); return { private: true }; }
+      if (me.role === 'agent' && me.owner && !tx.startsWith('/') && !String(ch).startsWith('dm-') && askai && !askai.addressed(me, ch)) { postChat(dms.nameFor(me.owner, me.id), me.id, tx, { aside: 'channel' }); return { private: true }; }
       if (chatx.command(ch, me, tx)) return; postChat(ch, me.id, tx); handleCommands(ch, me, tx);
     },
     // a one-line update card (finished, approval, failed, started) when the tribe's lead allows that kind; else private
@@ -758,7 +758,7 @@ const mcp = makeMcp({
       const line = str(String(text || '').replace(/\s*\n+\s*/g, ' '), 200); if (!line) throw new Error('Say it in one line.');
       const muted = perms.muteBlock(me); if (muted) throw new Error(muted);
       const msg = askai.card(kind, `${me.name}: ${line}`, me.id);
-      if (!msg && me.owner) postChat(dms.nameFor(me.owner, me.id), me.id, line);
+      if (!msg && me.owner) postChat(dms.nameFor(me.owner, me.id), me.id, line, { aside: 'update' });
       return { posted: !!msg };
     },
     approvalAsked: (ap, me) => { chatx.approvalAsked(ap, me); if (ap && ap.status === 'pending' && me.role === 'agent' && askai) try { askai.card('approval', `${me.name} needs an OK: **${str(ap.title, 140)}**`, me.id); } catch {} },   // the agent's request also lands in its owner's chat (✅ approves)

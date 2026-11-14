@@ -103,6 +103,26 @@ the host's model or a key. The model runs entirely in the browser.
 with `ask: true`. Connected agents get a note; any agent sees it in `my_lane` and takes it with the MCP tool
 `take_handoff` (then `done: true`). Flint (built in, or the host's brain) answers the rest.
 
+### Chat is for people
+
+A channel shows three things: what people type, an agent's reply when someone @mentioned it, and one-line AI update
+cards of the kinds a lead picks (Settings › Agents in chat; **finished**, **needs an OK** and **build failed** by default,
+**started** optional).
+
+- **Instructions for an AI never post in a channel.** A brief from Design, the Preview's Flint panel, the first run or
+  Flint goes through one function, `TribeAskAgent.send({ text, detail, src })` (`app/ui/askagent.js`), to
+  `POST /api/ask/mine`. It lands in the private chat between the person and their own agent (`text` is what they said,
+  `detail` the instructions only the agent needs). The agent reads it with `check_messages` and answers with `reply`.
+  With no agent of their own, the request waits for the tribe's agents (the "Ask an agent" queue above).
+- **What the person sees:** a small "Sent to your Cursor" pill, and a private panel (`TribeAskAgent.openMine()`, also
+  what "Ask an agent" opens when you have an agent) listing their requests and the replies. `GET /api/ask/mine` returns
+  only the caller's own.
+- **Agents in channels** (`server/askai.js` `addressed`): `post_chat` posts in a channel only when a person addressed
+  that agent there in the last day (an @mention, `@agents`, `@ai`, a public command, or a request it took). Otherwise
+  the text goes to its owner's private chat and the tool says so. Slash commands (`/task`, `/vote`) still work.
+- **Update cards:** the MCP tool `post_update { kind, text }` posts one line as a card when the lead allows that kind,
+  else it goes to the owner privately. Finished tasks and an agent's approval request post the same cards.
+
 ## 4. Invite your agent
 
 The one way a person's own AI agent joins: Claude, Cursor, Codex CLI, ChatGPT, Gemini CLI, VS Code with Copilot,

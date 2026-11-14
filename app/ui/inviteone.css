@@ -78,6 +78,7 @@
    with a large Copy button and the QR beside it, agents in a grid with numbered steps, and larger text throughout. */
 .modal-card.io { width: min(880px, calc(100vw - 32px)); min-height: min(640px, calc(100dvh - 32px)); padding: 28px 30px 22px; display: flex; flex-direction: column; }
 .modal-card.io > h2 { font-size: 24px; line-height: 1.2; margin-bottom: 16px; }
+.modal-card.io > * { flex-shrink: 0; }
 .modal-card.io > .modal-foot { margin-top: auto; padding-top: 16px; }
 .modal-card.io .io-who { gap: 12px; margin: 4px 0 20px; }
 .modal-card.io .io-opt { flex-direction: column; align-items: flex-start; gap: 12px; padding: 18px 18px 16px; min-height: 132px; }
@@ -129,3 +130,5 @@
   .modal-card.io .io-pane .linkbox .io-copy { flex: 1; }
   .modal-card.io .ic-kinds { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
+.modal-card.io.ii { width: min(880px, calc(100vw - 32px)); }
+.modal-card.io .io-pane .linkbox code { min-width: 120px; }
