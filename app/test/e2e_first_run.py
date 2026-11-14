@@ -220,7 +220,7 @@ def main():
             host.evaluate("TribeApp.show('home')"); host.wait_for_selector("#pj-check", timeout=15000)
             shot(host, "04-dashboard"); audit(host, "dashboard (new)"); no_dead_end(host, "dashboard")
             steps = host.eval_on_selector_all("#pj-check .ock-row", "els => els.map(e => e.dataset.step)")
-            assert steps == ["vision", "task", "claude", "home", "share"], steps
+            assert [s for s in steps if s != "flint"] == ["vision", "task", "claude", "home", "share"], steps   # "flint" is the optional setup row (flintsetup.js, v0.36)
             host.click("#pj-check [data-ck=vision]"); host.wait_for_selector("#av-cats .av-cat")
             # reload mid-flow: the composer is gone, nothing is half-saved, the checklist is still there
             host.reload(); host.wait_for_function("window.TribeClient && TribeClient.connected()", timeout=20000)

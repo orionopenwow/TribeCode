@@ -82,7 +82,7 @@ def main():
             # 1. five steps (feat/folder-sync): where it lives is the code repository, one step; sharing comes last
             host.wait_for_selector("#pj-check.hero .ock-card", timeout=15000)
             steps = host.eval_on_selector_all("#pj-check .ock-row", "els => els.map(e => e.dataset.step)")
-            assert steps == ["vision", "task", "claude", "home", "share"], steps
+            assert [s for s in steps if s != "flint"] == ["vision", "task", "claude", "home", "share"], steps   # "flint" is the optional setup row (flintsetup.js, v0.36)
             assert "5 steps" in host.text_content("#pj-check .ock-hero-t")
             assert "choose where it lives" in host.text_content("#pj-check [data-step=home]").lower()
             assert "create the code repository" not in host.text_content("#pj-check").lower(), "no separate repo step"
