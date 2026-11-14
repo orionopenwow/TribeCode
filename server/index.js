@@ -557,7 +557,7 @@ versionsHub = require('./versions')({ P, W, perms, broadcast, nameOf, syncLog: p
 folderHome.watchAll();
 bus.on('notify', n => { if (n && n.type === 'release') syncHub.onRelease(P.current() || P.defaultId(), n.ref).catch(() => {}); });
 const agentnet = makeAgentNet({ P, store, id, str, broadcast, bus, getMembers: () => members, presenceFor, loadTasks: () => loadTasks(), saveTask: t => saveTask(t), createTask: o => createTask(o), approvals, coord, nameOf });
-askai = require('./askai')({ store: baseStore, id, str, P, getMembers: () => members, presenceFor, postChat, coord, approvals, brain, askBrain: (c, mem, t) => chatx.askBrain(c, mem, t), createTask: o => createTask(o), bus, nameOf });
+askai = require('./askai')({ store: baseStore, id, str, P, getMembers: () => members, presenceFor, postChat, coord, approvals, brain, askBrain: (c, mem, t) => chatx.askBrain(c, mem, t), createTask: o => createTask(o), bus, nameOf, dmName: (a, b) => dms.nameFor(a, b), readChannel: (ch, n) => store.readJSONL(`chat/${ch === 'general' ? P.channelOf(P.current() || P.defaultId()) : ch}.jsonl`, n) });
 const compute = require('./compute')({ store: baseStore, str, getMembers: () => members, isOnline: mid => online.has(mid), broadcast });   // shared compute (Helpers list)
 const openspace = require('./openspace')({ P, broadcast, isLocal, log: m => console.log('  ' + m) });   // Open Space office (optional, host-only)
 const shelf = require('./shelf')({ P, root: require('./tpldir').root(), docs, postChat, str, nameOf });   // starter shelf: tools, libraries, Claude skills
@@ -748,9 +748,20 @@ const mcp = makeMcp({
       const tx = str(text, 4000); if (!tx) return; const muted = perms.muteBlock(me); if (muted) throw new Error(muted);   /* feat/roles */
       const ch = channel ? chans.resolve(P.current() || P.defaultId(), channel) : 'general';
       if (!ch) throw new Error(`No channel ${String(channel).slice(0, 40)} in this project.`);
+      // Chat is for people: an agent speaks in a channel only when someone addressed it there (server/askai.js addressed);
+      // anything else goes to its owner's private chat. Slash commands (/task, /vote) still work.
+      if (me.role === 'agent' && me.owner && !tx.startsWith('/') && !String(ch).startsWith('dm-') && askai && !askai.addressed(me, ch)) { postChat(dms.nameFor(me.owner, me.id), me.id, tx); return { private: true }; }
       if (chatx.command(ch, me, tx)) return; postChat(ch, me.id, tx); handleCommands(ch, me, tx);
     },
-    approvalAsked: (ap, me) => chatx.approvalAsked(ap, me),   // the agent's request also lands in its owner's chat (✅ approves)
+    // a one-line update card (finished, approval, failed, started) when the tribe's lead allows that kind; else private
+    update(me, kind, text) {
+      const line = str(String(text || '').replace(/\s*\n+\s*/g, ' '), 200); if (!line) throw new Error('Say it in one line.');
+      const muted = perms.muteBlock(me); if (muted) throw new Error(muted);
+      const msg = askai.card(kind, `${me.name}: ${line}`, me.id);
+      if (!msg && me.owner) postChat(dms.nameFor(me.owner, me.id), me.id, line);
+      return { posted: !!msg };
+    },
+    approvalAsked: (ap, me) => { chatx.approvalAsked(ap, me); if (ap && ap.status === 'pending' && me.role === 'agent' && askai) try { askai.card('approval', `${me.name} needs an OK: **${str(ap.title, 140)}**`, me.id); } catch {} },   // the agent's request also lands in its owner's chat (✅ approves)
     recent: (n, channel) => store.readJSONL(`chat/${(channel && chans.resolve(P.current() || P.defaultId(), channel)) || 'general'}.jsonl`, n).filter(x => !x.deleted).map(x => {
       const media = x.media ? (x.media.kind === 'voice' ? '[voice note] ' : x.media.kind === 'image' ? '[image] ' : x.media.kind === 'file' ? `[file: ${x.media.name || 'file'}] ` : '') : '';
       const vote = x.vote ? `[vote] ${x.vote.q || ''} ` : '';

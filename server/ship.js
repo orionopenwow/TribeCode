@@ -215,7 +215,7 @@ module.exports = function ship({ P, store, hubFor, approvals, getMembers, loadTa
       bus.notify({ type: 'repo', priority: 'low', title: `${plural(r.count, 'saved change')} on GitHub now`, body: label || '', view: 'repo' });
     } else {
       s.log.unshift({ at: new Date().toISOString(), kind: `${kind}-failed`, text: `Could not ship: ${r.error}` }); save(s);
-      postChat('general', 'tribecode', `⚠️ Could not ship to GitHub: ${r.error}. Nothing was forced.`);
+      postChat('general', 'tribecode', `⚠️ Could not ship to GitHub: ${r.error}. Nothing was forced.`, { card: 'failed' });
     }
     try { hubFor(pid()).poll({ force: true }).catch(() => {}); } catch {}
     push();

@@ -215,7 +215,7 @@ module.exports = function integrator({ repo, enabled, G, store, settings, board,
         update(id, { status: 'failed', failed: new Date().toISOString(), result });
         const msg = `Integration ${id} stopped (${out.stage}): ${out.error}`;
         log('integrate-failed', msg, { notify: 'repo', priority: 'high', extra: { ref: id, detail: (out.conflicts || []).join(', ') } });
-        postChat('general', 'tribecode', `⚠️ ${msg}. Nothing was pushed.`);
+        postChat('general', 'tribecode', `⚠️ ${msg}. Nothing was pushed.`, { card: 'failed' });
       }
       poll({ force: true }).catch(() => {});
       return { id, ...result };
