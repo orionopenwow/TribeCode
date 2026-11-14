@@ -125,22 +125,52 @@ shown and its acceptable-use policy linked. Model files stay out of the repo and
 - Eval: 1,196 phrasings at 99.4% (was 996/1,003 = 99.3%); held-out batch 6 (50, written before the matchers) scored
   48/50 = 96% on its first untuned run. `app/test/e2e_flint_max.py` runs 46 commands end to end.
 
-## 5. Tier 1 status (2026-11-13, feat/build-feeds)
+## 5. Status of tiers 1 and 2 (2026-11-14, feat/flint-local)
 
-- **Built:** `app/ui/flintembed.js` (static word-embedding inference in plain JS: reads a Model2Vec model's own
-  `model.safetensors` + `tokenizer.json`, WordPiece lookup, mean pooling, cosine; browser and Node, about 0.06 ms per
-  sentence), `app/ui/flintmodel.js` (the opt-in sheet behind "Set up a local model": name, license, size, where it
-  comes from, a Wi-Fi hint, progress, kept in IndexedDB, Remove) and `server/flintmodel.js` (the model's address).
-  Tier 1 is **opt-in only**, not automatic as the table above first planned.
-- **Used for:** ranking "did you mean" for unrecognized commands (`flintnlu.js setSemantic`), re-ranking help answers,
-  and search by meaning over docs, tasks and chat in the Ctrl+K palette. It never decides a command, so the eval is
-  identical with and without it (1189/1196 = 99.4%; held-out batches unchanged).
-- **The model:** the default address is `minishlab/potion-base-8M` on Hugging Face (Model2Vec, MIT, about 30 MB). It
-  could not be downloaded from the build machine, so **the real model has not been run through this loader yet**:
-  check its size, license and file names on its model card before release. A host can instead put the two files in
-  `<tribe>/.tribe/flint-model/` and members download from their own host.
-- **Tested with a fixture** (`scripts/dev/flint-fixture-model.js`, 740 KB, not a trained model; its synonym list was
-  written by the same hand as the test phrases): did-you-mean top 3 on 16 unrecognized paraphrases went from 6/16 to
-  10/16 (`flint_embed_test.js`). Treat that as proof the wiring works, not as the real model's quality.
-- **Not built:** vectors stored per doc in `.tribe/` (the index is rebuilt in memory, at most once a minute), taught
-  phrases by meaning, tier 2.
+Numbers and their caveats: [FLINT-CAPABILITY.md](FLINT-CAPABILITY.md) (written by `node scripts/dev/flint-capability.js`).
+
+**Tier 0 grew** (no model): conversation memory for follow-ups (`app/ui/flintconv.js`), a planner that turns a goal
+into a visible plan of his own commands with one Undo per step (`flintplan.js`), concept matching for search,
+duplicate tasks, related docs and comment groups plus a summary that keeps dates, numbers and decisions
+(`flintsem.js`), and project memory: facts picked up on the device, kept with the project, viewable and editable
+(`flintfacts.js`, `server/flintfacts.js`).
+
+**Tier 1, the local brain** (`flintembed.js`, `flintmodel.js`, `server/flintmodel.js`)
+- Now a **recommended setup step** (`flintsetup.js`): on Home after sign-up or a first tribe, as an extra row in the
+  project's Getting started list, in Settings › Plan & AI, and once more from Flint's chat for someone who said Later.
+  Still nothing is fetched until Download is pressed. It reads the Network Information API and
+  `navigator.storage.estimate()` and says why it would wait. The download keeps its pieces in IndexedDB and resumes
+  with `Range: bytes=N-`.
+- Used for: "did you mean", help answers, the palette, and now Flint's "where did we talk about…" across docs, tasks,
+  chat, files and Versions, duplicate-task detection, related docs and comment groups (each also works, more
+  literally, with no model). It never decides a command, so the eval is identical with and without it.
+- **The model:** `minishlab/potion-base-8M` (Model2Vec, MIT, about 30 MB); on phones the default is the smaller
+  `minishlab/potion-base-2M` (about 8 MB). Neither could be downloaded from the build machine, so **no real model has
+  been run through this loader**, and the 2M model's name, size and file layout are from memory of its model card:
+  check both cards before release. A host can keep the files in `<tribe>/.tribe/flint-model/` instead.
+- **Tested with a fixture** (`scripts/dev/flint-fixture-model.js`, 740 KB, not a trained model): did-you-mean top 3
+  on 16 unrecognized paraphrases goes from 6/16 to 8/16 (`flint_embed_test.js`; an earlier note here said 10/16).
+
+**Tier 2, a local model, opt-in** (`flintllm.js`, `server/flintllm.js`): one `chat()` over three backends.
+- **A server on this computer** (Ollama, LM Studio, llama.cpp, Jan: any OpenAI-compatible `/v1`), straight from the
+  page. Loopback addresses only. On the website the server must allow the page's origin (Ollama: `OLLAMA_ORIGINS`).
+- **The host's server**, through the host (which itself only talks to loopback; host and admins, members when the
+  host shares it). This is the path in the desktop app, whose page origin Ollama does not allow by default.
+- **In the browser on WebGPU**: the existing built-in model (`brainpick.js`, `brainworker.js`: WebLLM from its CDN,
+  only after Download there, pinned and SHA-384 checked, in a worker). Nothing of it is in the repo.
+- The model never executes anything. It returns `{ "ops": [{ "say": "<one of Flint's commands>" }] }` or
+  `{ "text": … }`; `validate()` checks the shape, re-reads every sentence with flintnlu.js, refuses commands a model
+  may never start (hosting, invites, payments, publishing…) and turns outbound or destructive ones into a button.
+  What passes runs through flintlocal.js with one Undo entry per op. Writing jobs (summary, rewrite in a tone, draft
+  from project facts, explain an error, names) stream into the chat. Timeout, Cancel, fallback to tiers 0 and 1.
+- **Not measured:** no real model was reachable here. `e2e_flint_llm.py` runs against a scripted fake server; it
+  proves the plumbing and the safety checks, not any model's quality.
+
+**Desktop app CSP** (unchanged: `script-src 'self' blob: 'wasm-unsafe-eval'`, `worker-src 'self' blob:`,
+`connect-src … http: https:`): tiers 0 and 1 are plain JS. Tier 2 through the host needs nothing new. The in-browser
+backend loads from a `blob:` URL in a worker and uses WebAssembly, both allowed; it still needs the webview to have
+WebGPU (WebView2 on Windows does; macOS and Linux webviews mostly do not yet). Not run in a real desktop build here.
+
+**Not built:** vectors stored per doc (the index is rebuilt in memory, at most once a minute), taught phrases by
+meaning, clustering website comments into task groups in the UI (the function exists: `TribeFlintSem.cluster`),
+related docs in the doc view (`TribeFlintModel.relatedTo` exists, no UI yet).
