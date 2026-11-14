@@ -77,8 +77,8 @@ def main():
             st = pg.evaluate("TribeOffline.state()")
             assert [m["id"] for m in st["members"]] == ["me"], st["members"]
             assert st["projects"][0]["name"] == "My first project"
-            pg.wait_for_selector("#demo-pill.solo", state="visible")
-            assert "On this phone" in pg.text_content("#demo-pill")
+            pg.wait_for_selector("#share-card[data-where='browser']", state="visible")
+            assert "saved on this phone" in pg.text_content("#sc-line") and not pg.locator("#demo-pill").is_visible(), "the card says where it is saved; no pill"
 
             # 3. Flint adds a task with no model (the built-in intent router)
             pg.evaluate("TribeFlint.ask('add a task: sketch the home screen')")

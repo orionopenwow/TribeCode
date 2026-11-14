@@ -94,7 +94,7 @@ def main():
             # server call; choosing "This computer" as its home makes the real tribe here
             ask(pg, "start a project", "Starting your first project")
             pg.wait_for_selector("#tn #tn-name", state="visible", timeout=8000)   # the one create flow (tribenew.js)
-            pg.fill("#tn-name", "Flint's project"); pg.click("#tn-next")
+            pg.fill("#tn-name", "Flint's project"); pg.click("#tn-options")
             assert health()["members"] == 0, "nothing goes to the server before a home is chosen"
             pg.click("#tn [data-tn-where='folder']"); pg.click("#tn-go")
             for _ in range(60):

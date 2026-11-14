@@ -67,7 +67,7 @@ def main():
             # ---------- 1. a project on this device ----------
             pg = page("Orion", q="&freshopen=1")
             pg.evaluate("TribeNew.open()"); pg.wait_for_selector("#tn #tn-name", state="visible"); pg.wait_for_timeout(250)
-            pg.fill("#tn-name", "Lantern Crew"); pg.click("#tn-next"); pg.wait_for_selector("#tn[data-step='2'] [data-tn-where]")
+            pg.fill("#tn-name", "Lantern Crew"); pg.click("#tn-options"); pg.wait_for_selector("#tn[data-step='2'] [data-tn-where]")
             pg.click("#tn [data-tn-where='device']"); pg.click("#tn-go"); pg.wait_for_selector("#tn[data-step='3']", timeout=10000)
             pg.click("#tn-skip"); pg.wait_for_function("!TribeNew.isOpen()"); pg.wait_for_timeout(600)
             assert pg.evaluate("TribeOffline.solo()"), "the tribe lives on this device"

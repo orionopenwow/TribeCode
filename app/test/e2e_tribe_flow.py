@@ -100,8 +100,8 @@ def main():
 
             # ---------- 2. Back works, and keeps what was typed ----------
             pg.click("#pj-plus"); opened(pg, "back test")
-            pg.click("#tn-next"); assert pg.is_visible("#tn-err") and pg.evaluate("TribeNew.state().step") == 1, "a calm inline note, no empty name"
-            pg.fill("#tn-name", "Lantern Crew"); pg.click("#tn [data-tn-emo='🎮']"); pg.click("#tn-next")
+            pg.click("#tn-options"); assert pg.is_visible("#tn-err") and pg.evaluate("TribeNew.state().step") == 1, "a calm inline note, no empty name"
+            pg.fill("#tn-name", "Lantern Crew"); pg.click("#tn [data-tn-emo='🎮']"); pg.click("#tn-options")
             pg.wait_for_selector("#tn[data-step='2'] [data-tn-where]")
             homes = pg.evaluate("TribeNew.homes()"); assert homes == ["folder", "device", "cloud", "github", "shared"], homes
             assert pg.evaluate("TribeNew.recommended()") == "folder", "a page served by TribeCode: a folder on this computer"
@@ -112,8 +112,8 @@ def main():
             pg.screenshot(path=str(SHOTS / "tribe-flow-where.png"))
             pg.click("#tn-back"); pg.wait_for_selector("#tn[data-step='1']")
             assert pg.input_value("#tn-name") == "Lantern Crew" and pg.get_attribute("#tn [data-tn-emo='🎮']", "aria-checked") == "true", "Back keeps the name and icon"
-            pg.click("#tn-next"); pg.wait_for_selector("#tn[data-step='2']"); assert pg.evaluate("TribeNew.state().where") == "github", "and the choice"
-            pg.click("#tn-b2"); pg.wait_for_selector("#tn[data-step='1']"); pg.click("#tn-next"); pg.wait_for_selector("#tn[data-step='2']")
+            pg.click("#tn-options"); pg.wait_for_selector("#tn[data-step='2']"); assert pg.evaluate("TribeNew.state().where") == "github", "and the choice"
+            pg.click("#tn-b2"); pg.wait_for_selector("#tn[data-step='1']"); pg.click("#tn-options"); pg.wait_for_selector("#tn[data-step='2']")
             pg.click("#tn-go"); assert "owner/name" in pg.inner_text("#tn-err"), "github needs a repo: an inline note"
 
             # ---------- 3a. This device ----------
@@ -128,7 +128,7 @@ def main():
             st = pg.evaluate("TribeOffline.state()"); assert [p["name"] for p in st["projects"]] == ["Lantern Crew"] and st["projects"][0]["emoji"] == "🎮", st["projects"]
             assert "Start your first project" in pg.inner_text("#tn-first")
             # inside that tribe, + opens the same flow with its tribe as the home
-            pg.click("#pj-plus"); opened(pg, "rail + in a tribe"); pg.fill("#tn-name", "Moon Garden"); pg.click("#tn-next")
+            pg.click("#pj-plus"); opened(pg, "rail + in a tribe"); pg.fill("#tn-name", "Moon Garden"); pg.click("#tn-options")
             assert pg.evaluate("TribeNew.homes()") == ["tribe"] and pg.evaluate("TribeNew.recommended()") == "tribe"
             pg.click("#tn-go"); pg.wait_for_selector("#tn[data-step='3']", timeout=8000); pg.click("#tn-done"); closed(pg, "in a tribe")
             pg.wait_for_function("TribeOffline.state().projects.length === 2 && TribeProjects.current() === TribeOffline.state().projects[1].id", timeout=8000)
@@ -136,7 +136,7 @@ def main():
 
             # ---------- 3b. A GitHub repo (mocked) ----------
             pg = page(); mock_github(pg.context)
-            pg.evaluate("TribeNew.open({ name: 'Repo Crew' })"); opened(pg, "github"); pg.click("#tn-next")
+            pg.evaluate("TribeNew.open({ name: 'Repo Crew' })"); opened(pg, "github"); pg.click("#tn-options")
             pg.click("#tn [data-tn-where='github']"); pg.fill("#tn-repo", "https://github.com/camp/lantern"); pg.click("#tn-go")
             pg.wait_for_selector("#tn[data-step='3']", timeout=10000)
             assert pg.input_value("#tn-link") == "https://github.com/camp/lantern"
@@ -146,7 +146,7 @@ def main():
 
             # ---------- 3c. Free cloud (a mocked cloud tribe) ----------
             pg = page(); seen = []; mock_cloud(pg.context, seen)
-            pg.evaluate("TribeNew.open({ name: 'Cloud Crew' })"); opened(pg, "cloud"); pg.click("#tn-next")
+            pg.evaluate("TribeNew.open({ name: 'Cloud Crew' })"); opened(pg, "cloud"); pg.click("#tn-options")
             pg.click("#tn [data-tn-where='cloud']"); pg.click("#tn-go"); assert "invite link" in pg.inner_text("#tn-err")
             pg.fill("#tn-cloud", CLOUD + "/join/abc12"); pg.click("#tn-go")
             pg.wait_for_selector("#tn[data-step='3'] #tn-invite", timeout=10000)   # feat/invite-one: the invite step opens the one invite sheet
@@ -158,7 +158,7 @@ def main():
 
             # ---------- 3d. A folder on this computer (the real server here), then in that tribe ----------
             pg = page()
-            pg.evaluate("TribeNew.open({ name: 'Home Crew' })"); opened(pg, "folder"); pg.click("#tn-next")
+            pg.evaluate("TribeNew.open({ name: 'Home Crew' })"); opened(pg, "folder"); pg.click("#tn-options")
             assert pg.get_attribute("#tn [data-tn-where='folder']", "aria-checked") == "true", "recommended is chosen"
             pg.click("#tn-folder #lr-browse-go"); pg.wait_for_selector("#tn-folder .lr-dir"); pg.click("#tn-folder [data-open$='Games']")
             pg.wait_for_selector("#tn-folder [data-dir$='HomeCrew']"); pg.click("#tn-folder [data-dir$='HomeCrew']")
@@ -172,14 +172,14 @@ def main():
             pg.wait_for_selector("#invite-modal:not(.hidden) .modal-card.io #io-pane[data-who='friend'] #tl-link", timeout=30000)
             pg.wait_for_function("/\\/t\\//.test(document.querySelector('#tl-link').textContent)", timeout=10000)   # the new tribe's link
             pg.evaluate("TribeInvite.close()")
-            pg.wait_for_selector("#home-pill:not(.hidden)", timeout=20000)
-            pg.wait_for_function("document.querySelector('#home-pill').textContent.includes('~/Games/HomeCrew')", timeout=10000)
+            pg.wait_for_selector("#share-card", state="visible", timeout=20000)
+            pg.wait_for_function("document.querySelector('#sc-line').textContent.includes('~/Games/HomeCrew')", timeout=10000)
             pg.wait_for_function("window.TribeClient && TribeClient.connected() && !TribeOffline.solo()", timeout=20000)
             pg.wait_for_selector("#tn-first", state="visible", timeout=10000)
             s = pg.evaluate(ONE); assert s["sheets"] == 0 and s["scrims"] == 0, s
             n0 = pg.evaluate("TribeProjects.list().length")
             pg.click("#tn-first-later"); pg.wait_for_selector("#tn-first", state="detached")
-            pg.click("#pj-plus"); opened(pg, "rail + on a server"); pg.fill("#tn-name", "Second Crew"); pg.click("#tn-next")
+            pg.click("#pj-plus"); opened(pg, "rail + on a server"); pg.fill("#tn-name", "Second Crew"); pg.click("#tn-options")
             assert pg.evaluate("TribeNew.homes()") == ["tribe", "folder", "github", "shared"]
             pg.click("#tn-go"); pg.wait_for_selector("#tn[data-step='3'] #tn-invite", timeout=10000)
             pg.click("#tn-done"); closed(pg, "server tribe")
@@ -194,7 +194,7 @@ def main():
             for step in (1, 2, 3):
                 pg.wait_for_selector(f"#tn[data-step='{step}']"); pg.wait_for_timeout(300)
                 f = pg.evaluate(FIT); assert f["w"] <= 390 and f["l"] >= 0 and f["over"] <= 0 and not f["wide"], (step, f)
-                if step == 1: pg.fill("#tn-name", "Pocket Crew"); pg.click("#tn-next")
+                if step == 1: pg.fill("#tn-name", "Pocket Crew"); pg.click("#tn-options")
                 if step == 2:
                     assert pg.evaluate("TribeNew.recommended()") == "device", "a phone: this device"
                     pg.click("#tn [data-tn-where='cloud']"); pg.wait_for_timeout(200); f = pg.evaluate(FIT); assert not f["wide"], f

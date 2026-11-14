@@ -73,7 +73,7 @@ def main():
             pg.wait_for_function("window.TribeLocalSetup && window.TribeApp && TribeApp.fresh()", timeout=15000)
             pg.wait_for_selector("#view-hub:not(.hidden) #hub-host", timeout=10000); time.sleep(0.5)
             pg.click("#hub-host"); pg.wait_for_selector("#tn #tn-name", state="visible")   # the one create flow (tribenew.js)
-            pg.fill("#tn-name", "Pixel Quest"); pg.click("#tn-next"); pg.click("#tn [data-tn-where='device']"); pg.click("#tn-go")
+            pg.fill("#tn-name", "Pixel Quest"); pg.click("#tn-options"); pg.click("#tn [data-tn-where='device']"); pg.click("#tn-go")
             pg.wait_for_selector("#tn[data-step='3'] #tn-skip", timeout=8000); pg.click("#tn-skip"); pg.wait_for_selector("#tn", state="detached")
             pg.evaluate("TribeLocalSetup.where()"); pg.wait_for_selector("#su-where", state="visible", timeout=8000)   # its home, any time later
 

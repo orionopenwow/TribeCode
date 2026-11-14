@@ -52,18 +52,18 @@ def main():
             pg.add_init_script("try { localStorage.setItem('tribecode.settings.v1', JSON.stringify({name: 'Camp', onboarded: true, tour: {done: true}, server: {url: '%s', token: '%s'}})); localStorage.setItem('tribecode.project:%s', '%s'); localStorage.setItem('tribecode.firstrun.done', '1') } catch (e) {}" % (BASE, host, BASE, pid))
             pg.goto(BASE + "/?skipIntro=1"); pg.wait_for_function("window.TribeClient && TribeClient.connected() && window.TribeHome", timeout=20000)
             pg.evaluate(f"TribeProjects.switchTo('{pid}', 'home')")
-            pg.wait_for_selector("#home-pill:not(.hidden)", timeout=15000)
-            assert pg.locator("#home-pill:visible, #host-pill:visible, #demo-pill:visible").count() == 1, "one pill"
+            pg.wait_for_selector("#share-card", state="visible", timeout=15000)
+            assert pg.locator("#home-pill:visible, #host-pill:visible, #demo-pill:visible").count() == 0, "no pill in the header: the dashboard card says it"
 
             # ---------- 1. an empty folder, made in the picker: start fresh, edit, on disk ----------
-            pg.click("#home-pill"); pg.click("#hp-move"); pg.wait_for_selector("#lr-folder .lr-dir")
+            pg.click("#sc-more"); pg.click("#hp-move"); pg.wait_for_selector("#lr-folder .lr-dir")
             pg.click("#lr-folder [data-open$='Projects']"); pg.wait_for_selector("#lr-folder [data-dir$='OldSite']")
             pg.fill("#lr-mk-name", "Jiddles"); pg.click("#lr-mk button")
             pg.wait_for_function("document.querySelector('#lr-folder-go') && document.querySelector('#lr-folder-go').textContent.includes('Start fresh')", timeout=10000)
             assert "Empty folder" in pg.inner_text("#lr-found")
             pg.uncheck("#lr-git"); pg.click("#lr-folder-go"); pg.wait_for_selector("#lr-folder", state="detached")
             fresh = home / "Projects" / "Jiddles"
-            wait(lambda: "~/Projects/Jiddles" in pg.inner_text("#home-pill"), "the pill shows the folder")
+            wait(lambda: "~/Projects/Jiddles" in pg.inner_text("#sc-line"), "the card shows the folder")
             assert not (fresh / ".git").exists(), "plain folders work without git"
             st, d = api(f"/projects/{pid}/folder/file", "PUT", {"path": "src/game.js", "content": "let score = 0;\n"}, token=host); assert st == 200, d
             assert (fresh / "src" / "game.js").read_text() == "let score = 0;\n", "written straight into the folder"
@@ -121,7 +121,7 @@ def main():
             api(f"/projects/{pid}/folder/file", "PUT", {"path": "after.txt", "content": "new home"}, token=host)
             assert (moved / "after.txt").exists() and not (fresh / "after.txt").exists(), "edits go to the new folder"
             pg.evaluate(f"TribeProjects.switchTo('{pid}', 'home')")
-            wait(lambda: "~/Projects/Jiddles2" in pg.inner_text("#home-pill"), "the pill follows the move")
+            wait(lambda: "~/Projects/Jiddles2" in pg.inner_text("#sc-line"), "the card follows the move")
             (moved / "watched.txt").write_text("still watching")
             wait(lambda: pg.evaluate("window.__fc.some(x => x.files.some(f => f.endsWith('watched.txt')))"), "the watcher follows the move", t=10)
 

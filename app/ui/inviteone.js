@@ -106,8 +106,9 @@
     if (role === 'spectator' || role === 'agent') { p.innerHTML = '<p class="io-calm">Spectators watch along, so they can\'t invite people. Ask the host for a builder seat.</p>'; return; }
     // A project that lives only on this device has nowhere for a friend to arrive yet: say so, with the way on.
     if (solo()) {
-      p.innerHTML = `<div class="io-calm"><p>This project lives on this device. Choose where it lives first, then friends can join.</p><button type="button" class="btn primary" id="io-where">Choose where it lives</button></div>`;
-      $('#io-where').onclick = () => { close(); const L = window.TribeLocalSetup, P = window.TribePhoneHost; if (L && L.where && !matchMedia('(max-width: 820px)').matches) L.where(); else if (P && P.move) P.move(); };
+      // feat/real-tribe: why, and the one button (sharecard.js); afterwards the invite sheet opens again by itself
+      p.innerHTML = `<div class="io-calm"><p>Friends and AI agents join with a link, which works once this tribe is online. Everything in it comes along.</p><button type="button" class="btn primary" id="io-where">Put this tribe online</button></div>`;
+      $('#io-where').onclick = () => { close(); const L = window.TribeLocalSetup, P = window.TribePhoneHost; if (window.TribeShare) window.TribeShare.online('friends'); else if (L && L.where && !matchMedia('(max-width: 820px)').matches) L.where(); else if (P && P.move) P.move(); };
       return;
     }
     if (st.who === 'guest') return guestPane(p);

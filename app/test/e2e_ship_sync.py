@@ -238,12 +238,12 @@ def main():
             pg.add_init_script("try { localStorage.setItem('tribecode.settings.v1', JSON.stringify({name: 'Camp', onboarded: true, tour: {done: true}, server: {url: '%s', token: '%s'}})); localStorage.setItem('tribecode.project:%s', '%s'); localStorage.setItem('tribecode.firstrun.done', '1') } catch (e) {}" % (BASE, host, BASE, pid))
             pg.goto(BASE + "/?skipIntro=1"); pg.wait_for_function("window.TribeClient && TribeClient.connected() && window.TribeHome", timeout=20000)
             pg.evaluate(f"TribeProjects.switchTo && TribeProjects.switchTo('{pid}', 'home')")
-            pg.wait_for_selector("#home-pill:not(.hidden)", timeout=15000)
-            assert pg.locator("#home-pill:visible, #demo-pill:visible").count() == 1, "one pill"
-            wait(lambda: "Folder + GitHub" in pg.inner_text("#home-pill"), "one status for the folder and GitHub")
-            pg.click("#home-pill"); pg.wait_for_selector("#home-pop")
+            pg.wait_for_selector("#share-card", state="visible", timeout=15000)
+            assert pg.locator("#home-pill:visible, #demo-pill:visible").count() == 0, "no pill in the header"
+            wait(lambda: "copy on GitHub" in pg.inner_text("#sc-line") and "on this computer" in pg.inner_text("#sc-line"), "one sentence for the folder and GitHub")
+            pg.click("#sc-more"); pg.wait_for_selector("#home-pop")
             acts = pg.inner_text("#home-pop")
-            for t in ["Move to", "GitHub", "Ship now", "Ship / sync settings", "Share"]: assert t in acts, (t, acts)
+            for t in ["Move to", "GitHub", "Back up now", "Backup settings", "Share"]: assert t in acts, (t, acts)
             assert "phone" not in acts.lower(), "desktop wording: no phone"
             pg.click("#hp-sync"); pg.wait_for_selector("#lr-sync #lr-repo")
             for t in ["Manual", "Auto-ship", "pull request", "Commit message", "Pull before ship", "Pause sync", "Undo last ship"]: assert t in pg.inner_text("#lr-sync"), t
@@ -253,7 +253,7 @@ def main():
             pg.click("#lr-sync [data-mode='manual']"); pg.click("#lr-save"); pg.wait_for_selector("#lr-sync", state="detached")
             st, d = call(f"/projects/{pid}/sync", token=host); assert d["settings"]["mode"] == "manual"
             # sharing: three paths from the pill
-            pg.click("#home-pill"); pg.click("#hp-share"); pg.wait_for_selector("#lr-share")
+            pg.click("#sc-more"); pg.click("#hp-share"); pg.wait_for_selector("#lr-share")
             ways = pg.locator("#lr-share [data-share]").evaluate_all("els => els.map(e => e.dataset.share)"); assert ways == ["anywhere", "network", "folder", "solo"], ways
             assert "Recommended" in pg.text_content("#lr-share [data-share='anywhere']")
             pg.click("#lr-share [data-share='network']"); pg.wait_for_function("(document.querySelector('#lr-share-link') || {}).value && document.querySelector('#lr-share-link').value.includes('/join/')", timeout=15000)
@@ -269,7 +269,7 @@ def main():
             pg.check("#lr-found [data-join][value='']"); assert pg.inner_text("#lr-folder-go") == "Share through this folder"
             pg.click("#lr-folder-go"); pg.wait_for_selector("#lr-folder", state="detached")
             wait(lambda: call(f"/projects/{pid}/sync", token=host)[1]["status"]["kind"] == "folder", "now synced through the shared folder")
-            wait(lambda: "shared folder" in pg.inner_text("#home-pill"), "the pill says so")
+            wait(lambda: "shared folder" in pg.inner_text("#sc-line"), "the card says so")
             assert any(x.name.endswith(".tribecode.git") and x.name != "camp.tribecode.git" for x in shared.iterdir())
             b.close()
 

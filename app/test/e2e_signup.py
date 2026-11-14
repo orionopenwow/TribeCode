@@ -87,7 +87,7 @@ def main():
             assert g.locator("#sg").count() == 0
 
             # ---- 2. a guest starts a project: Save your work (calm, never blocking)
-            g.evaluate("TribeLocalSetup.start()"); g.fill("#tn-name", "Moon Garden"); g.click("#tn-next")   # the one create-a-tribe flow (tribenew.js)
+            g.evaluate("TribeLocalSetup.start()"); g.fill("#tn-name", "Moon Garden"); g.click("#tn-options")   # the one create-a-tribe flow (tribenew.js)
             g.click("#tn [data-tn-where='device']"); g.click("#tn-go"); g.wait_for_selector("#tn[data-step='3']", timeout=15000); g.click("#tn-skip")
             g.wait_for_selector("#tn", state="detached", timeout=8000)
             g.wait_for_selector("#sg-nudge", state="visible", timeout=15000)

@@ -28,8 +28,8 @@
     const st_ = $('#ub-st');
     if (local) {
       const db = O.state && O.state(), pid = db && (db.current || ((db.projects || [])[0] || {}).id), h = ((O.homes && O.homes()) || {})[pid] || {};
-      st_.textContent = h.github ? 'Live on GitHub' : 'On this device';
-      st_.classList.add('ub-where'); st_.setAttribute('role', 'button'); st_.tabIndex = 0; st_.title = 'Where should it live?';
+      st_.textContent = h.github ? 'Only you · copy on GitHub' : 'Only you';   // feat/real-tribe: who can see it; where it is saved is on the dashboard card
+      st_.classList.add('ub-where'); st_.setAttribute('role', 'button'); st_.tabIndex = 0; st_.title = 'Sharing and backup';
     } else {
       st_.textContent = on ? (m && m.role === 'host' ? 'Hosting' : 'Online') : (C && C.hasToken && C.hasToken() && !(O && O.asleep && O.asleep()) ? 'Reconnecting…' : 'Just you for now');
       st_.classList.remove('ub-where'); st_.removeAttribute('role'); st_.removeAttribute('tabindex'); st_.title = '';
@@ -37,7 +37,7 @@
     const ac = !on && window.TribeAccounts && window.TribeAccounts.status(true);   // signed out, a guest or a TEST account (accounts.js)
     if (ac) { $('#ub-st').textContent = ac; if (window.TribeAccounts.mode() === 'signedout') $('#ub-name').textContent = 'Signed out'; }
     const as = window.TribeAccounts && window.TribeAccounts.signedAs && window.TribeAccounts.signedAs();   // feat/signup: who this is
-    if (as) { st_.textContent = local ? `${as} · ${st_.textContent}` : `Signed in as ${as}`; st_.title = `Signed in as ${as}` + (local ? ' · Where should it live?' : ''); }
+    if (as) { st_.textContent = local ? `${as} · ${st_.textContent}` : `Signed in as ${as}`; st_.title = `Signed in as ${as}` + (local ? ' · Sharing and backup' : ''); }
   }
   function place() {
     const pf = $('#pf-btn'), bell = $('#nf-bell'), tb = $('.titlebar .tb-right'), nest = $('#tour-side');

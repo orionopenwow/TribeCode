@@ -116,7 +116,7 @@ def main():
             f = fx.new_page(); watch(f)
             f.goto(BASE + "/?skipIntro=1&freshopen=1&signup=1"); f.wait_for_selector("#sg #sg-guest", state="visible", timeout=20000)
             f.click("#sg-guest"); f.wait_for_function("TribeAccounts.mode() === 'guest'")
-            f.evaluate("TribeLocalSetup.start()"); f.fill("#tn-name", "Moon Garden"); f.click("#tn-next")
+            f.evaluate("TribeLocalSetup.start()"); f.fill("#tn-name", "Moon Garden"); f.click("#tn-options")
             f.click("#tn [data-tn-where='device']"); f.click("#tn-go"); f.wait_for_selector("#tn[data-step='3']", timeout=15000); f.click("#tn-skip")
             f.evaluate("window.TribeHub && TribeHub.open && TribeHub.open('home')")
             f.wait_for_selector("#view-hub #fs-step .fsu", state="visible", timeout=10000)

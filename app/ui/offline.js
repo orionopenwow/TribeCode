@@ -1038,7 +1038,7 @@
         break;
       }
       case 'invites': {
-        if (solo() && !b && POST) { setTimeout(() => (window.TribeShare ? window.TribeShare.online('friends') : window.TribeLocalSetup && !phoneLike() ? window.TribeLocalSetup.where() : window.TribePhoneHost && window.TribePhoneHost.move()), 50); return no(409, 'This tribe isn’t online yet. Put it online and friends can join with a link.'); }
+        if (solo() && !b && POST) { setTimeout(() => needsReal('Friends and AI agents join with a link, which works once this tribe is online.'), 50); return no(409, 'This tribe isn’t online yet. Put it online and friends can join with a link.'); }
         if (!b && POST) {
           const inv = { code: 'DEMO' + rid(4).toUpperCase(), by: 'me', role: body.role === 'spectator' ? 'spectator' : 'builder', maxUses: Number(body.maxUses) || 5, uses: 0, created: iso(), expires: iso(Date.now() + (Number(body.hours) || 24) * 3600e3), demo: true, ...(body.project && body.project !== 'tribe' ? { project: body.project } : {}) };
           db.invites.push(inv); save(); friendJoins(); noteInvite();

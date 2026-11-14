@@ -104,7 +104,7 @@ def main():
             # 5. Start your first project makes the project at once on this device (feat/setup-local); choosing
             #    "This computer" as its home then makes the tribe, with you as host
             pg.click("#hub-host"); pg.wait_for_selector("#tn #tn-name", timeout=5000)   # the one create flow (tribenew.js)
-            pg.fill("#tn-name", "Fox Den"); pg.click("#tn-next")
+            pg.fill("#tn-name", "Fox Den"); pg.click("#tn-options")
             pg.wait_for_selector("#tn[data-step='2']", timeout=10000)
             assert health()["members"] == 0, "making the project waits on no server"
             pg.click("#tn [data-tn-where='folder']"); pg.click("#tn-go")

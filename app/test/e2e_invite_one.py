@@ -185,7 +185,7 @@ def main():
             sheet("agent", None, "Flint")
             # the create-a-tribe flow's invite step
             pg.evaluate("TribeNew.open({ name: 'Side Quest' })"); pg.wait_for_selector("#tn[data-step='1']")
-            pg.click("#tn-next") if pg.locator("#tn-next").count() else pg.press("#tn input", "Enter")
+            pg.click("#tn-options") if pg.locator("#tn-options").count() else pg.press("#tn input", "Enter")
             pg.wait_for_selector("#tn[data-step='2']"); pg.click("#tn-go"); pg.wait_for_selector("#tn[data-step='3'] #tn-invite", timeout=15000)
             assert pg.locator("#tn-link").count() == 0, "the create flow has no invite link of its own"
             pg.click("#tn-invite"); pg.wait_for_selector("#invite-modal:not(.hidden) .modal-card.io #io-pane[data-who='friend']", timeout=15000)

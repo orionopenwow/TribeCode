@@ -93,7 +93,7 @@ def main():
             pg.wait_for_selector("#tn #tn-name", state="visible")
             pg.fill("#tn-name", "Pixel Quest")
             if SHOTS: pg.screenshot(path=str(SHOT_DIR / "setup-optimistic.png"))
-            pg.click("#tn-next"); pg.wait_for_selector("#tn[data-step='2']")
+            pg.click("#tn-options"); pg.wait_for_selector("#tn[data-step='2']")
             if SHOTS: time.sleep(0.3); pg.screenshot(path=str(SHOT_DIR / "setup-where.png"))
             t0 = time.time(); pg.click("#tn [data-tn-where='device']"); pg.click("#tn-go")
             pg.wait_for_function("TribeOffline.solo() && TribeClient.connected()", timeout=5000)
@@ -110,8 +110,8 @@ def main():
             assert not server_calls, f"nothing went to the server before a home was chosen: {server_calls[:5]}"
             assert health()["members"] == 0
             pg.reload(); pg.wait_for_function("window.TribeOffline && TribeOffline.solo() && TribeClient.connected()", timeout=15000)
-            pg.wait_for_selector("#demo-pill.solo", state="visible", timeout=8000)
-            assert "On this device" in pg.text_content("#demo-pill")
+            pg.wait_for_selector("#share-card[data-where='browser']", state="visible", timeout=8000)
+            assert "saved in this browser" in pg.text_content("#sc-line")
             body = pg.evaluate("document.body.innerText")
             for w in BAD: assert w not in body, f"the local project shows {w!r}"
 

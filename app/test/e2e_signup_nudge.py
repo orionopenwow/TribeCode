@@ -186,7 +186,7 @@ def main():
             # ---- a guest's project on this device survives the upgrade from the pop-up
             cx4 = guest_ctx(b); g8 = cx4.new_page(); watch(g8, "upgrade")
             g8.goto(BASE + "/?skipIntro=1&freshopen=1"); g8.wait_for_function("window.TribeLocalSetup && window.TribeSignupNudge", timeout=15000)
-            g8.evaluate("TribeLocalSetup.start()"); g8.fill("#tn-name", "Moon Garden"); g8.click("#tn-next")   # the one create-a-tribe flow (tribenew.js)
+            g8.evaluate("TribeLocalSetup.start()"); g8.fill("#tn-name", "Moon Garden"); g8.click("#tn-options")   # the one create-a-tribe flow (tribenew.js)
             g8.click("#tn [data-tn-where='device']"); g8.click("#tn-go"); g8.wait_for_selector("#tn[data-step='3']", timeout=15000); g8.click("#tn-skip")
             g8.wait_for_timeout(600); g8.evaluate("document.getElementById('sg-nudge') && document.getElementById('sg-nudge').remove()")
             assert g8.evaluate("TribeSignupNudge.show({ force: true })")

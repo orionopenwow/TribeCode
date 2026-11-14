@@ -208,7 +208,7 @@ def main():
             ph.fill("#tn-name", "Moon Garden"); ph.wait_for_timeout(250)
             ph.screenshot(path=str(SHOTS / "phone-plus-start.png"))
             assert ph.evaluate("document.documentElement.scrollWidth <= innerWidth + 1")
-            ph.click("#tn-next"); ph.wait_for_selector("#tn[data-step='2']", state="visible", timeout=10000)
+            ph.click("#tn-options"); ph.wait_for_selector("#tn[data-step='2']", state="visible", timeout=10000)
             homes = ph.eval_on_selector_all("#tn [data-tn-where]", "els => els.map(e => e.dataset.tnWhere)")
             assert homes == ["folder", "device", "cloud", "github", "shared"], homes   # feat/folder-sync: the folder home, off on a phone
             assert ph.get_attribute("#tn [data-tn-where='folder']", "disabled") is not None, "a phone: no folder home"
@@ -245,9 +245,9 @@ def main():
             assert r["kind"] == "build" and "via Qwen3 in your browser" in r["say"] and len(r["create"]) == 3, r
             # 5: a project kept on this device says so, and the label opens Where should it live?
             lp.evaluate("TribeApp.show('hub')")
-            lp.evaluate("TribeLocalSetup.start({ name: 'Glow' })"); lp.wait_for_selector("#tn #tn-next"); lp.click("#tn-next")
+            lp.evaluate("TribeLocalSetup.start({ name: 'Glow' })"); lp.wait_for_selector("#tn #tn-options"); lp.click("#tn-options")
             lp.click("#tn [data-tn-where='device']"); lp.click("#tn-go"); lp.wait_for_selector("#tn[data-step='3'] #tn-skip", timeout=10000); lp.click("#tn-skip")
-            lp.wait_for_function("document.querySelector('#ub-st') && document.querySelector('#ub-st').textContent === 'On this device'", timeout=8000)
+            lp.wait_for_function("document.querySelector('#ub-st') && document.querySelector('#ub-st').textContent === 'Only you'", timeout=8000)
             lp.click("#ub-st"); lp.wait_for_selector("#su-where", state="visible", timeout=5000)
             lx.close()
             b.close()

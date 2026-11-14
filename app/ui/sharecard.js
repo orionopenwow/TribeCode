@@ -147,6 +147,8 @@
     new MutationObserver(soon).observe(document.body, { attributes: true, attributeFilter: ['data-view', 'class'] });
     const hook = () => { const c = C(); if (!c || !c.on) return setTimeout(hook, 300); ['status', 'hello', 'presence', 'members', 'sync'].forEach(ev => c.on(ev, soon)); c.on('hello', () => setTimeout(comeBack, 300)); soon(); if (c.connected && c.connected()) setTimeout(comeBack, 600); };
     hook(); if (S() && S().on) S().on(soon);
+    // a dashboard that redrew without a signal still gets its card (cheap: only when the slot is empty)
+    setInterval(() => { const sl = $('#pj-share-slot'); if (sl && !sl.firstElementChild && document.body.dataset.view === 'home') card(); }, 1500);
   };
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', watch); else watch();
 

@@ -152,7 +152,7 @@
     const js = $('#tn-join-shared', el); if (js) js.onclick = () => { st.name = n.value.trim() || 'Shared tribe'; st.where = 'shared'; st.step = 2; draw(); };
     const more = $('#tn-more', el); if (more) more.onclick = () => { close(true); PJ().gallery(); };
     const named = () => { st.name = n.value.trim(); if (!st.name) { err('Give it a name first. You can change it later.'); n.focus(); return false; } return true; };
-    const op = $('#tn-options', el); if (op) op.onclick = () => { if (!named()) return; st.opts = true; st.where = recommended(); st.step = 2; draw(); };
+    const op = $('#tn-options', el); if (op) op.onclick = () => { if (!named()) return; if (!st.opts) st.where = recommended(); st.opts = true; st.step = 2; draw(); };
     $('#tn-f1', el).onsubmit = e => {
       e.preventDefault(); if (!named()) return;
       if (st.created) { st.step = 3; return draw(); }
