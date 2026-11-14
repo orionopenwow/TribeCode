@@ -32,7 +32,7 @@
       const signIn = gh.configured ? `<button class="btn primary" data-gh="start">${GH}<span>Sign in with GitHub</span></button>` : '';
       const setup = !gh.configured ? (gh.canConfigure
         ? `<div class="gh-setup"><small>To switch on one-click sign-in for everyone, paste a GitHub app id here. It is a one-time step for the owner. <a href="${DOCS}" target="_blank" rel="noopener">How</a></small>
-            <div class="gh-line"><input class="input" id="gh-cid" placeholder="Client id, e.g. Ov23li…" autocomplete="off" spellcheck="false" maxlength="80"><button class="btn" data-gh="cid">Save</button></div></div>`
+            <div class="gh-line"><input class="input" id="gh-cid" placeholder="GitHub app id, e.g. Ov23li…" autocomplete="off" spellcheck="false" maxlength="80"><button class="btn" data-gh="cid">Save</button></div></div>`
         : '<small class="gh-hint">One-click sign-in isn’t switched on for this tribe yet. You can paste a token below.</small>') : '';
       body = `${note ? `<p class="gh-note">${note}</p>` : ''}<div class="gh-acts">${signIn}${ghcli}</div>${setup}
         <details class="gh-paste"><summary>Paste a token instead</summary><div class="gh-line"><input class="input" id="gh-tok" type="password" placeholder="ghp_… or github_pat_…" autocomplete="off" spellcheck="false"><button class="btn" data-gh="token">Save</button></div><small>Needs the <code>repo</code> scope. It is kept on the computer that runs this tribe and never shown to anyone.</small></details>`;

@@ -80,7 +80,7 @@ def main():
 
             # ---- 1. one-click sign-in is off: calm for the owner, and the token path works ----
             pg.evaluate("TribeGitHubConnect.open()"); pg.wait_for_selector("#ghc-sheet [data-ghc='signin']", timeout=8000)
-            off = pg.inner_text("#ghc-off"); assert "isn’t switched on yet" in off and "GitHub app id" in off, off
+            off = pg.inner_text("#ghc-off"); assert "isn’t switched on yet" in off and "GitHub app id" in pg.inner_text("#ghc-sheet"), off
             assert pg.locator("#ghc-sheet [data-gh='start']").count() == 0, "no dead Sign in button while it is off"
             assert pg.is_visible("#ghc-sheet #gh-cid"), "the owner can switch it on right here"
             assert pg.is_disabled("#ghc-go"), "Connect waits for the sign-in"

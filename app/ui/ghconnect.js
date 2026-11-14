@@ -49,7 +49,7 @@
       const owner = gh && gh.canConfigure, ready = gh && gh.configured;
       el.innerHTML = `<div class="ghc" data-ghc="signin">
         <span class="ph-lab">1 · Sign in to GitHub</span>
-        ${ready ? '' : `<p class="ph-note ghc-calm" id="ghc-off">${owner ? 'One-click sign-in isn’t switched on yet. Add a GitHub app id below to switch it on for everyone, or paste a token for now.' : 'One-click sign-in isn’t switched on for this tribe yet. Pasting a token works the same.'}</p>`}
+        ${ready ? '' : `<p class="ph-note ghc-calm" id="ghc-off">${owner ? 'One-click sign-in isn’t switched on yet. A token works for now.' : 'One-click sign-in isn’t switched on for this tribe yet. Pasting a token works the same.'}</p>`}
         <div id="ghc-sign"></div>
         <p class="ph-note">Your sign-in is kept on the computer that runs this tribe. Nobody else in the tribe can see or use it.</p></div>`;
       if (window.TribeGitHub) { window.TribeGitHub.noAuto = true; window.TribeGitHub.mount(el.querySelector('#ghc-sign')); }

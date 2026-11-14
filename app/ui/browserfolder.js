@@ -10,7 +10,8 @@
   const OFF = () => window.TribeOffline;
   const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const toast = m => window.TribeApp && window.TribeApp.toast && window.TribeApp.toast(m);
-  const can = () => typeof window.showDirectoryPicker === 'function' && window.isSecureContext !== false;
+  const phone = () => matchMedia('(max-width: 820px)').matches || /Android|iPhone|iPad/i.test(navigator.userAgent || '');
+  const can = () => typeof window.showDirectoryPicker === 'function' && window.isSecureContext !== false && !phone();
   const safe = s => String(s || '').replace(/[\\/:*?"<>|\x00-\x1F]+/g, '-').replace(/^\.+/, '').trim().slice(0, 80) || 'untitled';
 
   // ---------- remembered folders (IndexedDB keeps the handle itself; localStorage only its name) ----------
@@ -84,7 +85,7 @@
     let picked = null;
     const draw = () => {
       if (!can()) {
-        el.innerHTML = `<p class="ph-note bf-note" id="bf-fallback">This browser can’t open folders. It will be kept in this browser, and you can download a copy of its files any time from Sharing and backup.</p>
+        el.innerHTML = `<p class="ph-note bf-note" id="bf-fallback">${phone() ? 'Folders need a computer. It will be kept on this phone' : 'This browser can’t open folders. It will be kept in this browser'}, and you can download a copy of its files any time from Sharing and backup.</p>
           <p class="ph-note"><a href="${esc((window.TribeWeb && window.TribeWeb.RELEASES) || 'https://github.com/orionopenwow/TribeCode/releases/latest')}" target="_blank" rel="noopener">Get the TribeCode app</a> to keep it in a folder on your computer.</p>`;
         return;
       }

@@ -59,14 +59,15 @@
       ];
     }
     const here = canHere();
-    return [
+    const list = [
       ...(here ? [{ k: 'computer', icon: 'box', t: 'On this computer', s: 'The TribeCode app keeps it on this computer. Friends join with a link' }] : []),
-      { k: f.ok ? 'folder' : 'bfolder', icon: 'folder', t: 'A folder you pick or create', s: f.ok ? 'Its files go in a folder of yours on this computer. Edit them here or in any editor' : BF() && BF().can() ? 'A copy of its files is saved in a folder on this computer. It also stays in this browser' : phone() ? 'Folders need a computer. On a phone it stays on this phone' : 'This browser can’t open folders. It stays in this browser, and you can download a copy' },
+      { k: f.ok ? 'folder' : 'bfolder', icon: 'folder', t: 'A folder you pick or create', s: f.ok ? 'Its files go in a folder of yours on this computer. Edit them here or in any editor' : phone() ? 'Folders need a computer. On a phone it stays on this phone, and you can download a copy' : BF() && BF().can() ? 'A copy of its files is saved in a folder on this computer. It also stays in this browser' : 'This browser can’t open folders. It stays in this browser, and you can download a copy' },
       { k: 'github', icon: 'git', t: 'GitHub', s: 'A copy is kept on GitHub. Friends can see it there even when this computer is off', note: 'You can also connect GitHub later.' },
       { k: 'cloud', icon: 'zap', t: 'Free cloud', s: 'Always online on a free server, even when your computer is off' },
       ...(f.ok ? [{ k: 'shared', icon: 'net', t: 'A shared folder', s: 'A Dropbox, OneDrive, Google Drive or iCloud folder you already use. Friends who have the folder join from it' }] : []),
-      { k: 'device', icon: 'spark', t: phone() ? 'On this phone only' : 'In this browser only', s: 'Starts right away and works offline. Only you see it until you put it online' },
     ];
+    const dev = { k: 'device', icon: 'spark', t: phone() ? 'On this phone only' : 'In this browser only', s: 'Starts right away and works offline. Only you see it until you put it online' };
+    return here ? [...list, dev] : [dev, ...list];   // the default always comes first
   }
   // A step with one choice is no step: "More options" shows only when there is something to choose.
   const choices = () => homes().filter(h => !h.off).length;
