@@ -28,3 +28,12 @@
 .help-scrim { position: fixed; inset: 0; z-index: 119; background: rgba(6, 8, 11, .45); opacity: 0; transition: opacity .16s ease; }
 .help-scrim.on { opacity: 1; }
 @media (prefers-reduced-motion: reduce) { .help-scrim { transition: none; } }
+
+/* feat/help-next: six entries by intent; the first is the main one; "Something's wrong" opens a short second list */
+.help-menu .hm-primary b { color: var(--text); font-weight: 700; }
+.help-menu .hm-primary svg.i:first-child { color: var(--accent); }
+.help-menu .hm-back { display: flex; align-items: center; gap: 8px; width: 100%; min-height: 36px; padding: 6px 10px; border: 0; background: none; color: var(--muted); font: inherit; font-size: 13px; cursor: pointer; border-radius: var(--r-sm, 8px); }
+.help-menu .hm-back:hover, .help-menu .hm-back:focus-visible { background: var(--surface-2); color: var(--text); }
+.help-menu .hm-back svg { transform: rotate(180deg); }
+.help-menu .hm-site { border: 0; background: none; padding: 0; color: var(--muted); font: inherit; cursor: pointer; text-decoration: underline; text-underline-offset: 2px; }
+.help-menu .hm-site:hover, .help-menu .hm-site:focus-visible { color: var(--text); }

@@ -1,4 +1,4 @@
-# Hosting & the Host switch
+# The tribe's computer and sharing
 
 ## What hosting means
 

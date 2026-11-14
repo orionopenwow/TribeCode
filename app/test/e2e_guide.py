@@ -32,7 +32,8 @@ def main():
         # 1) API: the list, one page, and nothing outside docs/guide
         st, body = get("/api/guide"); assert st == 200, st
         pages = json.loads(body)["pages"]
-        files = sorted(f for f in os.listdir(ROOT / "docs" / "guide") if f.endswith(".md"))
+        files = sorted(f for f in os.listdir(ROOT / "docs" / "guide") if f.endswith(".md") and not f.startswith("p-"))   # p-*.md are the Help center's path pages (e2e_help_next)
+        paths = json.loads(body).get("paths", []); assert len(paths) == len([f for f in os.listdir(ROOT / "docs" / "guide") if f.startswith("p-")]) and all(len(x["body"].split()) < 480 for x in paths)
         assert 5 <= len(pages) <= 16 and len(pages) == len(files), (len(pages), files)
         assert pages[0]["slug"] == "start-here" and pages[0]["title"] == "Start here", pages[0]
         assert all(len(p["body"].split()) < 480 for p in pages), [(p["slug"], len(p["body"].split())) for p in pages]
@@ -70,7 +71,7 @@ def main():
             # navigate: click a page in the list, then Next
             host.click("#gd-list [data-gd=phones]"); host.wait_for_function("document.querySelector('#gd-page h1').textContent === 'Phones'")
             assert host.evaluate("document.querySelector('#gd-list .gd-item.on').dataset.gd") == "phones"
-            host.click("#gd-page .gd-pn.next"); host.wait_for_function("document.querySelector('#gd-page h1').textContent.startsWith('Hosting')")
+            host.click("#gd-page .gd-pn.next"); host.wait_for_function("document.querySelector('#gd-page h1').textContent.startsWith('The tribe')")
             # search over titles and text
             host.fill("#gd-q", "tailscale")
             host.wait_for_function("document.querySelector('#gd-list .gd-eye').textContent.includes('match')")

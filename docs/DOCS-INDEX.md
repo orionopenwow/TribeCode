@@ -92,20 +92,20 @@ Every doc in the repo, one line each, with its status. Updated 2026-11-12 (v0.31
 | Page | What it covers |
 | --- | --- |
 | [Start here](guide/01-start-here.md) | TribeCode lets a few friends, or one person with AI helpers, build apps, games and websites together, and run the business around them. |
-| [Make a project & invite friends](guide/02-projects-and-invites.md) | Tap Create a project on Home, or the + under the project circles. |
+| [Make a project and invite friends](guide/02-projects-and-invites.md) | Tap Create a project on Home, or the + under the project circles. |
 | [Connect your AI](guide/03-connect-claude-code.md) | Bring the coding agent you already use: Claude Code, Codex CLI, Gemini CLI, Qwen Code, Cursor or any other MCP client (Windsurf, VS Code Copilot, Goos |
 | [Working together](guide/04-working-together.md) | Five places in the sidebar: Dashboard, Messages, Files, Task Board and Agents Hub. |
-| [Repos, versions & pushing](guide/05-repos-versions-pushing.md) | You don't need to know git. |
+| [Your code, versions and GitHub](guide/05-repos-versions-pushing.md) | You don't need to know git. |
 | [Phones](guide/06-phones.md) | A phone is a full member: chat, voice notes, approvals, tasks, docs and Ask AI. |
-| [Hosting & the Host switch](guide/07-hosting.md) | One computer runs the tribe: that's the host. |
-| [Agents & the Office](guide/08-agents-and-office.md) | Agents are the AI teammates: each person's AI (Claude Code, Codex…), plus a few helpers the tribe runs by itself. |
+| [The tribe's computer and sharing](guide/07-hosting.md) | One computer runs the tribe: that's the host. |
+| [Agents and the Office](guide/08-agents-and-office.md) | Agents are the AI teammates: each person's AI (Claude Code, Codex…), plus a few helpers the tribe runs by itself. |
 | [Troubleshooting](guide/09-troubleshooting.md) | The problems we've actually hit, and what fixes them. |
 | [Run it as a company](guide/10-company-mode.md) | Company mode turns a project into a small business with an org chart. |
 | [Money and autopilot](guide/11-money-and-autopilot.md) | Money shows the business's numbers in plain words, and autopilot lets an AI-held seat work its charter on a schedule. |
 | [Work: gigs, hiring, time and compute](guide/12-work-and-hiring.md) | Work (in the sidebar on Home, and in Ctrl K) is where people find vibecoding work, hire into the tribe, trade time and share spare AI. |
 | [Academy, Legal and Offload](guide/13-academy-legal-offload.md) | Academy has short, plain-language lessons for every role: Founder basics, CEO, Build, Design, Grow, Sales, Support, Run, Money and Legal. |
 | [The Marketplace](guide/14-marketplace.md) | 553 checked add-ons for your project: sidebar widgets (Figma, Notion, Stripe, Plausible, Calendly and 100 more), Claude Code skills, libraries, connec |
-| [Your experience: modes and Recommended next](guide/15-modes-and-recommendations.md) | TribeCode grows with you. |
+| [Your experience: modes and the Next step](guide/15-modes-and-recommendations.md) | TribeCode grows with you. |
 
 ## Archived (docs/archive/)
 

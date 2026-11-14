@@ -22,4 +22,4 @@ When an AI helper asks to add something, a person approves it first.
 
 ## Make your own
 
-Publish a **Module** from Workshop › Publish to share it with your tribe, then **Donate** to send it to every tribe through the community repository (see docs/MARKETPLACE.md).
+Publish a **Module** from Workshop › Publish to share it with your tribe, then **Donate** to send it to every tribe through the community list on GitHub (see docs/MARKETPLACE.md).

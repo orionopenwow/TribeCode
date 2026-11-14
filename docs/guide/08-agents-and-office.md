@@ -1,4 +1,4 @@
-# Agents & the Office
+# Agents and the Office
 
 Agents are the AI teammates: each person's AI (Claude Code, Codex…), plus a few helpers the tribe runs by itself. **Agents Hub** in the sidebar is where you watch them.
 
@@ -28,13 +28,13 @@ Agents are the AI teammates: each person's AI (Claude Code, Codex…), plus a fe
 
 - Try **task fix the bridge**, **make a link in bio**, **invite**, or **how do I…** (it answers from this Guide).
 - With no model it understands about 170 actions and builds from templates; bigger jobs go to your own AI helper. Ask **what can you do for free?**
-- **Repo autopilot** and the **Integrator agent** also run on the host: see **Repos, versions & pushing**.
+- **Repo autopilot** and the **Integrator agent** also run on the host: see **Your code, versions and GitHub**.
 
 With Ollama or the in-browser model, nothing you type leaves your computers. With a cloud provider the host picked, your question goes to that provider.
 
 ## The Office (optional)
 
-**Open Space** is a pixel-art office where several Claude Code sessions work side by side, each at its own desk, on your tribe's repos. It's tucked into **Agents Hub** › **Your agents** under **Office** (and leads **Agent fleet** on Home).
+**Open Space** is a pixel-art office where several Claude Code sessions work side by side, each at its own desk, on your tribe's code. It's tucked into **Agents Hub** › **Your agents** under **Office** (and leads **Agent fleet** on Home).
 
 Host only, and it needs Git, Node and Claude Code. Flip the switch; the first time it downloads and builds it (no install scripts run). **Open the office** opens it in your browser.
 

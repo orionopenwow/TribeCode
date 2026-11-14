@@ -4,7 +4,7 @@ Company mode turns a project into a small business with an org chart. Use it alo
 
 ## Make a company
 
-1. Open the project and pick **Company** in the sidebar. You can also tap **Make it a company** in *Recommended next* on the Dashboard.
+1. Open the project and pick **Company** in the sidebar. You can also tap **Make it a company** in the *Next step* card on the Dashboard.
 2. Pick a template: **SaaS app**, **Agency**, **Creator**, **Game studio**, **Local business**, **Nonprofit**, **Club or class**, or **Blank**.
 3. That's it. You get seats, a goal for each, one to three company goals and a few starter tasks on the Task Board.
 

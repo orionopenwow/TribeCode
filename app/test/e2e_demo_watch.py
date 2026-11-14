@@ -225,7 +225,7 @@ def main():
 
             # ---- Help › See how TribeCode works ----
             pg.wait_for_selector("#tb-help", state="visible", timeout=10000)
-            pg.click("#tb-help"); pg.click("[data-help=watch]")
+            pg.click("#tb-help"); pg.click("[data-help=learn]"); pg.click("#guide [data-help=watch]")
             pg.wait_for_function("window.TribeDemoWatch && TribeDemoWatch._test.state().running", timeout=20000)
             assert pg.evaluate("TribeOffline.mode()") == "watch"
             pg.evaluate("TribeDemoWatch.exit()")

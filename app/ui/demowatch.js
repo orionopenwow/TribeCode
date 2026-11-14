@@ -431,7 +431,7 @@
       if (make) {
         await point('what a company adds', [() => make.closest('section, .co-ig, .hero-card, .card'), '#view-company']);
         await hold(1400);
-        const b = await point('Make it a company', '#co-make');
+        const b = await point('Make it a company', ['#co-quick', '#co-make']);   // Skip the questions: the company is made in one press
         await press(b);
       }
       await point('the company', ['#view-company .co-seats', '#co-su', '#view-company'], { ms: 2500 });

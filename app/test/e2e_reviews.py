@@ -55,7 +55,7 @@ def main():
             url = ap.evaluate("window.__opened[0]")
             assert url.startswith("https://github.com/orionopenwow/TribeCode/issues/new?") and "template=review.yml" in url and "Good" in urllib.request.unquote(url) and "consent=" in url, url
             assert ap.locator("#fb").count() == 0
-            ap.click("#tb-help"); assert ap.locator("[data-help=review]").count() == 1
+            ap.click("#tb-help"); ap.click("[data-help=learn]"); ap.wait_for_selector("#guide [data-help=review]"); assert ap.locator("[data-help=review]").count() == 1
             ctx.close(); b.close()
         assert not errors, errors
         print("e2e_reviews: ok")
