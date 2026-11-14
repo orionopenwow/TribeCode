@@ -1413,21 +1413,64 @@
   const orig = new WeakMap();   // text node -> English
   const ATTRS = ['placeholder', 'title', 'aria-label'];
   const SKIP = '.cv-world,.cv-lname,.cv-fname,.cv-aname b,.cv-phead b,.cv-ins-name,script,style,textarea,code,pre,.msg-body,.msg .body,.md,.doc-body,.rt,.pvw-frame,.tk-title,.card .title,[contenteditable],[data-title],.pj-name,.pc-name,#chat-list,.dm-body,.nf-item .nf-t';
+  // feat/group-styles: the group's own words (Company -> Club, Lead -> Captain, Role -> Seat, Check-in -> Standup).
+  // A small term map applied AFTER translation, in every language: the default word (in the current language) becomes
+  // the chosen word (translated when it is one of the listed choices, else as typed). Chat, docs and names are skipped
+  // like everything else here. No chosen words = no work.
+  const DEFW = { group: 'Company', lead: 'Lead', role: 'Role', checkin: 'Check-in' };
+  let WORDS = null, PAIRS = [];
+  const plural = w => (/[^aeiou]y$/i.test(w) ? w.slice(0, -1) + 'ies' : /(s|x|ch|sh)$/i.test(w) ? w + 'es' : w + 's');
+  const rx = w => w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  function pairs() {
+    PAIRS = [];
+    if (!WORDS) return;
+    const latin = !['ja', 'zh', 'ko'].includes(cur);
+    for (const k of Object.keys(DEFW)) {
+      const to0 = String(WORDS[k] || '').trim(); if (!to0 || to0 === DEFW[k]) continue;
+      const from = tr(DEFW[k]) || DEFW[k], to = tr(to0) || to0; if (from === to) continue;
+      if (!latin) { PAIRS.push(x => x.split(from).join(to)); continue; }
+      const low = cur === 'de' ? null : [from.toLowerCase(), to.toLowerCase()];   // German nouns keep their capital
+      const forms = [[plural(from), plural(to)], [from, to], ...(low && low[0] !== from ? [[plural(low[0]), plural(low[1])], low] : [])];
+      const res = forms.map(([a, b]) => [new RegExp('(^|[^\\p{L}\\p{N}])' + rx(a) + '(?![\\p{L}\\p{N}])', 'gu'), b]);
+      PAIRS.push(x => { for (const [re, b] of res) x = x.replace(re, (m, pre) => pre + b); return x; });
+    }
+  }
+  const terms = x => { if (!PAIRS.length || !x) return x; for (const f of PAIRS) x = f(x); return x; };
+  const tbase = new WeakMap(), tout = new WeakMap();   // text node -> its own words / what we last wrote
+  function termOnly(n, raw, s) {
+    if (!PAIRS.length && !tbase.has(n)) return;
+    if (s.length > 200) return;
+    const base = tbase.has(n) && tout.get(n) === s ? tbase.get(n) : s;
+    const want = terms(base); tbase.set(n, base); tout.set(n, want);
+    if (want !== s) n.nodeValue = raw.replace(s, want);
+  }
+  function words(w) {
+    const next = w && typeof w === 'object' && Object.keys(DEFW).some(k => w[k] && w[k] !== DEFW[k]) ? { ...w } : null;
+    if (JSON.stringify(next) === JSON.stringify(WORDS)) return;
+    WORDS = next; pairs(); if (document.body) apply();
+  }
+  // Chosen words back to the default ones, so Flint understands both ("add a seat" = "add a role").
+  function plainWords(text) {
+    if (!WORDS || !text) return text;
+    let x = String(text);
+    for (const k of Object.keys(DEFW)) { const to = String(WORDS[k] || '').trim(); if (!to || to === DEFW[k]) continue; x = x.replace(new RegExp('(^|[^\\p{L}\\p{N}])' + rx(to) + '(?![\\p{L}\\p{N}])', 'giu'), (m, pre) => pre + DEFW[k].toLowerCase()); }
+    return x;
+  }
   function swapText(n) {
     const raw = n.nodeValue; if (!raw) return;
-    const pe = n.parentElement; if (!pe || pe.closest(SKIP)) return; const s = raw.trim(); if (!s || s.length > 60) return;
+    const pe = n.parentElement; if (!pe || pe.closest(SKIP)) return; const s = raw.trim(); if (!s) return;
     // v0.27 fix: only English keys (or a node we translated before) count; inferring English from a translation turned
     // the word "Design" into "Theme" (it's German for Theme) on English screens
-    const en = orig.get(n) || (D[s] ? s : null); if (!en) return;
+    const en = orig.get(n) || (s.length <= 60 && D[s] ? s : null); if (!en) return termOnly(n, raw, s);
     orig.set(n, en);
-    const want = tr(en) || en; if (s !== want) n.nodeValue = raw.replace(s, want);
+    const want = terms(tr(en) || en); if (s !== want) n.nodeValue = raw.replace(s, want);
   }
   function swapAttrs(el) {
     for (const a of ATTRS) {
       const v = el.getAttribute(a); if (!v) continue;
       const key = 'data-en-' + a; let en = el.getAttribute(key);
-      if (!en || (v !== en && v !== tr(en))) { en = D[v] ? v : null; if (!en) continue; el.setAttribute(key, en); }
-      const want = tr(en) || en; if (v !== want) el.setAttribute(a, want);
+      if (!en || (v !== en && v !== tr(en) && v !== terms(tr(en) || en))) { en = D[v] ? v : null; if (!en) continue; el.setAttribute(key, en); }
+      const want = terms(tr(en) || en); if (v !== want) el.setAttribute(a, want);
     }
   }
   function walk(root) {
@@ -1450,9 +1493,9 @@
   function apply() { document.documentElement.lang = cur; busy = true; try { walk(document.body); } finally { busy = false; } }
   function set(code) {
     if (!supported(code)) return; cur = code; try { localStorage.setItem(KEY, code); } catch {}
-    apply(); window.dispatchEvent(new CustomEvent('tribe-lang', { detail: { lang: cur } }));
+    pairs(); apply(); window.dispatchEvent(new CustomEvent('tribe-lang', { detail: { lang: cur } }));
   }
   function start() { apply(); observe(); }
   if (document.body) start(); else document.addEventListener('DOMContentLoaded', start);
-  window.TribeI18n = { lang: () => cur, set, t, LANGS, apply };
+  window.TribeI18n = { lang: () => cur, set, t, LANGS, apply, words, plainWords, terms: x => terms(x) };
 })();

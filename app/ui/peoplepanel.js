@@ -33,7 +33,7 @@
         <button class="btn sm" id="ppl-claude" type="button" title="Invite your own AI agent (Claude, Cursor, Codex…): it joins next to you, with your access">Invite your agent</button>
         <button class="btn ghost sm" id="ppl-close" type="button" aria-label="Close">Done</button></header>
       <div class="ppl-tabs" role="tablist"><button role="tab" data-tab="tribe" type="button">This tribe</button><button role="tab" data-tab="friends" type="button">Friends</button></div>
-      <div class="ppl-tools"><input class="input ppl-q" id="ppl-q" type="search" placeholder="Search people" aria-label="Search people" autocomplete="off">
+      <div class="ppl-tools"><button class="linkish ppl-whocan" id="ppl-whocan" type="button">Who can do what here</button><input class="input ppl-q" id="ppl-q" type="search" placeholder="Search people" aria-label="Search people" autocomplete="off">
         <div class="ppl-chips" role="group" aria-label="Filters"><button type="button" class="ppl-chip" data-f="online" aria-pressed="false">Online</button><button type="button" class="ppl-chip" data-f="project" aria-pressed="false">In this project</button><button type="button" class="ppl-chip" data-f="ai" aria-pressed="false">AIs</button></div></div>
       <div class="ppl-body" id="ppl-body"></div>
     </aside>`;
@@ -165,6 +165,7 @@
     btn.setAttribute('aria-expanded', 'false'); document.body.classList.remove('ppl-on');
   }
   btn.onclick = () => (open ? close() : show());
+  $('#ppl-whocan').onclick = () => { close(); window.TribeGroupStyle && window.TribeGroupStyle.open(); };   // feat/group-styles
   $('#ppl-scrim').onclick = close; $('#ppl-close').onclick = close; $('#ppl-invite').onclick = () => invite(); $('#ppl-claude').onclick = () => invite({ who: 'agent' });
   document.querySelectorAll('#ppl-panel [data-tab]').forEach(b => b.onclick = () => { tab = b.dataset.tab; focusId = null; draw(); load(); });
   document.querySelectorAll('#ppl-panel [data-f]').forEach(b => b.onclick = () => { const f = b.dataset.f; flt.has(f) ? flt.delete(f) : flt.add(f); draw(); });

@@ -147,7 +147,7 @@ module.exports = function groupstyle({ P, store, perms, getMembers, votes, bus, 
   function view(pid, me) {
     const g = get(pid);
     const mine = me ? livePermits().filter(p => p.member === me.id && p.project === (pid || null)).map(p => ({ cap: p.cap, label: PLAIN[p.cap] || p.cap, until: new Date(p.until).toISOString() })) : [];
-    return { ...g, project: pid || null, isDefault: untouched(pid), council: { ...g.council, people: councilOf(g, pid).map(m => ({ id: m.id, name: m.name, color: m.color })) },
+    return { ...g, project: pid || null, channel: P.channelOf(pid || P.defaultId()), isDefault: untouched(pid), council: { ...g.council, people: councilOf(g, pid).map(m => ({ id: m.id, name: m.name, color: m.color })) },
       styles: STYLES.map(s => ({ id: s, ...STYLE_TEXT[s] })), wordChoices: WORDS, defaults: DEF_WORDS, ruleChoices: RULES.map(r => ({ id: r, text: RULE_TEXT[r] })),
       caps: CAPS.filter(c => !c.locked).map(c => ({ id: c.id, label: PLAIN[c.id] || c.label, rule: ruleFor(g, c.id), low: LOW_RISK.includes(c.id) })),
       people: humans(pid).map(m => ({ id: m.id, name: m.name, color: m.color })),

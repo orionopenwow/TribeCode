@@ -1,0 +1,68 @@
+/* How this group decides (feat/group-styles, groupstyle.js). Flat matte: 1px borders, depth by luminance only. */
+.gs { display: grid; gap: 24px; padding-top: 4px; }
+.gs-sec { display: grid; gap: 10px; min-width: 0; }
+.gs-sec h4 { margin: 0; font-size: 16px; font-weight: 600; color: var(--text); }
+.gs-opts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.gs-opt { display: grid; gap: 4px; text-align: left; padding: 12px 14px; min-height: 64px; border: 1px solid var(--edge); border-radius: var(--r-sm); background: var(--surface-2); color: var(--text); font: inherit; cursor: pointer; transition: border-color var(--dur-quick) var(--ease-out), background-color var(--dur-quick) var(--ease-out); }
+.gs-opt b { font-size: 14px; font-weight: 600; }
+.gs-opt small, .gs-note, .gs-w small, .gs-role-t small, .gs-ck small, .gs-askbar small { color: var(--muted); font-size: 12px; line-height: 1.45; }
+.gs-opt:hover { background: var(--surface-3, var(--surface-2)); }
+.gs-opt.on { border-color: var(--accent); }
+.gs-opt:focus-visible, .gs-role-h:focus-visible, .gs-sw:focus-visible, .gs-askbar-x:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.gs-more { display: grid; gap: 10px; padding: 12px 14px; border: 1px solid var(--stroke); border-radius: var(--r-sm); background: var(--surface); }
+.gs-note { margin: 0; max-width: 65ch; }
+.gs-fl { font-size: 12px; color: var(--muted); }
+.gs-f { display: grid; gap: 4px; min-width: 0; flex: 1 1 150px; }
+.gs-f.gs-grow { flex: 3 1 220px; }
+.gs-leadw { max-width: 260px; }
+.gs-row { display: flex; flex-wrap: wrap; gap: 10px; }
+.gs-checks { display: flex; flex-wrap: wrap; gap: 4px 14px; }
+.gs-checks.col { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.gs-ck { display: flex; align-items: flex-start; gap: 8px; min-height: 28px; font-size: 13px; color: var(--text); cursor: pointer; }
+.gs-ck input { margin-top: 3px; accent-color: var(--accent); }
+.gs-ck small { display: block; }
+.gs-ai { padding-top: 6px; }
+.gs-roles, .gs-who { list-style: none; margin: 0; padding: 0; display: grid; }
+.gs-roles { gap: 6px; }
+.gs-role { border: 1px solid var(--stroke); border-radius: var(--r-sm); background: var(--surface); }
+.gs-role-h { display: flex; align-items: center; gap: 10px; width: 100%; padding: 10px 12px; min-height: 44px; background: none; border: 0; color: var(--text); font: inherit; text-align: left; cursor: pointer; }
+.gs-role-t { display: grid; gap: 2px; flex: 1; min-width: 0; }
+.gs-role-t b { font-size: 14px; font-weight: 600; }
+.gs-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--sw); flex: none; }
+.gs-role.open .gs-role-h svg { transform: rotate(180deg); }
+.gs-role-f { display: grid; gap: 10px; padding: 4px 12px 14px; border-top: 1px solid var(--stroke); }
+.gs-swatches { display: flex; gap: 8px; }
+.gs-sw { width: 28px; height: 28px; border-radius: 50%; border: 1px solid var(--edge); background: var(--sw); cursor: pointer; padding: 0; }
+.gs-sw.on { outline: 2px solid var(--text); outline-offset: 2px; }
+.gs-danger { justify-self: start; color: var(--muted); }
+.gs-who { border: 1px solid var(--stroke); border-radius: var(--r-sm); background: var(--surface); }
+.gs-w { display: flex; align-items: center; gap: 10px; padding: 10px 12px; min-height: 48px; border-top: 1px solid var(--stroke); }
+.gs-w:first-child { border-top: 0; }
+.gs-w-t { display: grid; gap: 2px; flex: 1; min-width: 0; }
+.gs-w-t b { font-size: 13px; font-weight: 500; color: var(--text); }
+.gs-rt { font-size: 12px; color: var(--muted); text-align: right; max-width: 190px; }
+.gs-rule { max-width: 210px; }
+.gs-you { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; color: var(--muted); white-space: nowrap; }
+.gs-sp { flex: 1; }
+#gs-sheet .ui-foot { flex-wrap: wrap; }
+.gs-askbar { position: fixed; left: 50%; bottom: 20px; transform: translateX(-50%); z-index: 1200; display: flex; align-items: center; gap: 12px; width: min(520px, calc(100vw - 24px)); padding: 10px 12px 10px 14px; border: 1px solid var(--edge); border-radius: var(--r-sm); background: var(--surface-2); color: var(--text); }
+.gs-askbar-t { display: grid; gap: 2px; flex: 1; min-width: 0; }
+.gs-askbar-t b { font-size: 13px; font-weight: 600; }
+.gs-askbar-x { display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; border: 0; border-radius: var(--r-sm); background: none; color: var(--muted); cursor: pointer; }
+/* Company setup: the same question, small (companysetup.js) */
+.co-set-style { display: grid; gap: 6px; margin: 0 0 14px; }
+.co-set-style .gs-opts { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+@media (max-width: 820px) {
+  .gs { gap: 20px; }
+  .gs-opts, .gs-checks.col, .co-set-style .gs-opts { grid-template-columns: 1fr; }
+  .gs-w { flex-wrap: wrap; }
+  .gs-rt { text-align: left; max-width: none; flex-basis: 100%; order: 3; }
+  .gs-rule { max-width: none; flex-basis: 100%; order: 3; }
+  .gs-w .btn, .gs-opt, .gs-role-h, .gs-ck { min-height: 36px; }
+  .gs-askbar { bottom: 76px; }
+  .gs-askbar-x, .gs-sw { width: 36px; height: 36px; }
+}
+@media (prefers-reduced-motion: reduce) { .gs-opt { transition: none; } }
+.co-h-acts { display: flex; flex-wrap: wrap; gap: 8px; justify-content: flex-end; }
+.ppl-whocan { flex: 1 0 100%; text-align: left; min-height: 28px; }
+@media (max-width: 820px) { .ppl-whocan { min-height: 36px; } }

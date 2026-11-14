@@ -1298,6 +1298,7 @@
   // ---------- public parse ----------
   function parse(text, ctx) {
     ctx = ctx || {};
+    if (typeof window !== 'undefined' && window.TribeI18n && window.TribeI18n.plainWords) text = window.TribeI18n.plainWords(text);   // feat/group-styles: the group's own words mean the default ones
     const pieces = split(text);
     if (pieces.length === 1) {
       const lh = learnedHit(text, ctx); if (lh) { const inner = parse(lh.means, { ...ctx, learned: [] }); inner.learned = lh; return inner; }

@@ -27,7 +27,8 @@
   const ink = c => { const m = /^#?([0-9a-f]{6})$/i.exec(c || ''); if (!m) return '#12151A'; const n = parseInt(m[1], 16); return ((n >> 16) * 299 + ((n >> 8) & 255) * 587 + (n & 255) * 114) / 1000 > 150 ? '#12151A' : '#FFFFFF'; };
   const STATUS = { 'on-track': 'On track', 'needs-you': 'Needs you', blocked: 'Stuck', idle: 'Quiet' };
   // Plain words (feat/company3): a seat is a role, a standup is a check-in, the CEO is the lead. Stored titles stay as they are.
-  const roleName = x => (x && x.title === 'CEO' ? 'Lead' : (x && x.title) || '');
+  const leadWord = () => (window.TribeGroupStyle ? window.TribeGroupStyle.leadName() : 'Lead');   // feat/group-styles: Lead, Captain, Teacher… or Council
+  const roleName = x => (x && (x.title === 'CEO' || (x.kind === 'ceo' && leadWord() === 'Council')) ? leadWord() : (x && x.title) || '');
   const KIND_L = { 'ceo-call': 'Lead’s decision', vote: 'Vote', approval: 'OK given', proposal: 'Proposal', decision: 'Decision' };
   const ASK_CHIPS = ['publish', 'spend money', 'email customers', 'sign contracts', 'deploy to production'];
 
@@ -187,7 +188,7 @@
     const big = w => w ? avatar(w, 'lg') : '';
     return `<article class="co-seat ${ceo ? 'ceo' : ''} ${emptySeat ? 'empty' : ''} ${mine ? 'mine' : ''}" data-seat="${esc(x.id)}" style="--sc:${esc(x.color)}" tabindex="0" role="button" aria-label="${esc(roleName(x))} role${emptySeat ? ', nobody yet' : ': ' + esc(holderLine(x))}. ${esc(STATUS[x.status] || '')}">
       <div class="co-seat-top"><span class="co-avs">${emptySeat ? '<span class="co-av lg open" aria-hidden="true">+</span>' : big(x.who.person) + big(x.who.agent)}</span>
-        <span class="co-seat-id"><span class="co-role">${esc(roleName(x))}${x.title === 'CEO' ? ' <span class="co-aka">CEO</span>' : ''}</span><b>${emptySeat ? 'Nobody yet' : esc(holderLine(x))}${mine ? ' <small>you</small>' : ''}</b>
+        <span class="co-seat-id"><span class="co-role">${esc(roleName(x))}${x.title === 'CEO' && leadWord() === 'Lead' ? ' <span class="co-aka">CEO</span>' : ''}</span><b>${emptySeat ? 'Nobody yet' : esc(holderLine(x))}${mine ? ' <small>you</small>' : ''}</b>
           <small class="co-kindl">${emptySeat ? 'A friend or an AI helper can do it' : x.who.person && x.who.agent ? 'A person, with an AI helper' : x.who.agent ? 'An AI helper does this' : 'A person does this'}</small></span>
         <span class="co-pill s-${esc(x.status)}">${esc(STATUS[x.status] || x.status)}</span></div>
       ${x.who.agent ? aiLine(x) : ''}${emptySeat ? '' : `<div class="co-now"><span class="co-lbl">Working on</span><p>${now ? esc(now) : '<span class="faint">No update yet today.</span>'}</p></div>`}
@@ -206,7 +207,7 @@
     return `<header class="co-head"><div class="co-h-t"><span class="eyebrow">Company</span><h1>${esc(c.name)}</h1>
         ${c.mission ? `<p class="co-mission">${esc(c.mission)}</p>` : lead ? '<button class="linkish co-mission-add" id="co-edit-co">Say what it’s for in one line</button>' : ''}
         ${h.text ? `<p class="co-health t-${esc(h.tone)}" id="co-health"><span class="co-hdot" aria-hidden="true"></span>${esc(h.text)}</p>` : ''}</div>
-        ${lead ? `<button class="btn" id="co-settings" aria-label="Company settings">${icon('gear', 16)}Settings</button>` : ''}</header>
+        <span class="co-h-acts"><button class="btn" id="co-whocan">${icon('shield', 16)}Who can do what</button>${lead ? `<button class="btn" id="co-settings" aria-label="Company settings">${icon('gear', 16)}Settings</button>` : ''}</span></header>
       ${sample ? '' : stripHtml(c, d)}${sample ? '' : nextHtml(c, d)}
       ${sec('seats', 'users', 'Roles', `Who does what <span class="co-n">${c.seats.length}</span>`, `<div class="co-seats">${ceo ? seatCard(ceo, true, d) : ''}${rest.map(x => seatCard(x, false, d)).join('')}</div>`, seatsX)}
       ${sec('week', 'calendar', 'This week', 'Updates, OKs and decisions', `<div class="co-week-g">${todayCard(c, d)}${approvalsCard(c, d)}${decisionsCard(c, d, sample)}</div>`)}
@@ -426,6 +427,7 @@
     wireNext(c, d);
     const add = $('#co-add'); if (add) add.onclick = addSeatSheet;
     const set = $('#co-settings'); if (set) set.onclick = settingsSheet;
+    const wc = $('#co-whocan'); if (wc) wc.onclick = () => window.TribeGroupStyle && window.TribeGroupStyle.open();
     const ec = $('#co-edit-co'); if (ec) ec.onclick = settingsSheet;
     const mo = $('#co-money-open'); if (mo) mo.onclick = openMoney;
     const ap = $('#co-appr-open'); if (ap) ap.onclick = () => (window.TribeNotify && window.TribeNotify.openInbox ? window.TribeNotify.openInbox() : toast('Open the bell to answer approvals.'));
@@ -668,6 +670,7 @@
   C.on('ws', msg => { if (msg && msg.type === 'company' && (!msg.project || msg.project === pid())) { clearTimeout(st.t); st.t = setTimeout(() => load(), 250); } });
   C.on('project', () => { st = { d: null, pid: '' }; nav(); setTimeout(() => load(), 50); if (open) draw(); });
   C.on('hello', () => setTimeout(() => load(), 300));
+  addEventListener('tribe-groupstyle', () => { clearTimeout(st.t); st.t = setTimeout(() => load(), 150); });   // feat/group-styles: the lead's name, who may change things
   if (C.connected && C.connected()) setTimeout(() => load(), 600);
 
   window.TribeCompany = { open: show, go, close: hide, refresh: load, get: () => co(), view: () => st.d, loadedFor: () => (st.d ? st.pid : ''), tile, flint, openSeat, create };
