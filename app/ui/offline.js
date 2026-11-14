@@ -1387,9 +1387,10 @@
       pop = document.createElement('div'); pop.className = 'od-pop'; pop.id = 'demo-pop'; pop.setAttribute('role', 'dialog'); pop.setAttribute('aria-label', 'Sharing and backup');
       const dev = phoneLike() ? 'this phone' : 'this device', p0 = db.projects[0] || {}, gh = ((db.homes || {})[p0.id] || {}).github;
       pop.innerHTML = `<header><span class="od-dot" aria-hidden="true"></span><div><span class="eyebrow">Sharing and backup</span><b>${esc(p0.name && p0.name !== 'My first project' ? p0.name : db.tribe.name)} is saved on ${dev}</b></div></header>
-        <p>Tasks, notes, docs and chat are kept here and survive reloads. ${gh ? `It is mirrored to <b>${esc(gh.repo)}</b> on GitHub, so anyone can see the live repo and the suggested changes.` : `Choose where it lives (${phoneLike() ? 'a GitHub repo, a computer, a free cloud or a phone' : 'a folder on this computer, a free cloud or a phone, with GitHub as a synced copy'}) and friends can join.`}</p>
+        <p>Tasks, notes, docs and chat are kept here and survive reloads. ${gh ? `A copy is kept on GitHub at <b>${esc(gh.repo)}</b>, where friends can see it and suggest changes.` : `Choose where it’s kept (${phoneLike() ? 'GitHub, a computer, a free cloud or a phone' : 'this computer, a folder you pick, GitHub or a free cloud'}) and friends can join.`}</p>
         <div class="od-acts">
           ${!phoneLike() && window.TribeHome ? `<button id="od-folder"${window.TribeHome.canPickFolder().ok ? '' : ` aria-disabled="true" title="${esc(window.TribeHome.canPickFolder().why)}"`}><svg class="i"><use href="#i-folder"/></svg><span>Move to a folder</span></button>` : ''}
+          ${!phoneLike() && window.TribeBrowserFolder && !(window.TribeHome && window.TribeHome.canPickFolder().ok) ? `<button id="od-bfolder"><svg class="i"><use href="#i-folder"/></svg><span>${window.TribeBrowserFolder.can() ? (window.TribeBrowserFolder.name(p0.id) ? `Save a copy to ${esc(window.TribeBrowserFolder.name(p0.id))} again` : 'Save a copy to a folder') : 'Download a copy'}</span></button>` : ''}
           <button id="od-move"><svg class="i"><use href="#i-zap"/></svg><span>Put this tribe online</span></button>
           ${window.TribeLocalSetup ? `<button id="od-gh"><svg class="i"><use href="#i-git"/></svg><span>${gh ? `GitHub · ${esc(gh.repo)}` : 'Connect GitHub'}</span></button>` : ''}
           ${window.TribeHome ? '<button id="od-sync"><svg class="i"><use href="#i-gear"/></svg><span>Backup settings</span></button><button id="od-share"><svg class="i"><use href="#i-users"/></svg><span>Share</span></button>' : ''}
@@ -1399,6 +1400,7 @@
       const odOn = (id, fn) => { const b = pop.querySelector(id); if (b) b.onclick = () => { closePop(); fn(); }; };
       odOn('#od-folder', () => { const h = window.TribeHome; const c = h.canPickFolder(); if (c.ok) h.folder(); else toast(c.why); });
       odOn('#od-gh', () => window.TribeLocalSetup.choose('github'));
+      { const bfb = pop.querySelector('#od-bfolder'); if (bfb) bfb.onclick = () => { closePop(); window.TribeLocalSetup.choose('bfolder'); }; }   // the click itself opens the folder window
       odOn('#od-sync', () => window.TribeLocalSetup.choose('github'));   // this device: GitHub is a mirror; ship settings come with a host
       odOn('#od-share', () => window.TribeHome.share());
       pop.querySelector('#od-move').onclick = () => { closePop(); if (window.TribeLocalSetup && !phoneLike()) window.TribeLocalSetup.where(); else if (window.TribeShare) window.TribeShare.online('friends'); else if (window.TribePhoneHost) window.TribePhoneHost.move(); };

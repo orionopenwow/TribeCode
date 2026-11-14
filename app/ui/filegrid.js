@@ -75,9 +75,41 @@
         owner: who ? { name: who.name, color: who.color } : null, thumb: f.kind === 'image' && f.size < 4 * 1048576 && !/svg/.test(f.type) ? T.img(u) : T.icon(UPCAT[f.kind] || 'other', `${f.kind || 'file'} · ${Math.max(1, Math.round(f.size / 1024))} KB`),
         cls: 'fg-card', attrs: `data-up="${esc(f.id)}" data-upname="${esc(f.name)}" data-uptype="${esc(f.type || '')}" draggable="true"`, acts: ['open', 'download', 'delete'] });
     }
+    // feat/setup-github: the project's website, once someone started it (a draft, a built page, or one in the code)
+    const w = !at && siteOf();
+    if (w) out.push({ src: 'site', id: 'site', cat: 'sites', type: 'Website', title: w.title, at: w.at, loc: here, mine: true, lead: true, thumb: w.url ? `<div class="fg-th fx-th-site"><span class="fx-bar"><i></i><i></i><i></i></span><iframe src="${esc(w.url)}" sandbox="" referrerpolicy="no-referrer" loading="lazy" tabindex="-1" aria-hidden="true"></iframe></div>` : T.site('', w.title), cls: 'fg-card', attrs: 'data-site="1"', acts: ['open'] });
     if (!at) for (const s of (shots || []).slice(0, 24)) { const u = media(`/api/visuals/${s.latest.screen}/${s.latest.ts}.png`);
       out.push({ src: 'shot', id: 'shot:' + s.name, url: u, cat: 'pics', type: `Screenshot · ${s.count} version${s.count === 1 ? '' : 's'}`, title: s.name, at: s.latest.at || '', loc: { key: 'shots', label: 'Screenshots of the app' }, mine: true, thumb: T.img(u), cls: 'fg-card', attrs: `data-shot="${esc(u)}"`, acts: ['open', 'download'] }); }
     return out;
+  }
+  // ---------- feat/setup-github: the project's website in Files (a live preview card on the Websites tab) ----------
+  const pidNow = () => (window.TribeProjects && window.TribeProjects.current && window.TribeProjects.current()) || '';
+  const agoS = at => { const s = (Date.now() - Date.parse(at)) / 1000; if (!Number.isFinite(s)) return ''; if (s < 60) return 'just now'; if (s < 3600) return `${Math.floor(s / 60)} min ago`; if (s < 86400) return `${Math.floor(s / 3600)} h ago`; return new Date(at).toLocaleDateString([], { month: 'short', day: 'numeric' }); };
+  function siteOf() {
+    const c = render.site; if (!c || c.pid !== pidNow() || !c.w) return null;
+    const w = c.w, G = w.gen || {}, draft = !!(G.draft && G.draftUrl), live = !!(w.exists && w.previewUrl);
+    if (!draft && !live && !w.started) return null;
+    const useDraft = draft && (G.unpublished || !live);
+    const rel = useDraft ? `${G.draftUrl}&v=${encodeURIComponent(G.draft.updated || '')}` : live ? `${w.previewUrl}&v=${encodeURIComponent((w.built && w.built.hash) || '')}` : '';
+    return { title: ((w.fields || {}).headline) || `${projName().name || 'Project'} website`, at: (useDraft && G.draft.updated) || (w.built && w.built.at) || (w.started && w.started.at) || '',
+      url: rel ? (rel.startsWith('/') ? C.base() + rel : rel) : '', live, draft: useDraft, where: !rel && w.started ? w.started.path : '' };
+  }
+  function siteLead(cat) {
+    const w = cat === 'sites' && siteOf(); if (!w) return '';
+    const state = w.draft ? (w.live ? 'Changes not published yet' : 'Not published yet') : w.live ? 'Built' : `Started in ${w.where || 'the project'}`;
+    return `<section class="fg-site" id="fg-site" aria-label="Website">
+      <div class="fg-site-pv" id="fg-site-pv" role="button" tabindex="0" title="Open in the website builder">${w.url ? `<iframe src="${esc(w.url)}" title="Website preview" sandbox="" referrerpolicy="no-referrer" loading="lazy" tabindex="-1"></iframe>` : `<span class="fg-site-none">${FV().icon('sites', 22)}</span>`}</div>
+      <div class="fg-site-b"><span class="eyebrow">Website</span><h2 id="fg-site-title">${esc(w.title)}</h2>
+        <p id="fg-site-meta">${w.at ? `Last saved ${esc(agoS(w.at))} · ` : ''}${esc(state)}</p>
+        <div class="fg-site-acts"><button type="button" class="btn primary" id="fg-site-open">Open in the website builder</button><button type="button" class="btn" id="fg-site-pub">Publish</button></div></div>
+    </section>`;
+  }
+  const openSite = () => (window.TribeShell && window.TribeShell.go ? window.TribeShell.go('website') : window.TribeWebsite && window.TribeWebsite.open());
+  function wireSite(body) {
+    const pv = body.querySelector('#fg-site-pv'); if (!pv) return;
+    pv.onclick = openSite; pv.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openSite(); } };
+    body.querySelector('#fg-site-open').onclick = openSite;
+    body.querySelector('#fg-site-pub').onclick = () => (window.TribePublish && window.TribePublish.open ? window.TribePublish.open(pidNow()) : openSite());
   }
   function create(k, anchor, o) {
     if (k === 'note' || k === 'doc') return o.create();
@@ -143,8 +175,8 @@
         scope: 'project', idp: 'fg', title: 'Files', eyebrow: projName().name ? `${projName().name} · files` : 'This project', cardClass: 'fg-card', prefs: 'tribecode.pfiles', q,
         ids: { create: 'fg-new-menu', menu: 'fg-newmenu', grid: 'fg-items' },
         studio: { ids: { doc: 'doc-first', sheet: 'fg-new-sheet', slides: 'fg-new-deck' }, extra: [{ k: 'assets', ic: 'assets', t: 'Assets', s: 'Sounds, models, sprites, icons', id: 'fg-assets' }], note: 'Everyone in the project sees what you make here.' },
-        top, create: (k, a) => create(k, a, o), make: (k, d) => make(k, d, o), act,
-        open: it => (it.src === 'up' ? act('open', it) : it.src === 'shot' ? (window.TribePreview && window.TribePreview.image ? window.TribePreview.image(it.url, it.title) : window.open(it.url, '_blank', 'noopener')) : o.open(it.slug)),
+        top, create: (k, a) => create(k, a, o), make: (k, d) => make(k, d, o), act, lead: siteLead, wire: wireSite,
+        open: it => (it.src === 'site' ? openSite() : it.src === 'up' ? act('open', it) : it.src === 'shot' ? (window.TribePreview && window.TribePreview.image ? window.TribePreview.image(it.url, it.title) : window.open(it.url, '_blank', 'noopener')) : o.open(it.slug)),
         search: v => { q = v; },
       });
       fv.set(items(list, shots, at, o));
@@ -154,6 +186,7 @@
       const up = root.querySelector('[data-up]'); if (up) up.onclick = () => { at = pane.dataset.fgFolder = ''; draw(shots); };
     };
     draw(render.shots);
+    { const p = pidNow(); if (p) try { const r = await C.api(`/projects/${encodeURIComponent(p)}/website`); const w = r.website || r, was = JSON.stringify(siteOf()); render.site = { pid: p, w }; if (was !== JSON.stringify(siteOf()) && pane.querySelector(':scope > .fg .fx') && !pane.querySelector('#doc-title') && !pane.querySelector('#fx-rename')) draw(render.shots); } catch {} }   // feat/setup-github
     try { const u = await C.api('/uploads'); const ups = u.project || []; if (JSON.stringify(ups.map(x => x.id)) !== JSON.stringify((render.ups || []).map(x => x.id))) { render.ups = ups; if (pane.querySelector(':scope > .fg .fx') && !pane.querySelector('#doc-title') && !pane.querySelector('#fx-rename')) draw(render.shots); } } catch {}   // feat/dropzone
     try { const v = await C.api('/visuals'); const n = (v.screens || []).length; if (n !== (render.shots || []).length) { render.shots = v.screens || []; if (pane.querySelector(':scope > .fg .fx') && !pane.querySelector('#doc-title') && !pane.querySelector('#fx-rename')) draw(render.shots); } } catch {}
   }

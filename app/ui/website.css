@@ -54,7 +54,7 @@
 
 @container (max-width: 900px) {   /* a narrow main (right panel open, small window): editor above the preview */
   .wb { grid-template-columns: minmax(0, 1fr); gap: 26px; }
-  .wb-preview { position: static; }
+  .wb-preview { position: relative; top: auto; }
 }
 @media (max-width: 820px) {
   .wb-edit { gap: 26px; }

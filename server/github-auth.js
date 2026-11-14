@@ -19,6 +19,8 @@
 //   POST   /api/github/gh           host computer only: use the gh CLI's login
 //   POST   /api/github/token        { token }   checked against GitHub, then saved
 //   POST   /api/github/signout
+//   GET    /api/github/repos                    the signed-in person's own places on GitHub, newest first (feat/setup-github)
+//   POST   /api/github/repos        { name, private? }   make one on their account (private unless they say otherwise)
 'use strict';
 const { run } = require('./gitutil');
 
@@ -46,11 +48,11 @@ module.exports = function githubAuth({ W, store, getMembers, isLocal, str, broad
   const err = (status, msg) => Object.assign(new Error(msg), { status });
   const human = me => me && me.role !== 'agent' && me.role !== 'spectator';
 
-  async function call(url, { method = 'GET', form, token, timeout = 15_000 } = {}) {
+  async function call(url, { method = 'GET', form, json, token, timeout = 15_000 } = {}) {
     const ctl = new AbortController(); const t = setTimeout(() => ctl.abort(), timeout);
     try {
-      const res = await fetch(url, { method, signal: ctl.signal, body: form ? new URLSearchParams(form).toString() : undefined,
-        headers: { Accept: 'application/json', 'User-Agent': 'TribeCode', ...(form ? { 'Content-Type': 'application/x-www-form-urlencoded' } : {}),
+      const res = await fetch(url, { method, signal: ctl.signal, body: form ? new URLSearchParams(form).toString() : json ? JSON.stringify(json) : undefined,
+        headers: { Accept: 'application/json', 'User-Agent': 'TribeCode', ...(form ? { 'Content-Type': 'application/x-www-form-urlencoded' } : json ? { 'Content-Type': 'application/json' } : {}),
           ...(token ? { Authorization: `Bearer ${token}`, 'X-GitHub-Api-Version': '2022-11-28' } : {}) } });
       const data = await res.json().catch(() => ({}));
       return { status: res.status, data };
@@ -75,6 +77,33 @@ module.exports = function githubAuth({ W, store, getMembers, isLocal, str, broad
     const { githubToken, githubLogin, githubVia, githubAt, ...rest } = W.readSecret(mid);
     W.writeSecret(mid, Object.keys(rest).length ? rest : null);
     flows.delete(mid);
+  }
+
+  // ---------- pick or create (feat/setup-github): the person's own GitHub, with their own saved sign-in ----------
+  // The token is read here and never leaves the server; a browser only ever sees names and links.
+  const NAME_RE = /^[A-Za-z0-9._-]{1,100}$/;
+  const repoView = r => ({ name: String(r.full_name || ''), private: r.private !== false, url: r.html_url || (r.full_name ? `https://github.com/${r.full_name}` : null), updated: r.pushed_at || r.updated_at || null });
+  function mine(me) {
+    const t = W.readSecret(me.id).githubToken;
+    if (!t) throw err(401, 'Sign in to GitHub first.');
+    return t;
+  }
+  async function repos(me) {
+    const r = await call(API() + '/user/repos?per_page=60&sort=updated&affiliation=owner,collaborator,organization_member', { token: mine(me) });
+    if (r.status === 401) throw err(401, 'GitHub no longer accepts the saved sign-in. Sign in again.');
+    if (r.status >= 300 || !Array.isArray(r.data)) throw err(502, `GitHub answered HTTP ${r.status}`);
+    return r.data.filter(x => x && x.full_name && !x.archived && (!x.permissions || x.permissions.push !== false)).slice(0, 60).map(repoView);
+  }
+  async function createRepo(me, body) {
+    const name = str(body.name, 100).trim().replace(/\s+/g, '-');
+    if (!NAME_RE.test(name) || /^\.+$/.test(name)) throw err(400, 'Use letters, numbers, dashes, dots or underscores for the name.');
+    const r = await call(API() + '/user/repos', { method: 'POST', token: mine(me), json: { name, private: body.private !== false, description: str(body.description, 200) || 'Made with TribeCode', auto_init: false } });
+    if (r.status === 401) throw err(401, 'GitHub no longer accepts the saved sign-in. Sign in again.');
+    if (r.status === 403) throw err(403, 'That GitHub sign-in is not allowed to create one. Pick one you already have, or sign in again.');
+    if (r.status === 422) throw err(409, `You already have one called ${name} on GitHub. Pick it from the list, or use another name.`);
+    if (r.status >= 300 || !r.data || !r.data.full_name) throw err(502, `GitHub could not create it (HTTP ${r.status}${r.data && r.data.message ? ': ' + scrub(r.data.message).slice(0, 80) : ''})`);
+    log(`GitHub: ${W.readSecret(me.id).githubLogin || me.name} created ${r.data.full_name}`);
+    return repoView(r.data);
   }
 
   // ---------- device flow ----------
@@ -194,6 +223,8 @@ module.exports = function githubAuth({ W, store, getMembers, isLocal, str, broad
         return send(res, 200, { login: await save(me.id, t, 'token'), github: await status(req, me) });
       }
       if (b === 'signout' && m === 'POST') { signOut(me.id); return send(res, 200, { github: await status(req, me) }); }
+      if (b === 'repos' && m === 'GET') return send(res, 200, { repos: await repos(me) });
+      if (b === 'repos' && m === 'POST') return send(res, 200, { repo: await createRepo(me, await readBody(req)) });
     } catch (e) { return fail(res, e.status || 500, e.message); }
     return null;
   }
