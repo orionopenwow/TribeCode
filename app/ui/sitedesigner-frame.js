@@ -11,7 +11,7 @@
 (function () {
   'use strict';
   var post = function (m) { m.sd = 1; parent.postMessage(m, '*'); };
-  var CM = false, SEL = null, selEl = null, cur = null, drag = null, line = null, navT = 0;
+  var CM = false, SEL = null, selEl = null, cur = null, drag = null, line = null, navT = 0, swapping = false;
   var ROOT = function () { return document.getElementById('wdz-root') || document.body; };
   var q = function (s) { return document.querySelector(s); };
   var esc = function (s) { return window.CSS && CSS.escape ? CSS.escape(s) : String(s).replace(/["\\]/g, '\\$&'); };
@@ -157,7 +157,7 @@
   });
   document.addEventListener('focusin', function (e) { var el = e.target.closest && e.target.closest('[data-e]'); if (!el) return; var x = target(el); if (x && !(SEL && SEL.key === x.key && SEL.kind === x.kind)) pick(x); });
   document.addEventListener('focusout', function (e) {
-    var el = e.target.closest && e.target.closest('[data-e]'); if (!el) return;
+    var el = e.target.closest && e.target.closest('[data-e]'); if (!el || swapping) return;
     if (el.hasAttribute('data-dbl')) el.removeAttribute('contenteditable');
     post({ t: 'commit', key: el.dataset.e, value: el.innerText });
   });
@@ -198,11 +198,13 @@
     var d = e.data || {};
     if (d.labels) { for (var k in d.labels) L[k] = d.labels[k]; barHtml(); tb.dataset.for = ''; placeTb(); }
     if (d.html != null) {   // the design changed: swap the page in place (no reload, no flash, the scroll stays)
-      var ed = editing(), keep = ed ? ed.dataset.e : '';
+      var wasEd = !!editing();
+      if ('sel' in d) SEL = d.sel && d.sel.key ? { kind: d.sel.kind, key: d.sel.key } : null;   // what is selected after the change (an entry that moved keeps the caret)
       var cssEl = document.getElementById('wdz-css'); if (cssEl && d.css != null && cssEl.textContent !== d.css) cssEl.textContent = d.css;
       bar.remove(); cur = null; selEl = null;
-      ROOT().innerHTML = d.html; markItems(); select(SEL);
-      if (keep) { var again = q('[data-e="' + esc(keep) + '"]'); if (again) typeIn(again, false); }
+      swapping = true; try { ROOT().innerHTML = d.html; } finally { swapping = false; }   // the old words leaving the page are not an edit
+      markItems(); select(SEL);
+      if (wasEd && SEL && SEL.kind === 'text' && selEl && !selEl.hasAttribute('data-dbl')) typeIn(selEl, false);
       var w = wide(); post({ t: 'ready', soft: 1, sw: w.sw, iw: w.iw, wide: w.wide });
     }
     if ('cm' in d) { CM = !!d.cm; document.documentElement.classList.toggle('wdz-cm', CM); if (CM) select(null); }

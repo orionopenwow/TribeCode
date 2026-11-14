@@ -414,7 +414,87 @@
   }
 
   // feat/site-v2: the newer steps; anything else goes to command0. at.facts = what the project knows (fill()), if loaded.
+  // ---------- feat/site-editor2: Flint on the selected thing, screen sizes, every button, an opening time ----------
+  // every string on the site that a visitor reads: fn(page, block, path, text)
+  function walkWords(c, fn) { c.pages.forEach(pg => pg.blocks.forEach(b => { const go = (v, path) => { if (typeof v === 'string') { if (v && !/^data:/.test(v) && !/(^|\.)(img|alt|shape|icon|fit|pos|kind|to|url|action|email)$/.test(path)) fn(pg, b, path, v); } else if (Array.isArray(v)) v.forEach((x, i) => go(x, `${path}.${i}`)); else if (v && typeof v === 'object') Object.keys(v).forEach(k => go(v[k], path ? `${path}.${k}` : k)); }; go(b.props || {}, ''); })); }
+  const DAY_S = '(?:mon|tues?|wed(?:nes)?|thu(?:rs?)?|fri|sat(?:ur)?|sun)(?:day)?s?', TIME_S = '\\d{1,2}(?:[:.]\\d{2})?(?:\\s*(?:am|pm|a\\.m\\.|p\\.m\\.))?';
+  const DAY_RX = new RegExp(`\\b(${DAY_S})\\b`, 'i'), TIME_RX = new RegExp(`\\b(${TIME_S})(?![\\d%])`, 'i'), OPEN_RX = /\b(?:opens?|opening|open from|hours?|doors)\b/i;
+  const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+  const dayIx = d => DAYS.findIndex(x => x.toLowerCase().slice(0, 3) === String(d || '').toLowerCase().slice(0, 3));
+  // "Saturday 9am", "9 on saturdays", "10:30" -> { day: 'Saturday' | '', time: '9am' | '' }
+  function whenOf(t) { t = String(t || ''); const d = DAY_RX.exec(t), rest = d ? t.replace(d[0], ' ') : t, tm = TIME_RX.exec(rest); return { day: d ? DAYS[dayIx(d[1])] || '' : '', time: tm ? tm[1].replace(/\s+/g, '').toLowerCase() : '' }; }
+  // put a new day and/or time into words that already say when: "Opens Friday at 10am" + Saturday 9am -> "Opens Saturday at 9am".
+  // Only the line that names the same day changes when the words are a list of days ("Sat: 9 to 2"). -> new words, or '' when nothing fits
+  function retime(old, when) {
+    const w = typeof when === 'string' ? whenOf(when) : when || {}; if (!w.day && !w.time) return '';
+    const lines = String(old).split('\n'); let li = lines.findIndex(l => w.day && DAY_RX.test(l) && dayIx(DAY_RX.exec(l)[1]) === dayIx(w.day) && TIME_RX.test(l.replace(DAY_RX, ' ')));
+    const multi = lines.filter(l => DAY_RX.test(l)).length > 1;
+    if (li < 0) { if (multi && w.day) return ''; li = lines.findIndex(l => TIME_RX.test(l.replace(DAY_RX, ' ')) || (w.day && !w.time && DAY_RX.test(l))); }
+    if (li < 0) return '';
+    let l = lines[li]; const d = DAY_RX.exec(l);
+    if (w.time) {
+      const at = d ? d.index + d[0].length : 0, m = TIME_RX.exec(l.slice(at)) || null, m0 = m ? null : TIME_RX.exec(l);
+      const hit = m ? { i: at + m.index, s: m[1] } : m0 ? { i: m0.index, s: m0[1] } : null; if (!hit) return '';
+      let t = w.time; const oldMer = /(am|pm)/i.exec(hit.s); if (!/[ap]\.?m/i.test(t) && oldMer) t += oldMer[1].toLowerCase();
+      l = l.slice(0, hit.i) + t + l.slice(hit.i + hit.s.length);
+    }
+    if (w.day && !multi) { const d2 = DAY_RX.exec(l); if (d2) { const short = d2[1].length <= 4, plural = /s$/i.test(d2[1]) && d2[1].length > 3 && !/^(?:tues|thurs|wednes)$/i.test(d2[1]); l = l.slice(0, d2.index) + (short ? w.day.slice(0, d2[1].replace(/s$/i, '').length || 3) : w.day + (plural ? 's' : '')) + l.slice(d2.index + d2[0].length); } else { const tm = TIME_RX.exec(l); if (tm) { const pre = l.slice(0, tm.index).replace(/\b(?:at|from)\s*$/i, ''); l = `${pre}${w.day} at ${l.slice(tm.index)}`; } } }
+    lines[li] = l; const out = lines.join('\n'); return out === String(old) ? '' : out;
+  }
+  // the words on the site that say when something opens, best first: [{ page, block, path, text }]
+  function openTimes(c, sel) {
+    const out = []; walkWords(c, (pg, b, path, v) => { const t = TIME_RX.test(v.replace(DAY_RX, ' ')) || DAY_RX.test(v); if (!t || v.length > 240) return; const open = OPEN_RX.test(v) || (/\.text$/.test(path) && OPEN_RX.test(String(getAt(b.props, path.replace(/text$/, 'label')) || ''))); if (open || (sel && sel.block === b.id && String(sel.path || '').replace(/\.$/, '') === path)) out.push({ page: pg.id, block: b.id, path, text: v, score: (sel && sel.block === b.id && String(sel.path || '').replace(/\.$/, '') === path ? 4 : 0) + (/\bopens?\b/i.test(v) ? 2 : 1) }); });
+    return out.sort((a, b) => b.score - a.score);
+  }
+  function commandEl(c, s, at) {
+    at = at || {}; const id = s.intent, sl = s.slots || {}, pg = pageOf(c, at.page), sel = at.sel || null;
+    const b = sel && pg.blocks.find(x => x.id === sel.block), isEl = !!(b && sel.kind && sel.kind !== 'block'), words = isEl && (sel.kind === 'text' || sel.kind === 'button');
+    const sp = !isEl ? '' : sel.kind === 'image' ? sel.path + 'img' : String(sel.path || '').replace(/\.$/, ''), cur = () => (b.es || {})[sp] || {};
+    const named = t => t ? pg.blocks.find(x => x.type === (TYPEW[t] || t)) || c.pages.map(p => p.blocks.find(x => x.type === (TYPEW[t] || t))).find(Boolean) : null;
+    const what = () => { const v = getAt(b.props, sel.kind === 'button' ? sel.path + '.label' : sp); return typeof v === 'string' && v ? `“${short(v)}”` : 'it'; };
+    const keep = isEl ? { sel: { block: sel.block, path: sel.path, kind: sel.kind } } : {};
+    const CLICK = { say: 'Click it on the page first, then say that again.' };
+    if (id === 'site.suggest') return { need: 'suggest', mode: sl.do === 'apply' ? 'apply' : 'list', say: '' };
+    if (id === 'site.buttons') { const k = sl.style === 'solid' ? '' : sl.style; return { cfg: setBtn(c, k), say: `Every button on the site is ${{ pill: 'fully rounded', outline: 'outlined', soft: 'soft', '': 'solid' }[k || '']} now.`, chips: ['Make all buttons outlined', 'Make all buttons solid'] }; }
+    if (id === 'site.time') {
+      const w = whenOf(sl.when), list = openTimes(c, sel); if (!w.day && !w.time) return { say: 'When? Say a day, a time or both: “change the opening time to Saturday 9am”.' };
+      for (const o of list) { const next = retime(o.text, w); if (next) { const p = c.pages.find(x => x.id === o.page); return { cfg: setProp(c, o.page, o.block, o.path, next), page: o.page, sel: { block: o.block, path: o.path, kind: 'text' }, say: `“${short(o.text)}” now says “${short(next)}”${p && p.id !== pg.id ? ` (on ${p.title})` : ''}.${list.length > 1 ? ` ${list.length - 1} other place${list.length > 2 ? 's' : ''} on the site mention${list.length > 2 ? '' : 's'} opening: check ${list.length > 2 ? 'they still fit' : 'it still fits'}.` : ''}` }; } }
+      return { say: list.length ? 'I found where the site says when you open, but could not fit that in. Click the words and type the new time.' : 'Nothing on the site says when you open yet. Say “add opening hours”, or click the words that should change and say “change this to …”.' };
+    }
+    if (id === 'site.width' || id === 'site.entrance') {
+      const t = named(sl.block) || b || pg.blocks.find(x => x.type === 'hero'); if (!t) return CLICK; const p = pageWith(c, t), nm = BLOCKS[t.type].label.replace(/ \(.*/, '').toLowerCase();
+      if (id === 'site.width') return { cfg: setStyle(c, p.id, t.id, { w: sl.w || '' }), say: `The ${nm} section is ${sl.w === 'narrow' ? 'narrower' : sl.w === 'wide' ? 'wider' : 'its normal width'} now.` };
+      return { cfg: setStyle(c, p.id, t.id, { anim: sl.anim || '' }), say: sl.anim ? `The ${nm} section ${sl.anim === 'rise' ? 'rises' : 'fades'} in when it scrolls into view. It shows on the published site, not here, and stays still for people who ask for less motion.` : `The ${nm} section is just there now, no entrance.` };
+    }
+    if (id === 'site.el.show') {
+      const t = named(sl.block), blockLevel = !!t || !isEl || !sp || sel.kind === 'item', tb = t || b; if (!tb) return CLICK;
+      const p = pageWith(c, tb), now = String(blockLevel ? (tb.style || {}).hide || '' : cur().hide || '').split(',').filter(Boolean);
+      const next = sl.mode === 'only' ? DEVS.filter(d => d !== sl.dev) : sl.mode === 'show' ? now.filter(d => d !== sl.dev) : [...new Set([...now, sl.dev])];
+      if (next.length >= 3) return { say: 'It has to show somewhere. To take it off the site everywhere, say “hide this section” or “remove this”.' };
+      const cfg = blockLevel ? setStyle(c, p.id, tb.id, { hide: next.join(',') }) : setElStyle(c, pg.id, b.id, sp, { hide: next.join(',') });
+      const nm = blockLevel ? `The ${BLOCKS[tb.type].label.replace(/ \(.*/, '').toLowerCase()} section` : cap(what());
+      return { cfg, ...(blockLevel ? { sel: { block: tb.id, path: '', kind: 'block' } } : keep), say: next.length ? `${nm} does not show on ${next.map(d => d === 'desktop' ? 'computers' : d + 's').join(' or ')} now. Here it stays visible but faded on that size, so you can bring it back.` : `${nm} shows on every screen size again.`, chips: next.length ? ['Show me the phone size'] : [] };
+    }
+    if (id === 'site.el.size' && !words) return command(c, { ...s, intent: 'site.size' }, at);
+    if ((id === 'site.size' || id === 'site.el.size') && words) { const L = ['s', '', 'l', 'xl'], i = L.indexOf(cur().sz || ''), n = sl.dir === 'normal' ? 1 : Math.max(0, Math.min(3, i + (sl.dir === 'smaller' ? -1 : 1))); if (n === i) return { ...keep, say: sl.dir === 'smaller' ? 'That is as small as it goes.' : 'That is as big as it goes. For a bigger headline, try another layout or font.' }; return { cfg: setElStyle(c, pg.id, b.id, sp, { sz: L[n] }), ...keep, say: `${cap(what())} is ${{ s: 'small', '': 'its normal size', l: 'large', xl: 'huge' }[L[n]]} now.`, chips: [sl.dir === 'smaller' ? 'Smaller' : 'Bigger'] }; }
+    if (id === 'site.el.align' && !words) return command(c, { ...s, intent: 'site.align' }, at);
+    if ((id === 'site.el.align' || (id === 'site.align' && !sl.block)) && words) return { cfg: setElStyle(c, pg.id, b.id, sp, { al: sl.align || 'center' }), ...keep, say: `${cap(what())} lines up ${sl.align === 'center' || !sl.align ? 'in the middle' : 'on the ' + sl.align} now.` };
+    if (id === 'site.el.weight') { if (!words) return CLICK; const patch = 'i' in sl ? { i: sl.i ? 1 : '' } : { b: sl.b ? 1 : '' }; return { cfg: setElStyle(c, pg.id, b.id, sp, patch), ...keep, say: `${cap(what())} is ${'i' in sl ? (sl.i ? 'slanted' : 'upright') : (sl.b ? 'bold' : 'not bold')} now.` }; }
+    if (id === 'site.el.color') { if (!words) return CLICK; return { cfg: setElStyle(c, pg.id, b.id, sp, { col: sl.col || '' }), ...keep, say: `${cap(what())} is ${{ accent: 'in the main colour', muted: 'in the quiet colour', ink: 'in the strong colour', '': 'back to its own colour' }[sl.col || '']} now.` }; }
+    if (id === 'site.el.text') { if (!words) return CLICK; const path = sel.kind === 'button' ? sel.path + '.label' : sp, old = getAt(b.props, path), txt = String(sl.text || '').slice(0, 600); if (!txt) return { say: 'To what? “change this to Fresh bread daily”.' }; return { cfg: setProp(c, pg.id, b.id, path, txt), ...keep, say: typeof old === 'string' && old ? `“${short(old)}” now says “${short(txt)}”.` : `It says “${short(txt)}” now.` }; }
+    if (id === 'site.el.item') {
+      if (!isEl) return CLICK; const ls = listsOf(sel.path), en = ls[ls.length - 1];
+      if (!en) { if (sl.op === 'del' && sel.kind === 'image') return { cfg: setImage(c, pg.id, b.id, sel.path, '', getAt(b.props, sel.path + 'alt') || ''), ...keep, say: 'Took the picture out. A placeholder shows until you add one.' }; return { ...keep, say: `That is not one of several entries, so there is nothing to ${sl.op === 'del' ? 'remove on its own. Clear its words, or say “remove this section”' : sl.op === 'dup' ? 'copy. Say “duplicate this section”' : sl.op === 'add' ? 'add to. Say “add a section”' : 'move it past. Say “move this section up”'}.` }; }
+      const r = itemOp(c, pg.id, b.id, en.list, en.i, sl.op); if (r.i < 0) return { ...keep, say: r.why === 'last' ? 'A list keeps at least one entry. Say “remove this section” to take the whole thing out.' : r.why === 'full' ? 'That list is full (24 entries).' : 'That entry is not there any more.' };
+      if (r.i === en.i && (sl.op === 'up' || sl.op === 'down')) return { ...keep, say: `It is already ${sl.op === 'up' ? 'first' : 'last'}.` };
+      const item = `${en.list}.${r.i}`, own = String(sel.path || '').replace(/\.$/, ''), rest = own.slice(en.item.length);
+      const nsel = sl.op === 'del' ? { block: b.id, path: '', kind: 'block' } : sl.op === 'add' || sl.op === 'dup' ? { block: b.id, path: item, kind: 'item' } : { block: b.id, path: item + rest + (/\.$/.test(sel.path) ? '.' : ''), kind: sel.kind };
+      return { cfg: r.cfg, sel: nsel, say: { up: 'Moved it up one.', down: 'Moved it down one.', dup: 'Made a copy right after it.', add: 'Added another one after it: click its words to change them.', del: 'Removed it.' }[sl.op] };
+    }
+    return null;
+  }
   function command(c, s, at) {
+    { const e = /^site\.(?:el\.|suggest$|buttons$|time$|width$|entrance$|size$|align$)/.test(s.intent || '') ? commandEl(c, s, at) : null; if (e) return e; }
     at = at || {}; { const r2 = command2(c, s, at); if (r2 !== undefined) return r2; }
     at = at || {}; const sl = s.slots || {}, id = s.intent, pg = pageOf(c, at.page), sel = at.sel || {};
     const selBlock = sel.block && pg.blocks.find(b => b.id === sel.block);
@@ -909,5 +989,5 @@ ${t.btn === 'pill' ? '.btn{border-radius:999px}' : t.btn === 'outline' ? '.btn{b
   }
   const illusFor = text => { const t = String(text || '').toLowerCase(); const W = { cafe: /coffee|caf[eé]|bakery|restaurant|menu|food|tea/, shop: /shop|store|merch|buy|market|product/, phone: /app|phone|mobile|download/, people: /team|about|community|club|people|contact|talk/, rocket: /launch|startup|soon|grow|fast/, stage: /band|music|show|event|tour|podcast|conference|speak/, desk: /work|portfolio|studio|design|blog|write|course|learn|resume/ }; for (const k of Object.keys(W)) if (W[k].test(t)) return k; return 'hills'; };
 
-  return { setElStyle, listsOf, itemOp, setBtn, setPageSeo, movePage, setSiteText, hideOf, DEVS, ILLUS, illustration, illusFor, ACCENTS, setRadius, setPalette, applyOps, outline, check, kitNormalize, kitFromSite, kitToSite, FONT, ICONS, ICON_NAMES, icon: ic, iconFor, answer, command2, FONT_PAIRS, CATS, duplicateBlock, setHidden, setStyle, setSpace, setFonts, setSeo, setLogo, rewrite, fill, md, BLOCKS, TYPES, PRESETS, TEMPLATES, blank, normalize, colors, fromTemplate, render, exportFiles, dataToBytes, buttons, images, href, autoWire, addPage, renamePage, deletePage, addBlock, removeBlock, moveBlock, setVariant, setProp, setTheme, setMode, setColor, setLink, setImage, imageShape, command, getAt, slugify, contrast };
+  return { walkWords, whenOf, retime, openTimes, commandEl, setElStyle, listsOf, itemOp, setBtn, setPageSeo, movePage, setSiteText, hideOf, DEVS, ILLUS, illustration, illusFor, ACCENTS, setRadius, setPalette, applyOps, outline, check, kitNormalize, kitFromSite, kitToSite, FONT, ICONS, ICON_NAMES, icon: ic, iconFor, answer, command2, FONT_PAIRS, CATS, duplicateBlock, setHidden, setStyle, setSpace, setFonts, setSeo, setLogo, rewrite, fill, md, BLOCKS, TYPES, PRESETS, TEMPLATES, blank, normalize, colors, fromTemplate, render, exportFiles, dataToBytes, buttons, images, href, autoWire, addPage, renamePage, deletePage, addBlock, removeBlock, moveBlock, setVariant, setProp, setTheme, setMode, setColor, setLink, setImage, imageShape, command, getAt, slugify, contrast };
 });
