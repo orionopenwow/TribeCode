@@ -1239,5 +1239,10 @@
 "Most pictures here are our own drawings. Where you see a real screenshot, it is the makers' own work, used under the licence named below it. Each tool's name and logo belong to its makers. TribeCode is an independent project and is not part of any of them.": "ここにある画像のほとんどは私たちが描いたイラストです。実際のスクリーンショットは各ツールの作者によるもので、その下に示したライセンスのもとで使っています。各ツールの名前とロゴは、それぞれの作者のものです。TribeCode は独立したプロジェクトで、どのツールにも属していません。",
 "Screenshot:": "スクリーンショット：",
 "The Godot editor with a 3D game level open": "3D ゲームのステージを開いた Godot エディター",
-"Penpot showing a phone screen design next to its CSS code": "スマホ画面のデザインとその CSS コードを並べて表示している Penpot"
+"Penpot showing a phone screen design next to its CSS code": "スマホ画面のデザインとその CSS コードを並べて表示している Penpot",
+"Change one thing on your site": "サイトの1か所だけを変える",
+"Add, move or remove an entry in a list": "リストの項目を追加・移動・削除する",
+"Show or hide something on phones": "スマホで表示・非表示を切り替える",
+"Add, rename and order the pages of your site": "サイトのページを追加・改名・並べ替える",
+"Let what your tribe said update the site": "トライブの発言でサイトを更新する"
 }

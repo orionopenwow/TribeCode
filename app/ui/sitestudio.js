@@ -40,6 +40,8 @@
       <div class="stu-fonts" role="group" aria-label="Fonts">${Object.entries(FP).map(([id, f]) => `<button type="button" class="btn sm" data-stu="fonts" data-val="${id}" aria-pressed="${curF === id}">${esc(f.name)}</button>`).join('')}</div>
       <p class="stu-h"><b>Corners</b></p>
       <p class="wdz-row" role="group" aria-label="Corners">${RADII.map(([r, l]) => `<button type="button" class="btn sm" data-stu="radius" data-val="${r}" aria-pressed="${Math.abs((c.theme.radius || 0) - r) <= 2}">${l}</button>`).join('')}</p>
+      <p class="stu-h"><b>Buttons</b><small>every button on the site</small></p>
+      <p class="wdz-row" role="group" aria-label="Buttons">${[['', 'Solid'], ['outline', 'Outlined'], ['pill', 'Fully round'], ['soft', 'Soft']].map(([v, l]) => `<button type="button" class="btn sm" data-stu="btnstyle" data-val="${v}" aria-pressed="${(c.theme.btn || '') === v}">${l}</button>`).join('')}</p>
       <p class="stu-h"><b>Spacing</b></p>
       <p class="wdz-row" role="group" aria-label="Spacing">${[['compact', 'Compact'], ['normal', 'Normal'], ['roomy', 'Roomy']].map(([v, l]) => `<button type="button" class="btn sm" data-stu="space" data-val="${v}" aria-pressed="${(c.theme.space || 'normal') === v}">${l}</button>`).join('')}</p>
       <p class="stu-h"><b>Light or dark</b></p>
@@ -160,6 +162,7 @@
     if (k === 'accent') return api.commit(S().setColor(c, v));
     if (k === 'fonts') return api.commit(S().setFonts(c, v));
     if (k === 'radius') return api.commit(S().setRadius(c, +v));
+    if (k === 'btnstyle') return api.commit(S().setBtn(c, v));
     if (k === 'space') return api.commit(S().setSpace(c, v));
     if (k === 'mode') return api.commit(S().setMode(c, v));
     if (k === 'kit-save') { if (!kitApi()) return; kit = await kitApi().set(api.pid(), { ...S().kitFromSite(c), voice: (kit && kitPid === (api.pid() || 'me') && kit.voice) || '' }); kitPid = api.pid() || 'me'; api.say('Saved this look as the brand kit. Design uses the same colours, fonts and logo.'); if (box) stylePanel(box, api); return; }

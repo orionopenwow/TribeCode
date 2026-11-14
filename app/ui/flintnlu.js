@@ -700,6 +700,45 @@
     return m ? tidyLabel(m[1].replace(/\s+(?:to|at|for)$/i, '')) : '';
   }
   const ALIGN_W = c => /\b(?:left)\b/.test(c) ? 'left' : /\bright\b/.test(c) ? 'right' : /\b(?:center|centered|middle)\b/.test(c) ? 'center' : '';
+  // feat/site-editor2: sentences about the thing that is selected in the website editor (words, a button, a picture, an
+  // entry of a list), about screen sizes, every button at once, and what the tribe decided. ctx.selKind is what is selected.
+  const DEV_W = c => /\b(?:phones?|mobiles?|small screens?|cell ?phones?|iphones?|android)\b/.test(c) ? 'phone' : /\b(?:tablets?|ipads?)\b/.test(c) ? 'tablet' : /\b(?:desktops?|computers?|laptops?|big screens?|large screens?|pcs?)\b/.test(c) ? 'desktop' : '';
+  function siteEl(c, r, ctx, hit) {
+    const H = (intent, slots) => hit(intent, slots, 0.987), el = !!ctx.selKind && ctx.selKind !== 'block', THIS = '(?:this|it|that|these words|this text|this line|this one|the selected (?:one|text|words|thing))';
+    const hasThis = new RegExp(`\\b${THIS}\\b`).test(c), rl = r.toLowerCase();   // rl: the words as typed (the speller turns "pill" into "pull" and "rise" into "rose")
+    let m;
+    // what the tribe said -> changes to the site
+    if (/\b(?:what|anything)\b.*\b(?:should|could|can|do)\s+(?:we|i)\s+(?:update|change|fix|edit)\b.*\b(?:site|website|page)\b|\b(?:any|show|what are the|see the)\s+suggest\w*\b|\bsuggest\w*\s+for\s+(?:the|my|our)\s+(?:site|website)\b|\bwhat (?:has|have|did|do) (?:the (?:tribe|team|group|chat)|we|people) (?:say|said|decided?)\b.*\b(?:site|website|page|this)\b|\bis the (?:site|website) up to date\b/.test(c)) return H('site.suggest', { do: 'list' });
+    if (/\b(?:apply|use|do|make)\b.*\bwhat (?:we|the (?:tribe|team|group)) (?:decided?|agreed?|said|say|voted?)\b|\bapply (?:the |all |those |these |every )?(?:the )?suggest\w*\b|\b(?:update|sync|bring)\s+the\s+(?:site|website)\s+(?:from|with|to match|up to date with)\s+(?:the\s+)?(?:chat|tasks?|docs?|tribe|team|decisions?|what we (?:decided?|said|say))\b/.test(c)) return H('site.suggest', { do: 'apply' });
+    // screen sizes: "hide this on phones", "show the gallery on phones again", "only show this on computers"
+    const dev = DEV_W(c);
+    if (dev && /\b(?:hide|hidden|show|shown|display|visible|only|take off|unhide)\b/.test(c) && !/\b(?:preview|view|looks?|see how|check|switch to|size)\b/.test(c) && !(/\bon an? \w+/.test(c) && !/\b(?:hide|hidden|only)\b/.test(c)) && (hasThis || blockOf(c) || /\b(?:section|block|part|button|picture|image|headline|title|text|words)\b/.test(c))) {
+      const only = /\bonly\b/.test(c), on = !only && /\b(?:show|display|visible|unhide)\b/.test(c) && !/\b(?:don'?t|do not|not|never)\s+(?:show|display)\b/.test(c), b = blockOf(c);
+      return H('site.el.show', { dev, mode: only ? 'only' : on ? 'show' : 'hide', ...(b ? { block: b } : {}) });
+    }
+    // an opening time: "change the opening time to Saturday 9am", "we open at 9 on Saturdays now", "opens Saturday at 9am now"
+    if ((m = /\b(?:change|set|update|move|make)\s+(?:the\s+|our\s+)?(?:opening|open|opens|doors?)\s*(?:time|hours?|day|date)?\s+(?:to|is|be)\s+(.+)$/i.exec(r)) || (m = /^(?:we|it|the shop|the store|doors)\s+(?:now\s+)?opens?\s+(?:now\s+)?(?:at\s+|on\s+|from\s+)?(.+?)[.!]?$/i.exec(r)) || (m = /^opens?\s+(.+?)\s+now[.!]?$/i.exec(r))) { const when = m[1].replace(/[.!]+$/, '').replace(/\s+(?:now|instead|from now on)$/i, '').trim(); if (/\d/.test(when)) return H('site.time', { when }); }
+    // every button at once
+    if (/\b(?:all|every)\s+(?:the\s+|of the\s+)?buttons?\b|^(?:make\s+)?(?:the\s+)?buttons\b/.test(c) && (m = /\b(rounder|round|rounded|pill|pills|capsule|outlined?|outlines?|hollow|ghost|solid|filled|soft|softer|subtle)\b/.exec(rl))) { const w = m[1]; return H('site.buttons', { style: /round|pill|capsule/.test(w) ? 'pill' : /outlin|hollow|ghost/.test(w) ? 'outline' : /soft|subtle/.test(w) ? 'soft' : 'solid' }); }
+    // a section's width and entrance
+    if (/\b(?:narrower|narrow|wider|full width|normal width)\b/.test(c) && /\b(?:this|it|that|section|block)\b/.test(c) && !/\b(?:picture|image|photo|column)\b/.test(c)) return H('site.width', { w: /narrow/.test(c) ? 'narrow' : /normal/.test(c) ? '' : 'wide', ...(blockOf(c) ? { block: blockOf(c) } : {}) });
+    if (/\b(?:fade|fades|rise|rises|slide|slides|animate|animation|entrance)\b/.test(rl) && /\b(?:this|it|that|section|block|in|into view|scroll)\b/.test(c)) return H('site.entrance', { anim: /\b(?:no|remove|without|stop|off|none)\b/.test(c) ? '' : /\b(?:rise|rises|slide|slides|up)\b/.test(rl) ? 'rise' : 'fade', ...(blockOf(c) ? { block: blockOf(c) } : {}) });
+    if (!el) return null;
+    // the selected words, button, picture or entry
+    if ((m = new RegExp(`^(?:please\\s+)?(?:change|set|make|rename|rewrite|update|edit)\\s+${THIS}\\s+(?:to\\s+say|to\\s+read|to|say|says|read|into)\\s+(.+)$`, 'i').exec(r)) && !/^(?:bold|bigger|smaller|larger|huge|small|large|italic|centered?|the main colou?r|accent|quiet(?:er)?|grey|gray|muted|round(?:er)?|narrow(?:er)?|wid(?:e|er)|teal|red|blue|green|orange|purple|pink|yellow|black|white|dark|light)\b/i.test(m[1])) return H('site.el.text', { text: m[1].replace(/^["“']|["”']$/g, '').trim() });
+    if (new RegExp(`^(?:please\\s+)?(?:make\\s+)?${THIS}\\s+(?:a\\s+(?:bit|little|lot)\\s+|much\\s+|way\\s+)?(?:bigger|larger|huge|smaller|tinier|small|large|normal(?:\\s+size)?)(?:\\s+please)?$`, 'i').test(c)) return H('site.el.size', { dir: /small|tin/.test(c) ? 'smaller' : /normal/.test(c) ? 'normal' : 'bigger' });
+    if (/^(?:bigger|larger|smaller)(?:\s+please)?$/.test(c)) return H('site.el.size', { dir: /small/.test(c) ? 'smaller' : 'bigger' });
+    if (/\b(?:bold|bolder|unbold|italics?|italic|slanted)\b/.test(c) && (hasThis || c.split(' ').length <= 3)) return H('site.el.weight', /ital|slant/.test(c) ? { i: !/\b(?:not|no|remove)\b|unital/.test(c) } : { b: !/\b(?:not|no|remove)\b|unbold/.test(c) });
+    if (new RegExp(`\\b(?:make|turn|colou?r|paint|set)\\s+${THIS}\\b`).test(c) && (m = /\b(the main colou?r|main colou?r|accent(?: colou?r)?|brand colou?r|quiet(?:er)?|muted|grey|gray|softer|subtle|strong(?:er)?|darker|normal colou?r|default colou?r|as it was)\b/.exec(c))) return H('site.el.color', { col: /main|accent|brand/.test(m[1]) ? 'accent' : /quiet|muted|gr[ea]y|soft|subtle/.test(m[1]) ? 'muted' : /strong|darker/.test(m[1]) ? 'ink' : '' });
+    if (new RegExp(`^(?:please\\s+)?(?:center|centre|middle)\\s+${THIS}$|\\b(?:align|line up|put|move)\\s+${THIS}\\s+(?:to\\s+the\\s+|on\\s+the\\s+|in\\s+the\\s+)?(?:left|right|center|centre|middle)\\b|^(?:left|right|center|centre)\\s+align\\s+${THIS}$`, 'i').test(c)) return H('site.el.align', { align: ALIGN_W(c.replace(/centre/g, 'center')) || 'center' });
+    if (ctx.selList !== false) {
+      if (new RegExp(`^(?:please\\s+)?(?:move|bump|push|shift|nudge)\\s+${THIS}\\s+(?:up|down|higher|lower|earlier|later|to the top|to the bottom|first|last)\\b`).test(c) || /^(?:move\s+)?(?:it\s+)?(?:up|down)(?:\s+one)?$/.test(c)) return H('site.el.item', { op: /\b(?:up|higher|earlier|top|first)\b/.test(c) ? 'up' : 'down' });
+      if (new RegExp(`^(?:please\\s+)?(?:duplicate|copy|clone|double)\\s+${THIS}$`).test(c)) return H('site.el.item', { op: 'dup' });
+      if (/^(?:please\s+)?(?:add|one)\s+(?:another|one more|more)(?:\s+one)?(?:\s+(?:entry|item|row|line|link|card|plan|question))?$|^another(?:\s+one)?$/.test(c)) return H('site.el.item', { op: 'add' });
+      if (new RegExp(`^(?:please\\s+)?(?:delete|remove|get rid of|drop|take out|lose|kill|bin)\\s+${THIS}$`).test(c)) return H('site.el.item', { op: 'del' });
+    }
+    return null;
+  }
   function siteNew(c, r, ctx, hit) {
     let m; const H = (intent, slots) => hit(intent, slots, 0.985);
     const rl = r.toLowerCase(), url = urlOf(r), email = (EMAIL_RX.exec(r) || [])[1] || '';
@@ -918,6 +957,7 @@
     const out = [], hit = (intent, slots, conf) => { out.push({ intent, area: intent === 'lesson' ? 'help' : intent.startsWith('canvas.') ? 'canvas' : 'build', slots: slots || {}, conf: conf || (view === 'canvas' ? 0.98 : 0.97), req: {}, label: '' }); return out; };
     const r = String(raw || '').trim(), rl = r.toLowerCase();
     const lf = lessonOf(c); if (lf) return hit('lesson', { feature: lf }, 0.97);
+    if (view === 'site') { const w = siteEl(c, r, ctx, hit); if (w) return w; }   // feat/site-editor2: the selected thing, screen sizes, what the tribe said
     { const z = maxNew(c, r, ctx, hit, view); if (z) return z; }   // feat/flint-max
     const IMG = /\b(?:image|images|picture|pictures|photo|photos|avatar|img|headshot|portrait|cover|pfp)\b/;
     if (view) {

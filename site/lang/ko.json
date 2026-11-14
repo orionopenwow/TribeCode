@@ -1239,5 +1239,10 @@
 "Most pictures here are our own drawings. Where you see a real screenshot, it is the makers' own work, used under the licence named below it. Each tool's name and logo belong to its makers. TribeCode is an independent project and is not part of any of them.": "여기 있는 그림은 대부분 저희가 직접 그린 것입니다. 실제 스크린샷은 각 도구를 만든 분들의 작품이며, 그 아래에 적힌 라이선스에 따라 사용합니다. 각 도구의 이름과 로고는 만든 분들의 것입니다. TribeCode는 독립 프로젝트이며 어느 도구에도 속해 있지 않습니다.",
 "Screenshot:": "스크린샷:",
 "The Godot editor with a 3D game level open": "3D 게임 레벨을 연 Godot 편집기",
-"Penpot showing a phone screen design next to its CSS code": "휴대폰 화면 디자인과 그 CSS 코드를 나란히 보여 주는 Penpot"
+"Penpot showing a phone screen design next to its CSS code": "휴대폰 화면 디자인과 그 CSS 코드를 나란히 보여 주는 Penpot",
+"Change one thing on your site": "사이트에서 한 가지만 바꾸기",
+"Add, move or remove an entry in a list": "목록의 항목 추가, 이동, 삭제",
+"Show or hide something on phones": "휴대폰에서 보이거나 숨기기",
+"Add, rename and order the pages of your site": "사이트 페이지 추가, 이름 바꾸기, 순서 정하기",
+"Let what your tribe said update the site": "트라이브가 한 말로 사이트 업데이트하기"
 }

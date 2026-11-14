@@ -293,7 +293,7 @@
    ],
    "steps": [
     "Open the website designer.",
-    "Click the words and type. Click a picture to swap it.",
+    "Click the words and type. Double-click a picture to swap it.",
     "Click a button to choose where it goes.",
     "Every change is saved. Ctrl Z takes the last one back."
    ]
@@ -316,6 +316,106 @@
     "Slide Speed, How many and How strong until it feels right.",
     "Untick “Move on phones too” to show a still picture on phones.",
     "Or tell Flint: “add a 3D background”, then “make it calmer”."
+   ]
+  },
+  {
+   "id": "site-one-thing",
+   "group": "make",
+   "title": "Change one thing on your site",
+   "intro": "Every word, picture, button and icon on the page can be picked and changed on its own. You end with exactly that one thing looking the way you want.",
+   "asks": [
+    "edit one word on my site",
+    "make this text bigger",
+    "select something on the website",
+    "change the colour of a heading",
+    "the small toolbar on the page",
+    "right click on my site"
+   ],
+   "steps": [
+    "Open the website designer and click the thing you want to change.",
+    "A small toolbar appears above it: bigger, smaller, bold, colour and line up.",
+    "Right-click it for everything else you can do with it.",
+    "Press Esc to step out to what holds it: the entry, then the section.",
+    "Ctrl Z takes back any change."
+   ]
+  },
+  {
+   "id": "site-list-entry",
+   "group": "make",
+   "title": "Add, move or remove an entry in a list",
+   "intro": "Links, prices, questions, team members and menu lines are lists. Each entry can be moved, copied or removed without touching the rest. You end with the list in the order you want.",
+   "asks": [
+    "add another link",
+    "reorder my links",
+    "remove a price plan",
+    "move a question up",
+    "duplicate a card",
+    "delete one item from the list"
+   ],
+   "steps": [
+    "Click any words in the entry, then press Esc once: the whole entry is selected.",
+    "Use the arrows on its toolbar to move it, or the copy and bin buttons.",
+    "Add another gives you a new entry right after it.",
+    "Or tell Flint: move this up, duplicate this, remove this."
+   ]
+  },
+  {
+   "id": "site-phone-hide",
+   "group": "make",
+   "title": "Show or hide something on phones",
+   "intro": "Some things only make sense on a big screen, or only on a phone. You can choose per screen size, for one element or a whole section. You end with a page that fits each screen.",
+   "asks": [
+    "hide this on mobile",
+    "only show on desktop",
+    "different on phones",
+    "hide a section on small screens",
+    "phone layout of my site"
+   ],
+   "steps": [
+    "Click the thing, or select its section.",
+    "Under Show it on, switch off Phone, Tablet or Computer.",
+    "Press Phone in the top bar: what is hidden there looks faded, so you can bring it back.",
+    "On the published site it is really gone on that size."
+   ]
+  },
+  {
+   "id": "site-pages",
+   "group": "make",
+   "title": "Add, rename and order the pages of your site",
+   "intro": "A site can have several pages, each with its own name in the menu and its own title in search results. You end with a menu that matches how you want people to move around.",
+   "asks": [
+    "add a page to my website",
+    "rename a page",
+    "reorder the menu",
+    "delete a page",
+    "page title for search",
+    "change the menu"
+   ],
+   "steps": [
+    "Open the website designer and press the plus next to the page names to add one.",
+    "Double-click a name in the page's own menu to type a new one.",
+    "Open Site on the right to reorder or remove pages.",
+    "There you can also give each page its own title and description for search."
+   ]
+  },
+  {
+   "id": "site-suggestions",
+   "group": "make",
+   "title": "Let what your tribe said update the site",
+   "intro": "When someone says in chat that the opening time changed, or makes a task to add a contact form, the designer notices and offers the change. You end with a site that matches what was decided.",
+   "asks": [
+    "update the site from chat",
+    "what should we change on the website",
+    "apply what we decided",
+    "suggestions for my site",
+    "is the site up to date",
+    "what did the tribe say about this"
+   ],
+   "steps": [
+    "Open the website designer and look at Suggestions on the right.",
+    "Each one shows the words before and after, and who said it and where.",
+    "Tap Apply, Not now or Dismiss. Apply is a normal change and Ctrl Z takes it back.",
+    "Click anything on the page to see what the tribe said about it."
    ]
   },
   {

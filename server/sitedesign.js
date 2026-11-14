@@ -21,6 +21,8 @@
 //                                                     to the block, assigned per the project's task mode); resolving the task
 //                                                     resolves its comments (onTask, called from saveTask)
 //   MCP: site_comments, site_comments_to_tasks
+//   GET  /api/projects/:id/site-suggestions           feat/site-editor2: changes drawn from chat, tasks, docs, decisions and
+//                                                     comments (server/sitesuggest.js); POST …/dismiss, …/applied
 //   feat/design-site2:
 //   GET|PUT  /api/projects/:id/brand                     the brand kit (logo, colours, fonts, voice) shared with the canvas
 //   GET      /api/projects/:id/site-proposals            changes an agent proposed, waiting for a person
@@ -157,6 +159,8 @@ module.exports = function siteDesign({ base, root, showcase, siteFlint, P, tasks
     try { if (postChat) postChat('general', 'tribecode', `🗒 Flint turned ${open.length} website comment${open.length === 1 ? '' : 's'} into ${made.length} task${made.length === 1 ? '' : 's'}${mode === 'council' ? ', open to claim' : ''}: ${made.map(t => `“${t.title}”`).join(', ')}.`); } catch {}
     return { tasks: made, groups: groups.length, mode, say: `Made ${made.length} task${made.length === 1 ? '' : 's'} from ${open.length} comment${open.length === 1 ? '' : 's'}, one per section${mode === 'council' ? ' (Council mode: open to claim)' : made.some(t => t.assignee) ? `, assigned to ${nameOf(made.find(t => t.assignee).assignee)} to accept` : ' (a lead assigns them)'}.` };
   }
+  // feat/site-editor2: suggested changes drawn from what the tribe said (server/sitesuggest.js)
+  const suggest = require('./sitesuggest.js')({ base, P, tasks, nameOf, loadCfg: pid => load(pid), loadComments: pid => loadC(pid), log });
   // saveTask hook: a website task marked done resolves its comments (and reopening it reopens them)
   function onTask(t) {
     if (!t || !t.site || !t.site.project) return;
@@ -186,6 +190,16 @@ module.exports = function siteDesign({ base, root, showcase, siteFlint, P, tasks
         if (d === 'publish' && m === 'POST') return send(res, 200, publish(b));
       }
       if (a === 'projects' && c === 'site-autofill' && m === 'GET') return send(res, 200, { facts: await facts(b) });
+      if (a === 'projects' && c === 'site-suggestions') {
+        // people only: an AI helper reads the site through site_read and proposes through site_propose, under its own permissions
+        if (me.role === 'guest' || me.role === 'agent') return fail(res, 403, me.role === 'agent' ? 'suggestions are for people; a helper uses site_read and site_propose' : 'join the tribe to see what it suggests');
+        if (!d && m === 'GET') return send(res, 200, { ...suggest.view(b), canEdit });
+        if (m === 'POST' && (d === 'dismiss' || d === 'applied')) {
+          if (!canEdit) return fail(res, 403, 'a person who can change the site answers a suggestion');
+          const body = (await readBody(req)) || {};
+          return send(res, 200, d === 'dismiss' ? suggest.dismiss(b, me, body.id) : suggest.applied(b, me, body));
+        }
+      }
       if (a === 'projects' && c === 'brand') {
         if (m === 'GET') return send(res, 200, { kit: brandGet(b), canEdit });
         if (m === 'PUT') { if (!canEdit) return fail(res, 403, 'spectators are read-only'); const body = await readBody(req, 600 * 1024); return send(res, 200, { ok: true, kit: brandSet(b, (body && body.kit) || {}, me) }); }

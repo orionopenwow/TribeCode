@@ -10720,6 +10720,528 @@
    "i": null,
    "ctx": "g",
    "v": "c5"
+  },
+  {
+   "t": "make this bold",
+   "i": "site.el.weight",
+   "s": {
+    "b": true
+   },
+   "ctx": "se",
+   "v": "e2"
+  },
+  {
+   "t": "bold this",
+   "i": "site.el.weight",
+   "s": {
+    "b": true
+   },
+   "ctx": "se",
+   "v": "e2"
+  },
+  {
+   "t": "make it not bold",
+   "i": "site.el.weight",
+   "s": {
+    "b": false
+   },
+   "ctx": "se",
+   "v": "e2"
+  },
+  {
+   "t": "make this italic",
+   "i": "site.el.weight",
+   "s": {
+    "i": true
+   },
+   "ctx": "se",
+   "v": "e2"
+  },
+  {
+   "t": "change this to Opens Saturday at 9am",
+   "i": "site.el.text",
+   "s": {
+    "text": "Opens Saturday at 9am"
+   },
+   "ctx": "se",
+   "v": "e2"
+  },
+  {
+   "t": "make it say Fresh bread daily",
+   "i": "site.el.text",
+   "s": {
+    "text": "Fresh bread daily"
+   },
+   "ctx": "se",
+   "v": "e2"
+  },
+  {
+   "t": "change it to Back soon",
+   "i": "site.el.text",
+   "s": {
+    "text": "Back soon"
+   },
+   "ctx": "se",
+   "v": "e2"
+  },
+  {
+   "t": "rename this to Shop",
+   "i": "site.el.text",
+   "s": {
+    "text": "Shop"
+   },
+   "ctx": "se",
+   "v": "e2"
+  },
+  {
+   "t": "make this the main colour",
+   "i": "site.el.color",
+   "s": {
+    "col": "accent"
+   },
+   "ctx": "se",
+   "v": "e2"
+  },
+  {
+   "t": "make it quieter",
+   "i": "site.el.color",
+   "s": {
+    "col": "muted"
+   },
+   "ctx": "se",
+   "v": "e2"
+  },
+  {
+   "t": "turn this grey",
+   "i": "site.el.color",
+   "s": {
+    "col": "muted"
+   },
+   "ctx": "se",
+   "v": "e2"
+  },
+  {
+   "t": "center this",
+   "i": "site.el.align",
+   "s": {
+    "align": "center"
+   },
+   "ctx": "se",
+   "v": "e2"
+  },
+  {
+   "t": "align this to the right",
+   "i": "site.el.align",
+   "s": {
+    "align": "right"
+   },
+   "ctx": "se",
+   "v": "e2"
+  },
+  {
+   "t": "put it on the left",
+   "i": "site.el.align",
+   "s": {
+    "align": "left"
+   },
+   "ctx": "se",
+   "v": "e2"
+  },
+  {
+   "t": "move this up",
+   "i": "site.el.item",
+   "s": {
+    "op": "up"
+   },
+   "ctx": "se",
+   "v": "e2"
+  },
+  {
+   "t": "move it down",
+   "i": "site.el.item",
+   "s": {
+    "op": "down"
+   },
+   "ctx": "se",
+   "v": "e2"
+  },
+  {
+   "t": "bump this to the top",
+   "i": "site.el.item",
+   "s": {
+    "op": "up"
+   },
+   "ctx": "se",
+   "v": "e2"
+  },
+  {
+   "t": "duplicate this",
+   "i": "site.el.item",
+   "s": {
+    "op": "dup"
+   },
+   "ctx": "se",
+   "v": "e2"
+  },
+  {
+   "t": "copy it",
+   "i": "site.el.item",
+   "s": {
+    "op": "dup"
+   },
+   "ctx": "se",
+   "v": "e2"
+  },
+  {
+   "t": "add another",
+   "i": "site.el.item",
+   "s": {
+    "op": "add"
+   },
+   "ctx": "se",
+   "v": "e2"
+  },
+  {
+   "t": "add one more",
+   "i": "site.el.item",
+   "s": {
+    "op": "add"
+   },
+   "ctx": "se",
+   "v": "e2"
+  },
+  {
+   "t": "remove this",
+   "i": "site.el.item",
+   "s": {
+    "op": "del"
+   },
+   "ctx": "se",
+   "v": "e2"
+  },
+  {
+   "t": "delete it",
+   "i": "site.el.item",
+   "s": {
+    "op": "del"
+   },
+   "ctx": "se",
+   "v": "e2"
+  },
+  {
+   "t": "get rid of this",
+   "i": "site.el.item",
+   "s": {
+    "op": "del"
+   },
+   "ctx": "se",
+   "v": "e2"
+  },
+  {
+   "t": "hide this on phones",
+   "i": "site.el.show",
+   "s": {
+    "dev": "phone",
+    "mode": "hide"
+   },
+   "ctx": "se",
+   "v": "e2"
+  },
+  {
+   "t": "hide it on mobile",
+   "i": "site.el.show",
+   "s": {
+    "dev": "phone",
+    "mode": "hide"
+   },
+   "ctx": "se",
+   "v": "e2"
+  },
+  {
+   "t": "show this on phones again",
+   "i": "site.el.show",
+   "s": {
+    "dev": "phone",
+    "mode": "show"
+   },
+   "ctx": "se",
+   "v": "e2"
+  },
+  {
+   "t": "only show this on computers",
+   "i": "site.el.show",
+   "s": {
+    "dev": "desktop",
+    "mode": "only"
+   },
+   "ctx": "se",
+   "v": "e2"
+  },
+  {
+   "t": "hide the gallery on phones",
+   "i": "site.el.show",
+   "s": {
+    "dev": "phone",
+    "mode": "hide",
+    "block": "gallery"
+   },
+   "ctx": "s",
+   "v": "e2"
+  },
+  {
+   "t": "hide the pricing section on tablets",
+   "i": "site.el.show",
+   "s": {
+    "dev": "tablet",
+    "mode": "hide",
+    "block": "pricing"
+   },
+   "ctx": "s",
+   "v": "e2"
+  },
+  {
+   "t": "only show the faq on desktop",
+   "i": "site.el.show",
+   "s": {
+    "dev": "desktop",
+    "mode": "only",
+    "block": "faq"
+   },
+   "ctx": "s",
+   "v": "e2"
+  },
+  {
+   "t": "show me the phone size",
+   "i": "site.device",
+   "s": {
+    "dev": "phone"
+   },
+   "ctx": "s",
+   "v": "e2"
+  },
+  {
+   "t": "make all buttons rounder",
+   "i": "site.buttons",
+   "s": {
+    "style": "pill"
+   },
+   "ctx": "s",
+   "v": "e2"
+  },
+  {
+   "t": "make every button outlined",
+   "i": "site.buttons",
+   "s": {
+    "style": "outline"
+   },
+   "ctx": "s",
+   "v": "e2"
+  },
+  {
+   "t": "make the buttons solid",
+   "i": "site.buttons",
+   "s": {
+    "style": "solid"
+   },
+   "ctx": "s",
+   "v": "e2"
+  },
+  {
+   "t": "make all the buttons pill shaped",
+   "i": "site.buttons",
+   "s": {
+    "style": "pill"
+   },
+   "ctx": "s",
+   "v": "e2"
+  },
+  {
+   "t": "make the pricing section narrower",
+   "i": "site.width",
+   "s": {
+    "w": "narrow",
+    "block": "pricing"
+   },
+   "ctx": "s",
+   "v": "e2"
+  },
+  {
+   "t": "make this section wider",
+   "i": "site.width",
+   "s": {
+    "w": "wide"
+   },
+   "ctx": "s",
+   "v": "e2"
+  },
+  {
+   "t": "fade this section in",
+   "i": "site.entrance",
+   "s": {
+    "anim": "fade"
+   },
+   "ctx": "s",
+   "v": "e2"
+  },
+  {
+   "t": "make the gallery rise in as you scroll",
+   "i": "site.entrance",
+   "s": {
+    "anim": "rise",
+    "block": "gallery"
+   },
+   "ctx": "s",
+   "v": "e2"
+  },
+  {
+   "t": "no animation on this section",
+   "i": "site.entrance",
+   "s": {
+    "anim": ""
+   },
+   "ctx": "s",
+   "v": "e2"
+  },
+  {
+   "t": "change the opening time to Saturday 9am",
+   "i": "site.time",
+   "s": {
+    "when": "Saturday 9am"
+   },
+   "ctx": "s",
+   "v": "e2"
+  },
+  {
+   "t": "we open at 9 on saturday now",
+   "i": "site.time",
+   "ctx": "s",
+   "v": "e2"
+  },
+  {
+   "t": "set the opening hours to 10am",
+   "i": "site.time",
+   "s": {
+    "when": "10am"
+   },
+   "ctx": "s",
+   "v": "e2"
+  },
+  {
+   "t": "update the opening day to Sunday 11am",
+   "i": "site.time",
+   "ctx": "s",
+   "v": "e2"
+  },
+  {
+   "t": "what should we update on the site?",
+   "i": "site.suggest",
+   "s": {
+    "do": "list"
+   },
+   "ctx": "s",
+   "v": "e2"
+  },
+  {
+   "t": "any suggestions for the site",
+   "i": "site.suggest",
+   "s": {
+    "do": "list"
+   },
+   "ctx": "s",
+   "v": "e2"
+  },
+  {
+   "t": "what did the tribe say about this",
+   "i": "site.suggest",
+   "s": {
+    "do": "list"
+   },
+   "ctx": "s",
+   "v": "e2"
+  },
+  {
+   "t": "is the website up to date",
+   "i": "site.suggest",
+   "s": {
+    "do": "list"
+   },
+   "ctx": "s",
+   "v": "e2"
+  },
+  {
+   "t": "apply what we decided in chat",
+   "i": "site.suggest",
+   "s": {
+    "do": "apply"
+   },
+   "ctx": "s",
+   "v": "e2"
+  },
+  {
+   "t": "apply the suggestions",
+   "i": "site.suggest",
+   "s": {
+    "do": "apply"
+   },
+   "ctx": "s",
+   "v": "e2"
+  },
+  {
+   "t": "update the site from the chat",
+   "i": "site.suggest",
+   "s": {
+    "do": "apply"
+   },
+   "ctx": "s",
+   "v": "e2"
+  },
+  {
+   "t": "do what the team agreed",
+   "i": "site.suggest",
+   "s": {
+    "do": "apply"
+   },
+   "ctx": "s",
+   "v": "e2"
+  },
+  {
+   "t": "undo that",
+   "i": "undo",
+   "ctx": "s",
+   "v": "e2"
+  },
+  {
+   "t": "add a pricing section",
+   "i": "site.block.add",
+   "s": {
+    "block": "pricing"
+   },
+   "ctx": "s",
+   "v": "e2"
+  },
+  {
+   "t": "hide this section",
+   "i": "site.block.hide",
+   "ctx": "s",
+   "v": "e2"
+  },
+  {
+   "t": "rounder corners",
+   "i": "site.radius",
+   "s": {
+    "size": "more"
+   },
+   "ctx": "s",
+   "v": "e2"
+  },
+  {
+   "t": "show it on a phone",
+   "i": "preview.device",
+   "s": {
+    "dev": "phone"
+   },
+   "ctx": "p",
+   "v": "e2"
   }
  ]
 }
