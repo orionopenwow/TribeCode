@@ -1175,7 +1175,10 @@
 "Your own AI.": "Deine eigene KI.",
 "If paid plans come later, they will be for things that cost money to run for you, like always-on hosting. They will never take a feature away from your own computer.": "Falls später Bezahlpläne kommen, dann für Dinge, deren Betrieb für dich Geld kostet, wie Hosting, das immer läuft. Sie nehmen dir nie eine Funktion auf deinem eigenen Computer weg.",
 "// about this page": "// über diese seite",
-"The pictures here are our own drawings, not screenshots. Each tool's name and logo belong to its makers. TribeCode is an independent project and is not part of any of them.": "Die Bilder hier sind unsere eigenen Zeichnungen, keine Screenshots. Name und Logo jedes Werkzeugs gehören seinen Machern. TribeCode ist ein unabhängiges Projekt und gehört zu keinem von ihnen.",
 "The list comes from the same place the app's Workshop reads, so the two always match.": "Die Liste stammt aus derselben Quelle, die auch der Workshop der App liest, also stimmen beide immer überein.",
-"Licences and sources": "Lizenzen und Quellen"
+"Licences and sources": "Lizenzen und Quellen",
+"Most pictures here are our own drawings. Where you see a real screenshot, it is the makers' own work, used under the licence named below it. Each tool's name and logo belong to its makers. TribeCode is an independent project and is not part of any of them.": "Die meisten Bilder hier sind unsere eigenen Zeichnungen. Ein echter Screenshot stammt von den Machern des Tools und wird unter der darunter genannten Lizenz verwendet. Name und Logo jedes Tools gehören seinen Machern. TribeCode ist ein unabhängiges Projekt und gehört zu keinem von ihnen.",
+"Screenshot:": "Screenshot:",
+"The Godot editor with a 3D game level open": "Der Godot-Editor mit einem geöffneten 3D-Spiellevel",
+"Penpot showing a phone screen design next to its CSS code": "Penpot zeigt den Entwurf eines Handy-Bildschirms neben dem zugehörigen CSS-Code"
 }

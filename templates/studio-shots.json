@@ -1,0 +1,28 @@
+{
+  "about": "Real screenshots of the tools in templates/studios.json, used only where the project's own terms clearly allow it. One record per tool id. scripts/dev/toolbox-shots.py makes the web sizes from 'original'; scripts/dev/site-toolbox.js writes site/assets/toolbox/credits.json from this file. A tool with no record here keeps its drawn card (docs/SCREENSHOT-PERMISSIONS.md says why).",
+  "sizes": [640, 1280],
+  "shots": {
+    "godot": {
+      "file": "godot", "w": 1280, "h": 720,
+      "alt": "The Godot editor with a 3D game level open",
+      "by": "Godot Engine contributors",
+      "license": "CC BY 4.0", "licenseUrl": "https://creativecommons.org/licenses/by/4.0/",
+      "source": "https://github.com/godotengine/godot-design/blob/master/screenshots/editor_tps_demo_1920x1080.jpg",
+      "original": "https://raw.githubusercontent.com/godotengine/godot-design/master/screenshots/editor_tps_demo_1920x1080.jpg",
+      "terms": "The repository's README: files are licensed under CC BY 4.0 unless otherwise specified (LICENSE file).",
+      "fetched": "2026-11-14",
+      "changes": "Resized and recompressed. Nothing else changed."
+    },
+    "penpot": {
+      "file": "penpot", "w": 1066, "h": 711,
+      "alt": "Penpot showing a phone screen design next to its CSS code",
+      "by": "Penpot contributors",
+      "license": "MPL-2.0", "licenseUrl": "https://www.mozilla.org/MPL/2.0/",
+      "source": "https://github.com/penpot/penpot-docs/blob/main/img/inspect/inspect-workspace.webp",
+      "original": "https://raw.githubusercontent.com/penpot/penpot-docs/main/img/inspect/inspect-workspace.webp",
+      "terms": "The Penpot docs repository's LICENSE is MPL-2.0 and covers the files in it, this picture included.",
+      "fetched": "2026-11-14",
+      "changes": "Resized and recompressed. Nothing else changed."
+    }
+  }
+}

@@ -48,6 +48,10 @@
 .tb-card { display: flex; flex-direction: column; min-width: 0; padding: 16px; border: 1px solid var(--edge); border-radius: var(--r); background: var(--surface); }
 .tb-card h3 { font-size: 20px; margin-top: 14px; }
 .tb-card .tb-links { margin-top: auto; padding-top: 16px; }
+.tb-shot { margin: 0; }
+.tb-shot img { display: block; width: 100%; height: auto; border: 1px solid var(--stroke); border-radius: var(--r-sm); background: var(--main); }
+.tb-shot__credit { margin-top: 6px; font-size: 12px; line-height: 1.4; color: var(--faint); }
+.tb-shot__credit a { color: var(--muted); text-decoration: underline; text-underline-offset: 3px; }
 .tb-art { display: block; width: 100%; height: auto; border: 1px solid var(--stroke); border-radius: var(--r-sm); background: var(--main); }
 
 /* the drawings: flat shapes only */

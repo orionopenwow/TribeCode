@@ -1175,7 +1175,10 @@
 "Your own AI.": "あなた自身の AI。",
 "If paid plans come later, they will be for things that cost money to run for you, like always-on hosting. They will never take a feature away from your own computer.": "今後有料プランができるとしても、常時稼働のホスティングのように、運用にお金がかかるものが対象です。あなたのパソコン上の機能を取り上げることは決してありません。",
 "// about this page": "// このページについて",
-"The pictures here are our own drawings, not screenshots. Each tool's name and logo belong to its makers. TribeCode is an independent project and is not part of any of them.": "ここにある絵は私たちが描いたイラストで、スクリーンショットではありません。各ツールの名前とロゴはそれぞれの作り手のものです。TribeCode は独立したプロジェクトで、どのツールの一部でもありません。",
 "The list comes from the same place the app's Workshop reads, so the two always match.": "この一覧はアプリの Workshop と同じ場所から読み込んでいるので、両者はいつも一致します。",
-"Licences and sources": "ライセンスと出典"
+"Licences and sources": "ライセンスと出典",
+"Most pictures here are our own drawings. Where you see a real screenshot, it is the makers' own work, used under the licence named below it. Each tool's name and logo belong to its makers. TribeCode is an independent project and is not part of any of them.": "ここにある画像のほとんどは私たちが描いたイラストです。実際のスクリーンショットは各ツールの作者によるもので、その下に示したライセンスのもとで使っています。各ツールの名前とロゴは、それぞれの作者のものです。TribeCode は独立したプロジェクトで、どのツールにも属していません。",
+"Screenshot:": "スクリーンショット：",
+"The Godot editor with a 3D game level open": "3D ゲームのステージを開いた Godot エディター",
+"Penpot showing a phone screen design next to its CSS code": "スマホ画面のデザインとその CSS コードを並べて表示している Penpot"
 }

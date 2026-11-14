@@ -1175,7 +1175,10 @@
 "Your own AI.": "你自己的 AI。",
 "If paid plans come later, they will be for things that cost money to run for you, like always-on hosting. They will never take a feature away from your own computer.": "如果以后有付费方案，也只针对替你运行需要花钱的东西，比如始终在线的托管。它们绝不会拿走你自己电脑上的任何功能。",
 "// about this page": "// 关于本页",
-"The pictures here are our own drawings, not screenshots. Each tool's name and logo belong to its makers. TribeCode is an independent project and is not part of any of them.": "这里的图都是我们自己画的，不是截图。每个工具的名称和标志归各自的作者所有。TribeCode 是独立项目，不隶属于其中任何一个。",
 "The list comes from the same place the app's Workshop reads, so the two always match.": "这份清单和应用里的工坊读取的是同一个来源，所以两边始终一致。",
-"Licences and sources": "许可证和来源"
+"Licences and sources": "许可证和来源",
+"Most pictures here are our own drawings. Where you see a real screenshot, it is the makers' own work, used under the licence named below it. Each tool's name and logo belong to its makers. TribeCode is an independent project and is not part of any of them.": "这里的大多数图片是我们自己画的示意图。真实截图是工具作者的作品，按图片下方注明的许可协议使用。每个工具的名称和标志归其作者所有。TribeCode 是独立项目，不隶属于其中任何一个。",
+"Screenshot:": "截图：",
+"The Godot editor with a 3D game level open": "打开了 3D 游戏关卡的 Godot 编辑器",
+"Penpot showing a phone screen design next to its CSS code": "Penpot 显示一个手机界面设计及其旁边的 CSS 代码"
 }

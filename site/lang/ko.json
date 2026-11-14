@@ -1175,7 +1175,10 @@
 "Your own AI.": "나만의 AI.",
 "If paid plans come later, they will be for things that cost money to run for you, like always-on hosting. They will never take a feature away from your own computer.": "나중에 유료 요금제가 생기더라도, 항상 켜져 있는 호스팅처럼 대신 운영하는 데 비용이 드는 것에만 해당해요. 내 컴퓨터에 있는 기능을 빼앗는 일은 절대 없어요.",
 "// about this page": "// 이 페이지에 대해",
-"The pictures here are our own drawings, not screenshots. Each tool's name and logo belong to its makers. TribeCode is an independent project and is not part of any of them.": "여기 있는 그림은 스크린샷이 아니라 우리가 직접 그린 거예요. 각 도구의 이름과 로고는 만든 사람들의 것이에요. TribeCode는 독립 프로젝트이며 어느 도구에도 속하지 않아요.",
 "The list comes from the same place the app's Workshop reads, so the two always match.": "이 목록은 앱의 워크숍이 읽는 곳과 같은 곳에서 가져오므로 둘은 항상 일치해요.",
-"Licences and sources": "라이선스와 출처"
+"Licences and sources": "라이선스와 출처",
+"Most pictures here are our own drawings. Where you see a real screenshot, it is the makers' own work, used under the licence named below it. Each tool's name and logo belong to its makers. TribeCode is an independent project and is not part of any of them.": "여기 있는 그림은 대부분 저희가 직접 그린 것입니다. 실제 스크린샷은 각 도구를 만든 분들의 작품이며, 그 아래에 적힌 라이선스에 따라 사용합니다. 각 도구의 이름과 로고는 만든 분들의 것입니다. TribeCode는 독립 프로젝트이며 어느 도구에도 속해 있지 않습니다.",
+"Screenshot:": "스크린샷:",
+"The Godot editor with a 3D game level open": "3D 게임 레벨을 연 Godot 편집기",
+"Penpot showing a phone screen design next to its CSS code": "휴대폰 화면 디자인과 그 CSS 코드를 나란히 보여 주는 Penpot"
 }

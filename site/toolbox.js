@@ -1,7 +1,8 @@
 /* The free toolbox (toolbox.html, and the teaser on the homepage). Draws the tools from toolbox-data.json, which
    scripts/dev/site-toolbox.js generates from the app's own Studios list (templates/studios.json), so the site and the
-   app never drift. The pictures are original flat drawings in the site's style, not screenshots: each project's own
-   images have their own terms (assets/toolbox/CREDITS.md). Names and licences are marked translate="no"; everything
+   app never drift. A tool whose own terms clearly allow it shows a real screenshot with its credit (t.shot, from
+   templates/studio-shots.json; assets/toolbox/credits.json); every other picture is an original flat drawing in the
+   site's style (assets/toolbox/CREDITS.md). Names and licences are marked translate="no"; everything
    else is plain English that i18n.js translates. No libraries. */
 (function () {
   'use strict';
@@ -39,6 +40,12 @@
     <rect class="a-soft" x="28" y="240" width="504" height="30" rx="6"/><rect class="a-fill" x="36" y="248" width="150" height="14" rx="3"/><rect class="a-line a-bg" x="194" y="248" width="96" height="14" rx="3"/><rect class="a-line a-bg" x="298" y="248" width="60" height="14" rx="3"/>
   </svg>`;
 
+  // A real screenshot: only resized, never cropped (the box takes the picture's own shape, so nothing shifts when it
+  // loads), lazy, WebP with a JPEG fallback, and its credit right under it. Names and licences are not translated.
+  const shot = t => { const h = t.shot, f = BASE + 'assets/toolbox/' + encodeURIComponent(h.file), set = e => `${f}-640.${e} 640w, ${f}-${h.w}.${e} ${h.w}w`;
+    return `<figure class="tb-shot"><picture><source type="image/webp" srcset="${set('webp')}" sizes="(max-width: 720px) 92vw, 420px">
+      <img src="${f}-640.jpg" srcset="${set('jpg')}" sizes="(max-width: 720px) 92vw, 420px" width="${+h.w}" height="${+h.h}" loading="lazy" decoding="async" alt="${esc(h.alt)}"></picture>
+      <figcaption class="tb-shot__credit"><span>Screenshot:</span> <a href="${esc(h.source)}" rel="noopener" translate="no">${esc(h.by)}</a>, <a href="${esc(h.licenseUrl)}" rel="noopener license" translate="no">${esc(h.license)}</a></figcaption></figure>`; };
   const li = a => a.map(f => `<li>${esc(f)}</li>`).join('');
   const meta = t => `<p class="tb-meta mono" translate="no"><span>${esc(t.license)}</span><span>${t.platforms.map(esc).join(' · ')}</span></p>`;
   const links = (t, big) => `<p class="tb-links"><a class="btn ${big ? 'btn--light' : 'btn--dark btn--sm'}" href="${esc(t.url)}" rel="noopener">Get it</a><a class="tb-src" href="${esc(t.source)}" rel="noopener">Source code</a></p>`;
@@ -50,7 +57,7 @@
         <ul class="tb-list tb-list--two">${li(t.features.concat(t.more || []))}</ul>${meta(t)}${links(t, true)}</div>`;
   }
   function card(t) {
-    return `<article class="tb-card" id="tool-${esc(t.id)}" style="--c:${esc(t.color)}">${ART[t.art] || ''}
+    return `<article class="tb-card" id="tool-${esc(t.id)}" style="--c:${esc(t.color)}"${t.shot ? ' data-shot="1"' : ''}>${t.shot ? shot(t) : ART[t.art] || ''}
       <h3 translate="no">${esc(t.name)}</h3>${stands(t)}<p class="tb-what">${esc(t.what)}</p><ul class="tb-list">${li(t.features)}</ul>${meta(t)}${links(t)}</article>`;
   }
   function teaser(tools) {

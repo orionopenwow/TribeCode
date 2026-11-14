@@ -89,7 +89,17 @@
     "2D and 3D in one editor",
     "Export to desktop, phones and the web",
     "No royalties, ever"
-   ]
+   ],
+   "shot": {
+    "file": "godot",
+    "w": 1280,
+    "h": 720,
+    "alt": "The Godot editor with a 3D game level open",
+    "by": "Godot Engine contributors",
+    "license": "CC BY 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by/4.0/",
+    "source": "https://github.com/godotengine/godot-design/blob/master/screenshots/editor_tps_demo_1920x1080.jpg"
+   }
   },
   {
    "id": "kdenlive",
@@ -151,7 +161,17 @@
     "Design screens in the browser",
     "Components and prototypes",
     "Inspect the CSS behind a design"
-   ]
+   ],
+   "shot": {
+    "file": "penpot",
+    "w": 1066,
+    "h": 711,
+    "alt": "Penpot showing a phone screen design next to its CSS code",
+    "by": "Penpot contributors",
+    "license": "MPL-2.0",
+    "licenseUrl": "https://www.mozilla.org/MPL/2.0/",
+    "source": "https://github.com/penpot/penpot-docs/blob/main/img/inspect/inspect-workspace.webp"
+   }
   },
   {
    "id": "pixelorama",

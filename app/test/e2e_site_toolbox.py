@@ -46,7 +46,28 @@ def main():
             assert box.locator(".tb-links a.btn").get_attribute("href") == t["url"], t["id"]
             assert box.locator(".tb-links a.tb-src").get_attribute("href") == t["source"], t["id"]
             assert t["url"].startswith("https://") and t["source"].startswith("https://github.com/"), t["id"]
-        assert pg.locator("#tb-grid img, #tb-feature img").count() == 0, "the toolbox uses drawings only"
+        # real screenshots only for tools whose terms allow it (templates/studio-shots.json): whole, lazy, sized so the
+        # page does not shift, WebP with a JPEG fallback, credited with links to the source and the licence
+        shots = {t["id"]: t["shot"] for t in data if t.get("shot")}
+        assert set(shots) == {"godot", "penpot"}, list(shots)
+        assert pg.locator("#tb-grid img, #tb-feature img").count() == len(shots), "every other card is a drawing"
+        credits = {c["tool"]: c for c in json.load(open(os.path.join(ROOT, "site", "assets", "toolbox", "credits.json"), encoding="utf8"))["images"]}
+        assert set(credits) == set(shots)
+        for sid, h in shots.items():
+            card = pg.locator(f"#tool-{sid}"); im = card.locator(".tb-shot img")
+            assert card.locator("svg.tb-art").count() == 0 and im.count() == 1, sid
+            assert im.get_attribute("loading") == "lazy" and im.get_attribute("alt") == h["alt"], sid
+            assert im.get_attribute("width") == str(h["w"]) and im.get_attribute("height") == str(h["h"]), sid
+            assert card.locator('.tb-shot source[type="image/webp"]').count() == 1, sid
+            links = card.locator(".tb-shot__credit a").evaluate_all("a => a.map(x => [x.textContent, x.getAttribute('href')])")
+            assert links == [[h["by"], h["source"]], [h["license"], h["licenseUrl"]]], links
+            c = credits[sid]
+            assert c["author"] == h["by"] and c["licence"] == h["license"] and c["sourceUrl"] == h["source"] and c["date"] and c["attribution"], c
+            for f in c["files"]:
+                assert os.path.getsize(os.path.join(ROOT, "site", "assets", "toolbox", f)) <= 120 * 1024, f
+            im.scroll_into_view_if_needed(); pg.wait_for_function("el => el.complete && el.naturalWidth > 0", arg=im.element_handle(), timeout=8000)
+            r = pg.evaluate("el => { const b = el.getBoundingClientRect(); return b.width / b.height; }", im.element_handle())
+            assert abs(r - h["w"] / h["h"]) < 0.03, "shown whole, not cropped"
         # the four pillars point at sections that exist on the homepage
         hrefs = pg.eval_on_selector_all(".tb-pillar", "a => a.map(x => x.getAttribute('href'))")
         assert hrefs == ["index.html#make", "index.html#kit", "index.html#company", "index.html#room"], hrefs
