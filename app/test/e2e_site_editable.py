@@ -307,6 +307,23 @@ def live(pw):
         pg.evaluate("TribeSiteDesigner.redo()"); pg.wait_for_timeout(300); esc_to(pg, f, None)
         print("  ok  Esc steps out to the entry, the section, then nothing; an entry moves, copies and goes by toolbar and keys; undo and redo cover it")
 
+        # ---- several things at once (round 3): shift-click, one change to all, one Undo
+        f.locator("small[data-e]").nth(0).click(); f.locator("small[data-e]").nth(1).click(modifiers=["Shift"]); f.locator("h1[data-e]").first.click(modifiers=["Shift"])
+        pg.wait_for_function("TribeSiteDesigner.state().multi === 3", timeout=3000)
+        assert f.locator(".wdz-msel").count() == 3 and "3 things selected" in pg.inner_text("#wdz-insp").lower()
+        es0 = json.dumps(cfg(pg)["pages"][0]["blocks"][0].get("es") or {}, sort_keys=True)
+        pg.click("#wdz-insp [data-sp=multi][data-val=hidephone]")
+        pg.wait_for_function("(() => { const e = TribeSiteDesigner.cfg().pages[0].blocks[0].es || {}; return ['items.0.note', 'items.1.note', 'name'].every(k => (e[k] || {}).hide === 'phone'); })()", timeout=3000)
+        pg.wait_for_timeout(300); assert fr(pg).locator(".wdz-msel").count() == 3, "they stay selected for the next change"
+        pg.evaluate("TribeSiteDesigner.undo()"); pg.wait_for_timeout(300)
+        assert json.dumps(cfg(pg)["pages"][0]["blocks"][0].get("es") or {}, sort_keys=True) == es0, "one Undo takes the change back from all of them"
+        f = fr(pg); f.locator("small[data-e]").nth(0).click(); pg.wait_for_function("TribeSiteDesigner.state().multi === 0", timeout=3000)
+        n1 = len(cfg(pg)["pages"][0]["blocks"][0]["props"]["items"])
+        f.locator("a.lk").nth(2).click(); f.locator("a.lk").nth(3).click(modifiers=["Shift"]); pg.wait_for_function("TribeSiteDesigner.state().multi === 2", timeout=3000)
+        f.locator("body").press("Delete"); pg.wait_for_function(f"TribeSiteDesigner.cfg().pages[0].blocks[0].props.items.length === {n1 - 2}", timeout=3000)
+        pg.evaluate("TribeSiteDesigner.undo()"); pg.wait_for_function(f"TribeSiteDesigner.cfg().pages[0].blocks[0].props.items.length === {n1}", timeout=3000); pg.wait_for_timeout(300); f = fr(pg); esc_to(pg, f, None)
+        print("  ok  shift-click selects several things; one change (or Delete) applies to all and is one Undo")
+
         # ---- right-click: the same actions as a menu; hide on phones shows in the phone preview and the export
         f.locator("h1[data-e]").first.click(button="right")
         pg.wait_for_selector(".sp-menu:not([hidden])", timeout=3000)

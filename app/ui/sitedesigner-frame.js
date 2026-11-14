@@ -113,6 +113,8 @@
     if (selEl) { selEl.classList.add('wdz-sel'); var b = selEl.closest('[data-block]'); if (b) placeBar(b); }
     placeTb();
   }
+  var MULTI = [];
+  function multiSet(list) { MULTI = list || []; [].forEach.call(document.querySelectorAll('.wdz-msel'), function (e) { e.classList.remove('wdz-msel'); }); MULTI.forEach(function (m) { var e = find(m); if (e) e.classList.add('wdz-msel'); }); }
   function pick(x, quiet) { select(x); if (!quiet) post({ t: 'select', key: x.key, kind: x.kind }); }
   function typeIn(el, all) {
     if (!el) return; if (el.hasAttribute('data-dbl')) el.setAttribute('contenteditable', 'plaintext-only');
@@ -192,7 +194,15 @@
     var dbl = t.closest('[data-dbl]'); if (dbl && dbl.isContentEditable) return;   // typing in it
     var pg = t.closest('[data-page]'); if (pg) { if (dbl) select({ kind: 'text', key: dbl.dataset.e }); var m = { t: 'page', id: pg.dataset.page, key: dbl ? dbl.dataset.e : '' }; clearTimeout(navT); navT = setTimeout(function () { post(m); }, e.detail > 1 ? 0 : 260); return; }   // a double-click types in the name instead of leaving the page
     var go = t.closest('[data-goto]'); if (go) { var gb = q('[data-block="' + esc(go.dataset.goto) + '"]'); if (gb) gb.scrollIntoView({ block: 'start', behavior: 'smooth' }); if (dbl) pick({ kind: 'text', key: dbl.dataset.e }); return; }
-    var x = target(t); if (!x) { select(null); return post({ t: 'select', key: '', kind: '' }); }
+    var x = target(t); if (!x) { multiSet([]); select(null); return post({ t: 'select', key: '', kind: '' }); }
+    if (e.shiftKey && x.kind !== 'field' && x.kind !== 'icon' && String(x.key).charAt(0) !== '@') {   // round 3: several things at once
+      e.preventDefault(); var ed0 = editing(); if (ed0) ed0.blur(); try { getSelection().removeAllRanges(); } catch (z) {}
+      var cur0 = MULTI.slice(); if (!cur0.length && SEL && String(SEL.key).charAt(0) !== '@') cur0.push({ kind: SEL.kind, key: SEL.key });
+      var at0 = -1; for (var mi = 0; mi < cur0.length; mi++) if (cur0[mi].key === x.key && cur0[mi].kind === x.kind) at0 = mi;
+      if (at0 >= 0) cur0.splice(at0, 1); else cur0.push({ kind: x.kind, key: x.key });
+      multiSet(cur0); select(null); return post({ t: 'multi', list: cur0 });
+    }
+    if (MULTI.length) multiSet([]);
     if (x.kind === 'field') e.preventDefault();
     pick(x);
     if (x.kind === 'icon') post({ t: 'icon', key: x.key });
@@ -207,7 +217,7 @@
     e.preventDefault(); if (!(SEL && SEL.key === x.key && SEL.kind === x.kind)) pick(x);
     post({ t: 'menu', x: e.clientX, y: e.clientY, key: x.key, kind: x.kind });
   }, true);
-  document.addEventListener('mousedown', function (e) { if (e.target.closest('[data-ph]')) e.preventDefault(); }, true);   // the box is part of the design here, not a form to fill in
+  document.addEventListener('mousedown', function (e) { if (e.target.closest('[data-ph]') || (e.shiftKey && !e.target.closest('.wdz-tb,.wdz-bar'))) e.preventDefault(); }, true);   // shift-click picks things, it does not stretch a text selection   // the box is part of the design here, not a form to fill in
   document.addEventListener('submit', function (e) { e.preventDefault(); }, true);
   // (round 2) drag a selected picture inside its frame to choose what stays in view; the focus point is saved in percent
   var pdrag = null;
@@ -282,7 +292,7 @@
       var cssEl = document.getElementById('wdz-css'); if (cssEl && d.css != null && cssEl.textContent !== d.css) cssEl.textContent = d.css;
       bar.remove(); cur = null; selEl = null;
       swapping = true; try { ROOT().innerHTML = d.html; } finally { swapping = false; }   // the old words leaving the page are not an edit
-      markItems(); select(SEL);
+      markItems(); select(SEL); multiSet(MULTI);
       if (wasEd && SEL && SEL.kind === 'text' && selEl && !selEl.hasAttribute('data-dbl')) typeIn(selEl, false);
       var w = wide(); post({ t: 'ready', soft: 1, sw: w.sw, iw: w.iw, wide: w.wide });
     }
@@ -290,6 +300,7 @@
     if (d.pins) pins(d.pins);
     if ('sel' in d) { var s = d.sel; if (typeof s === 'string') { var el = s ? q(s) : null; s = el ? target(el) : null; } select(s); if (selEl && d.scroll) { var r = selEl.getBoundingClientRect(); if (r.top < 0 || r.bottom > innerHeight) selEl.scrollIntoView({ block: 'center' }); } }
     if (d.type) { var te = find({ kind: 'text', key: d.type }); if (te) typeIn(te, true); }
+    if (d.multi) multiSet(d.multi === 'none' ? [] : d.multi);
     if (d.play) { var pb = q('[data-block="' + esc(d.play) + '"]'); if (pb) { pb.classList.remove('an-play-fade', 'an-play-rise'); void pb.offsetWidth; pb.classList.add('an-play-' + (d.anim === 'rise' ? 'rise' : 'fade')); pb.scrollIntoView({ block: 'nearest' }); setTimeout(function () { pb.classList.remove('an-play-fade', 'an-play-rise'); }, 900); } }
     if ('linkset' in d) { var na = q('a[data-new]'); if (na) { var hostE = na.closest('[data-e]'); if (d.linkset) { na.setAttribute('href', d.linkset); na.removeAttribute('data-new'); } else { while (na.firstChild) na.parentNode.insertBefore(na.firstChild, na); na.remove(); } if (hostE) { hostE.normalize(); post({ t: 'commit', key: hostE.dataset.e, value: words(hostE) }); } } }
     if (d.y != null) scrollTo(0, d.y);

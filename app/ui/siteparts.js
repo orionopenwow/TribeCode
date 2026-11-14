@@ -220,6 +220,7 @@
     if (k === 'pgdel') { const c = S().deletePage(api.cfg(), el.dataset.id); if (!c) return; const pg = api.cfg().pages.find(p => p.id === el.dataset.id); api.commit(c); return api.say(`Removed the page ${pg ? pg.title : ''}. Undo brings it back.`, '', [{ label: 'Undo', fn: () => api.undo() }]); }
     if (k === 'nav') { const c = JSON.parse(JSON.stringify(api.cfg())); if (v) c.nav = v; else delete c.nav; return api.commit(c); }
     if (k === 'panel') return api.panel(v);
+    if (k === 'multi') return multiAct(api, v);
     if (k === 'formin') { const C = window.TribeClient; return api.commit(S().setProp(api.cfg(), api.page(), sel.block, 'action', `${String(C.base()).replace(/\/$/, '')}/api/site-form/${api.pid()}`)); }
     if (k === 'formoff') return api.commit(S().setProp(api.cfg(), api.page(), sel.block, 'action', ''));
     if (k === 'play') { const b = sel && blockOf(api, sel.block); return b && api.post({ play: b.id, anim: (b.style || {}).anim }); }
@@ -235,6 +236,39 @@
     return false;
   }
 
+  // ---------- several things at once (shift-click): one change to all of them, one Undo ----------
+  function multi(box, api) {
+    const list = api.multi(), n = list.length, kinds = list.map(s => s.kind), words = kinds.some(k => k === 'text' || k === 'button'), movable = list.every(s => s.kind === 'block' || entryOf(s));
+    const B = (v, l, cls) => `<button type="button" class="btn sm${cls || ''}" data-sp="multi" data-val="${v}">${l}</button>`;
+    box.innerHTML = `<p class="wdz-eyebrow">${n} things selected</p><p class="wdz-hint">Shift-click adds or takes away. What you choose here changes all of them, as one step for Undo.</p>
+      ${words ? `<p class="wdz-f"><span>Words</span></p><p class="wdz-row">${B('bigger', 'Bigger')}${B('smaller', 'Smaller')}${B('bold', 'Bold')}${B('accent', 'Main colour')}${B('muted', 'Quiet')}${B('plain', 'As it is')}</p>` : ''}
+      <p class="wdz-f"><span>Show them on</span></p><p class="wdz-row">${B('hidephone', 'Hide on phones')}${B('showall', 'Show everywhere')}</p>
+      ${movable ? `<p class="wdz-f"><span>Order</span></p><p class="wdz-row">${B('up', 'Move up')}${B('down', 'Move down')}</p>` : ''}
+      <p class="wdz-row">${B('del', 'Remove', ' ghost')}<button type="button" class="btn sm ghost" data-sp="multi" data-val="none">Select nothing</button></p>`;
+  }
+  function multiAct(api, a) {
+    const list = api.multi().slice(); if (a === 'none') { api.clearMulti(); return api.panel('edit'); }
+    if (list.length < 2) return;
+    let c = api.cfg(); const pg = api.page(), blk = id => (c.pages.find(p => p.id === pg) || c.pages[0]).blocks.find(b => b.id === id);
+    const SZ = ['s', '', 'l', 'xl'], idx = s => { const en = entryOf(s); return en ? en.i : (c.pages.find(p => p.id === pg) || c.pages[0]).blocks.findIndex(b => b.id === s.block); };
+    const order = a === 'up' ? list.slice().sort((x, y) => idx(x) - idx(y)) : a === 'down' || a === 'del' ? list.slice().sort((x, y) => idx(y) - idx(x)) : list;
+    let did = 0; const next = [];
+    for (const s of order) {
+      const b = blk(s.block); if (!b) continue; const sp = stylePath(s), en = entryOf(s); let keep = s;
+      if (a === 'bigger' || a === 'smaller') { if (sp && s.kind !== 'image') { const i = SZ.indexOf(((b.es || {})[sp] || {}).sz || ''), n2 = Math.max(0, Math.min(3, i + (a === 'bigger' ? 1 : -1))); if (n2 !== i) { c = S().setElStyle(c, pg, b.id, sp, { sz: SZ[n2] }); did++; } } else if (s.kind === 'block') { const cur = (b.style || {}).sz || '', n3 = a === 'bigger' ? (cur === 's' ? '' : 'l') : (cur === 'l' ? '' : 's'); if (n3 !== cur) { c = S().setStyle(c, pg, b.id, { sz: n3 }); did++; } } }
+      else if (a === 'bold') { if (sp && s.kind !== 'image') { c = S().setElStyle(c, pg, b.id, sp, { b: 1 }); did++; } }
+      else if (a === 'accent' || a === 'muted' || a === 'plain') { if (sp && s.kind !== 'image') { c = S().setElStyle(c, pg, b.id, sp, a === 'plain' ? { col: '', c: '', b: '', sz: '' } : { col: a, c: '' }); did++; } }
+      else if (a === 'hidephone' || a === 'showall') { const h = a === 'hidephone' ? 'phone' : ''; if (s.kind === 'block' || s.kind === 'item' || !sp) { if (s.kind === 'block') { c = S().setStyle(c, pg, b.id, { hide: h }); did++; } } else { c = S().setElStyle(c, pg, b.id, sp, { hide: h }); did++; } }
+      else if (a === 'up' || a === 'down') { if (s.kind === 'block') { c = S().moveBlock(c, pg, b.id, a); did++; } else if (en) { const r = S().itemOp(c, pg, b.id, en.list, en.i, a); if (r.i >= 0 && r.i !== en.i) { c = r.cfg; did++; const own = trimPath(s.path), rest = own.slice(en.item.length); keep = { block: s.block, path: `${en.list}.${r.i}${rest}${/\.$/.test(s.path) ? '.' : ''}`, kind: s.kind }; } } }
+      else if (a === 'del') { keep = null; if (s.kind === 'block') { c = S().removeBlock(c, pg, b.id); did++; } else if (en) { const r = S().itemOp(c, pg, b.id, en.list, en.i, 'del'); if (r.i >= 0) { c = r.cfg; did++; } } else if (s.kind === 'image') { c = S().setImage(c, pg, b.id, s.path, '', S().getAt(b.props, s.path + 'alt') || ''); did++; } else if (sp) { c = S().setProp(c, pg, b.id, s.kind === 'button' ? s.path + '.label' : sp, ''); did++; } }
+      if (keep) next.push(keep);
+    }
+    if (!did) return api.say('Nothing to change there for what is selected.');
+    if (a === 'del') api.clearMulti(); else { api.setMulti(next); }
+    api.commit(c);
+    if (a !== 'del') api.post({ multi: next.map(s => ({ kind: s.kind, key: `${s.block}|${s.path || ''}` })) });
+    api.say(`${{ bigger: 'Made bigger', smaller: 'Made smaller', bold: 'Made bold', accent: 'Coloured', muted: 'Coloured', plain: 'Set back', hidephone: 'Hidden on phones', showall: 'Shown everywhere', up: 'Moved up', down: 'Moved down', del: 'Removed' }[a]}: ${did} thing${did === 1 ? '' : 's'}. One Undo takes it back.`, '', [{ label: 'Undo', fn: () => api.undo() }]);
+  }
   // ---------- the right-click menu ----------
   let menuEl = null;
   function closeMenu() { if (!menuEl || menuEl.hidden) return false; menuEl.hidden = true; return true; }
@@ -279,5 +313,5 @@
   function said(api) { window.TribeSiteParts._api = api; const box = api.root().querySelector('#wdz-said'); if (box && window.TribeSiteSuggest && window.TribeSiteSuggest.said) window.TribeSiteSuggest.said(box, api); }
 
   const menuOpen = () => !!(menuEl && !menuEl.hidden);
-  window.TribeSiteParts = { formRow, menuOpen, crumbs, looks, element, list, section, picture, siteSel, pages, wire, click, key, frame, menu, closeMenu, parentOf, entryOf, act, said };
+  window.TribeSiteParts = { multi, multiAct, formRow, menuOpen, crumbs, looks, element, list, section, picture, siteSel, pages, wire, click, key, frame, menu, closeMenu, parentOf, entryOf, act, said };
 })();

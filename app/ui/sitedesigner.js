@@ -22,7 +22,7 @@
 [data-img]{cursor:pointer}.wdz-pin{position:absolute;z-index:5;width:24px;height:24px;margin:-12px 0 0 -12px;border-radius:50% 50% 50% 0;border:2px solid #fff;background:#F26B1D;color:#fff;font:700 11px/1 system-ui;cursor:pointer;padding:0}.wdz-pin.done{background:#6b7280}.wdz-cm [data-block]{cursor:crosshair}.wdz-cm [data-block]:hover{outline:2px dashed #F26B1D!important}[data-unwired]{outline:1px dashed var(--muted);outline-offset:3px}[data-unwired]::after{content:'not linked';font:600 10px/1 ui-monospace,monospace;margin-left:8px;opacity:.7}
 [data-e]:empty{display:inline-block;min-width:5em;min-height:1em}[data-e]:empty::before{content:attr(data-hint);opacity:.55;font-style:italic;font-weight:400}[data-item]:hover{outline:1px dashed var(--muted);outline-offset:3px}[data-sys]{cursor:help}[data-ph],[data-icon]{cursor:pointer}[data-icon]:hover,[data-ph]:hover,[data-img]:hover{outline:1px dashed var(--muted);outline-offset:2px}
 [data-e].wdz-sel,[data-btn].wdz-sel,[data-item].wdz-sel,[data-icon].wdz-sel,[data-ph].wdz-sel,[data-img].wdz-sel{outline-offset:2px!important}.tk[data-icon]{display:inline-grid}
-.wdz-tb{position:absolute;z-index:8;display:flex;align-items:center;background:#16181D;border:1px solid #3A3F4A;border-radius:8px;overflow:hidden;font:600 13px/1 system-ui,sans-serif;color:#F2F3F5;text-align:left;white-space:nowrap}.wdz-tb button{all:unset;box-sizing:border-box;min-width:30px;height:30px;display:grid;place-items:center;cursor:pointer;padding:0 6px;color:#F2F3F5}.wdz-tb button:hover,.wdz-tb button:focus-visible{background:#2A2F39}.wdz-tb i{width:1px;height:18px;background:#3A3F4A}.wdz-tb [data-a=igrip]{cursor:grab;touch-action:none;letter-spacing:-2px}@media (max-width:480px){.wdz-tb [data-a=ital],.wdz-tb [data-a=wlink],.wdz-tb [data-a=align]{display:none}}[data-img].wdz-sel img{cursor:grab}.wdz-panning img{cursor:grabbing}.wdz-idrop{position:absolute;z-index:9;background:#F26B1D;border-radius:2px;pointer-events:none}.wdz-bar svg{display:block}
+.wdz-tb{position:absolute;z-index:8;display:flex;align-items:center;background:#16181D;border:1px solid #3A3F4A;border-radius:8px;overflow:hidden;font:600 13px/1 system-ui,sans-serif;color:#F2F3F5;text-align:left;white-space:nowrap}.wdz-tb button{all:unset;box-sizing:border-box;min-width:30px;height:30px;display:grid;place-items:center;cursor:pointer;padding:0 6px;color:#F2F3F5}.wdz-tb button:hover,.wdz-tb button:focus-visible{background:#2A2F39}.wdz-tb i{width:1px;height:18px;background:#3A3F4A}.wdz-tb [data-a=igrip]{cursor:grab;touch-action:none;letter-spacing:-2px}@media (max-width:480px){.wdz-tb [data-a=ital],.wdz-tb [data-a=wlink],.wdz-tb [data-a=align]{display:none}}[data-img].wdz-sel img{cursor:grab}.wdz-panning img{cursor:grabbing}.wdz-msel{outline:2px solid var(--accent)!important;outline-offset:2px}.wdz-idrop{position:absolute;z-index:9;background:#F26B1D;border-radius:2px;pointer-events:none}.wdz-bar svg{display:block}
 html[data-dev=phone] .ehide-phone,html[data-dev=tablet] .ehide-tablet,html[data-dev=desktop] .ehide-desktop{opacity:.35;outline:1px dashed var(--muted);outline-offset:-3px}
 [data-e]{white-space:pre-wrap}[data-e] a{cursor:text}a[data-new]{outline:1px dashed var(--accent);outline-offset:2px}[data-e]:empty:not([data-hint])::before{content:'Add words'}
 .wdz-bar{position:absolute;top:8px;right:8px;z-index:6;display:flex;gap:0;background:#16181D;border:1px solid #3A3F4A;border-radius:8px;overflow:hidden;font:600 13px/1 system-ui,sans-serif;text-align:left}.wdz-bar button{all:unset;box-sizing:border-box;min-width:30px;height:30px;display:grid;place-items:center;color:#F2F3F5;cursor:pointer;padding:0 6px}.wdz-bar button+button{border-left:1px solid #3A3F4A}.wdz-bar button:hover,.wdz-bar button:focus-visible{background:#2A2F39}.wdz-bar [data-a=grip]{cursor:grab;touch-action:none;letter-spacing:-2px}.wdz-dragging,.wdz-dragging *{cursor:grabbing!important;user-select:none}.wdz-moving{opacity:.45}.wdz-drop{position:absolute;left:0;right:0;height:4px;background:var(--accent);z-index:7;pointer-events:none}.wdz-cm .wdz-bar{display:none}[data-icon]{cursor:pointer}[data-icon]:hover{outline:2px dashed var(--muted);outline-offset:2px}@media (max-width:480px){.wdz-bar button{min-width:36px;height:36px}}</style>`;
@@ -324,6 +324,7 @@ html[data-dev=phone] .ehide-phone,html[data-dev=tablet] .ehide-tablet,html[data-
     if (d.t === 'redo') return redo();
     if (d.t === 'select') {
       if (SP()) SP().closeMenu();
+      st.multi = [];
       if (!d.key) { if (st.sel) { st.sel = null; if (st.panel === 'edit') panelPaint(); chipKey = ''; logPaint(); $('#wdz-blocks').querySelectorAll('.wdz-blk.is-sel').forEach(li => li.classList.remove('is-sel')); } return; }
       const k = String(d.key), i = k.indexOf('|'), block = k.slice(0, i), path = k.slice(i + 1);
       const same = st.sel && st.sel.block === block && st.sel.path === path && st.sel.kind === (d.kind || 'block') && st.panel === 'edit';
@@ -334,6 +335,7 @@ html[data-dev=phone] .ehide-phone,html[data-dev=tablet] .ehide-tablet,html[data-
     if (d.t === 'text') { liveText = d; clearTimeout(liveT); liveT = setTimeout(() => { if (liveText) { const l = liveText; commitText(l); } }, 900); return; }
     if (d.t === 'commit') return commitText(d);
     if (d.t === 'pin') return commentAt(d);
+    if (d.t === 'multi') { flushText(); st.multi = (d.list || []).map(x => { const k = String(x.key), i = k.indexOf('|'); return { block: k.slice(0, i), path: k.slice(i + 1), kind: x.kind || 'block' }; }); st.sel = null; st.panel = 'edit'; panelPaint(); return; }
     if (d.t === 'focus') { const k = String(d.key), bid = k.slice(0, k.indexOf('|')), path = k.slice(k.indexOf('|') + 1); let c = S().setProp(st.cfg, st.page, bid, path + 'fx', Math.max(0, Math.min(100, +d.x || 0))); c = S().setProp(c, st.page, bid, path + 'fy', Math.max(0, Math.min(100, +d.y || 0))); c = S().setProp(c, st.page, bid, path + 'pos', ''); return commit(c); }
     if (d.t === 'imove') {   // an entry dragged to a new place among its own kind
       const k = String(d.key), bid = k.slice(0, k.indexOf('|')), item = k.slice(k.indexOf('|') + 1), list = item.replace(/\.\d+$/, ''); let c = st.cfg, i = +d.from; const to = +d.to;
@@ -374,7 +376,7 @@ html[data-dev=phone] .ehide-phone,html[data-dev=tablet] .ehide-tablet,html[data-
   const sgApi = () => ({ ...spApi, panelNow: () => st.panel, flush: () => flush(), close: () => close(), addComment: c => addComment(c) });
   const tr = t => (window.TribeI18n && window.TribeI18n.t ? window.TribeI18n.t(t, t) : t);
   const frameLabels = () => ({ smaller: tr('Smaller'), bigger: tr('Bigger'), bold: tr('Bold'), color: tr('Colour'), align: tr('Align'), link: tr('Where it goes'), up: tr('Move up'), down: tr('Move down'), dup: tr('Duplicate'), add: tr('Add another'), del: tr('Remove'), flint: tr('Ask Flint about this'), more: tr('More'), replace: tr('Replace the picture'), fit: tr('Fill or fit'), swap: tr('Swap the icon'), words: tr('Edit the words'), grip: tr('Drag to move this section'), sadd: tr('Add a section below'), igrip: tr('Drag to move it'), ital: tr('Slanted'), wlink: tr('Link the selected words') });
-  const spApi = { sel: () => st.sel, setSel: s => { st.sel = s; }, cfg: () => st.cfg, commit: (c, o) => commit(c, o), page: () => st.page, setPage: id => { st.page = id; st.sel = null; frameScroll = 0; }, pageNow: () => pageNow(), say: (t, h, a) => say(t, h, a), ask: t => ask(t), pid: () => st.pid, connected: () => connected(),
+  const spApi = { setMulti: l => { st.multi = l || []; }, multi: () => st.multi || [], clearMulti: () => { st.multi = []; const f = $('#wdz-frame'); if (f && f.contentWindow) f.contentWindow.postMessage({ multi: 'none' }, '*'); }, sel: () => st.sel, setSel: s => { st.sel = s; }, cfg: () => st.cfg, commit: (c, o) => commit(c, o), page: () => st.page, setPage: id => { st.page = id; st.sel = null; frameScroll = 0; }, pageNow: () => pageNow(), say: (t, h, a) => say(t, h, a), ask: t => ask(t), pid: () => st.pid, connected: () => connected(),
     paint: () => paint(), panel: p => { if (p) st.panel = p; panelPaint(); }, postSel: sc => postSel(sc), post: m => { const f = $('#wdz-frame'); if (f && f.contentWindow) f.contentWindow.postMessage(m, '*'); }, root: () => root, box: () => $('#wdz-insp'),
     pickFile: () => pickFile(), iconPicker: key => STU() && STU().iconPicker(stuApi, key), comment: () => commentMode(true), fillFlint: t => { if (fui) fui.fill(t); }, undo: () => undo(), canEdit: () => st.canEdit !== false, dev: () => st.dev, comments: () => st.comments, tr };
   // ---------- feat/design-site2: Style, Check and "Have my agent do it" live in app/ui/sitestudio.js ----------
@@ -441,6 +443,7 @@ html[data-dev=phone] .ehide-phone,html[data-dev=tablet] .ehide-tablet,html[data-
     for (const id of ['#wdz-dlmenu', '#wdz-keys', '#wdz-peek', '#wdz-picker']) { const x = $(id); if (x && !x.hidden) { x.hidden = true; return; } }
     if (st && st.cmode) return commentMode(false);
     if (SP() && SP().closeMenu()) return;
+    if (st && st.multi && st.multi.length) { spApi.clearMulti(); panelPaint(); return; }
     if (st && st.sel) { flushText(); st.sel = SP() ? SP().parentOf(st.sel) : null; st.panel = 'edit'; panelPaint(); postSel(false); chipKey = ''; logPaint(); $('#wdz-blocks').querySelectorAll('.wdz-blk').forEach(li => li.classList.toggle('is-sel', !!st.sel && li.dataset.blk === st.sel.block)); return; }
     close();
   }
@@ -452,6 +455,7 @@ html[data-dev=phone] .ehide-phone,html[data-dev=tablet] .ehide-tablet,html[data-
     if (mod && e.key.toLowerCase() === 's') { e.preventDefault(); return saveVersion(); }
     if (!mod && !e.altKey && /^[123]$/.test(e.key)) { st.dev = ['desktop', 'tablet', 'phone'][+e.key - 1]; return chrome(); }
     if (!mod && e.key.toLowerCase() === 'c') return commentMode(!st.cmode);
+    if (st.multi && st.multi.length > 1 && SP() && (e.key === 'Delete' || e.key === 'Backspace') && !mod) { e.preventDefault(); return SP().multiAct(spApi, 'del'); }
     if (!sb) return;
     if (SP() && st.sel.kind !== 'block' && SP().key(e, spApi)) return;   // an entry, a picture, an element: its own shortcuts
     if (st.sel.kind !== 'block' && !mod && !e.altKey && e.key.toLowerCase() !== 'h') return;   // Delete with words selected never removes the whole section
@@ -601,6 +605,7 @@ html[data-dev=phone] .ehide-phone,html[data-dev=tablet] .ehide-tablet,html[data-
   function inspector() {
     const box = $('#wdz-insp'); if (!box) return;
     const s = st.sel, pg = pageNow(), b = s && pg.blocks.find(x => x.id === s.block);
+    if (st.multi && st.multi.length > 1 && SP() && SP().multi) return SP().multi(box, spApi);
     if (s && s.block === '@' && SP()) return SP().siteSel(box, spApi);
     if (!b) { box.innerHTML = `<p class="wdz-eyebrow">Edit</p><p class="wdz-hint">Click anything in the preview. Words: click and type. Buttons: pick where they go. Pictures: replace, round or square.</p><p class="wdz-hint">Right-click anything for more. Esc steps out to what holds it.</p>`; return; }
     const BL = S().BLOCKS[b.type];
@@ -956,5 +961,5 @@ html[data-dev=phone] .ehide-phone,html[data-dev=tablet] .ehide-tablet,html[data-
     say(`${srcs.length === 1 ? 'Here is your picture' : `Here are your ${srcs.length} pictures`}: click a picture on the page, then pick one.`, `<div class="wdz-bgrid">${srcs.map(p => `<button type="button" data-boardpick="${esc(p.src)}" data-alt="${esc(p.alt)}" aria-label="${esc(p.alt)}"><img src="${esc(p.src)}" alt=""></button>`).join('')}</div>`);
     return true;
   }
-  window.TribeSiteDesigner = { importCfg, dropFiles, open, close, ask, download, undo, redo, flush, dirty, hasDraft, comments: () => st ? st.comments : [], state: () => st && { pid: st.pid, page: st.page, sel: st.sel, hist: st.hist.length, fut: st.fut.length, log: st.log, pending: st.pending || null, open: !!root && !root.hidden, dirty: st.dirty, rev: st.rev, dev: st.dev, panel: st.panel, cmode: st.cmode }, cfg: () => st && st.cfg, useTemplate, gallery: () => gal.list };
+  window.TribeSiteDesigner = { importCfg, dropFiles, open, close, ask, download, undo, redo, flush, dirty, hasDraft, comments: () => st ? st.comments : [], state: () => st && { multi: (st.multi || []).length, pid: st.pid, page: st.page, sel: st.sel, hist: st.hist.length, fut: st.fut.length, log: st.log, pending: st.pending || null, open: !!root && !root.hidden, dirty: st.dirty, rev: st.rev, dev: st.dev, panel: st.panel, cmode: st.cmode }, cfg: () => st && st.cfg, useTemplate, gallery: () => gal.list };
 })();
