@@ -133,7 +133,7 @@
     if (signin) signin.onclick = () => {
       if (s.phone && window.TribeGhPhone) {   // a phone alone: the token sheet from ghphone.js, then back to this row
         const GP = window.TribeGhPhone; GP.open(); let n = 0;
-        const t = setInterval(() => { if (GP.getToken()) { clearInterval(t); delete cache[pid]; if (window.TribePublish) window.TribePublish.open(pid, 'pages'); } else if (++n > 240) clearInterval(t); }, 500);
+        const t = setInterval(() => { if (GP.getToken()) { clearInterval(t); delete cache[pid]; const sc = document.querySelector('.nx-scrim'); if (sc) sc.click(); if (window.TribePublish) window.TribePublish.open(pid, 'pages'); } else if (++n > 240) clearInterval(t); }, 500);
         return;
       }
       const box = signin.parentElement; if (!window.TribeGitHub || !window.TribeGitHub.mount) { location.hash = '#/settings/github'; return; }
