@@ -12,44 +12,28 @@
   const D = {
     // feat/site-editor2: the website designer's element tools and Suggestions (siteparts.js, sitesuggest.js, sitedesigner-frame.js)
     "Press Esc again to close the designer": ["Pulsa Esc otra vez para cerrar el diseñador","Pressione Esc de novo para fechar o designer","Appuyez encore sur Échap pour fermer le designer","Drücke noch einmal Esc, um den Designer zu schließen","もう一度Escを押すとデザイナーを閉じます","再按一次 Esc 关闭设计器","Esc를 한 번 더 누르면 디자이너가 닫힙니다"],
-    "Smaller": ["Más pequeño","Menor","Plus petit","Kleiner","小さく","缩小","작게"],
-    "Bigger": ["Más grande","Maior","Plus grand","Größer","大きく","放大","크게"],
-    "Bold": ["Negrita","Negrito","Gras","Fett","太字","加粗","굵게"],
-    "Colour": ["Color","Cor","Couleur","Farbe","色","颜色","색"],
-    "Align": ["Alinear","Alinhar","Aligner","Ausrichten","揃える","对齐","정렬"],
-    "Move up": ["Subir","Mover para cima","Monter","Nach oben","上へ移動","上移","위로 이동"],
-    "Move down": ["Bajar","Mover para baixo","Descendre","Nach unten","下へ移動","下移","아래로 이동"],
-    "Duplicate": ["Duplicar","Duplicar","Dupliquer","Duplizieren","複製","复制","복제"],
-    "Add another": ["Añadir otro","Adicionar outro","En ajouter un autre","Noch eins hinzufügen","もう1つ追加","再加一个","하나 더 추가"],
-    "Remove": ["Quitar","Remover","Retirer","Entfernen","削除","移除","삭제"],
-    "Ask Flint about this": ["Pregunta a Flint sobre esto","Pergunte ao Flint sobre isto","Demander à Flint à ce sujet","Flint dazu fragen","これについてFlintに聞く","就此询问 Flint","이것에 대해 Flint에게 묻기"],
-    "More": ["Más","Mais","Plus","Mehr","その他","更多","더 보기"],
-    "Replace the picture": ["Cambiar la imagen","Trocar a imagem","Remplacer l’image","Bild ersetzen","画像を差し替える","更换图片","사진 바꾸기"],
+                "Colour": ["Color","Cor","Couleur","Farbe","色","颜色","색"],
+                    "Add another": ["Añadir otro","Adicionar outro","En ajouter un autre","Noch eins hinzufügen","もう1つ追加","再加一个","하나 더 추가"],
+        "Ask Flint about this": ["Pregunta a Flint sobre esto","Pergunte ao Flint sobre isto","Demander à Flint à ce sujet","Flint dazu fragen","これについてFlintに聞く","就此询问 Flint","이것에 대해 Flint에게 묻기"],
+        "Replace the picture": ["Cambiar la imagen","Trocar a imagem","Remplacer l’image","Bild ersetzen","画像を差し替える","更换图片","사진 바꾸기"],
     "Fill or fit": ["Rellenar o ajustar","Preencher ou ajustar","Remplir ou ajuster","Füllen oder einpassen","フィルまたはフィット","填满或适应","채우기 또는 맞추기"],
     "Swap the icon": ["Cambiar el icono","Trocar o ícone","Changer l’icône","Symbol tauschen","アイコンを変更","更换图标","아이콘 바꾸기"],
     "Edit the words": ["Editar el texto","Editar o texto","Modifier le texte","Text bearbeiten","文字を編集","编辑文字","글 편집"],
     "Drag to move this section": ["Arrastra para mover esta sección","Arraste para mover esta seção","Glisser pour déplacer cette section","Ziehen, um diesen Abschnitt zu verschieben","ドラッグしてこのセクションを移動","拖动以移动此部分","드래그해서 이 섹션 이동"],
     "Add a section below": ["Añadir una sección debajo","Adicionar uma seção abaixo","Ajouter une section en dessous","Abschnitt darunter hinzufügen","下にセクションを追加","在下方添加部分","아래에 섹션 추가"],
     "Words": ["Texto","Texto","Texte","Text","文字","文字","글"],
-    "Size": ["Tamaño","Tamanho","Taille","Größe","サイズ","大小","크기"],
-    "Small": ["Pequeño","Pequeno","Petit","Klein","小","小","작게"],
-    "Normal": ["Normal","Normal","Normal","Normal","標準","正常","보통"],
-    "Large": ["Grande","Grande","Grand","Groß","大","大","크게"],
-    "Huge": ["Enorme","Enorme","Très grand","Riesig","特大","特大","아주 크게"],
+            "Normal": ["Normal","Normal","Normal","Normal","標準","正常","보통"],
+        "Huge": ["Enorme","Enorme","Très grand","Riesig","特大","特大","아주 크게"],
     "As it is": ["Como está","Como está","Tel quel","Wie es ist","そのまま","保持原样","그대로"],
     "Quiet": ["Suave","Discreta","Discrète","Dezent","控えめ","柔和","차분하게"],
     "Strong": ["Fuerte","Forte","Forte","Kräftig","強め","醒目","진하게"],
     "Line up": ["Alineación","Alinhamento","Alignement","Ausrichtung","揃え方","对齐方式","정렬"],
-    "Left": ["Izquierda","Esquerda","Gauche","Links","左","左","왼쪽"],
-    "Middle": ["Centro","Centro","Centre","Mitte","中央","居中","가운데"],
-    "Right": ["Derecha","Direita","Droite","Rechts","右","右","오른쪽"],
-    "Slanted": ["Cursiva","Itálico","Italique","Kursiv","斜体","斜体","기울임"],
+        "Middle": ["Centro","Centro","Centre","Mitte","中央","居中","가운데"],
+        "Slanted": ["Cursiva","Itálico","Italique","Kursiv","斜体","斜体","기울임"],
     "Show it on": ["Mostrar en","Mostrar em","Afficher sur","Anzeigen auf","表示する画面","显示在","표시할 화면"],
     "Computer": ["Ordenador","Computador","Ordinateur","Computer","パソコン","电脑","컴퓨터"],
     "Comment here": ["Comentar aquí","Comentar aqui","Commenter ici","Hier kommentieren","ここにコメント","在此评论","여기에 댓글"],
-    "Text size": ["Tamaño del texto","Tamanho do texto","Taille du texte","Textgröße","文字サイズ","文字大小","글자 크기"],
-    "Width": ["Ancho","Largura","Largeur","Breite","幅","宽度","너비"],
-    "Narrow": ["Estrecho","Estreita","Étroite","Schmal","狭い","窄","좁게"],
+            "Narrow": ["Estrecho","Estreita","Étroite","Schmal","狭い","窄","좁게"],
     "Wide": ["Ancho","Larga","Large","Breit","広い","宽","넓게"],
     "When it scrolls into view": ["Cuando aparece al desplazarse","Quando aparece ao rolar","Quand elle apparaît au défilement","Wenn es ins Bild scrollt","スクロールで表示されたとき","滚动到可见时","스크롤해서 보일 때"],
     "Just there": ["Sin efecto","Sem efeito","Sans effet","Einfach da","そのまま表示","直接显示","그냥 표시"],
@@ -59,9 +43,7 @@
     "Fill the frame": ["Rellenar el marco","Preencher a moldura","Remplir le cadre","Rahmen füllen","枠いっぱいに","填满框","틀 채우기"],
     "Show all of it": ["Mostrarla entera","Mostrar inteira","La montrer en entier","Ganz zeigen","全体を表示","完整显示","전체 보이기"],
     "Keep in view": ["Mantener a la vista","Manter à vista","Garder visible","Im Bild behalten","見せる位置","保持可见的位置","보이게 둘 위치"],
-    "Top": ["Arriba","Topo","Haut","Oben","上","上","위"],
-    "Bottom": ["Abajo","Base","Bas","Unten","下","下","아래"],
-    "Take the picture out": ["Quitar la imagen","Tirar a imagem","Retirer l’image","Bild herausnehmen","画像を外す","移除图片","사진 빼기"],
+            "Take the picture out": ["Quitar la imagen","Tirar a imagem","Retirer l’image","Bild herausnehmen","画像を外す","移除图片","사진 빼기"],
     "Site name": ["Nombre del sitio","Nome do site","Nom du site","Name der Website","サイト名","网站名称","사이트 이름"],
     "Page in the menu": ["Página en el menú","Página no menu","Page dans le menu","Seite im Menü","メニュー内のページ","菜单中的页面","메뉴의 페이지"],
     "Open this page": ["Abrir esta página","Abrir esta página","Ouvrir cette page","Diese Seite öffnen","このページを開く","打开此页面","이 페이지 열기"],
@@ -72,8 +54,7 @@
     "Stands out": ["Destacado","Em destaque","Mis en avant","Hervorgehoben","目立たせる","突出显示","강조"],
     "The grey hint inside it": ["El texto gris de ayuda","O texto cinza de dica","L’indication grise à l’intérieur","Der graue Hinweis darin","中のグレーのヒント","框内的灰色提示","안의 회색 안내 글"],
     "Box to type in": ["Campo para escribir","Campo para digitar","Champ de saisie","Eingabefeld","入力欄","输入框","입력 칸"],
-    "Dismiss": ["Descartar","Dispensar","Ignorer","Verwerfen","却下","忽略","닫기"],
-    "Apply all": ["Aplicar todo","Aplicar tudo","Tout appliquer","Alle anwenden","すべて適用","全部应用","모두 적용"],
+        "Apply all": ["Aplicar todo","Aplicar tudo","Tout appliquer","Alle anwenden","すべて適用","全部应用","모두 적용"],
     "Look again": ["Buscar de nuevo","Procurar de novo","Chercher à nouveau","Noch einmal suchen","もう一度探す","重新查找","다시 찾기"],
     "Applied before": ["Aplicado antes","Aplicado antes","Déjà appliqué","Früher angewendet","以前に適用","之前已应用","이전에 적용함"],
     "What the tribe said about this": ["Lo que dijo la tribu sobre esto","O que a tribo disse sobre isto","Ce que la tribu en a dit","Was der Tribe dazu gesagt hat","これについてトライブが言ったこと","部落对此说了什么","이것에 대해 트라이브가 한 말"],
@@ -108,8 +89,7 @@
     "Duplicate the selected section or entry": ["Duplicar la sección o entrada seleccionada","Duplicar a seção ou entrada selecionada","Dupliquer la section ou l’entrée sélectionnée","Ausgewählten Abschnitt oder Eintrag duplizieren","選択したセクションまたは項目を複製","复制选中的部分或条目","선택한 섹션 또는 항목 복제"],
     "Move the selected section or entry": ["Mover la sección o entrada seleccionada","Mover a seção ou entrada selecionada","Déplacer la section ou l’entrée sélectionnée","Ausgewählten Abschnitt oder Eintrag verschieben","選択したセクションまたは項目を移動","移动选中的部分或条目","선택한 섹션 또는 항목 이동"],
     // feat/ai-invite: Bring an AI helper (inviteagent.js)
-    "An AI helper": ["Un ayudante de IA","Um ajudante de IA","Un assistant IA","Ein KI-Helfer","AIヘルパー","一个 AI 助手","AI 도우미"],
-    "Change": ["Cambiar","Mudar","Changer","Ändern","変更","更改","변경"],
+        "Change": ["Cambiar","Mudar","Changer","Ändern","変更","更改","변경"],
     "Bring an AI helper": ["Trae un ayudante de IA","Traga um ajudante de IA","Amener un assistant IA","KI-Helfer dazuholen","AIヘルパーを呼ぶ","带来一个 AI 助手","AI 도우미 데려오기"],
     "Which AI do you already use?": ["¿Qué IA usas ya?","Qual IA você já usa?","Quelle IA utilisez-vous déjà ?","Welche KI nutzt du schon?","すでに使っているAIはどれですか？","你已经在用哪个 AI？","이미 쓰고 있는 AI는 무엇인가요?"],
     "Pick one. You get the shortest way to bring it in, and you choose what it may do.": ["Elige una. Verás la forma más corta de traerla y tú decides qué puede hacer.","Escolha uma. Você vê o caminho mais curto para trazê-la e decide o que ela pode fazer.","Choisissez-en une. Vous obtenez le chemin le plus court pour l’amener, et vous décidez ce qu’elle peut faire.","Wähle eine. Du bekommst den kürzesten Weg, sie dazuzuholen, und bestimmst, was sie darf.","1つ選んでください。いちばん短い手順が表示され、できることはあなたが決めます。","选一个。你会看到最短的接入方式，并由你决定它能做什么。","하나를 고르세요. 가장 짧은 연결 방법이 나오고, 무엇을 해도 되는지는 직접 정합니다."],
@@ -173,17 +153,14 @@
     "Who does what?": ["¿Quién hace qué?","Quem faz o quê?","Qui fait quoi ?","Wer macht was?","誰が何を担当しますか？","谁负责什么？","누가 무엇을 하나요?"],
     "How do you want to check in?": ["¿Cómo quieren ponerse al día?","Como vocês querem se atualizar?","Comment voulez-vous faire le point ?","Wie wollt ihr euch abstimmen?","どのように近況を共有しますか？","你们想怎样同步进展？","어떻게 근황을 나눌까요?"],
     "Set it up": ["Configurar","Configurar","Configurer","Einrichten","設定する","完成设置","설정하기"],
-    "Nobody yet": ["Nadie todavía","Ninguém ainda","Personne pour l’instant","Noch niemand","まだいません","暂无","아직 없음"],
-    "Me": ["Yo","Eu","Moi","Ich","自分","我","나"],
-    "Roles": ["Roles","Funções","Rôles","Rollen","役割","角色","역할"],
+            "Roles": ["Roles","Funções","Rôles","Rollen","役割","角色","역할"],
     "Role": ["Rol","Função","Rôle","Rolle","役割","角色","역할"],
     "Lead": ["Líder","Líder","Responsable","Leitung","リーダー","负责人","리더"],
     "Next check-in": ["Próxima puesta al día","Próximo ponto","Prochain point","Nächste Abstimmung","次の近況共有","下次同步","다음 근황 공유"],
     "Money this month": ["Dinero este mes","Dinheiro este mês","Argent ce mois-ci","Geld in diesem Monat","今月のお金","本月收支","이번 달 돈"],
     "Needs a person’s OK": ["Necesita el OK de una persona","Precisa do OK de uma pessoa","Nécessite l’accord d’une personne","Braucht das OK eines Menschen","人のOKが必要","需要人来确认","사람의 확인 필요"],
     "Nothing is waiting": ["Nada en espera","Nada esperando","Rien en attente","Nichts wartet","待ちはありません","没有待处理事项","대기 중인 것 없음"],
-    "Not now": ["Ahora no","Agora não","Pas maintenant","Nicht jetzt","今はしない","暂不","나중에"],
-    "You’re set for today": ["Todo listo por hoy","Tudo certo por hoje","Tout est en ordre pour aujourd’hui","Für heute ist alles erledigt","今日はこれで完了です","今天都安排好了","오늘 할 일은 끝났어요"],
+        "You’re set for today": ["Todo listo por hoy","Tudo certo por hoje","Tout est en ordre pour aujourd’hui","Für heute ist alles erledigt","今日はこれで完了です","今天都安排好了","오늘 할 일은 끝났어요"],
     "Nothing is waiting on you.": ["Nada depende de ti ahora.","Nada depende de você agora.","Rien ne vous attend.","Nichts wartet auf dich.","あなた待ちのものはありません。","没有等你处理的事。","당신을 기다리는 일이 없습니다."],
     "Post today’s update": ["Publica la novedad de hoy","Publique a atualização de hoje","Publier le point du jour","Heutiges Update posten","今日の近況を投稿","发布今日进展","오늘의 근황 올리기"],
     "Two lines: what got done, and what’s next.": ["Dos líneas: qué se hizo y qué sigue.","Duas linhas: o que foi feito e o que vem a seguir.","Deux lignes : ce qui est fait, et la suite.","Zwei Zeilen: was erledigt ist und was als Nächstes kommt.","2行で：終わったことと、次にやること。","两行：完成了什么，接下来做什么。","두 줄: 한 일과 다음 할 일."],
@@ -369,13 +346,9 @@
     "and it’s saved on this computer": ["y está guardado en este ordenador", "e está guardado neste computador", "et c'est enregistré sur cet ordinateur", "und es ist auf diesem Computer gespeichert", "このパソコンに保存されています", "并保存在这台电脑上", "이 컴퓨터에 저장되어 있습니다"],
     "and it’s saved where the tribe lives": ["y está guardado donde vive la tribu", "e está guardado onde a tribo vive", "et c'est enregistré là où vit la tribu", "und es ist dort gespeichert, wo der Tribe lebt", "トライブのある場所に保存されています", "并保存在部落所在的地方", "트라이브가 있는 곳에 저장되어 있습니다"],
     "Putting your tribe online…": ["Poniendo tu tribu en línea…", "A colocar a tua tribo online…", "Mise en ligne de votre tribu…", "Dein Tribe geht online…", "トライブをオンラインにしています…", "正在让你的部落上线…", "트라이브를 온라인으로 전환하는 중…"],
-    "Invite friends": ["Invitar amigos", "Convidar amigos", "Inviter des amis", "Freunde einladen", "友だちを招待", "邀请朋友", "친구 초대"],
-    "See options": ["Ver opciones", "Ver opções", "Voir les options", "Optionen ansehen", "選択肢を見る", "查看选项", "선택지 보기"],
-    "Move to a host": ["Mover a un host", "Mover para um host", "Déplacer vers un hôte", "Zu einem Host umziehen", "ホストに移す", "移到主机", "호스트로 옮기기"],
-    "Free cloud": ["Nube gratis", "Nuvem grátis", "Cloud gratuit", "Kostenlose Cloud", "無料クラウド", "免费云端", "무료 클라우드"],
-    "My laptop": ["Mi portátil", "Meu notebook", "Mon ordinateur portable", "Mein Laptop", "自分のノートPC", "我的笔记本", "내 노트북"],
-    "My Android": ["Mi Android", "Meu Android", "Mon Android", "Mein Android", "自分のAndroid", "我的安卓手机", "내 안드로이드"],
-    "iPhones can't host": ["Los iPhone no pueden alojar", "iPhones não podem hospedar", "Les iPhone ne peuvent pas héberger", "iPhones können nicht hosten", "iPhoneはホストになれません", "iPhone 无法当主机", "iPhone은 호스트가 될 수 없어요"],
+        "See options": ["Ver opciones", "Ver opções", "Voir les options", "Optionen ansehen", "選択肢を見る", "查看选项", "선택지 보기"],
+            "My laptop": ["Mi portátil", "Meu notebook", "Mon ordinateur portable", "Mein Laptop", "自分のノートPC", "我的笔记本", "내 노트북"],
+        "iPhones can't host": ["Los iPhone no pueden alojar", "iPhones não podem hospedar", "Les iPhone ne peuvent pas héberger", "iPhones können nicht hosten", "iPhoneはホストになれません", "iPhone 无法当主机", "iPhone은 호스트가 될 수 없어요"],
     "AI helpers need a computer": ["Los ayudantes de IA necesitan un ordenador", "Os ajudantes de IA precisam de um computador", "Les assistants IA ont besoin d'un ordinateur", "KI-Helfer brauchen einen Computer", "AIヘルパーにはパソコンが必要です", "AI 助手需要电脑", "AI 도우미는 컴퓨터가 필요해요"],
     "Friends need a host": ["Los amigos necesitan un host", "Os amigos precisam de um host", "Les amis ont besoin d'un hôte", "Freunde brauchen einen Host", "友だちを呼ぶにはホストが必要です", "邀请朋友需要主机", "친구를 부르려면 호스트가 필요해요"],
     "The code repository lives on a computer": ["El repositorio de código vive en un ordenador", "O repositório de código fica em um computador", "Le dépôt de code vit sur un ordinateur", "Das Code-Repository liegt auf einem Computer", "コードリポジトリはパソコン上にあります", "代码仓库在电脑上", "코드 저장소는 컴퓨터에 있어요"],
@@ -384,20 +357,16 @@
     "This needs a computer or a host": ["Esto necesita un ordenador o un host", "Isso precisa de um computador ou host", "Il faut un ordinateur ou un hôte", "Dafür braucht es einen Computer oder Host", "パソコンかホストが必要です", "这需要电脑或主机", "컴퓨터나 호스트가 필요해요"],
     "Open it on your laptop": ["Ábrelo en tu portátil", "Abra no seu notebook", "Ouvrez-le sur votre portable", "Auf dem Laptop öffnen", "ノートPCで開く", "在笔记本上打开", "노트북에서 열기"],
     "Copy the download link": ["Copiar el enlace de descarga", "Copiar o link de download", "Copier le lien de téléchargement", "Download-Link kopieren", "ダウンロードリンクをコピー", "复制下载链接", "다운로드 링크 복사"],
-    "I have an invite link": ["Tengo un enlace de invitación", "Tenho um link de convite", "J'ai un lien d'invitation", "Ich habe einen Einladungslink", "招待リンクがあります", "我有邀请链接", "초대 링크가 있어요"],
-    "Use GitHub from this phone": ["Usar GitHub desde este móvil", "Usar o GitHub neste celular", "Utiliser GitHub depuis ce téléphone", "GitHub auf diesem Handy nutzen", "このスマホでGitHubを使う", "在这台手机上使用 GitHub", "이 폰에서 GitHub 사용"],
+        "Use GitHub from this phone": ["Usar GitHub desde este móvil", "Usar o GitHub neste celular", "Utiliser GitHub depuis ce téléphone", "GitHub auf diesem Handy nutzen", "このスマホでGitHubを使う", "在这台手机上使用 GitHub", "이 폰에서 GitHub 사용"],
     "GitHub on this phone": ["GitHub en este móvil", "GitHub neste celular", "GitHub sur ce téléphone", "GitHub auf diesem Handy", "このスマホのGitHub", "这台手机上的 GitHub", "이 폰의 GitHub"],
-    "Connect GitHub": ["Conectar GitHub", "Conectar o GitHub", "Connecter GitHub", "GitHub verbinden", "GitHubに接続", "连接 GitHub", "GitHub 연결"],
-    "Bring a repo in": ["Traer un repositorio", "Trazer um repositório", "Importer un dépôt", "Ein Repo holen", "リポジトリを取り込む", "导入仓库", "저장소 가져오기"],
+        "Bring a repo in": ["Traer un repositorio", "Trazer um repositório", "Importer un dépôt", "Ein Repo holen", "リポジトリを取り込む", "导入仓库", "저장소 가져오기"],
     "Bring it in": ["Traerlo", "Trazer", "L'importer", "Holen", "取り込む", "导入", "가져오기"],
-    "Connect": ["Conectar", "Conectar", "Connecter", "Verbinden", "接続", "连接", "연결"],
-    "Disconnect": ["Desconectar", "Desconectar", "Déconnecter", "Trennen", "接続を解除", "断开", "연결 해제"],
+        "Disconnect": ["Desconectar", "Desconectar", "Déconnecter", "Trennen", "接続を解除", "断开", "연결 해제"],
     "Push": ["Enviar", "Enviar", "Pousser", "Pushen", "プッシュ", "推送", "푸시"],
     "Pull": ["Traer cambios", "Puxar", "Récupérer", "Pullen", "プル", "拉取", "풀"],
     "Open the files": ["Abrir los archivos", "Abrir os arquivos", "Ouvrir les fichiers", "Dateien öffnen", "ファイルを開く", "打开文件", "파일 열기"],
     "In sync with GitHub": ["Sincronizado con GitHub", "Sincronizado com o GitHub", "Synchronisé avec GitHub", "Synchron mit GitHub", "GitHubと同期済み", "已与 GitHub 同步", "GitHub와 동기화됨"],
-    "On this phone": ["En este móvil", "Neste celular", "Sur ce téléphone", "Auf diesem Handy", "このスマホ上", "在这台手机上", "이 폰에서"],
-    "Space used": ["Espacio usado", "Espaço usado", "Espace utilisé", "Belegter Speicher", "使用中の容量", "已用空间", "사용한 공간"],
+        "Space used": ["Espacio usado", "Espaço usado", "Espace utilisé", "Belegter Speicher", "使用中の容量", "已用空间", "사용한 공간"],
     // Fresh open + Flint's tour (hub.js empty state, flinttour.js)
     "Make your first project": ["Crea tu primer proyecto","Crie seu primeiro projeto","Créez votre premier projet","Starte dein erstes Projekt","最初のプロジェクトを作ろう","创建你的第一个项目","첫 프로젝트를 만들어 보세요"],
     "A project is a room for you, your friends and your AI helpers: a chat, files, a task board, a design canvas and a live preview of what you build.": ["Un proyecto es una sala para ti, tus amigos y tus ayudantes de IA: un chat, archivos, un tablero de tareas, un lienzo de diseño y una vista previa en vivo de lo que construyes.","Um projeto é uma sala para você, seus amigos e seus ajudantes de IA: um chat, arquivos, um quadro de tarefas, uma tela de design e uma prévia ao vivo do que você constrói.","Un projet est une salle pour vous, vos amis et vos assistants IA : un chat, des fichiers, un tableau de tâches, un canevas de design et un aperçu en direct de ce que vous construisez.","Ein Projekt ist ein Raum für dich, deine Freunde und eure KI-Helfer: ein Chat, Dateien, ein Aufgabenboard, eine Design-Leinwand und eine Live-Vorschau von dem, was ihr baut.","プロジェクトは、あなたと友だち、AIヘルパーのための部屋です。チャット、ファイル、タスクボード、デザインキャンバス、作っているもののライブプレビューがあります。","项目是你、朋友和 AI 助手共用的房间：聊天、文件、任务板、设计画布，以及你所构建内容的实时预览。","프로젝트는 나와 친구, AI 도우미를 위한 방이에요. 채팅, 파일, 작업 보드, 디자인 캔버스, 만들고 있는 것의 실시간 미리보기가 있어요."],
@@ -460,14 +429,9 @@
     'Advanced': ['Avanzado', 'Avançado', 'Avancé', 'Erweitert', '詳細', '高级', '고급'],
     'Smaller': ['Más pequeño', 'Menor', 'Plus petit', 'Kleiner', '小さく', '缩小', '작게'],
     'Bigger': ['Más grande', 'Maior', 'Plus grand', 'Größer', '大きく', '放大', '크게'],
-    'Ask Flint': ['Preguntar a Flint', 'Perguntar ao Flint', 'Demander à Flint', 'Flint fragen', 'Flintに聞く', '问 Flint', 'Flint에게 묻기'],
-    'Align left': ['Alinear a la izquierda', 'Alinhar à esquerda', 'Aligner à gauche', 'Links ausrichten', '左揃え', '左对齐', '왼쪽 정렬'],
-    'Align centre': ['Centrar', 'Centralizar', 'Centrer', 'Zentrieren', '中央揃え', '居中对齐', '가운데 정렬'],
-    'Align right': ['Alinear a la derecha', 'Alinhar à direita', 'Aligner à droite', 'Rechts ausrichten', '右揃え', '右对齐', '오른쪽 정렬'],
-    'Align top': ['Alinear arriba', 'Alinhar ao topo', 'Aligner en haut', 'Oben ausrichten', '上揃え', '顶部对齐', '위쪽 정렬'],
-    'Align middle': ['Alinear al medio', 'Alinhar ao meio', 'Aligner au milieu', 'Mittig ausrichten', '上下中央揃え', '垂直居中', '세로 가운데 정렬'],
-    'Align bottom': ['Alinear abajo', 'Alinhar embaixo', 'Aligner en bas', 'Unten ausrichten', '下揃え', '底部对齐', '아래쪽 정렬'],
-    'Spread evenly': ['Repartir por igual', 'Distribuir igualmente', 'Répartir également', 'Gleichmäßig verteilen', '均等に配置', '均匀分布', '고르게 배치'],
+            'Align centre': ['Centrar', 'Centralizar', 'Centrer', 'Zentrieren', '中央揃え', '居中对齐', '가운데 정렬'],
+            'Align middle': ['Alinear al medio', 'Alinhar ao meio', 'Aligner au milieu', 'Mittig ausrichten', '上下中央揃え', '垂直居中', '세로 가운데 정렬'],
+        'Spread evenly': ['Repartir por igual', 'Distribuir igualmente', 'Répartir également', 'Gleichmäßig verteilen', '均等に配置', '均匀分布', '고르게 배치'],
     'Tell me what to design': ['Dime qué diseñar', 'Diga o que desenhar', 'Dites-moi quoi concevoir', 'Sag mir, was ich gestalten soll', '何をデザインするか教えて', '告诉我要设计什么', '무엇을 디자인할지 알려 주세요'],
     'A screen, a section or a change to what you select. I build real frames with auto layout that you can edit, and every step can be undone.': ['Una pantalla, una sección o un cambio en lo que selecciones. Creo marcos reales con diseño automático que puedes editar, y cada paso se puede deshacer.', 'Uma tela, uma seção ou uma mudança no que você selecionar. Crio quadros reais com layout automático que você pode editar, e cada passo pode ser desfeito.', 'Un écran, une section ou un changement sur la sélection. Je crée de vrais cadres en mise en page auto, modifiables, et chaque étape s’annule.', 'Ein Screen, ein Abschnitt oder eine Änderung an der Auswahl. Ich baue echte Frames mit Auto-Layout zum Bearbeiten, und jeder Schritt lässt sich rückgängig machen.', '画面、セクション、選択中のものへの変更。編集できる自動レイアウトの本物のフレームを作り、どの手順も元に戻せます。', '一个页面、一个区块，或对所选内容的修改。我会生成可编辑的自动布局框架，每一步都能撤销。', '화면, 섹션, 또는 선택한 것의 변경. 편집할 수 있는 자동 레이아웃 프레임을 만들고, 모든 단계는 되돌릴 수 있어요.'],
     'Undone': ['Deshecho', 'Desfeito', 'Annulé', 'Rückgängig gemacht', '元に戻しました', '已撤销', '되돌림'],
@@ -528,8 +492,7 @@
     'Choose photo': ['Elegir foto', 'Escolher foto', 'Choisir une photo', 'Foto wählen', '写真を選ぶ', '选择照片', '사진 선택'],
     'Move up': ['Subir', 'Mover para cima', 'Monter', 'Nach oben', '上へ', '上移', '위로'],
     'Move down': ['Bajar', 'Mover para baixo', 'Descendre', 'Nach unten', '下へ', '下移', '아래로'],
-    'Colors': ['Colores', 'Cores', 'Couleurs', 'Farben', '色', '颜色', '색상'],
-    'Fonts': ['Fuentes', 'Fontes', 'Polices', 'Schriften', 'フォント', '字体', '글꼴'],
+        'Fonts': ['Fuentes', 'Fontes', 'Polices', 'Schriften', 'フォント', '字体', '글꼴'],
     'Headings': ['Títulos', 'Títulos', 'Titres', 'Überschriften', '見出し', '标题', '제목'],
     'Body text': ['Texto', 'Texto', 'Texte', 'Fließtext', '本文', '正文', '본문'],
     'Sections': ['Secciones', 'Seções', 'Sections', 'Abschnitte', 'セクション', '版块', '섹션'],
@@ -597,8 +560,7 @@
     'Your name there': ['Tu nombre allí', 'Seu nome lá', 'Votre nom là-bas', 'Dein Name dort', 'そこでの名前', '你在那里的名字', '거기서 쓸 이름'],
     'Everything moves over in one go and this phone signs in to the host. Then the phone copy is deleted.': ['Todo pasa de una vez y este teléfono inicia sesión en el host. Luego se borra la copia del teléfono.', 'Tudo vai de uma vez e este celular entra no host. Depois a cópia do celular é apagada.', 'Tout passe d’un coup et ce téléphone se connecte à l’hôte. Ensuite, la copie du téléphone est supprimée.', 'Alles zieht auf einmal um und dieses Handy meldet sich beim Host an. Danach wird die Kopie auf dem Handy gelöscht.', 'すべて一度に移り、このスマホはホストにサインインします。その後スマホ内のコピーは削除されます。', '所有内容一次迁移，这部手机登录主机。然后删除手机上的副本。', '모든 게 한 번에 옮겨지고 이 휴대폰은 호스트에 로그인해요. 그다음 휴대폰의 사본은 삭제돼요.'],
     'No host yet?': ['¿Aún sin host?', 'Ainda sem host?', 'Pas encore d’hôte ?', 'Noch kein Host?', 'まだホストがない？', '还没有主机？', '아직 호스트가 없나요?'],
-    'Move': ['Mover', 'Mover', 'Déplacer', 'Umziehen', '移す', '迁移', '옮기기'],
-    'Moving…': ['Moviendo…', 'Movendo…', 'Déplacement…', 'Zieht um…', '移動中…', '迁移中…', '옮기는 중…'],
+        'Moving…': ['Moviendo…', 'Movendo…', 'Déplacement…', 'Zieht um…', '移動中…', '迁移中…', '옮기는 중…'],
     'Paste the full invite link, like https://host/join/abc12': ['Pega el enlace completo, como https://host/join/abc12', 'Cole o link completo, como https://host/join/abc12', 'Collez le lien complet, comme https://host/join/abc12', 'Füge den ganzen Link ein, etwa https://host/join/abc12', 'https://host/join/abc12 のような完全なリンクを貼り付けてください', '粘贴完整的邀请链接，例如 https://host/join/abc12', 'https://host/join/abc12 같은 전체 링크를 붙여넣으세요'],
     'That invite didn’t work. Ask for a fresh link.': ['Esa invitación no funcionó. Pide un enlace nuevo.', 'Esse convite não funcionou. Peça um link novo.', 'Cette invitation n’a pas marché. Demandez un nouveau lien.', 'Die Einladung hat nicht geklappt. Bitte um einen neuen Link.', 'その招待は使えませんでした。新しいリンクを頼んでください。', '这个邀请无效。请要一个新链接。', '그 초대는 안 됐어요. 새 링크를 요청하세요.'],
     'Moved. Welcome to your host!': ['Listo. ¡Bienvenido a tu host!', 'Pronto. Bem-vindo ao seu host!', 'C’est fait. Bienvenue sur votre hôte !', 'Erledigt. Willkommen auf deinem Host!', '完了。ホストへようこそ！', '迁移完成。欢迎来到你的主机！', '완료됐어요. 호스트에 오신 걸 환영해요!'],
@@ -686,8 +648,7 @@
     'Comment on the preview': ['Comentar en la vista previa', 'Comentar na prévia', 'Commenter l’aperçu', 'Vorschau kommentieren', 'プレビューにコメント', '在预览上评论', '미리보기에 댓글 달기'],
     'now': ['ahora', 'agora', 'maintenant', 'jetzt', '今', '刚刚', '방금'],
     // v0.28 Make it yours (personalize.js): first-launch name, icon, theme, language
-    'Make it yours': ['Hazlo tuyo', 'Deixe do seu jeito', 'Personnalisez', 'Mach es zu deinem', '自分好みに', '打造专属于你', '나만의 스타일로'],
-    'What should friends call you?': ['¿Cómo te llaman tus amigos?', 'Como seus amigos devem te chamar?', 'Comment vos amis vous appellent-ils ?', 'Wie sollen dich Freunde nennen?', '友だちに何と呼ばれたい？', '朋友们怎么称呼你？', '친구들이 뭐라고 부르면 될까요?'],
+        'What should friends call you?': ['¿Cómo te llaman tus amigos?', 'Como seus amigos devem te chamar?', 'Comment vos amis vous appellent-ils ?', 'Wie sollen dich Freunde nennen?', '友だちに何と呼ばれたい？', '朋友们怎么称呼你？', '친구들이 뭐라고 부르면 될까요?'],
     'Pick a look': ['Elige un estilo', 'Escolha um visual', 'Choisissez un style', 'Wähle einen Look', '見た目を選ぶ', '选择外观', '스타일 고르기'],
     'Last touches': ['Últimos detalles', 'Últimos detalhes', 'Dernières touches', 'Letzter Schliff', '仕上げ', '最后几项', '마무리'],
     'Your name': ['Tu nombre', 'Seu nome', 'Votre nom', 'Dein Name', 'あなたの名前', '你的名字', '이름'],
@@ -805,8 +766,7 @@
     'For me': ['Para mí', 'Para mim', 'Pour moi', 'Für mich', '自分用', '给我', '내 작업'],
     'Due': ['Fecha', 'Prazo', 'Échéance', 'Fällig', '期限', '截止', '마감'],
     'Add a task… press Enter': ['Añade una tarea… pulsa Enter', 'Adicione uma tarefa… tecle Enter', 'Ajoutez une tâche… appuyez sur Entrée', 'Aufgabe hinzufügen… Enter drücken', 'タスクを追加… Enter で決定', '添加任务… 按 Enter', '작업 추가… Enter 누르기'],
-    'Add a task': ['Añadir una tarea', 'Adicionar uma tarefa', 'Ajouter une tâche', 'Aufgabe hinzufügen', 'タスクを追加', '添加任务', '작업 추가'],
-    'List': ['Lista', 'Lista', 'Liste', 'Liste', 'リスト', '列表', '목록'],
+        'List': ['Lista', 'Lista', 'Liste', 'Liste', 'リスト', '列表', '목록'],
     'View': ['Vista', 'Visualização', 'Vue', 'Ansicht', '表示', '视图', '보기'],
     'Filter tasks': ['Filtrar tareas', 'Filtrar tarefas', 'Filtrer les tâches', 'Aufgaben filtern', 'タスクを絞り込む', '筛选任务', '작업 필터'],
     'Showing': ['Mostrando', 'Mostrando', 'Affichage', 'Angezeigt', '表示中', '正在显示', '표시 중'],
@@ -916,8 +876,7 @@
     'Connect your AI': ['Conecta tu IA', 'Conecte sua IA', 'Connecter votre IA', 'Deine KI verbinden', 'AI を接続', '连接你的 AI', 'AI 연결'],
     'Connect GitHub': ['Conectar GitHub', 'Conectar GitHub', 'Connecter GitHub', 'GitHub verbinden', 'GitHub を接続', '连接 GitHub', 'GitHub 연결'],
     'Connect': ['Conectar', 'Conectar', 'Connecter', 'Verbinden', '接続', '连接', '연결'],
-    'Create': ['Crear', 'Criar', 'Créer', 'Erstellen', '作成', '创建', '만들기'],
-    'Steps': ['Pasos', 'Passos', 'Étapes', 'Schritte', 'ステップ', '步骤', '단계'],
+        'Steps': ['Pasos', 'Passos', 'Étapes', 'Schritte', 'ステップ', '步骤', '단계'],
     // focused first run (firstrun.js)
     'What do you want to make with your friends?': ['¿Qué quieres crear con tus amigos?', 'O que você quer criar com seus amigos?', 'Que voulez-vous créer avec vos amis ?', 'Was willst du mit deinen Freunden bauen?', '友だちと何を作りたい？', '想和朋友一起做什么？', '친구들과 무엇을 만들고 싶나요?'],
     'Your tribe is ready': ['Tu tribu está lista', 'Sua tribo está pronta', 'Votre tribu est prête', 'Dein Tribe ist bereit', 'トライブの準備ができました', '你的部落已就绪', '트라이브가 준비됐어요'],
@@ -934,8 +893,7 @@
     'Writing the idea down': ['Anotando la idea', 'Anotando a ideia', 'On note l’idée', 'Idee wird notiert', 'アイデアを書き留め中', '正在记下想法', '아이디어 기록 중'],
     'Making a first version': ['Haciendo una primera versión', 'Fazendo uma primeira versão', 'Création d’une première version', 'Erste Version wird gebaut', '最初のバージョンを作成中', '正在做第一版', '첫 버전 만드는 중'],
     'Opening the preview': ['Abriendo la vista previa', 'Abrindo a prévia', 'Ouverture de l’aperçu', 'Vorschau wird geöffnet', 'プレビューを開いています', '正在打开预览', '미리보기 여는 중'],
-    'Invite a friend': ['Invita a un amigo', 'Convide um amigo', 'Invitez un ami', 'Lade einen Freund ein', '友だちを招待', '邀请一位朋友', '친구 초대하기'],
-    'Connect your own AI': ['Conecta tu propia IA', 'Conecte sua própria IA', 'Connectez votre propre IA', 'Verbinde deine eigene KI', '自分の AI をつなぐ', '连接你自己的 AI', '내 AI 연결하기'],
+        'Connect your own AI': ['Conecta tu propia IA', 'Conecte sua própria IA', 'Connectez votre propre IA', 'Verbinde deine eigene KI', '自分の AI をつなぐ', '连接你自己的 AI', '내 AI 연결하기'],
     'Publish your play link': ['Publica tu enlace para jugar', 'Publique seu link para jogar', 'Publiez votre lien de jeu', 'Veröffentliche deinen Spiel-Link', 'プレイ用リンクを公開', '发布可玩的链接', '플레이 링크 공개하기'],
     'Later': ['Más tarde', 'Depois', 'Plus tard', 'Später', 'あとで', '稍后', '나중에'],
     'Show QR code': ['Mostrar código QR', 'Mostrar QR code', 'Afficher le QR code', 'QR-Code zeigen', 'QR コードを表示', '显示二维码', 'QR 코드 보기'],
@@ -953,8 +911,7 @@
     'Hosting': ['Alojando', 'Hospedando', 'Hébergement', 'Gehostet', 'ホスト中', '托管中', '호스팅 중'],
     // feat/ui-consistent: one word, one thing
     'On this computer': ['En este ordenador', 'Neste computador', 'Sur cet ordinateur', 'Auf diesem Computer', 'このパソコン上', '在这台电脑上', '이 컴퓨터에서'],
-    'History': ['Historial', 'Histórico', 'Historique', 'Verlauf', '履歴', '历史', '기록'],
-    'Set up sharing and backup': ['Configura compartir y copia de seguridad', 'Configure compartilhamento e backup', 'Configurer le partage et la sauvegarde', 'Teilen und Sicherung einrichten', '共有とバックアップを設定', '设置共享和备份', '공유 및 백업 설정'],
+        'Set up sharing and backup': ['Configura compartir y copia de seguridad', 'Configure compartilhamento e backup', 'Configurer le partage et la sauvegarde', 'Teilen und Sicherung einrichten', '共有とバックアップを設定', '设置共享和备份', '공유 및 백업 설정'],
     'Your tribe is online. Now invite your friends.': ['Tu tribu está en línea. Ahora invita a tus amigos.', 'Sua tribo está online. Agora convide seus amigos.', 'Votre tribu est en ligne. Invitez vos amis.', 'Dein Tribe ist online. Lade jetzt deine Freunde ein.', 'トライブがオンラインになりました。友達を招待しましょう。', '你的部落已上线。现在邀请朋友吧。', '트라이브가 온라인입니다. 이제 친구를 초대하세요.'],
     'Online again on this computer.': ['En línea de nuevo en este ordenador.', 'Online de novo neste computador.', 'De nouveau en ligne sur cet ordinateur.', 'Wieder online auf diesem Computer.', 'このパソコンで再びオンラインです。', '已在这台电脑上重新上线。', '이 컴퓨터에서 다시 온라인입니다.'],
     'Just you here': ['Solo tú aquí', 'Só você aqui', 'Vous seul ici', 'Nur du hier', 'あなただけです', '这里只有你', '여기에는 나만 있어요'],
@@ -962,8 +919,7 @@
     'Start a tribe or join one, and what people propose shows up here for a vote.': ['Crea una tribu o únete a una, y lo que la gente proponga aparecerá aquí para votar.', 'Crie uma tribo ou entre em uma, e o que as pessoas propuserem aparece aqui para votação.', 'Créez une tribu ou rejoignez-en une : les propositions apparaîtront ici pour un vote.', 'Starte einen Tribe oder tritt einem bei, dann erscheinen Vorschläge hier zur Abstimmung.', 'トライブを作るか参加すると、提案がここに表示され投票できます。', '创建或加入一个部落，大家的提案会出现在这里供投票。', '트라이브를 만들거나 참여하면 제안이 여기에 표시되어 투표할 수 있습니다.'],
     'Bugs are shared with your tribe': ['Los errores se comparten con tu tribu', 'Os bugs são compartilhados com sua tribo', 'Les bugs sont partagés avec votre tribu', 'Fehler werden mit deinem Tribe geteilt', 'バグはトライブと共有されます', '问题会与你的部落共享', '버그는 트라이브와 공유됩니다'],
     'Start a tribe or join one to collect bug reports here. Ctrl Shift B reports a bug any time.': ['Crea una tribu o únete a una para reunir aquí los informes de errores. Ctrl Shift B informa de un error en cualquier momento.', 'Crie uma tribo ou entre em uma para reunir relatos de bugs aqui. Ctrl Shift B relata um bug a qualquer momento.', 'Créez une tribu ou rejoignez-en une pour réunir ici les rapports de bugs. Ctrl Shift B signale un bug à tout moment.', 'Starte einen Tribe oder tritt einem bei, um Fehlerberichte hier zu sammeln. Strg Umschalt B meldet jederzeit einen Fehler.', 'トライブを作るか参加すると、バグ報告がここに集まります。Ctrl Shift B でいつでも報告できます。', '创建或加入一个部落，在这里收集问题报告。随时按 Ctrl Shift B 报告问题。', '트라이브를 만들거나 참여하면 버그 신고가 여기에 모입니다. Ctrl Shift B로 언제든 신고할 수 있습니다.'],
-    'How it works': ['Cómo funciona', 'Como funciona', 'Comment ça marche', 'So funktioniert es', '仕組み', '工作原理', '작동 방식'],
-    'Search or jump to…': ['Busca o salta a…', 'Buscar ou ir para…', 'Rechercher ou aller à…', 'Suchen oder springen zu…', '検索または移動…', '搜索或跳转到…', '검색 또는 이동…'],
+        'Search or jump to…': ['Busca o salta a…', 'Buscar ou ir para…', 'Rechercher ou aller à…', 'Suchen oder springen zu…', '検索または移動…', '搜索或跳转到…', '검색 또는 이동…'],
     'Recent changes': ['Cambios recientes', 'Mudanças recentes', 'Changements récents', 'Letzte Änderungen', '最近の変更', '最近更改', '최근 변경'],
     'Your tribe link': ['El enlace de tu tribu', 'O link da sua tribo', 'Le lien de votre tribu', 'Dein Tribe-Link', 'トライブのリンク', '你的部落链接', '트라이브 링크'],
     'Copy': ['Copiar', 'Copiar', 'Copier', 'Kopieren', 'コピー', '复制', '복사'],
@@ -982,14 +938,10 @@
     '+ Note': ['+ Nota', '+ Nota', '+ Note', '+ Notiz', '+ メモ', '+ 备注', '+ 메모'],
     'Properties': ['Propiedades', 'Propriedades', 'Propriétés', 'Eigenschaften', 'プロパティ', '属性', '속성'],
     'free · edits the code': ['gratis · edita el código', 'grátis · edita o código', 'gratuit · modifie le code', 'kostenlos · ändert den Code', '無料 · コードを編集', '免费 · 修改代码', '무료 · 코드를 수정'],
-    'Undo': ['Deshacer', 'Desfazer', 'Annuler', 'Rückgängig', '元に戻す', '撤销', '실행 취소'],
-    'Padding': ['Relleno', 'Preenchimento', 'Marge intérieure', 'Innenabstand', '内側の余白', '内边距', '안쪽 여백'],
-    'Margin': ['Margen', 'Margem', 'Marge', 'Außenabstand', '外側の余白', '外边距', '바깥 여백'],
+            'Margin': ['Margen', 'Margem', 'Marge', 'Außenabstand', '外側の余白', '外边距', '바깥 여백'],
     'Width': ['Ancho', 'Largura', 'Largeur', 'Breite', '幅', '宽度', '너비'],
     'Height': ['Alto', 'Altura', 'Hauteur', 'Höhe', '高さ', '高度', '높이'],
-    'Weight': ['Grosor', 'Peso', 'Graisse', 'Stärke', '太さ', '粗细', '굵기'],
-    'Fill': ['Relleno', 'Preenchimento', 'Fond', 'Füllung', '塗り', '填充', '채우기'],
-    'Radius': ['Radio', 'Raio', 'Rayon', 'Radius', '角丸', '圆角', '모서리'],
+            'Radius': ['Radio', 'Raio', 'Rayon', 'Radius', '角丸', '圆角', '모서리'],
     'Build history': ['Historial de versiones', 'Histórico de versões', 'Historique des versions', 'Versionsverlauf', 'ビルド履歴', '构建历史', '빌드 기록'],
     'Save this version': ['Guardar esta versión', 'Salvar esta versão', 'Enregistrer cette version', 'Diese Version speichern', 'このバージョンを保存', '保存此版本', '이 버전 저장'],
     'Restore': ['Restaurar', 'Restaurar', 'Restaurer', 'Wiederherstellen', '復元', '恢复', '복원'],
@@ -999,8 +951,7 @@
     'Hide Flint': ['Ocultar Flint', 'Ocultar Flint', 'Masquer Flint', 'Flint ausblenden', 'Flint を隠す', '隐藏 Flint', 'Flint 숨기기'],
     'Show or hide Flint': ['Mostrar u ocultar Flint', 'Mostrar ou ocultar Flint', 'Afficher ou masquer Flint', 'Flint ein- oder ausblenden', 'Flint の表示切替', '显示或隐藏 Flint', 'Flint 표시/숨기기'],
     'Resize Flint': ['Cambiar tamaño de Flint', 'Redimensionar Flint', 'Redimensionner Flint', 'Flint-Größe ändern', 'Flint のサイズ変更', '调整 Flint 大小', 'Flint 크기 조절'],
-    'Fix it': ['Arréglalo', 'Corrigir', 'Corriger', 'Beheben', '直す', '修复', '고치기'],
-    'Make the title bigger': ['Agranda el título', 'Aumente o título', 'Agrandis le titre', 'Titel größer machen', 'タイトルを大きく', '把标题放大', '제목 크게'],
+        'Make the title bigger': ['Agranda el título', 'Aumente o título', 'Agrandis le titre', 'Titel größer machen', 'タイトルを大きく', '把标题放大', '제목 크게'],
     'Make it dark': ['Hazlo oscuro', 'Deixe escuro', 'Passe en sombre', 'Dunkel machen', 'ダークにする', '改成深色', '어둡게 만들기'],
     'Mobile layout': ['Diseño móvil', 'Layout para celular', 'Mise en page mobile', 'Mobil-Layout', 'モバイルレイアウト', '移动端布局', '모바일 레이아웃'],
     'Add a contact form': ['Añade un formulario de contacto', 'Adicione um formulário de contato', 'Ajoute un formulaire de contact', 'Kontaktformular hinzufügen', 'お問い合わせフォームを追加', '添加联系表单', '문의 양식 추가'],
@@ -1324,9 +1275,7 @@
     "No phone setting (viewport) on the page. It is added for you.": ["La página no tiene ajuste para teléfono (viewport). Se añade solo.","A página não tem ajuste para celular (viewport). É adicionado para você.","Pas de réglage téléphone (viewport) sur la page. Il est ajouté pour vous.","Die Seite hat keine Handy-Einstellung (Viewport). Sie wird ergänzt.","ページにスマホ用の設定（viewport）がありません。自動で追加します。","页面没有手机设置（viewport），会自动添加。","페이지에 휴대폰 설정(viewport)이 없습니다. 자동으로 추가됩니다."],
     "No icon. One is made for you from the name and color.": ["Sin icono. Se crea uno con el nombre y el color.","Sem ícone. Um é criado a partir do nome e da cor.","Pas d'icône. Une est créée à partir du nom et de la couleur.","Kein Icon. Eins wird aus Name und Farbe für dich erstellt.","アイコンがありません。名前と色から作成します。","没有图标，会根据名称和颜色自动生成。","아이콘이 없습니다. 이름과 색으로 만들어 드립니다."],
     "No game canvas found on the first page. Check the game starts from index.html.": ["No se encontró lienzo de juego en la primera página. Comprueba que el juego empieza en index.html.","Nenhuma tela de jogo encontrada na primeira página. Confira se o jogo começa em index.html.","Aucun canevas de jeu trouvé sur la première page. Vérifiez que le jeu démarre depuis index.html.","Auf der ersten Seite wurde keine Spielfläche gefunden. Prüfe, ob das Spiel von index.html startet.","最初のページにゲーム用キャンバスが見つかりません。index.html からゲームが始まるか確認してください。","首页未找到游戏画布。请确认游戏从 index.html 启动。","첫 페이지에서 게임 캔버스를 찾지 못했습니다. 게임이 index.html에서 시작하는지 확인하세요."],
-    "Build a first version": ["Crea una primera versión","Crie uma primeira versão","Créer une première version","Eine erste Version bauen","最初のバージョンを作る","做出第一个版本","첫 버전 만들기"],
     "Fix what the safety check found": ["Arregla lo que encontró la revisión de seguridad","Corrija o que a verificação de segurança encontrou","Corriger ce que le contrôle de sécurité a trouvé","Beheben, was die Sicherheitsprüfung gefunden hat","安全チェックの指摘を直す","修复安全检查发现的问题","안전 점검에서 찾은 문제 고치기"],
-    "Publish it": ["Publícalo","Publique","Le publier","Veröffentlichen","公開する","发布","게시하기"],
     "Give it a link that stays up": ["Dale un enlace que siga activo","Dê a ele um link que fica no ar","Lui donner un lien qui reste en ligne","Gib ihm einen Link, der online bleibt","ずっと開けるリンクを作る","给它一个一直可用的链接","계속 열리는 링크 만들기"],
     "Make it an app people can install": ["Conviértelo en una app instalable","Transforme em um app que as pessoas instalam","En faire une appli installable","Mach daraus eine installierbare App","インストールできるアプリにする","做成可安装的应用","설치할 수 있는 앱으로 만들기"],
     "Share the link": ["Comparte el enlace","Compartilhe o link","Partager le lien","Link teilen","リンクを共有する","分享链接","링크 공유하기"],
@@ -1630,6 +1579,15 @@
     "The play link works while this computer is on. A lasting link keeps working when it is off.": ["El enlace para jugar funciona mientras este ordenador está encendido. Un enlace duradero sigue funcionando cuando está apagado.","O link para jogar funciona enquanto este computador está ligado. Um link duradouro continua funcionando quando ele está desligado.","Le lien de jeu marche tant que cet ordinateur est allumé. Un lien durable continue de marcher quand il est éteint.","Der Spiel-Link funktioniert, solange dieser Computer an ist. Ein dauerhafter Link funktioniert auch, wenn er aus ist.","プレイ用リンクはこのパソコンがオンの間だけ使えます。ずっと使えるリンクはオフでも動きます。","试玩链接只在这台电脑开着时有效。长期链接在关机后仍然可用。","플레이 링크는 이 컴퓨터가 켜져 있을 때만 됩니다. 오래가는 링크는 꺼져 있어도 됩니다."],
     "Phones can install it from the link, and an Android app can be built for you.": ["Los teléfonos pueden instalarlo desde el enlace, y se puede crear una app de Android para ti.","Celulares podem instalar pelo link, e um app Android pode ser criado para você.","Les téléphones peuvent l'installer depuis le lien, et une appli Android peut être construite pour vous.","Handys können es über den Link installieren, und eine Android-App kann für dich gebaut werden.","スマホはリンクからインストールでき、Androidアプリも作成できます。","手机可以通过链接安装，也可以为你构建 Android 应用。","휴대폰은 링크에서 설치할 수 있고 Android 앱도 만들어 드립니다."],
     "See all of it": ["Verlo todo","Ver tudo","Tout voir","Alles ansehen","全部見る","查看全部","전체 보기"],
+    // feat/live-shots: real screenshots with a credit on the Workshop's tool cards
+    "Drawn by TribeCode": ["Dibujo de TribeCode","Desenho do TribeCode","Dessin de TribeCode","Gezeichnet von TribeCode","TribeCode によるイラスト","TribeCode 绘制","TribeCode가 그림"],
+    "Screenshot:": ["Captura:","Captura de tela:","Capture d’écran :","Screenshot:","スクリーンショット：","截图：","스크린샷:"],
+    "The Godot editor with a 3D game level open": ["El editor de Godot con un nivel de juego en 3D abierto","O editor do Godot com uma fase de jogo em 3D aberta","L’éditeur Godot avec un niveau de jeu en 3D ouvert","Der Godot-Editor mit einem geöffneten 3D-Spiellevel","3D ゲームのステージを開いた Godot エディター","打开了 3D 游戏关卡的 Godot 编辑器","3D 게임 레벨을 연 Godot 편집기"],
+    "Penpot showing a phone screen design next to its CSS code": ["Penpot mostrando el diseño de una pantalla de móvil junto a su código CSS","O Penpot mostrando o design de uma tela de celular ao lado do código CSS","Penpot affichant la maquette d’un écran de téléphone à côté de son code CSS","Penpot zeigt den Entwurf eines Handy-Bildschirms neben dem zugehörigen CSS-Code","スマホ画面のデザインとその CSS コードを並べて表示している Penpot","Penpot 显示一个手机界面设计及其旁边的 CSS 代码","휴대폰 화면 디자인과 그 CSS 코드를 나란히 보여 주는 Penpot"],
+    "The Fyrox editor with a 3D scene, its object list and properties": ["El editor de Fyrox con una escena 3D, su lista de objetos y propiedades","O editor do Fyrox com uma cena 3D, a lista de objetos e as propriedades","L’éditeur Fyrox avec une scène 3D, sa liste d’objets et ses propriétés","Der Fyrox-Editor mit einer 3D-Szene, der Objektliste und den Eigenschaften","3D シーンとオブジェクト一覧、プロパティを表示した Fyrox エディター","显示 3D 场景、对象列表和属性的 Fyrox 编辑器","3D 장면과 오브젝트 목록, 속성을 보여 주는 Fyrox 편집기"],
+    "Material Maker with a node graph and a 3D preview of a wooden material": ["Material Maker con un grafo de nodos y una vista previa 3D de un material de madera","O Material Maker com um grafo de nós e uma prévia 3D de um material de madeira","Material Maker avec un graphe de nœuds et un aperçu 3D d’un matériau en bois","Material Maker mit einem Knotengraphen und einer 3D-Vorschau eines Holzmaterials","ノードグラフと木のマテリアルの 3D プレビューを表示した Material Maker","显示节点图和木质材质 3D 预览的 Material Maker","노드 그래프와 나무 재질의 3D 미리보기를 보여 주는 Material Maker"],
+    "The Pyxel image editor with a pixel character and a sheet of sprites": ["El editor de imágenes de Pyxel con un personaje en píxeles y una hoja de sprites","O editor de imagens do Pyxel com um personagem em pixels e uma folha de sprites","L’éditeur d’images de Pyxel avec un personnage en pixels et une planche de sprites","Der Pyxel-Bildeditor mit einer Pixelfigur und einem Sprite-Bogen","ドット絵のキャラクターとスプライトシートを表示した Pyxel の画像エディター","显示像素角色和精灵图表的 Pyxel 图像编辑器","픽셀 캐릭터와 스프라이트 시트를 보여 주는 Pyxel 이미지 편집기"],
+    "Tiles are drawn by TribeCode. Screenshots are their makers' work, used under the licence shown with each one. Names belong to their projects. Licenses as listed in each project's repository.": ["Los iconos los dibuja TribeCode. Las capturas son obra de sus creadores y se usan con la licencia indicada en cada una. Los nombres pertenecen a sus proyectos. Licencias según el repositorio de cada proyecto.","Os ícones são desenhados pelo TribeCode. As capturas de tela são obra dos criadores, usadas sob a licença indicada em cada uma. Os nomes pertencem aos seus projetos. Licenças conforme o repositório de cada projeto.","Les vignettes sont dessinées par TribeCode. Les captures d’écran sont le travail de leurs auteurs, utilisées sous la licence indiquée avec chacune. Les noms appartiennent à leurs projets. Licences telles qu’indiquées dans le dépôt de chaque projet.","Die Kacheln zeichnet TribeCode. Screenshots stammen von den Machern und werden unter der jeweils genannten Lizenz verwendet. Die Namen gehören ihren Projekten. Lizenzen wie im Repository des jeweiligen Projekts angegeben.","タイルは TribeCode が描いたものです。スクリーンショットは各ツールの作者によるもので、それぞれに示したライセンスのもとで使っています。名前は各プロジェクトのものです。ライセンスは各プロジェクトのリポジトリの記載どおりです。","图块由 TribeCode 绘制。截图是工具作者的作品，按各自注明的许可协议使用。名称归各项目所有。许可协议以各项目仓库所列为准。","타일은 TribeCode가 그렸습니다. 스크린샷은 만든 분들의 작품이며 각각에 표시된 라이선스에 따라 사용합니다. 이름은 각 프로젝트의 것입니다. 라이선스는 각 프로젝트 저장소에 적힌 대로입니다."],
     // feat/setup-github: setup in plain words, a folder you pick or create, Connect GitHub, Files › Websites
     "Where": ["Dónde","Onde","Où","Wo","場所","位置","위치"],
     "Where it’s kept": ["Dónde se guarda","Onde fica guardado","Où c’est conservé","Wo es liegt","保存場所","保存位置","보관 위치"],
@@ -1840,17 +1798,155 @@
     "Keeps everyone pointed at the goal": ["Mantiene a todos enfocados en la meta","Mantém todos focados na meta","Garde tout le monde tourné vers l’objectif","Hält alle aufs Ziel ausgerichtet","全員を目標に向かわせます","让大家朝着目标前进","모두가 목표를 향하게 합니다"],
   });
   const KEY = 'tribecode.lang';
+  // feat/languages: the runtime below the table. Exact-text rows above keep working unchanged. New in this pass:
+  //   * templates: t('Give the {role} role to someone', { role }) and, for text other code already built in English,
+  //     pattern rows ("Give the {role} role to someone") that the page walker matches and re-fills;
+  //   * plurals (Intl.PluralRules), dates, times, numbers, relative time and lists (Intl.*) in the person's language;
+  //   * more rows from other files: TribeI18n.add(rows), addPatterns(rows), addPlurals(rows) (i18n-more.js);
+  //   * TribeI18n.terms(map): a tribe's own words (Company -> Club, Lead -> Captain) applied to what is shown;
+  //   * dir: right-to-left languages set <html dir="rtl"> (none ships yet; RTL is the list to extend).
+  // Public: window.TribeI18n = { lang(), set(code), t, n, date, time, rel, num, list, add, addPatterns, addPlurals,
+  //   terms, has(en), LANGS, RTL, apply }.
+  const RTL = ['ar', 'he', 'fa', 'ur'];
   const supported = c => LANGS.some(([k]) => k === c);
-  function detect() { const n = String((navigator.languages && navigator.languages[0]) || navigator.language || 'en').slice(0, 2).toLowerCase(); return supported(n) ? n : 'en'; }
+  function detect() {
+    const list = (navigator.languages && navigator.languages.length ? navigator.languages : [navigator.language || 'en']);
+    for (const l of list) { const c = String(l).slice(0, 2).toLowerCase(); if (supported(c)) return c; }
+    return 'en';
+  }
   let cur = 'en'; try { cur = localStorage.getItem(KEY) || detect(); } catch { cur = detect(); }
   if (!supported(cur)) cur = 'en';
-  const tr = en => { if (cur === 'en') return null; const row = D[en]; return row ? row[IDX[cur]] : null; };
-  const t = (key, fallback) => tr(fallback) || fallback;
+  const col = () => IDX[cur];
+  // ---- Intl helpers: dates, times, numbers, relative time and lists in the person's language
+  const loc = () => (cur === 'zh' ? 'zh-CN' : cur);
+  const asDate = d => (d instanceof Date ? d : new Date(d));
+  function date(d, opts) { try { return new Intl.DateTimeFormat(loc(), opts || { month: 'short', day: 'numeric', year: 'numeric' }).format(asDate(d)); } catch { return String(d); } }
+  function time(d, opts) { try { return new Intl.DateTimeFormat(loc(), opts || { hour: 'numeric', minute: '2-digit' }).format(asDate(d)); } catch { return String(d); } }
+  function num(x, opts) { try { return new Intl.NumberFormat(loc(), opts).format(x); } catch { return String(x); } }
+  function rel(d, base) {
+    const ms = asDate(d).getTime() - (base ? asDate(base).getTime() : Date.now()), abs = Math.abs(ms);
+    const pick = abs < 45e3 ? [Math.round(ms / 1e3), 'second'] : abs < 45 * 6e4 ? [Math.round(ms / 6e4), 'minute'] : abs < 22 * 36e5 ? [Math.round(ms / 36e5), 'hour'] : abs < 26 * 864e5 ? [Math.round(ms / 864e5), 'day'] : abs < 320 * 864e5 ? [Math.round(ms / (30 * 864e5)), 'month'] : [Math.round(ms / (365 * 864e5)), 'year'];
+    try { return new Intl.RelativeTimeFormat(loc(), { numeric: 'auto' }).format(pick[0], pick[1]); } catch { return date(d); }
+  }
+  function list(arr, type) { const a = (arr || []).map(String); try { return new Intl.ListFormat(loc(), { style: 'long', type: type || 'conjunction' }).format(a); } catch { return a.join(', '); } }
+  // ---- a tribe's own words: terms({ Company: 'Club' }) for English, or terms({ en: {...}, es: {...} }) per language
+  let TERMS = null, termRe = null;
+  const esc = k => k.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  function terms(map) {
+    if (map === undefined) return TERMS;
+    TERMS = map && Object.keys(map).length ? map : null; termRe = null;
+    if (TERMS) {
+      const flat = typeof Object.values(TERMS)[0] === 'string';
+      const m = flat ? (cur === 'en' ? TERMS : null) : TERMS[cur];
+      if (m && Object.keys(m).length) termRe = [new RegExp('(^|[^\\p{L}\\p{N}])(' + Object.keys(m).sort((x, y) => y.length - x.length).map(esc).join('|') + ')(?![\\p{L}\\p{N}])', 'gu'), m];
+    }
+    if (document.body) apply();
+    return TERMS;
+  }
+  const withTerms = s => gterms(termRe && s ? s.replace(termRe[0], (m, pre, w) => pre + termRe[1][w]) : s);   // then the group's own words (feat/group-styles, below)
+  // ---- lookups, templates and patterns
+  const tr = en => { if (cur === 'en') return null; const row = D[en]; return row ? row[col()] : null; };
+  const fill = (s, vars) => (vars ? String(s).replace(/\{(\w+)\}/g, (m, k) => (vars[k] === undefined || vars[k] === null ? m : String(vars[k]))) : s);
   // reverse lookup so re-rendered nodes in another language can find their English again
   const REV = new Map(); Object.entries(D).forEach(([en, row]) => row.forEach(x => REV.set(x, en)));
+  const MORE = { rows: {}, patterns: {}, plurals: {} };   // what other files added (the audit checks these too)
+  function add(rows) { Object.entries(rows || {}).forEach(([en, row]) => { MORE.rows[en] = row; if (!D[en]) { D[en] = row; row.forEach(x => { if (x) REV.set(x, en); }); } }); if (document.body && cur !== 'en') apply(); }
+  const PAT = [];                    // { en, re, keys, row, lit }: rows whose English has {placeholders}
+  const patCache = new Map();
+  function addPatterns(rows) {
+    Object.entries(rows || {}).forEach(([en, row]) => {
+      MORE.patterns[en] = row;
+      const keys = []; let lit = 0;
+      // {n} {count} {num} {total} match digits only, so "{n} of {total}" never matches "Best of show"
+      const src = en.split(/(\{\w+\})/).map(part => { const m = /^\{(\w+)\}$/.exec(part); if (m) { keys.push(m[1]); return /^(n|count|num|total)\d*$/.test(m[1]) ? '([\\d.,]+)' : '(.+?)'; } lit += part.length; return esc(part); }).join('');
+      if (!keys.length) { if (!D[en]) D[en] = row; return; }
+      PAT.push({ en, re: new RegExp('^' + src + '$', 's'), keys, row, lit });
+    });
+    PAT.sort((x, y) => y.lit - x.lit); patCache.clear();
+  }
+  // {name} {who} {title} {project} {tribe} {file} {text} {q}: what a person wrote. Kept as written, never translated.
+  const RAW = /^(name|who|title|project|tribe|file|text|q)\d*$/;
+  function matchPattern(s) {
+    if (!PAT.length || s.length > 400) return null;
+    if (patCache.has(s)) return patCache.get(s);
+    let hit = null;
+    for (const p of PAT) {
+      const m = p.re.exec(s); if (!m) continue;
+      // "Invite to {name}" must not catch "Invite to this project": a name slot filled with words that start in lower
+      // case is ordinary English, and a half-translated sentence is worse than an English one. So: no match.
+      if (p.keys.some((k, i) => RAW.test(k) && /^\p{Ll}/u.test(m[i + 1]))) continue;
+      const vars = {}; p.keys.forEach((k, i) => { vars[k] = m[i + 1]; }); hit = { p, vars }; break;
+    }
+    if (patCache.size > 4000) patCache.clear();
+    patCache.set(s, hit); return hit;
+  }
+  // a captured value may itself be a UI word ("Give the Lead role…"): translate it too when it has a row.
+  // Not a name, though (RAW above): a tribe called "My Tribe" is not renamed inside "Invite to My Tribe".
+  const trVal = v => { const row = D[v]; return row && cur !== 'en' ? row[col()] || v : v; };
+  function trPattern(h) {
+    const out = cur === 'en' ? h.p.en : (h.p.row[col()] || h.p.en); const vars = {};
+    Object.keys(h.vars).forEach(k => { const v = h.vars[k]; vars[k] = RAW.test(k) ? v : /^\d[\d,]*(\.\d+)?$/.test(v) && cur !== 'en' ? num(Number(v.replace(/,/g, ''))) : trVal(v); });
+    return fill(out, vars);
+  }
+  // "🚀 Getting started", "+ Add block", "Pictures…": the words of a row with a mark in front or an ellipsis after.
+  // Looked up without the decoration and put back around the translation (exact rows only).
+  const DECO = /^([^\p{L}\p{N}]+\s)?(.+?)(…)?$/su;
+  function undecorate(s) { const m = DECO.exec(s); if (!m || (!m[1] && !m[3]) || !D[m[2]]) return null; return { pre: m[1] || '', mid: m[2], post: m[3] || '' }; }
+  const decorated = u => u.pre + (tr(u.mid) || u.mid) + u.post;
+  // t(english) · t(english, vars) · t(key, english) · t(key, english, vars)
+  function t(a, b, c) {
+    const vars = (b && typeof b === 'object') ? b : (c && typeof c === 'object' ? c : null);
+    const en = typeof b === 'string' ? b : a;
+    let out = tr(en);
+    if (!out && cur !== 'en') {
+      if (vars) { const h = PAT.find(p => p.en === en); if (h) out = h.row[col()]; }
+      else { const u = undecorate(en); if (u) return withTerms(decorated(u)); const h = matchPattern(en); if (h) return withTerms(trPattern(h)); }   // a sentence built elsewhere ("Opened Tasks.")
+    }
+    return withTerms(fill(out || en, vars));
+  }
+  // ---- plurals: rows are keyed by the English "other" form; a cell is a string or { one, few, many, other }
+  const PL = {};
+  const addPlurals = rows => { Object.assign(PL, rows || {}); Object.assign(MORE.plurals, rows || {}); };
+  const prCache = {};
+  const rules = () => (prCache[cur] || (prCache[cur] = (() => { try { return new Intl.PluralRules(loc()); } catch { return { select: x => (x === 1 ? 'one' : 'other') }; } })()));
+  // n(3, { one: '{n} task', other: '{n} tasks' }) -> "3 tasks" / "3 tareas" / "3 件のタスク"
+  function n(count, forms, vars) {
+    const f = typeof forms === 'string' ? { other: forms } : (forms || {});
+    const v = { n: num(count), count: num(count), ...(vars || {}) };
+    if (cur !== 'en') { const cell = (PL[f.other] || [])[col()]; if (cell) { const c = typeof cell === 'string' ? { other: cell } : cell; return withTerms(fill(c[rules().select(count)] || c.other, v)); } }
+    const en = count === 1 && f.one ? f.one : f.other;
+    return withTerms(fill(cur === 'en' ? en : (tr(en) || en), v));
+  }
+  const has = en => !!(D[en] || undecorate(en) || matchPattern(en));
   const orig = new WeakMap();   // text node -> English
   const ATTRS = ['placeholder', 'title', 'aria-label'];
-  const SKIP = '.cv-world,.cv-lname,.cv-fname,.cv-aname b,.cv-phead b,.cv-ins-name,script,style,textarea,code,pre,.msg-body,.msg .body,.md,.doc-body,.rt,.pvw-frame,.tk-title,.card .title,[contenteditable],[data-title],.pj-name,.pc-name,#chat-list,.dm-body,.nf-item .nf-t';
+  // #ss-name is the tribe or project name in the sidebar switcher: a name, like .pj-name and .pc-name (a project called "Tasks" stays "Tasks")
+  const SKIP = '.cv-world,.cv-lname,.cv-fname,.cv-aname b,.cv-phead b,.cv-ins-name,script,style,textarea,code,pre,.msg-body,.msg .body,.md,.doc-body,.rt,.pvw-frame,.tk-title,.card .title,[contenteditable],[data-title],.pj-name,.pc-name,#ss-name,#chat-list,.dm-body,.nf-item .nf-t,[data-i18n-skip]';
+  // English for a shown string: an exact row, or a pattern row. Returns { en, out } or null.
+  function resolve(s) {
+    if (D[s]) return { en: s, out: withTerms(tr(s) || s) };
+    const u = undecorate(s); if (u) return { en: s, out: withTerms(decorated(u)) };
+    const h = matchPattern(s); if (h) return { en: s, out: withTerms(trPattern(h)) };
+    if (termRe && cur === 'en') { const w = withTerms(s); if (w !== s) return { en: s, out: w }; }
+    return null;
+  }
+  // ---- the rewrite-storm guard. Some code writes a label in English and checks the live text first
+  // (`if (el.textContent !== text) el.textContent = text`) from a watcher on that same label. Once the label is
+  // translated the check never passes again: it writes English, we translate, its watcher fires, it writes English…
+  // and the page freezes (v0.3.x: Files in any language but English). So an element swapped more than FLIP_MAX times
+  // inside FLIP_MS is left in English, marked data-i18n-hold, and listed in TribeI18n.held() for the audit to fail on.
+  const FLIP_MAX = 20, FLIP_MS = 1000, flips = new WeakMap(), HELD = [];
+  const sigOf = el => (el.tagName || '').toLowerCase() + (el.id ? '#' + el.id : '') + (typeof el.className === 'string' && el.className.trim() ? '.' + el.className.trim().split(/\s+/).slice(0, 2).join('.') : '');
+  function storm(el, en) {
+    if (el.hasAttribute('data-i18n-hold')) return true;
+    const now = (typeof performance !== 'undefined' ? performance.now() : Date.now()); let f = flips.get(el);
+    if (!f || now - f.t > FLIP_MS) { f = { n: 0, t: now }; flips.set(el, f); }
+    if (++f.n <= FLIP_MAX) return false;
+    el.setAttribute('data-i18n-hold', ''); HELD.push({ el: sigOf(el), en: String(en).slice(0, 80), lang: cur });
+    try { console.warn('[i18n] left in English, something keeps rewriting it:', sigOf(el), JSON.stringify(String(en).slice(0, 80))); } catch {}
+    return true;
+  }
+  const unhold = () => { HELD.length = 0; try { document.querySelectorAll('[data-i18n-hold]').forEach(el => el.removeAttribute('data-i18n-hold')); } catch {} };
   // feat/group-styles: the group's own words (Company -> Club, Lead -> Captain, Role -> Seat, Check-in -> Standup).
   // A small term map applied AFTER translation, in every language: the default word (in the current language) becomes
   // the chosen word (translated when it is one of the listed choices, else as typed). Chat, docs and names are skipped
@@ -1873,13 +1969,13 @@
       PAIRS.push(x => { for (const [re, b] of res) x = x.replace(re, (m, pre) => pre + b); return x; });
     }
   }
-  const terms = x => { if (!PAIRS.length || !x) return x; for (const f of PAIRS) x = f(x); return x; };
+  const gterms = x => { if (!PAIRS.length || !x) return x; for (const f of PAIRS) x = f(x); return x; };
   const tbase = new WeakMap(), tout = new WeakMap();   // text node -> its own words / what we last wrote
   function termOnly(n, raw, s) {
     if (!PAIRS.length && !tbase.has(n)) return;
     if (s.length > 200) return;
     const base = tbase.has(n) && tout.get(n) === s ? tbase.get(n) : s;
-    const want = terms(base); tbase.set(n, base); tout.set(n, want);
+    const want = gterms(base); tbase.set(n, base); tout.set(n, want);
     if (want !== s) n.nodeValue = raw.replace(s, want);
   }
   function words(w) {
@@ -1894,21 +1990,22 @@
     for (const k of Object.keys(DEFW)) { const to = String(WORDS[k] || '').trim(); if (!to || to === DEFW[k]) continue; x = x.replace(new RegExp('(^|[^\\p{L}\\p{N}])' + rx(to) + '(?![\\p{L}\\p{N}])', 'giu'), (m, pre) => pre + DEFW[k].toLowerCase()); }
     return x;
   }
-  function swapText(n) {
-    const raw = n.nodeValue; if (!raw) return;
-    const pe = n.parentElement; if (!pe || pe.closest(SKIP)) return; const s = raw.trim(); if (!s) return;
+  function swapText(node) {
+    const raw = node.nodeValue; if (!raw) return;
+    const pe = node.parentElement; if (!pe || pe.hasAttribute('data-i18n-hold') || pe.closest(SKIP)) return; const s = raw.trim(); if (!s || s.length > 600) return;
     // v0.27 fix: only English keys (or a node we translated before) count; inferring English from a translation turned
     // the word "Design" into "Theme" (it's German for Theme) on English screens
-    const en = orig.get(n) || (s.length <= 60 && D[s] ? s : null); if (!en) return termOnly(n, raw, s);
-    orig.set(n, en);
-    const want = terms(tr(en) || en); if (s !== want) n.nodeValue = raw.replace(s, want);
+    const en = orig.get(node); const r = (en && resolve(en)) || resolve(s); if (!r) return termOnly(node, raw, s);   // no row: only the group's own words apply
+    orig.set(node, r.en);
+    if (s !== r.out) { if (cur !== 'en' && storm(pe, r.en)) return; node.nodeValue = raw.replace(s, () => r.out); }
   }
   function swapAttrs(el) {
     for (const a of ATTRS) {
       const v = el.getAttribute(a); if (!v) continue;
-      const key = 'data-en-' + a; let en = el.getAttribute(key);
-      if (!en || (v !== en && v !== tr(en) && v !== terms(tr(en) || en))) { en = D[v] ? v : null; if (!en) continue; el.setAttribute(key, en); }
-      const want = terms(tr(en) || en); if (v !== want) el.setAttribute(a, want);
+      const key = 'data-en-' + a; const en = el.getAttribute(key);
+      let r = en ? resolve(en) : null;
+      if (!r || (v !== en && v !== r.out)) { r = resolve(v); if (!r) continue; el.setAttribute(key, r.en); }
+      if (v !== r.out) { if (cur !== 'en' && storm(el, r.en)) return; el.setAttribute(a, r.out); }
     }
   }
   function walk(root) {
@@ -1924,16 +2021,28 @@
     if (mo) mo.disconnect();
     mo = new MutationObserver(list => {
       if (busy) return; busy = true;
-      try { for (const m of list) { if (m.type === 'characterData') swapText(m.target); else m.addedNodes.forEach(walk); } } finally { busy = false; }
+      try { for (const m of list) { if (m.type === 'characterData') swapText(m.target); else if (m.type === 'attributes') swapAttrs(m.target); else m.addedNodes.forEach(walk); } } finally { busy = false; }
     });
-    mo.observe(document.body, { childList: true, subtree: true, characterData: true });
+    mo.observe(document.body, { childList: true, subtree: true, characterData: true, attributes: true, attributeFilter: ATTRS });
   }
-  function apply() { document.documentElement.lang = cur; busy = true; try { walk(document.body); } finally { busy = false; } }
+  function apply() {
+    document.documentElement.lang = cur; document.documentElement.dir = RTL.includes(cur) ? 'rtl' : 'ltr';
+    busy = true; try { walk(document.body); } finally { busy = false; }
+  }
   function set(code) {
     if (!supported(code)) return; cur = code; try { localStorage.setItem(KEY, code); } catch {}
+    unhold();   // a new language gets a fresh try
+    patCache.clear(); if (TERMS) { const keep = TERMS; TERMS = null; terms(keep); }
     pairs(); apply(); window.dispatchEvent(new CustomEvent('tribe-lang', { detail: { lang: cur } }));
   }
+  // one language picker for every place that offers it: TribeI18n.picker() gives the markup, any [data-lang-pick] works
+  // The select's name is the hidden word "Language" in the label: plain text, so it follows the language like any
+  // other label. The language names themselves are never translated (each is written in its own language).
+  // picker(cls, { reload: true }): for the first screen, where text drawn through t() is redrawn by loading again.
+  const picker = (cls, opts) => `<label class="lang-pick${cls ? ' ' + cls : ''}"${opts && opts.reload ? ' data-lang-reload' : ''}><svg class="ti-svg" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.6 3.8 5.6 3.8 9s-1.3 6.4-3.8 9c-2.5-2.6-3.8-5.6-3.8-9S9.5 5.6 12 3z"/></svg><span class="lang-pick-name">Language</span><select data-lang-pick data-i18n-skip>${LANGS.map(([k, n]) => `<option value="${k}"${k === cur ? ' selected' : ''}>${n}</option>`).join('')}</select></label>`;
+  document.addEventListener('change', e => { const el = e.target; if (!(el && el.matches && el.matches('[data-lang-pick]'))) return; set(el.value); if (el.closest('[data-lang-reload]')) { try { location.reload(); } catch {} } });
+  window.addEventListener('tribe-lang', () => document.querySelectorAll('[data-lang-pick],#set-lang').forEach(el => { if (el.value !== cur) el.value = cur; }));
   function start() { apply(); observe(); }
   if (document.body) start(); else document.addEventListener('DOMContentLoaded', start);
-  window.TribeI18n = { lang: () => cur, set, t, LANGS, apply, words, plainWords, terms: x => terms(x) };
+  window.TribeI18n = { lang: () => cur, set, t, n, date, time, rel, num, list, add, addPatterns, addPlurals, terms: x => (typeof x === 'string' ? withTerms(x) : terms(x)), words, plainWords, has, picker, held: () => HELD.slice(), LANGS, RTL, apply, _more: () => MORE, _table: () => D };   // _more, _table: for the audit tools
 })();

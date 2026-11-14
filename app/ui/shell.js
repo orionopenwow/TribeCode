@@ -202,7 +202,11 @@
     const want = `#/${w}/${d.slug}`;
     if (location.hash !== want && !/^#\/(agents-hub|secretary)$/.test(location.hash)) history.replaceState(null, '', location.pathname + location.search + want);
     const crumb = $("#crumb-label"), text = WS[w].label === d.tab ? WS[w].label : `${WS[w].label} › ${d.tab}`;   // no "Files › Files"
-    if (crumb && crumb.textContent !== text) crumb.textContent = text;
+    // feat/languages: the label on screen may be this text in the person's language. Comparing the live text with the
+    // English rewrote it on every pass, the translator translated it again, and the watcher below (crumb-label) called
+    // this again: Files froze in every language but English. The label is up to date when it shows either form.
+    const shown = crumb ? crumb.textContent : '', local = window.TribeI18n && window.TribeI18n.t ? window.TribeI18n.t(text) : text;
+    if (crumb && shown !== text && shown !== local) crumb.textContent = text;
   }
   document.addEventListener('click', e => { const t = e.target.closest && e.target.closest('#view-tabs [data-tab]'); if (t) { e.preventDefault(); go(t.dataset.tab); if (t.dataset.cfseg && window.TribeCodeFiles) setTimeout(() => window.TribeCodeFiles.set(t.dataset.cfseg), 0); } });
   window.addEventListener('tribe:cf', () => { tabsSig = ''; drawTabs(); });

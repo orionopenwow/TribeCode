@@ -78,7 +78,7 @@ html:not(.ui-still) .modal:not(.hidden) { transition: none; }
   .su-steps a { display: inline-flex; align-items: center; }
   .btn.db-more, .cal-nav .btn, .ctx-b, .cv-hbtn, .cv-back, .set-back, .wt-plus, .mcd-search-btn, .ppl-act, .lk-dot, .lr-x, .su-x { min-width: 36px; min-height: 36px; }
   summary { display: flex; align-items: center; }
-  summary::-webkit-details-marker { margin-right: 6px; }
+  summary::-webkit-details-marker { margin-inline-end: 6px; }   /* feat/languages: direction-neutral (docs/I18N-REPORT.md, Right to left) */
   /* small things that must stay small on screen (text links in a row, a tab's ×, a switch): the look stays, the
      hit area grows to 36px around the centre */
   .linkish, .wt-x, .pj-inl, .toggle.set-toggle, .toggle.oa-sw, .ui-hit { position: relative; }
@@ -104,3 +104,16 @@ li.ui-empty { list-style: none; }
 /* places that kept their old class as a hook: the shared look wins */
 .ui-empty.mk-empty, .ui-empty.co-none, .ui-empty.nf-empty, .ui-empty.fg-empty { grid-column: 1 / -1; align-items: initial; color: inherit; }
 .ui-empty.center.mk-empty, .ui-empty.center.nf-empty, .ui-empty.center.fg-empty { justify-items: center; text-align: center; }
+
+/* ---------- the language picker (feat/languages): one control, from TribeI18n.picker() ----------
+   Settings, the ? menu and the first screen show the same thing. Flat: one border, no shadow. The label is the
+   36px target; the word "Language" is there for screen readers only. Direction-neutral properties throughout. */
+.lang-pick { display: inline-flex; align-items: center; gap: 6px; min-height: 36px; padding-inline: 10px 6px; border: 1px solid var(--edge); border-radius: var(--r-sm); background: var(--surface); color: var(--muted); cursor: pointer; }
+.lang-pick:hover, .lang-pick:focus-within { color: var(--text); }
+.lang-pick select { appearance: none; -webkit-appearance: none; border: 0; background: transparent; color: var(--text); font: inherit; font-size: 13px; min-height: 34px; padding: 0; padding-inline-end: 4px; cursor: pointer; }
+.lang-pick select:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.lang-pick-name { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.help-menu .hm-lang { padding: 6px 10px 8px; }
+.help-menu .hm-lang .lang-pick { display: flex; }
+.help-menu .hm-lang .lang-pick select { flex: 1; }
+.fr-foot { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 12px; }

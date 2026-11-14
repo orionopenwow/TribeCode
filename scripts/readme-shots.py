@@ -14,6 +14,8 @@ Usage: python3 scripts/readme-shots.py [--only dashboard,chat,...] [--keep]   (n
 Needs: Python Playwright + Pillow, Google Chrome at /usr/bin/google-chrome, Node 20+, git.
 """
 import base64, json, os, shutil, subprocess, sys, tempfile, threading, time, traceback, urllib.request, urllib.error, struct, zlib
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), 'dev'))
+import fixedclock   # a fixed clock and seeded randomness, for this script, the tribe server and every page
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from playwright.sync_api import sync_playwright
@@ -119,6 +121,10 @@ def shoot(page, name, prep=None, tries=2):
             if os.environ.get("SHOTS_DEBUG"):
                 try: page.screenshot(path=os.path.join(os.environ["SHOTS_DEBUG"], f"fail-{name}.png"))
                 except Exception: pass
+            try:   # the app's own "something went wrong" card says why a screen never came up
+                why = page.evaluate("(() => { const p = document.querySelector('#sh-card pre'); return p ? p.textContent.slice(0, 600) : ''; })()")
+                if why: print(f"  (self-heal card on {name}: {why})")
+            except Exception: pass
             if attempt + 1 < tries:
                 print(f"  (retrying {name}: {str(e).splitlines()[0]})")
                 try: page.keyboard.press("Escape"); page.wait_for_timeout(800)
@@ -312,6 +318,7 @@ def run(srv_dir, work):
         def open_as(name, color, tok, mobile=False, project=None):
             if mobile: ctx = b.new_context(viewport={"width": 390, "height": 844}, device_scale_factor=PHONE_SCALE, is_mobile=True, has_touch=True, user_agent=IPHONE_UA, timezone_id="UTC", locale="en-US")
             else: ctx = b.new_context(viewport={"width": 1440, "height": 900}, device_scale_factor=2, timezone_id="UTC", locale="en-US")
+            fixedclock.apply(ctx)
             ctx.add_init_script(settings_js(name, color, tok, project or pid))
             pg = ctx.new_page(); pg.goto(BASE + "/?skipIntro=1"); wait_text(pg, "#sync-status", "connected")
             if pg.locator("#install-sheet:not(.hidden) #ins-later").count(): pg.click("#ins-later")
@@ -326,23 +333,39 @@ def run(srv_dir, work):
 
         # ---------- Create project dialog + the getting-started card ----------
         def prep_create():
-            host.click("#pj-plus"); host.click(".np-setup [data-ns='tpl:game']"); host.wait_for_selector("#np-input"); host.fill("#np-input", "Night Market")
+            # the new-project dialog (tribenew.js): a name and an icon, then friends
+            for _ in range(3):   # the first click after loading can go to closing the helper panel's guide
+                if host.locator("#tn-name").is_visible(): break
+                try: host.click("#pj-plus", timeout=4000)
+                except Exception: host.keyboard.press("Escape")
+                try: host.wait_for_selector("#tn-name", timeout=4000)
+                except Exception: pass
+            host.wait_for_selector("#tn-name", timeout=5000); host.fill("#tn-name", "Night Market"); host.click('[data-tn-emo="🎮"]'); host.focus("#tn-name")
         shoot(host, "create", prep_create)
-        close_overlays(host)
+        try: host.click("#tn-cancel", timeout=2000)
+        except Exception: close_overlays(host)
+        host.wait_for_selector("#tn-name", state="detached", timeout=5000)
         def prep_kickoff():   # the card can take a moment after the dialog closes; reload once if it doesn't show
-            chat(host)
-            try: host.wait_for_selector("#flow-kick .fk-notechip", timeout=15000)
-            except Exception: host.reload(); wait_text(host, "#sync-status", "connected"); chat(host); host.wait_for_selector("#flow-kick .fk-notechip", timeout=15000)
+            def open_card():   # the card starts folded to a slim "Getting started" bar; Open shows it
+                chat(host)
+                if not host.locator("#flow-kick").is_visible(): host.click("#flow-expand", timeout=15000)
+                host.wait_for_selector("#flow-kick .fk-notechip", timeout=15000)
+            try: open_card()
+            except Exception: host.reload(); wait_text(host, "#sync-status", "connected"); open_card()
             host.evaluate("document.querySelector('#flow-kick').scrollIntoView({block: 'start'})")
         shoot(host, "kickoff", prep_kickoff)
+        try: host.click("#flow-min", timeout=2000)   # fold it again so the chat is the hero in later screens
+        except Exception: pass
 
         # ---------- the vision assistant (before the vision exists) ----------
         def prep_vision():
             host.evaluate("TribeApp.show('home')"); host.wait_for_selector("#pj-check [data-ck=vision]", timeout=15000)
-            host.click("#pj-check [data-ck=vision]"); host.wait_for_selector(".av-wrap [data-q=what]")
-            host.fill(".av-wrap [data-q=what]", "Pixel Quest: a tiny co-op platformer you can finish in ten minutes")
-            host.fill(".av-wrap [data-q=who]", "Friends on a couch or on their phones, no tutorial needed")
-            host.click("#av-go"); host.wait_for_function("document.querySelector('#pj-vtext').value.includes('Done for v1')", timeout=20000); host.wait_for_timeout(600)
+            # the vision dialog (assist.js): pick what it is, say the gist, and the vision fills in by itself
+            if not host.locator("#av-gist").is_visible(): host.click("#pj-check [data-ck=vision]")
+            host.wait_for_selector("#av-gist")
+            host.fill("#av-gist", "A tiny co-op platformer you can finish in ten minutes, for friends on a couch or on their phones.")
+            host.evaluate("document.querySelector('#av-gist').dispatchEvent(new Event('input', {bubbles: true}))")
+            host.wait_for_function("document.querySelector('#pj-vtext').value.includes('Done for v1')", timeout=20000); host.wait_for_timeout(600)
         shoot(host, "vision", prep_vision)
         close_overlays(host)
         try: host.click(".av-wrap [data-close]", timeout=1500)
@@ -417,7 +440,7 @@ def run(srv_dir, work):
 
         # ---------- Dashboard ----------
         def prep_dashboard():
-            close_overlays(host); host.evaluate("TribeApp.show('home')"); host.wait_for_selector("#pj-sec-repo", timeout=15000); host.wait_for_timeout(1800); top(host)
+            close_overlays(host); host.evaluate("TribeApp.show('home')"); host.wait_for_selector("#db-crit, #pj-check, #pj-share-slot", state="attached", timeout=15000); host.wait_for_timeout(1800); top(host)
         SRV["dash"] = shoot(host, "dashboard", prep_dashboard)
 
         # ---------- Messages (desktop) ----------
@@ -466,6 +489,7 @@ def run(srv_dir, work):
         def prep_plan():
             host.reload(); wait_text(host, "#sync-status", "connected"); chat(host); host.wait_for_timeout(500)   # a fresh page: the doc editor can leave Updates half-drawn
             host.evaluate("TribeFlow.openUpdates()"); host.wait_for_selector("#view-flow-updates:not(.hidden) #plan-hero .pi")
+            host.wait_for_function("(() => { const f = document.querySelector('#gx-feed'); return f && f.children.length > 0; })()", timeout=15000)   # the feed loads after the plan
         shoot(host, "plan", prep_plan)
 
         # ---------- Flint, in the room panel ----------
@@ -483,7 +507,7 @@ def run(srv_dir, work):
 
         # ---------- preview the app in the right panel ----------
         def prep_preview():
-            host.evaluate("TribeApp.show('home')"); host.wait_for_selector("#pj-sec-repo", timeout=15000); top(host); host.evaluate("TribePreview.open()"); host.wait_for_timeout(2500)
+            host.evaluate("TribeApp.show('home')"); host.wait_for_selector("#db-crit, #pj-check, #pj-share-slot", state="attached", timeout=15000); top(host); host.evaluate("TribePreview.open()"); host.wait_for_timeout(2500)
         shoot(host, "preview", prep_preview)
         try: host.evaluate("TribePreview.close()")
         except Exception: pass
@@ -499,14 +523,14 @@ def run(srv_dir, work):
         shoot(ph, "phone-plus", prep_phone_plus)
         close_overlays(ph)
         def prep_phone_dashboard():
-            ph.evaluate("TribeApp.show('home')"); ph.wait_for_selector("#pj-sec-repo", timeout=15000); ph.wait_for_timeout(1200); top(ph)
+            ph.evaluate("TribeApp.show('home')"); ph.wait_for_selector("#db-crit, #pj-check, #pj-share-slot", state="attached", timeout=15000); ph.wait_for_timeout(1200); top(ph)
         shoot(ph, "phone-dashboard", prep_phone_dashboard)
         def prep_phone_panel():
             ph.evaluate("TribeApp.show('home')"); ph.wait_for_timeout(300); ph.click("#menu-btn"); ph.wait_for_function("document.body.classList.contains('drawer-open')")
         shoot(ph, "phone-panel", prep_phone_panel)
         close_overlays(ph); ph.evaluate("document.body.classList.remove('drawer-open')")
         def prep_phone_files():
-            ph.evaluate("TribeHub.open('docs')"); ph.wait_for_selector("#hub-docs [data-up]", timeout=15000); ph.wait_for_timeout(1500); top(ph)
+            ph.evaluate("TribeHub.open('docs')"); ph.wait_for_selector("#hub-docs [data-mynote], #hub-docs .hub-li, #hub-docs [data-up]", timeout=15000); ph.wait_for_timeout(1500); top(ph)
         shoot(ph, "phone-files", prep_phone_files)
         def prep_phone_doc():   # the phone editor (Google Docs mobile): a personal note, full screen
             ph.evaluate("TribeHub.open('docs')"); ph.wait_for_selector("#hub-docs [data-mynote]", timeout=15000)
@@ -565,11 +589,12 @@ def run(srv_dir, work):
         # ---------- the offline demo tribe (a fresh browser, no server involved once it starts) ----------
         def prep_demo():
             dctx = b.new_context(viewport={"width": 1440, "height": 900}, device_scale_factor=2, timezone_id="UTC", locale="en-US")
+            fixedclock.apply(dctx)
             dctx.add_init_script(f"try {{ localStorage.setItem('tribecode.settings.v1', JSON.stringify({{name:'Orion', onboarded:true, theme:'campfire', tour:{{done:true}}, checklist:{{setup:true, tour:true}}, hintDismissed:true}})); }} catch (e) {{}}")
             dp = dctx.new_page(); SRV["demo"] = dp
             dp.goto(BASE + "/?skipIntro=1"); dp.wait_for_function("window.TribeOffline && window.TribeHub", timeout=15000)
             if not dp.evaluate("document.body.dataset.view === 'hub'"): dp.evaluate("TribeHub.open('home')")
-            dp.wait_for_selector("#hub-demo", state="visible", timeout=10000); dp.click("#hub-demo")
+            dp.evaluate("TribeOffline.start('showcase')")   # the demo is in the ? menu and Ctrl K now, not a tile on Home
             dp.wait_for_function("TribeOffline.active() && window.TribeClient && TribeClient.connected()", timeout=10000)
             dp.wait_for_function("(TribeClient.state().projects || []).some(p => p.name === 'Lantern Run')", timeout=8000)
             dp.evaluate("TribeApp.show('chat')"); dp.wait_for_timeout(600)

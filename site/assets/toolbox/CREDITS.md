@@ -5,17 +5,45 @@ does not bundle or redistribute any of them; each installs from its own site.
 
 ## Pictures
 
-Every picture on the page is an original flat drawing made for TribeCode (`site/toolbox.js`), not a screenshot. No
-project's screenshot, logo or wordmark is used:
+A real screenshot is used only where the project's own terms clearly allow reuse on someone else's site. Today that
+is two tools on this page. Each picture is shown whole, only resized and recompressed (no crop, no retouching, nothing removed),
+with its credit under it on the page and in the app's Workshop. The same records, machine-readable, are in
+`credits.json` next to this file (generated from `templates/studio-shots.json`).
 
-- ArtCraft's own screenshots live in a separate media repository (`storytold/github-media`) that carries no licence
-  file, and ArtCraft's `NOTICE` says its name, wordmark and logos are trademarks not covered by the code licence. So
-  reuse of its images is not clearly allowed. The page shows a drawing and links to ArtCraft's own site for the real
-  screenshots.
-- The other projects' screenshots and logos have their own terms (several logos are trademarks), so they get drawn
-  cards too.
+| Tool | Files | Author | Licence | Source | Terms read | Fetched | Attribution shown |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| Godot | `godot-640.webp/.jpg`, `godot-1280.webp/.jpg` | Godot Engine contributors | [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) | https://github.com/godotengine/godot-design/blob/master/screenshots/editor_tps_demo_1920x1080.jpg | The repository's README: "Unless otherwise specified, files contained in this repository are licensed under CC BY 4.0 International"; `LICENSE` | 2026-11-14 | Screenshot: Godot Engine contributors, CC BY 4.0 (both linked) |
+| Penpot | `penpot-640.webp/.jpg`, `penpot-1066.webp/.jpg` | Penpot contributors | [MPL-2.0](https://www.mozilla.org/MPL/2.0/) | https://github.com/penpot/penpot-docs/blob/main/img/inspect/inspect-workspace.webp | The docs repository's `LICENSE` (MPL-2.0) covers the files in it | 2026-11-14 | Screenshot: Penpot contributors, MPL-2.0 (both linked) |
+
+Changes made to both: resized and recompressed. Nothing else.
+
+The app's Workshop lists more tools than this page and shows three more real screenshots, under the same rules (files
+in `app/ui/assets/studios/`, records in `credits.json`):
+
+| Tool | Author | Licence | Source |
+| --- | --- | --- | --- |
+| Fyrox | Dmitry Stepanov and Fyrox Engine contributors | MIT | https://github.com/FyroxEngine/Fyrox/blob/master/pics/editor.png |
+| Material Maker | Rodolphe Suescun and contributors | MIT | https://github.com/RodZill4/material-maker/blob/master/material_maker/doc/images/screenshot.png |
+| Pyxel | Takashi Kitao | MIT | https://github.com/kitao/pyxel/blob/main/docs/images/image_editor.gif (its first frame) |
+
+Every other picture on the page is an original flat drawing made for TribeCode (`site/toolbox.js`). No project's
+logo or wordmark is used anywhere, and no watermark was removed from anything.
+
+Why the others are still drawings (the request to send, or what to verify, is in `docs/SCREENSHOT-PERMISSIONS.md`):
+
+- ArtCraft: its screenshots live in a separate media repository (`storytold/github-media`) with no licence file, and
+  its `NOTICE` says the name, wordmark and logos are trademarks not covered by the code licence.
+- Pixelorama: the code is MIT but the repository holds no screenshots; its docs repository has no licence file.
+- Krita: a press kit is offered, but no reuse terms are stated for it.
+- OBS Studio: no terms found for its screenshots.
+- Blender, Kdenlive, Audacity: their manuals are under Creative Commons licences that allow reuse with credit (read on
+  2026-11-14), but the pictures could not be downloaded from the build sandbox. The exact pictures and credit lines
+  are listed in `docs/SCREENSHOT-PERMISSIONS.md` under "Fetch on a normal network".
 
 Names appear in plain text only, to say which tool is meant.
+
+To refresh the files: `python3 -I scripts/dev/toolbox-shots.py`, then `node scripts/dev/site-toolbox.js`.
+`npm test` runs both with `--check`.
 
 ## Licences
 

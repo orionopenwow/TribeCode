@@ -1,0 +1,119 @@
+{
+ "commit": "ed0e954",
+ "skipped": [
+  "docs",
+  "docs-files"
+ ],
+ "routes": 72,
+ "english": 1808,
+ "englishPhone": 1772,
+ "static": {
+  "tableKeys": 1324,
+  "rows": 1350,
+  "repeats": 26,
+  "dupDiff": [
+   "Free cloud",
+   "My Android",
+   "I have an invite link",
+   "Move to a host",
+   "On this phone",
+   "Nobody yet",
+   "Connect GitHub",
+   "Not now",
+   "Move",
+   "Align bottom",
+   "Fill",
+   "Padding",
+   "Weight",
+   "Build a first version",
+   "Publish it"
+  ],
+  "short": []
+ },
+ "counts": {
+  "es": {
+   "untranslated": 1380,
+   "attrs": 405,
+   "overflow": 5,
+   "dates": 43,
+   "mixed": 0,
+   "held": 0,
+   "flint": 1,
+   "flintAsked": 5,
+   "phoneUntranslated": null,
+   "phoneOverflow": null
+  },
+  "pt": {
+   "untranslated": 1364,
+   "attrs": 401,
+   "overflow": 5,
+   "dates": 43,
+   "mixed": 0,
+   "held": 0,
+   "flint": 1,
+   "flintAsked": 5,
+   "phoneUntranslated": null,
+   "phoneOverflow": null
+  },
+  "fr": {
+   "untranslated": 1360,
+   "attrs": 398,
+   "overflow": 2,
+   "dates": 43,
+   "mixed": 0,
+   "held": 0,
+   "flint": 1,
+   "flintAsked": 5,
+   "phoneUntranslated": null,
+   "phoneOverflow": null
+  },
+  "de": {
+   "untranslated": 1380,
+   "attrs": 405,
+   "overflow": 6,
+   "dates": 43,
+   "mixed": 0,
+   "held": 0,
+   "flint": 1,
+   "flintAsked": 5,
+   "phoneUntranslated": 1362,
+   "phoneOverflow": 2
+  },
+  "ja": {
+   "untranslated": 1380,
+   "attrs": 405,
+   "overflow": 3,
+   "dates": 44,
+   "mixed": 0,
+   "held": 0,
+   "flint": 1,
+   "flintAsked": 5,
+   "phoneUntranslated": 1304,
+   "phoneOverflow": 2
+  },
+  "zh": {
+   "untranslated": 1371,
+   "attrs": 400,
+   "overflow": 1,
+   "dates": 44,
+   "mixed": 0,
+   "held": 0,
+   "flint": 1,
+   "flintAsked": 5,
+   "phoneUntranslated": null,
+   "phoneOverflow": null
+  },
+  "ko": {
+   "untranslated": 1380,
+   "attrs": 405,
+   "overflow": 1,
+   "dates": 44,
+   "mixed": 0,
+   "held": 0,
+   "flint": 1,
+   "flintAsked": 5,
+   "phoneUntranslated": null,
+   "phoneOverflow": null
+  }
+ }
+}

@@ -12,6 +12,8 @@ Everything runs from app/ui served as plain files with no tribe (the same path a
 Usage: python3 scripts/dev/design-thumbs.py [--only starters|sites|slides|canvas|boards]   (TRIBE_PORT_OFFSET shifts the port)
 """
 import base64, functools, http.server, io, json, os, sys, threading
+import sys; sys.path.insert(0, str(__import__('pathlib').Path(__file__).resolve().parent))
+import fixedclock   # a fixed clock and seeded randomness, for this script and everything it starts
 from pathlib import Path
 from PIL import Image
 from playwright.sync_api import sync_playwright
@@ -64,8 +66,9 @@ def starters(pg):
     print("starters")
     cat = json.loads((UI / "starters" / "catalog.json").read_text())["items"]
     pg.set_viewport_size({"width": 800, "height": 500})
+    fixedclock.freeze(pg); pg.wait_for_timeout = lambda ms: fixedclock.step(pg, ms)   # time moves only in these steps: a fixed frame every run
     for s in cat:
-        pg.goto(f"{B}/starters/{s['id']}/index.html"); pg.wait_for_timeout(500)
+        pg.goto(f"{B}/starters/{s['id']}/index.html", wait_until="networkidle"); pg.wait_for_timeout(500)
         pg.click("body", position={"x": 3, "y": 3})
         f = PLAY.get(s["id"])
         if f: f(pg)
@@ -82,6 +85,7 @@ def sites():
 
 def app_page(p):
     ctx = p.chromium.launch(executable_path="/usr/bin/google-chrome", args=["--no-proxy-server"]).new_context(viewport={"width": 1440, "height": 900})
+    fixedclock.apply(ctx)
     ctx.add_init_script("try{localStorage.setItem('tribecode.settings.v1',JSON.stringify({name:'Rae',color:'#38C6B1',onboarded:true,server:{url:'',token:''},hosting:false,tour:{done:true}}))}catch(e){}")
     pg = ctx.new_page()
     pg.goto(f"{B}/?skipIntro=1#/hub/design")

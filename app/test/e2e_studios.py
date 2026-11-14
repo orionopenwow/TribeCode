@@ -103,11 +103,28 @@ def main():
             hrefs = {a[0] for a in links}; assert "https://getartcraft.com/" in hrefs and "https://www.blender.org/download/" in hrefs
             # thumbnails are our own tiles (no <img> logos)
             assert pg.locator("#studios .sto-thumb img").count() == 0 and pg.locator("#studios .sto-thumb i").count() >= len(st)
+            # real screenshots only where the tool's terms allow it (templates/studio-shots.json): credited, lazy, sized, never a logo
+            shots = {x["id"]: x["shot"] for x in rg["studios"] if x.get("shot")}
+            assert set(shots) == {"godot", "penpot", "fyrox", "material-maker", "pyxel"}, shots.keys()
+            for sid, h in shots.items():
+                assert h["source"].startswith("https://") and h["licenseUrl"].startswith("https://") and h["by"] and h["license"] and h["alt"], h
+                im = pg.locator(f'#sto-grid .sto-card[data-id="{sid}"] .sto-shot img')
+                assert im.count() == 1 and im.get_attribute("loading") == "lazy" and im.get_attribute("alt") == h["alt"], sid
+                assert im.get_attribute("width") == str(h["w"]) and im.get_attribute("height") == str(h["h"]), "no layout shift: the picture's own size"
+                cr = pg.locator(f'#sto-grid .sto-card[data-id="{sid}"] .sto-credit').inner_text()
+                assert h["by"] in cr and h["license"] in cr, cr
+                im.scroll_into_view_if_needed(); pg.wait_for_function("el => el.complete && el.naturalWidth > 0", arg=im.element_handle(), timeout=8000)
+            assert pg.locator('#sto-grid .sto-card[data-id="blender"] .sto-shot img').count() == 0 and pg.locator('#sto-grid .sto-card[data-id="blender"] .sto-drawn').count() == 1, "no clear terms: a drawn tile"
+            # every card starts with a picture area of one shape, so the cards in a row are one height
+            rows = pg.eval_on_selector_all("#sto-grid .sto-card", "els => { const r = {}; els.forEach(e => { const b = e.getBoundingClientRect(); (r[Math.round(b.top)] = r[Math.round(b.top)] || []).push(Math.round(b.height)); }); return Object.values(r); }")
+            assert len(rows) >= 3 and all(max(r) - min(r) <= 1 for r in rows), rows
+            areas = pg.eval_on_selector_all("#sto-grid .sto-shot picture, #sto-grid .sto-art", "els => els.map(e => { const b = e.getBoundingClientRect(); return Math.round(100 * b.width / b.height); })")
+            assert len(areas) == len(st) and all(abs(a - 178) <= 3 for a in areas), areas
             # category filter, keyboard
             pg.click("[data-cat='sound']"); pg.wait_for_function("[...document.querySelectorAll('#sto-grid .sto-card')].map(c => c.dataset.id).sort().join() === 'audacity,beepbox,lmms'")
             pg.keyboard.press("ArrowRight"); pg.wait_for_function("document.querySelector('[data-cat=video]').classList.contains('on')")
             pg.click("[data-cat='']")
-            if SHOTS: pg.screenshot(path=f"{SHOTS}/studios-1440.png", full_page=False)
+            if SHOTS: pg.screenshot(path=f"{SHOTS}/studios-1440.png", full_page=False); pg.locator("#sto-grid").screenshot(path=f"{SHOTS}/studios-grid-1440.png")
             # the detail pane explains for THIS project (a game)
             pg.click("#sto-grid .sto-card[data-id='pixelorama'] .sto-what"); pg.wait_for_selector("#sto-detail .sto-detail h2")
             helps_game = pg.inner_text("#sto-detail [data-helps]"); assert helps_game.startswith("In this game, use Pixelorama"), helps_game

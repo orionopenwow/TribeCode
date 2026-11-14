@@ -71,7 +71,7 @@
       <div class="fr-chips" role="list">${IDEAS.map(([e, l, full]) => `<button type="button" class="fr-chip" role="listitem" data-fr-idea="${esc(full)}"><span aria-hidden="true">${e}</span>${esc(t(l))}</button>`).join('')}</div>
       <ol class="fr-steps" id="fr-steps" hidden></ol>
       <p class="fr-note">${esc(t('A first version runs right away, even without an AI. Your own Claude, Codex or Gemini can build the rest.'))}</p>
-      <div class="fr-foot"><button type="button" class="linkish" id="fr-skip">${esc(t('Show everything'))}</button></div>
+      <div class="fr-foot"><button type="button" class="linkish" id="fr-skip">${esc(t('Show everything'))}</button>${window.TribeI18n && window.TribeI18n.picker ? window.TribeI18n.picker('fr-lang', { reload: true }) : ''}</div>
     </div>`;
     document.body.appendChild(el);
     const inp = $('#fr-in');
