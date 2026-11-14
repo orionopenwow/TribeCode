@@ -77,6 +77,23 @@ rule is broken; deliberate exceptions are in its `ALLOW` lists with a reason eac
 | Right panel | Open on Home (your dashboard, a project's dashboard), closed everywhere else, remembered per page. Automated browsers keep the old single switch unless the address has `?panelrule=1`. | `shell.js` |
 | One word, one thing | History (a project's versions), Saved designs (the website designer), Earlier shots (Visuals). A host's status reads "On this computer"; the setup step is "Set up sharing and backup". | strings + `i18n.js` |
 
-Not converted yet (each keeps working; move them when their file is next touched): the one-off sheets still draw
-their own boxes and headers (free-AI bridge, plans, Flint's page, website templates), and most "needs a tribe" notes
-outside Proposals and Bugs still use their own markup instead of `TribeUI.empty`.
+Sheets. `TribeUI.sheet({ kind: 'steps' | 'decision', eyebrow, title, body, foot, onClose })` draws a new sheet: one
+header, one close button, one scrim, Esc, a focus trap, a bottom sheet on phones for `steps`. A sheet that already
+draws its own box calls `TribeUI.adopt(card, { scrim, kind, onClose })` and closes through `TribeUI.dismiss(nodes, done)`;
+History, plans, the free-AI bridge, website templates and Flint's page do this. Every sheet and centred modal leaves
+with the same short fade it enters with (`--dur-quick`), and nothing moves under reduced motion. Automated browsers
+skip the leave unless the page is opened with `?uimotion=1`.
+
+Empty states on `TribeUI.empty`: Proposals, Bugs, Files, Marketplace (added, no results, offline), Inbox, Agents,
+Company, the search palette, the calendar's task list and call history.
+
+Words. Buttons, titles and toasts say "Start or join a tribe", "Back up" (was Ship), "Update now" (was Sync now),
+"Projects and backup", "On this computer". Three terms were kept on purpose: "code repository" (the settled plain name,
+in about 140 files and Flint's replies), "Host" as a role name next to Admin and Mod, and "Ship it" as the name of the
+vote-to-go-live card.
+
+`e2e_ui_lint` also prints duplicate ids and any row of actions with two primary buttons.
+
+Not converted yet (each keeps working; move them when their file is next touched): Work's empty cards keep their own
+markup because they carry the three "How it works" steps (they already follow title, one line, one action); Tasks
+keeps its welcome card; `#aib-guide` is drawn in both Agents views, so that id appears twice while both are mounted.

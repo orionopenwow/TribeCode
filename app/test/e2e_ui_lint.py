@@ -105,7 +105,7 @@ def main():
     tmp = Path(tempfile.mkdtemp(prefix="tribe-uilint-", dir="/tmp")); errors = []
     env = {**os.environ, "TRIBE_NO_GH": "1", "TRIBE_TEST": "1", "TRIBE_NO_DOWNLOAD": "1", "NO_PROXY": "127.0.0.1,localhost"}
     srv = subprocess.Popen(["node", str(ROOT / "server" / "index.js"), "--port", str(PORT), "--dir", str(tmp / "tribe"), "--ollama", "http://localhost:9"], stdout=open(tmp / "log", "w"), stderr=subprocess.STDOUT, env=env)
-    found = {}
+    found = {}; dups = {}; rows2 = {}
     try:
         for _ in range(100):
             try:
@@ -138,6 +138,11 @@ def main():
                     r = pg.evaluate(MEASURE, {"allow": list(ALLOW), "tallow": list(TARGET_ALLOW), "phone": size == "phone"})
                     for x in r["text"]: found.setdefault(("text", size, x["sig"], x["px"]), (name, x["t"], x["floor"]))
                     for x in r["targets"]: found.setdefault(("target", size, x["sig"], f'{x["w"]}x{x["h"]}'), (name, x["t"], 36))
+                    # one primary button per row of actions
+                    for x in pg.evaluate("""(() => { const vis = e => { const r = e.getBoundingClientRect(); const cs = getComputedStyle(e); return r.width > 1 && r.height > 1 && cs.visibility !== 'hidden' && cs.display !== 'none'; };
+                      const out = []; document.querySelectorAll('.modal-foot, .ui-foot, .ui-empty-acts, [class$="-acts"], [class*="-acts "], [class$="-foot"]').forEach(row => { if (!vis(row)) return;
+                        const p = [...row.querySelectorAll('.btn.primary')].filter(vis); if (p.length > 1) out.push('.' + String(row.className).split(' ')[0] + ': ' + p.map(b => b.textContent.trim().slice(0, 24)).join(' | ')); }); return out; })()"""): rows2.setdefault(x, name)
+                    for d in pg.evaluate("(() => { const n = {}; document.querySelectorAll('[id]').forEach(e => { if (e.id && !e.closest('svg')) n[e.id] = (n[e.id] || 0) + 1; }); return Object.keys(n).filter(k => n[k] > 1); })()"): dups.setdefault(d, name)
                     try: pg.evaluate("window.TribeSettings && TribeSettings.isOpen && TribeSettings.isOpen() && TribeSettings.close(); window.TribePeoplePanel && TribePeoplePanel.close && TribePeoplePanel.close(); window.TribeHelp && TribeHelp.close && TribeHelp.close()")
                     except Exception: pass
                     pg.keyboard.press("Escape"); pg.wait_for_timeout(150)
@@ -200,6 +205,8 @@ def main():
     for (kind, size, sig, val), (route, text, floor) in rows:
         print(f"  {kind:6} {size:7} {val:>8} (floor {floor}) on {route}: {sig}  “{text}”")
     nt = sum(1 for k in found if k[0] == "text"); ng = sum(1 for k in found if k[0] == "target")
+    for d, route in sorted(dups.items()): print(f"  dup-id on {route}: #{d}")
+    for x, route in sorted(rows2.items()): print(f"  two primaries on {route}: {x}")
     if REPORT:
         print(f"e2e_ui_lint report: {nt} small-text rules, {ng} small phone targets"); return
     assert not errors, errors[:5]
