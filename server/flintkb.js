@@ -48,9 +48,9 @@ module.exports = function flintkb({ ui, nlu, model } = {}) {
   function build() {
     if (idx && Date.now() - at < 60000) return idx;
     const secs = [], seen = new Set();
-    const gd = guideDirs.find(isDir);
+    const gd = guideDirs.find(isDir);   // the path pages (p-*, help-next) go deeper, so they weigh less: a plain question gets a numbered page first
     if (gd) for (const f of fs.readdirSync(gd).filter(f => /^[a-z0-9][a-z0-9-]*\.md$/.test(f)).sort()) {
-      try { const full = path.join(gd, f), st = fs.lstatSync(full); if (!st.isFile() || st.size > MAX) continue; seen.add(full); secs.push(...sections(f, fs.readFileSync(full, 'utf8'), { source: 'Guide', slug: f.replace(/\.md$/, '').replace(/^\d+-/, ''), file: `docs/guide/${f}`, name: f, w: 1.3 })); } catch {}
+      try { const full = path.join(gd, f), st = fs.lstatSync(full); if (!st.isFile() || st.size > MAX) continue; seen.add(full); secs.push(...sections(f, fs.readFileSync(full, 'utf8'), { source: 'Guide', slug: f.replace(/\.md$/, '').replace(/^\d+-/, ''), file: `docs/guide/${f}`, name: f, w: /^p-/.test(f) ? (/-basics\.md$/.test(f) ? 1.0 : 0.85) : 1.3 })); } catch {}
     }
     const dd = docDirs.find(isDir);
     if (dd) for (const f of fs.readdirSync(dd).filter(f => /\.md$/i.test(f) && indexed(f)).sort()) {

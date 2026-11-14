@@ -35,6 +35,10 @@ Each person's agent works on its own copy, so nobody steps on anybody else. The 
 - **Milestones** (Task Board) are your versions: name what's in the next one, and when you release it, Autopilot labels it.
 - **Commits** and **Activity** on the Repo tab show what changed, and who changed it.
 
+## Go back to an older version
+
+**History** (Ctrl K, type History) lists every saved version. Pick one and tap **Restore the project to this version**. It returns as a new version; nothing is lost. That also undoes a bad push.
+
 ## Get the files out
 
 - **Ctrl K** › **Export project to a folder**: **Just the files** (ready to zip) or **With history** (every version, ready for GitHub).
