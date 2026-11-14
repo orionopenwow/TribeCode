@@ -81,8 +81,8 @@ html:not(.ui-still) .modal:not(.hidden) { transition: none; }
   summary::-webkit-details-marker { margin-inline-end: 6px; }   /* feat/languages: direction-neutral (docs/I18N-REPORT.md, Right to left) */
   /* small things that must stay small on screen (text links in a row, a tab's ×, a switch): the look stays, the
      hit area grows to 36px around the centre */
-  .linkish, .wt-x, .pj-inl, .toggle.set-toggle, .toggle.oa-sw, .ui-hit { position: relative; }
-  .linkish::after, .wt-x::after, .pj-inl::after, .toggle.set-toggle::after, .toggle.oa-sw::after, .ui-hit::after {
+  .linkish, .wt-x, .pj-inl, .toggle.set-toggle, .toggle.oa-sw, .ui-hit, #board.tkb .tk-check { position: relative; }
+  .linkish::after, .wt-x::after, .pj-inl::after, .toggle.set-toggle::after, .toggle.oa-sw::after, .ui-hit::after, #board.tkb .tk-check::after, .ab-spark.ab-corner::after {   /* fix/integ8: a task's Mark done circle and its ✦ corner (already absolute) */
     content: ""; position: absolute; left: 50%; top: 50%; width: max(100%, 36px); height: max(100%, 36px); transform: translate(-50%, -50%);
   }
   .lk-custom input[type=color] { width: 36px; height: 36px; }

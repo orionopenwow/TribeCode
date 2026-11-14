@@ -312,6 +312,7 @@ def main():
 
             # ---- Claude Code joins over MCP ----
             host.evaluate("document.querySelector('#cc-connect').click()")   # v0.22: the helper card hides this button until setup is done
+            host.wait_for_selector("#ic-body .ic-kinds [data-ic-kind='code']", state="attached", timeout=10000); host.evaluate("document.querySelector(\"#ic-body .ic-kinds [data-ic-kind='code']\").click()")   # fix/integ8: the question comes first; pick Claude Code
             wait_text(host, "#invite-body", "claude mcp add --transport http tribecode")
             host.wait_for_selector("#ic-body [data-ic-copy='code']", timeout=10000); host.click("#ic-body [data-ic-copy='code']"); host.wait_for_function("!document.querySelector('#cc-cmd').textContent.includes('••••')", timeout=10000)   # feat/invite-one: the key is made on Copy
             cmd = host.inner_text("#cc-cmd").strip()

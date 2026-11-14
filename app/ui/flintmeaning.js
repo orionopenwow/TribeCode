@@ -26,7 +26,7 @@
   'use strict';
   const SUFFIX = [[/ies$/, 'y'], [/sses$/, 'ss'], [/([^s])s$/, '$1'], [/ing$/, ''], [/ing$/, 'e'], [/ed$/, ''], [/ed$/, 'e'], [/([a-z])\1(?:ing|ed)$/, '$1'], [/ly$/, ''], [/er$/, ''], [/est$/, ''], [/ness$/, ''], [/ment$/, '']];
   // words that say nothing about the subject in a request ("can you", "please", "for me")
-  const FILLER = new Set('please pls can could would will you your me my i we us our the a an to of for it its this that these those do does did is are was be been am just some any there here now then and or so want need like would let lets get give make have has had with on in at by from up out about into over as if what which who how when where why'.split(' '));
+  const FILLER = new Set('please pls can could would will you your me my i we us our the a an to of for it its this that these those do does did is are was be been am just some any there here now then and or so want need like would let lets get give make have has had with on in at by from up out about into over as if what which who how when where why much many very too really quite'.split(' '));   // fix/integ8: degree words ("how much it costs") carry no topic; "much" was matching "way too hard"
 
   function fromBuffer(buf) {
     const ab = buf instanceof ArrayBuffer ? buf : buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength);

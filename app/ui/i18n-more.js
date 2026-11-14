@@ -249,6 +249,8 @@
     'Not on the site yet': ['Aún no está en el sitio', 'Ainda não está no site', 'Pas encore sur le site', 'Noch nicht auf der Website', 'まだサイトにありません', '网站上还没有', '아직 사이트에 없음'],
   });
   I.addPatterns({
+    // fix/integ8: the question a task's "Put it to a vote" posts in the chat; each reader sees it in their own language
+    'Should we do “{title}”?': ['¿Hacemos “{title}”?', 'Fazemos “{title}”?', 'On fait « {title} » ?', 'Sollen wir „{title}“ machen?', '「{title}」をやりますか？', '我们要做“{title}”吗？', '“{title}” 할까요?'],
     'Good morning, {name}': ['Buenos días, {name}', 'Bom dia, {name}', 'Bonjour, {name}', 'Guten Morgen, {name}', 'おはようございます、{name}さん', '早上好，{name}', '좋은 아침이에요, {name}님'],
     'Good afternoon, {name}': ['Buenas tardes, {name}', 'Boa tarde, {name}', 'Bon après-midi, {name}', 'Guten Tag, {name}', 'こんにちは、{name}さん', '下午好，{name}', '좋은 오후예요, {name}님'],
     'Good evening, {name}': ['Buenas noches, {name}', 'Boa noite, {name}', 'Bonsoir, {name}', 'Guten Abend, {name}', 'こんばんは、{name}さん', '晚上好，{name}', '좋은 저녁이에요, {name}님'],

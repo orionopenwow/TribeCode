@@ -167,7 +167,7 @@ def main():
             pg.wait_for_selector("#set-flintsetup [data-fs=get]", timeout=10000)
             part = pg.evaluate("TribeFlintModel.partial()"); assert part and 50000 < part["got"] < 740000, part
             assert pg.inner_text("#set-flintsetup [data-fs=get]") == "Resume" and "Paused at" in pg.inner_text("#set-flintsetup .fsu-pct")
-            assert pg.evaluate("TribeFlintModel.installed()") is False and pg.evaluate("TribeNLU.hasSemantic()") is False, "half a model is never used"
+            assert pg.evaluate("TribeFlintModel.installed()") is False and pg.evaluate("!(window.TribeMeaning && TribeMeaning.model().helper)") is True, "half a model is never used"   # fix/integ8: the built-in word meanings are always on now, so "semantic" alone no longer says the download is in use
             cdp.send("Network.emulateNetworkConditions", {"offline": False, "latency": 0, "downloadThroughput": -1, "uploadThroughput": -1})
             go()   # the pieces survive a reload
             part2 = pg.evaluate("TribeFlintModel.partial()"); assert part2 and part2["got"] == part["got"], (part, part2)
@@ -211,7 +211,7 @@ def main():
             ph.evaluate("(() => { const d = document.createElement('div'); d.id = 'ph-slot'; d.style.cssText = 'position:fixed;inset:60px 0 auto 0;z-index:999'; document.body.appendChild(d); TribeFlintSetup.mount(d, 'home'); })()")
             ph.wait_for_selector("#ph-slot .fsu [data-fs=get]", timeout=10000)
             t = ph.inner_text("#ph-slot"); assert "about 8 MB" in t and "smaller version, for phones" in t, t
-            assert ph.evaluate("document.querySelector('#ph-slot .fsu').getBoundingClientRect().right <= innerWidth + 1 && document.querySelector('#ph-slot [data-fs=get]').getBoundingClientRect().height >= 40"), "fits 390px with thumb-sized buttons"
+            assert ph.evaluate("document.querySelector('#ph-slot .fsu').getBoundingClientRect().right <= innerWidth + 1 && document.querySelector('#ph-slot [data-fs=get]').getBoundingClientRect().height >= 40"), ("fits 390px with thumb-sized buttons", ph.evaluate("[document.querySelector('#ph-slot .fsu').getBoundingClientRect().right, innerWidth, document.querySelector('#ph-slot [data-fs=get]').getBoundingClientRect().height, document.querySelector('#ph-slot [data-fs=get]').className, document.querySelector('#ph-slot [data-fs=get]').parentElement.className]"))
             assert not [u for u in outside if "huggingface" in u], outside
             px.close(); b.close()
         assert not errors, errors

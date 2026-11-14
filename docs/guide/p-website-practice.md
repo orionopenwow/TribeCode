@@ -22,21 +22,14 @@ The site works. Now make it good for real visitors.
 
 ## Editing on the page
 
-- **Click anything.** It gets one outline and a small toolbar: bigger, smaller, bold, colour, line up. Words can be typed over right away.
-- **Right-click** shows everything you can do with it. **Esc** steps out: the words, then the entry they sit in, then the section.
-- **Lists** (links, prices, questions, team): select an entry, then move, copy, add or remove it. The keyboard works too: Alt and the arrows, Ctrl D, Delete.
-- **Screen sizes.** Under **Show it on**, switch off Phone, Tablet or Computer for one thing or a whole section. In the editor it looks faded on that size; on the published site it is gone.
-- **Pages.** Double-click a name in the menu to rename it. **Site** on the right reorders pages and gives each its own title for search.
-- **Tell Flint.** With something selected: "make this bigger", "change this to …", "hide this on phones", "move this up". Any time: "make all buttons rounder", "change the opening time to Saturday 9am".
+- **Click anything.** It gets one outline and a small toolbar. Words can be typed over right away; **right-click** shows the rest, and **Esc** steps out.
+- **Lists** (links, prices, questions): select an entry, then move, copy, add or remove it.
+- **Show it on** switches one thing or a whole section off for Phone, Tablet or Computer.
+- **Tell Flint**: "make this bigger", "hide this on phones".
 
 ## What your tribe said
 
-The designer reads what the project already knows: chat, tasks, docs, updates, decisions and comments on the site. Never direct messages or private notes.
-
-- **Suggestions** (on the right) lists changes it found, with the words before and after, and who said it and where. **Apply** is a normal change, and Undo takes it back. **Not now** hides it. **Dismiss** removes it for everyone.
-- Click anything on the page to see **What the tribe said about this**, and where its words came from.
-- Ask Flint "what should we update on the site?" or "apply what we decided".
-- If you cannot change the site in this project, **Ask them** leaves a comment on that section for the people who can.
+**Suggestions** lists changes found in the project's chat, tasks, docs and decisions (never direct messages or private notes), with who said it. **Apply** is a normal change that Undo takes back. If you cannot change the site, **Ask them** asks the people who can.
 
 ## Working with others
 

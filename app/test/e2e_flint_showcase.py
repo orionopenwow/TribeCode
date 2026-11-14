@@ -143,7 +143,7 @@ def main():
             # ---------- where did we talk about… (no model) ----------
             said, chips = ask(pg, "where did we talk about how much it costs?")
             assert "comes up" in said and any(c.startswith("Doc · Pricing notes") for c in chips) and any("cheaper for schools" in c for c in chips), (said, chips)
-            assert not any("boss fight" in c for c in chips)
+            assert not any("boss fight" in c for c in chips), chips
             pg.locator("#flint .fl-act", has_text="Doc · Pricing notes").last.click(); pg.wait_for_timeout(800)
 
             # ---------- Running on your device ----------

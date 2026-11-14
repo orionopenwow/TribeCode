@@ -207,7 +207,8 @@ def main():
                 if "task-assigned" in kinds and "dm" in kinds: break
                 time.sleep(0.3)
             else: raise AssertionError(f"Sam's inbox: {kinds}")
-            s.wait_for_function("window.TribeNotify && TribeNotify.state().unread > 0", timeout=8000)
+            try: s.wait_for_function("window.TribeNotify && TribeNotify.state().unread > 0", timeout=8000)
+            except Exception: raise AssertionError(("unread never rose", s.evaluate("TribeNotify.state()"), s.evaluate("({p: TribeClient.project(), c: TribeClient.connected()})"), [(i.get("type"), i.get("read"), i.get("project")) for i in inbox.get("items", [])]))
             b.close()
         assert not errors, "\n".join(errors[:10])
         print("e2e_loops: OK (push keys from env, MCP helper takes a task + code_write → preview, pin answered over MCP, live reload by polling without SSE, phone friend task + DM → inbox, link-in-bio template edited in Easy → published play link)")
