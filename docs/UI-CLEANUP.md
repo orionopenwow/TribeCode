@@ -59,3 +59,24 @@ Found by the app walk and the leftover scan in `docs/APP-AUDIT-2026-11-13.md`.
 `e2e_no_stale.py` now also guards: `#wdz-log`, `#su-start`, `.su-seats`, `#rail-camp`, `.camp-btn`, `.nest-fold-head/body`, `.pj-nav-legacy`, `.av-chips`, `.av-qs`, `.fl-nudges`, `.pvf-btns`, `.cvf-acts`, `.ag-grid`, `.invite-pill`, `.tl-head`, `.tl-cta`.
 
 Left in place on purpose (they look old but are in use): `hostpill.js` (the Hosting pop-out opens under the home pill's "Hosting · who can reach you"), `previewflint.js` and `canvas/flintpane.js` (they mount the one Flint chat and add each editor's tools), `setup.js` (the starter row inside a project), the `su-sheet` class (the create-a-tribe sheet reuses its styles).
+
+## Shared UI rules (feat/ui-consistent)
+
+One stylesheet and one helper hold the rules every feature follows: `app/ui/uikit.css` (loaded last) and
+`app/ui/uikit.js` (`window.TribeUI`). `app/test/e2e_ui_lint.py` walks the main places at 1280 and 390 and fails when a
+rule is broken; deliberate exceptions are in its `ALLOW` lists with a reason each.
+
+| Rule | What it says | Where |
+| --- | --- | --- |
+| Sheets | Two shapes: the bottom-sheet family (`.ph-sheet`) for anything with steps, the centred modal (`.modal-card`) for one decision. Every scrim uses `--scrim` and fades in over `--dur-quick`; every card rises over `--dur-quick` on `--ease-out`; nothing moves under reduced motion. Close buttons are one 32px square. | `uikit.css` §1 |
+| One Esc rule | Esc closes the topmost sheet or panel. Features keep their own handlers; `uikit.js` is the net for layers with none (the chat's Who is here panel, pins, "Watch Flint build", one-off scrims). | `uikit.js` |
+| Type floors | 11px for mono uppercase labels, 12px for everything else. | `uikit.css` §2 |
+| Phone targets | 36px. Standard controls grow to 36px tall; things that must stay small on screen (text links, a tab's ×, a switch) keep their look and get a 36px hit area. | `uikit.css` §3 |
+| Buttons | One primary per card or sheet, last in the row (`.modal-foot`, `.ui-foot`). | `uikit.css` §4 |
+| Empty states | `TribeUI.empty(el, { title, line, action, how, kind })`: a title, one line, one action, optional "How it works". `TribeUI.emptyAction = (kind, el) => ({ label, run })` lets the what-next engine fill the action. | `uikit.js`, `uikit.css` §5 |
+| Right panel | Open on Home (your dashboard, a project's dashboard), closed everywhere else, remembered per page. Automated browsers keep the old single switch unless the address has `?panelrule=1`. | `shell.js` |
+| One word, one thing | History (a project's versions), Saved designs (the website designer), Earlier shots (Visuals). A host's status reads "On this computer"; the setup step is "Set up sharing and backup". | strings + `i18n.js` |
+
+Not converted yet (each keeps working; move them when their file is next touched): the one-off sheets still draw
+their own boxes and headers (free-AI bridge, plans, Flint's page, website templates), and most "needs a tribe" notes
+outside Proposals and Bugs still use their own markup instead of `TribeUI.empty`.
