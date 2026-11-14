@@ -109,14 +109,15 @@ def main():
             htok = pg.evaluate("TribeStore.get().server.token"); host_id = pg.evaluate("TribeClient.state().me.id")
             pg.evaluate("localStorage.removeItem('tribecode.inviteclaude.kind')")
             shut = lambda: pg.evaluate("TribeInviteClaude.close()")   # the first name of TribeInviteAgent still works
-            opened = lambda: pg.wait_for_selector("#invite-modal:not(.hidden) #ic-body #ic-status", timeout=10000)   # the one invite sheet, on Your AI agent
+            opened = lambda: pg.wait_for_selector("#invite-modal:not(.hidden) #ic-body .ic-kinds", timeout=10000)   # the one invite sheet, on Your AI agent
             on_pick = lambda k: pg.wait_for_selector(f"#invite-modal:not(.hidden) #ic-body [data-ic-kind='{k}'].on", timeout=10000)
 
             # ---------- the sheet from the sidebar row ----------
             assert "Invite your agent" in pg.text_content("#sf-claude")
             pg.click("#sf-claude"); opened()
             assert pg.evaluate("TribeInvite.state().who") == "agent" and "Your AI agent" in pg.text_content("#io-who-agent")
-            pg.wait_for_selector("#ic-body [data-ic-text='code']")
+            assert pg.text_content("#ic-body .ic-qt") == "Which AI do you already use?" and pg.locator("#ic-body [data-ic-kind].on").count() == 0, "a first-timer gets the question, with nothing chosen"
+            pg.click("#ic-body [data-ic-kind='code']"); pg.wait_for_selector("#ic-body [data-ic-text='code']")
             # the picker: every agent, each with a glyph of its kind
             picks = pg.eval_on_selector_all("#ic-body [data-ic-kind]", "els => els.map(e => [e.dataset.icKind, e.dataset.icFamily, e.textContent.trim(), !!e.querySelector('svg')])")
             assert [x[0] for x in picks] == ["code", "desktop", "web", "cursor", "codex", "chatgpt", "gemini", "vscode", "windsurf", "cline", "zed", "other"], picks

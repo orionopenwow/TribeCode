@@ -1731,7 +1731,26 @@
   },
   {
    "t": "connect my ai",
-   "i": "connect.ai"
+   "i": "invite.agent"
+  },
+  {
+   "t": "how do i add cursor",
+   "i": "invite.agent",
+   "s": {
+    "kind": "cursor"
+   }
+  },
+  {
+   "t": "what can my ai do here",
+   "i": "agent.can"
+  },
+  {
+   "t": "disconnect it",
+   "i": "agent.disconnect"
+  },
+  {
+   "t": "disconnect my ai",
+   "i": "agent.disconnect"
   },
   {
    "t": "invite my agent",
@@ -4130,12 +4149,25 @@
   },
   {
    "t": "connect my ai thanks",
-   "i": "connect.ai",
+   "i": "invite.agent",
    "v": "wrap"
   },
   {
-   "t": "flint invite my agent",
+   "t": "flint how do i add cursor",
    "i": "invite.agent",
+   "s": {
+    "kind": "cursor"
+   },
+   "v": "wrap"
+  },
+  {
+   "t": "can you disconnect it",
+   "i": "agent.disconnect",
+   "v": "wrap"
+  },
+  {
+   "t": "please disconnect my ai",
+   "i": "agent.disconnect",
    "v": "wrap"
   },
   {
@@ -4147,7 +4179,15 @@
    "v": "typo"
   },
   {
-   "t": "can you invite my claude",
+   "t": "could you invite my cursor for me",
+   "i": "invite.agent",
+   "s": {
+    "kind": "cursor"
+   },
+   "v": "wrap"
+  },
+  {
+   "t": "ok so invite my claude",
    "i": "invite.agent",
    "s": {
     "kind": "claude"
@@ -4160,87 +4200,82 @@
    "v": "typo"
   },
   {
-   "t": "please add codex",
+   "t": "flint connect gemini",
    "i": "connect.ai",
    "v": "wrap"
   },
   {
-   "t": "could you hook up claude code for me",
+   "t": "hey flint, hook up claude code",
    "i": "connect.ai",
    "v": "wrap"
   },
   {
-   "t": "ok so add codex",
-   "i": "connect.ai",
-   "v": "wrap"
-  },
-  {
-   "t": "flint use the local model",
+   "t": "please give flint a brain",
    "i": "brain.pick",
    "v": "wrap"
   },
   {
-   "t": "hey flint, turn on the secretary",
+   "t": "use the local model please",
+   "i": "brain.pick",
+   "v": "wrap"
+  },
+  {
+   "t": "ok so autopilot off",
    "i": "helper.toggle",
    "s": {
-    "what": "secretary",
-    "on": true
+    "what": "autopilot",
+    "on": false
    },
    "v": "wrap"
   },
   {
-   "t": "please start a jam",
+   "t": "start a jam thanks",
    "i": "jam.start",
    "v": "wrap"
   },
   {
-   "t": "kick off a jam for 60 minutes please",
-   "i": "jam.start",
-   "v": "wrap"
-  },
-  {
-   "t": "ok so join the voice chat",
+   "t": "hey flint, start a huddle",
    "i": "huddle.start",
    "v": "wrap"
   },
   {
-   "t": "hang up thanks",
-   "i": "huddle.leave",
+   "t": "can you join the voice chat",
+   "i": "huddle.start",
    "v": "wrap"
   },
   {
-   "t": "hey flint, give feedback",
+   "t": "record meeting notes please",
+   "i": "capture.toggle",
+   "v": "wrap"
+  },
+  {
+   "t": "could you give feedback for me",
    "i": "feedback",
    "v": "wrap"
   },
   {
-   "t": "can you rate tribecode",
-   "i": "feedback",
-   "v": "wrap"
-  },
-  {
-   "t": "i'm new please",
+   "t": "show me around thanks",
    "i": "tour",
    "v": "wrap"
   },
   {
-   "t": "could you copy a prompt for my ai for me",
-   "i": "prompt.copy",
+   "t": "flint i'm new",
+   "i": "tour",
    "v": "wrap"
   },
   {
-   "t": "recommend a physics library for 3d games thanks",
+   "t": "can you find a ui library",
    "i": "market.search",
    "s": {
-    "q": "physics"
+    "q": "ui"
    },
    "v": "wrap"
   },
   {
-   "t": "flint search the marketplace for icons",
+   "t": "please recommend a physics library for 3d games",
    "i": "market.search",
    "s": {
-    "q": "icons"
+    "q": "physics"
    },
    "v": "wrap"
   },
@@ -4250,17 +4285,25 @@
    "v": "typo"
   },
   {
-   "t": "can you show trending repos",
+   "t": "could you what's trending for me",
    "i": "trending",
    "v": "wrap"
   },
   {
-   "t": "please any new tools",
+   "t": "ok so show trending repos",
    "i": "trending",
    "v": "wrap"
   },
   {
-   "t": "could you download krita for me",
+   "t": "flint open blender",
+   "i": "studio.open",
+   "s": {
+    "app": "blender"
+   },
+   "v": "wrap"
+  },
+  {
+   "t": "hey flint, download krita",
    "i": "studio.open",
    "s": {
     "app": "krita"
@@ -4268,103 +4311,95 @@
    "v": "wrap"
   },
   {
-   "t": "ok so add a jump sound",
+   "t": "please get me a coin sprite",
    "i": "asset.add",
    "v": "wrap"
   },
   {
-   "t": "flint find a heart icon",
+   "t": "find a heart icon please",
    "i": "asset.add",
    "v": "wrap"
   },
   {
-   "t": "hey flint, find the boss notes",
+   "t": "ok so search for parking",
    "i": "find",
    "s": {
-    "q": "the boss notes"
+    "q": "parking"
    },
    "v": "wrap"
   },
   {
-   "t": "please what's new",
+   "t": "what's new thanks",
    "i": "status",
    "v": "wrap"
   },
   {
-   "t": "catch me up please",
-   "i": "status",
+   "t": "hey flint, who's online",
+   "i": "people.online",
    "v": "wrap"
   },
   {
-   "t": "ok so what should i do next",
+   "t": "can you what should i do next",
    "i": "focus",
    "v": "wrap"
   },
   {
-   "t": "where was i thanks",
-   "i": "focus",
-   "v": "wrap"
-  },
-  {
-   "t": "hey flint, what is free",
+   "t": "what can you do please",
    "i": "tiers",
    "v": "wrap"
   },
   {
-   "t": "can you how do i invite a friend",
-   "i": "invite",
+   "t": "could you what is free for me",
+   "i": "tiers",
    "v": "wrap"
   },
   {
-   "t": "what is the secretary please",
+   "t": "how does publishing work thanks",
    "i": "help.kb",
    "v": "wrap"
   },
   {
-   "t": "could you can i host on my phone for me",
+   "t": "flint what is the secretary",
    "i": "help.kb",
    "v": "wrap"
   },
   {
-   "t": "explain how cloud save works thanks",
+   "t": "can you why is the preview blank",
    "i": "help.kb",
    "v": "wrap"
   },
   {
-   "t": "flint agrega tarea llamar a Sam",
-   "i": "task.add",
-   "s": {
-    "title": "Llamar a Sam"
-   },
+   "t": "please explain how cloud save works",
+   "i": "help.kb",
    "v": "wrap"
   },
   {
-   "t": "can you modo oscuro",
-   "i": "theme.dark-mode",
-   "v": "wrap"
-  },
-  {
-   "t": "please abre ajustes",
-   "i": "nav.settings",
-   "v": "wrap"
-  },
-  {
-   "t": "could you ouvre le calendrier for me",
+   "t": "could you abre el calendario for me",
    "i": "nav.calendar",
    "v": "wrap"
   },
   {
-   "t": "ok so mode sombre",
+   "t": "ok so modo oscuro",
    "i": "theme.dark-mode",
    "v": "wrap"
   },
   {
-   "t": "flint why does my shader flicker on safari when the canvas resizes",
-   "i": "help.kb",
+   "t": "flint modo escuro",
+   "i": "theme.dark-mode",
    "v": "wrap"
   },
   {
-   "t": "hey flint, is our pricing too high compared to competitors",
+   "t": "hey flint, ouvre le calendrier",
+   "i": "nav.calendar",
+   "v": "wrap"
+  },
+  {
+   "t": "please dunkles Thema",
+   "i": "theme.dark-mode",
+   "v": "wrap"
+  },
+  {
+   "t": "why does my shader flicker on safari when the canvas resizes please",
    "i": "help.kb",
    "v": "wrap"
   },

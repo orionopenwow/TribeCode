@@ -242,7 +242,7 @@ def main():
             print("B ok: tribe link (QR, copy), one-time, project-only and guest pass all work end to end")
 
             # ================= C: one Claude per person =================
-            pg.click("#sf-claude"); pg.wait_for_selector("#ic-body [data-ic-text='code']")
+            pg.click("#sf-claude"); pg.wait_for_selector("#ic-body .ic-kinds.ic-big"); pg.click("#ic-body [data-ic-kind='code']"); pg.wait_for_selector("#ic-body [data-ic-text='code']")
             assert "••••" in pg.text_content("#cc-cmd") and "Nothing is made yet" in pg.text_content("#ic-status")
             pg.click("#ic-body [data-ic-kind='desktop']"); assert "••••" in pg.text_content("#ic-body [data-ic-text='desktop']")
             pg.click("#ic-body [data-ic-kind='web']")
@@ -508,7 +508,7 @@ def main():
             fits = "(() => { const c = document.querySelector('.modal-card.io'), r = c.getBoundingClientRect(); return r.left >= 0 && r.right <= innerWidth + 1 && c.scrollWidth <= c.clientWidth + 1 && document.documentElement.scrollWidth <= innerWidth + 1 && [...c.querySelectorAll('.io-opt, .linkbox, .io-sw, .cai-pre, .ic-scope, .btn')].every(e => { const b = e.getBoundingClientRect(); return !b.width || (b.left >= r.left - 1 && b.right <= r.right + 1); }); })()"
             for who in ("friend", "guest", "agent"):
                 ph.evaluate(f"TribeApp.openInvite({{ who: '{who}' }})"); ph.wait_for_selector(f"#invite-modal:not(.hidden) #io-pane[data-who='{who}']")
-                ph.wait_for_selector("#tl-link" if who == "friend" else "#io-guest-make" if who == "guest" else "#ic-body #ic-status"); time.sleep(0.5)
+                ph.wait_for_selector("#tl-link" if who == "friend" else "#io-guest-make" if who == "guest" else "#ic-body .ic-kinds"); time.sleep(0.5)
                 assert ph.evaluate(fits), f"the {who} pane fits 390px"
                 assert all(ph.locator(f"#io-who-{w}").is_visible() for w in ("friend", "guest", "agent"))
                 if who == "friend":

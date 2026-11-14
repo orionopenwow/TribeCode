@@ -401,7 +401,16 @@
     if (id === 'host.start') return legacy('start hosting');
     if (id === 'host.stop') return legacy('stop hosting');
     if (id === 'invite.agent') return legacy(sl.kind ? `invite my ${sl.kind}` : 'invite my agent', 'opened the invite for your agent');   // the one invite sheet, on that kind (flint.js inviteClaude)
-    if (id === 'connect.ai') { const k = /\b(claude|cursor|codex|chat ?gpt|gemini|copilot|vs ?code|windsurf|cline|zed)\b/.exec(String(s.text || curText || '').toLowerCase()); return legacy(k ? `invite my ${k[1]}` : 'connect my ai'); }
+    if (id === 'connect.ai') { const k = /\b(claude|cursor|codex|chat ?gpt|gemini|copilot|vs ?code|windsurf|cline|zed)\b/.exec(String(s.text || curText || '').toLowerCase()); return legacy(k ? `invite my ${k[1]}` : 'invite my agent', 'opened Bring an AI helper'); }   // one way in: the same sheet
+    if (id === 'agent.can') {
+      const k = /\b(claude|cursor|codex|chat ?gpt|gemini|copilot|vs ?code|windsurf|cline|zed)\b/.exec(String(s.text || curText || '').toLowerCase());
+      return { text: 'Your AI helper acts as you, and never above your own role. You pick one of three: Just answer me (chat only), Help build and ask before big changes (chat, docs, tasks and files; publishing the website stays with you), or Work on its own on tasks you give it. It can never change this itself, read private messages or invite people. You can change it any time.', acts: [['Change what it may do', 'inviteagent', k ? k[1].replace(/\s+/g, '') : undefined]], sum: 'explained what an AI helper may do' };
+    }
+    if (id === 'agent.disconnect') {
+      const k = sl.kind || (/\b(claude|cursor|codex|chat ?gpt|gemini|copilot|vs ?code|windsurf|cline|zed)\b/.exec(String(s.text || curText || '').toLowerCase()) || [])[1];
+      if (window.TribeInviteAgent && connected()) window.TribeInviteAgent.open(k ? { kind: String(k).replace(/\s+/g, '').replace(/^claude.*/, 'claude').replace('copilot', 'vscode') } : undefined);
+      return { text: 'I opened your AI helper. Pause stops it at once and keeps it for later. Remove makes it leave: its key stops working that moment, and nothing it wrote is lost.', acts: [['Open it again', 'inviteagent', undefined]], sum: 'opened the AI helper to pause or remove it' };
+    }
     if (id === 'github.connect') {
       const solo = window.TribeOffline && window.TribeOffline.solo && window.TribeOffline.solo();
       if (solo && window.TribeGhPhone) { window.TribeGhPhone.open(); return { text: 'Here is GitHub on this phone: paste a token once, then bring a repo in, push and pull. The token stays on this phone.' }; }

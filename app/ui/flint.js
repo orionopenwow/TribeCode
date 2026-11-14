@@ -253,7 +253,7 @@
     if (RX.status.test(t)) return status();
     if (RX.summarize.test(t)) return summarize();
     if (RX.helper.test(t)) return helper(t);
-    if (RX.connect.test(t)) { if (agentKindIn(t)) return inviteClaude(t); ACTS.connect(); return say('Let\'s get your AI into the room: Claude Code, Codex, Gemini CLI, Cursor or any MCP tool. I opened the connect steps: one command or one config on your computer and it joins.', [act('Show the steps again', 'connect'), act('How it works', 'guide', 'connect-claude-code')]); }
+    if (RX.connect.test(t)) return inviteClaude(t);   // one way in: Bring an AI helper
     if (RX.hosting.test(t)) return hosting(t);
     if (RX.website.test(t)) return website(t);
     if (RX.focus.test(t)) return focusReply();
@@ -362,7 +362,7 @@
     const kind = agentKindIn(t), name = kind ? AGENT_WORDS.find(x => x[0] === kind)[2] : '';
     if (!connected()) return say(`Your ${name || 'agent'} joins a tribe. Host one on this computer or join a friend first.`, [act('Host or join', 'invite')]);
     ACTS.inviteagent(kind || undefined);
-    return say(name ? `Here's your ${name}'s invite. Copy what it shows into ${name} and it joins next to you, with your access and never more.` : 'Here\'s the invite for your AI agent. Pick which one (Claude, Cursor, Codex, ChatGPT, Gemini…), copy what it shows, and it joins next to you, with your access and never more.', [act('Open it again', 'inviteagent', kind || undefined)]);
+    return say(name ? `Here's how to bring your ${name} in. Choose what it may do, copy what it shows into ${name}, and it says hello here. It acts as you, with your access and never more.` : 'I opened Bring an AI helper. Pick the AI you already use (or "I don\'t have one"), choose what it may do, and copy the one thing it shows. It says hello here when it connects, and it acts as you, with your access and never more.', [act('Open it again', 'inviteagent', kind || undefined)]);
   }
   function invite() { ACTS.invite(); if (FF()) later(300, () => { const ib = seen('#invite-body'); if (ib) FF().done(ib, 'Invite ready'); }); return say(connected() ? 'Here\'s your invite. Send the link to a friend: they tap it, type a name, and they\'re in.' : 'Invites come from a tribe. Host one on this computer first, then invite friends.', [act('Open invite again', 'invite'), act('How invites work', 'guide', 'projects-and-invites')]); }
   function hosting(t) {
