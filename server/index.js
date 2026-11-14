@@ -592,6 +592,7 @@ const agentsHub = makeAgentsHub({ P, store: baseStore, pstore: store, brain, get
 // The variable keeps its first name, inviteClaude; an invited Claude is the kind "claude".
 inviteClaude = require('./inviteagent')({ P, getMembers: () => members, saveMembers, pushPresence, perms, hash, id, slug, str, endpoints: (req, t) => agentEndpoints(req, t), agentsHub,
   publicBase: () => args['public-url'] || process.env.TRIBE_PUBLIC_URL || share.publicUrl(), postChat, sendTo, agentSeen, idleMs: AGENT_IDLE, publicMember, docs, store, chans, nameOf,
+  pendingBy: aid => approvals.list().some(a => a.by === aid && a.status === 'pending'),
   auth: () => claudeAuth, ...(process.env.TRIBE_TEST === '1' && Number(process.env.TRIBE_CLAUDE_STALE_MS) ? { staleMs: Number(process.env.TRIBE_CLAUDE_STALE_MS) } : {}) });
 // Sign-in for the claude.ai connector (server/claudeauth.js): OAuth 2.1 + PKCE on this host, so the key leaves the link.
 // The address a client sees: the one it asked on when it is one of ours (public link, network, this computer), else the public one.

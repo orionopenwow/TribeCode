@@ -3,7 +3,7 @@
 //   A friend           the tribe link with a QR. "A one-time link instead" swaps it for a link that runs out; inside a
 //                      project, "Just this project" makes the link show them only that project.
 //   A guest for a day  a guest pass: works once, and the account it makes stops after 24 hours.
-//   Your AI agent      Invite your agent: Claude, Cursor, Codex, ChatGPT, Gemini… (inviteagent.js draws this part).
+//   An AI helper       Invite your agent: Claude, Cursor, Codex, ChatGPT, Gemini… (inviteagent.js draws this part).
 // It lives in the shared modal (#invite-modal). Nothing is made on the server until the person asks for it: the tribe
 // link already exists, a one-time or project link is made when its switch goes on, a guest pass when its button is
 // pressed, and the agent member on Copy or Download. The server APIs are unchanged (/api/tribe-link, /api/invites).
@@ -19,7 +19,7 @@
   const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const toast = (m, k) => (window.TribeApp && window.TribeApp.toast ? window.TribeApp.toast(m, k) : null);
   const swap = fn => (window.TribeMotion && window.TribeMotion.swap ? window.TribeMotion.swap(fn) : fn());
-  const WHO = [['friend', 'A friend', 'A link they open to join'], ['guest', 'A guest for a day', 'A pass that works once'], ['agent', 'Your AI agent', 'Claude, Cursor, Codex and more']];
+  const WHO = [['friend', 'A friend', 'A link they open to join'], ['guest', 'A guest for a day', 'A pass that works once'], ['agent', 'An AI helper', 'Claude, Cursor, Codex and more']];
   // three large choices, each with a stroke icon from icons.js (people, a clock for the day pass, the agent plug)
   const ICON = { friend: 'people', guest: 'clock', agent: 'agent' }, TONE = { friend: 'k-ember', guest: 'k-indigo', agent: 'k-teal' };
   const glyph = k => (window.TribeIcons ? window.TribeIcons.svg(ICON[k], 26) : '');

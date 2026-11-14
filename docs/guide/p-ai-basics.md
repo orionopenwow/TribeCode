@@ -11,7 +11,7 @@ You can use TribeCode with no AI at all, and add help when you want it.
 ## The short version
 
 1. **Ask Flint.** Type what you want in plain words: "make a website for my band", "what should I do next".
-2. **Bring an AI helper** when you want changes made for you. Open **Invite**, choose **Your AI agent**, or ask Flint "connect my AI".
+2. **Bring an AI helper** when you want changes made for you. Open **Invite**, choose **An AI helper**, or ask Flint "connect my AI".
 3. **Ask for one thing.** "Add a contact section." Say what done looks like.
 4. **Review it.** The helper proposes a change. You look, then approve or say what to change.
 5. **Give Flint a brain on this device** if you want richer answers without sending anything away.

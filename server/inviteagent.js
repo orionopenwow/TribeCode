@@ -21,6 +21,8 @@
 //     Connect your AI (POST /api/agents) counts as theirs of that kind: GET lists it as "already connected", POST re-keys
 //     it instead of minting a second member, and Pause / narrowing / Remove work on it too. Two of one kind (from before
 //     there was one way) both keep working; `merge` (Claude) and `dupes` (any kind) say so.
+//   A helper made from the sheet starts with "Help build, ask before big changes" (the sheet sends that preset); one
+//     made by an app's sign-in, and every helper that already exists, keeps what it has.
 //   Nothing is made when the sheet opens: GET carries a `preview` of every setup with the key masked, and POST (the
 //     sheet's Copy or Download) makes the member. One that never connected is taken out again after 24 hours (sweep).
 //   Apps that sign in (Claude on the web, ChatGPT, an editor with no key in its config) go through server/agentauth.js
@@ -86,7 +88,7 @@ const ADMIN = /^(perms|modes|members\/[^/]+\/role|projects\/[^/]+\/(delete|setti
 // Read-only tools that stay on when the owner can only watch (spectator).
 const READ_TOOL = /^(list_|read_|check_|checks_status|search_|get_|tribe_overview|where_is|inbox_next|my_lane|agents_read|market_(list|search|read))/;
 
-module.exports = function inviteAgent({ P, getMembers, saveMembers, pushPresence, perms, hash, id, slug, str, endpoints, agentsHub, publicBase = () => null,
+module.exports = function inviteAgent({ pendingBy = () => false, P, getMembers, saveMembers, pushPresence, perms, hash, id, slug, str, endpoints, agentsHub, publicBase = () => null,
   postChat, sendTo, agentSeen, idleMs, publicMember, docs, store, chans, nameOf, rate = Number(process.env.TRIBE_CLAUDE_RATE) || 120, now = () => Date.now(),
   auth = () => null, staleMs = 24 * 3600_000 }) {
   const member = mid => getMembers().find(m => m.id === mid) || null;
@@ -116,6 +118,7 @@ module.exports = function inviteAgent({ P, getMembers, saveMembers, pushPresence
   function doing(ag) {
     if (ag.paused) return 'paused';
     if (ag.invited && !ag.firstSeen) return 'not here yet';
+    try { if (pendingBy(ag.id)) return 'waiting for your OK'; } catch {}
     const s = agentSeen.get(ag.id);
     if (!s || now() - s.at >= idleMs) return 'resting until you start it';
     const w = String(s.where || '');

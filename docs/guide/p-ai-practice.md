@@ -23,7 +23,7 @@ One task, one change you can read in a few minutes. Big requests give big change
 
 ## Change what a helper may do
 
-Open **Invite**, choose **Your AI agent** and pick the helper. Choose one of the three, or tick single boxes: chat, docs, tasks, files, website, approvals. It applies at once. Ask Flint "what can my AI do here" for the short version.
+Open **Invite**, choose **An AI helper** and pick the helper. Choose one of the three, or tick single boxes: chat, docs, tasks, files, website, approvals. It applies at once. Ask Flint "what can my AI do here" for the short version.
 
 ## Several helpers
 

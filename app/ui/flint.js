@@ -360,7 +360,7 @@
   const agentKindIn = t => { const w = AGENT_WORDS.find(x => x[1].test(String(t || '').toLowerCase())); return w ? w[0] : null; };
   function inviteClaude(t) {
     const kind = agentKindIn(t), name = kind ? AGENT_WORDS.find(x => x[0] === kind)[2] : '';
-    if (!connected()) return say(`Your ${name || 'agent'} joins a tribe. Host one on this computer or join a friend first.`, [act('Host or join', 'invite')]);
+    if (!connected()) return say(`Your ${name || 'AI helper'} joins a tribe. Host one on this computer or join a friend first.`, [act('Host or join', 'invite')]);
     ACTS.inviteagent(kind || undefined);
     return say(name ? `Here's how to bring your ${name} in. Choose what it may do, copy what it shows into ${name}, and it says hello here. It acts as you, with your access and never more.` : 'I opened Bring an AI helper. Pick the AI you already use (or "I don\'t have one"), choose what it may do, and copy the one thing it shows. It says hello here when it connects, and it acts as you, with your access and never more.', [act('Open it again', 'inviteagent', kind || undefined)]);
   }

@@ -79,7 +79,7 @@ def main():
             pg.evaluate("TribeInviteAgent.open()"); pg.wait_for_selector(f"{body} .ic-kinds.ic-big")
             assert pg.text_content(f"{body} .ic-qt") == "Which AI do you already use?"
             assert pg.locator(f"{body} [data-ic-kind].on").count() == 0 and pg.locator(f"{body} .ic-steps").count() == 0, "nothing is chosen for a newcomer"
-            assert pg.eval_on_selector_all(f"{body} [data-ic-kind]", "els => els.map(e => e.dataset.icKind)") == PICKS
+            assert pg.eval_on_selector_all(f"{body} .ic-kinds [data-ic-kind]", "els => els.map(e => e.dataset.icKind)") == PICKS
             assert pg.eval_on_selector_all(f"{body} [data-ic-alt]", "els => els.map(e => e.dataset.icAlt)") == ["local", "free", "none"]
             words = pg.inner_text(body)
             for jargon in ("MCP", "CLI key", "API key", "stdio", "token"): assert jargon not in words, f"the question says {jargon}"
@@ -102,7 +102,7 @@ def main():
             # ---- 3. every tool: its own short steps and the one thing to copy, key masked
             pg.evaluate("TribeInviteAgent.open()"); pg.wait_for_selector(f"{body} .ic-kinds.ic-big")
             for k in PICKS:
-                pg.click(f"{body} [data-ic-kind='{k}']"); pg.wait_for_selector(f"{body} [data-ic-kind='{k}'].on")
+                pg.evaluate("k => document.querySelector(`#ic-body .ic-kinds [data-ic-kind='${k}']`).click()", k); pg.wait_for_selector(f"{body} [data-ic-kind='{k}'].on")
                 if pg.locator(f"{body} .ic-need").count():   # an app in the cloud needs a public address first: it says so
                     assert k in ("web", "chatgpt") and "public" in pg.text_content(f"{body} .ic-need"), k; continue
                 n = pg.locator(f"{body} .ic-steps > li").count(); assert 2 <= n <= 4, (k, n)
@@ -113,8 +113,12 @@ def main():
             print("Each of the 12 tools shows 2-4 steps and its copy block; still nothing made")
 
             # ---- 4. what it may do: chosen before Copy, it is what the helper starts with
-            pg.click(f"{body} [data-ic-kind='cursor']"); pg.wait_for_selector(f"{body} [data-ic-kind='cursor'].on")
-            assert pg.get_attribute(f"{body} #ic-want .ic-preset.on", "data-ic-preset") == "own"
+            pg.evaluate("document.querySelector(\"#ic-body .ic-kinds [data-ic-kind='cursor']\").click()"); pg.wait_for_selector(f"{body} [data-ic-kind='cursor'].on")
+            assert pg.get_attribute(f"{body} #ic-want .ic-preset.on", "data-ic-preset") == "build", "a new helper starts with Help build"
+            # the chosen tool is one row; the cards are tucked away, and Change goes back to the question
+            assert "Cursor" in pg.text_content(f"{body} #ic-chosen") and not pg.is_visible(f"{body} .ic-kinds") and pg.locator(f"{body} .ic-kinds [data-ic-kind]").count() == 12
+            pg.click(f"{body} #ic-change"); pg.wait_for_selector(f"{body} .ic-kinds.ic-big [data-ic-kind='cursor'].on"); assert pg.text_content(f"{body} .ic-qt") == "Which AI do you already use?"
+            pg.click(f"{body} .ic-kinds.ic-big [data-ic-kind='cursor']"); pg.wait_for_selector(f"{body} #ic-chosen")
             assert "never above your own role" in pg.inner_text(body)
             pg.click(f"{body} #ic-want [data-ic-preset='answer']"); pg.wait_for_selector(f"{body} #ic-want [data-ic-preset='answer'].on")
             pg.screenshot(path=str(SHOTS / "ai-helper-setup.png"))
@@ -158,6 +162,23 @@ def main():
             assert sorted(v["agents"][0]["scopes"]) == sorted(["chat", "docs", "tasks", "files", "approvals"]), "a new key keeps what it may do"
             print("Returning: Show me the setup again, same helper, new key, same permissions")
 
+            # ---- 6b. the default: a helper made from the sheet with nothing touched is "Help build"; a pending approval shows as "waiting for your OK"
+            pg.click(f"{body} #ic-change"); pg.click(f"{body} .ic-kinds.ic-big [data-ic-kind='gemini']"); pg.wait_for_selector(f"{body} #ic-want [data-ic-preset='build'].on")
+            pg.click(f"{body} [data-ic-copy]"); pg.wait_for_selector(f"{body} .ic-wait")
+            gkey = re.search(r"Bearer ([A-Za-z0-9_-]{20,})", pg.text_content(f"{body} .ic-setup [data-ic-text]")).group(1)
+            gem = [a for a in ok(api("/invite-agent", token=htok))["agents"] if a["agentKind"] == "gemini"][0]
+            assert gem["preset"] == "build" and "website" not in gem["scopes"], gem
+            assert mcp(gkey, "initialize", {"protocolVersion": "2025-06-18"})[0] == 200
+            good, txt = tool(gkey, "request_approval", {"title": "Rename the main file", "details": "It would be clearer.", "risk": "low"}); assert good, txt
+            gem = [a for a in ok(api("/invite-agent", token=htok))["agents"] if a["agentKind"] == "gemini"][0]; assert gem["doing"] == "waiting for your OK", gem
+            pg.wait_for_function("(document.querySelector('#ic-body .ic-doing') || {}).textContent === 'waiting for your OK'", timeout=10000)
+            aid = [a for a in ok(api("/approvals", token=htok))["approvals"] if a["status"] == "pending"][0]["id"]
+            ok(api(f"/approvals/{aid}/approve", "POST", {}, token=htok))
+            gem = [a for a in ok(api("/invite-agent", token=htok))["agents"] if a["agentKind"] == "gemini"][0]; assert gem["doing"] != "waiting for your OK", gem
+            ok(api("/invite-agent?id=" + gem["id"], "DELETE", token=htok))
+            pg.evaluate("TribeInviteAgent.close()"); pg.evaluate("TribeInviteAgent.open({ kind: 'cursor' })"); pg.wait_for_selector(f"{body} #ic-access")
+            print("Default = Help build; a pending approval reads 'waiting for your OK' and clears when answered")
+
             # ---- 7. its face: an about line and a colour, on its People card
             ok(api("/invite-agent", "PUT", {"id": cid, "about": "Tidies <b>code</b> and writes tests.", "color": "#6C7CFF"}, token=htok))
             assert api("/invite-agent", "PUT", {"id": cid, "color": "red"}, token=htok)[0] == 400
@@ -169,7 +190,7 @@ def main():
             pg.evaluate("TribeInviteAgent.open({ kind: 'ask' })"); pg.wait_for_selector(f"{body} .ic-kinds.ic-big")
             assert pg.evaluate("document.documentElement.scrollWidth <= innerWidth") and pg.evaluate("[...document.querySelectorAll('#ic-body [data-ic-kind], #ic-body [data-ic-alt]')].every(e => { const r = e.getBoundingClientRect(); return r.left >= 0 && r.right <= innerWidth && r.height >= 36; })"), "a choice is cut off or too small at 390"
             pg.screenshot(path=str(SHOTS / "ai-helper-question-390.png"))
-            pg.click(f"{body} [data-ic-kind='cursor']"); pg.wait_for_selector(f"{body} #ic-welcome")
+            pg.evaluate("document.querySelector(\"#ic-body .ic-kinds [data-ic-kind='cursor']\").click()"); pg.wait_for_selector(f"{body} #ic-welcome")
             assert pg.evaluate("[...document.querySelectorAll('#ic-body .ic-preset, #ic-body [data-ic-job], #ic-body [data-ic-find], #ic-body [data-ic-color]')].every(e => { const r = e.getBoundingClientRect(); return r.right <= innerWidth && r.height >= 36; })"), "a control is cut off or too small at 390"
             pg.locator(f"{body} #ic-welcome").scroll_into_view_if_needed(); pg.screenshot(path=str(SHOTS / "ai-helper-welcome-390.png"))
             print("390px: the question and the welcome fit")

@@ -109,3 +109,6 @@
   .ic-presets { grid-template-columns: 1fr; }
 }
 @media (max-width: 420px) { .ic-kinds.ic-big, .ic-alts { grid-template-columns: 1fr; } }
+.ic-chosen { display: flex; align-items: center; gap: 12px; margin: 0 0 12px; padding: 8px 12px; border: 1px solid color-mix(in srgb, var(--live) 45%, var(--edge)); border-radius: var(--r-ctl, 8px); background: var(--surface); }
+.ic-cur { display: inline-flex; align-items: center; gap: 8px; flex: 1; font-size: 15px; color: var(--text); }
+.ic-change { font-size: 13px; min-height: 36px; }

@@ -11,6 +11,8 @@
   // English -> [es, pt, fr, de, ja, zh, ko]
   const D = {
     // feat/ai-invite: Bring an AI helper (inviteagent.js)
+    "An AI helper": ["Un ayudante de IA","Um ajudante de IA","Un assistant IA","Ein KI-Helfer","AIヘルパー","一个 AI 助手","AI 도우미"],
+    "Change": ["Cambiar","Mudar","Changer","Ändern","変更","更改","변경"],
     "Bring an AI helper": ["Trae un ayudante de IA","Traga um ajudante de IA","Amener un assistant IA","KI-Helfer dazuholen","AIヘルパーを呼ぶ","带来一个 AI 助手","AI 도우미 데려오기"],
     "Which AI do you already use?": ["¿Qué IA usas ya?","Qual IA você já usa?","Quelle IA utilisez-vous déjà ?","Welche KI nutzt du schon?","すでに使っているAIはどれですか？","你已经在用哪个 AI？","이미 쓰고 있는 AI는 무엇인가요?"],
     "Pick one. You get the shortest way to bring it in, and you choose what it may do.": ["Elige una. Verás la forma más corta de traerla y tú decides qué puede hacer.","Escolha uma. Você vê o caminho mais curto para trazê-la e decide o que ela pode fazer.","Choisissez-en une. Vous obtenez le chemin le plus court pour l’amener, et vous décidez ce qu’elle peut faire.","Wähle eine. Du bekommst den kürzesten Weg, sie dazuzuholen, und bestimmst, was sie darf.","1つ選んでください。いちばん短い手順が表示され、できることはあなたが決めます。","选一个。你会看到最短的接入方式，并由你决定它能做什么。","하나를 고르세요. 가장 짧은 연결 방법이 나오고, 무엇을 해도 되는지는 직접 정합니다."],

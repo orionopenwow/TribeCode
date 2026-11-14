@@ -1,4 +1,4 @@
-// Invite your agent: the one way a person's own AI agent joins (server/inviteagent.js). It is the "Your AI agent" choice
+// Invite your agent: the one way a person's own AI agent joins (server/inviteagent.js). It is the "An AI helper" choice
 // of the one invite sheet (inviteone.js), which calls mount(el) to draw it. It began as Invite your Claude; Claude is
 // now one kind among several, and a person can have one of each kind.
 //   The picker: Claude Code, Claude Desktop, Claude on the web, Cursor, Codex CLI, ChatGPT, Gemini CLI, VS Code,
@@ -13,7 +13,7 @@
 //     one kind (from before there was one way) both show, with a hint to merge them. A new key is one deliberate tap.
 // Entry points: the sidebar row (#sf-claude), the People panel, the empty chat, the Agents Hub, Settings, Flint.
 //   window.TribeInviteAgent = { open(opts), mount(el, opts), unmount(), access(el), card(), close(), icon(kind, size) }
-//     open({ kind }): opens the one sheet on "Your AI agent". kind: a choice ('code', 'cursor', 'chatgpt'…) or a kind
+//     open({ kind }): opens the one sheet on "An AI helper". kind: a choice ('code', 'cursor', 'chatgpt'…) or a kind
 //                     ('claude', 'gemini'…); an older tool name ('claude-code', 'claude-ai') works too.
 //     access(el): every agent's permissions block, for Settings.   card(): a small HTML card for the Agents Hub.
 //   window.TribeInviteClaude: the same functions under their first name; open() lands on Claude.
@@ -98,7 +98,7 @@
   async function ensureKey() {
     const k = kind();
     if (made[k]) return made[k];
-    try { const r = await C.api(API, { method: 'POST', body: { kind: k, pick, ...(target[k] ? { id: target[k] } : {}), ...(want[k] && !agentsOf(k).length ? { preset: want[k] } : {}) } }); made[k] = r; merge(r); showSetup[k] = true; }
+    try { const r = await C.api(API, { method: 'POST', body: { kind: k, pick, ...(target[k] ? { id: target[k] } : {}), ...(!agentsOf(k).length ? { preset: want[k] || 'build' } : {}) } }); made[k] = r; merge(r); showSetup[k] = true; }
     catch (e) { toast(e.message); return null; }
     return made[k];
   }
@@ -220,10 +220,15 @@
     const k = kind(), list = agentsOf(k), has = list.length > 0, K = kindInfo(k), plural = k === 'other' ? 'agents here' : `${K.short}s`;
     const others = (st.agents || []).filter(a => a.agentKind !== k);
     const hello = list.length === 1 && list[0].joined && list[0].via === 'invite' && !list[0].paused ? list[0] : null;
-    root.innerHTML = `<div class="ic-q"><span class="eyebrow">Bring an AI helper</span></div>${eyebrow(1, 'Your AI')}${pickerHtml()}
+    const cur = picks().find(x => x.id === pick) || { id: pick, kind: k, name: K.label };
+    // The chosen tool is one row; Change goes back to the question. The cards stay in the page (hidden) under the same
+    // data-ic-kind, so another module (or a test) can still pick one directly.
+    root.innerHTML = `<div class="ic-q"><span class="eyebrow">Bring an AI helper</span></div>${eyebrow(1, 'Your AI')}
+      <div class="ic-chosen" id="ic-chosen"><span class="ic-cur on" data-ic-kind="${esc(cur.id)}" data-ic-family="${esc(cur.kind)}">${icon(cur.kind, 16)}<b>${esc(cur.name)}</b></span><button type="button" class="linkish ic-change" id="ic-change">Change</button></div>
+      <div class="ic-allkinds" hidden>${pickerHtml()}</div>
       <p class="lead">${has ? (list[0].via === 'connect' && list.length === 1 ? `<b>${esc(list[0].name)}</b> is already connected, so there is nothing new to make. Narrow it, pause it or remove it here.` : `<b>${esc(list[0].name)}</b> works next to you, with your access and never more. Narrow it, pause it or remove it any time.`)
         : `It joins next to you as <b>${esc(nameOf(k))}</b>, with your access and never more. Narrow it, pause it or remove it any time.`}</p>
-      ${!has ? `${eyebrow(2, 'What it may do')}<div id="ic-want">${presetsHtml(want[k] || 'own')}</div>${ASYOU}` : ''}
+      ${!has ? `${eyebrow(2, 'What it may do')}<div id="ic-want">${presetsHtml(want[k] || 'build')}</div>${ASYOU}` : ''}
       ${setupShown(k) ? eyebrow(has ? 2 : 3, 'Connect it') : ''}
       ${topStatus()}
       ${hello ? welcomeHtml(hello) : ''}
@@ -251,7 +256,8 @@
     body.querySelectorAll('#ic-want [data-ic-preset]').forEach(b => b.onclick = () => { want[kind()] = b.dataset.icPreset; const el = body.querySelector('#ic-want'); if (el) { el.innerHTML = presetsHtml(want[kind()]); wire(); } });
     const wl = body.querySelector('[data-ic-welcome]'); if (wl) wireWelcome(wl, wl.dataset.icWelcome);
     if (stage !== 'tool') { body.querySelectorAll('[data-ic-kind]').forEach(b => b.onclick = () => { stage = 'tool'; pick = b.dataset.icKind; ask = null; copiedCode = false; try { localStorage.setItem(KEY, pick); } catch {} draw(); watch(); }); const o2 = body.querySelector('#ic-other'); if (o2) o2.onclick = () => { const A = window.TribeApp; close(); if (A && A.connectClaude) A.connectClaude({ tool: 'codex', fresh: true }); }; return; }
-    body.querySelectorAll('[data-ic-kind]').forEach(b => b.onclick = () => { pick = b.dataset.icKind; ask = null; copiedCode = false; try { localStorage.setItem(KEY, pick); } catch {} draw(); });
+    const chg = body.querySelector('#ic-change'); if (chg) chg.onclick = () => { stage = 'ask'; alt = ''; draw(); };
+    body.querySelectorAll('.ic-kinds [data-ic-kind]').forEach(b => b.onclick = () => { pick = b.dataset.icKind; ask = null; copiedCode = false; try { localStorage.setItem(KEY, pick); } catch {} draw(); });
     body.querySelectorAll('[data-ic-goto]').forEach(b => b.onclick = () => { pick = resolvePick(b.dataset.icGoto); ask = null; draw(); });
     body.querySelectorAll('[data-ic-copy]').forEach(b => b.onclick = async () => {
       const id = b.dataset.icCopy, first = blockOf(id); if (!first) return;

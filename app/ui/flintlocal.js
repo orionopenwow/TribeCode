@@ -400,7 +400,7 @@
     if (id === 'invite') return legacy('invite a friend', 'opened the invite');
     if (id === 'host.start') return legacy('start hosting');
     if (id === 'host.stop') return legacy('stop hosting');
-    if (id === 'invite.agent') return legacy(sl.kind ? `invite my ${sl.kind}` : 'invite my agent', 'opened the invite for your agent');   // the one invite sheet, on that kind (flint.js inviteClaude)
+    if (id === 'invite.agent') return legacy(sl.kind ? `invite my ${sl.kind}` : 'invite my agent', 'opened Bring an AI helper');   // the one invite sheet, on that kind (flint.js inviteClaude)
     if (id === 'connect.ai') { const k = /\b(claude|cursor|codex|chat ?gpt|gemini|copilot|vs ?code|windsurf|cline|zed)\b/.exec(String(s.text || curText || '').toLowerCase()); return legacy(k ? `invite my ${k[1]}` : 'invite my agent', 'opened Bring an AI helper'); }   // one way in: the same sheet
     if (id === 'agent.can') {
       const k = /\b(claude|cursor|codex|chat ?gpt|gemini|copilot|vs ?code|windsurf|cline|zed)\b/.exec(String(s.text || curText || '').toLowerCase());
