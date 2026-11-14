@@ -26,6 +26,7 @@
     invite: { title: 'Inviting friends', steps: ['Invite friends in the sidebar copies your tribe link: anyone with it picks a name and they are in, on a phone or a laptop.', 'People in the top bar also has the link, a QR code and one-time guest passes.', 'Ask Flint: “invite a friend”.'], show: { go: 'chat', sel: '#tour-invite, #ppl-btn', say: 'Copy the tribe link here.' }, guide: 'working-together' },
     people: { title: 'People and presence', steps: ['People in the top bar lists the tribe and your friends: who is online and where (a doc, the designer, a task).', 'Click someone to message them, jump to where they are, or see their profile.', 'Settings › Show where I am turns it off. Or tell Flint “go invisible”.'], show: { go: 'chat', sel: '#ppl-btn', say: 'Who is here, and where.' } },
     market: { title: 'The Marketplace', steps: ['Widgets, skills, libraries, connectors, studios and asset packs, each with its source and license.', 'Add does something real for every kind, with Undo. The Installed tab lists what you added.', 'Ask Flint: “find a physics library” or “what have I installed”.'], show: { go: 'market', sel: '#mk-q, .mk-search input, [data-mk-search]', say: 'Search everything here.' } },
+    local: { title: 'Flint on your device', steps: ['Level 0 is plain code on this device: commands, follow-ups, plans, palettes, sums. No model, nothing sent anywhere.', 'Level 1, the local brain, is a small download (recommended): Flint matches by meaning. Level 2, a local model, is opt-in: Ollama on your computer or a model in the browser writes and rewrites.', 'Flint’s page shows what this device can do, with a self-test, and what would leave it: nothing, unless you connect your own AI or use credits.'], show: { go: 'flintpage', sel: '#fp-device', say: 'What runs on this device, measured here.' } },
     design: { title: 'The Design flow', steps: ['Design asks what you are making: a website, app, game, screen, slides, poster, whiteboard or logo.', 'Pick a template (or describe it), and a Plan card ticks off as it becomes tasks.', 'Ask Flint: “make a poster for our gig” or “design a logo for Ember Socks”.'], show: { go: 'designflow', sel: '.dfl-kinds, .dfl-kind, .dfl-page', say: 'Start any kind of design here.' } },
   };
   const FEATURES = Object.keys(LESSONS);
@@ -61,6 +62,7 @@
       if (key === 'preview' && W.TribePreview) return W.TribePreview.open();
       if (key === 'inspo' && W.TribeInspoBoard) return W.TribeInspoBoard.open({});
       if (key === 'premium' && W.TribePremium) return W.TribePremium.open();
+      if (key === 'flintpage' && W.TribeFlintPage) return W.TribeFlintPage.open('', 'device');
       if (W.TribeSiteDesigner && document.querySelector('#wdz:not([hidden])')) W.TribeSiteDesigner.close();
       if (sh && sh.go) return sh.go(key);
     } catch {}

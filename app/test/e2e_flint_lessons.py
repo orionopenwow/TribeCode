@@ -63,7 +63,7 @@ def main():
             pg.wait_for_function("window.TribeFlintLessons && window.TribeFlint && window.TribeFlintLocal && TribeClient.connected()", timeout=20000)
             pg.wait_for_timeout(600)
             n = len(pg.evaluate("TribeFlintLessons.FEATURES"))
-            assert n == 18, n   # 14 + invite, people, market, design (feat/flint-cleanup)
+            assert n == 19, n   # 14 + invite, people, market, design (feat/flint-cleanup) + local (feat/flint-local)
 
             # ---- Flint's chat: "teach me tasks"
             pg.evaluate("TribeFlint.ask('teach me tasks')")
