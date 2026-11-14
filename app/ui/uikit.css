@@ -1,0 +1,70 @@
+/* Shared UI rules (feat/ui-consistent). Loaded last, so one rule here holds for every feature's sheet, label and
+   control instead of each stylesheet deciding for itself. Nothing here restyles: same tokens, same flat matte look.
+   The rules, and the test that keeps them (app/test/e2e_ui_lint.py), are written up in docs/UI-CLEANUP.md.
+
+   1. Sheets: one scrim, one way in. Every full-screen layer is either the bottom-sheet family (.ph-sheet: anything
+      with steps) or the centred modal (.modal-card: one decision); the older one-offs keep their own boxes but
+      take the same scrim colour and the same entrance. Leaving is a cut or the family's own short fade.
+   2. Type floors: 11px for mono uppercase labels, 12px for everything else.
+   3. Phone targets: 36px.
+   4. Buttons in a foot: the primary is last.
+   5. Empty states: .ui-empty (drawn by TribeUI.empty in uikit.js). */
+
+/* ---------- 1. sheets ---------- */
+.modal, .ph-scrim, .nx-scrim, .plp-scrim, .pm-scrim, .aib-scrim, .ab-scrim, .ac-scrim, .ad-scrim, .a3-scrim, .ep-scrim, .dfl-scrim, .lg-scrim,
+.mk-scrim, .nf-scrim, .pp-scrim, .ppl-scrim, .pl-scrim, .pf-scrim, .tl-scrim, .help-scrim, .stu-sheet, .pj-sheet, .lr-sheet-scrim {
+  background-color: var(--scrim);
+  animation: tm-fade-in var(--dur-quick) var(--ease-out);
+}
+.modal > .modal-card, .ph-sheet, .nx-scrim > *, .plp-scrim > *, .pm-scrim > *, .aib-scrim > *, .ab-scrim > *, .ac-scrim > *, .ad-scrim > *, .a3-scrim > *,
+.dfl-scrim > *, .lg-scrim > *, .mk-scrim > *, .nf-scrim > *, .pp-scrim > *, .pl-scrim > *, .pf-scrim > *, .tl-scrim > *, .lr-sheet, .stu-sheet > *, .pj-sheet > * {
+  animation-duration: var(--dur-quick);
+  animation-timing-function: var(--ease-out);
+}
+.modal > .modal-card { animation-name: tm-rise; }
+.ph-scrim.out, .ph-sheet.out { transition: opacity var(--dur-quick) var(--ease-in); }
+/* one header: eyebrow, title, close. The close button is the same 32px square everywhere. */
+.ui-x, .ph-x, .lr-x, .su-x, .plp-x, .aib-x, .nx-x { flex: none; width: 32px; height: 32px; display: grid; place-items: center; border-radius: var(--r-ctl, 8px); }
+@media (prefers-reduced-motion: reduce) {
+  .modal, .modal > .modal-card, .ph-scrim, .ph-sheet, [class$="-scrim"], [class$="-scrim"] > *, .lr-sheet, .ph-scrim.out, .ph-sheet.out { animation: none; transition: none; }
+}
+
+/* ---------- 2. type floors ---------- */
+/* mono uppercase labels: 11px */
+.eyebrow, .fx-eyebrow, .ppl-kind, .ppl-you, .ppl-ai, .cal-gut, .cal-gut span, .m2-jg, .ac-test { font-size: 11px; }
+/* everything else: 12px */
+.mk-lic, .mk-stars, .ppl-sn, .fl-st, .cvx-preset small, .set-pv-who small, .m2-jt small, .btn .emo { font-size: 12px; }
+.ac-hero-ring svg text, .ac-card-top svg text { font-size: 12px; }
+.set-l .ac-test, .flint-home .fl-st, .fh-head .fl-st { font-size: 12px; }
+
+/* ---------- 3. phone targets: 36px ---------- */
+@media (max-width: 760px) {
+  /* the standard control families grow to 36px tall */
+  .btn, .btn.sm, .tabs > button, [class$="-seg"] > button, [class*="-seg "] > button, [class$="-tabs"] > button, .mk-cat, .cvx-qb, .fl-place, .lk-chip,
+  .mcd-btn, .ctx-b, .cv-hbtn, .cv-file, .cv-back, .chan-switch, .set-back, .wt-plus, .ppl-chip, .hc-home, .help-menu button, .su-steps a, select, .input, summary {
+    min-height: 36px;
+  }
+  .su-steps a { display: inline-flex; align-items: center; }
+  .btn.db-more, .cal-nav .btn, .ctx-b, .cv-hbtn, .cv-back, .set-back, .wt-plus, .mcd-search-btn, .ppl-act, .lk-dot, .lr-x, .su-x { min-width: 36px; min-height: 36px; }
+  summary { display: flex; align-items: center; }
+  summary::-webkit-details-marker { margin-right: 6px; }
+  /* small things that must stay small on screen (text links in a row, a tab's ×, a switch): the look stays, the
+     hit area grows to 36px around the centre */
+  .linkish, .wt-x, .pj-inl, .toggle.set-toggle, .toggle.oa-sw, .ui-hit { position: relative; }
+  .linkish::after, .wt-x::after, .pj-inl::after, .toggle.set-toggle::after, .toggle.oa-sw::after, .ui-hit::after {
+    content: ""; position: absolute; left: 50%; top: 50%; width: max(100%, 36px); height: max(100%, 36px); transform: translate(-50%, -50%);
+  }
+  .lk-custom input[type=color] { width: 36px; height: 36px; }
+}
+
+/* ---------- 4. buttons in a foot: the primary is last ---------- */
+.modal-foot, .ui-foot { display: flex; align-items: center; gap: 8px; }
+.modal-foot > .btn.primary, .ui-foot > .btn.primary { order: 9; }
+
+/* ---------- 5. empty states ---------- */
+.ui-empty { display: grid; justify-items: start; gap: 6px; padding: 18px; border: 1px solid var(--edge); border-radius: var(--r-lg, 12px); background: var(--surface); max-width: 62ch; }
+.ui-empty b { font-size: 15px; font-weight: 600; color: var(--text); }
+.ui-empty p { margin: 0; color: var(--muted); font-size: 13.5px; line-height: 1.5; }
+.ui-empty .ui-empty-acts { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin-top: 6px; }
+.ui-empty.center { justify-items: center; text-align: center; margin-inline: auto; }
+.ui-empty.bare { border: 0; background: none; padding: 8px 0; }

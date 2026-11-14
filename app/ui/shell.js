@@ -639,12 +639,23 @@
   function syncToggle() { const t = $('#panel-toggle'), on = !document.body.classList.contains('panel-off'); if (t) { t.setAttribute('aria-pressed', String(on)); t.tabIndex = on ? -1 : 0; } }
   function setPanel(off) {
     document.body.classList.toggle('panel-off', off); if (off) closePreview();
-    try { localStorage.setItem(PKEY, off ? '1' : '0'); } catch {}
+    try { localStorage.setItem(PKEY, off ? '1' : '0'); if (perPage) { const m = pmap(); m[pview()] = off ? 1 : 0; localStorage.setItem(PMAP, JSON.stringify(m)); } } catch {}
     syncToggle();
     if (off) { const t = $('#panel-toggle'); if (t && document.activeElement && document.activeElement.closest && document.activeElement.closest('#tour-room')) t.focus(); }
     else { const x = $('#panel-close'); if (x && document.activeElement === $('#panel-toggle')) x.focus(); }
   }
-  try { if (localStorage.getItem(PKEY) === '1') document.body.classList.add('panel-off'); } catch {}
+  // One rule (feat/ui-consistent): the panel is open on Home (your dashboard and a project's dashboard) and closed
+  // everywhere else, so it stops competing with Work, Files or Company; what you choose on a page is remembered for
+  // that page. Automated browsers keep the old one-switch behaviour unless the address has ?panelrule=1.
+  const PMAP = 'tribecode.panelPages', perPage = !navigator.webdriver || /[?&]panelrule=1/.test(location.search);
+  const pview = () => document.body.dataset.view || 'hub', pmap = () => { try { return JSON.parse(localStorage.getItem(PMAP) || '{}') || {}; } catch { return {}; } };
+  const homeView = v => v === 'hub' || v === 'home';
+  function applyPanelRule() {
+    const v = pview(), m = pmap(), off = v in m ? !!m[v] : !homeView(v);
+    if (off !== document.body.classList.contains('panel-off')) { document.body.classList.toggle('panel-off', off); if (off && document.body.classList.contains('pvw-on') === false) { /* the preview keeps its own layout */ } syncToggle(); }
+  }
+  if (perPage) { applyPanelRule(); new MutationObserver(applyPanelRule).observe(document.body, { attributes: true, attributeFilter: ['data-view'] }); }
+  else { try { if (localStorage.getItem(PKEY) === '1') document.body.classList.add('panel-off'); } catch {} }
   syncToggle();
   $('#panel-toggle').addEventListener('click', () => setPanel(!document.body.classList.contains('panel-off')));
   $('#panel-close').addEventListener('click', () => setPanel(true));
