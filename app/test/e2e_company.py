@@ -70,9 +70,12 @@ def main():
             pg.wait_for_selector("#nest-company.co-subtle:not(.hidden)", timeout=10000)
             assert pg.inner_text("#nest-company").strip() == "Set up company", pg.inner_text("#nest-company")
             pg.screenshot(path=str(SHOTS / "company-setup-row.png"), clip={"x": 0, "y": 0, "width": 420, "height": 720})
-            pg.click("#nest-company"); pg.wait_for_selector("#view-company .co-tpl[data-tpl='saas']", timeout=10000)
-            assert pg.locator("#view-company .co-tpl").count() == 8
-            pg.click("#view-company .co-tpl[data-tpl='saas']")
+            pg.click("#nest-company"); pg.wait_for_selector("#view-company #co-make", timeout=10000)
+            # feat/company3: setup asks four questions; the first picks the starting shape
+            pg.click("#view-company #co-make"); pg.wait_for_selector("#co-setup[data-step='1'] [data-tpl='saas']", timeout=10000)
+            assert pg.locator("#co-setup [data-tpl]").count() == 8
+            pg.click("#co-setup [data-tpl='saas']")
+            for step in (2, 3, 4): pg.wait_for_selector(f"#co-setup[data-step='{step}']"); pg.click("#cs-next")
             pg.wait_for_selector("#view-company .co-seat.ceo", timeout=10000)
             assert pg.locator("#view-company .co-seat").count() == 5
             pg.wait_for_selector("#nest-company:not(.hidden):not(.co-subtle)", timeout=10000); assert pg.inner_text("#nest-company").strip().startswith("Company")

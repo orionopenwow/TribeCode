@@ -85,7 +85,7 @@ def main():
             for s in secs:   # each section: an icon, an eyebrow and a title
                 assert pg.locator(f"#view-company .co-sec[data-sec={s}] .co-sec-ic svg").count() == 1 and pg.inner_text(f"#view-company .co-sec[data-sec={s}] h2").strip(), s
             assert "Firefly Labs" in pg.inner_text("#view-company .co-head h1") and pg.inner_text("#co-health").strip().endswith(".")
-            h = pg.inner_text("#co-health"); assert "approval" in h and "%" in h, h
+            h = pg.inner_text("#co-health"); assert "person’s OK" in h and "%" in h, h
             seat = pg.locator("#view-company .co-seat[data-seat='growth']")
             assert "Maya" in seat.inner_text() and "Post in two forums" in seat.inner_text() and seat.locator(".co-av.lg").count() == 1
             assert seat.locator("[data-seat-act]").count() == 1, "one action per seat"
@@ -167,7 +167,7 @@ def main():
             pe.click("#co-example"); pe.wait_for_selector("#view-company .co-sample .co-sec[data-sec=money] .co-chart", timeout=8000)
             assert pe.locator("#view-company .co-sample .co-seat").count() == 5
             pe.click("#co-sample-back"); pe.wait_for_selector("#view-company .co-ig-grid", timeout=5000)
-            pe.click("#co-make"); pe.wait_for_selector("#view-company .co-v2 .co-seat.ceo", timeout=10000)
+            pe.click("#co-quick"); pe.wait_for_selector("#view-company .co-v2 .co-seat.ceo", timeout=10000)   # feat/company3: "Skip the questions" is the one-click path
             assert pe.locator("#view-company .co-sec[data-sec=money] .co-none").count() == 1, "money has its own empty state"
             pe.click("#co-money-add"); pe.wait_for_function("document.body.dataset.view === 'money'", timeout=10000)
             b.close()
