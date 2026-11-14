@@ -128,7 +128,7 @@ def main():
             hp.evaluate(f"TribeProjects.switchTo('{pid}', 'home')"); hp.wait_for_timeout(600)
             hp.wait_for_selector("#nest-company.co-subtle:not(.hidden)", timeout=10000)
             assert hp.inner_text("#nest-company").strip() == "Set up company"
-            hp.click("#nest-company"); hp.wait_for_selector("#view-company .co-tpl[data-tpl='saas']", timeout=10000)
+            hp.click("#nest-company"); hp.wait_for_selector("#view-company #co-make", timeout=10000)   # feat/company3: setup starts with questions
             hp.wait_for_function("document.querySelector('#ub-st').textContent === 'Hosting'", timeout=8000)   # 5: hosting for real
             assert hp.locator("#ub-st.ub-where").count() == 0
             # 9: the board offers Freesound for sounds; Settings shows the key is set, never the key itself
