@@ -63,6 +63,7 @@
 #board.tkb .tk-top__more { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 25px; margin: -4px; padding: 4px; overflow: hidden; }
 #board.tkb .tk-grp { position: relative; display: flex; align-items: center; gap: 6px; flex: none; }
 #board.tkb .tk-grp::before { content: ''; position: absolute; left: -13px; top: 6px; bottom: 6px; width: 1px; background: var(--edge); }
+#board.tkb .tk-grp:first-child::before { content: none; }
 #board.tkb .tk-grp:empty, #board.tkb .tk-grp:has(> #tk-mode[hidden]) { display: none; }
 #board.tkb .tk-top__more .tk-types { margin: 0; gap: 6px; flex-wrap: nowrap; }
 #board.tkb .tk-type, #board.tkb .tk-pill, #board.tkb .tk-chip { display: inline-flex; align-items: center; gap: 6px; height: 32px; padding: 0 11px; border: 1px solid var(--edge); border-radius: 999px; background: none; color: var(--muted); font-size: 13px; white-space: nowrap; cursor: pointer; transition: border-color var(--dur-quick) var(--ease-out), background-color var(--dur-quick) var(--ease-out), color var(--dur-quick) var(--ease-out); }
@@ -344,7 +345,7 @@
 .tkd-who span:last-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .tkd-who:hover { border-color: var(--edge-pop, var(--faint)); color: var(--text); }
 .tkd-who[aria-pressed="true"] { border-color: var(--accent); color: var(--text); background: var(--surface-2); }
-.tkd-link { height: 30px; padding: 0 6px; color: var(--accent-ink); font-size: 12.5px; text-align: left; }
+.tkd-link { display: inline-flex; align-items: center; gap: 6px; height: 30px; padding: 0 6px; color: var(--accent-ink); font-size: 12.5px; text-align: left; }
 .tkd-in { height: 34px; padding: 0 10px; border: 1px solid var(--edge); border-radius: 9px; background: var(--canvas); color: var(--text); font: 14px var(--font, Inter, sans-serif); }
 .tkd-in--sm { height: 30px; font-size: 13px; min-width: 120px; flex: 1; }
 .tkd-notes { height: auto; padding: 8px 10px; line-height: 1.55; resize: vertical; }

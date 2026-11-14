@@ -78,6 +78,7 @@ def main():
 
             pg = open_as(b, "Maya", mt, {"width": 1280, "height": 900})
             pg.screenshot(path=str(OUT / f"{PRE}list.png"), full_page=False)
+            pg.evaluate("TribeTasks.filter('overdue')"); time.sleep(0.4); pg.screenshot(path=str(OUT / f"{PRE}filter.png")); pg.evaluate("TribeTasks.filter('')")
             pg.evaluate("TribeTasks.view('board')"); time.sleep(0.6); pg.screenshot(path=str(OUT / f"{PRE}board.png"))
             pg.evaluate("TribeTasks.view('list')"); pg.close()
             wd = open_as(b, "Maya", mt, {"width": 1720, "height": 1000}); wd.evaluate("document.querySelector('#panel-close') && document.querySelector('#panel-close').click()"); time.sleep(0.5); wd.screenshot(path=str(OUT / f"{PRE}wide.png")); wd.close()
