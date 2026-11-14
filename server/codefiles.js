@@ -332,6 +332,7 @@ module.exports = function codefiles({ P, claims = null, identity = null, member 
     }
     const repo = repoOf();
     if (!b) return send(res, 200, repo ? await info(repo) : { hasRepo: false });
+    if (!repo && b === 'list' && req.method === 'GET') return send(res, 200, { paths: [], hasRepo: false });   // fix/integ8: Flint's search index asks on every project; no code is an empty list, not an error
     if (!repo) return fail(res, 404, 'this project has no repo pinned');
     const q = url.searchParams;
     try {

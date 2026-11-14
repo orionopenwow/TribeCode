@@ -423,7 +423,7 @@
     push({ type: 'notification', item: it }); return it;
   }
   function pickUp(pid, tid, wait = 2500) {
-    if (db.busy) return; db.busy = tid; save();
+    if (solo() || db.busy) return; db.busy = tid; save();   // fix/integ8: your own tribe has no pretend agent to pick tasks up
     later(wait, () => {
       const t = (db.tasks[pid] || []).find(x => x.id === tid); if (!t || t.status === 'done') { db.busy = null; save(); return; }
       Object.assign(t, { assignee: AGENT, status: 'doing', updated: iso(), updatedBy: AGENT }); save();

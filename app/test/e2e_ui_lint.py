@@ -114,8 +114,10 @@ def main():
             time.sleep(0.2)
         host = api("/bootstrap", "POST", {"name": "Orion"})[1]["token"]
         pid = api("/projects", token=host)[1]["projects"][0]["id"]
-        api(f"/projects/{pid}/tasks", "POST", {"title": "Draw the title screen"}, host)
-        api("/chat", "POST", {"text": "Morning crew"}, host)
+        # fix/integ8: these two used paths that answer 404, so the walk only ever saw empty screens; a failed seed is now an error
+        for path, body in (("/tasks", {"title": "Draw the title screen"}), ("/chat/general/send", {"text": "Morning crew"})):
+            code = api(path, "POST", body, host)[0]
+            assert code == 200, f"seed {path}: HTTP {code}"
         with sync_playwright() as pw:
             b = pw.chromium.launch(executable_path="/usr/bin/google-chrome", args=["--no-proxy-server"])
             for size, vp in (("desktop", {"width": 1280, "height": 860}), ("phone", {"width": 390, "height": 844})):

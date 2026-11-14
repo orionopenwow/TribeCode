@@ -104,7 +104,8 @@ def main():
             pg.evaluate("TribeClient.api('/chat/general', { method: 'POST', body: { text: 'first thought from the bus' } })")
             pg.wait_for_function("(TribeOffline.state().docs['first-project'] || []).some(d => d.title === 'Ideas')", timeout=8000)
             time.sleep(1.2)
-            assert not any(m["by"] in ("maya", "claude") for m in pg.evaluate("TribeOffline.state().chat['first-project']")), "a pretend person answered in solo mode"
+            pretend = [m for m in pg.evaluate("TribeOffline.state().chat['first-project']") if m["by"] in ("maya", "claude")]
+            assert not pretend, ("a pretend person answered in solo mode", pg.evaluate("TribeOffline.state().mode"), pretend[:2])
 
             # 4. a reload keeps everything
             before = pg.evaluate("[(TribeOffline.state().tasks['first-project'] || []).length, (TribeOffline.state().docs['first-project'] || []).length]")

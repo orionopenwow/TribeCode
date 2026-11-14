@@ -879,7 +879,7 @@
     'Backup': ['Copia de seguridad', 'Backup', 'Sauvegarde', 'Sicherung', 'バックアップ', '备份', '백업'],
     'Backup settings': ['Ajustes de copia de seguridad', 'Ajustes de backup', 'Réglages de sauvegarde', 'Sicherungseinstellungen', 'バックアップ設定', '备份设置', '백업 설정'],
     'Undo last backup': ['Deshacer la última copia', 'Desfazer o último backup', 'Annuler la dernière sauvegarde', 'Letzte Sicherung rückgängig', '最後のバックアップを取り消す', '撤销上次备份', '마지막 백업 취소'],
-    'Projects and backup': ['Proyectos y copia de seguridad', 'Projetos e backup', 'Projets et sauvegarde', 'Projekte und Sicherung', 'プロジェクトとバックアップ', '项目和备份', '프로젝트 및 백업'],
+    'Projects and backup': ['Proyectos y copias', 'Projetos e backup', 'Projets et sauvegarde', 'Projekte und Sicherung', 'プロジェクトと保存', '项目和备份', '프로젝트 및 백업'],
     'Start or join a tribe': ['Crea una tribu o únete a una', 'Crie uma tribo ou entre em uma', 'Créez une tribu ou rejoignez-en une', 'Tribe starten oder beitreten', 'トライブを始めるか参加する', '创建或加入部落', '트라이브를 시작하거나 참여'],
     'Start a tribe here': ['Crear una tribu aquí', 'Criar uma tribo aqui', 'Créer une tribu ici', 'Hier einen Tribe starten', 'ここでトライブを始める', '在这里创建部落', '여기서 트라이브 시작'],
     'Settings for this computer': ['Ajustes de este ordenador', 'Ajustes deste computador', 'Réglages de cet ordinateur', 'Einstellungen für diesen Computer', 'このコンピューターの設定', '此电脑的设置', '이 컴퓨터 설정'],
