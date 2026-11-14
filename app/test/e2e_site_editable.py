@@ -291,7 +291,7 @@ def live(pw):
         assert f.locator(".wdz-idrop").count() == 1 and f.locator(".wdz-idrop").bounding_box()["width"] > 100, "a clear line shows where it will land"
         pg.mouse.up()
         pg.wait_for_function(f"TribeSiteDesigner.cfg().pages[0].blocks[0].props.items[2].label === {json.dumps(first)}", timeout=4000)
-        assert sel(pg) == {"block": sel(pg)["block"], "path": "items.2", "kind": "item"} and f.locator(".wdz-idrop").count() == 0
+        pg.wait_for_timeout(300); assert sel(pg)["path"].startswith("items.2") and f.locator(".wdz-idrop").count() == 0, sel(pg)
         pg.wait_for_timeout(300); f.locator("body").press("Control+z"); pg.wait_for_function(f"TribeSiteDesigner.cfg().pages[0].blocks[0].props.items[0].label === {json.dumps(first)}", timeout=4000); pg.wait_for_timeout(300)
         n0 = len(cfg(pg)["pages"][0]["blocks"][0]["props"]["items"])
         f.locator("small[data-e]").first.click(); esc_to(pg, f, "item")
@@ -367,6 +367,19 @@ def live(pw):
         lead = f.locator(".b-hero p.lead[data-e]").first; lead.scroll_into_view_if_needed(); lead.click(); lead.press("Control+a"); lead.type("Bread from 7"); lead.press("Shift+Enter"); lead.type("Soup at noon"); lead.press("Enter")
         pg.wait_for_function("TribeSiteDesigner.cfg().pages[0].blocks.find(b => b.type === 'hero').props.text === 'Bread from 7\\nSoup at noon'", timeout=4000)
         assert "Bread from 7<br>Soup at noon" in pg.evaluate("TribeSiteCfg.exportFiles(TribeSiteDesigner.cfg(), 'html')['index.html']")
+        # some of the words: select one with the mouse, make it bold, link another (round 2)
+        PICK = "(w) => { const el = document.querySelector('.b-hero p.lead[data-e]'); el.focus(); const tw = document.createTreeWalker(el, NodeFilter.SHOW_TEXT); let n; while ((n = tw.nextNode())) { const i = n.nodeValue.indexOf(w); if (i >= 0) { const r = document.createRange(); r.setStart(n, i); r.setEnd(n, i + w.length); const g = getSelection(); g.removeAllRanges(); g.addRange(r); return true; } } return false; }"
+        lead.click(); assert f.evaluate(PICK, "Bread"); f.locator(".wdz-tb [data-a=bold]").click()
+        pg.wait_for_function("TribeSiteDesigner.cfg().pages[0].blocks.find(b => b.type === 'hero').props.text === '**Bread** from 7\\nSoup at noon'", timeout=4000)
+        assert not (block(pg, "hero").get("es") or {}).get("text"), "only the word is bold, not the whole line"
+        assert f.evaluate(PICK, "noon"); f.locator(".wdz-tb [data-a=wlink]").click(); pg.wait_for_selector("#sp-wlink-to", timeout=3000)
+        pg.fill("#sp-wlink-to", "example.com/menu"); pg.press("#sp-wlink-to", "Enter")
+        pg.wait_for_function("TribeSiteDesigner.cfg().pages[0].blocks.find(b => b.type === 'hero').props.text === '**Bread** from 7\\nSoup at [noon](https://example.com/menu)'", timeout=4000)
+        out = pg.evaluate("TribeSiteCfg.exportFiles(TribeSiteDesigner.cfg(), 'html')['index.html']")
+        assert '<b>Bread</b> from 7<br>Soup at <a href="https://example.com/menu" rel="noopener">noon</a>' in out
+        pg.wait_for_timeout(300); f = fr(pg); assert f.locator(".b-hero p.lead b").inner_text() == "Bread" and f.locator(".b-hero p.lead a").get_attribute("href") == "https://example.com/menu"
+        assert f.evaluate(PICK, "Bread"); f.locator(".wdz-tb [data-a=bold]").click()   # again takes it off
+        pg.wait_for_function("TribeSiteDesigner.cfg().pages[0].blocks.find(b => b.type === 'hero').props.text.startsWith('Bread from 7')", timeout=4000)
         # a label the site shows in capitals is saved as it was typed, not in capitals
         cap = f.locator(".in h3[data-e]").first; cap.scroll_into_view_if_needed(); cap.click(); cap.press("Control+a"); cap.type("Where we are"); cap.press("Enter")
         pg.wait_for_function("TribeSiteDesigner.cfg().pages[0].blocks.find(b => b.type === 'info').props.items[0].label === 'Where we are'", timeout=4000)

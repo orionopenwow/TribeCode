@@ -755,7 +755,8 @@ ${t.btn === 'pill' ? '.btn{border-radius:999px}' : t.btn === 'outline' ? '.btn{b
     const P = b.props || {}, ES = b.es || {};
     // feat/site-editor2: per-element style (size, colour, alignment, weight, hidden on a screen size), kept in b.es by path
     const ecl = path => { const s = ES[path]; if (!s) return ''; return (s.sz ? ' e-sz-' + s.sz : '') + (s.col ? ' e-col-' + s.col : '') + (s.al ? ' e-al-' + s.al : '') + (s.b ? ' e-b' : '') + (s.i ? ' e-i' : '') + (s.hide ? s.hide.split(',').map(d => (o.edit ? ' ehide-' : ' hide-') + d).join('') : ''); };
-    const NL = t => esc(t).replace(/\r?\n/g, '<br>');   // a line break someone typed stays a line break
+    // a line break someone typed stays a line break; **bold**, *slanted* and [words](link) on part of the words (round 2)
+    const NL = t => esc(t).replace(/\r?\n/g, '<br>').replace(/\[([^\]\n]{1,200})\]\(((?:https?:\/\/|mailto:|#|\/)[^\s)]{1,400})\)/g, (m, w, u) => /^javascript:/i.test(u) ? w : `<a href="${u}"${/^https?:/.test(u) ? ' rel="noopener"' : ''}>${w}</a>`).replace(/\*\*([^*\n]+?)\*\*/g, '<b>$1</b>').replace(/(^|[^*\w])\*([^*\s][^*\n]*?)\*(?![*\w])/g, '$1<i>$2</i>');
     // every visible word is editable: E is a whole element, BT the words inside a button or link (hint shows while it is empty)
     const E = (path, tag, txt, cls, hint, attrs) => { const k = ((cls || '') + ecl(path)).trim(); return `<${tag}${k ? ` class="${k}"` : ''}${attrs || ''}${o.edit ? ` data-e="${b.id}|${path}" contenteditable="plaintext-only" spellcheck="false"${hint ? ` data-hint="${esc(hint)}"` : ''}` : ''}>${NL(txt)}</${tag}>`; };
     const BT = (path, txt) => o.edit ? `<span data-e="${b.id}|${path}" contenteditable="plaintext-only" spellcheck="false">${NL(txt)}</span>` : NL(txt);

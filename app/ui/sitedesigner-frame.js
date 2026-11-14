@@ -16,7 +16,7 @@
   var q = function (s) { return document.querySelector(s); };
   var esc = function (s) { return window.CSS && CSS.escape ? CSS.escape(s) : String(s).replace(/["\\]/g, '\\$&'); };
   var L = { smaller: 'Smaller', bigger: 'Bigger', bold: 'Bold', color: 'Colour', align: 'Align', link: 'Where it goes', up: 'Move up', down: 'Move down', dup: 'Duplicate', add: 'Add another', del: 'Remove', flint: 'Ask Flint about this', more: 'More', replace: 'Replace the picture', fit: 'Fill or fit', swap: 'Swap the icon', words: 'Edit the words',
-    grip: 'Drag to move this section', sadd: 'Add a section below', igrip: 'Drag to move it' };
+    grip: 'Drag to move this section', sadd: 'Add a section below', igrip: 'Drag to move it', ital: 'Slanted', wlink: 'Link the selected words' };
   var I = function (d) { return '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + d + '</svg>'; };
   var IC = { up: I('<path d="M12 19V5M6 11l6-6 6 6"/>'), down: I('<path d="M12 5v14M6 13l6 6 6-6"/>'), dup: I('<rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a1 1 0 0 1 1-1h10"/>'), add: I('<path d="M12 5v14M5 12h14"/>'),
     del: I('<path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14"/>'), link: I('<path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/>'),
@@ -78,7 +78,7 @@
     var B = function (a, label) { return '<button type="button" data-a="' + a + '" title="' + L[label || a] + '" aria-label="' + L[label || a] + '">' + (IC[a] || '') + '</button>'; };
     var T = function (a, label, txt) { return '<button type="button" data-a="' + a + '" title="' + L[label] + '" aria-label="' + L[label] + '"><b>' + txt + '</b></button>'; };
     var h = '', site = String(s.key).charAt(0) === '@';
-    if (s.kind === 'text' || s.kind === 'button') { if (!site) h += T('smaller', 'smaller', 'A\u2212') + T('bigger', 'bigger', 'A+') + T('bold', 'bold', 'B') + B('color') + B('align'); else h += B('words'); if (s.kind === 'button') h += B('link'); }
+    if (s.kind === 'text' || s.kind === 'button') { if (!site) h += T('smaller', 'smaller', 'A\u2212') + T('bigger', 'bigger', 'A+') + T('bold', 'bold', 'B') + '<button type="button" data-a="ital" title="' + L.ital + '" aria-label="' + L.ital + '"><b style="font-style:italic;font-family:Georgia,serif">I</b></button>' + (s.kind === 'text' ? '<button type="button" data-a="wlink" title="' + L.wlink + '" aria-label="' + L.wlink + '">' + IC.link + '</button>' : '') + B('color') + B('align'); else h += B('words'); if (s.kind === 'button') h += B('link'); }
     if (s.kind === 'image') h += B('replace') + (site ? '' : B('fit'));
     if (s.kind === 'icon') h += B('swap');
     if (s.kind === 'field') h += B('words');
@@ -120,7 +120,16 @@
   }
   // the words as they are written, not as CSS shows them: innerText gives "ADDRESS" for a label styled in capitals,
   // and saving that would change what the site says. Line breaks typed with Shift Enter are kept.
-  function words(el) { var out = ''; (function go(n) { for (var c = n.firstChild; c; c = c.nextSibling) { if (c.nodeType === 3) out += c.nodeValue; else if (c.nodeName === 'BR') out += '\n'; else if (c.nodeType === 1) { if (/^(DIV|P)$/.test(c.nodeName) && out && !/\n$/.test(out)) out += '\n'; go(c); } } })(el); return out.replace(/\u00a0/g, ' ').replace(/\n$/, ''); }
+  function words(el) { var out = ''; (function go(n) { for (var c = n.firstChild; c; c = c.nextSibling) { if (c.nodeType === 3) out += c.nodeValue; else if (c.nodeName === 'BR') out += '\n'; else if (c.nodeType === 1) { if (/^(DIV|P)$/.test(c.nodeName) && out && !/\n$/.test(out)) out += '\n'; var w = /^(B|STRONG)$/.test(c.nodeName) ? ['**', '**'] : /^(I|EM)$/.test(c.nodeName) ? ['*', '*'] : c.nodeName === 'A' && c.getAttribute('href') ? ['[', '](' + c.getAttribute('href') + ')'] : null; if (w && !c.textContent.trim()) continue; if (w) out += w[0]; go(c); if (w) out += w[1]; } } })(el); return out.replace(/\u00a0/g, ' ').replace(/\n$/, ''); }
+  // some of the words, selected with the mouse inside the thing that is being typed in: wrap or unwrap them
+  function partRange() { var g = getSelection(); if (!g || !g.rangeCount || g.isCollapsed || !selEl) return null; var r = g.getRangeAt(0), host = selEl.matches('[data-e]') ? selEl : selEl.querySelector('[data-e]'); return host && host.contains(r.commonAncestorContainer) && String(r).trim() ? { r: r, host: host } : null; }
+  function wrapPart(tag, attrs) {
+    var p = partRange(); if (!p) return null;
+    var inside = p.r.commonAncestorContainer.nodeType === 1 ? p.r.commonAncestorContainer : p.r.commonAncestorContainer.parentElement, old = inside.closest(tag);
+    if (old && p.host.contains(old) && old !== p.host) { while (old.firstChild) old.parentNode.insertBefore(old.firstChild, old); old.remove(); }   // again takes it off
+    else { var el = document.createElement(tag); for (var k in attrs || {}) el.setAttribute(k, attrs[k]); el.appendChild(p.r.extractContents()); p.r.insertNode(el); var g = getSelection(); g.removeAllRanges(); var nr = document.createRange(); nr.selectNodeContents(el); g.addRange(nr); }
+    p.host.normalize(); post({ t: 'text', key: p.host.dataset.e, value: words(p.host) }); return p.host;
+  }
   var editing = function () { var a = document.activeElement; return a && a.closest && a.closest('[data-e]') && a.isContentEditable ? a.closest('[data-e]') : null; };
   // which screen size the editor is showing: the one picked in the top bar, or "phone" when the preview itself is that narrow
   var DEV = 'desktop'; function setDev() { document.documentElement.dataset.dev = innerWidth <= 640 ? 'phone' : DEV; }
@@ -164,6 +173,9 @@
     var a = b.dataset.a; if (a === 'igrip') return;
     if (a === 'words') { if (SEL.kind === 'field') return post({ t: 'tb', act: 'words', key: SEL.key, kind: SEL.kind }); return typeIn(selEl.matches('[data-e]') ? selEl : selEl.querySelector('[data-e]'), true); }
     if (a === 'more') { var r = b.getBoundingClientRect(); return post({ t: 'menu', x: r.left, y: r.bottom + 4, key: SEL.key, kind: SEL.kind }); }
+    if ((a === 'bold' || a === 'ital') && partRange()) { wrapPart(a === 'bold' ? 'b' : 'i'); return; }   // only the selected words
+    if (a === 'wlink') { var had = partRange(); if (!had) return post({ t: 'tb', act: 'wlink-none', key: SEL.key, kind: SEL.kind }); var h = wrapPart('a', { href: '#', 'data-new': '1' }); if (h && !h.querySelector('a[data-new]')) return; return post({ t: 'tb', act: 'wlink', key: SEL.key, kind: SEL.kind }); }
+    if (a === 'ital') return post({ t: 'tb', act: 'ital', key: SEL.key, kind: SEL.kind });
     var ed = editing(); if (ed) ed.blur();
     post({ t: 'tb', act: a, key: SEL.key, kind: SEL.kind });
   });
@@ -260,6 +272,7 @@
     if (d.pins) pins(d.pins);
     if ('sel' in d) { var s = d.sel; if (typeof s === 'string') { var el = s ? q(s) : null; s = el ? target(el) : null; } select(s); if (selEl && d.scroll) { var r = selEl.getBoundingClientRect(); if (r.top < 0 || r.bottom > innerHeight) selEl.scrollIntoView({ block: 'center' }); } }
     if (d.type) { var te = find({ kind: 'text', key: d.type }); if (te) typeIn(te, true); }
+    if ('linkset' in d) { var na = q('a[data-new]'); if (na) { var hostE = na.closest('[data-e]'); if (d.linkset) { na.setAttribute('href', d.linkset); na.removeAttribute('data-new'); } else { while (na.firstChild) na.parentNode.insertBefore(na.firstChild, na); na.remove(); } if (hostE) { hostE.normalize(); post({ t: 'commit', key: hostE.dataset.e, value: words(hostE) }); } } }
     if (d.y != null) scrollTo(0, d.y);
   });
   addEventListener('scroll', function () { post({ t: 'scroll', y: scrollY }); if (tb.classList.contains('is-docked') || SEL) placeTb(); }, { passive: true });

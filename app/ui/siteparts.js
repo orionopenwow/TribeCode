@@ -163,6 +163,15 @@
     if (a === 'smaller') return step(api, 'sz', -1);
     if (a === 'bigger') return step(api, 'sz', 1);
     if (a === 'bold') { const b = blockOf(api, sel.block); return b && setEs(api, { b: esOf(b, sel).b ? '' : 1 }); }
+    if (a === 'ital') { const b = blockOf(api, sel.block); return b && setEs(api, { i: esOf(b, sel).i ? '' : 1 }); }
+    if (a === 'wlink-none') return api.say('Select some of the words with the mouse first, then press the link button. To link a whole button, click the button.');
+    if (a === 'wlink') {   // some words were just wrapped on the page: ask where they go, right in the panel
+      api.panel('edit'); const box = api.box(); if (!box) return;
+      box.insertAdjacentHTML('afterbegin', `<form class="sp-wlink" id="sp-wlink"><label class="wdz-f"><span>Link the selected words to</span><input class="input" id="sp-wlink-to" placeholder="https://… or an email address" autocomplete="off"></label><p class="wdz-row"><button type="submit" class="btn sm primary">Link</button><button type="button" class="btn sm ghost" data-sp="wlink-cancel">Cancel</button></p></form>`);
+      const f = box.querySelector('#sp-wlink'), i = f.querySelector('input'); i.focus();
+      f.addEventListener('submit', e => { e.preventDefault(); let v = i.value.trim(); if (/^[^\s@]+@[^\s@]+\.[a-z]{2,}$/i.test(v)) v = 'mailto:' + v; else if (v && !/^(https?:\/\/|mailto:|#|\/)/i.test(v)) v = 'https://' + v; f.remove(); api.post({ linkset: /^javascript:/i.test(v) ? '' : v }); });
+      return;
+    }
     if (a === 'color') return step(api, 'col');
     if (a === 'align') return step(api, 'al');
     if (a === 'link') { api.setSel({ ...sel, kind: 'button' }); api.panel('edit'); const i = api.root().querySelector('#wdz-link'); if (i) i.focus(); return; }
@@ -194,6 +203,7 @@
     if (k === 'pgdel') { const c = S().deletePage(api.cfg(), el.dataset.id); if (!c) return; const pg = api.cfg().pages.find(p => p.id === el.dataset.id); api.commit(c); return api.say(`Removed the page ${pg ? pg.title : ''}. Undo brings it back.`, '', [{ label: 'Undo', fn: () => api.undo() }]); }
     if (k === 'nav') { const c = JSON.parse(JSON.stringify(api.cfg())); if (v) c.nav = v; else delete c.nav; return api.commit(c); }
     if (k === 'panel') return api.panel(v);
+    if (k === 'wlink-cancel') { const f = api.root().querySelector('#sp-wlink'); if (f) f.remove(); return api.post({ linkset: '' }); }
     return act(api, k);
   }
   // keys for something smaller than a section. -> true when the key was used
