@@ -19,7 +19,9 @@ module.exports = function makeTaskFlow({ P, store, getMembers, perms, bus, postC
   const mem = id => getMembers().find(m => m.id === id) || null;
   const now = () => new Date().toISOString();
 
-  function settings() { const s = store.readJSON(FILE, null) || {}; return { ...DEF, ...s, mode: s.mode === 'council' ? 'council' : 'lead' }; }
+  // feat/group-styles: when the group decides as a council (server/groupstyle.js), tasks are claimed, not assigned: one setting, not two.
+  const byStyle = () => { try { return perms && perms.styleOf && perms.styleOf(P.current() || P.defaultId()).style === 'council'; } catch { return false; } };
+  function settings() { const s = store.readJSON(FILE, null) || {}, st = byStyle(); return { ...DEF, ...s, mode: st || s.mode === 'council' ? 'council' : 'lead', ...(st ? { fromStyle: true } : {}) }; }
   function setSettings(body, me) {
     if (!isLead(me)) throw err(403, 'only the host or a project lead changes how work is shared');
     const s = settings();

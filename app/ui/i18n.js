@@ -1591,6 +1591,157 @@
   // Storage card keys (storage.js asks t('st.*', English)): translated by the same English text.
   // Tasks design pass: the board draws stroke icons where it had a leading emoji, so the same phrases are also found without one.
   ['🔥 Ask Flint to pick', '✂️ Split into smaller tasks', '🔥 Ask Flint to plan tasks', '🔥 Plan this week with Flint'].forEach(k => { const bare = k.replace(/^\S+\s/, ''); if (D[k] && !D[bare]) D[bare] = D[k].map(x => x.replace(/^(🔥|✂️)\s*/, '')); });
+  // feat/group-styles: how this group decides, the group's own words, who can do what (groupstyle.js)
+  Object.assign(D, {
+    "With a council, nobody decides the big things alone: publishing, sending work to the main copy, spending, roles and settings.": ["Con un consejo, nadie decide solo lo importante: publicar, enviar trabajo a la copia principal, gastar, roles y ajustes.","Com um conselho, ninguém decide sozinho o que é importante: publicar, enviar trabalho para a cópia principal, gastar, funções e ajustes.","Avec un conseil, personne ne décide seul des grandes choses : publier, envoyer le travail vers la copie principale, dépenser, rôles et réglages.","Mit einem Rat entscheidet niemand Großes allein: Veröffentlichen, Arbeit in die Hauptkopie geben, Ausgaben, Rollen und Einstellungen.","評議会では、大事なことを1人では決めません：公開、メインのコピーへの送信、支出、役割、設定。","有议事会时，大事不由一个人决定：发布、把成果送入主副本、花钱、角色和设置。","평의회에서는 큰 일을 혼자 결정하지 않습니다: 게시, 메인 사본으로 보내기, 지출, 역할, 설정."],
+    "Anyone building can publish, send work to the main copy and change settings. Deleting, removing someone and changing roles need a second person to agree.": ["Quien construye puede publicar, enviar trabajo a la copia principal y cambiar ajustes. Borrar, quitar a alguien y cambiar roles necesitan que una segunda persona esté de acuerdo.","Quem constrói pode publicar, enviar trabalho para a cópia principal e mudar ajustes. Apagar, remover alguém e mudar funções precisam que uma segunda pessoa concorde.","Ceux qui construisent peuvent publier, envoyer le travail vers la copie principale et changer les réglages. Supprimer, retirer quelqu’un et changer les rôles demandent l’accord d’une deuxième personne.","Wer mitbaut, darf veröffentlichen, Arbeit in die Hauptkopie geben und Einstellungen ändern. Löschen, jemanden entfernen und Rollen ändern brauchen die Zustimmung einer zweiten Person.","作っている人は公開、メインのコピーへの送信、設定の変更ができます。削除、メンバーの除外、役割の変更にはもう1人の同意が必要です。","参与的人可以发布、把成果送入主副本、更改设置。删除、移除成员和更改角色需要第二个人同意。","만드는 사람은 게시, 메인 사본으로 보내기, 설정 변경을 할 수 있습니다. 삭제, 내보내기, 역할 변경은 두 번째 사람의 동의가 필요합니다."],
+    "Make roles below and tick what each one looks after. In the list at the bottom, pick how each thing is decided.": ["Creen roles abajo y marquen de qué se ocupa cada uno. En la lista del final, elijan cómo se decide cada cosa.","Criem funções abaixo e marquem do que cada uma cuida. Na lista do final, escolham como cada coisa é decidida.","Créez des rôles ci-dessous et cochez ce dont chacun s’occupe. Dans la liste en bas, choisissez comment chaque chose se décide.","Legt unten Rollen an und hakt an, worum sich jede kümmert. In der Liste ganz unten wählt ihr, wie jede Sache entschieden wird.","下で役割を作り、それぞれの担当にチェックを入れます。一番下のリストで、項目ごとの決め方を選びます。","在下方创建角色并勾选各自负责的事。在底部的列表里，选择每件事怎么决定。","아래에서 역할을 만들고 각 역할이 맡을 일을 체크하세요. 맨 아래 목록에서 항목별 결정 방식을 고르세요."],
+    "Things only the computer’s owner can do are never part of a role. AI helpers follow their owner.": ["Lo que solo puede hacer el dueño del ordenador nunca forma parte de un rol. Los ayudantes de IA siguen a su dueño.","O que só o dono do computador pode fazer nunca faz parte de uma função. Os ajudantes de IA seguem o dono.","Ce que seul le propriétaire de l’ordinateur peut faire ne fait jamais partie d’un rôle. Les assistants IA suivent leur propriétaire.","Was nur die Person darf, der der Computer gehört, ist nie Teil einer Rolle. KI-Helfer folgen ihrer Besitzerin.","コンピューターの持ち主だけができることは、役割に含められません。AIヘルパーは持ち主に従います。","只有电脑主人能做的事永远不属于任何角色。AI 助手跟随它的主人。","컴퓨터 주인만 할 수 있는 일은 역할에 포함되지 않습니다. AI 도우미는 주인을 따릅니다."],
+    "None yet. A role has a name, a purpose and the things it looks after.": ["Aún ninguno. Un rol tiene un nombre, un propósito y las cosas de las que se ocupa.","Nenhuma ainda. Uma função tem um nome, um propósito e as coisas de que cuida.","Aucun pour l’instant. Un rôle a un nom, un but et ce dont il s’occupe.","Noch keine. Eine Rolle hat einen Namen, einen Zweck und die Dinge, um die sie sich kümmert.","まだありません。役割には名前、目的、担当することがあります。","还没有。角色有名称、用途和它负责的事。","아직 없습니다. 역할에는 이름, 목적, 맡는 일이 있습니다."],
+    "They said yes. Until {when} you can: {what}.": ["Dijeron que sí. Hasta {when} puedes: {what}.","Disseram que sim. Até {when} você pode: {what}.","Ils ont dit oui. Jusqu’à {when} vous pouvez : {what}.","Sie haben Ja gesagt. Bis {when} darfst du: {what}.","承認されました。{when}まで可能：{what}。","他们同意了。在 {when} 之前你可以：{what}。","승인되었습니다. {when}까지 가능: {what}."],
+    "AI helpers may vote on small, safe things": ["Los ayudantes de IA pueden votar en cosas pequeñas y seguras","Os ajudantes de IA podem votar em coisas pequenas e seguras","Les assistants IA peuvent voter sur les petites choses sûres","KI-Helfer dürfen bei kleinen, sicheren Dingen abstimmen","AIヘルパーは小さく安全なことに投票できる","AI 助手可以对小而安全的事投票","AI 도우미가 작고 안전한 일에 투표할 수 있음"],
+    "Off: only people vote. A helper’s vote counts as its owner’s one vote.": ["Apagado: solo votan las personas. El voto de un ayudante cuenta como el único voto de su dueño.","Desligado: só pessoas votam. O voto de um ajudante conta como o único voto do dono.","Désactivé : seules les personnes votent. Le vote d’un assistant compte comme l’unique vote de son propriétaire.","Aus: nur Menschen stimmen ab. Die Stimme eines Helfers zählt als die eine Stimme seiner Besitzerin.","オフ：人だけが投票します。ヘルパーの票は持ち主の1票として数えます。","关闭：只有人投票。助手的票算作它主人的那一票。","끄기: 사람만 투표합니다. 도우미의 표는 주인의 한 표로 셉니다."],
+    "Back to one lead.": ["De vuelta a un líder.","De volta a um líder.","Retour à un responsable.","Zurück zu einer Leitung.","リーダー1人に戻しました。","已恢复为一位负责人。","리더 한 명으로 되돌렸습니다."],
+    "Saved.": ["Guardado.","Salvo.","Enregistré.","Gespeichert.","保存しました。","已保存。","저장했습니다."],
+    "Put to a vote. {who} can answer in the chat.": ["Sometido a votación. {who} puede responder en el chat.","Colocado em votação. {who} pode responder no chat.","Mis au vote. {who} peut répondre dans le chat.","Zur Abstimmung gestellt. {who} kann im Chat antworten.","投票にかけました。{who} がチャットで答えられます。","已发起投票。{who} 可以在聊天中回应。","투표에 부쳤습니다. {who} 님이 채팅에서 답할 수 있습니다."],
+    "Asked. {who} can answer in the chat.": ["Pedido enviado. {who} puede responder en el chat.","Pedido enviado. {who} pode responder no chat.","Demande envoyée. {who} peut répondre dans le chat.","Gefragt. {who} kann im Chat antworten.","依頼しました。{who} がチャットで答えられます。","已请求。{who} 可以在聊天中回应。","요청했습니다. {who} 님이 채팅에서 답할 수 있습니다."],
+    "Could not load this right now.": ["No se pudo cargar ahora.","Não foi possível carregar agora.","Impossible de charger pour le moment.","Das ließ sich gerade nicht laden.","今は読み込めませんでした。","现在无法加载。","지금은 불러올 수 없습니다."],
+    "Only the computer’s owner ({who}) can do this.": ["Solo el dueño del ordenador ({who}) puede hacer esto.","Só o dono do computador ({who}) pode fazer isto.","Seul le propriétaire de l’ordinateur ({who}) peut faire cela.","Nur die Person, der der Computer gehört ({who}), darf das.","これはコンピューターの持ち主（{who}）だけができます。","只有这台电脑的主人（{who}）能做这件事。","이것은 컴퓨터 주인({who})만 할 수 있습니다."],
+    "Only the computer’s owner can do this.": ["Solo el dueño del ordenador puede hacer esto.","Só o dono do computador pode fazer isto.","Seul le propriétaire de l’ordinateur peut faire cela.","Nur die Person, der der Computer gehört, darf das.","これはコンピューターの持ち主だけができます。","只有这台电脑的主人能做这件事。","이것은 컴퓨터 주인만 할 수 있습니다."],
+    "The council decides this here: {who}.": ["Aquí esto lo decide el consejo: {who}.","Aqui o conselho decide isto: {who}.","Ici, c’est le conseil qui décide : {who}.","Das entscheidet hier der Rat: {who}.","ここでは評議会が決めます：{who}。","这里由议事会决定：{who}。","여기서는 평의회가 결정합니다: {who}."],
+    "The council decides this here.": ["Aquí esto lo decide el consejo.","Aqui o conselho decide isto.","Ici, c’est le conseil qui décide.","Das entscheidet hier der Rat.","ここでは評議会が決めます。","这里由议事会决定。","여기서는 평의회가 결정합니다."],
+    "Everyone decides this together here.": ["Aquí esto lo deciden todos juntos.","Aqui todos decidem isto juntos.","Ici, tout le monde décide ensemble.","Das entscheiden hier alle gemeinsam.","ここでは全員で決めます。","这里由所有人一起决定。","여기서는 모두 함께 결정합니다."],
+    "{who} can do this here.": ["{who} puede hacer esto aquí.","{who} pode fazer isto aqui.","{who} peut faire cela ici.","{who} darf das hier.","ここでは {who} ができます。","这里 {who} 可以做这件事。","여기서는 {who} 님이 할 수 있습니다."],
+    "Nobody here can do this yet.": ["Aquí nadie puede hacer esto todavía.","Ninguém aqui pode fazer isto ainda.","Personne ici ne peut encore faire cela.","Das darf hier noch niemand.","ここではまだ誰もできません。","这里还没有人能做这件事。","여기서는 아직 아무도 할 수 없습니다."],
+    "{who} can do this here. One tap asks them.": ["{who} puede hacer esto aquí. Un toque se lo pide.","{who} pode fazer isto aqui. Um toque pede a eles.","{who} peut faire cela ici. Un appui le leur demande.","{who} darf das hier. Ein Tipp fragt sie.","ここでは {who} ができます。ワンタップで頼めます。","这里 {who} 可以做这件事。点一下就能请他们处理。","여기서는 {who} 님이 할 수 있습니다. 한 번 눌러 요청하세요."],
+    "Ask to say what you are making": ["Pedir permiso para decir qué están haciendo","Pedir para dizer o que vocês estão fazendo","Demander à dire ce que vous créez","Fragen, ob du sagen darfst, was ihr baut","何を作るか書けるよう頼む","请求填写你们要做什么","무엇을 만드는지 쓰도록 요청하기"],
+    "Ask to publish it": ["Pedir que se publique","Pedir para publicar","Demander à le publier","Um Veröffentlichung bitten","公開を頼む","请求发布","게시 요청하기"],
+    "Ask to publish": ["Pedir publicar","Pedir para publicar","Demander à publier","Um Veröffentlichung bitten","公開を頼む","请求发布","게시 요청"],
+    "The people who can publish here get your request.": ["Las personas que pueden publicar aquí reciben tu pedido.","As pessoas que podem publicar aqui recebem seu pedido.","Les personnes qui peuvent publier ici reçoivent votre demande.","Die Leute, die hier veröffentlichen dürfen, bekommen deine Anfrage.","ここで公開できる人に依頼が届きます。","这里能发布的人会收到你的请求。","여기서 게시할 수 있는 사람들에게 요청이 전달됩니다."],
+    "Ask to send it to the main copy": ["Pedir enviarlo a la copia principal","Pedir para enviar para a cópia principal","Demander à l’envoyer vers la copie principale","Fragen, ob es in die Hauptkopie darf","メインのコピーへ送るよう頼む","请求送入主副本","메인 사본으로 보내기 요청"],
+    "Put to a vote in the chat.": ["Sometido a votación en el chat.","Colocado em votação no chat.","Mis au vote dans le chat.","Im Chat zur Abstimmung gestellt.","チャットで投票にかけました。","已在聊天中发起投票。","채팅에서 투표에 부쳤습니다."],
+    "Propose a change": ["Proponer un cambio","Propor uma mudança","Proposer un changement","Änderung vorschlagen","変更を提案","提议更改","변경 제안"],
+    "The council decides changes here. Propose one; when enough of the council say yes, the edit buttons open for you for a day.": ["Aquí los cambios los decide el consejo. Propón uno; cuando suficientes del consejo digan que sí, los botones de edición se abren para ti por un día.","Aqui o conselho decide as mudanças. Proponha uma; quando gente suficiente do conselho disser sim, os botões de edição abrem para você por um dia.","Ici, le conseil décide des changements. Proposez-en un ; quand assez de membres disent oui, les boutons de modification s’ouvrent pour vous pendant un jour.","Änderungen entscheidet hier der Rat. Schlag eine vor; wenn genug vom Rat Ja sagen, öffnen sich die Bearbeiten-Knöpfe für dich einen Tag lang.","ここでは変更を評議会が決めます。提案して十分な賛成が集まると、編集ボタンが1日使えるようになります。","这里的更改由议事会决定。提出一项；当足够多的成员同意后，编辑按钮会为你开放一天。","여기서는 변경을 평의회가 결정합니다. 제안하고 충분한 동의를 얻으면 편집 버튼이 하루 동안 열립니다."],
+    "My folder": ["Mi carpeta","Minha pasta","Mon dossier","Mein Ordner","マイフォルダ","我的文件夹","내 폴더"],
+    "New file here": ["Nuevo archivo aquí","Novo arquivo aqui","Nouveau fichier ici","Neue Datei hier","ここに新しいファイル","在此新建文件","여기에 새 파일"],
+    "New file": ["Nuevo archivo","Novo arquivo","Nouveau fichier","Neue Datei","新しいファイル","新建文件","새 파일"],
+    "Send to the main copy": ["Enviar a la copia principal","Enviar para a cópia principal","Envoyer vers la copie principale","In die Hauptkopie geben","メインのコピーへ送る","送入主副本","메인 사본으로 보내기"],
+    "Sent to the main copy.": ["Enviado a la copia principal.","Enviado para a cópia principal.","Envoyé vers la copie principale.","In die Hauptkopie gegeben.","メインのコピーへ送りました。","已送入主副本。","메인 사본으로 보냈습니다."],
+    "Create": ["Crear","Criar","Créer","Anlegen","作成","创建","만들기"],
+    "One tap asks them.": ["Un toque se lo pide.","Um toque pede a eles.","Un appui le leur demande.","Ein Tipp fragt sie.","ワンタップで頼めます。","点一下就能请他们处理。","한 번 눌러 요청하세요."],
+    "One lead, a council or your own roles, and who can do what here.": ["Un líder, un consejo o sus propios roles, y quién puede hacer qué aquí.","Um líder, um conselho ou suas próprias funções, e quem pode fazer o quê aqui.","Un responsable, un conseil ou vos propres rôles, et qui peut faire quoi ici.","Eine Leitung, ein Rat oder eigene Rollen, und wer hier was darf.","リーダー1人、評議会、または独自の役割。ここで誰が何をできるか。","一位负责人、议事会或自定义角色，以及这里谁能做什么。","리더 한 명, 평의회 또는 우리만의 역할, 그리고 여기서 누가 무엇을 할 수 있는지."],
+    "How this group decides": ["Cómo decide este grupo","Como este grupo decide","Comment ce groupe décide","Wie diese Gruppe entscheidet","このグループの決め方","这个小组怎么决定","이 그룹의 결정 방식"],
+    "How this group decides and who can do what": ["Cómo decide este grupo y quién puede hacer qué","Como este grupo decide e quem pode fazer o quê","Comment ce groupe décide et qui peut faire quoi","Wie diese Gruppe entscheidet und wer was darf","このグループの決め方と、誰が何をできるか","这个小组怎么决定，谁能做什么","이 그룹의 결정 방식과 누가 무엇을 할 수 있는지"],
+    "Company": ["Empresa","Empresa","Entreprise","Firma","会社","公司","회사"],
+    "Club": ["Club","Clube","Club","Club","クラブ","俱乐部","클럽"],
+    "Studio": ["Estudio","Estúdio","Studio","Studio","スタジオ","工作室","스튜디오"],
+    "Class": ["Clase","Turma","Classe","Klasse","クラス","班级","반"],
+    "Team": ["Equipo","Equipe","Équipe","Team","チーム","团队","팀"],
+    "Collective": ["Colectivo","Coletivo","Collectif","Kollektiv","コレクティブ","集体","공동체"],
+    "Family": ["Familia","Família","Famille","Familie","ファミリー","家庭","가족"],
+    "Crew": ["Tripulación","Turma","Bande","Crew","クルー","伙伴","크루"],
+    "Band": ["Banda","Banda","Groupe","Band","バンド","乐队","밴드"],
+    "Lab": ["Laboratorio","Laboratório","Labo","Labor","ラボ","实验室","랩"],
+    "Captain": ["Capitán","Capitão","Capitaine","Kapitän","キャプテン","队长","주장"],
+    "Director": ["Director","Diretor","Directeur","Direktor","ディレクター","总监","디렉터"],
+    "Organizer": ["Organizador","Organizador","Organisateur","Organisator","まとめ役","组织者","주최자"],
+    "Teacher": ["Profesor","Professor","Professeur","Lehrkraft","先生","老师","선생님"],
+    "Coach": ["Entrenador","Treinador","Coach","Coach","コーチ","教练","코치"],
+    "Chair": ["Presidente","Presidente","Président","Vorsitz","議長","主席","의장"],
+    "Founder": ["Fundador","Fundador","Fondateur","Gründer","創業者","创始人","창립자"],
+    "Council": ["Consejo","Conselho","Conseil","Rat","評議会","议事会","평의회"],
+    "Seat": ["Puesto","Cadeira","Siège","Platz","席","席位","자리"],
+    "Job": ["Trabajo","Trabalho","Poste","Aufgabe","仕事","职责","일"],
+    "Hat": ["Sombrero","Chapéu","Casquette","Hut","帽子","帽子","모자"],
+    "Check-in": ["Puesta al día","Atualização","Point","Check-in","チェックイン","碰头","체크인"],
+    "Standup": ["Reunión rápida","Reunião rápida","Point rapide","Standup","朝会","站会","스탠드업"],
+    "Meeting": ["Reunión","Reunião","Réunion","Treffen","ミーティング","会议","회의"],
+    "Roll call": ["Pase de lista","Chamada","Appel","Anwesenheitsrunde","点呼","点名","출석 확인"],
+    "This group": ["Este grupo","Este grupo","Ce groupe","Diese Gruppe","このグループ","这个小组","이 그룹"],
+    "How we decide and who can do what": ["Cómo decidimos y quién puede hacer qué","Como decidimos e quem pode fazer o quê","Comment on décide et qui peut faire quoi","Wie wir entscheiden und wer was darf","決め方と、誰が何をできるか","我们怎么决定，谁能做什么","결정 방식과 누가 무엇을 할 수 있는지"],
+    "How we decide": ["Cómo decidimos","Como decidimos","Comment on décide","Wie wir entscheiden","決め方","我们怎么决定","결정 방식"],
+    "Who has the final say?": ["¿Quién tiene la última palabra?","Quem tem a palavra final?","Qui a le dernier mot ?","Wer hat das letzte Wort?","最後に決めるのは誰？","谁说了算？","최종 결정은 누가 하나요?"],
+    "One lead": ["Un líder","Um líder","Un responsable","Eine Leitung","リーダー1人","一位负责人","리더 한 명"],
+    "A council": ["Un consejo","Um conselho","Un conseil","Ein Rat","評議会","议事会","평의회"],
+    "Our own roles": ["Nuestros propios roles","Nossas próprias funções","Nos propres rôles","Eigene Rollen","自分たちの役割","我们自己的角色","우리만의 역할"],
+    "Everyone building": ["Todos los que construyen","Todos que constroem","Tous ceux qui construisent","Alle, die mitbauen","作っている全員","所有参与的人","만드는 모두"],
+    "One person has the final say.": ["Una persona tiene la última palabra.","Uma pessoa tem a palavra final.","Une personne a le dernier mot.","Eine Person hat das letzte Wort.","1人が最後に決めます。","由一个人最终决定。","한 사람이 최종 결정합니다."],
+    "Big things pass when enough of you agree.": ["Lo importante se aprueba cuando suficientes están de acuerdo.","O importante passa quando gente suficiente concorda.","Les grandes décisions passent quand assez d’entre vous sont d’accord.","Großes gilt, wenn genug von euch zustimmen.","大事なことは十分な人数の賛成で決まります。","大事要足够多的人同意才通过。","큰 일은 충분한 인원이 동의하면 통과됩니다."],
+    "Anyone can do most things.": ["Cualquiera puede hacer casi todo.","Qualquer um pode fazer quase tudo.","Chacun peut faire presque tout.","Alle dürfen das meiste.","ほとんどのことは誰でもできます。","大多数事情谁都能做。","대부분의 일은 누구나 할 수 있습니다."],
+    "One person has the final say. You choose what to call them.": ["Una persona tiene la última palabra. Tú eliges cómo llamarla.","Uma pessoa tem a palavra final. Você escolhe como chamá-la.","Une personne a le dernier mot. Vous choisissez son nom.","Eine Person hat das letzte Wort. Ihr wählt, wie sie heißt.","1人が最後に決めます。呼び方は自由です。","由一个人最终决定。怎么称呼由你们定。","한 사람이 최종 결정합니다. 호칭은 직접 정하세요."],
+    "No single lead. Big things pass when enough of the council agree.": ["Sin un solo líder. Lo importante se aprueba cuando suficientes del consejo están de acuerdo.","Sem um líder único. O importante passa quando gente suficiente do conselho concorda.","Pas de responsable unique. Les grandes décisions passent quand assez de membres du conseil sont d’accord.","Keine einzelne Leitung. Großes gilt, wenn genug vom Rat zustimmen.","リーダーは置きません。大事なことは評議会の十分な賛成で決まります。","没有单一负责人。大事要议事会足够多的人同意才通过。","단독 리더가 없습니다. 큰 일은 평의회의 충분한 동의로 통과됩니다."],
+    "Anyone building can do most things. Deleting and removing need a second person.": ["Quien construye puede hacer casi todo. Borrar y quitar necesitan a una segunda persona.","Quem constrói pode fazer quase tudo. Apagar e remover precisam de uma segunda pessoa.","Ceux qui construisent peuvent presque tout faire. Supprimer et retirer demandent une deuxième personne.","Wer mitbaut, darf das meiste. Löschen und Entfernen brauchen eine zweite Person.","作っている人はほとんど何でもできます。削除や除外にはもう1人の同意が必要です。","参与的人大多数事情都能做。删除和移除需要第二个人同意。","만드는 사람은 대부분 할 수 있습니다. 삭제와 내보내기는 두 번째 사람이 필요합니다."],
+    "You name the roles and tick what each one looks after.": ["Ustedes nombran los roles y marcan de qué se ocupa cada uno.","Vocês nomeiam as funções e marcam do que cada uma cuida.","Vous nommez les rôles et cochez ce dont chacun s’occupe.","Ihr benennt die Rollen und hakt an, worum sich jede kümmert.","役割に名前を付け、それぞれの担当にチェックを入れます。","你们给角色命名，并勾选各自负责的事。","역할 이름을 정하고 각 역할이 맡을 일을 체크하세요."],
+    "Who is on the council": ["Quién está en el consejo","Quem está no conselho","Qui siège au conseil","Wer im Rat sitzt","評議会のメンバー","谁在议事会里","평의회 구성원"],
+    "How many must agree": ["Cuántos deben estar de acuerdo","Quantos precisam concordar","Combien doivent être d’accord","Wie viele zustimmen müssen","必要な賛成の数","需要多少人同意","몇 명이 동의해야 하나요"],
+    "Time to decide": ["Tiempo para decidir","Tempo para decidir","Temps pour décider","Zeit zum Entscheiden","決めるまでの時間","决定的期限","결정 기한"],
+    "If time runs out": ["Si se acaba el tiempo","Se o tempo acabar","Si le temps est écoulé","Wenn die Zeit abläuft","時間切れのとき","如果超时","시간이 다 되면"],
+    "More than half": ["Más de la mitad","Mais da metade","Plus de la moitié","Mehr als die Hälfte","過半数","超过一半","과반수"],
+    "Any two": ["Dos cualesquiera","Quaisquer dois","Deux personnes","Zwei beliebige","だれか2人","任意两人","아무나 두 명"],
+    "Everyone": ["Todos","Todos","Tout le monde","Alle","全員","所有人","모두"],
+    "One day": ["Un día","Um dia","Un jour","Ein Tag","1日","一天","하루"],
+    "Two days": ["Dos días","Dois dias","Deux jours","Zwei Tage","2日","两天","이틀"],
+    "One week": ["Una semana","Uma semana","Une semaine","Eine Woche","1週間","一周","일주일"],
+    "It does not pass": ["No se aprueba","Não passa","Ça ne passe pas","Es gilt nicht","通りません","不通过","통과되지 않음"],
+    "More yes than no is enough": ["Basta con más sí que no","Basta mais sim do que não","Plus de oui que de non suffit","Mehr Ja als Nein genügt","賛成が反対より多ければ可","赞成多于反对即可","찬성이 반대보다 많으면 통과"],
+    "What do you call the lead?": ["¿Cómo llaman al líder?","Como vocês chamam o líder?","Comment appelez-vous le responsable ?","Wie nennt ihr die Leitung?","リーダーを何と呼びますか？","你们怎么称呼负责人？","리더를 뭐라고 부르나요?"],
+    "Roles you made": ["Roles que crearon","Funções que vocês criaram","Rôles que vous avez créés","Eure Rollen","作った役割","你们创建的角色","직접 만든 역할"],
+    "Your own roles": ["Sus propios roles","Suas próprias funções","Vos propres rôles","Eigene Rollen","独自の役割","自己的角色","우리만의 역할"],
+    "What it is for": ["Para qué sirve","Para que serve","À quoi ça sert","Wofür sie da ist","目的","用途","목적"],
+    "Looks after": ["Se ocupa de","Cuida de","S’occupe de","Kümmert sich um","担当すること","负责","맡는 일"],
+    "Who has this role": ["Quién tiene este rol","Quem tem esta função","Qui a ce rôle","Wer diese Rolle hat","この役割の人","谁担任这个角色","이 역할을 맡은 사람"],
+    "Remove this role": ["Quitar este rol","Remover esta função","Retirer ce rôle","Diese Rolle entfernen","この役割を削除","移除这个角色","이 역할 삭제"],
+    "Our words": ["Nuestras palabras","Nossas palavras","Nos mots","Unsere Wörter","私たちの言葉","我们的用词","우리의 말"],
+    "What do you call things here?": ["¿Cómo llaman a las cosas aquí?","Como vocês chamam as coisas aqui?","Comment appelez-vous les choses ici ?","Wie nennt ihr die Dinge hier?","ここでの呼び方は？","你们这里怎么称呼？","여기서는 뭐라고 부르나요?"],
+    "The group": ["El grupo","O grupo","Le groupe","Die Gruppe","グループ","小组","그룹"],
+    "The lead": ["El líder","O líder","Le responsable","Die Leitung","リーダー","负责人","리더"],
+    "A role": ["Un rol","Uma função","Un rôle","Eine Rolle","役割","角色","역할"],
+    "A check-in": ["Una puesta al día","Uma atualização","Un point","Ein Check-in","チェックイン","碰头","체크인"],
+    "The app and Flint use your words everywhere.": ["La app y Flint usan sus palabras en todas partes.","O app e o Flint usam suas palavras em todo lugar.","L’appli et Flint utilisent vos mots partout.","Die App und Flint nutzen eure Wörter überall.","アプリとFlintはどこでもこの言葉を使います。","应用和 Flint 会处处使用你们的用词。","앱과 Flint가 어디서나 이 말을 씁니다."],
+    "Right now": ["Ahora mismo","Agora","En ce moment","Im Moment","現在","当前","지금"],
+    "Who can do what": ["Quién puede hacer qué","Quem pode fazer o quê","Qui peut faire quoi","Wer was darf","誰が何をできるか","谁能做什么","누가 무엇을 할 수 있나요"],
+    "You can": ["Tú puedes","Você pode","Vous pouvez","Du darfst","できます","你可以","가능"],
+    "Asked": ["Pedido","Pedido","Demandé","Gefragt","依頼済み","已请求","요청함"],
+    "Ask them": ["Pedírselo","Pedir a eles","Leur demander","Sie fragen","頼む","请他们处理","요청하기"],
+    "Put it to a vote": ["Someter a votación","Colocar em votação","Mettre au vote","Zur Abstimmung stellen","投票にかける","发起投票","투표에 부치기"],
+    "Back to one lead": ["Volver a un líder","Voltar a um líder","Revenir à un responsable","Zurück zu einer Leitung","リーダー1人に戻す","恢复为一位负责人","리더 한 명으로 되돌리기"],
+    "One person who can": ["Una persona que pueda","Uma pessoa que possa","Une personne qui le peut","Eine Person, die es darf","できる人1人","一位有权限的人","할 수 있는 한 사람"],
+    "One person, and a second person agrees": ["Una persona, y una segunda está de acuerdo","Uma pessoa, e uma segunda concorda","Une personne, et une deuxième est d’accord","Eine Person, und eine zweite stimmt zu","1人と、もう1人の同意","一人，再加第二个人同意","한 사람과 두 번째 사람의 동의"],
+    "The council agrees": ["El consejo está de acuerdo","O conselho concorda","Le conseil est d’accord","Der Rat stimmt zu","評議会の賛成","议事会同意","평의회 동의"],
+    "Everyone agrees": ["Todos están de acuerdo","Todos concordam","Tout le monde est d’accord","Alle stimmen zu","全員の賛成","所有人同意","모두 동의"],
+    "The lead only": ["Solo el líder","Só o líder","Le responsable seulement","Nur die Leitung","リーダーのみ","仅负责人","리더만"],
+    "Only the computer’s owner": ["Solo el dueño del ordenador","Só o dono do computador","Seul le propriétaire de l’ordinateur","Nur die Person, der der Computer gehört","このコンピューターの持ち主のみ","仅这台电脑的主人","이 컴퓨터의 주인만"],
+    "Anyone building here (not people who only watch)": ["Cualquiera que construya aquí (no quienes solo miran)","Qualquer um que constrói aqui (não quem só assiste)","Tous ceux qui construisent ici (pas ceux qui regardent)","Alle, die hier mitbauen (nicht nur Zuschauende)","ここで作っている人（見るだけの人は除く）","在这里参与的人（不含只旁观的人）","여기서 만드는 사람 (보기만 하는 사람 제외)"],
+    "Delete someone else’s chat message": ["Borrar el mensaje de otra persona","Apagar a mensagem de outra pessoa","Supprimer le message de quelqu’un d’autre","Die Nachricht einer anderen Person löschen","他の人のメッセージを削除","删除别人的聊天消息","다른 사람의 메시지 삭제"],
+    "Mute someone for a while": ["Silenciar a alguien un rato","Silenciar alguém por um tempo","Rendre quelqu’un muet un moment","Jemanden eine Weile stummschalten","しばらくミュートする","暂时禁言某人","잠시 음소거하기"],
+    "Remove someone from a project": ["Quitar a alguien de un proyecto","Remover alguém de um projeto","Retirer quelqu’un d’un projet","Jemanden aus einem Projekt entfernen","プロジェクトから外す","把某人移出项目","프로젝트에서 내보내기"],
+    "Invite people": ["Invitar personas","Convidar pessoas","Inviter des gens","Leute einladen","人を招待","邀请他人","사람 초대"],
+    "Change someone’s role": ["Cambiar el rol de alguien","Mudar a função de alguém","Changer le rôle de quelqu’un","Die Rolle von jemandem ändern","役割を変更する","更改某人的角色","누군가의 역할 변경"],
+    "Make or unmake an admin": ["Nombrar o quitar un admin","Tornar ou remover um admin","Nommer ou retirer un admin","Admin ernennen oder abberufen","管理者にする・外す","设为或取消管理员","관리자 지정 또는 해제"],
+    "Move, assign and close any task": ["Mover, asignar y cerrar cualquier tarea","Mover, atribuir e fechar qualquer tarefa","Déplacer, attribuer et fermer toute tâche","Jede Aufgabe verschieben, zuweisen und schließen","どのタスクも移動・割り当て・完了","移动、分配和关闭任何任务","모든 작업 이동, 배정, 닫기"],
+    "Close any proposal": ["Cerrar cualquier propuesta","Fechar qualquer proposta","Fermer toute proposition","Jeden Vorschlag schließen","どの提案も閉じる","关闭任何提案","모든 제안 닫기"],
+    "Say yes to small, safe requests from AI helpers": ["Aprobar pedidos pequeños y seguros de los ayudantes de IA","Aprovar pedidos pequenos e seguros dos ajudantes de IA","Accepter les petites demandes sûres des assistants IA","Kleine, sichere Anfragen von KI-Helfern erlauben","AIヘルパーの小さく安全な依頼を承認","批准 AI 助手的小而安全的请求","AI 도우미의 작고 안전한 요청 승인"],
+    "Say yes to any request, including spending": ["Aprobar cualquier pedido, incluidos los gastos","Aprovar qualquer pedido, inclusive gastos","Accepter toute demande, y compris les dépenses","Jede Anfrage erlauben, auch Ausgaben","支出を含むすべての依頼を承認","批准任何请求，包括花钱","지출을 포함한 모든 요청 승인"],
+    "Delete someone else’s files": ["Borrar archivos de otra persona","Apagar arquivos de outra pessoa","Supprimer les fichiers de quelqu’un d’autre","Dateien anderer löschen","他の人のファイルを削除","删除别人的文件","다른 사람의 파일 삭제"],
+    "Delete a project": ["Borrar un proyecto","Apagar um projeto","Supprimer un projet","Ein Projekt löschen","プロジェクトを削除","删除项目","프로젝트 삭제"],
+    "Change project settings and the plan": ["Cambiar los ajustes del proyecto y el plan","Mudar os ajustes do projeto e o plano","Changer les réglages du projet et le plan","Projekteinstellungen und Plan ändern","プロジェクトの設定と計画を変更","更改项目设置和计划","프로젝트 설정과 계획 변경"],
+    "Change the sidebar": ["Cambiar la barra lateral","Mudar a barra lateral","Changer la barre latérale","Die Seitenleiste ändern","サイドバーを変更","更改侧边栏","사이드바 변경"],
+    "Send work to the main copy": ["Enviar trabajo a la copia principal","Enviar trabalho para a cópia principal","Envoyer le travail vers la copie principale","Arbeit in die Hauptkopie geben","作業をメインのコピーに送る","把成果送入主副本","작업을 메인 사본으로 보내기"],
+    "Put projects on the owner’s GitHub": ["Poner proyectos en el GitHub del dueño","Colocar projetos no GitHub do dono","Mettre des projets sur le GitHub du propriétaire","Projekte auf das GitHub der Besitzerin legen","持ち主のGitHubにプロジェクトを置く","把项目放到主人的 GitHub","주인의 GitHub에 프로젝트 올리기"],
+    "Use the owner’s AI": ["Usar la IA del dueño","Usar a IA do dono","Utiliser l’IA du propriétaire","Die KI der Besitzerin nutzen","持ち主のAIを使う","使用主人的 AI","주인의 AI 사용"],
+    "Publish the website or app for everyone": ["Publicar el sitio o la app para todos","Publicar o site ou app para todos","Publier le site ou l’appli pour tous","Website oder App für alle veröffentlichen","サイトやアプリを全員に公開","向所有人发布网站或应用","웹사이트나 앱을 모두에게 게시"],
+    "Change how this group decides, its roles and its words": ["Cambiar cómo decide el grupo, sus roles y sus palabras","Mudar como o grupo decide, suas funções e palavras","Changer la façon de décider, les rôles et les mots du groupe","Ändern, wie die Gruppe entscheidet, ihre Rollen und Wörter","決め方・役割・言葉を変更","更改小组的决定方式、角色和用词","그룹의 결정 방식, 역할, 말 변경"],
+    "Sharing links and where the tribe runs": ["Enlaces para compartir y dónde funciona la tribu","Links de compartilhamento e onde a tribo roda","Liens de partage et où tourne la tribu","Freigabelinks und wo der Tribe läuft","共有リンクとトライブの置き場所","分享链接和部落运行的位置","공유 링크와 트라이브 실행 위치"],
+    "AI keys and sign-in secrets": ["Claves de IA y secretos de inicio de sesión","Chaves de IA e segredos de login","Clés IA et secrets de connexion","KI-Schlüssel und Anmeldegeheimnisse","AIキーとサインインの秘密情報","AI 密钥和登录机密","AI 키와 로그인 비밀 정보"],
+    "Run programs on the computer": ["Ejecutar programas en el ordenador","Rodar programas no computador","Lancer des programmes sur l’ordinateur","Programme auf dem Computer starten","コンピューターでプログラムを実行","在电脑上运行程序","컴퓨터에서 프로그램 실행"],
+    "Back up, move or delete the tribe": ["Respaldar, mover o borrar la tribu","Fazer backup, mover ou apagar a tribo","Sauvegarder, déplacer ou supprimer la tribu","Tribe sichern, umziehen oder löschen","トライブのバックアップ・移動・削除","备份、迁移或删除部落","트라이브 백업, 이동, 삭제"],
+    "Edit the website and its design": ["Editar el sitio y su diseño","Editar o site e o design","Modifier le site et son design","Website und Design bearbeiten","サイトとデザインを編集","编辑网站及其设计","웹사이트와 디자인 편집"],
+    "Write code and files in the project folder": ["Escribir código y archivos en la carpeta del proyecto","Escrever código e arquivos na pasta do projeto","Écrire du code et des fichiers dans le dossier du projet","Code und Dateien im Projektordner schreiben","プロジェクトフォルダにコードやファイルを書く","在项目文件夹里写代码和文件","프로젝트 폴더에 코드와 파일 쓰기"],
+    "Vote on proposals and chat votes": ["Votar propuestas y votaciones del chat","Votar em propostas e votações do chat","Voter sur les propositions et les votes du chat","Über Vorschläge und Chat-Abstimmungen abstimmen","提案やチャットの投票に参加","对提案和聊天投票进行表决","제안과 채팅 투표에 참여"],
+    "Ask for something to be decided": ["Pedir que se decida algo","Pedir que algo seja decidido","Demander qu’une chose soit décidée","Um eine Entscheidung bitten","決めてほしいことを頼む","请求对某事作出决定","결정을 요청하기"],
+    "You decide the big things together": ["Deciden juntos las cosas importantes","Vocês decidem juntos as coisas importantes","Vous décidez ensemble des grandes choses","Ihr entscheidet Großes gemeinsam","大事なことは一緒に決めます","大事一起决定","큰 일은 함께 결정합니다"],
+    "Keeps everyone pointed at the goal": ["Mantiene a todos enfocados en la meta","Mantém todos focados na meta","Garde tout le monde tourné vers l’objectif","Hält alle aufs Ziel ausgerichtet","全員を目標に向かわせます","让大家朝着目标前进","모두가 목표를 향하게 합니다"],
+  });
   const KEY = 'tribecode.lang';
   const supported = c => LANGS.some(([k]) => k === c);
   function detect() { const n = String((navigator.languages && navigator.languages[0]) || navigator.language || 'en').slice(0, 2).toLowerCase(); return supported(n) ? n : 'en'; }
@@ -1603,21 +1754,64 @@
   const orig = new WeakMap();   // text node -> English
   const ATTRS = ['placeholder', 'title', 'aria-label'];
   const SKIP = '.cv-world,.cv-lname,.cv-fname,.cv-aname b,.cv-phead b,.cv-ins-name,script,style,textarea,code,pre,.msg-body,.msg .body,.md,.doc-body,.rt,.pvw-frame,.tk-title,.card .title,[contenteditable],[data-title],.pj-name,.pc-name,#chat-list,.dm-body,.nf-item .nf-t';
+  // feat/group-styles: the group's own words (Company -> Club, Lead -> Captain, Role -> Seat, Check-in -> Standup).
+  // A small term map applied AFTER translation, in every language: the default word (in the current language) becomes
+  // the chosen word (translated when it is one of the listed choices, else as typed). Chat, docs and names are skipped
+  // like everything else here. No chosen words = no work.
+  const DEFW = { group: 'Company', lead: 'Lead', role: 'Role', checkin: 'Check-in' };
+  let WORDS = null, PAIRS = [];
+  const plural = w => (/[^aeiou]y$/i.test(w) ? w.slice(0, -1) + 'ies' : /(s|x|ch|sh)$/i.test(w) ? w + 'es' : w + 's');
+  const rx = w => w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  function pairs() {
+    PAIRS = [];
+    if (!WORDS) return;
+    const latin = !['ja', 'zh', 'ko'].includes(cur);
+    for (const k of Object.keys(DEFW)) {
+      const to0 = String(WORDS[k] || '').trim(); if (!to0 || to0 === DEFW[k]) continue;
+      const from = tr(DEFW[k]) || DEFW[k], to = tr(to0) || to0; if (from === to) continue;
+      if (!latin) { PAIRS.push(x => x.split(from).join(to)); continue; }
+      const low = cur === 'de' ? null : [from.toLowerCase(), to.toLowerCase()];   // German nouns keep their capital
+      const forms = [[plural(from), plural(to)], [from, to], ...(low && low[0] !== from ? [[plural(low[0]), plural(low[1])], low] : [])];
+      const res = forms.map(([a, b]) => [new RegExp('(^|[^\\p{L}\\p{N}])' + rx(a) + '(?![\\p{L}\\p{N}])', 'gu'), b]);
+      PAIRS.push(x => { for (const [re, b] of res) x = x.replace(re, (m, pre) => pre + b); return x; });
+    }
+  }
+  const terms = x => { if (!PAIRS.length || !x) return x; for (const f of PAIRS) x = f(x); return x; };
+  const tbase = new WeakMap(), tout = new WeakMap();   // text node -> its own words / what we last wrote
+  function termOnly(n, raw, s) {
+    if (!PAIRS.length && !tbase.has(n)) return;
+    if (s.length > 200) return;
+    const base = tbase.has(n) && tout.get(n) === s ? tbase.get(n) : s;
+    const want = terms(base); tbase.set(n, base); tout.set(n, want);
+    if (want !== s) n.nodeValue = raw.replace(s, want);
+  }
+  function words(w) {
+    const next = w && typeof w === 'object' && Object.keys(DEFW).some(k => w[k] && w[k] !== DEFW[k]) ? { ...w } : null;
+    if (JSON.stringify(next) === JSON.stringify(WORDS)) return;
+    WORDS = next; pairs(); if (document.body) apply();
+  }
+  // Chosen words back to the default ones, so Flint understands both ("add a seat" = "add a role").
+  function plainWords(text) {
+    if (!WORDS || !text) return text;
+    let x = String(text);
+    for (const k of Object.keys(DEFW)) { const to = String(WORDS[k] || '').trim(); if (!to || to === DEFW[k]) continue; x = x.replace(new RegExp('(^|[^\\p{L}\\p{N}])' + rx(to) + '(?![\\p{L}\\p{N}])', 'giu'), (m, pre) => pre + DEFW[k].toLowerCase()); }
+    return x;
+  }
   function swapText(n) {
     const raw = n.nodeValue; if (!raw) return;
-    const pe = n.parentElement; if (!pe || pe.closest(SKIP)) return; const s = raw.trim(); if (!s || s.length > 60) return;
+    const pe = n.parentElement; if (!pe || pe.closest(SKIP)) return; const s = raw.trim(); if (!s) return;
     // v0.27 fix: only English keys (or a node we translated before) count; inferring English from a translation turned
     // the word "Design" into "Theme" (it's German for Theme) on English screens
-    const en = orig.get(n) || (D[s] ? s : null); if (!en) return;
+    const en = orig.get(n) || (s.length <= 60 && D[s] ? s : null); if (!en) return termOnly(n, raw, s);
     orig.set(n, en);
-    const want = tr(en) || en; if (s !== want) n.nodeValue = raw.replace(s, want);
+    const want = terms(tr(en) || en); if (s !== want) n.nodeValue = raw.replace(s, want);
   }
   function swapAttrs(el) {
     for (const a of ATTRS) {
       const v = el.getAttribute(a); if (!v) continue;
       const key = 'data-en-' + a; let en = el.getAttribute(key);
-      if (!en || (v !== en && v !== tr(en))) { en = D[v] ? v : null; if (!en) continue; el.setAttribute(key, en); }
-      const want = tr(en) || en; if (v !== want) el.setAttribute(a, want);
+      if (!en || (v !== en && v !== tr(en) && v !== terms(tr(en) || en))) { en = D[v] ? v : null; if (!en) continue; el.setAttribute(key, en); }
+      const want = terms(tr(en) || en); if (v !== want) el.setAttribute(a, want);
     }
   }
   function walk(root) {
@@ -1640,9 +1834,9 @@
   function apply() { document.documentElement.lang = cur; busy = true; try { walk(document.body); } finally { busy = false; } }
   function set(code) {
     if (!supported(code)) return; cur = code; try { localStorage.setItem(KEY, code); } catch {}
-    apply(); window.dispatchEvent(new CustomEvent('tribe-lang', { detail: { lang: cur } }));
+    pairs(); apply(); window.dispatchEvent(new CustomEvent('tribe-lang', { detail: { lang: cur } }));
   }
   function start() { apply(); observe(); }
   if (document.body) start(); else document.addEventListener('DOMContentLoaded', start);
-  window.TribeI18n = { lang: () => cur, set, t, LANGS, apply };
+  window.TribeI18n = { lang: () => cur, set, t, LANGS, apply, words, plainWords, terms: x => terms(x) };
 })();

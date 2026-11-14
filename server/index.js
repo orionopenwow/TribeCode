@@ -132,7 +132,8 @@ function send(res, status, body, headers = {}) {
     'Access-Control-Allow-Headers': 'Authorization, Content-Type, Mcp-Session-Id, MCP-Protocol-Version, X-Project', 'Access-Control-Allow-Methods': 'GET, POST, PATCH, PUT, DELETE, OPTIONS', ...headers });
   res.end(isObj ? JSON.stringify(body) : body);
 }
-const fail = (res, status, error) => send(res, status, { error });
+// feat/group-styles: a refusal says who CAN do it (when a capability check just said no), so the app can offer "Ask them".
+const fail = (res, status, error) => { let need = null; if (status === 403 && res && res._me) { try { need = perms.refused(res._me); } catch {} } return send(res, status, need ? { error, need } : { error }); };
 function readBody(req, limit = 256 * 1024) {
   return new Promise((resolve, reject) => {
     let size = 0; const chunks = [];
@@ -430,7 +431,7 @@ const flint = makeFlint({ brain, str, llm });   // feat/flint
 brain.refresh().then(st => console.log(st.online ? `  Brain:    ${st.model} ${st.cloud ? "(the host's key)" : "via Ollama"}` : `  Brain:    off (${st.error})`));
 const readVision = () => { try { return fs.readFileSync(store.p('VISION.md'), 'utf8'); } catch { return ''; } };
 const projectRepo = () => (P.get(P.current() || P.defaultId()) || {}).repo || null;
-const board = makeBoard({ store, id, slug, str, getMembers: () => members, broadcast, postChat, createTask: (o) => createTask(o), repo: projectRepo, brain, readVision, can: (me, cap) => perms.can(me, cap) });
+const board = makeBoard({ store, id, slug, str, getMembers: () => members, broadcast, postChat, createTask: (o) => createTask(o), repo: projectRepo, brain, readVision, can: (me, cap) => perms.can(me, cap), counting: () => perms.counting(), passMark: perms.passMark });
 const docs = makeDocs({ store, slug, str, broadcast, brain, postChat, onWrite: (d, prev) => docsx.onWrite(d, prev) });
 const bugs = makeBugs({ store, id, str, broadcast, postChat, brain, createTask: o => createTask(o), getTask: tid => loadTasks().find(t => t.id === tid), saveTask: t => saveTask(t), getMembers: () => members, tellAgent: (...x) => coord.tell(...x), can: (me, cap) => perms.can(me, cap) });
 const nameOf = mid => (members.find(x => x.id === mid) || {}).name || 'someone';
@@ -499,7 +500,7 @@ const pocket = makeNotify({ store, bus, getMembers: () => members, sendTo, postC
 let shipHub = null, syncHub = null, folderHome = null, versionsHub = null;   // feat/ship-flow: a ship vote decided from a phone (one-tap approval) counts as that person's vote
 let publishOnApproval = null;   // v0.27 publish: an approved "publish" request from an AI helper (server/publish.js)
 let companyHub = null;   // v0.27 company: decided approvals land in the company's decision log (server/company.js)
-const approvals = makeApprovals({ store, id, str, bus, getMembers: () => members, postChat, broadcast: m => { broadcast(m); if (shipHub && m && m.type === 'approval') try { shipHub.onApproval(m.approval); } catch (e) { console.error('ship:', e.message); } if (syncHub && m && m.type === 'approval') try { syncHub.onApproval(m.approval); } catch (e) { console.error('sync:', e.message); } if (companyHub && m && m.type === 'approval') try { companyHub.onApproval(m.approval); } catch (e) { console.error('company:', e.message); } if (publishOnApproval && m && m.type === 'approval') try { publishOnApproval(m.approval); } catch (e) { console.error('publish:', e.message); } }, hub: pocket, project: () => P.current(), canSee: (m, pid) => !pid || P.canSee(m, pid),
+const approvals = makeApprovals({ counting: a => perms.counting(a && a.project ? a.project : undefined), passMark: perms.passMark, store, id, str, bus, getMembers: () => members, postChat, broadcast: m => { broadcast(m); if (shipHub && m && m.type === 'approval') try { shipHub.onApproval(m.approval); } catch (e) { console.error('ship:', e.message); } if (syncHub && m && m.type === 'approval') try { syncHub.onApproval(m.approval); } catch (e) { console.error('sync:', e.message); } if (companyHub && m && m.type === 'approval') try { companyHub.onApproval(m.approval); } catch (e) { console.error('company:', e.message); } if (publishOnApproval && m && m.type === 'approval') try { publishOnApproval(m.approval); } catch (e) { console.error('publish:', e.message); } }, hub: pocket, project: () => P.current(), canSee: (m, pid) => !pid || P.canSee(m, pid),
   canDecideAny: (who, a) => who.role === 'host' || ((!a.project || P.canSee(who, a.project)) && (perms.can(who, 'approvals.approve', a.project) || (a.risk === 'low' && perms.can(who, 'approvals.approve_low', a.project)))) });   // feat/roles
 const canSeeCh = (me, ch) => {   // fix/security-2: typing only in channels you can read
   if (ch === 'general') return true;
@@ -516,6 +517,9 @@ const chatx = makeChatx({ store, id, str, getMembers: () => members, postChat, d
   canModerate: (mem, msg, ch) => { const pid = (P.byChannel(ch) || {}).id || P.current(); const by = memberById(msg.by); return perms.can(mem, 'chat.moderate', pid) && (!by || perms.outranks(mem, by, pid)); },   // feat/roles
   muteBlock: mem => perms.muteBlock(mem), audit: (...x) => perms.audit(...x),
   voters: () => members.filter(x => x.role !== 'agent' && x.role !== 'spectator' && P.canSee(x, P.current() || P.defaultId())) });   // votes: the project's humans
+// feat/group-styles: how this group decides (one lead, a council, open, or its own roles) on top of the same capability table
+const groupStyle = require('./groupstyle')({ P, store: baseStore, perms, getMembers: () => members, votes: chatx.votes, bus, postChat, broadcast: m => broadcast(m), str, id });
+perms.setStyle(groupStyle); chatx.votes.hooks.decided = m => groupStyle.decided(m); chatx.votes.hooks.counting = () => groupStyle.counting(P.current() || P.defaultId());
 // feat/chat2: created channels, link previews (SSRF-safe fetch + picture proxy), GIF search (server/channels.js, embeds.js, gifs.js)
 const chans = require('./channels')({ store: baseStore, P, str, broadcast, getMembers: () => members });
 const embeds = require('./embeds')({ store: baseStore });
@@ -547,7 +551,7 @@ const rooms = makeRooms({ checkFolder: (p, o) => folderHome.check(p, o), watchFo
   broadcast, postChat, nameOf, str, perms });
 const coord = makeCoord({ P, store, id, str, broadcast, postChat, bus, getMembers: () => members, presenceFor, loadTasks: () => loadTasks(), saveTask: t => saveTask(t), claims, hubFor, approvals, brain, nameOf });
 // feat/ship-flow: Ship it (review what changed, vote to push), Turbo (ships on its own at calm moments), Share, Pulse, Split (server/ship.js)
-const ship = shipHub = require('./ship')({ P, store, hubFor, approvals, getMembers: () => members, loadTasks: () => loadTasks(), createTask: o => createTask(o), postChat, broadcast, bus, str, nameOf,
+const ship = shipHub = require('./ship')({ styleOf: pid => perms.styleOf(pid), counting: pid => perms.counting(pid), passMark: perms.passMark, P, store, hubFor, approvals, getMembers: () => members, loadTasks: () => loadTasks(), createTask: o => createTask(o), postChat, broadcast, bus, str, nameOf,
   can: (m, cap) => m.role === 'host' || perms.can(m, cap, P.current()), pushAuth: () => githubAuth.pushAuth(), coord, claims, id, brain });
 // feat/folder-sync: a folder on this computer as the project's home (server/folderhome.js), GitHub as its synced copy (server/sync.js)
 syncHub = require('./sync')({ onShipped: (pid, me, entry) => checksHub && checksHub.onShipped(pid, me, entry), P, W, base: baseStore, getMembers: () => members, approvals, broadcast, postChat, nameOf, perms, pushAuth: () => githubAuth.pushAuth(), brain, resetHub,
@@ -565,7 +569,7 @@ const assetLib = require('./assets')({ P, root: require('./tpldir').root(), base
 const assist = require('./assist')({ P, store, brain, docs, loadTasks: () => loadTasks(), getMembers: () => members, presenceFor, postChat, coord, shelf, str, nameOf });   // feat/assist: vision drafting + suggested tasks (server/assist.js)
 // feat/viewers: asset viewers (server/files.js) + phone app mode (server/phoneapp.js)
 const assetFiles = require('./files')({ P });
-const codeFiles = require('./codefiles')({ P, claims, identity: W.identity, member: id => members.find(x => x.id === id), broadcast });   // feat/files-code: the read-only Code view of Files (server/codefiles.js)
+const codeFiles = require('./codefiles')({ perms, P, claims, identity: W.identity, member: id => members.find(x => x.id === id), broadcast });   // feat/files-code: the read-only Code view of Files (server/codefiles.js)
 const uploads = require('./uploads')({ store: baseStore, P, nameOf, broadcast, can: (me, cap) => perms.can(me, cap) });   // the Files center: any file type, yours or the project's
 const dropzone = require('./dropzone')({ isLocal });   // feat/dropzone: the desktop app's dropped paths (host, this computer only)
 const connections = require('./connections')({ P, store: baseStore, uploads, visuals, postChat, nameOf, broadcast, isLocal });   // feat/mcp-directory: special connections (ArtCraft…), host only
@@ -704,7 +708,7 @@ const publishHub = require('./publish')({ P, W, base: baseStore, preview, setupF
   baseUrl: () => { const pub = share.publicUrl && share.publicUrl(), lan = (lanUrls().find(u => u.kind === 'lan') || lanUrls()[0] || {}).url; return (pub || lan || `http://localhost:${PORT}`).replace(/\/+$/, ''); } });
 publishOnApproval = a => publishHub.onApproval(a);
 // feat/publish-real: a zip, a GitHub page, itch.io, an installable app and app wrappers, from the same Publish sheet (server/publishreal.js)
-const publishReal = require('./publishreal')({ P, W, base: baseStore, publish: publishHub, getMembers: () => members, broadcast, nameOf, log: m => console.error('  ' + m) });
+const publishReal = require('./publishreal')({ P, W, base: baseStore, publish: publishHub, perms, getMembers: () => members, broadcast, nameOf, log: m => console.error('  ' + m) });
 const jamHub = require('./jam')({ P, W, base: baseStore, setupFlow, publish: publishHub, getMembers: () => members, broadcast, postChat, nameOf });
 const widgets = require('./widgets')({ P, store: baseStore, broadcast, preview, showcase, shelf, sense, can: (me, cap, pid) => perms.can(me, cap, pid) });   // feat/sidebar-widgets (server/widgets.js)
 const studios = require('./studios')({ P, base: baseStore, root: require('./tpldir').root(), sense, broadcast, buildKit });   // v0.27: Studios — creative apps beside TribeCode, linked not bundled (server/studios.js)
@@ -805,7 +809,7 @@ async function apiInProject(req, res, url) {
   const parts = url.pathname.split('/').filter(Boolean).slice(1); // after /api
   const [a, , c] = parts; let b = parts[1]; const m = req.method;
   const ctx = () => ({ m, a, b, c, parts, me, url, readBody, send, fail });
-  const me = authed(req);
+  const me = authed(req); res._me = me || null;
   const need = () => { if (!me) { fail(res, 401, 'not a member of this tribe'); return false; } return true; };
   { const hit = endpointLimited(req, parts.join('/'), me); if (hit) { res.setHeader('Retry-After', '60'); return fail(res, 429, hit.startsWith('search') ? 'Searching a lot: give it a minute, then try again.' : 'slow down: too many of those in a minute'); } }   // harden: per endpoint and client
 
@@ -1079,6 +1083,7 @@ async function apiInProject(req, res, url) {
     }
     return fail(res, 405, 'GET or PUT');
   }
+  if (a === 'groupstyle') { if (!need()) return; const h = await groupStyle.route(req, res, ctx()); if (h !== null) return; return fail(res, 404, 'not found'); }   // feat/group-styles
   if (a === 'perms') return perms.route(req, res, ctx());   // feat/roles: Settings › Roles & privileges, mutes, audit (server/perms.js)
   if (a === 'ask') return askai.route(req, res, ctx());
   if (a === 'compute' && !b) return compute.route(req, res, ctx());

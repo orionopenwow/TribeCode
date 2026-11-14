@@ -26,6 +26,7 @@
     });
     const data = await res.json().catch(() => ({}));
     if (res.status === 402 && data && data.need) { try { window.dispatchEvent(new CustomEvent('tribe-402', { detail: data })); } catch {} }   // harden: the server's plan/credits gate -> the plans pop-out (premium.js)
+    if (res.status === 403 && data && data.need) { try { window.dispatchEvent(new CustomEvent('tribe-403', { detail: data })); } catch {} }   // feat/group-styles: the refusal says who can do it -> the "Ask them" bar (groupstyle.js)
     if (!res.ok) throw Object.assign(new Error(data.error || res.statusText), { status: res.status, data });
     return data;
   }

@@ -191,7 +191,7 @@
         ${r.ok === false ? `<pre class="cr-err">${esc(r.error || '')}${r.conflicts && r.conflicts.length ? '\nConflicts: ' + esc(r.conflicts.join(', ')) : ''}</pre>` : ''}
         <div class="cr-act">
           ${i.state === 'pending' && me().role !== 'agent' && canEdit() ? '<button class="btn sm" data-approve>Approve</button><button class="btn ghost sm" data-reject>Reject</button>' : ''}
-          ${(i.state === 'approved' || (i.state === 'failed' && i.proposalStatus === 'approved')) && isHost() ? `<button class="btn primary sm" data-integrate ${busy.has(i.id) ? 'disabled' : ''}>${busy.has(i.id) ? 'Integrating…' : 'Integrate now'}</button>` : ''}
+          ${(i.state === 'approved' || (i.state === 'failed' && i.proposalStatus === 'approved')) && isHost() ? `<button class="btn primary sm" data-integrate ${busy.has(i.id) ? 'disabled' : ''}>${busy.has(i.id) ? 'Integrating…' : 'Integrate now'}</button>` : (i.state === 'approved' || i.state === 'proposed') ? '<button class="btn sm" data-gs-ask="repo.merge">Ask to send it to the main copy</button>' : ''}
         </div></div>`;
     }).join('') : `<div class="empty">No integrations yet. ${st.master && st.master.name ? `<b>${esc(st.master.name)}</b> (the integrator agent) proposes one with <code>propose_integration</code>.` : 'Turn on the integrator agent in Autopilot.'}</div>`;
   }

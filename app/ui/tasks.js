@@ -430,6 +430,7 @@
         + (remote() ? item('who:ask-agent', 'Ask an AI helper', '<span class="tk-av tk-av--ai">✦</span>') : '')
         + (textTask(t) ? item('who:flint', 'Flint', `<span class="tk-av tk-av--flint">${ico('flame', 14)}</span>`) : '')
         + (hasOwner(t) ? item('who:', 'Nobody yet', av(null)) : '')
+        + (remote() ? item('vote', 'Put it to a vote', ico('vote', 16)) : '')
         + (F ? '<hr>' + item('flint-pick', 'Ask Flint to pick', ico('flame', 16)) : '');
     } else {
       html = `<p class="tkp-h">Move to</p>${COLS.filter(([k]) => k !== t.status).map(([k, l]) => item('move:' + k, l, `<span class="tkp-dot" style="--c:var(--tk-${k})"></span>`)).join('')}<hr>`
@@ -463,6 +464,7 @@
       if (m === 'assign') { const row = document.querySelector(`#board .task[data-id="${CSS.escape(t.id)}"]`); return menu((row && row.querySelector('.tk-more')) || anchor, 'assign', t); }
       if (m === 'ask-agent') return pickWho(t, 'ask-agent');
       if (m === 'claim') return doStep(t.id, 'claim', anchor);
+      if (m === 'vote') return C.api('/chat/general/vote', { method: 'POST', body: { question: `Should we do “${t.title}”?`.slice(0, 200) } }).then(() => window.TribeApp.toast(window.TribeI18n ? window.TribeI18n.t('', 'Put to a vote in the chat.') : 'Put to a vote in the chat.'), e => window.TribeApp.toast(e.message));   // feat/group-styles: Propose, from a task
       if (m === 'flint-pick') { if (!F) return; try { F.focus && F.focus(); } catch {} return F.ask(`Who should do this task, and why: ${t.title}`); }
       if (m === 'split') return split(t.id);
       if (m === 'delete') return remove(t.id);
@@ -492,11 +494,11 @@
     const had = document.getElementById('tk-pop'); if (had && had.dataset.kind === 'mode') return closeMenu(true);
     closeMenu();
     const p = document.createElement('div'); p.id = 'tk-pop'; p.className = 'tk-pop tk-pop--mode'; p.setAttribute('role', 'dialog'); p.setAttribute('aria-label', 'How work is shared'); p.dataset.kind = 'mode'; p._anchor = anchor;
-    const ro = !workLead, opt = (k, t, sub) => `<button type="button" class="tkp-mode" data-wmode="${k}" aria-pressed="${work.mode === k}" ${ro ? 'disabled' : ''}><b>${t}</b><small>${sub}</small></button>`;
+    const ro = !workLead || !!work.fromStyle, opt = (k, t, sub) => `<button type="button" class="tkp-mode" data-wmode="${k}" aria-pressed="${work.mode === k}" ${ro ? 'disabled' : ''}><b>${t}</b><small>${sub}</small></button>`;
     p.innerHTML = `<p class="tkp-h">How work is shared</p>${opt('lead', 'Lead assigns', 'A lead assigns tasks; the person accepts or declines.')}${opt('council', 'Council (open claim)', 'Tasks are posted openly; anyone claims one and it is theirs.')}
       <label class="tkp-lim">Claim limit per person <input type="number" class="tkd-in tkd-in--sm" id="tk-lim" min="0" max="20" value="${work.claimLimit || 0}" ${ro ? 'disabled' : ''}><small>0 = no limit</small></label>
       <label class="tkp-lim"><input type="checkbox" id="tk-aaa" ${work.agentAutoAccept ? 'checked' : ''} ${ro ? 'disabled' : ''}> AI helpers accept on their own<small>Off: the agent's owner accepts for it</small></label>
-      ${ro ? '<p class="tkp-note">Only the host or a project lead changes this.</p>' : ''}`;
+      ${work.fromStyle ? '<p class="tkp-note">This group decides as a council, so tasks are open to claim. Change it under “How we decide”.</p>' : ro ? '<p class="tkp-note">Only the host or a project lead changes this.</p>' : ''}`;
     document.body.appendChild(p);
     const r = anchor.getBoundingClientRect(); p.style.left = Math.max(8, Math.min(innerWidth - p.offsetWidth - 8, r.left)) + 'px'; p.style.top = (r.bottom + 6) + 'px';
     p.addEventListener('keydown', e => { if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); closeMenu(true); } });

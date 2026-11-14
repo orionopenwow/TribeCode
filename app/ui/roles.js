@@ -165,7 +165,7 @@
   let showLog = false, log = [];
   function drawModal() {
     const box = $('#roles-body'); if (!box || modal().classList.contains('hidden')) return;
-    if (!st.matrix) { box.innerHTML = `<header class="rl-head"><div><span class="eyebrow">Roles &amp; privileges</span><h2>Who can do what</h2></div><button class="btn ghost" data-rl="close">Done</button></header><p class="rl-fine">Only the host and admins manage roles.</p>`; return; }
+    if (!st.matrix) { box.innerHTML = `<header class="rl-head"><div><span class="eyebrow">Roles &amp; privileges</span><h2>Who can do what</h2></div><button class="btn ghost" data-rl="close">Done</button></header><p class="rl-fine">Only the host and admins manage roles.</p><p class="rl-fine"><button class="linkish" data-rl="style">How this group decides and who can do what</button></p>`; return; }
     const cols = ['host', 'admin', 'mod', 'builder'];
     const people = (st.members || []).slice().sort((a, b) => (RANK[b.role] || 0) - (RANK[a.role] || 0) || a.name.localeCompare(b.name));
     const ink = c => (['#FFB86B', '#38C6B1', '#3DD6D0', '#9AE66E', '#E7E9EE'].includes(c) ? '#0B0C10' : '#fff');
@@ -196,7 +196,7 @@
         <ul class="rl-people">${rows || '<li class="faint">Just you so far.</li>'}</ul></section>
       <section class="rl-sec"><div class="rl-sh"><span class="eyebrow">Privileges</span><small>Turn a privilege on or off for a role. Locked rows stay with the host.</small></div>
         <div class="rl-scroll"><table class="rl-matrix"><thead><tr><th scope="col"><span class="sr">Privilege</span></th>${cols.map(r => `<th scope="col">${label(r)}</th>`).join('')}</tr></thead><tbody>${matrix}</tbody></table></div>
-        <div class="rl-foot">${st.canReset ? '<button class="btn soft" data-rl="reset">Reset to defaults</button>' : ''}<button class="linkish" data-rl="log" aria-expanded="${showLog}">${showLog ? 'Hide' : 'Show'} recent changes</button></div>
+        <div class="rl-foot"><button class="linkish" data-rl="style">How this group decides</button>${st.canReset ? '<button class="btn soft" data-rl="reset">Reset to defaults</button>' : ''}<button class="linkish" data-rl="log" aria-expanded="${showLog}">${showLog ? 'Hide' : 'Show'} recent changes</button></div>
         ${showLog ? `<ol class="rl-log">${log.length ? log.slice(0, 30).map(e => `<li><time>${esc(new Date(e.at).toLocaleString([], { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }))}</time><span>${esc(line(e))}</span></li>`).join('') : '<li class="faint">Nothing yet.</li>'}</ol>` : ''}</section>`;
   }
   function line(e) {
@@ -215,6 +215,7 @@
     const t = e.target.closest && e.target.closest('#roles-body [data-rl], #roles-body .rl-cell[data-cap]'); if (!t) return;
     try {
       if (t.dataset.rl === 'close') return close();
+      if (t.dataset.rl === 'style') { close(); return window.TribeGroupStyle && window.TribeGroupStyle.open(); }
       if (t.dataset.rl === 'log') { showLog = !showLog; if (showLog) log = (await C.api('/perms/audit?limit=60')).entries || []; return drawModal(); }
       if (t.dataset.rl === 'reset') { t.disabled = true; const r = await C.api('/perms/reset', { method: 'POST' }); st.matrix = r.matrix; drawModal(); toast('Privileges back to defaults'); return refresh(); }
       if (t.dataset.cap) {
