@@ -35,7 +35,7 @@
 (function () {
   'use strict';
   if (window.TribeFx) { window.TribeFx.scan(); return; }
-  var REG = {}, items = [], raf = 0, last = 0, frames = 0, loading3d = 0;
+  var REG = {}, items = [], raf = 0, last = 0, frames = 0, loading3d = 0, CLOCK = {};
   var KINDS3D = { sphere: 1, dome: 1, constellation: 1, drift: 1, warp: 1 };
   var me = document.currentScript, BASE = me && me.src ? me.src.replace(/[^/]*$/, '') : '';
   var mq = function (q) { try { return window.matchMedia(q); } catch (e) { return { matches: false }; } };
@@ -88,13 +88,13 @@
     if (!inst) return;                                   // no WebGL here: the still picture stays
     canvas.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;display:block';
     layer.appendChild(canvas); layer.classList.add('fx-live');
-    var it = { el: el, kind: kind, def: def, layer: layer, canvas: canvas, inst: inst, o: o, t: Math.random() * 40, vis: !IO, still: reduce.matches, w: 0, h: 0, dpr: 0 };
+    var key = kind + '|' + (el.id || ''), it = { el: el, kind: kind, key: key, def: def, layer: layer, canvas: canvas, inst: inst, o: o, t: CLOCK[key] != null ? CLOCK[key] : 20 + Math.random() * 20, vis: !IO, still: reduce.matches, w: 0, h: 0, dpr: 0 };
     canvas.addEventListener('webglcontextlost', function (e) { e.preventDefault(); kill(it); }, false);
     items.push(it); if (IO) IO.observe(el); if (RO) RO.observe(layer);
     fit(it); if (it.vis && !it.still) wake();
   }
   function kill(it) {
-    var i = items.indexOf(it); if (i < 0) return; items.splice(i, 1);
+    var i = items.indexOf(it); if (i < 0) return; items.splice(i, 1); CLOCK[it.key] = it.t;   // a section that comes back (an edit redraws the page) carries on where it was
     try { if (IO) IO.unobserve(it.el); if (RO) RO.unobserve(it.layer); } catch (e) {}
     try { it.inst.dispose(); } catch (e) {}
     if (it.canvas.parentNode) it.canvas.parentNode.removeChild(it.canvas);
@@ -214,7 +214,7 @@
     var W = 1, H = 1, dpr = 1, drops = [], rings = [], lastT = 0, cascade = 0, max = 100, seed = 7;
     var rnd = function () { seed = (seed * 16807) % 2147483647; return (seed & 0xfffffff) / 0x10000000; };
     var add = function (head) { var m = 8 * dpr; drops.push({ x: m + rnd() * Math.max(1, W - m * 2), y: m + rnd() * Math.max(1, H - m * 2), r: (0.8 + (head || 0) * 1.6) * dpr, rMax: (3.5 + rnd() * 5.5) * dpr, grow: (0.25 + rnd() * 0.4) * dpr, run: false, vy: 0 }); };
-    return { resize: function (w, h, d) { W = w; H = h; dpr = d; drops = []; rings = []; seed = 7; max = Math.max(50, Math.min(200, Math.round(W * H / (d * d) / 6500))); for (var i = 0; i < max * 0.6; i++) add(rnd() * 3); lastT = 0; },
+    return { resize: function (w, h, d) { W = w; H = h; dpr = d; drops = []; rings = []; seed = 7; max = Math.max(50, Math.min(200, Math.round(W * H / (d * d) / 6500))); for (var i = 0; i < max * 0.7; i++) add(rnd() * 4); lastT = 0; },
       draw: function (t, o) {
         var dt = lastT ? Math.max(0, Math.min(0.05, t - lastT)) : 0.016, k = dt * 60; lastT = t; var cap = Math.round(max * o.density), i, j, d2, o2;
         if (drops.length < cap && rnd() < 0.34 * k) add();

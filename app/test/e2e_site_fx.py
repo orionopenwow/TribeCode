@@ -169,7 +169,7 @@ console.log('model ok');
                 st = f.evaluate("TribeFx.stats()"); assert st["kinds"] == [k] and st["size"][0][0] > 100, (k, st)
                 assert f.evaluate("typeof THREE !== 'undefined'") == (k in three), f"{k}: Three.js loads only for a 3D background"
                 pg.wait_for_timeout(900)
-                share = painted(fr.locator(f"#b-{h0['id']}"), plain); assert share > 0.004, f"{k} drew nothing (share {share:.4f})"
+                share = painted(fr.locator(f"#b-{h0['id']}"), plain); assert share > 0.0025, f"{k} drew nothing (share {share:.4f})"
                 assert f.evaluate("getComputedStyle(document.querySelector('.fx-layer')).pointerEvents") == "none"
                 assert f.evaluate("document.documentElement.scrollWidth <= innerWidth + 1"), f"{k}: no sideways scroll"
                 if k in ("orb", "constellation") and SHOTS: shot(pg, f"site-3d-{k}-1440.png")

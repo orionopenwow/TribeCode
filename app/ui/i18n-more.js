@@ -192,8 +192,6 @@
     "Few": ["Pocos", "Poucos", "Peu", "Wenige", "少なめ", "少", "적게"],
     "Many": ["Muchos", "Muitos", "Beaucoup", "Viele", "多め", "多", "많이"],
     "Faint": ["Tenue", "Suave", "Discret", "Zart", "うすく", "淡", "옅게"],
-    "Strong": ["Fuerte", "Forte", "Marqué", "Kräftig", "濃く", "浓", "진하게"],
-    "Colour": ["Color", "Cor", "Couleur", "Farbe", "色", "颜色", "색"],
     "Second colour": ["Segundo color", "Segunda cor", "Deuxième couleur", "Zweite Farbe", "2つ目の色", "第二种颜色", "두 번째 색"],
     "Text colour": ["Color del texto", "Cor do texto", "Couleur du texte", "Textfarbe", "文字の色", "文字颜色", "글자 색"],
     "Quiet colour": ["Color discreto", "Cor discreta", "Couleur discrète", "Dezente Farbe", "控えめな色", "淡色", "차분한 색"],

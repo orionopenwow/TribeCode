@@ -72,7 +72,10 @@
   // html = what sitecfg.render made; K = the palette in use. Sections keep their ids ("b-<block id>"), so the layer is added by id.
   function decorate(html, cfg, o, K) {
     o = o || {}; const blocks = []; (cfg.pages || []).forEach(p => (p.blocks || []).forEach(b => { const f = clean(b.fx); if (f && (o.edit || !b.hidden)) blocks.push([b, f]); }));
-    if (!blocks.length) return html;
+    // the designer's preview always has the script: the page is swapped in place there, and the script picks up a
+    // background the moment one is added (and frees it the moment it goes)
+    const editJs = () => `<script src="${here().replace(/"/g, '%22')}fx.js"></script>`, tail = (h, js) => h.replace(/<\/body>(?![\s\S]*<\/body>)/, `${js}</body>`);
+    if (!blocks.length) return o.edit ? tail(html, editJs()) : html;
     let n = 0, three = false;
     for (const [b, f] of blocks) {
       const a = K[f.c] || K.accent, b2 = K[f.c2] || K.ink, opt = JSON.stringify({ s: f.s, d: f.d, i: f.i, p: f.p, a, b: b2 });
@@ -80,12 +83,12 @@
       const next = html.replace(re, (m, p1, p2) => `${p1}has-fx ${p2} data-fx="${f.kind}" data-fx-o='${opt}'><div class="fx-layer" aria-hidden="true" style="background-image:url(&quot;${still(f.kind, a, b2)}&quot;)"></div>`);
       if (next !== html) { n++; if (KINDS[f.kind].three) three = true; html = next; }
     }
-    if (!n) return html;
+    if (!n) return o.edit ? tail(html, editJs()) : html;
     let js = '';
-    if (o.edit) js = `<script src="${here().replace(/"/g, '%22')}fx.js"></script>`;                       // the preview: loaded from the app, like the designer's own helper
+    if (o.edit) js = editJs();                                                                             // the preview: loaded from the app, like the designer's own helper
     else if (o.mode === 'pages') js = '<script src="fx/fx.js" defer></script>';                              // a folder of files: fx/ sits beside the pages
     else { const t = text('fx'); if (t) js = inline(t) + (three && text('three') && text('fx3d') ? inline(text('three')) + inline(text('fx3d')) : ''); }   // one file: everything inside it
-    return html.replace('</head>', `<style>${CSS}</style></head>`).replace(/<\/body>(?![\s\S]*<\/body>)/, `${js}</body>`);
+    return tail(html.replace('</style>', `${CSS}</style>`), js);   // the CSS joins the site's own sheet (the first one)
   }
   function exportInto(res, cfg, kind) {
     const u = uses(cfg); if (!u.any || kind !== 'zip' || !res || !res.files) return res;
