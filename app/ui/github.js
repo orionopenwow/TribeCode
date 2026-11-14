@@ -7,7 +7,7 @@
   const C = window.TribeClient;
   const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const toast = m => (window.TribeApp && window.TribeApp.toast ? window.TribeApp.toast(m) : console.log(m));
-  const DOCS = 'https://github.com/orionopenwow/TribeCode/blob/main/docs/GITHUB-AND-FOLDERS.md';
+  const DOCS = 'https://github.com/orionopenwow/TribeCode/blob/main/docs/GITHUB-CONNECT.md';
   const GH = '<svg class="gh-i" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 19c-4 1.3-4-2-6-2.5M15 21v-3.5c0-1 .1-1.4-.5-2 2.8-.3 5.5-1.4 5.5-6a4.6 4.6 0 0 0-1.3-3.2 4.3 4.3 0 0 0-.1-3.2s-1-.3-3.4 1.3a11.6 11.6 0 0 0-6 0C6.8 2.8 5.8 3.1 5.8 3.1a4.3 4.3 0 0 0-.1 3.2A4.6 4.6 0 0 0 4.4 9.5c0 4.6 2.7 5.7 5.5 6-.6.6-.6 1.2-.5 2V21"/></svg>';
   let gh = null, poller = null;
   const mounts = new Set();
@@ -31,11 +31,11 @@
       const ghcli = gh.gh && gh.gh.signedIn ? `<button class="btn" data-gh="cli">Use my GitHub CLI login${gh.gh.user ? ` (@${esc(gh.gh.user)})` : ''}</button>` : '';
       const signIn = gh.configured ? `<button class="btn primary" data-gh="start">${GH}<span>Sign in with GitHub</span></button>` : '';
       const setup = !gh.configured ? (gh.canConfigure
-        ? `<div class="gh-setup"><small>One-time setup: register a GitHub OAuth App and paste its client id. <a href="${DOCS}" target="_blank" rel="noopener">How</a></small>
-            <div class="gh-line"><input class="input" id="gh-cid" placeholder="Client id, e.g. Ov23li…" autocomplete="off" spellcheck="false" maxlength="80"><button class="btn" data-gh="cid">Save</button></div></div>`
-        : '<small class="gh-hint">The host hasn\'t turned on GitHub sign-in yet. You can paste a token below.</small>') : '';
+        ? `<div class="gh-setup"><small>To switch on one-click sign-in for everyone, paste a GitHub app id here. It is a one-time step for the owner. <a href="${DOCS}" target="_blank" rel="noopener">How</a></small>
+            <div class="gh-line"><input class="input" id="gh-cid" placeholder="GitHub app id, e.g. Ov23li…" autocomplete="off" spellcheck="false" maxlength="80"><button class="btn" data-gh="cid">Save</button></div></div>`
+        : '<small class="gh-hint">One-click sign-in isn’t switched on for this tribe yet. You can paste a token below.</small>') : '';
       body = `${note ? `<p class="gh-note">${note}</p>` : ''}<div class="gh-acts">${signIn}${ghcli}</div>${setup}
-        <details class="gh-paste"><summary>Paste a token instead</summary><div class="gh-line"><input class="input" id="gh-tok" type="password" placeholder="ghp_… or github_pat_…" autocomplete="off" spellcheck="false"><button class="btn" data-gh="token">Save</button></div><small>Needs the <code>repo</code> scope. It stays on the host computer.</small></details>`;
+        <details class="gh-paste"><summary>Paste a token instead</summary><div class="gh-line"><input class="input" id="gh-tok" type="password" placeholder="ghp_… or github_pat_…" autocomplete="off" spellcheck="false"><button class="btn" data-gh="token">Save</button></div><small>Needs the <code>repo</code> scope. It is kept on the computer that runs this tribe and never shown to anyone.</small></details>`;
     }
     el.innerHTML = `<div class="gh-box" data-state="${gh.signedIn ? 'in' : f.state}">${body}</div>`;
     el.querySelectorAll('[data-gh]').forEach(b => b.addEventListener('click', e => { e.preventDefault(); e.stopPropagation(); act(b.dataset.gh, el); }));
@@ -87,6 +87,7 @@
   async function done(login) {
     toast(`Signed in to GitHub as @${login}`);
     redraw(); try { dispatchEvent(new CustomEvent('tribe:github', { detail: { login } })); } catch {}
+    if (pub.noAuto) return;   // feat/setup-github: the Connect GitHub sheet picks or creates the place itself
     try {
       const fl = (await C.api('/flow')).flow;
       const s = fl && fl.steps && fl.steps.github && fl.steps.github.s;
@@ -105,5 +106,5 @@
   if (window.TribePalette && window.TribePalette.register) window.TribePalette.register(() => [
     { kind: 'Action', label: 'Sign in with GitHub', keys: 'github login sign in account push token oauth', run: () => window.TribeSettings ? window.TribeSettings.open('projects', 'set-github') : signIn() },
   ]);
-  window.TribeGitHub = { mount, signIn, status: () => gh };
+  const pub = window.TribeGitHub = { mount, signIn, status: () => gh, noAuto: false };
 })();
