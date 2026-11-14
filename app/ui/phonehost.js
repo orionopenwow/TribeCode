@@ -1,7 +1,7 @@
 // Where should your tribe live? (docs/PHONE-HOSTING.md) The phone's "Start a tribe" chooser, plus the sheet that moves a
 // tribe kept on this phone to a real host. Four homes, one row each:
 //   This phone   your own tribe in this browser right away (app/ui/offline.js solo mode); friends join after a move
-//   Free cloud   Render's one-click deploy of this repo (docs/CLOUD.md)
+//   Free cloud   cloudhome.js: one button opens Render, then the address and setup code move the tribe in (docs/CLOUD.md)
 //   My Android   Termux: one line installs and starts a host (scripts/phone/termux-host.sh)
 //   A computer   the desktop app (or a friend's), as before
 // move(): paste an invite link to the new host -> join it with your name -> POST /api/import/solo (server/soloimport.js)
@@ -9,7 +9,6 @@
 //   window.TribePhoneHost = { open(), move(), parseInvite(raw) }
 (function () {
   'use strict';
-  const RENDER = 'https://render.com/deploy?repo=https://github.com/orionopenwow/TribeCode';
   const TERMUX = 'https://f-droid.org/packages/com.termux/';
   const ONE_LINE = 'curl -fsSL https://raw.githubusercontent.com/orionopenwow/TribeCode/main/scripts/phone/termux-host.sh | bash';
   const dl = () => (window.TribeWeb && window.TribeWeb.RELEASES) || 'https://github.com/orionopenwow/TribeCode/releases/latest';
@@ -50,7 +49,7 @@
     const s = sheet(`<header class="ph-h"><div><span class="eyebrow">${tr('Start a tribe')}</span><h3>${tr('Where should your tribe live?')}</h3></div></header>
       <div class="ph-list">
         ${row('phone', 'spark', 'This phone', 'Start now. Friends join once it moves to a host', 'Instant', true)}
-        ${row('cloud', 'net', 'Free cloud', 'Always online on a free Render server. Friends join from anywhere')}
+        ${row('cloud', 'net', 'Free cloud', window.TribeCloudHome.SUB)}
         ${row('android', 'zap', 'My Android', 'Host from an Android phone with Termux', android ? 'Android' : '')}
         ${row('computer', 'box', 'A computer', 'The desktop app on a PC or Mac hosts by itself')}
       </div>
@@ -69,16 +68,45 @@
   }
   const back = `<button class="ph-back" data-ph-back aria-label="${esc(tr('Back'))}">${ic('chev', 16)}</button>`;
   function cloud() {
-    const s = sheet(`<header class="ph-h">${back}<div><span class="eyebrow">${tr('Free cloud')}</span><h3>${tr('A tribe that stays online')}</h3></div></header>
-      <ol class="ph-steps">
-        <li>${tr('Open Render and sign in (GitHub works). It reads TribeCode’s setup by itself.')}</li>
-        <li>${tr('Tap Apply and wait a few minutes for the first build.')}</li>
-        <li>${tr('Copy TRIBE_SETUP_CODE from the service’s Environment tab.')}</li>
-        <li>${tr('Open your new address, enter the code and your name. You’re the host.')}</li>
-      </ol>
-      <p class="ph-note">${tr('Free plan: it naps after 15 minutes alone and wakes in about a minute. Cloud save brings everything back.')}</p>
-      <div class="ph-acts"><a class="btn primary" id="ph-render" href="${RENDER}" target="_blank" rel="noopener">${tr('Open Render')}</a></div>`, 'ph-cloud', tr('Free cloud'));
+    const C = window.TribeCloudHome;
+    const s = sheet(`<header class="ph-h">${back}<div><span class="eyebrow">${tr('Free cloud')}</span><h3>${tr('Keep it online without your computer')}</h3></div></header>
+      ${C.fields('ph')}
+      <p class="ph-err hidden" id="ph-cloud-err" role="alert"></p>
+      <div class="ph-acts"><button class="btn primary" id="ph-cloud-go">${tr('Move it there')}</button></div>`, 'ph-cloud', tr('Free cloud'));
+    const err = t => { const e = s.querySelector('#ph-cloud-err'); e.textContent = t || ''; e.classList.toggle('hidden', !t); };
+    const btn = s.querySelector('#ph-cloud-go');
+    C.wire(s, 'ph', btn);
+    btn.onclick = async () => {
+      err(''); btn.disabled = true; btn.textContent = tr('Moving…');
+      try {
+        const st = S().get(), name = st.name && st.name !== 'Me' ? st.name : 'Host';
+        const c = await C.connect({ ...C.read(s, 'ph'), name, color: st.color });
+        await land(c.server, c.token, name);
+      } catch (e) {
+        err(e && e.message || String(e)); btn.disabled = false; btn.textContent = tr('Move it there');
+        const f = s.querySelector(e && e.field === 'code' ? '#ph-code' : '#ph-addr'); if (f) f.focus();
+      }
+    };
     s.querySelector('#ph-render').focus();
+  }
+  // Signed in to a host with a token: bring the tribe kept on this phone over (when there is one) and switch to the host.
+  async function land(server, token, name) {
+    const o = OFF();
+    if (o && o.solo && o.solo()) {
+      const r = await fetch(`${server}/api/import/solo`, { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token }, body: JSON.stringify(o.exportSolo()) });
+      const rd = await r.json().catch(() => ({})); if (!r.ok) throw new Error(rd.error || `HTTP ${r.status}`);
+    }
+    // A web page (the PWA) can't use the host from another origin: open the host's own page, signed in with a device link.
+    let go = null;
+    const web = /^https?:$/.test(location.protocol) && !/(^|\.)tauri\.localhost$/i.test(location.hostname);
+    if (web && server !== location.origin) {
+      const l = await fetch(`${server}/api/device-link`, { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token }, body: JSON.stringify({ label: 'Phone (moved from this phone)' }) });
+      const ld = await l.json().catch(() => ({})); if (l.ok && ld.path) go = server + ld.path;
+    }
+    close(); toast(tr('Moved. Welcome to your host!'));
+    if (o && o.finishMove) return o.finishMove(server, token, name, go);
+    if (go) { location.href = go; return; }
+    S().set({ name, server: { url: server, token }, hosting: false }); location.reload();
   }
   function termux() {
     const s = sheet(`<header class="ph-h">${back}<div><span class="eyebrow">${tr('My Android')}</span><h3>${tr('Host from an Android phone')}</h3></div></header>
@@ -146,17 +174,7 @@
       try {
         const j = await fetch(`${inv.server}/api/join`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ code: inv.code, name, color: st.color }) });
         const jd = await j.json().catch(() => ({})); if (!j.ok || !jd.token) throw new Error(jd.error || tr('That invite didn’t work. Ask for a fresh link.'));
-        const r = await fetch(`${inv.server}/api/import/solo`, { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + jd.token }, body: JSON.stringify(o.exportSolo()) });
-        const rd = await r.json().catch(() => ({})); if (!r.ok) throw new Error(rd.error || `HTTP ${r.status}`);
-        // A web page (the PWA) can't use the host from another origin: open the host's own page, signed in with a device link.
-        let go = null;
-        const web = /^https?:$/.test(location.protocol) && !/(^|\.)tauri\.localhost$/i.test(location.hostname);
-        if (web && inv.server !== location.origin) {
-          const l = await fetch(`${inv.server}/api/device-link`, { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + jd.token }, body: JSON.stringify({ label: 'Phone (moved from this phone)' }) });
-          const ld = await l.json().catch(() => ({})); if (l.ok && ld.path) go = inv.server + ld.path;
-        }
-        close(); toast(tr('Moved. Welcome to your host!'));
-        o.finishMove(inv.server, jd.token, name, go);
+        await land(inv.server, jd.token, name);
       } catch (e) {
         err(/Failed to fetch|NetworkError|Load failed/i.test(String(e.message)) ? tr('Couldn’t reach that host. Is it online?') : e.message);
         btn.disabled = false; btn.textContent = tr('Move');

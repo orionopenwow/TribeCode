@@ -9,7 +9,7 @@
 //     This computer  the desktop app starts its server (app.js hostHere, silent), or the TribeCode server that serves
 //                    this page takes it; the draft syncs in with POST /api/import/solo (idempotent by draftId, the local
 //                    copy is kept until the host confirms it has everything).
-//     Free cloud     Render's one-click deploy (docs/CLOUD.md), then Move with its invite link (phonehost.js move()).
+//     Free cloud     cloudhome.js: one button opens Render; the address and setup code come back and the project moves in.
 //     Phone          keep it on this phone, or host from an Android phone with Termux (docs/PHONE-HOSTING.md).
 // Public: window.TribeLocalSetup = { start(), where(), choose(home), github: { connect(repo, token), live(force), mirror() },
 //   state(), pid() }
@@ -72,7 +72,7 @@
         ${fo.ok ? row('folder', 'folder', 'A folder you pick or create', 'Its files go in a folder of yours on this computer. Edit them here or in any editor') : ''}
         ${bf ? row('bfolder', 'folder', 'A folder you pick or create', BF.can() ? (BF.name(pid()) ? `A copy is saved in ${esc(BF.name(pid()))}. Save it again` : 'A copy of its files is saved in a folder on this computer. It also stays in this browser') : 'This browser can’t open folders. Download a copy of its files instead') : ''}
         ${row('github', 'git', 'GitHub', gh ? `Connected to ${esc(gh.repo)}` : 'A copy is kept on GitHub. Friends can see it there even when this computer is off', gh ? 'Connected' : '', true)}
-        ${row('cloud', 'zap', 'Free cloud', 'Always online on a free server, even when your computer is off')}
+        ${row('cloud', 'zap', 'Free cloud', window.TribeCloudHome.SUB)}
         ${fo.ok ? row('shared', 'net', 'A shared folder', 'A Dropbox, OneDrive, Google Drive or iCloud folder you already use. Friends who have the folder join from it') : ''}
         ${phoneLike() ? row('phone', 'spark', 'Phone', 'Keep it on this phone, or run it from an Android phone') : ''}
       </div>
@@ -162,7 +162,7 @@
   }
   // Send the draft (idempotent: the host remembers draftId), then switch this device over to the host. The local copy
   // is forgotten only after the host answered that it has everything.
-  async function importTo(server, token, { hosting, step: say = step, noReload } = {}) {
+  async function importTo(server, token, { hosting, step: say = step, noReload, place } = {}) {
     say('Bringing your project over…');
     const data = OFF().exportSolo();
     let r, d;
@@ -177,7 +177,7 @@
     try { if (first && first.id) localStorage.setItem('tribecode.project:' + server, first.id); sessionStorage.setItem('tribecode.view', 'home'); } catch {}
     say('Done. Opening it…');
     if (noReload) return { ...d, server, token };
-    toast(d.again ? 'It was already there. Opening it.' : `${(first && first.name) || 'Your project'} now lives on this computer.`);
+    toast(d.again ? 'It was already there. Opening it.' : `${(first && first.name) || 'Your project'} now lives ${place || 'on this computer'}.`);
     setTimeout(() => location.reload(), 300);
     return d;
   }
@@ -188,16 +188,24 @@
 
   // ---------- Free cloud and Phone: the existing steps (phonehost.js), then Move with an invite link ----------
   function cloud() {
-    const s = sheet(`<header class="ph-h">${back}<div><span class="eyebrow">Free cloud</span><h3>A home that stays online</h3></div></header>
-      <ol class="ph-steps">
-        <li>Open Render and sign in (GitHub works). It reads TribeCode’s setup by itself.</li>
-        <li>Tap Apply and wait a few minutes for the first build.</li>
-        <li>Open your new address, enter TRIBE_SETUP_CODE and your name. You’re the host.</li>
-        <li>Make an invite link there, then come back and tap Move.</li>
-      </ol>
-      <p class="ph-note">Free plan: it naps after 15 minutes alone and wakes in about a minute. Cloud save brings everything back.</p>
-      <div class="ph-acts"><a class="btn" href="https://render.com/deploy?repo=https://github.com/orionopenwow/TribeCode" target="_blank" rel="noopener">Open Render</a><button class="btn primary" id="su-move">I have the link · Move</button></div>`, 'su-cloud', 'Free cloud');
-    s.querySelector('#su-move').onclick = () => { close(); PH() && PH().move(); };
+    const C = window.TribeCloudHome;
+    const s = sheet(`<header class="ph-h">${back}<div><span class="eyebrow">Free cloud</span><h3>Keep it online without your computer</h3></div></header>
+      ${C.fields('su')}
+      <p class="ph-err hidden" id="su-cloud-err" role="alert"></p>
+      <div class="ph-acts"><button class="btn primary" id="su-move">Move it there</button></div>`, 'su-cloud', 'Free cloud');
+    const err = t => { const e = s.querySelector('#su-cloud-err'); e.textContent = t || ''; e.classList.toggle('hidden', !t); };
+    const btn = s.querySelector('#su-move');
+    C.wire(s, 'su', btn);
+    btn.onclick = async () => {
+      err(''); btn.disabled = true; btn.textContent = 'Moving…';
+      try {
+        const me = S().get(), c = await C.connect({ ...C.read(s, 'su'), name: me.name, color: me.color });
+        await importTo(c.server, c.token, { hosting: false, step: t => { btn.textContent = t; }, place: 'on your free cloud' });
+      } catch (e) {
+        err(e && e.message || String(e)); btn.disabled = false; btn.textContent = 'Move it there';
+        const f = s.querySelector(e && e.field === 'code' ? '#su-code' : '#su-addr'); if (f) f.focus();
+      }
+    };
   }
   function phone() {
     const s = sheet(`<header class="ph-h">${back}<div><span class="eyebrow">Phone</span><h3>${phoneLike() ? 'Keep it on this phone' : 'Host from a phone'}</h3></div></header>

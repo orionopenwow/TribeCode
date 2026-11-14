@@ -325,8 +325,8 @@
       <div class="hj-acts"><button class="btn" id="hub-join">Paste invite link</button>${on ? '<button class="btn" id="hub-new">' + ico('i-plus', 15) + 'New project</button>' : ''}</div>`
       : `<h3>${ico('i-link', 16)}Join with a link</h3>
       <p>A friend sent a link like <code>…/join/k7Qx2</code>? Paste it and pick a name. No account needed.</p>
-      <div class="hj-acts"><button class="btn primary" id="hub-join">Paste invite link</button><button class="btn" id="hub-host">Get the desktop app</button><a class="btn" id="hub-cloud" href="https://render.com/deploy?repo=https://github.com/orionopenwow/TribeCode" target="_blank" rel="noopener">☁️ Free cloud tribe</a></div>
-      <p class="hj-note">To start your own tribe from a browser: the desktop app hosts it on your computer, or one click makes a free cloud tribe (docs: CLOUD.md).</p>`}</div>`;
+      <div class="hj-acts"><button class="btn primary" id="hub-join">Paste invite link</button><button class="btn" id="hub-host">Get the desktop app</button><button class="btn" id="hub-cloud">Free cloud tribe</button></div>
+      <p class="hj-note">To start your own tribe from a browser: the desktop app hosts it on your computer, or a free cloud tribe stays online without it (it naps when nobody is there).</p>`}</div>`;
   }
   async function instant() {   // host first if needed (desktop app), then the instant invite
     if (!connected()) {
@@ -1052,7 +1052,7 @@
   function bind(el) {
     const on = (sel, fn) => { const b = el.querySelector(sel); if (b) b.onclick = fn; };
     el.querySelectorAll('[data-pj-go]').forEach(b => b.onclick = () => { const id = b.dataset.pjGo; if (PJ().current() === id) App().show('home'); else PJ().switchTo(id, 'home'); });
-    on('#hub-new', newProject); on('#hub-instant', instant); on('#hub-join', join); on('#hub-host', host); on('#hub-resume', resume);
+    on('#hub-new', newProject); on('#hub-instant', instant); on('#hub-join', join); on('#hub-host', host); on('#hub-cloud', () => window.TribePhoneHost && window.TribePhoneHost.cloud()); on('#hub-resume', resume);
     on('#hub-cc', () => App().connectClaude());
     on('#hub-tour', () => window.TribeFlintTour && window.TribeFlintTour.start());
     on('#hub-sug-more', () => { sugOpen = !sugOpen; render(); });

@@ -49,3 +49,9 @@
 @keyframes ph-pop { from { opacity: 0; } }
 @keyframes ph-up { from { transform: translateY(100%); } }
 @media (prefers-reduced-motion: reduce) { .ph-scrim, .ph-sheet { animation: none; } .ph-sheet.out, .ph-scrim.out { transition: none; } }
+
+/* Free cloud (cloudhome.js): the honest limits as a short list, then one button */
+.ch-facts { margin: 0 2px 4px; padding: 0 0 0 18px; display: grid; gap: 6px; font-size: 13px; line-height: 1.5; color: var(--text); }
+.ch-facts li::marker { color: var(--faint); }
+.ch-go { justify-content: flex-start; margin-top: 12px; }
+.ch-go a.btn { text-decoration: none; }

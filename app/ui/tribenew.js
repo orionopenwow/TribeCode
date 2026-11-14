@@ -63,7 +63,7 @@
       ...(here ? [{ k: 'computer', icon: 'box', t: 'On this computer', s: 'The TribeCode app keeps it on this computer. Friends join with a link' }] : []),
       { k: f.ok ? 'folder' : 'bfolder', icon: 'folder', t: 'A folder you pick or create', s: f.ok ? 'Its files go in a folder of yours on this computer. Edit them here or in any editor' : phone() ? 'Folders need a computer. On a phone it stays on this phone, and you can download a copy' : BF() && BF().can() ? 'A copy of its files is saved in a folder on this computer. It also stays in this browser' : 'This browser can’t open folders. It stays in this browser, and you can download a copy' },
       { k: 'github', icon: 'git', t: 'GitHub', s: 'A copy is kept on GitHub. Friends can see it there even when this computer is off', note: 'You can also connect GitHub later.' },
-      { k: 'cloud', icon: 'zap', t: 'Free cloud', s: 'Always online on a free server, even when your computer is off' },
+      { k: 'cloud', icon: 'zap', t: 'Free cloud', s: window.TribeCloudHome.SUB },
       ...(f.ok ? [{ k: 'shared', icon: 'net', t: 'A shared folder', s: 'A Dropbox, OneDrive, Google Drive or iCloud folder you already use. Friends who have the folder join from it' }] : []),
     ];
     const dev = { k: 'device', icon: 'spark', t: phone() ? 'On this phone only' : 'In this browser only', s: 'Starts right away and works offline. Only you see it until you put it online' };
@@ -205,11 +205,11 @@
       const G = window.TribeGitHubConnect;
       if (G) st.ghCtl = G.mount($('#tn-gh', box), { name: st.name, repo: st.repo || '', local: !inTribe(), onChange: c => { st.repo = (c && c.repo) || ''; st.ghNew = !!(c && c.create); st.ghTok = (c && c.token) || ''; err(''); } });
     } else if (w === 'cloud') {
-      box.innerHTML = `<ol class="ph-steps tn-steps"><li><a href="https://render.com/deploy?repo=https://github.com/orionopenwow/TribeCode" target="_blank" rel="noopener">Open Render</a> and tap Apply (sign in with GitHub). The first build takes a few minutes.</li>
-        <li>Open your new address, enter TRIBE_SETUP_CODE and your name, then make an invite link.</li><li>Paste the link here.</li></ol>
-        <label class="ph-lab" for="tn-cloud">Invite link from your cloud tribe</label><input class="input" id="tn-cloud" inputmode="url" autocomplete="off" placeholder="https://…onrender.com/join/abc12" value="${esc(st.cloud || '')}">
-        <p class="ph-note">Free plan: it naps after 15 minutes alone and wakes in about a minute.</p>`;
-      const c = $('#tn-cloud', box); c.oninput = () => { st.cloud = c.value; err(''); };
+      // cloudhome.js: the same fields as every other place that offers Free cloud
+      box.innerHTML = `<div class="tn-cloud">${window.TribeCloudHome.fields('tn', { value: st.cloud || '', code: st.cloudCode || '' })}</div>`;
+      const ca = $('#tn-addr', box), cc = $('#tn-code', box);
+      window.TribeCloudHome.wire(box, 'tn');
+      ca.oninput = () => { st.cloud = ca.value; err(''); }; cc.oninput = () => { st.cloudCode = cc.value; err(''); };
     } else if (w === 'computer' && !desktop() && staticWeb()) {
       box.innerHTML = `<p class="ph-note tn-note">This page comes from the web, so it needs the TribeCode app on this computer. <a href="${esc((window.TribeWeb && window.TribeWeb.RELEASES) || 'https://github.com/orionopenwow/TribeCode/releases/latest')}" target="_blank" rel="noopener">Get the app</a>, or start on this device and move it later.</p>`;
     } else box.innerHTML = '';
@@ -231,8 +231,7 @@
     const w = st.where;
     let repo = '';
     if (w === 'github') { repo = parseRepo(st.repo); if (!repo) { err('Pick where it goes on GitHub first, or type it as owner/name.'); const r = $('#ghc-repo', el); if (r) r.focus(); return; } }
-    let inv = null;
-    if (w === 'cloud') { inv = A() && A().parseInvite ? A().parseInvite(st.cloud || '') : null; if (!inv) { err('Paste the whole invite link from your cloud tribe, like https://…/join/abc12.'); const c = $('#tn-cloud', el); if (c) c.focus(); return; } }
+    if (w === 'cloud' && !String(st.cloud || '').trim()) { err('Set up your free cloud first, then paste its address here.'); const c = $('#tn-addr', el); if (c) c.focus(); return; }
     if (w === 'computer' && !desktop() && staticWeb()) { err('This needs the TribeCode app on this computer. Start on this device for now and move it later.'); return; }
     if ((w === 'folder' || w === 'shared') && !folderOk().ok) { err(folderOk().why); return; }
     if (w === 'shared' && !(st.shared && st.shared.path)) { err('Pick the shared folder first.'); return; }
@@ -289,12 +288,11 @@
           }
           }
         } else if (w === 'cloud') {
-          running('Joining your cloud tribe…');
-          const me = S().get(), nm = me.name && me.name !== 'Me' ? me.name : 'Host';
-          const j = await realFetch(`${inv.server}/api/join`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ code: inv.code, name: nm, color: me.color }) });
-          const jd = await j.json().catch(() => ({})); if (!j.ok || !jd.token) throw new Error(jd.error || 'That invite didn’t work. Make a fresh link in your cloud tribe and paste it again.');
-          const r = await L().host.importTo(inv.server, jd.token, { hosting: false, step: running, noReload: true });
-          st.created = { where: w, server: inv.server, token: jd.token, pid: ((r.projects || [])[0] || {}).id, reload: true };
+          running('Reaching your cloud tribe…');
+          const me = S().get();
+          const c = await window.TribeCloudHome.connect({ value: st.cloud, code: st.cloudCode, name: me.name, color: me.color });
+          const r = await L().host.importTo(c.server, c.token, { hosting: false, step: running, noReload: true });
+          st.created = { where: w, server: c.server, token: c.token, pid: ((r.projects || [])[0] || {}).id, reload: true };
         }
       }
       lsSet('tribecode.firstrun.done', '1');   // the focused first run would open over the new tribe: this flow ends with its own card

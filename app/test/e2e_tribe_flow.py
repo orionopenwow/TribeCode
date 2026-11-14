@@ -44,6 +44,8 @@ def mock_cloud(ctx, seen):
     def handle(route):
         u = route.request.url[len(CLOUD):].split("?")[0]; seen.append((route.request.method, u))
         if route.request.method == "OPTIONS": return route.fulfill(status=204, headers={"Access-Control-Allow-Origin": "*", "Access-Control-Allow-Headers": "*", "Access-Control-Allow-Methods": "GET,POST"})
+        if u == "/api/health": return reply(route, 200, {"ok": True, "cloud": True, "members": 0})
+        if u == "/api/bootstrap": return reply(route, 200, {"token": "cloud-token", "member": {"id": "camp"}}) if json.loads(route.request.post_data or "{}").get("setupCode") == "s3tup" else reply(route, 403, {"error": "no"})
         if u == "/api/join": return reply(route, 200, {"token": "cloud-token", "member": {"id": "camp"}})
         if u == "/api/import/solo": return reply(route, 200, {"projects": [{"id": "cloud-crew", "name": "Cloud Crew"}]})
         if u == "/api/invites": return reply(route, 200, {"invite": {"code": "cl0ud"}})
@@ -148,11 +150,11 @@ def main():
             # ---------- 3c. Free cloud (a mocked cloud tribe) ----------
             pg = page(); seen = []; mock_cloud(pg.context, seen)
             pg.evaluate("TribeNew.open({ name: 'Cloud Crew' })"); opened(pg, "cloud"); pg.click("#tn-options")
-            pg.click("#tn [data-tn-where='cloud']"); pg.click("#tn-go"); assert "invite link" in pg.inner_text("#tn-err")
-            pg.fill("#tn-cloud", CLOUD + "/join/abc12"); pg.click("#tn-go")
+            pg.click("#tn [data-tn-where='cloud']"); pg.click("#tn-go"); assert "free cloud" in pg.inner_text("#tn-err")
+            pg.fill("#tn-addr", CLOUD); pg.fill("#tn-code", "s3tup"); pg.click("#tn-go")   # cloudhome.js: the address and the setup code, no invite link to make
             pg.wait_for_selector("#tn[data-step='3'] #tn-invite", timeout=10000)   # feat/invite-one: the invite step opens the one invite sheet
             assert pg.locator("#tn-link").count() == 0, "no invite link of its own"
-            assert ("POST", "/api/join") in seen and ("POST", "/api/import/solo") in seen, seen
+            assert ("POST", "/api/bootstrap") in seen and ("POST", "/api/import/solo") in seen, seen
             assert pg.evaluate("TribeStore.get().server.url") == CLOUD
             pg.click("#tn-x"); closed(pg, "cloud")
             pg.context.close()

@@ -46,7 +46,7 @@
     if (own) return own.map(([k, i, t, s]) => `<button type="button" class="nx-row" data-nx="${k}"${k === 'wifi' ? ' disabled' : ''}><span class="nx-ic">${ic(i)}</span><span class="nx-t"><b>${esc(T(t))}</b><small>${esc(T(s))}</small></span></button>`).join('');
     const rows = [
       ['move', 'arrow-right', 'Move to a host', 'Paste a friend\'s invite link and everything moves over in one tap.'],
-      ['cloud', 'cloud', 'Free cloud', 'A free Render server that stays online without anyone\'s computer.'],
+      ['cloud', 'cloud', 'Free cloud', window.TribeCloudHome.SUB + '.'],
       ['laptop', 'monitor', 'My laptop', 'Install the desktop app and this project can live there.'],
       iPhone() ? ['iphone', 'info', 'iPhones can\'t host', 'Apple doesn\'t let apps run a server in the background. Pick one of the options above.'] : ['termux', 'phone', 'My Android', 'Host from this phone with one command in Termux, while it stays open and charging.'],
     ];

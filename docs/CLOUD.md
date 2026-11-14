@@ -2,14 +2,18 @@
 
 Run a TribeCode tribe on a free cloud host, so you and your friends can join from anywhere without keeping your own computer on.
 
-## One click on Render (free)
+## From inside the app (free)
 
-1. Open https://render.com/deploy?repo=https://github.com/orionopenwow/TribeCode and sign in to Render (GitHub sign-in works).
-2. Render reads `render.yaml`: one free web service named `tribecode`, built from the `Dockerfile`. Click **Apply** and wait for the build (a few minutes the first time).
-3. In the service's **Environment** tab, copy `TRIBE_SETUP_CODE`. Render made it for you.
-4. Open your service's address (something like `https://tribecode-xxxx.onrender.com`). TribeCode asks for the setup code and your name. The first person with the code becomes the host.
-5. Invite friends from the app as usual. Invite links use your cloud address automatically.
-6. Connect GitHub from the dashboard's Getting started steps, so your code lives in your GitHub repository.
+Every place that offers **Free cloud** shows the same step (`app/ui/cloudhome.js`): Where should it live?, the create flow, the phone chooser and the join screen.
+
+1. Press **Set up free cloud**. Render opens in a new tab at https://render.com/deploy?repo=https://github.com/orionopenwow/TribeCode. Sign in (GitHub sign-in works), click **Apply** and wait for the build (a few minutes the first time). Render reads `render.yaml`: one free web service named `tribecode`, built from the `Dockerfile`.
+2. Bring two things back to the app: your service's address (something like `https://tribecode-xxxx.onrender.com`) and `TRIBE_SETUP_CODE` from the service's **Environment** tab. Render made the code for you.
+3. Press **Move it there**. The app makes you the host of the cloud tribe and moves your project in. Invite links use your cloud address from then on.
+4. Connect GitHub from the dashboard's Getting started steps, so your code lives in your GitHub repository.
+
+If the cloud tribe already has a host, paste an invite link from it in the address box and leave the code empty. Opening the cloud address in a browser still works too: it asks for the setup code and your name.
+
+The step says what the free plan does before you press anything: it naps, a nap wipes its files, and browsers put them back.
 
 ## What to know about the free plan
 

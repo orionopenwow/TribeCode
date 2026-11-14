@@ -19,7 +19,7 @@ picks a home only when you want friends in. The home can be as light as a GitHub
 | --- | --- | --- |
 | **A GitHub repo** | The repo is the shared truth. Anyone can see the live repo; suggestions appear as files on a branch | A repo; a token only to write |
 | **This computer** | A own tribe: friends join with a link, agents, huddles | The desktop app (or `npm start`) |
-| **Free cloud** | A tribe that stays online without anyone's computer | A free Render account ([CLOUD.md](CLOUD.md)) |
+| **Free cloud** | A tribe that is online when your computer is off. It naps when nobody is there and wakes in about a minute | A free Render account; one button, then the address and setup code ([CLOUD.md](CLOUD.md)) |
 | **Phone** | Keep it on this phone, or host from an Android phone | Termux for hosting ([PHONE-HOSTING.md](PHONE-HOSTING.md)) |
 
 4. **Sync.** Choosing a server home sends the draft in one call (`POST /api/import/solo`). It is idempotent: the draft
