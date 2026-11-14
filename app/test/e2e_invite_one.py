@@ -202,7 +202,7 @@ def main():
             pg.evaluate(f"TribeProjects.switchTo('{cur}', 'home')"); pg.wait_for_function(f"TribeProjects.current() === '{cur}'", timeout=10000)
             pg.click("#tour-invite"); pg.wait_for_function("/\\/t\\//.test((document.querySelector('#tl-link') || {}).textContent || '')", timeout=10000)
             tl = pg.text_content("#tl-link").strip()
-            pg.click("#tl-qrb"); pg.wait_for_selector("#tl-qr svg", state="visible")
+            pg.wait_for_selector("#tl-qr svg", state="visible")   # v0.37: on a computer the QR sits beside the link from the start
             pg.click("#tl-copy"); assert pg.evaluate("navigator.clipboard.readText()") == tl
             st, _, hd = http(urllib.parse.urlparse(tl).path, base=BASE); assert st == 302 and hd["Location"].startswith("/join/"), (st, hd.get("Location"))
             maya = ok(api("/join", "POST", {"code": hd["Location"].split("/join/")[1], "name": "Maya"}), "tribe link join")

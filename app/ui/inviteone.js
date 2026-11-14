@@ -20,7 +20,11 @@
   const toast = (m, k) => (window.TribeApp && window.TribeApp.toast ? window.TribeApp.toast(m, k) : null);
   const swap = fn => (window.TribeMotion && window.TribeMotion.swap ? window.TribeMotion.swap(fn) : fn());
   const WHO = [['friend', 'A friend', 'A link they open to join'], ['guest', 'A guest for a day', 'A pass that works once'], ['agent', 'Your AI agent', 'Claude, Cursor, Codex and more']];
-  const GLYPH = { friend: '+', guest: '1×', agent: 'AI' }, TONE = { friend: 'k-ember', guest: 'k-indigo', agent: 'k-teal' };
+  // three large choices, each with a stroke icon from icons.js (people, a clock for the day pass, the agent plug)
+  const ICON = { friend: 'people', guest: 'clock', agent: 'agent' }, TONE = { friend: 'k-ember', guest: 'k-indigo', agent: 'k-teal' };
+  const glyph = k => (window.TribeIcons ? window.TribeIcons.svg(ICON[k], 26) : '');
+  const GLYPH = { get friend() { return glyph('friend'); }, get guest() { return glyph('guest'); }, get agent() { return glyph('agent'); } };
+  const wide = () => !matchMedia('(max-width: 820px)').matches;   // on a computer the QR sits beside the link from the start
   const IA = () => window.TribeInviteAgent;
   const KIND = { public: 'Works from anywhere', tailscale: 'Works on your Tailscale network', wifi: 'Same Wi-Fi only', local: 'This computer only' };
   let st = null;   // { who, once, proj, pid, preset, name, made, guest, seq }
@@ -118,12 +122,12 @@
   function friendPane(p) {
     const pre = st.preset ? 'ii' : 'inv', scope = canScope();
     p.innerHTML = `<section class="tl-box" id="tl-box"><span class="eyebrow">Your tribe link</span><p class="faint tl-sub">One link for your whole tribe. Anyone with it picks a name and they're in, on a phone or a computer. No AI needed.</p>
-        <div class="linkbox"><code id="tl-link">…</code><button class="btn" id="tl-qrb" title="Show a QR code to scan with a phone" aria-label="Show QR code" aria-expanded="false">QR</button><button class="btn primary" id="tl-copy" disabled>Copy</button></div>
-        <div class="qr tl-qr hidden" id="tl-qr"></div><details class="io-manage" id="tl-manage" hidden><summary>Rename, renew or turn off</summary><div class="tl-row" id="tl-row"></div></details></section>
+        <div class="linkbox"><code id="tl-link">…</code><button class="btn io-qrb" id="tl-qrb" title="Show a QR code to scan with a phone" aria-label="Show QR code" aria-expanded="${wide()}">QR</button><button class="btn primary io-copy" id="tl-copy" disabled>Copy</button></div>
+        <div class="qr tl-qr${wide() ? '' : ' hidden'}" id="tl-qr"></div><details class="io-manage" id="tl-manage" hidden><summary>Rename, renew or turn off</summary><div class="tl-row" id="tl-row"></div></details></section>
       <section class="tl-box io-made" id="io-made" hidden><span class="eyebrow" id="io-made-eyebrow"></span><p class="faint tl-sub" id="io-made-title"></p>
-        <div class="linkbox ${pre}-link"><code id="${pre}-link">Making a link…</code><button class="btn" id="${pre}-qrbtn" title="Show a QR code to scan with a phone" aria-label="Show QR code">QR</button><button class="btn primary" id="${pre}-copy" disabled>Copy</button></div>
+        <div class="linkbox ${pre}-link"><code id="${pre}-link">Making a link…</code><button class="btn io-qrb" id="${pre}-qrbtn" title="Show a QR code to scan with a phone" aria-label="Show QR code">QR</button><button class="btn primary io-copy" id="${pre}-copy" disabled>Copy</button></div>
         <div class="io-kind" id="io-kind" hidden></div>
-        <div class="io-qr${pre === 'ii' ? ' hidden' : ''}" id="${pre}-qr"></div><p class="faint io-net" id="inv-net"></p>
+        <div class="io-qr${pre === 'ii' && !wide() ? ' hidden' : ''}" id="${pre}-qr"></div><p class="faint io-net" id="inv-net"></p>
         ${navigator.share ? '<div class="io-acts"><button type="button" class="btn" id="io-share">Share…</button></div>' : ''}</section>
       <div class="io-switches">
         <details class="tl-more io-once" id="io-once-box"${st.once ? ' open' : ''}><summary class="toggle io-sw" role="switch" id="io-once" aria-checked="${!!st.once}"><span class="io-swt"><b>A one-time link instead</b><small>It runs out. Pick how long it lasts and how many people can use it.</small></span><span class="switch"></span></summary>
@@ -178,6 +182,7 @@
     const kind = $('#io-kind');
     if (st.preset) {
       link.textContent = st.preset; link.title = st.preset; copy.disabled = false;
+      { const q = $(`#${pre}-qr`); if (q && !q.classList.contains('hidden') && !q.firstChild) qr(q, st.preset); }
       if (kind && st.presetKind) { kind.hidden = false; kind.className = 'io-kind ' + (st.presetKind === 'public' ? 'ok' : 'warn'); kind.innerHTML = esc(KIND[st.presetKind] || '') + (st.presetKind === 'public' ? '' : ' · <button type="button" class="linkish" id="ii-public">Make it work from anywhere</button>'); const pb = $('#ii-public'); if (pb) pb.onclick = goPublic; }
       return;
     }
@@ -237,8 +242,8 @@
     const scope = canScope(), g = st.guest;
     p.innerHTML = `<section class="tl-box" id="io-guest"><span class="eyebrow">Guest pass · one use · 24 hours</span>
         <p class="faint tl-sub">For a quick look or a playtest. The link works once, and the account it makes stops working after a day. Nothing to clean up.</p>
-        ${g ? `<div class="linkbox"><code id="io-guest-link" title="${esc(g.link)}">${esc(g.link)}</code><button class="btn" id="io-guest-qrb" title="Show a QR code to scan with a phone" aria-label="Show QR code">QR</button><button class="btn primary" id="io-guest-copy">Copy</button></div>
-          <div class="io-qr hidden" id="io-guest-qr"></div><p class="faint io-net">${esc(g.note)}</p>
+        ${g ? `<div class="linkbox"><code id="io-guest-link" title="${esc(g.link)}">${esc(g.link)}</code><button class="btn io-qrb" id="io-guest-qrb" title="Show a QR code to scan with a phone" aria-label="Show QR code">QR</button><button class="btn primary io-copy" id="io-guest-copy">Copy</button></div>
+          <div class="io-qr${wide() ? '' : ' hidden'}" id="io-guest-qr"></div><p class="faint io-net">${esc(g.note)}</p>
           <div class="io-acts"><button type="button" class="btn" id="io-guest-make">Make another pass</button></div>`
         : '<div class="io-acts"><button type="button" class="btn primary" id="io-guest-make">Make a guest pass</button></div>'}</section>
       ${scope ? `<div class="io-switches">${sw('io-project', st.proj, 'Just this project', `The guest only sees ${projName(st.pid)}.`, scoped())}</div>` : ''}`;
@@ -255,6 +260,7 @@
     };
     const c = $('#io-guest-copy'); if (c) c.onclick = async () => { if (await copyText(g.link)) { c.textContent = 'Copied'; toast('Guest pass copied'); } else getSelection().selectAllChildren($('#io-guest-link')); };
     const qb = $('#io-guest-qrb'); if (qb) qb.onclick = () => { const q = $('#io-guest-qr'); if (!q.classList.toggle('hidden')) qr(q, g.link); };
+    { const q = $('#io-guest-qr'); if (g && q && !q.classList.contains('hidden')) qr(q, g.link); }
   }
 
   document.addEventListener('keydown', e => { if (e.key === 'Escape' && isOpen()) close(); });

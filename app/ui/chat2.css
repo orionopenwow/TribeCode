@@ -287,3 +287,18 @@ body.chat-drop #view-chat .chat-col { outline: 2px dashed var(--edge-pop); outli
 body[data-view="chat"] .ios-hint, body.kb-open .ios-hint { display: none !important; }
 .compose textarea#chat-input { box-sizing: border-box; min-height: 34px; }
 @media (max-width: 820px) { .m2-composer #chat-form textarea#chat-input { min-height: 42px; height: auto; } }
+
+/* One-line AI update cards in a channel (chatx.js cardHtml): finished, needs an OK, failed, started */
+.msg.dx.msg-card { display: flex; align-items: baseline; gap: 8px; margin: 4px 0; padding: 6px 12px; border: 1px solid var(--edge); border-left: 3px solid var(--live); border-radius: var(--r-ctl, 8px); background: var(--surface); min-width: 0; }
+.msg.dx.msg-card[data-card="approval"] { border-left-color: var(--brand); }
+.msg.dx.msg-card[data-card="failed"] { border-left-color: var(--alert); }
+.msg-card .mc-i { flex: none; align-self: center; display: grid; color: var(--live); }
+.msg-card[data-card="approval"] .mc-i { color: var(--brand); }
+.msg-card[data-card="failed"] .mc-i { color: var(--alert); }
+.msg-card .mc-k { flex: none; font: 600 11px var(--mono); letter-spacing: .05em; text-transform: uppercase; color: var(--muted); }
+.msg.dx.msg-card .mc-t { flex: 1; min-width: 0; margin: 0; font-size: 13.5px; line-height: 1.5; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.msg-card .mc-w { flex: none; font: 500 11px var(--mono); color: var(--faint); }
+.pa-cards { align-items: flex-start; flex-direction: column; gap: 6px; }
+.pa-cards label { display: inline-flex; align-items: center; gap: 8px; }
+.pa-cards small { font-size: 12.5px; line-height: 1.5; max-width: 60ch; }
+@media (max-width: 820px) { .msg-card .mc-k { display: none; } .msg-card .mc-t { white-space: normal; } }

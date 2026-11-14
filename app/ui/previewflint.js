@@ -276,12 +276,11 @@
     const about = pickNow ? ` About the ${pickNow.tag} “${(pickNow.text || '').slice(0, 80)}”.` : '';
     const kit = await kitHint();   // the project's open-source stack + quality bar (server/buildkit.js)
     const plan = steps && steps.length ? ` Plan to follow: ${steps.map((x, i) => `${i + 1}. ${x}`).join(' ')}` : '';
-    const msg = `@agents In the live preview${where}: ${text}.${about}${plan} Save the change in the project's code; the preview reloads by itself.${kit ? ' ' + kit : ''}`;
+    // Chat is for people: the brief goes privately to your own agent (askagent.js send), never into a channel
+    const detail = `In the live preview${where}.${about}${plan} Save the change in the project's code; the preview reloads by itself.${kit ? ' ' + kit : ''}`;
     if (window.TribeFlintFly) window.TribeFlintFly.done(document.querySelector('#pvf .flm-thread') || document.querySelector('#pvw'), 'Sent to your AI');
-    try { await C.api('/agents/channel', { method: 'POST', body: { text: msg } }); }
-    catch { await C.api('/chat/general', { method: 'POST', body: { text: 'Claude, ' + msg.replace(/^@agents /, '') } }); }
-    const online = (C.state().members || []).some(m => m.role === 'agent' && m.online);
-    feed({ k: 'ask', text: online ? 'Sent to your AI helpers. Their work shows up here, and the preview reloads as they save.' : 'Sent to your AI helpers in #agents. None is connected right now: connect one in Connect your AI and it picks this up.' });
+    const r = await window.TribeAskAgent.send({ text, detail, src: 'preview' });
+    feed({ k: 'ask', text: r.sent ? `${r.note} The preview reloads as it saves.` : r.note });
   }
   async function fix(msg) {
     feed({ k: 'you', who: 'You', text: 'Fix it' });

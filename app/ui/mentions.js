@@ -66,11 +66,13 @@
       <label class="pa-line"><input type="checkbox" id="pa-on" ${p.on ? 'checked' : ''}> Agents take @commands in public chat</label>
       <label class="pa-line">Who can command <select class="input set-select" id="pa-who"><option value="members">Everyone but spectators</option><option value="builders">Builders and up (no guests)</option><option value="admins">Admins only</option></select></label>
       <label class="pa-line">Channels <input class="input" id="pa-ch" placeholder="every channel" value="${esc((p.channels || []).join(', '))}"></label>
-      <label class="pa-line"><input type="checkbox" id="pa-done" ${p.postDone ? 'checked' : ''}> Post what agents make and finish in the channel</label>
+      <div class="pa-line pa-cards" id="pa-cards"><span>AI updates shown in channels, one line each</span>
+        ${(p.kinds || ['finished', 'approval', 'failed', 'started']).map(k => `<label><input type="checkbox" data-card="${k}" ${(p.cards || []).includes(k) ? 'checked' : ''}> ${({ finished: 'Finished', approval: 'Needs an OK', failed: 'Build failed', started: 'Started' })[k] || k}</label>`).join('')}
+        <small class="faint">Everything else an AI agent says goes privately to its owner. An agent still answers in a channel when someone @mentions it.</small></div>
       <label class="pa-line">Limit per person per hour <input class="input" id="pa-rate" type="number" min="1" max="200" value="${p.perHour}" style="width:80px"></label></div>`;
     el.querySelector('#pa-who').value = p.who;
     const save = async () => {
-      const body = { on: el.querySelector('#pa-on').checked, who: el.querySelector('#pa-who').value, channels: el.querySelector('#pa-ch').value.split(',').map(s => s.trim()).filter(Boolean), postDone: el.querySelector('#pa-done').checked, perHour: +el.querySelector('#pa-rate').value };
+      const body = { on: el.querySelector('#pa-on').checked, who: el.querySelector('#pa-who').value, channels: el.querySelector('#pa-ch').value.split(',').map(s => s.trim()).filter(Boolean), cards: [...el.querySelectorAll('#pa-cards [data-card]')].filter(x => x.checked).map(x => x.dataset.card), perHour: +el.querySelector('#pa-rate').value };
       try { await C().api('/ask/public', { method: 'PUT', body }); if (window.TribeApp && window.TribeApp.toast) window.TribeApp.toast('Saved'); } catch (e) { if (window.TribeApp && window.TribeApp.toast) window.TribeApp.toast(e.message); }
     };
     el.querySelectorAll('input, select').forEach(x => x.onchange = save);

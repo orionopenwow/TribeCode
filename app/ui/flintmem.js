@@ -227,7 +227,7 @@
     // a free build stands on its own; hand it on only when an AI helper is here to take it further, or when it needs one
     if (!(free && free.built && !agents.length)) {
       const ask = `please build this in the project's code so it runs in TribeCode's preview (index.html at the top folder, relative paths): ${what}${made ? ` A first version is already in the repo${free && free.dir ? ` at ${free.dir}/` : ''}; build on it.` : ''}`;
-      let asked = false; try { await C.api('/agents/channel', { method: 'POST', body: { text: '@agents ' + ask } }); asked = true; } catch { try { await C.api('/chat/general', { method: 'POST', body: { text: 'Claude, ' + ask } }); asked = true; } catch {} }
+      let asked = false; try { const r = await window.TribeAskAgent.send({ text: `Build this: ${what}`, detail: ask, src: 'flint' }); asked = !!r.ok; } catch {}   // privately to your own agent, never into a channel
       if (asked) done.push(agents.length ? `handed the brief to ${agents.length === 1 ? agents[0].name : agents.length + ' AI helpers'}` : 'posted the brief for your AI helpers');
       if (!agents.length) need.push(tier && tier.tier === 'agent' ? 'a stronger AI for this one (it needs real engineering): connect Claude Code, Codex or Gemini, or the host can add an AI key' : 'an AI helper to build the rest: connect Claude Code, Codex or Gemini (I can open that)');
     }

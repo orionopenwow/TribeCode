@@ -130,8 +130,10 @@
         ${isPhone() && on && pj.length ? phoneProjects(pj) : ''}
         <div class="hub-two hub-bottom">${notesSec(on)}${activitySec(on)}</div>
         ${isPhone() ? sec('AI insights', 'Worth a look', `<div class="ai-cards" id="hub-ins-phone">${insightCards()}</div>`, 'id="hub-insights"') : ''}
+        <footer class="hub-foot" id="hub-foot"><button type="button" class="linkish" id="hub-site">${ico('i-net', 13)}TribeCode website</button></footer>
       </div>`;
       bind(el);
+      { const hs = el.querySelector('#hub-site'); if (hs) hs.onclick = () => window.TribeHelp && window.TribeHelp.website && window.TribeHelp.website(); }
       if (window.TribeDashBand) window.TribeDashBand.mountHome(el.querySelector('#hub-band-slot'));
       if (window.TribeFlint && window.TribeFlint.mountDashboard) window.TribeFlint.mountDashboard(el.querySelector('#hub-flint-slot'));   // feat/flint-ai: Flint on the Dashboard
     });

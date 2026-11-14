@@ -112,7 +112,7 @@
       await api(`/projects/${encodeURIComponent(pid)}/setup/starter`, { method: 'POST', body: {} }).catch(() => {});
       // your own AI helpers build the rest, when there are any
       const agents = ((C.state() || {}).members || []).filter(m => m.role === 'agent');
-      if (agents.length) api('/agents/channel', { method: 'POST', body: { text: `@agents please build this in the project's code so it runs in TribeCode's preview (index.html at the top folder, relative paths): ${idea} A starter is already in the repo; build on it.` } }).catch(() => {});
+      if (agents.length && window.TribeAskAgent) window.TribeAskAgent.send({ text: `Build this: ${idea}`, detail: 'Build it in the project\'s code so it runs in TribeCode\'s preview (index.html at the top folder, relative paths). A starter is already in the repo; build on it.', src: 'firstrun' }).catch(() => {});
       stepUi(3);
       const s = $('#fr-start'); if (s) s.remove();
       if (window.TribePreview && window.TribePreview.open) { try { await window.TribePreview.open(); } catch {} }

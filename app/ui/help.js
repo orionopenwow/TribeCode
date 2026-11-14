@@ -1,7 +1,7 @@
 // Help: a filled "?" at the far right of the title bar (right of the window buttons). One small menu with everything
 // you'd look for when stuck: the Guide and its key pages, keyboard shortcuts, what's new, connecting Claude Code,
 // reporting a bug, checking for updates, the docs and the project on GitHub, and the version you're on.
-//   window.TribeHelp = { open(), close(), shortcuts() }
+//   window.TribeHelp = { open(), close(), shortcuts(), website() }
 (function () {
   'use strict';
   const $ = s => document.querySelector(s);
@@ -11,6 +11,10 @@
   const ver = () => (window.TribeUpdater && window.TribeUpdater.current && window.TribeUpdater.current()) || '';
   const guide = slug => window.TribeGuide && window.TribeGuide.open(slug);
   const ext = url => { try { const sh = window.__TAURI__ && window.__TAURI__.shell; if (sh && sh.open) return sh.open(url); } catch {} window.open(url, '_blank', 'noopener'); };
+  // Back to the main website (tribecode.org). The web app served from the site itself (/app/) goes there in the same tab;
+  // a self-hosted browser app opens it in a new tab so the app stays; the desktop app opens it in the system browser.
+  const SITE = 'https://tribecode.org/';
+  const website = () => { let same = false; try { same = !window.__TAURI__ && /(^|\.)tribecode\.org$/.test(location.hostname); } catch {} if (same) location.href = location.origin + '/'; else ext(SITE); };
 
   const SECTIONS = [
     ['Learn', [
@@ -32,6 +36,7 @@
       ['update', 'i-refresh', 'Check for updates', '', () => { if (window.TribeUpdater && window.TribeUpdater.check) { window.TribeUpdater.check(true); window.TribeApp && window.TribeApp.toast('Checking for updates…'); } }],
     ]],
     ['More', [
+      ['site', 'i-net', 'TribeCode website', 'tribecode.org', website],
       ['new', 'i-flag', "What's new", 'The changelog for every version', () => ext(`${REPO}/blob/main/CHANGELOG.md`)],
       ['docs', 'i-folder', 'Docs on GitHub', 'Design system, hosting, phones, the vision', () => ext(`${REPO}/tree/main/docs`)],
       ['gh', 'i-git', 'TribeCode on GitHub', 'Code, releases, issues · MIT', () => ext(REPO)],
@@ -96,5 +101,5 @@
     const done = () => { w.remove(); document.removeEventListener('keydown', key); }, key = e => { if (e.key === 'Escape') done(); };
     document.addEventListener('keydown', key); w.querySelector('#hk-close').onclick = done; w.onclick = e => { if (e.target === w) done(); };
   }
-  window.TribeHelp = { open, close, shortcuts };
+  window.TribeHelp = { open, close, shortcuts, website };
 })();
