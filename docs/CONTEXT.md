@@ -4,7 +4,9 @@ The one document that remembers the greater vision and everything in flight. Upd
 
 Last updated: 2026-11-12 (v0.31.2)
 
-Latest: **v0.34.0** (2026-11-13). The build runner (server/checks.js), gig feeds across tribes (server/workfetch.js, app/ui/workfeeds.js) and Flint's opt-in local helper (flintembed.js, flintmodel.js).
+Latest: **v0.35.0** (2026-11-13). The one invite sheet (inviteone.js), one Claude per person and the claude.ai connector sign-in (server/claudeauth.js); the calm first dashboard and on-device parity (devicelocal.js, scripts/dev/app-bundle.js); passkeys, with two-step sign-in and Stripe payments built but off by default (server/auth3.js, stripe.js; TRIBE_TWO_STEP, TRIBE_PAYMENTS).
+
+Earlier: **v0.34.0** (2026-11-13). The build runner (server/checks.js), gig feeds across tribes (server/workfetch.js, app/ui/workfeeds.js) and Flint's opt-in local helper (flintembed.js, flintmodel.js).
 
 Earlier: **v0.33.0** (2026-11-13). One Flint chat (TribeFlint.mount), flintmax and Flint's page; tribenew.js create flow; folder homes, sync and Versions (server/folderhome.js, sync.js, versions.js, livingrepo.js); dropzone.js and folderread.js; auth2 sign-in; Invite your Claude; the free-AI bridge; tabbed Settings (server/mysettings.js); the dashboard band; widget cards (wcards.js); Work v2 and server/workfeed.js; hardening (server/premium.js, diskcap.js, limits). See CHANGELOG and docs/APP-AUDIT-2026-11-13.md (draft).
 

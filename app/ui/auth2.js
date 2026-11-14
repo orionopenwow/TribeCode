@@ -277,6 +277,7 @@
   async function hostRow(row, base) {
     const tok = (S().get().server || {}).token || '';
     let d; try { d = await api(base, '/accounts/admin/settings', { token: tok }); } catch { return; }
+    if (d && d.on === false) return;   // accounts are off on this host: nothing to set
     if (!row.parentNode) return;
     let el = row.parentNode.querySelector('#set-signin-host');
     if (!el) { el = document.createElement('div'); el.className = 'set-row au-host'; el.id = 'set-signin-host'; (row.parentNode.querySelector('#set-methods') || row).after(el); }

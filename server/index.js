@@ -342,9 +342,9 @@ let places = null;   // made below, once chans exists
 let inviteClaude = null;   // made below (server/inviteclaude.js)
 let claudeAuth = null;     // made below (server/claudeauth.js): sign-in for the claude.ai connector
 
-// harden: presence frames are cheap to send and expensive to fan out (each one re-sends presence to everyone), so each
+// harden (a project switch is never dropped: it is a click, and losing it leaves the person on the wrong project): presence frames are cheap to send and expensive to fan out (each one re-sends presence to everyone), so each
 // socket gets 40 of them per 10 seconds; the rest are dropped. A person keeps at most 24 sockets (tabs, devices).
-const FLOODY = new Set(['place', 'activity', 'project', 'huddle-state', 'announce', 'huddle-join', 'huddle-leave']);
+const FLOODY = new Set(['place', 'activity', 'huddle-state', 'announce', 'huddle-join', 'huddle-leave']);
 const MAX_SOCKETS_PER_MEMBER = 24, FLOOD_N = 40, FLOOD_MS = 10_000;
 function flooding(s) {
   const now = Date.now(); if (!s._fl || now - s._fl.t > FLOOD_MS) s._fl = { t: now, n: 0 };

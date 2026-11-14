@@ -1,5 +1,20 @@
 # Changelog
 
+## v0.35.0
+- **One invite sheet**: every Invite button opens the same sheet and asks who you're inviting: a friend (tribe link with QR, or a one-time link, or just this project), a guest for a day, or your Claude.
+- **One Claude per person**: your Claude is made when you press Copy or Download, not when the sheet opens, and an unused one is cleaned up after a day. A Claude you already connected shows as "already connected" with narrow, Pause and Remove.
+- **Sign-in for Claude on the web**: claude.ai's connector now signs in to your tribe, so the key is no longer in the link. Hosts approve with a short code typed in the app. Old links keep working.
+- **A calmer first dashboard**: a new project shows its preview and one next step ("1 of 5", See all steps). The rest appears as it becomes relevant; established projects are unchanged.
+- **Projects on this device do more**: the Guide and website templates are built into the app, Versions keeps snapshots of the vision, docs and website, and the widget picker and notification settings work with no host.
+- **One meaning for Versions**: project history is Versions; the website designer's list is Saved designs and screenshot history is Earlier shots, all linked from the Versions panel.
+- **Passkeys**: add one in Settings and sign in with it (where the browser allows it).
+- **Built but switched off**: two-step sign-in and paid checkout are in the code and hidden until the host turns each on (docs/ACCOUNTS.md, docs/PREMIUM.md). The plans pop-out says "Paid plans are coming".
+- **Signed out isn't stuck**: the notice has Log in again and returns you where you were. Settings names each device's browser and system.
+- **Small joins**: Chart this CSV draws the chart; pictures show in docs; small tap targets on phones have bigger hit areas.
+- **Fixes**: clicking a tribe is never dropped when the app is busy sending presence updates; a host with accounts off no longer sees a console error in Settings.
+- **Website**: the "Made with TribeCode" gallery is removed and "Built for a crew" sits above Download.
+- **Phones**: the invite sheet, the first-step card, device Versions and the approval code page fit at 390px.
+
 ## v0.34.0
 - **Real build results**: the host runs a project's own checks after each ship, or when you press Run checks on the Build status card or tell Flint "run the checks". The dashboard shows pass or fail with the failing lines, and the person who shipped is told. Plain web projects get a safe check that runs nothing. Running a project's test scripts is off until a lead turns it on, because it runs members' code on the host computer.
 - **Gigs across tribes**: hosts can follow another tribe's signed gig list by address and key. Those gigs show under Gigs › Public with the tribe named. The fetcher refuses private addresses, cross-host redirects, oversized or unsigned lists and old copies. Hosts can pause or block a source and hide a gig.

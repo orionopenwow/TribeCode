@@ -97,7 +97,7 @@ def main():
             assert pg.locator("#home-ai-cards .ai-card b:text-is('Connect your AI')").count() == 0, "the panel's own Connect your AI card is enough on desktop"
             pg.click("#home-ai-cards details.ai-dev > summary"); pg.wait_for_selector("#home-ai-cards details.ai-dev[open] .ai-card")
             assert [t.strip() for t in pg.locator("#grp-global .nest-row span").all_inner_texts()] == ["Home", "Files", "Design", "Code", "Work", "Agent fleet"]
-            assert "Starts a new project for the two of you" in pg.inner_text("#view-hub")
+            assert "A link they open to join you" in pg.inner_text("#view-hub")
             pg.unroute_all(behavior="ignoreErrors")
 
             # ---- New project -> the chat's Getting started: the steps once (in the bar)
@@ -140,8 +140,7 @@ def main():
             pg.keyboard.press("Escape"); pg.evaluate("window.TribePreview && TribePreview.close && TribePreview.close()")
 
             # ---- Connect your AI: a hint for "terminal"
-            pg.evaluate("TribeApp.connectClaude({fresh: true})"); pg.wait_for_selector("#invite-body details.cc-what", timeout=10000)
-            pg.click("#invite-body details.cc-what > summary"); assert "PowerShell" in pg.inner_text("#invite-body details.cc-what")
+            pg.evaluate("TribeApp.connectClaude({fresh: true})"); pg.wait_for_selector("#invite-body:has-text('already connected')", timeout=10000)   # one Claude per person: the sheet shows the one Sam has (the terminal hint is covered by e2e_invite_one)
             close_sheets(pg)
 
             # ---- Settings: advanced rows live in their own tab (feat/settings-tabs), the last tab is remembered
