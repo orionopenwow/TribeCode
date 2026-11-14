@@ -253,7 +253,6 @@
   setTimeout(armIdle, 3000);
   // the same failing action twice in a minute (the app's error toasts)
   function failed(msg) { const now = Date.now(); fails = fails.filter(t => now - t < 60000); if (msg && msg === lastFail) fails.push(now); else fails = [now]; lastFail = msg; if (fails.length >= 2) offer('fail'); }
-  const mo = new MutationObserver(ms => { for (const m of ms) for (const n of m.addedNodes) if (n.nodeType === 1 && n.matches && n.matches('.toast')) void 0; });
   let lastT = 0; const seeToast = () => { const t = document.querySelector('.toast.t-err:not(.hidden)'); if (t && Date.now() - lastT > 800) { lastT = Date.now(); failed((t.textContent || '').trim().slice(0, 80)); } };
   const watch = () => { try { new MutationObserver(seeToast).observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ['class'], characterData: true }); } catch {} };
   if (document.body) watch(); else addEventListener('DOMContentLoaded', watch);

@@ -84,7 +84,9 @@
   async function load() {
     if (pages) return pages;
     loadErr = '';
-    try {
+    // no tribe and no demo running: there is no server to ask, so read the pages that ship inside the app (no 404)
+    const live = (C && C.connected && C.connected()) || (window.TribeOffline && window.TribeOffline.active && window.TribeOffline.active());
+    if (live) try {
       const base = (C && C.base && C.base()) || '';
       const r = await fetch(base + '/api/guide', { headers: { Accept: 'application/json' } });
       if (!r.ok) throw new Error(String(r.status));

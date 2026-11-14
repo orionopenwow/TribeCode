@@ -1197,6 +1197,10 @@
     "No problem. Here is the one thing I would do next:": ["No pasa nada. Esto es lo único que haría ahora:","Sem problema. Esta é a única coisa que eu faria agora:","Pas de souci. Voici la seule chose que je ferais ensuite :","Kein Problem. Das wäre mein einer nächster Schritt:","大丈夫。次にやるならこれひとつです：","没关系。我下一步只会做这一件事：","괜찮아요. 다음에 할 한 가지는 이것입니다:"],
     "Next:": ["Siguiente:","Próximo:","Ensuite :","Als Nächstes:","次：","下一步：","다음:"],
     "You are at": ["Estás en","Você está em","Vous en êtes à","Du bist bei","現在地：","你目前在","현재 단계:"],
+    "That didn't work twice": ["Eso no funcionó dos veces", "Isso não funcionou duas vezes", "Ça n'a pas marché deux fois", "Das hat zweimal nicht geklappt", "2回うまくいきませんでした", "这已经两次没成功", "두 번 실패했어요"],
+    "Not sure what to do here?": ["¿No sabes qué hacer aquí?", "Não sabe o que fazer aqui?", "Vous ne savez pas quoi faire ici ?", "Nicht sicher, was hier zu tun ist?", "ここで何をすればいいか迷っていますか？", "不确定在这里做什么？", "여기서 뭘 할지 모르겠나요?"],
+    "Do this next": ["Haz esto ahora", "Faça isto agora", "Faites ceci ensuite", "Das als Nächstes", "次はこれ", "接下来做这个", "다음은 이것"],
+    "All six done": ["Los seis hechos", "Os seis feitos", "Les six sont faits", "Alle sechs erledigt", "6つすべて完了", "六步全部完成", "여섯 단계 모두 완료"],
     "See all of it": ["Verlo todo","Ver tudo","Tout voir","Alles ansehen","全部見る","查看全部","전체 보기"],
   };
   // Storage card keys (storage.js asks t('st.*', English)): translated by the same English text.

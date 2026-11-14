@@ -82,7 +82,7 @@ def main():
             pg.evaluate("localStorage.setItem('tribecode.project.ember-cafe.keep', '1')")   # a real project that shares a demo's name
             # ---- Help › See how TribeCode works, in the desktop window ----
             until(pg, "!!document.querySelector('#tb-help')", 10)
-            pg.click("#tb-help"); pg.click("[data-help=watch]")
+            pg.click("#tb-help"); pg.click("[data-help=learn]"); pg.click("#guide [data-help=watch]")
             until(pg, "!!document.getElementById('di')", 30, "the intro slides come first (feat/demo-intro)")
             pg.click("#di-skip")
             until(pg, "!!(window.TribeDemoWatch && TribeDemoWatch._test.state().running)", 30, "the tour starts")
