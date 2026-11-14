@@ -18,7 +18,8 @@
   // scene(build): build({ scene, camera, o, R }) -> { frame(t, o, dt), size?(w, h), free: [things with dispose()] }
   function scene(fov, build) {
     return { make: function (canvas, o) {
-      var renderer; try { renderer = new T3.WebGLRenderer({ canvas: canvas, alpha: true, antialias: true, powerPreference: 'low-power' }); } catch (e) { return null; }
+      var attrs = { alpha: true, antialias: true, powerPreference: 'low-power' }, gl = canvas.getContext('webgl2', attrs) || canvas.getContext('webgl', attrs); if (!gl) return null;   // asked for here, so a browser with no WebGL stays quiet
+      var renderer; try { renderer = new T3.WebGLRenderer({ canvas: canvas, context: gl, alpha: true, antialias: true }); } catch (e) { return null; }
       renderer.setClearColor(0x000000, 0);
       var sc = new T3.Scene(), cam = new T3.PerspectiveCamera(fov, 1, 0.1, 400), last = 0;
       var s = build({ scene: sc, camera: cam, o: o });

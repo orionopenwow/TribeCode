@@ -81,7 +81,7 @@
   }
   function mount(el) {
     if (find(el)) return; var kind = el.getAttribute('data-fx'), def = REG[kind];
-    if (!def) { if (KINDS3D[kind]) load3d(); return; }
+    if (!def) { if (KINDS3D[kind] && hasGL()) load3d(); return; }   // no WebGL: Three.js is not even fetched
     var o = read(el); if (!o.phones && small.matches) return;
     var layer = layerOf(el), canvas = document.createElement('canvas'), inst = null;
     try { inst = def.make(canvas, o); } catch (e) { inst = null; }
@@ -106,6 +106,7 @@
     if (root && root.getAttribute && root.getAttribute('data-fx')) mount(root);
   }
   function sweep() { for (var i = items.length - 1; i >= 0; i--) { var it = items[i]; if (!document.documentElement.contains(it.el) || !it.el.getAttribute('data-fx')) kill(it); else if (it.el.getAttribute('data-fx') !== it.kind) { kill(it); mount(it.el); } } }
+  var gl0, hasGL = function () { if (gl0 === undefined) { try { var c = document.createElement('canvas'), g = c.getContext('webgl') || c.getContext('experimental-webgl'); gl0 = !!g; var x = g && g.getExtension('WEBGL_lose_context'); if (x) x.loseContext(); } catch (e) { gl0 = false; } } return gl0; };
   function load3d() {
     if (loading3d || !BASE) return; loading3d = 1;
     var add = function (src, next) { var s = document.createElement('script'); s.src = BASE + src; s.onload = next; s.onerror = function () { loading3d = 2; }; document.head.appendChild(s); };

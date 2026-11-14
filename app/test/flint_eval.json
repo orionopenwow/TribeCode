@@ -4747,6 +4747,277 @@
    "v": "held3"
   },
   {
+   "t": "add a 3D background",
+   "i": "site.fx",
+   "s": {
+    "op": "add"
+   },
+   "ctx": "s"
+  },
+  {
+   "t": "put moving particles behind the header",
+   "i": "site.fx",
+   "s": {
+    "op": "add",
+    "block": "header"
+   },
+   "ctx": "s"
+  },
+  {
+   "t": "make the background calmer",
+   "i": "site.fx",
+   "s": {
+    "op": "calmer"
+   },
+   "ctx": "s"
+  },
+  {
+   "t": "turn off motion on phones",
+   "i": "site.fx",
+   "s": {
+    "op": "phones"
+   },
+   "ctx": "s"
+  },
+  {
+   "t": "add a starfield behind the hero",
+   "i": "site.fx",
+   "s": {
+    "op": "add",
+    "kind": "warp",
+    "block": "hero"
+   },
+   "ctx": "s"
+  },
+  {
+   "t": "remove the moving background",
+   "i": "site.fx",
+   "s": {
+    "op": "remove"
+   },
+   "ctx": "s"
+  },
+  {
+   "t": "make the animation slower",
+   "i": "site.fx",
+   "s": {
+    "op": "slower"
+   },
+   "ctx": "s"
+  },
+  {
+   "t": "give the footer a moving background",
+   "i": "site.fx",
+   "s": {
+    "op": "add",
+    "block": "footer"
+   },
+   "ctx": "s"
+  },
+  {
+   "t": "add a constellation background",
+   "i": "site.fx",
+   "s": {
+    "op": "add",
+    "kind": "constellation"
+   },
+   "ctx": "s"
+  },
+  {
+   "t": "no animation on mobile",
+   "i": "site.fx",
+   "s": {
+    "op": "phones"
+   },
+   "ctx": "s"
+  },
+  {
+   "t": "turn motion back on for phones",
+   "i": "site.fx",
+   "s": {
+    "op": "phones",
+    "on": true
+   },
+   "ctx": "s"
+  },
+  {
+   "t": "fewer particles",
+   "i": "site.fx",
+   "s": {
+    "op": "fewer"
+   },
+   "ctx": "s"
+  },
+  {
+   "t": "speed up the background animation",
+   "i": "site.fx",
+   "s": {
+    "op": "faster"
+   },
+   "ctx": "s"
+  },
+  {
+   "t": "make the particles fainter",
+   "i": "site.fx",
+   "s": {
+    "op": "fainter"
+   },
+   "ctx": "s"
+  },
+  {
+   "t": "add animated dots in the background",
+   "i": "site.fx",
+   "s": {
+    "op": "add",
+    "kind": "dots"
+   },
+   "ctx": "s"
+  },
+  {
+   "t": "use a 3d sphere background",
+   "i": "site.fx",
+   "s": {
+    "op": "add",
+    "kind": "sphere"
+   },
+   "ctx": "s"
+  },
+  {
+   "t": "add ripples behind the contact section",
+   "i": "site.fx",
+   "s": {
+    "op": "add",
+    "kind": "rings",
+    "block": "contact"
+   },
+   "ctx": "s"
+  },
+  {
+   "t": "stop the animation",
+   "i": "site.fx",
+   "s": {
+    "op": "remove"
+   },
+   "ctx": "s"
+  },
+  {
+   "t": "make the hero background accent",
+   "i": "site.bg",
+   "s": {
+    "block": "hero",
+    "bg": "accent"
+   },
+   "ctx": "s"
+  },
+  {
+   "t": "show me the phone view",
+   "i": "site.device",
+   "s": {
+    "dev": "phone"
+   },
+   "ctx": "s"
+  },
+  {
+   "t": "hide this section",
+   "i": "site.block.hide",
+   "ctx": "s"
+  },
+  {
+   "t": "i want an animated background",
+   "i": "site.fx",
+   "s": {
+    "op": "add"
+   },
+   "ctx": "s",
+   "v": "heldfx"
+  },
+  {
+   "t": "put floating particles behind the intro",
+   "i": "site.fx",
+   "s": {
+    "op": "add",
+    "kind": "drift",
+    "block": "intro"
+   },
+   "ctx": "s",
+   "v": "heldfx"
+  },
+  {
+   "t": "the moving background is too busy",
+   "i": "site.fx",
+   "s": {
+    "op": "calmer"
+   },
+   "ctx": "s",
+   "v": "heldfx"
+  },
+  {
+   "t": "disable the animation on mobile",
+   "i": "site.fx",
+   "s": {
+    "op": "phones"
+   },
+   "ctx": "s",
+   "v": "heldfx"
+  },
+  {
+   "t": "get rid of the animated background",
+   "i": "site.fx",
+   "s": {
+    "op": "remove"
+   },
+   "ctx": "s",
+   "v": "heldfx"
+  },
+  {
+   "t": "slow down the background motion",
+   "i": "site.fx",
+   "s": {
+    "op": "slower"
+   },
+   "ctx": "s",
+   "v": "heldfx"
+  },
+  {
+   "t": "add a 3d globe behind the hero",
+   "i": "site.fx",
+   "s": {
+    "op": "add",
+    "kind": "sphere",
+    "block": "hero"
+   },
+   "ctx": "s",
+   "v": "heldfx"
+  },
+  {
+   "t": "more stars in the background",
+   "i": "site.fx",
+   "s": {
+    "op": "more"
+   },
+   "ctx": "s",
+   "v": "heldfx"
+  },
+  {
+   "t": "make the background animation livelier",
+   "i": "site.fx",
+   "s": {
+    "op": "livelier"
+   },
+   "ctx": "s",
+   "v": "heldfx"
+  },
+  {
+   "t": "add water drops to the background",
+   "i": "site.fx",
+   "s": {
+    "op": "add",
+    "kind": "drops"
+   },
+   "ctx": "s",
+   "v": "heldfx"
+  },
+  {
    "t": "make a breakout game",
    "i": "site.starter-breakout",
    "ctx": "g"

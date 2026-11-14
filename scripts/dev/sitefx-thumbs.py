@@ -17,7 +17,7 @@ if '--check' in sys.argv:
 from playwright.sync_api import sync_playwright
 from PIL import Image
 os.makedirs(OUT, exist_ok=True)
-opt = json.dumps({'s': 1, 'd': 1, 'i': 1, 'p': 1, 'a': '#38C6B1', 'b': '#6C7CFF'})
+opt = json.dumps({'s': 1, 'd': 1.4, 'i': 1.6, 'p': 1, 'a': '#38C6B1', 'b': '#6C7CFF'})
 secs = ''.join(f"<section id=\"k-{k}\" data-fx=\"{k}\" data-fx-o='{opt}' style=\"position:relative;isolation:isolate;overflow:hidden;width:480px;height:300px;float:left\"><div class=\"fx-layer\" style=\"position:absolute;inset:0;z-index:-1\"></div></section>" for k in kinds)
 page_html = f'<!doctype html><html><body style="margin:0;background:#12151A">{secs}<script src="file://{FX}/fx.js"></script></body></html>'
 tmp = os.path.join(OUT, '_page.html'); open(tmp, 'w').write(page_html)

@@ -144,3 +144,22 @@ and/or database.  Title to copyright in this software, database and
 any associated documentation shall at all times remain with
 Princeton University and LICENSEE agrees to preserve same.
 
+
+-------------------------------------------------------------------------------
+Moving and 3D backgrounds for websites (app/ui/sitefx.js, app/ui/sitefx/)
+-------------------------------------------------------------------------------
+ThreeUI Community (https://github.com/MengTo/threeui), MIT License, Copyright (c) 2026 Meng To.
+Code was ported here. Ten of the thirteen backgrounds in app/ui/sitefx/fx.js and fx3d.js are ports of its
+components: Pulsing dots (Dot Matrix), Glowing horizon (Emerald Horizon), Ribbons of light (Ribbon Field), Flowing
+streams (Stream Convergence), Ripples (Bell Field), Glowing orb (Energy Orb), Pixel arc (Data Pixel Arc), Water drops
+(Condensation), Turning sphere (Orbital Sphere) and Rising dome (Structure Flow). They were rewritten in plain
+JavaScript without React, recoloured to follow the site's own palette, and given TribeCode's runtime (one loop, pause
+off screen, reduced motion, still fallback). Constellation, Floating particles and Starfield are TribeCode's own
+scenes, made after the same catalogue's particle fields. No ThreeUI name, logo, thumbnail, video, font or Pro
+component is used; the thumbnails in app/ui/sitefx/thumbs are pictures of TribeCode's ports
+(scripts/dev/sitefx-thumbs.py). The license text is app/ui/sitefx/LICENSE-threeui.txt, and it is copied into every
+site that uses one of these backgrounds (fx/LICENSE-threeui.txt).
+
+Three.js r149 (https://threejs.org), MIT License, Copyright (c) 2010-2023 three.js authors: app/ui/sitefx/three.min.js,
+unmodified, with its license header. It is loaded only by a page that uses a 3D background. License text:
+app/ui/sitefx/LICENSE-three.txt (copied into a site that uses it as fx/LICENSE-three.txt).
