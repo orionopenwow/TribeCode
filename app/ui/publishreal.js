@@ -59,7 +59,7 @@
     const rows = [];
     rows.push(row('zip', 'download', 'Download it', esc(T('A zip with everything in it. Drop it on any web place and it works.')), `<button class="btn" type="button" data-zip="web">${esc(T('Download the zip'))}</button>`));
     const ghLink = !pg ? '' : `${linkbox('pages', pg.url)}${pg.pagesEnabled ? `<small class="faint">${esc(T('The first time, GitHub takes about a minute before the link opens.'))}</small>` : `<p class="pbr-warn">${esc(T('One more step: turn the page on. Open the settings, pick "Deploy from a branch", branch main, and Save.'))} <a href="${esc(pg.settingsUrl)}" target="_blank" rel="noopener">${esc(T('Open the settings'))}</a></p>`}`;
-    const ghAct = !can ? (pg ? '' : `<small class="faint">${esc(T('Ask a builder to publish it.'))}</small>`)
+    const ghAct = !can ? `<button class="btn" type="button" id="pbr-ask" data-gs-ask="site.publish">${esc(T('Ask to publish'))}</button><small class="faint">${esc(T('The people who can publish here get your request.'))}</small>`
       : !gh.signedIn ? `<button class="btn${pg ? '' : ' primary'}" type="button" data-gh-signin>${esc(T('Sign in to GitHub'))}</button><small class="faint">${esc(T(pg ? 'Sign in to update it.' : 'Free. Your page lives in your own GitHub account.'))}</small>`
       : pg ? `<button class="btn" type="button" data-pages>${esc(T('Update it'))}</button>`
         : `<label class="pb-l pbr-name">${esc(T('Its name in the link'))}<input class="input" id="pbr-name" maxlength="40" value="${esc(s.slug)}" autocomplete="off" spellcheck="false"></label><button class="btn primary" type="button" data-pages>${esc(T('Publish to GitHub'))}</button>`;

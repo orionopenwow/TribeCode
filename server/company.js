@@ -355,7 +355,8 @@ module.exports = function company({ P, base, store, broadcast, postChat = () => 
     const members = getMembers().filter(m => seeOk(m, pid) && !(m.guestUntil && Date.parse(m.guestUntil) < Date.now()));
     const out = {
       company: c ? { ...c, seats: c.seats.map(x => ({ ...x, who: { person: who(x.holder.person), agent: who(x.holder.agent) } })), goals: c.goals.map(g => ({ ...g, progress: progress(g, tasks) })) } : null,
-      canLead: lead, canEdit: lead, mySeats: c ? c.seats.filter(x => holds(x, me.id)).map(x => x.id) : [],
+      canLead: lead, canEdit: lead, propose: !lead && me.role !== 'agent' && !!(perms && perms.counting && (perms.counting(pid) || { ids: [] }).ids.includes(me.id)),   // feat/group-styles: a council member proposes changes
+      mySeats: c ? c.seats.filter(x => holds(x, me.id)).map(x => x.id) : [],
       templates: tplList(), kinds: Object.keys(KINDS).map(k => ({ id: k, title: KIND_TITLE[k], color: KINDS[k] })),
       people: lead ? members.filter(m => m.role !== 'agent' && m.role !== 'spectator').map(m => who(m.id)) : [],
       agents: members.filter(m => m.role === 'agent' && (lead || m.owner === me.id)).map(m => ({ ...who(m.id), owner: m.owner, ownerName: nameOf(m.owner) })),

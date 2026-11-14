@@ -207,7 +207,8 @@
     return `<header class="co-head"><div class="co-h-t"><span class="eyebrow">Company</span><h1>${esc(c.name)}</h1>
         ${c.mission ? `<p class="co-mission">${esc(c.mission)}</p>` : lead ? '<button class="linkish co-mission-add" id="co-edit-co">Say what it’s for in one line</button>' : ''}
         ${h.text ? `<p class="co-health t-${esc(h.tone)}" id="co-health"><span class="co-hdot" aria-hidden="true"></span>${esc(h.text)}</p>` : ''}</div>
-        <span class="co-h-acts"><button class="btn" id="co-whocan">${icon('shield', 16)}Who can do what</button>${lead ? `<button class="btn" id="co-settings" aria-label="Company settings">${icon('gear', 16)}Settings</button>` : ''}</span></header>
+        <span class="co-h-acts"><button class="btn" id="co-whocan">${icon('shield', 16)}Who can do what</button>${lead ? `<button class="btn" id="co-settings" aria-label="Company settings">${icon('gear', 16)}Settings</button>` : d.propose && !sample ? `<button class="btn primary" id="co-propose" data-gs-ask="settings.edit">${icon('edit', 16)}Propose a change</button>` : ''}</span></header>
+      ${!lead && d.propose && !sample ? '<p class="co-propose-note" id="co-propose-note">The council decides changes here. Propose one; when enough of the council say yes, the edit buttons open for you for a day.</p>' : ''}
       ${sample ? '' : stripHtml(c, d)}${sample ? '' : nextHtml(c, d)}
       ${sec('seats', 'users', 'Roles', `Who does what <span class="co-n">${c.seats.length}</span>`, `<div class="co-seats">${ceo ? seatCard(ceo, true, d) : ''}${rest.map(x => seatCard(x, false, d)).join('')}</div>`, seatsX)}
       ${sec('week', 'calendar', 'This week', 'Updates, OKs and decisions', `<div class="co-week-g">${todayCard(c, d)}${approvalsCard(c, d)}${decisionsCard(c, d, sample)}</div>`)}

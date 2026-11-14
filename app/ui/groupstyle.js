@@ -177,6 +177,8 @@
     const go = el.querySelector('#gs-askbar-go'); if (go) go.onclick = async () => { const r = await ask(need.cap, '', go); if (r) done(); };
     clearTimeout(barTimer); barTimer = setTimeout(done, 12000);
   }
+  // One way in from anywhere: any button with data-gs-ask="<thing>" asks for it (Company, tasks, Publish, the website, the main copy).
+  document.addEventListener('click', e => { const b = e.target.closest && e.target.closest('[data-gs-ask]'); if (!b || b.closest('#gs-sheet')) return; e.preventDefault(); ask(b.dataset.gsAsk, b.dataset.gsNote || '', b); });
   addEventListener('tribe-403', e => bar(e && e.detail && e.detail.need));
 
   if (C && C.on) {

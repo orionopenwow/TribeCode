@@ -36,6 +36,9 @@
     const pid = encodeURIComponent(p.id), me = (C().state && C().state().me) || {};
     const [pulse, tasks, cnv, site, pv, pub, co] = await Promise.all([api(`/projects/${pid}/pulse`), api('/tasks'), api('/canvas'), api(`/projects/${pid}/site-config`), api('/preview'),
       (window.TribePublish && window.TribePublish.status ? Promise.resolve().then(() => window.TribePublish.status(p.id)).catch(() => null) : api('/publish?project=' + pid)), api(`/projects/${pid}/company`, { project: p.id })]);
+    // feat/group-styles: what this person can't do alone here, and who can (groupstyle.js keeps the live list)
+    try { const gv = window.TribeGroupStyle && window.TribeGroupStyle.view(); st.cant = {};
+      for (const cap of ['settings.edit', 'site.publish']) { const r = gv && gv.who.rows.find(x => x.id === cap); if (r && !r.me) st.cant[cap] = (r.people || []).map(x => x.name).slice(0, 3).join(', ') || 'Someone else'; } } catch {}
     if (pulse) {
       st.vision = !!(pulse.vision && pulse.vision.has); st.tasks = pulse.taskCount || 0;
       st.friends = (pulse.team || []).filter(m => m.kind !== 'agent' && m.id !== me.id).length;
@@ -59,8 +62,13 @@
   // ---------- the steps (pure): each knows when it is done, why it matters and what one tap does ----------
   // run names are resolved in RUN below, so pick() stays pure and testable
   const kindWord = st => ({ game: 'game', '3d': 'game', app: 'app', tool: 'app', site: 'website' }[(st.project && st.project.kind) || ''] || 'project');
+  // A step you can't do alone becomes "ask": one tap sends the request to the people who decide it here.
+  const askStep = (st, s, cap, title) => (s && !s.done && st.cant && st.cant[cap] ? { ...s, title, why: T('{who} can do this here. One tap asks them.').replace('{who}', st.cant[cap]), act: 'Ask them', run: 'ask', cap } : s);
   function steps(st) {
     const what = kindWord(st), name = st.project ? st.project.name : '';
+    return steps0(st, what, name).map(s => (s && s.id === 'vision' ? askStep(st, s, 'settings.edit', 'Ask to say what you are making') : s && s.id === 'publish' ? askStep(st, s, 'site.publish', 'Ask to publish it') : s));
+  }
+  function steps0(st, what, name) {
     return [
       { id: 'start', stage: 'idea', done: !!(st.tribe && st.project), title: 'Start your first project', why: 'Everything you make lives in a project. It starts on this device in one tap.', act: 'Start a project', run: 'start' },
       { id: 'vision', stage: 'idea', done: st.vision, title: 'Say what you are making', why: 'One or two sentences. Everyone, and every AI helper, reads them before they build.', act: 'Write it', run: 'vision' },
@@ -109,6 +117,7 @@
 
   // ---------- what one tap does ----------
   const RUN = {
+    ask: s => window.TribeGroupStyle && window.TribeGroupStyle.ask(s.cap),
     start: () => { const A = App(); if (A && A.startFirst) A.startFirst(); else if (window.TribeProjects && window.TribeProjects.openNew) window.TribeProjects.openNew(); },
     vision: () => { go('home'); setTimeout(() => window.TribeProjects && window.TribeProjects.step('vision'), 120); },
     task: () => window.TribeProjects && window.TribeProjects.step('newtask'),
