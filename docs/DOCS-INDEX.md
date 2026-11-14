@@ -42,6 +42,7 @@ Every doc in the repo, one line each, with its status. Updated 2026-11-12 (v0.31
 | [FEATURES-NEXT](FEATURES-NEXT.md) | Roadmap | Written during the v0.4 audit (2026-11-06). | historical (read by explore.py) |
 | [FLINT-CREATORS](FLINT-CREATORS.md) | Flint | A plan for the next step of Flint: a lightweight local "creators" helper that controls creative apps (Blender, Photoshop, | current |
 | [FLINT-TIERS](FLINT-TIERS.md) | Flint | Flint is TribeCode's built-in helper. | current |
+| [FLINT-CAPABILITY](FLINT-CAPABILITY.md) | Flint | Scores by editor and skill type, with no model and with the fixture model; written by `scripts/dev/flint-capability.js`. | current |
 | [GAME-STUDIO](GAME-STUDIO.md) | Building | Game Studio lets a tribe build a multiplayer browser game live in a huddle. | plan (not built) |
 | [GITHUB-AND-FOLDERS](GITHUB-AND-FOLDERS.md) | Repos | Three things that make a project feel like yours, with no terminal and no token pasting. | current |
 | [GROK-SCOPE](GROK-SCOPE.md) | Research | Researched November 10, 2026. | research |

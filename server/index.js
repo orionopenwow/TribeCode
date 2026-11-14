@@ -666,7 +666,9 @@ const siteFlint = require('./siteflint')({ P, base: baseStore, showcase, nameOf,
 const inspoBoard = require('./inspo')({ P, base: baseStore, embeds, showcase, assets: assetLib, postChat, nameOf, broadcast });   // v0.25: the inspiration board (server/inspo.js)
 const ledger = require('./ledger')({ P, base: baseStore, broadcast, postChat, nameOf, perms, getMembers: () => members }), seatpilot = require('./seatpilot')({ P, base: baseStore, broadcast, nameOf, perms, getMembers: () => members, approvals, coord, bus, ledger });   // v0.27 company: Money + seat autopilot (server/ledger.js, server/seatpilot.js)
 const academy = require('./academy')({ P, base: baseStore, store, docs, captures, nameOf, broadcast }), legalDocs = require('./legal')({ P, base: baseStore, store, docs, approvals, postChat, nameOf, broadcast });   // v0.27 company: Role Academy + Offload (server/academy.js), Legal documents (server/legal.js)
-const flintModel = require('./flintmodel')({ base: baseStore });   // feat/build-feeds: Flint's local helper (tier 1), the model's address or the host's own copy
+const flintModel = require('./flintmodel')({ base: baseStore });
+const flintFacts = require('./flintfacts')({ store, str, broadcast });   // feat/flint-local: the project's memory (facts), kept with the project
+const flintLLM = require('./flintllm')({ base: baseStore, perms });   // feat/flint-local: a loopback-only bridge to a local model server on the host   // feat/build-feeds: Flint's local helper (tier 1), the model's address or the host's own copy
 const flintKB = require('./flintkb')({ ui: UI, nlu: require(path.join(UI, 'flintnlu.js')) });   // flint-local: Flint's knowledge base (TF-IDF over the Guide and docs)
 const aiBasics = require('./aibasics')({ llm, base: baseStore, P, str });   // feat/flint-ai: ✦ basic features supercharged by AI (server/aibasics.js)
 const flintMem = require('./flintmem')({ base: baseStore, store, docs, str, nameOf, loadTasks: () => loadTasks(), readVision, recentChat: n => store.readJSONL('chat/general.jsonl', n).filter(x => !x.deleted && x.by !== 'tribecode').map(x => ({ who: nameOf(x.by), text: x.text })), llm, perms, broadcast }); flint.useBrief(me => flintMem.brief(me));   // v0.27.1: Flint remembers you, tribe skills, project words, drafts (server/flintmem.js)
@@ -1211,6 +1213,8 @@ async function apiInProject(req, res, url) {
   }
 
   if (a === 'ai' && ['basic', 'refine', 'tags', 'extract'].includes(b)) return aiBasics.route(req, res, ctx());   // feat/flint-ai: ✦ refine + file tags
+  if (a === 'flint' && b === 'facts') return flintFacts.route(req, res, ctx());   // feat/flint-local: what Flint knows about this project
+  if (a === 'flint' && b === 'llm') return flintLLM.route(req, res, ctx());   // feat/flint-local: the host's local model server, loopback only
   if (a === 'flint' && b === 'model') return flintModel.route(req, res, ctx());   // feat/build-feeds: where the browser gets Flint's small local model (server/flintmodel.js)
   if (a === 'flint' && b === 'kb') return flintKB.route(req, res, ctx());   // flint-local: how-to answers from the docs, no model (server/flintkb.js)
   if (a === 'flint' && ['memory', 'skills', 'vocab', 'draft', 'learned'].includes(b)) return flintMem.route(req, res, ctx());   // v0.27.1; flint-local: phrases people taught Flint

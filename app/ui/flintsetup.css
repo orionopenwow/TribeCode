@@ -1,0 +1,21 @@
+/* "Give Flint a local brain (recommended)" (app/ui/flintsetup.js): one flat card, used on Home, in the project's
+   Getting started list and in Settings › Plan & AI. 1px border, no shadow; the progress bar is flintmodel.css's. */
+.fs-step { margin: 12px auto 32px; max-width: 980px; width: calc(100% - 48px); }
+.fsu { display: flex; align-items: flex-start; gap: 14px; padding: 14px 16px; background: var(--surface); border: 1px solid var(--edge); border-left: 3px solid var(--accent); border-radius: var(--r); color: var(--text); }
+.fsu.fsu-on { border-left-color: var(--live); }
+.fsu.fsu-wait { border-left-color: var(--amber); }
+.fsu-face { flex: none; image-rendering: pixelated; margin-top: 2px; }
+.fsu-t { flex: 1; min-width: 0; display: grid; gap: 4px; }
+.fsu-t b { font: 700 16px/1.3 var(--display); }
+.fsu-t small { color: var(--muted); font-size: 13px; line-height: 1.5; max-width: 68ch; }
+.fsu-size { font-family: var(--mono); color: var(--text); }
+.fsu-t .fsu-why { color: var(--text); border-left: 3px solid var(--amber); padding-left: 8px; }
+.fsu-t .fsu-err { color: var(--ember-ink, var(--alert)); }
+.fsu-prog { display: grid; gap: 6px; margin-top: 4px; max-width: 420px; }
+.fsu-pct { font: 12px/1 var(--mono); color: var(--faint); }
+.fsu-acts { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; flex: none; }
+.ock-row.ock-flint { display: block; padding: 0; border: 0; background: none; }
+.ock-row.ock-flint .fsu { border-radius: var(--r); }
+#set-flintsetup { margin-bottom: 8px; }
+@media (max-width: 720px) { .fs-step { width: calc(100% - 28px); } .fsu { flex-wrap: wrap; } .fsu-acts { width: 100%; } .fsu-acts .btn { flex: 1; min-height: 40px; } }
+#pj-check.hero.one .ock-flint { display: none; }   /* the calm first dashboard shows one step; this row waits under "See all steps" */

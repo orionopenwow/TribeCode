@@ -1,0 +1,22 @@
+/* Flint's plan card (app/ui/flintplan.js): a goal as visible steps, with progress. Flat, bordered, no shadow. */
+.fplan { border: 1px solid var(--edge); border-radius: var(--r); background: var(--surface-2); padding: 12px; display: grid; gap: 10px; margin-top: 6px; }
+.fplan-h { margin: 0; display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+.fplan-h b { font: 700 15px/1.3 var(--display); }
+.fplan-h small { font: 12px/1 var(--mono); color: var(--faint); }
+.fplan-bar { height: 4px; border-radius: 2px; background: var(--surface-3); overflow: hidden; }
+.fplan-bar i { display: block; height: 100%; background: var(--live); transition: width var(--dur-base) var(--ease-out); }
+.fplan-steps { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.fplan-step { display: flex; align-items: flex-start; gap: 8px; font-size: 13.5px; line-height: 1.4; }
+.fplan-mk { flex: none; width: 20px; height: 20px; border-radius: 50%; border: 1px solid var(--edge-pop); display: grid; place-items: center; font: 600 11px/1 var(--mono); color: var(--muted); }
+.fplan-l { flex: 1; min-width: 0; display: grid; gap: 1px; }
+.fplan-l small { color: var(--faint); font-size: 12px; }
+.fplan-step.is-ok .fplan-mk { background: var(--live); border-color: var(--live); color: var(--on-live); }
+.fplan-step.is-run .fplan-mk { border-color: var(--accent); color: var(--accent-ink); }
+.fplan-step.is-fail .fplan-mk { border-color: var(--amber); color: var(--amber-ink); }
+.fplan-step.is-skip .fplan-l, .fplan-step.is-undone .fplan-l { color: var(--faint); text-decoration: line-through; }
+.fplan-x { flex: none; background: none; border: 0; color: var(--faint); cursor: pointer; font-size: 12px; padding: 2px 6px; border-radius: var(--r-sm); }
+.fplan-x:hover { color: var(--text); background: var(--surface-3); }
+.fplan-acts { margin: 0; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.fplan-sum { font: 12.5px/1 var(--mono); color: var(--muted); }
+
+@media (prefers-reduced-motion: reduce) { .fplan-bar i { transition: none; } }

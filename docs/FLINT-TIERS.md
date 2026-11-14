@@ -21,6 +21,30 @@ subscription, and this repository holds no prices.
 `GET /api/flint/tiers` returns this map and whether the tribe's AI is on. `POST /api/flint/tier { ask, picked }`
 classifies one request. Ask Flint "What can you do for free?" to see it in the app.
 
+## Flint on your device: levels 0 to 2
+
+What runs on hardware you control, with nothing sent to an AI service. Flint's page (`#/flint`) lists the levels and
+has **Running on your device**: WebGPU or not, cores, the memory hint, free storage, which levels are active, what
+was downloaded, a self-test with live numbers, and what would leave the device (only your own AI or credits).
+
+| Level | What | Download | How it turns on |
+|---|---|---|---|
+| **0 · No AI** | Rules and math: commands, follow-ups ("tell Sam too", "make that 15"), plans from a goal, project memory, duplicate-task check, concept search | none | always |
+| **1 · Local brain** | A small word-meaning model in plain JS, no GPU: matching by meaning in "did you mean", help answers, the palette and "where did we talk about…" | about 30 MB (8 MB on phones), once | **recommended setup step**: Home after sign-up, the Getting started list, Settings › Plan & AI. Download now / Later; waits on metered or slow connections and low storage; resumes |
+| **2 · Local model** | A small language model: turns loose requests into Flint's own commands (checked, undoable), real summaries, rewrites in a tone, drafts from project facts, explains errors, names | the model's own size | opt-in: "Choose a local model" on Flint's page. Ollama / LM Studio / llama.cpp on this computer or the host, or the built-in model in a WebGPU browser |
+
+- **A plan from a goal:** "launch page for our bake sale by friday" shows the steps first (skip any), then runs them
+  one by one with a progress bar; "Undo last step" takes back exactly one.
+- **Project memory:** say "the bake sale is on Saturday 14 June" or "we decided to drop multiplayer"; ask "when is
+  the bake sale?". "What Flint knows about this project" lists every fact to edit or forget. Stored in the project's
+  `.tribe/flint-facts.json`, never sent anywhere.
+- **What a local model may do:** only hand back text or Flint's own commands. Hosting, invites, payments and
+  publishing are refused; messages to people and deletions wait for a press. Only `localhost` addresses are accepted.
+
+Details, what was only tested with fixtures, and the desktop CSP: [FLINT-RESEARCH.md §5](FLINT-RESEARCH.md).
+Scores: [FLINT-CAPABILITY.md](FLINT-CAPABILITY.md). Tests: `flint_local_test.js`, `e2e_flint_setup.py`,
+`e2e_flint_llm.py`, `e2e_flint_showcase.py`.
+
 ## Flint's local brain (no model at all)
 
 The first tier is wider than a list of commands. `app/ui/flintnlu.js` understands what people type with no language

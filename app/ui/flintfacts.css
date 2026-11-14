@@ -1,0 +1,10 @@
+/* "What Flint knows about this project" (app/ui/flintfacts.js): the sheet reuses flintmodel.css's card. */
+.ffx-grp { display: grid; gap: 6px; }
+.ffx-grp h3 { margin: 0; }
+.ffx-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.ffx-row { display: grid; grid-template-columns: minmax(110px, 30%) 1fr auto; gap: 6px; align-items: center; }
+.ffx-row .input { min-width: 0; }
+.ffx-from { grid-column: 1 / -1; color: var(--faint); font-size: 12px; margin-top: -2px; }
+.ffx-add { display: grid; gap: 6px; }
+.ffx-add label { font-size: 13px; color: var(--muted); }
+@media (max-width: 640px) { .ffx-row { grid-template-columns: 1fr auto; } .ffx-row .ffx-k { grid-column: 1 / -1; } }
