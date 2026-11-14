@@ -42,6 +42,7 @@ const CAPS = [
   { id: 'repo.merge', group: 'Projects', label: 'Merge into main', roles: ['admin'] },
   { id: 'github.use_host', group: 'Projects', label: 'Put projects on the host\'s GitHub', roles: ['admin'] },   // fix/security-2 (server/flow.js)
   { id: 'ai.use_host_brain', group: 'Projects', label: 'Use the host\'s AI brain', roles: ['admin', 'mod', 'builder'] },
+  { id: 'site.edit', group: 'Projects', label: 'Change the website (words, pictures, sections)', roles: ['admin', 'mod', 'builder'] },   // feat/site-editor2: a row, so a group's own roles can hold it and others can ask
   { id: 'site.publish', group: 'Projects', label: 'Publish the website or app for everyone', roles: ['admin', 'mod', 'builder'] },   // feat/group-styles: was "anyone building" in publishreal.js; now a row
   { id: 'group.decide', group: 'Community', label: 'Change how the group decides, its roles and words', roles: ['admin'] },   // feat/group-styles (server/groupstyle.js)
   // Host only, hard-coded where they are checked, never overridable.

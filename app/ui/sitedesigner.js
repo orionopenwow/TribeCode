@@ -22,9 +22,9 @@
 [data-img]{cursor:pointer}.wdz-pin{position:absolute;z-index:5;width:24px;height:24px;margin:-12px 0 0 -12px;border-radius:50% 50% 50% 0;border:2px solid #fff;background:#F26B1D;color:#fff;font:700 11px/1 system-ui;cursor:pointer;padding:0}.wdz-pin.done{background:#6b7280}.wdz-cm [data-block]{cursor:crosshair}.wdz-cm [data-block]:hover{outline:2px dashed #F26B1D!important}[data-unwired]{outline:1px dashed var(--muted);outline-offset:3px}[data-unwired]::after{content:'not linked';font:600 10px/1 ui-monospace,monospace;margin-left:8px;opacity:.7}
 [data-e]:empty{display:inline-block;min-width:5em;min-height:1em}[data-e]:empty::before{content:attr(data-hint);opacity:.55;font-style:italic;font-weight:400}[data-item]:hover{outline:1px dashed var(--muted);outline-offset:3px}[data-sys]{cursor:help}[data-ph],[data-icon]{cursor:pointer}[data-icon]:hover,[data-ph]:hover,[data-img]:hover{outline:1px dashed var(--muted);outline-offset:2px}
 [data-e].wdz-sel,[data-btn].wdz-sel,[data-item].wdz-sel,[data-icon].wdz-sel,[data-ph].wdz-sel,[data-img].wdz-sel{outline-offset:2px!important}.tk[data-icon]{display:inline-grid}
-.wdz-tb{position:absolute;z-index:8;display:flex;align-items:center;background:#16181D;border:1px solid #3A3F4A;border-radius:8px;overflow:hidden;font:600 13px/1 system-ui,sans-serif;color:#F2F3F5;text-align:left;white-space:nowrap}.wdz-tb button{all:unset;box-sizing:border-box;min-width:30px;height:30px;display:grid;place-items:center;cursor:pointer;padding:0 6px;color:#F2F3F5}.wdz-tb button:hover,.wdz-tb button:focus-visible{background:#2A2F39}.wdz-tb i{width:1px;height:18px;background:#3A3F4A}.wdz-bar svg{display:block}
+.wdz-tb{position:absolute;z-index:8;display:flex;align-items:center;background:#16181D;border:1px solid #3A3F4A;border-radius:8px;overflow:hidden;font:600 13px/1 system-ui,sans-serif;color:#F2F3F5;text-align:left;white-space:nowrap}.wdz-tb button{all:unset;box-sizing:border-box;min-width:30px;height:30px;display:grid;place-items:center;cursor:pointer;padding:0 6px;color:#F2F3F5}.wdz-tb button:hover,.wdz-tb button:focus-visible{background:#2A2F39}.wdz-tb i{width:1px;height:18px;background:#3A3F4A}.wdz-tb [data-a=igrip]{cursor:grab;touch-action:none;letter-spacing:-2px}@media (max-width:480px){.wdz-tb [data-a=ital],.wdz-tb [data-a=wlink],.wdz-tb [data-a=align]{display:none}}[data-img].wdz-sel img{cursor:grab}.wdz-panning img{cursor:grabbing}.wdz-idrop{position:absolute;z-index:9;background:#F26B1D;border-radius:2px;pointer-events:none}.wdz-bar svg{display:block}
 html[data-dev=phone] .ehide-phone,html[data-dev=tablet] .ehide-tablet,html[data-dev=desktop] .ehide-desktop{opacity:.35;outline:1px dashed var(--muted);outline-offset:-3px}
-[data-e]{white-space:pre-wrap}[data-e]:empty:not([data-hint])::before{content:'Add words'}
+[data-e]{white-space:pre-wrap}[data-e] a{cursor:text}a[data-new]{outline:1px dashed var(--accent);outline-offset:2px}[data-e]:empty:not([data-hint])::before{content:'Add words'}
 .wdz-bar{position:absolute;top:8px;right:8px;z-index:6;display:flex;gap:0;background:#16181D;border:1px solid #3A3F4A;border-radius:8px;overflow:hidden;font:600 13px/1 system-ui,sans-serif;text-align:left}.wdz-bar button{all:unset;box-sizing:border-box;min-width:30px;height:30px;display:grid;place-items:center;color:#F2F3F5;cursor:pointer;padding:0 6px}.wdz-bar button+button{border-left:1px solid #3A3F4A}.wdz-bar button:hover,.wdz-bar button:focus-visible{background:#2A2F39}.wdz-bar [data-a=grip]{cursor:grab;touch-action:none;letter-spacing:-2px}.wdz-dragging,.wdz-dragging *{cursor:grabbing!important;user-select:none}.wdz-moving{opacity:.45}.wdz-drop{position:absolute;left:0;right:0;height:4px;background:var(--accent);z-index:7;pointer-events:none}.wdz-cm .wdz-bar{display:none}[data-icon]{cursor:pointer}[data-icon]:hover{outline:2px dashed var(--muted);outline-offset:2px}@media (max-width:480px){.wdz-bar button{min-width:36px;height:36px}}</style>`;
   // the frame's helper is a real file loaded from the app's origin, never an inline script: the srcdoc frame inherits the
   // page's CSP, and the desktop app's has no 'unsafe-inline' (app/src-tauri/tauri.conf.json)
@@ -209,6 +209,7 @@ html[data-dev=phone] .ehide-phone,html[data-dev=tablet] .ehide-tablet,html[data-
         <span class="wdz-saved" id="wdz-saved" aria-live="polite"></span>
         <button type="button" class="btn ghost sm wdz-ic" data-wdz="undo" title="Undo (Ctrl Z)" aria-label="Undo">↶</button>
         <button type="button" class="btn ghost sm wdz-ic" data-wdz="redo" title="Redo (Ctrl Shift Z)" aria-label="Redo">↷</button>
+        <button type="button" class="btn ghost sm wdz-ic wdz-more" data-wdz="more" aria-expanded="false" aria-label="More" title="More">⋯</button>
         <button type="button" class="btn sm" data-wdz="mode" id="wdz-mode" aria-pressed="false">Dark</button>
         <label class="wdz-sel-wrap"><span class="sr">Theme</span><select id="wdz-theme" class="input sm" aria-label="Theme">${Object.entries(P).map(([k, p]) => `<option value="${k}">${esc(p.name)}</option>`).join('')}</select></label>
         <span class="wdz-devs" role="group" aria-label="Preview size"><button type="button" class="btn ghost sm" data-dev="desktop" aria-pressed="true">Desktop</button><button type="button" class="btn ghost sm" data-dev="tablet" aria-pressed="false">Tablet</button><button type="button" class="btn ghost sm" data-dev="phone" aria-pressed="false">Phone</button></span>
@@ -333,6 +334,14 @@ html[data-dev=phone] .ehide-phone,html[data-dev=tablet] .ehide-tablet,html[data-
     if (d.t === 'text') { liveText = d; clearTimeout(liveT); liveT = setTimeout(() => { if (liveText) { const l = liveText; commitText(l); } }, 900); return; }
     if (d.t === 'commit') return commitText(d);
     if (d.t === 'pin') return commentAt(d);
+    if (d.t === 'focus') { const k = String(d.key), bid = k.slice(0, k.indexOf('|')), path = k.slice(k.indexOf('|') + 1); let c = S().setProp(st.cfg, st.page, bid, path + 'fx', Math.max(0, Math.min(100, +d.x || 0))); c = S().setProp(c, st.page, bid, path + 'fy', Math.max(0, Math.min(100, +d.y || 0))); c = S().setProp(c, st.page, bid, path + 'pos', ''); return commit(c); }
+    if (d.t === 'imove') {   // an entry dragged to a new place among its own kind
+      const k = String(d.key), bid = k.slice(0, k.indexOf('|')), item = k.slice(k.indexOf('|') + 1), list = item.replace(/\.\d+$/, ''); let c = st.cfg, i = +d.from; const to = +d.to;
+      for (let n = 0; n < 40 && i !== to; n++) { const r = S().itemOp(c, st.page, bid, list, i, to > i ? 'down' : 'up'); if (r.i < 0 || r.i === i) break; c = r.cfg; i = r.i; }
+      const own = st.sel && st.sel.block === bid ? String(st.sel.path || '') : '', rest = own.indexOf(item) === 0 ? own.slice(item.length) : null;
+      st.sel = rest != null && st.sel.kind !== 'item' ? { block: bid, path: `${list}.${i}${rest}`, kind: st.sel.kind } : { block: bid, path: `${list}.${i}`, kind: 'item' };
+      return commit(c);
+    }
     if (d.t === 'move') { commit(S().moveBlock(st.cfg, st.page, d.block, +d.to)); st.sel = { block: d.block, path: '', kind: 'block' }; return; }
     if (d.t === 'icon') return STU() && STU().iconPicker(stuApi, d.key);
     if (d.t === 'act') {
@@ -364,7 +373,7 @@ html[data-dev=phone] .ehide-phone,html[data-dev=tablet] .ehide-tablet,html[data-
   const SG = () => window.TribeSiteSuggest;
   const sgApi = () => ({ ...spApi, panelNow: () => st.panel, flush: () => flush(), close: () => close(), addComment: c => addComment(c) });
   const tr = t => (window.TribeI18n && window.TribeI18n.t ? window.TribeI18n.t(t, t) : t);
-  const frameLabels = () => ({ smaller: tr('Smaller'), bigger: tr('Bigger'), bold: tr('Bold'), color: tr('Colour'), align: tr('Align'), link: tr('Where it goes'), up: tr('Move up'), down: tr('Move down'), dup: tr('Duplicate'), add: tr('Add another'), del: tr('Remove'), flint: tr('Ask Flint about this'), more: tr('More'), replace: tr('Replace the picture'), fit: tr('Fill or fit'), swap: tr('Swap the icon'), words: tr('Edit the words'), grip: tr('Drag to move this section'), sadd: tr('Add a section below') });
+  const frameLabels = () => ({ smaller: tr('Smaller'), bigger: tr('Bigger'), bold: tr('Bold'), color: tr('Colour'), align: tr('Align'), link: tr('Where it goes'), up: tr('Move up'), down: tr('Move down'), dup: tr('Duplicate'), add: tr('Add another'), del: tr('Remove'), flint: tr('Ask Flint about this'), more: tr('More'), replace: tr('Replace the picture'), fit: tr('Fill or fit'), swap: tr('Swap the icon'), words: tr('Edit the words'), grip: tr('Drag to move this section'), sadd: tr('Add a section below'), igrip: tr('Drag to move it'), ital: tr('Slanted'), wlink: tr('Link the selected words') });
   const spApi = { sel: () => st.sel, setSel: s => { st.sel = s; }, cfg: () => st.cfg, commit: (c, o) => commit(c, o), page: () => st.page, setPage: id => { st.page = id; st.sel = null; frameScroll = 0; }, pageNow: () => pageNow(), say: (t, h, a) => say(t, h, a), ask: t => ask(t), pid: () => st.pid, connected: () => connected(),
     paint: () => paint(), panel: p => { if (p) st.panel = p; panelPaint(); }, postSel: sc => postSel(sc), post: m => { const f = $('#wdz-frame'); if (f && f.contentWindow) f.contentWindow.postMessage(m, '*'); }, root: () => root, box: () => $('#wdz-insp'),
     pickFile: () => pickFile(), iconPicker: key => STU() && STU().iconPicker(stuApi, key), comment: () => commentMode(true), fillFlint: t => { if (fui) fui.fill(t); }, undo: () => undo(), canEdit: () => st.canEdit !== false, dev: () => st.dev, comments: () => st.comments, tr };
@@ -390,6 +399,7 @@ html[data-dev=phone] .ehide-phone,html[data-dev=tablet] .ehide-tablet,html[data-
       box.insertAdjacentHTML('beforeend', `<p class="wdz-f"><span>Background</span></p><p class="wdz-row" role="group" aria-label="Background">${B('bg', '', 'None')}${B('bg', 'card', 'Tint')}${B('bg', 'accent', 'Accent')}${B('bg', 'ink', 'Dark')}</p>
         <p class="wdz-f"><span>Spacing</span></p><p class="wdz-row" role="group" aria-label="Spacing">${B('pad', 's', 'Tight')}${B('pad', '', 'Normal')}${B('pad', 'l', 'Roomy')}</p>
         ${SP() ? SP().section(b, spApi) : ''}
+        ${SP() && SP().formRow ? SP().formRow(b, spApi) : ''}
         <p class="wdz-row"><button type="button" class="btn sm" data-dup="${b.id}">Duplicate</button><button type="button" class="btn sm" data-hide="${b.id}" aria-pressed="${!!b.hidden}">${b.hidden ? 'Show on the site' : 'Hide from the site'}</button><button type="button" class="btn sm" data-wdz="comment">Comment here</button></p>`);
       if (SP()) SP().said(spApi);
     }
@@ -549,7 +559,7 @@ html[data-dev=phone] .ehide-phone,html[data-dev=tablet] .ehide-tablet,html[data-
     if (k === 'space') return commit(S().setSpace(st.cfg, el.dataset.val));
     if (k === 'nologo') return commit(S().setLogo(st.cfg, '', false));
     if (k === 'logofav') return commit(S().setSeo(st.cfg, { favicon: st.cfg.logo }));
-    if (k === 'logo' || k === 'favicon' || k === 'share') { picFor = k; fileFor = null; const f = $('#wdz-file'); f.value = ''; f.click(); return; }
+    if (k === 'logo' || k === 'favicon' || k === 'share' || k === 'pageshare') { picFor = k; fileFor = null; const f = $('#wdz-file'); f.value = ''; f.click(); return; }
     if (k === 'fill') { const r = await autofill(st.cfg); commit(r.cfg); fillNote(r.used); if (!r.used.length) say('The project has nothing to fill in yet: give it a bio, a vision doc, members or tasks.'); return; }
   }
 
@@ -673,6 +683,8 @@ html[data-dev=phone] .ehide-phone,html[data-dev=tablet] .ehide-tablet,html[data-
     if (t.closest('[data-import]')) { const f = $('#wdz-import'); f.value = ''; f.click(); return; }
     if (!a) { if (!t.closest('.wdz-dl')) $('#wdz-dlmenu').hidden = true; return; }
     const k = a.dataset.wdz;
+    if (k === 'more') { const on = !root.querySelector('.wdz-top').classList.contains('is-more'); root.querySelector('.wdz-top').classList.toggle('is-more', on); a.setAttribute('aria-expanded', String(on)); return; }
+    if (k !== 'dlmenu') { const tp = root.querySelector('.wdz-top'); if (tp.classList.contains('is-more')) { tp.classList.remove('is-more'); const mb = tp.querySelector('[data-wdz="more"]'); if (mb) mb.setAttribute('aria-expanded', 'false'); } }
     if (k === 'close') return close();
     if (k === 'undo') return undo();
     if (k === 'redo') return redo();
@@ -701,7 +713,7 @@ html[data-dev=phone] .ehide-phone,html[data-dev=tablet] .ehide-tablet,html[data-
   function pickFile() { fileFor = st.sel ? { ...st.sel } : null; const f = $('#wdz-file'); f.value = ''; f.click(); }
   async function onFile(e) {
     const file = e.target.files && e.target.files[0]; if (!file) return;
-    if (picFor) { const k = picFor; picFor = null; if (file.size > 4 * 1024 * 1024) return say('That picture is over 4 MB. Try a smaller one.'); const src = await shrink(file); commit(k === 'logo' ? S().setLogo(st.cfg, src) : S().setSeo(st.cfg, k === 'favicon' ? { favicon: src } : { image: src })); say(k === 'logo' ? 'Logo added: it is in the header and is the tab icon too.' : k === 'favicon' ? 'Favicon set.' : 'Share image set: it shows when someone posts the link (after you publish to a real address).'); st.panel = 'site'; panelPaint(); return; }
+    if (picFor) { const k = picFor; picFor = null; if (file.size > 4 * 1024 * 1024) return say('That picture is over 4 MB. Try a smaller one.'); const src = await shrink(file); if (k === 'pageshare') { commit(S().setPageSeo(st.cfg, st.page, { image: src })); say(`Share picture set for the ${pageNow().title} page. Other pages keep the site's own.`); st.panel = 'site'; panelPaint(); return; } commit(k === 'logo' ? S().setLogo(st.cfg, src) : S().setSeo(st.cfg, k === 'favicon' ? { favicon: src } : { image: src })); say(k === 'logo' ? 'Logo added: it is in the header and is the tab icon too.' : k === 'favicon' ? 'Favicon set.' : 'Share image set: it shows when someone posts the link (after you publish to a real address).'); st.panel = 'site'; panelPaint(); return; }
     if (!fileFor) return;
     if (file.size > 12 * 1024 * 1024) return say('That picture is over 12 MB. Try a smaller one.');
     const src = await shrink(file);

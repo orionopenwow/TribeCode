@@ -40,7 +40,7 @@ const PLAIN = {
   'approvals.approve': 'Say yes to any request, including spending', 'files.delete': 'Delete someone else’s files', 'project.create': 'Start a project',
   'project.delete': 'Delete a project', 'settings.edit': 'Change project settings and the plan', 'widgets.edit': 'Change the sidebar',
   'repo.merge': 'Send work to the main copy', 'github.use_host': 'Put projects on the owner’s GitHub', 'ai.use_host_brain': 'Use the owner’s AI',
-  'site.publish': 'Publish the website or app for everyone', 'group.decide': 'Change how this group decides, its roles and its words',
+  'site.edit': 'Change the website', 'site.publish': 'Publish the website or app for everyone', 'group.decide': 'Change how this group decides, its roles and its words',
   'tribe.hosting': 'Sharing links and where the tribe runs', 'tribe.secrets': 'AI keys and sign-in secrets', 'tribe.launch': 'Run programs on the computer', 'tribe.owner': 'Back up, move or delete the tribe',
 };
 // What a council decides together, and what needs a second person when the group is open.

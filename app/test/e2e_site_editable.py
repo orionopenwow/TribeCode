@@ -217,6 +217,11 @@ def walk(pw):
     return res
 
 
+# what the toolbar covers besides the thing it belongs to (must be nothing)
+CLEAR_JS = """(() => { const tb = document.querySelector('.wdz-tb'), sel = document.querySelector('.wdz-sel'); if (!tb || !sel) return ['no toolbar'];
+  const t = tb.getBoundingClientRect(); return [...document.querySelectorAll('[data-e],[data-btn],[data-img],[data-icon],.wdz-bar')].filter(e => e !== sel && !e.contains(sel) && !sel.contains(e)).filter(e => { const b = e.getBoundingClientRect(); return b.width > 0 && b.height > 0 && t.left < b.right && t.right > b.left && t.top < b.bottom && t.bottom > b.top; }).map(e => (e.dataset.e || e.dataset.btn || e.className).slice(0, 40)); })()"""
+
+
 def live(pw):
     """The real editor with a tribe: the things that used to be dead ends, and that nothing glitches while you work."""
     tmp = tempfile.mkdtemp(prefix="tribe-se2-", dir="/tmp")
@@ -246,6 +251,7 @@ def live(pw):
         pg.wait_for_function("(TribeSiteDesigner.state().sel || {}).kind === 'text'", timeout=4000)
         assert sel(pg)["path"] == "items.0.note", sel(pg)
         assert f.locator(".wdz-tb").is_visible() and f.locator(".wdz-sel").count() == 1, "one outline and one toolbar"
+        assert f.evaluate(CLEAR_JS) == [], "the toolbar never sits on words, a picture or the section's bar"
         assert pg.locator("#wdz-insp .sp-crumbs").is_visible() and pg.locator("#wdz-insp [data-etext]").input_value().startswith("Opens Friday")
         note.press("Control+a"); note.type("Opens Saturday at 9am")
         pg.wait_for_function("TribeSiteDesigner.cfg().pages[0].blocks[0].props.items[0].note === 'Opens Saturday at 9am'", timeout=4000)
@@ -277,6 +283,16 @@ def live(pw):
         f.locator("body").press("Control+z"); pg.wait_for_function(f"TribeSiteDesigner.cfg().pages[0].blocks[0].props.items[0].label === {json.dumps(first)}", timeout=4000)
         f.locator("body").press("Control+Shift+z"); pg.wait_for_function(f"TribeSiteDesigner.cfg().pages[0].blocks[0].props.items[1].label === {json.dumps(first)}", timeout=4000)
         f.locator("body").press("Control+z"); pg.wait_for_timeout(300)
+        # drag the entry by its grip: a line shows where it lands; it drops as the third link
+        f.locator("small[data-e]").first.click(); esc_to(pg, f, "item")
+        fb = pg.locator("#wdz-frame").bounding_box(); grip = f.locator(".wdz-tb [data-a=igrip]").bounding_box(); third = f.locator("a.lk").nth(2).bounding_box()
+        pg.mouse.move(grip["x"] + grip["width"] / 2, grip["y"] + grip["height"] / 2); pg.mouse.down()
+        pg.mouse.move(third["x"] + 40, third["y"] + third["height"] * 0.8, steps=6); pg.wait_for_timeout(120)
+        assert f.locator(".wdz-idrop").count() == 1 and f.locator(".wdz-idrop").bounding_box()["width"] > 100, "a clear line shows where it will land"
+        pg.mouse.up()
+        pg.wait_for_function(f"TribeSiteDesigner.cfg().pages[0].blocks[0].props.items[2].label === {json.dumps(first)}", timeout=4000)
+        pg.wait_for_timeout(300); assert sel(pg)["path"].startswith("items.2") and f.locator(".wdz-idrop").count() == 0, sel(pg)
+        pg.wait_for_timeout(300); pg.evaluate("TribeSiteDesigner.undo()"); pg.wait_for_function(f"TribeSiteDesigner.cfg().pages[0].blocks[0].props.items[0].label === {json.dumps(first)}", timeout=4000); pg.wait_for_timeout(300)
         n0 = len(cfg(pg)["pages"][0]["blocks"][0]["props"]["items"])
         f.locator("small[data-e]").first.click(); esc_to(pg, f, "item")
         f.locator(".wdz-tb [data-a=dup]").click(); pg.wait_for_function(f"TribeSiteDesigner.cfg().pages[0].blocks[0].props.items.length === {n0 + 1}", timeout=4000)
@@ -351,6 +367,26 @@ def live(pw):
         lead = f.locator(".b-hero p.lead[data-e]").first; lead.scroll_into_view_if_needed(); lead.click(); lead.press("Control+a"); lead.type("Bread from 7"); lead.press("Shift+Enter"); lead.type("Soup at noon"); lead.press("Enter")
         pg.wait_for_function("TribeSiteDesigner.cfg().pages[0].blocks.find(b => b.type === 'hero').props.text === 'Bread from 7\\nSoup at noon'", timeout=4000)
         assert "Bread from 7<br>Soup at noon" in pg.evaluate("TribeSiteCfg.exportFiles(TribeSiteDesigner.cfg(), 'html')['index.html']")
+        # some of the words: select one with the mouse, make it bold, link another (round 2)
+        PICK = "(w) => { const el = document.querySelector('.b-hero p.lead[data-e]'); el.focus(); const tw = document.createTreeWalker(el, NodeFilter.SHOW_TEXT); let n; while ((n = tw.nextNode())) { const i = n.nodeValue.indexOf(w); if (i >= 0) { const r = document.createRange(); r.setStart(n, i); r.setEnd(n, i + w.length); const g = getSelection(); g.removeAllRanges(); g.addRange(r); return true; } } return false; }"
+        lead.click(); assert f.evaluate(PICK, "Bread"); f.locator(".wdz-tb [data-a=bold]").click()
+        pg.wait_for_function("TribeSiteDesigner.cfg().pages[0].blocks.find(b => b.type === 'hero').props.text === '**Bread** from 7\\nSoup at noon'", timeout=4000)
+        assert not (block(pg, "hero").get("es") or {}).get("text"), "only the word is bold, not the whole line"
+        assert f.evaluate(PICK, "noon"); f.locator(".wdz-tb [data-a=wlink]").click(); pg.wait_for_selector("#sp-wlink-to", timeout=3000)
+        pg.fill("#sp-wlink-to", "example.com/menu"); pg.press("#sp-wlink-to", "Enter")
+        pg.wait_for_function("TribeSiteDesigner.cfg().pages[0].blocks.find(b => b.type === 'hero').props.text === '**Bread** from 7\\nSoup at [noon](https://example.com/menu)'", timeout=4000)
+        out = pg.evaluate("TribeSiteCfg.exportFiles(TribeSiteDesigner.cfg(), 'html')['index.html']")
+        assert '<b>Bread</b> from 7<br>Soup at <a href="https://example.com/menu" rel="noopener">noon</a>' in out
+        pg.wait_for_timeout(300); f = fr(pg); assert f.locator(".b-hero p.lead b").inner_text() == "Bread" and f.locator(".b-hero p.lead a").get_attribute("href") == "https://example.com/menu"
+        assert f.evaluate(PICK, "Bread"); f.locator(".wdz-tb [data-a=bold]").click()   # again takes it off
+        pg.wait_for_function("TribeSiteDesigner.cfg().pages[0].blocks.find(b => b.type === 'hero').props.text.startsWith('Bread from 7')", timeout=4000)
+        # any colour, space around and font for this one element (round 2)
+        f.locator(".b-hero h1[data-e]").first.click(); pg.wait_for_selector("#wdz-insp [data-escolor]")
+        pg.click("#wdz-insp [data-sp=es][data-k=sp][data-val=l]"); pg.wait_for_function("((TribeSiteDesigner.cfg().pages[0].blocks.find(b => b.type === 'hero').es || {}).title || {}).sp === 'l'", timeout=3000)
+        pg.click("#wdz-insp [data-sp=es][data-k=f][data-val=mono]"); pg.wait_for_timeout(250)
+        pg.evaluate("(() => { const i = document.querySelector('#wdz-insp [data-escolor]'); i.value = '#12ab34'; i.dispatchEvent(new Event('change', { bubbles: true })); })()")
+        pg.wait_for_function("((TribeSiteDesigner.cfg().pages[0].blocks.find(b => b.type === 'hero').es || {}).title || {}).c === '#12AB34'", timeout=3000)
+        assert 'class="e-sp-l e-f-mono" style="color:#12AB34"' in pg.evaluate("TribeSiteCfg.exportFiles(TribeSiteDesigner.cfg(), 'html')['index.html']")
         # a label the site shows in capitals is saved as it was typed, not in capitals
         cap = f.locator(".in h3[data-e]").first; cap.scroll_into_view_if_needed(); cap.click(); cap.press("Control+a"); cap.type("Where we are"); cap.press("Enter")
         pg.wait_for_function("TribeSiteDesigner.cfg().pages[0].blocks.find(b => b.type === 'info').props.items[0].label === 'Where we are'", timeout=4000)
@@ -369,9 +405,26 @@ def live(pw):
         assert "an-rise" in pg.evaluate("TribeSiteCfg.exportFiles(TribeSiteDesigner.cfg(), 'html')['index.html']")
         pg.click("#wdz-insp .sp-li [data-sp=entry][data-val=down] >> nth=0"); pg.wait_for_timeout(400)
         assert block(pg, "pricing")["props"]["plans"][1]["name"] == pb["props"]["plans"][0]["name"]
+        # the entrance can be played in the editor; where a browser has no scroll timelines it plays once on opening
+        f.locator(f"[data-block='{pb['id']}'] h2").click(); esc_to(pg, f, "block")
+        pg.click("#wdz-insp [data-sp=play]"); pg.wait_for_timeout(120)
+        assert f.locator(f"[data-block='{pb['id']}'].an-play-rise").count() == 1, "Play it shows the entrance right here"
+        assert "@supports not (animation-timeline:view()){.an-fade{animation:an-fade .7s" in pg.evaluate("TribeSiteCfg.exportFiles(TribeSiteDesigner.cfg(), 'html')['index.html']")
+        # drag a selected picture inside its frame: what stays in view is saved
+        im = f.locator(".b-hero [data-img]").first; im.scroll_into_view_if_needed(); im.click(); pg.wait_for_function("(TribeSiteDesigner.state().sel || {}).kind === 'image'", timeout=3000)
+        ib = im.bounding_box(); pg.mouse.move(ib["x"] + ib["width"] / 2, ib["y"] + ib["height"] / 2); pg.mouse.down(); pg.mouse.move(ib["x"] + ib["width"] / 2 - 60, ib["y"] + ib["height"] / 2 + 10, steps=5); pg.mouse.up()
+        pg.wait_for_function("typeof TribeSiteDesigner.cfg().pages[0].blocks.find(b => b.type === 'hero').props.fx === 'number'", timeout=3000)
+        assert (sel(pg) or {}).get("kind") == "image", "the end of a drag is not a click on something else"
+        assert "object-position:" in pg.evaluate("TribeSiteCfg.exportFiles(TribeSiteDesigner.cfg(), 'html')['index.html']")
+        # a section can move to another page (above its footer); Undo brings it back
+        f.locator(f"[data-block='{pb['id']}'] h2").click(); esc_to(pg, f, "block"); other = cfg(pg)["pages"][1]["id"]
+        pg.select_option(f"#wdz-insp [data-sp-moveto='{pb['id']}']", other)
+        pg.wait_for_function(f"TribeSiteDesigner.cfg().pages[1].blocks.some(b => b.id === '{pb['id']}') && !TribeSiteDesigner.cfg().pages[0].blocks.some(b => b.id === '{pb['id']}')", timeout=3000)
+        pg.evaluate("TribeSiteDesigner.undo()"); pg.wait_for_function(f"TribeSiteDesigner.cfg().pages[0].blocks.some(b => b.id === '{pb['id']}')", timeout=3000); pg.wait_for_timeout(300)
         pg.click("[data-panel=site]"); assert pg.locator("#wdz-insp .sp-pages .sp-li").count() == len(cfg(pg)["pages"]) >= 2
         pg.fill("#wdz-insp [data-pgseo=title]", "Maras Kitchen, open daily"); pg.locator("#wdz-insp [data-pgseo=title]").press("Tab")
         pg.wait_for_function("(TribeSiteDesigner.cfg().pages[0].seo || {}).title === 'Maras Kitchen, open daily'", timeout=3000)
+        assert pg.locator("#wdz-insp [data-site=pageshare]").count() == 1, "each page can have its own share picture"
         files = pg.evaluate("Object.fromEntries(Object.entries(TribeSiteCfg.exportFiles(TribeSiteDesigner.cfg(), 'zip').files).filter(([k]) => /html$/.test(k)).map(([k, v]) => [k, /<title>([^<]*)/.exec(v)[1]]))")
         assert files["index.html"] == "Maras Kitchen, open daily" and "Whats on" in files[[k for k in files if k != "index.html"][0]], files
         shot(pg, "site-editor2-pages-1440.png")
@@ -392,6 +445,12 @@ def live(pw):
         box = mf.locator(".wdz-tb").bounding_box(); assert box and box["x"] >= 0 and box["x"] + box["width"] <= 391, box
         assert m.evaluate("document.documentElement.scrollWidth <= innerWidth + 1"), "no sideways scroll on a phone"
         assert m.locator("#wdz-saved").is_visible(), "the saved state shows on a phone too"
+        assert mf.evaluate(CLEAR_JS) == [], "on a phone too the toolbar is clear of the words"
+        bar = m.locator(".wdz-top").bounding_box(); assert bar["height"] <= 60, f"the phone's top bar is one row, not {bar['height']}px"
+        assert not m.locator("[data-wdz='dl-html']").first.is_visible()
+        shot(m, "site-editor2-words-390.png")
+        m.locator("[data-wdz='more']").tap(); m.wait_for_selector("#wdz-dl", state="visible"); shot(m, "site-editor2-more-390.png")
+        m.locator("[data-wdz='more']").tap(); m.wait_for_timeout(150); assert m.locator(".wdz-top").bounding_box()["height"] <= 60
         shot(m, "site-editor2-words-390.png")
         print("  ok  phone: tap words, the toolbar fits the screen, nothing scrolls sideways, the saved state is visible")
         b.close()

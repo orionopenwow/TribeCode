@@ -52,6 +52,9 @@
     return `<div class="sp-looks">
       <p class="wdz-f"><span>Size</span></p><p class="wdz-row" role="group" aria-label="Size">${P('sz', 's', 'Small', e.sz)}${P('sz', '', 'Normal', e.sz)}${P('sz', 'l', 'Large', e.sz)}${P('sz', 'xl', 'Huge', e.sz)}</p>
       <p class="wdz-f"><span>Colour</span></p><p class="wdz-row" role="group" aria-label="Colour">${P('col', '', 'As it is', e.col)}${sw('accent', k.accent, 'Main colour')}${sw('muted', k.muted, 'Quiet')}${sw('ink', k.ink, 'Strong')}</p>
+      <p class="wdz-row"><label class="sp-pick"><span>Any colour</span><input type="color" data-escolor="1" value="${esc(e.c || k.accent)}" aria-label="Any colour"></label>${e.c ? '<button type="button" class="btn sm ghost" data-sp="es" data-k="c" data-val="">Back to the palette</button>' : ''}</p>
+      <p class="wdz-f"><span>Space around it</span></p><p class="wdz-row" role="group" aria-label="Space around it">${P('sp', 's', 'Tight', e.sp)}${P('sp', '', 'Normal', e.sp)}${P('sp', 'l', 'Roomy', e.sp)}</p>
+      <p class="wdz-f"><span>Font</span></p><p class="wdz-row" role="group" aria-label="Font">${P('f', '', 'As it is', e.f)}${P('f', 'display', 'Heading font', e.f)}${P('f', 'body', 'Text font', e.f)}${P('f', 'mono', 'Typewriter', e.f)}</p>
       <p class="wdz-f"><span>Line up</span></p><p class="wdz-row" role="group" aria-label="Line up">${P('al', '', 'As it is', e.al)}${P('al', 'left', 'Left', e.al)}${P('al', 'center', 'Middle', e.al)}${P('al', 'right', 'Right', e.al)}<button type="button" class="btn sm" data-sp="es" data-k="b" data-val="1" aria-pressed="${!!e.b}">Bold</button><button type="button" class="btn sm" data-sp="es" data-k="i" data-val="1" aria-pressed="${!!e.i}">Slanted</button></p>
       ${showOn(hide, 'el')}${en ? entryRow(b, en) : ''}${foot()}</div>`;
   }
@@ -90,13 +93,27 @@
     const nm = LIST_NAMES[k] || 'Entry', name = x => typeof x === 'string' ? x : x && typeof x === 'object' ? (x.label || x.title || x.name || x.q || x.quote || x.value || x.alt || x.caption || '') : '';
     return `<div class="sp-list" data-list="${esc(k)}"><p class="wdz-f"><span>${esc(k)} · ${v.length}</span></p>${v.map((x, i) => `<div class="sp-li"><button type="button" class="sp-li-t" data-sp="pickentry" data-list="${esc(k)}" data-i="${i}" title="Select it on the page">${esc(short(name(x), 30) || `${nm} ${i + 1}`)}</button><span class="sp-li-a"><button type="button" data-sp="entry" data-val="up" data-list="${esc(k)}" data-i="${i}" aria-label="Move up"${i ? '' : ' disabled'}>↑</button><button type="button" data-sp="entry" data-val="down" data-list="${esc(k)}" data-i="${i}" aria-label="Move down"${i < v.length - 1 ? '' : ' disabled'}>↓</button><button type="button" data-sp="entry" data-val="dup" data-list="${esc(k)}" data-i="${i}" aria-label="Duplicate">⧉</button><button type="button" data-sp="entry" data-val="del" data-list="${esc(k)}" data-i="${i}" aria-label="Remove">×</button></span></div>`).join('')}<p class="wdz-row"><button type="button" class="btn sm" data-item="add" data-k="${esc(k)}">+ Add ${esc(nm.toLowerCase())}</button></p></div>`;
   }
+  // a section can go to another page (it lands above that page's footer)
+  let _cfgNow = null, _pageNow = null;
+  const pagesOther = b => { const c = _cfgNow; if (!c || c.pages.length < 2 || b.type === 'footer') return ''; return `<label class="wdz-f"><span>Move it to another page</span><select class="input" data-sp-moveto="${esc(b.id)}"><option value="">Stays on this page</option>${c.pages.filter(p => p.id !== _pageNow).map(p => `<option value="${esc(p.id)}">${esc(p.title)}</option>`).join('')}</select></label>`; };
+  document.addEventListener('change', e => { const i = e.target; if (!i || !i.matches || !i.matches('[data-sp-moveto]') || !i.value) return; const api = window.TribeSiteParts && window.TribeSiteParts._api; if (!api) return; const to = i.value, pg = api.cfg().pages.find(p => p.id === to); const c = S().moveBlockToPage(api.cfg(), api.page(), i.dataset.spMoveto, to); api.setSel(null); api.commit(c); api.say(`Moved the section to ${pg ? pg.title : 'the other page'}. Undo brings it back.`, '', [{ label: 'Undo', fn: () => api.undo() }]); });
+  // a contact form or signup can deliver into this project's chat, with no outside service (server/sitedesign.js form)
+  const FORM_RX = /\/api\/site-form\/[\w-]+$/;
+  function formRow(b, api) {
+    if (b.type !== 'contact' && b.type !== 'newsletter') return '';
+    const on = FORM_RX.test(String(b.props.action || '')), C = window.TribeClient, base = C && C.base ? C.base() : '', local = /^https?:\/\/(localhost|127\.|\[::1\]|192\.168\.|10\.)/i.test(base);
+    if (!api.pid() || !api.connected()) return '<p class="wdz-hint">In a tribe, this form can send its messages straight into the project’s chat.</p>';
+    return `<p class="wdz-f"><span>Where the messages go</span></p><p class="wdz-row"><button type="button" class="btn sm${on ? '' : ' primary'}" data-sp="formin" aria-pressed="${on}">${on ? 'Into this project’s chat: on' : 'Send them into this project’s chat'}</button>${on ? '<button type="button" class="btn sm ghost" data-sp="formoff">Switch off</button>' : ''}</p>
+      <p class="wdz-hint">${on ? 'Messages arrive in the project’s main chat.' : 'No outside service needed.'} It works while this tribe’s computer is on and can be reached from where the site is${local ? ': right now its address is only this computer or this home network, so visitors elsewhere cannot send yet. Share the tribe with a public link first, then switch this on again' : ''}. A hidden field stops simple bots.</p>`;
+  }
   // a section's own look beyond background and spacing
-  function section(b) {
+  function section(b, api) { if (api) { _cfgNow = api.cfg(); _pageNow = api.page(); window.TribeSiteParts && (window.TribeSiteParts._api = api); }
     const st = b.style || {}, hide = String(st.hide || '').split(',').filter(Boolean), B = (k, v, l) => `<button type="button" class="btn sm" data-sp="sty" data-k="${k}" data-val="${v}" aria-pressed="${(st[k] || '') === v}">${l}</button>`;
     return `<p class="wdz-f"><span>Text size</span></p><p class="wdz-row" role="group" aria-label="Text size">${B('sz', 's', 'Small')}${B('sz', '', 'Normal')}${B('sz', 'l', 'Large')}</p>
       <p class="wdz-f"><span>Line up</span></p><p class="wdz-row" role="group" aria-label="Line up">${B('al', '', 'As it is')}${B('al', 'left', 'Left')}${B('al', 'center', 'Middle')}${B('al', 'right', 'Right')}</p>
       <p class="wdz-f"><span>Width</span></p><p class="wdz-row" role="group" aria-label="Width">${B('w', 'narrow', 'Narrow')}${B('w', '', 'Normal')}${B('w', 'wide', 'Wide')}</p>
-      <p class="wdz-f"><span>When it scrolls into view</span></p><p class="wdz-row" role="group" aria-label="When it scrolls into view">${B('anim', '', 'Just there')}${B('anim', 'fade', 'Fades in')}${B('anim', 'rise', 'Rises in')}</p>
+      <p class="wdz-f"><span>When it scrolls into view</span></p><p class="wdz-row" role="group" aria-label="When it scrolls into view">${B('anim', '', 'Just there')}${B('anim', 'fade', 'Fades in')}${B('anim', 'rise', 'Rises in')}${st.anim ? '<button type="button" class="btn sm ghost" data-sp="play">Play it</button>' : ''}</p>
+      ${pagesOther(b)}
       ${showOn(hide, 'block')}<div class="sp-said" id="wdz-said"></div>`;
   }
   function picture(b, sel, api) {
@@ -125,7 +142,7 @@
     const c = api.cfg(), cur = api.page();
     return `<div class="sp-pages"><p class="wdz-f"><span>Pages · ${c.pages.length}</span></p>${c.pages.map((p, i) => `<div class="sp-li${p.id === cur ? ' is-cur' : ''}"><input class="input sm" data-pgname="${esc(p.id)}" maxlength="40" value="${esc(p.title)}" aria-label="Page name"><span class="sp-li-a"><button type="button" data-sp="gopage" data-id="${esc(p.id)}" aria-label="Open this page" title="Open this page">→</button><button type="button" data-sp="pgmove" data-val="up" data-id="${esc(p.id)}" aria-label="Move up"${i > 1 ? '' : ' disabled'}>↑</button><button type="button" data-sp="pgmove" data-val="down" data-id="${esc(p.id)}" aria-label="Move down"${i > 0 && i < c.pages.length - 1 ? '' : ' disabled'}>↓</button><button type="button" data-sp="pgdel" data-id="${esc(p.id)}" aria-label="Remove this page"${i ? '' : ' disabled title="The first page is the home page"'}>×</button></span></div>`).join('')}
       <p class="wdz-row"><button type="button" class="btn sm" data-wdz="addpage">+ Add a page</button><button type="button" class="btn sm" data-sp="nav" data-val="${c.nav === 'centered' ? '' : 'centered'}" aria-pressed="${c.nav === 'centered'}">Menu in the middle</button></p>
-      ${c.pages.length > 1 ? (() => { const p = c.pages.find(x => x.id === cur) || c.pages[0], ps = p.seo || {}; return `<p class="wdz-f"><span>“${esc(short(p.title, 20))}” in search results</span></p><label class="wdz-f"><span class="sr">Title of this page</span><input class="input" data-pgseo="title" maxlength="120" value="${esc(ps.title || '')}" placeholder="${esc(p.title)} · ${esc(c.seo.title || c.name)}" aria-label="Title of this page"></label><label class="wdz-f"><span class="sr">Description of this page</span><textarea class="input" rows="2" data-pgseo="description" maxlength="320" placeholder="What this page is about, in a sentence" aria-label="Description of this page">${esc(ps.description || '')}</textarea></label>`; })() : ''}</div>`;
+      ${c.pages.length > 1 ? (() => { const p = c.pages.find(x => x.id === cur) || c.pages[0], ps = p.seo || {}; return `<p class="wdz-f"><span>“${esc(short(p.title, 20))}” in search results</span></p><label class="wdz-f"><span class="sr">Title of this page</span><input class="input" data-pgseo="title" maxlength="120" value="${esc(ps.title || '')}" placeholder="${esc(p.title)} · ${esc(c.seo.title || c.name)}" aria-label="Title of this page"></label><label class="wdz-f"><span class="sr">Description of this page</span><textarea class="input" rows="2" data-pgseo="description" maxlength="320" placeholder="What this page is about, in a sentence" aria-label="Description of this page">${esc(ps.description || '')}</textarea></label><p class="wdz-row"><span class="wdz-lab">Share picture for this page</span>${ps.image ? `<img class="wdz-mini wide" src="${esc(ps.image)}" alt="">` : ''}<button type="button" class="btn sm" data-site="pageshare">${ps.image ? 'Change' : 'Add'}</button></p>`; })() : ''}</div>`;
   }
   function wire(box, api) {
     box.querySelectorAll('[data-pgname]').forEach(i => i.addEventListener('change', () => i.value.trim() && api.commit(S().renamePage(api.cfg(), i.dataset.pgname, i.value.trim()))));
@@ -163,6 +180,15 @@
     if (a === 'smaller') return step(api, 'sz', -1);
     if (a === 'bigger') return step(api, 'sz', 1);
     if (a === 'bold') { const b = blockOf(api, sel.block); return b && setEs(api, { b: esOf(b, sel).b ? '' : 1 }); }
+    if (a === 'ital') { const b = blockOf(api, sel.block); return b && setEs(api, { i: esOf(b, sel).i ? '' : 1 }); }
+    if (a === 'wlink-none') return api.say('Select some of the words with the mouse first, then press the link button. To link a whole button, click the button.');
+    if (a === 'wlink') {   // some words were just wrapped on the page: ask where they go, right in the panel
+      api.panel('edit'); const box = api.box(); if (!box) return;
+      box.insertAdjacentHTML('afterbegin', `<form class="sp-wlink" id="sp-wlink"><label class="wdz-f"><span>Link the selected words to</span><input class="input" id="sp-wlink-to" placeholder="https://… or an email address" autocomplete="off"></label><p class="wdz-row"><button type="submit" class="btn sm primary">Link</button><button type="button" class="btn sm ghost" data-sp="wlink-cancel">Cancel</button></p></form>`);
+      const f = box.querySelector('#sp-wlink'), i = f.querySelector('input'); i.focus();
+      f.addEventListener('submit', e => { e.preventDefault(); let v = i.value.trim(); if (/^[^\s@]+@[^\s@]+\.[a-z]{2,}$/i.test(v)) v = 'mailto:' + v; else if (v && !/^(https?:\/\/|mailto:|#|\/)/i.test(v)) v = 'https://' + v; f.remove(); api.post({ linkset: /^javascript:/i.test(v) ? '' : v }); });
+      return;
+    }
     if (a === 'color') return step(api, 'col');
     if (a === 'align') return step(api, 'al');
     if (a === 'link') { api.setSel({ ...sel, kind: 'button' }); api.panel('edit'); const i = api.root().querySelector('#wdz-link'); if (i) i.focus(); return; }
@@ -194,6 +220,10 @@
     if (k === 'pgdel') { const c = S().deletePage(api.cfg(), el.dataset.id); if (!c) return; const pg = api.cfg().pages.find(p => p.id === el.dataset.id); api.commit(c); return api.say(`Removed the page ${pg ? pg.title : ''}. Undo brings it back.`, '', [{ label: 'Undo', fn: () => api.undo() }]); }
     if (k === 'nav') { const c = JSON.parse(JSON.stringify(api.cfg())); if (v) c.nav = v; else delete c.nav; return api.commit(c); }
     if (k === 'panel') return api.panel(v);
+    if (k === 'formin') { const C = window.TribeClient; return api.commit(S().setProp(api.cfg(), api.page(), sel.block, 'action', `${String(C.base()).replace(/\/$/, '')}/api/site-form/${api.pid()}`)); }
+    if (k === 'formoff') return api.commit(S().setProp(api.cfg(), api.page(), sel.block, 'action', ''));
+    if (k === 'play') { const b = sel && blockOf(api, sel.block); return b && api.post({ play: b.id, anim: (b.style || {}).anim }); }
+    if (k === 'wlink-cancel') { const f = api.root().querySelector('#sp-wlink'); if (f) f.remove(); return api.post({ linkset: '' }); }
     return act(api, k);
   }
   // keys for something smaller than a section. -> true when the key was used
@@ -244,8 +274,10 @@
     }
   }
   // "What the tribe said about this" is filled by the suggestions (app/ui/sitesuggest.js) when it is there
-  function said(api) { const box = api.root().querySelector('#wdz-said'); if (box && window.TribeSiteSuggest && window.TribeSiteSuggest.said) window.TribeSiteSuggest.said(box, api); }
+  // the colour picker under "Colour": any colour for this one element (a change event, so one Undo per pick)
+  document.addEventListener('change', e => { const i = e.target; if (!i || !i.matches || !i.matches('[data-escolor]') || !window.TribeSiteDesigner) return; const api = window.TribeSiteParts && window.TribeSiteParts._api; if (api) setEs(api, { c: i.value, col: '' }); });
+  function said(api) { window.TribeSiteParts._api = api; const box = api.root().querySelector('#wdz-said'); if (box && window.TribeSiteSuggest && window.TribeSiteSuggest.said) window.TribeSiteSuggest.said(box, api); }
 
   const menuOpen = () => !!(menuEl && !menuEl.hidden);
-  window.TribeSiteParts = { menuOpen, crumbs, looks, element, list, section, picture, siteSel, pages, wire, click, key, frame, menu, closeMenu, parentOf, entryOf, act, said };
+  window.TribeSiteParts = { formRow, menuOpen, crumbs, looks, element, list, section, picture, siteSel, pages, wire, click, key, frame, menu, closeMenu, parentOf, entryOf, act, said };
 })();

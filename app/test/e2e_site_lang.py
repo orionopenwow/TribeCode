@@ -25,7 +25,8 @@ def main():
         pg.click("#lang-btn"); pg.wait_for_selector("#lang-menu:not([hidden])")
         assert pg.locator("#lang-menu [data-lang]").count() == 8
         pg.click("#lang-menu [data-lang='es']")
-        assert pg.text_content("#hero-title").strip() == "Crea apps, juegos y sitios web con tus amigos." and pg.evaluate("document.documentElement.lang") == "es"
+        pg.wait_for_function("document.documentElement.lang === 'es'", timeout=5000); pg.wait_for_timeout(200)
+        assert pg.text_content("#hero-title").strip() == "Crea apps, juegos y sitios web con tus amigos.", pg.text_content("#hero-title")
         assert "Descargar" in pg.text_content(".nav__end") and pg.locator("#lang-menu").is_hidden()
         pg.reload(); pg.wait_for_selector("#lang-btn"); assert pg.text_content("#hero-title").strip().startswith("Crea apps") and "ES" in pg.text_content("#lang-btn")
         pg.evaluate("TribeLang.set('ja')"); assert "友だち" in pg.text_content("#hero-title") and pg.evaluate("document.documentElement.lang") == "ja"

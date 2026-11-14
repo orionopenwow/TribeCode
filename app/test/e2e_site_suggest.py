@@ -16,7 +16,7 @@ server/sitesuggest.js). The tribe is the context for every part of the design.
     "make all buttons rounder", "move this up", "undo that".
 Usage: python app/test/e2e_site_suggest.py [--shots DIR]
 """
-import json, os, subprocess, sys, tempfile, time, urllib.request, urllib.error
+import json, os, subprocess, sys, tempfile, time, urllib.request, urllib.error, urllib.parse
 from pathlib import Path
 from playwright.sync_api import sync_playwright
 
@@ -138,6 +138,29 @@ def main():
         d2 = ok(api(f"/projects/{pid}/site-suggestions", token=host, project=pid))
         assert fix["id"] in d2["dismissed"] and not any(s["id"] == fix["id"] for s in d2["suggestions"]) and len(d2["suggestions"]) == 3
         print("  ok  a spectator reads but cannot answer; a dismissed suggestion is gone for everyone")
+
+        # ---- a contact form that delivers into the project (round 2): off until the design points a form at it
+        def post_form(fields, pid2=None):
+            req = urllib.request.Request(f"{BASE}/api/site-form/{pid2 or pid}", method="POST", data=urllib.parse.urlencode(fields).encode(), headers={"Content-Type": "application/x-www-form-urlencoded"})
+            try:
+                with urllib.request.urlopen(req, timeout=20) as r: return r.status, r.read().decode()
+            except urllib.error.HTTPError as e: return e.code, e.read().decode()
+        assert post_form({"name": "Ann", "message": "hello"})[0] == 404, "a form nobody switched on takes nothing"
+        cur = ok(api(f"/projects/{pid}/site-config", token=host, project=pid)); c2 = cur["config"]
+        c2["pages"][0]["blocks"].insert(1, {"id": "bform1", "type": "contact", "variant": "form", "props": {"title": "Write to us", "text": "", "email": "", "action": f"{BASE}/api/site-form/{pid}", "button": "Send"}})
+        ok(api(f"/projects/{pid}/site-config", "PUT", {"config": c2, "base": cur["rev"]}, token=host, project=pid), "save with the form on")
+        st, body = post_form({"name": "Ann <b>", "email": "ann@example.org", "message": "Do you ship to Leeds?\nThanks!", "website": ""})
+        assert st == 200 and "Thank you" in body and "<script" not in body
+        chat = ok(api("/chat/general", token=host, project=pid)); texts = [m.get("text", "") for m in (chat.get("messages") or chat if isinstance(chat, dict) else chat)]
+        hit = [t for t in texts if "From the website form" in t]; assert len(hit) == 1 and "Ann" in hit[0] and "ann@example.org" in hit[0] and "Do you ship to Leeds?" in hit[0] and "<b>" not in hit[0], hit
+        assert post_form({"name": "Bot", "message": "buy now", "website": "http://spam.example"})[0] == 200   # the hidden field was filled: same answer, nothing kept
+        assert post_form({"message": "a http://a.example b http://b.example c http://c.example d http://d.example"})[0] == 200
+        assert post_form({"email": "not-an-email", "message": "x"})[0] in (400, 429) and post_form({"message": "x" * 9000})[0] in (413, 429)
+        chat = ok(api("/chat/general", token=host, project=pid)); texts = [m.get("text", "") for m in (chat.get("messages") or chat if isinstance(chat, dict) else chat)]
+        assert len([t for t in texts if "From the website form" in t]) == 1, "bots, link floods and bad input add nothing"
+        ok(api(f"/projects/{pid}/site-config", "PUT", {"config": base_cfg, "base": ok(api(f"/projects/{pid}/site-config", token=host, project=pid))["rev"]}, token=host, project=pid), "back to the plain design")
+        assert post_form({"name": "Ann", "message": "hello"})[0] in (404, 429)   # off again, or the per-minute limit said no first
+        print("  ok  a contact form delivers into the project's chat only when switched on; a hidden field, link floods and bad input are dropped")
 
         with sync_playwright() as p:
             b = p.chromium.launch(executable_path=CHROME, args=["--no-proxy-server"])
