@@ -181,11 +181,24 @@ def main():
         job = list(wf["jobs"].values())[0]
         assert job["runs-on"].startswith("ubuntu") and len(job["steps"]) >= 5 and all(("uses" in s) != ("run" in s) for s in job["steps"])
         yml = t[".github/workflows/tribecode-android.yml"].decode()
-        assert "bubblewrap" in yml and "secrets.ANDROID_KEYSTORE_BASE64" in yml and "app.apk" in yml and "assetlinks.json" in yml and TOKEN not in yml
-        twa = json.loads(t["android/twa-manifest.json"])
-        assert twa["host"] == "camp-test.github.io" and twa["startUrl"].startswith("/star-hopper/") and twa["packageId"] == w["dest"]["android"]["pkg"] and twa["name"] == "Star Hopper" and twa["display"] == "standalone", twa
-        assert twa["webManifestUrl"] == r["url"] + "manifest.webmanifest" and twa["iconUrl"].startswith(r["url"]), twa
-        al = json.loads(t["android/assetlinks.template.json"]); assert al[0]["target"]["package_name"] == twa["packageId"] and al[0]["relation"] == ["delegate_permission/common.handle_all_urls"]
+        assert "gradle --no-daemon assembleRelease" in yml and "gradle/actions/setup-gradle@v4" in yml and "bubblewrap" not in yml, "plain Gradle, nothing that stops to ask a question"
+        assert "secrets.ANDROID_KEYSTORE_BASE64" in yml and "app.apk" in yml and "assetlinks.json" in yml and "gh release create" in yml and TOKEN not in yml
+        assert "${{ secrets." not in "".join(l for l in yml.splitlines() if l.strip().startswith(("run:", "echo", "gradle", "keytool"))), "secrets only reach steps through env"
+        info = json.loads(t["android/app.json"]); pkg = w["dest"]["android"]["pkg"]
+        assert info["packageId"] == pkg and info["host"] == "camp-test.github.io" and info["startUrl"] == r["url"] and info["name"] == "Star Hopper" and info["versionCode"] >= 1, info
+        gradle = t["android/app/build.gradle"].decode()
+        assert f"applicationId '{pkg}'" in gradle and f"namespace '{pkg}'" in gradle and "com.google.androidbrowserhelper:androidbrowserhelper:" in gradle and "System.getenv('KEYSTORE_PW')" in gradle and "VERSION_1_8" in gradle, gradle
+        assert "com.android.application" in t["android/build.gradle"].decode() and "google()" in t["android/settings.gradle"].decode()
+        import xml.dom.minidom as minidom
+        man = minidom.parseString(t["android/app/src/main/AndroidManifest.xml"]); act = man.getElementsByTagName("activity")[0]
+        assert act.getAttribute("android:name") == "com.google.androidbrowserhelper.trusted.LauncherActivity" and act.getAttribute("android:exported") == "true"
+        md = {m.getAttribute("android:name"): m for m in man.getElementsByTagName("meta-data")}
+        assert md["android.support.customtabs.trusted.DEFAULT_URL"].getAttribute("android:value") == r["url"] and md["asset_statements"].getAttribute("android:resource") == "@string/asset_statements"
+        data = man.getElementsByTagName("data")[0]; assert data.getAttribute("android:host") == "camp-test.github.io" and data.getAttribute("android:scheme") == "https" and data.getAttribute("android:pathPrefix") == "/star-hopper/"
+        strs = {x.getAttribute("name"): x.firstChild.data for x in minidom.parseString(t["android/app/src/main/res/values/strings.xml"]).getElementsByTagName("string")}
+        assert strs["app_name"] == "Star Hopper" and "https://camp-test.github.io" in strs["asset_statements"] and "delegate_permission/common.handle_all_urls" in strs["asset_statements"]
+        assert png_size(t["android/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png"]) == (512, 512), "the app icon rides along"
+        al = json.loads(t["android/assetlinks.template.json"]); assert al[0]["target"]["package_name"] == pkg and al[0]["relation"] == ["delegate_permission/common.handle_all_urls"]
         b = ok(api("/publish/real/build" + Q, token=camp))
         assert b["state"] == "ready" and b["download"] == f"https://github.com/{full}/releases/latest/download/app.apk", b
         ghmock.STATE["runs"] = "failure"; assert ok(api("/publish/real/build" + Q, token=camp))["state"] == "failed"
@@ -198,7 +211,26 @@ def main():
         assert wi["dest"]["ios"]["on"] and ok(api("/publish/real" + Q, token=camp))["next"] == "share"
         wo = ok(api("/publish/real/wrapper", "POST", {"project": pid, "kind": "ios", "on": False}, token=camp)); assert not wo["dest"]["ios"]["on"]
         ok(api("/publish/real/pages", "POST", {"project": pid}, token=camp)); assert ".github/workflows/tribecode-ios.yml" not in ghmock.tree_of(full), "turned off = gone on the next publish"
+        # the computer app: a tiny Tauri project + a build for Windows, Mac and Linux, unsigned and said so
+        assert ok(api("/publish/real/build" + Q + "&what=desktop", token=camp))["state"] == "none"
+        wd = ok(api("/publish/real/wrapper", "POST", {"project": pid, "kind": "desktop", "on": True}, token=camp), "desktop on"); assert wd["dest"]["desktop"] == {"on": True, "sent": True}, wd["dest"]
+        t = ghmock.tree_of(full)
+        dwf = yaml.safe_load(t[".github/workflows/tribecode-desktop.yml"]); dtrig = dwf.get("on", dwf.get(True))
+        assert "workflow_dispatch" in dtrig and dwf["permissions"]["contents"] == "write" and set(dwf["jobs"]) == {"release", "build"} and dwf["jobs"]["build"]["needs"] == "release"
+        assert dwf["jobs"]["build"]["strategy"]["matrix"]["os"] == ["ubuntu-22.04", "windows-latest", "macos-latest"] and all(("uses" in x) != ("run" in x) for x in dwf["jobs"]["build"]["steps"])
+        dy = t[".github/workflows/tribecode-desktop.yml"].decode(); assert "@tauri-apps/cli@2 build" in dy and "libwebkit2gtk-4.1-dev" in dy and "NOT signed" in dy and "secrets." not in dy
+        conf = json.loads(t["desktop/src-tauri/tauri.conf.json"])
+        assert conf["build"]["frontendDist"] == r["url"] and conf["productName"] == "Star Hopper" and re.match(r"^[A-Za-z0-9.-]+$", conf["identifier"]) and re.match(r"^1\.0\.\d+$", conf["version"]) and conf["bundle"]["active"] is True, conf
+        assert 'tauri = { version = "2"' in t["desktop/src-tauri/Cargo.toml"].decode() and f'version = "{conf["version"]}"' in t["desktop/src-tauri/Cargo.toml"].decode() and "generate_context!" in t["desktop/src-tauri/src/main.rs"].decode()
+        assert png_size(t["desktop/app-icon.png"]) == (512, 512) and "Run anyway" in t["desktop/README.md"].decode() and "Open Anyway" in t["desktop/README.md"].decode(), "how to open an unsigned app"
+        bd = ok(api("/publish/real/build" + Q + "&what=desktop", token=camp)); assert bd["state"] == "ready" and bd["releases"] == f"https://github.com/{full}/releases" and "download" not in bd, bd
+        assert ok(api("/publish/real/build" + Q, token=camp))["download"].endswith("/releases/latest/download/app.apk"), "the Android link is untouched"
         assert api("/publish/real/wrapper", "POST", {"project": pid, "kind": "windows", "on": True}, token=camp)[0] == 400
+        # a message with a number in it travels as a sentence + its parts, so the sheet can say it in any language
+        Path(app, "index.html").write_text(GAME.replace("</body>", '<img src="art/missing.png"><script src="gone.js"></script></body>'))
+        lo = {c["id"]: c for c in ok(api("/publish/real" + Q, token=camp))["checks"]}["loads"]
+        assert not lo["ok"] and lo["whyKey"].startswith("The first page points at {n} files") and lo["vars"] == {"n": 2, "files": "art/missing.png, gone.js"} and "2 files" in lo["why"], lo
+        Path(app, "index.html").write_text(GAME)
 
         # ---------------- W + U: in a browser ----------------
         site = tempfile.mkdtemp(prefix="pubreal-web-", dir="/tmp"); z.extractall(site)
@@ -223,10 +255,12 @@ def main():
             d1 = cd.new_page(); watch(d1, "desktop"); d1.goto(BASE + "/?skipIntro=1"); d1.wait_for_function("window.TribePublish && window.TribeClient && (TribeClient.state().projects || []).length > 0", timeout=20000)
             st0 = d1.evaluate("TribePublish.status()"); assert st0["next"] in ("share", "app") and st0["dest"]["pages"]["url"] == r["url"] and "token" not in json.dumps(st0).lower().replace("signedin", ""), st0
             d1.evaluate("TribePublish.open()"); d1.wait_for_selector("#pb-real .pbr-row[data-dest='android']", timeout=15000)
-            assert [x.get_attribute("data-dest") for x in d1.locator("#pb-real .pbr-row").all()] == ["zip", "pages", "itch", "install", "android", "ios"]
+            assert [x.get_attribute("data-dest") for x in d1.locator("#pb-real .pbr-row").all()] == ["zip", "pages", "itch", "install", "android", "ios", "desktop"]
             assert d1.locator("#pb-real [data-kind='game'].is-on").count() == 1 and r["url"] in d1.locator("#pb-real [data-dest='pages']").text_content()
             d1.wait_for_selector("#pbr-build a, #pbr-build [data-openurl], #pbr-build code", timeout=15000)
             assert "releases/latest/download/app.apk" in d1.locator("#pb-real [data-dest='android']").inner_html(), "the Android download link"
+            d1.wait_for_selector("#pb-real [data-dest='android'] [data-qrbox]:not(.hidden) svg", timeout=5000)   # the code to scan is already showing
+            d1.wait_for_selector("#pbr-build-desktop [data-openurl]", timeout=15000); assert "/releases" in d1.locator("#pbr-build-desktop").inner_html() and "not signed" in d1.locator("#pb-real [data-dest='desktop']").text_content()
             assert "Mac" in d1.locator("#pb-real [data-dest='ios']").text_content(), "honest about the iPhone"
             txt = d1.locator("#pb-real").text_content()
             assert not re.search(r"\b(repo|repository|ship|sync|host|deploy(?! from a branch))\b", txt, re.I), re.findall(r"\b(repo|repository|ship|sync|host|deploy(?! from a branch))\b", txt, re.I)

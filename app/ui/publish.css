@@ -97,3 +97,4 @@
   .pbr-b .btn { min-height: 40px; }
 }
 .pbr-row.is-focus { border-color: var(--accent); }
+.pb-tg[hidden], .pb-sheet .btn[hidden] { display: none; }

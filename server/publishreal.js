@@ -12,7 +12,7 @@
 //   PUT  /api/publish/real                     { project, kind?, pwa?, color? }           -> { dest }
 //   GET  /api/publish/real/zip?project=&for=web|itch                                      -> the zip
 //   POST /api/publish/real/pages               { project, title, desc, name?, icons? }    -> { url, repo, pagesEnabled, settingsUrl, version }
-//   POST /api/publish/real/wrapper             { project, kind:'android'|'ios', on }      -> { dest }   (sent with the next Publish; done right away when a page is live)
+//   POST /api/publish/real/wrapper             { project, kind:'android'|'ios'|'desktop', on }      -> { dest }   (sent with the next Publish; done right away when a page is live)
 //   GET  /api/publish/real/build?project=      -> { state:'none'|'queued'|'building'|'ready'|'failed', download?, page? }   the Android build on GitHub
 // Test hook: TRIBE_GITHUB_API.
 'use strict';
@@ -110,7 +110,7 @@ module.exports = function publishReal({ P, W, base, publish, getMembers, broadca
     const d = destOf(pid);
     return { kind: d.kind || null, pwa: d.pwa !== false, color: d.color || null, version: d.version || 0,
       pages: d.pages ? { url: d.pages.url, repo: d.pages.repo, web: d.pages.web, at: d.pages.at, by: d.pages.by, byName: nameOf(d.pages.by), pagesEnabled: d.pages.pagesEnabled, settingsUrl: d.pages.settingsUrl, version: d.pages.version } : null,
-      android: d.android ? { on: !!d.android.on, pkg: d.android.pkg || null, sent: !!d.android.sent } : { on: false }, ios: d.ios ? { on: !!d.ios.on, sent: !!d.ios.sent } : { on: false } };
+      android: d.android ? { on: !!d.android.on, pkg: d.android.pkg || null, sent: !!d.android.sent } : { on: false }, ios: d.ios ? { on: !!d.ios.on, sent: !!d.ios.sent } : { on: false }, desktop: d.desktop ? { on: !!d.desktop.on, sent: !!d.desktop.sent } : { on: false } };
   }
   function status(pid, me) {
     const p = P.get(pid) || {}; let raw = null, problem = null;
@@ -154,7 +154,8 @@ module.exports = function publishReal({ P, W, base, publish, getMembers, broadca
     const wrap = [];
     if (d.android && d.android.on) wrap.push(...core.wrapperFiles('android', wm));
     if (d.ios && d.ios.on) wrap.push(...core.wrapperFiles('ios', wm));
-    for (const w of wrap) out.push({ path: w.path, b64: Buffer.from(w.text, 'utf8').toString('base64') });
+    if (d.desktop && d.desktop.on) wrap.push(...core.wrapperFiles('desktop', wm));
+    for (const w of wrap) out.push({ path: w.path, b64: w.b64 != null ? w.b64 : Buffer.from(w.text, 'utf8').toString('base64') });
     let r;
     try { r = await core.pagesPublish({ fetch: f, api: API(), token, name, title: meta.title, desc: meta.desc, files: out, project: pid, message: `Publish ${meta.title} (version ${meta.version}) with TribeCode`, wait: process.env.TRIBE_TEST ? 5 : undefined }); }
     catch (e) {
@@ -168,22 +169,25 @@ module.exports = function publishReal({ P, W, base, publish, getMembers, broadca
     d.pages = { url: r.url, repo: r.repo, web: r.web, login: r.login, at: new Date().toISOString(), by: me.id, pagesEnabled: r.pagesEnabled, settingsUrl: r.settingsUrl, version: meta.version, commit: r.commit };
     if (d.android && d.android.on) { d.android.pkg = wm.pkg; d.android.sent = true; d.android.url = url0; }
     if (d.ios && d.ios.on) d.ios.sent = true;
+    if (d.desktop && d.desktop.on) d.desktop.sent = true;
     save(); broadcast({ type: 'publish', project: pid, real: true });
     log(`published ${pid} to GitHub Pages ${r.repo} (${out.length} files)`);
     return { url: r.url, repo: r.repo, web: r.web, pagesEnabled: r.pagesEnabled, settingsUrl: r.settingsUrl, version: meta.version, created: r.created, dest: view(pid, me) };
   }
-  async function build(pid, me) {
-    const d = destOf(pid); if (!d.pages || !d.android || !d.android.on || !d.android.sent) return { state: 'none' };
+  async function build(pid, me, what) {
+    const desk = what === 'desktop', k = desk ? 'desktop' : 'android';
+    const d = destOf(pid); if (!d.pages || !d[k] || !d[k].on || !d[k].sent) return { state: 'none' };
     const token = tokenOf(me), repo = d.pages.repo, page = `https://github.com/${repo}/actions`;
-    const download = `https://github.com/${repo}/releases/latest/download/app.apk`, releases = `https://github.com/${repo}/releases/latest`;
-    if (!token) return { state: 'unknown', page, download, releases };
+    const releases = desk ? `https://github.com/${repo}/releases` : `https://github.com/${repo}/releases/latest`;
+    const base = desk ? { page, releases } : { page, releases, download: `https://github.com/${repo}/releases/latest/download/app.apk` };
+    if (!token) return { state: 'unknown', ...base };
     try {
-      const r = await f(`${API()}/repos/${repo}/actions/workflows/tribecode-android.yml/runs?per_page=1`, { headers: { Authorization: 'Bearer ' + token, Accept: 'application/vnd.github+json', 'User-Agent': 'TribeCode' } });
+      const r = await f(`${API()}/repos/${repo}/actions/workflows/tribecode-${k}.yml/runs?per_page=1`, { headers: { Authorization: 'Bearer ' + token, Accept: 'application/vnd.github+json', 'User-Agent': 'TribeCode' } });
       const j = await r.json().catch(() => ({})), run = (j.workflow_runs || [])[0];
-      if (!r.ok || !run) return { state: r.ok ? 'queued' : 'unknown', page, download, releases };
+      if (!r.ok || !run) return { state: r.ok ? 'queued' : 'unknown', ...base };
       const state = run.status !== 'completed' ? (run.status === 'queued' ? 'queued' : 'building') : run.conclusion === 'success' ? 'ready' : 'failed';
-      return { state, page: run.html_url || page, download, releases };
-    } catch { return { state: 'unknown', page, download, releases }; }
+      return { state, ...base, page: run.html_url || page };
+    } catch { return { state: 'unknown', ...base }; }
   }
 
   async function route(req, res, { m, c, me, url, readBody, send, fail }) {
@@ -211,13 +215,13 @@ module.exports = function publishReal({ P, W, base, publish, getMembers, broadca
       if (m === 'POST' && c === 'wrapper') {
         const body = await readBody(req, 4096).catch(() => ({})); const pid = pidOf(body.project);
         if (!canSend(me, pid)) return fail(res, 403, 'you can\'t change how this project is published');
-        if (!['android', 'ios'].includes(body.kind)) return fail(res, 400, 'kind is android or ios');
+        if (!['android', 'ios', 'desktop'].includes(body.kind)) return fail(res, 400, 'kind is android, ios or desktop');
         const d = destOf(pid); d[body.kind] = { ...(d[body.kind] || {}), on: body.on !== false }; if (!d[body.kind].on) d[body.kind].sent = false;
         save();
         if (d.pages && d[body.kind].on) { const r = await pages(pid, me, {}); return send(res, 200, { ...r, sent: true }); }
         return send(res, 200, { dest: view(pid, me), sent: false });
       }
-      if (m === 'GET' && c === 'build') return send(res, 200, await build(pidOf(url.searchParams.get('project')), me));
+      if (m === 'GET' && c === 'build') return send(res, 200, await build(pidOf(url.searchParams.get('project')), me, url.searchParams.get('what')));
     } catch (e) {
       if (e.findings) return send(res, e.status || 409, { error: e.message, findings: e.findings });
       return send(res, e.status || 500, { error: e.message, needGithub: !!e.needGithub, taken: !!e.taken });

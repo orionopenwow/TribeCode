@@ -68,8 +68,8 @@ class GH(http.server.BaseHTTPRequestHandler):
             if method == "GET": return self._send(200, {"html_url": url}) if r["pages"] else self._send(404, {"message": "Not Found"})
             if not STATE["pages_allowed"]: return self._send(403, {"message": "Resource not accessible by integration"})
             r["pages"] = body.get("source"); return self._send(201, {"html_url": url})
-        if rest == "/actions/workflows/tribecode-android.yml/runs":
-            if ".github/workflows/tribecode-android.yml" not in tree_of(full): return self._send(404, {"message": "Not Found"})
+        if rest in ("/actions/workflows/tribecode-android.yml/runs", "/actions/workflows/tribecode-desktop.yml/runs"):
+            if ".github/workflows/" + rest.split("/")[3] not in tree_of(full): return self._send(404, {"message": "Not Found"})
             run = {"status": "completed", "conclusion": STATE["runs"], "html_url": f"https://github.com/{full}/actions/runs/1"} if STATE["runs"] in ("success", "failure") else {"status": "in_progress", "conclusion": None, "html_url": f"https://github.com/{full}/actions/runs/1"}
             return self._send(200, {"total_count": 1, "workflow_runs": [run]})
         return self._send(404, {"message": "Not Found"})

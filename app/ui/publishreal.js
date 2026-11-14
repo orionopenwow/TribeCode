@@ -8,6 +8,7 @@
   'use strict';
   const C = window.TribeClient; if (!C) return;
   const T = s => (window.TribeI18n && window.TribeI18n.t ? window.TribeI18n.t(s, s) : s);
+  const fill = (t, v) => String(t).replace(/\{(\w+)\}/g, (_, k) => (v && v[k] != null ? v[k] : ''));
   const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const toast = m => window.TribeApp && window.TribeApp.toast && window.TribeApp.toast(m);
   const ico = (n, s) => (window.TribeIcons ? window.TribeIcons.svg(n, s || 18) : '');
@@ -52,7 +53,7 @@
   function draw(host, pid, s, form) {
     const d = s.dest || {}, pg = d.pages, gh = s.github || {}, can = s.canSend, game = s.kind === 'game', site = s.kind === 'site';
     const bad = (s.checks || []).filter(c => !c.ok && !c.auto), auto = (s.checks || []).filter(c => c.auto);
-    const checks = !s.checks.length ? '' : `<div class="pbr-checks" id="pbr-checks"><p class="pbr-checks__h">${bad.length ? esc(T('Before it goes out')) : esc(T('Ready to go'))}</p><ul>${s.checks.map(c => `<li class="${c.ok ? 'is-ok' : c.auto ? 'is-auto' : 'is-bad'}">${ico(c.ok || c.auto ? 'check' : 'x', 14)}<span><b>${esc(T(c.label))}</b>${c.why ? `<small>${esc(T(c.why))}</small>` : ''}</span></li>`).join('')}</ul>${auto.length ? `<p class="faint pbr-auto">${esc(T('The ticked-in-grey ones are filled in for you when you publish.'))}</p>` : ''}</div>`;
+    const checks = !s.checks.length ? '' : `<div class="pbr-checks" id="pbr-checks"><p class="pbr-checks__h">${bad.length ? esc(T('Before it goes out')) : esc(T('Ready to go'))}</p><ul>${s.checks.map(c => `<li class="${c.ok ? 'is-ok' : c.auto ? 'is-auto' : 'is-bad'}">${ico(c.ok || c.auto ? 'check' : 'x', 14)}<span><b>${esc(T(c.label))}</b>${c.why ? `<small>${esc(c.whyKey ? fill(T(c.whyKey), c.vars) : T(c.why))}</small>` : ''}</span></li>`).join('')}</ul>${auto.length ? `<p class="faint pbr-auto">${esc(T('The ticked-in-grey ones are filled in for you when you publish.'))}</p>` : ''}</div>`;
     const kinds = `<div class="pbr-kind" role="group" aria-label="${esc(T('What is it?'))}"><span class="eyebrow">${esc(T('What is it?'))}</span>${KINDS.map(([k, l, i]) => `<button type="button" class="chip${s.kind === k ? ' is-on' : ''}" data-kind="${k}" aria-pressed="${s.kind === k}" ${can ? '' : 'disabled'}>${ico(i, 14)} ${esc(T(l))}</button>`).join('')}</div>`;
 
     const rows = [];
@@ -64,7 +65,7 @@
         : `<label class="pb-l pbr-name">${esc(T('Its name in the link'))}<input class="input" id="pbr-name" maxlength="40" value="${esc(s.slug)}" autocomplete="off" spellcheck="false"></label><button class="btn primary" type="button" data-pages>${esc(T('Publish to GitHub'))}</button>`;
     const ghBody = ghLink + ghAct;
     rows.push(row('pages', 'github', 'A link that stays up', esc(T('A live page on GitHub, free. It stays up when your tribe is offline, and updates when you publish again.')) + (gh.login ? ` <span class="faint">@${esc(gh.login)}</span>` : ''), ghBody, pg ? 'Live' : ''));
-    if (game) rows.push(row('itch', 'gift', 'itch.io', esc(T('The place people find small games. Free to list.')), s.itch && !s.itch.ok ? `<p class="pbr-warn">${esc(T(s.itch.problems[0]))}</p>`
+    if (game) rows.push(row('itch', 'gift', 'itch.io', esc(T('The place people find small games. Free to list.')), s.itch && !s.itch.ok ? `<p class="pbr-warn">${esc(s.itch.keys && s.itch.keys[0] ? fill(T(s.itch.keys[0].key), s.itch.keys[0].vars) : T(s.itch.problems[0]))}</p>`
       : `<button class="btn" type="button" data-zip="itch">${esc(T('Get the itch.io zip'))}</button><ol class="pbr-steps"><li>${esc(T('On itch.io, choose Upload new project.'))}</li><li>${esc(T('Kind of project: HTML. Upload the zip and tick "This file will be played in the browser".'))}</li><li>${esc(T('Save and view the page. Set it to Public when you are happy.'))}</li></ol>`));
     if (!site) {
       rows.push(row('install', 'phone', 'Install on phones', esc(T('People open the link and add it to their home screen. It opens full screen and works with no connection.')),
@@ -78,24 +79,31 @@
       rows.push(row('ios', 'phone', 'iPhone app', esc(T('Apple needs a Mac and a paid Apple developer account to sign an app. There is no way round that.')),
         `<small class="faint">${esc(T('On iPhone, Install on phones already works today: open the link in Safari, Share, Add to Home Screen.'))}</small>${!pg ? '' : io.on ? `<p class="pbr-ok">${ico('check', 14)} ${esc(T('The prepared build is in your GitHub project. It runs once you add your Apple signing secrets (the file lists them).'))}</p><button class="linkish" type="button" data-wrap="ios" data-on="0">${esc(T('Remove it'))}</button>` : `<button class="btn" type="button" data-wrap="ios" data-on="1">${esc(T('Add the prepared iPhone build'))}</button>`}`));
     }
-    host.innerHTML = `<div class="pbr" id="pbr">${kinds}${checks}<p class="eyebrow pbr-h">${esc(T('Where it goes'))}</p><ul class="pbr-list">${rows.join('')}</ul>
-      <p class="faint pbr-foot">${esc(T('A computer app (Windows, Mac, Linux) is next on the list; for now the link opens in any browser there.'))}</p></div>`;
+    const dk = d.desktop || {};
+    rows.push(row('desktop', 'monitor', 'Computer app', esc(T('Installers for Windows, Mac and Linux. A small window that opens your page. GitHub builds them in your account.')),
+      !pg ? `<small class="faint">${esc(T('First give it a link that stays up (above).'))}</small>`
+        : !can ? ''
+          : dk.on ? `<div id="pbr-build-desktop" class="pbr-build"><span class="pb-spin" aria-hidden="true"></span> ${esc(T('Checking the build…'))}</div><details class="pbr-more"><summary>${esc(T('Opening it the first time'))}</summary><p>${esc(T('These builds are not signed, so the computer asks before it runs them. On Windows choose More info, then Run anyway. On a Mac open it once, then choose Open Anyway in System Settings, Privacy & Security. Removing the warning needs your own certificates.'))}</p><p>${esc(T('The Mac build is for Apple chips. It needs a connection, and always shows the newest version of your page.'))}</p></details><button class="linkish" type="button" data-wrap="desktop" data-on="0">${esc(T('Stop making the computer app'))}</button>`
+            : `<button class="btn" type="button" data-wrap="desktop" data-on="1">${esc(T('Make the computer app'))}</button>`, dk.on ? 'On' : ''));
+    host.innerHTML = `<div class="pbr" id="pbr">${kinds}${checks}<p class="eyebrow pbr-h">${esc(T('Where it goes'))}</p><ul class="pbr-list">${rows.join('')}</ul></div>`;
     wire(host, pid, s, form);
-    if ((s.dest.android || {}).on && pg) pollBuild(host, pid);
+    if ((s.dest.android || {}).on && pg) pollBuild(host, pid, 'android');
+    if (dk.on && pg) pollBuild(host, pid, 'desktop');
   }
-  let pollT = null;
-  async function pollBuild(host, pid, n = 0) {
-    clearTimeout(pollT);
-    const box = host.querySelector('#pbr-build'); if (!box || !document.body.contains(box)) return;
-    let b; try { b = await C.api('/publish/real/build?project=' + encodeURIComponent(pid)); } catch { b = { state: 'unknown' }; }
-    const dl = b.download ? `<div class="pbr-dl">${linkbox('apk', b.download)}</div>` : '';
+  const pollT = {};
+  async function pollBuild(host, pid, what = 'android', n = 0) {
+    clearTimeout(pollT[what]);
+    const desk = what === 'desktop', box = host.querySelector(desk ? '#pbr-build-desktop' : '#pbr-build'); if (!box || !document.body.contains(box)) return;
+    let b; try { b = await C.api('/publish/real/build?project=' + encodeURIComponent(pid) + '&what=' + what); } catch { b = { state: 'unknown' }; }
+    const dl = b.download ? `<div class="pbr-dl">${linkbox('apk', b.download)}</div>` : b.releases && desk ? `<div class="pbr-dl">${linkbox('desk', b.releases)}</div>` : '';
     const page = b.page ? ` <a href="${esc(b.page)}" target="_blank" rel="noopener">${esc(T('See it on GitHub'))}</a>` : '';
-    box.innerHTML = b.state === 'ready' ? `<p class="pbr-ok">${ico('check', 14)} ${esc(T('The app is built. Open this on an Android phone to install it.'))}</p>${dl}`
+    box.innerHTML = b.state === 'ready' ? `<p class="pbr-ok">${ico('check', 14)} ${esc(T(desk ? 'The installers are built. Pick the one for your computer.' : 'The app is built. Scan this with an Android phone, or open the link on it, to install.'))}</p>${dl}`
       : b.state === 'failed' ? `<p class="pbr-warn">${esc(T('The build did not finish.'))}${page}</p>`
-        : b.state === 'building' || b.state === 'queued' ? `<span class="pb-spin" aria-hidden="true"></span> ${esc(T('GitHub is building the app. It takes a few minutes.'))}${page}`
+        : b.state === 'building' || b.state === 'queued' ? `<span class="pb-spin" aria-hidden="true"></span> ${esc(T(desk ? 'GitHub is building the installers. It takes about ten minutes.' : 'GitHub is building the app. It takes a few minutes.'))}${page}`
           : `<p class="faint">${esc(T('The build runs on GitHub.'))}${page}</p>${dl}`;
     wireLinks(box);
-    if ((b.state === 'building' || b.state === 'queued') && n < 40) pollT = setTimeout(() => pollBuild(host, pid, n + 1), 15000);
+    if (b.state === 'ready' && !desk) { const q = box.querySelector('[data-qr]'); if (q) q.click(); }   // the phone is the one that needs it: show the code straight away
+    if ((b.state === 'building' || b.state === 'queued') && n < 40) pollT[what] = setTimeout(() => pollBuild(host, pid, what, n + 1), 15000);
   }
   function wireLinks(root) {
     root.querySelectorAll('[data-copy]').forEach(b => b.onclick = async () => { try { await navigator.clipboard.writeText(b.dataset.copy); b.textContent = T('Copied'); setTimeout(() => { b.textContent = T('Copy'); }, 1500); } catch { prompt(T('Copy this link'), b.dataset.copy); } });
@@ -123,6 +131,11 @@
     });
     const signin = host.querySelector('[data-gh-signin]');
     if (signin) signin.onclick = () => {
+      if (s.phone && window.TribeGhPhone) {   // a phone alone: the token sheet from ghphone.js, then back to this row
+        const GP = window.TribeGhPhone; GP.open(); let n = 0;
+        const t = setInterval(() => { if (GP.getToken()) { clearInterval(t); delete cache[pid]; if (window.TribePublish) window.TribePublish.open(pid, 'pages'); } else if (++n > 240) clearInterval(t); }, 500);
+        return;
+      }
       const box = signin.parentElement; if (!window.TribeGitHub || !window.TribeGitHub.mount) { location.hash = '#/settings/github'; return; }
       box.innerHTML = '<div class="pbr-gh" id="pbr-gh"></div>'; window.TribeGitHub.mount(box.querySelector('#pbr-gh'));
     };
@@ -139,12 +152,12 @@
     });
     host.querySelectorAll('[data-wrap]').forEach(b => b.onclick = async () => {
       busy(b, 'Working…');
-      try { const r = await C.api('/publish/real/wrapper', { method: 'POST', body: { project: pid, kind: b.dataset.wrap, on: b.dataset.on === '1' } }); if (b.dataset.on === '1') toast(T(b.dataset.wrap === 'android' ? 'GitHub is building your Android app' : 'Added to your GitHub project')); again(); void r; }
+      try { const r = await C.api('/publish/real/wrapper', { method: 'POST', body: { project: pid, kind: b.dataset.wrap, on: b.dataset.on === '1' } }); if (b.dataset.on === '1') toast(T(b.dataset.wrap === 'android' ? 'GitHub is building your Android app' : b.dataset.wrap === 'desktop' ? 'GitHub is building your computer app' : 'Added to your GitHub project')); again(); void r; }
       catch (e) { idle(b); toast(e.message); }
     });
   }
   C.on && C.on('ws', m => { if (m && m.type === 'publish' && m.project) delete cache[m.project]; if (m && m.type === 'github') { for (const k of Object.keys(cache)) delete cache[k]; const h = document.getElementById('pb-real'); if (h && h.dataset.pid && document.body.contains(h)) mount(h, h.dataset.pid, h._form); } });
   C.on && C.on('project', () => { for (const k of Object.keys(cache)) delete cache[k]; });
 
-  window.TribePublishReal = { mount, status, NEXT };
+  window.TribePublishReal = { mount, status, NEXT, drawIcon };
 })();
