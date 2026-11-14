@@ -28,6 +28,43 @@ Caveats, read before quoting a number:
 | open writing (needs a writing model) | 0/4 (0%) | 0/4 (0%) | 0/4 (0%) | 0/4 (0%) |
 | **All scored rows** | **53/117 (45%)** | **51/117 (44%)** | **107/117 (91%)** | **107/117 (91%)** |
 
+## Held-out batch 8 (written after the upgrades, scored once, never tuned against)
+
+The fairer “after” number. Same shapes, new phrasings and topics.
+
+| Skill | Upgrades off · no model | No model | Fixture model |
+|---|---|---|---|
+| commands | 15/26 (58%) | 16/26 (62%) | 16/26 (62%) |
+| follow-ups | 1/10 (10%) | 10/10 (100%) | 10/10 (100%) |
+| did-you-mean | 5/10 (50%) | 5/10 (50%) | 5/10 (50%) |
+| help answers | 6/8 (75%) | 6/8 (75%) | 7/8 (88%) |
+| search by meaning | 2/10 (20%) | 3/10 (30%) | 3/10 (30%) |
+| duplicate tasks | 2/5 (40%) | 3/5 (60%) | 2/5 (40%) |
+| summaries | 0/3 (0%) | 1/3 (33%) | 1/3 (33%) |
+| copy / tone | 5/6 (83%) | 5/6 (83%) | 5/6 (83%) |
+| generation | 2/9 (22%) | 8/9 (89%) | 8/9 (89%) |
+| open writing (needs a writing model) | 0/3 (0%) | 0/3 (0%) | 0/3 (0%) |
+| **All scored rows** | **38/87 (44%)** | **57/87 (66%)** | **57/87 (66%)** |
+
+“Upgrades off” runs the same batch with flintconv.js, flintplan.js and flintsem.js switched off (the tone word lists cannot be switched off, so that row is the same).
+
+Examples of what still fails on batch 8:
+
+- commands: “the banner task can go to review” → got nothing
+- commands: “who has nothing to do” → got help.kb
+- did-you-mean: “clear that chore off the board” → chips: flint.clear, nav.tasks, task.unassign
+- did-you-mean: “broadcast that the cake is here” → chips: host.start, site.podcast, people.where
+- help answers: “how do i keep the server running at home” → answered from docs/guide/06-phones.md
+- help answers: “how do i sell my skills to other tribes” → answered from docs/ASSETS.md
+- search by meaning: “where could we hold it” → found d3, wanted d1
+- search by meaning: “dead url” → found v1, wanted t1
+- duplicate tasks: “Pick up trophies” → no warning
+- duplicate tasks: “Send thank you letters” → no warning
+- summaries: “The choir concert is on Sunday 7 Decembe…” → lost “Ana”
+- summaries: “The garden club has 38 members. Dues are…” → lost “twelve dollars”
+- copy / tone: “friendly: Please be advised that the office will be cl” → still has “Please be advised”
+- generation: “a tracker sheet for volunteer hours” → got nothing
+
 ## By editor (commands)
 
 | Editor | Main eval, no model | Batch 7 commands, no model |

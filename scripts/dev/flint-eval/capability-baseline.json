@@ -199,5 +199,199 @@
     4
    ]
   }
+ },
+ "h8": {
+  "none": {
+   "editor": {
+    "Anywhere (tasks, chat, calendar, settings)": [
+     533,
+     547
+    ],
+    "Website designer": [
+     618,
+     625
+    ],
+    "Preview": [
+     27,
+     27
+    ],
+    "Design canvas": [
+     156,
+     156
+    ],
+    "Sheets": [
+     30,
+     30
+    ],
+    "Docs": [
+     18,
+     18
+    ],
+    "Slides": [
+     4,
+     4
+    ]
+   },
+   "held": {
+    "Anywhere (tasks, chat, calendar, settings)": [
+     7,
+     15
+    ],
+    "Website designer": [
+     4,
+     5
+    ],
+    "Design canvas": [
+     2,
+     2
+    ],
+    "Docs": [
+     1,
+     2
+    ],
+    "Sheets": [
+     1,
+     2
+    ]
+   },
+   "skill": {
+    "commands": [
+     15,
+     26
+    ],
+    "follow-ups": [
+     1,
+     10
+    ],
+    "did-you-mean": [
+     5,
+     10
+    ],
+    "help answers": [
+     6,
+     8
+    ],
+    "search by meaning": [
+     2,
+     10
+    ],
+    "duplicate tasks": [
+     2,
+     5
+    ],
+    "summaries": [
+     0,
+     3
+    ],
+    "copy / tone": [
+     5,
+     6
+    ],
+    "generation": [
+     2,
+     9
+    ],
+    "open writing (needs a writing model)": [
+     0,
+     3
+    ]
+   }
+  },
+  "fixture": {
+   "editor": {
+    "Anywhere (tasks, chat, calendar, settings)": [
+     533,
+     547
+    ],
+    "Website designer": [
+     618,
+     625
+    ],
+    "Preview": [
+     27,
+     27
+    ],
+    "Design canvas": [
+     156,
+     156
+    ],
+    "Sheets": [
+     30,
+     30
+    ],
+    "Docs": [
+     18,
+     18
+    ],
+    "Slides": [
+     4,
+     4
+    ]
+   },
+   "held": {
+    "Anywhere (tasks, chat, calendar, settings)": [
+     7,
+     15
+    ],
+    "Website designer": [
+     4,
+     5
+    ],
+    "Design canvas": [
+     2,
+     2
+    ],
+    "Docs": [
+     1,
+     2
+    ],
+    "Sheets": [
+     1,
+     2
+    ]
+   },
+   "skill": {
+    "commands": [
+     15,
+     26
+    ],
+    "follow-ups": [
+     1,
+     10
+    ],
+    "did-you-mean": [
+     5,
+     10
+    ],
+    "help answers": [
+     7,
+     8
+    ],
+    "search by meaning": [
+     3,
+     10
+    ],
+    "duplicate tasks": [
+     2,
+     5
+    ],
+    "summaries": [
+     0,
+     3
+    ],
+    "copy / tone": [
+     5,
+     6
+    ],
+    "generation": [
+     2,
+     9
+    ],
+    "open writing (needs a writing model)": [
+     0,
+     3
+    ]
+   }
+  }
  }
 }

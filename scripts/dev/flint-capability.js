@@ -12,7 +12,7 @@
 const fs = require('fs'), path = require('path');
 const ROOT = path.join(__dirname, '..', '..'), UI = path.join(ROOT, 'app', 'ui');
 const N = require(path.join(UI, 'flintnlu.js')), E = require(path.join(UI, 'flintembed.js')), FM = require(path.join(UI, 'flintmax.js')), LD = require(path.join(UI, 'localdoc.js'));
-const H7 = require('./flint-eval/held7.js'), EVAL = require(path.join(ROOT, 'app', 'test', 'flint_eval.json'));
+const H7 = require('./flint-eval/held7.js'), H8 = require('./flint-eval/held8.js'), EVAL = require(path.join(ROOT, 'app', 'test', 'flint_eval.json'));
 const BASELINE = process.argv.includes('--baseline'), JSON_ONLY = process.argv.includes('--json');
 const opt = f => { if (BASELINE) return null; try { return require(path.join(UI, f)); } catch { return null; } };
 const CONV = opt('flintconv.js'), PLAN = opt('flintplan.js'), SEMX = opt('flintsem.js');   // the upgrades (absent in the baseline)
@@ -49,7 +49,7 @@ const parse = (t, ctx) => (CONV ? CONV.create().parse(t, ctx, N) : N.parse(t, ct
 const tally = () => ({ ok: 0, n: 0, fails: [] });
 const mark = (t, why, label) => { t.n++; if (!why) t.ok++; else t.fails.push(`“${label}” → ${why}`); };
 
-function run(withModel) {
+function run(withModel, H7) {
   N.setSemantic(withModel ? MODEL : null);
   const R = { editor: {}, held: {}, skill: {} };
   // ---- by editor: the main eval, then held-out batch 7's commands ----
@@ -130,9 +130,11 @@ function run(withModel) {
 }
 
 const flat = R => { const o = {}; for (const g of ['editor', 'held', 'skill']) { o[g] = {}; for (const [k, t] of Object.entries(R[g])) o[g][k] = [t.ok, t.n]; } return o; };
-const none = run(false), fix = run(true), now = { none: flat(none), fixture: flat(fix) };
+const none = run(false, H7), fix = run(true, H7), now = { none: flat(none), fixture: flat(fix) };
+const none8 = run(false, H8), fix8 = run(true, H8), now8 = { none: flat(none8), fixture: flat(fix8) };
 const BF = path.join(__dirname, 'flint-eval', 'capability-baseline.json');
-if (BASELINE) { fs.writeFileSync(BF, JSON.stringify({ at: new Date().toISOString().slice(0, 10), ...now }, null, 1) + '\n'); console.log('saved the baseline'); }
+if (BASELINE) { let old = null; try { old = JSON.parse(fs.readFileSync(BF, 'utf8')); } catch {}   // batch 7's first run is kept as it was scored; batch 8 is added with the upgrades switched off
+  fs.writeFileSync(BF, JSON.stringify({ ...(old && old.none ? old : { at: new Date().toISOString().slice(0, 10), ...now }), h8: now8 }, null, 1) + '\n'); console.log('saved the baseline'); }
 if (JSON_ONLY) { console.log(JSON.stringify(now)); process.exit(0); }
 let before = null; try { before = JSON.parse(fs.readFileSync(BF, 'utf8')); } catch {}
 
@@ -154,6 +156,14 @@ L.push('## By skill type (held-out batch 7)', '');
 L.push(before ? '| Skill | Before · no model | Before · fixture model | After · no model | After · fixture model |' : '| Skill | No model | Fixture model |', before ? '|---|---|---|---|---|' : '|---|---|---|');
 for (const k of SK) L.push(before ? `| ${k} | ${pc(before.none.skill[k] || [0, 0])} | ${pc(before.fixture.skill[k] || [0, 0])} | ${pc(now.none.skill[k])} | ${pc(now.fixture.skill[k])} |` : `| ${k} | ${pc(now.none.skill[k])} | ${pc(now.fixture.skill[k])} |`);
 L.push(before ? `| **All scored rows** | **${pc(h7(before.none))}** | **${pc(h7(before.fixture))}** | **${pc(h7(now.none))}** | **${pc(h7(now.fixture))}** |` : `| **All scored rows** | **${pc(h7(now.none))}** | **${pc(h7(now.fixture))}** |`, '');
+if (!BASELINE && CONV) {
+  L.push('## Held-out batch 8 (written after the upgrades, scored once, never tuned against)', '', 'The fairer “after” number. Same shapes, new phrasings and topics.', '', '| Skill | Upgrades off · no model | No model | Fixture model |', '|---|---|---|---|');
+  const b8 = (before && before.h8) || null;
+  for (const k of SK) L.push(`| ${k} | ${b8 ? pc(b8.none.skill[k]) : '–'} | ${pc(now8.none.skill[k])} | ${pc(now8.fixture.skill[k])} |`);
+  L.push(`| **All scored rows** | **${b8 ? pc(h7(b8.none)) : '–'}** | **${pc(h7(now8.none))}** | **${pc(h7(now8.fixture))}** |`, '', '“Upgrades off” runs the same batch with flintconv.js, flintplan.js and flintsem.js switched off (the tone word lists cannot be switched off, so that row is the same).', '', 'Examples of what still fails on batch 8:', '');
+  for (const k of scored) none8.skill[k].fails.slice(0, 2).forEach(f => L.push(`- ${k}: ${f}`));
+  L.push('');
+}
 L.push('## By editor (commands)', '', '| Editor | Main eval, no model | Batch 7 commands, no model |', '|---|---|---|');
 for (const k of Object.keys(now.none.editor)) L.push(`| ${k} | ${pc(now.none.editor[k])} | ${pc(now.none.held[k] || [0, 0])} |`);
 L.push(`| **All** | **${pc(sumOf(now.none.editor))}** | **${pc(sumOf(now.none.held))}** |`, '', 'The local helper never decides a command, so these are the same with the fixture model.', '');
