@@ -68,6 +68,7 @@
       ${window.TribeCapture ? item('capture', 'i-mic', 'Capture to notes', `<span class="pf-sw ${capOn ? 'on' : ''}"><i></i></span>`) : ''}
       ${item('settings', 'i-gear', 'Settings')}
       ${window.TribeGuide ? item('guide', 'i-help', 'Guide') : ''}
+      ${window.TribeHelp && window.TribeHelp.website ? item('website', 'i-net', 'TribeCode website') : ''}
       ${window.TribeUpdater ? item('update', 'i-refresh', 'Check for updates') : ''}
       ${window.TribeAccounts ? window.TribeAccounts.menuHtml() : ''}
       ${window.TribeUi && window.TribeUi.desktop() ? (window.TribeUi.onWorking() ? item('installed', 'i-home', 'Back to the installed version') : item('working', 'i-zap', 'Open the Working version (newest)')) : ''}`;
@@ -103,6 +104,7 @@
     else if (a === 'invite') click('#tour-invite');
     else if (a === 'notify') (window.TribeNotify.settingsTab || window.TribeNotify.openSettings || window.TribeNotify.openInbox)();
     else if (a === 'guide') window.TribeGuide.open();
+    else if (a === 'website') window.TribeHelp.website();
     else if (a === 'settings') window.TribeSettings ? window.TribeSettings.open() : click('#settings-btn');
     else if (a === 'working') window.TribeUi.useUi('working');
     else if (a === 'installed') window.TribeUi.useUi('installed');

@@ -174,8 +174,9 @@ def main():
             tree = ok(api("/code/tree", token=camp, project=kp))
             assert "index.html" in json.dumps(tree), "the starter wrote index.html"
             assert "kombucha" in ok(api("/vision", token=camp, project=kp))["text"].lower(), "the description became the vision"
-            msgs = ok(api("/agents/channel", token=camp, project=kp))["messages"]
-            assert any("kombucha" in (m.get("text") or "") for m in msgs), "the brief reached the AI helpers"
+            msgs = ok(api("/ask/mine", token=camp, project=kp))["requests"]   # v0.37: privately to Camp's own agent, not into #agents
+            assert any("kombucha" in (m.get("text") or "") for m in msgs), "the brief reached Camp's agent"
+            assert not any("kombucha" in (m.get("text") or "") and "index.html at the top folder" in (m.get("text") or "") for m in ok(api("/chat/general", token=camp, project=kp))["messages"] + ok(api("/agents/channel", token=camp, project=kp))["messages"]), "the brief must not post in a channel"
 
             # the Flint panel is open beside the preview
             host.wait_for_selector("#pvf.is-open #flm-in-preview", timeout=5000)
@@ -226,8 +227,11 @@ def main():
             assert "1.56" in v, f"the panel's change reached the preview: {v}"
             # a build request goes to the AI helpers
             host.click("#pvf .flm-chips .fl-chip:text-is('Make it dark')")
-            host.wait_for_function("[...document.querySelectorAll('#pvf .fl-thread .fl-ev-ask')].some(li => /AI helpers/.test(li.innerText))", timeout=6000)
-            assert any("Make it dark" in (m.get("text") or "") for m in ok(api("/agents/channel", token=camp, project=kp))["messages"]), "the ask reached #agents"
+            host.wait_for_function("[...document.querySelectorAll('#pvf .fl-thread .fl-ev-ask')].some(li => /Sent to your/.test(li.innerText))", timeout=6000)
+            assert any("Make it dark" in (m.get("text") or "") for m in ok(api("/ask/mine", token=camp, project=kp))["requests"]), "the ask reached Camp's agent, privately"
+            # its private reply shows in the feed too
+            mcp(atok, kp, "reply", {"text": "Private reply: starting on the dark theme"})
+            host.wait_for_function("[...document.querySelectorAll('#pvf .fl-thread .fl-ev-agent')].some(li => /Private reply/.test(li.innerText))", timeout=6000)
             # the agent answers in #agents → a feed line
             mcp(atok, kp, "agents_post", {"text": "Dark theme: on it, editing style.css"})
             host.wait_for_function("[...document.querySelectorAll('#pvf .fl-thread .fl-ev-agent')].some(li => /Dark theme/.test(li.innerText))", timeout=6000)

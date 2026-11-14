@@ -192,12 +192,13 @@ def main():
             assert host.evaluate("TribePreviewFlint.notes().length") == 2
             host.click("#pvf-queue [data-pvf='applyall']")
             feed_has(host, "Made it bold")
-            feed_has(host, "Sent to your AI helpers")
+            feed_has(host, "Sent to your|waits for the tribe")   # v0.37: privately to your own agent, or waiting for the tribe's agents
             assert host.locator("#pvf-queue.hidden").count() == 1
 
             def reached(word):
-                msgs = (api("/agents/channel", token=camp, project=gp)[1].get("messages") or []) + (api("/chat/general", token=camp, project=gp)[1].get("messages") or [])
-                return next((m.get("text") for m in msgs if word in (m.get("text") or "")), None)
+                msgs = (api("/ask/mine", token=camp, project=gp)[1].get("requests") or []) + (api("/coord/asks", token=camp, project=gp)[1].get("asks") or []) + (api("/chat/general", token=camp, project=gp)[1].get("messages") or [])
+                full = lambda m: " ".join(str(m.get(k) or "") for k in ("text", "title", "context"))
+                return next((full(m) for m in msgs if word in full(m)), None)
             for _ in range(30):
                 if reached("score counter"): break
                 time.sleep(0.2)
@@ -216,7 +217,7 @@ def main():
             ta.fill(ta.input_value() + "\nTest it with two players")
             shot(host, "plan")
             host.click("#pvf .fl-thread [data-pvf='runplan']")
-            feed_has(host, "Sent to your AI helpers")
+            feed_has(host, "Sent to your|waits for the tribe")
             for _ in range(30):
                 if reached("multiplayer"): break
                 time.sleep(0.2)

@@ -156,6 +156,7 @@ def main():
         artm = [m["text"] for m in ok(api(f"/chat/{art['id']}?limit=50", token=orion))["messages"]]
         assert "Art only: new grass tiles" not in gen and "General only: lock the jump height" in gen, gen
         assert artm == ["Art only: new grass tiles"], artm
+        ok(api(f"/chat/{art['id']}", "POST", {"text": "@agents can one of you export the sprites?"}, token=orion))   # v0.37: an agent answers in a channel when someone asked it there
         r = mcp(atok, "post_chat", {"text": "Agent here: sprites exported", "channel": "art-sprites"})
         assert not r["result"].get("isError"), r
         assert "Agent here: sprites exported" in [m["text"] for m in ok(api(f"/chat/{art['id']}?limit=50", token=orion))["messages"]]

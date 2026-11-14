@@ -611,3 +611,8 @@ body.at-home .main > #view-hub:has(.hub-files), body.at-home .main > #view-hub:h
 .hmt-pj { flex: none; max-width: 30%; height: 22px; padding: 0 8px; border: 1px solid var(--edge); border-radius: 999px; font-size: 12px; line-height: 20px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 #view-work > .hub-crumb, #view-work .hub-mytasks { max-width: 1080px; margin-left: auto; margin-right: auto; }
 #view-agents-hub > .hub-crumb { max-width: 1080px; margin: 0 auto 8px; }
+
+/* Home's quiet footer: one line back to the main website (help.js website) */
+.hub-foot { display: flex; justify-content: center; padding: 18px 0 6px; font-size: 13px; color: var(--faint); }
+.hub-foot .linkish { display: inline-flex; align-items: center; gap: 6px; color: var(--muted); }
+.hub-foot .linkish .i { width: 13px; height: 13px; opacity: .8; }

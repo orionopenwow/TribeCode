@@ -130,8 +130,18 @@
       return `<button class="rx ${ids.includes(me()) ? 'on' : ''} ${pop} ${faces ? 'has-f' : ''}" data-rx="${e}" title="${esc(who(ids))} reacted ${e}" aria-label="${e} ${ids.length}, ${esc(who(ids))}${ids.includes(me()) ? ', tap to remove yours' : ''}"><span class="rx-e">${e}</span>${faces ? `<span class="rx-fs" aria-hidden="true">${ids.map(face).join('')}</span>` : ''}<span class="rx-n">${ids.length}</span></button>`;
     }).join('')}<button class="rx rx-add" data-rx-add title="Add a reaction" aria-label="Add a reaction">${icon('i-smile-plus')}</button>${META}</div>`;
   }
+  // A one-line AI update card (server/askai.js card): finished, needs an OK, failed, started. The only AI lines a channel
+  // shows besides an agent's reply to an @mention. Stroke icon, one line, no avatar.
+  const CARD = { finished: ['check', 'Finished'], approval: ['hand', 'Needs an OK'], failed: ['x', 'Failed'], started: ['bolt', 'Started'] };
+  function cardHtml(m) {
+    const c = CARD[m.card] || CARD.finished, when = new Date(m.at).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+    const line = String(m.text || '').replace(/^[^\p{L}\p{N}@*_`(]+/u, '');   // older cards began with an emoji
+    const glyph = window.TribeIcons ? window.TribeIcons.svg(c[0], 14) : '';
+    return `<div class="msg dx sys msg-card" data-card="${esc(m.card)}" data-id="${esc(m.id)}" data-at="${esc(m.at)}" data-by="${esc(m.by)}"><span class="mc-i" aria-hidden="true">${glyph}</span><span class="mc-k">${esc(c[1])}</span><p class="mc-t">${window.TribeMD ? window.TribeMD.inline(line) : esc(line)}</p><time class="mc-w">${esc(when)}</time></div>`;
+  }
   function html(m, ch) {
     msgs.set(m.id, { m, ch });
+    if (m.card && !m.deleted) return cardHtml(m);
     const sys = m.by === 'tribecode', brain = m.by === 'brain', agent = isAgent(m.by), mine = !sys && !!me() && m.by === me();
     const when = new Date(m.at).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
     const md = t => (window.TribeMD ? window.TribeMD.inline(t).replace(/\n/g, '<br>') : esc(t));

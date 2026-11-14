@@ -387,6 +387,7 @@ def main():
             overview = tool(atok, "tribe_overview"); assert "Pixel Quest" in tool(atok, "list_projects") and "Orion's Claude" in overview
             recent = tool(atok, "read_chat", {"limit": 50})
             assert "hello from maya on desktop" in recent and "jay here, on my phone" in recent and "default-project secret" not in recent, recent
+            assert api("/chat/general", "POST", {"text": "@agents say hello when you are connected"}, token=host_tok, project=pq)[0] == 200   # v0.37: agents speak in a channel when asked there
             tool(atok, "post_chat", {"text": "Claude Code here: I can see the board and the chat."})
             for pg in (host, maya, jay): wait_text(chat(pg), "#chat-list", "Claude Code here: I can see the board")
             assert "Claude Code here" in (tmp / "tribe" / "chat" / f"p-{pq}.jsonl").read_text()

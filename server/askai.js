@@ -12,7 +12,7 @@
 
 const POLICIES = ['ask', 'always', 'never'];
 
-module.exports = function askai({ store, id, str, P, getMembers, presenceFor, postChat, coord, approvals, brain, askBrain, createTask, bus, nameOf }) {
+module.exports = function askai({ store, id, str, P, getMembers, presenceFor, postChat, coord, approvals, brain, askBrain, createTask, bus, nameOf, dmName = null, readChannel = () => [] }) {
   const FILE = '.tribe/askai.json';
   const db = Object.assign({ policy: {}, pending: [] }, store.readJSON(FILE, {}));
   // Agents in public chat (v0.20): "@maya's-claude add a jump sound" in a channel gives Maya's Claude a public command;
@@ -21,7 +21,16 @@ module.exports = function askai({ store, id, str, P, getMembers, presenceFor, po
   // whether finished work is posted, and a per-person hourly limit. Each owner's own "Friends can ask my AI"
   // policy (ask | always | never) still decides whether someone else may command *their* agent.
   const PUB_DEFAULT = { on: true, who: 'members', channels: [], postDone: true, perHour: 20 };
-  const pub = () => Object.assign({}, PUB_DEFAULT, db.pub || {});
+  // Chat is for people: a channel shows what people type, an agent's reply when it was @mentioned, and one-line AI
+  // update cards of the kinds a lead picks here (cards). Everything else an agent says goes to its owner privately.
+  const CARD_KINDS = ['finished', 'approval', 'failed', 'started'];
+  const CARD_DEFAULT = ['finished', 'approval', 'failed'];
+  const pub = () => {
+    const p = Object.assign({}, PUB_DEFAULT, db.pub || {});
+    if (!Array.isArray(p.cards)) p.cards = CARD_DEFAULT.filter(k => k !== 'finished' || p.postDone !== false);
+    p.cards = p.cards.filter(k => CARD_KINDS.includes(k)); p.postDone = p.cards.includes('finished');
+    return p;
+  };
   const save = () => { db.pending = db.pending.slice(-200); store.writeJSON(FILE, db); };
   const member = mid => getMembers().find(m => m.id === mid);
   const err = (status, message) => Object.assign(new Error(message), { status });
@@ -96,8 +105,10 @@ module.exports = function askai({ store, id, str, P, getMembers, presenceFor, po
         const body = await readBody(req); const ch = str(body.channel, 80) || 'general';
         return send(res, 200, await ask(ch, me, '@ai ' + str(body.text, 2000)));
       }
+      if (b === 'mine' && m === 'GET') return send(res, 200, listMine(me));
+      if (b === 'mine' && m === 'POST') return send(res, 200, sendMine(me, await readBody(req)));
       if (b === 'policy' && m === 'GET') return send(res, 200, { policy: policyOf(me.id), options: POLICIES });
-      if (b === 'public' && m === 'GET') return send(res, 200, { ...pub(), canEdit: me.role === 'host' || me.role === 'admin', canCommand: canCommand(me) });
+      if (b === 'public' && m === 'GET') return send(res, 200, { ...pub(), kinds: CARD_KINDS, canEdit: me.role === 'host' || me.role === 'admin', canCommand: canCommand(me) });
       if (b === 'public' && m === 'PUT') {
         if (!(me.role === 'host' || me.role === 'admin')) return fail(res, 403, 'only the host or an admin changes this');
         return send(res, 200, setPub(await readBody(req)));
@@ -175,17 +186,75 @@ module.exports = function askai({ store, id, str, P, getMembers, presenceFor, po
   function taskDone(t, ch) {
     if (!pub().postDone || !t || !t.assignee) return;
     const a = member(t.assignee); if (!a || a.role !== 'agent') return;
-    postChat(ch, 'tribecode', `✅ ${a.name} finished **${str(t.title, 160)}**${a.owner ? ` (${first(nameOf(a.owner))}'s agent)` : ''}.`);
+    card('finished', `${a.name} finished **${str(t.title, 160)}**${a.owner ? ` (${first(nameOf(a.owner))}'s agent)` : ''}.`, a.id, ch);
+  }
+  // One-line AI update card in the project's channel, only for the kinds the lead chose. Returns the message or null.
+  function card(kind, line, agentId, ch = 'general') {
+    if (!CARD_KINDS.includes(kind) || !pub().cards.includes(kind)) return null;
+    const one = str(String(line || '').replace(/\s*\n+\s*/g, ' ').trim(), 220); if (!one) return null;
+    return postChat(ch, 'tribecode', one, { card: kind, ...(agentId ? { agent: agentId } : {}) });
+  }
+  // May this agent speak in this channel right now? Only when a person addressed it there in the last day: an @mention
+  // (or @agents / @ai), a public command, or a request it took from "Ask an agent".
+  function addressed(ag, ch) {
+    if (!ag || ag.role !== 'agent') return true;
+    const since = Date.now() - 24 * 3600e3;
+    if (db.pending.some(p => p.agent === ag.id && Date.parse(p.created || p.at || 0) > since)) return true;
+    if (coord && coord.tookAsk && coord.tookAsk(ag.id, since)) return true;
+    let msgs = []; try { msgs = readChannel(ch, 80) || []; } catch {}
+    return msgs.some(x => {
+      if (!x || !x.text || x.deleted || x.by === ag.id || Date.parse(x.at) < since) return false;
+      const m = member(x.by); if (!m || m.role === 'agent') return false;
+      if (/(^|\s)@(agents|ai)\b/i.test(x.text)) return true;
+      try { return agentsIn(x.text, m).some(h => h.agent.id === ag.id); } catch { return false; }
+    });
+  }
+  // ---------- private requests to your own agent ----------
+  // Instructions meant for an AI (a design brief from the canvas, "fix this" from the preview) never post in a channel.
+  // They go into the private chat between a person and their own agent; the agent reads them with check_messages and
+  // answers with reply. With no agent of your own, the request waits for the tribe's agents (coord "Ask an agent").
+  const myAgents = me => { const on = new Set(presenceFor(me).filter(m => m.role === 'agent' && m.online).map(m => m.id)); return getMembers().filter(m => m.role === 'agent' && m.owner === me.id).map(a => ({ a, online: on.has(a.id) })); };
+  const agentView = x => ({ id: x.a.id, name: x.a.name, kind: x.a.kind || null, online: x.online });
+  function sendMine(me, body) {
+    if (!me || me.role === 'agent') throw err(403, 'agents cannot do this');
+    if (me.role === 'spectator') throw err(403, 'spectators are read-only');
+    const say = str(body.text, 2000), detail = str(body.detail, 4000), src = str(body.src, 24) || null;
+    if (!say) throw err(400, 'say what you need');
+    const mine = myAgents(me);
+    const pickd = (body.to && mine.find(x => x.a.id === body.to)) || mine.find(x => x.online) || mine[0];
+    if (!pickd || !dmName) {
+      const h = coord.ask({ text: detail ? `${say}\n\n${detail}` : say }, me);
+      return { sent: false, queued: true, ask: h };
+    }
+    const msg = postChat(dmName(me.id, pickd.a.id), me.id, detail ? `${say}\n\n${detail}` : say, { ask: { say, ...(src ? { src } : {}) } });
+    return { sent: true, agent: agentView(pickd), request: msg.id };
+  }
+  function listMine(me) {
+    if (!me || me.role === 'agent') throw err(403, 'agents cannot do this');
+    const mine = myAgents(me), requests = [];
+    if (dmName) for (const x of mine) {
+      let cur = null, msgs = []; try { msgs = readChannel(dmName(me.id, x.a.id), 300) || []; } catch {}
+      for (const m of msgs) {
+        if (!m || m.deleted) continue;
+        if (m.by === me.id && m.ask) { cur = { id: m.id, at: m.at, text: str(m.ask.say || m.text, 600), src: m.ask.src || null, agent: x.a.id, agentName: x.a.name, channel: dmName(me.id, x.a.id), replies: [] }; requests.push(cur); }
+        else if (m.by === me.id) cur = null;   // an ordinary private message: later replies belong to it, not to a request
+        else if (cur && m.by === x.a.id && m.text && !m.aside && !m.approval) cur.replies.push({ id: m.id, at: m.at, text: str(m.text, 2000) });   // asides: things it meant for a channel, approval asks
+      }
+    }
+    requests.sort((a, b) => (a.at < b.at ? 1 : -1));
+    return { agents: mine.map(agentView), requests: requests.slice(0, 40) };
   }
   function setPub(body) {
     const cur = pub(), next = { ...cur };
     if (typeof body.on === 'boolean') next.on = body.on;
     if (['members', 'builders', 'admins'].includes(body.who)) next.who = body.who;
     if (Array.isArray(body.channels)) next.channels = body.channels.map(c => str(c, 40).replace(/^#/, '')).filter(Boolean).slice(0, 20);
-    if (typeof body.postDone === 'boolean') next.postDone = body.postDone;
+    if (Array.isArray(body.cards)) next.cards = [...new Set(body.cards.map(k => str(k, 20)).filter(k => CARD_KINDS.includes(k)))];
+    else if (typeof body.postDone === 'boolean') { const c = cur.cards.filter(k => k !== 'finished'); if (body.postDone) c.unshift('finished'); next.cards = c; }
+    next.postDone = (next.cards || cur.cards).includes('finished');
     if (Number.isFinite(+body.perHour)) next.perHour = Math.max(1, Math.min(200, Math.round(+body.perHour)));
     db.pub = next; save(); return next;
   }
 
-  return { ask, pick, route, sync, policyOf, err, command, taskDone, pub, setPub };
+  return { ask, pick, route, sync, policyOf, err, command, taskDone, pub, setPub, card, addressed, sendMine, listMine, CARD_KINDS };
 };

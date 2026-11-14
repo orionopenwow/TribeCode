@@ -429,5 +429,7 @@ module.exports = function coord({ P, store, id, str, broadcast, postChat, bus, g
     return { handoffs: db.handoffs.filter(h => inPid(h) && h.status === 'open').slice(-8).map(h => ({ id: h.id, title: h.title, from: h.from, to: h.to || null })),
       reviews: db.reviews.filter(r => inPid(r) && r.status === 'pending').slice(-8).map(r => ({ id: r.id, title: r.title, by: r.by, branch: r.branch, task: r.task })) };
   }
-  return { route, mcpTools, inboxFor, tell, control, agents, ownership, addLane, dropLane, conflicts, handoff, requestReview, reviews, plan, accept, summary, usage, openWork };
+  // chat policy (server/askai.js addressed): an agent that took someone's "Ask an agent" request may answer in the channel
+  const tookAsk = (agentId, since) => db.handoffs.some(h => h.ask && h.takenBy === agentId && Date.parse(h.takenAt || 0) > since);
+  return { route, mcpTools, inboxFor, tell, control, agents, ownership, addLane, dropLane, conflicts, handoff, requestReview, reviews, plan, accept, summary, usage, openWork, ask, tookAsk };
 };

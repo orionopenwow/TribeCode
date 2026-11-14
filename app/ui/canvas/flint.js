@@ -277,11 +277,10 @@
   async function sendToHelpers(text) {
     const st = window.TribeCanvas && window.TribeCanvas.state ? window.TribeCanvas.state() : {};
     const sel = (st.selected || []).slice(0, 5);
-    const msg = `@agents On the design canvas (Design, file "${st.name || E.file}"): ${text}.${sel.length ? ` Selected layers: ${sel.join(', ')}.` : ''} Use the canvas tools: get_canvas to read it, add_frame / add_layers / update_layer / set_auto_layout to draw, export_frame when it should become code. Keep real auto layout and the project's look.`;
-    try { await C.api('/agents/channel', { method: 'POST', body: { text: msg } }); }
-    catch { try { await C.api('/chat/general', { method: 'POST', body: { text: 'Claude, ' + msg.replace(/^@agents /, '') } }); } catch {} }
-    const online = ((C.state && C.state().members) || []).some(m => m.role === 'agent' && m.online);
-    return online ? T('Sent to your AI helpers. You\'ll see their cursor here as they draw.') : T('Sent to your AI helpers in #agents. None is connected right now: connect one in Connect your AI and it picks this up.');
+    // Chat is for people: the brief goes privately to your own agent (askagent.js send), never into a channel
+    const detail = `On the design canvas (Design, file "${st.name || E.file}").${sel.length ? ` Selected layers: ${sel.join(', ')}.` : ''} Use the canvas tools: get_canvas to read it, add_frame / add_layers / update_layer / set_auto_layout to draw, export_frame when it should become code. Keep real auto layout and the project's look.`;
+    const r = await window.TribeAskAgent.send({ text, detail, src: 'canvas' });
+    return r.sent && r.agent.online ? `${r.note} ${T('You\'ll see its cursor here as it draws.')}` : r.note;
   }
 
   window.TribeCanvasFlint = { mount, ask, open, close, run, sendToHelpers, useMyAI, use: h => { hook = h; if (h && bar) close(); }, get busy() { return busy; } };

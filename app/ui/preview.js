@@ -609,7 +609,7 @@
     };
   }
 
-  // Empty state: one tap asks the agents (the #agents channel; the project chat when no agent is here).
+  // Empty state: one tap asks your own agent privately (the tribe's agents when you have none).
   // "Build it": the vision (when there is none), the starter (host, so there is something to run now), then the agents.
   async function buildFrom(text) {
     const st = pane && pane.querySelector('#pvw-bstat'), go = pane && pane.querySelector('#pvw-bgo');
@@ -623,7 +623,9 @@
       say('Making a first version you can run…');
       let made = false; try { const r = await C.api(`/projects/${encodeURIComponent(pid)}/setup/starter`, { method: 'POST', body: {} }); made = !!(r.written && r.written.length); } catch {}
       const ask = `please build this in the project's code so it runs in TribeCode's preview (index.html at the top folder, relative paths): ${text}${made ? ' A starter is already in the repo; build on it.' : ''}`;
-      try { await C.api('/agents/channel', { method: 'POST', body: { text: '@agents ' + ask } }); } catch { try { await C.api('/chat/general', { method: 'POST', body: { text: 'Claude, ' + ask } }); } catch {} }
+      // chat is for people: the brief goes privately to your own agent (or waits for the tribe's agents), never into a channel
+      const detail = `Build it in the project's code so it runs in TribeCode's preview (index.html at the top folder, relative paths).${made ? ' A starter is already in the repo; build on it.' : ''}`;
+      try { if (window.TribeAskAgent) await window.TribeAskAgent.send({ text: `Build this: ${text}`, detail, src: 'preview' }); else await C.api('/agents/channel', { method: 'POST', body: { text: '@agents ' + ask } }); } catch {}
       say(made ? 'A first version is running. Your agents were asked to build the rest; it refreshes here as they work.' : 'Asked your agents to build it. It appears here the moment there is a page.');
       if (made) toast('A first version is running. Your agents were asked to build the rest; it refreshes here as they work.');   // the start screen gives way to the app, so say it where it stays
       if (made) setTimeout(() => open(), 600);
@@ -631,8 +633,8 @@
   }
   async function askClaude() {
     const text = 'please start the app: create an index.html at the top folder of the code (a no-build static page is fine, relative paths for scripts and images) so the tribe can watch it live in TribeCode\'s preview.';
-    try { await C.api('/agents/channel', { method: 'POST', body: { text: '@agents ' + text } }); toast('Asked the agents in #agents'); }
-    catch { try { await C.api('/chat/general', { method: 'POST', body: { text: 'Claude, ' + text } }); toast('Asked in the project chat'); } catch (e) { toast(e.message); } }
+    try { if (window.TribeAskAgent) await window.TribeAskAgent.send({ text: 'Start the app', detail: text, src: 'preview' }); else await C.api('/agents/channel', { method: 'POST', body: { text: '@agents ' + text } }); }
+    catch (e) { toast(e.message); }
     const b = pane && pane.querySelector('[data-act="ask"]');
     if (b) { const p = document.createElement('p'); p.className = 'pvw-asked'; p.textContent = 'Asked. It shows up here as soon as it exists.'; b.replaceWith(p); }
   }
