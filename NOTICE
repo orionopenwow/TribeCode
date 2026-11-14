@@ -71,3 +71,14 @@ App and game starters (app/ui/starters/, docs/STARTERS.md). Each folder keeps it
 - topdown: original TribeCode starter, MIT
 - weather: original TribeCode starter, MIT
 <!-- starters:end -->
+
+-------------------------------------------------------------------------------
+Lucide (https://lucide.dev, https://github.com/lucide-icons/lucide), ISC License, Copyright (c) Lucide Icons and
+Contributors (portions MIT, Copyright (c) Cole Bemis, from Feather)
+-------------------------------------------------------------------------------
+The website designer's icon set (the ICONS table in app/ui/sitecfg.js: about 90 icons used in exported websites) is
+copied from Lucide's icons/ folder, unchanged apart from whitespace. Exported sites carry the icons inline.
+
+ISC License (Lucide): Permission to use, copy, modify, and/or distribute this software for any purpose with or without
+fee is hereby granted, provided that the above copyright notice and this permission notice appear in all copies. THE
+SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE.
