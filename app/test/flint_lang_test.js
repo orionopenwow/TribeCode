@@ -15,6 +15,17 @@ const FLOOR_HELD = { es: 18, pt: 19, fr: 19, de: 19, ja: 20, zh: 20, ko: 20 };  
 const ok = (want, got) => (want === 'dark' ? /^theme\.(dark|dark-mode|midnight)$/.test(got || '') : got === want);
 const hit = (intent, text) => { const s = N.parse(text, { page: 'home' }).steps[0] || {}; return [ok(intent, s.intent) && (s.conf || 0) >= 0.6, s.intent]; };
 let bad = false; const lines = [];
+// The website editor's sentences: the same intent (and the same words to type) as the English twin, with something selected.
+{
+  const EDS = require(path.join(__dirname, '..', '..', 'scripts', 'dev', 'flint-eval', 'lang-editor.js'));
+  const ctx = { view: 'site', pages: ['Home', 'About', 'Contact'], selection: true, selKind: 'text', selList: true }, CODES = ['es', 'pt', 'fr', 'de', 'ja', 'zh', 'ko'];
+  const step = t => N.parse(t, ctx).steps[0] || {}; let okN = 0, all = 0;
+  for (const [en, row] of Object.entries(EDS)) {
+    const want = step(en); if (!/^site\./.test(want.intent || '')) { console.error(`editor: the English sentence ${JSON.stringify(en)} is not a website step (${want.intent})`); bad = true; continue; }
+    row.forEach((t, i) => { const got = step(t); all++; const same = got.intent === want.intent && JSON.stringify(got.slots || {}) === JSON.stringify(want.slots || {}); if (same) okN++; else { bad = true; console.error(`  ✗ ${CODES[i]} editor ${JSON.stringify(t)} → want ${want.intent} ${JSON.stringify(want.slots || {})}, got ${got.intent} ${JSON.stringify(got.slots || {})}`); } });
+  }
+  lines.push(`website editor sentences: ${okN}/${all} match their English twin`);
+}
 for (const lang of Object.keys(SET)) {
   const a = [0, 0], h = [0, 0], fails = [];
   for (const [intent, pair] of Object.entries(SET[lang])) for (const text of pair) { const [y, got] = hit(intent, text); a[1]++; if (y) a[0]++; else fails.push(`  ✗ ${lang} tuned ${JSON.stringify(text)} → want ${intent}, got ${got || 'nothing'}`); }
