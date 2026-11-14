@@ -141,7 +141,7 @@ add('g', [
   ['dark mode', 'theme.dark-mode'], ['make it darker', 'theme.dark-mode'], ['switch to dark mode', 'theme.dark-mode'], ['night mode', 'theme.dark-mode'], ['light mode', 'theme.light'],
   ['switch to campfire', 'theme.campfire'], ['add a task to fix the contact page', 'task.add', { title: 'Fix the contact page' }], ['open the website', 'nav.website'], ['open the design canvas', 'nav.design'],
   ['make a landing page for sunrise bakery', 'build.landing'], ['undo', 'undo'], ['tell maya the site is live', 'dm.send'], ['add a page to the docs about rules', 'doc.new'],
-  ['open files', 'nav.files'], ['what can you do', 'tiers'], ['publish it', 'publish'], ['make a 3d game called orb run', 'build.3d'], ['change the accent color to teal', 'accent.set', { color: 'teal' }],
+  ['open files', 'nav.files'], ['what can you do', 'tiers'], ['publish it', 'publish'], ['publish my site', 'publish.to'], ['make an Android app from this', 'publish.to', { dest: 'android' }], ['put my game on itch', 'publish.to', { dest: 'itch' }], ['publish my game online', 'publish.to'], ['make an iphone app', 'publish.to', { dest: 'ios' }], ['put it on my phone', 'publish.to', { dest: 'install' }], ['make a 3d game called orb run', 'build.3d'], ['change the accent color to teal', 'accent.set', { color: 'teal' }],
   ['open the inspiration board', 'nav.inspo'], ['open my moodboard', 'nav.inspo'], ['buy credits', 'premium.open'], ['get premium', 'premium.open'], ['upgrade', 'premium.open'],
   ['connect my ai', 'connect.ai'], ['use my own ai', 'connect.ai'], ['add codex', 'connect.ai'], ['connect gemini', 'connect.ai'], ['hook up cursor', 'connect.ai'],
   // Invite your agent (inviteagent.js): the one invite sheet opens on the kind they name

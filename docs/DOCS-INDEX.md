@@ -65,6 +65,7 @@ Every doc in the repo, one line each, with its status. Updated 2026-11-12 (v0.31
 | [POLISH-AUDIT](POLISH-AUDIT.md) | Design | Ranked polish gaps against best-in-class editors and builders. | current |
 | [PREMIUM](PREMIUM.md) | Premium | TribeCode is free and open source (MIT). | current |
 | [PROJECTS](PROJECTS.md) | Projects | A tribe has projects. | current |
+| [PUBLISH](PUBLISH.md) | Publish for real | One Publish sheet: zip, a link that stays up, itch.io, installable, Android and iPhone builds. | current |
 | [RESEARCH-2026-11](RESEARCH-2026-11.md) | Research | What the market looks like, what people love and hate, and where a self-hosted, multiplayer, bring-your-own-Claude app can win. | research (point in time) |
 | [REVIEW-2026-11-11](REVIEW-2026-11-11.md) | Review | This review looked for gaps in main at bf0e8d6 (v0.29.0) after the parallel merges: router, accounts, local setup, Flint, ✦ AI basics, inspiration boa | review (point in time) |
 | [REVIEWS](REVIEWS.md) | Website | Every review TribeCode shows is from a real person and links to where they wrote it. | current |

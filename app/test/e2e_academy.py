@@ -96,7 +96,7 @@ console.log(JSON.stringify({ one: r.content[0].text.slice(0, 80), list: l.conten
             pr = ok(api("/academy", token=host, project=pid))["progress"]; assert pr["cto"]["done"] == ["cto-1"], pr
             # persists across a reload
             pg.reload(); pg.wait_for_function("window.TribeAcademy && TribeClient.connected()", timeout=20000); pg.evaluate("TribeAcademy.open()")
-            pg.wait_for_selector("#ac-hero"); assert "1 of 6 done" in pg.inner_text("#ac-hero") and "Continue · lesson 2" in pg.inner_text("#ac-continue")
+            pg.wait_for_selector("#ac-hero"); assert "1 of 9 done" in pg.inner_text("#ac-hero") and "Continue · lesson 2" in pg.inner_text("#ac-continue")
             # the seat-sheet slot (Agent A mounts it in #co-academy-slot)
             pg.evaluate("(() => { const d = document.createElement('div'); d.id = 'co-academy-slot'; document.body.appendChild(d); return TribeAcademy.mount(d, 'legal'); })()")
             pg.wait_for_selector("#co-academy-slot .ac-mini [data-ac='legal']")

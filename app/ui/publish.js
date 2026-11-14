@@ -3,7 +3,8 @@
 // task), warnings can be published past. Then: the play link with Copy, a QR code, a share card preview, Remix on/off,
 // Update and Unpublish. Entry points: a 🚀 button in the preview toolbar (added from outside preview.js), a "Share it"
 // card on the project dashboard, Ctrl K, and ?remixPlay=<slug> (from a play page's "Remix this") starts a remix.
-// Public: window.TribePublish = { open(pid?), state(pid?) }.
+// Public: window.TribePublish = { open(pid?), state(pid?), status(pid?) }. The sheet also holds "Where it goes" (publishreal.js):
+// a zip, a GitHub page, itch.io, an installable app and app packages.
 (function () {
   const C = window.TribeClient; if (!C) return;
   const $ = s => document.querySelector(s);
@@ -11,6 +12,7 @@
   const toast = m => window.TribeApp && window.TribeApp.toast && window.TribeApp.toast(m);
   const me = () => C.state().me || {};
   const pidNow = () => C.project && C.project();
+  const T = s => (window.TribeI18n && window.TribeI18n.t ? window.TribeI18n.t(s, s) : s);
   const ROCKET = '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 15c-1.5 1.3-2 4-2 6 2 0 4.7-.5 6-2"/><path d="M9 12a17 17 0 0 1 11-9c0 5-3 9-9 11z"/><path d="M9 12 6 11l2-3 4-1M12 15l1 3 3-2 1-4"/><circle cx="15" cy="8.5" r="1.4"/></svg>';
   const cache = {};   // pid -> { published, canPublish }
 
@@ -34,7 +36,8 @@
   const findingRow = f => `<li class="pb-f pb-f--${f.level}"><span class="pb-f__lv">${f.level === 'block' ? 'Must fix' : 'Warning'}</span><div><b>${esc(f.kind)}</b>${f.file ? ` <code>${esc(f.file)}${f.line ? ':' + f.line : ''}</code>` : ''}<small>${esc(f.why)}</small></div>
     <button type="button" class="btn sm" data-fix="${esc(JSON.stringify({ k: f.kind, f: f.file, l: f.line, w: f.why }))}">Fix it</button></li>`;
 
-  async function open(pid = pidNow()) {
+  let FOCUS = '';
+  async function open(pid = pidNow(), focus = '') {
     if (!pid) return toast('Open a project first');
     const p = (C.state().projects || []).find(x => x.id === pid) || { name: 'this project' };
     const s = sheet(`<p class="eyebrow">Publish</p><h2 class="pb-h">Share ${esc(p.name)} with a link</h2><p class="faint pb-sub">Checking the files before anything goes public…</p><div class="pb-body" id="pb-body"><div class="pb-spin" aria-label="Checking"></div></div>
@@ -43,23 +46,25 @@
     const st = await state(pid, true), cur = (st.published || [])[0];
     if (!st.canPublish && !cur) { $('#pb-body').innerHTML = `<p class="faint">${me().role === 'spectator' ? 'Spectators can watch, not publish. Ask the host for builder access.' : 'You can\'t publish this project.'}</p>`; return; }
     let ch; try { ch = await C.api('/publish/check', { method: 'POST', body: { project: pid } }); } catch (e) { $('#pb-body').innerHTML = `<p class="pb-err">${esc(e.message)}</p>`; return; }
-    render(s, pid, p, cur, ch, st);
+    FOCUS = focus || ''; render(s, pid, p, cur, ch, st);
   }
   function render(s, pid, p, cur, ch, st) {
     const agent = me().role === 'agent';
     const warns = ch.findings.filter(f => f.level === 'warn'), blocks = ch.findings.filter(f => f.level === 'block');
-    s.body.querySelector('.pb-sub').textContent = cur ? `Live at its play link · version ${cur.version}. Update it any time.` : 'Anyone with the link can open it, on any phone or computer. No account needed.';
+    const phone = !!st.phone;   // a tribe that lives on this phone: no play link (that needs a computer), the rest works
+    s.body.querySelector('.pb-sub').textContent = phone ? T('A play link needs the tribe on a computer. Everything below works from this phone.') : cur ? `Live at its play link · version ${cur.version}. Update it any time.` : 'Anyone with the link can open it, on any phone or computer. No account needed.';
     const chk = !ch.findings.length ? `<p class="pb-ok">✓ Safety check: ${ch.files} file${ch.files === 1 ? '' : 's'}, no secrets or risky code found.</p>`
       : `<div class="pb-check"><p class="pb-check__h">${blocks.length ? `✕ ${blocks.length} thing${blocks.length > 1 ? 's' : ''} must be fixed before this goes public` : `⚠ ${warns.length} warning${warns.length > 1 ? 's' : ''} to look over`}</p><ul class="pb-fl">${ch.findings.map(findingRow).join('')}</ul></div>`;
     $('#pb-body').innerHTML = `${cur ? live(cur) : ''}${chk}
       <form class="pb-form" id="pb-form" autocomplete="off">
         <label class="pb-l">Title<input class="input" id="pb-title" maxlength="80" value="${esc((cur && cur.title) || p.name)}"></label>
         <label class="pb-l">One line about it<input class="input" id="pb-desc" maxlength="240" placeholder="What is it? Who is it for?" value="${esc((cur && cur.desc) || p.bio || '')}"></label>
-        <label class="pb-tg"><input type="checkbox" id="pb-remix" ${!cur || cur.allowRemix ? 'checked' : ''}> <span>Allow remix <small class="faint">People can start their own copy with your name on it.</small></span></label>
-      </form>`;
+        <label class="pb-tg" ${phone ? 'hidden' : ''}><input type="checkbox" id="pb-remix" ${!cur || cur.allowRemix ? 'checked' : ''}> <span>Allow remix <small class="faint">People can start their own copy with your name on it.</small></span></label>
+      </form><div id="pb-real" class="pb-real"></div>`;
+    if (window.TribePublishReal) window.TribePublishReal.mount($('#pb-real'), pid, { title: () => ($('#pb-title') || {}).value, desc: () => ($('#pb-desc') || {}).value, focus: FOCUS }); FOCUS = '';
     const foot = s.body.querySelector('.modal-foot');
     foot.innerHTML = `${cur ? '<button class="linkish pb-down" id="pb-down">Unpublish</button>' : ''}<span style="flex:1"></span><button class="btn" data-close>Close</button>
-      <button class="btn primary" id="pb-go" ${blocks.length ? 'disabled' : ''}>${blocks.length ? 'Fix the issues first' : agent ? 'Ask to publish' : warns.length ? (cur ? 'Update anyway' : 'Publish anyway') : cur ? 'Update the link' : 'Publish'}</button>`;
+      <button class="btn primary" id="pb-go" ${phone ? 'hidden' : ''} ${blocks.length ? 'disabled' : ''}>${blocks.length ? 'Fix the issues first' : agent ? 'Ask to publish' : warns.length ? (cur ? 'Update anyway' : 'Publish anyway') : cur ? 'Update the link' : 'Publish'}</button>`;
     foot.querySelector('[data-close]').onclick = s.close;
     wireLive(s.body, cur);
     s.body.querySelectorAll('[data-fix]').forEach(b => b.onclick = async () => {
@@ -153,5 +158,7 @@
     setTimeout(go, 800);
   })();
 
-  window.TribePublish = { open, state };
+  // status(pid): what is published where and the one next step (publishreal.js), for the guide and Flint
+  const status = (pid, fresh) => (window.TribePublishReal ? window.TribePublishReal.status(pid, fresh) : state(pid, fresh).then(st => ({ kind: 'site', dest: {}, play: (st.published || [])[0] || null, next: (st.published || [])[0] ? 'share' : 'publish' })));
+  window.TribePublish = { open, state, status };
 })();

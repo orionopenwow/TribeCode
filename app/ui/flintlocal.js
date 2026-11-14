@@ -378,6 +378,7 @@
     if (id === 'preview.device') { const P = window.TribePreview; if (P && !document.querySelector('#pvw [data-dev]')) P.open(); setTimeout(() => { const b = document.querySelector(`#pvw [data-dev="${sl.dev}"], [data-dev="${sl.dev}"]`); if (b) b.click(); }, 250); return { text: T('device', { x: sl.dev }) }; }
     if (id === 'preview.edit') { const P = window.TribePreview; if (P && !document.querySelector('#pvw')) P.open(); setTimeout(() => { const b = document.querySelector('#pvw-edit, [data-pvw-edit], #pvw [data-edit]'); if (b && b.getAttribute('aria-pressed') !== 'true') b.click(); }, 300); return { text: T('editOn') }; }
     if (id === 'comment.mode') { const P = window.TribePreview; if (P && !document.querySelector('#pvw') && view() !== 'canvas') P.open(); setTimeout(() => { if (window.TribePins && window.TribePins.toggle) window.TribePins.toggle(true); else document.dispatchEvent(new KeyboardEvent('keydown', { key: 'c' })); }, 300); return { text: T('commentOn') }; }
+    if (id === 'publish.to') { if (window.TribePublish) window.TribePublish.open(undefined, sl.dest || ''); return { text: T('opened', { x: 'Publish' }), sum: 'opened Publish' }; }
     if (id === 'publish') { if (window.TribePublish) window.TribePublish.open(); return { text: T('opened', { x: 'Publish' }), sum: 'opened Publish' }; }
     if (id.startsWith('theme.')) {
       const snap = lookSnap(), done = setTheme(id.slice(6)); if (!done) return { text: T('noPlace', { x: id.slice(6) }) };
