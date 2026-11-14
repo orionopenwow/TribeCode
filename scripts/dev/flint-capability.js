@@ -44,6 +44,8 @@ function cmdWhy(steps, want, slots) {
   if (s.conf < 0.6) return 'low confidence';
   return slotWhy(s.slots || {}, slots);
 }
+// the path the app takes: flintconv.js (follow-ups, everyday rewrites) in front of flintnlu.js when it is there
+const parse = (t, ctx) => (CONV ? CONV.create().parse(t, ctx, N) : N.parse(t, ctx));
 const tally = () => ({ ok: 0, n: 0, fails: [] });
 const mark = (t, why, label) => { t.n++; if (!why) t.ok++; else t.fails.push(`“${label}” → ${why}`); };
 
@@ -51,9 +53,9 @@ function run(withModel) {
   N.setSemantic(withModel ? MODEL : null);
   const R = { editor: {}, held: {}, skill: {} };
   // ---- by editor: the main eval, then held-out batch 7's commands ----
-  for (const c of EVAL.cases) { const ed = EDITOR[c.ctx || 'g']; R.editor[ed] = R.editor[ed] || tally(); mark(R.editor[ed], cmdWhy(N.parse(c.t, { ...base(), now: new Date(EVAL.now), ...CTX[c.ctx || 'g'] }).steps, c.i, c.s), c.t); }
+  for (const c of EVAL.cases) { const ed = EDITOR[c.ctx || 'g']; R.editor[ed] = R.editor[ed] || tally(); const cx = { ...base(), now: new Date(EVAL.now), ...CTX[c.ctx || 'g'] }; let why = cmdWhy(parse(c.t, cx).steps, c.i, c.s); if (!why && PLAN && c.i !== null && PLAN.isGoal(c.t, N, cx)) why = 'the planner would take it'; mark(R.editor[ed], why, c.t); }
   const cmd = R.skill.commands = tally();
-  for (const [cx, t, i, s] of H7.cmd) { const why = cmdWhy(N.parse(t, { ...base(), ...CTX[cx] }).steps, i, s); mark(cmd, why, t); const ed = EDITOR[cx]; R.held[ed] = R.held[ed] || tally(); mark(R.held[ed], why, t); }
+  for (const [cx, t, i, s] of H7.cmd) { const why = cmdWhy(parse(t, { ...base(), ...CTX[cx] }).steps, i, s); mark(cmd, why, t); const ed = EDITOR[cx]; R.held[ed] = R.held[ed] || tally(); mark(R.held[ed], why, t); }
   // ---- follow-ups: a conversation; the session keeps what flintlocal.js keeps (the last task and person), or flintconv.js's memory ----
   const fol = R.skill['follow-ups'] = tally();
   for (const conv of H7.follow) {
@@ -73,7 +75,7 @@ function run(withModel) {
   // ---- did you mean: handled directly, or the wanted intent among the three chips ----
   const dym = R.skill['did-you-mean'] = tally();
   for (const [t, want] of H7.dym) {
-    const st = N.parse(t, base()).steps, s = st[0];
+    const st = parse(t, base()).steps, s = st[0];
     const direct = st.length === 1 && s.intent && s.conf >= 0.6, hit = direct ? want.includes(s.intent) : st.length === 1 && (s.alts || []).slice(0, 3).some(a => want.includes(a.intent));
     mark(dym, hit ? '' : direct ? `did ${s.intent}` : `chips: ${(s.alts || []).slice(0, 3).map(a => a.intent).join(', ') || 'none'}`, t);
   }
@@ -105,7 +107,7 @@ function run(withModel) {
   // ---- summaries (extractive, no model): every key fact kept, inside the word limit ----
   const sum = R.skill.summaries = tally();
   for (const [text, facts, max] of H7.summary) {
-    const out = (PLAN && PLAN.summary ? PLAN.summary(text, LD) : LD.summarize(text, { max: 3 }).text) || '', words = out.split(/\s+/).filter(Boolean).length;
+    const out = (SEMX ? SEMX.summary(text, LD, { maxWords: max }) : LD.summarize(text, { max: 3 }).text) || '', words = out.split(/\s+/).filter(Boolean).length;
     const miss = facts.filter(f => !low(out).includes(low(f)));
     mark(sum, words > max ? `${words} words (limit ${max})` : miss.length ? `lost “${miss.join('”, “')}”` : '', text.slice(0, 40) + '…');
   }
@@ -118,7 +120,7 @@ function run(withModel) {
   // ---- generation: something real from a description ----
   const gen = R.skill.generation = tally(), wr = R.skill['open writing (needs a writing model)'] = tally();
   for (const [t, kind] of H7.gen) {
-    const st = N.parse(t, base()).steps, s = st[0] || {};
+    const st = parse(t, base()).steps, s = st[0] || {};
     if (kind === 'build') mark(gen, st.length === 1 && s.intent && s.conf >= 0.6 && /^(site|build|deck|sheet|doc|design|canvas)\b/.test(s.intent) ? '' : `got ${s.intent || 'nothing'}`, t);
     else if (kind === 'plan') { const p = PLAN ? PLAN.plan(t, { ...base(), nlu: N }) : null; mark(gen, p && p.steps.length >= 3 && p.steps.every(x => x.intent) ? '' : p ? `a plan of ${p.steps.length} steps` : 'no plan: one question with chips', t); }
     else mark(wr, 'needs a writing model (tier 2 or 3); Flint says so and offers one', t);

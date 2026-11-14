@@ -210,10 +210,10 @@
     return String(s || '').replace(/(^|[.!?]\s+|\n\s*(?:[-*]\s+(?:\[[ x]\]\s+)?)?)([a-z])/g, (m, a, b) => a + b.toUpperCase()).replace(/\bi\b(?=[\s,.!?'’]|$)/g, 'I').replace(/\bi'm\b/g, "I'm").replace(/\bi’m\b/g, 'I’m').replace(/\b(monday|tuesday|wednesday|thursday|friday|saturday|sunday|january|february|april|june|july|august|september|october|november|december)\b/g, w => cap(w));
   }
   const TONES = {
-    friendly: [[/\bpurchase\b/gi, 'buy'], [/\butili[sz]e\b/gi, 'use'], [/\bassist\b/gi, 'help'], [/\bdo not\b/gi, "don't"], [/\bwe are\b/gi, "we're"], [/\bplease contact us\b/gi, 'say hi'], [/\bcustomers\b/gi, 'folks'], [/\bhello\b/gi, 'hey']],
-    professional: [[/\bhey\b/gi, 'hello'], [/\bfolks\b/gi, 'customers'], [/\bstuff\b/gi, 'work'], [/\bawesome\b/gi, 'excellent'], [/\bgonna\b/gi, 'going to'], [/\bkinda\b/gi, 'somewhat'], [/!+/g, '.'], [/\bdon't\b/gi, 'do not'], [/\bwe're\b/gi, 'we are']],
+    friendly: [[/\bwe would like to inform you that\s+/gi, 'good news: '], [/\bwe regret to inform you that\s+/gi, 'sorry, '], [/^buy now\.?$/i, 'Grab yours today'], [/\bpurchase\b/gi, 'buy'], [/\butili[sz]e\b/gi, 'use'], [/\bassist\b/gi, 'help'], [/\bdo not\b/gi, "don't"], [/\bwe are\b/gi, "we're"], [/\bplease contact us\b/gi, 'say hi'], [/\bcustomers\b/gi, 'folks'], [/\bhello\b/gi, 'hey']],
+    professional: [[/,?\s*sorry for the (?:trouble|hassle|mess)\b/gi, '. We apologize for the inconvenience'], [/\byou guys\b/gi, 'you'], [/\bhey\b/gi, 'hello'], [/\bfolks\b/gi, 'customers'], [/\bstuff\b/gi, 'work'], [/\bawesome\b/gi, 'excellent'], [/\bgonna\b/gi, 'going to'], [/\bkinda\b/gi, 'somewhat'], [/!+/g, '.'], [/\bdon't\b/gi, 'do not'], [/\bwe're\b/gi, 'we are']],
     playful: [[/\bgood\b/gi, 'great'], [/\bvery\s+/gi, 'super '], [/\bhello\b/gi, 'hey there'], [/\.\s*$/, '!']],
-    confident: [[/\b(?:we think|we believe|maybe|perhaps|probably|might|try to|hopefully)\s+/gi, ''], [/\bcould\b/gi, 'will'], [/\bhelp you\b/gi, 'let you']],
+    confident: [[/\b(?:we think|we believe|maybe|perhaps|probably|might|try to|hopefully)\s+/gi, ''], [/\bcould\b/gi, 'will'], [/\b(this|it|that) help you\b/gi, '$1 helps you'], [/\bhelp you\b/gi, 'let you']],
   };
   function tone(text, t) { let s = String(text || ''); for (const [rx, to] of TONES[t] || []) s = s.replace(rx, to); return sentenceCase(s.replace(/\s{2,}/g, ' ').trim()); }
 
