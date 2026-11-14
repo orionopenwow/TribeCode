@@ -265,10 +265,11 @@
 <script>
 (function () {
   'use strict';
-  // the same cards as the app: site/quick-guides.json is generated from templates/quickguides.json
+  // the same cards as the app: site/quick-guides.json is generated from templates/quickguides.json.
+  // Titles are translated (site/lang/*.json); the steps are English for now, so they are marked data-no-i18n.
   const out = document.getElementById('qk-out'), box = document.getElementById('qk-q');
   const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-  const card = g => `<details class="qk-card" data-qk="${esc(g.id)}"><summary>${esc(g.title)}<small>${g.steps.length} steps</small></summary><div class="qk-b"><p>${esc(g.intro)}</p><ol>${g.steps.map(x => `<li>${esc(x)}</li>`).join('')}</ol><a href="app/?welcome=1" data-open-app>Try it in the app</a></div></details>`;
+  const card = g => `<details class="qk-card" data-qk="${esc(g.id)}"><summary>${esc(g.title)}</summary><div class="qk-b"><div data-no-i18n lang="en"><p>${esc(g.intro)}</p><ol>${g.steps.map(x => `<li>${esc(x)}</li>`).join('')}</ol></div><a href="app/?welcome=1" data-open-app>Try it in the app</a></div></details>`;
   fetch('quick-guides.json').then(r => r.json()).then(d => {
     const draw = () => {
       const q = box.value.trim().toLowerCase(), hit = g => !q || q.split(/\s+/).every(w => `${g.title} ${g.asks.join(' ')} ${g.intro} ${g.steps.join(' ')}`.toLowerCase().includes(w));

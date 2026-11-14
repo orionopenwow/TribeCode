@@ -50,7 +50,7 @@
     if (loading) return loading;
     const C = W.TribeClient, live = C && C.connected && C.connected();
     const from = url => fetch(url).then(r => (r.ok ? r.json() : null)).then(j => (j && j.quick && j.quick.guides ? j.quick : null)).catch(() => null);
-    loading = (live ? from(C.base() + '/api/guide') : Promise.resolve(null)).then(q => q || from('guide-pages.json')).then(q => { DATA = q || { guides: [], groups: [], labels: {} }; loading = null; return DATA; });
+    loading = (live ? from(C.base() + '/api/guide') : Promise.resolve(null)).then(q => q || (location.protocol === 'file:' ? null : from('guide-pages.json'))).then(q => { DATA = q || { guides: [], groups: [], labels: {} }; loading = null; return DATA; });
     return loading;
   }
   // "never name a feature the UI doesn't show": a card that needs a part of the app is listed only when that part is here
@@ -185,6 +185,7 @@
     let b;
     if ((b = t.closest('[data-qg-do]'))) { e.preventDefault(); return void run(b.dataset.qgDo); }
     if ((b = t.closest('[data-qg-show]'))) { e.preventDefault(); return void show(b.dataset.qgShow); }
+    if ((b = t.closest('[data-learn-home]'))) { e.preventDefault(); return void (W.TribeGuide && W.TribeGuide.home && W.TribeGuide.home()); }   // the skills reader's way back to Learn
     if ((b = t.closest('[data-qg-all]'))) { e.preventDefault(); return void open(); }
     if ((b = t.closest('[data-qg-next]'))) { e.preventDefault(); return void openNext(); }
     if ((b = t.closest('[data-qg]'))) { e.preventDefault(); return void open(b.dataset.qg); }
@@ -245,7 +246,7 @@
     return cardMsg(n.guide, lead);
   }
 
-  const kick = () => load().catch(() => {});
+  const kick = () => { if (location.protocol !== 'file:') load().catch(() => {}); };   // opened as a file there is nothing to fetch
   if (document.readyState === 'complete') setTimeout(kick, 800); else addEventListener('load', () => setTimeout(kick, 800));
   W.TribeQuick = { load, all, get, groups, search, match: t => match(all(), t), open, close: closeSheet, run, show, homeHTML, flint, answer, forKind, label, canDo: id => { const g = get(id); return !!g && canDo(g); } };
   W.TribeLearn = { get: P, mark, done, counts, next, resume, summaryHTML, openNext, STEP_GUIDE };

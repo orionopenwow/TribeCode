@@ -41,7 +41,7 @@ Nothing people use was removed.
 - **? menu:** Quick guides is the second entry. **Ctrl K** lists every card. **Empty states** get a "How it works" link to the card for that kind of place. The **next-step sheet** offers "How do I do this?" until you have done that step once, then never again.
 - **Flint:** a "how do I" question that a card answers gets the card in the reply, with Do it for me and Show me. "quick guides", "open the guide for …", "what should I learn next", "resume" and "my progress" work. Flint only offers cards for parts of the app that are present, and a card's wording uses the live name of the button or Settings tab it points at.
 - **Progress:** kept on the device (`tribecode.learn`). Academy progress stays on the server as before.
-- **Languages:** the Learn chrome, group names and all 45 card titles are in the eight languages. The card steps, the one-line why and the button labels are English for now.
+- **Languages:** the Learn chrome, group names and all 45 card titles are in the eight languages, in the app and on the website. The card steps, the one-line why and the button labels are English for now.
 
 ## Holes not filled
 
