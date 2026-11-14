@@ -92,7 +92,8 @@ def main():
         # a huddle on a phone-only tribe says what would help
         pg.evaluate("TribeHuddle.join()")
         pg.wait_for_function("TribeHuddle.inCall()", timeout=8000)
-        wait_text(pg, "#nx-nudge", "Voice huddles need a host", timeout=8000)
+        wait_text(pg, "#nx-nudge", "This needs the tribe online", timeout=8000)   # feat/real-tribe: why + the one button
+        assert "Calls between people" in pg.inner_text("#nx-nudge") and pg.inner_text("#nx-nudge [data-sc-online]") == "Put this tribe online"
         pg.evaluate("TribeHuddle.leave()")
 
         # the relay sheet (a call that fails without TURN)

@@ -74,6 +74,7 @@
     if (!on) { pill.classList.add('hidden'); close(); return; }
     place();
     try { await load(true); } catch {}
+    try { window.TribeShare && window.TribeShare.card(); } catch {}   // feat/real-tribe: the dashboard card says what the pill said
     const t = statusText(cur.folder, cur.sync);
     pill.classList.remove('hidden'); pill.dataset.tone = t.tone || '';
     pill.innerHTML = `<span class="hp-dot lr-dot" aria-hidden="true"></span><span class="lr-l">${esc(t.l)}</span><span class="lr-s"> · ${esc(t.s)}</span>`;

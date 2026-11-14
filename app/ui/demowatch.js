@@ -315,7 +315,7 @@
       await hold(400);
     } },
     { id: 'project', title: 'Start a project', dur: 10000, say: 'A project is one thing the tribe makes. Ember Café: a friend’s café that needs a website.', async run() {
-      const btn = $('#tn') ? await point('Next', ['#tn-next']) : null;
+      const btn = $('#tn') ? await point('Create', ['#tn-create']) : null;   // feat/real-tribe: name and icon, then Create
       if (btn) await press(btn, 'me', false);
       try { if (window.TribeNew && window.TribeNew.isOpen()) window.TribeNew.close(true); } catch {}
       try { if (window.TribeLocalSetup && window.TribeLocalSetup.state().open) window.TribeLocalSetup.close(); } catch {}
