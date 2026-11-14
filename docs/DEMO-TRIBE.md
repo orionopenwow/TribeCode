@@ -6,7 +6,7 @@ with roles, tasks, notes, a living doc, a vote, toolbox picks and repo autopilot
 ## Start it
 
 - **Windows:** double-click `Start-Demo-Tribe.bat` in the Desktop TribeCode folder (`scripts/desktop/`). It
-  uses the Working copy (dev branch) at http://localhost:4848 and its own test tribe, so your real tribe is
+  uses the Working copy (dev branch) at http://localhost:4848 and its own test tribe, so your own tribe is
   untouched.
 - **Anywhere:** `npm run demo-tribe` (or `node scripts/start-demo-tribe.js`) against a running TribeCode.
   Options: `--port 4848`, `--dir <folder>` (default `~/TribeCode-Projects`), `--no-share`, `--cloudflare`,

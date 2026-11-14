@@ -140,7 +140,7 @@ def main():
             g5.wait_for_url("**/signin.html*", timeout=15000)
             g5.wait_for_url(lambda u: "/signin.html" not in u, timeout=15000)
             g5.wait_for_function("window.TribeClient && TribeClient.connected() && TribeClient.state().me && TribeClient.state().me.name === 'Nova'", timeout=20000)
-            assert not g5.evaluate("TribeOffline.active()"), "success lands in the real tribe, not the demo"
+            assert not g5.evaluate("TribeOffline.active()"), "success lands in your own tribe, not the demo"
             g5.close()
 
             # cancelled at the provider

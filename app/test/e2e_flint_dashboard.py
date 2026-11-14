@@ -91,7 +91,7 @@ def main():
                 pg.screenshot(path=str(SHOTS / "flint-home.png"))
 
             # Start a project from Flint: the optimistic Start sheet (feat/setup-local) makes it on this device with no
-            # server call; choosing "This computer" as its home makes the real tribe here
+            # server call; choosing "This computer" as its home makes your own tribe here
             ask(pg, "start a project", "Starting your first project")
             pg.wait_for_selector("#tn #tn-name", state="visible", timeout=8000)   # the one create flow (tribenew.js)
             pg.fill("#tn-name", "Flint's project"); pg.click("#tn-options")

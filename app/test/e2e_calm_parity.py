@@ -13,7 +13,7 @@ On this device (no server, the app's files only):
  6. The Guide opens with its pages; Website templates opens and a template opens in the designer; Versions takes a
     snapshot, shows the diff, restores as a new version, names one and downloads a zip; the widget picker lists the
     cards that need no host and a note and a checklist keep their state; notification settings save; no "Failed to
-    fetch" and no "This needs a real tribe" anywhere; the demo pill's tap area at 390px.
+    fetch" and no "This needs the tribe online" anywhere; the demo pill's tap area at 390px.
 --shots writes docs/screenshots/dash-first-step.png and device-versions.png.
 Usage: python app/test/e2e_calm_parity.py [--shots]
 """
@@ -104,7 +104,7 @@ def shot(pg, name):
 
 def no_fetch_errors(pg, where):
     t = pg.evaluate("window.__toasts || []"); toasts.extend(t)
-    worst = [m for m in t if "Failed to fetch" in m or "needs a real tribe" in m or "hit a snag" in m]
+    worst = [m for m in t if "Failed to fetch" in m or "needs the tribe online" in m or "hit a snag" in m]
     assert not worst, f"{where}: {worst}"
     assert "Failed to fetch" not in pg.inner_text("body"), f"{where}: 'Failed to fetch' on screen"
 

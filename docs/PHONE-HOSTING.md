@@ -13,7 +13,7 @@ phone picks one in **Where should your tribe live?** (the "+" on the phone's Hom
 
 ## This phone (instant)
 
-A real tribe that lives in this phone's browser (the PWA): you, Flint and an empty first project. Tasks, docs, the vision and chat
+A own tribe that lives in this phone's browser (the PWA): you, Flint and an empty first project. Tasks, docs, the vision and chat
 are kept on the phone (localStorage and IndexedDB) and survive reloads and restarts. It runs on the same in-browser backend as the
 offline demo (`app/ui/offline.js`, `mode: 'solo'`), without the pretend people or demo data. Flint answers from its built-in
 intent router, and from the in-browser model if you turned that on.

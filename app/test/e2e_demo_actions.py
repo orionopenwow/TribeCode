@@ -1,9 +1,9 @@
-"""The offline demo behaves like a real tribe (app/ui/offline.js, feat/demo-auto), with NO tribe server (a static file
+"""The offline demo behaves like your own tribe (app/ui/offline.js, feat/demo-auto), with NO tribe server (a static file
 server over app/ui). In the calm demo: react to a message (double-click = 👍 in the real chat, and the quick-react
 bar), reply, pin, edit and delete your own message, a picture in chat (an object URL, no server), a DM to a pretend
 friend; create a task, assign it to Maya (she accepts and starts it), move it on the board, assign one to Claude (he
 picks it up and asks for a merge), approve it from the Inbox (the task lands in Done); a doc and a note in Files, a
-comment on the doc (Maya answers); a pretend huddle. None of these shows "This needs a real tribe", and nothing
+comment on the doc (Maya answers); a pretend huddle. None of these shows "This needs the tribe online", and nothing
 logs an error. Usage: python app/test/e2e_demo_actions.py
 """
 import base64, functools, http.server, json, os, sys, threading, time
@@ -30,7 +30,7 @@ def api(pg, path, body=None, method=None):
 
 
 def no_needs_card(pg, what):
-    assert pg.locator("#od-needs").count() == 0, f"{what}: showed 'This needs a real tribe'"
+    assert pg.locator("#od-needs").count() == 0, f"{what}: showed 'This needs the tribe online'"
     assert "not in the offline demo" not in (pg.text_content(".toast") or "").lower() if pg.locator(".toast").count() else True, what
 
 
@@ -133,10 +133,10 @@ def main():
             assert {x["id"] for x in got} == {"me", "maya"}, got
             pg.evaluate("TribeClient.send({ type: 'huddle-leave' })")
 
-            # only truly impossible things say "This needs a real tribe": a calm card with Host
+            # only truly impossible things say "This needs the tribe online": a calm card with Host
             pg.evaluate("TribeClient.api('/agents/connect-real', { method: 'POST', body: {} }).catch(() => {})")
             pg.wait_for_selector("#od-needs", state="visible", timeout=4000)
-            assert "This needs a real tribe" in pg.text_content("#od-needs") and pg.locator("#od-needs [data-od=real]").count() == 1
+            assert "The demo can’t do this" in pg.text_content("#od-needs") and pg.locator("#od-needs [data-od=real]").count() == 1
             ctx.close(); b.close()
     finally:
         srv.shutdown()

@@ -18,7 +18,7 @@ picks a home only when you want friends in. The home can be as light as a GitHub
 | Home | What it gives | Needs |
 | --- | --- | --- |
 | **A GitHub repo** | The repo is the shared truth. Anyone can see the live repo; suggestions appear as files on a branch | A repo; a token only to write |
-| **This computer** | A real tribe: friends join with a link, agents, huddles | The desktop app (or `npm start`) |
+| **This computer** | A own tribe: friends join with a link, agents, huddles | The desktop app (or `npm start`) |
 | **Free cloud** | A tribe that stays online without anyone's computer | A free Render account ([CLOUD.md](CLOUD.md)) |
 | **Phone** | Keep it on this phone, or host from an Android phone | Termux for hosting ([PHONE-HOSTING.md](PHONE-HOSTING.md)) |
 

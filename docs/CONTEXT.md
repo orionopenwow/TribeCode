@@ -53,7 +53,7 @@ Sketch (not started; the gists and plan work now lays the groundwork):
 - **One release updates everything together:** merging dev → main with a version bump publishes the GitHub release (desktop installers + Restart to update) and redeploys the website and demo (Pages) from the same commit.
 - **No shell on the user's PC** (the device command workspace doesn't start, and screen control was declined): changes on the PC are delivered as files the user double-clicks.
 - **Two lanes.** `main` = stable/released. `dev` = working lane where new work lands first.
-  - Desktop\TribeCode\Stable\Start-Stable.bat runs `main` at :4747 with the real tribe.
+  - Desktop\TribeCode\Stable\Start-Stable.bat runs `main` at :4747 with your own tribe.
   - Desktop\TribeCode\Working\Start-Working.bat runs `dev` at :4848 with live reload and its own test tribe (no exe compile needed to test UI).
 - **No pull requests, autopilot milestones** (user, 2026-11-06): agents' feature branches stay local in the sandbox (worktrees). Only `dev` and `main` get pushed, so GitHub never shows "Compare & pull request". At every milestone, dev is merged into main with a version bump, which releases automatically.
 - **Shipping.** Feature branches → `dev` (user tests in Working) → merge to `main` + version bump → CI release → in-app "Restart to update".

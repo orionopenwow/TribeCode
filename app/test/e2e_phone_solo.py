@@ -1,7 +1,7 @@
 """Phone hosting (docs/PHONE-HOSTING.md): on a 390px phone with no tribe, "+" opens "Where should your tribe live?"
 (app/ui/phonehost.js). The Android and Free cloud rows show their steps (Termux one-liner, Render link). "This phone"
-starts a REAL tribe in the browser (offline.js solo mode: no pretend people), Flint adds a task by itself with no model,
-a doc is written, and a reload keeps everything. Inviting asks to move first. Then "Move to a host" joins a real tribe
+starts your own tribe in the browser (offline.js solo mode: no pretend people), Flint adds a task by itself with no model,
+a doc is written, and a reload keeps everything. Inviting asks to move first. Then "Move to a host" joins your own tribe
 server with an invite link and imports it (POST /api/import/solo): the project, task, doc and chat arrive on the host
 and the phone is signed in there. No console errors, no sideways scroll.
 Usage: python app/test/e2e_phone_solo.py [--shots]
@@ -84,13 +84,13 @@ def main():
             pg.evaluate("TribeFlint.ask('add a task: sketch the home screen')")
             pg.wait_for_function("(TribeOffline.state().tasks['first-project'] || []).some(t => /sketch the home screen/i.test(t.title))", timeout=10000)
             pg.wait_for_function("TribeFlint.thread().slice(-1)[0].who === 'flint' && /Added to Tasks/.test(TribeFlint.thread().slice(-1)[0].text)", timeout=8000)
-            # v0.32 holes pass: Flint's other free work on a phone-only tribe never hits "This needs a real tribe"
+            # v0.32 holes pass: Flint's other free work on a phone-only tribe never hits "This needs the tribe online"
             def flint_says(text, pattern, timeout=12000):
                 n0 = pg.evaluate("TribeFlint.thread().length")
                 pg.evaluate("t => TribeFlint.ask(t)", text)
                 pg.wait_for_function("([n, re]) => { const t = TribeFlint.thread(); return t.length > n + 1 && !t[t.length - 1].streaming && new RegExp(re, 'i').test(t[t.length - 1].text || ''); }", arg=[n0, pattern], timeout=timeout)
                 last = pg.evaluate("TribeFlint.thread().slice(-1)[0].text")
-                assert "needs a real tribe" not in last.lower(), (text, last)
+                assert "real" " tribe" not in last.lower() and "needs the tribe online" not in last.lower(), (text, last)
                 return last
             flint_says("make slides about our game jam", "template")
             assert any(d.get("kind") == "deck" for d in pg.evaluate("TribeOffline.state().docs['first-project'] || []")), "slides saved on the phone"
@@ -114,7 +114,9 @@ def main():
 
             # 5. inviting asks to move first
             r = pg.evaluate("TribeClient.api('/invites', { method: 'POST', body: {} }).then(() => 'ok', e => e.message)")
-            assert "Move it to a host" in r, r
+            assert "isn’t online yet" in r, r
+            pg.wait_for_selector("#od-needs [data-sc-online]", state="visible", timeout=5000); pg.click("#od-needs [data-sc-online]")   # why + Put this tribe online
+            pg.wait_for_selector("#nx-sheet [data-nx=move]", state="visible", timeout=5000); pg.click("#nx-sheet [data-nx=move]")
             pg.wait_for_selector("#ph-move-sheet", state="visible", timeout=5000)
             pg.screenshot(path=str(SHOTS / "ph-3-move.png"))
 

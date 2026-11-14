@@ -95,7 +95,7 @@ It only touches dev and test state:
    `dev`, `main` and the current branch are never deleted
 4. `node_modules/.cache` folders in the checkout
 
-A real tribe folder is only touched with `--tribe <folder>`, it must contain `.tribe/`, and it is renamed to
+A own tribe folder is only touched with `--tribe <folder>`, it must contain `.tribe/`, and it is renamed to
 `<folder>.reset-<time>`, never deleted. Stop its server first.
 
 ## dev:shots

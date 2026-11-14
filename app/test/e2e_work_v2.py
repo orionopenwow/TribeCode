@@ -100,7 +100,7 @@ def main():
             # Get help with no tribe: says exactly what needs a tribe, and opens the create-a-tribe flow
             fr.click("#wk-get"); fr.wait_for_selector("#wk-need", state="visible")
             assert "Posting a gig needs a tribe" in fr.inner_text("#wk-need"), fr.inner_text("#wk-need")
-            assert "real tribe" not in fr.inner_text("body")
+            assert "real" " tribe" not in fr.inner_text("body").lower()
             fr.click("#wk-need-go"); fr.wait_for_function("window.TribeNew && TribeNew.isOpen()", timeout=8000)
             assert fr.locator("#wk-need").count() == 0
             fr.keyboard.press("Escape"); fr.evaluate("TribeNew.close && TribeNew.close()")
@@ -121,15 +121,15 @@ def main():
             sz = fr.evaluate(SIZES); assert not sz["small"] and not sz["body"], sz
             fr.context.close()
 
-            # ---------- 2. a tribe that lives in this tab (offline.js): local data, never "Loading…" or "real tribe" ----------
+            # ---------- 2. a tribe that lives in this tab (offline.js): local data, never "Loading…" or "own tribe" ----------
             dm = page("Orion", q="&freshopen=1"); dm.evaluate("TribeOffline.start('quiet')"); dm.wait_for_function("TribeClient.connected()", timeout=20000)
             dm.evaluate("TribeTalent.open()"); dm.wait_for_selector("#tl-empty #tl-e-start", state="visible", timeout=10000)
             dm.wait_for_timeout(1500); txt = dm.inner_text("body")
-            assert "Loading" not in dm.inner_text("#view-work") and "This needs a real tribe" not in txt, txt[:400]
+            assert "Loading" not in dm.inner_text("#view-work") and "This needs the tribe online" not in txt, txt[:400]
             dm.click("#wk-get"); dm.wait_for_selector("#wk-need"); assert "Posting a gig needs a tribe" in dm.inner_text("#wk-need")
             dm.context.close()
 
-            # ---------- 3. a real tribe ----------
+            # ---------- 3. your own tribe ----------
             host = ok(api("/bootstrap", "POST", {"name": "Camp"}))["token"]
             p = ok(api("/projects", "POST", {"name": "Lantern Run"}, token=host)); pid = (p.get("project") or p)["id"]
             inv = ok(api("/invites", "POST", {}, token=host))["invite"]; j = ok(api("/join", "POST", {"code": inv["code"], "name": "Maya"})); maya = j["token"]

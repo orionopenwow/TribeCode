@@ -5,7 +5,7 @@ computer. Checked 2026-11-12 on v0.31.2 with an iPhone (390x844, Safari user age
 Test: `app/test/e2e_mobile_complete.py`. Crawl of every destination: phone-only tribe.
 
 - **(a) Phone-only**: "This phone" (offline.js solo mode). Everything is kept on the phone (localStorage + IndexedDB) and
-  moves to a host in one tap. `app/ui/phonelocal.js` answers the parts that used to say "This needs a real tribe".
+  moves to a host in one tap. `app/ui/phonelocal.js` answers the parts that used to say "This needs the tribe online".
 - **(b) Joined**: the phone joined a host (desktop app, Render, Android Termux) with an invite link. Everything goes
   through the host.
 - **(c) Installed PWA**: (a) or (b) from the Home Screen. Same features, full screen, plus phone notifications (iPhone:
@@ -51,7 +51,7 @@ Legend: ✅ works · ◐ partly (note) · ➜ needs a computer or host: shows th
 | Phone app builds (Expo) | 404 | ➜ | ◐ | ◐ | Expo runs on a computer; the phone opens the app in Expo Go |
 | Big local models (Ollama) | — | ➜ | ✅ (host's) | ✅ | Small in-browser model works on (a) with WebGPU |
 
-Before the pass, a crawl of every destination on (a) found 26 screens hitting "This needs a real tribe", one crash
+Before the pass, a crawl of every destination on (a) found 26 screens hitting "This needs the tribe online", one crash
 (calendar) and pretend data in the code repository view. Now: 0 raw errors; 9 destinations show the next-options card.
 
 ## Next options (one component: `app/ui/nextopts.js`)

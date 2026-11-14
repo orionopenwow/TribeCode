@@ -1,13 +1,13 @@
 """See how TribeCode works in the DESKTOP APP (fix/desk-demo). The desktop context as close as a browser test gets:
-  * a real tribe server on localhost, started the way the sidecar is (--port --dir --ui), already hosting a tribe;
+  * your own tribe server on localhost, started the way the sidecar is (--port --dir --ui), already hosting a tribe;
   * the app's bundled page at http://tauri.localhost/ (the Windows webview origin), served from app/ui like Tauri does,
     under the CSP from app/src-tauri/tauri.conf.json (with hashes for the pages' inline scripts, as Tauri adds them);
   * window.__TAURI__ / __TAURI_INTERNALS__ stubs (core.invoke host_start / host_log / host_stop…, app.getVersion, window,
     event, shell), and navigator.webdriver false, so the first-run and desktop-only paths run as in the real app.
 Checks: Help › See how TribeCode works starts the tour in the same window; the first frame is the blank slate (no
-project circles, none of the real tribe's or the user's names); inside the demo TribeHost.isDesktop is false, a host
+project circles, none of your own tribe's or the user's names); inside the demo TribeHost.isDesktop is false, a host
 attempt (TribeApp.hostHere, the sidecar's host_start) is refused and the real server is never started, stopped or signed
-in to; the tour plays to the end at 4x; Exit brings back the real tribe with the saved server and token unchanged and no
+in to; the tour plays to the end at 4x; Exit brings back your own tribe with the saved server and token unchanged and no
 demo data in storage. Wait helpers poll with evaluate: the CSP (rightly) blocks the eval Playwright's waits use.
 Usage: python app/test/e2e_demo_desktop.py
 """
@@ -49,14 +49,14 @@ def until(pg, js, timeout=20, what=""):
 def main():
     tmp = Path(tempfile.mkdtemp(prefix="tribe-dd-", dir="/tmp"))
     env = {**os.environ, "TRIBE_NO_GH": "1", "TRIBE_TEST": "1", "TRIBE_NO_DOWNLOAD": "1", "NO_PROXY": "127.0.0.1,localhost"}
-    srv = subprocess.Popen(["node", str(ROOT / "server" / "index.js"), "--port", str(PORT), "--dir", str(tmp / "tribe"), "--name", "Real Tribe", "--ui", str(UI), "--ollama", "http://localhost:9"],
+    srv = subprocess.Popen(["node", str(ROOT / "server" / "index.js"), "--port", str(PORT), "--dir", str(tmp / "tribe"), "--name", "Camp Tribe", "--ui", str(UI), "--ollama", "http://localhost:9"],
                            stdout=open(tmp / "log", "w"), stderr=subprocess.STDOUT, env=env)
     errors = []
     try:
         for _ in range(60):
             try: urllib.request.urlopen(SRV + "/api/health", timeout=1); break
             except Exception: time.sleep(0.25)
-        req = urllib.request.Request(SRV + "/api/bootstrap", data=json.dumps({"name": "Orion", "color": "#7C5CFF", "tribe": "Real Tribe"}).encode(), headers={"Content-Type": "application/json"})
+        req = urllib.request.Request(SRV + "/api/bootstrap", data=json.dumps({"name": "Orion", "color": "#7C5CFF", "tribe": "Camp Tribe"}).encode(), headers={"Content-Type": "application/json"})
         token = json.load(urllib.request.urlopen(req))["token"]
         real = {"name": "Orion", "color": "#7C5CFF", "onboarded": True, "server": {"url": SRV, "token": token}, "hosting": True, "tribeHere": True, "tour": {"done": True}}
         stub = """
@@ -76,8 +76,8 @@ def main():
             pg.on("console", lambda m: m.type == "warning" and m.text.startswith("demo watch:") and errors.append(m.text))
             pg.on("console", lambda m: "Content Security Policy" in m.text and "about:srcdoc" not in (m.location or {}).get("url", "") and errors.append("csp: " + m.text[:200]))
             pg.goto("http://tauri.localhost/")
-            until(pg, "!!(window.TribeClient && TribeClient.connected())", 40, "the real tribe connects")
-            assert pg.evaluate("TribeHost.isDesktop") and pg.evaluate("TribeClient.state().tribe.name") == "Real Tribe"
+            until(pg, "!!(window.TribeClient && TribeClient.connected())", 40, "your own tribe connects")
+            assert pg.evaluate("TribeHost.isDesktop") and pg.evaluate("TribeClient.state().tribe.name") == "Camp Tribe"
 
             pg.evaluate("localStorage.setItem('tribecode.project.ember-cafe.keep', '1')")   # a real project that shares a demo's name
             # ---- Help › See how TribeCode works, in the desktop window ----
@@ -91,7 +91,7 @@ def main():
               desk: TribeHost.isDesktop, text: document.body.innerText, server: TribeStore.get().server.url })""")
             assert first["circles"] == 0 and first["projects"] == 0, first
             assert not first["desk"], "inside the demo the desktop app behaves like the browser"
-            assert "Orion" not in first["text"] and "Real Tribe" not in first["text"], "real data inside the demo"
+            assert "Orion" not in first["text"] and "Camp Tribe" not in first["text"], "real data inside the demo"
             assert "offline-demo" in first["server"], first["server"]
             time.sleep(1)   # fix/batch-fixes: the blank slate holds a token before its fake socket opens: no connection pills
             pills = pg.evaluate("[...document.querySelectorAll('#health-pill:not(.hidden), .hid-chip, #ub-st')].map(e => e.textContent).join(' | ') + ' | ' + document.body.innerText")
@@ -111,12 +111,12 @@ def main():
             assert not [c for c in pg.evaluate("window.__inv")[n0:] if c.startswith("host_")], "the demo touched the sidecar"
             print(f"  desktop app: the tour from blank to Your turn in {time.time() - t0:.1f} s, no host calls")
 
-            # ---- Exit: the real tribe, unchanged ----
+            # ---- Exit: your own tribe, unchanged ----
             pg.click("#dw-exit")
-            until(pg, "!!(window.TribeOffline && !TribeOffline.active() && window.TribeClient && TribeClient.connected())", 40, "back in the real tribe")
+            until(pg, "!!(window.TribeOffline && !TribeOffline.active() && window.TribeClient && TribeClient.connected())", 40, "back in your own tribe")
             saved = pg.evaluate("JSON.parse(localStorage.getItem('tribecode.settings.v1'))")
             assert saved["server"] == real["server"] and saved["name"] == "Orion" and saved.get("hosting") is True, saved
-            assert pg.evaluate("TribeClient.state().tribe.name") == "Real Tribe"
+            assert pg.evaluate("TribeClient.state().tribe.name") == "Camp Tribe"
             left = pg.evaluate("Object.keys(localStorage).concat(Object.keys(sessionStorage)).filter(k => /offlineDemo|offline-demo|demo_|setup.wherePending/.test(k))")
             assert not left, left
             assert pg.evaluate("localStorage.getItem('tribecode.project.ember-cafe.keep')") == "1", "the exit wipe touched a real project's keys"

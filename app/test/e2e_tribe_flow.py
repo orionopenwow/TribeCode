@@ -1,6 +1,6 @@
 """The one create-a-tribe flow (feat/ui-tribeflow, app/ui/tribenew.js).
   1. Every way in opens the same sheet (#tn, step 1: name and icon): the rail +, the empty Home, Settings, the
-     welcome's "Start my real tribe", the phone's projects sheet, and TribeLocalSetup.start / TribeProjects.openNew.
+     welcome's "Start my tribe", the phone's projects sheet, and TribeLocalSetup.start / TribeProjects.openNew.
      Closing leaves no sheet and no scrim behind; there is only ever one sheet and one scrim.
   2. Back works on every step and keeps what was typed.
   3. Each "where it lives" completes: This device, A GitHub repo (mocked GitHub), Free cloud (a mocked cloud tribe:
@@ -93,7 +93,7 @@ def main():
                 pg.evaluate(js); opened(pg, how)
                 pg.evaluate("TribeNew.open()"); opened(pg, how + " twice: still one sheet")
                 pg.click(".tn-scrim", position={"x": 8, "y": 8}); closed(pg, how)
-            # the welcome's "Start my real tribe"
+            # the welcome's "Start my tribe"
             pg.evaluate("TribeWelcome.open()"); pg.wait_for_selector("#wl", timeout=5000)
             pg.click("#wl-skip"); pg.wait_for_selector("#wl [data-go='real']", state="visible", timeout=5000); pg.click("#wl [data-go='real']")
             pg.wait_for_selector("#wl", state="detached"); opened(pg, "welcome"); pg.click("#tn-x"); closed(pg, "welcome")

@@ -7,7 +7,7 @@ A phone-only tribe (iPhone, 390x844, touch; offline.js solo mode + phonelocal.js
   in a sandboxed frame; Files › Code keeps files; GitHub from the phone with a token (api.github.com mocked):
   bring a repo in, edit a file, push a commit (blobs -> tree -> commit -> ref moved); host-only parts (AI helpers, the
   repository) show the "needs a computer or a host" card, and See options lists Move to a host · Free cloud · My laptop
-  · and on an iPhone the plain "iPhones can't host" note. No raw "This needs a real tribe", no sideways scroll, no
+  · and on an iPhone the plain "iPhones can't host" note. No raw "This needs the tribe online", no sideways scroll, no
   console errors.
 A phone joined to a real host (Pixel): the same core flows reach the host (task, doc, website config) and nothing says
 it needs a host.
@@ -98,7 +98,7 @@ def phone_only(b, errors):
     pg.wait_for_function("TribeOffline.solo() && TribeClient.connected()", timeout=15000)
     pid = pg.evaluate("TribeOffline.state().projects[0].id")
     bad = []
-    pg.evaluate("""() => { const f = window.fetch; window.__nope = []; window.fetch = async (i, o) => { const r = await f(i, o); try { if (r.status === 404) { const d = await r.clone().json().catch(() => ({})); if (d.error === 'This needs a real tribe') window.__nope.push(String(i && i.url || i)); } } catch {} return r; }; }""")
+    pg.evaluate("""() => { const f = window.fetch; window.__nope = []; window.fetch = async (i, o) => { const r = await f(i, o); try { if (r.status === 404) { const d = await r.clone().json().catch(() => ({})); if (d.error === 'This needs the tribe online') window.__nope.push(String(i && i.url || i)); } } catch {} return r; }; }""")
 
     # 1. a task and a doc, kept over a reload
     r = call(pg, "POST", "/tasks", {"title": "Draw the lantern sprite", "due": time.strftime("%Y-%m-%d")}); assert r["ok"], r
@@ -169,8 +169,9 @@ def phone_only(b, errors):
 
     # 8. host-only parts: the card, See options, the iPhone note
     pg.evaluate("TribeShell.go('agents-hub')"); pg.wait_for_selector(".nx-card[data-nx-card=agents]", timeout=8000)
-    assert "This needs a real tribe" not in pg.inner_text("body")
-    pg.click(".nx-card[data-nx-card=agents] [data-nx-open]"); pg.wait_for_selector("#nx-sheet")
+    assert "real" " tribe" not in pg.inner_text("body").lower()
+    assert pg.inner_text(".nx-card[data-nx-card=agents] button") == "Put this tribe online", "why + the one button"
+    pg.click(".nx-card[data-nx-card=agents] [data-sc-online]"); pg.wait_for_selector("#nx-sheet")
     rows = pg.eval_on_selector_all("#nx-sheet .nx-row b", "els => els.map(e => e.textContent)")
     assert rows == ["Move to a host", "Free cloud", "My laptop", "iPhones can't host"], rows
     assert pg.locator("#nx-sheet .nx-row[data-nx=iphone]").is_disabled()
@@ -179,7 +180,7 @@ def phone_only(b, errors):
     pg.keyboard.press("Escape"); pg.wait_for_selector("#nx-sheet", state="detached")
     pg.evaluate("TribeShell.go('ws-agents')"); pg.wait_for_timeout(1500)
 
-    # 9. reload: everything stayed, and no screen hit a raw "needs a real tribe"
+    # 9. reload: everything stayed, and no screen hit a raw "needs the tribe online"
     pg.reload(); pg.wait_for_function("TribeOffline.solo() && TribeClient.connected() && window.TribePhoneLocal", timeout=15000)
     t = call(pg, "GET", "/tasks"); assert any(x["title"] == "Draw the lantern sprite" for x in t["d"]["tasks"]), t
     sc = call(pg, "GET", f"/projects/{pid}/site-config"); assert sc["d"]["config"]["template"] == "linkbio"
@@ -189,7 +190,7 @@ def phone_only(b, errors):
         pg.evaluate(f"TribeShell.go({json.dumps(k)})"); pg.wait_for_timeout(700); no_sideways(pg, k)
         pg.keyboard.press("Escape")
     nope = pg.evaluate("window.__nope || []")
-    assert not nope, f"raw 'needs a real tribe' on: {nope}"
+    assert not nope, f"raw 'needs the tribe online' on: {nope}"
     ctx.close()
 
 def main():

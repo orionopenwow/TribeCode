@@ -76,7 +76,7 @@ def main():
             assert ph.locator("#wl").count() == 0
             ph.close()
 
-            # start my real tribe: just closes, the normal app is underneath; never shown again on a plain visit
+            # start my own tribe: just closes, the normal app is underneath; never shown again on a plain visit
             c = b.new_context(viewport={"width": 1280, "height": 800}); q = c.new_page(); q.on("pageerror", lambda e: errors.append(str(e)))
             q.goto(BASE + "/?welcome=1"); q.wait_for_selector("#wl"); q.keyboard.press("Escape")
             assert q.locator("#wl").count() == 0 and not q.evaluate("window.TribeOffline && TribeOffline.active()")

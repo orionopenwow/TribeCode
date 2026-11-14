@@ -118,7 +118,7 @@ def main():
             assert host.locator("#fl-agents").count() == 0
             quiet(host); shot(host, "fleet-empty")
             # Start a project: the instant Start sheet (feat/setup-local) makes it on this device; agents need a tribe, so
-            # choosing This computer as its home makes the real tribe, and the hero moves on to Connect your AI (a real key)
+            # choosing This computer as its home makes your own tribe, and the hero moves on to Connect your AI (a real key)
             host.click("#fl-start")
             host.wait_for_selector("#tn #tn-name", state="visible", timeout=8000)   # the one create flow (tribenew.js)
             host.fill("#tn-name", "Fleet test"); host.click("#tn-options")
