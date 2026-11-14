@@ -353,7 +353,7 @@ console.log(JSON.stringify({ done: r.done.length, skipped: r.skipped.length, tit
             if pg.locator(".stu-issue .btn").count():
                 bb = pg.locator(".stu-issue .btn").first.bounding_box(); assert bb["height"] >= 40 and bb["x"] + bb["width"] <= 391, bb
             shot(pg, "studio-check-390.png")
-            pg.click("#wdz-agent"); pg.wait_for_selector("#stu-agent", timeout=5000)
+            pg.click("[data-wdz=more]"); pg.click("#wdz-agent"); pg.wait_for_selector("#stu-agent", timeout=5000)
             sb = pg.locator("#stu-agent .stu-sheet-in").bounding_box(); assert sb["x"] >= 0 and sb["width"] <= 391, sb
             shot(pg, "studio-agent-390.png")
             pg.click("#stu-agent [data-stu=agent-close]")
