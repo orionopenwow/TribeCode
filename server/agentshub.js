@@ -18,7 +18,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 
 // short: how the agent is named ("Maya's Codex"). TribeCode works with these tools; it isn't made by their vendors.
-const KINDS = {
+const KINDS = Object.assign(Object.create(null), {   // no prototype: a kind named "constructor" or "__proto__" is simply not a kind
   'claude-code': { label: 'Claude Code', short: 'Claude', color: '#38C6B1' },
   codex: { label: 'Codex CLI', short: 'Codex', color: '#10A37F', tool: true },
   gemini: { label: 'Gemini CLI', short: 'Gemini', color: '#4C8DF6', tool: true },
@@ -36,17 +36,17 @@ const KINDS = {
   continue: { label: 'Continue', short: 'Continue', color: '#B58CFF', tool: true },
   'claude-ai': { label: 'Claude.ai', short: 'Claude.ai', color: '#D9825B', tool: true, remote: true },
   chatgpt: { label: 'ChatGPT', short: 'ChatGPT', color: '#5BBF8E', tool: true, remote: true },
-};
+});
 const kindOf = m => (m && KINDS[m.kind] ? m.kind : 'claude-code');
 
 // Invite your agent (server/inviteagent.js): the kinds a person can invite, one of each. short: how it is named
 // ("Maya's Cursor"); "other" is "<Name>'s agent" and can be renamed.
-const AGENT_KINDS = {
+const AGENT_KINDS = Object.assign(Object.create(null), {
   claude: { label: 'Claude', short: 'Claude' }, cursor: { label: 'Cursor', short: 'Cursor' }, codex: { label: 'Codex', short: 'Codex' },
   chatgpt: { label: 'ChatGPT', short: 'ChatGPT' }, gemini: { label: 'Gemini', short: 'Gemini' }, vscode: { label: 'VS Code', short: 'VS Code' },
   windsurf: { label: 'Windsurf', short: 'Windsurf' }, cline: { label: 'Cline', short: 'Cline' }, zed: { label: 'Zed', short: 'Zed' },
   other: { label: 'Another agent', short: 'agent' },
-};
+});
 // The invite sheet's picker, in order. id: what the sheet calls the choice; kind: whose agent it becomes; tool: its
 // setup in setupFor below; behaves: 'own' (a session that is working reads its inbox between steps) or 'ask' (it looks
 // at TribeCode when its person asks it to); signin: it signs in on a TribeCode page (server/agentauth.js), no key.

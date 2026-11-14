@@ -72,7 +72,7 @@ def main():
             wait_text(host, "#io-made-title", "Link copied")
             clip = host.evaluate("navigator.clipboard.readText()")
             assert clip == link, f"the link is on the clipboard ({clip!r})"
-            for sel in ["#ii-copy", "#ii-qrbtn", "#io-who-claude"]: host.wait_for_selector(sel, state="visible")
+            for sel in ["#ii-copy", "#ii-qrbtn", "#io-who-agent"]: host.wait_for_selector(sel, state="visible")
             host.click("#ii-qrbtn"); host.wait_for_selector("#ii-qr .qr svg")
             shot(host, "sheet")
             tok = host.evaluate("TribeStore.get().server.token")

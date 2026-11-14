@@ -7,7 +7,8 @@ P   Flint's proof-of-work ZIPs hold a project's code: only the member who saved 
     it; a friend can't overwrite someone else's ZIP by saving under the same name; the manifest only names the people
     this member can already see; the host folder path is only told to the host.
 B   the Blender bridge's copy-paste command carries no shell syntax ($( ), backticks, ;) from the model name.
-O   sign-in for the claude.ai connector (server/claudeauth.js): redirect URIs are validated (no open redirect), PKCE is
+C   an invited agent of any kind (server/inviteagent.js): its person's access and never more, whatever it is called.
+O   sign-in for apps that sign in (server/agentauth.js; claude.ai, ChatGPT, editors): redirect URIs are validated (no open redirect, no app schemes), the name an app registers under only picks what the agent is called, PKCE is
     required, only a signed-in person approves, tokens are hashes at rest and never work from a URL, refresh tokens rotate
     and a replay ends the grant, Pause and Remove end the sign-in, the endpoints are rate-limited.
 F   the Agent fleet: a friend can't give a task to an agent outside their project.
@@ -140,7 +141,7 @@ def main():
         ok(api(f"/agents/fleet/{cag}/task", "POST", {"title": "polish the title screen"}, token=ct, project=pb), "Cleo tasks her own agent")
         print("F ok: fleet tasks stay in the project")
 
-        # ================= C: an invited Claude (server/inviteclaude.js) =================
+        # ================= C: an invited agent (server/inviteagent.js; /api/invite-claude is its old path) =================
         ck = ok(api("/invite-claude", "POST", {}, token=mt, project=pa), "Maya invites her Claude")["token"]
         assert ck not in Path(tmp, "tribe", ".tribe", "members.json").read_text(), "only the key's hash is stored"
         assert api(f"/chat/general", token=ck, project=pb)[0] == 403, "her Claude can't read project B"
@@ -156,8 +157,39 @@ def main():
         ok(api("/invite-claude", "DELETE", token=mt))
         assert api("/tasks", token=ck, project=pa)[0] == 401, "removed: refused"
         assert ck not in Path(tmp, "server.log").read_text(errors="ignore"), "the key isn't logged"
-        print("C ok: an invited Claude has its person's access and never more")
-        # ================= O: sign-in for the claude.ai connector (server/claudeauth.js) =================
+        # the same wall for every other kind, on the new path
+        made = {k: ok(api("/invite-agent", "POST", {"kind": k}, token=mt, project=pa), f"Maya invites a {k}") for k in ("codex", "cursor", "other")}
+        assert len({m["agent"]["id"] for m in made.values()}) == 3 and [made[k]["agent"]["name"] for k in ("codex", "cursor", "other")] == ["Maya's Codex", "Maya's Cursor", "Maya's agent"]
+        mfile = Path(tmp, "tribe", ".tribe", "members.json").read_text()
+        for k, m in made.items():
+            xk = m["token"]
+            assert xk not in mfile, "only the key's hash is stored"
+            assert api("/chat/general", token=xk, project=pb)[0] == 403, f"her {k} can't read project B"
+            assert api("/invites", "POST", {"maxUses": 1}, token=xk, project=pa)[0] == 403 and api("/agents", "POST", {}, token=xk, project=pa)[0] == 403, f"her {k} can't invite people or mint keys"
+            for path in ("/invite-agent", "/invite-claude"):
+                assert api(path, "PUT", {"adminAsMe": True, "id": m["agent"]["id"]}, token=xk)[0] == 403 and api(path, "POST", {"kind": "gemini"}, token=xk)[0] == 403, f"her {k} can't change its access or invite another agent"
+            assert api("/perms/mute", "POST", {"member": bob["member"]["id"], "minutes": 5}, token=xk, project=pa)[0] == 403, "no admin"
+            assert api(f"/chat/{bm}", token=xk)[0] == 403, f"her {k} can't read her DMs with Bob"
+            assert api("/tasks", token=xk, project=pa)[0] == 200
+        # Bob can't touch Maya's agents by id or kind: his own request only ever means his own
+        cod = made["codex"]
+        assert api("/invite-agent", "PUT", {"id": cod["agent"]["id"], "paused": True}, token=bt)[0] == 404 and api("/invite-agent?id=" + cod["agent"]["id"], "DELETE", token=bt)[0] == 404
+        assert api("/invite-agent", "POST", {"id": cod["agent"]["id"]}, token=bt)[0] == 404, "Bob can't take a new key for her Codex"
+        assert api("/tasks", token=cod["token"], project=pa)[0] == 200
+        # a kind is one of the list, and a name is plain text that can't copy someone here
+        for bad in ("__proto__", "constructor", "host", "../x", "claude " * 9): assert api("/invite-agent", "POST", {"kind": bad}, token=mt)[0] == 400, bad
+        assert api("/invite-agent", "PUT", {"kind": "other", "name": "Bob"}, token=mt)[0] == 409 and api("/invite-agent", "PUT", {"kind": "codex", "name": "Host"}, token=mt)[0] == 400
+        nm = [a["name"] for a in ok(api("/invite-agent", "PUT", {"kind": "other", "name": "<img src=x onerror=1>@Bob\u0000"}, token=mt))["agents"] if a["agentKind"] == "other"][0]
+        assert "<" not in nm and ">" not in nm and "@" not in nm and "\u0000" not in nm, nm
+        # one of each: pausing or removing one leaves the others exactly as they were
+        ok(api("/invite-agent", "PUT", {"kind": "codex", "paused": True}, token=mt))
+        assert api("/tasks", token=cod["token"], project=pa)[0] == 401 and api("/tasks", token=made["cursor"]["token"], project=pa)[0] == 200
+        for k in made: ok(api("/invite-agent?kind=" + k, "DELETE", token=mt))
+        for m in made.values(): assert api("/tasks", token=m["token"], project=pa)[0] == 401, "removed: refused"
+        log_now = Path(tmp, "server.log").read_text(errors="ignore")
+        for m in made.values(): assert m["token"] not in log_now, "a key was logged"
+        print("C ok: an invited agent of any kind has its person's access and never more")
+        # ================= O: sign-in for apps that sign in (server/agentauth.js) =================
         import base64, hashlib, re, secrets, urllib.parse
         class _NoRedirect(urllib.request.HTTPRedirectHandler):
             def redirect_request(self, *a, **k): return None
@@ -179,7 +211,7 @@ def main():
         for path in ("/.well-known/oauth-protected-resource", "/.well-known/oauth-authorization-server"):
             st, d, _ = web(path, headers={"Host": "evil.example"}); assert st == 200 and "evil.example" not in json.dumps(d), d
         # registration: only https (or http on this computer), no fragments, credentials, look-alike hosts or other schemes
-        for bad in (["http://evil.example/cb"], ["http://localhost@evil.example/cb"], ["http://127.0.0.1.evil.example/cb"], ["https://claude.ai/cb#x"], ["https://u:p@claude.ai/cb"], ["javascript:alert(1)"], ["data:text/html,x"], ["file:///etc/passwd"], ["//evil.example"], [CB] * 6, [CB, 7], [], None):
+        for bad in (["http://evil.example/cb"], ["http://localhost@evil.example/cb"], ["http://127.0.0.1.evil.example/cb"], ["https://claude.ai/cb#x"], ["https://u:p@claude.ai/cb"], [CB, "cursor://anysphere.cursor-mcp/oauth/callback", "vscode://vscode.github-authentication/did-authenticate"], ["javascript:alert(1)"], ["data:text/html,x"], ["file:///etc/passwd"], ["//evil.example"], [CB] * 6, [CB, 7], [], None):
             st, d, _ = web("/connect/register", "POST", {"redirect_uris": bad}); assert st == 400 and d.get("error") == "invalid_redirect_uri", (bad, st, d)
         assert web("/connect/register", "POST", {"redirect_uris": [CB], "token_endpoint_auth_method": "client_secret_basic"})[0] == 400, "no confidential clients"
         assert web("/connect/register", "POST", {"redirect_uris": [CB], "grant_types": ["client_credentials"]})[0] == 400, "no other grants"
@@ -195,7 +227,7 @@ def main():
         for over in ({"code_challenge": None}, {"code_challenge_method": "plain"}, {"ch": "short"}):
             st, _, hd = authz(**over); assert st == 302 and hd["Location"].startswith(CB + "?") and "error=invalid_request" in hd["Location"], (over, hd.get("Location"))
         st, _, hd = authz(resource="https://other.example/mcp"); assert "error=invalid_target" in hd["Location"], "a token is only for this tribe's MCP address"
-        ver, ch = pkce(); st, _, hd = authz(ch=ch); assert st == 302 and hd["Location"].startswith("/claude-consent.html#rid="), hd.get("Location")
+        ver, ch = pkce(); st, _, hd = authz(ch=ch); assert st == 302 and hd["Location"].startswith("/agent-consent.html#rid="), hd.get("Location")
         rid = hd["Location"].split("rid=")[1]
         # only a signed-in person approves: nobody, a Claude, a spectator and a guest can't; nor someone guessing the rid
         ck2 = ok(api("/invite-claude", "POST", {}, token=mt, project=pa))["token"]
@@ -244,6 +276,25 @@ def main():
         ok(api("/invite-claude", "PUT", {"paused": True}, token=mt)); assert api("/tasks", token=at, project=pa)[0] == 401, "paused"
         ok(api("/invite-claude", "PUT", {"paused": False}, token=mt)); assert api("/tasks", token=at, project=pa)[0] == 200
         ok(api("/invite-claude", "DELETE", token=mt)); assert api("/tasks", token=at, project=pa)[0] == 401 and api("/tasks", token=ck2, project=pa)[0] == 401, "removed"
+        # an app registered under another product's name: the name only picks what the agent is called. It never reaches
+        # another agent of Maya's, and it gets the same wall.
+        hk = ok(api("/invite-agent", "POST", {"kind": "claude"}, token=mt, project=pa))["token"]
+        st, creg, _ = web("/connect/register", "POST", {"redirect_uris": ["http://localhost:8787/callback"], "client_name": "Cursor"}); assert st == 201, creg
+        ver, ch = pkce(); st, _, hd = web("/connect/authorize?" + urllib.parse.urlencode({"response_type": "code", "client_id": creg["client_id"], "redirect_uri": "http://localhost:49152/callback", "state": "s2", "code_challenge": ch, "code_challenge_method": "S256"}))
+        assert st == 302 and hd["Location"].startswith("/agent-consent.html#rid="), "a loopback redirect may use any port"
+        rid = hd["Location"].split("rid=")[1]
+        st, req, _ = web("/connect/request?rid=" + rid); assert req["kind"] == "cursor" and req["client"] == "Cursor" and req["loopback"], req
+        done = ok(api("/agent-auth", "POST", {"rid": rid}, token=mt)); assert done["name"] == "Maya's Cursor", done
+        code = urllib.parse.parse_qs(urllib.parse.urlparse(done["redirect"]).query)["code"][0]
+        st, t, _ = web("/connect/token", "POST", form={"grant_type": "authorization_code", "client_id": creg["client_id"], "redirect_uri": "http://localhost:49152/callback", "code": code, "code_verifier": ver}); assert st == 200, t
+        cat = t["access_token"]
+        mine = {a["agentKind"]: a for a in ok(api("/invite-agent", token=mt))["agents"]}
+        assert set(mine) == {"claude", "cursor"} and not mine["claude"]["connections"] and len(mine["cursor"]["connections"]) == 1 and not mine["cursor"]["key"], "the sign-in belongs to her Cursor, not her Claude"
+        assert api("/tasks", token=cat, project=pa)[0] == 200 and api("/chat/general", token=cat, project=pb)[0] == 403 and api(f"/chat/{bm}", token=cat)[0] == 403
+        assert api("/invite-agent", token=cat)[0] == 403 and api("/agent-auth", "POST", {"rid": "x"}, token=cat)[0] == 403 and api("/perms/mute", "POST", {"member": bob["member"]["id"], "minutes": 5}, token=cat, project=pa)[0] == 403
+        ok(api("/invite-agent", "PUT", {"kind": "claude", "paused": True}, token=mt)); assert api("/tasks", token=cat, project=pa)[0] == 200 and api("/tasks", token=hk, project=pa)[0] == 401, "pausing her Claude leaves her Cursor"
+        ok(api("/invite-agent?kind=cursor", "DELETE", token=mt)); assert api("/tasks", token=cat, project=pa)[0] == 401
+        ok(api("/invite-agent?kind=claude", "DELETE", token=mt))
         # rate limits
         got = [web("/connect/token", "POST", form={"grant_type": "refresh_token", "refresh_token": "x"})[0] for _ in range(45)]; assert 429 in got, got
         got = [web("/connect/register", "POST", {"redirect_uris": [CB]})[0] for _ in range(24)]; assert 429 in got, got
