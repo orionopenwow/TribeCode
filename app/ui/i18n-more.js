@@ -226,6 +226,27 @@
     "3D points joined by thin lines.": ["Puntos 3D unidos por líneas finas.", "Pontos 3D ligados por linhas finas.", "Des points 3D reliés par de fines lignes.", "3D-Punkte, verbunden durch feine Linien.", "細い線でつながる3Dの点。", "由细线相连的 3D 点。", "가는 선으로 이어진 3D 점."],
     "A deep 3D field of soft dots.": ["Un campo 3D profundo de puntos suaves.", "Um campo 3D profundo de pontos suaves.", "Un champ 3D profond de points doux.", "Ein tiefes 3D-Feld aus weichen Punkten.", "やわらかな点が奥まで広がる3D空間。", "柔和圆点构成的深邃 3D 空间。", "부드러운 점이 깊게 펼쳐진 3D 공간."],
     "3D points streaming toward you.": ["Puntos 3D que vienen hacia ti.", "Pontos 3D vindo na sua direção.", "Des points 3D qui viennent vers vous.", "3D-Punkte, die auf dich zuströmen.", "こちらへ流れてくる3Dの点。", "朝你涌来的 3D 光点。", "내 쪽으로 흘러오는 3D 점."],
+  // The website editor (feat/site-editor2 round 3): what the helper answers about the selected thing, and the titles of
+  // suggestions drawn from what the tribe said. The words people wrote themselves (before/after) are never translated.
+    'Moved it up one.': ['Lo subí un lugar.', 'Subi uma posição.', "Monté d'un cran.", 'Eins nach oben verschoben.', '1つ上に移動しました。', '已上移一位。', '한 칸 위로 옮겼어요.'],
+    'Moved it down one.': ['Lo bajé un lugar.', 'Desci uma posição.', "Descendu d'un cran.", 'Eins nach unten verschoben.', '1つ下に移動しました。', '已下移一位。', '한 칸 아래로 옮겼어요.'],
+    'Removed it.': ['Eliminado.', 'Removido.', 'Supprimé.', 'Entfernt.', '削除しました。', '已删除。', '삭제했어요.'],
+    'Made a copy right after it.': ['Hice una copia justo después.', 'Fiz uma cópia logo depois.', "J'ai fait une copie juste après.", 'Direkt dahinter eine Kopie erstellt.', 'すぐ後ろにコピーを作りました。', '已在其后复制一份。', '바로 뒤에 사본을 만들었어요.'],
+    'Added another one after it: click its words to change them.': ['Añadí otro después: haz clic en sus palabras para cambiarlas.', 'Adicionei outro depois: clique nas palavras para mudá-las.', "J'en ai ajouté un autre après : cliquez sur ses mots pour les changer.", 'Dahinter ein weiteres hinzugefügt: Klicke auf die Wörter, um sie zu ändern.', '後ろにもう1つ追加しました。文字をクリックして変更できます。', '已在其后再加一项：点击文字即可修改。', '뒤에 하나 더 추가했어요. 글자를 눌러 바꿔 보세요.'],
+    'Click it on the page first, then say that again.': ['Primero haz clic en ello en la página y dilo otra vez.', 'Clique nisso na página primeiro e diga de novo.', "Cliquez d'abord dessus sur la page, puis redites-le.", 'Klicke es zuerst auf der Seite an und sag es dann noch einmal.', '先にページ上でクリックしてから、もう一度言ってください。', '请先在页面上点击它，然后再说一遍。', '먼저 페이지에서 눌러 선택한 뒤 다시 말해 주세요.'],
+    'That entry is not there any more.': ['Esa entrada ya no está.', 'Esse item não está mais lá.', "Cette entrée n'est plus là.", 'Diesen Eintrag gibt es nicht mehr.', 'その項目はもうありません。', '那一项已经不在了。', '그 항목은 이제 없어요.'],
+    'That is as small as it goes.': ['No puede ser más pequeño.', 'Não dá para ficar menor.', 'Impossible de faire plus petit.', 'Kleiner geht es nicht.', 'これ以上小さくできません。', '已经是最小了。', '더 작게는 안 돼요.'],
+    'That is as big as it goes. For a bigger headline, try another layout or font.': ['No puede ser más grande. Para un titular mayor, prueba otro diseño o fuente.', 'Não dá para ficar maior. Para um título maior, tente outro layout ou fonte.', 'Impossible de faire plus grand. Pour un titre plus grand, essayez une autre mise en page ou police.', 'Größer geht es nicht. Für eine größere Überschrift probiere ein anderes Layout oder eine andere Schrift.', 'これ以上大きくできません。見出しを大きくするには、別のレイアウトやフォントを試してください。', '已经是最大了。想要更大的标题，请换一种布局或字体。', '더 크게는 안 돼요. 더 큰 제목은 다른 레이아웃이나 글꼴을 써 보세요.'],
+    'Took the picture out. A placeholder shows until you add one.': ['Quité la imagen. Se muestra un espacio vacío hasta que añadas una.', 'Tirei a imagem. Um espaço reservado aparece até você adicionar outra.', "Image retirée. Un emplacement vide s'affiche jusqu'à ce que vous en ajoutiez une.", 'Bild entfernt. Ein Platzhalter erscheint, bis du eins hinzufügst.', '画像を外しました。追加するまで仮の枠が表示されます。', '已移除图片。添加新图片前会显示占位。', '사진을 뺐어요. 새로 넣을 때까지 빈 자리가 표시돼요.'],
+    'Nothing to change there for what is selected.': ['No hay nada que cambiar ahí en lo seleccionado.', 'Nada para mudar aí no que está selecionado.', "Rien à changer ici pour ce qui est sélectionné.", 'Für die Auswahl gibt es da nichts zu ändern.', '選択中のものに変更できる点はありません。', '所选内容没有可改的地方。', '선택한 것에는 바꿀 게 없어요.'],
+    'Update when you open': ['Actualizar el horario de apertura', 'Atualizar o horário de abertura', "Mettre à jour l'heure d'ouverture", 'Öffnungszeit aktualisieren', '開店時間を更新', '更新开门时间', '여는 시간 업데이트'],
+    'Use the new headline': ['Usar el nuevo titular', 'Usar o novo título', 'Utiliser le nouveau titre', 'Die neue Überschrift verwenden', '新しい見出しを使う', '使用新标题', '새 제목 사용'],
+    'Use the new tagline': ['Usar el nuevo lema', 'Usar o novo slogan', 'Utiliser le nouveau slogan', 'Den neuen Slogan verwenden', '新しいキャッチコピーを使う', '使用新标语', '새 문구 사용'],
+    'Rename the site': ['Cambiar el nombre del sitio', 'Renomear o site', 'Renommer le site', 'Website umbenennen', 'サイト名を変更', '重命名网站', '사이트 이름 바꾸기'],
+    'Use the new email address': ['Usar el nuevo correo', 'Usar o novo e-mail', 'Utiliser la nouvelle adresse e-mail', 'Die neue E-Mail-Adresse verwenden', '新しいメールアドレスを使う', '使用新邮箱地址', '새 이메일 주소 사용'],
+    'Change the words': ['Cambiar el texto', 'Mudar o texto', 'Changer le texte', 'Text ändern', '文言を変更', '修改文字', '문구 바꾸기'],
+    'Change the heading as the comment says': ['Cambiar el encabezado como dice el comentario', 'Mudar o título como diz o comentário', 'Changer le titre comme le dit le commentaire', 'Überschrift wie im Kommentar ändern', 'コメントのとおり見出しを変更', '按评论修改标题', '댓글대로 제목 바꾸기'],
+    'Not on the site yet': ['Aún no está en el sitio', 'Ainda não está no site', 'Pas encore sur le site', 'Noch nicht auf der Website', 'まだサイトにありません', '网站上还没有', '아직 사이트에 없음'],
   });
   I.addPatterns({
     'Good morning, {name}': ['Buenos días, {name}', 'Bom dia, {name}', 'Bonjour, {name}', 'Guten Morgen, {name}', 'おはようございます、{name}さん', '早上好，{name}', '좋은 아침이에요, {name}님'],
@@ -246,6 +267,10 @@
     '{n} people': ['{n} personas', '{n} pessoas', '{n} personnes', '{n} Personen', '{n}人', '{n} 人', '{n}명'],
     '{n} member · {n2} online': ['{n} miembro · {n2} en línea', '{n} membro · {n2} online', '{n} membre · {n2} en ligne', '{n} Mitglied · {n2} online', 'メンバー{n}人 · {n2}人がオンライン', '{n} 位成员 · {n2} 人在线', '멤버 {n}명 · {n2}명 접속 중'],
     '{n} members · {n2} online': ['{n} miembros · {n2} en línea', '{n} membros · {n2} online', '{n} membres · {n2} en ligne', '{n} Mitglieder · {n2} online', 'メンバー{n}人 · {n2}人がオンライン', '{n} 位成员 · {n2} 人在线', '멤버 {n}명 · {n2}명 접속 중'],
+    'It says “{text}” now.': ['Ahora dice «{text}».', 'Agora diz “{text}”.', 'Il est maintenant écrit « {text} ».', 'Jetzt steht dort „{text}“.', '「{text}」に変更しました。', '现在写的是“{text}”。', '이제 “{text}”라고 적혀 있어요.'],
+    'Add {what}': ['Añadir {what}', 'Adicionar {what}', 'Ajouter {what}', '{what} hinzufügen', '{what}を追加', '添加{what}', '{what} 추가'],
+    'Make {color} the main colour': ['Usar {color} como color principal', 'Usar {color} como cor principal', 'Faire de {color} la couleur principale', '{color} zur Hauptfarbe machen', '{color}をメインカラーにする', '把{color}设为主色', '{color}을(를) 메인 색으로'],
+    '{n} things selected': ['{n} elementos seleccionados', '{n} itens selecionados', '{n} éléments sélectionnés', '{n} Elemente ausgewählt', '{n}個を選択中', '已选择 {n} 项', '{n}개 선택됨'],
   });
   I.addPlurals({
     '{n} tasks': [{ one: '{n} tarea', other: '{n} tareas' }, { one: '{n} tarefa', other: '{n} tarefas' }, { one: '{n} tâche', other: '{n} tâches' }, { one: '{n} Aufgabe', other: '{n} Aufgaben' }, '{n}件のタスク', '{n} 个任务', '작업 {n}개'],
