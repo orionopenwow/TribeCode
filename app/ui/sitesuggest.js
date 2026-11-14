@@ -72,7 +72,9 @@
   async function ask(api, s) {
     const text = `Suggestion: ${s.title}. “${s.before}” becomes “${s.after}”. (${s.source.who || 'Someone'} ${WHERE[s.source.kind] || ''}: “${s.source.text}”)`.slice(0, 590);
     const blk = s.target && s.target.block !== '@' ? s.target.block : (api.pageNow().blocks[0] || {}).id;
-    try { await api.addComment({ page: api.page(), block: blk, blockType: '', label: s.title, text, x: 50, y: 24 }); later.add(s.id); api.say('Asked: it is a comment on that section now. The people who can change the site see it and can turn it into a task.'); } catch (e) { api.say('Could not ask: ' + e.message); }
+    try { await api.addComment({ page: api.page(), block: blk, blockType: '', label: s.title, text, x: 50, y: 24 }); later.add(s.id);
+      if (window.TribeGroupStyle && window.TribeGroupStyle.ask && api.pid() && api.connected()) { try { await window.TribeGroupStyle.ask('site.edit', s.title); } catch {} }
+      api.say('Asked: it is a comment on that section now. The people who can change the site see it and can turn it into a task.'); } catch (e) { api.say('Could not ask: ' + e.message); }
   }
   async function click(el, api) {
     const k = el.dataset.sg, id = el.dataset.id, s = id && current(api).find(x => x.id === id);

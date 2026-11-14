@@ -35,7 +35,7 @@ const path = require('node:path');
 const S = require('../app/ui/sitecfg.js');
 const AI = require('../app/ui/aibasics-core.js');
 
-module.exports = function siteDesign({ base, root, showcase, siteFlint, P, tasks, nameOf = x => x, members = () => [], inspo, postChat, broadcast, log = () => {} }) {
+module.exports = function siteDesign({ perms = null, base, root, showcase, siteFlint, P, tasks, nameOf = x => x, members = () => [], inspo, postChat, broadcast, log = () => {} }) {
   const LIB = path.join(root, 'templates', 'sites');
   const UI = [path.join(root, 'app', 'ui'), path.join(root, 'ui')].find(d => fs.existsSync(path.join(d, 'sitecfg.js'))) || path.join(root, 'app', 'ui');
   const FONTS = path.join(UI, 'assets', 'site-fonts');
@@ -171,7 +171,10 @@ module.exports = function siteDesign({ base, root, showcase, siteFlint, P, tasks
 
   async function route(req, res, { m, a, b, c, d, parts = [], me, readBody, send, fail }) {
     if (!me) return fail(res, 401, 'not a member');
-    const canEdit = !!me && me.role !== 'spectator' && me.role !== 'guest';
+    // feat/site-editor2: "change the website" is a row in the permissions table (site.edit), so a group's own roles decide
+    // it and a refusal says who can do it (the Ask bar). AI helpers keep their own rules (site_propose).
+    const mayRole = !!me && me.role !== 'spectator' && me.role !== 'guest';
+    const canEdit = mayRole && (me.role === 'agent' || !perms || a !== 'projects' || perms.can(me, 'site.edit', b));
     try {
       if (a === 'site-designer') {
         if (b === 'templates' && m === 'GET') { const k = catalog(); return send(res, 200, { templates: k.templates, categories: k.categories || [] }); }
