@@ -215,7 +215,7 @@
   const parseRepo = v => { const m = String(v || '').trim().replace(/\.git$/, '').match(/(?:github\.com[/:])?([\w.-]+)\/([\w.-]+)\/?$/); return m ? `${m[1]}/${m[2]}` : ''; };
   function draft() {
     if (!OFF() || !OFF().start) throw new Error('Setup did not load. Reload the app and try again.');
-    if (!solo()) OFF().start('solo', { name: st.name, emoji: st.emoji });
+    if (!solo()) OFF().start('solo', { name: st.name, emoji: st.emoji, quiet: !st.opts && st.where === 'computer' });
     return new Promise(res => { let n = 0; const t = () => (L() && L().pid() && inTribe()) || n++ > 60 ? res() : setTimeout(t, 100); t(); });
   }
   async function create() {
@@ -295,7 +295,7 @@
     const c = st.created || {};
     const hosted = !!(c.server && c.token) || (inTribe() && !solo());
     el.innerHTML = `${head('Invite friends · optional', 'Who’s building with you?')}
-      ${hosted ? `<p class="ph-lead">Friends join ${esc(st.name)} with a link, a guest gets a pass for a day, and your AI agent can come too. Invite them now, or any time from the sidebar.${c.where === 'folder' || c.where === 'computer' || c.where === 'shared' ? ' Links work for friends on this network (Wi-Fi) while this computer runs TribeCode; to work with friends anywhere, connect GitHub or a shared folder from the pill at the top.' : ''}</p>`
+      ${hosted ? `<p class="ph-lead">Friends join ${esc(st.name)} with a link, a guest gets a pass for a day, and your AI agent can come too. Invite them now, or any time from the sidebar.${c.where === 'folder' || c.where === 'computer' || c.where === 'shared' ? ' Links work for friends on this Wi-Fi while this computer is on. For friends anywhere, see More options under Sharing and backup on the dashboard.' : ''}</p>`
       : c.where === 'github' ? `<p class="ph-lead">Friends can follow it on GitHub right away. To build together live, give it a host later (This computer or Free cloud).</p>
         <div class="su-cmd tn-link"><input class="input" id="tn-link" readonly value="${esc(c.url || '')}" aria-label="Repository link"><button type="button" class="btn" id="tn-copy">Copy</button></div>`
       : `<p class="ph-lead">${esc(st.name)} is ready and saved in this browser. Friends and AI agents join once it is online; you can do that now or any time from the dashboard.</p>`}

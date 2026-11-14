@@ -153,7 +153,7 @@
       members: [{ id: 'me', name, color: st.color || '#F26B1D', role: 'host', joined: iso(now) }],
       current: pid,
       projects: [{ id: pid, name: pname, emoji: d.emoji || '✨', image: null, bio: String(d.bio || '').slice(0, 400), color: '#F26B1D', channel: 'general', default: true, created: iso(now), members: { me: 'host' } }],
-      chat: { [pid]: [{ id: 'm-' + rid(), at: iso(now), by: 'tribecode', text: d.name ? `${first} started **${pname}** on ${where}. Everything works here already: add tasks, notes and docs, ask Flint for help. When friends should join, put it online from Sharing and backup on the dashboard.` : `${first} started **${String(tname).slice(0, 40)}** on ${where}. It is saved here for now: add tasks and notes, ask Flint for help, and put it online when friends should join.` }] },
+      chat: { [pid]: [{ id: 'm-' + rid(), at: iso(now), by: 'tribecode', text: d.quiet ? `${first} started **${pname}**. Add tasks, notes and docs, ask Flint for help, and invite friends whenever you like.` : d.name ? `${first} started **${pname}** on ${where}. Everything works here already: add tasks, notes and docs, ask Flint for help. When friends should join, put it online from Sharing and backup on the dashboard.` : `${first} started **${String(tname).slice(0, 40)}** on ${where}. It is saved here for now: add tasks and notes, ask Flint for help, and put it online when friends should join.` }] },
       tasks: { [pid]: (Array.isArray(d.tasks) ? d.tasks : []).map(x => String(x || '').trim().slice(0, 200)).filter(Boolean).slice(0, 30).map((title, i) => ({ id: 't-' + rid(6), title, status: 'backlog', assignee: null, by: 'me', created: iso(now), updated: iso(now), order: now + i, source: 'board', body: '', project: pid })) },
       docs: { [pid]: docs }, vision: { [pid]: String(d.bio || '') }, gists: { [pid]: [] },
       company: d.company ? { [pid]: companyDraft(d.company, pname) } : {}, whiteboard: {},
@@ -1264,7 +1264,10 @@
     return { server: { ...(st.server || {}) }, hosting: st.hosting, hostOff: st.hostOff, projKey: pk, projVal: pkv, at: iso() };
   }
   // start(): ask which demo (Explore quietly / Watch it come alive). start('quiet' | 'showcase') starts that one.
+  // feat/real-tribe: a draft that is on its way to this computer (tribenew.js) says nothing about where it is saved
+  let draftQuiet = false;
   function start(mode, draft) {
+    draftQuiet = !!(draft && draft.quiet);
     if (!['quiet', 'showcase', 'solo', 'watch'].includes(mode)) return choose();
     // fix/desk-demo: "Start a project" inside the tour makes the project in the tour's own tribe (never a real one here)
     if (mode === 'solo' && draft && active() && db && db.mode === 'watch' && hooks.create.length) { hooks.create.forEach(fn => { try { fn(draft); } catch (e) { console.warn(e); } }); return; }
@@ -1302,7 +1305,7 @@
   }
   function closeChooser() { const body = document.querySelector('#invite-body'); if (body && body.querySelector('.od-choice')) document.querySelector('#invite-modal').classList.add('hidden'); }
   function enterUi() {
-    const go = () => { if (A() && A().show) A().show('home'); toast(db?.mode === 'showcase' ? `${db?.tribe?.name || 'Campfire Crew'} is live. Sit back and watch, or join in.` : solo() ? (db.projects[0] && db.projects[0].name !== 'My first project' ? `${db.projects[0].name} is ready, and it’s saved ${phoneLike() ? 'on this phone' : 'in this browser'}.` : `${db?.tribe?.name} is ready on this phone.`) : `${db?.tribe?.name || 'Demo Tribe'} is ready. Nothing leaves this device.`); };
+    const go = () => { if (A() && A().show) A().show('home'); if (draftQuiet) { draftQuiet = false; return; } toast(db?.mode === 'showcase' ? `${db?.tribe?.name || 'Campfire Crew'} is live. Sit back and watch, or join in.` : solo() ? (db.projects[0] && db.projects[0].name !== 'My first project' ? `${db.projects[0].name} is ready, and it’s saved ${phoneLike() ? 'on this phone' : 'in this browser'}.` : `${db?.tribe?.name} is ready on this phone.`) : `${db?.tribe?.name || 'Demo Tribe'} is ready. Nothing leaves this device.`); };
     if (C().connected()) return go();
     let n = 0; const wait = () => (C().connected() || ++n > 40 ? go() : setTimeout(wait, 50)); wait();
   }

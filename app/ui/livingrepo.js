@@ -427,7 +427,7 @@
   async function share() {
     if (!live()) {   // this device only: sharing needs a home first
       const s = sheet('lr-share', 'Share', `${head('Share', 'How should friends join?')}<div class="ph-list">${WAYS.map(([k, icn, t, sub, rec]) => `<button type="button" class="ph-row" data-share="${k}"><span class="ph-ic${rec ? ' live' : ''}">${ic(icn, 18)}</span><span class="ph-tt"><b>${esc(t)}${rec ? ' <em class="ph-tag">Recommended</em>' : ''}</b><small>${esc(sub)}</small></span></button>`).join('')}</div><div id="lr-share-detail"></div>`);
-      s.querySelectorAll('[data-share]').forEach(b => b.onclick = () => { closeSheet(true); if (b.dataset.share === 'anywhere') L() && L().choose('github'); else if (b.dataset.share === 'network') L() && L().choose('computer'); else if (b.dataset.share === 'folder') sharedFolder(); else toast('It stays on this device. Share any time from the pill at the top.'); });
+      s.querySelectorAll('[data-share]').forEach(b => b.onclick = () => { closeSheet(true); if (b.dataset.share === 'anywhere') L() && L().choose('github'); else if (b.dataset.share === 'network') L() && L().choose('computer'); else if (b.dataset.share === 'folder') sharedFolder(); else toast('It stays on this device. Share any time from Sharing and backup on the dashboard.'); });
       return s;
     }
     await load(true).catch(() => {});
@@ -474,7 +474,7 @@
         shared();
       },
       solo() {
-        det.innerHTML = `<p class="ph-lead" data-solo-done>It stays ${cur.folder ? `in <code>${esc(cur.folder.display)}</code>` : 'where it is'}. Nobody else sees it. Share any time from the pill at the top.</p><div class="ph-acts"><button type="button" class="btn primary" data-lr-close>Done</button></div>`;
+        det.innerHTML = `<p class="ph-lead" data-solo-done>It stays ${cur.folder ? `in <code>${esc(cur.folder.display)}</code>` : 'where it is'}. Nobody else sees it. Share any time from Sharing and backup on the dashboard.</p><div class="ph-acts"><button type="button" class="btn primary" data-lr-close>Done</button></div>`;
         det.querySelector('[data-lr-close]').onclick = () => closeSheet(); shared();
       },
     };

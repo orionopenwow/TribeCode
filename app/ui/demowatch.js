@@ -550,7 +550,7 @@
   // Esc ends the show (no dim, no cursors, no cards) and leaves the tribe to explore; the pill still has Exit
   addEventListener('keydown', e => {
     if (!running || document.getElementById('sn')) return;   // the sign-up pop-up (signupnudge.js) has the keys while it is open
-    if (e.key === 'Escape' && e.isTrusted) { e.preventDefault(); tidy(); stop(); if (A() && A().toast) A().toast('Stopped. Look around, or Exit the demo from the pill at the top.'); }
+    if (e.key === 'Escape' && e.isTrusted) { e.preventDefault(); tidy(); stop(); if (A() && A().toast) A().toast('Stopped. Look around, or Exit the demo from Sharing and backup on the dashboard.'); }
     else if (!e.isTrusted || e.altKey || e.ctrlKey || e.metaKey) return;
     else if (e.key === 'ArrowRight' || (e.key === 'Enter' && !/BUTTON|^A$/.test((e.target && e.target.tagName) || ''))) { e.preventDefault(); e.stopPropagation(); next(); }   // the fields Flint types in never take your keys
     else if (e.key === 'ArrowLeft') { e.preventDefault(); e.stopPropagation(); back(); }
