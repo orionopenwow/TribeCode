@@ -78,11 +78,11 @@
   function row(m) {
     const s = status(m), p = placeOf(m), wk = working(m), you = m.id === me().id, Zp = Z();
     const where = p ? (Zp.canOpen(p) && !you ? `<button type="button" class="ppl-where linkish" data-jump="${esc(m.id)}" title="Jump there">${esc(Zp.label(p))}</button>` : `<span class="ppl-where">${esc(Zp.label(p))}</span>`) : '';
-    const line = s.k === 'offline' ? `offline${s.seen ? ` · last seen ${esc(ago(s.seen))}` : ''}` : esc(s.t);
+    const line = isAI(m) && m.invited && m.doing && s.k !== 'offline' ? esc(m.doing) : s.k === 'offline' ? `offline${s.seen ? ` · last seen ${esc(ago(s.seen))}` : ''}` : esc(s.t);
     const star = !isAI(m) && !you ? `<button type="button" class="ppl-act ppl-star${friends.has(m.id) ? ' on' : ''}" data-star="${esc(m.id)}" aria-pressed="${friends.has(m.id)}" title="${friends.has(m.id) ? 'Starred friend' : 'Star as friend'}" aria-label="${friends.has(m.id) ? 'Unstar' : 'Star'} ${esc(m.name)}">${STAR(friends.has(m.id))}</button>` : '';
     return `<div class="ppl-row${focusId === m.id ? ' focus' : ''}" data-mid="${esc(m.id)}">
       ${face(m)}
-      <div class="ppl-t"><b>${esc(m.name)}${you ? ' <span class="ppl-you">you</span>' : ''}${isAI(m) ? ` <span class="ppl-ai${m.agentKind ? ' ppl-kind' : ''}" title="${esc(m.agentKind ? `AI agent · ${KIND_NAME[m.agentKind] || 'agent'}` : 'AI agent')}"${m.agentKind ? ` data-kind="${esc(m.agentKind)}"` : ''}>${m.agentKind && window.TribeIcons && window.TribeIcons.agent ? window.TribeIcons.agent(m.agentKind, 11) : ''}AI</span>` : ''}</b>${isAI(m) && m.invited && m.ownerName ? `<small class="ppl-by">invited by ${esc(m.ownerName)}</small>` : ''}
+      <div class="ppl-t"><b>${esc(m.name)}${you ? ' <span class="ppl-you">you</span>' : ''}${isAI(m) ? ` <span class="ppl-ai${m.agentKind ? ' ppl-kind' : ''}" title="${esc(m.agentKind ? `AI agent · ${KIND_NAME[m.agentKind] || 'agent'}` : 'AI agent')}"${m.agentKind ? ` data-kind="${esc(m.agentKind)}"` : ''}>${m.agentKind && window.TribeIcons && window.TribeIcons.agent ? window.TribeIcons.agent(m.agentKind, 11) : ''}AI</span>` : ''}</b>${isAI(m) && m.invited && m.ownerName ? `<small class="ppl-by">invited by ${esc(m.ownerName)}</small>` : ''}${isAI(m) && m.about ? `<small class="ppl-about">${esc(m.about)}</small>` : ''}
         <small class="ppl-st st-${s.k}">${line}${where ? ' · ' : ''}${where}</small>
         ${wk.length ? `<small class="ppl-wk">Working on ${wk.slice(0, 2).map(t => `“${esc(t.title)}”`).join(', ')}${wk.length > 2 ? ` +${wk.length - 2}` : ''}</small>` : ''}</div>
       ${you ? '' : `<div class="ppl-acts">

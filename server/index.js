@@ -291,7 +291,7 @@ const agentSeen = new Map(); // agent id -> { at, where, project }
 const AGENT_IDLE = 3 * 60_000;
 function presence() {
   return members.filter(m => !(m.invited && m.removed)).map(m => {
-    if (m.role === 'agent') { const a = agentSeen.get(m.id); const on = !!a && Date.now() - a.at < AGENT_IDLE; return { ...publicMember(m), owner: m.owner, ...(m.invited ? { invited: true, ownerName: nameOf(m.owner), paused: !!m.paused } : {}), ...(inviteClaude ? { agentKind: inviteClaude.kindOf(m) } : {}), online: on, where: on ? a.where : null, since: a ? new Date(a.at).toISOString() : null, project: on ? a.project || null : null }; }
+    if (m.role === 'agent') { const a = agentSeen.get(m.id); const on = !!a && Date.now() - a.at < AGENT_IDLE; return { ...publicMember(m), owner: m.owner, ...(m.invited ? { invited: true, ownerName: nameOf(m.owner), paused: !!m.paused } : {}), ...(inviteClaude ? { agentKind: inviteClaude.kindOf(m), about: inviteClaude.aboutOf(m), doing: inviteClaude.doing(m) } : {}), online: on, where: on ? a.where : null, since: a ? new Date(a.at).toISOString() : null, project: on ? a.project || null : null }; }
     const o = online.get(m.id); return { ...publicMember(m), online: !!o, where: o ? o.where : null, since: o ? o.since : null, project: o ? o.project || null : null };
   }).map(e => (profiles ? profiles.decorate(e, memberById(e.id) || e, idleAll(e.id)) : e));   // feat/profiles
 }
@@ -592,6 +592,7 @@ const agentsHub = makeAgentsHub({ P, store: baseStore, pstore: store, brain, get
 // The variable keeps its first name, inviteClaude; an invited Claude is the kind "claude".
 inviteClaude = require('./inviteagent')({ P, getMembers: () => members, saveMembers, pushPresence, perms, hash, id, slug, str, endpoints: (req, t) => agentEndpoints(req, t), agentsHub,
   publicBase: () => args['public-url'] || process.env.TRIBE_PUBLIC_URL || share.publicUrl(), postChat, sendTo, agentSeen, idleMs: AGENT_IDLE, publicMember, docs, store, chans, nameOf,
+  pendingBy: aid => approvals.list().some(a => a.by === aid && a.status === 'pending'),
   auth: () => claudeAuth, ...(process.env.TRIBE_TEST === '1' && Number(process.env.TRIBE_CLAUDE_STALE_MS) ? { staleMs: Number(process.env.TRIBE_CLAUDE_STALE_MS) } : {}) });
 // Sign-in for the claude.ai connector (server/claudeauth.js): OAuth 2.1 + PKCE on this host, so the key leaves the link.
 // The address a client sees: the one it asked on when it is one of ours (public link, network, this computer), else the public one.

@@ -345,6 +345,7 @@ def main():
 
             # ================= 5. Claude Code connects and chats =================
             host.evaluate("TribeApp.connectClaude({ fresh: true })")
+            host.wait_for_selector("#ic-body .ic-kinds [data-ic-kind='code']", state="attached", timeout=10000); host.evaluate("document.querySelector(\"#ic-body .ic-kinds [data-ic-kind='code']\").click()")   # the question comes first; pick Claude Code
             host.wait_for_selector("#ic-body [data-ic-copy='code']", timeout=10000); host.click("#ic-body [data-ic-copy='code']"); host.wait_for_function("!document.querySelector('#cc-cmd').textContent.includes('••••')", timeout=10000)   # feat/invite-one: the key is made on Copy
             cmd = host.text_content("#cc-cmd").strip()
             m = re.fullmatch(r'claude mcp add --transport http tribecode (\S+) --header "Authorization: Bearer ([A-Za-z0-9_-]{20,})"', cmd)

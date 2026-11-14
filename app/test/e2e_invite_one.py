@@ -143,7 +143,7 @@ def main():
             invites0 = len(ok(api("/invites", token=htok))["invites"])
             pg.click("#tour-invite"); pg.wait_for_selector("#invite-modal:not(.hidden) #tl-link")
             assert "Who are you inviting?" in pg.text_content("#io-title") and pg.locator("[data-io-who]").count() == 3
-            assert [x.strip() for x in pg.locator("[data-io-who] b").all_text_contents()] == ["A friend", "A guest for a day", "Your AI agent"]
+            assert [x.strip() for x in pg.locator("[data-io-who] b").all_text_contents()] == ["A friend", "A guest for a day", "An AI helper"]
             pg.wait_for_function("/\\/t\\//.test(document.querySelector('#tl-link').textContent)", timeout=10000)
             assert pg.locator("#io-made").is_hidden() and pg.locator("#tl-box").is_visible()
             time.sleep(1.5); pg.screenshot(path=str(SHOTS / "invite-one.png"))
@@ -242,15 +242,15 @@ def main():
             print("B ok: tribe link (QR, copy), one-time, project-only and guest pass all work end to end")
 
             # ================= C: one Claude per person =================
-            pg.click("#sf-claude"); pg.wait_for_selector("#ic-body [data-ic-text='code']")
+            pg.click("#sf-claude"); pg.wait_for_selector("#ic-body .ic-kinds.ic-big"); pg.evaluate("document.querySelector(\"#ic-body .ic-kinds [data-ic-kind='code']\").click()"); pg.wait_for_selector("#ic-body [data-ic-text='code']")
             assert "••••" in pg.text_content("#cc-cmd") and "Nothing is made yet" in pg.text_content("#ic-status")
-            pg.click("#ic-body [data-ic-kind='desktop']"); assert "••••" in pg.text_content("#ic-body [data-ic-text='desktop']")
-            pg.click("#ic-body [data-ic-kind='web']")
+            pg.evaluate("document.querySelector(\"#ic-body .ic-kinds [data-ic-kind='desktop']\").click()"); assert "••••" in pg.text_content("#ic-body [data-ic-text='desktop']")
+            pg.evaluate("document.querySelector(\"#ic-body .ic-kinds [data-ic-kind='web']\").click()")
             assert pg.text_content("#ic-body [data-ic-text='web']").strip() == PUBLIC + "/mcp", "the address for claude.ai carries no key"
             assert "token=" not in pg.inner_text("#ic-body") and pg.locator("#ic-code").is_visible()
             pg.click("#ic-body [data-ic-copy='web']"); time.sleep(0.6)
             assert not agents(htok), "copying the claude.ai address makes no member either"
-            pg.click("#ic-body [data-ic-kind='code']"); time.sleep(0.4)
+            pg.evaluate("document.querySelector(\"#ic-body .ic-kinds [data-ic-kind='code']\").click()"); time.sleep(0.4)
             assert not agents(htok), "no Claude member until Copy"
             pg.click("#ic-body [data-ic-copy='code']")
             pg.wait_for_function("!document.querySelector('#cc-cmd').textContent.includes('••••')", timeout=10000)
@@ -442,7 +442,7 @@ def main():
             ucode = ap.text_content("#c-usercode").replace(" ", ""); assert re.match(r"^[A-Z2-9]{6}$", ucode), ucode
             assert ap.locator("#c-yes").is_hidden(), "nobody to approve here"
             assert api("/claude-auth?code=" + ucode, token=g["token"])[0] == 200 and api("/claude-auth", "POST", {"code": ucode}, token=g["token"])[0] == 403, "a guest can't approve"
-            pg.click("#sf-claude"); pg.wait_for_selector("#ic-body #ic-access"); pg.click("#ic-new"); pg.click("#ic-body [data-ic-kind='web']")
+            pg.click("#sf-claude"); pg.wait_for_selector("#ic-body #ic-access"); pg.click("#ic-new"); pg.evaluate("document.querySelector(\"#ic-body .ic-kinds [data-ic-kind='web']\").click()")
             pg.fill("#ic-code", "ZZZZZZ"); pg.click("#ic-code-go"); time.sleep(0.8); assert pg.locator("#ic-ask-yes").count() == 0, "a wrong code shows nothing to approve"
             pg.fill("#ic-code", ucode.lower()); pg.click("#ic-code-go"); pg.wait_for_selector("#ic-ask-yes")
             assert "Claude script" in pg.text_content("#ic-approve").replace("<", "").replace(">", "") and f"127.0.0.1:{PORT}" in pg.text_content("#ic-approve") and "Campw's Claude" in pg.text_content("#ic-approve")
@@ -508,7 +508,7 @@ def main():
             fits = "(() => { const c = document.querySelector('.modal-card.io'), r = c.getBoundingClientRect(); return r.left >= 0 && r.right <= innerWidth + 1 && c.scrollWidth <= c.clientWidth + 1 && document.documentElement.scrollWidth <= innerWidth + 1 && [...c.querySelectorAll('.io-opt, .linkbox, .io-sw, .cai-pre, .ic-scope, .btn')].every(e => { const b = e.getBoundingClientRect(); return !b.width || (b.left >= r.left - 1 && b.right <= r.right + 1); }); })()"
             for who in ("friend", "guest", "agent"):
                 ph.evaluate(f"TribeApp.openInvite({{ who: '{who}' }})"); ph.wait_for_selector(f"#invite-modal:not(.hidden) #io-pane[data-who='{who}']")
-                ph.wait_for_selector("#tl-link" if who == "friend" else "#io-guest-make" if who == "guest" else "#ic-body #ic-status"); time.sleep(0.5)
+                ph.wait_for_selector("#tl-link" if who == "friend" else "#io-guest-make" if who == "guest" else "#ic-body .ic-q"); time.sleep(0.5)
                 assert ph.evaluate(fits), f"the {who} pane fits 390px"
                 assert all(ph.locator(f"#io-who-{w}").is_visible() for w in ("friend", "guest", "agent"))
                 if who == "friend":

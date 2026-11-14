@@ -21,6 +21,8 @@
 //     Connect your AI (POST /api/agents) counts as theirs of that kind: GET lists it as "already connected", POST re-keys
 //     it instead of minting a second member, and Pause / narrowing / Remove work on it too. Two of one kind (from before
 //     there was one way) both keep working; `merge` (Claude) and `dupes` (any kind) say so.
+//   A helper made from the sheet starts with "Help build, ask before big changes" (the sheet sends that preset); one
+//     made by an app's sign-in, and every helper that already exists, keeps what it has.
 //   Nothing is made when the sheet opens: GET carries a `preview` of every setup with the key masked, and POST (the
 //     sheet's Copy or Download) makes the member. One that never connected is taken out again after 24 hours (sweep).
 //   Apps that sign in (Claude on the web, ChatGPT, an editor with no key in its config) go through server/agentauth.js
@@ -33,7 +35,7 @@
 //   GET    /api/invite-agent           status: agents[], kinds[], picks[], preview { setups }, plus the Claude fields
 //                                      (agent, online, joined, scopes, paused, adminAsMe, claudes[], merge)
 //   POST   /api/invite-agent           { kind?, pick?, id?, scopes? } makes (or re-keys) it: { token, agent, setups }
-//   PUT    /api/invite-agent           { id? | kind?, scopes?, paused?, adminAsMe?, name? (Something else only) }
+//   PUT    /api/invite-agent           { id? | kind?, scopes? | preset?, paused?, adminAsMe?, about?, color?, name? (Something else only) }
 //   DELETE /api/invite-agent[?id=|?kind=]   Remove: the key and every sign-in stop working at once
 //   DELETE /api/invite-agent/connections/<id>   end one sign-in
 'use strict';
@@ -41,6 +43,19 @@ const { AGENT_KINDS, PICKS, BEHAVES, agentKindOf } = require('./agentshub');
 
 const SCOPES = ['chat', 'docs', 'tasks', 'files', 'website', 'approvals'];
 const LABEL = { chat: 'Chat', docs: 'Docs and notes', tasks: 'Tasks', files: 'Files and code', website: 'Website', approvals: 'Ask for approvals' };
+
+// What it may do, in three plain choices. Each is only a set of the scopes above: nothing new is allowed by a preset
+// that ticking the boxes by hand could not allow, and the cap on its role (yours, never more) is the same for all three.
+const PRESETS = [
+  { id: 'answer', label: 'Just answer me', line: 'It reads and writes in chat. Nothing else.', scopes: ['chat'] },
+  { id: 'build', label: 'Help build, ask before big changes', line: 'Chat, docs, tasks and files, and it asks for your OK. Publishing the website stays with you.', scopes: ['chat', 'docs', 'tasks', 'files', 'approvals'] },
+  { id: 'own', label: 'Work on its own on tasks I give it', line: 'Everything above, and the website too.', scopes: SCOPES.slice() },
+];
+const presetOf = scopes => { const k = [...scopes].sort().join(); return (PRESETS.find(p => [...p.scopes].sort().join() === k) || { id: '' }).id; };
+// Its face on the People card: a colour from the app's own palette and a line about what it is good at.
+const COLORS = ['#38C6B1', '#6C7CFF', '#F26B1D', '#3BD16F', '#FF6F8E'];
+const ABOUT = { claude: 'Good at writing, planning and careful code.', cursor: 'Good at editing code right inside your project.', codex: 'Good at working through coding tasks in a terminal.', chatgpt: 'Good at ideas, writing and quick answers.', gemini: 'Good at reading a lot at once and coding in a terminal.',
+  vscode: 'Good at code changes inside VS Code.', windsurf: 'Good at multi-step code changes in the editor.', cline: 'Good at step-by-step coding tasks.', zed: 'Good at fast edits in the Zed editor.', other: 'An AI helper.' };
 
 // Which scope a tool belongs to. 'general' tools (overview, projects, presence, Marketplace reads) are always on.
 function scopeOfTool(name) {
@@ -73,7 +88,7 @@ const ADMIN = /^(perms|modes|members\/[^/]+\/role|projects\/[^/]+\/(delete|setti
 // Read-only tools that stay on when the owner can only watch (spectator).
 const READ_TOOL = /^(list_|read_|check_|checks_status|search_|get_|tribe_overview|where_is|inbox_next|my_lane|agents_read|market_(list|search|read))/;
 
-module.exports = function inviteAgent({ P, getMembers, saveMembers, pushPresence, perms, hash, id, slug, str, endpoints, agentsHub, publicBase = () => null,
+module.exports = function inviteAgent({ pendingBy = () => false, P, getMembers, saveMembers, pushPresence, perms, hash, id, slug, str, endpoints, agentsHub, publicBase = () => null,
   postChat, sendTo, agentSeen, idleMs, publicMember, docs, store, chans, nameOf, rate = Number(process.env.TRIBE_CLAUDE_RATE) || 120, now = () => Date.now(),
   auth = () => null, staleMs = 24 * 3600_000 }) {
   const member = mid => getMembers().find(m => m.id === mid) || null;
@@ -98,6 +113,22 @@ module.exports = function inviteAgent({ P, getMembers, saveMembers, pushPresence
   const scopesOf = ag => (Array.isArray(ag.scopes) ? ag.scopes.filter(s => SCOPES.includes(s)) : SCOPES.slice());
   const live = ag => { const s = agentSeen.get(ag.id); return !!s && now() - s.at < idleMs; };
   const err = (status, msg) => Object.assign(new Error(msg), { status });
+  const aboutOf = ag => (typeof ag.about === 'string' && ag.about ? ag.about : ABOUT[kindOf(ag)] || ABOUT.other);
+  // One gentle line on what it is doing now, from what is already known (its presence): nothing is guessed.
+  function doing(ag) {
+    if (ag.paused) return 'paused';
+    if (ag.invited && !ag.firstSeen) return 'not here yet';
+    try { if (pendingBy(ag.id)) return 'waiting for your OK'; } catch {}
+    const s = agentSeen.get(ag.id);
+    if (!s || now() - s.at >= idleMs) return 'resting until you start it';
+    const w = String(s.where || '');
+    if (/code|^in .+\.[a-z0-9]{1,5}$/i.test(w)) return 'reading the code';
+    if (/doc$/.test(w)) return 'reading a doc';
+    if (/task/.test(w)) return 'looking at the tasks';
+    if (/website/.test(w)) return 'working on the website';
+    if (/^in #/.test(w)) return 'in chat';
+    return 'here and listening';
+  }
 
   // ---------- the gate: every request an invited Claude makes ----------
   const hits = new Map();
@@ -302,7 +333,7 @@ module.exports = function inviteAgent({ P, getMembers, saveMembers, pushPresence
   function agentView(ag, me) {
     const inv = !!ag.invited, a = auth(), k = kindOf(ag);
     return { ...publicMember(ag), via: inv ? 'invite' : 'connect', kind: ag.kind || 'claude-code', agentKind: k, kindLabel: AGENT_KINDS[k].label, online: live(ag), joined: inv ? ag.firstSeen || null : ag.firstSeen || ag.joined || null,
-      paused: !!ag.paused, scopes: scopesOf(ag), adminAsMe: !!(inv && ag.adminAsMe), key: !!ag.tokenHash, ownerName: me.name, connections: a ? a.connections(ag.id) : [], renameable: inv && k === 'other' };
+      paused: !!ag.paused, scopes: scopesOf(ag), preset: presetOf(scopesOf(ag)), about: aboutOf(ag), doing: doing(ag), adminAsMe: !!(inv && ag.adminAsMe), key: !!ag.tokenHash, ownerName: me.name, connections: a ? a.connections(ag.id) : [], renameable: inv && k === 'other' };
   }
   const namesFor = me => Object.fromEntries(ORDER.map(k => { const ag = primary(me, k); return [k, ag ? ag.name : nameFor(me, k)]; }));
   function view(req, me) {
@@ -316,6 +347,7 @@ module.exports = function inviteAgent({ P, getMembers, saveMembers, pushPresence
       agents: list.map(x => agentView(x, me)), dupes: Object.keys(count).filter(k => count[k] > 1),
       kinds: ORDER.map(k => ({ id: k, label: AGENT_KINDS[k].label, short: AGENT_KINDS[k].short, name: names[k] })), picks: PICKS.map(p => ({ id: p.id, kind: p.kind, name: p.name, sub: p.sub, signin: !!p.signin })),
       preview: setup(req, MASK, names),
+      presets: PRESETS.map(p => ({ ...p })), colors: COLORS.slice(),
       all: SCOPES.map(k => ({ id: k, label: LABEL[k] })), canAdmin: ownerRole === 'host' || ownerRole === 'admin', public: !!publicBase() || !!endpoints(req, null).public, rate,
     };
   }
@@ -372,6 +404,7 @@ module.exports = function inviteAgent({ P, getMembers, saveMembers, pushPresence
     if (m === 'GET') return send(res, 200, view(req, me));
     const body = m === 'DELETE' ? {} : await readBody(req).catch(() => ({}));
     const pickScopes = v => (Array.isArray(v) ? [...new Set(v.filter(s => SCOPES.includes(s)))] : null);
+    if (typeof body.preset === 'string' && !Array.isArray(body.scopes)) { const pr = PRESETS.find(x => x.id === body.preset); if (!pr) return fail(res, 400, 'unknown choice'); body.scopes = pr.scopes.slice(); }
     const wanted = str(body.id, 64) || (url && url.searchParams.get('id')) || '';
     const rawKind = str(body.kind, 24) || str(body.pick, 24) || (url && url.searchParams.get('kind')) || '';
     const kind = rawKind ? kindFrom(rawKind) : 'claude';
@@ -402,6 +435,8 @@ module.exports = function inviteAgent({ P, getMembers, saveMembers, pushPresence
         if (!ag.invited || kindOf(ag) !== 'other') return fail(res, 400, 'only "Something else" can be renamed');
         try { ag.name = cleanName(body.name, ag); ag.customName = true; } catch (e) { return fail(res, e.status || 400, e.message); }
       }
+      if (typeof body.about === 'string') ag.about = body.about.replace(/[\u0000-\u001f\u007f<>]/g, '').replace(/\s+/g, ' ').trim().slice(0, 140);
+      if (typeof body.color === 'string') { if (!COLORS.includes(body.color)) return fail(res, 400, 'pick one of the colours shown'); ag.color = body.color; }
       const sc = pickScopes(body.scopes); if (sc) ag.scopes = sc;
       if (typeof body.paused === 'boolean') ag.paused = body.paused;
       if (typeof body.adminAsMe === 'boolean' && ag.invited) ag.adminAsMe = body.adminAsMe;
@@ -419,6 +454,7 @@ module.exports = function inviteAgent({ P, getMembers, saveMembers, pushPresence
     return fail(res, 405, 'method not allowed');
   }
 
-  return { route, gateTool, gatePath, listable, usable, ensure, sweep, view, claudesOf, agentsOf, kindOf, nameFor, whereFor, seen, inbox, mcpTools, SCOPES, scopeOfTool, scopeOfPath };
+  return { route, aboutOf, doing, gateTool, gatePath, listable, usable, ensure, sweep, view, claudesOf, agentsOf, kindOf, nameFor, whereFor, seen, inbox, mcpTools, SCOPES, scopeOfTool, scopeOfPath };
 };
 module.exports.SCOPES = SCOPES;
+module.exports.PRESETS = PRESETS;
