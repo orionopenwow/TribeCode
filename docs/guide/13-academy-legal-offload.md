@@ -2,7 +2,7 @@
 
 ## Academy
 
-**Academy** has short, plain-language lessons for every role: **Founder basics**, **CEO**, **Build**, **Design**, **Grow**, **Sales**, **Support**, **Run**, **Money** and **Legal**. 62 lessons, each with a *Try it in your tribe* step and a few trusted free readings.
+**Academy** has short, plain-language lessons for every role: **Founder basics**, **CEO**, **Build**, **Design**, **Grow**, **Sales**, **Support**, **Run**, **Money** and **Legal**. 65 lessons, each with a *Try it in your tribe* step and a few trusted free readings.
 
 If you hold a seat, the Academy opens on your role's track, and the seat's charter shows **Learn this role**. Progress and badges are kept for you.
 

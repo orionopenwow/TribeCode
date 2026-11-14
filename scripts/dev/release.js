@@ -71,6 +71,7 @@ const run = (label, cmd, args, env = {}) => {
   return ok;
 };
 if (!CHECK) run('app bundle written (the Guide and the website template list inside the app)', process.execPath, ['scripts/dev/app-bundle.js']);
+if (!CHECK) run('website numbers and version stamped from the real counts (site/facts.json)', process.execPath, ['scripts/dev/site-facts.js']);
 run('app bundle is current (scripts/dev/app-bundle.js --check)', process.execPath, ['scripts/dev/app-bundle.js', '--check']);
 run('bundle_test (the desktop sidecar bundle builds and parses)', process.execPath, ['app/test/bundle_test.js']);
 run('Tauri config (scripts/check-tauri-config.py)', 'python3', ['scripts/check-tauri-config.py']);

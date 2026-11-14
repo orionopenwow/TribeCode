@@ -103,7 +103,8 @@
   const set = (k, v) => $$(`[data-gh="${k}"]`).forEach(el => { el.textContent = v; el.hidden = false; });
   const box = $('[data-gh-box]');
   let failed = 0;
-  const fail = () => { if (++failed === 1) { const f = $('[data-gh-fallback]'); if (f) f.hidden = false; if (box) box.classList.add('is-fallback'); } };
+  // GitHub did not answer: keep the packaged version (stamped by scripts/dev/site-facts.js), hide the tiles that have no number, and point to GitHub in one plain line
+  const fail = () => { if (++failed === 1) { const f = $('[data-gh-fallback]'); if (f) f.hidden = false; if (box) box.classList.add('is-fallback'); $$('[data-gh="stars"], [data-gh="forks"]').forEach(el => { if (el.textContent.trim() === '–') { const t = el.closest('.stat'); if (t) t.hidden = true; } }); } };
   gh('').then(r => {
     set('stars', fmt(r.stargazers_count)); set('forks', fmt(r.forks_count));
     box && box.classList.add('is-ready');
