@@ -199,6 +199,10 @@ def main():
             st, j = mcp(ckey, "initialize", {"protocolVersion": "2025-06-18", "clientInfo": {"name": "cursor-vscode", "version": "1"}})
             assert st == 200 and "Campw's Cursor" in json.dumps(j), j
             pg.wait_for_function("document.querySelector('#ic-status') && document.querySelector('#ic-status').textContent.includes(\"Campw's Cursor joined\")", timeout=10000)
+            # opened again: it is here, with its own checkboxes, Pause and Remove; a new key is one deliberate tap
+            shut(); pg.evaluate("TribeInviteAgent.open({ kind: 'cursor' })"); opened(); on_pick("cursor"); pg.wait_for_selector("#ic-body #ic-access #ic-pause")
+            assert "Campw's Cursor joined" in pg.text_content("#ic-status") and pg.locator("#ic-new").count() == 1 and pg.locator("#ic-body [data-ic-text]").count() == 0, "no key on screen until asked"
+            assert pg.get_attribute("#ic-access", "data-ic-agentkind") == "cursor" and pg.locator("#ic-body [data-ic-of]").count() == 1, "only the Cursor's controls on the Cursor's tab"
             time.sleep(5)   # let the toast go
             pg.screenshot(path=str(SHOTS / "invite-agent-joined.png"))
             msgs = ok(api("/chat/general", token=htok))["messages"]

@@ -96,7 +96,8 @@
     const k = kind(), list = agentsOf(k), s = setupOf(pick);
     if (list.length) return list.length === 1 ? `<div id="ic-status">${statusHtml(list[0], k)}</div>` : '<div id="ic-status"></div>';
     if (made[k] || (s.signin && s.available)) return `<div id="ic-status">${statusHtml(null, k)}</div>`;
-    const cap = your(k); return `<div id="ic-status"><div class="ic-status ic-idle" data-ic-status>Nothing is made yet. ${esc(cap[0].toUpperCase() + cap.slice(1))} gets its key when you press Copy${(s.blocks || []).some(b => b.file && !b.alt) ? ' or Download' : ''}.</div></div>`;
+    const cap = your(k); if (s.signin) return `<div id="ic-status"><div class="ic-status ic-idle" data-ic-status>Nothing is made yet. ${esc(cap[0].toUpperCase() + cap.slice(1))} joins when you approve its sign-in.</div></div>`;
+    return `<div id="ic-status"><div class="ic-status ic-idle" data-ic-status>Nothing is made yet. ${esc(cap[0].toUpperCase() + cap.slice(1))} gets its key when you press Copy${(s.blocks || []).some(b => b.file && !b.alt) ? ' or Download' : ''}.</div></div>`;
   }
   function pickerHtml() {
     const have = new Set(((st && st.agents) || []).map(a => a.agentKind));
