@@ -284,7 +284,11 @@ def live(pw):
         f.locator("body").press("Delete"); pg.wait_for_function(f"TribeSiteDesigner.cfg().pages[0].blocks[0].props.items.length === {n0}", timeout=4000)
         assert sel(pg)["kind"] == "block"
         esc_to(pg, f, None)
-        assert pg.is_visible("#wdz"), "stepping out never closes the editor by surprise"
+        f.locator("body").press("Escape"); pg.wait_for_timeout(250)   # with nothing left to step out of, Esc in the page asks first
+        assert pg.is_visible("#wdz") and "Press Esc again" in pg.inner_text("body"), "stepping out never closes the editor by surprise"
+        # Undo shows what it changed: the section is selected again
+        pg.evaluate("TribeSiteDesigner.undo()"); pg.wait_for_function("(TribeSiteDesigner.state().sel || {}).kind === 'block'", timeout=3000)
+        pg.evaluate("TribeSiteDesigner.redo()"); pg.wait_for_timeout(300); esc_to(pg, f, None)
         print("  ok  Esc steps out to the entry, the section, then nothing; an entry moves, copies and goes by toolbar and keys; undo and redo cover it")
 
         # ---- right-click: the same actions as a menu; hide on phones shows in the phone preview and the export

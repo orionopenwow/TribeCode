@@ -246,5 +246,6 @@
   // "What the tribe said about this" is filled by the suggestions (app/ui/sitesuggest.js) when it is there
   function said(api) { const box = api.root().querySelector('#wdz-said'); if (box && window.TribeSiteSuggest && window.TribeSiteSuggest.said) window.TribeSiteSuggest.said(box, api); }
 
-  window.TribeSiteParts = { crumbs, looks, element, list, section, picture, siteSel, pages, wire, click, key, frame, menu, closeMenu, parentOf, entryOf, act, said };
+  const menuOpen = () => !!(menuEl && !menuEl.hidden);
+  window.TribeSiteParts = { menuOpen, crumbs, looks, element, list, section, picture, siteSel, pages, wire, click, key, frame, menu, closeMenu, parentOf, entryOf, act, said };
 })();

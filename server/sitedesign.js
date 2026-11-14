@@ -191,10 +191,11 @@ module.exports = function siteDesign({ base, root, showcase, siteFlint, P, tasks
       }
       if (a === 'projects' && c === 'site-autofill' && m === 'GET') return send(res, 200, { facts: await facts(b) });
       if (a === 'projects' && c === 'site-suggestions') {
-        if (me.role === 'guest') return fail(res, 403, 'join the tribe to see what it suggests');
+        // people only: an AI helper reads the site through site_read and proposes through site_propose, under its own permissions
+        if (me.role === 'guest' || me.role === 'agent') return fail(res, 403, me.role === 'agent' ? 'suggestions are for people; a helper uses site_read and site_propose' : 'join the tribe to see what it suggests');
         if (!d && m === 'GET') return send(res, 200, { ...suggest.view(b), canEdit });
         if (m === 'POST' && (d === 'dismiss' || d === 'applied')) {
-          if (!canEdit || me.role === 'agent') return fail(res, 403, 'a person who can change the site answers a suggestion');
+          if (!canEdit) return fail(res, 403, 'a person who can change the site answers a suggestion');
           const body = (await readBody(req)) || {};
           return send(res, 200, d === 'dismiss' ? suggest.dismiss(b, me, body.id) : suggest.applied(b, me, body));
         }

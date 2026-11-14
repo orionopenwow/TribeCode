@@ -1236,5 +1236,10 @@
 "Search: invite, publish, undo…": "検索：招待、公開、取り消し…",
 "Try it in the app": "アプリで試す",
 "Nothing for that yet. Try another word.": "まだありません。別の言葉で試してください。",
-"The quick guides could not load. They are also in the app, under the ? button.": "クイックガイドを読み込めませんでした。アプリの ? ボタンにもあります。"
+"The quick guides could not load. They are also in the app, under the ? button.": "クイックガイドを読み込めませんでした。アプリの ? ボタンにもあります。",
+"Change one thing on your site": "サイトの1か所だけを変える",
+"Add, move or remove an entry in a list": "リストの項目を追加・移動・削除する",
+"Show or hide something on phones": "スマホで表示・非表示を切り替える",
+"Add, rename and order the pages of your site": "サイトのページを追加・改名・並べ替える",
+"Let what your tribe said update the site": "トライブの発言でサイトを更新する"
 }

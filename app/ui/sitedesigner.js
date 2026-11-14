@@ -50,8 +50,18 @@ html[data-dev=phone] .ehide-phone,html[data-dev=tablet] .ehide-tablet,html[data-
     save(); if (!opts.quiet) paint();
     return true;
   }
-  function undo() { if (!st.hist.length) return false; st.fut.push(JSON.stringify(st.cfg)); st.cfg = JSON.parse(st.hist.pop()); fixPage(); save(); paint(); return true; }
-  function redo() { if (!st.fut.length) return false; st.hist.push(JSON.stringify(st.cfg)); st.cfg = JSON.parse(st.fut.pop()); fixPage(); save(); paint(); return true; }
+  // Undo and Redo show what they changed: the section that differs is selected and brought into view (feat/site-editor2)
+  function showChange(before, after) {
+    try {
+      const A = JSON.parse(before), B = after, pgB = B.pages.find(p => p.id === st.page) || B.pages[0], pgA = A.pages.find(p => p.id === pgB.id);
+      if (!pgA) return; const byId = Object.fromEntries(pgA.blocks.map(b => [b.id, JSON.stringify(b)]));
+      const hit = pgB.blocks.find(b => byId[b.id] !== JSON.stringify(b));
+      if (hit && !(st.sel && st.sel.block === hit.id)) st.sel = { block: hit.id, path: '', kind: 'block' };
+      if (hit) setTimeout(() => postSel(true), 60);
+    } catch {}
+  }
+  function undo() { if (!st.hist.length) return false; const was = JSON.stringify(st.cfg); st.fut.push(was); st.cfg = JSON.parse(st.hist.pop()); fixPage(); showChange(was, st.cfg); save(); paint(); return true; }
+  function redo() { if (!st.fut.length) return false; const was = JSON.stringify(st.cfg); st.hist.push(was); st.cfg = JSON.parse(st.fut.pop()); fixPage(); showChange(was, st.cfg); save(); paint(); return true; }
   function fixPage() { if (!st.cfg.pages.some(p => p.id === st.page)) st.page = st.cfg.pages[0].id; if (st.sel && st.sel.block !== '@' && !pageNow().blocks.some(b => b.id === st.sel.block)) st.sel = null; }
   const ago = t => { if (!t) return ''; const s = Math.round((Date.now() - t) / 1000); return s < 20 ? 'just now' : s < 60 ? `${s}s ago` : s < 3600 ? `${Math.round(s / 60)} min ago` : new Date(t).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }); };
   function status(text) { const el = $('#wdz-saved'); if (!el) return; el.textContent = text != null ? text : st.dirty ? 'Saving…' : st.savedAt ? `Saved${st.pid && connected() ? '' : ' on this device'} · ${ago(st.savedAt)}` : ''; el.classList.toggle('is-dirty', !!st.dirty); }
@@ -270,7 +280,7 @@ html[data-dev=phone] .ehide-phone,html[data-dev=tablet] .ehide-tablet,html[data-
   }
   // the live preview: one render per tick; if the frame does not say "ready" soon, a fresh frame gets it (Chrome can leave
   // a sandboxed srcdoc frame blank when it is re-navigated quickly, e.g. right after the designer was hidden)
-  let frameT = 0, frameWd = 0, frameReady = false, softPage = null;
+  let frameT = 0, frameWd = 0, frameReady = false, softPage = null, escAt = 0;
   function frame() {
     if (!$('#wdz-frame')) return;
     if (!fontsAsked) loadFonts();
@@ -301,7 +311,11 @@ html[data-dev=phone] .ehide-phone,html[data-dev=tablet] .ehide-tablet,html[data-
     const f = $('#wdz-frame'); if (!f || e.source !== f.contentWindow) return;
     if (d.t === 'ready') { frameReady = true; if (d.soft) { postSel(false); postPins(); return; } f.contentWindow.postMessage({ y: frameScroll, labels: frameLabels(), dev: st.dev }, '*'); postSel(false); postPins(); return; }
     if (d.t === 'scroll') { frameScroll = d.y; return; }
-    if (d.t === 'esc') return escape();   // Esc pressed inside the preview
+    if (d.t === 'esc') {   // Esc pressed inside the preview: with nothing left to step out of, the first press says so and the second closes
+      const nothing = !st.sel && !st.cmode && ['#wdz-dlmenu', '#wdz-keys', '#wdz-peek', '#wdz-picker'].every(id => { const x = $(id); return !x || x.hidden; }) && !(SP() && SP().menuOpen && SP().menuOpen());
+      if (nothing && Date.now() - escAt > 2500) { escAt = Date.now(); toast('Press Esc again to close the designer'); return; }
+      escAt = 0; return escape();
+    }
     if (d.t === 'page') { if (d.id === st.page) { if (d.key) { st.sel = { block: '@', path: String(d.key).split('|')[1] || '', kind: 'text' }; st.panel = 'edit'; panelPaint(); } return; } flushText(); st.page = d.id; st.sel = null; frameScroll = 0; paint(); return; }
     if (d.t === 'tb' || d.t === 'menu' || d.t === 'sys' || d.t === 'key') { if (d.t !== 'key') flushText(); if (d.t === 'key') return keys({ key: d.key, ctrlKey: d.ctrl, metaKey: d.meta, altKey: d.alt, shiftKey: d.shift, preventDefault() {}, target: null }); return SP() && SP().frame(d, spApi, f.getBoundingClientRect()); }
     if (d.t === 'undo') return undo();
