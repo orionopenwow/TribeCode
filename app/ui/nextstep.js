@@ -250,9 +250,9 @@
   }
   function provide() { const U = window.TribeUI; if (U && U.emptyAction !== emptyAction) U.emptyAction = emptyAction; return !!U; }
   if (!provide()) { addEventListener('DOMContentLoaded', provide); addEventListener('load', provide); }
-  // TribeNextStep.empty is only an alias of TribeUI.emptyHTML now (a plain fallback until uikit.js is on this branch)
+  // TribeNextStep.empty is only an alias of TribeUI.emptyHTML (a plain fallback if uikit.js has not loaded)
   const empty = o => { const U = window.TribeUI, a = o.action || (o.act ? { label: o.act, run: () => (o.run && o.run !== 'open' ? act(o.run) : open()) } : null);
-    if (U && U.emptyHTML) return U.emptyHTML({ title: o.title, line: o.line, kind: o.kind || o.id || '', action: a, how: o.how });
+    if (U && U.emptyHTML) return U.emptyHTML({ title: o.title, line: o.line, kind: o.kind || o.id || '', action: a && { ...a, attr: `data-ns-emp="${esc(o.run || 'open')}"` }, how: o.how });   // a string has no handler of its own: the delegated click below runs it
     return `<div class="ui-empty ns-empty" data-ui-kind="${esc(o.kind || o.id || '')}"><b>${esc(T(o.title))}</b><p>${esc(T(o.line))}</p>${a ? `<button type="button" class="btn primary" data-ns-emp="${esc(o.run || 'open')}">${esc(T(a.label))}</button>` : ''}</div>`; };
   document.addEventListener('click', e => { const b = e.target.closest && e.target.closest('[data-ns-emp]'); if (!b) return; e.preventDefault(); const r = b.dataset.nsEmp; if (r === 'open') open(); else act(r); });
 

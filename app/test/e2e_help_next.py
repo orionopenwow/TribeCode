@@ -126,6 +126,12 @@ def main():
             pg.evaluate("document.body.insertAdjacentHTML('beforeend', '<div id=\"t-emp\" style=\"position:fixed;left:20px;bottom:20px;z-index:99\">' + TribeNextStep.empty({title: 'Nothing here yet', line: 'Start with one small thing.', act: 'What should I do next?'}) + '</div>')")
             pg.click("#t-emp [data-ns-emp]"); pg.wait_for_selector("#ns-sheet .ns-best"); pg.keyboard.press("Escape"); pg.wait_for_selector("#ns-sheet", state="detached")
 
+            # against the real modules (uikit.js and publishreal.js are on this branch now): the engine is TribeUI's provider, a
+            # shared empty state drawn by TribeUI gets its action from it, and the engine reads the real publish status
+            r = pg.evaluate("""(async () => { const d = document.createElement('div'); d.id = 't-emp2'; document.body.appendChild(d); TribeUI.empty(d, { title: 'No tasks yet', line: 'Add the first one.', kind: 'tasks' });
+              const b = d.querySelector('[data-ui-empty="act"]'); const st = await TribePublish.status(TribeClient.project && TribeClient.project());
+              const out = [TribeUI.emptyAction === TribeNextStep.emptyAction, !!b && b.textContent.trim().length > 0, !!window.TribePublishReal, !!st && typeof st.next === 'string', !!document.querySelector('#t-emp .ui-empty')]; d.remove(); return out; })()""")
+            assert r == [True, True, True, True, True], r
             # one pattern: when TribeUI (uikit.js) is there, this engine is its emptyAction provider and empty() is an alias
             r = pg.evaluate("(() => { const had = window.TribeUI; window.TribeUI = window.TribeUI || { emptyAction: null }; TribeNextStep._provide(); const a = TribeUI.emptyAction('tasks', null), b = TribeUI.emptyAction('', null); const out = [typeof a.run, a.label, typeof b.run, !!b.label]; if (!had) delete window.TribeUI; return out; })()")
             assert r == ["function", "New task", "function", True], r
