@@ -105,7 +105,7 @@ def main():
             # ---- status
             ask(host, "what's new", "open task")
             # ---- connect Claude opens the connect flow
-            ask(host, "connect claude", "Claude Code")
+            ask(host, "connect claude", "Claude's invite")   # chat-for-people: Flint opens the invite for your own agent
             host.wait_for_selector("#invite-modal:not(.hidden)", timeout=5000)
             host.wait_for_function("document.querySelector('#invite-body').textContent.includes('Claude')", timeout=10000)
             host.evaluate("document.querySelector('#invite-modal').classList.add('hidden')")
