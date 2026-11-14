@@ -62,7 +62,7 @@ html:not(.ui-still) .modal:not(.hidden) { transition: none; }
 
 /* ---------- 2. type floors ---------- */
 /* mono uppercase labels: 11px */
-.eyebrow, .fx-eyebrow, .ppl-kind, .ppl-you, .ppl-ai, .cal-gut, .cal-gut span, .m2-jg, .ac-test { font-size: 11px; }
+.fx-eyebrow, .ppl-kind, .ppl-you, .ppl-ai, .cal-gut, .cal-gut span, .m2-jg, .ac-test { font-size: 11px; }
 /* everything else: 12px */
 .mk-lic, .mk-stars, .ppl-sn, .fl-st, .cvx-preset small, .set-pv-who small, .m2-jt small, .btn .emo { font-size: 12px; }
 .ac-hero-ring svg text, .ac-card-top svg text { font-size: 12px; }

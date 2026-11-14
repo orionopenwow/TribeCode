@@ -59,7 +59,7 @@
     shown = [...items, ...extra].filter(it => it.dest || it.kind !== 'Go to' || !dests.has(norm(it.label))).map(it => [it.score !== undefined ? it.score : score(q, it), it]).filter(([s]) => s >= 0).sort((a, b) => b[0] - a[0]).slice(0, 12).map(([, it]) => it);
     sel = Math.min(sel, Math.max(0, shown.length - 1));
     $('#pal-list').innerHTML = shown.length ? shown.map((it, i) => `<button class="pal-item ${i === sel ? 'on' : ''}" data-i="${i}"><span class="k">${it.kind}</span>${it.icon && /^[\w-]+$/.test(it.icon) ? `<svg class="i pal-ic" aria-hidden="true"><use href="#${it.icon}"/></svg>` : ''}<span class="l">${esc(it.label)}</span>${it.hint ? `<span class="h">${esc(it.hint)}</span>` : ''}</button>`).join('')
-      : '<div class="faint" style="padding:14px;font-size:13px">No matches</div>';
+      : window.TribeUI.emptyHTML({ kind: 'no-results', bare: true, cls: 'pal-none', title: 'Nothing matches', line: 'Try another word.' });
     $('#pal-list').querySelectorAll('[data-i]').forEach(b => { b.onmousemove = () => { if (sel !== +b.dataset.i) { sel = +b.dataset.i; $('#pal-list').querySelectorAll('[data-i]').forEach(x => x.classList.toggle('on', +x.dataset.i === sel)); } }; b.onclick = () => run(+b.dataset.i); });
   }
   function run(i) { const it = shown[i]; close(); if (it) setTimeout(it.run, 30); }

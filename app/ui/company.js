@@ -101,7 +101,7 @@
         <span class="co-sec-tt"><span class="eyebrow">${esc(eyebrow)}</span><h2 id="co-h-${key}">${title}</h2></span><span class="co-fold-i">${icon('chev', 16)}</span></button>${extra ? `<div class="co-sec-x">${extra}</div>` : ''}</header>
       <div class="co-sec-b" id="co-b-${key}">${body}</div></section>`;
   }
-  const empty = (text, act) => `<div class="co-none"><p>${text}</p>${act || ''}</div>`;
+  const empty = (text, act) => `<div class="ui-empty co-none" data-ui-kind="company"><p>${text}</p>${act ? `<div class="ui-empty-acts">${act}</div>` : ''}</div>`;   // the shared empty state (uikit.css)
 
   // ---------- feat/company3: an AI in a role, the summary strip, one next step ----------
   const short = (l, n = 3) => (l || []).slice(0, n).join(', ');
