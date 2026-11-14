@@ -4,6 +4,9 @@ week · Overdue), one "Add a task" line with type / for me / due chips, full-wid
 per row (Assign → Start → Send for review → Approve / Send back → Reopen), the "⋯" menu, the drawer, drag between
 sections, keyboard (↑/↓, Enter, Esc, X), a List | Board toggle, and on phones the same rows stacked with thumb-size
 buttons and the drawer as a bottom sheet.
+The v0.36 design pass is checked here too: no emoji in the page chrome (stroke icons instead), a status count filters
+and shows it is selected, an empty board is one welcome (not four empty boxes) and an empty section is one quiet line,
+text is at least 12px (titles and inputs 14px), and a 390px phone never scrolls sideways.
 Usage: python app/test/e2e_tasks_calm.py   (honours TRIBE_PORT_OFFSET; TRIBE_SHOTS=1 saves screenshots)"""
 import json, os, subprocess, sys, tempfile, time, urllib.request, urllib.error
 from datetime import date, timedelta
@@ -52,6 +55,24 @@ def open_as(browser, name, token, vp, mobile=False, lang=None):
     return page
 
 
+# design pass: the Tasks page chrome (header, counts, add line and chips, section headers, row buttons) has no emoji
+NO_EMOJI = """() => { const bad = [];
+  for (const el of document.querySelectorAll('#view-tasks .view-head, #tk-seg, #board .tk-top, #board .col h5, #board .tk-acts, #board .tk-welcome, #board .tk-own, #board .tk-meta')) {
+    const m = (el.textContent || '').match(/\\p{Extended_Pictographic}/u); if (m) bad.push(el.className + ': ' + m[0]); }
+  const before = getComputedStyle(document.querySelector('#view-tasks .view-head h1'), '::before').content;
+  if (before !== 'none' && before !== 'normal') bad.push('h1::before ' + before);
+  if (!document.querySelector('#view-tasks .view-head h1 svg')) bad.push('no title icon');
+  return bad; }"""
+# design pass: every visible piece of text is at least 12px (avatar initials aside); titles and inputs at least 14px
+SMALL = """() => { const bad = [], vis = el => el.offsetParent && getComputedStyle(el).visibility !== 'hidden';
+  for (const el of document.querySelectorAll('#view-tasks *')) {
+    if (!vis(el) || el.closest('.tk-av, svg, #tk-drawer')) continue;
+    if (![...el.childNodes].some(n => n.nodeType === 3 && n.nodeValue.trim())) continue;
+    const px = parseFloat(getComputedStyle(el).fontSize); if (px < 12) bad.push(el.className + ' ' + px + ' ' + el.textContent.trim().slice(0, 20)); }
+  for (const el of document.querySelectorAll('#board .task .t, #tk-add')) { if (vis(el) && parseFloat(getComputedStyle(el).fontSize) < 14) bad.push('body ' + el.className); }
+  return bad; }"""
+
+
 def task(tok, title):
     return next(t for t in api("/api/tasks", token=tok)[1]["tasks"] if t["title"] == title)
 
@@ -71,25 +92,47 @@ def main():
         maya = api("/api/join", "POST", {"code": code, "name": "Maya"})[1]["token"]
         ms = api("/api/members", token=host)[1]["members"]
         camp_id = next(m["id"] for m in ms if m["name"] == "Camp"); maya_id = next(m["id"] for m in ms if m["name"] == "Maya")
-        yday = (date.today() - timedelta(days=1)).isoformat()
-        seed = [("Orders page with a daily total and a print button", "doing", camp_id, "build", None),
-                ("Delivery routes", "review", maya_id, "build", None),
-                ("Price sheet for cafés", "backlog", None, "write", yday),
-                ("Flavor photos", "backlog", None, "design", None),
-                ("Fix the totals rounding on the receipt", "backlog", maya_id, "fix", None),
-                ("Batch counter", "done", camp_id, "build", None),
-                ("Write the how-to text", "done", maya_id, "write", None),
-                ("Pick the app colors", "done", None, "design", None),
-                ("Logo sketch", "done", maya_id, "design", None)]
-        for title, st, who, ty, due in seed:
-            t = api("/api/tasks", "POST", {"title": title, "status": st, "type": ty, "due": due}, host)[1]["task"]
-            if who: api(f"/api/tasks/{t['id']}", "PATCH", {"assignee": who}, host)
-            if who == maya_id and st == "backlog": api(f"/api/tasks/{t['id']}/accept", "POST", {}, maya); api(f"/api/tasks/{t['id']}", "PATCH", {"status": "backlog"}, host)   # feat/tasks-company: she accepts, it's queued
-        orders = task(host, "Orders page with a daily total and a print button")
-        api(f"/api/tasks/{orders['id']}", "PATCH", {"subtasks": [{"t": "Table", "done": True}, {"t": "Total", "done": True}, {"t": "Print", "done": False}]}, host)
         with sync_playwright() as p:
             b = p.chromium.launch(executable_path="/usr/bin/google-chrome", args=["--no-proxy-server"])
             pg = open_as(b, "Camp", host, {"width": 1280, "height": 900})
+
+            # 0. an empty board: one welcome with its two ways in, instead of four empty boxes; the counts step back
+            pg.wait_for_selector("#board .tk-welcome", timeout=8000)
+            assert pg.locator("#board .col").count() == 1 and pg.locator("#board .tk-list").count() == 0, "one welcome, no empty boxes"
+            assert "Add a task" in pg.inner_text("#board .tk-welcome") and "No tasks yet" in pg.inner_text("#board .tk-welcome")
+            assert pg.locator("#board .tk-welcome ol li").count() == 4, "the four stages in one line"
+            assert pg.evaluate("document.querySelector('#tk-seg').classList.contains('is-quiet')"), "all-zero counts are quiet"
+            assert pg.evaluate("document.querySelectorAll('#tk-seg .tk-stat.is-zero').length") == 5
+            assert not pg.evaluate(NO_EMOJI), pg.evaluate(NO_EMOJI)
+            assert not pg.evaluate(SMALL), pg.evaluate(SMALL)
+            shot(pg, "tasks-v2-empty.png")
+            pg.click('#board .tk-welcome [data-add="backlog"]'); pg.fill("#board .col .quick-add", "A first small thing"); pg.press("#board .col .quick-add", "Enter")
+            pg.wait_for_selector('#board [data-sec="needs"] .task:has-text("A first small thing")', timeout=8000)
+            assert pg.locator("#board .tk-welcome").count() == 0, "the welcome leaves with the first task"
+            # sections with nothing in them are one quiet line: no box, and still a place to drop a task
+            quiet = pg.evaluate("[...document.querySelectorAll('#board .col.is-empty')].map(c => [c.dataset.sec, getComputedStyle(c.querySelector('.tk-list')).borderTopWidth, c.getBoundingClientRect().height])")
+            assert [q[0] for q in quiet] == ["doing", "review", "done"] and all(q[1] == "0px" and q[2] <= 40 for q in quiet), quiet
+            assert not pg.evaluate("document.querySelector('#tk-seg').classList.contains('is-quiet')")
+            api(f"/api/tasks/{task(host, 'A first small thing')['id']}", "DELETE", token=host)
+            pg.wait_for_selector("#board .tk-welcome", timeout=8000)
+
+            yday = (date.today() - timedelta(days=1)).isoformat()
+            seed = [("Orders page with a daily total and a print button", "doing", camp_id, "build", None),
+                    ("Delivery routes", "review", maya_id, "build", None),
+                    ("Price sheet for cafés", "backlog", None, "write", yday),
+                    ("Flavor photos", "backlog", None, "design", None),
+                    ("Fix the totals rounding on the receipt", "backlog", maya_id, "fix", None),
+                    ("Batch counter", "done", camp_id, "build", None),
+                    ("Write the how-to text", "done", maya_id, "write", None),
+                    ("Pick the app colors", "done", None, "design", None),
+                    ("Logo sketch", "done", maya_id, "design", None)]
+            for title, st, who, ty, due in seed:
+                t = api("/api/tasks", "POST", {"title": title, "status": st, "type": ty, "due": due}, host)[1]["task"]
+                if who: api(f"/api/tasks/{t['id']}", "PATCH", {"assignee": who}, host)
+                if who == maya_id and st == "backlog": api(f"/api/tasks/{t['id']}/accept", "POST", {}, maya); api(f"/api/tasks/{t['id']}", "PATCH", {"status": "backlog"}, host)   # feat/tasks-company: she accepts, it's queued
+            orders = task(host, "Orders page with a daily total and a print button")
+            api(f"/api/tasks/{orders['id']}", "PATCH", {"subtasks": [{"t": "Table", "done": True}, {"t": "Total", "done": True}, {"t": "Print", "done": False}]}, host)
+            pg.evaluate("TribeTasks.load()")
 
             # 1. stat tiles count what needs doing
             n = lambda k: int(pg.inner_text(f'#tk-seg [data-segn="{k}"]'))
@@ -112,13 +155,23 @@ def main():
                 assert btn.is_visible() and btn.inner_text().strip() == label, (title, btn.inner_text())
             pr = task(host, "Price sheet for cafés")
             assert pg.locator(f'#board .task[data-id="{pr["id"]}"] .due-chip.overdue').count() == 1, "overdue chip"
+            assert not pg.evaluate(NO_EMOJI), pg.evaluate(NO_EMOJI)
+            assert not pg.evaluate(SMALL), pg.evaluate(SMALL)
+            # the facts sit in the same order on every row: title, kind, who, due, the next step
+            order = pg.evaluate(f"""(() => {{ const r = document.querySelector('#board .task[data-id="{pr["id"]}"]'); const x = s => r.querySelector(s).getBoundingClientRect(); return [x('.t').left <= x('.tk-ty').left, x('.tk-ty').right <= x('.tk-acts').left, x('.due-chip').right <= x('.tk-acts').left, r.getBoundingClientRect().height >= 44]; }})()""")
+            assert all(order), order
+            assert pg.evaluate(f"""document.querySelector('#board .task[data-id="{pr["id"]}"]').classList.contains('is-late')"""), "an overdue row is marked"
             shot(pg, "tasks-dashboard-desktop.png")
 
             # 2. tiles filter; tap again to clear
             pg.click('#tk-seg [data-seg="overdue"]')
             wait(lambda: pg.evaluate("[...document.querySelectorAll('#board .task')].map(t => t.dataset.id)") == [pr["id"]], what="overdue filter")
             assert pg.locator("#tk-filter").is_visible()
+            assert pg.get_attribute('#tk-seg [data-seg="overdue"]', "aria-pressed") == "true" and pg.locator('#tk-seg [aria-pressed="true"]').count() == 1
+            wait(lambda: pg.evaluate("""(() => { const b = document.querySelector('#tk-seg [data-seg="overdue"]'), o = document.querySelector('#tk-seg [data-seg="doing"]'); return getComputedStyle(b).backgroundColor !== getComputedStyle(o).backgroundColor && getComputedStyle(b, '::after').opacity === '1'; })()"""), what="the selected count looks selected")
+            assert pg.evaluate("[...document.querySelectorAll('#board .col')].map(c => c.dataset.sec)") == ["needs"], "only the sections that hold a match"
             pg.click('#tk-seg [data-seg="overdue"]')
+            assert pg.locator('#tk-seg [aria-pressed="true"]').count() == 0
             wait(lambda: pg.locator("#board .task").count() == 8, what="filter cleared")
 
             # 3. one Add line: Enter makes a task that needs someone; "For me" + due assign it on the way in
@@ -202,7 +255,7 @@ def main():
             wait(lambda: task(host, "Fix the totals rounding on the receipt")["status"] == "review", what="dragged to review")
 
             # 10. Board view: four columns (two by two on a narrow board), wide enough for titles; the choice sticks
-            pg.click('#board [data-view="board"]')
+            pg.click('#view-tasks .view-head [data-view="board"]')   # List | Board sits in the page header, beside New task
             pg.wait_for_function("document.querySelector('#board').dataset.view === 'board'")
             tops = pg.evaluate("[...document.querySelectorAll('#board .col')].map(c => Math.round(c.getBoundingClientRect().top))")
             widths = pg.evaluate("[...document.querySelectorAll('#board .col')].map(c => c.getBoundingClientRect().width)")
@@ -210,7 +263,9 @@ def main():
             shot(pg, "tasks-dashboard-board.png")
             pg.reload(); pg.wait_for_function("window.TribeClient && TribeClient.connected()", timeout=15000); time.sleep(0.8)
             pg.evaluate("TribeApp.show('tasks')"); pg.wait_for_function("document.querySelector('#board').dataset.view === 'board'", timeout=8000)
-            pg.click('#board [data-view="list"]')
+            sw = pg.locator("#view-tasks .tk-views").bounding_box(); nt = pg.locator("#task-new").bounding_box()
+            assert abs((sw["y"] + sw["height"] / 2) - (nt["y"] + nt["height"] / 2)) <= 2 and sw["x"] + sw["width"] <= nt["x"], ("the switch and New task share the header line", sw, nt)
+            pg.click('#view-tasks .view-head [data-view="list"]')
 
             # 11. a friend sees the change live
             mp = open_as(b, "Maya", maya, {"width": 1280, "height": 800})
@@ -220,6 +275,12 @@ def main():
             ph = open_as(b, "Camp", host, {"width": 390, "height": 844}, mobile=True)
             assert ph.locator("#tk-seg").is_visible()
             assert ph.evaluate("document.documentElement.scrollWidth") <= 391
+            assert ph.evaluate("(() => { const m = document.querySelector('.main'); return !m || m.scrollWidth <= m.clientWidth + 1; })()"), "the page never scrolls sideways"
+            assert ph.evaluate("[...document.querySelectorAll('#tk-seg .tk-stat')].every(b => { const r = b.getBoundingClientRect(); return r.left >= 0 && r.right <= 391 && r.height >= 44; })"), "all five counts fit, thumb-size"
+            assert ph.evaluate("(() => { const c = document.querySelector('#board .tk-top__more'); return getComputedStyle(c).flexWrap === 'nowrap' && c.scrollWidth > c.clientWidth && c.getBoundingClientRect().height <= 60; })()"), "the chips are one scroller"
+            assert ph.evaluate("[...document.querySelectorAll('#board .task')].every(r => r.getBoundingClientRect().height >= 44)"), "rows stay tappable"
+            assert not ph.evaluate(NO_EMOJI), ph.evaluate(NO_EMOJI)
+            assert not ph.evaluate(SMALL), ph.evaluate(SMALL)
             prow = ph.locator(f'#board .task[data-id="{pr["id"]}"]')
             btn = prow.locator('.tk-acts .tk-btn').bounding_box(); rb = prow.bounding_box()
             assert btn["height"] >= 44 and btn["width"] >= rb["width"] * 0.6, ("thumb-size button", btn, rb)
