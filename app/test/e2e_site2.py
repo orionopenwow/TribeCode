@@ -178,7 +178,7 @@ def main():
             pg.wait_for_function("document.querySelectorAll('#lanes [data-step].on').length >= 2", timeout=6000)
             # host: share the network, honest about 24/7
             host = pg.inner_text("#host .feature__copy")
-            assert "It runs where you want it." in host and "GitHub repository" in host and "move it later" in host, host
+            assert "It runs where you want it." in host and "GitHub account" in host and "move it later" in host, host
             assert all(c in host for c in ["Zero npm dependencies", "Plain files + git", "MIT licensed"])
             assert "one link" in host
             # pricing lives on its own page (pricing.html): promises, Tribes / Schools & studios tabs, Free is available now, paid plans are planned with a waitlist

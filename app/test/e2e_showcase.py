@@ -160,7 +160,7 @@ def main():
             # agents in general, not one tool; the honest hosting line; pricing with every paid button disabled; no "Welcome back" bar
             for tool in ["Claude Code", "Codex", "Gemini CLI", "Cursor"]:
                 assert tool in body, tool
-            assert "It runs where you want it." in body and "GitHub repository" in body and "Anthropic" not in body
+            assert "It runs where you want it." in body and "GitHub account" in body and "Anthropic" not in body
             assert pg.locator("#pricing").count() == 0, "pricing has its own page"
             assert pg.locator("#continue").count() == 0
             assert all(u.startswith(("https://api.github.com/", "https://avatars.githubusercontent.com/")) for u in seen), seen
