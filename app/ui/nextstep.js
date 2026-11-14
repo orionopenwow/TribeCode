@@ -48,6 +48,8 @@
     st.published = !!(pub && (pub.published === true || (Array.isArray(pub.published) && pub.published.length) || pub.live || pub.url));
     st.checked = st.published || ls.get(`tribecode.next.${p.id}.checked`) === '1';
     st.company = !!(co && (co.company || co.seats || (co.name && co.seats)));
+    // one voice: what reco.js senses about this project (company seats, money, assets, lessons, add-ons) joins the same list
+    try { const R = window.TribeReco; if (R && R.list) st.extras = (await R.list(p.id, true)).filter(x => !['vision', 'friends', 'repo', 'company'].includes(x.id)).map(x => ({ id: 'x-' + x.id, title: x.t, why: x.why, act: x.b, run: 'reco:' + x.id, _x: x })); } catch {}
     return st;
   }
 
@@ -71,6 +73,7 @@
     st.myTask && { id: 'mytask', title: `Carry on with “${st.myTask.title}”`, why: 'It is assigned to you and still open.', act: 'Open Tasks', run: 'tasks' },
     !st.ai && st.tribe && st.project && { id: 'ai', title: 'Add an AI helper', why: 'Claude, Cursor, Codex or Gemini can take tasks and build with you. Flint works without one.', act: 'Invite your agent', run: 'ai' },
     st.tribe && st.project && !st.company && { id: 'company', title: 'Run it as a company', why: 'Roles, check-ins and money in and out, set up by four questions.', act: 'Open Company', run: 'company' },
+    ...(st.extras || []),
     { id: 'learn', title: 'See the whole path', why: 'A short guide from idea to a published link, with more depth when you want it.', act: 'Open the path', run: 'learn' },
     { id: 'tour', title: 'Take the tour with Flint', why: 'Two minutes: he flies you around the main places.', act: 'Start the tour', run: 'tour' },
   ].filter(Boolean);
@@ -114,7 +117,7 @@
     tour: () => window.TribeFlintGuide && window.TribeFlintGuide.tour && window.TribeFlintGuide.tour(),
   };
   const pathFor = () => ({ game: 'game', '3d': 'game', app: 'app', tool: 'app', site: 'website' }[(proj() || {}).kind || ''] || 'website');
-  function run(step) { close(); const f = RUN[step.run]; if (f) f(step); document.dispatchEvent(new CustomEvent('tribe:nextstep', { detail: { id: step.id } })); }
+  function run(step) { close(); if (step._x) { const x = step._x, M = window.TribeMode; try { if (x.unlock && M && M.allowsKey && !M.allowsKey(x.unlock) && M.unlock) M.unlock(x.unlock); x.run(); } catch {} } const f = RUN[step.run]; if (f) f(step); document.dispatchEvent(new CustomEvent('tribe:nextstep', { detail: { id: step.id } })); }
 
   // ---------- things to ask Flint, for where you are, and ideas by kind ----------
   const PROMPTS = {
@@ -142,7 +145,7 @@
 
   // ---------- Flint: the same engine answers in chat ----------
   const RX = {
-    next: /^(?:what (?:should|do|can) i do (?:next|now)|what(?:'s| is) (?:the )?next(?: step)?|next step|what now|where do i start|how do i (?:start|begin))\??$/,
+    next: /^(?:what (?:should|do|can) i do(?: (?:next|now))?|what next|what(?:'s| is) next for me|what(?:'s| is) (?:the )?next(?: step)?|next step|what now|where do i start|how do i (?:start|begin))\??$/,
     stuck: /^(?:i(?:'m| am) (?:stuck|lost|confused)|(?:i )?(?:don'?t|do not) know what to do(?: next)?|help me|i need help|what do i do)\??$/,
     make: /^(?:what can i (?:make|build|create)(?: here| with (?:this|tribecode))?|give me (?:an? )?(?:idea|ideas)|inspire me|(?:some )?ideas?(?: please)?|what should i (?:make|build))\??$/,
     ship: /^(?:how do i (?:ship|publish|launch|release|share)(?: (?:this|it|my (?:app|game|site|website|project)))?|how (?:do|can) (?:people|others|friends) (?:see|open|play|use) (?:this|it)|(?:ship|publish|launch) (?:it|this) how)\??$/,
@@ -162,8 +165,7 @@
       const line = !st.project ? T('Start a project first, then build something you can open.') : !todo.length ? T('It is already published. Open Publish to copy the link or publish again.') : `${T('To ship it:')} ${todo.map((s, i) => `${i + 1}. ${T(s.title)}`).join(' ')}`;
       return { text: line, acts: [[T((todo[0] || { act: 'Publish' }).act), 'nextstep', (todo[0] || { run: 'publish' }).run], [T('How publishing works'), 'nextstep', 'learn']] };
     }
-    // "what should I do next" with a task of your own in progress keeps Flint's task answer (focus.js): one way
-    if (kind === 'next' && st.myTask && st.vision) return null;
+    // one voice: a task of your own is simply one of the engine's steps (usually the top one)
     const lead = kind === 'stuck' ? T('No problem. Here is the one thing I would do next:') : T('Next:');
     const where = st.project ? ` ${T('You are at')} ${T(STAGES.find(s => s[0] === n.stage)[1])} (${n.stages.filter(s => s.done).length}/${STAGES.length}).` : '';
     return { text: `${lead} **${T(n.best.title)}**. ${T(n.best.why)}${where}`, acts: [[T(n.best.act), 'nextstep', n.best.run], ...n.alts.map(a => [T(a.title), 'nextstep', a.run]), [T('See all of it'), 'nextstep', 'open']] };
@@ -214,7 +216,9 @@
     box.innerHTML = `<section class="ns-card" id="ns-card" data-ns-step="${esc(b.id)}" aria-label="${esc(T('Next step'))}">
       <div class="ns-card-h"><span class="eyebrow">${esc(T('Next step'))}</span>${strip(n)}</div>
       <div class="ns-card-b"><div class="ns-card-t"><h3>${esc(T(b.title))}</h3><p>${esc(T(b.why))}</p></div>
-      <div class="ns-acts"><button type="button" class="btn primary" data-ns-go>${esc(T(b.act))}</button><button type="button" class="btn ghost" data-ns-more>${esc(T('Other options'))}</button></div></div></section>`;
+      <div class="ns-acts"><button type="button" class="btn primary" data-ns-go>${esc(T(b.act))}</button><button type="button" class="btn ghost" data-ns-more>${esc(T('Other options'))}</button></div></div>
+      ${n.alts.length ? `<div class="ns-card-alts"><span class="eyebrow">${esc(T('Or'))}</span>${n.alts.map((a, i) => `<button type="button" class="linkish" data-ns-alt="${i}">${esc(T(a.title))}</button>`).join('')}</div>` : ''}</section>`;
+    box.querySelectorAll('[data-ns-alt]').forEach(x => { x.onclick = () => run(n.alts[+x.dataset.nsAlt]); });
     box.querySelector('[data-ns-go]').onclick = () => run(b);
     box.querySelector('[data-ns-more]').onclick = open;
   }

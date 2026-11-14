@@ -3,7 +3,9 @@
 // experience mode, and suggests at most three things worth doing next, each with one button. Features stack at your
 // request: "Turn it on" unlocks a feature above your mode for you only (TribeMode.unlock), without changing your mode.
 // Dismissed suggestions stay hidden on this device (localStorage 'tribecode.reco.hide.<project>').
-// Public: window.TribeReco = { draw(pid), list(pid) }.
+// feat/help-next (one voice): this file no longer draws its own card. It is the sensing half of the one next-step
+// engine (nextstep.js reads list(pid, true)); the dashboard shows one card, the Next step.
+// Public: window.TribeReco = { draw(pid), list(pid, all?) }.
 (function () {
   const C = window.TribeClient; if (!C) return;
   const $ = s => document.querySelector(s);
@@ -18,7 +20,7 @@
   const members = pid => (C.state().members || []).filter(m => m.role !== 'agent' && (!proj(pid).members || proj(pid).members[m.id] !== undefined));
 
   // id, emoji, title, why, button label, run(), unlock key (when the feature sits above the person's mode), score
-  async function list(pid) {
+  async function list(pid, all) {
     const p = proj(pid), out = [];
     let sense = {}, co = null, vision = '';
     try { sense = await C.api(`/projects/${encodeURIComponent(pid)}/sense`); } catch {}
@@ -44,21 +46,12 @@
     add({ id: 'market', e: '🧩', t: 'Find add-ons for this project', why: 'Widgets, templates, skills and connectors, sorted by what your tribe uses most.', b: 'Open the Marketplace', run: () => (window.TribeMarket && window.TribeMarket.open ? window.TribeMarket.open() : go('market')), score: 20 });
 
     const h = hidden(pid);
-    return out.filter(x => !h.has(x.id)).sort((a, b) => b.score - a.score).slice(0, 3);
+    return out.filter(x => !h.has(x.id)).sort((a, b) => b.score - a.score).slice(0, all ? 12 : 3);
   }
 
-  let seq = 0;
-  async function draw(pid) {
-    const slot = $('#pj-reco-slot'); if (!slot || !pid) return;
-    const n = ++seq, items = await list(pid); if (n !== seq) return;
-    if (!items.length) { slot.innerHTML = ''; return; }
-    slot.innerHTML = `<section class="card rc-card" aria-label="Recommended next"><div class="rc-head"><span class="eyebrow">Recommended next</span><span class="faint rc-sub">picked for this project</span></div>
-      <div class="rc-list">${items.map(x => `<div class="rc-item" data-rc="${esc(x.id)}"><span class="rc-e" aria-hidden="true">${x.e}</span><div class="rc-t"><b>${esc(x.t)}</b><small>${esc(x.why)}</small></div>
-        <div class="rc-acts"><button class="btn sm ${x.unlock && needs(x.unlock) ? 'primary' : ''}" data-rc-go="${esc(x.id)}">${esc(x.b)}</button><button class="rc-x" data-rc-x="${esc(x.id)}" title="Not now" aria-label="Hide this suggestion">×</button></div></div>`).join('')}</div></section>`;
-    slot.querySelectorAll('[data-rc-go]').forEach(b => b.onclick = () => { const x = items.find(i => i.id === b.dataset.rcGo); if (!x) return; if (x.unlock && needs(x.unlock) && M().unlock) M().unlock(x.unlock); x.run(); });
-    slot.querySelectorAll('[data-rc-x]').forEach(b => b.onclick = () => { hideOne(pid, b.dataset.rcX); draw(pid); });
-  }
-  let t; const soon = () => { clearTimeout(t); t = setTimeout(() => { const pid = C.project && C.project(); if (pid && $('#pj-reco-slot')) draw(pid); }, 400); };
+  // the one card is the Next step (nextstep.js); drawing here only asks it to refresh
+  function draw() { const N = window.TribeNextStep; if (N && N.refresh) N.refresh(); }
+  let t; const soon = () => { clearTimeout(t); t = setTimeout(() => { draw(); }, 400); };
   if (C.on) { C.on('company', soon); C.on('vision', soon); C.on('projects', soon); }
   document.addEventListener('tribe:mode', soon);
   window.TribeReco = { draw, list };

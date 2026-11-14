@@ -70,7 +70,9 @@ def main():
                 assert before in ("vision", "task", "design", "build", "check", "publish", "share", "mytask"), before
 
             # 4. Flint answers from the same engine
-            r = pg.evaluate("TribeNextStep.flint('what should I do next?')"); assert r is None or ("**" in r["text"] and any(a[1] == "nextstep" for a in r["acts"])), r
+            r = pg.evaluate("TribeNextStep.flint('what should I do next?')"); assert r and "**" in r["text"] and any(a[1] == "nextstep" for a in r["acts"]), r   # always the engine: one voice
+            assert pg.evaluate("TribeNextStep.flint('what next')") and pg.evaluate("TribeNextStep.pick({tribe: true, project: {id: 'p', name: 'P'}, vision: true, tasks: 2, myTask: {id: 't', title: 'Fix the menu'}}).best.id") == "mytask", "your own open task is the engine's top step"
+            assert pg.locator(".rc-card").count() == 0, "one card: no second Recommended next"
             r = pg.evaluate("TribeNextStep.flint(\"I'm stuck\")"); assert r and "**" in r["text"] and r["acts"][0][1] == "nextstep", r
             r = pg.evaluate("TribeNextStep.flint('inspire me')"); assert r and "Website" in r["text"] and "Game" in r["text"], r
             r = pg.evaluate("TribeNextStep.flint('what can I make')"); assert r and len(r["acts"]) >= 3

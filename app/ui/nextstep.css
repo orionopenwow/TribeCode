@@ -37,6 +37,8 @@
 .ns-card-b { display: flex; align-items: flex-end; gap: 16px; margin-top: 10px; flex-wrap: wrap; }
 .ns-card-t { flex: 1; min-width: 220px; }
 .ns-card-t h3 { margin: 0 0 4px; font: 700 18px/1.25 var(--display, inherit); letter-spacing: -0.01em; }
+.ns-card-alts { display: flex; align-items: center; flex-wrap: wrap; gap: 6px 16px; margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--edge); font-size: 13.5px; }
+.ns-card-alts .linkish { min-height: 32px; text-align: left; }
 .ns-card-t p { margin: 0; color: var(--muted); font-size: 14px; line-height: 1.5; max-width: 65ch; }
 
 /* the chip in the project header */
