@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.38.1
+- **Free cloud in one step**: every place that offers Free cloud now shows the same step. One button opens Render; you bring back your cloud address and setup code, press Move it there, and the app makes you the host and moves your project in. No more opening the address, making an invite link and pasting it back.
+- **Honest wording**: the step says up front that the free cloud naps after 15 minutes with nobody there, takes about a minute to wake, and wipes its files on a nap while browsers put them back. "Always online" is gone.
+- **Already has people?** Paste an invite link in the address box instead.
+- **Phones**: the step fits at 390px with 40px buttons and fields.
+
 ## v0.38.0
 - **Website editor, overhauled**: every word, picture and button on all 52 templates can be selected and edited. One small toolbar, right-click, drag to reorder, a section library, and a Full width view. Sign-up forms on your site reach your project chat while the tribe's computer is online.
 - **Suggestions from your tribe**: the website designer reads your chats, tasks, docs and notes and offers one-tap changes with who said it. Nothing changes until you press Apply, and Undo takes it back.
