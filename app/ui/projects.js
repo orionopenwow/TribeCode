@@ -255,6 +255,7 @@ ${canEdit && !started ? `      <section class="pj-context" id="pj-context"><div 
             <span class="gl-num">${t.n}</span><span class="gl-line">${esc(t.line)}</span>
             ${t.pct != null && (tasksAll.length || t.k === 'company') ? `<span class="gl-bar" aria-hidden="true"><i style="width:${t.pct}%"></i></span>` : ''}
             <span class="gl-act">${t.act}<span aria-hidden="true">→</span></span></button>`).join('')}</div></section>` : ''}
+      <div id="pj-share-slot"></div><!-- feat/real-tribe: Sharing and backup, one plain card in place of the header pills (sharecard.js) -->
       <div id="pj-reco-slot"></div><!-- v0.27: recommended next for this project (reco.js) -->
       ${canEdit ? '<div id="pj-board-slot"></div>' : ''}<!-- v0.25: the inspiration board (inspo.js) -->
       ${sec('pj-sec-stream', 'Recent changes and what’s next', `<div class="pj-grid">

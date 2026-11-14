@@ -10,7 +10,7 @@
 // A slim chapter bar sits at the bottom: chapter segments + title, time / total, Pause/Play, Skip, 2x, Try it yourself
 // (stops the tour and hands you the same tribe, which keeps running by itself), Leave. One caption line per chapter.
 // Reduced motion: cursors cut instead of gliding, text appears a line at a time, no particles.
-// Only runs inside the showcase (TribeOffline.mode() === 'showcase'): it never touches a real tribe.
+// Only runs inside the showcase (TribeOffline.mode() === 'showcase'): it never touches your own tribe.
 // Start: ?demo=showcase (showcase.js sets window.__tribeTour; ?tour=off skips it, ?tour=fast runs it in seconds for
 // tests), or "Play the 3-minute tour" in the Showcase pill. It also answers a few showcase-only API paths
 // (agents at work, hand-offs, #agents, ownership, the website, the preview) through offline.js's hooks.route.

@@ -1,6 +1,6 @@
 // Where should your tribe live? (docs/PHONE-HOSTING.md) The phone's "Start a tribe" chooser, plus the sheet that moves a
 // tribe kept on this phone to a real host. Four homes, one row each:
-//   This phone   a real tribe in this browser right away (app/ui/offline.js solo mode); friends join after a move
+//   This phone   your own tribe in this browser right away (app/ui/offline.js solo mode); friends join after a move
 //   Free cloud   Render's one-click deploy of this repo (docs/CLOUD.md)
 //   My Android   Termux: one line installs and starts a host (scripts/phone/termux-host.sh)
 //   A computer   the desktop app (or a friend's), as before

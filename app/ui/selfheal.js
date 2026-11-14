@@ -158,7 +158,7 @@
     const { base, token } = server();
     const text = [reason, '', ...logs.slice(-15)].join('\n');
     if (auto && !shouldFile('selfheal ' + reason)) return false;
-    const demo = !!(window.TribeOffline && window.TribeOffline.active && window.TribeOffline.active());   // fix/desk-demo: a demo never reports into your real tribe
+    const demo = !!(window.TribeOffline && window.TribeOffline.active && window.TribeOffline.active());   // fix/desk-demo: a demo never reports into your own tribe
     if (!base || !token || demo) { try { await navigator.clipboard.writeText(text); } catch {} return false; }
     let project = ''; try { project = localStorage.getItem('tribecode.project:' + base) || ''; } catch {}
     try {

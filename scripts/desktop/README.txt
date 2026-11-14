@@ -8,7 +8,7 @@ TribeCode
   Stable\Update-and-Open-TribeCode.bat
                               THE INSTALLED APP (released versions). Updates the .exe only when
                               you double-click it (or press Restart to update in the app), then
-                              opens it. Uses your real tribe in %USERPROFILE%\TribeCode.
+                              opens it. Uses your own tribe in %USERPROFILE%\TribeCode.
 
   Invite-A-Friend.bat         ONE DOUBLE-CLICK: a fresh project and a link that works from
                               anywhere, already copied. Paste it in a text. Your friend taps

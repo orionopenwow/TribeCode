@@ -53,7 +53,7 @@
   // ---------- 1. Start: the one create flow (tribenew.js: name and icon · where it lives · invite · done) ----------
   function start(o = {}) { close(); return window.TribeNew ? window.TribeNew.open(o) : null; }
 
-  // ---------- 2. Where should it live? (optional, last; also from the pill any time) ----------
+  // ---------- 2. Where should it live? (optional, last; also from Sharing and backup any time) ----------
   const pid = () => { const o = OFF(); const db = o && o.solo && o.solo() ? o.state() : null; return db ? (db.current || (db.projects[0] || {}).id) : null; };
   const homeOf = id => ((OFF() && OFF().homes ? OFF().homes() : {})[id || pid()] || {});
   function where(o = {}) {
@@ -65,7 +65,7 @@
     const gh = homeOf().github, desk = desktopApp(), fo = window.TribeHome && window.TribeHome.canPickFolder ? window.TribeHome.canPickFolder() : { ok: false };
     const row = (k, icon, title, sub, tag, live) => `<button class="ph-row" data-su="${k}"><span class="ph-ic${live ? ' live' : ''}">${ic(icon)}</span><span class="ph-tt"><b>${title}${tag ? ` <em class="ph-tag">${tag}</em>` : ''}</b><small>${sub}</small></span><span class="ph-go">${ic('chev', 16)}</span></button>`;
     const s = sheet(`<header class="ph-h"><div><span class="eyebrow">${o.first ? 'Last step · optional' : 'Where it lives'}</span><h3>Where should it live?</h3></div></header>
-      <p class="ph-lead">${o.first ? 'It already works here. Pick a home now so friends can join, or decide later from the pill at the top.' : 'It works on this device now. A home lets friends see it and join.'}</p>
+      <p class="ph-lead">${o.first ? 'It already works here. Pick a home now so friends can join, or decide later from Sharing and backup on the dashboard.' : 'It works on this device now. A home lets friends see it and join.'}</p>
       <div class="ph-list">
         ${fo.ok ? row('folder', 'folder', 'A folder on this computer', 'Your own folder holds the files; this computer hosts it. Edit here or in VS Code', desk ? 'Recommended' : '') : ''}
         ${fo.ok ? row('shared', 'net', 'A shared folder', 'A Dropbox, OneDrive, Google Drive, iCloud, NAS or Syncthing folder you already sync. No account; friends join from it') : ''}
@@ -107,7 +107,7 @@
       <div class="ph-acts"><button class="btn" id="su-offline">Keep working offline</button><button class="btn primary" id="su-retry">Try again</button></div></div>
       <p class="ph-note">Your project is safe on this device; nothing was lost.</p>`;
     box.querySelector('#su-retry').onclick = retry;
-    box.querySelector('#su-offline').onclick = () => { close(); toast('Still on this device. Choose a home any time from the pill at the top.'); };
+    box.querySelector('#su-offline').onclick = () => { close(); toast('Still on this device. Put it online any time from Sharing and backup on the dashboard.'); };
   }
   async function computer() {
     syncing('Moving it to this computer');

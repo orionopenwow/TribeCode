@@ -39,7 +39,7 @@ body.offline-demo #host-pill { display: none !important; }
   body[data-view="chat"] .od-pill, body.mobile-chat .od-pill { display: none; }   /* the chat opens with "lives only in this browser"; the pill would sit on the composer */
   .od-pop { left: 8px !important; right: 8px; width: auto; }
 }
-/* feat/demo-auto: "This needs a real tribe" (only for what a demo in one tab truly can't do), calm, never an error */
+/* feat/demo-auto: "The demo can’t do this" (only for what a demo in one tab truly can't do), calm, never an error */
 .od-needs { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); z-index: 9000; display: flex; align-items: center; gap: 12px; max-width: min(520px, calc(100vw - 24px));
   padding: 10px 10px 10px 14px; border: 1px solid var(--edge); border-radius: 12px; background: var(--raised); color: var(--text); }
 .od-needs-t { display: flex; flex-direction: column; gap: 2px; min-width: 0; flex: 1; }

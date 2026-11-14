@@ -1,0 +1,20 @@
+/* Sharing and backup (sharecard.js): one plain card on the dashboard, in place of the header pills. Flat matte, tokens only. */
+.share-card { display: flex; align-items: center; gap: 14px; margin: 14px 0; padding: 14px 16px; }
+.share-card .sc-ic { flex: none; display: grid; place-items: center; width: 36px; height: 36px; border: 1px solid var(--border); border-radius: var(--r-ctl); background: var(--raised, var(--surface)); color: var(--body); }
+.share-card[data-tone="conflict"] .sc-ic { color: var(--deny, var(--accent)); border-color: currentColor; }
+.share-card .sc-t { flex: 1; min-width: 0; }
+.share-card h3 { margin: 0 0 2px; font-size: 14px; font-weight: 600; color: var(--text); }
+.share-card p { margin: 0; font-size: 13.5px; line-height: 1.5; color: var(--body); overflow-wrap: anywhere; }
+.share-card .sc-acts { flex: none; display: flex; gap: 8px; }
+.share-card .sc-acts .btn { min-height: 36px; white-space: nowrap; }
+/* the pills this card stands in for never show (their lists open from More options) */
+#home-pill, #host-pill, .od-pill.solo { display: none !important; }
+.sc-busy { position: fixed; left: 50%; bottom: max(20px, env(safe-area-inset-bottom)); transform: translateX(-50%); z-index: 400; display: flex; align-items: center; gap: 10px; max-width: calc(100vw - 32px); padding: 10px 14px; border: 1px solid var(--border); border-radius: var(--r-card); background: var(--surface); color: var(--text); font-size: 13.5px; }
+.sc-needs .nx-acts .btn { white-space: nowrap; }
+@media (max-width: 820px) {
+  .share-card { flex-wrap: wrap; gap: 10px 12px; padding: 12px; }
+  .share-card .sc-t { flex-basis: calc(100% - 48px); }
+  .share-card .sc-acts { width: 100%; }
+  .share-card .sc-acts .btn { flex: 1; min-height: 44px; }
+  .sc-busy { bottom: calc(76px + env(safe-area-inset-bottom)); }
+}

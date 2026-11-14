@@ -30,7 +30,7 @@
   // "Where" switch on Gigs (and a visibility choice on each gig). Old names still open the right place (LEGACY).
   const TABS = [['gigs', 'work', 'Gigs'], ['offers', 'gift', 'My offers'], ['people', 'people', 'Find people'], ['trade', 'swap', 'Trade']];
   const LEGACY = { templates: ['gigs', { tpl: true }], bank: ['trade', { trade: 'bank' }], compute: ['trade', { trade: 'compute' }], public: ['gigs', { where: 'public' }] };
-  const NOPE = 'This needs a real tribe';   // offline.js answers this for anything a tribe-in-this-tab can't do
+  const NOPE = 'This needs the tribe online';   // offline.js answers this for anything a tribe-in-this-tab can't do
   const LS = 'tribecode.work.v1';
   const saved = (() => { try { return JSON.parse(localStorage.getItem(LS) || '{}') || {}; } catch { return {}; } })();
   const remember = () => { try { localStorage.setItem(LS, JSON.stringify({ tab: st.tab, sort: st.sort, trade: st.trade })); } catch {} };
@@ -40,7 +40,7 @@
     f: { skills: '', seat: '', pay: '', hours: 0, free: 0 }, data: null, bank: null, compute: null, pub: null, busy: false, err: '', local: false };
   let open_ = false;
 
-  // Where Work's data comes from: 'tribe' (a real tribe answers /api/talent), 'waiting' (a tribe is reconnecting) or
+  // Where Work's data comes from: 'tribe' (a tribe that is online answers /api/talent), 'waiting' (a tribe is reconnecting) or
   // 'local' (no tribe, or a tribe that lives in this tab: offline.js has no Work backend). Local never calls the API.
   const inTab = () => !!(window.TribeOffline && window.TribeOffline.active && window.TribeOffline.active());
   function mode() {
@@ -94,7 +94,7 @@
     if (st.tab === 'gigs' && st.where === 'public' && !st.pub) jobs.push(C.api('/talent/public').then(d => { st.pub = d; }).catch(() => { st.pub = { available: false, gigs: [], reason: 'offline' }; }));
     if (st.tab === 'gigs' && st.where === 'public' && window.TribeWorkFeeds) jobs.push(window.TribeWorkFeeds.load());   // feat/build-feeds: gigs from the tribes this one follows
     try { await Promise.all(jobs); }
-    catch (e) { const m = String((e && e.message) || ''); if (m === NOPE || /real tribe/i.test(m)) st.local = true; else st.err = m || 'no answer'; }
+    catch (e) { const m = String((e && e.message) || ''); if (m === NOPE || /tribe online/i.test(m)) st.local = true; else st.err = m || 'no answer'; }
     st.busy = false;
     if (open_) draw();
     loadTasks();

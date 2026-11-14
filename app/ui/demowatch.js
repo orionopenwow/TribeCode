@@ -586,7 +586,7 @@
     const t = e.target.closest && e.target.closest('#hub-tour, [data-dw-start]'); if (!t) return;
     const hasTribe = !!(C() && C().hasToken && C().hasToken()) && !on();
     const paused2 = !!(window.TribeFlintTour && window.TribeFlintTour.state && window.TribeFlintTour.state().paused);
-    if (t.id === 'hub-tour' && (hasTribe || paused2)) return;   // a real tribe, or "Continue the tour": Flint's look around the real places (flinttour.js)
+    if (t.id === 'hub-tour' && (hasTribe || paused2)) return;   // your own tribe, or "Continue the tour": Flint's look around the real places (flinttour.js)
     e.preventDefault(); e.stopPropagation(); begin();
   }, true);
   // from anywhere (the real app, another demo): a fresh tour in this tab, after a reload so nothing else is mounted

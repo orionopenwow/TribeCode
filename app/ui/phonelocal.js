@@ -1,5 +1,5 @@
 // Phone-only completeness (feat/mobile-complete, docs/MOBILE-COMPLETE.md): the API paths a tribe that lives only on this
-// device (offline.js solo mode) used to answer with "This needs a real tribe". Each is answered here, from the same
+// device (offline.js solo mode) used to answer with a "needs a host" error. Each is answered here, from the same
 // localStorage draft (offline.js db), so it persists and moves to a host with the rest:
 //   real, local:  website designer (site-config, versions, autofill, comments, publish = "kept on this phone"),
 //                 task settings, Money (ledger entries, summary, runway, CSV), Work (profile, gigs), storage (this

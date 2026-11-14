@@ -18,8 +18,8 @@
 
   // feature -> [title, why]
   const WHY = {
-    agents: ['AI helpers need a computer', 'Claude Code, Codex and other AI helpers run on a computer and talk to the tribe through its host.'],
-    friends: ['Friends need a host', 'This tribe lives only on this phone. Give it a home and friends can join with one link.'],
+    agents: ['AI helpers need a computer', 'Claude Code, Codex and other AI helpers run on a computer and reach the tribe once it is online.'],
+    friends: ['Friends need a host', 'This tribe is saved only here. Put it online and friends can join with one link.'],
     repo: ['The code repository lives on a computer', 'Branches, commits and the drift radar need git, which runs on a host. On this phone you can still sync files with GitHub.'],
     secretary: ['The Secretary runs on a host', 'It reads the tribe overnight and writes a journal, so it needs a computer or a cloud host that stays on.'],
     huddle: ['Voice huddles need a host', 'Calls between people go through the tribe\'s host. On this phone alone there is nobody to call yet.'],
@@ -30,7 +30,7 @@
     connectors: ['Connectors run on a host', 'Tools like MCP servers and integrations run next to the tribe on a computer or cloud host.'],
     screenshare: ['Screen sharing starts on a computer', 'Phone browsers can watch a shared screen but can\'t start one (iPhones don\'t allow it at all). Share from a laptop, or show it with your camera.'],
     relay: ['This call can\'t connect directly', 'Some networks, like cellular data or strict office Wi-Fi, block direct calls. Join the same Wi-Fi as the others, or ask the host to add a relay for calls.'],
-    generic: ['This needs a computer or a host', 'This part runs on the tribe\'s host. Everything else keeps working on this phone.'],
+    generic: ['This needs a computer or a host', 'This part runs on the computer that keeps the tribe online. Everything else keeps working here.'],
   };
   const why = f => WHY[f] || WHY.generic;
 
@@ -104,6 +104,8 @@
       <p class="nx-why">${esc(T(w))}</p><div class="nx-rows">${opts(feature)}</div>`);
   }
   function card(feature) {
+    // feat/real-tribe: your own tribe in this browser gets why + the one button (sharecard.js); the list follows the button
+    if (window.TribeShare && window.TribeOffline && window.TribeOffline.solo && window.TribeOffline.solo() && !OWN[feature] && !(feature === 'repo' && window.TribeGhPhone)) return window.TribeShare.needs(feature, T(why(feature)[1]));
     const [t, w] = why(feature);
     return `<div class="nx-card" data-nx-card="${esc(feature || 'generic')}"><span class="nx-ic">${ic('info')}</span><div class="nx-t"><b>${esc(T(t))}</b><small>${esc(T(w))}</small></div><span class="nx-acts">${feature === 'repo' && window.TribeGhPhone ? `<button type="button" class="btn sm" data-gp-open>${esc(T('Use GitHub from this phone'))}</button>` : ''}<button type="button" class="btn sm primary" data-nx-open="${esc(feature || 'generic')}">${esc(T('See options'))}</button></span></div>`;
   }
@@ -135,9 +137,10 @@
     let n = document.getElementById('nx-nudge');
     if (!n) { n = document.createElement('div'); n.id = 'nx-nudge'; n.className = 'nx-nudge'; n.setAttribute('role', 'status'); document.body.appendChild(n); }
     const [t] = why(feature);
-    n.innerHTML = `<span class="nx-dot" aria-hidden="true"></span><b>${esc(T(t))}</b><button type="button" class="btn sm" data-nx-open="${esc(feature)}">${esc(T('See options'))}</button><button type="button" class="nx-x" aria-label="${esc(T('Close'))}">${ic('x', 14)}</button>`;
+    const mine = !!(window.TribeShare && window.TribeOffline && window.TribeOffline.solo && window.TribeOffline.solo() && !OWN[feature]);   // feat/real-tribe
+    n.innerHTML = mine ? `<span class="nx-dot" aria-hidden="true"></span><b>${esc(T('This needs the tribe online'))}</b><button type="button" class="btn sm primary" data-sc-online="${esc(feature)}">${esc(T('Put this tribe online'))}</button>` + `<button type="button" class="nx-x" aria-label="${esc(T('Close'))}">${window.TribeIcons ? window.TribeIcons.svg('x', 14) : '×'}</button>` : `<span class="nx-dot" aria-hidden="true"></span><b>${esc(T(t))}</b><button type="button" class="btn sm" data-nx-open="${esc(feature)}">${esc(T('See options'))}</button><button type="button" class="nx-x" aria-label="${esc(T('Close'))}">${ic('x', 14)}</button>`;
     n.querySelector('.nx-x').onclick = () => n.remove();
-    n.querySelector('[data-nx-open]').addEventListener('click', () => n.remove());
+    { const o = n.querySelector('[data-nx-open]'); if (o) o.addEventListener('click', () => n.remove()); }
     clearTimeout(nudge.t); nudge.t = setTimeout(() => n && n.remove(), 7000);
   }
 

@@ -231,7 +231,7 @@
 .ab-count { font-size: 14px; color: var(--muted); }
 .ab-count b { color: var(--text); }
 
-/* "X needs a tribe": exact, calm, with the one-tap fix (replaces the vague "This needs a real tribe") */
+/* "X needs a tribe": exact, calm, with the one-tap fix (replaces a vague error) */
 .wk-need { position: fixed; z-index: 140; left: 50%; bottom: 24px; transform: translateX(-50%); width: min(520px, calc(100vw - 24px)); display: flex; align-items: center; gap: 12px; padding: 12px 12px 12px 14px;
   background: var(--surface-3, var(--surface-2)); border: 1px solid var(--edge); border-left: 3px solid var(--amber, var(--accent)); border-radius: var(--r-lg, 12px);
   animation: wk-in var(--dur-base) var(--ease-out); }

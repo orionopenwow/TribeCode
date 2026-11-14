@@ -7,7 +7,7 @@ Double-click Start-Working.bat.
 - Pulls new work from GitHub every 20 seconds; the server restarts by itself when
   server code changes and the window reloads when the screens change.
 - Runs at http://localhost:4848, next to the installed app (4747), so both can be open.
-- Uses its own test tribe in this folder (tribe-data), so testing never touches your real tribe.
+- Uses its own test tribe in this folder (tribe-data), so testing never touches your own tribe.
 - Phone layout: press F12 in Edge/Chrome, then Ctrl+Shift+M.
 
 When the work here looks good, it is released from main, and ..\Stable picks it up

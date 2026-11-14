@@ -1,8 +1,13 @@
 // The one create-a-tribe flow (feat/ui-tribeflow). Every way in opens this sheet: the rail +, the empty Home, the
-// welcome's "Start my real tribe", Settings, the phone's projects sheet, Files' "move to a tribe", Flint and the Work
+// welcome's "Start my tribe", Settings, the phone's projects sheet, Files' "move to a tribe", Flint and the Work
 // page (they all call TribeProjects.openNew or TribeLocalSetup.start, which land here).
+// feat/real-tribe: every tribe is a full tribe. The default path is two steps: Name and icon, then Invite (optional).
+// It is made where it works best without asking: with the tribe you are in; on this computer when TribeCode runs here
+// (the desktop app, or a page its own server serves), quietly; otherwise in this browser, where everything still works
+// and "Put this tribe online" (sharecard.js) is one button away. "More options" on step 1 opens the list of places
+// (step 2 below) for a folder, GitHub, a free cloud or a shared folder.
 //   1. Name and icon.
-//   2. Where it lives, its living repo (feat/folder-sync): A folder on this computer · This device only · Free cloud ·
+//   2. (More options) Where it lives (feat/folder-sync): A folder on this computer · This device only · Free cloud ·
 //      GitHub repo, each with a plain line and a recommended default (the folder on the desktop app; off with a reason on
 //      a phone or the public website). GitHub can also be connected later to any of the others (livingrepo.js). Inside a tribe you
 //      already have, the new one lives with it (or clones a GitHub repo there).
@@ -32,7 +37,7 @@
   const staticWeb = () => /(^|\.)tribecode\.org$|\.github\.io$/.test(location.hostname) || !/^https?:$/.test(location.protocol);
   const CARD = 'tribecode.tribenew.card';
   const EMOJI = ['🏕️', '✦', '🎮', '🌐', '📱', '🎨', '🚀', '🔥', '🌱', '🎵', '🧪', '📚'];
-  const STEPS = ['Name', 'Home', 'Friends'];
+  const STEPS = ['Name', 'Home', 'Friends'], QUICK = ['Name', 'Friends'];
 
   // ---------- where it can live ----------
   // feat/folder-sync: the home is the living repo. "A folder on this computer" (this computer hosts it, the files live
@@ -58,6 +63,14 @@
     ];
   }
   const isHostHere = () => { const m = ((C() && C().state && C().state()) || {}).me || {}; return m.role === 'host'; };
+  // feat/real-tribe: where a tribe is made when nobody asked (Create on step 1): with your tribe; on this computer when
+  // TribeCode runs here; else in this browser.
+  const served = () => /^https?:$/.test(location.protocol) && !staticWeb() && !/(^|\.)tauri\.localhost$/i.test(location.hostname);
+  function auto() {
+    if (inTribe()) return 'tribe';
+    if (desktop() || (served() && !phone())) return 'computer';
+    return 'device';
+  }
   // The recommended home: the tribe you are in; a folder on the desktop app (or a page its own server serves); else this device.
   function recommended() {
     if (inTribe()) return 'tribe';
@@ -88,7 +101,7 @@
   function open(pre = {}) {
     closeOthers();
     if (el) close(true);
-    st = { step: 1, name: String(pre.name || '').slice(0, 48), emoji: pre.emoji || EMOJI[0], where: recommended(), created: null, busy: false, from: pre.from || '' };
+    st = { step: 1, name: String(pre.name || '').slice(0, 48), emoji: pre.emoji || EMOJI[0], where: recommended(), created: null, busy: false, from: pre.from || '', opts: false };
     scrim = document.createElement('div'); scrim.className = 'ph-scrim tn-scrim'; scrim.onclick = () => close();
     el = document.createElement('div'); el.className = 'ph-sheet su-sheet tn-sheet'; el.id = 'tn';
     el.setAttribute('role', 'dialog'); el.setAttribute('aria-modal', 'true'); el.setAttribute('aria-labelledby', 'tn-h');
@@ -98,12 +111,12 @@
     return el;
   }
   function head(eyebrow, title) {
-    const n = Math.min(st.step, 3);
+    const steps = st.opts ? STEPS : QUICK, n = st.opts ? Math.min(st.step, 3) : st.step >= 3 ? 2 : 1;
     return `<div class="ph-grab" aria-hidden="true"></div>
       <header class="ph-h tn-head">${st.step > 1 && !st.busy ? `<button type="button" class="ph-back" id="tn-back" aria-label="Back">${ic('chev', 16)}</button>` : ''}
         <div><span class="eyebrow">${esc(eyebrow)}</span><h3 id="tn-h">${esc(title)}</h3></div>
         <button type="button" class="su-x" id="tn-x" aria-label="Close">${ic('x', 16)}</button></header>
-      <ol class="tn-prog" aria-label="Step ${n} of 3">${STEPS.map((s, i) => `<li class="${i + 1 < n ? 'done' : i + 1 === n ? 'on' : ''}"${i + 1 === n ? ' aria-current="step"' : ''}><span>${s}</span></li>`).join('')}</ol>`;
+      <ol class="tn-prog" aria-label="Step ${n} of ${steps.length}">${steps.map((s, i) => `<li class="${i + 1 < n ? 'done' : i + 1 === n ? 'on' : ''}"${i + 1 === n ? ' aria-current="step"' : ''}><span>${s}</span></li>`).join('')}</ol>`;
   }
   const err = (t) => { const e = $('#tn-err', el); if (!e) return; e.textContent = t || ''; e.hidden = !t; };
   function draw() {
@@ -111,7 +124,7 @@
     const paint = () => {
       if (st.step === 1) step1(); else if (st.step === 2) step2(); else step3();
       const x = $('#tn-x', el); if (x) x.onclick = () => close();
-      const b = $('#tn-back', el); if (b) b.onclick = () => { st.step -= 1; draw(); };
+      const b = $('#tn-back', el); if (b) b.onclick = () => { st.step = st.step === 3 && !st.opts ? 1 : st.step - 1; draw(); };
       el.dataset.step = st.step;
     };
     if (window.TribeMotion && window.TribeMotion.swap && el.childElementCount) window.TribeMotion.swap(paint); else paint();
@@ -127,9 +140,10 @@
         <span class="ph-lab" id="tn-emo-l">Icon</span>
         <div class="tn-emo" role="radiogroup" aria-labelledby="tn-emo-l">${EMOJI.map(e => `<button type="button" role="radio" data-tn-emo="${esc(e)}" aria-checked="${e === st.emoji}" aria-label="${esc(e)}">${esc(e)}</button>`).join('')}</div>
         <p class="tn-err" id="tn-err" role="status" hidden></p>
-        <div class="ph-acts"><button type="button" class="btn" id="tn-cancel">Cancel</button><button class="btn primary" id="tn-next" type="submit">Next</button></div>
+        <div class="tn-prog-line" id="tn-run" role="status" aria-live="polite" hidden><span class="su-spin" aria-hidden="true"></span><span id="tn-run-t"></span></div>
+        <div class="ph-acts"><button type="button" class="btn" id="tn-cancel">Cancel</button><button class="btn primary" id="tn-create" type="submit">${st.created ? 'Next' : 'Create'}</button></div>
       </form>
-      <p class="ph-foot">${host ? '<button type="button" class="linkish" id="tn-more">Start from an idea, a template or my code</button><span aria-hidden="true">·</span>' : ''}<button type="button" class="linkish" id="tn-join">Join a friend’s tribe instead</button>${folderOk().ok ? '<span aria-hidden="true">·</span><button type="button" class="linkish" id="tn-join-shared">Join from a shared folder</button>' : ''}</p>`;
+      <p class="ph-foot">${st.created ? '' : '<button type="button" class="linkish" id="tn-options">More options</button><span aria-hidden="true">·</span>'}${host ? '<button type="button" class="linkish" id="tn-more">Start from an idea, a template or my code</button><span aria-hidden="true">·</span>' : ''}<button type="button" class="linkish" id="tn-join">Join a friend’s tribe instead</button>${folderOk().ok ? '<span aria-hidden="true">·</span><button type="button" class="linkish" id="tn-join-shared">Join from a shared folder</button>' : ''}</p>`;
     const n = $('#tn-name', el);
     n.oninput = () => { st.name = n.value; err(''); };
     el.querySelectorAll('[data-tn-emo]').forEach(b => b.onclick = () => { st.emoji = b.dataset.tnEmo; el.querySelectorAll('[data-tn-emo]').forEach(x => x.setAttribute('aria-checked', String(x === b))); });
@@ -137,10 +151,12 @@
     $('#tn-join', el).onclick = () => { close(true); window.TribeSettings && window.TribeSettings.joinPrompt && window.TribeSettings.joinPrompt(); };
     const js = $('#tn-join-shared', el); if (js) js.onclick = () => { st.name = n.value.trim() || 'Shared tribe'; st.where = 'shared'; st.step = 2; draw(); };
     const more = $('#tn-more', el); if (more) more.onclick = () => { close(true); PJ().gallery(); };
+    const named = () => { st.name = n.value.trim(); if (!st.name) { err('Give it a name first. You can change it later.'); n.focus(); return false; } return true; };
+    const op = $('#tn-options', el); if (op) op.onclick = () => { if (!named()) return; st.opts = true; st.where = recommended(); st.step = 2; draw(); };
     $('#tn-f1', el).onsubmit = e => {
-      e.preventDefault(); st.name = n.value.trim();
-      if (!st.name) { err('Give it a name first. You can change it later.'); return n.focus(); }
-      st.step = 2; draw();
+      e.preventDefault(); if (!named()) return;
+      if (st.created) { st.step = 3; return draw(); }
+      st.opts = false; st.where = auto(); create();   // no questions: it is made where it works best
     };
     if (!phone()) setTimeout(() => n.focus(), 30);
   }
@@ -150,7 +166,7 @@
     const list = homes(), rec = recommended(), done = st.created;
     if (!list.some(h => h.k === st.where)) st.where = rec;
     el.innerHTML = `${head('Where it lives', done ? `${st.name} is ready` : `Where should ${st.name} live?`)}
-      <p class="ph-lead">${done ? 'It already has a home. You can move it any time from the pill at the top.' : 'Its home is its living repo. Pick one; you can move it later and nothing is lost.'}</p>
+      <p class="ph-lead">${done ? 'It already has a home. You can move it any time from Sharing and backup on the dashboard.' : 'Pick where its files are kept. You can move it later and nothing is lost.'}</p>
       <div class="tn-where" role="radiogroup" aria-label="Where it lives">${list.map(h => `<button type="button" class="ph-row tn-row" role="radio" data-tn-where="${h.k}" aria-checked="${h.k === st.where}"${done || h.off ? ' disabled' : ''}${h.off ? ' data-off="1"' : ''}>
         <span class="ph-ic">${ic(h.icon)}</span><span class="ph-tt"><b>${esc(h.t)}${h.k === rec ? ' <em class="ph-tag">Recommended</em>' : ''}</b><small>${esc(h.s)}</small>${h.note ? `<small class="tn-later">${esc(h.note)}</small>` : ''}</span><span class="tn-dot" aria-hidden="true"></span></button>`).join('')}</div>
       <div class="tn-more-box" id="tn-detail"></div>
@@ -168,7 +184,7 @@
     if (st.created) { box.innerHTML = ''; return; }
     const w = st.where;
     if (w === 'folder') {
-      box.innerHTML = `<div id="tn-folder"></div>${inTribe() ? '' : '<p class="ph-note">Optional: skip it and the tribe keeps the files in TribeCode’s own folder on this computer. Pick a folder any time from the pill at the top.</p>'}`;
+      box.innerHTML = `<div id="tn-folder"></div>${inTribe() ? '' : '<p class="ph-note">Optional: skip it and the tribe keeps the files in TribeCode’s own folder on this computer. Pick a folder any time from Sharing and backup on the dashboard.</p>'}`;
       if (window.TribeHome) window.TribeHome.pickFolder({ mount: $('#tn-folder', box), onChange: c => { st.folder = c; err(''); const go = $('#tn-go', el); if (go && !st.created) go.textContent = c && c.summary && !c.summary.empty ? 'Use what’s here' : 'Create'; } });
       if (st.folder) { /* a choice made before Back: the picker asks again (it re-checks the folder) */ st.folder = null; }
     } else if (w === 'shared') {
@@ -193,7 +209,7 @@
   const running = t => { const r = $('#tn-run', el); if (!r) return; r.hidden = !t; const x = $('#tn-run-t', el); if (x) x.textContent = t || ''; };
   function busy(on) {
     st.busy = on; if (!el) return;
-    el.querySelectorAll('#tn-go, #tn-b2, [data-tn-where]:not([data-off]), #tn-detail input, #tn-detail button').forEach(b => { b.disabled = on; });
+    el.querySelectorAll('#tn-go, #tn-b2, #tn-create, #tn-cancel, #tn-options, #tn-name, [data-tn-emo], [data-tn-where]:not([data-off]), #tn-detail input, #tn-detail button').forEach(b => { b.disabled = on; });
     const back = $('#tn-back', el); if (back) back.hidden = on;
   }
   const parseRepo = v => { const m = String(v || '').trim().replace(/\.git$/, '').match(/(?:github\.com[/:])?([\w.-]+)\/([\w.-]+)\/?$/); return m ? `${m[1]}/${m[2]}` : ''; };
@@ -221,11 +237,11 @@
         const body = { name: st.name, emoji: st.emoji, ...(w === 'github' ? { url: `https://github.com/${repo}` } : {}) };
         const r = await C().api('/projects', { method: 'POST', body });
         const p = r.project || r; st.created = { where: w, pid: p.id, server: (S().get().server || {}).url, repo };
-        if (w === 'folder') { running('Setting up the folder…'); await C().api(`/projects/${encodeURIComponent(p.id)}/folder`, { method: 'PUT', body: { path: st.folder.path, gitInit: st.folder.gitInit } }).catch(e => toast(`${st.name} is made, but the folder didn’t take: ${e.message} Pick it again from the pill at the top.`)); }
+        if (w === 'folder') { running('Setting up the folder…'); await C().api(`/projects/${encodeURIComponent(p.id)}/folder`, { method: 'PUT', body: { path: st.folder.path, gitInit: st.folder.gitInit } }).catch(e => toast(`${st.name} is made, but the folder didn’t take: ${e.message} Pick it again from Sharing and backup on the dashboard.`)); }
         if (w === 'shared') { running(st.shared.join ? 'Joining the shared copy…' : 'Starting the shared copy…'); await window.TribeHome.connectShared(p.id, st.shared, (path, o) => C().api(path, o)).catch(e => toast(`${st.name} is made, but the shared folder didn’t take: ${e.message}`)); }
         if (PJ() && PJ().refresh) await PJ().refresh();
       } else {
-        running(w === 'device' ? 'Making it on this device…' : 'Making it on this device first…');
+        running(st.opts ? (w === 'device' ? 'Making it on this device…' : 'Making it on this device first…') : 'Making it…');
         await draft();
         if (w === 'device') st.created = { where: w, pid: L().pid() };
         else if (w === 'github') {
@@ -234,20 +250,26 @@
           const r = await L().github.connect(repo, tok && tok.trim() ? tok.trim() : undefined);
           st.created = { where: w, pid: L().pid(), repo, url: (r.live && r.live.url) || `https://github.com/${repo}` };
         } else if (w === 'computer' || w === 'folder' || w === 'shared') {
-          const r = await L().host.computer({ step: running, noReload: true });
+          let r = null;
+          if (!st.opts) {   // feat/real-tribe: asked nothing, so nothing may fail: no TribeCode here (or it is busy) keeps it in this browser
+            try { r = await L().host.computer({ step: () => running('Making it…'), noReload: true }); } catch { r = null; }
+            if (!r || r.noApp || r.alreadyTribe || !r.server) { st.created = { where: 'device', pid: L().pid() }; r = null; }
+          } else r = await L().host.computer({ step: running, noReload: true });
+          if (!st.opts && !r) { /* kept in this browser */ } else {
           if (r && r.noApp) throw Object.assign(new Error('TribeCode isn’t running on this computer. Your tribe is safe on this device; get the app to host it, or pick This device.'), { soft: true, keep: 'device' });
           if (r && r.alreadyTribe) throw Object.assign(new Error('This computer already hosts a tribe. Ask its host for an invite link and pick Free cloud’s link box, or keep it on this device.'), { soft: true, keep: 'device' });
           st.created = { where: w, server: r.server, token: r.token, pid: ((r.projects || [])[0] || {}).id, reload: true };
           if (w === 'folder' && st.created.pid && st.folder && st.folder.path) {
             running('Setting up the folder…');
             const fr = await realFetch(`${r.server}/api/projects/${encodeURIComponent(st.created.pid)}/folder`, { method: 'PUT', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + r.token }, body: JSON.stringify({ path: st.folder.path, gitInit: st.folder.gitInit }) });
-            if (!fr.ok) { const fd = await fr.json().catch(() => ({})); toast(`Your tribe is ready on this computer, but the folder didn’t take: ${fd.error || fr.status}. Pick it again from the pill at the top.`); }
+            if (!fr.ok) { const fd = await fr.json().catch(() => ({})); toast(`Your tribe is ready on this computer, but the folder didn’t take: ${fd.error || fr.status}. Pick it again from Sharing and backup on the dashboard.`); }
             else st.created.folder = (await fr.json().catch(() => ({}))).folder;
           }
           if (w === 'shared' && st.created.pid) {
             running(st.shared.join ? 'Joining the shared copy…' : 'Starting the shared copy…');
             const call = async (path, o) => { const x = await realFetch(`${r.server}/api${path}`, { method: o.method, headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + r.token }, body: JSON.stringify(o.body) }); const d = await x.json().catch(() => ({})); if (!x.ok) throw new Error(d.error || x.status); return d; };
-            await window.TribeHome.connectShared(st.created.pid, st.shared, call).catch(e => toast(`Your tribe is ready on this computer, but the shared folder didn’t take: ${e.message}. Try again from the pill at the top.`));
+            await window.TribeHome.connectShared(st.created.pid, st.shared, call).catch(e => toast(`Your tribe is ready on this computer, but the shared folder didn’t take: ${e.message}. Try again from Sharing and backup on the dashboard.`));
+          }
           }
         } else if (w === 'cloud') {
           running('Joining your cloud tribe…');
@@ -276,9 +298,10 @@
       ${hosted ? `<p class="ph-lead">Friends join ${esc(st.name)} with a link, a guest gets a pass for a day, and your AI agent can come too. Invite them now, or any time from the sidebar.${c.where === 'folder' || c.where === 'computer' || c.where === 'shared' ? ' Links work for friends on this network (Wi-Fi) while this computer runs TribeCode; to work with friends anywhere, connect GitHub or a shared folder from the pill at the top.' : ''}</p>`
       : c.where === 'github' ? `<p class="ph-lead">Friends can follow it on GitHub right away. To build together live, give it a host later (This computer or Free cloud).</p>
         <div class="su-cmd tn-link"><input class="input" id="tn-link" readonly value="${esc(c.url || '')}" aria-label="Repository link"><button type="button" class="btn" id="tn-copy">Copy</button></div>`
-      : `<p class="ph-lead">It lives on this device for now, so friends can join once it has a home. Pick one any time from the pill at the top; this step will be waiting.</p>`}
+      : `<p class="ph-lead">${esc(st.name)} is ready and saved in this browser. Friends and AI agents join once it is online; you can do that now or any time from the dashboard.</p>`}
       <p class="tn-err" id="tn-err" role="status" hidden></p>
-      <div class="ph-acts"><button type="button" class="btn" id="tn-skip">Skip</button>${hosted ? `<button type="button" class="btn" id="tn-done">Open ${esc(st.name)}</button><button type="button" class="btn primary" id="tn-invite">Invite friends</button>` : `<button type="button" class="btn primary" id="tn-done">Open ${esc(st.name)}</button>`}</div>`;
+      <div class="ph-acts"><button type="button" class="btn" id="tn-skip">Skip</button>${hosted ? `<button type="button" class="btn" id="tn-done">Open ${esc(st.name)}</button><button type="button" class="btn primary" id="tn-invite">Invite friends</button>` : c.where === 'github' ? `<button type="button" class="btn primary" id="tn-done">Open ${esc(st.name)}</button>` : `<button type="button" class="btn" id="tn-done">Open ${esc(st.name)}</button><button type="button" class="btn primary" id="tn-online">Put this tribe online</button>`}</div>`;
+    const ol = $('#tn-online', el); if (ol) ol.onclick = async () => { await finish(); if (window.TribeShare) setTimeout(() => window.TribeShare.online('friends'), 260); };
     $('#tn-skip', el).onclick = () => finish(); $('#tn-done', el).onclick = () => finish();
     const iv = $('#tn-invite', el); if (iv) iv.onclick = () => finish({ invite: true });   // the one invite sheet (inviteone.js), once we're in the new tribe
     const copy = $('#tn-copy', el), inp = $('#tn-link', el);
@@ -327,7 +350,7 @@
   if (document.body) watch(); else document.addEventListener('DOMContentLoaded', watch);
   if (lsGet(CARD)) addEventListener('load', () => setTimeout(card, 800));
 
-  // The welcome's "Start my real tribe" (welcome.js belongs to the intro): open this flow once the welcome is gone.
+  // The welcome's "Start my tribe" (welcome.js belongs to the intro): open this flow once the welcome is gone.
   document.addEventListener('click', e => {
     if (!(e.target.closest && e.target.closest('#wl [data-go="real"]'))) return;
     const wait = (n = 0) => (document.getElementById('wl') && n < 40 ? setTimeout(() => wait(n + 1), 50) : open({ from: 'welcome' }));

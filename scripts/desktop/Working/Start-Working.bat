@@ -23,7 +23,7 @@ if errorlevel 1 (
 
 rem WORKING = the dev branch, where new work lands first. No exe to compile:
 rem it pulls from GitHub every 20 s and open tabs reload by themselves.
-rem It uses its own test tribe in this folder (tribe-data), so your real tribe stays untouched.
+rem It uses its own test tribe in this folder (tribe-data), so your own tribe stays untouched.
 if not exist "TribeCode\server\index.js" (
   echo  Downloading TribeCode...
   git clone https://github.com/orionopenwow/TribeCode.git TribeCode || (pause & exit /b 1)

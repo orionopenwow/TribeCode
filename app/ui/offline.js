@@ -6,22 +6,22 @@
 // Claude agent that answers @mentions, picks up new tasks and posts a gist. Inviting someone makes a pretend link and
 // a third friend (Rio) "joins" a few seconds later. Chat (replies, reactions, pins, edit/delete, pictures, DMs), tasks
 // (assign/accept, approvals), docs and comments, notes, uploads, proposals and a pretend huddle all work here; only what
-// truly needs another device or a real agent shows a calm "This needs a real tribe" card with Host.
+// truly needs another device or a real agent shows a calm "The demo can't do this" card (a demo) or "This needs the tribe online" with Put this tribe online (your own tribe in this browser).
 // feat/demo-auto: a demo lives in THIS TAB only (sessionStorage) and never rewrites your saved settings, so it can't leak
 // into the real app; it survives reloads in the tab; Leave/Exit, a real sign-in or hosting end it cleanly.
 // Showcase mode (app/ui/showcase.js): the same backend seeded with a lively "Campfire Crew" tribe and a script that
 // plays out by itself (db.mode === 'showcase'). start() with no mode asks which one you want.
-// Solo mode (db.mode === 'solo', docs/PHONE-HOSTING.md): a REAL tribe that lives on this phone only. Same backend, but
+// Solo mode (db.mode === 'solo', docs/PHONE-HOSTING.md): your own tribe, kept in this browser. Same backend, but
 // no pretend people and no demo data: you, Flint and an empty first project. exportSolo() packs it for the move to a
 // real host (POST /api/import/solo, server/soloimport.js); app/ui/phonehost.js draws the chooser and the move sheet.
-//   window.TribeOffline = { active(), start(mode), choose(), leave(), exit(), end(), reset(), hostForReal(), socket(url), mediaUrl(u), ephemeral(), state(), _k }
+//   window.TribeOffline = { options(anchor), active(), start(mode), choose(), leave(), exit(), end(), reset(), hostForReal(), socket(url), mediaUrl(u), ephemeral(), state(), _k }
 (function () {
   'use strict';
   const S = window.TribeStore;
   const KEY = 'tribecode.offlineDemo.v1', BKEY = 'tribecode.offlineDemo.backup';
   const ORIGIN = 'https://offline-demo.tribecode.invalid';   // server.url while in the demo (what the desktop app's base() returns)
   const TOKEN = 'offline-demo';
-  const NOPE = 'This needs a real tribe';
+  const NOPE = 'This needs the tribe online';
   const RELEASES = 'https://github.com/orionopenwow/TribeCode/releases/latest';
   const ls = {
     get(k) { try { return JSON.parse(localStorage.getItem(k) || 'null'); } catch { return null; } },
@@ -69,8 +69,8 @@
     Storage.prototype.getItem = function (k) { return eph && db && db.on && db.mode === 'watch' && this === window.localStorage && Object.prototype.hasOwnProperty.call(MASK, k) ? MASK[k]() : gi.call(this, k); };
   } catch {}
   // fix/desk-demo: inside a demo the desktop app behaves like the browser. Its host paths (hostHere, the Host switch,
-  // startFirst, "This computer") would start or stop the real tribe server on this computer and sign in to it, which
-  // ended the demo mid-tour (S.set with a real token) and showed the real tribe under the tour. While a demo in this tab
+  // startFirst, "This computer") would start or stop your own tribe's server on this computer and sign in to it, which
+  // ended the demo mid-tour (S.set with a real token) and showed your own tribe under the tour. While a demo in this tab
   // is on, TribeHost.isDesktop is false and the sidecar commands are refused.
   const H = window.TribeHost, DESK = !!(H && H.isDesktop);
   if (H) Object.defineProperty(H, 'isDesktop', { configurable: true, enumerable: true, get: () => DESK && !(eph && db && db.on) });
@@ -137,7 +137,7 @@
     };
   }
 
-  // A real tribe on this phone: just you and an empty first project (Flint answers from the Flint panel, no model needed).
+  // Your own tribe in this browser: just you and an empty first project (Flint answers from the Flint panel, no model needed).
   // draft (feat/setup-local, app/ui/setuplocal.js): the project you just named on the dashboard, made instantly here:
   //   { name, bio, emoji, notes, company: { name, mission, seats: { ceo, cto, growth, ops: 'me' | 'ai' | 'later' } } | null }
   function seedSolo(draft) {
@@ -153,7 +153,7 @@
       members: [{ id: 'me', name, color: st.color || '#F26B1D', role: 'host', joined: iso(now) }],
       current: pid,
       projects: [{ id: pid, name: pname, emoji: d.emoji || '✨', image: null, bio: String(d.bio || '').slice(0, 400), color: '#F26B1D', channel: 'general', default: true, created: iso(now), members: { me: 'host' } }],
-      chat: { [pid]: [{ id: 'm-' + rid(), at: iso(now), by: 'tribecode', text: d.name ? `${first} started **${pname}** on ${where}. Everything works here already: add tasks, notes and docs, ask Flint for help. Choose where it lives (GitHub, this computer, a free cloud or a phone) whenever you like.` : `${first} started **${String(tname).slice(0, 40)}** on ${where}. It lives only here for now: add tasks and notes, ask Flint for help, and move it to a host when friends should join.` }] },
+      chat: { [pid]: [{ id: 'm-' + rid(), at: iso(now), by: 'tribecode', text: d.name ? `${first} started **${pname}** on ${where}. Everything works here already: add tasks, notes and docs, ask Flint for help. When friends should join, put it online from Sharing and backup on the dashboard.` : `${first} started **${String(tname).slice(0, 40)}** on ${where}. It is saved here for now: add tasks and notes, ask Flint for help, and put it online when friends should join.` }] },
       tasks: { [pid]: (Array.isArray(d.tasks) ? d.tasks : []).map(x => String(x || '').trim().slice(0, 200)).filter(Boolean).slice(0, 30).map((title, i) => ({ id: 't-' + rid(6), title, status: 'backlog', assignee: null, by: 'me', created: iso(now), updated: iso(now), order: now + i, source: 'board', body: '', project: pid })) },
       docs: { [pid]: docs }, vision: { [pid]: String(d.bio || '') }, gists: { [pid]: [] },
       company: d.company ? { [pid]: companyDraft(d.company, pname) } : {}, whiteboard: {},
@@ -300,7 +300,7 @@
     if (m.type === 'huddle-join' || m.type === 'huddle-state') {   // a pretend huddle: Maya is there (no audio travels anywhere)
       if (solo()) return push({ type: 'huddle', members: [{ id: 'me', muted: !!m.muted }] });
       hud = { me: { id: 'me', muted: !!m.muted, sharing: !!m.sharing } }; push({ type: 'huddle', members: [hud.me, { id: 'maya', muted: false, demo: true }] });
-      if (m.type === 'huddle-join' && !db.huddled) { db.huddled = true; save(); later(1800, () => post(cur(), 'maya', 'Hi from the huddle 🎧 (a pretend one: in a real tribe you\'d hear me)')); }
+      if (m.type === 'huddle-join' && !db.huddled) { db.huddled = true; save(); later(1800, () => post(cur(), 'maya', 'Hi from the huddle 🎧 (a pretend one: in your own tribe you\'d hear me)')); }
       return;
     }
     if (m.type === 'huddle-leave') { hud = null; return push({ type: 'huddle', members: [] }); }
@@ -352,8 +352,8 @@
     save(); chatPush(pid, msg); return msg;
   }
   const LINES = [
-    'Hi! I\'m a pretend Claude in this offline demo. In a real tribe I read the board, claim files before I edit and save my changes to the code. Make a task and watch me pick it up.',
-    'Good idea. In a real tribe I\'d claim the folder first so nobody\'s agent collides with mine, then post a short gist when it\'s done.',
+    'Hi! I\'m a pretend Claude in this offline demo. In your own tribe I read the board, claim files before I edit and save my changes to the code. Make a task and watch me pick it up.',
+    'Good idea. In your own tribe I\'d claim the folder first so nobody\'s agent collides with mine, then post a short gist when it\'s done.',
     'I\'d split that into one task per lane (Player, Levels, Art). Add them on the Tasks board and I\'ll grab one.',
     'Noted. A real coding agent (Claude Code, Codex, Gemini CLI…) connects from Connect your AI, then it shows up right here.',
   ];
@@ -724,7 +724,7 @@
   // ---------- chat, like server/chatx.js + dm.js: replies, reactions, pins, edit/delete, forwards, pictures and files ----------
   // A channel is a project's chat ('general' = the current project, or a project's own channel) or a DM ('dm-a-b').
   // Pictures and files are kept as blobs (object URLs for <img src>; IndexedDB so they survive a reload, memory only
-  // in a watch-only demo). The pretend friends react and answer, so it feels like a real tribe.
+  // in a watch-only demo). The pretend friends react and answer, so it feels like a living tribe.
   const QUICK_OK = /^[\p{Extended_Pictographic}\p{Emoji_Component}‍️]{1,16}$/u;
   function chanOf(ch) {
     if (typeof ch !== 'string' || !ch) return null;
@@ -857,7 +857,7 @@
       case 'projects': {
         if (!b && GET) return ok({ projects: projects(), current: cur() });
         if (!b && POST) {
-          if (body.path || body.url || body.files) return no(400, 'Folders and repos need a real tribe. Start an empty project instead.');
+          if (body.path || body.url || body.files) return no(400, 'Folders and code from GitHub need the tribe online. Start an empty project instead.');
           const name = String(body.name || 'New project').slice(0, 48), pre = db && (db.mode === 'watch' || db.mode === 'showcase') ? DEMO_ID : ''; let id = pre + slugify(name), n = 2; while (proj(id)) id = `${pre}${slugify(name)}-${n++}`;
           const p = { id, name, emoji: body.emoji || '', image: null, bio: '', color: ['#38C6B1', '#6C7CFF', '#FFB86B', '#FF6F8E'][db.projects.length % 4], channel: 'p-' + id, default: false, created: iso(), members: { me: 'host', maya: 'builder' } };
           db.projects.push(p); db.tasks[id] = []; db.docs[id] = []; db.chat[id] = []; db.gists[id] = []; save();
@@ -893,7 +893,7 @@
           if (!parts[3] && (PUT || PATCH)) { if (body.on === false) { delete db.company[p.id]; } else { const cd = db.company[p.id] = db.company[p.id] || companyDraft({}, p.name); if (body.name !== undefined) cd.name = String(body.name).slice(0, 60); if (body.mission !== undefined) cd.mission = String(body.mission).slice(0, 400); } save(); push({ type: 'company', project: p.id }); return ok(companyView(p)); }
           if (parts[3] === 'template' && POST) { db.company[p.id] = companyDraft({ name: body.name || p.name, seats: { ceo: 'me' } }, p.name); save(); push({ type: 'company', project: p.id }); return ok({ company: companyView(p).company, tasks: [], helper: null }); }
           if (parts[3] === 'seats' && parts[5] === 'assign' && POST) { const cd = db.company[p.id]; if (cd && cd.seats[parts[4]] !== undefined) { cd.seats[parts[4]] = body.person === 'me' ? 'me' : body.person === null ? 'later' : cd.seats[parts[4]]; save(); push({ type: 'company', project: p.id }); } return ok({ seat: (companyView(p).company || { seats: [] }).seats.find(x => x.id === parts[4]) || null }); }
-          return no(409, 'Goals, standups and decisions start once the project has a home. Choose where it lives from the pill at the top.');
+          return no(409, 'Goals, standups and decisions start once the tribe is online. Put it online from Sharing and backup on the dashboard.');
         }
         if (c === 'workspace' && GET) return ok({ repo: null, github: { installed: false, signedIn: false, user: null }, branch: null, identity: { name: me().name, email: '', custom: false, hasToken: false } });
         break;
@@ -1038,7 +1038,7 @@
         break;
       }
       case 'invites': {
-        if (solo() && !b && POST) { setTimeout(() => (window.TribeLocalSetup && !phoneLike() ? window.TribeLocalSetup.where() : window.TribePhoneHost && window.TribePhoneHost.move()), 50); return no(409, phoneLike() ? 'This tribe lives on this phone. Move it to a host first, then friends can join.' : 'This project lives on this device. Choose where it lives first, then friends can join.'); }
+        if (solo() && !b && POST) { setTimeout(() => (window.TribeShare ? window.TribeShare.online('friends') : window.TribeLocalSetup && !phoneLike() ? window.TribeLocalSetup.where() : window.TribePhoneHost && window.TribePhoneHost.move()), 50); return no(409, 'This tribe isn’t online yet. Put it online and friends can join with a link.'); }
         if (!b && POST) {
           const inv = { code: 'DEMO' + rid(4).toUpperCase(), by: 'me', role: body.role === 'spectator' ? 'spectator' : 'builder', maxUses: Number(body.maxUses) || 5, uses: 0, created: iso(), expires: iso(Date.now() + (Number(body.hours) || 24) * 3600e3), demo: true, ...(body.project && body.project !== 'tribe' ? { project: body.project } : {}) };
           db.invites.push(inv); save(); friendJoins(); noteInvite();
@@ -1230,7 +1230,7 @@
       catch (e) { console.warn('offline demo:', e); out = [500, { error: 'The offline demo hit a snag: ' + (e && e.message || e) }]; }
       if (out instanceof Response) return out;
       const [status, data] = out;
-      if (status === 404 && data.error === NOPE && method !== 'GET' && Date.now() - lastNope > 1500) { lastNope = Date.now(); setTimeout(() => (solo() ? toast('That works once the project has a home. Choose where it lives from the pill at the top.') : needsReal()), 50); }
+      if (status === 404 && data.error === NOPE && method !== 'GET' && Date.now() - lastNope > 1500) { lastNope = Date.now(); setTimeout(() => needsReal(), 50); }
       return new Response(JSON.stringify(data), { status, headers: { 'Content-Type': 'application/json' } });
     })();
   };
@@ -1239,7 +1239,10 @@
   function needsReal(what) {
     let c = document.getElementById('od-needs');
     if (!c) { c = document.createElement('div'); c.id = 'od-needs'; c.className = 'od-needs'; c.setAttribute('role', 'status'); document.body.appendChild(c); }
-    c.innerHTML = `<span class="od-dot" aria-hidden="true"></span><div class="od-needs-t"><b>This needs a real tribe</b><small>${esc(what || 'Other devices and real AI agents can\'t reach a demo that lives in this tab.')}</small></div><button class="btn sm primary" data-od="real">Host</button><button class="od-needs-x" aria-label="Close">×</button>`;
+    // feat/real-tribe: your own tribe in this browser gets the one button that puts it online; a demo says it is a demo
+    c.innerHTML = solo()
+      ? `<span class="od-dot" aria-hidden="true"></span><div class="od-needs-t"><b>This needs the tribe online</b><small>${esc(what || 'Other people and AI agents reach a tribe through a computer that keeps it online.')}</small></div><button class="btn sm primary" data-sc-online="generic">Put this tribe online</button><button class="od-needs-x" aria-label="Close">×</button>`
+      : `<span class="od-dot" aria-hidden="true"></span><div class="od-needs-t"><b>The demo can’t do this</b><small>${esc(what || 'Other devices and real AI agents can\'t reach a demo that lives in this tab.')}</small></div><button class="btn sm primary" data-od="real">Start my own tribe</button><button class="od-needs-x" aria-label="Close">×</button>`;
     c.querySelector('.od-needs-x').onclick = () => c.remove();
     clearTimeout(needsReal.t); needsReal.t = setTimeout(() => c.remove(), 6000);
   }
@@ -1268,7 +1271,7 @@
     closeChooser();
     if (active() && (db?.mode || 'quiet') === mode && !draft) { enterUi(); return; }
     const wasReal = !active() && !!(C() && C().hasToken()), wasDemo = active();
-    if (mode === 'solo') {   // a real tribe on this device: kept in localStorage, the old settings backed up
+    if (mode === 'solo') {   // your own tribe in this browser: kept in localStorage, the old settings backed up
       endDemo(true);
       if (!ls.get(BKEY)) ls.set(BKEY, backup());
       db = seedSolo(draft); save(); blobClear();
@@ -1333,7 +1336,7 @@
     try { sessionStorage.setItem('tribecode.view', 'home'); } catch {}
     location.reload();
   }
-  // A demo whose token was replaced (you joined a real tribe meanwhile) is over: forget it, keep the new sign-in.
+  // A demo whose token was replaced (you joined a tribe of your own meanwhile) is over: forget it, keep the new sign-in.
   if (db && db.on && !eph && (S0.get().server || {}).token !== TOKEN) { ls.del(KEY); ls.del(BKEY); db = null; }
   // A pretend tribe saved by an older version (localStorage, not this tab): the real app comes back, clean.
   if (db && db.on && !eph && db.mode !== 'solo') { restore(); ls.del(KEY); db = null; blobClear(); cleanKeys(); }
@@ -1369,7 +1372,7 @@
   }
   phoneMq.addEventListener('change', () => { closePop(); place(); });
   function closePop() { if (pop) { pop.remove(); pop = null; if (pill) pill.setAttribute('aria-expanded', 'false'); document.removeEventListener('click', outside, true); } }
-  const outside = e => { if (pop && !pop.contains(e.target) && !(pill && pill.contains(e.target))) closePop(); };
+  const outside = e => { if (pop && !pop.contains(e.target) && !(pill && pill.contains(e.target)) && !(popAnchor && popAnchor.contains(e.target))) closePop(); };
   function openPop() {
     closePop();
     if (db?.mode === 'showcase' && window.TribeShowcase) {
@@ -1378,15 +1381,15 @@
       document.body.appendChild(pop); placePop(); return;
     }
     if (solo()) {
-      pop = document.createElement('div'); pop.className = 'od-pop'; pop.id = 'demo-pop'; pop.setAttribute('role', 'dialog'); pop.setAttribute('aria-label', phoneLike() ? 'On this phone' : 'On this device');
+      pop = document.createElement('div'); pop.className = 'od-pop'; pop.id = 'demo-pop'; pop.setAttribute('role', 'dialog'); pop.setAttribute('aria-label', 'Sharing and backup');
       const dev = phoneLike() ? 'this phone' : 'this device', p0 = db.projects[0] || {}, gh = ((db.homes || {})[p0.id] || {}).github;
-      pop.innerHTML = `<header><span class="od-dot" aria-hidden="true"></span><div><span class="eyebrow">On ${dev} only</span><b>${esc(p0.name && p0.name !== 'My first project' ? p0.name : db.tribe.name)} lives on ${dev}</b></div></header>
-        <p>It's real: tasks, notes, docs and chat are kept here and survive reloads. ${gh ? `It is mirrored to <b>${esc(gh.repo)}</b> on GitHub, so anyone can see the live repo and the suggested changes.` : `Choose where it lives (${phoneLike() ? 'a GitHub repo, a computer, a free cloud or a phone' : 'a folder on this computer, a free cloud or a phone, with GitHub as a synced copy'}) and friends can join.`}</p>
+      pop.innerHTML = `<header><span class="od-dot" aria-hidden="true"></span><div><span class="eyebrow">Sharing and backup</span><b>${esc(p0.name && p0.name !== 'My first project' ? p0.name : db.tribe.name)} is saved on ${dev}</b></div></header>
+        <p>Tasks, notes, docs and chat are kept here and survive reloads. ${gh ? `It is mirrored to <b>${esc(gh.repo)}</b> on GitHub, so anyone can see the live repo and the suggested changes.` : `Choose where it lives (${phoneLike() ? 'a GitHub repo, a computer, a free cloud or a phone' : 'a folder on this computer, a free cloud or a phone, with GitHub as a synced copy'}) and friends can join.`}</p>
         <div class="od-acts">
           ${!phoneLike() && window.TribeHome ? `<button id="od-folder"${window.TribeHome.canPickFolder().ok ? '' : ` aria-disabled="true" title="${esc(window.TribeHome.canPickFolder().why)}"`}><svg class="i"><use href="#i-folder"/></svg><span>Move to a folder</span></button>` : ''}
-          <button id="od-move"><svg class="i"><use href="#i-zap"/></svg><span>${window.TribeLocalSetup ? 'Choose where it lives' : 'Move to a host'}</span></button>
+          <button id="od-move"><svg class="i"><use href="#i-zap"/></svg><span>Put this tribe online</span></button>
           ${window.TribeLocalSetup ? `<button id="od-gh"><svg class="i"><use href="#i-git"/></svg><span>${gh ? `GitHub · ${esc(gh.repo)}` : 'Connect GitHub'}</span></button>` : ''}
-          ${window.TribeHome ? '<button id="od-sync"><svg class="i"><use href="#i-gear"/></svg><span>Ship / sync settings</span></button><button id="od-share"><svg class="i"><use href="#i-users"/></svg><span>Share</span></button>' : ''}
+          ${window.TribeHome ? '<button id="od-sync"><svg class="i"><use href="#i-gear"/></svg><span>Backup settings</span></button><button id="od-share"><svg class="i"><use href="#i-users"/></svg><span>Share</span></button>' : ''}
           <button id="od-del"><svg class="i"><use href="#i-x"/></svg><span>${phoneLike() ? 'Delete this phone tribe' : 'Delete this tribe'}</span></button>
         </div>`;
       document.body.appendChild(pop);
@@ -1395,7 +1398,7 @@
       odOn('#od-gh', () => window.TribeLocalSetup.choose('github'));
       odOn('#od-sync', () => window.TribeLocalSetup.choose('github'));   // this device: GitHub is a mirror; ship settings come with a host
       odOn('#od-share', () => window.TribeHome.share());
-      pop.querySelector('#od-move').onclick = () => { closePop(); if (window.TribeLocalSetup) window.TribeLocalSetup.where(); else if (window.TribePhoneHost) window.TribePhoneHost.move(); };
+      pop.querySelector('#od-move').onclick = () => { closePop(); if (window.TribeLocalSetup && !phoneLike()) window.TribeLocalSetup.where(); else if (window.TribeShare) window.TribeShare.online('friends'); else if (window.TribePhoneHost) window.TribePhoneHost.move(); };
       pop.querySelector('#od-del').onclick = () => { if (confirm(`Delete ${db.tribe.name} from ${dev}? Its tasks, notes and chat are gone for good unless you moved it to a host first.`)) leave(); };
       placePop(); return;
     }
@@ -1403,7 +1406,7 @@
     pop.innerHTML = `<header><span class="od-dot" aria-hidden="true"></span><div><span class="eyebrow">${db.mode === 'watch' ? 'Demo' : 'Offline demo'}</span><b>${esc(db.tribe.name)} lives in this tab</b></div></header>
       <p>${db.mode === 'watch' ? 'Flint builds a small game while you watch. Nothing leaves this device, and Exit puts your own app back exactly as it was.' : 'You\'re the host of a pretend tribe: Maya, Jay and a pretend Claude answer you here. Nothing leaves this device, and it ends when you leave or close this tab.'}</p>
       <div class="od-acts">
-        <button id="od-real" data-od="real"><svg class="i"><use href="#i-zap"/></svg><span>Host this for real</span></button>
+        <button id="od-real" data-od="real"><svg class="i"><use href="#i-zap"/></svg><span>Start my own tribe</span></button>
         <button id="od-reset"><svg class="i"><use href="#i-refresh"/></svg><span>Reset demo</span></button>
         <button id="od-leave"><svg class="i"><use href="#i-x"/></svg><span>${db.mode === 'watch' ? 'Exit demo' : 'Leave demo'}</span></button>
       </div>`;
@@ -1413,16 +1416,20 @@
     placePop();
   }
   function placePop() {
-    const r = pill.getBoundingClientRect();
+    const a = popAnchor && popAnchor.isConnected && popAnchor.offsetParent ? popAnchor : pill && pill.offsetParent ? pill : null;
+    const r = a ? a.getBoundingClientRect() : { top: 56, bottom: 56, left: Math.max(8, (innerWidth - 340) / 2) };
     pop.style.top = (r.bottom + 8 + pop.offsetHeight > innerHeight ? Math.max(8, r.top - 8 - pop.offsetHeight) : r.bottom + 8) + 'px'; pop.style.left = Math.max(8, Math.min(innerWidth - pop.offsetWidth - 8, r.left)) + 'px';
-    pill.setAttribute('aria-expanded', 'true');
+    if (pill) pill.setAttribute('aria-expanded', 'true');
     setTimeout(() => document.addEventListener('click', outside, true), 0);
   }
+  // feat/real-tribe: the list behind "More options" on the Sharing and backup card (sharecard.js)
+  let popAnchor = null;
+  function options(anchor) { if (pop) return closePop(); popAnchor = anchor || null; openPop(); return pop; }
   function hostForReal() {
     closePop();
     const modal = document.querySelector('#invite-modal'), body = document.querySelector('#invite-body'); if (!modal || !body) return;
     modal.classList.remove('hidden');
-    body.innerHTML = `<span class="eyebrow">Host this for real</span><h2>A real tribe runs on a computer</h2>
+    body.innerHTML = `<span class="eyebrow">Start my own tribe</span><h2>Your own tribe runs on a computer</h2>
       <ol class="od-steps">
         <li><b>On a PC or Mac:</b> install the TribeCode desktop app. It hosts your tribe by itself when you create your first project.</li>
         <li><b>Already have a computer running TribeCode?</b> Link it: open Settings there and send yourself a device link, or join it with an invite link.</li>
@@ -1443,6 +1450,7 @@
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', ready); else ready();
 
   window.TribeOffline = {
+    options,
     active, start, choose, boot, leave, reset, hostForReal,
     solo: () => active() && solo(), exportSolo, realFetch: (i, o) => realFetch(i, o),
     // feat/setup-local: where each draft project lives (github: { repo, branch, synced }), kept in the draft itself

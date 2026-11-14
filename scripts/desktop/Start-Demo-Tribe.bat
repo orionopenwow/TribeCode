@@ -7,7 +7,7 @@ where node >nul 2>nul || (echo  TribeCode needs Node.js: https://nodejs.org & st
 where git  >nul 2>nul || (echo  TribeCode needs Git: https://git-scm.com & start "" https://git-scm.com/download/win & pause & exit /b 1)
 
 rem Uses the Working copy (dev branch, newest features) and its test tribe, at http://localhost:4848,
-rem so your real tribe stays untouched. Same clone as Working\Start-Working.bat.
+rem so your own tribe stays untouched. Same clone as Working\Start-Working.bat.
 if not exist "Working" mkdir "Working"
 cd Working
 if not exist "TribeCode\server\index.js" (

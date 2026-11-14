@@ -16,7 +16,7 @@
 //      not locked and not touched for 2 hours (`git worktree remove`), then those merged branches (`git branch -d`,
 //      never -D). Branch dev, main and the current branch are never deleted.
 //   4. Node caches inside this checkout (node_modules/.cache folders).
-// A real tribe folder is only touched when you pass it with --tribe, and then it is renamed to
+// Your own tribe folder is only touched when you pass it with --tribe, and then it is renamed to
 // <folder>.reset-<time> so nothing is lost.
 'use strict';
 const { execFileSync } = require('child_process');
@@ -129,7 +129,7 @@ plan.push({ what: 'git worktree prune (forget worktrees whose folder is gone)', 
   }
 })(ROOT, 4);
 
-// ---- 5. a real tribe folder, only when asked for ----
+// ---- 5. your own tribe folder, only when asked for ----
 if (TRIBE) {
   const t = path.resolve(TRIBE.replace(/^~(?=$|[\\/])/, os.homedir()));
   if (!fs.existsSync(path.join(t, '.tribe'))) { console.error(`${t} is not a tribe folder (no .tribe inside); not touching it.`); process.exit(2); }

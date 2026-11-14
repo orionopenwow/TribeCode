@@ -81,16 +81,20 @@
     if (cur.sync && cur.sync.status && cur.sync.status.lastShip) rt = setTimeout(refresh, 60_000);   // "synced N min ago" stays true
   }
   let pop = null;
+  const anchorRect = () => { const a = anchorEl && anchorEl.isConnected && anchorEl.offsetParent ? anchorEl : null; return a ? a.getBoundingClientRect() : { top: 56, bottom: 56, left: Math.max(8, (innerWidth - 340) / 2) }; };
   function close() { if (pop) { pop.remove(); pop = null; pill.setAttribute('aria-expanded', 'false'); document.removeEventListener('click', outside, true); } }
-  const outside = e => { if (pop && !pop.contains(e.target) && !pill.contains(e.target)) close(); };
-  async function open() {
+  const outside = e => { if (pop && !pop.contains(e.target) && !pill.contains(e.target) && !(anchorEl && anchorEl.contains(e.target))) close(); };
+  // feat/real-tribe: the pill no longer shows; this list opens from the dashboard's Sharing and backup card (More options)
+  let anchorEl = null;
+  async function open(anchor) {
     if (pop) return close();
+    anchorEl = anchor && anchor.getBoundingClientRect ? anchor : document.getElementById('sc-more');
     await load(true).catch(() => {});
     const pj = ((C().state().projects || []).find(x => x.id === pid()) || {}), name = pj.name || 'This project', t = statusText(cur.folder, cur.sync);
     const st = (cur.sync && cur.sync.status) || {}, gh = !!st.connected, can = (cur.sync && cur.sync.can) || {}, pick = canPickFolder();
     const hosting = document.getElementById('host-pill') && !document.getElementById('host-pill').classList.contains('hidden');
-    pop = document.createElement('div'); pop.className = 'host-pop lr-pop'; pop.id = 'home-pop'; pop.setAttribute('role', 'dialog'); pop.setAttribute('aria-label', 'Where it lives');
-    pop.innerHTML = `<header><span class="hp-dot lr-dot" data-tone="${esc(t.tone)}" aria-hidden="true"></span><div><span class="eyebrow">Where it lives · its living repo</span><b>${esc(name)}: ${esc(t.l)}</b></div></header>
+    pop = document.createElement('div'); pop.className = 'host-pop lr-pop'; pop.id = 'home-pop'; pop.setAttribute('role', 'dialog'); pop.setAttribute('aria-label', 'Sharing and backup');
+    pop.innerHTML = `<header><span class="hp-dot lr-dot" data-tone="${esc(t.tone)}" aria-hidden="true"></span><div><span class="eyebrow">Sharing and backup</span><b>${esc(name)}: ${esc(t.l)}</b></div></header>
       <div class="hpo-rows">
         <div class="hpo-row"><span>Home</span><b>${cur.folder ? `<code title="${esc(cur.folder.display)}">${esc(cur.folder.display)}</code>` : hosting ? 'This computer' : 'The tribe’s host'}</b></div>
         <div class="hpo-row"><span>GitHub</span><b>${gh ? esc(st.repo) : 'Not connected'}</b></div>
@@ -102,21 +106,21 @@
         <button id="hp-move" ${pick.ok ? '' : `aria-disabled="true" title="${esc(pick.why)}"`}>${ic('folder')}<span>${cur.folder ? 'Move to another folder' : 'Move to a folder'}${pick.ok ? '' : `<small>${esc(pick.why)}</small>`}</span></button>
         <button id="hp-github">${ic('git')}<span>${gh && st.kind !== 'folder' ? `GitHub · ${esc(st.repo)}` : 'Connect GitHub'}</span></button>
         <button id="hp-shared" ${pick.ok ? '' : `aria-disabled="true" title="${esc(pick.why)}"`}>${ic('net')}<span>${gh && st.kind === 'folder' ? `Shared folder · ${esc(st.repo)}` : 'Share through a synced folder'}</span></button>
-        ${gh && can.ship ? `<button id="hp-ship">${ic('upload')}<span>Ship now${st.pending ? ` · ${plural(st.pending, 'change')}` : ''}</span></button>` : ''}
-        <button id="hp-sync">${ic('gear')}<span>Ship / sync settings</span></button>
+        ${gh && can.ship ? `<button id="hp-ship">${ic('upload')}<span>Back up now${st.pending ? ` · ${plural(st.pending, 'change')}` : ''}</span></button>` : ''}
+        <button id="hp-sync">${ic('gear')}<span>Backup settings</span></button>
         ${window.TribeVersions ? `<button id="hp-versions">${ic('refresh')}<span>Versions</span></button>` : ''}
         <button id="hp-share">${ic('users')}<span>Share</span></button>
-        ${hosting ? `<button id="hp-host">${ic('net')}<span>Hosting · who can reach you</span></button>` : ''}
+        ${hosting ? `<button id="hp-host">${ic('net')}<span>Who can reach this computer</span></button>` : ''}
       </div>`;
     document.body.appendChild(pop);
-    const r = pill.getBoundingClientRect(); pop.style.top = (r.bottom + 8) + 'px'; pop.style.left = Math.max(8, Math.min(innerWidth - pop.offsetWidth - 8, r.left)) + 'px';
+    const r = anchorRect(); pop.style.top = (r.bottom + 8 + pop.offsetHeight > innerHeight ? Math.max(8, r.top - 8 - pop.offsetHeight) : r.bottom + 8) + 'px'; pop.style.left = Math.max(8, Math.min(innerWidth - pop.offsetWidth - 8, r.left)) + 'px';
     pill.setAttribute('aria-expanded', 'true');
     const on = (id, f) => { const b = pop.querySelector(id); if (b) b.onclick = () => { close(); f(); }; };
     on('#hp-move', () => (pick.ok ? folder({ pid: pid() }) : toast(pick.why)));
     on('#hp-github', () => (st.kind === 'folder' ? github(null, true) : github())); on('#hp-shared', () => (gh && st.kind === 'folder' ? sync() : pick.ok ? sharedFolder() : toast(pick.why))); on('#hp-ship', () => ship()); on('#hp-fix', () => ship()); on('#hp-sync', () => sync()); on('#hp-versions', () => window.TribeVersions.open()); on('#hp-share', () => share());
     on('#hp-host', async () => {   // the Hosting popout (hostpill.js), under this pill: invite, who can reach you, the Host switch
       if (!window.TribeHostPill) return window.TribeSettings && window.TribeSettings.open();
-      await window.TribeHostPill.open(); const hp = document.getElementById('host-pop'), r = pill.getBoundingClientRect();
+      await window.TribeHostPill.open(); const hp = document.getElementById('host-pop'), r = anchorRect();
       if (hp) { hp.style.top = (r.bottom + 8) + 'px'; hp.style.left = Math.max(8, r.left) + 'px'; }
     });
     setTimeout(() => document.addEventListener('click', outside, true), 0);
@@ -429,7 +433,7 @@
     const s = sheet('lr-share', 'Share', `${head('Share', 'How should friends join?')}
       <div class="ph-list lr-ways" role="radiogroup" aria-label="Ways to share">${WAYS.map(([k, icn, t, sub, rec]) => `<button type="button" class="ph-row" role="radio" aria-checked="false" data-share="${k}"><span class="ph-ic${rec ? ' live' : ''}">${ic(icn, 18)}</span><span class="ph-tt"><b>${esc(t)}${rec ? ' <em class="ph-tag">Recommended</em>' : ''}</b><small>${esc(sub)}</small></span></button>`).join('')}</div>
       <div id="lr-share-detail" class="lr-share-detail"></div><p class="tn-err ph-err" id="lr-share-err" role="status" hidden></p>
-      <p class="ph-foot">You can switch later from the pill at the top.</p>`);
+      <p class="ph-foot">You can switch later from Sharing and backup on the dashboard.</p>`);
     const det = $('#lr-share-detail', s), errf = t => { const e = $('#lr-share-err', s); e.textContent = t || ''; e.hidden = !t; };
     const shared = () => { try { localStorage.setItem(`tribecode.ov.${pid()}.shared`, '1'); } catch {} };   // the steps card's "Share it"
     const pick = k => s.querySelectorAll('[data-share]').forEach(x => x.setAttribute('aria-checked', String(x.dataset.share === k)));
@@ -528,5 +532,5 @@
   hook(); if (S() && S().on) S().on(soon);
   document.addEventListener('DOMContentLoaded', registerSettings);
 
-  window.TribeHome = { refresh, open, close, where, folder, sharedFolder, connectShared, SHARED_LINE, pickFolder, canPickFolder, github, sync, renderSync, ship, share, statusText, closeSheet, state: () => ({ ...cur }) };
+  window.TribeHome = { refresh, open, close, where, folder, sharedFolder, connectShared, SHARED_LINE, pickFolder, canPickFolder, github, sync, renderSync, ship, share, statusText, closeSheet, load, state: () => ({ ...cur }) };
 })();
