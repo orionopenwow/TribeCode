@@ -10,7 +10,7 @@ const RISKS = ['low', 'medium', 'high'];
 const REMIND_H = Number(process.env.TRIBE_APPROVAL_REMIND_HOURS) || 4;   // re-notify once after this; escalate to the host after twice this
 
 module.exports = function approvals({ store, id, str, bus, getMembers, postChat, broadcast, hub, project = () => undefined, canSee = () => true, now = () => Date.now(), remindHours = REMIND_H, tick = true,
-  canDecideAny = (who) => who.role === 'host' }) {   // feat/roles: approvals.approve (any risk) / approvals.approve_low (server/perms.js)
+  canDecideAny = (who) => who.role === 'host', counting = () => null, passMark = (need, n) => Math.floor(n / 2) + 1 }) {   // feat/roles: approvals.approve (any risk) / approvals.approve_low (server/perms.js)
   let list = store.readJSON('.tribe/approvals.json', []);
   let rules = store.readJSON('.tribe/approval-rules.json', []);   // { id, owner, agent, kind, created }
   const save = () => { list = list.slice(-500); store.writeJSON('.tribe/approvals.json', list); };
@@ -54,7 +54,21 @@ module.exports = function approvals({ store, id, str, bus, getMembers, postChat,
     if (!a) fail(404, 'approval not found');
     if (who.role === 'agent') fail(403, 'agents never decide approvals, not even each other\'s');
     if (!['approve', 'deny'].includes(decision)) fail(400, 'decision must be approve or deny');
+    // feat/group-styles: under a council a high-risk request is decided by the council together (the group's one
+    // counting rule), one answer per member. Ship it counts its own votes; a helper's small requests stay with its owner.
+    const rule = a.risk === 'high' && a.kind !== 'ship' ? counting(a) : null;
+    if (rule) {
+      if (!rule.ids.includes(who.id)) fail(403, 'the council decides this here');
+      if (a.status !== 'pending') fail(409, `already ${a.status}`);
+      a.answers = { ...(a.answers || {}), [who.id]: decision };
+      const live = rule.ids.filter(x => member(x)), n = live.length || 1, mark = passMark(rule.need, n);
+      const yes = live.filter(x => a.answers[x] === 'approve').length, no = live.filter(x => a.answers[x] === 'deny').length;
+      a.tally = { yes, no, needed: mark, of: n };
+      if (yes < mark && no <= n - mark) { save(); broadcast({ type: 'approval', approval: view(a) }); return view(a); }   // still waiting on the others
+      decision = yes >= mark ? 'approve' : 'deny';
+    } else {
     if (!a.to.includes(who.id) && !canDecideAny(who, a)) fail(403, a.risk === 'low' ? 'this request was not addressed to you' : 'this request was not addressed to you (your role decides low-risk requests only)');
+    }
     if (a.status !== 'pending') fail(409, `already ${a.status}`);
     a.status = decision === 'approve' ? 'approved' : 'denied';
     a.decidedBy = who.id; a.decidedAt = new Date(now()).toISOString(); a.note = str(note, 500);

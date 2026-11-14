@@ -29,7 +29,7 @@ const TICK_MS = Number(process.env.TRIBE_TURBO_TICK_MS) || 60_000;
 const QUIET_MS = Number(process.env.TRIBE_TURBO_QUIET_MS) || 0;   // overrides the per-project quiet minutes (tests)
 const DEFAULTS = () => ({ mode: 'host', turbo: { on: false, quietMin: 10, maxPerHour: 4 }, current: null, history: [], log: [], lastShip: null });
 
-module.exports = function ship({ P, store, hubFor, approvals, getMembers, loadTasks, createTask, postChat, broadcast, bus, str, nameOf, can, pushAuth, coord, claims, id, brain, styleOf = null }) {
+module.exports = function ship({ P, store, hubFor, approvals, getMembers, loadTasks, createTask, postChat, broadcast, bus, str, nameOf, can, pushAuth, coord, claims, id, brain, styleOf = null, counting = () => null, passMark = null }) {
   const fail = (status, msg) => Object.assign(new Error(msg), { status });
   // feat/group-styles: a council decides shipping the way it decides everything else (styleOf from server/groupstyle.js)
   const load = () => { const s = { ...DEFAULTS(), ...(store.readJSON('ship.json', {}) || {}) }; s.turbo = { ...DEFAULTS().turbo, ...(s.turbo || {}) };
@@ -41,7 +41,8 @@ module.exports = function ship({ P, store, hubFor, approvals, getMembers, loadTa
   const member = mid => getMembers().find(m => m.id === mid) || null;
   const isAgent = m => !!m && m.role === 'agent';
   const people = () => getMembers().filter(m => m.role !== 'agent' && m.role !== 'spectator' && P.canSee(m, pid()));
-  const deciders = mode => (mode === 'host' ? people().filter(m => can(m, 'repo.merge')) : people());
+  const rule = () => { try { return counting(pid()); } catch { return null; } };   // feat/group-styles: the group's one counting rule
+  const deciders = mode => { const r = rule(); return r ? people().filter(m => r.ids.includes(m.id)) : mode === 'host' ? people().filter(m => can(m, 'repo.merge')) : people(); };
   const plural = (n, a, b = a + 's') => `${n} ${n === 1 ? a : b}`;
   const repoOf = () => { const p = P.get(pid()); return p && p.repo && fs.existsSync(path.join(p.repo, '.git')) ? p.repo : null; };
   const MODE_TEXT = { host: 'The host decides', majority: 'More than half of the people decide', everyone: 'Everyone has to say yes' };
@@ -100,7 +101,7 @@ module.exports = function ship({ P, store, hubFor, approvals, getMembers, loadTa
   function tally(rq) {
     const voters = deciders(rq.mode).map(m => m.id);
     const yes = voters.filter(v => rq.votes[v] && rq.votes[v].v === 'yes').length, no = voters.filter(v => rq.votes[v] && rq.votes[v].v === 'no').length;
-    const n = voters.length || 1, needed = rq.mode === 'host' ? 1 : rq.mode === 'majority' ? Math.floor(n / 2) + 1 : n;
+    const r = rule(), n = voters.length || 1, needed = r && passMark ? passMark(r.need, n) : rq.mode === 'host' ? 1 : rq.mode === 'majority' ? Math.floor(n / 2) + 1 : n;
     return { voters: voters.length, yes, no, needed, waitingOn: voters.filter(v => !rq.votes[v]).map(nameOf) };
   }
   function view(rq) {
@@ -166,7 +167,7 @@ module.exports = function ship({ P, store, hubFor, approvals, getMembers, loadTa
   async function evaluate(s) {
     const rq = s.current; if (!rq || rq.status !== 'pending') return;
     const t = tally(rq);
-    const approved = t.yes >= t.needed, denied = rq.mode === 'host' ? t.no >= 1 && !approved : rq.mode === 'majority' ? t.no > t.voters - t.needed : t.no >= 1;
+    const approved = t.yes >= t.needed, denied = rule() ? t.no > t.voters - t.needed : rq.mode === 'host' ? t.no >= 1 && !approved : rq.mode === 'majority' ? t.no > t.voters - t.needed : t.no >= 1;
     if (denied) {
       rq.status = 'denied'; rq.decidedAt = new Date().toISOString(); s.history.push(rq); save(s); closeAsks(rq, 'Decided: not shipping');
       const nos = Object.entries(rq.votes).filter(([, x]) => x.v === 'no').map(([mid, x]) => `${nameOf(mid)}${x.comment ? ` ("${x.comment}")` : ''}`);

@@ -103,7 +103,8 @@ def main():
         forged = {"question": "Sam asks to change project settings", "council": {"electorate": [ids["Sam"]], "need": "one", "ask": {"by": ids["Sam"], "cap": "settings.edit", "project": pid}},
                   "electorate": [ids["Sam"]], "need": "one"}
         st, d = api(f"/chat/{ch}/vote", "POST", forged, token=sam, project=pid); assert st == 200, (st, d)
-        fv = d["message"]; assert "council" not in fv["vote"], fv
+        fv = d["message"]; cv = fv["vote"].get("council") or {}
+        assert not cv.get("ask") and sorted(cv.get("electorate") or []) == sorted([ids["Hana"], ids["Sam"], ids["Bo"]]) and cv.get("need") == "majority", fv   # counted by the real council, and it carries no request
         cast(sam, ch, fv["id"]); cast(bo, ch, fv["id"]); cast(dee, ch, fv["id"]); cast(host, ch, fv["id"])
         assert vote(ch, fv["id"])["status"] == "passed" and plan(sam)[0] == 403, "an ordinary vote handed out a pass"
         # the real thing: two of three
@@ -123,6 +124,26 @@ def main():
         a = api("/groupstyle/ask", "POST", {"cap": "repo.merge"}, token=dee, project=pid)[1]; vid = a["vote"]
         assert cast(dee, ch, vid)[0] == 403, "the asker isn't on the council"
         cast(sam, ch, vid, "no"); cast(bo, ch, vid, "no"); assert vote(ch, vid)["status"] == "failed" and "repo.merge" not in caps(dee)
+        # ---------- U: one counting rule (chat votes, Board proposals, high-risk approvals all use the council) ----------
+        st, d = api(f"/chat/{ch}/vote", "POST", {"question": "Should we add a dark theme?"}, token=dee, project=pid); uv = d["message"]["id"]
+        assert cast(dee, ch, uv)[0] == 403, "someone outside the council counted in a chat vote"
+        cast(sam, ch, uv); assert vote(ch, uv)["status"] == "open"; cast(bo, ch, uv); assert vote(ch, uv)["status"] == "passed"
+        st, d = api(f"/chat/{ch}/vote", "POST", {"question": "Lunch?", "options": ["Pizza", "Soup"]}, token=dee, project=pid)
+        assert st == 200 and "council" not in d["message"]["vote"] and cast(dee, ch, d["message"]["id"], "o1")[0] == 200, "a poll stays open to everyone"
+        st, d = api("/proposals", "POST", {"title": "Add a level editor", "body": "So friends can make levels."}, token=dee, project=pid); assert st == 200, (st, d)
+        prop = d["proposal"]; assert prop["tally"]["voters"] == 3 and prop["tally"]["needed"] == 2, prop["tally"]
+        assert api(f"/proposals/{prop['id']}/vote", "POST", {"vote": "yes"}, token=dee, project=pid)[0] == 403, "someone outside the council voted on a proposal"
+        assert api(f"/proposals/{prop['id']}/vote", "POST", {"vote": "yes"}, token=sam_ai, project=pid)[0] == 403
+        d = api(f"/proposals/{prop['id']}/vote", "POST", {"vote": "yes"}, token=sam, project=pid)[1]["proposal"]; assert d["status"] == "open" and d["tally"]["yes"] == 1, d
+        d = api(f"/proposals/{prop['id']}/vote", "POST", {"vote": "yes"}, token=bo, project=pid)[1]["proposal"]; assert d["status"] != "open", d
+        st, d = api("/approvals", "POST", {"title": "Spend on a domain name", "risk": "high", "kind": "spend"}, token=sam_ai, project=pid); assert st == 200, (st, d)
+        ap = d["approval"]["id"]
+        assert api(f"/approvals/{ap}/approve", "POST", {}, token=dee, project=pid)[0] == 403, "someone outside the council approved spending"
+        assert api(f"/approvals/{ap}/approve", "POST", {}, token=sam_ai, project=pid)[0] == 403
+        d = api(f"/approvals/{ap}/approve", "POST", {}, token=host, project=pid)[1]["approval"]; assert d["status"] == "pending" and d["tally"] == {"yes": 1, "no": 0, "needed": 2, "of": 3}, d   # the owner alone is not enough
+        d = api(f"/approvals/{ap}/approve", "POST", {}, token=host, project=pid)[1]["approval"]; assert d["status"] == "pending" and d["tally"]["yes"] == 1, "answering twice counted twice"
+        d = api(f"/approvals/{ap}/approve", "POST", {}, token=bo, project=pid)[1]["approval"]; assert d["status"] == "approved", d
+        print("U ok: chat votes, Board proposals and high-risk approvals all count the council, once each")
         # leaving the council takes a vote; then the change is made by the server, cleaned
         a = api("/groupstyle/ask", "POST", {"change": {"style": "custom", "roles": [{"name": "Evil", "caps": ["tribe.owner", "tribe.secrets", "repo.merge"], "members": [ids["Sam"]]}]}}, token=sam, project=pid)[1]; vid = a["vote"]
         cast(host, ch, vid); cast(bo, ch, vid)

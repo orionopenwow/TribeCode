@@ -69,7 +69,7 @@ module.exports = function votes({ store, id, str, slug, find, update, postChat, 
 
   // feat/group-styles: a vote with `council` has a FIXED list of deciders and its own pass mark (server/groupstyle.js).
   // The list is set by the server when the vote is made (never from a request body). Only people on it count, each once.
-  const hooks = { decided: null };
+  const hooks = { decided: null, counting: null };   // counting(): the group's one counting rule (server/groupstyle.js), null = every person
   const deciders = v => { const ok = new Set(v.council.electorate); return getMembers().filter(m => ok.has(m.id) && isHuman(m) && !m.guestUntil); };
   const passMark = (v, n) => (v.council.need === 'all' ? n : v.council.need === 'two' ? Math.min(2, n) : v.council.need === 'one' ? 1 : Math.floor(n / 2) + 1);
   function tally(v) {
@@ -146,6 +146,9 @@ module.exports = function votes({ store, id, str, slug, find, update, postChat, 
       ballots: {}, status: 'open', deadline: dl ? iso(dl) : null, seen: {}, eligible: voters().map(m => m.id) };
     if (agent) { vote.suggested = { agent: me.id, owner: me.owner || null }; if (str(why, 400)) vote.why = str(why, 400); }
     if (pt) vote.pitch = pt;
+    // Approve / Not yet votes follow the group's counting rule: under a council, the council decides (polls stay open to all).
+    const rule = !council && !opts.length && hooks.counting ? hooks.counting() : null;
+    if (rule && rule.ids.length) { vote.council = { electorate: rule.ids.slice(), need: rule.need, tie: rule.tie, ai: false, rule: 'council', ask: null }; vote.eligible = vote.council.electorate; }
     if (council && !agent && !opts.length) { vote.council = { electorate: [...new Set(council.electorate || [])], need: council.need, tie: council.tie, ai: council.ai === true, rule: council.rule, ask: council.ask || null }; vote.eligible = vote.council.electorate; }
     const msg = postChat(ch, me.id, q, { vote });
     saveIdx([...idx(), { project: project(), ch, id: msg.id, by: me.id, deadline: vote.deadline }]);

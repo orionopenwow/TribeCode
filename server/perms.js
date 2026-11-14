@@ -105,6 +105,9 @@ function perms({ P, store, getMembers, saveMembers, bus, broadcast, pushPresence
   }
   const setStyle = s => { style = s; };
   const styleOf = pid => (style ? style.styleOf(pid) : { style: 'lead', words: { group: 'Company', lead: 'Lead', role: 'Role', checkin: 'Check-in' }, need: 'majority' });
+  // The one counting rule (server/groupstyle.js counting()): null = the old count; else { ids, need, tie }.
+  const counting = pid => (style && style.counting ? style.counting(pid === undefined ? P.current() : pid) : null);
+  const passMark = (need, n) => (need === 'all' ? n : need === 'two' ? Math.min(2, n) : need === 'one' ? 1 : Math.floor(n / 2) + 1);
   // The refusal behind a 403 just sent to this member (within a moment), with who could do it instead.
   function refused(m) {
     const x = m && lastNo.get(m.id); if (!x || now() - x.at > 1500) return null;
@@ -309,7 +312,7 @@ function perms({ P, store, getMembers, saveMembers, bus, broadcast, pushPresence
     return fail(res, 404, 'not found');
   }
 
-  return { setStyle, styleOf, refused, can, capsOf, roleIn, actingRole, rank, atLeast, outranks, allowed, mutedUntil, muteBlock, audit, assign, mute, unmute, removeFromProject, setOverride, reset, matrix, route, LABEL, CAPS, RANK };
+  return { setStyle, styleOf, counting, passMark, refused, can, capsOf, roleIn, actingRole, rank, atLeast, outranks, allowed, mutedUntil, muteBlock, audit, assign, mute, unmute, removeFromProject, setOverride, reset, matrix, route, LABEL, CAPS, RANK };
 }
 perms.CAPS = CAPS; perms.RANK = RANK; perms.ROLES = ROLES; perms.LABEL = LABEL;
 module.exports = perms;

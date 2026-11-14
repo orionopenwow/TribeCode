@@ -128,6 +128,13 @@ module.exports = function groupstyle({ P, store, perms, getMembers, votes, bus, 
     if (!isPerson(m)) return false;
     return hasPermit(m.id, cap, pid);
   }
+  // ONE counting rule for everything a group votes on (chat votes, Board proposals, Ship it, high-risk approvals):
+  // null = count the way each always did (every person, more than half); under a council = the council and its pass mark.
+  function counting(pid) {
+    if (untouched(pid)) return null;
+    const g = get(pid); if (g.style !== 'council') return null;
+    return { ids: councilOf(g, pid).map(m => m.id), need: g.council.need, tie: g.council.tie, hours: g.council.hours };
+  }
   const styleOf = pid => { const g = get(pid); return { style: g.style, words: g.words, need: g.council.need }; };
 
   // ---------- who can do what here ----------
@@ -264,5 +271,5 @@ module.exports = function groupstyle({ P, store, perms, getMembers, votes, bus, 
     return null;
   }
 
-  return { get, view, who, hook, styleOf, set, reset, ask, decided, need, route, ruleFor: (pid, cap) => ruleFor(get(pid), cap), PLAIN, STYLES, WORDS, DEF_WORDS };
+  return { counting, get, view, who, hook, styleOf, set, reset, ask, decided, need, route, ruleFor: (pid, cap) => ruleFor(get(pid), cap), PLAIN, STYLES, WORDS, DEF_WORDS };
 };
