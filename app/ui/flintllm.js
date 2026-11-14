@@ -70,7 +70,8 @@
     if (/^(?:please\s+)?(?:summari[sz]e|sum up|tl;?dr)\b.*\b(?:doc|document|page|note)\b/i.test(t) || /^(?:a\s+)?(?:real|proper|better)\s+summary\b/i.test(t)) return { kind: 'summary', input: '' };
     if ((m = /^(?:please\s+)?explain\s+(?:this\s+)?(?:error|code|bug|message|stack ?trace)?\s*[:\-–]?\s*([\s\S]{6,})$/i.exec(t))) return { kind: 'explain', input: m[1] };
     if (/^(?:please\s+)?(?:come up with|suggest|give me|brainstorm|think of)\s+(?:a\s+|some\s+|a few\s+|\d+\s+)?(?:good\s+|catchy\s+)?names?\b/i.test(t) || /^(?:name ideas|what should we (?:call|name))\b/i.test(t)) return { kind: 'name', input: t };
-    if (/^(?:please\s+)?(?:write|draft|compose)\s+(?:me\s+|us\s+)?(?:an?\s+|the\s+|some\s+)?(?!task|note\b)/i.test(t)) return { kind: 'draft', input: t };
+    // a draft, unless it names something Flint already makes with no model (a doc, a sheet, slides, the vision, a note, a task…)
+    if ((m = /^(?:please\s+)?(?:write|draft|compose)\s+(?:me\s+|us\s+)?(?:an?\s+|the\s+|some\s+|our\s+|my\s+)?((?:\S+\s*){1,3})/i.exec(t)) && !/\b(?:docs?|documents?|sheets?|spreadsheets?|slides?|decks?|presentations?|vision|readme|notes?|tasks?|todos?|standup|pages?|sites?|websites?|proposals?|down|it|this|that)\b/i.test(m[1])) return { kind: 'draft', input: t };
     return null;
   }
   const WRITE = {

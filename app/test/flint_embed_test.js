@@ -66,4 +66,22 @@ for (const [t, want] of dym) {
 if (verbose) console.log(lines.join('\n'));
 console.log(`did you mean, top 3 (${n} unrecognized paraphrases): without the model ${a}/${n} = ${Math.round(a / n * 100)}% · with ${M.name || path.basename(dir)} ${b}/${n} = ${Math.round(b / n * 100)}%`);
 assert.ok(n >= 12, 'enough unrecognized paraphrases to measure'); assert.ok(b > a, 'the model improves did-you-mean');
+// ---------- feat/flint-local: the tier-1 uses (app/ui/flintsem.js) work with no model and blend the model in when it is there ----------
+{
+  const S = require('../ui/flintsem.js');
+  const docs = [{ id: 'd1', text: 'Pricing notes: three plans, discounts for students' }, { id: 't1', text: 'Fix the jump bug on the second level' }, { id: 'c1', text: 'the server went down again last night' }, { id: 't2', text: 'Buy milk and eggs' }];
+  for (const model of [null, M]) {
+    assert.strictEqual(S.rank('how much does it cost', docs, { nlu: N, model })[0].id, 'd1', 'search: concept match' + (model ? ' + model' : ''));
+    assert.strictEqual(S.rank('the outage', docs, { nlu: N, model })[0].id, 'c1');
+    assert.strictEqual(S.rank('zzz qqq', docs, { nlu: N, model }).length, 0, 'nothing in common: nothing found');
+    assert.strictEqual(S.duplicate('Get milk and eggs from the shop', docs.map(d => d.text), { model }), 3);
+    assert.strictEqual(S.duplicate('Draw the hero', docs.map(d => d.text), { model }), -1);
+    assert.deepStrictEqual(S.related('What everything costs', docs, { nlu: N, model, k: 1 }).map(r => r.id), ['d1']);
+    const g = S.cluster(['the boss is too hard', 'boss fight is way too difficult', 'love the music'], { model }); assert.deepStrictEqual(g[0].items, [0, 1]); assert.strictEqual(g.length, 2);
+  }
+  const withM = S.rank('purchase groceries', [{ id: 'a', text: 'buy milk' }, { id: 'b', text: 'switch to dark theme' }], { nlu: N, model: M })[0];
+  assert.ok(withM && withM.id === 'a' && withM.cos > 0.3, 'the model adds its cosine to the blend');
+  assert.ok(/14 June/.test(S.summary('We met on Tuesday. The sale is on Saturday 14 June at the gym. The weather was lovely. We still need a card reader.', null, { maxWords: 30 })), 'the summary keeps the date');
+  console.log('tier-1 uses (search, duplicates, related, groups) pass with no model and with the fixture model');
+}
 console.log(`flint_embed_test ok (${M.vocabSize} tokens × ${M.dim}, ${per.toFixed(3)} ms per embed, eval unchanged with the model: ${without.length} cases)`);

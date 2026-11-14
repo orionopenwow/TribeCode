@@ -88,7 +88,8 @@ def main():
             assert pg.evaluate("TribeFlintModel.status()") == {"ready": False, "installed": None}
             assert pg.evaluate("TribeNLU.hasSemantic()") is False
             base_parse = pg.evaluate("JSON.stringify(['add a task to buy milk', 'open the calendar', 'switch to dark theme', 'larger lettering', 'summarize the chat'].map(t => TribeNLU.parse(t, {}).steps.map(s => [s.intent, s.conf, s.alts])))")
-            said, chips = ask(pg, "larger lettering"); assert "bigger font" not in chips, (said, chips)
+            # ("larger lettering" itself is understood outright since feat/flint-local: flintconv.js rewrites it)
+            said, chips = ask(pg, "digest of what people said"); assert not any("summar" in c for c in chips), (said, chips)
             said0, _ = ask(pg, "how do i invite a friend to a project?")
             assert not [r for r in palette(pg, "repair the glitch") if "by meaning" in r[2]], "no meaning rows without the model"
             assert files == [], "nothing is fetched until the person opts in"
@@ -131,8 +132,8 @@ def main():
             assert files == [], "loaded from IndexedDB, not downloaded again"
 
             # ---------- did you mean, by meaning ----------
-            said, chips = ask(pg, "larger lettering")
-            assert "one of these" in said.lower() and "bigger font" in chips, (said, chips)
+            said, chips = ask(pg, "digest of what people said")
+            assert "one of these" in said.lower() and any("summar" in c for c in chips), (said, chips)
             alts = pg.evaluate("TribeNLU.parse('digest of what people said', {}).steps[0].alts.map(a => a.intent)"); assert "chat.summarize" in alts, alts
             # recognized commands are untouched
             now_parse = pg.evaluate("JSON.stringify(['add a task to buy milk', 'open the calendar', 'switch to dark theme', 'summarize the chat'].map(t => TribeNLU.parse(t, {}).steps.map(s => [s.intent, s.conf])))")
@@ -146,6 +147,20 @@ def main():
             rows = palette(pg, "fix the crash"); assert rows[0][1] == "Fix the crash on the title screen" and "by meaning" not in rows[0][2], "an exact match stays first, once"
             assert len([r for r in rows if r[1] == "Fix the crash on the title screen"]) == 1, rows
             rows = palette(pg, "new task"); assert rows[0][1] == "New task", "commands rank as before"
+
+            # ---------- feat/flint-local: the same matching in Flint's chat, related docs, duplicate tasks, comment groups ----------
+            hits = pg.evaluate("TribeFlintModel.find('repair the glitch', 3).then(h => h.map(x => [x.kind, x.label]))")
+            assert hits and hits[0] == ["Task", "Fix the crash on the title screen"], hits
+            said, chips = ask(pg, "where did we talk about the dark picture?")
+            assert "matched by meaning with my local brain" in said and any(c.startswith("Chat · the photo of the boss") for c in chips), (said, chips)
+            assert api("/docs", "POST", {"title": "What things cost", "body": "Prices for the booth and the stickers.\n"}, token=tok)[0] == 200
+            rel = pg.evaluate("(async () => { const M = TribeFlintModel.model(), S = TribeFlintSem; return S.related('Budget for the launch What everything will cost.', [{ id: 'a', text: 'What things cost Prices for the booth and the stickers.' }, { id: 'b', text: 'Draw the boss sprite' }], { nlu: TribeNLU, model: M }).map(r => r.id); })()")
+            assert rel == ["a"], rel
+            dup = pg.evaluate("[TribeFlintSem.duplicate('Repair the crash on the title screen', ['Draw the boss sprite', 'Fix the crash on the title screen'], { model: TribeFlintModel.model() }), TribeFlintSem.duplicate('Draw the hero sprite', ['Draw the boss sprite', 'Fix the crash on the title screen'], { model: TribeFlintModel.model() })]")
+            assert dup == [1, -1], dup
+            said, chips = ask(pg, "add a task to repair the crash on the title screen"); assert "already on the board" in said and chips[0] == "Add it anyway", (said, chips)
+            groups = pg.evaluate("TribeFlintSem.cluster(['the boss is too hard', 'cannot beat the boss, too difficult', 'the music is lovely', 'love the soundtrack', 'save file got lost'], { model: TribeFlintModel.model() }).map(g => g.items)")
+            assert [0, 1] in groups and [2, 3] in groups and [4] in groups, groups
 
             # ---------- help answers still come from the docs ----------
             kb = []; pg.on("request", lambda r: "/api/flint/kb" in r.url and kb.append(r.url))
@@ -161,7 +176,7 @@ def main():
             after = pg.evaluate("JSON.stringify(['add a task to buy milk', 'open the calendar', 'switch to dark theme', 'larger lettering', 'summarize the chat'].map(t => TribeNLU.parse(t, {}).steps.map(s => [s.intent, s.conf, s.alts])))")
             assert after == base_parse, "without the model, Flint is exactly as before"
             assert not [r for r in palette(pg, "repair the glitch") if "by meaning" in r[2]]
-            said, chips = ask(pg, "larger lettering"); assert "bigger font" not in chips
+            said, chips = ask(pg, "digest of what people said"); assert not any("summar" in c for c in chips)
             go(); assert pg.evaluate("TribeFlintModel.status()") == {"ready": False, "installed": None}
             pg.evaluate("TribeFlintPage.open()"); pg.wait_for_selector("#flint-page .fpg-lv"); assert pg.locator(".fpg-lv.on").count() == 1
             b.close()
