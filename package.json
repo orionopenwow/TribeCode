@@ -18,6 +18,7 @@
     "screenshots": "python3 app/test/ui_smoke.py --shots && python3 app/test/e2e_tribe.py --shots",
     "dev:test": "node scripts/dev/test.js",
     "dev:shots": "python3 scripts/dev/shots.py",
+    "dev:thumbs": "python3 scripts/dev/live-thumbs.py",
     "dev:seed": "node scripts/dev/seed.js",
     "dev:loop": "node scripts/dev/loop.js",
     "dev:reset": "node scripts/dev/reset.js",
