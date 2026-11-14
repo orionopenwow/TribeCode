@@ -755,9 +755,10 @@ ${t.btn === 'pill' ? '.btn{border-radius:999px}' : t.btn === 'outline' ? '.btn{b
     const P = b.props || {}, ES = b.es || {};
     // feat/site-editor2: per-element style (size, colour, alignment, weight, hidden on a screen size), kept in b.es by path
     const ecl = path => { const s = ES[path]; if (!s) return ''; return (s.sz ? ' e-sz-' + s.sz : '') + (s.col ? ' e-col-' + s.col : '') + (s.al ? ' e-al-' + s.al : '') + (s.b ? ' e-b' : '') + (s.i ? ' e-i' : '') + (s.hide ? s.hide.split(',').map(d => (o.edit ? ' ehide-' : ' hide-') + d).join('') : ''); };
+    const NL = t => esc(t).replace(/\r?\n/g, '<br>');   // a line break someone typed stays a line break
     // every visible word is editable: E is a whole element, BT the words inside a button or link (hint shows while it is empty)
-    const E = (path, tag, txt, cls, hint, attrs) => { const k = ((cls || '') + ecl(path)).trim(); return `<${tag}${k ? ` class="${k}"` : ''}${attrs || ''}${o.edit ? ` data-e="${b.id}|${path}" contenteditable="plaintext-only" spellcheck="false"${hint ? ` data-hint="${esc(hint)}"` : ''}` : ''}>${esc(txt)}</${tag}>`; };
-    const BT = (path, txt) => o.edit ? `<span data-e="${b.id}|${path}" contenteditable="plaintext-only" spellcheck="false">${esc(txt)}</span>` : esc(txt);
+    const E = (path, tag, txt, cls, hint, attrs) => { const k = ((cls || '') + ecl(path)).trim(); return `<${tag}${k ? ` class="${k}"` : ''}${attrs || ''}${o.edit ? ` data-e="${b.id}|${path}" contenteditable="plaintext-only" spellcheck="false"${hint ? ` data-hint="${esc(hint)}"` : ''}` : ''}>${NL(txt)}</${tag}>`; };
+    const BT = (path, txt) => o.edit ? `<span data-e="${b.id}|${path}" contenteditable="plaintext-only" spellcheck="false">${NL(txt)}</span>` : NL(txt);
     const SYS = what => o.edit ? ` data-sys="${what}"` : '';
     const H = l => href(c, l, pg, o.mode) || (o.edit ? '#' : '');
     const A = (path, lab, l, cls) => { const h = H(l); return `<a class="${(cls + ecl(path)).trim()}"${h ? ` href="${esc(h)}"` : ''}${/^https?:/.test(h) ? ' rel="noopener"' : ''}${o.edit ? ` data-btn="${b.id}|${path}"${h && h !== '#' ? '' : ' data-unwired="1"'}` : ''}>${o.edit ? `<span data-e="${b.id}|${path}.label" contenteditable="plaintext-only" spellcheck="false">${esc(lab)}</span>` : esc(lab)}</a>`; };

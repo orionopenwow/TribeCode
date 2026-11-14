@@ -58,7 +58,8 @@
       Object.keys(groups).sort(function (a, b) { return b.length - a.length; }).forEach(function (it) {
         var els = groups[it], box = els[0];
         while (box && !els.every(function (e) { return box.contains(e); })) box = box.parentElement;
-        if (!box || box === bl) return;
+        var foreign = function (b) { return keyed.some(function (e) { return b.contains(e) && els.indexOf(e) < 0 && !(e._items || []).some(function (x) { return x === it; }); }); };
+        if (!box || box === bl || foreign(box)) { box = els[0].closest('[data-btn]') || els[0]; if (box.hasAttribute('data-item')) return; box.setAttribute('data-item', id + '|' + it); return; }   // no box of its own: its main element stands for it
         for (;;) {   // grow to the card around it while that card holds nothing of another entry
           var up = box.parentElement; if (!up || up === bl || up.hasAttribute('data-block') || /\bwrap\b/.test(up.className)) break;
           var others = keyed.some(function (e) { return up.contains(e) && els.indexOf(e) < 0 && !(e._items || []).some(function (x) { return x === it; }); });
@@ -106,7 +107,13 @@
     if (!el) return; if (el.hasAttribute('data-dbl')) el.setAttribute('contenteditable', 'plaintext-only');
     el.focus(); try { var r = document.createRange(); r.selectNodeContents(el); if (!all) r.collapse(false); var g = getSelection(); g.removeAllRanges(); g.addRange(r); } catch (e) {}
   }
+  // the words as they are written, not as CSS shows them: innerText gives "ADDRESS" for a label styled in capitals,
+  // and saving that would change what the site says. Line breaks typed with Shift Enter are kept.
+  function words(el) { var out = ''; (function go(n) { for (var c = n.firstChild; c; c = c.nextSibling) { if (c.nodeType === 3) out += c.nodeValue; else if (c.nodeName === 'BR') out += '\n'; else if (c.nodeType === 1) { if (/^(DIV|P)$/.test(c.nodeName) && out && !/\n$/.test(out)) out += '\n'; go(c); } } })(el); return out.replace(/\u00a0/g, ' ').replace(/\n$/, ''); }
   var editing = function () { var a = document.activeElement; return a && a.closest && a.closest('[data-e]') && a.isContentEditable ? a.closest('[data-e]') : null; };
+  // which screen size the editor is showing: the one picked in the top bar, or "phone" when the preview itself is that narrow
+  var DEV = 'desktop'; function setDev() { document.documentElement.dataset.dev = innerWidth <= 640 ? 'phone' : DEV; }
+  setDev(); addEventListener('resize', setDev);
   addEventListener('resize', placeTb);
   if (window.ResizeObserver) new ResizeObserver(placeTb).observe(document.documentElement);
   document.addEventListener('load', placeTb, true);   // a picture arriving moves what is under it
@@ -122,7 +129,7 @@
 
   // ---------- clicks ----------
   document.addEventListener('click', function (e) {
-    var t = e.target, a = t.closest('a'); if (a) e.preventDefault();
+    var t = e.target, a = t.closest('a'); if (a || t.closest('form button, form input[type=submit]')) e.preventDefault();
     if (t.closest('.wdz-bar,.wdz-tb')) return;
     var pn = t.closest('.wdz-pin'); if (pn) { e.preventDefault(); return post({ t: 'pinopen', id: pn.dataset.id }); }
     if (CM) { e.preventDefault(); e.stopPropagation(); var sb = t.closest('[data-block]'); if (!sb) return; var r = sb.getBoundingClientRect(); return post({ t: 'pin', block: sb.dataset.block, x: Math.round((e.clientX - r.left) / r.width * 100), y: Math.round(e.clientY - r.top), cx: e.clientX, cy: e.clientY }); }
@@ -151,7 +158,7 @@
   // ---------- words ----------
   document.addEventListener('input', function (e) {
     var el = e.target.closest('[data-e]'); if (!el) return;
-    var v = el.innerText, same = document.querySelectorAll('[data-e="' + esc(el.dataset.e) + '"]');
+    var v = words(el), same = document.querySelectorAll('[data-e="' + esc(el.dataset.e) + '"]');
     for (var i = 0; i < same.length; i++) if (same[i] !== el) same[i].textContent = v;   // its copy in the menu follows
     post({ t: 'text', key: el.dataset.e, value: v }); placeTb();
   });
@@ -159,7 +166,7 @@
   document.addEventListener('focusout', function (e) {
     var el = e.target.closest && e.target.closest('[data-e]'); if (!el || swapping) return;
     if (el.hasAttribute('data-dbl')) el.removeAttribute('contenteditable');
-    post({ t: 'commit', key: el.dataset.e, value: el.innerText });
+    post({ t: 'commit', key: el.dataset.e, value: words(el) });
   });
   document.addEventListener('keydown', function (e) {
     var el = editing(), mod = e.ctrlKey || e.metaKey;
@@ -196,6 +203,7 @@
   function wide() { var sw = document.documentElement.scrollWidth, iw = innerWidth, w = ''; if (sw > iw + 1) { var bs = document.querySelectorAll('[data-block]'); for (var i = 0; i < bs.length && !w; i++) { var els = bs[i].querySelectorAll('*'); for (var j = 0; j < els.length; j++) { if (els[j].closest('.wdz-bar,.wdz-tb')) continue; if (els[j].getBoundingClientRect().right > iw + 1) { w = bs[i].dataset.block; break; } } } } return { sw: sw, iw: iw, wide: w }; }
   addEventListener('message', function (e) {
     var d = e.data || {};
+    if (d.dev) { DEV = d.dev; setDev(); }
     if (d.labels) { for (var k in d.labels) L[k] = d.labels[k]; barHtml(); tb.dataset.for = ''; placeTb(); }
     if (d.html != null) {   // the design changed: swap the page in place (no reload, no flash, the scroll stays)
       var wasEd = !!editing();

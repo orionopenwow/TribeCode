@@ -85,6 +85,7 @@ def main():
         if OUT:
             per = {n: dict({k: v for k, v in r.items() if k != "miss"}, miss=len(r["miss"])) for n, r in rows}
             Path(OUT).write_text(json.dumps({"total": tot, "kinds": [[*k, n] for k, n in kinds.items()], "miss": miss[:400], "per": per}, indent=1))
+        if "--walk" in sys.argv: walk(pw); return
         if "--audit-only" in sys.argv: return
         assert not miss, f"{len(miss)} visible things cannot be edited, e.g. {miss[:5]}"
         print("  ok  every visible word, picture and icon in every template can be selected and edited")
@@ -147,6 +148,75 @@ def esc_to(pg, f, kind):
     raise AssertionError(f"Esc never reached {kind}: {sel(pg)}")
 
 
+WALK_JS = r"""
+() => {
+  // inside the preview: is every list entry a selectable box, does anything stick out sideways, is anything keyed twice by mistake
+  const out = { entries: 0, entryBoxes: 0, missing: [], wide: document.documentElement.scrollWidth - innerWidth, keyed: 0, hidden: [] };
+  const lists = p => { const seg = String(p || '').replace(/\.$/, '').split('.'), o = []; for (let n = 1; n < seg.length; n++) if (/^\d+$/.test(seg[n])) o.push(seg.slice(0, n + 1).join('.')); return o; };
+  const want = new Set();
+  document.querySelectorAll('[data-e],[data-btn],[data-img],[data-icon]').forEach(el => { out.keyed++; const k = el.dataset.e || el.dataset.btn || el.dataset.img || el.dataset.icon; const [b, p] = [k.slice(0, k.indexOf('|')), k.slice(k.indexOf('|') + 1)]; if (b === '@') return; lists(p).forEach(it => want.add(b + '|' + it)); const r = el.getBoundingClientRect(); if ((r.width < 8 || r.height < 8) && el.dataset.e && el.textContent.trim()) out.hidden.push(k); });
+  want.forEach(k => { out.entries++; if (document.querySelector('[data-item="' + CSS.escape(k) + '"]')) out.entryBoxes++; else out.missing.push(k); });
+  return out;
+}
+"""
+
+
+def walk(pw):
+    """Every template in the real editor: every entry of every list is a box you can select; three random words are
+    typed over and land in the right place; nothing sticks out sideways on a phone. Prints what it finds (--walk)."""
+    import random
+    random.seed(7)
+    tmp = tempfile.mkdtemp(prefix="tribe-walk-", dir="/tmp")
+    env = {**os.environ, "TRIBE_NO_GH": "1", "TRIBE_TEST": "1", "TRIBE_NO_DOWNLOAD": "1"}
+    srv = subprocess.Popen(["node", str(ROOT / "server" / "index.js"), "--port", str(PORT), "--dir", tmp, "--ollama", "http://localhost:9", "--name", "Walk"], stdout=open(os.path.join(tmp, "server.log"), "w+"), stderr=subprocess.STDOUT, env=env)
+    res = {"templates": 0, "entries": 0, "entryBoxes": 0, "typed": 0, "typedOk": 0, "wide390": [], "missing": [], "typeFail": [], "tiny": []}
+    try:
+        for _ in range(80):
+            try:
+                if api("/health")[0] == 200: break
+            except Exception: pass
+            time.sleep(0.2)
+        tok = api("/bootstrap", "POST", {"name": "Mara"})[1]["token"]; pid = api("/projects", token=tok)[1]["projects"][0]["id"]
+        b = pw.chromium.launch(executable_path=CHROME, args=["--no-proxy-server"])
+        ctx = b.new_context(viewport={"width": 1440, "height": 900}); ctx.add_init_script(settings_js("Mara", tok, pid))
+        pg = ctx.new_page(); watch(pg, "walk"); pg.goto(BASE + "/?skipIntro=1")
+        pg.wait_for_function("window.TribeSiteDesigner && window.TribeSiteParts && TribeClient.connected()", timeout=20000)
+        tpls = sorted(p.stem for p in (UI / "sitetpl").glob("*.json") if p.name != "catalog.json")
+        for t in tpls:
+            f = open_tpl(pg, pid, t); res["templates"] += 1
+            w = f.evaluate(WALK_JS)
+            res["entries"] += w["entries"]; res["entryBoxes"] += w["entryBoxes"]
+            for k in w["missing"]: res["missing"].append(f"{t}: {k}")
+            for k in w["hidden"]: res["tiny"].append(f"{t}: {k}")
+            keys = f.evaluate("[...document.querySelectorAll('[data-e]:not([data-dbl])')].filter(e => e.getBoundingClientRect().height > 4 && !e.dataset.e.startsWith('@')).map(e => e.dataset.e)")
+            for k in random.sample(keys, min(3, len(keys))):
+                res["typed"] += 1
+                try:
+                    for _ in range(4):
+                        if not sel(pg): break
+                        f.locator("body").press("Escape"); pg.wait_for_timeout(60)
+                    el = f.locator(f"[data-e='{k}']:not([data-dbl])").first; el.scroll_into_view_if_needed(timeout=2000); el.click(timeout=2000); el.press("Control+a"); el.type("Zq"); el.press("Enter"); pg.wait_for_timeout(150)
+                    bid, path = k.split("|", 1)
+                    got = pg.evaluate("([bid, path]) => { const c = TribeSiteDesigner.cfg(); for (const p of c.pages) { const b = p.blocks.find(x => x.id === bid); if (b) return TribeSiteCfg.getAt(b.props, path); } return null; }", [bid, path])
+                    s = sel(pg) or {}
+                    if got == "Zq" and s.get("block") == bid: res["typedOk"] += 1
+                    else: res["typeFail"].append(f"{t}: {k} -> {got!r} sel={s}")
+                except Exception as e:
+                    res["typeFail"].append(f"{t}: {k} {str(e)[:80]}")
+            pg.click("[data-dev=phone]"); pg.wait_for_timeout(350)
+            wide = f.evaluate("document.documentElement.scrollWidth - innerWidth")
+            if wide > 1: res["wide390"].append(f"{t}: {wide}px")
+            pg.click("[data-dev=desktop]")
+        b.close()
+    finally:
+        srv.terminate()
+        try: srv.wait(timeout=5)
+        except Exception: srv.kill()
+    print(json.dumps({k: (v if not isinstance(v, list) else {"n": len(v), "first": v[:12]}) for k, v in res.items()}, indent=1))
+    if errors: print("console errors:", errors[:8])
+    return res
+
+
 def live(pw):
     """The real editor with a tribe: the things that used to be dead ends, and that nothing glitches while you work."""
     tmp = tempfile.mkdtemp(prefix="tribe-se2-", dir="/tmp")
@@ -197,6 +267,7 @@ def live(pw):
         pg.wait_for_timeout(200); f.locator("small[data-e]").first.click()
         esc_to(pg, f, "item")
         assert sel(pg)["path"] == "items.0" and f.locator("[data-item].wdz-sel").count() == 1, sel(pg)
+        assert f.locator("[data-item].wdz-sel").evaluate("e => e.matches('a.lk')"), "an entry with no box of its own is its link, not the whole section"
         first = cfg(pg)["pages"][0]["blocks"][0]["props"]["items"][0]["label"]
         f.locator("body").press("Alt+ArrowDown")
         pg.wait_for_function(f"TribeSiteDesigner.cfg().pages[0].blocks[0].props.items[1].label === {json.dumps(first)}", timeout=4000)
@@ -272,6 +343,14 @@ def live(pw):
         pg.wait_for_function("(TribeSiteDesigner.cfg().pages[0].blocks.find(b => b.type === 'contact') || {props:{}}).props.lName === 'Your name'", timeout=4000)
         sb = f.locator("form.cf button [data-e]"); sb.click(); sb.press("Control+a"); sb.type("Send it"); sb.press("Enter")
         pg.wait_for_function("TribeSiteDesigner.cfg().pages[0].blocks.find(b => b.type === 'contact').props.button === 'Send it'", timeout=4000)
+        # Shift Enter is a line break, on the page and on the published site (it used to vanish on the next redraw)
+        lead = f.locator(".b-hero p.lead[data-e]").first; lead.scroll_into_view_if_needed(); lead.click(); lead.press("Control+a"); lead.type("Bread from 7"); lead.press("Shift+Enter"); lead.type("Soup at noon"); lead.press("Enter")
+        pg.wait_for_function("TribeSiteDesigner.cfg().pages[0].blocks.find(b => b.type === 'hero').props.text === 'Bread from 7\\nSoup at noon'", timeout=4000)
+        assert "Bread from 7<br>Soup at noon" in pg.evaluate("TribeSiteCfg.exportFiles(TribeSiteDesigner.cfg(), 'html')['index.html']")
+        # a label the site shows in capitals is saved as it was typed, not in capitals
+        cap = f.locator(".in h3[data-e]").first; cap.scroll_into_view_if_needed(); cap.click(); cap.press("Control+a"); cap.type("Where we are"); cap.press("Enter")
+        pg.wait_for_function("TribeSiteDesigner.cfg().pages[0].blocks.find(b => b.type === 'info').props.items[0].label === 'Where we are'", timeout=4000)
+        assert f.evaluate("getComputedStyle(document.querySelector('.in h3')).textTransform") == "uppercase"
         f.locator("form.cf [data-sys]").click(); pg.wait_for_function("(TribeSiteDesigner.state().sel || {}).kind === 'block'", timeout=3000)
         assert "only for you" in pg.locator("[data-flctx=designer] .fl-thread > *").last.inner_text()
         html = pg.evaluate("TribeSiteCfg.exportFiles(TribeSiteDesigner.cfg(), 'html')['index.html']")
