@@ -291,7 +291,7 @@ def main():
             groups = pg.locator(".fpg-grp h3").all_inner_texts()
             for g in ["Website designer", "Design canvas", "Docs", "Sheets", "Slides", "Your tribe"]:
                 assert any(g.lower() in x.lower() for x in groups), (g, groups)
-            assert any("Invite your Claude" in x for x in pg.locator(".fpg-cap b").all_inner_texts()) and any("free-AI bridge" in x for x in pg.locator(".fpg-cap b").all_inner_texts())
+            assert any("Invite your agent" in x for x in pg.locator(".fpg-cap b").all_inner_texts()) and any("free-AI bridge" in x for x in pg.locator(".fpg-cap b").all_inner_texts())
             pg.fill("#fp-q", "palette"); pg.wait_for_timeout(150)
             n_pal = pg.locator(".fpg-cap").count(); assert 0 < n_pal < n_all, n_pal
             pg.locator(".fpg-cap", has_text="Palettes from a mood").locator("[data-try]").click()

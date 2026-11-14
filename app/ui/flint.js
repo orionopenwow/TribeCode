@@ -58,7 +58,8 @@
     newnote: () => { const b = $('#room-note-new'); if (b) b.click(); else if (Hub()) Hub().open('docs'); },
     nav: v => { if (v === 'hub') return Hub() ? Hub().open('home') : App().show('hub'); if (v === 'guide') return ACTS.guide(); if (v === 'settings') return window.TribeSettings && window.TribeSettings.open(); if (v === 'whiteboard') return window.TribeWhiteboard && window.TribeWhiteboard.open();   /* feat/whiteboard */ App().show(v); },
     invite: () => App() && App().openInvite(),
-    inviteclaude: () => window.TribeInviteClaude && window.TribeInviteClaude.open(),   // Invite your Claude
+    inviteclaude: () => window.TribeInviteClaude && window.TribeInviteClaude.open(),   // its first name: lands on Claude
+    inviteagent: kind => window.TribeInviteAgent && window.TribeInviteAgent.open(kind ? { kind } : undefined),   // Invite your agent (inviteagent.js), on that kind
     host: () => App() && (App().hostHere ? App().hostHere() : App().openInvite()),
     stophost: () => App() && App().setHosting && App().setHosting(false),
     secretary: () => window.TribeSecretary && window.TribeSecretary.open(),
@@ -156,7 +157,8 @@
     asset: /^(?:please\s+|can you\s+|could you\s+)?(?:add|get|find|grab|give me|i need|we need|use|put in|drop in|pick)\s+(?:me\s+|us\s+)?(?:an?\s+|some\s+|the\s+)?(.*?)\b(sound effects?|sounds?|sfx|3d models?|models?|glb|rigged|animated character|sprites?|pixel art|icons?|fonts?|textures?|hdris?|motion|animations?)\b(.*)$/,
     find: /^(?:find|search(?: for)?|look for|where(?:'s| is))\s+(.+)$/,
     help: /^(how|what|why|where|when|can i|could i|help|guide|explain|is there|do i)\b|\?$/,
-    inviteClaude: /\b(invite|add|bring) (in )?(my|our) (own )?claude\b|\binvite claude\b/,   // Invite your Claude (inviteclaude.js)
+    // Invite your agent (inviteagent.js): "invite my agent", "invite my cursor", "bring in my codex", "invite my claude"
+    inviteClaude: /\b(invite|add|bring|connect|hook up) (in )?(my|our) (own )?(ai )?(claude( code| desktop)?|cursor|codex|chatgpt|gemini( cli)?|copilot|vs ?code|windsurf|cline|zed|agent)\b|\binvite (an? )?(ai )?(claude|cursor|codex|chatgpt|gemini|copilot|windsurf|cline|zed|agent)\b/,
     invite: /\binvite\b|\badd (a )?friend\b|\bshare (the|a) link\b/,
     hello: /^(hi|hey|hello|yo|hiya|good (morning|afternoon|evening))\b|^(thanks|thank you|thx|cheers)\b/,
     website: /\b(make|build|generate|create|design|redo|refresh|write|shuffle)\b.*\b(web ?site|home ?page|landing page|site)\b|^(our |the )?web ?site$/,   // feat/customize
@@ -234,11 +236,11 @@
     const text = String(raw || '').trim().replace(/\s+/g, ' '), t = text.toLowerCase();
     let m;
     if (!specialsDone && await special(text)) return null;
-    if (RX.inviteClaude.test(t)) return inviteClaude();
+    if (RX.inviteClaude.test(t)) return inviteClaude(t);
     if (RX.status.test(t)) return status();
     if (RX.summarize.test(t)) return summarize();
     if (RX.helper.test(t)) return helper(t);
-    if (RX.connect.test(t)) { ACTS.connect(); return say('Let\'s get your AI into the room: Claude Code, Codex, Gemini CLI, Cursor or any MCP tool. I opened the connect steps: one command or one config on your computer and it joins.', [act('Show the steps again', 'connect'), act('How it works', 'guide', 'connect-claude-code')]); }
+    if (RX.connect.test(t)) { if (agentKindIn(t)) return inviteClaude(t); ACTS.connect(); return say('Let\'s get your AI into the room: Claude Code, Codex, Gemini CLI, Cursor or any MCP tool. I opened the connect steps: one command or one config on your computer and it joins.', [act('Show the steps again', 'connect'), act('How it works', 'guide', 'connect-claude-code')]); }
     if (RX.hosting.test(t)) return hosting(t);
     if (RX.website.test(t)) return website(t);
     if (RX.focus.test(t)) return focusReply();
@@ -340,7 +342,15 @@
     } catch (e) { msg.text = `I could not write that ${name}: ${e.message}`; if (FF()) FF().home(); }
     delete msg.streaming; save(); draw(); return msg;
   }
-  function inviteClaude() { if (!connected()) return say('Your Claude joins a tribe. Host one on this computer or join a friend first.', [act('Host or join', 'invite')]); ACTS.inviteclaude(); return say('Here\'s your Claude\'s invite. Copy the command into your terminal and it joins next to you, with your access and never more.', [act('Open it again', 'inviteclaude')]); }
+  // Which agent a sentence names ("add codex" -> codex); null when it names none ("invite my agent").
+  const AGENT_WORDS = [['claude', /\bclaude\b/, 'Claude'], ['cursor', /\bcursor\b/, 'Cursor'], ['codex', /\bcodex\b/, 'Codex'], ['chatgpt', /\bchat ?gpt\b/, 'ChatGPT'], ['gemini', /\bgemini\b/, 'Gemini'], ['vscode', /\b(vs ?code|copilot)\b/, 'VS Code'], ['windsurf', /\bwindsurf\b/, 'Windsurf'], ['cline', /\bcline\b/, 'Cline'], ['zed', /\bzed\b/, 'Zed']];
+  const agentKindIn = t => { const w = AGENT_WORDS.find(x => x[1].test(String(t || '').toLowerCase())); return w ? w[0] : null; };
+  function inviteClaude(t) {
+    const kind = agentKindIn(t), name = kind ? AGENT_WORDS.find(x => x[0] === kind)[2] : '';
+    if (!connected()) return say(`Your ${name || 'agent'} joins a tribe. Host one on this computer or join a friend first.`, [act('Host or join', 'invite')]);
+    ACTS.inviteagent(kind || undefined);
+    return say(name ? `Here's your ${name}'s invite. Copy what it shows into ${name} and it joins next to you, with your access and never more.` : 'Here\'s the invite for your AI agent. Pick which one (Claude, Cursor, Codex, ChatGPT, Gemini…), copy what it shows, and it joins next to you, with your access and never more.', [act('Open it again', 'inviteagent', kind || undefined)]);
+  }
   function invite() { ACTS.invite(); if (FF()) later(300, () => { const ib = seen('#invite-body'); if (ib) FF().done(ib, 'Invite ready'); }); return say(connected() ? 'Here\'s your invite. Send the link to a friend: they tap it, type a name, and they\'re in.' : 'Invites come from a tribe. Host one on this computer first, then invite friends.', [act('Open invite again', 'invite'), act('How invites work', 'guide', 'projects-and-invites')]); }
   function hosting(t) {
     const desk = !!(window.TribeHost && window.TribeHost.isDesktop);

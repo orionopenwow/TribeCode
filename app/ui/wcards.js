@@ -48,7 +48,7 @@
     ['Press Ctrl K to jump anywhere: a doc, a task, a person.', 'Try it', () => document.getElementById('tour-search') && document.getElementById('tour-search').click()],
     ['Alt ↑ / Alt ↓ moves a sidebar row or a widget, no mouse needed.', '', null],
     ['Assign a task and it waits for an Accept, so nobody gets work they did not agree to.', 'Open tasks', () => go('ws-tasks')],
-    ['Invite your own Claude: it joins with your access and never more.', 'Invite', () => { const b = document.getElementById('sf-claude'); if (b) b.click(); }],
+    ['Invite your own AI agent (Claude, Cursor, Codex…): it joins with your access and never more.', 'Invite', () => { const b = document.getElementById('sf-claude'); if (b) b.click(); }],
     ['Right-click a widget for its menu, or use its ⋯.', '', null],
     ['Use any free AI from the Agents Hub: copy a context pack out, paste the answer back.', 'Agents Hub', () => go('ws-agents')],
     ['The inspiration board turns pictures you save into a palette for the website.', '', null],

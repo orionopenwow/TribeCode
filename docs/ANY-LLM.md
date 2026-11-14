@@ -4,8 +4,10 @@ Claude is no longer required. Three parts:
 
 ## 1. Bring any coding agent
 
-Agents Hub › Your agents and the **Connect your AI** sheet offer Claude Code, Codex CLI, Gemini CLI, Qwen Code, Cursor,
-Claude Desktop and any MCP client. Each tool mints its own revocable key (POST `/api/agents { kind }`); the agent is named
+A person's own agent joins through **Invite your agent** (§4): that is the way in for most people. Agents Hub ›
+Your agents, the TribeCode MCP page and the **Connect your AI** sheet also give a tool a plain key of its own (Codex CLI,
+Gemini CLI, Qwen Code, Cursor, Goose, Continue, any MCP client; the Claudes open the invite sheet instead).
+Each tool mints its own revocable key (POST `/api/agents { kind }`); the agent is named
 after its owner ("Maya's Codex"). The response carries `setup`: 2–3 steps and copy-ready blocks per place
 (Anywhere / Same Wi-Fi / This computer), built by `server/agentshub.js setupFor`. The sheet polls `/api/agents/mine`
 and flips "Waiting for it to connect…" to "Connected" live.
@@ -29,7 +31,8 @@ tool you used last), two tabs: **Discover clients** (searchable grid, 2 columns,
 from `GET /api/agents/mine`, live/idle, Remove = `DELETE /api/agents/mine?id=`). Every Connect reuses the sheet
 (`TribeApp.connectClaude({ tool })`), so each client gets its own key and its exact setup. Up to 8 keys per person.
 
-Formats added on 2026-11-07, each from the tool's own docs:
+Formats added on 2026-11-07, each from the tool's own docs (the ones the invite sheet also offers were re-checked on
+2026-11-13: see the table in §4, which is the current one where the two differ):
 
 | Client | Where | Shape |
 | --- | --- | --- |
@@ -39,8 +42,8 @@ Formats added on 2026-11-07, each from the tool's own docs:
 | [Goose](https://github.com/block/goose/blob/main/crates/goose/src/agents/extension.rs) | `~/.config/goose/config.yaml` | `extensions.<name>` `{ type: streamable_http, uri, headers, enabled, timeout }` (the `headers` field is in the source, not the docs page) |
 | [Continue](https://docs.continue.dev/customize/deep-dives/mcp) | `.continue/mcpServers/tribecode.yaml` | `mcpServers[]` `{ type: streamable-http, url, requestOptions.headers }` ([reference](https://docs.continue.dev/reference)) |
 | Windsurf | `~/.codeium/windsurf/mcp_config.json` | `mcpServers.<name>` `{ serverUrl, headers }` |
-| [Claude.ai](https://claude.com/docs/connectors/custom) | Customize › Connectors › Add custom connector | the public https URL with `?token=`, **No sign-in** |
-| [ChatGPT](https://developers.openai.com/api/docs/guides/developer-mode) | Settings › Apps › Advanced settings › Developer mode › Create app | the public https URL with `?token=`, **No Authentication** |
+| [Claude.ai](https://support.claude.com/en/articles/11175166-getting-started-with-custom-connectors-using-remote-mcp) | Customize › Connectors › + › Add custom connector | the public https URL with `?token=`, **No sign in** (the invite sheet's version signs in instead, §4) |
+| [ChatGPT](https://developers.openai.com/api/docs/guides/developer-mode) | chatgpt.com/plugins › + › Add custom MCP server | the public https URL with `?token=`, **No authentication** (the invite sheet's version signs in instead, §4) |
 
 Honest notes:
 - **Windsurf**: on 2026-11-07 `docs.windsurf.com/windsurf/cascade/mcp` redirects to Devin's docs, so the `serverUrl` +
@@ -48,8 +51,8 @@ Honest notes:
   its MCP docs.
 - **Claude.ai and ChatGPT** connect from their vendors' clouds, so they only get the tribe's public https link (Tailscale
   Funnel or a Cloudflare quick tunnel, `server/share.js`); without one the page shows a note (and the host a "Turn on the
-  public link" button) and Connect mints nothing. Their forms take OAuth or no sign-in; TribeCode doesn't do OAuth, so
-  the key rides in the URL (`/mcp` has always accepted `?token=`). Treat that URL like a password, and Remove it on the
+  public link" button) and Connect mints nothing. Their forms take OAuth or no sign-in. A key from this page rides in
+  the URL (`/mcp` has always accepted `?token=`); the invite sheet uses sign-in instead, so no key is in the address (§4). Treat that URL like a password, and Remove it on the
   Connected tab to revoke it. Claude.ai's Request headers (beta, some organizations) can carry `Authorization: Bearer`
   instead. A Cloudflare quick tunnel changes address each start, so re-add the connector then; Funnel keeps it.
 - Nothing is marked "Coming soon" today: every listed client works with a Bearer header or the token in the URL.
@@ -100,77 +103,129 @@ the host's model or a key. The model runs entirely in the browser.
 with `ask: true`. Connected agents get a note; any agent sees it in `my_lane` and takes it with the MCP tool
 `take_handoff` (then `done: true`). Flint (built in, or the host's brain) answers the rest.
 
-## 4. Invite your Claude
+## 4. Invite your agent
 
-The one way a person's Claude joins. It is the **Your Claude** choice of the one invite sheet (`app/ui/inviteone.js`:
-"Who?" → A friend · A guest for a day · Your Claude), which every invite entry opens: the sidebar rows, People, Home,
-a project's menu, the create-a-tribe flow, the empty chat, Flint ("invite my claude") and Connect your AI's Claude
-choices. Code: `server/inviteclaude.js`, `server/claudeauth.js`, `app/ui/inviteclaude.js`
-(`TribeInviteClaude.open()`, `.mount(el)`, `.access(el)` for Settings, `.card()` for the Agents Hub).
+The one way a person's own AI agent joins: Claude, Cursor, Codex CLI, ChatGPT, Gemini CLI, VS Code with Copilot,
+Windsurf, Cline, Zed, or anything else that speaks MCP. It is the **Your AI agent** choice of the one invite sheet
+(`app/ui/inviteone.js`: "Who?" → A friend · A guest for a day · Your AI agent), which every invite entry opens: the
+sidebar row, People, Home, a project's menu, the create-a-tribe flow, the empty chat, the Agents Hub's card, Settings and
+Flint ("invite my agent", "invite my cursor", "add codex", "connect gemini", "invite my claude"). It began as Invite
+your Claude; Claude is now one kind among ten. Code: `server/inviteagent.js`, `server/agentauth.js`,
+`app/ui/inviteagent.js` (`TribeInviteAgent.open({ kind })`, `.mount(el)`, `.access(el)` for Settings, `.card()` for the
+Agents Hub). The old names keep working: `TribeInviteClaude.open()`, `TribeInvite.open({ who: 'claude' })`,
+`/api/invite-claude`, `/api/claude-auth`.
 
-![The one invite sheet](screenshots/invite-one.png)
+![Invite your agent](screenshots/invite-agent.png)
 
-1. It guesses which Claude (a phone gets Claude on the web, else Claude Code; your last pick is remembered):
-   - **Claude Code**: one command, `claude mcp add --transport http tribecode <url>/mcp --header "Authorization: Bearer …"`.
-     The stdio bridge form is under a fold.
-   - **Claude Desktop**: the `claude_desktop_config.json` snippet (the stdio bridge, `scripts/mcp-stdio.js`), Copy and
-     **Download config**.
-   - **Claude on the web**: with a public https address, the connector address for claude.ai › Settings › Connectors ›
-     Add custom connector. The address has **no key in it**: claude.ai signs in (below). Without a public address it
-     explains why and offers **Work with friends anywhere** (the tunnel).
-2. **Nothing is made when the sheet opens.** The setup shows with the key masked; the Claude member is made when you
-   press **Copy** or **Download** (or approve a sign-in). A Claude that never connects is taken out again after 24 hours.
-3. **Waiting for your Claude…** turns into **✓ Campw's Claude joined** when it first connects (MCP `initialize`). It
-   posts a hello in chat and shows in People with the AI badge and "invited by Campw".
+1. **The picker.** Twelve choices, each with a small stroke glyph for its kind (`icons.js` `agent-<kind>`, our own
+   shapes, not logos): Claude Code, Claude Desktop, Claude on the web, Cursor, Codex CLI, ChatGPT, Gemini CLI, VS Code,
+   Windsurf, Cline, Zed, Something else. It starts on your last pick (a phone gets Claude on the web).
+2. **Each one's setup**: short numbered steps, the exact command or config with Copy (and **Download** where it is a
+   file: `claude_desktop_config.json`, Cursor's and VS Code's `mcp.json`, Windsurf's `mcp_config.json`), and one line
+   on how it behaves: *Answers @mentions on its own while a session is running* (Claude Code, Codex CLI, Gemini CLI,
+   Cline) or *Checks TribeCode when you ask it* (the editors and the chat apps).
+3. **Nothing is made when the sheet opens.** The setup shows with the key masked; the agent member is made when you
+   press **Copy** or **Download** (or approve a sign-in). One that never connects is taken out again after 24 hours.
+4. **Waiting for your Cursor…** turns into **✓ Campw's Cursor joined** when it first connects (MCP `initialize`). It
+   posts a hello in chat and shows in People with the AI badge, its kind's glyph and "invited by Campw".
 
-**One Claude per person.** A Claude you connected earlier with Connect your AI counts as yours: the sheet shows it as
-*already connected* with its controls (narrow, Pause, Remove, New key) and never makes a second member; a new key goes
-to that same member. If you have two from before (one from each feature), both keep working and show together with a
-hint: **Keep only this one** on the one you use removes the other (it asks first).
+**One source for setup text.** Every tool's steps and blocks come from `server/agentshub.js` `setupFor` (the invite
+sheet, Connect your AI and the TribeCode MCP page all read it; `PICKS` is the picker, `AGENT_KINDS` the kinds). The
+list of tools the pages show is `app/ui/connectai.js` (`TribeConnectAI.directory()`); `mcpdir.js` no longer has its own.
 
-**Sign-in for the claude.ai connector** (`server/claudeauth.js`). The tribe host is its own small authorization server,
-following the MCP authorization spec (2025-11-25): OAuth 2.1 authorization code with PKCE (S256 only), public clients,
-dynamic client registration, and the two discovery documents.
+**One of each kind per person.** Kinds: `claude`, `cursor`, `codex`, `chatgpt`, `gemini`, `vscode`, `windsurf`,
+`cline`, `zed`, `other`. Each is its own member with its own key, access checkboxes, Pause and Remove, named
+"<Name>'s Claude", "<Name>'s Cursor", "<Name>'s Codex"… ("<Name>'s agent" for Something else, which can be renamed).
+Asking for a kind you have gives that same member a new key. A tool you connected earlier with Connect your AI counts
+as yours of that kind and is shown as *already connected*. Two of one kind (from before) both keep working, with
+**Keep only this one**. An invited Claude from before kinds existed has no kind on file and is a `claude`: same member,
+key, access and name (`agentKind` is written back at start).
+
+**Setups, checked against each tool's own documentation on 2026-11-13:**
+
+| Agent | How it connects | Checked against |
+| --- | --- | --- |
+| Claude Code | `claude mcp add --transport http tribecode <url>/mcp --header "Authorization: Bearer …"`; the stdio bridge under a fold | [code.claude.com/docs/en/mcp](https://code.claude.com/docs/en/mcp) |
+| Claude Desktop | `claude_desktop_config.json` (Settings › Developer › Edit Config): stdio only, so the bridge `scripts/mcp-stdio.js` | [modelcontextprotocol.io](https://modelcontextprotocol.io/docs/develop/connect-local-servers) |
+| Claude on the web | Customize › Connectors › + › Add custom connector: the address, no key; it signs in (below) | [support.claude.com](https://support.claude.com/en/articles/11175166-getting-started-with-custom-connectors-using-remote-mcp) |
+| Cursor | `.cursor/mcp.json` or `~/.cursor/mcp.json`: `mcpServers.<name>` `{ url, headers }`; without headers it signs in | [cursor.com/docs/mcp](https://cursor.com/docs/mcp) |
+| Codex CLI | `~/.codex/config.toml` `[mcp_servers.<name>]` `url` + `http_headers`; `codex mcp login` to sign in instead | [developers.openai.com/codex/mcp](https://developers.openai.com/codex/mcp) |
+| ChatGPT | chatgpt.com/plugins › + › Add custom MCP server: the address, **OAuth**; it signs in (below) | [developer mode guide](https://developers.openai.com/api/docs/guides/developer-mode) |
+| Gemini CLI | `gemini mcp add -s user -t http -H "Authorization: Bearer …" tribecode <url>`; `settings.json` `httpUrl` + `headers` | [gemini-cli docs](https://github.com/google-gemini/gemini-cli/blob/main/docs/tools/mcp-server.md) |
+| VS Code (Copilot) | `.vscode/mcp.json`: `servers.<name>` `{ type: "http", url, headers }` | [MCP configuration reference](https://code.visualstudio.com/docs/agents/reference/mcp-configuration) |
+| Windsurf | `mcp_config.json` (Cascade › Open MCP config file): `mcpServers.<name>` `{ serverUrl, headers }`, then refresh | [docs.devin.ai](https://docs.devin.ai/windsurf/plugins/cascade/mcp) |
+| Cline | `cline_mcp_settings.json`: `mcpServers.<name>` `{ type: "streamableHttp", url, headers }` | [docs.cline.bot](https://docs.cline.bot/mcp/configuring-mcp-servers) |
+| Zed | settings file: `context_servers.<name>` `{ url, headers }`; without headers it signs in | [zed.dev/docs/ai/mcp](https://zed.dev/docs/ai/mcp) |
+| Something else | the `/mcp` address + `Authorization: Bearer`, a typical JSON, or the stdio bridge config | the MCP spec |
+
+What could not be confirmed, said plainly:
+
+- **Nothing here was run against the real products.** Every row was read from documentation; the test suite plays
+  each agent with a plain MCP client. A menu name may differ in the version you have (each setup links its docs).
+- **ChatGPT**: the developer-mode guide now describes *chatgpt.com/plugins › Add custom MCP server* with OAuth
+  (dynamic registration) or no authentication. OpenAI's help-center article on the same thing could not be opened, so
+  which plans have it, and whether older builds still show *Settings › Apps › Developer mode*, is not confirmed.
+- **Codex CLI**: `config.toml` and `codex mcp login` are documented; the `codex mcp add --url … --bearer-token-env-var`
+  one-liner (a fold) is from the CLI's source as read on 2026-11-07, not from the docs page.
+- **VS Code**: `.vscode/mcp.json` is documented, but the reference now files it under an older setup and points new
+  Copilot sessions to a root `.mcp.json` with `mcpServers`. The fold offers that file; its entry's exact fields are an
+  assumption (the same `type`/`url`/`headers`).
+- **Windsurf**: its docs now live under Devin's and give the file as `~/.config/devin/mcp_config.json`
+  (`%AppData%\devin\` on Windows), with `~/.codeium/windsurf/` for older builds. Both are named in the setup.
+- **Claude on the web**: the article lists three ways for it to identify itself; TribeCode supports *Register
+  automatically* (dynamic registration), not Client ID Metadata Documents. Whether claude.ai falls back by itself
+  when a server offers only registration is not stated there, so the steps say which to choose.
+- **Qwen Code, Goose, Continue** (Connect your AI only): last checked 2026-11-07.
+- An agent that can't use MCP at all goes through the copy-and-paste bridge (Agents Hub › Use any free AI).
+
+**Sign-in for apps that sign in** (`server/agentauth.js`). Standard MCP authorization, nothing product-specific. The
+tribe host is its own small authorization server, following the MCP authorization spec (2025-11-25): OAuth 2.1
+authorization code with PKCE (S256 only), public clients, dynamic client registration, and the two discovery documents.
 
 - `/mcp` without a valid key answers `401` with `WWW-Authenticate: Bearer resource_metadata="…"`.
 - `GET /.well-known/oauth-protected-resource` (also `…/mcp`) and `GET /.well-known/oauth-authorization-server`.
-- `POST /connect/register` (redirect URIs: https, or http on localhost; no fragments), `GET /connect/authorize`,
-  `POST /connect/token` (form-encoded), `POST /connect/revoke`.
-- The consent page is TribeCode's own (`app/ui/claude-consent.html`): the member signed in on that address approves
-  **Let your Claude join as <name>'s Claude**. It shows the app's name and where it returns to. If that browser isn't
-  signed in there (you use the app on localhost, claude.ai opened the public address), the page shows a short code;
-  type it under Invite › Your Claude › Claude on the web and approve in the app.
+- `POST /connect/register` (redirect URIs: any https address, or http on localhost on any port; no fragments, no
+  custom app schemes; there is no list of vendors' addresses), `GET /connect/authorize`, `POST /connect/token`
+  (form-encoded), `POST /connect/revoke`.
+- **Which agent it becomes**: the name the app registered under picks the kind ("Claude" → your Claude, "Cursor" →
+  your Cursor, "ChatGPT" → your ChatGPT…; a name nobody knows becomes "<Name>'s agent"). The name only decides what
+  the agent is called. It never changes what it may do, and it can't reach another of your agents.
+- The consent page is TribeCode's own (`app/ui/agent-consent.html`): the member signed in on that address approves
+  **Let Cursor join as <name>'s Cursor**. It shows the app's name and where it returns to. If that browser isn't
+  signed in there (you use the app on localhost, the app opened the public address), the page shows a short code;
+  type it under Invite › Your AI agent and approve in the app.
 - Access tokens last an hour, refresh tokens 30 days and rotate on every use (using an old one again ends the whole
-  sign-in). Only sha256 hashes are stored (`.tribe/claude-oauth.json`). A token only works in the `Authorization`
-  header, signs in as your invited Claude, and so follows every rule below. The sheet lists each sign-in with
-  **Sign out**; Pause and Remove reach them too. The endpoints are rate-limited.
-- The header key stays for Claude Code and Desktop (Claude Code can also sign in this way: loopback redirects on any
-  port are accepted). An old `…/mcp?token=…` link keeps working for whoever has one; the sheet no longer offers it.
-- Not built: Client ID Metadata Documents (the server would have to fetch a URL a stranger names). claude.ai falls
-  back to dynamic registration, which is what this implements.
+  sign-in). Only sha256 hashes are stored (`.tribe/claude-oauth.json`, which keeps its name). A token only works in
+  the `Authorization` header, signs in as your invited agent of that kind, and so follows every rule below. The sheet
+  lists each sign-in with **Sign out**; Pause and Remove reach them too. The endpoints are rate-limited.
+- The header key stays for everything that can send one. An old `…/mcp?token=…` link keeps working for whoever has one.
+- Not built: Client ID Metadata Documents (the server would have to fetch a URL a stranger names).
 
-**Access: everything you can, never more.**
+**Access: everything you can, never more.** The same for every kind; nothing in the code looks at the kind to decide
+what is allowed.
 
-- Its key is its own member key: one per person, shown once, only its hash stored, revoked in one click.
-- Every request runs as the Claude. `perms.actingRole()` derives its role from yours on every call, capped at builder,
+- Its key is its own member key: shown once, only its hash stored, revoked in one click.
+- Every request runs as the agent. `perms.actingRole()` derives its role from yours on every call, capped at builder,
   so it can't do admin or host things even when you are the host. If your role drops (say to spectator), it can only
   read. Its projects follow yours on every call.
 - **Let it act as me for admin** (off by default, shown to hosts and admins) lifts the cap to admin: it may moderate
   (mute, remove from a project). Roles, hosting, keys, backups, invites and its own permissions stay human-only.
 - It never reads DMs other than its private line with you, never decides approvals (it can ask for them), never
-  invites people, mints keys or approves a sign-in. The Marketplace is read-only for it.
+  invites people or other agents, mints keys or approves a sign-in. The Marketplace is read-only for it.
 - **What it can do**: Chat, Docs and notes, Tasks, Files and code, Website, Ask for approvals. Unticked areas vanish
   from its `tools/list` and their tools and `/api` paths are refused. **Pause** refuses its key and its sign-ins at
-  once (401); **Remove** wipes them and takes it out of People.
+  once (401); **Remove** wipes them and takes it out of People. Each agent has its own; changing one leaves the others.
 - Rate-limited: `TRIBE_CLAUDE_RATE` actions a minute (default 120), MCP calls and API calls alike.
 - Keys and tokens never go in logs or the tribe folder.
 
-**Alongside you.** Presence says where it is ("Campw's Claude · in Launch plan doc"). Its messages carry its name, and
+**Alongside you.** Presence says where it is ("Campw's Cursor · in Launch plan doc"). Its messages carry its name, and
 you can edit or delete them like your own. MCP tools it gets on top of the usual ones: `inbox_next` (new @mentions of
-it in channels it can see, plus your private messages; `@Campw's Claude` from anyone, `@claude` from you), `reply_chat`,
+it in channels it can see, plus your private messages; `@Campw's Cursor` from anyone, `@cursor` from you), `reply_chat`,
 `react_chat`, `comment_task`, `where_is`.
 
-HTTP: `GET|POST|PUT|DELETE /api/invite-claude` (status with `claudes`, `merge` and a masked `preview` · make or re-key ·
-`{id, scopes, paused, adminAsMe}` · remove), `DELETE /api/invite-claude/connections/<id>`, `GET|POST /api/claude-auth`
-(what a typed code is asking · approve or decline).
-Tests: `app/test/e2e_invite_one.py`, `app/test/e2e_invite_claude.py`; security: `security4_test.py` › C and O.
+HTTP: `GET|POST|PUT|DELETE /api/invite-agent` (status with `agents`, `kinds`, `picks` and a masked `preview.setups` ·
+`{ kind | pick | id }` make or re-key · `{ id | kind, scopes, paused, adminAsMe, name }` · remove by `?id=` or
+`?kind=`), `DELETE /api/invite-agent/connections/<id>`, `GET|POST /api/agent-auth` (what a typed code is asking ·
+approve or decline). `/api/invite-claude` and `/api/claude-auth` are the same routes under their first names; without
+a kind they mean your Claude.
+Tests: `app/test/e2e_invite_agent.py`, `app/test/e2e_invite_one.py`; security: `security4_test.py` › C and O.

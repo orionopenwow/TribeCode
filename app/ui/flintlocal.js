@@ -193,6 +193,7 @@
   const BUILDPHRASE = {
     'build.3d': n => `build a 3D game${n}`, 'build.2d': n => `build a platformer game${n}`, 'build.todo': n => `build a to-do app${n}`, 'build.video': n => `build a video editor${n}`, 'build.landing': n => `build a landing page${n}`,
   };
+  let curText = '';   // what was typed, for a step that needs the words themselves (which agent "add codex" names)
   async function step(s, H, prev) {
     const sl = s.slots || {}, id = s.intent, area = s.area;
     if (window.TribeFlintMax && window.TribeFlintMax.has && window.TribeFlintMax.has(id)) return window.TribeFlintMax.run(s, { pushUndo, connected });   // feat/flint-max: palettes, fonts, copy, sheets, docs, slides
@@ -394,7 +395,8 @@
     if (id === 'invite') return legacy('invite a friend', 'opened the invite');
     if (id === 'host.start') return legacy('start hosting');
     if (id === 'host.stop') return legacy('stop hosting');
-    if (id === 'connect.ai') return legacy('connect my ai');
+    if (id === 'invite.agent') return legacy(sl.kind ? `invite my ${sl.kind}` : 'invite my agent', 'opened the invite for your agent');   // the one invite sheet, on that kind (flint.js inviteClaude)
+    if (id === 'connect.ai') { const k = /\b(claude|cursor|codex|chat ?gpt|gemini|copilot|vs ?code|windsurf|cline|zed)\b/.exec(String(s.text || curText || '').toLowerCase()); return legacy(k ? `invite my ${k[1]}` : 'connect my ai'); }
     if (id === 'github.connect') {
       const solo = window.TribeOffline && window.TribeOffline.solo && window.TribeOffline.solo();
       if (solo && window.TribeGhPhone) { window.TribeGhPhone.open(); return { text: 'Here is GitHub on this phone: paste a token once, then bring a repo in, push and pull. The token stays on this phone.' }; }
@@ -524,7 +526,7 @@
     if (PV && PV.source && PV.source() === 'site' && document.querySelector('#pvw') && SE && PF && PF.ask && SE.parse(text)) { PF.ask(text); if (PF.open && !matchMedia('(max-width: 820px)').matches) PF.open(); return H.say('On it: the change shows in the website preview, with Undo next to it.', []); }
     const NL = N(); if (!NL) return (await H.special(text)) ? true : null;
     syncLearned(); await tasks();
-    const ctx = ctxNow(), P = NL.parse(text, ctx), steps = P.steps;
+    const ctx = ctxNow(), P = NL.parse(text, ctx), steps = P.steps; curText = text;
     const sayR = r => { if (!r || r.said) return true; return H.say(r.text, (r.acts || []).map(a => H.act(a[0], a[1], a[2])), r.html ? { html: r.html } : undefined); };
     if (steps.length === 1) {
       const s = steps[0];

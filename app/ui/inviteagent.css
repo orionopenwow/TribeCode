@@ -1,4 +1,4 @@
-/* Invite your Claude (inviteclaude.js): the "Your Claude" pane of the one invite sheet, the status line, the access checkboxes. Flat matte, theme variables only. */
+/* Invite your agent (inviteagent.js): the "Your AI agent" pane of the one invite sheet: the picker, the status line, the access checkboxes. Flat matte, theme variables only. */
 .ic-pane .lead b { color: var(--text); }
 .ic-pane .lead { margin-top: 0; }
 .ic-status { display: flex; align-items: center; gap: 8px; margin: 4px 0 14px; padding: 10px 12px; border: 1px solid var(--edge); border-radius: var(--r-ctl, 8px); background: var(--surface-2); font-size: 13.5px; color: var(--muted); }
@@ -48,3 +48,24 @@
 .ic-codelab, .ic-askline { display: block; margin: 0 0 8px; font-size: 13px; line-height: 1.5; color: var(--text); max-width: 65ch; }
 .ic-code { width: 130px; font-family: var(--mono); letter-spacing: .12em; text-transform: uppercase; }
 .ic-other { margin: 14px 0 0; }
+/* the picker: one chip per agent, a small glyph, a dot when you already have one of that kind */
+.ic-kinds { margin: 0 0 14px; }
+.ic-chip { display: inline-flex; align-items: center; gap: 6px; }
+.ic-chip .ti-svg { flex: none; color: var(--muted); }
+.ic-chip.on .ti-svg { color: var(--live); }
+.ic-has { flex: none; width: 6px; height: 6px; border-radius: 50%; background: var(--live); }
+.ic-behaves { display: flex; align-items: flex-start; gap: 8px; margin: 12px 0 0; color: var(--muted); max-width: 65ch; }
+.ic-behaves a { color: inherit; text-decoration: underline; }
+.ic-bdot { flex: none; width: 6px; height: 6px; margin-top: 6px; border-radius: 50%; border: 1px solid var(--live); }
+.ic-filenote, .ic-nomcp { margin: 0 0 10px; max-width: 65ch; }
+.ic-nomcp { margin-top: 8px; }
+.ic-also { margin: 14px 0 0; }
+.ic-kicon { display: grid; place-items: center; width: 26px; height: 26px; border: 1px solid var(--edge); border-radius: 8px; background: var(--surface-2); color: var(--live); }
+.ic-rename .ic-name { flex: 1; min-width: 140px; max-width: 260px; }
+.ic-more { margin: 12px 0 0; }
+/* the AI badge with its kind's glyph (People) */
+.ppl-ai.ppl-kind { display: inline-flex; align-items: center; gap: 3px; vertical-align: -2px; }
+.ppl-ai.ppl-kind .ti-svg { flex: none; }
+.ah-invite { margin: 0 0 12px; }
+#set-agentaccess .ic-access:first-of-type { margin-top: 8px; }
+@media (max-width: 520px) { .ic-kinds { gap: 6px; } .ic-chip { padding-left: 9px; padding-right: 9px; } }

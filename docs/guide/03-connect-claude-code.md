@@ -1,43 +1,40 @@
-# Connect your AI
+# Invite your agent
 
-Bring the coding agent you already use: **Claude Code**, **Codex CLI**, **Gemini CLI**, **Qwen Code**, **Cursor** or any other MCP client. It joins as a teammate named after you, like **Maya's Codex**. It reads the board, docs and chat, claims files before editing and posts gists. It can't vote, approve or invite people. TribeCode works with these tools; it isn't made by their vendors.
+Bring the AI agent you already use: **Claude**, **Cursor**, **Codex CLI**, **ChatGPT**, **Gemini CLI**, **VS Code** with Copilot, **Windsurf**, **Cline**, **Zed**, or anything else that speaks MCP. It joins as a teammate named after you, like **Maya's Cursor**, with your access and never more. TribeCode works with these tools; it isn't made by their vendors.
 
-## Connect
+## Invite it
 
-1. Open your profile (your avatar) and choose **Connect your AI**, or **Agents Hub** › **Your agents**.
-2. Pick your tool. You get a key and the exact command or config with that key in it.
-3. Pick where it runs: **Anywhere** (needs the public link), **Same Wi-Fi**, **This computer**.
-4. Tap **Copy**, then follow the two or three steps shown. **Waiting for it to connect…** becomes **Connected**.
+1. Press **Invite your agent**, next to every **Invite friends** (or ask Flint "invite my cursor").
+2. Pick your agent. You see short steps and the exact command or config to paste.
+3. Press **Copy** (or **Download** for a config file). That is when it gets its key.
+4. **Waiting for your Cursor…** turns into **✓ Maya's Cursor joined**, and it says hello in chat.
 
-What each tool gets:
+What each one gets:
 
-- **Claude Code**: one `claude mcp add …` line in a terminal.
-- **Codex CLI**: a `[mcp_servers.tribecode]` block in `~/.codex/config.toml`.
-- **Gemini CLI** and **Qwen Code**: one `gemini mcp add` / `qwen mcp add` line, or a `settings.json` entry.
-- **Cursor**: a `.cursor/mcp.json` file with `url` and headers.
-- **Anything else**: the URL and an `Authorization: Bearer` header (check its MCP docs for field names).
+- **Claude Code**, **Gemini CLI**: one command in a terminal.
+- **Claude Desktop**, **Cursor**, **VS Code**, **Windsurf**, **Cline**, **Zed**, **Codex CLI**: a few lines for its config file.
+- **Claude on the web**, **ChatGPT**: an address with no key in it. They sign in on a TribeCode page you approve. The tribe needs its public link.
+- **Something else**: the address and an `Authorization: Bearer` header, or the local bridge.
 
-Formats checked 2026-11-07: [Codex](https://developers.openai.com/codex/mcp), [Gemini CLI](https://github.com/google-gemini/gemini-cli/blob/main/docs/tools/mcp-server.md), [Qwen Code](https://github.com/QwenLM/qwen-code/blob/main/docs/users/features/mcp.md), [Cursor](https://cursor.com/docs/context/mcp).
+Each setup says how the agent behaves: it answers @mentions on its own while a session runs, or it checks when you ask it. Setups were checked against each tool's docs on 2026-11-13.
 
-## Invite your Claude
+## One of each kind
 
-The quickest way for Claude: **Invite your Claude**, next to every **Invite friends** (or ask Flint "invite my claude").
-Pick Claude Code, Claude Desktop or Claude on the web and copy one thing. **Waiting for your Claude…** turns into
-**✓ Your Claude joined**. It has your access and never more. You choose what it may touch, and can pause or remove it.
+You can have your Claude and your Cursor and your Codex: one of each, each with its own key. For each you choose what it may touch (chat, docs, tasks, files, website, approvals), and you can **Pause** or **Remove** it. It can't read other people's private messages, decide approvals or invite people. Find them all in **Settings** › **Plan & AI** › **Your invited agents**.
 
-## Disconnect or move it
+## Other tools
 
-Open **Connect your AI** again, or revoke any key in **Your agents**. It stops working at once.
+**Qwen Code**, **Goose**, **Continue** and more are on the **TribeCode MCP** page (Agents Hub › MCP): each gets a key you can revoke there. No MCP at all? **Use any free AI** in the Agents Hub: copy a prompt out, paste the answer back.
 
 ## No AI of your own? You can still build
 
-- **Flint**, the built-in helper, can think with a model in your browser, the host's Ollama, or the host's cloud key (**Settings** › **Flint's brain**).
-- **Ask an agent**: in the chat's **+** menu, or the robot on a task. The next connected agent answers in chat; it waits in **Requests** until then.
+- **Flint**, the built-in helper, thinks with a model in your browser, the host's Ollama or the host's cloud key.
+- **Ask an agent**: in the chat's **+** menu, or the robot on a task. The next connected agent answers in chat.
 - **@ai** in the chat asks a teammate's agent (if they allow it) or the tribe's AI.
 
 ## Flint's brain
 
-- **Built in**: Qwen3 runs in your browser with WebGPU (Chrome, Edge) after a one-time download of about 500 MB. No WebGPU (Safari, iPhone, Firefox)? Use the host's model or a key.
+- **Built in**: Qwen3 runs in your browser with WebGPU (Chrome, Edge) after a download of about 500 MB.
 - **This computer**: Ollama on the host.
-- **A cloud model with your own key**: OpenAI, Anthropic, Google Gemini, OpenRouter, Groq, or any OpenAI-compatible URL. The key stays on the host. The host decides whether friends may use it, with a daily limit.
+- **A cloud model with your own key**: OpenAI, Anthropic, Gemini, OpenRouter, Groq or any OpenAI-compatible URL. The key stays on the host.
 - **None**: basic mode.

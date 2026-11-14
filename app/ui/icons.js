@@ -108,6 +108,17 @@
     swap: '<path d="M4 8h14l-3.5-3.5M20 16H6l3.5 3.5"/>',
     clock: '<circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/>',
     external: '<path d="M14 4h6v6M20 4l-9 9M18 14v4.5a1.5 1.5 0 0 1-1.5 1.5h-11A1.5 1.5 0 0 1 4 18.5v-11A1.5 1.5 0 0 1 5.5 6H10"/>',
+    // Invited agents, one glyph per kind (inviteagent.js). Plain shapes of our own, not anyone's logo.
+    'agent-claude': '<path d="M12 3v3M12 18v3M3 12h3M18 12h3M6 6l2 2M16 16l2 2M18 6l-2 2M8 16l-2 2"/>',
+    'agent-cursor': '<path d="M6 4l12 7-5.2 1.6L11 18z"/>',
+    'agent-codex': '<rect x="3.5" y="5" width="17" height="14" rx="2"/><path d="M7.5 10l3 2.5-3 2.5M13 15h3.5"/>',
+    'agent-chatgpt': '<path d="M4 5h16v11H9l-5 4z"/><path d="M8.5 10.5h.01M12 10.5h.01M15.5 10.5h.01"/>',
+    'agent-gemini': '<path d="M12 3c.6 4.8 4.2 8.4 9 9-4.8.6-8.4 4.2-9 9-.6-4.8-4.2-8.4-9-9 4.8-.6 8.4-4.2 9-9z"/>',
+    'agent-vscode': '<path d="M9 7 4 12l5 5M15 7l5 5-5 5"/>',
+    'agent-windsurf': '<path d="M3 16c2.5 0 3.5-3 6-3s3.5 3 6 3 3.5-3 6-3M3 10c2.5 0 3.5-3 6-3s3.5 3 6 3 3.5-3 6-3"/>',
+    'agent-cline': '<rect x="4" y="6" width="16" height="13" rx="4"/><path d="M9.5 12v2M14.5 12v2M12 3v3"/>',
+    'agent-zed': '<path d="M6 6h12L6 18h12"/>',
+    'agent-other': '<path d="M9 3v5M15 3v5M6 8h12v3a6 6 0 0 1-12 0zM12 17v4"/>',
   };
   const ALIAS = { messages: 'chat', 'task-board': 'tasks', code: 'code', repo: 'git', agents: 'agent', fleet: 'agent', settings: 'gear', notes: 'notes', website: 'sites', plan: 'coin', credits: 'bolt', pictures: 'pics', canvas: 'design' };
   const name = n => (P[n] ? n : P[ALIAS[n]] ? ALIAS[n] : 'other');
@@ -135,5 +146,7 @@
     };
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', go, { once: true }); else go();
   }
-  window.TribeIcons = { svg, fill, has: n => !!P[n] || !!P[ALIAS[n]], names: () => Object.keys(P), paths: P };
+  // agent(kind): the glyph for an invited agent's kind ('claude', 'cursor'…); an unknown kind draws the plug.
+  const agent = (kind, size = 16, cls = '') => svg(P['agent-' + kind] ? 'agent-' + kind : 'agent-other', size, cls);
+  window.TribeIcons = { svg, fill, agent, has: n => !!P[n] || !!P[ALIAS[n]], names: () => Object.keys(P), paths: P };
 })();

@@ -228,13 +228,14 @@
     };
     draw();
   }
-  // feat/invite-one: a person's Claude joins one way, Invite your Claude, in the one invite sheet. Connect your AI keeps
-  // the other tools (Codex CLI, Gemini CLI, Qwen Code, Cursor, any MCP client).
+  // A person's own agent joins one way, Invite your agent, in the one invite sheet (inviteagent.js). Asked for by
+  // tool, the Claudes open there; the other tools keep this sheet (a plain key per tool: the TribeCode MCP page, the
+  // Agents Hub and the invite sheet's "Connect another AI").
   const CLAUDE_TOOLS = ['claude-code', 'claude-desktop', 'claude-ai'];
   async function connectClaude(opts) {
     if (!C.connected()) return openInvite();
     const tool = opts && opts.tool;
-    if ((!tool || CLAUDE_TOOLS.includes(tool) || !CAI()) && window.TribeInvite) return window.TribeInvite.open({ who: 'claude', kind: tool || undefined, fresh: !!(opts && opts.fresh && tool), welcome: !!(opts && opts.welcome) });
+    if ((!tool || CLAUDE_TOOLS.includes(tool) || !CAI()) && window.TribeInvite) return window.TribeInvite.open({ who: 'agent', kind: tool || undefined, fresh: !!(opts && opts.fresh && tool), welcome: !!(opts && opts.welcome) });
     if (window.TribeInvite) window.TribeInvite.close();
     $('#invite-modal').classList.remove('hidden');
     return connectTool(tool, opts);
@@ -268,7 +269,7 @@
     try {
       const { messages } = await C.api(`/chat/general?limit=${PAGE}`);
       $('#chat-list').classList.remove('from-cache'); chatCache.set(messages);
-      $('#chat-list').innerHTML = messages.length ? (messages.length >= PAGE ? moreBtn() : '') + messages.map(chatHtml).join('') : '<div class="empty-room">Say hi 👋<button type="button" class="btn sm ic-empty" data-ic-open>Invite your Claude</button></div>';
+      $('#chat-list').innerHTML = messages.length ? (messages.length >= PAGE ? moreBtn() : '') + messages.map(chatHtml).join('') : '<div class="empty-room">Say hi 👋<button type="button" class="btn sm ic-empty" data-ic-open>Invite your agent</button></div>';
       $('#chat-list').scrollTop = 1e9;
       for (const it of (C.outbox ? C.outbox() : [])) if (it.kind === 'chat' && it.ch === 'general' && !messages.some(x => x.cid === it.body.cid)) pendingBubble(it.body.text, it.body.cid, C.connected() ? 'sending' : 'waiting');
     } catch {}
