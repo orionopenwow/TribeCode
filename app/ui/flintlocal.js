@@ -216,6 +216,8 @@
       const n = needT(); if (n) return n;
       const t = sl.task;
       if (id === 'task.add') {
+        const SM = window.TribeFlintSem;   // feat/flint-local: a task that says the same thing as an open one gets one question first
+        if (SM && !dupOk && sl.title) { const open = tasksCache.filter(x => x.status !== 'done'), FMd = window.TribeFlintModel, di = SM.duplicate(sl.title, open.map(x => x.title), { model: FMd && FMd.ready() ? FMd.model() : null }); if (di >= 0) return { text: `That looks like “${open[di].title}”, which is already on the board. Add it anyway?`, acts: [['Add it anyway', 'dupadd', s.text], ['Open Tasks', 'nav', 'tasks']] }; }
         const extra = {}; if (sl.due) extra.due = sl.due; if (sl.who && sl.who.id) extra.assignee = sl.who.id; if (sl.type) extra.type = sl.type;
         const tk = await H.task(sl.title, extra, true);
         if (tk && tk.id) { last.task = tk; tasksAt = 0; pushUndo(`“${tk.title}”`, () => C.api('/tasks/' + encodeURIComponent(tk.id), { method: 'DELETE' })); return { text: T('taskAdded', { t: tk.title, x: (sl.due ? T('due', { d: day(sl.due) }) : '') + (sl.who && sl.who.name ? T('forP', { p: first(sl.who.name) }) : '') }), acts: [['Open Tasks', 'nav', 'tasks']], sum: `added the task “${tk.title}”${sl.due ? ' (due ' + day(sl.due) + ')' : ''}` }; }
@@ -524,7 +526,15 @@
     if (PV && PV.source && PV.source() === 'site' && document.querySelector('#pvw') && SE && PF && PF.ask && SE.parse(text)) { PF.ask(text); if (PF.open && !matchMedia('(max-width: 820px)').matches) PF.open(); return H.say('On it: the change shows in the website preview, with Undo next to it.', []); }
     const NL = N(); if (!NL) return (await H.special(text)) ? true : null;
     syncLearned(); await tasks();
-    const ctx = ctxNow(), P = NL.parse(text, ctx), steps = P.steps;
+    lastH = H;
+    const ctx = ctxNow();
+    // feat/flint-local: a goal ("launch page for our bake sale by friday") gets a visible plan first; nothing runs until Run plan
+    const PL = window.TribeFlintPlan; if (PL && PL.offer && PL.isGoal(text, NL, ctx) && PL.offer(text, H, ctx)) { lastMiss = null; return true; }
+    // feat/flint-local: what the project's memory already knows ("when is the bake sale?") and where something was said
+    const FX = window.TribeFlintFacts; if (FX && FX.answer) { const fa = await FX.answer(text); if (fa) { lastMiss = null; return H.say(fa.text, (fa.acts || []).map(a => H.act(a[0], a[1], a[2]))); } }
+    { const w = await whereSaid(text, H); if (w) { lastMiss = null; return w; } }
+    const P = MEM ? MEM.parse(text, ctx, NL) : NL.parse(text, ctx), steps = P.steps;
+    const missed = () => { if (window.TribeFlintSetup && window.TribeFlintSetup.missed) setTimeout(() => window.TribeFlintSetup.missed(H, text), 60); };
     const sayR = r => { if (!r || r.said) return true; return H.say(r.text, (r.acts || []).map(a => H.act(a[0], a[1], a[2])), r.html ? { html: r.html } : undefined); };
     if (steps.length === 1) {
       const s = steps[0];
@@ -534,13 +544,13 @@
       if (s.intent && s.conf >= 0.6 && (LOCAL_FIRST.test(s.intent) || !legacyHit)) {
         if (s.ask && !(s.intent === 'dm.send' && s.slots && s.slots.toChat)) { lastMiss = null; return H.say(Q(s.ask.question), (s.ask.options || []).map(o => H.act(o, 'ask', fillAsk(s, o)))); }
         const r = await step(s, H, []);
-        if (r) { lastMiss = null; if (P.learned) r.text = (r.text || '') + ''; return sayR(r); }
+        if (r) { lastMiss = null; if (MEM) { MEM.done([s]); if (last.task) MEM.task(last.task); } if (FX && FX.learn) FX.learn(text, 'Flint'); if (P.learned) r.text = (r.text || '') + ''; return sayR(r); }
       }
       if (legacyHit) { lastMiss = null; return H.legacy(text); }
       // nothing local was sure: a question gets the docs; with a brain, the model; otherwise "did you mean" or the honest card
       if (/^(how|why|where|when|what|can|could|is|are|do|does|explain|help|tell me about)\b|\?$/i.test(text.trim()) && !H.modelOnline()) { if (H.guide && await H.guide(text)) { lastMiss = null; return true; } const kb = await kbAnswer(text, H); if (kb) { lastMiss = null; return sayR(kb); } }
-      if (H.modelOnline()) return null;
-      lastMiss = text;
+      if (H.modelOnline() || (window.TribeFlintLLM && window.TribeFlintLLM.ready())) return null;   // a model (the tribe's, or the local one this person chose) reads it next
+      lastMiss = text; missed();
       const alts = (s.alts || P.alts || []).filter(a => a.example || a.intent).slice(0, 3);
       if (s.intent && s.conf >= 0.45) { const ex = exampleOf(s.intent); if (ex) alts.unshift({ intent: s.intent, example: ex }); }
       const uniq = []; alts.forEach(a => { const ex = a.example || exampleOf(a.intent); if (ex && !uniq.includes(ex)) uniq.push(ex); });
@@ -554,7 +564,7 @@
       if (s.ask && !(s.intent === 'dm.send' && prev.length)) { if (lines.length) H.say(T('multi', { list: lines.join(' · ') })); return H.say(Q(s.ask.question), (s.ask.options || []).map(o => H.act(o, 'ask', fillAsk(s, o)))); }
       const r = await step(s, H, prev);
       if (!r) { if (lines.length) H.say(T('multi', { list: lines.join(' · ') })); return H.say(T('stopped', { s: s.text })); }
-      prev.push(r);
+      prev.push(r); if (MEM) { MEM.done([s]); if (last.task) MEM.task(last.task); }
       if (!r.said && r.text) lines.push(r.text.replace(/\.$/, ''));
     }
     if (lines.length) H.say(lines.length === 1 ? lines[0] : T('multi', { list: lines.join(' · ') }), []);
@@ -578,5 +588,30 @@
   // a "did you mean" chip: learn the pairing, then run it
   async function meant(arg) { let o = {}; try { o = JSON.parse(arg); } catch {} if (o.say && o.means) await learn(o.say, o.means); if (window.TribeFlint) window.TribeFlint.ask(o.means || ''); }
 
-  window.TribeFlintLocal = { handle, meant, parse: t => N() && N().parse(t, ctxNow()), ctx: ctxNow, undo, learned: learnedList, _learn: learn };
+  // ---------- feat/flint-local: session memory, plan steps, "where did we talk about…" ----------
+  const MEM = window.TribeFlintConv ? window.TribeFlintConv.create() : null;
+  let lastH = null, dupOk = false;
+  async function addAnyway(text) { dupOk = true; try { if (window.TribeFlint) await window.TribeFlint.ask(text); } finally { dupOk = false; } }
+  // one plan step: a sentence Flint understands, run quietly, everything it changed folded into ONE Undo entry
+  async function runSay(say, label) {
+    const NL = N(), H0 = lastH; if (!NL || !H0) return { ok: false, text: 'Flint is not ready yet.' };
+    await tasks(); const P = NL.parse(say, ctxNow()), s = P.steps[0];
+    if (P.steps.length !== 1 || !s.intent || s.conf < 0.6 || s.ask) return { ok: false, text: 'I was not sure about that step, so I left it.' };
+    const mark = UNDO.length; let said = ''; dupOk = true;
+    const H2 = { ...H0, say: t => { said = said || String(t || ''); return {}; } };
+    let r = null; try { r = await step(s, H2, []); } catch (e) { r = null; said = e.message; } finally { dupOk = false; }
+    const added = UNDO.splice(mark);
+    if (added.length) { const fns = added.filter(u => typeof u.fn === 'function'); if (fns.length) pushUndo(label || say, async () => { for (const u of fns.reverse()) await u.fn(); }); else pushUndo('build', 'build'); }
+    if (r && MEM) MEM.done([s]);
+    return { ok: !!r, text: (r && r.text) || said || '', undo: added.some(u => typeof u.fn === 'function') };
+  }
+  const WHERE = /^(?:where|when)\s+(?:did|have|was|were)\s+(?:we|i|you|they|someone|anyone|somebody|people)\s+(?:talk(?:ed|ing)?|say|said|discuss(?:ed)?|mention(?:ed)?|write|wrote|decide[d]?|chat(?:ted)?)\s*(?:about|on|that)?\s+(.+?)\??$|^(?:what did (?:we|they|people) say about|find where we (?:talked about|discussed|mentioned))\s+(.+?)\??$/i;
+  async function whereSaid(text, H) {
+    const m = WHERE.exec(String(text || '').trim()), FMd = window.TribeFlintModel; if (!m || !FMd || !FMd.find || !connected()) return null;
+    const q = (m[1] || m[2] || '').trim(); let hits = []; try { hits = await FMd.find(q, 4); } catch {}
+    if (!hits.length) return H.say(`I looked through the docs, tasks, chat, files and Versions and found nothing about “${q}”.`, [H.act('Search everything', 'search', q)]);
+    return H.say(`Here is where “${q}” comes up${FMd.ready() ? ' (matched by meaning with my local brain)' : ''}:`, hits.map((h, i) => H.act(`${h.kind} · ${h.label}`.slice(0, 70), 'semhit', i)), { hits: undefined });
+  }
+
+  window.TribeFlintLocal = { handle, meant, runSay, addAnyway, memory: () => MEM, parse: t => N() && N().parse(t, ctxNow()), ctx: ctxNow, undo, learned: learnedList, _learn: learn };
 })();

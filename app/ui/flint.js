@@ -77,6 +77,15 @@
     feedback: () => window.TribeFeedback && window.TribeFeedback.open(),   // feat/reviews
     prompt: async () => { const p = window.TribeFocus && window.TribeFocus.prompt(); if (!p) return; try { await navigator.clipboard.writeText(p); toast('Copied. Paste it into your AI helper.'); } catch { window.prompt('Copy this for your AI helper:', p); } },   // feat/focus
     preview: () => (window.TribePreview && window.TribePreview.open ? window.TribePreview.open() : App().show('docs')),
+    // feat/flint-local: the recommended local brain, the local model, project memory, plan and search chips
+    flintsetup: arg => window.TribeFlintSetup && window.TribeFlintSetup.act(arg),
+    flintllm: () => window.TribeFlintLLM && window.TribeFlintLLM.open(),
+    llmcancel: () => window.TribeFlintLLM && window.TribeFlintLLM.cancel(),
+    flintfacts: () => window.TribeFlintFacts && window.TribeFlintFacts.open(),
+    flintdevice: () => window.TribeFlintPage && window.TribeFlintPage.open('', 'device'),
+    dupadd: text => window.TribeFlintLocal && window.TribeFlintLocal.addAnyway(text),
+    semhit: i => window.TribeFlintModel && window.TribeFlintModel.openHit(i),
+    copytext: async t => { try { await navigator.clipboard.writeText(String(t || '')); toast('Copied.'); } catch { window.prompt('Copy this:', String(t || '')); } },
     dm: id => window.TribeDM && window.TribeDM.open && window.TribeDM.open(id),   // flint-local
     meant: arg => window.TribeFlintLocal && window.TribeFlintLocal.meant(arg),
     res: key => window.TribeFlintGrow && window.TribeFlintGrow.run('res', key),   // feat/flint-ai: open a resource (Academy, Guide, Legal, Marketplace, templates, docs)
@@ -208,6 +217,8 @@
     if (/^(what can (you|flint) do( for free)?|what('?s| is) free|what do you do for free|what can you build( for free)?|(show )?(your|flint'?s) (free )?tiers?|are you free)\??$/.test(t)) return tiersReply();   // flint-free: the honest capability map
     // flint-local: Flint's own brain first (app/ui/flintnlu.js + flintlocal.js): many-step commands, typos, eight
     // languages, taught phrases, undo, how-to answers from the docs. It hands back to the routes below when they fit.
+    // feat/flint-local: with a local model chosen, writing jobs (a summary, a rewrite in a tone, a draft, an explanation, names) go to it first
+    { const LLM = window.TribeFlintLLM; if (LLM && LLM.ready() && LLM.kindOf(text) && !llmBusy) { llmBusy = true; try { if (await LLM.handle(text, { say, act, redraw: () => { save(); draw(); }, drawLast })) return null; } finally { llmBusy = false; } } }
     if (window.TribeFlintLocal && !localBusy) {
       localBusy = true;
       try { const r = await window.TribeFlintLocal.handle(text, LH); if (r) return r === true ? null : r; } finally { localBusy = false; }
@@ -215,7 +226,7 @@
     }
     return legacyRoute(text);
   }
-  let localBusy = false;
+  let localBusy = false, llmBusy = false;
   async function special(text) {   // the feature routers that know their own phrases (memory, company, academy, captures)
     if (window.TribeFlintGrow && await window.TribeFlintGrow.flint(text)) return true;   // feat/flint-ai: grow your idea, resources, today's plan, the inspiration board, your style
     if (window.TribeFlintRun) { const r = await window.TribeFlintRun.flint(text); if (r) { if (r !== true) say(r.text, r.acts || []); return true; } }   // feat/flint-runthrough: tribe/project/vision/proposal/standup/presentation/proof/Blender
@@ -402,6 +413,8 @@
     return say(out.length > 1 ? `Here's what I found for “${q}”:` : `Nothing matched “${q}” in docs, tasks or the Guide.`, out.slice(0, 5));
   }
   async function fallback(text, triedGuide, noModel) {
+    // feat/flint-local, tier 2: a local model the person chose reads what the rules missed and hands back checked commands or text
+    const LLM = window.TribeFlintLLM; if (LLM && LLM.ready() && !llmBusy) { llmBusy = true; try { if (await LLM.handle(text, { say, act, redraw: () => { save(); draw(); }, drawLast })) return null; } finally { llmBusy = false; } }
     if (!noModel) await refreshModel();
     if (model.online && !noModel) return modelReply(text);
     const g = triedGuide ? null : await guideSearch(text);

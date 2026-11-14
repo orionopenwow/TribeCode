@@ -151,6 +151,7 @@
           body: JSON.stringify(payload) });
         const d = await r.json();
         if (r.status === 409) { showConflict(d.doc); setStatus('Not saved: someone else edited this'); return; }
+        try { if (r.ok && !liveBody) document.dispatchEvent(new CustomEvent('tribe:doc-saved', { detail: { title, body } })); } catch {}   // feat/flint-local: Flint's project memory reads it on this device
         if (!r.ok) throw new Error(d.error || r.statusText);
         cur = { ...cur, ...d.doc }; if (liveBody && sess) cur.body = sess.text(); dirty = false; setStatus(`Saved · v${cur.version}`);
         activity();
