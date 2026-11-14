@@ -78,7 +78,7 @@
   function frame() {
     const sec = section();
     sec.innerHTML = `<div class="ac-wrap">
-      <div class="ac-top"><div class="sec-head"><span class="eyebrow">Academy</span><h2>${st.tab === 'legal' ? 'Legal documents' : st.tab === 'offload' ? 'Do it for free elsewhere' : 'Learn every role'}</h2></div>
+      <div class="ac-top"><div class="sec-head"><button type="button" class="linkish ac-back" id="ac-back" onclick="window.TribeGuide && window.TribeGuide.home && window.TribeGuide.home()">‹ Learn</button><span class="eyebrow">Skills</span><h2>${st.tab === 'legal' ? 'Legal documents' : st.tab === 'offload' ? 'Do it for free elsewhere' : 'Learn every role'}</h2></div>
         <div class="ac-tabs" id="ac-tabs" role="tablist">${TABS.map(([k, l]) => `<button role="tab" data-tab="${k}" aria-selected="${st.tab === k}" class="${st.tab === k ? 'on' : ''}">${l}</button>`).join('')}</div></div>
       <div id="ac-body" data-title></div></div>`;
     sec.querySelectorAll('[data-tab]').forEach(b => b.onclick = () => { st.opts = {}; st.tab = b.dataset.tab; if (st.tab === 'learn') { st.track = null; st.lesson = -1; } frame(); body(); });

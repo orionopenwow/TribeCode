@@ -245,7 +245,7 @@ def main():
             host.mouse.move(720, 600); shot(host, "nav-tabs-bugs")
             # remembered: away and back lands on Bugs
             host.click("#nest-docs"); host.wait_for_selector("#view-docs:not(.hidden)")
-            host.wait_for_selector("#view-tabs:not(.hidden) #wt-website"); assert tabs(host) == ["Files", "Website", "Captures", "Academy"], tabs(host)   # Files: one row, a small stroke icon each (feat/files-dash)
+            host.wait_for_selector("#view-tabs:not(.hidden) #wt-website"); assert tabs(host) == ["Files", "Website", "Captures", "Skills"], tabs(host)   # Files: one row, a small stroke icon each (feat/files-dash)
             assert host.eval_on_selector_all("#view-tabs [data-tab]", "e => e.every(x => x.querySelector('svg.fx-i'))")
             host.click("#nest-ws-tasks"); host.wait_for_selector("#view-bugs:not(.hidden)")
             # Requests shows up as a tab only while something waits

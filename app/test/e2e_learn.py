@@ -151,7 +151,7 @@ def main():
             pg.evaluate("TribeGuide.home()"); pg.wait_for_selector("#guide #gd-skills .qg-skill"); pg.evaluate("document.querySelector('#gd-read').scrollTop = 0")
             pg.screenshot(path=str(SHOTS / "learn-home-1440.png"))
             pg.click("#guide #gd-skills .qg-skill[data-gd-track=growth]"); pg.wait_for_selector("#view-academy", state="visible")
-            assert not pg.evaluate("TribeGuide.isOpen()") and "Growth" in pg.text_content("#view-academy")
+            pg.wait_for_function("document.querySelector('#view-academy') && document.querySelector('#view-academy').textContent.includes('Growth')", timeout=30000); assert not pg.evaluate("TribeGuide.isOpen()") and pg.locator("#view-academy #ac-back").count() == 1
 
             # 8. progress persists across a reload
             pg.reload(); pg.wait_for_function(ready, timeout=30000); pg.evaluate("TribeQuick.load()"); pg.wait_for_function("TribeQuick.all().length > 30")
@@ -171,7 +171,7 @@ def main():
             assert ph.evaluate("document.querySelector('#gd-read').scrollWidth <= document.querySelector('#gd-read').clientWidth + 1"), "no sideways scroll"
             assert ph.evaluate("[...document.querySelectorAll('#guide .qg-row')].every(b => b.getBoundingClientRect().height >= 44)")
             ph.screenshot(path=str(SHOTS / "learn-home-390.png"))
-            ph.evaluate("TribeGuide.close(); TribeQuick.open('invite-friend')"); ph.wait_for_selector("#qg-card .qg-steps li")
+            ph.evaluate("TribeGuide.close(); TribeQuick.open('invite-friend')"); ph.wait_for_selector("#qg-card .qg-steps li"); ph.wait_for_timeout(500)
             assert ph.evaluate("(() => { const r = document.querySelector('#qg-card').getBoundingClientRect(); return r.left >= 0 && r.right <= innerWidth + 1 && r.bottom <= innerHeight + 1; })()")
             assert ph.evaluate("[...document.querySelectorAll('#qg-card .qg-foot .btn')].every(b => b.getBoundingClientRect().height >= 36)")
             ph.screenshot(path=str(SHOTS / "learn-quick-card-390.png"))
