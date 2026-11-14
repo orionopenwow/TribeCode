@@ -115,7 +115,9 @@ if (typeof window !== 'undefined' && typeof document !== 'undefined') (function 
   const Core = window.TribeMeaningCore, C = () => window.TribeClient, SM = () => window.TribeFlintSem, N = () => window.TribeNLU;
   let BUILT = null, CUR = null, loading = null;
   // tests of the helper by itself switch the table off (localStorage tribecode.meaning = 'off'); there is no setting for it
-  const OFF = (() => { try { return localStorage.getItem('tribecode.meaning') === 'off'; } catch { return false; } })();
+  // (a page opened straight from a file cannot fetch the table: Flint then works by his rules alone)
+  const OFF = location.protocol === 'file:' || (() => { try { return localStorage.getItem('tribecode.meaning') === 'off'; } catch { return false; } })();
+  let retryAt = 0;
   const helper = () => { const F = window.TribeFlintModel; return F && F.ready && F.ready() && F.model ? F.model() : null; };
   // the model everything uses: the built-in table, with the optional helper stacked on top when it is installed
   function apply() {
@@ -125,10 +127,10 @@ if (typeof window !== 'undefined' && typeof document !== 'undefined') (function 
   }
   function ready() {
     if (BUILT) return Promise.resolve(true);
-    if (OFF) return Promise.resolve(false);
+    if (OFF || Date.now() < retryAt) return Promise.resolve(false);
     if (!loading) loading = fetch('flintwords.bin').then(r => { if (!r.ok) throw new Error('flintwords.bin ' + r.status); return r.arrayBuffer(); })
       .then(b => { BUILT = Core.fromBuffer(b); apply(); return true; })
-      .catch(e => { console.warn('Flint word table:', e.message); loading = null; return false; });
+      .catch(e => { console.warn('Flint word table:', e.message); loading = null; retryAt = Date.now() + 60000; return false; });
     return loading;
   }
   const status = () => ({ level: helper() ? 'helper' : BUILT ? 'built-in' : 'none', words: BUILT ? BUILT.vocabSize : 0, name: CUR ? CUR.name : '' });

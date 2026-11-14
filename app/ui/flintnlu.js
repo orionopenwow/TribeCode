@@ -1258,7 +1258,8 @@
     const best = hits[0] || null;
     const near = search(EXIDX, c, 12), seen = new Set(), alts = [];
     for (const n of near) { if (seen.has(n.doc.id) || (best && n.doc.id === best.intent)) continue; seen.add(n.doc.id); alts.push({ intent: n.doc.id, example: n.doc.text, score: Math.round(n.score * 100) / 100 }); if (alts.length >= 3) break; }
-    if (!best && SEM) { const sem = semNear(meant(P.toks, c), 12); if (sem.length) { const bl = blendAlts(near, sem, null, ctx); if (bl.length) { alts.length = 0; alts.push(...bl); } } }
+    // (a request that needs a writer or an artist keeps its plain list, so Flint's honest "that needs an AI" card still shows)
+    if (!best && SEM && !(SEM.cover && needsAI(text))) { const sem = semNear(meant(P.toks, c), 12); if (sem.length) { const bl = blendAlts(near, sem, null, ctx); if (bl.length) { alts.length = 0; alts.push(...bl); } } }
     // a phrase this person taught, said in other words: offered first, never run by itself (the exact phrase still runs at once)
     if (!best && SEM && SEM.score && ctx.learned && ctx.learned.length) { const q = meant(P.toks, c); let bl = null, bs = 0.5; for (const x of ctx.learned) { const sc = SEM.score(q, String(x.say || '')); if (sc >= bs) { bs = sc; bl = x; } } if (bl) { alts.unshift({ intent: 'taught', example: bl.say, score: Math.round(bs * 100) / 100, sem: true, learned: true }); alts.length = Math.min(alts.length, 3); } }
     if (!best) {

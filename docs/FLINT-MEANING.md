@@ -73,7 +73,7 @@ A paraphrase counts as right when Flint does the right thing directly or the rig
 | tuning sets · paraphrases | 96/114 (84%), 3 wrong actions | 107/114 (94%), 3 wrong actions, single chip right 15 of 15 | 103/114 (90%), 3 wrong actions, single chip right 18 of 18 |
 | tuning sets · help | 15/26 (58%) | 19/26 (73%) | 18/26 (69%) |
 | tuning sets · search | 21/50 (42%), top 3: 30 | 26/50 (52%), top 3: 36 | 25/50 (50%), top 3: 36 |
-| batch 9 (held out) · paraphrases | 83/140 (59%), 13 wrong actions | 98/140 (70%), 13 wrong actions, single chip right 16 of 21 | 93/140 (66%), 13 wrong actions, single chip right 14 of 19 |
+| batch 9 (held out) · paraphrases | 83/140 (59%), 13 wrong actions | 97/140 (69%), 13 wrong actions, single chip right 16 of 21 | 92/140 (66%), 13 wrong actions, single chip right 14 of 19 |
 | batch 9 (held out) · help | 5/12 (42%) | 7/12 (58%) | 6/12 (50%) |
 | batch 9 (held out) · search | 18/66 (27%), top 3: 31 | 27/66 (41%), top 3: 46 | 30/66 (45%), top 3: 41 |
 <!-- numbers:end -->
