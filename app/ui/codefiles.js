@@ -186,7 +186,7 @@
     const p = proj() || {};
     pane.innerHTML = `<div class="cf-code" id="cf-code">
       <div class="cf-head"><div><span class="eyebrow">Code</span><h2 id="cf-title">${esc(p.name || 'Code')}</h2></div>
-        <button class="btn cf-branch" id="cf-branch" aria-haspopup="menu" disabled>${svg(I.git, 16)}<span id="cf-branch-name">…</span>${svg(I.down, 14)}</button></div>
+        <button class="btn" id="cf-mine" type="button" hidden>My folder</button><button class="btn cf-branch" id="cf-branch" aria-haspopup="menu" disabled>${svg(I.git, 16)}<span id="cf-branch-name">…</span>${svg(I.down, 14)}</button></div>
       <div id="cf-body"><p class="cf-empty">Reading the code…</p></div></div>`;
     loadInfo().then(i => {
       if (seg !== 'code' || !$('#cf-code')) return;
@@ -198,6 +198,7 @@
       if (!ref) ref = i.branch || '';
       $('#cf-branch-name').textContent = ref || 'files';
       const bb = $('#cf-branch'); bb.disabled = !i.git; bb.onclick = e => branchMenu(e.currentTarget);
+      const mb = $('#cf-mine'); if (mb) { mb.hidden = !canMine(); mb.onclick = openMine; }
       $('#cf-body').innerHTML = `
         <label class="cf-search">${svg(I.search, 18)}<input id="cf-q" placeholder="Find a file" autocomplete="off" spellcheck="false" aria-label="Find a file by name" value="${esc(q)}"><kbd>/</kbd></label>
         <div class="cf-recent" id="cf-recent" aria-label="Recently changed"></div>
@@ -351,7 +352,33 @@
   // ---------- edit (v0.23): write the file, commit it on the checked-out branch, 🔒 lock it so nobody saves over you ----------
   const meNow = () => (window.TribeClient && window.TribeClient.state().me) || {};
   const live = () => !ref || !info || !info.branch || ref === info.branch;
-  const editable = f => { const m = meNow(); return f && !f.loading && !f.error && !f.hidden && !f.binary && !f.tooBig && live() && m.role && m.role !== 'spectator' && m.role !== 'agent' && !m.guest; };
+  // feat/group-styles: My folder = people/<my id>/ in the project's files. Mine to write (a guest pass too); "Send to the
+  // main copy" copies one file out, decided by how the group decides (a refusal offers "Ask them").
+  const minePrefix = () => `people/${meNow().id}/`;
+  const inMine = path => !!meNow().id && String(path || '').startsWith(minePrefix());
+  const canMine = () => { const m = meNow(); return !!m.role && m.role !== 'spectator' && m.role !== 'agent'; };
+  async function openMine() {
+    try { const r = await C.api('/code/mine', { method: 'POST', body: {} }); kids.clear(); open.clear(); open.add(''); await reveal(r.path); }
+    catch (e) { toast(e.message); }
+  }
+  function newInMine() {
+    const s = window.TribeUI.sheet({ kind: 'decision', eyebrow: 'My folder', title: 'New file', body: '<label class="cf-newf"><span class="faint">Name</span><input class="input" id="cf-new-name" maxlength="80" placeholder="notes.md" autocomplete="off" spellcheck="false"></label>',
+      foot: '<button type="button" class="btn" id="cf-new-no">Cancel</button><button type="button" class="btn primary" id="cf-new-ok">Create</button>' });
+    const inp = s.el.querySelector('#cf-new-name'); setTimeout(() => inp.focus(), 30);
+    const go = async () => {
+      const name = inp.value.trim().replace(/^\/+/, ''); if (!name || /\.\.|\\/.test(name)) return toast('Give it a simple name, like notes.md');
+      try { const path = minePrefix() + name; await C.api('/code/file', { method: 'PUT', body: { path, text: '', message: `New ${name}` } }); s.close(); kids.clear(); await reveal(path); }
+      catch (e) { toast(e.message); }
+    };
+    s.el.querySelector('#cf-new-ok').onclick = go; s.el.querySelector('#cf-new-no').onclick = () => s.close();
+    inp.onkeydown = e => { if (e.key === 'Enter') { e.preventDefault(); go(); } };
+  }
+  async function sendMine(path, btn) {
+    btn.disabled = true;
+    try { const r = await C.api('/code/send', { method: 'POST', body: { path } }); toast(window.TribeI18n ? window.TribeI18n.t('', 'Sent to the main copy.') : 'Sent to the main copy.'); kids.clear(); await reveal(r.path); }
+    catch (e) { btn.disabled = false; if (!(e.data && e.data.need)) toast(e.message); }   // with `need`, the Ask them bar is already showing
+  }
+  const editable = f => { const m = meNow(); return f && !f.loading && !f.error && !f.hidden && !f.binary && !f.tooBig && live() && m.role && m.role !== 'spectator' && m.role !== 'agent' && (!m.guest || inMine(f.path)); };
   const allClaims = () => ((own && own.owners) || []).flatMap(o => (o.claims || []).map(c => ({ ...c, by: o.id, name: o.name })));
   const myLock = path => allClaims().find(c => c.path === path && c.by === meNow().id);
   const otherLock = path => allClaims().find(c => c.by !== meNow().id && (c.path === path || (c.path.endsWith('/') && path.startsWith(c.path))));
@@ -416,6 +443,7 @@
         ${f.md && f.text ? `<button class="btn" id="cf-src">${f.source ? 'Show it rendered' : 'Show the source'}</button>` : ''}
         ${canAsk() ? `<button class="btn" id="cf-ask">${svg(I.robot, 15)}Ask an agent about this file</button>` : ''}
         ${f.text != null && !f.hidden && !f.binary && window.TribeAIBridge ? `<button class="btn" id="cf-freeai" title="Copy this file for ChatGPT, Gemini or another free AI, then paste its answer back">${svg(I.copy, 15)}Ask a free AI</button>` : ''}
+        ${inMine(f.path) && !f.editing && live() ? '<button class="btn" id="cf-new">New file here</button><button class="btn" id="cf-send">Send to the main copy</button>' : ''}
         ${editable(f) && !f.editing ? `<button class="btn primary" id="cf-edit">✏️ Edit</button>` : ''}
       </div>
       ${who.length ? `<div class="cf-owner" id="cf-owner">${who.map(w => `<span>${w.how === 'editing' ? '✋' : '🧭'} <b>${esc(w.name)}</b> ${w.how === 'editing' ? `is working on this${w.note ? `: ${esc(w.note)}` : ''}` : `looks after <code>${esc(w.note)}</code>`}</span>`).join('')}</div>` : ''}
@@ -431,6 +459,8 @@
     $('#cf-close').onclick = closeFile;
     $('#cf-copy').onclick = () => copy(f.path);
     const sb = $('#cf-src'); if (sb) sb.onclick = () => { file.source = !file.source; drawView(); };
+    const nb = $('#cf-new'); if (nb) nb.onclick = newInMine;
+    const sd = $('#cf-send'); if (sd) sd.onclick = () => sendMine(f.path, sd);
     const eb = $('#cf-edit'); if (eb) eb.onclick = () => { file.editing = true; file.draft = file.text || ''; drawView(); const ta = $('#cf-ed'); if (ta) ta.focus(); };
     if (f.editing) wireEditor(f);
     const fa = $('#cf-freeai'); if (fa) fa.onclick = () => window.TribeAIBridge.open({ src: 'file', files: [{ path: f.path, text: f.editing ? f.draft : f.text }] });   // feat/agents-free

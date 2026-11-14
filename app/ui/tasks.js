@@ -464,7 +464,7 @@
       if (m === 'assign') { const row = document.querySelector(`#board .task[data-id="${CSS.escape(t.id)}"]`); return menu((row && row.querySelector('.tk-more')) || anchor, 'assign', t); }
       if (m === 'ask-agent') return pickWho(t, 'ask-agent');
       if (m === 'claim') return doStep(t.id, 'claim', anchor);
-      if (m === 'vote') return C.api('/chat/general/vote', { method: 'POST', body: { question: `Should we do “${t.title}”?`.slice(0, 200) } }).then(() => window.TribeApp.toast('Put to a vote in the chat.'), e => window.TribeApp.toast(e.message));   // feat/group-styles: Propose, from a task
+      if (m === 'vote') return C.api('/chat/general/vote', { method: 'POST', body: { question: `Should we do “${t.title}”?`.slice(0, 200) } }).then(() => window.TribeApp.toast(window.TribeI18n ? window.TribeI18n.t('', 'Put to a vote in the chat.') : 'Put to a vote in the chat.'), e => window.TribeApp.toast(e.message));   // feat/group-styles: Propose, from a task
       if (m === 'flint-pick') { if (!F) return; try { F.focus && F.focus(); } catch {} return F.ask(`Who should do this task, and why: ${t.title}`); }
       if (m === 'split') return split(t.id);
       if (m === 'delete') return remove(t.id);

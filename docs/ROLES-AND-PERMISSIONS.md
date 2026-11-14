@@ -52,7 +52,7 @@ There were three places that each said something about "who decides":
 3. **"Council" existed only on the Task Board.** It changed who picks up tasks. Merges, approvals, publishing and
    settings stayed with the host and admins, so a "council" group still had a single decider for everything that
    mattered.
-4. **Four voting systems with four different electorates.** Chat votes (`votes.js`, majority of the project's
+4. **Four voting systems with four different electorates** (now one counting rule, part 3). Chat votes (`votes.js`, majority of the project's
    people), Board proposals (`board.js`, majority of all people), Ship it (`ship.js`, host / majority / everyone)
    and high-risk approvals (`approvals.js`, sent to every person). None knew about a
    council, and none could be asked "let me do this one thing".
@@ -104,13 +104,26 @@ How the pieces fit:
 - **Host-only rows stay host-only**, described as "the computer's owner". The owner can always put a project back
   to One lead (`POST /api/groupstyle/reset`), so a council that has gone quiet can't lock a tribe.
 
-What stayed as it was, on purpose: Board proposals and ordinary chat votes still count every person (they are for
-"what should we build", not for permission), and the approvals inbox still sends an AI helper's request to its owner.
-Under a council, "decide any approval" is one of the things the council agrees on.
+- **One counting rule.** `groupstyle.js` `counting()` (reached everywhere through `perms.counting()` and
+  `perms.passMark()`) answers "who counts, and how many must agree". With no council it answers "the way it always
+  was". Under a council: chat votes that are Approve / Not yet (`votes.js` `create()`), Board proposals (`board.js`
+  `tally()`), Ship it (`ship.js` `deciders()`, `tally()`) and high-risk approvals (`approvals.js` `decide()`, one
+  answer per council member) all count the council with the council's pass mark. Polls with options stay open to
+  everyone, and an AI helper's small requests still go to its owner.
+- **Propose and Request, outside the chat.** Any button marked `data-gs-ask` asks for that thing. They are on the
+  Company page (a council member sees "Propose a change" where the edit buttons were hidden), on Publish ("Ask to
+  publish"), on a waiting integration ("Ask to send it to the main copy"), on a task ("Put it to a vote"), in Files
+  ("Send to the main copy" from My folder), and in the ? next step, which becomes "Ask them" when the step is
+  something you can't do alone (`nextstep.js` `askStep()`).
+- **Rules are visible in every style**: each row of "Who can do what here" shows how it is decided and by whom. They
+  are editable in the "Our own roles" style.
 
-Not done yet: the Company page still treats "may change settings" as its lead, so under a council its edit buttons
-appear after the council says yes to "change project settings" (a one-day pass). Board proposals do not yet use the
-council's count. Per-thing rules are edited only in the "Our own roles" style.
+What stayed as it was, on purpose: the approvals inbox still sends an AI helper's low and medium-risk requests to its
+owner, and polls count everyone.
+
+Not done yet: Board proposals and Ship it have no "time limit" of their own (the council's time limit applies to
+chat votes and requests). The Company page's individual edit buttons open after the council says yes to "change
+project settings" (a one-day pass); before that a council member sees one "Propose a change" button.
 
 ## 4. Folders: who may write where
 
@@ -120,10 +133,14 @@ council's count. Per-thing rules are edited only in the "Our own roles" style.
 | **A branch of your own** (an AI helper's work, or yours in your own editor) | You and your helpers. | "Send my work to the main copy" = merge into main (`repo.merge`). One lead: the host or an admin does it, or says yes to your request. Council: the council agrees, then you send it. Open: any builder. Own roles: whoever holds a role that looks after it, under the rule the group picked. |
 | **GitHub** (Ship it) | Decided per project: host/admin, more than half, or everyone (`ship.js`); under a council, the council's rule. | Ship it pushes exactly what was reviewed, never forced. |
 | **A shared folder** (sync) | Any person in the project who is not a spectator or guest writes into it (`sync.js` `writer()`); only someone who may change settings connects, changes or undoes it (`lead()`). | Sync sends saved changes; conflicts are sorted out by someone who may change settings. |
-| **Your own folder** | There is no per-person folder on the tribe's computer today: no `people/<member>/` path is checked anywhere in the server. Your own space is your branch, your uploads (only you, an admin or the host delete them: `files.delete`) and your scratch pad. | Not applicable. |
+| **My folder** (`people/<your id>/` in the project's files; "My folder" in Files › Code) | You, always, even on a guest pass; your AI helpers; and whoever may delete anyone's files, for tidying (`codefiles.js` `writeBlock()`). Nobody else. People who only watch have none. | "Send to the main copy" copies one file to the same path in the project (`codefiles.js` `send2main()`). It needs "send work to the main copy" (`repo.merge`), so the group's style decides: one lead = the host or an admin, or their yes to your request; council = the council agrees; open = any builder; own roles = whoever the group gave it to. A refusal shows who can and offers "Ask them". |
 
-One inconsistency fixed here: publishing had no row (part 2, point 5). One left as found and written down: "your own
-folder" is a branch and your uploads, not a folder with its own rule; making it one is a separate piece of work.
+Fixed here: publishing had no row (part 2, point 5), and there was no folder of your own (point 8).
+
+Honest limits of My folder: it lives in the project's files, so it needs a project folder; everyone in the project can
+read it; builders can still edit the rest of the project folder directly, as before (My folder is the place to work
+without touching the shared files, and the only place a guest pass can write). An AI helper writes in its owner's
+folder, and elsewhere only where its owner already may.
 
 ## Tests
 

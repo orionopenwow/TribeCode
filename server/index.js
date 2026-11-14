@@ -569,7 +569,7 @@ const assetLib = require('./assets')({ P, root: require('./tpldir').root(), base
 const assist = require('./assist')({ P, store, brain, docs, loadTasks: () => loadTasks(), getMembers: () => members, presenceFor, postChat, coord, shelf, str, nameOf });   // feat/assist: vision drafting + suggested tasks (server/assist.js)
 // feat/viewers: asset viewers (server/files.js) + phone app mode (server/phoneapp.js)
 const assetFiles = require('./files')({ P });
-const codeFiles = require('./codefiles')({ P, claims, identity: W.identity, member: id => members.find(x => x.id === id), broadcast });   // feat/files-code: the read-only Code view of Files (server/codefiles.js)
+const codeFiles = require('./codefiles')({ perms, P, claims, identity: W.identity, member: id => members.find(x => x.id === id), broadcast });   // feat/files-code: the read-only Code view of Files (server/codefiles.js)
 const uploads = require('./uploads')({ store: baseStore, P, nameOf, broadcast, can: (me, cap) => perms.can(me, cap) });   // the Files center: any file type, yours or the project's
 const dropzone = require('./dropzone')({ isLocal });   // feat/dropzone: the desktop app's dropped paths (host, this computer only)
 const connections = require('./connections')({ P, store: baseStore, uploads, visuals, postChat, nameOf, broadcast, isLocal });   // feat/mcp-directory: special connections (ArtCraft…), host only

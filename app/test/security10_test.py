@@ -189,6 +189,36 @@ def main():
         st, d = cast(hana_ai, ch, vid); assert st == 200, (st, d)
         v = vote(ch, vid); assert v["status"] == "passed" and set(v["ballots"]) == {ids["Hana"]}, v   # the owner's ballot, once
         assert "board.manage" in caps(dee)
+        # ---------- F: My folder (people/<id>/ in the project's files) ----------
+        work = tempfile.mkdtemp(prefix="sec10-src-", dir="/tmp"); app = os.path.join(work, "bakery"); os.makedirs(app)
+        Path(app, "index.html").write_text("<h1>Bakery</h1>")
+        gitc = lambda *a: subprocess.run(["git", "-C", app, "-c", "user.email=t@t", "-c", "user.name=T", *a], check=True, capture_output=True)
+        gitc("init", "-q", "-b", "main"); gitc("add", "-A"); gitc("commit", "-q", "-m", "init")
+        fp = api("/projects", "POST", {"path": app}, token=host)[1]["project"]["id"]
+        put = lambda t, path, text="x": api("/code/file", "PUT", {"path": path, "text": text}, token=t, project=fp)
+        st, d = api("/code/mine", "POST", {}, token=sam, project=fp); assert st == 200 and d["folder"] == f"people/{ids['Sam']}", (st, d)
+        assert api("/code/mine", "POST", {}, token=watch, project=fp)[0] == 403, "someone who only watches got a folder"
+        mine = f"people/{ids['Sam']}/notes.md"
+        assert put(sam, mine, "my idea")[0] == 200
+        assert put(sam_ai, f"people/{ids['Sam']}/from-helper.md")[0] == 200, "a helper can't write in its owner's folder"
+        assert put(bo, mine, "bo was here")[0] == 403, "someone else wrote in my folder"
+        assert put(hana_ai, mine)[0] == 403, "someone else's helper wrote in my folder"
+        assert put(watch, f"people/{ids['Watcher']}/x.md")[0] == 403 and put(watch, mine)[0] == 403
+        assert api("/code/file?path=" + mine, "DELETE", token=bo, project=fp)[0] == 403
+        assert put(sam, f"people/{ids['Sam']}/../../index.html", "climb")[0] in (400, 403, 404), "a path climbed out of the folder"
+        assert put(host, mine, "tidy")[0] == 200   # whoever may delete anyone's files can tidy
+        assert put(sam, mine, "my idea")[0] == 200
+        # send to the main copy: decided by the group's style (here: one lead)
+        st, d = api("/code/send", "POST", {"path": mine}, token=sam, project=fp); assert st == 403 and d["need"]["cap"] == "repo.merge" and "Hana" in d["need"]["who"], (st, d)
+        assert api("/code/send", "POST", {"path": mine}, token=bo, project=fp)[0] == 403, "someone sent a file out of another person's folder"
+        assert api("/code/send", "POST", {"path": mine}, token=sam_ai, project=fp)[0] == 403
+        assert not Path(app, "notes.md").exists()
+        fch = api("/groupstyle", token=host, project=fp)[1]["channel"]
+        a = api("/groupstyle/ask", "POST", {"cap": "repo.merge", "note": "notes.md"}, token=sam, project=fp)[1]
+        assert api(f"/chat/{fch}/vote/{a['vote']}/cast", "POST", {"option": "yes"}, token=host, project=fp)[0] == 200
+        st, d = api("/code/send", "POST", {"path": mine}, token=sam, project=fp); assert st == 200 and d["path"] == "notes.md", (st, d)
+        assert Path(app, "notes.md").read_text() == "my idea"
+        print("F ok: my folder is mine (and my helper's); sending to the main copy is decided by the group")
         # reset by the computer's owner only
         assert api("/groupstyle/reset", "POST", {}, token=dee, project=pid)[0] == 403
         g = api("/groupstyle/reset", "POST", {}, token=host, project=pid)[1]

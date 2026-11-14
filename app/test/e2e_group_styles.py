@@ -8,7 +8,11 @@ Checks:
    open to claim, and nobody (not even the owner) changes settings alone; a friend's request passes with two of three;
  5 a custom role: name, purpose, what it looks after, who holds it; the holder gets exactly that;
  6 a non-decider's change to the style goes to a vote instead of being saved;
- 7 a 390px phone fits, no page errors.
+ 7 a 390px phone fits, no page errors;
+ 8 under a council: the Company page offers a council member "Propose a change" (a request, not hidden buttons); the
+   Task Board is open to claim in the browser, its own switch is locked with the reason, and a task can be put to a
+   vote that the council counts; the ? next step becomes "Ask them" for someone who can't do the step;
+ 9 My folder in Files: mine to write, "Send to the main copy" is refused with who can, and Ask them works.
 Usage: TRIBE_PORT_OFFSET=3320 python3 app/test/e2e_group_styles.py   (screenshots: docs/screenshots/group-styles-*.png)
 """
 import json, os, subprocess, tempfile, time, urllib.request, urllib.error
@@ -138,7 +142,43 @@ def main():
             row = pg.inner_text("#gs-who li[data-cap='repo.merge']"); assert "The council agrees" in row and "Camp" in row and "Maya" in row, row
             pg.screenshot(path=str(SHOTS / "group-styles-council-1440.png"))
             # a friend asks from the list; two of three say yes
-            tp = page(theo, "Theo", pid); sheet(tp)
+            tp = page(theo, "Theo", pid)
+            # ---- 8: Company under a council: a council member proposes instead of the buttons being hidden ----
+            tp.evaluate("TribeCompany.open()"); tp.wait_for_selector("#view-company #co-propose", timeout=15000)
+            assert tp.locator("#co-settings").count() == 0 and "council decides changes here" in tp.inner_text("#co-propose-note").lower()
+            tp.click("#co-propose")
+            v = None
+            for _ in range(40):
+                v = next((x for x in ok(api(f"/chat/{chan}/votes", token=host, project=pid))["votes"] if x.get("council") and x["status"] == "open" and (x["council"].get("ask") or {}).get("cap") == "settings.edit"), None)
+                if v: break
+                time.sleep(0.25)
+            assert v, "Propose a change didn't ask the council"
+            ok(api(f"/chat/{chan}/vote/{v['id']}/close", "POST", {}, token=theo, project=pid), "withdraw the proposal")
+            # ---- 8: the Task Board under a council, in the browser ----
+            coin = ok(api("/tasks", "POST", {"title": "Draw the coin"}, token=host, project=pid))["task"]
+            tp.evaluate("TribeShell.go('tasks')")
+            tp.wait_for_function("[...document.querySelectorAll('#board [data-sec=needs] h5')].some(h => h.textContent.includes('Open to claim'))", timeout=15000)
+            crow = tp.locator(f'#board .task[data-id="{coin["id"]}"]'); assert crow.locator('[data-qa="claim"]').inner_text().strip() == "Claim"
+            assert "council" in tp.inner_text("#tk-mode").lower()
+            tp.evaluate("document.querySelector('#tk-mode').click()"); tp.wait_for_selector('#tk-pop [data-wmode="council"]')
+            assert tp.locator('#tk-pop [data-wmode]:not([disabled])').count() == 0 and "decides as a council" in tp.inner_text("#tk-pop"), "the board's own switch should be locked under a council"
+            tp.screenshot(path=str(SHOTS / "group-styles-tasks-council-1440.png")); tp.keyboard.press("Escape")
+            pg.evaluate("TribeShell.go('tasks')"); pg.wait_for_selector('#tk-mode', state="attached", timeout=15000); pg.wait_for_timeout(800); pg.evaluate("document.querySelector('#tk-mode').click()"); pg.wait_for_selector('#tk-pop [data-wmode="council"]')
+            assert pg.locator('#tk-pop [data-wmode]:not([disabled])').count() == 0, "even the owner can't flip the board back while the group is a council"
+            pg.keyboard.press("Escape")
+            crow.locator('[data-qa="claim"]').click()
+            tp.wait_for_function(f"fetch('/api/tasks', {{ headers: {{ Authorization: 'Bearer {theo}', 'X-Project': '{pid}' }} }}).then(r => r.json()).then(d => d.tasks.find(t => t.id === '{coin['id']}').assignee === '{theo_id}')", timeout=10000)
+            ok(api(f"/chat/{chan}/vote", "POST", {"question": "Should we do “Draw the coin”?"}, token=theo, project=pid))
+            v = next(x for x in ok(api(f"/chat/{chan}/votes", token=host, project=pid))["votes"] if x["q"].startswith("Should we do") and x["status"] == "open")
+            assert v["council"]["need"] == "majority" and v["tally"]["needed"] == 2, "a vote about a task is counted by the council"
+            for t in (host, maya): api(f"/chat/{chan}/vote/{v['id']}/cast", "POST", {"option": "yes"}, token=t, project=pid)
+            # ---- 8: the ? next step for someone who can't do the step ----
+            tp.wait_for_function("window.TribeNextStep && TribeNextStep.open", timeout=8000)
+            nx = tp.evaluate("(async () => { await TribeGroupStyle.load(); const st = { tribe: true, project: { id: 'x', name: 'X', kind: 'site' }, vision: false, tasks: 0, cant: { 'settings.edit': 'Camp, Maya' } }; const p = TribeNextStep.pick ? TribeNextStep.pick(st) : null; return p && p.best ? [p.best.title, p.best.act, p.best.run, p.best.why] : null; })()")
+            assert nx and nx[1] == "Ask them" and nx[2] == "ask" and "Camp, Maya" in nx[3], nx
+            tp.evaluate("TribeNextStep.close && TribeNextStep.close()"); tp.wait_for_timeout(300)   # a finished task offers the next step; not what this checks
+            WHO_OPENED = tp.evaluate("!!document.querySelector('.nx-scrim')")
+            sheet(tp)
             tp.click("#gs-who li[data-cap='site.publish'] [data-ask]"); tp.wait_for_function("document.querySelector(\"#gs-who li[data-cap='site.publish'] [data-ask]\").textContent === 'Asked'", timeout=8000)
             votes = ok(api(f"/chat/{chan}/votes", token=host, project=pid))["votes"]; v = next(x for x in votes if x.get("council") and x["status"] == "open")
             assert v["tally"]["needed"] == 2 and v["tally"]["n"] == 3, v["tally"]
@@ -173,6 +213,32 @@ def main():
             assert pg.locator("#gs-who [data-rule='repo.merge']").count() == 1, "custom: each thing has its own rule"
             pg.screenshot(path=str(SHOTS / "group-styles-who-1440.png"))
             close(pg)
+
+            # ---- 9: My folder in Files ----
+            work = Path(tempfile.mkdtemp(prefix="gs-src-", dir="/tmp")) / "bakery"; work.mkdir()
+            (work / "index.html").write_text("<h1>Bakery</h1>")
+            gitc = lambda *a: subprocess.run(["git", "-C", str(work), "-c", "user.email=t@t", "-c", "user.name=T", *a], check=True, capture_output=True)
+            gitc("init", "-q", "-b", "main"); gitc("add", "-A"); gitc("commit", "-q", "-m", "init")
+            fp = ok(api("/projects", "POST", {"path": str(work)}, token=host))["project"]["id"]
+            fpg = page(theo, "Theo", fp)
+            fpg.evaluate("TribeApp.show('docs'); TribeCodeFiles.set('code')")
+            fpg.wait_for_selector("#cf-mine:not([hidden])", timeout=15000); fpg.click("#cf-mine")
+            fpg.wait_for_selector("#cf-viewer #cf-send", timeout=15000)
+            assert fpg.evaluate("(TribeCodeFiles.current() || {}).path") == f"people/{theo_id}/README.md"
+            fpg.click("#cf-new"); fpg.fill("#cf-new-name", "idea.md"); fpg.click("#cf-new-ok")
+            fpg.wait_for_function(f"(TribeCodeFiles.current() || {{}}).path === 'people/{theo_id}/idea.md'", timeout=10000)
+            assert api("/code/file", "PUT", {"path": f"people/{theo_id}/idea.md", "text": "nope"}, token=maya, project=fp)[0] == 403, "someone else wrote in Theo's folder"
+            ok(api("/code/file", "PUT", {"path": f"people/{theo_id}/idea.md", "text": "A bread quiz"}, token=theo, project=fp))
+            fpg.screenshot(path=str(SHOTS / "group-styles-myfolder-1440.png"))
+            fpg.click("#cf-send"); fpg.wait_for_selector("#gs-askbar #gs-askbar-go", timeout=8000)
+            assert "Camp can do this here" in fpg.inner_text("#gs-askbar") and not (work / "idea.md").exists()
+            fpg.click("#gs-askbar-go"); fpg.wait_for_selector("#gs-askbar", state="detached", timeout=8000)
+            fch = ok(api("/groupstyle", token=host, project=fp))["channel"]
+            v = next(x for x in ok(api(f"/chat/{fch}/votes", token=host, project=fp))["votes"] if x.get("council") and x["status"] == "open")
+            ok(api(f"/chat/{fch}/vote/{v['id']}/cast", "POST", {"option": "yes"}, token=host, project=fp)); fpg.wait_for_timeout(500)
+            fpg.click("#cf-send"); fpg.wait_for_function("(TribeCodeFiles.current() || {}).path === 'idea.md'", timeout=10000)
+            assert (work / "idea.md").read_text() == "A bread quiz"
+            fpg.close()
 
             # ---- 7: phone ----
             ph = page(maya, "Maya", pid, 390, 844, phone=True); sheet(ph)

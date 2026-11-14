@@ -10,6 +10,9 @@
   const toast = m => window.TribeApp && window.TribeApp.toast && window.TribeApp.toast(m);
   const icon = (n, s = 16) => (window.TribeIcons && window.TribeIcons.svg && window.TribeIcons.has && window.TribeIcons.has(n) ? window.TribeIcons.svg(n, s) : '');
   const T = x => (window.TribeI18n && window.TribeI18n.t ? window.TribeI18n.t(x, x) : x);   // long lines: the exact-text swap only handles short ones
+  // Templates with {placeholders}: translated as one sentence, then filled in. A small local helper until the shared
+  // t(text, {vars}) from feat/languages lands; that one can replace this line.
+  const tt = (text, vars) => T(text).replace(/\{(\w+)\}/g, (m, k) => (vars && vars[k] != null ? vars[k] : m));
   const DEF = { group: 'Company', lead: 'Lead', role: 'Role', checkin: 'Check-in' };
   const COLORS = ['#F26B1D', '#38C6B1', '#6C7CFF', '#3BD16F', '#FF6F8E', '#FFB86B'];
   const NEED_T = { majority: 'More than half', two: 'Any two', all: 'Everyone' };
@@ -42,10 +45,10 @@
         <div class="gs-row"><label class="gs-f"><span class="gs-fl">How many must agree</span><select class="input" id="gs-need">${Object.entries(NEED_T).map(([k, t]) => `<option value="${k}"${D.council.need === k ? ' selected' : ''}>${t}</option>`).join('')}</select></label>
         <label class="gs-f"><span class="gs-fl">Time to decide</span><select class="input" id="gs-hours">${[[24, 'One day'], [48, 'Two days'], [168, 'One week']].map(([h, t]) => `<option value="${h}"${Number(D.council.hours) === h ? ' selected' : ''}>${t}</option>`).join('')}</select></label>
         <label class="gs-f"><span class="gs-fl">If time runs out</span><select class="input" id="gs-tie"><option value="fails"${D.council.tie === 'fails' ? ' selected' : ''}>It does not pass</option><option value="more-yes"${D.council.tie === 'more-yes' ? ' selected' : ''}>More yes than no is enough</option></select></label></div>
-        <p class="gs-note">With a council, nobody decides the big things alone: publishing, sending work to the main copy, spending, roles and settings.</p></div>`;
+        <p class="gs-note">${esc(T('With a council, nobody decides the big things alone: publishing, sending work to the main copy, spending, roles and settings.'))}</p></div>`;
     }
-    if (D.style === 'open') more = '<p class="gs-note">Anyone building can publish, send work to the main copy and change settings. Deleting, removing someone and changing roles need a second person to agree.</p>';
-    if (D.style === 'custom') more = '<p class="gs-note">Make roles below and tick what each one looks after. In the list at the bottom, pick how each thing is decided.</p>';
+    if (D.style === 'open') more = `<p class="gs-note">${esc(T('Anyone building can publish, send work to the main copy and change settings. Deleting, removing someone and changing roles need a second person to agree.'))}</p>`;
+    if (D.style === 'custom') more = `<p class="gs-note">${esc(T('Make roles below and tick what each one looks after. In the list at the bottom, pick how each thing is decided.'))}</p>`;
     if (D.style === 'lead') more = `<label class="gs-f gs-leadw"><span class="gs-fl">What do you call the lead?</span><input class="input" id="gs-w-lead2" maxlength="24" list="gs-dl-lead" value="${esc(D.words.lead)}" placeholder="Lead"></label>`;
     return `<section class="gs-sec" aria-labelledby="gs-h-style"><span class="eyebrow">How we decide</span><h4 id="gs-h-style">Who has the final say?</h4>
       <div class="gs-opts" role="radiogroup" aria-labelledby="gs-h-style">${opts}</div>${more}</section>`;
@@ -66,12 +69,12 @@
         <div class="gs-swatches" role="radiogroup" aria-label="Colour">${COLORS.map(c => `<button type="button" class="gs-sw${r.color.toLowerCase() === c.toLowerCase() ? ' on' : ''}" role="radio" aria-checked="${r.color.toLowerCase() === c.toLowerCase()}" data-rcolor="${i}" data-c="${c}" style="--sw:${c}" aria-label="${c}"></button>`).join('')}</div>
         <span class="gs-fl">Looks after</span><div class="gs-checks col">${V.caps.map(c => `<label class="gs-ck"><input type="checkbox" data-rcap="${i}" value="${esc(c.id)}" ${r.caps.includes(c.id) ? 'checked' : ''}><span>${esc(T(c.label))}</span></label>`).join('')}</div>
         <span class="gs-fl">Who has this role</span><div class="gs-checks">${V.people.map(p => `<label class="gs-ck"><input type="checkbox" data-rmem="${i}" value="${esc(p.id)}" ${r.members.includes(p.id) ? 'checked' : ''}><span>${esc(p.name)}</span></label>`).join('')}</div>
-        <p class="gs-note">Things only the computer’s owner can do are never part of a role. AI helpers follow their owner.</p>
+        <p class="gs-note">${esc(T('Things only the computer’s owner can do are never part of a role. AI helpers follow their owner.'))}</p>
         <button type="button" class="linkish gs-danger" data-rdel="${i}">Remove this role</button></div>`;
       return `<li class="gs-role${open ? ' open' : ''}" style="--sw:${esc(r.color)}"><button type="button" class="gs-role-h" data-ropen="${i}" aria-expanded="${open}"><span class="gs-dot" aria-hidden="true"></span><span class="gs-role-t"><b>${esc(r.name)}</b><small>${esc(r.purpose || `${r.caps.length} ${r.caps.length === 1 ? 'thing' : 'things'}`)}${who.length ? ` · ${esc(names(who))}` : ''}</small></span>${icon('chev', 16)}</button>${form}</li>`;
     }).join('');
     return `<section class="gs-sec" aria-labelledby="gs-h-roles"><span class="eyebrow">Roles you made</span><h4 id="gs-h-roles">Your own roles</h4>
-      ${D.roles.length ? `<ul class="gs-roles">${list}</ul>` : '<p class="gs-note" id="gs-noroles">None yet. A role has a name, a purpose and the things it looks after.</p>'}
+      ${D.roles.length ? `<ul class="gs-roles">${list}</ul>` : `<p class="gs-note" id="gs-noroles">${esc(T('None yet. A role has a name, a purpose and the things it looks after.'))}</p>`}
       ${D.roles.length < 24 ? `<button type="button" class="btn sm" id="gs-addrole">${icon('plus', 14)}Add a role</button>` : ''}</section>`;
   }
   function whoHtml() {
@@ -83,10 +86,10 @@
         ${r.me ? `<span class="gs-you">${icon('check', 14)}You can</span>` : r.locked ? '' : `<button type="button" class="btn sm" data-ask="${esc(r.id)}">Ask</button>`}</li>`;
     }).join('');
     const every = V.who.everyone.map(r => `<li class="gs-w me"><div class="gs-w-t"><b>${esc(T(r.label))}</b><small>${esc(T(r.ruleText))}</small></div></li>`).join('');
-    const passes = V.permits.length ? `<p class="gs-note" id="gs-passes">${V.permits.map(p => `They said yes: you can ${esc(p.label.charAt(0).toLowerCase() + p.label.slice(1))} until ${esc(new Date(p.until).toLocaleString([], { weekday: 'short', hour: '2-digit', minute: '2-digit' }))}.`).join(' ')}</p>` : '';
+    const passes = V.permits.length ? `<p class="gs-note" id="gs-passes">${V.permits.map(p => esc(tt('They said yes. Until {when} you can: {what}.', { what: T(p.label), when: new Date(p.until).toLocaleString([], { weekday: 'short', hour: '2-digit', minute: '2-digit' }) }))).join(' ')}</p>` : '';
     return `<section class="gs-sec" aria-labelledby="gs-h-who"><span class="eyebrow">Right now</span><h4 id="gs-h-who">Who can do what here</h4>${passes}
       <ul class="gs-who" id="gs-who">${rows}${every}</ul>
-      <label class="gs-ck gs-ai"><input type="checkbox" id="gs-ai" ${D.aiVotes ? 'checked' : ''}><span>AI helpers may vote on small, safe things <small>Off: only people vote. A helper’s vote counts as its owner’s one vote.</small></span></label></section>`;
+      <label class="gs-ck gs-ai"><input type="checkbox" id="gs-ai" ${D.aiVotes ? 'checked' : ''}><span>${esc(T('AI helpers may vote on small, safe things'))} <small>${esc(T('Off: only people vote. A helper’s vote counts as its owner’s one vote.'))}</small></span></label></section>`;
   }
   function footHtml() {
     const ch = dirty();
@@ -128,7 +131,7 @@
     const f = sheet.foot, q = s => f.querySelector(s);
     const c = q('#gs-close'); if (c) c.onclick = () => sheet.close();
     const s = q('#gs-save'); if (s) s.onclick = () => save(s);
-    const r = q('#gs-reset'); if (r) r.onclick = async () => { try { V = await C.api('/groupstyle/reset', { method: 'POST', body: {} }); after('Back to one lead.'); } catch (e) { toast(e.message); } };
+    const r = q('#gs-reset'); if (r) r.onclick = async () => { try { V = await C.api('/groupstyle/reset', { method: 'POST', body: {} }); after(T('Back to one lead.')); } catch (e) { toast(e.message); } };
   }
   function after(msg) {
     if (window.TribeI18n && window.TribeI18n.words) window.TribeI18n.words(V.words);
@@ -138,14 +141,14 @@
   async function save(btn) {
     btn.disabled = true; btn.classList.add('busy');
     try {
-      if (V.can.decide) { V = await C.api('/groupstyle', { method: 'PUT', body: D }); after('Saved.'); }
-      else { const r = await C.api('/groupstyle/ask', { method: 'POST', body: { change: D } }); D = draft(); draw(); toast(`Put to a vote. ${names(r.deciders)} can answer in the chat.`); }
+      if (V.can.decide) { V = await C.api('/groupstyle', { method: 'PUT', body: D }); after(T('Saved.')); }
+      else { const r = await C.api('/groupstyle/ask', { method: 'POST', body: { change: D } }); D = draft(); draw(); toast(tt('Put to a vote. {who} can answer in the chat.', { who: names(r.deciders) })); }
     } catch (e) { btn.disabled = false; btn.classList.remove('busy'); toast(e.message); }
   }
   async function open() {
     if (sheet) return sheet;
     await load();
-    if (!V) { toast('Could not load this right now.'); return null; }
+    if (!V) { toast(T('Could not load this right now.')); return null; }
     D = draft(); openRole = null;
     sheet = window.TribeUI.sheet({ kind: 'steps', wide: true, id: 'gs-sheet', eyebrow: 'This group', title: 'How we decide and who can do what', body: '<div class="gs"></div>', foot: ' ', onClose: () => { sheet = null; } });
     draw();
@@ -157,7 +160,7 @@
     if (btn) btn.disabled = true;
     try {
       const r = await C.api('/groupstyle/ask', { method: 'POST', body: { cap, note: note || '' } });
-      toast(`Asked. ${names(r.deciders)} can answer in the chat.`);
+      toast(tt('Asked. {who} can answer in the chat.', { who: names(r.deciders) }));
       if (btn) btn.textContent = 'Asked';
       return r;
     } catch (e) { if (btn) btn.disabled = false; toast(e.message); return null; }
@@ -169,7 +172,7 @@
     let el = document.getElementById('gs-askbar'); if (el) el.remove();
     el = document.createElement('div'); el.id = 'gs-askbar'; el.className = 'gs-askbar'; el.setAttribute('role', 'status');
     const who = names(need.who);
-    const line = need.locked ? `Only the computer’s owner${who ? ` (${who})` : ''} can do this.` : need.rule === 'council' ? `The council decides this here${who ? `: ${who}` : ''}.` : need.rule === 'all' ? 'Everyone decides this together here.' : who ? `${who} can do this here.` : 'Nobody here can do this yet.';
+    const line = need.locked ? (who ? tt('Only the computer’s owner ({who}) can do this.', { who }) : T('Only the computer’s owner can do this.')) : need.rule === 'council' ? (who ? tt('The council decides this here: {who}.', { who }) : T('The council decides this here.')) : need.rule === 'all' ? T('Everyone decides this together here.') : who ? tt('{who} can do this here.', { who }) : T('Nobody here can do this yet.');
     el.innerHTML = `<span class="gs-askbar-t"><b>${esc(T(need.label))}</b><small>${esc(line)}</small></span>${need.ask ? '<button type="button" class="btn sm primary" id="gs-askbar-go">Ask them</button>' : ''}<button type="button" class="gs-askbar-x" aria-label="Close">${icon('x', 14) || '×'}</button>`;
     document.body.appendChild(el);
     const done = () => { clearTimeout(barTimer); el.remove(); };
