@@ -151,7 +151,7 @@ def main():
             pg.screenshot(path=str(SHOTS / "cp-invite.png"))
             pg.click("#io-who-agent"); pg.wait_for_selector(".modal-card.io .ic-kinds .ic-chip")
             assert pg.locator(".modal-card.io .ic-kinds").evaluate("e => getComputedStyle(e).display") == "grid"
-            pg.wait_for_selector(".modal-card.io .ic-steps li")
+            pg.click(".modal-card.io [data-ic-kind='code']"); pg.wait_for_selector(".modal-card.io .ic-steps li")
             assert pg.locator(".modal-card.io .ic-steps li").first.evaluate("e => getComputedStyle(e, '::before').content") not in ("none", "normal")
             assert float(pg.locator(".modal-card.io .ic-steps").evaluate("e => parseFloat(getComputedStyle(e).fontSize)")) >= 15
             pg.screenshot(path=str(SHOTS / "cp-invite-agent.png"))

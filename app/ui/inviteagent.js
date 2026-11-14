@@ -214,7 +214,7 @@
     if (!alive() || !st) return;
     if (stage !== 'tool') {
       root.innerHTML = `<div class="ic-q"><span class="eyebrow">Bring an AI helper</span>${stage === 'ask' ? '<h3 class="ic-qt">Which AI do you already use?</h3><p class="lead">Pick one. You get the shortest way to bring it in, and you choose what it may do.</p>' : ''}</div>
-        ${stage === 'ask' ? `${pickerHtml(true)}<div class="ic-step"><span class="eyebrow">Not one of these?</span></div>${altsHtml()}<div id="ic-status" hidden></div>` : `<div class="ic-altpane" id="ic-alt" data-ic-altpane="${esc(alt)}">${altHtml()}</div><button type="button" class="linkish ic-back" id="ic-back">Back to the question</button>`}`;
+        ${stage === 'ask' ? `${pickerHtml(true)}<div class="ic-step"><span class="eyebrow">Not one of these?</span></div>${altsHtml()}<div id="ic-status" hidden></div><p class="faint ic-small ic-other">Qwen Code, Goose, Continue or another tool with a plain key of its own? <button type="button" class="linkish" id="ic-other">Connect another AI</button></p>` : `<div class="ic-altpane" id="ic-alt" data-ic-altpane="${esc(alt)}">${altHtml()}</div><button type="button" class="linkish ic-back" id="ic-back">Back to the question</button>`}`;
       return wire();
     }
     const k = kind(), list = agentsOf(k), has = list.length > 0, K = kindInfo(k), plural = k === 'other' ? 'agents here' : `${K.short}s`;
@@ -250,7 +250,7 @@
     });
     body.querySelectorAll('#ic-want [data-ic-preset]').forEach(b => b.onclick = () => { want[kind()] = b.dataset.icPreset; const el = body.querySelector('#ic-want'); if (el) { el.innerHTML = presetsHtml(want[kind()]); wire(); } });
     const wl = body.querySelector('[data-ic-welcome]'); if (wl) wireWelcome(wl, wl.dataset.icWelcome);
-    if (stage !== 'tool') { body.querySelectorAll('[data-ic-kind]').forEach(b => b.onclick = () => { stage = 'tool'; pick = b.dataset.icKind; ask = null; copiedCode = false; try { localStorage.setItem(KEY, pick); } catch {} draw(); watch(); }); return; }
+    if (stage !== 'tool') { body.querySelectorAll('[data-ic-kind]').forEach(b => b.onclick = () => { stage = 'tool'; pick = b.dataset.icKind; ask = null; copiedCode = false; try { localStorage.setItem(KEY, pick); } catch {} draw(); watch(); }); const o2 = body.querySelector('#ic-other'); if (o2) o2.onclick = () => { const A = window.TribeApp; close(); if (A && A.connectClaude) A.connectClaude({ tool: 'codex', fresh: true }); }; return; }
     body.querySelectorAll('[data-ic-kind]').forEach(b => b.onclick = () => { pick = b.dataset.icKind; ask = null; copiedCode = false; try { localStorage.setItem(KEY, pick); } catch {} draw(); });
     body.querySelectorAll('[data-ic-goto]').forEach(b => b.onclick = () => { pick = resolvePick(b.dataset.icGoto); ask = null; draw(); });
     body.querySelectorAll('[data-ic-copy]').forEach(b => b.onclick = async () => {
