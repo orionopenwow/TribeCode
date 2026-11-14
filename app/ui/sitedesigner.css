@@ -95,8 +95,8 @@ body.wdz-open { overflow: hidden; }
 .wdz-note > span { flex: 1; min-width: 200px; }
 .wdz-note[hidden] { display: none; }
 .wdz-conflict { border-color: var(--accent); }
-.wdz-ptabs { display: flex; gap: 2px; padding: 8px 10px 0; border-bottom: 1px solid var(--border); }
-.wdz-ptabs button { height: 32px; padding: 0 12px; border: 1px solid transparent; border-bottom: 0; border-radius: var(--r-sm) var(--r-sm) 0 0; background: none; color: var(--muted); font: 600 12.5px var(--font); cursor: pointer; display: inline-flex; align-items: center; }
+.wdz-ptabs { display: flex; gap: 0; padding: 8px 8px 0; min-width: 0; border-bottom: 1px solid var(--border); }
+.wdz-ptabs button { height: 32px; padding: 0 9px; flex: 1 1 auto; justify-content: center; min-width: 0; white-space: nowrap; border: 1px solid transparent; border-bottom: 0; border-radius: var(--r-sm) var(--r-sm) 0 0; background: none; color: var(--muted); font: 600 12.5px var(--font); cursor: pointer; display: inline-flex; align-items: center; }
 .wdz-ptabs button[aria-selected="true"] { background: var(--surface-2); border-color: var(--border); color: var(--text); }
 .wdz-right { grid-template-rows: auto minmax(0, 1fr) minmax(320px, 1.15fr); overflow: hidden; }
 .wdz-right > .wdz-insp { overflow: auto; min-height: 0; }
