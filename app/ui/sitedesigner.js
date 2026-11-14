@@ -121,6 +121,7 @@
     chipKey = ''; logPaint();   // feat/flint-unify: this design's thread and chips
     status(); await loadComments();
     try { if (STU()) STU().opened(stuApi); } catch {}
+    try { if (window.TribeSiteFxUI) window.TribeSiteFxUI.opened(stuApi); } catch {}   // feat/site-3d
     if (o.comment) commentMode(true);
     const ask2 = o.ask || rest; if (ask2) setTimeout(() => ask(ask2), 60);
     return st;
@@ -365,7 +366,7 @@
   function picker() {
     const C2 = S().CATS || {}, groups = {};
     S().TYPES.forEach(t => { const g = C2[t] || 'More'; (groups[g] = groups[g] || []).push(t); });
-    return Object.entries(groups).map(([g, ts]) => `<p class="wdz-eyebrow">${esc(g)}</p>${ts.map(ty => `<div class="wdz-pk"><b>${esc(S().BLOCKS[ty].label)}</b><span class="wdz-pkv">${S().BLOCKS[ty].variants.map(v => `<button type="button" class="wdz-pkb" data-add="${ty}" data-v="${v}" title="Add ${esc(S().BLOCKS[ty].label.toLowerCase())}: ${esc(v)}">${schem(ty, v)}<small>${esc(v)}</small></button>`).join('')}</span></div>`).join('')}`).join('');
+    return Object.entries(groups).map(([g, ts]) => `<p class="wdz-eyebrow">${esc(g)}</p>${ts.map(ty => `<div class="wdz-pk"><b>${esc(S().BLOCKS[ty].label)}</b><span class="wdz-pkv">${S().BLOCKS[ty].variants.map(v => `<button type="button" class="wdz-pkb" data-add="${ty}" data-v="${v}" title="Add ${esc(S().BLOCKS[ty].label.toLowerCase())}: ${esc(v)}">${schem(ty, v)}<small>${esc(v)}</small></button>`).join('')}</span></div>`).join('')}`).join('') + (window.TribeSiteFxUI ? window.TribeSiteFxUI.picker() : '');   // feat/site-3d
   }
   const KEYS = [['?', 'These shortcuts'], ['Ctrl Z · Ctrl Shift Z', 'Undo · Redo'], ['Ctrl D', 'Duplicate the selected block'], ['Delete', 'Remove the selected block'], ['H', 'Hide or show the selected block'], ['Alt ↑ · Alt ↓', 'Move the selected block'], ['C', 'Comment mode'], ['1 · 2 · 3', 'Desktop · Tablet · Phone'], ['Ctrl S', 'Save a version'], ['Esc', 'Deselect, close']];
   function shortcuts() { const k = $('#wdz-keys'); k.hidden = !k.hidden; k.innerHTML = `<div class="wdz-keys-in"><p class="wdz-eyebrow">Keyboard shortcuts</p><dl>${KEYS.map(([a, b]) => `<dt><kbd>${esc(a)}</kbd></dt><dd>${esc(b)}</dd>`).join('')}</dl><button type="button" class="btn sm" data-wdz="keys">Close</button></div>`; }
@@ -560,6 +561,7 @@
       ${lists.map(([k, v]) => `<p class="wdz-row wdz-list"><span>${esc(k)}: ${v.length}</span><button type="button" class="btn sm" data-item="add" data-k="${k}">+ Add</button><button type="button" class="btn sm ghost" data-item="del" data-k="${k}"${v.length ? '' : ' disabled'}>− Remove last</button></p>`).join('')}
       ${'img' in b.props ? `<p class="wdz-row"><button type="button" class="btn sm" data-selimg="1">Picture…</button></p>` : ''}`;
     box.querySelectorAll('[data-prop]').forEach(i => i.addEventListener('change', () => commit(S().setProp(st.cfg, st.page, b.id, i.dataset.prop, i.value))));
+    if (window.TribeSiteFxUI) window.TribeSiteFxUI.row(box, stuApi, b);   // feat/site-3d: the moving background behind this section
   }
   function itemTemplate(b, k) { const d = S().BLOCKS[b.type].make(st.cfg.name)[k]; const last = (b.props[k] || []).slice(-1)[0]; return JSON.parse(JSON.stringify(last || (d && d[0]) || { label: 'New', link: { kind: '', to: '' } })); }
 
@@ -666,6 +668,7 @@
   function blobDownload(blob, name) { const u = URL.createObjectURL(blob), a = document.createElement('a'); a.href = u; a.download = name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(u), 4000); }
   async function download(kind) {
     const slug = S().slugify(st.cfg.name);
+    if (window.TribeSiteFx && window.TribeSiteFx.uses(st.cfg).any) await window.TribeSiteFx.preload(true);   // feat/site-3d: the background scripts go into the download
     if (kind !== 'zip') { const html = S().exportFiles(st.cfg, 'html')['index.html']; blobDownload(new Blob([html], { type: 'text/html' }), 'index.html'); say('Downloaded index.html: one standalone file with every page and its pictures. Open it in any browser, or put it on any host.'); return html; }
     const ex = S().exportFiles(st.cfg, 'zip'), files = Object.entries(ex.files);
     for (const a of ex.assets) { const b = S().dataToBytes(a.src); if (b) files.push([a.path, b]); }

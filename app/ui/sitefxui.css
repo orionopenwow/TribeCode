@@ -1,0 +1,11 @@
+/* Moving and 3D backgrounds in the website designer (feat/site-3d): the picker tiles and the Edit panel controls. */
+.sfx-tile img { display: block; width: 72px; height: 45px; object-fit: cover; border-radius: var(--r-sm); border: 1px solid var(--border); background: var(--surface); }
+.sfx-note { margin: 4px 0 0; font-size: 11.5px; line-height: 1.5; color: var(--muted); }
+.sfx-box { display: grid; gap: 10px; margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--border); }
+.sfx-box .wdz-eyebrow, .sfx-box .wdz-hint, .sfx-box .wdz-row { margin: 0; }
+.sfx-range input[type="range"] { width: 100%; margin: 0; accent-color: var(--accent); }
+.sfx-range small { display: flex; justify-content: space-between; font: 500 10.5px var(--mono); color: var(--muted); }
+.sfx-range small i { font-style: normal; }
+.sfx-two { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.sfx-check { display: flex; align-items: center; gap: 8px; font-size: 12.5px; color: var(--text); cursor: pointer; }
+.sfx-check input { accent-color: var(--accent); margin: 0; }

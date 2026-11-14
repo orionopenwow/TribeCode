@@ -93,7 +93,7 @@ module.exports = function siteDesign({ base, root, showcase, siteFlint, P, tasks
     const cfg = load(pid); if (!cfg) throw err(409, 'design the site first');
     const dir = showcase.siteDir(pid).dir; fs.mkdirSync(path.join(dir, 'assets'), { recursive: true });
     const ex = S.exportFiles(cfg, 'zip'); const written = [];
-    for (const [f, text] of Object.entries(ex.files)) { fs.writeFileSync(path.join(dir, f), text); written.push(f); }
+    for (const [f, text] of Object.entries(ex.files)) { if (f.includes('/')) fs.mkdirSync(path.dirname(path.join(dir, f)), { recursive: true }); fs.writeFileSync(path.join(dir, f), text); written.push(f); }   // feat/site-3d: fx/ beside the pages
     for (const a of ex.assets) { const bytes = S.dataToBytes(a.src); if (bytes) { fs.writeFileSync(path.join(dir, a.path), Buffer.from(bytes)); written.push(a.path); } }
     if (fs.existsSync(FONTS) && ex.fonts.length) { fs.mkdirSync(path.join(dir, 'fonts'), { recursive: true }); for (const f of ex.fonts) for (const n of [f.file, f.license]) { try { fs.copyFileSync(path.join(FONTS, n), path.join(dir, 'fonts', n)); written.push('fonts/' + n); } catch {} } }
     return { ok: true, dir: showcase.siteDir(pid).shown.replace(/index\.html.*$/, ''), files: written };
