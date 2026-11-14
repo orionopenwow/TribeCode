@@ -55,3 +55,7 @@ button.stu-sw[aria-pressed="true"] { outline: 2px solid var(--text); outline-off
   .stu-look, .stu-fonts .btn, .stu-issue .btn { min-height: 40px; }
   .stu-sw { width: 32px; height: 32px; }
 }
+.stu-illus { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; }
+.stu-illus button { padding: 0; border: 1px solid var(--border); border-radius: var(--r-sm); overflow: hidden; background: none; cursor: pointer; aspect-ratio: 4 / 3; }
+.stu-illus button:hover, .stu-illus button:focus-visible { border-color: var(--accent); }
+.stu-illus img { display: block; width: 100%; height: 100%; object-fit: cover; }

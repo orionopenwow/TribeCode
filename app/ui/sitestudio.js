@@ -71,7 +71,7 @@
   function checkPanel(box, api) {
     const head = `<p class="wdz-eyebrow">Check my site</p>`;
     if (!lastIssues) { box.innerHTML = `${head}<p class="wdz-hint">Looks for what would bother a visitor: buttons that go nowhere, pictures with no description, faint colours, empty sections, search and sharing details, and anything wider than a phone.</p><p class="wdz-row"><button type="button" class="btn sm primary" data-stu="check">Check my site</button></p>`; return; }
-    const fixes = lastIssues.filter(x => x.fix), must = lastIssues.filter(x => x.level === 'fix'), tips = lastIssues.filter(x => x.level !== 'fix');
+    const fixes = lastIssues.filter(x => x.fix && x.level === 'fix'), must = lastIssues.filter(x => x.level === 'fix'), tips = lastIssues.filter(x => x.level !== 'fix');
     const row = x => `<li class="stu-issue stu-${x.level}" data-issue="${esc(x.id)}"><span class="stu-dot" aria-hidden="true"></span><div><b>${esc(x.title)}</b><p>${esc(x.text)}</p><p class="wdz-row">${x.fix ? `<button type="button" class="btn sm" data-stu="fix" data-id="${esc(x.id)}">${esc(x.fix.label)}</button>` : ''}${x.block ? `<button type="button" class="btn sm ghost" data-stu="show" data-block="${esc(x.block)}" data-pg="${esc(x.page || '')}">Show me</button>` : ''}</p></div></li>`;
     box.innerHTML = `${head}
       <p class="stu-sum" role="status">${!lastIssues.length ? `${I('check')} <b>Nothing to fix.</b> It is ready to publish.` : `<b>${must.length ? `${must.length} to fix` : 'Nothing that must be fixed'}</b>${tips.length ? ` · ${tips.length} suggestion${tips.length === 1 ? '' : 's'}` : ''}`}</p>
@@ -150,9 +150,12 @@
     setTimeout(() => el.querySelector('#stu-iq').focus(), 0);
   }
 
+  // illustrations (TribeSiteCfg.ILLUS): drawn in the site's own colours, one tap puts one in the selected picture slot
+  function illusRow(api) { const L = S().ILLUS || {}, c = api.cfg(); return `<p class="stu-h"><b>Illustrations</b><small>in your site's colours</small></p><div class="stu-illus" role="group" aria-label="Illustrations">${Object.keys(L).map(id => `<button type="button" data-stu="illus" data-val="${id}" title="${esc(L[id].name)}" aria-label="${esc(L[id].name)}"><img src="${S().illustration(id, c)}" alt="" loading="lazy"></button>`).join('')}</div>`; }
   function paint(panel, box, api) { if (!box) return; if (panel === 'style') return stylePanel(box, api); if (panel === 'check') return checkPanel(box, api); }
   async function click(el, api) {
     const k = el.dataset.stu, v = el.dataset.val, c = api.cfg(), box = document.getElementById('wdz-insp');
+    if (k === 'illus') { const s0 = api.sel(); if (!s0 || s0.kind !== 'image' || !S().ILLUS[v]) return; const pg = c.pages.find(p => p.id === api.page()) || c.pages[0], b = pg.blocks.find(x => x.id === s0.block); if (!b) return; const old = S().getAt(b.props, s0.path + 'alt'); return api.commit(S().setImage(c, pg.id, b.id, s0.path, S().illustration(v, c), old || S().ILLUS[v].alt)); }
     if (k === 'look') return api.commit(S().setTheme(c, v));
     if (k === 'accent') return api.commit(S().setColor(c, v));
     if (k === 'fonts') return api.commit(S().setFonts(c, v));
@@ -162,7 +165,7 @@
     if (k === 'kit-save') { if (!kitApi()) return; kit = await kitApi().set(api.pid(), { ...S().kitFromSite(c), voice: (kit && kitPid === (api.pid() || 'me') && kit.voice) || '' }); kitPid = api.pid() || 'me'; api.say('Saved this look as the brand kit. Design uses the same colours, fonts and logo.'); if (box) stylePanel(box, api); return; }
     if (k === 'kit-use') { if (!kit) await loadKit(api); if (!kit) return; api.commit(S().kitToSite(c, kit)); api.say('Used the brand kit: its colours, fonts and logo are on every page.', '', [{ label: 'Undo', fn: () => { if (api.undo()) api.say('Undone.'); } }]); return; }
     if (k === 'check') return runCheck(api, box);
-    if (k === 'fix' || k === 'fixall') { const list = (lastIssues || []).filter(x => x.fix && (k === 'fixall' || x.id === el.dataset.id)); if (list.length && applyFix(api, list, k === 'fixall' ? 'Fixed' : list[0].title)) await runCheck(api, document.getElementById('wdz-insp')); return; }
+    if (k === 'fix' || k === 'fixall') { const list = (lastIssues || []).filter(x => x.fix && (k === 'fixall' ? x.level === 'fix' : x.id === el.dataset.id)); if (list.length && applyFix(api, list, k === 'fixall' ? 'Fixed' : list[0].title)) await runCheck(api, document.getElementById('wdz-insp')); return; }
     if (k === 'show') return api.select(el.dataset.block, el.dataset.pg);
     if (k === 'agent') return agentSheet(api);
     if (k === 'agent-close') { const s = document.getElementById('stu-agent'); if (s) s.remove(); return; }
@@ -171,5 +174,5 @@
     if (k === 'agent-flint') { const t = document.getElementById('stu-ask'), text = (t && t.value || '').trim(); if (!text) { if (t) t.focus(); return; } const s = document.getElementById('stu-agent'); if (s) s.remove(); return api.ask(text); }
     if (k === 'icon') return iconPicker(api, el.dataset.key);
   }
-  window.TribeSiteStudio = { paint, click, opened, closed, issues, proposal, iconPicker, reset: () => { lastIssues = null; } };
+  window.TribeSiteStudio = { illusRow, paint, click, opened, closed, issues, proposal, iconPicker, reset: () => { lastIssues = null; } };
 })();

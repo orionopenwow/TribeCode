@@ -17,6 +17,8 @@
     "Every choice here changes all pages at once. Undo takes it back.": ["Cada opción cambia todas las páginas a la vez. Deshacer lo revierte.","Cada escolha muda todas as páginas de uma vez. Desfazer reverte.","Chaque choix change toutes les pages d'un coup. Annuler le retire.","Jede Auswahl ändert alle Seiten auf einmal. Rückgängig nimmt sie zurück.","ここでの選択はすべてのページに一度に反映されます。「元に戻す」で戻せます。","这里的每个选择会同时改变所有页面。撤销即可恢复。","여기서 고르면 모든 페이지가 한 번에 바뀝니다. 실행 취소로 되돌립니다."],
     "How we sound": ["Cómo sonamos","Como soamos","Notre ton","So klingen wir","私たちの話し方","我们的语气","우리의 말투"],
     "Use the logo here": ["Usar el logo aquí","Usar o logo aqui","Utiliser le logo ici","Logo hier verwenden","ここにロゴを使う","在这里使用标志","여기에 로고 사용"],
+    "Illustrations": ["Ilustraciones","Ilustrações","Illustrations","Illustrationen","イラスト","插图","일러스트"],
+    "in your site's colours": ["con los colores de tu sitio","nas cores do seu site","aux couleurs de votre site","in den Farben deiner Website","サイトの色で","使用你网站的颜色","내 사이트 색상으로"],
     "Brand kit": ["Kit de marca","Kit da marca","Kit de marque","Marken-Kit","ブランドキット","品牌套件","브랜드 키트"],
     "Use the brand kit here": ["Usar el kit de marca aquí","Usar o kit da marca aqui","Utiliser le kit de marque ici","Marken-Kit hier verwenden","ここでブランドキットを使う","在这里使用品牌套件","여기에 브랜드 키트 사용"],
     "Save this look as the brand kit": ["Guardar este estilo como kit de marca","Salvar este visual como kit da marca","Enregistrer ce style comme kit de marque","Diesen Look als Marken-Kit speichern","この見た目をブランドキットとして保存","把这个外观存为品牌套件","이 모양을 브랜드 키트로 저장"],

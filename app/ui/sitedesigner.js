@@ -317,7 +317,7 @@
   }
   // ---------- feat/design-site2: Style, Check and "Have my agent do it" live in app/ui/sitestudio.js ----------
   const STU = () => window.TribeSiteStudio;
-  const stuApi = { cfg: () => st.cfg, commit: c => commit(c), say: (t, h, a) => say(t, h, a), undo: () => undo(), pid: () => st.pid, page: () => st.page, connected: () => connected(), ask: t => ask(t),
+  const stuApi = { sel: () => st.sel, cfg: () => st.cfg, commit: c => commit(c), say: (t, h, a) => say(t, h, a), undo: () => undo(), pid: () => st.pid, page: () => st.page, connected: () => connected(), ask: t => ask(t),
     render: (c, o) => S().render(c, { ...o, fonts: file => FONTS.get(file) || '', extraHead: EDIT_CSS }), frameJs: () => EDIT_JS(),
     select: (block, pg) => { if (pg && st.cfg.pages.some(p => p.id === pg)) st.page = pg; st.sel = { block, path: '', kind: 'block' }; st.panel = 'edit'; paint(); postSel(true); } };
   // ---------- feat/site-v2: the right panel (Edit · Comments · Site), the block picker, shortcuts ----------
@@ -355,6 +355,10 @@
       newsletter: R(12, 8, 36, 5, .6) + R(10, 20, 28, 7, .2) + R(40, 20, 12, 7, .7), cta: v === 'accent' ? R(0, 4, 60, 32, .5) + R(16, 12, 28, 5, .9) + R(24, 22, 12, 5, .9) : R(14, 12, 32, 5, .6) + R(24, 22, 12, 6, .8),
       stats: [0, 1, 2].map(i => R(6 + i * 18, 12, 12, 8, .6) + R(6 + i * 18, 23, 14, 2.5, .3)).join(''), logos: [0, 1, 2, 3].map(i => R(4 + i * 14, 16, 10, 6, .3)).join(''),
       banner: R(0, 14, 60, 10, .5) + R(18, 17.5, 24, 3, .9), divider: v === 'dots' ? [0, 1, 2].map(i => `<circle cx="${24 + i * 6}" cy="20" r="1.5" fill="currentColor" opacity=".5"/>`).join('') : R(6, 19, 48, 1.5, .5), image: v === 'side' ? R(4, 6, 26, 28) + lines(34, 12, 3, 22) : R(4, 4, 52, 24) + R(4, 31, 30, 3, .4),
+      // feat/design-site2: steps (numbered circles), visit us (facts in columns or a card with a button), timeline (a line with dots)
+      steps: v === 'stack' ? [0, 1, 2].map(i => `<circle cx="9" cy="${8 + i * 12}" r="3.5" fill="currentColor" opacity=".6"/>` + R(17, 5.5 + i * 12, 22, 2.5, .5) + R(17, 9.5 + i * 12, 34, 2, .25)).join('') : [0, 1, 2].map(i => `<circle cx="${10 + i * 19}" cy="11" r="4" fill="currentColor" opacity=".6"/>` + R(5 + i * 19, 20, 12, 2.5, .5) + R(5 + i * 19, 25, 14, 2, .25) + R(5 + i * 19, 29, 10, 2, .25)).join(''),
+      info: v === 'card' ? R(4, 4, 52, 32, .15) + [0, 1, 2].map(i => R(8, 9 + i * 7, 9, 2, .3) + R(20, 9 + i * 7, 22, 2.5, .5)).join('') + R(8, 29, 14, 4.5, .8) : R(4, 5, 20, 4, .6) + [0, 1, 2].map(i => R(4 + i * 18, 16, 8, 2, .3) + R(4 + i * 18, 21, 14, 2.5, .5) + R(4 + i * 18, 26, 11, 2, .25)).join(''),
+      timeline: v === 'cards' ? [0, 1, 2].map(i => R(4 + i * 18, 8, 15, 24, .2) + R(6 + i * 18, 11, 7, 2, .6) + R(6 + i * 18, 16, 11, 2, .3) + R(6 + i * 18, 20, 9, 2, .3)).join('') : R(9.25, 4, 1.5, 32, .3) + [0, 1, 2].map(i => `<circle cx="10" cy="${8 + i * 12}" r="2.5" fill="currentColor" opacity=".7"/>` + R(17, 5.5 + i * 12, 10, 2, .3) + R(17, 9.5 + i * 12, 30, 2.5, .5)).join(''),
     }[type] || lines(4, 6, 6, 52);
     return `<svg viewBox="0 0 60 40" width="60" height="40" aria-hidden="true">${body}</svg>`;
   }
@@ -544,7 +548,7 @@
       box.innerHTML = `<p class="wdz-eyebrow">Picture</p>${src ? `<img class="wdz-thumb${shape === 'round' ? ' round' : ''}" src="${esc(src)}" alt="">` : '<p class="wdz-hint">No picture yet: a placeholder shows.</p>'}
         <p class="wdz-row"><button type="button" class="btn sm primary" data-img="upload">Upload</button><button type="button" class="btn sm" data-img="board">From my board</button></p>
         <p class="wdz-row" role="group" aria-label="Shape"><button type="button" class="btn sm" data-img="round" aria-pressed="${shape === 'round'}">Round</button><button type="button" class="btn sm" data-img="square" aria-pressed="${shape === 'square'}">Square</button><button type="button" class="btn sm ghost" data-img="none">Original</button></p>
-        <label class="wdz-f"><span>Alt text (what it shows)</span><input class="input" id="wdz-alt" value="${esc(alt)}" placeholder="Mara at the wheel, glazing a mug"></label><div id="wdz-board" class="wdz-board" hidden></div>`;
+        <label class="wdz-f"><span>Alt text (what it shows)</span><input class="input" id="wdz-alt" value="${esc(alt)}" placeholder="Mara at the wheel, glazing a mug"></label><div id="wdz-board" class="wdz-board" hidden></div>${STU() && STU().illusRow ? STU().illusRow(stuApi) : ''}`;
       box.querySelector('#wdz-alt').addEventListener('change', e => commit(S().setImage(st.cfg, st.page, b.id, s.path, src, e.target.value.trim())));
       return;
     }
