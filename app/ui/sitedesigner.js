@@ -19,7 +19,8 @@
 
   const EDIT_CSS = `<style>[data-e]{cursor:text;border-radius:2px}[data-e]:hover{outline:1px dashed var(--muted);outline-offset:2px}[data-e]:focus{outline:2px solid var(--accent);outline-offset:2px}
 [data-block]{position:relative}[data-block]:hover{outline:1px dashed var(--line);outline-offset:-1px}.wdz-sel{outline:2px solid var(--accent)!important;outline-offset:-2px}
-[data-img]{cursor:pointer}.wdz-pin{position:absolute;z-index:5;width:24px;height:24px;margin:-12px 0 0 -12px;border-radius:50% 50% 50% 0;border:2px solid #fff;background:#F26B1D;color:#fff;font:700 11px/1 system-ui;cursor:pointer;padding:0}.wdz-pin.done{background:#6b7280}.wdz-cm [data-block]{cursor:crosshair}.wdz-cm [data-block]:hover{outline:2px dashed #F26B1D!important}[data-unwired]{outline:1px dashed var(--muted);outline-offset:3px}[data-unwired]::after{content:'not linked';font:600 10px/1 ui-monospace,monospace;margin-left:8px;opacity:.7}</style>`;
+[data-img]{cursor:pointer}.wdz-pin{position:absolute;z-index:5;width:24px;height:24px;margin:-12px 0 0 -12px;border-radius:50% 50% 50% 0;border:2px solid #fff;background:#F26B1D;color:#fff;font:700 11px/1 system-ui;cursor:pointer;padding:0}.wdz-pin.done{background:#6b7280}.wdz-cm [data-block]{cursor:crosshair}.wdz-cm [data-block]:hover{outline:2px dashed #F26B1D!important}[data-unwired]{outline:1px dashed var(--muted);outline-offset:3px}[data-unwired]::after{content:'not linked';font:600 10px/1 ui-monospace,monospace;margin-left:8px;opacity:.7}
+.wdz-bar{position:absolute;top:8px;right:8px;z-index:6;display:flex;gap:0;background:#16181D;border:1px solid #3A3F4A;border-radius:8px;overflow:hidden;font:600 13px/1 system-ui,sans-serif;text-align:left}.wdz-bar button{all:unset;box-sizing:border-box;min-width:30px;height:30px;display:grid;place-items:center;color:#F2F3F5;cursor:pointer;padding:0 6px}.wdz-bar button+button{border-left:1px solid #3A3F4A}.wdz-bar button:hover,.wdz-bar button:focus-visible{background:#2A2F39}.wdz-bar [data-a=grip]{cursor:grab;touch-action:none;letter-spacing:-2px}.wdz-dragging,.wdz-dragging *{cursor:grabbing!important;user-select:none}.wdz-moving{opacity:.45}.wdz-drop{position:absolute;left:0;right:0;height:4px;background:var(--accent);z-index:7;pointer-events:none}.wdz-cm .wdz-bar{display:none}[data-icon]{cursor:pointer}[data-icon]:hover{outline:2px dashed var(--muted);outline-offset:2px}@media (max-width:480px){.wdz-bar button{min-width:36px;height:36px}}</style>`;
   // the frame's helper is a real file loaded from the app's origin, never an inline script: the srcdoc frame inherits the
   // page's CSP, and the desktop app's has no 'unsafe-inline' (app/src-tauri/tauri.conf.json)
   const EDIT_JS = () => `<script src="${new URL('sitedesigner-frame.js', document.baseURI).href.replace(/"/g, '%22')}"><\/script>`;
@@ -119,11 +120,12 @@
     else if (!cfg) showStart(); else paint();
     chipKey = ''; logPaint();   // feat/flint-unify: this design's thread and chips
     status(); await loadComments();
+    try { if (STU()) STU().opened(stuApi); } catch {}
     if (o.comment) commentMode(true);
     const ask2 = o.ask || rest; if (ask2) setTimeout(() => ask(ask2), 60);
     return st;
   }
-  function close() { if (!root) return; flush(); root.hidden = true; document.body.classList.remove('wdz-open'); if (location.hash === '#/site-designer') history.back(); }
+  function close() { if (!root) return; try { if (STU()) STU().closed(); } catch {} flush(); root.hidden = true; document.body.classList.remove('wdz-open'); if (location.hash === '#/site-designer') history.back(); }
   function projectName(pid) { try { const p = ((C.state && C.state().projects) || []).find(x => x.id === pid); return (p && p.name) || 'My site'; } catch { return 'My site'; } }
   // a template as a config: the static gallery first (works with no tribe and offline), then the host, then the model
   const inlineImgs = async c => { const walk = async o => { if (Array.isArray(o)) { for (const x of o) await walk(x); return; } if (!o || typeof o !== 'object') return; for (const k of Object.keys(o)) { if ((k === 'img' || k === 'logo') && typeof o[k] === 'string' && o[k] && !/^data:/.test(o[k])) o[k] = await toData(o[k]); else await walk(o[k]); } }; await walk(c); return c; };
@@ -197,6 +199,7 @@
         <button type="button" class="btn ghost sm wdz-ic" data-wdz="keys" title="Keyboard shortcuts (?)" aria-label="Keyboard shortcuts">?</button>
         <button type="button" class="btn sm" data-wdz="templates">Templates</button>
         <button type="button" class="btn sm" data-wdz="freeai" id="wdz-freeai" title="Copy the design for ChatGPT, Gemini or another free AI, then paste its answer back">Ask a free AI</button>
+        <button type="button" class="btn sm" data-stu="agent" id="wdz-agent" title="Ask your own AI agent to change the site. You approve what it sends back.">Have my agent do it</button>
         <button type="button" class="btn sm" data-wdz="save" title="Keep this design in Saved designs (the project’s history is in Versions)">Save design</button>
         <span class="wdz-dl"><button type="button" class="btn sm primary" data-wdz="dl-html" id="wdz-dl">Download HTML</button><button type="button" class="btn sm primary wdz-dl-more" data-wdz="dlmenu" aria-label="More download options" aria-expanded="false">▾</button>
           <span class="wdz-menu" id="wdz-dlmenu" hidden role="menu"><button type="button" role="menuitem" data-wdz="dl-html"><b>index.html</b><small>One standalone file: every page, pictures inside, no scripts</small></button><button type="button" role="menuitem" data-wdz="dl-zip"><b>.zip with pages and assets</b><small>A file per page, assets/, fonts/ and site.json</small></button><button type="button" role="menuitem" data-wdz="publish"><b>Publish to the project</b><small>Writes it to the project's site/ folder</small></button></span></span>
@@ -210,7 +213,7 @@
         </aside>
         <main class="wdz-stage"><div class="wdz-frame" id="wdz-framewrap" data-dev="desktop"><iframe id="wdz-frame" title="Live preview of the website" sandbox="allow-scripts"></iframe></div></main>
         <aside class="wdz-right" aria-label="Edit and Flint">
-          <div class="wdz-ptabs" role="tablist" aria-label="Panel"><button type="button" role="tab" data-panel="edit" aria-selected="true">Edit</button><button type="button" role="tab" data-panel="comments" aria-selected="false">Comments<span class="wdz-n" id="wdz-cn2" hidden></span></button><button type="button" role="tab" data-panel="site" aria-selected="false">Site</button></div>
+          <div class="wdz-ptabs" role="tablist" aria-label="Panel"><button type="button" role="tab" data-panel="edit" aria-selected="true">Edit</button><button type="button" role="tab" data-panel="comments" aria-selected="false">Comments<span class="wdz-n" id="wdz-cn2" hidden></span></button><button type="button" role="tab" data-panel="style" aria-selected="false">Style</button><button type="button" role="tab" data-panel="site" aria-selected="false">Site</button><button type="button" role="tab" data-panel="check" aria-selected="false">Check</button></div>
           <div class="wdz-insp" id="wdz-insp"></div>
           <section class="wdz-flint" id="wdz-flint" aria-label="Flint"></section>
         </aside>
@@ -254,7 +257,7 @@
   const FONTS = new Map(); let fontsAsked = false;
   async function loadFonts() {
     fontsAsked = true;
-    const files = ['fraunces-latin-700-normal', 'instrument-serif-latin-400-normal', 'space-grotesk-latin-700-normal', 'bricolage-grotesque-latin-800-normal', 'jetbrains-mono-latin-700-normal', 'silkscreen-latin-400-normal', 'inter-latin-400-normal'];
+    const files = ['fraunces-latin-700-normal', 'instrument-serif-latin-400-normal', 'space-grotesk-latin-700-normal', 'bricolage-grotesque-latin-800-normal', 'jetbrains-mono-latin-700-normal', 'silkscreen-latin-400-normal', 'inter-latin-400-normal', 'dm-serif-display-latin-400-normal', 'outfit-latin-700-normal'];
     await Promise.all(files.map(async n => { try { const r = await fetch('assets/site-fonts/' + n + '.woff2'); if (!r.ok) return; const b = await r.blob(); FONTS.set(n, await new Promise(res => { const fr = new FileReader(); fr.onload = () => res(fr.result); fr.readAsDataURL(b); })); } catch {} }));
     if (FONTS.size && root && !root.hidden) frame();
   }
@@ -292,6 +295,15 @@
     if (d.t === 'text') { liveText = d; clearTimeout(liveT); liveT = setTimeout(() => { if (liveText) { const l = liveText; commitText(l); } }, 900); return; }
     if (d.t === 'commit') return commitText(d);
     if (d.t === 'pin') return commentAt(d);
+    if (d.t === 'move') { commit(S().moveBlock(st.cfg, st.page, d.block, +d.to)); st.sel = { block: d.block, path: '', kind: 'block' }; return; }
+    if (d.t === 'icon') return STU() && STU().iconPicker(stuApi, d.key);
+    if (d.t === 'act') {
+      const id = d.block;
+      if (d.act === 'up' || d.act === 'down') { st.sel = { block: id, path: '', kind: 'block' }; return commit(S().moveBlock(st.cfg, st.page, id, d.act)); }
+      if (d.act === 'dup') { const r = S().duplicateBlock(st.cfg, st.page, id); commit(r.cfg); st.sel = { block: r.block.id, path: '', kind: 'block' }; paint(); return; }
+      if (d.act === 'del') return commit(S().removeBlock(st.cfg, st.page, id));
+      if (d.act === 'add') { st.addAfter = id; const p = $('#wdz-picker'); p.hidden = false; p.innerHTML = picker(); const ab = root.querySelector('[data-wdz="picker"]'); if (ab) ab.setAttribute('aria-expanded', 'true'); p.scrollIntoView({ block: 'nearest' }); const f1 = p.querySelector('button'); if (f1) f1.focus(); return; }
+    }
     if (d.t === 'pinopen') { st.panel = 'comments'; panelPaint(); const el = $(`[data-cmt="${CSS.escape(d.id)}"]`); if (el) el.scrollIntoView({ block: 'nearest' }); return; }
   }
 
@@ -303,6 +315,11 @@
     st.hist.push(JSON.stringify(st.cfg)); st.fut = []; st.cfg = S().setProp(st.cfg, st.page, block, path, v);
     save(); const u = root.querySelector('[data-wdz="undo"]'); if (u) u.disabled = false; inspector();
   }
+  // ---------- feat/design-site2: Style, Check and "Have my agent do it" live in app/ui/sitestudio.js ----------
+  const STU = () => window.TribeSiteStudio;
+  const stuApi = { sel: () => st.sel, cfg: () => st.cfg, commit: c => commit(c), say: (t, h, a) => say(t, h, a), undo: () => undo(), pid: () => st.pid, page: () => st.page, connected: () => connected(), ask: t => ask(t),
+    render: (c, o) => S().render(c, { ...o, fonts: file => FONTS.get(file) || '', extraHead: EDIT_CSS }), frameJs: () => EDIT_JS(),
+    select: (block, pg) => { if (pg && st.cfg.pages.some(p => p.id === pg)) st.page = pg; st.sel = { block, path: '', kind: 'block' }; st.panel = 'edit'; paint(); postSel(true); } };
   // ---------- feat/site-v2: the right panel (Edit · Comments · Site), the block picker, shortcuts ----------
   function panelPaint() {
     if (!root || !st) return;
@@ -311,6 +328,7 @@
     [$('#wdz-cn'), $('#wdz-cn2')].forEach(n => { if (n) { n.hidden = !open; n.textContent = open; } });
     if (st.panel === 'comments') return commentsPaint();
     if (st.panel === 'site') return sitePaint();
+    if ((st.panel === 'style' || st.panel === 'check') && STU()) return STU().paint(st.panel, $('#wdz-insp'), stuApi);
     inspector();
     const s = st.sel, b = s && s.kind === 'block' && pageNow().blocks.find(x => x.id === s.block), box = $('#wdz-insp');
     if (b && box) {
@@ -337,6 +355,10 @@
       newsletter: R(12, 8, 36, 5, .6) + R(10, 20, 28, 7, .2) + R(40, 20, 12, 7, .7), cta: v === 'accent' ? R(0, 4, 60, 32, .5) + R(16, 12, 28, 5, .9) + R(24, 22, 12, 5, .9) : R(14, 12, 32, 5, .6) + R(24, 22, 12, 6, .8),
       stats: [0, 1, 2].map(i => R(6 + i * 18, 12, 12, 8, .6) + R(6 + i * 18, 23, 14, 2.5, .3)).join(''), logos: [0, 1, 2, 3].map(i => R(4 + i * 14, 16, 10, 6, .3)).join(''),
       banner: R(0, 14, 60, 10, .5) + R(18, 17.5, 24, 3, .9), divider: v === 'dots' ? [0, 1, 2].map(i => `<circle cx="${24 + i * 6}" cy="20" r="1.5" fill="currentColor" opacity=".5"/>`).join('') : R(6, 19, 48, 1.5, .5), image: v === 'side' ? R(4, 6, 26, 28) + lines(34, 12, 3, 22) : R(4, 4, 52, 24) + R(4, 31, 30, 3, .4),
+      // feat/design-site2: steps (numbered circles), visit us (facts in columns or a card with a button), timeline (a line with dots)
+      steps: v === 'stack' ? [0, 1, 2].map(i => `<circle cx="9" cy="${8 + i * 12}" r="3.5" fill="currentColor" opacity=".6"/>` + R(17, 5.5 + i * 12, 22, 2.5, .5) + R(17, 9.5 + i * 12, 34, 2, .25)).join('') : [0, 1, 2].map(i => `<circle cx="${10 + i * 19}" cy="11" r="4" fill="currentColor" opacity=".6"/>` + R(5 + i * 19, 20, 12, 2.5, .5) + R(5 + i * 19, 25, 14, 2, .25) + R(5 + i * 19, 29, 10, 2, .25)).join(''),
+      info: v === 'card' ? R(4, 4, 52, 32, .15) + [0, 1, 2].map(i => R(8, 9 + i * 7, 9, 2, .3) + R(20, 9 + i * 7, 22, 2.5, .5)).join('') + R(8, 29, 14, 4.5, .8) : R(4, 5, 20, 4, .6) + [0, 1, 2].map(i => R(4 + i * 18, 16, 8, 2, .3) + R(4 + i * 18, 21, 14, 2.5, .5) + R(4 + i * 18, 26, 11, 2, .25)).join(''),
+      timeline: v === 'cards' ? [0, 1, 2].map(i => R(4 + i * 18, 8, 15, 24, .2) + R(6 + i * 18, 11, 7, 2, .6) + R(6 + i * 18, 16, 11, 2, .3) + R(6 + i * 18, 20, 9, 2, .3)).join('') : R(9.25, 4, 1.5, 32, .3) + [0, 1, 2].map(i => `<circle cx="10" cy="${8 + i * 12}" r="2.5" fill="currentColor" opacity=".7"/>` + R(17, 5.5 + i * 12, 10, 2, .3) + R(17, 9.5 + i * 12, 30, 2.5, .5)).join(''),
     }[type] || lines(4, 6, 6, 52);
     return `<svg viewBox="0 0 60 40" width="60" height="40" aria-hidden="true">${body}</svg>`;
   }
@@ -526,7 +548,7 @@
       box.innerHTML = `<p class="wdz-eyebrow">Picture</p>${src ? `<img class="wdz-thumb${shape === 'round' ? ' round' : ''}" src="${esc(src)}" alt="">` : '<p class="wdz-hint">No picture yet: a placeholder shows.</p>'}
         <p class="wdz-row"><button type="button" class="btn sm primary" data-img="upload">Upload</button><button type="button" class="btn sm" data-img="board">From my board</button></p>
         <p class="wdz-row" role="group" aria-label="Shape"><button type="button" class="btn sm" data-img="round" aria-pressed="${shape === 'round'}">Round</button><button type="button" class="btn sm" data-img="square" aria-pressed="${shape === 'square'}">Square</button><button type="button" class="btn sm ghost" data-img="none">Original</button></p>
-        <label class="wdz-f"><span>Alt text (what it shows)</span><input class="input" id="wdz-alt" value="${esc(alt)}" placeholder="Mara at the wheel, glazing a mug"></label><div id="wdz-board" class="wdz-board" hidden></div>`;
+        <label class="wdz-f"><span>Alt text (what it shows)</span><input class="input" id="wdz-alt" value="${esc(alt)}" placeholder="Mara at the wheel, glazing a mug"></label><div id="wdz-board" class="wdz-board" hidden></div>${STU() && STU().illusRow ? STU().illusRow(stuApi) : ''}`;
       box.querySelector('#wdz-alt').addEventListener('change', e => commit(S().setImage(st.cfg, st.page, b.id, s.path, src, e.target.value.trim())));
       return;
     }
@@ -552,7 +574,7 @@
     if (t.closest('[data-pick]')) { st.sel = { block: t.closest('[data-pick]').dataset.pick, path: '', kind: 'block' }; paint(); postSel(true); return; }
     if (t.closest('[data-move]')) { const x = t.closest('[data-move]'); commit(S().moveBlock(st.cfg, st.page, x.dataset.id, x.dataset.move)); return; }
     if (t.closest('[data-del]')) { commit(S().removeBlock(st.cfg, st.page, t.closest('[data-del]').dataset.del)); return; }
-    if (t.closest('[data-add]')) { const x = t.closest('[data-add]'); const r = S().addBlock(st.cfg, st.page, x.dataset.add, x.dataset.v); commit(r.cfg); st.sel = { block: r.block.id, path: '', kind: 'block' }; $('#wdz-picker').hidden = true; paint(); postSel(true); return; }
+    if (t.closest('[data-add]')) { const x = t.closest('[data-add]'); const ai = st.addAfter ? pageNow().blocks.findIndex(b => b.id === st.addAfter) : -1; st.addAfter = null; const r = S().addBlock(st.cfg, st.page, x.dataset.add, x.dataset.v, ai >= 0 ? ai + 1 : undefined); commit(r.cfg); st.sel = { block: r.block.id, path: '', kind: 'block' }; $('#wdz-picker').hidden = true; paint(); postSel(true); return; }
     if (t.closest('[data-var]') && st.sel) { commit(S().setVariant(st.cfg, st.page, st.sel.block, t.closest('[data-var]').dataset.var)); return; }
     if (t.closest('[data-item]') && st.sel) {
       const x = t.closest('[data-item]'), b = pg.blocks.find(y => y.id === st.sel.block); if (!b) return;
@@ -575,6 +597,7 @@
     if (t.closest('[data-sty]') && st.sel) { const x = t.closest('[data-sty]'); commit(S().setStyle(st.cfg, st.page, st.sel.block, { [x.dataset.sty]: x.dataset.val })); return; }
     if (t.closest('[data-cact]')) return commentAction(t.closest('[data-cact]'));
     if (t.closest('[data-site]')) return siteAction(t.closest('[data-site]'));
+    if (t.closest('[data-stu]') && STU()) return STU().click(t.closest('[data-stu]'), stuApi);
     if (t.closest('[data-gcat]')) { gal.cat = t.closest('[data-gcat]').dataset.gcat; galPaint(); return; }
     if (t.closest('[data-peek]')) { peek(t.closest('[data-peek]').dataset.peek); return; }
     if (t.closest('[data-peekclose]')) { const pk = $('#wdz-peek'); if (pk) pk.hidden = true; return; }
@@ -586,7 +609,7 @@
     if (k === 'redo') return redo();
     if (k === 'mode') return commit(S().setMode(st.cfg, st.cfg.theme.mode === 'dark' ? 'light' : 'dark'));
     if (k === 'addpage') { const r = S().addPage(st.cfg, ''); commit(r.cfg); st.page = r.page.id; paint(); say(`Added ${r.page.title}. Rename it: “rename this page to About”.`); return; }
-    if (k === 'picker') { const p = $('#wdz-picker'); p.hidden = !p.hidden; a.setAttribute('aria-expanded', String(!p.hidden)); if (!p.hidden) p.innerHTML = picker(); if (false) p.innerHTML = S().TYPES.map(ty => `<div class="wdz-pk"><b>${esc(S().BLOCKS[ty].label)}</b><span>${S().BLOCKS[ty].variants.map(v => `<button type="button" class="wdz-chip" data-add="${ty}" data-v="${v}">${esc(v)}</button>`).join('')}</span></div>`).join(''); return; }
+    if (k === 'picker') { st.addAfter = null; const p = $('#wdz-picker'); p.hidden = !p.hidden; a.setAttribute('aria-expanded', String(!p.hidden)); if (!p.hidden) p.innerHTML = picker(); if (false) p.innerHTML = S().TYPES.map(ty => `<div class="wdz-pk"><b>${esc(S().BLOCKS[ty].label)}</b><span>${S().BLOCKS[ty].variants.map(v => `<button type="button" class="wdz-chip" data-add="${ty}" data-v="${v}">${esc(v)}</button>`).join('')}</span></div>`).join(''); return; }
     if (k === 'templates') return showStart(true);
     if (k === 'dlmenu') { const m = $('#wdz-dlmenu'); m.hidden = !m.hidden; a.setAttribute('aria-expanded', String(!m.hidden)); return; }
     if (k === 'dl-html' || k === 'dl-zip') { $('#wdz-dlmenu').hidden = true; return download(k === 'dl-zip' ? 'zip' : 'html'); }

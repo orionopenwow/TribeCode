@@ -260,14 +260,30 @@
   // Screens, posters and logos: a design file on the canvas
   const api = kind => (projectScope() ? (p, o) => C.api(p, o) : (p, o) => LF().backend(kind).api(p, o));
   function fill(v, vars) { return typeof v === 'string' ? v.replace(/\{\{(\w+)\}\}/g, (a, k) => (k in vars ? vars[k] : a)) : v; }
+  // feat/design-site2: starters follow the brand kit (app/ui/brandkit.js): its main colour when the prompt names none,
+  // its heading font on the big words, and its logo on the layer a template marks with logo: true.
+  async function kitNow() { try { const B = window.TribeBrandKit; if (!B) return null; const k = await B.get(pidNow() || ''); return k && (k.colors.accent || k.logo || k.fonts.display) ? k : null; } catch { return null; } }
+  const hasColour = ask => { const KC = K() ? K().COLORS : {}; return /#[0-9a-f]{6}\b/i.test(ask || '') || (Object.keys(KC).length && new RegExp(`\\b(${Object.keys(KC).join('|')})\\b`, 'i').test(ask || '')); };
   function nodesFrom(tpl, vars) {
     const frame = { id: 'f' + rid(), t: 'frame', p: '', i: Date.now() % 1e9, v: 1, x: 0, y: 0, w: tpl.w, h: tpl.h, fill: fill(tpl.fill, vars), clip: true, name: vars.title };
-    const kids = tpl.nodes.map((n, i) => { const o = { ...n, id: n.id + rid(), p: frame.id, i: i + 1, v: 1 };
+    const ids = {}; tpl.nodes.forEach(n => { ids[n.id] = n.id + rid(); });
+    const kids = tpl.nodes.filter(n => !(n.noLogo && vars.logo)).map((n, i) => { const o = { ...n, id: ids[n.id], p: n.in && ids[n.in] ? ids[n.in] : frame.id, i: i + 1, v: 1 };
       for (const k of ['fill', 'stroke']) if (o[k]) o[k] = fill(o[k], vars);
-      if (o.tx) o.tx = { ...o.tx, c: fill(o.tx.c, vars), col: fill(o.tx.col, vars), sz: undefined }; if (o.t === 'text') o.sz = { h: 'fixed', v: 'hug' };
+      if (o.lay) o.lay = { ...o.lay, p: [...(o.lay.p || [0, 0, 0, 0])] };
+      if (o.tx) { o.tx = { ...o.tx, c: fill(o.tx.c, vars), col: fill(o.tx.col, vars) }; if (o.tx.al === 'left' && o.center) o.tx.al = 'center'; }
+      if (o.t === 'text' && !o.sz) o.sz = { h: 'fixed', v: 'hug' };
+      if (o.tx && vars.font && (o.tx.s >= 36 || o.head) && !o.mono) o.tx.f = vars.font;
+      if (o.tx && o.mono) o.tx.f = 'JetBrains Mono';
+      if (o.logo && vars.logo) { o.img = vars.logo; o.fill = ''; o.r = 0; }
+      for (const k of ['in', 'logo', 'noLogo', 'mono', 'head', 'tx2', 'center']) delete o[k];
       return o; });
     return [frame, ...kids];
   }
+  // colours a starter can use next to the main one
+  const hx = h => { const m = /^#?([0-9a-f]{6})$/i.exec(h || ''); return m ? [0, 2, 4].map(i => parseInt(m[1].slice(i, i + 2), 16)) : [242, 107, 29]; };
+  const mixHex = (a, b, t) => { const A = hx(a), B = hx(b); return '#' + A.map((v, i) => Math.round(v + (B[i] - v) * t).toString(16).padStart(2, '0')).join('').toUpperCase(); };
+  const lumOf = h => { const [r, g, b] = hx(h).map(v => { v /= 255; return v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4; }); return 0.2126 * r + 0.7152 * g + 0.0722 * b; };
+  const shades = accent => ({ soft: mixHex(accent, '#FFFFFF', 0.82), deep: mixHex(accent, '#000000', 0.38), on: (1.05) / (lumOf(accent) + 0.05) >= 3 ? '#FFFFFF' : '#12151A' });
   async function makeCanvas(kind, tplId, ask) {
     const d = D(), list = kind === 'screen' ? d.SCREENS : kind === 'poster' ? d.POSTERS : d.LOGOS, tpl = list.find(x => x.id === tplId) || null;
     const title = nameFrom(ask, tpl ? tpl.t : kind === 'logo' ? 'Logo' : kind === 'poster' ? 'Poster' : 'Screens');
@@ -275,7 +291,11 @@
     if (!fid) throw new Error('Could not make the design file.');
     if (tpl && tpl.nodes) {
       const sub = ask && nameFrom(ask, '').toLowerCase() !== ask.toLowerCase() ? ask : (kind === 'logo' ? 'Brand kit · colors and type' : 'Add the details here');
-      const vars = { title, sub: sub.slice(0, 120), accent: accentFrom(ask), initial: (title.trim()[0] || 'A').toUpperCase() };
+      const kit = await kitNow();
+      const vars = { title, sub: sub.slice(0, 120), accent: kit && kit.colors.accent && !hasColour(ask) ? kit.colors.accent : accentFrom(ask), initial: (title.trim()[0] || 'A').toUpperCase(),
+        font: kit && kit.fonts.display && !/^System/.test(kit.fonts.display) ? kit.fonts.display : '', logo: (kit && kit.logo) || '' };
+      Object.assign(vars, shades(vars.accent), { fontName: vars.font || 'Inter' });
+      if (kind === 'poster' && tpl.id === 'quote' && sub === 'Add the details here') vars.sub = 'Name, what they do';
       await A(`/canvas/${encodeURIComponent(fid)}/ops`, { method: 'POST', body: { ops: nodesFrom(tpl, vars) } });
     }
     const p = newPlan(kind, title, tplId, ask, { type: 'canvas', id: fid, pid: pidNow() });

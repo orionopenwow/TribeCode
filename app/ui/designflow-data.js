@@ -112,43 +112,108 @@
   // Canvas templates for posters and logos: plain nodes (server/canvas.js), placed at 0,0. {{title}}, {{sub}}, {{accent}}
   const P = (id, t, x, y, w, h, o) => Object.assign({ id, t, x, y, w, h }, o || {});
   const TX = (c, s, wt, col, o, al) => Object.assign({ tx: { c, f: 'Inter', s, wt, lh: 1.15, al: al || 'left', col } }, o || {});
+  // feat/design-site2: posters and logos, redrawn. Colours: {{accent}} (the brand kit's or the prompt's), {{soft}} (a light
+  // tint of it), {{deep}} (a dark shade), {{on}} (readable words on the accent). Words sit in auto-layout frames (F), so a
+  // long title pushes the lines under it down instead of running over them. `in` names the frame a layer sits in.
+  const F = (id, x, y, w, h, lay, o) => Object.assign({ id, t: 'frame', x, y, w, h, fill: '', lay: Object.assign({ d: 'col', g: 12, p: [0, 0, 0, 0], ai: 'start', jc: 'start' }, lay) }, o || {});
+  const IN = (parent, n, sz) => Object.assign(n, { in: parent, sz: sz || (n.t === 'text' ? { h: 'fill', v: 'hug' } : { h: 'fill', v: 'hug' }) });
+  const HUG = { h: 'hug', v: 'hug' };
+  const T = (id, c, size, wt, col, name, extra) => P(id, 'text', 0, 0, 200, 30, TX(c, size, wt, col, Object.assign({ name }, extra || {})));
+  const fact = (id, into, label, value, lc, vc) => [IN(into, F(id, 0, 0, 150, 50, { g: 4 }, { name: label }), HUG), IN(id, T(id + 'l', label.toUpperCase(), 12, 700, lc, label + ' label', { mono: true }), HUG), IN(id, T(id + 'v', value, 19, 700, vc, label), HUG)];
   const POSTERS = [
-    { id: 'event', t: 'Event poster', d: 'Portrait, big title, date and place', w: 600, h: 848, fill: '#12151A', nodes: [
-      P('acc', 'rect', 40, 40, 520, 360, { fill: '{{accent}}', r: 0, name: 'Picture block' }),
-      P('dot', 'ellipse', 360, 120, 160, 160, { fill: '#F8FAFC', name: 'Sun' }),
-      P('ttl', 'text', 40, 440, 520, 140, TX('{{title}}', 64, 800, '#F8FAFC', { name: 'Title' })),
-      P('sub', 'text', 40, 600, 520, 60, TX('{{sub}}', 22, 500, '#94A3B8', { name: 'Details' })),
-      P('when', 'text', 40, 760, 520, 40, TX('SAT 21 NOV · 7 PM · THE OLD HALL', 18, 700, '{{accent}}', { name: 'When and where' })) ] },
+    { id: 'event', t: 'Event poster', d: 'Portrait, a night scene, date and place', w: 600, h: 848, fill: '#12151A', nodes: [
+      P('sun', 'ellipse', 250, -150, 500, 500, { fill: '{{accent}}', name: 'Sun' }),
+      P('moon', 'ellipse', 48, 150, 140, 140, { fill: '{{soft}}', name: 'Moon' }),
+      P('hill', 'ellipse', -220, 320, 680, 320, { fill: '{{deep}}', name: 'Hill' }),
+      P('floor', 'rect', 0, 440, 600, 408, { fill: '#12151A', name: 'Ground' }),
+      F('body', 0, 440, 600, 408, { g: 14, p: [36, 40, 40, 40], jc: 'between' }, { name: 'Words' }),
+      IN('body', F('top', 0, 0, 520, 200, { g: 12 }, { name: 'Title block' })),
+      IN('top', T('eb', 'LIVE · ONE NIGHT ONLY', 15, 700, '{{accent}}', 'Eyebrow', { mono: true })),
+      IN('top', T('ttl', '{{title}}', 60, 800, '#F8FAFC', 'Title')),
+      IN('top', T('sub', '{{sub}}', 21, 500, '#94A3B8', 'Details')),
+      IN('body', F('info', 0, 0, 520, 60, { d: 'row', g: 24, jc: 'between' }, { name: 'When and where' })),
+      ...fact('f1', 'info', 'When', 'Sat 21 Nov', '#94A3B8', '#F8FAFC'), ...fact('f2', 'info', 'Doors', '7 pm', '#94A3B8', '#F8FAFC'), ...fact('f3', 'info', 'Where', 'The Old Hall', '#94A3B8', '#F8FAFC') ] },
     { id: 'social', t: 'Social square', d: '1080 square for a post', w: 540, h: 540, fill: '{{accent}}', nodes: [
-      P('ttl', 'text', 40, 160, 460, 160, TX('{{title}}', 56, 800, '#FFFFFF', { name: 'Title' })),
-      P('sub', 'text', 40, 340, 460, 60, TX('{{sub}}', 20, 500, '#FFFFFF', { name: 'Line' })),
-      P('bar', 'rect', 40, 470, 120, 8, { fill: '#FFFFFF', name: 'Bar' }) ] },
+      P('ring', 'ellipse', 290, -150, 400, 400, { fill: '{{deep}}', name: 'Big circle' }),
+      P('dot', 'ellipse', 400, 90, 96, 96, { fill: '{{soft}}', name: 'Small circle' }),
+      F('body', 0, 0, 540, 540, { g: 14, p: [40, 40, 40, 40], jc: 'end' }, { name: 'Words' }),
+      IN('body', T('eb', 'NEW', 14, 700, '{{on}}', 'Tag', { mono: true }), HUG),
+      IN('body', T('ttl', '{{title}}', 54, 800, '{{on}}', 'Title')),
+      IN('body', T('sub', '{{sub}}', 20, 500, '{{on}}', 'Line')),
+      IN('body', F('foot', 0, 0, 460, 24, { d: 'row', g: 12, ai: 'center' }, { name: 'Footer' })),
+      IN('foot', P('bar', 'rect', 0, 0, 48, 6, { fill: '{{on}}', name: 'Bar' }), { h: 'fixed', v: 'fixed' }),
+      IN('foot', T('at', '@yourname', 15, 700, '{{on}}', 'Handle'), HUG) ] },
     { id: 'flyer', t: 'Flyer', d: 'Letter-size announcement', w: 600, h: 776, fill: '#F8FAFC', nodes: [
-      P('top', 'rect', 0, 0, 600, 140, { fill: '{{accent}}', name: 'Band' }),
-      P('eb', 'text', 40, 52, 520, 40, TX('ANNOUNCEMENT', 18, 700, '#FFFFFF', { name: 'Eyebrow' })),
-      P('ttl', 'text', 40, 190, 520, 140, TX('{{title}}', 52, 800, '#12151A', { name: 'Title' })),
-      P('sub', 'text', 40, 350, 520, 120, TX('{{sub}}', 20, 400, '#475569', { name: 'Text' })),
-      P('box', 'rect', 40, 620, 520, 100, { fill: '#E2E8F0', r: 12, name: 'Contact box' }),
-      P('ct', 'text', 64, 655, 470, 30, TX('hello@example.com · example.com', 18, 600, '#12151A', { name: 'Contact' })) ] },
+      P('top', 'rect', 0, 0, 600, 250, { fill: '{{accent}}', name: 'Band' }),
+      P('c1', 'ellipse', 400, -80, 260, 260, { fill: '{{deep}}', name: 'Big circle' }),
+      P('c2', 'ellipse', 470, 140, 150, 150, { fill: '{{soft}}', name: 'Small circle' }),
+      P('eb', 'text', 40, 40, 300, 24, TX('ANNOUNCEMENT', 15, 700, '{{on}}', { name: 'Eyebrow', mono: true })),
+      F('body', 0, 250, 600, 526, { g: 16, p: [36, 40, 40, 40], jc: 'between' }, { name: 'Words' }),
+      IN('body', F('tb', 0, 0, 520, 300, { g: 14 }, { name: 'Title block' })),
+      IN('tb', T('ttl', '{{title}}', 50, 800, '#12151A', 'Title')),
+      IN('tb', T('sub', '{{sub}}', 20, 400, '#475569', 'Text')),
+      IN('tb', T('d1', 'When    Saturday 21 November, 7 pm', 17, 600, '#12151A', 'When')),
+      IN('tb', T('d2', 'Where   The Old Hall, 12 Main Street', 17, 600, '#12151A', 'Where')),
+      IN('tb', T('d3', 'Bring   A friend', 17, 600, '#12151A', 'Bring')),
+      IN('body', F('box', 0, 0, 520, 64, { d: 'row', p: [20, 24, 20, 24], jc: 'between', ai: 'center' }, { fill: '#E2E8F0', r: 12, name: 'Contact box' })),
+      IN('box', T('ct', 'hello@example.com', 17, 700, '#12151A', 'Email'), HUG), IN('box', T('ws', 'example.com', 17, 700, '#12151A', 'Website'), HUG) ] },
+    { id: 'quote', t: 'Quote card', d: 'A line worth sharing, 4:5', w: 540, h: 675, fill: '#F8FAFC', nodes: [
+      P('blob', 'ellipse', 330, -120, 330, 330, { fill: '{{soft}}', name: 'Circle' }),
+      P('q', 'text', 36, 10, 200, 190, TX('“', 200, 800, '{{accent}}', { name: 'Quote mark' })),
+      F('body', 0, 0, 540, 675, { g: 20, p: [40, 40, 44, 40], jc: 'end' }, { name: 'Words' }),
+      IN('body', T('ttl', '{{title}}', 42, 700, '#12151A', 'Quote')),
+      IN('body', P('bar', 'rect', 0, 0, 64, 6, { fill: '{{accent}}', name: 'Bar' }), { h: 'fixed', v: 'fixed' }),
+      IN('body', T('sub', '{{sub}}', 18, 600, '#475569', 'Who said it')) ] },
+    { id: 'offer', t: 'Offer', d: 'A sale or a launch with one big number', w: 600, h: 848, fill: '{{soft}}', nodes: [
+      P('disc', 'ellipse', 80, 60, 440, 440, { fill: '{{accent}}', name: 'Disc' }),
+      P('num', 'text', 80, 190, 440, 180, TX('20%', 150, 800, '{{on}}', { name: 'Big number' }, 'center')),
+      P('off', 'text', 80, 370, 440, 40, TX('OFF THIS WEEK', 18, 700, '{{on}}', { name: 'Under the number', mono: true }, 'center')),
+      F('body', 0, 520, 600, 328, { g: 14, p: [20, 40, 40, 40], jc: 'end' }, { name: 'Words' }),
+      IN('body', T('ttl', '{{title}}', 48, 800, '#12151A', 'Title')),
+      IN('body', T('sub', '{{sub}}', 20, 500, '#334155', 'Line')),
+      IN('body', F('btn', 0, 0, 160, 48, { d: 'row', p: [13, 22, 13, 22], ai: 'center' }, { fill: '#12151A', r: 24, name: 'Button' }), HUG),
+      IN('btn', T('bl', 'Shop now', 17, 700, '#FFFFFF', 'Button label'), HUG) ] },
   ];
+  const mark = (id, x, y, size, onDark) => [
+    P(id, 'rect', x, y, size, size, { fill: '{{accent}}', r: Math.round(size * 0.28), name: 'Mark', logo: true }),
+    P(id + 'i', 'ellipse', x + size * 0.3, y + size * 0.3, size * 0.4, size * 0.4, { fill: onDark ? '#12151A' : '#FFFFFF', name: 'Mark detail', noLogo: true })];
   const LOGOS = [
-    { id: 'kit', t: 'Brand kit', d: 'Mark, wordmark, colors and type', w: 800, h: 500, fill: '#F8FAFC', nodes: [
-      P('mk', 'rect', 60, 60, 120, 120, { fill: '{{accent}}', r: 28, name: 'Mark' }),
-      P('mki', 'ellipse', 95, 95, 50, 50, { fill: '#F8FAFC', name: 'Mark detail' }),
-      P('wm', 'text', 210, 85, 540, 80, TX('{{title}}', 56, 800, '#12151A', { name: 'Wordmark' })),
-      P('c1', 'rect', 60, 260, 120, 120, { fill: '{{accent}}', r: 12, name: 'Main color' }),
-      P('c2', 'rect', 200, 260, 120, 120, { fill: '#12151A', r: 12, name: 'Ink' }),
-      P('c3', 'rect', 340, 260, 120, 120, { fill: '#E2E8F0', r: 12, name: 'Neutral' }),
-      P('ty', 'text', 500, 260, 260, 120, TX('Aa\nInter · 800 / 400', 30, 700, '#12151A', { name: 'Type' })),
-      P('nt', 'text', 60, 420, 700, 40, TX('{{sub}}', 18, 400, '#475569', { name: 'Note' })) ] },
+    { id: 'kit', t: 'Brand kit', d: 'Mark, wordmark, colors and type on one sheet', w: 800, h: 560, fill: '#F8FAFC', nodes: [
+      P('lt', 'rect', 40, 40, 352, 170, { fill: '#FFFFFF', stroke: '#E2E8F0', sw: 1, r: 16, name: 'On light' }),
+      ...mark('mk', 68, 93, 64, false),
+      P('wm', 'text', 150, 104, 226, 44, TX('{{title}}', 30, 800, '#12151A', { name: 'Wordmark', head: true })),
+      P('dk', 'rect', 408, 40, 352, 170, { fill: '#12151A', r: 16, name: 'On dark' }),
+      ...mark('mk2', 436, 93, 64, true),
+      P('wm2', 'text', 518, 104, 226, 44, TX('{{title}}', 30, 800, '#F8FAFC', { name: 'Wordmark on dark', head: true })),
+      P('cl', 'text', 40, 238, 300, 18, TX('COLORS', 12, 700, '#64748B', { name: 'Colors label', mono: true })),
+      P('c1', 'rect', 40, 264, 220, 96, { fill: '{{accent}}', r: 12, name: 'Main color' }),
+      P('c1t', 'text', 54, 332, 190, 18, TX('Main', 13, 700, '{{on}}', { name: 'Main label' })),
+      P('c2', 'rect', 272, 264, 112, 96, { fill: '{{deep}}', r: 12, name: 'Deep' }),
+      P('c3', 'rect', 396, 264, 112, 96, { fill: '{{soft}}', r: 12, name: 'Soft' }),
+      P('c4', 'rect', 520, 264, 112, 96, { fill: '#12151A', r: 12, name: 'Ink' }),
+      P('c5', 'rect', 644, 264, 116, 96, { fill: '#E2E8F0', r: 12, name: 'Neutral' }),
+      P('tl', 'text', 40, 388, 300, 18, TX('TYPE', 12, 700, '#64748B', { name: 'Type label', mono: true })),
+      P('aa', 'text', 40, 408, 110, 80, TX('Aa', 64, 800, '#12151A', { name: 'Type sample' })),
+      P('th', 'text', 160, 420, 600, 30, TX('Headings in {{fontName}}, bold', 22, 700, '#12151A', { name: 'Heading sample', head: true })),
+      P('tb', 'text', 160, 454, 600, 26, TX('Body text in Inter. Clear, calm and easy to read.', 16, 400, '#475569', { name: 'Body sample' })),
+      P('nt', 'text', 40, 516, 720, 22, TX('{{sub}}', 14, 500, '#64748B', { name: 'Note' })) ] },
+    { id: 'lockup', t: 'Logo with name', d: 'The mark beside the name, on light and on dark', w: 800, h: 400, fill: '#FFFFFF', nodes: [
+      P('dk', 'rect', 400, 0, 400, 400, { fill: '#12151A', name: 'Dark half' }),
+      ...mark('mk', 48, 160, 80, false),
+      P('wm', 'text', 144, 181, 240, 40, TX('{{title}}', 30, 800, '#12151A', { name: 'Name', sz: HUG })),
+      ...mark('mk2', 448, 160, 80, true),
+      P('wm2', 'text', 544, 181, 240, 40, TX('{{title}}', 30, 800, '#F8FAFC', { name: 'Name on dark', sz: HUG })) ] },
     { id: 'monogram', t: 'Monogram', d: 'One letter in a shape', w: 500, h: 500, fill: '#12151A', nodes: [
+      P('rg', 'ellipse', 80, 80, 340, 340, { fill: '{{deep}}', name: 'Ring' }),
       P('bg', 'ellipse', 100, 100, 300, 300, { fill: '{{accent}}', name: 'Circle' }),
-      P('ch', 'text', 100, 160, 300, 180, TX('{{initial}}', 160, 800, '#FFFFFF', { name: 'Letter' }, 'center')) ] },
+      P('ch', 'text', 100, 158, 300, 184, TX('{{initial}}', 160, 800, '{{on}}', { name: 'Letter' }, 'center')) ] },
     { id: 'badge', t: 'Badge', d: 'A round stamp with the name', w: 500, h: 500, fill: '#F8FAFC', nodes: [
       P('ring', 'ellipse', 60, 60, 380, 380, { fill: '#12151A', name: 'Ring' }),
-      P('in', 'ellipse', 90, 90, 320, 320, { fill: '{{accent}}', name: 'Inside' }),
-      P('nm', 'text', 110, 200, 280, 100, TX('{{title}}', 40, 800, '#FFFFFF', { name: 'Name' }, 'center')),
-      P('yr', 'text', 110, 300, 280, 40, TX('EST. 2026', 16, 700, '#12151A', { name: 'Year' }, 'center')) ] },
+      P('in', 'ellipse', 84, 84, 332, 332, { fill: '{{accent}}', name: 'Inside' }),
+      F('body', 84, 84, 332, 332, { g: 10, p: [0, 44, 0, 44], ai: 'center', jc: 'center' }, { name: 'Words' }),
+      IN('body', T('st', '★', 22, 700, '{{on}}', 'Star'), HUG),
+      IN('body', P('nm', 'text', 0, 0, 244, 50, TX('{{title}}', 38, 800, '{{on}}', { name: 'Name' }, 'center'))),
+      IN('body', T('yr', 'EST. 2026', 15, 700, '{{on}}', 'Year', { mono: true }), HUG) ] },
   ];
   // Whiteboard templates: sticky notes (server/whiteboard.js elements). {{q}} is the question from the prompt.
   const st = (id, x, y, text, fill) => ({ id, t: 'sticky', x, y, w: 180, h: 140, text, fill: fill || '#FFB86B', size: 18 });
@@ -164,6 +229,7 @@
     ['portfolio', 'Portfolio', 'Your work with the story'], ['creator', 'Creator', 'Stream schedule and links'], ['service', 'Local business', 'Prices, booking, reviews'], ['wedding', 'Event', 'Date, place, RSVP'],
     ['podcast', 'Podcast', 'Episodes and where to listen'], ['blog', 'Blog', 'Posts and a newsletter'], ['saas', 'Product', 'A startup or app page'], ['gamepage', 'Game page', 'Screens, trailer, wishlist'],
     ['resume', 'Resume', 'Who you are and what you did'], ['nonprofit', 'Nonprofit', 'Mission and a donate button'], ['photography', 'Photography', 'A gallery first'], ['comingsoon', 'Coming soon', 'A waitlist'],
+    ['conference', 'Conference', 'Schedule, speakers, tickets'], ['menu', 'Restaurant menu', 'The menu first, with prices'], ['course', 'Class or course', 'What you learn, weeks, sign-up'], ['club', 'Club or group', 'When you meet and how to join'],
   ].map(([id, t, d]) => ({ id, t, d }));
 
   window.TribeDesignData = { KINDS, PLANS, SCREENS, SLIDES, POSTERS, LOGOS, BOARDS, SITES };

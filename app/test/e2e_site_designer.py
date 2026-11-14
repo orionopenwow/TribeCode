@@ -92,7 +92,7 @@ def main():
         pid = ok(api("/projects", token=tok))["projects"][0]["id"]
         assert api("/site-designer/templates")[0] == 401, "members only"
         tl = ok(api("/site-designer/templates", token=tok))["templates"]
-        assert len(tl) >= 40 and sum(1 for t in tl if t.get("license") == "MIT" and t.get("source") == "TribeCode") == 16, len(tl)   # feat/site-v2: ours + the imported ones
+        assert len(tl) >= 40 and sum(1 for t in tl if t.get("license") == "MIT" and t.get("source") == "TribeCode") == 20, len(tl)   # feat/site-v2: ours + the imported ones
         lb = ok(api("/site-designer/template/linkbio", token=tok))["config"]
         assert lb["pages"][0]["blocks"][0]["type"] == "links" and lb["pages"][0]["blocks"][0]["props"]["img"].startswith("data:image/"), "template pictures are inlined"
 

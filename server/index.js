@@ -1109,7 +1109,7 @@ async function apiInProject(req, res, url) {
   if (a === 'projects' && (c === 'ledger' || c === 'ledger.csv')) return ledger.route(req, res, ctx());   // v0.27 company: Money (server/ledger.js)
   if (a === 'projects' && c === 'seatpilot') return seatpilot.route(req, res, ctx());   // v0.27 company: seat autopilot (server/seatpilot.js)
   if (a === 'projects' && c === 'sense') return sense.route(req, res, ctx());
-  if (a === 'site-designer' || (a === 'projects' && (c === 'site-config' || c === 'site-autofill' || c === 'site-comments'))) return siteDesign.route(req, res, { ...ctx(), d: parts[3] });
+  if (a === 'site-designer' || (a === 'projects' && (c === 'site-config' || c === 'site-autofill' || c === 'site-comments' || c === 'site-proposals' || c === 'brand'))) return siteDesign.route(req, res, { ...ctx(), d: parts[3] });
   if (a === 'site-library' || (a === 'projects' && (c === 'site-library' || c === 'site-data'))) return siteLib.route(req, res, ctx());   // website templates (server/sitelib.js)
   if (a === 'flint' && (b === 'proof' || b === 'blender')) return flintRun.route(req, res, ctx());   // feat/flint-runthrough
   if ((a === 'flint' && (b === 'tiers' || b === 'tier' || b === 'starters')) || (a === 'projects' && c === 'flint')) return flintFree.route(req, res, ctx());   // Flint's free tier: recipes + the capability map (server/flintfree.js)

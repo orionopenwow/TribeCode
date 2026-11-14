@@ -21,6 +21,11 @@
 //                                                     to the block, assigned per the project's task mode); resolving the task
 //                                                     resolves its comments (onTask, called from saveTask)
 //   MCP: site_comments, site_comments_to_tasks
+//   feat/design-site2:
+//   GET|PUT  /api/projects/:id/brand                     the brand kit (logo, colours, fonts, voice) shared with the canvas
+//   GET      /api/projects/:id/site-proposals            changes an agent proposed, waiting for a person
+//   POST     /api/projects/:id/site-proposals/:pid/applied|declined   a person's answer (the designer applies it as one undo step)
+//   MCP: site_read (the site as an outline), site_propose (a list of safe steps; nothing changes until a person approves)
 // Stored in .tribe/website/<pid>.config.json and <pid>.comments.json. Plain files; no AI needed anywhere.
 'use strict';
 const fs = require('node:fs');
@@ -37,6 +42,24 @@ module.exports = function siteDesign({ base, root, showcase, siteFlint, P, tasks
   const safe = pid => String(pid).replace(/[^\w-]/g, '');
   const file = pid => `.tribe/website/${safe(pid)}.config.json`;
   const cfile = pid => `.tribe/website/${safe(pid)}.comments.json`;
+  const pfile = pid => `.tribe/website/${safe(pid)}.proposals.json`;
+  const loadP = pid => { const l = base.readJSON(pfile(pid), []); return Array.isArray(l) ? l : []; };
+  const saveP = (pid, l) => base.writeJSON(pfile(pid), l.slice(-40));
+  const brandGet = pid => showcase.kitGet(pid);   // one brand record, kept by server/showcase.js (it also feeds the project page)
+  const brandSet = (pid, kit, me) => showcase.kitSet(pid, kit, me);
+  // an agent's proposal: the steps are tried on a copy right away, so the person sees in words what would change
+  function propose(pid, me, { note, ops }) {
+    const cfg = load(pid); if (!cfg) throw err(404, 'this project has no website design yet: a person starts one in the website designer');
+    if (!Array.isArray(ops) || !ops.length) throw err(400, 'ops must be a list of steps');
+    const r = S.applyOps(cfg, ops); if (!r.done.length) throw err(400, `none of the steps could be applied: ${r.skipped.join('; ') || 'nothing to do'}`);
+    const raw = loadRaw(pid), l = loadP(pid);
+    const rec = { id: 'sp' + Date.now().toString(36) + Math.floor(Math.random() * 1296).toString(36), by: me ? me.id : 'agent', at: new Date().toISOString(), note: String(note || '').slice(0, 400), ops: JSON.parse(JSON.stringify(ops)).slice(0, 60), done: r.done, skipped: r.skipped, rev: (raw && raw.rev) || 0, status: 'open' };
+    l.forEach(x => { if (x.status === 'open' && x.by === rec.by) x.status = 'replaced'; });   // one open proposal per helper
+    l.push(rec); saveP(pid, l);
+    try { if (broadcast) broadcast({ type: 'site-proposal', project: pid, id: rec.id }); } catch {}
+    return rec;
+  }
+  const pview = x => ({ id: x.id, by: x.by, byName: nameOf(x.by), at: x.at, note: x.note, ops: x.ops, done: x.done, skipped: x.skipped, status: x.status, rev: x.rev });
   const loadRaw = pid => base.readJSON(file(pid), null);
   const load = pid => { const c = loadRaw(pid); if (c) { delete c.rev; delete c.savedBy; delete c.savedAt; } return c; };
   const save = (pid, cfg, me) => { const old = loadRaw(pid); const c = S.normalize(cfg); delete c.rev; delete c.savedBy; delete c.savedAt; const rec = { ...c, rev: ((old && old.rev) || 0) + 1, savedBy: me ? me.id : (old && old.savedBy) || '', savedAt: new Date().toISOString() }; base.writeJSON(file(pid), rec); return { config: c, rev: rec.rev }; };
@@ -163,6 +186,21 @@ module.exports = function siteDesign({ base, root, showcase, siteFlint, P, tasks
         if (d === 'publish' && m === 'POST') return send(res, 200, publish(b));
       }
       if (a === 'projects' && c === 'site-autofill' && m === 'GET') return send(res, 200, { facts: await facts(b) });
+      if (a === 'projects' && c === 'brand') {
+        if (m === 'GET') return send(res, 200, { kit: brandGet(b), canEdit });
+        if (m === 'PUT') { if (!canEdit) return fail(res, 403, 'spectators are read-only'); const body = await readBody(req, 600 * 1024); return send(res, 200, { ok: true, kit: brandSet(b, (body && body.kit) || {}, me) }); }
+      }
+      if (a === 'projects' && c === 'site-proposals') {
+        const e = parts[4];
+        if (!d && m === 'GET') return send(res, 200, { proposals: loadP(b).filter(x => x.status === 'open').map(pview), canEdit });
+        if (d && m === 'POST' && (e === 'applied' || e === 'declined')) {
+          if (!canEdit || me.role === 'agent') return fail(res, 403, 'a person answers a proposal');
+          const l = loadP(b), x = l.find(y => y.id === d); if (!x) return fail(res, 404, 'that proposal is gone');
+          x.status = e; x.answeredBy = me.id; x.answeredAt = new Date().toISOString(); saveP(b, l);
+          try { if (broadcast) broadcast({ type: 'site-proposal', project: b, id: x.id }); } catch {}
+          return send(res, 200, { ok: true });
+        }
+      }
       if (a === 'projects' && c === 'site-comments') {
         const e = parts[4];
         if (!d && m === 'GET') return send(res, 200, { comments: loadC(b).map(view), canEdit });
@@ -182,11 +220,21 @@ module.exports = function siteDesign({ base, root, showcase, siteFlint, P, tasks
       inputSchema: { type: 'object', properties: { project: { type: 'string' }, open: { type: 'boolean', description: 'only open ones' } }, additionalProperties: false },
       run: async (a = {}) => { const l = loadC(cur(a)).filter(c => !a.open || c.status === 'open'); return text(l.length ? l.map(c => `[${c.status}] ${c.label || c.blockType || 'section'} (${c.block}): “${c.text}” · ${nameOf(c.by)}${c.task ? ` · task ${c.task}` : ''}`).join('\n') : 'No comments on the website.'); },
     },
+    site_read: {
+      description: 'Read the project website as an outline: its pages, each section (block) with its id, type, layout variant and words, the theme, and which block types, looks and font pairs exist. Use it before site_propose. Pictures are left out.',
+      inputSchema: { type: 'object', properties: { project: { type: 'string' } }, additionalProperties: false },
+      run: async (a = {}) => { const cfg = load(cur(a)); if (!cfg) return text('This project has no website design yet. A person starts one in the website designer (Files › Website).', true); const k = brandGet(cur(a)); return text(JSON.stringify({ ...S.outline(cfg), brand: { name: k.name, colors: k.colors, fonts: k.fonts, voice: k.voice } })); },
+    },
+    site_propose: {
+      description: 'Propose changes to the project website as a list of safe steps. Nothing changes until a person approves the proposal in the website designer, where it becomes one undo step. Steps (each { op, … }): text { block, path, value } (path like "title", "text", "items.0.title", "buttons.0.label"); add { type, variant?, page?, after?: blockId, props?: words only }; remove { block }; move { block, to: "up"|"down"|"top"|"bottom"|index }; variant { block, variant }; style { block, bg: ""|"card"|"accent"|"ink", pad: ""|"s"|"l" }; link { block, path, kind: "page"|"section"|"url"|"email", to }; alt { block, path, value }; theme { preset }; palette { preset }; accent { color: "#RRGGBB" }; fonts { pair }; space { value: "compact"|"normal"|"roomy" }; radius { value }; page { title }; rename { page, title }; seo { title?, description? }. Pictures cannot be set. Steps that do not fit are skipped and named in the answer.',
+      inputSchema: { type: 'object', properties: { project: { type: 'string' }, note: { type: 'string', description: 'one or two sentences for the person: what you changed and why' }, ops: { type: 'array', items: { type: 'object' }, maxItems: 60 } }, required: ['ops'], additionalProperties: false },
+      run: async (a = {}, me) => { try { const r = propose(cur(a), me || { id: 'agent', role: 'agent' }, a); return text(`Proposed ${r.done.length} change${r.done.length === 1 ? '' : 's'}; a person approves them in the website designer.\n${r.done.map(x => '- ' + x).join('\n')}${r.skipped.length ? `\nSkipped:\n${r.skipped.map(x => '- ' + x).join('\n')}` : ''}`); } catch (e) { return text(e.message, true); } },
+    },
     site_comments_to_tasks: {
       description: 'Summarize the open website comments into tasks, one per section, linked to the block and assigned per the project\'s task mode (Lead or Council). Finishing a task resolves its comments.',
       inputSchema: { type: 'object', properties: { project: { type: 'string' } }, additionalProperties: false },
       run: async (a = {}, me) => { try { const r = await toTasks(cur(a), me || { id: 'agent', role: 'agent' }); return text(r.say); } catch (e) { return text(e.message, true); } },
     },
   };
-  return { route, load, save: (pid, cfg) => save(pid, cfg).config, template, templates, publish, facts, onTask, toTasks, mcpTools, comments: loadC, exists: pid => !!loadRaw(pid) };
+  return { propose, proposals: loadP, brandGet, brandSet, route, load, save: (pid, cfg) => save(pid, cfg).config, template, templates, publish, facts, onTask, toTasks, mcpTools, comments: loadC, exists: pid => !!loadRaw(pid) };
 };

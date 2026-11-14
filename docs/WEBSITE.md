@@ -139,6 +139,43 @@ picture round", "dark mode", "add a gallery", "move the FAQ to the top", "make t
 "make the accent teal", "change the headline to …", "download the html", "something for my band". What needs an AI gets
 the one AI-boost card (Use my AI · Get credits / Premium). Test: `app/test/e2e_site_designer.py`.
 
+### Style, Check, the section bar and "Have my agent do it" (`app/ui/sitestudio.js`)
+
+- **Better pages out of the box.** Sections alternate a quiet tint, a one-page site gets a menu of its sections and a
+  call-to-action, lists without text become tick lists, and there are three more blocks: Steps, Visit us (address, hours,
+  phone, a directions button) and Timeline. Features can carry icons (about 90 from Lucide, inline in the export).
+- **In the preview.** The section under the pointer shows a small bar: drag the grip to move it, or move up/down,
+  duplicate, add a section below, remove. Click an icon to swap it. Every action is one undo step.
+- **Style** (right panel). A look, the main colour, the font pair, corners, spacing and light/dark each restyle every
+  page in one tap. Two more font pairs (DM Serif Display, Outfit; SIL OFL).
+- **Brand kit.** "Save this look as the brand kit" keeps logo, colours, fonts and "how we sound" in one record per
+  project (`GET|PUT /api/projects/:id/brand`, `app/ui/brandkit.js`; on the device when there is no tribe). The Design
+  canvas shows the kit's colours first in its colour picker, and agents get the kit in `site_read`.
+- **Check** ("Check my site"). `TribeSiteCfg.check(cfg)` lists problems in plain words: low contrast, buttons that go
+  nowhere, pictures with no description, no description for search, empty pages and sections, example words left in,
+  forms that do nothing yet, things wider than a phone (measured in a hidden 390px frame). Safe ones have a one-tap fix;
+  "Fix N for me" applies them all as one undo step.
+- **Have my agent do it.** The button sends the ask to the person's agent (the ask queue). The agent uses two MCP tools:
+  `site_read` (the site as an outline: pages, sections with ids and words, no pictures) and `site_propose` (a list of
+  safe steps: text, add, remove, move, variant, style, link, alt, theme, palette, accent, fonts, space, radius, page,
+  rename, seo). `TribeSiteCfg.applyOps` checks every step; pictures, scripts and unknown fields are skipped. Nothing
+  changes until a person taps Apply in the designer (an agent cannot answer its own proposal); Apply is one undo step.
+  With no agent, the same sheet hands the ask to Flint.
+
+- **One brand record.** The kit is the only brand record. The project page's older fields (`/website/brand`: primary,
+  wordmark, logo, font) are a copy of it: an older project is moved into a kit the first time it is read, the older
+  route answers from the kit, and a change through either route lands in both (`kitGet`, `kitSet`, `kitSync` in
+  `server/showcase.js`). The canvas lists the kit's fonts and has "Use the logo here"; Design flow's poster and logo
+  starters take the kit's colour, heading font and logo.
+- **Illustrations.** Eight original flat scenes (`TribeSiteCfg.ILLUS`, MIT like the app) drawn in the site's own
+  colours. Click a picture, then pick one under Illustrations; Check offers one for a grey placeholder; an agent may
+  use the step `illustration { block, path?, name }` (the only picture step there is).
+- **More site types.** Conference / meetup, Restaurant menu, Class or course, Club or group
+  (`scripts/dev/site-types.json`, written as designer configs; `python3 scripts/dev/site-gallery.py --only <ids>`
+  rebuilds `app/ui/sitetpl/<id>.json` and the thumbnails; run it for the 16 as well after changing how they convert).
+
+Test: `app/test/e2e_site_studio.py`.
+
 ## API
 
 | Method | Path | Who |
