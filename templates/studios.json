@@ -9,7 +9,7 @@
       "back": "Export PNG or WebP images and MP4 clips, then drop them into Files › Assets." },
     { "id": "blender", "role": "the 3D models, characters and animations", "title": "Blender", "glyph": "◆", "color": "#E8A33D",
       "what": "3D modelling, rigging, animation and rendering.",
-      "license": "GPL-2.0+", "platforms": ["Windows", "Mac", "Linux"], "url": "https://www.blender.org/download/",
+      "license": "GPL-3.0", "platforms": ["Windows", "Mac", "Linux"], "url": "https://www.blender.org/download/",
       "good": "Characters, props and whole scenes for 3D games and websites; renders and turntables for trailers.",
       "for": ["3d", "game", "video"],
       "back": "Export glTF (.glb) for three.js or Godot, or render PNG/MP4. glTF files open in TribeCode's 3D viewer." },
