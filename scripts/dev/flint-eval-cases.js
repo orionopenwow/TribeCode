@@ -279,6 +279,21 @@ add('s', [['the title needs more punch', 'site.copy', { field: 'headline', tone:
   ['put a call to action before the footer', 'site.block.add', { block: 'cta' }], ['pull our team from the project', 'site.autofill']]);
 add('p', [['shorten the headline', 'site.copy', { field: 'headline', tone: 'shorter' }], ['add business hours', 'site.hours']]);
 for (let i = H3; i < C.length; i++) C[i].v = 'held3';
+// ---- feat/site-3d: moving and 3D backgrounds behind a section (app/ui/sitefx.js) ----
+add('s', [['add a 3D background', 'site.fx', { op: 'add' }], ['put moving particles behind the header', 'site.fx', { op: 'add', block: 'header' }], ['make the background calmer', 'site.fx', { op: 'calmer' }],
+  ['turn off motion on phones', 'site.fx', { op: 'phones' }], ['add a starfield behind the hero', 'site.fx', { op: 'add', kind: 'warp', block: 'hero' }], ['remove the moving background', 'site.fx', { op: 'remove' }],
+  ['make the animation slower', 'site.fx', { op: 'slower' }], ['give the footer a moving background', 'site.fx', { op: 'add', block: 'footer' }], ['add a constellation background', 'site.fx', { op: 'add', kind: 'constellation' }],
+  ['no animation on mobile', 'site.fx', { op: 'phones' }], ['turn motion back on for phones', 'site.fx', { op: 'phones', on: true }], ['fewer particles', 'site.fx', { op: 'fewer' }],
+  ['speed up the background animation', 'site.fx', { op: 'faster' }], ['make the particles fainter', 'site.fx', { op: 'fainter' }], ['add animated dots in the background', 'site.fx', { op: 'add', kind: 'dots' }],
+  ['use a 3d sphere background', 'site.fx', { op: 'add', kind: 'sphere' }], ['add ripples behind the contact section', 'site.fx', { op: 'add', kind: 'rings', block: 'contact' }], ['stop the animation', 'site.fx', { op: 'remove' }],
+  // these must stay what they were
+  ['make the hero background accent', 'site.bg', { block: 'hero', bg: 'accent' }], ['show me the phone view', 'site.device', { dev: 'phone' }], ['hide this section', 'site.block.hide']]);
+const HFX = C.length;   // held out: written with the rules; 9/10 on its first untuned run, then the one miss was fixed
+add('s', [['i want an animated background', 'site.fx', { op: 'add' }], ['put floating particles behind the intro', 'site.fx', { op: 'add', kind: 'drift', block: 'intro' }], ['the moving background is too busy', 'site.fx', { op: 'calmer' }],
+  ['disable the animation on mobile', 'site.fx', { op: 'phones' }], ['get rid of the animated background', 'site.fx', { op: 'remove' }], ['slow down the background motion', 'site.fx', { op: 'slower' }],
+  ['add a 3d globe behind the hero', 'site.fx', { op: 'add', kind: 'sphere', block: 'hero' }], ['more stars in the background', 'site.fx', { op: 'more' }], ['make the background animation livelier', 'site.fx', { op: 'livelier' }],
+  ['add water drops to the background', 'site.fx', { op: 'add', kind: 'drops' }]]);
+for (let i = HFX; i < C.length; i++) C[i].v = 'heldfx';
 // ---- feat/design-flow: app and game starters (app/ui/starters) picked by what you ask for ----
 add('g', [
   ['make a breakout game', 'site.starter-breakout'], ['build me a brick breaker', 'site.starter-breakout'], ['make an arkanoid clone called brick party', 'site.starter-breakout', { name: 'brick party' }],

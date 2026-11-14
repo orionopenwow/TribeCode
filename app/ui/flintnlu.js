@@ -606,6 +606,34 @@
   const cleanText = t => String(t || '').replace(/^["“']|["”'.]+$/g, '').trim();
   const FONT_W = [['fraunces', 'fraunces'], ['instrument serif', 'instrument serif|instrument'], ['space grotesk', 'space grotesk|grotesk'], ['bricolage', 'bricolage'], ['jetbrains mono', 'jetbrains mono|jetbrains'], ['silkscreen', 'silkscreen'], ['inter', 'inter'],
     ['pixel', 'pixel|retro|8 bit|arcade'], ['mono', 'mono|monospace|monospaced|code|typewriter'], ['serif', 'serif|serifs|classic|elegant|bookish'], ['sans', 'sans|sans serif|cleaner|clean|modern|simple']];
+  // feat/site-3d: moving and 3D backgrounds behind a section of the website (app/ui/sitefx.js). "add a 3D background",
+  // "put moving particles behind the header", "make the background calmer", "turn off motion on phones".
+  const FX_KIND = [['constellation', /constellations?|network|connected dots|nodes/], ['warp', /starfield|stars?|space|warp|galaxy/], ['drift', /particles?|floating|dust|snow|fireflies|bokeh/], ['sphere', /sphere|globe|planet|orbits?/], ['dome', /dome/], ['orb', /orb|ball|bubble/],
+    ['drops', /drops?|droplets?|rain|water|condensation/], ['rings', /ripples?|rings?|bell/], ['streams', /streams?|waves?|wavy|bands?|aurora/], ['ribbons', /ribbons?/], ['horizon', /horizon|glow|sunrise|sunset/], ['arc', /pixels?|arc|squares/], ['dots', /dots?|grid|halftone/]];
+  const FX_WORD = /\b(?:3d|3 d|three d|three dimensional|moving|animated|animation|animations|motion|living|live|shader|particles?|starfield|stars|constellations?|ripples?|ribbons?|streams?|floating|water drops?|droplets?|raindrops?)\b/;
+  function siteFx(c, hit) {
+    const bgw = /\b(?:background|backdrop|behind)\b/.test(c), fxw = FX_WORD.test(c), H = (op, more) => hit('site.fx', { op, ...(more || {}) }, 0.986);
+    const where = /\bbehind (?:the |my |our )?(header|hero|top|intro|banner|heading|footer|contact|pricing|features|gallery|team|faq|testimonials|newsletter|info|stats|cta|text|steps|timeline)\b/.exec(c) || /\b(?:to|on|in|for|give|make) (?:the |my |our )?(header|hero|top|intro|footer|contact|pricing|features|gallery|team|faq|testimonials|newsletter|info|stats|cta|steps|timeline)(?: section| block)?\b/.exec(c);
+    const blk = where ? { block: where[1] } : {};
+    if (/\b(?:phones?|mobile|mobiles|small screens?|iphone|android)\b/.test(c) && /\b(?:motion|animation|animations|moving|movement|animated|3d|background)\b/.test(c) && /\b(?:turn|switch|stop|no|disable|enable|off|on|without|pause|still|keep|allow|play|show)\b/.test(c) && !/\b(?:view|preview|version|looks?)\b/.test(c))
+      return H('phones', { on: /\b(?:turn (?:\w+ ){0,3}on|switch (?:\w+ ){0,3}on|back on|enable|allow|play|keep (?:it |the \w+ )?(?:moving|on))\b/.test(c) && !/\b(?:off|no|stop|disable|without|pause|still)\b/.test(c), ...blk });
+    if (!bgw && !fxw) return null;
+    if (/\b(?:remove|delete|get rid of|take (?:away|off|out)|stop|turn off|switch off|disable|no more|kill|lose)\b/.test(c) && (fxw || /\bbackground (?:animation|motion|effect)\b/.test(c)) && /\b(?:background|backdrop|animation|motion|effect|particles?|3d)\b/.test(c)) return H('remove', blk);
+    if (/\b(?:calmer|calm|quieter|quiet|subtler|subtle|gentler|gentle|less busy|less distracting|too busy|too much|tone (?:it |the \w+ )?down|chill|relaxed|softer)\b/.test(c) && (bgw || fxw)) return H('calmer', blk);
+    if (/\b(?:livelier|lively|more alive|more energy|energetic|more exciting|bolder|pop more|more dramatic|wilder|busier)\b/.test(c) && (bgw || fxw)) return H('livelier', blk);
+    if (/\b(?:slower|slow (?:it |the \w+ )?down|slow)\b/.test(c) && (bgw || fxw)) return H('slower', blk);
+    if (/\b(?:faster|speed (?:it |the \w+ )?up|quicker|fast)\b/.test(c) && (bgw || fxw)) return H('faster', blk);
+    if (/\b(?:fewer|less dense|sparser|thin (?:it |them |the \w+ )?out|not so many|less of them)\b/.test(c) && (bgw || fxw)) return H('fewer', blk);
+    if (/\b(?:more of them|denser|more dense|more (?:particles|dots|stars|drops)|thicker)\b/.test(c) && (bgw || fxw)) return H('more', blk);
+    if (/\b(?:fainter|faint|dimmer|lighter|more transparent|see through|less visible|fade)\b/.test(c) && fxw) return H('fainter', blk);
+    if (/\b(?:stronger|brighter|more visible|more vivid|bolder colou?rs?)\b/.test(c) && fxw) return H('stronger', blk);
+    if (!fxw) return null;
+    if (!bgw && !/\b(?:add|put|insert|give|want|need|use|try|make|switch|change|set|show|have|get|can (?:i|we|you))\b/.test(c)) return null;
+    if (!bgw && !/\b(?:3d|3 d|three d|particles?|starfield|constellations?|ripples?|ribbons?|animation|animated|motion|moving)\b/.test(c)) return null;
+    if (!bgw && /\b(?:button|buttons|text|headline|heading|title|picture|image|photo|logo|icon|icons|entrance|scroll|hover|fade in|slide in|gif|video)\b/.test(c)) return null;
+    let kind = ''; for (const [k, re] of FX_KIND) if (new RegExp('\\b(?:' + re.source + ')\\b').test(c)) { kind = k; break; }
+    return H('add', { ...(kind ? { kind } : {}), ...(/\b(?:3d|3 d|three d|three dimensional)\b/.test(c) && !kind ? { three: true } : {}), ...blk });
+  }
   function siteMore(c, r, ctx, hit, glob) {
     let m;
     const FW = '(headline|title|heading|tagline|subtitle|subheading|intro|button(?: text)?|cta|main button)';
@@ -934,7 +962,7 @@
     const IMG = /\b(?:image|images|picture|pictures|photo|photos|avatar|img|headshot|portrait|cover|pfp)\b/;
     if (view) {
       const cv = view === 'canvas';
-      if (!cv) { const y = siteNew(c, r, ctx, hit); if (y) return y; const x = siteMore(c, r, ctx, hit, false); if (x) return x; }
+      if (!cv) { const f3 = siteFx(c, hit); if (f3) return f3; const y = siteNew(c, r, ctx, hit); if (y) return y; const x = siteMore(c, r, ctx, hit, false); if (x) return x; }
       else { const y = canvasNew(c, r, ctx, hit); if (y) return y; }
       // export (the website designer)
       if (!cv && /\b(?:export|download|zip|html|webpage file|web page file|save it as|get the code|code for this|source code|static files?)\b/.test(c) && !IMG.test(c)) return hit('site.export', { fmt: /\bzip\b/.test(c) ? 'zip' : /\b(?:html|webpage|web page)\b/.test(c) ? 'html' : '' });
@@ -1121,6 +1149,8 @@
   FUNC.forEach(w => KEEP.add(w));
   // feat/flint-unify: words the new site and canvas commands read (so spelling tolerance never "fixes" them away)
   'trailer trailers swap swaps dupe dup ungroup unlock unhide distribute evenly lock freeze rectangle rect ellipse oval circle artboard placeholder snap grid zoom resize width height wide tall twice halve front back forward backward behind underneath instagram insta tiktok youtube spotify twitter github linkedin facebook twitch soundcloud bandcamp pinterest threads bluesky mastodon discord patreon substack kofi behance dribbble snapchat whatsapp telegram vimeo etsy social socials icon icons handle email phone call map directions address countdown copyright footer announcement banner bio menu nav navigation navbar align alignment justify corners rounder rounding radius sharper language logo testimonial quote review plan tier package team stat metric feature perk dish drink episode gig tour faq question clear empty wipe timer animations motion notifications notifs mute unmute snooze pin unpin react thumbs heart reopen unassign priority urgent prioritize whiteboard inspiration inspo template templates marketplace gigs away offline invisible afk brb sounds'.split(' ').forEach(w => { VOCAB.add(w); KEEP.add(w); });
+  // feat/site-3d: words of the moving-background sentences (siteFx)
+  'moving animated animation animations motion movement particles particle starfield stars constellation constellations ripples ripple ribbons ribbon streams stream floating shader slower faster fewer sparser denser fainter dimmer stronger brighter calmer quieter subtler gentler livelier busier speed quicker dots droplets drops sphere globe dome orb horizon halftone aurora fireflies bokeh backdrop behind phones mobile dimensional pixels distracting energetic vivid'.split(' ').forEach(w => { VOCAB.add(w); KEEP.add(w); });
   'noon midnight morning afternoon evening night tonight weekend week weeks month months day days hour hours minute minutes mins today tomorrow eod eow sept'.split(' ').forEach(w => { VOCAB.add(w); KEEP.add(w); });
   // feat/flint-max: design, copy, sheet, doc and slide words (kept, and typos of them corrected toward them)
   ('palette palettes scheme colours colors colour color mood vibe vibes brutalist brutal brutalism corporate professional elegant classy luxury luxurious premium friendly techy retro vintage calm zen modern autumn sunset ocean forest earthy desert coffee pastel candy '

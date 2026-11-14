@@ -19,6 +19,8 @@
   'use strict';
   const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const clone = o => JSON.parse(JSON.stringify(o));
+  // feat/site-3d: moving and 3D backgrounds live in app/ui/sitefx.js; a block keeps them in block.fx
+  let fxMod; const FX = () => { if (fxMod === undefined) { try { fxMod = typeof module === 'object' && module.exports ? require('./sitefx.js') : (typeof self !== 'undefined' && self.TribeSiteFx) || undefined; } catch { fxMod = null; } } return fxMod || (typeof self !== 'undefined' && self.TribeSiteFx) || null; };
   let seq = 0;
   const uid = p => (p || 'b') + Date.now().toString(36).slice(-4) + (seq++).toString(36) + Math.floor(Math.random() * 1296).toString(36);
   const slugify = s => String(s || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 40) || 'page';
@@ -132,7 +134,7 @@
     if (t.alt && typeof t.alt === 'object') { const alt = {}; ['dark', 'light'].forEach(m => { const a = t.alt[m]; if (m !== c.theme.base && a && ['bg', 'ink', 'accent'].every(k => /^#[0-9a-f]{3,8}$/i.test(a[k] || ''))) alt[m] = { ...a }; }); if (Object.keys(alt).length) c.theme.alt = alt; }   // feat/flint-max: a palette's own other mode
     if (!Array.isArray(c.pages) || !c.pages.length) c.pages = [page('Home')];
     const seen = new Set();
-    c.pages.forEach((pg, i) => { pg.id = pg.id || uid('p'); pg.title = String(pg.title || 'Page').slice(0, 40); pg.slug = i === 0 ? 'index' : (pg.slug && pg.slug !== 'index' ? pg.slug : slugify(pg.title)); while (seen.has(pg.slug)) pg.slug += '-2'; seen.add(pg.slug); pg.blocks = (pg.blocks || []).filter(b => b && BLOCKS[b.type]).map(b => { const o = { id: b.id || uid('b'), type: b.type, variant: BLOCKS[b.type].variants.includes(b.variant) ? b.variant : BLOCKS[b.type].variants[0], props: b.props || BLOCKS[b.type].make() }; if (b.hidden) o.hidden = true; const st = b.style || {}; if (st.bg || st.pad || st.al || st.tint || st.sz) o.style = { bg: /^(card|accent|ink)$/.test(st.bg) ? st.bg : '', pad: /^(s|l)$/.test(st.pad) ? st.pad : '', ...(/^(left|center|right)$/.test(st.al) ? { al: st.al } : {}), ...(/^(s|l)$/.test(st.sz) ? { sz: st.sz } : {}), ...(/^#[0-9a-f]{3,8}$/i.test(st.tint || '') ? { tint: st.tint } : {}) }; styleX(o, b); return o; }); const ps = pg.seo; if (ps && typeof ps === 'object' && (ps.title || ps.description)) pg.seo = { title: String(ps.title || '').slice(0, 120), description: String(ps.description || '').slice(0, 320), ...(/^(data:image\/|https:\/\/|assets\/)/.test(ps.image || '') ? { image: String(ps.image) } : {}) }; else if (ps && /^(data:image\/|https:\/\/|assets\/)/.test(ps.image || '')) pg.seo = { title: '', description: '', image: String(ps.image) }; else delete pg.seo; });
+    c.pages.forEach((pg, i) => { pg.id = pg.id || uid('p'); pg.title = String(pg.title || 'Page').slice(0, 40); pg.slug = i === 0 ? 'index' : (pg.slug && pg.slug !== 'index' ? pg.slug : slugify(pg.title)); while (seen.has(pg.slug)) pg.slug += '-2'; seen.add(pg.slug); pg.blocks = (pg.blocks || []).filter(b => b && BLOCKS[b.type]).map(b => { const o = { id: b.id || uid('b'), type: b.type, variant: BLOCKS[b.type].variants.includes(b.variant) ? b.variant : BLOCKS[b.type].variants[0], props: b.props || BLOCKS[b.type].make() }; if (b.hidden) o.hidden = true; if (b.fx) { const f = FX() ? FX().clean(b.fx) : b.fx; if (f) o.fx = f; } const st = b.style || {}; if (st.bg || st.pad || st.al || st.tint || st.sz) o.style = { bg: /^(card|accent|ink)$/.test(st.bg) ? st.bg : '', pad: /^(s|l)$/.test(st.pad) ? st.pad : '', ...(/^(left|center|right)$/.test(st.al) ? { al: st.al } : {}), ...(/^(s|l)$/.test(st.sz) ? { sz: st.sz } : {}), ...(/^#[0-9a-f]{3,8}$/i.test(st.tint || '') ? { tint: st.tint } : {}) }; styleX(o, b); return o; }); const ps = pg.seo; if (ps && typeof ps === 'object' && (ps.title || ps.description)) pg.seo = { title: String(ps.title || '').slice(0, 120), description: String(ps.description || '').slice(0, 320), ...(/^(data:image\/|https:\/\/|assets\/)/.test(ps.image || '') ? { image: String(ps.image) } : {}) }; else if (ps && /^(data:image\/|https:\/\/|assets\/)/.test(ps.image || '')) pg.seo = { title: '', description: '', image: String(ps.image) }; else delete pg.seo; });
     if (/^(outline|pill|soft)$/.test(t.btn || '')) c.theme.btn = t.btn;
     c.theme.space = /^(compact|roomy)$/.test(t.space) ? t.space : 'normal';
     const so = c.seo || {}; c.seo = { title: String(so.title || '').slice(0, 120), description: String(so.description || '').slice(0, 320), image: String(so.image || ''), favicon: String(so.favicon || ''), lang: /^[a-z]{2}(-[A-Za-z]{2})?$/.test(so.lang || '') ? so.lang : 'en' };
@@ -494,6 +496,7 @@
     return null;
   }
   function command(c, s, at) {
+    if (s && s.intent === 'site.fx' && FX()) return FX().command(c, s, at || {}, { BLOCKS });   // feat/site-3d
     { const e = /^site\.(?:el\.|suggest$|buttons$|time$|width$|entrance$|size$|align$)/.test(s.intent || '') ? commandEl(c, s, at) : null; if (e) return e; }
     at = at || {}; { const r2 = command2(c, s, at); if (r2 !== undefined) return r2; }
     at = at || {}; const sl = s.slots || {}, id = s.intent, pg = pageOf(c, at.page), sel = at.sel || {};
@@ -823,9 +826,10 @@ ${t.btn === 'pill' ? '.btn{border-radius:999px}' : t.btn === 'outline' ? '.btn{b
     const meta = `${desc ? `<meta name="description" content="${esc(desc)}"><meta property="og:description" content="${esc(desc)}">` : ''}<meta property="og:title" content="${esc(title)}"><meta property="og:type" content="website"><meta name="twitter:card" content="${S.image ? 'summary_large_image' : 'summary'}">${abs(PS.image || S.image) ? `<meta property="og:image" content="${esc(PS.image || S.image)}">` : ''}${S.favicon ? `<link rel="icon" href="${esc(S.favicon)}">` : ''}`;
     const credit = c.credit ? `<p class="credit"${o.edit ? ' data-sys="credit"' : ''}>Design based on <a href="${esc(c.credit.url)}" rel="noopener">${esc(c.credit.text)}</a>${c.credit.license ? ` (${esc(c.credit.license)})` : ''}</p>` : '';
     const head = `<!doctype html><html lang="${esc(S.lang)}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${esc(title)}</title>${meta}<meta name="generator" content="TribeCode website designer"><style>${css(c, o.fonts || '')}</style>${o.extraHead || ''}</head><body><a class="skip" href="#main">Skip to content</a>`;
-    if (mode === 'single' && !o.edit) return `${head}${c.pages.map((p, i) => `<div class="pg${i === 0 ? ' pg-home' : ''}" id="p-${p.slug}">${nav(c, p, { mode })}<main${i === 0 ? ' id="main"' : ''}>${renderPage(c, p, { mode })}</main></div>`).join('\n')}${credit}</body></html>`;
+    const fxd = html => (FX() ? FX().decorate(html, c, { ...o, mode }, colors(c)) : html);   // feat/site-3d
+    if (mode === 'single' && !o.edit) return fxd(`${head}${c.pages.map((p, i) => `<div class="pg${i === 0 ? ' pg-home' : ''}" id="p-${p.slug}">${nav(c, p, { mode })}<main${i === 0 ? ' id="main"' : ''}>${renderPage(c, p, { mode })}</main></div>`).join('\n')}${credit}</body></html>`);
     const pg = c.pages.find(p => p.id === o.page || p.slug === o.page) || c.pages[0];
-    return `${head}${nav(c, pg, { mode, edit: o.edit })}<main id="main">${renderPage(c, pg, { mode, edit: o.edit })}</main>${credit}${o.extraBody || ''}</body></html>`;
+    return fxd(`${head}${nav(c, pg, { mode, edit: o.edit })}<main id="main">${renderPage(c, pg, { mode, edit: o.edit })}</main>${credit}${o.extraBody || ''}</body></html>`);
   }
   // standalone files: 'single' = { 'index.html' } with every page and the pictures inside; 'zip' = one file per page,
   // pictures in assets/ (data: URLs written out), fonts in fonts/ (paths listed in .fonts for the caller to copy)
@@ -840,7 +844,8 @@ ${t.btn === 'pill' ? '.btn{border-radius:999px}' : t.btn === 'outline' ? '.btn{b
     c.pages.forEach(p => { files[p.slug === 'index' ? 'index.html' : p.slug + '.html'] = render(c, { page: p.id, mode: 'pages', fonts: used.size ? 'fonts/' : '' }); });
     files['site.json'] = JSON.stringify(cfg, null, 1);
     files['README.md'] = `# ${c.name}\n\nMade with the TribeCode website designer. Plain HTML and CSS, no build step and no scripts: open index.html, or upload this folder to any static host (GitHub Pages, Netlify, a USB stick).\n\n- ${c.pages.map(p => (p.slug === 'index' ? 'index' : p.slug) + '.html: ' + p.title).join('\n- ')}\n- assets/: the pictures\n- fonts/: the fonts (SIL Open Font License, licenses alongside)\n- site.json: the design, to open again in TribeCode\n`;
-    return { files, assets: [...assets].map(([src, path]) => ({ src, path })), fonts: [...used].map(f => ({ file: FONT[f][0] + '.woff2', license: 'LICENSE-' + f.replace(/\s+/g, '') + '.txt' })) };
+    const out2 = { files, assets: [...assets].map(([src, path]) => ({ src, path })), fonts: [...used].map(f => ({ file: FONT[f][0] + '.woff2', license: 'LICENSE-' + f.replace(/\s+/g, '') + '.txt' })) };
+    return FX() ? FX().exportInto(out2, c, kind) : out2;   // feat/site-3d: fx/ beside the pages
   }
   const dataToBytes = src => { const m = /^data:[^;,]+(;base64)?,(.*)$/.exec(src || ''); if (!m) return null; if (m[1]) { const bin = typeof atob === 'function' ? atob(m[2]) : Buffer.from(m[2], 'base64').toString('binary'); const u = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) u[i] = bin.charCodeAt(i); return u; } return new TextEncoder().encode(decodeURIComponent(m[2])); };
 

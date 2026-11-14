@@ -413,6 +413,32 @@
    }
   },
   {
+   "id": "site-motion",
+   "group": "make",
+   "title": "Add a 3D or moving background",
+   "intro": "Put gentle motion behind any part of your site: drifting dots, a glowing orb, a 3D starfield. Your words stay on top and stay yours to edit.",
+   "asks": [
+    "add a 3d background",
+    "animated background",
+    "moving particles behind the header",
+    "make my site move",
+    "background animation"
+   ],
+   "needs": "TribeSiteDesigner",
+   "steps": [
+    "Open the website designer and click the section you want.",
+    "In the Edit panel, find Moving background and pick one.",
+    "Slide Speed, How many and How strong until it feels right.",
+    "Untick “Move on phones too” to show a still picture on phones.",
+    "Or tell Flint: “add a 3D background”, then “make it calmer”."
+   ],
+   "do": "call:TribeSiteDesigner.open",
+   "doLabel": "Open the designer",
+   "show": {
+    "lesson": "site"
+   }
+  },
+  {
    "id": "site-one-thing",
    "group": "make",
    "title": "Change one thing on your site",
