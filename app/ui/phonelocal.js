@@ -135,7 +135,7 @@
     if (e === 'connectors' && method === 'GET') return ok({ connectors: [] });
     if (e === 'ai-spend' && method === 'GET') return ok(summary(pid).aiSpend);
     if (e === 'settings' && method === 'PUT') { if (body.cash) { const a = Number(body.cash.amount); d.settings.cash = Number.isFinite(a) ? { amount: round(a), currency: body.cash.currency || d.settings.currency, at: iso() } : null; } if (body.currency) d.settings.currency = String(body.currency).slice(0, 3).toUpperCase(); save(); return ok({ settings: d.settings }); }
-    if (e === 'import') return needsHost('connectors', 'Importing a CSV works once the project has a home. On this phone, add entries by hand.');
+    if (e === 'import') return needsHost('connectors', 'Importing a CSV works once the tribe is online. On this phone, add entries by hand.');
     const x = d.entries.find(y => y.id === e);
     if (x && method === 'DELETE') { d.entries = d.entries.filter(y => y !== x); save(); return ok({ ok: true }); }
     if (x && (method === 'PATCH' || method === 'PUT')) { if (body.label != null) x.label = String(body.label).slice(0, 120); if (body.amount != null && Number.isFinite(Number(body.amount))) x.amount = round(body.amount); save(); return ok({ entry: view(x) }); }
@@ -166,7 +166,7 @@
     if (b === 'timebank' && method === 'GET') return ok({ entries: [], balance: { net: 0, given: 0, got: 0 } });
     if (b === 'compute' && method === 'GET') return ok({ offers: [], mine: [], available: false, reason: 'Sharing compute needs a computer.' });
     if (b === 'public' && method === 'GET') return ok({ available: false, gigs: [], reason: 'offline' });
-    if (method !== 'GET') return needsHost('friends', 'Hiring and applying need other people, so the project needs a home first.');
+    if (method !== 'GET') return needsHost('friends', 'Hiring and applying need other people, so the tribe needs to be online first.');
     return null;
   }
 
@@ -266,7 +266,7 @@
     const p = project(pid), db = K().db(), tasks = (db.tasks || {})[pid] || [];
     const md = [`# ${p.name || 'Project'} · TRIBE_CONTEXT.md`, '', p.bio ? p.bio : '', '', '## Vision', (db.vision || {})[pid] || '_Not written yet._', '', '## Open tasks',
       ...(tasks.filter(t => t.status !== 'done').slice(0, 20).map(t => `- ${t.title}`)), tasks.some(t => t.status !== 'done') ? '' : '_None yet._', '',
-      '## Where it lives', 'On this phone only. Move it to a host for friends and AI helpers.'].join('\n');
+      '## Where it lives', 'Saved on this phone only. Put it online for friends and AI helpers.'].join('\n');
     return ok({ text: md, markdown: md, path: 'TRIBE_CONTEXT.md', bytes: md.length });
   }
 

@@ -27,8 +27,8 @@
     if (PH && PH.move) return PH.move();
     if (LS && LS.where) return LS.where();
   }
-  const line = text => `<span class="dv-line"><span class="dv-line-t">${esc(text)}</span> <button type="button" class="linkish dv-where" data-device-where>Choose where it lives</button></span>`;
-  document.addEventListener('click', e => { const b = e.target.closest && e.target.closest('[data-device-where]'); if (!b) return; e.preventDefault(); e.stopPropagation(); where(); }, true);
+  const line = text => `<span class="dv-line"><span class="dv-line-t">${esc(text)}</span> <button type="button" class="linkish dv-where" data-device-where>Put this tribe online</button></span>`;
+  document.addEventListener('click', e => { const b = e.target.closest && e.target.closest('[data-device-where]'); if (!b) return; e.preventDefault(); e.stopPropagation(); if (window.TribeShare) window.TribeShare.online('generic'); else where(); }, true);
 
   // ---------- IndexedDB: the versions ----------
   const CAP = 40, SAVE_MS = 3000;

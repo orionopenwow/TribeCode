@@ -16,7 +16,7 @@
   let data = null, st = { task: null, provider: null, input: '', target: null }, host = null;
 
   // a project on this device answers without the lists: say so instead of throwing on data.tasks (audit 2026-11-13)
-  async function load() { if (!data) { const d = await api('/academy/offload'); if (!d || !Array.isArray(d.tasks) || !Array.isArray(d.providers)) throw new Error('Offload opens once this project has a home (the pill at the top), or in a tribe.'); data = d; } return data; }
+  async function load() { if (!data) { const d = await api('/academy/offload'); if (!d || !Array.isArray(d.tasks) || !Array.isArray(d.providers)) throw new Error('Offload opens once the tribe is online (the pill at the top), or in a tribe.'); data = d; } return data; }
   function prompt(taskId, input) {
     const t = data && data.tasks.find(x => x.id === taskId); if (!t) return '';
     const ctx = data.context || {}, gist = ctx.gist ? `In short: ${ctx.gist}` : '';

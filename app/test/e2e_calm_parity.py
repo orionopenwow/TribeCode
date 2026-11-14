@@ -306,7 +306,7 @@ def device_part(b):
     pg.evaluate("TribeApp.show('home')"); pg.wait_for_timeout(500)
     pg.evaluate("TribeWidgets.openPicker()"); pg.wait_for_selector("#wg-picker .wgx-live")
     assert sorted(pg.eval_on_selector_all("#wg-picker .wgx-live", "els => els.map(e => e.dataset.wcard)")) == ["bookmarks", "checklist", "countdown", "mytasks", "note", "quickdocs"]
-    assert "Choose where it lives" in pg.inner_text("#wgx-device")
+    assert "Put this tribe online" in pg.inner_text("#wgx-device")
     for i, k in enumerate(("note", "checklist", "mytasks", "quickdocs")):
         if not pg.locator("#wg-picker").count(): pg.evaluate("TribeWidgets.openPicker()"); pg.wait_for_selector("#wg-picker .wgx-live")
         pg.click(f"#wg-picker [data-wcard={k}]")
@@ -331,13 +331,14 @@ def device_part(b):
     pg.click("#set-nf-test"); pg.wait_for_timeout(500)
     no_fetch_errors(pg, "device notifications")
     pg.click("#set-nf-device [data-device-where]")
-    pg.wait_for_function("!!document.querySelector('.su-sheet, .ph-sheet, #su, #su-where, .su')", timeout=60000)
+    pg.wait_for_function("!!document.querySelector('#sc-busy, .su-sheet, .ph-sheet, #su, #su-where, .su, #nx-sheet') || (TribeClient.connected() && !TribeOffline.active())", timeout=60000)   # feat/real-tribe: Put this tribe online starts right away where TribeCode runs
     pg.context.close()
 
     # 390px: the demo pill's tap area (the "On this phone" pill is the same control)
     ph = open_device(b, 390, 844)
-    ph.wait_for_selector("#demo-pill", state="visible", timeout=45000)
-    v = ph.evaluate(HIT, "#demo-pill"); assert v and v["taps"] >= 32, f"the pill: {v}"
+    ph.wait_for_selector("#sc-online", state="attached", timeout=45000)   # feat/real-tribe: the pill is gone; the dashboard card carries the button
+    ph.locator("#sc-online").scroll_into_view_if_needed(); assert not ph.locator("#demo-pill").is_visible()
+    v = ph.evaluate(HIT, "#sc-online"); assert v and v["taps"] >= 32, f"Put this tribe online: {v}"
     ph.evaluate("TribeGuide.open()"); ph.wait_for_selector("#gd-list .gd-item", timeout=45000)
     assert ph.evaluate("document.documentElement.scrollWidth <= innerWidth + 1"), "sideways scroll in the guide"
     no_fetch_errors(ph, "device phone")

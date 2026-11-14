@@ -59,7 +59,7 @@
   function where(o = {}) {
     try { localStorage.removeItem('tribecode.setup.wherePending'); } catch {}
     if (!(OFF() && OFF().solo && OFF().solo())) {
-      if (window.TribeClient && window.TribeClient.connected()) return toast('This project already has a home.');
+      if (window.TribeClient && window.TribeClient.connected()) return toast('This tribe is already online.');
       return start();
     }
     const gh = homeOf().github, desk = desktopApp(), fo = window.TribeHome && window.TribeHome.canPickFolder ? window.TribeHome.canPickFolder() : { ok: false };

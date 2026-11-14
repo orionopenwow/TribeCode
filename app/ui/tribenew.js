@@ -56,7 +56,7 @@
     const f = folderOk();
     return [
       { k: 'folder', icon: 'folder', t: 'A folder on this computer', s: f.ok ? 'Your own folder holds the files; this computer hosts it and friends join with a link. Edit here or in VS Code' : f.why, off: !f.ok },
-      { k: 'device', icon: 'spark', t: phone() ? 'This phone only' : 'This device only', s: 'Starts right away and works offline. Only you see it until you give it a home' },
+      { k: 'device', icon: 'spark', t: phone() ? 'This phone only' : 'This device only', s: 'Starts right away and works offline. Only you see it until you put it online' },
       { k: 'cloud', icon: 'zap', t: 'Free cloud', s: 'Always online on a free Render server, even when your computer is off' },
       { k: 'github', icon: 'git', t: 'GitHub repo', s: 'Anyone can see the live repo and suggested changes. No server needs to stay on', note: 'You can also connect GitHub later to any of the others.' },
       { k: 'shared', icon: 'net', t: 'A shared folder', s: f.ok ? 'A Dropbox, OneDrive, Google Drive, iCloud, NAS or Syncthing folder you already sync holds a shared copy. No account; friends with it join from it' : f.why, off: !f.ok },

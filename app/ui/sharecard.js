@@ -63,7 +63,7 @@
       : s.primary === 'invite' ? `<button type="button" class="btn" id="sc-invite">${esc(T('Invite friends'))}</button>`
       : s.primary === 'fix' ? `<button type="button" class="btn primary" id="sc-fix">${esc(T('Sort it out'))}</button>` : '';
     slot.innerHTML = `<section class="card share-card" id="share-card" data-where="${s.where}" data-tone="${esc(s.tone)}" aria-labelledby="sc-h">
-      <span class="sc-ic" aria-hidden="true">${ic(s.where === 'browser' ? 'spark' : s.where === 'computer' ? 'box' : 'users', 18)}</span>
+      <span class="sc-ic" aria-hidden="true">${ic(s.where === 'browser' ? 'eye' : s.where === 'computer' ? 'box' : 'users', 18)}</span>
       <div class="sc-t"><h3 id="sc-h">${esc(T('Sharing and backup'))}</h3><p id="sc-line">${esc(s.line)}</p></div>
       <div class="sc-acts">${btn}<button type="button" class="btn" id="sc-more" aria-haspopup="dialog">${esc(T('More options'))}</button></div></section>`;
     const on = (id, f) => { const b = $(id, slot); if (b) b.onclick = e => { e.stopPropagation(); f(b); }; };

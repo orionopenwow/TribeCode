@@ -1302,7 +1302,7 @@
   }
   function closeChooser() { const body = document.querySelector('#invite-body'); if (body && body.querySelector('.od-choice')) document.querySelector('#invite-modal').classList.add('hidden'); }
   function enterUi() {
-    const go = () => { if (A() && A().show) A().show('home'); toast(db?.mode === 'showcase' ? `${db?.tribe?.name || 'Campfire Crew'} is live. Sit back and watch, or join in.` : solo() ? (db.projects[0] && db.projects[0].name !== 'My first project' ? `${db.projects[0].name} is ready. It lives on ${phoneLike() ? 'this phone' : 'this device'} until you choose a home.` : `${db?.tribe?.name} is ready on this phone.`) : `${db?.tribe?.name || 'Demo Tribe'} is ready. Nothing leaves this device.`); };
+    const go = () => { if (A() && A().show) A().show('home'); toast(db?.mode === 'showcase' ? `${db?.tribe?.name || 'Campfire Crew'} is live. Sit back and watch, or join in.` : solo() ? (db.projects[0] && db.projects[0].name !== 'My first project' ? `${db.projects[0].name} is ready, and it’s saved ${phoneLike() ? 'on this phone' : 'in this browser'}.` : `${db?.tribe?.name} is ready on this phone.`) : `${db?.tribe?.name || 'Demo Tribe'} is ready. Nothing leaves this device.`); };
     if (C().connected()) return go();
     let n = 0; const wait = () => (C().connected() || ++n > 40 ? go() : setTimeout(wait, 50)); wait();
   }

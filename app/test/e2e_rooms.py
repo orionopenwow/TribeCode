@@ -139,9 +139,9 @@ def main():
             host.wait_for_selector("#pj-rail .pj-circle", state="attached")
             # first launch: zero steps, straight into the first project, one dismissible line
             assert host.locator("#onboard").count() == 0
-            host.wait_for_selector("#share-card", state="visible")   # feat/folder-sync: one pill top left for the home and its hosting (no banner)
             assert host.locator("#hi-banner").count() == 0
             host.wait_for_selector("#view-home:not(.hidden) #pj-overview h1")
+            host.wait_for_selector("#share-card", state="visible")   # feat/real-tribe: no pill; the dashboard card says where it is saved and who sees it
             shot(host, "first-launch")
             host.click("#sc-more"); host.click("#home-pop #hp-host"); host.wait_for_selector("#host-pop #hpo-invite"); host.keyboard.press("Escape")
             assert host.evaluate("TribeStore.get().firstRun") is False

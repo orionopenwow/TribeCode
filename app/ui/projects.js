@@ -189,7 +189,7 @@
       { id: 'task', emo: '📝', label: 'Add a first task', sub: 'One small thing to build first.', done: (d.taskCount || 0) > 0, below: canEdit ? '<button class="btn sm primary" data-ck="newtask">New task</button>' : '',
         inline: canEdit && d.vision && d.vision.has ? `<div class="ock-inline ock-sugg"><span class="eyebrow">Suggested from your vision</span><div class="ock-sugg-list" id="ock-sugg"><span class="faint">Thinking of first tasks…</span></div><form class="ock-own" data-ock-task><input class="input" maxlength="140" placeholder="Or write your own first task" aria-label="Your own first task"><button class="btn sm" type="submit">Add</button></form></div>` : '' },
       { id: 'claude', emo: '🤖', label: 'Connect your AI', sub: 'Claude Code, Codex, Gemini or Cursor can build with you.', done: myAgent || d.agents.length > 0, acts: canEdit ? '<button class="btn sm" data-ck="claude">Connect</button>' : '' },
-      { id: 'home', emo: '📁', label: 'Choose where it lives', sub: 'Its home is its living repo: a folder on this computer, the tribe’s host, or either one with GitHub as a synced copy.',
+      { id: 'home', emo: '📁', label: 'Choose where it lives', sub: 'Keep its files in a folder on this computer, and add GitHub as a backup copy if you like.',
         done: !!(p.hasFolder || p.hasRepo || d.repo || (syn && syn.connected)), acts: canEdit ? '<button class="btn sm" data-ck="home">Choose</button>' : '' },
       { id: 'share', emo: '🤝', label: 'Share it', sub: 'Work with friends anywhere (GitHub + an invite link), share on this network, or keep it just you for now.',
         done: team.length > 1 || lsg('shared') === '1', acts: canEdit ? '<button class="btn sm" data-ck="share">Share</button>' : '' },

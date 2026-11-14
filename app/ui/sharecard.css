@@ -12,6 +12,10 @@
 .sc-busy { position: fixed; left: 50%; bottom: max(20px, env(safe-area-inset-bottom)); transform: translateX(-50%); z-index: 400; display: flex; align-items: center; gap: 10px; max-width: calc(100vw - 32px); padding: 10px 14px; border: 1px solid var(--border); border-radius: var(--r-card); background: var(--surface); color: var(--text); font-size: 13.5px; }
 .sc-needs .nx-acts .btn { white-space: nowrap; }
 @media (max-width: 820px) {
+  /* the short "needs the tribe online" note: words on top, the one button under them */
+  .od-needs { flex-wrap: wrap; width: calc(100vw - 24px); bottom: calc(76px + env(safe-area-inset-bottom)); }
+  .od-needs .od-needs-t { flex-basis: calc(100% - 60px); }
+  .od-needs [data-sc-online] { flex: 1; min-height: 44px; margin-left: 20px; }
   .share-card { flex-wrap: wrap; gap: 10px 12px; padding: 12px; }
   .share-card .sc-t { flex-basis: calc(100% - 48px); }
   .share-card .sc-acts { width: 100%; }

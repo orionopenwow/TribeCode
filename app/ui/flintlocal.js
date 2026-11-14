@@ -410,7 +410,7 @@
     // a tribe that lives only on this phone has nobody to call: say so and show the next options instead of a lonely call
     if ((id === 'huddle.start' || id === 'call.video' || id === 'call.share' || id === 'call.ring' || id === 'call.present') && window.TribeOffline && window.TribeOffline.solo && window.TribeOffline.solo()) {
       if (window.TribeNextOpts) window.TribeNextOpts.sheet(id === 'call.share' || id === 'call.present' ? 'screenshare' : 'huddle');
-      return { text: 'Calls need friends in the tribe, and this tribe lives only on this phone. Move it to a host, or open TribeCode on a laptop, and then call.' };
+      return { text: 'Calls need friends in the tribe, and this tribe is saved only on this phone. Put it online, or open TribeCode on a laptop, and then call.' };
     }
     if (id === 'huddle.start') { const Hd = window.TribeHuddle; if (!Hd) return { text: T('noPlace', { x: 'Huddle' }) }; if (!Hd.inCall()) Hd.join(); pushUndo('huddle', () => Hd.leave()); return { text: T('huddleOn') }; }
     if (id.startsWith('call.') || id === 'secretary.summary') {
