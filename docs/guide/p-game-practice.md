@@ -32,6 +32,14 @@ Work in short rounds: **pick one change, build it, play it, keep or undo.** Put 
 - Use a call to play together and decide; write the decision in the project.
 - Give AI helpers narrow tasks ("add a pause menu") and review what they propose before it goes in.
 
-## Versions
+## Where it can go
+
+In Publish, **Where it goes** offers what fits a game:
+
+- **Play link** for quick tests while the tribe's computer is on.
+- **A link that stays up**, through your own GitHub sign-in, for testers who play later.
+- **itch.io**: a zip laid out the way itch wants it, with three steps. You upload it to your own itch.io account.
+- **Install on phones**: an icon and an offline copy, from the lasting link.
+- **Android app**: an app file built in your GitHub account, with a download link and a QR code.
 
 Each publish is a version. Keep a line on what changed so testers know what to look at.

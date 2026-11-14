@@ -35,14 +35,17 @@
   const T = s => (window.TribeI18n && window.TribeI18n.t ? window.TribeI18n.t(s, s) : s);
   const LEVELS = [['basics', 'Basics'], ['practice', 'In practice'], ['production', 'Production']];
   // each path: [id, title, one line, lesson for "Show me", the journey: [stage, what you do, the next-step run]]
-  const PATHS = [
-    ['website', 'Make a website', 'From a template to a link people can open.', 'site', [['Idea', 'Say what the site is for', 'vision'], ['Design', 'Pick a template and a look', 'design'], ['Build', 'Edit the words and pictures', 'design'], ['Check', 'Run Check my site', 'check'], ['Publish', 'Publish, or download the files', 'publish'], ['Share', 'Send the link', 'invite']]],
-    ['game', 'Make a game', 'A playable game in the preview, then out to players.', 'design', [['Idea', 'One sentence: what you do and why it is fun', 'vision'], ['Design', 'Pick a game starter', 'design'], ['Build', 'Ask Flint or your AI helper for changes', 'build'], ['Check', 'Play it at phone size', 'check'], ['Publish', 'Make a play link', 'publish'], ['Share', 'Invite testers', 'invite']]],
-    ['app', 'Make an app', 'Screens first, then a working app you can open on a phone.', 'preview', [['Idea', 'Who it is for and the one job it does', 'vision'], ['Design', 'Lay out the screens', 'design'], ['Build', 'Build a first version', 'build'], ['Check', 'Try it at phone size', 'check'], ['Publish', 'Publish it', 'publish'], ['Share', 'Get three people to try it', 'invite']]],
+  // feat/publish-real adds real destinations (Download, a link that stays up, itch.io, Install on phones, Android app)
+  const REAL = () => !!window.TribePublishReal;
+  const paths_ = () => [
+    ['website', 'Make a website', 'From a template to a link people can open.', 'site', [['Idea', 'Say what the site is for', 'vision'], ['Design', 'Pick a template and a look', 'design'], ['Build', 'Edit the words and pictures', 'design'], ['Check', 'Run Check my site', 'check'], ['Publish', REAL() ? 'A link that stays up, or download the files' : 'Publish, or download the files', 'publish'], ['Share', 'Send the link', 'invite']]],
+    ['game', 'Make a game', 'A playable game in the preview, then out to players.', 'design', [['Idea', 'One sentence: what you do and why it is fun', 'vision'], ['Design', 'Pick a game starter', 'design'], ['Build', 'Ask Flint or your AI helper for changes', 'build'], ['Check', 'Play it at phone size', 'check'], ['Publish', REAL() ? 'A play link, itch.io, or an app for phones' : 'Make a play link', 'publish'], ['Share', 'Invite testers', 'invite']]],
+    ['app', 'Make an app', 'Screens first, then a working app you can open on a phone.', 'preview', [['Idea', 'Who it is for and the one job it does', 'vision'], ['Design', 'Lay out the screens', 'design'], ['Build', 'Build a first version', 'build'], ['Check', 'Try it at phone size', 'check'], ['Publish', REAL() ? 'A lasting link, install on phones, or an Android app' : 'Publish it', 'publish'], ['Share', 'Get three people to try it', 'invite']]],
     ['company', 'Run it as a company', 'Roles, check-ins and money in and out around your project.', 'company', [['Idea', 'What the company makes', 'vision'], ['Set up', 'Answer four questions', 'company'], ['Roles', 'Give each role to a person or an AI', 'company'], ['Check-ins', 'A short regular check-in', 'company'], ['Money', 'Write down money in and out', 'company'], ['Grow', 'Bring in help', 'invite']]],
     ['friends', 'Work with friends', 'One link, shared tasks, calls and comments.', 'invite', [['Invite', 'Send one link', 'invite'], ['Talk', 'Chat and calls', 'tasks'], ['Plan', 'Tasks with one clear next button', 'tasks'], ['Build', 'Edit together, live', 'design'], ['Review', 'Comment on the page itself', 'check'], ['Decide', 'Approve with one tap', 'tasks']]],
     ['ai', 'Use AI helpers', 'Flint with no AI, your own agent, or a free model.', 'agents', [['Start', 'Ask Flint: he works with no AI', 'build'], ['Invite', 'Invite your own agent', 'ai'], ['Ask', 'Send it a request privately', 'ai'], ['Review', 'Approve what it proposes', 'tasks'], ['Local', 'Give Flint a brain on this device', 'ai'], ['Scale', 'Give agents roles and tasks', 'company']]],
   ];
+  let PATHS = paths_();
   const pathOf = id => PATHS.find(x => x[0] === id);
   const deepPage = (id, level) => deep.find(x => x.slug === `${id}-${level}`);
 
@@ -155,6 +158,7 @@
   }
   // ---------- a path: the journey, Show me, and one page at three depths ----------
   function path(id, level) {
+    PATHS = paths_();
     const root = frame(), P = pathOf(id) || PATHS[0]; id = P[0];
     level = LEVELS.some(l => l[0] === level) ? level : 'basics'; cur = '@' + id;
     const pg = deepPage(id, level), body = pg ? window.TribeMD.render(pg.body.replace(/^#\s+.+\n/, '')) : `<p>${T('This page is not on this device yet. Open the Guide while you are in a tribe.')}</p>`;

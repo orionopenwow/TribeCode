@@ -10,7 +10,7 @@ Checklists for an app with real users. Adjust to your platform and rules where y
 
 ## Build pipeline
 
-- [ ] Every change is a task, reviewed, and tested before it is merged
+- [ ] Every change is a task, reviewed, and tested before it goes in
 - [ ] Automated tests run on every change; the main line always works
 - [ ] Separate places for development, testing and live, with separate data
 - [ ] Secrets stored outside the code and rotated
@@ -20,12 +20,11 @@ Checklists for an app with real users. Adjust to your platform and rules where y
 - [ ] Version numbers follow one rule (for example major.minor.patch) and each has a change note
 - [ ] Staged rollout: a small group first, then everyone
 - [ ] A written way to roll back, tried at least once
-- [ ] Data changes can run forward and backward
 
 ## Performance budget
 
 - [ ] First load under 3 seconds on a mid-range phone on mobile data
-- [ ] App code under an agreed size per screen; pictures sized and compressed
+- [ ] Pictures sized and compressed; code size agreed per screen
 - [ ] Taps respond within 100 ms; long work shows progress
 - [ ] Works offline or fails kindly, and recovers when the connection returns
 
@@ -45,11 +44,13 @@ Checklists for an app with real users. Adjust to your platform and rules where y
 
 ## Store submission
 
-- [ ] Icons, screenshots per device size, descriptions, keywords
-- [ ] Privacy answers, age rating, test account for reviewers
+- [ ] **Install on phones** checked first: name, icon, offline copy, on a real Android phone and iPhone
+- [ ] **Google Play**: Play developer account; the release's `app.aab` signed with your own key, kept as secrets in your GitHub project; name, description, two or more screenshots, icon, privacy answers, age rating, a test account for reviewers
+- [ ] **Android address bar**: the release's `assetlinks.json` added to your own site so the app opens full screen
+- [ ] **iPhone (TestFlight)**: a Mac and a paid Apple developer account; Publish prepares the build file, you upload it and invite testers
+- [ ] **Computer app**: installers are unsigned; sign them or explain the warning
 - [ ] Each store's rules read; time allowed for review and a rejected first try
 
 ## After launch
 
 - [ ] Error and crash reports watched; a support address answered
-- [ ] A regular release rhythm and a list of known problems

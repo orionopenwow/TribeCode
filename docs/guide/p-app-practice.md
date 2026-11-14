@@ -36,4 +36,12 @@ For every screen, design four states, not one:
 
 ## Releasing
 
-Publish often. Each publish is a version with a note on what changed. Tell your testers what to look at, and turn what they say into tasks.
+Publish often. Each publish is a version with a note on what changed. In Publish, **Where it goes** offers:
+
+- **A link that stays up**, through your own GitHub sign-in. Everything below builds on it.
+- **Install on phones**: name, icon and an offline copy, so it opens like an app.
+- **Android app**: an app file built in your GitHub account, with a download link and a QR code.
+- **Computer app**: Windows, Mac and Linux installers, unsigned.
+- **Download it**: a zip for any web service you already use.
+
+An iPhone app needs a Mac and a paid Apple developer account. Until then, iPhone users install from the link.

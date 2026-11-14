@@ -33,6 +33,13 @@ The site works. Now make it good for real visitors.
 3. Run **Check my site** and clear the list.
 4. Publish. Each publish is a new version, and you can go back to an older one.
 
-## Your own address
+## Where it can go
 
-You can download the site as plain files and put them on any web service you already use.
+Publish has a **Where it goes** list. It checks the project first, then offers what fits:
+
+- **Play link**: works right away while the tribe's computer is on.
+- **Download it**: a zip of the finished page, for any web service you already use.
+- **A link that stays up**: a lasting address through your own GitHub sign-in, updated on every publish.
+- **Install on phones**: adds an icon and an offline copy, once it has a link that stays up.
+
+The play link is for trying things. Use the lasting link for anything you print or post.

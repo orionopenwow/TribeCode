@@ -8,7 +8,7 @@ An app here is a small web app: it opens from a link and works on a phone like a
 2. **Lay out the screens.** Open **Design** and sketch two or three screens: where you start, the main screen, the result.
 3. **Build a first version.** Ask Flint or your AI helper: "build the first screen", then the next. With no AI, start from a starter and edit its files.
 4. **Try it at phone size.** Open the preview, switch to phone size, and do the main job from start to finish.
-5. **Publish.** Press **Publish** for a link and a QR code.
+5. **Publish.** Press **Publish** for a play link and a QR code. Under **Where it goes**, **A link that stays up** keeps it open when your computer is off, and **Install on phones** lets people add it to their Home Screen.
 6. **Get three people to try it.** Do not explain. Watch, and write down where they stop.
 
 ## Keep the first version tiny

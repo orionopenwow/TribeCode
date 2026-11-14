@@ -7,7 +7,7 @@ Checklists for a game heading to a store or a large audience. Adjust the numbers
 - [ ] Milestones are named and dated: prototype, vertical slice, alpha (all features), beta (all content), release candidate, launch
 - [ ] Each milestone has exit rules written before work starts
 - [ ] Every change is a task with an owner and a reviewer; builds are numbered
-- [ ] One branch of work is always playable from start to finish
+- [ ] One line of work is always playable from start to finish
 
 ## Asset budgets
 
@@ -38,9 +38,11 @@ Checklists for a game heading to a store or a large audience. Adjust the numbers
 
 ## Store submission
 
-- [ ] Store pages: name, short and long description, screenshots at each size, trailer, icon
-- [ ] Age rating forms, privacy statement, data collection answers
-- [ ] Platform rules read for each store; test builds sent early
+- [ ] **itch.io**: the itch zip from Publish uploaded as an HTML game; page with cover, screenshots, controls and credits
+- [ ] **Google Play**: a Play developer account; the release's `app.aab` signed with your own key (added as secrets in your GitHub project); name, description, two or more screenshots, icon, privacy answers, age rating
+- [ ] **iPhone (TestFlight)**: needs a Mac and a paid Apple developer account; Publish prepares the build file, you upload and invite testers
+- [ ] **Computer app**: installers for Windows, Mac and Linux are unsigned; say so on the download page, or sign them yourself
+- [ ] Each store's rules read; test builds sent early; time allowed for a rejected first try
 - [ ] Launch day plan, a patch plan, and a way for players to report problems
 
 ## Team roles

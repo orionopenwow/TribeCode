@@ -45,7 +45,10 @@
     st.design = !!(cnv && (cnv.files || []).length);
     st.site = !!(site && site.config);
     st.built = st.site || !!(pv && pv.preview && pv.preview.hasIndex);
-    st.published = !!(pub && (pub.published === true || (Array.isArray(pub.published) && pub.published.length) || pub.live || pub.url));
+    // feat/publish-real: status() also says the one next publishing step (build, fix, publish, pages, app, share) and where it is out
+    const out = pub && pub.dest ? Object.values(pub.dest).some(d => d && (d.url || d.on || d.done)) : false;
+    st.pubNext = (pub && typeof pub.next === 'string' && pub.next) || '';
+    st.published = !!(pub && (pub.published === true || (Array.isArray(pub.published) && pub.published.length) || pub.live || pub.url || pub.play || out || ['pages', 'app', 'share'].includes(st.pubNext)));
     st.checked = st.published || ls.get(`tribecode.next.${p.id}.checked`) === '1';
     st.company = !!(co && (co.company || co.seats || (co.name && co.seats)));
     // one voice: what reco.js senses about this project (company seats, money, assets, lessons, add-ons) joins the same list
@@ -65,11 +68,15 @@
       { id: 'design', stage: 'design', done: st.design || st.site || st.built, title: `Sketch how the ${what} looks`, why: 'A quick design gives you and your AI helper the same picture. Starters make it a two-minute job.', act: 'Open Design', run: 'design' },
       { id: 'build', stage: 'build', done: st.built, title: 'Build a first version', why: 'A rough version you can click beats a perfect plan. Flint builds one from a sentence, with no AI needed.', act: 'Ask Flint to build it', run: 'build', say: what === 'website' ? `make a website for ${name}` : what === 'game' ? `make a game called ${name}` : `build an app called ${name}` },
       { id: 'check', stage: 'check', done: st.checked, title: 'Check it before anyone sees it', why: 'Open it, try it on a phone size, and fix what looks off. Websites have Check my site.', act: st.site ? 'Check my site' : 'Open the preview', run: 'check' },
-      { id: 'publish', stage: 'publish', done: st.published, title: 'Publish it', why: 'A link other people can open is the point. Publish runs a safety check first.', act: 'Publish', run: 'publish' },
+      st.pubNext === 'fix' && !st.published
+        ? { id: 'publish', stage: 'publish', done: false, title: 'Fix what the safety check found', why: 'Publish checked the project and found something to fix before it can go out.', act: 'Open Publish', run: 'publish' }
+        : { id: 'publish', stage: 'publish', done: st.published, title: 'Publish it', why: 'A link other people can open is the point. Publish runs a safety check first.', act: 'Publish', run: 'publish' },
+      st.pubNext === 'pages' && { id: 'pages', stage: 'publish', done: false, title: 'Give it a link that stays up', why: 'The play link works while this computer is on. A lasting link keeps working when it is off.', act: 'Open Publish', run: 'publish' },
       { id: 'share', stage: 'share', done: st.friends > 0, title: 'Bring a friend in', why: 'One link lets a friend join on a phone or a computer, to build with you or just to try it.', act: 'Invite', run: 'invite' },
-    ];
+    ].filter(Boolean);
   }
   const SIDE = st => [
+    st.pubNext === 'app' && { id: 'app', title: 'Make it an app people can install', why: 'Phones can install it from the link, and an Android app can be built for you.', act: 'Open Publish', run: 'publish' },
     st.myTask && { id: 'mytask', title: `Carry on with “${st.myTask.title}”`, why: 'It is assigned to you and still open.', act: 'Open Tasks', run: 'tasks' },
     !st.ai && st.tribe && st.project && { id: 'ai', title: 'Add an AI helper', why: 'Claude, Cursor, Codex or Gemini can take tasks and build with you. Flint works without one.', act: 'Invite your agent', run: 'ai' },
     st.tribe && st.project && !st.company && { id: 'company', title: 'Run it as a company', why: 'Roles, check-ins and money in and out, set up by four questions.', act: 'Open Company', run: 'company' },

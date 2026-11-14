@@ -34,6 +34,13 @@ A checklist for sites that carry real traffic, a brand or sales. Copy it into a 
 - [ ] Version noted with what changed; the last good version is known for rollback
 - [ ] Links, forms and the buy flow tested on the live link after publishing
 
+## Where it goes
+
+- [ ] Public traffic uses **A link that stays up**, not the play link
+- [ ] **Download it** kept as a zip per release, as a backup and for your own web service
+- [ ] **Install on phones** on, with name, icon and offline copy checked on a real phone
+- [ ] The GitHub sign-in used for publishing belongs to the owner, not to a helper
+
 ## Roles
 
 Owner (decides), Writer, Designer, Builder, Reviewer. One person can hold several, but the reviewer should not be the builder.

@@ -63,6 +63,11 @@ def main():
             done = pick(state(vision=1, tasks=1, design=1, built=1, checked=1, published=1, friends=1)); assert done[3] is True and done[0] == "keepgoing", done
             assert pick(state())[2] <= 2
             assert pg.evaluate("TribeNextStep.pick(%s, ['vision']).best.id" % state()) == "task", "Not now moves to the next one"
+            # feat/publish-real: TribePublish.status(pid).next steers the publishing steps (works before that branch merges)
+            base = "{tribe: true, project: {id: 'p', name: 'P'}, vision: true, tasks: 1, design: true, site: true, built: true, checked: true, friends: 1, pubNext: %r, published: %s}"
+            assert pg.evaluate("TribeNextStep.pick(%s).best.title" % (base % ("fix", "false"))) == "Fix what the safety check found"
+            assert pg.evaluate("TribeNextStep.pick(%s).best.id" % (base % ("pages", "true"))) == "pages"
+            assert pg.evaluate("(() => { const n = TribeNextStep.pick(%s); return [n.best.id, ...n.alts.map(a => a.id)].includes('app'); })()" % (base % ("app", "true")))
             # real state: saying what you are making moves the live answer off 'vision'
             pid = pg.evaluate("TribeClient.project()")
             if pid:
@@ -97,6 +102,11 @@ def main():
             pg.click("#guide .gd-level[data-gdl=practice]"); pg.wait_for_selector("#guide .gd-deep[data-level=practice]")
             pg.click("#guide .gd-level[data-gdl=production]"); pg.wait_for_selector("#guide .gd-deep[data-level=production]")
             txt = pg.text_content("#guide .gd-deep"); assert "Store submission" in txt and "Asset budgets" in txt and "Accessibility" in txt, txt[:200]
+            assert "itch.io" in txt and "Google Play" in txt and "TestFlight" in txt and "Mac" in txt, "real destinations and store checklists"
+            had = pg.evaluate("!!window.TribePublishReal"); pg.evaluate("window.TribePublishReal = window.TribePublishReal || {}; TribeGuide.path('game')")
+            pg.wait_for_function("document.querySelector('#guide .gd-journey').textContent.includes('itch.io')")
+            if not had: pg.evaluate("delete window.TribePublishReal")
+            pg.evaluate("TribeGuide.path('game', 'production')"); pg.wait_for_selector("#guide .gd-deep[data-level=production]")
             assert pg.evaluate("location.hash") == "#/guide/path/game/production"
             pg.screenshot(path=str(SHOTS / "help-next-path.png"))
             paths = pg.evaluate("fetch('/api/guide').then(r => r.json()).then(j => j.paths)")

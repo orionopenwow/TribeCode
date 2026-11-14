@@ -8,7 +8,7 @@ You can go from nothing to a page people can open in one sitting. You do not nee
 2. **Pick a template.** Open **Design**, choose **Website**, and pick the template closest to what you want. Link page, portfolio, shop, blog, cafe, band and more are there.
 3. **Change the words and pictures.** Click any text to type over it. Click a picture to swap it. Pick a look (colors and fonts) from the side.
 4. **Check it.** Press **Check my site**. It lists what to fix in plain words, such as a missing title or a picture with no description.
-5. **Publish.** Press **Publish**. A safety check runs first, then you get a link and a QR code.
+5. **Publish.** Press **Publish**. A safety check runs first, then you get a play link and a QR code. Under **Where it goes** you can also **Download it** as a zip, or make **A link that stays up** with your own GitHub sign-in.
 6. **Share.** Send the link. Anyone can open it on a phone or computer, with no account.
 
 ## Good first choices
