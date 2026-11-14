@@ -76,7 +76,7 @@ stamps every place that quotes one.
 | Suggestions from your tribe: one-tap changes with who said it, nothing changes until Apply, Undo takes it back | index | `e2e_site_suggest`, `sitesuggest_test` | Proven | not on the site |
 | Moving backgrounds pause off screen and show a still picture for reduced motion; ten are ThreeUI ports (MIT) | index | `e2e_site_fx`; `docs/SITE-3D.md`, `NOTICE` | Proven | not on the site |
 | One lead, a council, everyone equal, or your own roles; the app says who can and offers to ask | index, mission | `e2e_group_styles`, `security10_test` | Proven | site said CEO and C-suite only |
-| Learn: quick guides with a button that does it and Show me; lessons under Skills | index | `e2e_learn`, `e2e_help_next` | Proven | not on the site |
+| Learn: quick guides with a button that does it and Show me; lessons under Skills | index | `e2e_learn` (`e2e_help_next` fails today on an unrelated check: one path page is over its word limit) | Proven | not on the site |
 | Change language from the ? menu, the first screen or Settings | index | `e2e_i18n_audit`, `i18n_runtime_test` | Proven | not on the site |
 | The app's menus are only partly translated | index, docs | `docs/I18N-REPORT.md` (about 1,250 strings per language still English) | Proven | False ("the app comes in" eight languages) |
 
