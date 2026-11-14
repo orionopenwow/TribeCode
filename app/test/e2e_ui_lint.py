@@ -169,6 +169,30 @@ def main():
             pg.evaluate("TribeShell.go('home')"); pg.wait_for_timeout(500); pg.evaluate("TribeShell.go('ws-tasks')"); pg.wait_for_timeout(600)
             assert not off(), "what you chose on a page is remembered for that page"
             c.close()
+            # sheets: the shared helper, and one way out (?uimotion=1 lets an automated browser play the leave motion)
+            c = b.new_context(viewport={"width": 1280, "height": 860})
+            c.add_init_script("if (!localStorage.getItem('tribecode.settings.v1')) localStorage.setItem('tribecode.settings.v1', %s); localStorage.setItem('tribecode.helpers.v1', JSON.stringify({flint:1,brain:1,ai:1}))" % json.dumps(json.dumps(s)))
+            pg = c.new_page(); pg.on("pageerror", lambda e: errors.append(str(e)))
+            pg.goto(BASE + "/?skipIntro=1&uimotion=1", wait_until="domcontentloaded")
+            pg.wait_for_function("window.TribeRouter && window.TribeShell && window.TribeUI", timeout=40000); pg.wait_for_function("TribeClient.connected()", timeout=45000); pg.wait_for_timeout(1200)
+            assert not pg.evaluate("document.documentElement.classList.contains('ui-still')")
+            pg.evaluate("window.__sh = TribeUI.sheet({ kind: 'decision', eyebrow: 'Check', title: 'Leave without saving?', body: '<p>One line.</p>', foot: '<button class=\"btn\" id=\"u-no\">Stay</button><button class=\"btn primary\" id=\"u-yes\">Leave</button>' })")
+            pg.wait_for_selector(".ui-card .ui-h h3"); assert pg.inner_text(".ui-card .eyebrow").strip().lower() == "check" and pg.locator(".ui-card .ui-x").count() == 1 and pg.locator(".ui-scrim").count() == 1
+            order = pg.evaluate("[...document.querySelectorAll('.ui-card .ui-foot .btn')].sort((a, b) => a.getBoundingClientRect().left - b.getBoundingClientRect().left).map(b => b.id)")
+            assert order[-1] == "u-yes", f"the primary button is last: {order}"
+            pg.wait_for_timeout(100); pg.keyboard.press("Tab"); pg.keyboard.press("Tab"); pg.keyboard.press("Tab"); pg.keyboard.press("Tab")
+            assert pg.evaluate("!!document.activeElement.closest('.ui-card')"), "Tab stays inside the sheet"
+            pg.keyboard.press("Escape"); pg.wait_for_timeout(40)
+            assert pg.locator(".ui-card.ui-out").count() == 1, "the sheet plays the shared leave"
+            pg.wait_for_timeout(350); assert pg.locator(".ui-card").count() == 0 and pg.locator(".ui-scrim").count() == 0
+            # an adopted one-off: History keeps its own box, takes the shared way in and out
+            pg.evaluate("TribeVersions.open()"); pg.wait_for_selector("#vr.ui-sheet"); assert pg.locator(".vr-scrim.ui-veil").count() == 1
+            pg.evaluate("document.querySelector('#vr').focus()"); pg.keyboard.press("Escape"); pg.wait_for_timeout(450); assert pg.locator("#vr").count() == 0, "Esc closes History"
+            # the centred-modal family fades out instead of cutting
+            pg.evaluate("TribeApp.openInvite()"); pg.wait_for_selector("#invite-modal:not(.hidden)"); pg.wait_for_timeout(300)
+            pg.evaluate("document.querySelector('#invite-modal').classList.add('hidden')"); pg.wait_for_timeout(350)
+            assert pg.evaluate("getComputedStyle(document.querySelector('#invite-modal')).visibility") == "hidden"
+            c.close()
             b.close()
     finally:
         srv.terminate()
@@ -180,7 +204,7 @@ def main():
         print(f"e2e_ui_lint report: {nt} small-text rules, {ng} small phone targets"); return
     assert not errors, errors[:5]
     assert not found, f"UI lint: {nt} places with text under the floor and {ng} phone targets under 36px (list above)"
-    print("e2e_ui_lint: OK (text floors 11/12px at 1280 and 390, phone targets 36px, one Esc rule, shared empty state, right panel per page)")
+    print("e2e_ui_lint: OK (text floors 11/12px at 1280 and 390, phone targets 36px, one Esc rule, shared sheet + one way out, shared empty state, right panel per page)")
 
 
 if __name__ == "__main__":

@@ -59,6 +59,7 @@
     st = fresh(o); if (keep && !o.files && !o.src) { st = keep; if (o.tab) st.tab = o.tab; }
     if (!el) { el = document.createElement('div'); el.id = 'aib'; el.className = 'aib-scrim'; el.hidden = true; document.body.appendChild(el); el.addEventListener('click', onClick); el.addEventListener('input', onInput); el.addEventListener('change', onChange); el.addEventListener('keydown', e => { if (e.key === 'Escape') close(); }); wireDrop(); }
     el.hidden = false; document.body.classList.add('aib-open');
+    { const card = el.firstElementChild || el; if (window.TribeUI) window.TribeUI.adopt(el, { scrim: el, kind: 'steps', onClose: () => close(), trap: false }); void card; }   // shared scrim colour, way in and Esc
     if (st.src === 'file' && !st.files.length) { const cur = window.TribeCodeFiles && window.TribeCodeFiles.current && window.TribeCodeFiles.current(); if (cur && cur.text != null) { st.files = [{ path: cur.path, text: cur.text }]; st.pick = new Set([cur.path]); } }
     if (st.src === 'file' && !st.files.length && has()) st.src = 'files';   // no file open: pick some
     draw(); loadFor(st.src);
@@ -66,7 +67,7 @@
     setTimeout(() => { const f = el.querySelector(st.tab === 'back' ? '#aib-paste' : '#aib-goal'); if (f) f.focus({ preventScroll: true }); }, 30);
     return st;
   }
-  function close() { if (!el) return; el.hidden = true; document.body.classList.remove('aib-open'); }
+  function close() { if (!el || el.hidden) return; const n = el; document.body.classList.remove('aib-open'); if (window.TribeUI) window.TribeUI.dismiss(n, () => { if (!document.body.classList.contains('aib-open')) n.hidden = true; }); else n.hidden = true; }   // the shared way out
   document.addEventListener('keydown', e => { if (e.key === 'Escape' && el && !el.hidden && !e.defaultPrevented && !el.contains(e.target)) close(); });   // Esc closes it even when focus is still on the button that opened it
 
   // ---------- data for each source ----------

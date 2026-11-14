@@ -19,8 +19,8 @@
   let el = null, scrim = null, st = null;
   function close(now) {
     if (!el) return; const a = el, b = scrim; el = scrim = null; st = null;
-    if (now || reduced()) { a.remove(); b.remove(); return; }
-    a.classList.add('out'); b.classList.add('out'); setTimeout(() => { a.remove(); b.remove(); }, 160);
+    if (now) { a.remove(); b.remove(); return; }
+    window.TribeUI.dismiss([a, b], () => { a.remove(); b.remove(); });   // the shared way out (uikit.js)
   }
   async function open(pid) {
     pid = pid || (C() && C().project && C().project());
@@ -35,6 +35,7 @@
       <nav class="vr-also" id="vr-also" aria-label="Kept elsewhere"><span class="faint">Kept separately:</span><button type="button" class="linkish" id="vr-designs" title="Designs of the website saved in the website designer">Saved designs</button><span class="faint" aria-hidden="true">·</span><button type="button" class="linkish" id="vr-shots" title="Earlier screenshots of each screen, in Visuals">Earlier shots</button></nav>
       <div class="vr-body"><ol class="vr-list" id="vr-list" aria-label="Versions"></ol><section class="vr-detail" id="vr-detail" aria-live="polite"><p class="faint">Pick a version to see what changed.</p></section></div>`;
     document.body.append(scrim, el);
+    window.TribeUI.adopt(el, { scrim, kind: 'steps', onClose: () => close() });   // shared scrim, way in, Esc, focus trap
     el.addEventListener('keydown', e => { if (e.key === 'Escape') { e.stopPropagation(); close(); } });
     $('#vr-x', el).onclick = () => close();
     st = { pid, cmp: [], data: null, site: [] };
