@@ -324,7 +324,9 @@ html[data-dev=phone] .ehide-phone,html[data-dev=tablet] .ehide-tablet,html[data-
       if (SP()) SP().closeMenu();
       if (!d.key) { if (st.sel) { st.sel = null; if (st.panel === 'edit') panelPaint(); chipKey = ''; logPaint(); $('#wdz-blocks').querySelectorAll('.wdz-blk.is-sel').forEach(li => li.classList.remove('is-sel')); } return; }
       const k = String(d.key), i = k.indexOf('|'), block = k.slice(0, i), path = k.slice(i + 1);
+      const same = st.sel && st.sel.block === block && st.sel.path === path && st.sel.kind === (d.kind || 'block') && st.panel === 'edit';
       st.sel = { block, path, kind: d.kind || 'block' }; st.panel = 'edit'; panelPaint(); logPaint();   // a click in the page always shows what was clicked
+      if (!same) { const ib = $('#wdz-insp'); if (ib) ib.scrollTop = 0; }   // a new selection starts at the top of its panel
       $('#wdz-blocks').querySelectorAll('.wdz-blk').forEach(li => li.classList.toggle('is-sel', li.dataset.blk === block)); return;
     }
     if (d.t === 'text') { liveText = d; clearTimeout(liveT); liveT = setTimeout(() => { if (liveText) { const l = liveText; commitText(l); } }, 900); return; }
