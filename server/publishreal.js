@@ -56,7 +56,7 @@ function pngIcon(size, color) {
   return Buffer.concat([Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]), chunk('IHDR', ihdr), chunk('IDAT', zlib.deflateSync(raw, { level: 9 })), chunk('IEND', Buffer.alloc(0))]);
 }
 
-module.exports = function publishReal({ P, W, base, publish, getMembers, broadcast = () => {}, nameOf = id => id, fetchImpl, log = () => {} }) {
+module.exports = function publishReal({ P, W, base, publish, getMembers, broadcast = () => {}, nameOf = id => id, fetchImpl, log = () => {}, perms = null }) {
   const FILE = '.tribe/publish-real.json';
   let db = base.readJSON(FILE, { projects: {} }); db.projects = db.projects || {};
   const save = () => base.writeJSON(FILE, db);
@@ -66,7 +66,7 @@ module.exports = function publishReal({ P, W, base, publish, getMembers, broadca
   const destOf = pid => (db.projects[pid] = db.projects[pid] || {});
   const tokenOf = me => { try { return (W.readSecret(me.id) || {}).githubToken || ''; } catch { return ''; } };
   const loginOf = me => { try { return (W.readSecret(me.id) || {}).githubLogin || ''; } catch { return ''; } };
-  const canSend = (me, pid) => publish.canPublish(me, pid) && me.role !== 'agent';
+  const canSend = (me, pid) => publish.canPublish(me, pid) && me.role !== 'agent' && (!perms || perms.can(me, 'site.publish', pid));   // feat/group-styles: a row in the table, so a council can decide it
 
   // The web folder as a bundle. The preview's web root first; a designed website (site/) when there is no app yet.
   function bundle(pid) {

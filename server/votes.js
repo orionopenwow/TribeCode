@@ -67,18 +67,31 @@ module.exports = function votes({ store, id, str, slug, find, update, postChat, 
   const saveIdx = l => store.writeJSON(IDX, l);
   const recent = new Map();   // agent id -> timestamps of suggestions
 
+  // feat/group-styles: a vote with `council` has a FIXED list of deciders and its own pass mark (server/groupstyle.js).
+  // The list is set by the server when the vote is made (never from a request body). Only people on it count, each once.
+  const hooks = { decided: null };
+  const deciders = v => { const ok = new Set(v.council.electorate); return getMembers().filter(m => ok.has(m.id) && isHuman(m) && !m.guestUntil); };
+  const passMark = (v, n) => (v.council.need === 'all' ? n : v.council.need === 'two' ? Math.min(2, n) : v.council.need === 'one' ? 1 : Math.floor(n / 2) + 1);
   function tally(v) {
-    const ppl = voters(), ids = new Set(ppl.map(m => m.id));
+    const ppl = v.council ? deciders(v) : voters(), ids = new Set(ppl.map(m => m.id));
     const ballots = Object.entries(v.ballots || {}).filter(([mid]) => ids.has(mid) || v.status !== 'open');
     const counts = Object.fromEntries(v.options.map(o => [o.id, 0]));
     for (const [, o] of ballots) if (o in counts) counts[o]++;
     const n = Math.max(1, v.status === 'open' ? ppl.length : (v.voters || ppl.length));
     const voted = ballots.length;
-    return { counts, n, voted, needed: Math.floor(n / 2) + 1, waiting: ppl.filter(m => !(v.ballots || {})[m.id]).map(m => m.id) };
+    return { counts, n, voted, needed: v.council ? passMark(v, n) : Math.floor(n / 2) + 1, waiting: ppl.filter(m => !(v.ballots || {})[m.id]).map(m => m.id) };
   }
   // Outcome right now; `final` = deadline or manual close (no more votes coming).
-  function outcome(v, final) {
+  function outcome(v, final, by) {
     const t = tally(v), c = t.counts;
+    if (v.council) {
+      if (c.yes >= t.needed) return { status: 'passed', option: 'yes' };
+      if (c.no > t.n - t.needed) return { status: 'failed', option: 'no' };
+      if (!final) return null;
+      // time ran out: the tie rule may let "more yes than no" carry it; closing it early by hand never does
+      if (by === 'deadline' && v.council.tie === 'more-yes' && c.yes > c.no) return { status: 'passed', option: 'yes' };
+      return { status: 'failed', option: null, reason: by === 'deadline' ? 'no quorum' : 'withdrawn' };
+    }
     if (v.kind === 'approve') {
       if (c.yes >= t.needed) return { status: 'passed', option: 'yes' };
       if (c.no >= t.needed) return { status: 'failed', option: 'no' };
@@ -102,7 +115,7 @@ module.exports = function votes({ store, id, str, slug, find, update, postChat, 
   }
 
   // ---------- create ----------
-  function create(ch, me, { question, options, minutes, deadline, why, pitch } = {}) {
+  function create(ch, me, { question, options, minutes, deadline, why, pitch } = {}, council = null) {
     ch = chan(ch);
     if (isDm(ch)) throw err(400, 'votes live in team channels, not DMs');
     if (me.role === 'spectator') throw err(403, 'spectators can read but not start votes');
@@ -133,6 +146,7 @@ module.exports = function votes({ store, id, str, slug, find, update, postChat, 
       ballots: {}, status: 'open', deadline: dl ? iso(dl) : null, seen: {}, eligible: voters().map(m => m.id) };
     if (agent) { vote.suggested = { agent: me.id, owner: me.owner || null }; if (str(why, 400)) vote.why = str(why, 400); }
     if (pt) vote.pitch = pt;
+    if (council && !agent && !opts.length) { vote.council = { electorate: [...new Set(council.electorate || [])], need: council.need, tie: council.tie, ai: council.ai === true, rule: council.rule, ask: council.ask || null }; vote.eligible = vote.council.electorate; }
     const msg = postChat(ch, me.id, q, { vote });
     saveIdx([...idx(), { project: project(), ch, id: msg.id, by: me.id, deadline: vote.deadline }]);
     if (agent) bus.notify({ type: 'vote', priority: 'normal', to: voters().map(m => m.id), from: me.id, title: `${me.owner && member(me.owner) ? `${member(me.owner).name}'s Claude` : me.name} suggests a vote`, body: q, view: 'chat', ref: msg.id });
@@ -145,7 +159,7 @@ module.exports = function votes({ store, id, str, slug, find, update, postChat, 
     let closed = null;
     const msg = update(chan(ch), mid, x => {
       const v = x.vote; if (v.status !== 'open') return x;
-      const o = outcome(v, final); if (!o) return x;
+      const o = outcome(v, final, by); if (!o) return x;
       const t = tally(v);
       Object.assign(v, { status: o.status, result: o.option, reason: o.reason || undefined, closed: iso(now()), closedBy: by || null, voters: t.n, final: t.counts });
       closed = x; return x;
@@ -163,15 +177,35 @@ module.exports = function votes({ store, id, str, slug, find, update, postChat, 
       `# ${head}: ${v.q}\n\nDecided by a chat vote (${counts}).${v.suggested ? ` Suggested by ${nameOf(v.suggested.agent)}.` : ''}\n\n${Object.entries(v.ballots).map(([mid, o]) => `- ${nameOf(mid)}: ${label(v, o)}`).join('\n')}\n`);
     bus.notify({ type: 'decision', priority: 'low', to: voters().map(x => x.id), from: 'tribecode', title: `Decided: ${clip(v.q, 120)}`, body: `${head} · ${counts}`, view: 'chat', ref: m.id });
     // A passed proposal goes straight to the Board (milestone, tasks from its checklist, decision record), as its author.
+    if (v.council && hooks.decided) { try { hooks.decided(m); } catch (e) { console.error('votes decided', e); } }
     if (v.pitch && v.status === 'passed' && board) { const by = member(m.by); if (by && isHuman(by)) { try { toBoard(ch, m.id, by); } catch (e) { /* already on the Board */ } } }
   }
 
   function cast(ch, vid, me, option) {
-    if (me.role === 'agent') throw err(403, 'agents cannot vote; their humans do');
-    if (!isHuman(me)) throw err(403, 'spectators can read but not vote');
-    const m = get(ch, vid), v = m.vote;
+    const m0 = get(ch, vid), cv = m0.vote.council;
+    // An AI helper never votes, except: the group switched on "AI may vote on low-risk things", this vote is one of
+    // those, and its owner is a decider who hasn't voted. It then fills its owner's ballot (one ballot per person, and
+    // the owner's own vote replaces it).
+    let as = me;
+    if (me.role === 'agent') {
+      const owner = member(me.owner);
+      if (!cv || !cv.ai || !owner || !isHuman(owner)) throw err(403, 'agents cannot vote; their humans do');
+      if ((m0.vote.ballots || {})[owner.id] && !(m0.vote.byAgent || {})[owner.id]) throw err(409, 'your owner already voted');
+      as = owner;
+    }
+    if (!isHuman(as)) throw err(403, 'spectators can read but not vote');
+    const m = m0, v = m.vote;
     if (v.status !== 'open') throw err(409, 'voting is closed');
-    if (!voters().some(x => x.id === me.id)) throw err(403, 'you are not in this project');
+    if (cv ? !deciders(v).some(x => x.id === as.id) : !voters().some(x => x.id === me.id)) throw err(403, cv ? 'this one is decided by the people it names' : 'you are not in this project');
+    if (cv) {
+      if (option !== 'clear' && !v.options.some(o => o.id === option)) throw err(400, 'unknown option');
+      update(chan(ch), m.id, x => {
+        const b = { ...(x.vote.ballots || {}) }, ba = { ...(x.vote.byAgent || {}) };
+        if (option === 'clear' || (b[as.id] === option && as === me)) { delete b[as.id]; delete ba[as.id]; } else { b[as.id] = option; if (as !== me) ba[as.id] = me.id; else delete ba[as.id]; }
+        x.vote.ballots = b; x.vote.byAgent = ba; return x;
+      });
+      return settle(ch, m.id, false, as.id);
+    }
     if (option !== 'clear' && !v.options.some(o => o.id === option)) throw err(400, 'unknown option');
     update(chan(ch), m.id, x => {
       const b = { ...(x.vote.ballots || {}) };
@@ -192,7 +226,7 @@ module.exports = function votes({ store, id, str, slug, find, update, postChat, 
     if (!isHuman(me)) return null;
     const m = get(ch, vid);
     if ((m.vote.seen || {})[me.id]) return m;
-    return update(chan(ch), m.id, x => { x.vote.seen = { ...(x.vote.seen || {}), [me.id]: iso(now()) }; x.vote.eligible = voters().map(p => p.id); return x; });
+    return update(chan(ch), m.id, x => { x.vote.seen = { ...(x.vote.seen || {}), [me.id]: iso(now()) }; if (!x.vote.council) x.vote.eligible = voters().map(p => p.id); return x; });
   }
   function remind(ch, vid, me, { auto = false } = {}) {
     const m = get(ch, vid), v = m.vote;
@@ -264,7 +298,7 @@ module.exports = function votes({ store, id, str, slug, find, update, postChat, 
   }
   if (tick) setInterval(sweep, SWEEP_MS).unref();
 
-  return { create, cast, close, seen, remind, toTask, toBoard, list, tally, sweep, parseCommand, looksLikeDecision, draftFrom };
+  return { hooks, create, cast, close, seen, remind, toTask, toBoard, list, tally, sweep, parseCommand, looksLikeDecision, draftFrom };
 };
 module.exports.parseCommand = parseCommand;
 module.exports.looksLikeDecision = looksLikeDecision;

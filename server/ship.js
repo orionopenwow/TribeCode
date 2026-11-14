@@ -29,10 +29,13 @@ const TICK_MS = Number(process.env.TRIBE_TURBO_TICK_MS) || 60_000;
 const QUIET_MS = Number(process.env.TRIBE_TURBO_QUIET_MS) || 0;   // overrides the per-project quiet minutes (tests)
 const DEFAULTS = () => ({ mode: 'host', turbo: { on: false, quietMin: 10, maxPerHour: 4 }, current: null, history: [], log: [], lastShip: null });
 
-module.exports = function ship({ P, store, hubFor, approvals, getMembers, loadTasks, createTask, postChat, broadcast, bus, str, nameOf, can, pushAuth, coord, claims, id, brain }) {
+module.exports = function ship({ P, store, hubFor, approvals, getMembers, loadTasks, createTask, postChat, broadcast, bus, str, nameOf, can, pushAuth, coord, claims, id, brain, styleOf = null }) {
   const fail = (status, msg) => Object.assign(new Error(msg), { status });
-  const load = () => { const s = { ...DEFAULTS(), ...(store.readJSON('ship.json', {}) || {}) }; s.turbo = { ...DEFAULTS().turbo, ...(s.turbo || {}) }; return s; };
-  const save = s => { s.history = (s.history || []).slice(-30); s.log = (s.log || []).slice(0, 60); store.writeJSON('ship.json', s); };
+  // feat/group-styles: a council decides shipping the way it decides everything else (styleOf from server/groupstyle.js)
+  const load = () => { const s = { ...DEFAULTS(), ...(store.readJSON('ship.json', {}) || {}) }; s.turbo = { ...DEFAULTS().turbo, ...(s.turbo || {}) };
+    try { const st = styleOf && styleOf(P.current() || P.defaultId()); if (st && st.style === 'council') { s.ownMode = s.mode; s.mode = st.need === 'all' ? 'everyone' : 'majority'; s.fromStyle = true; } } catch {}
+    return s; };
+  const save = s => { if (s.fromStyle) { s.mode = s.ownMode || 'host'; } delete s.fromStyle; delete s.ownMode; s.history = (s.history || []).slice(-30); s.log = (s.log || []).slice(0, 60); store.writeJSON('ship.json', s); };
   const pid = () => P.current() || P.defaultId();
   const push = () => broadcast({ type: 'ship', project: pid() });
   const member = mid => getMembers().find(m => m.id === mid) || null;

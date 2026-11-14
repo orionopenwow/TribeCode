@@ -42,6 +42,8 @@ const CAPS = [
   { id: 'repo.merge', group: 'Projects', label: 'Merge into main', roles: ['admin'] },
   { id: 'github.use_host', group: 'Projects', label: 'Put projects on the host\'s GitHub', roles: ['admin'] },   // fix/security-2 (server/flow.js)
   { id: 'ai.use_host_brain', group: 'Projects', label: 'Use the host\'s AI brain', roles: ['admin', 'mod', 'builder'] },
+  { id: 'site.publish', group: 'Projects', label: 'Publish the website or app for everyone', roles: ['admin', 'mod', 'builder'] },   // feat/group-styles: was "anyone building" in publishreal.js; now a row
+  { id: 'group.decide', group: 'Community', label: 'Change how the group decides, its roles and words', roles: ['admin'] },   // feat/group-styles (server/groupstyle.js)
   // Host only, hard-coded where they are checked, never overridable.
   { id: 'tribe.hosting', group: 'Host only', label: 'Hosting, sharing and tunnels', locked: true },
   { id: 'tribe.secrets', group: 'Host only', label: 'AI keys, GitHub and sign-in secrets', locked: true },
@@ -90,9 +92,24 @@ function perms({ P, store, getMembers, saveMembers, bus, broadcast, pushPresence
     const o = db.overrides[cap]; if (o && typeof o[role] === 'boolean') return o[role];
     return c.roles.includes(role);
   }
+  // feat/group-styles: the group's style (server/groupstyle.js) has the last word on rows that aren't host-only.
+  // With no style chosen it returns the table's answer unchanged, so existing tribes behave as before.
+  let style = null;
+  const lastNo = new Map();   // member id -> { cap, pid, at }: the most recent refusal, so a 403 can say who CAN do it
   function can(m, cap, pid = P.current()) {
     if (!m || !CAP[cap] || expired(m)) return false;
-    return allowed(cap, actingRole(m, pid));
+    const base = allowed(cap, actingRole(m, pid));
+    const ok = style && !CAP[cap].locked ? !!style.hook(m, cap, pid, base) : base;
+    if (!ok) lastNo.set(m.id, { cap, pid: pid || null, at: now() });
+    return ok;
+  }
+  const setStyle = s => { style = s; };
+  const styleOf = pid => (style ? style.styleOf(pid) : { style: 'lead', words: { group: 'Company', lead: 'Lead', role: 'Role', checkin: 'Check-in' }, need: 'majority' });
+  // The refusal behind a 403 just sent to this member (within a moment), with who could do it instead.
+  function refused(m) {
+    const x = m && lastNo.get(m.id); if (!x || now() - x.at > 1500) return null;
+    lastNo.delete(m.id);
+    return style ? style.need(m, x.cap, x.pid) : null;
   }
   const capsOf = (m, pid) => Object.fromEntries(CAPS.filter(c => can(m, c.id, pid)).map(c => [c.id, true]));
 
@@ -292,7 +309,7 @@ function perms({ P, store, getMembers, saveMembers, bus, broadcast, pushPresence
     return fail(res, 404, 'not found');
   }
 
-  return { can, capsOf, roleIn, actingRole, rank, atLeast, outranks, allowed, mutedUntil, muteBlock, audit, assign, mute, unmute, removeFromProject, setOverride, reset, matrix, route, LABEL, CAPS, RANK };
+  return { setStyle, styleOf, refused, can, capsOf, roleIn, actingRole, rank, atLeast, outranks, allowed, mutedUntil, muteBlock, audit, assign, mute, unmute, removeFromProject, setOverride, reset, matrix, route, LABEL, CAPS, RANK };
 }
 perms.CAPS = CAPS; perms.RANK = RANK; perms.ROLES = ROLES; perms.LABEL = LABEL;
 module.exports = perms;
