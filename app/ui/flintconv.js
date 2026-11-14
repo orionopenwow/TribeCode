@@ -86,12 +86,15 @@
       for (const [rx, to] of REWRITES) { if (!rx.test(t)) continue; const P = tryParse(N, t.replace(rx, to), ctx); if (P && P.steps[0].intent !== 'help.kb') return P; }
       return null;
     }
+    // flintnlu.js asks "When is it due?" for task.due even when it read the date (its check looks for a slot the
+    // matcher renames). The date is there, so the question is dropped here rather than in that shared file.
+    const tidy = P => { for (const s of P.steps || []) if (s.intent === 'task.due' && s.ask && s.ask.slot === 'when' && s.slots && s.slots.due) delete s.ask; return P; };
     function parse(text, ctx, N) {
       ctx = ctx || {};
-      const F = followUp(text, ctx, N); if (F) { F.via = 'follow-up'; return F; }
+      const F = followUp(text, ctx, N); if (F) { F.via = 'follow-up'; return tidy(F); }
       const P = N.parse(text, ctx), s = P.steps[0];
-      if (sure(P) && !(P.steps.length === 1 && s.intent === 'help.kb' && s.conf < 0.7)) return P;
-      const R = rewrite(text, ctx, N); if (R) { R.via = 'rewrite'; return R; }
+      if (sure(P) && !(P.steps.length === 1 && s.intent === 'help.kb' && s.conf < 0.7)) return tidy(P);
+      const R = rewrite(text, ctx, N); if (R) { R.via = 'rewrite'; return tidy(R); }
       return P;
     }
     function done(steps) {

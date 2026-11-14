@@ -597,7 +597,7 @@
   // one plan step: a sentence Flint understands, run quietly, everything it changed folded into ONE Undo entry
   async function runSay(say, label) {
     const NL = N(), H0 = lastH; if (!NL || !H0) return { ok: false, text: 'Flint is not ready yet.' };
-    await tasks(); const P = NL.parse(say, ctxNow()), s = P.steps[0];
+    await tasks(); const P = MEM ? MEM.parse(say, ctxNow(), NL) : NL.parse(say, ctxNow()), s = P.steps[0];
     if (P.steps.length !== 1 || !s.intent || s.conf < 0.6 || s.ask) return { ok: false, text: 'I was not sure about that step, so I left it.' };
     const mark = UNDO.length; let said = ''; dupOk = true;
     const H2 = { ...H0, say: t => { said = said || String(t || ''); return {}; } };
