@@ -191,6 +191,7 @@ body[data-view="canvas"] .window .main { padding: 0; overflow: hidden; }
 .cv-tok { width: 18px; height: 18px; padding: 0; border: 1px solid var(--edge); border-radius: 4px; background: var(--c); cursor: pointer; }
 .cv-tok:hover { border-color: var(--text); }
 .cv-tok.brand { border-radius: 50%; }
+.cv-brandlogo { height: 24px; width: auto; max-width: 72px; border-radius: 4px; }
 .cv-ta { width: 100%; box-sizing: border-box; padding: 8px; border: 1px solid transparent; border-radius: 6px; background: var(--surface-2); color: var(--text); font: 13px/1.5 var(--font); resize: vertical; outline: none; }
 .cv-ta:focus { border-color: var(--cv-sel); }
 .cv-pempty { padding: 18px 16px; display: flex; flex-direction: column; gap: 10px; }

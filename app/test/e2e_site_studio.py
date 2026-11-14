@@ -90,6 +90,17 @@ def main():
         tok = ok(api("/bootstrap", "POST", {"name": "Mara"}), "bootstrap")["token"]
         pid = ok(api("/projects", token=tok))["projects"][0]["id"]
 
+        # ---- one brand record: what the older route saved is the kit, and the kit answers the older route
+        ok(api(f"/projects/{pid}/website/brand", "PUT", {"primary": "#112233", "wordmark": "Old Co", "font": "grotesk"}, token=tok), "old brand route")
+        k0 = ok(api(f"/projects/{pid}/brand", token=tok))["kit"]
+        assert k0["colors"]["accent"] == "#112233" and k0["name"] == "Old Co" and k0["fonts"]["display"] == "Space Grotesk", k0
+        ok(api(f"/projects/{pid}/brand", "PUT", {"kit": {**k0, "colors": {**k0["colors"], "accent": "#445566"}, "voice": "Dry"}}, token=tok), "kit route")
+        old = ok(api(f"/projects/{pid}/website/brand", token=tok))["brand"]
+        assert old["primary"] == "#445566" and old["wordmark"] == "Old Co" and old["font"] == "grotesk" and old["kit"]["voice"] == "Dry", old
+        ok(api(f"/projects/{pid}/website/brand", "PUT", {"primary": "#778899"}, token=tok))
+        k1 = ok(api(f"/projects/{pid}/brand", token=tok))["kit"]
+        assert k1["colors"]["accent"] == "#778899" and k1["voice"] == "Dry", "a change through the older route keeps the rest of the kit"
+
         # ---- the model, with no browser: a change list is checked step by step, and Check my site finds real problems
         out = subprocess.run(["node", "-e", """
 const S = require('./app/ui/sitecfg.js');
@@ -159,6 +170,7 @@ console.log(JSON.stringify({ done: r.done.length, skipped: r.skipped.length, tit
             pg.fill("#stu-voice", "Warm and plain"); pg.press("#stu-voice", "Tab"); pg.wait_for_timeout(500)
             assert ok(api(f"/projects/{pid}/brand", token=tok))["kit"]["voice"] == "Warm and plain", "how we sound is part of the kit"
             assert pg.locator("[data-stu=fonts][data-val=elegant]").count() == 1 and pg.locator("[data-stu=fonts][data-val=friendly]").count() == 1, "the two new font pairs"
+            assert ok(api(f"/projects/{pid}/website/brand", token=tok))["brand"]["primary"].lower() == want.lower(), "the project page uses the same colour"
             assert api(f"/projects/{pid}/brand")[0] == 401, "members only"
 
             # ---- Check my site: plain problems, one-tap fixes, one undo

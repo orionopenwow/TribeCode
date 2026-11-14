@@ -118,7 +118,7 @@ module.exports = function showcase({ P, base, W, getMembers, nameOf, visuals, hu
     if (!cache.has(pid)) { const s = base.readJSON(rel(pid), null); cache.set(pid, s ? { ...blank(), ...s, sections: { ...blank().sections, ...(s.sections || {}) } } : blank()); }
     return cache.get(pid);
   }
-  const save = (pid, st) => { cache.set(pid, st); base.writeJSON(rel(pid), st); };
+  const save = (pid, st) => { cache.set(pid, st); base.writeJSON(rel(pid), st); try { kitSync(pid, st); } catch {} };   // the brand fields in here are a copy of the brand kit
   const err = (status, msg) => Object.assign(new Error(msg), { status });
   const member = mid => getMembers().find(m => m.id === mid) || null;
   const push = pid => broadcast({ type: 'website', project: pid });
@@ -329,6 +329,51 @@ ${blocks.join('\n')}
   const newGen = (g, pid) => ({ layout: sitegen.pickLayout(g.sense, pid), seed: 0, copySeed: 0, off: {}, order: null, edited: {}, copy: null, type: null, info: {} });
   // ---------- feat/site-builder: brand kit, themes, one-tap Instant, suggestions that learn ----------
   const now = () => new Date().toISOString();
+  // feat/design-site2: ONE brand record per project, the brand kit (.tribe/website/<id>.brand.json; shape checked by
+  // TribeSiteCfg.kitNormalize: name, logo, colors { accent, ink, bg, more }, fonts { display, body }, voice). The website
+  // designer, the Design canvas, Design flow and agents read it (GET|PUT /api/projects/:id/brand, server/sitedesign.js).
+  // The older fields this page uses (primary, wordmark, logo, font) are a copy of the kit: a project that only had
+  // those is moved into a kit the first time it is read, and a change through either route lands in both.
+  const KITS = require('../app/ui/sitecfg.js');
+  const kitRel = pid => `.tribe/website/${String(pid).replace(/[^\w-]/g, '')}.brand.json`;
+  const fontIdOf = display => sitegen.FONT_IDS.find(id => sitegen.FONTS[id].display === display) || '';
+  function kitFromOld(b, keep) {
+    const k = KITS.kitNormalize(keep || {});
+    k.colors.accent = b.primary || '';
+    k.name = b.wordmark || '';
+    if (b.logo) k.logo = logoUrl(b.logo) || '';
+    else if (k.logo) { let shown = true; try { cleanLogo(k.logo); } catch { shown = false; } if (shown) k.logo = ''; }   // a kit logo this page cannot show (WebP, too big) stays in the kit
+    if (b.font && sitegen.FONTS[b.font]) { if (fontIdOf(k.fonts.display) !== b.font) k.fonts = { display: sitegen.FONTS[b.font].display, body: k.fonts.body || 'Inter' }; }
+    else if (fontIdOf(k.fonts.display)) k.fonts = { display: '', body: k.fonts.body };
+    return KITS.kitNormalize(k);
+  }
+  // every save of this page's state keeps the kit in step (themes, ideas, Flint's edits and undo all change the brand fields)
+  function kitSync(pid, st) {
+    const b = (st && st.brand) || {}, raw = base.readJSON(kitRel(pid), null);
+    if (!raw && !(b.primary || b.wordmark || b.logo || b.font)) return;
+    const cur = KITS.kitNormalize(raw || {}), next = kitFromOld(b, cur);
+    if (JSON.stringify(cur) === JSON.stringify(next)) return;
+    kitWrite(pid, next, null); try { broadcast({ type: 'brand-kit', project: pid }); } catch {}
+  }
+  const kitWrite = (pid, k, me) => { try { fs.mkdirSync(path.dirname(base.p(kitRel(pid))), { recursive: true }); } catch {} base.writeJSON(kitRel(pid), { ...k, savedBy: me ? me.id : '', savedAt: now() }); };
+  function kitGet(pid) {
+    const raw = base.readJSON(kitRel(pid), null);
+    if (raw) return KITS.kitNormalize(raw);
+    const b = load(pid).brand;
+    if (b && (b.primary || b.wordmark || b.logo || b.font)) { const k = kitFromOld(b, null); try { kitWrite(pid, k, null); } catch {} return k; }   // move the old record over, once
+    return KITS.kitNormalize(null);
+  }
+  function kitSet(pid, kit, me) {
+    const k = KITS.kitNormalize(kit);
+    const st = load(pid), b = { ...(st.brand || {}) };
+    if (k.colors.accent) b.primary = k.colors.accent; else delete b.primary;
+    if (k.name) b.wordmark = sitegen.clean(one(k.name, 60), 60); else delete b.wordmark;
+    if (k.logo) { try { const l = cleanLogo(k.logo); if (l) b.logo = l; } catch {} } else delete b.logo;   // a logo this page cannot show (too big, WebP) stays in the kit only
+    const f = fontIdOf(k.fonts.display); if (f) b.font = f; else delete b.font;
+    st.brand = Object.keys(b).length ? b : null; save(pid, st); kitWrite(pid, k, me); push(pid);
+    try { broadcast({ type: 'brand-kit', project: pid }); } catch {}
+    return k;
+  }
   function brandSet(pid, body, me) {
     if (!canManage(pid, me)) throw err(403, 'only the host or the project lead changes the brand kit; ask them to');
     const st = load(pid), b = { ...(st.brand || {}) };
@@ -342,9 +387,10 @@ ${blocks.join('\n')}
     return st.brand;
   }
   function brandView(pid) {
-    const st = load(pid), b = st.brand || {}, layout = (st.gen && st.gen.layout) || (st.genLive && st.genLive.layout) || 'editorial';
+    const st = load(pid), b0 = st.brand || {}, kit = kitGet(pid), layout = (st.gen && st.gen.layout) || (st.genLive && st.genLive.layout) || 'editorial';
     let g = null; try { g = { p: P.get(pid), sense: (sense() || { get: () => null }).get(pid) }; } catch { g = { p: P.get(pid), sense: null }; }
-    return { primary: b.primary || '', accent: b.accent || '', font: b.font || '', wordmark: b.wordmark || '', logo: b.logo ? { type: b.logo.type, bytes: b.logo.bytes, url: logoUrl(b.logo) } : null,
+    const b = { ...b0, primary: kit.colors.accent || b0.primary || '', wordmark: kit.name || b0.wordmark || '', font: fontIdOf(kit.fonts.display) || b0.font || '' };   // answered from the kit
+    return { primary: b.primary || '', accent: b.accent || '', font: b.font || '', wordmark: b.wordmark || '', kit: { colors: kit.colors, fonts: kit.fonts, voice: kit.voice }, logo: b.logo ? { type: b.logo.type, bytes: b.logo.bytes, url: logoUrl(b.logo) } : null,
       notes: sitegen.brandNotes(layout, b, g), layoutFont: sitegen.LAYOUT_FONT[layout], swatches: sitegen.SWATCHES,
       fonts: sitegen.FONT_IDS.map(id => ({ id, name: `${sitegen.FONTS[id].name} + Inter`, feel: sitegen.FONTS[id].feel })) };
   }
@@ -810,7 +856,7 @@ ${blocks.join('\n')}
     return null;
   }
 
-  return { route, build, gather, html, signature, tick, exists, started, brandView, load, save: (pid, st) => save(pid, st), push: pid => push(pid), canManage: (pid, me) => canManage(pid, me), canDraft: me => canDraft(me), cleanLogo, fresh, newGen: (g, pid) => newGen(g, pid), httpsRepo, siteDir, generate, publish, draftHtml, mcpTools, instant, ideas, handEdits, brandSet };
+  return { kitGet, kitSet, route, build, gather, html, signature, tick, exists, started, brandView, load, save: (pid, st) => save(pid, st), push: pid => push(pid), canManage: (pid, me) => canManage(pid, me), canDraft: me => canDraft(me), cleanLogo, fresh, newGen: (g, pid) => newGen(g, pid), httpsRepo, siteDir, generate, publish, draftHtml, mcpTools, instant, ideas, handEdits, brandSet };
 };
 module.exports.httpsRepo = httpsRepo;
 module.exports.visionText = visionText;

@@ -260,11 +260,18 @@
   // Screens, posters and logos: a design file on the canvas
   const api = kind => (projectScope() ? (p, o) => C.api(p, o) : (p, o) => LF().backend(kind).api(p, o));
   function fill(v, vars) { return typeof v === 'string' ? v.replace(/\{\{(\w+)\}\}/g, (a, k) => (k in vars ? vars[k] : a)) : v; }
+  // feat/design-site2: starters follow the brand kit (app/ui/brandkit.js): its main colour when the prompt names none,
+  // its heading font on the big words, and its logo on the layer a template marks with logo: true.
+  async function kitNow() { try { const B = window.TribeBrandKit; if (!B) return null; const k = await B.get(pidNow() || ''); return k && (k.colors.accent || k.logo || k.fonts.display) ? k : null; } catch { return null; } }
+  const hasColour = ask => { const KC = K() ? K().COLORS : {}; return /#[0-9a-f]{6}\b/i.test(ask || '') || (Object.keys(KC).length && new RegExp(`\\b(${Object.keys(KC).join('|')})\\b`, 'i').test(ask || '')); };
   function nodesFrom(tpl, vars) {
     const frame = { id: 'f' + rid(), t: 'frame', p: '', i: Date.now() % 1e9, v: 1, x: 0, y: 0, w: tpl.w, h: tpl.h, fill: fill(tpl.fill, vars), clip: true, name: vars.title };
     const kids = tpl.nodes.map((n, i) => { const o = { ...n, id: n.id + rid(), p: frame.id, i: i + 1, v: 1 };
       for (const k of ['fill', 'stroke']) if (o[k]) o[k] = fill(o[k], vars);
       if (o.tx) o.tx = { ...o.tx, c: fill(o.tx.c, vars), col: fill(o.tx.col, vars), sz: undefined }; if (o.t === 'text') o.sz = { h: 'fixed', v: 'hug' };
+      if (o.tx && vars.font && o.tx.s >= 36 && !o.mono) o.tx.f = vars.font;
+      if (o.logo) { if (vars.logo) { o.img = vars.logo; o.fill = ''; } delete o.logo; }
+      delete o.mono;
       return o; });
     return [frame, ...kids];
   }
@@ -275,7 +282,9 @@
     if (!fid) throw new Error('Could not make the design file.');
     if (tpl && tpl.nodes) {
       const sub = ask && nameFrom(ask, '').toLowerCase() !== ask.toLowerCase() ? ask : (kind === 'logo' ? 'Brand kit · colors and type' : 'Add the details here');
-      const vars = { title, sub: sub.slice(0, 120), accent: accentFrom(ask), initial: (title.trim()[0] || 'A').toUpperCase() };
+      const kit = await kitNow();
+      const vars = { title, sub: sub.slice(0, 120), accent: kit && kit.colors.accent && !hasColour(ask) ? kit.colors.accent : accentFrom(ask), initial: (title.trim()[0] || 'A').toUpperCase(),
+        font: kit && kit.fonts.display && !/^System/.test(kit.fonts.display) ? kit.fonts.display : '', logo: (kit && kit.logo) || '' };
       await A(`/canvas/${encodeURIComponent(fid)}/ops`, { method: 'POST', body: { ops: nodesFrom(tpl, vars) } });
     }
     const p = newPlan(kind, title, tplId, ask, { type: 'canvas', id: fid, pid: pidNow() });

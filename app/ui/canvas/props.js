@@ -17,6 +17,11 @@
   const BK = () => window.TribeBrandKit, bkPid = () => { try { return (window.TribeProjects && window.TribeProjects.current && window.TribeProjects.current()) || ''; } catch { return ''; } };
   let bkAsked = null, bkHook = false;
   const brandColors = () => { const B = BK(); if (!B) return []; const pid = bkPid(); if (!bkHook) { bkHook = true; B.onChange(() => { try { render(); } catch {} }); } if (bkAsked !== pid) { bkAsked = pid; B.get(pid).then(k => { if (B.colors(k).length) { try { render(); } catch {} } }).catch(() => {}); } return B.colors(B.cached(pid)).map(c => c.toUpperCase()).slice(0, 6); };
+  const brandKit = () => { const B = BK(); return B ? B.cached(bkPid()) : null; };
+  // the kit's fonts join the font list; a bundled family (app/ui/assets/site-fonts) is loaded once so it shows on the canvas
+  const fontsNow = () => { const k = brandKit(), out = []; if (k && k.fonts) for (const f of [k.fonts.display, k.fonts.body]) { if (f && !/^System/.test(f) && !out.includes(f) && !FONTS.includes(f)) out.push(f); } out.forEach(loadFace); return [...out, ...FONTS]; };
+  const faces = new Set();
+  function loadFace(name) { if (faces.has(name)) return; faces.add(name); try { const F = window.TribeSiteCfg && window.TribeSiteCfg.FONT && window.TribeSiteCfg.FONT[name]; if (!F || !window.FontFace) return; const ff = new FontFace(name, `url(assets/site-fonts/${F[0]}.woff2) format("woff2")`, { weight: String(F[1]) }); ff.load().then(x => { document.fonts.add(x); try { E.draw && E.draw(); } catch {} }).catch(() => {}); } catch {} }
   const tokenColors = () => { const cs = getComputedStyle(document.documentElement); return TOKENS.map(t => hex(cs.getPropertyValue(t))).filter(Boolean); };
   const r1 = v => Math.round((Number(v) || 0) * 100) / 100;
 
@@ -140,6 +145,7 @@
       out.push(sec('Fill', fill ? colorRow('fill', fill, { remove: n.t === 'instance' ? '' : 'nofill', dis, label: 'Fill' }) : `<p class="cv-pnote faint">${T('No fill')}</p>`,
         fill ? '' : `<button class="cv-pbtn icon" data-act="addfill" title="${T('Add fill')}" aria-label="${T('Add fill')}"${dis || n.t === 'instance' ? ' disabled' : ''}>+</button>`));
     }
+    { const k = brandKit(); if (k && k.logo && (n.t === 'rect' || n.t === 'frame' || n.t === 'ellipse') && !dis) out.push(sec('Brand kit', `<div class="cv-prow"><img class="cv-brandlogo" src="${E.esc(k.logo)}" alt=""><button class="cv-pbtn" data-act="brandlogo">${T('Use the logo here')}</button></div>`)); }
     // stroke
     if (n.t !== 'group' && n.t !== 'text' && n.t !== 'instance') {
       out.push(sec('Stroke', n.stroke ? colorRow('stroke', n.stroke, { remove: 'nostroke', dis, label: 'Stroke' }) + `<div class="cv-grid">${num('sw', n.sw || 1, T('Weight'), { min: 0, max: 64, dis })}</div>` : `<p class="cv-pnote faint">${T('No stroke')}</p>`,
@@ -149,7 +155,7 @@
     if (n.t === 'text') {
       const t = n.tx || {};
       out.push(sec('Text', `
-        <label class="cv-f wide"><span>${T('Font')}</span><select data-k="font"${dis ? ' disabled' : ''}>${FONTS.map(f => `<option${t.f === f ? ' selected' : ''}>${f}</option>`).join('')}</select></label>
+        <label class="cv-f wide"><span>${T('Font')}</span><select data-k="font"${dis ? ' disabled' : ''}>${fontsNow().map(f => `<option${t.f === f ? ' selected' : ''}>${f}</option>`).join('')}</select></label>
         <div class="cv-grid">
           ${num('fs', t.s, T('Size'), { min: 1, max: 400, dis })}
           <label class="cv-f"><span>${T('Weight')}</span><select data-k="fw"${dis ? ' disabled' : ''}>${WEIGHTS.map(([w, l]) => `<option value="${w}"${+t.wt === w ? ' selected' : ''}>${T(l)}</option>`).join('')}</select></label>
@@ -260,6 +266,7 @@
     else if (act === 'resetone' && E.inner) { const inst = S.get(E.inner.inst); if (inst) { const ov = Object.assign({}, inst.ov); delete ov[E.inner.src]; E.patch(inst.id, { ov: Object.keys(ov).length ? ov : undefined }); } }
     else if (act === 'addlayout') E.autoLayout();
     else if (act === 'rmlayout') E.autoLayout();   // Shift A on a frame that has it removes it
+    else if (act === 'brandlogo') { const k = brandKit(); if (k && k.logo) E.patchMany(ids, n => { n.img = k.logo; }); }
     else if (act === 'addfill') E.patchMany(ids, n => { n.fill = n.t === 'frame' || n.t === 'component' ? '#FFFFFF' : '#D9D9D9'; });
     else if (act === 'nofill') E.patchMany(ids, n => { delete n.fill; });
     else if (act === 'addstroke') E.patchMany(ids, n => { n.stroke = '#12151A'; n.sw = 1; });

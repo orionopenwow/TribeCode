@@ -43,11 +43,10 @@ module.exports = function siteDesign({ base, root, showcase, siteFlint, P, tasks
   const file = pid => `.tribe/website/${safe(pid)}.config.json`;
   const cfile = pid => `.tribe/website/${safe(pid)}.comments.json`;
   const pfile = pid => `.tribe/website/${safe(pid)}.proposals.json`;
-  const bfile = pid => `.tribe/website/${safe(pid)}.brand.json`;
   const loadP = pid => { const l = base.readJSON(pfile(pid), []); return Array.isArray(l) ? l : []; };
   const saveP = (pid, l) => base.writeJSON(pfile(pid), l.slice(-40));
-  const brandGet = pid => S.kitNormalize(base.readJSON(bfile(pid), null));
-  const brandSet = (pid, kit, me) => { const k = S.kitNormalize(kit); try { fs.mkdirSync(path.dirname(base.p(bfile(pid))), { recursive: true }); } catch {} base.writeJSON(bfile(pid), { ...k, savedBy: me ? me.id : '', savedAt: new Date().toISOString() }); try { if (broadcast) broadcast({ type: 'brand-kit', project: pid }); } catch {} return k; };
+  const brandGet = pid => showcase.kitGet(pid);   // one brand record, kept by server/showcase.js (it also feeds the project page)
+  const brandSet = (pid, kit, me) => showcase.kitSet(pid, kit, me);
   // an agent's proposal: the steps are tried on a copy right away, so the person sees in words what would change
   function propose(pid, me, { note, ops }) {
     const cfg = load(pid); if (!cfg) throw err(404, 'this project has no website design yet: a person starts one in the website designer');
