@@ -454,6 +454,7 @@ ${canEdit && !started ? `      <section class="pj-context" id="pj-context"><div 
     })();
   }
   function connectGithub(p) {
+    if (window.TribeGitHubConnect) return window.TribeGitHubConnect.open({ pid: p.id, name: p.name, after: () => overview() });   // feat/setup-github: the one flow
     const m = $('#invite-modal'), body = $('#invite-body'); if (!m || !body) return;
     m.classList.remove('hidden');
     body.innerHTML = `<span class="eyebrow">GitHub · ${esc(p.name)}</span><h2 class="pj-gh-h">${GH_MARK} Connect GitHub</h2>

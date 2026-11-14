@@ -198,6 +198,56 @@ What could not be confirmed, said plainly:
 - **Qwen Code, Goose, Continue** (Connect your AI only): last checked 2026-11-07.
 - An agent that can't use MCP at all goes through the copy-and-paste bridge (Agents Hub › Use any free AI).
 
+### Bring an AI helper (the journey)
+
+The sheet above is one journey, in plain words (app/ui/inviteagent.js; test: app/test/e2e_ai_invite2.py):
+
+1. **Which AI do you already use?** A person who never connected an AI gets this question first, with nothing chosen
+   for them: the twelve tools, plus **A model on this computer** (Flint's brain: Ollama, or LM Studio's local address),
+   **A free one** (the small model in the browser, or the copy-and-paste bridge) and **I don't have one** (Flint with
+   no AI, then the same two free options). None of these makes a member or a key.
+2. **What it may do.** Three choices, each only a set of the existing permissions (`PRESETS` in server/inviteagent.js):
+   *Just answer me* = chat. *Help build, ask before big changes* = chat, docs, tasks, files, approvals (not website).
+   *Work on its own on tasks I give it* = all six. The boxes stay under it for a custom mix. A choice made before Copy
+   is sent with the POST (`preset`), so the helper starts with it. It acts as you and never above your own role.
+3. **Connect it.** The setup text from the table above, then "Waiting for your Cursor to say hello…".
+4. **It says hello.** The first MCP call (`seen`) turns the line into a welcome: its face (kind glyph, a colour from the
+   app's palette, an "about" line), one gentle line on what it is doing (from its presence: "reading the code",
+   "in chat", "resting until you start it"), a first job (three ready ones, sent on its private line and opened in the
+   private panel), a first-day list, and where to find it (private panel, Agents page, @name in a channel).
+
+A returning person lands on the helper they have; **Show me the setup again** is the main action and re-keys the same
+member (one per person per tool). Pause stops it at once; Remove makes it leave. Flint opens the same sheet for
+"connect my AI", "how do I add Cursor", "what can my AI do here" and "disconnect it".
+
+Two rules with tests of their own (e2e_ai_invite2.py): the key is shown once (never in a GET, never to another member,
+only its hash on disk, not in the log), and a helper can never change what it may do (the route is people-only, over
+HTTP and through `tribe_api`).
+
+**Re-checked on 2026-11-14** (read from each maker's page that day; nothing was run against the real products):
+
+| Tool | What was confirmed | Source |
+|---|---|---|
+| Claude Code | `claude mcp add --transport http <name> <url> --header "Authorization: Bearer …"`; `claude mcp remove <name>`; `/mcp` shows the status | https://code.claude.com/docs/en/mcp |
+| Claude on the web / Desktop connectors | Customize › Connectors › "+ Add" › "Add custom connector": a name and a URL; it usually signs in with OAuth; on every plan (Free: one) | https://support.claude.com/en/articles/11175166-get-started-with-custom-connectors-using-remote-mcp |
+| Cursor | `.cursor/mcp.json` or `~/.cursor/mcp.json`: `mcpServers.<name> { url, headers }`; OAuth with PKCE when there is no header | https://cursor.com/docs/mcp |
+| Codex CLI | `~/.codex/config.toml` `[mcp_servers.<name>]` with `url`, `http_headers`, `bearer_token_env_var`; `codex mcp login <name>`; `/mcp` | https://developers.openai.com/codex/mcp (now redirects to learn.chatgpt.com/docs/extend/mcp) |
+| Gemini CLI | `gemini mcp add -s user -t http -H "Authorization: Bearer …" <name> <url>`; settings.json `httpUrl` + `headers` | https://github.com/google-gemini/gemini-cli/blob/main/docs/tools/mcp-server.md |
+| VS Code | `.vscode/mcp.json`: `servers.<name> { type: "http", url, headers }` is still documented | https://code.visualstudio.com/docs/agents/reference/mcp-configuration |
+
+Not confirmed on 2026-11-14, said plainly:
+
+- **ChatGPT**: no OpenAI page could be read this time either (only third-party write-ups came up), so its steps stand as
+  written on 2026-11-13 and are **unverified**.
+- **Claude Desktop** (the `claude_desktop_config.json` file), **Windsurf**, **Cline**, **Zed**: not re-read; last
+  checked 2026-11-13.
+- **Codex CLI**: the page shows `codex mcp add <name> --url <url>` only together with OAuth flags, so the two folded
+  one-liners are still **unverified**; the main `config.toml` block is confirmed.
+- **VS Code**: the page calls `.vscode/mcp.json` the older place for new Copilot setups and prefers a file with a
+  top-level `mcpServers`. The main block still works as documented; the fold offers the newer file, fields assumed.
+- **A model on this computer / A free one / I don't have one** are TribeCode's own features (Flint's brain, the
+  bridge), not third-party setups: a local model does not join as a member of its own.
+
 **Sign-in for apps that sign in** (`server/agentauth.js`). Standard MCP authorization, nothing product-specific. The
 tribe host is its own small authorization server, following the MCP authorization spec (2025-11-25): OAuth 2.1
 authorization code with PKCE (S256 only), public clients, dynamic client registration, and the two discovery documents.

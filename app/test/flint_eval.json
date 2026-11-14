@@ -2296,7 +2296,27 @@
   },
   {
    "t": "connect my ai",
-   "i": "connect.ai",
+   "i": "invite.agent",
+   "ctx": "g"
+  },
+  {
+   "t": "how do i add cursor",
+   "i": "invite.agent",
+   "ctx": "g"
+  },
+  {
+   "t": "what can my ai do here",
+   "i": "agent.can",
+   "ctx": "g"
+  },
+  {
+   "t": "disconnect it",
+   "i": "agent.disconnect",
+   "ctx": "g"
+  },
+  {
+   "t": "remove my cursor",
+   "i": "agent.disconnect",
    "ctx": "g"
   },
   {

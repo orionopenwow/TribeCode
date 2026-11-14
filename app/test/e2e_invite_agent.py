@@ -109,21 +109,22 @@ def main():
             htok = pg.evaluate("TribeStore.get().server.token"); host_id = pg.evaluate("TribeClient.state().me.id")
             pg.evaluate("localStorage.removeItem('tribecode.inviteclaude.kind')")
             shut = lambda: pg.evaluate("TribeInviteClaude.close()")   # the first name of TribeInviteAgent still works
-            opened = lambda: pg.wait_for_selector("#invite-modal:not(.hidden) #ic-body #ic-status", timeout=10000)   # the one invite sheet, on Your AI agent
+            opened = lambda: pg.wait_for_selector("#invite-modal:not(.hidden) #ic-body .ic-q", timeout=10000)   # the one invite sheet, on An AI helper
             on_pick = lambda k: pg.wait_for_selector(f"#invite-modal:not(.hidden) #ic-body [data-ic-kind='{k}'].on", timeout=10000)
 
             # ---------- the sheet from the sidebar row ----------
             assert "Invite your agent" in pg.text_content("#sf-claude")
             pg.click("#sf-claude"); opened()
-            assert pg.evaluate("TribeInvite.state().who") == "agent" and "Your AI agent" in pg.text_content("#io-who-agent")
-            pg.wait_for_selector("#ic-body [data-ic-text='code']")
+            assert pg.evaluate("TribeInvite.state().who") == "agent" and "An AI helper" in pg.text_content("#io-who-agent")
+            assert pg.text_content("#ic-body .ic-qt") == "Which AI do you already use?" and pg.locator("#ic-body [data-ic-kind].on").count() == 0, "a first-timer gets the question, with nothing chosen"
+            pg.evaluate("document.querySelector(\"#ic-body .ic-kinds [data-ic-kind='code']\").click()"); pg.wait_for_selector("#ic-body [data-ic-text='code']")
             # the picker: every agent, each with a glyph of its kind
-            picks = pg.eval_on_selector_all("#ic-body [data-ic-kind]", "els => els.map(e => [e.dataset.icKind, e.dataset.icFamily, e.textContent.trim(), !!e.querySelector('svg')])")
+            picks = pg.eval_on_selector_all("#ic-body .ic-kinds [data-ic-kind]", "els => els.map(e => [e.dataset.icKind, e.dataset.icFamily, e.textContent.trim(), !!e.querySelector('svg')])")
             assert [x[0] for x in picks] == ["code", "desktop", "web", "cursor", "codex", "chatgpt", "gemini", "vscode", "windsurf", "cline", "zed", "other"], picks
             assert all(x[3] for x in picks) and picks[3][2] == "Cursor" and picks[-1][2] == "Something else", picks
             # each one's setup: numbered steps, this tribe's /mcp address, the key masked, one line on how it behaves
             for k, fam, name, _ in picks:
-                pg.click(f"#ic-body [data-ic-kind='{k}']"); on_pick(k)
+                pg.evaluate("k => document.querySelector(`#ic-body .ic-kinds [data-ic-kind='${k}']`).click()", k); on_pick(k)
                 if k in ("web", "chatgpt"):   # they connect from their maker's cloud: no public address here, so nothing to paste yet
                     assert "public https" in pg.text_content("#ic-body .ic-need") and name.split(" on ")[0] in pg.text_content("#ic-body .ic-need"), k
                     continue
@@ -135,7 +136,7 @@ def main():
                 assert "Nothing is made yet" in pg.text_content("#ic-status") and "Campw's " in pg.text_content("#ic-body .lead"), k
             assert "Campw's agent" in pg.text_content("#ic-body .lead") and pg.locator("#ic-bridge").count() == 1, "Something else: the generic setup and the copy-and-paste bridge"
             assert not [x for x in ok(api("/members", token=htok))["members"] if x["role"] == "agent"], "looking at every setup makes nothing"
-            pg.click("#ic-body [data-ic-kind='code']"); on_pick("code")
+            pg.evaluate("document.querySelector(\"#ic-body .ic-kinds [data-ic-kind='code']\").click()"); on_pick("code")
             # nothing is made when the sheet opens: the key is masked and there is no Claude member yet
             assert "••••" in pg.text_content("#ic-body [data-ic-text='code']") and "Nothing is made yet" in pg.text_content("#ic-status")
             assert not [x for x in ok(api("/members", token=htok))["members"] if x["role"] == "agent"], "no Claude before Copy"
@@ -153,16 +154,16 @@ def main():
             pg.wait_for_selector("#ic-body .ic-steps li.now")
             assert "paste it in your terminal" in pg.text_content("#ic-body .ic-steps").lower()
             # Claude Desktop: the config carries the same URL and key, and can be downloaded
-            pg.click("#ic-body [data-ic-kind='desktop']")
+            pg.evaluate("document.querySelector(\"#ic-body .ic-kinds [data-ic-kind='desktop']\").click()")
             cfg = json.loads(pg.text_content("#ic-body [data-ic-text='desktop']"))
             srvc = cfg["mcpServers"]["tribecode"]
             assert srvc["env"]["TRIBE_TOKEN"] == key and srvc["args"][-1] == m.group(1), srvc
             with pg.expect_download() as dl: pg.click("#ic-dl")
             assert dl.value.suggested_filename == "claude_desktop_config.json"
             # Claude on the web: no public https address here, so it explains and offers "Work with friends anywhere"
-            pg.click("#ic-body [data-ic-kind='web']")
+            pg.evaluate("document.querySelector(\"#ic-body .ic-kinds [data-ic-kind='web']\").click()")
             assert "public https" in pg.text_content("#ic-body .ic-need") and pg.locator("#ic-public").is_visible()
-            pg.click("#ic-body [data-ic-kind='code']")
+            pg.evaluate("document.querySelector(\"#ic-body .ic-kinds [data-ic-kind='code']\").click()")
 
             # ---------- it connects: joined, hello in chat, People with the AI badge ----------
             st, j = mcp(key, "initialize", {"protocolVersion": "2025-06-18", "clientInfo": {"name": "claude-code"}})

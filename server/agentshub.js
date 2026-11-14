@@ -56,13 +56,13 @@ const PICKS = [
   { id: 'web', kind: 'claude', tool: 'claude-ai', name: 'Claude on the web', sub: 'claude.ai', behaves: 'ask', signin: true },
   { id: 'cursor', kind: 'cursor', tool: 'cursor', name: 'Cursor', sub: 'The AI code editor', behaves: 'ask' },
   { id: 'codex', kind: 'codex', tool: 'codex', name: 'Codex CLI', sub: 'OpenAI\'s terminal agent', behaves: 'own' },
-  { id: 'chatgpt', kind: 'chatgpt', tool: 'chatgpt', name: 'ChatGPT', sub: 'A custom MCP server, on the web', behaves: 'ask', signin: true },
+  { id: 'chatgpt', kind: 'chatgpt', tool: 'chatgpt', name: 'ChatGPT', sub: 'chatgpt.com', behaves: 'ask', signin: true },
   { id: 'gemini', kind: 'gemini', tool: 'gemini', name: 'Gemini CLI', sub: 'Google\'s terminal agent', behaves: 'own' },
   { id: 'vscode', kind: 'vscode', tool: 'vscode', name: 'VS Code', sub: 'Copilot in Agent mode', behaves: 'ask' },
   { id: 'windsurf', kind: 'windsurf', tool: 'windsurf', name: 'Windsurf', sub: 'Cascade', behaves: 'ask' },
   { id: 'cline', kind: 'cline', tool: 'cline', name: 'Cline', sub: 'The open-source coding agent', behaves: 'own' },
   { id: 'zed', kind: 'zed', tool: 'zed', name: 'Zed', sub: 'The Agent Panel', behaves: 'ask' },
-  { id: 'other', kind: 'other', tool: 'mcp', name: 'Something else', sub: 'Any agent that speaks MCP', behaves: 'ask' },
+  { id: 'other', kind: 'other', tool: 'mcp', name: 'Something else', sub: 'Any other AI tool that can connect', behaves: 'ask' },
 ];
 const BEHAVES = { own: 'Answers @mentions on its own while a session is running.', ask: 'Checks TribeCode when you ask it.' };
 // Which kind a connected tool counts as (a Connect-your-AI key, or the name an app registered under when it signed in).

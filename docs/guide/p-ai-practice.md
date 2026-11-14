@@ -21,9 +21,14 @@ One task, one change you can read in a few minutes. Big requests give big change
 2. Open the preview and try it, at phone size too.
 3. Approve, or reply with what is wrong. If it broke something, go back a version first.
 
+## Change what a helper may do
+
+Open **Invite**, choose **An AI helper** and pick the helper. Choose one of the three, or tick single boxes: chat, docs, tasks, files, website, approvals. It applies at once. Ask Flint "what can my AI do here" for the short version.
+
 ## Several helpers
 
-- Give each one a role and an area, so two helpers do not edit the same thing.
+- One helper per tool for each person: your Claude, your Cursor. Connecting again reuses the same one.
+- Give each one an area, so two helpers do not edit the same thing.
 - Put their work on the Task Board like anyone else's.
 - The agents channel shows what they are doing and where they clash.
 
@@ -39,4 +44,4 @@ Helpers do better when the project says what it is: a clear vision, up-to-date t
 
 ## Privacy
 
-Check what a helper can read before you connect it. Keep keys and passwords out of the project's files.
+Check what a helper can read before you connect it. Keep keys and passwords out of the project's files. A helper's key is shown once, to you only. Nobody else in the project can see it.

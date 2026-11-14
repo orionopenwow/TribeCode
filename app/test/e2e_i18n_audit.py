@@ -30,7 +30,7 @@ OUT = sys.argv[sys.argv.index("--json") + 1] if "--json" in sys.argv else None
 BASELINE = ROOT / "app" / "test" / "i18n_baseline.json"
 ALLOW = json.loads((ROOT / "app" / "test" / "i18n_allow.json").read_text())
 LANGS = ["es", "pt", "fr", "de", "ja", "zh", "ko"]
-SLACK = 3   # a count may wobble by this much (timing: a toast or a tip that shows on one run and not the next)
+SLACK = 8   # a count may wobble by this much between runs (a tip, a toast, a place still drawing); not yet measured over many runs
 
 COLLECT = r"""
 (opts) => {

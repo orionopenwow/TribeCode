@@ -218,8 +218,10 @@ def main():
 
             # ---------- 4. Ask an agent: queued for the next agent, taken over MCP ----------
             mp.evaluate("TribeAskAgent.open({ text: 'Add a pause menu with resume and quit' })")
-            mp.wait_for_selector("#aa-send"); mp.click("#aa-send")
-            mp.wait_for_selector("#invite-modal", state="hidden")
+            # Maya has an agent of her own (step 1), so Ask an agent opens her private panel (chat-for-people); the tribe's queue is the API's
+            mp.wait_for_selector("#aa-send"); assert mp.locator("#aa-mine").count() == 1, "with an agent of your own, asking is private"
+            mp.evaluate("document.querySelector('#invite-modal').classList.add('hidden')")
+            r3 = api("/coord/asks", "POST", {"text": "Add a pause menu with resume and quit"}, token=mtok); assert r3[0] == 200, r3
             asks = api("/coord/asks", token=htok)[1]["asks"]; assert asks and asks[0]["title"] == "Add a pause menu with resume and quit" and asks[0]["status"] == "open", asks
             hid = asks[0]["id"]
             err, lane = tool(mkey, "my_lane"); assert hid in lane, lane

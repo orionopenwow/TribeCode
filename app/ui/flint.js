@@ -54,7 +54,10 @@
     connect: () => App() && App().connectClaude && App().connectClaude(),
     brain: () => (B() ? B().open() : ACTS.guide('agents-and-office')),
     credits: () => window.TribePremium && window.TribePremium.gate('credits'),   // feat/flint-site: the one AI-boost pair (aiboost.js)
-    guide: slug => window.TribeGuide && window.TribeGuide.open(slug || undefined),
+    guide: slug => window.TribeGuide && (slug ? window.TribeGuide.open(slug) : window.TribeGuide.home ? window.TribeGuide.home() : window.TribeGuide.open()),
+    quick: id => window.TribeQuick && window.TribeQuick.open(id || undefined),   // feat/learn: quick guides (quickguides.js)
+    quickdo: id => window.TribeQuick && window.TribeQuick.run(id),
+    quickshow: id => window.TribeQuick && window.TribeQuick.show(id),
     note: id => { if (Hub() && Hub().openNote) Hub().openNote(id); else if (Hub()) Hub().open('docs'); },
     newnote: () => { const b = $('#room-note-new'); if (b) b.click(); else if (Hub()) Hub().open('docs'); },
     nav: v => { if (v === 'hub') return Hub() ? Hub().open('home') : App().show('hub'); if (v === 'guide') return ACTS.guide(); if (v === 'settings') return window.TribeSettings && window.TribeSettings.open(); if (v === 'whiteboard') return window.TribeWhiteboard && window.TribeWhiteboard.open();   /* feat/whiteboard */ App().show(v); },
@@ -231,6 +234,7 @@
   }
   let localBusy = false, llmBusy = false;
   async function special(text) {   // the feature routers that know their own phrases (memory, company, academy, captures)
+    if (window.TribeQuick && window.TribeQuick.flint) { const r = await window.TribeQuick.flint(text); if (r) { say(r.text, (r.acts || []).map(x => act(x[0], x[1], x[2])), r.extra); return true; } }   // feat/learn: quick guides, what should I learn next, resume
     if (window.TribeNextStep && window.TribeNextStep.flint) { const r = await window.TribeNextStep.flint(text); if (r) { say(r.text, (r.acts || []).map(x => act(x[0], x[1], x[2]))); return true; } }   // feat/help-next: what should I do next, I'm stuck, what can I make, how do I ship this
     if (window.TribeFlintGrow && await window.TribeFlintGrow.flint(text)) return true;   // feat/flint-ai: grow your idea, resources, today's plan, the inspiration board, your style
     if (window.TribeFlintRun) { const r = await window.TribeFlintRun.flint(text); if (r) { if (r !== true) say(r.text, r.acts || []); return true; } }   // feat/flint-runthrough: tribe/project/vision/proposal/standup/presentation/proof/Blender
@@ -244,7 +248,7 @@
   // the specific phrases the routes below handle well on their own (flintlocal.js lets them keep those)
   const LEGACY = ['inviteClaude', 'status', 'summarize', 'helper', 'connect', 'hosting', 'website', 'focus', 'prompt', 'preview', 'inspo', 'dress', 'asset', 'make', 'customize', 'task', 'note', 'doStep', 'nav'];
   const legacyHit = raw => { const text = String(raw || '').trim().replace(/\s+/g, ' '), t = text.toLowerCase(); return LEGACY.some(k => { const m = RX[k].exec(k === 'inspo' ? text : t); return m && (k !== 'task' || (m[1] && m[1].trim())); }); };
-  const LH = { clear: () => (sink && sink.clearAll ? sink.clearAll() : clear()), say: (text, acts, extra) => say(text, acts || [], extra), act, legacy: text => legacyRoute(text, false, true), special, legacyHit, task: (title, extra, quiet) => task(title, extra, quiet), guide: async t => { const g = await guideSearch(t); return g ? guideReply(g) : null; }, modelOnline: () => !!model.online && !(B() && B().choice() === 'none') };
+  const LH = { clear: () => (sink && sink.clearAll ? sink.clearAll() : clear()), say: (text, acts, extra) => say(text, acts || [], extra), act, legacy: text => legacyRoute(text, false, true), special, legacyHit, task: (title, extra, quiet) => task(title, extra, quiet), guide: async t => { const Q = window.TribeQuick; if (Q) { await Q.load(); const c = Q.answer(t); if (c) return say(c.text, c.acts.map(x => act(x[0], x[1], x[2])), c.extra); } const g = await guideSearch(t); return g ? guideReply(g) : null; }, modelOnline: () => !!model.online && !(B() && B().choice() === 'none') };
   async function legacyRoute(raw, specialsDone, viaLocal) {
     const text = String(raw || '').trim().replace(/\s+/g, ' '), t = text.toLowerCase();
     let m;
@@ -253,7 +257,7 @@
     if (RX.status.test(t)) return status();
     if (RX.summarize.test(t)) return summarize();
     if (RX.helper.test(t)) return helper(t);
-    if (RX.connect.test(t)) { if (agentKindIn(t)) return inviteClaude(t); ACTS.connect(); return say('Let\'s get your AI into the room: Claude Code, Codex, Gemini CLI, Cursor or any MCP tool. I opened the connect steps: one command or one config on your computer and it joins.', [act('Show the steps again', 'connect'), act('How it works', 'guide', 'connect-claude-code')]); }
+    if (RX.connect.test(t)) return inviteClaude(t);   // one way in: Bring an AI helper
     if (RX.hosting.test(t)) return hosting(t);
     if (RX.website.test(t)) return website(t);
     if (RX.focus.test(t)) return focusReply();
@@ -360,9 +364,9 @@
   const agentKindIn = t => { const w = AGENT_WORDS.find(x => x[1].test(String(t || '').toLowerCase())); return w ? w[0] : null; };
   function inviteClaude(t) {
     const kind = agentKindIn(t), name = kind ? AGENT_WORDS.find(x => x[0] === kind)[2] : '';
-    if (!connected()) return say(`Your ${name || 'agent'} joins a tribe. Host one on this computer or join a friend first.`, [act('Host or join', 'invite')]);
+    if (!connected()) return say(`Your ${name || 'AI helper'} joins a tribe. Host one on this computer or join a friend first.`, [act('Host or join', 'invite')]);
     ACTS.inviteagent(kind || undefined);
-    return say(name ? `Here's your ${name}'s invite. Copy what it shows into ${name} and it joins next to you, with your access and never more.` : 'Here\'s the invite for your AI agent. Pick which one (Claude, Cursor, Codex, ChatGPT, Gemini…), copy what it shows, and it joins next to you, with your access and never more.', [act('Open it again', 'inviteagent', kind || undefined)]);
+    return say(name ? `Here's how to bring your ${name} in. Choose what it may do, copy what it shows into ${name}, and it says hello here. It acts as you, with your access and never more.` : 'I opened Bring an AI helper. Pick the AI you already use (or "I don\'t have one"), choose what it may do, and copy the one thing it shows. It says hello here when it connects, and it acts as you, with your access and never more.', [act('Open it again', 'inviteagent', kind || undefined)]);
   }
   function invite() { ACTS.invite(); if (FF()) later(300, () => { const ib = seen('#invite-body'); if (ib) FF().done(ib, 'Invite ready'); }); return say(connected() ? 'Here\'s your invite. Send the link to a friend: they tap it, type a name, and they\'re in.' : 'Invites come from a tribe. Host one on this computer first, then invite friends.', [act('Open invite again', 'invite'), act('How invites work', 'guide', 'projects-and-invites')]); }
   function hosting(t) {

@@ -64,5 +64,19 @@
    "overflow": 0,
    "untranslated": 1247
   }
+ },
+ "quick": {
+  "ja": {
+   "attrs": 388,
+   "dates": 45,
+   "flint": 1,
+   "mixed": 0,
+   "overflow": 2,
+   "untranslated": 1241
+  },
+  "static": {
+   "dup_diff": 0,
+   "short": 0
+  }
  }
 }

@@ -25,7 +25,7 @@
 // docs/ANY-LLM.md all document an https or a loopback redirect.
 // Who approves: the member signed in on the consent page's own address. A host who uses the app on localhost while
 // the app opens the public address isn't signed in there, so the page also shows a short code to type in the app
-// (Invite › Your AI agent); the app shows who is asking before Approve.
+// (Invite › An AI helper); the app shows who is asking before Approve.
 // What a token is: an access token (1 hour) and a refresh token (30 days, rotated on every use), random, kept only as
 // sha256 hashes in .tribe/claude-oauth.json (the file keeps its name). An access token signs in as the person's invited
 // agent of that kind, so every rule in server/inviteagent.js applies (their access and never more, scopes, Pause,

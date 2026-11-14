@@ -70,6 +70,28 @@
     .lx-words dl { grid-template-columns: 1fr; }
   }
   @media (prefers-reduced-motion: reduce) { .lx-card { animation: none; } }
+  /* quick guides: the same cards the app shows (site/quick-guides.json, written by scripts/dev/site-quick.js) */
+  .qk { max-width: 1120px; margin: 0 auto; padding: 8px 24px 64px; }
+  .qk-h { display: flex; align-items: end; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin-bottom: 14px; }
+  .qk-h .k { color: var(--ember); font: 600 12px/1 var(--mono, ui-monospace, monospace); letter-spacing: .06em; text-transform: uppercase; }
+  .qk-h h2 { margin: 6px 0 4px; color: var(--text); font-size: clamp(22px, 2.4vw, 28px); letter-spacing: -.02em; }
+  .qk-h p { margin: 0; color: var(--muted); font-size: 15px; max-width: 60ch; line-height: 1.6; }
+  .qk-q { flex: 1; min-width: 220px; max-width: 360px; height: 44px; padding: 0 14px; border: 1px solid var(--edge); border-radius: 10px; background: var(--surface); color: var(--text); font: inherit; font-size: 15px; }
+  .qk-q:focus-visible { outline: 2px solid var(--ember); outline-offset: 2px; }
+  .qk-g { margin: 22px 0 8px; color: var(--muted); font: 600 12px/1 var(--mono, ui-monospace, monospace); letter-spacing: .06em; text-transform: uppercase; }
+  .qk-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; align-items: start; }
+  .qk-card { border: 1px solid var(--edge); border-radius: 12px; background: var(--surface); }
+  .qk-card summary { cursor: pointer; list-style: none; padding: 13px 16px; color: var(--text); font-weight: 600; font-size: 15px; min-height: 44px; display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+  .qk-card summary::-webkit-details-marker { display: none; }
+  .qk-card summary small { color: var(--muted); font: 500 12px/1 var(--mono, ui-monospace, monospace); white-space: nowrap; }
+  .qk-card[open] { border-color: color-mix(in srgb, var(--ember) 55%, var(--edge)); }
+  .qk-b { padding: 0 16px 14px; }
+  .qk-b p { margin: 0 0 10px; color: var(--muted); font-size: 14.5px; line-height: 1.6; }
+  .qk-b ol { margin: 0 0 12px; padding-left: 20px; color: var(--text); font-size: 14.5px; line-height: 1.6; }
+  .qk-b a { color: var(--ember); font-weight: 600; font-size: 14px; }
+  .qk-none { color: var(--muted); font-size: 15px; }
+  @media (max-width: 980px) { .qk-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  @media (max-width: 640px) { .qk { padding: 8px 16px 48px; } .qk-grid { grid-template-columns: 1fr; } .qk-q { max-width: none; flex-basis: 100%; } }
   /* ===== lesson scenes (learn-art.js): the hero widget's look, small ===== */
   .lv { position: relative; overflow: hidden; border: 1px solid #2A313C; border-radius: 16px; background: #0F1318 url(assets/art/stage-night.svg) center 78% / cover no-repeat; padding: 14px 16px 18px; isolation: isolate; font-family: Inter, system-ui, sans-serif; }
   .lv::before { content: ""; position: absolute; inset: 0; background: rgba(12, 15, 20, .55); z-index: -1; }
@@ -235,6 +257,34 @@
     <details class="lx-words"><summary>📖 Words to know</summary><dl id="lx-words"></dl></details>
   </section>
 </main>
+<section class="qk" id="quick" aria-labelledby="qk-title">
+  <div class="qk-h"><div><span class="k">Quick guides</span><h2 id="qk-title">How do I…?</h2><p>One screen each: a few steps, then you are done. In the app every card also has a button that does it for you and a Show me that points at the real thing.</p></div>
+    <input class="qk-q" id="qk-q" type="search" placeholder="Search: invite, publish, undo…" aria-label="Search quick guides" autocomplete="off"></div>
+  <div id="qk-out" aria-live="polite"></div>
+</section>
+<script>
+(function () {
+  'use strict';
+  // the same cards as the app: site/quick-guides.json is generated from templates/quickguides.json.
+  // Titles are translated (site/lang/*.json); the steps are English for now, so they are marked data-no-i18n.
+  const out = document.getElementById('qk-out'), box = document.getElementById('qk-q');
+  const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const card = g => `<details class="qk-card" data-qk="${esc(g.id)}"><summary>${esc(g.title)}</summary><div class="qk-b"><div data-no-i18n lang="en"><p>${esc(g.intro)}</p><ol>${g.steps.map(x => `<li>${esc(x)}</li>`).join('')}</ol></div><a href="app/?welcome=1" data-open-app>Try it in the app</a></div></details>`;
+  fetch('quick-guides.json').then(r => r.json()).then(d => {
+    const draw = () => {
+      const q = box.value.trim().toLowerCase(), hit = g => !q || q.split(/\s+/).every(w => `${g.title} ${g.asks.join(' ')} ${g.intro} ${g.steps.join(' ')}`.toLowerCase().includes(w));
+      const list = d.guides.filter(hit);
+      out.innerHTML = !list.length ? '<p class="qk-none">Nothing for that yet. Try another word.</p>'
+        : q ? `<div class="qk-grid">${list.map(card).join('')}</div>`
+        : d.groups.map(([id, name]) => { const gs = list.filter(g => g.group === id); return gs.length ? `<h3 class="qk-g">${esc(name)}</h3><div class="qk-grid">${gs.map(card).join('')}</div>` : ''; }).join('');
+      document.documentElement.dataset.quickShown = String(list.length);
+    };
+    box.addEventListener('input', draw); draw();
+    document.documentElement.dataset.quick = String(d.guides.length);
+    const h = /^#quick-([a-z-]+)$/.exec(location.hash), el = h && out.querySelector(`[data-qk="${h[1]}"]`); if (el) { el.open = true; el.scrollIntoView({ block: 'center' }); }
+  }).catch(() => { out.innerHTML = '<p class="qk-none">The quick guides could not load. They are also in the app, under the ? button.</p>'; });
+})();
+</script>
 <footer class="footer"><div class="wrap footer__legal mono"><p>© 2026 TribeCode contributors · MIT</p><p>Claude and Claude Code are products of Anthropic. TribeCode is an independent project that works with them.</p></div></footer>
 <script src="learn-art.js?v=0.32.0"></script>
 <script>

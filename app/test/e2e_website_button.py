@@ -103,6 +103,37 @@ def main():
             assert pg.locator("#wb-started").is_hidden()
             t = preview_site(); assert EMPTY in t, t
             pg.evaluate("TribePreview.close && TribePreview.close()")
+
+            # feat/setup-github: the Website tab draws no orange line down the window. The preview card is a hero card;
+            # its accent stripe is positioned against the card, so the card must stay positioned at every width.
+            for w in (1360, 1100, 900, 390):
+                pg.set_viewport_size({"width": w, "height": 900}); website(draft); pg.wait_for_timeout(300)
+                r = pg.evaluate("""(() => { const c = document.querySelector('#view-website .wb-preview'), cs = getComputedStyle(c), b = c.getBoundingClientRect();
+                    const loose = [...document.querySelectorAll('.hero-card')].filter(e => e.offsetParent && getComputedStyle(e).position === 'static').map(e => e.className);
+                    return { pos: cs.position, stripe: getComputedStyle(c, '::before').position, left: Math.round(b.left), loose }; })()""")
+                assert r["pos"] in ("relative", "sticky") and r["stripe"] == "absolute" and not r["loose"], (w, r)
+                if w > 820: assert r["left"] > 200, (w, r)   # the card (and so its stripe) sits in the page, not at the window's edge
+            pg.set_viewport_size({"width": 1360, "height": 900})
+
+            # Files › Websites: the project's website shows as a card with a live preview; none yet: a proper empty state
+            def files_sites(pid):
+                pg.evaluate("TribePreview.close && TribePreview.close()")
+                pg.evaluate(f"TribeProjects.switchTo('{pid}', 'home')"); pg.wait_for_timeout(700)
+                pg.evaluate("TribeApp.show('docs')"); pg.wait_for_selector(".fx-tabs [data-dk='sites']", timeout=10000)
+                pg.click(".fx-tabs [data-dk='sites']"); pg.wait_for_timeout(900)
+            files_sites(draft)
+            pg.wait_for_selector("#fg-site", timeout=8000)
+            assert "Ember Cafe" in pg.inner_text("#fg-site-title") and "Last saved" in pg.inner_text("#fg-site-meta") and "Not published yet" in pg.inner_text("#fg-site-meta")
+            fr = pg.locator("#fg-site-pv iframe"); assert fr.count() == 1 and "/website/draft" in fr.get_attribute("src") and fr.get_attribute("sandbox") == "", "a live preview, with scripts off"
+            assert pg.inner_text("#fg-site-open") == "Open in the website builder" and pg.inner_text("#fg-site-pub") == "Publish"
+            assert pg.locator("#fg-empty").count() == 0 and pg.inner_text(".fx-tabs [data-dk='sites'] [data-n]") == "1"
+            pg.click(".fx-tabs [data-dk='all']"); pg.wait_for_selector(".fx-card[data-site]", timeout=5000)   # and it is one of the files under All
+            pg.click(".fx-tabs [data-dk='sites']"); pg.wait_for_selector("#fg-site")
+            pg.click("#fg-site-open"); pg.wait_for_selector("#view-website:not(.hidden) #wb-root", timeout=10000)
+            files_sites(built); pg.wait_for_selector("#fg-site", timeout=8000)
+            assert "/website/preview" in pg.get_attribute("#fg-site-pv iframe", "src") and "Built" in pg.inner_text("#fg-site-meta")
+            files_sites(none); pg.wait_for_selector("#fg-empty", timeout=8000)
+            assert pg.locator("#fg-site").count() == 0 and "No websites yet" in pg.inner_text("#fg-empty") and pg.locator("#fg-empty [data-empty-new='site']").count() == 1
             b.close()
         errs = [e for e in errors if "ResizeObserver" not in e and "sandboxed" not in e]
         assert not errs, errs

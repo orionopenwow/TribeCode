@@ -1,5 +1,7 @@
 # Help, guide and "what next" (feat/help-next)
 
+> Since feat/learn the Help center is called **Learn** and starts with quick guides and My progress; the ? menu has a seventh entry, Quick guides. See `docs/LEARN-ASSESSMENT.md`.
+
 ## The problem
 
 The ? menu had 15 entries sorted by what we built (tour, demo, run-through, three set-up pages, four links). A newcomer could not tell which one answers "I do not know what to do now", and nothing took a person from an idea to a published link at the depth they need.

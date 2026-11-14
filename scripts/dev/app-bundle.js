@@ -25,7 +25,7 @@ const templates = lib.catalog().map(x => ({ ...x, thumb: fs.existsSync(path.join
 if (!templates.length) { console.error('app-bundle: no website templates found in templates/sites'); process.exit(1); }
 
 const files = {
-  'guide-pages.json': JSON.stringify({ pages, paths: guide.paths() }) + '\n',
+  'guide-pages.json': JSON.stringify({ pages, paths: guide.paths(), quick: guide.quick() }) + '\n',
   'site-library.json': JSON.stringify({ templates, categories: lib.CATEGORIES }) + '\n',
 };
 const check = process.argv.includes('--check');

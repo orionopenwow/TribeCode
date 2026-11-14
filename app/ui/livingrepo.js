@@ -283,30 +283,14 @@
   }
 
   // ---------- GitHub (a synced copy of any home) ----------
+  // feat/setup-github: one flow for every door (ghconnect.js): sign in, pick or create, done.
   async function github(after, replace) {
     if (solo()) return L() && L().choose ? L().choose('github') : null;
     await load(true).catch(() => {});
-    const can = (cur.sync && cur.sync.can) || {}, st = (cur.sync && cur.sync.status) || {};
-    if (st.connected && !replace) return sync();
-    const s = sheet('lr-gh', 'Connect GitHub', `${head('Connect GitHub', 'Give it a synced copy on GitHub')}
-      <p class="ph-lead">The home stays the real thing. GitHub gets a copy when you back up, by hand or by itself. You can disconnect any time.</p>
-      <div id="lr-gh-sign" class="lr-gh-sign"><span class="faint">Checking for a GitHub sign-in…</span></div>
-      <label class="ph-lab" for="lr-gh-repo">Repository</label><input class="input" id="lr-gh-repo" placeholder="owner/name or https://github.com/owner/name" spellcheck="false">
-      <label class="ph-lab" for="lr-gh-branch">Branch</label><input class="input" id="lr-gh-branch" value="main" spellcheck="false">
-      <p class="ph-note">Nothing leaves this computer until you press Back up. Pick automatic backup in the settings after.</p>
-      <p class="tn-err ph-err" id="lr-gh-err" role="status" hidden></p>
-      <div class="ph-acts"><button type="button" class="btn" data-lr-close>Cancel</button><button type="button" class="btn primary" id="lr-gh-go" ${can.edit ? '' : 'disabled title="Only the host or the project lead connects GitHub"'}>Connect</button></div>`);
-    const G = L() && L().github && L().github.guide;
-    if (G) G.detect(true).then(d => { const box = $('#lr-gh-sign', s); if (!box) return; box.innerHTML = d.ready ? `<p class="lr-ok">✓ GitHub sign-in found (${esc(d.ready === 'gh' ? 'GitHub CLI' : d.ready === 'git' ? 'a git credential' : d.ready === 'browser' ? 'a token in this browser' : 'TribeCode’s GitHub sign-in')}).</p>` : `<details class="su-more lr-guide"><summary>No GitHub sign-in yet: how to add one</summary>${G.html(d)}</details>`; if (!d.ready && G.bind) try { G.bind(box, () => {}, () => github(after)); } catch {} }).catch(() => { const box = $('#lr-gh-sign', s); if (box) box.innerHTML = ''; });
-    else $('#lr-gh-sign', s).innerHTML = '';
-    const errf = t => { const e = $('#lr-gh-err', s); e.textContent = t || ''; e.hidden = !t; };
-    $('#lr-gh-go', s).onclick = async () => {
-      const repo = $('#lr-gh-repo', s).value.trim(); if (!repo) return errf('Type the repository as owner/name.');
-      $('#lr-gh-go', s).disabled = true;
-      try { await srv(`/projects/${encodeURIComponent(pid())}/sync`, { method: 'PUT', body: { kind: 'github', repo, branch: $('#lr-gh-branch', s).value.trim() || 'main' } }); closeSheet(); refresh(); if (after) after(); else sync(); }
-      catch (e) { $('#lr-gh-go', s).disabled = false; errf(e.message); }
-    };
-    return s;
+    const st = (cur.sync && cur.sync.status) || {};
+    if (st.connected && st.kind === 'github' && !replace) return sync();
+    if (window.TribeGitHubConnect) return window.TribeGitHubConnect.open({ pid: pid(), replace, after: () => { refresh(); if (after) after(); } });
+    return toast('Connect GitHub did not load. Reload the app.');
   }
 
   // ---------- Ship / sync settings (also a Settings section) ----------
@@ -495,16 +479,16 @@
     if (solo()) return L() && L().where ? L().where() : null;
     await load(true).catch(() => {});
     const pick = canPickFolder(), st = (cur.sync && cur.sync.status) || {};
-    const s = sheet('lr-where', 'Where it lives', `${head('Where it lives', 'Its home is its living repo')}
-      <p class="ph-lead">The home holds the real files. GitHub is an optional synced copy on top, for any home.</p>
+    const s = sheet('lr-where', 'Where it’s kept', `${head('Where it’s kept', 'Where should it be kept?')}
+      <p class="ph-lead">Pick where its files are kept. GitHub can be added on top as an extra copy.</p>
       <div class="ph-list">
-        <button type="button" class="ph-row" data-w="folder" ${pick.ok ? '' : 'aria-disabled="true"'}><span class="ph-ic">${ic('folder', 18)}</span><span class="ph-tt"><b>${cur.folder ? `Folder · ${esc(cur.folder.display)}` : 'A folder on this computer'}${desktop() ? ' <em class="ph-tag">Recommended</em>' : ''}</b><small>${pick.ok ? (cur.folder ? 'Move it to another folder' : 'Your own folder: edit here or in VS Code, both stay in step') : esc(pick.why)}</small></span></button>
-        ${o.onHost ? `<button type="button" class="ph-row" data-w="host"><span class="ph-ic">${ic('box', 18)}</span><span class="ph-tt"><b>Here, on the tribe’s host</b><small>One click: a living repo in the tribe’s own folder, with every change saved</small></span></button>` : ''}
+        ${o.onHost ? `<button type="button" class="ph-row" data-w="host"><span class="ph-ic">${ic('box', 18)}</span><span class="ph-tt"><b>On this computer</b><small>One click: TribeCode keeps it in its own folder, with every change saved</small></span></button>` : ''}
+        <button type="button" class="ph-row" data-w="folder" ${pick.ok ? '' : 'aria-disabled="true"'}><span class="ph-ic">${ic('folder', 18)}</span><span class="ph-tt"><b>${cur.folder ? `Folder · ${esc(cur.folder.display)}` : 'A folder you pick or create'}</b><small>${pick.ok ? (cur.folder ? 'Move it to another folder' : 'Its files go in a folder of yours on this computer. Edit them here or in any editor') : esc(pick.why)}</small></span></button>
+        <button type="button" class="ph-row" data-w="github"><span class="ph-ic live">${ic('git', 18)}</span><span class="ph-tt"><b>${st.connected && st.kind === 'github' ? `GitHub · ${esc(st.repo)}` : 'GitHub'}</b><small>${st.connected && st.kind === 'github' ? 'Connected. See when it was last backed up' : 'A copy on GitHub that friends can reach from anywhere'}</small></span></button>
         <button type="button" class="ph-row" data-w="shared" ${pick.ok ? '' : 'aria-disabled="true"'}><span class="ph-ic">${ic('net', 18)}</span><span class="ph-tt"><b>${st.connected && st.kind === 'folder' ? `Shared folder · ${esc(st.repo)}` : 'A shared folder'}</b><small>${pick.ok ? esc(SHARED_LINE) : esc(pick.why)}</small></span></button>
-        <button type="button" class="ph-row" data-w="github"><span class="ph-ic live">${ic('git', 18)}</span><span class="ph-tt"><b>${st.connected ? `GitHub · ${esc(st.repo)}` : 'Connect GitHub'}</b><small>${st.connected ? 'Backup settings' : 'A synced copy friends can reach from anywhere. Manual or automatic'}</small></span></button>
       </div>`);
     s.querySelector('[data-w="folder"]').onclick = () => (pick.ok ? folder({ pid: pid() }) : toast(pick.why));
-    s.querySelector('[data-w="github"]').onclick = () => (st.connected && st.kind === 'github' ? sync() : github(null, true));
+    s.querySelector('[data-w="github"]').onclick = () => { closeSheet(true); if (window.TribeGitHubConnect) window.TribeGitHubConnect.open({ pid: pid(), after: () => refresh() }); else github(null, true); };
     s.querySelector('[data-w="shared"]').onclick = () => (pick.ok ? sharedFolder() : toast(pick.why));
     const h = s.querySelector('[data-w="host"]'); if (h) h.onclick = () => { closeSheet(); o.onHost(); };
     return s;

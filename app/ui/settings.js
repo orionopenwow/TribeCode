@@ -115,7 +115,7 @@
   }
 
   // feat/shell-polish: a quiet stroke icon beside each row's name (app/ui/icons.js)
-  const SET_ICO = { Plan: 'bolt', Personalize: 'sparkle', Profile: 'user', Experience: 'sliders', Name: 'rename', Color: 'palette', Language: 'globe', Look: 'palette', 'Sidebar order': 'list', Folder: 'files', "Flint's brain": 'flame', 'Local brain': 'flame', 'Host on this computer': 'monitor', 'Open at login': 'monitor', 'Download updates in the background': 'download', 'Friends can ask my AI': 'people', GitHub: 'github', 'Save a copy': 'download', 'TribeCode MCP': 'plug', Chat: 'chat', 'Sign-in': 'key', 'Start fresh': 'refresh', 'Fix problems': 'wrench', 'Crash reports': 'bug', 'Agents in chat': 'agent', 'Starting modes': 'sliders', 'Roles &amp; privileges': 'shield', Packs: 'assets', Backup: 'cloud', 'Freesound sounds': 'media' };
+  const SET_ICO = { 'How we decide': 'shield', Plan: 'bolt', Personalize: 'sparkle', Profile: 'user', Experience: 'sliders', Name: 'rename', Color: 'palette', Language: 'globe', Look: 'palette', 'Sidebar order': 'list', Folder: 'files', "Flint's brain": 'flame', 'Local brain': 'flame', 'Host on this computer': 'monitor', 'Open at login': 'monitor', 'Download updates in the background': 'download', 'Friends can ask my AI': 'people', GitHub: 'github', 'Save a copy': 'download', 'TribeCode MCP': 'plug', Chat: 'chat', 'Sign-in': 'key', 'Start fresh': 'refresh', 'Fix problems': 'wrench', 'Crash reports': 'bug', 'Agents in chat': 'agent', 'Starting modes': 'sliders', 'Roles &amp; privileges': 'shield', Packs: 'assets', Backup: 'cloud', 'Freesound sounds': 'media' };
   const setIco = label => SET_ICO[label] ? `<span data-icon="${SET_ICO[label]}"></span>` : '';
   const slug = s => String(s).toLowerCase().replace(/&amp;/g, 'and').replace(/<[^>]+>/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 40);
   // One row: label and hint on the left, the control on the right. o: { id, keys (extra search words), wide }
@@ -215,6 +215,7 @@
     const desk = window.TribeHost.isDesktop;
     return sec('Sign-up and email', `${slot('set-signin-host')}${slot('set-resets')}${row('Accounts', '<span class="set-info">Off on this server</span>', 'Sign-up rules, password resets and email appear here when accounts are on (start the server with TRIBE_ACCOUNTS=1).', { id: 'set-signup-off', keys: 'smtp email open sign-up accounts' })}`, { note: 'Who can make an account here, and how TribeCode sends sign-in and notification email.' })
     + sec('People', `${on() ? row('Invites', '<button class="btn" id="set-invite">Invite people…</button>', 'A link or QR code to bring friends in, with the role they start as.', { keys: 'invite link qr join' }) : ''}
+      ${row('How we decide', '<button class="btn" id="set-groupstyle">Open</button>', 'One lead, a council or your own roles, and who can do what here.', { keys: 'council lead roles permissions who can vote decide words' })}
       ${canRoles() ? row('Roles &amp; privileges', '<button class="btn" id="set-roles">Manage</button>', 'Admins, 🛡️ mods and what each role can do.', { keys: 'permissions admin mod' }) : ''}
       ${canRoles() && window.TribeMode && on() ? row('Starting modes', '<div id="set-rolemodes"></div>', 'The experience each role starts with. Anyone can change their own.') : ''}
       ${on() && window.TribeModeration ? row('Moderation', '<button class="btn" id="set-mod">Reports &amp; word filter</button>', 'Reports from members, and words that show as •••• in every message.', { keys: 'reports filter ban moderate' }) : ''}`)
@@ -447,6 +448,7 @@
 
     // Tribe & admin
     click('#set-invite', () => { close(); window.TribeFlow ? window.TribeFlow.instant() : window.TribeApp.openInvite(); });
+    click('#set-groupstyle', () => { close(); window.TribeGroupStyle && window.TribeGroupStyle.open(); });
     click('#set-roles', () => { close(); window.TribeRoles.open(); });
     click('#set-mod', () => window.TribeModeration.openSafety());
     click('#set-host', async e => { const b = e.currentTarget; b.disabled = true; await window.TribeApp.setHosting(b.getAttribute('aria-checked') !== 'true'); draw(); });

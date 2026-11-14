@@ -12,13 +12,16 @@ const src = fs.readFileSync(FILE, 'utf8');
 const a = src.indexOf('const D = {'), b = src.indexOf("const KEY = 'tribecode.lang';");
 if (a < 0 || b < 0) { console.error('could not find the table'); process.exit(1); }
 const table = src.slice(a, b);
-const evalTable = t => new Function('return (' + t.slice(t.indexOf('{'), t.lastIndexOf('};') + 1) + ')')();
+const vm = require('vm');
+// the table as the app ends up with it (rows are also added after the big literal), from the whole file's text
+const evalTable = t => { const win = { addEventListener() {}, dispatchEvent() {} }; const ctx = { window: win, document: { body: null, documentElement: {}, addEventListener() {}, querySelectorAll: () => [] }, localStorage: { getItem: () => 'en', setItem() {} }, navigator: { language: 'en' }, NodeFilter: {}, MutationObserver: function () { this.observe = () => {}; this.disconnect = () => {}; }, CustomEvent: function () {}, Intl, console, performance: { now: () => 0 } }; vm.createContext(ctx); vm.runInContext(src.slice(0, a) + t + src.slice(b), ctx); return win.TribeI18n._table(); };
 const STR = '(?:"(?:[^"\\\\]|\\\\.)*"|\'(?:[^\'\\\\]|\\\\.)*\')';
 const ROW = new RegExp('(' + STR + ')\\s*:\\s*(\\[\\s*(?:' + STR + '\\s*,?\\s*)*\\])\\s*,?[ \\t]*\\n?', 'g');
 const lit = s => new Function('return ' + s)();
 const hits = [...table.matchAll(ROW)].map(m => ({ key: lit(m[1]), row: m[2], at: m.index, len: m[0].length }));
 const before = evalTable(table);
-if (new Set(hits.map(h => h.key)).size !== Object.keys(before).length) { console.error(`read ${new Set(hits.map(h => h.key)).size} keys, the table has ${Object.keys(before).length}: not touching it`); process.exit(1); }
+// rows the app adds in code (a few variants without their emoji) are not in the text; the proof below is what counts
+if (new Set(hits.map(h => h.key)).size < Object.keys(before).length - 20) { console.error('read far fewer rows than the table has: not touching it'); process.exit(1); }
 const byKey = new Map(); hits.forEach(h => { if (!byKey.has(h.key)) byKey.set(h.key, []); byKey.get(h.key).push(h); });
 const dups = [...byKey.entries()].filter(([, l]) => l.length > 1);
 const differ = dups.filter(([, l]) => new Set(l.map(h => JSON.stringify(lit(h.row)))).size > 1);   // by what the cells say, not how the row is spaced

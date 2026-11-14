@@ -14,10 +14,8 @@
     // ---- sections and navigation
     'Home': ['Inicio', 'Início', 'Accueil', 'Start', 'ホーム', '首页', '홈'],
     'Work': ['Trabajo', 'Trabalho', 'Travail', 'Arbeit', '仕事', '工作', '일'],
-    'Company': ['Empresa', 'Empresa', 'Entreprise', 'Firma', '会社', '公司', '회사'],
     'Invite': ['Invitar', 'Convidar', 'Inviter', 'Einladen', '招待', '邀请', '초대'],
     'Agents': ['Agentes', 'Agentes', 'Agents', 'Agenten', 'エージェント', '智能体', '에이전트'],
-    'Friends': ['Amigos', 'Amigos', 'Amis', 'Freunde', '友だち', '朋友', '친구'],
     'Workspace': ['Espacio de trabajo', 'Espaço de trabalho', 'Espace de travail', 'Arbeitsbereich', 'ワークスペース', '工作区', '워크스페이스'],
     'Notifications': ['Notificaciones', 'Notificações', 'Notifications', 'Benachrichtigungen', '通知', '通知', '알림'],
     'Accessibility': ['Accesibilidad', 'Acessibilidade', 'Accessibilité', 'Barrierefreiheit', 'アクセシビリティ', '无障碍', '접근성'],
@@ -66,7 +64,6 @@
     "Choose Flint's AI": ['Elegir la IA de Flint', 'Escolher a IA do Flint', 'Choisir l’IA de Flint', 'Flints KI wählen', 'FlintのAIを選ぶ', '选择 Flint 的 AI', 'Flint의 AI 선택'],
     'Flint has no AI yet': ['Flint aún no tiene IA', 'O Flint ainda não tem IA', 'Flint n’a pas encore d’IA', 'Flint hat noch keine KI', 'FlintにはまだAIがありません', 'Flint 还没有 AI', 'Flint에 아직 AI가 없어요'],
     'Flint · your helper': ['Flint · tu ayudante', 'Flint · seu ajudante', 'Flint · votre assistant', 'Flint · dein Helfer', 'Flint · あなたのヘルパー', 'Flint · 你的助手', 'Flint · 내 도우미'],
-    'AI helpers': ['Ayudantes de IA', 'Ajudantes de IA', 'Assistants IA', 'KI-Helfer', 'AIヘルパー', 'AI 助手', 'AI 도우미'],
     'Agent fleet': ['Flota de agentes', 'Frota de agentes', 'Flotte d’agents', 'Agentenflotte', 'エージェント一覧', '智能体队伍', '에이전트 목록'],
     'All caught up': ['Todo al día', 'Tudo em dia', 'Tout est à jour', 'Alles erledigt', 'すべて確認済み', '都处理完了', '모두 확인했어요'],
     'All clear': ['Todo en orden', 'Tudo certo', 'Tout va bien', 'Alles in Ordnung', '問題ありません', '一切正常', '문제없어요'],

@@ -12,7 +12,9 @@
   const C = window.TribeClient;
   const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const toast = m => window.TribeApp && window.TribeApp.toast && window.TribeApp.toast(m);
-  const roleName = t => (t === 'CEO' ? 'Lead' : t);
+  const leadWord = () => (a0 && a0.style === 'council' ? 'Council' : window.TribeGroupStyle ? window.TribeGroupStyle.words().lead || 'Lead' : 'Lead');
+  let a0 = null;   // the answers so far (for the lead's name)
+  const roleName = t => (t === 'CEO' ? leadWord() : t);
   // plain names for the starting shapes; anything new in the file falls back to its own name
   const KIND = { saas: 'An app or online tool', 'game-studio': 'A game', agency: 'Work for clients', creator: 'Videos, writing or a channel', local: 'A local shop or service', nonprofit: 'A cause or nonprofit', club: 'A club or community', blank: 'Something else, or not sure yet' };
   const STEPS = 4;
@@ -20,7 +22,10 @@
   function start({ sec, view, pid, me, done, cancel, skip }) {
     const tpls = (view.templates || []).slice().sort((a, b) => (a.id === 'blank') - (b.id === 'blank'));
     const proj = ((C.state() || {}).projects || []).find(p => p.id === pid) || {};
-    const a = { step: 1, tpl: '', name: proj.name || '', mission: '', who: {}, rhythms: { standup: true, weekly: true, board: true }, goal: '', target: '', busy: false };
+    const a = { step: 1, tpl: '', name: proj.name || '', mission: '', who: {}, rhythms: { standup: true, weekly: true, board: true }, goal: '', target: '', busy: false, style: (window.TribeGroupStyle && (window.TribeGroupStyle.view() || {}).style) || 'lead' };
+    a0 = a; const style0 = a.style;
+    // feat/group-styles: who has the final say is part of "Who does what?" (changeable later from the Company page)
+    const STYLE = [['lead', 'One lead', 'One person has the final say.'], ['council', 'A council', 'Big things pass when enough of you agree.'], ['open', 'Everyone building', 'Anyone can do most things.']];
     const tpl = () => tpls.find(t => t.id === a.tpl) || tpls.find(t => t.id === 'blank') || tpls[0] || { id: 'blank', roles: [] };
     const roles = () => (tpl().roles || (tpl().seats || []).map(t => ({ kind: '', title: t, goal: '' })));
     const people = (view.people || []).filter(p => p.id !== me.id);
@@ -32,8 +37,9 @@
         <label class="co-f"><span class="co-fl">Name</span><input class="input" id="cs-name" maxlength="60" value="${esc(a.name)}" placeholder="Your company or project name"></label>
         <label class="co-f"><span class="co-fl">What it’s for <span class="faint">one line, optional</span></span><input class="input" id="cs-mission" maxlength="400" value="${esc(a.mission)}" placeholder="e.g. Cozy little games for short breaks"></label>`;
       if (a.step === 3) return `<h1 id="cs-q">Who does what?</h1><p class="co-lead">Give each role to yourself, a friend or an AI helper. “Nobody yet” is fine; you can fill it later.</p>
+        <div class="co-set-style" id="cs-style"><span class="co-fl" id="cs-style-l">Who has the final say?</span><div class="gs-opts" role="radiogroup" aria-labelledby="cs-style-l">${STYLE.map(([k, t, sub]) => `<button type="button" class="gs-opt${a.style === k ? ' on' : ''}" role="radio" aria-checked="${a.style === k}" data-gstyle="${k}"><b>${t}</b><small>${sub}</small></button>`).join('')}</div></div>
         <ul class="co-set-roles">${roles().map((r, i) => { const lead = r.kind === 'ceo', v = a.who[i] !== undefined ? a.who[i] : lead ? 'me' : '';
-          return `<li><div><b>${esc(roleName(r.title))}</b><small>${esc(lead ? 'Sets the goal and makes the final decisions' : r.goal || '')}</small></div>
+          return `<li><div><b>${esc(roleName(r.title))}</b><small>${esc(lead ? (a.style === 'council' ? 'You decide the big things together' : a.style === 'open' ? 'Keeps everyone pointed at the goal' : 'Sets the goal and makes the final decisions') : r.goal || '')}</small></div>
             ${lead ? '<span class="co-set-you">You</span>' : `<select class="input" data-role="${i}" aria-label="Who does ${esc(roleName(r.title))}">
               <option value=""${v === '' ? ' selected' : ''}>Nobody yet</option><option value="me"${v === 'me' ? ' selected' : ''}>Me</option>
               ${people.map(p => `<option value="p:${esc(p.id)}"${v === 'p:' + p.id ? ' selected' : ''}>${esc(p.name)}</option>`).join('')}
@@ -62,6 +68,7 @@
       if (a.step === 4) { sec.querySelectorAll('[data-rh]').forEach(el => { a.rhythms[el.dataset.rh] = el.checked; }); a.goal = (v('#cs-goal') || '').trim(); a.target = v('#cs-target') || ''; }
     }
     function wire() {
+      sec.querySelectorAll('[data-gstyle]').forEach(b => b.onclick = () => { read(); a.style = b.dataset.gstyle; draw(); });
       sec.querySelectorAll('[data-tpl]').forEach(b => b.onclick = () => { a.tpl = b.dataset.tpl; a.who = {}; a.step = 2; draw(); });
       sec.querySelector('#cs-back').onclick = () => { read(); if (a.step === 1) return cancel(); a.step--; draw(); };
       sec.querySelector('#cs-skip').onclick = () => { if (!a.busy) skip(); };
@@ -84,6 +91,8 @@
         }
         await soft(() => C.api(P, { method: 'PUT', body: { rhythms: a.rhythms } }));
         if (a.goal) { const target = Number(a.target) || 0; await soft(() => C.api(`${P}/goals`, { method: 'POST', body: { title: target ? `${target} ${a.goal}` : a.goal, results: target ? [{ text: a.goal, target, current: 0 }] : [] } })); }
+        // last: under a council the answers above would each need the council
+        if (a.style !== style0) await soft(async () => { await C.api('/groupstyle', { method: 'PUT', body: { style: a.style }, project: pid }); if (window.TribeGroupStyle) await window.TribeGroupStyle.load(); });
         const fresh = await C.api(P, { project: pid }).catch(() => r);
         done(fresh && fresh.company ? fresh : r);
       } catch (e) { a.busy = false; btn.disabled = false; btn.classList.remove('busy'); toast(e.message); }

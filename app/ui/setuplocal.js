@@ -64,18 +64,20 @@
     }
     const gh = homeOf().github, desk = desktopApp(), fo = window.TribeHome && window.TribeHome.canPickFolder ? window.TribeHome.canPickFolder() : { ok: false };
     const row = (k, icon, title, sub, tag, live) => `<button class="ph-row" data-su="${k}"><span class="ph-ic${live ? ' live' : ''}">${ic(icon)}</span><span class="ph-tt"><b>${title}${tag ? ` <em class="ph-tag">${tag}</em>` : ''}</b><small>${sub}</small></span><span class="ph-go">${ic('chev', 16)}</span></button>`;
-    const s = sheet(`<header class="ph-h"><div><span class="eyebrow">${o.first ? 'Last step · optional' : 'Where it lives'}</span><h3>Where should it live?</h3></div></header>
-      <p class="ph-lead">${o.first ? 'It already works here. Pick a home now so friends can join, or decide later from Sharing and backup on the dashboard.' : 'It works on this device now. A home lets friends see it and join.'}</p>
+    const BF = window.TribeBrowserFolder, bf = !fo.ok && BF && !phoneLike();
+    const s = sheet(`<header class="ph-h"><div><span class="eyebrow">${o.first ? 'Last step · optional' : 'Where it’s kept'}</span><h3>Where should it be kept?</h3></div></header>
+      <p class="ph-lead">${o.first ? 'It already works here. Pick where it’s kept so friends can join, or decide later from Sharing and backup on the dashboard.' : 'It works in this browser now. Keep it on a computer or online and friends can see it and join.'}</p>
       <div class="ph-list">
-        ${fo.ok ? row('folder', 'folder', 'A folder on this computer', 'Your own folder holds the files; this computer hosts it. Edit here or in VS Code', desk ? 'Recommended' : '') : ''}
-        ${fo.ok ? row('shared', 'net', 'A shared folder', 'A Dropbox, OneDrive, Google Drive, iCloud, NAS or Syncthing folder you already sync. No account; friends join from it') : ''}
-        ${row('computer', 'box', 'This computer', desk ? 'The desktop app hosts it in TribeCode’s own folder. Friends on your network join with a link' : 'The TribeCode app or server on this computer hosts it. Friends on your network join with a link')}
-        ${row('cloud', 'zap', 'Free cloud', 'Always online on a free Render server')}
-        ${row('github', 'git', 'A GitHub repo', gh ? `Live on ${esc(gh.repo)}` : 'Anyone can see the live repo and suggested changes. No server needed', gh ? 'Connected' : 'Light', true)}
-        ${phoneLike() ? row('phone', 'spark', 'Phone', 'Keep it on this phone, or host from an Android phone') : ''}
+        ${row('computer', 'box', 'On this computer', 'The TribeCode app keeps it on this computer. Friends join with a link', desk ? 'Recommended' : '')}
+        ${fo.ok ? row('folder', 'folder', 'A folder you pick or create', 'Its files go in a folder of yours on this computer. Edit them here or in any editor') : ''}
+        ${bf ? row('bfolder', 'folder', 'A folder you pick or create', BF.can() ? (BF.name(pid()) ? `A copy is saved in ${esc(BF.name(pid()))}. Save it again` : 'A copy of its files is saved in a folder on this computer. It also stays in this browser') : 'This browser can’t open folders. Download a copy of its files instead') : ''}
+        ${row('github', 'git', 'GitHub', gh ? `Connected to ${esc(gh.repo)}` : 'A copy is kept on GitHub. Friends can see it there even when this computer is off', gh ? 'Connected' : '', true)}
+        ${row('cloud', 'zap', 'Free cloud', 'Always online on a free server, even when your computer is off')}
+        ${fo.ok ? row('shared', 'net', 'A shared folder', 'A Dropbox, OneDrive, Google Drive or iCloud folder you already use. Friends who have the folder join from it') : ''}
+        ${phoneLike() ? row('phone', 'spark', 'Phone', 'Keep it on this phone, or run it from an Android phone') : ''}
       </div>
-      <p class="ph-note">A GitHub repo or a shared folder can also be added later to any home, as its synced copy.</p>
-      <p class="ph-foot"><button class="linkish" data-su-close id="su-later">Decide later</button><span aria-hidden="true">·</span><button class="linkish" data-su-join>Join with a link</button></p>`, 'su-where', 'Where should it live?');
+      <p class="ph-note">GitHub or a shared folder can also be added later, as an extra copy.</p>
+      <p class="ph-foot"><button class="linkish" data-su-close id="su-later">Decide later</button><span aria-hidden="true">·</span><button class="linkish" data-su-join>Join with a link</button></p>`, 'su-where', 'Where should it be kept?');
     s.addEventListener('click', e => {
       const b = e.target.closest('[data-su]'); if (!b) return;
       choose(b.dataset.su);
@@ -86,9 +88,20 @@
     if (home === 'folder' && window.TribeHome) { close(); return window.TribeHome.folder(); }
     if (home === 'shared' && window.TribeHome) { close(); return window.TribeHome.sharedFolder(); }
     if (home === 'github') return githubGate();
+    if (home === 'bfolder') return browserFolder();
     if (home === 'computer') return computer();
     if (home === 'cloud') return cloud();
     if (home === 'phone') return phone();
+  }
+
+  // feat/setup-github: a folder from a web page: the browser's own picker (it has New folder), or a .zip where it has none
+  async function browserFolder() {
+    const BF = window.TribeBrowserFolder; if (!BF) return;
+    try {
+      if (!BF.can()) { const r = BF.zip(pid()); close(); return toast(`Downloaded ${r.name}. This browser can’t open folders, so the copy is one file.`); }
+      const r = await BF.again(pid()); if (!r) return;
+      close(); toast(`A copy of ${r.files} file${r.files === 1 ? '' : 's'} is saved in ${r.folder}. It also stays in this browser.`);
+    } catch (e) { toast(e.message); }
   }
 
   // ---------- This computer: sync the draft into the server here ----------

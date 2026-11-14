@@ -1,11 +1,11 @@
 {
  "zip": "glowbug-proof.zip",
- "kb": 307,
- "files": 57,
+ "kb": 355,
+ "files": 61,
  "groups": {
   "README.md": 1,
   "game": 12,
-  "website": 27,
+  "website": 31,
   "docs": 2,
   "tasks": 2,
   "chat": 2,

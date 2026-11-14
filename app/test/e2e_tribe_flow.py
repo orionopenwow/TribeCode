@@ -103,18 +103,18 @@ def main():
             pg.click("#tn-options"); assert pg.is_visible("#tn-err") and pg.evaluate("TribeNew.state().step") == 1, "a calm inline note, no empty name"
             pg.fill("#tn-name", "Lantern Crew"); pg.click("#tn [data-tn-emo='🎮']"); pg.click("#tn-options")
             pg.wait_for_selector("#tn[data-step='2'] [data-tn-where]")
-            homes = pg.evaluate("TribeNew.homes()"); assert homes == ["folder", "device", "cloud", "github", "shared"], homes
-            assert pg.evaluate("TribeNew.recommended()") == "folder", "a page served by TribeCode: a folder on this computer"
-            assert pg.locator("#tn [data-tn-where='folder'] .ph-tag").text_content().strip() == "Recommended"
-            assert [t.strip() for t in pg.locator("#tn [data-tn-where] .ph-tt b").evaluate_all("els => els.map(e => e.firstChild.textContent)")] == ["A folder on this computer", "This device only", "Free cloud", "GitHub repo", "A shared folder"]
-            assert "connect GitHub later to any of the others" in pg.inner_text("#tn [data-tn-where='github']")
-            pg.click("#tn [data-tn-where='github']"); pg.wait_for_selector("#tn-repo"); pg.mouse.move(5, 5); pg.wait_for_timeout(300)
+            homes = pg.evaluate("TribeNew.homes()"); assert homes == ["computer", "folder", "github", "cloud", "shared", "device"], homes
+            assert pg.evaluate("TribeNew.recommended()") == "computer", "a page served by TribeCode: on this computer"
+            assert pg.locator("#tn [data-tn-where='computer'] .ph-tag").text_content().strip() == "Recommended"
+            assert [t.strip() for t in pg.locator("#tn [data-tn-where] .ph-tt b").evaluate_all("els => els.map(e => e.firstChild.textContent)")] == ["On this computer", "A folder you pick or create", "GitHub", "Free cloud", "A shared folder", "In this browser only"]
+            assert "connect GitHub later" in pg.inner_text("#tn [data-tn-where='github']")
+            pg.click("#tn [data-tn-where='github']"); pg.wait_for_selector("#ghc-repo"); pg.mouse.move(5, 5); pg.wait_for_timeout(300)
             pg.screenshot(path=str(SHOTS / "tribe-flow-where.png"))
             pg.click("#tn-back"); pg.wait_for_selector("#tn[data-step='1']")
             assert pg.input_value("#tn-name") == "Lantern Crew" and pg.get_attribute("#tn [data-tn-emo='🎮']", "aria-checked") == "true", "Back keeps the name and icon"
             pg.click("#tn-options"); pg.wait_for_selector("#tn[data-step='2']"); assert pg.evaluate("TribeNew.state().where") == "github", "and the choice"
             pg.click("#tn-b2"); pg.wait_for_selector("#tn[data-step='1']"); pg.click("#tn-options"); pg.wait_for_selector("#tn[data-step='2']")
-            pg.click("#tn-go"); assert "owner/name" in pg.inner_text("#tn-err"), "github needs a repo: an inline note"
+            pg.click("#tn-go"); assert "owner/name" in pg.inner_text("#tn-err"), "GitHub needs to know where: an inline note"
 
             # ---------- 3a. This device ----------
             pg.click("#tn [data-tn-where='device']"); pg.click("#tn-go")
@@ -128,16 +128,17 @@ def main():
             st = pg.evaluate("TribeOffline.state()"); assert [p["name"] for p in st["projects"]] == ["Lantern Crew"] and st["projects"][0]["emoji"] == "🎮", st["projects"]
             assert "Start your first project" in pg.inner_text("#tn-first")
             # inside that tribe, + opens the same flow with its tribe as the home
-            pg.click("#pj-plus"); opened(pg, "rail + in a tribe"); pg.fill("#tn-name", "Moon Garden"); pg.click("#tn-options")
+            pg.click("#pj-plus"); opened(pg, "rail + in a tribe"); pg.fill("#tn-name", "Moon Garden")
             assert pg.evaluate("TribeNew.homes()") == ["tribe"] and pg.evaluate("TribeNew.recommended()") == "tribe"
-            pg.click("#tn-go"); pg.wait_for_selector("#tn[data-step='3']", timeout=8000); pg.click("#tn-done"); closed(pg, "in a tribe")
+            assert pg.locator("#tn-options").count() == 0, "one choice: the step is skipped"
+            pg.click("#tn-create"); pg.wait_for_selector("#tn[data-step='3']", timeout=8000); pg.click("#tn-done"); closed(pg, "in a tribe")
             pg.wait_for_function("TribeOffline.state().projects.length === 2 && TribeProjects.current() === TribeOffline.state().projects[1].id", timeout=8000)
             pg.context.close()
 
             # ---------- 3b. A GitHub repo (mocked) ----------
             pg = page(); mock_github(pg.context)
             pg.evaluate("TribeNew.open({ name: 'Repo Crew' })"); opened(pg, "github"); pg.click("#tn-options")
-            pg.click("#tn [data-tn-where='github']"); pg.fill("#tn-repo", "https://github.com/camp/lantern"); pg.click("#tn-go")
+            pg.click("#tn [data-tn-where='github']"); pg.fill("#ghc-repo", "https://github.com/camp/lantern"); pg.click("#tn-go")
             pg.wait_for_selector("#tn[data-step='3']", timeout=10000)
             assert pg.input_value("#tn-link") == "https://github.com/camp/lantern"
             assert pg.evaluate("TribeLocalSetup.state().home.github.repo") == "camp/lantern"
@@ -159,7 +160,8 @@ def main():
             # ---------- 3d. A folder on this computer (the real server here), then in that tribe ----------
             pg = page()
             pg.evaluate("TribeNew.open({ name: 'Home Crew' })"); opened(pg, "folder"); pg.click("#tn-options")
-            assert pg.get_attribute("#tn [data-tn-where='folder']", "aria-checked") == "true", "recommended is chosen"
+            assert pg.get_attribute("#tn [data-tn-where='computer']", "aria-checked") == "true", "recommended is chosen"
+            pg.click("#tn [data-tn-where='folder']")
             pg.click("#tn-folder #lr-browse-go"); pg.wait_for_selector("#tn-folder .lr-dir"); pg.click("#tn-folder [data-open$='Games']")
             pg.wait_for_selector("#tn-folder [data-dir$='HomeCrew']"); pg.click("#tn-folder [data-dir$='HomeCrew']")
             pg.wait_for_function("document.querySelector('#tn-go').textContent.includes('Use what')", timeout=10000)

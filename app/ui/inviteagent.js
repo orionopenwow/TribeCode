@@ -1,4 +1,4 @@
-// Invite your agent: the one way a person's own AI agent joins (server/inviteagent.js). It is the "Your AI agent" choice
+// Invite your agent: the one way a person's own AI agent joins (server/inviteagent.js). It is the "An AI helper" choice
 // of the one invite sheet (inviteone.js), which calls mount(el) to draw it. It began as Invite your Claude; Claude is
 // now one kind among several, and a person can have one of each kind.
 //   The picker: Claude Code, Claude Desktop, Claude on the web, Cursor, Codex CLI, ChatGPT, Gemini CLI, VS Code,
@@ -13,7 +13,7 @@
 //     one kind (from before there was one way) both show, with a hint to merge them. A new key is one deliberate tap.
 // Entry points: the sidebar row (#sf-claude), the People panel, the empty chat, the Agents Hub, Settings, Flint.
 //   window.TribeInviteAgent = { open(opts), mount(el, opts), unmount(), access(el), card(), close(), icon(kind, size) }
-//     open({ kind }): opens the one sheet on "Your AI agent". kind: a choice ('code', 'cursor', 'chatgpt'…) or a kind
+//     open({ kind }): opens the one sheet on "An AI helper". kind: a choice ('code', 'cursor', 'chatgpt'…) or a kind
 //                     ('claude', 'gemini'…); an older tool name ('claude-code', 'claude-ai') works too.
 //     access(el): every agent's permissions block, for Settings.   card(): a small HTML card for the Agents Hub.
 //   window.TribeInviteClaude: the same functions under their first name; open() lands on Claude.
@@ -26,6 +26,19 @@
   const KEY = 'tribecode.inviteclaude.kind';   // the last choice (the key keeps its first name so nobody's choice is lost)
   const API = '/invite-agent';
   let root = null, st = null, made = {}, pick = null, poll = 0, copiedCode = false, showSetup = {}, target = {}, ask = null;
+  // The journey ("Bring an AI helper"): 'ask' = "Which AI do you already use?" (a first-timer starts here, nothing is
+  // chosen for them), 'alt' = one of the three answers that are not a tool (a model on this computer, a free one, none),
+  // 'tool' = the chosen tool: what it may do, the one thing to copy, waiting for its hello, then its first job.
+  let stage = 'tool', alt = '', want = {};
+  const DAY = 'tribecode.aihelper.day';   // the first-day checklist, per helper, on this device
+  const dayGet = id => { try { return (JSON.parse(localStorage.getItem(DAY) || '{}') || {})[id] || {}; } catch { return {}; } };
+  const daySet = (id, k) => { try { const all = JSON.parse(localStorage.getItem(DAY) || '{}') || {}; all[id] = { ...(all[id] || {}), [k]: 1 }; localStorage.setItem(DAY, JSON.stringify(all)); } catch {} };
+  const JOBS = [
+    ['intro', 'Introduce yourself in my private panel', 'Introduce yourself here in two sentences: what you are good at, and one thing you can do for me in this project today.'],
+    ['next', 'Read the project and suggest 3 next steps', 'Read this project (the overview, the tasks and the main files) and suggest 3 next steps, shortest first. Do not change anything yet.'],
+    ['fix', 'Fix one small thing', 'Find one small thing to fix in this project (a typo, a broken link or an unclear label). Tell me what it is and ask for my OK before you change it.'],
+  ];
+  const ALTS = [['local', 'A model on this computer', 'Ollama or LM Studio'], ['free', 'A free one', 'No account needed'], ['none', 'I don\'t have one', 'Start without, or try a free one']];
 
   const icon = (kind, size = 16) => (window.TribeIcons && window.TribeIcons.agent ? window.TribeIcons.agent(kind, size) : '');
   const picks = () => (st && st.picks) || [];
@@ -67,7 +80,14 @@
     el.innerHTML = '<p class="lead">Getting it ready…</p>';
     try { st = await C.api(API); } catch (e) { if (alive()) el.innerHTML = `<p class="io-calm">Couldn't open this: ${esc(e.message)}</p>`; return; }
     if (!alive() || root !== el) return;
-    pick = resolvePick(opts && opts.kind);
+    const want0 = opts && opts.kind, mineAll = st.agents || [];
+    if (want0 === 'ask' || (!want0 && !mineAll.length)) { stage = 'ask'; alt = ''; pick = null; }   // never connected an AI: the question comes first
+    else {
+      stage = 'tool'; pick = resolvePick(want0);
+      // A returning person lands on a helper they have, not on a tool they never chose.
+      if (!want0 && mineAll.length && !mineAll.some(a => a.agentKind === kind())) pick = resolvePick(mineAll[0].agentKind);
+    }
+    want = {};
     // Already here: show it and its access. A new key would cut a running session off, so the setup waits behind a button.
     if (opts && opts.fresh) showSetup[kind()] = true;
     draw(); watch();
@@ -78,7 +98,7 @@
   async function ensureKey() {
     const k = kind();
     if (made[k]) return made[k];
-    try { const r = await C.api(API, { method: 'POST', body: { kind: k, pick, ...(target[k] ? { id: target[k] } : {}) } }); made[k] = r; merge(r); showSetup[k] = true; }
+    try { const r = await C.api(API, { method: 'POST', body: { kind: k, pick, ...(target[k] ? { id: target[k] } : {}), ...(!agentsOf(k).length ? { preset: want[k] || 'build' } : {}) } }); made[k] = r; merge(r); showSetup[k] = true; }
     catch (e) { toast(e.message); return null; }
     return made[k];
   }
@@ -89,7 +109,7 @@
   function statusHtml(c, k) {
     if (c && c.paused) return `<div class="ic-status paused" data-ic-status><span class="cc-dot"></span>Paused · ${esc(c.name)} can't do anything until you resume it</div>`;
     if (c && c.joined) return `<div class="ic-status on" data-ic-status><span class="ic-check" aria-hidden="true">✓</span>${esc(c.name)} ${c.via === 'connect' ? 'is already connected' : 'joined'}${c.online ? ' · online now' : ''}</div>`;
-    return `<div class="ic-status" data-ic-status><span class="cc-dot"></span>Waiting for ${esc(your(k || (c && c.agentKind) || 'claude'))}…</div>`;
+    return `<div class="ic-status ic-wait" data-ic-status><span class="cc-dot"></span>Waiting for ${esc(your(k || (c && c.agentKind) || 'claude'))} to say hello…</div>`;
   }
   // The line under the picker: nothing made yet / waiting / joined.
   function topStatus() {
@@ -99,15 +119,53 @@
     const cap = your(k); if (s.signin) return `<div id="ic-status"><div class="ic-status ic-idle" data-ic-status>Nothing is made yet. ${esc(cap[0].toUpperCase() + cap.slice(1))} joins when you approve its sign-in.</div></div>`;
     return `<div id="ic-status"><div class="ic-status ic-idle" data-ic-status>Nothing is made yet. ${esc(cap[0].toUpperCase() + cap.slice(1))} gets its key when you press Copy${(s.blocks || []).some(b => b.file && !b.alt) ? ' or Download' : ''}.</div></div>`;
   }
-  function pickerHtml() {
+  // The choices. big: the first question, where each one is a large card with a line under its name.
+  function pickerHtml(big) {
     const have = new Set(((st && st.agents) || []).map(a => a.agentKind));
-    return `<div class="cai-chips ic-kinds" role="tablist" aria-label="Which agent">${picks().map(p => `<button type="button" role="tab" class="cai-chip ic-chip${p.id === pick ? ' on' : ''}" aria-selected="${p.id === pick}" data-ic-kind="${esc(p.id)}" data-ic-family="${esc(p.kind)}" title="${esc(p.sub)}${have.has(p.kind) ? ' · already here' : ''}">${icon(p.kind, 14)}<span>${esc(p.name)}</span>${have.has(p.kind) ? '<i class="ic-has" aria-label="already here"></i>' : ''}</button>`).join('')}</div>`;
+    return `<div class="cai-chips ic-kinds${big ? ' ic-big' : ''}" role="tablist" aria-label="Which AI">${picks().map(p => `<button type="button" role="tab" class="cai-chip ic-chip${p.id === pick ? ' on' : ''}" aria-selected="${p.id === pick}" data-ic-kind="${esc(p.id)}" data-ic-family="${esc(p.kind)}" title="${esc(p.sub)}${have.has(p.kind) ? ' · already here' : ''}">${icon(p.kind, big ? 18 : 14)}<span>${esc(p.name)}</span>${big ? `<small>${esc(p.sub)}</small>` : ''}${have.has(p.kind) ? '<i class="ic-has" aria-label="already here"></i>' : ''}</button>`).join('')}</div>`;
+  }
+  const altsHtml = () => `<div class="ic-alts">${ALTS.map(([id, name, sub]) => `<button type="button" class="cai-chip ic-chip ic-altb${alt === id ? ' on' : ''}" data-ic-alt="${id}">${window.TribeIcons ? window.TribeIcons.svg(id === 'local' ? 'monitor' : id === 'free' ? 'sparkle' : 'help', 18) : ''}<span>${esc(name)}</span><small>${esc(sub)}</small></button>`).join('')}</div>`;
+  const eyebrow = (n, t) => `<div class="ic-step"><span class="ic-n" aria-hidden="true">${n}</span><span class="eyebrow">${esc(t)}</span></div>`;
+  // The three plain choices for what it may do. Each is a set of the boxes under it, nothing more.
+  function presetsHtml(cur) {
+    return `<div class="ic-presets" role="radiogroup" aria-label="What it may do">${((st && st.presets) || []).map(p => `<button type="button" role="radio" aria-checked="${p.id === cur}" class="ic-preset${p.id === cur ? ' on' : ''}" data-ic-preset="${esc(p.id)}"><b>${esc(p.label)}</b><small>${esc(p.line)}</small></button>`).join('')}</div>`;
+  }
+  const ASYOU = '<p class="faint ic-small ic-asyou">It acts as you, and never above your own role. You can change this any time.</p>';
+  // A way in that is not a tool: nobody is left without an AI to try.
+  function altHtml() {
+    const go = (id, label, primary) => `<button type="button" class="btn${primary ? ' primary' : ''}" data-ic-go="${id}">${esc(label)}</button>`;
+    const card = (title, line, btn) => `<div class="ic-opt"><div><b>${esc(title)}</b><small>${esc(line)}</small></div>${btn}</div>`;
+    const browser = card('A small model in this browser', 'Free, no account. One download, then it runs on this device.', go('brain', 'Set it up'));
+    const bridge = card('A free chat AI, by copy and paste', 'Use the free plan of ChatGPT, Gemini, Claude or another chat page. You copy a question out and paste the answer back.', go('bridge', 'Open copy and paste'));
+    const flint = card('Flint, with no AI at all', 'The built-in guide answers, writes and plans without any AI. Ask him at the bottom of the screen.', go('flint', 'Ask Flint', true));
+    if (alt === 'local') return `<h3 class="ic-qt">A model on this computer</h3><p class="lead">Ollama or LM Studio can power Flint, the built-in guide, and the app's own writing and summaries. Nothing leaves this computer.</p>
+      ${card('Use it as Flint\'s brain', 'Pick Ollama, or paste the address LM Studio shows for its local server.', go('brain', 'Choose Flint\'s brain', true))}
+      <p class="faint ic-small">To have a local model join as a helper of its own, run it inside a tool that can connect, such as Cline or Zed, and pick that tool.</p>`;
+    if (alt === 'free') return `<h3 class="ic-qt">A free one</h3><p class="lead">Two ways that need no account here.</p>${browser}${bridge}`;
+    return `<h3 class="ic-qt">No AI yet? You can still start.</h3><p class="lead">Pick any of these. You can bring an AI of your own later.</p>${flint}${browser}${bridge}`;
+  }
+  // After its hello: its face, a first job to watch, the first-day list and where to find it.
+  function welcomeHtml(c) {
+    const d = dayGet(c.id), n = esc(c.name);
+    const list = [['hello', 'It said hello', true], ['job', 'Give it a first job', !!d.job], ['may', 'Choose what it may do', !!d.may], ['about', 'Write a line about it', !!d.about]];
+    return `<section class="ic-welcome" id="ic-welcome" data-ic-welcome="${esc(c.id)}">
+      <div class="ic-wh"><span class="ic-face" style="background:${esc(c.color || 'var(--live)')}" aria-hidden="true">${icon(c.agentKind, 18)}</span><div class="ic-wt"><b>${n}</b><small class="ic-about">${esc(c.about || '')}</small><small class="ic-doing"><i class="ic-bdot" aria-hidden="true"></i><span>${esc(c.doing || '')}</span></small></div></div>
+      ${eyebrow(4, 'Give it a first job')}
+      <p class="faint ic-small">About 30 seconds. The answer arrives in your private panel, where only you see it.</p>
+      <div class="ic-jobs">${JOBS.map(([id, label]) => `<button type="button" class="btn ic-job" data-ic-job="${id}">${esc(label)}</button>`).join('')}</div>
+      <div class="ic-step"><span class="eyebrow">Its first day</span></div>
+      <ul class="ic-day">${list.map(([id, t, done]) => `<li class="${done ? 'done' : ''}" data-ic-day="${id}"><i aria-hidden="true">${done ? '✓' : ''}</i><span>${esc(t)}</span></li>`).join('')}</ul>
+      <div class="ic-step"><span class="eyebrow">Where to find it</span></div>
+      <div class="ic-find"><button type="button" class="btn sm" data-ic-find="panel">Your private panel</button><button type="button" class="btn sm" data-ic-find="agents">The Agents page</button><span class="faint ic-small">Or type @ and its name in any channel.</span></div>
+      <div class="ic-row ic-me"><label class="ic-small faint" for="ic-about-${esc(c.id)}">About it</label><input class="input ic-aboutin" id="ic-about-${esc(c.id)}" data-ic-about maxlength="140" value="${esc(c.about || '')}" autocomplete="off"><button type="button" class="btn sm" data-ic-about-save>Save</button></div>
+      <div class="ic-row ic-colors" role="radiogroup" aria-label="Its colour">${((st && st.colors) || []).map(x => `<button type="button" role="radio" aria-checked="${x === c.color}" class="ic-color${x === c.color ? ' on' : ''}" data-ic-color="${esc(x)}" style="background:${esc(x)}" aria-label="Colour"></button>`).join('')}</div>
+    </section>`;
   }
   function setupHtml() {
     const k = kind(), s = setupOf(pick), has = agentsOf(k).length > 0;
     if (!setupShown(k)) {
-      return `<p class="ic-note faint">To connect it on another computer, make a new key. The old one stops working, so a session running now needs the new setup too.</p>
-        <button type="button" class="btn" id="ic-new">New key and setup</button>`;
+      return `<button type="button" class="btn primary" id="ic-new">Show me the setup again</button>
+        <p class="ic-note faint">Use it to connect again, or on another computer. It stays the same helper. Copy makes a new key, and the old one stops working.</p>`;
     }
     if (!s.available) return `<div class="ic-need"><p>${esc(s.why)}</p><button type="button" class="btn primary" id="ic-public">Work with friends anywhere</button></div>`;
     const masked = !made[k];
@@ -144,21 +202,36 @@
     return `<section class="ic-access"${first ? ' id="ic-access"' : ''} data-ic-of="${esc(c.id)}" data-ic-agentkind="${esc(c.agentKind)}">
       ${head ? `<div class="ic-who"><span class="ic-kicon" aria-hidden="true">${icon(c.agentKind, 16)}</span><b>${esc(c.name)}</b><span class="ppl-ai">AI</span><small class="faint">${inv ? 'invited by you' : 'from Connect your AI'}</small></div>${statusHtml(c)}` : ''}
       <div class="ic-ah"><span class="eyebrow">What it can do</span><span class="faint ic-small">Everything you can, never more</span></div>
+      ${presetsHtml(c.preset || '')}${ASYOU}
       <div class="ic-scopes">${(st.all || []).map(s => `<label class="ic-scope"><input type="checkbox" data-ic-scope="${esc(s.id)}"${on.has(s.id) ? ' checked' : ''}><span>${esc(s.label)}</span></label>`).join('')}</div>
       ${st.canAdmin && inv ? `<label class="ic-scope ic-admin"><input type="checkbox" data-ic-admin${first ? ' id="ic-admin"' : ''}${c.adminAsMe ? ' checked' : ''}><span>Let it act as me for admin<small>Off by default. Host-only things (hosting, keys, backups) always stay yours.</small></span></label>` : ''}
       ${c.renameable ? `<div class="ic-row ic-rename"><label class="ic-small faint" for="ic-name-${esc(c.id)}">Its name</label><input class="input ic-name" id="ic-name-${esc(c.id)}" data-ic-name maxlength="32" value="${esc(c.name)}" autocomplete="off" spellcheck="false"><button type="button" class="btn sm" data-ic-rename>Rename</button></div>` : ''}
       ${connectionsHtml(c)}
-      <div class="ic-row ic-ctl"><label class="ic-pause"><input type="checkbox" data-ic-pause${first ? ' id="ic-pause"' : ''}${c.paused ? ' checked' : ''}><span>Pause</span></label><span class="ic-flex"></span>${twin ? `<button type="button" class="btn sm" data-ic-keep title="Keep this one and remove the other">Keep only this one</button>` : ''}<button type="button" class="btn ic-remove" data-ic-remove${first ? ' id="ic-remove"' : ''}>Remove</button></div>
+      <div class="ic-row ic-ctl"><label class="ic-pause"><input type="checkbox" data-ic-pause${first ? ' id="ic-pause"' : ''}${c.paused ? ' checked' : ''}><span>Pause</span></label><span class="ic-flex"></span>${twin ? `<button type="button" class="btn sm" data-ic-keep title="Keep this one and remove the other">Keep only this one</button>` : ''}<button type="button" class="btn ic-remove" data-ic-remove${first ? ' id="ic-remove"' : ''} title="It leaves, and its key stops working">Remove</button></div>
       ${first ? `<p class="faint ic-small">It can't read anyone's private messages, approve requests or invite people. ${inv ? `It's limited to ${esc(st.rate || 120)} actions a minute, and everything` : 'Everything'} it does is labelled ${esc(c.name)}.</p>` : ''}</section>`;
   }
   function draw() {
     if (!alive() || !st) return;
+    if (stage !== 'tool') {
+      root.innerHTML = `<div class="ic-q"><span class="eyebrow">Bring an AI helper</span>${stage === 'ask' ? '<h3 class="ic-qt">Which AI do you already use?</h3><p class="lead">Pick one. You get the shortest way to bring it in, and you choose what it may do.</p>' : ''}</div>
+        ${stage === 'ask' ? `${pickerHtml(true)}<div class="ic-step"><span class="eyebrow">Not one of these?</span></div>${altsHtml()}<div id="ic-status" hidden></div><p class="faint ic-small ic-other">Qwen Code, Goose, Continue or another tool with a plain key of its own? <button type="button" class="linkish" id="ic-other">Connect another AI</button></p>` : `<div class="ic-altpane" id="ic-alt" data-ic-altpane="${esc(alt)}">${altHtml()}</div><button type="button" class="linkish ic-back" id="ic-back">Back to the question</button>`}`;
+      return wire();
+    }
     const k = kind(), list = agentsOf(k), has = list.length > 0, K = kindInfo(k), plural = k === 'other' ? 'agents here' : `${K.short}s`;
     const others = (st.agents || []).filter(a => a.agentKind !== k);
-    root.innerHTML = `${pickerHtml()}
+    const hello = list.length === 1 && list[0].joined && list[0].via === 'invite' && !list[0].paused ? list[0] : null;
+    const cur = picks().find(x => x.id === pick) || { id: pick, kind: k, name: K.label };
+    // The chosen tool is one row; Change goes back to the question. The cards stay in the page (hidden) under the same
+    // data-ic-kind, so another module (or a test) can still pick one directly.
+    root.innerHTML = `<div class="ic-q"><span class="eyebrow">Bring an AI helper</span></div>${eyebrow(1, 'Your AI')}
+      <div class="ic-chosen" id="ic-chosen"><span class="ic-cur on" data-ic-kind="${esc(cur.id)}" data-ic-family="${esc(cur.kind)}">${icon(cur.kind, 16)}<b>${esc(cur.name)}</b></span><button type="button" class="linkish ic-change" id="ic-change">Change</button></div>
+      <div class="ic-allkinds" hidden>${pickerHtml()}</div>
       <p class="lead">${has ? (list[0].via === 'connect' && list.length === 1 ? `<b>${esc(list[0].name)}</b> is already connected, so there is nothing new to make. Narrow it, pause it or remove it here.` : `<b>${esc(list[0].name)}</b> works next to you, with your access and never more. Narrow it, pause it or remove it any time.`)
         : `It joins next to you as <b>${esc(nameOf(k))}</b>, with your access and never more. Narrow it, pause it or remove it any time.`}</p>
+      ${!has ? `${eyebrow(2, 'What it may do')}<div id="ic-want">${presetsHtml(want[k] || 'build')}</div>${ASYOU}` : ''}
+      ${setupShown(k) ? eyebrow(has ? 2 : 3, 'Connect it') : ''}
       ${topStatus()}
+      ${hello ? welcomeHtml(hello) : ''}
       ${list.length > 1 ? `<div class="ic-merge" id="ic-merge"><b>You have two ${esc(plural)}.</b> Both keep working. One is enough: pick the one you use with <b>Keep only this one</b>, and the other is removed.</div>` : ''}
       <div class="ic-setup" id="ic-setup">${setupHtml()}</div>
       ${list.map((c, i) => accessHtml(c, i === 0, list.length > 1, list.length > 1)).join('')}
@@ -172,7 +245,19 @@
   }
   function wire() {
     const body = root;
-    body.querySelectorAll('[data-ic-kind]').forEach(b => b.onclick = () => { pick = b.dataset.icKind; ask = null; copiedCode = false; try { localStorage.setItem(KEY, pick); } catch {} draw(); });
+    body.querySelectorAll('[data-ic-alt]').forEach(b => b.onclick = () => { stage = 'alt'; alt = b.dataset.icAlt; draw(); });
+    const bk = body.querySelector('#ic-back'); if (bk) bk.onclick = () => { stage = 'ask'; alt = ''; draw(); };
+    body.querySelectorAll('[data-ic-go]').forEach(b => b.onclick = () => {
+      const g = b.dataset.icGo; close();
+      if (g === 'brain' && window.TribeBrain && window.TribeBrain.open) window.TribeBrain.open();
+      else if (g === 'bridge' && window.TribeAIBridge && window.TribeAIBridge.open) window.TribeAIBridge.open({});
+      else if (g === 'flint' && window.TribeFlint && window.TribeFlint.focus) window.TribeFlint.focus();
+    });
+    body.querySelectorAll('#ic-want [data-ic-preset]').forEach(b => b.onclick = () => { want[kind()] = b.dataset.icPreset; const el = body.querySelector('#ic-want'); if (el) { el.innerHTML = presetsHtml(want[kind()]); wire(); } });
+    const wl = body.querySelector('[data-ic-welcome]'); if (wl) wireWelcome(wl, wl.dataset.icWelcome);
+    if (stage !== 'tool') { body.querySelectorAll('[data-ic-kind]').forEach(b => b.onclick = () => { stage = 'tool'; pick = b.dataset.icKind; ask = null; copiedCode = false; try { localStorage.setItem(KEY, pick); } catch {} draw(); watch(); }); const o2 = body.querySelector('#ic-other'); if (o2) o2.onclick = () => { const A = window.TribeApp; close(); if (A && A.connectClaude) A.connectClaude({ tool: 'codex', fresh: true }); }; return; }
+    const chg = body.querySelector('#ic-change'); if (chg) chg.onclick = () => { stage = 'ask'; alt = ''; draw(); };
+    body.querySelectorAll('.ic-kinds [data-ic-kind]').forEach(b => b.onclick = () => { pick = b.dataset.icKind; ask = null; copiedCode = false; try { localStorage.setItem(KEY, pick); } catch {} draw(); });
     body.querySelectorAll('[data-ic-goto]').forEach(b => b.onclick = () => { pick = resolvePick(b.dataset.icGoto); ask = null; draw(); });
     body.querySelectorAll('[data-ic-copy]').forEach(b => b.onclick = async () => {
       const id = b.dataset.icCopy, first = blockOf(id); if (!first) return;
@@ -209,11 +294,26 @@
     const send = async allow => { const a = ask; ask = null; try { const r = await C.api('/agent-auth', { method: 'POST', body: { code: a.code, allow } }); toast(allow ? `Approved. ${r.name || 'Your agent'} is signing in.` : 'Declined. Nothing was shared.'); st = { ...st, ...(await C.api(API)) }; draw(); } catch (e) { toast(e.message); redraw(); } };
     if (yes) yes.onclick = () => send(true); if (no) no.onclick = () => send(false);
   }
+  function wireWelcome(sec, cid) {
+    const put = async (patch, msg, flag) => { try { Object.assign(st, await C.api(API, { method: 'PUT', body: { ...patch, id: cid } })); if (flag) daySet(cid, flag); draw(); toast(msg); } catch (e) { toast(e.message); } };
+    sec.querySelectorAll('[data-ic-job]').forEach(b => b.onclick = async () => {
+      const job = JOBS.find(j => j[0] === b.dataset.icJob), A = window.TribeAskAgent; if (!job || !A || !A.send) return;
+      b.disabled = true;
+      const r = await A.send({ text: job[2], src: 'first-job', to: cid });
+      if (!r.ok) { b.disabled = false; return toast(r.note); }
+      daySet(cid, 'job'); close(); if (A.openMine) A.openMine();
+    });
+    const ai = sec.querySelector('[data-ic-about]'), as = sec.querySelector('[data-ic-about-save]');
+    if (ai && as) { const go = () => put({ about: ai.value }, 'Saved. It shows on its People card.', 'about'); as.onclick = go; ai.onkeydown = e => { if (e.key === 'Enter') go(); }; }
+    sec.querySelectorAll('[data-ic-color]').forEach(b => b.onclick = () => put({ color: b.dataset.icColor }, 'Saved.'));
+    sec.querySelectorAll('[data-ic-find]').forEach(b => b.onclick = () => { const w = b.dataset.icFind; close(); if (w === 'panel' && window.TribeAskAgent) window.TribeAskAgent.openMine(); else if (w === 'agents' && window.TribeAgentsHub) window.TribeAgentsHub.open(); });
+  }
   // One agent's controls. `after` repaints whoever shows them (the sheet, or Settings).
   function wireAccess(sec, cid, after) {
     const mineOf = () => (st.agents || []).find(x => x.id === cid) || {};
     const put = async (patch, msg) => { try { Object.assign(st, await C.api(API, { method: 'PUT', body: { ...patch, id: cid } })); after(); toast(msg || 'Saved.'); } catch (e) { toast(e.message); } };
     const gone = async (id, msg) => { try { const r = await C.api(API + '?id=' + encodeURIComponent(id), { method: 'DELETE' }); for (const k of Object.keys(made)) if (made[k].agent && made[k].agent.id === id) delete made[k]; st = { ...st, ...(await C.api(API)) }; after(); toast(typeof msg === 'function' ? msg(r) : msg); } catch (e) { toast(e.message); } };
+    sec.querySelectorAll('[data-ic-preset]').forEach(b => b.onclick = () => { daySet(cid, 'may'); put({ preset: b.dataset.icPreset }); });
     sec.querySelectorAll('[data-ic-scope]').forEach(c => c.onchange = () => put({ scopes: [...sec.querySelectorAll('[data-ic-scope]:checked')].map(x => x.dataset.icScope) }));
     const ad = sec.querySelector('[data-ic-admin]'); if (ad) ad.onchange = () => put({ adminAsMe: ad.checked });
     const pa = sec.querySelector('[data-ic-pause]'); if (pa) pa.onchange = () => put({ paused: pa.checked }, pa.checked ? 'Paused. It can\'t do anything until you resume it.' : 'Resumed.');
@@ -227,7 +327,7 @@
     sec.querySelectorAll('[data-ic-revoke]').forEach(b => b.onclick = async () => { b.disabled = true; try { Object.assign(st, await C.api(API + '/connections/' + encodeURIComponent(b.dataset.icRevoke), { method: 'DELETE' })); after(); toast('Signed out there. It has to sign in again to come back.'); } catch (e) { b.disabled = false; toast(e.message); } });
   }
   const paintStatus = () => { const el = root && root.querySelector('#ic-status'); if (!el) return; const tmp = document.createElement('div'); tmp.innerHTML = topStatus(); el.innerHTML = tmp.firstElementChild.innerHTML; };
-  const sig = list => JSON.stringify((list || []).map(c => [c.id, c.name, c.paused, c.connections]));
+  const sig = list => JSON.stringify((list || []).map(c => [c.id, c.name, c.paused, c.connections, !!c.joined, c.doing]));
   const joinedIds = list => new Set((list || []).filter(c => c.joined).map(c => c.id));
   const said = new Set();   // "✓ … joined" is said once per agent, whichever of the poll and the push sees it first
   function watch() {
@@ -247,7 +347,7 @@
   }
   if (C && C.on) C.on('ws', m => {
     if (!m || m.type !== 'agent-joined' || !m.agent) return;
-    if (alive() && st) { const c = (st.agents || []).find(x => x.id === m.agent.id); if (c) { c.joined = c.joined || new Date().toISOString(); c.online = true; } paintStatus(); }
+    if (alive() && st) { const c = (st.agents || []).find(x => x.id === m.agent.id); if (c) { c.joined = c.joined || new Date().toISOString(); c.online = true; if (!c.doing || c.doing === 'not here yet') c.doing = 'here and listening'; } if (stage === 'tool') draw(); }
     if (!said.has(m.agent.id)) { said.add(m.agent.id); toast(`✓ ${m.agent.name} joined`); }
   });
 

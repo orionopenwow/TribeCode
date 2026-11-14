@@ -31,7 +31,7 @@ function git(cwd, args, { max = 16 << 20, timeout = 15000 } = {}) {
 }
 const txt = b => b.toString('utf8');
 
-module.exports = function codefiles({ P, claims = null, identity = null, member = null, broadcast = () => {} }) {
+module.exports = function codefiles({ P, claims = null, identity = null, member = null, broadcast = () => {}, perms = null }) {
   const repoOf = () => { const p = P.get(P.current() || P.defaultId()); if (!p || !p.repo) return null; try { return fs.realpathSync(p.repo); } catch { return null; } };
   const cache = new Map();   // key -> { at, v }
   const memo = async (key, ms, fn) => { const h = cache.get(key); if (h && Date.now() - h.at < ms) return h.v; const v = await fn(); cache.set(key, { at: Date.now(), v }); if (cache.size > 200) cache.delete(cache.keys().next().value); return v; };
@@ -278,13 +278,52 @@ module.exports = function codefiles({ P, claims = null, identity = null, member 
       return { removed: true, committed: !r.code };
     });
   }
+  // ---------- My folder (feat/group-styles) ----------
+  // Every person in the project has people/<their id>/ inside the project's files. They can always write there (a guest
+  // pass too); their AI helpers can; nobody else can, except someone who may delete anyone's files (tidying up).
+  // People who only watch have none. "Send to the main copy" copies one file out of it to the same path in the project;
+  // it needs "send work to the main copy" (repo.merge), so who may is decided by the group's style, and a refusal
+  // offers "Ask them" like everywhere else.
+  const MINE = /^people\/([^/]+)\//;
+  const ownerOf = rel => { const x = MINE.exec(String(rel || '')); return x ? x[1] : null; };
+  const inProject = m => !!m && m.role !== 'spectator' && projRole(m) !== 'spectator' && seesProject(m);
+  const myId = me => (me && me.role === 'agent' ? (inProject(member && me.owner ? member(me.owner) : null) ? me.owner : null) : inProject(me) ? me.id : null);
+  // null = fine; else why not
+  function writeBlock(me, rel) {
+    const owner = ownerOf(rel);
+    if (!owner) return canEdit(me) ? null : 'ask the host to make you a builder to edit code';
+    if (owner === myId(me)) return null;
+    if (me.role !== 'agent' && perms && perms.can(me, 'files.delete')) return null;
+    return 'that is someone else’s folder';
+  }
+  async function mine(repo, me) {
+    const id = myId(me); if (!id || me.role === 'agent') throw bad(403, 'people who only watch have no folder here');
+    const rel = `people/${id}/README.md`, abs = path.join(repo, ...rel.split('/'));
+    if (!fs.existsSync(abs)) await save(repo, rel, `# ${String(me.name || 'My').replace(/[#\n\r]/g, ' ').slice(0, 40)}’s folder\n\nOnly you and your AI helpers write here. When something is ready, use “Send to the main copy”.\n`, 'Start my folder', me);
+    return { folder: `people/${id}`, path: rel };
+  }
+  async function send2main(repo, rel, me) {
+    const owner = ownerOf(rel);
+    if (!owner || owner !== myId(me) || me.role === 'agent') throw bad(403, 'you send files from your own folder');
+    if (!perms || !perms.can(me, 'repo.merge')) throw bad(403, 'sending work to the main copy needs a yes here');
+    const dest = rel.replace(MINE, ''); if (!dest || MINE.test(dest)) throw bad(400, 'pick a file in your folder');
+    const abs = path.join(repo, ...rel.split('/'));
+    let text; try { const stt = fs.lstatSync(abs); if (!stt.isFile() || stt.size > MAX_VIEW) throw 0; text = fs.readFileSync(abs, 'utf8'); } catch { throw bad(404, 'that file isn’t in your folder'); }
+    const out = await save(repo, dest, text, `Send ${dest} to the main copy`, me);
+    return { ...out, sent: true, from: rel, path: dest };
+  }
   async function route(req, res, { m, b, me, url, send, fail, readBody }) {
     if (!me) return fail(res, 401, 'not a member of this tribe');
     if (m !== 'GET') {
       const repo = repoOf(); if (!repo) return fail(res, 404, 'this project has no repo pinned');
-      if (!canEdit(me)) return fail(res, 403, 'ask the host to make you a builder to edit code');
       try {
-        if (b === 'file' && m === 'PUT') { const body = await readBody(req); return send(res, 200, await save(repo, clean(body.path), body.text, body.message, me)); }
+        if (b === 'mine' && m === 'POST') return send(res, 200, await mine(repo, me));
+        if (b === 'send' && m === 'POST') { const body = await readBody(req); return send(res, 200, await send2main(repo, clean(body.path), me)); }
+        if (b === 'file') { const rel = clean(m === 'PUT' ? (req._cfBody = await readBody(req)).path : url.searchParams.get('path')); const no = writeBlock(me, rel); if (no) return fail(res, 403, no); }
+        else if (!canEdit(me)) return fail(res, 403, 'ask the host to make you a builder to edit code');
+      } catch (e) { return fail(res, e.status || 500, e.status ? e.message : 'could not save'); }
+      try {
+        if (b === 'file' && m === 'PUT') { const body = req._cfBody; return send(res, 200, await save(repo, clean(body.path), body.text, body.message, me)); }
         if (b === 'file' && m === 'DELETE') return send(res, 200, await remove(repo, clean(url.searchParams.get('path')), url.searchParams.get('message'), me));   // feat/agents-free: Undo of a new file
         if (b === 'lock' && m === 'POST') { if (!claims) return fail(res, 501, 'locks are off'); const body = await readBody(req); const r = claims.claim(clean(body.path), body.note || 'editing in TribeCode', me); return r.conflict ? fail(res, 423, `${r.conflict.name || 'Someone'} already locked ${r.conflict.path}`) : send(res, 200, r); }
         if (b === 'lock' && m === 'DELETE') { if (!claims) return fail(res, 501, 'locks are off'); return send(res, 200, { released: !!claims.release(clean(url.searchParams.get('path')), me) }); }

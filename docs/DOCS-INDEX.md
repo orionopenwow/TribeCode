@@ -28,6 +28,7 @@ Every doc in the repo, one line each, with its status. Updated 2026-11-12 (v0.31
 | [CLOUD](CLOUD.md) | Hosting | Run a TribeCode tribe on a free cloud host, so you and your friends can join from anywhere without keeping your own computer on. | current |
 | [COMMS-SMOKE](COMMS-SMOKE.md) | Testing | app/test/e2e_comms_smoke.py checks every way people (and their Claude Code) talk inside a tribe, end to end, in real | current |
 | [COMPANY](COMPANY.md) | Company | Company mode: seats, charters, money, rituals, autopilot and approvals. | current |
+| [ROLES-AND-PERMISSIONS](ROLES-AND-PERMISSIONS.md) | Roles and permissions | Who can do what, how a group decides (one lead, a council, open, own roles), Ask them, folders. | current |
 | [CRAFTS](CRAFTS.md) | Files | TribeCode has three light editors built in. | current |
 | [DATA](DATA.md) | Storage | Everything a tribe makes lives in one folder on the host's computer: the tribe folder. | current |
 | [DEMO-TRIBE](DEMO-TRIBE.md) | Demo | A ready-made tribe for testing TribeCode with friends: two small, original games, already split into lanes, | current |

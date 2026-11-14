@@ -30,7 +30,7 @@ def main():
             assert pg.evaluate("document.querySelector('#tb-help').getBoundingClientRect().top < 60"), "? is in the title bar"
             # feat/help-next: six entries by intent; "Something's wrong" opens a short second list; the rest is in the Help center
             pg.click("#tb-help"); pg.wait_for_selector("#help-menu [data-help=next]")
-            assert pg.evaluate("[...document.querySelectorAll('#help-menu .hm-sec [data-help]')].map(b => b.dataset.help).join()") == "next,learn,flint,wrong,keys,new"
+            assert pg.evaluate("[...document.querySelectorAll('#help-menu .hm-sec [data-help]')].map(b => b.dataset.help).join()") == "next,quick,learn,flint,wrong,keys,new"
             pg.click("#help-menu [data-help=wrong]"); pg.wait_for_selector("#help-menu [data-help=bug]")
             for k in ["trouble", "bug", "update"]: assert pg.locator(f"#help-menu [data-help={k}]").count() == 1, k
             pg.click("#help-menu [data-help-back]"); pg.wait_for_selector("#help-menu [data-help=keys]")

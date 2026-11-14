@@ -295,11 +295,13 @@
       const vis = visible(), counts = {};
       for (const it of vis) counts[it.cat] = (counts[it.cat] || 0) + 1;
       root.querySelectorAll('[data-n]').forEach(s => { const n = s.dataset.n === 'all' ? vis.length : counts[s.dataset.n] || 0; s.textContent = n ? String(n) : ''; });
-      const list = vis.filter(it => st.cat === 'all' || it.cat === st.cat).sort(sorter);
-      const cnt = $(`#${o.idp}-count`); if (cnt) cnt.textContent = st.loading && !st.items.length ? '' : `${list.length} file${list.length === 1 ? '' : 's'}`;
+      const lead = o.lead ? o.lead(st.cat) || '' : '';   // feat/setup-github: a caller's own card above the files (the project's website on the Websites tab)
+      const list = vis.filter(it => (st.cat === 'all' || it.cat === st.cat) && !(lead && it.lead)).sort(sorter);
+      const cnt = $(`#${o.idp}-count`); if (cnt) cnt.textContent = st.loading && !st.items.length ? '' : (n => `${n} file${n === 1 ? '' : 's'}`)(list.length + (lead ? 1 : 0));
       shown = [];
       const body = grid;
-      if (!list.length) {
+      if (!list.length && lead) body.innerHTML = lead;
+      else if (!list.length) {
         let [t, s, k, a] = st.q ? ['Nothing matches that', 'Try another word, or look in Everything.', '', ''] : EMPTY[st.cat] || EMPTY.all;
         if (!st.q && s === EMPTY.all[1]) s = emptyWhere();   // fix/batch-fixes: the wording fits where you are
         body.innerHTML = `${st.loading ? '<div class="fx-empty dc-empty fg-empty"><span class="fx-spin"></span><b>Gathering your files…</b></div>'
@@ -307,7 +309,7 @@
         const eb = body.querySelector('[data-empty-new]'); if (eb) eb.onclick = e => o.create(eb.dataset.emptyNew, e.currentTarget);
       } else {
         const gs = groups(list), one = gs.length === 1 && !o.alwaysHeads;
-        body.innerHTML = gs.map(g => {
+        body.innerHTML = lead + gs.map(g => {
           const cards = g.items.map(it => { shown.push(it); return card(it, shown.length - 1); }).join('');
           return `<section class="fx-group" data-group="${esc(g.key)}">${one ? '' : `<header class="fx-gh"><span class="fx-gh-ic">${icon(g.icon || (g.device ? 'device' : 'tribe'), 14)}</span><h2>${esc(g.label)}</h2><span class="fx-gh-n">${g.items.length}</span>${g.note ? `<span class="fx-gh-note">${esc(g.note)}</span>` : ''}</header>`}
             <div class="fx-items dc-items ${st.view}">${cards}</div></section>`;

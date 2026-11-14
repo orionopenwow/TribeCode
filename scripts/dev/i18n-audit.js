@@ -18,14 +18,14 @@ const NAMES = { es: 'Spanish', pt: 'Portuguese', fr: 'French', de: 'German', ja:
 const BEFORE = path.join(ROOT, 'app', 'test', 'i18n_before.json');
 
 // ---- the tables, loaded the way the browser loads them
-function loadTables() {
+function loadTables(files) {
   const listeners = [];
   const win = { addEventListener: () => {}, dispatchEvent: () => {} };
   const doc = { body: null, documentElement: {}, addEventListener: (n, f) => listeners.push(f), createTreeWalker: () => ({ nextNode: () => null }) };
   const store = { getItem: () => 'en', setItem: () => {} };
   const ctx = { window: win, document: doc, localStorage: store, navigator: { language: 'en' }, NodeFilter: {}, MutationObserver: function () { this.observe = () => {}; this.disconnect = () => {}; }, CustomEvent: function () {}, Intl, console };
   const vm = require('vm'); vm.createContext(ctx);
-  for (const f of ['i18n.js', 'i18n-more.js']) { const p = path.join(APP, 'app', 'ui', f); if (fs.existsSync(p)) vm.runInContext(fs.readFileSync(p, 'utf8'), ctx, { filename: f }); }
+  for (const f of (files || ['i18n.js', 'i18n-more.js'])) { const p = path.join(APP, 'app', 'ui', f); if (fs.existsSync(p)) vm.runInContext(fs.readFileSync(p, 'utf8'), ctx, { filename: f }); }
   return win.TribeI18n;
 }
 
@@ -50,13 +50,14 @@ function staticChecks() {
   }
   out.rows = rows; out.repeats = repeats;   // repeats: rows whose key is defined again further down (dead text)
   // the check checks itself: what it read must be the whole table, or it says how much it missed
-  let real = -1; try { const body = table.slice(table.indexOf('{'), table.lastIndexOf('};') + 1); real = Object.keys(new Function('return (' + body + ')')()).length; } catch (e) { out.fails.push('the table in app/ui/i18n.js could not be evaluated: ' + e.message); }
+  let real = -1; try { real = Object.keys(loadTables(['i18n.js'])._table()).length; } catch (e) { out.fails.push('app/ui/i18n.js could not be loaded: ' + e.message); }
   out.tableKeys = real;
   // rows whose translation IS the English ("Chat" in Spanish, "Design" in French): translated on purpose, so the walk
   // must not count them as still English. Per language, from the table as the app evaluates it.
   out.same = Object.fromEntries(LANGS.map(l => [l, []]));
   for (const [k, val] of seen) { const cells = JSON.parse(val); LANGS.forEach((l, i) => { if (cells[i] === k) out.same[l].push(k); }); }
-  if (real >= 0 && seen.size !== real) out.fails.push(`the static check read ${seen.size} of the table's ${real} keys (${unread} rows it could not parse): its duplicate and empty-cell results are incomplete`);
+  // a few rows are made in code (a phrase without its leading emoji), so up to 20 keys may not be in the text
+  if (real >= 0 && (seen.size > real || seen.size < real - 20)) out.fails.push(`the static check read ${seen.size} of the table's ${real} keys (${unread} rows it could not parse): its duplicate and empty-cell results are incomplete`);
   // the extra file: every row has seven cells, placeholders survive translation
   const morePath = path.join(APP, 'app', 'ui', 'i18n-more.js'); out.moreRows = 0; out.badPlaceholders = [];
   if (fs.existsSync(morePath)) {

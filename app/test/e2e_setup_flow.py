@@ -84,7 +84,7 @@ def main():
             steps = host.eval_on_selector_all("#pj-check .ock-row", "els => els.map(e => e.dataset.step)")
             assert [s for s in steps if s != "flint"] == ["vision", "task", "claude", "home", "share"], steps   # "flint" is the optional setup row (flintsetup.js, v0.36)
             assert "5 steps" in host.text_content("#pj-check .ock-hero-t")
-            assert "choose where it lives" in host.text_content("#pj-check [data-step=home]").lower()
+            assert "set up sharing and backup" in host.text_content("#pj-check [data-step=home]").lower()
             assert "create the code repository" not in host.text_content("#pj-check").lower(), "no separate repo step"
             assert host.locator("#pj-check [data-step=friend]").count() == 0
             host.wait_for_function("document.body.dataset.stage === 'new' && document.body.dataset.vision === '0'", timeout=5000)

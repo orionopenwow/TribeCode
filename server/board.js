@@ -7,7 +7,7 @@ const bus = require('./bus');
 
 const VOTES = ['yes', 'no'];
 
-module.exports = function board({ store, id, slug, str, getMembers, broadcast, postChat, createTask, repo, brain, readVision, can = (me) => me.role === 'host' }) {   // can(me, cap): feat/roles (server/perms.js)
+module.exports = function board({ store, id, slug, str, getMembers, broadcast, postChat, createTask, repo, brain, readVision, can = (me) => me.role === 'host', counting = () => null, passMark = (need, n) => Math.floor(n / 2) + 1 }) {   // can(me, cap): feat/roles (server/perms.js)
   const file = p => `proposals/${p.id}.md`;
   const load = pid => { const r = store.readMd(`proposals/${pid}.md`); return r && { ...r.meta, body: r.body }; };
   const all = () => store.listMd('proposals').map(f => { const r = store.readMd(f); return r && { ...r.meta, body: r.body }; })
@@ -23,18 +23,21 @@ module.exports = function board({ store, id, slug, str, getMembers, broadcast, p
   }
 
   function tally(p) {
-    const members = getMembers().filter(m => m.role !== 'spectator' && m.role !== 'agent');
-    const voters = members.length || 1;
-    const yes = Object.values(p.votes || {}).filter(v => v === 'yes').length;
-    const no = Object.values(p.votes || {}).filter(v => v === 'no').length;
-    return { yes, no, voters, pending: Math.max(0, voters - yes - no), needed: Math.floor(voters / 2) + 1 };
+    // feat/group-styles: the group's one counting rule. Under a council only the council's votes count.
+    const rule = counting(), ids = rule ? new Set(rule.ids) : null;
+    const members = getMembers().filter(m => m.role !== 'spectator' && m.role !== 'agent' && (!ids || ids.has(m.id)));
+    const voters = members.length || 1, ok = new Set(members.map(m => m.id));
+    const cast = Object.entries(p.votes || {}).filter(([mid]) => !ids || ok.has(mid));
+    const yes = cast.filter(([, v]) => v === 'yes').length;
+    const no = cast.filter(([, v]) => v === 'no').length;
+    return { yes, no, voters, pending: Math.max(0, voters - yes - no), needed: rule ? passMark(rule.need, voters) : Math.floor(voters / 2) + 1, ...(rule ? { council: true } : {}) };
   }
 
   function resolve(p, by) {
     if (p.status !== 'open') return p;
     const t = tally(p);
     if (t.yes >= t.needed) return approve(p, by);
-    if (t.no >= t.needed || (t.pending === 0 && t.yes < t.needed)) {
+    if (t.no >= t.needed || t.no > t.voters - t.needed || (t.pending === 0 && t.yes < t.needed)) {
       p.status = 'parked'; p.closed = new Date().toISOString(); save(p);
       postChat('general', 'tribecode', `Proposal parked: **${p.title}** (${t.yes} yes · ${t.no} no)`);
     }
@@ -114,6 +117,7 @@ module.exports = function board({ store, id, slug, str, getMembers, broadcast, p
       if (m === 'POST' && c === 'vote') {
         if (me.role === 'agent') return fail(res, 403, 'agents cannot vote; their humans do');
         if (p.status !== 'open') return fail(res, 409, 'voting is closed');
+        const rule = counting(); if (rule && !rule.ids.includes(me.id)) return fail(res, 403, 'the council decides proposals here');
         const body = await readBody(req);
         if (body.vote === 'clear') delete p.votes[me.id];
         else if (VOTES.includes(body.vote)) p.votes = { ...p.votes, [me.id]: body.vote };
