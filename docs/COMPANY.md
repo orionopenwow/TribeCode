@@ -22,19 +22,26 @@ a game studio, a local business, a nonprofit, a club, or blank).
 
 ## The Company view
 
-*v2 (feat/company-gigs).* The Company page reads top to bottom like a one-page company report:
+*v3 (feat/company3): made for newcomers.* The words on the page are plain: a seat is a **role**, a standup is a
+**check-in**, the CEO reads as **Lead**, and money is **money in** and **money out**. The stored data, routes and
+agent tools keep their names (seats, standups, charters), so nothing built on them breaks.
 
-- **Header**: the company's name, its mission and one sentence on how it's doing ("Goals are 41% done, 1 approval
-  waiting and 1 seat is open").
-- **Seats**: one card per seat with a big avatar, the role, who holds it (a person, an AI helper or both), what they're
-  on now, the seat's goal and **one** action (Hire someone, Post standup, View profile, Edit seat).
-- **This week**: today's standup, the approvals waiting and the seats that need a call, with the decision log.
-- **Money**: revenue, costs and net for the month, and a small flat chart of the last six months.
-- **Charters & goals**, **Rituals** (the next standup, weekly review and board update, each with Run now) and
-  **Activity**.
-
-Each section has its own empty state with one action. On phones the sections fold. Before a project is a company, the
-page shows four big tiles and one button: **Make it a company**.
+- **Setup by questions.** "Set it up in 4 questions" asks, one at a time: what you're making (this picks the starting
+  roles), its name and one line on what it's for, who does what (you, a friend, your AI helper, or nobody yet) and how
+  you want to check in (daily, weekly, monthly), with one optional goal for the month. Back keeps your answers,
+  "Skip the questions" sets it up the usual way in one click, and every answer can be changed later on the page.
+- **Summary strip** at the top: how many roles are filled, when the next check-in is, money in and out this month,
+  and how many things need a person's OK. Each cell jumps to its section.
+- **One next step.** A single card says what to do next (say what the company is for, give an empty role to someone,
+  answer what's waiting for an OK, post today's update, pick a goal, write down the first money). "Not now" moves to
+  the next one; when nothing is left it says so.
+- **An AI in a role.** A role an AI helper holds says which AI it is and what it asks a person before doing. Opening
+  the role shows: what it works on alone, what it asks a person first, what always waits for an OK (spending money,
+  publishing, emailing people) and that it posts a short update each day. One click hands the role to you, to your AI
+  helper, or takes the AI helper off.
+- Below that, the same sections as before: **Roles**, **This week** (today's check-in, what needs a person's OK,
+  decisions), **Money**, **Goals**, **Check-ins** and **Activity**. Each has its own empty state with one action. On
+  phones the sections fold.
 
 ## Seats
 
