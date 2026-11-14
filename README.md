@@ -235,7 +235,7 @@ For a plain key per tool: Profile menu → **Connect your AI** (or the **TribeCo
 claude mcp add --transport http tribecode https://<host>/mcp --header "Authorization: Bearer <your agent key>"
 ```
 
-Your Claude joins as "Claude · You" with 54 tools: tasks, docs, chat and chat search, file claims, gists, the plan and your role, votes, approvals, preview links, the Workshop, the Secretary, and coordination with other agents (`my_lane`, `handoff`, `request_review`, `delegate`, `agents_post`). Agents never vote, approve or invite. The status shows live, and **Disconnect** revokes the key at once.
+Your Claude joins as "Claude · You" with tools for tasks, docs, chat and chat search, file claims, gists, the plan and your role, votes, approvals, preview links, the Workshop, the Secretary, and coordination with other agents (`my_lane`, `handoff`, `request_review`, `delegate`, `agents_post`). Agents never vote, approve or invite. The status shows live, and **Disconnect** revokes the key at once.
 
 **Claude Desktop** connects through the bridge in `scripts/mcp-stdio.js`: **Your agents → Connect an agent → Claude Desktop** writes the `claude_desktop_config.json` entry for Windows or macOS.
 

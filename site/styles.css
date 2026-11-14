@@ -1680,3 +1680,5 @@ button.mk-send { border: 0; padding: 0; cursor: pointer; }
 .vs-app--site { width: 100%; box-sizing: border-box; } .vs-app--site .vs-app__body > * { min-width: 0; }
 @media (max-width: 520px) { .vs-app--site .vs-hero { grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); } }
 .vs__mid { grid-template-columns: minmax(0, 1fr); }
+
+.stat[hidden] { display: none; }
