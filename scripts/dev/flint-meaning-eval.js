@@ -14,7 +14,8 @@ const N = require(path.join(UI, 'flintnlu.js')), E = require(path.join(UI, 'flin
 let CONV = null; try { CONV = require(path.join(UI, 'flintconv.js')); } catch {}
 let MEAN = null; try { MEAN = require(path.join(UI, 'flintmeaning.js')); } catch {}
 const H7 = require('./flint-eval/held7.js'), H8 = require('./flint-eval/held8.js'), H9 = require('./flint-eval/held9.js'), T9 = require('./flint-eval/tune9.js');
-const kb = require(path.join(ROOT, 'server', 'flintkb.js'))({ nlu: N });
+let TIER = null;   // the model of the tier being scored; the knowledge base re-ranks with it, as the server does with the shipped table
+const kb = require(path.join(ROOT, 'server', 'flintkb.js'))({ nlu: N, model: () => (TIER && TIER.cover ? TIER : null) });
 const ab = b => b.buffer.slice(b.byteOffset, b.byteOffset + b.byteLength);
 const fx = path.join(ROOT, 'app', 'test', 'fixtures', 'flint-model');
 const FIX = E.fromFiles({ model: ab(fs.readFileSync(path.join(fx, 'model.safetensors'))), tokenizer: fs.readFileSync(path.join(fx, 'tokenizer.json'), 'utf8') });
@@ -26,7 +27,7 @@ const V = process.argv.includes('-v'), JSON_ONLY = process.argv.includes('--json
 const NOW = new Date('2026-11-13T10:00:00');
 const base = () => ({ now: NOW, members: [{ id: 'm1', name: 'Maya Lee' }, { id: 'm2', name: 'Sam Ortiz' }], tasks: [] });
 const parse = (t, ctx) => (CONV ? CONV.create().parse(t, ctx, N) : N.parse(t, ctx));
-const tally = () => ({ ok: 0, n: 0, direct: 0, wrong: 0, fails: [] });
+const tally = () => ({ ok: 0, n: 0, direct: 0, wrong: 0, sure: 0, sureOk: 0, fails: [] });
 
 function para(list, model) {
   const T = tally();
@@ -35,6 +36,8 @@ function para(list, model) {
     const direct = st.length === 1 && s.intent && s.conf >= 0.6 && s.intent !== 'help.kb';
     const chips = (s.alts || []).slice(0, 3).map(a => a.intent);
     const hit = direct ? want.includes(s.intent) : st.length === 1 && (want.includes(s.intent) || chips.some(c => want.includes(c)));
+    // the single "Did you mean this?" chip (TribeMeaning.sure): well clear of the next one
+    if (!direct && model && s.alts && s.alts[0] && s.alts[0].score >= 0.4 && s.alts[0].score - (s.alts[1] ? s.alts[1].score || 0 : 0) >= 0.15) { T.sure++; if (want.includes(s.alts[0].intent)) T.sureOk++; }
     T.n++; if (hit) { T.ok++; if (direct) T.direct++; } else { if (direct) T.wrong++; T.fails.push(`“${t}” → ${direct ? 'did ' + s.intent : 'chips: ' + (chips.join(', ') || 'none')}`); }
   }
   return T;
@@ -43,7 +46,7 @@ function help(list, model) {
   const T = tally();
   for (const [q, rx] of list) {
     let a = kb.ask(q, 8);
-    if (model && a.length) a = (MEAN && MEAN.rerank ? MEAN.rerank(model, q, a, x => `${x.title} ${x.heading} ${x.snippet}`, x => x.score || 0) : a);
+    if (model && !model.cover && a.length) a = MEAN.rerank(model, q, a, x => `${x.title} ${x.heading} ${x.snippet}`, x => x.score || 0);
     T.n++; if (a[0] && rx.test(`${a[0].file} ${a[0].slug || ''}`)) T.ok++; else T.fails.push(`“${q}” → ${a[0] ? a[0].file : 'nothing'}`);
   }
   return T;
@@ -62,7 +65,7 @@ const dymList = H => H.dym.concat(H.cmd.filter(c => c[0] === 'g').map(c => [c[1]
 
 const R = {};
 for (const [name, model] of TIERS) {
-  N.setSemantic(model);
+  N.setSemantic(model); TIER = model;
   R[name] = {
     'tuning sets · paraphrases': para(dymList(H7).concat(dymList(H8), T9.para), model),
     'tuning sets · help': help(H7.help.concat(H8.help, T9.help), model),
@@ -74,10 +77,10 @@ for (const [name, model] of TIERS) {
 }
 N.setSemantic(null);
 const pct = t => `${t.ok}/${t.n} (${Math.round(t.ok / t.n * 100)}%)`;
-if (JSON_ONLY) { console.log(JSON.stringify(Object.fromEntries(Object.entries(R).map(([k, v]) => [k, Object.fromEntries(Object.entries(v).map(([s, t]) => [s, { ok: t.ok, n: t.n, top3: t.top3, direct: t.direct, wrong: t.wrong }]))])), null, 1)); process.exit(0); }
+if (JSON_ONLY) { console.log(JSON.stringify(Object.fromEntries(Object.entries(R).map(([k, v]) => [k, Object.fromEntries(Object.entries(v).map(([s, t]) => [s, { ok: t.ok, n: t.n, top3: t.top3, direct: t.direct, wrong: t.wrong, sure: t.sure, sureOk: t.sureOk }]))])), null, 1)); process.exit(0); }
 const rows = Object.keys(R['no table']);
 const lines = ['| Set | ' + TIERS.map(t => t[0]).join(' | ') + ' |', '|---|' + TIERS.map(() => '---').join('|') + '|'];
-for (const r of rows) lines.push(`| ${r} | ${TIERS.map(([n]) => { const t = R[n][r]; return pct(t) + (t.top3 != null ? `, top 3: ${t.top3}` : '') + (t.wrong ? `, ${t.wrong} wrong action${t.wrong > 1 ? 's' : ''}` : ''); }).join(' | ')} |`);
+for (const r of rows) lines.push(`| ${r} | ${TIERS.map(([n]) => { const t = R[n][r]; return pct(t) + (t.top3 != null ? `, top 3: ${t.top3}` : '') + (t.wrong ? `, ${t.wrong} wrong action${t.wrong > 1 ? 's' : ''}` : '') + (t.sure ? `, single chip right ${t.sureOk} of ${t.sure}` : ''); }).join(' | ')} |`);
 console.log(lines.join('\n'));
 if (V) for (const [n] of TIERS) for (const r of rows) if (process.argv.includes('--held') ? /batch 9/.test(r) : /tuning/.test(r)) { console.log(`\n## ${n} · ${r}`); R[n][r].fails.forEach(f => console.log('  ' + f)); }
 if (process.argv.includes('--write')) {

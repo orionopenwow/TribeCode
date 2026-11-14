@@ -82,7 +82,9 @@
       texts.forEach((text, j) => { const B = toks(text); A.forEach((a, i) => { let m = 0; for (const b of B) { const s = near(a, b); if (s > m) { m = s; if (m === 1) break; } } best[i][j] = m; }); });
       const wt = A.map((a, i) => { let hit = 0; for (let j = 0; j < N; j++) hit += best[i][j]; return a.wt * Math.pow(Math.log(1 + N / (0.5 + hit)) / Math.log(1 + N / 0.5), 2); });
       const all = wt.reduce((s, x) => s + x, 0) || 1;
-      return texts.map((_, j) => { let got = 0; for (let i = 0; i < A.length; i++) got += best[i][j] * wt[i]; return got / all; });
+      // a long text has more chances to contain something close to each word, so it has to earn its place: past a dozen
+      // meaningful words the score is eased down (a 60-word Guide section counts about two thirds of a 6-word task title)
+      return texts.map((text, j) => { let got = 0; for (let i = 0; i < A.length; i++) got += best[i][j] * wt[i]; const len = toks(text).length; return got / all / (len > 12 ? 1 + 0.25 * Math.log2(len / 12) : 1); });
     }
     // both ways: a short query against a short text (a command example, a task title)
     const score = (q, text) => { const c1 = cover(q, text); if (!c1) return 0; return c1 * 0.7 + cover(text, q) * 0.3; };
@@ -106,3 +108,110 @@
   }
   return { fromBuffer, stack, rerank, version: 1 };
 });
+
+// ---------- in the browser: window.TribeMeaning (documented at the top of this file) ----------
+if (typeof window !== 'undefined' && typeof document !== 'undefined') (function () {
+  'use strict';
+  const Core = window.TribeMeaningCore, C = () => window.TribeClient, SM = () => window.TribeFlintSem, N = () => window.TribeNLU;
+  let BUILT = null, CUR = null, loading = null;
+  // tests of the helper by itself switch the table off (localStorage tribecode.meaning = 'off'); there is no setting for it
+  const OFF = (() => { try { return localStorage.getItem('tribecode.meaning') === 'off'; } catch { return false; } })();
+  const helper = () => { const F = window.TribeFlintModel; return F && F.ready && F.ready() && F.model ? F.model() : null; };
+  // the model everything uses: the built-in table, with the optional helper stacked on top when it is installed
+  function apply() {
+    CUR = Core.stack(BUILT, helper());
+    if (N() && N().setSemantic) N().setSemantic(CUR);
+    try { document.dispatchEvent(new CustomEvent('flintmeaning', { detail: status() })); } catch {}
+  }
+  function ready() {
+    if (BUILT) return Promise.resolve(true);
+    if (OFF) return Promise.resolve(false);
+    if (!loading) loading = fetch('flintwords.bin').then(r => { if (!r.ok) throw new Error('flintwords.bin ' + r.status); return r.arrayBuffer(); })
+      .then(b => { BUILT = Core.fromBuffer(b); apply(); return true; })
+      .catch(e => { console.warn('Flint word table:', e.message); loading = null; return false; });
+    return loading;
+  }
+  const status = () => ({ level: helper() ? 'helper' : BUILT ? 'built-in' : 'none', words: BUILT ? BUILT.vocabSize : 0, name: CUR ? CUR.name : '' });
+  if (!OFF) document.addEventListener('flintmodel', apply);   // the helper arrived or was removed
+
+  // ---------- the index: what this person can already see, kept on this device ----------
+  // Tribe content comes from flintmodel.js's corpus (docs, tasks, channel chat, file paths, Versions; never private
+  // messages). The Guide and Flint's own commands are added here so search works before any tribe is joined.
+  let guide = null, guideAt = 0, cmds = null, lastTribe = [];
+  async function guideItems() {
+    if (guide && Date.now() - guideAt < 10 * 60000) return guide;
+    const out = [];
+    try {
+      const r = await fetch(((C() && C().base && C().base()) || '') + '/api/guide'); if (!r.ok) throw new Error(r.status);
+      for (const p of (await r.json()).pages || []) String(p.body || '').split(/\n(?=#{2,3}\s)/).forEach(sec => {
+        const h = (/^#{2,3}\s+(.+)$/m.exec(sec) || [])[1] || '', body = sec.replace(/^#.*$/gm, '').replace(/[*_`>|]/g, ' ').replace(/\[([^\]]+)\]\([^)]*\)/g, '$1').replace(/\s+/g, ' ').trim();
+        if (body.length < 30) return;
+        out.push({ kind: 'Guide', label: (h ? `${p.title}: ${h}` : p.title).slice(0, 90), hint: 'Guide', text: `${p.title} ${h} ${h} ${body}`.slice(0, 600), run: () => window.TribeGuide && window.TribeGuide.open(p.slug) });
+      });
+    } catch {}
+    if (out.length) { guide = out; guideAt = Date.now(); }
+    return out;
+  }
+  function cmdItems() {
+    if (cmds) return cmds; if (!N() || !N().catalog) return [];
+    const seen = new Set(); cmds = [];
+    for (const x of N().catalog()) { const ex = (x.examples || [])[0]; if (!ex || seen.has(x.id)) continue; seen.add(x.id); cmds.push({ kind: 'Command', label: ex, hint: x.label || 'Flint', intent: x.id, text: `${x.label || ''} ${(x.examples || []).join(' ')}`, run: () => window.TribeFlint && window.TribeFlint.ask && window.TribeFlint.ask(ex) }); }
+    return cmds;
+  }
+  async function tribeItems() {
+    const F = window.TribeFlintModel; if (!F || !F.corpus) return lastTribe;
+    try { const c = await F.corpus(); if (c) lastTribe = c; } catch {}
+    return lastTribe;
+  }
+  const ALL = ['doc', 'task', 'chat', 'file', 'version', 'guide'];
+  const docsOf = new WeakMap();   // one docs list per item list, so flintsem.js keeps its word index between searches
+  function rankItems(q, items, limit, min) {
+    if (!SM() || !items.length) return [];
+    let docs = docsOf.get(items); if (!docs) { docs = items.map((it, i) => ({ id: i, text: it.text })); docsOf.set(items, docs); }
+    return SM().rank(q, docs, { nlu: N(), model: CUR, k: limit }).filter(r => r.score >= min).map(r => ({ ...items[r.id], score: Math.round(r.score * 100) / 100 }));
+  }
+  const pick = (lists, scopes) => { const S = new Set((scopes || ALL).map(s => String(s).toLowerCase().replace(/s$/, ''))); const key = [...S].sort().join(); let m = pick.memo.get(key); if (m && m.lists.every((l, i) => l === lists[i])) return m.items; const items = [].concat(...lists).filter(it => S.has(it.kind.toLowerCase())); pick.memo.set(key, { lists, items }); return items; };
+  pick.memo = new Map();
+  async function search(query, o = {}) {
+    const q = String(query || '').trim(); if (q.length < 2) return [];
+    await ready();
+    const S = (o.scopes || ALL).map(s => String(s).toLowerCase().replace(/s$/, ''));
+    const lists = [await tribeItems(), S.includes('guide') ? await guideItems() : [], []];
+    const out = rankItems(q, pick(lists, S), o.limit || 6, CUR ? 0.2 : 0.12);
+    if (S.includes('command')) {   // commands are matched the way Flint matches them (rules, examples and meaning cues)
+      const ni = nearestIntent(q), all = cmdItems();
+      for (const a of ni ? [ni, ...ni.alts] : []) { const it = all.find(c => c.intent === a.intent); if (it && a.score >= 0.3) out.push({ ...it, score: Math.round(a.score * 100) / 100 }); }
+      out.sort((x, y) => y.score - x.score); out.length = Math.min(out.length, o.limit || 6);
+    }
+    return out;
+  }
+  // The closest thing Flint can do. Never runs anything.
+  function nearestIntent(text, ctx) {
+    const n = N(); if (!n || !n.one) return null;
+    const s = n.one(String(text || ''), ctx || {}), cat = n.catalog(), meta = id => { const x = cat.find(c => c.id === id) || {}; return { label: x.label || '', example: (x.examples || [])[0] || '' }; };
+    if (s.intent && !s.fuzzy) return { intent: s.intent, ...meta(s.intent), score: s.conf, confident: true, alts: [] };
+    const alts = (s.alts || []).filter(a => a.intent).map(a => ({ intent: a.intent, label: meta(a.intent).label, example: a.example || meta(a.intent).example, score: a.score || 0 }));
+    if (!alts.length) return null;
+    return { ...alts[0], confident: sure(alts), alts: alts.slice(1) };
+  }
+  // well clear of the next one (set on the tuning sets: 22 of 22 right there)
+  const sure = alts => !!(CUR && alts[0] && alts[0].score >= 0.4 && alts[0].score - (alts[1] ? alts[1].score || 0 : 0) >= 0.15);
+  const rerank = (q, items, textOf, baseOf) => (CUR && CUR.cover ? Core.rerank(CUR, q, items, textOf, baseOf) : items || []);
+
+  // ---------- Ctrl K: rows found by meaning sit under exact matches and above loose letter matches ----------
+  function paletteRows(q) {
+    if (!q || q.length < 3) return [];
+    if (!BUILT) { ready(); return []; }
+    const again = () => { const i = document.getElementById('pal-input'), p = document.getElementById('palette'); if (i && p && !p.classList.contains('hidden') && i.value.trim().toLowerCase() === q) i.dispatchEvent(new Event('input', { bubbles: true })); };
+    const F = window.TribeFlintModel, before = lastTribe, hadGuide = guide;
+    if (F && F.corpus) tribeItems().then(c => { if (c !== before) again(); });
+    if (!hadGuide) guideItems().then(g => { if (g.length) again(); });
+    const items = pick([lastTribe, guide || [], []], ALL);
+    return rankItems(q, items, 4, 0.3).filter(it => !it.label.toLowerCase().includes(q)).map(it => ({ kind: it.kind, label: it.label, hint: `by meaning${it.hint && it.kind !== 'Guide' ? ' · ' + it.hint : ''}`, score: 30 + it.score * 20, run: it.run, sem: true }));
+  }
+  if (!OFF && window.TribePalette && window.TribePalette.register) window.TribePalette.register(paletteRows);
+
+  window.TribeMeaning = { off: OFF, search, nearestIntent, ready, model: () => CUR, status, rerank, sure };
+  // the table is part of the app shell (cached for offline); it is read once the page is idle, or on first use
+  (window.requestIdleCallback || (f => setTimeout(f, 900)))(() => ready());
+})();

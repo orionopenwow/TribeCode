@@ -69,8 +69,8 @@
     ['any', 'Explain an error, with a local model', 'explain this error: TypeError: x is undefined', '', 'Local'],
   ];
   const LEVELS = [
-    ['none', 'No AI', 'Always on. Rules, recipes, palettes and math: instant, offline, private.'],
-    ['helper', 'Local brain', 'Recommended. A small word-meaning model on this device, no GPU needed: Flint understands your own words, finds things by meaning and spots duplicate tasks. One download, about 30 MB (8 MB on phones).'],
+    ['none', 'No AI', 'Always on. Rules, recipes, palettes, math and a built-in word list that finds commands, docs, tasks and chat by meaning: instant, offline, private.'],
+    ['helper', 'Local brain', 'Recommended. A small word-meaning model on this device, no GPU needed: Flint understands more of your own words, sharpens the built-in search by meaning and spots duplicate tasks. One download, about 30 MB (8 MB on phones).'],
     ['local', 'Local model', 'Opt-in. A small language model on a computer you control (Ollama or LM Studio on this computer or the host, or in this browser with WebGPU). It writes summaries, rewrites and drafts, and turns loose requests into Flint’s own commands, checked and undoable.'],
     ['yours', 'Your AI', 'Your own Claude, OpenAI or Gemini key, on the host only. For writing and code.'],
     ['credits', 'Credits', 'TribeCode credits when you have no key. The same requests, billed per use.'],

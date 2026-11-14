@@ -17,7 +17,17 @@ const HELP_DOCS = new Set(['ACCOUNTS', 'ANY-LLM', 'ASSETS', 'BROWSER-APP', 'CLOU
 const indexed = f => HELP_DOCS.has(String(f).replace(/\.md$/i, '').toUpperCase());
 const MAX = 200 * 1024;
 
-module.exports = function flintkb({ ui, nlu } = {}) {
+module.exports = function flintkb({ ui, nlu, model } = {}) {
+  // feat/flint-meaning: answers are re-ranked by meaning with the word table that ships with the app (app/ui/flintwords.bin,
+  // read once, on the first question). `model` overrides it (the evals pass null for "no table"). No table: as before.
+  let MEAN = null, table;
+  const meaning = () => {
+    if (model !== undefined) return typeof model === 'function' ? model() : model;
+    if (table !== undefined) return table;
+    table = null;
+    try { const dir = ui || path.join(__dirname, '..', 'app', 'ui'), f = path.join(dir, 'flintwords.bin'); if (fs.existsSync(f)) { MEAN = require(path.join(dir, 'flintmeaning.js')); const b = fs.readFileSync(f); table = MEAN.fromBuffer(b.buffer.slice(b.byteOffset, b.byteOffset + b.byteLength)); } } catch (e) { table = null; }
+    return table;
+  };
   const guideDirs = [process.env.TRIBE_GUIDE, path.join(__dirname, '..', 'docs', 'guide'), ui && path.join(ui, '..', 'guide'), ui && path.join(ui, '..', '..', 'docs', 'guide')].filter(Boolean);
   const docDirs = [path.join(__dirname, '..', 'docs'), ui && path.join(ui, '..', '..', 'docs')].filter(Boolean);
   const isDir = d => { try { return fs.statSync(d).isDirectory(); } catch { return false; } };
@@ -64,7 +74,11 @@ module.exports = function flintkb({ ui, nlu } = {}) {
   function ask(q, k = 3) {
     q = String(q || '').slice(0, 300); if (!q.trim()) return [];
     const I = build(), hits = nlu.search(I, q, 12).map(h => ({ ...h, score: h.score * (h.doc.s.w || 1) })).sort((a, b) => b.score - a.score);
-    const out = [], files = new Set();
+    const out = [], files = new Set(), mm = meaning();
+    if (mm && mm.cover && hits.length > 1) {   // the top 8 by words, then by how well each covers what was asked
+      const top = Math.max(1e-6, hits[0].score), head = hits.slice(0, 8).map(h => { const s = h.doc.s; return { h, blend: mm.cover(q, `${s.title} ${s.heading} ${snippet(s.body, q)}`) * 0.5 + h.score / top * 0.5 }; }).sort((a, b) => b.blend - a.blend).map(x => x.h);
+      hits.splice(0, head.length, ...head);
+    }
     for (const h of hits) { const s = h.doc.s; if (files.has(s.file + s.heading)) continue; files.add(s.file + s.heading); out.push({ title: s.title, heading: s.heading, snippet: snippet(s.body, q), source: s.source, file: s.file, slug: s.slug, score: Math.round(h.score * 100) / 100 }); if (out.length >= k) break; }
     return out.filter(a => a.snippet);
   }

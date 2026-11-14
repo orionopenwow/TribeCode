@@ -1259,6 +1259,8 @@
     const near = search(EXIDX, c, 12), seen = new Set(), alts = [];
     for (const n of near) { if (seen.has(n.doc.id) || (best && n.doc.id === best.intent)) continue; seen.add(n.doc.id); alts.push({ intent: n.doc.id, example: n.doc.text, score: Math.round(n.score * 100) / 100 }); if (alts.length >= 3) break; }
     if (!best && SEM) { const sem = semNear(meant(P.toks, c), 12); if (sem.length) { const bl = blendAlts(near, sem, null, ctx); if (bl.length) { alts.length = 0; alts.push(...bl); } } }
+    // a phrase this person taught, said in other words: offered first, never run by itself (the exact phrase still runs at once)
+    if (!best && SEM && SEM.score && ctx.learned && ctx.learned.length) { const q = meant(P.toks, c); let bl = null, bs = 0.5; for (const x of ctx.learned) { const sc = SEM.score(q, String(x.say || '')); if (sc >= bs) { bs = sc; bl = x; } } if (bl) { alts.unshift({ intent: 'taught', example: bl.say, score: Math.round(bs * 100) / 100, sem: true, learned: true }); alts.length = Math.min(alts.length, 3); } }
     if (!best) {
       const top = near[0];
       const tc = top && CAT.find(x => x.id === top.doc.id); if (top && top.score >= 0.62 && !(tc && tc.ctx && !tc.ctx(ctx)) && !(tc && Object.keys(tc.req).length)) return { intent: top.doc.id, area: (CAT.find(x => x.id === top.doc.id) || {}).area, slots: {}, conf: Math.min(0.7, top.score), text, c, alts, fuzzy: true, lang: P.lang };

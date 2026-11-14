@@ -71,6 +71,8 @@
     taughtNone: ['You haven’t taught me any phrases yet. Try “when I say standup, open the calendar”.', 'Aún no me enseñaste frases. Prueba “cuando diga standup, abre el calendario”.', 'Você ainda não me ensinou frases. Tente “quando eu disser standup, abra o calendário”.', 'Pas encore de phrases. Essayez « quand je dis standup, ouvre le calendrier ».', 'Noch keine Sätze. Probier „wenn ich standup sage, öffne den Kalender“.', 'まだ教わったフレーズはありません。', '你还没教过我短语。', '아직 가르쳐 준 문구가 없어요.'],
     forgot: ['Forgot “{s}”.', 'Olvidé “{s}”.', 'Esqueci “{s}”.', 'J’ai oublié « {s} ».', '„{s}“ vergessen.', '「{s}」を忘れました。', '已忘记“{s}”。', '“{s}”을(를) 잊었어요.'],
     meant: ['Thanks. Next time “{s}” means: {m}.', 'Gracias. La próxima vez “{s}” significa: {m}.', 'Valeu. Da próxima vez “{s}” significa: {m}.', 'Merci. La prochaine fois, « {s} » voudra dire : {m}.', 'Danke. Nächstes Mal heißt „{s}“: {m}.', 'ありがとう。次から「{s}」は「{m}」の意味にします。', '谢谢。下次“{s}”就是：{m}。', '고마워요. 다음엔 “{s}”을(를) “{m}”(으)로 알게요.'],
+    didYouOne: ['Did you mean this?', '¿Querías decir esto?', 'Você quis dizer isto?', 'Vouliez-vous dire ceci ?', 'Meintest du das?', 'こちらのことですか？', '你是指这个吗？', '이것을 말씀하신 건가요?'],
+    foundBy: ['Here is what matches “{q}” by meaning:', 'Esto coincide con “{q}” por significado:', 'Isto combina com “{q}” pelo significado:', 'Voici ce qui correspond à « {q} » par le sens :', 'Das passt der Bedeutung nach zu „{q}“:', '「{q}」に意味が近いもの:', '按含义与“{q}”相符的内容：', '“{q}”와 뜻이 가까운 항목:'],
     didYou: ['I’m not sure what you mean. One of these?', 'No estoy seguro. ¿Alguna de estas?', 'Não tenho certeza. Uma destas?', 'Je ne suis pas sûr. L’une de celles-ci ?', 'Nicht ganz sicher. Eins davon?', 'よくわかりませんでした。どれかですか？', '我不太确定。是这些之一吗？', '잘 모르겠어요. 이 중 하나인가요?'],
     beyond: ['This one needs an AI, so nothing changed. Use my AI connects your own for free; Get credits / Premium uses ours.', 'Eso es más de lo que puedo hacer solo, sin IA. Puedo pasárselo a tu asistente de IA, o puedes darme un cerebro.', 'Isso é mais do que consigo sozinho, sem IA. Posso passar ao seu assistente de IA, ou você pode me dar um cérebro.', 'C’est au-delà de ce que je fais seul, sans IA. Je peux le confier à votre assistant IA, ou vous pouvez me donner un cerveau.', 'Das schaffe ich ohne KI nicht allein. Ich kann es deinem KI-Helfer geben, oder du gibst mir ein Gehirn.', 'AIなしでは私だけでは難しいです。AIヘルパーに渡すか、私に頭脳を与えてください。', '没有 AI 我一个人做不到。我可以交给你的 AI 助手，或者给我一个大脑。', 'AI 없이 혼자 하기엔 어려워요. AI 도우미에게 넘기거나 저에게 두뇌를 주세요.'],
     pickFirst: ['Pick something in the preview (Edit) or select a layer on the canvas first, then tell me how to change it.', 'Primero elige algo en la vista previa (Editar) o una capa en el lienzo, y dime cómo cambiarlo.', 'Primeiro escolha algo na prévia (Editar) ou uma camada no canvas, e diga como mudar.', 'Choisissez d’abord un élément dans l’aperçu (Modifier) ou un calque, puis dites-moi quoi changer.', 'Wähle erst etwas in der Vorschau (Bearbeiten) oder eine Ebene aus und sag mir, was sich ändern soll.', 'まずプレビュー（編集）で要素か、キャンバスでレイヤーを選んでください。', '先在预览（编辑）里选一个元素或在画布上选图层，再告诉我怎么改。', '먼저 미리보기(편집)에서 요소나 캔버스의 레이어를 고른 뒤 바꿀 내용을 말해 주세요.'],
@@ -443,7 +445,11 @@
     if (id === 'trending') { go('trending'); return { text: T('trending') }; }
     if (id === 'studio.open') { if (window.TribeStudios) window.TribeStudios.open(String(sl.app || '').toLowerCase()); return { text: T('opened', { x: sl.app }) }; }
     if (id === 'asset.add') return legacy(s.text);
-    if (id === 'find') return legacy('find ' + (sl.q || ''));
+    if (id === 'find') {   // feat/flint-meaning: by meaning first (docs, tasks, chat, files, Versions), then the plain search
+      const TM = window.TribeMeaning, FMd = window.TribeFlintModel;
+      if (sl.q && TM && TM.model() && FMd && FMd.find && connected()) { let hits = []; try { hits = await FMd.find(sl.q, 4); } catch {} if (hits.length) return { text: T('foundBy', { q: sl.q }), acts: hits.map((h, i) => [`${h.kind} · ${h.label}`.slice(0, 70), 'semhit', i]).concat([['Search everything', 'search', sl.q]]) }; }
+      return legacy('find ' + (sl.q || ''));
+    }
     if (id === 'people.where' || id === 'people.online' || id === 'people.working' || (id === 'status' && /\b(?:online|here|around|on)\s*\??$/i.test(s.text || ''))) { const PP = window.TribePeoplePanel; const r = PP && PP.flint(id === 'status' ? 'people.online' : id, sl); if (r) return r; }   // feat/presence
     if (id === 'status') return legacy("what's new");
     if (id === 'focus') return legacy('what should i do next');
@@ -500,7 +506,7 @@
 
   async function kbAnswer(q, H) {
     let ans = [];
-    const FM = window.TribeFlintModel, sem = FM && FM.ready() ? FM : null;   // tier 1: with the local helper, more candidates, re-ranked by meaning
+    const FM = window.TribeFlintModel, TMk = window.TribeMeaning, sem = FM && (FM.ready() || (TMk && TMk.model())) ? FM : null;   // more candidates, re-ranked by meaning (the built-in word table, plus the local helper when installed)
     if (connected()) { try { ans = (await C.api('/flint/kb?q=' + encodeURIComponent(q) + '&k=' + (sem ? 8 : 2))).answers || []; } catch {} }
     if (sem && ans.length > 1) ans = sem.rerank(q, ans, a => `${a.title} ${a.heading} ${a.snippet}`, a => a.score);
     if (!ans.length && N()) {   // offline: the Guide pages the app can see
@@ -563,6 +569,8 @@
       const alts = (s.alts || P.alts || []).filter(a => a.example || a.intent).slice(0, 3);
       if (s.intent && s.conf >= 0.45) { const ex = exampleOf(s.intent); if (ex) alts.unshift({ intent: s.intent, example: ex }); }
       const uniq = []; alts.forEach(a => { const ex = a.example || exampleOf(a.intent); if (ex && !uniq.includes(ex)) uniq.push(ex); });
+      // feat/flint-meaning: one command well clear of the rest is offered by itself, as a question. Nothing runs until it is tapped.
+      const TMd = window.TribeMeaning; if (uniq.length && !(s.intent && s.conf >= 0.45) && TMd && TMd.sure && TMd.sure(alts)) return H.say(T('didYouOne'), [H.act(uniq[0], 'meant', JSON.stringify({ say: text, means: uniq[0] }))]);
       if (uniq.length && (s.conf >= 0.45 || (alts[0] && alts[0].score >= 0.35))) return H.say(T('didYou'), uniq.slice(0, 3).map(e => H.act(e, 'meant', JSON.stringify({ say: text, means: e }))));
       return null;   // flint.js shows its basic-mode reply (with the honest offer of a brain / an AI helper)
     }
@@ -619,7 +627,7 @@
     const m = WHERE.exec(String(text || '').trim()), FMd = window.TribeFlintModel; if (!m || !FMd || !FMd.find || !connected()) return null;
     const q = (m[1] || m[2] || '').trim(); let hits = []; try { hits = await FMd.find(q, 4); } catch {}
     if (!hits.length) return H.say(`I looked through the docs, tasks, chat, files and Versions and found nothing about “${q}”.`, [H.act('Search everything', 'search', q)]);
-    return H.say(`Here is where “${q}” comes up${FMd.ready() ? ' (matched by meaning with my local brain)' : ''}:`, hits.map((h, i) => H.act(`${h.kind} · ${h.label}`.slice(0, 70), 'semhit', i)), { hits: undefined });
+    return H.say(`Here is where “${q}” comes up${FMd.ready() ? ' (matched by meaning with my local brain)' : window.TribeMeaning && window.TribeMeaning.model() ? ' (matched by meaning)' : ''}:`, hits.map((h, i) => H.act(`${h.kind} · ${h.label}`.slice(0, 70), 'semhit', i)), { hits: undefined });
   }
 
   window.TribeFlintLocal = { handle, meant, runSay, addAnyway, memory: () => MEM, parse: t => N() && N().parse(t, ctxNow()), ctx: ctxNow, undo, learned: learnedList, _learn: learn };
