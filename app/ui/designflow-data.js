@@ -229,6 +229,7 @@
     ['portfolio', 'Portfolio', 'Your work with the story'], ['creator', 'Creator', 'Stream schedule and links'], ['service', 'Local business', 'Prices, booking, reviews'], ['wedding', 'Event', 'Date, place, RSVP'],
     ['podcast', 'Podcast', 'Episodes and where to listen'], ['blog', 'Blog', 'Posts and a newsletter'], ['saas', 'Product', 'A startup or app page'], ['gamepage', 'Game page', 'Screens, trailer, wishlist'],
     ['resume', 'Resume', 'Who you are and what you did'], ['nonprofit', 'Nonprofit', 'Mission and a donate button'], ['photography', 'Photography', 'A gallery first'], ['comingsoon', 'Coming soon', 'A waitlist'],
+    ['conference', 'Conference', 'Schedule, speakers, tickets'], ['menu', 'Restaurant menu', 'The menu first, with prices'], ['course', 'Class or course', 'What you learn, weeks, sign-up'], ['club', 'Club or group', 'When you meet and how to join'],
   ].map(([id, t, d]) => ({ id, t, d }));
 
   window.TribeDesignData = { KINDS, PLANS, SCREENS, SLIDES, POSTERS, LOGOS, BOARDS, SITES };

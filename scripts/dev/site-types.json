@@ -1,0 +1,104 @@
+{
+  "about": "Site types written straight as website-designer configs (feat/design-site2). scripts/dev/site-gallery.py turns each into app/ui/sitetpl/<id>.json and a thumbnail. A picture given as \"illus:<name>\" becomes one of TribeSiteCfg.ILLUS in the site's colours. Original to TribeCode, MIT.",
+  "types": [
+    {
+      "id": "conference", "title": "Conference / meetup", "category": "Events", "order": 60,
+      "summary": "A one-day event: what it is, the schedule hour by hour, who is speaking, tickets, and how to get there.",
+      "tags": ["conference", "meetup", "event", "schedule", "speakers", "tickets", "summit", "workshop day"],
+      "config": {
+        "name": "Small Web Day",
+        "theme": { "preset": "bold", "fonts": { "display": "Space Grotesk", "body": "Inter" } },
+        "seo": { "description": "Small Web Day: one day of short talks about making small, fast, friendly websites. Saturday 14 March at The Old Print Works." },
+        "pages": [
+          { "title": "Home", "slug": "index", "blocks": [
+            { "type": "hero", "variant": "split", "props": { "eyebrow": "SAT 14 MARCH · THE OLD PRINT WORKS", "title": "Small Web Day", "text": "One day of short talks about making small, fast, friendly websites. Eight speakers, long breaks, good coffee.", "img": "illus:stage", "alt": "A microphone on a stage under a light", "buttons": [{ "label": "Get a ticket" }, { "label": "See the schedule" }] } },
+            { "type": "stats", "variant": "bar", "props": { "title": "", "items": [{ "value": "8", "label": "talks" }, { "value": "150", "label": "seats" }, { "value": "1", "label": "day, one room" }] } },
+            { "type": "timeline", "variant": "line", "props": { "title": "Schedule", "items": [
+              { "when": "9:00", "title": "Doors and coffee", "text": "Pick up your badge and find a seat." },
+              { "when": "10:00", "title": "Pages that load in a blink", "text": "Rosa Lind on shipping less." },
+              { "when": "11:30", "title": "Writing for people in a hurry", "text": "Teo Marsh on plain words." },
+              { "when": "13:00", "title": "Lunch", "text": "Included with every ticket. Tell us what you can't eat." },
+              { "when": "14:30", "title": "Lightning talks", "text": "Five people, five minutes each." },
+              { "when": "17:00", "title": "Wrap-up and drinks", "text": "Stay as long as you like." } ] } },
+            { "type": "team", "variant": "grid", "props": { "title": "Speakers", "items": [
+              { "name": "Rosa Lind", "role": "Performance, Fernworks", "img": "", "alt": "" }, { "name": "Teo Marsh", "role": "Writer and editor", "img": "", "alt": "" },
+              { "name": "Ines Okafor", "role": "Designer, Tiny Shop", "img": "", "alt": "" }, { "name": "Your name?", "role": "Lightning talks are open", "img": "", "alt": "" } ] } },
+            { "type": "pricing", "variant": "cards", "props": { "title": "Tickets", "note": "Every ticket includes lunch. Can't afford one? Write to us.", "plans": [
+              { "name": "Early", "price": "$40", "per": "until 1 Feb", "features": ["All talks", "Lunch and coffee"], "button": { "label": "Get early ticket" } },
+              { "name": "Regular", "price": "$60", "per": "", "features": ["All talks", "Lunch and coffee", "Drinks after"], "button": { "label": "Get a ticket" } } ] } },
+            { "type": "info", "variant": "card", "props": { "title": "Getting there", "items": [{ "label": "Where", "text": "The Old Print Works\n12 Mill Lane" }, { "label": "Doors", "text": "9:00 on Saturday 14 March" }, { "label": "Access", "text": "Step-free. Quiet room upstairs." }], "button": { "label": "Open the map", "link": { "kind": "url", "to": "https://www.openstreetmap.org/search?query=12%20Mill%20Lane" } } } },
+            { "type": "faq", "variant": "list", "props": { "title": "Questions", "items": [{ "q": "Will talks be recorded?", "a": "Yes. Videos go up two weeks after." }, { "q": "Can I get a refund?", "a": "Up to a week before, no questions." }] } },
+            { "type": "footer", "variant": "simple", "props": { "text": "© Small Web Day", "links": [] } } ] }
+        ]
+      }
+    },
+    {
+      "id": "menu", "title": "Restaurant menu", "category": "Food & drink", "order": 61,
+      "summary": "The menu first, for a QR code on the table: starters, mains, sweets and drinks with prices, then hours and a booking button.",
+      "tags": ["restaurant", "menu", "qr menu", "bistro", "bar", "food", "dinner", "prices"],
+      "config": {
+        "name": "Osteria Lume",
+        "theme": { "preset": "editorial", "fonts": { "display": "DM Serif Display", "body": "Inter" } },
+        "seo": { "description": "Osteria Lume: a short seasonal menu, fresh pasta made every morning. Open Wednesday to Sunday from 6 pm." },
+        "pages": [
+          { "title": "Menu", "slug": "index", "blocks": [
+            { "type": "hero", "variant": "minimal", "props": { "eyebrow": "OPEN WED TO SUN · FROM 6 PM", "title": "Osteria Lume", "text": "A short seasonal menu. Fresh pasta made every morning.", "img": "", "alt": "", "buttons": [{ "label": "Book a table" }, { "label": "Find us" }] } },
+            { "type": "list", "variant": "menu", "props": { "title": "To start", "items": [
+              { "title": "Burrata, roast peppers", "meta": "$11", "text": "With basil oil and grilled bread." }, { "title": "Fried artichokes", "meta": "$9", "text": "Lemon, sea salt." }, { "title": "Soup of the day", "meta": "$7", "text": "Ask us. Always vegetarian." } ] } },
+            { "type": "list", "variant": "menu", "props": { "title": "Mains", "items": [
+              { "title": "Tagliatelle al ragù", "meta": "$18", "text": "Slow beef and pork ragù, parmesan." }, { "title": "Pumpkin ravioli", "meta": "$17", "text": "Brown butter, sage, hazelnuts. Vegetarian." },
+              { "title": "Sea bream", "meta": "$24", "text": "Grilled whole, with fennel and potatoes." }, { "title": "Mushroom risotto", "meta": "$16", "text": "Can be made vegan." } ] } },
+            { "type": "list", "variant": "menu", "props": { "title": "Sweets and drinks", "items": [
+              { "title": "Tiramisù", "meta": "$8", "text": "" }, { "title": "Lemon sorbet", "meta": "$6", "text": "" }, { "title": "House wine, glass", "meta": "$7", "text": "Red or white." }, { "title": "Espresso", "meta": "$3", "text": "" } ] } },
+            { "type": "banner", "variant": "bar", "props": { "text": "Allergies? Tell us when you order and we will sort it out.", "button": { "label": "", "link": { "kind": "", "to": "" } } } },
+            { "type": "info", "variant": "card", "props": { "title": "Find us", "items": [{ "label": "Address", "text": "8 Lantern Street\nOld Town" }, { "label": "Hours", "text": "Wed to Sun: 6 pm to 11 pm\nMon, Tue: closed" }, { "label": "Phone", "text": "555 0142" }], "button": { "label": "Get directions", "link": { "kind": "url", "to": "https://www.openstreetmap.org/search?query=8%20Lantern%20Street" } } } },
+            { "type": "cta", "variant": "accent", "props": { "title": "Book a table", "text": "Call us, or write and we answer the same day.", "buttons": [{ "label": "Call 555 0142", "link": { "kind": "url", "to": "tel:5550142" } }] } },
+            { "type": "footer", "variant": "simple", "props": { "text": "© Osteria Lume", "links": [] } } ] }
+        ]
+      }
+    },
+    {
+      "id": "course", "title": "Class or course", "category": "Learning", "order": 62,
+      "summary": "A class you teach: what people will be able to do, how the weeks go, who you are, the price, and a sign-up.",
+      "tags": ["course", "class", "workshop", "lessons", "tutor", "teacher", "learn", "training", "school"],
+      "config": {
+        "name": "Sourdough in Four Weeks",
+        "theme": { "preset": "sand", "fonts": { "display": "Fraunces", "body": "Inter" } },
+        "seo": { "description": "Sourdough in Four Weeks: a small evening class. Bake a loaf you are proud of, starting from flour and water." },
+        "pages": [
+          { "title": "Home", "slug": "index", "blocks": [
+            { "type": "hero", "variant": "split", "props": { "eyebrow": "EVENING CLASS · 8 PLACES", "title": "Sourdough in Four Weeks", "text": "Bake a loaf you are proud of, starting from flour and water. Four Tuesday evenings, everything provided.", "img": "illus:cafe", "alt": "A warm cup on a table", "buttons": [{ "label": "Save my place" }, { "label": "How it goes" }] } },
+            { "type": "features", "variant": "ticks", "props": { "title": "By the end you can", "items": [{ "title": "Keep a starter alive and happy" }, { "title": "Shape a loaf that holds" }, { "title": "Read your dough instead of the clock" }, { "title": "Bake with what your oven can do" }] } },
+            { "type": "steps", "variant": "row", "props": { "title": "How the weeks go", "items": [{ "title": "Week 1: the starter", "text": "Mix one and take it home." }, { "title": "Week 2: mixing and folding", "text": "Your first dough, start to finish." }, { "title": "Week 3: shaping", "text": "Rounds, ovals and scoring." }, { "title": "Week 4: bake day", "text": "Bake, taste, and fix what went wrong." }] } },
+            { "type": "image", "variant": "side", "props": { "title": "Taught by Noor", "text": "Noor has baked for a neighbourhood café for nine years and has taught 200 people their first loaf. Classes are small so everyone gets hands-on help.", "img": "illus:people", "alt": "Two people talking", "shape": "" } },
+            { "type": "testimonials", "variant": "quotes", "props": { "title": "From past classes", "items": [{ "quote": "I had failed three times on my own. Week two it finally made sense.", "name": "Dana", "role": "Spring class" }] } },
+            { "type": "pricing", "variant": "cards", "props": { "title": "Price", "note": "Flour, jars and a banneton to keep are included.", "plans": [{ "name": "Four evenings", "price": "$120", "per": "", "features": ["Tuesdays, 6:30 to 8:30", "All ingredients", "A starter and a banneton to keep"], "button": { "label": "Save my place" } }] } },
+            { "type": "faq", "variant": "list", "props": { "title": "Questions", "items": [{ "q": "Do I need to have baked before?", "a": "No. Complete beginners do well." }, { "q": "What if I miss a week?", "a": "You get notes and a short video to catch up." }] } },
+            { "type": "contact", "variant": "form", "props": { "title": "Save my place", "text": "Leave your name and email. We will write back with the next start date.", "email": "", "action": "", "button": "Send" } },
+            { "type": "footer", "variant": "simple", "props": { "text": "© Sourdough in Four Weeks", "links": [] } } ] }
+        ]
+      }
+    },
+    {
+      "id": "club", "title": "Club or group", "category": "Community", "order": 63,
+      "summary": "A sports club, a choir or a neighbourhood group: when you meet, what is coming up, who runs it, and how to join.",
+      "tags": ["club", "team", "group", "community", "sports", "choir", "society", "neighbourhood", "join", "members"],
+      "config": {
+        "name": "Riverside Runners",
+        "theme": { "preset": "forest", "fonts": { "display": "Outfit", "body": "Inter" } },
+        "seo": { "description": "Riverside Runners: a friendly running club for every pace. We meet at the boathouse on Tuesdays and Saturdays." },
+        "pages": [
+          { "title": "Home", "slug": "index", "blocks": [
+            { "type": "hero", "variant": "split", "props": { "eyebrow": "EVERY PACE WELCOME", "title": "Riverside Runners", "text": "A friendly running club. We meet at the boathouse twice a week and nobody gets left behind.", "img": "illus:hills", "alt": "A sun over rolling hills", "buttons": [{ "label": "Come for a free run" }, { "label": "When we meet" }] } },
+            { "type": "info", "variant": "columns", "props": { "title": "When we meet", "items": [{ "label": "Tuesday", "text": "6:30 pm, 5 km easy\nThe boathouse" }, { "label": "Saturday", "text": "9:00 am, long run\nCoffee after" }, { "label": "New here?", "text": "Your first three runs are free" }], "button": { "label": "", "link": { "kind": "", "to": "" } } } },
+            { "type": "list", "variant": "cards", "props": { "title": "Coming up", "items": [{ "title": "Spring 10K", "meta": "Sun 6 April", "text": "Flat and fast along the river." }, { "title": "Beginners' block starts", "meta": "Tue 15 April", "text": "From zero to 5 km in eight weeks." }, { "title": "Club picnic", "meta": "Sat 3 May", "text": "Bring family and something to share." }] } },
+            { "type": "stats", "variant": "grid", "props": { "title": "", "items": [{ "value": "86", "label": "members" }, { "value": "2", "label": "runs a week" }, { "value": "1998", "label": "running since" }] } },
+            { "type": "team", "variant": "grid", "props": { "title": "Who runs the club", "items": [{ "name": "Maya Ortiz", "role": "Chair", "img": "", "alt": "" }, { "name": "Ben Akers", "role": "Coach", "img": "", "alt": "" }, { "name": "Li Wen", "role": "New members", "img": "", "alt": "" }] } },
+            { "type": "pricing", "variant": "cards", "props": { "title": "Membership", "note": "Fees pay for coaching, insurance and the picnic.", "plans": [{ "name": "Try it", "price": "Free", "per": "3 runs", "features": ["Just turn up"], "button": { "label": "Come for a free run" } }, { "name": "Member", "price": "$45", "per": "/ year", "features": ["All runs and coaching", "Club vest", "Race discounts"], "button": { "label": "Join the club" } }] } },
+            { "type": "contact", "variant": "form", "props": { "title": "Join us", "text": "Tell us your name and we will look out for you at the boathouse.", "email": "", "action": "", "button": "Send" } },
+            { "type": "footer", "variant": "simple", "props": { "text": "© Riverside Runners", "links": [] } } ] }
+        ]
+      }
+    }
+  ]
+}

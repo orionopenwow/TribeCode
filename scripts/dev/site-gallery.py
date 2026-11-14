@@ -27,7 +27,8 @@ THUMBS = '--no-thumbs' not in args
 SOURCES = json.loads((ROOT / 'scripts' / 'dev' / 'site-sources.json').read_text())
 NATIVE_CAT = {'linkbio': 'Link in bio', 'merch': 'Shop', 'portfolio': 'Portfolio', 'creator': 'Creator', 'band': 'Music', 'cafe': 'Food & drink', 'service': 'Business', 'wedding': 'Events',
               'podcast': 'Creator', 'blog': 'Blog', 'saas': 'Startup', 'gamepage': 'Games', 'resume': 'Personal', 'nonprofit': 'Nonprofit', 'photography': 'Portfolio', 'comingsoon': 'Coming soon'}
-ORDER = ['Link in bio', 'Business', 'Startup', 'Portfolio', 'Personal', 'Blog', 'Shop', 'Food & drink', 'Music', 'Creator', 'Events', 'Nonprofit', 'Games', 'Coming soon']
+ORDER = ['Link in bio', 'Business', 'Startup', 'Portfolio', 'Personal', 'Blog', 'Shop', 'Food & drink', 'Music', 'Creator', 'Events', 'Learning', 'Community', 'Nonprofit', 'Games', 'Coming soon']
+TYPES = json.loads((ROOT / 'scripts' / 'dev' / 'site-types.json').read_text())['types']   # feat/design-site2: site types written as designer configs
 
 def hexrgb(h): h = h.lstrip('#'); return tuple(int(h[i:i + 2], 16) for i in (0, 2, 4))
 def mix(a, b, t): x, y = hexrgb(a), hexrgb(b); return '#' + ''.join(f'{round(x[i] + (y[i] - x[i]) * t):02X}' for i in range(3))
@@ -107,6 +108,14 @@ def main():
             cfg = page.evaluate('([id, d, imgs]) => TribeSiteCfg.fromTemplate(id, d, r => imgs[String(r || "").replace(/^\\.\\//, "")] || "")', [tid, d, imgs])
             (OUT / f'{tid}.json').write_text(json.dumps(cfg, separators=(',', ':')))
             cat.append({'id': tid, 'title': m.get('title', tid), 'summary': m.get('summary', ''), 'category': NATIVE_CAT.get(tid, 'Business'), 'tags': m.get('tags', []), 'source': 'TribeCode', 'license': 'MIT', 'order': m.get('order', 50)})
+        # 1b. site types written as designer configs (scripts/dev/site-types.json); "illus:<name>" pictures are drawn in the site's colours
+        for t in TYPES:
+            if ONLY and t['id'] not in ONLY: continue
+            cfg = page.evaluate('''([id, c]) => { const S = TribeSiteCfg; let cfg = S.normalize({ ...c, template: id });
+                const walk = o => { if (Array.isArray(o)) return o.forEach(walk); if (!o || typeof o !== 'object') return; for (const k of Object.keys(o)) { if (k === 'img' && /^illus:/.test(o[k] || '')) o[k] = S.illustration(o[k].slice(6), cfg); else walk(o[k]); } };
+                walk(cfg.pages); return S.autoWire(S.normalize(cfg), null, { quiet: true }).cfg; }''', [t['id'], t['config']])
+            (OUT / f"{t['id']}.json").write_text(json.dumps(cfg, separators=(',', ':')))
+            cat.append({'id': t['id'], 'title': t['title'], 'summary': t['summary'], 'category': t['category'], 'tags': t['tags'], 'source': 'TribeCode', 'license': 'MIT', 'order': t.get('order', 60)})
         # 2. imported
         for i, t in enumerate(SOURCES['templates']):
             if ONLY and t['id'] not in ONLY: continue

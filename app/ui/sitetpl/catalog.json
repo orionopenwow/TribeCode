@@ -12,6 +12,8 @@
   "Music",
   "Creator",
   "Events",
+  "Learning",
+  "Community",
   "Nonprofit",
   "Games",
   "Coming soon"
@@ -666,6 +668,26 @@
    "thumb": "sitetpl/thumbs/cafe.webp"
   },
   {
+   "id": "menu",
+   "title": "Restaurant menu",
+   "summary": "The menu first, for a QR code on the table: starters, mains, sweets and drinks with prices, then hours and a booking button.",
+   "category": "Food & drink",
+   "tags": [
+    "restaurant",
+    "menu",
+    "qr menu",
+    "bistro",
+    "bar",
+    "food",
+    "dinner",
+    "prices"
+   ],
+   "source": "TribeCode",
+   "license": "MIT",
+   "order": 61,
+   "thumb": "sitetpl/thumbs/menu.webp"
+  },
+  {
    "id": "sb-business-casual",
    "title": "Business Casual",
    "summary": "A warm small-business page with a story, opening hours and a promise.",
@@ -754,6 +776,69 @@
    "license": "MIT",
    "order": 8,
    "thumb": "sitetpl/thumbs/wedding.webp"
+  },
+  {
+   "id": "conference",
+   "title": "Conference / meetup",
+   "summary": "A one-day event: what it is, the schedule hour by hour, who is speaking, tickets, and how to get there.",
+   "category": "Events",
+   "tags": [
+    "conference",
+    "meetup",
+    "event",
+    "schedule",
+    "speakers",
+    "tickets",
+    "summit",
+    "workshop day"
+   ],
+   "source": "TribeCode",
+   "license": "MIT",
+   "order": 60,
+   "thumb": "sitetpl/thumbs/conference.webp"
+  },
+  {
+   "id": "course",
+   "title": "Class or course",
+   "summary": "A class you teach: what people will be able to do, how the weeks go, who you are, the price, and a sign-up.",
+   "category": "Learning",
+   "tags": [
+    "course",
+    "class",
+    "workshop",
+    "lessons",
+    "tutor",
+    "teacher",
+    "learn",
+    "training",
+    "school"
+   ],
+   "source": "TribeCode",
+   "license": "MIT",
+   "order": 62,
+   "thumb": "sitetpl/thumbs/course.webp"
+  },
+  {
+   "id": "club",
+   "title": "Club or group",
+   "summary": "A sports club, a choir or a neighbourhood group: when you meet, what is coming up, who runs it, and how to join.",
+   "category": "Community",
+   "tags": [
+    "club",
+    "team",
+    "group",
+    "community",
+    "sports",
+    "choir",
+    "society",
+    "neighbourhood",
+    "join",
+    "members"
+   ],
+   "source": "TribeCode",
+   "license": "MIT",
+   "order": 63,
+   "thumb": "sitetpl/thumbs/club.webp"
   },
   {
    "id": "nonprofit",
