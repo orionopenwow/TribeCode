@@ -7,7 +7,11 @@
   In the preview: every section has a small bar (move up/down, duplicate, add below, remove) and a grip to drag it.
   Have my agent do it: an agent reads the site (site_read) and proposes steps (site_propose) over MCP; nothing changes
   until the person taps Apply; Undo takes it back; an agent cannot approve its own proposal. Unsafe steps are skipped.
-  Exported pages: no sideways scroll at 390px. No console errors.
+  Icons: clicking an icon in the preview opens the picker; a pick is one undo step. Illustrations: one tap puts a
+  flat scene in the site's colours into a picture slot; Check offers it for grey placeholders.
+  Send to my agent: with an agent in the tribe the sheet sends the ask; a fake MCP agent finds it (my_lane), takes it
+  (take_handoff), reads and proposes; the person applies. Phone 390px: Style and Check work, no sideways scroll.
+  No console errors.
 Usage: python app/test/e2e_site_studio.py [--shots DIR]
 """
 import json, os, subprocess, sys, tempfile, time, urllib.request, urllib.error
@@ -232,6 +236,39 @@ console.log(JSON.stringify({ done: r.done.length, skipped: r.skipped.length, tit
             assert bl[1]["type"] == "steps", [x["type"] for x in bl]
             shot(pg, "studio-bar-1440.png")
 
+            # ---- icons in the preview: click one, pick another (one undo step)
+            pg.evaluate("""(() => { const S = TribeSiteCfg, c = TribeSiteDesigner.cfg(); const r = S.applyOps(c, [{ op: 'add', type: 'features', variant: 'icons', props: { title: 'Why us', items: [{ title: 'Fast', text: 'Quick to load.' }, { title: 'Kind', text: 'Easy to use.' }] } }]); TribeSiteDesigner.importCfg(r.cfg, 'test'); })()""")
+            pg.wait_for_timeout(500)
+            fr = pg.frame_locator("#wdz-frame")
+            ic = fr.locator("[data-icon]").first
+            ic.scroll_into_view_if_needed(); key = ic.get_attribute("data-icon"); ic.click()
+            pg.wait_for_selector("#stu-icons #stu-ig button", timeout=5000)
+            assert pg.locator("#stu-ig button").count() >= 80, "the icon set"
+            pg.fill("#stu-iq", "heart"); pg.wait_for_timeout(200)
+            assert 1 <= pg.locator("#stu-ig button").count() < 10, "search narrows the icons"
+            shot(pg, "studio-icons-1440.png")
+            pg.click("#stu-ig button[data-ic=heart]"); pg.wait_for_timeout(400)
+            assert pg.locator("#stu-icons").count() == 0
+            bid_i, path_i = key.split("|")
+            got = pg.evaluate("([b, p]) => { const c = TribeSiteDesigner.cfg(); for (const pg of c.pages) for (const x of pg.blocks) if (x.id === b) return TribeSiteCfg.getAt(x.props, p); return null; }", [bid_i, path_i])
+            assert got == "heart", got
+            pg.evaluate("TribeSiteDesigner.undo()"); pg.wait_for_timeout(300)
+            got = pg.evaluate("([b, p]) => { const c = TribeSiteDesigner.cfg(); for (const pg of c.pages) for (const x of pg.blocks) if (x.id === b) return TribeSiteCfg.getAt(x.props, p); return null; }", [bid_i, path_i])
+            assert got != "heart", "Undo takes the icon back"
+
+            # ---- illustrations: click the hero picture, one tap puts a scene in the site's colours there
+            fr.locator("[data-img]").first.click(); pg.wait_for_timeout(400)
+            pg.wait_for_selector("#wdz-insp [data-stu=illus]", timeout=5000)
+            assert pg.locator("#wdz-insp [data-stu=illus]").count() == 8
+            shot(pg, "studio-illus-1440.png")
+            pg.click("#wdz-insp [data-stu=illus][data-val=cafe]"); pg.wait_for_timeout(400)
+            hero = next(x for x in cfg(pg)["pages"][0]["blocks"] if x["type"] == "hero")
+            assert hero["props"]["img"].startswith("data:image/svg+xml;base64,") and hero["props"]["alt"], "the illustration is in the picture slot, with a description"
+            import base64 as _b
+            svg = _b.b64decode(hero["props"]["img"].split(",", 1)[1]).decode()
+            assert cfg(pg)["theme"]["colors"]["accent"].upper() in svg.upper() and "<script" not in svg and "http" not in svg.replace("http://www.w3.org/2000/svg", ""), "drawn in the site's own accent, nothing from outside"
+            pg.evaluate("TribeSiteDesigner.undo()"); pg.wait_for_timeout(300)
+
             # ---- Have my agent do it: read, propose, the person approves, Undo
             pg.click("#wdz-agent")
             pg.wait_for_selector("#stu-agent", timeout=5000)
@@ -265,6 +302,61 @@ console.log(JSON.stringify({ done: r.done.length, skipped: r.skipped.length, tit
             assert ok(api(f"/projects/{pid}/site-proposals", token=tok))["proposals"] == [], "answered"
             pg.evaluate("TribeSiteDesigner.undo()"); pg.wait_for_timeout(300)
             assert cfg(pg)["pages"][0]["blocks"][0]["props"]["title"] != "Coffee worth the walk" and cfg(pg)["theme"]["colors"]["accent"].lower() != "#c2255c", "one Undo takes the agent's changes back"
+
+            # ---- Send to my agent, end to end: the sheet sends the ask; a fake MCP agent finds it, takes it, proposes; Apply
+            pg.reload(); pg.wait_for_function("window.TribeSiteDesigner && window.TribeClient && TribeClient.connected()", timeout=20000)
+            pg.wait_for_selector("#wb-design", timeout=15000); pg.click("#wb-design")
+            pg.wait_for_function("TribeSiteDesigner.state() && TribeSiteDesigner.state().open && TribeSiteDesigner.cfg().pages.length >= 1", timeout=10000)
+            pg.wait_for_timeout(600)
+            pg.click("#wdz-agent"); pg.wait_for_selector("#stu-agent [data-stu=agent-send]", timeout=8000)   # there is an agent in the tribe now
+            pg.fill("#stu-ask", "Add a short how it works section and call the place friendly")
+            shot(pg, "studio-agent-send-1440.png")
+            pg.click("#stu-agent [data-stu=agent-send]")
+            pg.wait_for_function("!document.querySelector('#stu-agent')", timeout=8000)
+            asks = [x for x in ok(api("/coord/asks", token=tok, project=pid))["asks"] if "how it works" in json.dumps(x).lower()]
+            assert len(asks) == 1, f"one tap sends one request, got {len(asks)}"
+            err, lane = mcp(key, "my_lane", {}, project=pid); assert not err, lane
+            import re as _re
+            hid = _re.search(r"h-[a-z0-9]{4,}", lane); assert hid and "site_read" in lane, lane[:600]
+            err, took = mcp(key, "take_handoff", {"id": hid.group(0)}, project=pid); assert not err and "site_propose" in took, took
+            err, txt = mcp(key, "site_read", {}, project=pid); assert not err, txt
+            o = json.loads(txt); first = o["pages"][0]["blocks"][0]["id"]
+            err, txt = mcp(key, "site_propose", {"note": "Added how it works under the opening.", "ops": [
+                {"op": "add", "type": "steps", "after": first, "props": {"title": "How a visit goes", "items": [{"title": "Walk in", "text": "No booking needed."}, {"title": "Order", "text": "At the counter."}, {"title": "Stay", "text": "As long as you like."}]}},
+                {"op": "illustration", "block": first, "name": "cafe"},
+                {"op": "text", "block": first, "path": "eyebrow", "value": "FRIENDLY SINCE DAY ONE"}]}, project=pid)
+            assert not err and "Proposed 3 changes" in txt, txt
+            mcp(key, "take_handoff", {"id": hid.group(0), "done": True}, project=pid)
+            pg.wait_for_function("[...document.querySelectorAll('[data-flctx=designer] .fl-thread button')].some(b => /Apply/.test(b.textContent))", timeout=10000)
+            n_before = len(cfg(pg)["pages"][0]["blocks"])
+            pg.evaluate("[...document.querySelectorAll('[data-flctx=designer] .fl-thread button')].filter(b => /Apply/.test(b.textContent)).pop().click()")
+            pg.wait_for_function("TribeSiteDesigner.cfg().pages[0].blocks.some(b => b.type === 'steps' && b.props.title === 'How a visit goes')", timeout=5000)
+            c9 = cfg(pg)
+            assert c9["pages"][0]["blocks"][1]["props"].get("title") == "How a visit goes" and c9["pages"][0]["blocks"][0]["props"]["eyebrow"] == "FRIENDLY SINCE DAY ONE" and c9["pages"][0]["blocks"][0]["props"]["img"].startswith("data:image/svg+xml"), "the agent's three changes are on the page"
+            pg.evaluate("TribeSiteDesigner.undo()"); pg.wait_for_timeout(300)
+            assert len(cfg(pg)["pages"][0]["blocks"]) == n_before, "one Undo takes them back"
+
+            # ---- phone 390px: Style and Check work, nothing scrolls sideways
+            pg.set_viewport_size({"width": 390, "height": 800}); pg.wait_for_timeout(600)
+            tab(pg, "style"); pg.wait_for_selector("[data-stu=look]", timeout=5000)
+            assert pg.evaluate("document.documentElement.scrollWidth <= innerWidth + 1"), "Style: no sideways scroll at 390"
+            lk = pg.locator("[data-stu=look][aria-pressed=false]").first; lk.scroll_into_view_if_needed()
+            box = lk.bounding_box(); assert box["x"] >= 0 and box["x"] + box["width"] <= 391 and box["height"] >= 40, box
+            p0 = cfg(pg)["theme"]["preset"]; lk.click(); pg.wait_for_timeout(300)
+            assert cfg(pg)["theme"]["preset"] != p0, "a look can be tapped on a phone"
+            shot(pg, "studio-style-390.png")
+            assert pg.evaluate("document.querySelector('#wdz-insp').getBoundingClientRect().height") >= 240, "the panel has room on a phone"
+            pg.evaluate("TribeSiteDesigner.undo()"); pg.wait_for_timeout(200)
+            tab(pg, "check"); pg.locator("[data-stu=check]").first.scroll_into_view_if_needed(); pg.locator("[data-stu=check]").first.click()
+            pg.wait_for_function("document.querySelector('.stu-issue') || /Nothing to fix/.test(document.querySelector('#wdz-insp').textContent)", timeout=8000)
+            assert pg.evaluate("document.documentElement.scrollWidth <= innerWidth + 1"), "Check: no sideways scroll at 390"
+            if pg.locator(".stu-issue .btn").count():
+                bb = pg.locator(".stu-issue .btn").first.bounding_box(); assert bb["height"] >= 40 and bb["x"] + bb["width"] <= 391, bb
+            shot(pg, "studio-check-390.png")
+            pg.click("#wdz-agent"); pg.wait_for_selector("#stu-agent", timeout=5000)
+            sb = pg.locator("#stu-agent .stu-sheet-in").bounding_box(); assert sb["x"] >= 0 and sb["width"] <= 391, sb
+            shot(pg, "studio-agent-390.png")
+            pg.click("#stu-agent [data-stu=agent-close]")
 
             # ---- phone: the panels fit, no sideways scroll
             pg.set_viewport_size({"width": 390, "height": 800}); pg.wait_for_timeout(500)

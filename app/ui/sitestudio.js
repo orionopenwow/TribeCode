@@ -30,7 +30,7 @@
       <p class="wdz-hint">Every choice here changes all pages at once. Undo takes it back.</p>
       <div class="stu-kit" id="stu-kit"><p class="stu-h">${I('palette')}<b>Brand kit</b><small>${hasKit ? 'Shared with Design' : 'One look for your website and your designs'}</small></p>
         ${hasKit ? `<p class="stu-kitrow">${K.logo ? `<img src="${esc(K.logo)}" alt="">` : ''}${[K.colors.accent, K.colors.ink, K.colors.bg, ...K.colors.more].filter(Boolean).slice(0, 6).map(h => `<span class="stu-sw" style="background:${h}" title="${h}"></span>`).join('')}<small>${esc([K.fonts.display, K.fonts.body].filter(Boolean).filter((x, i, a) => a.indexOf(x) === i).join(' + '))}</small></p>` : ''}
-        ${hasKit ? `<label class="stu-voice"><span>How we sound</span><input type="text" id="stu-voice" maxlength="200" value="${esc(K.voice || '')}" placeholder="Warm, plain, a little funny"></label>` : ''}
+        ${hasKit ? `<label class="stu-voice"><span>How we sound</span><input type="text" class="input" id="stu-voice" maxlength="200" value="${esc(K.voice || '')}" placeholder="Warm, plain, a little funny"></label>` : ''}
         <p class="wdz-row">${hasKit ? '<button type="button" class="btn sm" data-stu="kit-use">Use the brand kit here</button>' : ''}<button type="button" class="btn sm${hasKit ? ' ghost' : ''}" data-stu="kit-save">${hasKit ? 'Update it from this site' : 'Save this look as the brand kit'}</button></p></div>
       <p class="stu-h"><b>Look</b><small>colours, fonts and corners together</small></p>
       <div class="stu-looks" role="group" aria-label="Look">${Object.entries(P).map(([id, p]) => look(id, p)).join('')}</div>
@@ -100,7 +100,7 @@
       <p class="wdz-hint">${can ? (on.length ? `${esc(on.length === 1 ? on[0].name : `${on.length} agents`)} ${on.length === 1 ? 'is' : 'are'} connected. The agent reads the site and sends back a list of changes. Nothing changes until you press Apply, and Undo takes it back.` : all.length ? 'Your agent is not connected right now. The request waits for it; the changes come back here for you to approve.' : 'No agent has joined this tribe yet. Invite yours, or let the built-in helper try.') : 'An agent needs the tribe to be online. The built-in helper works right here.'}</p>
       <p class="wdz-row">${can && all.length ? '<button type="button" class="btn sm primary" data-stu="agent-send">Send to my agent</button>' : can && window.TribeInviteAgent ? '<button type="button" class="btn sm primary" data-stu="agent-invite">Invite my agent</button>' : ''}<button type="button" class="btn sm${can && (all.length || window.TribeInviteAgent) ? '' : ' primary'}" data-stu="agent-flint">Let the built-in helper try</button><span class="wdz-sp"></span><button type="button" class="btn sm ghost" data-stu="agent-close">Cancel</button></p></div>`;
     (document.getElementById('wdz') || document.body).appendChild(el);
-    el.addEventListener('click', e => { const b = e.target.closest('[data-stu]'); if (b) click(b, api); else if (e.target === el) el.remove(); });
+    el.addEventListener('click', e => { e.stopPropagation(); const b = e.target.closest('[data-stu]'); if (b) click(b, api); else if (e.target === el) el.remove(); });   // stop here: the designer also listens for [data-stu], and one tap must send once
     el.addEventListener('keydown', e => { if (e.key === 'Escape') { e.stopPropagation(); el.remove(); } });
     setTimeout(() => { const t = el.querySelector('#stu-ask'); if (t) t.focus(); }, 0);
   }

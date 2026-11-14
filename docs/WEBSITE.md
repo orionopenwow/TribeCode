@@ -162,6 +162,18 @@ the one AI-boost card (Use my AI · Get credits / Premium). Test: `app/test/e2e_
   changes until a person taps Apply in the designer (an agent cannot answer its own proposal); Apply is one undo step.
   With no agent, the same sheet hands the ask to Flint.
 
+- **One brand record.** The kit is the only brand record. The project page's older fields (`/website/brand`: primary,
+  wordmark, logo, font) are a copy of it: an older project is moved into a kit the first time it is read, the older
+  route answers from the kit, and a change through either route lands in both (`kitGet`, `kitSet`, `kitSync` in
+  `server/showcase.js`). The canvas lists the kit's fonts and has "Use the logo here"; Design flow's poster and logo
+  starters take the kit's colour, heading font and logo.
+- **Illustrations.** Eight original flat scenes (`TribeSiteCfg.ILLUS`, MIT like the app) drawn in the site's own
+  colours. Click a picture, then pick one under Illustrations; Check offers one for a grey placeholder; an agent may
+  use the step `illustration { block, path?, name }` (the only picture step there is).
+- **More site types.** Conference / meetup, Restaurant menu, Class or course, Club or group
+  (`scripts/dev/site-types.json`, written as designer configs; `python3 scripts/dev/site-gallery.py --only <ids>`
+  rebuilds `app/ui/sitetpl/<id>.json` and the thumbnails; run it for the 16 as well after changing how they convert).
+
 Test: `app/test/e2e_site_studio.py`.
 
 ## API

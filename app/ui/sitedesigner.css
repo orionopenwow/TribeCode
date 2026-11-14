@@ -153,10 +153,10 @@ body.wdz-open { overflow: hidden; }
   .wdz-top { gap: 6px; padding: 6px 8px; }
   .wdz-pages { max-width: 100%; order: 10; width: 100%; }
   .wdz-sel-wrap, .wdz-devs, .wdz-saved, [data-wdz="templates"] { display: none; }
-  .wdz-body { grid-template-columns: 1fr; grid-template-rows: 46vh auto auto; overflow: auto; }
+  .wdz-body { grid-template-columns: 1fr; grid-template-rows: 46vh max-content max-content; overflow: auto; }
   .wdz-stage { padding: 8px; order: 1; }
-  .wdz-right { order: 2; border-left: 0; border-top: 1px solid var(--border); grid-template-rows: auto auto auto; overflow: visible; }
-  .wdz-left { order: 3; border-right: 0; border-top: 1px solid var(--border); }
+  .wdz-right { order: 2; border-left: 0; border-top: 1px solid var(--border); grid-template-rows: max-content max-content max-content; overflow: visible; min-height: auto; }
+  .wdz-left { order: 3; border-right: 0; border-top: 1px solid var(--border); min-height: auto; overflow: visible; }
   .wdz-frame[data-dev="phone"] { width: 100%; }
   .wdz-blk-acts button, .wdz-tab, .wdz-chip { min-height: 44px; }
   .wdz-start { inset: 96px 0 0; }
