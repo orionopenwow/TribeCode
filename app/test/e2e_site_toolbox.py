@@ -11,7 +11,7 @@ from pathlib import Path
 from playwright.sync_api import sync_playwright
 
 ROOT = Path(__file__).resolve().parents[2]
-PORT = 5590 + int(os.environ.get("TRIBE_PORT_OFFSET", "0"))
+PORT = 5595 + int(os.environ.get("TRIBE_PORT_OFFSET", "0"))
 SHOTS = sys.argv[sys.argv.index("--shots") + 1] if "--shots" in sys.argv else None
 
 
