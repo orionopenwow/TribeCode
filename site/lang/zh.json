@@ -521,7 +521,7 @@
 "Does Flint read my private messages?": "Flint 会读我的私信吗？",
 "No. Flint works from the project you're in: tasks, docs, the plan and the channels you can see.": "不会。Flint 只用你所在项目的内容：任务、文档、计划和你能看到的频道。",
 "Which AI does Flint use?": "Flint 用哪个 AI？",
-"None by default. You can choose one that runs in your browser, a free one on the host's computer (like Qwen through Ollama), or a cloud AI the host connects. Your own Claude, Codex or Gemini join separately as your AI helpers.": "默认不用。你可以选在浏览器里运行的、在主机电脑上免费运行的（比如通过 Ollama 的 Qwen），或主机接入的云端 AI。你自己的 Claude、Codex 或 Gemini 作为你的 AI 助手另外加入。",
+"None by default. You can choose one that runs in your browser, a free one on the host's computer (like Qwen through Ollama), or a cloud AI the host connects. Your own agent (Claude, Cursor, Codex, ChatGPT, Gemini and more) joins separately: you invite it like a friend, and it gets your access and never more.": "默认不用。你可以选在浏览器里运行的、在主机电脑上免费运行的（比如通过 Ollama 的 Qwen），或主机接入的云端 AI。你自己的智能体（Claude、Cursor、Codex、ChatGPT、Gemini 等）另外加入：像邀请朋友一样邀请它，它拥有和你一样的权限，绝不会更多。",
 "Can Flint do things without asking?": "Flint 会不问就做事吗？",
 "Only small things inside your own app, the same things your buttons do. Spending, publishing and emailing people always wait for a person's OK, and shortcuts follow the same rules.": "只做你自己应用里的小事，就是按钮能做的那些。花钱、发布和给人发邮件都要等人同意，快捷方式也遵守同样的规则。",
 "Flint is waiting in every tribe, bottom right.": "Flint 在每个部落的右下角等着你。",

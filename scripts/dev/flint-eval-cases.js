@@ -143,7 +143,11 @@ add('g', [
   ['make a landing page for sunrise bakery', 'build.landing'], ['undo', 'undo'], ['tell maya the site is live', 'dm.send'], ['add a page to the docs about rules', 'doc.new'],
   ['open files', 'nav.files'], ['what can you do', 'tiers'], ['publish it', 'publish'], ['make a 3d game called orb run', 'build.3d'], ['change the accent color to teal', 'accent.set', { color: 'teal' }],
   ['open the inspiration board', 'nav.inspo'], ['open my moodboard', 'nav.inspo'], ['buy credits', 'premium.open'], ['get premium', 'premium.open'], ['upgrade', 'premium.open'],
-  ['connect my ai', 'connect.ai'], ['use my own ai', 'connect.ai'], ['write a poem about the sea', null], ['make the backend scale to a million users', null],
+  ['connect my ai', 'connect.ai'], ['use my own ai', 'connect.ai'], ['add codex', 'connect.ai'], ['connect gemini', 'connect.ai'], ['hook up cursor', 'connect.ai'],
+  // Invite your agent (inviteagent.js): the one invite sheet opens on the kind they name
+  ['invite my agent', 'invite.agent'], ['invite my ai agent', 'invite.agent'], ['bring in my agent', 'invite.agent'], ['add my agent', 'invite.agent'],
+  ['invite my claude', 'invite.agent', { kind: 'claude' }], ['invite my cursor', 'invite.agent', { kind: 'cursor' }], ['invite my codex', 'invite.agent', { kind: 'codex' }],
+  ['bring in my gemini', 'invite.agent', { kind: 'gemini' }], ['invite chatgpt', 'invite.agent', { kind: 'chatgpt' }], ['invite my windsurf', 'invite.agent', { kind: 'windsurf' }], ['invite a friend', 'invite'], ['write a poem about the sea', null], ['make the backend scale to a million users', null],
   ['make a band page, then tell everyone', ['site.band', 'dm.send']], ['add a gallery page', 'doc.new'],
 ]);
 

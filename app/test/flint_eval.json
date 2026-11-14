@@ -2263,6 +2263,94 @@
    "ctx": "g"
   },
   {
+   "t": "add codex",
+   "i": "connect.ai",
+   "ctx": "g"
+  },
+  {
+   "t": "connect gemini",
+   "i": "connect.ai",
+   "ctx": "g"
+  },
+  {
+   "t": "hook up cursor",
+   "i": "connect.ai",
+   "ctx": "g"
+  },
+  {
+   "t": "invite my agent",
+   "i": "invite.agent",
+   "ctx": "g"
+  },
+  {
+   "t": "invite my ai agent",
+   "i": "invite.agent",
+   "ctx": "g"
+  },
+  {
+   "t": "bring in my agent",
+   "i": "invite.agent",
+   "ctx": "g"
+  },
+  {
+   "t": "add my agent",
+   "i": "invite.agent",
+   "ctx": "g"
+  },
+  {
+   "t": "invite my claude",
+   "i": "invite.agent",
+   "s": {
+    "kind": "claude"
+   },
+   "ctx": "g"
+  },
+  {
+   "t": "invite my cursor",
+   "i": "invite.agent",
+   "s": {
+    "kind": "cursor"
+   },
+   "ctx": "g"
+  },
+  {
+   "t": "invite my codex",
+   "i": "invite.agent",
+   "s": {
+    "kind": "codex"
+   },
+   "ctx": "g"
+  },
+  {
+   "t": "bring in my gemini",
+   "i": "invite.agent",
+   "s": {
+    "kind": "gemini"
+   },
+   "ctx": "g"
+  },
+  {
+   "t": "invite chatgpt",
+   "i": "invite.agent",
+   "s": {
+    "kind": "chatgpt"
+   },
+   "ctx": "g"
+  },
+  {
+   "t": "invite my windsurf",
+   "i": "invite.agent",
+   "s": {
+    "kind": "windsurf"
+   },
+   "ctx": "g"
+  },
+  {
+   "t": "invite a friend",
+   "i": "invite",
+   "ctx": "g"
+  },
+  {
    "t": "write a poem about the sea",
    "i": null,
    "ctx": "g"

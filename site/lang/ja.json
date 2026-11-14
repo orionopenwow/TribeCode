@@ -521,7 +521,7 @@
 "Does Flint read my private messages?": "Flint は私のプライベートメッセージを読む？",
 "No. Flint works from the project you're in: tasks, docs, the plan and the channels you can see.": "いいえ。Flint が使うのは、今いるプロジェクトのタスク、ドキュメント、計画、あなたが見られるチャンネルです。",
 "Which AI does Flint use?": "Flint はどの AI を使う？",
-"None by default. You can choose one that runs in your browser, a free one on the host's computer (like Qwen through Ollama), or a cloud AI the host connects. Your own Claude, Codex or Gemini join separately as your AI helpers.": "初期設定ではなし。ブラウザで動くもの、ホストのPCで動く無料のもの（Ollama 経由の Qwen など）、ホストがつなぐクラウド AI から選べます。あなた自身の Claude、Codex、Gemini は、AI ヘルパーとして別に参加します。",
+"None by default. You can choose one that runs in your browser, a free one on the host's computer (like Qwen through Ollama), or a cloud AI the host connects. Your own agent (Claude, Cursor, Codex, ChatGPT, Gemini and more) joins separately: you invite it like a friend, and it gets your access and never more.": "初期設定ではなし。ブラウザで動くもの、ホストのPCで動く無料のもの（Ollama 経由の Qwen など）、ホストがつなぐクラウド AI から選べます。あなた自身のエージェント（Claude、Cursor、Codex、ChatGPT、Gemini など）は別に参加します。友だちと同じように招待でき、権限はあなたと同じで、それ以上にはなりません。",
 "Can Flint do things without asking?": "Flint は聞かずに何かすることがある？",
 "Only small things inside your own app, the same things your buttons do. Spending, publishing and emailing people always wait for a person's OK, and shortcuts follow the same rules.": "自分のアプリ内の小さなことだけ。ボタンでできることと同じです。お金を使う、公開する、人にメールするは必ず人の OK を待ち、近道も同じルールに従います。",
 "Flint is waiting in every tribe, bottom right.": "Flint はどのトライブでも右下で待っています。",

@@ -221,7 +221,11 @@ A frameless window with real window buttons, project circles, a calm sidebar, br
 
 ## Connect your AI
 
-Profile menu → **Connect your AI** (or the **TribeCode MCP** page, which lists 15 tools: Claude Code, Codex, Gemini CLI, Qwen Code, Cursor, VS Code, Windsurf, Zed, Cline, Goose, Continue, Claude Desktop, Claude.ai and ChatGPT through your public link, and any MCP client) gives you one command or config. For Claude Code, pick where it runs:
+**Invite your agent** (next to every Invite friends, or ask Flint "invite my cursor") brings your own AI in as a teammate: Claude Code, Claude Desktop, Claude on the web, Cursor, Codex CLI, ChatGPT, Gemini CLI, VS Code with Copilot, Windsurf, Cline, Zed, or anything else that speaks MCP. Pick it, copy the command or config it shows, and it joins as "Maya's Cursor" with your access and never more. You can have one of each kind, each with its own key, checkboxes for what it may touch, Pause and Remove. How each one connects, and what was checked: [docs/ANY-LLM.md](docs/ANY-LLM.md#4-invite-your-agent).
+
+<p align="center"><img src="docs/screenshots/invite-agent.png" alt="Invite your agent: the picker on Cursor, with its mcp.json and the key masked until Copy" width="100%"></p>
+
+For a plain key per tool: Profile menu → **Connect your AI** (or the **TribeCode MCP** page, which lists 15 tools: Claude Code, Codex, Gemini CLI, Qwen Code, Cursor, VS Code, Windsurf, Zed, Cline, Goose, Continue, Claude Desktop, Claude.ai and ChatGPT through your public link, and any MCP client) gives you one command or config. For Claude Code, pick where it runs:
 
 - **Anywhere:** over the tribe's public https link (Tailscale Funnel or cloudflared).
 - **Same Wi-Fi:** over the host's network address.

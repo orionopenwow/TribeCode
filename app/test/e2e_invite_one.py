@@ -10,7 +10,7 @@ D  the OAuth flow with a scripted client: discovery, registration, PKCE authoriz
    a wrong verifier refused; the token acts as the person's Claude with its permissions.
 E  the signed-out notice has Log in again and returns to the same place; Settings names a device's browser and system.
 F  390px: the sheet fits a phone. Screenshot: docs/screenshots/invite-one.png.
-Unit: a Claude that never connected is taken out after 24 hours (server/inviteclaude.js sweep, a fake clock).
+Unit: a Claude that never connected is taken out after 24 hours (server/inviteagent.js sweep, a fake clock).
 Usage: python3 app/test/e2e_invite_one.py   (TRIBE_PORT_OFFSET to run beside other suites)
 """
 import base64, hashlib, json, os, re, secrets, subprocess, tempfile, time, urllib.error, urllib.parse, urllib.request
@@ -100,7 +100,7 @@ const ag2 = ic.ensure(members[0]); ag2.firstSeen = new Date(t).toISOString(); t 
 members.push({ id: 'old', name: 'Claude · Campw', role: 'agent', owner: 'cam', tokenHash: 'h:k', joined: '2026-01-01T00:00:00Z' }); out.legacyStays = ic.sweep() === 0 && members.length === 3;
 console.log(JSON.stringify(out)); process.exit(0);
 """
-    r = subprocess.run(["node", "-e", js, str(ROOT / "server" / "inviteclaude.js")], capture_output=True, text=True, timeout=60)
+    r = subprocess.run(["node", "-e", js, str(ROOT / "server" / "inviteagent.js")], capture_output=True, text=True, timeout=60)
     assert r.returncode == 0, r.stderr
     out = json.loads(r.stdout.strip().splitlines()[-1])
     assert all(out.values()), out
@@ -143,46 +143,46 @@ def main():
             invites0 = len(ok(api("/invites", token=htok))["invites"])
             pg.click("#tour-invite"); pg.wait_for_selector("#invite-modal:not(.hidden) #tl-link")
             assert "Who are you inviting?" in pg.text_content("#io-title") and pg.locator("[data-io-who]").count() == 3
-            assert [x.strip() for x in pg.locator("[data-io-who] b").all_text_contents()] == ["A friend", "A guest for a day", "Your Claude"]
+            assert [x.strip() for x in pg.locator("[data-io-who] b").all_text_contents()] == ["A friend", "A guest for a day", "Your AI agent"]
             pg.wait_for_function("/\\/t\\//.test(document.querySelector('#tl-link').textContent)", timeout=10000)
             assert pg.locator("#io-made").is_hidden() and pg.locator("#tl-box").is_visible()
             time.sleep(1.5); pg.screenshot(path=str(SHOTS / "invite-one.png"))
             sheet("friend", None, "sidebar row")
-            pg.click("#sf-claude"); sheet("claude", None, "sidebar Claude row")
+            pg.click("#sf-claude"); sheet("agent", None, "sidebar agent row")
             pg.evaluate("TribeHub.open('home')"); pg.wait_for_selector("#hub-instant", state="visible", timeout=10000)
             pg.click("#hub-instant"); sheet("friend", None, "Home's Invite a friend")
             pg.evaluate(f"TribeProjects.switchTo('{cur}', 'home')"); pg.wait_for_function(f"TribeProjects.current() === '{cur}' && !document.body.classList.contains('global')", timeout=10000)
             pg.click("#ppl-btn"); pg.wait_for_selector("#ppl-panel:not([hidden])")
             pg.click("#ppl-invite"); sheet("friend", None, "People › Invite")
-            pg.click("#ppl-btn"); pg.wait_for_selector("#ppl-panel:not([hidden])"); pg.click("#ppl-claude"); sheet("claude", None, "People › Invite your Claude")
+            pg.click("#ppl-btn"); pg.wait_for_selector("#ppl-panel:not([hidden])"); pg.click("#ppl-claude"); sheet("agent", None, "People › Invite your agent")
             pg.evaluate("TribeFriends.open()"); pg.wait_for_selector("#ppl-panel:not([hidden]) #ppl-guest")   # the old shim still opens Friends
             pg.click("#ppl-guest"); sheet("guest", None, "People › guest pass")
             pg.evaluate("TribeFriends.open()"); pg.click("#ppl-new-invite"); sheet("friend", cur, "People › Invite a friend (this project)")
-            pg.evaluate("TribeFriends.open()"); pg.click("#ppl-new-claude"); sheet("claude", None, "People › Add your Claude")
+            pg.evaluate("TribeFriends.open()"); pg.click("#ppl-new-claude"); sheet("agent", None, "People › Add your Claude")
             pg.evaluate("TribeFriends.close()")
             pg.click(f"#pj-rail [data-pj-open='{cur}']", button="right"); pg.click("[data-rc='invite']"); sheet("friend", cur, "the project menu")
             pg.evaluate(f"TribeFlow.inviteSheet({{ name: 'Game', project: '{cur}', invite: {{ link: '{BASE}/join/abc', kind: 'local' }} }})")
             pg.wait_for_selector(".modal-card.ii #ii-link"); assert "/join/abc" in pg.text_content("#ii-link"); sheet("friend", cur, "a new project's invite")
-            pg.evaluate("TribeApp.connectClaude()"); sheet("claude", None, "Connect your AI")
-            pg.evaluate("TribeApp.connectClaude({ tool: 'claude-desktop', fresh: true })"); pg.wait_for_selector("#ic-body [data-ic-kind='desktop'].on"); sheet("claude", None, "Connect your AI › Claude Desktop")
-            pg.evaluate("TribeInviteClaude.open()"); sheet("claude", None, "TribeInviteClaude.open()")
+            pg.evaluate("TribeApp.connectClaude()"); sheet("agent", None, "Connect your AI")
+            pg.evaluate("TribeApp.connectClaude({ tool: 'claude-desktop', fresh: true })"); pg.wait_for_selector("#ic-body [data-ic-kind='desktop'].on"); sheet("agent", None, "Connect your AI › Claude Desktop")
+            pg.evaluate("TribeInviteClaude.open()"); sheet("agent", None, "TribeInviteClaude.open()")
             pg.evaluate("TribeApp.openInvite()"); sheet("friend", None, "TribeApp.openInvite()")
             # another tool still gets Connect your AI, and its Claude chip comes back to the one sheet
             pg.evaluate("TribeApp.connectClaude({ tool: 'codex' })"); pg.wait_for_selector("#invite-modal:not(.hidden) #cc-setup[data-kind='codex']", timeout=10000)
             assert pg.locator(".modal-card.io").count() == 0
-            pg.click("#invite-body [data-cai-tool='claude-code']"); sheet("claude", None, "Connect your AI › Claude Code chip")
+            pg.click("#invite-body [data-cai-tool='claude-code']"); sheet("agent", None, "Connect your AI › Claude Code chip")
             ok(api("/agents/mine?id=" + agents(htok, True)[0]["id"], "DELETE", token=htok))   # the Codex key that sheet made
             # the empty chat
             pg.evaluate("TribeApp.show('chat')")
             pg.evaluate("(() => { const C = TribeClient, api = C.api; C.__api = api; C.api = (p, o) => /^\\/chat\\/general\\?/.test(p) ? Promise.resolve({ messages: [] }) : api(p, o); return Promise.resolve(TribeApp.reloadChat()).catch(() => null); })()")
             pg.wait_for_selector("#chat-list .empty-room [data-ic-open]", state="attached", timeout=6000)
             pg.evaluate("void (TribeClient.api = TribeClient.__api)")
-            pg.evaluate("document.querySelector('#chat-list .empty-room [data-ic-open]').click()"); sheet("claude", None, "the empty chat")
+            pg.evaluate("document.querySelector('#chat-list .empty-room [data-ic-open]').click()"); sheet("agent", None, "the empty chat")
             # Flint
             pg.evaluate("document.querySelector('#flint') && document.querySelector('#flint').classList.remove('folded')")
             if pg.locator("#fl-input").count() and pg.locator("#fl-input").is_visible(): pg.fill("#fl-input", "invite my claude"); pg.press("#fl-input", "Enter")
             else: pg.evaluate("TribeFlint && TribeFlint.ask ? TribeFlint.ask('invite my claude') : null")
-            sheet("claude", None, "Flint")
+            sheet("agent", None, "Flint")
             # the create-a-tribe flow's invite step
             pg.evaluate("TribeNew.open({ name: 'Side Quest' })"); pg.wait_for_selector("#tn[data-step='1']")
             pg.click("#tn-next") if pg.locator("#tn-next").count() else pg.press("#tn input", "Enter")
@@ -347,7 +347,7 @@ def main():
                 st, body, hd = authorize(redirect=badr, challenge=ch); assert st == 400 and not hd.get("Location") and "can't continue" in body, (badr, st)
             st, body, hd = authorize(challenge=ch, client="tcc_nope"); assert st == 400 and not hd.get("Location")
             # a loopback redirect may use any port
-            st, _, hd = authorize(redirect=f"http://127.0.0.1:{PORT + 1}/api/health", challenge=ch); assert st == 302 and hd["Location"].startswith("/claude-consent.html#rid="), hd.get("Location")
+            st, _, hd = authorize(redirect=f"http://127.0.0.1:{PORT + 1}/api/health", challenge=ch); assert st == 302 and hd["Location"].startswith("/agent-consent.html#rid="), hd.get("Location")
             # no PKCE, a plain challenge, another resource: back to the client with an error
             for extra, err in (({}, "invalid_request"), ({"code_challenge": ch, "code_challenge_method": "plain"}, "invalid_request"), ({"code_challenge": ch, "code_challenge_method": "S256", "resource": "https://other.example/mcp"}, "invalid_target"), ({"code_challenge": ch, "code_challenge_method": "S256", "response_type": "token"}, "unsupported_response_type")):
                 st, _, hd = authorize(extra=extra); loc = urllib.parse.urlparse(hd["Location"]); qq = urllib.parse.parse_qs(loc.query)
@@ -355,7 +355,7 @@ def main():
 
             def consent_url(v_c=None):
                 v, c = v_c or pkce()
-                st, _, hd = authorize(challenge=c); assert st == 302 and hd["Location"].startswith("/claude-consent.html#rid="), (st, hd.get("Location"))
+                st, _, hd = authorize(challenge=c); assert st == 302 and hd["Location"].startswith("/agent-consent.html#rid="), (st, hd.get("Location"))
                 return v, hd["Location"]
             def code_of(url):
                 qq = urllib.parse.parse_qs(urllib.parse.urlparse(url).query); assert qq.get("state") == ["st8"] and qq.get("iss") == [BASE], url
@@ -372,7 +372,7 @@ def main():
             v1, loc = consent_url()
             assert not [a for a in agents(htok) if a.get("owner") == rio["member"]["id"]]
             rp.goto(BASE + loc); rp.wait_for_selector("#c-signed:not([hidden]) #c-yes", timeout=15000)
-            assert "Let your Claude join as Rio's Claude?" in rp.text_content("#c-title"), rp.text_content("#c-title")
+            assert "Let Claude join as Rio's Claude?" in rp.text_content("#c-title"), rp.text_content("#c-title")
             facts = rp.inner_text("#c-facts"); assert "Claude script" in facts.replace("<", "").replace(">", "") and f"127.0.0.1:{PORT}" in facts and "<script>" not in rp.inner_html("#c-facts"), facts
             rp.screenshot(path=str(SHOTS / "invite-one-consent.png"))
             assert not [a for a in agents(htok) if a.get("owner") == rio["member"]["id"]], "nothing is made until the person approves"
@@ -506,11 +506,11 @@ def main():
             ph.goto(BASE + "/?skipIntro=1"); ph.wait_for_function("window.TribeClient && TribeClient.connected() && window.TribeInvite", timeout=25000)
             if ph.locator("#ins-later").count() and ph.locator("#ins-later").is_visible(): ph.click("#ins-later")
             fits = "(() => { const c = document.querySelector('.modal-card.io'), r = c.getBoundingClientRect(); return r.left >= 0 && r.right <= innerWidth + 1 && c.scrollWidth <= c.clientWidth + 1 && document.documentElement.scrollWidth <= innerWidth + 1 && [...c.querySelectorAll('.io-opt, .linkbox, .io-sw, .cai-pre, .ic-scope, .btn')].every(e => { const b = e.getBoundingClientRect(); return !b.width || (b.left >= r.left - 1 && b.right <= r.right + 1); }); })()"
-            for who in ("friend", "guest", "claude"):
+            for who in ("friend", "guest", "agent"):
                 ph.evaluate(f"TribeApp.openInvite({{ who: '{who}' }})"); ph.wait_for_selector(f"#invite-modal:not(.hidden) #io-pane[data-who='{who}']")
                 ph.wait_for_selector("#tl-link" if who == "friend" else "#io-guest-make" if who == "guest" else "#ic-body #ic-status"); time.sleep(0.5)
                 assert ph.evaluate(fits), f"the {who} pane fits 390px"
-                assert all(ph.locator(f"#io-who-{w}").is_visible() for w in ("friend", "guest", "claude"))
+                assert all(ph.locator(f"#io-who-{w}").is_visible() for w in ("friend", "guest", "agent"))
                 if who == "friend":
                     ph.tap("#io-once"); ph.wait_for_function("/\\/join\\//.test(document.querySelector('#inv-link').textContent)", timeout=10000); time.sleep(0.3); assert ph.evaluate(fits), "the one-time link fits 390px"
                     ph.screenshot(path=str(SHOTS / "invite-one-phone.png"))
