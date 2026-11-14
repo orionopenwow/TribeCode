@@ -150,6 +150,7 @@ def main():
             assert "¿Qué hago ahora?" in pg.text_content("#help-menu [data-help=next]")
             pg.click("#help-menu [data-help=learn]"); pg.wait_for_selector("#guide .gd-paths .gd-path")
             assert "Hacer un juego" in pg.text_content("#guide .gd-paths")
+            assert pg.evaluate("TribeI18n.t('', 'what can I make')") == "qué puedo hacer" and pg.evaluate("TribeI18n.t('', 'A shared shopping list')") == "Una lista de la compra compartida", "prompt chips and ideas are translated"
             pg.keyboard.press("Escape"); pg.evaluate("TribeI18n.set('en')")
 
             # 10. a 390px phone: the Help center and a path fit with no sideways scroll; the sheet opens
