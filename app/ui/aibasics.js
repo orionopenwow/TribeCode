@@ -80,7 +80,7 @@
     doc: [['doc.summary', 'Summarize'], ['doc.points', 'Key points & action items'], ['doc.tidy', 'Tidy it up'], ['doc.outline', 'Outline'], ['doc.continue', 'Continue writing'], ['doc.title', 'Suggest a title'], ['doc.tags', 'Suggest tags'], ['doc.read', 'Reading time & outline'], ['doc.glossary', 'Explain like I\'m new']],
     note: [['doc.summary', 'Summarize'], ['doc.points', 'Key points & action items'], ['doc.tidy', 'Tidy it up'], ['doc.outline', 'Outline'], ['doc.continue', 'Continue writing'], ['doc.title', 'Suggest a title'], ['doc.tags', 'Suggest tags'], ['doc.read', 'Reading time & outline'], ['doc.glossary', 'Explain like I\'m new']],
     files: [['file.describe', 'Describe and tag these files']],
-    seat: [['seat.charter', 'Fill in the charter']],
+    seat: [['seat.charter', 'Fill this role in']],
   };
   const TITLE = { 'chat.summary': 'Summary', 'chat.tasks': 'Things to do', 'task.split': 'Steps', 'task.estimate': 'Estimate', 'task.owner': 'Who could own it', 'doc.tidy': 'Tidied', 'doc.outline': 'Outline', 'doc.continue': 'What comes next', 'file.describe': 'Descriptions and tags', 'seat.charter': 'A charter for this seat', 'home.plan': 'Today\'s plan',
     'doc.summary': 'Summary', 'doc.points': 'Key points & action items', 'doc.title': 'Title ideas', 'doc.tags': 'Tag ideas', 'doc.read': 'Reading time & outline', 'doc.glossary': 'Terms, explained' };

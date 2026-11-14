@@ -146,9 +146,9 @@
       <h2>${esc(x.title)}</h2><p>${esc(x.sub)}</p>
       <div class="co-next-a">${x.acts.map(([a, l], i) => `<button class="btn ${i ? '' : 'primary'}" type="button" data-next="${a}">${esc(l)}</button>`).join('')}<button class="linkish" type="button" data-next="skip">Not now</button></div></section>`;
   }
-  function refreshNext() {
+  function refreshNext(force) {
     const el = $('#co-next'), c = co(); if (!el || !c || !open) return;
-    const a = document.activeElement; if (a && el.contains(a)) return;
+    const a = document.activeElement; if (!force && a && el.contains(a)) return;
     const t = document.createElement('div'); t.innerHTML = nextHtml(c, st.d); el.replaceWith(t.firstElementChild); wireNext(c, st.d);
   }
   function wireNext(c, d) {
@@ -157,7 +157,7 @@
     const assign = async body => { try { await C.api(`${P}/seats/${encodeURIComponent(sid)}/assign`, { method: 'POST', body }); load(); } catch (e) { toast(e.message); } };
     el.querySelectorAll('[data-next]').forEach(b => b.onclick = () => {
       const a = b.dataset.next, x = c.seats.find(s => s.id === sid);
-      if (a === 'skip') { try { localStorage.setItem(skipKey(), JSON.stringify([...skipped(), el.dataset.step].slice(-40))); } catch {} return refreshNext(); }
+      if (a === 'skip') { try { localStorage.setItem(skipKey(), JSON.stringify([...skipped(), el.dataset.step].slice(-40))); } catch {} return refreshNext(true); }
       if (a === 'mission') return settingsSheet();
       if (a === 'take') { b.disabled = true; return assign({ person: me().id }); }
       if (a === 'ai') { b.disabled = true; return assign({ agent: d.myAgent.id }); }

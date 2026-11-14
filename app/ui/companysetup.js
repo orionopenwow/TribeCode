@@ -20,7 +20,7 @@
   function start({ sec, view, pid, me, done, cancel, skip }) {
     const tpls = (view.templates || []).slice().sort((a, b) => (a.id === 'blank') - (b.id === 'blank'));
     const proj = ((C.state() || {}).projects || []).find(p => p.id === pid) || {};
-    const a = { step: 1, tpl: '', name: proj.name || '', mission: '', who: {}, rhythms: { standup: true, weekly: true, board: false }, goal: '', target: '', busy: false };
+    const a = { step: 1, tpl: '', name: proj.name || '', mission: '', who: {}, rhythms: { standup: true, weekly: true, board: true }, goal: '', target: '', busy: false };
     const tpl = () => tpls.find(t => t.id === a.tpl) || tpls.find(t => t.id === 'blank') || tpls[0] || { id: 'blank', roles: [] };
     const roles = () => (tpl().roles || (tpl().seats || []).map(t => ({ kind: '', title: t, goal: '' })));
     const people = (view.people || []).filter(p => p.id !== me.id);

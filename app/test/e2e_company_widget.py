@@ -58,8 +58,8 @@ def main():
             for t in tiles:   # each tile: a picture, a title and one line
                 tile = pg.locator(f"#view-company .co-ig-tile[data-ig='{t}']")
                 assert tile.locator(".co-ig-art").is_visible() and tile.locator("h3").inner_text().strip() and tile.locator(":scope > p").inner_text().strip()
-            assert pg.locator("#view-company #co-make").inner_text().strip() == "Make it a company"
-            assert pg.locator("#view-company .co-tpl").count() == 8, "templates stay below for leads"
+            assert pg.locator("#view-company #co-make").inner_text().strip() == "Set it up in 4 questions"   # feat/company3: questions first
+            assert pg.locator("#view-company #co-quick").inner_text().strip() == "Skip the questions"
             pg.screenshot(path=str(SHOTS / "company-widget.png"), full_page=False)
             # See an example: the real view, read-only
             pg.click("#co-example"); pg.wait_for_selector("#view-company .co-sample .co-seat.ceo", timeout=5000)
@@ -69,8 +69,8 @@ def main():
             assert pg.locator(".co-sheet:visible, #co-sheet:visible").count() == 0, "no seat sheet in the example"
             assert ok(api(f"/projects/{pid}/company", token=host, project=pid))["company"] is None, "the example changed nothing"
             pg.click("#co-sample-back"); pg.wait_for_selector("#view-company .co-ig-grid", timeout=5000)
-            # Make it a company: one click, the lean four seats
-            pg.click("#co-make"); pg.wait_for_selector("#view-company .co-seat.ceo", timeout=10000)
+            # Skip the questions: one click, the lean four roles
+            pg.click("#co-quick"); pg.wait_for_selector("#view-company .co-seat.ceo", timeout=10000)
             c = ok(api(f"/projects/{pid}/company", token=host, project=pid))["company"]
             assert c and c["on"] and [x["title"] for x in c["seats"]] == ["CEO", "Build", "Grow", "Run"], c
             pg.close()
