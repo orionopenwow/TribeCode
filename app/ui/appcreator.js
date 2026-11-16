@@ -91,6 +91,9 @@
       if (pick !== 'over') o = { ...o, template: '' };
     }
     if (o.template) { const t = A().template(o.template, { name: o.name, accent: o.accent }); if (t) { if (doc) st.undo.push(JSON.stringify(doc)); doc = t; } }
+    // pass 4: an app made on this device before there was a tribe comes along into a project that has none yet
+    let brought = false;
+    if (!doc && pid && !unreachable && st.canEdit && !o.name) { const mine = ls.get(LOCAL, null); if (mine && mine.screens && mine.screens.length) { doc = A().normalize(mine); brought = true; } }
     if (!doc) doc = A().blank(o.name || 'My app');
     st.doc = doc; st.screen = doc.start;
     // someone who can only suggest picks up their unsent draft on this device (it is theirs until they send it)
@@ -99,6 +102,7 @@
     coworkOn();
     if (o.template || !cur || resend) save();
     if (resend && !unreachable) toast('Sent the changes you made while the tribe could not be reached.');
+    if (brought) toast('Brought in the app you made on this device before the tribe.');
     if (pid && st.canEdit && window.TribeWhere) window.TribeWhere.check(pid, 'app');   // files changed outside TribeCode: ask, never write over them
     if (o.kit) installKit(o.kit, true);
     if (o.template && cur) toast('Started from the template. Undo brings back your earlier design.');

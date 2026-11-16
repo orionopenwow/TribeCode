@@ -139,7 +139,10 @@ module.exports = function designFiles({ P, base, isLocal = () => false, broadcas
     const cmd = process.platform === 'win32' ? 'explorer.exe' : process.platform === 'darwin' ? 'open' : 'xdg-open';
     try { const c = spawn(cmd, [dir], { detached: true, stdio: 'ignore', windowsHide: false }); c.on('error', () => {}); c.unref(); return true; } catch { return false; }
   }
+  // a look also catches up: a write that was still waiting when the server stopped, or a folder the project got since
+  function catchUp(pid) { for (const kind of Object.keys(SUB)) { if (timers.has(`${pid}|${kind}`) || !makers[kind]) continue; try { write(pid, kind); } catch (e) { log(`design files: ${e.message}`); } } }
   function status(pid, req) {
+    catchUp(pid);
     const h = home(pid), m = man(pid);
     const one = kind => { const r = m[kind] || {}; return { has: has(pid, kind), folder: SUB[kind], files: Object.keys(r.files || {}).length, at: r.at || '', held: r.held || [], hands: !!r.hands }; };
     return { folder: display(h.dir), kind: h.kind, canOpen: !!(req && isLocal(req)), git: fs.existsSync(path.join(h.dir, '.git')), site: one('site'), app: one('app') };

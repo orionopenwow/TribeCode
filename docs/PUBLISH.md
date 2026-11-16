@@ -15,6 +15,15 @@ which looks at the project, runs a check list, and offers the places that fit.
 
 A tribe that lives on a phone alone gets the same sheet: see "From a phone alone" below.
 
+## What it reads (pass 4)
+
+Publish no longer needs a code folder. It reads, in this order: the design picked under **What goes online?** (shown
+when the project has both a designed website and a designed phone app), else the project's web folder, else the
+designed website (`site/`), else the designed app (`app-web/`). Those two folders are written by
+`server/designfiles.js` a moment after every save (`docs/WHERE-IT-LIVES.md`); Publish finishes any write still waiting
+before it reads. The phone app keeps its own record and link, so it never replaces the website's page. The play link
+uses the same fallback.
+
 ## How it works
 
 - `app/ui/pubcore.js` is shared by the server and the browser (same pattern as `secsum.js`). It senses the kind

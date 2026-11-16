@@ -56,6 +56,11 @@ app, an Expo project) rather than HTML pages. Forcing both into one schema would
 
 ## Export
 
+Since pass 4 the phone web app is also written by itself: `app-web/` in the project folder follows every save
+(`server/designfiles.js`, `docs/WHERE-IT-LIVES.md`), with `app-design.json` beside it. Export never empties a folder:
+files a person added to `app-web/` or `app-expo/` stay. A change the tribe has not confirmed is kept on the device
+(`tribecode.appcreator.unsent.<project>`) and sent when the tribe can be reached again.
+
 | Choice | What happens |
 | --- | --- |
 | Try it in the live preview (was "Save into the project") | `POST /api/projects/:id/app-config/export { kind: 'pwa' }` writes `app-web/` in the project's code: `index.html`, `app.js` (the same runtime as Play), `sw.js` (offline), `manifest.webmanifest`, `icon.svg`, the fonts with their licence files. The live preview finds `app-web/` when the project has no other web root, so it opens on any phone through the preview link. A project with no code folder gets one first. |

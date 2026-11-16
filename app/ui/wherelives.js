@@ -6,7 +6,7 @@
 //   3 Online             a public address that stays up (Publish › A link that stays up, on the person's own GitHub).
 // It also asks the one question the folder can raise: files changed outside TribeCode are never written over silently
 // ("Use the design" copies theirs to .my-changes first; "Keep my files" stops the designer writing that folder).
-// Reached from the website designer, App Creator, the Publish sheet, Flint and Ctrl K (the quick guide).
+// Reached from the website designer (download menu), App Creator (Export menu) and the Publish sheet.
 // Public: window.TribeWhere = { open(pid?, kind?), close(), status(pid), check(pid, kind), ask(pid, kind, status) }
 (function () {
   'use strict';
@@ -23,9 +23,9 @@
 
   // our own drawings: plain strokes in the app's tokens
   const DRAW = {
-    folder: '<svg class="wl-draw" viewBox="0 0 72 56" aria-hidden="true"><rect x="6" y="6" width="60" height="38" rx="4" class="wl-d-body"/><path d="M26 50h20M36 44v6" class="wl-d-line"/><path d="M22 20h9l3 3h16v13H22z" class="wl-d-hot"/></svg>',
-    friends: '<svg class="wl-draw" viewBox="0 0 72 56" aria-hidden="true"><circle cx="20" cy="20" r="7" class="wl-d-body"/><path d="M8 44c0-8 5-12 12-12s12 4 12 12" class="wl-d-body"/><circle cx="52" cy="20" r="7" class="wl-d-body"/><path d="M40 44c0-8 5-12 12-12s12 4 12 12" class="wl-d-body"/><path d="M29 22h14M39 18l4 4-4 4" class="wl-d-hot"/></svg>',
-    online: '<svg class="wl-draw" viewBox="0 0 72 56" aria-hidden="true"><circle cx="36" cy="28" r="20" class="wl-d-body"/><path d="M16 28h40M36 8c8 6 8 34 0 40M36 8c-8 6-8 34 0 40" class="wl-d-line"/><circle cx="50" cy="14" r="5" class="wl-d-hotfill"/></svg>',
+    folder: '<svg class="whl-draw" viewBox="0 0 72 56" aria-hidden="true"><rect x="6" y="6" width="60" height="38" rx="4" class="whl-d-body"/><path d="M26 50h20M36 44v6" class="whl-d-line"/><path d="M22 20h9l3 3h16v13H22z" class="whl-d-hot"/></svg>',
+    friends: '<svg class="whl-draw" viewBox="0 0 72 56" aria-hidden="true"><circle cx="20" cy="20" r="7" class="whl-d-body"/><path d="M8 44c0-8 5-12 12-12s12 4 12 12" class="whl-d-body"/><circle cx="52" cy="20" r="7" class="whl-d-body"/><path d="M40 44c0-8 5-12 12-12s12 4 12 12" class="whl-d-body"/><path d="M29 22h14M39 18l4 4-4 4" class="whl-d-hot"/></svg>',
+    online: '<svg class="whl-draw" viewBox="0 0 72 56" aria-hidden="true"><circle cx="36" cy="28" r="20" class="whl-d-body"/><path d="M16 28h40M36 8c8 6 8 34 0 40M36 8c-8 6-8 34 0 40" class="whl-d-line"/><circle cx="50" cy="14" r="5" class="whl-d-hotfill"/></svg>',
   };
 
   async function status(pid) { return C.api(`/projects/${encodeURIComponent(pid)}/design-files`, { project: pid }); }
@@ -47,38 +47,38 @@
     if (st && st.sheet) close();
     const proj = ((C && C.state && C.state().projects) || []).find(p => p.id === pid) || {};
     st = { pid, kind: KIND[kind] ? kind : '', name: proj.name || '' };
-    st.sheet = window.TribeUI.sheet({ id: 'wl-sheet', wide: true, eyebrow: 'Where it lives', title: proj.name || 'Your project',
-      body: `<div class="wl" id="wl"><p class="faint">${esc(T('Checking your project…'))}</p></div>`, onClose: () => { st = null; } });
-    st.sheet.el.classList.add('wl-sheet');
+    st.sheet = window.TribeUI.sheet({ id: 'whl-sheet', wide: true, eyebrow: 'Where it lives', title: proj.name || 'Your project',
+      body: `<div class="whl" id="whl"><p class="faint">${esc(T('Checking your project…'))}</p></div>`, onClose: () => { st = null; } });
+    st.sheet.el.classList.add('whl-sheet');
     const data = pid ? await load(pid) : { files: null, pub: null, people: 0 }; if (!st) return;
     Object.assign(st, data); draw();
   }
   function close() { if (st && st.sheet) st.sheet.close(); st = null; }
 
-  const filesLine = (f, kind) => { const x = f && f[kind]; if (!x || !x.has) return ''; return `<li><code>${esc(x.folder)}/</code> <span>${esc(F(kind === 'site' ? 'the website, {n} files' : 'the phone app, {n} files', { n: x.files || '' }))}</span>${x.hands ? `<small>${esc(T('You keep your own files here. The designer is not writing this folder.'))} <button type="button" class="linkish" data-wl-use="${kind}">${esc(T('Write the design again'))}</button></small>` : ''}</li>`; };
+  const filesLine = (f, kind) => { const x = f && f[kind]; if (!x || !x.has) return ''; return `<li><code>${esc(x.folder)}/</code> <span>${esc(F(kind === 'site' ? 'the website, {n} files' : 'the phone app, {n} files', { n: x.files || '' }))}</span>${x.hands ? `<small>${esc(T('You keep your own files here. The designer is not writing this folder.'))} <button type="button" class="linkish" data-whl-use="${kind}">${esc(T('Write the design again'))}</button></small>` : ''}</li>`; };
   function heldBox(f) {
-    return ['site', 'app'].filter(k => f && f[k] && f[k].held && f[k].held.length).map(k => `<div class="wl-warn" data-wl-held="${k}"><b>${esc(F(k === 'site' ? 'Files of the website were changed outside TribeCode' : 'Files of the phone app were changed outside TribeCode'))}</b>
+    return ['site', 'app'].filter(k => f && f[k] && f[k].held && f[k].held.length).map(k => `<div class="whl-warn" data-whl-held="${k}"><b>${esc(F(k === 'site' ? 'Files of the website were changed outside TribeCode' : 'Files of the phone app were changed outside TribeCode'))}</b>
       <p>${esc(f[k].held.slice(0, 6).join(', '))}${f[k].held.length > 6 ? ' …' : ''}</p>
       <p class="faint">${esc(T('Nothing was written over them. Choose which one the folder keeps.'))}</p>
-      <div class="wl-row"><button type="button" class="btn" data-wl-use="${k}">${esc(T('Use the design'))}</button><button type="button" class="btn" data-wl-mine="${k}">${esc(T('Keep my files'))}</button></div>
+      <div class="whl-row"><button type="button" class="btn" data-whl-use="${k}">${esc(T('Use the design'))}</button><button type="button" class="btn" data-whl-mine="${k}">${esc(T('Keep my files'))}</button></div>
       <small class="faint">${esc(T('Use the design: your versions are copied to the .my-changes folder first. Keep my files: the designer stops writing this folder, and publishing uses your files.'))}</small></div>`).join('');
   }
   function draw() {
     if (!st || !st.sheet) return;
-    const root = st.sheet.el.querySelector('#wl'); if (!root) return;
+    const root = st.sheet.el.querySelector('#whl'); if (!root) return;
     const f = st.files, pub = st.pub, pg = pub && pub.dest && pub.dest.pages, play = pub && pub.play;
     const none = !f || (!f.site.has && !f.app.has);
-    const step = (n, key, title, line, state, body) => `<section class="wl-step" data-wl-step="${key}"><div class="wl-pic">${DRAW[key]}</div><div class="wl-t"><span class="eyebrow">${esc(F('Step {n} of 3', { n }))}</span><h4>${esc(T(title))}${state ? ` <span class="wl-tag">${esc(T(state))}</span>` : ''}</h4><p>${esc(T(line))}</p>${body}</div></section>`;
+    const step = (n, key, title, line, state, body) => `<section class="whl-step" data-whl-step="${key}"><div class="whl-pic">${DRAW[key]}</div><div class="whl-t"><span class="eyebrow">${esc(F('Step {n} of 3', { n }))}</span><h4>${esc(T(title))}${state ? ` <span class="whl-tag">${esc(T(state))}</span>` : ''}</h4><p>${esc(T(line))}</p>${body}</div></section>`;
     const s1 = !online() ? `<p class="faint">${esc(T('With no tribe, your design is kept in this browser. Start or join a tribe and it becomes files in a folder.'))}</p>`
       : none ? `<p class="faint">${esc(T('Nothing here yet. Make a website or a phone app in Design and its files appear in the folder by themselves.'))}</p>`
-        : `${heldBox(f)}<ul class="wl-files">${filesLine(f, 'site')}${filesLine(f, 'app')}</ul><p class="wl-path"><code id="wl-folder">${esc(f.folder)}</code></p>
-          <div class="wl-row">${f.canOpen ? `<button type="button" class="btn" data-wl-open>${esc(T('Open the folder'))}</button>` : `<small class="faint">${esc(T('The folder is where this tribe is kept. Open it on that computer.'))}</small>`}</div>
+        : `${heldBox(f)}<ul class="whl-files">${filesLine(f, 'site')}${filesLine(f, 'app')}</ul><p class="whl-path"><code id="whl-folder">${esc(f.folder)}</code></p>
+          <div class="whl-row">${f.canOpen ? `<button type="button" class="btn" data-whl-open>${esc(T('Open the folder'))}</button>` : `<small class="faint">${esc(T('The folder is where this tribe is kept. Open it on that computer.'))}</small>`}</div>
           <small class="faint">${esc(T('Every change is written there a moment after you make it. Double-click index.html to open it with no internet.'))}</small>`;
-    const s2 = `<div class="wl-row"><button type="button" class="btn${!none && st.people < 2 ? ' primary' : ''}" data-wl-invite>${esc(T('Invite a friend'))}</button>${st.people > 1 ? `<span class="faint">${esc(F('{n} people are in this tribe', { n: st.people }))}</span>` : ''}</div>
+    const s2 = `<div class="whl-row"><button type="button" class="btn${!none && st.people < 2 ? ' primary' : ''}" data-whl-invite>${esc(T('Invite a friend'))}</button>${st.people > 1 ? `<span class="faint">${esc(F('{n} people are in this tribe', { n: st.people }))}</span>` : ''}</div>
       <small class="faint">${esc(T('It reaches friends while the tribe can be reached. When it cannot, they see a plain message and what they typed waits on their device.'))}</small>`;
     const link = pg ? pg.url : '';
-    const s3 = `${link ? `<p class="wl-path"><a href="${esc(link)}" target="_blank" rel="noopener" id="wl-link">${esc(link)}</a></p>` : ''}
-      <div class="wl-row"><button type="button" class="btn${!none && st.people > 1 && !link ? ' primary' : ''}" data-wl-online ${none ? 'disabled' : ''}>${esc(T(link ? 'Update it' : 'Put it online'))}</button>${!link && play ? `<span class="faint">${esc(T('It has a play link, which works while the tribe can be reached.'))}</span>` : ''}</div>
+    const s3 = `${link ? `<p class="whl-path"><a href="${esc(link)}" target="_blank" rel="noopener" id="whl-link">${esc(link)}</a></p>` : ''}
+      <div class="whl-row"><button type="button" class="btn${!none && st.people > 1 && !link ? ' primary' : ''}" data-whl-online ${none ? 'disabled' : ''}>${esc(T(link ? 'Update it' : 'Put it online'))}</button>${!link && play ? `<span class="faint">${esc(T('It has a play link, which works while the tribe can be reached.'))}</span>` : ''}</div>
       <small class="faint">${esc(T('A public address on your own GitHub account, free. It stays up when every computer is off.'))}</small>`;
     root.innerHTML = step(1, 'folder', 'In a folder', 'Your website and phone app are real files in the project’s folder, where this tribe is kept.', none ? '' : 'Now', s1)
       + step(2, 'friends', 'With your friends', 'One link lets friends in. Everyone changes the same website and app, live, by their role.', st.people > 1 ? 'Now' : '', s2)
@@ -94,12 +94,12 @@
   }
   function wire(root) {
     const q = s => root.querySelector(s);
-    const o = q('[data-wl-open]'); if (o) o.onclick = async () => { try { const r = await C.api(`/projects/${encodeURIComponent(st.pid)}/design-files/open`, { method: 'POST', body: { kind: st.kind } }); if (!r.revealed) toast(F('The folder is {path}', { path: r.path })); } catch (e) { toast(e.message); } };
+    const o = q('[data-whl-open]'); if (o) o.onclick = async () => { try { const r = await C.api(`/projects/${encodeURIComponent(st.pid)}/design-files/open`, { method: 'POST', body: { kind: st.kind } }); if (!r.revealed) toast(F('The folder is {path}', { path: r.path })); } catch (e) { toast(e.message); } };
     const leave = () => { try { if (window.TribeAppCreator && window.TribeAppCreator.state && window.TribeAppCreator.state() && document.querySelector('#apc')) window.TribeAppCreator.close(); } catch {} };   // App Creator is full screen and makes the app behind it inert; it has saved
-    const i = q('[data-wl-invite]'); if (i) i.onclick = () => { const pid = st.pid; close(); leave(); if (window.TribeInvite) window.TribeInvite.open({}); else if (window.TribeApp && window.TribeApp.openInvite) window.TribeApp.openInvite(); void pid; };
-    const on = q('[data-wl-online]'); if (on) on.onclick = () => { const pid = st.pid; close(); leave(); if (window.TribePublish) window.TribePublish.open(pid, 'pages'); };
-    root.querySelectorAll('[data-wl-use]').forEach(b => b.onclick = async () => { b.disabled = true; const r = await resolve(b.dataset.wlUse, 'design'); if (st) { if (r && r.status) st.files = r.status; draw(); } });
-    root.querySelectorAll('[data-wl-mine]').forEach(b => b.onclick = async () => { b.disabled = true; const r = await resolve(b.dataset.wlMine, 'mine'); if (st) { if (r && r.status) st.files = r.status; draw(); } });
+    const i = q('[data-whl-invite]'); if (i) i.onclick = () => { const pid = st.pid; close(); leave(); if (window.TribeInvite) window.TribeInvite.open({}); else if (window.TribeApp && window.TribeApp.openInvite) window.TribeApp.openInvite(); void pid; };
+    const on = q('[data-whl-online]'); if (on) on.onclick = () => { const pid = st.pid; close(); leave(); if (window.TribePublish) window.TribePublish.open(pid, 'pages'); };
+    root.querySelectorAll('[data-whl-use]').forEach(b => b.onclick = async () => { b.disabled = true; const r = await resolve(b.dataset.whlUse, 'design'); if (st) { if (r && r.status) st.files = r.status; draw(); } });
+    root.querySelectorAll('[data-whl-mine]').forEach(b => b.onclick = async () => { b.disabled = true; const r = await resolve(b.dataset.whlMine, 'mine'); if (st) { if (r && r.status) st.files = r.status; draw(); } });
   }
 
   // the one question, asked where the person is: in the editor whose files were changed outside
@@ -108,13 +108,13 @@
     if (asking || (st && st.sheet)) return;
     const held = f[kind].held;
     asking = { pid, kind };
-    const sh = window.TribeUI.sheet({ id: 'wl-ask', eyebrow: 'Where it lives', title: kind === 'site' ? 'Files of the website were changed outside TribeCode' : 'Files of the phone app were changed outside TribeCode',
-      body: `<div class="wl wl-askb"><p>${esc(held.slice(0, 6).join(', '))}${held.length > 6 ? ' …' : ''}</p><p class="faint">${esc(T('Nothing was written over them. Choose which one the folder keeps.'))}</p>
-        <div class="wl-row"><button type="button" class="btn" data-wl-use="${kind}">${esc(T('Use the design'))}</button><button type="button" class="btn" data-wl-mine="${kind}">${esc(T('Keep my files'))}</button></div>
+    const sh = window.TribeUI.sheet({ id: 'whl-ask', eyebrow: 'Where it lives', title: kind === 'site' ? 'Files of the website were changed outside TribeCode' : 'Files of the phone app were changed outside TribeCode',
+      body: `<div class="whl whl-askb"><p>${esc(held.slice(0, 6).join(', '))}${held.length > 6 ? ' …' : ''}</p><p class="faint">${esc(T('Nothing was written over them. Choose which one the folder keeps.'))}</p>
+        <div class="whl-row"><button type="button" class="btn" data-whl-use="${kind}">${esc(T('Use the design'))}</button><button type="button" class="btn" data-whl-mine="${kind}">${esc(T('Keep my files'))}</button></div>
         <small class="faint">${esc(T('Use the design: your versions are copied to the .my-changes folder first. Keep my files: the designer stops writing this folder, and publishing uses your files.'))}</small></div>`,
       onClose: () => { asking = null; } });
-    sh.el.querySelector('[data-wl-use]').onclick = async () => { await resolve(kind, 'design'); sh.close(); };
-    sh.el.querySelector('[data-wl-mine]').onclick = async () => { await resolve(kind, 'mine'); sh.close(); };
+    sh.el.querySelector('[data-whl-use]').onclick = async () => { await resolve(kind, 'design'); sh.close(); };
+    sh.el.querySelector('[data-whl-mine]').onclick = async () => { await resolve(kind, 'mine'); sh.close(); };
   }
   const editorOpen = kind => (kind === 'site' ? (() => { const r = document.querySelector('#wdz, .wdz'); return !!r && !r.hidden; })() : !!document.querySelector('#apc'));
   async function check(pid, kind) { if (!online() || !pid) return; try { const f = await status(pid); if (f[kind] && f[kind].held && f[kind].held.length) ask(pid, kind, f); } catch {} }

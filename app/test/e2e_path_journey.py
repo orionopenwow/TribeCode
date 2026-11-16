@@ -132,6 +132,10 @@ def main():
             wait(lambda: (app / "index.html").exists() and (app / "app-design.json").exists() and (app / "app.js").exists(), "the app's files appear by themselves")
             pg.evaluate("TribeAppCreator.apply({ op: 'rename', name: 'Bake Habits' })")
             wait(lambda: json.loads((app / "app-design.json").read_text())["name"] == "Bake Habits", "an app change reaches the files")
+            # the same design always makes the same files: writing again changes nothing (no churn in the folder)
+            for kind in ("site", "app"):
+                ok(api(f"/projects/{pid}/design-files/write", "POST", {"kind": kind}, token=mara), "write " + kind)
+                again = ok(api(f"/projects/{pid}/design-files/write", "POST", {"kind": kind}, token=mara)); assert again["ok"] and again["wrote"] == 0, (kind, again["wrote"])
             f = F(); assert f["site"]["has"] and f["app"]["has"] and f["kind"] == "plain" and f["folder"].endswith(f"projects/{pid}") and f["canOpen"], f
 
             # double-click: both open from disk
@@ -144,12 +148,13 @@ def main():
 
             # Where it lives, from App Creator's Export menu
             pg.click("#apc-export"); pg.click("#apc-menu [data-x='where']")
-            pg.wait_for_selector("#wl-sheet [data-wl-step='online']", timeout=8000)
-            assert pg.locator("#wl-sheet [data-wl-step]").count() == 3 and pg.locator("#wl-folder").inner_text().endswith(f"projects/{pid}")
-            assert pg.locator("#wl-sheet .wl-files li").count() == 2 and pg.locator("#wl-sheet .btn.primary").count() <= 1, "two folders listed, at most one main button"
-            assert pg.locator("#wl-sheet [data-wl-open]").count() == 1
+            pg.wait_for_selector("#whl-sheet [data-whl-step='online']", timeout=8000)
+            assert pg.evaluate("document.querySelector('#whl-sheet').getBoundingClientRect().height") > 400, "the sheet is drawn in full"
+            assert pg.locator("#whl-sheet [data-whl-step]").count() == 3 and pg.locator("#whl-folder").inner_text().endswith(f"projects/{pid}")
+            assert pg.locator("#whl-sheet .whl-files li").count() == 2 and pg.locator("#whl-sheet .btn.primary").count() <= 1, "two folders listed, at most one main button"
+            assert pg.locator("#whl-sheet [data-whl-open]").count() == 1
             shot(pg, "where-it-lives-1440.png")
-            pg.keyboard.press("Escape"); pg.wait_for_selector("#wl-sheet", state="detached", timeout=4000)
+            pg.keyboard.press("Escape"); pg.wait_for_selector("#whl-sheet", state="detached", timeout=4000)
             pg.evaluate("TribeAppCreator.close()")
 
             # a file edited by hand is never written over
@@ -159,14 +164,14 @@ def main():
             pg.evaluate("TribeSiteDesigner.ask('light mode')")
             wait(lambda: F()["site"]["held"] == ["index.html"], "the write is held")
             assert "my own line" in (site / "index.html").read_text() and json.loads((site / "site.json").read_text())["theme"].get("mode") == "dark", "nothing was written"
-            pg.wait_for_selector("#wl-ask [data-wl-mine]", timeout=8000); shot(pg, "where-it-lives-ask.png")
-            pg.click("#wl-ask [data-wl-mine]"); pg.wait_for_selector("#wl-ask", state="detached", timeout=4000)
+            pg.wait_for_selector("#whl-ask [data-whl-mine]", timeout=8000); shot(pg, "where-it-lives-ask.png")
+            pg.click("#whl-ask [data-whl-mine]"); pg.wait_for_selector("#whl-ask", state="detached", timeout=4000)
             wait(lambda: F()["site"]["hands"] and not F()["site"]["held"], "Keep my files")
             pg.evaluate("TribeSiteDesigner.ask('dark mode')"); pg.evaluate("TribeSiteDesigner.flush()"); time.sleep(0.9)
             assert "my own line" in (site / "index.html").read_text(), "the designer stopped writing this folder"
             pg.evaluate("TribeSiteDesigner.close()")
-            pg.evaluate(f"TribeWhere.open('{pid}', 'site')"); pg.wait_for_selector("#wl-sheet .wl-files [data-wl-use='site']", timeout=8000)
-            pg.click("#wl-sheet .wl-files [data-wl-use='site']")
+            pg.evaluate(f"TribeWhere.open('{pid}', 'site')"); pg.wait_for_selector("#whl-sheet .whl-files [data-whl-use='site']", timeout=8000)
+            pg.click("#whl-sheet .whl-files [data-whl-use='site']")
             wait(lambda: not F()["site"]["hands"] and "my own line" not in (site / "index.html").read_text(), "Write the design again")
             kept = list((proj / ".my-changes").rglob("index.html")); assert kept and "my own line" in kept[0].read_text(), "their version was copied aside first"
             assert (site / "mine.txt").read_text() == "a file I added\n", "a file the designer never wrote is left alone"
@@ -263,8 +268,8 @@ def main():
             assert pg.locator("#pbr [data-what][aria-pressed='true']").get_attribute("data-what") == "site" and r["url"] in pg.locator("#pbr").inner_text()
             assert "repository" not in pg.locator("#invite-modal").inner_text().lower()
             shot(pg, "publish-what-goes-online.png")
-            pg.click("#pbr [data-where]"); pg.wait_for_selector("#wl-sheet #wl-link", timeout=8000)
-            assert pg.locator("#wl-link").inner_text() == r["url"] and "Live" in pg.locator("#wl-sheet [data-wl-step='online']").inner_text()
+            pg.click("#pbr [data-where]"); pg.wait_for_selector("#whl-sheet #whl-link", timeout=8000)
+            assert pg.locator("#whl-link").inner_text() == r["url"] and "Live" in pg.locator("#whl-sheet [data-whl-step='online']").inner_text()
             pg.keyboard.press("Escape")
 
             # the project gets a folder of its own; the files follow; a saved version is a commit; Ship and Pull
@@ -294,12 +299,14 @@ def main():
             c3 = b.new_context(viewport={"width": 390, "height": 844}, is_mobile=True, has_touch=True); c3.add_init_script(settings_js("Mara", mara, pid))
             ph = c3.new_page(); watch(ph, "phone"); ph.goto(BASE + "/?skipIntro=1")
             ph.wait_for_function("window.TribeWhere && window.TribeClient && TribeClient.connected()", timeout=20000)
-            ph.evaluate(f"TribeWhere.open('{pid}')"); ph.wait_for_selector("#wl-sheet [data-wl-held='site']", timeout=8000)
+            ph.evaluate(f"TribeWhere.open('{pid}')"); ph.wait_for_selector("#whl-sheet [data-whl-held='site']", timeout=8000)
+            assert ph.locator("#whl-sheet [data-whl-held]").count() == 1, "only the file that really changed is asked about"
+            assert ph.evaluate("document.querySelector('#whl-sheet').getBoundingClientRect().height") > 400, "the sheet is drawn in full"
             assert not ph.evaluate("document.documentElement.scrollWidth > innerWidth + 1"), "no sideways scroll at 390px"
-            small = ph.evaluate("[...document.querySelectorAll('#wl-sheet .btn')].filter(b => b.getBoundingClientRect().height < 40).length"); assert small == 0, small
-            assert ph.evaluate("(() => { const r = document.querySelector('#wl-sheet').getBoundingClientRect(); return r.left >= 0 && r.right <= innerWidth + 1; })()")
+            small = ph.evaluate("[...document.querySelectorAll('#whl-sheet .btn')].filter(b => b.getBoundingClientRect().height < 40).length"); assert small == 0, small
+            assert ph.evaluate("(() => { const r = document.querySelector('#whl-sheet').getBoundingClientRect(); return r.left >= 0 && r.right <= innerWidth + 1; })()")
             shot(ph, "where-it-lives-390.png")
-            ph.click("#wl-sheet [data-wl-held='site'] [data-wl-use='site']")
+            ph.click("#whl-sheet [data-whl-held='site'] [data-whl-use='site']")
             wait(lambda: not F()["site"]["held"] and "from GitHub" not in (folder / "site" / "index.html").read_text(), "Use the design, from a phone")
             assert any("from GitHub" in p.read_text() for p in (folder / ".my-changes").rglob("index.html")), "the pulled version was copied aside"
             b.close()

@@ -39,6 +39,8 @@
   let FOCUS = '';
   async function open(pid = pidNow(), focus = '') {
     if (!pid) return toast('Open a project first');
+    // pass 4: App Creator is full screen and makes the app behind it inert, this sheet included: leave it first (it saves on close)
+    try { if (window.TribeAppCreator && document.querySelector('#apc')) window.TribeAppCreator.close(); } catch {}
     const p = (C.state().projects || []).find(x => x.id === pid) || { name: 'this project' };
     const s = sheet(`<p class="eyebrow">Publish</p><h2 class="pb-h">Share ${esc(p.name)} with a link</h2><p class="faint pb-sub">Checking the files before anything goes public…</p><div class="pb-body" id="pb-body"><div class="pb-spin" aria-label="Checking"></div></div>
       <div class="modal-foot"><span style="flex:1"></span><button class="btn" data-close>Close</button></div>`);

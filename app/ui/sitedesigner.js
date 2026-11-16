@@ -207,8 +207,10 @@ html[data-dev=phone] .ehide-phone,html[data-dev=tablet] .ehide-tablet,html[data-
     const pid = o.pid !== undefined ? o.pid : (C && C.project && C.project()) || '';
     let cfg = o.cfg || null, rev = 0, server = null;
     if (!cfg && pid && connected()) { try { server = await C.api(`/projects/${encodeURIComponent(pid)}/site-config`); cfg = server.config; rev = server.rev || 0; } catch {} }
-    const d = !o.cfg && readDraft(pid);
-    let restored = false;
+    let d = !o.cfg && readDraft(pid);
+    let restored = false, brought = false;
+    // pass 4: a site made on this device before there was a tribe comes along into a project that has none yet
+    if (!o.cfg && !o.template && !o.prompt && pid && server && !server.config && !d && server.canEdit !== false) { const mine = readDraft(''); if (mine && mine.cfg && mine.cfg.pages && mine.cfg.pages.some(p => (p.blocks || []).length)) { d = { cfg: mine.cfg, at: Date.now(), rev: 0, dirty: true }; brought = true; } }
     if (d && (!cfg || (d.dirty && (d.rev || 0) >= rev) || (!connected() && d.at))) { cfg = d.cfg; restored = !!d.dirty && !!server; }
     mount();
     st = fresh(cfg || S().blank(projectName(pid)), pid); st.rev = rev;
@@ -219,6 +221,7 @@ html[data-dev=phone] .ehide-phone,html[data-dev=tablet] .ehide-tablet,html[data-
     { const f = $('#wdz-frame'); if (f && f.srcdoc) { const n = f.cloneNode(false); n.removeAttribute('srcdoc'); f.replaceWith(n); } }   // a frame that was inside the hidden designer can stay unpainted in Chrome: start a fresh one
     if (d && d.dirty && server && (d.rev || 0) < rev && JSON.stringify(S().normalize(d.cfg)) !== JSON.stringify(st.cfg)) { st.dirty = true; st.cfg = S().normalize(d.cfg); conflict({ config: server.config, rev, by: server.savedBy, at: server.savedAt }); }
     else if (restored) { st.dirty = true; push(); }
+    if (brought) setTimeout(() => say('Brought in the site you made on this device before the tribe.'), 300);
     let tpl = o.template, rest = o.prompt || '';
     if (rest && !tpl && window.TribeNLU) { const P = window.TribeNLU.parse(rest, {}); const s = (P.steps || [])[0]; if (s && /^site\./.test(s.intent) && s.conf >= 0.6 && S().TEMPLATES.includes(s.intent.slice(5))) { tpl = s.intent.slice(5); if (s.slots && s.slots.name) o.name = s.slots.name; rest = ''; } }
     if (tpl) await useTemplate(tpl, !cfg, { name: o.name });
