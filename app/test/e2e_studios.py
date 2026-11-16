@@ -105,7 +105,7 @@ def main():
             assert pg.locator("#studios .sto-thumb img").count() == 0 and pg.locator("#studios .sto-thumb i").count() >= len(st)
             # real screenshots only where the tool's terms allow it (templates/studio-shots.json): credited, lazy, sized, never a logo
             shots = {x["id"]: x["shot"] for x in rg["studios"] if x.get("shot")}
-            assert set(shots) == {"godot", "penpot", "fyrox", "material-maker", "pyxel"}, shots.keys()
+            assert set(shots) == {"artcraft", "godot", "penpot", "fyrox", "material-maker", "pyxel"}, shots.keys()   # artcraft: our own screenshot of the app
             for sid, h in shots.items():
                 assert h["source"].startswith("https://") and h["licenseUrl"].startswith("https://") and h["by"] and h["license"] and h["alt"], h
                 im = pg.locator(f'#sto-grid .sto-card[data-id="{sid}"] .sto-shot img')

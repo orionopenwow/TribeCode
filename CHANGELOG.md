@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.40.1
+- **Demo tribe**: ticking a lesson step no longer shows "This needs the tribe online"; lesson progress is kept on the device.
+- **Flint**: "how does hosting work" is answered from the Guide again.
+- **Workshop**: ArtCraft's card shows a real screenshot of the app, with its credit.
+- **Website**: the free toolbox shows the ArtCraft screenshot.
+- **Phones**: the demo tribe fix applies on phones too.
+
 ## v0.40.0
 - **Website designer, one row**: the top bar is one line on every screen. Templates, Save design, the look and the AI helpers are under More, and the side panel has four tabs: Edit, Ideas, Style, Check.
 - **Zoom, code and spacing**: zoom in, out and Fit, and edit at any zoom. See and copy the HTML and CSS of any section and add your own CSS for the whole site. Drag the top or bottom of a section to set its space.

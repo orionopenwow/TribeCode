@@ -237,7 +237,8 @@ def main():
             # ---- 5. A site config imports into the website designer as a new version
             pg.evaluate("TribePreview.close && TribePreview.close()")
             pg.evaluate("TribeSiteDesigner.open({})"); pg.wait_for_function("TribeSiteDesigner.state() && TribeSiteDesigner.state().open", timeout=15000)
-            pg.wait_for_selector("#wdz-freeai"); pg.click("#wdz-freeai"); pg.wait_for_selector("#aib:not([hidden]) #aib-out")
+            pg.click("#wdz [data-wdz='more']"); pg.wait_for_selector("#wdz-more", state="visible"); pg.click("#wdz-freeai");   # Ask a free AI lives under More since the one-row top bar
+            pg.wait_for_selector("#aib:not([hidden]) #aib-out")
             pg.wait_for_function("document.querySelector('#aib-pack').textContent.includes('site.json')")
             v0 = len(ok(api(f"/projects/{pid}/website/versions", token=host, project=pid)).get("versions", []))
             site = {"name": "Bake sale", "pages": [{"title": "Home", "blocks": [{"type": "hero", "props": {"title": "Fresh bread on Saturday", "text": "Come early."}}]}]}

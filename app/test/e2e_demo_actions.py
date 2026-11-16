@@ -67,6 +67,9 @@ def main():
             # a pretend friend reacts too (Maya)
             pg.wait_for_function(f"Object.values(TribeOffline.state().chat['lantern-run'].find(m => m.id === '{mid}').reactions || {{}}).some(l => l.includes('maya'))", timeout=6000)
             no_needs_card(pg, "reactions")
+            # lesson progress (lessons.js) saves quietly in the demo: it used to raise the "needs the tribe online" card
+            r = api(pg, "/me/learn", {"track": {"first-site": {"start": 1}}}, "PUT"); assert r["track"]["first-site"]["start"] == 1, r
+            pg.wait_for_timeout(300); no_needs_card(pg, "lesson progress")
 
             # ---- reply, pin, edit, delete ----
             rep = api(pg, "/chat/general/send", {"text": "Yes! 8 pm", "replyTo": mid})["message"]

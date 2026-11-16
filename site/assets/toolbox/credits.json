@@ -13,13 +13,13 @@
    ],
    "sourceUrl": "https://getartcraft.com/",
    "originalFile": "templates/studio-shots/artcraft.png",
-   "author": "taken by TribeCode",
-   "licence": "ArtCraft is MIT / Apache-2.0",
+   "author": "TribeCode",
+   "licence": "MIT / Apache-2.0 app",
    "licenceUrl": "https://github.com/storytold/artcraft",
    "terms": "Our own screenshot of the ArtCraft app running on the project owner's computer, taken 2026-11-16. The app is MIT / Apache-2.0; its NOTICE reserves the name and logos, which we use only to name the tool. Not taken from ArtCraft's own media repository.",
    "date": "2026-11-16",
    "changes": "Resized and recompressed. Nothing else changed.",
-   "attribution": "Screenshot: taken by TribeCode, ArtCraft is MIT / Apache-2.0 (https://github.com/storytold/artcraft). Source: https://getartcraft.com/. Resized and recompressed. Nothing else changed."
+   "attribution": "Screenshot: TribeCode, MIT / Apache-2.0 app (https://github.com/storytold/artcraft). Source: https://getartcraft.com/. Resized and recompressed. Nothing else changed."
   },
   {
    "tool": "godot",
