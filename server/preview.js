@@ -4,7 +4,7 @@
 //   /preview/<projectId>/<path>?pt=…   same, redirected to the path form so relative URLs keep the token.
 //
 // Static mode (default): files from the project's repo folder. The web root is the repo root when it has
-// index.html, else the first of public/ dist/ build/ app/ web/ that has one (the host can pin another).
+// index.html, else the first of public/ dist/ build/ app/ web/ app-web/ that has one (the host can pin another).
 // Dev-server mode (host only): proxy to the project's own dev server on 127.0.0.1:<port> (http, that port
 // only, no redirects to other hosts, websocket upgrades proxied for HMR).
 //
@@ -32,7 +32,7 @@ const net = require('node:net');
 const crypto = require('node:crypto');
 
 const TTL_MS = Number(process.env.TRIBE_PREVIEW_TTL_MS) || 2 * 3600_000;
-const CANDIDATES = ['', 'public', 'dist', 'build', 'app', 'web'];
+const CANDIDATES = ['', 'public', 'dist', 'build', 'app', 'web', 'app-web'];   // app-web: App Creator's export (server/appcreator.js)
 const CSP = 'sandbox allow-scripts allow-forms allow-pointer-lock allow-popups';
 const RESERVED = '__tribe';
 const MIME = {

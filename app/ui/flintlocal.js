@@ -127,7 +127,7 @@
     try { tasksCache = ((await C.api('/tasks')).tasks || []).map(t => ({ id: t.id, title: t.title, status: t.status, assignee: t.assignee, due: t.due, body: t.body, type: t.type, accept: t.accept })); tasksAt = Date.now(); } catch {}
     return tasksCache;
   }
-  const view = () => { const h = location.hash || ''; if (/^#\/canvas/.test(h) || document.body.dataset.view === 'canvas') return 'canvas'; if (document.body.classList.contains('pvw-on') || /^#\/preview/.test(h)) return 'preview'; return (document.body.dataset.view || h.replace(/^#\/?/, '').split('/')[0] || 'home'); };
+  const view = () => { const h = location.hash || ''; if (document.getElementById('apc')) return 'appcreator'; if (/^#\/canvas/.test(h) || document.body.dataset.view === 'canvas') return 'canvas'; if (document.body.classList.contains('pvw-on') || /^#\/preview/.test(h)) return 'preview'; return (document.body.dataset.view || h.replace(/^#\/?/, '').split('/')[0] || 'home'); };
   function ctxNow() {
     const st = C && C.state ? C.state() : {};
     const PF = window.TribePreviewFlint, CV = window.TribeCanvas;
@@ -338,6 +338,8 @@
     // project, the canvas, the preview): a template by meaning ("link tree website") opens with that template, filled
     // from the project; an edit ("make the headline punchier") opens the project's design and runs there. Building the
     // site into the repo as code is the old path, now only when asked for ("build the website into the repo").
+    // App Creator (app/ui/appcreator.js): "make me a habit tracker app", and, with it open, screens, kits, links and the look
+    if (/^app\./.test(id) && window.TribeAppCreator) { const r = window.TribeAppCreator.flint(s); if (r) return { text: r.text, sum: 'changed the app design' }; }
     if (id === 'site.repo') { pushUndo('build', 'build'); return legacy('build me a landing page', 'built the website into the repo'); }
     // feat/design-flow: "make a breakout game", "a kanban board": the starter opens in the Design flow with its plan
     if (/^site\.starter-/.test(id) && window.TribeDesignFlow) {

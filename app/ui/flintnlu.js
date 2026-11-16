@@ -952,11 +952,110 @@
     }
     return null;
   }
+
+  // ---------- App Creator (app/ui/appcreator.js): ctx.view 'appcreator' while it is open ----------
+  // appMake: "make me a habit tracker app" from anywhere (a word that already names a code starter, like "notes app",
+  // only counts with "phone app" / "mobile app" or inside App Creator). appEl: screens, kits, parts, links and the look.
+  const APP_TPL = [['habits', 'habit tracker|habit app|habits app|habit'], ['notes', 'notes|note taking|note', 1], ['workout', 'workout|gym|fitness|weightlifting|lifting'], ['recipes', 'recipe|recipes|cooking'],
+    ['budget', 'budget|budgeting|expense tracker|expenses|spending tracker|money tracker'], ['chat', 'chat|messaging|messenger', 1], ['social', 'social media|social network|social|photo sharing'], ['shop', 'shop|store|shopping|ecommerce|e commerce'],
+    ['booking', 'booking|appointment|appointments|reservation'], ['meditation', 'meditation|mindfulness|breathing'], ['todo', 'to do|todo|task|tasks|to do list', 1], ['gamemenu', 'game menu|title screen|main menu'],
+    ['planner', 'planner|week planner|agenda|calendar'], ['focus', 'focus timer|focus|pomodoro', 1], ['kanban', 'project board|project management'], ['journal', 'journal|journaling|diary'],
+    ['water', 'water tracker|water|hydration|drink water'], ['sleep', 'sleep tracker|sleep'], ['meds', 'medicine reminder|medicine|medication|pill reminder|pills'], ['running', 'running|run tracker|jogging|run'],
+    ['split', 'bill splitter|bill splitting|split bills|expense splitting'], ['savings', 'savings goals|savings|saving'], ['subs', 'subscription tracker|subscriptions'], ['events', 'community events|events|meetup|meetups'],
+    ['bookclub', 'book club'], ['neighbors', 'neighborhood|neighbourhood|neighbors'], ['grocery', 'grocery list|grocery|groceries|shopping list'], ['swap', 'secondhand|second hand|marketplace|resale|swap'],
+    ['drops', 'sneaker drops|sneaker|sneakers'], ['noodles', 'restaurant|food ordering|ordering|takeout'], ['coffee', 'coffee shop|coffee loyalty|loyalty card|coffee'], ['mealprep', 'meal planner|meal plan|meal planning|meal prep'],
+    ['trip', 'trip planner|trip|travel planner|travel|itinerary'], ['hotel', 'hotel booking|hotel|hotels'], ['cityguide', 'city guide|travel guide'], ['flashcards', 'flashcards|flashcard|language learning|vocabulary'],
+    ['course', 'online course|course|courses|e learning'], ['trivia', 'quiz game|quiz|trivia'], ['puzzle', 'puzzle game menu|puzzle game|puzzle|match three'], ['racing', 'racing game|racing|car game'],
+    ['party', 'party game|party games'], ['podcast', 'podcast studio|podcast|podcasting'], ['music', 'music player|music streaming|music'], ['creator', 'creator dashboard|creator'], ['crm', 'crm|sales leads|sales|leads'],
+    ['invoices', 'invoices|invoice|invoicing'], ['stock', 'inventory|stock'], ['chores', 'chore chart|chores|chore'], ['baby', 'baby tracker|baby'], ['pets', 'pet care|pet|pets|dog'],
+    ['weather', 'weather', 1], ['plants', 'plant care|plants|plant'], ['parking', 'parking'], ['converter', 'unit converter|converter|conversion']];
+  const APP_Q = /\b(?:phone|mobile|iphone|ios|android)\s+app\b|\bapp\s+(?:design|mockup|prototype)\b/;
+  function appMake(c, r, ctx, hit) {
+    const rl = String(r || '').toLowerCase().replace(/[-_]/g, ' ');
+    if (!/\bapps?\b/.test(rl) || /\b(?:site|website|web site|page|landing|homepage|repo|game)\b/.test(rl.replace(/\b(?:game menu|puzzle game|racing game|party game|quiz game)\b/g, ''))) return null;
+    if (!/^(?:(?:can you|could you|please|lets|let us|i want to|i wanna|i want|i need|we need|help me)\s+)?(?:make|build|create|design|start|mock up|give me|i want|i need|we need|new|begin|prototype)\b/.test(rl) && !/^(?:an?\s+)?[\w\s]+\s+app$/.test(rl)) return null;
+    const q = APP_Q.test(rl) || ctx.view === 'appcreator';
+    let best = null;   // the match that starts first, then the longest ("travel planner app" is the trip planner, not the week planner)
+    for (const [id, words, needQ] of APP_TPL) {
+      const mm = new RegExp(`\\b(?:${words})\\b(?:\\s+(?:tracker|planner|list|reminder|reminders|app|application))?\\s+(?:phone\\s+|mobile\\s+|iphone\\s+|ios\\s+|android\\s+)?app\\b`).exec(rl);
+      if (mm && (!best || mm.index < best.m.index || (mm.index === best.m.index && mm[0].length > best.m[0].length))) best = { id, needQ, m: mm };
+    }
+    if (best) {
+      const { id, needQ } = best;
+      if (needQ && !q) return null;
+      const nm = /\b(?:called|named)\s+["“']?([^,.!?"”']{2,40})/.exec(r || ''), col = colorOf(rl);
+      return hit('app.make', { template: id, name: nm ? nm[1].trim() : '', ...(col ? { color: col } : {}) }, 0.975);
+    }
+    return null;
+  }
+  const APP_KIT = { settings: 'settings', setting: 'settings', preferences: 'settings', onboarding: 'onboarding', welcome: 'onboarding', intro: 'onboarding', paywall: 'paywall', premium: 'paywall', subscription: 'paywall', upgrade: 'paywall',
+    profile: 'profile', account: 'profile', 'sign in': 'signin', signin: 'signin', login: 'signin', 'log in': 'signin', signup: 'signin', 'sign up': 'signin', 'create account': 'signin', chat: 'chat', messages: 'chat', messaging: 'chat',
+    shop: 'shop', store: 'shop', stats: 'charts', insights: 'charts', analytics: 'charts', 'empty state': 'empty', player: 'player', 'now playing': 'player', search: 'search', notifications: 'notifications', notification: 'notifications', alerts: 'notifications',
+    checkout: 'checkout', cart: 'checkout', detail: 'detail', details: 'detail', feed: 'feed', booking: 'calendar', timer: 'timer', map: 'map', help: 'help', faq: 'help', about: 'about', leaderboard: 'leaderboard', achievements: 'achievements', badges: 'achievements', invite: 'invite', 'invite friends': 'invite', permissions: 'permissions' };
+  const APP_BLOCK = { 'top bar': 'nav', 'nav bar': 'nav', 'navigation bar': 'nav', header: 'header', 'big title': 'header', title: 'header', heading: 'header', list: 'list', 'card row': 'cards', cards: 'cards', carousel: 'cards', card: 'card', 'feature card': 'card',
+    form: 'form', 'search bar': 'search', 'search box': 'search', chips: 'search', filters: 'search', 'chat bubbles': 'chat', 'feed post': 'feed', post: 'feed', 'profile header': 'profile', 'settings rows': 'settings', 'welcome pages': 'onboarding',
+    'sign in form': 'signin', 'login form': 'signin', 'empty state': 'empty', chart: 'chart', graph: 'chart', 'bar chart': 'chart', 'line chart': 'chart', 'media player': 'player', 'music player': 'player', player: 'player', map: 'map', button: 'button',
+    paragraph: 'text', text: 'text', picture: 'image', image: 'image', photo: 'image', illustration: 'image', stats: 'stats', 'stat tiles': 'stats', tiles: 'stats', checklist: 'checklist', 'check list': 'checklist', timer: 'timer', countdown: 'timer',
+    grid: 'grid', 'tile grid': 'grid', 'product grid': 'grid', calendar: 'calendar', 'date picker': 'calendar', 'time picker': 'calendar', 'day picker': 'calendar' };
+  const APP_FONT = { serif: 'editorial', editorial: 'editorial', classic: 'classic', elegant: 'elegant', fancy: 'elegant', mono: 'mono', monospace: 'mono', 'code font': 'mono', pixel: 'pixel', retro: 'pixel', friendly: 'friendly', rounded: 'friendly', clean: 'clean', sans: 'clean', 'sans serif': 'clean', bold: 'bold', chunky: 'bold', techy: 'tech', tech: 'tech', system: 'system' };
+  const alt = o => Object.keys(o).sort((a, b) => b.length - a.length).map(k => k.replace(/ /g, '\\s+')).join('|');
+  function appEl(c, r, ctx, hit) {
+    const rl = String(r || '').toLowerCase().replace(/[-_]/g, ' ').replace(/[?.!]+$/, '').trim(), H = (i, s) => hit(i, s || {}, 0.995);
+    let m;
+    if (/^(?:undo|undo that|take that back|go back one step)$/.test(rl)) return H('app.undo');
+    if (/\b(?:have|ask|get|let)\s+(?:my|our|the)\s+(?:ai|helper|helpers|agent|agents|claude)\b|\bbuild it for real\b|\bsend (?:it|this|the app) to (?:my|our|the) (?:ai|helpers?|agents?)\b/.test(rl)) return H('app.export', { kind: 'ai' });
+    if (/\b(?:expo|react native)\b/.test(rl) && /\b(?:export|make|save|build|turn|get)\b/.test(rl)) return H('app.export', { kind: 'expo' });
+    if (/^(?:export|download|save)\b.*\b(?:app|it|this|project|web app)\b|^(?:export|download)(?: it)?$/.test(rl)) return H('app.export', { kind: 'pwa' });
+    if (/^(?:play|run|try|test|preview)\b.*\b(?:it|app|prototype|this)\b|^(?:play|preview)$|\bplay the prototype\b|\btry it out\b|\btap through\b/.test(rl)) return H('app.play');
+    if ((m = /^(?:rename|call)\s+(?:the|my|this)\s+app\s+(?:to\s+)?["“']?(.+?)["”']?$/.exec(rl))) return H('app.rename', { name: r.slice(r.length - m[1].length).trim() || m[1] });
+    if ((m = /\b(?:link|connect|point|wire)\s+(?:this|it|that|the\s+[\w\s]+?)?\s*(?:button\s+)?to\s+(?:the\s+)?([\w\s]+?)(?:\s+(?:screen|page|tab))?(?:\s+(?:as|with)\s+an?\s+(sheet|slide|fade|grow|morph|zoom|push)(?:\s+transition)?)?$/.exec(rl))
+      || (m = /\b(?:make|have)\s+(?:this|it|that|the\s+button)\s+(?:go|open|lead|take\s+me)\s+(?:to\s+)?(?:the\s+)?([\w\s]+?)(?:\s+(?:screen|page|tab))?(?:\s+(?:as|with)\s+an?\s+(sheet|slide|fade|grow|morph|zoom|push))?$/.exec(rl))
+      || (m = /^(?:when tapped|on tap|tapping (?:this|it))\s*,?\s*(?:go|open)\s+(?:to\s+)?(?:the\s+)?([\w\s]+?)(?:\s+(?:screen|page|tab))?$/.exec(rl))) {
+      const how = { sheet: 'sheet', slide: 'push', push: 'push', fade: 'fade', grow: 'morph', morph: 'morph', zoom: 'morph' }[m[2]] || '';
+      return H('app.link', { to: m[1].trim(), ...(how ? { how } : {}) });
+    }
+    if (/\b(?:tab bar|bottom tabs|tabs at the bottom|bottom navigation|tab navigation)\b/.test(rl) && /\b(?:add|put|give|want|need|make|include)\b/.test(rl)) return H('app.tabbar');
+    if (/\bapps?\b/.test(rl)) { const mk = appMake(c, r, ctx, hit); if (mk) return mk; }
+    const kitW = new RegExp(`\\b(${alt(APP_KIT)})\\b`), blkW = new RegExp(`\\b(${alt(APP_BLOCK)})\\b`);
+    if (/^(?:add|put|insert|include|give me|i need|we need|i want|we want|create|make|stick|drop in|throw in|plus)\b/.test(rl)) {
+      const screeny = /\b(?:screen|screens|page|pages|flow|kit|tab|step|steps)\b/.test(rl);
+      const k = kitW.exec(rl), bl = blkW.exec(rl);
+      if (k && (screeny || ['onboarding', 'paywall', 'signin', 'checkout', 'notifications', 'leaderboard', 'achievements', 'invite', 'permissions', 'help', 'about', 'settings', 'profile'].includes(APP_KIT[k[1].replace(/\s+/g, ' ')]) && !(bl && bl[1].length > k[1].length))) return H('app.kit', { kit: APP_KIT[k[1].replace(/\s+/g, ' ')] });
+      if (bl) return H('app.block', { type: APP_BLOCK[bl[1].replace(/\s+/g, ' ')] });
+      if (k) return H('app.kit', { kit: APP_KIT[k[1].replace(/\s+/g, ' ')] });
+      if ((m = /^(?:add|create|make)\s+(?:a\s+|an\s+)?(?:new\s+|blank\s+|empty\s+)?(?:screen|page)(?:\s+(?:called|named|for)\s+(.+))?$/.exec(rl)) || (m = /^(?:add|create|make)\s+(?:a\s+|an\s+)(.+?)\s+(?:screen|page)$/.exec(rl))) return H('app.screen', { name: m[1] ? r.slice(r.length - m[1].length).trim().replace(/\b\p{L}/u, x => x.toUpperCase()) : '' });
+    }
+    if (/\b(?:ios|iphone|apple)\b/.test(rl) && /\b(?:look|style|version|design|like|use|make|switch)\b/.test(rl)) return H('app.platform', { platform: 'ios' });
+    if (/\b(?:android|material|pixel phone|google)\b/.test(rl) && /\b(?:look|style|version|design|like|use|make|switch)\b/.test(rl)) return H('app.platform', { platform: 'android' });
+    if ((m = /\b(?:use|switch to|try|apply|go with|change to)\s+(?:the\s+)?([\w\s]+?)\s+(?:look|preset|theme|style)$/.exec(rl))) return H('app.preset', { preset: m[1].trim() });
+    if (/\b(?:fonts?|typeface|type|lettering|typography)\b/.test(rl)) {
+      if ((m = new RegExp(`\\b(${alt(APP_FONT)})\\b`).exec(rl.replace(/\b(?:fonts?|typeface|type|typography)\b/g, ''))) && !/^(?:swap|change|switch|try)\s+(?:the\s+)?(?:fonts?|type)$/.test(rl)) return H('app.theme', { font: APP_FONT[m[1].replace(/\s+/g, ' ')] });
+      if (/\b(?:swap|change|switch|different|another|new|next|try|other)\b/.test(rl)) return H('app.theme', { font: 'next' });
+    }
+    if (/\b(?:dark|darker|night|dim)\b(?:\s+(?:mode|theme))?/.test(rl) && !/\b(?:background|text)\s+dark/.test(rl) && /^(?:make|turn|switch|go|use|set|dark|i want|lets|change|darker|night)\b/.test(rl)) return H('app.theme', { mode: 'dark' });
+    if (/\b(?:light|lighter|bright|brighter|day)\b(?:\s+(?:mode|theme))?/.test(rl) && /^(?:make|turn|switch|go|use|set|light|i want|lets|change|lighter|brighter)\b/.test(rl)) return H('app.theme', { mode: 'light' });
+    if (/\bpill\b|\bpill shaped\b|\bfully rounded\b/.test(rl)) return H('app.theme', { radius: 'pill' });
+    if (/\b(?:rounder|more round|more rounded|round(?:ed)? corners|softer corners|curvier)\b/.test(rl)) return H('app.theme', { radius: 'more' });
+    if (/\b(?:sharper|square(?:r)? corners|less round|less rounded|straight corners|boxier|no rounding)\b/.test(rl)) return H('app.theme', { radius: 'less' });
+    if (/\b(?:compact|tighter|denser|less space|less padding|squeeze)\b/.test(rl)) return H('app.theme', { density: 'compact' });
+    if (/\b(?:roomier|roomy|more space|more spacious|more padding|airy|airier|breathing room|spread out)\b/.test(rl)) return H('app.theme', { density: 'roomy' });
+    if (/\b(?:calmer|calm motion|slower|gentler|softer motion|slow down)\b/.test(rl)) return H('app.theme', { motion: 'calm' });
+    if (/\b(?:snappier|snappy|faster|quicker|livelier|zippier)\b/.test(rl)) return H('app.theme', { motion: 'snappy' });
+    if (/\b(?:thin|thinner|lighter|fine)\s+icons?\b/.test(rl)) return H('app.theme', { icons: 'thin' });
+    if (/\b(?:bold|bolder|thicker|heavier|chunky)\s+icons?\b/.test(rl)) return H('app.theme', { icons: 'bold' });
+    if ((m = /\b(warm|warmer|cool|cooler|tinted|plain|neutral|white)\s+(?:background|backdrop|bg)\b/.exec(rl))) return H('app.theme', { surface: { warm: 'warm', warmer: 'warm', cool: 'cool', cooler: 'cool', tinted: 'tinted', plain: 'neutral', neutral: 'neutral', white: 'neutral' }[m[1]] });
+    const col = colorOf(rl);
+    if (col && /\b(?:make|turn|change|switch|use|set|paint|colou?r|accent|in|go)\b/.test(rl) && !/\b(?:text|words)\b/.test(rl)) return H('app.theme', { color: col });
+    { const mk = appMake(c, r, ctx, hit); if (mk) return mk; }
+    return null;
+  }
   function design(c, raw, ctx) {
     const view = ctx.view === 'canvas' ? 'canvas' : (ctx.view === 'site' || (ctx.view === 'preview' && ctx.site)) ? 'site' : '';
     const out = [], hit = (intent, slots, conf) => { out.push({ intent, area: intent === 'lesson' ? 'help' : intent.startsWith('canvas.') ? 'canvas' : 'build', slots: slots || {}, conf: conf || (view === 'canvas' ? 0.98 : 0.97), req: {}, label: '' }); return out; };
     const r = String(raw || '').trim(), rl = r.toLowerCase();
+    if (ctx.view === 'appcreator') { const w = appEl(c, r, ctx, hit); if (w) return w; }   // App Creator (app/ui/appcreator.js)
     const lf = lessonOf(c); if (lf) return hit('lesson', { feature: lf }, 0.97);
+    if (view !== 'canvas') { const am = appMake(c, r, ctx, hit); if (am) return am; }
     if (view === 'site') { const w = siteEl(c, r, ctx, hit); if (w) return w; }   // feat/site-editor2: the selected thing, screen sizes, what the tribe said
     { const z = maxNew(c, r, ctx, hit, view); if (z) return z; }   // feat/flint-max
     const IMG = /\b(?:image|images|picture|pictures|photo|photos|avatar|img|headshot|portrait|cover|pfp)\b/;

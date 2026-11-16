@@ -11242,6 +11242,698 @@
    },
    "ctx": "p",
    "v": "e2"
+  },
+  {
+   "t": "make me a habit tracker app",
+   "i": "app.make",
+   "s": {
+    "template": "habits"
+   },
+   "ctx": "g",
+   "v": "ac"
+  },
+  {
+   "t": "build a workout app",
+   "i": "app.make",
+   "s": {
+    "template": "workout"
+   },
+   "ctx": "g",
+   "v": "ac"
+  },
+  {
+   "t": "create a recipe app called Supper",
+   "i": "app.make",
+   "s": {
+    "template": "recipes",
+    "name": "Supper"
+   },
+   "ctx": "g",
+   "v": "ac"
+  },
+  {
+   "t": "make a budget app in blue",
+   "i": "app.make",
+   "s": {
+    "template": "budget"
+   },
+   "ctx": "g",
+   "v": "ac"
+  },
+  {
+   "t": "design a meditation app",
+   "i": "app.make",
+   "s": {
+    "template": "meditation"
+   },
+   "ctx": "g",
+   "v": "ac"
+  },
+  {
+   "t": "i want a travel planner app",
+   "i": "app.make",
+   "s": {
+    "template": "trip"
+   },
+   "ctx": "g",
+   "v": "ac"
+  },
+  {
+   "t": "make a notes phone app",
+   "i": "app.make",
+   "s": {
+    "template": "notes"
+   },
+   "ctx": "g",
+   "v": "ac"
+  },
+  {
+   "t": "build a todo mobile app",
+   "i": "app.make",
+   "s": {
+    "template": "todo"
+   },
+   "ctx": "g",
+   "v": "ac"
+  },
+  {
+   "t": "make a podcast app",
+   "i": "app.make",
+   "s": {
+    "template": "podcast"
+   },
+   "ctx": "g",
+   "v": "ac"
+  },
+  {
+   "t": "create a pet care app",
+   "i": "app.make",
+   "s": {
+    "template": "pets"
+   },
+   "ctx": "g",
+   "v": "ac"
+  },
+  {
+   "t": "a sleep tracker app",
+   "i": "app.make",
+   "s": {
+    "template": "sleep"
+   },
+   "ctx": "g",
+   "v": "ac"
+  },
+  {
+   "t": "make me a grocery list app",
+   "i": "app.make",
+   "s": {
+    "template": "grocery"
+   },
+   "ctx": "g",
+   "v": "ac"
+  },
+  {
+   "t": "build a music player app",
+   "i": "app.make",
+   "s": {
+    "template": "music"
+   },
+   "ctx": "g",
+   "v": "ac"
+  },
+  {
+   "t": "make an invoice app",
+   "i": "app.make",
+   "s": {
+    "template": "invoices"
+   },
+   "ctx": "g",
+   "v": "ac"
+  },
+  {
+   "t": "make a language flashcards app",
+   "i": "app.make",
+   "s": {
+    "template": "flashcards"
+   },
+   "ctx": "g",
+   "v": "ac"
+  },
+  {
+   "t": "make a notes app",
+   "i": "site.starter-notes",
+   "ctx": "g",
+   "v": "ac"
+  },
+  {
+   "t": "build a chat app",
+   "i": "site.starter-chat",
+   "ctx": "g",
+   "v": "ac"
+  },
+  {
+   "t": "design a mobile app",
+   "i": "design.new",
+   "s": {
+    "kind": "app"
+   },
+   "ctx": "g",
+   "v": "ac"
+  },
+  {
+   "t": "make an iphone app",
+   "i": "publish.to",
+   "ctx": "g",
+   "v": "ac"
+  },
+  {
+   "t": "make a site for my mobile app",
+   "i": "site.saas",
+   "ctx": "g",
+   "v": "ac"
+  },
+  {
+   "t": "add a settings screen",
+   "i": "app.kit",
+   "s": {
+    "kit": "settings"
+   },
+   "ctx": "a",
+   "v": "ac"
+  },
+  {
+   "t": "add onboarding",
+   "i": "app.kit",
+   "s": {
+    "kit": "onboarding"
+   },
+   "ctx": "a",
+   "v": "ac"
+  },
+  {
+   "t": "add a paywall",
+   "i": "app.kit",
+   "s": {
+    "kit": "paywall"
+   },
+   "ctx": "a",
+   "v": "ac"
+  },
+  {
+   "t": "add a login screen",
+   "i": "app.kit",
+   "s": {
+    "kit": "signin"
+   },
+   "ctx": "a",
+   "v": "ac"
+  },
+  {
+   "t": "add sign in",
+   "i": "app.kit",
+   "s": {
+    "kit": "signin"
+   },
+   "ctx": "a",
+   "v": "ac"
+  },
+  {
+   "t": "add a profile page",
+   "i": "app.kit",
+   "s": {
+    "kit": "profile"
+   },
+   "ctx": "a",
+   "v": "ac"
+  },
+  {
+   "t": "i need a checkout flow",
+   "i": "app.kit",
+   "s": {
+    "kit": "checkout"
+   },
+   "ctx": "a",
+   "v": "ac"
+  },
+  {
+   "t": "add a notifications screen",
+   "i": "app.kit",
+   "s": {
+    "kit": "notifications"
+   },
+   "ctx": "a",
+   "v": "ac"
+  },
+  {
+   "t": "add a search screen",
+   "i": "app.kit",
+   "s": {
+    "kit": "search"
+   },
+   "ctx": "a",
+   "v": "ac"
+  },
+  {
+   "t": "add a leaderboard",
+   "i": "app.kit",
+   "s": {
+    "kit": "leaderboard"
+   },
+   "ctx": "a",
+   "v": "ac"
+  },
+  {
+   "t": "add welcome screens",
+   "i": "app.kit",
+   "s": {
+    "kit": "onboarding"
+   },
+   "ctx": "a",
+   "v": "ac"
+  },
+  {
+   "t": "put in a help page",
+   "i": "app.kit",
+   "s": {
+    "kit": "help"
+   },
+   "ctx": "a",
+   "v": "ac"
+  },
+  {
+   "t": "add a new screen",
+   "i": "app.screen",
+   "ctx": "a",
+   "v": "ac"
+  },
+  {
+   "t": "add a screen called Rewards",
+   "i": "app.screen",
+   "s": {
+    "name": "Rewards"
+   },
+   "ctx": "a",
+   "v": "ac"
+  },
+  {
+   "t": "add a tab bar",
+   "i": "app.tabbar",
+   "ctx": "a",
+   "v": "ac"
+  },
+  {
+   "t": "give it bottom tabs",
+   "i": "app.tabbar",
+   "ctx": "a",
+   "v": "ac"
+  },
+  {
+   "t": "add a chart",
+   "i": "app.block",
+   "s": {
+    "type": "chart"
+   },
+   "ctx": "a",
+   "v": "ac"
+  },
+  {
+   "t": "add a button",
+   "i": "app.block",
+   "s": {
+    "type": "button"
+   },
+   "ctx": "a",
+   "v": "ac"
+  },
+  {
+   "t": "add a list",
+   "i": "app.block",
+   "s": {
+    "type": "list"
+   },
+   "ctx": "a",
+   "v": "ac"
+  },
+  {
+   "t": "put a map here",
+   "i": "app.block",
+   "s": {
+    "type": "map"
+   },
+   "ctx": "a",
+   "v": "ac"
+  },
+  {
+   "t": "add a search bar",
+   "i": "app.block",
+   "s": {
+    "type": "search"
+   },
+   "ctx": "a",
+   "v": "ac"
+  },
+  {
+   "t": "add a picture",
+   "i": "app.block",
+   "s": {
+    "type": "image"
+   },
+   "ctx": "a",
+   "v": "ac"
+  },
+  {
+   "t": "add stat tiles",
+   "i": "app.block",
+   "s": {
+    "type": "stats"
+   },
+   "ctx": "a",
+   "v": "ac"
+  },
+  {
+   "t": "add a checklist",
+   "i": "app.block",
+   "s": {
+    "type": "checklist"
+   },
+   "ctx": "a",
+   "v": "ac"
+  },
+  {
+   "t": "add a date picker",
+   "i": "app.block",
+   "s": {
+    "type": "calendar"
+   },
+   "ctx": "a",
+   "v": "ac"
+  },
+  {
+   "t": "add a form",
+   "i": "app.block",
+   "s": {
+    "type": "form"
+   },
+   "ctx": "a",
+   "v": "ac"
+  },
+  {
+   "t": "insert a feed post",
+   "i": "app.block",
+   "s": {
+    "type": "feed"
+   },
+   "ctx": "a",
+   "v": "ac"
+  },
+  {
+   "t": "link this button to the profile screen",
+   "i": "app.link",
+   "s": {
+    "to": "profile"
+   },
+   "ctx": "a",
+   "v": "ac"
+  },
+  {
+   "t": "link it to settings as a sheet",
+   "i": "app.link",
+   "s": {
+    "to": "settings",
+    "how": "sheet"
+   },
+   "ctx": "a",
+   "v": "ac"
+  },
+  {
+   "t": "make this go to the cart",
+   "i": "app.link",
+   "s": {
+    "to": "cart"
+   },
+   "ctx": "a",
+   "v": "ac"
+  },
+  {
+   "t": "when tapped go to stats",
+   "i": "app.link",
+   "s": {
+    "to": "stats"
+   },
+   "ctx": "a",
+   "v": "ac"
+  },
+  {
+   "t": "connect this to the home screen",
+   "i": "app.link",
+   "s": {
+    "to": "home"
+   },
+   "ctx": "a",
+   "v": "ac"
+  },
+  {
+   "t": "make it dark",
+   "i": "app.theme",
+   "s": {
+    "mode": "dark"
+   },
+   "ctx": "a",
+   "v": "ac"
+  },
+  {
+   "t": "dark mode",
+   "i": "app.theme",
+   "s": {
+    "mode": "dark"
+   },
+   "ctx": "a",
+   "v": "ac"
+  },
+  {
+   "t": "make it light",
+   "i": "app.theme",
+   "s": {
+    "mode": "light"
+   },
+   "ctx": "a",
+   "v": "ac"
+  },
+  {
+   "t": "rounder",
+   "i": "app.theme",
+   "s": {
+    "radius": "more"
+   },
+   "ctx": "a",
+   "v": "ac"
+  },
+  {
+   "t": "make the corners sharper",
+   "i": "app.theme",
+   "s": {
+    "radius": "less"
+   },
+   "ctx": "a",
+   "v": "ac"
+  },
+  {
+   "t": "pill buttons",
+   "i": "app.theme",
+   "s": {
+    "radius": "pill"
+   },
+   "ctx": "a",
+   "v": "ac"
+  },
+  {
+   "t": "more space",
+   "i": "app.theme",
+   "s": {
+    "density": "roomy"
+   },
+   "ctx": "a",
+   "v": "ac"
+  },
+  {
+   "t": "make it more compact",
+   "i": "app.theme",
+   "s": {
+    "density": "compact"
+   },
+   "ctx": "a",
+   "v": "ac"
+  },
+  {
+   "t": "snappier",
+   "i": "app.theme",
+   "s": {
+    "motion": "snappy"
+   },
+   "ctx": "a",
+   "v": "ac"
+  },
+  {
+   "t": "calmer motion",
+   "i": "app.theme",
+   "s": {
+    "motion": "calm"
+   },
+   "ctx": "a",
+   "v": "ac"
+  },
+  {
+   "t": "thin icons",
+   "i": "app.theme",
+   "s": {
+    "icons": "thin"
+   },
+   "ctx": "a",
+   "v": "ac"
+  },
+  {
+   "t": "warm background",
+   "i": "app.theme",
+   "s": {
+    "surface": "warm"
+   },
+   "ctx": "a",
+   "v": "ac"
+  },
+  {
+   "t": "make it teal",
+   "i": "app.theme",
+   "ctx": "a",
+   "v": "ac"
+  },
+  {
+   "t": "change the color to purple",
+   "i": "app.theme",
+   "ctx": "a",
+   "v": "ac"
+  },
+  {
+   "t": "swap the font",
+   "i": "app.theme",
+   "s": {
+    "font": "next"
+   },
+   "ctx": "a",
+   "v": "ac"
+  },
+  {
+   "t": "use a serif font",
+   "i": "app.theme",
+   "s": {
+    "font": "editorial"
+   },
+   "ctx": "a",
+   "v": "ac"
+  },
+  {
+   "t": "mono font",
+   "i": "app.theme",
+   "s": {
+    "font": "mono"
+   },
+   "ctx": "a",
+   "v": "ac"
+  },
+  {
+   "t": "use the iOS look",
+   "i": "app.platform",
+   "s": {
+    "platform": "ios"
+   },
+   "ctx": "a",
+   "v": "ac"
+  },
+  {
+   "t": "make it look like android",
+   "i": "app.platform",
+   "s": {
+    "platform": "android"
+   },
+   "ctx": "a",
+   "v": "ac"
+  },
+  {
+   "t": "use the midnight look",
+   "i": "app.preset",
+   "s": {
+    "preset": "midnight"
+   },
+   "ctx": "a",
+   "v": "ac"
+  },
+  {
+   "t": "switch to the paper theme",
+   "i": "app.preset",
+   "s": {
+    "preset": "paper"
+   },
+   "ctx": "a",
+   "v": "ac"
+  },
+  {
+   "t": "play it",
+   "i": "app.play",
+   "ctx": "a",
+   "v": "ac"
+  },
+  {
+   "t": "try the prototype",
+   "i": "app.play",
+   "ctx": "a",
+   "v": "ac"
+  },
+  {
+   "t": "export the app",
+   "i": "app.export",
+   "s": {
+    "kind": "pwa"
+   },
+   "ctx": "a",
+   "v": "ac"
+  },
+  {
+   "t": "make an expo project",
+   "i": "app.export",
+   "s": {
+    "kind": "expo"
+   },
+   "ctx": "a",
+   "v": "ac"
+  },
+  {
+   "t": "have my ai build it",
+   "i": "app.export",
+   "s": {
+    "kind": "ai"
+   },
+   "ctx": "a",
+   "v": "ac"
+  },
+  {
+   "t": "undo",
+   "i": "app.undo",
+   "ctx": "a",
+   "v": "ac"
+  },
+  {
+   "t": "rename the app to Pocket",
+   "i": "app.rename",
+   "ctx": "a",
+   "v": "ac"
+  },
+  {
+   "t": "make me a shop app",
+   "i": "app.make",
+   "s": {
+    "template": "shop"
+   },
+   "ctx": "a",
+   "v": "ac"
   }
  ]
 }

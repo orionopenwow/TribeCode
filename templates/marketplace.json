@@ -15347,6 +15347,294 @@
       "thumb": "market-thumbs/bilawalsidhu-gods-eye-view.webp",
       "thumbWide": true,
       "verified": "2026-11-12 git"
+    },
+    {
+      "id": "ak-settings",
+      "kind": "app-kit",
+      "emoji": "📱",
+      "title": "Settings screen",
+      "summary": "Account, notifications and help rows with real switches.",
+      "tags": [
+        "app",
+        "screens",
+        "app creator"
+      ],
+      "for": [
+        "app"
+      ],
+      "kit": "settings",
+      "license": "MIT",
+      "score": 70,
+      "added": "2026-11-15",
+      "seat": "design",
+      "author": "TribeCode",
+      "source": "https://github.com/orionopenwow/TribeCode/blob/main/app/ui/appcreator-data.js",
+      "docs": "https://github.com/orionopenwow/TribeCode/blob/main/docs/APP-CREATOR.md",
+      "verified": "2026-11-15 bundled"
+    },
+    {
+      "id": "ak-onboarding",
+      "kind": "app-kit",
+      "emoji": "📱",
+      "title": "Onboarding pages",
+      "summary": "Three welcome pages with dots and a Get started button that leads into the app.",
+      "tags": [
+        "app",
+        "screens",
+        "app creator"
+      ],
+      "for": [
+        "app"
+      ],
+      "kit": "onboarding",
+      "license": "MIT",
+      "score": 70,
+      "added": "2026-11-15",
+      "seat": "design",
+      "author": "TribeCode",
+      "source": "https://github.com/orionopenwow/TribeCode/blob/main/app/ui/appcreator-data.js",
+      "docs": "https://github.com/orionopenwow/TribeCode/blob/main/docs/APP-CREATOR.md",
+      "verified": "2026-11-15 bundled"
+    },
+    {
+      "id": "ak-paywall",
+      "kind": "app-kit",
+      "emoji": "📱",
+      "title": "Paywall layout",
+      "summary": "Plans, features and a trial button, ready to design. Payments are not connected.",
+      "tags": [
+        "app",
+        "screens",
+        "app creator"
+      ],
+      "for": [
+        "app"
+      ],
+      "kit": "paywall",
+      "license": "MIT",
+      "score": 70,
+      "added": "2026-11-15",
+      "seat": "design",
+      "author": "TribeCode",
+      "source": "https://github.com/orionopenwow/TribeCode/blob/main/app/ui/appcreator-data.js",
+      "docs": "https://github.com/orionopenwow/TribeCode/blob/main/docs/APP-CREATOR.md",
+      "verified": "2026-11-15 bundled"
+    },
+    {
+      "id": "ak-signin",
+      "kind": "app-kit",
+      "emoji": "📱",
+      "title": "Sign-in and create account",
+      "summary": "A sign-in screen linked to a create-account screen.",
+      "tags": [
+        "app",
+        "screens",
+        "app creator"
+      ],
+      "for": [
+        "app"
+      ],
+      "kit": "signin",
+      "license": "MIT",
+      "score": 70,
+      "added": "2026-11-15",
+      "seat": "design",
+      "author": "TribeCode",
+      "source": "https://github.com/orionopenwow/TribeCode/blob/main/app/ui/appcreator-data.js",
+      "docs": "https://github.com/orionopenwow/TribeCode/blob/main/docs/APP-CREATOR.md",
+      "verified": "2026-11-15 bundled"
+    },
+    {
+      "id": "ak-checkout",
+      "kind": "app-kit",
+      "emoji": "📱",
+      "title": "Cart and checkout",
+      "summary": "A cart, a delivery form and an order confirmation (design only, no payment).",
+      "tags": [
+        "app",
+        "screens",
+        "app creator"
+      ],
+      "for": [
+        "app"
+      ],
+      "kit": "checkout",
+      "license": "MIT",
+      "score": 70,
+      "added": "2026-11-15",
+      "seat": "design",
+      "author": "TribeCode",
+      "source": "https://github.com/orionopenwow/TribeCode/blob/main/app/ui/appcreator-data.js",
+      "docs": "https://github.com/orionopenwow/TribeCode/blob/main/docs/APP-CREATOR.md",
+      "verified": "2026-11-15 bundled"
+    },
+    {
+      "id": "ak-chat",
+      "kind": "app-kit",
+      "emoji": "📱",
+      "title": "Chat screens",
+      "summary": "A conversation list linked to a chat with bubbles and a composer.",
+      "tags": [
+        "app",
+        "screens",
+        "app creator"
+      ],
+      "for": [
+        "app"
+      ],
+      "kit": "chat",
+      "license": "MIT",
+      "score": 70,
+      "added": "2026-11-15",
+      "seat": "design",
+      "author": "TribeCode",
+      "source": "https://github.com/orionopenwow/TribeCode/blob/main/app/ui/appcreator-data.js",
+      "docs": "https://github.com/orionopenwow/TribeCode/blob/main/docs/APP-CREATOR.md",
+      "verified": "2026-11-15 bundled"
+    },
+    {
+      "id": "ak-notifications",
+      "kind": "app-kit",
+      "emoji": "📱",
+      "title": "Notifications screen",
+      "summary": "Today and earlier, with icons; joins the tab bar.",
+      "tags": [
+        "app",
+        "screens",
+        "app creator"
+      ],
+      "for": [
+        "app"
+      ],
+      "kit": "notifications",
+      "license": "MIT",
+      "score": 70,
+      "added": "2026-11-15",
+      "seat": "design",
+      "author": "TribeCode",
+      "source": "https://github.com/orionopenwow/TribeCode/blob/main/app/ui/appcreator-data.js",
+      "docs": "https://github.com/orionopenwow/TribeCode/blob/main/docs/APP-CREATOR.md",
+      "verified": "2026-11-15 bundled"
+    },
+    {
+      "id": "ak-charts",
+      "kind": "app-kit",
+      "emoji": "📱",
+      "title": "Stats screen",
+      "summary": "A big number, a chart and stat tiles.",
+      "tags": [
+        "app",
+        "screens",
+        "app creator"
+      ],
+      "for": [
+        "app"
+      ],
+      "kit": "charts",
+      "license": "MIT",
+      "score": 70,
+      "added": "2026-11-15",
+      "seat": "design",
+      "author": "TribeCode",
+      "source": "https://github.com/orionopenwow/TribeCode/blob/main/app/ui/appcreator-data.js",
+      "docs": "https://github.com/orionopenwow/TribeCode/blob/main/docs/APP-CREATOR.md",
+      "verified": "2026-11-15 bundled"
+    },
+    {
+      "id": "ak-leaderboard",
+      "kind": "app-kit",
+      "emoji": "📱",
+      "title": "Leaderboard",
+      "summary": "Ranked players with scores, for games and challenges.",
+      "tags": [
+        "app",
+        "screens",
+        "app creator"
+      ],
+      "for": [
+        "app"
+      ],
+      "kit": "leaderboard",
+      "license": "MIT",
+      "score": 70,
+      "added": "2026-11-15",
+      "seat": "design",
+      "author": "TribeCode",
+      "source": "https://github.com/orionopenwow/TribeCode/blob/main/app/ui/appcreator-data.js",
+      "docs": "https://github.com/orionopenwow/TribeCode/blob/main/docs/APP-CREATOR.md",
+      "verified": "2026-11-15 bundled"
+    },
+    {
+      "id": "ak-achievements",
+      "kind": "app-kit",
+      "emoji": "📱",
+      "title": "Achievements",
+      "summary": "Badges earned and the next ones to unlock.",
+      "tags": [
+        "app",
+        "screens",
+        "app creator"
+      ],
+      "for": [
+        "app"
+      ],
+      "kit": "achievements",
+      "license": "MIT",
+      "score": 70,
+      "added": "2026-11-15",
+      "seat": "design",
+      "author": "TribeCode",
+      "source": "https://github.com/orionopenwow/TribeCode/blob/main/app/ui/appcreator-data.js",
+      "docs": "https://github.com/orionopenwow/TribeCode/blob/main/docs/APP-CREATOR.md",
+      "verified": "2026-11-15 bundled"
+    },
+    {
+      "id": "ak-invite",
+      "kind": "app-kit",
+      "emoji": "📱",
+      "title": "Invite friends",
+      "summary": "A share-your-link screen with who joined.",
+      "tags": [
+        "app",
+        "screens",
+        "app creator"
+      ],
+      "for": [
+        "app"
+      ],
+      "kit": "invite",
+      "license": "MIT",
+      "score": 70,
+      "added": "2026-11-15",
+      "seat": "design",
+      "author": "TribeCode",
+      "source": "https://github.com/orionopenwow/TribeCode/blob/main/app/ui/appcreator-data.js",
+      "docs": "https://github.com/orionopenwow/TribeCode/blob/main/docs/APP-CREATOR.md",
+      "verified": "2026-11-15 bundled"
+    },
+    {
+      "id": "ak-calendar",
+      "kind": "app-kit",
+      "emoji": "📱",
+      "title": "Booking picker",
+      "summary": "Pick a day and a time, then a confirmation screen.",
+      "tags": [
+        "app",
+        "screens",
+        "app creator"
+      ],
+      "for": [
+        "app"
+      ],
+      "kit": "calendar",
+      "license": "MIT",
+      "score": 70,
+      "added": "2026-11-15",
+      "seat": "design",
+      "author": "TribeCode",
+      "source": "https://github.com/orionopenwow/TribeCode/blob/main/app/ui/appcreator-data.js",
+      "docs": "https://github.com/orionopenwow/TribeCode/blob/main/docs/APP-CREATOR.md",
+      "verified": "2026-11-15 bundled"
     }
   ]
 }

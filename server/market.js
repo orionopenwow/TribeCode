@@ -25,7 +25,7 @@ const KIND = {
   widget: { label: 'Widgets', emoji: '🧩' }, 'company-template': { label: 'Company templates', emoji: '🏢' }, playbook: { label: 'Playbooks', emoji: '📋' },
   skill: { label: 'Skills', emoji: '🧠' }, library: { label: 'Libraries', emoji: '📚' }, tool: { label: 'Tools', emoji: '🛠️' }, studio: { label: 'Studios', emoji: '🎛️' },
   'site-template': { label: 'Starters', emoji: '🌐' }, connector: { label: 'Connectors', emoji: '🔌' }, 'asset-pack': { label: 'Asset packs', emoji: '🎨' },
-  legal: { label: 'Legal', emoji: '⚖️' }, academy: { label: 'Academy', emoji: '🎓' },
+  legal: { label: 'Legal', emoji: '⚖️' }, academy: { label: 'Academy', emoji: '🎓' }, 'app-kit': { label: 'App kits', emoji: '📱' },
 };
 const FOR = { game: 'Games', site: 'Sites', app: 'Apps', business: 'Businesses', any: 'Anything' };
 const SEATS = ['ceo', 'cto', 'design', 'growth', 'sales', 'support', 'ops', 'finance', 'legal'];
