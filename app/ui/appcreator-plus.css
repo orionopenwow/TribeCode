@@ -77,6 +77,8 @@
 .apc-hshots { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 6px; }
 .apc-hmeta { display: grid; gap: 2px; margin: 8px 0 0; font-size: 13px; }
 .apc-hview .apc-row .input { flex: 1; min-width: 0; }
+.apc-hview, .apc-hlist { min-width: 0; }
+.apc-hrow b, .apc-hrow small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding-right: 56px; }
 .apc-keys { display: grid; gap: 2px; margin-top: 8px; }
 .apc-key { display: flex; justify-content: space-between; align-items: center; gap: 12px; min-height: 36px; padding: 0 4px; border-bottom: 1px solid var(--border); font-size: 13px; }
 .apc-key kbd { font: 600 11.5px/1 var(--mono); color: var(--muted); border: 1px solid var(--border); border-radius: 6px; padding: 5px 7px; white-space: nowrap; background: var(--canvas); }
@@ -115,12 +117,11 @@
   .apc-top .apc-title { flex: 1 1 0; }
   .apc-top .apc-name { width: 100%; max-width: none; min-width: 0; box-sizing: border-box; margin-left: 0; text-overflow: ellipsis; }
   .apc-top .apc-sp { display: none; }
-  .apc-top .apc-tb { width: 36px; }
   .apc-top .cw-row { flex: 0 1 auto; min-width: 0; overflow: hidden; }
   .apc-top .btn, .apc-top .apc-menuw, .apc-top .apc-plus { flex: none; }
   /* the note sits above the screen content, clear of what the person is tapping */
   .apc-note { top: 8px; bottom: auto; max-width: calc(100% - 24px); z-index: 11; }
-  .apc-hgrid { grid-template-columns: 1fr; }
+  .apc-hgrid { grid-template-columns: minmax(0, 1fr); }
   .apc-hlist { max-height: 30vh; }
   .apc-sheet.apc-tsheet { align-items: flex-end; }
   .apc-pin { min-width: 28px; height: 28px; line-height: 26px; }

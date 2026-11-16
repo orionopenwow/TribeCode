@@ -352,6 +352,8 @@ def main():
             mp.tap("#apc-rack [data-sheet='edit']"); mp.wait_for_selector("#apc-sheet .apc-quick")
             shot(mp, "p4-app-edit-390.png")
             mp.tap("#apc-sheet [data-q='history']"); mp.wait_for_selector("#apc-sheet #apc-hlist .apc-hrow")
+            mp.wait_for_selector("#apc-hview #apc-hrestore")
+            assert mp.evaluate("[...document.querySelectorAll('#apc-sheet .apc-hrow, #apc-sheet #apc-hrnb, #apc-sheet #apc-hsave button')].every(e => e.getBoundingClientRect().right <= 390)"), "History fits a phone"
             shot(mp, "p4-app-history-390.png")
             mp.tap("#apc-sheet-x")
             # the note sits at the top of the stage, not over the content being tapped
