@@ -1,6 +1,7 @@
 // How changes work here, in every creator tool (feat/cowork-editors, server/changereq.js).
 //   A strip at the top of the website designer, App Creator, Motion Studio, the Launch kit and Share a clip says it in one
-//   line from the group's own style: "You can change this directly" or "Your changes go to Ana for OK". Someone who can't
+//   line from the group's own style: "Your changes go to Ana for OK". Someone who can change the tool directly sees no
+//   strip (p4), until changes wait for their OK: "2 changes are waiting for your OK · Look at them". Someone who can't
 //   change it keeps editing as a draft, then presses "Suggest this change": the draft goes to the right people as a
 //   request, with before and after pictures where the tool can draw them. They answer it in the inbox (Approve,
 //   Request changes, Deny, a comment); an approved change is applied as one step and Undo puts the earlier version back.
