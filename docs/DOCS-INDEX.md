@@ -72,6 +72,7 @@ Every doc in the repo, one line each, with its status. Updated 2026-11-12 (v0.31
 | [REVIEWS](REVIEWS.md) | Website | Every review TribeCode shows is from a real person and links to where they wrote it. | current |
 | [SHARED-COMPUTE](SHARED-COMPUTE.md) | Agents | Friends lend their computers to the tribe for heavy repo work: builds, test runs, code analysis (and decompiling or | partly built |
 | [SIGN-IN](SIGN-IN.md) | Accounts | Friends can join a tribe from an invite with Continue with Discord / GitHub / Google instead of typing a name, and | current |
+| [SITE-CREATOR](SITE-CREATOR.md) | Website | The website designer's layout (one row, More, four tabs), zoom, code and your own CSS, spacing handles, shortcuts, and how fast it is. | current |
 | [SITE-TEMPLATES](SITE-TEMPLATES.md) | Website | Sixteen real website templates, each with its own look, in templates/sites/<id>/. | current |
 | [SOLO](SOLO.md) | Agents | TribeCode works with zero friends. | current |
 | [STARTERS](STARTERS.md) | Building | Two kinds of starters live in TribeCode: | current |

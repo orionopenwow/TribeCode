@@ -319,21 +319,21 @@ html[data-dev=phone] .ehide-phone,html[data-dev=tablet] .ehide-tablet,html[data-
         <span class="wdz-zoom" role="group" aria-label="Zoom"><button type="button" class="btn ghost sm wdz-ic" data-wdz="zoomout" title="Zoom out (Ctrl −)" aria-label="Zoom out">${IC.minus}</button><button type="button" class="btn ghost sm wdz-zv" data-wdz="zoom100" id="wdz-zoomv" title="Back to 100% (Ctrl 0)" aria-label="Zoom: back to 100%">100%</button><button type="button" class="btn ghost sm wdz-ic" data-wdz="zoomin" title="Zoom in (Ctrl +)" aria-label="Zoom in">${IC.plus}</button><button type="button" class="btn ghost sm wdz-zfit" data-wdz="zoomfit" title="Fit the whole width in the window (Shift 1)">Fit</button></span>
         <button type="button" class="btn sm wdz-hide-phone" data-wdz="comment" id="wdz-cmode" aria-pressed="false" title="Click a section to leave a comment (C)">Comment<span class="wdz-n" id="wdz-cn" hidden></span></button>
         <button type="button" class="btn ghost sm wdz-ic wdz-hide-phone" data-wdz="keys" title="Keyboard shortcuts (?)" aria-label="Keyboard shortcuts">${ic('help')}</button>
-        <span class="wdz-morewrap"><button type="button" class="btn ghost sm wdz-ic wdz-more" data-wdz="more" aria-expanded="false" aria-haspopup="menu" aria-controls="wdz-more" aria-label="More" title="More">${ic('more')}<span class="wdz-dot" id="wdz-moredot" hidden></span></button>
-          <div class="wdz-menu wdz-moremenu" id="wdz-more" hidden role="menu" aria-label="More">
+        <span class="wdz-morewrap"><button type="button" class="btn ghost sm wdz-ic wdz-more" data-wdz="more" aria-expanded="false" aria-haspopup="true" aria-controls="wdz-more" aria-label="More" title="More">${ic('more')}<span class="wdz-dot" id="wdz-moredot" hidden></span></button>
+          <div class="wdz-menu wdz-moremenu" id="wdz-more" hidden role="group" aria-label="More">
             <p class="wdz-eyebrow">Look</p>
             <div class="wdz-mrow"><button type="button" class="btn sm" data-wdz="mode" id="wdz-mode" aria-pressed="false">Dark</button><label class="wdz-sel-wrap"><span class="sr">Theme</span><select id="wdz-theme" class="input sm" aria-label="Theme">${Object.entries(P).map(([k, p]) => `<option value="${k}">${esc(p.name)}</option>`).join('')}</select></label></div>
-            <button type="button" role="menuitemcheckbox" data-wdz="wide" id="wdz-wide" aria-pressed="false" class="wdz-hide-phone"><b>Full width</b><small>Show the page at a full computer width (1280)</small></button>
-            <button type="button" role="menuitem" data-wdz="comment" class="wdz-only-phone"><b>Comment</b><small>Tap a section to leave a comment</small></button>
+            <button type="button" data-wdz="wide" id="wdz-wide" aria-pressed="false" class="wdz-hide-phone"><b>Full width</b><small>Show the page at a full computer width (1280)</small></button>
+            <button type="button" data-wdz="comment" class="wdz-only-phone"><b>Comment</b><small>Tap a section to leave a comment</small></button>
             <hr>
-            <button type="button" role="menuitem" data-wdz="templates"><b>Templates</b><small>Start again from a ready-made design</small></button>
-            <button type="button" role="menuitem" data-wdz="save"><b>Save design</b><small>Keep this version in Saved designs</small></button>
-            <button type="button" role="menuitem" data-wdz="code"><b>Code</b><small>Code for this section, and your own CSS</small></button>
-            <button type="button" role="menuitem" data-wdz="requests" id="wdz-req" hidden><b>Suggested changes<span class="wdz-n" id="wdz-reqn" hidden></span></b><small>What people asked to change, and what waits for you</small></button>
+            <button type="button" data-wdz="templates"><b>Templates</b><small>Start again from a ready-made design</small></button>
+            <button type="button" data-wdz="save"><b>Save design</b><small>Keep this version in Saved designs</small></button>
+            <button type="button" data-wdz="code"><b>Code</b><small>Code for this section, and your own CSS</small></button>
+            <button type="button" data-wdz="requests" id="wdz-req" hidden><b>Suggested changes<span class="wdz-n" id="wdz-reqn" hidden></span></b><small>What people asked to change, and what waits for you</small></button>
             <hr>
-            <button type="button" role="menuitem" data-wdz="freeai" id="wdz-freeai"><b>Ask a free AI</b><small>Copy the design for ChatGPT, Gemini or another free AI, then paste its answer back</small></button>
-            <button type="button" role="menuitem" data-stu="agent" id="wdz-agent"><b>Have my agent do it</b><small>Your own AI agent changes the site. You approve what it sends back.</small></button>
-            <button type="button" role="menuitem" data-wdz="keys" class="wdz-only-phone"><b>Keyboard shortcuts</b><small>For when a keyboard is attached</small></button>
+            <button type="button" data-wdz="freeai" id="wdz-freeai"><b>Ask a free AI</b><small>Copy the design for ChatGPT, Gemini or another free AI, then paste its answer back</small></button>
+            <button type="button" data-stu="agent" id="wdz-agent"><b>Have my agent do it</b><small>Your own AI agent changes the site. You approve what it sends back.</small></button>
+            <button type="button" data-wdz="keys" class="wdz-only-phone"><b>Keyboard shortcuts</b><small>For when a keyboard is attached</small></button>
           </div></span>
         <span class="wdz-dl"><button type="button" class="btn sm primary" data-wdz="dl-html" id="wdz-dl">Download HTML</button><button type="button" class="btn sm primary wdz-dl-more" data-wdz="dlmenu" aria-label="Download and publish" title="Download and publish" aria-expanded="false"><span class="wdz-dl-caret">▾</span><span class="wdz-dl-ico">${ic('download')}</span></button>
           <span class="wdz-menu" id="wdz-dlmenu" hidden role="menu"><button type="button" role="menuitem" data-wdz="dl-html"><b>index.html</b><small>One standalone file: every page, pictures inside, no scripts</small></button><button type="button" role="menuitem" data-wdz="dl-zip"><b>.zip with pages and assets</b><small>A file per page, assets/, fonts/ and site.json</small></button><button type="button" role="menuitem" data-wdz="publish"><b>Publish to the project</b><small>Writes it to the project's site/ folder</small></button></span></span>
@@ -615,7 +615,7 @@ html[data-dev=phone] .ehide-phone,html[data-dev=tablet] .ehide-tablet,html[data-
     if (mod && e.key === '0') { e.preventDefault(); return setZoom(1); }
     if (!mod && e.key === '!') { e.preventDefault(); return setZoom('fit'); }
     if (mod && e.key.toLowerCase() === 'v' && !e.shiftKey && readClip()) { e.preventDefault(); return pasteSection(); }
-    if (!mod && !e.altKey && (e.key === 'ArrowUp' || e.key === 'ArrowDown') && (!st.sel || st.sel.kind === 'block') && (!t || t === document.body || t === root || (t.closest && t.closest('.wdz-left, .wdz-stage')))) { const bs = pageNow().blocks, i = st.sel ? bs.findIndex(b => b.id === st.sel.block) : -1, n = bs[i < 0 ? (e.key === 'ArrowDown' ? 0 : bs.length - 1) : i + (e.key === 'ArrowDown' ? 1 : -1)]; if (n) { e.preventDefault(); st.sel = { block: n.id, path: '', kind: 'block' }; st.panel = 'edit'; panelPaint(); logPaint(); postSel(true); $('#wdz-blocks').querySelectorAll('.wdz-blk').forEach(li => li.classList.toggle('is-sel', li.dataset.blk === n.id)); } return; }
+    if (!mod && !e.altKey && (e.key === 'ArrowUp' || e.key === 'ArrowDown') && st.sel && st.sel.kind === 'block' && (!t || t === document.body || t === root || (t.closest && t.closest('.wdz-left, .wdz-stage')))) { const bs = pageNow().blocks, i = bs.findIndex(b => b.id === st.sel.block), n = i < 0 ? null : bs[i + (e.key === 'ArrowDown' ? 1 : -1)]; if (n) { e.preventDefault(); st.sel = { block: n.id, path: '', kind: 'block' }; st.panel = 'edit'; panelPaint(); logPaint(); postSel(true); $('#wdz-blocks').querySelectorAll('.wdz-blk').forEach(li => li.classList.toggle('is-sel', li.dataset.blk === n.id)); } return; }
     if (mod && e.key.toLowerCase() === 's') { e.preventDefault(); return saveVersion(); }
     if (!mod && !e.altKey && /^[123]$/.test(e.key)) { st.dev = ['desktop', 'tablet', 'phone'][+e.key - 1]; return chrome(); }
     if (!mod && e.key.toLowerCase() === 'c') return commentMode(!st.cmode);
@@ -815,7 +815,7 @@ html[data-dev=phone] .ehide-phone,html[data-dev=tablet] .ehide-tablet,html[data-
   async function onClick(e) {
     const t = e.target, a = t.closest('[data-wdz]'), pg = pageNow();
     if (t.closest('[data-peek]')) { peek(t.closest('[data-peek]').dataset.peek); return; }
-    if (t.closest('[data-tpl]')) { const x = t.closest('[data-tpl]'); const pk = $('#wdz-peek'); if (pk) pk.hidden = true; if (!(await okToReplace())) return; await useTemplate(x.dataset.tpl); say(`Started from the ${x.dataset.title || 'chosen'} template. Undo brings back what you had.`); return; }
+    if (t.closest('[data-tpl]')) { const x = t.closest('[data-tpl]'); const pk = $('#wdz-peek'); if (pk) pk.hidden = true; const had = hasSite(); if (!(await okToReplace())) return; await useTemplate(x.dataset.tpl); say(had ? `Started from the ${x.dataset.title || 'chosen'} template. Undo brings back what you had.` : `Started from the ${x.dataset.title || 'chosen'} template. Click anything to change it.`); return; }
     if (t.closest('[data-start="blank"]')) { hideStart(); paint(); return; }
     if (t.closest('[data-page]') && !a) { st.page = t.closest('[data-page]').dataset.page; st.sel = null; frameScroll = 0; paint(); return; }
     if (t.closest('[data-dev]') && t.closest('.wdz-devs')) { st.dev = t.closest('[data-dev]').dataset.dev; chrome(); return; }   // only the frame's width changes: the page itself is not drawn again
@@ -854,7 +854,7 @@ html[data-dev=phone] .ehide-phone,html[data-dev=tablet] .ehide-tablet,html[data-
     if (t.closest('[data-import]')) { const f = $('#wdz-import'); f.value = ''; f.click(); return; }
     if (!a) { if (!t.closest('.wdz-dl')) $('#wdz-dlmenu').hidden = true; if (!t.closest('.wdz-morewrap')) moreMenu(false); return; }
     const k = a.dataset.wdz;
-    if (k === 'more') { moreMenu($('#wdz-more').hidden); return; }
+    if (k === 'more') { const on = $('#wdz-more').hidden; moreMenu(on); if (on && e.detail === 0) { const f1 = $('#wdz-mode'); if (f1) f1.focus(); } return; }
     if (k !== 'dlmenu' && k !== 'mode') moreMenu(false);
     if (k === 'zoomin' || k === 'zoomout') return zoomStep(k === 'zoomin' ? 1 : -1);
     if (k === 'zoom100') return setZoom(1);
@@ -975,21 +975,24 @@ html[data-dev=phone] .ehide-phone,html[data-dev=tablet] .ehide-tablet,html[data-
   const ZOOMS = [0.25, 0.33, 0.5, 0.67, 0.75, 0.9, 1, 1.1, 1.25, 1.5, 2];
   const stageW = () => { const sg = root && root.querySelector('.wdz-stage'); if (!sg) return 0; const cs = getComputedStyle(sg); return sg.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight) - 2; };
   const baseW = () => (st.dev === 'phone' ? Math.min(390, innerWidth <= 820 ? stageW() : 390) : st.dev === 'tablet' ? 820 : st.wide ? 1280 : stageW());
+  const fitZ = () => { const w = baseW(), a = stageW(); return w > a && a > 0 ? Math.max(0.25, Math.floor(a / w * 100) / 100) : 1; };
   function setZoom(z) {
     if (!st) return;
-    if (z === 'fit') { const w = baseW(), a = stageW(); z = w > a && a > 0 ? Math.max(0.25, Math.floor(a / w * 100) / 100) : 1; st.fit = true; } else st.fit = false;
+    if (z === 'fit') { z = fitZ(); st.fit = true; } else st.fit = false;
     st.zoom = Math.max(0.25, Math.min(2, +z || 1)); applyZoom(); flash(`Zoom ${Math.round(st.zoom * 100)}%`);
   }
   function zoomStep(dir) { const z = (st && st.zoom) || 1; const i = dir > 0 ? ZOOMS.findIndex(x => x > z + 0.001) : ZOOMS.length - 1 - [...ZOOMS].reverse().findIndex(x => x < z - 0.001); const n = ZOOMS[Math.max(0, Math.min(ZOOMS.length - 1, i < 0 || i >= ZOOMS.length ? (dir > 0 ? ZOOMS.length - 1 : 0) : i))]; setZoom(n); }
   function applyZoom() {
     const wrap = $('#wdz-framewrap'), f = $('#wdz-frame'), zv = $('#wdz-zoomv'); if (!wrap || !f || !st) return;
+    if (st.fit) st.zoom = fitZ();
     const z = st.zoom || 1; if (zv) zv.textContent = Math.round(z * 100) + '%';
+    { const fb = root.querySelector('[data-wdz="zoomfit"]'); if (fb) fb.setAttribute('aria-pressed', String(!!st.fit)); }
     wrap.classList.toggle('is-zoom', z !== 1);
     if (z === 1) { wrap.style.width = ''; f.style.width = ''; f.style.height = ''; f.style.transform = ''; return; }
     const w = baseW(); wrap.style.width = Math.round(w * z) + 'px';
     f.style.width = w + 'px'; f.style.transform = `scale(${z})`; f.style.height = Math.round(wrap.clientHeight / z) + 'px';
   }
-  addEventListener('resize', () => { if (root && !root.hidden && st) { if (st.fit) setZoom('fit'); else applyZoom(); } });
+  addEventListener('resize', () => { if (root && !root.hidden && st) applyZoom(); });
   // Ctrl + wheel over the stage (outside the page) zooms too
   document.addEventListener('wheel', e => { if (!root || root.hidden || !(e.ctrlKey || e.metaKey) || !e.target.closest || !e.target.closest('.wdz-stage')) return; e.preventDefault(); const now = Date.now(); if (now - zoomAt < 60) return; zoomAt = now; zoomStep(e.deltaY < 0 ? 1 : -1); }, { passive: false });
 

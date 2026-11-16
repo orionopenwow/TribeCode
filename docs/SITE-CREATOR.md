@@ -81,7 +81,7 @@ both at once. There is no gap between the things inside a section in the model y
 | Alt ↑, Alt ↓ | Move the selected section or entry |
 | H | Hide or show the selected section |
 | Right-click | Everything you can do with it |
-| ↑, ↓ | Select the section above or below |
+| ↑, ↓ | With a section selected: select the one above or below |
 | Shift click | Select several things |
 | Esc | Stop typing, step out, close |
 | 1, 2, 3 | Desktop, Tablet, Phone |
@@ -104,7 +104,7 @@ empty space too.
 
 ## Speed
 
-Measured by `e2e_site_polish.py` in headless Chrome on the build machine, with the server on the same machine. Two
+Measured by `e2e_site_polish.py` in headless Chrome on the build machine, with the server on the same machine. Three
 runs; your numbers depend on the computer and the network.
 
 | What | Time |
@@ -114,7 +114,7 @@ runs; your numbers depend on the computer and the network.
 | Open, end to end, from a test's point of view | 340 to 660 ms |
 | First open of a new site from a template (fonts and the template load) | 0.8 to 1.9 s |
 | Click the headline, type, and the design holds the new words | about 1.1 s (0.9 s of it is the pause that waits for you to stop typing; the page shows each letter at once) |
-| An edit reaches a friend who has the designer open | 1.1 to 1.3 s before this pass |
+| An edit reaches a friend who has the designer open | 0.4 s (1.1 to 1.3 s before this pass) |
 
 One thing was slow and is changed: a save waited 600 ms after the last change before it left. With a friend in the
 designer it now waits 250 ms, so their copy follows sooner. Alone it still waits 600 ms, because nobody is watching

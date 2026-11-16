@@ -137,6 +137,8 @@ def main():
             assert state(cp)["open"], "Esc closed the menu, not the designer"
             cp.set_viewport_size({"width": 1100, "height": 800}); cp.wait_for_timeout(200)
             r = one_row(cp, "1100"); assert r["h"] <= 56, r
+            cut = cp.evaluate("(() => { const l = document.querySelector('#wdz .wdz-left').getBoundingClientRect().right; return [...document.querySelectorAll('#wdz .wdz-blk-acts button')].filter(b => b.getBoundingClientRect().right > l - 4).length; })()")
+            assert cut == 0, "every button in the list of blocks is inside its column in a narrow window"
             shot(cp, "p4-site-1100.png")
             cp.set_viewport_size({"width": 1440, "height": 900}); cp.wait_for_timeout(200)
             # the device buttons show which is on (it never changed before)
@@ -192,6 +194,9 @@ def main():
             f = cp.evaluate("(() => { const w = document.querySelector('#wdz-framewrap').getBoundingClientRect(), s = document.querySelector('#wdz .wdz-stage').getBoundingClientRect(); return { w: w.width, sw: s.width, l: w.left, sl: s.left, lw: document.querySelector('#wdz-frame').offsetWidth, z: TribeSiteDesigner.state().zoom }; })()")
             assert f["lw"] == 1280 and f["z"] < 1 and f["w"] <= f["sw"] and f["l"] >= f["sl"], ("1280 wide, all of it showing", f)
             shot(cp, "p4-site-fit-1440.png")
+            assert cp.get_attribute("#wdz [data-wdz='zoomfit']", "aria-pressed") == "true"
+            cp.click("#wdz .wdz-devs [data-dev='tablet']"); cp.wait_for_function("TribeSiteDesigner.state().zoom === 1", timeout=3000)   # Fit follows the device: a tablet fits whole
+            cp.click("#wdz .wdz-devs [data-dev='desktop']"); cp.wait_for_function("TribeSiteDesigner.state().zoom < 1", timeout=3000)
             cp.click("#wdz [data-wdz='zoom100']"); cp.click("#wdz [data-wdz='more']"); cp.click("#wdz-wide"); assert not state(cp)["wide"]
 
             # ---------- 6: spacing handles ----------
@@ -251,6 +256,13 @@ def main():
             shot(cp, "p4-site-keys-1440.png")
             cp.keyboard.press("Escape"); cp.wait_for_selector("#wdz-keys", state="hidden"); assert state(cp)["open"]
             cp.click("#wdz [data-wdz='keys']"); cp.wait_for_selector("#wdz-keys:not([hidden])"); cp.click("#wdz-keys [data-wdz='keys']")
+            # with nothing selected the arrows are the page's own (they scroll); they do not grab a section
+            if state(cp)["sel"]:
+                cp.keyboard.press("Escape"); cp.wait_for_function("!TribeSiteDesigner.state().sel", timeout=3000)
+            cp.keyboard.press("ArrowDown"); cp.wait_for_timeout(250); assert not state(cp)["sel"] and state(cp)["open"]
+            # More from the keyboard: the focus lands on its first control
+            cp.focus("#wdz [data-wdz='more']"); cp.keyboard.press("Enter"); cp.wait_for_selector("#wdz-more:not([hidden])")
+            assert cp.evaluate("document.activeElement && document.activeElement.id") == "wdz-mode"; cp.keyboard.press("Escape"); cp.wait_for_selector("#wdz-more", state="hidden")
             first = frame(cp).locator("[data-block]").first; fid = first.get_attribute("data-block")
             first.click(position={"x": 6, "y": 6}); cp.wait_for_function(f"(TribeSiteDesigner.state().sel || {{}}).block === '{fid}'")
             cp.keyboard.press("ArrowDown"); cp.wait_for_function(f"(TribeSiteDesigner.state().sel || {{}}).block === '{bid}'", timeout=4000)

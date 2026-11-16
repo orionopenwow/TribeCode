@@ -321,7 +321,7 @@ console.log(JSON.stringify({ done: r.done.length, skipped: r.skipped.length, tit
             assert len(asks) == 1, f"one tap sends one request, got {len(asks)}"
             err, lane = mcp(key, "my_lane", {}, project=pid); assert not err, lane
             import re as _re
-            hid = _re.search(r"h-[a-z0-9]{4,}", lane); assert hid and "site_read" in lane, lane[:600]
+            hid = _re.search(r"h-[A-Za-z0-9_-]{4,}", lane); assert hid and "site_read" in lane, lane[:600]
             err, took = mcp(key, "take_handoff", {"id": hid.group(0)}, project=pid); assert not err and "site_propose" in took, took
             err, txt = mcp(key, "site_read", {}, project=pid); assert not err, txt
             o = json.loads(txt); first = o["pages"][0]["blocks"][0]["id"]

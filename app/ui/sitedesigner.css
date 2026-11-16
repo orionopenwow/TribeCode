@@ -267,3 +267,8 @@ body.wdz-open { overflow: hidden; }
 /* the theme list is in More on every screen; the panel gives what is selected a little more room than Flint */
 .wdz .wdz-moremenu .wdz-sel-wrap { display: block; }
 @media (min-width: 821px) { .wdz-right { grid-template-rows: auto minmax(0, 1.35fr) minmax(280px, 1fr); } }
+
+.wdz-zoom .wdz-zfit[aria-pressed="true"] { background: var(--surface-2); color: var(--text); }
+/* a narrow window: the list of blocks keeps every button inside its row (the last one used to be cut off) */
+.wdz-blk-t { min-width: 0; overflow-wrap: anywhere; }
+@media (max-width: 1100px) and (min-width: 821px) { .wdz-body { grid-template-columns: 220px 1fr 280px; } .wdz-blk-acts button { width: 21px; } }

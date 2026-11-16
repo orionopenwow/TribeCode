@@ -414,7 +414,7 @@
    "steps": [
     "Open the website designer and press the plus next to the page names to add one.",
     "Double-click a name in the page's own menu to type a new one.",
-    "Open Site on the right to reorder or remove pages.",
+    "Open Style on the right, then Site settings, to reorder or remove pages.",
     "There you can also give each page its own title and description for search."
    ]
   },
@@ -432,7 +432,7 @@
     "what did the tribe say about this"
    ],
    "steps": [
-    "Open the website designer and look at Suggestions on the right.",
+    "Open the website designer and look at Ideas on the right.",
     "Each one shows the words before and after, and who said it and where.",
     "Tap Apply, Not now or Dismiss. Apply is a normal change and Ctrl Z takes it back.",
     "Click anything on the page to see what the tribe said about it."
@@ -1246,7 +1246,7 @@
    "steps": [
     "Open the website, App Creator or Motion Studio. Everyone in it shows at the top, and their pointer and outline show on the thing they are on.",
     "If someone is typing in a part, it says so. Wait, or ask them in the chat.",
-    "The line under the top bar says how changes work here: you change it directly, or your changes go to someone for OK.",
+    "If your changes need someone’s OK, a line under the top bar says who. If you can change it directly, there is no line.",
     "Press Suggest this change when you are ready. They approve, ask for changes or say no in the inbox, and Undo puts the earlier version back."
    ]
   }
