@@ -8,7 +8,7 @@
 //        pwa  -> app-web/   an installable phone web app (plain HTML/JS, offline), with its fonts; the live preview finds it
 //        expo -> app-expo/  an Expo project drawing the same screens; phone app mode is pointed at it when it has none yet,
 //                           so the Phone app card can install dependencies and show the Expo Go QR code
-//        Files are written only inside that one folder, and the folder is replaced as a whole on each export. A project
+//        Files are written only inside that one folder; files a person added there are left alone (pass 4). A project
 //        with no code folder gets one first (server/setup.js ensureRepo), as the website templates do.
 //   pass 4 (history and comments, like the website designer's):
 //   GET  /api/projects/:id/app-config/history             { versions: [{ id, rev, at, by, name, screens }] } newest first
@@ -28,10 +28,21 @@ const fs = require('node:fs');
 const path = require('node:path');
 const A = require('../app/ui/appcreator-core.js');
 
-module.exports = function appCreator({ P, store, root, perms = null, requests = () => null, brand = () => ({}), broadcast = () => {}, nameOf = x => x, ensureRepo = null, log = () => {} }) {
+module.exports = function appCreator({ files = null, P, store, root, perms = null, requests = () => null, brand = () => ({}), broadcast = () => {}, nameOf = x => x, ensureRepo = null, log = () => {} }) {
   const FONTS = [path.join(root, 'app', 'ui', 'assets', 'site-fonts'), path.join(root, 'ui', 'assets', 'site-fonts')].find(d => fs.existsSync(d)) || path.join(root, 'app', 'ui', 'assets', 'site-fonts');
   const rel = pid => `.tribe/appdesign/${String(pid).replace(/[^\w-]/g, '')}.json`;
-  const loadRaw = pid => store.readJSON(rel(pid), null);
+  // pass 4: with nothing saved here, the design file in the project's folder (app-web/app-design.json) is read
+  const loadRaw = pid => { const c = store.readJSON(rel(pid), null); if (c || !files || !P.get(pid)) return c; const d = files.adopt(pid, 'app'); if (!d) return null; try { return { ...A.normalize(d), rev: 0 }; } catch { return null; } };
+  const fontOf = f => { try { return fs.readFileSync(path.join(FONTS, f + '.woff2')); } catch { return null; } };
+  // the phone web app as files (pass 4): what Export writes, plus the design itself so the folder can bring it back
+  function pwaFiles(doc) {
+    const list = A.pwa(doc, { fonts: fontOf });
+    const font = A.FONTS[doc.theme.font]; const lic = { 'Inter': 'Inter', 'Outfit': 'Outfit', 'Bricolage Grotesque': 'BricolageGrotesque', 'Space Grotesk': 'SpaceGrotesk', 'Fraunces': 'Fraunces', 'DM Serif Display': 'DMSerifDisplay', 'Instrument Serif': 'InstrumentSerif', 'JetBrains Mono': 'JetBrainsMono', 'Silkscreen': 'Silkscreen', 'Caveat': 'Caveat' };
+    for (const fam of [font.display, font.body].filter((x, i, a) => x && a.indexOf(x) === i)) { if (!lic[fam]) continue; try { list.push([`fonts/LICENSE-${lic[fam]}.txt`, fs.readFileSync(path.join(FONTS, `LICENSE-${lic[fam]}.txt`))]); } catch {} }
+    list.push(['app-design.json', JSON.stringify(doc, null, 1)]);
+    return list;
+  }
+  if (files) files.use('app', pid => { const raw = store.readJSON(rel(pid), null); return raw ? pwaFiles(A.normalize(raw)) : null; });
   const err = (status, m) => Object.assign(new Error(m), { status });
   // ---------- history (pass 4) ----------
   const safe = pid => String(pid).replace(/[^\w-]/g, '');
@@ -69,6 +80,7 @@ module.exports = function appCreator({ P, store, root, perms = null, requests = 
     fs.mkdirSync(path.dirname(store.p(rel(pid))), { recursive: true });
     store.writeJSON(rel(pid), { ...c, rev, savedBy: me.id, savedAt: new Date().toISOString() });
     remember(pid, c, rev, me);
+    if (files && P.get(pid)) files.queue(pid, 'app', me.id);
     try { broadcast({ type: 'app-config', project: pid, rev, by: me.id }); } catch {}
     return { config: c, rev };
   }
@@ -76,7 +88,7 @@ module.exports = function appCreator({ P, store, root, perms = null, requests = 
   function writeFolder(repo, folder, files) {
     const dir = path.join(repo, folder);
     if (!dir.startsWith(repo + path.sep)) throw err(400, 'bad folder');
-    fs.rmSync(dir, { recursive: true, force: true });
+    // pass 4: nothing a person put in this folder is removed (it used to be replaced as a whole, node_modules included)
     const written = [];
     for (const [name, data] of files) {
       if (data == null) continue;
@@ -95,10 +107,12 @@ module.exports = function appCreator({ P, store, root, perms = null, requests = 
     if (!repo) throw err(400, 'give the project a code folder first (Repo → set up), or use Download');
     const doc = A.normalize(raw);
     if (kind === 'pwa') {
-      const files = A.pwa(doc, { fonts: f => { try { return fs.readFileSync(path.join(FONTS, f + '.woff2')); } catch { return null; } } });
-      const font = A.FONTS[doc.theme.font]; const lic = { 'Inter': 'Inter', 'Outfit': 'Outfit', 'Bricolage Grotesque': 'BricolageGrotesque', 'Space Grotesk': 'SpaceGrotesk', 'Fraunces': 'Fraunces', 'DM Serif Display': 'DMSerifDisplay', 'Instrument Serif': 'InstrumentSerif', 'JetBrains Mono': 'JetBrainsMono', 'Silkscreen': 'Silkscreen' };
-      for (const fam of [font.display, font.body].filter((x, i, a) => x && a.indexOf(x) === i)) { try { files.push([`fonts/LICENSE-${lic[fam]}.txt`, fs.readFileSync(path.join(FONTS, `LICENSE-${lic[fam]}.txt`))]); } catch {} }
-      const written = writeFolder(repo, 'app-web', files);
+      if (files) {   // the same files every save writes, written now; a person's own edits are copied to .my-changes first
+        const r = files.write(p.id, 'app', { force: true, by: me.id });
+        if (!r.ok) throw err(500, r.error || 'the files could not be written');
+        return { ok: true, kind, folder: 'app-web', written: r.files.map(f => `app-web/${f}`), preview: 'app-web/', kept: r.kept || '' };
+      }
+      const written = writeFolder(repo, 'app-web', pwaFiles(doc));
       return { ok: true, kind, folder: 'app-web', written, preview: 'app-web/' };
     }
     if (kind === 'expo') {

@@ -1,0 +1,37 @@
+/* Where it lives (wherelives.js): a shared sheet (uikit) with three steps. Flat matte, tokens only. */
+.ui-card.whl-sheet { width: min(760px, calc(100vw - 32px)); }
+.whl { display: flex; flex-direction: column; gap: 12px; }
+.whl-step { display: grid; grid-template-columns: 88px minmax(0, 1fr); gap: 16px; padding: 14px; border: 1px solid var(--edge); border-radius: var(--r-sm); background: var(--surface); }
+.whl-pic { display: grid; place-items: start center; padding-top: 4px; }
+.whl-draw { width: 72px; height: 56px; fill: none; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+.whl-d-body { stroke: var(--muted); }
+.whl-d-line { stroke: var(--faint); }
+.whl-d-hot { stroke: var(--accent); }
+.whl-d-hotfill { fill: var(--accent); stroke: none; }
+.whl-t { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.whl-t h4 { margin: 0; font-size: 17px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.whl-t p { margin: 0; line-height: 1.6; max-width: 65ch; }
+.whl-tag { font-family: var(--mono); font-size: 11px; font-weight: 500; padding: 2px 6px; border: 1px solid var(--live); border-radius: var(--r-sm); color: var(--live-ink, var(--live)); }
+.whl-files { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
+.whl-files li { display: flex; flex-wrap: wrap; gap: 4px 8px; align-items: baseline; }
+.whl-files li span { color: var(--muted); }
+.whl-files li small { flex-basis: 100%; color: var(--muted); line-height: 1.5; }
+.whl-path { overflow-wrap: anywhere; }
+.whl-path code, .whl-files code { font-family: var(--mono); font-size: 12px; }
+.whl-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; }
+.whl-row .btn { min-height: 40px; }
+.whl small { line-height: 1.5; }
+.whl-warn { display: flex; flex-direction: column; gap: 6px; padding: 10px 12px; border: 1px solid var(--amber); border-radius: var(--r-sm); background: var(--amber-tint); color: var(--amber-ink); }
+.whl-warn p { margin: 0; overflow-wrap: anywhere; }
+.whl-warn .faint, .whl-warn small.faint { color: inherit; opacity: 0.85; }
+.whl-askb p { margin: 0; overflow-wrap: anywhere; line-height: 1.6; }
+/* Publish › Where it goes: what goes online (publishreal.js) */
+.pbr-what { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; margin: 0 0 10px; }
+.pbr-what .eyebrow { flex-basis: 100%; }
+.pbr-where { margin: 0 0 12px; }
+@media (max-width: 560px) {
+  .whl-step { grid-template-columns: 1fr; gap: 8px; padding: 12px; }
+  .whl-pic { place-items: start; }
+  .whl-draw { width: 56px; height: 44px; }
+  .whl-row .btn { min-height: 44px; }
+}

@@ -47,12 +47,36 @@
     o = o || {};
     if (!A()) { toast('App Creator did not load. Reload the app.'); return; }
     ensureStyle();
-    const pid = o.pid || (connected() && C.project ? C.project() : '');
+    // pass 4: someone in a tribe that cannot be reached right now still means the tribe's app, not the design kept on this
+    // device with no tribe (which opened in its place and looked like the app had gone)
+    const inTribe = !!(C && C.hasToken && C.hasToken()) && !(window.TribeOffline && window.TribeOffline.solo && window.TribeOffline.solo());
+    const pid = o.pid || ((connected() || inTribe) && C.project ? C.project() : '');
     st = { open: true, pid, local: !pid, doc: null, rev: 0, canEdit: true, canDraft: true, base: '', pendingDraft: false, screen: '', sel: null, mode: 'edit', tab: 'screens', sels: [], peek: '', cmode: false, comments: [], map: false, mapSel: [], undo: [], redo: [], saving: false, savedAt: '', mobile: matchMedia('(max-width: 820px)').matches, sheet: '' };
     let cur = null;
-    if (pid) { try { const r = await C.api(`/projects/${encodeURIComponent(pid)}/app-config`); cur = r.config; st.rev = r.rev || 0; st.canEdit = r.canEdit !== false; st.canDraft = st.canEdit || !!r.canSuggest; st.base = cur ? JSON.stringify(A().normalize(cur)) : ''; } catch { cur = null; } }
+    // pass 4: changes that could not be sent (the tribe was unreachable) are kept on this device and come back here
+    let unsent = pid ? ls.get(UNSENT(pid), null) : null, unreachable = false;
+    if (pid) { try { const r = await C.api(`/projects/${encodeURIComponent(pid)}/app-config`); cur = r.config; st.rev = r.rev || 0; st.canEdit = r.canEdit !== false; st.canDraft = st.canEdit || !!r.canSuggest; st.base = cur ? JSON.stringify(A().normalize(cur)) : ''; } catch (e) { cur = null; unreachable = !(e && e.status); } }
     else cur = ls.get(LOCAL, null);
-    let doc = cur ? A().normalize(cur) : null;
+    if (unreachable && !(unsent && unsent.doc)) { st = null; toast('Can’t reach the tribe right now. Your app is safe there; try again in a moment.'); return null; }   // never a blank app saved over the real one
+    let doc = cur ? A().normalize(cur) : null, resend = false;
+    if (unsent && unsent.doc && st.canEdit) {
+      const mine = A().normalize(unsent.doc);
+      if (unreachable) { doc = mine; cur = mine; st.rev = unsent.base || 0; resend = true; }
+      else if (!doc || JSON.stringify(mine) === JSON.stringify(doc)) ls.set(UNSENT(pid), null);
+      else if ((unsent.base || 0) === st.rev) { doc = mine; resend = true; }
+      else if (window.TribeUI && window.TribeUI.sheet) {
+        const pick = await new Promise(res => {
+          let done = false; const end = v => { if (done) return; done = true; sh.close(); res(v); };
+          const sh = window.TribeUI.sheet({ id: 'apc-unsent', kind: 'decision', eyebrow: 'App Creator', title: 'Two versions of this app',
+            body: `<p>${esc(tr('You changed this app while the tribe could not be reached, and someone changed it since.'))}</p><p class="faint">${esc(tr('Keep mine replaces theirs for everyone. Keep theirs drops the changes kept on this device.'))}</p>`,
+            foot: `<button type="button" class="btn" id="apc-theirs">${esc(tr('Keep theirs'))}</button><button type="button" class="btn primary" id="apc-mine">${esc(tr('Keep mine'))}</button>`,
+            onClose: () => end('later') });
+          sh.el.querySelector('#apc-theirs').onclick = () => end('theirs'); sh.el.querySelector('#apc-mine').onclick = () => end('mine');
+        });
+        if (pick === 'mine') { st.undo.push(JSON.stringify(doc)); doc = mine; resend = true; }
+        else if (pick === 'theirs') ls.set(UNSENT(pid), null);
+      }
+    }
     // pass 3: picking a template in the gallery over an app the tribe already has asks first (the old app was replaced
     // and saved over at once; Undo only lasted until App Creator closed)
     if (o.template && o.askReplace && doc && doc.screens && doc.screens.length && window.TribeUI && window.TribeUI.sheet) {
@@ -67,13 +91,19 @@
       if (pick !== 'over') o = { ...o, template: '' };
     }
     if (o.template) { const t = A().template(o.template, { name: o.name, accent: o.accent }); if (t) { if (doc) st.undo.push(JSON.stringify(doc)); doc = t; } }
+    // pass 4: an app made on this device before there was a tribe comes along into a project that has none yet
+    let brought = false;
+    if (!doc && pid && !unreachable && st.canEdit && !o.name) { const mine = ls.get(LOCAL, null); if (mine && mine.screens && mine.screens.length) { doc = A().normalize(mine); brought = true; } }
     if (!doc) doc = A().blank(o.name || 'My app');
     st.doc = doc; st.screen = doc.start;
     // someone who can only suggest picks up their unsent draft on this device (it is theirs until they send it)
     if (pid && !st.canEdit && st.canDraft) { const dr = ls.get(DRAFT(pid), null); if (dr && dr.doc) { st.doc = A().normalize(dr.doc); st.pendingDraft = true; } }
     build();
     coworkOn();
-    if (o.template || !cur) save();
+    if (o.template || !cur || resend) save();
+    if (resend && !unreachable) toast('Sent the changes you made while the tribe could not be reached.');
+    if (brought) toast('Brought in the app you made on this device before the tribe.');
+    if (pid && st.canEdit && window.TribeWhere) window.TribeWhere.check(pid, 'app');   // files changed outside TribeCode: ask, never write over them
     if (o.kit) installKit(o.kit, true);
     if (o.template && cur) note('Started from the template. Undo brings back your earlier design.');   // pass 4: a short note under the phone, not a toast over the screen
     return st;
@@ -97,12 +127,15 @@
         st.dirty = false; st.pendingDraft = JSON.stringify(st.doc) !== st.base; ls.set(DRAFT(st.pid), st.pendingDraft ? { doc: st.doc, at: Date.now() } : null);
         mark(st.pendingDraft ? 'Draft: suggest it to share' : ''); if (crStrip) crStrip.draw(); return;
       }
-      st.saving = true; mark('Saving…');
-      try { const r = await C.api(`/projects/${encodeURIComponent(st.pid)}/app-config`, { method: 'PUT', body: { config: doc, base: st.rev } }); st.rev = r.rev; st.dirty = false; mark('Saved'); }
+      const pid = st.pid;
+      st.saving = true; mark('Saving…'); ls.set(UNSENT(pid), { doc, base: st.rev, at: Date.now() });   // pass 4: on this device until the tribe has it
+      try { const r = await C.api(`/projects/${encodeURIComponent(pid)}/app-config`, { method: 'PUT', body: { config: doc, base: st.rev } }); if (!st || st.pid !== pid) return; st.rev = r.rev; if (st.doc === doc) { st.dirty = false; ls.set(UNSENT(pid), null); } mark('Saved'); if (st.doc !== doc) saveT = setTimeout(run, 300); }
       catch (e) {
-        if (e && (e.status === 409 || /409|conflict/i.test(e.message || ''))) { try { const r = await C.api(`/projects/${encodeURIComponent(st.pid)}/app-config`); st.doc = A().normalize(r.config); st.rev = r.rev; paint(); toast('Someone else changed the app. You are seeing their version now.'); } catch {} }
-        else mark('Not saved: ' + (e.message || 'offline'));
-      } finally { st.saving = false; }
+        if (!st || st.pid !== pid) return;
+        if (e && (e.status === 409 || /409|conflict/i.test(e.message || ''))) { try { const r = await C.api(`/projects/${encodeURIComponent(pid)}/app-config`); st.doc = A().normalize(r.config); st.rev = r.rev; ls.set(UNSENT(pid), null); paint(); toast('Someone else changed the app. You are seeing their version now.'); } catch {} }
+        else if (e && e.status && e.status < 500) { ls.set(UNSENT(pid), null); mark('Not saved: ' + (e.message || '')); }
+        else { mark('Not saved yet: can’t reach the tribe. Kept on this device'); clearTimeout(saveT); saveT = setTimeout(run, 5000); }   // tried again by itself
+      } finally { if (st) st.saving = false; }
     };
     if (now) return run(); saveT = setTimeout(run, 500);
   }
@@ -111,12 +144,14 @@
     if (!st || !st.dirty || st.saving) return; clearTimeout(saveT);
     if (st.local) { ls.set(LOCAL, st.doc); st.dirty = false; return; }
     if (!st.canEdit || !st.pid) return;
-    C.api(`/projects/${encodeURIComponent(st.pid)}/app-config`, { method: 'PUT', body: { config: st.doc, base: st.rev }, keepalive: true }).then(r => { if (st) { st.rev = r.rev; st.dirty = false; mark('Saved'); } }).catch(() => {});
+    const pid = st.pid; ls.set(UNSENT(pid), { doc: st.doc, base: st.rev, at: Date.now() });
+    C.api(`/projects/${encodeURIComponent(pid)}/app-config`, { method: 'PUT', body: { config: st.doc, base: st.rev }, keepalive: true }).then(r => { ls.set(UNSENT(pid), null); if (st) { st.rev = r.rev; st.dirty = false; mark('Saved'); } }).catch(() => {});
   }
   addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') flushNow(); });
   addEventListener('pagehide', flushNow);
   const mark = t => { const el = root && root.querySelector('#apc-saved'); if (el) el.textContent = tr(t); };
   const DRAFT = pid => `tribecode.appcreator.draft.${pid}`;
+  const UNSENT = pid => `tribecode.appcreator.unsent.${pid}`;   // pass 4: an edit the tribe has not confirmed yet
 
   // ---------- edits ----------
   function commit(doc, say, keepSel) {
@@ -153,7 +188,8 @@
         <button class="btn" id="apc-play">${ic('play')}<span>Play</span></button>
         <div class="apc-menuw"><button class="btn primary" id="apc-export" aria-haspopup="true">Export</button>
           <div class="apc-menu" id="apc-menu" hidden>
-            <button data-x="pwa-save"><b>Save into the project</b><small>A phone web app in app-web/. The live preview opens it on any phone.</small></button>
+            <button data-x="pwa-save"><b>Try it in the live preview</b><small>Your app is already saved as files in app-web/. This opens it in the preview, on any phone.</small></button>
+            <button data-x="where"><b>Where it lives</b><small>Your app is already files in the project folder. Open it, share it or put it online.</small></button>
             <button data-x="pwa-zip"><b>Download the phone web app</b><small>Plain HTML and JavaScript, works offline, Add to Home Screen.</small></button>
             <button data-x="expo-save"><b>Expo project</b><small>React Native in app-expo/, for the App Store and Google Play.</small></button>
             <button data-x="brief"><b>Have my AI build it for real</b><small>Sends the screens, flows and data to your AI helpers. Nothing joins the main copy until a person says yes.</small></button>
@@ -189,6 +225,7 @@
   }
   function onKey(e) {
     if (!root || !st) return;
+    if (document.querySelector('.ui-scrim')) return;   // pass 4: a sheet on top (Where it lives, Put it on your phone) takes its own keys; Esc used to close App Creator under it
     const typing = /INPUT|TEXTAREA/.test(document.activeElement && document.activeElement.tagName) || (document.activeElement && document.activeElement.isContentEditable);
     if (P() && P().onKey(e)) { e.stopPropagation(); return; }   // pass 4: copy, paste, duplicate, arrows, the map, comments, "?"
     if (e.key === 'Escape') { if (st.mode === 'play') { st.mode = 'edit'; paint(); } else if (st.sheet) closeSheet(); else if (st.sel && !typing) { st.sel = null; paint(); } else if (!typing) close(); e.stopPropagation(); return; }
@@ -586,6 +623,7 @@
   async function doExport(kind) {
     const Co = A(), X = window.TribeExport;
     try {
+      if (kind === 'where') { if (window.TribeWhere) window.TribeWhere.open(st.pid, 'app'); return { where: true }; }
       if (kind === 'pwa-save' || kind === 'expo-save') {
         if (st.local || !st.pid) { if (kind === 'expo-save') return zipDownload(Co.expo(st.doc), '-expo'); return doExport('pwa-zip'); }
         await save(true);

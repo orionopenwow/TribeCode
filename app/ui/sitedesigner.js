@@ -207,8 +207,10 @@ html[data-dev=phone] .ehide-phone,html[data-dev=tablet] .ehide-tablet,html[data-
     const pid = o.pid !== undefined ? o.pid : (C && C.project && C.project()) || '';
     let cfg = o.cfg || null, rev = 0, server = null;
     if (!cfg && pid && connected()) { try { server = await C.api(`/projects/${encodeURIComponent(pid)}/site-config`); cfg = server.config; rev = server.rev || 0; } catch {} }
-    const d = !o.cfg && readDraft(pid);
-    let restored = false;
+    let d = !o.cfg && readDraft(pid);
+    let restored = false, brought = false;
+    // pass 4: a site made on this device before there was a tribe comes along into a project that has none yet
+    if (!o.cfg && !o.template && !o.prompt && pid && server && !server.config && !d && server.canEdit !== false) { const mine = readDraft(''); if (mine && mine.cfg && mine.cfg.pages && mine.cfg.pages.some(p => (p.blocks || []).length)) { d = { cfg: mine.cfg, at: Date.now(), rev: 0, dirty: true }; brought = true; } }
     if (d && (!cfg || (d.dirty && (d.rev || 0) >= rev) || (!connected() && d.at))) { cfg = d.cfg; restored = !!d.dirty && !!server; }
     mount();
     st = fresh(cfg || S().blank(projectName(pid)), pid); st.rev = rev;
@@ -219,6 +221,7 @@ html[data-dev=phone] .ehide-phone,html[data-dev=tablet] .ehide-tablet,html[data-
     { const f = $('#wdz-frame'); if (f && f.srcdoc) { const n = f.cloneNode(false); n.removeAttribute('srcdoc'); f.replaceWith(n); } }   // a frame that was inside the hidden designer can stay unpainted in Chrome: start a fresh one
     if (d && d.dirty && server && (d.rev || 0) < rev && JSON.stringify(S().normalize(d.cfg)) !== JSON.stringify(st.cfg)) { st.dirty = true; st.cfg = S().normalize(d.cfg); conflict({ config: server.config, rev, by: server.savedBy, at: server.savedAt }); }
     else if (restored) { st.dirty = true; push(); }
+    if (brought) setTimeout(() => say('Brought in the site you made on this device before the tribe.'), 300);
     let tpl = o.template, rest = o.prompt || '';
     if (rest && !tpl && window.TribeNLU) { const P = window.TribeNLU.parse(rest, {}); const s = (P.steps || [])[0]; if (s && /^site\./.test(s.intent) && s.conf >= 0.6 && S().TEMPLATES.includes(s.intent.slice(5))) { tpl = s.intent.slice(5); if (s.slots && s.slots.name) o.name = s.slots.name; rest = ''; } }
     if (tpl) await useTemplate(tpl, !cfg, { name: o.name });
@@ -226,6 +229,7 @@ html[data-dev=phone] .ehide-phone,html[data-dev=tablet] .ehide-tablet,html[data-
     chipKey = ''; logPaint();   // feat/flint-unify: this design's thread and chips
     status(); await loadComments();
     coworkOn();
+    if (pid && connected() && st.canEdit !== false && window.TribeWhere) window.TribeWhere.check(pid, 'site');   // pass 4: files changed outside TribeCode: ask, never write over them
     if (SG()) { SG().reset(); SG().refresh(sgApi()).catch(() => {}); }
     try { if (STU()) STU().opened(stuApi); } catch {}
     try { if (window.TribeSiteFxUI) window.TribeSiteFxUI.opened(stuApi); } catch {}   // feat/site-3d
@@ -311,7 +315,7 @@ html[data-dev=phone] .ehide-phone,html[data-dev=tablet] .ehide-tablet,html[data-
         <button type="button" class="btn sm" data-stu="agent" id="wdz-agent" title="Ask your own AI agent to change the site. You approve what it sends back.">Have my agent do it</button>
         <button type="button" class="btn sm" data-wdz="save" title="Keep this design in Saved designs (the project’s history is in Versions)">Save design</button>
         <span class="wdz-dl"><button type="button" class="btn sm primary" data-wdz="dl-html" id="wdz-dl">Download HTML</button><button type="button" class="btn sm primary wdz-dl-more" data-wdz="dlmenu" aria-label="More download options" aria-expanded="false">▾</button>
-          <span class="wdz-menu" id="wdz-dlmenu" hidden role="menu"><button type="button" role="menuitem" data-wdz="dl-html"><b>index.html</b><small>One standalone file: every page, pictures inside, no scripts</small></button><button type="button" role="menuitem" data-wdz="dl-zip"><b>.zip with pages and assets</b><small>A file per page, assets/, fonts/ and site.json</small></button><button type="button" role="menuitem" data-wdz="publish"><b>Publish to the project</b><small>Writes it to the project's site/ folder</small></button></span></span>
+          <span class="wdz-menu" id="wdz-dlmenu" hidden role="menu"><button type="button" role="menuitem" data-wdz="dl-html"><b>index.html</b><small>One standalone file: every page, pictures inside, no scripts</small></button><button type="button" role="menuitem" data-wdz="dl-zip"><b>.zip with pages and assets</b><small>A file per page, assets/, fonts/ and site.json</small></button><button type="button" role="menuitem" data-wdz="where"><b>Where it lives</b><small>Your site is already files in the project folder. Open it, share it or put it online.</small></button></span></span>
       </header>
       <div class="wdz-body">
         <aside class="wdz-left" aria-label="Blocks">
@@ -801,6 +805,7 @@ html[data-dev=phone] .ehide-phone,html[data-dev=tablet] .ehide-tablet,html[data-
     if (k === 'dlmenu') { const m = $('#wdz-dlmenu'); m.hidden = !m.hidden; a.setAttribute('aria-expanded', String(!m.hidden)); return; }
     if (k === 'dl-html' || k === 'dl-zip') { $('#wdz-dlmenu').hidden = true; return download(k === 'dl-zip' ? 'zip' : 'html'); }
     if (k === 'publish') { $('#wdz-dlmenu').hidden = true; return publish(); }
+    if (k === 'where') { $('#wdz-dlmenu').hidden = true; await flush(); if (window.TribeWhere) window.TribeWhere.open(st.pid, 'site'); return; }
     if (k === 'freeai') return window.TribeAIBridge && window.TribeAIBridge.open({ src: 'site', goal: 'Improve this website' });   // feat/agents-free
     if (k === 'save') return saveVersion();
     if (k === 'comment') return commentMode(!st.cmode);
@@ -865,7 +870,7 @@ html[data-dev=phone] .ehide-phone,html[data-dev=tablet] .ehide-tablet,html[data-
   }
   async function publish() {
     if (!st.pid || !connected()) return say('Publishing writes to a project. Download HTML works anywhere.');
-    await flush(); try { const r = await C.api(`/projects/${encodeURIComponent(st.pid)}/site-config/publish`, { method: 'POST', body: {} }); say(`Published ${r.files.filter(f => /\.html$/.test(f)).length} pages to ${r.dir}.`); } catch (e) { say(e.message); }
+    await flush(); try { const r = await C.api(`/projects/${encodeURIComponent(st.pid)}/site-config/publish`, { method: 'POST', body: {} }); say(`${r.files.filter(f => /\.html$/.test(f)).length} pages are in ${r.dir}${r.kept ? ' Your own versions are in ' + r.kept + '.' : ''}`); } catch (e) { say(e.message); }
   }
   async function saveVersion() {
     if (!st.pid || !connected()) { try { localStorage.setItem(LOCAL + '.v', JSON.stringify(st.cfg)); } catch {} return say('Saved this design on this device.'); }

@@ -77,9 +77,14 @@ The Expo export carries a person's own pictures inside `design.json` and draws t
 
 ## Export
 
+Since pass 4 the phone web app is also written by itself: `app-web/` in the project folder follows every save
+(`server/designfiles.js`, `docs/WHERE-IT-LIVES.md`), with `app-design.json` beside it. Export never empties a folder:
+files a person added to `app-web/` or `app-expo/` stay. A change the tribe has not confirmed is kept on the device
+(`tribecode.appcreator.unsent.<project>`) and sent when the tribe can be reached again.
+
 | Choice | What happens |
 | --- | --- |
-| Save into the project | `POST /api/projects/:id/app-config/export { kind: 'pwa' }` writes `app-web/` in the project's code: `index.html`, `app.js` (the same runtime as Play), `sw.js` (offline), `manifest.webmanifest`, `icon.svg`, the fonts with their licence files. The live preview finds `app-web/` when the project has no other web root, so it opens on any phone through the preview link. A project with no code folder gets one first. |
+| Try it in the live preview (was "Save into the project") | `POST /api/projects/:id/app-config/export { kind: 'pwa' }` writes `app-web/` in the project's code: `index.html`, `app.js` (the same runtime as Play), `sw.js` (offline), `manifest.webmanifest`, `icon.svg`, the fonts with their licence files. The live preview finds `app-web/` when the project has no other web root, so it opens on any phone through the preview link. A project with no code folder gets one first. |
 | Download the phone web app | The same files as a zip, made in the browser (works with no tribe). |
 | Expo project | `app-expo/`: `design.json` (the design as JSON) and an `App.js` that draws it with React Native's own pieces and Expo's icon set. When the project has no phone app yet, phone app mode points at `app-expo/`, so the Phone app card installs dependencies and shows the Expo Go code. |
 | Have my AI build it for real | A brief (screens, flows, a first guess at the data, the look) goes to `#agents` addressed to `@agents`. With no AI helper in the project it becomes a build task instead. Nothing joins the main copy until a person says yes. |

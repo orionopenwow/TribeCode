@@ -56,28 +56,36 @@ function pngIcon(size, color) {
   return Buffer.concat([Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]), chunk('IHDR', ihdr), chunk('IDAT', zlib.deflateSync(raw, { level: 9 })), chunk('IEND', Buffer.alloc(0))]);
 }
 
-module.exports = function publishReal({ P, W, base, publish, getMembers, broadcast = () => {}, nameOf = id => id, fetchImpl, log = () => {}, perms = null }) {
+module.exports = function publishReal({ files = null, P, W, base, publish, getMembers, broadcast = () => {}, nameOf = id => id, fetchImpl, log = () => {}, perms = null }) {
   const FILE = '.tribe/publish-real.json';
   let db = base.readJSON(FILE, { projects: {} }); db.projects = db.projects || {};
   const save = () => base.writeJSON(FILE, db);
   const err = (status, msg, extra) => Object.assign(new Error(msg), { status }, extra || {});
   const API = () => String(process.env.TRIBE_GITHUB_API || 'https://api.github.com').replace(/\/+$/, '');
   const f = (...a) => (fetchImpl || fetch)(...a);
-  const destOf = pid => (db.projects[pid] = db.projects[pid] || {});
+  // pass 4: a project can hold a designed website and a designed phone app (server/designfiles.js). "What goes online"
+  // picks one; the app keeps its own record (its own link) so the two never publish over each other.
+  const top = pid => (db.projects[pid] = db.projects[pid] || {});
+  const things = pid => (files ? { site: files.has(pid, 'site'), app: files.has(pid, 'app') } : { site: false, app: false });
+  const picked = pid => { const w = top(pid).what; return w && things(pid)[w] ? w : ''; };
+  const destOf = pid => { const t = top(pid); if (picked(pid) !== 'app') return t; t.by = t.by || {}; return (t.by.app = t.by.app || {}); };
+  // the folder to read: the picked design, else the project's web folder, else a designed website, else a designed app
+  function source(pid) {
+    const th = things(pid), w = picked(pid);
+    if (files) { try { files.settle(pid); } catch {} }
+    const from = kind => ({ what: kind, at: files.dirOf(pid, kind) });
+    if (w) return from(w);
+    try { const r = publish.files(pid); let at = r.root; try { at = fs.realpathSync(at); } catch {} return { what: files && th.site && at === files.dirOf(pid, 'site') ? 'site' : files && th.app && at === files.dirOf(pid, 'app') ? 'app' : 'code', at: null, src: r }; }
+    catch (e) { if (th.site) return from('site'); if (th.app) return from('app'); throw e; }
+  }
+  const checkOf = pid => { const so = source(pid); return publish.check(pid, so.at || undefined); };
   const tokenOf = me => { try { return (W.readSecret(me.id) || {}).githubToken || ''; } catch { return ''; } };
   const loginOf = me => { try { return (W.readSecret(me.id) || {}).githubLogin || ''; } catch { return ''; } };
   const canSend = (me, pid) => publish.canPublish(me, pid) && me.role !== 'agent' && (!perms || perms.can(me, 'site.publish', pid));   // feat/group-styles: a row in the table, so a council can decide it
 
   // The web folder as a bundle. The preview's web root first; a designed website (site/) when there is no app yet.
   function bundle(pid) {
-    let src;
-    try { src = publish.files(pid); }
-    catch (e) {
-      const p = P.get(pid), dir = p && p.repo && path.join(p.repo, 'site');
-      if (!dir || !fs.existsSync(path.join(dir, 'index.html'))) throw e;
-      const list = []; (function walk(d, rel) { for (const x of fs.readdirSync(d, { withFileTypes: true })) { if (x.name.startsWith('.') || x.isSymbolicLink()) continue; const abs = path.join(d, x.name), r = rel ? `${rel}/${x.name}` : x.name; if (x.isDirectory()) walk(abs, r); else if (x.isFile()) list.push({ rel: r, abs, size: fs.statSync(abs).size }); } })(dir, '');
-      src = { root: dir, list, total: list.reduce((n, x) => n + x.size, 0) };
-    }
+    const so = source(pid), src = so.src || publish.files(pid, so.at);
     const out = [];
     for (const x of src.list) {
       if (x.dirSecret || x.skip || /^\.env/i.test(path.basename(x.rel))) continue;
@@ -116,19 +124,21 @@ module.exports = function publishReal({ P, W, base, publish, getMembers, broadca
     const p = P.get(pid) || {}; let raw = null, problem = null;
     try { raw = bundle(pid); } catch (e) { problem = e.message; }
     const d = destOf(pid), sensed = raw ? core.kindOf(raw) : 'site', kind = d.kind || sensed;
-    let ch = { findings: [], blocked: false }; if (raw) { try { ch = publish.check(pid); } catch {} }
+    let ch = { findings: [], blocked: false }; if (raw) { try { ch = checkOf(pid); } catch {} }
     const meta = raw ? metaOf(pid) : {};
     const play = (publish.entriesOf(pid) || [])[0] || null;
     const dest = view(pid, me);
     const next = !raw ? 'build' : ch.blocked ? 'fix' : !play && !dest.pages ? 'publish' : !dest.pages ? 'pages' : kind !== 'site' && !dest.android.on ? 'app' : 'share';
-    return { project: pid, name: p.name || '', slug: core.slug((d.pages && d.pages.repo && d.pages.repo.split('/')[1]) || p.name), kind, sensed, problem,
+    const th = things(pid); let what = ''; try { what = source(pid).what; } catch {}
+    const appToo = picked(pid) === 'app' && th.site;   // a second link beside the website's: its own name
+    return { what, things: th, project: pid, name: p.name || '', slug: core.slug((d.pages && d.pages.repo && d.pages.repo.split('/')[1]) || (appToo ? `${p.name} app` : p.name)), kind, sensed, problem,
       checks: raw ? core.preflight(raw, { kind }) : [], findings: ch.findings || [], blocked: !!ch.blocked, files: raw ? raw.length : 0, bytes: raw ? raw.reduce((n, x) => n + x.size, 0) : 0,
       itch: raw ? core.itch(core.finish(raw, { ...meta, pwa: false })) : null, dest, play: play ? { url: play.url, version: play.version } : null, next,
       github: { signedIn: !!tokenOf(me), login: loginOf(me) || null }, canSend: canSend(me, pid) };
   }
 
   function zipFor(pid, what, body = {}) {
-    const ch = publish.check(pid); if (ch.blocked) throw err(409, 'The safety check found something that must be fixed first.', { findings: ch.findings });
+    const ch = checkOf(pid); if (ch.blocked) throw err(409, 'The safety check found something that must be fixed first.', { findings: ch.findings });
     const { files, meta } = finished(pid, body); let list = files;
     if (what === 'itch') { list = core.finish(bundle(pid), { ...meta, pwa: false }).map(x => ({ ...x, dirty: x.text != null })); const it = core.itch(list); if (!it.ok) throw err(409, it.problems[0]); }
     const src = new Map(bundle(pid).map(x => [x.path, x]));
@@ -139,12 +149,12 @@ module.exports = function publishReal({ P, W, base, publish, getMembers, broadca
   async function pages(pid, me, body) {
     if (!canSend(me, pid)) throw err(403, me.role === 'agent' ? 'AI helpers can\'t publish outside the tribe. Ask your owner to press Publish.' : 'you can\'t publish this project');
     const token = tokenOf(me); if (!token) throw err(401, 'Sign in to GitHub first (Settings › GitHub). It takes a minute and is free.', { needGithub: true });
-    const ch = publish.check(pid); if (ch.blocked) throw err(409, 'The safety check found something that must be fixed before this goes public.', { findings: ch.findings });
+    const ch = checkOf(pid); if (ch.blocked) throw err(409, 'The safety check found something that must be fixed before this goes public.', { findings: ch.findings });
     const d = destOf(pid), { files, meta } = finished(pid, body);
     const total = files.reduce((n, x) => n + (x.size || 0), 0);
     if (files.length > MAX_PAGES_FILES) throw err(413, `${files.length} files is more than a GitHub page can take from here (${MAX_PAGES_FILES}). Download the zip instead.`);
     if (total > MAX_PAGES_BYTES) throw err(413, 'Over 90 MB. Download the zip instead, or make the pictures and sound smaller.');
-    const name = core.slug(body.name || (d.pages && d.pages.repo && d.pages.repo.split('/')[1]) || meta.title);
+    const name = core.slug(body.name || (d.pages && d.pages.repo && d.pages.repo.split('/')[1]) || (picked(pid) === 'app' && things(pid).site ? `${meta.title} app` : meta.title));
     const src = new Map(bundle(pid).map(x => [x.path, x]));
     const out = files.map(x => { const o = src.get(x.path); const buf = x.b64 != null ? null : (o && o.text === x.text && o.abs) ? fs.readFileSync(o.abs) : x.text != null ? Buffer.from(x.text, 'utf8') : o && o.abs ? fs.readFileSync(o.abs) : Buffer.alloc(0); return { path: x.path, b64: x.b64 != null ? x.b64 : buf.toString('base64') }; });
     // app wrappers ride along, beside the page (GitHub builds them in the person's account)
@@ -198,6 +208,7 @@ module.exports = function publishReal({ P, W, base, publish, getMembers, broadca
       if (m === 'PUT' && !c) {
         const body = await readBody(req, 4096).catch(() => ({})); const pid = pidOf(body.project);
         if (!canSend(me, pid)) return fail(res, 403, 'you can\'t change how this project is published');
+        if (body.what !== undefined) { if (body.what === 'site' || body.what === 'app') top(pid).what = body.what; else delete top(pid).what; }
         const d = destOf(pid);
         if (body.kind === '' || body.kind === null) delete d.kind; else if (['site', 'game', 'app'].includes(body.kind)) d.kind = body.kind;
         if (typeof body.pwa === 'boolean') d.pwa = body.pwa;
