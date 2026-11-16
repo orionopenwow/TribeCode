@@ -1132,10 +1132,22 @@
     'board columns': 'kanban', columns: 'kanban', 'big picture header': 'hero', 'hero image': 'hero', hero: 'hero' };
   const APP_FONT = { serif: 'editorial', editorial: 'editorial', classic: 'classic', elegant: 'elegant', fancy: 'elegant', mono: 'mono', monospace: 'mono', 'code font': 'mono', pixel: 'pixel', retro: 'pixel', friendly: 'friendly', rounded: 'friendly', clean: 'clean', sans: 'clean', 'sans serif': 'clean', bold: 'bold', chunky: 'bold', techy: 'tech', tech: 'tech', system: 'system' };
   const alt = o => Object.keys(o).sort((a, b) => b.length - a.length).map(k => k.replace(/ /g, '\\s+')).join('|');
+  // feat/flint-appknow: working app features with no AI (app/ui/appfeatures.js): "add offline storage", "a dark mode
+  // switch", "make the timer work", "remove the pin lock". Inside App Creator any of them; elsewhere only with "app".
+  const appFeats = () => { try { return typeof module === 'object' && module.exports ? require('./appfeatures.js') : (typeof window !== 'undefined' ? window.TribeAppFeatures : null); } catch { return null; } };
+  function appFeature(rl, hit, anywhere) {
+    const FX = appFeats(); if (!FX) return null;
+    if (/^(?:what|which)\s+(?:app\s+)?features\s+(?:can|could|do)\s+(?:you|flint)\s+(?:add|do|make)|^(?:list|show)(?:\s+me)?\s+(?:the\s+)?(?:app\s+)?features(?:\s+you\s+can\s+add)?$|^what can you add to (?:my|the|our) app$/.test(rl)) return hit('app.features', {}, 0.99);
+    if (anywhere && !/\b(?:my|our|the|this)\s+(?:phone\s+|mobile\s+|web\s+)?apps?\b|\bto (?:the|my|our) app\b|\bin (?:the|my|our) app\b/.test(rl)) return null;
+    const off = /^(?:remove|take out|turn off|drop|get rid of|no more|disable|delete the|lose the)\b/.test(rl);
+    const f = FX.match(rl); if (!f) return null;
+    return hit('app.feature', { feature: f, ...(off ? { off: true } : {}) }, anywhere ? 0.97 : 0.995);
+  }
   function appEl(c, r, ctx, hit) {
     const rl = String(r || '').toLowerCase().replace(/[-_]/g, ' ').replace(/[?.!]+$/, '').trim(), H = (i, s) => hit(i, s || {}, 0.995);
     let m;
     if (/^(?:undo|undo that|take that back|go back one step)$/.test(rl)) return H('app.undo');
+    { const af = appFeature(rl, hit, false); if (af) return af; }
     if (/\b(?:have|ask|get|let)\s+(?:my|our|the)\s+(?:ai|helper|helpers|agent|agents|claude)\b|\bbuild it for real\b|\bsend (?:it|this|the app) to (?:my|our|the) (?:ai|helpers?|agents?)\b/.test(rl)) return H('app.export', { kind: 'ai' });
     if (/\b(?:expo|react native)\b/.test(rl) && /\b(?:export|make|save|build|turn|get)\b/.test(rl)) return H('app.export', { kind: 'expo' });
     if (/^(?:export|download|save)\b.*\b(?:app|it|this|project|web app)\b|^(?:export|download)(?: it)?$/.test(rl)) return H('app.export', { kind: 'pwa' });
@@ -1191,6 +1203,7 @@
     const out = [], hit = (intent, slots, conf) => { out.push({ intent, area: intent === 'lesson' ? 'help' : intent.startsWith('canvas.') ? 'canvas' : 'build', slots: slots || {}, conf: conf || (view === 'canvas' ? 0.98 : 0.97), req: {}, label: '' }); return out; };
     const r = String(raw || '').trim(), rl = r.toLowerCase();
     if (ctx.view === 'appcreator') { const w = appEl(c, r, ctx, hit); if (w) return w; }   // App Creator (app/ui/appcreator.js)
+    else { const af = appFeature(rl.replace(/[-_]/g, ' ').replace(/[?.!]+$/, '').trim(), hit, true); if (af) return af; }   // feat/flint-appknow: "add offline storage to my app"
     const lf = lessonOf(c); if (lf) return hit('lesson', { feature: lf }, 0.97);
     if (ctx.view === 'motion') { const mo = motionRules(c, r, ctx, hit); if (mo) return mo; }   // feat/motion
     else if (!view) { const mt = motionNew(c); if (mt) return hit('motion.new', { tpl: mt }, 0.975); }

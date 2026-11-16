@@ -341,6 +341,19 @@
     // from the project; an edit ("make the headline punchier") opens the project's design and runs there. Building the
     // site into the repo as code is the old path, now only when asked for ("build the website into the repo").
     // App Creator (app/ui/appcreator.js): "make me a habit tracker app", and, with it open, screens, kits, links and the look
+    // feat/flint-appknow: working app features with no AI (app/ui/appfeatures.js). With App Creator open: the design. Otherwise
+    // the host puts it in the project's app (its App Creator design, or the code app's page) and commits it.
+    if (id === 'app.features') {
+      const FX = window.TribeAppFeatures; if (!FX) return null; const L = FX.list(), g = {};
+      L.forEach(f => { (g[f.groupName] = g[f.groupName] || []).push(f.title); });
+      return { text: `I can add ${L.length} working features to an app with no AI, and everything stays on the phone:\n` + Object.entries(g).map(([k, v]) => `- **${k}**: ${v.join(', ')}`).join('\n') + '\nSay “add offline storage to my app” or “add a dark mode switch”. Real accounts, payments and syncing between phones need a stronger AI.' };
+    }
+    if (id === 'app.feature' && !(window.TribeAppCreator && window.TribeAppCreator.state() && window.TribeAppCreator.state().open)) {
+      const pid = C && C.project ? C.project() : '';
+      if (!connected() || !pid) return { text: 'Open a project with an app first, then ask again.' };
+      try { const r = await C.api(`/projects/${encodeURIComponent(pid)}/flint/feature`, { method: 'POST', body: { feature: sl.feature, off: !!sl.off } }); return { text: r.say, sum: (sl.off ? 'removed ' : 'added ') + (r.title || 'a feature'), acts: r.href != null && r.where === 'code' ? [['Open the preview', 'preview']] : [] }; }
+      catch (e) { return { text: (e && e.message) || 'That did not work.' }; }
+    }
     if (/^app\./.test(id) && window.TribeAppCreator) { const r = window.TribeAppCreator.flint(s); if (r) return { text: r.text, sum: 'changed the app design' }; }
     if (id === 'site.repo') { pushUndo('build', 'build'); return legacy('build me a landing page', 'built the website into the repo'); }
     // feat/design-flow: "make a breakout game", "a kanban board": the starter opens in the Design flow with its plan

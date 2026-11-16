@@ -72,10 +72,18 @@ const siteRecipeFor = a => (/\blanding page\b/.test(a) ? null : SITE_RECIPES.fin
 const BIG = /\b(refactor|rewrite|migrat\w*|multiplayer|online play|log ?in|sign[- ]?(in|up)|accounts?|auth\w*|database|backend|back-end|server|api\b|payments?|stripe|checkout|subscriptions?|chat ?bot|ai (enemies|opponent|chat)|leaderboards?|level editor|inventory system|save (system|games?)|physics engine|across (all|every|the whole)|whole (app|codebase|project|site)|every (file|page)|all (the )?(files|pages)|optimi[sz]e|performance|port (it|this)|convert (it|this|the app) to|typescript|react|vue|svelte|unit tests?|test suite|deploy pipeline|ci\b|debug|crash(es|ing)?|memory leak)\b/i;
 const PICKY = /\b(bigger|larger|smaller|bold|italic|underline|uppercase|cent(er|re)(ed)?|align|left|right|color|colour|background|rounded|corners?|padding|spacing|space|margin|hide|remove|delete|font|size|dark|light|red|orange|yellow|gold|green|mint|teal|blue|sky|navy|indigo|purple|violet|pink|rose|brown|white|black|gr[ae]y)\b|#[0-9a-f]{3,6}\b/i;
 
+// feat/flint-appknow: app features Flint adds with no AI (app/ui/appfeatures.js), and the honest line between them and
+// what needs a server or native code. REAL wins over a feature: "real accounts", "sync between phones", "payments".
+const FEAT = require('../app/ui/appfeatures.js');
+const REAL = /\b(?:real|secure|proper|production)\s+(?:log ?ins?|sign[- ]?(?:in|up)s?|accounts?|auth\w*|users?)\b|\baccounts? (?:that|which) work on (?:every|any|all|other) (?:device|phone)s?\b|\bsync\w*\b.{0,30}\b(?:between|across|with) (?:phones|devices|people|users|computers|my phone and)\b|\b(?:same|shared) (?:data|list) on (?:every|all|both) (?:phones?|devices?)\b|\b(?:cloud|server|online) (?:sync|save|backup|database)\b|\bshared (?:data|list|database) (?:between|for|with) (?:people|users|everyone)\b|\b(?:in-app purchases?|payments?|stripe|checkout|subscriptions?|charge (?:people|users|money))\b|\bpush notifications? (?:from a server|when the app is closed|to (?:everyone|all users))\b|\bnotify (?:people|users) when the app is closed\b|\bbluetooth\b|\bnfc\b|\bhealth ?kit\b|\bbackground (?:location|tracking|sync)\b|\bnative (?:module|code|plugin)s?\b|\bapple pay\b|\bgoogle pay\b|\bend[- ]to[- ]end encrypt\w*\b|\bencrypt\w*\b|\breal[- ]?time (?:chat|multiplayer|sync)\b|\bchat between (?:users|people|phones)\b|\bapp store (?:submission|upload)\b/;
+const realAsk = a => `Please ${a.replace(/^(?:please\s+)?/, '')}. This is a TribeCode project: keep the features that already work on the phone, explain any new service or account it needs (and whether it costs anything), and ask before big changes.`;
 function classify(ask, { picked = false } = {}) {
   const a = String(ask || '').toLowerCase().trim();
   if (!a) return { tier: 'rules', why: 'Nothing asked yet.' };
-  if (BIG.test(a)) return { tier: 'agent', why: 'This touches many parts of the code or needs real engineering (systems, accounts, data, servers or debugging). That is a job for a stronger AI: a member\'s own Claude Code, Codex or Gemini, or the host\'s AI key.' };
+  if (REAL.test(a)) return { tier: 'agent', real: true, why: 'This needs a server or native code: real accounts that work on every phone, data shared between people, payments, push from a server, or phone hardware a web app can\'t reach. That is a job for a stronger AI (a member\'s own Claude Code, Codex or Gemini, or the host\'s AI key), and a person approves what it builds.', ask: realAsk(String(ask).trim()) };
+  const newBuild = /\b(make|build|create|start|give me)\b.*\b(app|game|site|page|website|tracker|editor)\b/.test(a) && !/^(add|put|give (it|the app)|include|let)\b/.test(a);
+  if (!newBuild) { const f = FEAT.match(a); if (f) { const d = FEAT.get(f); return { tier: 'recipe', recipe: 'feature:' + f, feature: f, why: `Free: Flint adds “${d.title}” with no AI: ${d.what}${d.note ? ' ' + d.note : ''}` }; } }
+  if (BIG.test(a)) return { tier: 'agent', why: 'This touches many parts of the code or needs real engineering (systems, accounts, data, servers or debugging). That is a job for a stronger AI: a member\'s own Claude Code, Codex or Gemini, or the host\'s AI key.', ask: realAsk(String(ask).trim()) };
   const wantsBuild = /\b(make|build|create|start|give me|set up|spin up|i want|we want|need)\b/.test(a);
   const st = wantsBuild && starterFor(a);
   if (st) return { tier: 'recipe', recipe: 'starter:' + st.id, starter: st.id, why: `Free: Flint starts the ${st.title} starter from TribeCode's open-source starters (${st.license}), no AI needed. Tweak it with its knobs.` };
@@ -85,7 +93,7 @@ function classify(ask, { picked = false } = {}) {
   if (r) return { tier: 'recipe', recipe: r.id, why: `Free: Flint builds a ${r.title} from the open-source build kit, no AI needed.` };
   if (picked && PICKY.test(a)) return { tier: 'rules', why: 'Free: a look change on the element you picked, no AI needed.' };
   if (/\b(change|make|set|rename)\b.*\b(to|say|read)\b/.test(a) && picked) return { tier: 'rules', why: 'Free: new words for the element you picked.' };
-  if (/\b(add|make|build|create)\b.*\b(feature|system|mode|screen|page|level|enemy|enemies|boss|menu|animation|logic)\b/.test(a)) return { tier: 'agent', why: 'A new feature means writing real code. A small model can try a one-page tweak, but your AI helper (Claude Code, Codex, Gemini) does this well.' };
+  if (/\b(add|make|build|create)\b.*\b(feature|system|mode|screen|page|level|enemy|enemies|boss|menu|animation|logic)\b/.test(a)) return { tier: 'agent', why: 'A new feature means writing real code. A small model can try a one-page tweak, but your AI helper (Claude Code, Codex, Gemini) does this well. Flint adds 48 common app features with no AI: ask “what features can you add?”', ask: realAsk(String(ask).trim()) };
   return { tier: 'small', why: 'A small free model can handle this: Qwen on this device or on the host. With none on, Flint answers what it can without one.' };
 }
 
@@ -123,7 +131,7 @@ function accentFrom(ask) {
   const c = new RegExp(`\\b(${Object.keys(COLORS).join('|')})\\b`, 'i').exec(ask); return c ? COLORS[c[1].toLowerCase()] : '#F26B1D';
 }
 
-module.exports = function flintFree({ P, W, root, startersDir = '', getMembers = () => [], broadcast = () => {}, ensureRepo = null, siteLib = null, llmStatus = () => ({ online: false }), log = () => {} }) {
+module.exports = function flintFree({ P, W, root, startersDir = '', getMembers = () => [], broadcast = () => {}, ensureRepo = null, siteLib = null, appDesign = () => null, llmStatus = () => ({ online: false }), log = () => {} }) {
   const TEMPLATES = path.join(root, 'templates');
   loadStarters(startersDir);
   const err = (status, m) => Object.assign(new Error(m), { status });
@@ -151,6 +159,7 @@ module.exports = function flintFree({ P, W, root, startersDir = '', getMembers =
     const c = classify(ask);
     if (c.starter) return buildStarter(pid, me, c.starter, ask, opts);
     if (c.tier !== 'recipe') return { built: false, ...c };
+    if (c.feature) return { built: true, ...(await feature(pid, me, { feature: c.feature })) };
     if (c.site && siteLib) {   // a website template: name and color from what was said, then Customize takes over
       const out = await siteLib.create(pid, me, { template: c.site, name: nameFrom(ask, (P.get(pid) || {}).name), accent: /#[0-9a-f]{3,6}\b|\b(red|orange|yellow|gold|green|mint|teal|blue|sky|indigo|purple|violet|pink|rose|brown)\b/i.test(ask) ? accentFrom(ask) : null });
       const t = SITE_RECIPES.find(x => x.id === c.recipe);
@@ -283,12 +292,58 @@ module.exports = function flintFree({ P, W, root, startersDir = '', getMembers =
     return { restored: String(sha).slice(0, 7), subject: subj, savedFirst: saved, ...(await history(pid, me)) };
   }
 
+  // ---------- feat/flint-appknow: a working feature for the project's app, no AI (app/ui/appfeatures.js) ----------
+  // An app that lives in App Creator keeps the feature in its design (the next export carries it). A code app (a recipe,
+  // a starter, your own index.html) gets tribe-features/features.js + .css next to its page, one <script> and one <link>
+  // line, and a commit. Which page: body.dir when it has an index.html, else the top page, else the newest builds/*.
+  const FDIR = 'tribe-features';
+  function appPages(repo) {
+    const out = [];
+    for (const d of ['', 'public', 'app-web']) if (fs.existsSync(path.join(repo, d, 'index.html'))) out.push(d);
+    try { for (const d of fs.readdirSync(path.join(repo, 'builds'), { withFileTypes: true })) if (d.isDirectory() && fs.existsSync(path.join(repo, 'builds', d.name, 'index.html'))) out.push('builds/' + d.name); } catch {}
+    return out;
+  }
+  async function feature(pid, me, body = {}) {
+    const id = FEAT.get(body.feature) ? body.feature : FEAT.match(String(body.ask || ''), { cue: true });
+    const d = id && FEAT.get(id); if (!d) throw err(400, 'which feature? Ask “what features can you add?”');
+    const off = !!body.off;
+    if (!canEdit(me, pid)) throw err(403, 'only builders can change the app');
+    const AD = appDesign && appDesign();
+    if (AD && AD.addFeature && !body.dir) { const r = AD.addFeature(pid, id, me, off); if (r) return { where: 'design', feature: id, title: d.title, features: r.features, say: r.say + ' Export the app again to use it on a phone.' }; }
+    const repo = await repoFor(pid, me);
+    const pages = appPages(repo).filter(x => x !== 'app-web');
+    const dir = body.dir && pages.includes(String(body.dir)) ? String(body.dir) : pages.find(x => x === '') !== undefined ? '' : pages.find(x => x === 'public') || pages.filter(x => /^builds\//.test(x)).sort((x, y) => { try { return fs.statSync(path.join(repo, y)).mtimeMs - fs.statSync(path.join(repo, x)).mtimeMs; } catch { return 0; } })[0];
+    if (dir === undefined) return { where: 'none', feature: id, title: d.title, needApp: true, say: `There's no app page yet to add “${d.title}” to. Make an app first (“make me a habit tracker app”, or a to-do app), then ask again.` };
+    const base = dir ? path.join(repo, ...dir.split('/')) : repo, listFile = path.join(base, FDIR, 'features.json');
+    let ids = []; try { ids = JSON.parse(fs.readFileSync(listFile, 'utf8')).features || []; } catch {}
+    const had = ids.includes(id);
+    if (!off && had) return { where: 'code', dir, feature: id, title: d.title, features: ids, say: `The app already has “${d.title}”.` };
+    if (off && !had) return { where: 'code', dir, feature: id, title: d.title, features: ids, say: `The app doesn't have “${d.title}”.` };
+    ids = FEAT.clean(off ? ids.filter(x => x !== id) : ids.concat(id));
+    const name = (P.get(pid) || {}).name || 'App';
+    fs.mkdirSync(path.join(base, FDIR), { recursive: true });
+    const files = [];
+    if (ids.length) { for (const [rel, text] of FEAT.codeFiles(ids, { name })) { fs.writeFileSync(path.join(base, ...rel.split('/')), text); files.push((dir ? dir + '/' : '') + rel); } fs.writeFileSync(listFile, JSON.stringify({ features: ids, note: 'Added by Flint (TribeCode, no AI). Ask Flint to add or remove features; it rewrites features.js and features.css.' }, null, 1) + '\n'); files.push((dir ? dir + '/' : '') + FDIR + '/features.json'); }
+    else fs.rmSync(path.join(base, FDIR), { recursive: true, force: true });
+    const idx = path.join(base, 'index.html'); const html = fs.readFileSync(idx, 'utf8'), next = FEAT.inject(html, ids); if (next !== html) { fs.writeFileSync(idx, next); files.push((dir ? dir + '/' : '') + 'index.html'); }
+    await commit(repo, me, `Flint: ${off ? 'remove' : 'add'} “${d.title}” ${dir ? `in ${dir}` : 'in the app'} (no AI, via TribeCode)`);
+    broadcast({ type: 'repo', project: pid });
+    log(`flint feature: ${off ? '-' : '+'}${id} -> ${dir || '.'}`);
+    return { where: 'code', dir, href: dir ? dir + '/' : '', feature: id, title: d.title, features: ids, files, say: off ? `Removed “${d.title}”.` : `Added “${d.title}”: ${d.what}${d.note ? ' ' + d.note : ''}` };
+  }
+
   async function route(req, res, { m, a, b, parts, me, readBody, send, fail }) {
     if (!me) return fail(res, 401, 'not a member of this tribe');
     try {
       if (a === 'flint' && b === 'tiers' && m === 'GET') { const s = llmStatus() || {}; return send(res, 200, { tiers: TIERS, now: { host: { online: !!s.online, via: s.via || s.model || '' } } }); }
       if (a === 'flint' && b === 'tier' && m === 'POST') { const body = await readBody(req, 4 * 1024).catch(() => ({})); return send(res, 200, classify(body.ask, { picked: !!body.picked })); }
       if (a === 'flint' && b === 'starters' && m === 'GET') return send(res, 200, { items: STARTERS });
+      if (a === 'flint' && b === 'features' && m === 'GET') return send(res, 200, { features: FEAT.list(), groups: FEAT.GROUPS });
+      if (a === 'projects' && parts[2] === 'flint' && parts[3] === 'feature' && m === 'POST') {
+        if (!P.get(b) || (P.canSee && !P.canSee(me, b))) return fail(res, 404, 'project not found');
+        const body = await readBody(req, 4 * 1024).catch(() => ({}));
+        return send(res, 200, await feature(b, me, body));
+      }
       if (a === 'projects' && parts[2] === 'flint' && parts[3] === 'starter-config' && m === 'POST') {
         if (!P.get(b) || (P.canSee && !P.canSee(me, b))) return fail(res, 404, 'project not found');
         const body = await readBody(req, 16 * 1024).catch(() => ({}));
@@ -309,7 +364,7 @@ module.exports = function flintFree({ P, W, root, startersDir = '', getMembers =
     } catch (e) { return fail(res, e.status || 500, e.message); }
     return fail(res, 404, 'no such route');
   }
-  return { route, classify, build, TIERS, RECIPES, SITE_RECIPES };
+  return { route, classify, build, feature, TIERS, RECIPES, SITE_RECIPES };
 };
 module.exports.classify = classify;
 module.exports.TIERS = TIERS;

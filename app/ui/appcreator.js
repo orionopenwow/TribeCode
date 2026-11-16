@@ -197,12 +197,24 @@
     pane.innerHTML = `<p class="faint apc-hint">Click to add to the screen you see, under the selected part.</p>` + A().GROUPS.map(g => {
       const items = Object.entries(B).filter(([, b]) => b.group === g); if (!items.length) return '';
       return `<p class="apc-eyebrow">${esc(tr(g))}</p><div class="apc-lib">${items.map(([id, b]) => `<button class="apc-libi" data-add="${esc(id)}"><span class="apc-libic">${A().icon(b.icon) || ''}</span><span>${esc(tr(b.label))}</span></button>`).join('')}</div>`;
-    }).join('') + `<p class="faint apc-hint">More screens and flows are under Screens › Add ready-made screens, and on the add-on shelf.</p>`;
+    }).join('') + `<p class="faint apc-hint">More screens and flows are under Screens › Add ready-made screens, and on the add-on shelf.</p>` + featuresHTML();
+    wireFeatures(pane);
     pane.querySelectorAll('[data-add]').forEach(b => b.onclick = () => {
       const sc = A().findScreen(st.doc, st.screen); let at;
       if (st.sel) { const i = sc.blocks.findIndex(x => x.id === st.sel.block); if (i >= 0) at = i + 1; }
       apply({ op: 'block.add', screen: st.screen, type: b.dataset.add, at }); if (st.sheet) closeSheet();
     });
+  }
+  // What the app does (appfeatures.js): working behaviours Flint adds with no AI. They run in the exported phone web app.
+  function featuresHTML() {
+    const FX = window.TribeAppFeatures; if (!FX) return '';
+    const on = new Set(st.doc.features || []), groups = {};
+    for (const f of FX.list()) (groups[f.groupName] = groups[f.groupName] || []).push(f);
+    return `<p class="apc-eyebrow" id="apc-feat-h">${esc(tr('What it does'))} · ${on.size}</p><p class="faint apc-hint">${esc(tr('Working features for the exported phone app. Everything stays on the phone.'))}</p>`
+      + Object.entries(groups).map(([g, items]) => `<details class="apc-featg"${items.some(f => on.has(f.id)) ? ' open' : ''}><summary>${esc(tr(g))}</summary><div class="apc-feats">${items.map(f => `<button class="apc-feat${on.has(f.id) ? ' on' : ''}" data-feat="${esc(f.id)}" aria-pressed="${on.has(f.id)}"><b>${esc(tr(f.title))}</b><span>${esc(tr(f.what))}</span></button>`).join('')}</div></details>`).join('');
+  }
+  function wireFeatures(pane) {
+    pane.querySelectorAll('[data-feat]').forEach(b => b.onclick = () => { const id = b.dataset.feat, had = (st.doc.features || []).includes(id); const r = apply({ op: had ? 'feature.remove' : 'feature.add', feature: id }); if (r && r.say) note(r.say); });
   }
   function paintLook(pane) {
     const t = st.doc.theme, Co = A();
@@ -403,7 +415,11 @@
     const r = N.parse(text, { now: new Date(), view: 'appcreator', selection: !!st.sel, selKind: sel ? sel.block.type : '', screens: st.doc.screens.map(s => s.name) });
     const out = [];
     for (const s of r.steps) { if (!s.intent || s.conf < 0.6) continue; const x = flint(s); if (x) out.push(x); }
-    if (!out.length) return { text: tr('I can do that with an AI helper. Here I can add screens and kits, link buttons, and change the look: try “add a settings screen” or “make it dark”.') };
+    if (!out.length) {   // feat/flint-appknow: say honestly what it needs (server/flintfree.js classify), and what Flint can do here
+      let why = ''; if (connected()) { try { const t = await C.api('/flint/tier', { method: 'POST', body: { ask: text } }); if (t && t.tier === 'agent') why = t.why + ' '; } catch {} }
+      const t2 = why + tr('Here I can add screens and kits, link buttons, change the look, and add working features like offline storage, search, reminders or a dark mode switch: say “what features can you add?”.');
+      note(t2); return { text: t2 };
+    }
     const text2 = out.map(x => x.text).filter(Boolean).join(' '); note(text2); return { text: text2 };
   }
   const KIT_OF = { settings: 'settings', setting: 'settings', preferences: 'settings', onboarding: 'onboarding', welcome: 'onboarding', intro: 'onboarding', paywall: 'paywall', premium: 'paywall', subscription: 'paywall', profile: 'profile', account: 'profile', 'sign in': 'signin', signin: 'signin', login: 'signin', 'log in': 'signin', signup: 'signin', 'sign up': 'signin', chat: 'chat', messages: 'chat', shop: 'shop', store: 'shop', stats: 'charts', charts: 'charts', insights: 'charts', 'empty state': 'empty', player: 'player', music: 'player', search: 'search', notifications: 'notifications', alerts: 'notifications', checkout: 'checkout', cart: 'checkout', detail: 'detail', feed: 'feed', booking: 'calendar', calendar: 'calendar', timer: 'timer', map: 'map', help: 'help', faq: 'help', about: 'about', leaderboard: 'leaderboard', achievements: 'achievements', badges: 'achievements', invite: 'invite', permissions: 'permissions' };
@@ -411,6 +427,7 @@
     const id = step.intent, sl = step.slots || {}, Co = A();
     if (id === 'app.make') { const t = Co.template(sl.template, { name: sl.name, accent: sl.color && sl.color.hex }); if (!t) return null; if (!st || !st.open) { open({ template: sl.template, name: sl.name, accent: sl.color && sl.color.hex }); return { text: `Opened App Creator with the ${t.name} template.` }; } commit(t, ''); st.screen = t.start; paint(); return { text: `Started a ${(Co.TEMPLATES.find(x => x.id === sl.template) || {}).title || 'new'} app. Click anything to change it.` }; }
     if (!st || !st.open) { open({}); }
+    if (id === 'app.feature') { const r = apply({ op: sl.off ? 'feature.remove' : 'feature.add', feature: sl.feature }); return { text: r.say || 'That feature is not in the list.' }; }   // appfeatures.js
     if (id === 'app.kit') { const k = KIT_OF[String(sl.kit || '').toLowerCase()] || sl.kit; const r = apply({ op: 'kit', kit: k }); return { text: r.say }; }
     if (id === 'app.block') { const at = st.sel ? (Co.findScreen(st.doc, st.screen).blocks.findIndex(b => b.id === st.sel.block) + 1) || undefined : undefined; const r = apply({ op: 'block.add', screen: st.screen, type: sl.type, at }); return { text: r.say }; }
     if (id === 'app.tabbar') return { text: apply({ op: 'tabbar' }).say };
