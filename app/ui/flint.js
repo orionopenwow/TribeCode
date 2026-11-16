@@ -58,6 +58,7 @@
     quick: id => window.TribeQuick && window.TribeQuick.open(id || undefined),   // feat/learn: quick guides (quickguides.js)
     quickdo: id => window.TribeQuick && window.TribeQuick.run(id),
     quickshow: id => window.TribeQuick && window.TribeQuick.show(id),
+    lesson: id => window.TribeLessons && window.TribeLessons.start(id),   // pass 4: start or carry on a lesson (lessons.js)
     note: id => { if (Hub() && Hub().openNote) Hub().openNote(id); else if (Hub()) Hub().open('docs'); },
     newnote: () => { const b = $('#room-note-new'); if (b) b.click(); else if (Hub()) Hub().open('docs'); },
     nav: v => { if (v === 'hub') return Hub() ? Hub().open('home') : App().show('hub'); if (v === 'guide') return ACTS.guide(); if (v === 'settings') return window.TribeSettings && window.TribeSettings.open(); if (v === 'whiteboard') return window.TribeWhiteboard && window.TribeWhiteboard.open();   /* feat/whiteboard */ App().show(v); },
@@ -235,6 +236,7 @@
   }
   let localBusy = false, llmBusy = false;
   async function special(text) {   // the feature routers that know their own phrases (memory, company, academy, captures)
+    if (window.TribeLessons && window.TribeLessons.flint) { const r = await window.TribeLessons.flint(text); if (r) { say(r.text, (r.acts || []).map(x => act(x[0], x[1], x[2])), r.extra); return true; } }   // pass 4: lessons (lessons.js): teach me to make a website, lessons, my next lesson
     if (window.TribeQuick && window.TribeQuick.flint) { const r = await window.TribeQuick.flint(text); if (r) { say(r.text, (r.acts || []).map(x => act(x[0], x[1], x[2])), r.extra); return true; } }   // feat/learn: quick guides, what should I learn next, resume
     if (window.TribeNextStep && window.TribeNextStep.flint) { const r = await window.TribeNextStep.flint(text); if (r) { say(r.text, (r.acts || []).map(x => act(x[0], x[1], x[2]))); return true; } }   // feat/help-next: what should I do next, I'm stuck, what can I make, how do I ship this
     if (window.TribeFlintGrow && await window.TribeFlintGrow.flint(text)) return true;   // feat/flint-ai: grow your idea, resources, today's plan, the inspiration board, your style

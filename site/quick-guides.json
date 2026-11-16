@@ -1250,5 +1250,183 @@
     "Press Suggest this change when you are ready. They approve, ask for changes or say no in the inbox, and Undo puts the earlier version back."
    ]
   }
+ ],
+ "tracks": [
+  {
+   "id": "first-site",
+   "title": "Your first website",
+   "intro": "From nothing to a website you can put online. About ten minutes, no code, no AI needed.",
+   "mins": 10,
+   "steps": [
+    {
+     "title": "Pick a start",
+     "text": "Choose a template that looks close to what you want. Everything in it can be changed."
+    },
+    {
+     "title": "Change the words",
+     "text": "Click any words on the page and type your own."
+    },
+    {
+     "title": "Change the look",
+     "text": "Open Style and tap a look, a colour or a font pair. The whole site follows."
+    },
+    {
+     "title": "Add a section",
+     "text": "Press Add block and pick one, like a gallery or a contact form."
+    },
+    {
+     "title": "Add a page",
+     "text": "Press the plus beside the page names and give the page a title."
+    },
+    {
+     "title": "Make a button go somewhere",
+     "text": "Click a button on the page, then choose where it goes on the right."
+    },
+    {
+     "title": "See it on a phone",
+     "text": "Press Phone to see the page at phone size. Most visitors will see this."
+    },
+    {
+     "title": "Check your site",
+     "text": "Open Check. It lists what is wrong in plain words, with a fix for the safe ones."
+    },
+    {
+     "title": "Download it or put it online",
+     "text": "Download the site as files, or close the designer and publish it to a public address."
+    }
+   ]
+  },
+  {
+   "id": "first-app",
+   "title": "Your first phone app",
+   "intro": "From nothing to an app you can tap through on your own phone. About ten minutes, no code, no AI needed.",
+   "mins": 10,
+   "steps": [
+    {
+     "title": "Pick a start",
+     "text": "Open Design, choose App and pick a template. Each one is a few screens already linked."
+    },
+    {
+     "title": "Change a screen",
+     "text": "Click any words on the phone and type. Click a part to move, copy or remove it."
+    },
+    {
+     "title": "Add a screen",
+     "text": "Open Screens and add a blank screen, or open Add and pick a ready-made one."
+    },
+    {
+     "title": "Link two screens",
+     "text": "Click a button or a row, then choose the screen it opens."
+    },
+    {
+     "title": "Play it",
+     "text": "Press Play and tap through your app like a real one. Press Stop to keep editing."
+    },
+    {
+     "title": "Pick a look",
+     "text": "Open Look and choose one. Colour, corners and type change on every screen at once."
+    },
+    {
+     "title": "Make it a real app",
+     "text": "Press Export and choose the web app. It works offline and can be added to a home screen."
+    },
+    {
+     "title": "Put it on your phone",
+     "text": "Follow the steps: check it, put it online, scan the code, add it to your home screen."
+    }
+   ]
+  },
+  {
+   "id": "together",
+   "title": "Build it together",
+   "intro": "Bring a friend in, see each other work, and agree on changes. Free for any number of friends.",
+   "mins": 6,
+   "steps": [
+    {
+     "title": "Invite a friend",
+     "text": "Send the invite link. They tap it, type a name and they are in."
+    },
+    {
+     "title": "See each other",
+     "text": "Open the website designer or App Creator together. You see who is there and what each person has selected."
+    },
+    {
+     "title": "Choose who can change what",
+     "text": "Decide who changes things directly and who suggests changes first."
+    },
+    {
+     "title": "Suggest a change",
+     "text": "If you cannot change something yourself, make your edit and press Suggest this change. Say why in a line."
+    },
+    {
+     "title": "Answer a request",
+     "text": "Open Requests to see what was suggested, with before and after. Approve it, ask for changes or say no."
+    }
+   ]
+  },
+  {
+   "id": "online",
+   "title": "Take it online",
+   "intro": "Start in a folder on your computer, share it with a friend, back it up on GitHub, then give it a public address. Every step here is free; the limits are shown where you publish.",
+   "mins": 8,
+   "steps": [
+    {
+     "title": "Start in a folder",
+     "text": "Your project is a normal folder on your computer. It works with no internet and nothing leaves until you share it."
+    },
+    {
+     "title": "Share it with a friend",
+     "text": "Send an invite link. Friends work in the same project while your computer is on."
+    },
+    {
+     "title": "Back it up on GitHub",
+     "text": "Connect GitHub so every saved version has a copy online. A free GitHub account is enough."
+    },
+    {
+     "title": "Get a public address",
+     "text": "Publish to get a link anyone can open. GitHub Pages is free for public sites. A free cloud spot naps when nobody is there."
+    },
+    {
+     "title": "Open it on a phone",
+     "text": "Scan the code with your phone and add it to your home screen."
+    }
+   ]
+  },
+  {
+   "id": "power",
+   "title": "Power tools",
+   "intro": "One short step for each tool that saves you time. Do them in any order.",
+   "mins": 8,
+   "steps": [
+    {
+     "title": "Go back to an older version",
+     "text": "Open History and pick a saved moment to look at or restore."
+    },
+    {
+     "title": "Leave a comment on a design",
+     "text": "In the website designer press Comment, then click a section and type."
+    },
+    {
+     "title": "See change requests",
+     "text": "Open Requests to see what people suggested and answer them."
+    },
+    {
+     "title": "Fix what is safe",
+     "text": "In the website designer open Check and press Fix what is safe. One Undo takes it all back."
+    },
+    {
+     "title": "Read today's suggestions",
+     "text": "Open Suggestions. Each idea says who it came from. Apply it, undo it, or say not like this."
+    },
+    {
+     "title": "Use the design library",
+     "text": "Open the library and pick a palette, a font pair or an icon. It works in every designer."
+    },
+    {
+     "title": "Run the install check",
+     "text": "Open Put it on your phone. The check says what is missing and fixes it in one tap."
+    }
+   ]
+  }
  ]
 }

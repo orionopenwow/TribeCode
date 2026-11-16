@@ -333,6 +333,7 @@
       return { text: items.length ? T('calList', { w, list: items.slice(0, 8).join(' · ') }) : T('calNone', { w }), acts: [['Open Calendar', 'nav', 'calendar']] };
     }
     // feat/flint-site: lessons, redo, Premium, and the website designer
+    if (id === 'learn.track') { const LS = window.TribeLessons, r = LS && await LS.run(sl.track); return r ? { text: r.text, acts: r.acts || [], sum: 'lessons' } : { text: T('noPlace', { x: 'Lessons' }) }; }   // pass 4: the lesson tracks (lessons.js)
     if (id === 'lesson') { const L = window.TribeFlintLessons; if (L && L.open(sl.feature)) return { text: `Here is a short lesson on ${L.LESSONS[sl.feature].title.replace(/^The /, 'the ')}. Show me points at the real thing.`, sum: 'opened a lesson' }; return { text: T('noPlace', { x: 'Lessons' }) }; }
     if (id === 'redo') { const D = window.TribeSiteDesigner, st = D && D.state && D.state(); if (st && st.open) { D.redo(); return { text: 'Redone.' }; } return { text: 'Redo works in the website designer and on the canvas (Ctrl Shift Z). Here, say what to do again.' }; }
     if (id === 'premium.open') { const Pm = window.TribePremium; if (Pm) { if (/credit/i.test(s.text || '')) Pm.gate('credits'); else Pm.open(); } return { text: 'Here is what is free and what Premium adds. Everything local stays free.', sum: 'opened Premium' }; }
@@ -584,7 +585,7 @@
   }
 
   // ---------- the entry point ----------
-  const LOCAL_ONLY = new Set(['undo', 'teach', 'meant', 'unteach', 'taught', 'lesson', 'redo']);   // feat/flint-site: lessons before Flint's "teach me what X is"
+  const LOCAL_ONLY = new Set(['undo', 'teach', 'meant', 'unteach', 'taught', 'lesson', 'learn.track', 'redo']);   // feat/flint-site: lessons before Flint's "teach me what X is"
   const LOCAL_FIRST = /^(design\.palette|design\.fonts|copy\.|sheet\.(?:sum|sort|format|total|chart)|doc\.(?:toc|checklist|caps|summary|readability)|deck\.pitch|timer|settings\.|chat\.(?:pin|react)|file\.whiteboard|flint\.clear|doc\.template|market\.add|inspo\.search|nav\.(?:people|work)|preview\.(?:open|share)|task\.|chat\.send|dm\.|event\.add|cal\.show|theme\.|accent\.set|textsize\.set|lang\.set|calc|convert|time\.now|date\.calc|random|canvas\.|edit\.picked|preview\.(device|reload|edit)|comment\.mode|trending|market\.search|studio\.open|jam\.start|huddle\.|call\.|secretary\.summary|publish|site\.gallery|personalize\.open|feedback|tour|brain\.pick|build\.|site\.|premium\.)/;
   let lastMiss = null;
   async function handle(text, H) {
@@ -601,6 +602,7 @@
       if (/^(?:set ?up|choose|pick)\s+(?:a\s+|my\s+|the\s+)?(?:local (?:model|llm)|ollama|lm studio)$/.test(t) && window.TribeFlintLLM) { window.TribeFlintLLM.open(); lastMiss = null; return H.say('I looked for a model server on this computer and on the host. Pick one and I’ll use it for writing and for requests my rules miss.', []); }
       if (/^(?:what do you know about (?:this|the|our|my) project|what (?:does )?flint knows?(?: about (?:this|the|our) project)?|(?:open|show)(?: me)? (?:the )?project memory|project memory)$/.test(t) && window.TribeFlintFacts) { window.TribeFlintFacts.open(); lastMiss = null; return H.say('Here is everything I know about this project. Change or remove anything.', []); }
       if (/^(?:what can this (?:device|computer|phone|laptop) (?:do|run)|run (?:the |your )?self.?test|how fast (?:are you|is flint)(?: on this (?:device|computer|phone))?|what(?:'s| is) running on (?:my|this) device)$/.test(t) && window.TribeFlintPage) { window.TribeFlintPage.open('', 'device'); lastMiss = null; return H.say('This is what runs on this device. Press Run the self-test for live numbers.', []); } }
+    { const LS = window.TribeLessons; if (LS && LS.flint) { const lr = await LS.flint(text); if (lr) { lastMiss = null; return H.say(lr.text, (lr.acts || []).map(x => H.act(x[0], x[1], x[2]))); } } }   // pass 4: "teach me to make a website" starts the lesson (lessons.js), before it reads as a goal to plan
     const PL = window.TribeFlintPlan; if (PL && PL.offer && PL.isGoal(text, NL, ctx) && PL.offer(text, H, ctx)) { lastMiss = null; return true; }
     // feat/flint-local: what the project's memory already knows ("when is the bake sale?") and where something was said
     const FX = window.TribeFlintFacts; if (FX && FX.answer) { const fa = await FX.answer(text); if (fa) { lastMiss = null; return H.say(fa.text, (fa.acts || []).map(a => H.act(a[0], a[1], a[2]))); } }

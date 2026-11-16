@@ -1,7 +1,7 @@
 {
  "version": 1,
- "updated": "2026-11-14",
- "note": "Quick guides: one-screen answers to 'How do I…'. ONE source of truth. The app (app/ui/quickguides.js via /api/guide and guide-pages.json), Flint's knowledge base (server/flintkb.js) and the website (site/quick-guides.json, written by scripts/dev/site-quick.js) all read this file. Each card: 3 to 5 steps, 60 to 120 words, one 'do' (Do it for me) and one 'show' (Show me). 'do' is runner:arg (next, help, go, settings, call, click, ask, path). 'show' is { lesson } (app/ui/flintlessons.js) or { go | settings, sel, say }. 'needs' names a window global: without it the card is not listed. {tokens} in steps come from 'labels' (the live control's own words when it is on screen, else the text here).",
+ "updated": "2026-11-16",
+ "note": "Quick guides: one-screen answers to 'How do I…'. ONE source of truth. The app (app/ui/quickguides.js via /api/guide and guide-pages.json), Flint's knowledge base (server/flintkb.js) and the website (site/quick-guides.json, written by scripts/dev/site-quick.js) all read this file. Each card: 3 to 5 steps, 60 to 120 words, one 'do' (Do it for me) and one 'show' (Show me). 'do' is runner:arg (next, help, go, settings, call, click, ask, path). 'show' is { lesson } (app/ui/flintlessons.js) or { go | settings, sel, say }. 'needs' names a window global: without it the card is not listed. {tokens} in steps come from 'labels' (the live control's own words when it is on screen, else the text here). 'tracks' are the lessons (app/ui/lessons.js): each a list of steps the person does in the real tool; a step has show { open, sel } (the ring says the step's own sentence) and an optional check (lessons.js CHECKS) that ticks it; soon: true marks a step whose control another branch is adding (hidden until the control exists).",
  "groups": [
   [
    "start",
@@ -313,6 +313,7 @@
    "do": "call:TribeFlint.focus",
    "doLabel": "Open Flint",
    "show": {
+    "call": "TribeFlint.focus",
     "sel": "#flint, #flint-home",
     "say": "Flint is here. Type in plain words."
    }
@@ -1017,6 +1018,7 @@
    "do": "ask:undo",
    "doLabel": "Undo the last change",
    "show": {
+    "call": "TribeFlint.focus",
     "sel": "#flint, #flint-home",
     "say": "Say undo here."
    }
@@ -1282,6 +1284,7 @@
    "do": "call:TribeSuggest.open",
    "doLabel": "Show suggestions",
    "show": {
+    "call": "TribeFlint.focus",
     "sel": "#flint, #flint-home",
     "say": "Ask Flint “what do you suggest?” any time."
    }
@@ -1673,6 +1676,505 @@
    "show": {
     "lesson": "people"
    }
+  }
+ ],
+ "tracks": [
+  {
+   "id": "first-site",
+   "title": "Your first website",
+   "intro": "From nothing to a website you can put online. About ten minutes, no code, no AI needed.",
+   "mins": 10,
+   "needs": "TribeSiteDesigner",
+   "asks": [
+    "teach me to make a website",
+    "website lesson",
+    "learn to build a site",
+    "how do I make my first website"
+   ],
+   "steps": [
+    {
+     "id": "start",
+     "title": "Pick a start",
+     "text": "Choose a template that looks close to what you want. Everything in it can be changed.",
+     "show": {
+      "open": "sitelib",
+      "sel": "#slx-grid, #wdz-gal, #wdz-framewrap"
+     },
+     "check": "site.open"
+    },
+    {
+     "id": "words",
+     "title": "Change the words",
+     "text": "Click any words on the page and type your own.",
+     "show": {
+      "open": "site",
+      "sel": "#wdz-framewrap"
+     },
+     "check": "site.change"
+    },
+    {
+     "id": "look",
+     "title": "Change the look",
+     "text": "Open Style and tap a look, a colour or a font pair. The whole site follows.",
+     "show": {
+      "open": "site",
+      "sel": "#wdz [data-panel='style']"
+     },
+     "check": "site.look"
+    },
+    {
+     "id": "section",
+     "title": "Add a section",
+     "text": "Press Add block and pick one, like a gallery or a contact form.",
+     "show": {
+      "open": "site",
+      "sel": "#wdz .wdz-add"
+     },
+     "check": "site.section"
+    },
+    {
+     "id": "page",
+     "title": "Add a page",
+     "text": "Press the plus beside the page names and give the page a title.",
+     "show": {
+      "open": "site",
+      "sel": "#wdz-pages"
+     },
+     "check": "site.page"
+    },
+    {
+     "id": "link",
+     "title": "Make a button go somewhere",
+     "text": "Click a button on the page, then choose where it goes on the right.",
+     "show": {
+      "open": "site",
+      "sel": "#wdz-framewrap"
+     },
+     "check": "site.link"
+    },
+    {
+     "id": "phone",
+     "title": "See it on a phone",
+     "text": "Press Phone to see the page at phone size. Most visitors will see this.",
+     "show": {
+      "open": "site",
+      "sel": "#wdz [data-dev='phone']"
+     },
+     "check": "site.phone"
+    },
+    {
+     "id": "check",
+     "title": "Check your site",
+     "text": "Open Check. It lists what is wrong in plain words, with a fix for the safe ones.",
+     "show": {
+      "open": "site",
+      "sel": "#wdz [data-panel='check']"
+     },
+     "check": "site.check"
+    },
+    {
+     "id": "out",
+     "title": "Download it or put it online",
+     "text": "Download the site as files, or close the designer and publish it to a public address.",
+     "show": {
+      "open": "site",
+      "sel": "#wdz-dl"
+     },
+     "check": "site.out"
+    }
+   ]
+  },
+  {
+   "id": "first-app",
+   "title": "Your first phone app",
+   "intro": "From nothing to an app you can tap through on your own phone. About ten minutes, no code, no AI needed.",
+   "mins": 10,
+   "needs": "TribeAppCreator",
+   "asks": [
+    "teach me to make an app",
+    "app lesson",
+    "learn to build an app",
+    "how do I make my first app"
+   ],
+   "steps": [
+    {
+     "id": "start",
+     "title": "Pick a start",
+     "text": "Open Design, choose App and pick a template. Each one is a few screens already linked.",
+     "show": {
+      "open": "design",
+      "sel": ".dfl-kind[data-kind='app'], #apc-phone"
+     },
+     "check": "app.open"
+    },
+    {
+     "id": "edit",
+     "title": "Change a screen",
+     "text": "Click any words on the phone and type. Click a part to move, copy or remove it.",
+     "show": {
+      "open": "app",
+      "sel": "#apc-phone"
+     },
+     "check": "app.change"
+    },
+    {
+     "id": "screen",
+     "title": "Add a screen",
+     "text": "Open Screens and add a blank screen, or open Add and pick a ready-made one.",
+     "show": {
+      "open": "app",
+      "sel": "#apc-addsc, #apc-rack"
+     },
+     "check": "app.screen"
+    },
+    {
+     "id": "link",
+     "title": "Link two screens",
+     "text": "Click a button or a row, then choose the screen it opens.",
+     "show": {
+      "open": "app",
+      "sel": "#apc-phone"
+     },
+     "check": "app.link"
+    },
+    {
+     "id": "play",
+     "title": "Play it",
+     "text": "Press Play and tap through your app like a real one. Press Stop to keep editing.",
+     "show": {
+      "open": "app",
+      "sel": "#apc-play"
+     },
+     "check": "app.play"
+    },
+    {
+     "id": "look",
+     "title": "Pick a look",
+     "text": "Open Look and choose one. Colour, corners and type change on every screen at once.",
+     "show": {
+      "open": "app",
+      "sel": "#apc [data-tab='look'], #apc-rack"
+     },
+     "check": "app.look"
+    },
+    {
+     "id": "export",
+     "title": "Make it a real app",
+     "text": "Press Export and choose the web app. It works offline and can be added to a home screen.",
+     "show": {
+      "open": "app",
+      "sel": "#apc-export"
+     },
+     "check": "app.export"
+    },
+    {
+     "id": "phone",
+     "title": "Put it on your phone",
+     "text": "Follow the steps: check it, put it online, scan the code, add it to your home screen.",
+     "show": {
+      "open": "phone",
+      "sel": "#hs"
+     },
+     "check": "phone.open"
+    }
+   ]
+  },
+  {
+   "id": "together",
+   "title": "Build it together",
+   "intro": "Bring a friend in, see each other work, and agree on changes. Free for any number of friends.",
+   "mins": 6,
+   "asks": [
+    "teach me to work with friends",
+    "teamwork lesson",
+    "how do we build together"
+   ],
+   "steps": [
+    {
+     "id": "invite",
+     "title": "Invite a friend",
+     "text": "Send the invite link. They tap it, type a name and they are in.",
+     "show": {
+      "open": "invite",
+      "sel": "#invite-modal:not(.hidden)"
+     },
+     "check": "dom:#invite-modal:not(.hidden)"
+    },
+    {
+     "id": "see",
+     "title": "See each other",
+     "text": "Open the website designer or App Creator together. You see who is there and what each person has selected.",
+     "show": {
+      "open": "site",
+      "sel": "#wdz-cw, #wdz .cw-row, #wdz-framewrap"
+     },
+     "check": "cowork.on"
+    },
+    {
+     "id": "roles",
+     "title": "Choose who can change what",
+     "text": "Decide who changes things directly and who suggests changes first.",
+     "show": {
+      "open": "roles",
+      "sel": "#ppl-btn, #tb-help"
+     }
+    },
+    {
+     "id": "suggest",
+     "title": "Suggest a change",
+     "text": "If you cannot change something yourself, make your edit and press Suggest this change. Say why in a line.",
+     "show": {
+      "open": "site",
+      "sel": "#wdz .cr-line, #wdz .cr-h, #wdz-framewrap"
+     },
+     "check": "dom:#cr-why"
+    },
+    {
+     "id": "approve",
+     "title": "Answer a request",
+     "text": "Open Requests to see what was suggested, with before and after. Approve it, ask for changes or say no.",
+     "show": {
+      "open": "changes",
+      "sel": "#cr-list-body, .cr-list"
+     },
+     "check": "dom:#cr-list-body"
+    }
+   ]
+  },
+  {
+   "id": "online",
+   "title": "Take it online",
+   "intro": "Start in a folder on your computer, share it with a friend, back it up on GitHub, then give it a public address. Every step here is free; the limits are shown where you publish.",
+   "mins": 8,
+   "asks": [
+    "teach me to put it online",
+    "publishing lesson",
+    "how do I get a public address",
+    "how do I host it"
+   ],
+   "steps": [
+    {
+     "id": "folder",
+     "title": "Start in a folder",
+     "text": "Your project is a normal folder on your computer. It works with no internet and nothing leaves until you share it.",
+     "show": {
+      "open": "home",
+      "sel": "#pj-overview, #pj-plus"
+     }
+    },
+    {
+     "id": "share",
+     "title": "Share it with a friend",
+     "text": "Send an invite link. Friends work in the same project while your computer is on.",
+     "show": {
+      "open": "invite",
+      "sel": "#invite-modal:not(.hidden)"
+     },
+     "check": "dom:#invite-modal:not(.hidden)"
+    },
+    {
+     "id": "github",
+     "title": "Back it up on GitHub",
+     "text": "Connect GitHub so every saved version has a copy online. A free GitHub account is enough.",
+     "show": {
+      "open": "versions",
+      "sel": "#vr-list, #vr"
+     }
+    },
+    {
+     "id": "public",
+     "title": "Get a public address",
+     "text": "Publish to get a link anyone can open. GitHub Pages is free for public sites. A free cloud spot naps when nobody is there.",
+     "show": {
+      "open": "publish",
+      "sel": ".pb-sheet, #pb-form"
+     },
+     "check": "publish.done"
+    },
+    {
+     "id": "phone",
+     "title": "Open it on a phone",
+     "text": "Scan the code with your phone and add it to your home screen.",
+     "show": {
+      "open": "phone",
+      "sel": "#hs"
+     },
+     "check": "phone.open"
+    }
+   ]
+  },
+  {
+   "id": "power",
+   "title": "Power tools",
+   "intro": "One short step for each tool that saves you time. Do them in any order.",
+   "mins": 8,
+   "asks": [
+    "teach me the power tools",
+    "advanced lesson",
+    "what else can the designers do"
+   ],
+   "steps": [
+    {
+     "id": "versions",
+     "title": "Go back to an older version",
+     "text": "Open History and pick a saved moment to look at or restore.",
+     "show": {
+      "open": "versions",
+      "sel": "#vr-list, #vr"
+     },
+     "check": "dom:#vr"
+    },
+    {
+     "id": "comments",
+     "title": "Leave a comment on a design",
+     "text": "In the website designer press Comment, then click a section and type.",
+     "show": {
+      "open": "site",
+      "sel": "#wdz-cmode"
+     },
+     "check": "site.comment"
+    },
+    {
+     "id": "requests",
+     "title": "See change requests",
+     "text": "Open Requests to see what people suggested and answer them.",
+     "show": {
+      "open": "changes",
+      "sel": "#cr-list-body, .cr-list"
+     },
+     "check": "dom:#cr-list-body"
+    },
+    {
+     "id": "check",
+     "title": "Fix what is safe",
+     "text": "In the website designer open Check and press Fix what is safe. One Undo takes it all back.",
+     "show": {
+      "open": "site",
+      "sel": "#wdz [data-panel='check']"
+     },
+     "check": "site.check"
+    },
+    {
+     "id": "suggestions",
+     "title": "Read today's suggestions",
+     "text": "Open Suggestions. Each idea says who it came from. Apply it, undo it, or say not like this.",
+     "show": {
+      "open": "suggest",
+      "sel": "#sgx-sheet"
+     },
+     "check": "dom:#sgx-sheet"
+    },
+    {
+     "id": "library",
+     "title": "Use the design library",
+     "text": "Open the library and pick a palette, a font pair or an icon. It works in every designer.",
+     "show": {
+      "open": "library",
+      "sel": "#al-grid, #al-q"
+     },
+     "check": "dom:#al-grid"
+    },
+    {
+     "id": "phone",
+     "title": "Run the install check",
+     "text": "Open Put it on your phone. The check says what is missing and fixes it in one tap.",
+     "show": {
+      "open": "phone",
+      "sel": "#hs"
+     },
+     "check": "phone.open"
+    },
+    {
+     "id": "site-zoom",
+     "title": "Zoom the page",
+     "text": "Zoom out to see the whole page, or fit it to the window.",
+     "show": {
+      "open": "site",
+      "sel": "#wdz-zoom, [data-wdz='zoom']"
+     },
+     "soon": true
+    },
+    {
+     "id": "site-code",
+     "title": "See the code",
+     "text": "Open the code view to read the page's code or add your own styles.",
+     "show": {
+      "open": "site",
+      "sel": "#wdz-code, [data-wdz='code']"
+     },
+     "soon": true
+    },
+    {
+     "id": "site-space",
+     "title": "Drag the spacing",
+     "text": "Drag a section's edge to give it more or less room.",
+     "show": {
+      "open": "site",
+      "sel": ".wdz-space, [data-wdz='space']"
+     },
+     "soon": true
+    },
+    {
+     "id": "app-history",
+     "title": "Restore an earlier app design",
+     "text": "Open History in App Creator and restore an earlier save.",
+     "show": {
+      "open": "app",
+      "sel": "#apc-history, [data-apc='history']"
+     },
+     "soon": true
+    },
+    {
+     "id": "app-comments",
+     "title": "Comment on a screen",
+     "text": "Press Comment in App Creator and click a part of the screen.",
+     "show": {
+      "open": "app",
+      "sel": "#apc-comment, [data-apc='comment']"
+     },
+     "soon": true
+    },
+    {
+     "id": "app-multi",
+     "title": "Change several parts at once",
+     "text": "Hold Shift and click more than one part, then move, copy or remove them together.",
+     "show": {
+      "open": "app",
+      "sel": "#apc-multi, [data-apc='multi']"
+     },
+     "soon": true
+    },
+    {
+     "id": "app-map",
+     "title": "See every screen at once",
+     "text": "Open the map to see all screens and the links between them.",
+     "show": {
+      "open": "app",
+      "sel": "#apc-map, [data-apc='map']"
+     },
+     "soon": true
+    },
+    {
+     "id": "polish",
+     "title": "Polish it with Flint",
+     "text": "Press Polish it. Flint evens out spacing, contrast and text sizes with no AI.",
+     "show": {
+      "open": "site",
+      "sel": "[data-flint-polish], #wdz-polish, #apc-polish"
+     },
+     "soon": true
+    },
+    {
+     "id": "beautiful",
+     "title": "Ask a stronger AI to make it beautiful",
+     "text": "Press Make it beautiful. Your AI helper proposes changes and nothing changes until you approve.",
+     "show": {
+      "open": "site",
+      "sel": "[data-flint-beautiful], #wdz-beautiful, #apc-beautiful"
+     },
+     "soon": true
+    }
+   ]
   }
  ]
 }

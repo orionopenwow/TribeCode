@@ -69,7 +69,7 @@
 
   // ---------- progress, on this device ----------
   const KEY = 'tribecode.learn';
-  const P = () => { try { const j = JSON.parse(ls.get(KEY) || '{}'); return { quick: j.quick || {}, lesson: j.lesson || {}, step: j.step || {}, last: j.last || null }; } catch { return { quick: {}, lesson: {}, step: {}, last: null }; } };
+  const P = () => { try { const j = JSON.parse(ls.get(KEY) || '{}'); return { ...j, quick: j.quick || {}, lesson: j.lesson || {}, step: j.step || {}, last: j.last || null }; } catch { return { quick: {}, lesson: {}, step: {}, last: null }; } };
   function mark(kind, id, state) {
     if (!id) return; const p = P(), box = p[kind] || (p[kind] = {}), cur = box[id] || {};
     if (state === 'done') cur.done = cur.done || Date.now(); else cur.seen = cur.seen || Date.now();
@@ -93,7 +93,7 @@
   }
 
   // ---------- Do it for me / Show me ----------
-  const go = key => { try { if (key === 'design' && W.TribeDesignFlow && W.TribeDesignFlow.open) return W.TribeDesignFlow.open({});   // pass 3: there is no 'design' place in the shell; Design is the creation flow
+  const go = key => { try { if (key === 'design' && W.TribeDesignFlow && W.TribeDesignFlow.open) { if (W.TribeMarket && W.TribeMarket.unpage) W.TribeMarket.unpage(); return W.TribeDesignFlow.open({}); }   // pass 4: the shelf's full page was left over the flow, so Show me rang nothing   // pass 3: there is no 'design' place in the shell; Design is the creation flow
     const sh = W.TribeShell; if (W.TribeMarket && W.TribeMarket.unpage && key !== 'market') W.TribeMarket.unpage(); if (sh && sh.go) return sh.go(key); if (W.TribeApp && W.TribeApp.show) W.TribeApp.show(key); } catch {} };
   const fn = a => { const [g, m] = String(a).split('.'); const o = W[g]; return o && typeof o[m] === 'function' ? () => o[m]() : null; };
   const RUN = {
@@ -122,7 +122,7 @@
     const g = get(id), L = W.TribeFlintLessons; if (!g || !g.show || !L) return false;
     const s = g.show; leave(false); mark('quick', id, 'seen');
     if (s.lesson) { L.showMe(s.lesson); return true; }
-    try { if (s.settings) RUN.settings(s.settings); else if (s.call) RUN.call(s.call); else if (s.go) go(s.go); } catch {}
+    try { if (!s.go && W.TribeMarket && W.TribeMarket.unpage) W.TribeMarket.unpage(); if (s.settings) RUN.settings(s.settings); else if (s.call) RUN.call(s.call); else if (s.go) go(s.go); } catch {}
     let n = 0; const tick = () => { const el = find(s.sel); if (el) return L.ring(el, T(s.say)); if (++n < 30) setTimeout(tick, 120); else toast('Open a project first, then try Show me again.'); };
     setTimeout(tick, 180);
     return true;
@@ -244,12 +244,14 @@
     if (kind === 'prog') return { text: `${tally}${c.lessons ? ` ${c.lessons} ${T('lessons opened')}.` : ''}`, acts: [...(n.guide ? [[T('What should I learn next?'), 'ask', 'what should I learn next']] : []), [T('Open Learn'), 'guide', '']] };
     if (!n.guide) return { text: `${tally} ${T('The skills lessons are next: how to find people who want what you made, and how to run it.')}`, acts: [[T('Open Learn'), 'guide', '']] };
     const lead = n.why === 'resume' ? T('You left this one open:') : n.why === 'project' ? T('Your project is ready for this:') : `${tally} ${T('Next:')}`;
-    return cardMsg(n.guide, lead);
+    const msg = cardMsg(n.guide, lead), LS = W.TribeLessons, ln = LS && LS.next();
+    if (ln && ln.track) msg.acts.push([`${T('Lesson')}: ${T(ln.track.title)}`, 'lesson', ln.track.id]);   // pass 4: the lessons are one tap away
+    return msg;
   }
 
   const kick = () => { if (location.protocol !== 'file:') load().catch(() => {}); };   // opened as a file there is nothing to fetch
   if (document.readyState === 'complete') setTimeout(kick, 800); else addEventListener('load', () => setTimeout(kick, 800));
-  W.TribeQuick = { load, all, get, groups, search, match: t => match(all(), t), open, close: closeSheet, run, show, homeHTML, flint, answer, forKind, label, canDo: id => { const g = get(id); return !!g && canDo(g); } };
+  W.TribeQuick = { tracks: () => (DATA && DATA.tracks) || [], load, all, get, groups, search, match: t => match(all(), t), open, close: closeSheet, run, show, homeHTML, flint, answer, forKind, label, canDo: id => { const g = get(id); return !!g && canDo(g); } };
   W.TribeLearn = { get: P, mark, done, counts, next, resume, summaryHTML, openNext, STEP_GUIDE };
   return core;
 });

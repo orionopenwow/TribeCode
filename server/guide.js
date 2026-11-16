@@ -58,8 +58,8 @@ module.exports = function makeGuide({ ui } = {}) {
     if (qCache && Date.now() - qAt < 5000) return qCache;
     const files = [path.join(__dirname, '..', 'templates', 'quickguides.json'), ui && path.join(ui, '..', 'templates', 'quickguides.json'), ui && path.join(ui, '..', '..', 'templates', 'quickguides.json')].filter(Boolean);
     let q = null;
-    for (const f of files) { try { const j = JSON.parse(fs.readFileSync(f, 'utf8')); if (j && Array.isArray(j.guides)) { q = { version: j.version, groups: j.groups || [], labels: j.labels || {}, guides: j.guides }; break; } } catch {} }
-    qCache = q || { version: 0, groups: [], labels: {}, guides: [] }; qAt = Date.now();
+    for (const f of files) { try { const j = JSON.parse(fs.readFileSync(f, 'utf8')); if (j && Array.isArray(j.guides)) { q = { version: j.version, groups: j.groups || [], labels: j.labels || {}, guides: j.guides, tracks: Array.isArray(j.tracks) ? j.tracks : [] }; break; } } catch {} }
+    qCache = q || { version: 0, groups: [], labels: {}, guides: [], tracks: [] }; qAt = Date.now();
     return qCache;
   }
   return { route, pages, paths, quick, dir };
