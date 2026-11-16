@@ -63,7 +63,7 @@
   }
   function close() {
     if (!root) return; clearTimeout(saveT); if (st && st.dirty) save(true);
-    root.remove(); root = null; document.body.classList.remove('apc-open'); if (st) st.open = false;
+    inertOthers(false); root.remove(); root = null; document.body.classList.remove('apc-open'); if (st) st.open = false;
     document.removeEventListener('keydown', onKey, true);
   }
 
@@ -107,6 +107,12 @@
   function redo() { if (!st.redo.length) return note('Nothing to redo.'); st.undo.push(JSON.stringify(st.doc)); st.doc = A().normalize(JSON.parse(st.redo.pop())); st.sel = null; save(); paint(); note('Redone.'); }
   const note = t => { const el = root && root.querySelector('#apc-note'); if (el) { el.textContent = t; el.hidden = !t; clearTimeout(note.t); note.t = setTimeout(() => { el.hidden = true; }, 3200); } };
 
+  // pass 3: a full-screen editor keeps Tab inside it; the app behind is inert while it is open (it was reachable by Tab)
+  let inerted = [];
+  function inertOthers(on) {
+    if (on) { if (inerted.length) return; inerted = [...document.body.children].filter(e => e !== root && !e.inert && e.tagName !== 'SCRIPT'); inerted.forEach(e => { e.inert = true; }); }
+    else { inerted.forEach(e => { e.inert = false; }); inerted = []; }
+  }
   // ---------- layout ----------
   function build() {
     if (root) root.remove();
@@ -134,7 +140,7 @@
           <form class="apc-ask" id="apc-ask"><span class="apc-eyebrow">Flint</span><input class="input" id="apc-ask-in" placeholder="Add a settings screen, make it dark, rounder…" autocomplete="off"><button class="btn" type="submit">Do it</button><p class="apc-reply faint" id="apc-reply"></p></form></aside>
       </div>
       <nav class="apc-rack" id="apc-rack"><button data-sheet="screens">Screens</button><button data-sheet="add">Add</button><button data-sheet="look">Look</button><button data-sheet="edit">Edit</button><button data-sheet="flint">Flint</button></nav>`;
-    document.body.appendChild(root); document.body.classList.add('apc-open');
+    document.body.appendChild(root); document.body.classList.add('apc-open'); root.setAttribute('aria-modal', 'true'); inertOthers(true);
     const $ = s => root.querySelector(s);
     $('#apc-close').onclick = close;
     $('#apc-name').oninput = e => { st.doc.name = e.target.value.slice(0, 48); save(); };

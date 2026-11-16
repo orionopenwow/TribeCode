@@ -106,6 +106,10 @@ def main():
             links = sum(len(bk["links"]) for s in d["screens"] for bk in s["blocks"]); assert links >= 5, links
             pg.wait_for_function(f"fetch('/api/projects/{pid}/app-config', {{ headers: {{ Authorization: 'Bearer {tok}' }} }}).then(r => r.json()).then(j => j.config && j.config.template === 'habits')", timeout=6000)
             if SHOTS: pg.wait_for_timeout(300); pg.screenshot(path=str(SHOT / "app-creator-editor.png"))
+            # pass 3: Tab stays inside the editor; the app behind it is not reachable while it is open
+            pg.evaluate("document.activeElement && document.activeElement.blur()")
+            for _ in range(25): pg.keyboard.press("Tab")
+            assert pg.evaluate("document.querySelector('#apc').contains(document.activeElement)"), pg.evaluate("document.activeElement.id || document.activeElement.className")
 
             # ---- click words to type: one Undo takes it back
             h1 = pg.locator("#apc .apc-edit h1[data-e]").first
@@ -199,6 +203,7 @@ def main():
             ok = pg.evaluate("TribeAppCreator.screens().then(l => l[1].render(document.createElement('canvas'), 195, 422)).then(c => c.width === 195)")
             assert ok
             pg.evaluate("TribeAppCreator.close()")
+            assert pg.evaluate("[...document.body.children].every(e => !e.inert)"), "pass 3: closing gives the app back (nothing left inert)"
 
             # ---- phones: 390px
             m = b.new_context(viewport={"width": 390, "height": 844}, is_mobile=True, has_touch=True); m.add_init_script(settings_js("Mara", tok, pid))
