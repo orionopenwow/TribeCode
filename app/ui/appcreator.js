@@ -217,13 +217,14 @@
       <p class="apc-eyebrow">Spacing</p>${seg('density', [['compact', 'Compact'], ['regular', 'Regular'], ['roomy', 'Roomy']])}
       <p class="apc-eyebrow">Icons</p>${seg('icons', [['thin', 'Thin'], ['regular', 'Regular'], ['bold', 'Bold']])}
       <p class="apc-eyebrow">Motion</p>${seg('motion', [['calm', 'Calm'], ['standard', 'Standard'], ['snappy', 'Snappy']])}
-      ${st.pid ? `<p class="apc-eyebrow">Brand kit</p><div class="apc-row"><button class="btn" id="apc-brand-in">Use the brand kit</button><button class="btn" id="apc-brand-out">Save to brand kit</button></div>` : ''}`;
+      ${st.pid ? `<p class="apc-eyebrow">Brand kit</p><div class="apc-row"><button class="btn" id="apc-brand-in">Use the brand kit</button><button class="btn" id="apc-brand-out">Save to brand kit</button></div>` : ''}${window.TribeAssetLib ? `<p class="apc-eyebrow">Library</p><div class="apc-row"><button class="btn" id="apc-lib">Colours from the library</button></div>` : ''}`;
     pane.querySelectorAll('[data-pre]').forEach(b => b.onclick = () => apply({ op: 'preset', id: b.dataset.pre }));
     pane.querySelectorAll('[data-acc]').forEach(b => b.onclick = () => apply({ op: 'theme', set: { accent: b.dataset.acc } }));
     pane.querySelector('#apc-acc').onchange = e => apply({ op: 'theme', set: { accent: e.target.value } });
     pane.querySelectorAll('[data-th]').forEach(b => b.onclick = () => apply({ op: 'theme', set: { [b.dataset.th]: b.dataset.v } }));
     pane.querySelector('#apc-font').onchange = e => apply({ op: 'theme', set: { font: e.target.value } });
     const bi = pane.querySelector('#apc-brand-in'); if (bi) bi.onclick = brandIn;
+    const lb = pane.querySelector('#apc-lib'); if (lb) lb.onclick = () => window.TribeAssetLib.open({ kind: 'palette', onPick: x => { if (x.kind !== 'palette') return true; const p = window.TribeAssetLib.palette(x.id); if (!p) return; const dark = (() => { const n = parseInt(p.colors.bg.slice(1), 16); return ((n >> 16 & 255) * 0.3 + (n >> 8 & 255) * 0.59 + (n & 255) * 0.11) < 100; })(); apply({ op: 'theme', set: { accent: p.colors.accent, mode: dark ? 'dark' : 'light' } }); } });
     const bo = pane.querySelector('#apc-brand-out'); if (bo) bo.onclick = brandOut;
   }
   // the brand kit the website designer and the canvas share (GET|PUT /api/projects/:id/brand)
@@ -413,7 +414,7 @@
     if (id === 'app.kit') { const k = KIT_OF[String(sl.kit || '').toLowerCase()] || sl.kit; const r = apply({ op: 'kit', kit: k }); return { text: r.say }; }
     if (id === 'app.block') { const at = st.sel ? (Co.findScreen(st.doc, st.screen).blocks.findIndex(b => b.id === st.sel.block) + 1) || undefined : undefined; const r = apply({ op: 'block.add', screen: st.screen, type: sl.type, at }); return { text: r.say }; }
     if (id === 'app.tabbar') return { text: apply({ op: 'tabbar' }).say };
-    if (id === 'app.theme') { const set = {}; for (const k of ['mode', 'radius', 'font', 'density', 'icons', 'motion', 'surface']) if (sl[k]) set[k] = sl[k]; if (sl.color) set.accent = sl.color.hex; if (sl.font === 'next') { const ks = Object.keys(Co.FONTS); set.font = ks[(ks.indexOf(st.doc.theme.font) + 1) % ks.length]; } if (sl.radius === 'more' || sl.radius === 'less') { const ks = ['sharp', 'soft', 'round', 'pill'], i = ks.indexOf(st.doc.theme.radius); set.radius = ks[Math.max(0, Math.min(3, i + (sl.radius === 'more' ? 1 : -1)))]; } const r = apply({ op: 'theme', set }); return { text: sl.font === 'next' ? `Switched the type to ${Co.FONTS[set.font].name}.` : r.say }; }
+    if (id === 'app.theme') { const set = {}; for (const k of ['mode', 'radius', 'font', 'density', 'icons', 'motion', 'surface']) if (sl[k]) set[k] = sl[k]; if (sl.color) set.accent = sl.color.hex; if ('sound' in sl) set.sound = sl.sound || ''; if (sl.font === 'next') { const ks = Object.keys(Co.FONTS); set.font = ks[(ks.indexOf(st.doc.theme.font) + 1) % ks.length]; } if (sl.radius === 'more' || sl.radius === 'less') { const ks = ['sharp', 'soft', 'round', 'pill'], i = ks.indexOf(st.doc.theme.radius); set.radius = ks[Math.max(0, Math.min(3, i + (sl.radius === 'more' ? 1 : -1)))]; } const r = apply({ op: 'theme', set }); return { text: sl.font === 'next' ? `Switched the type to ${Co.FONTS[set.font].name}.` : r.say }; }
     if (id === 'app.preset') { const p = Co.PRESETS.find(x => x.id === sl.preset || x.name.toLowerCase() === String(sl.preset || '').toLowerCase()); if (!p) return { text: 'That look is not in the list. Open Look to see all of them.' }; return { text: apply({ op: 'preset', id: p.id }).say }; }
     if (id === 'app.platform') return { text: apply({ op: 'platform', platform: sl.platform }).say };
     if (id === 'app.link') {

@@ -95,11 +95,12 @@
 
   // ---------- the theme ----------
   const THEME0 = { accent: '#F26B1D', mode: 'light', radius: 'soft', font: 'clean', density: 'regular', icons: 'regular', motion: 'standard', surface: 'neutral', preset: '' };
+  const TAPS = ['click', 'tap', 'tick', 'pop', 'bubble', 'typing'];   // feat/asset-libs: a short sound on every tap (the library's UI sounds)
   function normTheme(t) {
     t = Object.assign({}, THEME0, t || {});
     return { accent: HEX(t.accent) || THEME0.accent, mode: t.mode === 'dark' ? 'dark' : 'light', radius: RADII[t.radius] ? t.radius : 'soft', font: FONTS[t.font] ? t.font : 'clean',
       density: DENS[t.density] ? t.density : 'regular', icons: ['thin', 'regular', 'bold'].includes(t.icons) ? t.icons : 'regular', motion: MOTION[t.motion] ? t.motion : 'standard',
-      surface: SURF[t.surface] != null ? t.surface : 'neutral', preset: str(t.preset, 30) };
+      surface: SURF[t.surface] != null ? t.surface : 'neutral', preset: str(t.preset, 30), ...(TAPS.includes(t.sound) ? { sound: t.sound } : {}) };
   }
   // the palette, worked out so text always reads: ink on bg >= 7, muted >= 4.5, text on the accent >= 4.5
   function palette(theme) {
@@ -315,7 +316,7 @@
   // theme (light/dark, corners, platform come in as variables or as data-plat / data-r on the root), so the editor puts it
   // on the page once and each screen or thumbnail only carries style="vars(theme)" and attrs(doc).
   const baseCache = {};
-  function attrs(doc) { const t = normTheme(doc.theme); return `data-plat="${doc.platform === 'android' ? 'android' : 'ios'}" data-r="${t.radius}"`; }
+  function attrs(doc) { const t = normTheme(doc.theme); return `data-plat="${doc.platform === 'android' ? 'android' : 'ios'}" data-r="${t.radius}"${t.sound ? ` data-snd="${t.sound}"` : ''}`; }
   function css(doc, opts) {
     const o = opts || {}, S = o.scope || '.ax', t = normTheme(doc.theme);
     return fontFaces(t, o.fontBase) + `${S}{${vars(t)}}` + baseCSS(S);
@@ -401,8 +402,11 @@ ${PARTS && PARTS.CSS ? PARTS.CSS : ''}
         return p.then(done);
       }
       function back() { var h = hist.pop(); if (h) return go(h.id, h.how === 'morph' ? 'fade' : h.how, true); }
+      var snd = { click: [[1800, .018, 'square', .18]], tap: [[880, .04, 'sine', .3]], tick: [[2400, .012, 'triangle', .2]], pop: [[520, .07, 'sine', .35, 1.8]], bubble: [[700, .09, 'sine', .3, 2.2]], typing: [[1500, .01, 'square', .1]] }, ac = null;
+      function beep() { var k = root.getAttribute('data-snd'), n = k && snd[k]; if (!n || reduce) return; try { ac = ac || new (window.AudioContext || window.webkitAudioContext)(); var t0 = ac.currentTime + .005; n.forEach(function (x) { var os = ac.createOscillator(), g = ac.createGain(); os.type = x[2]; os.frequency.setValueAtTime(x[0], t0); if (x[4]) os.frequency.exponentialRampToValueAtTime(x[0] * x[4], t0 + x[1]); g.gain.setValueAtTime(.0001, t0); g.gain.exponentialRampToValueAtTime(x[3], t0 + .004); g.gain.exponentialRampToValueAtTime(.0001, t0 + x[1]); os.connect(g); g.connect(ac.destination); os.start(t0); os.stop(t0 + x[1] + .02); }); } catch (er) {} }
       root.addEventListener('click', function (e) {
         var t = e.target; if (o.paused && o.paused()) return;
+        if (t.closest && t.closest('button, [data-to], [data-tog], [data-check], [data-pick], [data-chip], [data-plan], [data-like], [data-play], summary')) beep();
         var tog = t.closest('[data-tog]'); if (tog) { tog.classList.toggle('on'); tog.setAttribute('aria-checked', tog.classList.contains('on') ? 'true' : 'false'); return; }
         var chk = t.closest('[data-check]'); if (chk) { chk.classList.toggle('done'); return; }
         var chip = t.closest('[data-chip]'); if (chip) { Array.prototype.forEach.call(chip.parentNode.children, function (c) { c.classList.toggle('on', c === chip); }); return; }
@@ -437,7 +441,7 @@ ${PARTS && PARTS.CSS ? PARTS.CSS : ''}
     doc = normalize(doc); const say = s => ({ doc: normalize(doc), say: s });
     if (!op || typeof op !== 'object') return say('');
     const O = op.op;
-    if (O === 'theme') { const s = op.set || {}; doc.theme = normTheme(Object.assign({}, doc.theme, s, { preset: '' })); return say('Updated the look.'); }
+    if (O === 'theme') { const s = op.set || {}; doc.theme = normTheme(Object.assign({}, doc.theme, s, { preset: '' })); if ('sound' in s && Object.keys(s).length === 1) { if (!s.sound) delete doc.theme.sound; return say(s.sound ? `Every tap now plays a short “${s.sound}” sound. Say “no tap sounds” to turn it off.` : 'Taps are silent again.'); } return say('Updated the look.'); }
     if (O === 'preset') { const pr = PRESETS.find(x => x.id === op.id); if (!pr) return say('That look is not in the list.'); doc.theme = normTheme(Object.assign({}, pr.theme, { preset: pr.id })); return say(`Switched to the ${pr.name} look.`); }
     if (O === 'platform') { doc.platform = op.platform === 'android' ? 'android' : 'ios'; return say(doc.platform === 'android' ? 'Using the Android look.' : 'Using the iPhone look.'); }
     if (O === 'rename') { doc.name = str(op.name, 48) || doc.name; return say(`Renamed the app to ${doc.name}.`); }

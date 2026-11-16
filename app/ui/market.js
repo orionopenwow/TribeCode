@@ -462,6 +462,14 @@
     if (spectator()) return toast('Spectators can look, not add');
     const it = await itemOf(id); if (!it) return;
     const loc = localMode();
+    // Design packs add colours, sounds or icons to the design library (app/ui/assetlib.js) on this device
+    if (it.kind === 'asset-pack' && it.lib && window.TribeAssetLib) {
+      const n = window.TribeAssetLib.installPack({ id: it.id, title: it.title, items: it.lib });
+      if (!loc && pid()) C.api(`/market/${encodeURIComponent(id)}/use`, { method: 'POST', body: { project: pid(), only: 'open' } }).catch(() => {});
+      refreshItem({ ...it, installed: true });
+      result(n ? `${it.title}: ${n} added to the design library` : `${it.title} is already in the design library`, null, ['Open the design library', () => { if (window.TribeMarket && window.TribeMarket.close) { try { window.TribeMarket.close(); } catch {} } window.TribeAssetLib.open({ q: '' }); }]);
+      return { ok: true, n };
+    }
     // App kits drop their screens into App Creator (app/ui/appcreator.js), with or without a tribe
     if (it.kind === 'app-kit' && window.TribeAppCreator && window.TribeAppCore) {
       const AC = window.TribeAppCreator, acs = AC.state(), kit = it.kit || it.ref, openIt = ['Open App Creator', () => { if (window.TribeMarket && window.TribeMarket.close) { try { window.TribeMarket.close(); } catch {} } AC.open({ pid: loc ? '' : pid() }); }];

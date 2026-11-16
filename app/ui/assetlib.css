@@ -1,0 +1,27 @@
+/* The design library (assetlib.js): one sheet, search, kind tabs, a grid of tiles with their licence. Flat, tokens only. */
+#al-sheet { width: min(860px, calc(100vw - 32px)); }
+.al-body { display: flex; flex-direction: column; gap: var(--s3, 12px); min-width: 0; }
+.al-q .input { width: 100%; min-height: 40px; }
+.al-kinds { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; padding-bottom: 2px; }
+.al-kinds::-webkit-scrollbar { display: none; }
+.al-kind { flex: none; min-height: 36px; padding: 0 12px; border-radius: 999px; border: 1px solid var(--border); background: var(--surface); color: var(--muted); font-size: 13px; font-weight: 600; cursor: pointer; }
+.al-kind small { color: var(--faint); font-weight: 500; margin-left: 2px; }
+.al-kind[aria-selected="true"] { background: var(--raised); color: var(--text); border-color: var(--text); }
+.al-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(118px, 1fr)); gap: 8px; max-height: min(56vh, 520px); overflow-y: auto; align-content: start; }
+.al-tile { display: flex; flex-direction: column; gap: 4px; padding: 8px; min-height: 40px; border: 1px solid var(--border); border-radius: var(--r-md, 10px); background: var(--surface); color: var(--text); text-align: left; cursor: pointer; min-width: 0; }
+.al-tile:hover, .al-tile:focus-visible { border-color: var(--text); outline: none; }
+.al-tile b { font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.al-tile small { font-size: 11px; color: var(--faint); font-family: var(--mono, ui-monospace, monospace); }
+.al-pal, .al-font, .al-ico, .al-snd, .al-mo, .al-gen, .al-img { display: flex; align-items: center; justify-content: center; height: 56px; border-radius: var(--r-sm, 6px); background: var(--raised); overflow: hidden; width: 100%; }
+.al-pal { gap: 4px; padding: 0 10px; border: 1px solid var(--border); }
+.al-pal i { flex: 1; height: 26px; border-radius: 4px; }
+.al-font { font-size: 28px; color: var(--text); }
+.al-ico svg, .al-ic, .al-i { width: 26px; height: 26px; fill: none; stroke: var(--text); stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.al-snd .al-i, .al-mo .al-i { stroke: var(--teal, #38C6B1); }
+.al-gen { font-size: 22px; font-weight: 700; color: var(--muted); }
+.al-img { object-fit: cover; }
+.al-note { margin: 0; font-size: 12px; }
+@media (max-width: 640px) {
+  .al-grid { grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); max-height: 60vh; }
+  .al-pal, .al-font, .al-ico, .al-snd, .al-mo, .al-gen, .al-img { height: 48px; }
+}
