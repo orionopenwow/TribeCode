@@ -35,7 +35,7 @@ const path = require('node:path');
 const S = require('../app/ui/sitecfg.js');
 const AI = require('../app/ui/aibasics-core.js');
 
-module.exports = function siteDesign({ perms = null, base, root, showcase, siteFlint, P, tasks, nameOf = x => x, members = () => [], inspo, postChat, broadcast, log = () => {} }) {
+module.exports = function siteDesign({ perms = null, requests = () => null, base, root, showcase, siteFlint, P, tasks, nameOf = x => x, members = () => [], inspo, postChat, broadcast, log = () => {} }) {
   const LIB = path.join(root, 'templates', 'sites');
   const UI = [path.join(root, 'app', 'ui'), path.join(root, 'ui')].find(d => fs.existsSync(path.join(d, 'sitecfg.js'))) || path.join(root, 'app', 'ui');
   const FONTS = path.join(UI, 'assets', 'site-fonts');
@@ -64,7 +64,7 @@ module.exports = function siteDesign({ perms = null, base, root, showcase, siteF
   const pview = x => ({ id: x.id, by: x.by, byName: nameOf(x.by), at: x.at, note: x.note, ops: x.ops, done: x.done, skipped: x.skipped, status: x.status, rev: x.rev });
   const loadRaw = pid => base.readJSON(file(pid), null);
   const load = pid => { const c = loadRaw(pid); if (c) { delete c.rev; delete c.savedBy; delete c.savedAt; } return c; };
-  const save = (pid, cfg, me) => { const old = loadRaw(pid); const c = S.normalize(cfg); delete c.rev; delete c.savedBy; delete c.savedAt; const rec = { ...c, rev: ((old && old.rev) || 0) + 1, savedBy: me ? me.id : (old && old.savedBy) || '', savedAt: new Date().toISOString() }; base.writeJSON(file(pid), rec); return { config: c, rev: rec.rev }; };
+  const save = (pid, cfg, me) => { const old = loadRaw(pid); const c = S.normalize(cfg); delete c.rev; delete c.savedBy; delete c.savedAt; const rec = { ...c, rev: ((old && old.rev) || 0) + 1, savedBy: me ? me.id : (old && old.savedBy) || '', savedAt: new Date().toISOString() }; base.writeJSON(file(pid), rec); try { if (broadcast) broadcast({ type: 'site-config', project: pid, rev: rec.rev, by: rec.savedBy || null }); } catch {} return { config: c, rev: rec.rev }; };   // feat/cowork-editors: others' open designers pick it up
   if (siteFlint && siteFlint.useConfig) siteFlint.useConfig({ load, save: (pid, cfg) => save(pid, cfg).config });
   const MIME = { svg: 'image/svg+xml', png: 'image/png', jpg: 'image/jpeg', jpeg: 'image/jpeg', webp: 'image/webp', gif: 'image/gif' };
   const inlineFile = (dir, rel) => {
@@ -202,7 +202,9 @@ module.exports = function siteDesign({ perms = null, base, root, showcase, siteF
     // feat/site-editor2: "change the website" is a row in the permissions table (site.edit), so a group's own roles decide
     // it and a refusal says who can do it (the Ask bar). AI helpers keep their own rules (site_propose).
     const mayRole = !!me && me.role !== 'spectator' && me.role !== 'guest';
-    const canEdit = mayRole && (me.role === 'agent' || !perms || a !== 'projects' || perms.can(me, 'site.edit', b));
+    // feat/cowork-editors: an AI helper holds site.edit through its person (perms.actingRole); a refused helper's save, or a
+    // person's save sent with asRequest, becomes a change request the right people approve (server/changereq.js)
+    const canEdit = mayRole && (!perms || a !== 'projects' || perms.can(me, 'site.edit', b));
     try {
       if (a === 'site-designer') {
         if (b === 'templates' && m === 'GET') { const k = catalog(); return send(res, 200, { templates: k.templates, categories: k.categories || [] }); }
@@ -210,8 +212,14 @@ module.exports = function siteDesign({ perms = null, base, root, showcase, siteF
         return fail(res, 404, 'not found');
       }
       if (a === 'projects' && c === 'site-config') {
-        if (!d && m === 'GET') { const r = loadRaw(b); return send(res, 200, { config: load(b), rev: (r && r.rev) || 0, savedBy: r && r.savedBy ? nameOf(r.savedBy) : '', savedAt: (r && r.savedAt) || '', canEdit }); }
-        if (!canEdit) return fail(res, 403, 'spectators are read-only');
+        if (!d && m === 'GET') { const r = loadRaw(b); return send(res, 200, { config: load(b), rev: (r && r.rev) || 0, savedBy: r && r.savedBy ? nameOf(r.savedBy) : '', savedAt: (r && r.savedAt) || '', canEdit, canSuggest: mayRole && !canEdit }); }
+        if (!canEdit && !d && m === 'PUT' && mayRole && requests()) {
+          const body = await readBody(req, 6 * 1024 * 1024); if (!body || typeof body.config !== 'object') return fail(res, 400, 'config missing');
+          if (me.role === 'agent' || body.asRequest) return send(res, 202, requests().fromRefusal(b, me, 'site', body.config, { title: body.title, why: body.why, summary: body.summary, before: body.before, after: body.after }));
+          perms && perms.can(me, 'site.edit', b);   // records the refusal, so the 403 says who can do it
+          return fail(res, 403, 'changing the website needs someone’s OK here: suggest the change instead');
+        }
+        if (!canEdit) return fail(res, 403, mayRole ? 'changing the website needs someone’s OK here' : 'spectators are read-only');
         if (!d && m === 'PUT') {
           const body = await readBody(req, 6 * 1024 * 1024); if (!body || typeof body.config !== 'object') return fail(res, 400, 'config missing');
           const cur = loadRaw(b);
@@ -281,5 +289,5 @@ module.exports = function siteDesign({ perms = null, base, root, showcase, siteF
       run: async (a = {}, me) => { try { const r = await toTasks(cur(a), me || { id: 'agent', role: 'agent' }); return text(r.say); } catch (e) { return text(e.message, true); } },
     },
   };
-  return { form, formOn, propose, proposals: loadP, brandGet, brandSet, route, load, save: (pid, cfg) => save(pid, cfg).config, template, templates, publish, facts, onTask, toTasks, mcpTools, comments: loadC, exists: pid => !!loadRaw(pid) };
+  return { form, formOn, propose, proposals: loadP, brandGet, brandSet, route, load, save: (pid, cfg, me) => save(pid, cfg, me).config, saveRev: (pid, cfg, me) => save(pid, cfg, me), template, templates, publish, facts, onTask, toTasks, mcpTools, comments: loadC, exists: pid => !!loadRaw(pid) };
 };

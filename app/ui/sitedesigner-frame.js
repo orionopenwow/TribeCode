@@ -306,6 +306,45 @@
     if (d.y != null) scrollTo(0, d.y);
   });
   addEventListener('scroll', function () { post({ t: 'scroll', y: scrollY }); if (tb.classList.contains('is-docked') || SEL) placeTb(); }, { passive: true });
+  // ---------- feat/cowork-editors: the others in this page ----------
+  // My pointer goes out as the thing under it ("<kind>:<key>") plus where inside it, so it lands on the same words at any
+  // width; the others come in from the designer ({ cw: people }) and are drawn here, on the real elements.
+  var cwPeople = [], cwLayer = null, cwLast = 0, cwT = 0, cwPend = null, cwShown = false;
+  function cwPath(t) { var g = t && target(t); if (!g || !g.el) return null; return { p: g.kind + ':' + g.key, el: g.el }; }
+  function cwFind(p) {
+    var k = String(p || ''), i = k.indexOf(':'); if (i < 0) return null;
+    var kind = k.slice(0, i), key = k.slice(i + 1);
+    if (kind === 'block') return q('[data-block="' + esc(key.split('|')[0]) + '"]');
+    var a = ATTR[kind]; return a ? q('[' + a + '="' + esc(key) + '"]') : null;
+  }
+  function cwSend(a) {
+    cwPend = a; var now = Date.now();
+    if (now - cwLast >= 55) { cwLast = now; post({ t: 'cw-ptr', a: cwPend }); cwShown = !!cwPend; cwPend = undefined; }
+    else if (!cwT) cwT = setTimeout(function () { cwT = 0; if (cwPend !== undefined) { cwLast = Date.now(); post({ t: 'cw-ptr', a: cwPend }); cwShown = !!cwPend; cwPend = undefined; } }, 55);
+  }
+  document.addEventListener('pointermove', function (e) {
+    if (e.pointerType && e.pointerType !== 'mouse' && e.pointerType !== 'pen') return;
+    var w = cwPath(e.target); if (!w) { if (cwShown) cwSend(null); return; }
+    var r = w.el.getBoundingClientRect(); if (!r.width || !r.height) return;
+    cwSend({ p: w.p, x: (e.clientX - r.left) / r.width, y: (e.clientY - r.top) / r.height });
+  }, { passive: true });
+  document.addEventListener('mouseleave', function () { if (cwShown) cwSend(null); });
+  function cwDraw() {
+    if (!cwLayer || !cwLayer.isConnected) { cwLayer = document.createElement('div'); cwLayer.className = 'wdz-cw'; cwLayer.setAttribute('aria-hidden', 'true'); cwLayer.style.cssText = 'position:fixed;inset:0;pointer-events:none;z-index:2147483000;overflow:hidden'; document.documentElement.appendChild(cwLayer); }
+    var html = '';
+    cwPeople.forEach(function (p) {
+      var col = String(p.color || '#6C7CFF').replace(/[^#0-9a-zA-Z]/g, ''), name = String(p.name || '').replace(/[<>&"']/g, '');
+      var box = p.editing || p.sel, el = box && cwFind(box);
+      if (el) { var r = el.getBoundingClientRect(); if (r.width) html += '<div class="wdz-cw-out" data-cw-out="' + p.id + '" style="position:absolute;left:' + (r.left - 2) + 'px;top:' + (r.top - 2) + 'px;width:' + (r.width + 4) + 'px;height:' + (r.height + 4) + 'px;border:2px ' + (p.editing ? 'dashed' : 'solid') + ' ' + col + ';border-radius:6px"><span style="position:absolute;left:-2px;top:-20px;padding:1px 6px;border-radius:5px 5px 5px 0;background:' + col + ';color:#12151A;font:600 11px/16px system-ui,sans-serif;white-space:nowrap">' + (p.editing ? name + ' ' + (L.isEditing || 'is editing') : name) + '</span></div>'; }
+      var a = p.a, ael = a && cwFind(a.p);
+      if (ael) { var ar = ael.getBoundingClientRect(); if (ar.width) html += '<div class="wdz-cw-ptr" data-cw-ptr="' + p.id + '" style="position:absolute;left:0;top:0;transform:translate(' + Math.round(ar.left + a.x * ar.width) + 'px,' + Math.round(ar.top + a.y * ar.height) + 'px)"><svg viewBox="0 0 16 20" width="16" height="20"><path d="M1 1l13 8-6 1.5L5 18z" fill="' + col + '" stroke="#12151A" stroke-width="1.4" stroke-linejoin="round"/></svg><span style="position:absolute;left:13px;top:15px;padding:2px 7px;border-radius:6px;background:' + col + ';color:#12151A;font:600 12px/16px system-ui,sans-serif;white-space:nowrap">' + name + '</span></div>'; }
+    });
+    cwLayer.innerHTML = html;
+  }
+  addEventListener('message', function (e) { var d = e.data || {}; if (d.cw) { cwPeople = d.cw; cwDraw(); } });
+  addEventListener('scroll', function () { if (cwPeople.length) cwDraw(); }, { passive: true });
+  addEventListener('resize', function () { if (cwPeople.length) cwDraw(); });
+  setInterval(function () { if (cwPeople.length) cwDraw(); }, 500);   // the page swaps in place when the design changes
   markItems();
   var w0 = wide(); post({ t: 'ready', sw: w0.sw, iw: w0.iw, wide: w0.wide });
 })();

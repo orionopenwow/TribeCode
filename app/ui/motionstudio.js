@@ -39,6 +39,7 @@
   const mp4State = () => !('VideoEncoder' in window) ? 'no-encoder' : mp4Mod ? 'ready' : mp4Err ? 'failed' : 'untried';
   async function loadMp4() { if (mp4Mod) return mp4Mod; try { mp4Mod = await mp4Loader(); mp4Err = ''; return mp4Mod; } catch (e) { mp4Err = String((e && e.message) || e || 'failed'); throw e; } }
 
+  let cw = null, crStrip = null, canEdit = true, canSuggest = false, pendingDraft = false, base = '', baseDoc = null;   // feat/cowork-editors
   let root = null, doc = null, key = '', pid = '', local = '', t = 0, playing = false, raf = 0, last = 0, sel = 0, hist = [], fut = [], saveT = 0, savedAt = '', tab = 'tpl', pick = null, audio = null, fontsReady = null;
 
   // ---------- fonts: the engine draws with Inter (bundled, SIL OFL) ----------
@@ -66,6 +67,7 @@
 
   // ---------- history ----------
   function change(fn, note) {
+    if (cw && sel >= 0 && cw.lockedBy('st:' + sel)) { const before = JSON.stringify(doc.states[sel]); const r0 = fn(clone(doc)); const after = r0 && r0.states ? JSON.stringify(K().normalize(r0).states[sel]) : before; if (after !== before) { cw.guard('st:' + sel); return; } }   // feat/cowork-editors: someone else is changing this state
     hist.push(JSON.stringify(doc)); if (hist.length > 80) hist.shift(); fut = [];
     const r = fn(clone(doc)); if (r) doc = r; doc = K().normalize(doc); doc.rev = (doc.rev || 0) + 1;
     if (sel >= doc.states.length) sel = doc.states.length - 1;
@@ -80,6 +82,7 @@
   async function save() {
     clearTimeout(saveT); saveT = 0; if (!doc) return;
     try {
+      if (pid && canEdit === false) { pendingDraft = JSON.stringify(doc.states) + doc.name !== base; try { localStorage.setItem(DRAFTK(), pendingDraft ? JSON.stringify(doc) : ''); } catch {} setSaved(canSuggest ? (pendingDraft ? tr('Draft: suggest it to share') : '') : tr('View only')); if (crStrip) crStrip.draw(); return; }   // feat/cowork-editors
       if (pid) { if (!key) key = slug(doc.name) + '-' + rid(); window.__mosSelfAt = Date.now(); await C.api(`/projects/${encodeURIComponent(pid)}/motion/${encodeURIComponent(key)}`, { method: 'PUT', body: { doc } }); }
       else if (window.TribeLocalFiles && window.TribeLocalFiles.KINDS && window.TribeLocalFiles.KINDS.motion) {
         const LF = window.TribeLocalFiles; await LF.ready;
@@ -94,15 +97,20 @@
   async function open(o = {}) {
     if (!K()) { toast(tr('Motion Studio did not load. Reload the app.')); return null; }
     await loadFonts();
-    pid = o.pid !== undefined ? o.pid : projectId(); key = o.key || ''; local = o.local || ''; hist = []; fut = []; sel = 0; t = 0;
+    pid = o.pid !== undefined ? o.pid : projectId(); key = o.key || ''; local = o.local || ''; hist = []; fut = []; sel = 0; t = 0; canEdit = true; canSuggest = false; pendingDraft = false;
+    if (pid && !key && window.TribeChanges) { try { const h = (await window.TribeChanges.how(pid)).motion; if (h) { canEdit = h.can !== false; canSuggest = !h.can && !h.watch; } } catch {} }
     let d = null;
     if (o.doc) d = o.doc;
-    else if (key && pid) { try { d = (await C.api(`/projects/${encodeURIComponent(pid)}/motion/${encodeURIComponent(key)}`)).doc; } catch (e) { toast(e.message); } }
+    else if (key && pid) { try { const r0 = await C.api(`/projects/${encodeURIComponent(pid)}/motion/${encodeURIComponent(key)}`); d = r0.doc; canEdit = r0.canEdit !== false; canSuggest = !!r0.canSuggest; } catch (e) { toast(e.message); } }
     else if (local && window.TribeLocalFiles) { try { const it = await window.TribeLocalFiles.get(local); d = it && JSON.parse(it.body || 'null'); } catch {} }
     if (!d) d = K().make(o.template || 'ui-reel', { screens: o.screens, name: o.name, caption: o.caption, cta: o.cta, accent: o.accent || brandAccent(), aspect: o.aspect, size: o.size });
     doc = K().normalize(d); doc.rev = (doc.rev || 0) + 1;
+    base = JSON.stringify(doc.states) + doc.name;
+    if (pid && canEdit === false) { try { const dr = JSON.parse(localStorage.getItem(DRAFTK()) || 'null'); if (dr && dr.states) { doc = K().normalize(dr); pendingDraft = true; } } catch {} }
+    baseDoc = clone(K().normalize(d));
     await K().load(doc);
     mount();
+    coworkOn();
     if (!key && !local) scheduleSave();
     if (o.ask) setTimeout(() => ask(o.ask), 50);
     play(o.autoplay !== false && !matchMedia('(prefers-reduced-motion: reduce)').matches && !navigator.webdriver);
@@ -111,8 +119,59 @@
   function brandAccent() { try { const b = window.TribeBrand && window.TribeBrand.get && window.TribeBrand.get(); return b && b.accent || undefined; } catch { return undefined; } }
   // Closing saves only what has not been saved yet: a second save would make an unchanged graphic look newer than
   // the things it was made from (the suggestions compare those times).
-  function close() { play(false); stopAudio(); const pending = !!saveT || (doc && !key && !local); clearTimeout(saveT); saveT = 0; if (doc && pending) save(); if (root) root.remove(); root = null; document.body.classList.remove('mos-on'); }
+  function close() { if (cw) { cw.detach(); cw = null; } crStrip = null; play(false); stopAudio(); const pending = !!saveT || (doc && !key && !local); clearTimeout(saveT); saveT = 0; if (doc && pending) save(); if (root) root.remove(); root = null; document.body.classList.remove('mos-on'); }
   const isOpen = () => !!root && document.body.contains(root);
+
+  // ---------- working together (feat/cowork-editors) ----------
+  // A spot on the preview is "cv" plus where on the canvas; a spot on the timeline is "tl" plus where along it; a state is
+  // "st:<n>". Everyone sees each other's pointer on the same frame position at any window size.
+  const DRAFTK = () => `tribecode.motion.draft.${pid}.${key || 'new'}`;
+  function snapOf(d, at) {
+    try {
+      const keep = doc; doc = d; const c = document.createElement('canvas'); c.width = Math.round(d.size.w / 5); c.height = Math.round(d.size.h / 5);
+      paint(c, at == null ? K().beatSec(d, d.thumbAt >= 0 ? d.thumbAt : 2) : at, 30); doc = keep; return c.toDataURL('image/jpeg', 0.82);
+    } catch { return null; }
+  }
+  function motionSummary(b, d) {
+    if (!b) return [tr('A new motion graphic')];
+    const out = [], name = s => (s && (s.text || s.label || s.kind)) || '';
+    if (b.name !== d.name) out.push(`${tr('Renamed it to')} ${d.name}`);
+    if (b.states.length !== d.states.length) out.push(`${d.states.length > b.states.length ? tr('Added') : tr('Removed')} ${Math.abs(d.states.length - b.states.length)} ${tr('states')}`);
+    d.states.forEach((s, i) => { if (b.states[i] && JSON.stringify(b.states[i]) !== JSON.stringify(s)) out.push(`${tr('Changed state')} ${i + 1}${name(s) ? ` (${String(name(s)).slice(0, 40)})` : ''}`); });
+    if (b.bpm !== d.bpm) out.push(`${tr('Tempo')} ${b.bpm} → ${d.bpm} BPM`);
+    if (b.aspect !== d.aspect) out.push(`${tr('Size')} ${b.aspect} → ${d.aspect}`);
+    if (JSON.stringify(b.theme) !== JSON.stringify(d.theme)) out.push(tr('Changed the colours'));
+    return out.slice(0, 8);
+  }
+  function coworkOn() {
+    if (cw) { cw.detach(); cw = null; }
+    if (!root || !pid || !C || !C.connected || !C.connected()) return;
+    if (window.TribeChanges) crStrip = window.TribeChanges.strip($('#mos-cr', root), 'motion', { pid, draft: () => doc, key: () => key || (key = slug(doc.name) + '-' + rid()), dirty: () => !!pendingDraft,
+      before: () => (baseDoc ? snapOf(baseDoc) : null), after: () => snapOf(doc), summary: () => motionSummary(baseDoc, doc),
+      onSent: r => { if (r && (r.request || r.applied)) { pendingDraft = false; try { localStorage.removeItem(DRAFTK()); } catch {} setSaved(tr(r.applied ? 'Saved' : 'Sent for OK')); if (crStrip) crStrip.draw(); } } });
+    if (!window.TribeCowork) return;
+    cw = window.TribeCowork.attach('motion', {
+      key: () => `${pid}:${key || ''}`,
+      row: $('#mos-cw', root),
+      anchorAt: (x, y) => {
+        if (!root) return null;
+        const cv = $('#mos-cv', root), tl = $('.mos-tl-in', root) || $('#mos-tl', root), hit = (el, p) => { if (!el) return null; const r = el.getBoundingClientRect(); return x >= r.left && x <= r.right && y >= r.top && y <= r.bottom && r.width && r.height ? { p, x: (x - r.left) / r.width, y: (y - r.top) / r.height } : null; };
+        return hit(cv, 'cv') || hit(tl, 'tl');
+      },
+      rect: p => {
+        if (!root) return null;
+        if (p === 'cv') { const cv = $('#mos-cv', root); return cv ? cv.getBoundingClientRect() : null; }
+        if (p === 'tl') { const tl = $('.mos-tl-in', root) || $('#mos-tl', root); return tl ? tl.getBoundingClientRect() : null; }
+        const m = /^st:(\d+)$/.exec(String(p || '')); if (!m) return null;
+        const ch = root.querySelector(`.mos-chip[data-i="${m[1]}"]`); return ch ? ch.getBoundingClientRect() : null;
+      },
+      label: p => { const m = /^st:(\d+)$/.exec(String(p || '')); const s = m && doc && doc.states[+m[1]]; return s ? `${tr('state')} ${+m[1] + 1}${s.text ? ` (${String(s.text).slice(0, 30)})` : ''}` : tr('the preview'); },
+      blockOf: p => String(p || ''),
+    });
+    // what I'm changing: a state's settings in the Edit pane
+    root.addEventListener('focusin', e => { if (cw && e.target.closest && e.target.closest('#mos-pane') && tab === 'edit') cw.editing('st:' + sel); });
+    root.addEventListener('focusout', e => { if (cw && e.target.closest && e.target.closest('#mos-pane')) setTimeout(() => { if (cw && !(document.activeElement && document.activeElement.closest && document.activeElement.closest('#mos-pane'))) cw.editing(null); }, 0); });
+  }
 
   // ---------- the editor ----------
   const TABS = [['tpl', 'Templates', 'template'], ['states', 'States', 'list'], ['edit', 'Edit', 'sliders'], ['feel', 'Feel', 'sparkle'], ['sound', 'Sound', 'mic'], ['export', 'Export', 'download']];
@@ -124,11 +183,13 @@
         <button type="button" class="mos-ib" id="mos-close" aria-label="Close">${icon('x', 18)}</button>
         <div class="mos-title"><span class="eyebrow">MOTION</span><input id="mos-name" class="mos-name" aria-label="Name" maxlength="80"></div>
         <span class="mos-saved faint" id="mos-saved"></span>
+        <span class="cw-row" id="mos-cw" hidden></span>
         <div class="mos-undo"><button type="button" class="mos-ib" id="mos-undo" aria-label="Undo"><svg class="mos-i" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M9 14L4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/></svg></button></div>
         <form class="mos-flint" id="mos-flint"><span class="mos-fl-i">${icon('flame', 16)}</span><input id="mos-ask" autocomplete="off" placeholder="Tell Flint: snappier, make it 9:16, add a toast" aria-label="Tell Flint what to change"><button type="submit" class="btn" id="mos-ask-go">Go</button></form>
         <button type="button" class="btn" id="mos-ai">Have my AI do it</button>
         <button type="button" class="btn primary" id="mos-export-btn">Export</button>
       </header>
+      <div class="cr-strip" id="mos-cr" hidden></div>
       <p class="mos-say" id="mos-say" role="status" aria-live="polite"></p>
       <div class="mos-body">
         <aside class="mos-side" id="mos-side">
@@ -147,7 +208,7 @@
           <div class="mos-tl" id="mos-tl" aria-label="Beat timeline"></div>
         </main>
       </div>`;
-    document.body.append(root); document.body.classList.add('mos-on');
+    document.body.append(root); document.body.classList.add('mos-on'); root.classList.add('has-cr');
     $('#mos-close', root).onclick = close;
     $('#mos-undo', root).onclick = undo;
     const nm = $('#mos-name', root); nm.value = doc.name; nm.onchange = () => change(d => { d.name = nm.value.trim() || 'Motion graphic'; return d; });
@@ -206,6 +267,7 @@
 
   // ---------- timeline ----------
   function renderTimeline() {
+    if (cw) cw.select('st:' + sel);
     const tl = root && $('#mos-tl', root); if (!tl) return;
     const beats = doc.bars * doc.beatsPerBar, KN = K().KINDS;
     tl.innerHTML = `<div class="mos-tl-in">${Array.from({ length: beats }, (_, b) => `<span class="mos-beat${b % doc.beatsPerBar === 0 ? ' bar' : ''}" style="left:${b / beats * 100}%">${b % doc.beatsPerBar === 0 ? b / doc.beatsPerBar + 1 : ''}</span>`).join('')}
@@ -524,7 +586,7 @@ K.load(d).then(function(){function f(n){K.draw(g,d,still?K.beatSec(d,d.thumbAt>=
     try { await navigator.clipboard.writeText(brief + (ask0 || '…')); say(tr('Copied a brief for your AI. Paste it into Claude Code, Codex or Gemini.')); } catch { say(brief); }
   }
   // live updates from teammates and agents
-  if (C && C.on) try { C.on('ws', async m => { if (!m || m.type !== 'motion' || !isOpen() || !pid || m.project !== pid || m.key !== key || Date.now() - (window.__mosSelfAt || 0) < 1500) return; try { const r = await C.api(`/projects/${encodeURIComponent(pid)}/motion/${encodeURIComponent(key)}`); if (r && r.updated !== savedAt && r.doc) { doc = K().normalize(r.doc); doc.rev++; await K().load(doc); renderAll(); say(`${tr('Updated by')} ${r.by || tr('someone')}.`); } } catch {} }); } catch {}
+  if (C && C.on) try { C.on('ws', async m => { if (!m || m.type !== 'motion' || !isOpen() || !pid || m.project !== pid || m.key !== key || Date.now() - (window.__mosSelfAt || 0) < 1500) return; try { const r = await C.api(`/projects/${encodeURIComponent(pid)}/motion/${encodeURIComponent(key)}`); if (r && r.updated !== savedAt && r.doc) { base = JSON.stringify(K().normalize(r.doc).states) + K().normalize(r.doc).name; baseDoc = K().normalize(r.doc); if (pendingDraft || saveT) { say(tr('A friend changed this. Your draft stays yours until you send it.')); return; } doc = K().normalize(r.doc); doc.rev++; await K().load(doc); renderAll(); say(`${tr('Updated by')} ${r.by || tr('someone')}.`); } } catch {} }); } catch {}
 
   // ---------- suggestions (window.TribeSuggest, feature-detected) ----------
   function registerSuggest() {

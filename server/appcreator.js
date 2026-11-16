@@ -17,7 +17,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const A = require('../app/ui/appcreator-core.js');
 
-module.exports = function appCreator({ P, store, root, broadcast = () => {}, nameOf = x => x, ensureRepo = null, log = () => {} }) {
+module.exports = function appCreator({ P, store, root, perms = null, requests = () => null, broadcast = () => {}, nameOf = x => x, ensureRepo = null, log = () => {} }) {
   const FONTS = [path.join(root, 'app', 'ui', 'assets', 'site-fonts'), path.join(root, 'ui', 'assets', 'site-fonts')].find(d => fs.existsSync(d)) || path.join(root, 'app', 'ui', 'assets', 'site-fonts');
   const rel = pid => `.tribe/appdesign/${String(pid).replace(/[^\w-]/g, '')}.json`;
   const loadRaw = pid => store.readJSON(rel(pid), null);
@@ -73,10 +73,17 @@ module.exports = function appCreator({ P, store, root, broadcast = () => {}, nam
     if (!me) return fail(res, 401, 'not a member');
     if (a !== 'projects' || c !== 'app-config') return fail(res, 404, 'not found');
     const p = P.get(b); if (!p || (P.canSee && !P.canSee(me, p.id))) return fail(res, 404, 'project not found');
-    const canEdit = me.role !== 'spectator' && me.role !== 'guest' && (p.members || {})[me.id] !== 'spectator';
+    const mayRole = me.role !== 'spectator' && me.role !== 'guest' && (p.members || {})[me.id] !== 'spectator';
+    const canEdit = mayRole && (!perms || perms.can(me, 'app.edit', p.id));   // feat/cowork-editors: a row in the table (app.edit)
     try {
-      if (!d && m === 'GET') { const r = loadRaw(p.id); return send(res, 200, { config: r ? A.normalize(r) : null, rev: (r && r.rev) || 0, savedBy: r && r.savedBy ? nameOf(r.savedBy) : '', savedAt: (r && r.savedAt) || '', canEdit }); }
-      if (!canEdit) return fail(res, 403, 'spectators can look, not change the app');
+      if (!d && m === 'GET') { const r = loadRaw(p.id); return send(res, 200, { config: r ? A.normalize(r) : null, rev: (r && r.rev) || 0, savedBy: r && r.savedBy ? nameOf(r.savedBy) : '', savedAt: (r && r.savedAt) || '', canEdit, canSuggest: mayRole && !canEdit }); }
+      if (!canEdit && !d && m === 'PUT' && mayRole && requests()) {
+        const body = await readBody(req, 4 * 1024 * 1024); if (!body || typeof body.config !== 'object') return fail(res, 400, 'config missing');
+        if (me.role === 'agent' || body.asRequest) return send(res, 202, requests().fromRefusal(p.id, me, 'app', body.config, { title: body.title, why: body.why, summary: body.summary, before: body.before, after: body.after }));
+        perms.can(me, 'app.edit', p.id);
+        return fail(res, 403, 'changing the app needs someone’s OK here: suggest the change instead');
+      }
+      if (!canEdit) return fail(res, 403, mayRole ? 'changing the app needs someone’s OK here' : 'spectators can look, not change the app');
       if (!d && m === 'PUT') {
         const body = await readBody(req, 4 * 1024 * 1024); if (!body || typeof body.config !== 'object') return fail(res, 400, 'config missing');
         const cur = loadRaw(p.id);
@@ -96,5 +103,5 @@ module.exports = function appCreator({ P, store, root, broadcast = () => {}, nam
     save(pid, r.doc, me);
     return { added: r.added || [], say: r.say };
   }
-  return { route, addKit, load: pid => { const r = loadRaw(pid); return r ? A.normalize(r) : null; } };
+  return { route, addKit, save: (pid, cfg, me) => save(pid, cfg, me), load: pid => { const r = loadRaw(pid); return r ? A.normalize(r) : null; } };
 };

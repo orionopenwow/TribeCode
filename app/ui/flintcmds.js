@@ -22,8 +22,49 @@
   function motion(on) { document.documentElement.dataset.motion = on ? '' : 'off'; if (on) delete document.documentElement.dataset.motion; ls.set('tribecode.motion', on ? null : 'off'); }
   const timers = new Map();
   // the tribe's suggestions (app/ui/suggest.js): list, less/more/off/on, mute one kind, why
+  // which creator tool a sentence means, or the one that is open now
+  const TOOLW = t => { t = String(t || '').toLowerCase(); return /motion|clip|video/.test(t) ? 'motion' : /launch|store/.test(t) ? 'launch' : /^(?:the\s+)?(?:phone\s+)?app|app design/.test(t) ? 'app' : /site|page/.test(t) ? 'site' : ''; };
+  function openTool() {
+    const SD = window.TribeSiteDesigner, A = window.TribeAppCreator, M = window.TribeMotionStudio, LK = window.TribeLaunchKit;
+    if (M && M.isOpen && M.isOpen()) return 'motion';
+    if (A && A.state && A.state() && A.state().open) return 'app';
+    if (LK && LK.state && LK.state() && LK.state().open) return 'launch';
+    if (SD && SD.state && SD.state() && SD.state().open) return 'site';
+    return '';
+  }
+  const TOOLN = { site: 'the website', app: 'the phone app', motion: 'motion graphics', launch: 'the store page', publish: 'publishing' };
+  async function CH(what, toolWord, extra) {
+    const X = window.TribeChanges; if (!X) return { text: 'Changes are not available here.' };
+    const how = await X.how(null, true), tool = TOOLW(toolWord) || (what === 'why' && /publish/i.test(extra || '') ? 'publish' : '') || openTool() || 'site', h = how[tool];
+    if (what === 'mine') { X.sheet(); return { text: 'Here are the suggested changes: yours, and the ones waiting for your OK.' }; }
+    if (!h) return { text: 'Join a tribe first: changes are decided by the people in it.' };
+    if (what === 'who') {
+      const who = (h.who || []).join(', ');
+      if (h.can) return { text: `You can change ${TOOLN[tool]} directly here.${who ? ` If you'd like a second look, ${who} can also decide.` : ''}` };
+      return { text: h.rule === 'council' ? `The council approves changes to ${TOOLN[tool]}: ${who} (${h.mark} of ${h.of} need to say yes).` : who ? `${who} can approve changes to ${TOOLN[tool]}.` : `Nobody here can approve changes to ${TOOLN[tool]} yet. Ask the computer’s owner.` };
+    }
+    if (what === 'why') {
+      if (h.can) return { text: tool === 'publish' ? 'You can publish here. Open Publish to send it out.' : `You can change ${TOOLN[tool]} directly. If something didn't save, check that you're online.` };
+      if (h.watch) return { text: 'You can look but not change things: people who only watch stay read-only. Ask the owner to make you a builder.' };
+      return { text: tool === 'publish' ? `Publishing needs an OK here. Press "Ask to publish" in the Publish sheet and ${(h.who || []).slice(0, 3).join(', ') || 'the people who decide'} get it.` : `This group asks for an OK before changes to ${TOOLN[tool]} go live. ${h.line} Keep editing: it stays your draft until you press "Suggest this change".`, acts: [['See requests', 'ask', 'show my change requests']] };
+    }
+    if (what === 'send') {
+      const open = openTool();
+      if (!open) return { text: 'Open the thing you changed (the website, the app, a motion graphic or the store page), then say it again.' };
+      const h2 = how[open]; if (h2 && h2.can) return { text: `You can change ${TOOLN[open]} directly, so it is already saved.` };
+      const strip = document.querySelector('.cr-strip [data-cr-suggest]');
+      if (strip && !strip.disabled) { strip.click(); return { text: `Opening the suggestion for ${TOOLN[open]}. Add a reason if you like, then press Send for OK.` }; }
+      return { text: 'There is nothing new to send yet: change something first, and it becomes your draft.' };
+    }
+    return null;
+  }
   const SG = async (what, arg) => window.TribeSuggest ? { text: await window.TribeSuggest.flint(what, arg) } : { text: 'Suggestions are not available here.' };
   const RUN = {
+    // feat/cowork-editors: how changes work here (app/ui/changes.js)
+    async 'changes.who'(s) { return CH('who', s.slots.tool); },
+    async 'changes.why'(s) { return CH('why', s.slots.tool, s.slots.verb); },
+    async 'changes.send'(s) { return CH('send', s.slots.tool, s.slots.who || s.slots.who2 || s.slots.who3); },
+    async 'changes.mine'() { return CH('mine'); },
     'suggest.list'(s) { return SG('list', s.slots.about); },
     'suggest.less'() { return SG('less'); },
     'suggest.more'() { return SG('more'); },

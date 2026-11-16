@@ -44,6 +44,11 @@ const CAPS = [
   { id: 'ai.use_host_brain', group: 'Projects', label: 'Use the host\'s AI brain', roles: ['admin', 'mod', 'builder'] },
   { id: 'site.edit', group: 'Projects', label: 'Change the website (words, pictures, sections)', roles: ['admin', 'mod', 'builder'] },   // feat/site-editor2: a row, so a group's own roles can hold it and others can ask
   { id: 'site.publish', group: 'Projects', label: 'Publish the website or app for everyone', roles: ['admin', 'mod', 'builder'] },   // feat/group-styles: was "anyone building" in publishreal.js; now a row
+  // feat/cowork-editors: each creator tool is a row, so a group decides who changes what and the rest suggest changes
+  // (server/changereq.js turns a refused change into a request the right people approve with one tap)
+  { id: 'app.edit', group: 'Projects', label: 'Change the phone app design (App Creator)', roles: ['admin', 'mod', 'builder'] },
+  { id: 'motion.edit', group: 'Projects', label: 'Change motion graphics and clips', roles: ['admin', 'mod', 'builder'] },
+  { id: 'launch.edit', group: 'Projects', label: 'Change the store page (Launch kit)', roles: ['admin', 'mod', 'builder'] },
   { id: 'group.decide', group: 'Community', label: 'Change how the group decides, its roles and words', roles: ['admin'] },   // feat/group-styles (server/groupstyle.js)
   // Host only, hard-coded where they are checked, never overridable.
   { id: 'tribe.hosting', group: 'Host only', label: 'Hosting, sharing and tunnels', locked: true },

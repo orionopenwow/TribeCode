@@ -16,6 +16,7 @@
   const LOCAL = 'tribecode.sitedesigner.local';
   const connected = () => !!(C && C.connected && C.connected() && C.hasToken && C.hasToken());
   let root = null, st = null, saveT = 0, frameScroll = 0, liveText = null, liveT = 0;
+  let cw = null, crStrip = null, cwEditing = '';   // feat/cowork-editors: who else is here (cowork.js), how changes work here (changes.js)
 
   const EDIT_CSS = `<style>[data-e]{cursor:text;border-radius:2px}[data-e]:hover{outline:1px dashed var(--muted);outline-offset:2px}[data-e]:focus{outline:2px solid var(--accent);outline-offset:2px}
 [data-block]{position:relative}[data-block]:hover{outline:1px dashed var(--line);outline-offset:-1px}.wdz-sel{outline:2px solid var(--accent)!important;outline-offset:-2px}
@@ -44,6 +45,7 @@ html[data-dev=phone] .ehide-phone,html[data-dev=tablet] .ehide-tablet,html[data-
   const writeDraft = () => { if (!st) return; if (/^demo_/.test(st.pid || '') && !(window.TribeOffline && window.TribeOffline.active && window.TribeOffline.active())) return; try { localStorage.setItem(DKEY(st.pid), JSON.stringify({ cfg: st.cfg, at: Date.now(), rev: st.rev, dirty: st.dirty })); if (!st.pid) localStorage.setItem(LOCAL, JSON.stringify(st.cfg)); } catch {} };
   function commit(next, opts = {}) {
     if (!next || next === st.cfg) return false;
+    if (lockedChange(next)) { paint(); return false; }   // someone else is typing in this part: "Ana is editing this; ask or wait"
     const was = JSON.stringify(st.cfg);
     st.hist.push(was); if (st.hist.length > 80) st.hist.shift(); st.fut = [];
     st.cfg = S().normalize(next);
@@ -92,6 +94,10 @@ html[data-dev=phone] .ehide-phone,html[data-dev=tablet] .ehide-tablet,html[data-
     clearTimeout(saveT); saveT = 0; if (!st || !st.dirty) return true;
     const pid = st.pid, cfg = st.cfg, mine = JSON.stringify(cfg);
     if (!pid || !connected()) { st.dirty = false; st.savedAt = Date.now(); writeDraft(); status(); return true; }
+    if (st.canEdit === false) {   // feat/cowork-editors: a suggestion in the making stays on this device until it is sent
+      st.dirty = false; st.pendingDraft = st.canSuggest && mine !== st.base; writeDraft();
+      status(st.canSuggest ? (st.pendingDraft ? tr('Draft: suggest it to share') : '') : tr('View only')); if (crStrip) crStrip.draw(); return true;
+    }
     try {
       const r = await C.api(`/projects/${encodeURIComponent(pid)}/site-config`, { method: 'PUT', body: { config: cfg, base: st.rev, force: !!opts.force }, keepalive: !!opts.keepalive });
       if (!st || st.pid !== pid) return true;
@@ -126,6 +132,71 @@ html[data-dev=phone] .ehide-phone,html[data-dev=tablet] .ehide-tablet,html[data-
     say(how === 'both' ? 'Kept both: their design is in Saved designs, yours is the design now.' : 'Kept yours.');
   }
 
+  // ---------- working together (feat/cowork-editors) ----------
+  // A thing on the page is "<kind>:<block>|<path>" (the same key the preview uses), so pointers and outlines land on the
+  // same words, picture or section at any window size. The preview is a sandboxed frame: it measures its own pointer
+  // (cw-ptr) and draws the others itself ({ cw: people }).
+  const blockOfP = p => { const k = String(p || ''); return k.slice(k.indexOf(':') + 1).split('|')[0]; };
+  function thingLabel(p) {
+    const k = String(p || ''), kind = k.slice(0, k.indexOf(':')), key = k.slice(k.indexOf(':') + 1), bid = key.split('|')[0], path = key.slice(bid.length + 1);
+    const b = st && pageNow().blocks.find(x => x.id === bid); if (!b) return '';
+    const sec = String(b.type || 'section').replace(/[-_]/g, ' ');
+    const word = /title|head/i.test(path) ? tr('title') : kind === 'image' ? tr('picture') : kind === 'button' ? tr('button') : kind === 'text' ? tr('words') : '';
+    return word ? `${sec} · ${word}` : sec;
+  }
+  function lockedChange(next) {
+    if (!cw || !st.sel || cwEditing) return false;
+    const p = `${st.sel.kind || 'block'}:${st.sel.block}|${st.sel.path || ''}`; if (!cw.lockedBy(p)) return false;
+    const pg = x => (x.pages.find(q => q.id === st.page) || x.pages[0]).blocks.find(b => b.id === st.sel.block);
+    let after = null; try { after = pg(S().normalize(next)); } catch {}
+    if (JSON.stringify(pg(st.cfg)) === JSON.stringify(after)) return false;
+    cw.guard(p); return true;
+  }
+  // what a suggestion changes, in words (the website has no picture of itself here; the summary says it)
+  function siteSummary(baseJson, cfg) {
+    let b = null; try { b = baseJson ? S().normalize(JSON.parse(baseJson)) : null; } catch {}
+    if (!b) return [tr('A new website design')];
+    const out = [], words = o => { const l = []; const walk = x => { if (typeof x === 'string') { if (x.trim() && !/^(#|data:|https?:)/.test(x)) l.push(x.trim()); } else if (Array.isArray(x)) x.forEach(walk); else if (x && typeof x === 'object') Object.values(x).forEach(walk); }; walk(o); return l; };
+    for (const pg of cfg.pages) {
+      const old = b.pages.find(x => x.id === pg.id); if (!old) { out.push(`${tr('Added the page')} ${pg.title || pg.id}`); continue; }
+      for (const blk of pg.blocks) {
+        const ob = old.blocks.find(x => x.id === blk.id), sec = String(blk.type || 'section').replace(/[-_]/g, ' ');
+        if (!ob) { out.push(`${tr('Added a section:')} ${sec}`); continue; }
+        if (JSON.stringify(ob) === JSON.stringify(blk)) continue;
+        const a = words(ob.props), z = words(blk.props), gone = a.filter(x => !z.includes(x)), came = z.filter(x => !a.includes(x));
+        if (gone.length === 1 && came.length === 1) out.push(`${sec}: “${gone[0].slice(0, 60)}” → “${came[0].slice(0, 60)}”`);
+        else out.push(`${tr('Changed the section')} ${sec}`);
+      }
+      old.blocks.filter(x => !pg.blocks.some(y => y.id === x.id)).forEach(x => out.push(`${tr('Removed a section:')} ${String(x.type || 'section').replace(/[-_]/g, ' ')}`));
+    }
+    b.pages.filter(x => !cfg.pages.some(y => y.id === x.id)).forEach(x => out.push(`${tr('Removed the page')} ${x.title || x.id}`));
+    if (JSON.stringify(b.theme) !== JSON.stringify(cfg.theme)) out.push(tr('Changed the look'));
+    return out.slice(0, 8);
+  }
+  function postCw(people) { const f = $('#wdz-frame'); if (f && f.contentWindow && frameReady) f.contentWindow.postMessage({ cw: people || [] }, '*'); }
+  function coworkOn() {
+    if (cw) { cw.detach(); cw = null; }
+    if (!root || !st || !st.pid || !connected()) return;
+    let row = $('#wdz-cw'); if (!row) { const top = root.querySelector('.wdz-top'); if (top) { row = document.createElement('span'); row.id = 'wdz-cw'; row.className = 'cw-row'; row.hidden = true; const sv = $('#wdz-saved'); if (sv && sv.parentNode === top) sv.after(row); else top.appendChild(row); } }
+    let strip = $('#wdz-cr'); if (!strip) { const top = root.querySelector('.wdz-top'); if (top) { strip = document.createElement('div'); strip.id = 'wdz-cr'; strip.className = 'cr-strip'; strip.hidden = true; top.after(strip); root.classList.add('has-cr'); } }
+    if (window.TribeChanges && strip) crStrip = window.TribeChanges.strip(strip, 'site', { pid: st.pid, draft: () => st.cfg, dirty: () => !!st.pendingDraft, summary: () => siteSummary(st.base, st.cfg),
+      onSent: r => { if (r && (r.request || r.applied)) { st.pendingDraft = false; status(tr(r.applied ? 'Saved' : 'Sent for OK')); if (crStrip) crStrip.draw(); } } });
+    if (!window.TribeCowork) return;
+    cw = window.TribeCowork.attach('site', { key: () => (st && st.pid) || '', row, framePointer: true, anchorAt: () => null, rect: () => null, label: thingLabel, blockOf: blockOfP, draw: people => postCw(people) });
+  }
+  // someone else saved: an open designer with nothing unsaved takes their version (no reload); unsaved work keeps the
+  // Keep mine / Keep theirs choice, and a draft waiting to be suggested stays the person's own
+  if (C && C.on) C.on('ws', m => {
+    if (!m || m.type !== 'site-config' || !st || !root || root.hidden || m.project !== st.pid) return;
+    if ((m.rev || 0) <= (st.rev || 0) || (C.state && C.state().me && m.by === C.state().me.id)) return;
+    C.api(`/projects/${encodeURIComponent(st.pid)}/site-config`).then(r => {
+      if (!st || !r || !r.config || (r.rev || 0) <= (st.rev || 0)) return;
+      st.base = JSON.stringify(S().normalize(r.config));
+      if (st.dirty || liveText || st.pendingDraft) { if (st.pendingDraft) status(tr('A friend changed the site. Your draft stays yours until you send it.')); return; }
+      st.cfg = S().normalize(r.config); st.rev = r.rev; fixPage(); paint(); status(tr('Updated with a friend’s change'));
+    }).catch(() => {});
+  });
+
   // ---------- open / close ----------
   // open({ pid, template, prompt, cfg, ask }): the Design creation flow and Flint call this. template = a gallery id
   // (ours or an imported one); prompt = what the person said ("a link tree for June Bakes"): it can pick the template
@@ -140,7 +211,9 @@ html[data-dev=phone] .ehide-phone,html[data-dev=tablet] .ehide-tablet,html[data-
     let restored = false;
     if (d && (!cfg || (d.dirty && (d.rev || 0) >= rev) || (!connected() && d.at))) { cfg = d.cfg; restored = !!d.dirty && !!server; }
     mount();
-    st = fresh(cfg || S().blank(projectName(pid)), pid); st.rev = rev; st.savedAt = d && d.at || (server && server.savedAt ? Date.parse(server.savedAt) : 0);
+    st = fresh(cfg || S().blank(projectName(pid)), pid); st.rev = rev;
+    if (server) { st.canEdit = server.canEdit !== false; st.canSuggest = !!server.canSuggest; st.base = server.config ? JSON.stringify(S().normalize(server.config)) : ''; st.pendingDraft = !st.canEdit && !!d && !!d.cfg && JSON.stringify(st.cfg) !== st.base; }
+    st.savedAt = d && d.at || (server && server.savedAt ? Date.parse(server.savedAt) : 0);
     st.page = st.cfg.pages[0].id;
     root.hidden = false; document.body.classList.add('wdz-open');
     { const f = $('#wdz-frame'); if (f && f.srcdoc) { const n = f.cloneNode(false); n.removeAttribute('srcdoc'); f.replaceWith(n); } }   // a frame that was inside the hidden designer can stay unpainted in Chrome: start a fresh one
@@ -152,6 +225,7 @@ html[data-dev=phone] .ehide-phone,html[data-dev=tablet] .ehide-tablet,html[data-
     else if (!cfg) showStart(); else paint();
     chipKey = ''; logPaint();   // feat/flint-unify: this design's thread and chips
     status(); await loadComments();
+    coworkOn();
     if (SG()) { SG().reset(); SG().refresh(sgApi()).catch(() => {}); }
     try { if (STU()) STU().opened(stuApi); } catch {}
     try { if (window.TribeSiteFxUI) window.TribeSiteFxUI.opened(stuApi); } catch {}   // feat/site-3d
@@ -159,7 +233,7 @@ html[data-dev=phone] .ehide-phone,html[data-dev=tablet] .ehide-tablet,html[data-
     const ask2 = o.ask || rest; if (ask2) setTimeout(() => ask(ask2), 60);
     return st;
   }
-  function close() { if (!root) return; try { if (STU()) STU().closed(); } catch {} flush(); root.hidden = true; document.body.classList.remove('wdz-open'); if (location.hash === '#/site-designer') history.back(); }
+  function close() { if (!root) return; if (cw) { cw.detach(); cw = null; } crStrip = null; try { if (STU()) STU().closed(); } catch {} flush(); root.hidden = true; document.body.classList.remove('wdz-open'); if (location.hash === '#/site-designer') history.back(); }
   function projectName(pid) { try { const p = ((C.state && C.state().projects) || []).find(x => x.id === pid); return (p && p.name) || 'My site'; } catch { return 'My site'; } }
   // a template as a config: the static gallery first (works with no tribe and offline), then the host, then the model
   const inlineImgs = async c => { const walk = async o => { if (Array.isArray(o)) { for (const x of o) await walk(x); return; } if (!o || typeof o !== 'object') return; for (const k of Object.keys(o)) { if ((k === 'img' || k === 'logo') && typeof o[k] === 'string' && o[k] && !/^data:/.test(o[k])) o[k] = await toData(o[k]); else await walk(o[k]); } }; await walk(c); return c; };
@@ -329,8 +403,9 @@ html[data-dev=phone] .ehide-phone,html[data-dev=tablet] .ehide-tablet,html[data-
   function onFrame(e) {
     const d = e.data; if (!d || !d.sd || !root || root.hidden) return;
     const f = $('#wdz-frame'); if (!f || e.source !== f.contentWindow) return;
-    if (d.t === 'ready') { frameReady = true; if (d.soft) { postSel(false); postPins(); return; } f.contentWindow.postMessage({ y: frameScroll, labels: frameLabels(), dev: st.dev }, '*'); postSel(false); postPins(); return; }
+    if (d.t === 'ready') { frameReady = true; if (cw) cw.repaint(); if (d.soft) { postSel(false); postPins(); return; } f.contentWindow.postMessage({ y: frameScroll, labels: frameLabels(), dev: st.dev }, '*'); postSel(false); postPins(); return; }
     if (d.t === 'scroll') { frameScroll = d.y; return; }
+    if (d.t === 'cw-ptr') { if (cw) cw.pointer(d.a || null); return; }   // feat/cowork-editors: the frame measures its own pointer
     if (d.t === 'esc') {   // Esc pressed inside the preview: with nothing left to step out of, the first press says so and the second closes
       const nothing = !st.sel && !st.cmode && ['#wdz-dlmenu', '#wdz-keys', '#wdz-peek', '#wdz-picker'].every(id => { const x = $(id); return !x || x.hidden; }) && !(SP() && SP().menuOpen && SP().menuOpen());
       if (nothing && Date.now() - escAt > 2500) { escAt = Date.now(); toast('Press Esc again to close the designer'); return; }
@@ -348,7 +423,12 @@ html[data-dev=phone] .ehide-phone,html[data-dev=tablet] .ehide-tablet,html[data-
       const same = st.sel && st.sel.block === block && st.sel.path === path && st.sel.kind === (d.kind || 'block') && st.panel === 'edit';
       st.sel = { block, path, kind: d.kind || 'block' }; st.panel = 'edit'; panelPaint(); logPaint();   // a click in the page always shows what was clicked
       if (!same) { const ib = $('#wdz-insp'); if (ib) ib.scrollTop = 0; }   // a new selection starts at the top of its panel
-      $('#wdz-blocks').querySelectorAll('.wdz-blk').forEach(li => li.classList.toggle('is-sel', li.dataset.blk === block)); return;
+      $('#wdz-blocks').querySelectorAll('.wdz-blk').forEach(li => li.classList.toggle('is-sel', li.dataset.blk === block));
+      if (cw) cw.select(`${st.sel.kind}:${block}|${path}`); return;
+    }
+    if (d.t === 'text') {
+      const ek = 'text:' + d.key;
+      if (cw && cwEditing !== ek) { if (!cw.guard(ek)) { liveText = null; paint(); return; } cwEditing = ek; cw.editing(ek); }   // someone else is typing here
     }
     if (d.t === 'text') { liveText = d; clearTimeout(liveT); liveT = setTimeout(() => { if (liveText) { const l = liveText; commitText(l); } }, 900); return; }
     if (d.t === 'commit') return commitText(d);
@@ -376,6 +456,8 @@ html[data-dev=phone] .ehide-phone,html[data-dev=tablet] .ehide-tablet,html[data-
 
   function commitText(d) {
     liveText = null;
+    if (cw && !cwEditing && d && d.key && cw.lockedBy('text:' + d.key)) { cw.guard('text:' + d.key); paint(); return; }
+    if (cw && cwEditing) { cwEditing = ''; cw.editing(null); }
     const [block, path] = String(d.key).split('|');
     if (block === '@') { const next = S().setSiteText(st.cfg, path, String(d.value || '')); if (JSON.stringify(next) === JSON.stringify(st.cfg)) return; st.hist.push(JSON.stringify(st.cfg)); st.fut = []; st.cfg = S().normalize(next); save(); chrome(); if (st.panel === 'edit' || st.panel === 'site') panelPaint(); return; }
     const b = pageNow().blocks.find(x => x.id === block); if (!b) return;
@@ -393,7 +475,7 @@ html[data-dev=phone] .ehide-phone,html[data-dev=tablet] .ehide-tablet,html[data-
   const SG = () => window.TribeSiteSuggest;
   const sgApi = () => ({ ...spApi, panelNow: () => st.panel, flush: () => flush(), close: () => close(), addComment: c => addComment(c) });
   const tr = t => (window.TribeI18n && window.TribeI18n.t ? window.TribeI18n.t(t, t) : t);
-  const frameLabels = () => ({ smaller: tr('Smaller'), bigger: tr('Bigger'), bold: tr('Bold'), color: tr('Colour'), align: tr('Align'), link: tr('Where it goes'), up: tr('Move up'), down: tr('Move down'), dup: tr('Duplicate'), add: tr('Add another'), del: tr('Remove'), flint: tr('Ask Flint about this'), more: tr('More'), replace: tr('Replace the picture'), fit: tr('Fill or fit'), swap: tr('Swap the icon'), words: tr('Edit the words'), grip: tr('Drag to move this section'), sadd: tr('Add a section below'), igrip: tr('Drag to move it'), ital: tr('Slanted'), wlink: tr('Link the selected words') });
+  const frameLabels = () => ({ isEditing: tr('is editing'), smaller: tr('Smaller'), bigger: tr('Bigger'), bold: tr('Bold'), color: tr('Colour'), align: tr('Align'), link: tr('Where it goes'), up: tr('Move up'), down: tr('Move down'), dup: tr('Duplicate'), add: tr('Add another'), del: tr('Remove'), flint: tr('Ask Flint about this'), more: tr('More'), replace: tr('Replace the picture'), fit: tr('Fill or fit'), swap: tr('Swap the icon'), words: tr('Edit the words'), grip: tr('Drag to move this section'), sadd: tr('Add a section below'), igrip: tr('Drag to move it'), ital: tr('Slanted'), wlink: tr('Link the selected words') });
   const spApi = { setMulti: l => { st.multi = l || []; }, multi: () => st.multi || [], clearMulti: () => { st.multi = []; const f = $('#wdz-frame'); if (f && f.contentWindow) f.contentWindow.postMessage({ multi: 'none' }, '*'); }, sel: () => st.sel, setSel: s => { st.sel = s; }, cfg: () => st.cfg, commit: (c, o) => commit(c, o), page: () => st.page, setPage: id => { st.page = id; st.sel = null; frameScroll = 0; }, pageNow: () => pageNow(), say: (t, h, a) => say(t, h, a), ask: t => ask(t), pid: () => st.pid, connected: () => connected(),
     paint: () => paint(), panel: p => { if (p) st.panel = p; panelPaint(); }, postSel: sc => postSel(sc), post: m => { const f = $('#wdz-frame'); if (f && f.contentWindow) f.contentWindow.postMessage(m, '*'); }, root: () => root, box: () => $('#wdz-insp'),
     pickFile: () => pickFile(), iconPicker: key => STU() && STU().iconPicker(stuApi, key), comment: () => commentMode(true), fillFlint: t => { if (fui) fui.fill(t); }, undo: () => undo(), canEdit: () => st.canEdit !== false, dev: () => st.dev, comments: () => st.comments, tr };

@@ -7,27 +7,30 @@
 'use strict';
 const core = require('../app/ui/launchkit-core.js');
 
-module.exports = function launchkit({ P, base, broadcast }) {
+module.exports = function launchkit({ P, base, broadcast, perms = null, requests = () => null }) {
   const FILE = '.tribe/launchkit.json';
   let db = null;
   const load = () => { if (!db) { db = base.readJSON(FILE, { projects: {} }); if (!db.projects || typeof db.projects !== 'object') db.projects = {}; } return db; };
   const get = pid => core.norm(load().projects[pid]);
-  const canEdit = (me, pid) => !!me && me.role !== 'spectator' && (((P.get(pid) || {}).members || {})[me.id] !== 'spectator');
+  const mayRole = (me, pid) => !!me && me.role !== 'spectator' && (((P.get(pid) || {}).members || {})[me.id] !== 'spectator');
+  const canEdit = (me, pid) => mayRole(me, pid) && (!perms || perms.can(me, 'launch.edit', pid));   // feat/cowork-editors: a row in the table (launch.edit)
+  function set(pid, raw, me) { const kit = core.norm(raw); load().projects[pid] = kit; base.writeJSON(FILE, db); broadcast({ type: 'launchkit', project: pid, by: me ? me.id : null }); return kit; }
 
   async function route(req, res, { m, b, me, readBody, send, fail }) {
     const pid = b;
     if (!pid || !P.get(pid)) return fail(res, 404, 'no such project');
     if (P.canSee && !P.canSee(me, pid)) return fail(res, 403, 'not in this project');
-    if (m === 'GET') return send(res, 200, { kit: get(pid), canEdit: canEdit(me, pid) });
+    if (m === 'GET') return send(res, 200, { kit: get(pid), canEdit: canEdit(me, pid), canSuggest: mayRole(me, pid) && !canEdit(me, pid) });
     if (m === 'PUT') {
-      if (!canEdit(me, pid)) return fail(res, 403, 'spectators can look but not change the launch kit');
       const body = await readBody(req, 2 * 1024 * 1024);
-      const kit = core.norm(body && body.kit);
-      load().projects[pid] = kit; base.writeJSON(FILE, db);
-      broadcast({ type: 'launchkit', project: pid, by: me.id });
-      return send(res, 200, { kit });
+      if (!canEdit(me, pid)) {
+        if (mayRole(me, pid) && requests() && body && (me.role === 'agent' || body.asRequest)) return send(res, 202, requests().fromRefusal(pid, me, 'launch', body.kit || {}, { title: body.title, why: body.why, summary: body.summary, before: body.before, after: body.after }));
+        if (perms) perms.can(me, 'launch.edit', pid);
+        return fail(res, 403, mayRole(me, pid) ? 'changing the store page needs someone’s OK here: suggest the change instead' : 'spectators can look but not change the launch kit');
+      }
+      return send(res, 200, { kit: set(pid, body && body.kit, me) });
     }
     return fail(res, 405, 'GET or PUT');
   }
-  return { route, get };
+  return { route, get, set };
 };

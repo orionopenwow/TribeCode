@@ -12,6 +12,8 @@ const REMIND_H = Number(process.env.TRIBE_APPROVAL_REMIND_HOURS) || 4;   // re-n
 module.exports = function approvals({ store, id, str, bus, getMembers, postChat, broadcast, hub, project = () => undefined, canSee = () => true, now = () => Date.now(), remindHours = REMIND_H, tick = true,
   canDecideAny = (who) => who.role === 'host', counting = () => null, passMark = (need, n) => Math.floor(n / 2) + 1 }) {   // feat/roles: approvals.approve (any risk) / approvals.approve_low (server/perms.js)
   let list = store.readJSON('.tribe/approvals.json', []);
+  const decidedHooks = [];   // feat/cowork-editors: server/changereq.js applies an approved change request
+  const fireDecided = a => { for (const f of decidedHooks) { try { f(a); } catch (e) { console.error('  approvals hook: ' + e.message); } } };
   let rules = store.readJSON('.tribe/approval-rules.json', []);   // { id, owner, agent, kind, created }
   const save = () => { list = list.slice(-500); store.writeJSON('.tribe/approvals.json', list); };
   const saveRules = () => store.writeJSON('.tribe/approval-rules.json', rules);
@@ -27,14 +29,14 @@ module.exports = function approvals({ store, id, str, bus, getMembers, postChat,
     body: `${a.risk[0].toUpperCase() + a.risk.slice(1)} risk${a.details ? ' · ' + a.details.slice(0, 280) : ''}`, view: 'inbox', ref: a.id, approval: a.id,
     actions: [{ id: 'approve', label: 'Approve' }, { id: 'deny', label: 'Deny' }] });
 
-  function create({ title, details, risk, kind, to: askTo }, me) {
+  function create({ title, details, risk, kind, to: askTo, change }, me) {
     title = str(title, 160) || 'Untitled request';
     risk = RISKS.includes(risk) ? risk : 'medium';
     const owner = me.role === 'agent' && me.owner && member(me.owner) ? me.owner : null;
     let to = risk === 'high' || !owner ? humans().filter(m => canSee(m, project())).map(m => m.id).filter(x => x !== me.id) : [owner];   // only people in the project
     if (Array.isArray(askTo)) { const ok = askTo.filter(x => humans().some(m => m.id === x) && x !== me.id); if (ok.length) to = ok; }   // e.g. the receiving owner of a cross-owner delegation
     if (!to.length) to = hosts();
-    const a = { id: `ap-${now().toString(36)}-${id(4).toLowerCase()}`, title, details: str(details, 4000), risk, kind: kindOf(kind, title), by: me.id, to, status: 'pending', created: new Date(now()).toISOString(), questions: [], project: project() || undefined };
+    const a = { id: `ap-${now().toString(36)}-${id(4).toLowerCase()}`, title, details: str(details, 4000), risk, kind: kindOf(kind, title), by: me.id, to, status: 'pending', created: new Date(now()).toISOString(), questions: [], project: project() || undefined , ...(change && typeof change === 'object' ? { change: { id: String(change.id || '').slice(0, 40), tool: String(change.tool || '').slice(0, 20), project: change.project || null, onBehalf: change.onBehalf || null, ...(change.council && Array.isArray(change.council.ids) ? { council: { ids: change.council.ids.map(String).slice(0, 50), need: String(change.council.need || 'majority'), tie: 'fails' } } : {}) } } : {}) };
     // "Always allow this for my agent": low risk only, never high or medium.
     const rule = owner && risk === 'low' && rules.find(r => r.agent === me.id && r.owner === owner && r.kind === a.kind);
     if (rule) {
@@ -56,7 +58,7 @@ module.exports = function approvals({ store, id, str, bus, getMembers, postChat,
     if (!['approve', 'deny'].includes(decision)) fail(400, 'decision must be approve or deny');
     // feat/group-styles: under a council a high-risk request is decided by the council together (the group's one
     // counting rule), one answer per member. Ship it counts its own votes; a helper's small requests stay with its owner.
-    const rule = a.risk === 'high' && a.kind !== 'ship' ? counting(a) : null;
+    const rule = a.change && a.change.council ? a.change.council : a.risk === 'high' && a.kind !== 'ship' ? counting(a) : null;
     if (rule) {
       if (!rule.ids.includes(who.id)) fail(403, 'the council decides this here');
       if (a.status !== 'pending') fail(409, `already ${a.status}`);
@@ -77,6 +79,7 @@ module.exports = function approvals({ store, id, str, bus, getMembers, postChat,
       rules.push({ id: 'r-' + id(6).toLowerCase(), owner: who.id, agent: a.by, kind: a.kind, example: a.title, created: a.decidedAt }); saveRules(); a.ruleAdded = true;
     }
     save();
+    fireDecided(a);
     if (a.kind !== 'ask-claude') postChat('general', 'tribecode', `${a.status === 'approved' ? '✅' : '⛔'} ${who.name} ${a.status} **${a.title}** for ${nameOf(a.by)}${a.note ? `: "${a.note}"` : ''}`);   // @ai questions say it in their own words (server/askai.js)
     broadcast({ type: 'approval', approval: view(a) });
     if (req && req.role !== 'agent' && req.id !== who.id) bus.notify({ type: 'approval-result', priority: 'normal', to: [req.id], from: who.id, title: `${who.name} ${a.status} your request`, body: a.title + (a.note ? ` · "${a.note}"` : ''), view: 'inbox', ref: a.id });
@@ -158,5 +161,5 @@ module.exports = function approvals({ store, id, str, bus, getMembers, postChat,
     return null;
   }
 
-  return { create, list: () => list.map(view), decide, close, question, bulk, sweep, get: aid => view(get(aid)), rules: () => rules, route, RISKS };
+  return { onDecided: f => { if (typeof f === 'function') decidedHooks.push(f); }, create, list: () => list.map(view), decide, close, question, bulk, sweep, get: aid => view(get(aid)), rules: () => rules, route, RISKS };
 };
