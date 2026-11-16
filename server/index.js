@@ -1135,7 +1135,7 @@ async function apiInProject(req, res, url) {
   if (a === 'projects' && c === 'suggest') return suggestEngine.route(req, res, ctx());   // the tribe's suggestions (server/suggest.js)
   if (a === 'site-designer' || (a === 'projects' && (c === 'site-config' || c === 'site-autofill' || c === 'site-comments' || c === 'site-proposals' || c === 'site-suggestions' || c === 'brand'))) return siteDesign.route(req, res, { ...ctx(), d: parts[3] });
   if (a === 'projects' && c === 'launchkit') return launchKit.route(req, res, ctx());   // Launch kit (server/launchkit.js)
-  if (a === 'projects' && c === 'app-config') return appCreator.route(req, res, { ...ctx(), d: parts[3] });   // App Creator (server/appcreator.js)
+  if (a === 'projects' && (c === 'app-config' || c === 'app-comments')) return appCreator.route(req, res, { ...ctx(), d: parts[3], e: parts[4], f: parts[5] });   // App Creator (server/appcreator.js)
   if (a === 'site-library' || (a === 'projects' && (c === 'site-library' || c === 'site-data'))) return siteLib.route(req, res, ctx());   // website templates (server/sitelib.js)
   if (a === 'flint' && (b === 'proof' || b === 'blender')) return flintRun.route(req, res, ctx());   // feat/flint-runthrough
   if ((a === 'flint' && (b === 'tiers' || b === 'tier' || b === 'starters' || b === 'features')) || (a === 'projects' && c === 'flint')) return flintFree.route(req, res, ctx());   // Flint's free tier: recipes + the capability map (server/flintfree.js)

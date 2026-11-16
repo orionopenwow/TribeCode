@@ -10,6 +10,17 @@
 //                           so the Phone app card can install dependencies and show the Expo Go QR code
 //        Files are written only inside that one folder, and the folder is replaced as a whole on each export. A project
 //        with no code folder gets one first (server/setup.js ensureRepo), as the website templates do.
+//   pass 4 (history and comments, like the website designer's):
+//   GET  /api/projects/:id/app-config/history             { versions: [{ id, rev, at, by, name, screens }] } newest first
+//   GET  /api/projects/:id/app-config/history/:vid        { config, name, at, by }   (restoring = the editor saves it again)
+//   POST /api/projects/:id/app-config/history  { name }   builders: name the design as it is now ("v1 demo"); named ones are kept
+//   POST /api/projects/:id/app-config/history/:vid/name { name }
+//        Every save lands in the history; saves by the same person within two minutes share one entry. The last 30 unnamed
+//        and 20 named versions are kept. Pictures are stored once, by id, beside the versions.
+//   GET  /api/projects/:id/app-comments                   { comments, canEdit }
+//   POST /api/projects/:id/app-comments  { screen, block, label, text, x, y }      any member (not guests): a pin on a part
+//   POST /api/projects/:id/app-comments/:cid/reply { text } · /resolve · /reopen   replies: any member; resolve: author or builder
+//   DELETE /api/projects/:id/app-comments/:cid                                     the author, or a builder
 // addKit(pid, kit, me): the add-on shelf's app kits land here (server/market.js).
 // Stored in .tribe/appdesign/<pid>.json. No AI anywhere; "Have my AI build it" is the client posting the brief to #agents.
 'use strict';
@@ -22,11 +33,42 @@ module.exports = function appCreator({ P, store, root, perms = null, requests = 
   const rel = pid => `.tribe/appdesign/${String(pid).replace(/[^\w-]/g, '')}.json`;
   const loadRaw = pid => store.readJSON(rel(pid), null);
   const err = (status, m) => Object.assign(new Error(m), { status });
+  // ---------- history (pass 4) ----------
+  const safe = pid => String(pid).replace(/[^\w-]/g, '');
+  const hrel = pid => `.tribe/appdesign/${safe(pid)}.history.json`, crel = pid => `.tribe/appdesign/${safe(pid)}.comments.json`;
+  const vid = () => 'v' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+  const loadH = pid => { const h = store.readJSON(hrel(pid), null); return h && Array.isArray(h.versions) ? h : { versions: [], pics: {} }; };
+  function saveH(pid, h) {
+    const named = h.versions.filter(v => v.name).slice(-20), plain = h.versions.filter(v => !v.name).slice(-30), keep = new Set(named.concat(plain));
+    h.versions = h.versions.filter(v => keep.has(v));
+    const used = new Set(); for (const v of h.versions) for (const id of v.pics || []) used.add(id);
+    for (const id of Object.keys(h.pics || {})) if (!used.has(id)) delete h.pics[id];
+    store.writeJSON(hrel(pid), h);
+  }
+  function remember(pid, c, rev, me, name) {
+    try {
+      const h = loadH(pid), now = Date.now(), last = h.versions[h.versions.length - 1];
+      const { pics, ...lean } = c; h.pics = Object.assign(h.pics || {}, pics || {});
+      const entry = { id: vid(), rev, at: new Date(now).toISOString(), by: me.id, name: name ? String(name).slice(0, 60) : '', screens: c.screens.length, pics: Object.keys(pics || {}), config: lean };
+      if (!name && last && !last.name && last.by === me.id && now - Date.parse(last.at) < 120000) { entry.id = last.id; h.versions[h.versions.length - 1] = entry; }
+      else h.versions.push(entry);
+      saveH(pid, h); return entry;
+    } catch (e) { log(`app creator: history: ${e.message}`); return null; }
+  }
+  const fullOf = (h, v) => { const pics = {}; for (const id of v.pics || []) if (h.pics && h.pics[id]) pics[id] = h.pics[id]; return A.normalize({ ...v.config, pics }); };
+  const hview = v => ({ id: v.id, rev: v.rev, at: v.at, by: nameOf(v.by), name: v.name || '', screens: v.screens || 0 });
+  // ---------- comments (pass 4) ----------
+  const loadC = pid => { const l = store.readJSON(crel(pid), []); return Array.isArray(l) ? l : []; };
+  const saveC = (pid, l) => { fs.mkdirSync(path.dirname(store.p(crel(pid))), { recursive: true }); store.writeJSON(crel(pid), l.slice(-300)); try { broadcast({ type: 'app-comments', project: pid }); } catch {} };
+  const cview = c => ({ id: c.id, screen: c.screen, block: c.block, label: c.label || '', text: c.text, x: c.x, y: c.y, by: nameOf(c.by), byId: c.by, at: c.at, status: c.status, replies: (c.replies || []).map(r => ({ by: nameOf(r.by), text: r.text, at: r.at })) });
+  const num = v => Math.max(0, Math.min(1, +v || 0));
+
   function save(pid, config, me) {
     const cur = loadRaw(pid), rev = ((cur && cur.rev) || 0) + 1;
     const c = A.normalize(config);
     fs.mkdirSync(path.dirname(store.p(rel(pid))), { recursive: true });
     store.writeJSON(rel(pid), { ...c, rev, savedBy: me.id, savedAt: new Date().toISOString() });
+    remember(pid, c, rev, me);
     try { broadcast({ type: 'app-config', project: pid, rev, by: me.id }); } catch {}
     return { config: c, rev };
   }
@@ -69,13 +111,40 @@ module.exports = function appCreator({ P, store, root, perms = null, requests = 
     throw err(400, 'export kind is pwa or expo');
   }
 
-  async function route(req, res, { m, a, b, c, d, me, readBody, send, fail }) {
+  async function route(req, res, { m, a, b, c, d, e, f, me, readBody, send, fail }) {
     if (!me) return fail(res, 401, 'not a member');
-    if (a !== 'projects' || c !== 'app-config') return fail(res, 404, 'not found');
+    if (a !== 'projects' || (c !== 'app-config' && c !== 'app-comments')) return fail(res, 404, 'not found');
     const p = P.get(b); if (!p || (P.canSee && !P.canSee(me, p.id))) return fail(res, 404, 'project not found');
     const mayRole = me.role !== 'spectator' && me.role !== 'guest' && (p.members || {})[me.id] !== 'spectator';
     const canEdit = mayRole && (!perms || perms.can(me, 'app.edit', p.id));   // feat/cowork-editors: a row in the table (app.edit)
     try {
+      if (c === 'app-comments') {   // pass 4: pins on parts of a screen, with replies
+        const body = m === 'POST' ? ((await readBody(req)) || {}) : {};
+        if (!d && m === 'GET') return send(res, 200, { comments: loadC(p.id).map(cview), canEdit });
+        if (me.role === 'guest') return fail(res, 403, 'join the tribe to comment');
+        const l = loadC(p.id);
+        if (!d && m === 'POST') {
+          const text = String(body.text || '').trim().slice(0, 600); if (!text) return fail(res, 400, 'write the comment first');
+          const cm = { id: 'c' + vid(), screen: String(body.screen || '').slice(0, 40), block: String(body.block || '').slice(0, 40), label: String(body.label || '').slice(0, 80), text, x: num(body.x), y: num(body.y), by: me.id, at: new Date().toISOString(), status: 'open', replies: [] };
+          l.push(cm); saveC(p.id, l); return send(res, 200, { comment: cview(cm) });
+        }
+        const cm = l.find(x => x.id === d); if (!cm) return fail(res, 404, 'no such comment');
+        const mine = cm.by === me.id || canEdit;
+        if (e === 'reply' && m === 'POST') { const text = String(body.text || '').trim().slice(0, 600); if (!text) return fail(res, 400, 'write the reply first'); cm.replies = (cm.replies || []).concat({ by: me.id, text, at: new Date().toISOString() }).slice(-40); saveC(p.id, l); return send(res, 200, { comment: cview(cm) }); }
+        if ((e === 'resolve' || e === 'reopen') && m === 'POST') { if (!mine) return fail(res, 403, 'only the person who wrote it, or someone who can change the app, can do that'); cm.status = e === 'resolve' ? 'resolved' : 'open'; saveC(p.id, l); return send(res, 200, { comment: cview(cm) }); }
+        if (!e && m === 'DELETE') { if (!mine) return fail(res, 403, 'only the person who wrote it, or someone who can change the app, can remove it'); saveC(p.id, l.filter(x => x !== cm)); return send(res, 200, { ok: true }); }
+        return fail(res, 404, 'not found');
+      }
+      if (d === 'history') {   // pass 4
+        const h = loadH(p.id);
+        if (!e && m === 'GET') return send(res, 200, { versions: h.versions.map(hview).reverse(), canEdit });
+        if (e && !f && m === 'GET') { const v = h.versions.find(x => x.id === e); if (!v) return fail(res, 404, 'no such version'); return send(res, 200, { config: fullOf(h, v), name: v.name || '', at: v.at, by: nameOf(v.by) }); }
+        if (!canEdit) return fail(res, 403, 'naming versions needs someone who can change the app');
+        const body = (await readBody(req)) || {}, name = String(body.name || '').trim().slice(0, 60);
+        if (!e && m === 'POST') { const r = loadRaw(p.id); if (!r) return fail(res, 400, 'nothing is saved yet'); const v = remember(p.id, A.normalize(r), r.rev || 0, me, name || 'Saved version'); return send(res, 200, { version: v ? hview(v) : null }); }
+        if (e && f === 'name' && m === 'POST') { const v = h.versions.find(x => x.id === e); if (!v) return fail(res, 404, 'no such version'); v.name = name; saveH(p.id, h); return send(res, 200, { version: hview(v) }); }
+        return fail(res, 404, 'not found');
+      }
       if (!d && m === 'GET') { const r = loadRaw(p.id); return send(res, 200, { config: r ? A.normalize(r) : null, rev: (r && r.rev) || 0, savedBy: r && r.savedBy ? nameOf(r.savedBy) : '', savedAt: (r && r.savedAt) || '', canEdit, canSuggest: mayRole && !canEdit }); }
       if (!canEdit && !d && m === 'PUT' && mayRole && requests()) {
         const body = await readBody(req, 4 * 1024 * 1024); if (!body || typeof body.config !== 'object') return fail(res, 400, 'config missing');

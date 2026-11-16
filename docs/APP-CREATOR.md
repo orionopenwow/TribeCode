@@ -31,6 +31,7 @@ app, an Expo project) rather than HTML pages. Forcing both into one schema would
 | `app/ui/appcreator-core.js` | The engine, no DOM: normalize, the 27 components, themes and the 56 named looks, edits (`apply`), the prototype runtime (`AxRun`), the exports (`pwa`, `expo`, `brief`). Shared by the browser, the server and the tests. |
 | `app/ui/appcreator-data.js` | Icons, the first 12 templates, the first 10 screen kits, component defaults. |
 | `app/ui/appcreator-more.js` | 42 more templates and 14 more screen kits. |
+| `app/ui/appcreator-plus.js` / `.css` | History, comments, several parts, the clipboard, your own pictures, the screen map, tablet size, features in Play, the shortcuts sheet. |
 | `app/ui/appcreator.js` / `.css` | The editor: Screens / Add / Look on the left, the phone in the middle, the selection and Flint on the right; a rack of sheets on phones. |
 | `server/appcreator.js` | Saving (with a revision so two people never overwrite each other silently) and exporting into the project. |
 | `app/test/e2e_app_creator.py` | The end-to-end test. |
@@ -53,6 +54,26 @@ app, an Expo project) rather than HTML pages. Forcing both into one schema would
   the export. Reduced motion makes every transition instant.
 - **Payments stay off.** Paywall and checkout screens are layouts; the paywall always says "Payments are not connected:
   this is a design", and the shop templates' confirmation screens say no payment was taken.
+
+## The deeper tools (pass 4)
+
+`app/ui/appcreator-plus.js` / `.css`, with the routes in `server/appcreator.js`. They work the way the website designer's do,
+and with no tribe everything is kept on the device. Test: `app/test/e2e_app_plus.py`.
+
+| Tool | How | Where it is kept |
+| --- | --- | --- |
+| **History** | More › History, or Ctrl S to name a version. Every save is kept: the last 30, plus up to 20 named ones. Saves by one person within two minutes share an entry. Pick one to see its screens and **Restore this version** (one Undo; nothing in History is lost). | `.tribe/appdesign/<project>.history.json` (pictures stored once, by id). No tribe: `localStorage` (the last 20 and 10 named). |
+| **Comments** | C, then click a part: a numbered pin. Open it to reply, Resolve or Remove. The right panel lists them; the top bar shows how many are open. Any member can comment (guests can't); the author or someone who can change the app resolves. | `.tribe/appdesign/<project>.comments.json`; `GET/POST /api/projects/:id/app-comments`, `…/:cid/reply|resolve|reopen`, `DELETE …/:cid`. |
+| **Several parts** | Shift click adds a part to the selection; Ctrl A takes every part on the screen. Move, duplicate, copy, cut, remove (and Main/Quiet for buttons) apply to all, as one Undo. | — |
+| **Clipboard** | Ctrl C / X / V / D. With nothing selected, Ctrl C copies the whole screen. Works across screens and across projects. | `localStorage` on the device (never the system clipboard). |
+| **Your own pictures** | In any picture slot: **Your picture** picks a file; paste works while a picture is selected; drop a file on a picture. Made small on the device (900 px, about 400 KB at most) and saved inside the design, so the offline export carries it. Never sent anywhere else. Unused pictures are dropped on save. | `doc.pics` (`pic:<id>` in the slot). |
+| **Screen map** | M, or the map button. Every screen as a thumbnail, an arrow for every link, "Can't be reached" on a screen nothing leads to. Drag to arrange (one Undo), wheel or the buttons to zoom, Fit, Tidy up. Click opens a screen. Shift click or Shift drag selects several: Duplicate, Copy, Remove. | `doc.map` (only for screens the person moved). |
+| **Sizes** | iPhone, Android, **Tablet** (768 × 1024; the export then fills a tablet's screen). More › Preview in dark/light flips the mode for the eye only. | `doc.device`. |
+| **Play** | An app with working features (`appfeatures.js`) plays as the real exported app in a frame, so the features run; an app with none plays as the quick prototype. | — |
+| **Shortcuts** | `?` lists every shortcut that works. | — |
+
+Model ops added to `apply`: `pic`, `paste` (parts or screens, with their pictures; fresh ids), `screen.dup`, `device`, `map`.
+The Expo export carries a person's own pictures inside `design.json` and draws them in the picture, feature card and player slots.
 
 ## Export
 

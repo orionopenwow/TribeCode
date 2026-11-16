@@ -13,7 +13,7 @@
 //     mini(doc, screenId?, width?) -> HTML, templates() }
 (function () {
   'use strict';
-  const A = () => window.TribeAppCore, C = window.TribeClient;
+  const A = () => window.TribeAppCore, C = window.TribeClient, P = () => window.TribeAppPlus;   // P: appcreator-plus.js (pass 4)
   const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const toast = m => (window.TribeApp && window.TribeApp.toast ? window.TribeApp.toast(m) : console.log(m));
   const tr = s => (window.TribeI18n && window.TribeI18n.t ? (window.TribeI18n.t(s, s) || s) : s);
@@ -48,7 +48,7 @@
     if (!A()) { toast('App Creator did not load. Reload the app.'); return; }
     ensureStyle();
     const pid = o.pid || (connected() && C.project ? C.project() : '');
-    st = { open: true, pid, local: !pid, doc: null, rev: 0, canEdit: true, canDraft: true, base: '', pendingDraft: false, screen: '', sel: null, mode: 'edit', tab: 'screens', undo: [], redo: [], saving: false, savedAt: '', mobile: matchMedia('(max-width: 820px)').matches, sheet: '' };
+    st = { open: true, pid, local: !pid, doc: null, rev: 0, canEdit: true, canDraft: true, base: '', pendingDraft: false, screen: '', sel: null, mode: 'edit', tab: 'screens', sels: [], peek: '', cmode: false, comments: [], map: false, mapSel: [], undo: [], redo: [], saving: false, savedAt: '', mobile: matchMedia('(max-width: 820px)').matches, sheet: '' };
     let cur = null;
     if (pid) { try { const r = await C.api(`/projects/${encodeURIComponent(pid)}/app-config`); cur = r.config; st.rev = r.rev || 0; st.canEdit = r.canEdit !== false; st.canDraft = st.canEdit || !!r.canSuggest; st.base = cur ? JSON.stringify(A().normalize(cur)) : ''; } catch { cur = null; } }
     else cur = ls.get(LOCAL, null);
@@ -75,12 +75,12 @@
     coworkOn();
     if (o.template || !cur) save();
     if (o.kit) installKit(o.kit, true);
-    if (o.template && cur) toast('Started from the template. Undo brings back your earlier design.');
+    if (o.template && cur) note('Started from the template. Undo brings back your earlier design.');   // pass 4: a short note under the phone, not a toast over the screen
     return st;
   }
   function close() {
     if (!root) return; clearTimeout(saveT); if (st && st.dirty) save(true);
-    if (cw) { cw.detach(); cw = null; } crStrip = null;
+    if (cw) { cw.detach(); cw = null; } crStrip = null; if (P()) P().stopPlay();
     inertOthers(false); root.remove(); root = null; document.body.classList.remove('apc-open'); if (st) st.open = false;
     document.removeEventListener('keydown', onKey, true);
   }
@@ -90,7 +90,7 @@
     clearTimeout(saveT); st.dirty = true;
     const run = async () => {
       if (!st) return; const doc = st.doc;
-      if (st.local) { ls.set(LOCAL, doc); st.dirty = false; mark('Saved on this device'); return; }
+      if (st.local) { ls.set(LOCAL, doc); st.dirty = false; mark('Saved on this device'); if (P()) P().rememberLocal(doc); return; }
       if (!st.canEdit) {
         if (!st.canDraft) { st.dirty = false; mark('View only'); return; }
         // a suggestion in the making: kept on this device until "Suggest this change" sends it (server/changereq.js)
@@ -128,8 +128,8 @@
     save(); paint(); if (say) note(say);
   }
   function apply(op) { const r = A().apply(st.doc, op); if (r.say === '' && op.op !== 'text') return r; commit(r.doc, r.say, op.op === 'text'); if (r.added && r.added[0]) { st.screen = r.added[0]; paint(); } if (r.block) { st.sel = { block: r.block, path: '', kind: 'block' }; paint(); } return r; }
-  function undo() { if (!st.undo.length) return note('Nothing to undo.'); st.redo.push(JSON.stringify(st.doc)); st.doc = A().normalize(JSON.parse(st.undo.pop())); if (!A().findScreen(st.doc, st.screen)) st.screen = st.doc.start; st.sel = null; save(); paint(); note('Undone.'); }
-  function redo() { if (!st.redo.length) return note('Nothing to redo.'); st.undo.push(JSON.stringify(st.doc)); st.doc = A().normalize(JSON.parse(st.redo.pop())); st.sel = null; save(); paint(); note('Redone.'); }
+  function undo() { st.sels = []; if (!st.undo.length) return note('Nothing to undo.'); st.redo.push(JSON.stringify(st.doc)); st.doc = A().normalize(JSON.parse(st.undo.pop())); if (!A().findScreen(st.doc, st.screen)) st.screen = st.doc.start; st.sel = null; save(); paint(); note('Undone.'); }
+  function redo() { st.sels = []; if (!st.redo.length) return note('Nothing to redo.'); st.undo.push(JSON.stringify(st.doc)); st.doc = A().normalize(JSON.parse(st.redo.pop())); st.sel = null; save(); paint(); note('Redone.'); }
   const note = t => { const el = root && root.querySelector('#apc-note'); if (el) { el.textContent = t; el.hidden = !t; clearTimeout(note.t); note.t = setTimeout(() => { el.hidden = true; }, 3200); } };
 
   // pass 3: a full-screen editor keeps Tab inside it; the app behind is inert while it is open (it was reachable by Tab)
@@ -172,14 +172,15 @@
     $('#apc-close').onclick = close;
     $('#apc-name').oninput = e => { st.doc.name = e.target.value.slice(0, 48); save(); };
     $('#apc-name').onchange = () => commit(st.doc, 'Renamed the app.', true);
-    root.querySelectorAll('[data-plat]').forEach(b => b.onclick = () => apply({ op: 'platform', platform: b.dataset.plat }));
+    root.querySelectorAll('[data-plat]').forEach(b => b.onclick = () => { if (st.doc.device === 'tablet') { const c = JSON.parse(JSON.stringify(st.doc)); c.device = 'phone'; c.platform = b.dataset.plat; return commit(c, b.dataset.plat === 'android' ? 'Using the Android look.' : 'Using the iPhone look.', true); } apply({ op: 'platform', platform: b.dataset.plat }); });
     $('#apc-undo').onclick = undo; $('#apc-redo').onclick = redo;
-    $('#apc-play').onclick = () => { st.mode = st.mode === 'play' ? 'edit' : 'play'; st.sel = null; paint(); };
+    $('#apc-play').onclick = () => { st.mode = st.mode === 'play' ? 'edit' : 'play'; st.sel = null; st.sels = []; if (st.map && P()) P().toggleMap(false); paint(); };
     $('#apc-export').onclick = e => { e.stopPropagation(); const m = $('#apc-menu'); m.hidden = !m.hidden; };
     root.addEventListener('click', e => { if (!e.target.closest('.apc-menuw')) $('#apc-menu').hidden = true; });
     root.querySelectorAll('[data-x]').forEach(b => b.onclick = () => { $('#apc-menu').hidden = true; doExport(b.dataset.x); });
     root.querySelectorAll('[data-tab]').forEach(b => b.onclick = () => { st.tab = b.dataset.tab; paintLeft(); });
     root.querySelectorAll('[data-sheet]').forEach(b => b.onclick = () => openSheet(b.dataset.sheet));
+    if (P()) P().onBuild();
     $('#apc-ask').onsubmit = async e => { e.preventDefault(); const i = $('#apc-ask-in'), t = i.value.trim(); if (!t) return; i.value = ''; const r = await ask(t); $('#apc-reply').textContent = r.text || ''; };
     document.addEventListener('keydown', onKey, true);
     paint();
@@ -188,6 +189,7 @@
   function onKey(e) {
     if (!root || !st) return;
     const typing = /INPUT|TEXTAREA/.test(document.activeElement && document.activeElement.tagName) || (document.activeElement && document.activeElement.isContentEditable);
+    if (P() && P().onKey(e)) { e.stopPropagation(); return; }   // pass 4: copy, paste, duplicate, arrows, the map, comments, "?"
     if (e.key === 'Escape') { if (st.mode === 'play') { st.mode = 'edit'; paint(); } else if (st.sheet) closeSheet(); else if (st.sel && !typing) { st.sel = null; paint(); } else if (!typing) close(); e.stopPropagation(); return; }
     if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z' && !typing) { e.preventDefault(); e.shiftKey ? redo() : undo(); return; }
     if ((e.key === 'Delete' || e.key === 'Backspace') && st.sel && !typing) { e.preventDefault(); removeSel(); }
@@ -200,6 +202,7 @@
     root.querySelectorAll('[data-plat]').forEach(b => b.classList.toggle('on', st.doc.platform === b.dataset.plat));
     $('#apc-play').classList.toggle('primary', st.mode === 'play'); $('#apc-play').innerHTML = st.mode === 'play' ? `${ic('stop')}<span>${tr('Stop')}</span>` : `${ic('play')}<span>${tr('Play')}</span>`;
     root.classList.toggle('apc-playing', st.mode === 'play');
+    if (P()) P().paintTop();
   }
 
   // ---------- left: screens, the library, the look ----------
@@ -361,17 +364,22 @@
   function fit() {
     if (!root) return; const mid = root.querySelector('#apc-mid'), ph = root.querySelector('#apc-phone'); if (!mid || !ph) return;
     st.mobile = matchMedia('(max-width: 820px)').matches;
-    const pw = st.mobile ? 390 : 414, phh = st.mobile ? 844 : 868, k = Math.min(1, (mid.clientWidth - 16) / pw, (mid.clientHeight - 16) / phh);
+    const sz = P() ? P().SIZE() : { w: 390, h: 844 }, pad = st.mobile ? 0 : 24;
+    const pw = sz.w + pad, phh = sz.h + pad, k = Math.min(1, (mid.clientWidth - 16) / pw, (mid.clientHeight - 16) / phh);
     ph.style.transform = k < 1 ? `scale(${k.toFixed(4)})` : '';
   }
   window.addEventListener('resize', () => { fit(); if (root && st && st.sel) paintSel(); });
   function paintStage() {
-    const stage = root.querySelector('#apc-stage'), d = st.doc, Co = A(), phone = root.querySelector('#apc-phone');
-    phone.className = `apc-phone apc-${d.platform}`; fit();
+    const stage = root.querySelector('#apc-stage'), d = P() ? P().viewDoc() : st.doc, Co = A(), phone = root.querySelector('#apc-phone');
+    phone.className = `apc-phone apc-${d.platform}${d.device === 'tablet' ? ' apc-tablet' : ''}`; fit();
+    if (st.mode !== 'play' && P()) P().stopPlay();
     if (st.mode === 'play') {
       const bar = root.querySelector('#apc-bar'); if (bar) bar.hidden = true;
+      // pass 4: an app with working features plays as the real exported app (appfeatures.js runs inside the frame)
+      if (P() && P().playFrame(stage)) { P().afterStage(); return; }
       stage.innerHTML = `<div class="ax apc-ax" ${Co.attrs(d)} data-i18n-skip style="${Co.vars(d.theme)}">${d.screens.map(s => Co.screenHTML(d, s, { edit: false })).join('')}</div>`;
       Co.AxRun(stage.firstChild, { start: st.screen, onGo: id => { st.screen = id; } });
+      if (P()) P().afterStage();
       return;
     }
     const s = Co.findScreen(d, st.screen) || d.screens[0];
@@ -385,6 +393,7 @@
     ax.addEventListener('focusout', onStageBlur);
     ax.addEventListener('keydown', e => { if (e.key === 'Enter' && e.target.closest('[data-e]') && !e.target.closest('.ax-text')) { e.preventDefault(); e.target.blur(); } });
     if (st.sel) { const el = selEl(); if (el) { el.classList.add('apc-sel'); placeBar(el); } else st.sel = null; }
+    if (P()) P().afterStage();
   }
   function selEl() {
     const ax = root.querySelector('.apc-edit'); if (!ax || !st.sel) return null;
@@ -393,7 +402,10 @@
     return bEl;
   }
   function onStageClick(e) {
-    const t = e.target, bEl = t.closest('[data-b]'); if (!bEl) { st.sel = null; paintSel(); return; }
+    if (st.cmode && P()) { e.preventDefault(); e.stopPropagation(); if (document.activeElement && document.activeElement.blur) document.activeElement.blur(); P().stageComment(e); return; }   // pass 4: a comment on this part
+    const t = e.target, bEl = t.closest('[data-b]'); if (!bEl) { st.sel = null; st.sels = []; paintSel(); return; }
+    if (e.shiftKey && P() && st.sel) { e.preventDefault(); if (document.activeElement && document.activeElement.blur) document.activeElement.blur(); P().shiftClick(bEl.dataset.b); return; }   // pass 4: several parts
+    st.sels = [];
     const isText = t.closest('[data-e]');
     if (!isText) e.preventDefault();
     const block = bEl.dataset.b, item = t.closest('[data-item]'), icEl = t.closest('[data-ic]'), img = t.closest('[data-img]');
@@ -401,12 +413,12 @@
     st.sel = { block, kind: item ? 'item' : 'block', path: item ? item.dataset.item : '', ic: icEl ? icEl.dataset.ic : '', img: img ? img.dataset.img : '', lk: lk ? lk.dataset.lk : '' };
     paintSel();
   }
-  function paintSel() { if (cw) cw.select(st.sel ? `${st.screen}|${st.sel.block}` : null); root.querySelectorAll('.apc-sel').forEach(x => x.classList.remove('apc-sel')); const el = selEl(), bar = root.querySelector('#apc-bar'); if (el) { el.classList.add('apc-sel'); placeBar(el); } else if (bar) bar.hidden = true; paintInsp(); }
+  function paintSel() { if (cw) cw.select(st.sel ? `${st.screen}|${st.sel.block}` : null); root.querySelectorAll('.apc-sel').forEach(x => x.classList.remove('apc-sel')); const el = selEl(), bar = root.querySelector('#apc-bar'); if (el) { el.classList.add('apc-sel'); placeBar(el); } else if (bar) bar.hidden = true; if (P()) P().paintMulti(); paintInsp(); }
   function placeBar(el) {
     // the toolbar lives outside the scaled phone, so its buttons keep their full size
     const bar = root.querySelector('#apc-bar'), mid = root.querySelector('#apc-mid'); if (!bar || !st.canDraft) return;
-    const item = st.sel.kind === 'item';
-    bar.innerHTML = item
+    const item = st.sel.kind === 'item', multi = P() && (st.sels || []).length;
+    bar.innerHTML = multi ? P().multiBar() : item
       ? `<button data-bar="item.up" aria-label="Move up">${ic('up', 15)}</button><button data-bar="item.down" aria-label="Move down">${ic('down', 15)}</button><button data-bar="item.add" aria-label="Add one more">${ic('plus', 15)}</button><button data-bar="item.dup" aria-label="Duplicate">${ic('duplicate', 15)}</button><button data-bar="link" aria-label="Link to a screen">${ic('link', 15)}</button><button data-bar="item.remove" aria-label="Remove">${ic('delete', 15)}</button>`
       : `<button data-bar="up" aria-label="Move up">${ic('up', 15)}</button><button data-bar="down" aria-label="Move down">${ic('down', 15)}</button><button data-bar="dup" aria-label="Duplicate">${ic('duplicate', 15)}</button><button data-bar="link" aria-label="Link to a screen">${ic('link', 15)}</button><button data-bar="del" aria-label="Remove">${ic('delete', 15)}</button>`;
     const r = el.getBoundingClientRect(), r0 = mid.getBoundingClientRect();
@@ -418,6 +430,8 @@
   }
   function barAct(a) {
     const s = st.sel; if (!s) return;
+    if (/^m:/.test(a)) return P().multiAct(a.slice(2));
+    if ((st.sels || []).length && P() && /^(dup|del)$/.test(a)) return P().multiAct(a);
     if (a === 'up' || a === 'down') return apply({ op: 'block.move', block: s.block, dir: a === 'up' ? -1 : 1 });
     if (a === 'dup') return apply({ op: 'block.dup', block: s.block });
     if (a === 'del') return removeSel();
@@ -444,7 +458,9 @@
   function paintInsp(into) {
     const box = into || root.querySelector('#apc-insp'); if (!box) return;
     const d = st.doc, Co = A();
-    if (st.mode === 'play') { box.innerHTML = `<p class="apc-eyebrow">Playing</p><p class="faint">Tap through the app like it is on a phone. Links move between screens with the ${esc(d.theme.motion)} motion. Esc or Stop to go back to editing.</p>`; return; }
+    if (st.mode === 'play') { box.innerHTML = `<p class="apc-eyebrow">Playing</p><p class="faint apc-hint">Tap through the app like it is on a phone. Links move between screens with the ${esc(d.theme.motion)} motion. Esc or Stop to go back to editing.</p>${P() && P().playingReal() ? `<p class="faint apc-hint">${esc(tr('This is the real app: its working features run here, and what they save stays on this device.'))}</p>` : ''}`; return; }
+    if (!st.sel && P()) return P().inspEmpty(box);   // pass 4: this screen, quick actions, comments, tips
+    if (st.sel && (st.sels || []).length && P()) return P().multiInsp(box);
     if (!st.sel) {
       const sc = Co.findScreen(d, st.screen);
       box.innerHTML = `<p class="apc-eyebrow">${esc(sc ? sc.name : '')}</p><p class="faint">Click any part of the screen to select it, or click words to type. The library is under Add, the whole look under Look.</p>
@@ -462,11 +478,12 @@
       <div class="apc-field"><label for="apc-linkto">When tapped, go to</label><select class="input" id="apc-linkto"><option value="">Nothing</option>${others.map(s => `<option value="${esc(s.id)}"${link && link.to === s.id ? ' selected' : ''}>${esc(s.name)}</option>`).join('')}<option value="+new">A new screen…</option></select>
         <div class="apc-seg apc-segw" role="group" aria-label="Transition">${[['push', 'Slide'], ['sheet', 'Sheet'], ['fade', 'Fade'], ['morph', 'Grow']].map(([v, l]) => `<button data-how="${v}" class="${(link ? link.how : 'push') === v ? 'on' : ''}"${link ? '' : ' disabled'}>${esc(l)}</button>`).join('')}</div></div>
       ${icPath ? `<div class="apc-field"><span>Icon</span><div class="apc-icons">${Co.ICON_NAMES.map(n => `<button data-icn="${n}" aria-label="${n}" class="${Co.getPath(bk.props, icPath) === n ? 'on' : ''}">${Co.icon(n)}</button>`).join('')}</div></div>` : ''}
-      ${imPath ? `<div class="apc-field"><span>Picture</span><div class="apc-ills">${Co.ILL_NAMES.map(n => `<button data-ill="${n}" aria-label="${n}" class="ax ${Co.getPath(bk.props, imPath) === n ? 'on' : ''}" ${Co.attrs(d)} style="${Co.vars(d.theme)}">${Co.illus(n, d.theme)}</button>`).join('')}</div></div>` : ''}
+      ${imPath ? `<div class="apc-field"><span>Picture</span>${P() ? P().picField(bk, imPath) : ''}<div class="apc-ills">${Co.ILL_NAMES.map(n => `<button data-ill="${n}" aria-label="${n}" class="ax ${Co.getPath(bk.props, imPath) === n ? 'on' : ''}" ${Co.attrs(d)} style="${Co.vars(d.theme)}">${Co.illus(n, d.theme)}</button>`).join('')}</div></div>` : ''}
       ${bk.type === 'button' ? `<div class="apc-field"><span>Style</span><div class="apc-seg apc-segw">${[['primary', 'Main'], ['secondary', 'Quiet']].map(([v, l]) => `<button data-prop="style" data-v="${v}" class="${bk.props.style === v ? 'on' : ''}">${l}</button>`).join('')}</div></div>` : ''}
       ${bk.type === 'chart' ? `<div class="apc-field"><span>Chart</span><div class="apc-seg apc-segw">${[['bar', 'Bars'], ['line', 'Line']].map(([v, l]) => `<button data-prop="kind" data-v="${v}" class="${bk.props.kind === v ? 'on' : ''}">${l}</button>`).join('')}</div><label for="apc-vals">Values</label><input class="input" id="apc-vals" value="${esc((bk.props.values || []).join(', '))}"></div>` : ''}
       ${bk.type === 'nav' ? `<label class="apc-chk"><input type="checkbox" id="apc-back"${bk.props.back ? ' checked' : ''}> <span>Back button</span></label>` : ''}
-      <div class="apc-row"><button class="btn" data-bar2="dup">${ic('duplicate')}<span>Duplicate</span></button><button class="btn" data-bar2="del">${ic('delete')}<span>Remove</span></button></div>`;
+      <div class="apc-row"><button class="btn" data-bar2="dup">${ic('duplicate')}<span>Duplicate</span></button><button class="btn" data-bar2="m:copy">${ic('duplicate')}<span>Copy</span></button><button class="btn" data-bar2="del">${ic('delete')}<span>Remove</span></button></div>`;
+    if (imPath && P()) P().wirePicField(box, bk, imPath);
     const lt = box.querySelector('#apc-linkto');
     lt.onchange = () => {
       let to = lt.value;
@@ -654,5 +671,7 @@
   if (location.hash === '#/app-creator') setTimeout(() => open({}), 300);
   window.addEventListener('hashchange', () => { if (location.hash === '#/app-creator' && (!st || !st.open)) open({}); });
 
+  // pass 4: the deeper tools (history, comments, several parts, clipboard, pictures, the map) live in appcreator-plus.js
+  if (P()) P().init({ st: () => st, root: () => root, tr, ic, note, mini, connected, commit, apply: op => apply(op), paint, paintSel, fit, save: now => save(now), undo, redo, openSheet, closeSheet, setTab: t => { st.tab = t; paintLeft(); } });
   window.TribeAppCreator = { open, close, state: () => st, doc: () => st && st.doc, ask, apply: op => apply(op), flint, installKit, screens, mini, templates: () => A().templateList(), undo, redo, export: doExport };
 })();

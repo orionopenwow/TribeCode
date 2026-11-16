@@ -1,0 +1,134 @@
+/* App Creator, the deeper tools (appcreator-plus.js, pass 4): the map, comments, several parts, history, pictures, tablet.
+   Flat matte: tokens only, 1px borders, depth from luminance steps. */
+.apc-plus { display: inline-flex; align-items: center; gap: 2px; }
+.apc-tb.on { background: var(--surface-2); border-color: var(--border); color: var(--ember); }
+#apc-cmb { position: relative; }
+.apc-cn { position: absolute; top: 3px; right: 3px; min-width: 15px; height: 15px; padding: 0 3px; border-radius: 999px; background: var(--ember); color: var(--canvas); font: 700 9.5px/15px var(--mono); text-align: center; }
+.apc-moremenu { width: 300px; }
+.apc-m-phone { display: none !important; }
+
+/* the editor is exactly as wide as the window: a long top bar shrinks its name instead of widening the page */
+.apc { grid-template-columns: minmax(0, 1fr); }
+
+/* the middle never scrolls (a focus inside it used to nudge the phone and everything pinned to it) */
+/* and the phone is centred in it even when it is taller than the space (it used to hang low, cut off at the bottom) */
+.apc-mid { overflow: clip; grid-template: minmax(0, 1fr) / minmax(0, 1fr); }
+
+/* tablet size */
+.apc-phone.apc-tablet { width: 792px; height: 1048px; border-radius: 36px; }
+.apc-tablet .apc-screenwrap { width: 768px; height: 1024px; border-radius: 24px; }
+.apc-playframe { display: block; border: 0; width: 100%; height: 100%; background: var(--canvas); }
+.apc-peek .apc-phone { border-style: dashed; }
+
+/* several parts */
+.apc-edit .apc-sel2 { box-shadow: 0 0 0 2px var(--accent) !important; border-radius: 6px; }
+.apc-bar .apc-bn { display: grid; place-items: center; min-width: 32px; padding: 0 8px; font: 700 12px/1 var(--mono); color: var(--ember); border-right: 1px solid var(--border); }
+
+/* your own pictures */
+.apc-mine img, .apc-ills img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
+.apc-mine { margin-bottom: 6px; }
+.apc-hint { font-size: 12.5px; line-height: 1.5; margin: 6px 0; }
+
+/* the right panel with nothing selected */
+.apc-quick { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.apc-q { display: flex; align-items: center; gap: 8px; min-height: 40px; padding: 0 10px; border: 1px solid var(--border); border-radius: var(--r-sm); background: var(--canvas); color: var(--text); font: 500 13px/1.2 var(--font); text-align: left; cursor: pointer; }
+.apc-q:hover { background: var(--surface-2); }
+.apc-q:disabled { opacity: .45; cursor: default; }
+.apc-tips { margin: 0; padding-left: 18px; color: var(--muted); font-size: 12.5px; line-height: 1.6; }
+.apc-warn { margin: 6px 0; padding: 8px 10px; border: 1px solid var(--border); border-left: 3px solid var(--ember); border-radius: var(--r-sm); font-size: 12.5px; line-height: 1.5; color: var(--text); }
+
+/* comments */
+.apc-cmode .apc-edit, .apc-cmode .apc-edit * { cursor: crosshair !important; }
+.apc-pins { position: absolute; inset: 0; pointer-events: none; z-index: 8; }
+.apc-pin { position: absolute; transform: translate(-50%, -50%); min-width: 24px; height: 24px; padding: 0 6px; border-radius: 999px 999px 999px 4px; border: 1px solid var(--canvas); background: var(--ember); color: var(--canvas); font: 700 11px/22px var(--mono); text-align: center; cursor: pointer; pointer-events: auto; }
+.apc-pin-s { position: static; transform: none; flex: none; display: inline-block; cursor: inherit; }
+.apc-cbox { position: absolute; z-index: 12; width: 280px; max-width: calc(100% - 16px); max-height: calc(100% - 16px); overflow-y: auto; background: var(--raised); border: 1px solid var(--border); border-radius: var(--r); padding: 12px; box-sizing: border-box; }
+.apc-cbox .apc-eyebrow { margin: 0 0 8px; }
+.apc-cbox textarea { width: 100%; height: auto; min-height: 76px; padding: 10px 12px; font-family: inherit; line-height: 1.5; resize: vertical; box-sizing: border-box; }
+.apc-cbox #apc-rform { display: flex; gap: 6px; margin-top: 8px; }
+.apc-cbox #apc-rform .input { flex: 1; min-width: 0; }
+.apc-thread { display: grid; gap: 8px; max-height: 240px; overflow-y: auto; }
+.apc-cm { font-size: 13px; line-height: 1.5; }
+.apc-cm b { margin-right: 6px; }
+.apc-cm small { font-size: 11.5px; }
+.apc-cm p { margin: 2px 0 0; white-space: pre-wrap; overflow-wrap: anywhere; }
+.apc-cmr { padding-left: 10px; border-left: 1px solid var(--border); }
+.apc-clist { display: grid; gap: 4px; }
+.apc-crow { display: flex; gap: 8px; align-items: flex-start; text-align: left; padding: 8px; border: 1px solid var(--border); border-radius: var(--r-sm); background: var(--canvas); color: var(--text); cursor: pointer; font: inherit; min-height: 40px; }
+.apc-crow:hover { background: var(--surface-2); }
+.apc-crow b { display: block; font: 500 13px/1.4 var(--font); overflow-wrap: anywhere; }
+.apc-crow small { color: var(--muted); font-size: 11.5px; }
+.apc-crow.done { opacity: .6; }
+
+/* history and shortcuts */
+.apc-psheet .apc-sheet-in { max-width: 520px; }
+.apc-hsheet .apc-sheet-in { max-width: 860px; }
+.apc-sheet.apc-tsheet { align-items: center; }
+.apc-hsave { display: flex; gap: 8px; margin-top: 12px; }
+.apc-hsave .input { flex: 1; min-width: 0; }
+.apc-hgrid { display: grid; grid-template-columns: minmax(0, 300px) minmax(0, 1fr); gap: 16px; margin-top: 8px; }
+.apc-hlist { display: grid; gap: 4px; align-content: start; max-height: 52vh; overflow-y: auto; }
+.apc-hrow { display: grid; gap: 2px; text-align: left; padding: 10px 12px; border: 1px solid var(--border); border-radius: var(--r-sm); background: var(--canvas); color: var(--text); cursor: pointer; font: inherit; position: relative; min-height: 44px; }
+.apc-hrow:hover { background: var(--surface-2); }
+.apc-hrow.on { border-color: var(--ember); }
+.apc-hrow b { font: 600 13px/1.3 var(--font); }
+.apc-hrow small { color: var(--muted); font-size: 12px; }
+.apc-hrow .apc-pill { position: absolute; right: 8px; top: 8px; }
+.apc-hshots { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 6px; }
+.apc-hmeta { display: grid; gap: 2px; margin: 8px 0 0; font-size: 13px; }
+.apc-hview .apc-row .input { flex: 1; min-width: 0; }
+.apc-keys { display: grid; gap: 2px; margin-top: 8px; }
+.apc-key { display: flex; justify-content: space-between; align-items: center; gap: 12px; min-height: 36px; padding: 0 4px; border-bottom: 1px solid var(--border); font-size: 13px; }
+.apc-key kbd { font: 600 11.5px/1 var(--mono); color: var(--muted); border: 1px solid var(--border); border-radius: 6px; padding: 5px 7px; white-space: nowrap; background: var(--canvas); }
+
+/* the map of all screens */
+.apc-map { position: absolute; inset: 0; z-index: 10; background: var(--canvas); overflow: hidden; touch-action: none; cursor: grab; user-select: none; }
+.apc-map:active { cursor: grabbing; }
+.apc-map-in { position: absolute; left: 0; top: 0; transform-origin: 0 0; }
+.apc-map-svg { position: absolute; left: 0; top: 0; color: var(--muted); pointer-events: none; }
+.apc-map-svg path { fill: none; stroke: currentColor; stroke-width: 1.5; }
+.apc-mc { position: absolute; width: 136px; padding: 7px; box-sizing: border-box; display: grid; gap: 6px; justify-items: center; border: 1px solid var(--border); border-radius: var(--r); background: var(--surface); cursor: pointer; }
+.apc-mc:hover { background: var(--surface-2); }
+.apc-mc.cur { border-color: var(--muted); }
+.apc-mc.sel { border-color: var(--ember); border-width: 2px; padding: 6px; }
+.apc-mc.lost { border-style: dashed; }
+.apc-mc.drag { z-index: 3; background: var(--raised); }
+.apc-mc .apc-mini { pointer-events: none; border-radius: 8px; }
+.apc-mcn { font: 600 12px/1.3 var(--font); max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.apc-mcp { display: flex; gap: 4px; flex-wrap: wrap; justify-content: center; min-height: 18px; }
+.apc-pill-warn { color: var(--ember); border-color: var(--ember); }
+.apc-map-tools { position: absolute; left: 12px; top: 12px; display: flex; align-items: center; gap: 6px; padding: 4px 6px 4px 12px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--r); cursor: default; flex-wrap: wrap; max-width: calc(100% - 24px); box-sizing: border-box; }
+.apc-map-tools .apc-eyebrow { margin: 0 6px 0 0; }
+.apc-map-tools .btn { display: inline-flex; align-items: center; gap: 6px; min-height: 40px; }
+.apc-mz { font: 600 11.5px/1 var(--mono); color: var(--muted); min-width: 40px; text-align: center; }
+.apc-map-sel { position: absolute; left: 50%; bottom: 44px; transform: translateX(-50%); display: flex; align-items: center; gap: 8px; padding: 6px 8px 6px 14px; background: var(--raised); border: 1px solid var(--border); border-radius: var(--r); font-size: 13px; cursor: default; white-space: nowrap; max-width: calc(100% - 16px); overflow-x: auto; box-sizing: border-box; }
+.apc-map-sel .btn { min-height: 40px; }
+.apc-map-box { position: absolute; border: 1px solid var(--ember); background: color-mix(in srgb, var(--ember) 10%, transparent); pointer-events: none; }
+.apc-map-hint { position: absolute; left: 0; right: 0; bottom: 12px; margin: 0; text-align: center; font-size: 12px; pointer-events: none; }
+.apc-mapon .apc-note { z-index: 11; }
+
+@media (max-width: 820px) {
+  .apc-plus #apc-mapb, .apc-plus #apc-cmb, .apc-m-desk { display: none !important; }
+  .apc-m-phone { display: grid !important; }
+  .apc-moremenu { width: min(300px, 92vw); right: -96px; }
+  /* one row at 390px: the name takes what is left */
+  .apc-top .apc-title { flex: 1 1 0; }
+  .apc-top .apc-name { width: 100%; max-width: none; min-width: 0; box-sizing: border-box; margin-left: 0; text-overflow: ellipsis; }
+  .apc-top .apc-sp { display: none; }
+  .apc-top .apc-tb { width: 36px; }
+  .apc-top .cw-row { flex: 0 1 auto; min-width: 0; overflow: hidden; }
+  .apc-top .btn, .apc-top .apc-menuw, .apc-top .apc-plus { flex: none; }
+  /* the note sits above the screen content, clear of what the person is tapping */
+  .apc-note { top: 8px; bottom: auto; max-width: calc(100% - 24px); z-index: 11; }
+  .apc-hgrid { grid-template-columns: 1fr; }
+  .apc-hlist { max-height: 30vh; }
+  .apc-sheet.apc-tsheet { align-items: flex-end; }
+  .apc-pin { min-width: 28px; height: 28px; line-height: 26px; }
+  .apc-map-hint { display: none; }
+  .apc-map-tools { left: 8px; top: 8px; padding: 4px; gap: 4px; flex-wrap: nowrap; }
+  .apc-map-tools .apc-eyebrow, .apc-map-tools .apc-mz { display: none; }
+  .apc-map-tools .btn { padding: 0 10px; }
+  .apc-map-sel { bottom: 10px; }
+  .apc-cbox { width: calc(100% - 16px); left: 8px !important; }
+  .apc-key { min-height: 40px; }
+}

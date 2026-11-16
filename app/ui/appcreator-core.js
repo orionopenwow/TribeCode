@@ -182,7 +182,13 @@
     note: k => `<rect width="300" height="190" fill="${k.s}"/><path d="M105 35h70l25 25v95h-95z" fill="${k.l}"/><path d="M175 35v25h25" fill="${k.m}"/><path d="M122 85h56M122 105h56M122 125h36" stroke="${k.a}" stroke-width="7" stroke-linecap="round"/>`,
   };
   const ILL_NAMES = Object.keys(ILL);
+  // pass 4: a person's own picture ("pic:<id>", kept in doc.pics as a small data URL) draws instead of an illustration.
+  // The pictures of the app being drawn are set by screenHTML/blockHTML (rendering is synchronous).
+  let CUR_PICS = null;
+  const PIC_RX = /^data:image\/(?:png|jpeg|webp|gif);base64,[A-Za-z0-9+/=]+$/;
+  const picId = data => { let h = 5381; for (let i = 0; i < data.length; i += 7) h = ((h << 5) + h + data.charCodeAt(i)) | 0; return 'p' + (h >>> 0).toString(36) + data.length.toString(36); };
   function illus(name, theme) {
+    if (typeof name === 'string' && name.slice(0, 4) === 'pic:') { const d = CUR_PICS && CUR_PICS[name.slice(4)]; if (d) return `<img class="ax-pic" src="${d}" alt="">`; }
     const k0 = palette(theme), dark = normTheme(theme).mode === 'dark';
     const k = { a: k0.accent, d: dark ? mix(k0.bg, '#000000', 0.3) : mix(k0.ink, k0.accent, 0.25), s: mix(k0.bg, k0.accent, dark ? 0.18 : 0.13), l: dark ? mix(k0.ink, k0.accent, 0.1) : mix(k0.bg, '#FFFFFF', 0.8), m: mix(k0.accent, dark ? k0.bg : '#FFFFFF', 0.45) };
     const f = ILL[name] || ILL.sparkle;
@@ -241,7 +247,7 @@
   }
   function normalize(doc) {
     doc = doc && typeof doc === 'object' ? clone(doc) : {};
-    const out = { v: 1, name: str(doc.name || 'My app', 48).trim() || 'My app', platform: doc.platform === 'android' ? 'android' : 'ios', device: ['phone', 'max', 'small', 'pixel'].includes(doc.device) ? doc.device : 'phone', theme: normTheme(doc.theme), screens: [], start: '' };
+    const out = { v: 1, name: str(doc.name || 'My app', 48).trim() || 'My app', platform: doc.platform === 'android' ? 'android' : 'ios', device: ['phone', 'max', 'small', 'pixel', 'tablet'].includes(doc.device) ? doc.device : 'phone', theme: normTheme(doc.theme), screens: [], start: '' };
     { const fx = FEAT ? FEAT.clean(doc.features) : []; if (fx.length) out.features = fx; }   // appfeatures.js: what the exported app does (Flint adds these with no AI)
     const ids = new Set(), seen = new Set();
     for (const s of Array.isArray(doc.screens) ? doc.screens.slice(0, 60) : []) {
@@ -253,6 +259,14 @@
     const has = id => out.screens.some(s => s.id === id);
     for (const s of out.screens) for (const bk of s.blocks) for (const [k, l] of Object.entries(bk.links)) if (!has(l.to)) delete bk.links[k];
     out.start = has(doc.start) ? doc.start : out.screens[0].id;
+    // pass 4: where each screen sits on the map (optional), and the person's own pictures that are still used
+    if (doc.map && typeof doc.map === 'object') { const m = {}; for (const sc of out.screens) { const q = doc.map[sc.id]; if (q && isFinite(q.x) && isFinite(q.y)) m[sc.id] = { x: Math.round(Math.max(-20000, Math.min(20000, q.x))), y: Math.round(Math.max(-20000, Math.min(20000, q.y))) }; } if (Object.keys(m).length) out.map = m; }
+    if (doc.pics && typeof doc.pics === 'object') {
+      const used = new Set(); JSON.stringify(out.screens).replace(/"pic:([\w-]{1,40})"/g, (_, id) => { used.add(id); return _; });
+      const pics = {}; let total = 0;
+      for (const id of used) { const d = doc.pics[id]; if (typeof d !== 'string' || d.length > 600000 || !PIC_RX.test(d) || total + d.length > 3000000 || Object.keys(pics).length >= 30) continue; pics[id] = d; total += d.length; }
+      if (Object.keys(pics).length) out.pics = pics;
+    }
     return out;
   }
   const templateList = () => TEMPLATES.map(t => ({ id: t.id, title: t.title, summary: t.summary, icon: t.icon, accent: t.accent, cat: t.cat || 'Everyday', sweet: !!t.sweet }));
@@ -309,11 +323,12 @@
     };
   }
   function blockHTML(doc, bk, edit) {
-    const B = BLOCKS[bk.type]; if (!B) return '';
+    const B = BLOCKS[bk.type]; if (!B) return ''; CUR_PICS = doc.pics || null;
     let inner = ''; try { inner = B.render(bk.props, helpers(doc, bk, edit)); } catch (e) { inner = `<p class="ax-sub">${esc(B.label)}</p>`; }
     return `<div class="ax-b ax-b-${bk.type}" data-b="${esc(bk.id)}">${inner}</div>`;
   }
   function screenHTML(doc, screen, opts) {
+    CUR_PICS = doc.pics || null;
     const edit = !!(opts && opts.edit), bar = screen.blocks.filter(b => b.type === 'tabs'), body = screen.blocks.filter(b => b.type !== 'tabs' && b.type !== 'nav' && !b.hide), top = screen.blocks.filter(b => b.type === 'nav');
     return `<section class="ax-screen" data-screen="${esc(screen.id)}"><div class="ax-status"><b>9:41</b><span class="ax-sig"><i></i><i></i><i></i></span></div>${top.map(b => blockHTML(doc, b, edit)).join('')}<div class="ax-scroll">${body.map(b => blockHTML(doc, b, edit)).join('')}</div>${bar.map(b => blockHTML(doc, b, edit)).join('')}</section>`;
   }
@@ -345,7 +360,7 @@
 & .ax-tabs{flex:none;display:flex;border-top:1px solid var(--ax-line);background:var(--ax-bg);padding:6px 6px 22px}& .ax-tab{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;font-size:11px;color:var(--ax-muted);min-height:44px;justify-content:center;border-radius:var(--ax-rs)}& .ax-tab.on{color:var(--ax-accent)}&[data-plat=android] .ax-navt{text-align:left}&[data-plat=android] .ax-tab.on .ax-icw{background:var(--ax-soft);border-radius:999px;padding:2px 16px}
 & .ax-list{background:var(--ax-surface);border:1px solid var(--ax-line);border-radius:var(--ax-r);overflow:hidden}& .ax-row{display:flex;align-items:center;gap:12px;padding:12px var(--ax-pad);min-height:52px}& .ax-row+.ax-row{border-top:1px solid var(--ax-line)}& .ax-rt{flex:1;min-width:0;display:flex;flex-direction:column}& .ax-rt b{font-weight:600;overflow:hidden;text-overflow:ellipsis}& .ax-rt small{color:var(--ax-muted);font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}& .ax-meta{color:var(--ax-muted);font-size:14px;white-space:nowrap}& .ax-chev{width:16px;height:16px;color:var(--ax-muted)}
 & .ax-ib{width:36px;height:36px;border-radius:var(--ax-rs);background:var(--ax-soft);color:var(--ax-accent);display:grid;place-items:center;flex:none}
-& .ax-art{position:relative;overflow:hidden;border-radius:var(--ax-r);background:var(--ax-surface2);aspect-ratio:300/190}& .ax-art svg{position:absolute;inset:0;width:100%;height:100%;display:block}& .ax-tall{aspect-ratio:4/3}& .ax-sq{aspect-ratio:1;max-width:240px;width:100%;margin:8px auto 0}& .ax-hero{aspect-ratio:16/11}
+& .ax-art{position:relative;overflow:hidden;border-radius:var(--ax-r);background:var(--ax-surface2);aspect-ratio:300/190}& .ax-art svg{position:absolute;inset:0;width:100%;height:100%;display:block}& .ax-art .ax-pic{position:absolute;inset:0;width:100%;height:100%;display:block;object-fit:cover}& .ax-tall{aspect-ratio:4/3}& .ax-sq{aspect-ratio:1;max-width:240px;width:100%;margin:8px auto 0}& .ax-hero{aspect-ratio:16/11}
 & .ax-cards{display:flex;gap:var(--ax-gap);overflow-x:auto;margin:0 calc(-1 * var(--ax-pad));padding:0 var(--ax-pad);scrollbar-width:none}& .ax-cardi{flex:0 0 72%;position:relative;display:flex;flex-direction:column;gap:2px}& .ax-cardi .ax-art{margin-bottom:6px}& .ax-cardi small{color:var(--ax-muted);font-size:13px}
 & .ax-badge{display:inline-flex;align-items:center;gap:3px;font-size:12px;font-weight:600;padding:3px 8px;border-radius:999px;background:var(--ax-accent);color:var(--ax-on)}& .ax-badge .ax-i{width:12px;height:12px}& .ax-cardi .ax-badge{position:absolute;top:10px;left:10px}
 & .ax-feat{background:var(--ax-surface);border:1px solid var(--ax-line);border-radius:var(--ax-r);overflow:hidden}& .ax-feat .ax-art{border-radius:0}& .ax-featb{padding:var(--ax-pad);display:flex;flex-direction:column;gap:4px}& .ax-featb .ax-btn{margin-top:10px;align-self:flex-start}
@@ -459,6 +474,25 @@ ${PARTS && PARTS.CSS ? PARTS.CSS : ''}
     }
     if (O === 'rename') { doc.name = str(op.name, 48) || doc.name; return say(`Renamed the app to ${doc.name}.`); }
     if (O === 'kit') { const r = kit(doc, op.kit); if (!r.added.length) return say('That kit is not in the library.'); return { doc: r.doc, say: `Added ${(KITS[op.kit] || {}).title || 'the screens'}.`, added: r.added }; }
+    if (O === 'screen.dup') {   // pass 4: a copy of a whole screen, right after it
+      const s0 = findScreen(doc, op.screen); if (!s0) return say(''); if (doc.screens.length >= 60) return say('An app can have 60 screens.');
+      const c = clone(s0); let id = slug(s0.id + '-copy'); while (findScreen(doc, id)) id += '-2'; c.id = id; c.name = str(s0.name + ' copy', 40); delete c.tab; c.blocks.forEach(b => { delete b.id; });
+      doc.screens.splice(doc.screens.indexOf(s0) + 1, 0, c); const r = say(`Made a copy of ${s0.name}.`); r.added = [id]; return r;
+    }
+    if (O === 'paste') {   // pass 4: { blocks: [...], screen, at } or { screens: [...] }, with their pictures; ids are made fresh
+      if (op.pics && typeof op.pics === 'object') doc.pics = Object.assign({}, doc.pics, op.pics);
+      if (Array.isArray(op.screens) && op.screens.length) {
+        const added = [];
+        for (const s0 of op.screens.slice(0, 20)) { if (!s0 || doc.screens.length >= 60) break; const c = clone(s0); let id = slug(c.id || c.name); while (findScreen(doc, id)) id += '-2'; c.id = id; delete c.tab; (c.blocks || []).forEach(b => { delete b.id; }); doc.screens.push(c); added.push(id); }
+        const r = say(added.length === 1 ? 'Pasted the screen.' : `Pasted ${added.length} screens.`); r.added = added; return r;
+      }
+      const s1 = findScreen(doc, op.screen) || doc.screens[0], list = (Array.isArray(op.blocks) ? op.blocks : []).filter(b => b && BLOCKS[b.type]).slice(0, 20); if (!list.length) return say('');
+      let at = op.at == null ? s1.blocks.length : Math.max(0, Math.min(s1.blocks.length, +op.at)); const ids = [];
+      for (const b0 of list) { if (s1.blocks.length >= 40) break; const c = clone(b0); c.id = b0.type.slice(0, 3) + '-' + rid(); ids.push(c.id); s1.blocks.splice(at++, 0, c); }
+      const r = say(ids.length === 1 ? 'Pasted it.' : `Pasted ${ids.length} parts.`); r.block = ids[0]; r.blocks = ids; return r;
+    }
+    if (O === 'device') { doc.device = op.device === 'tablet' ? 'tablet' : 'phone'; return say(doc.device === 'tablet' ? 'Showing it at tablet size.' : 'Showing it at phone size.'); }
+    if (O === 'map') { doc.map = Object.assign({}, doc.map, op.at || {}); return say(op.say == null ? 'Arranged the map.' : op.say); }
     if (O === 'screen.add') { let id = slug(op.name || 'Screen'); while (findScreen(doc, id)) id += '-2'; doc.screens.push({ id, name: str(op.name || 'New screen', 40), icon: 'star', blocks: [{ type: 'nav', props: { title: str(op.name || 'New screen', 40), back: true, action: '' } }, { type: 'empty', props: clone(D.DEFAULTS.empty) }] }); return { ...say(`Added the ${op.name || 'new'} screen.`), added: [id] }; }
     if (O === 'screen.remove') { if (doc.screens.length < 2) return say('An app needs at least one screen.'); doc.screens = doc.screens.filter(s => s.id !== op.screen); for (const s of doc.screens) for (const bk of s.blocks) { for (const [k, l] of Object.entries(bk.links)) if (l.to === op.screen) delete bk.links[k]; if (bk.type === 'tabs') { const keep = []; bk.props.items.forEach((it, i) => { const l = bk.links['items.' + i]; if (!(l === undefined && Object.keys(bk.links).length && false)) keep.push(it); }); } } return say('Removed the screen.'); }
     if (O === 'screen.rename') { const s = findScreen(doc, op.screen); if (s) s.name = str(op.name, 40) || s.name; return say('Renamed the screen.'); }
@@ -473,7 +507,11 @@ ${PARTS && PARTS.CSS ? PARTS.CSS : ''}
     if (O === 'block.dup') { const c = clone(bk); delete c.id; sc.blocks.splice(sc.blocks.indexOf(bk) + 1, 0, c); return say('Duplicated it.'); }
     if (O === 'text') { setPath(bk.props, op.path, str(op.value, 600)); return say('Changed the words.'); }
     if (O === 'icon') { if (!D.ICONS[op.value]) return say('That icon is not in the set.'); setPath(bk.props, op.path, op.value); return say('Changed the icon.'); }
-    if (O === 'illus') { if (!ILL[op.value]) return say('That picture is not in the set.'); setPath(bk.props, op.path, op.value); return say('Changed the picture.'); }
+    if (O === 'pic') {   // pass 4: your own picture in a picture slot (already made small by the editor)
+      const d = String(op.data || ''); if (!PIC_RX.test(d) || d.length > 600000) return say('That picture is too big or not a picture. Try a smaller one.');
+      const id = picId(d); doc.pics = Object.assign({}, doc.pics, { [id]: d }); if (!setPath(bk.props, op.path, 'pic:' + id)) return say(''); return say('Put your picture in. It is saved with the app.');
+    }
+    if (O === 'illus') { if (/^pic:/.test(String(op.value)) && doc.pics && doc.pics[String(op.value).slice(4)]) { setPath(bk.props, op.path, op.value); return say('Changed the picture.'); } if (!ILL[op.value]) return say('That picture is not in the set.'); setPath(bk.props, op.path, op.value); return say('Changed the picture.'); }
     if (O === 'link') { if (!findScreen(doc, op.to)) return say('That screen does not exist.'); bk.links[str(op.path, 40)] = { to: op.to, how: ['push', 'sheet', 'fade', 'morph'].includes(op.how) ? op.how : 'push' }; return say(`Linked to ${findScreen(doc, op.to).name}.`); }
     if (O === 'unlink') { delete bk.links[str(op.path, 40)]; return say('Removed the link.'); }
     if (/^item\./.test(O)) {
@@ -494,7 +532,7 @@ ${PARTS && PARTS.CSS ? PARTS.CSS : ''}
     const html = `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>${esc(doc.name)}</title>
 <meta name="theme-color" content="${k.bg}"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon.svg"><link rel="apple-touch-icon" href="icon.svg">
 <style>${css(doc, { scope: '.ax', fontBase: 'fonts/' })}${FEAT && doc.features ? FEAT.css(doc.features) : ''}
-html,body{margin:0;height:100%;background:${k.bg}}.ax{position:fixed;inset:0;overflow:hidden}.ax .ax-status{display:none}@supports(padding:env(safe-area-inset-top)){.ax .ax-screen{padding-top:env(safe-area-inset-top)}.ax .ax-tabs{padding-bottom:max(10px,env(safe-area-inset-bottom))}}@media(min-width:600px){body{display:grid;place-items:center}.ax{position:relative;inset:auto;width:390px;height:844px;border-radius:44px;border:1px solid ${k.line}}.ax .ax-status{display:flex}}</style></head>
+html,body{margin:0;height:100%;background:${k.bg}}.ax{position:fixed;inset:0;overflow:hidden}.ax .ax-status{display:none}@supports(padding:env(safe-area-inset-top)){.ax .ax-screen{padding-top:env(safe-area-inset-top)}.ax .ax-tabs{padding-bottom:max(10px,env(safe-area-inset-bottom))}}@media(min-width:${doc.device === 'tablet' ? 1100 : 600}px){body{display:grid;place-items:center}.ax{position:relative;inset:auto;width:390px;height:844px;border-radius:44px;border:1px solid ${k.line}}.ax .ax-status{display:flex}}</style></head>
 <body><main class="ax" id="app" ${attrs(doc)}>
 ${screens}
 </main><script src="app.js"></script></body></html>
@@ -517,16 +555,18 @@ ${screens}
     const sl = slug(doc.name) || 'app';
     const pkg = JSON.stringify({ name: sl, version: '1.0.0', main: 'node_modules/expo/AppEntry.js', private: true, scripts: { start: 'expo start', android: 'expo start --android', ios: 'expo start --ios', web: 'expo start --web' }, dependencies: { expo: '~52.0.0', 'expo-status-bar': '~2.0.1', '@expo/vector-icons': '~14.0.4', react: '18.3.1', 'react-native': '0.76.9', 'react-dom': '18.3.1', 'react-native-web': '~0.19.13', '@expo/metro-runtime': '~4.0.1', 'expo-asset': '~11.0.5', 'expo-font': '~13.0.4' } }, null, 2);   // versions are Expo SDK 52's own (expo/bundledNativeModules.json); expo-asset and expo-font are listed so npm puts them where Metro looks (npm otherwise nests them under expo); the web packages make `npm run web` and `npx expo export --platform web` work (docs/APP-CREATOR.md)
     const appJson = JSON.stringify({ expo: { name: doc.name, slug: sl, version: '1.0.0', orientation: 'portrait', userInterfaceStyle: t.mode === 'dark' ? 'dark' : 'light', backgroundColor: k.bg, ios: { supportsTablet: false }, android: {} } }, null, 2);
-    const design = JSON.stringify({ name: doc.name, start: doc.start, theme: { ...k, radius: rc, radiusSmall: rs, radiusButton: Math.min(rb, 28), gap: g, pad: pd, dark: t.mode === 'dark' }, icons: FEATHER, screens: doc.screens }, null, 1);
+    const design = JSON.stringify({ name: doc.name, start: doc.start, theme: { ...k, radius: rc, radiusSmall: rs, radiusButton: Math.min(rb, 28), gap: g, pad: pd, dark: t.mode === 'dark' }, icons: FEATHER, screens: doc.screens, ...(doc.pics ? { pics: doc.pics } : {}) }, null, 1);
     const app = `// ${doc.name}: drawn from design.json (TribeCode's App Creator). Every screen, link and tab comes from that file,
 // so a new design can replace it. Built on React Native's own pieces and Expo's icon set; no navigation library.
 import React, { useRef, useState } from 'react';
-import { Animated, Pressable, SafeAreaView, ScrollView, StyleSheet, Switch, Text, TextInput, View, Easing } from 'react-native';
+import { Animated, Image, Pressable, SafeAreaView, ScrollView, StyleSheet, Switch, Text, TextInput, View, Easing } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { Feather } from '@expo/vector-icons';
 import D from './design.json';
 const T = D.theme;
 const Icon = ({ name, size = 20, color = T.ink }) => <Feather name={D.icons[name] || 'circle'} size={size} color={color} />;
+// a picture slot: the person's own picture when the design has one (kept inside design.json), else the plain tinted box
+const Pic = ({ name, style }) => { const uri = String(name || '').slice(0, 4) === 'pic:' ? (D.pics || {})[String(name).slice(4)] : ''; return uri ? <Image source={{ uri }} resizeMode="cover" style={style} /> : <View style={style} />; };
 
 function Block({ b, go, back }) {
   const p = b.props || {}, link = k => (b.links || {})[k], tap = k => () => { const l = link(k); if (l) go(l.to, l.how); };
@@ -536,7 +576,7 @@ function Block({ b, go, back }) {
     case 'header': return <View>{p.eyebrow ? <Text style={s.eyebrow}>{p.eyebrow}</Text> : null}<Text style={s.h1}>{p.title}</Text>{p.sub ? <Text style={s.sub}>{p.sub}</Text> : null}</View>;
     case 'list': case 'settings': case 'checklist': return <View>{p.title ? <Text style={s.h2}>{p.title}</Text> : null}<View style={s.list}>{(p.items || []).map((it, i) => <Row key={i} it={it} kind={b.type} onPress={link('items.' + i) ? tap('items.' + i) : null} />)}</View></View>;
     case 'cards': case 'grid': return <View>{p.title ? <Text style={s.h2}>{p.title}</Text> : null}<View style={s.grid}>{(p.items || []).map((it, i) => <Pressable key={i} style={s.gi} onPress={tap('items.' + i)}><View style={s.art} /><Text style={s.b}>{it.title}</Text><Text style={s.small}>{it.sub || it.price || ''}</Text></Pressable>)}</View></View>;
-    case 'card': return <Pressable style={s.card} onPress={tap('')}><View style={s.art} /><View style={{ padding: T.pad }}><Text style={s.eyebrow}>{p.meta}</Text><Text style={s.h2}>{p.title}</Text><Text style={s.sub}>{p.sub}</Text>{p.button ? <Pressable style={[s.btn, { alignSelf: 'flex-start', marginTop: 10 }]} onPress={tap('button')}><Text style={s.btnt}>{p.button}</Text></Pressable> : null}</View></Pressable>;
+    case 'card': return <Pressable style={s.card} onPress={tap('')}><Pic name={p.illus} style={s.art} /><View style={{ padding: T.pad }}><Text style={s.eyebrow}>{p.meta}</Text><Text style={s.h2}>{p.title}</Text><Text style={s.sub}>{p.sub}</Text>{p.button ? <Pressable style={[s.btn, { alignSelf: 'flex-start', marginTop: 10 }]} onPress={tap('button')}><Text style={s.btnt}>{p.button}</Text></Pressable> : null}</View></Pressable>;
     case 'form': return <View style={{ gap: T.gap }}>{(p.fields || []).map((f, i) => <View key={i}><Text style={s.label}>{f.label}</Text><TextInput style={s.input} placeholder={f.placeholder} placeholderTextColor={T.muted} /></View>)}{p.button ? <Pressable style={s.btn} onPress={tap('button')}><Text style={s.btnt}>{p.button}</Text></Pressable> : null}</View>;
     case 'search': return <View style={{ gap: 10 }}>{p.placeholder ? <TextInput style={s.input} placeholder={p.placeholder} placeholderTextColor={T.muted} /> : null}<ScrollView horizontal showsHorizontalScrollIndicator={false}>{(p.chips || []).map((c, i) => <Pressable key={i} onPress={() => setOn(i)} style={[s.chip, i === on && s.chipOn]}><Text style={i === on ? { color: T.bg } : s.text}>{c}</Text></Pressable>)}</ScrollView></View>;
     case 'chat': return <View style={{ gap: 6 }}>{(p.messages || []).map((m, i) => <View key={i} style={[s.msg, m.who === 'me' ? s.me : s.them]}><Text style={m.who === 'me' ? { color: T.on } : s.text}>{m.text}</Text></View>)}<TextInput style={[s.input, { marginTop: 8, borderRadius: 999 }]} placeholder={p.placeholder} placeholderTextColor={T.muted} /></View>;
@@ -548,11 +588,11 @@ function Block({ b, go, back }) {
     case 'paywall': return <View style={{ gap: 12 }}><Text style={s.h1}>{p.title}</Text><Text style={s.sub}>{p.sub}</Text>{(p.features || []).map((f, i) => <Text key={i} style={s.text}>✓  {f}</Text>)}{(p.plans || []).map((pl, i) => <Pressable key={i} onPress={() => setPick(i)} style={[s.plan, i === pick && { borderColor: T.accent, backgroundColor: T.soft }]}><Text style={s.b}>{pl.name}</Text><Text style={s.text}>{pl.price} {pl.per}</Text></Pressable>)}<Pressable style={s.btn} onPress={tap('button')}><Text style={s.btnt}>{p.button}</Text></Pressable><Text style={[s.small, { textAlign: 'center' }]}>Payments are not connected: this is a design.</Text></View>;
     case 'stats': return <View style={{ flexDirection: 'row', gap: 10 }}>{(p.tiles || []).map((x, i) => <View key={i} style={[s.card, { flex: 1, padding: T.pad }]}><Text style={s.h1}>{x.n}</Text><Text style={s.sub}>{x.label}</Text></View>)}</View>;
     case 'chart': return <View style={s.card}><View style={{ padding: T.pad }}><Text style={s.eyebrow}>{p.title || ''}</Text>{p.big ? <Text style={s.h1}>{p.big}</Text> : null}<View style={{ flexDirection: 'row', alignItems: 'flex-end', gap: 6, height: 90, marginTop: 8 }}>{(p.values || []).map((v, i, a) => <View key={i} style={{ flex: 1, height: (90 * v) / Math.max(...a), backgroundColor: i === a.length - 1 ? T.accent : T.soft, borderRadius: 4 }} />)}</View>{(p.tiles || []).map((x, i) => <Text key={i} style={s.text}>{x.n}  {x.label}</Text>)}</View></View>;
-    case 'player': case 'timer': return <View style={{ alignItems: 'center', gap: 6 }}><View style={[s.art, { width: 220, aspectRatio: 1 }]} /><Text style={s.h1}>{p.title || p.time}</Text><Text style={s.sub}>{p.artist || p.label}</Text>{p.button ? <Pressable style={[s.btn, { alignSelf: 'stretch' }]} onPress={tap('button')}><Text style={s.btnt}>{p.button}</Text></Pressable> : null}</View>;
+    case 'player': case 'timer': return <View style={{ alignItems: 'center', gap: 6 }}><Pic name={p.illus} style={[s.art, { width: 220, aspectRatio: 1 }]} /><Text style={s.h1}>{p.title || p.time}</Text><Text style={s.sub}>{p.artist || p.label}</Text>{p.button ? <Pressable style={[s.btn, { alignSelf: 'stretch' }]} onPress={tap('button')}><Text style={s.btnt}>{p.button}</Text></Pressable> : null}</View>;
     case 'calendar': return <View>{p.title ? <Text style={s.h2}>{p.title}</Text> : null}<ScrollView horizontal>{(p.days || []).map((d, i) => <Pressable key={i} onPress={() => setOn(i)} style={[s.chip, i === on && s.chipOn]}><Text style={i === on ? { color: T.bg } : s.text}>{d}</Text></Pressable>)}</ScrollView><View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 10 }}>{(p.slots || []).map((x, i) => <Pressable key={i} onPress={() => setPick(i)} style={[s.chip, i === pick && s.chipOn]}><Text style={i === pick ? { color: T.bg } : s.text}>{x}</Text></Pressable>)}</View></View>;
     case 'button': return <Pressable style={[s.btn, p.style === 'secondary' && { backgroundColor: T.surface2 }]} onPress={tap('')}><Text style={[s.btnt, p.style === 'secondary' && { color: T.ink }]}>{p.label}</Text></Pressable>;
     case 'text': return <Text style={[s.text, { lineHeight: 24 }]}>{p.text}</Text>;
-    case 'image': return <View style={[s.art, { aspectRatio: 16 / 11 }]} />;
+    case 'image': return <Pic name={p.illus} style={[s.art, { aspectRatio: 16 / 11 }]} />;
     case 'map': return <View style={[s.art, { aspectRatio: 2 }]}><Text style={[s.small, { position: 'absolute', left: 10, bottom: 10 }]}>{p.label}</Text></View>;
     default: return null;
   }
@@ -634,5 +674,5 @@ const s = StyleSheet.create({
   }
 
   return { attrs, vars, baseCSS, allFonts, normalize, template, templateList, blank, kit, addTab, apply, css, screenHTML, blockHTML, pwa, expo, brief, outline, entities, illus, icon, palette, normTheme, findScreen, findBlock, getPath,
-    AxRun, PRESETS, FONTS, BLOCKS, BLOCK_TYPES, GROUPS, TEMPLATES, KITS, COLORS, RADII, DENS, MOTION, ILL_NAMES, ICON_NAMES: D.ICON_NAMES, RUNTIME, contrast, version: 1 };
+    picId, PIC_RX, AxRun, PRESETS, FONTS, BLOCKS, BLOCK_TYPES, GROUPS, TEMPLATES, KITS, COLORS, RADII, DENS, MOTION, ILL_NAMES, ICON_NAMES: D.ICON_NAMES, RUNTIME, contrast, version: 1 };
 });
