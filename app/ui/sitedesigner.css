@@ -166,3 +166,109 @@ body.wdz-open { overflow: hidden; }
   .wdz-start { inset: 96px 0 0; }
   .wdz-flint .flint-mount { min-height: 360px; max-height: 70vh; }
 }
+
+/* ---------- p4-site: one row on every screen; what is used less sits under More ---------- */
+.wdz { display: flex; flex-direction: column; }
+.wdz > .wdz-top, .wdz > .cr-strip { flex: 0 0 auto; }
+.wdz > .wdz-body { flex: 1 1 auto; min-height: 0; }
+.wdz-top { flex-wrap: nowrap; position: relative; min-width: 0; }
+.wdz-top > * { flex: 0 0 auto; }
+.wdz-top .wdz-svg, .wdz-top .ti-svg { display: block; }
+.wdz-back { display: inline-flex; align-items: center; gap: 6px; }
+.wdz-top > .wdz-title { flex: 0 1 auto; min-width: 0; }
+.wdz-top > .wdz-pages { flex: 1 1 0; min-width: 72px; max-width: none; scrollbar-width: none; }
+.wdz-pages::-webkit-scrollbar { display: none; }
+.wdz-top > .wdz-sp { flex: 0 0 0; }
+.wdz-top > .wdz-saved { white-space: nowrap; max-width: 17ch; min-width: 0; overflow: hidden; text-overflow: ellipsis; flex: 0 1 auto; }
+.wdz-ic { display: inline-grid; place-items: center; }
+.wdz-devs .btn { display: inline-flex; align-items: center; gap: 6px; padding: 0 9px; border: 0; }
+.wdz-zoom { display: inline-flex; align-items: center; border: 1px solid var(--border); border-radius: var(--r-sm); }
+.wdz-zoom .btn { border: 0; }
+.wdz-zoom .wdz-ic { width: 30px; }
+.wdz-zv { min-width: 50px; padding: 0 2px; font: 600 12px var(--mono); justify-content: center; }
+.wdz-zoom .wdz-zfit { padding: 0 9px; border-left: 1px solid var(--border); border-radius: 0 var(--r-sm) var(--r-sm) 0; }
+.wdz-morewrap { position: relative; display: inline-flex; }
+.wdz .wdz-more { display: inline-grid; position: relative; }
+.wdz-more[aria-expanded="true"] { background: var(--surface-2); color: var(--text); }
+.wdz-dot { position: absolute; top: 5px; right: 5px; width: 7px; height: 7px; border-radius: 50%; background: var(--accent); }
+.wdz-dot[hidden] { display: none; }
+.wdz-menu button[hidden], .wdz-menu [hidden] { display: none; }
+.wdz-moremenu { width: 320px; max-height: calc(100dvh - 76px); overflow: auto; gap: 2px; padding: 8px; z-index: 6; }
+.wdz-moremenu .wdz-eyebrow { margin: 4px 10px 6px; }
+.wdz-mrow { display: flex; gap: 8px; align-items: center; padding: 0 10px 6px; }
+.wdz-mrow .wdz-sel-wrap { flex: 1; min-width: 0; }
+.wdz-mrow #wdz-theme { width: 100%; }
+.wdz-menu .wdz-mrow .btn { display: inline-flex; align-items: center; height: 32px; padding: 0 12px; border: 1px solid var(--border); font: 600 13px var(--font); }
+.wdz-moremenu hr { border: 0; border-top: 1px solid var(--border); margin: 4px 0; width: 100%; }
+.wdz-moremenu b { display: flex; align-items: center; }
+.wdz-moremenu button[aria-pressed="true"] b::after { content: '✓'; margin-left: auto; color: var(--live); font-weight: 600; }
+.wdz .wdz-only-phone { display: none; }
+.wdz-dl-ico { display: none; }
+@media (max-width: 1560px) { .wdz-devs .wdz-lbl { display: none; } .wdz-devs .btn { padding: 0 8px; } }
+@media (max-width: 1320px) { .wdz-back .wdz-lbl { display: none; } .wdz-back { width: 34px; padding: 0; justify-content: center; } #wdz-name { max-width: 12ch; } .wdz-top > .wdz-saved { max-width: 10ch; } }
+@media (max-width: 1160px) { .wdz-top > .wdz-title, .wdz-zoom .wdz-zfit { display: none; } }
+@media (max-width: 980px) and (min-width: 821px) { .wdz-top > .wdz-saved { max-width: 7ch; } }
+
+/* the panel: four tabs in one row; Ideas and Style hold two things each */
+.wdz-phead { min-width: 0; }
+.wdz .wdz-ptabs { flex-wrap: nowrap; }
+.wdz .wdz-ptabs button { flex: 1 1 0; padding: 0 6px; }
+.wdz-sub { display: flex; gap: 4px; padding: 10px 14px 0; }
+.wdz-sub[hidden] { display: none; }
+.wdz-sub button, .wdz-code-tabs button { height: 28px; padding: 0 12px; border: 1px solid var(--border); border-radius: 999px; background: none; color: var(--muted); font: 600 12px var(--font); cursor: pointer; display: inline-flex; align-items: center; transition: border-color var(--dur-quick) var(--ease-out), color var(--dur-quick) var(--ease-out); }
+.wdz-sub button:hover, .wdz-code-tabs button:hover { color: var(--text); }
+.wdz-sub button[aria-pressed="true"], .wdz-code-tabs button[aria-selected="true"] { background: var(--surface-2); color: var(--text); border-color: var(--faint); }
+
+/* zoom: the preview keeps its real width and is drawn smaller or larger */
+.wdz-stage > .wdz-frame.is-zoom { position: relative; max-width: none; overflow: hidden; align-self: flex-start; margin-inline: auto; flex-shrink: 0; transition: none; }
+.wdz-frame.is-zoom iframe { position: absolute; top: 0; left: 0; max-width: none; transform-origin: 0 0; }
+
+/* keyboard shortcuts, in groups */
+.wdz-keys-in { width: min(780px, 94vw); max-height: 88dvh; overflow: auto; }
+.wdz-keys-h { margin: 0 0 14px; font: 700 20px/1.2 var(--display); }
+.wdz-keys-g { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 16px 28px; margin-bottom: 14px; }
+.wdz-keys-g h3 { font: 600 10.5px/1.4 var(--mono); text-transform: uppercase; letter-spacing: .08em; color: var(--faint); margin: 0 0 8px; }
+.wdz-keys .wdz-keys-g dl { grid-template-columns: 1fr; gap: 3px; margin: 0; }
+.wdz-keys .wdz-keys-g dt { margin-top: 8px; display: flex; gap: 4px; flex-wrap: wrap; }
+.wdz-keys .wdz-keys-g dt:first-child { margin-top: 0; }
+
+/* code */
+.wdz-code-tabs { display: flex; gap: 4px; margin-bottom: 12px; flex-wrap: wrap; }
+.wdz-pre { margin: 8px 0 10px; padding: 12px; max-height: 46dvh; overflow: auto; border: 1px solid var(--border); border-radius: var(--r-sm); background: var(--canvas); color: var(--text); font: 12px/1.55 var(--mono); white-space: pre; tab-size: 2; user-select: text; }
+.wdz-own { width: 100%; height: auto; min-height: 220px; padding: 12px; margin: 8px 0 4px; font: 12.5px/1.55 var(--mono); resize: vertical; white-space: pre; }
+.wdz-code .wdz-hint b { color: var(--text); }
+
+@media (prefers-reduced-motion: reduce) { .wdz-sub button, .wdz-code-tabs button { transition: none; } }
+@media (max-width: 820px) {
+  /* one row: Back, the pages (they scroll sideways), undo, redo, More, download. Everything else opens under More. */
+  .wdz-top { gap: 4px; padding: 4px 8px; min-height: 48px; }
+  .wdz-top > .wdz-title, .wdz-top > .wdz-devs, .wdz-top > .wdz-zoom, .wdz .wdz-hide-phone { display: none; }
+  .wdz-top > .wdz-saved { display: inline; font-size: 11px; max-width: 58px; min-width: 0; flex: 0 1 auto; }   /* whether it is saved shows on a phone too */
+  .wdz-top > .wdz-pages { min-width: 56px; }
+  .wdz .wdz-only-phone { display: grid; }
+  .wdz-top > .wdz-pages { order: 0; width: auto; }
+  .wdz-back, .wdz-top .wdz-ic { width: 40px; height: 40px; padding: 0; justify-content: center; }
+  .wdz-back .wdz-lbl, #wdz-dl, .wdz-dl-caret { display: none; }
+  .wdz-dl-ico { display: block; }
+  .wdz-dl > .wdz-dl-more { width: 40px; height: 40px; padding: 0; border-left: 0; border-radius: var(--r-sm); display: inline-grid; place-items: center; }
+  .wdz-moremenu, .wdz-dl > .wdz-menu { position: fixed; left: 8px; right: 8px; top: 52px; width: auto; max-height: calc(100dvh - 64px); }
+  .wdz-menu button { min-height: 44px; }
+  .wdz-sub button, .wdz-code-tabs button { height: 40px; padding: 0 14px; }
+  .wdz-start { inset: 49px 0 0; }
+}
+/* who is here, in the one row: the words go first when it gets tight; a phone keeps three faces */
+@media (max-width: 1500px) { .wdz-top .cw-say { display: none; } }
+.wdz-top:has(.cw-row:not([hidden])) > .pz-slot { display: none; }   /* the co-work row already shows who is here */
+@media (max-width: 820px) {
+  .wdz-top > .pz-slot, .wdz-top .cw-say { display: none; }
+  .wdz-top .cw-chip:nth-child(n+4) { display: none; }
+  .wdz-back, .wdz-top .wdz-ic, .wdz-dl > .wdz-dl-more { min-height: 40px; }
+}
+/* the theme list is in More on every screen; the panel gives what is selected a little more room than Flint */
+.wdz .wdz-moremenu .wdz-sel-wrap { display: block; }
+@media (min-width: 821px) { .wdz-right { grid-template-rows: auto minmax(0, 1.35fr) minmax(280px, 1fr); } }
+
+.wdz-zoom .wdz-zfit[aria-pressed="true"] { background: var(--surface-2); color: var(--text); }
+/* a narrow window: the list of blocks keeps every button inside its row (the last one used to be cut off) */
+.wdz-blk-t { min-width: 0; overflow-wrap: anywhere; }
+@media (max-width: 1100px) and (min-width: 821px) { .wdz-body { grid-template-columns: 220px 1fr 280px; } .wdz-blk-acts button { width: 21px; } }

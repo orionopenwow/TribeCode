@@ -274,7 +274,7 @@ console.log(JSON.stringify({ done: r.done.length, skipped: r.skipped.length, tit
             pg.evaluate("TribeSiteDesigner.undo()"); pg.wait_for_timeout(300)
 
             # ---- Have my agent do it: read, propose, the person approves, Undo
-            pg.click("#wdz-agent")
+            pg.click("#wdz [data-wdz=more]"); pg.click("#wdz-agent")
             pg.wait_for_selector("#stu-agent", timeout=5000)
             shot(pg, "studio-agent-1440.png")
             assert pg.locator("#stu-agent [data-stu=agent-flint]").count() == 1, "works with no agent too: Flint is offered"
@@ -312,7 +312,7 @@ console.log(JSON.stringify({ done: r.done.length, skipped: r.skipped.length, tit
             pg.wait_for_selector("#wb-design", timeout=15000); pg.click("#wb-design")
             pg.wait_for_function("TribeSiteDesigner.state() && TribeSiteDesigner.state().open && TribeSiteDesigner.cfg().pages.length >= 1", timeout=10000)
             pg.wait_for_timeout(600)
-            pg.click("#wdz-agent"); pg.wait_for_selector("#stu-agent [data-stu=agent-send]", timeout=8000)   # there is an agent in the tribe now
+            pg.click("#wdz [data-wdz=more]"); pg.click("#wdz-agent"); pg.wait_for_selector("#stu-agent [data-stu=agent-send]", timeout=8000)   # there is an agent in the tribe now
             pg.fill("#stu-ask", "Add a short how it works section and call the place friendly")
             shot(pg, "studio-agent-send-1440.png")
             pg.click("#stu-agent [data-stu=agent-send]")
@@ -321,7 +321,7 @@ console.log(JSON.stringify({ done: r.done.length, skipped: r.skipped.length, tit
             assert len(asks) == 1, f"one tap sends one request, got {len(asks)}"
             err, lane = mcp(key, "my_lane", {}, project=pid); assert not err, lane
             import re as _re
-            hid = _re.search(r"h-[a-z0-9]{4,}", lane); assert hid and "site_read" in lane, lane[:600]
+            hid = _re.search(r"h-[A-Za-z0-9_-]{4,}", lane); assert hid and "site_read" in lane, lane[:600]
             err, took = mcp(key, "take_handoff", {"id": hid.group(0)}, project=pid); assert not err and "site_propose" in took, took
             err, txt = mcp(key, "site_read", {}, project=pid); assert not err, txt
             o = json.loads(txt); first = o["pages"][0]["blocks"][0]["id"]

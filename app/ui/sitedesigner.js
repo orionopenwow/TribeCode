@@ -14,6 +14,10 @@
   const $ = s => root && root.querySelector(s);
   const toast = m => window.TribeApp && window.TribeApp.toast && window.TribeApp.toast(m);
   const LOCAL = 'tribecode.sitedesigner.local';
+  // p4-site: stroke icons for the bar (the shared set where it has one, our own few where it does not)
+  const sv = d => `<svg class="wdz-svg" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${d}</svg>`;
+  const IC = { back: sv('<path d="M19 12H5M11 6l-6 6 6 6"/>'), undo: sv('<path d="M9 14 4 9l5-5"/><path d="M4 9h10a6 6 0 0 1 0 12h-3"/>'), redo: sv('<path d="m15 14 5-5-5-5"/><path d="M20 9H10a6 6 0 0 0 0 12h3"/>'), minus: sv('<path d="M5 12h14"/>'), plus: sv('<path d="M12 5v14M5 12h14"/>') };
+  const ic = (n, z = 16) => (window.TribeIcons && window.TribeIcons.has && window.TribeIcons.has(n) ? window.TribeIcons.svg(n, z) : '');
   const connected = () => !!(C && C.connected && C.connected() && C.hasToken && C.hasToken());
   let root = null, st = null, saveT = 0, frameScroll = 0, liveText = null, liveT = 0;
   let cw = null, crStrip = null, cwEditing = '';   // feat/cowork-editors: who else is here (cowork.js), how changes work here (changes.js)
@@ -26,7 +30,8 @@
 .wdz-tb{position:absolute;z-index:8;display:flex;align-items:center;background:#16181D;border:1px solid #3A3F4A;border-radius:8px;overflow:hidden;font:600 13px/1 system-ui,sans-serif;color:#F2F3F5;text-align:left;white-space:nowrap}.wdz-tb button{all:unset;box-sizing:border-box;min-width:30px;height:30px;display:grid;place-items:center;cursor:pointer;padding:0 6px;color:#F2F3F5}.wdz-tb button:hover,.wdz-tb button:focus-visible{background:#2A2F39}.wdz-tb i{width:1px;height:18px;background:#3A3F4A}.wdz-tb [data-a=igrip]{cursor:grab;touch-action:none;letter-spacing:-2px}@media (max-width:480px){.wdz-tb [data-a=ital],.wdz-tb [data-a=wlink],.wdz-tb [data-a=align]{display:none}}[data-img].wdz-sel img{cursor:grab}.wdz-panning img{cursor:grabbing}.wdz-msel{outline:2px solid var(--accent)!important;outline-offset:2px}.wdz-idrop{position:absolute;z-index:9;background:#F26B1D;border-radius:2px;pointer-events:none}.wdz-bar svg{display:block}
 html[data-dev=phone] .ehide-phone,html[data-dev=tablet] .ehide-tablet,html[data-dev=desktop] .ehide-desktop{opacity:.35;outline:1px dashed var(--muted);outline-offset:-3px}
 [data-e]{white-space:pre-wrap}[data-e] a{cursor:text}a[data-new]{outline:1px dashed var(--accent);outline-offset:2px}[data-e]:empty:not([data-hint])::before{content:'Add words'}
-.wdz-bar{position:absolute;top:8px;right:8px;z-index:6;display:flex;gap:0;background:#16181D;border:1px solid #3A3F4A;border-radius:8px;overflow:hidden;font:600 13px/1 system-ui,sans-serif;text-align:left}.wdz-bar button{all:unset;box-sizing:border-box;min-width:30px;height:30px;display:grid;place-items:center;color:#F2F3F5;cursor:pointer;padding:0 6px}.wdz-bar button+button{border-left:1px solid #3A3F4A}.wdz-bar button:hover,.wdz-bar button:focus-visible{background:#2A2F39}.wdz-bar [data-a=grip]{cursor:grab;touch-action:none;letter-spacing:-2px}.wdz-dragging,.wdz-dragging *{cursor:grabbing!important;user-select:none}.wdz-moving{opacity:.45}.wdz-drop{position:absolute;left:0;right:0;height:4px;background:var(--accent);z-index:7;pointer-events:none}.wdz-cm .wdz-bar{display:none}[data-icon]{cursor:pointer}[data-icon]:hover{outline:2px dashed var(--muted);outline-offset:2px}@media (max-width:480px){.wdz-bar button{min-width:36px;height:36px}}</style>`;
+.wdz-bar{position:absolute;top:8px;right:8px;z-index:6;display:flex;gap:0;background:#16181D;border:1px solid #3A3F4A;border-radius:8px;overflow:hidden;font:600 13px/1 system-ui,sans-serif;text-align:left}.wdz-bar button{all:unset;box-sizing:border-box;min-width:30px;height:30px;display:grid;place-items:center;color:#F2F3F5;cursor:pointer;padding:0 6px}.wdz-bar button+button{border-left:1px solid #3A3F4A}.wdz-bar button:hover,.wdz-bar button:focus-visible{background:#2A2F39}.wdz-bar [data-a=grip]{cursor:grab;touch-action:none;letter-spacing:-2px}.wdz-dragging,.wdz-dragging *{cursor:grabbing!important;user-select:none}.wdz-moving{opacity:.45}.wdz-drop{position:absolute;left:0;right:0;height:4px;background:var(--accent);z-index:7;pointer-events:none}.wdz-cm .wdz-bar{display:none}[data-icon]{cursor:pointer}[data-icon]:hover{outline:2px dashed var(--muted);outline-offset:2px}@media (max-width:480px){.wdz-bar button{min-width:36px;height:36px}}.wdz-sp{position:absolute;left:50%;z-index:7;transform:translateX(-50%);display:none;align-items:center;gap:6px;height:20px;padding:0 9px;background:#16181D;border:1px solid #3A3F4A;border-radius:10px;color:#F2F3F5;font:600 11px/1 ui-monospace,monospace;cursor:ns-resize;touch-action:none;user-select:none;-webkit-user-select:none;text-align:left}.wdz-sel>.wdz-sp{display:flex}.wdz-sp-pt{top:3px}.wdz-sp-pb{bottom:3px}.wdz-sp i{width:16px;height:2px;border-radius:1px;background:#F2F3F5}.wdz-sp b{font-weight:600;min-width:2ch;text-align:center}.wdz-sp:hover,.wdz-sp.is-drag,.wdz-sp:focus-visible{border-color:#F26B1D;outline:0}.wdz-sp-show-pt{box-shadow:inset 0 var(--pt,0) 0 rgba(242,107,29,.16)}.wdz-sp-show-pb{box-shadow:inset 0 calc(-1 * var(--pb,0)) 0 rgba(242,107,29,.16)}html.wdz-spacing,html.wdz-spacing *{cursor:ns-resize!important}@media (max-width:480px){.wdz-sp{height:30px;padding:0 12px}}
+</style>`;
   // the frame's helper is a real file loaded from the app's origin, never an inline script: the srcdoc frame inherits the
   // page's CSP, and the desktop app's has no 'unsafe-inline' (app/src-tauri/tauri.conf.json)
   const EDIT_JS = () => `<script src="${new URL('sitedesigner-frame.js', document.baseURI).href.replace(/"/g, '%22')}"><\/script>`;
@@ -88,7 +93,7 @@ html[data-dev=phone] .ehide-phone,html[data-dev=tablet] .ehide-tablet,html[data-
   function save() {
     clearTimeout(saveT); st.dirty = true; writeDraft(); status('Saving…');
     if (st.pid) dispatchEvent(new CustomEvent('tribe:site-draft', { detail: { pid: st.pid, dirty: true } }));
-    saveT = setTimeout(push, 600);
+    saveT = setTimeout(push, cw && cw.people && cw.people().length ? 250 : 600);   // p4-site: with a friend in here, their copy follows sooner
   }
   async function push(opts = {}) {
     clearTimeout(saveT); saveT = 0; if (!st || !st.dirty) return true;
@@ -179,7 +184,7 @@ html[data-dev=phone] .ehide-phone,html[data-dev=tablet] .ehide-tablet,html[data-
     if (!root || !st || !st.pid || !connected()) return;
     let row = $('#wdz-cw'); if (!row) { const top = root.querySelector('.wdz-top'); if (top) { row = document.createElement('span'); row.id = 'wdz-cw'; row.className = 'cw-row'; row.hidden = true; const sv = $('#wdz-saved'); if (sv && sv.parentNode === top) sv.after(row); else top.appendChild(row); } }
     let strip = $('#wdz-cr'); if (!strip) { const top = root.querySelector('.wdz-top'); if (top) { strip = document.createElement('div'); strip.id = 'wdz-cr'; strip.className = 'cr-strip'; strip.hidden = true; top.after(strip); root.classList.add('has-cr'); } }
-    if (window.TribeChanges && strip) crStrip = window.TribeChanges.strip(strip, 'site', { pid: st.pid, draft: () => st.cfg, dirty: () => !!st.pendingDraft, summary: () => siteSummary(st.base, st.cfg),
+    if (window.TribeChanges && strip) crStrip = window.TribeChanges.strip(strip, 'site', { pid: st.pid, draft: () => st.cfg, dirty: () => !!st.pendingDraft, summary: () => siteSummary(st.base, st.cfg), before: () => (st.base ? snapSite(st.base, st.page) : null), after: () => snapSite(st.cfg, st.page),
       onSent: r => { if (r && (r.request || r.applied)) { st.pendingDraft = false; status(tr(r.applied ? 'Saved' : 'Sent for OK')); if (crStrip) crStrip.draw(); } } });
     if (!window.TribeCowork) return;
     cw = window.TribeCowork.attach('site', { key: () => (st && st.pid) || '', row, framePointer: true, anchorAt: () => null, rect: () => null, label: thingLabel, blockOf: blockOfP, draw: people => postCw(people) });
@@ -188,14 +193,22 @@ html[data-dev=phone] .ehide-phone,html[data-dev=tablet] .ehide-tablet,html[data-
   // Keep mine / Keep theirs choice, and a draft waiting to be suggested stays the person's own
   if (C && C.on) C.on('ws', m => {
     if (!m || m.type !== 'site-config' || !st || !root || root.hidden || m.project !== st.pid) return;
-    if ((m.rev || 0) <= (st.rev || 0) || (C.state && C.state().me && m.by === C.state().me.id)) return;
+    if ((m.rev || 0) <= (st.rev || 0)) return;
+    // p4-site: a save of my own usually came from this designer (its answer sets the rev a moment later). When it did
+    // not (I approved a suggested change from the list, or my agent's proposal was applied), take it like anyone's.
+    const own = C.state && C.state().me && m.by === C.state().me.id, pidNow = st.pid;
+    const take = () => { if (!st || st.pid !== pidNow || !root || root.hidden || (m.rev || 0) <= (st.rev || 0)) return; takeTheirs(); };
+    if (own) setTimeout(take, 700); else take();
+  });
+  function takeTheirs() {
     C.api(`/projects/${encodeURIComponent(st.pid)}/site-config`).then(r => {
       if (!st || !r || !r.config || (r.rev || 0) <= (st.rev || 0)) return;
       st.base = JSON.stringify(S().normalize(r.config));
       if (st.dirty || liveText || st.pendingDraft) { if (st.pendingDraft) status(tr('A friend changed the site. Your draft stays yours until you send it.')); return; }
-      st.cfg = S().normalize(r.config); st.rev = r.rev; fixPage(); paint(); status(tr('Updated with a friend’s change'));
+      const mine = C.state && C.state().me && r.savedBy === C.state().me.id;
+      st.cfg = S().normalize(r.config); st.rev = r.rev; fixPage(); paint(); status(tr(mine ? 'Updated' : 'Updated with a friend’s change'));
     }).catch(() => {});
-  });
+  }
 
   // ---------- open / close ----------
   // open({ pid, template, prompt, cfg, ask }): the Design creation flow and Flint call this. template = a gallery id
@@ -203,6 +216,7 @@ html[data-dev=phone] .ehide-phone,html[data-dev=tablet] .ehide-tablet,html[data-
   // and the name, and the rest is passed to Flint.
   async function open(o = {}) {
     if (!S()) return;
+    perf.t0 = performance.now(); perf.open = 0; perf.ready = 0;
     if (st && root && !root.hidden) await flush();
     const pid = o.pid !== undefined ? o.pid : (C && C.project && C.project()) || '';
     let cfg = o.cfg || null, rev = 0, server = null;
@@ -213,17 +227,18 @@ html[data-dev=phone] .ehide-phone,html[data-dev=tablet] .ehide-tablet,html[data-
     if (!o.cfg && !o.template && !o.prompt && pid && server && !server.config && !d && server.canEdit !== false) { const mine = readDraft(''); if (mine && mine.cfg && mine.cfg.pages && mine.cfg.pages.some(p => (p.blocks || []).length)) { d = { cfg: mine.cfg, at: Date.now(), rev: 0, dirty: true }; brought = true; } }
     if (d && (!cfg || (d.dirty && (d.rev || 0) >= rev) || (!connected() && d.at))) { cfg = d.cfg; restored = !!d.dirty && !!server; }
     mount();
-    st = fresh(cfg || S().blank(projectName(pid)), pid); st.rev = rev;
+    st = fresh(cfg || S().blank(projectName(pid)), pid); st.rev = rev; st.blank = !cfg;
     if (server) { st.canEdit = server.canEdit !== false; st.canSuggest = !!server.canSuggest; st.base = server.config ? JSON.stringify(S().normalize(server.config)) : ''; st.pendingDraft = !st.canEdit && !!d && !!d.cfg && JSON.stringify(st.cfg) !== st.base; }
     st.savedAt = d && d.at || (server && server.savedAt ? Date.parse(server.savedAt) : 0);
     st.page = st.cfg.pages[0].id;
-    root.hidden = false; document.body.classList.add('wdz-open');
+    root.hidden = false; document.body.classList.add('wdz-open'); perf.open = Math.round(performance.now() - perf.t0); moreMenu(false);
     { const f = $('#wdz-frame'); if (f && f.srcdoc) { const n = f.cloneNode(false); n.removeAttribute('srcdoc'); f.replaceWith(n); } }   // a frame that was inside the hidden designer can stay unpainted in Chrome: start a fresh one
     if (d && d.dirty && server && (d.rev || 0) < rev && JSON.stringify(S().normalize(d.cfg)) !== JSON.stringify(st.cfg)) { st.dirty = true; st.cfg = S().normalize(d.cfg); conflict({ config: server.config, rev, by: server.savedBy, at: server.savedAt }); }
     else if (restored) { st.dirty = true; push(); }
     if (brought) setTimeout(() => say('Brought in the site you made on this device before the tribe.'), 300);
     let tpl = o.template, rest = o.prompt || '';
     if (rest && !tpl && window.TribeNLU) { const P = window.TribeNLU.parse(rest, {}); const s = (P.steps || [])[0]; if (s && /^site\./.test(s.intent) && s.conf >= 0.6 && S().TEMPLATES.includes(s.intent.slice(5))) { tpl = s.intent.slice(5); if (s.slots && s.slots.name) o.name = s.slots.name; rest = ''; } }
+    if (tpl && o.askReplace && !(await okToReplace())) tpl = '';   // p4-site: a template over a site that is already there asks first
     if (tpl) await useTemplate(tpl, !cfg, { name: o.name });
     else if (!cfg) showStart(); else paint();
     chipKey = ''; logPaint();   // feat/flint-unify: this design's thread and chips
@@ -255,7 +270,7 @@ html[data-dev=phone] .ehide-phone,html[data-dev=tablet] .ehide-tablet,html[data-
     if ((st.pid || o.name) && o.fill !== false) { const r = await autofill(c, o.name); filled = r.cfg; used = r.used; }   // a name you gave beats the project's
     if (first && !st.hist.length && !st.log.length) { st.cfg = S().normalize(filled); st.page = st.cfg.pages[0].id; save(); }
     else commit(filled);
-    st.page = st.cfg.pages[0].id; st.sel = null; hideStart(); paint();
+    st.page = st.cfg.pages[0].id; st.sel = null; st.blank = false; hideStart(); paint();
     fillNote(used);
     return true;
   }
@@ -297,24 +312,34 @@ html[data-dev=phone] .ehide-phone,html[data-dev=tablet] .ehide-tablet,html[data-
     const P = S().PRESETS;
     root.innerHTML = `
       <header class="wdz-top">
-        <button type="button" class="btn ghost sm" data-wdz="close" aria-label="Back">← Back</button>
+        <button type="button" class="btn ghost sm wdz-back" data-wdz="close" aria-label="Back" title="Back">${IC.back}<span class="wdz-lbl">Back</span></button>
         <b class="wdz-title"><span class="wdz-eyebrow">Website</span><span id="wdz-name"></span></b>
         <nav class="wdz-pages" id="wdz-pages" aria-label="Pages"></nav>
         <span class="wdz-sp"></span>
         <span class="wdz-saved" id="wdz-saved" aria-live="polite"></span>
-        <button type="button" class="btn ghost sm wdz-ic" data-wdz="undo" title="Undo (Ctrl Z)" aria-label="Undo">↶</button>
-        <button type="button" class="btn ghost sm wdz-ic" data-wdz="redo" title="Redo (Ctrl Shift Z)" aria-label="Redo">↷</button>
-        <button type="button" class="btn ghost sm wdz-ic wdz-more" data-wdz="more" aria-expanded="false" aria-label="More" title="More">⋯</button>
-        <button type="button" class="btn sm" data-wdz="mode" id="wdz-mode" aria-pressed="false">Dark</button>
-        <label class="wdz-sel-wrap"><span class="sr">Theme</span><select id="wdz-theme" class="input sm" aria-label="Theme">${Object.entries(P).map(([k, p]) => `<option value="${k}">${esc(p.name)}</option>`).join('')}</select></label>
-        <span class="wdz-devs" role="group" aria-label="Preview size"><button type="button" class="btn ghost sm" data-dev="desktop" aria-pressed="true">Desktop</button><button type="button" class="btn ghost sm" data-dev="tablet" aria-pressed="false">Tablet</button><button type="button" class="btn ghost sm" data-dev="phone" aria-pressed="false">Phone</button><button type="button" class="btn ghost sm" data-wdz="wide" id="wdz-wide" aria-pressed="false" title="Show the page at a full computer width (1280). Scroll sideways to see all of it.">Full width</button></span>
-        <button type="button" class="btn sm" data-wdz="comment" id="wdz-cmode" aria-pressed="false" title="Click a section to leave a comment (C)">Comment<span class="wdz-n" id="wdz-cn" hidden></span></button>
-        <button type="button" class="btn ghost sm wdz-ic" data-wdz="keys" title="Keyboard shortcuts (?)" aria-label="Keyboard shortcuts">?</button>
-        <button type="button" class="btn sm" data-wdz="templates">Templates</button>
-        <button type="button" class="btn sm" data-wdz="freeai" id="wdz-freeai" title="Copy the design for ChatGPT, Gemini or another free AI, then paste its answer back">Ask a free AI</button>
-        <button type="button" class="btn sm" data-stu="agent" id="wdz-agent" title="Ask your own AI agent to change the site. You approve what it sends back.">Have my agent do it</button>
-        <button type="button" class="btn sm" data-wdz="save" title="Keep this design in Saved designs (the project’s history is in Versions)">Save design</button>
-        <span class="wdz-dl"><button type="button" class="btn sm primary" data-wdz="dl-html" id="wdz-dl">Download HTML</button><button type="button" class="btn sm primary wdz-dl-more" data-wdz="dlmenu" aria-label="More download options" aria-expanded="false">▾</button>
+        <button type="button" class="btn ghost sm wdz-ic" data-wdz="undo" title="Undo (Ctrl Z)" aria-label="Undo">${IC.undo}</button>
+        <button type="button" class="btn ghost sm wdz-ic" data-wdz="redo" title="Redo (Ctrl Shift Z)" aria-label="Redo">${IC.redo}</button>
+        <span class="wdz-devs" role="group" aria-label="Preview size"><button type="button" class="btn ghost sm" data-dev="desktop" aria-pressed="true" title="Desktop (1)">${ic('monitor')}<span class="wdz-lbl">Desktop</span></button><button type="button" class="btn ghost sm" data-dev="tablet" aria-pressed="false" title="Tablet (2)">${ic('tablet')}<span class="wdz-lbl">Tablet</span></button><button type="button" class="btn ghost sm" data-dev="phone" aria-pressed="false" title="Phone (3)">${ic('phone')}<span class="wdz-lbl">Phone</span></button></span>
+        <span class="wdz-zoom" role="group" aria-label="Zoom"><button type="button" class="btn ghost sm wdz-ic" data-wdz="zoomout" title="Zoom out (Ctrl −)" aria-label="Zoom out">${IC.minus}</button><button type="button" class="btn ghost sm wdz-zv" data-wdz="zoom100" id="wdz-zoomv" title="Back to 100% (Ctrl 0)" aria-label="Zoom: back to 100%">100%</button><button type="button" class="btn ghost sm wdz-ic" data-wdz="zoomin" title="Zoom in (Ctrl +)" aria-label="Zoom in">${IC.plus}</button><button type="button" class="btn ghost sm wdz-zfit" data-wdz="zoomfit" title="Fit the whole width in the window (Shift 1)">Fit</button></span>
+        <button type="button" class="btn sm wdz-hide-phone" data-wdz="comment" id="wdz-cmode" aria-pressed="false" title="Click a section to leave a comment (C)">Comment<span class="wdz-n" id="wdz-cn" hidden></span></button>
+        <button type="button" class="btn ghost sm wdz-ic wdz-hide-phone" data-wdz="keys" title="Keyboard shortcuts (?)" aria-label="Keyboard shortcuts">${ic('help')}</button>
+        <span class="wdz-morewrap"><button type="button" class="btn ghost sm wdz-ic wdz-more" data-wdz="more" aria-expanded="false" aria-haspopup="true" aria-controls="wdz-more" aria-label="More" title="More">${ic('more')}<span class="wdz-dot" id="wdz-moredot" hidden></span></button>
+          <div class="wdz-menu wdz-moremenu" id="wdz-more" hidden role="group" aria-label="More">
+            <p class="wdz-eyebrow">Look</p>
+            <div class="wdz-mrow"><button type="button" class="btn sm" data-wdz="mode" id="wdz-mode" aria-pressed="false">Dark</button><label class="wdz-sel-wrap"><span class="sr">Theme</span><select id="wdz-theme" class="input sm" aria-label="Theme">${Object.entries(P).map(([k, p]) => `<option value="${k}">${esc(p.name)}</option>`).join('')}</select></label></div>
+            <button type="button" data-wdz="wide" id="wdz-wide" aria-pressed="false" class="wdz-hide-phone"><b>Full width</b><small>Show the page at a full computer width (1280)</small></button>
+            <button type="button" data-wdz="comment" class="wdz-only-phone"><b>Comment</b><small>Tap a section to leave a comment</small></button>
+            <hr>
+            <button type="button" data-wdz="templates"><b>Templates</b><small>Start again from a ready-made design</small></button>
+            <button type="button" data-wdz="save"><b>Save design</b><small>Keep this version in Saved designs</small></button>
+            <button type="button" data-wdz="code"><b>Code</b><small>Code for this section, and your own CSS</small></button>
+            <button type="button" data-wdz="requests" id="wdz-req" hidden><b>Suggested changes<span class="wdz-n" id="wdz-reqn" hidden></span></b><small>What people asked to change, and what waits for you</small></button>
+            <hr>
+            <button type="button" data-wdz="freeai" id="wdz-freeai"><b>Ask a free AI</b><small>Copy the design for ChatGPT, Gemini or another free AI, then paste its answer back</small></button>
+            <button type="button" data-stu="agent" id="wdz-agent"><b>Have my agent do it</b><small>Your own AI agent changes the site. You approve what it sends back.</small></button>
+            <button type="button" data-wdz="keys" class="wdz-only-phone"><b>Keyboard shortcuts</b><small>For when a keyboard is attached</small></button>
+          </div></span>
+        <span class="wdz-dl"><button type="button" class="btn sm primary" data-wdz="dl-html" id="wdz-dl">Download HTML</button><button type="button" class="btn sm primary wdz-dl-more" data-wdz="dlmenu" aria-label="Download and publish" title="Download and publish" aria-expanded="false"><span class="wdz-dl-caret">▾</span><span class="wdz-dl-ico">${ic('download')}</span></button>
           <span class="wdz-menu" id="wdz-dlmenu" hidden role="menu"><button type="button" role="menuitem" data-wdz="dl-html"><b>index.html</b><small>One standalone file: every page, pictures inside, no scripts</small></button><button type="button" role="menuitem" data-wdz="dl-zip"><b>.zip with pages and assets</b><small>A file per page, assets/, fonts/ and site.json</small></button><button type="button" role="menuitem" data-wdz="where"><b>Where it lives</b><small>Your site is already files in the project folder. Open it, share it or put it online.</small></button></span></span>
       </header>
       <div class="wdz-body">
@@ -326,7 +351,9 @@ html[data-dev=phone] .ehide-phone,html[data-dev=tablet] .ehide-tablet,html[data-
         </aside>
         <main class="wdz-stage"><div class="wdz-frame" id="wdz-framewrap" data-dev="desktop"><iframe id="wdz-frame" title="Live preview of the website" sandbox="allow-scripts"></iframe></div></main>
         <aside class="wdz-right" aria-label="Edit and Flint">
-          <div class="wdz-ptabs" role="tablist" aria-label="Panel"><button type="button" role="tab" data-panel="edit" aria-selected="true">Edit</button><button type="button" role="tab" data-panel="ideas" aria-selected="false">Suggestions<span class="wdz-n" id="wdz-sn" hidden></span></button><button type="button" role="tab" data-panel="comments" aria-selected="false">Comments<span class="wdz-n" id="wdz-cn2" hidden></span></button><button type="button" role="tab" data-panel="style" aria-selected="false">Style</button><button type="button" role="tab" data-panel="site" aria-selected="false">Site</button><button type="button" role="tab" data-panel="check" aria-selected="false">Check</button></div>
+          <div class="wdz-phead"><div class="wdz-ptabs" role="tablist" aria-label="Panel"><button type="button" role="tab" data-panel="edit" aria-selected="true">Edit</button><button type="button" role="tab" data-panel="ideas" aria-selected="false">Ideas<span class="wdz-n" id="wdz-sn" hidden></span><span class="wdz-n" id="wdz-cn3" hidden></span></button><button type="button" role="tab" data-panel="style" aria-selected="false">Style</button><button type="button" role="tab" data-panel="check" aria-selected="false">Check</button></div>
+            <div class="wdz-sub" id="wdz-sub-ideas" role="group" aria-label="Ideas" hidden><button type="button" data-panel="ideas" aria-pressed="true">Suggestions</button><button type="button" data-panel="comments" aria-pressed="false">Comments<span class="wdz-n" id="wdz-cn2" hidden></span></button></div>
+            <div class="wdz-sub" id="wdz-sub-style" role="group" aria-label="Style" hidden><button type="button" data-panel="style" aria-pressed="true">Look</button><button type="button" data-panel="site" aria-pressed="false">Site settings</button></div></div>
           <div class="wdz-insp" id="wdz-insp"></div>
           <section class="wdz-flint" id="wdz-flint" aria-label="Flint"></section>
         </aside>
@@ -341,14 +368,23 @@ html[data-dev=phone] .ehide-phone,html[data-dev=tablet] .ehide-tablet,html[data-
     root.querySelector('#wdz-file').addEventListener('change', onFile);
     root.querySelector('#wdz-import').addEventListener('change', onImport);
     root.addEventListener('input', e => { if (e.target && e.target.id === 'wdz-gq') { gal.q = e.target.value; galPaint(); } });
-    document.addEventListener('keydown', e => { if (e.key === 'Escape' && root && !root.hidden && !root.contains(e.target) && !e.defaultPrevented && !document.querySelector('.modal-wrap:not(.hidden), dialog[open]')) escape(); });
-    root.addEventListener('keydown', e => {
+    // keys work wherever the focus is while the designer is the top layer: on one of its own controls, or on nothing
+    // (after a click on empty space the page itself has the focus, and a shortcut used to do nothing then)
+    const onKey = e => {
       if (e.key === 'Escape' && !$('#wdz-dlmenu').hidden) { $('#wdz-dlmenu').hidden = true; return; }
+      if (e.key === 'Escape' && !$('#wdz-more').hidden) { moreMenu(false); const mb = root.querySelector('[data-wdz="more"]'); if (mb) mb.focus(); return; }
       const t = e.target; if (t && /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName)) return;
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') { e.preventDefault(); if (e.shiftKey) redo(); else undo(); }
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'y') { e.preventDefault(); redo(); }
       keys(e);
+    };
+    const layered = () => !!document.querySelector('.modal-wrap:not(.hidden), dialog[open], .ui-card, .ui-sheet');
+    document.addEventListener('keydown', e => {
+      if (!root || root.hidden || !st || root.contains(e.target) || e.defaultPrevented || layered()) return;
+      if (e.key === 'Escape') return escape();
+      if (e.target === document.body || e.target === document.documentElement) onKey(e);
     });
+    root.addEventListener('keydown', onKey);
     addEventListener('message', onFrame);
     dragList();
   }
@@ -366,7 +402,10 @@ html[data-dev=phone] .ehide-phone,html[data-dev=tablet] .ehide-tablet,html[data-
     $('#wdz-blocks').innerHTML = pg.blocks.map((b, i) => `<li class="wdz-blk${st.sel && st.sel.block === b.id ? ' is-sel' : ''}${b.hidden ? ' is-hidden' : ''}" draggable="true" data-blk="${b.id}" data-i="${i}"><span class="wdz-grip" aria-hidden="true">⋮⋮</span><button type="button" class="wdz-blk-t" data-pick="${b.id}">${esc(S().BLOCKS[b.type].label.replace(/ \(.*/, ''))}<small>${esc(b.variant)}</small></button><span class="wdz-blk-acts"><button type="button" data-move="up" data-id="${b.id}" aria-label="Move up"${i ? '' : ' disabled'}>↑</button><button type="button" data-move="down" data-id="${b.id}" aria-label="Move down"${i < pg.blocks.length - 1 ? '' : ' disabled'}>↓</button><button type="button" data-dup="${b.id}" aria-label="Duplicate block" title="Duplicate (Ctrl D)">⧉</button><button type="button" data-hide="${b.id}" aria-label="${b.hidden ? 'Show' : 'Hide'} block" aria-pressed="${!!b.hidden}" title="${b.hidden ? 'Show on the site' : 'Hide from the site'} (H)">${b.hidden ? '◌' : '◉'}</button><button type="button" data-del="${b.id}" aria-label="Delete block">×</button></span></li>`).join('');
     { const f0 = $('#wdz-frame'); if (f0 && f0.contentWindow && frameReady) f0.contentWindow.postMessage({ dev: st.dev }, '*'); }
     const wrap = $('#wdz-framewrap'); wrap.dataset.dev = st.dev;
-    { const wb = $('#wdz-wide'), on = st.dev === 'desktop' && !!st.wide; wrap.classList.toggle('is-wide', on); if (wb) { wb.setAttribute('aria-pressed', String(on)); wb.hidden = st.dev !== 'desktop'; } }   // round 3: Desktop at a real computer width, scrolled sideways (no scaling, so every click lands where it looks) root.querySelectorAll('[data-dev]').forEach(b => b.matches('button') && b.setAttribute('aria-pressed', String(b.dataset.dev === st.dev)));
+    { const wb = $('#wdz-wide'), on = st.dev === 'desktop' && !!st.wide; wrap.classList.toggle('is-wide', on); if (wb) { wb.setAttribute('aria-pressed', String(on)); wb.hidden = st.dev !== 'desktop'; } }   // round 3: Desktop at a real computer width, scrolled sideways (no scaling, so every click lands where it looks)
+    root.querySelectorAll('.wdz-devs [data-dev]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.dev === st.dev)));
+    { const rq = $('#wdz-req'); if (rq) rq.hidden = !(st.pid && connected() && window.TribeChanges); }
+    applyZoom();
   }
   // the site's fonts as data: URLs: the sandboxed preview has no origin, so it cannot fetch them itself
   const FONTS = new Map(); let fontsAsked = false;
@@ -378,7 +417,7 @@ html[data-dev=phone] .ehide-phone,html[data-dev=tablet] .ehide-tablet,html[data-
   }
   // the live preview: one render per tick; if the frame does not say "ready" soon, a fresh frame gets it (Chrome can leave
   // a sandboxed srcdoc frame blank when it is re-navigated quickly, e.g. right after the designer was hidden)
-  let frameT = 0, frameWd = 0, frameReady = false, softPage = null, escAt = 0;
+  let frameT = 0, frameWd = 0, frameReady = false, softPage = null, escAt = 0, zoomAt = 0;
   function frame() {
     if (!$('#wdz-frame')) return;
     if (!fontsAsked) loadFonts();
@@ -407,11 +446,22 @@ html[data-dev=phone] .ehide-phone,html[data-dev=tablet] .ehide-tablet,html[data-
   function onFrame(e) {
     const d = e.data; if (!d || !d.sd || !root || root.hidden) return;
     const f = $('#wdz-frame'); if (!f || e.source !== f.contentWindow) return;
-    if (d.t === 'ready') { frameReady = true; if (cw) cw.repaint(); if (d.soft) { postSel(false); postPins(); return; } f.contentWindow.postMessage({ y: frameScroll, labels: frameLabels(), dev: st.dev }, '*'); postSel(false); postPins(); return; }
+    if (d.t === 'ready') { frameReady = true; if (perf.t0 && !perf.ready) perf.ready = Math.round(performance.now() - perf.t0); if (cw) cw.repaint(); if (d.soft) { postSel(false); postPins(); return; } f.contentWindow.postMessage({ y: frameScroll, labels: frameLabels(), dev: st.dev }, '*'); postSel(false); postPins(); return; }
     if (d.t === 'scroll') { frameScroll = d.y; return; }
+    if (d.t === 'zoom') { const now = Date.now(); if (now - zoomAt < 60) return; zoomAt = now; return zoomStep(d.dy < 0 ? 1 : -1); }
+    if (d.t === 'spacing') return;
+    if (d.t === 'space') {   // a spacing handle was let go: one step, one Undo
+      const b = pageNow().blocks.find(x => x.id === d.block); if (!b) return;
+      const v = d.value === '' ? '' : S().snapSpace(d.value);
+      st.sel = { block: b.id, path: '', kind: 'block' }; commit(S().setStyle(st.cfg, st.page, b.id, { [d.side === 'pb' ? 'pb' : 'pt']: v == null ? '' : v }));
+      flash(v === '' ? 'Spacing: the site’s own' : `${d.side === 'pb' ? 'Space below' : 'Space above'}: ${v}`);
+      if (d.keep) setTimeout(() => { const g = $('#wdz-frame'); if (g && g.contentWindow) g.contentWindow.postMessage({ spfocus: d.side }, '*'); }, 80);
+      return;
+    }
+    if ((d.t === 'menu' || d.t === 'pin') && st.zoom && st.zoom !== 1) { ['x', 'y', 'cx', 'cy'].forEach(k => { if (d.t === 'pin' && (k === 'x' || k === 'y')) return; if (typeof d[k] === 'number') d[k] = d[k] * st.zoom; }); }
     if (d.t === 'cw-ptr') { if (cw) cw.pointer(d.a || null); return; }   // feat/cowork-editors: the frame measures its own pointer
     if (d.t === 'esc') {   // Esc pressed inside the preview: with nothing left to step out of, the first press says so and the second closes
-      const nothing = !st.sel && !st.cmode && ['#wdz-dlmenu', '#wdz-keys', '#wdz-peek', '#wdz-picker'].every(id => { const x = $(id); return !x || x.hidden; }) && !(SP() && SP().menuOpen && SP().menuOpen());
+      const nothing = !st.sel && !st.cmode && ['#wdz-dlmenu', '#wdz-more', '#wdz-keys', '#wdz-peek', '#wdz-picker'].every(id => { const x = $(id); return !x || x.hidden; }) && !(SP() && SP().menuOpen && SP().menuOpen());
       if (nothing && Date.now() - escAt > 2500) { escAt = Date.now(); toast('Press Esc again to close the designer'); return; }
       escAt = 0; return escape();
     }
@@ -479,7 +529,7 @@ html[data-dev=phone] .ehide-phone,html[data-dev=tablet] .ehide-tablet,html[data-
   const SG = () => window.TribeSiteSuggest;
   const sgApi = () => ({ ...spApi, panelNow: () => st.panel, flush: () => flush(), close: () => close(), addComment: c => addComment(c) });
   const tr = t => (window.TribeI18n && window.TribeI18n.t ? window.TribeI18n.t(t, t) : t);
-  const frameLabels = () => ({ isEditing: tr('is editing'), smaller: tr('Smaller'), bigger: tr('Bigger'), bold: tr('Bold'), color: tr('Colour'), align: tr('Align'), link: tr('Where it goes'), up: tr('Move up'), down: tr('Move down'), dup: tr('Duplicate'), add: tr('Add another'), del: tr('Remove'), flint: tr('Ask Flint about this'), more: tr('More'), replace: tr('Replace the picture'), fit: tr('Fill or fit'), swap: tr('Swap the icon'), words: tr('Edit the words'), grip: tr('Drag to move this section'), sadd: tr('Add a section below'), igrip: tr('Drag to move it'), ital: tr('Slanted'), wlink: tr('Link the selected words') });
+  const frameLabels = () => ({ isEditing: tr('is editing'), smaller: tr('Smaller'), bigger: tr('Bigger'), bold: tr('Bold'), color: tr('Colour'), align: tr('Align'), link: tr('Where it goes'), up: tr('Move up'), down: tr('Move down'), dup: tr('Duplicate'), add: tr('Add another'), del: tr('Remove'), flint: tr('Ask Flint about this'), more: tr('More'), replace: tr('Replace the picture'), fit: tr('Fill or fit'), swap: tr('Swap the icon'), words: tr('Edit the words'), grip: tr('Drag to move this section'), sadd: tr('Add a section below'), igrip: tr('Drag to move it'), ital: tr('Slanted'), wlink: tr('Link the selected words'), spaceAbove: tr('Space above: drag, or press the arrow keys'), spaceBelow: tr('Space below: drag, or press the arrow keys') });
   const spApi = { setMulti: l => { st.multi = l || []; }, multi: () => st.multi || [], clearMulti: () => { st.multi = []; const f = $('#wdz-frame'); if (f && f.contentWindow) f.contentWindow.postMessage({ multi: 'none' }, '*'); }, sel: () => st.sel, setSel: s => { st.sel = s; }, cfg: () => st.cfg, commit: (c, o) => commit(c, o), page: () => st.page, setPage: id => { st.page = id; st.sel = null; frameScroll = 0; }, pageNow: () => pageNow(), say: (t, h, a) => say(t, h, a), ask: t => ask(t), pid: () => st.pid, connected: () => connected(),
     paint: () => paint(), panel: p => { if (p) st.panel = p; panelPaint(); }, postSel: sc => postSel(sc), post: m => { const f = $('#wdz-frame'); if (f && f.contentWindow) f.contentWindow.postMessage(m, '*'); }, root: () => root, box: () => $('#wdz-insp'),
     pickFile: () => pickFile(), iconPicker: key => STU() && STU().iconPicker(stuApi, key), comment: () => commentMode(true), fillFlint: t => { if (fui) fui.fill(t); }, undo: () => undo(), canEdit: () => st.canEdit !== false, dev: () => st.dev, comments: () => st.comments, tr };
@@ -489,11 +539,16 @@ html[data-dev=phone] .ehide-phone,html[data-dev=tablet] .ehide-tablet,html[data-
     render: (c, o) => S().render(c, { ...o, fonts: file => FONTS.get(file) || '', extraHead: EDIT_CSS }), frameJs: () => EDIT_JS(),
     select: (block, pg) => { if (pg && st.cfg.pages.some(p => p.id === pg)) st.page = pg; st.sel = { block, path: '', kind: 'block' }; st.panel = 'edit'; paint(); postSel(true); } };
   // ---------- feat/site-v2: the right panel (Edit · Comments · Site), the block picker, shortcuts ----------
+  // four tabs: Ideas holds Suggestions and Comments, Style holds Look and Site settings
+  const GROUP = { comments: 'ideas', site: 'style' };
   function panelPaint() {
     if (!root || !st) return;
-    root.querySelectorAll('[data-panel]').forEach(b => b.setAttribute('aria-selected', String(b.dataset.panel === st.panel)));
+    const grp = GROUP[st.panel] || st.panel; st.sub = st.sub || {}; if (GROUP[st.panel] || st.panel === 'ideas' || st.panel === 'style') st.sub[grp] = st.panel;
+    root.querySelectorAll('.wdz-ptabs [data-panel]').forEach(b => b.setAttribute('aria-selected', String(b.dataset.panel === grp)));
+    root.querySelectorAll('.wdz-sub').forEach(x => { x.hidden = x.id !== 'wdz-sub-' + grp; });
+    root.querySelectorAll('.wdz-sub [data-panel]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.panel === st.panel)));
     const open = st.comments.filter(c => c.status === 'open').length;
-    [$('#wdz-cn'), $('#wdz-cn2')].forEach(n => { if (n) { n.hidden = !open; n.textContent = open; } });
+    [$('#wdz-cn'), $('#wdz-cn2'), $('#wdz-cn3')].forEach(n => { if (n) { n.hidden = !open || (n.id === 'wdz-cn3' && grp === 'ideas'); n.textContent = open; } });
     if (st.panel === 'comments') return commentsPaint();
     if (st.panel === 'site') return sitePaint();
     if (st.panel === 'ideas' && SG()) return SG().paint($('#wdz-insp'), sgApi());
@@ -539,12 +594,15 @@ html[data-dev=phone] .ehide-phone,html[data-dev=tablet] .ehide-tablet,html[data-
     S().TYPES.forEach(t => { const g = C2[t] || 'More'; (groups[g] = groups[g] || []).push(t); });
     return Object.entries(groups).map(([g, ts]) => `<p class="wdz-eyebrow">${esc(g)}</p>${ts.map(ty => `<div class="wdz-pk"><b>${esc(S().BLOCKS[ty].label)}</b><span class="wdz-pkv">${S().BLOCKS[ty].variants.map(v => `<button type="button" class="wdz-pkb" data-add="${ty}" data-v="${v}" title="Add ${esc(S().BLOCKS[ty].label.toLowerCase())}: ${esc(v)}">${schem(ty, v)}<small>${esc(v)}</small></button>`).join('')}</span></div>`).join('')}`).join('') + (window.TribeSiteFxUI ? window.TribeSiteFxUI.picker() : '');   // feat/site-3d
   }
-  const KEYS = [['?', 'These shortcuts'], ['Ctrl Z · Ctrl Shift Z', 'Undo · Redo'], ['Ctrl D', 'Duplicate the selected section or entry'], ['Delete', 'Remove the selected section or entry'], ['H', 'Hide or show the selected block'], ['Alt ↑ · Alt ↓', 'Move the selected section or entry'], ['C', 'Comment mode'], ['1 · 2 · 3', 'Desktop · Tablet · Phone'], ['Ctrl S', 'Save a version'], ['Enter', 'Type in the selected words'], ['Right-click', 'Everything you can do with it'], ['Esc', 'Stop typing, step out, close']];
-  function shortcuts() { const k = $('#wdz-keys'); k.hidden = !k.hidden; k.innerHTML = `<div class="wdz-keys-in"><p class="wdz-eyebrow">Keyboard shortcuts</p><dl>${KEYS.map(([a, b]) => `<dt><kbd>${esc(a)}</kbd></dt><dd>${esc(b)}</dd>`).join('')}</dl><button type="button" class="btn sm" data-wdz="keys">Close</button></div>`; }
+  const KEYS = [
+    ['Edit', [['Ctrl Z · Ctrl Shift Z', 'Undo · Redo'], ['Enter', 'Type in the selected words'], ['Ctrl D', 'Duplicate the selected section or entry'], ['Delete', 'Remove the selected section or entry'], ['Ctrl C · Ctrl X · Ctrl V', 'Copy, cut and paste a section, on any page'], ['Alt ↑ · Alt ↓', 'Move the selected section or entry'], ['H', 'Hide or show the selected section'], ['Right-click', 'Everything you can do with it']]],
+    ['Move around', [['↑ · ↓', 'Select the section above or below'], ['Shift click', 'Select several things'], ['Esc', 'Stop typing, step out, close']]],
+    ['View', [['1 · 2 · 3', 'Desktop · Tablet · Phone'], ['Ctrl + · Ctrl −', 'Zoom in · Zoom out'], ['Ctrl 0 · Shift 1', '100% · Fit the width'], ['C', 'Comment mode'], ['Ctrl S', 'Save a version'], ['?', 'These shortcuts']]]];
+  function shortcuts() { const k = $('#wdz-keys'); k.hidden = !k.hidden; if (k.hidden) return; k.innerHTML = `<div class="wdz-keys-in" role="document"><p class="wdz-eyebrow">Website designer</p><h2 class="wdz-keys-h">Keyboard shortcuts</h2><div class="wdz-keys-g">${KEYS.map(([g, rows]) => `<section><h3>${esc(g)}</h3><dl>${rows.map(([a, b]) => `<dt>${a.split(' · ').map(x => `<kbd>${esc(x)}</kbd>`).join(' ')}</dt><dd>${esc(b)}</dd>`).join('')}</dl></section>`).join('')}</div><p class="wdz-hint">On a Mac, Ctrl is ⌘.</p><button type="button" class="btn sm" data-wdz="keys">Close</button></div>`; const c = k.querySelector('button'); if (c) c.focus(); }
   // Esc peels one layer: a popover, comment mode, the selection, then the designer itself (like the other full panes)
   function escape() {
     if (!root || root.hidden) return;
-    for (const id of ['#wdz-dlmenu', '#wdz-keys', '#wdz-peek', '#wdz-picker']) { const x = $(id); if (x && !x.hidden) { x.hidden = true; return; } }
+    for (const id of ['#wdz-dlmenu', '#wdz-more', '#wdz-keys', '#wdz-peek', '#wdz-picker']) { const x = $(id); if (x && !x.hidden) { if (id === '#wdz-more') moreMenu(false); else x.hidden = true; return; } }
     if (st && st.cmode) return commentMode(false);
     if (SP() && SP().closeMenu()) return;
     if (st && st.multi && st.multi.length) { spApi.clearMulti(); panelPaint(); return; }
@@ -556,6 +614,12 @@ html[data-dev=phone] .ehide-phone,html[data-dev=tablet] .ehide-tablet,html[data-
     const sb = st.sel && pageNow().blocks.find(b => b.id === st.sel.block), mod = e.ctrlKey || e.metaKey;
     if (e.key === '?') { e.preventDefault(); return shortcuts(); }
     if (e.key === 'Escape') return escape();
+    if (mod && (e.key === '=' || e.key === '+')) { e.preventDefault(); return zoomStep(1); }
+    if (mod && (e.key === '-' || e.key === '_')) { e.preventDefault(); return zoomStep(-1); }
+    if (mod && e.key === '0') { e.preventDefault(); return setZoom(1); }
+    if (!mod && e.key === '!') { e.preventDefault(); return setZoom('fit'); }
+    if (mod && e.key.toLowerCase() === 'v' && !e.shiftKey && readClip()) { e.preventDefault(); return pasteSection(); }
+    if (!mod && !e.altKey && (e.key === 'ArrowUp' || e.key === 'ArrowDown') && st.sel && st.sel.kind === 'block' && (!t || t === document.body || t === root || (t.closest && t.closest('.wdz-left, .wdz-stage')))) { const bs = pageNow().blocks, i = bs.findIndex(b => b.id === st.sel.block), n = i < 0 ? null : bs[i + (e.key === 'ArrowDown' ? 1 : -1)]; if (n) { e.preventDefault(); st.sel = { block: n.id, path: '', kind: 'block' }; st.panel = 'edit'; panelPaint(); logPaint(); postSel(true); $('#wdz-blocks').querySelectorAll('.wdz-blk').forEach(li => li.classList.toggle('is-sel', li.dataset.blk === n.id)); } return; }
     if (mod && e.key.toLowerCase() === 's') { e.preventDefault(); return saveVersion(); }
     if (!mod && !e.altKey && /^[123]$/.test(e.key)) { st.dev = ['desktop', 'tablet', 'phone'][+e.key - 1]; return chrome(); }
     if (!mod && e.key.toLowerCase() === 'c') return commentMode(!st.cmode);
@@ -563,6 +627,8 @@ html[data-dev=phone] .ehide-phone,html[data-dev=tablet] .ehide-tablet,html[data-
     if (!sb) return;
     if (SP() && st.sel.kind !== 'block' && SP().key(e, spApi)) return;   // an entry, a picture, an element: its own shortcuts
     if (st.sel.kind !== 'block' && !mod && !e.altKey && e.key.toLowerCase() !== 'h') return;   // Delete with words selected never removes the whole section
+    if (mod && e.key.toLowerCase() === 'c' && st.sel.kind === 'block') { if (t && String(getSelection() || '')) return; e.preventDefault(); return copySection(sb); }
+    if (mod && e.key.toLowerCase() === 'x' && st.sel.kind === 'block') { e.preventDefault(); copySection(sb, true); st.sel = null; return commit(S().removeBlock(st.cfg, st.page, sb.id)); }
     if (mod && e.key.toLowerCase() === 'd') { e.preventDefault(); const r = S().duplicateBlock(st.cfg, st.page, sb.id); commit(r.cfg); st.sel = { block: r.block.id, path: '', kind: 'block' }; return paint(); }
     if (e.key === 'Delete' || e.key === 'Backspace') { e.preventDefault(); st.sel = null; return commit(S().removeBlock(st.cfg, st.page, sb.id)); }
     if (!mod && e.key.toLowerCase() === 'h') return commit(S().setHidden(st.cfg, st.page, sb.id, !sb.hidden));
@@ -753,7 +819,7 @@ html[data-dev=phone] .ehide-phone,html[data-dev=tablet] .ehide-tablet,html[data-
   async function onClick(e) {
     const t = e.target, a = t.closest('[data-wdz]'), pg = pageNow();
     if (t.closest('[data-peek]')) { peek(t.closest('[data-peek]').dataset.peek); return; }
-    if (t.closest('[data-tpl]')) { const x = t.closest('[data-tpl]'); const pk = $('#wdz-peek'); if (pk) pk.hidden = true; await useTemplate(x.dataset.tpl); say(`Started from the ${x.dataset.title || 'chosen'} template. Undo brings back what you had.`); return; }
+    if (t.closest('[data-tpl]')) { const x = t.closest('[data-tpl]'); const pk = $('#wdz-peek'); if (pk) pk.hidden = true; const had = hasSite(); if (!(await okToReplace())) return; await useTemplate(x.dataset.tpl); say(had ? `Started from the ${x.dataset.title || 'chosen'} template. Undo brings back what you had.` : `Started from the ${x.dataset.title || 'chosen'} template. Click anything to change it.`); return; }
     if (t.closest('[data-start="blank"]')) { hideStart(); paint(); return; }
     if (t.closest('[data-page]') && !a) { st.page = t.closest('[data-page]').dataset.page; st.sel = null; frameScroll = 0; paint(); return; }
     if (t.closest('[data-dev]') && t.closest('.wdz-devs')) { st.dev = t.closest('[data-dev]').dataset.dev; chrome(); return; }   // only the frame's width changes: the page itself is not drawn again
@@ -777,23 +843,28 @@ html[data-dev=phone] .ehide-phone,html[data-dev=tablet] .ehide-tablet,html[data-
     if (t.closest('[data-boardpick]')) { const src = await toData(t.closest('[data-boardpick]').dataset.boardpick); if (src && st.sel) { commit(S().setImage(st.cfg, st.page, st.sel.block, st.sel.path, src, t.closest('[data-boardpick]').dataset.alt || '')); say('Used the picture from your board. Undo puts the old one back.'); } return; }
     if (t.closest('[data-dup]')) { const r = S().duplicateBlock(st.cfg, st.page, t.closest('[data-dup]').dataset.dup); commit(r.cfg); st.sel = { block: r.block.id, path: '', kind: 'block' }; paint(); return; }
     if (t.closest('[data-hide]')) { const id = t.closest('[data-hide]').dataset.hide, b = pg.blocks.find(x => x.id === id); commit(S().setHidden(st.cfg, st.page, id, !(b && b.hidden))); return; }
-    if (t.closest('[data-panel]')) { st.panel = t.closest('[data-panel]').dataset.panel; panelPaint(); return; }
+    if (t.closest('[data-panel]')) { const pb = t.closest('[data-panel]'), want = pb.dataset.panel; st.panel = pb.closest('.wdz-ptabs') ? ((st.sub || {})[want] || want) : want; panelPaint(); return; }
     if (t.closest('[data-cf]')) return resolveConflict(t.closest('[data-cf]').dataset.cf);
     if (t.closest('[data-fill]')) { const k = t.closest('[data-fill]').dataset.fill; $('#wdz-fill').hidden = true; if (k === 'blank' && st.unfilled) { commit(JSON.parse(st.unfilled)); say('Started from the template as it is, with nothing filled in from the project. Undo brings the filled version back.'); } return; }
     if (t.closest('[data-sty]') && st.sel) { const x = t.closest('[data-sty]'); commit(S().setStyle(st.cfg, st.page, st.sel.block, { [x.dataset.sty]: x.dataset.val })); return; }
     if (t.closest('[data-cact]')) return commentAction(t.closest('[data-cact]'));
     if (t.closest('[data-site]')) return siteAction(t.closest('[data-site]'));
-    if (t.closest('[data-stu]') && STU()) return STU().click(t.closest('[data-stu]'), stuApi);
+    if (t.closest('[data-stu]') && STU()) { moreMenu(false); return STU().click(t.closest('[data-stu]'), stuApi); }
     if (t.closest('[data-sp]') && SP()) return SP().click(t.closest('[data-sp]'), spApi);
     if (t.closest('[data-sg]') && SG()) return SG().click(t.closest('[data-sg]'), sgApi());
     if (t.closest('[data-gcat]')) { gal.cat = t.closest('[data-gcat]').dataset.gcat; galPaint(); return; }
     if (t.closest('[data-peek]')) { peek(t.closest('[data-peek]').dataset.peek); return; }
     if (t.closest('[data-peekclose]')) { const pk = $('#wdz-peek'); if (pk) pk.hidden = true; return; }
     if (t.closest('[data-import]')) { const f = $('#wdz-import'); f.value = ''; f.click(); return; }
-    if (!a) { if (!t.closest('.wdz-dl')) $('#wdz-dlmenu').hidden = true; return; }
+    if (!a) { if (!t.closest('.wdz-dl')) $('#wdz-dlmenu').hidden = true; if (!t.closest('.wdz-morewrap')) moreMenu(false); return; }
     const k = a.dataset.wdz;
-    if (k === 'more') { const on = !root.querySelector('.wdz-top').classList.contains('is-more'); root.querySelector('.wdz-top').classList.toggle('is-more', on); a.setAttribute('aria-expanded', String(on)); return; }
-    if (k !== 'dlmenu') { const tp = root.querySelector('.wdz-top'); if (tp.classList.contains('is-more')) { tp.classList.remove('is-more'); const mb = tp.querySelector('[data-wdz="more"]'); if (mb) mb.setAttribute('aria-expanded', 'false'); } }
+    if (k === 'more') { const on = $('#wdz-more').hidden; moreMenu(on); if (on && e.detail === 0) { const f1 = $('#wdz-mode'); if (f1) f1.focus(); } return; }
+    if (k !== 'dlmenu' && k !== 'mode') moreMenu(false);
+    if (k === 'zoomin' || k === 'zoomout') return zoomStep(k === 'zoomin' ? 1 : -1);
+    if (k === 'zoom100') return setZoom(1);
+    if (k === 'zoomfit') return setZoom('fit');
+    if (k === 'code') return codeSheet();
+    if (k === 'requests') return window.TribeChanges && window.TribeChanges.sheet(st.pid);
     if (k === 'wide') { st.wide = !st.wide; return chrome(); }
     if (k === 'close') return close();
     if (k === 'undo') return undo();
@@ -889,6 +960,127 @@ html[data-dev=phone] .ehide-phone,html[data-dev=tablet] .ehide-tablet,html[data-
     await loadGallery(); galPaint();
   }
   function hideStart() { const b = $('#wdz-start'); if (b) b.hidden = true; }
+
+  // ---------- p4-site: More, zoom, sections on the clipboard, code, ask before replacing, pictures of a change ----------
+  const perf = { t0: 0, open: 0, ready: 0 };
+  // a word in the saved slot for a moment (the zoom, a spacing), then back to whether it is saved
+  let flashT = 0; const flash = text => { status(text); clearTimeout(flashT); flashT = setTimeout(() => { if (st && root && !root.hidden) status(); }, 1600); };
+  function moreMenu(on) {
+    const m = $('#wdz-more'), b = root && root.querySelector('[data-wdz="more"]'); if (!m || !b) return;
+    m.hidden = !on; b.setAttribute('aria-expanded', String(!!on));
+    if (on) { const dm = $('#wdz-dlmenu'); if (dm) dm.hidden = true; reqCount(); }
+  }
+  // how many suggested changes wait for this person: a count on More, so the strip need not sit there all day
+  async function reqCount() {
+    const n = $('#wdz-reqn'), dot = $('#wdz-moredot'); if (!n || !st || !st.pid || !connected() || !window.TribeChanges) { if (dot) dot.hidden = true; return; }
+    try { const l = await window.TribeChanges.mine(st.pid), w = l.filter(x => x.canDecide).length; n.hidden = !w; n.textContent = w; if (dot) dot.hidden = !w; } catch {}
+  }
+  // zoom: the preview keeps its real width (so the layout does not change) and is drawn smaller or larger. Clicks,
+  // typing and dragging work at any zoom because the browser maps them through the scale.
+  const ZOOMS = [0.25, 0.33, 0.5, 0.67, 0.75, 0.9, 1, 1.1, 1.25, 1.5, 2];
+  const stageW = () => { const sg = root && root.querySelector('.wdz-stage'); if (!sg) return 0; const cs = getComputedStyle(sg); return sg.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight) - 2; };
+  const baseW = () => (st.dev === 'phone' ? Math.min(390, innerWidth <= 820 ? stageW() : 390) : st.dev === 'tablet' ? 820 : st.wide ? 1280 : stageW());
+  const fitZ = () => { const w = baseW(), a = stageW(); return w > a && a > 0 ? Math.max(0.25, Math.floor(a / w * 100) / 100) : 1; };
+  function setZoom(z) {
+    if (!st) return;
+    if (z === 'fit') { z = fitZ(); st.fit = true; } else st.fit = false;
+    st.zoom = Math.max(0.25, Math.min(2, +z || 1)); applyZoom(); flash(`Zoom ${Math.round(st.zoom * 100)}%`);
+  }
+  function zoomStep(dir) { const z = (st && st.zoom) || 1; const i = dir > 0 ? ZOOMS.findIndex(x => x > z + 0.001) : ZOOMS.length - 1 - [...ZOOMS].reverse().findIndex(x => x < z - 0.001); const n = ZOOMS[Math.max(0, Math.min(ZOOMS.length - 1, i < 0 || i >= ZOOMS.length ? (dir > 0 ? ZOOMS.length - 1 : 0) : i))]; setZoom(n); }
+  function applyZoom() {
+    const wrap = $('#wdz-framewrap'), f = $('#wdz-frame'), zv = $('#wdz-zoomv'); if (!wrap || !f || !st) return;
+    if (st.fit) st.zoom = fitZ();
+    const z = st.zoom || 1; if (zv) zv.textContent = Math.round(z * 100) + '%';
+    { const fb = root.querySelector('[data-wdz="zoomfit"]'); if (fb) fb.setAttribute('aria-pressed', String(!!st.fit)); }
+    wrap.classList.toggle('is-zoom', z !== 1);
+    if (z === 1) { wrap.style.width = ''; f.style.width = ''; f.style.height = ''; f.style.transform = ''; return; }
+    const w = baseW(); wrap.style.width = Math.round(w * z) + 'px';
+    f.style.width = w + 'px'; f.style.transform = `scale(${z})`; f.style.height = Math.round(wrap.clientHeight / z) + 'px';
+  }
+  addEventListener('resize', () => { if (root && !root.hidden && st) applyZoom(); });
+  // Ctrl + wheel over the stage (outside the page) zooms too
+  document.addEventListener('wheel', e => { if (!root || root.hidden || !(e.ctrlKey || e.metaKey) || !e.target.closest || !e.target.closest('.wdz-stage')) return; e.preventDefault(); const now = Date.now(); if (now - zoomAt < 60) return; zoomAt = now; zoomStep(e.deltaY < 0 ? 1 : -1); }, { passive: false });
+
+  // a section on the clipboard: Ctrl C on a selected section, Ctrl V on any page (or in another site on this device)
+  const CLIP = 'tribecode.sitedesigner.clip';
+  let clip = null;
+  const readClip = () => { if (clip) return clip; try { const c = JSON.parse(localStorage.getItem(CLIP) || 'null'); if (c && c.type && S().BLOCKS[c.type]) clip = c; } catch {} return clip; };
+  function copySection(b, cut) {
+    clip = JSON.parse(JSON.stringify({ type: b.type, variant: b.variant, props: b.props, style: b.style, es: b.es, fx: b.fx }));
+    try { localStorage.setItem(CLIP, JSON.stringify(clip)); } catch {}
+    toast(tr(cut ? 'Cut the section. Ctrl V puts it on any page.' : 'Copied the section. Ctrl V pastes it on any page.'));
+  }
+  function pasteSection() {
+    const c0 = readClip(); if (!c0) return;
+    const next = JSON.parse(JSON.stringify(st.cfg)), pg = next.pages.find(p => p.id === st.page) || next.pages[0];
+    if (c0.type === 'footer' && pg.blocks.some(b => b.type === 'footer')) return say('This page already has a footer. Remove it first, or paste on another page.');
+    const before = new Set(st.cfg.pages.flatMap(p => p.blocks.map(b => b.id)));
+    const at = st.sel ? pg.blocks.findIndex(b => b.id === st.sel.block) : -1, foot = pg.blocks.findIndex(b => b.type === 'footer');
+    pg.blocks.splice(at >= 0 ? at + 1 : foot >= 0 ? foot : pg.blocks.length, 0, JSON.parse(JSON.stringify(c0)));
+    const norm = S().normalize(next), nb = (norm.pages.find(p => p.id === st.page) || norm.pages[0]).blocks.find(b => !before.has(b.id));
+    if (nb) st.sel = { block: nb.id, path: '', kind: 'block' };
+    commit(norm); paint(); postSel(true);
+  }
+
+  // Code: read and copy the selected section's HTML and CSS; write your own CSS for the whole site
+  function codeSheet() {
+    if (!window.TribeUI || !window.TribeUI.sheet) return;
+    const pg = pageNow(), b = (st.sel && pg.blocks.find(x => x.id === st.sel.block)) || pg.blocks[0];
+    const code = b ? S().sectionCode(st.cfg, st.page, b.id) : { html: '', css: '' };
+    const label = b ? S().BLOCKS[b.type].label.replace(/ \(.*/, '') : '';
+    const short = t => t.replace(/(src|href)="data:[^"]{120,}"/g, (m, k) => `${k}="data:… (a picture kept inside the page)"`);
+    const sh = window.TribeUI.sheet({ id: 'wdz-code', wide: true, eyebrow: 'Website', title: 'Code',
+      body: `<div class="wdz-code">
+        <div class="wdz-code-tabs" role="tablist" aria-label="Code"><button type="button" role="tab" data-ct="html" aria-selected="true">HTML</button><button type="button" role="tab" data-ct="css" aria-selected="false">CSS</button><button type="button" role="tab" data-ct="own" aria-selected="false">Your own CSS</button></div>
+        <div data-cp="html"><p class="wdz-hint">${b ? `${esc(tr('Code for this section'))}: <b>${esc(label)}</b>. ${esc(tr('This is what goes into the downloaded and published page.'))}` : ''}</p><pre class="wdz-pre" id="wdz-code-html" tabindex="0"></pre><p class="wdz-row"><button type="button" class="btn sm" data-copy="html">Copy HTML</button></p></div>
+        <div data-cp="css" hidden><p class="wdz-hint">${esc(tr('The rules of the site’s stylesheet that style this section.'))}</p><pre class="wdz-pre" id="wdz-code-css" tabindex="0"></pre><p class="wdz-row"><button type="button" class="btn sm" data-copy="css">Copy CSS</button></p></div>
+        <div data-cp="own" hidden><p class="wdz-hint">${esc(tr('Added at the end of the site’s stylesheet, for every page. It stays in the download and the published site. Anything that loads from another website is removed.'))}</p><label class="sr" for="wdz-code-own">Your own CSS</label><textarea class="input wdz-own" id="wdz-code-own" rows="12" spellcheck="false" autocapitalize="off" autocomplete="off" maxlength="20000" placeholder=".hero-split h1 { letter-spacing: -0.02em; }"></textarea><p class="wdz-hint" id="wdz-own-note" aria-live="polite"></p><p class="wdz-row"><button type="button" class="btn sm primary" data-own="apply">Apply</button><button type="button" class="btn sm" data-own="clear">Remove my CSS</button></p></div></div>` });
+    const q = x => sh.el.querySelector(x);
+    q('#wdz-code-html').textContent = short(code.html); q('#wdz-code-css').textContent = code.css; q('#wdz-code-own').value = st.cfg.css || '';
+    sh.el.addEventListener('click', async e => {
+      const tb = e.target.closest('[data-ct]'); if (tb) { sh.el.querySelectorAll('[data-ct]').forEach(x => x.setAttribute('aria-selected', String(x === tb))); sh.el.querySelectorAll('[data-cp]').forEach(x => { x.hidden = x.dataset.cp !== tb.dataset.ct; }); return; }
+      const cp = e.target.closest('[data-copy]'); if (cp) { const text = cp.dataset.copy === 'html' ? code.html : code.css; try { await navigator.clipboard.writeText(text); toast(tr('Copied')); } catch { const r = document.createRange(); r.selectNodeContents(q('#wdz-code-' + cp.dataset.copy)); const g = getSelection(); g.removeAllRanges(); g.addRange(r); toast(tr('Selected. Press Ctrl C to copy.')); } return; }
+      const own = e.target.closest('[data-own]'); if (own) {
+        const raw = own.dataset.own === 'clear' ? '' : q('#wdz-code-own').value, clean = S().cleanCss(raw);
+        if ((st.cfg.css || '') === clean) { q('#wdz-own-note').textContent = tr(clean ? 'Already applied.' : 'There is no CSS of yours on this site.'); return; }
+        commit(S().setCss(st.cfg, raw)); q('#wdz-code-own').value = st.cfg.css || '';
+        q('#wdz-own-note').textContent = tr(!clean ? 'Removed. Undo brings it back.' : clean.replace(/\s+/g, '') !== raw.replace(/\s+/g, '') ? 'Applied. Some of it was removed to keep the site safe; the box shows what is in use. Undo takes it back.' : 'Applied to every page. Undo takes it back.');
+      }
+    });
+    return sh;
+  }
+
+  // a template over a site that already has something in it: ask first (it replaces the site for everyone)
+  const hasSite = () => !!st && (!st.blank || st.hist.length > 0);   // st.blank: opened with nothing saved anywhere, and no template taken yet
+  function okToReplace() {
+    if (!hasSite() || !window.TribeUI || !window.TribeUI.sheet) return Promise.resolve(true);
+    return new Promise(res => {
+      let done = false; const end = v => { if (done) return; done = true; sh.close(); res(v); };
+      const sh = window.TribeUI.sheet({ id: 'wdz-replace', kind: 'decision', eyebrow: 'Website', title: 'Start over from this template?',
+        body: `<p>${esc(tr('This website already has a design'))}: <b>${esc(st.cfg.name || '')}</b>. ${esc(tr(st.pid && connected() ? 'Starting over replaces it for everyone in the tribe. Undo brings it back while the designer is open.' : 'Starting over replaces it. Undo brings it back while the designer is open.'))}</p>`,
+        foot: `<button type="button" class="btn" id="wdz-keep">${esc(tr('Keep my site'))}</button><button type="button" class="btn primary" id="wdz-over">${esc(tr('Start over'))}</button>`, onClose: () => end(false) });
+      sh.el.querySelector('#wdz-keep').onclick = () => end(false); sh.el.querySelector('#wdz-over').onclick = () => end(true);
+    });
+  }
+
+  // a picture of the page for a change request (before and after): the published HTML drawn through an SVG image
+  async function snapSite(cfgOrJson, pageId) {
+    try {
+      const cfg = typeof cfgOrJson === 'string' ? JSON.parse(cfgOrJson) : cfgOrJson; if (!cfg) return null;
+      const c = S().normalize(JSON.parse(JSON.stringify(cfg))), pg = c.pages.find(p => p.id === pageId) || c.pages[0];
+      const full = S().render(c, { page: pg.id, mode: 'pages', fonts: file => FONTS.get(file) || '' });
+      const a = full.indexOf('<style>'), b = full.indexOf('</style>', a), d = full.indexOf('<body>', b), e = full.lastIndexOf('</body>'); if (a < 0 || b < 0 || d < 0 || e < 0) return null;
+      const cssText = full.slice(a + 7, b).replace(/@import[^;]*;/g, '').replace(/:root\{/, '.wdz-snap{').replace(/(^|\})\s*(html|body)\s*(,\s*(html|body)\s*)*\{/g, '$1.wdz-snap{'), W = 1200, H = 1500, w = 480, h = 600;
+      const box = document.createElement('div'); box.setAttribute('xmlns', 'http://www.w3.org/1999/xhtml');
+      box.innerHTML = `<style>${cssText}.wdz-snap{width:${W}px;height:${H}px;overflow:hidden;margin:0;background:var(--bg);color:var(--ink);font-family:var(--body);line-height:1.6}.wdz-snap .skip{display:none}.wdz-snap [class*="an-"]{animation:none!important;opacity:1!important;transform:none!important}</style><div class="wdz-snap">${full.slice(d + 6, e).replace(/<script[\s\S]*?<\/script>/gi, '')}</div>`;
+      box.querySelectorAll('img[loading]').forEach(i => i.removeAttribute('loading'));
+      const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}"><foreignObject width="${W}" height="${H}">${new XMLSerializer().serializeToString(box)}</foreignObject></svg>`;
+      const img = new Image(); await new Promise((res, rej) => { img.onload = res; img.onerror = rej; img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg); });
+      const cv = document.createElement('canvas'); cv.width = w; cv.height = h; const g = cv.getContext('2d'); g.fillStyle = '#fff'; g.fillRect(0, 0, w, h); g.imageSmoothingQuality = 'high'; g.drawImage(img, 0, 0, W, H, 0, 0, w, h);
+      let out = cv.toDataURL('image/jpeg', 0.8); if (out.length > 380 * 1024) out = cv.toDataURL('image/jpeg', 0.5);
+      return out.length <= 400 * 1024 ? out : null;
+    } catch { return null; }
+  }
 
   // ---------- Flint ----------
   // feat/flint-unify: Flint here is the same chat as everywhere (TribeFlint.mount, ctx designer): the thread is this
@@ -1086,5 +1278,5 @@ html[data-dev=phone] .ehide-phone,html[data-dev=tablet] .ehide-tablet,html[data-
   }
   // the suggestion engine applies a website suggestion here when the designer shows that project: one normal edit, one Undo
   function applyChange({ ops, fn } = {}) { if (!st) return false; let next = null; if (ops) { const r = S().applyOps(st.cfg, ops); if (!r.done.length) return false; next = r.cfg; } else if (typeof fn === 'function') next = fn(st.cfg); return commit(next, { fromSuggest: true }); }
-  window.TribeSiteDesigner = { applyChange, importCfg, dropFiles, open, close, ask, download, undo, redo, flush, dirty, hasDraft, comments: () => st ? st.comments : [], state: () => st && { multi: (st.multi || []).length, pid: st.pid, page: st.page, sel: st.sel, hist: st.hist.length, fut: st.fut.length, log: st.log, pending: st.pending || null, open: !!root && !root.hidden, dirty: st.dirty, rev: st.rev, dev: st.dev, panel: st.panel, cmode: st.cmode }, cfg: () => st && st.cfg, useTemplate, gallery: () => gal.list };
+  window.TribeSiteDesigner = { applyChange, importCfg, dropFiles, open, close, ask, download, undo, redo, flush, dirty, hasDraft, comments: () => st ? st.comments : [], state: () => st && { multi: (st.multi || []).length, pid: st.pid, page: st.page, sel: st.sel, hist: st.hist.length, fut: st.fut.length, log: st.log, pending: st.pending || null, open: !!root && !root.hidden, dirty: st.dirty, rev: st.rev, dev: st.dev, panel: st.panel, cmode: st.cmode, zoom: st.zoom || 1, wide: !!st.wide }, cfg: () => st && st.cfg, useTemplate, gallery: () => gal.list, perf: () => ({ open: perf.open, ready: perf.ready }), zoom: setZoom, code: codeSheet, snap: snapSite };
 })();

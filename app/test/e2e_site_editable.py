@@ -258,10 +258,10 @@ def live(pw):
         assert pg.locator("#wdz-insp [data-etext]").input_value() == "Opens Saturday at 9am", "the panel follows what is typed on the page"
         # Desktop at a real computer width (round 3): Full width lays the page out 1280 wide and scrolls sideways; clicks still land
         assert f.evaluate("innerWidth") < 1100
-        pg.click("#wdz-wide"); pg.wait_for_function("document.querySelector('#wdz-framewrap').classList.contains('is-wide')"); pg.wait_for_timeout(300)
+        pg.click("#wdz [data-wdz=more]"); pg.click("#wdz-wide"); pg.wait_for_function("document.querySelector('#wdz-framewrap').classList.contains('is-wide')"); pg.wait_for_timeout(300)
         assert f.evaluate("innerWidth") == 1280 and pg.evaluate("document.querySelector('#wdz-framewrap').scrollWidth > document.querySelector('#wdz-framewrap').clientWidth")
         f.locator("h1[data-e]").first.click(); pg.wait_for_function("(TribeSiteDesigner.state().sel || {}).path === 'name'", timeout=3000)
-        pg.click("#wdz-wide"); pg.wait_for_timeout(300); assert f.evaluate("innerWidth") < 1100
+        pg.click("#wdz [data-wdz=more]"); pg.click("#wdz-wide"); pg.wait_for_timeout(300); assert f.evaluate("innerWidth") < 1100
         print("  ok  the note under a link is selected with one click and typed over in place")
 
         # ---- the small toolbar: bigger, bold; the page is swapped in place (no reload), the outline and toolbar stay
@@ -350,10 +350,10 @@ def live(pw):
         print("  ok  right-click menu; Hide on phones is one tap, shows dimmed in the phone preview and is really hidden in the export")
 
         # ---- on another tab, a click in the page still shows what was clicked
-        pg.click("[data-panel=style]"); f.locator("[data-btn]").first.click()
+        pg.click(".wdz-ptabs [data-panel=style]"); f.locator("[data-btn]").first.click()
         try: pg.wait_for_function("TribeSiteDesigner.state().panel === 'edit' && (TribeSiteDesigner.state().sel || {}).kind === 'button'", timeout=3000)
         except Exception: print('DEBUG', pg.evaluate("JSON.stringify(TribeSiteDesigner.state())")[:300], f.evaluate("document.activeElement && document.activeElement.outerHTML.slice(0,200)")); raise
-        assert pg.is_visible("#wdz-link") and pg.locator("[data-panel=edit]").get_attribute("aria-selected") == "true"
+        assert pg.is_visible("#wdz-link") and pg.locator(".wdz-ptabs [data-panel=edit]").get_attribute("aria-selected") == "true"
         nb = len(cfg(pg)["pages"][0]["blocks"])
         f.locator("[data-img]").first.click(); pg.wait_for_function("(TribeSiteDesigner.state().sel || {}).kind === 'image'", timeout=3000)
         f.locator(".wdz-tb [data-a=fit]").click(); pg.wait_for_function("TribeSiteDesigner.cfg().pages[0].blocks[0].props.fit === 'contain'", timeout=3000)
@@ -448,7 +448,7 @@ def live(pw):
         pg.select_option(f"#wdz-insp [data-sp-moveto='{pb['id']}']", other)
         pg.wait_for_function(f"TribeSiteDesigner.cfg().pages[1].blocks.some(b => b.id === '{pb['id']}') && !TribeSiteDesigner.cfg().pages[0].blocks.some(b => b.id === '{pb['id']}')", timeout=3000)
         pg.evaluate("TribeSiteDesigner.undo()"); pg.wait_for_function(f"TribeSiteDesigner.cfg().pages[0].blocks.some(b => b.id === '{pb['id']}')", timeout=3000); pg.wait_for_timeout(300)
-        pg.click("[data-panel=site]"); assert pg.locator("#wdz-insp .sp-pages .sp-li").count() == len(cfg(pg)["pages"]) >= 2
+        pg.click(".wdz-ptabs [data-panel=style]"); pg.click("#wdz-sub-style [data-panel=site]"); assert pg.locator("#wdz-insp .sp-pages .sp-li").count() == len(cfg(pg)["pages"]) >= 2
         pg.fill("#wdz-insp [data-pgseo=title]", "Maras Kitchen, open daily"); pg.locator("#wdz-insp [data-pgseo=title]").press("Tab")
         pg.wait_for_function("(TribeSiteDesigner.cfg().pages[0].seo || {}).title === 'Maras Kitchen, open daily'", timeout=3000)
         assert pg.locator("#wdz-insp [data-site=pageshare]").count() == 1, "each page can have its own share picture"
@@ -458,7 +458,7 @@ def live(pw):
         print("  ok  entries by name in a section's settings; width and a quiet entrance; each page has its own title for search")
 
         if SHOTS:
-            pg.click("[data-panel=edit]"); f = fr(pg); f.locator("h1[data-e]").first.click(); pg.wait_for_timeout(300); shot(pg, "site-editor2-words-1440.png")
+            pg.click(".wdz-ptabs [data-panel=edit]"); f = fr(pg); f.locator("h1[data-e]").first.click(); pg.wait_for_timeout(300); shot(pg, "site-editor2-words-1440.png")
             f.locator("h1[data-e]").first.click(button="right"); pg.wait_for_selector(".sp-menu:not([hidden])"); shot(pg, "site-editor2-menu-1440.png"); pg.keyboard.press("Escape")
 
         # ---- a phone: tap words, the toolbar stays on screen, nothing scrolls sideways
@@ -476,7 +476,7 @@ def live(pw):
         bar = m.locator(".wdz-top").bounding_box(); assert bar["height"] <= 60, f"the phone's top bar is one row, not {bar['height']}px"
         assert not m.locator("[data-wdz='dl-html']").first.is_visible()
         shot(m, "site-editor2-words-390.png")
-        m.locator("[data-wdz='more']").tap(); m.wait_for_selector("#wdz-dl", state="visible"); shot(m, "site-editor2-more-390.png")
+        m.locator("[data-wdz='more']").tap(); m.wait_for_selector("#wdz-more", state="visible"); assert m.locator("#wdz-more [data-wdz='templates']").is_visible(); shot(m, "site-editor2-more-390.png")
         m.locator("[data-wdz='more']").tap(); m.wait_for_timeout(150); assert m.locator(".wdz-top").bounding_box()["height"] <= 60
         shot(m, "site-editor2-words-390.png")
         print("  ok  phone: tap words, the toolbar fits the screen, nothing scrolls sideways, the saved state is visible")

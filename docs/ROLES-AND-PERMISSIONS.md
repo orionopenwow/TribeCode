@@ -166,9 +166,10 @@ stop when the tab is hidden (`app/ui/cowork.js`; relayed by the `cowork` socket 
 | `site.publish` (existed) | Publish; asking still goes through "Ask to publish" (one way to ask) |
 
 **Suggest, don't change.** If you may not change a tool but you are in the project, your edits stay on your device as
-a draft ("Draft: suggest it to share"). The strip at the top of the tool says how changes work here ("You can change
-this directly", "Your changes go to Ana for OK", "… the council for OK (2 of 3)") and has "Suggest this change". That
-sheet shows before and after (pictures for App Creator and Motion, a list of what changed for the site and store
+a draft ("Draft: suggest it to share"). The strip at the top of the tool says how changes work here ("Your changes go
+to Ana for OK", "… the council for OK (2 of 3)") and has "Suggest this change". Someone who can change the tool
+directly sees no strip, until changes wait for their OK ("1 change is waiting for your OK", with "Look at them"). That
+sheet shows before and after (pictures for App Creator, Motion and the website, a list of what changed for the store
 page), asks why, and says who will decide.
 
 **A change request is an approval** (`server/changereq.js`, kind `change` in `server/approvals.js`). Who decides comes

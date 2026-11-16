@@ -111,7 +111,7 @@
     if (selEl) selEl.classList.remove('wdz-sel');
     SEL = s && s.key ? { kind: s.kind, key: s.key } : null; selEl = find(SEL);
     if (selEl) { selEl.classList.add('wdz-sel'); var b = selEl.closest('[data-block]'); if (b) placeBar(b); }
-    placeTb();
+    placeTb(); if (typeof placeSp === 'function') placeSp();
   }
   var MULTI = [];
   function multiSet(list) { MULTI = list || []; [].forEach.call(document.querySelectorAll('.wdz-msel'), function (e) { e.classList.remove('wdz-msel'); }); MULTI.forEach(function (m) { var e = find(m); if (e) e.classList.add('wdz-msel'); }); }
@@ -187,7 +187,7 @@
   document.addEventListener('click', function (e) {
     if (Date.now() - noClick < 300) { e.preventDefault(); e.stopPropagation(); return; }   // the end of a drag is not a click
     var t = e.target, a = t.closest('a'); if (a || t.closest('form button, form input[type=submit]')) e.preventDefault();
-    if (t.closest('.wdz-bar,.wdz-tb')) return;
+    if (t.closest('.wdz-bar,.wdz-tb,.wdz-sp')) return;
     var pn = t.closest('.wdz-pin'); if (pn) { e.preventDefault(); return post({ t: 'pinopen', id: pn.dataset.id }); }
     if (CM) { e.preventDefault(); e.stopPropagation(); var sb = t.closest('[data-block]'); if (!sb) return; var r = sb.getBoundingClientRect(); return post({ t: 'pin', block: sb.dataset.block, x: Math.round((e.clientX - r.left) / r.width * 100), y: Math.round(e.clientY - r.top), cx: e.clientX, cy: e.clientY }); }
     var sys = t.closest('[data-sys]'); if (sys) { var sbl = sys.closest('[data-block]'); if (sbl) select({ kind: 'block', key: sbl.dataset.block + '|' }); return post({ t: 'sys', what: sys.dataset.sys, block: sbl ? sbl.dataset.block : '' }); }
@@ -208,16 +208,16 @@
     if (x.kind === 'icon') post({ t: 'icon', key: x.key });
   }, true);
   document.addEventListener('dblclick', function (e) {
-    var t = e.target; if (t.closest('.wdz-bar,.wdz-tb,.wdz-pin') || CM) return;
+    var t = e.target; if (t.closest('.wdz-bar,.wdz-tb,.wdz-sp,.wdz-pin') || CM) return;
     var d = t.closest('[data-dbl]'); if (d) { clearTimeout(navT); e.preventDefault(); pick({ kind: 'text', key: d.dataset.e }, true); return typeIn(d, true); }
     var im = t.closest('[data-img]'); if (im && !t.closest('[data-e]')) { pick({ kind: 'image', key: im.dataset.img }); post({ t: 'tb', act: 'replace', key: im.dataset.img, kind: 'image' }); }
   }, true);
   document.addEventListener('contextmenu', function (e) {
-    if (CM || e.target.closest('.wdz-bar,.wdz-tb')) return; var x = target(e.target); if (!x) return;
+    if (CM || e.target.closest('.wdz-bar,.wdz-tb,.wdz-sp')) return; var x = target(e.target); if (!x) return;
     e.preventDefault(); if (!(SEL && SEL.key === x.key && SEL.kind === x.kind)) pick(x);
     post({ t: 'menu', x: e.clientX, y: e.clientY, key: x.key, kind: x.kind });
   }, true);
-  document.addEventListener('mousedown', function (e) { if (e.target.closest('[data-ph]') || (e.shiftKey && !e.target.closest('.wdz-tb,.wdz-bar'))) e.preventDefault(); }, true);   // shift-click picks things, it does not stretch a text selection   // the box is part of the design here, not a form to fill in
+  document.addEventListener('mousedown', function (e) { if (e.target.closest('[data-ph]') || (e.shiftKey && !e.target.closest('.wdz-tb,.wdz-bar,.wdz-sp'))) e.preventDefault(); }, true);   // shift-click picks things, it does not stretch a text selection   // the box is part of the design here, not a form to fill in
   document.addEventListener('submit', function (e) { e.preventDefault(); }, true);
   // (round 2) drag a selected picture inside its frame to choose what stays in view; the focus point is saved in percent
   var pdrag = null;
@@ -256,7 +256,8 @@
     if (e.target.closest && e.target.closest('input,textarea,select')) return;
     if (mod && /^[zy]$/i.test(e.key)) { e.preventDefault(); return post({ t: (e.key.toLowerCase() === 'y' || e.shiftKey) ? 'redo' : 'undo' }); }
     if (e.key === 'Enter' && SEL && selEl) { var w = selEl.matches('[data-e]') ? selEl : selEl.querySelector('[data-e]'); if (w) { e.preventDefault(); return typeIn(w, false); } if (SEL.kind === 'image') return post({ t: 'tb', act: 'replace', key: SEL.key, kind: 'image' }); }
-    if (/^(Delete|Backspace)$/.test(e.key) || (mod && /^[ds]$/i.test(e.key)) || (e.altKey && /^Arrow(Up|Down)$/.test(e.key))) e.preventDefault();
+    if (/^(Delete|Backspace)$/.test(e.key) || (mod && /^[ds=+\-0]$/i.test(e.key)) || (e.altKey && /^Arrow(Up|Down)$/.test(e.key)) || (!mod && !e.altKey && /^Arrow(Up|Down)$/.test(e.key) && SEL && SEL.kind === 'block')) e.preventDefault();
+    if (mod && /^[cx]$/i.test(e.key) && (!SEL || SEL.kind !== 'block' || String(getSelection() || ''))) return;   // copying words stays the browser's own
     if (e.key.length === 1 || /^(Delete|Backspace|Arrow(Up|Down))$/.test(e.key)) post({ t: 'key', key: e.key, ctrl: e.ctrlKey, meta: e.metaKey, alt: e.altKey, shift: e.shiftKey });
   });
 
@@ -281,7 +282,7 @@
     [].forEach.call(document.querySelectorAll('.wdz-pin'), function (x) { x.remove(); });
     (list || []).forEach(function (p) { var b = q('[data-block="' + esc(p.block) + '"]'); if (!b) return; var s = document.createElement('button'); s.className = 'wdz-pin' + (p.status !== 'open' ? ' done' : ''); s.dataset.id = p.id; s.type = 'button'; s.textContent = p.n; s.title = p.text; s.style.left = p.x + '%'; s.style.top = Math.min(p.y, b.offsetHeight - 12) + 'px'; b.appendChild(s); });
   }
-  function wide() { var sw = document.documentElement.scrollWidth, iw = innerWidth, w = ''; if (sw > iw + 1) { var bs = document.querySelectorAll('[data-block]'); for (var i = 0; i < bs.length && !w; i++) { var els = bs[i].querySelectorAll('*'); for (var j = 0; j < els.length; j++) { if (els[j].closest('.wdz-bar,.wdz-tb')) continue; if (els[j].getBoundingClientRect().right > iw + 1) { w = bs[i].dataset.block; break; } } } } return { sw: sw, iw: iw, wide: w }; }
+  function wide() { var sw = document.documentElement.scrollWidth, iw = innerWidth, w = ''; if (sw > iw + 1) { var bs = document.querySelectorAll('[data-block]'); for (var i = 0; i < bs.length && !w; i++) { var els = bs[i].querySelectorAll('*'); for (var j = 0; j < els.length; j++) { if (els[j].closest('.wdz-bar,.wdz-tb,.wdz-sp')) continue; if (els[j].getBoundingClientRect().right > iw + 1) { w = bs[i].dataset.block; break; } } } } return { sw: sw, iw: iw, wide: w }; }
   addEventListener('message', function (e) {
     var d = e.data || {};
     if (d.dev) { DEV = d.dev; setDev(); }
@@ -346,5 +347,53 @@
   addEventListener('resize', function () { if (cwPeople.length) cwDraw(); });
   setInterval(function () { if (cwPeople.length) cwDraw(); }, 500);   // the page swaps in place when the design changes
   markItems();
+  // ---------- p4-site: zoom, and space above and below the selected section ----------
+  // Ctrl/Cmd + wheel (and a trackpad pinch, which arrives as the same event) zooms the designer, not the browser.
+  addEventListener('wheel', function (e) { if (!(e.ctrlKey || e.metaKey)) return; e.preventDefault(); post({ t: 'zoom', dy: e.deltaY }); }, { passive: false });
+  // Two handles on the selected section: drag the top one for the space above its content, the bottom one for the space
+  // below. The number snaps to the site's spacing scale and shows while you drag; letting go is one Undo. A double-click
+  // gives the section the site's own spacing back. Esc cancels.
+  var SCALE = [0, 8, 16, 24, 32, 48, 64, 80, 96, 128, 160], spT = null, spB = null, spDrag = null;
+  function snap(v) { var best = SCALE[0]; for (var i = 1; i < SCALE.length; i++) if (Math.abs(SCALE[i] - v) < Math.abs(best - v)) best = SCALE[i]; return best; }
+  function mkSp(side) { var h = document.createElement('div'); h.className = 'wdz-sp wdz-sp-' + side; h.setAttribute('contenteditable', 'false'); h.dataset.side = side; h.setAttribute('role', 'slider'); h.tabIndex = 0; h.title = L[side === 'pt' ? 'spaceAbove' : 'spaceBelow'] || (side === 'pt' ? 'Space above: drag' : 'Space below: drag'); h.setAttribute('aria-label', h.title); h.innerHTML = '<i></i><b></b>'; return h; }
+  function spNow(b, side) { var v = b.style.getPropertyValue(side === 'pt' ? '--pt' : '--pb'); if (v) return parseFloat(v) || 0; var cs = getComputedStyle(b); return parseFloat(side === 'pt' ? cs.paddingTop : cs.paddingBottom) || 0; }
+  function spLabel(h, b) { var v = Math.round(spNow(b, h.dataset.side)); h.querySelector('b').textContent = String(v); h.setAttribute('aria-valuenow', String(v)); h.setAttribute('aria-valuemin', '0'); h.setAttribute('aria-valuemax', '160'); }
+  function placeSp() {
+    if (spDrag) return;
+    var b = SEL && SEL.kind === 'block' && selEl && selEl.matches('[data-block]') ? selEl : null;
+    if (!b) { if (spT) spT.remove(); if (spB) spB.remove(); return; }
+    if (!spT) { spT = mkSp('pt'); spB = mkSp('pb'); [spT, spB].forEach(wireSp); }
+    b.appendChild(spT); b.appendChild(spB); spLabel(spT, b); spLabel(spB, b);
+  }
+  function spSet(b, side, v) { b.style.setProperty(side === 'pt' ? '--pt' : '--pb', v + 'px'); b.classList.add(side === 'pt' ? 'has-pt' : 'has-pb'); }
+  function spEnd(ok) {
+    if (!spDrag) return; var d = spDrag; spDrag = null; d.h.classList.remove('is-drag'); document.documentElement.classList.remove('wdz-spacing'); d.b.classList.remove('wdz-sp-show-' + d.side);
+    if (!ok || d.v === d.v0) { if (d.had) spSet(d.b, d.side, d.v0); else { d.b.style.removeProperty(d.side === 'pt' ? '--pt' : '--pb'); d.b.classList.remove(d.side === 'pt' ? 'has-pt' : 'has-pb'); } spLabel(d.h, d.b); return; }
+    noClick = Date.now(); post({ t: 'space', block: d.b.dataset.block, side: d.side, value: d.v });
+  }
+  function wireSp(h) {
+    h.addEventListener('pointerdown', function (e) {
+      var b = h.parentNode; if (!b || !b.matches || !b.matches('[data-block]')) return; e.preventDefault(); e.stopPropagation();
+      var side = h.dataset.side, had = !!b.style.getPropertyValue(side === 'pt' ? '--pt' : '--pb'), now = spNow(b, side);
+      spDrag = { h: h, b: b, side: side, y: e.clientY, start: now, v0: had ? Math.round(now) : -1, v: had ? Math.round(now) : -1, had: had };
+      h.classList.add('is-drag'); document.documentElement.classList.add('wdz-spacing'); b.classList.add('wdz-sp-show-' + side);
+      try { h.setPointerCapture(e.pointerId); } catch (x) {}
+    });
+    h.addEventListener('pointermove', function (e) {
+      if (!spDrag || spDrag.h !== h) return; var d = spDrag, v = snap(Math.max(0, Math.min(160, d.start + (e.clientY - d.y))));
+      if (v !== d.v) { d.v = v; spSet(d.b, d.side, v); h.querySelector('b').textContent = String(v); h.setAttribute('aria-valuenow', String(v)); post({ t: 'spacing', side: d.side, value: v }); }
+    });
+    h.addEventListener('pointerup', function () { spEnd(true); }); h.addEventListener('pointercancel', function () { spEnd(false); });
+    h.addEventListener('click', function (e) { e.preventDefault(); e.stopPropagation(); });
+    h.addEventListener('dblclick', function (e) { e.preventDefault(); e.stopPropagation(); var b = h.parentNode; if (b && b.dataset && b.dataset.block) post({ t: 'space', block: b.dataset.block, side: h.dataset.side, value: '' }); });
+    h.addEventListener('keydown', function (e) {   // arrows step along the scale
+      if (!/^Arrow(Up|Down)$/.test(e.key)) return; var b = h.parentNode; if (!b || !b.dataset || !b.dataset.block) return; e.preventDefault(); e.stopPropagation();
+      var cur0 = snap(spNow(b, h.dataset.side)), i = SCALE.indexOf(cur0), n = SCALE[Math.max(0, Math.min(SCALE.length - 1, i + (e.key === 'ArrowDown' ? 1 : -1)))];
+      if (n !== cur0 || !b.style.getPropertyValue(h.dataset.side === 'pt' ? '--pt' : '--pb')) post({ t: 'space', block: b.dataset.block, side: h.dataset.side, value: n, keep: 1 });
+    });
+  }
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && spDrag) { e.stopPropagation(); spEnd(false); } }, true);
+  addEventListener('message', function (e) { var d = e.data || {}; if (d.spfocus) { placeSp(); var h = d.spfocus === 'pb' ? spB : spT; if (h && h.isConnected) h.focus(); } });
+
   var w0 = wide(); post({ t: 'ready', sw: w0.sw, iw: w0.iw, wide: w0.wide });
 })();

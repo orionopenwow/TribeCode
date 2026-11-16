@@ -562,7 +562,7 @@
    "steps": [
     "Open the website designer and press the plus next to the page names to add one.",
     "Double-click a name in the page's own menu to type a new one.",
-    "Open Site on the right to reorder or remove pages.",
+    "Open Style on the right, then Site settings, to reorder or remove pages.",
     "There you can also give each page its own title and description for search."
    ],
    "do": "call:TribeSiteDesigner.open",
@@ -586,7 +586,7 @@
    ],
    "needs": "TribeSiteDesigner",
    "steps": [
-    "Open the website designer and look at Suggestions on the right.",
+    "Open the website designer and look at Ideas on the right.",
     "Each one shows the words before and after, and who said it and where.",
     "Tap Apply, Not now or Dismiss. Apply is a normal change and Ctrl Z takes it back.",
     "Click anything on the page to see what the tribe said about it."
@@ -1668,7 +1668,7 @@
    "steps": [
     "Open the website, App Creator or Motion Studio. Everyone in it shows at the top, and their pointer and outline show on the thing they are on.",
     "If someone is typing in a part, it says so. Wait, or ask them in the chat.",
-    "The line under the top bar says how changes work here: you change it directly, or your changes go to someone for OK.",
+    "If your changes need someone’s OK, a line under the top bar says who. If you can change it directly, there is no line.",
     "Press Suggest this change when you are ready. They approve, ask for changes or say no in the inbox, and Undo puts the earlier version back."
    ],
    "do": "call:TribeChanges.sheet",
@@ -2090,9 +2090,8 @@
      "text": "Zoom out to see the whole page, or fit it to the window.",
      "show": {
       "open": "site",
-      "sel": "#wdz-zoom, [data-wdz='zoom']"
-     },
-     "soon": true
+      "sel": "#wdz .wdz-zoom"
+     }
     },
     {
      "id": "site-code",
@@ -2100,9 +2099,8 @@
      "text": "Open the code view to read the page's code or add your own styles.",
      "show": {
       "open": "site",
-      "sel": "#wdz-code, [data-wdz='code']"
-     },
-     "soon": true
+      "sel": "#wdz .wdz-more"
+     }
     },
     {
      "id": "site-space",
@@ -2110,7 +2108,7 @@
      "text": "Drag a section's edge to give it more or less room.",
      "show": {
       "open": "site",
-      "sel": ".wdz-space, [data-wdz='space']"
+      "sel": ".wdz-sp"
      },
      "soon": true
     },
@@ -2120,9 +2118,8 @@
      "text": "Open History in App Creator and restore an earlier save.",
      "show": {
       "open": "app",
-      "sel": "#apc-history, [data-apc='history']"
-     },
-     "soon": true
+      "sel": "#apc-more"
+     }
     },
     {
      "id": "app-comments",
@@ -2130,9 +2127,8 @@
      "text": "Press Comment in App Creator and click a part of the screen.",
      "show": {
       "open": "app",
-      "sel": "#apc-comment, [data-apc='comment']"
-     },
-     "soon": true
+      "sel": "#apc-cmb"
+     }
     },
     {
      "id": "app-multi",
@@ -2140,9 +2136,8 @@
      "text": "Hold Shift and click more than one part, then move, copy or remove them together.",
      "show": {
       "open": "app",
-      "sel": "#apc-multi, [data-apc='multi']"
-     },
-     "soon": true
+      "sel": "#apc-phone"
+     }
     },
     {
      "id": "app-map",
@@ -2150,9 +2145,8 @@
      "text": "Open the map to see all screens and the links between them.",
      "show": {
       "open": "app",
-      "sel": "#apc-map, [data-apc='map']"
-     },
-     "soon": true
+      "sel": "#apc-mapb"
+     }
     },
     {
      "id": "polish",
@@ -2160,7 +2154,7 @@
      "text": "Press Polish it. Flint evens out spacing, contrast and text sizes with no AI.",
      "show": {
       "open": "site",
-      "sel": "[data-flint-polish], #wdz-polish, #apc-polish"
+      "sel": "[data-fc-act='polish']"
      },
      "soon": true
     },
@@ -2170,7 +2164,7 @@
      "text": "Press Make it beautiful. Your AI helper proposes changes and nothing changes until you approve.",
      "show": {
       "open": "site",
-      "sel": "[data-flint-beautiful], #wdz-beautiful, #apc-beautiful"
+      "sel": "[data-fc-act='beauty']"
      },
      "soon": true
     }

@@ -1,6 +1,7 @@
 // How changes work here, in every creator tool (feat/cowork-editors, server/changereq.js).
 //   A strip at the top of the website designer, App Creator, Motion Studio, the Launch kit and Share a clip says it in one
-//   line from the group's own style: "You can change this directly" or "Your changes go to Ana for OK". Someone who can't
+//   line from the group's own style: "Your changes go to Ana for OK". Someone who can change the tool directly sees no
+//   strip (p4), until changes wait for their OK: "2 changes are waiting for your OK · Look at them". Someone who can't
 //   change it keeps editing as a draft, then presses "Suggest this change": the draft goes to the right people as a
 //   request, with before and after pictures where the tool can draw them. They answer it in the inbox (Approve,
 //   Request changes, Deny, a comment); an approved change is applied as one step and Undo puts the earlier version back.
@@ -52,17 +53,31 @@
       if (!pid || !live()) { el.hidden = true; el.innerHTML = ''; return; }
       const h = HOW[tool];
       if (!h) { el.hidden = true; return; }
-      el.hidden = false; el.className = 'cr-strip' + (h.can ? ' is-direct' : h.watch ? ' is-watch' : ' is-ask');
+      // p4: someone who can change this directly gets no strip (it said the obvious all day). It comes back only when
+      // changes are waiting for their OK. People whose changes need an OK, and people who only watch, always see it.
+      if (h.can) {
+        const n = WAIT.pid === pid ? WAIT.n : 0;
+        el.className = 'cr-strip is-direct';
+        if (!n) { el.hidden = true; el.innerHTML = ''; return; }
+        el.hidden = false;
+        el.innerHTML = `<span class="cr-i">${icon('inbox', 14)}</span><span class="cr-line cr-wait">${esc(n === 1 ? T('1 change is waiting for your OK.') : tt('{n} changes are waiting for your OK.', { n }))}</span><button type="button" class="btn sm" data-cr-mine>${esc(T('Look at them'))}</button>`;
+        el.querySelector('[data-cr-mine]').onclick = () => sheet(pid);
+        return;
+      }
+      el.hidden = false; el.className = 'cr-strip' + (h.watch ? ' is-watch' : ' is-ask');
       const btn = !h.can && !h.watch && h.who && h.who.length ? `<button type="button" class="btn sm primary" data-cr-suggest${opts.dirty && !opts.dirty() ? ' disabled' : ''}>${esc(T(tool === 'publish' ? 'Ask to publish' : 'Suggest this change'))}</button>` : '';
       el.innerHTML = `<span class="cr-i">${icon(h.can ? 'check' : h.watch ? 'eye' : 'users', 14)}</span><span class="cr-line">${esc(lineOf(h))}</span>${btn}<button type="button" class="linkish cr-mine" data-cr-mine>${esc(T('Requests'))}</button>`;
       const b = el.querySelector('[data-cr-suggest]'); if (b) b.onclick = () => suggest(tool, { ...opts, pid });
       el.querySelector('[data-cr-mine]').onclick = () => sheet(pid);
     };
     s.draw = draw;
-    how(opts.pid).then(draw); draw();
+    how(opts.pid).then(() => { draw(); waiting(opts.pid).then(draw); }); draw();
     return { refresh: () => how(opts.pid, true).then(draw), draw, can: () => can(tool) };
   }
   const redraw = () => strips.forEach(s => s.draw && s.draw());
+  // how many suggested changes wait for this person's OK in this project
+  const WAIT = { pid: '', n: 0 };
+  async function waiting(pid) { pid = pid || projectId(); if (!pid || !live()) return 0; try { const l = await mine(pid); WAIT.pid = pid; WAIT.n = l.filter(x => x.canDecide).length; } catch {} return WAIT.n; }
 
   // ---------- suggesting ----------
   async function suggest(tool, opts = {}) {
@@ -166,10 +181,10 @@
   if (C && C.on) {
     C.on('ws', m => {
       if (!m) return;
-      if (m.type === 'change' || m.type === 'groupstyle' || m.type === 'perms') { how(null, true).then(redraw); if (open && m.type === 'change') { const b = document.getElementById('cr-list-body'); if (b) sheet(); } }
+      if (m.type === 'change' || m.type === 'groupstyle' || m.type === 'perms') { how(null, true).then(redraw).then(() => waiting()).then(redraw); if (open && m.type === 'change') { const b = document.getElementById('cr-list-body'); if (b) sheet(); } }
     });
     C.on('project', () => { howAt = 0; how(null, true).then(redraw); });
     C.on('hello', () => { howAt = 0; how(null, true).then(redraw); });
   }
-  window.TribeChanges = { how, line, can, strip, suggest, sheet, preview, undo, mine };
+  window.TribeChanges = { how, line, can, strip, suggest, sheet, preview, undo, mine, waiting };
 })();
