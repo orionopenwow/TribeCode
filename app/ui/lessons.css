@@ -1,0 +1,49 @@
+/* Lessons (lessons.js): the card that stays on screen while you work, the tracks on the Learn page, the first-run offer. */
+.les-card { position: fixed; left: 16px; bottom: 16px; z-index: 89; width: 320px; max-width: calc(100vw - 32px); background: var(--surface-3); border: 1px solid var(--border); border-radius: var(--r); padding: 12px 14px; color: var(--text); font-family: var(--font); }
+.les-card header { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.les-card .eyebrow { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.les-hb { display: flex; gap: 2px; flex: none; }
+.les-x { display: inline-grid; place-items: center; width: 36px; height: 36px; margin: -8px -8px -8px 0; background: none; border: 0; border-radius: var(--r-sm); color: var(--muted); cursor: pointer; font-size: 16px; }
+.les-x:hover { color: var(--text); background: var(--surface); }
+.les-card h4 { margin: 10px 0 4px; font-size: 16px; line-height: 1.3; }
+.les-card p { margin: 0 0 10px; color: var(--muted); font-size: 14px; line-height: 1.5; }
+.les-ok[hidden] { display: none; }
+.les-ok { display: flex; align-items: center; gap: 6px; color: var(--live-ink) !important; font-weight: 600; }
+.les-acts { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
+.les-acts .btn { min-height: 36px; }
+.les-bar { height: 4px; margin-top: 8px; background: var(--surface); border: 1px solid var(--border); border-radius: 4px; overflow: hidden; }
+.les-bar span { display: block; height: 100%; background: var(--accent); transition: width var(--dur-base) var(--ease-out); }
+.les-card.is-small { width: auto; padding: 0; border-radius: 999px; }
+.les-pill { display: flex; align-items: center; gap: 8px; min-height: 40px; padding: 0 14px; background: none; border: 0; color: var(--text); font: inherit; font-size: 13px; font-weight: 600; cursor: pointer; }
+
+.les-home { margin: 28px 0 8px; }
+.les-hh { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+.les-hh h2 { margin: 0; }
+.les-count { color: var(--muted); font-size: 13px; }
+.les-lead { color: var(--muted); max-width: 65ch; line-height: 1.6; margin: 6px 0 12px; }
+.les-next { margin: 0 0 12px; }
+.les-tracks { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 12px; }
+.les-track { display: flex; flex-direction: column; gap: 8px; padding: 14px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--r); }
+.les-track.is-next { border-color: var(--accent); }
+.les-track p { margin: 0; color: var(--muted); font-size: 14px; line-height: 1.5; flex: 1; }
+.les-th { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
+.les-th small { color: var(--muted); white-space: nowrap; }
+.les-fin { display: inline-flex; align-items: center; gap: 4px; color: var(--live-ink); font-size: 13px; font-weight: 600; }
+.les-track .btn { align-self: flex-start; min-height: 36px; }
+
+.les-offer { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; margin-top: 16px; padding: 12px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--r); color: var(--text); font-size: 13px; line-height: 1.5; }
+.les-offer-b { display: flex; flex-wrap: wrap; gap: 8px; }
+.les-offer .btn { min-height: 36px; white-space: nowrap; }
+.les-card.is-alt { left: auto; right: 16px; }
+
+@media (max-width: 820px) {
+  .les-card { left: 8px; right: 8px; bottom: calc(72px + env(safe-area-inset-bottom, 0px)); width: auto; max-width: none; padding: 10px 12px; }
+  .les-card.is-small { right: auto; }
+  .les-card h4 { margin-top: 8px; font-size: 15px; }
+  .les-card p { font-size: 13px; margin-bottom: 8px; }
+  #les-card .les-acts .btn, #les-home .les-track .btn, .les-offer .btn.sm { min-height: 40px; height: auto; }
+  #les-card .les-x { width: 40px; height: 40px; }
+  .les-card.is-alt { left: 8px; right: 8px; bottom: auto; top: calc(8px + env(safe-area-inset-top, 0px)); }
+  .les-tracks { grid-template-columns: 1fr; }
+}
+@media (prefers-reduced-motion: reduce) { .les-bar span { transition: none; } }

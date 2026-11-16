@@ -154,6 +154,7 @@
       <p class="gd-lead">${T('Quick guides answer one question on one screen. Paths take you from an idea to a published link. Skills cover running what you made.')}</p>
       ${Q && window.TribeLearn ? window.TribeLearn.summaryHTML('<div id="gd-stage"></div><div id="gd-skilln"></div>') : ''}
       <button type="button" class="gd-next" data-gd-next>${ico('i-flag')}<span><b>${T('What should I do next?')}</b><small>${T('One step for where your project is right now')}</small></span></button>
+      ${window.TribeLessons ? window.TribeLessons.homeHTML() : ''}
       ${Q ? Q.homeHTML() : ''}
       <h2>${T('Paths: build something, start to finish')}</h2>
       <div class="gd-paths">${PATHS.map(([id, t, line]) => `<a href="#/guide/path/${id}" class="gd-path" data-gdp="${id}"><b>${esc(T(t))}</b><small>${esc(T(line))}</small><span class="gd-lv">${LEVELS.map(l => T(l[1])).join(' · ')}</span></a>`).join('')}</div>

@@ -1072,6 +1072,19 @@ async function apiInProject(req, res, url) {
     return send(res, 200, { modes: next });
   }
   // Rename / recolor yourself: friends see it at once (Settings used to change it on this device only).
+  // pass 4: a person's lesson ticks follow them to every device (app/ui/lessons.js). The earliest tick wins; nothing is un-ticked.
+  if (a === 'me' && b === 'learn' && (m === 'GET' || m === 'PUT')) {
+    const file = `.tribe/learn/${String(me.id).replace(/[^\w-]/g, '')}.json`, cur = baseStore.readJSON(file, null) || { track: {} };
+    if (m === 'PUT') {
+      if (me.role === 'agent') return fail(res, 403, 'lessons are for people');
+      const body = await readBody(req), inc = body && typeof body.track === 'object' && body.track ? body.track : {};
+      let n = 0;
+      for (const [t, box] of Object.entries(inc)) { if (!/^[a-z0-9-]{1,40}$/.test(t) || !box || typeof box !== 'object') continue; cur.track[t] = cur.track[t] || {}; for (const [st, at] of Object.entries(box)) { const v = Number(at); if (!/^[a-z0-9-]{1,40}$/.test(st) || !(v > 0) || ++n > 400) continue; if (!cur.track[t][st] || v < cur.track[t][st]) cur.track[t][st] = v; } }
+      try { require('node:fs').mkdirSync(require('node:path').join(DIR, '.tribe', 'learn'), { recursive: true }); } catch {}
+      baseStore.writeJSON(file, cur);
+    }
+    return send(res, 200, { track: cur.track || {} });
+  }
   if (a === 'me' && ['settings', 'privacy', 'export', 'signout-others', 'deletion'].includes(b)) return mine.route(req, res, { b, m, me, th: tokenHashOf(req), readBody, send, fail });
   if (a === 'me' && !b && m === 'PATCH') {
     if (me.role === 'agent') return fail(res, 403, 'agents keep their names');

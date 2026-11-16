@@ -78,6 +78,7 @@
   .qk-h p { margin: 0; color: var(--muted); font-size: 15px; max-width: 60ch; line-height: 1.6; }
   .qk-q { flex: 1; min-width: 220px; max-width: 360px; height: 44px; padding: 0 14px; border: 1px solid var(--edge); border-radius: 10px; background: var(--surface); color: var(--text); font: inherit; font-size: 15px; }
   .qk-q:focus-visible { outline: 2px solid var(--ember); outline-offset: 2px; }
+  .qk-lp { margin: 0 0 12px; color: var(--muted); max-width: 65ch; line-height: 1.6; }
   .qk-g { margin: 22px 0 8px; color: var(--muted); font: 600 12px/1 var(--mono, ui-monospace, monospace); letter-spacing: .06em; text-transform: uppercase; }
   .qk-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; align-items: start; }
   .qk-card { border: 1px solid var(--edge); border-radius: 12px; background: var(--surface); }
@@ -260,6 +261,7 @@
 <section class="qk" id="quick" aria-labelledby="qk-title">
   <div class="qk-h"><div><span class="k">Quick guides</span><h2 id="qk-title">How do I…?</h2><p>One screen each: a few steps, then you are done. In the app every card also has a button that does it for you and a Show me that points at the real thing.</p></div>
     <input class="qk-q" id="qk-q" type="search" placeholder="Search: invite, publish, undo…" aria-label="Search quick guides" autocomplete="off"></div>
+  <div id="qk-lessons"></div>
   <div id="qk-out" aria-live="polite"></div>
 </section>
 <script>
@@ -279,6 +281,10 @@
         : d.groups.map(([id, name]) => { const gs = list.filter(g => g.group === id); return gs.length ? `<h3 class="qk-g">${esc(name)}</h3><div class="qk-grid">${gs.map(card).join('')}</div>` : ''; }).join('');
       document.documentElement.dataset.quickShown = String(list.length);
     };
+    // the lessons (tracks) from the same file: what each one covers, step by step. In the app each step shows you where to click.
+    const les = document.getElementById('qk-lessons'), tr = d.tracks || [];
+    if (les && tr.length) les.innerHTML = `<h3 class="qk-g">Lessons: step by step</h3><p class="qk-lp">Short lessons you do in the real tool. Each step shows you where to click and ticks itself when you have done it.</p><div class="qk-grid">${tr.map(t => `<details class="qk-card" data-lesson="${esc(t.id)}"><summary>${esc(t.title)}<small data-no-i18n>${t.steps.length} · ${t.mins} min</small></summary><div class="qk-b"><p>${esc(t.intro)}</p><ol>${t.steps.map(x => `<li><b>${esc(x.title)}</b> <span>${esc(x.text)}</span></li>`).join('')}</ol><a href="app/?welcome=1">Open the app</a></div></details>`).join('')}</div>`;
+    document.documentElement.dataset.lessons = String(tr.length);
     box.addEventListener('input', draw); draw();
     document.documentElement.dataset.quick = String(d.guides.length);
     const h = /^#quick-([a-z-]+)$/.exec(location.hash), el = h && out.querySelector(`[data-qk="${h[1]}"]`); if (el) { el.open = true; el.scrollIntoView({ block: 'center' }); }

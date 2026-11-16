@@ -16165,6 +16165,357 @@
    "i": "changes.mine",
    "ctx": "g",
    "v": "cw"
+  },
+  {
+   "t": "teach me to make a website",
+   "i": "learn.track",
+   "s": {
+    "track": "first-site"
+   },
+   "ctx": "g",
+   "v": "ls"
+  },
+  {
+   "t": "teach me how to build a website",
+   "i": "learn.track",
+   "s": {
+    "track": "first-site"
+   },
+   "ctx": "g",
+   "v": "ls"
+  },
+  {
+   "t": "i want to learn to make a website step by step",
+   "i": "learn.track",
+   "s": {
+    "track": "first-site"
+   },
+   "ctx": "g",
+   "v": "ls"
+  },
+  {
+   "t": "the website lesson",
+   "i": "learn.track",
+   "s": {
+    "track": "first-site"
+   },
+   "ctx": "g",
+   "v": "ls"
+  },
+  {
+   "t": "start the website lesson",
+   "i": "learn.track",
+   "s": {
+    "track": "first-site"
+   },
+   "ctx": "g",
+   "v": "ls"
+  },
+  {
+   "t": "teach me to create a landing page",
+   "i": "learn.track",
+   "s": {
+    "track": "first-site"
+   },
+   "ctx": "g",
+   "v": "ls"
+  },
+  {
+   "t": "help me learn to build a site from scratch",
+   "i": "learn.track",
+   "s": {
+    "track": "first-site"
+   },
+   "ctx": "g",
+   "v": "ls"
+  },
+  {
+   "t": "teach me my first website",
+   "i": "learn.track",
+   "s": {
+    "track": "first-site"
+   },
+   "ctx": "g",
+   "v": "ls"
+  },
+  {
+   "t": "teach me to make an app",
+   "i": "learn.track",
+   "s": {
+    "track": "first-app"
+   },
+   "ctx": "g",
+   "v": "ls"
+  },
+  {
+   "t": "teach me how to build an app step by step",
+   "i": "learn.track",
+   "s": {
+    "track": "first-app"
+   },
+   "ctx": "g",
+   "v": "ls"
+  },
+  {
+   "t": "app lesson",
+   "i": "learn.track",
+   "s": {
+    "track": "first-app"
+   },
+   "ctx": "g",
+   "v": "ls"
+  },
+  {
+   "t": "take the phone app lesson",
+   "i": "learn.track",
+   "s": {
+    "track": "first-app"
+   },
+   "ctx": "g",
+   "v": "ls"
+  },
+  {
+   "t": "i want to learn to design an app",
+   "i": "learn.track",
+   "s": {
+    "track": "first-app"
+   },
+   "ctx": "g",
+   "v": "ls"
+  },
+  {
+   "t": "walk me through my first app",
+   "i": "learn.track",
+   "s": {
+    "track": "first-app"
+   },
+   "ctx": "g",
+   "v": "ls"
+  },
+  {
+   "t": "teach me to make an app",
+   "i": "learn.track",
+   "s": {
+    "track": "first-app"
+   },
+   "ctx": "s",
+   "v": "ls"
+  },
+  {
+   "t": "teach me to work with friends",
+   "i": "learn.track",
+   "s": {
+    "track": "together"
+   },
+   "ctx": "g",
+   "v": "ls"
+  },
+  {
+   "t": "take the teamwork lesson",
+   "i": "learn.track",
+   "s": {
+    "track": "together"
+   },
+   "ctx": "g",
+   "v": "ls"
+  },
+  {
+   "t": "teach me to build together with a friend",
+   "i": "learn.track",
+   "s": {
+    "track": "together"
+   },
+   "ctx": "g",
+   "v": "ls"
+  },
+  {
+   "t": "the working together lesson",
+   "i": "learn.track",
+   "s": {
+    "track": "together"
+   },
+   "ctx": "g",
+   "v": "ls"
+  },
+  {
+   "t": "teach me to put it online",
+   "i": "learn.track",
+   "s": {
+    "track": "online"
+   },
+   "ctx": "g",
+   "v": "ls"
+  },
+  {
+   "t": "teach me to publish my site",
+   "i": "learn.track",
+   "s": {
+    "track": "online"
+   },
+   "ctx": "g",
+   "v": "ls"
+  },
+  {
+   "t": "teach me how to get a public address",
+   "i": "learn.track",
+   "s": {
+    "track": "online"
+   },
+   "ctx": "g",
+   "v": "ls"
+  },
+  {
+   "t": "do the publishing lesson",
+   "i": "learn.track",
+   "s": {
+    "track": "online"
+   },
+   "ctx": "g",
+   "v": "ls"
+  },
+  {
+   "t": "teach me to host it on github",
+   "i": "learn.track",
+   "s": {
+    "track": "online"
+   },
+   "ctx": "g",
+   "v": "ls"
+  },
+  {
+   "t": "power tools lesson",
+   "i": "learn.track",
+   "s": {
+    "track": "power"
+   },
+   "ctx": "g",
+   "v": "ls"
+  },
+  {
+   "t": "start the advanced lesson",
+   "i": "learn.track",
+   "s": {
+    "track": "power"
+   },
+   "ctx": "g",
+   "v": "ls"
+  },
+  {
+   "t": "lessons",
+   "i": "learn.track",
+   "s": {
+    "track": "list"
+   },
+   "ctx": "g",
+   "v": "ls"
+  },
+  {
+   "t": "show me the lessons",
+   "i": "learn.track",
+   "s": {
+    "track": "list"
+   },
+   "ctx": "g",
+   "v": "ls"
+  },
+  {
+   "t": "what lessons are there?",
+   "i": "learn.track",
+   "s": {
+    "track": "list"
+   },
+   "ctx": "g",
+   "v": "ls"
+  },
+  {
+   "t": "what is my next lesson",
+   "i": "learn.track",
+   "s": {
+    "track": "next"
+   },
+   "ctx": "g",
+   "v": "ls"
+  },
+  {
+   "t": "next lesson",
+   "i": "learn.track",
+   "s": {
+    "track": "next"
+   },
+   "ctx": "g",
+   "v": "ls"
+  },
+  {
+   "t": "what's the next lesson?",
+   "i": "learn.track",
+   "s": {
+    "track": "next"
+   },
+   "ctx": "g",
+   "v": "ls"
+  },
+  {
+   "t": "stop the lesson",
+   "i": "learn.track",
+   "s": {
+    "track": "stop"
+   },
+   "ctx": "g",
+   "v": "ls"
+  },
+  {
+   "t": "pause this lesson",
+   "i": "learn.track",
+   "s": {
+    "track": "stop"
+   },
+   "ctx": "s",
+   "v": "ls"
+  },
+  {
+   "t": "close the lesson",
+   "i": "learn.track",
+   "s": {
+    "track": "stop"
+   },
+   "ctx": "g",
+   "v": "ls"
+  },
+  {
+   "t": "teach me the website designer",
+   "i": "lesson",
+   "s": {
+    "feature": "site"
+   },
+   "ctx": "g",
+   "v": "ls"
+  },
+  {
+   "t": "teach me how to wire buttons",
+   "i": "lesson",
+   "s": {
+    "feature": "site"
+   },
+   "ctx": "g",
+   "v": "ls"
+  },
+  {
+   "t": "lesson on the canvas",
+   "i": "lesson",
+   "s": {
+    "feature": "canvas"
+   },
+   "ctx": "g",
+   "v": "ls"
+  },
+  {
+   "t": "how do i make a website",
+   "i": "lesson",
+   "s": {
+    "feature": "site"
+   },
+   "ctx": "g",
+   "v": "ls"
   }
  ]
 }

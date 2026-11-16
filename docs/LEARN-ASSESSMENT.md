@@ -68,3 +68,12 @@ Nothing people use was removed.
 8. **Your own web address:** point a name you own at the published site.
 9. **Take your project with you:** export, back up, and open it on another computer.
 10. **From hobby to small business:** the four Company questions, a price, and the two legal pages every site needs.
+
+## Pass 4 (2026-11-16): lessons you do in the real tool
+
+Number 1 on the list above ("Your first hour") and number 7 are now built as lesson tracks, with three more: Your
+first website, Your first phone app, Build it together, Take it online and Power tools. A lesson keeps a small card
+on screen while the person works in the real website designer or App Creator, shows where to click, and ticks a step
+by itself when the app can see it was done. Lesson ticks are kept with the person in a tribe, which closes hole 2 for
+lessons (quick guide ticks are still per device). The lesson steps are translated in all eight languages, which the
+quick guide steps (hole 1) still are not. A test now presses every Show me in the app. See `docs/LESSONS.md`.

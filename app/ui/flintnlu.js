@@ -647,6 +647,19 @@
     ['preview', 'preview|live preview'], ['canvas', 'design canvas|canvas|figma|design|mockups?|screens'], ['site', 'website designer|site designer|website builder|site builder|websites?|sites?|wire buttons|buttons|landing pages?|designer'],
     ['invite', 'invit(?:e|ing) (?:friends?|people|someone|teammates)|invites?|tribe link|friends'], ['people', 'people panel|presence|who is online|show where i am|people'], ['market', 'marketplace|market|add ons|addons|plugins'], ['design', 'design flow|posters?|logos?|flyers?'], ['tasks', 'task board|tasks?|kanban|board'], ['work', 'work|gigs?|jobs|time bank'], ['files', 'files?|uploads?|folders'], ['chat', 'chat|messages|channels|dms']].map(([k, w]) => [k, new RegExp(`\\b(?:${w})\\b`)]);
   const featureOf = s => { for (const [k, rx] of LESSON_W) if (rx.test(s)) return k; return null; };
+  // pass 4: the lesson tracks (app/ui/lessons.js): "teach me to make a website", "the app lesson", "lessons", "my next lesson"
+  const TRACK_W = [[/together|with (?:my |a |our |some )?friends?|as a team|team ?work|collaborat/, 'together'], [/online|publish|public address|github|on the (?:internet|web)|\bhost|go live/, 'online'], [/\bapps?\b/, 'first-app'], [/web ?sites?|web ?pages?|\bsites?\b|landing page/, 'first-site'], [/power tools?|advanced|pro tools?/, 'power']];
+  function trackOf(c) {
+    c = String(c || '').toLowerCase().replace(/[?.!]+$/, '').replace(/\s+/g, ' ').trim();
+    if (/^(?:(?:open|show|see|list)(?: me)?(?: the| all| my)? )?lessons$|^what lessons (?:are there|do you have)$/.test(c)) return 'list';
+    if (/^(?:what(?:'s| is) (?:my |the )?next lesson|(?:my )?next lesson)$/.test(c)) return 'next';
+    if (/^(?:stop|close|end|quit|pause) (?:the |this |my )?lesson$/.test(c)) return 'stop';
+    const m = /^(?:(?:start|take|do|begin|open|give me|i want|run)(?: the| a| my| your)? )?(.{3,40}?) lesson$/.exec(c)
+      || /^(?:teach me|show me|help me learn|i want to learn|learn)(?: how)? to ((?:make|build|create|design|start|put|publish|get|take|work|host)\b.{2,60}?)(?: step by step| from scratch)?$/.exec(c)
+      || /^(?:teach me|walk me through)(?: how to (?:make|build))? ((?:my |a |our )?first .{3,30})$/.exec(c);
+    if (!m) return null;
+    const hit = TRACK_W.find(([rx]) => rx.test(m[1])); return hit ? hit[1] : null;
+  }
   function lessonOf(c) {
     let m = /^(?:teach me|teach|lesson (?:on|about|for)|a lesson (?:on|about)|tutorial (?:on|for|about)|walk me through|show me how(?: to use)?)\s+(?:about\s+)?(?:how to\s+)?(?:use\s+)?(.+?)(?:\s+works?)?$/.exec(c);
     if (m) return featureOf(m[1]);
@@ -1236,10 +1249,11 @@
   }
   function design(c, raw, ctx) {
     const view = ctx.view === 'canvas' ? 'canvas' : (ctx.view === 'site' || (ctx.view === 'preview' && ctx.site)) ? 'site' : '';
-    const out = [], hit = (intent, slots, conf) => { out.push({ intent, area: intent === 'lesson' ? 'help' : intent.startsWith('canvas.') ? 'canvas' : 'build', slots: slots || {}, conf: conf || (view === 'canvas' ? 0.98 : 0.97), req: {}, label: '' }); return out; };
+    const out = [], hit = (intent, slots, conf) => { out.push({ intent, area: intent === 'lesson' || intent === 'learn.track' ? 'help' : intent.startsWith('canvas.') ? 'canvas' : 'build', slots: slots || {}, conf: conf || (view === 'canvas' ? 0.98 : 0.97), req: {}, label: '' }); return out; };
     const r = String(raw || '').trim(), rl = r.toLowerCase();
     if (ctx.view === 'appcreator') { const w = appEl(c, r, ctx, hit); if (w) return w; }   // App Creator (app/ui/appcreator.js)
     else { const af = appFeature(rl.replace(/[-_]/g, ' ').replace(/[?.!]+$/, '').trim(), hit, true); if (af) return af; }   // feat/flint-appknow: "add offline storage to my app"
+    const tk = trackOf(rl); if (tk) return hit('learn.track', { track: tk }, 0.97);   // pass 4: a lesson track before the three-line feature lessons
     const lf = lessonOf(c); if (lf) return hit('lesson', { feature: lf }, 0.97);
     if (ctx.view === 'motion') { const mo = motionRules(c, r, ctx, hit); if (mo) return mo; }   // feat/motion
     else if (!view) { const mt = motionNew(c); if (mt) return hit('motion.new', { tpl: mt }, 0.975); }
@@ -1698,5 +1712,5 @@
   }
 
   const catalog = () => CAT.map(x => ({ id: x.id, area: x.area, label: x.label, examples: x.ex.slice() }));
-  return { needsAI, clarify, parse, one, split, prep, parseWhen, colorOf, person, taskRef, index, search, catalog, setSemantic, hasSemantic: () => !!SEM, COLORS, THEMES, LANGS, detectLang, version: 1 };
+  return { trackOf, needsAI, clarify, parse, one, split, prep, parseWhen, colorOf, person, taskRef, index, search, catalog, setSemantic, hasSemantic: () => !!SEM, COLORS, THEMES, LANGS, detectLang, version: 1 };
 });
