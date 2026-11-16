@@ -15,6 +15,7 @@
  *
  * The same file runs in Motion Studio, in node (tests, server-side Flint) and inside an exported page.
  *   TEMPLATES, CATS, FEELS, KINDS     templates by id (make(opts) -> doc), their categories, the feel presets
+ *   define(id, cat, name, about, base, states), addCat(id, name), helpers   more templates from another file
  *   make(id, opts) -> doc             normalize(doc) -> doc                  duration(doc) -> seconds
  *   seek(doc, t) -> frame             draw(g, doc, t, { w, h, blur })        load(doc) -> Promise (pictures)
  *   events(doc) -> sounds             snap(doc) -> doc on the beat grid      analyze(samples, rate) -> { bpm, offset, onsets }
@@ -689,6 +690,14 @@
   def('cap-pill', 'caption', 'Pill captions', 'The spoken word sits on an accent pill.', { bars: 2, aspect: '9:16', camera: { strength: 0 }, cursor: false, backdrop: { kind: 'scene' }, thumb: 3 }, [S('caption', 0, { text: 'three friends three AIs zero terminals', style: 'pill', hold: 8, cy: 380, fs: 72, w: 900 }), S('caption', 7.6, { text: 'three friends three AIs zero terminals', style: 'pill', hold: 8, cy: 380, fs: 72, w: 900 })]);
   def('cap-outline', 'caption', 'Outline captions', 'Bold white words with a dark outline, readable on anything.', { bars: 2, aspect: '9:16', camera: { strength: 0 }, cursor: false, backdrop: { kind: 'scene' }, thumb: 3 }, [S('caption', 0, { text: 'and it actually works on phones', style: 'outline', hold: 8, cy: 380, fs: 76, w: 900 }), S('caption', 7.6, { text: 'and it actually works on phones', style: 'outline', hold: 8, cy: 380, fs: 76, w: 900 })]);
 
+  // ---------- extension point: more templates from other files (motionsocial.js) ----------
+  // define(id, cat, name, about, base, states) adds a template exactly like the ones above; addCat(id, name) adds a
+  // category to the gallery. helpers are the same small builders the templates above use.
+  const LIST = Object.keys(TEMPLATES);
+  function define(id, cat, name, about, base, states) { def(id, cat, name, about, base, states); if (!LIST.includes(id)) LIST.push(id); return TEMPLATES[id]; }
+  function addCat(id, name) { if (!CATS.some(c => c[0] === id)) CATS.push([id, name]); }
+  const helpers = { S, click, drag, hover, type, focus };
+
   // ---------- Flint: motion.* steps (pure: the studio and the server share them) ----------
   function command(doc, step) {
     const s = step && step.slots || {}, id = step && step.intent || '';
@@ -714,6 +723,6 @@
   }
   function make(id, o) { const t = TEMPLATES[id] || TEMPLATES['ui-reel']; return t.make(o || {}); }
 
-  return { VERSION, KINDS, TEMPLATES, LIST: Object.keys(TEMPLATES), CATS, FEELS, FEEL_LIST: Object.keys(FEELS), THEMES, ASPECTS, NAMED, ICONS,
+  return { VERSION, KINDS, TEMPLATES, LIST, define, addCat, helpers, CATS, FEELS, FEEL_LIST: Object.keys(FEELS), THEMES, ASPECTS, NAMED, ICONS,
     make, normalize, duration, seek, draw, load, events, snap, analyze, command, applyFeel, step, channel, twoEdge, beatSec, colorOf };
 });

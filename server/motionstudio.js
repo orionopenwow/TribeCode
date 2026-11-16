@@ -10,7 +10,7 @@
 'use strict';
 const fs = require('node:fs');
 const path = require('node:path');
-const Kit = require('../app/ui/motionkit.js');
+const Kit = require('../app/ui/motionsocial.js');   // motionkit.js plus the social posts and share clips
 
 const okKey = k => /^[a-z0-9][a-z0-9-]{0,63}$/.test(String(k || ''));
 const MAX = 6 * 1024 * 1024;   // pictures from the Launch kit can ride along as data URLs

@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<script>
+  // The app moved to /app/ (the front page is the website). Home Screen installs and old app links (#/…) go straight in.
+  (function () { try {
+    var standalone = matchMedia('(display-mode: standalone)').matches || navigator.standalone;
+    if (standalone || /^#\//.test(location.hash) || /[?&]app=1/.test(location.search)) location.replace('app/' + location.search + location.hash);
+  } catch (e) {} })();
+</script>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Make apps, clips and store pages · TribeCode</title>
+<meta name="description" content="Start a phone app from a template, make a looping clip of it for your feed, and get the screenshots, icon and text the app stores ask for. Free and open source.">
+<meta name="theme-color" content="#1D2021">
+<meta name="color-scheme" content="dark">
+<link rel="manifest" href="app/manifest.webmanifest">
+<link rel="canonical" href="https://tribecode.org/create.html">
+<link rel="icon" type="image/svg+xml" href="assets/brand/icon-animated.svg">
+<link rel="alternate icon" type="image/svg+xml" href="assets/brand/icon.svg">
+<link rel="icon" type="image/png" sizes="192x192" href="assets/brand/icon-192.png">
+<link rel="apple-touch-icon" href="assets/brand/apple-touch-icon.png">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="TribeCode">
+<meta property="og:title" content="TribeCode · Build one app with your friends and their Agents">
+<meta property="og:description" content="Friends and their Agents in one room. Free, open source, saved to your own GitHub account.">
+<meta property="og:url" content="https://tribecode.org/">
+<meta property="og:image" content="https://tribecode.org/assets/og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="The TribeCode wordmark next to the app: a project overview with a living update, people and agents.">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="TribeCode · Build one app with your friends and their Agents">
+<meta name="twitter:description" content="Friends and their Agents in one room. Free, open source, saved to your own GitHub account.">
+<meta name="twitter:image" content="https://tribecode.org/assets/og-image.png">
+<link rel="stylesheet" href="styles.css?v=0.38.1">
+<link rel="stylesheet" href="nav.css?v=0.38.1">
+<link rel="stylesheet" href="create.css?v=0.38.1">
+<script>document.documentElement.classList.add('js')</script>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="i-download" viewBox="0 0 24 24"><path d="M12 4v11M7 10.5l5 5 5-5M5 20h14"/></symbol>
+    <symbol id="i-github" viewBox="0 0 24 24"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.08-1.25-.27-2.48-1-3.5.28-1.15.28-2.35 0-3.5 0 0-1 0-3 1.5-2.64-.5-5.36-.5-8 0C6 2 5 2 5 2c-.3 1.15-.3 2.35 0 3.5A5.4 5.4 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.39.49-.68 1.05-.85 1.65-.17.6-.22 1.23-.15 1.85v4"/><path d="M9 18c-4.51 2-5-2-7-2"/></symbol>
+    <symbol id="i-star" viewBox="0 0 24 24"><path d="M12 2.5l2.9 6 6.6.9-4.8 4.6 1.2 6.5L12 17.4l-5.9 3.1 1.2-6.5L2.5 9.4l6.6-.9z"/></symbol>
+    <symbol id="i-fork" viewBox="0 0 24 24"><circle cx="6" cy="5" r="2.5"/><circle cx="18" cy="5" r="2.5"/><circle cx="12" cy="19" r="2.5"/><path d="M6 7.5v1a3 3 0 0 0 3 3h6a3 3 0 0 0 3-3v-1M12 11.5v5"/></symbol>
+    <symbol id="i-tag" viewBox="0 0 24 24"><path d="M3 12V4a1 1 0 0 1 1-1h8l9 9-9 9z"/><circle cx="8" cy="8" r="1.5"/></symbol>
+    <symbol id="i-scale" viewBox="0 0 24 24"><path d="M12 3v18M7 21h10M5 7h14M5 7l-3 7h6zM19 7l-3 7h6z"/></symbol>
+    <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></symbol>
+    <symbol id="i-chevron" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></symbol>
+    <symbol id="i-menu" viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></symbol>
+    <symbol id="i-close" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></symbol>
+  </defs>
+</svg>
+
+<a class="skip" href="#main">Skip to content</a>
+
+<header class="nav" id="top">
+  <div class="wrap nav__in">
+    <a class="nav__logo" href="index.html#top" aria-label="TribeCode, back to top"><img class="nav__mark" src="assets/brand/logo-flame-sm.gif" alt="" width="28" height="28"><img src="assets/brand/wordmark.svg" alt="TribeCode" width="132" height="23"></a>
+    <nav class="nav__links" id="nav-links" aria-label="Main">
+      <div class="nav__item" data-menu>
+        <button class="nav__link nav__drop" type="button" aria-expanded="false" aria-controls="menu-features">Features<svg class="i i--xs" aria-hidden="true"><use href="#i-chevron"/></svg></button>
+        <div class="menu" id="menu-features" hidden></div><!-- filled by nav.js: the Features mega-menu -->
+      </div>
+      <a class="nav__link" href="learn.html">Learn</a>
+      <a class="nav__link" href="pricing.html">Pricing</a>
+      <a class="nav__link" href="flint.html">Flint</a>
+      <a class="nav__link" href="mission.html">Mission</a>
+      <a class="nav__link" href="docs.html">Docs</a>
+      <div class="nav__mobile-extra">
+        <a class="nav__link" href="app/">Open the app</a>
+        <a class="nav__link" href="https://github.com/orionopenwow/TribeCode/stargazers">Star on GitHub</a>
+      </div>
+    </nav>
+    <div class="nav__end">
+      <a class="btn btn--dark btn--sm nav__open" href="app/?welcome=1" data-open-app>Open the app</a>
+      <a class="nav__text nav__star" href="https://github.com/orionopenwow/TribeCode/stargazers" aria-label="Star TribeCode on GitHub"><svg class="i i--sm" aria-hidden="true"><use href="#i-star"/></svg>Star<span class="nav__count mono" data-gh="stars" hidden></span></a>
+      <a class="btn btn--light btn--sm" href="https://github.com/orionopenwow/TribeCode/releases/latest" data-dl-main>Download</a>
+      <button class="nav__toggle" type="button" aria-expanded="false" aria-controls="nav-links" aria-label="Menu"><svg class="i" aria-hidden="true"><use href="#i-menu"/></svg></button>
+    </div>
+  </div>
+</header>
+
+<main id="main" class="cr-page">
+  <section class="cr-hero" aria-labelledby="cr-title">
+    <div class="wrap cr-hero__grid">
+      <div>
+        <p class="eyebrow mono">// make it, then show it</p>
+        <h1 class="cr-title" id="cr-title">Make an app, a clip and a store page, in one place.</h1>
+        <p class="cr-lead">Start a phone app from a template, edit it by clicking, make a looping clip of it for your feed, then get the screenshots and words the app stores ask for. Free, and it works with no AI. Your tribe’s AI helpers make it go further.</p>
+        <p class="cr-ctas"><a class="btn btn--light" href="https://github.com/orionopenwow/TribeCode/releases/latest" data-dl-main>Download</a><a class="btn btn--dark" href="app/?welcome=1" data-open-app>Open the app</a></p>
+        <ul class="cr-nums mono"><li><b>54 apps to start from</b></li><li><b>128 motion templates</b></li><li><b>50 screenshot styles</b></li></ul>
+      </div>
+      <figure class="cr-clip" data-clip="assets/create/reel"><img src="assets/create/reel.webp" alt="A looping motion graphic: one shape turns into a button, a loader, a check, a music player, a slider, a toggle, tabs, a chart, a command menu and a toast." width="720" height="720" decoding="async"></figure>
+    </div>
+  </section>
+
+  <section class="cr-sec" id="apps" aria-labelledby="cr-apps-title">
+    <div class="wrap">
+      <p class="eyebrow mono">// app creator</p>
+      <div class="cr-sec__head">
+        <h2 id="cr-apps-title">Start from a real app, then make it yours.</h2>
+        <p>Every template opens as several linked screens with example data. Click any word to change it, link a button to another screen and press Play to try it like a real app.</p>
+      </div>
+      <div class="cr-apps" role="list" aria-label="Demo apps">
+        <figure class="cr-app" role="listitem"><div class="cr-app__ph"><img src="assets/create/app-habits.webp" alt="A habit tracker: today's habits with streaks." width="360" height="779" loading="lazy" decoding="async"></div><figcaption><b>Habits</b>Streaks with friends</figcaption></figure>
+        <figure class="cr-app" role="listitem"><div class="cr-app__ph"><img src="assets/create/app-recipes.webp" alt="A recipe app with a feed of dishes." width="360" height="779" loading="lazy" decoding="async"></div><figcaption><b>Supper Club</b>Recipes for the week</figcaption></figure>
+        <figure class="cr-app" role="listitem"><div class="cr-app__ph"><img src="assets/create/app-social.webp" alt="A small social feed with posts and pictures." width="360" height="779" loading="lazy" decoding="async"></div><figcaption><b>Moments</b>A feed for your group</figcaption></figure>
+        <figure class="cr-app" role="listitem"><div class="cr-app__ph"><img src="assets/create/app-meditation.webp" alt="A calm meditation app on a dark screen." width="360" height="779" loading="lazy" decoding="async"></div><figcaption><b>Take a breath</b>Meditation timer</figcaption></figure>
+        <figure class="cr-app" role="listitem"><div class="cr-app__ph"><img src="assets/create/app-gamemenu.webp" alt="A game's start menu." width="360" height="779" loading="lazy" decoding="async"></div><figcaption><b>Game menu</b>Start, levels, settings</figcaption></figure>
+        <figure class="cr-app" role="listitem"><div class="cr-app__ph"><img src="assets/create/app-trip.webp" alt="A trip planner with a day-by-day plan." width="360" height="779" loading="lazy" decoding="async"></div><figcaption><b>Trip</b>Plan the days together</figcaption></figure>
+        <figure class="cr-app" role="listitem"><div class="cr-app__ph"><img src="assets/create/app-music.webp" alt="A music player app." width="360" height="779" loading="lazy" decoding="async"></div><figcaption><b>Music</b>A player and playlists</figcaption></figure>
+      </div>
+      <div class="cr-two">
+        <figure class="cr-shot"><img src="assets/create/shot-app-creator.webp" alt="The App Creator: screens in a phone frame, a screen strip and the look panel." width="1200" height="750" loading="lazy" decoding="async"></figure>
+        <div>
+          <ul class="cr-list">
+            <li>54 apps to start from, 56 app looks, 27 app parts and 24 ready-made screens.</li>
+            <li>Change the color, corners, font, spacing and light or dark once, and every screen follows.</li>
+            <li>Tell Flint “add onboarding” or “add a settings screen” and it stacks them on. Kits from the add-on shelf drop in the same way.</li>
+            <li>Export a phone web app that works offline, or hand the design to your AI helpers to build for real. An Expo project export is there too <span class="beta mono" title="Built and tested in the browser. Not yet built and run on a real phone.">beta</span></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="cr-sec" id="motion" aria-labelledby="cr-motion-title">
+    <div class="wrap">
+      <p class="eyebrow mono">// motion studio</p>
+      <div class="cr-sec__head">
+        <h2 id="cr-motion-title">Motion graphics that loop, on the beat.</h2>
+        <p>One shape that never cuts: it morphs from state to state while a cursor clicks and drags, and the last frame is the first, so it loops. Every clip on this page was drawn by the same engine that runs in the app.</p>
+      </div>
+      <div class="cr-social">
+        <figure><div class="cr-clip cr-clip--tall" data-clip="assets/create/social-poll"><img src="assets/create/social-poll.webp" alt="A vertical post: a poll fills in after a tap." width="540" height="960" loading="lazy" decoding="async"></div><figcaption class="cr-cap">Poll for your followers</figcaption></figure>
+        <figure><div class="cr-clip cr-clip--tall" data-clip="assets/create/social-before-after"><img src="assets/create/social-before-after.webp" alt="A vertical post: a divider is dragged between before and after." width="540" height="960" loading="lazy" decoding="async"></div><figcaption class="cr-cap">Before and after</figcaption></figure>
+        <figure><div class="cr-clip cr-clip--tall" data-clip="assets/create/social-launch"><img src="assets/create/social-launch.webp" alt="A vertical post: a countdown, then an app icon and an end card." width="540" height="960" loading="lazy" decoding="async"></div><figcaption class="cr-cap">Launch day</figcaption></figure>
+        <figure><div class="cr-clip cr-clip--tall" data-clip="assets/create/social-milestone"><img src="assets/create/social-milestone.webp" alt="A vertical post on a dark canvas: a number counts up, a ring fills, then thank you." width="540" height="960" loading="lazy" decoding="async"></div><figcaption class="cr-cap">A milestone</figcaption></figure>
+      </div>
+      <div class="cr-two">
+        <div>
+          <ul class="cr-list">
+            <li>128 motion templates, including 69 social post layouts for TikTok, Reels, Shorts, Instagram and X.</li>
+            <li>54 motion feels, from calm to punchy. Say “snappier” or “make it 9:16” and Flint changes it.</li>
+            <li>Add your own song: the tempo is found in your browser and every change lands on the beat.</li>
+            <li>Export a video, a GIF, a picture, one web page that plays it, or a section of your website.</li>
+          </ul>
+        </div>
+        <figure class="cr-shot"><img src="assets/create/shot-motion-studio.webp" alt="Motion Studio: the template gallery, the preview and a beat timeline." width="1200" height="750" loading="lazy" decoding="async"></figure>
+      </div>
+    </div>
+  </section>
+
+  <section class="cr-sec" id="share" aria-labelledby="cr-share-title">
+    <div class="wrap">
+      <p class="eyebrow mono">// share a clip</p>
+      <div class="cr-two">
+        <div>
+          <div class="cr-sec__head">
+            <h2 id="cr-share-title">A clip of your project, sized for each feed.</h2>
+            <p>Pick your app’s screens, a screenshot, a timelapse of how it grew, or pictures you add. Pick 9:16, square or wide. The words to post come with it.</p>
+          </div>
+          <ul class="cr-list">
+            <li>Captions for X, TikTok and Instagram, drafted from what your tribe already wrote, with each platform’s limit counted.</li>
+            <li>A “Made with TribeCode · Remix” end card that you can turn off.</li>
+            <li>It opens in Motion Studio, where you can change anything before you export.</li>
+          </ul>
+        </div>
+        <figure class="cr-clip cr-clip--tall" data-clip="assets/create/share-app" style="max-width:360px;justify-self:center;width:100%"><img src="assets/create/share-app.webp" alt="A vertical clip: demo app screens swiped in a phone, then an end card." width="540" height="960" loading="lazy" decoding="async"></figure>
+      </div>
+    </div>
+  </section>
+
+  <section class="cr-sec" id="launch" aria-labelledby="cr-launch-title">
+    <div class="wrap">
+      <p class="eyebrow mono">// launch kit</p>
+      <div class="cr-two">
+        <div>
+          <div class="cr-sec__head">
+            <h2 id="cr-launch-title">Everything the app stores ask for.</h2>
+            <p>Store screenshots at the exact App Store and Google Play sizes, an app icon in every size, the store text with its limits, and a checklist for both stores. Drag the line to see a screen become a store screenshot.</p>
+          </div>
+          <ul class="cr-list">
+            <li>50 screenshot styles and 54 icon styles, with frames we drew ourselves.</li>
+            <li>17 paywall designs for your app. Payments are not connected, and the designs say so.</li>
+            <li>A 24-step checklist for Apple and Google, in plain words. Not legal advice.</li>
+          </ul>
+        </div>
+        <div class="cr-ba" aria-label="Before and after: an app screen and the same screen as a store screenshot">
+          <img src="assets/create/launch-before.webp" alt="A habit tracker screen as it looks in the app." width="440" height="952" loading="lazy" decoding="async">
+          <img class="cr-ba__after" src="assets/create/launch-after.webp" alt="The same screen as a store screenshot with a headline and a phone frame." width="440" height="956" loading="lazy" decoding="async">
+          <span class="cr-ba__bar" aria-hidden="true"></span><span class="cr-ba__knob" aria-hidden="true"><svg class="i i--sm"><use href="#i-arrow"/></svg></span>
+          <span class="cr-ba__lab cr-ba__lab--a">Your screen</span><span class="cr-ba__lab cr-ba__lab--b">Store screenshot</span>
+          <input type="range" min="0" max="100" value="50" aria-label="Move the divider">
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="cr-sec" id="suggest" aria-labelledby="cr-suggest-title">
+    <div class="wrap">
+      <p class="eyebrow mono">// suggestions</p>
+      <div class="cr-two">
+        <figure class="cr-shot"><img src="assets/create/shot-suggestions.webp" alt="The Suggestions list: ideas drawn from the tribe's photos, files and chat, each saying who it came from." width="1200" height="750" loading="lazy" decoding="async"></figure>
+        <div>
+          <div class="cr-sec__head">
+            <h2 id="cr-suggest-title">Ideas from your tribe, a few at a time.</h2>
+            <p>When someone adds a photo, a file or a task, or makes the same edit again and again, the app turns it into a small idea for the site, the app, a clip or the store page.</p>
+          </div>
+          <ul class="cr-list">
+            <li>Each idea says who it came from. Nothing changes until someone presses Apply, and Undo takes it back.</li>
+            <li>It works while your computer is idle and learns from what your tribe applies or turns down.</li>
+            <li>Photos are read on your own device and never sent anywhere. Gentle, Often or Off, in Settings.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="cr-sec" aria-labelledby="cr-get-title">
+    <div class="wrap cr-sec__head">
+      <h2 id="cr-get-title">Try it with your friends.</h2>
+      <p>TribeCode is free and open source. Download it, or open it in your browser.</p>
+      <p class="cr-ctas"><a class="btn btn--light" href="https://github.com/orionopenwow/TribeCode/releases/latest" data-dl-main>Download</a><a class="btn btn--dark" href="app/?welcome=1" data-open-app>Open the app</a></p>
+    </div>
+  </section>
+</main>
+
+<footer class="footer">
+  <div class="wrap footer__in">
+    <div class="footer__brand">
+      <span class="footer__lock"><img src="assets/brand/logo-flame-sm.gif" alt="" width="24" height="24" loading="lazy"><img src="assets/brand/wordmark.svg" alt="TribeCode" width="120" height="21" loading="lazy"></span>
+      <p>Build one app with your friends and their AI.</p>
+    </div>
+    <nav class="footer__links" aria-label="Footer">
+      <a href="app/">Open the app</a>
+      <a href="app/?demo=showcase">Demo tribe</a>
+      <a href="pricing.html">Pricing</a>
+      <a href="toolbox.html">The free toolbox</a>
+      <a href="create.html">Apps, clips and store pages</a>
+      <a href="flint.html">Meet Flint</a>
+      <a href="mission.html">Mission</a>
+      <a href="index.html#company">Company mode</a>
+      <a href="docs.html">Quick start</a>
+      <a href="docs.html#security">Security &amp; privacy</a>
+      <a href="https://github.com/orionopenwow/TribeCode">GitHub</a>
+      <a href="https://github.com/orionopenwow/TribeCode/releases">Releases</a>
+      <a href="https://github.com/orionopenwow/TribeCode/blob/main/CHANGELOG.md">Changelog</a>
+      <a href="https://github.com/orionopenwow/TribeCode/blob/main/LICENSE">MIT License</a>
+    </nav>
+  </div>
+  <div class="wrap footer__legal mono">
+    <p>© 2026 TribeCode contributors · MIT</p>
+    <p>Claude Code, Codex, Gemini CLI, Cursor and the other tools named here belong to their makers. TribeCode is an independent project that works with them.</p>
+  </div>
+</footer>
+
+<script src="main.js?v=0.38.1" defer></script>
+<script src="create.js?v=0.38.1" defer></script>
+<script src="nav.js?v=0.38.1" defer></script>
+<script src="i18n.js?v=0.38.1" defer></script>
+</body>
+</html>

@@ -365,10 +365,12 @@
         <button type="button" class="mos-exp" data-exp="gif">${icon('photo', 18)}<b>GIF</b><small>${tr('Loops in chats and docs, no sound')}</small></button>
         <button type="button" class="mos-exp" data-exp="png">${icon('photo', 18)}<b>PNG frame</b><small>${tr('The frame you are looking at')}</small></button>
         <button type="button" class="mos-exp" data-exp="html">${icon('code', 18)}<b>HTML page</b><small>${tr('One file that plays it, no internet needed')}</small></button>
+        ${window.TribeShareClip ? `<button type="button" class="mos-exp" data-share-clip>${icon('external', 18)}<b>${tr('Share a clip')}</b><small>${tr('Your app, site or a timelapse, sized for each feed, with words to post')}</small></button>` : ''}
         ${site ? `<button type="button" class="mos-exp" data-exp="site">${icon('globe', 18)}<b>Put it on my website</b><small>${tr('A section of your site that plays it')}</small></button>` : ''}
       </div>
       <div class="mos-grid2"><label class="mos-f"><span>Size</span><select id="mos-xs"><option value="1">${doc.size.w} × ${doc.size.h}</option><option value="0.5">${Math.round(doc.size.w / 2)} × ${Math.round(doc.size.h / 2)}</option></select></label>
         <label class="mos-f"><span>Frames per second</span><select id="mos-xf"><option value="30">30</option><option value="60">60</option></select></label></div>`;
+    const shb = $('[data-share-clip]', p); if (shb) shb.onclick = () => window.TribeShareClip.open({ pid, aspect: doc.aspect === '4:5' ? '1:1' : doc.aspect });
     $$('[data-exp]', p).forEach(b => b.onclick = async () => { const fmt0 = b.dataset.exp; b.disabled = true; try { const r = await exportAs(fmt0, { scale: +$('#mos-xs', p).value, fps: +$('#mos-xf', p).value }); if (r && r.blob) download(r.blob, `${slug(doc.name)}.${r.ext}`); } catch (e) { say(e.message || String(e)); } b.disabled = false; });
   }
   function download(blob, name) { const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name; document.body.append(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 20000); say(`${tr('Downloaded')} ${name}.`); }

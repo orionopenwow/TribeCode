@@ -255,7 +255,7 @@ def main():
             d1 = cd.new_page(); watch(d1, "desktop"); d1.goto(BASE + "/?skipIntro=1"); d1.wait_for_function("window.TribePublish && window.TribeClient && (TribeClient.state().projects || []).length > 0", timeout=20000)
             st0 = d1.evaluate("TribePublish.status()"); assert st0["next"] in ("share", "app") and st0["dest"]["pages"]["url"] == r["url"] and "token" not in json.dumps(st0).lower().replace("signedin", ""), st0
             d1.evaluate("TribePublish.open()"); d1.wait_for_selector("#pb-real .pbr-row[data-dest='android']", timeout=15000)
-            assert [x.get_attribute("data-dest") for x in d1.locator("#pb-real .pbr-row").all()] == ["zip", "pages", "itch", "install", "android", "ios", "launch", "desktop"]   # launch: the Launch kit (launchkit.js)
+            assert [x.get_attribute("data-dest") for x in d1.locator("#pb-real .pbr-row").all()] == ["zip", "pages", "itch", "install", "android", "ios", "launch", "share", "desktop"]   # launch: the Launch kit (launchkit.js); share: Share a clip (shareclip.js)
             assert d1.locator("#pb-real [data-kind='game'].is-on").count() == 1 and r["url"] in d1.locator("#pb-real [data-dest='pages']").text_content()
             d1.wait_for_selector("#pbr-build a, #pbr-build [data-openurl], #pbr-build code", timeout=15000)
             assert "releases/latest/download/app.apk" in d1.locator("#pb-real [data-dest='android']").inner_html(), "the Android download link"

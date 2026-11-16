@@ -1,0 +1,47 @@
+/* Share a clip (shareclip.js): flat matte, tokens only. The sheet itself comes from uikit.css (TribeUI.sheet). */
+.shc { display: grid; gap: 10px; }
+.shc-lead { margin: 0; color: var(--muted); font-size: 13px; line-height: 1.5; }
+.shc-h { margin: 10px 0 0; }
+.shc-cols { display: grid; grid-template-columns: minmax(0, 1fr) 248px; gap: 18px; align-items: start; }
+.shc-form { display: grid; gap: 8px; min-width: 0; }
+.shc-seg { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; }
+.shc-sizes { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.shc-opt { display: grid; justify-items: start; gap: 2px; min-height: 56px; padding: 8px 10px; border: 1px solid var(--edge); border-radius: var(--r); background: var(--surface); color: var(--text); font: inherit; font-size: 13px; text-align: left; cursor: pointer; transition: border-color var(--dur-quick) var(--ease-out), background var(--dur-quick) var(--ease-out); }
+.shc-opt:hover { background: var(--surface-2); }
+.shc-opt[aria-checked="true"] { border-color: var(--accent); background: var(--surface-2); }
+.shc-opt small { font-size: 11px; }
+.shc-opt b { font-family: var(--mono); font-weight: 600; }
+.shc-i { width: 18px; height: 18px; stroke: currentColor; fill: none; stroke-width: 1.75; stroke-linecap: round; stroke-linejoin: round; }
+.shc-pick { display: grid; gap: 6px; min-height: 40px; }
+.shc-pick p { margin: 0; font-size: 12px; }
+.shc-strip { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 2px; }
+.shc-strip img { width: 54px; height: 117px; object-fit: cover; border: 1px solid var(--edge); border-radius: 8px; flex: none; }
+.shc-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(104px, 1fr)); gap: 6px; }
+.shc-shot { display: grid; gap: 4px; padding: 4px; border: 1px solid var(--edge); border-radius: 8px; background: var(--surface); color: var(--text); font: inherit; font-size: 11px; cursor: pointer; text-align: left; min-height: 40px; }
+.shc-shot img { width: 100%; height: 60px; object-fit: cover; border-radius: 5px; background: var(--surface-2); }
+.shc-shot span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.shc-shot[aria-pressed="true"] { border-color: var(--accent); }
+.shc-l { font-size: 12px; color: var(--muted); margin-top: 4px; }
+.shc-tg { display: flex; align-items: center; gap: 8px; font-size: 13px; min-height: 40px; }
+.shc-up { justify-self: start; display: inline-flex; align-items: center; gap: 6px; cursor: pointer; }
+.shc-prev { margin: 0; display: grid; gap: 6px; justify-items: center; position: sticky; top: 0; }
+.shc-prev canvas { width: 240px; max-height: 427px; height: auto; border: 1px solid var(--edge); border-radius: 12px; background: var(--surface-2); }
+.shc-prev figcaption { font-size: 11px; font-family: var(--mono); }
+.shc-tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--edge); }
+.shc-tab { padding: 8px 12px; min-height: 40px; border: 0; border-bottom: 2px solid transparent; background: none; color: var(--muted); font: inherit; font-size: 13px; cursor: pointer; }
+.shc-tab[aria-selected="true"] { color: var(--text); border-bottom-color: var(--accent); }
+.shc-cap { width: 100%; resize: vertical; font-size: 13px; line-height: 1.5; }
+.shc-capbar { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.shc-capbar .mono { font-size: 11px; }
+.shc-over { color: var(--alert); }
+.shc-probs { font-size: 12px; color: var(--muted); }
+.shc-sp { flex: 1; }
+@media (max-width: 820px) {
+  .shc-cols { grid-template-columns: minmax(0, 1fr); }
+  .shc-prev { position: static; }
+  .shc-prev canvas { width: 180px; }
+  .shc-seg { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .shc-sizes { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .shc-opt, .shc-shot { min-height: 44px; }
+}
+@media (prefers-reduced-motion: reduce) { .shc-opt { transition: none; } }
