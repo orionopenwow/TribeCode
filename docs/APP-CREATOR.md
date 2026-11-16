@@ -63,6 +63,28 @@ app, an Expo project) rather than HTML pages. Forcing both into one schema would
 | Expo project | `app-expo/`: `design.json` (the design as JSON) and an `App.js` that draws it with React Native's own pieces and Expo's icon set. When the project has no phone app yet, phone app mode points at `app-expo/`, so the Phone app card installs dependencies and shows the Expo Go code. |
 | Have my AI build it for real | A brief (screens, flows, a first guess at the data, the look) goes to `#agents` addressed to `@agents`. With no AI helper in the project it becomes a build task instead. Nothing joins the main copy until a person says yes. |
 
+### The Expo export, checked (2026-11-15)
+
+Built for real in the cloud sandbox from the habit tracker template (Node 22.23.4, npm 10.9.9):
+
+```
+cd app-expo
+npm install --ignore-scripts      # 873 packages, expo 52.0.49, react-native 0.76.9, react 18.3.1
+npx expo export --platform web    # writes dist/: one web bundle (~911 kB) plus the icon fonts
+```
+
+`dist/` was served and opened in Chrome at 390px: no page errors, every screen block drawn (header, stat tiles, the
+checklist, the button, the tab bar). The social, music and shop templates were built and opened the same way, and all
+54 templates' `App.js` compile with Expo's own Babel preset (`babel-preset-expo`).
+
+Fixed on the way: the versions are now Expo SDK 52's own (from `expo/bundledNativeModules.json`); `react-dom`,
+`react-native-web` and `@expo/metro-runtime` are listed so `npm run web` works; `expo-asset` and `expo-font` are listed
+because npm otherwise nests them inside `expo`, where Metro cannot find them; stat tiles draw as a row of cards instead
+of sharing the chart's code.
+
+Not checked here: a native build on a phone (Expo Go or EAS needs a device or Expo's servers). `npx expo start` and
+the Expo Go QR code are the next step on a real computer.
+
 ## Flint (no AI)
 
 Anywhere: "make me a habit tracker app", "build a workout app called Lift", "a travel planner app in teal". A word that

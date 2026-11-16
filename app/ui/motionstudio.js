@@ -33,6 +33,11 @@
   const tok = () => ((window.TribeStore && window.TribeStore.get().server) || {}).token || '';
   const authH = () => ({ ...(tok() ? { Authorization: 'Bearer ' + tok() } : {}), ...(pid ? { 'X-Project': pid } : {}) });
   const MEDIABUNNY = 'https://cdn.jsdelivr.net/npm/mediabunny@1.62.1/+esm';
+  // MP4 needs the browser's video encoder (WebCodecs) and Mediabunny, fetched once from a CDN. mp4State says which of
+  // those is missing so the Export pane can tell the truth before anyone presses the button.
+  let mp4Loader = () => import(MEDIABUNNY), mp4Mod = null, mp4Err = '';
+  const mp4State = () => !('VideoEncoder' in window) ? 'no-encoder' : mp4Mod ? 'ready' : mp4Err ? 'failed' : 'untried';
+  async function loadMp4() { if (mp4Mod) return mp4Mod; try { mp4Mod = await mp4Loader(); mp4Err = ''; return mp4Mod; } catch (e) { mp4Err = String((e && e.message) || e || 'failed'); throw e; } }
 
   let root = null, doc = null, key = '', pid = '', local = '', t = 0, playing = false, raf = 0, last = 0, sel = 0, hist = [], fut = [], saveT = 0, savedAt = '', tab = 'tpl', pick = null, audio = null, fontsReady = null;
 
@@ -73,7 +78,7 @@
   function scheduleSave() { clearTimeout(saveT); setSaved(tr('Saving…')); saveT = setTimeout(save, 600); }
   function setSaved(s) { const el = root && $('#mos-saved', root); if (el) el.textContent = s; }
   async function save() {
-    clearTimeout(saveT); if (!doc) return;
+    clearTimeout(saveT); saveT = 0; if (!doc) return;
     try {
       if (pid) { if (!key) key = slug(doc.name) + '-' + rid(); window.__mosSelfAt = Date.now(); await C.api(`/projects/${encodeURIComponent(pid)}/motion/${encodeURIComponent(key)}`, { method: 'PUT', body: { doc } }); }
       else if (window.TribeLocalFiles && window.TribeLocalFiles.KINDS && window.TribeLocalFiles.KINDS.motion) {
@@ -94,7 +99,7 @@
     if (o.doc) d = o.doc;
     else if (key && pid) { try { d = (await C.api(`/projects/${encodeURIComponent(pid)}/motion/${encodeURIComponent(key)}`)).doc; } catch (e) { toast(e.message); } }
     else if (local && window.TribeLocalFiles) { try { const it = await window.TribeLocalFiles.get(local); d = it && JSON.parse(it.body || 'null'); } catch {} }
-    if (!d) d = K().make(o.template || 'ui-reel', { screens: o.screens, name: o.name, caption: o.caption, cta: o.cta, accent: o.accent || brandAccent(), aspect: o.aspect });
+    if (!d) d = K().make(o.template || 'ui-reel', { screens: o.screens, name: o.name, caption: o.caption, cta: o.cta, accent: o.accent || brandAccent(), aspect: o.aspect, size: o.size });
     doc = K().normalize(d); doc.rev = (doc.rev || 0) + 1;
     await K().load(doc);
     mount();
@@ -104,7 +109,9 @@
     return api.state();
   }
   function brandAccent() { try { const b = window.TribeBrand && window.TribeBrand.get && window.TribeBrand.get(); return b && b.accent || undefined; } catch { return undefined; } }
-  function close() { play(false); stopAudio(); clearTimeout(saveT); if (doc) save(); if (root) root.remove(); root = null; document.body.classList.remove('mos-on'); }
+  // Closing saves only what has not been saved yet: a second save would make an unchanged graphic look newer than
+  // the things it was made from (the suggestions compare those times).
+  function close() { play(false); stopAudio(); const pending = !!saveT || (doc && !key && !local); clearTimeout(saveT); saveT = 0; if (doc && pending) save(); if (root) root.remove(); root = null; document.body.classList.remove('mos-on'); }
   const isOpen = () => !!root && document.body.contains(root);
 
   // ---------- the editor ----------
@@ -361,7 +368,7 @@
     const site = !!(window.TribeSiteFx && window.TribeSiteFx.KINDS && window.TribeSiteFx.KINDS.motion);
     p.innerHTML = `<p class="mos-lead">${tr('Everything renders here, frame by frame, from the same engine as the preview.')}</p>
       <div class="mos-exps">
-        <button type="button" class="mos-exp" data-exp="mp4">${icon('media', 18)}<b>MP4 video</b><small>${tr('For X, TikTok, Instagram and YouTube')}</small></button>
+        <button type="button" class="mos-exp" data-exp="mp4" data-mp4="${mp4State()}">${icon('media', 18)}<b>MP4 video</b><small>${{ 'no-encoder': tr('Not in this browser: use WebM, or open this in Chrome or Edge'), failed: tr('The MP4 helper didn’t download. WebM works offline'), untried: tr('For X, TikTok, Instagram and YouTube. Downloads a small helper the first time'), ready: tr('For X, TikTok, Instagram and YouTube') }[mp4State()]}</small></button>
         <button type="button" class="mos-exp" data-exp="webm">${icon('media', 18)}<b>WebM video</b><small>${tr('Works in any browser, with sound')}</small></button>
         <button type="button" class="mos-exp" data-exp="gif">${icon('photo', 18)}<b>GIF</b><small>${tr('Loops in chats and docs, no sound')}</small></button>
         <button type="button" class="mos-exp" data-exp="png">${icon('photo', 18)}<b>PNG frame</b><small>${tr('The frame you are looking at')}</small></button>
@@ -384,7 +391,16 @@
     if (fmt0 === 'html') return { blob: new Blob([await htmlPage()], { type: 'text/html' }), ext: 'html' };
     if (fmt0 === 'site') return toSite();
     if (fmt0 === 'gif') return { blob: await gif(Math.min(1, (o.gifWidth || 600) / doc.size.w), o.gifFps || 20, dur), ext: 'gif' };
-    if (fmt0 === 'mp4') { try { const b = await mp4(scale, fps, N, dur); if (b) return { blob: b, ext: 'mp4' }; } catch (e) { console.warn('mp4', e); } say(tr('MP4 needs a newer browser and the internet once. Here is a WebM instead.')); }
+    if (fmt0 === 'mp4') {
+      let why = 'no-encoder';
+      try { const b = await mp4(scale, fps, N, dur); if (b) return { blob: b, ext: 'mp4' }; } catch (e) { console.warn('mp4', e); why = mp4State() === 'failed' ? 'helper' : 'encode'; }
+      const blob = await webm(scale, fps, dur);   // the WebM first, so its "Done." doesn't cover the reason
+      say(why === 'no-encoder' ? tr('This browser can’t make MP4 files. Here is a WebM instead: most sites take it, or Chrome and Edge can make the MP4.')
+        : why === 'helper' ? tr('The MP4 helper didn’t download (no internet?). Here is a WebM instead. Try MP4 again when you are online.')
+        : tr('Making the MP4 failed. Here is a WebM instead.'));
+      if (root && tab === 'export') { const pane = $('#mos-pane', root); if (pane) paneExport(pane); }
+      return { blob, ext: 'webm', fallback: why };
+    }
     return { blob: await webm(scale, fps, dur), ext: 'webm' };
   }
   async function webm(scale, fps, dur) {
@@ -407,7 +423,7 @@
   }
   async function mp4(scale, fps, N, dur) {
     if (!('VideoEncoder' in window)) return null;
-    const M = await import(MEDIABUNNY);
+    const M = await loadMp4();
     const c = offscreen(scale), out = new M.Output({ format: new M.Mp4OutputFormat({ fastStart: 'in-memory' }), target: new M.BufferTarget() });
     const vs = new M.CanvasSource(c, { codec: 'avc', bitrate: M.QUALITY_HIGH }); out.addVideoTrack(vs, { frameRate: fps });
     let as = null, abuf = null;
@@ -543,7 +559,7 @@ K.load(d).then(function(){function f(n){K.draw(g,d,still?K.beatSec(d,d.thumbAt>=
   registerSuggest(); window.addEventListener('tribe-suggest-ready', registerSuggest); setTimeout(registerSuggest, 2000);
 
   const api = {
-    open, close, isOpen, command, ask, thumb, exportAs, seekTo, list, save, undo, redo,
+    open, close, isOpen, command, ask, thumb, exportAs, seekTo, list, save, undo, redo, mp4State, _setMp4Loader: fn => { mp4Loader = fn; mp4Mod = null; mp4Err = ''; },
     templates: () => K().LIST.map(id => ({ id, cat: K().TEMPLATES[id].cat, name: K().TEMPLATES[id].name, about: K().TEMPLATES[id].about })),
     state: () => ({ open: isOpen(), t, playing, sel, key, pid, local, tab, saved: savedAt, doc: doc ? clone(doc) : null, dur: doc ? K().duration(doc) : 0 }),
     pixels: tt => { const c = document.createElement('canvas'); c.width = Math.round(doc.size.w / 4); c.height = Math.round(doc.size.h / 4); paint(c, tt, 30); return c.toDataURL('image/png'); },
