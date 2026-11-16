@@ -136,12 +136,12 @@
     } else if (src === 'shots') {
       box.innerHTML = st.shots.length ? `<div class="shc-grid">${st.shots.slice(0, 12).map((s, i) => `<button type="button" class="shc-shot" data-shot="${i}" aria-pressed="${i === (st.picks.shot || 0)}"><img alt="" width="96" height="60" src="${visualUrl(s.slug, s.latest.ts)}"><span>${esc(s.name)}</span></button>`).join('')}</div>`
         : `<p class="faint">${esc(T('No screenshots yet. Press the camera in the preview, or ask your AI to post one.'))}</p>`;
-      $$('[data-shot]', box).forEach(b => b.onclick = () => { st.picks.shot = +b.dataset.shot; $$('[data-shot]', box).forEach(x => x.setAttribute('aria-pressed', String(x === b))); st.picks.shotSrc = ''; rebuild(); });
+      $$('[data-shot]', box).forEach(b => b.onclick = async () => { st.picks.shot = +b.dataset.shot; $$('[data-shot]', box).forEach(x => x.setAttribute('aria-pressed', String(x === b))); st.picks.shotSrc = ''; await gather(); rebuild(); });
     } else if (src === 'timelapse') {
       const many = st.shots.filter(s => (s.count || 0) > 1);
       box.innerHTML = st.shots.length ? `<label class="shc-l" for="shc-lapse">${esc(T('Which screen'))}</label><select class="input" id="shc-lapse"><option value="">${esc(T('Every screen, oldest to newest'))}</option>${many.map(s => `<option value="${esc(s.slug)}">${esc(s.name)} · ${esc(F('{n} versions', { n: s.count }))}</option>`).join('')}</select>`
         : `<p class="faint">${esc(T('A timelapse needs screenshots over time. Press the camera in the preview now and then, and they add up.'))}</p>`;
-      const sel = $('#shc-lapse', box); if (sel) { sel.value = st.lapse; sel.onchange = () => { st.lapse = sel.value; st.picks.lapse = null; rebuild(); }; }
+      const sel = $('#shc-lapse', box); if (sel) { sel.value = st.lapse; sel.onchange = async () => { st.lapse = sel.value; st.picks.lapse = null; await gather(); rebuild(); }; }
     } else {
       box.innerHTML = `<label class="btn shc-up">${ico('upload', 16)} ${esc(T('Add pictures'))}<input type="file" id="shc-file" accept="image/*" multiple hidden></label><p class="faint" id="shc-up-n">${esc(st.uploads.length ? F('{n} pictures added', { n: st.uploads.length }) : T('Screenshots of your site, app or game work best.'))}</p>`;
       $('#shc-file', box).onchange = async e => { for (const f of [...e.target.files].slice(0, 10)) { const url = URL.createObjectURL(f); const im = await loadImg(url); URL.revokeObjectURL(url); const d = im && shrink(im); if (d) st.uploads.push(d); } st.uploads = st.uploads.slice(-10); $('#shc-up-n', box).textContent = F('{n} pictures added', { n: st.uploads.length }); rebuild(); };
