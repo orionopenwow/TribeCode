@@ -45,14 +45,7 @@ The **bell** (top right) collects what needs you: approvals, reviews, hand-offs,
 
 ## Suggestions
 
-TribeCode quietly notices what your tribe adds and does: new photos and files, the same edit made again and again, things asked for in chat that no task covers, a colour changed in one place but not another. A few times a day at most it turns them into **Suggestions** on the project's page (and inside each tool), each saying where it came from ("Ana's photo", "Ben in chat").
-
-- **Apply** does it, and **Undo** takes it back.
-- **Not now** hides it for a few days. **Not like this** tells it your tribe doesn't want that kind, and that one never comes back.
-- Ask Flint "what do you suggest?", "suggest less" or "stop suggesting about photos".
-- **Settings › Your AI › Suggestions**: Gentle (the default), Often or Off.
-
-It all works without an AI. Photos are looked at on your device only. With an AI connected, it can add ideas of its own, and those wait for Apply too.
+A few times a day at most, **Suggestions** on the project's page turn what your tribe adds and does (photos, files, repeated edits, things asked for in chat) into ideas, each saying where it came from. **Apply** does it, **Undo** takes it back, **Not like this** stops that kind. Settings › Your AI › Suggestions: Gentle, Often or Off.
 
 ## The scratchpad
 
