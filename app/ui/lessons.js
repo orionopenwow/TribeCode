@@ -194,6 +194,7 @@
     let i = sid ? all.findIndex(s => s.id === sid) : all.findIndex(s => !done(t.id, s.id));
     if (i < 0) i = 0;                                   // every step is ticked: do it again from the top
     st = { t, i, base: null, small: false, fin: false };
+    if (!synced) queueSync();                           // first lesson on this device: bring the person's ticks from the tribe
     begin();
     clearInterval(loop); loop = setInterval(tick, 600);
     return true;
@@ -273,7 +274,11 @@
     }
     if (offerObs && tracks().length && FIRST.every(f => offered(f.tid))) { offerObs.disconnect(); offerObs = null; }   // nothing left to offer: stop watching
   }
-  try { offerObs = new MutationObserver(() => { clearTimeout(offerT); offerT = setTimeout(offer, 300); }); offerObs.observe(document.body, { childList: true, subtree: true }); } catch {}
+  // watch only the two tools' own boxes (they are added to the page when first opened), never the whole app
+  const later = () => { clearTimeout(offerT); offerT = setTimeout(offer, 300); };
+  const watched = new WeakSet();
+  function watchTools() { if (!offerObs) return; for (const sel of ['#wdz', '#apc']) { const r = document.querySelector(sel); if (r && !watched.has(r)) { watched.add(r); offerObs.observe(r, { childList: true, subtree: true, attributes: true, attributeFilter: ['hidden'] }); later(); } } }
+  try { offerObs = new MutationObserver(later); new MutationObserver(watchTools).observe(document.body, { childList: true }); watchTools(); } catch {}
 
   // ---------- gentle suggestions after natural moments (the Suggestions engine, provider "learn") ----------
   function note(what) { const j = ls.get(); j.moments = j.moments || {}; if (!j.moments[what]) { j.moments[what] = Date.now(); ls.set(j); try { W.TribeSuggest && W.TribeSuggest.run && W.TribeSuggest.run({ providers: ['learn'] }); } catch {} } }
