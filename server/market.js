@@ -9,7 +9,8 @@
 //        widget -> the project's sidebar (server/widgets.js) · skill/library/tool/studio/connector -> the Toolbox
 //        (server/shelf.js; skills copy into .claude/skills) · playbook -> a checklist doc · site-template -> remix
 //        (client) · company-template -> Company mode (client; { needs: 'company' } until it exists) · asset-pack,
-//        legal, academy -> opened by the client. Agents never install directly: they get an approval for a human.
+//        legal, academy -> opened by the client · app-kit -> its screens join the project's App Creator design
+//        (server/appcreator.js addKit). Agents never install directly: they get an approval for a human.
 //
 // Ranking is honest about where it comes from: usage is THIS tribe's (installs, opens, uses), kept in
 // .tribe/market/usage.json. Hot = this week's tribe usage blended with the curated score; Rising = usage beating last
@@ -25,15 +26,15 @@ const KIND = {
   widget: { label: 'Widgets', emoji: '🧩' }, 'company-template': { label: 'Company templates', emoji: '🏢' }, playbook: { label: 'Playbooks', emoji: '📋' },
   skill: { label: 'Skills', emoji: '🧠' }, library: { label: 'Libraries', emoji: '📚' }, tool: { label: 'Tools', emoji: '🛠️' }, studio: { label: 'Studios', emoji: '🎛️' },
   'site-template': { label: 'Starters', emoji: '🌐' }, connector: { label: 'Connectors', emoji: '🔌' }, 'asset-pack': { label: 'Asset packs', emoji: '🎨' },
-  legal: { label: 'Legal', emoji: '⚖️' }, academy: { label: 'Academy', emoji: '🎓' },
+  legal: { label: 'Legal', emoji: '⚖️' }, academy: { label: 'Academy', emoji: '🎓' }, 'app-kit': { label: 'App kits', emoji: '📱' },
 };
 const FOR = { game: 'Games', site: 'Sites', app: 'Apps', business: 'Businesses', any: 'Anything' };
 const SEATS = ['ceo', 'cto', 'design', 'growth', 'sales', 'support', 'ops', 'finance', 'legal'];
-const INSTALL = new Set(['widget', 'skill', 'library', 'tool', 'studio', 'connector', 'playbook', 'site-template', 'company-template']);   // agents ask first
+const INSTALL = new Set(['widget', 'skill', 'library', 'tool', 'studio', 'connector', 'playbook', 'site-template', 'company-template', 'app-kit']);   // agents ask first
 const TOOLBOX = new Set(['skill', 'library', 'tool', 'studio', 'connector']);
 const DAY = 864e5;
 
-module.exports = function market({ P, store, root, approvals, widgets, shelf, docs, inspo = null, postChat, nameOf = id => id, getMembers = () => [], str = (v, n) => String(v == null ? '' : v).slice(0, n), now = () => Date.now(), tick = true, trending = null }) {
+module.exports = function market({ P, store, root, approvals, widgets, shelf, docs, appKit = null, inspo = null, postChat, nameOf = id => id, getMembers = () => [], str = (v, n) => String(v == null ? '' : v).slice(0, n), now = () => Date.now(), tick = true, trending = null }) {
   const catalog = (() => { try { return JSON.parse(fs.readFileSync(path.join(root, 'templates', 'marketplace.json'), 'utf8')).items || []; } catch { return []; } })();
   const byId = new Map(catalog.map((it, i) => [it.id, Object.assign(it, { _i: i })]));
   const err = (status, m) => Object.assign(new Error(m), { status });
@@ -171,6 +172,11 @@ module.exports = function market({ P, store, root, approvals, widgets, shelf, do
   const mcpJson = it => it.mcp && it.mcp.config ? `claude mcp add-json ${it.mcp.name} '${JSON.stringify(it.mcp.config)}'` : '';
   async function perform(it, pid, me) {
     const fx = [];
+    if (it.kind === 'app-kit') {   // App Creator's screens join the project's app design (server/appcreator.js addKit)
+      if (!appKit) throw err(400, 'App Creator is not on this host');
+      const r = appKit(pid, it.kit || it.ref, me);
+      return { done: 'app-kit', fx, kit: it.kit || it.ref, message: `${it.title}: ${r.added.length} screen${r.added.length === 1 ? '' : 's'} added to the app design` };
+    }
     if (it.kind === 'widget') {
       const r = widgets.addOne(pid, it.widget, me);
       if (!r.already) fx.push({ t: 'widget', w: it.widget });

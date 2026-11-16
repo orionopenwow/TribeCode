@@ -552,6 +552,46 @@
    ]
   },
   {
+   "id": "make-app",
+   "group": "make",
+   "title": "Make a phone app",
+   "intro": "Pick one of more than fifty designed apps, or start blank, and change anything by clicking it. You end with an app you can tap through on a phone.",
+   "asks": [
+    "make a phone app",
+    "design an app",
+    "make me an app",
+    "start an app",
+    "app creator",
+    "make a mobile app"
+   ],
+   "steps": [
+    "Open Design and pick App, or tell Flint \"make me a habit tracker app\".",
+    "Pick a template. Each one is a few screens already linked together.",
+    "Click any words to type over them. Click a part to move, copy or remove it.",
+    "Open Look to change the colour, corners, type and light or dark for every screen at once."
+   ]
+  },
+  {
+   "id": "app-prototype",
+   "group": "make",
+   "title": "Link screens and try your app",
+   "intro": "Make buttons go somewhere, then tap through the whole app before anyone builds it. You end with a prototype friends can try on their own phones.",
+   "asks": [
+    "link this button",
+    "make a prototype",
+    "try my app",
+    "play the app",
+    "connect the screens",
+    "share my app design"
+   ],
+   "steps": [
+    "Click a button or a row, then pick a screen under When tapped, go to.",
+    "Choose how it moves: Slide, Sheet, Fade or Grow.",
+    "Press Play and tap through it. Esc goes back to editing.",
+    "Export › Save into the project, then open the preview link on any phone."
+   ]
+  },
+  {
    "id": "publish",
    "group": "publish",
    "title": "Publish it",

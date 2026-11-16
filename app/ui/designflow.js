@@ -141,7 +141,10 @@
   // ---------- step 2: the gallery ----------
   async function templatesFor(kind) {
     const d = D(), th = id => `assets/designflow/${id}.webp`;
-    if (kind === 'app' || kind === 'game') return (await catalog()).filter(s => s.kind === kind).map(s => ({ id: s.id, t: s.title, d: s.summary, img: `starters/thumbs/${s.id}.webp`, lic: `${s.license} · ${s.by}`, ic: s.icon }));
+    const code = async () => (await catalog()).filter(s => s.kind === kind).map(s => ({ id: s.id, t: s.title, d: s.summary, img: `starters/thumbs/${s.id}.webp`, lic: `${s.license} · ${s.by}`, ic: s.icon }));
+    // App Creator: the designed phone apps come first, each thumbnail drawn from its real first screen (app/ui/appcreator.js)
+    if (kind === 'app' && window.TribeAppCreator && window.TribeAppCore) { const AC = window.TribeAppCreator, Co = window.TribeAppCore; return Co.templateList().map(t => ({ id: 'apc:' + t.id, t: t.title, d: t.summary, html: AC.mini(Co.template(t.id), null, 120), cat: t.cat })).concat([{ head: 'Start from code' }], await code()); }
+    if (kind === 'app' || kind === 'game') return code();
     if (kind === 'website') return d.SITES.map(s => ({ ...s, img: th('site-' + s.id) }));
     if (kind === 'screen') return d.SCREENS.map(s => ({ ...s, img: th('screen-' + s.id) }));
     if (kind === 'slides') return d.SLIDES.map(s => ({ ...s, img: th('slides-' + s.id) }));
@@ -164,7 +167,7 @@
     toTop();
     const list = await templatesFor(kind), grid = host.querySelector('#dfl-grid'); if (!grid) return;
     grid.innerHTML = `<button type="button" class="dfl-tpl dfl-blank" data-tpl=""><span class="dfl-th">${icon('blank', 34)}</span><b>Blank</b><small>Start from nothing</small></button>` +
-      list.map(t => `<button type="button" class="dfl-tpl" data-tpl="${esc(t.id)}"><span class="dfl-th"><img src="${esc(t.img)}" alt="" loading="lazy" width="320" height="200"></span><b>${esc(t.t)}</b><small>${esc(t.d)}</small>${t.lic ? `<span class="dfl-lic">${esc(t.lic)}</span>` : ''}</button>`).join('');
+      list.map(t => t.head ? `<p class="dfl-sub eyebrow">${esc(t.head)}</p>` : `<button type="button" class="dfl-tpl${t.html ? ' dfl-apc' : ''}" data-tpl="${esc(t.id)}"><span class="dfl-th">${t.html || `<img src="${esc(t.img)}" alt="" loading="lazy" width="320" height="200">`}</span><b>${esc(t.t)}</b><small>${esc(t.d)}</small>${t.lic ? `<span class="dfl-lic">${esc(t.lic)}</span>` : t.cat ? `<span class="dfl-lic">${esc(t.cat)}</span>` : ''}</button>`).join('');
     grid.querySelectorAll('img').forEach(i => { i.onerror = () => { const tp = list.find(t => i.src.endsWith(t.img)); i.replaceWith(Object.assign(document.createElement('span'), { className: 'dfl-noimg', innerHTML: icon((tp && tp.ic) || k.icon, 30) })); }; });
     grid.querySelectorAll('[data-tpl]').forEach(b => b.onclick = async () => {
       grid.querySelectorAll('[data-tpl]').forEach(x => { x.disabled = true; }); b.classList.add('busy');
@@ -184,11 +187,18 @@
   async function create(kind, tplId, ask) {
     ask = String(ask || '').trim();
     if (kind === 'website') return makeWebsite(tplId, ask);
+    if (kind === 'app' && window.TribeAppCreator && (!tplId || /^apc:/.test(tplId))) return makeApp(tplId.replace(/^apc:/, ''), ask);
     if (kind === 'app' || kind === 'game') return makeCode(kind, tplId, ask);
     if (kind === 'slides') return makeSlides(tplId, ask);
     if (kind === 'whiteboard') return makeBoard(tplId, ask);
     if (kind === 'motion') { const MS = window.TribeMotionStudio; if (!MS) throw new Error('Motion Studio did not load. Reload the app.'); await MS.open({ ...(tplId ? { template: tplId } : { doc: { name: 'Motion graphic', bars: 2, states: [{ kind: 'button', at: 0, text: 'Your words' }, { kind: 'toast', at: 4, text: 'Change anything' }] } }), ...(pidNow() ? { pid: pidNow() } : { pid: '' }), name: nameFrom(ask, '') || undefined, accent: accentFrom(ask) || undefined }); if (ask && !nameFrom(ask, '')) setTimeout(() => MS.ask(ask), 300); return; }   // feat/motion
     return makeCanvas(kind, tplId, ask);
+  }
+  // App: App Creator takes over (docs/APP-CREATOR.md), with the template, a name and a colour from the prompt
+  async function makeApp(tplId, ask) {
+    const name = nameFrom(ask, ''), accent = /\b(colou?r|in|accent)\b|#[0-9a-f]{6}/i.test(ask || '') ? accentFrom(ask) : '';
+    await window.TribeAppCreator.open({ template: tplId || '', name: name || undefined, accent: accent || undefined, pid: pidNow() || undefined });
+    return { opened: 'app-creator' };
   }
   // Website: the website designer takes over (its own entry), with the template and the prompt
   // a prompt that is only a name ("Sunrise Bakery") or says one ("a site for Sunrise Bakery"); not a style ("warm colors")

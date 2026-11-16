@@ -24,7 +24,7 @@ STATIC_PORT = 5720 + OFF
 BASE = f"http://localhost:{PORT}"
 SHOTS = ROOT / "docs" / "screenshots"
 LABELS = {"skill": ["Skill"], "connector": ["MCP server"], "library": ["Library"], "tool": ["Tool"], "studio": ["Studio"], "site-template": ["Starter"], "widget": ["Widget"], "asset-pack": ["Assets"], "company-template,legal": ["Company", "Legal"], "playbook": ["Playbook"], "academy": ["Academy"]}
-KINDS = ["widget", "company-template", "playbook", "skill", "library", "tool", "studio", "site-template", "connector", "asset-pack", "legal", "academy"]
+KINDS = ["widget", "company-template", "playbook", "skill", "library", "tool", "studio", "site-template", "connector", "asset-pack", "legal", "academy", "app-kit"]
 
 def api(path, method="GET", body=None, token=None, project=None):
     h = {"Content-Type": "application/json"}
@@ -228,7 +228,7 @@ def main():
                 if k == "playbook": continue
                 r = np_.evaluate(f"TribeMarket.use('{pick[k]['id']}')"); assert r and r.get("local"), (k, r)
             ids = np_.evaluate("TribeLocalFiles.list().map(x => x.title)")
-            assert len([t for t in ids if ":" in t]) >= len(KINDS), ids
+            assert len([t for t in ids if ":" in t]) >= len(KINDS) - 1, ids   # an app kit joins the App Creator design, not Files
             body = np_.evaluate(f"TribeLocalFiles.list().find(x => x.title.includes({json.dumps(pick['connector']['title'])})).body")
             assert "mcpServers" in body, body
             np_.click("#mk-detail [data-dclose]"); np_.fill("#mk-q", ""); np_.click("[data-tab='installed']"); np_.wait_for_function(f"document.querySelectorAll('#market .mk-card').length === {len(KINDS)}")

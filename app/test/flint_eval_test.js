@@ -12,7 +12,7 @@ const verbose = process.argv.includes('-v');
 { const i = process.argv.indexOf('--model'); if (i > 0) { const fs = require('fs'), E = require(path.join(__dirname, '..', 'ui', 'flintembed.js')), d = process.argv[i + 1], b = fs.readFileSync(path.join(d, 'model.safetensors')); N.setSemantic(E.fromFiles({ model: b.buffer.slice(b.byteOffset, b.byteOffset + b.byteLength), tokenizer: fs.readFileSync(path.join(d, 'tokenizer.json'), 'utf8') })); console.log(`with the local helper: ${d}`); } }
 const CTX = {
   g: {}, s: { view: 'site', pages: ['Home', 'About', 'Contact'] }, se: { view: 'site', pages: ['Home', 'About', 'Contact'], selection: true, selKind: 'text', selList: true }, p: { view: 'preview', site: true },
-  mo: { view: 'motion' }, c: { view: 'canvas' }, cs: { view: 'canvas', selection: true }, sh: { view: 'sheet' }, d: { view: 'doc' }, sl: { view: 'deck' },
+  mo: { view: 'motion' }, a: { view: 'appcreator', screens: ['Today', 'Stats', 'Profile'] }, c: { view: 'canvas' }, cs: { view: 'canvas', selection: true }, sh: { view: 'sheet' }, d: { view: 'doc' }, sl: { view: 'deck' },
 };
 const BASE = { now: new Date(data.now), members: [{ id: 'm1', name: 'Maya Lee' }, { id: 'm2', name: 'Sam Ortiz' }], tasks: [] };
 const low = v => String(v == null ? '' : v).toLowerCase().trim();

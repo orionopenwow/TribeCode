@@ -30,6 +30,7 @@
     'site-template': 'M3 5h18v14H3zM3 9h18M8 9v10',
     widget: 'M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM16.5 13v7M13 16.5h7',
     'asset-pack': 'M4 5h16v14H4zM4 15l4-4 4 4 3-3 5 5M15 9.5h.01',
+    'app-kit': 'M7 2.5h10v19H7zM11 18.5h2M9.5 6.5h5M9.5 10h5M9.5 13.5h3',
     templates: 'M6 3h9l4 4v14H6zM15 3v4h4M9 12h7M9 16h7',
     playbook: 'M9 6h11M9 12h11M9 18h11M4 6l1 1 2-2M4 12l1 1 2-2M4 18l1 1 2-2',
     academy: 'M2 9l10-5 10 5-10 5zM6 11v5c3 2 9 2 12 0v-5',
@@ -44,10 +45,10 @@
   }
 
   // ---------- kinds ----------
-  const KIND_LABEL = { widget: 'Widget', 'company-template': 'Company', playbook: 'Playbook', skill: 'Skill', library: 'Library', tool: 'Tool', studio: 'Studio', 'site-template': 'Starter', connector: 'MCP server', 'asset-pack': 'Assets', legal: 'Legal', academy: 'Academy' };
-  const KIND_ICON = { widget: 'widget', 'company-template': 'templates', playbook: 'playbook', skill: 'skill', library: 'library', tool: 'tool', studio: 'studio', 'site-template': 'site-template', connector: 'connector', 'asset-pack': 'asset-pack', legal: 'templates', academy: 'academy' };
+  const KIND_LABEL = { widget: 'Widget', 'company-template': 'Company', playbook: 'Playbook', skill: 'Skill', library: 'Library', tool: 'Tool', studio: 'Studio', 'site-template': 'Starter', connector: 'MCP server', 'asset-pack': 'Assets', legal: 'Legal', academy: 'Academy', 'app-kit': 'App kit' };
+  const KIND_ICON = { widget: 'widget', 'company-template': 'templates', playbook: 'playbook', skill: 'skill', library: 'library', tool: 'tool', studio: 'studio', 'site-template': 'site-template', connector: 'connector', 'asset-pack': 'asset-pack', legal: 'templates', academy: 'academy', 'app-kit': 'app-kit' };
   const CATS = [['', 'All', 'all'], ['skill', 'Skills', 'skill'], ['connector', 'MCP servers', 'connector'], ['library', 'Libraries', 'library'], ['tool', 'Tools', 'tool'], ['studio', 'Studios', 'studio'],
-    ['site-template', 'Starters', 'site-template'], ['widget', 'Widgets', 'widget'], ['asset-pack', 'Assets', 'asset-pack'], ['company-template,legal', 'Templates', 'templates'], ['playbook', 'Playbooks', 'playbook'], ['academy', 'Academy', 'academy']];
+    ['site-template', 'Starters', 'site-template'], ['widget', 'Widgets', 'widget'], ['asset-pack', 'Assets', 'asset-pack'], ['app-kit', 'App kits', 'app-kit'], ['company-template,legal', 'Templates', 'templates'], ['playbook', 'Playbooks', 'playbook'], ['academy', 'Academy', 'academy']];
   const SORTS = [['hot', 'Popular'], ['new', 'New'], ['az', 'A–Z']];
   const SEAT_LABEL = { ceo: 'CEO', cto: 'Build', design: 'Design', growth: 'Grow', sales: 'Sales', support: 'Support', ops: 'Run', finance: 'Finance', legal: 'Legal' };
   const FOR_LABEL = { game: 'Games', site: 'Sites', app: 'Apps', business: 'Businesses', any: 'Anything' };
@@ -67,6 +68,7 @@
       'company-template': 'Saves the company plan (seats, goals, first tasks) as a doc in Files.',
       'site-template': 'Saves a starter doc in Files with the clone command and credits.',
       'asset-pack': 'Pins it to the project’s inspiration board.',
+      'app-kit': 'Adds its screens to your app in App Creator, linked and in your app’s look.',
     })[it.kind] || 'Adds it to the project.';
   }
   const mcpSnippet = it => it.mcp ? JSON.stringify({ mcpServers: { [it.mcp.name]: it.mcp.config } }, null, 2) : '';
@@ -89,7 +91,7 @@
   const saveLocal = m => { try { localStorage.setItem(LKEY, JSON.stringify(m)); } catch {} };
 
   // ---------- the saved list: with no tribe answering the Marketplace reads market-catalog.json (never "Failed to fetch") ----------
-  const KIND_INFO = { widget: 'Widgets', 'company-template': 'Company templates', playbook: 'Playbooks', skill: 'Skills', library: 'Libraries', tool: 'Tools', studio: 'Studios', 'site-template': 'Starters', connector: 'MCP servers', 'asset-pack': 'Asset packs', legal: 'Legal', academy: 'Academy' };
+  const KIND_INFO = { widget: 'Widgets', 'company-template': 'Company templates', playbook: 'Playbooks', skill: 'Skills', library: 'Libraries', tool: 'Tools', studio: 'Studios', 'site-template': 'Starters', connector: 'MCP servers', 'asset-pack': 'Asset packs', legal: 'Legal', academy: 'Academy', 'app-kit': 'App kits' };
   const SEATS = ['ceo', 'cto', 'design', 'growth', 'sales', 'support', 'ops', 'finance', 'legal'];
   let saved = null, offline = false;
   const savedList = () => (saved = saved || fetch('market-catalog.json').then(r => (r.ok ? r.json() : { items: [] })).then(d => (d.items || []).map((it, i) => ({ ...it, _i: i }))).catch(() => []));
@@ -460,6 +462,26 @@
     if (spectator()) return toast('Spectators can look, not add');
     const it = await itemOf(id); if (!it) return;
     const loc = localMode();
+    // App kits drop their screens into App Creator (app/ui/appcreator.js), with or without a tribe
+    if (it.kind === 'app-kit' && window.TribeAppCreator && window.TribeAppCore) {
+      const AC = window.TribeAppCreator, acs = AC.state(), kit = it.kit || it.ref, openIt = ['Open App Creator', () => { if (window.TribeMarket && window.TribeMarket.close) { try { window.TribeMarket.close(); } catch {} } AC.open({ pid: loc ? '' : pid() }); }];
+      if (acs && acs.open) {   // the design is open: add it there (one Undo), and count the use
+        if (!loc && pid()) C.api(`/market/${encodeURIComponent(id)}/use`, { method: 'POST', body: { project: pid(), only: 'open' } }).catch(() => {});
+        AC.installKit(kit); result(`${it.title}: added to your app`); return { ok: true, kit };
+      }
+      if (!loc && pid()) {   // the host adds the screens to the project's app design (server/appcreator.js addKit)
+        const r = await C.api(`/market/${encodeURIComponent(id)}/use`, { method: 'POST', body: { project: pid() } });
+        if (r.pending) { result(r.message || 'Waiting'); return r; }
+        refreshItem(r.item || { ...it, installed: true }); result(r.message || `${it.title} added to your app`, null, openIt); return r;
+      }
+      // no tribe: the screens join the app design kept on this device
+      const key = 'tribecode.appcreator.local', Co = window.TribeAppCore;
+      let d = null; try { d = JSON.parse(localStorage.getItem(key) || 'null'); } catch {}
+      const r = Co.apply(d || Co.blank('My app'), { op: 'kit', kit }); try { localStorage.setItem(key, JSON.stringify(r.doc)); } catch {}
+      const m = localInst(); m[it.id] = { kit, at: new Date().toISOString() }; saveLocal(m);
+      refreshItem({ ...it, installed: true }); result(`${it.title}: added to your app on this device`, () => remove(id), openIt);
+      return { ok: true, local: true, kit };
+    }
     if (loc && !(st.target && st.target.type === 'local')) return askPick(id);
     if (!loc && !pid()) return askPick(id);
     if (btn) btn.disabled = true;
