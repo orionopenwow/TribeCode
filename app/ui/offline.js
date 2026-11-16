@@ -853,6 +853,7 @@
       case 'health': return ok({ ok: true, version: hello().version, tribe: db.tribe.name, members: db.members.length, lan: [], site: null, offlineDemo: true });
       case 'guide': { const g = await bundled('guide-pages.json'); const pages = (g && g.pages) || []; if (!b) return ok({ pages, paths: (g && g.paths) || [] }); const pg = pages.find(x => x.slug === b) || ((g && g.paths) || []).find(x => x.slug === b); return pg ? ok(pg) : no(404, 'no such page'); }   // feat/calm-parity: the Guide ships inside the app
       case 'me': if (GET && !b) return ok({ member: presence().find(m => m.id === 'me') });
+        if (b === 'learn' && (GET || PUT)) return ok({ track: (body && body.track) || {} });   // lesson progress (lessons.js) stays on the device in the demo; without this every tick raised the "needs the tribe online" card
         if (PATCH && !b) { const m = me(); if (body.name) m.name = String(body.name).slice(0, 32); if (body.color) m.color = String(body.color); save(); pushPresence(); return ok({ member: m }); } break;
       case 'projects': {
         if (!b && GET) return ok({ projects: projects(), current: cur() });

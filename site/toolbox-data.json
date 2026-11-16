@@ -32,8 +32,8 @@
     "h": 851,
     "small": 640,
     "alt": "ArtCraft's image editor: tools down the left, a blank canvas in the middle, and colour, properties and layers panels on the right",
-    "by": "taken by TribeCode",
-    "license": "ArtCraft is MIT / Apache-2.0",
+    "by": "TribeCode",
+    "license": "MIT / Apache-2.0 app",
     "licenseUrl": "https://github.com/storytold/artcraft",
     "source": "https://getartcraft.com/"
    }

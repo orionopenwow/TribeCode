@@ -167,7 +167,9 @@ def main():
             kb = []; pg.on("request", lambda r: "/api/flint/kb" in r.url and kb.append(r.url))
             said1, _ = ask(pg, "how do i invite a friend to a project?")
             assert said1 == said0 or len(said1) > 20, said1
-            assert all("k=8" in u for u in kb), kb
+            # since v0.39.0 a quick guide answers this first (H.guide in flint.js: the app-building check, k=1, then the quick guides),
+            # so the docs search (k=8 candidates, re-ranked by the local model) is only reached when no quick guide fits
+            assert all("k=8" in u or "k=1" in u for u in kb), kb
 
             # ---------- remove ----------
             pg.evaluate("TribeFlintModel.open()"); pg.wait_for_selector("#fmd-remove"); pg.click("#fmd-remove"); pg.wait_for_selector("#fmd-get", timeout=10000)
