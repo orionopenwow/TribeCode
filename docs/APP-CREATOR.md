@@ -58,7 +58,7 @@ app, an Expo project) rather than HTML pages. Forcing both into one schema would
 
 | Choice | What happens |
 | --- | --- |
-| Save into the project | `POST /api/projects/:id/app-config/export { kind: 'pwa' }` writes `app-web/` in the project's code: `index.html`, `app.js` (the same runtime as Play), `sw.js` (offline), `manifest.webmanifest`, `icon.svg`, the fonts with their licence files. The live preview finds `app-web/` when the project has no other web root, so it opens on any phone through the preview link. A project with no code folder gets one first. |
+| Try it in the live preview (was "Save into the project") | `POST /api/projects/:id/app-config/export { kind: 'pwa' }` writes `app-web/` in the project's code: `index.html`, `app.js` (the same runtime as Play), `sw.js` (offline), `manifest.webmanifest`, `icon.svg`, the fonts with their licence files. The live preview finds `app-web/` when the project has no other web root, so it opens on any phone through the preview link. A project with no code folder gets one first. |
 | Download the phone web app | The same files as a zip, made in the browser (works with no tribe). |
 | Expo project | `app-expo/`: `design.json` (the design as JSON) and an `App.js` that draws it with React Native's own pieces and Expo's icon set. When the project has no phone app yet, phone app mode points at `app-expo/`, so the Phone app card installs dependencies and shows the Expo Go code. |
 | Have my AI build it for real | A brief (screens, flows, a first guess at the data, the look) goes to `#agents` addressed to `@agents`. With no AI helper in the project it becomes a build task instead. Nothing joins the main copy until a person says yes. |

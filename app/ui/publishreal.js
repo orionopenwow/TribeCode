@@ -91,7 +91,11 @@
         : !can ? ''
           : dk.on ? `<div id="pbr-build-desktop" class="pbr-build"><span class="pb-spin" aria-hidden="true"></span> ${esc(T('Checking the build…'))}</div><details class="pbr-more"><summary>${esc(T('Opening it the first time'))}</summary><p>${esc(T('These builds are not signed, so the computer asks before it runs them. On Windows choose More info, then Run anyway. On a Mac open it once, then choose Open Anyway in System Settings, Privacy & Security. Removing the warning needs your own certificates.'))}</p><p>${esc(T('The Mac build is for Apple chips. It needs a connection, and always shows the newest version of your page.'))}</p></details><button class="linkish" type="button" data-wrap="desktop" data-on="0">${esc(T('Stop making the computer app'))}</button>`
             : `<button class="btn" type="button" data-wrap="desktop" data-on="1">${esc(T('Make the computer app'))}</button>`, dk.on ? 'On' : ''));
-    host.innerHTML = `<div class="pbr" id="pbr">${kinds}${checks}<p class="eyebrow pbr-h">${esc(T('Where it goes'))}</p><ul class="pbr-list">${rows.join('')}</ul></div>`;
+    // pass 4: a project can hold a designed website and a designed phone app; one of them goes online at a time, each with its own link
+    const th = s.things || {}, both = th.site && th.app;
+    const what = !both ? '' : `<div class="pbr-what" role="group" aria-label="${esc(T('What goes online?'))}"><span class="eyebrow">${esc(T('What goes online?'))}</span>${[['site', 'The website', 'sites'], ['app', 'The phone app', 'phone']].map(([k, l, i]) => `<button type="button" class="chip${s.what === k ? ' is-on' : ''}" data-what="${k}" aria-pressed="${s.what === k}" ${can ? '' : 'disabled'}>${ico(i, 14)} ${esc(T(l))}</button>`).join('')}</div>`;
+    const where = window.TribeWhere ? `<p class="pbr-where"><button type="button" class="linkish" data-where>${esc(T('Where it lives: the folder, your friends, online'))}</button></p>` : '';
+    host.innerHTML = `<div class="pbr" id="pbr">${what}${kinds}${checks}${where}<p class="eyebrow pbr-h">${esc(T('Where it goes'))}</p><ul class="pbr-list">${rows.join('')}</ul></div>`;
     wire(host, pid, s, form);
     if ((s.dest.android || {}).on && pg) pollBuild(host, pid, 'android');
     if (dk.on && pg) pollBuild(host, pid, 'desktop');
@@ -124,6 +128,8 @@
     host.querySelectorAll('[data-shareclip]').forEach(b => b.onclick = () => { const m = document.querySelector('#invite-modal'); if (m && b.closest('#invite-modal')) m.classList.add('hidden'); window.TribeShareClip.open({ pid }); });
     host.querySelectorAll('[data-homescreen]').forEach(b => b.onclick = () => { const m = document.querySelector('#invite-modal'); if (m && b.closest('#invite-modal')) m.classList.add('hidden'); window.TribeHomescreen.open(pid); });
     host.querySelectorAll('[data-launchkit]').forEach(b => b.onclick = () => { const m = document.querySelector('#invite-modal'); if (m && b.closest('#invite-modal')) m.classList.add('hidden'); window.TribeLaunchKit.open(pid); });
+    host.querySelectorAll('[data-what]').forEach(b => b.onclick = async () => { try { await C.api('/publish/real', { method: 'PUT', body: { project: pid, what: b.dataset.what } }); again(); } catch (e) { toast(e.message); } });
+    host.querySelectorAll('[data-where]').forEach(b => b.onclick = () => { const m = document.querySelector('#invite-modal'); if (m && b.closest('#invite-modal')) m.classList.add('hidden'); window.TribeWhere.open(pid); });
     host.querySelectorAll('[data-kind]').forEach(b => b.onclick = async () => { try { await C.api('/publish/real', { method: 'PUT', body: { project: pid, kind: b.dataset.kind } }); again(); } catch (e) { toast(e.message); } });
     const pwa = host.querySelector('#pbr-pwa'); if (pwa) pwa.onchange = async () => { try { await C.api('/publish/real', { method: 'PUT', body: { project: pid, pwa: pwa.checked } }); toast(T(pwa.checked ? 'It will be installable from the next publish' : 'Not installable from the next publish')); again(); } catch (e) { toast(e.message); } };
     host.querySelectorAll('[data-zip]').forEach(b => b.onclick = async () => {

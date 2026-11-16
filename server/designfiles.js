@@ -131,7 +131,9 @@ module.exports = function designFiles({ P, base, isLocal = () => false, broadcas
       const d = JSON.parse(fs.readFileSync(f, 'utf8')); return d && typeof d === 'object' ? d : null;
     } catch { return null; }
   }
-  function has(pid, kind) { try { return fs.statSync(path.join(dirOf(pid, kind), 'index.html')).isFile(); } catch { return false; } }
+  // the project got a folder (or a code folder) since the last write: the files follow it there
+  function follow(pid, kind) { try { const r = man(pid)[kind]; if (r && r.dir && !r.hands && r.dir !== dirOf(pid, kind)) write(pid, kind); } catch (e) { log(`design files: ${e.message}`); } }
+  function has(pid, kind) { follow(pid, kind); try { return fs.statSync(path.join(dirOf(pid, kind), 'index.html')).isFile(); } catch { return false; } }
   function reveal(dir) {
     if (process.env.TRIBE_NO_REVEAL) return false;
     const cmd = process.platform === 'win32' ? 'explorer.exe' : process.platform === 'darwin' ? 'open' : 'xdg-open';

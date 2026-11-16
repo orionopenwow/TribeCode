@@ -226,6 +226,7 @@ html[data-dev=phone] .ehide-phone,html[data-dev=tablet] .ehide-tablet,html[data-
     chipKey = ''; logPaint();   // feat/flint-unify: this design's thread and chips
     status(); await loadComments();
     coworkOn();
+    if (pid && connected() && st.canEdit !== false && window.TribeWhere) window.TribeWhere.check(pid, 'site');   // pass 4: files changed outside TribeCode: ask, never write over them
     if (SG()) { SG().reset(); SG().refresh(sgApi()).catch(() => {}); }
     try { if (STU()) STU().opened(stuApi); } catch {}
     try { if (window.TribeSiteFxUI) window.TribeSiteFxUI.opened(stuApi); } catch {}   // feat/site-3d
@@ -311,7 +312,7 @@ html[data-dev=phone] .ehide-phone,html[data-dev=tablet] .ehide-tablet,html[data-
         <button type="button" class="btn sm" data-stu="agent" id="wdz-agent" title="Ask your own AI agent to change the site. You approve what it sends back.">Have my agent do it</button>
         <button type="button" class="btn sm" data-wdz="save" title="Keep this design in Saved designs (the project’s history is in Versions)">Save design</button>
         <span class="wdz-dl"><button type="button" class="btn sm primary" data-wdz="dl-html" id="wdz-dl">Download HTML</button><button type="button" class="btn sm primary wdz-dl-more" data-wdz="dlmenu" aria-label="More download options" aria-expanded="false">▾</button>
-          <span class="wdz-menu" id="wdz-dlmenu" hidden role="menu"><button type="button" role="menuitem" data-wdz="dl-html"><b>index.html</b><small>One standalone file: every page, pictures inside, no scripts</small></button><button type="button" role="menuitem" data-wdz="dl-zip"><b>.zip with pages and assets</b><small>A file per page, assets/, fonts/ and site.json</small></button><button type="button" role="menuitem" data-wdz="publish"><b>Publish to the project</b><small>Writes it to the project's site/ folder</small></button></span></span>
+          <span class="wdz-menu" id="wdz-dlmenu" hidden role="menu"><button type="button" role="menuitem" data-wdz="dl-html"><b>index.html</b><small>One standalone file: every page, pictures inside, no scripts</small></button><button type="button" role="menuitem" data-wdz="dl-zip"><b>.zip with pages and assets</b><small>A file per page, assets/, fonts/ and site.json</small></button><button type="button" role="menuitem" data-wdz="where"><b>Where it lives</b><small>Your site is already files in the project folder. Open it, share it or put it online.</small></button></span></span>
       </header>
       <div class="wdz-body">
         <aside class="wdz-left" aria-label="Blocks">
@@ -801,6 +802,7 @@ html[data-dev=phone] .ehide-phone,html[data-dev=tablet] .ehide-tablet,html[data-
     if (k === 'dlmenu') { const m = $('#wdz-dlmenu'); m.hidden = !m.hidden; a.setAttribute('aria-expanded', String(!m.hidden)); return; }
     if (k === 'dl-html' || k === 'dl-zip') { $('#wdz-dlmenu').hidden = true; return download(k === 'dl-zip' ? 'zip' : 'html'); }
     if (k === 'publish') { $('#wdz-dlmenu').hidden = true; return publish(); }
+    if (k === 'where') { $('#wdz-dlmenu').hidden = true; await flush(); if (window.TribeWhere) window.TribeWhere.open(st.pid, 'site'); return; }
     if (k === 'freeai') return window.TribeAIBridge && window.TribeAIBridge.open({ src: 'site', goal: 'Improve this website' });   // feat/agents-free
     if (k === 'save') return saveVersion();
     if (k === 'comment') return commentMode(!st.cmode);
@@ -865,7 +867,7 @@ html[data-dev=phone] .ehide-phone,html[data-dev=tablet] .ehide-tablet,html[data-
   }
   async function publish() {
     if (!st.pid || !connected()) return say('Publishing writes to a project. Download HTML works anywhere.');
-    await flush(); try { const r = await C.api(`/projects/${encodeURIComponent(st.pid)}/site-config/publish`, { method: 'POST', body: {} }); say(`Published ${r.files.filter(f => /\.html$/.test(f)).length} pages to ${r.dir}.`); } catch (e) { say(e.message); }
+    await flush(); try { const r = await C.api(`/projects/${encodeURIComponent(st.pid)}/site-config/publish`, { method: 'POST', body: {} }); say(`${r.files.filter(f => /\.html$/.test(f)).length} pages are in ${r.dir}${r.kept ? ' Your own versions are in ' + r.kept + '.' : ''}`); } catch (e) { say(e.message); }
   }
   async function saveVersion() {
     if (!st.pid || !connected()) { try { localStorage.setItem(LOCAL + '.v', JSON.stringify(st.cfg)); } catch {} return say('Saved this design on this device.'); }
