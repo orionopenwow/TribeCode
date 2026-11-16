@@ -15363,6 +15363,7 @@
         "app"
       ],
       "kit": "settings",
+      "ref": "settings",
       "license": "MIT",
       "score": 70,
       "added": "2026-11-15",
@@ -15387,6 +15388,7 @@
         "app"
       ],
       "kit": "onboarding",
+      "ref": "onboarding",
       "license": "MIT",
       "score": 70,
       "added": "2026-11-15",
@@ -15411,6 +15413,7 @@
         "app"
       ],
       "kit": "paywall",
+      "ref": "paywall",
       "license": "MIT",
       "score": 70,
       "added": "2026-11-15",
@@ -15435,6 +15438,7 @@
         "app"
       ],
       "kit": "signin",
+      "ref": "signin",
       "license": "MIT",
       "score": 70,
       "added": "2026-11-15",
@@ -15459,6 +15463,7 @@
         "app"
       ],
       "kit": "checkout",
+      "ref": "checkout",
       "license": "MIT",
       "score": 70,
       "added": "2026-11-15",
@@ -15483,6 +15488,7 @@
         "app"
       ],
       "kit": "chat",
+      "ref": "chat",
       "license": "MIT",
       "score": 70,
       "added": "2026-11-15",
@@ -15507,6 +15513,7 @@
         "app"
       ],
       "kit": "notifications",
+      "ref": "notifications",
       "license": "MIT",
       "score": 70,
       "added": "2026-11-15",
@@ -15531,6 +15538,7 @@
         "app"
       ],
       "kit": "charts",
+      "ref": "charts",
       "license": "MIT",
       "score": 70,
       "added": "2026-11-15",
@@ -15555,6 +15563,7 @@
         "app"
       ],
       "kit": "leaderboard",
+      "ref": "leaderboard",
       "license": "MIT",
       "score": 70,
       "added": "2026-11-15",
@@ -15579,6 +15588,7 @@
         "app"
       ],
       "kit": "achievements",
+      "ref": "achievements",
       "license": "MIT",
       "score": 70,
       "added": "2026-11-15",
@@ -15603,6 +15613,7 @@
         "app"
       ],
       "kit": "invite",
+      "ref": "invite",
       "license": "MIT",
       "score": 70,
       "added": "2026-11-15",
@@ -15627,6 +15638,7 @@
         "app"
       ],
       "kit": "calendar",
+      "ref": "calendar",
       "license": "MIT",
       "score": 70,
       "added": "2026-11-15",

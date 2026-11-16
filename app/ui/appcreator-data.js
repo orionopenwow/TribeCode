@@ -67,6 +67,14 @@
     bolt: '<path d="M13 3.5L5.5 13H12l-1 7.5 7.5-9.5H12z"/>',
     sparkle: '<path d="M12 4l1.8 5.2L19 11l-5.2 1.8L12 18l-1.8-5.2L5 11l5.2-1.8z"/>',
     note: '<path d="M6 3.5h8l4 4v13H6z"/><path d="M14 3.5v4h4M9 12h6M9 16h4"/>',
+    plane: '<path d="M3.5 13.5l17-7-4 13-4.5-4.5z"/><path d="M12 15l-2.5 4.5"/>',
+    house: '<path d="M4.5 11L12 4.5l7.5 6.5V20h-15z"/><path d="M10 20v-5h4v5"/>',
+    ticket: '<path d="M4 7h16v3.2a1.8 1.8 0 0 0 0 3.6V17H4v-3.2a1.8 1.8 0 0 0 0-3.6z"/><path d="M14.5 7v10" stroke-dasharray="2 2"/>',
+    soup: '<path d="M4 11h16a8 8 0 0 1-16 0z"/><path d="M9 7.5c-1-1.2 1-2 0-3.5M13 7.5c-1-1.2 1-2 0-3.5"/>',
+    fish: '<path d="M3.5 12c3-4.5 9.5-4.5 13 0-3.5 4.5-10 4.5-13 0z"/><path d="M16.5 12l4-3v6z"/><circle cx="8" cy="11.3" r=".8"/>',
+    mountain: '<path d="M3 19l6.5-11 4 6.5 2-3L21 19z"/><path d="M8 10.5l1.5 1.5 1.5-1.5"/>',
+    car: '<path d="M5 16V12l2-4.5h10L19 12v4z"/><path d="M5 12h14"/><circle cx="8" cy="16.5" r="1.6"/><circle cx="16" cy="16.5" r="1.6"/>',
+    wave: '<path d="M3 9c3-2.5 6 2.5 9 0s6 2.5 9 0M3 14c3-2.5 6 2.5 9 0s6 2.5 9 0"/>',
   };
   const ICON_NAMES = Object.keys(ICONS);
 

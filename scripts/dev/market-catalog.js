@@ -24,7 +24,7 @@ const OUT = path.join(ROOT, 'app', 'ui', 'market-catalog.json');
 const THUMBS = path.join(ROOT, 'app', 'ui', 'market-thumbs');
 const OWN = 'https://github.com/orionopenwow/TribeCode';
 const KINDS = ['widget', 'company-template', 'playbook', 'skill', 'library', 'tool', 'studio', 'site-template', 'connector', 'asset-pack', 'legal', 'academy', 'app-kit'];
-const KEEP = ['id', 'kind', 'emoji', 'title', 'summary', 'tags', 'for', 'seat', 'url', 'repo', 'path', 'license', 'author', 'source', 'docs', 'updated', 'stars', 'thumb', 'thumbWide', 'install', 'mcp', 'score', 'added', 'featured', 'steps', 'verified', 'kit'];
+const KEEP = ['id', 'kind', 'emoji', 'title', 'summary', 'tags', 'for', 'seat', 'url', 'repo', 'path', 'license', 'author', 'source', 'docs', 'updated', 'stars', 'thumb', 'thumbWide', 'install', 'mcp', 'score', 'added', 'featured', 'steps', 'verified', 'kit', 'ref'];
 
 function slim(src) {
   const items = (src.items || []).map(it => Object.fromEntries(KEEP.filter(k => it[k] !== undefined).map(k => [k, it[k]])));

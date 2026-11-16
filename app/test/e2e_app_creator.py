@@ -57,6 +57,9 @@ for (const t of L) { const d = C.template(t.id);
   for (const s of d.screens) { const h = C.screenHTML(d, s, { edit: true }); if (/undefined|NaN/.test(h)) bad.push(t.id + '/' + s.id); }
   const reach = new Set([d.start]); let ch = true; while (ch) { ch = false; for (const s of d.screens) if (reach.has(s.id)) for (const b of s.blocks) for (const l of Object.values(b.links)) if (!reach.has(l.to)) { reach.add(l.to); ch = true; } }
   d.screens.filter(s => !reach.has(s.id)).forEach(s => bad.push('unreachable ' + t.id + '/' + s.id)); if (d.screens.length < 2) bad.push('one screen ' + t.id); }
+const IC = new Set(C.ICON_NAMES), IL = new Set(C.ILL_NAMES);
+const names = (o, w) => { if (!o || typeof o !== 'object') return; for (const [k, v] of Object.entries(o)) { if (typeof v === 'string') { if ((k === 'icon' || k === 'action') && v && !IC.has(v)) bad.push(`no icon ${v} (${w})`); if (k === 'illus' && v && !IL.has(v)) bad.push(`no picture ${v} (${w})`); } else names(v, w); } };
+for (const t of C.TEMPLATES) names(t.build(), t.id); for (const [k, K] of Object.entries(C.KITS)) names(K.screens(), 'kit ' + k);
 const looks = new Set(C.PRESETS.map(p => { const t = p.theme; return [t.mode, t.font, t.radius, t.density, t.surface, t.motion, t.icons].join(); }));
 console.log(JSON.stringify({ templates: L.length, sweet: L.filter(t => t.sweet).length, parts: C.BLOCK_TYPES.length, kits: Object.keys(C.KITS).length, presets: C.PRESETS.length, looks: looks.size, bad }));
 """, str(ROOT / "app" / "ui" / "appcreator-core.js")], capture_output=True, text=True, check=True)
@@ -211,7 +214,16 @@ def main():
                 for btn in bar.locator("button").all():
                     bb = btn.bounding_box(); assert bb["height"] >= 40, bb
             if SHOTS: mp.screenshot(path=str(SHOT / "app-creator-phone.png"))
-            m.close(); b.close()
+            m.close()
+            # the standout demos, one picture each, for the website (only with --shots)
+            if SHOTS:
+                s = b.new_context(viewport={"width": 390, "height": 844}, device_scale_factor=2)
+                sp = s.new_page(); sp.goto(BASE + "/?skipIntro=1"); sp.wait_for_function("window.TribeAppCore && window.TribeAppCreator", timeout=20000)
+                for tid in sp.evaluate("TribeAppCore.templateList().filter(t => t.sweet).map(t => t.id)"):
+                    sp.evaluate("""id => { const C = TribeAppCore, d = C.template(id); document.body.innerHTML = `<style>${C.css(d, { scope: '.ax' })} html,body{margin:0}</style><div class="ax" ${C.attrs(d)} style="position:fixed;inset:0">${C.screenHTML(d, C.findScreen(d, d.start))}</div>`; }""", tid)
+                    sp.wait_for_timeout(250); sp.screenshot(path=str(SHOT / f"app-creator-demo-{tid}.png"))
+                s.close()
+            b.close()
         assert not errors, errors[:6]
         print(f"e2e_app_creator: OK ({stats['templates']} templates, {stats['parts']} parts + {stats['kits']} screen kits, {stats['presets']} looks; gallery, typing + undo, recolour, link + play, Flint, shelf kit, web app export tapped, Expo, brief, 390px)")
     finally:

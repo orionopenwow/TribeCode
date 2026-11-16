@@ -250,6 +250,7 @@
     const stage = root.querySelector('#apc-stage'), d = st.doc, Co = A(), phone = root.querySelector('#apc-phone');
     phone.className = `apc-phone apc-${d.platform}`; fit();
     if (st.mode === 'play') {
+      const bar = root.querySelector('#apc-bar'); if (bar) bar.hidden = true;
       stage.innerHTML = `<div class="ax apc-ax" ${Co.attrs(d)} data-i18n-skip style="${Co.vars(d.theme)}">${d.screens.map(s => Co.screenHTML(d, s, { edit: false })).join('')}</div>`;
       Co.AxRun(stage.firstChild, { start: st.screen, onGo: id => { st.screen = id; } });
       return;

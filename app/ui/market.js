@@ -463,13 +463,24 @@
     const it = await itemOf(id); if (!it) return;
     const loc = localMode();
     // App kits drop their screens into App Creator (app/ui/appcreator.js), with or without a tribe
-    if (it.kind === 'app-kit' && window.TribeAppCreator) {
-      if (!loc && pid()) C.api(`/market/${encodeURIComponent(id)}/use`, { method: 'POST', body: { project: pid(), only: 'open' } }).catch(() => {});
-      if (window.TribeMarket && window.TribeMarket.close) { try { window.TribeMarket.close(); } catch {} }
-      const acs = window.TribeAppCreator.state();
-      if (acs && acs.open) window.TribeAppCreator.installKit(it.kit); else await window.TribeAppCreator.open({ kit: it.kit, pid: loc ? '' : pid() });
-      result(`${it.title}: added to your app in App Creator`);
-      return { ok: true, kit: it.kit };
+    if (it.kind === 'app-kit' && window.TribeAppCreator && window.TribeAppCore) {
+      const AC = window.TribeAppCreator, acs = AC.state(), kit = it.kit || it.ref, openIt = ['Open App Creator', () => { if (window.TribeMarket && window.TribeMarket.close) { try { window.TribeMarket.close(); } catch {} } AC.open({ pid: loc ? '' : pid() }); }];
+      if (acs && acs.open) {   // the design is open: add it there (one Undo), and count the use
+        if (!loc && pid()) C.api(`/market/${encodeURIComponent(id)}/use`, { method: 'POST', body: { project: pid(), only: 'open' } }).catch(() => {});
+        AC.installKit(kit); result(`${it.title}: added to your app`); return { ok: true, kit };
+      }
+      if (!loc && pid()) {   // the host adds the screens to the project's app design (server/appcreator.js addKit)
+        const r = await C.api(`/market/${encodeURIComponent(id)}/use`, { method: 'POST', body: { project: pid() } });
+        if (r.pending) { result(r.message || 'Waiting'); return r; }
+        refreshItem(r.item || { ...it, installed: true }); result(r.message || `${it.title} added to your app`, null, openIt); return r;
+      }
+      // no tribe: the screens join the app design kept on this device
+      const key = 'tribecode.appcreator.local', Co = window.TribeAppCore;
+      let d = null; try { d = JSON.parse(localStorage.getItem(key) || 'null'); } catch {}
+      const r = Co.apply(d || Co.blank('My app'), { op: 'kit', kit }); try { localStorage.setItem(key, JSON.stringify(r.doc)); } catch {}
+      const m = localInst(); m[it.id] = { kit, at: new Date().toISOString() }; saveLocal(m);
+      refreshItem({ ...it, installed: true }); result(`${it.title}: added to your app on this device`, () => remove(id), openIt);
+      return { ok: true, local: true, kit };
     }
     if (loc && !(st.target && st.target.type === 'local')) return askPick(id);
     if (!loc && !pid()) return askPick(id);

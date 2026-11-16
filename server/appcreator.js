@@ -10,6 +10,7 @@
 //                           so the Phone app card can install dependencies and show the Expo Go QR code
 //        Files are written only inside that one folder, and the folder is replaced as a whole on each export. A project
 //        with no code folder gets one first (server/setup.js ensureRepo), as the website templates do.
+// addKit(pid, kit, me): the add-on shelf's app kits land here (server/market.js).
 // Stored in .tribe/appdesign/<pid>.json. No AI anywhere; "Have my AI build it" is the client posting the brief to #agents.
 'use strict';
 const fs = require('node:fs');
@@ -86,5 +87,14 @@ module.exports = function appCreator({ P, store, root, broadcast = () => {}, nam
       return fail(res, 404, 'not found');
     } catch (e) { return fail(res, e.status || 500, e.message); }
   }
-  return { route, load: pid => { const r = loadRaw(pid); return r ? A.normalize(r) : null; } };
+  // the add-on shelf's app kits (server/market.js): the kit's screens join the project's app design (a blank app when none yet)
+  function addKit(pid, kitId, me) {
+    const p = P.get(pid); if (!p) throw err(404, 'project not found');
+    if (!A.KITS[kitId]) throw err(400, 'no such app kit');
+    const raw = loadRaw(pid), doc = raw ? A.normalize(raw) : A.blank(p.name || 'My app');
+    const r = A.apply(doc, { op: 'kit', kit: kitId });
+    save(pid, r.doc, me);
+    return { added: r.added || [], say: r.say };
+  }
+  return { route, addKit, load: pid => { const r = loadRaw(pid); return r ? A.normalize(r) : null; } };
 };
