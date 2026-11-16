@@ -4,7 +4,7 @@ The one document that remembers the greater vision and everything in flight. Upd
 
 Last updated: 2026-11-12 (v0.31.2)
 
-Latest: **v0.38.1** (2026-11-14). Free cloud in one step (cloudhome.js, used by setuplocal.js, phonehost.js, tribenew.js). v0.38.0, same day: Website editor overhaul (siteparts.js, sitesuggest.js, server/sitesuggest.js, sitecfg.js), moving backgrounds (sitefx.js, app/ui/sitefx/), group styles (server/groupstyle.js, server/perms.js), Learn (templates/quickguides.json), language runtime (i18n.js, i18n-more.js, flintlang.js), the claims ledger (docs/CLAIMS.md, scripts/dev/site-facts.js) and live screenshots (scripts/readme-shots.py).
+Latest: **v0.39.0** (2026-11-15). App Creator (appcreator*.js, server/appcreator.js), Motion Studio (motionkit.js, motionsocial.js, motionstudio.js, server/motionstudio.js), Share a clip (shareclip*.js), Launch kit (launchkit*.js, server/launchkit.js), the suggestion engine (suggest*.js, server/suggest.js), the design library (assetlib*.js, fontlib.js), site/create.html. v0.38.1 before it: free cloud in one step (cloudhome.js).
 
 Earlier: **v0.35.0** (2026-11-13). The one invite sheet (inviteone.js), one Claude per person and the claude.ai connector sign-in (server/claudeauth.js); the calm first dashboard and on-device parity (devicelocal.js, scripts/dev/app-bundle.js); passkeys, with two-step sign-in and Stripe payments built but off by default (server/auth3.js, stripe.js; TRIBE_TWO_STEP, TRIBE_PAYMENTS).
 

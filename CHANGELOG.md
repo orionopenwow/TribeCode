@@ -1,5 +1,16 @@
 # Changelog
 
+## v0.39.0
+- **App Creator**: make a phone app by clicking. 54 designed apps to start from, 61 parts, 51 ready-made screens and 56 looks. Link screens and play them as a prototype, then export a web app that works offline, an Expo project, or a brief for your AI helpers. Flint makes and edits apps with no AI.
+- **Motion Studio**: looping motion graphics on the beat. One shape morphs while a cursor clicks and drags, and the camera frames each state. 128 templates (69 social post layouts), 54 feels, your own song with the beat found in the browser, and export as video, GIF, a web page or a section of your website.
+- **Share a clip**: a short video of your project for X, TikTok, Instagram or YouTube from app screens, a screenshot, a timelapse or your pictures, with captions and a Made with TribeCode end card you can turn off.
+- **Launch kit**: store screenshots in 50 styles at every App Store and Google Play size, app icons in 54 styles, store text with limits and checks, 17 paywall designs (payments are not connected), and the Apple and Google checklist. From Publish.
+- **Suggestions for the whole tribe**: photos, files, repeated edits, chat and brand changes turn into a few ideas a day, each saying who it came from. Apply, Undo, Not like this; it learns what your tribe wants. Settings › Suggestions: Gentle, Often or Off. A member's own AI can propose ideas too, and they still wait for Apply.
+- **One design library**: 664 items with their licences and a search: 56 palettes, 68 font pairs, 153 icons, 52 sounds, 51 pictures, 63 website sections, 61 app parts, 51 screens, 55 moving backgrounds and 54 motion feels, in the website designer, App Creator, Motion Studio and Launch kit. Colour packs install from the shelf. Fonts beyond the 10 built in load from Google Fonts when you pick one.
+- **Website**: a new page for apps, clips and store pages, and a home section with clips drawn by the app's own engine.
+- **Flint**: understands the new tools with no AI ("make me a habit tracker app", "make it 9:16", "make store screenshots", "what do you suggest?", "use the sunset palette").
+- **Phones**: App Creator, Motion Studio, Share a clip, the Launch kit, Suggestions and the library all work at 390px with 40px targets.
+
 ## v0.38.1
 - **Free cloud in one step**: every place that offers Free cloud now shows the same step. One button opens Render; you bring back your cloud address and setup code, press Move it there, and the app makes you the host and moves your project in. No more opening the address, making an invite link and pasting it back.
 - **Honest wording**: the step says up front that the free cloud naps after 15 minutes with nobody there, takes about a minute to wake, and wipes its files on a nap while browsers put them back. "Always online" is gone.
