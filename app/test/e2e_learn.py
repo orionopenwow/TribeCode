@@ -90,6 +90,11 @@ def main():
             pg.evaluate("TribeFlintLessons.unring()")
             pg.evaluate("TribeQuick.show('language')"); pg.wait_for_selector(".fls-ring"); assert pg.locator("#set-lang").is_visible()
             pg.evaluate("TribeFlintLessons.unring(); TribeSettings.close()")
+            # pass 3: a guide whose Show me goes to Design opens the creation flow and rings the App tile (it used to go nowhere)
+            assert pg.evaluate("!!(window.TribeClient && TribeClient.project && TribeClient.project() && window.TribeDesignFlow && window.TribeDesignData)"), "a project is open"
+            pg.evaluate("TribeQuick.show('make-app')"); pg.wait_for_selector(".dfl-kind[data-kind='app']", state="visible", timeout=8000)
+            pg.wait_for_selector(".fls-ring", timeout=8000); pg.evaluate("TribeFlintLessons.unring()")
+            pg.evaluate("TribeShell.go('canvas')"); pg.wait_for_selector(".dfl", state="visible", timeout=8000)   # Ctrl K's Design is the same flow as the row
             assert pg.evaluate("TribeLearn.get().quick['whats-next'].seen > 0") and not pg.evaluate("TribeLearn.done('quick', 'whats-next')"), "seen is not done"
 
             # 3. Ctrl K lists them; an empty state's How it works opens the card for that kind of place

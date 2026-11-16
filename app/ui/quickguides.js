@@ -93,7 +93,8 @@
   }
 
   // ---------- Do it for me / Show me ----------
-  const go = key => { try { const sh = W.TribeShell; if (W.TribeMarket && W.TribeMarket.unpage && key !== 'market') W.TribeMarket.unpage(); if (sh && sh.go) return sh.go(key); if (W.TribeApp && W.TribeApp.show) W.TribeApp.show(key); } catch {} };
+  const go = key => { try { if (key === 'design' && W.TribeDesignFlow && W.TribeDesignFlow.open) return W.TribeDesignFlow.open({});   // pass 3: there is no 'design' place in the shell; Design is the creation flow
+    const sh = W.TribeShell; if (W.TribeMarket && W.TribeMarket.unpage && key !== 'market') W.TribeMarket.unpage(); if (sh && sh.go) return sh.go(key); if (W.TribeApp && W.TribeApp.show) W.TribeApp.show(key); } catch {} };
   const fn = a => { const [g, m] = String(a).split('.'); const o = W[g]; return o && typeof o[m] === 'function' ? () => o[m]() : null; };
   const RUN = {
     next: a => W.TribeNextStep && (a === 'open' ? W.TribeNextStep.open() : W.TribeNextStep.act(a)),
