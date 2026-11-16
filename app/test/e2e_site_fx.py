@@ -85,7 +85,7 @@ def main():
     # ---- the model, with no browser
     out = subprocess.run(["node", "-e", """
 const S = require('./app/ui/sitecfg.js'), FX = require('./app/ui/sitefx.js'), assert = require('node:assert');
-assert.equal(FX.LIST.length, 13);
+assert.ok(FX.LIST.length >= 50, 'at least 50 backgrounds');
 let c = S.blank('Fx Test'); const pg = c.pages[0], h = pg.blocks[0];
 for (const k of FX.LIST) {
   const c2 = S.normalize(FX.setFx(c, pg.id, h.id, { kind: k })), f = c2.pages[0].blocks[0].fx;
@@ -157,7 +157,7 @@ console.log('model ok');
             fr = pg.frame_locator("#wdz-frame")
             wait_frame(pg, "!!document.querySelector('[data-block]')")
             fr.locator(f"#b-{h0['id']}").click(position={"x": 8, "y": 8}); pg.wait_for_selector("#sfx-kind", timeout=8000)
-            assert pg.locator("#sfx-kind option").count() == 14, "None and the thirteen backgrounds"
+            assert pg.locator("#sfx-kind option").count() == len(kinds) + 1, "None and every background"
             assert pg.locator("#sfx-box [data-sfx=s]").count() == 0, "no sliders until one is picked"
             pg.wait_for_timeout(700)
             plain = Image.open(io.BytesIO(fr.locator(f"#b-{h0['id']}").screenshot())).convert("RGB")
@@ -208,7 +208,7 @@ console.log('model ok');
             # ---- the section picker: a tile adds an intro section with that background, one undo step
             nb = len(cfg(pg)["pages"][0]["blocks"])
             pg.click("[data-wdz=picker]"); pg.wait_for_selector("#wdz-picker [data-fxadd=drift]")
-            assert pg.locator("#wdz-picker [data-fxadd]").count() == 13
+            assert pg.locator("#wdz-picker [data-fxadd]").count() == len(kinds)
             pg.wait_for_function("[...document.querySelectorAll('#wdz-picker [data-fxadd] img')].every(i => i.complete && i.naturalWidth === 240)", timeout=10000)   # our own thumbnails load
             pg.locator("#wdz-picker [data-fxadd=dots]").scroll_into_view_if_needed(); pg.evaluate("document.querySelector('#wdz-picker [data-fxadd=warp]').scrollIntoView({ block: 'end' })")
             shot(pg, "site-3d-picker-1440.png")
@@ -304,7 +304,7 @@ console.log('model ok');
             shot(m, "site-3d-designer-390.png")
             c6.close(); b3.close()
         assert not errors, errors
-        print("e2e_site_fx: OK (13 backgrounds draw, controls, undo, editable words, picker, Flint, zip, one file, publish, offline, reduced motion, phones, no WebGL)")
+        print(f"e2e_site_fx: OK ({len(kinds)} backgrounds draw, controls, undo, editable words, picker, Flint, zip, one file, publish, offline, reduced motion, phones, no WebGL)")
     finally:
         srv.terminate()
         try: srv.wait(timeout=5)

@@ -13,18 +13,21 @@
 (function (root, factory) {
   const data = typeof module === 'object' && module.exports ? require('./appcreator-data.js') : root.TribeAppData;
   const more = typeof module === 'object' && module.exports ? (() => { try { return require('./appcreator-more.js'); } catch { return null; } })() : root.TribeAppMore;
-  const api = factory(data, more);
+  const parts = typeof module === 'object' && module.exports ? (() => { try { return require('./appcreator-parts.js'); } catch { return null; } })() : root.TribeAppParts;
+  const api = factory(data, more, parts);
   if (typeof module === 'object' && module.exports) module.exports = api;
   else root.TribeAppCore = api;
-})(typeof self !== 'undefined' ? self : this, function (D, MORE) {
+})(typeof self !== 'undefined' ? self : this, function (D, MORE, PARTS) {
   'use strict';
+  // appcreator-parts.js (feat/asset-libs): more icons, parts, starting words and screens join the base sets here
+  if (PARTS) { Object.assign(D.ICONS, PARTS.ICONS || {}); D.ICON_NAMES = Object.keys(D.ICONS); D.DEFAULTS = Object.assign({}, D.DEFAULTS, PARTS.DEFAULTS || {}); }
   const clone = o => JSON.parse(JSON.stringify(o));
   const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const str = (v, n) => String(v == null ? '' : v).slice(0, n || 400);
   const HEX = v => /^#[0-9a-f]{6}$/i.test(v || '') ? v.toUpperCase() : '';
   const slug = s => String(s || '').toLowerCase().normalize('NFKD').replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 30) || 'screen';
   const TEMPLATES = D.TEMPLATES.concat(MORE && MORE.TEMPLATES ? MORE.TEMPLATES : []);
-  const KITS = Object.assign({}, D.KITS, MORE && MORE.KITS ? MORE.KITS : {});
+  const KITS = Object.assign({}, D.KITS, MORE && MORE.KITS ? MORE.KITS : {}, PARTS && PARTS.KITS ? PARTS.KITS : {});
 
   // ---------- colours ----------
   const hexRgb = h => [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16));
@@ -216,8 +219,9 @@
     grid: { label: 'Tile grid', icon: 'grid', group: 'Content', lists: { items: 'title' }, render: (p, h) => `<div class="ax-sec">${p.title ? h.e('title', p.title, 'h2', 'ax-h2') : ''}<div class="ax-grid">${(p.items || []).map((it, i) => `<div class="ax-gi" data-item="items.${i}"${h.lk('items.' + i)}><div class="ax-art"${h.im('items.' + i + '.illus')}>${illus(it.illus, h.theme)}</div>${h.e('items.' + i + '.title', it.title, 'b')}${it.price ? h.e('items.' + i + '.price', it.price, 'small') : ''}</div>`).join('')}</div></div>` },
     calendar: { label: 'Day and time picker', icon: 'calendar', group: 'Input', lists: { days: '', slots: '' }, render: (p, h) => `<div class="ax-sec">${p.title ? h.e('title', p.title, 'h2', 'ax-h2') : ''}<div class="ax-days">${(p.days || []).map((d, i) => `<button class="ax-day${i === (p.on | 0) ? ' on' : ''}" data-item="days.${i}" data-pick="day">${h.e('days.' + i, d, 'span')}</button>`).join('')}</div><div class="ax-slots">${(p.slots || []).map((s, i) => `<button class="ax-slot${i === (p.pick | 0) ? ' on' : ''}" data-item="slots.${i}" data-pick="slot">${h.e('slots.' + i, s, 'span')}</button>`).join('')}</div></div>` },
   };
+  if (PARTS && PARTS.BLOCKS) for (const [k, B] of Object.entries(PARTS.BLOCKS)) if (!BLOCKS[k]) BLOCKS[k] = { ...B, render: (p, h) => B.render(p, h, { icon, illus, esc }) };
   const BLOCK_TYPES = Object.keys(BLOCKS);
-  const GROUPS = ['Navigation', 'Text', 'Content', 'Input', 'Social', 'Data', 'Media', 'Flows'];
+  const GROUPS = ['Navigation', 'Text', 'Content', 'Input', 'Social', 'Commerce', 'Data', 'Media', 'Flows'];
 
   // ---------- the document ----------
   const rid = () => Math.random().toString(36).slice(2, 8);
@@ -364,6 +368,7 @@
 & .ax-grid{display:grid;grid-template-columns:1fr 1fr;gap:var(--ax-gap)}& .ax-gi{display:flex;flex-direction:column;gap:2px}& .ax-gi .ax-art{aspect-ratio:1;margin-bottom:6px}& .ax-gi small{color:var(--ax-muted);font-size:13px}
 & .ax-days,& .ax-slots{display:flex;gap:8px;flex-wrap:wrap}& .ax-days{flex-wrap:nowrap;overflow-x:auto;margin-bottom:12px;scrollbar-width:none}& .ax-day{flex:none;min-width:64px;min-height:56px;border-radius:var(--ax-r);border:1px solid var(--ax-line);font-size:13px;font-weight:600;display:grid;place-items:center;padding:6px}& .ax-slot{min-height:44px;padding:0 16px;border-radius:var(--ax-rb);border:1px solid var(--ax-line);font-weight:600}& .ax-day.on,& .ax-slot.on{background:var(--ax-accent);color:var(--ax-on);border-color:var(--ax-accent)}
 & .ax-bwrap{display:flex}
+${PARTS && PARTS.CSS ? PARTS.CSS : ''}
 @media (prefers-reduced-motion: reduce){& *{transition:none!important;animation:none!important}}`));
   }
 
@@ -488,7 +493,10 @@ ${screens}
   }
   const FEATHER = { home: 'home', search: 'search', plus: 'plus', user: 'user', users: 'users', settings: 'settings', heart: 'heart', chat: 'message-circle', bell: 'bell', cart: 'shopping-cart', calendar: 'calendar', chart: 'bar-chart-2', check: 'check', play: 'play', pause: 'pause', star: 'star', book: 'book', pin: 'map-pin', clock: 'clock', flame: 'zap', leaf: 'feather', dumbbell: 'activity', wallet: 'credit-card', music: 'music', image: 'image', back: 'chevron-left', chevron: 'chevron-right', more: 'more-horizontal', close: 'x', lock: 'lock', mail: 'mail', gift: 'gift', list: 'list', grid: 'grid', sun: 'sun', moon: 'moon', bookmark: 'bookmark', share: 'share', filter: 'filter', camera: 'camera', trophy: 'award', game: 'play-circle', edit: 'edit-2', trash: 'trash-2', send: 'send', mic: 'mic', globe: 'globe', coffee: 'coffee', food: 'coffee', target: 'target', tag: 'tag', bolt: 'zap', sparkle: 'star', note: 'file-text', plane: 'navigation', house: 'home', ticket: 'tag', soup: 'coffee', fish: 'anchor', mountain: 'triangle', car: 'truck', wave: 'wind' };
   function expo(doc) {
-    doc = normalize(doc); const k = palette(doc.theme), t = normTheme(doc.theme), [rc, rs, rb] = RADII[t.radius], [g, pd] = DENS[t.density];
+    doc = normalize(doc);
+    // parts from appcreator-parts.js have no native code: the export draws each as the plainer part it names, same words
+    if (PARTS && PARTS.basic) for (const s of doc.screens) s.blocks = s.blocks.map(bk => { if (!PARTS.BLOCKS[bk.type]) return bk; const r = PARTS.basic(bk.type, bk.props); return r ? { ...bk, type: r.type, props: Object.assign(clone(D.DEFAULTS[r.type] || {}), r.props) } : bk; });
+    const k = palette(doc.theme), t = normTheme(doc.theme), [rc, rs, rb] = RADII[t.radius], [g, pd] = DENS[t.density];
     const sl = slug(doc.name) || 'app';
     const pkg = JSON.stringify({ name: sl, version: '1.0.0', main: 'node_modules/expo/AppEntry.js', private: true, scripts: { start: 'expo start', android: 'expo start --android', ios: 'expo start --ios', web: 'expo start --web' }, dependencies: { expo: '~52.0.0', 'expo-status-bar': '~2.0.0', '@expo/vector-icons': '^14.0.0', react: '18.3.1', 'react-native': '0.76.5' } }, null, 2);
     const appJson = JSON.stringify({ expo: { name: doc.name, slug: sl, version: '1.0.0', orientation: 'portrait', userInterfaceStyle: t.mode === 'dark' ? 'dark' : 'light', backgroundColor: k.bg, ios: { supportsTablet: false }, android: {} } }, null, 2);
