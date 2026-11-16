@@ -159,8 +159,8 @@
   }
   const PLACEHOLDER = { motion: 'A launch clip for Lantern Run in teal, snappy', website: 'A site for Sunrise Bakery, warm colors, with the menu', app: 'A kanban board for our band called Gig Board, in teal', game: 'A floaty endless runner called Fox Dash in pink', screen: 'For Ember Coffee, in teal', slides: 'Our game jam recap: Lantern Run', poster: 'Open mic night, Friday 8pm, in orange', whiteboard: 'What should our first level feel like?', logo: 'Lantern Studio, warm and friendly, in amber' };
   async function gallery(kind) {
-    if (!host) return;
     if (kind === 'website') return startWebsite();   // p5-start: one gallery for websites: the designer's own (kinds first)
+    if (!host) return;
     view = 'gallery'; kindNow = kind;
     const k = D().KINDS.find(x => x.id === kind); if (!k) return kinds();
     document.body.classList.add('dfl-deep');

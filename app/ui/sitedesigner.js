@@ -1246,6 +1246,7 @@ html[data-dev=phone] .ehide-phone,html[data-dev=tablet] .ehide-tablet,html[data-
       if (r.ask) asked = r.ask; if (r.chips) chips = r.chips;
       said.push(r.say);
       if (r.need === 'html' || r.need === 'zip') { if (work !== st.cfg) { commitAll(before, work); } await download(r.need); st.log.pop(); continue; }
+      if (r.need === 'template' && r.template === 'app-redirect') { const pgg = pageNow(), gb0 = pgg.blocks.find(b => b.type === 'go'); if (gb0) { commitAll(before, work); if (r.go) { commit(S().setProp(st.cfg, pgg.id, gb0.id, 'to', r.go)); said.pop(); said.push(`${tr('This page sends people to')} ${r.go}.`); } else { said.pop(); said.push(tr('This page already sends people on: put the address on the right.')); st.sel = { block: gb0.id, path: '', kind: 'block' }; } work = st.cfg; continue; } }   // p5-start: already the page that sends people on: only the address changes
       if (r.need === 'template') { commitAll(before, work); if (r.template === 'app-redirect' && hasSite() && !(await okToReplace())) { said.pop(); said.push(tr('Kept your site.')); continue; } await useTemplate(r.template); if (r.go) { const pg0 = st.cfg.pages[0], gb = pg0.blocks.find(b => b.type === 'go'); if (gb) commit(S().setProp(st.cfg, pg0.id, gb.id, 'to', r.go)); } work = st.cfg; continue; }
       if (r.need === 'start') { commitAll(before, work); await showStart(hasSite(), r.kind || ''); continue; }   // p5-start
       if (r.need === 'publish') { commitAll(before, work); paint(); await publish(); st.log.pop(); continue; }

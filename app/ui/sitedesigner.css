@@ -307,7 +307,7 @@ body.wdz-open { overflow: hidden; }
   .wdz-kmore .wdz-kind { grid-template-columns: auto 1fr; align-items: center; min-height: 52px; }
   .wdz-kmore .wdz-kart { width: 40px; height: 32px; }
   .wdz-kmore .wdz-kart svg { width: 32px; height: 24px; }
-  .wdz-kfoot .btn { min-height: 40px; }
+  #wdz .wdz-start .btn { height: auto; min-height: 40px; }
 }
 @media (prefers-reduced-motion: reduce) { .wdz-kind { transition: none; } }
 .wdz-gcats[hidden] { display: none; }

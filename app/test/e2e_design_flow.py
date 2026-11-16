@@ -4,17 +4,17 @@ On this device (no tribe, app/ui served as plain files):
   Home › Design shows "What are you making?" with nine kinds and stroke icons, and Continue (the files view) below.
   Game shows the starters with real thumbnails, a Blank card and the optional prompt. Picking Breakout with "a much
   faster breakout in pink" opens the workspace: the game runs in a sandboxed frame with the ball faster and the bricks
-  pink (Flint's free words → knobs), its knobs change it live, and the Plan card has the game's seven steps. Ticking a
-  step survives a reload; "Add these steps as tasks" puts the rest on the task board.
-  Website hands off to the website designer with the template, and the plan docks beside it.
-  A screen template opens the canvas with the screen on it; the plan docks there too.
+  pink (Flint's free words → knobs) and its knobs change it live. The Plan is switched off for now (p5-start): no plan
+  card, chip or dock anywhere; Continue (Recent) still reopens the game with its knobs after a reload.
+  Website opens the website designer's start screen (what kind of site?), the one website gallery.
+  A screen template opens the canvas with the screen on it.
   Phone 390px: no sideways scroll on the kinds, the gallery or the workspace.
 In a tribe (a project):
   Design in the project's sidebar opens the flow (not the canvas). Breakout with a prompt builds into the project's code
-  (a commit with config.js set from the words), the plan lives in .tribe/design-plans and ticks off for everyone,
-  "Add as tasks" makes real tasks, Website hands off to the designer for this project. Flint's free builds pick the
+  (a commit with config.js set from the words), kept in .tribe/design-plans so Continue finds it; Website opens the
+  designer's start screen for this project. Flint's free builds pick the
   starter for "make a snake game called sssnek".
-No console errors. --shots writes docs/screenshots/design-flow-1.png, design-flow-gallery.png, design-flow-plan.png.
+No console errors. --shots writes docs/screenshots/design-flow-1.png, design-flow-gallery.png.
 Usage: python3 app/test/e2e_design_flow.py [--shots]
 """
 import functools, http.server, json, os, subprocess, sys, tempfile, threading, time, urllib.request, urllib.error
@@ -94,12 +94,11 @@ def on_this_device(b):
     pg.fill("#dfl-ask", "A much faster breakout called Brick Party in pink")
     shot(pg, "design-flow-gallery")
     pg.click(".dfl-tpl[data-tpl=breakout]")
-    pg.wait_for_selector("#dfl[data-step=workspace] #dfl-plan", timeout=15000)
+    pg.wait_for_selector("#dfl[data-step=workspace] #dfl-frame", timeout=15000)
+    assert pg.locator("#dfl-plan, #dfl-plan-host, #dfl-chip:visible, #dfl-dock:visible").count() == 0, "no plan anywhere"
     src = pg.eval_on_selector("#dfl-frame", "f => f.srcdoc")
     assert 'ballSpeed: 5,' in src and 'brick: "#FF6F8E",' in src, "the prompt set the knobs (free): " + src[src.find('window.CONFIG'):src.find('window.CONFIG') + 200]
     assert pg.locator("#dfl .dfl-said").is_visible() and "Basic · no AI" in pg.inner_text("#dfl .dfl-said")
-    steps = pg.eval_on_selector_all("#dfl-plan .dfl-st b", "els => els.map(e => e.textContent.replace(/^\\d+/, ''))")
-    assert steps == ["Idea", "Core loop", "Art style", "Prototype", "Playtest with the tribe", "Polish", "Publish"], steps
     # the game runs in the frame (a canvas with pixels)
     pg.wait_for_timeout(600)
     fr = pg.frame_locator("#dfl-frame")
@@ -107,57 +106,20 @@ def on_this_device(b):
     # a knob changes it live
     pg.eval_on_selector("[data-k=rows]", "e => { e.value = 6; e.dispatchEvent(new Event('input', { bubbles: true })); }")
     pg.wait_for_function("document.querySelector('#dfl-frame').srcdoc.includes('rows: 6,')", timeout=5000)
-    # tick a step; it survives a reload
-    pg.click("#dfl-plan [data-step=idea] .dfl-tick")
-    pg.wait_for_selector("#dfl-plan [data-step=idea].done")
-    assert pg.inner_text("#dfl-plan .dfl-prog") == "1/7"
-    if SHOTS:   # a wide window, so the plan sits beside the game
-        pg.set_viewport_size({"width": 1680, "height": 1000}); pg.wait_for_timeout(300)
-        pg.evaluate("window.scrollTo(0, 0); let e = document.querySelector('#dfl'); while (e) { e.scrollTop = 0; e = e.parentElement; }")
-        shot(pg, "design-flow-plan"); pg.set_viewport_size({"width": 1360, "height": 860})
     key = pg.evaluate("TribeDesignFlow.plan().key")
     pg.reload(); pg.wait_for_selector("#dfl[data-step=kinds]", timeout=20000)
     pg.wait_for_selector(f"#dfl-cont-plans [data-plan='{key}']", timeout=5000)
-    assert "plan 1/7" in pg.inner_text(f"[data-plan='{key}']")
-    pg.click(f"#dfl-cont-plans [data-plan='{key}']"); pg.wait_for_selector("#dfl[data-step=workspace] #dfl-plan [data-step=idea].done", timeout=10000)
+    assert "plan" not in pg.inner_text(f"[data-plan='{key}']").lower() and "recent" in pg.inner_text("#dfl-cont-plans").lower()
+    pg.click(f"#dfl-cont-plans [data-plan='{key}']"); pg.wait_for_selector("#dfl[data-step=workspace] #dfl-frame", timeout=10000)
     assert 'rows: 6,' in pg.eval_on_selector("#dfl-frame", "f => f.srcdoc"), "the knob was saved with the game"
-    # Add these steps as tasks
-    before = pg.evaluate("TribeTasks.all().length")
-    pg.click("#dfl-addtasks")
-    pg.wait_for_function(f"TribeTasks.all().length === {before} + 6", timeout=8000)
-    assert any(t["title"] == "Brick Party: Core loop" for t in pg.evaluate("TribeTasks.all()")), pg.evaluate("TribeTasks.all().map(t => t.title)")
-
-    # Website: the website designer takes over with the template, and the plan docks beside it
+    # Website: the website designer's start screen (what kind of site?), the one website gallery; no plan
     pg.click("#dfl-back"); pg.wait_for_selector("#dfl[data-step=kinds]")
-    pg.click("[data-kind=website]"); pg.wait_for_selector(".dfl-tpl[data-tpl=cafe]")
-    pg.fill("#dfl-ask", "Sunrise Bakery")
-    pg.click(".dfl-tpl[data-tpl=cafe]")
-    pg.wait_for_function("TribeSiteDesigner.state() && TribeSiteDesigner.state().open", timeout=15000)
-    assert pg.evaluate("TribeDesignFlow.plan().kind") == "website" and pg.evaluate("TribeDesignFlow.plan().template") == "cafe"
-    # the plan is a calm "Plan 0/n" chip in the designer's own toolbar; the very first plan opens once by itself, as a side
-    # panel the designer makes room for (nothing covered)
-    pg.wait_for_selector("#wdz .wdz-top #dfl-chip:not([hidden])", timeout=5000)
-    n = len(pg.evaluate("TribeDesignFlow.plan().steps")); web_key = pg.evaluate("TribeDesignFlow.plan().key")
-    assert pg.inner_text("#dfl-chip").replace("\n", " ").split() == ["Plan", f"0/{n}"], pg.inner_text("#dfl-chip")
-    pg.wait_for_selector("#dfl-dock:not([hidden]) #dfl-dock-plan", timeout=5000)
-    assert "plan · website" in pg.inner_text("#dfl-dock").lower() and pg.get_attribute("#dfl-chip", "aria-expanded") == "true"
-    pg.wait_for_timeout(300)
-    R = "s => { const r = document.querySelector(s).getBoundingClientRect(); return { l: r.left, r: r.right, t: r.top, b: r.bottom, w: r.width }; }"
-    dk, wz = pg.evaluate(R, "#dfl-dock"), pg.evaluate(R, "#wdz")
-    assert dk["w"] <= 300 and wz["r"] <= dk["l"] + 0.5, ("the panel sits beside the designer, not over it", dk, wz)
-    for q in ["#wdz .wdz-top [data-wdz='more']", "#wdz-dl"]:
-        c = pg.evaluate(R, q); assert c["r"] <= dk["l"], ("the designer's controls stay uncovered", q, c, dk)
-    # tick a step and add the steps as tasks, right from the panel
-    first = pg.evaluate("TribeDesignFlow.plan().steps[0].id")
-    pg.click(f"#dfl-dock [data-step={first}] .dfl-tick"); pg.wait_for_selector(f"#dfl-dock [data-step={first}].done")
-    assert pg.inner_text("#dfl-chip").replace("\n", " ").split()[-1] == f"1/{n}"
-    assert pg.is_visible("#dfl-dock-addtasks")
-    # Esc folds it back to the chip; it stays folded for this design
-    pg.keyboard.press("Escape"); pg.wait_for_selector("#dfl-dock", state="hidden")
-    assert pg.get_attribute("#dfl-chip", "aria-expanded") == "false" and not pg.evaluate("document.body.classList.contains('dfl-side')")
-    assert web_key not in pg.evaluate("JSON.parse(localStorage.getItem('tribecode.designflow.open') || '{}')")
-    pg.wait_for_function("TribeSiteDesigner.cfg().name === 'Sunrise Bakery'", timeout=5000)   # the prompt names the site
-    if SHOTS: pg.evaluate("document.activeElement && document.activeElement.blur()"); shot(pg, "plan-chip")
+    pg.click("[data-kind=website]"); pg.wait_for_selector("#wdz-start:not([hidden]) .wdz-kmain [data-kind=linkbio]", timeout=15000)
+    pg.click("#wdz-start [data-kind=business]"); pg.wait_for_selector("#wdz-gal .wdz-tpl[data-tpl=cafe]", timeout=15000)
+    pg.click("#wdz-gal .wdz-tpl[data-tpl=cafe] [data-tpl]")
+    pg.wait_for_function("TribeSiteDesigner.cfg() && TribeSiteDesigner.cfg().template === 'cafe'", timeout=15000)
+    pg.wait_for_timeout(500)
+    assert pg.locator("#dfl-plan, #dfl-plan-host, #dfl-chip:visible, #dfl-dock:visible").count() == 0, "no plan anywhere"
     pg.evaluate("TribeSiteDesigner.close()")
 
     # A screen template: the canvas opens with the screen on it, plan docked
@@ -165,16 +127,8 @@ def on_this_device(b):
     pg.click("[data-kind=screen]"); pg.wait_for_selector(".dfl-tpl[data-tpl=login]")
     pg.click(".dfl-tpl[data-tpl=login]")
     pg.wait_for_function("TribeCanvas.state().open && TribeCanvas.state().nodes.some(n => n.t === 'frame' && !n.p)", timeout=15000)
-    # never opens by itself after the first time: just the chip, in the canvas's toolbar
-    pg.wait_for_selector("#dfl-chip:not([hidden])", timeout=5000); pg.wait_for_timeout(400)
-    assert pg.is_hidden("#dfl-dock") and pg.evaluate("!!document.querySelector('#cv #dfl-chip') || !!document.querySelector('.titlebar #dfl-chip')"), "folded, in a toolbar"
-    pg.click("#dfl-chip"); pg.wait_for_selector("#dfl-dock:not([hidden]) #dfl-dock-plan", timeout=5000)
-    assert "plan · screen / ui mockup" in pg.inner_text("#dfl-dock").lower()
-    pg.wait_for_timeout(300); dk, cv = pg.evaluate(R, "#dfl-dock"), pg.evaluate(R, "#cv")
-    assert cv["r"] <= dk["l"] + 0.5, ("the canvas makes room", cv, dk)
-    opened = pg.evaluate("JSON.parse(localStorage.getItem('tribecode.designflow.open') || '{}')")
-    assert pg.evaluate("TribeDesignFlow.plan().key") in opened and web_key not in opened, "open or closed is kept per design"
-    if SHOTS: shot(pg, "plan-panel")
+    pg.wait_for_timeout(600)
+    assert pg.locator("#dfl-plan, #dfl-plan-host, #dfl-chip:visible, #dfl-dock:visible").count() == 0, "no plan anywhere"
     ctx.close()
 
     # Phone 390px: no sideways scroll
@@ -184,16 +138,10 @@ def on_this_device(b):
     no_sideways(pp, "phone kinds")
     assert pp.evaluate("getComputedStyle(document.querySelector('.dfl-kinds')).gridTemplateColumns.split(' ').length") == 2
     pp.click("[data-kind=app]"); pp.wait_for_selector(".dfl-tpl[data-tpl=kanban]"); no_sideways(pp, "phone gallery")
-    pp.click(".dfl-tpl[data-tpl=kanban]"); pp.wait_for_selector("#dfl[data-step=workspace] #dfl-plan", timeout=15000)
+    pp.click(".dfl-tpl[data-tpl=kanban]"); pp.wait_for_selector("#dfl[data-step=workspace] #dfl-frame", timeout=15000)
     pp.wait_for_timeout(400); no_sideways(pp, "phone workspace")
-    # away from the workspace the plan is a small chip; a bottom sheet only on tap
-    pp.evaluate("TribeHub.open('home')"); pp.wait_for_selector("#dfl-chip.float:not([hidden])", timeout=8000); pp.wait_for_timeout(300)
-    assert pp.is_hidden("#dfl-dock"), "phones: never opens by itself"
-    pp.click("#dfl-chip"); pp.wait_for_selector("#dfl-dock.sheet:not([hidden])"); pp.wait_for_selector("#dfl-scrim:not([hidden])"); pp.wait_for_timeout(350)
-    sh = pp.evaluate("(() => { const r = document.querySelector('#dfl-dock').getBoundingClientRect(); return { b: r.bottom, w: r.width, h: innerHeight }; })()")
-    assert abs(sh["b"] - sh["h"]) <= 1 and sh["w"] <= 390, sh
-    no_sideways(pp, "phone plan sheet")
-    pp.click("#dfl-scrim", position={"x": 20, "y": 20}); pp.wait_for_selector("#dfl-dock", state="hidden")
+    pp.evaluate("TribeHub.open('home')"); pp.wait_for_timeout(600)
+    assert pp.locator("#dfl-chip:visible, #dfl-dock:visible").count() == 0, "no plan chip on phones either"
     ph.close()
 
 
@@ -230,7 +178,7 @@ def in_a_tribe(b):
         pg.click("[data-kind=game]"); pg.wait_for_selector(".dfl-tpl[data-tpl=breakout]")
         pg.fill("#dfl-ask", "A much faster breakout in pink")
         pg.click(".dfl-tpl[data-tpl=breakout]")
-        pg.wait_for_selector("#dfl[data-step=workspace] #dfl-plan", timeout=20000)
+        pg.wait_for_selector("#dfl[data-step=workspace] #dfl-frame, #dfl[data-step=workspace] .dfl-pv", timeout=20000)
         plans = ok(api(f"/projects/{pid}/design-plans", token=orion, project=pid))["plans"]
         assert len(plans) == 1 and plans[0]["kind"] == "game" and plans[0]["target"]["type"] == "build", plans
         dr = plans[0]["target"]["dir"]
@@ -244,27 +192,13 @@ def in_a_tribe(b):
             if ok(api(f"/projects/{pid}/flint/starter-config", "POST", {"starter": "breakout", "dir": dr}, token=orion, project=pid))["values"]["lives"] == 7: break
             time.sleep(0.15)
         else: raise AssertionError("the knob did not reach config.js")
-        # tick, add as tasks
-        pg.click("#dfl-plan [data-step=loop] .dfl-tick"); pg.wait_for_selector("#dfl-plan [data-step=loop].done")
-        for _ in range(30):
-            p2 = ok(api(f"/projects/{pid}/design-plans/{plans[0]['key']}", token=orion, project=pid))["plan"]
-            if any(s["id"] == "loop" and s["done"] for s in p2["steps"]): break
-            time.sleep(0.1)
-        else: raise AssertionError("the tick did not reach the server")
-        n0 = len(ok(api("/tasks", token=orion, project=pid)).get("tasks", []))
-        pg.click("#dfl-addtasks")
-        for _ in range(60):
-            n1 = len(ok(api("/tasks", token=orion, project=pid)).get("tasks", []))
-            if n1 >= n0 + 6: break
-            time.sleep(0.15)
-        assert n1 == n0 + 6, (n0, n1)
         # Website in the project: the designer opens for this project with the template
         pg.click("#dfl-back"); pg.wait_for_selector("#dfl[data-step=kinds]")
-        pg.click("[data-kind=website]"); pg.wait_for_selector(".dfl-tpl[data-tpl=band]")
-        pg.click(".dfl-tpl[data-tpl=band]")
-        pg.wait_for_function("TribeSiteDesigner.state() && TribeSiteDesigner.state().open", timeout=15000)
+        pg.click("[data-kind=website]"); pg.wait_for_selector("#wdz-start:not([hidden]) .wdz-kmain [data-kind=linkbio]", timeout=15000)
         assert pg.evaluate("TribeSiteDesigner.state().pid") == pid
-        assert any(p["kind"] == "website" and p["template"] == "band" for p in ok(api(f"/projects/{pid}/design-plans", token=orion, project=pid))["plans"])
+        pg.click("#wdz-start [data-kind=portfolio]"); pg.wait_for_selector("#wdz-gal .wdz-tpl[data-tpl=band]", timeout=15000)
+        pg.click("#wdz-gal .wdz-tpl[data-tpl=band] [data-tpl]")
+        pg.wait_for_function("TribeSiteDesigner.cfg() && TribeSiteDesigner.cfg().template === 'band'", timeout=15000)
         ctx.close()
     finally:
         srv.terminate()

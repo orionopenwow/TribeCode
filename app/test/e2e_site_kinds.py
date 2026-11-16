@@ -58,7 +58,10 @@ def gallery_ids(pg):
 
 
 def flint(pg, text):
-    return pg.evaluate("t => TribeSiteDesigner.ask(t)", text)
+    """Flint answers in the designer; the answer must come back (no hang), within 10 seconds."""
+    r = pg.evaluate("t => Promise.race([TribeSiteDesigner.ask(t).then(x => ({ ok: true, x })), new Promise(res => setTimeout(() => res({ ok: false }), 10000))])", text)
+    assert r["ok"], f"Flint never answered {text!r}"
+    return r["x"]
 
 
 def main():
@@ -82,7 +85,7 @@ def main():
                 init = ("try { localStorage.setItem('tribecode.helpers.v1', JSON.stringify({flint:1,brain:1,ai:1}));"
                         " localStorage.setItem('tribecode.settings.v1', JSON.stringify({name: 'Camp', onboarded: true, theme: 'dark', tour: {done: true}, checklist: {setup: true}%s, server: {url: '%s', token: '%s'}})); } catch (e) {}") % (f", lang: '{lang}'" if lang else "", BASE, host)
                 c = b.new_context(viewport={"width": w, "height": h}, is_mobile=phone, has_touch=phone, device_scale_factor=1)
-                c.add_init_script(init); pg = c.new_page()
+                c.add_init_script(init); c.set_default_timeout(20000); pg = c.new_page()
                 pg.on("pageerror", lambda e: errors.append(f"{e} {(e.stack or '')[:300]}"))
                 pg.on("console", lambda m: m.type == "error" and "ERR_" not in m.text and "Failed to load resource" not in m.text and errors.append(f"console: {m.text}"))
                 pg.goto(BASE + "/?skipIntro=1", wait_until="domcontentloaded", timeout=90000)
@@ -184,7 +187,7 @@ def main():
             ph = page(390, 844, phone=True)
             ph.evaluate(f"TribeSiteDesigner.open({{ pid: '{pid}', start: true }})"); kinds_shown(ph)
             assert ph.evaluate("document.documentElement.scrollWidth <= innerWidth + 1"), "no sideways scroll"
-            small = ph.evaluate("[...document.querySelectorAll('#wdz-start button')].filter(b => b.offsetParent && b.getBoundingClientRect().height < 40).map(b => b.textContent.trim().slice(0, 24))")
+            small = ph.evaluate("[...document.querySelectorAll('#wdz-start button')].filter(b => b.offsetParent && b.getBoundingClientRect().height < 40).map(b => b.textContent.trim().slice(0, 24) + ' ' + Math.round(b.getBoundingClientRect().height) + ' ' + getComputedStyle(b).minHeight + ' ' + innerWidth)")
             assert not small, small
             wide = ph.evaluate("[...document.querySelectorAll('#wdz-start *')].filter(e => e.offsetParent && e.getBoundingClientRect().right > innerWidth + 1).length")
             assert wide == 0, wide

@@ -719,7 +719,7 @@
     const first = t => home.blocks.find(b => b.type === t);
     if (F.name) {
       const old = c.name; c.name = String(F.name).slice(0, 80); used.push('the name');
-      c.pages.forEach(p => p.blocks.forEach(b => { if (b.type === 'hero' && (b.props.title === old || p === home && b === first('hero'))) b.props.title = c.name; if (b.type === 'links') b.props.name = c.name; if (b.type === 'footer' && /^©|^$/.test(b.props.text || '') || b.type === 'footer' && b.props.text === old) b.props.text = `© ${new Date().getFullYear()} ${c.name}`; }));
+      c.pages.forEach(p => p.blocks.forEach(b => { if (b.type === 'go' && old) ['title', 'text', 'button'].forEach(k => { if (typeof b.props[k] === 'string') b.props[k] = b.props[k].split(old).join(c.name); }); if (b.type === 'hero' && (b.props.title === old || p === home && b === first('hero'))) b.props.title = c.name; if (b.type === 'links') b.props.name = c.name; if (b.type === 'footer' && /^©|^$/.test(b.props.text || '') || b.type === 'footer' && b.props.text === old) b.props.text = `© ${new Date().getFullYear()} ${c.name}`; }));
     }
     const line = F.tagline || F.mission;
     if (line) { const h = first('hero'), l = first('links'); if (h) h.props.text = String(line).slice(0, 220); else if (l) l.props.bio = String(line).slice(0, 160); used.push(F.tagline ? 'the tagline' : 'the mission'); }
