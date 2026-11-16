@@ -26,7 +26,7 @@ def main():
         for page in PAGES:
             pg.goto(f"{base}/{page}"); pg.wait_for_selector("#menu-features .mm__a", state="attached")
             assert pg.locator('.nav__links > a[href="flint.html"]').count() == 1, f"{page}: Flint link in the nav"
-            items = pg.locator("#menu-features .mm__a").count(); assert items == 13, f"{page}: {items} menu items"   # 12 features and the free Toolbox page
+            items = pg.locator("#menu-features .mm__a").count(); assert items == 14, f"{page}: {items} menu items"   # 12 features, the free Toolbox page and Apps, clips and store pages (create.html)
             assert pg.locator("#menu-features .mm__eb").count() == 4
             first = pg.get_attribute('#menu-features [data-mm="make"]', "href")
             assert first == ("#make" if page == "index.html" else "index.html#make"), f"{page}: {first}"
