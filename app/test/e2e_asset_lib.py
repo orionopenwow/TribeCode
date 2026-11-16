@@ -74,6 +74,8 @@ def main():
             pg.evaluate("TribeAssets.open({})"); pg.wait_for_selector("[data-designlib]", timeout=8000); pg.click("[data-designlib]")
             pg.wait_for_selector("#al-sheet .al-tile", timeout=8000)
             assert pg.locator("#al-sheet [data-alk]").count() == len(counts), "a tab per kind"
+            off = pg.evaluate("(() => { const s = document.querySelector('#al-sheet').getBoundingClientRect(); return [...document.querySelectorAll('#al-sheet [data-alk]')].filter(b => b.getBoundingClientRect().right > s.right + 1).length; })()")
+            assert off == 0, f"pass 3: with a mouse every kind tab is visible, none hidden off the edge ({off})"
             assert "CC0" in pg.inner_text("#al-sheet .al-tile >> nth=0"), "tiles say their licence"
             pg.click("#al-sheet [data-alk='icon']"); pg.fill("#al-q", "rocket"); pg.wait_for_timeout(200)
             assert pg.locator("#al-sheet .al-tile").count() >= 1 and "rocket" in pg.inner_text("#al-grid").lower(), "search finds a rocket icon"

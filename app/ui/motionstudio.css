@@ -87,6 +87,9 @@ body.mos-on { overflow: hidden; }
 .mos-ph { position: absolute; top: 0; bottom: 0; width: 2px; margin-left: -1px; background: var(--accent); pointer-events: none; }
 .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 @media (max-width: 820px) {
+  /* pass 3: phone tap targets (36px floor) for the name and the Flint box */
+  .mos-name { min-height: 36px; }
+  .mos-flint input { min-height: 36px; }
   .mos-top { flex-wrap: wrap; gap: 8px; padding: 8px 12px; }
   .mos-name { width: 140px; max-width: 42vw; }
   .mos-undo, #mos-ai { display: none; }

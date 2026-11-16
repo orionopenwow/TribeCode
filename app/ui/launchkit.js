@@ -36,9 +36,16 @@
     try { localStorage.setItem(KEY(pid), JSON.stringify(kit)); } catch {}
     clearTimeout(st.saveT);
     if (st && !st.canEdit && st.canSuggest) { st.pendingDraft = JSON.stringify(kit) !== st.base; if (st.crStrip) st.crStrip.draw(); }   // a suggestion in the making
-    const go = async () => { if (online(pid) && st && st.canEdit) { try { await C.api(`/projects/${encodeURIComponent(pid)}/launchkit`, { method: 'PUT', body: { kit }, project: pid }); } catch {} } };
+    const go = async () => { if (st) st.saveT = 0; if (online(pid) && st && st.canEdit) { try { await C.api(`/projects/${encodeURIComponent(pid)}/launchkit`, { method: 'PUT', body: { kit }, project: pid }); } catch {} } };
     if (now) return go(); st.saveT = setTimeout(go, 600);
   }
+  // pass 3: a change made just before the tab closes or hides reaches the tribe too (keepalive)
+  function flushNow() {
+    if (!st || !st.saveT || !st.canEdit || !online(st.pid)) return; clearTimeout(st.saveT); st.saveT = 0;
+    C.api(`/projects/${encodeURIComponent(st.pid)}/launchkit`, { method: 'PUT', body: { kit: K().norm(st.kit) }, project: st.pid, keepalive: true }).catch(() => {});
+  }
+  addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') flushNow(); });
+  addEventListener('pagehide', flushNow);
 
   // ---------- where screens come from ----------
   const visualUrl = (slug, ts) => { const u = `${(C.base && C.base()) || ''}/api/visuals/${slug}/${ts}.png`; return window.TribeMedia ? window.TribeMedia.url(u) : u; };

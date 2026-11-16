@@ -86,14 +86,15 @@ body.apc-open { overflow: hidden; }
 .apc-edit [data-e]:focus { box-shadow: 0 0 0 2px var(--ax-accent); }
 .apc-edit [data-b] { cursor: pointer; position: relative; }
 .apc-edit [data-b]:hover { box-shadow: 0 0 0 1px var(--ax-line); border-radius: 6px; }
-.apc-edit .apc-sel { box-shadow: 0 0 0 2px #F26B1D !important; border-radius: 6px; }
-.apc-edit [data-to]::after { content: ''; position: absolute; top: 4px; right: 4px; width: 8px; height: 8px; border-radius: 999px; background: #F26B1D; pointer-events: none; }
+.apc-edit .apc-sel { box-shadow: 0 0 0 2px var(--accent) !important; border-radius: 6px; }
+.apc-edit [data-to]::after { content: ''; position: absolute; top: 4px; right: 4px; width: 8px; height: 8px; border-radius: 999px; background: var(--accent); pointer-events: none; }
 .apc-edit [data-to] { position: relative; }
 .apc-edit .ax-tab[data-to]::after { display: none; }
-.apc-bar { position: absolute; z-index: 9; display: flex; background: #16181D; border: 1px solid #3A3F4A; border-radius: 8px; overflow: hidden; }
-.apc-bar button { width: 40px; height: 40px; display: grid; place-items: center; border: 0; background: none; color: #F2F3F5; cursor: pointer; }
-.apc-bar button + button { border-left: 1px solid #3A3F4A; }
-.apc-bar button:hover { background: #22262E; }
+/* pass 3: tokens, not palette hex, so the toolbar follows light and dark */
+.apc-bar { position: absolute; z-index: 9; display: flex; background: var(--raised); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+.apc-bar button { width: 40px; height: 40px; display: grid; place-items: center; border: 0; background: none; color: var(--text); cursor: pointer; }
+.apc-bar button + button { border-left: 1px solid var(--border); }
+.apc-bar button:hover { background: var(--surface-2); }
 .apc-note { position: absolute; left: 50%; bottom: 16px; transform: translateX(-50%); margin: 0; background: var(--surface); border: 1px solid var(--border); border-radius: var(--r); padding: 8px 14px; font-size: 13px; max-width: 80%; text-align: center; }
 .apc-playing .apc-phone { border-color: var(--ember); }
 
@@ -130,6 +131,8 @@ body.apc-open { overflow: hidden; }
 
 @media (max-width: 1180px) { .apc-body { grid-template-columns: 260px 1fr 260px; } }
 @media (max-width: 820px) {
+  /* pass 3: the app name is a 36px target on phones */
+  .apc-name { min-height: 36px; }
   .apc { grid-template-rows: auto 1fr auto; }
   .apc-top { gap: 4px; padding: 6px 8px; min-height: 52px; }
   .apc-title .apc-eyebrow, .apc-saved, .apc-top .apc-seg { display: none; }

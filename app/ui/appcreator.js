@@ -53,6 +53,19 @@
     if (pid) { try { const r = await C.api(`/projects/${encodeURIComponent(pid)}/app-config`); cur = r.config; st.rev = r.rev || 0; st.canEdit = r.canEdit !== false; st.canDraft = st.canEdit || !!r.canSuggest; st.base = cur ? JSON.stringify(A().normalize(cur)) : ''; } catch { cur = null; } }
     else cur = ls.get(LOCAL, null);
     let doc = cur ? A().normalize(cur) : null;
+    // pass 3: picking a template in the gallery over an app the tribe already has asks first (the old app was replaced
+    // and saved over at once; Undo only lasted until App Creator closed)
+    if (o.template && o.askReplace && doc && doc.screens && doc.screens.length && window.TribeUI && window.TribeUI.sheet) {
+      const pick = await new Promise(res => {
+        let done = false; const end = v => { if (done) return; done = true; sh.close(); res(v); };
+        const sh = window.TribeUI.sheet({ id: 'apc-replace', kind: 'decision', eyebrow: 'App Creator', title: 'Start over from this template?',
+          body: `<p>${esc(tr('This project already has an app'))}: <b>${esc(doc.name || '')}</b>. ${esc(tr('Starting over replaces it for everyone in the tribe.'))}</p>`,
+          foot: `<button type="button" class="btn" id="apc-keep">${esc(tr('Keep my app'))}</button><button type="button" class="btn primary" id="apc-over">${esc(tr('Start over'))}</button>`,
+          onClose: () => end('keep') });
+        sh.el.querySelector('#apc-keep').onclick = () => end('keep'); sh.el.querySelector('#apc-over').onclick = () => end('over');
+      });
+      if (pick !== 'over') o = { ...o, template: '' };
+    }
     if (o.template) { const t = A().template(o.template, { name: o.name, accent: o.accent }); if (t) { if (doc) st.undo.push(JSON.stringify(doc)); doc = t; } }
     if (!doc) doc = A().blank(o.name || 'My app');
     st.doc = doc; st.screen = doc.start;
@@ -68,7 +81,7 @@
   function close() {
     if (!root) return; clearTimeout(saveT); if (st && st.dirty) save(true);
     if (cw) { cw.detach(); cw = null; } crStrip = null;
-    root.remove(); root = null; document.body.classList.remove('apc-open'); if (st) st.open = false;
+    inertOthers(false); root.remove(); root = null; document.body.classList.remove('apc-open'); if (st) st.open = false;
     document.removeEventListener('keydown', onKey, true);
   }
 
@@ -93,6 +106,15 @@
     };
     if (now) return run(); saveT = setTimeout(run, 500);
   }
+  // pass 3: a word typed just before the tab closes or hides is saved too (keepalive, like the website designer)
+  function flushNow() {
+    if (!st || !st.dirty || st.saving) return; clearTimeout(saveT);
+    if (st.local) { ls.set(LOCAL, st.doc); st.dirty = false; return; }
+    if (!st.canEdit || !st.pid) return;
+    C.api(`/projects/${encodeURIComponent(st.pid)}/app-config`, { method: 'PUT', body: { config: st.doc, base: st.rev }, keepalive: true }).then(r => { if (st) { st.rev = r.rev; st.dirty = false; mark('Saved'); } }).catch(() => {});
+  }
+  addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') flushNow(); });
+  addEventListener('pagehide', flushNow);
   const mark = t => { const el = root && root.querySelector('#apc-saved'); if (el) el.textContent = tr(t); };
   const DRAFT = pid => `tribecode.appcreator.draft.${pid}`;
 
@@ -110,6 +132,12 @@
   function redo() { if (!st.redo.length) return note('Nothing to redo.'); st.undo.push(JSON.stringify(st.doc)); st.doc = A().normalize(JSON.parse(st.redo.pop())); st.sel = null; save(); paint(); note('Redone.'); }
   const note = t => { const el = root && root.querySelector('#apc-note'); if (el) { el.textContent = t; el.hidden = !t; clearTimeout(note.t); note.t = setTimeout(() => { el.hidden = true; }, 3200); } };
 
+  // pass 3: a full-screen editor keeps Tab inside it; the app behind is inert while it is open (it was reachable by Tab)
+  let inerted = [];
+  function inertOthers(on) {
+    if (on) { if (inerted.length) return; inerted = [...document.body.children].filter(e => e !== root && !e.inert && e.tagName !== 'SCRIPT'); inerted.forEach(e => { e.inert = true; }); }
+    else { inerted.forEach(e => { e.inert = false; }); inerted = []; }
+  }
   // ---------- layout ----------
   function build() {
     if (root) root.remove();
@@ -139,7 +167,7 @@
           <form class="apc-ask" id="apc-ask"><span class="apc-eyebrow">Flint</span><input class="input" id="apc-ask-in" placeholder="Add a settings screen, make it dark, rounder…" autocomplete="off"><button class="btn" type="submit">Do it</button><p class="apc-reply faint" id="apc-reply"></p></form></aside>
       </div>
       <nav class="apc-rack" id="apc-rack"><button data-sheet="screens">Screens</button><button data-sheet="add">Add</button><button data-sheet="look">Look</button><button data-sheet="edit">Edit</button><button data-sheet="flint">Flint</button></nav>`;
-    document.body.appendChild(root); document.body.classList.add('apc-open'); root.classList.add('has-cr');
+    document.body.appendChild(root); document.body.classList.add('apc-open'); root.classList.add('has-cr'); root.setAttribute('aria-modal', 'true'); inertOthers(true);
     const $ = s => root.querySelector(s);
     $('#apc-close').onclick = close;
     $('#apc-name').oninput = e => { st.doc.name = e.target.value.slice(0, 48); save(); };

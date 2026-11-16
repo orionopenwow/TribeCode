@@ -197,7 +197,7 @@
   // App: App Creator takes over (docs/APP-CREATOR.md), with the template, a name and a colour from the prompt
   async function makeApp(tplId, ask) {
     const name = nameFrom(ask, ''), accent = /\b(colou?r|in|accent)\b|#[0-9a-f]{6}/i.test(ask || '') ? accentFrom(ask) : '';
-    await window.TribeAppCreator.open({ template: tplId || '', name: name || undefined, accent: accent || undefined, pid: pidNow() || undefined });
+    await window.TribeAppCreator.open({ template: tplId || '', name: name || undefined, accent: accent || undefined, pid: pidNow() || undefined, askReplace: true });
     return { opened: 'app-creator' };
   }
   // Website: the website designer takes over (its own entry), with the template and the prompt

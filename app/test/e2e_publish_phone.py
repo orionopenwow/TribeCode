@@ -90,7 +90,7 @@ def main():
             # the same sheet
             pg.evaluate("TribePublish.open()"); pg.wait_for_selector("#pb-real .pbr-row[data-dest='pages']", timeout=15000)
             assert "from this phone" in pg.locator(".pb-sub").text_content() and not pg.locator("#pb-go").is_visible() and not pg.locator("#pb-remix").is_visible(), "no play link from a phone alone, and it says so"
-            assert [x.get_attribute("data-dest") for x in pg.locator("#pb-real .pbr-row").all()] == ["zip", "pages", "itch", "install", "android", "ios", "launch", "desktop"]   # launch: the Launch kit (launchkit.js)
+            assert [x.get_attribute("data-dest") for x in pg.locator("#pb-real .pbr-row").all()] == ["zip", "pages", "itch", "install", "android", "ios", "launch", "share", "desktop"]   # launch: the Launch kit (launchkit.js); share: Share a clip (shareclip.js)
             assert pg.evaluate("document.documentElement.scrollWidth <= innerWidth + 1 && document.querySelector('.pb-sheet').scrollWidth <= document.querySelector('.pb-sheet').clientWidth + 1"), "no sideways scroll"
             pg.fill("#pb-title", "Star Hopper"); pg.fill("#pb-desc", "Hop between stars.")
 

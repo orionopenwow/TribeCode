@@ -535,3 +535,6 @@ body.has-userbar .nest-foot #nest-settings { display: none; }   /* Settings is t
 .window .rail .logo-btn#rail-logo { margin-bottom: 0; }
 .window .rail .pj-rail { width: 44px; padding-top: 10px; }
 .window .rail .pj-circle, .window .rail .pj-face, .window .rail .pj-plus, .window .rail .ws-nav { width: 44px; height: 44px; flex-basis: 44px; }
+
+/* pass 3: the user bar's gear and bell get 36px hit areas on phones */
+@media (max-width: 820px) { .userbar .ub-acts .ub-gear, .userbar .ub-acts .nf-bell { position: relative; } .userbar .ub-acts .ub-gear::after, .userbar .ub-acts .nf-bell::after { content: ''; position: absolute; left: 50%; top: 50%; width: 36px; height: 36px; transform: translate(-50%, -50%); } }

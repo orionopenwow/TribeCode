@@ -158,3 +158,10 @@ body[data-view="hub"]:has(#flint-home) #flint .fl-thread { display: none; }   /*
 }
 .flint-mount { min-width: 0; }
 .flm-tool { width: auto; min-width: 24px; padding: 0 6px; white-space: nowrap; font-size: 12px; font-weight: 600; }
+
+/* pass 3: phone tap targets for the thread's chips, its clear button and the composer's round buttons (36px floor) */
+@media (max-width: 820px) {
+  .fl-chip { height: 36px; }
+  .fl-x, .fl-ic, button.fl-av { position: relative; }
+  .fl-x::after, .fl-ic::after, button.fl-av::after { content: ''; position: absolute; left: 50%; top: 50%; width: 36px; height: 36px; transform: translate(-50%, -50%); }
+}

@@ -106,6 +106,10 @@ def main():
             links = sum(len(bk["links"]) for s in d["screens"] for bk in s["blocks"]); assert links >= 5, links
             pg.wait_for_function(f"fetch('/api/projects/{pid}/app-config', {{ headers: {{ Authorization: 'Bearer {tok}' }} }}).then(r => r.json()).then(j => j.config && j.config.template === 'habits')", timeout=6000)
             if SHOTS: pg.wait_for_timeout(300); pg.screenshot(path=str(SHOT / "app-creator-editor.png"))
+            # pass 3: Tab stays inside the editor; the app behind it is not reachable while it is open
+            pg.evaluate("document.activeElement && document.activeElement.blur()")
+            for _ in range(25): pg.keyboard.press("Tab")
+            assert pg.evaluate("document.querySelector('#apc').contains(document.activeElement)"), pg.evaluate("document.activeElement.id || document.activeElement.className")
 
             # ---- click words to type: one Undo takes it back
             h1 = pg.locator("#apc .apc-edit h1[data-e]").first
@@ -114,6 +118,12 @@ def main():
             pg.wait_for_function("TribeAppCreator.doc().screens[0].blocks[0].props.title === 'Hi Sam'", timeout=3000)
             pg.evaluate("TribeAppCreator.undo()")
             pg.wait_for_function("TribeAppCreator.doc().screens[0].blocks[0].props.title === 'Good morning, Maya'", timeout=3000)
+            # pass 3: words typed just before the tab reloads are saved (they used to wait 500 ms and be lost)
+            h1 = pg.locator("#apc .apc-edit h1[data-e]").first
+            h1.click(); pg.keyboard.press("Control+a"); pg.keyboard.type("Kept on reload"); pg.reload()
+            pg.wait_for_function("window.TribeAppCreator && window.TribeClient && TribeClient.connected()", timeout=20000)
+            pg.wait_for_function(f"fetch('/api/projects/{pid}/app-config', {{ headers: {{ Authorization: 'Bearer {tok}' }} }}).then(r => r.json()).then(j => j.config.screens[0].blocks[0].props.title === 'Kept on reload')", timeout=6000)
+            pg.evaluate(f"TribeAppCreator.open({{ pid: '{pid}' }})"); pg.wait_for_selector("#apc .apc-edit .ax-screen", timeout=8000)
 
             # ---- recolour from Look: every screen follows
             pg.click("#apc [data-tab='look']"); pg.click("#apc [data-acc='#2F5BEA']")
@@ -192,6 +202,14 @@ def main():
             assert len(sc) >= 5 and all(x["html"] > 200 for x in sc), sc
             ok = pg.evaluate("TribeAppCreator.screens().then(l => l[1].render(document.createElement('canvas'), 195, 422)).then(c => c.width === 195)")
             assert ok
+            pg.evaluate("TribeAppCreator.close()")
+            assert pg.evaluate("[...document.body.children].every(e => !e.inert)"), "pass 3: closing gives the app back (nothing left inert)"
+            # pass 3: a gallery template over the app the tribe already has asks first; Keep my app changes nothing
+            name0 = pg.evaluate(f"fetch('/api/projects/{pid}/app-config', {{ headers: {{ Authorization: 'Bearer {tok}' }} }}).then(r => r.json()).then(j => j.config.template)")
+            pg.evaluate("TribeDesignFlow.open({})"); pg.wait_for_timeout(300); pg.evaluate("TribeDesignFlow.gallery('app')")
+            pg.wait_for_selector("#dfl-grid [data-tpl='apc:notes']", timeout=8000); pg.click("#dfl-grid [data-tpl='apc:notes']")
+            pg.wait_for_selector("#apc-replace #apc-keep", timeout=8000); pg.click("#apc-keep"); pg.wait_for_selector("#apc .apc-edit .ax-screen", timeout=8000)
+            assert pg.evaluate("TribeAppCreator.doc().template") == name0, "Keep my app keeps it"
             pg.evaluate("TribeAppCreator.close()")
 
             # ---- phones: 390px

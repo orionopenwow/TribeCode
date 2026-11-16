@@ -117,3 +117,9 @@ li.ui-empty { list-style: none; }
 .help-menu .hm-lang .lang-pick { display: flex; }
 .help-menu .hm-lang .lang-pick select { flex: 1; }
 .fr-foot { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 12px; }
+
+/* pass 3: the shared sheet's close button gets a 40px hit area on phones (the look stays 32px) */
+@media (max-width: 820px) {
+  .ui-x { position: relative; }
+  .ui-x::after { content: ''; position: absolute; left: 50%; top: 50%; width: 40px; height: 40px; transform: translate(-50%, -50%); }
+}

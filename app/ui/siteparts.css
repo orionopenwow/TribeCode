@@ -33,7 +33,7 @@
 .sp-said { display: grid; gap: 6px; border-top: 1px solid var(--border); padding-top: 8px; margin-top: 4px; }
 
 /* six tabs do not fit a narrow panel: they scroll sideways instead of running into each other */
-.wdz .wdz-ptabs { overflow-x: auto; scrollbar-width: none; }
+.wdz .wdz-ptabs { flex-wrap: wrap; row-gap: 2px; overflow: visible; }   /* pass 3: wrap, never hide a tab off the edge (Check was unreachable in a 320px panel) */
 .wdz .wdz-ptabs::-webkit-scrollbar { display: none; }
 .wdz .wdz-ptabs button { flex: 0 0 auto; padding: 0 8px; }
 .wdz .wdz-ptabs .wdz-n { margin-left: 6px; }

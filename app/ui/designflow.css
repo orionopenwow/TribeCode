@@ -146,6 +146,7 @@ body.dfl-side #wdz { right: 300px; }
 
 @media (max-width: 1100px) { .dfl-plan.inline { position: static; } }
 @media (max-width: 820px) {
+  .dfl-back { min-height: 36px; }   /* pass 3: a 36px target on phones */
   .dfl-page { padding: 16px 14px 96px; }
   .dfl { gap: 16px; }
   .dfl-head h1 { font-size: 22px; }

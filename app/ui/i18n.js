@@ -1893,6 +1893,10 @@
       // "Invite to {name}" must not catch "Invite to this project": a name slot filled with words that start in lower
       // case is ordinary English, and a half-translated sentence is worse than an English one. So: no match.
       if (p.keys.some((k, i) => RAW.test(k) && /^\p{Ll}/u.test(m[i + 1]))) continue;
+      // pass 3: a word slot ("Add {what}") filled with several English words that have no row of their own would give a
+      // half-translated line ("Añadir a link for…"): no match, the whole line stays as it is.
+      // A slot in quote marks (“{quote}”) is somebody's words, kept as written, so it never counts.
+      if (cur !== 'en' && p.keys.some((k, i) => !RAW.test(k) && !/^(n|count|num|total)\d*$/.test(k) && !p.en.includes('“{' + k + '}”') && !p.en.includes('"{' + k + '}"') && !p.en.includes('«{' + k + '}»') && /\s/.test(m[i + 1].trim()) && !D[m[i + 1]])) continue;
       const vars = {}; p.keys.forEach((k, i) => { vars[k] = m[i + 1]; }); hit = { p, vars }; break;
     }
     if (patCache.size > 4000) patCache.clear();
