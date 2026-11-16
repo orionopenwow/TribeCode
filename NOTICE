@@ -51,6 +51,9 @@ Template pictures are original flat art made by scripts/dev/site-gallery.py; no 
 Fonts in app/ui/assets/site-fonts: SIL Open Font License 1.1 (licenses alongside the files). DM Serif Display
 (Copyright 2019 Google LLC, 2014-2017 Adobe) and Outfit (Copyright 2021 The Outfit Project Authors) were added with the
 website designer's Style panel; files from Fontsource (https://github.com/fontsource/font-files).
+More font pairs (app/ui/fontlib.js): 73 further families, each SIL Open Font License 1.1, are not bundled. Pages
+link them from Google Fonts (https://fonts.google.com) when online and fall back to system fonts offline; each family's
+copyright and licence are on its Google Fonts page. The list names only OFL families.
 Anthropic's public frontend-design skill (Apache-2.0) informed the website design rules (docs/WEBSITE-GENERATOR.md).
 
 <!-- starters:begin -->

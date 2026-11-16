@@ -27,10 +27,10 @@
       "csp": {
         "default-src": "'self'",
         "script-src": "'self' blob: 'wasm-unsafe-eval'",
-        "style-src": "'self' 'unsafe-inline'",
+        "style-src": "'self' 'unsafe-inline' https://fonts.googleapis.com",
         "img-src": "'self' data: blob: http: https:",
         "media-src": "'self' data: blob: http: https: mediastream:",
-        "font-src": "'self' data:",
+        "font-src": "'self' data: https://fonts.gstatic.com",
         "connect-src": "'self' ipc: http://ipc.localhost http: https: ws: wss: blob: data:",
         "frame-src": "'self' http: https: blob: data:",
         "worker-src": "'self' blob:",

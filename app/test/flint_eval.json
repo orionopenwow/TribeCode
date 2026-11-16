@@ -13863,6 +13863,87 @@
    "v": "as"
   },
   {
+   "t": "use a calmer font",
+   "i": "site.font",
+   "s": {
+    "font": "calmer"
+   },
+   "ctx": "s",
+   "v": "as"
+  },
+  {
+   "t": "make the fonts calmer",
+   "i": "site.font",
+   "s": {
+    "font": "calmer"
+   },
+   "ctx": "s",
+   "v": "as"
+  },
+  {
+   "t": "use a bolder font",
+   "i": "site.font",
+   "s": {
+    "font": "bolder"
+   },
+   "ctx": "s",
+   "v": "as"
+  },
+  {
+   "t": "switch the font to playfair",
+   "i": "site.font",
+   "s": {
+    "font": "playfair"
+   },
+   "ctx": "s",
+   "v": "as"
+  },
+  {
+   "t": "use lora for the fonts",
+   "i": "site.font",
+   "s": {
+    "font": "lora"
+   },
+   "ctx": "s",
+   "v": "as"
+  },
+  {
+   "t": "change the font to montserrat",
+   "i": "site.font",
+   "s": {
+    "font": "montserrat"
+   },
+   "ctx": "s",
+   "v": "as"
+  },
+  {
+   "t": "use poppins as the font",
+   "i": "site.font",
+   "s": {
+    "font": "poppins"
+   },
+   "ctx": "s",
+   "v": "as"
+  },
+  {
+   "t": "use the bebas font",
+   "i": "site.font",
+   "s": {
+    "font": "bebas"
+   },
+   "ctx": "s",
+   "v": "as"
+  },
+  {
+   "t": "fonts that are easier to read",
+   "i": "site.font",
+   "s": {
+    "font": "calmer"
+   },
+   "ctx": "s",
+   "v": "as"
+  },
+  {
    "t": "make me a habit tracker app",
    "i": "app.make",
    "s": {

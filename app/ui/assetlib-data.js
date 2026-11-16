@@ -143,7 +143,8 @@
     if (m.site) {
       const S2 = m.site;
       (S2.ICON_NAMES || []).forEach(n => add('icon', 'site:' + n, n.replace(/-/g, ' '), 'website', { license: 'ISC', source: 'Lucide (lucide.dev), a subset inlined by TribeCode' }));
-      Object.entries(S2.FONT_PAIRS || {}).forEach(([id, f]) => add('font', id, f.name, `${f.display} + ${f.body}`, { license: 'OFL-1.1', source: 'SIL Open Font License fonts shipped with TribeCode' }));
+      const FLi = m.fonts || (typeof self !== 'undefined' && self.TribeFontLib) || (typeof module === 'object' && module.exports ? (() => { try { return require('./fontlib.js'); } catch { return null; } })() : null);
+      Object.entries(S2.FONT_PAIRS || {}).forEach(([id, f]) => { const i = FLi && FLi.info(id), mood = FLi && FLi.PAIRS[id] ? FLi.PAIRS[id].mood : ''; add('font', id, f.name, `${f.display} ${f.body} ${mood}`, { license: 'OFL-1.1', source: i && i.online ? 'Google Fonts (SIL Open Font License), loaded when online' : 'SIL Open Font License fonts shipped with TribeCode' }); });
       Object.keys(S2.ILLUS || {}).forEach(n => add('picture', 'site:' + n, n, 'website'));
       (S2.TYPES || []).forEach(t => ((S2.BLOCKS[t] || {}).variants || []).forEach(v => add('section', `${t}:${v}`, `${(S2.BLOCKS[t] || {}).label || t}: ${v}`, t)));
     }

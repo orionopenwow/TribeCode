@@ -28,7 +28,8 @@
     cache.set(url, p); if (cache.size > 80) cache.delete(cache.keys().next().value); return p;
   }
   function symbolImg(name, color, sw) {
-    const I = window.TribeIcons; const d = I && I.paths ? (I.paths[name] || I.paths.spark || '') : '';
+    const I = window.TribeIcons, n = String(name || ''), S = window.TribeSiteCfg, AD = window.TribeAppData;   // 'site:x' and 'app:x' come from the design library
+    const d = /^site:/.test(n) && S && S.icon ? String(S.icon(n.slice(5))).replace(/^<svg[^>]*>|<\/svg>$/g, '') : /^app:/.test(n) && AD && AD.ICONS ? AD.ICONS[n.slice(4)] || '' : I && I.paths ? (I.paths[n] || I.paths.spark || '') : '';
     const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="240" height="240" fill="none" stroke="${color}" stroke-width="${sw}" stroke-linecap="round" stroke-linejoin="round">${d}</svg>`;
     return img('data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg));
   }

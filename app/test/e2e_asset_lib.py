@@ -63,7 +63,11 @@ def main():
 
             # ---- counts: 50+ of each kind, and every item names its licence
             counts = pg.evaluate("Object.fromEntries(TribeAssetData.KINDS.map(k => [k.id, TribeAssetLib.count(k.id)]))")
-            for k, n in counts.items(): assert n >= (10 if k == "font" else 50), (k, n)
+            for k, n in counts.items(): assert n >= 50, (k, n)
+            # fonts (feat/asset-libs2): one list for the site editor, App Creator and the library; OFL, a source and a preview line each
+            assert pg.evaluate("Object.keys(TribeSiteCfg.FONT_PAIRS).join() === Object.keys(TribeFontLib.PAIRS).join()"), "the site editor has the same pairs"
+            assert pg.evaluate("Object.keys(TribeFontLib.PAIRS).filter(id => TribeAppCore.FONTS[id]).length") >= 50, "App Creator has them too"
+            assert all(x["license"] == "OFL-1.1" and x["source"] for x in pg.evaluate("TribeAssetLib.list('font')")), "fonts are OFL with a source"
             assert all(x["license"] and x["source"] for x in pg.evaluate("TribeAssetLib.list()")), "every item has a licence and a source"
 
             # ---- from the Assets panel
@@ -73,7 +77,11 @@ def main():
             assert "CC0" in pg.inner_text("#al-sheet .al-tile >> nth=0"), "tiles say their licence"
             pg.click("#al-sheet [data-alk='icon']"); pg.fill("#al-q", "rocket"); pg.wait_for_timeout(200)
             assert pg.locator("#al-sheet .al-tile").count() >= 1 and "rocket" in pg.inner_text("#al-grid").lower(), "search finds a rocket icon"
-            pg.fill("#al-q", ""); pg.click("#al-sheet [data-alk='background']"); pg.wait_for_timeout(200)
+            pg.fill("#al-q", ""); pg.click("#al-sheet [data-alk='font']"); pg.wait_for_timeout(200)
+            assert pg.locator("#al-sheet .al-tile .al-fprev").count() >= 50, "every font pair shows a preview line"
+            assert pg.evaluate("TribeFontLib.load(['Playfair Display', 'Lato']).startsWith('https://fonts.googleapis.com/css2?')"), "Google Fonts is asked for the pair (offline the link drops and system fonts show)"
+            assert "Georgia" in pg.evaluate("document.querySelector(\"#al-sheet [data-al='font|playfair'] .al-font\").style.fontFamily"), "with a fallback stack"
+            pg.click("#al-sheet [data-alk='background']"); pg.wait_for_timeout(200)
             assert pg.locator("#al-sheet .al-tile img").count() >= 50, "backgrounds show their thumbnails"
             pg.wait_for_function("[...document.querySelectorAll('#al-sheet .al-tile img')].slice(0, 6).every(i => i.complete && i.naturalWidth > 0)", timeout=10000)
             if SHOTS: pg.click("#al-sheet [data-alk='palette']"); pg.wait_for_timeout(300); pg.screenshot(path=str(SHOT / "assets-library.png"))
@@ -110,6 +118,28 @@ def main():
             pg.click("#al-sheet [data-al='palette|grape']")
             pg.wait_for_function("TribeMotionStudio.state() && JSON.stringify(TribeMotionStudio.state()).toLowerCase().includes('#a04acb')", timeout=8000)
             pg.evaluate("TribeMotionStudio.close()")
+
+            # ---- the Launch kit's library button: colours, fonts and an icon symbol
+            pg.evaluate(f"TribeLaunchKit.open('{pid}', 'icon')"); pg.wait_for_selector("#lch-lib", timeout=10000)
+            pg.click("#lch-lib"); pg.wait_for_selector("#al-sheet [data-al='palette|ocean']", timeout=8000); pg.click("#al-sheet [data-al='palette|ocean']")
+            pg.wait_for_function("!document.querySelector('#al-sheet')", timeout=8000)
+            pg.click("#lch-lib"); pg.wait_for_selector("#al-sheet [data-alk='font']", timeout=8000); pg.click("#al-sheet [data-alk='font']"); pg.click("#al-sheet [data-al='font|playfair']")
+            pg.wait_for_function(f"TribeBrandKit.cached('{pid}') && TribeBrandKit.cached('{pid}').fonts.display === 'Playfair Display'", timeout=8000)
+            pg.click("#lch-lib"); pg.wait_for_selector("#al-sheet [data-alk='icon']", timeout=8000); pg.click("#al-sheet [data-alk='icon']"); pg.fill("#al-q", "rocket"); pg.wait_for_timeout(200)
+            pg.click("#al-sheet [data-al^='icon|'] >> nth=0")
+            pg.wait_for_function("/^(site|app):/.test(TribeLaunchKit.state().kit.icon.symbol)", timeout=8000)
+            pg.wait_for_function("(() => { const c = document.querySelector('#lch-ic'); if (!c) return false; const d = c.getContext('2d').getImageData(0, 0, 256, 256).data; let n = 0; for (let i = 3; i < d.length; i += 4) if (d[i] > 0) n++; return n > 1000; })()", timeout=8000)
+            pg.set_viewport_size({"width": 390, "height": 844}); pg.wait_for_timeout(200)
+            assert pg.locator("#lch-lib").is_visible(), "the Library button fits at 390px"
+            pg.set_viewport_size({"width": 1440, "height": 900})
+            pg.evaluate("TribeLaunchKit.close()")
+
+            # ---- suggestion "why" lines go through the translation runtime
+            pg.evaluate("TribeI18n.set('es')")
+            assert "Se pidió 3 veces" in pg.evaluate("TribeI18n.t('Asked for 3 times, and no task covers it yet.')")
+            assert "Tu tribu" in pg.evaluate("TribeI18n.t('Your tribe applied 2 like this lately, so it comes up first.')")
+            assert "Mencionado" in pg.evaluate("TribeI18n.t('Mentioned in a doc: “a habit tracker”')")
+            pg.evaluate("TribeI18n.set('en')")
 
             # ---- a shelf colour pack installs into the library; the suggestions provider is there
             n0 = pg.evaluate("TribeAssetLib.count('palette')")

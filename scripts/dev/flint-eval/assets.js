@@ -55,4 +55,8 @@ module.exports = [
   ['g', 'show me the colours in the library', 'library.open', { kind: 'colours' }], ['g', 'play a click sound', 'library.open', { q: 'click' }], ['g', 'play the success sound', 'library.open', { q: 'success' }],
   ['g', 'use the sunset palette', 'design.palette', { mood: 'sunset' }], ['g', 'find a rocket icon', 'asset.add', { kind: 'icon' }],
   ['s', 'add a pricing section', 'site.block.add', { block: 'pricing' }], ['a', 'add a profile screen', 'app.kit', { kit: 'profile' }],
+  // feat/asset-libs2: 50+ font pairs (fontlib.js)
+  ['s', 'use a calmer font', 'site.font', { font: 'calmer' }], ['s', 'make the fonts calmer', 'site.font', { font: 'calmer' }], ['s', 'use a bolder font', 'site.font', { font: 'bolder' }],
+  ['s', 'switch the font to playfair', 'site.font', { font: 'playfair' }], ['s', 'use lora for the fonts', 'site.font', { font: 'lora' }], ['s', 'change the font to montserrat', 'site.font', { font: 'montserrat' }],
+  ['s', 'use poppins as the font', 'site.font', { font: 'poppins' }], ['s', 'use the bebas font', 'site.font', { font: 'bebas' }], ['s', 'fonts that are easier to read', 'site.font', { font: 'calmer' }],
 ];

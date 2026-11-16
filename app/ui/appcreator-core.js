@@ -14,10 +14,11 @@
   const data = typeof module === 'object' && module.exports ? require('./appcreator-data.js') : root.TribeAppData;
   const more = typeof module === 'object' && module.exports ? (() => { try { return require('./appcreator-more.js'); } catch { return null; } })() : root.TribeAppMore;
   const parts = typeof module === 'object' && module.exports ? (() => { try { return require('./appcreator-parts.js'); } catch { return null; } })() : root.TribeAppParts;
-  const api = factory(data, more, parts);
+  const fl = typeof module === 'object' && module.exports ? (() => { try { return require('./fontlib.js'); } catch { return null; } })() : root.TribeFontLib;
+  const api = factory(data, more, parts, fl);
   if (typeof module === 'object' && module.exports) module.exports = api;
   else root.TribeAppCore = api;
-})(typeof self !== 'undefined' ? self : this, function (D, MORE, PARTS) {
+})(typeof self !== 'undefined' ? self : this, function (D, MORE, PARTS, FL) {
   'use strict';
   // appcreator-parts.js (feat/asset-libs): more icons, parts, starting words and screens join the base sets here
   if (PARTS) { Object.assign(D.ICONS, PARTS.ICONS || {}); D.ICON_NAMES = Object.keys(D.ICONS); D.DEFAULTS = Object.assign({}, D.DEFAULTS, PARTS.DEFAULTS || {}); }
@@ -52,6 +53,8 @@
     mono: { name: 'Mono (JetBrains Mono + Inter)', display: 'JetBrains Mono', dw: 700, body: 'Inter', files: ['jetbrains-mono-latin-700-normal', 'inter-latin-400-normal'] },
     pixel: { name: 'Pixel (Silkscreen + JetBrains Mono)', display: 'Silkscreen', dw: 400, body: 'JetBrains Mono', files: ['silkscreen-latin-400-normal', 'jetbrains-mono-latin-500-normal'] },
   };
+  // feat/asset-libs2: the shared font pairs (fontlib.js) that load from Google Fonts when online; system fonts offline
+  if (FL) for (const [id, p] of Object.entries(FL.PAIRS)) if (!FONTS[id] && (FL.isG(p.display) || FL.isG(p.body))) FONTS[id] = { name: p.name, display: p.display, dw: p.dw, body: p.body, files: [], online: true };
   const FACE = { 'Inter': [['inter-latin-400-normal', 400], ['inter-latin-600-normal', 600]], 'Outfit': [['outfit-latin-700-normal', 700]], 'Bricolage Grotesque': [['bricolage-grotesque-latin-800-normal', 800]],
     'Space Grotesk': [['space-grotesk-latin-700-normal', 700]], 'Fraunces': [['fraunces-latin-700-normal', 700]], 'DM Serif Display': [['dm-serif-display-latin-400-normal', 400]], 'Instrument Serif': [['instrument-serif-latin-400-normal', 400]],
     'JetBrains Mono': [['jetbrains-mono-latin-500-normal', 500], ['jetbrains-mono-latin-700-normal', 700]], 'Silkscreen': [['silkscreen-latin-400-normal', 400]] };
@@ -119,14 +122,16 @@
   function vars(theme) {
     const t = normTheme(theme), k = palette(t), [rc, rs, rb] = RADII[t.radius], [g, pd, bg] = DENS[t.density], f = FONTS[t.font], [ms, ease] = MOTION[t.motion];
     const sys = "system-ui,-apple-system,'Segoe UI',Roboto,sans-serif";
-    const disp = f.display ? `'${f.display}',${sys}` : sys, body = f.body ? `'${f.body}',${sys}` : sys;
+    const one = n => FL && FL.isG(n) ? FL.stack(n).replace(/"/g, "'") : `'${n}',${sys}`;
+    const disp = f.display ? one(f.display) : sys, body = f.body ? one(f.body) : sys;
+    if (f.online && FL && FL.load) FL.load([f.display, f.body]);   // in the browser: add the Google Fonts link once (offline it fails quietly)
     return `--ax-bg:${k.bg};--ax-ink:${k.ink};--ax-surface:${k.surface};--ax-surface2:${k.surface2};--ax-line:${k.line};--ax-muted:${k.muted};--ax-accent:${k.accent};--ax-on:${k.on};--ax-soft:${k.soft};`
       + `--ax-r:${rc}px;--ax-rs:${rs}px;--ax-rb:${rb}px;--ax-gap:${g}px;--ax-pad:${pd}px;--ax-bgap:${bg}px;--ax-display:${disp};--ax-body:${body};--ax-dw:${f.dw || 700};--ax-stroke:${t.icons === 'thin' ? 1.4 : t.icons === 'bold' ? 2.2 : 1.8};--ax-ms:${ms}ms;--ax-ease:${ease}`;
   }
   function fontFaces(theme, base) {
     const f = FONTS[normTheme(theme).font]; if (!f.display && !f.body) return '';
-    const fams = [f.display, f.body].filter((x, i, a) => x && a.indexOf(x) === i);
-    return fams.map(fam => (FACE[fam] || []).map(([file, w]) => `@font-face{font-family:'${fam}';src:url('${typeof base === 'function' ? base(file) : (base || 'assets/site-fonts/') + file + '.woff2'}') format('woff2');font-weight:${w};font-display:swap}`).join('')).join('');
+    const fams = [f.display, f.body].filter((x, i, a) => x && a.indexOf(x) === i), gh = FL ? FL.href(fams) : '';
+    return (gh ? `@import url('${gh}');` : '') + fams.map(fam => (FACE[fam] || []).map(([file, w]) => `@font-face{font-family:'${fam}';src:url('${typeof base === 'function' ? base(file) : (base || 'assets/site-fonts/') + file + '.woff2'}') format('woff2');font-weight:${w};font-display:swap}`).join('')).join('');
   }
 
   // ---------- illustrations: small flat scenes from the palette (drawn for TribeCode) ----------

@@ -9,6 +9,7 @@
 .lch-ttl { min-width: 0; flex: 1; }
 .lch-ttl h2 { margin: 2px 0 0; font-size: 20px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .lch-prog { font-family: var(--mono); font-size: 12px; color: var(--muted); white-space: nowrap; }
+.lch-lib { flex: none; min-height: 40px; display: inline-flex; align-items: center; gap: 6px; }
 .lch-x { width: 40px; height: 40px; display: grid; place-items: center; border: 1px solid var(--edge); border-radius: var(--r-sm); background: var(--surface); color: var(--muted); cursor: pointer; }
 .lch-x:hover { color: var(--text); background: var(--surface-2); }
 .lch-tabs { display: flex; gap: 4px; padding: 0 16px; border-bottom: 1px solid var(--edge); overflow-x: auto; scrollbar-width: none; }

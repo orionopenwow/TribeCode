@@ -37,7 +37,7 @@
       <p class="stu-h"><b>Main colour</b><small>buttons and links</small></p>
       <div class="stu-accents" role="group" aria-label="Main colour">${Object.entries(A).filter(([n]) => n !== 'gray').map(([n, sh]) => `<button type="button" class="stu-sw" data-stu="accent" data-val="${sh[1]}" style="background:${sh[1]}" title="${esc(n)}" aria-label="${esc(n)}" aria-pressed="${k.accent.toLowerCase() === S().colors(S().setColor(c, sh[1])).accent.toLowerCase()}"></button>`).join('')}<label class="stu-pick" title="Any colour"><span class="sr">Any colour</span><input type="color" id="stu-color" value="${esc(k.accent)}"></label></div>
       <p class="stu-h"><b>Fonts</b></p>
-      <div class="stu-fonts" role="group" aria-label="Fonts">${Object.entries(FP).map(([id, f]) => `<button type="button" class="btn sm" data-stu="fonts" data-val="${id}" aria-pressed="${curF === id}">${esc(f.name)}</button>`).join('')}</div>
+      <div class="stu-fonts" role="group" aria-label="Fonts">${Object.entries(FP).filter(([id], i) => i < 10 || id === curF).map(([id, f]) => `<button type="button" class="btn sm" data-stu="fonts" data-val="${id}" aria-pressed="${curF === id}">${esc(f.name)}</button>`).join('')}${window.TribeAssetLib ? `<button type="button" class="btn sm ghost" data-stu="fonts-lib">More fonts</button>` : ''}</div>
       <p class="stu-h"><b>Corners</b></p>
       <p class="wdz-row" role="group" aria-label="Corners">${RADII.map(([r, l]) => `<button type="button" class="btn sm" data-stu="radius" data-val="${r}" aria-pressed="${Math.abs((c.theme.radius || 0) - r) <= 2}">${l}</button>`).join('')}</p>
       <p class="stu-h"><b>Buttons</b><small>every button on the site</small></p>
@@ -161,6 +161,7 @@
     if (k === 'look') return api.commit(S().setTheme(c, v));
     if (k === 'accent') return api.commit(S().setColor(c, v));
     if (k === 'fonts') return api.commit(S().setFonts(c, v));
+    if (k === 'fonts-lib' && window.TribeAssetLib) { window.TribeAssetLib.open({ kind: 'font', pid: api.pid(), onPick: x => { if (x.kind !== 'font') return true; api.commit(S().setFonts(api.cfg(), x.id)); } }); return; }
     if (k === 'radius') return api.commit(S().setRadius(c, +v));
     if (k === 'btnstyle') return api.commit(S().setBtn(c, v));
     if (k === 'space') return api.commit(S().setSpace(c, v));

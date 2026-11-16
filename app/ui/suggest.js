@@ -178,7 +178,7 @@
   function why(id) {
     const x = list().find(i => i.id === id) || [...providers.values()].flatMap(v => v.items).find(i => i.id === id); if (!x) return '';
     const from = x.from.length ? `It came from ${x.from.map(chipText).join(', ')}.` : '';
-    return [x.why, from, CORE().explain(learn(), x.provider, x.kind)].filter(Boolean).join(' ');
+    return [x.why, from, CORE().explain(learn(), x.provider, x.kind)].filter(Boolean).map(tr).join(' ');   // each sentence through the runtime (rows and patterns in i18n-more.js)
   }
   const toast = m => (window.TribeApp && window.TribeApp.toast ? window.TribeApp.toast(m) : null);
 
@@ -219,7 +219,7 @@
   // o = { id, title, before?, after?, srcHtml?, why?, from?, row: [[attr, value, label, primary?]], rowClass?, cls? }
   function card(o) {
     const chips = (o.from || []).map(f => `<span class="sgx-chip">${esc(chipText(f))}</span>`).join('');
-    return `<li class="sg${o.cls ? ' ' + o.cls : ''}" data-sgid="${esc(o.id)}"><p class="sg-t">${esc(o.title)}</p>${o.before != null && o.after != null ? `<p class="sg-ba"><del>${esc(o.before)}</del><ins>${esc(o.after)}</ins></p>` : ''}${o.srcHtml || ''}${o.why ? `<p class="sgx-why">${esc(o.why)}</p>` : ''}${chips ? `<p class="sgx-from">${chips}</p>` : ''}
+    return `<li class="sg${o.cls ? ' ' + o.cls : ''}" data-sgid="${esc(o.id)}"><p class="sg-t">${esc(o.title)}</p>${o.before != null && o.after != null ? `<p class="sg-ba"><del>${esc(o.before)}</del><ins>${esc(o.after)}</ins></p>` : ''}${o.srcHtml || ''}${o.why ? `<p class="sgx-why">${esc(tr(o.why))}</p>` : ''}${chips ? `<p class="sgx-from">${chips}</p>` : ''}
       <p class="${o.rowClass || 'sgx-row'}">${(o.row || []).map(([attr, val, label, primary]) => `<button type="button" class="btn sm${primary ? ' primary' : ''}${primary === 0 ? ' ghost' : ''}" ${attr}="${esc(val)}" data-id="${esc(o.id)}">${esc(label)}</button>`).join('')}</p></li>`;
   }
   const boxes = new Set();
