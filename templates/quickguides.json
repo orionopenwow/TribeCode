@@ -1566,7 +1566,7 @@
    "intro": "Phones need an https link that works when your computer is off. A GitHub page is free and stays up; the free limits are shown with their sources.",
    "asks": [
     "put my app online for my phone",
-    "free hosting for my app",
+    "free place to keep my app online",
     "link that stays up"
    ],
    "needs": "TribeHomescreen",
