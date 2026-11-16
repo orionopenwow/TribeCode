@@ -86,7 +86,7 @@
     box.querySelector('#slx-use').onclick = async e => {
       const b = e.currentTarget; b.disabled = true; b.textContent = t('Making it…');
       // feat/calm-parity: a project on this device has no code folder to copy into; the same template opens in the website designer
-      if (window.TribeDevice && window.TribeDevice.on() && window.TribeSiteDesigner) { close(); return window.TribeSiteDesigner.open({ pid, template: id }); }
+      if (window.TribeDevice && window.TribeDevice.on() && window.TribeSiteDesigner) { close(); return window.TribeSiteDesigner.open({ pid, template: id, askReplace: true }); }
       try {
         const r = await C.api(`/projects/${encodeURIComponent(pid)}/site-library`, { method: 'POST', body: { template: id, name: box.querySelector('#slx-name').value.trim(), level } });
         toast(`✓ ${x.title}: ${r.files.length} files${r.dir ? ' in ' + r.dir + '/' : ''}`);

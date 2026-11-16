@@ -274,7 +274,7 @@ console.log(JSON.stringify({ done: r.done.length, skipped: r.skipped.length, tit
             pg.evaluate("TribeSiteDesigner.undo()"); pg.wait_for_timeout(300)
 
             # ---- Have my agent do it: read, propose, the person approves, Undo
-            pg.click("#wdz-agent")
+            pg.click("#wdz [data-wdz=more]"); pg.click("#wdz-agent")
             pg.wait_for_selector("#stu-agent", timeout=5000)
             shot(pg, "studio-agent-1440.png")
             assert pg.locator("#stu-agent [data-stu=agent-flint]").count() == 1, "works with no agent too: Flint is offered"
@@ -312,7 +312,7 @@ console.log(JSON.stringify({ done: r.done.length, skipped: r.skipped.length, tit
             pg.wait_for_selector("#wb-design", timeout=15000); pg.click("#wb-design")
             pg.wait_for_function("TribeSiteDesigner.state() && TribeSiteDesigner.state().open && TribeSiteDesigner.cfg().pages.length >= 1", timeout=10000)
             pg.wait_for_timeout(600)
-            pg.click("#wdz-agent"); pg.wait_for_selector("#stu-agent [data-stu=agent-send]", timeout=8000)   # there is an agent in the tribe now
+            pg.click("#wdz [data-wdz=more]"); pg.click("#wdz-agent"); pg.wait_for_selector("#stu-agent [data-stu=agent-send]", timeout=8000)   # there is an agent in the tribe now
             pg.fill("#stu-ask", "Add a short how it works section and call the place friendly")
             shot(pg, "studio-agent-send-1440.png")
             pg.click("#stu-agent [data-stu=agent-send]")

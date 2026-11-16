@@ -216,7 +216,7 @@
     const p = newPlan('website', title, tplId, ask, { type: 'site', pid: pidNow(), id: tplId });
     await savePlan(p); setActive(p);
     // fix/batch-fixes: "Sunrise Bakery" on the Café template names the site; the rest of the prompt goes to Flint
-    await SD.open({ ...(pidNow() ? { pid: pidNow() } : {}), ...(tplId ? { template: tplId } : {}), ...(named && tplId ? { name: named } : {}) });
+    await SD.open({ ...(pidNow() ? { pid: pidNow() } : {}), ...(tplId ? { template: tplId, askReplace: true } : {}), ...(named && tplId ? { name: named } : {}) });
     if (ask && !(named && named.toLowerCase() === ask.toLowerCase())) setTimeout(() => { try { SD.ask(ask); } catch {} }, 400);
     dock();
   }

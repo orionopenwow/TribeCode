@@ -127,6 +127,43 @@
     if (Object.keys(x).length) o.style = { bg: '', pad: '', ...(o.style || {}), ...x };
     if (b.es && typeof b.es === 'object') { const es = {}; Object.keys(b.es).slice(0, 120).forEach(k => { if (!ESPATH.test(k) || ESBAD.test(k)) return; const e = elStyle(b.es[k]); if (e) es[k] = e; }); if (Object.keys(es).length) o.es = es; }
   }
+  // p4-site: space above and below one section, on a scale (px); 0 is "none", absent is the site's own spacing
+  const SPACE_SCALE = [0, 8, 16, 24, 32, 48, 64, 80, 96, 128, 160];
+  const snapSpace = v => { if (v === '' || v == null || !Number.isFinite(+v)) return null; const n = Math.max(0, +v); return SPACE_SCALE.reduce((a, b) => (Math.abs(b - n) < Math.abs(a - n) ? b : a), SPACE_SCALE[0]); };
+  // p4-site: the site's own CSS (More > Code). It ends the site's stylesheet in the editor, the export and the published
+  // site alike. Kept safe: nothing that loads from elsewhere (@import, url() to another host, @font-face), no script-ish
+  // values (expression, behavior, -moz-binding, javascript:), no markup, no escapes that could hide any of those.
+  const CSS_MAX = 20000;
+  function cleanCss(v) {
+    let s = String(v == null ? '' : v).slice(0, CSS_MAX).replace(/\r/g, '');
+    s = s.replace(/<!--|-->/g, '').replace(/[<>]/g, m => (m === '>' ? '>' : '')).replace(/\\/g, '');
+    s = s.replace(/\/\*[\s\S]*?(\*\/|$)/g, m => (/\*\/$/.test(m) ? m : ''));
+    s = s.replace(/@(import|charset|namespace)\b[^;{}]*;?/gi, '');
+    s = s.replace(/url\s*\(\s*(?:'([^']*)'|"([^"]*)"|([^)]*))\s*\)?/gi, (m, a, b, d) => { const u = String(a != null ? a : b != null ? b : d || '').trim(); return /^(data:image\/(png|jpeg|gif|webp);base64,[A-Za-z0-9+/=]+|assets\/[\w./-]+|#[\w-]+)$/i.test(u) && !/\.\./.test(u) ? `url('${u}')` : 'none'; });
+    s = s.replace(/expression\s*\(|behaviou?r\s*:|-moz-binding\s*:|javascript\s*:|vbscript\s*:|image-set\s*\(|@font-face|src\s*:/gi, '-x-removed:');
+    // a stray closing brace would end a rule of ours early: drop every '}' that has no '{' before it
+    { let d = 0, out = ''; for (const ch of s) { if (ch === '{') { d++; out += ch; } else if (ch === '}') { if (d) { d--; out += ch; } } else out += ch; } s = out + '}'.repeat(d); }
+    return s.trim();
+  }
+  function setCss(c, v) { c = clone(c); const s = cleanCss(v); if (s) c.css = s; else delete c.css; return c; }
+  // the code of one section, to read and copy: its HTML as published, and the rules of the site's CSS that name its classes
+  function sectionCode(cfg, pageId, blockId) {
+    const c = normalize(clone(cfg)), pg = c.pages.find(p => p.id === pageId) || c.pages[0];
+    const html = renderPage(c, pg, { mode: 'pages' }).split('\n').find(x => { const i = x.indexOf(` id="b-${blockId}"`); return i > 0 && i < 12; }) || '';
+    const classes = new Set(); html.replace(/class="([^"]*)"/g, (m, k) => { k.split(/\s+/).forEach(x => x && classes.add(x)); return m; });
+    const own = c.css ? cleanCss(c.css) : '';
+    const all = css({ ...c, css: '' }, '').replace(/@import[^;]*;/g, ''), rules = [];
+    const names = sel => (sel.match(/\.[\w-]+/g) || []).map(x => x.slice(1));
+    const decl = body => body.split(';').map(x => x.trim()).filter(Boolean).map(x => '  ' + x.replace(/^([\w-]+):\s*/, '$1: ') + ';').join('\n');
+    const walk = (text, into) => { let i = 0; while (i < text.length) { const o = text.indexOf('{', i); if (o < 0) break; let d = 1, j = o + 1; while (j < text.length && d) { if (text[j] === '{') d++; else if (text[j] === '}') d--; j++; } const sel = text.slice(i, o).trim(), body = text.slice(o + 1, j - 1); i = j;
+      if (/^@(media|supports)/.test(sel)) { const inner = []; walk(body, inner); if (inner.length) into.push(`${sel} {\n${inner.map(x => '  ' + x.replace(/\n/g, '\n  ')).join('\n')}\n}`); }
+      else if (/^@/.test(sel)) continue;
+      else if (sel === ':root' || names(sel).some(n => classes.has(n))) into.push(`${sel} {\n${decl(body)}\n}`); } };
+    walk(all, rules);
+    let depth = 0; const VOID = /^<(img|br|hr|input|meta|link|source)\b/i;
+    const pretty = html.replace(/>\s*</g, '>\n<').split('\n').map(l => { const close = /^<\//.test(l), self = VOID.test(l) || /\/>$/.test(l) || /^<[^>]+>[^<]*<\/[^>]+>$/.test(l) || !/^</.test(l); if (close) depth = Math.max(0, depth - 1); const out = '  '.repeat(depth) + l; if (!close && !self) depth++; return out; }).join('\n');
+    return { html: pretty, css: rules.join('\n\n'), own };
+  }
   function normalize(c) {
     c = c && typeof c === 'object' ? c : {};
     c.v = 1; c.name = String(c.name || 'My site').slice(0, 80);
@@ -136,11 +173,12 @@
     if (t.alt && typeof t.alt === 'object') { const alt = {}; ['dark', 'light'].forEach(m => { const a = t.alt[m]; if (m !== c.theme.base && a && ['bg', 'ink', 'accent'].every(k => /^#[0-9a-f]{3,8}$/i.test(a[k] || ''))) alt[m] = { ...a }; }); if (Object.keys(alt).length) c.theme.alt = alt; }   // feat/flint-max: a palette's own other mode
     if (!Array.isArray(c.pages) || !c.pages.length) c.pages = [page('Home')];
     const seen = new Set();
-    c.pages.forEach((pg, i) => { pg.id = pg.id || uid('p'); pg.title = String(pg.title || 'Page').slice(0, 40); pg.slug = i === 0 ? 'index' : (pg.slug && pg.slug !== 'index' ? pg.slug : slugify(pg.title)); while (seen.has(pg.slug)) pg.slug += '-2'; seen.add(pg.slug); pg.blocks = (pg.blocks || []).filter(b => b && BLOCKS[b.type]).map(b => { const o = { id: b.id || uid('b'), type: b.type, variant: BLOCKS[b.type].variants.includes(b.variant) ? b.variant : BLOCKS[b.type].variants[0], props: b.props || BLOCKS[b.type].make() }; if (b.hidden) o.hidden = true; if (b.fx) { const f = FX() ? FX().clean(b.fx) : b.fx; if (f) o.fx = f; } const st = b.style || {}; if (st.bg || st.pad || st.al || st.tint || st.sz) o.style = { bg: /^(card|accent|ink)$/.test(st.bg) ? st.bg : '', pad: /^(s|l)$/.test(st.pad) ? st.pad : '', ...(/^(left|center|right)$/.test(st.al) ? { al: st.al } : {}), ...(/^(s|l)$/.test(st.sz) ? { sz: st.sz } : {}), ...(/^#[0-9a-f]{3,8}$/i.test(st.tint || '') ? { tint: st.tint } : {}) }; styleX(o, b); return o; }); const ps = pg.seo; if (ps && typeof ps === 'object' && (ps.title || ps.description)) pg.seo = { title: String(ps.title || '').slice(0, 120), description: String(ps.description || '').slice(0, 320), ...(/^(data:image\/|https:\/\/|assets\/)/.test(ps.image || '') ? { image: String(ps.image) } : {}) }; else if (ps && /^(data:image\/|https:\/\/|assets\/)/.test(ps.image || '')) pg.seo = { title: '', description: '', image: String(ps.image) }; else delete pg.seo; });
+    c.pages.forEach((pg, i) => { pg.id = pg.id || uid('p'); pg.title = String(pg.title || 'Page').slice(0, 40); pg.slug = i === 0 ? 'index' : (pg.slug && pg.slug !== 'index' ? pg.slug : slugify(pg.title)); while (seen.has(pg.slug)) pg.slug += '-2'; seen.add(pg.slug); pg.blocks = (pg.blocks || []).filter(b => b && BLOCKS[b.type]).map(b => { const o = { id: b.id || uid('b'), type: b.type, variant: BLOCKS[b.type].variants.includes(b.variant) ? b.variant : BLOCKS[b.type].variants[0], props: b.props || BLOCKS[b.type].make() }; if (b.hidden) o.hidden = true; if (b.fx) { const f = FX() ? FX().clean(b.fx) : b.fx; if (f) o.fx = f; } const st = b.style || {}; if (st.bg || st.pad || st.al || st.tint || st.sz) o.style = { bg: /^(card|accent|ink)$/.test(st.bg) ? st.bg : '', pad: /^(s|l)$/.test(st.pad) ? st.pad : '', ...(/^(left|center|right)$/.test(st.al) ? { al: st.al } : {}), ...(/^(s|l)$/.test(st.sz) ? { sz: st.sz } : {}), ...(/^#[0-9a-f]{3,8}$/i.test(st.tint || '') ? { tint: st.tint } : {}) }; styleX(o, b); { const pt = snapSpace(st.pt), pb = snapSpace(st.pb); if (pt != null || pb != null) o.style = { bg: '', pad: '', ...(o.style || {}), ...(pt != null ? { pt } : {}), ...(pb != null ? { pb } : {}) }; } return o; }); const ps = pg.seo; if (ps && typeof ps === 'object' && (ps.title || ps.description)) pg.seo = { title: String(ps.title || '').slice(0, 120), description: String(ps.description || '').slice(0, 320), ...(/^(data:image\/|https:\/\/|assets\/)/.test(ps.image || '') ? { image: String(ps.image) } : {}) }; else if (ps && /^(data:image\/|https:\/\/|assets\/)/.test(ps.image || '')) pg.seo = { title: '', description: '', image: String(ps.image) }; else delete pg.seo; });
     if (/^(outline|pill|soft)$/.test(t.btn || '')) c.theme.btn = t.btn;
     c.theme.space = /^(compact|roomy)$/.test(t.space) ? t.space : 'normal';
     const so = c.seo || {}; c.seo = { title: String(so.title || '').slice(0, 120), description: String(so.description || '').slice(0, 320), image: String(so.image || ''), favicon: String(so.favicon || ''), lang: /^[a-z]{2}(-[A-Za-z]{2})?$/.test(so.lang || '') ? so.lang : 'en' };
     if (c.logo && !/^(data:image\/|https:\/\/)/.test(c.logo)) delete c.logo;
+    if (c.css) { const cs = cleanCss(c.css); if (cs) c.css = cs; else delete c.css; } else delete c.css;
     if (c.credit && !(c.credit.text && /^https:\/\//.test(c.credit.url || ''))) delete c.credit;
     return c;
   }
@@ -592,7 +630,7 @@
   // ---------- feat/site-v2: more ops (each returns a new cfg) ----------
   function duplicateBlock(c, pageId, id) { c = clone(c); const p = pageOf(c, pageId), i = p.blocks.findIndex(b => b.id === id); if (i < 0) return { cfg: c, block: null }; const b = clone(p.blocks[i]); b.id = uid('b'); p.blocks.splice(i + 1, 0, b); return { cfg: c, block: b }; }
   function setHidden(c, pageId, id, on) { c = clone(c); const b = pageOf(c, pageId).blocks.find(x => x.id === id); if (b) { if (on) b.hidden = true; else delete b.hidden; } return c; }
-  function setStyle(c, pageId, id, patch) { c = clone(c); const b = pageOf(c, pageId).blocks.find(x => x.id === id); if (b) { b.style = { bg: '', pad: '', ...(b.style || {}), ...patch }; if (patch.bg) delete b.style.tint; Object.keys(b.style).forEach(k => { if (!b.style[k]) delete b.style[k]; }); if (!Object.keys(b.style).length) delete b.style; } return normalize(c); }
+  function setStyle(c, pageId, id, patch) { c = clone(c); const b = pageOf(c, pageId).blocks.find(x => x.id === id); if (b) { b.style = { bg: '', pad: '', ...(b.style || {}), ...patch }; if (patch.bg) delete b.style.tint; Object.keys(b.style).forEach(k => { if (!b.style[k] && !((k === 'pt' || k === 'pb') && b.style[k] === 0)) delete b.style[k]; }); if (!Object.keys(b.style).length) delete b.style; } return normalize(c); }
   // feat/site-editor2: one element's look, the entries of a list, the pages, the whole site's buttons
   function setElStyle(c, pageId, id, path, patch) { c = clone(c); const b = pageOf(c, pageId).blocks.find(x => x.id === id); if (!b || !ESPATH.test(path)) return c; const es = b.es = b.es || {}; const cur = { ...(es[path] || {}), ...patch }; Object.keys(cur).forEach(k => { if (!cur[k]) delete cur[k]; }); if (Object.keys(cur).length) es[path] = cur; else delete es[path]; return normalize(c); }
   // the lists a path sits in, outermost first: 'plans.1.features.2' -> [{ list: 'plans', i: 1, item: 'plans.1' }, { list: 'plans.1.features', i: 2, item: 'plans.1.features.2' }]
@@ -756,7 +794,8 @@ section{border-bottom:0}.zebra{background:var(--alt)}.zebra .card,.zebra form.cf
 @media (max-width:640px){.hide-phone{display:none!important}}@media (min-width:641px) and (max-width:1024px){.hide-tablet{display:none!important}}@media (min-width:1025px){.hide-desktop{display:none!important}}
 @keyframes an-fade{from{opacity:0}to{opacity:1}}@keyframes an-rise{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:none}}@media (prefers-reduced-motion:no-preference){@supports not (animation-timeline:view()){.an-fade{animation:an-fade .7s ease-out both}.an-rise{animation:an-rise .7s ease-out both}}.an-play-fade{animation:an-fade .7s ease-out both}.an-play-rise{animation:an-rise .7s ease-out both}@supports (animation-timeline:view()){.an-fade{animation:an-fade linear both;animation-timeline:view();animation-range:entry 0% entry 45%}.an-rise{animation:an-rise linear both;animation-timeline:view();animation-range:entry 0% entry 45%}}}
 ${t.btn === 'pill' ? '.btn{border-radius:999px}' : t.btn === 'outline' ? '.btn{background:transparent;color:var(--accent)}.btn.alt{border-color:var(--line);color:var(--ink)}.hero-accent .btn,.cta-accent .btn{background:transparent;color:inherit;border-color:currentColor}' : t.btn === 'soft' ? `.btn{background:${mix(k.bg, k.accent, 0.16)};color:var(--ink);border-color:${mix(k.bg, k.accent, 0.16)}}` : ''}
-@media (max-width:760px){.g-grid.n3{grid-template-columns:1fr 1fr}.nav .wrap{gap:12px}section{padding:48px 0}.nav-one nav a:not(.btn){display:none}}@media (max-width:480px){.g-grid.n2,.g-grid.n3,.g-grid.n4{grid-template-columns:1fr}}`;
+@media (max-width:760px){.g-grid.n3{grid-template-columns:1fr 1fr}.nav .wrap{gap:12px}section{padding:48px 0}.nav-one nav a:not(.btn){display:none}}@media (max-width:480px){.g-grid.n2,.g-grid.n3,.g-grid.n4{grid-template-columns:1fr}}
+.has-pt.has-pt{padding-top:var(--pt)}.has-pb.has-pb{padding-bottom:var(--pb)}@media (max-width:760px){.has-pt.has-pt{padding-top:calc(var(--pt) * .65)}.has-pb.has-pb{padding-bottom:calc(var(--pb) * .65)}}${c.css ? '\n/* your own CSS */\n' + cleanCss(c.css) : ''}`;
   }
   function renderBlock(c, b, pg, o) {
     const P = b.props || {}, ES = b.es || {};
@@ -809,7 +848,7 @@ ${t.btn === 'pill' ? '.btn{border-radius:999px}' : t.btn === 'outline' ? '.btn{b
     const XC = { footer: 'foot-', newsletter: 'nl-', cta: 'cta-', stats: 'st-', logos: 'lg-', banner: 'bn bn-', divider: 'dv dv-', image: 'im-', text: 't-', steps: 'sp-', info: 'in-', timeline: 'tl-' };
     let zi = 0;   // every other plain section gets a quiet tint, so the page has a rhythm instead of a line under each part
     const zebra = b => { const st = b.style || {}; if (/^(hero|links|banner|divider|footer)$/.test(b.type) || st.bg || st.tint || b.hidden || (b.type === 'cta' && b.variant === 'accent')) return ''; return zi++ % 2 === 0 ? ' zebra' : ''; };
-    return (pg.blocks || []).filter(b => o.edit || !b.hidden).map(b => { const tag = b.type === 'footer' ? 'footer' : b.type === 'banner' ? 'div' : 'section', st = b.style || {}; return `<${tag} id="b-${b.id}" class="${b.type}-${b.variant} b-${b.type}${zebra(b)}${XC[b.type] ? ' ' + XC[b.type] + b.variant : ''}${st.bg ? ' bg-' + st.bg : ''}${st.pad ? ' pad-' + st.pad : ''}${st.sz === 'l' || st.sz === 's' ? ' sz-' + st.sz : ''}${st.al ? ' al-' + st.al : ''}${st.tint && /^#[0-9a-f]{3,8}$/i.test(st.tint) ? ' tinted' : ''}${b.hidden ? ' is-hidden' : ''}${st.hide ? st.hide.split(',').map(d => (o.edit ? ' ehide-' : ' hide-') + d).join('') : ''}${st.anim && !o.edit ? ' an-' + st.anim : ''}${st.w ? ' w-' + st.w : ''}"${st.tint && /^#[0-9a-f]{3,8}$/i.test(st.tint) ? ` style="background:${st.tint};color:${contrast(st.tint, '#FFFFFF') >= 4.5 ? '#FFFFFF' : '#111111'}"` : ''}${o.edit ? ` data-block="${b.id}"` : ''}>${renderBlock(c, b, pg, o)}</${tag}>`; }).join('\n');
+    return (pg.blocks || []).filter(b => o.edit || !b.hidden).map(b => { const tag = b.type === 'footer' ? 'footer' : b.type === 'banner' ? 'div' : 'section', st = b.style || {}; return `<${tag} id="b-${b.id}" class="${b.type}-${b.variant} b-${b.type}${zebra(b)}${XC[b.type] ? ' ' + XC[b.type] + b.variant : ''}${st.bg ? ' bg-' + st.bg : ''}${st.pad ? ' pad-' + st.pad : ''}${st.sz === 'l' || st.sz === 's' ? ' sz-' + st.sz : ''}${st.al ? ' al-' + st.al : ''}${st.tint && /^#[0-9a-f]{3,8}$/i.test(st.tint) ? ' tinted' : ''}${b.hidden ? ' is-hidden' : ''}${st.hide ? st.hide.split(',').map(d => (o.edit ? ' ehide-' : ' hide-') + d).join('') : ''}${st.anim && !o.edit ? ' an-' + st.anim : ''}${st.w ? ' w-' + st.w : ''}${st.pt != null ? ' has-pt' : ''}${st.pb != null ? ' has-pb' : ''}"${(st.tint && /^#[0-9a-f]{3,8}$/i.test(st.tint)) || st.pt != null || st.pb != null ? ` style="${st.tint && /^#[0-9a-f]{3,8}$/i.test(st.tint) ? `background:${st.tint};color:${contrast(st.tint, '#FFFFFF') >= 4.5 ? '#FFFFFF' : '#111111'};` : ''}${st.pt != null ? `--pt:${+st.pt}px;` : ''}${st.pb != null ? `--pb:${+st.pb}px;` : ''}"` : ''}${o.edit ? ` data-block="${b.id}"` : ''}>${renderBlock(c, b, pg, o)}</${tag}>`; }).join('\n');
   }
   function nav(c, pg, o) {
     const one = c.pages.length < 2, first = (pg.blocks || [])[0];
@@ -1002,5 +1041,5 @@ ${t.btn === 'pill' ? '.btn{border-radius:999px}' : t.btn === 'outline' ? '.btn{b
   }
   const illusFor = text => { const t = String(text || '').toLowerCase(); const W = { cafe: /coffee|caf[eé]|bakery|restaurant|menu|food|tea/, shop: /shop|store|merch|buy|market|product/, phone: /app|phone|mobile|download/, people: /team|about|community|club|people|contact|talk/, rocket: /launch|startup|soon|grow|fast/, stage: /band|music|show|event|tour|podcast|conference|speak/, desk: /work|portfolio|studio|design|blog|write|course|learn|resume/ }; for (const k of Object.keys(W)) if (W[k].test(t)) return k; return 'hills'; };
 
-  return { moveBlockToPage, walkWords, whenOf, retime, openTimes, commandEl, setElStyle, listsOf, itemOp, setBtn, setPageSeo, movePage, setSiteText, hideOf, DEVS, ILLUS, illustration, illusFor, ACCENTS, setRadius, setPalette, applyOps, outline, check, kitNormalize, kitFromSite, kitToSite, FONT, ICONS, ICON_NAMES, icon: ic, iconFor, answer, command2, FONT_PAIRS, CATS, duplicateBlock, setHidden, setStyle, setSpace, setFonts, setSeo, setLogo, rewrite, fill, md, BLOCKS, TYPES, PRESETS, TEMPLATES, blank, normalize, colors, fromTemplate, render, exportFiles, dataToBytes, buttons, images, href, autoWire, addPage, renamePage, deletePage, addBlock, removeBlock, moveBlock, setVariant, setProp, setTheme, setMode, setColor, setLink, setImage, imageShape, command, getAt, slugify, contrast };
+  return { SPACE_SCALE, snapSpace, cleanCss, setCss, sectionCode, moveBlockToPage, walkWords, whenOf, retime, openTimes, commandEl, setElStyle, listsOf, itemOp, setBtn, setPageSeo, movePage, setSiteText, hideOf, DEVS, ILLUS, illustration, illusFor, ACCENTS, setRadius, setPalette, applyOps, outline, check, kitNormalize, kitFromSite, kitToSite, FONT, ICONS, ICON_NAMES, icon: ic, iconFor, answer, command2, FONT_PAIRS, CATS, duplicateBlock, setHidden, setStyle, setSpace, setFonts, setSeo, setLogo, rewrite, fill, md, BLOCKS, TYPES, PRESETS, TEMPLATES, blank, normalize, colors, fromTemplate, render, exportFiles, dataToBytes, buttons, images, href, autoWire, addPage, renamePage, deletePage, addBlock, removeBlock, moveBlock, setVariant, setProp, setTheme, setMode, setColor, setLink, setImage, imageShape, command, getAt, slugify, contrast };
 });

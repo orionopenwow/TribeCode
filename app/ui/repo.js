@@ -342,6 +342,7 @@
   C.on('repo-settings', m => { st.settings = m.settings; if (isShown()) { renderAutopilot(); renderStrip(); } });
   C.on('repo-activity', m => { st.activity = [m.entry, ...(st.activity || [])].slice(0, 60); if (isShown()) renderActivity(); if (/integrate|propose/.test(m.entry.kind)) refreshIntegrations(); });
   C.on('change', m => {
+    if (!m || !m.change) return;   // 'change' is also what a suggested change in the creator tools sends (server/changereq.js); that one has no code change in it
     const i = changes.findIndex(x => x.id === m.change.id);
     if (i >= 0) changes[i] = { ...changes[i], ...m.change }; else changes.unshift({ patchLines: 0, ...m.change });
     if (isShown()) renderChanges();
