@@ -88,6 +88,7 @@ const ok = (cond, what) => { n++; if (!cond) { fails++; console.error(`  ✗ ${w
     eq(I.t('Good morning, Orion'), 'Buenos días, Orion', 'a greeting');
     eq(I.t('1 of 5'), '1 de 5', 'a count');
     eq(I.t('Best of show'), 'Best of show', '"{n} of {total}" only matches digits');
+    ok(/^Mencionado/.test(I.t('Mentioned in a doc: “a habit tracker”')), 'a quoted slot is somebody’s words: the sentence around it still translates');
     eq(I.t('Add a bridge to the moon'), 'Add a bridge to the moon', 'a word slot full of untranslated English: the line stays whole, never half Spanish');
     eq(I.t('🚀 Getting started'), '🚀 ' + I.t('Getting started'), 'an emoji-led label uses the table’s own row');
     ok(I.t('Getting started') !== 'Getting started', 'and that row exists');
