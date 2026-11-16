@@ -763,7 +763,9 @@
    "do": "call:TribeAppCreator.open",
    "doLabel": "Open App Creator",
    "show": {
-    "go": "design"
+    "go": "design",
+    "sel": "[data-kind='app']",
+    "say": "Pick App to start from one of the designed apps."
    }
   },
   {
@@ -789,7 +791,9 @@
    "do": "call:TribeAppCreator.open",
    "doLabel": "Open App Creator",
    "show": {
-    "go": "design"
+    "go": "design",
+    "sel": "[data-kind='app']",
+    "say": "Open App, link a button to a screen, then press Play."
    }
   },
   {
