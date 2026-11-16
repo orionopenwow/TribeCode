@@ -59,7 +59,9 @@
     else if (src.kind === 'app') {
       const AC = window.TribeAppCreator; let s = null; try { s = ((await AC.screens(st.pid)) || []).find(x => String(x.id || x.name) === src.ref); } catch {}
       if (s && s.image) d = await D().img(s.image);
-      else if (s && typeof s.render === 'function') { const r = await s.render(786, 1704); d = typeof r === 'string' ? await D().img(r) : r; }
+      else if (s && typeof s.render === 'function') {   // App Creator's render(canvas, w, h); older hooks render(w, h) -> canvas | data URL
+        let r; if (s.render.length >= 3) { const cv = document.createElement('canvas'); r = await s.render(cv, 786, 1704); r = r || cv; } else r = await s.render(786, 1704);
+        d = typeof r === 'string' ? await D().img(r) : r; }
     }
     if (!d) return drawable(null, i);
     if (src.kind !== 'paywall') st.mem.set(k, { d }); return d;

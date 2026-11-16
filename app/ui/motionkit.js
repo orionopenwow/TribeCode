@@ -712,7 +712,14 @@
     else return { doc, say: '' };
     bump(); return { doc: d, say };
   }
-  function make(id, o) { const t = TEMPLATES[id] || TEMPLATES['ui-reel']; return t.make(o || {}); }
+  // Screens may come as picture URLs or as { image | src | url, name } (the Launch kit and App Creator hand objects over).
+  const srcOf = x => (typeof x === 'string' ? x : x && (x.image || x.src || x.url || x.png)) || '';
+  function make(id, o) {
+    const t = TEMPLATES[id] || TEMPLATES['ui-reel']; o = { ...(o || {}) };
+    if (Array.isArray(o.screens)) o.screens = o.screens.map(srcOf).filter(Boolean);
+    if (!o.aspect && o.size && o.size.w && o.size.h) { const r = o.size.w / o.size.h; o.aspect = r < 0.7 ? '9:16' : r < 0.9 ? '4:5' : r > 1.4 ? '16:9' : '1:1'; }
+    return t.make(o);
+  }
 
   return { VERSION, KINDS, TEMPLATES, LIST: Object.keys(TEMPLATES), CATS, FEELS, FEEL_LIST: Object.keys(FEELS), THEMES, ASPECTS, NAMED, ICONS,
     make, normalize, duration, seek, draw, load, events, snap, analyze, command, applyFeel, step, channel, twoEdge, beatSec, colorOf };

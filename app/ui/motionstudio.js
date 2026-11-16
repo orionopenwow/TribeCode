@@ -73,7 +73,7 @@
   function scheduleSave() { clearTimeout(saveT); setSaved(tr('Saving…')); saveT = setTimeout(save, 600); }
   function setSaved(s) { const el = root && $('#mos-saved', root); if (el) el.textContent = s; }
   async function save() {
-    clearTimeout(saveT); if (!doc) return;
+    clearTimeout(saveT); saveT = 0; if (!doc) return;
     try {
       if (pid) { if (!key) key = slug(doc.name) + '-' + rid(); window.__mosSelfAt = Date.now(); await C.api(`/projects/${encodeURIComponent(pid)}/motion/${encodeURIComponent(key)}`, { method: 'PUT', body: { doc } }); }
       else if (window.TribeLocalFiles && window.TribeLocalFiles.KINDS && window.TribeLocalFiles.KINDS.motion) {
@@ -94,7 +94,7 @@
     if (o.doc) d = o.doc;
     else if (key && pid) { try { d = (await C.api(`/projects/${encodeURIComponent(pid)}/motion/${encodeURIComponent(key)}`)).doc; } catch (e) { toast(e.message); } }
     else if (local && window.TribeLocalFiles) { try { const it = await window.TribeLocalFiles.get(local); d = it && JSON.parse(it.body || 'null'); } catch {} }
-    if (!d) d = K().make(o.template || 'ui-reel', { screens: o.screens, name: o.name, caption: o.caption, cta: o.cta, accent: o.accent || brandAccent(), aspect: o.aspect });
+    if (!d) d = K().make(o.template || 'ui-reel', { screens: o.screens, name: o.name, caption: o.caption, cta: o.cta, accent: o.accent || brandAccent(), aspect: o.aspect, size: o.size });
     doc = K().normalize(d); doc.rev = (doc.rev || 0) + 1;
     await K().load(doc);
     mount();
@@ -104,7 +104,9 @@
     return api.state();
   }
   function brandAccent() { try { const b = window.TribeBrand && window.TribeBrand.get && window.TribeBrand.get(); return b && b.accent || undefined; } catch { return undefined; } }
-  function close() { play(false); stopAudio(); clearTimeout(saveT); if (doc) save(); if (root) root.remove(); root = null; document.body.classList.remove('mos-on'); }
+  // Closing saves only what has not been saved yet: a second save would make an unchanged graphic look newer than
+  // the things it was made from (the suggestions compare those times).
+  function close() { play(false); stopAudio(); const pending = !!saveT || (doc && !key && !local); clearTimeout(saveT); saveT = 0; if (doc && pending) save(); if (root) root.remove(); root = null; document.body.classList.remove('mos-on'); }
   const isOpen = () => !!root && document.body.contains(root);
 
   // ---------- the editor ----------
