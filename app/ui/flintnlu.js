@@ -952,11 +952,76 @@
     }
     return null;
   }
+
+  // feat/motion: Motion Studio (app/ui/motionstudio.js, motionkit.js). In the studio (view 'motion'): "snappier", "slower",
+  // "less bounce", "make it 9:16 for tiktok", "loop it", "sync to the beat", "change the accent to teal", "add a toast",
+  // "remove the chart", "export a gif". Anywhere: "make a motion graphic", "a logo reveal", "kinetic type", "lower thirds".
+  const MO_KIND = [['bars', 'bar chart|bar graph|bars'], ['donut', 'donut|doughnut|pie chart|pie'], ['chart', 'line chart|chart|graph|line graph'], ['cmdk', 'command palette|cmd k|command k|search box|search bar|spotlight'],
+    ['toast', 'toast|snackbar|saved message|confirmation'], ['loader', 'loader|spinner|loading spinner|loading'], ['check', 'check mark|checkmark|tick|check|done state'], ['island', 'dynamic island|island'], ['player', 'music player|player|now playing'],
+    ['slider', 'volume slider|slider|volume'], ['toggle', 'toggle|switch'], ['tabs', 'tab bar|tabs'], ['notif', 'notification|push notification|alert'], ['endcard', 'end card|endcard|outro|end screen'], ['lower', 'lower third|lower thirds|name tag'],
+    ['caption', 'captions|caption|subtitles'], ['countdown', 'countdown'], ['button', 'button|cta'], ['logo', 'logo'], ['wordmark', 'wordmark'], ['word', 'words|headline|kinetic text|big text|title card'], ['list', 'checklist|list'],
+    ['stat', 'stat|number|counter|big number'], ['ring', 'progress ring|ring|progress'], ['phone', 'phone|iphone|screens|app screen'], ['post', 'post|tweet'], ['quote', 'quote|testimonial'], ['poll', 'poll|vote'], ['badge', 'badge|live badge|tag'], ['card', 'card']];
+  const MO_TPL = [['ui-reel', /\b(?:ui|interface)\s+(?:animation|reel|morph|motion|demo)|\bmorph(?:ing)?\s+reel\b|\bdribbble\b|\bui\s+reel\b/], ['logo-draw', /\blogo\s+(?:reveal|animation|intro|sting|animated)|\banimat(?:e|ed|ion)\s+(?:of\s+)?(?:my|our|the|a)?\s*logo\b/],
+    ['type-punch', /\bkinetic\s+(?:type|typography|text)|\banimated\s+(?:text|words|headline|typography)|\btext\s+animation\b/], ['app-preview', /\bapp\s+(?:preview|promo|trailer)(?:\s+video)?\b|\bpromo\s+video\s+for\s+(?:my|our|the)\s+app\b|\bapp\s+store\s+video\b/],
+    ['stat-big', /\b(?:stat|number|stats)\s+(?:counter|animation|count up)|\banimated\s+(?:stats?|numbers?|counter)\b|\bcount(?:ing)?\s+up\s+number\b/], ['chart-line', /\b(?:animated|animating)\s+(?:chart|graph)|\b(?:chart|graph)\s+(?:animation|reveal)\b/],
+    ['social-hook', /\b(?:tiktok|reels?|shorts|vertical)\s+(?:video|clip|hook)|\b(?:video|clip)\s+for\s+(?:tiktok|reels|instagram reels|shorts)\b/], ['social-post', /\b(?:animated|motion)\s+(?:post|tweet)\b|\banimated\s+post\s+for\s+(?:x|twitter)\b/],
+    ['lower-name', /\blower\s+thirds?\b/], ['cap-karaoke', /\b(?:animated|karaoke|tiktok|word by word)\s+captions?\b|\bcaptions?\s+(?:style|animation)\b/], ['end-remix', /\b(?:end\s*card|outro|end screen)\b/],
+    ['trans-circle', /\b(?:circle|iris)\s+(?:reveal|wipe|transition)\b|\btransition\s+(?:animation|effect)\b/], ['type-countdown', /\b(?:countdown|count down)\s+(?:animation|video|timer)\b|\b3 2 1 countdown\b/],
+    ['tour-wipe', /\bbefore\s+(?:and|&)\s+after\s+(?:video|animation|wipe|slider)\b/], ['tour-zoom', /\b(?:product|screenshot|feature)\s+tour(?:\s+video)?\b/], ['ui-reel', /\bmotion\s+(?:graphics?|design|video)\b|\banimated\s+(?:video|promo|clip)\b|\bmotion\s+studio\b/]];
+  function motionNew(c) {
+    if (!/\b(?:make|create|build|design|do|need|want|give|start|open|new|generate|animate|render|can you|could you|i would like|show me|use|switch to|try|for)\b/.test(c) && c.split(' ').length > 4) return null;
+    if (/\b(?:turn off|disable|stop|reduce|no)\s+(?:the\s+)?(?:animations?|motion)\b/.test(c)) return null;
+    for (const [id, re] of MO_TPL) if (re.test(c)) return id;
+    return null;
+  }
+  function motionRules(c, r, ctx, hit) {
+    const H = (intent, slots) => hit(intent, slots || {}, 0.99);
+    const kindIn = s => { for (const [k, w] of MO_KIND) if (new RegExp(`\\b(?:${w})\\b`).test(s)) return k === 'countdown' ? 'count' : k; return ''; };
+    let m;
+    const tpl = motionNew(c); if (tpl && /\b(?:use|switch to|try|make|start|load|open|change to|swap to|give me)\b/.test(c) && !/\b(?:add|insert|remove|delete)\b/.test(c)) return H('motion.new', { tpl });
+    if (/\b(?:export|download|render|save (?:it |this )?as|make (?:it |this )?(?:an?|into an?)|get (?:an?|the))\b/.test(c) && (m = /\b(mp4|gif|webm|png|html|video|picture|image|page|still)\b/.exec(c))) return H('motion.export', { fmt: { video: 'mp4', picture: 'png', image: 'png', still: 'png', page: 'html' }[m[1]] || m[1] });
+    if (/\b(?:sync|snap|line (?:it |them |everything )?up|lock|match|align|put (?:it |everything )?on)\b.*\b(?:beat|beats|music|song|tempo|grid|rhythm|bpm)\b|\bon the beat\b/.test(c)) return H('motion.beat');
+    if (/\b(?:add|use|upload|put in|pick|choose)\s+(?:a |my |our |some |the )?(?:song|music|track|audio|soundtrack)\b/.test(c)) return H('motion.song');
+    if (/\b(?:9[: x]?16|vertical|portrait|tiktok|reels?|shorts|stories|story)\b/.test(c) && !/\b(?:add|insert)\b/.test(c)) return H('motion.aspect', { ratio: '9:16' });
+    if (/\b(?:16[: x]?9|landscape|widescreen|youtube|horizontal|twitter)\b|\bfor x\b/.test(c)) return H('motion.aspect', { ratio: '16:9' });
+    if (/\b(?:4[: x]?5|instagram post|insta post|ig post)\b/.test(c)) return H('motion.aspect', { ratio: '4:5' });
+    if (/\b(?:1[: x]1|square)\b/.test(c)) return H('motion.aspect', { ratio: '1:1' });
+    if (/\b(?:play (?:it |this )?once|no loop|do not loop|stop looping|without looping|not loop)\b/.test(c)) return H('motion.loop', { on: false });
+    if (/\b(?:loop|looping|on repeat|seamless)\b/.test(c)) return H('motion.loop', { on: true });
+    if (/\bmotion blur\b/.test(c)) return H('motion.blur', { on: !/\b(?:no|off|remove|without|turn off|disable|less)\b/.test(c) });
+    if (/\b(?:hide|remove|no|without|lose|get rid of)\s+(?:the\s+)?(?:cursor|mouse|pointer)\b/.test(c)) return H('motion.cursor', { on: false });
+    if (/\b(?:show|add|bring back)\s+(?:the\s+)?(?:cursor|mouse|pointer)\b/.test(c)) return H('motion.cursor', { on: true });
+    if (/\b(?:still camera|no zoom|stop zooming|do not zoom|camera still|no camera|keep the camera still|camera (?:steady|fixed))\b/.test(c)) return H('motion.camera', { on: false });
+    if (/\b(?:zoom in more|more zoom|closer|zoom more|tighter shots?)\b/.test(c)) return H('motion.camera', { more: true });
+    if (/\b(?:less zoom|zoom out|wider shots?|zoom less)\b/.test(c)) return H('motion.camera', { more: false });
+    if (/\b(?:less|no|without|reduce|lose the|too much)\s+(?:bounce|bounciness|overshoot|wobble|springiness)\b|\b(?:less bouncy|too bouncy|not so bouncy|no bounce)\b/.test(c)) return H('motion.overshoot', { more: false });
+    if (/\b(?:more|add (?:a little |some )?)\s*(?:bounce|overshoot|spring)\b|\bbouncier\b/.test(c)) return H('motion.overshoot', { more: true });
+    const FEEL = ['crisp', 'smooth', 'gentle', 'brisk', 'silky', 'steady', 'precise', 'lively', 'relaxed', 'firm', 'soft', 'swift', 'measured', 'breezy', 'loose', 'polished', 'studio', 'keynote', 'documentary', 'playful', 'elegant', 'minimal', 'bold', 'dreamy', 'cinematic', 'sharp', 'fluid', 'liquid', 'weighty', 'feather', 'glide', 'tactile', 'hushed', 'energetic', 'easygoing', 'confident', 'velvet', 'metronome', 'heartbeat', 'ambient'];
+    if ((m = new RegExp(`\\b(${FEEL.join('|')})\\b`).exec(c)) && /\b(?:feel|style|make (?:it|this)|more|go|look|vibe|preset|motion)\b/.test(c)) return H('motion.feel', { feel: m[1] });
+    if (/\b(?:snappier|snappy|punchier|punchy|crisper|tighter|more energy|more energetic|faster springs|zippier|quicker moves)\b/.test(c)) return H('motion.feel', { feel: 'snappier' });
+    if (/\b(?:calmer|calm (?:it )?down|smoother|softer|gentler|more relaxed|chill(?:er)?|less busy|less hectic|too hectic|mellower)\b/.test(c)) return H('motion.feel', { feel: 'calmer' });
+    if (/\b(?:slower|slow (?:it |this )?down|too fast|less fast|reduce the tempo|lower the tempo)\b/.test(c)) return H('motion.speed', { dir: 'slower' });
+    if (/\b(?:faster|speed (?:it |this )?up|too slow|quicker|raise the tempo|more tempo)\b/.test(c)) return H('motion.speed', { dir: 'faster' });
+    if (/\b(?:longer|add a bar(?! chart| graph)|more bars|extend it|make it last longer)\b/.test(c)) return H('motion.length', { more: true });
+    if (/\b(?:shorter|fewer bars|remove a bar|cut a bar|trim it)\b/.test(c)) return H('motion.length', { more: false });
+    if (/\b(?:dark|night)\s+(?:mode|canvas|background|theme|version)\b|^(?:make it |go )?dark$/.test(c)) return H('motion.theme', { theme: 'night', keep: true });
+    if (/\b(?:light)\s+(?:mode|canvas|background|theme|version)\b|^(?:make it |go )?light$/.test(c)) return H('motion.theme', { theme: 'warm', keep: true });
+    if ((m = /\b(?:change|set|make|update|edit)\s+(?:the\s+)?(button|headline|title|words?|text|toast|caption|captions|name|end card)\s+(?:text\s+)?(?:to\s+say|to\s+read|say|says|read|to|into)\s+(.+)$/i.exec(r))) { const w = m[1].toLowerCase(), k = { button: 'button', headline: 'word', title: 'word', word: 'word', words: 'word', toast: 'toast', caption: 'caption', captions: 'caption', name: 'lower', 'end card': 'endcard' }[w]; return H('motion.text', { ...(k ? { kind: k } : {}), text: m[2].replace(/^["“']|["”'.]+$/g, '').trim() }); }
+    const col = colorOf(r);
+    if (col && /\b(?:accent|colou?r|brand|highlight|main|make (?:it|the \w+)|turn (?:it|the \w+)|in|use)\b/.test(c)) return H('motion.accent', { color: col });
+    if (/\b(?:add|insert|put|include|throw in|append|another|one more|give it|stick)\b/.test(c) && (m = kindIn(c))) return H('motion.add', { kind: m });
+    if (/\b(?:remove|delete|drop|lose|get rid of|cut|no more|take out|without)\b/.test(c) && (m = kindIn(c))) return H('motion.remove', { kind: m });
+    if (/^(?:play|play it|preview|watch it|start)$/.test(c)) return H('motion.play', { on: true });
+    if (/^(?:pause|stop|stop it|pause it)$/.test(c)) return H('motion.play', { on: false });
+    return null;
+  }
   function design(c, raw, ctx) {
     const view = ctx.view === 'canvas' ? 'canvas' : (ctx.view === 'site' || (ctx.view === 'preview' && ctx.site)) ? 'site' : '';
     const out = [], hit = (intent, slots, conf) => { out.push({ intent, area: intent === 'lesson' ? 'help' : intent.startsWith('canvas.') ? 'canvas' : 'build', slots: slots || {}, conf: conf || (view === 'canvas' ? 0.98 : 0.97), req: {}, label: '' }); return out; };
     const r = String(raw || '').trim(), rl = r.toLowerCase();
     const lf = lessonOf(c); if (lf) return hit('lesson', { feature: lf }, 0.97);
+    if (ctx.view === 'motion') { const mo = motionRules(c, r, ctx, hit); if (mo) return mo; }   // feat/motion
+    else if (!view) { const mt = motionNew(c); if (mt) return hit('motion.new', { tpl: mt }, 0.975); }
     if (view === 'site') { const w = siteEl(c, r, ctx, hit); if (w) return w; }   // feat/site-editor2: the selected thing, screen sizes, what the tribe said
     { const z = maxNew(c, r, ctx, hit, view); if (z) return z; }   // feat/flint-max
     const IMG = /\b(?:image|images|picture|pictures|photo|photos|avatar|img|headshot|portrait|cover|pfp)\b/;
@@ -1151,6 +1216,8 @@
   'trailer trailers swap swaps dupe dup ungroup unlock unhide distribute evenly lock freeze rectangle rect ellipse oval circle artboard placeholder snap grid zoom resize width height wide tall twice halve front back forward backward behind underneath instagram insta tiktok youtube spotify twitter github linkedin facebook twitch soundcloud bandcamp pinterest threads bluesky mastodon discord patreon substack kofi behance dribbble snapchat whatsapp telegram vimeo etsy social socials icon icons handle email phone call map directions address countdown copyright footer announcement banner bio menu nav navigation navbar align alignment justify corners rounder rounding radius sharper language logo testimonial quote review plan tier package team stat metric feature perk dish drink episode gig tour faq question clear empty wipe timer animations motion notifications notifs mute unmute snooze pin unpin react thumbs heart reopen unassign priority urgent prioritize whiteboard inspiration inspo template templates marketplace gigs away offline invisible afk brb sounds'.split(' ').forEach(w => { VOCAB.add(w); KEEP.add(w); });
   // feat/site-3d: words of the moving-background sentences (siteFx)
   'moving animated animation animations motion movement particles particle starfield stars constellation constellations ripples ripple ribbons ribbon streams stream floating shader slower faster fewer sparser denser fainter dimmer stronger brighter calmer quieter subtler gentler livelier busier speed quicker dots droplets drops sphere globe dome orb horizon halftone aurora fireflies bokeh backdrop behind phones mobile dimensional pixels distracting energetic vivid'.split(' ').forEach(w => { VOCAB.add(w); KEEP.add(w); });
+  // feat/motion: Motion Studio words
+  'player players notification wordmark smoother gentler hectic preset presets rid still once loop loops looping repeat seamless sync beat beats tempo bpm rhythm song music soundtrack track snappier snappy punchier punchy crisper zippier calmer mellower bounce bouncy bouncier bounciness overshoot wobble springiness kinetic typography reel reels morph morphing dribbble tiktok shorts vertical portrait landscape widescreen youtube horizontal square instagram insta toast snackbar loader spinner checkmark island slider toggle tabs donut doughnut palette countdown outro endcard wordmark subtitles captions caption lower thirds third testimonial poll badge cursor pointer camera zoom blur webm gif mp4 png html render cinematic dreamy playful silky velvet metronome heartbeat ambient tactile hushed breezy brisk documentary keynote weighty feather glide liquid fluid easygoing iris wipe transition transitions promo trailer stat stats counter'.split(' ').forEach(w => { VOCAB.add(w); KEEP.add(w); });
   'noon midnight morning afternoon evening night tonight weekend week weeks month months day days hour hours minute minutes mins today tomorrow eod eow sept'.split(' ').forEach(w => { VOCAB.add(w); KEEP.add(w); });
   // feat/flint-max: design, copy, sheet, doc and slide words (kept, and typos of them corrected toward them)
   ('palette palettes scheme colours colors colour color mood vibe vibes brutalist brutal brutalism corporate professional elegant classy luxury luxurious premium friendly techy retro vintage calm zen modern autumn sunset ocean forest earthy desert coffee pastel candy '

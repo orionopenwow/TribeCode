@@ -439,6 +439,34 @@
    }
   },
   {
+   "id": "motion-studio",
+   "group": "make",
+   "title": "Make a motion graphic",
+   "intro": "One shape that morphs on the beat: UI reels, logo reveals, app promos and clips for X, TikTok and Instagram. It loops perfectly.",
+   "asks": [
+    "make a motion graphic",
+    "animate my logo",
+    "ui animation reel",
+    "make a tiktok clip",
+    "motion studio"
+   ],
+   "needs": "TribeMotionStudio",
+   "steps": [
+    "Open Design and pick Motion graphic.",
+    "Choose a template, or tell Flint “make a logo reveal”.",
+    "Click a state on the timeline to change its words, size or colour.",
+    "Pick a feel, or say “snappier”, “make it 9:16” or “put it on the beat”.",
+    "Export an MP4, a GIF or a web page, or put it on your website."
+   ],
+   "do": "call:TribeMotionStudio.open",
+   "doLabel": "Open Motion Studio",
+   "show": {
+    "call": "TribeMotionStudio.open",
+    "sel": "#mos-ask",
+    "say": "Tell Flint what to change, or pick a template."
+   }
+  },
+  {
    "id": "site-one-thing",
    "group": "make",
    "title": "Change one thing on your site",

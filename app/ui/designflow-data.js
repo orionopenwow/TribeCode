@@ -16,6 +16,7 @@
     { id: 'poster', t: 'Poster / graphic', d: 'Posters, social posts and flyers', icon: 'poster' },
     { id: 'whiteboard', t: 'Whiteboard', d: 'Sticky notes, arrows and sketches to think together', icon: 'whiteboard' },
     { id: 'logo', t: 'Logo / brand kit', d: 'A mark, a wordmark, colors and type', icon: 'brand' },
+    { id: 'motion', t: 'Motion graphic', d: 'UI reels, app promos, logo reveals and social clips that loop', icon: 'media' },   // feat/motion: Motion Studio
   ];
   const s = (id, t, d, k, q, label) => ({ id, t, d, act: k ? { k, q: q || '', label: label || '' } : null });
   const PLANS = {

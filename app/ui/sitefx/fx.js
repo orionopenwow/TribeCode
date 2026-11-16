@@ -46,7 +46,7 @@
   function num(v, d, lo, hi) { v = +v; return isFinite(v) ? Math.max(lo, Math.min(hi, v)) : d; }
   function read(el) {
     var o = {}; try { o = JSON.parse(el.getAttribute('data-fx-o') || '{}') || {}; } catch (e) {}
-    return { speed: num(o.s, 1, 0, 3), density: num(o.d, 1, 0.3, 2.5), intensity: num(o.i, 1, 0.1, 2), phones: o.p === 0 ? 0 : 1, a: rgb(o.a || '#4263eb'), b: rgb(o.b || o.a || '#111111'), ah: o.a || '#4263eb', bh: o.b || o.a || '#111111' };
+    return { speed: num(o.s, 1, 0, 3), density: num(o.d, 1, 0.3, 2.5), intensity: num(o.i, 1, 0.1, 2), phones: o.p === 0 ? 0 : 1, a: rgb(o.a || '#4263eb'), b: rgb(o.b || o.a || '#111111'), ah: o.a || '#4263eb', bh: o.b || o.a || '#111111', m: o.m && typeof o.m === 'object' ? o.m : null };
   }
 
   // ---------- one loop ----------
@@ -82,6 +82,7 @@
   function mount(el) {
     if (find(el)) return; var kind = el.getAttribute('data-fx'), def = REG[kind];
     if (!def) { if (KINDS3D[kind] && hasGL()) load3d(); return; }   // no WebGL: Three.js is not even fetched
+    if (kind === 'motion' && !window.TribeMotionKit) { loadMotion(); return; }   // feat/motion: the engine first, then this section mounts
     var o = read(el); if (!o.phones && small.matches) return;
     var layer = layerOf(el), canvas = document.createElement('canvas'), inst = null;
     try { inst = def.make(canvas, o); } catch (e) { inst = null; }
@@ -107,6 +108,13 @@
   }
   function sweep() { for (var i = items.length - 1; i >= 0; i--) { var it = items[i]; if (!document.documentElement.contains(it.el) || !it.el.getAttribute('data-fx')) kill(it); else if (it.el.getAttribute('data-fx') !== it.kind) { kill(it); mount(it.el); } } }
   var gl0, hasGL = function () { if (gl0 === undefined) { try { var c = document.createElement('canvas'), g = c.getContext('webgl') || c.getContext('experimental-webgl'); gl0 = !!g; var x = g && g.getExtension('WEBGL_lose_context'); if (x) x.loseContext(); } catch (e) { gl0 = false; } } return gl0; };
+  var loadingMo = 0;
+  function loadMotion() {
+    if (loadingMo || !BASE) return; loadingMo = 1;
+    var s = document.createElement('script'); s.src = BASE + 'motionkit.js'; s.onload = function () { scan(); };
+    s.onerror = function () { if (/\/sitefx\/$/.test(BASE)) { var s2 = document.createElement('script'); s2.src = BASE + '../motionkit.js'; s2.onload = function () { scan(); }; document.head.appendChild(s2); } };
+    document.head.appendChild(s);
+  }
   function load3d() {
     if (loading3d || !BASE) return; loading3d = 1;
     var add = function (src, next) { var s = document.createElement('script'); s.src = BASE + src; s.onload = next; s.onerror = function () { loading3d = 2; }; document.head.appendChild(s); };
@@ -154,6 +162,17 @@
   }
   var css = function (c, a) { return 'rgba(' + Math.round(c[0] * 255) + ',' + Math.round(c[1] * 255) + ',' + Math.round(c[2] * 255) + ',' + a + ')'; };
   var OUT = 'void put(vec3 c,float a){a=clamp(a,0.,1.);gl_FragColor=vec4(c*a,a);}\n';
+
+  // ---------- a Motion Studio piece (feat/motion): the engine draws it, covering the section ----------
+  REG.motion = { make: function (canvas, o) {
+    var K = window.TribeMotionKit, g = canvas.getContext('2d'); if (!K || !g || !o.m) return null;
+    var d = K.normalize(o.m); K.load(d);
+    return {
+      resize: function (w, h, dpr) { canvas.width = Math.max(1, Math.round(w * dpr)); canvas.height = Math.max(1, Math.round(h * dpr)); },
+      draw: function (t) { var s = Math.max(canvas.width / d.size.w, canvas.height / d.size.h); g.setTransform(1, 0, 0, 1, 0, 0); g.clearRect(0, 0, canvas.width, canvas.height); g.translate((canvas.width - d.size.w * s) / 2, (canvas.height - d.size.h * s) / 2); g.scale(s, s); K.draw(g, d, t, { blur: 0 }); },
+      dispose: function () {}
+    };
+  } };
 
   // ---------- the shader effects ----------
   // Pulsing dots (after "Dot Matrix")
