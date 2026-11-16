@@ -135,7 +135,8 @@ def main():
             assert pg.locator("#apc-flint .fl-chip").count() >= 4, "chips"
             assert pg.locator("#apc-flint .flm-ctx").inner_text().strip().lower() == "app"
             assert pg.locator("#apc-flint [data-fc-act=polish]").count() == 1 and pg.locator("#apc-flint [data-fc-act=beauty]").count() == 0, "no AI in the tribe: Polish it only"
-            assert "stronger AI" in pg.locator("#apc-flint [data-fc-line]").inner_text(), "one honest line where Make it beautiful would be"
+            assert "stronger AI" in pg.locator("#apc-flint [data-fc-line]").text_content(), "one honest line where Make it beautiful would be"
+            pg.click("#apc-flint [data-fc-tip]"); assert pg.locator("#apc-flint [data-fc-line]").is_visible(), "pass 5: the line sits behind the small info button"
             n0 = len(doc(pg)["screens"])
             pg.fill("#apc-ask-in", "add a settings screen"); pg.press("#apc-ask-in", "Enter")
             pg.wait_for_function(f"TribeAppCreator.doc().screens.length > {n0}", timeout=5000)

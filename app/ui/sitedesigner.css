@@ -275,3 +275,113 @@ body.wdz-open { overflow: hidden; }
 /* a narrow window: the list of blocks keeps every button inside its row (the last one used to be cut off) */
 .wdz-blk-t { min-width: 0; overflow-wrap: anywhere; }
 @media (max-width: 1100px) and (min-width: 821px) { .wdz-body { grid-template-columns: 220px 1fr 280px; } .wdz-blk-acts button { width: 21px; } }
+
+/* ---------- pass 5: four columns. Blocks, the page, the panel, and Flint on the far right in a column of his own ---------- */
+.wdz-body { position: relative; }
+@media (min-width: 821px) {
+  .wdz-body { grid-template-columns: 220px minmax(0, 1fr) 290px 320px; }   /* the page keeps at least ~600px at 1440 */
+  .wdz.fl-rail .wdz-body { grid-template-columns: 220px minmax(0, 1fr) 290px 44px; }
+  .wdz .wdz-right { grid-template-rows: auto minmax(0, 1fr); }
+  .wdz-right > .wdz-insp { max-height: none; border-bottom: 0; padding-bottom: 28px; }   /* the panel has the whole height now: nothing is cut off at its foot */
+}   /* the panel has the whole height now: nothing is cut off at its foot */
+.wdz-fl { position: relative; display: flex; flex-direction: column; min-height: 0; min-width: 0; background: var(--surface); border-left: 1px solid var(--border); }
+.wdz-fl > .wdz-flint { flex: 1 1 auto; min-height: 0; border-top: 0; }
+.wdz-fl-rail, .wdz-fl-grab { display: none; }
+.wdz-fl-rail { flex-direction: column; align-items: center; gap: 8px; width: 100%; padding: 12px 0; border: 0; background: none; color: var(--muted); font: 600 11px/1 var(--mono); letter-spacing: .06em; text-transform: uppercase; cursor: pointer; transition: color var(--dur-quick) var(--ease-out), background-color var(--dur-quick) var(--ease-out); }
+.wdz-fl-rail span { writing-mode: vertical-rl; }
+.wdz-fl-rail:hover, .wdz-fl-rail:focus-visible { color: var(--text); background: var(--surface-2); }
+.wdz.fl-rail .wdz-fl-rail { display: flex; flex: 1 1 auto; }
+.wdz.fl-rail .wdz-fl > .wdz-flint { display: none; }
+/* Flint, uncrowded: a small header, the thread that fills the column (newest at the bottom), three chips, one quiet row, the box */
+.wdz-fl .flint-mount { padding: 10px 12px 12px; gap: 8px; }
+.wdz-fl .flm-head { min-height: 24px; }
+.wdz-fl .flm-head .flm-ctx { display: none; }   /* it is the website designer: the word "Website" says nothing here */
+.wdz-fl .flm-head .fl-st { font-size: 11px; color: var(--faint); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.wdz-fl .flm-thread { flex: 1 1 auto; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; }
+.wdz-fl .flm-thread > :first-child { margin-top: auto; }   /* newest at the bottom, next to the box, like any chat */
+.wdz-fl .fl-hi { margin: 0; font-size: 13px; line-height: 1.5; color: var(--muted); }
+.wdz-fl .flm-chips { flex-wrap: wrap; }
+.wdz-fl .flm-tools .flm-tool { width: 28px; height: 28px; min-width: 28px; padding: 0; display: inline-grid; place-items: center; }
+@media (max-width: 1439px) and (min-width: 1280px) { .wdz-body { grid-template-columns: 200px minmax(0, 1fr) 280px 300px; } .wdz.fl-rail .wdz-body { grid-template-columns: 200px minmax(0, 1fr) 280px 44px; } }
+/* a narrower window: the column is the rail; open, Flint is a drawer over the page, left of the panel */
+@media (max-width: 1279px) and (min-width: 821px) {
+  .wdz-body, .wdz.fl-rail .wdz-body, .wdz.fl-open .wdz-body { grid-template-columns: 210px minmax(0, 1fr) 280px 44px; }
+  .wdz-fl .wdz-fl-rail { display: flex; flex: 1 1 auto; }
+  .wdz.fl-open .wdz-fl-rail { color: var(--text); background: var(--surface-2); }
+  .wdz-fl > .wdz-flint { display: none; }
+  .wdz.fl-open .wdz-fl > .wdz-flint { display: flex; position: absolute; z-index: 5; top: 0; bottom: 0; right: calc(100% + 281px); width: min(360px, 46vw); background: var(--surface); border: 1px solid var(--border); border-top: 0; border-bottom: 0; }
+}
+/* a phone: the box to type in is always at the bottom; Flint's replies slide up above it (the handle, or a reply, opens them) */
+@media (max-width: 820px) {
+  .wdz-body { padding-bottom: 72px; }
+  .wdz-fl { position: fixed; z-index: 8; left: 0; right: 0; bottom: 0; border-left: 0; border-top: 1px solid var(--border); max-height: 72dvh; }
+  .wdz-fl-grab { display: grid; place-items: center; height: 22px; border: 0; background: none; cursor: pointer; flex: none; }
+  .wdz-fl-grab span { width: 36px; height: 4px; border-radius: 2px; background: var(--border); }
+  .wdz-fl > .wdz-flint { display: flex; }
+  .wdz-fl .flint-mount { padding-top: 0; }
+  .wdz:not(.fl-sheet) .wdz-fl .flm-head, .wdz:not(.fl-sheet) .wdz-fl .flm-thread, .wdz:not(.fl-sheet) .wdz-fl .flm-extra, .wdz:not(.fl-sheet) .wdz-fl .flm-chips { display: none; }
+  .wdz.fl-sheet .wdz-fl { height: 72dvh; }
+  .wdz .wdz-flint .flint-mount { min-height: 0; max-height: none; }
+}
+
+/* the list of blocks: a grip, the name, and on the right the eye, the lock and the menu */
+.wdz-left { position: relative; }
+.wdz-blk { grid-template-columns: 18px minmax(0, 1fr) auto; gap: 2px; padding: 2px 2px 2px 4px; transition: border-color var(--dur-quick) var(--ease-out); }
+.wdz-blk:hover { border-color: var(--faint); }
+.wdz-blk.is-sel { border-color: var(--accent); }
+.wdz-grip { display: grid; place-items: center; color: var(--faint); cursor: grab; letter-spacing: 0; touch-action: none; }
+.wdz-blk.is-locked .wdz-grip { cursor: default; opacity: .35; }
+.wdz-blk-n { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.wdz-blk-t small { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.wdz-blk-acts { gap: 0; }
+.wdz-blk-acts .wdz-ba { width: 26px; height: 28px; display: inline-grid; place-items: center; color: var(--faint); opacity: 0; transition: opacity var(--dur-quick) var(--ease-out), color var(--dur-quick) var(--ease-out); }
+.wdz-blk:hover .wdz-ba, .wdz-blk.is-sel .wdz-ba, .wdz-blk-acts .wdz-ba:focus-visible, .wdz-blk-acts .wdz-ba.on, .wdz-blk-acts .wdz-ba[data-bmenu] { opacity: 1; }
+.wdz-blk-acts .wdz-ba.on { color: var(--text); }
+.wdz-blk-acts .wdz-ba[data-bmenu] { color: var(--muted); }
+.wdz-blk.is-drag { opacity: .45; }
+.wdz-blocks.is-sorting .wdz-blk { cursor: grabbing; }
+.wdz-ren { height: 30px; padding: 0 8px; font: 600 13px var(--font); min-width: 0; }
+.wdz-ldrop { position: absolute; z-index: 4; height: 2px; background: var(--accent); border-radius: 1px; pointer-events: none; }
+.wdz-ldrop.x { width: 2px; }
+.wdz-pages { position: relative; }
+.wdz-pages.is-sorting .wdz-tab { cursor: grabbing; }
+.wdz-pkb[draggable="true"] { cursor: grab; }
+@media (hover: none) { .wdz-blk-acts .wdz-ba { opacity: 1; } }
+
+/* find and replace, and the history: small panels at the top right of the page */
+.wdz-float { position: absolute; z-index: 6; top: 12px; right: 12px; width: min(340px, calc(100% - 24px)); max-height: calc(100% - 24px); overflow: auto; display: grid; gap: 8px; align-content: start; padding: 12px; border: 1px solid var(--border); border-radius: var(--r); background: var(--surface); }
+.wdz-float[hidden] { display: none; }
+.wdz-fhead { display: flex; align-items: center; justify-content: space-between; }
+.wdz-fhead .wdz-eyebrow { margin: 0; }
+.wdz-x { width: 28px; height: 28px; border: 1px solid transparent; border-radius: var(--r-sm); background: none; color: var(--muted); font-size: 18px; line-height: 1; cursor: pointer; }
+.wdz-x:hover { border-color: var(--border); color: var(--text); }
+.wdz-fopts { font-size: 12.5px; color: var(--muted); gap: 14px; }
+.wdz-fopts label { display: inline-flex; align-items: center; gap: 6px; cursor: pointer; }
+.wdz-fn { margin-left: auto; font: 12px var(--mono); color: var(--faint); }
+.wdz-fhits, .wdz-hlist { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; }
+.wdz-fhit, .wdz-hrow { width: 100%; display: grid; gap: 2px; text-align: left; padding: 7px 8px; border: 1px solid transparent; border-radius: var(--r-sm); background: none; color: var(--text); font: 13px/1.4 var(--font); cursor: pointer; }
+.wdz-fhit:hover, .wdz-hrow:hover, .wdz-fhit:focus-visible, .wdz-hrow:focus-visible { background: var(--surface-2); }
+.wdz-fhit.is-on, .wdz-hrow.is-now { border-color: var(--border); background: var(--surface-2); }
+.wdz-fhit small { color: var(--faint); font-size: 11.5px; }
+.wdz-fhit span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--muted); }
+.wdz-fhit mark { background: none; color: var(--text); font-weight: 600; border-bottom: 1px solid var(--accent); }
+.wdz-hrow { grid-template-columns: minmax(0, 1fr) auto; align-items: center; }
+.wdz-hrow span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.wdz-hrow small { font: 11px var(--mono); color: var(--faint); }
+.wdz-hrow.is-fut span { color: var(--faint); }
+
+/* the plan from the Design flow stays out of the designer for now (designflow.js keeps it for later) */
+html body.wdz-open #dfl-chip, html body.wdz-open #dfl-dock, html body.wdz-open #dfl-scrim { display: none !important; }
+html body.wdz-open.dfl-side #wdz { right: 0; }
+
+@media (prefers-reduced-motion: reduce) { .wdz-fl-rail, .wdz-blk, .wdz-ba { transition: none; } }
+@media (max-width: 820px) {
+  .wdz-float { position: fixed; top: 56px; left: 8px; right: 8px; width: auto; max-height: calc(100dvh - 150px); }
+  .wdz-fhit, .wdz-hrow, .wdz-x { min-height: 40px; }
+  .wdz-blk-acts .wdz-ba { width: 36px; height: 40px; }
+}
+.wdz-insp { position: relative; }
+.sp-li[draggable="true"] { cursor: grab; }
+.wdz-insp.is-sorting .sp-li { cursor: grabbing; }
+.sp-li.is-drag { opacity: .45; }
+@media (max-width: 820px) { .wdz-fl [data-fl-hide] svg { transform: rotate(90deg); } }   /* on a phone, folding Flint goes down */

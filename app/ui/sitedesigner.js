@@ -17,6 +17,11 @@
   // p4-site: stroke icons for the bar (the shared set where it has one, our own few where it does not)
   const sv = d => `<svg class="wdz-svg" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${d}</svg>`;
   const IC = { back: sv('<path d="M19 12H5M11 6l-6 6 6 6"/>'), undo: sv('<path d="M9 14 4 9l5-5"/><path d="M4 9h10a6 6 0 0 1 0 12h-3"/>'), redo: sv('<path d="m15 14 5-5-5-5"/><path d="M20 9H10a6 6 0 0 0 0 12h3"/>'), minus: sv('<path d="M5 12h14"/>'), plus: sv('<path d="M12 5v14M5 12h14"/>') };
+  // pass 5: Flint's own column (rail, drawer, phone sheet) and the drag handles, eye and lock in the list of blocks
+  Object.assign(IC, { chevR: sv('<path d="m9 6 6 6-6 6"/>'), eye: sv('<path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>'), eyeOff: sv('<path d="M3 3l18 18"/><path d="M10.6 5.1A10.4 10.4 0 0 1 12 5c6.5 0 10 7 10 7a17 17 0 0 1-3 3.9M6.6 6.6A17 17 0 0 0 2 12s3.5 7 10 7a9.7 9.7 0 0 0 5.4-1.6"/><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2"/>'),
+    lock: sv('<rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/>'), unlock: sv('<rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 7.5-2"/>'), grip: sv('<circle cx="9" cy="6" r="1"/><circle cx="15" cy="6" r="1"/><circle cx="9" cy="12" r="1"/><circle cx="15" cy="12" r="1"/><circle cx="9" cy="18" r="1"/><circle cx="15" cy="18" r="1"/>'),
+    info: sv('<circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/>'), more: sv('<circle cx="5" cy="12" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/>'), clock: sv('<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>'), search: sv('<circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/>') });
+  const FLINT_IC = '<img class="fl-face" src="assets/flint.svg" alt="" width="20" height="20" aria-hidden="true">';
   const ic = (n, z = 16) => (window.TribeIcons && window.TribeIcons.has && window.TribeIcons.has(n) ? window.TribeIcons.svg(n, z) : '');
   const connected = () => !!(C && C.connected && C.connected() && C.hasToken && C.hasToken());
   let root = null, st = null, saveT = 0, frameScroll = 0, liveText = null, liveT = 0;
@@ -31,6 +36,8 @@
 html[data-dev=phone] .ehide-phone,html[data-dev=tablet] .ehide-tablet,html[data-dev=desktop] .ehide-desktop{opacity:.35;outline:1px dashed var(--muted);outline-offset:-3px}
 [data-e]{white-space:pre-wrap}[data-e] a{cursor:text}a[data-new]{outline:1px dashed var(--accent);outline-offset:2px}[data-e]:empty:not([data-hint])::before{content:'Add words'}
 .wdz-bar{position:absolute;top:8px;right:8px;z-index:6;display:flex;gap:0;background:#16181D;border:1px solid #3A3F4A;border-radius:8px;overflow:hidden;font:600 13px/1 system-ui,sans-serif;text-align:left}.wdz-bar button{all:unset;box-sizing:border-box;min-width:30px;height:30px;display:grid;place-items:center;color:#F2F3F5;cursor:pointer;padding:0 6px}.wdz-bar button+button{border-left:1px solid #3A3F4A}.wdz-bar button:hover,.wdz-bar button:focus-visible{background:#2A2F39}.wdz-bar [data-a=grip]{cursor:grab;touch-action:none;letter-spacing:-2px}.wdz-dragging,.wdz-dragging *{cursor:grabbing!important;user-select:none}.wdz-moving{opacity:.45}.wdz-drop{position:absolute;left:0;right:0;height:4px;background:var(--accent);z-index:7;pointer-events:none}.wdz-cm .wdz-bar{display:none}[data-icon]{cursor:pointer}[data-icon]:hover{outline:2px dashed var(--muted);outline-offset:2px}@media (max-width:480px){.wdz-bar button{min-width:36px;height:36px}}.wdz-sp{position:absolute;left:50%;z-index:7;transform:translateX(-50%);display:none;align-items:center;gap:6px;height:20px;padding:0 9px;background:#16181D;border:1px solid #3A3F4A;border-radius:10px;color:#F2F3F5;font:600 11px/1 ui-monospace,monospace;cursor:ns-resize;touch-action:none;user-select:none;-webkit-user-select:none;text-align:left}.wdz-sel>.wdz-sp{display:flex}.wdz-sp-pt{top:3px}.wdz-sp-pb{bottom:3px}.wdz-sp i{width:16px;height:2px;border-radius:1px;background:#F2F3F5}.wdz-sp b{font-weight:600;min-width:2ch;text-align:center}.wdz-sp:hover,.wdz-sp.is-drag,.wdz-sp:focus-visible{border-color:#F26B1D;outline:0}.wdz-sp-show-pt{box-shadow:inset 0 var(--pt,0) 0 rgba(242,107,29,.16)}.wdz-sp-show-pb{box-shadow:inset 0 calc(-1 * var(--pb,0)) 0 rgba(242,107,29,.16)}html.wdz-spacing,html.wdz-spacing *{cursor:ns-resize!important}@media (max-width:480px){.wdz-sp{height:30px;padding:0 12px}}
+.wdz-bar [data-a=grip]{touch-action:none;cursor:grab}[data-locked]:hover{outline-style:solid;outline-color:var(--line)}[data-locked] [data-e]{cursor:default}.wdz-bar .wdz-lk{all:unset;box-sizing:border-box;display:inline-flex;align-items:center;gap:6px;height:30px;padding:0 10px;color:#F2F3F5;cursor:pointer;font:600 12px/1 system-ui,sans-serif}
+.wdz-dropto{outline:3px solid var(--accent)!important;outline-offset:2px!important}
 </style>`;
   // the frame's helper is a real file loaded from the app's origin, never an inline script: the srcdoc frame inherits the
   // page's CSP, and the desktop app's has no 'unsafe-inline' (app/src-tauri/tauri.conf.json)
@@ -51,6 +58,7 @@ html[data-dev=phone] .ehide-phone,html[data-dev=tablet] .ehide-tablet,html[data-
   function commit(next, opts = {}) {
     if (!next || next === st.cfg) return false;
     if (lockedChange(next)) { paint(); return false; }   // someone else is typing in this part: "Ana is editing this; ask or wait"
+    if (refuseLocked(next)) { paint(); return false; }   // pass 5: a locked section keeps its words and look
     const was = JSON.stringify(st.cfg);
     st.hist.push(was); if (st.hist.length > 80) st.hist.shift(); st.fut = [];
     st.cfg = S().normalize(next);
@@ -59,6 +67,26 @@ html[data-dev=phone] .ehide-phone,html[data-dev=tablet] .ehide-tablet,html[data-
     save(); if (!opts.quiet) paint();
     return true;
   }
+  // pass 5: a locked section (its lock in the list of blocks, or right-click > Lock) cannot be changed or removed until it
+  // is unlocked; its name, its lock and its place among the others can. Every way in (the page, the panel, Flint) stops here.
+  function lockedHit(next) {
+    if (!st.cfg.pages.some(p => p.blocks.some(b => b.locked))) return null;
+    const strip = b => { const o = { ...b }; delete o.name; delete o.locked; return JSON.stringify(o); };
+    const n = S().normalize(JSON.parse(JSON.stringify(next)));
+    for (const pg of st.cfg.pages) for (const b of pg.blocks) {
+      if (!b.locked) continue;
+      const np = n.pages.find(p => p.id === pg.id), nb = np && np.blocks.find(x => x.id === b.id);
+      if (!nb) return b;
+      if (nb.locked && strip(nb) !== strip(b)) return b;
+    }
+    return null;
+  }
+  function refuseLocked(next) {
+    let hit = null; try { hit = lockedHit(next); } catch { hit = null; }
+    if (!hit) return false;
+    toast(`${blkName(hit)} is locked. Unlock it to change it.`); return true;
+  }
+  const blkName = b => (b && b.name) || (b && S().BLOCKS[b.type] ? S().BLOCKS[b.type].label.replace(/ \(.*/, '') : 'This section');
   // Undo and Redo show what they changed: the section that differs is selected and brought into view (feat/site-editor2)
   function showChange(before, after) {
     try {
@@ -333,6 +361,8 @@ html[data-dev=phone] .ehide-phone,html[data-dev=tablet] .ehide-tablet,html[data-
             <button type="button" data-wdz="templates"><b>Templates</b><small>Start again from a ready-made design</small></button>
             <button type="button" data-wdz="save"><b>Save design</b><small>Keep this version in Saved designs</small></button>
             <button type="button" data-wdz="code"><b>Code</b><small>Code for this section, and your own CSS</small></button>
+            <button type="button" data-wdz="find"><b>Find and replace</b><small>Words on every page (Ctrl F)</small></button>
+            <button type="button" data-wdz="history"><b>History</b><small>Every step of this design. Go back to any of them</small></button>
             <button type="button" data-wdz="requests" id="wdz-req" hidden><b>Suggested changes<span class="wdz-n" id="wdz-reqn" hidden></span></b><small>What people asked to change, and what waits for you</small></button>
             <hr>
             <button type="button" data-wdz="freeai" id="wdz-freeai"><b>Ask a free AI</b><small>Copy the design for ChatGPT, Gemini or another free AI, then paste its answer back</small></button>
@@ -349,12 +379,17 @@ html[data-dev=phone] .ehide-phone,html[data-dev=tablet] .ehide-tablet,html[data-
           <button type="button" class="btn sm wdz-add" data-wdz="picker" aria-expanded="false">+ Add block</button>
           <div class="wdz-picker" id="wdz-picker" hidden></div>
         </aside>
-        <main class="wdz-stage"><div class="wdz-frame" id="wdz-framewrap" data-dev="desktop"><iframe id="wdz-frame" title="Live preview of the website" sandbox="allow-scripts"></iframe></div></main>
-        <aside class="wdz-right" aria-label="Edit and Flint">
+        <main class="wdz-stage"><div class="wdz-frame" id="wdz-framewrap" data-dev="desktop"><iframe id="wdz-frame" title="Live preview of the website" sandbox="allow-scripts"></iframe></div>
+          <div class="wdz-float" id="wdz-find" hidden role="dialog" aria-label="Find and replace"></div><div class="wdz-float" id="wdz-hist" hidden role="dialog" aria-label="History"></div></main>
+        <aside class="wdz-right" aria-label="Edit">
           <div class="wdz-phead"><div class="wdz-ptabs" role="tablist" aria-label="Panel"><button type="button" role="tab" data-panel="edit" aria-selected="true">Edit</button><button type="button" role="tab" data-panel="ideas" aria-selected="false">Ideas<span class="wdz-n" id="wdz-sn" hidden></span><span class="wdz-n" id="wdz-cn3" hidden></span></button><button type="button" role="tab" data-panel="style" aria-selected="false">Style</button><button type="button" role="tab" data-panel="check" aria-selected="false">Check</button></div>
             <div class="wdz-sub" id="wdz-sub-ideas" role="group" aria-label="Ideas" hidden><button type="button" data-panel="ideas" aria-pressed="true">Suggestions</button><button type="button" data-panel="comments" aria-pressed="false">Comments<span class="wdz-n" id="wdz-cn2" hidden></span></button></div>
             <div class="wdz-sub" id="wdz-sub-style" role="group" aria-label="Style" hidden><button type="button" data-panel="style" aria-pressed="true">Look</button><button type="button" data-panel="site" aria-pressed="false">Site settings</button></div></div>
           <div class="wdz-insp" id="wdz-insp"></div>
+        </aside>
+        <aside class="wdz-fl" id="wdz-fl" aria-label="Flint">
+          <button type="button" class="wdz-fl-rail" data-wdz="flint" aria-controls="wdz-flint" aria-expanded="true" title="Flint (Ctrl J)">${FLINT_IC}<span>Flint</span></button>
+          <button type="button" class="wdz-fl-grab" data-wdz="flint-sheet" aria-label="Show Flint's replies" aria-expanded="false"><span></span></button>
           <section class="wdz-flint" id="wdz-flint" aria-label="Flint"></section>
         </aside>
       </div>
@@ -363,6 +398,8 @@ html[data-dev=phone] .ehide-phone,html[data-dev=tablet] .ehide-tablet,html[data-
       <div class="wdz-peek" id="wdz-peek" hidden role="dialog" aria-label="Template preview"></div><div class="wdz-cpop" id="wdz-cpop" hidden></div><div class="wdz-keys" id="wdz-keys" hidden role="dialog" aria-label="Keyboard shortcuts"></div>`;
     document.body.appendChild(root);
     root.addEventListener('click', onClick);
+    flintInit();
+    root.addEventListener('focusin', e => { if (e.target && e.target.closest && e.target.closest('#wdz-insp, .wdz-fl, .wdz-left, .wdz-top')) flushText(); });   // pass 5: words typed on the page are kept before a box in the panel is used
     mountFlint();
     root.querySelector('#wdz-theme').addEventListener('change', e => commit(S().setTheme(st.cfg, e.target.value)));
     root.querySelector('#wdz-file').addEventListener('change', onFile);
@@ -385,6 +422,13 @@ html[data-dev=phone] .ehide-phone,html[data-dev=tablet] .ehide-tablet,html[data-
       if (e.target === document.body || e.target === document.documentElement) onKey(e);
     });
     root.addEventListener('keydown', onKey);
+    // pass 5: Ctrl J (Flint's column) and Ctrl F (find and replace) work from anywhere in the designer, even while typing
+    // in a box (Flint's own box keeps its keys to itself, so these are caught on the way down)
+    document.addEventListener('keydown', e => {
+      if (!root || root.hidden || !st || layered() || !(e.ctrlKey || e.metaKey) || e.altKey) return;
+      if (e.code === 'KeyJ' && !e.shiftKey) { e.preventDefault(); e.stopPropagation(); return flintDock(); }
+      if (e.code === 'KeyF' && !e.shiftKey) { e.preventDefault(); e.stopPropagation(); return findPanel(true); }
+    }, true);
     // pass 4 polish: Tab stays inside the designer, the same rule as App Creator. The app behind is not made inert (the
     // Design flow dock, toasts and sheets live outside and must keep working); instead Tab wraps at the designer's ends,
     // and a Tab that would land in the app behind comes back. A sheet or dialog opened from here keeps its own focus.
@@ -404,16 +448,18 @@ html[data-dev=phone] .ehide-phone,html[data-dev=tablet] .ehide-tablet,html[data-
   }
 
   // ---------- paint ----------
-  function paint() { if (!root || !st) return; chrome(); frame(); panelPaint(); logPaint(); status(); }
+  function paint() { if (!root || !st) return; chrome(); frame(); panelPaint(); logPaint(); status(); histPaint(); }
   function chrome() {
     if (!root || !st) return;
     const c = st.cfg, pg = pageNow();
     $('#wdz-name').textContent = c.name;
-    $('#wdz-pages').innerHTML = c.pages.map(p => `<button type="button" class="wdz-tab" data-page="${p.id}" aria-current="${p.id === pg.id ? 'page' : 'false'}">${esc(p.title)}</button>`).join('') + `<button type="button" class="wdz-tab wdz-tab-add" data-wdz="addpage" title="Add a page" aria-label="Add a page">+</button>`;
+    $('#wdz-pages').innerHTML = c.pages.map((p, i) => `<button type="button" class="wdz-tab" data-page="${p.id}" aria-current="${p.id === pg.id ? 'page' : 'false'}"${i ? ` draggable="true" title="${esc(tr('Drag to change the order of the pages'))}"` : ''}>${esc(p.title)}</button>`).join('') + `<button type="button" class="wdz-tab wdz-tab-add" data-wdz="addpage" title="Add a page" aria-label="Add a page">+</button>`;
     $('#wdz-theme').value = c.theme.preset;
     const m = $('#wdz-mode'); m.setAttribute('aria-pressed', String(c.theme.mode === 'dark')); m.textContent = c.theme.mode === 'dark' ? 'Light' : 'Dark'; m.title = `Switch to the ${c.theme.mode === 'dark' ? 'light' : 'dark'} variant`;
     root.querySelector('[data-wdz="undo"]').disabled = !st.hist.length; root.querySelector('[data-wdz="redo"]').disabled = !st.fut.length;
-    $('#wdz-blocks').innerHTML = pg.blocks.map((b, i) => `<li class="wdz-blk${st.sel && st.sel.block === b.id ? ' is-sel' : ''}${b.hidden ? ' is-hidden' : ''}" draggable="true" data-blk="${b.id}" data-i="${i}"><span class="wdz-grip" aria-hidden="true">⋮⋮</span><button type="button" class="wdz-blk-t" data-pick="${b.id}">${esc(S().BLOCKS[b.type].label.replace(/ \(.*/, ''))}<small>${esc(b.variant)}</small></button><span class="wdz-blk-acts"><button type="button" data-move="up" data-id="${b.id}" aria-label="Move up"${i ? '' : ' disabled'}>↑</button><button type="button" data-move="down" data-id="${b.id}" aria-label="Move down"${i < pg.blocks.length - 1 ? '' : ' disabled'}>↓</button><button type="button" data-dup="${b.id}" aria-label="Duplicate block" title="Duplicate (Ctrl D)">⧉</button><button type="button" data-hide="${b.id}" aria-label="${b.hidden ? 'Show' : 'Hide'} block" aria-pressed="${!!b.hidden}" title="${b.hidden ? 'Show on the site' : 'Hide from the site'} (H)">${b.hidden ? '◌' : '◉'}</button><button type="button" data-del="${b.id}" aria-label="Delete block">×</button></span></li>`).join('');
+    // pass 5: the list reads like the layers of a big editor: a grip to drag, the name (double-click or F2 to rename),
+    // and on the right the eye (hide), the lock and a menu with everything else (the same menu as a right-click)
+    $('#wdz-blocks').innerHTML = pg.blocks.map((b, i) => { const lab = S().BLOCKS[b.type].label.replace(/ \(.*/, ''); return `<li class="wdz-blk${st.sel && st.sel.block === b.id ? ' is-sel' : ''}${b.hidden ? ' is-hidden' : ''}${b.locked ? ' is-locked' : ''}" draggable="${b.locked ? 'false' : 'true'}" data-blk="${b.id}" data-i="${i}"><span class="wdz-grip" aria-hidden="true" title="Drag to move">${IC.grip}</span><button type="button" class="wdz-blk-t" data-pick="${b.id}" title="${esc(tr('Double-click to rename'))}"><span class="wdz-blk-n">${esc(b.name || lab)}</span><small>${esc(b.name ? `${lab} · ${b.variant}` : b.variant)}</small></button><span class="wdz-blk-acts"><button type="button" class="wdz-ba${b.hidden ? ' on' : ''}" data-hide="${b.id}" aria-label="${b.hidden ? 'Show' : 'Hide'} ${esc(b.name || lab)}" aria-pressed="${!!b.hidden}" title="${b.hidden ? 'Show on the site' : 'Hide from the site'} (H)">${b.hidden ? IC.eyeOff : IC.eye}</button><button type="button" class="wdz-ba${b.locked ? ' on' : ''}" data-lock="${b.id}" aria-label="${b.locked ? 'Unlock' : 'Lock'} ${esc(b.name || lab)}" aria-pressed="${!!b.locked}" title="${b.locked ? 'Unlock' : 'Lock so nobody changes it by accident'} (Ctrl Shift L)">${b.locked ? IC.lock : IC.unlock}</button><button type="button" class="wdz-ba" data-bmenu="${b.id}" aria-label="More for ${esc(b.name || lab)}" aria-haspopup="menu" title="More (right-click)">${IC.more}</button></span></li>`; }).join('');
     { const f0 = $('#wdz-frame'); if (f0 && f0.contentWindow && frameReady) f0.contentWindow.postMessage({ dev: st.dev }, '*'); }
     const wrap = $('#wdz-framewrap'); wrap.dataset.dev = st.dev;
     { const wb = $('#wdz-wide'), on = st.dev === 'desktop' && !!st.wide; wrap.classList.toggle('is-wide', on); if (wb) { wb.setAttribute('aria-pressed', String(on)); wb.hidden = st.dev !== 'desktop'; } }   // round 3: Desktop at a real computer width, scrolled sideways (no scaling, so every click lands where it looks)
@@ -475,12 +521,12 @@ html[data-dev=phone] .ehide-phone,html[data-dev=tablet] .ehide-tablet,html[data-
     if ((d.t === 'menu' || d.t === 'pin') && st.zoom && st.zoom !== 1) { ['x', 'y', 'cx', 'cy'].forEach(k => { if (d.t === 'pin' && (k === 'x' || k === 'y')) return; if (typeof d[k] === 'number') d[k] = d[k] * st.zoom; }); }
     if (d.t === 'cw-ptr') { if (cw) cw.pointer(d.a || null); return; }   // feat/cowork-editors: the frame measures its own pointer
     if (d.t === 'esc') {   // Esc pressed inside the preview: with nothing left to step out of, the first press says so and the second closes
-      const nothing = !st.sel && !st.cmode && ['#wdz-dlmenu', '#wdz-more', '#wdz-keys', '#wdz-peek', '#wdz-picker'].every(id => { const x = $(id); return !x || x.hidden; }) && !(SP() && SP().menuOpen && SP().menuOpen());
+      const nothing = !st.sel && !st.cmode && ['#wdz-dlmenu', '#wdz-more', '#wdz-keys', '#wdz-peek', '#wdz-picker', '#wdz-find', '#wdz-hist'].every(id => { const x = $(id); return !x || x.hidden; }) && !(SP() && SP().menuOpen && SP().menuOpen());
       if (nothing && Date.now() - escAt > 2500) { escAt = Date.now(); toast('Press Esc again to close the designer'); return; }
       escAt = 0; return escape();
     }
     if (d.t === 'page') { if (d.id === st.page) { if (d.key) { st.sel = { block: '@', path: String(d.key).split('|')[1] || '', kind: 'text' }; st.panel = 'edit'; panelPaint(); } return; } flushText(); st.page = d.id; st.sel = null; frameScroll = 0; paint(); return; }
-    if (d.t === 'tb' || d.t === 'menu' || d.t === 'sys' || d.t === 'key') { if (d.t !== 'key') flushText(); if (d.t === 'key') return keys({ key: d.key, ctrlKey: d.ctrl, metaKey: d.meta, altKey: d.alt, shiftKey: d.shift, preventDefault() {}, target: null }); return SP() && SP().frame(d, spApi, f.getBoundingClientRect()); }
+    if (d.t === 'tb' || d.t === 'menu' || d.t === 'sys' || d.t === 'key') { if (d.t !== 'key') flushText(); if (d.t === 'key') { if ((d.ctrl || d.meta) && !d.alt && d.code === 'KeyJ') return flintDock(); if ((d.ctrl || d.meta) && d.code === 'KeyF') return findPanel(true); return keys({ key: d.key, code: d.code || '', ctrlKey: d.ctrl, metaKey: d.meta, altKey: d.alt, shiftKey: d.shift, preventDefault() {}, target: null }); } return SP() && SP().frame(d, spApi, f.getBoundingClientRect()); }
     if (d.t === 'undo') return undo();
     if (d.t === 'redo') return redo();
     if (d.t === 'select') {
@@ -504,16 +550,23 @@ html[data-dev=phone] .ehide-phone,html[data-dev=tablet] .ehide-tablet,html[data-
     if (d.t === 'multi') { flushText(); st.multi = (d.list || []).map(x => { const k = String(x.key), i = k.indexOf('|'); return { block: k.slice(0, i), path: k.slice(i + 1), kind: x.kind || 'block' }; }); st.sel = null; st.panel = 'edit'; panelPaint(); return; }
     if (d.t === 'focus') { const k = String(d.key), bid = k.slice(0, k.indexOf('|')), path = k.slice(k.indexOf('|') + 1); let c = S().setProp(st.cfg, st.page, bid, path + 'fx', Math.max(0, Math.min(100, +d.x || 0))); c = S().setProp(c, st.page, bid, path + 'fy', Math.max(0, Math.min(100, +d.y || 0))); c = S().setProp(c, st.page, bid, path + 'pos', ''); return commit(c); }
     if (d.t === 'imove') {   // an entry dragged to a new place among its own kind
-      const k = String(d.key), bid = k.slice(0, k.indexOf('|')), item = k.slice(k.indexOf('|') + 1), list = item.replace(/\.\d+$/, ''); let c = st.cfg, i = +d.from; const to = +d.to;
-      for (let n = 0; n < 40 && i !== to; n++) { const r = S().itemOp(c, st.page, bid, list, i, to > i ? 'down' : 'up'); if (r.i < 0 || r.i === i) break; c = r.cfg; i = r.i; }
+      const k = String(d.key), bid = k.slice(0, k.indexOf('|')), item = k.slice(k.indexOf('|') + 1), list = item.replace(/\.\d+$/, ''); const mv = moveEntry(bid, list, +d.from, +d.to), c = mv.cfg, i = mv.i;
       const own = st.sel && st.sel.block === bid ? String(st.sel.path || '') : '', rest = own.indexOf(item) === 0 ? own.slice(item.length) : null;
       st.sel = rest != null && st.sel.kind !== 'item' ? { block: bid, path: `${list}.${i}${rest}`, kind: st.sel.kind } : { block: bid, path: `${list}.${i}`, kind: 'item' };
       return commit(c);
     }
     if (d.t === 'move') { commit(S().moveBlock(st.cfg, st.page, d.block, +d.to)); st.sel = { block: d.block, path: '', kind: 'block' }; return; }
     if (d.t === 'icon') return STU() && STU().iconPicker(stuApi, d.key);
+    if (d.t === 'dropblock') { const a = st.dragAdd; if (a) addAt(a, +d.gap); return; }   // pass 5: a new block dragged onto the page
+    if (d.t === 'dropimg') {   // pass 5: a picture file dropped onto a picture on the page
+      const k = String(d.key), bid = k.slice(0, k.indexOf('|')), path = k.slice(k.indexOf('|') + 1), f2 = d.file, b = pageNow().blocks.find(x => x.id === bid);
+      if (!b || !f2) return; if (f2.size > 12 * 1024 * 1024) return say('That picture is over 12 MB. Try a smaller one.');
+      shrink(f2).then(src => { st.sel = { block: bid, path, kind: 'image' }; if (commit(S().setImage(st.cfg, st.page, bid, path, src, S().getAt(b.props, path + 'alt') || String(f2.name || '').replace(/\.[a-z0-9]+$/i, '').replace(/[-_]+/g, ' ')))) flash(tr('Picture replaced')); }).catch(() => say('That picture could not be read.'));
+      return;
+    }
     if (d.t === 'act') {
       const id = d.block;
+      if (d.act === 'unlock') return toggleLock(id);
       if (d.act === 'up' || d.act === 'down') { st.sel = { block: id, path: '', kind: 'block' }; return commit(S().moveBlock(st.cfg, st.page, id, d.act)); }
       if (d.act === 'dup') { const r = S().duplicateBlock(st.cfg, st.page, id); commit(r.cfg); st.sel = { block: r.block.id, path: '', kind: 'block' }; paint(); return; }
       if (d.act === 'del') return commit(S().removeBlock(st.cfg, st.page, id));
@@ -529,11 +582,16 @@ html[data-dev=phone] .ehide-phone,html[data-dev=tablet] .ehide-tablet,html[data-
     const [block, path] = String(d.key).split('|');
     if (block === '@') { const next = S().setSiteText(st.cfg, path, String(d.value || '')); if (JSON.stringify(next) === JSON.stringify(st.cfg)) return; st.hist.push(JSON.stringify(st.cfg)); st.fut = []; st.cfg = S().normalize(next); save(); chrome(); if (st.panel === 'edit' || st.panel === 'site') panelPaint(); return; }
     const b = pageNow().blocks.find(x => x.id === block); if (!b) return;
-    const v = String(d.value || '').replace(/\u00a0/g, ' ').trim();
-    if (String(S().getAt(b.props, path) ?? '') === v) return;
+    if (b.locked) { toast(`${blkName(b)} is locked. Unlock it to change it.`); paint(); return; }
+    const v = String(d.value || '').replace(/\u00a0/g, ' ').trim(), old = String(S().getAt(b.props, path) ?? '');
+    if (old === v) return;
     st.hist.push(JSON.stringify(st.cfg)); st.fut = []; st.cfg = S().setProp(st.cfg, st.page, block, path, v);
     save(); const u = root.querySelector('[data-wdz="undo"]'); if (u) u.disabled = false; const r2 = root.querySelector('[data-wdz="redo"]'); if (r2) r2.disabled = true;
-    const live = root.querySelector('#wdz-insp [data-etext]'); if (st.panel === 'edit') { if (live && document.activeElement !== live && st.sel && st.sel.block === block) live.value = v; else if (!live) inspector(); }
+    // pass 5: the panel's own box for these words follows what was typed on the page (a button's Text box did not, so an
+    // edit made there later wrote the old words back over the new ones). A box the person already changed is left alone.
+    const lab = /\.label$/.test(path) ? root.querySelector(`#wdz-insp [data-lab="${CSS.escape(path.replace(/\.label$/, ''))}"]`) : null;
+    const live = lab || root.querySelector('#wdz-insp [data-etext]');
+    if (st.panel === 'edit') { if (live && st.sel && st.sel.block === block && (document.activeElement !== live || live.value === old)) live.value = v; else if (!live) inspector(); }
   }
   const flushText = () => { if (liveText) commitText(liveText); };
   // feat/site-editor2: the element tools (app/ui/siteparts.js): one element's look, list entries, the right-click menu,
@@ -543,10 +601,11 @@ html[data-dev=phone] .ehide-phone,html[data-dev=tablet] .ehide-tablet,html[data-
   const SG = () => window.TribeSiteSuggest;
   const sgApi = () => ({ ...spApi, panelNow: () => st.panel, flush: () => flush(), close: () => close(), addComment: c => addComment(c) });
   const tr = t => (window.TribeI18n && window.TribeI18n.t ? window.TribeI18n.t(t, t) : t);
-  const frameLabels = () => ({ isEditing: tr('is editing'), smaller: tr('Smaller'), bigger: tr('Bigger'), bold: tr('Bold'), color: tr('Colour'), align: tr('Align'), link: tr('Where it goes'), up: tr('Move up'), down: tr('Move down'), dup: tr('Duplicate'), add: tr('Add another'), del: tr('Remove'), flint: tr('Ask Flint about this'), more: tr('More'), replace: tr('Replace the picture'), fit: tr('Fill or fit'), swap: tr('Swap the icon'), words: tr('Edit the words'), grip: tr('Drag to move this section'), sadd: tr('Add a section below'), igrip: tr('Drag to move it'), ital: tr('Slanted'), wlink: tr('Link the selected words'), spaceAbove: tr('Space above: drag, or press the arrow keys'), spaceBelow: tr('Space below: drag, or press the arrow keys') });
+  const frameLabels = () => ({ locked: tr('Locked'), unlock: tr('Locked. Click to unlock'), isEditing: tr('is editing'), smaller: tr('Smaller'), bigger: tr('Bigger'), bold: tr('Bold'), color: tr('Colour'), align: tr('Align'), link: tr('Where it goes'), up: tr('Move up'), down: tr('Move down'), dup: tr('Duplicate'), add: tr('Add another'), del: tr('Remove'), flint: tr('Ask Flint about this'), more: tr('More'), replace: tr('Replace the picture'), fit: tr('Fill or fit'), swap: tr('Swap the icon'), words: tr('Edit the words'), grip: tr('Drag to move this section'), sadd: tr('Add a section below'), igrip: tr('Drag to move it'), ital: tr('Slanted'), wlink: tr('Link the selected words'), spaceAbove: tr('Space above: drag, or press the arrow keys'), spaceBelow: tr('Space below: drag, or press the arrow keys') });
   const spApi = { setMulti: l => { st.multi = l || []; }, multi: () => st.multi || [], clearMulti: () => { st.multi = []; const f = $('#wdz-frame'); if (f && f.contentWindow) f.contentWindow.postMessage({ multi: 'none' }, '*'); }, sel: () => st.sel, setSel: s => { st.sel = s; }, cfg: () => st.cfg, commit: (c, o) => commit(c, o), page: () => st.page, setPage: id => { st.page = id; st.sel = null; frameScroll = 0; }, pageNow: () => pageNow(), say: (t, h, a) => say(t, h, a), ask: t => ask(t), pid: () => st.pid, connected: () => connected(),
     paint: () => paint(), panel: p => { if (p) st.panel = p; panelPaint(); }, postSel: sc => postSel(sc), post: m => { const f = $('#wdz-frame'); if (f && f.contentWindow) f.contentWindow.postMessage(m, '*'); }, root: () => root, box: () => $('#wdz-insp'),
-    pickFile: () => pickFile(), iconPicker: key => STU() && STU().iconPicker(stuApi, key), comment: () => commentMode(true), fillFlint: t => { if (fui) fui.fill(t); }, undo: () => undo(), canEdit: () => st.canEdit !== false, dev: () => st.dev, comments: () => st.comments, tr };
+    pickFile: () => pickFile(), iconPicker: key => STU() && STU().iconPicker(stuApi, key), comment: () => commentMode(true), fillFlint: t => { if (fui) fui.fill(t); }, undo: () => undo(), canEdit: () => st.canEdit !== false, dev: () => st.dev, comments: () => st.comments, tr,
+    blockMenu: () => ({ paste: !!readClip(), look: !!readLook() }), blockAct: (v, b) => blockAct(v, b) };
   // ---------- feat/design-site2: Style, Check and "Have my agent do it" live in app/ui/sitestudio.js ----------
   const STU = () => window.TribeSiteStudio;
   const stuApi = { sel: () => st.sel, cfg: () => st.cfg, commit: c => commit(c), say: (t, h, a) => say(t, h, a), undo: () => undo(), pid: () => st.pid, page: () => st.page, connected: () => connected(), ask: t => ask(t),
@@ -606,17 +665,18 @@ html[data-dev=phone] .ehide-phone,html[data-dev=tablet] .ehide-tablet,html[data-
   function picker() {
     const C2 = S().CATS || {}, groups = {};
     S().TYPES.forEach(t => { const g = C2[t] || 'More'; (groups[g] = groups[g] || []).push(t); });
-    return Object.entries(groups).map(([g, ts]) => `<p class="wdz-eyebrow">${esc(g)}</p>${ts.map(ty => `<div class="wdz-pk"><b>${esc(S().BLOCKS[ty].label)}</b><span class="wdz-pkv">${S().BLOCKS[ty].variants.map(v => `<button type="button" class="wdz-pkb" data-add="${ty}" data-v="${v}" title="Add ${esc(S().BLOCKS[ty].label.toLowerCase())}: ${esc(v)}">${schem(ty, v)}<small>${esc(v)}</small></button>`).join('')}</span></div>`).join('')}`).join('') + (window.TribeSiteFxUI ? window.TribeSiteFxUI.picker() : '');   // feat/site-3d
+    return Object.entries(groups).map(([g, ts]) => `<p class="wdz-eyebrow">${esc(g)}</p>${ts.map(ty => `<div class="wdz-pk"><b>${esc(S().BLOCKS[ty].label)}</b><span class="wdz-pkv">${S().BLOCKS[ty].variants.map(v => `<button type="button" class="wdz-pkb" draggable="true" data-add="${ty}" data-v="${v}" title="Add ${esc(S().BLOCKS[ty].label.toLowerCase())}: ${esc(v)}. Or drag it onto the page.">${schem(ty, v)}<small>${esc(v)}</small></button>`).join('')}</span></div>`).join('')}`).join('') + (window.TribeSiteFxUI ? window.TribeSiteFxUI.picker() : '');   // feat/site-3d
   }
   const KEYS = [
-    ['Edit', [['Ctrl Z · Ctrl Shift Z', 'Undo · Redo'], ['Enter', 'Type in the selected words'], ['Ctrl D', 'Duplicate the selected section or entry'], ['Delete', 'Remove the selected section or entry'], ['Ctrl C · Ctrl X · Ctrl V', 'Copy, cut and paste a section, on any page'], ['Alt ↑ · Alt ↓', 'Move the selected section or entry'], ['H', 'Hide or show the selected section'], ['Right-click', 'Everything you can do with it']]],
-    ['Move around', [['↑ · ↓', 'Select the section above or below'], ['Shift click', 'Select several things'], ['Esc', 'Stop typing, step out, close']]],
-    ['View', [['1 · 2 · 3', 'Desktop · Tablet · Phone'], ['Ctrl + · Ctrl −', 'Zoom in · Zoom out'], ['Ctrl 0 · Shift 1', '100% · Fit the width'], ['C', 'Comment mode'], ['Ctrl S', 'Save a version'], ['?', 'These shortcuts']]]];
+    ['Edit', [['Ctrl Z · Ctrl Shift Z', 'Undo · Redo'], ['Enter · Double-click', 'Type in the selected words'], ['Ctrl D', 'Duplicate the selected section or entry'], ['Delete', 'Remove the selected section or entry'], ['Ctrl C · Ctrl X · Ctrl V', 'Copy, cut and paste a section, on any page'], ['Ctrl Alt C · Ctrl Alt V', 'Copy a section’s look, paste it on another'], ['Ctrl V on selected words', 'Paste a link: the words become a link'], ['Ctrl F', 'Find and replace words on every page']]],
+    ['Sections', [['Alt ↑ · Alt ↓', 'Move the selected section or entry'], ['Drag', 'Move a section, an entry or a page; drag a new block onto the page'], ['F2', 'Rename the section in the list'], ['H', 'Hide or show the selected section'], ['Ctrl Shift L', 'Lock or unlock the selected section'], ['Right-click', 'Everything you can do with it']]],
+    ['Move around', [['↑ · ↓', 'Select the section above or below'], ['Tab · Shift Tab', 'Select the next or the last section (on the page)'], ['Shift click', 'Select several things'], ['Esc', 'Stop typing, step out to what holds it, close']]],
+    ['View', [['1 · 2 · 3', 'Desktop · Tablet · Phone'], ['Ctrl + · Ctrl −', 'Zoom in · Zoom out'], ['Ctrl 0 · Shift 1', '100% · Fit the width'], ['Ctrl J', 'Show or hide Flint'], ['C', 'Comment mode'], ['Ctrl S', 'Save a version'], ['?', 'These shortcuts']]]];
   function shortcuts() { const k = $('#wdz-keys'); k.hidden = !k.hidden; if (k.hidden) return; k.innerHTML = `<div class="wdz-keys-in" role="document"><p class="wdz-eyebrow">Website designer</p><h2 class="wdz-keys-h">Keyboard shortcuts</h2><div class="wdz-keys-g">${KEYS.map(([g, rows]) => `<section><h3>${esc(g)}</h3><dl>${rows.map(([a, b]) => `<dt>${a.split(' · ').map(x => `<kbd>${esc(x)}</kbd>`).join(' ')}</dt><dd>${esc(b)}</dd>`).join('')}</dl></section>`).join('')}</div><p class="wdz-hint">On a Mac, Ctrl is ⌘.</p><button type="button" class="btn sm" data-wdz="keys">Close</button></div>`; const c = k.querySelector('button'); if (c) c.focus(); }
   // Esc peels one layer: a popover, comment mode, the selection, then the designer itself (like the other full panes)
   function escape() {
     if (!root || root.hidden) return;
-    for (const id of ['#wdz-dlmenu', '#wdz-more', '#wdz-keys', '#wdz-peek', '#wdz-picker']) { const x = $(id); if (x && !x.hidden) { if (id === '#wdz-more') moreMenu(false); else x.hidden = true; return; } }
+    for (const id of ['#wdz-dlmenu', '#wdz-more', '#wdz-keys', '#wdz-peek', '#wdz-picker', '#wdz-find', '#wdz-hist']) { const x = $(id); if (x && !x.hidden) { if (id === '#wdz-more') moreMenu(false); else x.hidden = true; return; } }
     if (st && st.cmode) return commentMode(false);
     if (SP() && SP().closeMenu()) return;
     if (st && st.multi && st.multi.length) { spApi.clearMulti(); panelPaint(); return; }
@@ -632,13 +692,19 @@ html[data-dev=phone] .ehide-phone,html[data-dev=tablet] .ehide-tablet,html[data-
     if (mod && (e.key === '-' || e.key === '_')) { e.preventDefault(); return zoomStep(-1); }
     if (mod && e.key === '0') { e.preventDefault(); return setZoom(1); }
     if (!mod && e.key === '!') { e.preventDefault(); return setZoom('fit'); }
-    if (mod && e.key.toLowerCase() === 'v' && !e.shiftKey && readClip()) { e.preventDefault(); return pasteSection(); }
+    if (mod && e.key.toLowerCase() === 'v' && !e.shiftKey && !e.altKey && readClip()) { e.preventDefault(); return pasteSection(); }
     if (!mod && !e.altKey && (e.key === 'ArrowUp' || e.key === 'ArrowDown') && st.sel && st.sel.kind === 'block' && (!t || t === document.body || t === root || (t.closest && t.closest('.wdz-left, .wdz-stage')))) { const bs = pageNow().blocks, i = bs.findIndex(b => b.id === st.sel.block), n = i < 0 ? null : bs[i + (e.key === 'ArrowDown' ? 1 : -1)]; if (n) { e.preventDefault(); st.sel = { block: n.id, path: '', kind: 'block' }; st.panel = 'edit'; panelPaint(); logPaint(); postSel(true); $('#wdz-blocks').querySelectorAll('.wdz-blk').forEach(li => li.classList.toggle('is-sel', li.dataset.blk === n.id)); } return; }
     if (mod && e.key.toLowerCase() === 's') { e.preventDefault(); return saveVersion(); }
     if (!mod && !e.altKey && /^[123]$/.test(e.key)) { st.dev = ['desktop', 'tablet', 'phone'][+e.key - 1]; return chrome(); }
     if (!mod && e.key.toLowerCase() === 'c') return commentMode(!st.cmode);
     if (st.multi && st.multi.length > 1 && SP() && (e.key === 'Delete' || e.key === 'Backspace') && !mod) { e.preventDefault(); return SP().multiAct(spApi, 'del'); }
+    // pass 5: Tab and Shift Tab step through the sections on the page (from the page itself; the panel keeps its own Tab)
+    if (e.key === 'Tab' && !mod && !e.altKey && !t) { const bs = pageNow().blocks; if (!bs.length) return; const i = sb ? bs.indexOf(sb) : -1, n = bs[(i + (e.shiftKey ? -1 : 1) + bs.length) % bs.length]; flushText(); st.sel = { block: n.id, path: '', kind: 'block' }; st.panel = 'edit'; panelPaint(); logPaint(); postSel(true); $('#wdz-blocks').querySelectorAll('.wdz-blk').forEach(li => li.classList.toggle('is-sel', li.dataset.blk === n.id)); return; }
     if (!sb) return;
+    if (e.key === 'F2') { e.preventDefault(); return renameBlock(sb.id); }
+    if (mod && e.shiftKey && (e.code === 'KeyL' || e.key.toLowerCase() === 'l')) { e.preventDefault(); return toggleLock(sb.id); }
+    if (mod && e.altKey && e.code === 'KeyC') { e.preventDefault(); return copyLook(sb); }
+    if (mod && e.altKey && e.code === 'KeyV') { e.preventDefault(); return pasteLook(sb); }
     if (SP() && st.sel.kind !== 'block' && SP().key(e, spApi)) return;   // an entry, a picture, an element: its own shortcuts
     if (st.sel.kind !== 'block' && !mod && !e.altKey && e.key.toLowerCase() !== 'h') return;   // Delete with words selected never removes the whole section
     if (mod && e.key.toLowerCase() === 'c' && st.sel.kind === 'block') { if (t && String(getSelection() || '')) return; e.preventDefault(); return copySection(sb); }
@@ -837,7 +903,7 @@ html[data-dev=phone] .ehide-phone,html[data-dev=tablet] .ehide-tablet,html[data-
     if (t.closest('[data-start="blank"]')) { hideStart(); paint(); return; }
     if (t.closest('[data-page]') && !a) { st.page = t.closest('[data-page]').dataset.page; st.sel = null; frameScroll = 0; paint(); return; }
     if (t.closest('[data-dev]') && t.closest('.wdz-devs')) { st.dev = t.closest('[data-dev]').dataset.dev; chrome(); return; }   // only the frame's width changes: the page itself is not drawn again
-    if (t.closest('[data-pick]')) { st.sel = { block: t.closest('[data-pick]').dataset.pick, path: '', kind: 'block' }; paint(); postSel(true); return; }
+    if (t.closest('[data-pick]')) { const id = t.closest('[data-pick]').dataset.pick; if (e.detail === 2) return renameBlock(id); if (st.sel && st.sel.block === id && st.sel.kind === 'block') return; st.sel = { block: id, path: '', kind: 'block' }; paint(); postSel(true); return; }   // pass 5: a double-click renames it
     if (t.closest('[data-move]')) { const x = t.closest('[data-move]'); commit(S().moveBlock(st.cfg, st.page, x.dataset.id, x.dataset.move)); return; }
     if (t.closest('[data-del]')) { commit(S().removeBlock(st.cfg, st.page, t.closest('[data-del]').dataset.del)); return; }
     if (t.closest('[data-add]')) { const x = t.closest('[data-add]'); const ai = st.addAfter ? pageNow().blocks.findIndex(b => b.id === st.addAfter) : -1; st.addAfter = null; const r = S().addBlock(st.cfg, st.page, x.dataset.add, x.dataset.v, ai >= 0 ? ai + 1 : undefined); commit(r.cfg); st.sel = { block: r.block.id, path: '', kind: 'block' }; $('#wdz-picker').hidden = true; paint(); postSel(true); return; }
@@ -856,6 +922,10 @@ html[data-dev=phone] .ehide-phone,html[data-dev=tablet] .ehide-tablet,html[data-
     }
     if (t.closest('[data-boardpick]')) { const src = await toData(t.closest('[data-boardpick]').dataset.boardpick); if (src && st.sel) { commit(S().setImage(st.cfg, st.page, st.sel.block, st.sel.path, src, t.closest('[data-boardpick]').dataset.alt || '')); say('Used the picture from your board. Undo puts the old one back.'); } return; }
     if (t.closest('[data-dup]')) { const r = S().duplicateBlock(st.cfg, st.page, t.closest('[data-dup]').dataset.dup); commit(r.cfg); st.sel = { block: r.block.id, path: '', kind: 'block' }; paint(); return; }
+    if (t.closest('[data-lock]')) { const id = t.closest('[data-lock]').dataset.lock; return toggleLock(id); }
+    if (t.closest('[data-bmenu]')) { const x = t.closest('[data-bmenu]'), r = x.getBoundingClientRect(); return blockMenu(x.dataset.bmenu, r.left, r.bottom + 4); }
+    if (t.closest('[data-hist]')) return histJump(+t.closest('[data-hist]').dataset.hist);
+    if (t.closest('[data-fr]')) return findAct(t.closest('[data-fr]'));
     if (t.closest('[data-hide]')) { const id = t.closest('[data-hide]').dataset.hide, b = pg.blocks.find(x => x.id === id); commit(S().setHidden(st.cfg, st.page, id, !(b && b.hidden))); return; }
     if (t.closest('[data-panel]')) { const pb = t.closest('[data-panel]'), want = pb.dataset.panel; st.panel = pb.closest('.wdz-ptabs') ? ((st.sub || {})[want] || want) : want; panelPaint(); return; }
     if (t.closest('[data-cf]')) return resolveConflict(t.closest('[data-cf]').dataset.cf);
@@ -895,13 +965,122 @@ html[data-dev=phone] .ehide-phone,html[data-dev=tablet] .ehide-tablet,html[data-
     if (k === 'save') return saveVersion();
     if (k === 'comment') return commentMode(!st.cmode);
     if (k === 'keys') return shortcuts();
+    if (k === 'flint') return flintDock();
+    if (k === 'flint-sheet') return flintDock();
+    if (k === 'find') return findPanel(true);
+    if (k === 'history') return histPanel();
+  }
+  function toggleLock(id) {
+    const b = pageNow().blocks.find(x => x.id === id); if (!b) return;
+    const was = JSON.stringify(st.cfg); st.hist.push(was); if (st.hist.length > 80) st.hist.shift(); st.fut = [];   // a lock is never refused by the lock itself
+    st.cfg = S().normalize(S().setLocked(st.cfg, st.page, id, !b.locked)); save(); paint();
+    flash(b.locked ? `${blkName(b)} unlocked` : `${blkName(b)} locked: nobody changes it by accident`);
+  }
+  // pass 5: drag to reorder, the same everywhere in the designer. A mouse drags at once and a line shows where it lands;
+  // a finger holds for a moment first (so a swipe still scrolls), and holding without moving opens the menu. Esc cancels.
+  // Each drop is one Undo.
+  let noTap = 0;
+  function sortable(box, o) {
+    let from = -1, gap = -1, line = null, touch = null, cur = null;
+    const items = () => { const l = [...box.querySelectorAll(o.item)]; return o.group && cur ? l.filter(x => o.group(x) === o.group(cur)) : l; };
+    const can = el => !o.can || o.can(el);
+    const gapAt = (x, y) => { const l = items(); for (let i = 0; i < l.length; i++) { const r = l[i].getBoundingClientRect(); if (o.axis === 'x' ? x < r.left + r.width / 2 : y < r.top + r.height / 2) return Math.max(i, o.min || 0); } return l.length; };
+    const show = g => {
+      const l = items(); if (!l.length) return;
+      if (!line) { line = document.createElement('div'); line.className = 'wdz-ldrop' + (o.axis === 'x' ? ' x' : ''); line.setAttribute('aria-hidden', 'true'); }
+      const host = o.lineHost ? o.lineHost() : box; if (line.parentNode !== host) host.appendChild(line);
+      const hr = host.getBoundingClientRect(), end = g >= l.length, a = l[Math.min(g, l.length - 1)].getBoundingClientRect();
+      if (o.axis === 'x') Object.assign(line.style, { left: Math.round((end ? a.right + 1 : a.left - 2) - hr.left + host.scrollLeft) + 'px', top: Math.round(a.top - hr.top + host.scrollTop) + 'px', height: Math.round(a.height) + 'px', width: '' });
+      else Object.assign(line.style, { top: Math.round((end ? a.bottom + 1 : a.top - 3) - hr.top + host.scrollTop) + 'px', left: Math.round(a.left - hr.left + host.scrollLeft) + 'px', width: Math.round(a.width) + 'px', height: '' });
+    };
+    const stop = () => { if (line) line.remove(); line = null; box.querySelectorAll(o.item).forEach(x => x.classList.remove('is-drag')); box.classList.remove('is-sorting'); from = -1; gap = -1; cur = null; };
+    const drop = () => { const f = from, g = gap, el = cur, ext = from < 0 && o.external ? o.external() : null; stop(); if (ext && g >= 0) return o.onAdd && o.onAdd(ext, g); if (f < 0 || g < 0) return; const to = g > f ? g - 1 : g; if (to !== f) o.onMove(f, to, el); };
+    box.addEventListener('dragstart', e => { const el = e.target.closest && e.target.closest(o.item); if (!el || !box.contains(el)) return; if (!can(el)) { e.preventDefault(); return; } cur = el; from = items().indexOf(el); el.classList.add('is-drag'); box.classList.add('is-sorting'); e.dataTransfer.effectAllowed = 'move'; try { e.dataTransfer.setData('text/plain', el.textContent.trim().slice(0, 40)); } catch {} });
+    const zone = o.zone ? o.zone() : box;
+    zone.addEventListener('dragover', e => { if (from < 0 && !(o.external && o.external())) return; e.preventDefault(); e.dataTransfer.dropEffect = from < 0 ? 'copy' : 'move'; const g = gapAt(e.clientX, e.clientY); if (g !== gap) { gap = g; show(g); } });
+    zone.addEventListener('dragleave', e => { if (e.relatedTarget && zone.contains(e.relatedTarget)) return; if (line) { line.remove(); line = null; } gap = -1; });
+    zone.addEventListener('drop', e => { if (from < 0 && !(o.external && o.external())) return; e.preventDefault(); drop(); });
+    box.addEventListener('dragend', () => stop());
+    box.addEventListener('pointerdown', e => {
+      if (e.pointerType !== 'touch' || e.button) return; const el = e.target.closest && e.target.closest(o.item); if (!el || !box.contains(el) || e.target.closest('.wdz-blk-acts, .sp-li-a, input')) return;
+      touch = { el, id: e.pointerId, x0: e.clientX, y0: e.clientY, on: false };
+      touch.t = setTimeout(() => { if (!touch) return; touch.on = true; box._held = Date.now(); if (can(el)) { cur = el; from = items().indexOf(el); el.classList.add('is-drag'); box.classList.add('is-sorting'); } try { el.setPointerCapture(touch.id); } catch {} if (navigator.vibrate) try { navigator.vibrate(8); } catch {} }, 380);
+    });
+    box.addEventListener('pointermove', e => {
+      if (!touch || e.pointerId !== touch.id) return;
+      if (!touch.on) { if (Math.abs(e.clientX - touch.x0) + Math.abs(e.clientY - touch.y0) > 8) { clearTimeout(touch.t); touch = null; } return; }
+      if (from < 0) return; const g = gapAt(e.clientX, e.clientY); if (g !== gap) { gap = g; show(g); }
+    });
+    const up = ok => e => {
+      if (!touch || e.pointerId !== touch.id) return; clearTimeout(touch.t); const t = touch; touch = null; if (!t.on) return;
+      noTap = Date.now(); if (ok && gap >= 0 && from >= 0) return drop();
+      stop(); if (ok && o.onHold) o.onHold(t.el, e.clientX, e.clientY);
+    };
+    box.addEventListener('pointerup', up(true)); box.addEventListener('pointercancel', up(false));
+    box.addEventListener('touchmove', e => { if (touch && touch.on) e.preventDefault(); }, { passive: false });
+    box.addEventListener('contextmenu', e => { if (touch || Date.now() - (box._held || 0) < 900) { e.preventDefault(); e.stopPropagation(); } }, true);   // the long press is the drag (and the menu when it does not move)
+    box.addEventListener('click', e => { if (Date.now() - noTap < 450) { e.preventDefault(); e.stopPropagation(); } }, true);
+    box.addEventListener('dragstart', () => { sortCancel = stop; }); box.addEventListener('pointerdown', () => { sortCancel = stop; });
+    return { stop, busy: () => from >= 0 || !!line };
+  }
+  let sortCancel = null;
+  document.addEventListener('keydown', e => { if (e.key === 'Escape' && sortCancel && root && !root.hidden && document.querySelector('.wdz-ldrop, .is-sorting')) { e.stopPropagation(); sortCancel(); sortCancel = null; } }, true);
+  // an entry of a list (a link, a card, a question) moved to a new place among its own kind: one Undo
+  function moveEntry(bid, list, from, to) {
+    let c = st.cfg, i = +from;
+    for (let n = 0; n < 40 && i !== to; n++) { const r = S().itemOp(c, st.page, bid, list, i, to > i ? 'down' : 'up'); if (r.i < 0 || r.i === i) break; c = r.cfg; i = r.i; }
+    return { cfg: c, i };
   }
   function dragList() {
-    let from = null;
-    root.addEventListener('dragstart', e => { const li = e.target.closest && e.target.closest('.wdz-blk'); if (!li) return; from = li.dataset.blk; e.dataTransfer.effectAllowed = 'move'; try { e.dataTransfer.setData('text/plain', from); } catch {} li.classList.add('is-drag'); });
-    root.addEventListener('dragover', e => { if (from && e.target.closest && e.target.closest('.wdz-blk')) e.preventDefault(); });
-    root.addEventListener('drop', e => { const li = e.target.closest && e.target.closest('.wdz-blk'); if (!from || !li) return; e.preventDefault(); const to = +li.dataset.i; const id = from; from = null; commit(S().moveBlock(st.cfg, st.page, id, to)); });
-    root.addEventListener('dragend', () => { from = null; root.querySelectorAll('.is-drag').forEach(x => x.classList.remove('is-drag')); });
+    const blocks = () => pageNow().blocks;
+    sortable($('#wdz-blocks'), {
+      item: '.wdz-blk', lineHost: () => $('#wdz-blocks').parentNode, zone: () => root.querySelector('.wdz-left'), can: el => !el.classList.contains('is-locked'),
+      external: () => st && st.dragAdd,
+      onMove: (f, to) => { const b = blocks()[f]; if (!b) return; st.sel = { block: b.id, path: '', kind: 'block' }; commit(S().moveBlock(st.cfg, st.page, b.id, to)); postSel(true); flash(`Moved ${blkName(b)}`); },
+      onAdd: (a, g) => addAt(a, g),
+      onHold: (el, x, y) => blockMenu(el.dataset.blk, x, y),
+    });
+    sortable($('#wdz-pages'), {
+      item: '.wdz-tab[data-page]', axis: 'x', min: 1, can: el => !!el.dataset.page && st.cfg.pages.findIndex(p => p.id === el.dataset.page) > 0,
+      onMove: (f, to) => { const p = st.cfg.pages[f]; if (!p) return; commit(S().movePageTo(st.cfg, p.id, to)); flash(`Moved the ${p.title} page`); },
+    });
+    sortable($('#wdz-insp'), {
+      item: '.sp-li[draggable]', group: el => el.closest('.sp-list'),
+      onMove: (f, to, el) => { const l = el && el.closest('.sp-list'); if (!l || !st.sel) return; const list = l.dataset.list, bid = st.sel.block, mv = moveEntry(bid, list, f, to); st.sel = { block: bid, path: `${list}.${mv.i}`, kind: 'item' }; commit(mv.cfg); postSel(true); flash(tr('Moved')); },
+    });
+    // dragging a new block out of "+ Add block": onto the list (where the line is) or onto the page itself
+    root.addEventListener('dragstart', e => {
+      const k = e.target.closest && e.target.closest('.wdz-pkb[data-add]'); if (!k) return;
+      st.dragAdd = { type: k.dataset.add, v: k.dataset.v }; e.dataTransfer.effectAllowed = 'copy'; try { e.dataTransfer.setData('text/plain', k.title || k.dataset.add); } catch {}
+      const f = $('#wdz-frame'); if (f && f.contentWindow) f.contentWindow.postMessage({ adddrag: 1 }, '*');
+    });
+    root.addEventListener('dragend', e => { if (!st || !st.dragAdd) return; setTimeout(() => { if (st) st.dragAdd = null; }, 0); const f = $('#wdz-frame'); if (f && f.contentWindow) f.contentWindow.postMessage({ adddrag: 0 }, '*'); });
+    // the list's own right-click, and its ⋯ button: the same menu as on the page
+    $('#wdz-blocks').addEventListener('contextmenu', e => { const li = e.target.closest('.wdz-blk'); if (!li || e.defaultPrevented) return; e.preventDefault(); blockMenu(li.dataset.blk, e.clientX, e.clientY); });
+    $('#wdz-blocks').addEventListener('dblclick', e => { const t = e.target.closest('.wdz-blk-t'); if (t) { e.preventDefault(); renameBlock(t.dataset.pick); } });
+  }
+  function addAt(a, g) {
+    if (!a || !st) return; const r = S().addBlock(st.cfg, st.page, a.type, a.v, Math.max(0, Math.min(pageNow().blocks.length, g)));
+    st.dragAdd = null; commit(r.cfg); st.sel = { block: r.block.id, path: '', kind: 'block' }; paint(); postSel(true);
+    const pk = $('#wdz-picker'); if (pk) pk.hidden = true; const ab = root.querySelector('[data-wdz="picker"]'); if (ab) ab.setAttribute('aria-expanded', 'false');
+    flash(`Added ${blkName(r.block)}`);
+  }
+  function blockMenu(id, x, y) {
+    if (!SP() || !id) return; flushText();
+    st.sel = { block: id, path: '', kind: 'block' }; st.panel = 'edit'; panelPaint(); postSel(true);
+    $('#wdz-blocks').querySelectorAll('.wdz-blk').forEach(li => li.classList.toggle('is-sel', li.dataset.blk === id));
+    SP().menu(spApi, x, y);
+  }
+  // rename in place in the list: Enter keeps it, Esc leaves it as it was; an empty name goes back to the block's kind
+  function renameBlock(id) {
+    const li = $('#wdz-blocks').querySelector(`.wdz-blk[data-blk="${CSS.escape(id)}"]`), b = pageNow().blocks.find(x => x.id === id); if (!li || !b) return;
+    const t = li.querySelector('.wdz-blk-t'); if (!t || li.querySelector('.wdz-ren')) return;
+    const inp = document.createElement('input'); inp.className = 'input wdz-ren'; inp.maxLength = 40; inp.value = blkName(b); inp.setAttribute('aria-label', tr('Name of this section in the list'));
+    t.hidden = true; t.after(inp); inp.focus(); inp.select();
+    let done = false;
+    const end = keep => { if (done) return; done = true; const v = inp.value.trim(), now = pageNow().blocks.find(x => x.id === id); inp.remove(); t.hidden = false; if (!keep || !now) return; const lab = S().BLOCKS[now.type].label.replace(/ \(.*/, ''); const name = v === lab ? '' : v; if ((now.name || '') === name) return; commit(S().setBlockName(st.cfg, st.page, id, name)); flash(name ? `Renamed to ${name}` : 'Name back to the block’s kind'); };
+    inp.addEventListener('keydown', e => { e.stopPropagation(); if (e.key === 'Enter') { e.preventDefault(); end(true); } if (e.key === 'Escape') { e.preventDefault(); end(false); } });
+    inp.addEventListener('blur', () => end(true));
   }
 
   // ---------- pictures ----------
@@ -1024,6 +1203,23 @@ html[data-dev=phone] .ehide-phone,html[data-dev=tablet] .ehide-tablet,html[data-
     try { localStorage.setItem(CLIP, JSON.stringify(clip)); } catch {}
     toast(tr(cut ? 'Cut the section. Ctrl V puts it on any page.' : 'Copied the section. Ctrl V pastes it on any page.'));
   }
+  // pass 5: a section's look (colours, spacing, sizes, its kind of layout when it is the same block) on its own clipboard
+  const LOOK = 'tribecode.sitedesigner.look';
+  let look = null;
+  const readLook = () => { if (look) return look; try { const c = JSON.parse(localStorage.getItem(LOOK) || 'null'); if (c && c.type) look = c; } catch {} return look; };
+  function copyLook(b) { look = S().lookOf(st.cfg, st.page, b.id); try { localStorage.setItem(LOOK, JSON.stringify(look)); } catch {} flash(tr('Copied the look')); toast(tr('Copied the look. Ctrl Alt V puts it on another section.')); }
+  function pasteLook(b) { const l = readLook(); if (!l) return toast(tr('Copy a look first: right-click a section, Copy look.')); if (commit(S().pasteLook(st.cfg, st.page, b.id, l))) flash(tr('Pasted the look')); }
+  // the section menu's own actions (siteparts.js shows them; the page and the list of blocks share it)
+  function blockAct(v, b) {
+    if (v === 'blk-cut') { copySection(b, true); st.sel = null; commit(S().removeBlock(st.cfg, st.page, b.id)); return true; }
+    if (v === 'blk-copy') { copySection(b); return true; }
+    if (v === 'blk-paste') { st.sel = { block: b.id, path: '', kind: 'block' }; pasteSection(); return true; }
+    if (v === 'blk-rename') { setTimeout(() => renameBlock(b.id), 0); return true; }
+    if (v === 'blk-copylook') { copyLook(b); return true; }
+    if (v === 'blk-pastelook') { pasteLook(b); return true; }
+    if (v === 'blk-lock') { toggleLock(b.id); return true; }
+    return false;
+  }
   function pasteSection() {
     const c0 = readClip(); if (!c0) return;
     const next = JSON.parse(JSON.stringify(st.cfg)), pg = next.pages.find(p => p.id === st.page) || next.pages[0];
@@ -1103,11 +1299,13 @@ html[data-dev=phone] .ehide-phone,html[data-dev=tablet] .ehide-tablet,html[data-
   let fui = null, chipKey = '';
   function mountFlint() {
     const host = $('#wdz-flint'); if (!host || fui || !window.TribeFlint || !window.TribeFlint.mount) return;
-    fui = window.TribeFlint.mount(host, { ctx: 'designer', echo: false, run: text => ask(text).then(() => true), onSay: m => { if (st) { st.log.push(m); logPaint(); } }, onClear: () => { if (st) { st.log = []; st.pending = null; logPaint(); } },
-      hello: 'Say what to change: “add a link for my book club”, “make the buttons work”, “add a page called About”, “dark mode”. No AI needed, and Undo takes back any step.', chips: chipsNow, onEscape: () => escape() });
+    fui = window.TribeFlint.mount(host, { ctx: 'designer', echo: false, run: text => ask(text).then(() => true), onSay: m => { if (st) { st.log.push(m); logPaint(); if (innerWidth <= 820 && m.who === 'flint' && root && !root.classList.contains('fl-sheet')) flintDock(true, { focus: false }); } }, onClear: () => { if (st) { st.log = []; st.pending = null; logPaint(); } },
+      hello: tr('Say what to change, like “dark mode” or “add a page called About”.'), chips: chipsNow, onEscape: () => escape(),
+      tools: [{ title: tr('Hide Flint (Ctrl J)'), html: IC.chevR, attrs: { 'data-fl-hide': '1' }, fn: () => flintDock(false) }] });
     if (fui && FC() && FC().extra) FC().extra(fui, 'site', () => ask('polish it'), () => { const b = root && root.querySelector('#wdz-agent'); if (b) b.click(); else ask('make it beautiful'); });   // one flow: the same sheet as More › Make it beautiful
   }
-  function chipsNow() {
+  function chipsNow() { return chipsAll().slice(0, 3); }   // pass 5: three at most, so the column stays calm
+  function chipsAll() {
     if (!st) return [];
     const links = st.cfg.pages.some(p => p.blocks.some(b => b.type === 'links')), sel = st.sel && pageNow().blocks.find(b => b.id === st.sel.block);
     if (sel && st.sel.kind === 'image') return ['Replace the picture', 'Make the picture round', 'Hide this on phones'];
@@ -1117,6 +1315,128 @@ html[data-dev=phone] .ehide-phone,html[data-dev=tablet] .ehide-tablet,html[data-
     if (links) return ['Add a link for…', 'Add my Instagram', 'Make the buttons work', 'Dark mode', 'Rounder corners'];
     return ['Make the buttons work', 'Add a page called About', 'Add a link for…', 'Dark mode', 'Add a gallery', 'Make the picture round'];
   }
+  // pass 5: Flint has his own column on the far right, beside (never on top of) the panel. It folds to a slim rail
+  // (remembered per person) and opens again with one click or Ctrl J. In a narrower window (under 1280) he opens as a
+  // drawer over the page, still left of the panel; on a phone he is a sheet at the bottom whose box to type in is
+  // always there, and his replies slide up above it.
+  const FLKEY = 'tribecode.sitedesigner.flint';
+  const flMode = () => innerWidth <= 820 ? 'phone' : innerWidth < 1280 ? 'narrow' : 'wide';
+  let flLast = '';
+  function flintInit() {
+    if (!root) return; const m = flMode(); flLast = m;
+    root.classList.remove('fl-open', 'fl-rail', 'fl-sheet');
+    if (m === 'phone') { flintAria(false); return; }
+    let pref = 'open'; try { pref = localStorage.getItem(FLKEY) || 'open'; } catch {}
+    const open = m === 'wide' && pref !== 'rail'; root.classList.add(open ? 'fl-open' : 'fl-rail'); flintAria(open);
+  }
+  function flintAria(open) { const r = root && root.querySelector('.wdz-fl-rail'), g = root && root.querySelector('.wdz-fl-grab'); if (r) { r.setAttribute('aria-expanded', String(!!open)); r.title = open ? tr('Hide Flint (Ctrl J)') : tr('Flint (Ctrl J)'); } if (g) g.setAttribute('aria-expanded', String(!!open)); }
+  function flintDock(open, o = {}) {
+    if (!root) return; const m = flMode();
+    if (m === 'phone') { if (open == null) open = !root.classList.contains('fl-sheet'); root.classList.toggle('fl-sheet', !!open); flintAria(open); if (open && fui) setTimeout(() => { const b = fui.el && fui.el.querySelector('.flm-thread'); if (b) b.scrollTop = b.scrollHeight; }, 30); return; }
+    if (open == null) open = !root.classList.contains('fl-open');
+    root.classList.toggle('fl-open', !!open); root.classList.toggle('fl-rail', !open); flintAria(open);
+    if (m === 'wide' && o.remember !== false) try { localStorage.setItem(FLKEY, open ? 'open' : 'rail'); } catch {}
+    if (open && o.focus !== false && fui) fui.focus();
+    else if (!open && root.contains(document.activeElement) && document.activeElement.closest('.wdz-fl')) { const r = root.querySelector('.wdz-fl-rail'); if (r) r.focus(); }
+    if (st && st.zoom === 'fit') applyZoom();
+  }
+  addEventListener('resize', () => { if (!root || root.hidden) return; if (flMode() !== flLast) flintInit(); });
+
+  // ---------- pass 5: find and replace words on every page ----------
+  const fr = { q: '', r: '', case: false, whole: false, at: 0 };
+  function findPanel(on) {
+    const box = $('#wdz-find'); if (!box) return;
+    if (on === false || (on == null && !box.hidden)) { if (box.contains(document.activeElement)) document.activeElement.blur(); box.hidden = true; return; }   // the keys go back to the page at once
+    histPanel(false);
+    // opening it with some words selected while typing on the page looks for those words (an open panel keeps its own)
+    const sel = !box.hidden ? '' : (() => { try { const f = $('#wdz-frame'), w = f && f.contentWindow, a = w && w.document.activeElement; if (!a || !a.isContentEditable) return ''; const g = w.getSelection(); return g ? String(g).trim() : ''; } catch { return ''; } })();
+    if (sel && sel.length < 60 && !/\n/.test(sel)) fr.q = sel;
+    box.hidden = false; findPaint(); const i = box.querySelector('#wdz-fq'); if (i) { i.focus(); i.select(); }
+  }
+  function findPaint(keepFocus) {
+    const box = $('#wdz-find'); if (!box || box.hidden) return;
+    const hits = S().findWords(st.cfg, fr.q, fr), total = hits.reduce((a, h) => a + h.n, 0); fr.at = Math.min(fr.at, Math.max(0, hits.length - 1));
+    const kind = t => (S().BLOCKS[t] ? S().BLOCKS[t].label.replace(/ \(.*/, '') : t);
+    const snip = h => { const i = fr.case ? h.text.indexOf(fr.q) : h.text.toLowerCase().indexOf(fr.q.toLowerCase()), a = Math.max(0, i - 24); return `${a ? '…' : ''}${esc(h.text.slice(a, i))}<mark>${esc(h.text.slice(i, i + fr.q.length))}</mark>${esc(h.text.slice(i + fr.q.length, i + fr.q.length + 40))}${i + fr.q.length + 40 < h.text.length ? '…' : ''}`; };
+    const list = hits.slice(0, 60).map((h, i) => { const b = (st.cfg.pages.find(p => p.id === h.page) || { blocks: [] }).blocks.find(x => x.id === h.block); return `<li><button type="button" class="wdz-fhit${i === fr.at ? ' is-on' : ''}" data-fr="go" data-i="${i}"><small>${esc(h.pageTitle)} · ${esc((b && b.name) || kind(h.type))}${h.locked ? ' · ' + esc(tr('locked')) : ''}</small><span>${snip(h)}</span></button></li>`; }).join('');
+    const ae = document.activeElement, focusId = ae && box.contains(ae) ? ae.id : '';
+    box.innerHTML = `<div class="wdz-fhead"><p class="wdz-eyebrow">${esc(tr('Find and replace'))}</p><button type="button" class="wdz-x" data-fr="close" aria-label="${esc(tr('Close'))}">×</button></div>
+      <label class="wdz-f"><span class="sr">${esc(tr('Find'))}</span><input class="input" id="wdz-fq" placeholder="${esc(tr('Find words on every page'))}" value="${esc(fr.q)}" autocomplete="off" spellcheck="false"></label>
+      <label class="wdz-f"><span class="sr">${esc(tr('Replace with'))}</span><input class="input" id="wdz-fr" placeholder="${esc(tr('Replace with'))}" value="${esc(fr.r)}" autocomplete="off" spellcheck="false"></label>
+      <p class="wdz-row wdz-fopts"><label><input type="checkbox" id="wdz-fcase"${fr.case ? ' checked' : ''}> ${esc(tr('Match case'))}</label><label><input type="checkbox" id="wdz-fwhole"${fr.whole ? ' checked' : ''}> ${esc(tr('Whole words'))}</label></p>
+      <p class="wdz-row"><button type="button" class="btn sm" data-fr="one"${hits.length ? '' : ' disabled'}>${esc(tr('Replace'))}</button><button type="button" class="btn sm primary" data-fr="all"${hits.length ? '' : ' disabled'}>${esc(tr('Replace all'))}</button><span class="wdz-fn" aria-live="polite">${fr.q.trim() ? (total ? `${total} ${total === 1 ? esc(tr('match')) : esc(tr('matches'))}` : esc(tr('Nothing found'))) : ''}</span></p>
+      ${hits.length ? `<ol class="wdz-fhits">${list}</ol>` : ''}`;
+    const fq = box.querySelector('#wdz-fq'), frp = box.querySelector('#wdz-fr');
+    fq.oninput = () => { fr.q = fq.value; fr.at = 0; findPaint(true); }; frp.oninput = () => { fr.r = frp.value; };
+    box.querySelector('#wdz-fcase').onchange = e => { fr.case = e.target.checked; findPaint(); }; box.querySelector('#wdz-fwhole').onchange = e => { fr.whole = e.target.checked; findPaint(); };
+    box.onkeydown = e => { e.stopPropagation(); if (e.key === 'Escape') { e.preventDefault(); findPanel(false); } if (e.key === 'Enter' && e.target === fq) { e.preventDefault(); findGo(e.shiftKey ? fr.at - 1 : fr.at + (box.dataset.went ? 1 : 0)); box.dataset.went = '1'; } if (e.key === 'Enter' && e.target === frp) { e.preventDefault(); findAct({ dataset: { fr: 'one' } }); } };
+    if (keepFocus || focusId) { const f = box.querySelector('#' + (focusId || 'wdz-fq')); if (f) { f.focus(); if (f.setSelectionRange && f.value != null) try { f.setSelectionRange(f.value.length, f.value.length); } catch {} } }
+  }
+  function findGo(i) {
+    const hits = S().findWords(st.cfg, fr.q, fr); if (!hits.length) return; fr.at = (i + hits.length) % hits.length; const h = hits[fr.at];
+    flushText(); if (h.page !== st.page) { st.page = h.page; frameScroll = 0; }
+    st.sel = { block: h.block, path: h.path, kind: 'text' }; st.panel = 'edit'; paint(); setTimeout(() => postSel(true), 120); findPaint(true);
+  }
+  function findAct(el) {
+    const k = el.dataset.fr; if (k === 'close') return findPanel(false);
+    if (k === 'go') return findGo(+el.dataset.i);
+    const hits = S().findWords(st.cfg, fr.q, fr); if (!hits.length) return;
+    flushText();
+    if (k === 'all') { const r = S().replaceWords(st.cfg, fr.q, fr.r, fr); if (r.n && commit(r.cfg)) { flash(`${tr('Replaced')} ${r.n}`); toast(`${tr('Replaced')} ${r.n}. ${tr('One Undo takes them all back.')}`); } else if (hits.some(h => h.locked)) toast(tr('The words that are left are in locked sections.')); findPaint(true); return; }
+    const h = hits[Math.min(fr.at, hits.length - 1)]; if (h.locked) { toast(tr('That one is in a locked section. Unlock it to change it.')); return findGo(fr.at + 1); }
+    const r = S().replaceWords(st.cfg, fr.q, fr.r, { ...fr, only: { page: h.page, block: h.block, path: h.path } });
+    if (r.n && commit(r.cfg)) flash(tr('Replaced'));
+    findPaint(true); if (S().findWords(st.cfg, fr.q, fr).length) findGo(fr.at);
+  }
+
+  // ---------- pass 5: the history of this design: every step, newest first; click one to go back (or forward) to it ----------
+  function stepLabel(a, b) {
+    try {
+      const A = typeof a === 'string' ? JSON.parse(a) : a, B = typeof b === 'string' ? JSON.parse(b) : b, kind = x => blkName(x);
+      if (JSON.stringify(A.theme) !== JSON.stringify(B.theme)) return tr('Changed the look of the site');
+      if (A.name !== B.name) return `${tr('Renamed the site')}: ${B.name}`;
+      if ((A.css || '') !== (B.css || '')) return tr('Changed your own CSS');
+      const ap = A.pages.map(p => p.id).join(), bp = B.pages.map(p => p.id).join();
+      if (ap !== bp) { if (B.pages.length > A.pages.length) return `${tr('Added a page')}: ${B.pages.find(p => !A.pages.some(q => q.id === p.id)).title}`; if (B.pages.length < A.pages.length) return `${tr('Removed a page')}: ${A.pages.find(p => !B.pages.some(q => q.id === p.id)).title}`; return tr('Changed the order of the pages'); }
+      for (const pb of B.pages) {
+        const pa = A.pages.find(p => p.id === pb.id); if (!pa) continue;
+        if (pa.title !== pb.title) return `${tr('Renamed a page')}: ${pb.title}`;
+        const ai = pa.blocks.map(x => x.id), bi = pb.blocks.map(x => x.id);
+        const added = pb.blocks.find(x => !ai.includes(x.id)); if (added) return `${tr('Added')} ${kind(added)}`;
+        const gone = pa.blocks.find(x => !bi.includes(x.id)); if (gone) return `${tr('Removed')} ${kind(gone)}`;
+        if (ai.join() !== bi.join()) { const mv = pb.blocks.find((x, i) => ai.indexOf(x.id) !== i && Math.abs(ai.indexOf(x.id) - i) > 0); return `${tr('Moved')} ${kind(mv || pb.blocks[0])}`; }
+        for (const xb of pb.blocks) {
+          const xa = pa.blocks.find(x => x.id === xb.id); if (!xa || JSON.stringify(xa) === JSON.stringify(xb)) continue;
+          if (!!xa.locked !== !!xb.locked) return `${xb.locked ? tr('Locked') : tr('Unlocked')} ${kind(xb)}`;
+          if (!!xa.hidden !== !!xb.hidden) return `${xb.hidden ? tr('Hid') : tr('Showed')} ${kind(xb)}`;
+          if ((xa.name || '') !== (xb.name || '')) return `${tr('Renamed')} ${kind(xb)}`;
+          if (JSON.stringify(xa.props) !== JSON.stringify(xb.props)) return `${tr('Changed the words in')} ${kind(xb)}`;
+          return `${tr('Changed the look of')} ${kind(xb)}`;
+        }
+      }
+      return tr('Changed the site');
+    } catch { return tr('Changed the site'); }
+  }
+  function histPanel(on) {
+    const box = $('#wdz-hist'); if (!box) return;
+    if (on === false || (on == null && !box.hidden)) { if (box.contains(document.activeElement)) document.activeElement.blur(); box.hidden = true; return; }
+    findPanel(false); box.hidden = false; histPaint(); const f = box.querySelector('.is-now') || box.querySelector('button'); if (f) f.focus();
+  }
+  function histPaint() {
+    const box = $('#wdz-hist'); if (!box || box.hidden || !st) return;
+    const all = [...st.hist, JSON.stringify(st.cfg), ...st.fut.slice().reverse()], now = st.hist.length;
+    const rows = []; for (let i = all.length - 1; i >= Math.max(0, all.length - 61); i--) rows.push(`<li><button type="button" class="wdz-hrow${i === now ? ' is-now' : ''}${i > now ? ' is-fut' : ''}" data-hist="${i}"${i === now ? ' aria-current="step"' : ''}><span>${esc(i ? stepLabel(all[i - 1], all[i]) : tr('Where you started'))}</span><small>${i === now ? esc(tr('Now')) : i > now ? esc(tr('Undone')) : ''}</small></button></li>`);
+    box.innerHTML = `<div class="wdz-fhead"><p class="wdz-eyebrow">${esc(tr('History'))}</p><button type="button" class="wdz-x" data-wdz="history" aria-label="${esc(tr('Close'))}">×</button></div><p class="wdz-hint">${esc(tr('Click a step to go back to it. Nothing is lost: the steps after it wait until you make a new change.'))}</p><ol class="wdz-hlist">${rows.join('')}</ol>`;
+    box.onkeydown = e => { e.stopPropagation(); if (e.key === 'Escape') { e.preventDefault(); histPanel(false); } };
+  }
+  function histJump(i) {
+    if (!st || !Number.isFinite(i)) return; const now = st.hist.length; if (i === now) return;
+    flushText(); const was = JSON.stringify(st.cfg);
+    while (st.hist.length > i) { st.fut.push(JSON.stringify(st.cfg)); st.cfg = JSON.parse(st.hist.pop()); }
+    while (st.hist.length < i && st.fut.length) { st.hist.push(JSON.stringify(st.cfg)); st.cfg = JSON.parse(st.fut.pop()); }
+    fixPage(); showChange(was, st.cfg); save(); paint(); histPaint(); flash(i < now ? tr('Went back') : tr('Went forward'));
+  }
+
   // pass 4 (flintcreate.js): every reply says which level answered (rules, a local model, a stronger AI)
   let lvlNow = 'rules';
   const FC = () => window.TribeFlintCreate;
@@ -1127,6 +1447,7 @@ html[data-dev=phone] .ehide-phone,html[data-dev=tablet] .ehide-tablet,html[data-
   function logPaint() {
     if (!fui) mountFlint(); if (!fui || !st) return;
     st.log = st.log.slice(-40); fui.set(st.log);
+    { const c = fui.el && fui.el.querySelector('[data-flm="clear"]'); if (c) c.hidden = !st.log.length; }   // pass 5: nothing to clear, no button
     const k = chipsNow().join('|'); if (k !== chipKey) { chipKey = k; fui.chips(chipsNow()); }
   }
   const FMX = () => window.TribeFlintMax;
@@ -1236,7 +1557,7 @@ html[data-dev=phone] .ehide-phone,html[data-dev=tablet] .ehide-tablet,html[data-
     paint(); postSel(true);
     return reply;
   }
-  function commitAll(before, work) { if (JSON.stringify(work) === before || work === st.cfg && JSON.stringify(st.cfg) === before) return; if (work !== st.cfg) { st.hist.push(before); st.fut = []; st.cfg = work; fixPage(); save(); } }
+  function commitAll(before, work) { if (JSON.stringify(work) === before || work === st.cfg && JSON.stringify(st.cfg) === before) return; if (work !== st.cfg && refuseLocked(work)) return; if (work !== st.cfg) { st.hist.push(before); st.fut = []; st.cfg = work; fixPage(); save(); } }
   async function boost(text) {
     const B = window.TribeBoost;
     if (B && await B.online() && window.TribeAIBasics && window.TribeAIBasics.ask) {
@@ -1292,5 +1613,5 @@ html[data-dev=phone] .ehide-phone,html[data-dev=tablet] .ehide-tablet,html[data-
   }
   // the suggestion engine applies a website suggestion here when the designer shows that project: one normal edit, one Undo
   function applyChange({ ops, fn } = {}) { if (!st) return false; let next = null; if (ops) { const r = S().applyOps(st.cfg, ops); if (!r.done.length) return false; next = r.cfg; } else if (typeof fn === 'function') next = fn(st.cfg); return commit(next, { fromSuggest: true }); }
-  window.TribeSiteDesigner = { applyChange, importCfg, dropFiles, open, close, ask, download, undo, redo, flush, dirty, hasDraft, comments: () => st ? st.comments : [], state: () => st && { multi: (st.multi || []).length, pid: st.pid, page: st.page, sel: st.sel, hist: st.hist.length, fut: st.fut.length, log: st.log, pending: st.pending || null, open: !!root && !root.hidden, dirty: st.dirty, rev: st.rev, dev: st.dev, panel: st.panel, cmode: st.cmode, zoom: st.zoom || 1, wide: !!st.wide }, cfg: () => st && st.cfg, useTemplate, gallery: () => gal.list, perf: () => ({ open: perf.open, ready: perf.ready }), zoom: setZoom, code: codeSheet, snap: snapSite };
+  window.TribeSiteDesigner = { flint: open => flintDock(open == null ? null : !!open, { remember: false, focus: false }), applyChange, importCfg, dropFiles, open, close, ask, download, undo, redo, flush, dirty, hasDraft, comments: () => st ? st.comments : [], state: () => st && { multi: (st.multi || []).length, pid: st.pid, page: st.page, sel: st.sel, hist: st.hist.length, fut: st.fut.length, log: st.log, pending: st.pending || null, open: !!root && !root.hidden, dirty: st.dirty, rev: st.rev, dev: st.dev, panel: st.panel, cmode: st.cmode, zoom: st.zoom || 1, wide: !!st.wide }, cfg: () => st && st.cfg, useTemplate, gallery: () => gal.list, perf: () => ({ open: perf.open, ready: perf.ready }), zoom: setZoom, code: codeSheet, snap: snapSite };
 })();

@@ -232,13 +232,17 @@
   // the one spot under the thread: Polish it always; Make it beautiful only while the tribe has an AI, else one honest line
   function extra(ui, kind, onPolish, onBeauty) {
     const box = ui.extra; if (!box) return;
+    // pass 5: one quiet row, not a button beside a paragraph; what a stronger AI adds sits behind a small info button
+    const SPARK = '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z"/></svg>';
+    const INFO = '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg>';
     const paint = ai => {
-      box.innerHTML = `<div class="fc-row" data-fc="${kind}"><button type="button" class="btn sm" data-fc-act="polish" title="${esc(tr('Tidy spacing, sizes, colours and buttons. No AI.'))}">${esc(tr('Polish it'))}</button>${ai.any
-        ? `<button type="button" class="btn sm" data-fc-act="beauty" title="${esc(tr('Your tribe’s AI proposes a redesign. You approve it.'))}">${esc(tr('Make it beautiful'))}</button>`
-        : `<small class="fc-line" data-fc-line>${esc(tr('No AI needed. A stronger AI adds full redesigns and new writing.'))}</small>`}</div>`;
+      const note = tr('No AI needed. A stronger AI adds full redesigns and new writing.');
+      box.innerHTML = `<div class="fc-row" data-fc="${kind}"><button type="button" class="fc-quiet" data-fc-act="polish" title="${esc(tr('Tidy spacing, sizes, colours and buttons. No AI.'))}">${SPARK}<b>${esc(tr('Polish it'))}</b><small>${esc(tr('Tidy spacing, sizes and colours'))}</small></button>${ai.any
+        ? `<button type="button" class="fc-quiet fc-beauty" data-fc-act="beauty" title="${esc(tr('Your tribe’s AI proposes a redesign. You approve it.'))}"><b>${esc(tr('Make it beautiful'))}</b></button>`
+        : `<button type="button" class="fc-info" data-fc-tip aria-expanded="false" aria-label="${esc(note)}" title="${esc(note)}">${INFO}</button><small class="fc-line" data-fc-line hidden>${esc(note)}</small>`}</div>`;
     };
     paint({ any: false }); hasAI().then(paint).catch(() => {});
-    box.onclick = e => { const b = e.target.closest('[data-fc-act]'); if (!b) return; if (b.dataset.fcAct === 'polish') onPolish(); else onBeauty(); };
+    box.onclick = e => { const t = e.target.closest('[data-fc-tip]'); if (t) { const l = box.querySelector('[data-fc-line]'); if (l) { l.hidden = !l.hidden; t.setAttribute('aria-expanded', String(!l.hidden)); } return; } const b = e.target.closest('[data-fc-act]'); if (!b) return; if (b.dataset.fcAct === 'polish') onPolish(); else onBeauty(); };
     ui.refreshAI = () => hasAI(true).then(paint).catch(() => {});
   }
   const screenBy = (s, name) => { const d = s.doc, n = String(name || '').toLowerCase().trim(); if (!n) return d.screens.find(x => x.id === s.screen); return d.screens.find(x => x.name.toLowerCase() === n || x.id === n) || d.screens.find(x => x.name.toLowerCase().includes(n)); };

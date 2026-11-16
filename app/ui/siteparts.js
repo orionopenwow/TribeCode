@@ -91,7 +91,7 @@
   // a list in a section's settings: every entry by name, with its own move, copy and remove
   function list(b, k, v) {
     const nm = LIST_NAMES[k] || 'Entry', name = x => typeof x === 'string' ? x : x && typeof x === 'object' ? (x.label || x.title || x.name || x.q || x.quote || x.value || x.alt || x.caption || '') : '';
-    return `<div class="sp-list" data-list="${esc(k)}"><p class="wdz-f"><span>${esc(k)} · ${v.length}</span></p>${v.map((x, i) => `<div class="sp-li"><button type="button" class="sp-li-t" data-sp="pickentry" data-list="${esc(k)}" data-i="${i}" title="Select it on the page">${esc(short(name(x), 30) || `${nm} ${i + 1}`)}</button><span class="sp-li-a"><button type="button" data-sp="entry" data-val="up" data-list="${esc(k)}" data-i="${i}" aria-label="Move up"${i ? '' : ' disabled'}>↑</button><button type="button" data-sp="entry" data-val="down" data-list="${esc(k)}" data-i="${i}" aria-label="Move down"${i < v.length - 1 ? '' : ' disabled'}>↓</button><button type="button" data-sp="entry" data-val="dup" data-list="${esc(k)}" data-i="${i}" aria-label="Duplicate">⧉</button><button type="button" data-sp="entry" data-val="del" data-list="${esc(k)}" data-i="${i}" aria-label="Remove">×</button></span></div>`).join('')}<p class="wdz-row"><button type="button" class="btn sm" data-item="add" data-k="${esc(k)}">+ Add ${esc(nm.toLowerCase())}</button></p></div>`;
+    return `<div class="sp-list" data-list="${esc(k)}"><p class="wdz-f"><span>${esc(k)} · ${v.length}</span></p>${v.map((x, i) => `<div class="sp-li" draggable="true" data-i="${i}" title="Drag to change the order"><button type="button" class="sp-li-t" data-sp="pickentry" data-list="${esc(k)}" data-i="${i}" title="Select it on the page">${esc(short(name(x), 30) || `${nm} ${i + 1}`)}</button><span class="sp-li-a"><button type="button" data-sp="entry" data-val="up" data-list="${esc(k)}" data-i="${i}" aria-label="Move up"${i ? '' : ' disabled'}>↑</button><button type="button" data-sp="entry" data-val="down" data-list="${esc(k)}" data-i="${i}" aria-label="Move down"${i < v.length - 1 ? '' : ' disabled'}>↓</button><button type="button" data-sp="entry" data-val="dup" data-list="${esc(k)}" data-i="${i}" aria-label="Duplicate">⧉</button><button type="button" data-sp="entry" data-val="del" data-list="${esc(k)}" data-i="${i}" aria-label="Remove">×</button></span></div>`).join('')}<p class="wdz-row"><button type="button" class="btn sm" data-item="add" data-k="${esc(k)}">+ Add ${esc(nm.toLowerCase())}</button></p></div>`;
   }
   // a section can go to another page (it lands above that page's footer)
   let _cfgNow = null, _pageNow = null;
@@ -206,7 +206,7 @@
   }
   function click(el, api) {
     const k = el.dataset.sp, v = el.dataset.val, sel = api.sel();
-    if (k === 'menu') { closeMenu(); if (/^blk-/.test(v)) { const b = sel && blockOf(api, sel.block); if (!b) return; const c = api.cfg(), pg = api.page(); if (v === 'blk-up' || v === 'blk-down') return api.commit(S().moveBlock(c, pg, b.id, v.slice(4))); if (v === 'blk-dup') { const r = S().duplicateBlock(c, pg, b.id); api.setSel({ block: r.block.id, path: '', kind: 'block' }); return api.commit(r.cfg); } if (v === 'blk-hide') return api.commit(S().setHidden(c, pg, b.id, !b.hidden)); if (v === 'blk-del') { api.setSel(null); return api.commit(S().removeBlock(c, pg, b.id)); } } return act(api, v); }
+    if (k === 'menu') { closeMenu(); if (/^blk-/.test(v)) { const b = sel && blockOf(api, sel.block); if (!b) return; const c = api.cfg(), pg = api.page(); if (api.blockAct && api.blockAct(v, b)) return; if (v === 'blk-hidedesk') return showToggle(api, 'block', 'desktop'); if (v === 'blk-up' || v === 'blk-down') return api.commit(S().moveBlock(c, pg, b.id, v.slice(4))); if (v === 'blk-dup') { const r = S().duplicateBlock(c, pg, b.id); api.setSel({ block: r.block.id, path: '', kind: 'block' }); return api.commit(r.cfg); } if (v === 'blk-hide') return api.commit(S().setHidden(c, pg, b.id, !b.hidden)); if (v === 'blk-del') { api.setSel(null); return api.commit(S().removeBlock(c, pg, b.id)); } } return act(api, v); }
     if (k === 'es') { const b = sel && blockOf(api, sel.block); if (!b) return; const cur = esOf(b, sel)[el.dataset.k]; return setEs(api, { [el.dataset.k]: /^(b|i)$/.test(el.dataset.k) ? (cur ? '' : 1) : v }); }
     if (k === 'show') return showToggle(api, el.dataset.scope, v);
     if (k === 'entry') return entry(api, v, el.dataset.list ? { list: el.dataset.list, i: +el.dataset.i, item: `${el.dataset.list}.${el.dataset.i}` } : null);
@@ -284,8 +284,14 @@
       if (sel.kind === 'icon') h += M('swap', 'Swap the icon');
       if (sel.kind === 'field') h += M('words', 'Change the grey hint');
       if (en) h += sep + M('up', 'Move up', 'Alt ↑') + M('down', 'Move down', 'Alt ↓') + M('dup', 'Duplicate', 'Ctrl D') + M('add', 'Add another') + M('del', 'Remove', 'Del');
-      if (sel.kind === 'block') h += M('blk-up', 'Move up', 'Alt ↑') + M('blk-down', 'Move down', 'Alt ↓') + M('blk-dup', 'Duplicate', 'Ctrl D') + M('blk-hide', b.hidden ? 'Show on the site' : 'Hide from the site', 'H') + M('blk-del', 'Remove', 'Del');
-      if (stylePath(sel) || sel.kind === 'block') h += sep + M('hidephone', offPhone ? 'Show on phones' : 'Hide on phones');
+      // pass 5: what the big editors put on a right-click, for a section (the same menu on the page and in the list of blocks)
+      const offDesk = sel.kind === 'block' && String((b.style || {}).hide || '').split(',').includes('desktop'), X = api.blockMenu ? api.blockMenu(b) : {};
+      if (sel.kind === 'block') h += M('blk-cut', 'Cut', 'Ctrl X') + M('blk-copy', 'Copy', 'Ctrl C') + (X.paste ? M('blk-paste', 'Paste below', 'Ctrl V') : '') + M('blk-dup', 'Duplicate', 'Ctrl D') + M('blk-rename', 'Rename', 'F2')
+        + sep + M('blk-up', 'Move up', 'Alt ↑') + M('blk-down', 'Move down', 'Alt ↓')
+        + sep + M('blk-copylook', 'Copy look', 'Ctrl Alt C') + (X.look ? M('blk-pastelook', 'Paste look', 'Ctrl Alt V') : '')
+        + sep + M('blk-hide', b.hidden ? 'Show on the site' : 'Hide from the site', 'H');
+      if (stylePath(sel) || sel.kind === 'block') h += (sel.kind === 'block' ? '' : sep) + M('hidephone', offPhone ? 'Show on phones' : 'Hide on phones') + (sel.kind === 'block' ? M('blk-hidedesk', offDesk ? 'Show on computers' : 'Hide on computers') : '');
+      if (sel.kind === 'block') h += M('blk-lock', b.locked ? 'Unlock' : 'Lock', 'Ctrl Shift L') + sep + M('blk-del', 'Remove', 'Del');
       h += sep + M('flint', 'Ask Flint about this') + M('comment', 'Comment here', 'C') + (sel.kind !== 'block' ? M('section', 'Select the section', 'Esc') : '');
     }
     if (!h) return;

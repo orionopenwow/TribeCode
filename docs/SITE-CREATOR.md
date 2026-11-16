@@ -5,6 +5,54 @@ Pass 4 (`feat/p4-site`, 16 Nov 2026). The designer is `app/ui/sitedesigner.js` a
 (what can be selected and typed over) and `docs/WEBSITE.md`. The test for everything on this page is
 `app/test/e2e_site_polish.py`.
 
+## Pass 5: Flint's own column, the list of blocks, drag, find, history
+
+Pass 5 (`feat/p5-editor`, 16 Nov 2026), after Camp's note that Flint sat on top of the edit pane. The test is
+`app/test/e2e_site_editor5.py`.
+
+**Four columns.** From left to right: the blocks, the page, the panel (Edit, Ideas, Style, Check) and Flint. Flint is
+never stacked under the panel any more, so the panel has the whole height and nothing in it is cut off at the foot.
+- Flint folds to a slim rail on the far right (the arrow in his header, or Ctrl J), and the page gets the room back.
+  Folded or open is remembered per person.
+- Under 1280 px wide he is the rail. Opened, he is a drawer over the page, left of the panel, so he never covers it.
+- On a phone his box to type in is always at the bottom. The handle, or a reply, slides his replies up.
+- He is calmer: one short greeting, at most three ideas that follow what is selected, and Polish it as one quiet row.
+  The note about what a stronger AI adds is behind the small info button. The thread ends at the box, like any chat.
+
+**The Design flow's plan** does not open beside the designer for now (a CSS rule in `sitedesigner.css`; the plan's code
+in `designflow.js` is unchanged, so it can come back).
+
+**The list of blocks** reads like the layers in Figma: a grip, the name, then the eye (hide), the lock and a menu.
+- Double-click a name, or press F2, to rename it in the list. An empty name goes back to the kind of block.
+- A locked section cannot be changed or removed until it is unlocked: not from the page, the panel, find and replace
+  or Flint. Nobody can type in it on the page, and its bar there is one button that unlocks it.
+- Right-click a row, or its menu button, for the same menu as a right-click on the page.
+
+**The menu for a section**: Cut, Copy, Paste below, Duplicate, Rename, Move up and down, Copy look, Paste look, Hide
+from the site, Hide on phones, Hide on computers, Lock, Remove, Ask Flint, Comment. A look is the section's colours,
+spacing, sizes and (on the same kind of block) its layout. Where it shows is not part of it.
+
+**Drag to reorder**, the same everywhere. A line shows where it will land, Esc cancels, and each drop is one Undo.
+- Blocks in the list.
+- Sections on the page (the grip in a section's bar).
+- Entries of a list, on the page and in the panel.
+- Pages in the page tabs (Home stays first).
+- A new block out of "+ Add block", onto the list or onto the page.
+
+With a finger, hold a moment first so a swipe still scrolls; holding without moving opens the menu.
+
+**More that the big editors have**:
+- Tab and Shift Tab step through the sections on the page.
+- A link pasted onto selected words makes them a link.
+- A picture file dropped on a picture replaces it.
+- Find and replace on every page (Ctrl F, or More), one at a time or all at once.
+- History (More): every step with what it did, and a click goes back or forward to it.
+
+**A bug fixed on the way**: words typed on the page and a button's Text box in the panel could write over each other.
+The panel's box did not follow the page, and the page's last words arrived after the box's change. The box now follows
+the page, and the page's words are kept as soon as a box in the panel is used. The first click on a button also puts
+the caret at the end of its words, instead of in the middle where the click landed.
+
 ## One row
 
 The top bar is one row at every width. It holds what is used all the time; the rest is under **More**.
@@ -89,6 +137,12 @@ both at once. There is no gap between the things inside a section in the model y
 | Ctrl 0, Shift 1 | 100%, Fit the width |
 | C | Comment mode |
 | Ctrl S | Save a version |
+| Ctrl Alt C, Ctrl Alt V | Copy a section's look, paste it on another (pass 5) |
+| F2 | Rename the selected section in the list (pass 5) |
+| Ctrl Shift L | Lock or unlock the selected section (pass 5) |
+| Tab, Shift Tab | On the page: select the next or the last section (pass 5) |
+| Ctrl F | Find and replace words on every page (pass 5) |
+| Ctrl J | Show or hide Flint (pass 5) |
 
 Shortcuts used to work only while one of the designer's own controls had the focus. They now work after a click on
 empty space too.
@@ -121,6 +175,13 @@ designer it now waits 250 ms, so their copy follows sooner. Alone it still waits
 and each save sends the whole design.
 
 ## Left
+
+Pass 5:
+- Dragging a new block onto the page works with a mouse; with a finger, tap the block in "+ Add block" (it lands below
+  what is selected) and then drag it in the list.
+- The look clipboard and the section clipboard are on this device, not shared with the tribe.
+- History lists the steps of this visit to the designer. Saved versions (Ctrl S) are the way to keep a point for later.
+- Find and replace reads the words of the blocks. The site's name and the page names are changed where they are.
 
 - Zoom has no pan with Space and drag; the page scrolls inside its frame instead.
 - The code view reads; it does not edit the section's HTML. Your own CSS is the way to change what the tools do not reach.

@@ -183,7 +183,8 @@
   });
 
   // ---------- clicks ----------
-  var noClick = 0;
+  var noClick = 0, downKey = '';
+  document.addEventListener('pointerdown', function (e) { downKey = SEL ? SEL.kind + '|' + SEL.key : ''; }, true);
   document.addEventListener('click', function (e) {
     if (Date.now() - noClick < 300) { e.preventDefault(); e.stopPropagation(); return; }   // the end of a drag is not a click
     var t = e.target, a = t.closest('a'); if (a || t.closest('form button, form input[type=submit]')) e.preventDefault();
@@ -204,7 +205,9 @@
     }
     if (MULTI.length) multiSet([]);
     if (x.kind === 'field') e.preventDefault();
+    var fresh = downKey !== x.kind + '|' + x.key && (x.kind === 'text' || x.kind === 'button');
     pick(x);
+    if (fresh && e.detail === 1) { var w0 = x.el.matches('[data-e]') ? x.el : x.el.querySelector('[data-e]'); var g0 = getSelection(); if (w0 && w0.isContentEditable && document.activeElement === w0 && g0 && g0.isCollapsed) typeIn(w0, false); }
     if (x.kind === 'icon') post({ t: 'icon', key: x.key });
   }, true);
   document.addEventListener('dblclick', function (e) {
@@ -251,6 +254,7 @@
   });
   document.addEventListener('keydown', function (e) {
     var el = editing(), mod = e.ctrlKey || e.metaKey;
+    if (mod && !e.altKey && (e.code === 'KeyF' || e.code === 'KeyJ')) { e.preventDefault(); return post({ t: 'key', key: e.key, code: e.code, ctrl: e.ctrlKey, meta: e.metaKey, alt: false, shift: e.shiftKey }); }
     if (e.key === 'Escape') { if (drag || idrag) return; if (el) { e.preventDefault(); el.blur(); return; } return post({ t: 'esc' }); }
     if (el) { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); el.blur(); } return; }
     if (e.target.closest && e.target.closest('input,textarea,select')) return;
@@ -258,15 +262,42 @@
     if (e.key === 'Enter' && SEL && selEl) { var w = selEl.matches('[data-e]') ? selEl : selEl.querySelector('[data-e]'); if (w) { e.preventDefault(); return typeIn(w, false); } if (SEL.kind === 'image') return post({ t: 'tb', act: 'replace', key: SEL.key, kind: 'image' }); }
     if (/^(Delete|Backspace)$/.test(e.key) || (mod && /^[ds=+\-0]$/i.test(e.key)) || (e.altKey && /^Arrow(Up|Down)$/.test(e.key)) || (!mod && !e.altKey && /^Arrow(Up|Down)$/.test(e.key) && SEL && SEL.kind === 'block')) e.preventDefault();
     if (mod && /^[cx]$/i.test(e.key) && (!SEL || SEL.kind !== 'block' || String(getSelection() || ''))) return;   // copying words stays the browser's own
-    if (e.key.length === 1 || /^(Delete|Backspace|Arrow(Up|Down))$/.test(e.key)) post({ t: 'key', key: e.key, ctrl: e.ctrlKey, meta: e.metaKey, alt: e.altKey, shift: e.shiftKey });
+    if (e.key === 'Tab' || e.key === 'F2') e.preventDefault();
+    if (e.key.length === 1 || /^(Delete|Backspace|Arrow(Up|Down)|Tab|F2)$/.test(e.key)) post({ t: 'key', key: e.key, code: e.code, ctrl: e.ctrlKey, meta: e.metaKey, alt: e.altKey, shift: e.shiftKey });
   });
+
+  // pass 5: paste a link while some words are selected: those words become the link (like the big editors)
+  document.addEventListener('paste', function (e) {
+    var t = (e.clipboardData && e.clipboardData.getData('text/plain') || '').trim(); if (!/^(https?:\/\/|mailto:)[^\s<>"]+$/i.test(t) || !partRange()) return;
+    e.preventDefault(); var h = wrapPart('a', { href: t }); if (h) post({ t: 'commit', key: h.dataset.e, value: words(h) });
+  }, true);
+  // pass 5: a picture file dropped on a picture replaces it; a new block dragged out of "+ Add block" lands where the line is
+  var ADD = false, fileOver = null;
+  function overPic(t) { var im = t && t.closest && t.closest('[data-img]'); return im && String(im.dataset.img).charAt(0) !== '@' ? im : null; }
+  function hasFiles(e) { var ty = e.dataTransfer && e.dataTransfer.types; return !!ty && [].indexOf.call(ty, 'Files') >= 0; }
+  document.addEventListener('dragover', function (e) {
+    if (hasFiles(e)) { var im = overPic(e.target); if (fileOver && fileOver !== im) fileOver.classList.remove('wdz-dropto'); fileOver = im; if (im) { e.preventDefault(); e.dataTransfer.dropEffect = 'copy'; im.classList.add('wdz-dropto'); } return; }
+    if (!ADD) return; e.preventDefault(); e.dataTransfer.dropEffect = 'copy'; var g = gapAt(e.clientY); lineAt(g); if (line) line.classList.add('is-new'); line.dataset.gap = g;
+    if (e.clientY < 50) scrollBy(0, -16); else if (e.clientY > innerHeight - 50) scrollBy(0, 16);
+  });
+  document.addEventListener('dragleave', function (e) { if (!e.relatedTarget && line && ADD) { line.remove(); line = null; } if (fileOver && !e.relatedTarget) { fileOver.classList.remove('wdz-dropto'); fileOver = null; } });
+  document.addEventListener('drop', function (e) {
+    if (hasFiles(e)) { var im = overPic(e.target); if (fileOver) fileOver.classList.remove('wdz-dropto'); fileOver = null; if (!im) return; e.preventDefault(); var f = e.dataTransfer.files && e.dataTransfer.files[0]; if (f && /^image\//.test(f.type)) { pick({ kind: 'image', key: im.dataset.img }); post({ t: 'dropimg', key: im.dataset.img, file: f }); } return; }
+    if (!ADD) return; e.preventDefault(); var g = gapAt(e.clientY); if (line) { line.remove(); line = null; } ADD = false; post({ t: 'dropblock', gap: g });
+  });
+  // pass 5: a locked section is not typed in; its bar is one button that says so and unlocks it
+  function lockMarks() { [].forEach.call(document.querySelectorAll('[data-locked] [contenteditable]'), function (x) { if (x.getAttribute('contenteditable') !== 'false') x.setAttribute('contenteditable', 'false'); }); }
 
   // ---------- the section bar (feat/design-site2): on the section under the pointer, or the selected one ----------
   bar.className = 'wdz-bar'; bar.setAttribute('contenteditable', 'false');
   function barHtml() { var B = function (a, l, g) { return '<button type="button" data-a="' + a + '" title="' + L[l] + '" aria-label="' + L[l] + '">' + g + '</button>'; }; bar.innerHTML = B('grip', 'grip', '\u22EE\u22EE') + B('up', 'up', IC.up) + B('down', 'down', IC.down) + B('dup', 'dup', IC.dup) + B('add', 'sadd', IC.add) + B('del', 'del', IC.del); }
   barHtml();
   function blocks() { return [].slice.call(document.querySelectorAll('[data-block]')); }
-  function placeBar(b) { if (b === cur && bar.parentNode === b) return; cur = b; if (!b) { bar.remove(); return; } b.appendChild(bar); }
+  function placeBar(b) {
+    if (b === cur && bar.parentNode === b && bar.dataset.lk === (b && b.hasAttribute('data-locked') ? '1' : '')) return; cur = b; if (!b) { bar.remove(); return; }
+    var lk = b.hasAttribute('data-locked'); if (bar.dataset.lk !== (lk ? '1' : '')) { bar.dataset.lk = lk ? '1' : ''; if (lk) bar.innerHTML = '<button type="button" class="wdz-lk" data-a="unlock" title="' + (L.unlock || 'Locked. Click to unlock') + '">' + I('<rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/>') + (L.locked || 'Locked') + '</button>'; else barHtml(); }
+    b.appendChild(bar);
+  }
   document.addEventListener('mouseover', function (e) { if (drag) return; var b = e.target.closest && e.target.closest('[data-block]'); if (b) placeBar(b); });
   bar.addEventListener('click', function (e) { var b = e.target.closest('[data-a]'); if (!b || !cur) return; e.preventDefault(); e.stopPropagation(); var a = b.dataset.a; if (a === 'grip') return; post({ t: 'act', act: a, block: cur.dataset.block }); });
   function gapAt(y) { var bs = blocks(), g = bs.length; for (var i = 0; i < bs.length; i++) { var r = bs[i].getBoundingClientRect(); if (y < r.top + r.height / 2) { g = i; break; } } return g; }
@@ -293,7 +324,7 @@
       var cssEl = document.getElementById('wdz-css'); if (cssEl && d.css != null && cssEl.textContent !== d.css) cssEl.textContent = d.css;
       bar.remove(); cur = null; selEl = null;
       swapping = true; try { ROOT().innerHTML = d.html; } finally { swapping = false; }   // the old words leaving the page are not an edit
-      markItems(); select(SEL); multiSet(MULTI);
+      markItems(); lockMarks(); select(SEL); multiSet(MULTI);
       if (wasEd && SEL && SEL.kind === 'text' && selEl && !selEl.hasAttribute('data-dbl')) typeIn(selEl, false);
       var w = wide(); post({ t: 'ready', soft: 1, sw: w.sw, iw: w.iw, wide: w.wide });
     }
@@ -302,6 +333,7 @@
     if ('sel' in d) { var s = d.sel; if (typeof s === 'string') { var el = s ? q(s) : null; s = el ? target(el) : null; } select(s); if (selEl && d.scroll) { var r = selEl.getBoundingClientRect(); if (r.top < 0 || r.bottom > innerHeight) selEl.scrollIntoView({ block: 'center' }); } }
     if (d.type) { var te = find({ kind: 'text', key: d.type }); if (te) typeIn(te, true); }
     if (d.multi) multiSet(d.multi === 'none' ? [] : d.multi);
+    if ('adddrag' in d) { ADD = !!d.adddrag; if (!ADD && line) { line.remove(); line = null; } }
     if (d.play) { var pb = q('[data-block="' + esc(d.play) + '"]'); if (pb) { pb.classList.remove('an-play-fade', 'an-play-rise'); void pb.offsetWidth; pb.classList.add('an-play-' + (d.anim === 'rise' ? 'rise' : 'fade')); pb.scrollIntoView({ block: 'nearest' }); setTimeout(function () { pb.classList.remove('an-play-fade', 'an-play-rise'); }, 900); } }
     if ('linkset' in d) { var na = q('a[data-new]'); if (na) { var hostE = na.closest('[data-e]'); if (d.linkset) { na.setAttribute('href', d.linkset); na.removeAttribute('data-new'); } else { while (na.firstChild) na.parentNode.insertBefore(na.firstChild, na); na.remove(); } if (hostE) { hostE.normalize(); post({ t: 'commit', key: hostE.dataset.e, value: words(hostE) }); } } }
     if (d.y != null) scrollTo(0, d.y);
@@ -346,7 +378,7 @@
   addEventListener('scroll', function () { if (cwPeople.length) cwDraw(); }, { passive: true });
   addEventListener('resize', function () { if (cwPeople.length) cwDraw(); });
   setInterval(function () { if (cwPeople.length) cwDraw(); }, 500);   // the page swaps in place when the design changes
-  markItems();
+  markItems(); lockMarks();
   // ---------- p4-site: zoom, and space above and below the selected section ----------
   // Ctrl/Cmd + wheel (and a trackpad pinch, which arrives as the same event) zooms the designer, not the browser.
   addEventListener('wheel', function (e) { if (!(e.ctrlKey || e.metaKey)) return; e.preventDefault(); post({ t: 'zoom', dy: e.deltaY }); }, { passive: false });

@@ -154,7 +154,7 @@ def main():
             pg.click("#wdz-picker [data-add='gallery'][data-v='masonry']")
             pg.wait_for_function("TribeSiteDesigner.cfg().pages[0].blocks.some(b => b.type === 'gallery' && b.variant === 'masonry')", timeout=4000)
             gi = next(i for i, x in enumerate(cfg(pg)["pages"][0]["blocks"]) if x["type"] == "gallery")
-            pg.click(f"#wdz-blocks .wdz-blk:nth-child({gi + 1}) [data-move='up']")
+            pg.click(f"#wdz-blocks .wdz-blk:nth-child({gi + 1}) [data-bmenu]"); pg.click(".sp-menu [data-val='blk-up']")   # pass 5: Move up is in the row's menu (and Alt Up, and drag)
             assert cfg(pg)["pages"][0]["blocks"][gi - 1]["type"] == "gallery", "moved up"
             out = ask(pg, "make the buttons work")
             assert "Wired" in out or "already goes somewhere" in out, out

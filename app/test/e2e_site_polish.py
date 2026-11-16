@@ -188,7 +188,8 @@ def main():
             fb = cp.locator("#wdz-frame").bounding_box(); cp.mouse.move(fb["x"] + 200, fb["y"] + 200)
             cp.keyboard.down("Control"); cp.mouse.wheel(0, -120); cp.keyboard.up("Control")
             cp.wait_for_function("document.querySelector('#wdz-zoomv').textContent === '110%'", timeout=3000)
-            # Fit: the full computer width, whole, in the window
+            # Fit: the full computer width, whole, in the window (pass 5: with Flint folded to his rail, so a tablet fits whole)
+            cp.evaluate("TribeSiteDesigner.flint && TribeSiteDesigner.flint(false)")
             cp.click("#wdz [data-wdz='zoom100']"); cp.click("#wdz [data-wdz='more']"); cp.click("#wdz-wide"); assert state(cp)["wide"]
             cp.click("#wdz [data-wdz='zoomfit']")
             f = cp.evaluate("(() => { const w = document.querySelector('#wdz-framewrap').getBoundingClientRect(), s = document.querySelector('#wdz .wdz-stage').getBoundingClientRect(); return { w: w.width, sw: s.width, l: w.left, sl: s.left, lw: document.querySelector('#wdz-frame').offsetWidth, z: TribeSiteDesigner.state().zoom }; })()")
@@ -198,6 +199,7 @@ def main():
             cp.click("#wdz .wdz-devs [data-dev='tablet']"); cp.wait_for_function("TribeSiteDesigner.state().zoom === 1", timeout=3000)   # Fit follows the device: a tablet fits whole
             cp.click("#wdz .wdz-devs [data-dev='desktop']"); cp.wait_for_function("TribeSiteDesigner.state().zoom < 1", timeout=3000)
             cp.click("#wdz [data-wdz='zoom100']"); cp.click("#wdz [data-wdz='more']"); cp.click("#wdz-wide"); assert not state(cp)["wide"]
+            cp.evaluate("TribeSiteDesigner.flint && TribeSiteDesigner.flint(true)")
 
             # ---------- 6: spacing handles ----------
             blk = frame(cp).locator("[data-block]").nth(1); bid = blk.get_attribute("data-block")
