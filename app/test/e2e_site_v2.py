@@ -122,7 +122,7 @@ def main():
             c = cfg(sp)
             assert blocks(c)[0]["type"] == "links" and blocks(c)[0]["props"]["items"], "the link-in-bio template with its links (no tribe needed)"
             assert blocks(c)[0]["props"]["img"].startswith("data:image/"), "its picture is inside"
-            sp.click("[data-wdz='templates']")
+            sp.click("#wdz [data-wdz='more']"); sp.click("#wdz-more [data-wdz='templates']")
             sp.wait_for_function("document.querySelectorAll('#wdz-gal .wdz-tpl').length >= 40", timeout=10000)
             sp.wait_for_function("[...document.querySelectorAll('#wdz-gal .wdz-tpl img')].slice(0, 8).every(i => i.complete && i.naturalWidth > 100)", timeout=10000)
             assert sp.evaluate("document.querySelector('#wdz-gal .wdz-tpl img').src").endswith(".webp")
@@ -144,6 +144,7 @@ def main():
             sp.wait_for_timeout(200)
             shot(sp, "site-gallery-v2.png")
             sp.click("#wdz-gal .wdz-tpl[data-tpl='sb-agency'] [data-tpl='sb-agency']")
+            sp.wait_for_selector("#wdz-replace #wdz-over", timeout=5000); sp.click("#wdz-over")   # p4-site: a template over a site that is already there asks first
             sp.wait_for_function("TribeSiteDesigner.cfg().template === 'sb-agency'", timeout=10000)
             before = blocks(cfg(sp))[0]["props"]["title"]
             out = dask(sp, "change the headline to Posters for every shop on the street")

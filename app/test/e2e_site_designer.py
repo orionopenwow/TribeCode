@@ -216,7 +216,7 @@ def main():
             assert 'href="shop.html"' in z.read("index.html").decode()
 
             # ---- versions keep the config
-            pg.click("[data-wdz='save']")
+            pg.click("#wdz [data-wdz='more']"); pg.click("#wdz-more [data-wdz='save']")
             pg.wait_for_function("TribeSiteDesigner.state().log.slice(-1)[0].text.includes('Saved designs')", timeout=5000)
             vs = ok(api(f"/projects/{pid}/website/versions", token=tok))
             vd = [x for x in vs["saved"] if x.get("designer")]

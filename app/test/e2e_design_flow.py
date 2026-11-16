@@ -145,7 +145,7 @@ def on_this_device(b):
     R = "s => { const r = document.querySelector(s).getBoundingClientRect(); return { l: r.left, r: r.right, t: r.top, b: r.bottom, w: r.width }; }"
     dk, wz = pg.evaluate(R, "#dfl-dock"), pg.evaluate(R, "#wdz")
     assert dk["w"] <= 300 and wz["r"] <= dk["l"] + 0.5, ("the panel sits beside the designer, not over it", dk, wz)
-    for q in ["#wdz .wdz-top [data-wdz='save']", "#wdz-dl"]:
+    for q in ["#wdz .wdz-top [data-wdz='more']", "#wdz-dl"]:
         c = pg.evaluate(R, q); assert c["r"] <= dk["l"], ("the designer's controls stay uncovered", q, c, dk)
     # tick a step and add the steps as tasks, right from the panel
     first = pg.evaluate("TribeDesignFlow.plan().steps[0].id")

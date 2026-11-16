@@ -976,8 +976,8 @@ ${t.btn === 'pill' ? '.btn{border-radius:999px}' : t.btn === 'outline' ? '.btn{b
     const hero = c.pages[0].blocks.find(b => b.type === 'hero' || b.type === 'links'), lead = hero && (hero.props.text || hero.props.bio || '');
     if (!S.description) add('fix', 'seo-desc', 'No description for search results', 'Search engines and link previews show a sentence about the site. Yours is empty.', lead ? { fix: { label: 'Use the opening line', ops: [{ op: 'seo', description: short2(lead, 155) }] } } : undefined);
     if (S.description && S.description.length > 170) add('tip', 'seo-long', 'The description is long', 'Search results cut it off after about 160 characters.');
-    if (!S.favicon && !c.logo) add('tip', 'seo-icon', 'No icon for the browser tab', 'Add a logo or a favicon under Site.');
-    if (!S.image) add('tip', 'seo-share', 'No share picture', 'Links to the site in chats and on social media look better with a picture. Add one under Site.');
+    if (!S.favicon && !c.logo) add('tip', 'seo-icon', 'No icon for the browser tab', 'Add a logo or a favicon under Style › Site settings.');
+    if (!S.image) add('tip', 'seo-share', 'No share picture', 'Links to the site in chats and on social media look better with a picture. Add one under Style › Site settings.');
     c.pages.forEach(pg => {
       const vis = pg.blocks.filter(b => !b.hidden);
       if (!vis.length) add('fix', 'empty-page', `The page “${pg.title}” is empty`, 'Add a section to it or remove the page.', { page: pg.id, n: pg.id });
