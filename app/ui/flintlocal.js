@@ -348,6 +348,10 @@
       L.forEach(f => { (g[f.groupName] = g[f.groupName] || []).push(f.title); });
       return { text: `I can add ${L.length} working features to an app with no AI, and everything stays on the phone:\n` + Object.entries(g).map(([k, v]) => `- **${k}**: ${v.join(', ')}`).join('\n') + '\nSay “add offline storage to my app” or “add a dark mode switch”. Real accounts, payments and syncing between phones need a stronger AI.' };
     }
+    if (id === 'app.needsai') {   // a server or native job: said honestly, with the ready request for the AI helpers
+      let t = null; if (connected()) { try { t = await C.api('/flint/tier', { method: 'POST', body: { ask: s.text } }); } catch {} }
+      return { text: (t && t.why) || 'That needs a server or native code, so it is a job for a stronger AI helper; a person approves what it builds.', acts: [['Send to my AI helper', 'ask', 'have my ai do it']] };
+    }
     if (id === 'app.feature' && !(window.TribeAppCreator && window.TribeAppCreator.state() && window.TribeAppCreator.state().open)) {
       const pid = C && C.project ? C.project() : '';
       if (!connected() || !pid) return { text: 'Open a project with an app first, then ask again.' };

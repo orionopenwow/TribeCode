@@ -427,6 +427,7 @@
     const id = step.intent, sl = step.slots || {}, Co = A();
     if (id === 'app.make') { const t = Co.template(sl.template, { name: sl.name, accent: sl.color && sl.color.hex }); if (!t) return null; if (!st || !st.open) { open({ template: sl.template, name: sl.name, accent: sl.color && sl.color.hex }); return { text: `Opened App Creator with the ${t.name} template.` }; } commit(t, ''); st.screen = t.start; paint(); return { text: `Started a ${(Co.TEMPLATES.find(x => x.id === sl.template) || {}).title || 'new'} app. Click anything to change it.` }; }
     if (!st || !st.open) { open({}); }
+    if (id === 'app.needsai') return null;   // flintnlu.js: a server or native job; ask() says so honestly (server/flintfree.js classify)
     if (id === 'app.feature') { const r = apply({ op: sl.off ? 'feature.remove' : 'feature.add', feature: sl.feature }); return { text: r.say || 'That feature is not in the list.' }; }   // appfeatures.js
     if (id === 'app.kit') { const k = KIT_OF[String(sl.kit || '').toLowerCase()] || sl.kit; const r = apply({ op: 'kit', kit: k }); return { text: r.say }; }
     if (id === 'app.block') { const at = st.sel ? (Co.findScreen(st.doc, st.screen).blocks.findIndex(b => b.id === st.sel.block) + 1) || undefined : undefined; const r = apply({ op: 'block.add', screen: st.screen, type: sl.type, at }); return { text: r.say }; }
@@ -532,7 +533,11 @@
         }
         if (ctx.brand && ctx.brand.colors && ctx.brand.colors.accent && ctx.brand.colors.accent.toUpperCase() !== doc.theme.accent) out.push({ id: 'app-brand', title: 'Use the brand colour in the app', why: 'The brand kit has a colour the app does not use yet.', from: [{ kind: 'brand', ref: 'brand', who: '' }],
           apply: async () => { const before = JSON.stringify(doc); const r = Co.apply(doc, { op: 'theme', set: { accent: ctx.brand.colors.accent } }); await C.api(`/projects/${encodeURIComponent(ctx.projectId)}/app-config`, { method: 'PUT', body: { config: r.doc, force: true } }); return async () => { await C.api(`/projects/${encodeURIComponent(ctx.projectId)}/app-config`, { method: 'PUT', body: { config: JSON.parse(before), force: true } }); }; } });
-        return out.slice(0, 6);
+        // feat/flint-appknow: parts that only look right until the app runs on a phone (appfeatures.js suggestions())
+        const FX = window.TribeAppFeatures;
+        if (FX && FX.suggestions) for (const h of FX.suggestions(doc).slice(0, 2)) out.push({ id: h.id, title: h.title, why: h.why, from: [{ kind: 'design', ref: 'app', who: '' }],
+          apply: async () => { const before = JSON.stringify(doc); const r = Co.apply(doc, { op: 'feature.add', feature: h.feature }); await C.api(`/projects/${encodeURIComponent(ctx.projectId)}/app-config`, { method: 'PUT', body: { config: r.doc, force: true } }); if (st && st.open && st.pid === ctx.projectId) { st.doc = r.doc; paint(); } return async () => { await C.api(`/projects/${encodeURIComponent(ctx.projectId)}/app-config`, { method: 'PUT', body: { config: JSON.parse(before), force: true } }); if (st && st.open && st.pid === ctx.projectId) { st.doc = Co.normalize(JSON.parse(before)); paint(); } }; } });
+        return out.slice(0, 8);
       } });
   }
   registerSuggest(); window.addEventListener('load', registerSuggest); setTimeout(registerSuggest, 1500);

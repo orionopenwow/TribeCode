@@ -58,7 +58,9 @@
   def({ id: 'remember', group: 'data', title: 'Remember everything', what: 'Ticks, switches, choices and typed text stay put after the app is closed.',
     words: ['offline storage', 'remember things', 'remember everything', 'save data', 'saves my data', 'save my data', 'keep my data', 'local storage', 'persist data', 'remember ticks', 'loses data', 'loses its data', 'loses my data', 'forgets everything', 'store data on the phone', 'make it work offline', 'make it remember', 'remember what i tick', 'keep data after closing', 'data stays after reload'], weak: ['save progress', 'storage', 'persistence'],
     fn: function (root, k) {
-      var path = function (el) { var p = []; while (el && el !== root && el.parentNode) { p.unshift(Array.prototype.indexOf.call(el.parentNode.children, el)); el = el.parentNode; } return p.join('.'); };
+      // a place in the page that other features' added bars and boxes don't shift (they are skipped when counting)
+      var ours = /^tcf-(?:bar|add|none|emptymsg|total|chart|timer|count|map|photo|streak|today|pull|toast|offline|sheet|gate|bit|search|mic)\b/;
+      var path = function (el) { var p = []; while (el && el !== root && el.parentNode) { var i = 0, s = el.previousElementSibling; while (s) { if (!ours.test(s.className || '')) i++; s = s.previousElementSibling; } p.unshift(i); el = el.parentNode; } return p.join('.'); };
       var st = k.ls.get('remember', {});
       var save = function () { k.ls.set('remember', st); };
       k.all('[data-check],[data-tog],[data-like],input[type=checkbox],input[type=radio],input[type=text],input:not([type]),textarea,select').forEach(function (el) {
@@ -114,7 +116,7 @@
       b.onclick = function () { if (b.dataset.sure) { var ks = []; for (var i = 0; i < localStorage.length; i++) { var key = localStorage.key(i); if (key.indexOf(prefix) === 0) ks.push(key); } ks.forEach(function (x) { localStorage.removeItem(x); }); location.reload(); return; } b.dataset.sure = '1'; b.textContent = 'Tap again to clear'; setTimeout(function () { delete b.dataset.sure; b.textContent = 'Start over'; }, 3000); };
     } });
   def({ id: 'csv', group: 'data', title: 'Export as CSV', what: 'Downloads the first list as a spreadsheet file (CSV).',
-    words: ['export csv', 'export as csv', 'download csv', 'export to spreadsheet', 'export to excel', 'csv export', 'download the list as csv', 'export the list'], weak: [],
+    words: ['export csv', 'export as csv', 'export to csv', 'csv file', 'save as csv', 'download csv', 'export to spreadsheet', 'export to excel', 'csv export', 'download the list as csv', 'export the list'], weak: [],
     fn: function (root, k) {
       var b = k.button('Export CSV', 'tcf-ghost', k.bar());
       b.onclick = function () { var list = k.lists()[0]; if (!list) return k.toast('No list to export'); var q = function (s) { return '"' + String(s).replace(/"/g, '""') + '"'; }; var lines = k.rowsIn(list).map(function (r) { var parts = Array.prototype.map.call(r.querySelectorAll('b, strong, small, span, p, .ax-rt, .ax-sub'), function (x) { return k.textOf(x); }).filter(Boolean); if (!parts.length) parts = [k.textOf(r)]; return parts.map(q).join(','); }); var a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([lines.join('\n')], { type: 'text/csv' })); a.download = k.name + '.csv'; a.click(); };
@@ -435,6 +437,10 @@
     + '.tcf-prog{flex:1 1 100%;display:grid;gap:4px}.tcf-prog i{display:block;height:8px;border-radius:8px;background:var(--ax-accent,#F26B1D);width:0;transition:width .3s}.tcf-prog span{font-size:12px;opacity:.7}.tcf-chart{display:flex;gap:6px;align-items:flex-end;height:140px;padding:8px 16px}.tcf-cb{flex:1;display:grid;grid-template-rows:1fr auto;height:100%;gap:4px;min-width:0}.tcf-cb i{align-self:end;display:block;background:var(--ax-accent,#F26B1D);border-radius:6px 6px 0 0}.tcf-cb span{font-size:10px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:center}'
     + '.tcf-count{display:flex;gap:16px;align-items:center;justify-content:center;padding:12px}.tcf-count output{font:600 40px system-ui,sans-serif;min-width:64px;text-align:center}.tcf-stars{display:flex;gap:4px;justify-content:center}.tcf-stars button{font-size:28px;background:none;border:0;min-width:44px;min-height:44px;color:#E0951F;cursor:pointer}.tcf-mic{min-width:40px;min-height:40px;border-radius:10px;border:1px solid rgba(127,127,127,.35);background:transparent}.tcf-focus{outline:2px solid var(--ax-accent,#F26B1D)}';
 
+  // What no feature here can do, because it needs a server or native code: real accounts, data shared between phones,
+  // payments, push when the app is closed, phone hardware, encryption. server/flintfree.js classify and flintnlu.js
+  // send these to a stronger AI with a ready request (a person approves what it builds).
+  const REAL = /\b(?:real|secure|proper|production)\s+(?:log ?ins?|sign[- ]?(?:in|up)s?|accounts?|auth\w*|users?)\b|\baccounts? (?:that|which) work on (?:every|any|all|other) (?:device|phone)s?\b|\bsync\w*\b.{0,30}\b(?:between|across|with) (?:phones|devices|people|users|computers|my phone and)\b|\b(?:same|shared) (?:data|list) on (?:every|all|both) (?:phones?|devices?)\b|\b(?:cloud|server|online) (?:sync|save|backup|database)\b|\bshared (?:data|list|database) (?:between|for|with) (?:people|users|everyone)\b|\b(?:in-app purchases?|payments?|stripe|checkout|subscriptions?|charge (?:people|users|money))\b|\bpush notifications? (?:from a server|when the app is closed|to (?:everyone|all users))\b|\bnotify (?:people|users) when the app is closed\b|\bbluetooth\b|\bnfc\b|\bhealth ?kit\b|\bbackground (?:location|tracking|sync)\b|\bnative (?:module|code|plugin)s?\b|\bapple pay\b|\bgoogle pay\b|\bend[- ]to[- ]end encrypt\w*\b|\bencrypt\w*\b|\breal[- ]?time (?:chat|multiplayer|sync)\b|\bchat between (?:users|people|phones)\b|\bapp store (?:submission|upload)\b/;
   const byId = {}; for (const f of F) byId[f.id] = f;
   const norm = s => String(s || '').toLowerCase().replace(/[’']/g, '').replace(/[^a-z0-9 ]+/g, ' ').replace(/\s+/g, ' ').trim();
   // "add offline storage", "make my app remember things", "a dark mode switch please": the feature whose words fit best.
@@ -466,7 +472,21 @@
     if (!/tribe-features\/features\.js/.test(h)) h = /<\/body>/i.test(h) ? h.replace(/<\/body>(?![\s\S]*<\/body>)/i, '<script src="tribe-features/features.js"></script>\n</body>') : h + '\n<script src="tribe-features/features.js"></script>\n';
     return h;
   }
+  // Suggestions (TribeSuggest, app/ui/suggest.js): the App Creator design has parts that only look right until it runs
+  // on a phone. A checklist with no storage forgets every tick on reload; a timer part doesn't count down; a list with
+  // money in it has no total. One idea each, from the design itself; Apply adds the feature, Undo removes it.
+  const HINTS = [
+    { feature: 'remember', when: d => d.screens.some(s => s.blocks.some(b => ['checklist', 'toggles', 'tracker', 'kanban', 'form', 'settings'].includes(b.type))), title: 'Make the app remember ticks and switches', why: 'Your app has a checklist or switches. On a phone they reset every time it is opened, until it saves them.' },
+    { feature: 'timer', when: d => d.screens.some(s => s.blocks.some(b => ['timer', 'countdown'].includes(b.type))), title: 'Make the timer count down', why: 'The timer part is a picture of a timer. This makes it start, pause and beep in the exported app.' },
+    { feature: 'totals', when: d => d.screens.some(s => s.blocks.some(b => ['list', 'table', 'wallet', 'receipt'].includes(b.type) && /[$€£¥]\s?\d/.test(JSON.stringify(b.props || {})))), title: 'Add a total under the money list', why: 'A list with prices or amounts in it. This adds them up and keeps the total right as rows change.' },
+    { feature: 'install', when: d => d.screens.length >= 3, title: 'Add an Install button', why: 'Friends can put the app on their Home Screen in one tap (with steps on iPhone, where browsers can\'t show a prompt).' },
+  ];
+  function suggestions(doc) {
+    if (!doc || !Array.isArray(doc.screens)) return [];
+    const have = new Set(doc.features || []);
+    return HINTS.filter(h => !have.has(h.feature) && h.when(doc)).map(h => ({ id: 'appknow-' + h.feature, feature: h.feature, title: h.title, why: h.why }));
+  }
   const list = () => F.map(f => ({ id: f.id, group: f.group, groupName: GROUPS[f.group], title: f.title, what: f.what, note: f.note || '', secure: !!f.secure }));
   const get = id => { const f = byId[id]; return f ? { id: f.id, group: f.group, title: f.title, what: f.what, note: f.note || '', secure: !!f.secure, words: f.words.slice() } : null; };
-  return { FEATURES: F, GROUPS, TCKit, list, get, match, clean, runtime, css, codeFiles, inject };
+  return { FEATURES: F, GROUPS, REAL, TCKit, list, get, match, clean, runtime, css, codeFiles, inject, suggestions };
 });

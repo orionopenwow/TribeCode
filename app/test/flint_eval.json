@@ -14859,6 +14859,626 @@
    "i": "share.timelapse",
    "ctx": "g",
    "v": "sc"
+  },
+  {
+   "t": "add offline storage",
+   "i": "app.feature",
+   "s": {
+    "feature": "remember"
+   },
+   "ctx": "a",
+   "v": "ak"
+  },
+  {
+   "t": "make it remember things",
+   "i": "app.feature",
+   "s": {
+    "feature": "remember"
+   },
+   "ctx": "a",
+   "v": "ak"
+  },
+  {
+   "t": "make it work offline",
+   "i": "app.feature",
+   "s": {
+    "feature": "remember"
+   },
+   "ctx": "a",
+   "v": "ak"
+  },
+  {
+   "t": "let people add items to the list",
+   "i": "app.feature",
+   "s": {
+    "feature": "addlist"
+   },
+   "ctx": "a",
+   "v": "ak"
+  },
+  {
+   "t": "add swipe to delete",
+   "i": "app.feature",
+   "s": {
+    "feature": "swipe"
+   },
+   "ctx": "a",
+   "v": "ak"
+  },
+  {
+   "t": "add backup and restore",
+   "i": "app.feature",
+   "s": {
+    "feature": "backup"
+   },
+   "ctx": "a",
+   "v": "ak"
+  },
+  {
+   "t": "add a start over button",
+   "i": "app.feature",
+   "s": {
+    "feature": "reset"
+   },
+   "ctx": "a",
+   "v": "ak"
+  },
+  {
+   "t": "add export to csv",
+   "i": "app.feature",
+   "s": {
+    "feature": "csv"
+   },
+   "ctx": "a",
+   "v": "ak"
+  },
+  {
+   "t": "add notes on items",
+   "i": "app.feature",
+   "s": {
+    "feature": "notes"
+   },
+   "ctx": "a",
+   "v": "ak"
+  },
+  {
+   "t": "add favorites",
+   "i": "app.feature",
+   "s": {
+    "feature": "favorites"
+   },
+   "ctx": "a",
+   "v": "ak"
+  },
+  {
+   "t": "make it searchable",
+   "i": "app.feature",
+   "s": {
+    "feature": "search"
+   },
+   "ctx": "a",
+   "v": "ak"
+  },
+  {
+   "t": "add search that works",
+   "i": "app.feature",
+   "s": {
+    "feature": "search"
+   },
+   "ctx": "a",
+   "v": "ak"
+  },
+  {
+   "t": "add a sort button",
+   "i": "app.feature",
+   "s": {
+    "feature": "sort"
+   },
+   "ctx": "a",
+   "v": "ak"
+  },
+  {
+   "t": "filter by tag",
+   "i": "app.feature",
+   "s": {
+    "feature": "filterchips"
+   },
+   "ctx": "a",
+   "v": "ak"
+  },
+  {
+   "t": "add a dark mode toggle",
+   "i": "app.feature",
+   "s": {
+    "feature": "darkswitch"
+   },
+   "ctx": "a",
+   "v": "ak"
+  },
+  {
+   "t": "add a bigger text option",
+   "i": "app.feature",
+   "s": {
+    "feature": "textsize"
+   },
+   "ctx": "a",
+   "v": "ak"
+  },
+  {
+   "t": "add haptic feedback",
+   "i": "app.feature",
+   "s": {
+    "feature": "haptics"
+   },
+   "ctx": "a",
+   "v": "ak"
+  },
+  {
+   "t": "add pull to refresh",
+   "i": "app.feature",
+   "s": {
+    "feature": "pullrefresh"
+   },
+   "ctx": "a",
+   "v": "ak"
+  },
+  {
+   "t": "add skeleton loading",
+   "i": "app.feature",
+   "s": {
+    "feature": "skeleton"
+   },
+   "ctx": "a",
+   "v": "ak"
+  },
+  {
+   "t": "add toast messages",
+   "i": "app.feature",
+   "s": {
+    "feature": "toasts"
+   },
+   "ctx": "a",
+   "v": "ak"
+  },
+  {
+   "t": "add confetti when finished",
+   "i": "app.feature",
+   "s": {
+    "feature": "celebrate"
+   },
+   "ctx": "a",
+   "v": "ak"
+  },
+  {
+   "t": "add an install button",
+   "i": "app.feature",
+   "s": {
+    "feature": "install"
+   },
+   "ctx": "a",
+   "v": "ak"
+  },
+  {
+   "t": "add an offline banner",
+   "i": "app.feature",
+   "s": {
+    "feature": "offline"
+   },
+   "ctx": "a",
+   "v": "ak"
+  },
+  {
+   "t": "add reminders",
+   "i": "app.feature",
+   "s": {
+    "feature": "reminders"
+   },
+   "ctx": "a",
+   "v": "ak"
+  },
+  {
+   "t": "use my location",
+   "i": "app.feature",
+   "s": {
+    "feature": "location"
+   },
+   "ctx": "a",
+   "v": "ak"
+  },
+  {
+   "t": "make the map work",
+   "i": "app.feature",
+   "s": {
+    "feature": "map"
+   },
+   "ctx": "a",
+   "v": "ak"
+  },
+  {
+   "t": "keep the screen on",
+   "i": "app.feature",
+   "s": {
+    "feature": "wakelock"
+   },
+   "ctx": "a",
+   "v": "ak"
+  },
+  {
+   "t": "make the timer work",
+   "i": "app.feature",
+   "s": {
+    "feature": "timer"
+   },
+   "ctx": "a",
+   "v": "ak"
+  },
+  {
+   "t": "add a stopwatch",
+   "i": "app.feature",
+   "s": {
+    "feature": "stopwatch"
+   },
+   "ctx": "a",
+   "v": "ak"
+  },
+  {
+   "t": "add a daily streak",
+   "i": "app.feature",
+   "s": {
+    "feature": "streak"
+   },
+   "ctx": "a",
+   "v": "ak"
+  },
+  {
+   "t": "add a demo login",
+   "i": "app.feature",
+   "s": {
+    "feature": "demologin"
+   },
+   "ctx": "a",
+   "v": "ak"
+  },
+  {
+   "t": "add a pin lock",
+   "i": "app.feature",
+   "s": {
+    "feature": "pinlock"
+   },
+   "ctx": "a",
+   "v": "ak"
+  },
+  {
+   "t": "show onboarding only once",
+   "i": "app.feature",
+   "s": {
+    "feature": "onboardonce"
+   },
+   "ctx": "a",
+   "v": "ak"
+  },
+  {
+   "t": "add up the numbers",
+   "i": "app.feature",
+   "s": {
+    "feature": "totals"
+   },
+   "ctx": "a",
+   "v": "ak"
+  },
+  {
+   "t": "add a tap counter",
+   "i": "app.feature",
+   "s": {
+    "feature": "counter"
+   },
+   "ctx": "a",
+   "v": "ak"
+  },
+  {
+   "t": "add a chart from the list",
+   "i": "app.feature",
+   "s": {
+    "feature": "chart"
+   },
+   "ctx": "a",
+   "v": "ak"
+  },
+  {
+   "t": "translate the app",
+   "i": "app.feature",
+   "s": {
+    "feature": "languages"
+   },
+   "ctx": "a",
+   "v": "ak"
+  },
+  {
+   "t": "add read aloud",
+   "i": "app.feature",
+   "s": {
+    "feature": "readaloud"
+   },
+   "ctx": "a",
+   "v": "ak"
+  },
+  {
+   "t": "add speech to text",
+   "i": "app.feature",
+   "s": {
+    "feature": "dictate"
+   },
+   "ctx": "a",
+   "v": "ak"
+  },
+  {
+   "t": "add keyboard shortcuts",
+   "i": "app.feature",
+   "s": {
+    "feature": "shortcuts"
+   },
+   "ctx": "a",
+   "v": "ak"
+  },
+  {
+   "t": "add an undo button",
+   "i": "app.feature",
+   "s": {
+    "feature": "undo"
+   },
+   "ctx": "a",
+   "v": "ak"
+  },
+  {
+   "t": "remove the pin lock",
+   "i": "app.feature",
+   "s": {
+    "feature": "pinlock",
+    "off": true
+   },
+   "ctx": "a",
+   "v": "ak"
+  },
+  {
+   "t": "turn off haptics",
+   "i": "app.feature",
+   "s": {
+    "feature": "haptics",
+    "off": true
+   },
+   "ctx": "a",
+   "v": "ak"
+  },
+  {
+   "t": "add offline storage to my app",
+   "i": "app.feature",
+   "s": {
+    "feature": "remember"
+   },
+   "ctx": "g",
+   "v": "ak"
+  },
+  {
+   "t": "add a dark mode switch to the app",
+   "i": "app.feature",
+   "s": {
+    "feature": "darkswitch"
+   },
+   "ctx": "g",
+   "v": "ak"
+  },
+  {
+   "t": "add reminders to my app",
+   "i": "app.feature",
+   "s": {
+    "feature": "reminders"
+   },
+   "ctx": "g",
+   "v": "ak"
+  },
+  {
+   "t": "add swipe to delete in my app",
+   "i": "app.feature",
+   "s": {
+    "feature": "swipe"
+   },
+   "ctx": "g",
+   "v": "ak"
+  },
+  {
+   "t": "my app loses data on reload",
+   "i": "app.feature",
+   "s": {
+    "feature": "remember"
+   },
+   "ctx": "g",
+   "v": "ak"
+  },
+  {
+   "t": "what features can you add",
+   "i": "app.features",
+   "ctx": "g",
+   "v": "ak"
+  },
+  {
+   "t": "what can you add to my app",
+   "i": "app.features",
+   "ctx": "g",
+   "v": "ak"
+  },
+  {
+   "t": "list the app features",
+   "i": "app.features",
+   "ctx": "g",
+   "v": "ak"
+  },
+  {
+   "t": "add a search bar",
+   "i": "app.block",
+   "s": {
+    "type": "search"
+   },
+   "ctx": "a",
+   "v": "ak"
+  },
+  {
+   "t": "add a settings screen",
+   "i": "app.kit",
+   "s": {
+    "kit": "settings"
+   },
+   "ctx": "a",
+   "v": "ak"
+  },
+  {
+   "t": "add a login screen",
+   "i": "app.kit",
+   "s": {
+    "kit": "signin"
+   },
+   "ctx": "a",
+   "v": "ak"
+  },
+  {
+   "t": "make it dark",
+   "i": "app.theme",
+   "s": {
+    "mode": "dark"
+   },
+   "ctx": "a",
+   "v": "ak"
+  },
+  {
+   "t": "set a timer for 5 minutes",
+   "i": "timer",
+   "ctx": "g",
+   "v": "ak"
+  },
+  {
+   "t": "please make it save my data",
+   "i": "app.feature",
+   "s": {
+    "feature": "remember"
+   },
+   "ctx": "a",
+   "v": "ak"
+  },
+  {
+   "t": "could you add swipe left to delete",
+   "i": "app.feature",
+   "s": {
+    "feature": "swipe"
+   },
+   "ctx": "a",
+   "v": "ak"
+  },
+  {
+   "t": "i want people to be able to star items",
+   "i": "app.feature",
+   "s": {
+    "feature": "favorites"
+   },
+   "ctx": "a",
+   "v": "ak"
+  },
+  {
+   "t": "give it a light and dark switch",
+   "i": "app.feature",
+   "s": {
+    "feature": "darkswitch"
+   },
+   "ctx": "a",
+   "v": "ak"
+  },
+  {
+   "t": "add a countdown that beeps",
+   "i": "app.feature",
+   "s": {
+    "feature": "timer"
+   },
+   "ctx": "a",
+   "v": "ak"
+  },
+  {
+   "t": "add a wake lock",
+   "i": "app.feature",
+   "s": {
+    "feature": "wakelock"
+   },
+   "ctx": "a",
+   "v": "ak"
+  },
+  {
+   "t": "put a share sheet in",
+   "i": "app.feature",
+   "s": {
+    "feature": "share"
+   },
+   "ctx": "a",
+   "v": "ak"
+  },
+  {
+   "t": "add a running total",
+   "i": "app.feature",
+   "s": {
+    "feature": "totals"
+   },
+   "ctx": "a",
+   "v": "ak"
+  },
+  {
+   "t": "add multiple languages",
+   "i": "app.feature",
+   "s": {
+    "feature": "languages"
+   },
+   "ctx": "a",
+   "v": "ak"
+  },
+  {
+   "t": "add a passcode lock",
+   "i": "app.feature",
+   "s": {
+    "feature": "pinlock"
+   },
+   "ctx": "a",
+   "v": "ak"
+  },
+  {
+   "t": "let me export my data",
+   "i": "app.feature",
+   "s": {
+    "feature": "backup"
+   },
+   "ctx": "a",
+   "v": "ak"
+  },
+  {
+   "t": "add an offline notice",
+   "i": "app.feature",
+   "s": {
+    "feature": "offline"
+   },
+   "ctx": "a",
+   "v": "ak"
+  },
+  {
+   "t": "put a share sheet in my app",
+   "i": "app.feature",
+   "s": {
+    "feature": "share"
+   },
+   "ctx": "g",
+   "v": "ak"
+  },
+  {
+   "t": "add a stopwatch to the app",
+   "i": "app.feature",
+   "s": {
+    "feature": "stopwatch"
+   },
+   "ctx": "g",
+   "v": "ak"
   }
  ]
 }
