@@ -1127,6 +1127,108 @@
     "Pick the size for the feed and the first words on screen.",
     "Copy the caption, then press Open in Motion Studio and Export the video."
    ]
+  },
+  {
+   "id": "phone-path",
+   "group": "publish",
+   "title": "Put your app on your phone",
+   "intro": "Five short steps take any app, game or website to an icon on your home screen. Each step checks itself and says what to do if you get stuck.",
+   "asks": [
+    "put my app on my phone",
+    "get my app on my phone",
+    "home screen app"
+   ],
+   "steps": [
+    "Open Publish and pick Put it on your phone, or ask Flint.",
+    "Make it installable: one tap adds what is missing.",
+    "Put it online with a GitHub page, then scan the code with your phone.",
+    "Add it to the home screen with the steps for your phone and browser."
+   ]
+  },
+  {
+   "id": "phone-installable",
+   "group": "publish",
+   "title": "Make your app installable",
+   "intro": "A phone only offers an icon when the page tells it the app’s name, its icons and how to open. Flint checks and adds what is missing in one tap.",
+   "asks": [
+    "add a manifest",
+    "app icons for phones",
+    "make my site an installable app"
+   ],
+   "steps": [
+    "Open Put it on your phone. The first step checks your page.",
+    "Read the crosses: each says what is missing and why.",
+    "Tap Make it installable. It adds only what is missing and saves a version.",
+    "Tap Undo if you want it back the way it was."
+   ]
+  },
+  {
+   "id": "phone-online",
+   "group": "publish",
+   "title": "Give your app a link that stays up",
+   "intro": "Phones need an https link that works when your computer is off. A GitHub page is free and stays up; the free limits are shown with their sources.",
+   "asks": [
+    "put my app online for my phone",
+    "free hosting for my app",
+    "link that stays up"
+   ],
+   "steps": [
+    "Open Put it on your phone and go to Put it online.",
+    "Pick GitHub Pages for a link that stays up, or a play link to try it fast.",
+    "Press Check it: it opens the live link and runs the install check.",
+    "Read the free limits before you share it widely."
+   ]
+  },
+  {
+   "id": "phone-open",
+   "group": "publish",
+   "title": "Open your app on your phone",
+   "intro": "Scan a code with the phone’s camera or text yourself the link, so it opens in the phone’s real browser.",
+   "asks": [
+    "open my app on my phone",
+    "qr code for my app",
+    "send the link to my phone"
+   ],
+   "steps": [
+    "Open Put it on your phone and go to Open it on your phone.",
+    "Point the phone’s Camera app at the code.",
+    "Or tap Send by text and open the message on the phone.",
+    "Make sure it opens in Safari or Chrome, not inside another app."
+   ]
+  },
+  {
+   "id": "phone-add",
+   "group": "publish",
+   "title": "Add your app to the home screen",
+   "intro": "iPhones add it from the Share menu; Android offers Install in the menu. The steps are drawn for each phone and browser.",
+   "asks": [
+    "install on iphone home screen",
+    "install on android home screen",
+    "home screen steps"
+   ],
+   "steps": [
+    "Open Put it on your phone and go to Add it to the home screen.",
+    "Pick your phone and browser.",
+    "Follow the drawn steps: Share then Add to Home Screen on iPhone, menu then Install app on Android.",
+    "Inside Instagram or TikTok? Open the link in Safari or Chrome first."
+   ]
+  },
+  {
+   "id": "phone-store",
+   "group": "publish",
+   "title": "Decide about a store app",
+   "intro": "The home screen is free and enough for most. A store app costs a membership and takes review; see the costs and free build limits from the stores’ own pages.",
+   "asks": [
+    "store app or home screen",
+    "app store costs",
+    "expo free builds"
+   ],
+   "steps": [
+    "Open Put it on your phone and go to A real store app.",
+    "Read the costs: Apple yearly, Google once, Expo’s free builds.",
+    "Open the Launch kit for screenshots, icon and store text.",
+    "Ask your AI helpers to prepare an Expo build when you are ready."
+   ]
   }
  ]
 }

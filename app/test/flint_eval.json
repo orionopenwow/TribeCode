@@ -15479,6 +15479,408 @@
    },
    "ctx": "g",
    "v": "ak"
+  },
+  {
+   "t": "how do i put my app on my phone",
+   "i": "phone.path",
+   "ctx": "g",
+   "v": "hs"
+  },
+  {
+   "t": "how can i get my game on my android phone",
+   "i": "phone.path",
+   "ctx": "g",
+   "v": "hs"
+  },
+  {
+   "t": "how do i put my website on my iphone",
+   "i": "phone.path",
+   "ctx": "g",
+   "v": "hs"
+  },
+  {
+   "t": "help me put my app on my phone",
+   "i": "phone.path",
+   "ctx": "g",
+   "v": "hs"
+  },
+  {
+   "t": "i want to put my app on my iphone",
+   "i": "phone.path",
+   "ctx": "g",
+   "v": "hs"
+  },
+  {
+   "t": "can i put this on my phone",
+   "i": "phone.path",
+   "ctx": "g",
+   "v": "hs"
+  },
+  {
+   "t": "install my app on my iphone",
+   "i": "phone.path",
+   "ctx": "g",
+   "v": "hs"
+  },
+  {
+   "t": "put my game on my phone",
+   "i": "phone.path",
+   "ctx": "g",
+   "v": "hs"
+  },
+  {
+   "t": "get my app on my android",
+   "i": "phone.path",
+   "ctx": "g",
+   "v": "hs"
+  },
+  {
+   "t": "add it to my home screen",
+   "i": "phone.path",
+   "s": {
+    "stage": "add"
+   },
+   "ctx": "g",
+   "v": "hs"
+  },
+  {
+   "t": "add my app to my home screen",
+   "i": "phone.path",
+   "s": {
+    "stage": "add"
+   },
+   "ctx": "g",
+   "v": "hs"
+  },
+  {
+   "t": "add to home screen",
+   "i": "phone.path",
+   "s": {
+    "stage": "add"
+   },
+   "ctx": "g",
+   "v": "hs"
+  },
+  {
+   "t": "how do i add an icon to my home screen",
+   "i": "phone.path",
+   "s": {
+    "stage": "add"
+   },
+   "ctx": "g",
+   "v": "hs"
+  },
+  {
+   "t": "pin my app to the home screen",
+   "i": "phone.path",
+   "s": {
+    "stage": "add"
+   },
+   "ctx": "g",
+   "v": "hs"
+  },
+  {
+   "t": "make my app installable",
+   "i": "phone.path",
+   "s": {
+    "stage": "ready"
+   },
+   "ctx": "g",
+   "v": "hs"
+  },
+  {
+   "t": "make it installable",
+   "i": "phone.path",
+   "s": {
+    "stage": "ready"
+   },
+   "ctx": "g",
+   "v": "hs"
+  },
+  {
+   "t": "is my app installable",
+   "i": "phone.path",
+   "s": {
+    "stage": "ready"
+   },
+   "ctx": "g",
+   "v": "hs"
+  },
+  {
+   "t": "why isnt my app installable",
+   "i": "phone.path",
+   "s": {
+    "stage": "ready"
+   },
+   "ctx": "g",
+   "v": "hs"
+  },
+  {
+   "t": "make my site installable on phones",
+   "i": "phone.path",
+   "s": {
+    "stage": "ready"
+   },
+   "ctx": "g",
+   "v": "hs"
+  },
+  {
+   "t": "open the put it on my phone guide",
+   "i": "phone.path",
+   "ctx": "g",
+   "v": "hs"
+  },
+  {
+   "t": "phone install guide",
+   "i": "phone.path",
+   "ctx": "g",
+   "v": "hs"
+  },
+  {
+   "t": "how do i turn my site into an app on my phone",
+   "i": "phone.path",
+   "ctx": "g",
+   "v": "hs"
+  },
+  {
+   "t": "how to get my app on my home screen",
+   "i": "phone.path",
+   "ctx": "g",
+   "v": "hs"
+  },
+  {
+   "t": "why cant i install it on my iphone",
+   "i": "phone.ask",
+   "s": {
+    "topic": "iphone"
+   },
+   "ctx": "g",
+   "v": "hs"
+  },
+  {
+   "t": "why can't i install my app on iphone",
+   "i": "phone.ask",
+   "s": {
+    "topic": "iphone"
+   },
+   "ctx": "g",
+   "v": "hs"
+  },
+  {
+   "t": "there is no install button on my iphone",
+   "i": "phone.ask",
+   "s": {
+    "topic": "iphone"
+   },
+   "ctx": "g",
+   "v": "hs"
+  },
+  {
+   "t": "no add to home screen option on my iphone",
+   "i": "phone.ask",
+   "s": {
+    "topic": "iphone"
+   },
+   "ctx": "g",
+   "v": "hs"
+  },
+  {
+   "t": "iphone wont let me install it",
+   "i": "phone.ask",
+   "s": {
+    "topic": "iphone"
+   },
+   "ctx": "g",
+   "v": "hs"
+  },
+  {
+   "t": "how do i install it on android",
+   "i": "phone.ask",
+   "s": {
+    "topic": "android"
+   },
+   "ctx": "g",
+   "v": "hs"
+  },
+  {
+   "t": "install my app on an android phone",
+   "i": "phone.ask",
+   "s": {
+    "topic": "android"
+   },
+   "ctx": "g",
+   "v": "hs"
+  },
+  {
+   "t": "why wont chrome let me install it",
+   "i": "phone.ask",
+   "s": {
+    "topic": "android"
+   },
+   "ctx": "g",
+   "v": "hs"
+  },
+  {
+   "t": "is it free to put my app on my phone",
+   "i": "phone.ask",
+   "s": {
+    "topic": "free"
+   },
+   "ctx": "g",
+   "v": "hs"
+  },
+  {
+   "t": "does it cost money to put my app on my phone",
+   "i": "phone.ask",
+   "s": {
+    "topic": "free"
+   },
+   "ctx": "g",
+   "v": "hs"
+  },
+  {
+   "t": "is putting my app on my phone free",
+   "i": "phone.ask",
+   "s": {
+    "topic": "free"
+   },
+   "ctx": "g",
+   "v": "hs"
+  },
+  {
+   "t": "how much does the app store cost",
+   "i": "phone.ask",
+   "s": {
+    "topic": "free"
+   },
+   "ctx": "g",
+   "v": "hs"
+  },
+  {
+   "t": "how much does google play cost",
+   "i": "phone.ask",
+   "s": {
+    "topic": "free"
+   },
+   "ctx": "g",
+   "v": "hs"
+  },
+  {
+   "t": "is it free to add my app to my home screen",
+   "i": "phone.ask",
+   "s": {
+    "topic": "free"
+   },
+   "ctx": "g",
+   "v": "hs"
+  },
+  {
+   "t": "do i need a mac",
+   "i": "phone.ask",
+   "s": {
+    "topic": "mac"
+   },
+   "ctx": "g",
+   "v": "hs"
+  },
+  {
+   "t": "do i need a mac to make an iphone app",
+   "i": "phone.ask",
+   "s": {
+    "topic": "mac"
+   },
+   "ctx": "g",
+   "v": "hs"
+  },
+  {
+   "t": "can i make an iphone app without a mac",
+   "i": "phone.ask",
+   "s": {
+    "topic": "mac"
+   },
+   "ctx": "g",
+   "v": "hs"
+  },
+  {
+   "t": "do i need a mac to publish on the app store",
+   "i": "phone.ask",
+   "s": {
+    "topic": "mac"
+   },
+   "ctx": "g",
+   "v": "hs"
+  },
+  {
+   "t": "why cant i install it from instagram",
+   "i": "phone.ask",
+   "s": {
+    "topic": "inapp"
+   },
+   "ctx": "g",
+   "v": "hs"
+  },
+  {
+   "t": "it wont install from tiktok",
+   "i": "phone.ask",
+   "s": {
+    "topic": "inapp"
+   },
+   "ctx": "g",
+   "v": "hs"
+  },
+  {
+   "t": "add to home screen is missing in messenger",
+   "i": "phone.ask",
+   "s": {
+    "topic": "inapp"
+   },
+   "ctx": "g",
+   "v": "hs"
+  },
+  {
+   "t": "why cant i add it from facebook",
+   "i": "phone.ask",
+   "s": {
+    "topic": "inapp"
+   },
+   "ctx": "g",
+   "v": "hs"
+  },
+  {
+   "t": "will my app work offline",
+   "i": "phone.ask",
+   "s": {
+    "topic": "offline"
+   },
+   "ctx": "g",
+   "v": "hs"
+  },
+  {
+   "t": "does it work without internet on my phone",
+   "i": "phone.ask",
+   "s": {
+    "topic": "offline"
+   },
+   "ctx": "g",
+   "v": "hs"
+  },
+  {
+   "t": "do i need the app store",
+   "i": "phone.ask",
+   "s": {
+    "topic": "store"
+   },
+   "ctx": "g",
+   "v": "hs"
+  },
+  {
+   "t": "should i put my app in the app store",
+   "i": "phone.ask",
+   "s": {
+    "topic": "store"
+   },
+   "ctx": "g",
+   "v": "hs"
   }
  ]
 }

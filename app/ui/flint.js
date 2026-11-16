@@ -96,6 +96,7 @@
     res: key => window.TribeFlintGrow && window.TribeFlintGrow.run('res', key),   // feat/flint-ai: open a resource (Academy, Guide, Legal, Marketplace, templates, docs)
     grow: arg => window.TribeFlintGrow && window.TribeFlintGrow.run('grow', arg),   // feat/flint-ai: the "Grow your idea" questions
     usestyle: () => window.TribeFlintGrow && window.TribeFlintGrow.run('usestyle'),
+    homescreen: stage => window.TribeHomescreen && window.TribeHomescreen.open(undefined, stage || ''),   // Put it on your phone (homescreen.js)
     today: () => window.TribeFlintGrow && window.TribeFlintGrow.run('today'),   // flint-local: a "did you mean" chip teaches Flint the phrase, then runs it
   };
   const act = (label, name, arg) => ({ label, act: name, arg: arg == null ? '' : String(arg) });

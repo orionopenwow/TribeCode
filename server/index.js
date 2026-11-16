@@ -712,6 +712,7 @@ const publishHub = require('./publish')({ P, W, base: baseStore, preview, setupF
 publishOnApproval = a => publishHub.onApproval(a);
 // feat/publish-real: a zip, a GitHub page, itch.io, an installable app and app wrappers, from the same Publish sheet (server/publishreal.js)
 const publishReal = require('./publishreal')({ P, W, base: baseStore, publish: publishHub, perms, getMembers: () => members, broadcast, nameOf, log: m => console.error('  ' + m) });
+const homeScreen = require('./homescreen')({ P, W, publishReal, publish: publishHub, preview, perms, getMembers: () => members, broadcast, log: m => console.error('  ' + m) });   // Put it on your phone (server/homescreen.js)
 const jamHub = require('./jam')({ P, W, base: baseStore, setupFlow, publish: publishHub, getMembers: () => members, broadcast, postChat, nameOf });
 const widgets = require('./widgets')({ P, store: baseStore, broadcast, preview, showcase, shelf, sense, can: (me, cap, pid) => perms.can(me, cap, pid) });   // feat/sidebar-widgets (server/widgets.js)
 const studios = require('./studios')({ P, base: baseStore, root: require('./tpldir').root(), sense, broadcast, buildKit });   // v0.27: Studios — creative apps beside TribeCode, linked not bundled (server/studios.js)
@@ -1328,6 +1329,7 @@ async function apiInProject(req, res, url) {
   if (a === 'visuals') { const h = await visuals.route(req, res, ctx()); if (h !== null) return; }
   if (a === 'preview') { const h = await preview.route(req, res, ctx()); if (h !== null) return; }   // app preview links + settings
   if (a === 'publish' && b === 'real') { const h = await publishReal.route(req, res, ctx()); if (h !== null) return; }   // feat/publish-real
+  if (a === 'homescreen') return homeScreen.route(req, res, ctx());   // Put it on your phone (server/homescreen.js)
   if (a === 'publish') { const h = await publishHub.route(req, res, ctx()); if (h !== null) return; }   // v0.27 publish: play links
   if (a === 'jam') { const h = await jamHub.route(req, res, ctx()); if (h !== null) return; }   // v0.27 jams
   if (a === 'applink' || a === 'export' || a === 'shortcut' || a === 'github') { const h = await (a === 'applink' ? applink : a === 'github' ? githubAuth : exporter).route(req, res, ctx()); if (h !== null) return; }   // Home Screen app links, Desktop folders, GitHub sign-in
