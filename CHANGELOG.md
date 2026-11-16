@@ -1,5 +1,21 @@
 # Changelog
 
+## v0.40.0
+- **Website designer, one row**: the top bar is one line on every screen. Templates, Save design, the look and the AI helpers are under More, and the side panel has four tabs: Edit, Ideas, Style, Check.
+- **Zoom, code and spacing**: zoom in, out and Fit, and edit at any zoom. See and copy the HTML and CSS of any section and add your own CSS for the whole site. Drag the top or bottom of a section to set its space.
+- **App Creator grows up**: every save is kept, with named versions you can look at and bring back. Leave comments on a part. Select several parts at once. Copy and paste parts and whole screens between screens and projects. Put your own pictures in any picture slot. A screen map shows every screen with arrows for its links. Tablet size, a light/dark preview, and Play runs an app's working features.
+- **One Flint in both creators**: the same panel in the website designer and App Creator, with Undo on every reply and a badge that says whether no AI, a model on your device or a stronger AI answered. 66 everyday requests per creator work with no AI.
+- **Polish it**: one button tidies spacing, sizes, colours and dead buttons in a site or an app, with no AI. It shows what will change first, and one Undo takes it back.
+- **Make it beautiful**: with an AI in the tribe, it reads the design and proposes changes. You see before and after and approve; nothing changes until you do. A model on your device can help too, and can only use Flint's own checked commands.
+- **Your site and app are real files**: every change is written into the project's folder a moment later. Open the folder and double-click index.html, with no internet. A file you changed by hand is never written over: TribeCode asks, and copies yours aside first.
+- **Where it lives**: one sheet shows the three steps (in a folder, with your friends, online) and the next button to press. Publish works for a designed website or app straight away; with both, choose what goes online.
+- **Nothing lost when the tribe is unreachable**: App Creator keeps your change on the device and sends it by itself.
+- **Lessons**: five short lessons you do in the real tool: Your first website, Your first phone app, Build it together, Take it online and Power tools. Show me points at the real button, steps tick themselves, and your progress follows you. Say "teach me to make a website" to Flint.
+- **Working together**: a friend sees your website edit in about half a second. Website change requests show before and after pictures. The "You can change this directly" line is gone; a line appears only when changes need an OK or wait for yours.
+- **Shortcuts**: press ? in either creator for the list of what works.
+- **Fixes**: a newer app design is no longer replaced by an older copy after a late reload; picking a template over your website asks first; four guides whose Show me did nothing now point at the right place; exporting no longer empties your own files from the export folders.
+- **Phones**: both creators keep a one-row top bar with the page right under it. More, History, the screen map, the lesson card, Polish and Where it lives fit 390px with 40px buttons.
+
 ## v0.39.0
 - **App Creator**: make a phone app by clicking. 54 designed apps to start from, 61 parts, 51 ready-made screens and 56 looks. Link screens and play them as a prototype, then export a web app that works offline, an Expo project, or a brief for your AI helpers. Flint makes and edits apps with no AI.
 - **Motion Studio**: looping motion graphics on the beat. One shape morphs while a cursor clicks and drags, and the camera frames each state. 128 templates (69 social post layouts), 54 feels, your own song with the beat found in the browser, and export as video, GIF, a web page or a section of your website.
