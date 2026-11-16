@@ -51,6 +51,8 @@ Motion graphics made in the app: UI morph reels, app promos, logo reveals, kinet
 
 58 templates in 12 categories (`TEMPLATES`, `CATS`), each a `make(opts)` that returns a doc. Options: `name`, `accent`, `aspect`, `feel`, and for `app-preview` the Launch kit's `screens` (picture URLs), `caption` and `cta`. Thumbnails in the gallery are drawn by the engine at the template's `thumbAt` beat.
 
+More templates come from other files through the extension point: `define(id, cat, name, about, base, states)`, `addCat(id, name)` and `helpers` (the same `S`, `click`, `drag`, `hover`, `type`, `focus` builders). `app/ui/motionsocial.js` adds 61 social post layouts and the nine Share clips (`docs/SHARE-CLIPS.md`), for 128 in all; the page loads it right after `motionkit.js`, and the server requires it instead of `motionkit.js`, so both sides know every template.
+
 54 feel presets (`FEELS`): stiffness, damping, blur between states, enter time, motion-blur subframes and camera strength, each with a name and a one-line description. `applyFeel(doc, id)`.
 
 ## Sound

@@ -763,7 +763,7 @@
    "do": "call:TribeAppCreator.open",
    "doLabel": "Open App Creator",
    "show": {
-    "go": "design"
+    "lesson": "design"
    }
   },
   {
@@ -789,7 +789,7 @@
    "do": "call:TribeAppCreator.open",
    "doLabel": "Open App Creator",
    "show": {
-    "go": "design"
+    "lesson": "design"
    }
   },
   {
