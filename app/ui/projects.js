@@ -257,6 +257,7 @@ ${canEdit && !started ? `      <section class="pj-context" id="pj-context"><div 
             <span class="gl-act">${t.act}<span aria-hidden="true">→</span></span></button>`).join('')}</div></section>` : ''}
       ${hero ? '' : '<div id="pj-next-slot"></div>'}<!-- feat/help-next: one next step on the way to a published link (nextstep.js); the setup steps above come first -->
       <div id="pj-share-slot"></div><!-- feat/real-tribe: Sharing and backup, one plain card in place of the header pills (sharecard.js) -->
+      <div id="pj-suggest-slot"></div><!-- the tribe's suggestions: the best two and the count (suggest.js) -->
       <div id="pj-reco-slot"></div><!-- v0.27: recommended next for this project (reco.js) -->
       ${canEdit ? '<div id="pj-board-slot"></div>' : ''}<!-- v0.25: the inspiration board (inspo.js) -->
       ${sec('pj-sec-stream', 'Recent changes and what’s next', `<div class="pj-grid">

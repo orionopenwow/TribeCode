@@ -11242,6 +11242,309 @@
    },
    "ctx": "p",
    "v": "e2"
+  },
+  {
+   "t": "what do you suggest?",
+   "i": "suggest.list",
+   "ctx": "g",
+   "v": "sg"
+  },
+  {
+   "t": "what would you suggest",
+   "i": "suggest.list",
+   "ctx": "g",
+   "v": "sg"
+  },
+  {
+   "t": "anything you recommend?",
+   "i": "suggest.list",
+   "ctx": "g",
+   "v": "sg"
+  },
+  {
+   "t": "any ideas?",
+   "i": "suggest.list",
+   "ctx": "g",
+   "v": "sg"
+  },
+  {
+   "t": "got any ideas",
+   "i": "suggest.list",
+   "ctx": "g",
+   "v": "sg"
+  },
+  {
+   "t": "give me some ideas",
+   "i": "suggest.list",
+   "ctx": "g",
+   "v": "sg"
+  },
+  {
+   "t": "show me the suggestions",
+   "i": "suggest.list",
+   "ctx": "g",
+   "v": "sg"
+  },
+  {
+   "t": "open suggestions",
+   "i": "suggest.list",
+   "ctx": "g",
+   "v": "sg"
+  },
+  {
+   "t": "any ideas for the app?",
+   "i": "suggest.list",
+   "s": {
+    "about": "app"
+   },
+   "ctx": "g",
+   "v": "sg"
+  },
+  {
+   "t": "ideas for my website",
+   "i": "suggest.list",
+   "s": {
+    "about": "website"
+   },
+   "ctx": "g",
+   "v": "sg"
+  },
+  {
+   "t": "any suggestions about the photos",
+   "i": "suggest.list",
+   "s": {
+    "about": "photos"
+   },
+   "ctx": "g",
+   "v": "sg"
+  },
+  {
+   "t": "what do you suggest for the brand",
+   "i": "suggest.list",
+   "s": {
+    "about": "brand"
+   },
+   "ctx": "g",
+   "v": "sg"
+  },
+  {
+   "t": "suggest something",
+   "i": "suggest.list",
+   "ctx": "g",
+   "v": "sg"
+  },
+  {
+   "t": "i am out of ideas",
+   "i": "suggest.list",
+   "ctx": "g",
+   "v": "sg"
+  },
+  {
+   "t": "what could we improve",
+   "i": "suggest.list",
+   "ctx": "g",
+   "v": "sg"
+  },
+  {
+   "t": "what would make it better",
+   "i": "suggest.list",
+   "ctx": "g",
+   "v": "sg"
+  },
+  {
+   "t": "inspire me",
+   "i": "suggest.list",
+   "ctx": "g",
+   "v": "sg"
+  },
+  {
+   "t": "whats your suggestions",
+   "i": "suggest.list",
+   "ctx": "g",
+   "v": "sg"
+  },
+  {
+   "t": "any sugestions?",
+   "i": "suggest.list",
+   "ctx": "g",
+   "v": "sg"
+  },
+  {
+   "t": "suggest less",
+   "i": "suggest.less",
+   "ctx": "g",
+   "v": "sg"
+  },
+  {
+   "t": "fewer suggestions please",
+   "i": "suggest.less",
+   "ctx": "g",
+   "v": "sg"
+  },
+  {
+   "t": "too many ideas",
+   "i": "suggest.less",
+   "ctx": "g",
+   "v": "sg"
+  },
+  {
+   "t": "calm down with the suggestions",
+   "i": "suggest.less",
+   "ctx": "g",
+   "v": "sg"
+  },
+  {
+   "t": "tone down the suggestions",
+   "i": "suggest.less",
+   "ctx": "g",
+   "v": "sg"
+  },
+  {
+   "t": "suggest more often",
+   "i": "suggest.more",
+   "ctx": "g",
+   "v": "sg"
+  },
+  {
+   "t": "more suggestions please",
+   "i": "suggest.more",
+   "ctx": "g",
+   "v": "sg"
+  },
+  {
+   "t": "turn off suggestions",
+   "i": "suggest.off",
+   "ctx": "g",
+   "v": "sg"
+  },
+  {
+   "t": "stop suggesting",
+   "i": "suggest.off",
+   "ctx": "g",
+   "v": "sg"
+  },
+  {
+   "t": "no more suggestions",
+   "i": "suggest.off",
+   "ctx": "g",
+   "v": "sg"
+  },
+  {
+   "t": "suggestions off",
+   "i": "suggest.off",
+   "ctx": "g",
+   "v": "sg"
+  },
+  {
+   "t": "i dont want suggestions",
+   "i": "suggest.off",
+   "ctx": "g",
+   "v": "sg"
+  },
+  {
+   "t": "turn on suggestions",
+   "i": "suggest.on",
+   "ctx": "g",
+   "v": "sg"
+  },
+  {
+   "t": "start suggesting again",
+   "i": "suggest.on",
+   "ctx": "g",
+   "v": "sg"
+  },
+  {
+   "t": "stop suggesting about photos",
+   "i": "suggest.mute",
+   "s": {
+    "about": "photos"
+   },
+   "ctx": "g",
+   "v": "sg"
+  },
+  {
+   "t": "no more suggestions about the brand",
+   "i": "suggest.mute",
+   "s": {
+    "about": "brand"
+   },
+   "ctx": "g",
+   "v": "sg"
+  },
+  {
+   "t": "don't suggest anything about files",
+   "i": "suggest.mute",
+   "s": {
+    "about": "files"
+   },
+   "ctx": "g",
+   "v": "sg"
+  },
+  {
+   "t": "mute photo suggestions",
+   "i": "suggest.mute",
+   "s": {
+    "about": "photo"
+   },
+   "ctx": "g",
+   "v": "sg"
+  },
+  {
+   "t": "stop suggesting things based on my edits",
+   "i": "suggest.mute",
+   "s": {
+    "about": "edits"
+   },
+   "ctx": "g",
+   "v": "sg"
+  },
+  {
+   "t": "you can suggest about photos again",
+   "i": "suggest.unmute",
+   "s": {
+    "about": "photos"
+   },
+   "ctx": "g",
+   "v": "sg"
+  },
+  {
+   "t": "unmute photo suggestions",
+   "i": "suggest.unmute",
+   "s": {
+    "about": "photo"
+   },
+   "ctx": "g",
+   "v": "sg"
+  },
+  {
+   "t": "why did you suggest that?",
+   "i": "suggest.why",
+   "ctx": "g",
+   "v": "sg"
+  },
+  {
+   "t": "why that suggestion",
+   "i": "suggest.why",
+   "ctx": "g",
+   "v": "sg"
+  },
+  {
+   "t": "where did that idea come from",
+   "i": "suggest.why",
+   "ctx": "g",
+   "v": "sg"
+  },
+  {
+   "t": "why are you suggesting this",
+   "i": "suggest.why",
+   "ctx": "g",
+   "v": "sg"
+  },
+  {
+   "t": "explain that suggestion",
+   "i": "suggest.why",
+   "ctx": "g",
+   "v": "sg"
   }
  ]
 }

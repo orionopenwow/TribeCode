@@ -37,6 +37,8 @@
   const count = api => (data ? current(api).length : 0);
 
   function card(s, canEdit) {
+    // the one suggestion card (app/ui/suggest.js) when it is loaded; the same markup otherwise
+    if (window.TribeSuggest && window.TribeSuggest.card) return window.TribeSuggest.card({ id: s.id, title: s.title, before: s.before, after: s.after, srcHtml: srcLine(s.source, true), rowClass: 'wdz-row', row: [canEdit ? ['data-sg', 'apply', 'Apply', true] : ['data-sg', 'ask', 'Ask them', true], ['data-sg', 'later', 'Not now'], ...(canEdit ? [['data-sg', 'dismiss', 'Dismiss', 0]] : []), ...(s.target && s.target.block !== '@' ? [['data-sg', 'show', 'Show me', 0]] : [])] });
     return `<li class="sg" data-sgid="${esc(s.id)}"><p class="sg-t">${esc(s.title)}</p><p class="sg-ba"><del>${esc(s.before)}</del><ins>${esc(s.after)}</ins></p>${srcLine(s.source, true)}
       <p class="wdz-row">${canEdit ? `<button type="button" class="btn sm primary" data-sg="apply" data-id="${esc(s.id)}">Apply</button>` : `<button type="button" class="btn sm primary" data-sg="ask" data-id="${esc(s.id)}">Ask them</button>`}<button type="button" class="btn sm" data-sg="later" data-id="${esc(s.id)}">Not now</button>${canEdit ? `<button type="button" class="btn sm ghost" data-sg="dismiss" data-id="${esc(s.id)}">Dismiss</button>` : ''}${s.target && s.target.block !== '@' ? `<button type="button" class="btn sm ghost" data-sg="show" data-id="${esc(s.id)}">Show me</button>` : ''}</p></li>`;
   }
@@ -66,6 +68,7 @@
     const r = S().applyOps(api.cfg(), s.ops); if (!r.done.length) return false;
     if (s.target && s.target.block && s.target.block !== '@') { if (s.target.page && s.target.page !== api.page()) api.setPage(s.target.page); api.setSel({ block: s.target.block, path: s.target.path || '', kind: s.target.path ? 'text' : 'block' }); }
     api.commit(r.cfg);
+    if (window.TribeSuggest && api.pid() && api.connected()) window.TribeSuggest.feedback({ id: 'site:' + s.id, provider: 'site', kind: 'site-' + s.kind, title: s.title }, 'yes').catch(() => {});   // the engine learns from it
     if (api.pid() && api.connected()) C.api(`/projects/${encodeURIComponent(api.pid())}/site-suggestions/applied`, { method: 'POST', body: { id: s.id, title: s.title, before: s.before, after: s.after, target: s.target, source: s.source } }).then(x => { if (x && x.record && data) data.history = (data.history || []).filter(h => h.id !== x.record.id).concat(x.record); }).catch(() => {});
     return true;
   }
@@ -86,7 +89,7 @@
     if (k === 'apply') { if (applyOne(api, s)) { api.say(`${s.title}: “${s.before}” is now “${s.after}”. It came from ${s.source.who || 'someone'} ${WHERE[s.source.kind] || ''}.`, '', [{ label: 'Undo', fn: () => api.undo() }]); api.postSel(true); } return api.panel(api.panelNow() === 'ideas' ? 'ideas' : 'edit'); }
     if (k === 'ask') return ask(api, s);
     if (k === 'later') { later.add(s.id); return api.panel(api.panelNow()); }
-    if (k === 'dismiss') { later.add(s.id); if (data) data.dismissed = (data.dismissed || []).concat(s.id); if (api.pid() && api.connected()) { try { await C.api(`/projects/${encodeURIComponent(api.pid())}/site-suggestions/dismiss`, { method: 'POST', body: { id: s.id } }); } catch (e) { api.say('Could not dismiss it for everyone: ' + e.message); } } return api.panel(api.panelNow()); }
+    if (k === 'dismiss') { later.add(s.id); if (window.TribeSuggest) window.TribeSuggest.feedback({ id: 'site:' + s.id, provider: 'site', kind: 'site-' + s.kind, title: s.title }, 'no').catch(() => {}); if (data) data.dismissed = (data.dismissed || []).concat(s.id); if (api.pid() && api.connected()) { try { await C.api(`/projects/${encodeURIComponent(api.pid())}/site-suggestions/dismiss`, { method: 'POST', body: { id: s.id } }); } catch (e) { api.say('Could not dismiss it for everyone: ' + e.message); } } return api.panel(api.panelNow()); }
     if (k === 'show' && s.target) { if (s.target.page && s.target.page !== api.page()) api.setPage(s.target.page); api.setSel({ block: s.target.block, path: s.target.path || '', kind: s.target.path ? 'text' : 'block' }); api.paint(); api.postSel(true); return; }
   }
 

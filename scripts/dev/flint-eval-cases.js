@@ -414,6 +414,10 @@ for (let i = K5; i < C.length; i++) C[i].v = 'c5';
 const E2 = C.length;
 for (const [ctx, t, i, s] of require('./flint-eval/editor2.js')) C.push({ t, i, s: s || undefined, ctx });
 for (let i = E2; i < C.length; i++) C[i].v = 'e2';
+// ---- the tribe's suggestion engine: asking for ideas, less, off, mute one kind, why (app/ui/suggest.js) ----
+const SG0 = C.length;
+for (const [ctx, t, i, s] of require('./flint-eval/suggest.js')) C.push({ t, i, s: s || undefined, ctx });
+for (let i = SG0; i < C.length; i++) C[i].v = 'sg';
 
 const out = { about: 'Flint evaluation set (feat/flint-site): websites, the design canvas, preview edits, lessons and global commands. Written by scripts/dev/flint-eval-cases.js; checked by app/test/flint_eval_test.js. "i" = the expected intent (a list for several steps, null when Flint should not claim it), "s" = slots that must match, "ctx" = s|c|cs|p|g (site designer, canvas, canvas with a selection, preview, anywhere).', now: '2026-11-10T10:00:00', cases: C };
 fs.writeFileSync(path.join(__dirname, '..', '..', 'app', 'test', 'flint_eval.json'), JSON.stringify(out, null, 1) + '\n');
