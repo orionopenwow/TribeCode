@@ -1255,7 +1255,7 @@
 "Drifting dots, ripples, a constellation or a starfield behind any section, in your site's own colors. They pause off screen and show a still picture for people who ask for less motion. Ten are ports of ThreeUI Community by Meng To (MIT).": "漂う点、波紋、星座、星空を、サイトの配色のままどのセクションの背景にも置けます。画面外では一時停止し、動きを減らす設定の人には静止画を表示します。10 種類は Meng To の ThreeUI Community（MIT）からの移植です。",
 "Decide the way your group decides": "グループに合った決め方を選べます",
 "One lead, a council that votes, everyone equal, or roles you name yourselves. When you can't do something, the app says who can and offers to ask them.": "リーダー 1 人、投票で決める評議会、全員対等、または自分たちで名前を付けた役割。自分にできない操作は、誰ができるかをアプリが示し、その人への依頼を提案します。",
-"51 quick guides in Learn": "「学ぶ」にクイックガイド 51 本",
+"52 quick guides in Learn": "「学ぶ」にクイックガイド 52 本",
 "One screen each: a few steps, a button that does it for you, and Show me, which points at the real thing. The longer lessons are there too, under Skills.": "それぞれ 1 画面：数ステップ、代わりに実行するボタン、そして実際の場所を指し示す「見せて」。長めのレッスンも「スキル」にあります。",
 "Pick your language": "言語を選ぶ",
 "Change it from the ? menu, the first screen or Settings. Flint understands requests in all eight. The app's menus are only partly translated so far, so some screens stay in English.": "? メニュー、最初の画面、または設定から変更できます。Flint は 8 言語すべてで依頼を理解します。アプリのメニューはまだ一部しか翻訳されていないため、英語のままの画面もあります。",
@@ -1263,7 +1263,7 @@
 "Tested on simulated devices. Not yet confirmed on every real one.": "シミュレートした端末でテスト済み。すべての実機ではまだ確認していません。",
 "You approve what goes in": "取り込む内容はあなたが承認",
 "Shortcuts to the tools you already use": "いつものツールへのショートカット",
-"51 quick guides, and 65 lessons in ten tracks": "クイックガイド 51 本と、10 トラック 65 レッスン",
+"52 quick guides, and 65 lessons in ten tracks": "クイックガイド 52 本と、10 トラック 65 レッスン",
 "Stars, forks and every release are on {0}.": "スター、フォーク、すべてのリリースは {0} にあります。",
 "Add a 3D or moving background": "3D や動く背景を追加する",
 "❚❚ Pause": "❚❚ 一時停止",
@@ -1286,5 +1286,12 @@
 "Give the work around your product a shape: seats like CEO, Build, Grow and Run, held by friends or AI helpers, with short charters, daily check-ins and real numbers. One person with AI helpers, or a crew of friends who choose how they decide.": "プロダクトまわりの仕事に形を。CEO、Build、Grow、Run といった役割を友だちや AI ヘルパーが担い、短い憲章、毎日のチェックイン、本当の数字で回します。AI ヘルパーと一人でも、決め方を自分たちで選ぶ仲間のチームでも。",
 "Checkout in the merch shop goes to your own Stripe, Shopify or Gumroad link: the page never takes card details. Review sections are for real reviews only, and signup and RSVP forms say they aren't connected until you add a link. In the website designer, a contact or sign-up form can instead deliver into your tribe: turn it on for that form, and each message lands in the project's chat. It works while the tribe's computer is online.": "グッズショップの決済は、あなた自身の Stripe、Shopify、Gumroad のリンクへ。ページがカード情報を受け取ることはありません。レビュー欄は本物のレビュー専用で、登録や出欠のフォームはリンクを足すまで「未接続」と表示します。ウェブサイトデザイナーでは、問い合わせや登録のフォームをトライブに届けることもできます。そのフォームでオンにすると、各メッセージがプロジェクトのチャットに届きます。トライブのコンピューターがオンラインの間だけ動きます。",
 "Chat, Flint, templates, the Academy, the Marketplace and one-tap publishing. A company starts simple: seats and today's updates.": "チャット、Flint、テンプレート、アカデミー、マーケットプレイス、ワンタップ公開。会社はシンプルに始まります。役割と今日の更新だけ。",
-"This site comes in English, Español, Português, Français, Deutsch, 日本語, 简体中文 and 한국어. In the app, {0} changes menus and buttons in the same languages, though only part of the app is translated so far, and Flint understands requests in all eight; what people write stays as they wrote it. The first time, it follows your device's language.": "このサイトは English、Español、Português、Français、Deutsch、日本語、简体中文、한국어 に対応。アプリでは {0} でメニューとボタンが同じ言語に変わりますが、アプリの翻訳はまだ一部で、Flint は 8 言語すべての依頼を理解します。人が書いたものは書いたまま残ります。最初は端末の言語に合わせます。"
+"This site comes in English, Español, Português, Français, Deutsch, 日本語, 简体中文 and 한국어. In the app, {0} changes menus and buttons in the same languages, though only part of the app is translated so far, and Flint understands requests in all eight; what people write stays as they wrote it. The first time, it follows your device's language.": "このサイトは English、Español、Português、Français、Deutsch、日本語、简体中文、한국어 に対応。アプリでは {0} でメニューとボタンが同じ言語に変わりますが、アプリの翻訳はまだ一部で、Flint は 8 言語すべての依頼を理解します。人が書いたものは書いたまま残ります。最初は端末の言語に合わせます。",
+"Make a motion graphic": "モーショングラフィックを作る",
+"One shape that morphs on the beat: UI reels, logo reveals, app promos and clips for X, TikTok and Instagram. It loops perfectly.": "拍に合わせて変形するひとつの形: UIリール、ロゴ演出、アプリ紹介、X・TikTok・Instagram向けクリップ。完璧にループします。",
+"Open Design and pick Motion graphic.": "デザインを開き、モーショングラフィックを選びます。",
+"Choose a template, or tell Flint “make a logo reveal”.": "テンプレートを選ぶか、Flintに「ロゴ演出を作って」と伝えます。",
+"Click a state on the timeline to change its words, size or colour.": "タイムラインのステートをクリックして、文字・サイズ・色を変えます。",
+"Pick a feel, or say “snappier”, “make it 9:16” or “sync to the beat”.": "質感を選ぶか、「もっと軽快に」「9:16にして」「拍に合わせて」と言います。",
+"Export an MP4, a GIF or a web page, or put it on your website.": "MP4、GIF、ウェブページで書き出すか、サイトに載せます。"
 }

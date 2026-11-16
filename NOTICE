@@ -163,3 +163,13 @@ site that uses one of these backgrounds (fx/LICENSE-threeui.txt).
 Three.js r149 (https://threejs.org), MIT License, Copyright (c) 2010-2023 three.js authors: app/ui/sitefx/three.min.js,
 unmodified, with its license header. It is loaded only by a page that uses a 3D background. License text:
 app/ui/sitefx/LICENSE-three.txt (copied into a site that uses it as fx/LICENSE-three.txt).
+
+Motion Studio (app/ui/motionkit.js, motionstudio.js) is TribeCode's own code (MIT). Its approach takes ideas, not code,
+from these MIT-licensed projects: Emil Kowalski's skills (https://github.com/emilkowalski/skills), the Animate skill
+(https://github.com/cth9191/animate), the HTML animation skill (https://github.com/drewharvey/claude-html-animation-skill),
+rossark-motion-skill (https://github.com/rossark0/rossark-motion-skill) and anime.js (https://github.com/juliangarnier/anime).
+Remotion is not used or required: it has its own license that needs a company license in some cases.
+Inter (https://rsms.me/inter), SIL Open Font License 1.1, Copyright (c) 2016 The Inter Project Authors: three subset
+weights in app/ui/motionfonts/ (the same files as site/assets/fonts), license text app/ui/motionfonts/LICENSE-Inter.txt.
+Mediabunny (https://github.com/Vanilagy/mediabunny), MPL-2.0, is loaded from a CDN only when someone exports an MP4; it
+is never bundled.

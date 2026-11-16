@@ -1255,7 +1255,7 @@
 "Drifting dots, ripples, a constellation or a starfield behind any section, in your site's own colors. They pause off screen and show a still picture for people who ask for less motion. Ten are ports of ThreeUI Community by Meng To (MIT).": "떠다니는 점, 물결, 별자리, 별밭을 사이트 색 그대로 어느 섹션 뒤에나 둘 수 있어요. 화면 밖에서는 멈추고, 움직임 줄이기를 켠 사람에게는 정지 그림을 보여 줘요. 열 가지는 Meng To의 ThreeUI Community(MIT)를 옮긴 것이에요.",
 "Decide the way your group decides": "우리 그룹의 방식대로 결정해요",
 "One lead, a council that votes, everyone equal, or roles you name yourselves. When you can't do something, the app says who can and offers to ask them.": "리더 한 명, 투표하는 위원회, 모두 동등, 또는 직접 이름 붙인 역할 중에서 골라요. 내가 할 수 없는 일은 앱이 누가 할 수 있는지 알려 주고 요청해 줄지 물어봐요.",
-"51 quick guides in Learn": "배우기에 빠른 안내 51개",
+"52 quick guides in Learn": "배우기에 빠른 안내 52개",
 "One screen each: a few steps, a button that does it for you, and Show me, which points at the real thing. The longer lessons are there too, under Skills.": "각각 한 화면: 몇 단계, 대신 해 주는 버튼, 그리고 실제 위치를 가리키는 보여 주기. 더 긴 수업도 기술 아래에 있어요.",
 "Pick your language": "언어 선택",
 "Change it from the ? menu, the first screen or Settings. Flint understands requests in all eight. The app's menus are only partly translated so far, so some screens stay in English.": "? 메뉴, 첫 화면, 설정에서 바꿀 수 있어요. Flint는 여덟 언어 모두로 요청을 이해해요. 앱 메뉴는 아직 일부만 번역되어 있어서 영어로 남은 화면도 있어요.",
@@ -1263,7 +1263,7 @@
 "Tested on simulated devices. Not yet confirmed on every real one.": "가상 기기에서 테스트했어요. 모든 실제 기기에서 확인된 것은 아니에요.",
 "You approve what goes in": "들어갈 내용은 내가 승인",
 "Shortcuts to the tools you already use": "이미 쓰는 도구로 가는 바로가기",
-"51 quick guides, and 65 lessons in ten tracks": "빠른 안내 51개, 그리고 열 개 트랙의 수업 65개",
+"52 quick guides, and 65 lessons in ten tracks": "빠른 안내 52개, 그리고 열 개 트랙의 수업 65개",
 "Stars, forks and every release are on {0}.": "스타, 포크, 모든 릴리스는 {0}에 있어요.",
 "Add a 3D or moving background": "3D 또는 움직이는 배경 추가",
 "❚❚ Pause": "❚❚ 일시정지",
@@ -1286,5 +1286,12 @@
 "Give the work around your product a shape: seats like CEO, Build, Grow and Run, held by friends or AI helpers, with short charters, daily check-ins and real numbers. One person with AI helpers, or a crew of friends who choose how they decide.": "제품을 둘러싼 일에 모양을 잡아요. CEO, Build, Grow, Run 같은 자리를 친구나 AI 도우미가 맡고, 짧은 헌장, 매일 체크인, 진짜 숫자로 굴러가요. AI 도우미와 함께하는 한 사람이든, 결정 방식을 스스로 고르는 친구들의 크루든.",
 "Checkout in the merch shop goes to your own Stripe, Shopify or Gumroad link: the page never takes card details. Review sections are for real reviews only, and signup and RSVP forms say they aren't connected until you add a link. In the website designer, a contact or sign-up form can instead deliver into your tribe: turn it on for that form, and each message lands in the project's chat. It works while the tribe's computer is online.": "굿즈 쇼핑몰 결제는 내 Stripe, Shopify, Gumroad 링크로 가요. 페이지는 카드 정보를 절대 받지 않아요. 리뷰 섹션은 진짜 리뷰만, 가입과 회신 양식은 링크를 넣기 전까지 연결되지 않았다고 알려요. 웹사이트 디자이너에서는 문의나 가입 양식을 트라이브로 받을 수도 있어요. 그 양식에서 켜면 메시지가 프로젝트 채팅에 도착해요. 트라이브의 컴퓨터가 온라인일 때만 작동해요.",
 "Chat, Flint, templates, the Academy, the Marketplace and one-tap publishing. A company starts simple: seats and today's updates.": "채팅, Flint, 템플릿, 아카데미, 마켓플레이스, 탭 한 번 게시. 회사는 단순하게 시작해요. 자리와 오늘의 소식.",
-"This site comes in English, Español, Português, Français, Deutsch, 日本語, 简体中文 and 한국어. In the app, {0} changes menus and buttons in the same languages, though only part of the app is translated so far, and Flint understands requests in all eight; what people write stays as they wrote it. The first time, it follows your device's language.": "이 사이트는 English, Español, Português, Français, Deutsch, 日本語, 简体中文, 한국어를 지원해요. 앱에선 {0}로 메뉴와 버튼이 같은 언어로 바뀌지만 아직 앱의 일부만 번역되어 있고, Flint는 여덟 언어 모두로 요청을 이해하며, 사람들이 쓴 글은 쓴 그대로 남아요. 처음엔 기기 언어를 따라가요."
+"This site comes in English, Español, Português, Français, Deutsch, 日本語, 简体中文 and 한국어. In the app, {0} changes menus and buttons in the same languages, though only part of the app is translated so far, and Flint understands requests in all eight; what people write stays as they wrote it. The first time, it follows your device's language.": "이 사이트는 English, Español, Português, Français, Deutsch, 日本語, 简体中文, 한국어를 지원해요. 앱에선 {0}로 메뉴와 버튼이 같은 언어로 바뀌지만 아직 앱의 일부만 번역되어 있고, Flint는 여덟 언어 모두로 요청을 이해하며, 사람들이 쓴 글은 쓴 그대로 남아요. 처음엔 기기 언어를 따라가요.",
+"Make a motion graphic": "모션 그래픽 만들기",
+"One shape that morphs on the beat: UI reels, logo reveals, app promos and clips for X, TikTok and Instagram. It loops perfectly.": "박자에 맞춰 변하는 하나의 도형: UI 릴, 로고 등장, 앱 홍보, X·TikTok·Instagram용 클립. 완벽하게 반복돼요.",
+"Open Design and pick Motion graphic.": "디자인을 열고 모션 그래픽을 고르세요.",
+"Choose a template, or tell Flint “make a logo reveal”.": "템플릿을 고르거나 Flint에게 “로고 등장 만들어 줘”라고 말하세요.",
+"Click a state on the timeline to change its words, size or colour.": "타임라인의 상태를 클릭해 글자, 크기, 색을 바꾸세요.",
+"Pick a feel, or say “snappier”, “make it 9:16” or “sync to the beat”.": "느낌을 고르거나 “더 경쾌하게”, “9:16으로”, “박자에 맞춰”라고 말하세요.",
+"Export an MP4, a GIF or a web page, or put it on your website.": "MP4, GIF, 웹페이지로 내보내거나 웹사이트에 넣으세요."
 }
