@@ -152,7 +152,7 @@
     open = window.TribeUI.sheet({ id: 'cr-list', eyebrow: T('Changes'), title: T('Suggested changes'), body: '<div class="cr-list" id="cr-list-body"></div>', onClose: () => { open = null; } });
     const fill = async () => {
       const box = document.getElementById('cr-list-body'); if (!box) return;
-      const l = await mine(pid), wait = l.filter(x => x.canDecide), mineL = l.filter(x => x.mine), rest = l.filter(x => !x.canDecide && !x.mine);
+      const l = await mine(pid), wait = l.filter(x => x.canDecide), mineL = l.filter(x => x.mine && !x.canDecide), rest = l.filter(x => !x.canDecide && !x.mine);
       const sec = (t, xs) => (xs.length ? `<h4 class="cr-h">${esc(T(t))}</h4>${xs.map(rowHtml).join('')}` : '');
       box.innerHTML = l.length ? sec('Waiting for you', wait) + sec('Yours', mineL) + sec('Everyone else’s', rest) : `<p class="cr-empty">${esc(T('No suggested changes yet. Someone who can’t change a tool directly sends a suggestion from its top strip, and it shows up here.'))}</p>`;
       box.querySelectorAll('[data-cr-prev]').forEach(el => preview(el, el.dataset.crPrev, pid));
