@@ -305,7 +305,7 @@ def main():
 
             # ---------- 8: a template over a site that is already there asks first ----------
             name0 = cfg(cp)["name"]; blocks0 = json.dumps(cfg(cp)["pages"]); cp.evaluate("window.__b0 = JSON.stringify(TribeSiteDesigner.cfg().pages)")
-            cp.click("#wdz [data-wdz='more']"); cp.click("#wdz-more [data-wdz='templates']"); cp.wait_for_selector("#wdz-gal [data-tpl]", timeout=15000)
+            cp.click("#wdz [data-wdz='more']"); cp.click("#wdz-more [data-wdz='templates']"); cp.click("#wdz-start [data-kind='all']"); cp.wait_for_selector("#wdz-gal [data-tpl]", timeout=15000)   # pass 5: the kinds screen comes first
             cp.locator("#wdz-gal [data-tpl]").nth(2).click(); cp.wait_for_selector("#wdz-replace", timeout=5000)
             assert "already has a design" in cp.inner_text("#wdz-replace") and name0 in cp.inner_text("#wdz-replace")
             shot(cp, "p4-site-replace-1440.png")
