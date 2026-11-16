@@ -415,6 +415,11 @@ const E2 = C.length;
 for (const [ctx, t, i, s] of require('./flint-eval/editor2.js')) C.push({ t, i, s: s || undefined, ctx });
 for (let i = E2; i < C.length; i++) C[i].v = 'e2';
 
+// ---- the Launch kit: store screenshots, icon, store text, keywords, paywalls, the checklist, the preview video ----
+const LK = C.length;
+for (const [ctx, t, i, s] of require('./flint-eval/launch.js')) C.push({ t, i, s: s || undefined, ctx });
+for (let i = LK; i < C.length; i++) C[i].v = 'lk';
+
 const out = { about: 'Flint evaluation set (feat/flint-site): websites, the design canvas, preview edits, lessons and global commands. Written by scripts/dev/flint-eval-cases.js; checked by app/test/flint_eval_test.js. "i" = the expected intent (a list for several steps, null when Flint should not claim it), "s" = slots that must match, "ctx" = s|c|cs|p|g (site designer, canvas, canvas with a selection, preview, anywhere).', now: '2026-11-10T10:00:00', cases: C };
 fs.writeFileSync(path.join(__dirname, '..', '..', 'app', 'test', 'flint_eval.json'), JSON.stringify(out, null, 1) + '\n');
 console.log(`flint_eval.json: ${C.length} cases`);

@@ -378,6 +378,13 @@
     if (id === 'preview.device') { const P = window.TribePreview; if (P && !document.querySelector('#pvw [data-dev]')) P.open(); setTimeout(() => { const b = document.querySelector(`#pvw [data-dev="${sl.dev}"], [data-dev="${sl.dev}"]`); if (b) b.click(); }, 250); return { text: T('device', { x: sl.dev }) }; }
     if (id === 'preview.edit') { const P = window.TribePreview; if (P && !document.querySelector('#pvw')) P.open(); setTimeout(() => { const b = document.querySelector('#pvw-edit, [data-pvw-edit], #pvw [data-edit]'); if (b && b.getAttribute('aria-pressed') !== 'true') b.click(); }, 300); return { text: T('editOn') }; }
     if (id === 'comment.mode') { const P = window.TribePreview; if (P && !document.querySelector('#pvw') && view() !== 'canvas') P.open(); setTimeout(() => { if (window.TribePins && window.TribePins.toggle) window.TribePins.toggle(true); else document.dispatchEvent(new KeyboardEvent('keydown', { key: 'c' })); }, 300); return { text: T('commentOn') }; }
+    if (id.startsWith('launch.')) {   // the Launch kit (launchkit.js): one tab per kind of request
+      if (!window.TribeLaunchKit) return { text: T('noPlace', { x: 'Launch kit' }) };
+      const tab = { 'launch.shots': 'shots', 'launch.icon': 'icon', 'launch.text': 'text', 'launch.keywords': 'text', 'launch.paywall': 'paywall', 'launch.checklist': 'check', 'launch.video': 'video' }[id];
+      window.TribeLaunchKit.open(undefined, tab);
+      if (id === 'launch.keywords') setTimeout(() => { const k = document.querySelector('#lk-t-keywords'); if (k) { k.focus(); k.scrollIntoView({ block: 'center' }); } }, 600);
+      return { text: T('opened', { x: 'Launch kit' }), sum: 'opened the Launch kit' };
+    }
     if (id === 'publish.to') { if (window.TribePublish) window.TribePublish.open(undefined, sl.dest || ''); return { text: T('opened', { x: 'Publish' }), sum: 'opened Publish' }; }
     if (id === 'publish') { if (window.TribePublish) window.TribePublish.open(); return { text: T('opened', { x: 'Publish' }), sum: 'opened Publish' }; }
     if (id.startsWith('theme.')) {

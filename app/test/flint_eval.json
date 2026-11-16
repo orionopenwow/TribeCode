@@ -11242,6 +11242,324 @@
    },
    "ctx": "p",
    "v": "e2"
+  },
+  {
+   "t": "make store screenshots",
+   "i": "launch.shots",
+   "ctx": "g",
+   "v": "lk"
+  },
+  {
+   "t": "make app store screenshots",
+   "i": "launch.shots",
+   "ctx": "g",
+   "v": "lk"
+  },
+  {
+   "t": "create screenshots for the app store",
+   "i": "launch.shots",
+   "ctx": "g",
+   "v": "lk"
+  },
+  {
+   "t": "i need screenshots for google play",
+   "i": "launch.shots",
+   "ctx": "g",
+   "v": "lk"
+  },
+  {
+   "t": "play store screenshots",
+   "i": "launch.shots",
+   "ctx": "g",
+   "v": "lk"
+  },
+  {
+   "t": "make my app store screenshots",
+   "i": "launch.shots",
+   "ctx": "g",
+   "v": "lk"
+  },
+  {
+   "t": "design screenshots for my app",
+   "i": "launch.shots",
+   "ctx": "g",
+   "v": "lk"
+  },
+  {
+   "t": "generate store screenshots for ios",
+   "i": "launch.shots",
+   "ctx": "g",
+   "v": "lk"
+  },
+  {
+   "t": "make the feature graphic",
+   "i": "launch.shots",
+   "ctx": "g",
+   "v": "lk"
+  },
+  {
+   "t": "make an app icon",
+   "i": "launch.icon",
+   "ctx": "g",
+   "v": "lk"
+  },
+  {
+   "t": "design my app icon",
+   "i": "launch.icon",
+   "ctx": "g",
+   "v": "lk"
+  },
+  {
+   "t": "i need an app icon",
+   "i": "launch.icon",
+   "ctx": "g",
+   "v": "lk"
+  },
+  {
+   "t": "create a new app icon",
+   "i": "launch.icon",
+   "ctx": "g",
+   "v": "lk"
+  },
+  {
+   "t": "app icon generator",
+   "i": "launch.icon",
+   "ctx": "g",
+   "v": "lk"
+  },
+  {
+   "t": "make the icons for my app",
+   "i": "launch.icon",
+   "ctx": "g",
+   "v": "lk"
+  },
+  {
+   "t": "generate app icons",
+   "i": "launch.icon",
+   "ctx": "g",
+   "v": "lk"
+  },
+  {
+   "t": "write my store description",
+   "i": "launch.text",
+   "ctx": "g",
+   "v": "lk"
+  },
+  {
+   "t": "write the app store description",
+   "i": "launch.text",
+   "ctx": "g",
+   "v": "lk"
+  },
+  {
+   "t": "draft my play store listing",
+   "i": "launch.text",
+   "ctx": "g",
+   "v": "lk"
+  },
+  {
+   "t": "help me write the app store listing",
+   "i": "launch.text",
+   "ctx": "g",
+   "v": "lk"
+  },
+  {
+   "t": "write a description for the app store",
+   "i": "launch.text",
+   "ctx": "g",
+   "v": "lk"
+  },
+  {
+   "t": "write my google play description",
+   "i": "launch.text",
+   "ctx": "g",
+   "v": "lk"
+  },
+  {
+   "t": "make my store listing",
+   "i": "launch.text",
+   "ctx": "g",
+   "v": "lk"
+  },
+  {
+   "t": "write the store text",
+   "i": "launch.text",
+   "ctx": "g",
+   "v": "lk"
+  },
+  {
+   "t": "check my keywords",
+   "i": "launch.keywords",
+   "ctx": "g",
+   "v": "lk"
+  },
+  {
+   "t": "check my app store keywords",
+   "i": "launch.keywords",
+   "ctx": "g",
+   "v": "lk"
+  },
+  {
+   "t": "improve my keywords",
+   "i": "launch.keywords",
+   "ctx": "g",
+   "v": "lk"
+  },
+  {
+   "t": "fix the store keywords",
+   "i": "launch.keywords",
+   "ctx": "g",
+   "v": "lk"
+  },
+  {
+   "t": "optimize my keywords",
+   "i": "launch.keywords",
+   "ctx": "g",
+   "v": "lk"
+  },
+  {
+   "t": "help with aso",
+   "i": "launch.keywords",
+   "ctx": "g",
+   "v": "lk"
+  },
+  {
+   "t": "app store optimization",
+   "i": "launch.keywords",
+   "ctx": "g",
+   "v": "lk"
+  },
+  {
+   "t": "add a paywall",
+   "i": "launch.paywall",
+   "ctx": "g",
+   "v": "lk"
+  },
+  {
+   "t": "make a paywall screen",
+   "i": "launch.paywall",
+   "ctx": "g",
+   "v": "lk"
+  },
+  {
+   "t": "design a paywall",
+   "i": "launch.paywall",
+   "ctx": "g",
+   "v": "lk"
+  },
+  {
+   "t": "add a paywall to my app",
+   "i": "launch.paywall",
+   "ctx": "g",
+   "v": "lk"
+  },
+  {
+   "t": "paywall templates",
+   "i": "launch.paywall",
+   "ctx": "g",
+   "v": "lk"
+  },
+  {
+   "t": "create a subscription paywall",
+   "i": "launch.paywall",
+   "ctx": "g",
+   "v": "lk"
+  },
+  {
+   "t": "what do i need to launch on the app store",
+   "i": "launch.checklist",
+   "ctx": "g",
+   "v": "lk"
+  },
+  {
+   "t": "what do i need to publish on google play",
+   "i": "launch.checklist",
+   "ctx": "g",
+   "v": "lk"
+  },
+  {
+   "t": "app store checklist",
+   "i": "launch.checklist",
+   "ctx": "g",
+   "v": "lk"
+  },
+  {
+   "t": "how do i get my app on the app store",
+   "i": "launch.checklist",
+   "ctx": "g",
+   "v": "lk"
+  },
+  {
+   "t": "how do i submit my app to the play store",
+   "i": "launch.checklist",
+   "ctx": "g",
+   "v": "lk"
+  },
+  {
+   "t": "launch checklist",
+   "i": "launch.checklist",
+   "ctx": "g",
+   "v": "lk"
+  },
+  {
+   "t": "what do i need to put my app in the stores",
+   "i": "launch.checklist",
+   "ctx": "g",
+   "v": "lk"
+  },
+  {
+   "t": "make an app preview video",
+   "i": "launch.video",
+   "ctx": "g",
+   "v": "lk"
+  },
+  {
+   "t": "app store preview video",
+   "i": "launch.video",
+   "ctx": "g",
+   "v": "lk"
+  },
+  {
+   "t": "make the app preview",
+   "i": "launch.video",
+   "ctx": "g",
+   "v": "lk"
+  },
+  {
+   "t": "open the launch kit",
+   "i": "launch.open",
+   "ctx": "g",
+   "v": "lk"
+  },
+  {
+   "t": "launch kit",
+   "i": "launch.open",
+   "ctx": "g",
+   "v": "lk"
+  },
+  {
+   "t": "show me the launch kit",
+   "i": "launch.open",
+   "ctx": "g",
+   "v": "lk"
+  },
+  {
+   "t": "publish my app to the app store",
+   "i": "publish.to",
+   "ctx": "g",
+   "v": "lk"
+  },
+  {
+   "t": "make an android app",
+   "i": "publish.to",
+   "ctx": "g",
+   "v": "lk"
+  },
+  {
+   "t": "publish it",
+   "i": "publish",
+   "ctx": "g",
+   "v": "lk"
   }
  ]
 }

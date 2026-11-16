@@ -1,5 +1,7 @@
 # TribeCode in the App Store and Google Play: the plan
 
+Members putting **their own** apps in the stores use the built-in Launch kit (`docs/LAUNCH-KIT.md`): screenshots at every store size, icon sets, store text with the limits checked, paywall designs and the submission checklist. This page is about TribeCode's own apps.
+
 Status: plan + first pieces built, 2026-11-10 (`feat/appstore`); 2026-11-11 (`feat/polish`): Sign in with Apple (config-gated), the cloud AI consent sheet, `support.html`, `delete-account.html` and `GET/DELETE /api/account`. Built so far: the browser app ([BROWSER-APP.md](BROWSER-APP.md)),
 report / block / word filter / delete-account entry point (`app/ui/moderation.js`, `server/moderation.js`), draft privacy
 policy and terms (`app/ui/privacy.html`, `app/ui/terms.html`), the Android TWA scaffold (`mobile/android/`) and the

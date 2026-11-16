@@ -49,6 +49,8 @@ Gate: `npm test` green on `dev`, `e2e_truth` green, and a manual click-through o
 
 The full plan is in `docs/APP-STORE.md`. Short version:
 
+For TribeCode's own listing, the built-in **Launch kit** (`docs/LAUNCH-KIT.md`, Publish › Where it goes › Launch kit) makes the store screenshots, the icon set and the store text, and keeps the Apple and Google checklist. The same tool is what members use for their own apps.
+
 - **Android**: a Trusted Web Activity first (`mobile/android/`), then Tauri. You need a Google Play developer account ($25 once), then put the signing fingerprints into `app/ui/.well-known/assetlinks.json`. *you*
 - **iPhone**: Tauri v2 iOS build on a Mac. You need an Apple Developer account ($99/yr), a Services ID for Sign in with Apple, and TestFlight. *you + a Mac*
 - **Store requirements**:

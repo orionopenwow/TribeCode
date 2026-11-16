@@ -45,7 +45,12 @@
     if (!s) return;
     const st = await state(pid, true), cur = (st.published || [])[0];
     if (!st.canPublish && !cur) { $('#pb-body').innerHTML = `<p class="faint">${me().role === 'spectator' ? 'Spectators can watch, not publish. Ask the host for builder access.' : 'You can\'t publish this project.'}</p>`; return; }
-    let ch; try { ch = await C.api('/publish/check', { method: 'POST', body: { project: pid } }); } catch (e) { $('#pb-body').innerHTML = `<p class="pb-err">${esc(e.message)}</p>`; return; }
+    let ch; try { ch = await C.api('/publish/check', { method: 'POST', body: { project: pid } }); } catch (e) {
+      // the Launch kit (launchkit.js) needs no code: store text, an icon and screenshots of the sample screens can start now
+      $('#pb-body').innerHTML = `<p class="pb-err">${esc(e.message)}</p>${window.TribeLaunchKit ? `<p class="faint">${esc(T('The store text, the app icon and the launch checklist do not need code yet.'))}</p><button class="btn" type="button" data-launchkit>${esc(T('Open the Launch kit'))}</button>` : ''}`;
+      const lk = $('#pb-body [data-launchkit]'); if (lk) lk.onclick = () => { s.close(); window.TribeLaunchKit.open(pid); };
+      return;
+    }
     FOCUS = focus || ''; render(s, pid, p, cur, ch, st);
   }
   function render(s, pid, p, cur, ch, st) {
