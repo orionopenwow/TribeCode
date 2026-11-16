@@ -1,7 +1,7 @@
 // The design library (feat/asset-libs): ONE place to find colours, fonts, icons, pictures, sounds, motion feels, moving
 // backgrounds, App Creator parts and screens, and website sections, each with its licence and where it came from.
 // The content lives where it already did (the website designer, App Creator, Motion Studio, the backgrounds pack);
-// assetlib-data.js adds 56 palettes and 30 sounds and gathers everything into one list. Files that come from outside
+// assetlib-data.js adds 56 palettes and 52 sounds and gathers everything into one list. Files that come from outside
 // (3D models, music, big icon sets) stay in the Assets panel (assets.js), which links here and back.
 //
 // Colours and fonts are applied through the project's brand kit (brandkit.js), so the website designer, App Creator,
@@ -20,11 +20,12 @@
   const T = s => (window.TribeI18n && window.TribeI18n.t ? window.TribeI18n.t(s, s) || s : s);
   const toast = m => (window.TribeApp && window.TribeApp.toast ? window.TribeApp.toast(m) : null);
   const extra = [];   // items installed from shelf asset-packs this session (and remembered on this device)
-  try { JSON.parse(localStorage.getItem('tribecode.assetlib.packs') || '[]').forEach(x => extra.push(x)); } catch {}
+  const addPal = x => { const D0 = window.TribeAssetData; if (D0 && x.kind === 'palette' && x.palette && !D0.PALETTES.some(p => p.id === x.id)) D0.PALETTES.push({ id: x.id, name: x.name, mood: x.tags || '', colors: x.palette }); };
+  try { JSON.parse(localStorage.getItem('tribecode.assetlib.packs') || '[]').forEach(x => { extra.push(x); addPal(x); }); } catch {}
 
   function all() {
     if (!D()) return [];
-    return D().catalog({ site: window.TribeSiteCfg, app: window.TribeAppCore, fx: window.TribeSiteFx, motion: window.TribeMotionKit }).concat(extra);
+    return D().catalog({ site: window.TribeSiteCfg, app: window.TribeAppCore, fx: window.TribeSiteFx, motion: window.TribeMotionKit }).concat(extra.filter(x => x.kind !== 'palette'));   // pack palettes join PALETTES, which the catalog lists
   }
   function list(kind, q) {
     const words = String(q || '').toLowerCase().split(/\s+/).filter(Boolean);
@@ -128,8 +129,9 @@
     for (const it of pack.items) {
       if (!it || !it.kind || !it.id || !okLic.test(it.license || '')) continue;
       if (extra.some(x => x.kind === it.kind && x.id === it.id)) continue;
-      extra.push({ kind: it.kind, id: String(it.id), name: String(it.name || it.id), tags: String(it.tags || pack.title || ''), license: it.license, source: String(it.source || pack.title || ''), pack: pack.id });
-      if (it.kind === 'palette' && it.palette && D()) D().PALETTES.push({ id: String(it.id), name: String(it.name || it.id), mood: String(it.tags || ''), colors: it.palette });
+      const x = { kind: it.kind, id: String(it.id), name: String(it.name || it.id), tags: String(it.tags || pack.title || ''), license: it.license, source: String(it.source || pack.title || ''), pack: pack.id, ...(it.kind === 'palette' && it.palette ? { palette: it.palette } : {}) };
+      if (x.kind === 'palette' && !(x.palette && /^#[0-9a-f]{6}$/i.test(x.palette.accent) && /^#[0-9a-f]{6}$/i.test(x.palette.ink) && /^#[0-9a-f]{6}$/i.test(x.palette.bg))) continue;
+      extra.push(x); addPal(x);
       n++;
     }
     try { localStorage.setItem('tribecode.assetlib.packs', JSON.stringify(extra)); } catch {}

@@ -4,7 +4,7 @@
 // moving backgrounds (some ported from ThreeUI Community by Meng To, MIT), App Creator parts and screens, website sections.
 // Plain data and functions, no DOM: window.TribeAssetData in the browser, require() on the server and in tests.
 //   PALETTES  [{ id, name, mood, colors: { accent, ink, bg, more: [hex, hex] } }]      (56)
-//   SOUNDS    [{ id, name, use, notes: [[freq Hz, start s, length s, wave, gain]], sweep? }]   drawn with WebAudio, no files
+//   SOUNDS    [{ id, name, use, notes: [[freq Hz, start s, length s, wave, gain]], sweep? }]   (52) drawn with WebAudio, no files
 //   catalog(mods) -> [{ kind, id, name, tags, license, source }]   mods = { site, app, appParts, fx, motion } (any may be missing)
 //   KINDS     [{ id, name }] in the order the picker shows them
 (function (root, factory) {
@@ -105,6 +105,28 @@
     S('lock', 'Lock', 'locked', [[300, 0, 0.03, 'square', 0.18], [200, 0.04, 0.05, 'square', 0.18]]),
     S('unlock', 'Unlock', 'unlocked', [[200, 0, 0.03, 'square', 0.18], [420, 0.05, 0.06, 'square', 0.18]]),
     S('heartbeat', 'Heartbeat', 'a like', [[90, 0, 0.09, 'sine', 0.5], [90, 0.16, 0.09, 'sine', 0.4]]),
+    S('ping', 'Ping', 'a mention', [[1760, 0, 0.25, 'sine', 0.2]]),
+    S('ding', 'Ding', 'an answer arrives', [[1318, 0, 0.4, 'sine', 0.22], [2637, 0, 0.2, 'sine', 0.06]]),
+    S('doorbell', 'Doorbell', 'someone joined', [[784, 0, 0.3, 'sine', 0.25], [622, 0.3, 0.45, 'sine', 0.25]]),
+    S('alarm', 'Alarm', 'time is up', [[880, 0, 0.1, 'square', 0.12], [880, 0.15, 0.1, 'square', 0.12], [880, 0.3, 0.1, 'square', 0.12]]),
+    S('buzz', 'Buzz', 'not allowed', [[110, 0, 0.18, 'sawtooth', 0.14]]),
+    S('pluck', 'Pluck', 'a string note', [[392, 0, 0.3, 'triangle', 0.3]], 0.98),
+    S('drop', 'Drop', 'something lands', [[900, 0, 0.12, 'sine', 0.3]], 0.3),
+    S('blip', 'Blip', 'a small signal', [[1200, 0, 0.03, 'square', 0.12]]),
+    S('select', 'Select', 'an item is picked', [[740, 0, 0.04, 'triangle', 0.25], [1110, 0.04, 0.05, 'triangle', 0.2]]),
+    S('back', 'Back', 'going back', [[880, 0, 0.05, 'triangle', 0.22], [660, 0.05, 0.06, 'triangle', 0.22]]),
+    S('open', 'Open', 'a sheet opens', [[400, 0, 0.14, 'sine', 0.25]], 1.8),
+    S('close', 'Close', 'a sheet closes', [[720, 0, 0.12, 'sine', 0.25]], 0.55),
+    S('refresh', 'Refresh', 'pull to refresh', [[500, 0, 0.08, 'sine', 0.2], [750, 0.08, 0.08, 'sine', 0.2], [1000, 0.16, 0.1, 'sine', 0.2]]),
+    S('complete', 'Complete', 'a task is done', [[659, 0, 0.08, 'triangle', 0.25], [988, 0.08, 0.22, 'triangle', 0.25]]),
+    S('reward', 'Reward', 'a badge earned', [[784, 0, 0.08, 'sine', 0.22], [988, 0.08, 0.08, 'sine', 0.22], [1175, 0.16, 0.08, 'sine', 0.22], [1568, 0.24, 0.3, 'sine', 0.2]]),
+    S('fail', 'Fail', 'a game over', [[392, 0, 0.15, 'square', 0.13], [330, 0.15, 0.15, 'square', 0.13], [262, 0.3, 0.3, 'square', 0.13]]),
+    S('countdown', 'Countdown beep', 'a count of three', [[880, 0, 0.08, 'sine', 0.25], [880, 0.5, 0.08, 'sine', 0.25], [1760, 1, 0.2, 'sine', 0.25]]),
+    S('magic', 'Magic', 'something appears from nowhere', [[1047, 0, 0.06, 'sine', 0.15], [1319, 0.05, 0.06, 'sine', 0.15], [1568, 0.1, 0.06, 'sine', 0.15], [2093, 0.15, 0.25, 'sine', 0.12]]),
+    S('snap', 'Snap', 'a thing clicks into place', [[2600, 0, 0.015, 'square', 0.2], [900, 0.015, 0.03, 'triangle', 0.15]]),
+    S('zip', 'Zip', 'a fast slide', [[400, 0, 0.1, 'sawtooth', 0.08]], 4),
+    S('boing', 'Boing', 'a playful bounce in a game', [[200, 0, 0.3, 'sine', 0.3]], 3),
+    S('scroll', 'Scroll tick', 'a list scrolls', [[3000, 0, 0.008, 'square', 0.08]]),
   ];
   const KINDS = [
     { id: 'palette', name: 'Colours' }, { id: 'font', name: 'Fonts' }, { id: 'icon', name: 'Icons' }, { id: 'picture', name: 'Pictures' },

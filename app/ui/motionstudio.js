@@ -228,7 +228,7 @@
     const k = K();
     p.innerHTML = `<p class="mos-lead">${tr('Every template is one shape that never cuts. Pick one, then change anything.')}</p>` + k.CATS.map(([c, name]) => {
       const ids = k.LIST.filter(id => k.TEMPLATES[id].cat === c); if (!ids.length) return '';
-      return `<section class="mos-cat"><h4 class="eyebrow">${esc(name)}</h4><div class="mos-tpls">${ids.map(id => `<button type="button" class="mos-tpl${doc.template === id ? ' on' : ''}" data-tpl="${id}" title="${esc(k.TEMPLATES[id].about)}"><img alt="" width="160" height="100" data-src="${id}"><b>${esc(k.TEMPLATES[id].name)}</b></button>`).join('')}</div></section>`;
+      return `<section class="mos-cat"><h4 class="eyebrow">${esc(name)}</h4><div class="mos-tpls">${ids.map(id => `<button type="button" class="mos-tpl${doc.template === id ? ' on' : ''}" data-tpl="${id}" title="${esc(tr(k.TEMPLATES[id].about))}"><img alt="" width="160" height="100" data-src="${id}"><b>${esc(tr(k.TEMPLATES[id].name))}</b></button>`).join('')}</div></section>`;
     }).join('');
     // thumbnails are drawn a few at a time so the pane opens at once
     const imgs = $$('img[data-src]', p); let i = 0; const next = () => { const end = Math.min(imgs.length, i + 6); for (; i < end; i++) imgs[i].src = thumb(imgs[i].dataset.src, 320, 200); if (i < imgs.length) requestAnimationFrame(next); }; requestAnimationFrame(next);
@@ -272,7 +272,7 @@
   function wireEdit(p) {
     const s = doc.states[sel]; if (!s) return;
     $$('[data-p]', p).forEach(el => el.onchange = () => { const k = el.dataset.p, v = el.type === 'number' ? +el.value : el.value; change(d => { const x = d.states[sel]; if (k === 'at') { const dAt = v - x.at; x.acts.forEach(a => { a.at += dAt; if (a.until != null) a.until += dAt; }); } x[k] = k === 'value' && /^[\d.]+$/.test(String(v)) ? +v : v; return d; }); });
-    const lib = $('#mos-lib', p); if (lib) lib.onclick = () => window.TribeAssetLib.open({ kind: 'palette', onPick: x => { if (x.kind !== 'palette') return true; const pl = window.TribeAssetLib.palette(x.id); if (pl) change(d => { d.theme = { ...d.theme, accent: pl.colors.accent }; }); } });
+    const lib = $('#mos-lib', p); if (lib) lib.onclick = () => window.TribeAssetLib.open({ kind: 'palette', onPick: x => { if (x.kind !== 'palette') return true; const pl = window.TribeAssetLib.palette(x.id); if (pl) change(d => { d.theme = { ...d.theme, accent: pl.colors.accent }; return d; }, 'Colours from the library'); } });
     $$('[data-g]', p).forEach(el => el.onchange = () => { const k = el.dataset.g; change(d => { if (k === 'bpm' || k === 'bars') d[k] = +el.value; else if (k === 'accent' || k === 'bg') d.theme = { ...d.theme, [k]: el.value }; else if (k === 'cam') d.camera = { ...d.camera, strength: el.value / 100 }; else if (k === 'cursor') d.cursor = el.checked; return d; }); });
     $$('[data-delact]', p).forEach(b => b.onclick = () => change(d => { d.states[sel].acts.splice(+b.dataset.delact, 1); return d; }, tr('Removed.')));
     $$('[data-addact]', p).forEach(b => b.onclick = () => change(d => { const x = d.states[sel], nx = d.states[sel + 1], at = Math.min(x.at + 1, nx ? nx.at - 0.5 : x.at + 1); x.acts.push(b.dataset.addact === 'drag' ? { type: 'drag', at, until: at + 1, x0: -100, y0: 0, x1: 100, y1: 0 } : { type: 'click', at, x: 0, y: 0 }); return d; }, tr('Added. Use the pin to place it on the preview.')));

@@ -1,8 +1,8 @@
 {
   "version": "v0.38.1",
-  "flintActions": 241,
+  "flintActions": 242,
   "flintActionsAbout": 240,
-  "addons": 565,
+  "addons": 569,
   "addonsPlus": 550,
   "lessons": 65,
   "tracks": 10,
@@ -11,7 +11,7 @@
   "screenTemplates": 13,
   "companyTemplates": 7,
   "quickGuides": 57,
-  "movingBackgrounds": 13,
+  "movingBackgrounds": 55,
   "languages": 8,
   "agentTools": 15,
   "remix": 13
