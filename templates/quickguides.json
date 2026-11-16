@@ -940,6 +940,31 @@
    }
   },
   {
+   "id": "share-clip",
+   "group": "publish",
+   "title": "Share a clip of your project",
+   "intro": "Make a short video of your app, site or game for X, TikTok, Instagram or YouTube, with the words to post beside it.",
+   "asks": [
+    "share my app on tiktok",
+    "make a clip for x",
+    "make a timelapse",
+    "share this",
+    "make a video of my game"
+   ],
+   "needs": "TribeShareClip",
+   "steps": [
+    "Open Publish and find Share a clip under Where it goes.",
+    "Pick what to show: your app screens, a screenshot, a timelapse or pictures you add.",
+    "Pick the size for the feed and the first words on screen.",
+    "Copy the caption, then press Open in Motion Studio and Export the video."
+   ],
+   "do": "call:TribeShareClip.open",
+   "doLabel": "Share a clip",
+   "show": {
+    "lesson": "export"
+   }
+  },
+  {
    "id": "store-shots",
    "group": "publish",
    "title": "Make store screenshots and an app icon",

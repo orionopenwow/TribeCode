@@ -372,6 +372,18 @@
   I('launch.video', 'local', [/^(?:make|create|record|do)\s+(?:an?\s+|my\s+|the\s+)?app\s+preview(?:\s+video)?$/, /^(?:app\s*store|play\s*store|store)\s+(?:preview\s+)?video$/],
     { p: 0.97, ex: ['make an app preview video'] });
   I('launch.open', 'local', [/^(?:open|show|show me|go to)\s+(?:the\s+)?launch\s*kit$/, /^launch\s*kit$/], { p: 0.98, ex: ['open the launch kit'] });
+  // Share a clip (app/ui/shareclip.js): a short video of the project for a feed, made in Motion Studio
+  const FEED = '(?<plat>x|twitter|tiktok|tik tok|instagram|insta|ig|reels|youtube|shorts|linkedin|social media|socials)';
+  const PROJ = '(?:my|our|the|this)\\s+(?:app|game|site|website|project|build|changes|progress|update|work)';
+  I('share.clip', 'local', [new RegExp(`^(?:make|create|render|do|cut|record|get)\\s+(?:me\\s+)?(?:a\\s+|an\\s+)?(?:short\\s+|quick\\s+|little\\s+)?(?:clip|video|reel|post)\\s+(?:of|from|about|showing)\\s+(?:${PROJ}|it|this)(?:\\s+(?:for|on|to)\\s+(?:${FEED}))?$`),
+    new RegExp(`^(?:make|create|render|do|cut|get)\\s+(?:me\\s+)?(?:a\\s+|an\\s+)?(?:short\\s+|quick\\s+)?(?:clip|video)\\s+(?:for|to post on|to put on)\\s+${FEED}$`),
+    new RegExp(`^(?:share|post|show off)\\s+(?:${PROJ}|this|it)(?:\\s+(?:on|to)\\s+${FEED})?$`),
+    new RegExp(`^share\\s+(?:a|the)\\s+(?:clip|video)(?:\\s+(?:of|from)\\s+(?:${PROJ}|this|it))?(?:\\s+(?:on|to)\\s+${FEED})?$`),
+    /^share this$/, /^share it$/, /^share a clip$/, /^make a share clip$/, new RegExp(`^(?:clip|video)\\s+(?:for|on)\\s+${FEED}$`)],
+    { p: 0.985, fill: (s, c, ctx, X) => { const p = String((X && X.c.plat) || s.plat || '').toLowerCase(); return p ? { platform: /tik|reel|short|insta|ig/.test(p) ? (/insta|ig/.test(p) ? 'instagram' : 'tiktok') : /youtube|x|twitter|linkedin/.test(p) ? 'x' : '' } : {}; },
+      ex: ['make a clip for tiktok', 'share this', 'make a clip of my app', 'share my game on x'] });
+  I('share.timelapse', 'local', [new RegExp(`^(?:make|create|render|do|show me|build|get)\\s+(?:me\\s+)?(?:a\\s+)?time\\s?-?lapse(?:\\s+(?:video|clip))?(?:\\s+of\\s+(?:${PROJ}|it|this|how it grew|the whole thing))?(?:\\s+(?:for|on)\\s+${FEED})?$`), /^time\s?-?lapse$/, /^timelapse of (?:the|my|our) (?:project|build|app|game|site)$/],
+    { p: 0.985, ex: ['make a timelapse', 'make a timelapse of the project'] });
   I('edit.picked', 'preview', [/^(?:make|turn|change|set|paint|color|colour)\s+(?:it|this|that|the (?:title|heading|button|text|header|link|logo|image|section|background|font))\s+(?<prop>.+)$/, /^(?:make|turn)\s+(?:it|this|that)\s+(?:a\s+)?(?:bit\s+|little\s+|lot\s+)?(?<prop>bigger|smaller|bolder|lighter|wider|narrower|taller|shorter|rounder|darker|brighter|centered|bold|italic|hidden|uppercase)$/,
     /^(?:bigger|smaller|bold|italic|center it|center|left align|right align|underline|hide it|delete it|round the corners|more padding|less padding|more space|less space)$/, /^(?:change|replace)\s+(?:the\s+)?(?:text|words|label|copy|title|heading)\s+(?:to|with)\s+(?<prop>.+)$/],
     { p: 0.9, ctx: c => c && (c.picked || (c.selection && c.view === 'canvas')), ex: ['make it bigger', 'make the title blue', 'change the text to order now'] });
@@ -1418,6 +1430,7 @@
     'github.connect': 'github sign log in connect account repo git', 'premium.open': 'plans premium upgrade pricing subscription paid pro tiers buy credits',
     'publish': 'publish ship release launch deploy live public go out world put website site game',
     'launch.open': 'launch kit app store play store google stores screenshots icon listing keywords paywall submit submission',
+    'share.clip': 'share clip video post reel tiktok instagram x twitter youtube shorts social feed promo show off', 'share.timelapse': 'timelapse time lapse progress history grew over time clip video',
     'preview.open': 'preview live look see open result running app', 'preview.device': 'phone mobile tablet device small screen preview check',
     'preview.reload': 'reload refresh again preview', 'preview.share': 'share preview link send show friend', 'checks.run': 'checks tests run check verify test quality works',
     'build.3d': '3d three dimensional game world build make', 'build.2d': '2d game platformer build make arcade', 'design.new': 'design poster logo banner flyer graphic picture create make art',

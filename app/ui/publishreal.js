@@ -81,6 +81,8 @@
     }
     // Launch kit (launchkit.js): screenshots, icon, store text, paywall and the checklist for the App Store and Google Play
     if (!site && window.TribeLaunchKit) rows.push(row('launch', 'store', 'Launch kit', esc(T('Store screenshots, an app icon, the store text and a checklist for the App Store and Google Play.')), `<button class="btn" type="button" data-launchkit>${esc(T('Open the Launch kit'))}</button>`));
+    // Share a clip (shareclip.js): a short video of the project for X, TikTok, Instagram or YouTube, made in Motion Studio
+    if (window.TribeShareClip) rows.push(row('share', 'media', 'Share a clip', esc(T('A short video of your project for X, TikTok, Instagram or YouTube, with the words to post beside it.')), `<button class="btn" type="button" data-shareclip>${esc(T('Share a clip'))}</button>`));
     const dk = d.desktop || {};
     rows.push(row('desktop', 'monitor', 'Computer app', esc(T('Installers for Windows, Mac and Linux. A small window that opens your page. GitHub builds them in your account.')),
       !pg ? `<small class="faint">${esc(T('First give it a link that stays up (above).'))}</small>`
@@ -117,6 +119,7 @@
     const busy = (b, t) => { b.disabled = true; b.dataset.was = b.textContent; b.textContent = T(t); };
     const idle = b => { b.disabled = false; if (b.dataset.was) b.textContent = b.dataset.was; };
     wireLinks(host);
+    host.querySelectorAll('[data-shareclip]').forEach(b => b.onclick = () => { const m = document.querySelector('#invite-modal'); if (m && b.closest('#invite-modal')) m.classList.add('hidden'); window.TribeShareClip.open({ pid }); });
     host.querySelectorAll('[data-launchkit]').forEach(b => b.onclick = () => { const m = document.querySelector('#invite-modal'); if (m && b.closest('#invite-modal')) m.classList.add('hidden'); window.TribeLaunchKit.open(pid); });
     host.querySelectorAll('[data-kind]').forEach(b => b.onclick = async () => { try { await C.api('/publish/real', { method: 'PUT', body: { project: pid, kind: b.dataset.kind } }); again(); } catch (e) { toast(e.message); } });
     const pwa = host.querySelector('#pbr-pwa'); if (pwa) pwa.onchange = async () => { try { await C.api('/publish/real', { method: 'PUT', body: { project: pid, pwa: pwa.checked } }); toast(T(pwa.checked ? 'It will be installable from the next publish' : 'Not installable from the next publish')); again(); } catch (e) { toast(e.message); } };

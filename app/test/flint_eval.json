@@ -13484,6 +13484,231 @@
    },
    "ctx": "a",
    "v": "ac"
+  },
+  {
+   "t": "make a clip for tiktok",
+   "i": "share.clip",
+   "s": {
+    "platform": "tiktok"
+   },
+   "ctx": "g",
+   "v": "sc"
+  },
+  {
+   "t": "make a clip for x",
+   "i": "share.clip",
+   "s": {
+    "platform": "x"
+   },
+   "ctx": "g",
+   "v": "sc"
+  },
+  {
+   "t": "make a video for instagram",
+   "i": "share.clip",
+   "s": {
+    "platform": "instagram"
+   },
+   "ctx": "g",
+   "v": "sc"
+  },
+  {
+   "t": "make a clip for twitter",
+   "i": "share.clip",
+   "s": {
+    "platform": "x"
+   },
+   "ctx": "g",
+   "v": "sc"
+  },
+  {
+   "t": "make a short clip for reels",
+   "i": "share.clip",
+   "s": {
+    "platform": "tiktok"
+   },
+   "ctx": "g",
+   "v": "sc"
+  },
+  {
+   "t": "make a quick video for youtube",
+   "i": "share.clip",
+   "s": {
+    "platform": "x"
+   },
+   "ctx": "g",
+   "v": "sc"
+  },
+  {
+   "t": "share this",
+   "i": "share.clip",
+   "ctx": "g",
+   "v": "sc"
+  },
+  {
+   "t": "share it",
+   "i": "share.clip",
+   "ctx": "g",
+   "v": "sc"
+  },
+  {
+   "t": "share a clip",
+   "i": "share.clip",
+   "ctx": "g",
+   "v": "sc"
+  },
+  {
+   "t": "share a clip of my app",
+   "i": "share.clip",
+   "ctx": "g",
+   "v": "sc"
+  },
+  {
+   "t": "share my app on tiktok",
+   "i": "share.clip",
+   "s": {
+    "platform": "tiktok"
+   },
+   "ctx": "g",
+   "v": "sc"
+  },
+  {
+   "t": "share my game on x",
+   "i": "share.clip",
+   "s": {
+    "platform": "x"
+   },
+   "ctx": "g",
+   "v": "sc"
+  },
+  {
+   "t": "post our game on instagram",
+   "i": "share.clip",
+   "s": {
+    "platform": "instagram"
+   },
+   "ctx": "g",
+   "v": "sc"
+  },
+  {
+   "t": "share the project on social media",
+   "i": "share.clip",
+   "ctx": "g",
+   "v": "sc"
+  },
+  {
+   "t": "show off my site on linkedin",
+   "i": "share.clip",
+   "s": {
+    "platform": "x"
+   },
+   "ctx": "g",
+   "v": "sc"
+  },
+  {
+   "t": "make a clip of my app",
+   "i": "share.clip",
+   "ctx": "g",
+   "v": "sc"
+  },
+  {
+   "t": "make a video of our game for instagram",
+   "i": "share.clip",
+   "s": {
+    "platform": "instagram"
+   },
+   "ctx": "g",
+   "v": "sc"
+  },
+  {
+   "t": "make a clip of the changes",
+   "i": "share.clip",
+   "ctx": "g",
+   "v": "sc"
+  },
+  {
+   "t": "make a reel of my app",
+   "i": "share.clip",
+   "ctx": "g",
+   "v": "sc"
+  },
+  {
+   "t": "make a post about our game for x",
+   "i": "share.clip",
+   "s": {
+    "platform": "x"
+   },
+   "ctx": "g",
+   "v": "sc"
+  },
+  {
+   "t": "record a clip of this",
+   "i": "share.clip",
+   "ctx": "g",
+   "v": "sc"
+  },
+  {
+   "t": "make a clip from my website",
+   "i": "share.clip",
+   "ctx": "g",
+   "v": "sc"
+  },
+  {
+   "t": "cut a short video of the progress for tiktok",
+   "i": "share.clip",
+   "s": {
+    "platform": "tiktok"
+   },
+   "ctx": "g",
+   "v": "sc"
+  },
+  {
+   "t": "make a timelapse",
+   "i": "share.timelapse",
+   "ctx": "g",
+   "v": "sc"
+  },
+  {
+   "t": "make a timelapse of the project",
+   "i": "share.timelapse",
+   "ctx": "g",
+   "v": "sc"
+  },
+  {
+   "t": "timelapse",
+   "i": "share.timelapse",
+   "ctx": "g",
+   "v": "sc"
+  },
+  {
+   "t": "make a time lapse video",
+   "i": "share.timelapse",
+   "ctx": "g",
+   "v": "sc"
+  },
+  {
+   "t": "show me a timelapse of how it grew",
+   "i": "share.timelapse",
+   "ctx": "g",
+   "v": "sc"
+  },
+  {
+   "t": "make a timelapse of my game for tiktok",
+   "i": "share.timelapse",
+   "ctx": "g",
+   "v": "sc"
+  },
+  {
+   "t": "create a time-lapse of our app",
+   "i": "share.timelapse",
+   "ctx": "g",
+   "v": "sc"
+  },
+  {
+   "t": "timelapse of the build",
+   "i": "share.timelapse",
+   "ctx": "g",
+   "v": "sc"
   }
  ]
 }
