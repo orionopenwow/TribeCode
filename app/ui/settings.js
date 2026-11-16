@@ -170,6 +170,7 @@
       ${window.TribeAcademy ? row('Free AI tools', '<button class="btn" id="set-offload">Open Offload</button>', 'Some jobs don\'t need your AI: verified free tools, a ready prompt, and a way to bring the result back.', { keys: 'free bridge offload' }) : ''}`)
     + sec('Flint', `${on() && window.TribeFlintMem ? `<div class="set-row set-row-wide" id="set-flint" data-keys="memory remember skills"><div class="set-l"><b>Flint</b><small>What Flint remembers about you, how you like to learn, and the tribe's skills.</small></div><div class="set-c" id="set-flintmem"></div></div>` : ''}
       ${row('Flint\'s tips', sw('set-flint-tips', !P() || P().get().flintTips !== false, 'Flint\'s tips'), 'Short hints from Flint the first time you open something new.', { keys: 'hints tips guide autoplay' })}
+      ${row('Suggestions', seg('data-suggest', (P() && P().get().suggest) || 'gentle', [['gentle', 'Gentle'], ['often', 'Often'], ['off', 'Off']], 'Suggestions'), 'Ideas drawn from your tribe’s files, photos, edits and plans. Gentle: a few new ones a day, none in quiet hours.', { id: 'set-suggest', keys: 'ideas suggest suggestions recommend hints' })}
       ${row('Flint reads aloud', sw('set-flint-voice', P() && P().get().flintVoice, 'Flint reads aloud'), 'Flint speaks his answers with this device\'s voice.', { keys: 'voice speech speak tts' })}`)
     + sec('Cloud AI privacy', row('Allowed cloud AIs', '<div id="set-aiconsent"></div>', 'Before anything first goes to a cloud AI, TribeCode asks and names the provider. Revoke and it asks again.', { id: 'set-aiconsent-row', wide: true, keys: 'consent privacy provider revoke openai anthropic' }));
   }
@@ -467,6 +468,7 @@
     click('#set-readable', e => { const v = !P().get().readable; P().set({ readable: v }); e.currentTarget.setAttribute('aria-checked', String(v)); });
     box.querySelectorAll('[data-focus]').forEach(b => b.onclick = () => { P().set({ focus: b.dataset.focus }); draw(); });
     box.querySelectorAll('[data-motion]').forEach(b => b.onclick = () => { P().set({ motion: b.dataset.motion }); draw(); });
+    box.querySelectorAll('[data-suggest]').forEach(b => b.onclick = () => { P().set({ suggest: b.dataset.suggest }); if (window.TribeSuggest) window.TribeSuggest.run({}); draw(); });
     click('#set-captions', e => { const v = !P().get().captions; P().set({ captions: v }); e.currentTarget.setAttribute('aria-checked', String(v)); });
     click('#set-sr', e => { const v = !P().get().announce; P().set({ announce: v }); e.currentTarget.setAttribute('aria-checked', String(v)); });
 

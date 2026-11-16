@@ -44,8 +44,10 @@ html[data-dev=phone] .ehide-phone,html[data-dev=tablet] .ehide-tablet,html[data-
   const writeDraft = () => { if (!st) return; if (/^demo_/.test(st.pid || '') && !(window.TribeOffline && window.TribeOffline.active && window.TribeOffline.active())) return; try { localStorage.setItem(DKEY(st.pid), JSON.stringify({ cfg: st.cfg, at: Date.now(), rev: st.rev, dirty: st.dirty })); if (!st.pid) localStorage.setItem(LOCAL, JSON.stringify(st.cfg)); } catch {} };
   function commit(next, opts = {}) {
     if (!next || next === st.cfg) return false;
-    st.hist.push(JSON.stringify(st.cfg)); if (st.hist.length > 80) st.hist.shift(); st.fut = [];
+    const was = JSON.stringify(st.cfg);
+    st.hist.push(was); if (st.hist.length > 80) st.hist.shift(); st.fut = [];
     st.cfg = S().normalize(next);
+    if (window.TribeSuggest && !opts.fromSuggest) window.TribeSuggest.noteSiteEdit(was, st.cfg);   // repeated edits become a suggestion (app/ui/suggest.js)
     if (!st.cfg.pages.some(p => p.id === st.page)) st.page = st.cfg.pages[0].id;
     save(); if (!opts.quiet) paint();
     return true;
@@ -978,5 +980,7 @@ html[data-dev=phone] .ehide-phone,html[data-dev=tablet] .ehide-tablet,html[data-
     say(`${srcs.length === 1 ? 'Here is your picture' : `Here are your ${srcs.length} pictures`}: click a picture on the page, then pick one.`, `<div class="wdz-bgrid">${srcs.map(p => `<button type="button" data-boardpick="${esc(p.src)}" data-alt="${esc(p.alt)}" aria-label="${esc(p.alt)}"><img src="${esc(p.src)}" alt=""></button>`).join('')}</div>`);
     return true;
   }
-  window.TribeSiteDesigner = { importCfg, dropFiles, open, close, ask, download, undo, redo, flush, dirty, hasDraft, comments: () => st ? st.comments : [], state: () => st && { multi: (st.multi || []).length, pid: st.pid, page: st.page, sel: st.sel, hist: st.hist.length, fut: st.fut.length, log: st.log, pending: st.pending || null, open: !!root && !root.hidden, dirty: st.dirty, rev: st.rev, dev: st.dev, panel: st.panel, cmode: st.cmode }, cfg: () => st && st.cfg, useTemplate, gallery: () => gal.list };
+  // the suggestion engine applies a website suggestion here when the designer shows that project: one normal edit, one Undo
+  function applyChange({ ops, fn } = {}) { if (!st) return false; let next = null; if (ops) { const r = S().applyOps(st.cfg, ops); if (!r.done.length) return false; next = r.cfg; } else if (typeof fn === 'function') next = fn(st.cfg); return commit(next, { fromSuggest: true }); }
+  window.TribeSiteDesigner = { applyChange, importCfg, dropFiles, open, close, ask, download, undo, redo, flush, dirty, hasDraft, comments: () => st ? st.comments : [], state: () => st && { multi: (st.multi || []).length, pid: st.pid, page: st.page, sel: st.sel, hist: st.hist.length, fut: st.fut.length, log: st.log, pending: st.pending || null, open: !!root && !root.hidden, dirty: st.dirty, rev: st.rev, dev: st.dev, panel: st.panel, cmode: st.cmode }, cfg: () => st && st.cfg, useTemplate, gallery: () => gal.list };
 })();

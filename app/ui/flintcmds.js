@@ -21,7 +21,17 @@
   // reduced motion: data-motion="off" on <html> (motion.css turns transitions off; motion.js skips view transitions)
   function motion(on) { document.documentElement.dataset.motion = on ? '' : 'off'; if (on) delete document.documentElement.dataset.motion; ls.set('tribecode.motion', on ? null : 'off'); }
   const timers = new Map();
+  // the tribe's suggestions (app/ui/suggest.js): list, less/more/off/on, mute one kind, why
+  const SG = async (what, arg) => window.TribeSuggest ? { text: await window.TribeSuggest.flint(what, arg) } : { text: 'Suggestions are not available here.' };
   const RUN = {
+    'suggest.list'(s) { return SG('list', s.slots.about); },
+    'suggest.less'() { return SG('less'); },
+    'suggest.more'() { return SG('more'); },
+    'suggest.off'() { return SG('off'); },
+    'suggest.on'() { return SG('on'); },
+    'suggest.mute'(s) { return SG('mute', s.slots.about); },
+    'suggest.unmute'(s) { return SG('unmute', s.slots.about); },
+    'suggest.why'() { return SG('why'); },
     async timer(s, H) {
       const secs = s.slots.secs; if (!secs) return { text: 'For how long?', acts: [['5 minutes', 'ask', 'set a timer for 5 minutes'], ['10 minutes', 'ask', 'set a timer for 10 minutes'], ['25 minutes', 'ask', 'set a timer for 25 minutes']] };
       const what = String(s.slots.what || '').trim(), id = setTimeout(() => {

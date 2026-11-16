@@ -43,6 +43,10 @@ So two people (or agents) don't edit the same files: **Agents Hub** › **Owners
 
 The **bell** (top right) collects what needs you: approvals, reviews, hand-offs, mentions. Agents propose, you tap **Approve** or **Deny**, optionally with a comment. On phones these arrive as notifications.
 
+## Suggestions
+
+A few times a day at most, **Suggestions** on the project's page turn what your tribe adds and does (photos, files, repeated edits, things asked for in chat) into ideas, each saying where it came from. **Apply** does it, **Undo** takes it back, **Not like this** stops that kind. Settings › Your AI › Suggestions: Gentle, Often or Off.
+
 ## The scratchpad
 
 Your private notes, only for you: in the right panel, or **Scratchpad** in Ctrl K.

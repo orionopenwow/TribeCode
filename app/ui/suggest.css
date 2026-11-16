@@ -1,0 +1,30 @@
+/* The one Suggestions list (app/ui/suggest.js): the project page card, the sheet and each tool's panel.
+   Flat matte: 1px borders, depth from luminance steps only. The card itself (.sg …) is shared with siteparts.css. */
+.sgx { display: grid; gap: 10px; }
+.sgx .sg-list { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.sgx .sg { display: grid; gap: 6px; border: 1px solid var(--border); border-radius: var(--r); background: var(--surface-2); padding: 12px; }
+.sgx .sg-t { font: 600 13.5px var(--font); color: var(--text); margin: 0; line-height: 1.4; }
+.sgx .sg-ba { display: grid; gap: 2px; font-size: 12.5px; margin: 0; }
+.sgx .sg-ba del { color: var(--faint); text-decoration: line-through; }
+.sgx .sg-ba ins { color: var(--text); text-decoration: none; border-left: 2px solid var(--teal, var(--accent)); padding-left: 6px; }
+.sgx-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: 32px; }
+.sgx-head .btn .ti, .sgx-head .btn svg { margin-right: 4px; }
+.sgx-hint { font-size: 12.5px; color: var(--muted); margin: 0; line-height: 1.5; max-width: 65ch; }
+.sgx-why { font-size: 12.5px; color: var(--muted); margin: 0; line-height: 1.5; }
+.sgx-from { display: flex; flex-wrap: wrap; gap: 6px; margin: 0; }
+.sgx-chip { display: inline-flex; align-items: center; min-height: 22px; padding: 1px 8px; border: 1px solid var(--border); border-radius: 999px; background: var(--surface); color: var(--muted); font-size: 12px; line-height: 1.4; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sgx-row { display: flex; flex-wrap: wrap; gap: 6px; margin: 2px 0 0; }
+.sgx-done { display: flex; align-items: center; gap: 8px; margin: 0; padding: 8px 10px; border: 1px solid var(--border); border-radius: var(--r-sm); background: var(--surface); font-size: 12.5px; color: var(--muted); }
+.sgx-done span { flex: 1; min-width: 0; }
+.sgx-done svg { color: var(--teal, var(--accent)); flex: none; }
+.sgx-why-out { font-size: 12.5px; color: var(--text); margin: 0; padding: 8px 10px; border-left: 2px solid var(--teal, var(--accent)); background: var(--surface); border-radius: 0 var(--r-sm) var(--r-sm) 0; line-height: 1.5; }
+.sgx-slot { padding: 14px 16px; margin: 0 0 16px; }
+.sgx-slot:empty { display: none; }
+@media (max-width: 820px) {
+  .sgx .sg { padding: 10px; }
+  .sgx .sgx-row .btn, .sgx .sgx-head .btn, .sgx .sgx-done .btn { min-height: 40px; }
+  .sgx-slot { padding: 12px; margin: 0 0 12px; }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .sgx .sg { transition: background-color var(--dur-quick) var(--ease-out); }
+}
