@@ -1,6 +1,6 @@
 {
   "version": "v0.38.1",
-  "flintActions": 241,
+  "flintActions": 243,
   "flintActionsAbout": 240,
   "addons": 565,
   "addonsPlus": 550,
@@ -10,9 +10,20 @@
   "designerTemplates": 52,
   "screenTemplates": 13,
   "companyTemplates": 7,
-  "quickGuides": 57,
+  "quickGuides": 58,
   "movingBackgrounds": 13,
   "languages": 8,
   "agentTools": 15,
-  "remix": 13
+  "remix": 13,
+  "appTemplates": 54,
+  "appLooks": 56,
+  "appParts": 27,
+  "appScreens": 24,
+  "motionTemplates": 128,
+  "socialLayouts": 69,
+  "motionFeels": 54,
+  "shotStyles": 50,
+  "iconStyles": 54,
+  "paywalls": 17,
+  "checklistSteps": 24
 }

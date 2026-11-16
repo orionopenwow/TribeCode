@@ -26,6 +26,9 @@ function count() {
   const dir = (read('app/ui/connectai.js').match(/const DIRECTORY = \[([^\]]*)\]/) || [, ''])[1].split(',').filter(s => s.trim()).length;
   const guides = json('templates/quickguides.json');
   const companies = json('templates/companies.json');
+  const motion = require(R('app/ui/motionsocial.js'));          // Motion Studio's engine with the social posts and share clips
+  const appc = require(R('app/ui/appcreator-core.js'));         // App Creator: templates, looks, parts, kits
+  const lk = require(R('app/ui/launchkit-core.js'));            // Launch kit: screenshot styles, icon styles, paywalls, checklist
   const siteLangs = (read('site/i18n.js').match(/const LANGS = \[([\s\S]*?)\];/) || [, ''])[1].match(/\['[a-z]{2}'/g) || [];
   return {
     version: 'v' + json('package.json').version,
@@ -44,6 +47,17 @@ function count() {
     languages: siteLangs.length,
     agentTools: dir,                                         // the tools the "Connect your AI" directory lists
     remix: (read('site/index.html').match(/class="rx__card"/g) || []).length,
+    appTemplates: appc.templateList().length,
+    appLooks: Object.keys(appc.PRESETS).length,
+    appParts: Object.keys(appc.BLOCKS).length,
+    appScreens: Object.keys(appc.KITS).length,
+    motionTemplates: motion.LIST.length,
+    socialLayouts: motion.LIST.filter(id => motion.TEMPLATES[id].cat === 'social').length,
+    motionFeels: motion.FEEL_LIST.length,
+    shotStyles: lk.SHOT_STYLES.length,
+    iconStyles: lk.ICON_STYLES.length,
+    paywalls: lk.PAYWALLS.length,
+    checklistSteps: lk.CHECKLIST.length,
   };
 }
 
@@ -77,6 +91,17 @@ const RULES = [
   ['remix', `Show all ${N}`],
   ['quickGuides', `${N} quick guides`],
   ['movingBackgrounds', `${N} moving(?: and 3D)? backgrounds`],
+  ['appTemplates', `${N} apps to start from`],
+  ['appLooks', `${N} app looks`],
+  ['appParts', `${N} app parts`],
+  ['appScreens', `${N} ready-made screens`],
+  ['motionTemplates', `${N} motion templates`],
+  ['socialLayouts', `${N} social post layouts`],
+  ['motionFeels', `${N} motion feels`],
+  ['shotStyles', `${N} screenshot styles`],
+  ['iconStyles', `${N} icon styles`],
+  ['paywalls', `${N} paywall designs`],
+  ['checklistSteps', `${N}-step checklist`],
 ].map(([fact, src]) => ({ fact, re: new RegExp(src, 'gi') }));
 // a number in front of one of these words must be covered by a rule
 const LOOSE = /\b\d[\d,]*\+? (?:checked |everyday |website |screen |quick |moving |free )?(?:add-ons|lessons in|templates|tracks|guides|backgrounds|actions|languages)\b/gi;

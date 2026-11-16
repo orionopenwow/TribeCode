@@ -80,6 +80,34 @@ stamps every place that quotes one.
 | Change language from the ? menu, the first screen or Settings | index | `e2e_i18n_audit`, `i18n_runtime_test` | Proven | not on the site |
 | The app's menus are only partly translated | index, docs | `docs/I18N-REPORT.md` (about 1,250 strings per language still English) | Proven | False ("the app comes in" eight languages) |
 
+## App Creator, Motion Studio, Share a clip, Launch kit, Suggestions (create.html, the home page's creator section)
+
+Checked 2026-11-15 on branch `feat/site-demos` (wave 1 merged in `integ9`).
+
+| Claim | Where | Evidence | Status | Was |
+|---|---|---|---|---|
+| 54 apps to start from, 56 app looks, 27 app parts and 24 ready-made screens | create, index | counted by `scripts/dev/site-facts.js` from `app/ui/appcreator-core.js`; `e2e_app_creator` | Proven | |
+| Click any word to change it, link a button to another screen and press Play | create | `e2e_app_creator` | Proven | |
+| Change the look once and every screen follows | create | `e2e_app_creator` | Proven | |
+| Flint stacks screens on ("add onboarding", "add a settings screen"); shelf kits drop in | create | `e2e_app_creator`, `flint_eval_test` | Proven | |
+| Export a phone web app that works offline | create | `e2e_app_creator` (taps through the export in a browser) | Proven | |
+| An Expo project export | create | Written by `server/appcreator.js`; never built or run on a phone | Real-device-only | |
+| 128 motion templates, including 69 social post layouts | create, index | counted from `app/ui/motionkit.js` + `app/ui/motionsocial.js`; `motionkit_test`, `e2e_share_clip` (every social layout looks different) | Proven | |
+| Every clip on the page was drawn by the app's own engine | create, index | `scripts/dev/site-demos.py` renders them with `motionkit.js` | Proven | |
+| One shape that never cuts; the last frame is the first, so it loops | create | `motionkit_test`, `e2e_motion_studio`, `e2e_share_clip` (share clips loop) | Proven | |
+| 54 motion feels; "snappier" and "make it 9:16" change it through Flint | create | `motionkit_test`, `flint_eval_test` (motion cases) | Proven | |
+| Your own song: the tempo is found in the browser and changes land on the beat | create | `e2e_motion_studio`, `motionkit_test` (analyze) | Proven | |
+| Export a video, a GIF, a picture, one web page, or a section of your website | create | `e2e_motion_studio` (WebM, GIF, PNG, HTML, site section); MP4 needs a CDN library this sandbox cannot load | Partly | |
+| A clip of your project from app screens, a screenshot, a timelapse or your pictures, in 9:16, square or wide | create, index | `e2e_share_clip` | Proven | |
+| Captions for X, TikTok and Instagram with each limit counted | create | `e2e_share_clip`, `shareclip-core.js` | Proven | |
+| A "Made with TribeCode · Remix" end card you can turn off | create | `e2e_share_clip` | Proven | |
+| 50 screenshot styles and 54 icon styles, at the exact store sizes, with our own frames | create, index | counted from `app/ui/launchkit-core.js`; `e2e_launch_kit`, `launchkit_test` | Proven | |
+| 17 paywall designs; payments are not connected and the designs say so | create | `e2e_launch_kit`, `launchkit_test` | Proven | |
+| A 24-step checklist for Apple and Google, not legal advice | create | `launchkit_test`; `docs/LAUNCH-KIT.md` sources | Proven | |
+| Suggestions: who it came from, nothing changes until Apply, Undo, learns from applies and dismissals | create | `e2e_suggest_engine`, `suggest_core_test` | Proven | |
+| Photos are read on your own device and never sent anywhere | create | `e2e_suggest_engine` (palette read in the page at 64px); `docs/SUGGESTIONS.md` | Proven | |
+| It works while your computer is idle | create | `e2e_suggest_engine` (idle time, never blocks typing) | Proven | |
+
 ## Company and work
 
 | Claim | Where | Evidence | Status | Was |

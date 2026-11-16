@@ -25,10 +25,12 @@
     vibe: '<path d="M4 15c0-5 3-8 8-8"/><path d="M8 15c0-3 1.5-4 4-4"/><circle cx="12" cy="15" r="1.4"/><path d="M15 9l5-3M15 13l6 1M15 17l4 3"/>',
     learn: '<path d="M2 9l10-5 10 5-10 5z"/><path d="M6 11v5c3 2 9 2 12 0v-5"/><path d="M22 9v6"/>',
     docs: '<path d="M6 3h8l4 4v14H6z"/><path d="M14 3v4h4"/><path d="M9 12h6M9 16h6"/>',
+    create: '<rect x="7" y="2.5" width="10" height="19" rx="2.5"/><path d="M10.5 9.5l4 2.5-4 2.5z"/>',
   };
   const ITEMS = [
     ['Build', [
       ['make', '#make', 'What you can make', 'Games, sites and tools for the people around you', '#F26B1D'],
+      ['create', 'create.html', 'Apps, clips and store pages', 'App Creator, Motion Studio and the Launch kit', '#E86A92'],
       ['kit', '#kit', 'The whole studio', 'Docs, widgets, studios and assets in one app', '#38C6B1'],
       ['starters', '#starters', 'Starters', 'Working first versions to play with and remix', '#FABD2F'],
       ['toolbox', 'toolbox.html', 'The free toolbox', 'ArtCraft, Blender, Godot and more, all free', '#3BD16F'],
@@ -51,6 +53,7 @@
   ];
   // small previews for the spotlight (flat, real words, the same pieces as the homepage mocks)
   const SPOT = {
+    create: '<div class="sp-shots"><img src="assets/create/reel.webp" alt="" loading="lazy" width="100" height="100"><img src="assets/create/launch-after.webp" alt="" loading="lazy" width="46" height="100"></div>',
     make: '<div class="sp-tiles"><span style="--c:#F26B1D">🎮<b>Lantern Run</b><i>game</i></span><span style="--c:#38C6B1">🧁<b>Oak St. Bakers</b><i>site</i></span><span style="--c:#6C7CFF">✅<b>Chore wheel</b><i>tool</i></span></div>',
     gallery: '<div class="sp-shots"><img src="assets/showcase/site-cafe.webp" alt="" loading="lazy" width="160" height="100"><img src="assets/showcase/app-dashboard.webp" alt="" loading="lazy" width="160" height="100"></div>',
     kit: '<div class="sp-grid"><span>📄 Docs</span><span>🔥 Flint</span><span>🧩 515 widgets</span><span>🎨 Studios</span></div>',
