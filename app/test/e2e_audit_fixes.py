@@ -72,7 +72,7 @@ def main():
             pg.click("#tn-skip"); pg.wait_for_function("!TribeNew.isOpen()"); pg.wait_for_timeout(600)
             assert pg.evaluate("TribeOffline.solo()"), "the tribe lives on this device"
             # Website templates: a calm line, no "lib.categories is not iterable", and it closes
-            pg.evaluate("TribeSiteLib.open()"); pg.wait_for_selector(".slx-win"); pg.wait_for_timeout(900)
+            pg.evaluate("TribeSiteLib.open({ code: true })"); pg.wait_for_selector(".slx-win"); pg.wait_for_timeout(900)
             t = clean(pg, ".slx-win", "website templates"); assert "Loading" not in pg.inner_text("#slx-grid"), "website templates: stuck on Loading…"
             pg.evaluate("TribeSiteLib.close()")
             # notification settings (the older window): a calm line, never stuck on Loading…

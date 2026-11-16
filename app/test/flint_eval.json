@@ -2473,7 +2473,10 @@
   },
   {
    "t": "make a site for my mobile app",
-   "i": "site.saas",
+   "i": "site.start",
+   "s": {
+    "kind": "app"
+   },
    "ctx": "g",
    "v": "h1"
   },
@@ -14108,7 +14111,10 @@
   },
   {
    "t": "make a site for my mobile app",
-   "i": "site.saas",
+   "i": "site.start",
+   "s": {
+    "kind": "app"
+   },
    "ctx": "g",
    "v": "ac"
   },
@@ -17764,6 +17770,216 @@
    "i": "where.open",
    "ctx": "g",
    "v": "ls"
+  },
+  {
+   "t": "make a website",
+   "i": "site.start",
+   "s": {
+    "kind": ""
+   },
+   "ctx": "g",
+   "v": "sk"
+  },
+  {
+   "t": "build me a new site",
+   "i": "site.start",
+   "s": {
+    "kind": ""
+   },
+   "ctx": "g",
+   "v": "sk"
+  },
+  {
+   "t": "start a website",
+   "i": "site.start",
+   "s": {
+    "kind": ""
+   },
+   "ctx": "g",
+   "v": "sk"
+  },
+  {
+   "t": "new website",
+   "i": "site.start",
+   "s": {
+    "kind": ""
+   },
+   "ctx": "g",
+   "v": "sk"
+  },
+  {
+   "t": "i want a new website",
+   "i": "site.start",
+   "s": {
+    "kind": ""
+   },
+   "ctx": "g",
+   "v": "sk"
+  },
+  {
+   "t": "we need a site",
+   "i": "site.start",
+   "s": {
+    "kind": ""
+   },
+   "ctx": "g",
+   "v": "sk"
+  },
+  {
+   "t": "create a web page",
+   "i": "site.start",
+   "s": {
+    "kind": ""
+   },
+   "ctx": "g",
+   "v": "sk"
+  },
+  {
+   "t": "make a page for my app",
+   "i": "site.start",
+   "s": {
+    "kind": "app"
+   },
+   "ctx": "g",
+   "v": "sk"
+  },
+  {
+   "t": "build a website for my github project",
+   "i": "site.start",
+   "s": {
+    "kind": "app"
+   },
+   "ctx": "g",
+   "v": "sk"
+  },
+  {
+   "t": "make a site for our game",
+   "i": "site.start",
+   "s": {
+    "kind": "app"
+   },
+   "ctx": "g",
+   "v": "sk"
+  },
+  {
+   "t": "make a homepage for my open source project",
+   "i": "site.start",
+   "s": {
+    "kind": "app"
+   },
+   "ctx": "g",
+   "v": "sk"
+  },
+  {
+   "t": "make a project page",
+   "i": "site.start",
+   "s": {
+    "kind": "app"
+   },
+   "ctx": "g",
+   "v": "sk"
+  },
+  {
+   "t": "build an app page",
+   "i": "site.start",
+   "s": {
+    "kind": "app"
+   },
+   "ctx": "g",
+   "v": "sk"
+  },
+  {
+   "t": "make a page for my repo",
+   "i": "site.start",
+   "s": {
+    "kind": "app"
+   },
+   "ctx": "g",
+   "v": "sk"
+  },
+  {
+   "t": "create a website for my ios app",
+   "i": "site.start",
+   "s": {
+    "kind": "app"
+   },
+   "ctx": "g",
+   "v": "sk"
+  },
+  {
+   "t": "make a page for my app",
+   "i": "site.start",
+   "s": {
+    "kind": "app"
+   },
+   "ctx": "s",
+   "v": "sk"
+  },
+  {
+   "t": "send people to my app",
+   "i": "site.redirect",
+   "ctx": "g",
+   "v": "sk"
+  },
+  {
+   "t": "make a page that sends people to my app store page",
+   "i": "site.redirect",
+   "ctx": "g",
+   "v": "sk"
+  },
+  {
+   "t": "redirect visitors to my latest release",
+   "i": "site.redirect",
+   "ctx": "g",
+   "v": "sk"
+  },
+  {
+   "t": "make a redirect page",
+   "i": "site.redirect",
+   "ctx": "g",
+   "v": "sk"
+  },
+  {
+   "t": "forward people to my github",
+   "i": "site.redirect",
+   "ctx": "g",
+   "v": "sk"
+  },
+  {
+   "t": "make a redirect to https://example.com/app",
+   "i": "site.redirect",
+   "ctx": "g",
+   "v": "sk"
+  },
+  {
+   "t": "send everyone straight to the download page",
+   "i": "site.redirect",
+   "ctx": "g",
+   "v": "sk"
+  },
+  {
+   "t": "send people to my app",
+   "i": "site.redirect",
+   "ctx": "s",
+   "v": "sk"
+  },
+  {
+   "t": "make a link in bio",
+   "i": "site.linkbio",
+   "ctx": "g",
+   "v": "sk"
+  },
+  {
+   "t": "make a landing page for my game",
+   "i": "build.landing",
+   "ctx": "g",
+   "v": "sk"
+  },
+  {
+   "t": "make a site for my band",
+   "i": "site.band",
+   "ctx": "g",
+   "v": "sk"
   }
  ]
 }

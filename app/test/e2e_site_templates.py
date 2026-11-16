@@ -108,7 +108,7 @@ def main():
             host.wait_for_function("window.TribeClient && TribeClient.connected() && TribeClient.project() === %r" % pid, timeout=15000)
 
             # ---- 2: the gallery ----
-            host.evaluate("TribeSiteLib.open()")
+            host.evaluate("TribeSiteLib.open({ code: true })")
             host.wait_for_selector("#slx .slx-card", timeout=8000)
             assert host.locator("#slx .slx-card").count() == 16
             host.wait_for_function("[...document.querySelectorAll('#slx .slx-th img')].every(i => i.complete && i.naturalWidth > 0)", timeout=8000)

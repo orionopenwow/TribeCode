@@ -329,6 +329,19 @@
     ['starter-calculator', 'calculator|calculator app|tip calculator|calc app', 'calculator'], ['starter-weather', 'weather app|forecast app|weather dashboard|weather widget', 'weather app'], ['starter-sketch', 'drawing app|paint app|sketch app|doodle app|sketchpad|sketch pad', 'sketch pad'],
   ];
   for (const [k, w, phrase] of SITES) I('site.' + k, 'build', [new RegExp(`^${V_MAKE}\\s+(?:me\\s+|us\\s+)?${ART}(?:new\\s+|simple\\s+|quick\\s+|nice\\s+|little\\s+|small\\s+|cool\\s+)?(?:${w})${NAMED}$`, 'u')], { p: k === 'merch' ? 0.9 : 0.94, fill: buildFill, label: phrase, ex: [`make a ${w.split('|')[0]}`, `build me a ${w.split('|')[1] || w.split('|')[0]} for ember`] });
+  // p5-start: "make a website" opens the start screen (what kind of site?); "a page for my app / my github project" opens
+  // it at App or project page; "send people to my app" starts the page that sends visitors on (app-redirect)
+  I('site.start', 'build', [
+    /^(?:make|build|create|start|set up|design)\s+(?:me\s+|us\s+)?(?:a\s+)?(?:new\s+)?(?:website|site|web site|webpage|web page)$/,
+    /^(?:a\s+)?new\s+(?:website|site)$/, /^(?:i|we)\s+(?:want|need|would like)\s+(?:a\s+)?(?:new\s+)?(?:website|site)$/,
+    /^(?:make|build|create|start|set up|design)\s+(?:me\s+|us\s+)?(?:a\s+)?(?:new\s+)?(?:website|site|page|web page|webpage|homepage)\s+for\s+(?:my|our|the|this)\s+(?<k>app|game|github project|github repo|github repository|repo|repository|open source project|project|library|tool|mobile app|phone app|ios app|android app|desktop app)$/,
+    /^(?:make|build|create|start)\s+(?:me\s+|us\s+)?(?:a\s+|an\s+)?(?<k2>app|project|github|github project|open source project|repo)\s+(?:page|site|website)$/,
+  ], { p: 0.97, fill: s => ({ kind: s.k || s.k2 ? 'app' : '' }), label: 'a new website', ex: ['make a website', 'make a page for my app', 'build a site for my github project', 'make a project page'] });
+  I('site.redirect', 'build', [
+    /^(?:make|build|create|set up|add)?\s*(?:me\s+|us\s+)?(?:a\s+)?(?:page\s+(?:that|to)\s+)?(?:send|sends|redirect|redirects|forward|forwards|take|takes|point|points)\s+(?:people|visitors|everyone|users|fans|them)\s+(?:straight\s+)?(?:on\s+)?to\s+(?:my|our|the)\s+(?:app|game|app store page|play store page|app store|play store|store page|download|download page|release|latest release|github|github page|project|website|site|link).*$/,
+    /^(?:make|build|create|set up|add)\s+(?:me\s+|us\s+)?(?:a\s+)?(?:redirect|redirect page|forwarding page|go to page)(?:\s+to\s+.+)?$/,
+    /^(?:redirect|forward)\s+(?:people|visitors|everyone|my visitors)\s+to\s+.+$/,
+  ], { p: 0.97, label: 'a page that sends people on', ex: ['send people to my app', 'make a redirect page', 'redirect visitors to my app store page'] });
   I('site.gallery', 'build', [/^(?:show|open|browse|see|list)\s+(?:me\s+)?(?:the\s+|all\s+|your\s+)?(?:website\s+|site\s+)?templates$/, /^(?:what|which)\s+(?:website\s+|site\s+)?templates(?:\s+(?:do you have|are there))?$/, /^(?:pick|choose)\s+a\s+(?:website\s+|site\s+)?template$/], { ex: ['show me the website templates', 'which templates are there'] });
 
   // the design canvas (app/ui/canvas/flint.js does the work)

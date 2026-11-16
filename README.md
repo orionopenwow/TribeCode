@@ -152,7 +152,7 @@ The app you're building opens in a full-window workspace: the preview (desktop, 
 
 ### Customize and your website
 
-Settings › **Look**: a tribe accent, backgrounds (flat patterns, tints or a picture), spacing and font size, per-project themes, and a Dashboard cover (a color, a picture or your GitHub repo's preview). The **website designer** (modeled on OpenPage, MIT) builds a project site from blocks with themes that each have a real dark mode: 52 templates (link in bio, merch shop, portfolio, band, café, local service, wedding RSVP and more, several converted from open-source sets with their credits) that fill in from your project, comments that become tasks, autosave, and Download HTML. Customize at three levels: Easy (a short form), Comfortable (looks, fonts, sections) or Pro (the code). See [docs/WEBSITE.md](docs/WEBSITE.md) and [docs/SITE-TEMPLATES.md](docs/SITE-TEMPLATES.md).
+Settings › **Look**: a tribe accent, backgrounds (flat patterns, tints or a picture), spacing and font size, per-project themes, and a Dashboard cover (a color, a picture or your GitHub repo's preview). The **website designer** (modeled on OpenPage, MIT) builds a project site from blocks with themes that each have a real dark mode: 61 templates (link in bio, merch shop, portfolio, band, café, local service, wedding RSVP and more, several converted from open-source sets with their credits) that fill in from your project, comments that become tasks, autosave, and Download HTML. Customize at three levels: Easy (a short form), Comfortable (looks, fonts, sections) or Pro (the code). See [docs/WEBSITE.md](docs/WEBSITE.md) and [docs/SITE-TEMPLATES.md](docs/SITE-TEMPLATES.md).
 
 ### Home
 

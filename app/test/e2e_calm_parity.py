@@ -254,7 +254,7 @@ def device_part(b):
     assert n == len(json.loads((ROOT / "app" / "ui" / "guide-pages.json").read_text())["pages"])
 
     # Website templates: the gallery, and a template opens in the designer
-    pg.evaluate("TribeSiteLib.open()"); pg.wait_for_selector(".slx-card", timeout=45000)
+    pg.evaluate("TribeSiteLib.open({ code: true })"); pg.wait_for_selector(".slx-card", timeout=45000)
     assert pg.locator(".slx-card").count() == 16
     pg.wait_for_function("[...document.querySelectorAll('.slx-th img')].slice(0, 4).every(i => i.complete && i.naturalWidth > 0)", timeout=45000)
     pg.click(".slx-card[data-tpl=cafe]"); pg.wait_for_selector("#slx-use"); pg.click("#slx-use")

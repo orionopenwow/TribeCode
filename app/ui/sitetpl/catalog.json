@@ -2,6 +2,7 @@
  "about": "Website templates for the designer (scripts/dev/site-gallery.py). Sources and licenses: docs/SITE-TEMPLATES.md.",
  "categories": [
   "Link in bio",
+  "Projects",
   "Business",
   "Startup",
   "Portfolio",
@@ -35,7 +36,131 @@
    "source": "TribeCode",
    "license": "MIT",
    "order": 1,
-   "thumb": "sitetpl/thumbs/linkbio.webp"
+   "thumb": "sitetpl/thumbs/linkbio.webp",
+   "kind": "linkbio"
+  },
+  {
+   "id": "lb-musician",
+   "title": "Musician links",
+   "summary": "Links for a singer, DJ or band: the new song first, your next shows, and where to listen.",
+   "category": "Link in bio",
+   "tags": [
+    "musician",
+    "dj",
+    "band",
+    "singer",
+    "links",
+    "linktree",
+    "spotify",
+    "shows"
+   ],
+   "source": "TribeCode",
+   "license": "MIT",
+   "order": 2,
+   "thumb": "sitetpl/thumbs/lb-musician.webp",
+   "kind": "linkbio"
+  },
+  {
+   "id": "lb-shop",
+   "title": "Shop links",
+   "summary": "For a maker who sells online: the shop, this week's drop with pictures, and a newsletter.",
+   "category": "Link in bio",
+   "tags": [
+    "shop",
+    "maker",
+    "etsy",
+    "drop",
+    "links",
+    "linktree",
+    "products"
+   ],
+   "source": "TribeCode",
+   "license": "MIT",
+   "order": 3,
+   "thumb": "sitetpl/thumbs/lb-shop.webp",
+   "kind": "linkbio"
+  },
+  {
+   "id": "lb-writer",
+   "title": "Writer links",
+   "summary": "For a writer or newsletter: the latest piece, the book, talks, and a sign-up box.",
+   "category": "Link in bio",
+   "tags": [
+    "writer",
+    "author",
+    "newsletter",
+    "substack",
+    "book",
+    "links",
+    "linktree"
+   ],
+   "source": "TribeCode",
+   "license": "MIT",
+   "order": 4,
+   "thumb": "sitetpl/thumbs/lb-writer.webp",
+   "kind": "linkbio"
+  },
+  {
+   "id": "lb-coach",
+   "title": "Coach or teacher links",
+   "summary": "For a coach, tutor or teacher: book a session, the free guide, and what people said.",
+   "category": "Link in bio",
+   "tags": [
+    "coach",
+    "tutor",
+    "teacher",
+    "yoga",
+    "trainer",
+    "booking",
+    "links",
+    "linktree"
+   ],
+   "source": "TribeCode",
+   "license": "MIT",
+   "order": 5,
+   "thumb": "sitetpl/thumbs/lb-coach.webp",
+   "kind": "linkbio"
+  },
+  {
+   "id": "lb-dev",
+   "title": "Developer links",
+   "summary": "For a developer or maker: your projects, GitHub, the blog and how to reach you.",
+   "category": "Link in bio",
+   "tags": [
+    "developer",
+    "programmer",
+    "github",
+    "open source",
+    "maker",
+    "links",
+    "linktree",
+    "portfolio"
+   ],
+   "source": "TribeCode",
+   "license": "MIT",
+   "order": 6,
+   "thumb": "sitetpl/thumbs/lb-dev.webp",
+   "kind": "linkbio"
+  },
+  {
+   "id": "lb-artist",
+   "title": "Artist links",
+   "summary": "For an illustrator or artist: commissions, prints, a few pieces and your socials.",
+   "category": "Link in bio",
+   "tags": [
+    "artist",
+    "illustrator",
+    "commissions",
+    "prints",
+    "art",
+    "links",
+    "linktree"
+   ],
+   "source": "TribeCode",
+   "license": "MIT",
+   "order": 7,
+   "thumb": "sitetpl/thumbs/lb-artist.webp",
+   "kind": "linkbio"
   },
   {
    "id": "tt-profile-card",
@@ -52,7 +177,8 @@
    "license": "MIT",
    "credit": false,
    "order": 121,
-   "thumb": "sitetpl/thumbs/tt-profile-card.webp"
+   "thumb": "sitetpl/thumbs/tt-profile-card.webp",
+   "kind": "linkbio"
   },
   {
    "id": "h5-identity",
@@ -69,7 +195,71 @@
    "license": "CC BY 3.0",
    "credit": true,
    "order": 122,
-   "thumb": "sitetpl/thumbs/h5-identity.webp"
+   "thumb": "sitetpl/thumbs/h5-identity.webp",
+   "kind": "linkbio"
+  },
+  {
+   "id": "gh-project",
+   "title": "GitHub project",
+   "summary": "A home for an open-source project: what it does, a screenshot, how to install it, what's new, and the code.",
+   "category": "Projects",
+   "tags": [
+    "github",
+    "open source",
+    "project",
+    "repository",
+    "library",
+    "tool",
+    "release",
+    "download",
+    "readme"
+   ],
+   "source": "TribeCode",
+   "license": "MIT",
+   "order": 1,
+   "thumb": "sitetpl/thumbs/gh-project.webp",
+   "kind": "app"
+  },
+  {
+   "id": "app-download",
+   "title": "App download page",
+   "summary": "A page for a phone or desktop app: one claim, store buttons, screenshots, and answers to common questions.",
+   "category": "Projects",
+   "tags": [
+    "app",
+    "download",
+    "app store",
+    "google play",
+    "mobile app",
+    "desktop app",
+    "launch",
+    "landing"
+   ],
+   "source": "TribeCode",
+   "license": "MIT",
+   "order": 2,
+   "thumb": "sitetpl/thumbs/app-download.webp",
+   "kind": "app"
+  },
+  {
+   "id": "app-redirect",
+   "title": "Send people to my app",
+   "summary": "One short page that sends visitors on to your app store page, a download or another address, with a button in case.",
+   "category": "Projects",
+   "tags": [
+    "redirect",
+    "forward",
+    "send people",
+    "app store",
+    "download link",
+    "short link",
+    "go to"
+   ],
+   "source": "TribeCode",
+   "license": "MIT",
+   "order": 3,
+   "thumb": "sitetpl/thumbs/app-redirect.webp",
+   "kind": "app"
   },
   {
    "id": "service",
@@ -89,7 +279,8 @@
    "source": "TribeCode",
    "license": "MIT",
    "order": 7,
-   "thumb": "sitetpl/thumbs/service.webp"
+   "thumb": "sitetpl/thumbs/service.webp",
+   "kind": "business"
   },
   {
    "id": "sb-agency",
@@ -106,7 +297,8 @@
    "license": "MIT",
    "credit": false,
    "order": 100,
-   "thumb": "sitetpl/thumbs/sb-agency.webp"
+   "thumb": "sitetpl/thumbs/sb-agency.webp",
+   "kind": "business"
   },
   {
    "id": "sb-business-frontpage",
@@ -122,7 +314,8 @@
    "license": "MIT",
    "credit": false,
    "order": 102,
-   "thumb": "sitetpl/thumbs/sb-business-frontpage.webp"
+   "thumb": "sitetpl/thumbs/sb-business-frontpage.webp",
+   "kind": "business"
   },
   {
    "id": "sb-creative",
@@ -139,7 +332,8 @@
    "license": "MIT",
    "credit": false,
    "order": 105,
-   "thumb": "sitetpl/thumbs/sb-creative.webp"
+   "thumb": "sitetpl/thumbs/sb-creative.webp",
+   "kind": "business"
   },
   {
    "id": "sb-modern-business",
@@ -155,7 +349,8 @@
    "license": "MIT",
    "credit": false,
    "order": 109,
-   "thumb": "sitetpl/thumbs/sb-modern-business.webp"
+   "thumb": "sitetpl/thumbs/sb-modern-business.webp",
+   "kind": "business"
   },
   {
    "id": "sb-small-business",
@@ -171,7 +366,8 @@
    "license": "MIT",
    "credit": false,
    "order": 114,
-   "thumb": "sitetpl/thumbs/sb-small-business.webp"
+   "thumb": "sitetpl/thumbs/sb-small-business.webp",
+   "kind": "business"
   },
   {
    "id": "saas",
@@ -190,7 +386,8 @@
    "source": "TribeCode",
    "license": "MIT",
    "order": 11,
-   "thumb": "sitetpl/thumbs/saas.webp"
+   "thumb": "sitetpl/thumbs/saas.webp",
+   "kind": "app"
   },
   {
    "id": "sb-grayscale",
@@ -207,7 +404,8 @@
    "license": "MIT",
    "credit": false,
    "order": 107,
-   "thumb": "sitetpl/thumbs/sb-grayscale.webp"
+   "thumb": "sitetpl/thumbs/sb-grayscale.webp",
+   "kind": "app"
   },
   {
    "id": "sb-landing-page",
@@ -224,7 +422,8 @@
    "license": "MIT",
    "credit": false,
    "order": 108,
-   "thumb": "sitetpl/thumbs/sb-landing-page.webp"
+   "thumb": "sitetpl/thumbs/sb-landing-page.webp",
+   "kind": "app"
   },
   {
    "id": "sb-new-age",
@@ -241,7 +440,8 @@
    "license": "MIT",
    "credit": false,
    "order": 110,
-   "thumb": "sitetpl/thumbs/sb-new-age.webp"
+   "thumb": "sitetpl/thumbs/sb-new-age.webp",
+   "kind": "app"
   },
   {
    "id": "sb-one-page-wonder",
@@ -257,7 +457,8 @@
    "license": "MIT",
    "credit": false,
    "order": 111,
-   "thumb": "sitetpl/thumbs/sb-one-page-wonder.webp"
+   "thumb": "sitetpl/thumbs/sb-one-page-wonder.webp",
+   "kind": "app"
   },
   {
    "id": "tt-landing-page",
@@ -274,7 +475,8 @@
    "license": "MIT",
    "credit": false,
    "order": 116,
-   "thumb": "sitetpl/thumbs/tt-landing-page.webp"
+   "thumb": "sitetpl/thumbs/tt-landing-page.webp",
+   "kind": "app"
   },
   {
    "id": "tt-app-landing",
@@ -291,7 +493,8 @@
    "license": "MIT",
    "credit": false,
    "order": 117,
-   "thumb": "sitetpl/thumbs/tt-app-landing.webp"
+   "thumb": "sitetpl/thumbs/tt-app-landing.webp",
+   "kind": "app"
   },
   {
    "id": "h5-photon",
@@ -307,7 +510,8 @@
    "license": "CC BY 3.0",
    "credit": true,
    "order": 123,
-   "thumb": "sitetpl/thumbs/h5-photon.webp"
+   "thumb": "sitetpl/thumbs/h5-photon.webp",
+   "kind": "app"
   },
   {
    "id": "h5-stellar",
@@ -324,7 +528,8 @@
    "license": "CC BY 3.0",
    "credit": true,
    "order": 125,
-   "thumb": "sitetpl/thumbs/h5-stellar.webp"
+   "thumb": "sitetpl/thumbs/h5-stellar.webp",
+   "kind": "app"
   },
   {
    "id": "h5-landed",
@@ -340,7 +545,8 @@
    "license": "CC BY 3.0",
    "credit": true,
    "order": 131,
-   "thumb": "sitetpl/thumbs/h5-landed.webp"
+   "thumb": "sitetpl/thumbs/h5-landed.webp",
+   "kind": "app"
   },
   {
    "id": "portfolio",
@@ -358,7 +564,8 @@
    "source": "TribeCode",
    "license": "MIT",
    "order": 3,
-   "thumb": "sitetpl/thumbs/portfolio.webp"
+   "thumb": "sitetpl/thumbs/portfolio.webp",
+   "kind": "portfolio"
   },
   {
    "id": "photography",
@@ -376,7 +583,8 @@
    "source": "TribeCode",
    "license": "MIT",
    "order": 15,
-   "thumb": "sitetpl/thumbs/photography.webp"
+   "thumb": "sitetpl/thumbs/photography.webp",
+   "kind": "portfolio"
   },
   {
    "id": "sb-freelancer",
@@ -392,7 +600,8 @@
    "license": "MIT",
    "credit": false,
    "order": 106,
-   "thumb": "sitetpl/thumbs/sb-freelancer.webp"
+   "thumb": "sitetpl/thumbs/sb-freelancer.webp",
+   "kind": "portfolio"
   },
   {
    "id": "sb-stylish-portfolio",
@@ -408,7 +617,8 @@
    "license": "MIT",
    "credit": false,
    "order": 115,
-   "thumb": "sitetpl/thumbs/sb-stylish-portfolio.webp"
+   "thumb": "sitetpl/thumbs/sb-stylish-portfolio.webp",
+   "kind": "portfolio"
   },
   {
    "id": "h5-forty",
@@ -425,7 +635,8 @@
    "license": "CC BY 3.0",
    "credit": true,
    "order": 124,
-   "thumb": "sitetpl/thumbs/h5-forty.webp"
+   "thumb": "sitetpl/thumbs/h5-forty.webp",
+   "kind": "portfolio"
   },
   {
    "id": "h5-miniport",
@@ -441,7 +652,8 @@
    "license": "CC BY 3.0",
    "credit": true,
    "order": 128,
-   "thumb": "sitetpl/thumbs/h5-miniport.webp"
+   "thumb": "sitetpl/thumbs/h5-miniport.webp",
+   "kind": "portfolio"
   },
   {
    "id": "resume",
@@ -458,7 +670,8 @@
    "source": "TribeCode",
    "license": "MIT",
    "order": 13,
-   "thumb": "sitetpl/thumbs/resume.webp"
+   "thumb": "sitetpl/thumbs/resume.webp",
+   "kind": "portfolio"
   },
   {
    "id": "sb-personal",
@@ -475,7 +688,8 @@
    "license": "MIT",
    "credit": false,
    "order": 112,
-   "thumb": "sitetpl/thumbs/sb-personal.webp"
+   "thumb": "sitetpl/thumbs/sb-personal.webp",
+   "kind": "portfolio"
   },
   {
    "id": "sb-resume",
@@ -491,7 +705,8 @@
    "license": "MIT",
    "credit": false,
    "order": 113,
-   "thumb": "sitetpl/thumbs/sb-resume.webp"
+   "thumb": "sitetpl/thumbs/sb-resume.webp",
+   "kind": "portfolio"
   },
   {
    "id": "h5-dimension",
@@ -508,7 +723,8 @@
    "license": "CC BY 3.0",
    "credit": true,
    "order": 126,
-   "thumb": "sitetpl/thumbs/h5-dimension.webp"
+   "thumb": "sitetpl/thumbs/h5-dimension.webp",
+   "kind": "portfolio"
   },
   {
    "id": "h5-read-only",
@@ -524,7 +740,8 @@
    "license": "CC BY 3.0",
    "credit": true,
    "order": 129,
-   "thumb": "sitetpl/thumbs/h5-read-only.webp"
+   "thumb": "sitetpl/thumbs/h5-read-only.webp",
+   "kind": "portfolio"
   },
   {
    "id": "blog",
@@ -543,7 +760,8 @@
    "source": "TribeCode",
    "license": "MIT",
    "order": 10,
-   "thumb": "sitetpl/thumbs/blog.webp"
+   "thumb": "sitetpl/thumbs/blog.webp",
+   "kind": "blog"
   },
   {
    "id": "sb-clean-blog",
@@ -560,7 +778,8 @@
    "license": "MIT",
    "credit": false,
    "order": 103,
-   "thumb": "sitetpl/thumbs/sb-clean-blog.webp"
+   "thumb": "sitetpl/thumbs/sb-clean-blog.webp",
+   "kind": "blog"
   },
   {
    "id": "tt-ghostwind",
@@ -576,7 +795,8 @@
    "license": "MIT",
    "credit": false,
    "order": 118,
-   "thumb": "sitetpl/thumbs/tt-ghostwind.webp"
+   "thumb": "sitetpl/thumbs/tt-ghostwind.webp",
+   "kind": "blog"
   },
   {
    "id": "tt-minimal-blog",
@@ -593,7 +813,8 @@
    "license": "MIT",
    "credit": false,
    "order": 119,
-   "thumb": "sitetpl/thumbs/tt-minimal-blog.webp"
+   "thumb": "sitetpl/thumbs/tt-minimal-blog.webp",
+   "kind": "blog"
   },
   {
    "id": "h5-massively",
@@ -610,7 +831,8 @@
    "license": "CC BY 3.0",
    "credit": true,
    "order": 130,
-   "thumb": "sitetpl/thumbs/h5-massively.webp"
+   "thumb": "sitetpl/thumbs/h5-massively.webp",
+   "kind": "blog"
   },
   {
    "id": "merch",
@@ -628,7 +850,8 @@
    "source": "TribeCode",
    "license": "MIT",
    "order": 2,
-   "thumb": "sitetpl/thumbs/merch.webp"
+   "thumb": "sitetpl/thumbs/merch.webp",
+   "kind": "business"
   },
   {
    "id": "tt-nordic-store",
@@ -645,7 +868,8 @@
    "license": "MIT",
    "credit": false,
    "order": 120,
-   "thumb": "sitetpl/thumbs/tt-nordic-store.webp"
+   "thumb": "sitetpl/thumbs/tt-nordic-store.webp",
+   "kind": "business"
   },
   {
    "id": "cafe",
@@ -665,7 +889,8 @@
    "source": "TribeCode",
    "license": "MIT",
    "order": 6,
-   "thumb": "sitetpl/thumbs/cafe.webp"
+   "thumb": "sitetpl/thumbs/cafe.webp",
+   "kind": "business"
   },
   {
    "id": "menu",
@@ -685,7 +910,8 @@
    "source": "TribeCode",
    "license": "MIT",
    "order": 61,
-   "thumb": "sitetpl/thumbs/menu.webp"
+   "thumb": "sitetpl/thumbs/menu.webp",
+   "kind": "business"
   },
   {
    "id": "sb-business-casual",
@@ -702,7 +928,8 @@
    "license": "MIT",
    "credit": false,
    "order": 101,
-   "thumb": "sitetpl/thumbs/sb-business-casual.webp"
+   "thumb": "sitetpl/thumbs/sb-business-casual.webp",
+   "kind": "business"
   },
   {
    "id": "band",
@@ -721,7 +948,8 @@
    "source": "TribeCode",
    "license": "MIT",
    "order": 5,
-   "thumb": "sitetpl/thumbs/band.webp"
+   "thumb": "sitetpl/thumbs/band.webp",
+   "kind": "portfolio"
   },
   {
    "id": "creator",
@@ -739,7 +967,8 @@
    "source": "TribeCode",
    "license": "MIT",
    "order": 4,
-   "thumb": "sitetpl/thumbs/creator.webp"
+   "thumb": "sitetpl/thumbs/creator.webp",
+   "kind": "linkbio"
   },
   {
    "id": "podcast",
@@ -756,7 +985,8 @@
    "source": "TribeCode",
    "license": "MIT",
    "order": 9,
-   "thumb": "sitetpl/thumbs/podcast.webp"
+   "thumb": "sitetpl/thumbs/podcast.webp",
+   "kind": "blog"
   },
   {
    "id": "wedding",
@@ -775,7 +1005,8 @@
    "source": "TribeCode",
    "license": "MIT",
    "order": 8,
-   "thumb": "sitetpl/thumbs/wedding.webp"
+   "thumb": "sitetpl/thumbs/wedding.webp",
+   "kind": "event"
   },
   {
    "id": "conference",
@@ -795,7 +1026,8 @@
    "source": "TribeCode",
    "license": "MIT",
    "order": 60,
-   "thumb": "sitetpl/thumbs/conference.webp"
+   "thumb": "sitetpl/thumbs/conference.webp",
+   "kind": "event"
   },
   {
    "id": "course",
@@ -816,7 +1048,8 @@
    "source": "TribeCode",
    "license": "MIT",
    "order": 62,
-   "thumb": "sitetpl/thumbs/course.webp"
+   "thumb": "sitetpl/thumbs/course.webp",
+   "kind": "event"
   },
   {
    "id": "club",
@@ -838,7 +1071,8 @@
    "source": "TribeCode",
    "license": "MIT",
    "order": 63,
-   "thumb": "sitetpl/thumbs/club.webp"
+   "thumb": "sitetpl/thumbs/club.webp",
+   "kind": "business"
   },
   {
    "id": "nonprofit",
@@ -857,7 +1091,8 @@
    "source": "TribeCode",
    "license": "MIT",
    "order": 14,
-   "thumb": "sitetpl/thumbs/nonprofit.webp"
+   "thumb": "sitetpl/thumbs/nonprofit.webp",
+   "kind": "business"
   },
   {
    "id": "gamepage",
@@ -876,7 +1111,8 @@
    "source": "TribeCode",
    "license": "MIT",
    "order": 12,
-   "thumb": "sitetpl/thumbs/gamepage.webp"
+   "thumb": "sitetpl/thumbs/gamepage.webp",
+   "kind": "app"
   },
   {
    "id": "comingsoon",
@@ -893,7 +1129,8 @@
    "source": "TribeCode",
    "license": "MIT",
    "order": 16,
-   "thumb": "sitetpl/thumbs/comingsoon.webp"
+   "thumb": "sitetpl/thumbs/comingsoon.webp",
+   "kind": "app"
   },
   {
    "id": "sb-coming-soon",
@@ -910,7 +1147,8 @@
    "license": "MIT",
    "credit": false,
    "order": 104,
-   "thumb": "sitetpl/thumbs/sb-coming-soon.webp"
+   "thumb": "sitetpl/thumbs/sb-coming-soon.webp",
+   "kind": "app"
   },
   {
    "id": "h5-eventually",
@@ -926,7 +1164,8 @@
    "license": "CC BY 3.0",
    "credit": true,
    "order": 127,
-   "thumb": "sitetpl/thumbs/h5-eventually.webp"
+   "thumb": "sitetpl/thumbs/h5-eventually.webp",
+   "kind": "app"
   }
  ]
 }

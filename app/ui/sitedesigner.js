@@ -239,8 +239,11 @@ html[data-dev=phone] .ehide-phone,html[data-dev=tablet] .ehide-tablet,html[data-
     let tpl = o.template, rest = o.prompt || '';
     if (rest && !tpl && window.TribeNLU) { const P = window.TribeNLU.parse(rest, {}); const s = (P.steps || [])[0]; if (s && /^site\./.test(s.intent) && s.conf >= 0.6 && S().TEMPLATES.includes(s.intent.slice(5))) { tpl = s.intent.slice(5); if (s.slots && s.slots.name) o.name = s.slots.name; rest = ''; } }
     if (tpl && o.askReplace && !(await okToReplace())) tpl = '';   // p4-site: a template over a site that is already there asks first
+    hideStart();   // p5-start: a start screen left from last time does not cover this one
     if (tpl) await useTemplate(tpl, !cfg, { name: o.name });
-    else if (!cfg) showStart(); else paint();
+    else if (!cfg) showStart(false, o.kind || '');
+    else if (o.start) { paint(); showStart(true, o.kind || ''); }   // p5-start: "make a website" over a site that is there: the kinds, with Keep my design
+    else paint();
     chipKey = ''; logPaint();   // feat/flint-unify: this design's thread and chips
     status(); await loadComments();
     coworkOn();
@@ -301,7 +304,7 @@ html[data-dev=phone] .ehide-phone,html[data-dev=tablet] .ehide-tablet,html[data-
     let n = $('#wdz-fill'); if (!used || !used.length) { if (n) n.hidden = true; return; }
     if (!n) { n = document.createElement('div'); n.id = 'wdz-fill'; n.className = 'wdz-note'; n.setAttribute('role', 'status'); root.querySelector('.wdz-stage').prepend(n); }
     n.hidden = false;
-    n.innerHTML = `<span><b>Filled from your project:</b> ${esc(used.join(', '))}.</span><button type="button" class="btn sm" data-fill="blank">Start blank instead</button><button type="button" class="btn sm ghost" data-fill="ok" aria-label="Dismiss">OK</button>`;
+    n.innerHTML = `<span>${esc(tr('Filled in from your project:'))} <b>${esc(used.join(', '))}</b>. ${esc(tr('Change anything.'))}</span><button type="button" class="btn sm" data-fill="blank">${esc(tr('Use the template as it came'))}</button><button type="button" class="btn sm ghost wdz-ic" data-fill="ok" aria-label="${esc(tr('Dismiss'))}" title="${esc(tr('Dismiss'))}">${sv('<path d="M6 6l12 12M18 6 6 18"/>')}</button>`;
   }
 
   // ---------- the DOM ----------
@@ -752,7 +755,7 @@ html[data-dev=phone] .ehide-phone,html[data-dev=tablet] .ehide-tablet,html[data-
   }
 
   // ---------- the template gallery (feat/site-v2): thumbnails, categories, search, Use this, a larger peek ----------
-  const gal = { list: [], cats: [], cat: 'All', q: '', hov: null, ht: 0 };
+  const gal = { list: [], cats: [], cat: 'All', q: '', hov: null, ht: 0, kind: '' };
   async function loadGallery() {
     if (gal.list.length) return;
     try { const r = await fetch('sitetpl/catalog.json'); if (r.ok) { const j = await r.json(); gal.list = j.templates || []; gal.cats = j.categories || []; } } catch {}
@@ -762,18 +765,19 @@ html[data-dev=phone] .ehide-phone,html[data-dev=tablet] .ehide-tablet,html[data-
   function galPaint() {
     const box = $('#wdz-gal'); if (!box) return;
     const q = gal.q.trim().toLowerCase();
-    const list = gal.list.filter(t => (gal.cat === 'All' || t.category === gal.cat) && (!q || `${t.title} ${t.summary} ${t.category} ${(t.tags || []).join(' ')} ${t.source || ''}`.toLowerCase().includes(q)));
+    const base = gal.kind && gal.kind !== 'all' && DD() ? DD().siteTemplatesFor(gal.list, gal.kind, q ? 0 : 12) : gal.list;   // p5-start: one kind's templates, best first
+    const list = base.filter(t => (gal.kind !== 'all' || gal.cat === 'All' || t.category === gal.cat) && (!q || `${t.title} ${t.summary} ${t.category} ${(t.tags || []).join(' ')} ${t.source || ''}`.toLowerCase().includes(q)));
     $('#wdz-gcats').innerHTML = ['All', ...gal.cats].map(c => `<button type="button" class="wdz-chip" data-gcat="${esc(c)}" aria-pressed="${c === gal.cat}">${esc(c)}</button>`).join('');
     box.innerHTML = list.length ? list.map(t => `<div class="wdz-tpl" data-tpl="${esc(t.id)}" data-title="${esc(t.title)}" role="button" tabindex="0" aria-label="Use the ${esc(t.title)} template"><span class="wdz-tthumb">${t.thumb ? `<img src="${esc(t.thumb)}" alt="" loading="lazy" width="480" height="360">` : ''}</span><b>${esc(t.title)}</b><small>${esc(t.summary)}</small><span class="wdz-tmeta"><span class="wdz-tcat">${esc(t.category || '')}</span>${t.source && t.source !== 'TribeCode' ? `<span class="wdz-tsrc" title="${esc(t.source)} · ${esc(t.license)}">${esc(t.license)}</span>` : ''}</span><span class="wdz-tact"><button type="button" class="btn sm primary" data-tpl="${esc(t.id)}" data-title="${esc(t.title)}">Use this</button><button type="button" class="btn sm ghost" data-peek="${esc(t.id)}">Peek</button></span></div>`).join('') : `<p class="wdz-hint">No template matches “${esc(gal.q)}”. Try another word, or start blank.</p>`;
     box.querySelectorAll('img').forEach(i => { i.onerror = () => i.remove(); });
-    $('#wdz-gcount').textContent = `${list.length} of ${gal.list.length}`;
+    $('#wdz-gcount').textContent = `${list.length} of ${gal.kind && gal.kind !== 'all' && DD() ? DD().siteTemplatesFor(gal.list, gal.kind).length : gal.list.length}`;
   }
   async function peek(id, hover) {
     const t = gal.list.find(x => x.id === id), pk = $('#wdz-peek'); if (!t) return;
     pk.hidden = false; pk.innerHTML = `<div class="wdz-peek-in"><p class="wdz-row"><b>${esc(t.title)}</b><span class="wdz-hint">${esc(t.category || '')}${t.source && t.source !== 'TribeCode' ? ` · from ${esc(t.source)} (${esc(t.license)})` : ''}</span><span class="wdz-sp"></span><button type="button" class="btn sm primary" data-tpl="${esc(t.id)}" data-title="${esc(t.title)}">Use this</button><button type="button" class="btn sm ghost" data-peekclose="1" aria-label="Close preview">Close</button></p><div class="wdz-peek-f"><iframe title="Preview of ${esc(t.title)}" sandbox="" loading="lazy"></iframe></div></div>`;
     const c = await templateCfg(id); if (!c || pk.hidden) return;
     const fonts = file => FONTS.get(file) || ''; if (!fontsAsked) loadFonts();
-    pk.querySelector('iframe').srcdoc = S().render(c, { fonts });
+    pk.querySelector('iframe').srcdoc = S().render(c, { fonts, go: false });
     if (hover) pk.querySelector('.wdz-peek-in').addEventListener('mouseleave', () => { pk.hidden = true; }, { once: true });
   }
   async function onImport(e) {
@@ -820,7 +824,7 @@ html[data-dev=phone] .ehide-phone,html[data-dev=tablet] .ehide-tablet,html[data-
     const lists = Object.entries(b.props).filter(([, v]) => Array.isArray(v));
     box.innerHTML = `<p class="wdz-eyebrow">${esc(BL.label)}</p>
       <p class="wdz-f"><span>Layout</span></p><p class="wdz-row wdz-vars" role="group" aria-label="Layout">${BL.variants.map(v => `<button type="button" class="btn sm" data-var="${v}" aria-pressed="${v === b.variant}">${esc(v)}</button>`).join('')}</p>
-      ${strings.map(([k, v]) => `<label class="wdz-f"><span>${esc(k === 'url' ? 'Video or embed link' : k === 'action' ? 'Form link (Formspree, Google Forms…)' : k)}</span>${v.length > 70 || k === 'text' || k === 'bio' ? `<textarea class="input" rows="3" data-prop="${k}">${esc(v)}</textarea>` : `<input class="input" data-prop="${k}" value="${esc(v)}">`}</label>`).join('')}
+      ${strings.map(([k, v]) => `<label class="wdz-f"><span>${esc((BL.fields && BL.fields[k]) || (k === 'url' ? 'Video or embed link' : k === 'action' ? 'Form link (Formspree, Google Forms…)' : k))}</span>${v.length > 70 || k === 'text' || k === 'bio' ? `<textarea class="input" rows="3" data-prop="${k}">${esc(v)}</textarea>` : `<input class="input" data-prop="${k}" value="${esc(v)}">`}</label>`).join('')}
       ${lists.map(([k, v]) => SP() ? SP().list(b, k, v, spApi) : `<p class="wdz-row wdz-list"><span>${esc(k)}: ${v.length}</span><button type="button" class="btn sm" data-item="add" data-k="${k}">+ Add</button><button type="button" class="btn sm ghost" data-item="del" data-k="${k}"${v.length ? '' : ' disabled'}>− Remove last</button></p>`).join('')}
       ${'img' in b.props ? `<p class="wdz-row"><button type="button" class="btn sm" data-selimg="1">Picture…</button></p>` : ''}`;
     box.querySelectorAll('[data-prop]').forEach(i => i.addEventListener('change', () => commit(S().setProp(st.cfg, st.page, b.id, i.dataset.prop, i.value))));
@@ -835,6 +839,11 @@ html[data-dev=phone] .ehide-phone,html[data-dev=tablet] .ehide-tablet,html[data-
     if (t.closest('[data-peek]')) { peek(t.closest('[data-peek]').dataset.peek); return; }
     if (t.closest('[data-tpl]')) { const x = t.closest('[data-tpl]'); const pk = $('#wdz-peek'); if (pk) pk.hidden = true; const had = hasSite(); if (!(await okToReplace())) return; await useTemplate(x.dataset.tpl); say(had ? `Started from the ${x.dataset.title || 'chosen'} template. Undo brings back what you had.` : `Started from the ${x.dataset.title || 'chosen'} template. Click anything to change it.`); return; }
     if (t.closest('[data-start="blank"]')) { hideStart(); paint(); return; }
+    if (t.closest('#wdz-start [data-kind]')) {   // p5-start: a kind of site, All kinds, See all, or Blank
+      const k = t.closest('[data-kind]').dataset.kind, from = $('#wdz-start').dataset.from === '1';
+      if (k === 'blank') { if (hasSite()) { if (!(await okToReplace())) return; commit(S().blank(st.cfg.name)); say(tr('Started from a blank page. Undo brings back what you had.')); } hideStart(); paint(); return; }
+      gal.q = ''; gal.cat = 'All'; await showStart(from, k); const f = $('#wdz-start [data-kind], #wdz-start .wdz-tpl'); if (f && k) { const q = $('#wdz-gq'); (q || f).focus({ preventScroll: true }); } return;
+    }
     if (t.closest('[data-page]') && !a) { st.page = t.closest('[data-page]').dataset.page; st.sel = null; frameScroll = 0; paint(); return; }
     if (t.closest('[data-dev]') && t.closest('.wdz-devs')) { st.dev = t.closest('[data-dev]').dataset.dev; chrome(); return; }   // only the frame's width changes: the page itself is not drawn again
     if (t.closest('[data-pick]')) { st.sel = { block: t.closest('[data-pick]').dataset.pick, path: '', kind: 'block' }; paint(); postSel(true); return; }
@@ -886,7 +895,7 @@ html[data-dev=phone] .ehide-phone,html[data-dev=tablet] .ehide-tablet,html[data-
     if (k === 'mode') return commit(S().setMode(st.cfg, st.cfg.theme.mode === 'dark' ? 'light' : 'dark'));
     if (k === 'addpage') { const r = S().addPage(st.cfg, ''); commit(r.cfg); st.page = r.page.id; paint(); say(`Added ${r.page.title}. Rename it: “rename this page to About”.`); return; }
     if (k === 'picker') { st.addAfter = null; const p = $('#wdz-picker'); p.hidden = !p.hidden; a.setAttribute('aria-expanded', String(!p.hidden)); if (!p.hidden) p.innerHTML = picker(); if (false) p.innerHTML = S().TYPES.map(ty => `<div class="wdz-pk"><b>${esc(S().BLOCKS[ty].label)}</b><span>${S().BLOCKS[ty].variants.map(v => `<button type="button" class="wdz-chip" data-add="${ty}" data-v="${v}">${esc(v)}</button>`).join('')}</span></div>`).join(''); return; }
-    if (k === 'templates') return showStart(true);
+    if (k === 'templates') return showStart(true, '');
     if (k === 'dlmenu') { const m = $('#wdz-dlmenu'); m.hidden = !m.hidden; a.setAttribute('aria-expanded', String(!m.hidden)); return; }
     if (k === 'dl-html' || k === 'dl-zip') { $('#wdz-dlmenu').hidden = true; return download(k === 'dl-zip' ? 'zip' : 'html'); }
     if (k === 'publish') { $('#wdz-dlmenu').hidden = true; return publish(); }
@@ -963,17 +972,42 @@ html[data-dev=phone] .ehide-phone,html[data-dev=tablet] .ehide-tablet,html[data-
     try { const r = await C.api(`/projects/${encodeURIComponent(st.pid)}/website/versions`, { method: 'POST', body: { note: `Designer · ${new Date().toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}` } }); say('Saved to Saved designs. Restore it any time from Preview › Saved or Files › Website.'); return r; } catch (e) { say(e.message); }
   }
 
-  // ---------- the start screen: 16 templates or blank ----------
-  async function showStart(fromBar) {
-    const box = $('#wdz-start'); box.hidden = false;
-    box.innerHTML = `<div class="wdz-start-in"><p class="wdz-eyebrow">Website</p><h2>Start from a template</h2><p class="wdz-hint">Every template is blocks you can change, wire and export.${st.pid ? ' Inside a project it fills in what TribeCode knows: the name, the team, hours from chat, your board’s colors.' : ''} Or tell Flint what the site is for.</p>
-      <div class="wdz-gbar"><input class="input" id="wdz-gq" type="search" placeholder="Search templates: bakery, portfolio, link in bio…" aria-label="Search templates" value="${esc(gal.q)}"><span class="wdz-hint" id="wdz-gcount"></span><button type="button" class="btn sm" data-start="blank">${fromBar ? 'Keep my design' : 'Start blank'}</button><button type="button" class="btn sm ghost" data-import="1">Import HTML…</button></div>
-      <div class="wdz-gcats" id="wdz-gcats" role="group" aria-label="Categories"></div>
-      <div class="wdz-tpls" id="wdz-gal"><p class="wdz-hint">Loading templates…</p></div>
-      <p class="wdz-hint">Templates from Start Bootstrap and Tailwind Toolbox (MIT) and HTML5 UP (CC BY 3.0, credited in the footer) are converted into blocks; see docs/SITE-TEMPLATES.md.</p></div>`;
-    await loadGallery(); galPaint();
+  // ---------- the start screen (p5-start): what kind of site first, then that kind's templates ----------
+  // gal.kind: '' the kinds · 'all' every template (search, categories) · a kind id: its templates, best first
+  const DD = () => window.TribeDesignData;
+  const kindsOf = () => (DD() && DD().SITE_KINDS) || [];
+  function startHead(eyebrow, title, hint) { return `<p class="wdz-eyebrow">${esc(tr(eyebrow))}</p><h2>${esc(tr(title))}</h2>${hint ? `<p class="wdz-hint">${esc(tr(hint))}</p>` : ''}`; }
+  async function showStart(fromBar, kind) {
+    const box = $('#wdz-start'); if (!box) return; box.hidden = false;
+    root.classList.add('wdz-starting');   // the page's own controls wait until there is a page
+    box.dataset.from = fromBar ? '1' : '';
+    if (kind !== undefined) gal.kind = kind === 'blank' ? '' : kind;
+    await loadGallery();
+    if (!gal.kind || !DD()) return startKinds(box);
+    return startGallery(box);
   }
-  function hideStart() { const b = $('#wdz-start'); if (b) b.hidden = true; }
+  const keepBtn = () => `<button type="button" class="btn sm" data-start="blank">${esc(tr($('#wdz-start') && $('#wdz-start').dataset.from ? 'Keep my design' : 'Start blank'))}</button>`;
+  function startKinds(box) {
+    const K = kindsOf(), main = K.filter(k => k.main), more = K.filter(k => !k.main), n = id => DD().siteTemplatesFor(gal.list, id).length;
+    box.innerHTML = `<div class="wdz-start-in wdz-kinds-in">${startHead('Website', 'What kind of site?', 'Pick one to see its templates. Every word, picture and colour is yours to change after.')}
+      <div class="wdz-kmain" role="list">${main.map(k => `<button type="button" class="wdz-kind wdz-kind-main" role="listitem" data-kind="${k.id}"><span class="wdz-kart">${k.art}</span><span class="wdz-ktxt"><b>${esc(tr(k.t))}</b><small>${esc(tr(k.d))}</small><span class="wdz-kn">${n(k.id)} ${esc(tr('templates'))}</span></span></button>`).join('')}</div>
+      <p class="wdz-eyebrow wdz-kor">${esc(tr('Something else'))}</p>
+      <div class="wdz-kmore" role="list">${more.map(k => `<button type="button" class="wdz-kind" role="listitem" data-kind="${k.id}" title="${esc(tr(k.d))}"><span class="wdz-kart">${k.art}</span><b>${esc(tr(k.t))}</b></button>`).join('')}</div>
+      <div class="wdz-kfoot"><button type="button" class="btn sm ghost" data-kind="all">${esc(tr('See all templates'))} · ${gal.list.length}</button>${box.dataset.from ? keepBtn() : ''}<button type="button" class="btn sm ghost" data-import="1">${esc(tr('Import HTML…'))}</button></div>
+      <p class="wdz-hint">${esc(tr('Or tell Flint what the site is for: “a page for my band”, “send people to my app”.'))}</p></div>`;
+  }
+  function startGallery(box) {
+    const all = gal.kind === 'all', k = kindsOf().find(x => x.id === gal.kind) || {};
+    box.innerHTML = `<div class="wdz-start-in"><button type="button" class="btn sm ghost wdz-kback" data-kind="">${IC.back}${esc(tr('All kinds'))}</button>
+      ${startHead('Website', all ? 'All templates' : k.t || 'Templates', all ? 'Every template is blocks you can change, wire and export.' : k.d || '')}
+      <div class="wdz-gbar"><input class="input" id="wdz-gq" type="search" placeholder="${esc(tr('Search templates: bakery, portfolio, link in bio…'))}" aria-label="${esc(tr('Search templates'))}" value="${esc(gal.q)}"><span class="wdz-hint" id="wdz-gcount"></span>${keepBtn()}${all ? `<button type="button" class="btn sm ghost" data-import="1">${esc(tr('Import HTML…'))}</button>` : ''}</div>
+      <div class="wdz-gcats" id="wdz-gcats" role="group" aria-label="${esc(tr('Categories'))}"${all ? '' : ' hidden'}></div>
+      <div class="wdz-tpls" id="wdz-gal"><p class="wdz-hint">${esc(tr('Loading templates…'))}</p></div>
+      ${all ? '' : `<p class="wdz-row"><button type="button" class="btn sm" data-kind="all">${esc(tr('See all templates'))}</button></p>`}
+      <p class="wdz-hint">${esc(tr('Templates from Start Bootstrap and Tailwind Toolbox (MIT) and HTML5 UP (CC BY 3.0, credited in the footer) are converted into blocks; see docs/SITE-TEMPLATES.md.'))}</p></div>`;
+    galPaint();
+  }
+  function hideStart() { const b = $('#wdz-start'); if (b) b.hidden = true; if (root) root.classList.remove('wdz-starting'); }
 
   // ---------- p4-site: More, zoom, sections on the clipboard, code, ask before replacing, pictures of a change ----------
   const perf = { t0: 0, open: 0, ready: 0 };
@@ -1212,7 +1246,8 @@ html[data-dev=phone] .ehide-phone,html[data-dev=tablet] .ehide-tablet,html[data-
       if (r.ask) asked = r.ask; if (r.chips) chips = r.chips;
       said.push(r.say);
       if (r.need === 'html' || r.need === 'zip') { if (work !== st.cfg) { commitAll(before, work); } await download(r.need); st.log.pop(); continue; }
-      if (r.need === 'template') { commitAll(before, work); await useTemplate(r.template); work = st.cfg; continue; }
+      if (r.need === 'template') { commitAll(before, work); if (r.template === 'app-redirect' && hasSite() && !(await okToReplace())) { said.pop(); said.push(tr('Kept your site.')); continue; } await useTemplate(r.template); if (r.go) { const pg0 = st.cfg.pages[0], gb = pg0.blocks.find(b => b.type === 'go'); if (gb) commit(S().setProp(st.cfg, pg0.id, gb.id, 'to', r.go)); } work = st.cfg; continue; }
+      if (r.need === 'start') { commitAll(before, work); await showStart(hasSite(), r.kind || ''); continue; }   // p5-start
       if (r.need === 'publish') { commitAll(before, work); paint(); await publish(); st.log.pop(); continue; }
       if (r.need === 'device') { st.dev = r.dev; continue; }
       if (r.need === 'suggest') { commitAll(before, work); said.pop(); const SG = window.TribeSiteSuggest; if (!SG) { said.push('Suggestions are not loaded here.'); continue; } said.push(await SG.flint(r.mode, sgApi())); work = st.cfg; continue; }

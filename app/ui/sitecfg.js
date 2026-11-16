@@ -103,14 +103,23 @@
     image: { label: 'Image', variants: ['wide', 'side', 'framed'], make: () => ({ title: '', text: '', img: '', alt: '', shape: '' }) },
     steps: { label: 'Steps (how it works)', variants: ['row', 'stack'], make: () => ({ title: 'How it works', items: [{ title: 'Say what you need', text: 'One line on the first step.' }, { title: 'We get to work', text: 'What happens next.' }, { title: 'Done', text: 'What they end up with.' }] }) },
     info: { label: 'Visit us (address, hours, phone)', variants: ['columns', 'card'], make: () => ({ title: 'Visit us', items: [{ label: 'Address', text: '12 Example Street\nYour town' }, { label: 'Hours', text: 'Mon to Fri: 8 to 5\nSat: 9 to 2' }, { label: 'Phone', text: '555 0100' }], button: L('Get directions') }) },
+    // p5-start: a page that sends visitors on to an app store, a release or another address, after a short wait and with
+    // a button. The address is fixed in the page (never read from the link someone opened), shown in full, and only
+    // https:// or http://. The wait is a <meta http-equiv="refresh"> written only into exported and published pages.
+    go: { label: 'Send visitors on (redirect)', variants: ['card', 'plain'], fields: { to: 'Send people to (a web address)', wait: 'Seconds before it goes (2 to 30)', button: 'Button words' }, make: () => ({ title: 'Taking you to the app', text: 'If nothing happens, press the button.', to: '', wait: '4', button: 'Go now' }) },
     timeline: { label: 'Timeline (story, experience)', variants: ['line', 'cards'], make: () => ({ title: 'The story so far', items: [{ when: '2023', title: 'Started', text: 'How it began, in a line.' }, { when: '2024', title: 'Grew', text: 'What changed.' }, { when: 'Now', title: 'Today', text: 'Where things stand.' }] }) },
   };
   const CATS = { hero: 'Intro', banner: 'Intro', features: 'Content', text: 'Content', list: 'Content', stats: 'Social proof', testimonials: 'Social proof', logos: 'Social proof', team: 'Content', gallery: 'Media', image: 'Media', embed: 'Media',
-    pricing: 'Commerce', cta: 'Conversion', newsletter: 'Conversion', contact: 'Conversion', faq: 'Content', links: 'Intro', divider: 'Layout', footer: 'Layout', steps: 'Content', info: 'Conversion', timeline: 'Content' };
+    pricing: 'Commerce', cta: 'Conversion', newsletter: 'Conversion', contact: 'Conversion', faq: 'Content', links: 'Intro', go: 'Conversion', divider: 'Layout', footer: 'Layout', steps: 'Content', info: 'Conversion', timeline: 'Content' };
   const TYPES = Object.keys(BLOCKS);
   const block = (type, props, variant) => ({ id: uid('b'), type, variant: variant || BLOCKS[type].variants[0], props: props || BLOCKS[type].make() });
   const page = (title, blocks) => ({ id: uid('p'), slug: slugify(title) === 'home' ? 'index' : slugify(title), title, blocks: blocks || [] });
 
+  // p5-start: the redirect's address and wait, made safe
+  function goTo(v) { const u = String(v == null ? '' : v).trim().slice(0, 600); if (!/^https?:\/\/[^\s"'<>\\]+$/i.test(u)) return ''; try { const x = new URL(u); return /^https?:$/.test(x.protocol) && x.hostname.includes('.') && !x.username && !x.password ? x.href : ''; } catch { return ''; } }
+  const goWait = v => { const n = Math.round(+v); return String(Number.isFinite(n) ? Math.max(2, Math.min(30, n)) : 4); };
+  function goProps(P) { P = P && typeof P === 'object' ? P : {}; return { title: String(P.title == null ? '' : P.title).slice(0, 120), text: String(P.text == null ? '' : P.text).slice(0, 400), to: goTo(P.to), wait: goWait(P.wait), button: String(P.button || 'Go now').slice(0, 40) }; }
+  const goHost = to => { try { return new URL(to).host.replace(/^www\./, ''); } catch { return ''; } };
   function blank(name) {
     name = name || 'My site';
     return normalize({ v: 1, name, theme: { preset: 'minimal', mode: 'light', ...clone(PRESETS.minimal) }, pages: [page('Home', [block('hero', BLOCKS.hero.make(name)), block('features'), block('contact'), block('footer', BLOCKS.footer.make(name))])] });
@@ -178,6 +187,7 @@
     c.theme.space = /^(compact|roomy)$/.test(t.space) ? t.space : 'normal';
     const so = c.seo || {}; c.seo = { title: String(so.title || '').slice(0, 120), description: String(so.description || '').slice(0, 320), image: String(so.image || ''), favicon: String(so.favicon || ''), lang: /^[a-z]{2}(-[A-Za-z]{2})?$/.test(so.lang || '') ? so.lang : 'en' };
     if (c.logo && !/^(data:image\/|https:\/\/)/.test(c.logo)) delete c.logo;
+    c.pages.forEach(pg => pg.blocks.forEach(b => { if (b.type === 'go') b.props = goProps(b.props); }));
     if (c.css) { const cs = cleanCss(c.css); if (cs) c.css = cs; else delete c.css; } else delete c.css;
     if (c.credit && !(c.credit.text && /^https:\/\//.test(c.credit.url || ''))) delete c.credit;
     return c;
@@ -622,6 +632,9 @@
       return { cfg: setProp(c, pg.id, hero.id, sl.field === 'tagline' ? (hero.type === 'hero' ? 'text' : 'bio') : (hero.type === 'hero' ? 'title' : 'name'), sl.text), say: `The ${sl.field} says “${sl.text}”.` };
     }
     if (id === 'site.export') return { need: sl.fmt === 'zip' ? 'zip' : 'html', say: sl.fmt === 'zip' ? 'Downloading a zip: one HTML file per page, the pictures in assets/, the fonts and their licenses.' : 'Downloading index.html: one standalone file with every page, the pictures inside it, and no scripts.' };
+    // p5-start: the start screen (what kind of site?), and the page that sends visitors on
+    if (id === 'site.start') return { need: 'start', kind: sl.kind || '', say: sl.kind === 'app' ? 'Here are the pages for an app, a game or a project. Pick one; what you have stays until you do.' : 'What kind of site? Pick one to see its templates; what you have stays until you do.' };
+    if (id === 'site.redirect') { const u = /https?:\/\/[^\s"'<>]+/i.exec(s.text || ''); return { need: 'template', template: 'app-redirect', go: u ? goTo(u[0].replace(/[.,!?)]+$/, '')) : '', say: u ? 'Started a page that sends visitors on to that address after a few seconds, with a button in case. Undo brings back what you had.' : 'Started a page that sends visitors on. Put the address on the right: it waits a few seconds, shows where it goes and has a button. Undo brings back what you had.' }; }
     if (/^site\./.test(id) && TEMPLATES.includes(id.slice(5))) return { need: 'template', template: id.slice(5), say: `Starting from the ${id.slice(5)} template. Your current design is one Undo away.` };
     return null;
   }
@@ -725,6 +738,16 @@
     const pics = (F.images || []).filter(Boolean);
     if (pics.length) { let n = 0; const h = first('hero'); if (h && !/^data:image\/(png|jpe?g|webp)/.test(h.props.img || '') && h.variant !== 'minimal') { h.props.img = pics[n++ % pics.length]; } const g = c.pages.map(p => p.blocks.find(b => b.type === 'gallery')).find(Boolean); if (g) g.props.items.forEach(x => { if (n < pics.length) x.img = pics[n++]; }); if (n) used.push(`${n} picture${n === 1 ? '' : 's'} from your board`); }
     if (F.logo) { c.logo = F.logo; c.seo = { ...(c.seo || {}), favicon: F.logo }; used.push('the logo'); }
+    // p5-start: the project's GitHub address and latest version (server/sitedesign.js gitFacts) fill the placeholders an
+    // App or project page carries: github.com/you/your-project in buttons and links, and "Version 1.0"
+    const GHF = F.github && /^https:\/\/github\.com\/[\w.-]+\/[\w.-]+$/.test(F.github.url || '') ? F.github : null;
+    if (GHF) {
+      let hit = 0; const PH = 'https://github.com/you/your-project';
+      const walk = o => { if (Array.isArray(o)) return o.forEach(walk); if (!o || typeof o !== 'object') return; for (const k of Object.keys(o)) { const v = o[k]; if (typeof v === 'string' && v.startsWith(PH)) { o[k] = GHF.url + v.slice(PH.length); hit++; } else walk(v); } };
+      walk(c.pages); if (hit) used.push('the GitHub address');
+      const ver = /^\d+(\.\d+){0,2}$/.test(GHF.version || '') ? GHF.version : '';
+      if (ver && hit) { let vh = 0; c.pages.forEach(p => p.blocks.forEach(b => { const P = b.props || {}; if (b.type === 'hero' && /\bVersion \d+(\.\d+)*/.test(P.eyebrow || '')) { P.eyebrow = P.eyebrow.replace(/\bVersion \d+(\.\d+)*/, 'Version ' + ver); vh++; } if (b.type === 'list' && /what.?s new/i.test(P.title || '') && P.items && P.items[0] && /^Version \d/.test(P.items[0].title || '')) { P.items[0].title = 'Version ' + ver; vh++; } })); if (vh) used.push('the latest version'); }
+    }
     c.seo = { ...(c.seo || {}), title: c.seo && c.seo.title || c.name, description: (c.seo && c.seo.description) || String(F.tagline || F.mission || '').slice(0, 160) };
     return { cfg: normalize(c), used };
   }
@@ -755,7 +778,7 @@ figure{margin:0}figcaption{font-size:.9rem;color:var(--muted);margin-top:8px}.g-
 blockquote{margin:0;font-family:var(--display);font-size:1.3rem;line-height:1.35}.q-quotes blockquote{font-size:1.8rem;max-width:30ch}
 details{border-top:1px solid var(--line);padding:14px 0}summary{cursor:pointer;font-weight:600}.faq-columns{display:grid;grid-template-columns:1fr 1fr;gap:0 40px}
 .team .who{display:flex;gap:16px;align-items:center}.team .av{width:64px;height:64px;border-radius:50%;object-fit:cover;border:1px solid var(--line)}
-.links{max-width:560px;margin:0 auto;text-align:center}.links .pic{margin:0 auto 16px;max-width:120px}.links .pic img{aspect-ratio:1}.lk{display:block;padding:16px 20px;margin:12px 0;border:1px solid var(--line);border-radius:var(--r);background:var(--card);text-decoration:none;font-weight:600}.lk small{display:block;font-weight:400;color:var(--muted)}.l-cards .lk{border-color:var(--ink)}.l-pills .lk{border-radius:999px}.soc{display:flex;gap:16px;justify-content:center;flex-wrap:wrap;margin-top:16px}
+.go{max-width:560px;margin:0 auto;text-align:center}.go .go-to{margin:16px 0}.go .btns{justify-content:center}.go .go-url{font-size:.85em;overflow-wrap:anywhere}.go-card{padding:32px 24px;border:1px solid var(--line);border-radius:var(--r);background:var(--card)}.links{max-width:560px;margin:0 auto;text-align:center}.links .pic{margin:0 auto 16px;max-width:120px}.links .pic img{aspect-ratio:1}.lk{display:block;padding:16px 20px;margin:12px 0;border:1px solid var(--line);border-radius:var(--r);background:var(--card);text-decoration:none;font-weight:600}.lk small{display:block;font-weight:400;color:var(--muted)}.l-cards .lk{border-color:var(--ink)}.l-pills .lk{border-radius:999px}.soc{display:flex;gap:16px;justify-content:center;flex-wrap:wrap;margin-top:16px}
 .row p,.card p:last-child{margin:0}.rows .row{display:grid;grid-template-columns:1fr auto;gap:16px;padding:14px 0;border-top:1px solid var(--line)}.menu .row{display:flex;gap:8px;align-items:baseline;padding:8px 0}.menu .row .dots{flex:1;border-bottom:1px dotted var(--muted);transform:translateY(-4px)}
 form.cf{display:grid;gap:12px;max-width:560px}form.cf input,form.cf textarea{font:inherit;padding:12px;border-radius:var(--r);border:1px solid var(--line);background:var(--card);color:var(--ink)}form.cf label{font-weight:600;font-size:.92rem}
 .embed{aspect-ratio:16/9;width:100%;border:1px solid var(--line);border-radius:var(--r);background:var(--card)}.e-inline .embed{max-width:640px}.t-two .wrap{display:grid;grid-template-columns:1fr 2fr;gap:40px}
@@ -838,6 +861,8 @@ ${t.btn === 'pill' ? '.btn{border-radius:999px}' : t.btn === 'outline' ? '.btn{b
       case 'cta': return `<div class="wrap">${b.variant === 'split' ? '<div>' : ''}${T('title', P.title)}${P.text || o.edit ? E('text', 'p', P.text, 'lead') : ''}${b.variant === 'split' ? '</div>' : ''}<div class="btns">${(P.buttons || []).map((x, i) => A(`buttons.${i}`, x.label, x.link, i ? 'btn alt' : 'btn')).join('')}</div></div>`;
       case 'stats': return `<div class="wrap">${T('title', P.title)}<div class="st">${(P.items || []).map((x, i) => `<div>${E(`items.${i}.value`, 'b', x.value)}${E(`items.${i}.label`, 'span', x.label, 'muted')}</div>`).join('')}</div></div>`;
       case 'logos': return `<div class="wrap">${T('title', P.title)}<div class="lg">${(P.items || []).map((x, i) => x.img ? (o.edit ? `<span class="${ecl(`items.${i}.img`).trim()}" data-img="${b.id}|items.${i}."><img src="${esc(x.img)}" alt="${esc(x.alt || x.name)}"></span>` : `<img class="${ecl(`items.${i}.img`).trim()}" src="${esc(x.img)}" alt="${esc(x.alt || x.name)}">`) : E(`items.${i}.name`, 'span', x.name)).join('')}</div></div>`;
+      case 'go': { const to = goTo(P.to), w = goWait(P.wait);
+        return `<div class="wrap go go-${b.variant}">${T('title', P.title, 'h1')}${P.text || o.edit ? E('text', 'p', P.text, 'lead') : ''}<p class="go-to"${SYS('go')}>${to ? `Taking you to <b>${esc(goHost(to))}</b> in ${w} seconds.` : o.edit ? 'Not sending anyone yet: put the address on the right.' : ''}</p>${to ? `<p class="btns"><a class="btn" href="${esc(to)}" rel="noopener">${BT('button', P.button || 'Go now')}</a></p><p class="go-url muted">${esc(to)}</p>` : ''}</div>`; }
       case 'banner': return `<div class="wrap">${E('text', 'span', P.text)}${P.button && (P.button.label || o.edit) ? A('button', P.button.label, P.button.link, '') : ''}</div>`;
       case 'divider': return b.variant === 'dots' ? `<div class="wrap"><p aria-hidden="true"${o.edit ? ' data-deco="1"' : ''}>• • •</p></div>` : b.variant === 'line' ? '<div class="wrap"><hr></div>' : '';
       case 'image': return `<div class="wrap">${IMG('', P.img, P.alt, P.shape, 1600, 800)}${b.variant === 'side' ? '<div>' : ''}${T('title', P.title)}${P.text || o.edit ? E('text', 'p', P.text, 'lead') : ''}${b.variant === 'side' ? '</div>' : ''}</div>`;
@@ -867,7 +892,10 @@ ${t.btn === 'pill' ? '.btn{border-radius:999px}' : t.btn === 'outline' ? '.btn{b
     const S = c.seo, title = PS.title || (pg0 && pg0.slug !== 'index' ? `${pg0.title} · ${S.title || c.name}` : S.title || c.name), desc = PS.description || S.description, abs = u => /^https:\/\//.test(u || '') || (o.mode === 'pages' && /^assets\//.test(u || ''));
     const meta = `${desc ? `<meta name="description" content="${esc(desc)}"><meta property="og:description" content="${esc(desc)}">` : ''}<meta property="og:title" content="${esc(title)}"><meta property="og:type" content="website"><meta name="twitter:card" content="${S.image ? 'summary_large_image' : 'summary'}">${abs(PS.image || S.image) ? `<meta property="og:image" content="${esc(PS.image || S.image)}">` : ''}${S.favicon ? `<link rel="icon" href="${esc(S.favicon)}">` : ''}`;
     const credit = c.credit ? `<p class="credit"${o.edit ? ' data-sys="credit"' : ''}>Design based on <a href="${esc(c.credit.url)}" rel="noopener">${esc(c.credit.text)}</a>${c.credit.license ? ` (${esc(c.credit.license)})` : ''}</p>` : '';
-    const head = `<!doctype html><html lang="${esc(S.lang)}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${esc(title)}</title>${meta}<meta name="generator" content="TribeCode website designer"><style>${css(c, o.fonts || '')}</style>${o.extraHead || ''}</head><body><a class="skip" href="#main">Skip to content</a>`;
+    // p5-start: a "Send visitors on" section moves the page on by itself, only in files that leave the editor (o.go)
+    const goPg = o.go && !o.edit ? (pg0 || c.pages[0]) : null, goB = goPg && goPg.blocks.find(b => b.type === 'go' && !b.hidden && goTo(b.props.to));
+    const goMeta = goB ? `<meta http-equiv="refresh" content="${goWait(goB.props.wait)};url=${esc(goTo(goB.props.to))}">` : '';
+    const head = `<!doctype html><html lang="${esc(S.lang)}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${esc(title)}</title>${meta}${goMeta}<meta name="generator" content="TribeCode website designer"><style>${css(c, o.fonts || '')}</style>${o.extraHead || ''}</head><body><a class="skip" href="#main">Skip to content</a>`;
     const fxd = html => (FX() ? FX().decorate(html, c, { ...o, mode }, colors(c)) : html);   // feat/site-3d
     if (mode === 'single' && !o.edit) return fxd(`${head}${c.pages.map((p, i) => `<div class="pg${i === 0 ? ' pg-home' : ''}" id="p-${p.slug}">${nav(c, p, { mode })}<main${i === 0 ? ' id="main"' : ''}>${renderPage(c, p, { mode })}</main></div>`).join('\n')}${credit}</body></html>`);
     const pg = c.pages.find(p => p.id === o.page || p.slug === o.page) || c.pages[0];
@@ -877,13 +905,13 @@ ${t.btn === 'pill' ? '.btn{border-radius:999px}' : t.btn === 'outline' ? '.btn{b
   // pictures in assets/ (data: URLs written out), fonts in fonts/ (paths listed in .fonts for the caller to copy)
   function exportFiles(cfg, kind) {
     const c = normalize(clone(cfg));
-    if (kind !== 'zip') return { 'index.html': render(c, { mode: 'single' }) };
+    if (kind !== 'zip') return { 'index.html': render(c, { mode: 'single', go: true }) };
     const files = {}, assets = new Map(); let n = 0;
     const out = (src, alt) => { if (!/^data:image\//.test(src || '')) return src; if (!assets.has(src)) { const m = /^data:image\/([a-z+]+)(;base64)?,(.*)$/i.exec(src); const ext = m ? (m[1] === 'svg+xml' ? 'svg' : m[1] === 'jpeg' ? 'jpg' : m[1]) : 'png'; assets.set(src, `assets/${slugify(alt || 'image')}-${++n}.${ext}`); } return assets.get(src); };
     if (c.logo) c.logo = out(c.logo, 'logo'); if (c.seo.favicon) c.seo.favicon = out(c.seo.favicon, 'favicon'); if (c.seo.image) c.seo.image = out(c.seo.image, 'share');
     c.pages.forEach(p => p.blocks.forEach(b => { if (b.props.img) b.props.img = out(b.props.img, b.props.alt); (b.props.items || []).forEach(x => { if (x && x.img) x.img = out(x.img, x.alt); }); }));
     const used = new Set([c.theme.fonts.display, c.theme.fonts.body].filter(f => FONT[f]));
-    c.pages.forEach(p => { files[p.slug === 'index' ? 'index.html' : p.slug + '.html'] = render(c, { page: p.id, mode: 'pages', fonts: used.size ? 'fonts/' : '' }); });
+    c.pages.forEach(p => { files[p.slug === 'index' ? 'index.html' : p.slug + '.html'] = render(c, { page: p.id, mode: 'pages', fonts: used.size ? 'fonts/' : '', go: true }); });
     files['site.json'] = JSON.stringify(cfg, null, 1);
     files['README.md'] = `# ${c.name}\n\nMade with the TribeCode website designer. Plain HTML and CSS, no build step and no scripts: open index.html, or upload this folder to any static host (GitHub Pages, Netlify, a USB stick).\n\n- ${c.pages.map(p => (p.slug === 'index' ? 'index' : p.slug) + '.html: ' + p.title).join('\n- ')}\n- assets/: the pictures\n- fonts/: the fonts (SIL Open Font License, licenses alongside)\n- site.json: the design, to open again in TribeCode\n`;
     const out2 = { files, assets: [...assets].map(([src, path]) => ({ src, path })), fonts: [...used].map(f => ({ file: FONT[f][0] + '.woff2', license: 'LICENSE-' + f.replace(/\s+/g, '') + '.txt' })) };

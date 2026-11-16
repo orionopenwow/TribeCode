@@ -126,6 +126,27 @@ module.exports = function siteDesign({ files = null, perms = null, requests = ()
   }
 
   // ---------- auto-populate: what the project knows ----------
+  // p5-start: the project's GitHub address and latest version, read only from its own git folder (no network, no token):
+  // the origin remote in .git/config and the highest version tag in .git/refs/tags or .git/packed-refs
+  function gitFacts(dir) {
+    if (!dir) return null;
+    try {
+      let g = path.join(dir, '.git'); const st = fs.statSync(g);
+      if (st.isFile()) { const m = /^gitdir:\s*(.+)$/m.exec(fs.readFileSync(g, 'utf8')); if (!m) return null; g = path.resolve(dir, m[1].trim()); }
+      try { const cd = fs.readFileSync(path.join(g, 'commondir'), 'utf8').trim(); if (cd) g = path.resolve(g, cd); } catch {}   // a worktree keeps config and tags in the main folder
+      const conf = fs.readFileSync(path.join(g, 'config'), 'utf8');
+      const sec = /\[remote "origin"\]([\s\S]*?)(?=\n\[|$)/.exec(conf), url = sec && (/^\s*url\s*=\s*(\S+)/m.exec(sec[1]) || [])[1];
+      const gh = url && /github\.com[:/]+([\w.-]+)\/([\w.-]+?)(?:\.git)?\/?$/.exec(url);
+      if (!gh) return null;
+      const tags = new Set();
+      try { for (const f of fs.readdirSync(path.join(g, 'refs', 'tags'))) tags.add(f); } catch {}
+      try { for (const l of fs.readFileSync(path.join(g, 'packed-refs'), 'utf8').split('\n')) { const m = /refs\/tags\/(\S+)$/.exec(l); if (m && !/\^\{\}$/.test(m[1])) tags.add(m[1]); } } catch {}
+      const ver = t => (/^v?(\d+)\.(\d+)(?:\.(\d+))?$/.exec(t) || []).slice(1).map(x => +(x || 0));
+      const best = [...tags].filter(t => ver(t).length).sort((a, b) => { const x = ver(a), y = ver(b); return x[0] - y[0] || x[1] - y[1] || x[2] - y[2]; }).pop() || '';
+      const repo = `${gh[1]}/${gh[2]}`;
+      return { repo, url: `https://github.com/${repo}`, version: best.replace(/^v/, '') };
+    } catch { return null; }
+  }
   async function facts(pid) {
     const p = (P && P.get(pid)) || {}; const F = { name: p.name || '', tagline: p.bio || '' };
     try {
@@ -139,6 +160,7 @@ module.exports = function siteDesign({ files = null, perms = null, requests = ()
     try { const st = P.scopedStore(() => pid); const msgs = st.readJSONL('chat/general.jsonl', 400).filter(x => !x.deleted && x.by !== 'tribecode' && x.text).map(x => ({ who: nameOf(x.by), text: x.text, at: x.at })); Object.assign(F, AI.siteFacts(msgs)); } catch (e) { log('site-autofill chat: ' + e.message); }
     try { if (inspo) { const v = inspo.view(pid); if (v && v.palette && v.palette.accent) F.accent = v.palette.accent; F.images = (v.items || []).filter(x => (x.kind || 'image') === 'image' && x.thumb).slice(0, 6).map(x => x.thumb); } } catch {}
     try { const b = showcase.brandView ? showcase.brandView(pid) : null; if (b && b.logo && b.logo.url) F.logo = b.logo.url; } catch {}
+    try { const gf = gitFacts((p && p.repo) || (p && p.folder) || ''); if (gf) F.github = gf; } catch {}
     return F;
   }
 
@@ -313,5 +335,5 @@ module.exports = function siteDesign({ files = null, perms = null, requests = ()
       run: async (a = {}, me) => { try { const r = await toTasks(cur(a), me || { id: 'agent', role: 'agent' }); return text(r.say); } catch (e) { return text(e.message, true); } },
     },
   };
-  return { form, formOn, propose, proposals: loadP, brandGet, brandSet, route, load, save: (pid, cfg, me) => save(pid, cfg, me).config, saveRev: (pid, cfg, me) => save(pid, cfg, me), template, templates, publish, facts, onTask, toTasks, mcpTools, comments: loadC, exists: pid => !!loadRaw(pid) };
+  return { form, formOn, propose, proposals: loadP, brandGet, brandSet, route, load, save: (pid, cfg, me) => save(pid, cfg, me).config, saveRev: (pid, cfg, me) => save(pid, cfg, me), template, templates, publish, facts, gitFacts, onTask, toTasks, mcpTools, comments: loadC, exists: pid => !!loadRaw(pid) };
 };

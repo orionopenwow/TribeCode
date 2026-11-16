@@ -271,11 +271,13 @@
     "create a site",
     "link in bio page",
     "landing page",
-    "start a website"
+    "start a website",
+    "make a page for my app",
+    "send people to my app"
    ],
    "steps": [
     "Open Website templates.",
-    "Pick one, or tell Flint what the site is for.",
+    "Pick what kind of site, then one of its templates. Or tell Flint what the site is for.",
     "Click any words in the preview and type over them.",
     "Add a block from the left when you need a new section."
    ]
@@ -1259,8 +1261,8 @@
    "mins": 10,
    "steps": [
     {
-     "title": "Pick a start",
-     "text": "Choose a template that looks close to what you want. Everything in it can be changed."
+     "title": "Pick what kind of site",
+     "text": "Link in bio, or a page for an app or project, or something else. Then pick one of its templates; everything in it can be changed."
     },
     {
      "title": "Change the words",

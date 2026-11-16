@@ -275,3 +275,41 @@ body.wdz-open { overflow: hidden; }
 /* a narrow window: the list of blocks keeps every button inside its row (the last one used to be cut off) */
 .wdz-blk-t { min-width: 0; overflow-wrap: anywhere; }
 @media (max-width: 1100px) and (min-width: 821px) { .wdz-body { grid-template-columns: 220px 1fr 280px; } .wdz-blk-acts button { width: 21px; } }
+
+/* p5-start: the start screen asks what kind of site first: two main kinds as cards, the others as a quiet row */
+.wdz-kinds-in { gap: 16px; max-width: 920px; }
+.wdz-kmain { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.wdz-kind { display: grid; grid-template-columns: auto 1fr; gap: 14px; align-items: center; text-align: left; padding: 14px; border: 1px solid var(--border); border-radius: var(--r); background: var(--surface); color: var(--text); font: 600 14px var(--font); cursor: pointer; transition: border-color var(--dur-quick) var(--ease-out), background-color var(--dur-quick) var(--ease-out); }
+.wdz-kind:hover, .wdz-kind:focus-visible { border-color: var(--accent); background: var(--surface-2); }
+.wdz-kart { display: grid; place-items: center; width: 72px; height: 56px; border-radius: var(--r-sm); background: var(--surface-2); border: 1px solid var(--border); color: var(--accent); }
+.wdz-kind-main { padding: 18px; align-items: start; }
+.wdz-kind-main .wdz-kart { width: 96px; height: 76px; }
+.wdz-kind-main .wdz-kart svg { width: 76px; height: 57px; }
+.wdz-ktxt { display: grid; gap: 4px; min-width: 0; }
+.wdz-ktxt b { font: 700 17px/1.25 var(--display); }
+.wdz-ktxt small { font-weight: 400; font-size: 13px; line-height: 1.5; color: var(--muted); }
+.wdz-kn { font: 500 12px var(--mono); color: var(--faint); margin-top: 2px; }
+.wdz-kor { margin-top: 8px; }
+.wdz-kmore { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; }
+.wdz-kmore .wdz-kind { grid-template-columns: 1fr; justify-items: start; gap: 8px; padding: 10px 12px; font-size: 13.5px; }
+.wdz-kmore .wdz-kart { width: 48px; height: 36px; color: var(--muted); }
+.wdz-kmore .wdz-kart svg { width: 40px; height: 30px; }
+.wdz-kmore .wdz-kind:hover .wdz-kart { color: var(--accent); }
+.wdz-kfoot { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-top: 4px; }
+.wdz-kback { justify-self: start; gap: 6px; }
+.wdz-note .wdz-ic { min-width: 32px; }
+@media (max-width: 720px) {
+  .wdz-kmain { grid-template-columns: 1fr; }
+  .wdz-kind-main { grid-template-columns: auto 1fr; padding: 14px; }
+  .wdz-kind-main .wdz-kart { width: 72px; height: 56px; }
+  .wdz-kind-main .wdz-kart svg { width: 56px; height: 42px; }
+  .wdz-kmore { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .wdz-kmore .wdz-kind { grid-template-columns: auto 1fr; align-items: center; min-height: 52px; }
+  .wdz-kmore .wdz-kart { width: 40px; height: 32px; }
+  .wdz-kmore .wdz-kart svg { width: 32px; height: 24px; }
+  .wdz-kfoot .btn { min-height: 40px; }
+}
+@media (prefers-reduced-motion: reduce) { .wdz-kind { transition: none; } }
+.wdz-gcats[hidden] { display: none; }
+/* p5-start: while the start screen is up there is no page yet: only Back and the title stay in the top bar */
+.wdz.wdz-starting .wdz-top > :not(.wdz-back):not(.wdz-title):not(.wdz-sp) { display: none; }
