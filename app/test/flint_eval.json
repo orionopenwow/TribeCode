@@ -15881,6 +15881,290 @@
    },
    "ctx": "g",
    "v": "hs"
+  },
+  {
+   "t": "who can approve my change?",
+   "i": "changes.who",
+   "ctx": "g",
+   "v": "cw"
+  },
+  {
+   "t": "who approves changes here",
+   "i": "changes.who",
+   "ctx": "g",
+   "v": "cw"
+  },
+  {
+   "t": "who can approve my changes to the website",
+   "i": "changes.who",
+   "s": {
+    "tool": "website"
+   },
+   "ctx": "g",
+   "v": "cw"
+  },
+  {
+   "t": "who approves changes to the app",
+   "i": "changes.who",
+   "s": {
+    "tool": "app"
+   },
+   "ctx": "g",
+   "v": "cw"
+  },
+  {
+   "t": "who can change the website",
+   "i": "changes.who",
+   "s": {
+    "tool": "website"
+   },
+   "ctx": "g",
+   "v": "cw"
+  },
+  {
+   "t": "who can edit the store page",
+   "i": "changes.who",
+   "s": {
+    "tool": "store page"
+   },
+   "ctx": "g",
+   "v": "cw"
+  },
+  {
+   "t": "who will approve my edits",
+   "i": "changes.who",
+   "ctx": "g",
+   "v": "cw"
+  },
+  {
+   "t": "who do i ask for approval",
+   "i": "changes.who",
+   "ctx": "g",
+   "v": "cw"
+  },
+  {
+   "t": "who signs off on changes",
+   "i": "changes.who",
+   "ctx": "g",
+   "v": "cw"
+  },
+  {
+   "t": "who needs to approve this change",
+   "i": "changes.who",
+   "ctx": "a",
+   "v": "cw"
+  },
+  {
+   "t": "who is in charge of the website",
+   "i": "changes.who",
+   "s": {
+    "tool": "website"
+   },
+   "ctx": "g",
+   "v": "cw"
+  },
+  {
+   "t": "who can approve my changes to the motion graphic",
+   "i": "changes.who",
+   "s": {
+    "tool": "motion graphic"
+   },
+   "ctx": "mo",
+   "v": "cw"
+  },
+  {
+   "t": "why can't I publish?",
+   "i": "changes.why",
+   "s": {
+    "verb": "publish"
+   },
+   "ctx": "g",
+   "v": "cw"
+  },
+  {
+   "t": "why cant i publish",
+   "i": "changes.why",
+   "s": {
+    "verb": "publish"
+   },
+   "ctx": "g",
+   "v": "cw"
+  },
+  {
+   "t": "why can't i change the website",
+   "i": "changes.why",
+   "s": {
+    "verb": "change",
+    "tool": "website"
+   },
+   "ctx": "g",
+   "v": "cw"
+  },
+  {
+   "t": "why cannot i edit the app",
+   "i": "changes.why",
+   "s": {
+    "verb": "edit",
+    "tool": "app"
+   },
+   "ctx": "g",
+   "v": "cw"
+  },
+  {
+   "t": "why can't i edit this",
+   "i": "changes.why",
+   "s": {
+    "verb": "edit"
+   },
+   "ctx": "s",
+   "v": "cw"
+  },
+  {
+   "t": "why are my changes a draft",
+   "i": "changes.why",
+   "ctx": "g",
+   "v": "cw"
+  },
+  {
+   "t": "why do my changes need approval",
+   "i": "changes.why",
+   "ctx": "g",
+   "v": "cw"
+  },
+  {
+   "t": "why is it not letting me save",
+   "i": "changes.why",
+   "s": {
+    "verb": "save"
+   },
+   "ctx": "a",
+   "v": "cw"
+  },
+  {
+   "t": "why are my edits not saving",
+   "i": "changes.why",
+   "ctx": "g",
+   "v": "cw"
+  },
+  {
+   "t": "send this to Ana for approval",
+   "i": "changes.send",
+   "s": {
+    "who": "ana"
+   },
+   "ctx": "s",
+   "v": "cw"
+  },
+  {
+   "t": "send my changes for approval",
+   "i": "changes.send",
+   "ctx": "a",
+   "v": "cw"
+  },
+  {
+   "t": "submit my draft for review",
+   "i": "changes.send",
+   "ctx": "mo",
+   "v": "cw"
+  },
+  {
+   "t": "suggest this change",
+   "i": "changes.send",
+   "ctx": "s",
+   "v": "cw"
+  },
+  {
+   "t": "ask ana to approve this",
+   "i": "changes.send",
+   "s": {
+    "who2": "ana"
+   },
+   "ctx": "a",
+   "v": "cw"
+  },
+  {
+   "t": "send it for an ok",
+   "i": "changes.send",
+   "ctx": "s",
+   "v": "cw"
+  },
+  {
+   "t": "send my suggestion",
+   "i": "changes.send",
+   "ctx": "g",
+   "v": "cw"
+  },
+  {
+   "t": "ask for approval",
+   "i": "changes.send",
+   "ctx": "s",
+   "v": "cw"
+  },
+  {
+   "t": "send these changes to sam for approval",
+   "i": "changes.send",
+   "s": {
+    "who": "sam"
+   },
+   "ctx": "a",
+   "v": "cw"
+  },
+  {
+   "t": "get maya to approve my changes",
+   "i": "changes.send",
+   "s": {
+    "who2": "maya"
+   },
+   "ctx": "s",
+   "v": "cw"
+  },
+  {
+   "t": "show my requests",
+   "i": "changes.mine",
+   "ctx": "g",
+   "v": "cw"
+  },
+  {
+   "t": "show my change requests",
+   "i": "changes.mine",
+   "ctx": "g",
+   "v": "cw"
+  },
+  {
+   "t": "open suggested changes",
+   "i": "changes.mine",
+   "ctx": "g",
+   "v": "cw"
+  },
+  {
+   "t": "what changes are waiting for me",
+   "i": "changes.mine",
+   "ctx": "g",
+   "v": "cw"
+  },
+  {
+   "t": "what's waiting for my ok",
+   "i": "changes.mine",
+   "ctx": "g",
+   "v": "cw"
+  },
+  {
+   "t": "did anyone approve my change",
+   "i": "changes.mine",
+   "ctx": "g",
+   "v": "cw"
+  },
+  {
+   "t": "list pending changes",
+   "i": "changes.mine",
+   "ctx": "g",
+   "v": "cw"
+  },
+  {
+   "t": "which requests are pending",
+   "i": "changes.mine",
+   "ctx": "g",
+   "v": "cw"
   }
  ]
 }

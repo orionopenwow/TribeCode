@@ -23,6 +23,7 @@
   const IC = { undo: '<path d="M9 14L4 9l5-5"/><path d="M4 9h10a6 6 0 0 1 0 12h-3"/>', redo: '<path d="M15 14l5-5-5-5"/><path d="M20 9H10a6 6 0 0 0 0 12h3"/>', up: '<path d="M12 19V5M6 11l6-6 6 6"/>', down: '<path d="M12 5v14M6 13l6 6 6-6"/>', play: '<path d="M8 5.5v13l10.5-6.5z"/>', stop: '<rect x="6.5" y="6.5" width="11" height="11" rx="1.5"/>' };
   const ic = (n, sz) => { const s = sz || 16; if (IC[n]) return `<svg class="apc-ic" width="${s}" height="${s}" viewBox="0 0 24 24" aria-hidden="true">${IC[n]}</svg>`; const T = window.TribeIcons; return T && T.svg ? T.svg(n, s) : ''; };
   let root = null, st = null, saveT = 0, styleDone = false;
+  let cw = null, crStrip = null;   // feat/cowork-editors: who else is here (cowork.js) and how changes work here (changes.js)
 
   // ---------- the shared stylesheet for every app on the page (one copy) ----------
   function ensureStyle() {
@@ -47,15 +48,18 @@
     if (!A()) { toast('App Creator did not load. Reload the app.'); return; }
     ensureStyle();
     const pid = o.pid || (connected() && C.project ? C.project() : '');
-    st = { open: true, pid, local: !pid, doc: null, rev: 0, canEdit: true, screen: '', sel: null, mode: 'edit', tab: 'screens', undo: [], redo: [], saving: false, savedAt: '', mobile: matchMedia('(max-width: 820px)').matches, sheet: '' };
+    st = { open: true, pid, local: !pid, doc: null, rev: 0, canEdit: true, canDraft: true, base: '', pendingDraft: false, screen: '', sel: null, mode: 'edit', tab: 'screens', undo: [], redo: [], saving: false, savedAt: '', mobile: matchMedia('(max-width: 820px)').matches, sheet: '' };
     let cur = null;
-    if (pid) { try { const r = await C.api(`/projects/${encodeURIComponent(pid)}/app-config`); cur = r.config; st.rev = r.rev || 0; st.canEdit = r.canEdit !== false; } catch { cur = null; } }
+    if (pid) { try { const r = await C.api(`/projects/${encodeURIComponent(pid)}/app-config`); cur = r.config; st.rev = r.rev || 0; st.canEdit = r.canEdit !== false; st.canDraft = st.canEdit || !!r.canSuggest; st.base = cur ? JSON.stringify(A().normalize(cur)) : ''; } catch { cur = null; } }
     else cur = ls.get(LOCAL, null);
     let doc = cur ? A().normalize(cur) : null;
     if (o.template) { const t = A().template(o.template, { name: o.name, accent: o.accent }); if (t) { if (doc) st.undo.push(JSON.stringify(doc)); doc = t; } }
     if (!doc) doc = A().blank(o.name || 'My app');
     st.doc = doc; st.screen = doc.start;
+    // someone who can only suggest picks up their unsent draft on this device (it is theirs until they send it)
+    if (pid && !st.canEdit && st.canDraft) { const dr = ls.get(DRAFT(pid), null); if (dr && dr.doc) { st.doc = A().normalize(dr.doc); st.pendingDraft = true; } }
     build();
+    coworkOn();
     if (o.template || !cur) save();
     if (o.kit) installKit(o.kit, true);
     if (o.template && cur) toast('Started from the template. Undo brings back your earlier design.');
@@ -63,6 +67,7 @@
   }
   function close() {
     if (!root) return; clearTimeout(saveT); if (st && st.dirty) save(true);
+    if (cw) { cw.detach(); cw = null; } crStrip = null;
     root.remove(); root = null; document.body.classList.remove('apc-open'); if (st) st.open = false;
     document.removeEventListener('keydown', onKey, true);
   }
@@ -73,7 +78,12 @@
     const run = async () => {
       if (!st) return; const doc = st.doc;
       if (st.local) { ls.set(LOCAL, doc); st.dirty = false; mark('Saved on this device'); return; }
-      if (!st.canEdit) { mark('View only'); return; }
+      if (!st.canEdit) {
+        if (!st.canDraft) { st.dirty = false; mark('View only'); return; }
+        // a suggestion in the making: kept on this device until "Suggest this change" sends it (server/changereq.js)
+        st.dirty = false; st.pendingDraft = JSON.stringify(st.doc) !== st.base; ls.set(DRAFT(st.pid), st.pendingDraft ? { doc: st.doc, at: Date.now() } : null);
+        mark(st.pendingDraft ? 'Draft: suggest it to share' : ''); if (crStrip) crStrip.draw(); return;
+      }
       st.saving = true; mark('Saving…');
       try { const r = await C.api(`/projects/${encodeURIComponent(st.pid)}/app-config`, { method: 'PUT', body: { config: doc, base: st.rev } }); st.rev = r.rev; st.dirty = false; mark('Saved'); }
       catch (e) {
@@ -83,10 +93,12 @@
     };
     if (now) return run(); saveT = setTimeout(run, 500);
   }
-  const mark = t => { const el = root && root.querySelector('#apc-saved'); if (el) el.textContent = t; };
+  const mark = t => { const el = root && root.querySelector('#apc-saved'); if (el) el.textContent = tr(t); };
+  const DRAFT = pid => `tribecode.appcreator.draft.${pid}`;
 
   // ---------- edits ----------
   function commit(doc, say, keepSel) {
+    if (lockedChange(doc)) { paint(); return false; }   // someone else is typing in this part: "Ana is editing this; ask or wait"
     st.undo.push(JSON.stringify(st.doc)); if (st.undo.length > 80) st.undo.shift(); st.redo = [];
     st.doc = A().normalize(doc);
     if (!A().findScreen(st.doc, st.screen)) st.screen = st.doc.start;
@@ -106,6 +118,7 @@
         <button class="apc-tb" id="apc-close" aria-label="Close App Creator">${ic('x')}</button>
         <div class="apc-title"><span class="apc-eyebrow">App Creator</span><input id="apc-name" class="apc-name" aria-label="App name" maxlength="48" data-i18n-skip></div>
         <span class="apc-saved faint" id="apc-saved"></span>
+        <span class="cw-row" id="apc-cw" hidden></span>
         <span class="apc-sp"></span>
         <div class="apc-seg" role="group" aria-label="Phone look"><button data-plat="ios">iPhone</button><button data-plat="android">Android</button></div>
         <button class="apc-tb" id="apc-undo" aria-label="Undo" title="Undo">${ic('undo')}</button><button class="apc-tb" id="apc-redo" aria-label="Redo" title="Redo">${ic('redo')}</button>
@@ -118,6 +131,7 @@
             <button data-x="brief"><b>Have my AI build it for real</b><small>Sends the screens, flows and data to your AI helpers. Nothing joins the main copy until a person says yes.</small></button>
           </div></div>
       </header>
+      <div class="cr-strip" id="apc-cr" hidden></div>
       <div class="apc-body">
         <aside class="apc-left" id="apc-left"><nav class="apc-tabs" role="tablist"><button data-tab="screens" role="tab">Screens</button><button data-tab="add" role="tab">Add</button><button data-tab="look" role="tab">Look</button></nav><div class="apc-pane" id="apc-pane"></div></aside>
         <main class="apc-mid" id="apc-mid"><div class="apc-phone" id="apc-phone"><div class="apc-screenwrap" id="apc-stage"></div></div><div class="apc-bar" id="apc-bar" hidden></div><p class="apc-note" id="apc-note" role="status" hidden></p></main>
@@ -125,7 +139,7 @@
           <form class="apc-ask" id="apc-ask"><span class="apc-eyebrow">Flint</span><input class="input" id="apc-ask-in" placeholder="Add a settings screen, make it dark, rounder…" autocomplete="off"><button class="btn" type="submit">Do it</button><p class="apc-reply faint" id="apc-reply"></p></form></aside>
       </div>
       <nav class="apc-rack" id="apc-rack"><button data-sheet="screens">Screens</button><button data-sheet="add">Add</button><button data-sheet="look">Look</button><button data-sheet="edit">Edit</button><button data-sheet="flint">Flint</button></nav>`;
-    document.body.appendChild(root); document.body.classList.add('apc-open');
+    document.body.appendChild(root); document.body.classList.add('apc-open'); root.classList.add('has-cr');
     const $ = s => root.querySelector(s);
     $('#apc-close').onclick = close;
     $('#apc-name').oninput = e => { st.doc.name = e.target.value.slice(0, 48); save(); };
@@ -250,6 +264,70 @@
     catch (e) { note(e.message || 'Could not save the brand kit.'); }
   }
 
+  // ---------- working together (feat/cowork-editors) ----------
+  // A part of a screen is "<screen>|<block>"; pointers and outlines are anchored to it, so they land on the same part at
+  // any window size and phone scale.
+  function partLabel(p) {
+    const [scr, blk] = String(p || '').split('|'), d = st && st.doc; if (!d) return '';
+    const sc = A().findScreen(d, scr), f = blk && A().findBlock(d, blk);
+    const kind = f && f.block ? String(f.block.type || 'part').replace(/[-_]/g, ' ') : '';
+    return kind ? `${sc ? sc.name : scr} · ${kind}` : (sc ? sc.name : '');
+  }
+  function lockedChange(next) {
+    if (!cw || !st.sel || typing) return false;
+    const p = `${st.screen}|${st.sel.block}`; if (!cw.lockedBy(p)) return false;
+    const a = A().findBlock(st.doc, st.sel.block), b = A().findBlock(A().normalize(next), st.sel.block);
+    if (JSON.stringify(a && a.block) === JSON.stringify(b && b.block)) return false;
+    cw.guard(p); return true;
+  }
+  async function snapOf(docLike) {
+    try {
+      const Co = A(), d = Co.normalize(typeof docLike === 'string' ? JSON.parse(docLike) : docLike), s = Co.findScreen(d, st.screen) || d.screens[0]; if (!s) return null;
+      const cssText = Co.css(d, { scope: '.ax' }).replace(/@font-face\{[^}]*\}/g, '');
+      const html = `<div class="ax" ${Co.attrs(d)} style="position:relative;width:390px;height:844px;overflow:hidden">${Co.screenHTML(d, s, { edit: false })}</div>`;
+      const box = document.createElement('div'); box.setAttribute('xmlns', 'http://www.w3.org/1999/xhtml'); box.innerHTML = `<style>${cssText}</style>${html}`;
+      const w = 234, h = 506, svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}"><foreignObject width="390" height="844" transform="scale(${w / 390},${h / 844})">${new XMLSerializer().serializeToString(box)}</foreignObject></svg>`;
+      const img = new Image(); await new Promise((res, rej) => { img.onload = res; img.onerror = rej; img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg); });
+      const c = document.createElement('canvas'); c.width = w; c.height = h; c.getContext('2d').drawImage(img, 0, 0); return c.toDataURL('image/jpeg', 0.82);
+    } catch { return null; }
+  }
+  function summaryOf(baseJson, doc) {
+    const out = []; let b = null; try { b = baseJson ? A().normalize(JSON.parse(baseJson)) : null; } catch {}
+    if (!b) return [tr('A new app design')];
+    const ids = new Set(b.screens.map(x => x.id));
+    doc.screens.filter(x => !ids.has(x.id)).forEach(x => out.push(`${tr('Added the screen')} ${x.name}`));
+    b.screens.filter(x => !doc.screens.some(y => y.id === x.id)).forEach(x => out.push(`${tr('Removed the screen')} ${x.name}`));
+    doc.screens.forEach(x => { const o = b.screens.find(y => y.id === x.id); if (o && JSON.stringify(o) !== JSON.stringify(x)) out.push(`${tr('Changed the screen')} ${x.name}`); });
+    if (JSON.stringify(b.theme) !== JSON.stringify(doc.theme)) out.push(tr('Changed the look'));
+    if (b.name !== doc.name) out.push(`${tr('Renamed the app to')} ${doc.name}`);
+    return out.slice(0, 8);
+  }
+  function coworkOn() {
+    if (cw) { cw.detach(); cw = null; }
+    if (!root || !st || !st.pid || !connected()) return;
+    if (window.TribeChanges) crStrip = window.TribeChanges.strip(root.querySelector('#apc-cr'), 'app', { pid: st.pid, draft: () => st.doc, dirty: () => !!st.pendingDraft,
+      before: () => snapOf(st.base || st.doc), after: () => snapOf(st.doc), summary: () => summaryOf(st.base, st.doc),
+      onSent: r => { if (r && (r.request || r.applied)) { st.pendingDraft = false; ls.set(DRAFT(st.pid), null); mark(r.applied ? 'Saved' : 'Sent for OK'); if (crStrip) crStrip.draw(); } } });
+    if (!window.TribeCowork) return;
+    cw = window.TribeCowork.attach('app', {
+      key: () => (st && st.pid) || '',
+      row: root.querySelector('#apc-cw'),
+      anchorAt: (x, y) => {
+        if (!st || st.mode === 'play') return null;
+        const stage = root && root.querySelector('#apc-stage'), el = document.elementFromPoint(x, y); if (!stage || !el || !stage.contains(el)) return null;
+        const b = el.closest('[data-b]'), base = b || stage.querySelector('.ax') || stage, r = base.getBoundingClientRect(); if (!r.width || !r.height) return null;
+        return { p: `${st.screen}|${b ? b.dataset.b : ''}`, x: (x - r.left) / r.width, y: (y - r.top) / r.height };
+      },
+      rect: p => {
+        const [scr, blk] = String(p || '').split('|'); if (!st || !root || scr !== st.screen || st.mode === 'play') return null;
+        const stage = root.querySelector('#apc-stage'); if (!stage) return null;
+        const el = blk ? stage.querySelector(`[data-b="${CSS.escape(blk)}"]`) : stage.querySelector('.ax'); return el ? el.getBoundingClientRect() : null;
+      },
+      label: partLabel,
+      blockOf: p => String(p || ''),
+    });
+  }
+
   // ---------- the phone ----------
   // the phone scales to fit the middle (clicks still land: no iframe)
   function fit() {
@@ -258,7 +336,7 @@
     const pw = st.mobile ? 390 : 414, phh = st.mobile ? 844 : 868, k = Math.min(1, (mid.clientWidth - 16) / pw, (mid.clientHeight - 16) / phh);
     ph.style.transform = k < 1 ? `scale(${k.toFixed(4)})` : '';
   }
-  window.addEventListener('resize', () => { fit(); if (st && st.sel) paintSel(); });
+  window.addEventListener('resize', () => { fit(); if (root && st && st.sel) paintSel(); });
   function paintStage() {
     const stage = root.querySelector('#apc-stage'), d = st.doc, Co = A(), phone = root.querySelector('#apc-phone');
     phone.className = `apc-phone apc-${d.platform}`; fit();
@@ -272,7 +350,7 @@
     stage.innerHTML = `<div class="ax apc-ax apc-edit" ${Co.attrs(d)} data-i18n-skip style="${Co.vars(d.theme)}">${Co.screenHTML(d, s, { edit: true })}</div>`;
     const bar0 = root.querySelector('#apc-bar'); if (bar0) bar0.hidden = true;
     const ax = stage.firstChild;
-    ax.querySelectorAll('[data-e]').forEach(el => { if (st.canEdit) el.setAttribute('contenteditable', 'plaintext-only'); el.spellcheck = false; });
+    ax.querySelectorAll('[data-e]').forEach(el => { if (st.canDraft) el.setAttribute('contenteditable', 'plaintext-only'); el.spellcheck = false; });
     ax.querySelectorAll('input').forEach(i => { i.readOnly = true; i.tabIndex = -1; });
     ax.addEventListener('click', onStageClick, true);
     ax.addEventListener('input', onStageInput);
@@ -295,10 +373,10 @@
     st.sel = { block, kind: item ? 'item' : 'block', path: item ? item.dataset.item : '', ic: icEl ? icEl.dataset.ic : '', img: img ? img.dataset.img : '', lk: lk ? lk.dataset.lk : '' };
     paintSel();
   }
-  function paintSel() { root.querySelectorAll('.apc-sel').forEach(x => x.classList.remove('apc-sel')); const el = selEl(), bar = root.querySelector('#apc-bar'); if (el) { el.classList.add('apc-sel'); placeBar(el); } else if (bar) bar.hidden = true; paintInsp(); }
+  function paintSel() { if (cw) cw.select(st.sel ? `${st.screen}|${st.sel.block}` : null); root.querySelectorAll('.apc-sel').forEach(x => x.classList.remove('apc-sel')); const el = selEl(), bar = root.querySelector('#apc-bar'); if (el) { el.classList.add('apc-sel'); placeBar(el); } else if (bar) bar.hidden = true; paintInsp(); }
   function placeBar(el) {
     // the toolbar lives outside the scaled phone, so its buttons keep their full size
-    const bar = root.querySelector('#apc-bar'), mid = root.querySelector('#apc-mid'); if (!bar || !st.canEdit) return;
+    const bar = root.querySelector('#apc-bar'), mid = root.querySelector('#apc-mid'); if (!bar || !st.canDraft) return;
     const item = st.sel.kind === 'item';
     bar.innerHTML = item
       ? `<button data-bar="item.up" aria-label="Move up">${ic('up', 15)}</button><button data-bar="item.down" aria-label="Move down">${ic('down', 15)}</button><button data-bar="item.add" aria-label="Add one more">${ic('plus', 15)}</button><button data-bar="item.dup" aria-label="Duplicate">${ic('duplicate', 15)}</button><button data-bar="link" aria-label="Link to a screen">${ic('link', 15)}</button><button data-bar="item.remove" aria-label="Remove">${ic('delete', 15)}</button>`
@@ -323,13 +401,14 @@
   function onStageInput(e) {
     const el = e.target.closest('[data-e]'), bEl = e.target.closest('[data-b]'); if (!el || !bEl) return;
     const f = A().findBlock(st.doc, bEl.dataset.b); if (!f) return;
-    if (!typing) { typing = { block: f.block.id, before: JSON.stringify(st.doc) }; }
+    if (!typing && cw && !cw.guard(`${st.screen}|${f.block.id}`)) { el.blur(); paint(); return; }   // someone else is typing here
+    if (!typing) { typing = { block: f.block.id, before: JSON.stringify(st.doc) }; if (cw) cw.editing(`${st.screen}|${f.block.id}`); }
     const setPath = (o, p, v) => { const ks = p.split('.'); let a = o; for (let i = 0; i < ks.length - 1; i++) a = a[ks[i]]; a[ks[ks.length - 1]] = v; };
     setPath(f.block.props, el.dataset.e, el.textContent.slice(0, 600)); save();
   }
   function onStageBlur(e) {
     if (!typing || !e.target.closest('[data-e]')) return;
-    st.undo.push(typing.before); st.redo = []; typing = null;
+    st.undo.push(typing.before); st.redo = []; typing = null; if (cw) cw.editing(null);
     const strip = root.querySelector('#apc-strip'); if (strip && st.tab === 'screens') paintScreens(root.querySelector('#apc-pane'));
   }
 
@@ -543,7 +622,7 @@
   registerSuggest(); window.addEventListener('load', registerSuggest); setTimeout(registerSuggest, 1500);
 
   // the add-on shelf's app kits: market.js calls installKit when an "app-kit" item is used
-  C && C.on && C.on('ws', m => { if (!m || m.type !== 'app-config' || !st || !st.open || m.project !== st.pid || st.dirty || typing) return; C.api(`/projects/${encodeURIComponent(st.pid)}/app-config`).then(r => { if (!st || !r.config || r.rev === st.rev) return; st.doc = A().normalize(r.config); st.rev = r.rev; paint(); note('Updated with a friend’s change.'); }).catch(() => {}); });
+  C && C.on && C.on('ws', m => { if (!m || m.type !== 'app-config' || !st || !st.open || m.project !== st.pid || st.dirty || typing) return; C.api(`/projects/${encodeURIComponent(st.pid)}/app-config`).then(r => { if (!st || !r.config || r.rev === st.rev) return; st.base = JSON.stringify(A().normalize(r.config)); st.rev = r.rev; if (st.pendingDraft) { note('A friend changed the app. Your draft stays yours until you send it.'); return; } st.doc = A().normalize(r.config); paint(); note('Updated with a friend’s change.'); }).catch(() => {}); });
   if (location.hash === '#/app-creator') setTimeout(() => open({}), 300);
   window.addEventListener('hashchange', () => { if (location.hash === '#/app-creator' && (!st || !st.open)) open({}); });
 

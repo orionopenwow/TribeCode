@@ -142,6 +142,58 @@ read it; builders can still edit the rest of the project folder directly, as bef
 without touching the shared files, and the only place a guest pass can write). An AI helper writes in its owner's
 folder, and elsewhere only where its owner already may.
 
+## 5. Working together in the creator tools: suggest a change, approve it, push it yourself
+
+The website designer, App Creator, Motion Studio and the Launch kit now work the same way (branch
+`feat/cowork-editors`).
+
+**Seeing each other.** Everyone with the tool open sees a "who is here" row. On a desktop, each person's pointer shows
+with their name and colour, anchored to the part of the design under it, so it stays on the right button at any window
+size (in the website designer it is drawn inside the preview). Each person's selection has an outline with their name,
+and "Ana is editing …" while they type. If you start changing a part someone else is typing in, the tool stops you
+with "Ana is editing this; ask or wait." (a soft lock: it ends when they stop or leave). Others' saves arrive live,
+with no reload. Phones show the row and the outlines but no pointers. Pointers respect the live cursors switch and
+stop when the tab is hidden (`app/ui/cowork.js`; relayed by the `cowork` socket message in `server/index.js`).
+
+**New rows** (Settings › Who can do what here), all defaulting to builders and up, as before:
+
+| Row | What it covers |
+|---|---|
+| `site.edit` (existed) | Change the website |
+| `app.edit` | Change the phone app design (App Creator) |
+| `motion.edit` | Change motion graphics and clips |
+| `launch.edit` | Change the store page (Launch kit) |
+| `site.publish` (existed) | Publish; asking still goes through "Ask to publish" (one way to ask) |
+
+**Suggest, don't change.** If you may not change a tool but you are in the project, your edits stay on your device as
+a draft ("Draft: suggest it to share"). The strip at the top of the tool says how changes work here ("You can change
+this directly", "Your changes go to Ana for OK", "… the council for OK (2 of 3)") and has "Suggest this change". That
+sheet shows before and after (pictures for App Creator and Motion, a list of what changed for the site and store
+page), asks why, and says who will decide.
+
+**A change request is an approval** (`server/changereq.js`, kind `change` in `server/approvals.js`). Who decides comes
+from how the group decides (`groupstyle.js` `decidersFor()`): one lead = the host and admins; council = the council,
+counted with its pass mark (a tie fails); open = anyone who holds the row; own roles = whoever holds it. The deciders
+get it in the inbox with Approve, Request changes and Deny, each with an optional comment. On approve the server
+applies it as one step, keeps the earlier version, and records who asked and who approved; anyone involved, or anyone
+holding the row, can Undo it. The asker can withdraw it. A newer suggestion from the same person for the same tool
+replaces their open one. "Suggested changes" (the strip's "My requests", or Flint "show my requests") lists them.
+
+**AI helpers** use the same path. A helper's write to a tool it may not change (`PUT` site-config, app-config,
+launchkit, motion, or the `motion_write` tool) is not refused silently: it becomes a change request in its owner's
+name ("Maya's helper asks…"). If the owner may change the tool, it goes to the owner; if not, to the deciders above.
+
+**Enforced on the server.** Every save route checks the row (`sitedesign.js`, `appcreator.js`, `motionstudio.js`,
+`launchkit.js` `canEdit`); hiding a button is never the check. A refused write returns 403 with who can, or 202 with
+the change request when the caller asked for one. Only a decider can decide (`approvals.js`), and applying uses the
+approver's rights.
+
+**Flint** answers "who can approve my change?", "why can't I publish?", "send this to Ana for approval" and "show my
+requests". The Learn quick guide "Work together on a design" walks through it.
+
+Not done yet: Flint's replies and the server's refusal lines are in English only; website suggestions have no
+picture (a list of what changed instead).
+
 ## Tests
 
 - `app/test/security10_test.py`: a council decision can't be forged (voting twice, a spectator, an AI helper, a
@@ -149,3 +201,6 @@ folder, and elsewhere only where its owner already may.
   thing, one project; custom roles never hold host-only rows and never lift spectators or AI helpers; AI votes.
 - `app/test/e2e_group_styles.py`: the sheet, the ways in, Ask them, the group's words in two languages, the setup
   question, a council, a custom role, a change put to a vote, 390px.
+- `app/test/e2e_cowork_editors.py`: pointers on the same part at different window sizes, outlines, "is editing",
+  the soft lock, the website preview, Motion; a draft suggested, approved from the inbox, applied, undone; an AI
+  helper's request; a council needing both; a phone (no pointers, no sideways scroll); live cursors off.

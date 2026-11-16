@@ -18,6 +18,7 @@
   let last = 0, pending = null, shown = false;
   function send(e) {
     if (!on() || !desk() || document.hidden || !C.connected || !C.connected()) return;
+    if (window.TribeCowork && window.TribeCowork.active()) { if (shown) { C.send({ type: 'cursor', gone: true }); shown = false; } return; }   // a creator tool covers the pane: its own pointers (cowork.js)
     const p = pane(); if (!p) return;
     const r = p.getBoundingClientRect();
     if (e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom) { if (shown) { C.send({ type: 'cursor', gone: true }); shown = false; } return; }
@@ -40,7 +41,7 @@
   function place(c) {
     const p = pane(); if (!p) return;
     const r = p.getBoundingClientRect(), x = r.left + c.x * r.width, y = r.top + c.y * Math.max(r.height, p.scrollHeight) - p.scrollTop;
-    const visible = c.view === view() && y >= r.top - 4 && y <= r.bottom + 4;
+    const visible = c.view === view() && y >= r.top - 4 && y <= r.bottom + 4 && !(window.TribeCowork && window.TribeCowork.active());
     c.el.style.transform = `translate(${Math.round(x)}px, ${Math.round(y)}px)`; c.el.classList.toggle('off', !visible);
   }
   C.on('ws', m => {

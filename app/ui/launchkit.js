@@ -25,15 +25,17 @@
 
   // ---------- the record ----------
   async function load(pid) {
-    let kit = null, canEdit = true;
-    if (online(pid)) { try { const r = await C.api(`/projects/${encodeURIComponent(pid)}/launchkit`, { project: pid }); kit = r.kit; canEdit = r.canEdit !== false; } catch {} }
-    if (!kit) { try { kit = JSON.parse(localStorage.getItem(KEY(pid)) || 'null'); } catch {} }
-    return { kit: K().norm(kit), canEdit };
+    let kit = null, canEdit = true, canSuggest = false, base = '';
+    if (online(pid)) { try { const r = await C.api(`/projects/${encodeURIComponent(pid)}/launchkit`, { project: pid }); kit = r.kit; canEdit = r.canEdit !== false; canSuggest = !!r.canSuggest; base = JSON.stringify(K().norm(r.kit)); } catch {} }
+    // feat/cowork-editors: someone who can only suggest keeps working on their own copy on this device
+    if (!kit || (!canEdit && canSuggest)) { try { const mine = JSON.parse(localStorage.getItem(KEY(pid)) || 'null'); if (mine) kit = mine; } catch {} }
+    return { kit: K().norm(kit), canEdit, canSuggest, base };
   }
   function save(now) {
     if (!st) return; const pid = st.pid, kit = K().norm(st.kit);   // a clean copy goes out; the live record keeps its objects (the tabs hold them)
     try { localStorage.setItem(KEY(pid), JSON.stringify(kit)); } catch {}
     clearTimeout(st.saveT);
+    if (st && !st.canEdit && st.canSuggest) { st.pendingDraft = JSON.stringify(kit) !== st.base; if (st.crStrip) st.crStrip.draw(); }   // a suggestion in the making
     const go = async () => { if (online(pid) && st && st.canEdit) { try { await C.api(`/projects/${encodeURIComponent(pid)}/launchkit`, { method: 'PUT', body: { kit }, project: pid }); } catch {} } };
     if (now) return go(); st.saveT = setTimeout(go, 600);
   }
@@ -75,7 +77,7 @@
     const proj = ((C && C.state && C.state().projects) || []).find(p => p.id === pid) || {};
     const r = await load(pid);
     const brand = window.TribeBrandKit ? await window.TribeBrandKit.get(pid).catch(() => null) : null;
-    st = { pid, kit: r.kit, canEdit: r.canEdit, brand: brand || { colors: { accent: proj.color || '#F26B1D' } }, name: (brand && brand.name) || proj.name || 'My app', kind: 'app', tab: TABS.some(t => t[0] === tab) ? tab : 'shots', sel: 0, mem: new Map(), store: 'apple', size: 'ios69' };
+    st = { pid, kit: r.kit, canEdit: r.canEdit, canSuggest: r.canSuggest, base: r.base, pendingDraft: !r.canEdit && r.canSuggest && JSON.stringify(K().norm(r.kit)) !== r.base, brand: brand || { colors: { accent: proj.color || '#F26B1D' } }, name: (brand && brand.name) || proj.name || 'My app', kind: 'app', tab: TABS.some(t => t[0] === tab) ? tab : 'shots', sel: 0, mem: new Map(), store: 'apple', size: 'ios69' };
     if (!st.kit.icon.text) st.kit.icon.text = ([...st.name][0] || 'A').toUpperCase();
     if (online(pid)) C.api(`/projects/${encodeURIComponent(pid)}/sense`, { project: pid }).then(s => { if (st && s) st.kind = s.kind === 'game' || s.kind === '3d' ? 'game' : 'app'; }).catch(() => {});
     const scrim = document.createElement('div'); scrim.className = 'lch-scrim';
@@ -83,6 +85,7 @@
     el.innerHTML = `<header class="lch-head"><div class="lch-ttl"><span class="eyebrow">${esc(T('Launch kit'))}</span><h2 id="lch-h">${esc(st.name)}</h2></div>
       <span class="lch-prog" id="lch-prog"></span>${window.TribeAssetLib ? `<button type="button" class="btn sm ghost lch-lib" id="lch-lib">${ico('palette', 14)} <span>${esc(T('Library'))}</span></button>` : ''}<button type="button" class="lch-x" id="lch-x" aria-label="${esc(T('Close'))}">${ico('x', 18)}</button></header>
       <nav class="lch-tabs" role="tablist" aria-label="${esc(T('Launch kit'))}">${TABS.map(([id, l, i]) => `<button type="button" role="tab" class="lch-tab" data-lch-tab="${id}" aria-selected="false">${ico(i, 16)}<span>${esc(T(l))}</span></button>`).join('')}</nav>
+      <div class="cr-strip" id="lch-cr" hidden></div>
       <div class="lch-body" id="lch-body"></div>`;
     document.body.append(scrim, el); st.el = el; st.scrim = scrim;
     scrim.onclick = close; el.querySelector('#lch-x').onclick = close;
@@ -91,6 +94,12 @@
     if (window.TribeUI && window.TribeUI.adopt) window.TribeUI.adopt(el, { scrim, kind: 'steps', onClose: close });
     else el.addEventListener('keydown', e => { if (e.key === 'Escape') close(); });
     el.querySelectorAll('[data-lch-tab]').forEach(b => b.onclick = () => show(b.dataset.lchTab));
+    if (window.TribeChanges && online(pid)) st.crStrip = window.TribeChanges.strip(el.querySelector('#lch-cr'), 'launch', { pid, draft: () => K().norm(st.kit), dirty: () => !!(st && st.pendingDraft),
+      summary: () => { const b = (() => { try { return JSON.parse(st.base || 'null'); } catch { return null; } })(), k = K().norm(st.kit), out = []; if (!b) return [T('A new store page')];
+        const words = { text: T('the store text'), shots: T('the screenshots'), icon: T('the app icon'), paywall: T('the paywall'), checks: T('the checklist') };
+        for (const f of Object.keys(words)) if (JSON.stringify(b[f]) !== JSON.stringify(k[f])) out.push(`${T('Changed')} ${words[f]}`);
+        return out.length ? out : [T('Changed the store page')]; },
+      onSent: res => { if (res && (res.request || res.applied) && st) { st.pendingDraft = false; if (st.crStrip) st.crStrip.draw(); } } });
     show(st.tab); setTimeout(() => el.focus({ preventScroll: true }), 30);
   }
   // The brand font: a Google Fonts pair loads when online (fontlib.js); canvases wait for it, offline they use system fonts

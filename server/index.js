@@ -698,10 +698,10 @@ talent = require('./talent')({ P, base: baseStore, id, getMembers: () => members
 workFeed = require('./workfeed')({ base: baseStore, tribeName: () => tribe.name, publicGigs: () => talent.publicBundles(), id, publicBase: () => args['public-url'] || process.env.TRIBE_PUBLIC_URL || share.publicUrl(), memberName: m => m.name, log: m => console.error('  ' + m) });   // feat/build-feeds: + the scheduled, careful fetch of subscribed feeds
 buildKit = require('./buildkit')({ P, root: require('./tpldir').root(), sense });   // build kit: the open-source stack + quality bar per project kind (server/buildkit.js)
 setupFlow = require('./setup')({ P, W, base: baseStore, sense, buildKit, readVision, createTask: o => createTask(o), broadcast, resetHub, getMembers: () => members, siteTpl: () => siteTpl, company: () => companyHub });   // v0.27 company: setup/business   // feat/setup-flow: role flows, Create the repo, Make the starter
-const siteDesign = require('./sitedesign')({ perms, base: baseStore, root: require('./tpldir').root(), showcase, siteFlint, P, nameOf, members: () => members, inspo: inspoBoard, postChat: (...a) => postChat(...a), broadcast: m => broadcast(m), tasks: { create: a => createTask(a), save: t => saveTask(t), load: () => loadTasks(), flow: taskFlow } });   // the website designer (server/sitedesign.js, app/ui/sitecfg.js)
+const siteDesign = require('./sitedesign')({ perms, requests: () => changeReq, base: baseStore, root: require('./tpldir').root(), showcase, siteFlint, P, nameOf, members: () => members, inspo: inspoBoard, postChat: (...a) => postChat(...a), broadcast: m => broadcast(m), tasks: { create: a => createTask(a), save: t => saveTask(t), load: () => loadTasks(), flow: taskFlow } });   // the website designer (server/sitedesign.js, app/ui/sitecfg.js)
 const suggestEngine = require('./suggest')({ P, base: baseStore, nameOf, loadTasks: () => loadTasks(), siteComments: pid => siteDesign.comments(pid), llm, broadcast: m => broadcast(m), log: m => console.error('  ' + m) });   // the tribe's suggestion engine (server/suggest.js, app/ui/suggest.js)
-const launchKit = require('./launchkit')({ P, base: baseStore, broadcast: m => broadcast(m) });   // Launch kit: store screenshots, icon, text, paywalls, checklist (server/launchkit.js)
-const appCreator = require('./appcreator')({ P, store: baseStore, root: require('./tpldir').root(), broadcast: m => broadcast(m), nameOf, ensureRepo: (pid, me) => setupFlow.ensureRepo(pid, me), log: m => console.error('  ' + m) });   // App Creator (server/appcreator.js)
+const launchKit = require('./launchkit')({ P, base: baseStore, broadcast: m => broadcast(m), perms, requests: () => changeReq });   // Launch kit: store screenshots, icon, text, paywalls, checklist (server/launchkit.js)
+const appCreator = require('./appcreator')({ P, store: baseStore, perms, requests: () => changeReq, root: require('./tpldir').root(), broadcast: m => broadcast(m), nameOf, ensureRepo: (pid, me) => setupFlow.ensureRepo(pid, me), log: m => console.error('  ' + m) });   // App Creator (server/appcreator.js)
 const siteLib = require('./sitelib')({ P, W, root: require('./tpldir').root(), getMembers: () => members, broadcast, ensureRepo: (pid, me) => setupFlow.ensureRepo(pid, me), log: m => console.error('  ' + m) });   // website template library (server/sitelib.js)
 const flintFree = require('./flintfree')({ P, W, root: require('./tpldir').root(), startersDir: path.join(UI, 'starters'), getMembers: () => members, broadcast, ensureRepo: (pid, me) => setupFlow.ensureRepo(pid, me), siteLib, appDesign: () => appCreator, llmStatus: () => (llm.status ? llm.status() : {}), log: m => console.error('  ' + m) });   // Flint's free tier (server/flintfree.js)
 const flintRun = require('./flintrun')({ P, root: baseStore.root, tribe, getMembers: () => members, publicMember, visibleMembers: me => presenceFor(me).map(x => x.id), log: m => console.error('  ' + m) });   // feat/flint-runthrough: proof-of-work ZIPs + the Blender bridge stub (server/flintrun.js)
@@ -722,7 +722,15 @@ const whiteboard = require('./whiteboard')({ P, base: baseStore, broadcast, perm
 const pinsHub = require('./pins')({ P, base: baseStore, broadcast, bus, getMembers: () => members, perms, nameOf, memberColor: mid => (memberById(mid) || {}).color || '#F26B1D' });   // P1-E comment pins + preview presence (server/pins.js)
 const designCanvas = require('./canvas')({ P, base: baseStore, broadcast, perms, nameOf, memberColor: mid => (memberById(mid) || {}).color || '#F26B1D' });   // P1-A: the design canvas (server/canvas.js)   // feat/whiteboard: the shared team board (server/whiteboard.js)
 const designPlans = require('./designplans')({ P, base: baseStore, broadcast, perms });
-const motionStudio = require('./motionstudio')({ P, base: baseStore, broadcast, perms });   // feat/motion: motion graphics in the project (server/motionstudio.js)   // feat/design-flow: each design's plan in .tribe/design-plans (server/designplans.js)
+const motionStudio = require('./motionstudio')({ P, base: baseStore, broadcast, perms, requests: () => changeReq });
+// feat/cowork-editors: change requests across the creator tools (server/changereq.js). A request is an approval; when it
+// passes the change is applied here as one step and can be undone.
+const changeReq = require('./changereq')({ P, store: baseStore, perms, groupStyle, approvals, bus, broadcast: m => broadcast(m), getMembers: () => members, str, id, tools: {
+  site: { get: pid => siteDesign.load(pid), apply: (pid, cfg, by) => { if (cfg) siteDesign.saveRev(pid, cfg, by); } },
+  app: { get: pid => appCreator.load(pid), apply: (pid, cfg, by) => { if (cfg) appCreator.save(pid, cfg, by); } },
+  motion: { get: (pid, key) => { const r = motionStudio.read(pid, key); return r ? r.doc : null; }, apply: (pid, doc, by, key) => { if (doc) motionStudio.write(pid, key, doc, by); } },
+  launch: { get: pid => launchKit.get(pid), apply: (pid, kit, by) => { launchKit.set(pid, kit || {}, by); } },
+} });   // feat/motion: motion graphics in the project (server/motionstudio.js)   // feat/design-flow: each design's plan in .tribe/design-plans (server/designplans.js)
 const canvasCode = require('./canvascode')({ P, W, base: baseStore, getMembers: () => members, broadcast, ensureRepo: (pid, me) => setupFlow.ensureRepo(pid, me), log: m => console.error('  ' + m) });   // P1-C: design frame -> HTML/CSS in the project (server/canvascode.js)
 const canvasAI = require('./canvasai')({ P, canvas: designCanvas, nameOf, memberColor: mid => (memberById(mid) || {}).color || '#38C6B1', root: require('./tpldir').root(), classify: require('./flintfree').classify, log: m => console.error('  ' + m) });   // P1-F: Flint + agents on the canvas (server/canvasai.js)
 const canvasChat = require('./canvaschat')({ P, base: baseStore, broadcast, canvas: designCanvas, nameOf, memberColor: mid => (memberById(mid) || {}).color || '#F26B1D' });   // Flint's Make-style chat beside the Design canvas (server/canvaschat.js)
@@ -1138,6 +1146,7 @@ async function apiInProject(req, res, url) {
   if (a === 'canvasai') return canvasAI.route(req, res, ctx());
   if (a === 'canvaschat') return canvasChat.route(req, res, ctx());   // Flint's chat on a design file   // P1-F: Flint's free design moves (server/canvasai.js)
   if (a === 'projects' && c === 'design-plans') return designPlans.route(req, res, ctx());   // feat/design-flow
+  if (a === 'projects' && c === 'changes') return changeReq.route(req, res, ctx());   // feat/cowork-editors: change requests (server/changereq.js)
   if (a === 'projects' && c === 'motion') return motionStudio.route(req, res, ctx());   // feat/motion
   if (a === 'canvas') return designCanvas.route(req, res, ctx());   // P1-A design canvas   // feat/whiteboard (server/whiteboard.js)
   if (a === 'canvascode') return canvasCode.route(req, res, ctx());   // P1-C send a frame to the app
@@ -1447,6 +1456,19 @@ server.on('upgrade', (req, sock) => {
       const pid = s.project || P.current() || P.defaultId(); if (!P.canSee(me, pid)) return;
       const num = v => Math.max(0, Math.min(1, Number(v) || 0));
       const out = msg.gone ? { type: 'cursor', by: me.id, gone: true } : { type: 'cursor', by: me.id, name: me.name, color: me.color || null, view: String(msg.view || '').slice(0, 40), x: num(msg.x), y: num(msg.y) };
+      for (const [mid, o] of online) { if (mid === me.id) continue; const m2 = memberById(mid); if (!m2 || !P.canSee(m2, pid)) continue; for (const so of o.sockets) if (so !== s && (so.project || P.current() || P.defaultId()) === pid) so.send(out); }
+      return;
+    }
+    // feat/cowork-editors: { type:'cowork', ed, a?, sel?, editing?, gone? } — where someone is in a creator tool (website,
+    // App Creator, Motion Studio): a pointer anchored to the content, what they selected and what they are typing in.
+    // Reaches the others in the same project; people only, at most ~20 a second each. Plain data, clipped.
+    if (msg.type === 'cowork' && me.role !== 'agent' && me.role !== 'spectator') {
+      const now = Date.now(); if (!msg.gone && !msg.sel && !msg.editing && now - (s.cwAt || 0) < 45) return; s.cwAt = now;
+      const pid = s.project || P.current() || P.defaultId(); if (!P.canSee(me, pid)) return;
+      const num = v => Math.max(-1, Math.min(2, Number(v) || 0)), word = (v, n) => String(v == null ? '' : v).replace(/[\u0000-\u001f]/g, '').slice(0, n);
+      const anc = x => (x && typeof x === 'object' ? { p: word(x.p, 200), x: num(x.x), y: num(x.y), s: word(x.s, 40) } : null);
+      const out = msg.gone ? { type: 'cowork', by: me.id, gone: true, ed: word(msg.ed, 20) }
+        : { type: 'cowork', by: me.id, name: me.name, color: me.color || null, ed: word(msg.ed, 20), key: word(msg.key, 80), a: anc(msg.a), sel: msg.sel === null ? null : anc(msg.sel), selLabel: word(msg.selLabel, 80), editing: msg.editing === null ? null : anc(msg.editing), editLabel: word(msg.editLabel, 80) };
       for (const [mid, o] of online) { if (mid === me.id) continue; const m2 = memberById(mid); if (!m2 || !P.canSee(m2, pid)) continue; for (const so of o.sockets) if (so !== s && (so.project || P.current() || P.defaultId()) === pid) so.send(out); }
       return;
     }

@@ -40,7 +40,8 @@ const PLAIN = {
   'approvals.approve': 'Say yes to any request, including spending', 'files.delete': 'Delete someone else’s files', 'project.create': 'Start a project',
   'project.delete': 'Delete a project', 'settings.edit': 'Change project settings and the plan', 'widgets.edit': 'Change the sidebar',
   'repo.merge': 'Send work to the main copy', 'github.use_host': 'Put projects on the owner’s GitHub', 'ai.use_host_brain': 'Use the owner’s AI',
-  'site.edit': 'Change the website', 'site.publish': 'Publish the website or app for everyone', 'group.decide': 'Change how this group decides, its roles and its words',
+  'site.edit': 'Change the website', 'site.publish': 'Publish the website or app for everyone',
+  'app.edit': 'Change the phone app design', 'motion.edit': 'Change motion graphics and clips', 'launch.edit': 'Change the store page', 'group.decide': 'Change how this group decides, its roles and its words',
   'tribe.hosting': 'Sharing links and where the tribe runs', 'tribe.secrets': 'AI keys and sign-in secrets', 'tribe.launch': 'Run programs on the computer', 'tribe.owner': 'Back up, move or delete the tribe',
 };
 // What a council decides together, and what needs a second person when the group is open.
@@ -271,5 +272,11 @@ module.exports = function groupstyle({ P, store, perms, getMembers, votes, bus, 
     return null;
   }
 
-  return { counting, get, view, who, hook, styleOf, set, reset, ask, decided, need, route, ruleFor: (pid, cap) => ruleFor(get(pid), cap), PLAIN, STYLES, WORDS, DEF_WORDS };
+  // feat/cowork-editors (server/changereq.js): who decides a change this person can't make alone, as ids
+  function decidersFor(pid, me, cap) {
+    if (!me || !openCap(cap)) return { rule: 'owner', ids: getMembers().filter(m => m.role === 'host').map(m => m.id), need: 'one' };
+    const d = deciders(get(pid), me, cap, pid);
+    return { rule: d.rule, ids: d.list.map(m => m.id), need: d.need };
+  }
+  return { decidersFor, counting, get, view, who, hook, styleOf, set, reset, ask, decided, need, route, ruleFor: (pid, cap) => ruleFor(get(pid), cap), PLAIN, STYLES, WORDS, DEF_WORDS };
 };

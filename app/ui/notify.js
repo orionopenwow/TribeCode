@@ -84,7 +84,9 @@
   function approvalBlock(i) {
     const a = approvals.get(i.approval);
     if (!a) return '';
-    const details = a.details ? `<div class="nf-details">${esc(a.details)}</div>` : '';
+    // feat/cowork-editors: a suggested change shows what it changes (before/after, a summary) right in the card
+    const chg = a.change && a.change.id ? `<div class="nf-change" data-nf-change="${esc(a.change.id)}" data-proj="${esc(a.change.project || '')}"></div>` : '';
+    const details = (a.details ? `<div class="nf-details">${esc(a.details)}</div>` : '') + chg;
     const qs = (a.questions || []).map(q => `<div class="nf-q"><b>${esc(q.name)}</b> asked: ${esc(q.text)}</div>`).join('');
     const risk = `<span class="nf-risk ${esc(a.risk)}">${esc(a.risk)} risk</span>`;
     if (a.status === 'pending') {
@@ -95,10 +97,11 @@
           ${a.risk === 'low' && myAgent ? `<label class="nf-always" title="Future low-risk “${esc(a.kind)}” requests from your agent are approved automatically. Revoke in Settings."><input type="checkbox" data-always="${esc(a.id)}"> Always allow</label>` : ''}</div>
         <div class="nf-actions">${risk}
           <span style="flex:1"></span>
-          <button class="linkish nf-ask" data-ask="${esc(a.id)}">Ask a question</button>
+          <button class="linkish nf-ask" data-ask="${esc(a.id)}">${a.change ? 'Request changes' : 'Ask a question'}</button>
           <button class="btn nf-deny" data-decide="deny" data-ap="${esc(a.id)}">Deny</button><button class="btn primary nf-approve" data-decide="approve" data-ap="${esc(a.id)}">Approve</button></div>`;
     }
-    return `${details}${qs}<div class="nf-actions">${risk}<span class="nf-state ${esc(a.status)}">${a.status === 'closed' ? 'Closed' : a.status === 'approved' ? 'Approved' : 'Denied'}${a.decidedByName ? ' by ' + esc(a.decidedByName) : ''}${a.note ? ` · “${esc(a.note)}”` : ''}</span></div>`;
+    const undoBtn = a.change && a.status === 'approved' ? `<button class="btn nf-undo" data-nf-undo="${esc(a.change.id)}" data-proj="${esc(a.change.project || '')}">Undo</button>` : '';
+    return `${details}${qs}<div class="nf-actions">${risk}${undoBtn}<span class="nf-state ${esc(a.status)}">${a.status === 'closed' ? 'Closed' : a.status === 'approved' ? 'Approved' : 'Denied'}${a.decidedByName ? ' by ' + esc(a.decidedByName) : ''}${a.note ? ` · “${esc(a.note)}”` : ''}</span></div>`;
   }
   // feat/tasks-company: a task offered to you answers right here (Accept, or Decline with a reason)
   function offerBlock(i) {
@@ -131,7 +134,10 @@
       <div class="nf-chips">${counts}</div>
       <ol>${s.top.map(i => `<li data-jump="${esc(i.id)}">${esc(i.title)}</li>`).join('')}</ol></section>`;
   }
-  function render() {
+  // feat/cowork-editors: fill in what each suggested change changes, after the list is drawn
+  const fillChanges = () => { if (!window.TribeChanges) return; document.querySelectorAll('[data-nf-change]').forEach(el => window.TribeChanges.preview(el, el.dataset.nfChange, el.dataset.proj)); };
+  function render() { renderList(); setTimeout(fillChanges, 0); }
+  function renderList() {
     if (meta.history) return renderHistory();
     let list = items.filter(i => !snoozed(i) && (filter === 'all' || (filter === 'needs' ? needsYou(i) : ['mention', 'dm'].includes(i.type))));
     const lowPending = pendingForMe().filter(a => a.risk === 'low');
@@ -182,6 +188,8 @@
     render();
   }
   $('#nf-list').addEventListener('click', async e => {
+    const un = e.target.closest('[data-nf-undo]');
+    if (un) { e.stopPropagation(); un.disabled = true; try { if (window.TribeChanges) await window.TribeChanges.undo(un.dataset.nfUndo, un.dataset.proj); un.remove(); } catch (err) { toast(err.message); un.disabled = false; } return; }
     const btn = e.target.closest('[data-decide]');
     if (btn) { e.stopPropagation(); btn.disabled = true; try { await decideAp(btn.dataset.ap, btn.dataset.decide); } catch (err) { toast(err.message); btn.disabled = false; } return; }
     const ans = e.target.closest('[data-tkans]');

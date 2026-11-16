@@ -165,8 +165,35 @@
     if (u.undo) await u.undo();
     const v = L(); delete v.applied[id]; saveLocal(v); emit(); return true;
   }
+  // feat/cowork-editors: a suggestion someone can't apply becomes a change request (server/changereq.js) carrying the exact
+  // change: the suggestion runs with its save caught, so the people who decide approve the real thing with one tap.
+  async function capture(fn) {
+    const real = C.api; let got = null;
+    C.api = async (path, o = {}) => {
+      const m = o && o.method === 'PUT' && /^\/projects\/([^/]+)\/(site-config|app-config|launchkit|motion\/([a-z0-9][a-z0-9-]*))$/.exec(String(path));
+      if (!m || got) return real(path, o);
+      const b = o.body || {};
+      got = { pid: decodeURIComponent(m[1]), tool: m[2] === 'site-config' ? 'site' : m[2] === 'app-config' ? 'app' : m[2] === 'launchkit' ? 'launch' : 'motion', key: m[3] || undefined, payload: b.config || b.doc || b.kit };
+      return { ok: true, rev: (b.base || 0) + 1, config: got.payload, kit: got.payload, key: m[3] };
+    };
+    try { await fn(); } catch { /* a refusal on the way is fine: what it wanted to save is what we send */ } finally { C.api = real; }
+    return got && got.payload ? got : null;
+  }
   async function ask(item, refused) {
     const note = `${item.title}${item.why ? ` (${item.why})` : ''}`.slice(0, 300);
+    if (online() && typeof item.apply === 'function') {
+      const ch = await capture(() => item.apply());
+      if (ch) {
+        try {
+          const r = await C.api(`/projects/${encodeURIComponent(ch.pid || projectId())}/changes`, { method: 'POST', body: { tool: ch.tool, key: ch.key, payload: ch.payload, title: item.title, why: item.why || '', summary: [item.title].concat((item.from || []).map(chipText)).slice(0, 4) } });
+          const v = L(); v.later[item.id] = Date.now(); saveLocal(v); emit();
+          if (r && r.applied) { toast(tr('Done.')); return true; }
+          const who = r && r.request && r.request.to ? r.request.to.slice(0, 3).join(', ') : '';
+          toast(who ? tr('Sent to {who} for OK.').replace('{who}', who) : tr('Asked the people who can change this.'));
+          return 'asked';
+        } catch { /* falls back to Ask them below */ }
+      }
+    }
     try {
       if (window.TribeGroupStyle && window.TribeGroupStyle.ask) await window.TribeGroupStyle.ask(item.cap || 'site.edit', note);
       else if (online()) await C.api('/chat/general', { method: 'POST', body: { text: `Suggestion: ${note}` } });
