@@ -9,7 +9,15 @@
 - **One design library**: 664 items with their licences and a search: 56 palettes, 68 font pairs, 153 icons, 52 sounds, 51 pictures, 63 website sections, 61 app parts, 51 screens, 55 moving backgrounds and 54 motion feels, in the website designer, App Creator, Motion Studio and Launch kit. Colour packs install from the shelf. Fonts beyond the 10 built in load from Google Fonts when you pick one.
 - **Website**: a new page for apps, clips and store pages, and a home section with clips drawn by the app's own engine.
 - **Flint**: understands the new tools with no AI ("make me a habit tracker app", "make it 9:16", "make store screenshots", "what do you suggest?", "use the sunset palette").
-- **Phones**: App Creator, Motion Studio, Share a clip, the Launch kit, Suggestions and the library all work at 390px with 40px targets.
+- **Put it on your phone**: one guided path from any project to an icon on the home screen. It checks what makes it installable and fixes what is missing in one tap, puts it online (Play link, GitHub Pages or free cloud, with the free limits and where they come from), gives a QR code, and shows the Add to Home Screen steps for your phone and browser. A last step covers real store apps and what they cost.
+- **Work on it together**: the website designer, App Creator, Motion Studio and the Launch kit show who is here, each person's pointer and selection with their name, and stop you from typing over someone ("Ana is editing this"). Others' saves arrive live.
+- **Suggest a change**: if your role can't change a tool, your edits become a draft you can suggest with a reason. It goes to whoever can approve it (or the council), who sees a before and after and can approve, ask for changes or say no. New rows in Who can do what here: app, motion and store page.
+- **Flint knows app building**: 48 working features for App Creator and code apps (saved on the phone, search, dark mode, reminders, share and more) and 107 answers about making apps, all with no AI. It says plainly when a stronger AI would do better.
+- **Never lose the last edit**: App Creator, Motion Studio and the Launch kit save a change made just before the tab closes.
+- **Safer templates**: picking a template over your app asks first.
+- **Design is one place**: Ctrl K, Flint and Learn open the same creation flow as the sidebar.
+- **Translations**: Design and website designer menus in seven languages; no more half-translated lines.
+- **Phones**: App Creator, Motion Studio, Share a clip, the Launch kit, Suggestions, the library and Put it on your phone all work at 390px. Tap targets in the creator tools, Flint, sheets and the dashboard are at least 36px, and designer and library tabs wrap instead of hiding. Phones see who is editing; pointers show on desktops.
 
 ## v0.38.1
 - **Free cloud in one step**: every place that offers Free cloud now shows the same step. One button opens Render; you bring back your cloud address and setup code, press Move it there, and the app makes you the host and moves your project in. No more opening the address, making an invite link and pasting it back.
