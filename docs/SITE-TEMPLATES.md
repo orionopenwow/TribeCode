@@ -121,3 +121,28 @@ The same importer is in the designer: **Import HTML…** (gallery or Site panel)
 Licenses: Start Bootstrap and Tailwind Toolbox are MIT (their notices are in `NOTICE`); HTML5 UP is Creative Commons
 Attribution 3.0 (credit in the footer of every export of those templates, and in `NOTICE`). Not imported: Cruip's free
 templates (GPL-3.0, React/Next builds), and HTML5 UP pages whose layout depends on scripts.
+
+## What kind of site first (p5-start)
+
+Starting a website asks one question before the templates: what kind of site. The two main kinds are cards (Link in
+bio; App or project page), the others a quiet row (Business or shop, Portfolio, Event, Blog or notes, Blank). A kind
+shows its own templates, the best first and at most twelve, with **See all templates** for the whole gallery (search
+and categories). Design › Website, the older Website templates, New site and Flint ("make a website", "make a page for
+my app") all open this one screen; More › Templates opens it over a site with **Keep my design**.
+
+- The kinds and the best-first order live in `app/ui/designflow-data.js` (`SITE_KINDS`, `SITE_PICKS`); every template
+  in `app/ui/sitetpl/catalog.json` carries a `kind`, set by `scripts/dev/site-gallery.py` (`kind_of`).
+- Nine templates were added as site types in `scripts/dev/site-types.json`: six link-in-bio pages (musician, shop,
+  writer, coach, developer, artist), **GitHub project**, **App download page** and **Send people to my app**.
+- **Send visitors on** (`go` in `app/ui/sitecfg.js`) is the section behind "Send people to my app": a heading, a line,
+  where it goes shown in full, and a button. The address is fixed in the page, never read from the link someone
+  opened, and must be `https://` or `http://` with a real host and no user name. The wait is 2 to 30 seconds. The
+  `<meta http-equiv="refresh">` is written only into exported and published pages (`exportFiles`, `render(..., { go:
+  true })`), so the editor, previews and change-request pictures never move. Flint: "send people to my app", "make a
+  redirect to https://…".
+- An App or project page fills in the project's GitHub address and latest version tag when the project's own folder
+  has a GitHub `origin` (`gitFacts` in `server/sitedesign.js`: it reads `.git/config` and the tags, with no network
+  and no token). With nothing known, the clear placeholder `github.com/you/your-project` stays.
+- The design Plan (steps to tick beside a design) is switched off for now: `PLANS_ON` in `app/ui/designflow.js`.
+
+Tests: `app/test/site_kinds_test.js` (no browser) and `app/test/e2e_site_kinds.py`.

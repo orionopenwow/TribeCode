@@ -154,7 +154,7 @@ add('g', [
 // ---- held out: written after tuning, never tuned against; reported on their own ----
 const H0 = C.length;
 add('g', [['can u make me one of those link pages for my bio', 'site.linkbio'], ['website for my sourdough micro bakery', 'site.cafe'], ['our jazz trio needs a site', 'site.band'], ['site where i sell my zines', 'site.merch'],
-  ['page for my yoga classes', 'site.service'], ['we got engaged!! need a page for the guests', 'site.wedding'], ['make a site for my mobile app', 'site.saas'], ['teach me the inspo board', 'lesson', { feature: 'inspo' }],
+  ['page for my yoga classes', 'site.service'], ['we got engaged!! need a page for the guests', 'site.wedding'], ['make a site for my mobile app', 'site.start', { kind: 'app' }], ['teach me the inspo board', 'lesson', { feature: 'inspo' }],
   ['how do i use huddles', 'lesson', { feature: 'huddles' }], ['tutorial on exporting', 'lesson', { feature: 'export' }], ['night theme', 'theme.dark-mode']]);
 add('s', [['the signup button goes nowhere', 'site.wire'], ['make the order button link to the menu page', 'site.wire', { to: 'menu' }], ['new page: Workshops', 'site.page.add', { name: 'Workshops' }],
   ['swap in a photo from my board', 'site.image.replace', { source: 'board' }], ['circle crop the headshot', 'site.image.shape', { shape: 'round' }], ['flip it to dark', 'site.dark', { mode: 'dark' }],
@@ -463,6 +463,10 @@ for (let i = CW0; i < C.length; i++) C[i].v = 'cw';
 const LS0 = C.length;
 for (const [ctx, t, i, s] of require('./flint-eval/lessons.js')) C.push({ t, i, s: s || undefined, ctx });
 for (let i = LS0; i < C.length; i++) C[i].v = 'ls';
+// ---- p5-start: the website start screen: make a website, a page for my app, send people to my app ----
+const SK0 = C.length;
+for (const [ctx, t, i, s] of require('./flint-eval/sitekinds.js')) C.push({ t, i, s: s || undefined, ctx });
+for (let i = SK0; i < C.length; i++) C[i].v = 'sk';
 
 const out = { about: 'Flint evaluation set (feat/flint-site): websites, the design canvas, preview edits, lessons and global commands. Written by scripts/dev/flint-eval-cases.js; checked by app/test/flint_eval_test.js. "i" = the expected intent (a list for several steps, null when Flint should not claim it), "s" = slots that must match, "ctx" = s|c|cs|p|g (site designer, canvas, canvas with a selection, preview, anywhere).', now: '2026-11-10T10:00:00', cases: C };
 fs.writeFileSync(path.join(__dirname, '..', '..', 'app', 'test', 'flint_eval.json'), JSON.stringify(out, null, 1) + '\n');

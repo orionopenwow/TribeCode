@@ -98,6 +98,9 @@
     const steps = (D().PLANS[kind] || []).map(s => ({ ...s, act: s.act ? { ...s.act } : null, done: false }));
     return { key: `${kind}-${slug(title)}-${rid().slice(0, 6)}`, kind, title, template: template || '', prompt: prompt || '', target, steps, created: new Date().toISOString(), updated: '' };
   }
+  // p5-start: the Plan (steps to tick, "Add these steps as tasks") is switched off for now: plans are still kept per
+  // design so Continue can reopen it, but no checklist, chip or dock is shown. Set to true to bring it back.
+  const PLANS_ON = false;
   let active = null;   // the plan on screen
   function setActive(p) { active = p; ls.set(AKEY, p ? { key: p.key, pid: p.target.pid || '' } : null); dock(); }
 
@@ -111,7 +114,7 @@
   function kinds() {
     if (!host) return; view = 'kinds'; kindNow = '';
     document.body.classList.remove('dfl-deep');
-    host.innerHTML = `<section class="dfl" id="dfl" data-step="kinds">${head('Design', 'What are you making?', 'Pick one. Each comes with templates, an optional prompt for Flint and a plan to follow.')}
+    host.innerHTML = `<section class="dfl" id="dfl" data-step="kinds">${head('Design', 'What are you making?', PLANS_ON ? 'Pick one. Each comes with templates, an optional prompt for Flint and a plan to follow.' : 'Pick one. Each comes with templates and an optional prompt for Flint.')}
       <div class="dfl-kinds" role="list">${D().KINDS.map(k => `<button type="button" class="dfl-kind" role="listitem" data-kind="${k.id}"><span class="dfl-ki">${icon(k.icon, 22)}</span><span class="dfl-kt"><b>${esc(k.t)}</b><small>${esc(k.d)}</small></span></button>`).join('')}</div>
       ${scope === 'project' ? '<section class="dfl-cont" id="dfl-cont"><span class="eyebrow">Continue</span><h2>In this project</h2><div class="dfl-list" id="dfl-cont-list"><p class="faint">Loading…</p></div></section>' : '<div class="dfl-cont-plans" id="dfl-cont-plans"></div>'}</section>`;
     host.querySelectorAll('[data-kind]').forEach(b => b.onclick = () => swap(() => gallery(b.dataset.kind)));
@@ -121,7 +124,7 @@
   async function continueList() {
     const plans = await listPlans();
     const row = p => { const d = p.steps.filter(s => s.done).length, k = D().KINDS.find(x => x.id === p.kind) || {};
-      return `<button type="button" class="dfl-row" data-plan="${esc(p.key)}" data-pid="${esc(p.target.pid || '')}"><span class="dfl-ki sm">${icon(k.icon, 18)}</span><span class="dfl-kt"><b>${esc(p.title)}</b><small>${esc(k.t || p.kind)} · plan ${d}/${p.steps.length}</small></span>${icon('chev', 16)}</button>`; };
+      return `<button type="button" class="dfl-row" data-plan="${esc(p.key)}" data-pid="${esc(p.target.pid || '')}"><span class="dfl-ki sm">${icon(k.icon, 18)}</span><span class="dfl-kt"><b>${esc(p.title)}</b><small>${esc(k.t || p.kind)}${PLANS_ON ? ` · plan ${d}/${p.steps.length}` : ''}</small></span>${icon('chev', 16)}</button>`; };
     if (scope === 'project') {
       const box = host && host.querySelector('#dfl-cont-list'); if (!box) return;
       let files = []; try { files = (await C.api('/canvas')).files || []; } catch {}
@@ -133,7 +136,7 @@
       box.querySelectorAll('[data-wb]').forEach(b => b.onclick = () => window.TribeWhiteboard && window.TribeWhiteboard.open(b.dataset.wb));
     } else {
       const box = host && host.querySelector('#dfl-cont-plans'); if (!box) return;
-      box.innerHTML = plans.length ? `<span class="eyebrow">Your plans</span><div class="dfl-list">${plans.slice(0, 6).map(row).join('')}</div>` : '';
+      box.innerHTML = plans.length ? `<span class="eyebrow">${PLANS_ON ? 'Your plans' : 'Recent'}</span><div class="dfl-list">${plans.slice(0, 6).map(row).join('')}</div>` : '';
     }
     (host || document).querySelectorAll('[data-plan]').forEach(b => b.onclick = () => resume(b.dataset.plan, b.dataset.pid));
   }
@@ -156,7 +159,9 @@
   }
   const PLACEHOLDER = { motion: 'A launch clip for Lantern Run in teal, snappy', website: 'A site for Sunrise Bakery, warm colors, with the menu', app: 'A kanban board for our band called Gig Board, in teal', game: 'A floaty endless runner called Fox Dash in pink', screen: 'For Ember Coffee, in teal', slides: 'Our game jam recap: Lantern Run', poster: 'Open mic night, Friday 8pm, in orange', whiteboard: 'What should our first level feel like?', logo: 'Lantern Studio, warm and friendly, in amber' };
   async function gallery(kind) {
-    if (!host) return; view = 'gallery'; kindNow = kind;
+    if (kind === 'website') return startWebsite();   // p5-start: one gallery for websites: the designer's own (kinds first)
+    if (!host) return;
+    view = 'gallery'; kindNow = kind;
     const k = D().KINDS.find(x => x.id === kind); if (!k) return kinds();
     document.body.classList.add('dfl-deep');
     host.innerHTML = `<section class="dfl dfl-gal" id="dfl" data-step="gallery" data-kind="${kind}"><button type="button" class="dfl-back" id="dfl-back">${icon('back', 16)}All kinds</button>
@@ -209,6 +214,11 @@
     const KC = K() ? Object.keys(K().COLORS) : [];
     if (STYLE_RX.test(ask) || (KC.length && new RegExp(`\\b(${KC.join('|')})\\b`, 'i').test(ask))) return '';
     return nameFrom(ask, '');
+  }
+  // p5-start: Design > Website opens the website designer's start screen (what kind of site?), the one gallery
+  async function startWebsite(o = {}) {
+    const SD = window.TribeSiteDesigner; if (!SD) { toast('The website designer did not load. Reload the app.'); return; }
+    await SD.open({ ...(pidNow() ? { pid: pidNow() } : {}), start: true, ...(o.kind ? { kind: o.kind } : {}) });
   }
   async function makeWebsite(tplId, ask) {
     const SD = window.TribeSiteDesigner; if (!SD) throw new Error('The website designer did not load. Reload the app.');
@@ -395,7 +405,7 @@
         ${s ? `<p class="dfl-credit faint">${s.original ? 'An original TribeCode starter' : `Adapted from <a href="${esc(s.source)}" target="_blank" rel="noopener">${esc(s.source.replace(/^https:\/\/github.com\//, ''))}</a> by ${esc(s.by)}`} · ${esc(s.license)} · the LICENSE file travels with the code.</p>` : ''}
       </div></div></section>`;
     host.querySelector('#dfl-back').onclick = () => swap(kinds);
-    planCard(host.querySelector('#dfl-plan-host'), p, { inline: true });
+    if (PLANS_ON) planCard(host.querySelector('#dfl-plan-host'), p, { inline: true }); else { const ph = host.querySelector('#dfl-plan-host'); if (ph) ph.remove(); }
     toTop();
     if (local && it) paintFrame(it);
     if (p.target.type === 'build') {   // the project's own preview (a short-lived signed path, sandboxed like preview.js); it reloads itself when config.js changes
@@ -508,6 +518,7 @@
   }
   function dock() {
     let d = $('#dfl-dock'), sc = $('#dfl-scrim');
+    if (!PLANS_ON) { if (d) d.hidden = true; if (sc) sc.hidden = true; const c0 = $('#dfl-chip'); if (c0) c0.hidden = true; document.body.classList.remove('dfl-side'); return; }
     const flowShown = !!(host && host.isConnected && view === 'workspace' && host.offsetParent !== null);
     if (!active || flowShown) { if (d) d.hidden = true; if (sc) sc.hidden = true; const c = $('#dfl-chip'); if (c) c.hidden = true; document.body.classList.remove('dfl-side'); return; }
     const inline = ['local-site', 'build', 'code'].includes((active.target || {}).type);   // apps and games show their plan in the workspace
@@ -575,5 +586,5 @@
     return s;
   }
 
-  window.TribeDesignFlow = { mount, open, gallery: k => gallery(k), kinds: () => kinds(), create, plan: () => active, showPlan: resume, fromFlint, catalog, dock, icon, addTasks: () => active && addTasks(active), view: () => view };
+  window.TribeDesignFlow = { startWebsite, mount, open, gallery: k => gallery(k), kinds: () => kinds(), create, plan: () => active, showPlan: resume, fromFlint, catalog, dock, icon, addTasks: () => active && addTasks(active), view: () => view };
 })();

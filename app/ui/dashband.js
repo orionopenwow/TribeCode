@@ -135,7 +135,7 @@
     const pid = b && b.project.id;
     if (k === 'start') return PJ() && PJ().openNew ? PJ().openNew() : window.TribeLocalSetup && window.TribeLocalSetup.start();
     if (k === 'more') return menu(anchor, b, where);
-    if (k === 'new-site') return inProject(pid, () => window.TribeSiteDesigner && window.TribeSiteDesigner.open({ pid }));
+    if (k === 'new-site') return inProject(pid, () => window.TribeSiteDesigner && window.TribeSiteDesigner.open({ pid, start: true }));
     if (k === 'new-design') return inProject(pid, () => (window.TribeDesignFlow && window.TribeDesignFlow.open ? window.TribeDesignFlow.open({ kind: 'design' }) : window.TribeCanvas && window.TribeCanvas.open()));
     if (k === 'new-app') return inProject(pid, () => window.TribePreview && window.TribePreview.open());
     if (k === 'open') {

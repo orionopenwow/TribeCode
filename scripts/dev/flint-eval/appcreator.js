@@ -10,7 +10,7 @@ module.exports = [
   ['g', 'build a music player app', 'app.make', { template: 'music' }], ['g', 'make an invoice app', 'app.make', { template: 'invoices' }], ['g', 'make a language flashcards app', 'app.make', { template: 'flashcards' }],
   // unchanged neighbours
   ['g', 'make a notes app', 'site.starter-notes'], ['g', 'build a chat app', 'site.starter-chat'], ['g', 'design a mobile app', 'design.new', { kind: 'app' }], ['g', 'make an iphone app', 'publish.to'],
-  ['g', 'make a site for my mobile app', 'site.saas'],
+  ['g', 'make a site for my mobile app', 'site.start', { kind: 'app' }],
   // kits and screens
   ['a', 'add a settings screen', 'app.kit', { kit: 'settings' }], ['a', 'add onboarding', 'app.kit', { kit: 'onboarding' }], ['a', 'add a paywall', 'app.kit', { kit: 'paywall' }], ['a', 'add a login screen', 'app.kit', { kit: 'signin' }],
   ['a', 'add sign in', 'app.kit', { kit: 'signin' }], ['a', 'add a profile page', 'app.kit', { kit: 'profile' }], ['a', 'i need a checkout flow', 'app.kit', { kit: 'checkout' }], ['a', 'add a notifications screen', 'app.kit', { kit: 'notifications' }],

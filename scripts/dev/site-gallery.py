@@ -29,7 +29,14 @@ THUMBS = '--no-thumbs' not in args
 SOURCES = json.loads((ROOT / 'scripts' / 'dev' / 'site-sources.json').read_text())
 NATIVE_CAT = {'linkbio': 'Link in bio', 'merch': 'Shop', 'portfolio': 'Portfolio', 'creator': 'Creator', 'band': 'Music', 'cafe': 'Food & drink', 'service': 'Business', 'wedding': 'Events',
               'podcast': 'Creator', 'blog': 'Blog', 'saas': 'Startup', 'gamepage': 'Games', 'resume': 'Personal', 'nonprofit': 'Nonprofit', 'photography': 'Portfolio', 'comingsoon': 'Coming soon'}
-ORDER = ['Link in bio', 'Business', 'Startup', 'Portfolio', 'Personal', 'Blog', 'Shop', 'Food & drink', 'Music', 'Creator', 'Events', 'Learning', 'Community', 'Nonprofit', 'Games', 'Coming soon']
+ORDER = ['Link in bio', 'Projects', 'Business', 'Startup', 'Portfolio', 'Personal', 'Blog', 'Shop', 'Food & drink', 'Music', 'Creator', 'Events', 'Learning', 'Community', 'Nonprofit', 'Games', 'Coming soon']
+# p5-start: the kind of site each template belongs to (the website start screen asks this first). Kinds: linkbio, app
+# (an app, game or project page), business, portfolio, event, blog. Kept in step with KIND_OF in app/ui/designflow-data.js.
+KIND_BY_CAT = {'Link in bio': 'linkbio', 'Creator': 'linkbio', 'Projects': 'app', 'Startup': 'app', 'Games': 'app', 'Coming soon': 'app',
+               'Business': 'business', 'Shop': 'business', 'Food & drink': 'business', 'Nonprofit': 'business', 'Community': 'business',
+               'Portfolio': 'portfolio', 'Personal': 'portfolio', 'Music': 'portfolio', 'Events': 'event', 'Learning': 'event', 'Blog': 'blog'}
+KIND_BY_ID = {'podcast': 'blog'}
+def kind_of(c): return KIND_BY_ID.get(c['id']) or KIND_BY_CAT.get(c.get('category', ''), 'business')
 TYPES = json.loads((ROOT / 'scripts' / 'dev' / 'site-types.json').read_text())['types']   # feat/design-site2: site types written as designer configs
 
 def hexrgb(h): h = h.lstrip('#'); return tuple(int(h[i:i + 2], 16) for i in (0, 2, 4))
@@ -190,7 +197,7 @@ def main():
     except Exception: pass
     have = {c['id'] for c in cat}
     cat += [x for i, x in old.items() if i not in have and (OUT / f'{i}.json').exists()]
-    for c in cat: c['thumb'] = f"sitetpl/thumbs/{c['id']}.webp"
+    for c in cat: c['thumb'] = f"sitetpl/thumbs/{c['id']}.webp"; c['kind'] = kind_of(c)
     cat.sort(key=lambda c: (ORDER.index(c['category']) if c['category'] in ORDER else 99, c.get('order', 99)))
     cats = [x for x in ORDER if any(c['category'] == x for c in cat)]
     (OUT / 'catalog.json').write_text(json.dumps({'about': 'Website templates for the designer (scripts/dev/site-gallery.py). Sources and licenses: docs/SITE-TEMPLATES.md.', 'categories': cats, 'templates': cat}, indent=1))

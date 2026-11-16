@@ -66,7 +66,7 @@ def v028(page, tag):
     got = page.evaluate("TribeClient.api('/pins?state=resolved')")["pins"]
     assert any(p["id"] == pin["id"] and len(p["thread"]) == 2 for p in got), got
     # the website template gallery, with real thumbnails
-    page.evaluate("TribeSiteLib.open()")
+    page.evaluate("TribeSiteLib.open({ code: true })")
     page.wait_for_selector("#slx .slx-card", timeout=8000)
     assert page.locator("#slx .slx-card").count() == 16
     page.wait_for_function("[...document.querySelectorAll('#slx .slx-th img')].every(i => i.complete && i.naturalWidth > 0)", timeout=8000)

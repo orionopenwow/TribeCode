@@ -6,7 +6,7 @@
 //                opens the preview with Flint and the property sheet.
 //   Pro          + the files, with what each one is for; the code is plain HTML/CSS/JS, commented.
 // Edits are saved to site.json (and the pages re-rendered) as you go; Done saves a version (a git commit).
-// Public: window.TribeSiteLib = { open({ pid }), edit({ pid, dir, level }), close() }
+// Public: window.TribeSiteLib = { open({ pid, kind, code }), edit({ pid, dir, level }), close() }   open() without code: the designer's start screen
 (function () {
   const nice = n => /[A-Z ]/.test(n) ? n : String(n).replace(/[-_]+/g, ' ').replace(/\b\w/g, c => c.toUpperCase());   // polish: a folder name like ember-socks reads as Ember Socks
   'use strict';
@@ -43,7 +43,10 @@
   document.addEventListener('keydown', e => { if (e.key !== 'Escape' || !ov) return; e.stopPropagation(); e.preventDefault(); if (st) done(false); else close(); }, true);
 
   // ---------- the gallery ----------
+  // p5-start: one gallery. Website templates (Ctrl K, setup, the Website page, Flint) open the website designer's start
+  // screen (what kind of site, then its templates). This older code-template gallery stays reachable with opts.code.
   async function open(opts = {}) {
+    if (!opts.code && window.TribeSiteDesigner) { const pid = opts.pid || (C && C.project && C.project()) || undefined; return window.TribeSiteDesigner.open({ ...(pid ? { pid } : {}), start: true, ...(opts.kind ? { kind: opts.kind } : {}) }); }
     const pid = opts.pid || (C && C.project());
     const el = overlay('slx--gallery');
     el.innerHTML = `<div class="slx-win"><header class="slx-head"><div><p class="slx-eye">${t('Website templates')}</p><h2>${t('Start a site')}</h2></div>
