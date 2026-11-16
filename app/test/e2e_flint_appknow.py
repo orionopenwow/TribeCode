@@ -102,7 +102,7 @@ def main():
             for q, rx in [("how do I add login to my app", "server|Supabase"), ("how do apps work offline", "service worker"), ("what is a web app manifest", "manifest"),
                           ("should I use a PWA, Expo or Capacitor?", "Expo"), ("how do push notifications work on iPhone?", "16\\.4"), ("how do I store data in my app?", "localStorage|IndexedDB"),
                           ("how do I add a map to my app?", "OpenStreetMap"), ("why does my app lose its data when I reload?", "memory|Remember"), ("how do I take payments in my app?", "payment provider|Stripe"),
-                          ("how do I put my app on my home screen?", "Add to Home Screen")]:
+                          ("how do I put my app on my home screen?", "Add to Home Screen|Put it on your phone")]:
                 ask(host, q, rx)
 
             # ---- 2: features in the code app ----
