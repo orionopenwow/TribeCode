@@ -90,7 +90,7 @@
     const scrim = document.createElement('div'); scrim.className = 'lch-scrim';
     const el = document.createElement('section'); el.id = 'lch'; el.className = 'lch'; el.setAttribute('role', 'dialog'); el.setAttribute('aria-modal', 'true'); el.setAttribute('aria-labelledby', 'lch-h'); el.tabIndex = -1;
     el.innerHTML = `<header class="lch-head"><div class="lch-ttl"><span class="eyebrow">${esc(T('Launch kit'))}</span><h2 id="lch-h">${esc(st.name)}</h2></div>
-      <span class="lch-prog" id="lch-prog"></span>${window.TribeAssetLib ? `<button type="button" class="btn sm ghost lch-lib" id="lch-lib">${ico('palette', 14)} <span>${esc(T('Library'))}</span></button>` : ''}<button type="button" class="lch-x" id="lch-x" aria-label="${esc(T('Close'))}">${ico('x', 18)}</button></header>
+      <span class="lch-prog" id="lch-prog"></span>${window.TribeAssetLib ? `<button type="button" class="btn sm ghost lch-lib" id="lch-lib">${ico('palette', 14)} <span>${esc(T('Library'))}</span></button>` : ''}${window.TribeChanges && window.TribeChanges.entryHTML ? window.TribeChanges.entryHTML('btn sm ghost') : ''}<button type="button" class="lch-x" id="lch-x" aria-label="${esc(T('Close'))}">${ico('x', 18)}</button></header>
       <nav class="lch-tabs" role="tablist" aria-label="${esc(T('Launch kit'))}">${TABS.map(([id, l, i]) => `<button type="button" role="tab" class="lch-tab" data-lch-tab="${id}" aria-selected="false">${ico(i, 16)}<span>${esc(T(l))}</span></button>`).join('')}</nav>
       <div class="cr-strip" id="lch-cr" hidden></div>
       <div class="lch-body" id="lch-body"></div>`;
@@ -101,6 +101,7 @@
     if (window.TribeUI && window.TribeUI.adopt) window.TribeUI.adopt(el, { scrim, kind: 'steps', onClose: close });
     else el.addEventListener('keydown', e => { if (e.key === 'Escape') close(); });
     el.querySelectorAll('[data-lch-tab]').forEach(b => b.onclick = () => show(b.dataset.lchTab));
+    if (window.TribeChanges && window.TribeChanges.entry && online(pid)) window.TribeChanges.entry(el.querySelector('[data-cr-entry]'), pid);
     if (window.TribeChanges && online(pid)) st.crStrip = window.TribeChanges.strip(el.querySelector('#lch-cr'), 'launch', { pid, draft: () => K().norm(st.kit), dirty: () => !!(st && st.pendingDraft),
       summary: () => { const b = (() => { try { return JSON.parse(st.base || 'null'); } catch { return null; } })(), k = K().norm(st.kit), out = []; if (!b) return [T('A new store page')];
         const words = { text: T('the store text'), shots: T('the screenshots'), icon: T('the app icon'), paywall: T('the paywall'), checks: T('the checklist') };

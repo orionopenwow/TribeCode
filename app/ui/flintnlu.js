@@ -375,6 +375,15 @@
   // Put it on your phone (app/ui/homescreen.js): the guided path to an icon on the home screen, and Flint's no-AI answers
   const MYAPP = '(?:my|our|the|this)\\s+(?:app|game|site|website|page|project|web app|pwa)|it|this';
   const MYPHONE = '(?:my|a|the|our)\\s+(?:phone|iphone|android|android phone|mobile|ipad|tablet|cell|cellphone)';
+  // pass 4 polish: Where it lives (wherelives.js): the folder a site or app is saved in, and the next step
+  I('where.open', 'local', [
+    /^where\s+(?:is|are|does|do)\s+(?:my|our|the|this)\s+(?:site|website|app|design|designs|project|files?|page|pages|work)\s+(?:saved|stored|kept|live|living|go|going|end up)(?:\s+on\s+(?:my|the|this)\s+(?:computer|pc|mac|laptop|disk))?$/,
+    /^where\s+(?:did|does|do)\s+(?:my|our|the|this)\s+(?:site|website|app|design|project|files?|work)\s+(?:get\s+)?(?:save|saved|go)(?:\s+to)?$/,
+    /^where\s+(?:does|do)\s+(?:it|this|they)\s+live$/, /^where\s+is\s+(?:it|this)\s+(?:saved|stored|kept)$/, /^where\s+it\s+lives$/,
+    /^(?:open|show|show me|find|reveal)\s+(?:the|my|our|this)\s+(?:project\s+|site\s+|website\s+|app\s+)?folder$/,
+    /^(?:open|show|show me|find)\s+(?:the|my|our)\s+(?:site|website|app)(?:'s)?\s+files$/,
+    /^where\s+are\s+(?:the|my|our)\s+(?:real\s+)?files(?:\s+for\s+(?:my|the|this)\s+(?:site|website|app))?$/,
+  ]);
   I('phone.path', 'local', [
     new RegExp(`^(?:how\\s+(?:do|can|could)\\s+(?:i|we)|how\\s+to|help\\s+me|i\\s+want\\s+to|can\\s+(?:i|we|you))\\s+(?:put|get|install|add|have|use|open)\\s+(?:${MYAPP})\\s+(?:on|onto|to|in)\\s+(?:${MYPHONE}|(?:my|the)\\s+home\\s*screen)$`),
     new RegExp(`^(?:install|put|get)\\s+(?:my|our|the|this)\\s+(?:app|game|site|website|web app|pwa)\\s+(?:on|onto)\\s+${MYPHONE}$`),
@@ -1565,6 +1574,7 @@
     'publish': 'publish ship release launch deploy live public go out world put website site game',
     'launch.open': 'launch kit app store play store google stores screenshots icon listing keywords paywall submit submission',
     'phone.path': 'phone iphone android home screen homescreen install installable add icon pwa mobile put my app on',
+    'where.open': 'where saved stored kept lives folder files on my computer open the folder real files',
     'phone.ask': 'why cant install iphone safari free cost mac app store instagram tiktok offline android chrome',
     'share.clip': 'share clip video post reel tiktok instagram x twitter youtube shorts social feed promo show off', 'share.timelapse': 'timelapse time lapse progress history grew over time clip video',
     'preview.open': 'preview live look see open result running app', 'preview.device': 'phone mobile tablet device small screen preview check',

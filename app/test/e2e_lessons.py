@@ -25,7 +25,7 @@ SITE_PORT = PORT + 1
 BASE = f"http://localhost:{PORT}"
 SHOTS = ROOT / "docs" / "screenshots"
 SEED = "try { if (!localStorage.getItem('tribecode.settings.v1')) localStorage.setItem('tribecode.settings.v1', JSON.stringify({name: 'Orion', onboarded: true, tour: {done: true}})) } catch (e) {}"
-OPENERS = {"sitelib", "site", "design", "app", "phone", "invite", "roles", "changes", "versions", "publish", "suggest", "library", "home"}
+OPENERS = {"sitelib", "site", "design", "app", "phone", "invite", "roles", "changes", "versions", "publish", "suggest", "library", "home", "where"}
 
 
 class Q(http.server.SimpleHTTPRequestHandler):
@@ -188,10 +188,8 @@ def main():
             pg.evaluate(clean)
             assert not bad, "Show me rang nothing for: " + ", ".join(bad)
             print(f"  ok  the walk: {len(guides)} quick guides and {walked} lesson steps each ring a real control ({skipped} steps wait for their control)")
-            # a step whose control arrives later joins its track by itself
-            n0 = pg.evaluate("TribeLessons.steps('power').length")
-            pg.evaluate("(() => { const d = document.createElement('button'); d.setAttribute('data-fc-act', 'polish'); d.textContent = 'Polish it'; d.style.cssText = 'position:fixed;left:8px;top:80px;z-index:99'; document.body.appendChild(d); TribeLessons._see(); d.remove(); })()")
-            assert pg.evaluate("TribeLessons.steps('power').length") == n0 + 1 and n0 == 13
+            # pass 4 polish: every Power tools step has its control now, so none waits
+            assert pg.evaluate("TribeLessons.steps('power').length") == 16 and skipped == 0, (pg.evaluate("TribeLessons.steps('power').length"), skipped)
 
             # 8. phone, 390px
             ph = b.new_context(viewport={"width": 390, "height": 844}, is_mobile=True, has_touch=True)
@@ -213,7 +211,7 @@ def main():
             assert wp.locator("#qk-lessons .qk-card").count() == 5 and wp.locator("#qk-lessons [data-lesson=first-site] li").count() == 9
             wp.close(); b.close()
         assert not errors, errors
-        print("e2e_lessons: OK (5 tracks, 34 steps today + 9 waiting for their controls; ticks by doing, kept with the person; Flint, Suggestions, the walk, 390px, website)")
+        print("e2e_lessons: OK (5 tracks, 44 steps, none waiting; ticks by doing, kept with the person; Flint, Suggestions, the walk, 390px, website)")
     finally:
         srv.terminate(); web.shutdown()
         try: srv.wait(timeout=5)

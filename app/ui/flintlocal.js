@@ -412,6 +412,11 @@
       if (id === 'launch.keywords') setTimeout(() => { const k = document.querySelector('#lch-t-keywords'); if (k) { k.focus(); k.scrollIntoView({ block: 'center' }); } }, 600);
       return { text: T('opened', { x: 'Launch kit' }), sum: 'opened the Launch kit' };
     }
+    if (id === 'where.open') {   // Where it lives (wherelives.js): the folder, with friends, online
+      if (!window.TribeWhere) return { text: T('noPlace', { x: 'Where it lives' }) };
+      window.TribeWhere.open();
+      return { text: 'Opened Where it lives. Your site and app are real files in the project’s folder; the sheet shows the folder, who you share it with and how to put it online.', sum: 'where' };
+    }
     if (id === 'phone.path' || (id === 'publish.to' && sl.dest === 'install' && window.TribeHomescreen)) {   // Put it on your phone (homescreen.js)
       if (!window.TribeHomescreen) return { text: T('noPlace', { x: 'Put it on your phone' }) };
       window.TribeHomescreen.open(undefined, sl.stage || '');

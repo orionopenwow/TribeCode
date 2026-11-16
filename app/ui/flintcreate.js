@@ -145,22 +145,24 @@
     if (!force && Date.now() - aiAt < 30000) return aiVal;
     let agents = []; try { agents = ((C.state && C.state().members) || []).filter(m => m.role === 'agent'); } catch {}
     let host = false; try { const t = await C.api('/flint/tiers'); host = !!(t && t.now && t.now.host && t.now.host.online); } catch {}
-    aiAt = Date.now(); aiVal = { any: !!agents.length || host, agents, host };
+    // only a member's own helper can read the design and send a proposal back (docs/CLAUDE-HOOKS.md). The host's AI key
+    // by itself answers in chat; nothing there picks up a design brief, so it does not count here.
+    aiAt = Date.now(); aiVal = { any: !!agents.length, agents, host };
     return aiVal;
   }
   // "Make it beautiful": the brief goes to the tribe's own AI; its proposal comes back for a person to approve
   async function beautify(kind, o) {
     const ai = await hasAI(true), app = kind === 'app';
-    if (!ai.any) return { sent: false, text: tr(`A stronger AI can restyle the whole ${app ? 'app' : 'site'} at once: new layouts, colour and type chosen for your brand, rewritten words. None is connected to this tribe, so nothing was sent. With no AI, “Polish it” tidies spacing, sizes, colours and buttons right now.`), chips: ['Polish it'] };
+    if (!ai.any) return { sent: false, text: tr(ai.host
+      ? `Your tribe’s AI key answers in chat, but it cannot read and restyle the ${app ? 'app' : 'site'} yet. A member’s own AI helper can: connect one under AI helpers and it proposes changes for you to approve. Nothing was sent. With no AI, “Polish it” tidies spacing, sizes, colours and buttons right now.`
+      : `A stronger AI can restyle the whole ${app ? 'app' : 'site'} at once: new layouts, colour and type chosen for your brand, rewritten words. None is connected to this tribe, so nothing was sent. With no AI, “Polish it” tidies spacing, sizes, colours and buttons right now.`), chips: ['Polish it'] };
     let kit = {}; if (o.pid) { try { kit = (await C.api(`/projects/${encodeURIComponent(o.pid)}/brand`)).kit || {}; } catch {} }
     let me = ''; try { me = ((C.state && C.state().me) || {}).name || ''; } catch {}
     const text = brief(kind, { ask: o.ask, from: me, brand: kit, audience: o.audience, outline: o.outline });
     try {
-      if (ai.agents.length) await C.api('/coord/asks', { method: 'POST', body: { text }, ...(o.pid ? { project: o.pid } : {}) });
-      else await C.api('/agents/channel', { method: 'POST', body: { text: '@agents ' + text }, ...(o.pid ? { project: o.pid } : {}) });
+      await C.api('/coord/asks', { method: 'POST', body: { text }, ...(o.pid ? { project: o.pid } : {}) });
     } catch (e) { return { sent: false, text: `${tr('That could not be sent')}: ${e && e.message ? e.message : tr('the tribe did not answer')}.`, chips: ['Polish it'] }; }
-    if (!ai.agents.length) return { sent: true, text: tr('Sent to your tribe’s AI in #agents. Whatever it proposes waits for a person’s OK; nothing has changed.'), chips: [] };
-    return { sent: true, text: tr(app ? 'Sent to your tribe’s AI. It reads the design and proposes changes. You see before and after under Requests, and nothing changes until a person approves.' : 'Sent to your tribe’s AI. It reads the site and proposes changes. They show up here as a list for you to apply or decline; nothing changes until you do.'), chips: [] };
+    return { sent: true, text: tr(app ? 'Sent to your tribe’s AI. It reads the design and proposes changes. You see before and after under Suggested changes, and nothing changes until a person approves.' : 'Sent to your tribe’s AI. It reads the site and proposes changes. You see before and after under Suggested changes, and nothing changes until a person approves.'), chips: [] };
   }
 
   // ---------- Polish it (polish.js) ----------

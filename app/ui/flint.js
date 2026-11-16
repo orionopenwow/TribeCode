@@ -519,7 +519,10 @@
 
   // ---------- view ----------
   const CHIPS = ['Connect my AI', 'What\'s happening?'];   // simple right panel: two, the rest is one question away
-  const statusLine = () => (model.online ? `ready · ${model.browser ? 'built in' : model.cloud ? 'the host\'s AI' : 'local model on'}` : 'basic mode · no model');
+  // pass 4 polish: the header agrees with the badge on each reply. A model on this device (flintllm.js) counts even when
+  // the tribe has no brain set, because the creators' Flint uses it to choose commands.
+  const deviceModel = () => { const L = window.TribeFlintLLM; try { return L && L.ready && L.ready() ? ((L.config && L.config().backend) === 'browser' ? 'browser' : 'computer') : ''; } catch { return ''; } };
+  const statusLine = () => { if (model.online) return `ready · ${model.browser ? 'built in' : model.cloud ? 'the host\'s AI' : 'local model on'}`; const d = deviceModel(); return d === 'browser' ? 'ready · in this browser' : d === 'computer' ? 'ready · on this computer' : 'basic mode · no model'; };
   const privLine = () => {   // qa-pass: say where words actually go (a friend's words go to the host; a cloud model sees what you ask)
     const host = !(window.TribeClient && window.TribeClient.state && window.TribeClient.state().me) || window.TribeClient.state().me.role === 'host';
     if (model.online && model.cloud) return `Flint uses ${model.via || model.model} through the host's key, so what you ask goes to that service. The key never leaves the host.`;
@@ -568,7 +571,7 @@
     const i = thread.length - 1, m = thread[i];
     threads().filter(el => !el.closest('.flint-mount')).forEach(el => { const n = el.querySelector(`.fl-msg[data-i="${i}"] .fl-t`); if (n) { n.innerHTML = linkify(m.text); el.scrollTop = el.scrollHeight; } else { el.innerHTML = threadHtml(); el.scrollTop = el.scrollHeight; } });
   }
-  function drawStatus() { document.querySelectorAll('[data-flst]').forEach(e => { e.textContent = statusLine(); e.classList.toggle('ok', model.online); }); }
+  function drawStatus() { document.querySelectorAll('[data-flst]').forEach(e => { e.textContent = statusLine(); e.classList.toggle('ok', model.online || !!deviceModel()); }); }
   // The flame in the Ask bar: a small menu of what Flint does (feat: clickable Flint)
   function flintMenu(btn, root, sendFn) {
     const go = sendFn || (t => { setOpen(true); send(t); });

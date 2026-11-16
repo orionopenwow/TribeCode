@@ -69,3 +69,9 @@
 
 /* the reason box reads like writing, not code */
 #cr-why { font-family: inherit; height: auto; min-height: 96px; padding: 10px 14px; line-height: 1.5; resize: vertical; }
+
+/* the "Suggested changes" entry in a tool bar or menu (changes.js entry): an icon with a count when changes wait */
+.cr-entry { position: relative; }
+.cr-entry[hidden] { display: none !important; }
+.cr-n { display: inline-grid; place-items: center; min-width: 18px; height: 18px; margin-left: 6px; padding: 0 5px; border-radius: 999px; background: var(--accent); color: var(--canvas); font: 700 10.5px/1 var(--mono); }
+.cr-n[hidden] { display: none; }

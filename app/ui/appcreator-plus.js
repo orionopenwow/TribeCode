@@ -37,6 +37,7 @@
           <button data-m="map" class="apc-m-phone"><b>Screen map</b><small>Every screen and the links between them.</small></button>
           <button data-m="comment" class="apc-m-phone"><b>Comment</b><small>Tap a part to leave a note on it.</small></button>
           <button data-m="history"><b>History</b><small>Earlier versions. See one and bring it back.</small></button>
+          <button data-m="requests" data-cr-entry hidden><b>Suggested changes<span class="apc-n cr-n" data-cr-n hidden></span></b><small>What people asked to change, and what waits for you.</small></button>
           <button data-m="peek"><b id="apc-peek-l">Preview in dark</b><small>A look at the other mode. Nothing is changed.</small></button>
           <button data-m="size" class="apc-m-phone"><b>Phone or tablet</b><small id="apc-size-l"></small></button>
           <button data-m="keys" class="apc-m-desk"><b>Keyboard shortcuts</b><small>Press ? any time.</small></button>
@@ -49,6 +50,8 @@
     r.querySelectorAll('[data-m]').forEach(b => b.onclick = () => { r.querySelector('#apc-moremenu').hidden = true; const k = b.dataset.m;
       if (k === 'map') toggleMap(); else if (k === 'comment') commentMode(!st().cmode); else if (k === 'history') historySheet(); else if (k === 'peek') peek(); else if (k === 'keys') keysSheet();
       else if (k === 'size') { const d = st().doc, order = [['ios', 'phone'], ['android', 'phone'], ['ios', 'tablet']], i = order.findIndex(([p, dv]) => (dv === 'tablet') === (d.device === 'tablet') && (dv === 'tablet' || p === d.platform)); const n = order[(i + 1) % 3]; if (n[1] === 'tablet') setDevice('tablet'); else { if (d.device === 'tablet') setDevice('phone', true); X.apply({ op: 'platform', platform: n[0] }); } } });
+    // someone who can change the app directly sees no strip, so the requests list is here (changes.js keeps the count)
+    if (window.TribeChanges && window.TribeChanges.entry && st().pid) window.TribeChanges.entry(r.querySelector('#apc-moremenu [data-cr-entry]'), st().pid);
     // the strip above the editor can be hidden (cowork.js decides): the layout follows it
     const cr = r.querySelector('#apc-cr');
     if (cr) { const sync = () => r.classList.toggle('has-cr', !cr.hidden && cr.offsetHeight > 0); new MutationObserver(sync).observe(cr, { attributes: true, childList: true }); sync(); setTimeout(sync, 400); }
@@ -406,6 +409,34 @@
     if (!m) { m = document.createElement('div'); m.id = 'apc-map'; m.className = 'apc-map'; r.querySelector('#apc-mid').appendChild(m); wireMap(m); }
     r.classList.add('apc-mapon'); paintTop(); drawMap(); fitMap();
   }
+  // pass 4 polish: a link line never runs across a screen. Lines are straight runs with rounded corners that travel in
+  // the gaps between cards: straight across when nothing is in the way, otherwise out into the gap beside the first
+  // card, along the gap above or below the row, and in from the gap beside the last card.
+  function route(pos, from, to, hs) {
+    const hOf = id => (hs && hs[id]) || CARD.h, A = { ...pos[from], h: hOf(from) }, B = { ...pos[to], h: hOf(to) }, W = CARD.w, others = Object.entries(pos).filter(([id]) => id !== from && id !== to).map(([id, p]) => ({ ...p, h: hOf(id) }));
+    const hitsH = (y, x1, x2) => others.some(p => y > p.y - 6 && y < p.y + p.h + 6 && Math.max(x1, x2) > p.x - 6 && Math.min(x1, x2) < p.x + W + 6);
+    const hitsV = (x, y1, y2) => others.some(p => x > p.x - 6 && x < p.x + W + 6 && Math.max(y1, y2) > p.y - 6 && Math.min(y1, y2) < p.y + p.h + 6);
+    const poly = pts => { const P = pts.filter((q, i) => !i || q[0] !== pts[i - 1][0] || q[1] !== pts[i - 1][1]); let d = `M${P[0][0]} ${P[0][1]}`;
+      for (let i = 1; i < P.length; i++) { const [x, y] = P[i], n = P[i + 1], [px, py] = P[i - 1];
+        if (!n) { d += ` L${x} ${y}`; continue; }
+        const r = Math.min(10, Math.hypot(x - px, y - py) / 2, Math.hypot(n[0] - x, n[1] - y) / 2), ux = Math.sign(x - px), uy = Math.sign(y - py), vx = Math.sign(n[0] - x), vy = Math.sign(n[1] - y);
+        d += ` L${x - ux * r} ${y - uy * r} Q${x} ${y} ${x + vx * r} ${y + vy * r}`; }
+      return d; };
+    const ay = A.y + CARD.h / 2, by = B.y + CARD.h / 2, acx = A.x + W / 2, bcx = B.x + W / 2;
+    if (Math.abs(bcx - acx) < W) {   // one column: bottom to top, or round the side when a screen sits between
+      const down = B.y >= A.y, y1 = A.y + (down ? A.h : 0), y2 = B.y + (down ? 0 : B.h);
+      if (!hitsV(acx, y1, y2) && !hitsV(bcx, y1, y2)) { const my = Math.round((y1 + y2) / 2); return poly([[acx, y1], [acx, my], [bcx, my], [bcx, y2]]); }
+      const lx = Math.min(A.x, B.x) - Math.round(CARD.gx / 3); return poly([[A.x, ay], [lx, ay], [lx, by], [B.x, by]]);
+    }
+    const right = bcx >= acx, sg = right ? 1 : -1, x1 = A.x + (right ? W : 0), x2 = B.x + (right ? 0 : W), g = Math.round(CARD.gx / 2);
+    const l1 = x1 + sg * Math.min(g, Math.abs(x2 - x1) / 2), l2 = x2 - sg * Math.min(g, Math.abs(x2 - x1) / 2);
+    if (!hitsV(l1, ay, by) && !hitsH(by, l1, x2) && !hitsH(ay, x1, l1)) return poly([[x1, ay], [l1, ay], [l1, by], [x2, by]]);
+    if (!hitsH(ay, x1, l2) && !hitsV(l2, ay, by)) return poly([[x1, ay], [l2, ay], [l2, by], [x2, by]]);
+    // a screen is in the way: travel along the gap above (or below) the target's row
+    const gy = Math.round(CARD.gy / 2);
+    for (const ly of [B.y - gy, B.y + B.h + gy, A.y - gy, A.y + A.h + gy]) if (!hitsV(l1, ay, ly) && !hitsH(ly, l1, l2) && !hitsV(l2, ly, by)) return poly([[x1, ay], [l1, ay], [l1, ly], [l2, ly], [l2, by], [x2, by]]);
+    return poly([[x1, ay], [l1, ay], [l1, by], [x2, by]]);
+  }
   function drawMap() {
     const s = st(), r = root(), m = r && r.querySelector('#apc-map'); if (!m || !s.map) return;
     const d = s.doc, pos = layout(d), reach = reachable(d), L = links(d);
@@ -413,15 +444,16 @@
     const mid = id => ({ x: pos[id].x + CARD.w / 2, y: pos[id].y + CARD.h / 2 });
     // one line per pair of screens (an arrowhead at each end when both link to each other); screens in one column join
     // bottom to top, the rest side to side
+
+    m.querySelector('.apc-map-in').innerHTML = `<svg class="apc-map-svg" width="1" height="1" overflow="visible" aria-hidden="true"><defs><marker id="apc-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M1 1.5L9 5 1 8.5" fill="none" stroke="currentColor" stroke-width="1.6"/></marker></defs></svg>`
+      + d.screens.map(sc => `<div class="apc-mc${s.mapSel.includes(sc.id) ? ' sel' : ''}${sc.id === s.screen ? ' cur' : ''}${reach.has(sc.id) ? '' : ' lost'}" data-ms="${esc(sc.id)}" style="left:${pos[sc.id].x}px;top:${pos[sc.id].y}px" tabindex="0" role="button" aria-label="${esc(sc.name)}">${X.mini(d, sc.id, 120)}<span class="apc-mcn" data-i18n-skip>${esc(sc.name)}</span><span class="apc-mcp">${sc.id === d.start ? `<small class="apc-pill">${esc(tr('First'))}</small>` : ''}${reach.has(sc.id) ? '' : `<small class="apc-pill apc-pill-warn">${esc(tr('Can’t be reached'))}</small>`}</span></div>`).join('');
+    const hs = {}; m.querySelectorAll('.apc-mc').forEach(el => { hs[el.dataset.ms] = el.offsetHeight; });
     const seen = new Set(), paths = L.map(l => {
       const key = [l.from, l.to].sort().join('>'); if (seen.has(key)) return ''; seen.add(key);
       const both = L.some(x => x.from === l.to && x.to === l.from), a = mid(l.from), b = mid(l.to), ends = `marker-end="url(#apc-arrow)"${both ? ' marker-start="url(#apc-arrow)"' : ''}`;
-      if (Math.abs(b.x - a.x) < CARD.w) { const down = b.y >= a.y, y1 = pos[l.from].y + (down ? CARD.h : 0), y2 = pos[l.to].y + (down ? 0 : CARD.h), dy = Math.max(16, Math.abs(y2 - y1) / 2) * (down ? 1 : -1); return `<path d="M${a.x} ${y1} C${a.x} ${y1 + dy} ${b.x} ${y2 - dy} ${b.x} ${y2}" ${ends}/>`; }
-      const right = b.x >= a.x, x1 = pos[l.from].x + (right ? CARD.w : 0), x2 = pos[l.to].x + (right ? 0 : CARD.w), dx = Math.max(30, Math.abs(x2 - x1) / 2) * (right ? 1 : -1);
-      return `<path d="M${x1} ${a.y} C${x1 + dx} ${a.y} ${x2 - dx} ${b.y} ${x2} ${b.y}" ${ends}/>`;
+      const d = route(pos, l.from, l.to, hs); return `<path d="${d}" ${ends}/>`;
     }).join('');
-    m.querySelector('.apc-map-in').innerHTML = `<svg class="apc-map-svg" width="1" height="1" overflow="visible" aria-hidden="true"><defs><marker id="apc-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M1 1.5L9 5 1 8.5" fill="none" stroke="currentColor" stroke-width="1.6"/></marker></defs>${paths}</svg>`
-      + d.screens.map(sc => `<div class="apc-mc${s.mapSel.includes(sc.id) ? ' sel' : ''}${sc.id === s.screen ? ' cur' : ''}${reach.has(sc.id) ? '' : ' lost'}" data-ms="${esc(sc.id)}" style="left:${pos[sc.id].x}px;top:${pos[sc.id].y}px" tabindex="0" role="button" aria-label="${esc(sc.name)}">${X.mini(d, sc.id, 120)}<span class="apc-mcn" data-i18n-skip>${esc(sc.name)}</span><span class="apc-mcp">${sc.id === d.start ? `<small class="apc-pill">${esc(tr('First'))}</small>` : ''}${reach.has(sc.id) ? '' : `<small class="apc-pill apc-pill-warn">${esc(tr('Can’t be reached'))}</small>`}</span></div>`).join('');
+    m.querySelector('.apc-map-svg').insertAdjacentHTML('beforeend', paths);
     const n = s.mapSel.length, bar = m.querySelector('.apc-map-sel');
     bar.hidden = !n; if (n) bar.innerHTML = `<span data-i18n-skip>${n}</span> ${esc(tr(n === 1 ? 'screen selected' : 'screens selected'))}<button class="btn" data-ma2="open"${n === 1 ? '' : ' hidden'}>Open</button><button class="btn" data-ma2="dup">Duplicate</button><button class="btn" data-ma2="copy">Copy</button><button class="btn" data-ma2="del">Remove</button>`;
     bar.querySelectorAll('[data-ma2]').forEach(b => b.onclick = () => mapAct(b.dataset.ma2));
@@ -504,5 +536,5 @@
   function onWs(m) { if (m && m.type === 'app-comments' && st() && st().open && m.project === st().pid) loadComments(); }
 
   const playingReal = () => !!(root() && root().querySelector('#apc-playframe'));
-  window.TribeAppPlus = { init(x) { X = x; if (C() && C().on) C().on('ws', onWs); }, onBuild, paintTop, onKey, shiftClick, paintMulti, selIds, multiBar, multiAct, multiInsp, copy, cut, paste, clip, picField, wirePicField, setPicture, shrink, keysSheet, historySheet, rememberLocal, versions, versionDoc, nameVersion, loadComments, commentMode, stageComment, placePins, thread, inspEmpty, toggleMap, drawMap, fitMap, zoom, mapAct, layout, links, reachable, playFrame, stopPlay, playingReal, afterStage, viewDoc, SIZE, setDevice, peek, view: () => view };
+  window.TribeAppPlus = { route, CARD, init(x) { X = x; if (C() && C().on) C().on('ws', onWs); }, onBuild, paintTop, onKey, shiftClick, paintMulti, selIds, multiBar, multiAct, multiInsp, copy, cut, paste, clip, picField, wirePicField, setPicture, shrink, keysSheet, historySheet, rememberLocal, versions, versionDoc, nameVersion, loadComments, commentMode, stageComment, placePins, thread, inspEmpty, toggleMap, drawMap, fitMap, zoom, mapAct, layout, links, reachable, playFrame, stopPlay, playingReal, afterStage, viewDoc, SIZE, setDevice, peek, view: () => view };
 })();

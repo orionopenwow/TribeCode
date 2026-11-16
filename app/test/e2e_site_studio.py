@@ -294,18 +294,23 @@ console.log(JSON.stringify({ done: r.done.length, skipped: r.skipped.length, tit
                 {"op": "accent", "color": "#c2255c"}]}, project=pid)
             assert not err and "Proposed 2 changes" in txt and "Skipped" in txt, txt
             assert cfg(pg)["pages"][0]["blocks"][0]["props"]["title"] != "Coffee worth the walk", "nothing changes until a person says yes"
-            lst = ok(api(f"/projects/{pid}/site-proposals", token=tok))["proposals"]
-            assert len(lst) == 1 and lst[0]["status"] == "open", lst
-            assert api(f"/projects/{pid}/site-proposals/{lst[0]['id']}/applied", "POST", {}, token=key)[0] == 403, "an agent cannot approve its own proposal"
-            pg.wait_for_function("[...document.querySelectorAll('[data-flctx=designer] .fl-thread button')].some(b => /Apply/.test(b.textContent))", timeout=10000)
+            # pass 4 polish: the proposal is a change request (one way for sites and apps): before and after, a person approves
+            assert ok(api(f"/projects/{pid}/site-proposals", token=tok))["proposals"] == [], "no second list beside the requests"
+            reqs = [x for x in ok(api(f"/projects/{pid}/changes", token=tok))["requests"] if x["tool"] == "site" and x["status"] == "open"]
+            assert len(reqs) == 1 and reqs[0]["agent"] and reqs[0]["canDecide"] and reqs[0]["approval"], reqs
+            assert api(f"/approvals/{reqs[0]['approval']}/approve", "POST", {"note": ""}, token=key)[0] in (400, 403, 404), "an agent cannot approve its own proposal"
+            assert [x for x in ok(api(f"/projects/{pid}/changes", token=tok))["requests"] if x["id"] == reqs[0]["id"]][0]["status"] == "open"
+            pg.wait_for_function("[...document.querySelectorAll('[data-flctx=designer] .fl-thread button')].some(b => /Look at them/.test(b.textContent))", timeout=10000)
             shot(pg, "studio-proposal-1440.png")
-            pg.evaluate("[...document.querySelectorAll('[data-flctx=designer] .fl-thread button')].filter(b => /Apply/.test(b.textContent)).pop().click()")
-            pg.wait_for_function("TribeSiteDesigner.cfg().pages[0].blocks[0].props.title === 'Coffee worth the walk'", timeout=5000)
+            pg.evaluate("[...document.querySelectorAll('[data-flctx=designer] .fl-thread button')].filter(b => /Look at them/.test(b.textContent)).pop().click()")
+            pg.wait_for_selector(f"#cr-list [data-cr='{reqs[0]['id']}'] [data-cr-act='approve']", timeout=10000)
+            pg.click(f"#cr-list [data-cr='{reqs[0]['id']}'] [data-cr-act='approve']")
+            pg.wait_for_function("TribeSiteDesigner.cfg().pages[0].blocks[0].props.title === 'Coffee worth the walk'", timeout=10000)
             assert cfg(pg)["theme"]["colors"]["accent"].lower() == "#c2255c"
-            pg.wait_for_timeout(500)
-            assert ok(api(f"/projects/{pid}/site-proposals", token=tok))["proposals"] == [], "answered"
-            pg.evaluate("TribeSiteDesigner.undo()"); pg.wait_for_timeout(300)
-            assert cfg(pg)["pages"][0]["blocks"][0]["props"]["title"] != "Coffee worth the walk" and cfg(pg)["theme"]["colors"]["accent"].lower() != "#c2255c", "one Undo takes the agent's changes back"
+            ok(api(f"/projects/{pid}/changes/{reqs[0]['id']}/undo", "POST", {}, token=tok), "undo the helper's change")
+            pg.wait_for_function("TribeSiteDesigner.cfg().pages[0].blocks[0].props.title !== 'Coffee worth the walk'", timeout=10000)
+            assert cfg(pg)["theme"]["colors"]["accent"].lower() != "#c2255c", "one Undo takes the agent's changes back"
+            pg.evaluate("(() => { const s = document.querySelector('#cr-sheet'); if (s) { const x = s.querySelector('[data-close], .sheet-x, .ui-sheet-x, button[aria-label=Close]'); if (x) x.click(); else s.remove(); } })()"); pg.wait_for_timeout(300)
 
             # ---- Send to my agent, end to end: the sheet sends the ask; a fake MCP agent finds it, takes it, proposes; Apply
             pg.reload(); pg.wait_for_function("window.TribeSiteDesigner && window.TribeClient && TribeClient.connected()", timeout=20000)
@@ -331,14 +336,18 @@ console.log(JSON.stringify({ done: r.done.length, skipped: r.skipped.length, tit
                 {"op": "text", "block": first, "path": "eyebrow", "value": "FRIENDLY SINCE DAY ONE"}]}, project=pid)
             assert not err and "Proposed 3 changes" in txt, txt
             mcp(key, "take_handoff", {"id": hid.group(0), "done": True}, project=pid)
-            pg.wait_for_function("[...document.querySelectorAll('[data-flctx=designer] .fl-thread button')].some(b => /Apply/.test(b.textContent))", timeout=10000)
             n_before = len(cfg(pg)["pages"][0]["blocks"])
-            pg.evaluate("[...document.querySelectorAll('[data-flctx=designer] .fl-thread button')].filter(b => /Apply/.test(b.textContent)).pop().click()")
-            pg.wait_for_function("TribeSiteDesigner.cfg().pages[0].blocks.some(b => b.type === 'steps' && b.props.title === 'How a visit goes')", timeout=5000)
+            for _ in range(50):
+                rq2 = [x for x in ok(api(f"/projects/{pid}/changes", token=tok))["requests"] if x["tool"] == "site" and x["status"] == "open"]
+                if rq2: break
+                time.sleep(0.2)
+            assert len(rq2) == 1 and rq2[0]["canDecide"], rq2
+            ok(api(f"/approvals/{rq2[0]['approval']}/approve", "POST", {"note": ""}, token=tok), "the person approves")
+            pg.wait_for_function("TribeSiteDesigner.cfg().pages[0].blocks.some(b => b.type === 'steps' && b.props.title === 'How a visit goes')", timeout=10000)
             c9 = cfg(pg)
             assert c9["pages"][0]["blocks"][1]["props"].get("title") == "How a visit goes" and c9["pages"][0]["blocks"][0]["props"]["eyebrow"] == "FRIENDLY SINCE DAY ONE" and c9["pages"][0]["blocks"][0]["props"]["img"].startswith("data:image/svg+xml"), "the agent's three changes are on the page"
-            pg.evaluate("TribeSiteDesigner.undo()"); pg.wait_for_timeout(300)
-            assert len(cfg(pg)["pages"][0]["blocks"]) == n_before, "one Undo takes them back"
+            ok(api(f"/projects/{pid}/changes/{rq2[0]['id']}/undo", "POST", {}, token=tok), "undo")
+            pg.wait_for_function(f"TribeSiteDesigner.cfg().pages[0].blocks.length === {n_before}", timeout=10000)
 
             # ---- phone 390px: Style and Check work, nothing scrolls sideways
             pg.set_viewport_size({"width": 390, "height": 800}); pg.wait_for_timeout(600)

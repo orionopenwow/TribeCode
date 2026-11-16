@@ -94,12 +94,12 @@
   const agents = () => { try { return ((C.state && C.state().members) || []).filter(m => m.role === 'agent'); } catch { return []; } };
   function agentSheet(api) {
     let el = document.getElementById('stu-agent'); if (el) { el.remove(); }
-    el = document.createElement('div'); el.id = 'stu-agent'; el.className = 'stu-sheet'; el.setAttribute('role', 'dialog'); el.setAttribute('aria-label', 'Have my agent do it');
+    el = document.createElement('div'); el.id = 'stu-agent'; el.className = 'stu-sheet'; el.setAttribute('role', 'dialog'); el.setAttribute('aria-label', 'Make it beautiful');
     const all = api.connected() ? agents() : [], on = all.filter(m => m.online), can = api.connected() && api.pid();
-    el.innerHTML = `<div class="stu-sheet-in"><p class="wdz-eyebrow">Have my agent do it</p>
+    el.innerHTML = `<div class="stu-sheet-in"><p class="wdz-eyebrow">Make it beautiful</p>
       <h2>What should change on the site?</h2>
       <textarea id="stu-ask" class="input" rows="4" maxlength="2000" placeholder="Like: rewrite the opening for parents, add a how it works section, and make it feel calmer"></textarea>
-      <p class="wdz-hint">${can ? (on.length ? `${esc(on.length === 1 ? on[0].name : `${on.length} agents`)} ${on.length === 1 ? 'is' : 'are'} connected. The agent reads the site and sends back a list of changes. Nothing changes until you press Apply, and Undo takes it back.` : all.length ? 'Your agent is not connected right now. The request waits for it; the changes come back here for you to approve.' : 'No agent has joined this tribe yet. Invite yours, or let the built-in helper try.') : 'An agent needs the tribe to be online. The built-in helper works right here.'}</p>
+      <p class="wdz-hint">${can ? (on.length ? `${esc(on.length === 1 ? on[0].name : `${on.length} agents`)} ${on.length === 1 ? 'is' : 'are'} connected. The agent reads the site and proposes changes. You see before and after, and nothing changes until a person approves.` : all.length ? 'Your agent is not connected right now. The request waits for it; the changes come back here for you to approve.' : 'No agent has joined this tribe yet. Invite yours, or let the built-in helper try.') : 'An agent needs the tribe to be online. The built-in helper works right here.'}</p>
       <p class="wdz-row">${can && all.length ? '<button type="button" class="btn sm primary" data-stu="agent-send">Send to my agent</button>' : can && window.TribeInviteAgent ? '<button type="button" class="btn sm primary" data-stu="agent-invite">Invite my agent</button>' : ''}<button type="button" class="btn sm${can && (all.length || window.TribeInviteAgent) ? '' : ' primary'}" data-stu="agent-flint">Let the built-in helper try</button><span class="wdz-sp"></span><button type="button" class="btn sm ghost" data-stu="agent-close">Cancel</button></p></div>`;
     (document.getElementById('wdz') || document.body).appendChild(el);
     el.addEventListener('click', e => { e.stopPropagation(); const b = e.target.closest('[data-stu]'); if (b) click(b, api); else if (e.target === el) el.remove(); });   // stop here: the designer also listens for [data-stu], and one tap must send once
@@ -112,7 +112,7 @@
     try {
       await C.api('/coord/asks', { method: 'POST', body: { text: `Website change request for the project's website (made in the website designer): ${text}\n\nHow to do it: call site_read to see the site, then site_propose with your steps and a short note. Do not edit files for this. The person approves the proposal in the designer.` } });
       if (sheet) sheet.remove();
-      api.say('Sent to your agent. When it answers, its changes show up here as a list for you to apply or decline.');
+      api.say('Sent to your agent. When it answers, you see the site before and after under Suggested changes. Nothing changes until a person approves.');
     } catch (e) { api.say(`That could not be sent: ${e && e.message ? e.message : 'the tribe did not answer'}.`); }
   }
   // a proposal from an agent: said in the Flint log as a list in words, with Apply and Decline
@@ -133,7 +133,14 @@
   function opened(api) {
     lastIssues = null; kitPid = null;
     loadProposals(api);
-    if (C && C.on && !onProp) { onProp = d => { if (!d || d.type !== 'site-proposal' || (d.project && d.project !== api.pid())) return; loadProposals(api); }; C.on('ws', onProp); }
+    if (C && C.on && !onProp) { onProp = d => {
+      if (!d || (d.project && d.project !== api.pid())) return;
+      if (d.type === 'site-proposal') return loadProposals(api);
+      // pass 4 polish: a helper's proposal now arrives as a change request; Flint says so once, with the way to it
+      if (d.type === 'change' && d.tool === 'site' && d.status === 'open' && d.id && !seen.has(d.id) && window.TribeChanges) { seen.add(d.id);
+        window.TribeChanges.mine(api.pid()).then(l => { const x = (l || []).find(q => q.id === d.id); if (!x || !x.agent) return;
+          api.say(`${x.agentName || 'An AI helper'} proposes changes to the website${x.why ? `: ${x.why}` : '.'} Nothing has changed.`, '', x.canDecide ? [{ label: 'Look at them', fn: () => window.TribeChanges.sheet(api.pid()) }] : []); }).catch(() => {}); }
+    }; C.on('ws', onProp); }
   }
   function closed() { const s = document.getElementById('stu-agent'); if (s) s.remove(); const ip = document.getElementById('stu-icons'); if (ip) ip.remove(); }
 

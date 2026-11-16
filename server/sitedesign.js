@@ -54,6 +54,16 @@ module.exports = function siteDesign({ files = null, perms = null, requests = ()
     const cfg = load(pid); if (!cfg) throw err(404, 'this project has no website design yet: a person starts one in the website designer');
     if (!Array.isArray(ops) || !ops.length) throw err(400, 'ops must be a list of steps');
     const r = S.applyOps(cfg, ops); if (!r.done.length) throw err(400, `none of the steps could be applied: ${r.skipped.join('; ') || 'nothing to do'}`);
+    // pass 4 polish: a helper's proposal is a change request, as it is for an app (server/changereq.js): the person sees
+    // the site before and after, a person approves, a helper never approves its own, and Undo is on the request. The older
+    // list below is kept only for a helper nobody owns (no person to ask on behalf of).
+    const rq = requests && requests();
+    if (rq && rq.create && me && me.role === 'agent') {
+      try {
+        const n = r.done.length, out = rq.create(pid, me, { tool: 'site', payload: r.cfg, title: `${me.name || 'An AI helper'} proposes ${n} change${n === 1 ? '' : 's'} to the website`, why: String(note || '').slice(0, 600), summary: r.done.slice(0, 12) });
+        return { id: out.request ? out.request.id : '', done: r.done, skipped: r.skipped, request: true, applied: !!out.applied };
+      } catch (e) { if (e && e.status && e.status !== 400 && e.status !== 404) throw e; }
+    }
     const raw = loadRaw(pid), l = loadP(pid);
     const rec = { id: 'sp' + Date.now().toString(36) + Math.floor(Math.random() * 1296).toString(36), by: me ? me.id : 'agent', at: new Date().toISOString(), note: String(note || '').slice(0, 400), ops: JSON.parse(JSON.stringify(ops)).slice(0, 60), done: r.done, skipped: r.skipped, rev: (raw && raw.rev) || 0, status: 'open' };
     l.forEach(x => { if (x.status === 'open' && x.by === rec.by) x.status = 'replaced'; });   // one open proposal per helper
@@ -295,7 +305,7 @@ module.exports = function siteDesign({ files = null, perms = null, requests = ()
     site_propose: {
       description: 'Propose changes to the project website as a list of safe steps. Nothing changes until a person approves the proposal in the website designer, where it becomes one undo step. Steps (each { op, … }): text { block, path, value } (path like "title", "text", "items.0.title", "buttons.0.label"); add { type, variant?, page?, after?: blockId, props?: words only }; remove { block }; move { block, to: "up"|"down"|"top"|"bottom"|index }; variant { block, variant }; style { block, bg: ""|"card"|"accent"|"ink", pad: ""|"s"|"l" }; link { block, path, kind: "page"|"section"|"url"|"email", to }; alt { block, path, value }; theme { preset }; palette { preset }; accent { color: "#RRGGBB" }; fonts { pair }; space { value: "compact"|"normal"|"roomy" }; radius { value }; page { title }; rename { page, title }; seo { title?, description? }. Pictures cannot be set. Steps that do not fit are skipped and named in the answer.',
       inputSchema: { type: 'object', properties: { project: { type: 'string' }, note: { type: 'string', description: 'one or two sentences for the person: what you changed and why' }, ops: { type: 'array', items: { type: 'object' }, maxItems: 60 } }, required: ['ops'], additionalProperties: false },
-      run: async (a = {}, me) => { try { const r = propose(cur(a), me || { id: 'agent', role: 'agent' }, a); return text(`Proposed ${r.done.length} change${r.done.length === 1 ? '' : 's'}; a person approves them in the website designer.\n${r.done.map(x => '- ' + x).join('\n')}${r.skipped.length ? `\nSkipped:\n${r.skipped.map(x => '- ' + x).join('\n')}` : ''}`); } catch (e) { return text(e.message, true); } },
+      run: async (a = {}, me) => { try { const r = propose(cur(a), me || { id: 'agent', role: 'agent' }, a); return text(`Proposed ${r.done.length} change${r.done.length === 1 ? '' : 's'}. A person approves them under Suggested changes in the website designer or in the inbox; nothing has changed yet.\n${r.done.map(x => '- ' + x).join('\n')}${r.skipped.length ? `\nSkipped:\n${r.skipped.map(x => '- ' + x).join('\n')}` : ''}`); } catch (e) { return text(e.message, true); } },
     },
     site_comments_to_tasks: {
       description: 'Summarize the open website comments into tasks, one per section, linked to the block and assigned per the project\'s task mode (Lead or Council). Finishing a task resolves its comments.',

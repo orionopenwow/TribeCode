@@ -17710,6 +17710,60 @@
    },
    "ctx": "g",
    "v": "ls"
+  },
+  {
+   "t": "where is my site saved",
+   "i": "where.open",
+   "ctx": "g",
+   "v": "ls"
+  },
+  {
+   "t": "where is my website saved",
+   "i": "where.open",
+   "ctx": "g",
+   "v": "ls"
+  },
+  {
+   "t": "where is my app saved",
+   "i": "where.open",
+   "ctx": "g",
+   "v": "ls"
+  },
+  {
+   "t": "open the folder",
+   "i": "where.open",
+   "ctx": "g",
+   "v": "ls"
+  },
+  {
+   "t": "open the project folder",
+   "i": "where.open",
+   "ctx": "g",
+   "v": "ls"
+  },
+  {
+   "t": "where are my files",
+   "i": "where.open",
+   "ctx": "g",
+   "v": "ls"
+  },
+  {
+   "t": "where does it live",
+   "i": "where.open",
+   "ctx": "g",
+   "v": "ls"
+  },
+  {
+   "t": "show me the folder",
+   "i": "where.open",
+   "ctx": "g",
+   "v": "ls"
+  },
+  {
+   "t": "where is my site stored on my computer",
+   "i": "where.open",
+   "ctx": "g",
+   "v": "ls"
   }
  ]
 }

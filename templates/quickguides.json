@@ -1963,6 +1963,15 @@
      }
     },
     {
+     "id": "where",
+     "title": "See where it lives",
+     "text": "Your site and app are real files in the project folder. Where it lives shows the three steps and the next button to press.",
+     "show": {
+      "open": "where",
+      "sel": "#whl"
+     }
+    },
+    {
      "id": "share",
      "title": "Share it with a friend",
      "text": "Send an invite link. Friends work in the same project while your computer is on.",
@@ -2105,12 +2114,11 @@
     {
      "id": "site-space",
      "title": "Drag the spacing",
-     "text": "Drag a section's edge to give it more or less room.",
+     "text": "Click a section, then drag its top or bottom edge to give it more or less room.",
      "show": {
       "open": "site",
-      "sel": ".wdz-sp"
-     },
-     "soon": true
+      "sel": "#wdz-framewrap"
+     }
     },
     {
      "id": "app-history",
@@ -2154,19 +2162,17 @@
      "text": "Press Polish it. Flint evens out spacing, contrast and text sizes with no AI.",
      "show": {
       "open": "site",
-      "sel": "[data-fc-act='polish']"
-     },
-     "soon": true
+      "sel": "#wdz [data-fc-act='polish']"
+     }
     },
     {
      "id": "beautiful",
      "title": "Ask a stronger AI to make it beautiful",
-     "text": "Press Make it beautiful. Your AI helper proposes changes and nothing changes until you approve.",
+     "text": "Under More, press Make it beautiful. Your AI helper proposes changes and nothing changes until you approve.",
      "show": {
       "open": "site",
-      "sel": "[data-fc-act='beauty']"
-     },
-     "soon": true
+      "sel": "#wdz [data-fc-act='beauty'], #wdz .wdz-more"
+     }
     }
    ]
   }

@@ -186,5 +186,16 @@
     C.on('project', () => { howAt = 0; how(null, true).then(redraw); });
     C.on('hello', () => { howAt = 0; how(null, true).then(redraw); });
   }
-  window.TribeChanges = { how, line, can, strip, suggest, sheet, preview, undo, mine, waiting };
+  // A small "Suggested changes" button for a tool's top bar or menu: the way to the requests list for someone who can
+  // change the tool directly and so sees no strip. It hides with no tribe project, and shows a count when changes wait.
+  // entry(btn, pid) wires an existing button (it may hold a [data-cr-n] badge); entryHTML(cls) is an icon button to place.
+  const entryHTML = (cls = 'btn sm ghost') => `<button type="button" class="${cls} cr-entry" data-cr-entry hidden aria-label="${esc(T('Suggested changes'))}" title="${esc(T('Suggested changes'))}">${icon('inbox', 16)}<span class="cr-n" data-cr-n hidden></span></button>`;
+  function entry(btn, pid) {
+    if (!btn) return null;
+    const p = () => pid || projectId();
+    const draw = async () => { if (!btn.isConnected) return; const ok = !!(p() && live()); btn.hidden = !ok; if (!ok) return; const n = await waiting(p()), b = btn.querySelector('[data-cr-n]'); if (b) { b.hidden = !n; b.textContent = n || ''; } };
+    btn.addEventListener('click', e => { e.preventDefault(); sheet(p()); });
+    draw(); return { draw };
+  }
+  window.TribeChanges = { how, line, can, strip, suggest, sheet, preview, undo, mine, waiting, entry, entryHTML };
 })();

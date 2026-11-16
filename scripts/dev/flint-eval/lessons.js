@@ -23,4 +23,8 @@ module.exports = [
   // the line between a track and a three-line feature lesson
   ['g', 'teach me the website designer', 'lesson', { feature: 'site' }], ['g', 'teach me how to wire buttons', 'lesson', { feature: 'site' }],
   ['g', 'lesson on the canvas', 'lesson', { feature: 'canvas' }], ['g', 'how do i make a website', 'lesson', { feature: 'site' }],
+  // pass 4 polish: Where it lives
+  ['g', 'where is my site saved', 'where.open'], ['g', 'where is my website saved', 'where.open'], ['g', 'where is my app saved', 'where.open'],
+  ['g', 'open the folder', 'where.open'], ['g', 'open the project folder', 'where.open'], ['g', 'where are my files', 'where.open'],
+  ['g', 'where does it live', 'where.open'], ['g', 'show me the folder', 'where.open'], ['g', 'where is my site stored on my computer', 'where.open'],
 ];

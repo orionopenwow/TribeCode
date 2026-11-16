@@ -243,7 +243,10 @@ body.wdz-open { overflow: hidden; }
   /* one row: Back, the pages (they scroll sideways), undo, redo, More, download. Everything else opens under More. */
   .wdz-top { gap: 4px; padding: 4px 8px; min-height: 48px; }
   .wdz-top > .wdz-title, .wdz-top > .wdz-devs, .wdz-top > .wdz-zoom, .wdz .wdz-hide-phone { display: none; }
-  .wdz-top > .wdz-saved { display: inline; font-size: 11px; max-width: 58px; min-width: 0; flex: 0 1 auto; }   /* whether it is saved shows on a phone too */
+  /* whether it is saved shows on a phone as a small dot (full when saved, a ring while saving), so the words never cover a page tab */
+  .wdz-top > .wdz-saved { display: block; font-size: 0; width: 8px; height: 8px; max-width: 8px; min-width: 8px; flex: none; border-radius: 50%; background: var(--faint); border: 1px solid var(--faint); margin: 0 4px; }
+  .wdz-top > .wdz-saved:empty { visibility: hidden; }
+  .wdz-top > .wdz-saved.is-dirty { background: transparent; border-color: var(--muted); }
   .wdz-top > .wdz-pages { min-width: 56px; }
   .wdz .wdz-only-phone { display: grid; }
   .wdz-top > .wdz-pages { order: 0; width: auto; }

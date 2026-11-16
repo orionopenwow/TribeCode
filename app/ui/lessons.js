@@ -124,6 +124,7 @@
     suggest: () => { call('TribeSuggest', 'open'); },
     library: () => { call('TribeAssetLib', 'open'); },
     home: () => { closeSite(); closeApp(); call('TribeShell', 'go', 'home'); },
+    where: () => { closeSite(); closeApp(); call('TribeWhere', 'open'); },
   };
   function leave() { try { if (W.TribeMarket && W.TribeMarket.unpage) W.TribeMarket.unpage(); if (Q() && Q().close) Q().close(); if (W.TribeGuide && W.TribeGuide.isOpen && W.TribeGuide.isOpen()) W.TribeGuide.close(); if (W.TribeHelp && W.TribeHelp.close) W.TribeHelp.close(); } catch {} }
   // Show me: open the place, then ring the real control. Answers whether something was ringed.

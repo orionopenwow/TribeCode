@@ -249,6 +249,11 @@ def main():
             assert pg.locator("#apc-map .apc-mc").count() == nsc
             assert pg.locator("#apc-map .apc-map-svg path[marker-end]").count() >= 3, "links are arrows"
             assert pg.locator(f"#apc-map .apc-mc.lost[data-ms='{lost}']").count() == 1 and pg.locator("#apc-map .apc-mc.lost").count() == 1, "only the pasted copy is unreachable"
+            # pass 4 polish: no link line runs across a screen (it travels in the gaps), and the hint sits clear of notices
+            crossing = pg.evaluate("""(() => { const cards = [...document.querySelectorAll('#apc-map .apc-mc')].map(e => ({ x: parseFloat(e.style.left), y: parseFloat(e.style.top), w: e.offsetWidth, h: e.offsetHeight }));
+              const bad = []; for (const p of document.querySelectorAll('#apc-map .apc-map-svg path[marker-end]')) { const n = p.getTotalLength(); for (let t = 0; t <= n; t += 4) { const q = p.getPointAtLength(t); const c = cards.find(c => q.x > c.x + 8 && q.x < c.x + c.w - 8 && q.y > c.y + 8 && q.y < c.y + c.h - 8); if (c) { bad.push({ d: p.getAttribute('d'), at: [Math.round(q.x), Math.round(q.y)], card: c }); break; } } } return bad; })()""")
+            assert not crossing, f"link lines run across a screen: {crossing}"
+            hint = pg.locator("#apc-map .apc-map-hint").bounding_box(); assert hint and hint["y"] < 120, hint
             shot(pg, "p4-app-map-1440.png")
             z0 = pg.evaluate("TribeAppPlus.view().k"); pg.click("#apc-map [data-z='in']"); assert pg.evaluate("TribeAppPlus.view().k") > z0
             pg.click("#apc-map [data-z='fit']")
@@ -341,7 +346,8 @@ def main():
             top = mp.evaluate("document.querySelector('.apc-top').getBoundingClientRect().height"); assert top <= 60, top
             over = mp.evaluate("[...document.querySelectorAll('.apc-top > *, .apc-top .apc-plus > *')].filter(e => e.offsetParent && e.getBoundingClientRect().right > 391).map(e => (e.id || e.className) + ' ' + Math.round(e.getBoundingClientRect().right))"); assert not over, f"the top bar fits: {over}"
             mp.tap("#apc-more"); mp.wait_for_selector("#apc-moremenu:not([hidden])")
-            assert mp.locator("#apc-moremenu [data-m]:visible").count() == 5
+            mp.wait_for_selector("#apc-moremenu [data-m='requests']:visible", timeout=5000)   # pass 4 polish: the way to Suggested changes for someone who sees no strip
+            assert mp.locator("#apc-moremenu [data-m]:visible").count() == 6
             r = mp.locator("#apc-moremenu").bounding_box(); assert r["x"] >= 0 and r["x"] + r["width"] <= 390, r
             assert mp.evaluate("[...document.querySelectorAll('#apc-moremenu [data-m]')].filter(e => e.offsetParent).every(e => e.getBoundingClientRect().height >= 40)")
             shot(mp, "p4-app-more-390.png")

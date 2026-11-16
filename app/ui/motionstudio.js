@@ -154,6 +154,7 @@
   function coworkOn() {
     if (cw) { cw.detach(); cw = null; }
     if (!root || !pid || !C || !C.connected || !C.connected()) return;
+    if (window.TribeChanges && window.TribeChanges.entry) window.TribeChanges.entry(root.querySelector('[data-cr-entry]'), pid);
     if (window.TribeChanges) crStrip = window.TribeChanges.strip($('#mos-cr', root), 'motion', { pid, draft: () => doc, key: () => key || (key = slug(doc.name) + '-' + rid()), dirty: () => !!pendingDraft,
       before: () => (baseDoc ? snapOf(baseDoc) : null), after: () => snapOf(doc), summary: () => motionSummary(baseDoc, doc),
       onSent: r => { if (r && (r.request || r.applied)) { pendingDraft = false; try { localStorage.removeItem(DRAFTK()); } catch {} setSaved(tr(r.applied ? 'Saved' : 'Sent for OK')); if (crStrip) crStrip.draw(); } } });
@@ -194,6 +195,7 @@
         <span class="cw-row" id="mos-cw" hidden></span>
         <div class="mos-undo"><button type="button" class="mos-ib" id="mos-undo" aria-label="Undo"><svg class="mos-i" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M9 14L4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/></svg></button></div>
         <form class="mos-flint" id="mos-flint"><span class="mos-fl-i">${icon('flame', 16)}</span><input id="mos-ask" autocomplete="off" placeholder="Tell Flint: snappier, make it 9:16, add a toast" aria-label="Tell Flint what to change"><button type="submit" class="btn" id="mos-ask-go">Go</button></form>
+        ${window.TribeChanges && window.TribeChanges.entryHTML ? window.TribeChanges.entryHTML('mos-ib') : ''}
         <button type="button" class="btn" id="mos-ai">Have my AI do it</button>
         <button type="button" class="btn primary" id="mos-export-btn">Export</button>
       </header>

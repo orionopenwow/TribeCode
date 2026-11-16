@@ -336,7 +336,7 @@ html[data-dev=phone] .ehide-phone,html[data-dev=tablet] .ehide-tablet,html[data-
             <button type="button" data-wdz="requests" id="wdz-req" hidden><b>Suggested changes<span class="wdz-n" id="wdz-reqn" hidden></span></b><small>What people asked to change, and what waits for you</small></button>
             <hr>
             <button type="button" data-wdz="freeai" id="wdz-freeai"><b>Ask a free AI</b><small>Copy the design for ChatGPT, Gemini or another free AI, then paste its answer back</small></button>
-            <button type="button" data-stu="agent" id="wdz-agent"><b>Have my agent do it</b><small>Your own AI agent changes the site. You approve what it sends back.</small></button>
+            <button type="button" data-stu="agent" id="wdz-agent"><b>Make it beautiful</b><small>Your tribe’s AI proposes changes. You approve what it sends back.</small></button>
             <button type="button" data-wdz="keys" class="wdz-only-phone"><b>Keyboard shortcuts</b><small>For when a keyboard is attached</small></button>
           </div></span>
         <span class="wdz-dl"><button type="button" class="btn sm primary" data-wdz="dl-html" id="wdz-dl">Download HTML</button><button type="button" class="btn sm primary wdz-dl-more" data-wdz="dlmenu" aria-label="Download and publish" title="Download and publish" aria-expanded="false"><span class="wdz-dl-caret">▾</span><span class="wdz-dl-ico">${ic('download')}</span></button>
@@ -385,6 +385,20 @@ html[data-dev=phone] .ehide-phone,html[data-dev=tablet] .ehide-tablet,html[data-
       if (e.target === document.body || e.target === document.documentElement) onKey(e);
     });
     root.addEventListener('keydown', onKey);
+    // pass 4 polish: Tab stays inside the designer, the same rule as App Creator. The app behind is not made inert (the
+    // Design flow dock, toasts and sheets live outside and must keep working); instead Tab wraps at the designer's ends,
+    // and a Tab that would land in the app behind comes back. A sheet or dialog opened from here keeps its own focus.
+    root.setAttribute('aria-modal', 'true');
+    const tabbables = () => [...root.querySelectorAll('a[href], button, input, select, textarea, iframe, [tabindex]:not([tabindex="-1"])')].filter(el => !el.disabled && el.offsetParent !== null && !el.closest('[hidden]'));
+    const outside = el => !!(el && el.closest && el.closest('.modal-wrap, dialog, .ui-card, .ui-sheet, [role="dialog"]:not(#wdz), .dfl-dock, .dfl-chip, .toast, .les-card, .les-offer, .fls, .fls-tip, .flm, #flint-dock'));
+    document.addEventListener('keydown', e => {
+      if (e.key !== 'Tab' || !root || root.hidden || !st || layered() || outside(document.activeElement)) return;
+      const l = tabbables(); if (!l.length) return;
+      const a = document.activeElement, inside = root.contains(a), first = l[0], last = l[l.length - 1];
+      if (!inside) { e.preventDefault(); (e.shiftKey ? last : first).focus(); }
+      else if (!e.shiftKey && a === last) { e.preventDefault(); first.focus(); }
+      else if (e.shiftKey && a === first) { e.preventDefault(); last.focus(); }
+    }, true);
     addEventListener('message', onFrame);
     dragList();
   }
@@ -1091,7 +1105,7 @@ html[data-dev=phone] .ehide-phone,html[data-dev=tablet] .ehide-tablet,html[data-
     const host = $('#wdz-flint'); if (!host || fui || !window.TribeFlint || !window.TribeFlint.mount) return;
     fui = window.TribeFlint.mount(host, { ctx: 'designer', echo: false, run: text => ask(text).then(() => true), onSay: m => { if (st) { st.log.push(m); logPaint(); } }, onClear: () => { if (st) { st.log = []; st.pending = null; logPaint(); } },
       hello: 'Say what to change: “add a link for my book club”, “make the buttons work”, “add a page called About”, “dark mode”. No AI needed, and Undo takes back any step.', chips: chipsNow, onEscape: () => escape() });
-    if (fui && FC() && FC().extra) FC().extra(fui, 'site', () => ask('polish it'), () => ask('make it beautiful'));
+    if (fui && FC() && FC().extra) FC().extra(fui, 'site', () => ask('polish it'), () => { const b = root && root.querySelector('#wdz-agent'); if (b) b.click(); else ask('make it beautiful'); });   // one flow: the same sheet as More › Make it beautiful
   }
   function chipsNow() {
     if (!st) return [];

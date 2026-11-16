@@ -1375,6 +1375,10 @@
      "text": "Your project is a normal folder on your computer. It works with no internet and nothing leaves until you share it."
     },
     {
+     "title": "See where it lives",
+     "text": "Your site and app are real files in the project folder. Where it lives shows the three steps and the next button to press."
+    },
+    {
      "title": "Share it with a friend",
      "text": "Send an invite link. Friends work in the same project while your computer is on."
     },
@@ -1435,6 +1439,10 @@
      "text": "Open the code view to read the page's code or add your own styles."
     },
     {
+     "title": "Drag the spacing",
+     "text": "Click a section, then drag its top or bottom edge to give it more or less room."
+    },
+    {
      "title": "Restore an earlier app design",
      "text": "Open History in App Creator and restore an earlier save."
     },
@@ -1449,6 +1457,14 @@
     {
      "title": "See every screen at once",
      "text": "Open the map to see all screens and the links between them."
+    },
+    {
+     "title": "Polish it with Flint",
+     "text": "Press Polish it. Flint evens out spacing, contrast and text sizes with no AI."
+    },
+    {
+     "title": "Ask a stronger AI to make it beautiful",
+     "text": "Under More, press Make it beautiful. Your AI helper proposes changes and nothing changes until you approve."
     }
    ]
   }
