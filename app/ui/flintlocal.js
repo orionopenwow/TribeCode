@@ -382,7 +382,7 @@
       if (!window.TribeLaunchKit) return { text: T('noPlace', { x: 'Launch kit' }) };
       const tab = { 'launch.shots': 'shots', 'launch.icon': 'icon', 'launch.text': 'text', 'launch.keywords': 'text', 'launch.paywall': 'paywall', 'launch.checklist': 'check', 'launch.video': 'video' }[id];
       window.TribeLaunchKit.open(undefined, tab);
-      if (id === 'launch.keywords') setTimeout(() => { const k = document.querySelector('#lk-t-keywords'); if (k) { k.focus(); k.scrollIntoView({ block: 'center' }); } }, 600);
+      if (id === 'launch.keywords') setTimeout(() => { const k = document.querySelector('#lch-t-keywords'); if (k) { k.focus(); k.scrollIntoView({ block: 'center' }); } }, 600);
       return { text: T('opened', { x: 'Launch kit' }), sum: 'opened the Launch kit' };
     }
     if (id === 'publish.to') { if (window.TribePublish) window.TribePublish.open(undefined, sl.dest || ''); return { text: T('opened', { x: 'Publish' }), sum: 'opened Publish' }; }
