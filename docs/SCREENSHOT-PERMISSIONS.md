@@ -26,6 +26,9 @@ project's own address.
 ### ArtCraft
 
 Its screenshots are in `storytold/github-media`, which has no licence file; `NOTICE` reserves the name and logos.
+Since 2026-11-16 the toolbox shows **our own screenshot** of the app (taken on the project owner's computer, kept at
+`templates/studio-shots/artcraft.png`), not one of theirs, so no permission from their media repository is needed. The
+note below still applies if we ever want their pictures.
 Contact: open an issue at https://github.com/storytold/artcraft/issues, or use the contact on https://getartcraft.com/.
 
 > Hi! TribeCode is a free, open-source app that lists ArtCraft first in its Workshop and on its free toolbox page

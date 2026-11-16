@@ -73,6 +73,8 @@ def build():
             hit = [p for p in src_dir.glob(sid + ".*")]
             if not hit: sys.exit(f"{sid}: no {sid}.* in {src_dir}")
             data = hit[0].read_bytes()
+        elif not rec["original"].startswith("http"):   # our own screenshot, kept in the repository
+            data = (ROOT / rec["original"]).read_bytes()
         else:
             with urllib.request.urlopen(rec["original"], timeout=60) as r: data = r.read()
         im = Image.open(io.BytesIO(data)).convert("RGB")

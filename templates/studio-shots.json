@@ -1,6 +1,22 @@
 {
   "about": "Real screenshots of the tools in templates/studios.json, used only where the project's own terms clearly allow it. One record per tool id. 'small' and 'w' are the two widths made for the website (site/assets/toolbox); 'app' is the width the app's Workshop uses (app/ui/assets/studios); 'site': false means the tool is not on the website's toolbox page, so only the app file is made. scripts/dev/toolbox-shots.py makes the files from 'original'; scripts/dev/site-toolbox.js writes site/assets/toolbox/credits.json from this file. A tool with no record here keeps its drawn card (docs/SCREENSHOT-PERMISSIONS.md says why).",
   "shots": {
+    "artcraft": {
+      "file": "artcraft",
+      "w": 1280,
+      "h": 851,
+      "alt": "ArtCraft's image editor: tools down the left, a blank canvas in the middle, and colour, properties and layers panels on the right",
+      "by": "taken by TribeCode",
+      "license": "ArtCraft is MIT / Apache-2.0",
+      "licenseUrl": "https://github.com/storytold/artcraft",
+      "source": "https://getartcraft.com/",
+      "original": "templates/studio-shots/artcraft.png",
+      "terms": "Our own screenshot of the ArtCraft app running on the project owner's computer, taken 2026-11-16. The app is MIT / Apache-2.0; its NOTICE reserves the name and logos, which we use only to name the tool. Not taken from ArtCraft's own media repository.",
+      "fetched": "2026-11-16",
+      "changes": "Resized and recompressed. Nothing else changed.",
+      "small": 640,
+      "app": 640
+    },
     "godot": {
       "file": "godot",
       "w": 1280,

@@ -42,8 +42,8 @@
 
   // A real screenshot: only resized, never cropped (the box takes the picture's own shape, so nothing shifts when it
   // loads), lazy, WebP with a JPEG fallback, and its credit right under it. Names and licences are not translated.
-  const shot = t => { const h = t.shot, f = BASE + 'assets/toolbox/' + encodeURIComponent(h.file), set = e => `${f}-${+h.small}.${e} ${+h.small}w, ${f}-${+h.w}.${e} ${+h.w}w`;
-    return `<figure class="tb-shot"><picture><source type="image/webp" srcset="${set('webp')}" sizes="(max-width: 720px) 92vw, 420px">
+  const shot = (t, sizes) => { const h = t.shot, f = BASE + 'assets/toolbox/' + encodeURIComponent(h.file), set = e => `${f}-${+h.small}.${e} ${+h.small}w, ${f}-${+h.w}.${e} ${+h.w}w`;
+    return `<figure class="tb-shot"><picture><source type="image/webp" srcset="${set('webp')}" sizes="${sizes || '(max-width: 720px) 92vw, 420px'}">
       <img src="${f}-${+h.small}.jpg" srcset="${set('jpg')}" sizes="(max-width: 720px) 92vw, 420px" width="${+h.w}" height="${+h.h}" loading="lazy" decoding="async" alt="${esc(h.alt)}"></picture>
       <figcaption class="tb-shot__credit"><span>Screenshot:</span> <a href="${esc(h.source)}" rel="noopener" translate="no">${esc(h.by)}</a>, <a href="${esc(h.licenseUrl)}" rel="noopener license" translate="no">${esc(h.license)}</a></figcaption></figure>`; };
   const li = a => a.map(f => `<li>${esc(f)}</li>`).join('');
@@ -52,7 +52,8 @@
   const stands = t => `<p class="tb-kind"><span class="tb-kind__l mono">Stands in for a paid</span><b>${esc(t.kind)}</b></p>`;
 
   function feature(t) {
-    return `<div class="tb-feature__art" style="--c:${esc(t.color)}">${HERO}<p class="tb-note"><span>A drawing, not a screenshot.</span> <a href="${esc(t.url)}" rel="noopener">See the real thing on its site</a></p></div>
+    const art = t.shot ? shot(t, '(max-width: 900px) 92vw, 640px') : `${HERO}<p class="tb-note"><span>A drawing, not a screenshot.</span> <a href="${esc(t.url)}" rel="noopener">See the real thing on its site</a></p>`;
+    return `<div class="tb-feature__art" style="--c:${esc(t.color)}"${t.shot ? ' data-shot="1"' : ''}>${art}</div>
       <div class="tb-feature__tx" id="tool-${esc(t.id)}"><p class="eyebrow mono">// featured</p><h2 id="tb-feature-title" translate="no">${esc(t.name)}</h2>${stands(t)}<p class="tb-what">${esc(t.what)}</p>
         <ul class="tb-list tb-list--two">${li(t.features.concat(t.more || []))}</ul>${meta(t)}${links(t, true)}</div>`;
   }
@@ -61,7 +62,8 @@
       <h3 translate="no">${esc(t.name)}</h3>${stands(t)}<p class="tb-what">${esc(t.what)}</p><ul class="tb-list">${li(t.features)}</ul>${meta(t)}${links(t)}</article>`;
   }
   function teaser(tools) {
-    return tools.slice(0, 6).map(t => `<a class="tbz__tool" href="toolbox.html#tool-${esc(t.id)}" style="--c:${esc(t.color)}"><b translate="no">${esc(t.name)}</b><span>${esc(t.kind)}</span></a>`).join('');
+    const lead = tools[0] && tools[0].shot ? `<div class="tbz__hero">${shot(tools[0], '(max-width: 900px) 92vw, 640px')}</div>` : '';
+    return lead + tools.slice(0, 6).map(t => `<a class="tbz__tool" href="toolbox.html#tool-${esc(t.id)}" style="--c:${esc(t.color)}"><b translate="no">${esc(t.name)}</b><span>${esc(t.kind)}</span></a>`).join('');
   }
 
   function draw(data) {

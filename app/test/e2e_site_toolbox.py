@@ -36,7 +36,7 @@ def main():
         assert pg.evaluate("document.documentElement.dataset.toolbox") == str(len(data))
         assert pg.locator("#tb-feature-title").inner_text() == "ArtCraft"
         assert pg.locator("#tb-feature .tb-list li").count() >= 3
-        assert pg.locator("#tb-feature svg.tb-hero-art").count() == 1 and pg.locator("#tb-feature .tb-note a").count() == 1
+        assert pg.locator("#tb-feature .tb-shot img").count() == 1 and pg.locator("#tb-feature svg.tb-hero-art").count() == 0   # our own screenshot of ArtCraft
         assert pg.locator("#tb-grid .tb-card").count() == len(data) - 1
         for t in data:
             box = pg.locator("#tb-feature" if t["id"] == "artcraft" else f"#tool-{t['id']}")
@@ -49,12 +49,12 @@ def main():
         # real screenshots only for tools whose terms allow it (templates/studio-shots.json): whole, lazy, sized so the
         # page does not shift, WebP with a JPEG fallback, credited with links to the source and the licence
         shots = {t["id"]: t["shot"] for t in data if t.get("shot")}
-        assert set(shots) == {"godot", "penpot"}, list(shots)
+        assert set(shots) == {"artcraft", "godot", "penpot"}, list(shots)
         assert pg.locator("#tb-grid img, #tb-feature img").count() == len(shots), "every other card is a drawing"
         credits = {c["tool"]: c for c in json.load(open(os.path.join(ROOT, "site", "assets", "toolbox", "credits.json"), encoding="utf8"))["images"]}
         assert set(shots) <= set(credits), "every screenshot on the page has a credit record (the app shows a few more)"
         for sid, h in shots.items():
-            card = pg.locator(f"#tool-{sid}"); im = card.locator(".tb-shot img")
+            card = pg.locator("#tb-feature" if sid == "artcraft" else f"#tool-{sid}"); im = card.locator(".tb-shot img")
             assert card.locator("svg.tb-art").count() == 0 and im.count() == 1, sid
             assert im.get_attribute("loading") == "lazy" and im.get_attribute("alt") == h["alt"], sid
             assert im.get_attribute("width") == str(h["w"]) and im.get_attribute("height") == str(h["h"]), sid

@@ -29,10 +29,11 @@ in `app/ui/assets/studios/`, records in `credits.json`):
 Every other picture on the page is an original flat drawing made for TribeCode (`site/toolbox.js`). No project's
 logo or wordmark is used anywhere, and no watermark was removed from anything.
 
+ArtCraft's picture is our own screenshot of the app (MIT / Apache-2.0), taken on the project owner's computer on
+2026-11-16 and only resized. It is not from ArtCraft's media repository, and the name is used only to name the tool.
+
 Why the others are still drawings (the request to send, or what to verify, is in `docs/SCREENSHOT-PERMISSIONS.md`):
 
-- ArtCraft: its screenshots live in a separate media repository (`storytold/github-media`) with no licence file, and
-  its `NOTICE` says the name, wordmark and logos are trademarks not covered by the code licence.
 - Pixelorama: the code is MIT but the repository holds no screenshots; its docs repository has no licence file.
 - Krita: a press kit is offered, but no reuse terms are stated for it.
 - OBS Studio: no terms found for its screenshots.
