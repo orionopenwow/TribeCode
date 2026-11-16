@@ -79,15 +79,35 @@
     const scrim = document.createElement('div'); scrim.className = 'lch-scrim';
     const el = document.createElement('section'); el.id = 'lch'; el.className = 'lch'; el.setAttribute('role', 'dialog'); el.setAttribute('aria-modal', 'true'); el.setAttribute('aria-labelledby', 'lch-h'); el.tabIndex = -1;
     el.innerHTML = `<header class="lch-head"><div class="lch-ttl"><span class="eyebrow">${esc(T('Launch kit'))}</span><h2 id="lch-h">${esc(st.name)}</h2></div>
-      <span class="lch-prog" id="lch-prog"></span><button type="button" class="lch-x" id="lch-x" aria-label="${esc(T('Close'))}">${ico('x', 18)}</button></header>
+      <span class="lch-prog" id="lch-prog"></span>${window.TribeAssetLib ? `<button type="button" class="btn sm ghost lch-lib" id="lch-lib">${ico('palette', 14)} <span>${esc(T('Library'))}</span></button>` : ''}<button type="button" class="lch-x" id="lch-x" aria-label="${esc(T('Close'))}">${ico('x', 18)}</button></header>
       <nav class="lch-tabs" role="tablist" aria-label="${esc(T('Launch kit'))}">${TABS.map(([id, l, i]) => `<button type="button" role="tab" class="lch-tab" data-lch-tab="${id}" aria-selected="false">${ico(i, 16)}<span>${esc(T(l))}</span></button>`).join('')}</nav>
       <div class="lch-body" id="lch-body"></div>`;
     document.body.append(scrim, el); st.el = el; st.scrim = scrim;
     scrim.onclick = close; el.querySelector('#lch-x').onclick = close;
+    const lib = el.querySelector('#lch-lib'); if (lib) lib.onclick = () => library();
+    fontReady().then(ok => { if (ok && st && st.el === el) show(st.tab); });
     if (window.TribeUI && window.TribeUI.adopt) window.TribeUI.adopt(el, { scrim, kind: 'steps', onClose: close });
     else el.addEventListener('keydown', e => { if (e.key === 'Escape') close(); });
     el.querySelectorAll('[data-lch-tab]').forEach(b => b.onclick = () => show(b.dataset.lchTab));
     show(st.tab); setTimeout(() => el.focus({ preventScroll: true }), 30);
+  }
+  // The brand font: a Google Fonts pair loads when online (fontlib.js); canvases wait for it, offline they use system fonts
+  async function fontReady() {
+    const f = st && st.brand && st.brand.fonts, FL = window.TribeFontLib; if (!f || !f.display || !FL || !FL.isG(f.display)) return false;
+    FL.load([f.display, f.body]); const q = `700 40px "${String(f.display).replace(/"/g, '')}"`;
+    try { await Promise.race([document.fonts.load(q), new Promise(r => setTimeout(r, 2500))]); return document.fonts.check(q); } catch { return false; }
+  }
+  // The shared design library: colours and fonts go to the brand kit (screenshots, icons, paywalls), an icon becomes the app icon's symbol
+  function library() {
+    const L = window.TribeAssetLib; if (!L || !st) return;
+    L.open({ kind: 'palette', pid: st.pid, onPick: async x => {
+      if (!['palette', 'font', 'icon'].includes(x.kind)) { toast(T('Pick colours, fonts or an icon for the Launch kit.')); return true; }
+      try {
+        if (x.kind === 'icon') { st.kit.icon.symbol = x.id; st.kit.icon.upload = ''; save(); toast(T('The app icon uses that symbol now.')); }
+        else { const k = x.kind === 'palette' ? await L.usePalette(x.id, st.pid) : await L.useFont(x.id, st.pid); if (k) st.brand = { ...st.brand, ...k }; st.mem = new Map(); if (x.kind === 'font') await fontReady(); toast(T(x.kind === 'palette' ? 'Colours saved to the brand kit. The website, apps, motion and store pictures use them.' : 'Fonts saved to the brand kit.')); }
+        if (st.el) show(x.kind === 'icon' ? 'icon' : st.tab);
+      } catch (e) { toast(e.message || String(e)); }
+    } });
   }
   function close() {
     if (!st || !st.el) return; save(true);

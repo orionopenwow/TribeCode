@@ -60,6 +60,7 @@
   }
   async function useFont(id, pid) {
     const F = window.TribeSiteCfg && window.TribeSiteCfg.FONT_PAIRS, f = F && F[id]; if (!f) throw new Error('That font pair is not in the library.');
+    if (window.TribeFontLib) window.TribeFontLib.load([f.display, f.body]);
     const B = window.TribeBrandKit; pid = pid || pidNow();
     if (!B) return { fonts: { display: f.display, body: f.body } };
     const k = await B.get(pid); k.fonts = { display: f.display, body: f.body };
@@ -71,7 +72,7 @@
   function thumb(x) {
     const id = x.id;
     if (x.kind === 'palette') { const p = D().palette(id); return p ? `<span class="al-pal" style="background:${p.colors.bg}"><i style="background:${p.colors.accent}"></i><i style="background:${p.colors.ink}"></i><i style="background:${p.colors.more[0]}"></i><i style="background:${p.colors.more[1]}"></i></span>` : ''; }
-    if (x.kind === 'font') { const f = (window.TribeSiteCfg.FONT_PAIRS || {})[id] || {}; return `<span class="al-font" style="font-family:'${esc(f.display)}',serif">Aa</span>`; }
+    if (x.kind === 'font') { const f = (window.TribeSiteCfg.FONT_PAIRS || {})[id] || {}, FL = window.TribeFontLib, st = n => String(FL ? FL.stack(n) : `'${n}', serif`).replace(/"/g, "'").replace(/[<>&]/g, ''); return `<span class="al-font" style="font-family:${st(f.display)}">Aa</span><span class="al-fprev" style="font-family:${st(f.body)}">${esc(T('The quick brown fox jumps over the lazy dog'))}</span>`; }
     if (x.kind === 'icon') { const [src, n] = id.split(':'); const inner = src === 'site' ? (window.TribeSiteCfg.icon ? window.TribeSiteCfg.icon(n) : '') : (window.TribeAppData && window.TribeAppData.ICONS[n] ? svg(window.TribeAppData.ICONS[n], 'al-ic') : ''); return `<span class="al-ico">${inner}</span>`; }
     if (x.kind === 'background') return `<img class="al-img" src="sitefx/thumbs/${esc(id)}.jpg" alt="" loading="lazy" width="120" height="75">`;
     if (x.kind === 'sound') return `<span class="al-snd">${svg('<path d="M5 9v6h4l5 4V5L9 9z"/><path d="M17 9a4 4 0 0 1 0 6"/>')}</span>`;
@@ -99,6 +100,7 @@
     const grid = body.querySelector('#al-grid'), note = body.querySelector('#al-note');
     const paint = () => {
       const items = list(kind, q).slice(0, 240);
+      if (kind === 'font' && window.TribeFontLib) window.TribeFontLib.load([].concat(...items.map(x => window.TribeFontLib.pairFams(x.id))));   // online: the real fonts; offline: the fallback stack
       grid.innerHTML = items.length ? items.map(tile).join('') : `<p class="faint">${esc(T('Nothing matches that. Try another word.'))}</p>`;
       body.querySelectorAll('[data-alk]').forEach(b => b.setAttribute('aria-selected', b.dataset.alk === kind ? 'true' : 'false'));
       const first = items[0]; note.textContent = first ? `${T('Licence')}: ${first.license} · ${T(first.source)}` : '';

@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 // The design library and the 50+ examples (feat/asset-libs), with no browser:
-//   - every kind the library lists has 50+ items (fonts are the font pairs we ship, so they are counted, not held to 50)
+//   - every kind the library lists has 50+ items, fonts included (fontlib.js: bundled pairs + OFL pairs from Google Fonts)
+//   - every font pair: licence OFL-1.1, a source, a preview line; Google ones get a css2 address and a system fallback
 //   - every item has a licence from the allowed list and a source
 //   - the 56 palettes are valid and readable (text on background >= 4.5:1)
 //   - the 30 sounds are well formed
@@ -15,7 +16,18 @@ const D = require(R('app/ui/assetlib-data.js')), S = require(R('app/ui/sitecfg.j
 const FX = require(R('app/ui/sitefx.js')), K = require(R('app/ui/motionkit.js'));
 const cat = D.catalog({ site: S, app: A, fx: FX, motion: K }), by = {};
 cat.forEach(x => { by[x.kind] = (by[x.kind] || 0) + 1; });
-for (const k of D.KINDS.map(k => k.id)) { if (k === 'font') { assert.ok(by[k] >= 10, 'font pairs'); continue; } assert.ok(by[k] >= 50, `${k}: ${by[k]} (needs 50+)`); }
+for (const k of D.KINDS.map(k => k.id)) assert.ok(by[k] >= 50, `${k}: ${by[k]} (needs 50+)`);
+{ const FL = require('../ui/fontlib.js'), ids = Object.keys(FL.PAIRS);
+  assert.deepStrictEqual(ids, Object.keys(S.FONT_PAIRS), 'the site editor gets the same pairs');
+  for (const id of ids) { const i = FL.info(id); assert.ok(i.licence === 'OFL-1.1' && i.source && i.preview, id); for (const f of FL.pairFams(id)) assert.ok(FL.BUNDLED.includes(f) || FL.GFONT[f] || /^System/.test(f), `${id}: ${f}`); }
+  assert.ok(cat.filter(x => x.kind === 'font').every(x => x.license === 'OFL-1.1' && x.source), 'font licences');
+  assert.strictEqual(FL.href(['Abril Fatface', 'Lato', 'Inter']), 'https://fonts.googleapis.com/css2?family=Abril+Fatface&family=Lato:wght@400;700&display=swap', 'css2 address, bundled ones left out');
+  assert.strictEqual(FL.href(['Inter', 'Fraunces']), '', 'bundled pairs need no network');
+  assert.ok(/Georgia/.test(FL.stack('Playfair Display')) && /system-ui/.test(FL.stack('Lato')), 'offline fallback stacks');
+  const css = S.render(S.setFonts(S.normalize({}), 'playfair')); assert.ok(css.includes("<style>@import url('https://fonts.googleapis.com/css2?family=Lato") && /--display:'Playfair Display', Georgia/.test(css), 'site css loads the pair and falls back');
+  assert.ok(!S.render(S.setFonts(S.normalize({}), 'classic')).includes('googleapis'), 'bundled pair: no Google Fonts');
+  assert.ok(A.FONTS.playfair && A.FONTS.playfair.online && A.css({ ...A.blank ? A.blank() : {}, theme: { font: 'playfair' } }).includes('fonts.googleapis.com'), 'App Creator gets the pairs');
+  assert.ok(FL.PAIRS[FL.calmer('bebas')].mood === 'calm' && FL.PAIRS[FL.bolder('plain')].mood === 'bold', 'calmer / bolder'); }
 const LIC = /^(CC0-1\.0|MIT|ISC|Apache-2\.0|BSD-[23]-Clause|OFL-1\.1|CC-BY-4\.0)$/;
 cat.forEach(x => { assert.ok(LIC.test(x.license), `${x.kind}/${x.id} licence ${x.license}`); assert.ok(x.source && x.name, `${x.kind}/${x.id} source and name`); });
 const keys = new Set(); cat.forEach(x => { const k = x.kind + '|' + x.id; assert.ok(!keys.has(k), 'twice: ' + k); keys.add(k); });

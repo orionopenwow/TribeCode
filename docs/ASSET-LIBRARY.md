@@ -9,7 +9,7 @@ One place to find everything that makes a project look and sound like itself, wi
 | Colour palettes | 56 (+24 from the shelf's four colour packs) | `assetlib-data.js` | CC0, made for TribeCode |
 | UI sounds | 52 | `assetlib-data.js`, drawn with WebAudio, no files | CC0, made for TribeCode |
 | Icons | 153 | website designer (a Lucide subset, ISC) and App Creator (drawn for TribeCode) | ISC / CC0 |
-| Font pairs | 10 | the website designer's pairs of the OFL fonts TribeCode ships | OFL-1.1 |
+| Font pairs | 68 | `fontlib.js`: 10 pairs of the OFL fonts TribeCode ships, plus 58 OFL pairs loaded from Google Fonts when online (system fonts offline). The site editor, App Creator, the Launch kit and the library share the one list; each tile shows a preview line | OFL-1.1 |
 | Pictures | 51 | website designer and App Creator illustrations | CC0 |
 | Motion feels | 54 | Motion Studio | CC0 |
 | Moving backgrounds | 55 | `app/ui/sitefx/` (eight are ports of ThreeUI Community by Meng To, MIT) | MIT |
@@ -34,3 +34,9 @@ The library registers a `library` provider with the tribe's suggestions: a brand
 ## App Creator tap sounds
 
 `theme.sound` (`click`, `tap`, `tick`, `pop`, `bubble`, `typing`) plays a short sound on every tap in the prototype and in the exported web app. Flint: "play a click sound on tap", "no tap sounds".
+
+## Fonts, the Launch kit and translated reasons (feat/asset-libs2)
+
+- **Fonts**: `app/ui/fontlib.js` holds every pair with its mood (calm, bold, playful, serious, elegant, tech, retro, hand). Bundled families load from `assets/site-fonts`; the others add one Google Fonts css2 link (`TribeFontLib.load`). A site's CSS starts with an `@import` of that link, so exports work online and fall back to system fonts offline. The desktop app allows `fonts.googleapis.com` styles and `fonts.gstatic.com` fonts for this. Flint: "use a calmer font", "use a bolder font", "switch the font to playfair".
+- **Launch kit**: the Library button in its header opens the shared picker. Colours and fonts go to the brand kit (screenshots, icons, paywalls redraw), and an icon becomes the app icon's symbol (`site:` and `app:` icons draw on the canvas).
+- **Why lines**: every suggestion's "why" sentence, the "It came from" line and the learning line go through `TribeI18n.t`, with rows and patterns in `i18n-more.js`.

@@ -284,7 +284,7 @@ ${m.trial.on ? `<div class="pw-trial"><span>${e(m.trial.text)}</span><span>On</s
     return {
       v: 1, style: SHOT_STYLES.some(s => s.id === k.style) ? k.style : 's01', sizes: Array.isArray(k.sizes) ? k.sizes.filter(id => SIZES.some(s => s.id === id)) : SIZES.filter(s => s.def).map(s => s.id),
       feature: k.feature !== false, slides, shotsAt: str(k.shotsAt, 30), seen: Array.isArray(k.seen) ? k.seen.slice(0, 60).map(x => str(x, 80)) : [],
-      icon: { style: ICON_STYLES.some(s => s.id === icon.style) ? icon.style : 'i01', text: str(icon.text, 2), symbol: SYMBOLS.includes(icon.symbol) ? icon.symbol : 'spark', upload: /^data:image\/(png|jpeg|webp);base64,/.test(icon.upload || '') && icon.upload.length < 700000 ? icon.upload : '', swap: !!icon.swap },
+      icon: { style: ICON_STYLES.some(s => s.id === icon.style) ? icon.style : 'i01', text: str(icon.text, 2), symbol: SYMBOLS.includes(icon.symbol) || /^(site|app):[a-z0-9-]{1,40}$/.test(icon.symbol || '') ? icon.symbol : 'spark', upload: /^data:image\/(png|jpeg|webp);base64,/.test(icon.upload || '') && icon.upload.length < 700000 ? icon.upload : '', swap: !!icon.swap },
       text, langs: Array.isArray(k.langs) ? k.langs.slice(0, 8).map(x => str(x, 8)) : [], localized: k.localized && typeof k.localized === 'object' ? k.localized : {},
       paywall: paywallNorm(k.paywall), checks: k.checks && typeof k.checks === 'object' ? Object.fromEntries(Object.entries(k.checks).filter(([id]) => CHECKLIST.some(c => c.id === id)).map(([id, v]) => [id, !!v])) : {},
       notes: k.notes && typeof k.notes === 'object' ? Object.fromEntries(Object.entries(k.notes).filter(([id]) => CHECKLIST.some(c => c.id === id)).map(([id, v]) => [id, str(v, 2000)])) : {},
