@@ -121,7 +121,10 @@
     if (!el || el.dataset.done) return; el.dataset.done = '1';
     try {
       const { request: x } = await C.api(`/projects/${encodeURIComponent(pid || projectId())}/changes/${encodeURIComponent(id)}`);
-      el.innerHTML = `${x.before || x.after ? `<div class="cr-pics">${x.before ? `<figure><img src="${esc(x.before)}" alt=""><figcaption>${esc(T('Before'))}</figcaption></figure>` : ''}${x.after ? `<figure><img src="${esc(x.after)}" alt=""><figcaption>${esc(T('After'))}</figcaption></figure>` : ''}</div>` : ''}${(x.summary || []).length ? `<ul class="cr-sum">${x.summary.map(s => `<li>${esc(s)}</li>`).join('')}</ul>` : ''}`;
+      // pass 4: no pictures came with it (an AI helper's proposal): draw the app before and after right here
+      const AC = window.TribeAppCreator; let drawn = '';
+      if (!x.before && !x.after && x.draw && x.draw.after && AC && AC.mini) { try { const bf = x.draw.before, af = x.draw.after, sc = (af.screens || []).find(s2 => { const o = ((bf && bf.screens) || []).find(y => y.id === s2.id); return !o || JSON.stringify(o) !== JSON.stringify(s2); }), sid = sc ? sc.id : af.start, has = bf && (bf.screens || []).some(y => y.id === sid); drawn = `<div class="cr-pics cr-draw">${bf ? `<figure>${AC.mini(bf, has ? sid : undefined, 132)}<figcaption>${esc(T('Before'))}</figcaption></figure>` : ''}<figure>${AC.mini(af, sid, 132)}<figcaption>${esc(T('After'))}</figcaption></figure></div>`; } catch {} }
+      el.innerHTML = `${drawn}${x.before || x.after ? `<div class="cr-pics">${x.before ? `<figure><img src="${esc(x.before)}" alt=""><figcaption>${esc(T('Before'))}</figcaption></figure>` : ''}${x.after ? `<figure><img src="${esc(x.after)}" alt=""><figcaption>${esc(T('After'))}</figcaption></figure>` : ''}</div>` : ''}${(x.summary || []).length ? `<ul class="cr-sum">${x.summary.map(s => `<li>${esc(s)}</li>`).join('')}</ul>` : ''}`;
     } catch { el.textContent = ''; }
   }
   async function act(b, pid, after) {
@@ -149,7 +152,7 @@
     open = window.TribeUI.sheet({ id: 'cr-list', eyebrow: T('Changes'), title: T('Suggested changes'), body: '<div class="cr-list" id="cr-list-body"></div>', onClose: () => { open = null; } });
     const fill = async () => {
       const box = document.getElementById('cr-list-body'); if (!box) return;
-      const l = await mine(pid), wait = l.filter(x => x.canDecide), mineL = l.filter(x => x.mine), rest = l.filter(x => !x.canDecide && !x.mine);
+      const l = await mine(pid), wait = l.filter(x => x.canDecide), mineL = l.filter(x => x.mine && !x.canDecide), rest = l.filter(x => !x.canDecide && !x.mine);
       const sec = (t, xs) => (xs.length ? `<h4 class="cr-h">${esc(T(t))}</h4>${xs.map(rowHtml).join('')}` : '');
       box.innerHTML = l.length ? sec('Waiting for you', wait) + sec('Yours', mineL) + sec('Everyone else’s', rest) : `<p class="cr-empty">${esc(T('No suggested changes yet. Someone who can’t change a tool directly sends a suggestion from its top strip, and it shows up here.'))}</p>`;
       box.querySelectorAll('[data-cr-prev]').forEach(el => preview(el, el.dataset.crPrev, pid));

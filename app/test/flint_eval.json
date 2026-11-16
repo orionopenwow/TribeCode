@@ -14636,6 +14636,1200 @@
    "v": "ac"
   },
   {
+   "t": "add a settings screen",
+   "i": "app.kit",
+   "ctx": "a",
+   "v": "p4"
+  },
+  {
+   "t": "add a profile screen",
+   "i": "app.kit",
+   "ctx": "a",
+   "v": "p4"
+  },
+  {
+   "t": "add a screen called Favorites",
+   "i": "app.feature",
+   "ctx": "a",
+   "v": "p4"
+  },
+  {
+   "t": "add an onboarding flow",
+   "i": "app.kit",
+   "ctx": "a",
+   "v": "p4"
+  },
+  {
+   "t": "add a paywall",
+   "i": "app.kit",
+   "ctx": "a",
+   "v": "p4"
+  },
+  {
+   "t": "add a sign in screen",
+   "i": "app.kit",
+   "ctx": "a",
+   "v": "p4"
+  },
+  {
+   "t": "add a chat screen",
+   "i": "app.kit",
+   "ctx": "a",
+   "v": "p4"
+  },
+  {
+   "t": "add a list",
+   "i": "app.block",
+   "ctx": "a",
+   "v": "p4"
+  },
+  {
+   "t": "add a button",
+   "i": "app.block",
+   "ctx": "a",
+   "v": "p4"
+  },
+  {
+   "t": "add a search bar",
+   "i": "app.block",
+   "ctx": "a",
+   "v": "p4"
+  },
+  {
+   "t": "add a chart",
+   "i": "app.block",
+   "ctx": "a",
+   "v": "p4"
+  },
+  {
+   "t": "add a picture",
+   "i": "app.block",
+   "ctx": "a",
+   "v": "p4"
+  },
+  {
+   "t": "add a form",
+   "i": "app.block",
+   "ctx": "a",
+   "v": "p4"
+  },
+  {
+   "t": "add a tab bar",
+   "i": "app.tabbar",
+   "ctx": "a",
+   "v": "p4"
+  },
+  {
+   "t": "add a map",
+   "i": "app.block",
+   "ctx": "a",
+   "v": "p4"
+  },
+  {
+   "t": "make it dark",
+   "i": "app.theme",
+   "ctx": "a",
+   "v": "p4"
+  },
+  {
+   "t": "dark mode",
+   "i": "app.theme",
+   "ctx": "a",
+   "v": "p4"
+  },
+  {
+   "t": "make it light",
+   "i": "app.theme",
+   "ctx": "a",
+   "v": "p4"
+  },
+  {
+   "t": "make it blue",
+   "i": "app.theme",
+   "ctx": "a",
+   "v": "p4"
+  },
+  {
+   "t": "use teal as the main colour",
+   "i": "app.theme",
+   "ctx": "a",
+   "v": "p4"
+  },
+  {
+   "t": "change the colour to #2F5BEA",
+   "i": "app.theme",
+   "ctx": "a",
+   "v": "p4"
+  },
+  {
+   "t": "rounder",
+   "i": "app.theme",
+   "ctx": "a",
+   "v": "p4"
+  },
+  {
+   "t": "sharper corners",
+   "i": "app.theme",
+   "ctx": "a",
+   "v": "p4"
+  },
+  {
+   "t": "pill buttons",
+   "i": "app.theme",
+   "ctx": "a",
+   "v": "p4"
+  },
+  {
+   "t": "more space",
+   "i": "app.theme",
+   "ctx": "a",
+   "v": "p4"
+  },
+  {
+   "t": "make it compact",
+   "i": "app.theme",
+   "ctx": "a",
+   "v": "p4"
+  },
+  {
+   "t": "change the font",
+   "i": "app.theme",
+   "ctx": "a",
+   "v": "p4"
+  },
+  {
+   "t": "use a serif font",
+   "i": "app.theme",
+   "ctx": "a",
+   "v": "p4"
+  },
+  {
+   "t": "bolder icons",
+   "i": "app.theme",
+   "ctx": "a",
+   "v": "p4"
+  },
+  {
+   "t": "calmer motion",
+   "i": "app.theme",
+   "ctx": "a",
+   "v": "p4"
+  },
+  {
+   "t": "snappier",
+   "i": "app.theme",
+   "ctx": "a",
+   "v": "p4"
+  },
+  {
+   "t": "use the android look",
+   "i": "app.platform",
+   "ctx": "a",
+   "v": "p4"
+  },
+  {
+   "t": "use the iphone look",
+   "i": "app.platform",
+   "ctx": "a",
+   "v": "p4"
+  },
+  {
+   "t": "use the midnight look",
+   "i": "app.preset",
+   "ctx": "a",
+   "v": "p4"
+  },
+  {
+   "t": "rename the app to Trailmix",
+   "i": "app.rename",
+   "ctx": "a",
+   "v": "p4"
+  },
+  {
+   "t": "link this to settings",
+   "i": "app.link",
+   "ctx": "a",
+   "v": "p4"
+  },
+  {
+   "t": "link this button to the profile screen",
+   "i": "app.link",
+   "ctx": "a",
+   "v": "p4"
+  },
+  {
+   "t": "open it as a sheet",
+   "i": "app.el.how",
+   "ctx": "a",
+   "v": "p4"
+  },
+  {
+   "t": "change this to Welcome back",
+   "i": "app.el.text",
+   "ctx": "a",
+   "v": "p4"
+  },
+  {
+   "t": "make this say Get started",
+   "i": "app.el.text",
+   "ctx": "a",
+   "v": "p4"
+  },
+  {
+   "t": "remove this",
+   "i": "app.el.remove",
+   "ctx": "a",
+   "v": "p4"
+  },
+  {
+   "t": "delete this",
+   "i": "app.el.remove",
+   "ctx": "a",
+   "v": "p4"
+  },
+  {
+   "t": "duplicate this",
+   "i": "app.el.dup",
+   "ctx": "a",
+   "v": "p4"
+  },
+  {
+   "t": "move this up",
+   "i": "app.el.move",
+   "ctx": "a",
+   "v": "p4"
+  },
+  {
+   "t": "move this down",
+   "i": "app.el.move",
+   "ctx": "a",
+   "v": "p4"
+  },
+  {
+   "t": "change the icon to a heart",
+   "i": "app.el.icon",
+   "ctx": "a",
+   "v": "p4"
+  },
+  {
+   "t": "change the picture",
+   "i": "app.el.picture",
+   "ctx": "a",
+   "v": "p4"
+  },
+  {
+   "t": "delete this screen",
+   "i": "app.screen.remove",
+   "ctx": "a",
+   "v": "p4"
+  },
+  {
+   "t": "rename this screen to Home",
+   "i": "app.screen.rename",
+   "ctx": "a",
+   "v": "p4"
+  },
+  {
+   "t": "make this the first screen",
+   "i": "app.screen.first",
+   "ctx": "a",
+   "v": "p4"
+  },
+  {
+   "t": "duplicate this screen",
+   "i": "app.screen.dup",
+   "ctx": "a",
+   "v": "p4"
+  },
+  {
+   "t": "play it",
+   "i": "app.play",
+   "ctx": "a",
+   "v": "p4"
+  },
+  {
+   "t": "undo",
+   "i": "app.undo",
+   "ctx": "a",
+   "v": "p4"
+  },
+  {
+   "t": "undo that",
+   "i": "app.undo",
+   "ctx": "a",
+   "v": "p4"
+  },
+  {
+   "t": "redo",
+   "i": "app.redo",
+   "ctx": "a",
+   "v": "p4"
+  },
+  {
+   "t": "export it",
+   "i": "app.export",
+   "ctx": "a",
+   "v": "p4"
+  },
+  {
+   "t": "make a habit tracker app",
+   "i": "app.make",
+   "ctx": "a",
+   "v": "p4"
+  },
+  {
+   "t": "make it like the recipes template",
+   "i": "app.make",
+   "ctx": "a",
+   "v": "p4"
+  },
+  {
+   "t": "start over with the meditation template",
+   "i": "app.make",
+   "ctx": "a",
+   "v": "p4"
+  },
+  {
+   "t": "add offline storage",
+   "i": "app.feature",
+   "ctx": "a",
+   "v": "p4"
+  },
+  {
+   "t": "add a dark mode switch",
+   "i": "app.feature",
+   "ctx": "a",
+   "v": "p4"
+  },
+  {
+   "t": "add reminders",
+   "i": "app.feature",
+   "ctx": "a",
+   "v": "p4"
+  },
+  {
+   "t": "what features can you add?",
+   "i": "app.features",
+   "ctx": "a",
+   "v": "p4"
+  },
+  {
+   "t": "polish it",
+   "i": "app.polish",
+   "ctx": "a",
+   "v": "p4"
+  },
+  {
+   "t": "make it beautiful",
+   "i": "app.beautify",
+   "ctx": "a",
+   "v": "p4"
+  },
+  {
+   "t": "what can you do here?",
+   "i": "app.help",
+   "ctx": "a",
+   "v": "p4"
+  },
+  {
+   "t": "add a page called About",
+   "i": "site.page.add",
+   "ctx": "s",
+   "v": "p4"
+  },
+  {
+   "t": "add a contact page",
+   "i": "site.page.add",
+   "ctx": "s",
+   "v": "p4"
+  },
+  {
+   "t": "add a gallery",
+   "i": "site.block.add",
+   "ctx": "s",
+   "v": "p4"
+  },
+  {
+   "t": "add a pricing section",
+   "i": "site.block.add",
+   "ctx": "s",
+   "v": "p4"
+  },
+  {
+   "t": "add testimonials",
+   "i": "site.block.add",
+   "ctx": "s",
+   "v": "p4"
+  },
+  {
+   "t": "add a faq",
+   "i": "site.block.add",
+   "ctx": "s",
+   "v": "p4"
+  },
+  {
+   "t": "add a contact form",
+   "i": "site.block.add",
+   "ctx": "s",
+   "v": "p4"
+  },
+  {
+   "t": "add a newsletter signup",
+   "i": "site.block.add",
+   "ctx": "s",
+   "v": "p4"
+  },
+  {
+   "t": "add a footer",
+   "i": "site.block.add",
+   "ctx": "s",
+   "v": "p4"
+  },
+  {
+   "t": "add a video",
+   "i": "site.video",
+   "ctx": "s",
+   "v": "p4"
+  },
+  {
+   "t": "add a team section",
+   "i": "site.block.add",
+   "ctx": "s",
+   "v": "p4"
+  },
+  {
+   "t": "add a link for my book club",
+   "i": "site.link.add",
+   "ctx": "s",
+   "v": "p4"
+  },
+  {
+   "t": "add my instagram",
+   "i": "site.social.add",
+   "ctx": "s",
+   "v": "p4"
+  },
+  {
+   "t": "dark mode",
+   "i": "site.dark",
+   "ctx": "s",
+   "v": "p4"
+  },
+  {
+   "t": "light mode",
+   "i": "site.dark",
+   "ctx": "s",
+   "v": "p4"
+  },
+  {
+   "t": "make it blue",
+   "i": "site.color",
+   "ctx": "s",
+   "v": "p4"
+  },
+  {
+   "t": "make the main colour teal",
+   "i": "site.color",
+   "ctx": "s",
+   "v": "p4"
+  },
+  {
+   "t": "change the colour to #2F5BEA",
+   "i": "site.color",
+   "ctx": "s",
+   "v": "p4"
+  },
+  {
+   "t": "rounder corners",
+   "i": "site.radius",
+   "ctx": "s",
+   "v": "p4"
+  },
+  {
+   "t": "sharper corners",
+   "i": "site.radius",
+   "ctx": "s",
+   "v": "p4"
+  },
+  {
+   "t": "more space",
+   "i": "site.spacing",
+   "ctx": "s",
+   "v": "p4"
+  },
+  {
+   "t": "less space",
+   "i": "site.spacing",
+   "ctx": "s",
+   "v": "p4"
+  },
+  {
+   "t": "change the fonts",
+   "i": "site.font",
+   "ctx": "s",
+   "v": "p4"
+  },
+  {
+   "t": "use a serif font",
+   "i": "site.font",
+   "ctx": "s",
+   "v": "p4"
+  },
+  {
+   "t": "use the paper look",
+   "i": "site.theme",
+   "ctx": "s",
+   "v": "p4"
+  },
+  {
+   "t": "make the buttons pill shaped",
+   "i": "site.buttons",
+   "ctx": "s",
+   "v": "p4"
+  },
+  {
+   "t": "outline buttons",
+   "i": "site.buttons",
+   "ctx": "s",
+   "v": "p4"
+  },
+  {
+   "t": "make the buttons work",
+   "i": "site.wire",
+   "ctx": "s",
+   "v": "p4"
+  },
+  {
+   "t": "link this button to the contact page",
+   "i": "site.wire",
+   "ctx": "se",
+   "v": "p4"
+  },
+  {
+   "t": "link this to https://example.com",
+   "i": "site.wire",
+   "ctx": "se",
+   "v": "p4"
+  },
+  {
+   "t": "change the title to Fresh bread daily",
+   "i": "site.text",
+   "ctx": "s",
+   "v": "p4"
+  },
+  {
+   "t": "change this to Open today",
+   "i": "site.el.text",
+   "ctx": "se",
+   "v": "p4"
+  },
+  {
+   "t": "make this bigger",
+   "i": "site.el.size",
+   "ctx": "se",
+   "v": "p4"
+  },
+  {
+   "t": "make this smaller",
+   "i": "site.el.size",
+   "ctx": "se",
+   "v": "p4"
+  },
+  {
+   "t": "make this bold",
+   "i": "site.el.weight",
+   "ctx": "se",
+   "v": "p4"
+  },
+  {
+   "t": "center this",
+   "i": "site.el.align",
+   "ctx": "se",
+   "v": "p4"
+  },
+  {
+   "t": "make this teal",
+   "i": "site.el.colorname",
+   "ctx": "se",
+   "v": "p4"
+  },
+  {
+   "t": "move this section up",
+   "i": "site.block.move",
+   "ctx": "se",
+   "v": "p4"
+  },
+  {
+   "t": "move this section down",
+   "i": "site.block.move",
+   "ctx": "se",
+   "v": "p4"
+  },
+  {
+   "t": "remove this section",
+   "i": "site.block.remove",
+   "ctx": "se",
+   "v": "p4"
+  },
+  {
+   "t": "duplicate this section",
+   "i": "site.block.dup",
+   "ctx": "se",
+   "v": "p4"
+  },
+  {
+   "t": "hide this section",
+   "i": "site.block.hide",
+   "ctx": "se",
+   "v": "p4"
+  },
+  {
+   "t": "hide this on phones",
+   "i": "site.el.show",
+   "ctx": "se",
+   "v": "p4"
+  },
+  {
+   "t": "make this section dark",
+   "i": "site.dark",
+   "ctx": "se",
+   "v": "p4"
+  },
+  {
+   "t": "center the text in this section",
+   "i": "site.align",
+   "ctx": "se",
+   "v": "p4"
+  },
+  {
+   "t": "make this section narrower",
+   "i": "site.width",
+   "ctx": "se",
+   "v": "p4"
+  },
+  {
+   "t": "replace the picture",
+   "i": "site.image.replace",
+   "ctx": "se",
+   "v": "p4"
+  },
+  {
+   "t": "make the picture round",
+   "i": "site.image.shape",
+   "ctx": "se",
+   "v": "p4"
+  },
+  {
+   "t": "describe the picture",
+   "i": "site.image.alt",
+   "ctx": "se",
+   "v": "p4"
+  },
+  {
+   "t": "rename this page to Menu",
+   "i": "site.page.rename",
+   "ctx": "s",
+   "v": "p4"
+  },
+  {
+   "t": "delete the about page",
+   "i": "site.page.delete",
+   "ctx": "s",
+   "v": "p4"
+  },
+  {
+   "t": "move the gallery to the top",
+   "i": "site.block.move",
+   "ctx": "s",
+   "v": "p4"
+  },
+  {
+   "t": "undo",
+   "i": "undo",
+   "ctx": "s",
+   "v": "p4"
+  },
+  {
+   "t": "undo that",
+   "i": "undo",
+   "ctx": "s",
+   "v": "p4"
+  },
+  {
+   "t": "redo",
+   "i": "redo",
+   "ctx": "s",
+   "v": "p4"
+  },
+  {
+   "t": "check my site",
+   "i": "site.check",
+   "ctx": "s",
+   "v": "p4"
+  },
+  {
+   "t": "fix what is safe",
+   "i": "site.fixall",
+   "ctx": "s",
+   "v": "p4"
+  },
+  {
+   "t": "download the html",
+   "i": "site.export",
+   "ctx": "s",
+   "v": "p4"
+  },
+  {
+   "t": "publish it",
+   "i": "site.publish",
+   "ctx": "s",
+   "v": "p4"
+  },
+  {
+   "t": "make it like the cafe template",
+   "i": "site.cafe",
+   "ctx": "s",
+   "v": "p4"
+  },
+  {
+   "t": "start from the portfolio template",
+   "i": "site.portfolio",
+   "ctx": "s",
+   "v": "p4"
+  },
+  {
+   "t": "add a fade in",
+   "i": "site.entrance",
+   "ctx": "s",
+   "v": "p4"
+  },
+  {
+   "t": "what do you suggest?",
+   "i": "suggest.list",
+   "ctx": "s",
+   "v": "p4"
+  },
+  {
+   "t": "polish it",
+   "i": "site.polish",
+   "ctx": "s",
+   "v": "p4"
+  },
+  {
+   "t": "make it beautiful",
+   "i": "site.beautify",
+   "ctx": "s",
+   "v": "p4"
+  },
+  {
+   "t": "what can you do here?",
+   "i": "site.help",
+   "ctx": "s",
+   "v": "p4"
+  },
+  {
+   "t": "tidy it up",
+   "i": "app.polish",
+   "ctx": "a",
+   "v": "p4"
+  },
+  {
+   "t": "clean up",
+   "i": "app.polish",
+   "ctx": "a",
+   "v": "p4"
+  },
+  {
+   "t": "polish the app",
+   "i": "app.polish",
+   "ctx": "a",
+   "v": "p4"
+  },
+  {
+   "t": "make it look tidier",
+   "i": "app.polish",
+   "ctx": "a",
+   "v": "p4"
+  },
+  {
+   "t": "make the app beautiful",
+   "i": "app.beautify",
+   "ctx": "a",
+   "v": "p4"
+  },
+  {
+   "t": "make it look professional",
+   "i": "app.beautify",
+   "ctx": "a",
+   "v": "p4"
+  },
+  {
+   "t": "redesign it",
+   "i": "app.beautify",
+   "ctx": "a",
+   "v": "p4"
+  },
+  {
+   "t": "beautify",
+   "i": "app.beautify",
+   "ctx": "a",
+   "v": "p4"
+  },
+  {
+   "t": "help",
+   "i": "app.help",
+   "ctx": "a",
+   "v": "p4"
+  },
+  {
+   "t": "what can i say here",
+   "i": "app.help",
+   "ctx": "a",
+   "v": "p4"
+  },
+  {
+   "t": "what can flint do",
+   "i": "app.help",
+   "ctx": "a",
+   "v": "p4"
+  },
+  {
+   "t": "get rid of this",
+   "i": "app.el.remove",
+   "ctx": "a",
+   "v": "p4"
+  },
+  {
+   "t": "copy this",
+   "i": "app.el.dup",
+   "ctx": "a",
+   "v": "p4"
+  },
+  {
+   "t": "clone that",
+   "i": "app.el.dup",
+   "ctx": "a",
+   "v": "p4"
+  },
+  {
+   "t": "move it up",
+   "i": "app.el.move",
+   "ctx": "a",
+   "v": "p4"
+  },
+  {
+   "t": "move that down",
+   "i": "app.el.move",
+   "ctx": "a",
+   "v": "p4"
+  },
+  {
+   "t": "set this to Sign up free",
+   "i": "app.el.text",
+   "ctx": "a",
+   "v": "p4"
+  },
+  {
+   "t": "rename this to Continue",
+   "i": "app.el.text",
+   "ctx": "a",
+   "v": "p4"
+  },
+  {
+   "t": "make that say Next",
+   "i": "app.el.text",
+   "ctx": "a",
+   "v": "p4"
+  },
+  {
+   "t": "change the icon to a star",
+   "i": "app.el.icon",
+   "ctx": "a",
+   "v": "p4"
+  },
+  {
+   "t": "use a bell icon",
+   "i": "app.el.icon",
+   "ctx": "a",
+   "v": "p4"
+  },
+  {
+   "t": "swap the picture",
+   "i": "app.el.picture",
+   "ctx": "a",
+   "v": "p4"
+  },
+  {
+   "t": "pick another image",
+   "i": "app.el.picture",
+   "ctx": "a",
+   "v": "p4"
+  },
+  {
+   "t": "show this as a sheet",
+   "i": "app.el.how",
+   "ctx": "a",
+   "v": "p4"
+  },
+  {
+   "t": "make it a sheet",
+   "i": "app.el.how",
+   "ctx": "a",
+   "v": "p4"
+  },
+  {
+   "t": "remove the stats screen",
+   "i": "app.screen.remove",
+   "ctx": "a",
+   "v": "p4"
+  },
+  {
+   "t": "get rid of this screen",
+   "i": "app.screen.remove",
+   "ctx": "a",
+   "v": "p4"
+  },
+  {
+   "t": "call this screen Dashboard",
+   "i": "app.screen.rename",
+   "ctx": "a",
+   "v": "p4"
+  },
+  {
+   "t": "rename the profile screen to Me",
+   "i": "app.screen.rename",
+   "ctx": "a",
+   "v": "p4"
+  },
+  {
+   "t": "make the stats screen the first screen",
+   "i": "app.screen.first",
+   "ctx": "a",
+   "v": "p4"
+  },
+  {
+   "t": "start on the profile screen",
+   "i": "app.screen.first",
+   "ctx": "a",
+   "v": "p4"
+  },
+  {
+   "t": "copy this screen",
+   "i": "app.screen.dup",
+   "ctx": "a",
+   "v": "p4"
+  },
+  {
+   "t": "clone the today screen",
+   "i": "app.screen.dup",
+   "ctx": "a",
+   "v": "p4"
+  },
+  {
+   "t": "use the workout template",
+   "i": "app.make",
+   "ctx": "a",
+   "v": "p4"
+  },
+  {
+   "t": "try the budget template",
+   "i": "app.make",
+   "ctx": "a",
+   "v": "p4"
+  },
+  {
+   "t": "start again with the trip planner template",
+   "i": "app.make",
+   "ctx": "a",
+   "v": "p4"
+  },
+  {
+   "t": "switch to the music player template",
+   "i": "app.make",
+   "ctx": "a",
+   "v": "p4"
+  },
+  {
+   "t": "put that back",
+   "i": "app.redo",
+   "ctx": "a",
+   "v": "p4"
+  },
+  {
+   "t": "polish it up",
+   "i": "site.polish",
+   "ctx": "s",
+   "v": "p4"
+  },
+  {
+   "t": "polish everything",
+   "i": "site.polish",
+   "ctx": "s",
+   "v": "p4"
+  },
+  {
+   "t": "polish the site",
+   "i": "site.polish",
+   "ctx": "s",
+   "v": "p4"
+  },
+  {
+   "t": "polish my website",
+   "i": "site.polish",
+   "ctx": "s",
+   "v": "p4"
+  },
+  {
+   "t": "polish the page",
+   "i": "site.polish",
+   "ctx": "s",
+   "v": "p4"
+  },
+  {
+   "t": "make the site beautiful",
+   "i": "site.beautify",
+   "ctx": "s",
+   "v": "p4"
+  },
+  {
+   "t": "make my website look amazing",
+   "i": "site.beautify",
+   "ctx": "s",
+   "v": "p4"
+  },
+  {
+   "t": "redesign it",
+   "i": "site.beautify",
+   "ctx": "s",
+   "v": "p4"
+  },
+  {
+   "t": "restyle the site",
+   "i": "site.beautify",
+   "ctx": "s",
+   "v": "p4"
+  },
+  {
+   "t": "help",
+   "i": "site.help",
+   "ctx": "s",
+   "v": "p4"
+  },
+  {
+   "t": "what can i say here",
+   "i": "site.help",
+   "ctx": "s",
+   "v": "p4"
+  },
+  {
+   "t": "what can you do for free",
+   "i": "site.help",
+   "ctx": "s",
+   "v": "p4"
+  },
+  {
+   "t": "review my site",
+   "i": "site.check",
+   "ctx": "s",
+   "v": "p4"
+  },
+  {
+   "t": "audit the website",
+   "i": "site.check",
+   "ctx": "s",
+   "v": "p4"
+  },
+  {
+   "t": "is my site ok",
+   "i": "site.check",
+   "ctx": "s",
+   "v": "p4"
+  },
+  {
+   "t": "what's wrong with my site",
+   "i": "site.check",
+   "ctx": "s",
+   "v": "p4"
+  },
+  {
+   "t": "is the site ready",
+   "i": "site.check",
+   "ctx": "s",
+   "v": "p4"
+  },
+  {
+   "t": "fix everything safe",
+   "i": "site.fixall",
+   "ctx": "s",
+   "v": "p4"
+  },
+  {
+   "t": "fix them all",
+   "i": "site.fixall",
+   "ctx": "s",
+   "v": "p4"
+  },
+  {
+   "t": "pill buttons",
+   "i": "site.buttons",
+   "ctx": "s",
+   "v": "p4"
+  },
+  {
+   "t": "solid buttons",
+   "i": "site.buttons",
+   "ctx": "s",
+   "v": "p4"
+  },
+  {
+   "t": "soft buttons",
+   "i": "site.buttons",
+   "ctx": "s",
+   "v": "p4"
+  },
+  {
+   "t": "rounded buttons",
+   "i": "site.buttons",
+   "ctx": "s",
+   "v": "p4"
+  },
+  {
+   "t": "paint this blue",
+   "i": "site.el.colorname",
+   "ctx": "se",
+   "v": "p4"
+  },
+  {
+   "t": "turn this green",
+   "i": "site.el.colorname",
+   "ctx": "se",
+   "v": "p4"
+  },
+  {
+   "t": "make that red",
+   "i": "site.el.colorname",
+   "ctx": "se",
+   "v": "p4"
+  },
+  {
+   "t": "delete this section",
+   "i": "site.block.remove",
+   "ctx": "se",
+   "v": "p4"
+  },
+  {
+   "t": "get rid of this block",
+   "i": "site.block.remove",
+   "ctx": "se",
+   "v": "p4"
+  },
+  {
+   "t": "drop this part",
+   "i": "site.block.remove",
+   "ctx": "se",
+   "v": "p4"
+  },
+  {
    "t": "make a clip for tiktok",
    "i": "share.clip",
    "s": {

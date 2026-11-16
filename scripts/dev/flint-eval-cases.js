@@ -437,6 +437,11 @@ const AC = C.length;
 for (const [ctx, t, i, s] of require('./flint-eval/appcreator.js')) C.push({ t, i, s: s || undefined, ctx });
 for (let i = AC; i < C.length; i++) C[i].v = 'ac';
 
+// ---- pass 4: Flint in the creators (app/ui/flintcreate.js): the everyday requests, Polish it, Make it beautiful ----
+const P4 = C.length;
+for (const [ctx, t, i, s] of require('./flint-eval/creators.js')) C.push({ t, i, s: s || undefined, ctx });
+for (let i = P4; i < C.length; i++) C[i].v = 'p4';
+
 // ---- Share a clip (app/ui/shareclip.js): a clip of the project for a feed, and a timelapse ----
 const SC0 = C.length;
 for (const [ctx, t, i, s] of require('./flint-eval/share.js')) C.push({ t, i, s: s || undefined, ctx });

@@ -1177,6 +1177,10 @@
     const f = FX.match(rl); if (!f) return null;
     return hit('app.feature', { feature: f, ...(off ? { off: true } : {}) }, anywhere ? 0.97 : 0.995);
   }
+  const P4_THIS = '(?:this|that|it|the selected (?:one|part|thing)|the selection)(?:\\s+(?:one|part|button|row|card|item|title|text|line))?';
+  const P4_POLISH = /^(?:please\s+)?(?:polish|tidy|clean|neaten)\s+(?:it|this|the app|my app|the site|my site|the website|my website|the page|everything)(?:\s+up)?$|^(?:polish|tidy up|clean up|polish it up)$|^make\s+(?:it|this|everything)\s+(?:look\s+)?(?:tidier|cleaner|neater|more polished|tidy|neat)$/;
+  const P4_BEAUTY = /^(?:please\s+)?make\s+(?:it|this|the app|my app|the site|my site|the website|my website|everything)\s+(?:more\s+|look\s+|look more\s+)?(?:beautiful|pretty|prettier|gorgeous|stunning|amazing|professional|better|nicer|great)$|^(?:beautify|redesign|restyle)(?:\s+(?:it|this|the app|my app|the site|my site|the website))?$|^(?:have|ask|get|let)\s+(?:claude|my ai|a stronger ai|the ai)\s+(?:to\s+)?(?:make it (?:beautiful|pretty|better)|redesign(?: it)?|beautify(?: it)?)$/;
+  const P4_HELP = /^what can (?:you|flint|i) (?:do|say|ask|change)(?:\s+(?:here|in here|in app creator|in the designer|for free|with no ai))?$|^what (?:can|should) i (?:say|ask|type)(?: here)?$|^(?:help|ideas|examples)$/;
   function appEl(c, r, ctx, hit) {
     const rl = String(r || '').toLowerCase().replace(/[-_]/g, ' ').replace(/[?.!]+$/, '').trim(), H = (i, s) => hit(i, s || {}, 0.995);
     let m;
@@ -1184,6 +1188,24 @@
     // a job for a server or native code ("real login with accounts that work on every device"): said honestly, not a design kit
     { const FX = appFeats(); if (FX && FX.REAL && FX.REAL.test(rl) && !/\b(?:screen|screens|page|kit|flow|flows|design|layout|mockup|template|paywall)\b/.test(rl)) return H('app.needsai'); }
     { const af = appFeature(rl, hit, false); if (af) return af; }
+    // pass 4 (flintcreate.js): the selected thing, screens, templates, Polish it, Make it beautiful, "what can you do here?"
+    if (/^(?:redo|redo that|put that back)$/.test(rl)) return H('app.redo');
+    if (P4_POLISH.test(rl)) return H('app.polish');
+    if (P4_BEAUTY.test(rl)) return H('app.beautify');
+    if (P4_HELP.test(rl)) return H('app.help');
+    if ((m = /^(?:make it like|start over (?:with|from)|start (?:again |fresh )?(?:with|from)|switch to|use|try)\s+the\s+(.+?)\s+template$/.exec(rl))) { const t = APP_TPL.find(([, words]) => new RegExp(`^(?:${words})(?:\\s+(?:tracker|planner|list|app))?$`).test(m[1])); return H('app.make', { template: t ? t[0] : m[1] }); }
+    if ((m = /^(?:delete|remove|get rid of|drop)\s+(?:this|the current|the\s+(.+?))\s+screen$/.exec(rl))) return H('app.screen.remove', { name: m[1] || '' });
+    if ((m = /^(?:rename|call)\s+(?:this|the current|the\s+(.+?))\s+screen\s+(?:to\s+)?["“']?(.+?)["”']?$/.exec(rl))) return H('app.screen.rename', { name: m[1] || '', to: r.replace(/[?.!]+$/, '').trim().slice(-m[2].length).replace(/^["“']|["”']$/g, '') || m[2] });
+    if ((m = /^(?:make|set)\s+(?:this|the\s+(.+?))(?:\s+screen)?\s+the\s+(?:first|start|starting|home|opening)\s+screen$/.exec(rl)) || (m = /^(?:start|open)\s+(?:the app\s+)?(?:on|with|at)\s+(?:this|the\s+(.+?))\s+screen$/.exec(rl))) return H('app.screen.first', { name: m[1] || '' });
+    if ((m = /^(?:duplicate|copy|clone)\s+(?:this|the current|the\s+(.+?))\s+screen$/.exec(rl))) return H('app.screen.dup', { name: m[1] || '' });
+    if ((m = new RegExp(`^(?:please\\s+)?(?:change|set|make|rename|rewrite|update|edit)\\s+${P4_THIS}\\s+(?:to\\s+say|to\\s+read|to|say|says|read|into)\\s+(.+)$`).exec(rl)) && !colorOf(m[1]) && !/^(?:dark|light|darker|lighter|a sheet|round|rounder|compact|roomy|bold|bigger|smaller)\b/.test(m[1])) return H('app.el.text', { value: r.replace(/[?.!]+$/, '').trim().slice(-m[1].length).replace(/^["“']|["”']$/g, '') || m[1] });
+    if (new RegExp(`^(?:delete|remove|get rid of|drop)\\s+${P4_THIS}$`).test(rl)) return H('app.el.remove');
+    if (new RegExp(`^(?:duplicate|copy|clone)\\s+${P4_THIS}$`).test(rl)) return H('app.el.dup');
+    if ((m = new RegExp(`^move\\s+${P4_THIS}\\s+(up|down|higher|lower)$`).exec(rl))) return H('app.el.move', { dir: /up|higher/.test(m[1]) ? 'up' : 'down' });
+    if ((m = /^(?:change|set|swap|use|make)\s+(?:the\s+|this\s+|its\s+)?icon\s+(?:to|for|with|into)\s+(?:an?\s+|the\s+)?(.+?)(?:\s+icon)?$/.exec(rl))) return H('app.el.icon', { icon: m[1].trim() });
+    if ((m = /^(?:use|show|put)\s+(?:an?\s+|the\s+)([a-z]+)\s+icon(?:\s+(?:here|on (?:this|it)))?$/.exec(rl))) return H('app.el.icon', { icon: m[1].trim() });
+    if (/^(?:change|replace|swap|pick|choose|use)\s+(?:the\s+|this\s+|a\s+|another\s+|a different\s+)?(?:picture|image|photo|illustration)$/.test(rl)) return H('app.el.picture');
+    if ((m = /^(?:open|show)\s+(?:it|this|that)\s+as\s+an?\s+(sheet|fade|slide|pop ?up)$/.exec(rl)) || (m = /^make\s+(?:it|this|that)\s+(?:an?\s+)?(sheet|slide|fade)(?:\s+(?:up|in))?$/.exec(rl))) return H('app.el.how', { how: /sheet|pop/.test(m[1]) ? 'sheet' : m[1] === 'fade' ? 'fade' : 'push' });
     if (/\b(?:have|ask|get|let)\s+(?:my|our|the)\s+(?:ai|helper|helpers|agent|agents|claude)\b|\bbuild it for real\b|\bsend (?:it|this|the app) to (?:my|our|the) (?:ai|helpers?|agents?)\b/.test(rl)) return H('app.export', { kind: 'ai' });
     if (/\b(?:expo|react native)\b/.test(rl) && /\b(?:export|make|save|build|turn|get)\b/.test(rl)) return H('app.export', { kind: 'expo' });
     if (/^(?:export|download|save)\b.*\b(?:app|it|this|project|web app)\b|^(?:export|download)(?: it)?$/.test(rl)) return H('app.export', { kind: 'pwa' });
@@ -1244,6 +1266,18 @@
     if (ctx.view === 'motion') { const mo = motionRules(c, r, ctx, hit); if (mo) return mo; }   // feat/motion
     else if (!view) { const mt = motionNew(c); if (mt) return hit('motion.new', { tpl: mt }, 0.975); }
     if (view !== 'canvas') { const am = appMake(c, r, ctx, hit); if (am) return am; }
+    if (view === 'site') {   // pass 4 (flintcreate.js): Polish it, Make it beautiful, Check, "what can you do here?"
+      const q = rl.replace(/[-_]/g, ' ').replace(/[?.!]+$/, '').trim(), H4 = (i, sl) => hit(i, sl || {}, 0.995); let m4;
+      // the designer already tidies ("tidy this up" = site.tidy) and has named styles ("more professional" = site.style): those keep their words
+      if (/^(?:please\s+)?polish\s+(?:it|this|the site|my site|the website|my website|the page|everything)(?:\s+up)?$|^polish(?: it up)?$/.test(q)) return H4('site.polish');
+      if (P4_BEAUTY.test(q) && !/\bprofessional\b/.test(q) && !/^(?:please\s+)?make\s+this\b/.test(q)) return H4('site.beautify');
+      if (P4_HELP.test(q)) return H4('site.help');
+      if (/^(?:check|review|audit|test|inspect)\s+(?:my|the|this|our)\s+(?:site|website|page)$|^(?:is|does)\s+(?:my|the|this)\s+(?:site|website)\s+(?:ok|okay|ready|good|fine|work|working)$|^what(?:'s| is) wrong with (?:my|the|this) (?:site|website|page)$/.test(q)) return H4('site.check');
+      if (/^fix\s+(?:what(?:'s| is) safe|everything safe|the safe (?:ones|things)|them all|all of (?:it|them)|everything)$/.test(q)) return H4('site.fixall');
+      if ((m4 = /^(outlined?|pill|rounded|round|solid|filled|soft)\s+buttons$/.exec(q))) return H4('site.buttons', { style: /round|pill/.test(m4[1]) ? 'pill' : /outlin/.test(m4[1]) ? 'outline' : /soft/.test(m4[1]) ? 'soft' : 'solid' });
+      if (/^(?:text|button)$/.test(ctx.selKind || '') && (m4 = /^(?:make|turn|colou?r|paint)\s+(?:this|that)(?:\s+(?:one|part|button|title|text|line|word|words))?\s+(.+)$/.exec(q)) && colorOf(m4[1]) && !/\b(?:section|block|background)\b/.test(q)) return H4('site.el.colorname', { color: colorOf(m4[1]) });
+      if (ctx.selection && /^(?:remove|delete|get rid of|drop)\s+this\s+(?:section|block|part)$/.test(q)) return H4('site.block.remove', { block: '' });
+    }
     if (view === 'site') { const w = siteEl(c, r, ctx, hit); if (w) return w; }   // feat/site-editor2: the selected thing, screen sizes, what the tribe said
     { const z = maxNew(c, r, ctx, hit, view); if (z) return z; }   // feat/flint-max
     const IMG = /\b(?:image|images|picture|pictures|photo|photos|avatar|img|headshot|portrait|cover|pfp)\b/;

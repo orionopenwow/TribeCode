@@ -182,6 +182,7 @@
     root.querySelectorAll('[data-sheet]').forEach(b => b.onclick = () => openSheet(b.dataset.sheet));
     if (P()) P().onBuild();
     $('#apc-ask').onsubmit = async e => { e.preventDefault(); const i = $('#apc-ask-in'), t = i.value.trim(); if (!t) return; i.value = ''; const r = await ask(t); $('#apc-reply').textContent = r.text || ''; };
+    if (FC() && FC().appPanel) FC().appPanel($('#apc-ask'), fcApi);
     document.addEventListener('keydown', onKey, true);
     paint();
     setTimeout(() => { const n = root && root.querySelector('#apc-name'); if (n && !st.mobile) n.blur(); }, 0);
@@ -508,6 +509,7 @@
     root.appendChild(sh);
     const pane = sh.querySelector('.apc-pane');
     if (kind === 'edit') paintInsp(pane);
+    else if (kind === 'flint' && FC() && FC().appPanel) FC().appPanel(pane, fcApi);
     else if (kind === 'flint') { pane.innerHTML = `<form class="apc-ask"><input class="input" placeholder="Add a settings screen, make it dark…" autocomplete="off"><button class="btn primary" type="submit">Do it</button><p class="apc-reply faint"></p></form>`; const f = pane.querySelector('form'); f.onsubmit = async e => { e.preventDefault(); const i = f.querySelector('input'), t = i.value.trim(); if (!t) return; i.value = ''; const r = await ask(t); f.querySelector('.apc-reply').textContent = r.text || ''; }; }
     else paintLeft(pane);
     sh.querySelector('#apc-sheet-x').onclick = closeSheet;
@@ -533,7 +535,11 @@
   }
 
   // ---------- Flint (no AI): sentences -> the same edits ----------
+  // pass 4 (flintcreate.js): the Flint panel, the level badge, Undo on every reply, the local model for loose requests, Polish it
+  const FC = () => window.TribeFlintCreate;
+  const fcApi = { st: () => st, core: () => A(), apply: op => apply(op), commit: (d, say) => commit(d, say || ''), undo: () => undo(), redo: () => redo(), paint: () => paint(), flint: step => flint(step), note: t => note(t), root: () => root, pid: () => (st && st.pid) || '', close: () => close() };
   async function ask(text) {
+    if (FC() && FC().appAsk && st) return FC().appAsk(text, fcApi);
     const N = window.TribeNLU; if (!N) return { text: 'Flint is not loaded.' };
     const sel = st.sel ? A().findBlock(st.doc, st.sel.block) : null;
     const r = N.parse(text, { now: new Date(), view: 'appcreator', selection: !!st.sel, selKind: sel ? sel.block.type : '', screens: st.doc.screens.map(s => s.name) });
@@ -667,7 +673,7 @@
   registerSuggest(); window.addEventListener('load', registerSuggest); setTimeout(registerSuggest, 1500);
 
   // the add-on shelf's app kits: market.js calls installKit when an "app-kit" item is used
-  C && C.on && C.on('ws', m => { if (!m || m.type !== 'app-config' || !st || !st.open || m.project !== st.pid || st.dirty || typing) return; C.api(`/projects/${encodeURIComponent(st.pid)}/app-config`).then(r => { if (!st || !r.config || r.rev === st.rev) return; st.base = JSON.stringify(A().normalize(r.config)); st.rev = r.rev; if (st.pendingDraft) { note('A friend changed the app. Your draft stays yours until you send it.'); return; } st.doc = A().normalize(r.config); paint(); note('Updated with a friend’s change.'); }).catch(() => {}); });
+  C && C.on && C.on('ws', m => { if (!m || m.type !== 'app-config' || !st || !st.open || m.project !== st.pid || st.dirty || typing) return; C.api(`/projects/${encodeURIComponent(st.pid)}/app-config`).then(r => { if (!st || !r.config || r.rev <= st.rev || st.dirty) return; /* pass 4: an answer older than what is on screen (a save landed meanwhile) never replaces it */ st.base = JSON.stringify(A().normalize(r.config)); st.rev = r.rev; if (st.pendingDraft) { note('A friend changed the app. Your draft stays yours until you send it.'); return; } st.doc = A().normalize(r.config); paint(); note('Updated with a friend’s change.'); }).catch(() => {}); });
   if (location.hash === '#/app-creator') setTimeout(() => open({}), 300);
   window.addEventListener('hashchange', () => { if (location.hash === '#/app-creator' && (!st || !st.open)) open({}); });
 

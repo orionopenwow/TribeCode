@@ -73,9 +73,11 @@ module.exports = function changereq({ P, store, perms, groupStyle, approvals, bu
       agent: x.agent || null, agentName: x.agent ? nameOf(x.agent) : null, status: x.status, created: x.created, decidedBy: x.decidedBy || null, decidedByName: x.decidedBy ? nameOf(x.decidedBy) : null,
       decidedAt: x.decidedAt || null, note: x.note || '', approval: x.approval || null, to: (a && a.to ? a.to : x.to || []).map(nameOf), rule: x.rule, tally: a && a.tally ? a.tally : null,
       questions: a && a.questions ? a.questions : [], hasPictures: !!x.pics, undone: !!x.undoneAt,
-      mine: !!me && (x.by === me.id || x.agent === me.id), canDecide: !!me && x.status === 'open' && !!a && a.to.includes(me.id) && x.by !== me.id,
+      mine: !!me && (x.by === me.id || x.agent === me.id), canDecide: !!me && x.status === 'open' && !!a && a.to.includes(me.id) && (x.by !== me.id || !!x.agent),   // pass 4: your own helper's request is yours to answer (it asked on your behalf)
       canUndo: !!me && x.status === 'applied' && !x.undoneAt && mayUndo(x, me) };
     if (full) { const bd = body(x.id) || {}; out.before = bd.before || null; out.after = bd.after || null; }
+    // pass 4: an AI helper's app proposal has no pictures (it cannot draw); the reviewer's own screen draws before and after
+    if (full && !x.pics && x.tool === 'app' && x.status === 'open' && tools.app && tools.app.get) { const bd = body(x.id) || {}; try { out.draw = { before: tools.app.get(x.project) || null, after: bd.payload || null }; } catch {} }
     return out;
   }
   function mayUndo(x, me) {

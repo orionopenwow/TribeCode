@@ -21,6 +21,13 @@ subscription, and this repository holds no prices.
 `GET /api/flint/tiers` returns this map and whether the tribe's AI is on. `POST /api/flint/tier { ask, picked }`
 classifies one request. Ask Flint "What can you do for free?" to see it in the app.
 
+## In the website designer and App Creator
+
+Both creators have the same Flint panel, and every reply carries a badge for the level that answered: **No AI**,
+**In this browser**, **On this computer** or **A stronger AI**. A local model only picks from Flint's own commands
+(checked again by the rules); a stronger AI only proposes steps a person approves. **Polish it** tidies spacing,
+sizes, colours and buttons with no AI. The whole contract is in `docs/CLAUDE-HOOKS.md`.
+
 ## Flint on your device: levels 0 to 2
 
 What runs on hardware you control, with nothing sent to an AI service. Flint's page (`#/flint`) lists the levels and

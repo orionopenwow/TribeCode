@@ -1,0 +1,47 @@
+/* Flint in the creators (flintcreate.js) and "Polish it" (polish.js). Flat matte: 1px borders, tokens only. */
+
+/* which level answered, on the reply itself */
+.fl-lvl { display: inline-block; margin-top: 6px; padding: 1px 6px; border: 1px solid var(--border); border-radius: var(--r-sm); font-family: var(--mono); font-size: 11px; letter-spacing: .06em; text-transform: uppercase; color: var(--faint); }
+.fl-lvl[data-lvl="browser"], .fl-lvl[data-lvl="computer"] { color: var(--live-ink); border-color: var(--live); }
+.fl-lvl[data-lvl="agent"] { color: var(--peer-ink); border-color: var(--peer); }
+.fc-read { display: block; margin-top: 4px; font-size: 12px; line-height: 1.4; color: var(--faint); }
+.fc-done { margin: 6px 0 0; padding-left: 18px; font-size: 12.5px; line-height: 1.5; color: var(--muted); }
+
+/* the one spot under the thread: Polish it, and Make it beautiful or one honest line */
+.fc-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.fc-line { flex: 1 1 140px; font-size: 12px; line-height: 1.4; color: var(--faint); }
+
+/* App Creator's Flint panel: the same chat as the website designer */
+.apc-flint { margin-top: auto; padding-top: 12px; border-top: 1px solid var(--border); display: flex; flex-direction: column; min-height: 0; flex: 1 1 260px; max-height: 62%; }
+.apc-flint .flint-mount { display: flex; flex-direction: column; gap: 8px; min-height: 0; flex: 1; }
+.apc-flint .flm-thread { flex: 1 1 auto; min-height: 72px; overflow-y: auto; }
+.apc-flint.in-sheet { margin: 0; padding: 0; border: 0; max-height: none; flex: 1; min-height: 46vh; }
+
+/* Polish it: what will change, before it changes */
+.pol-sheet { position: fixed; inset: 0; z-index: 90; display: grid; place-items: center; padding: 16px; background: var(--scrim); }
+.pol-in { width: min(560px, 100%); max-height: 100%; overflow: auto; display: grid; gap: 10px; padding: 18px; border: 1px solid var(--border); border-radius: var(--r); background: var(--surface); color: var(--text); }
+.pol-in header { display: grid; grid-template-columns: 1fr auto; align-items: start; gap: 2px 12px; }
+.pol-in h2 { margin: 0; font: 600 18px/1.25 var(--display, var(--font)); grid-column: 1; }
+.pol-eyebrow { margin: 0; font-family: var(--mono); font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--faint); }
+.pol-x { grid-column: 2; grid-row: 1 / span 2; width: 36px; height: 36px; border: 1px solid transparent; border-radius: var(--r-sm); background: none; color: var(--muted); display: grid; place-items: center; cursor: pointer; }
+.pol-x:hover { border-color: var(--border); background: var(--surface-2); }
+.pol-lead { margin: 0; font-size: 14px; line-height: 1.5; color: var(--muted); }
+.pol-list { display: grid; gap: 6px; }
+.pol-row { display: grid; grid-template-columns: auto 1fr auto; gap: 10px; align-items: start; padding: 10px 12px; border: 1px solid var(--border); border-radius: var(--r-sm); background: var(--surface-2); cursor: pointer; }
+.pol-row input { margin-top: 3px; width: 16px; height: 16px; accent-color: var(--ember); }
+.pol-row b, .pol-notes b { display: block; font-size: 14px; font-weight: 600; line-height: 1.35; }
+.pol-row small, .pol-notes small { display: block; margin-top: 2px; font-size: 12.5px; line-height: 1.45; color: var(--muted); }
+.pol-g { font-style: normal; font-family: var(--mono); font-size: 11px; letter-spacing: .06em; text-transform: uppercase; color: var(--faint); white-space: nowrap; }
+.pol-hand { margin-top: 6px; }
+.pol-notes { margin: 0; padding: 0; list-style: none; display: grid; gap: 8px; }
+.pol-notes li { padding-left: 12px; border-left: 1px solid var(--border); }
+.pol-in footer { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: 4px; }
+.pol-foot { margin-left: auto; font-size: 12px; color: var(--faint); }
+@media (max-width: 820px) {
+  .pol-sheet { align-items: end; padding: 0; }
+  .pol-in { width: 100%; max-height: 86vh; border-radius: var(--r) var(--r) 0 0; border-bottom: 0; padding-bottom: max(18px, env(safe-area-inset-bottom)); }
+  .pol-row { grid-template-columns: auto 1fr; min-height: 44px; }
+  .pol-g { display: none; }
+  .pol-in footer .btn, .fc-row .btn.btn { min-height: 40px; }
+  .pol-x { width: 40px; height: 40px; }
+}

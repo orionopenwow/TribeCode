@@ -41,6 +41,7 @@ Every doc in the repo, one line each, with its status. Updated 2026-11-12 (v0.31
 | [EXPORT](EXPORT.md) | Storage | Every doc, sheet and deck in Files exports from its own menu (app/ui/exporter.js). | current |
 | [FEATURE-ASSESSMENT-SHIP-FLOW](FEATURE-ASSESSMENT-SHIP-FLOW.md) | Research | Short version: TribeCode already had most of the parts (a live code repository view, branches with conflict hints, an | research |
 | [FEATURES-NEXT](FEATURES-NEXT.md) | Roadmap | Written during the v0.4 audit (2026-11-06). | historical (read by explore.py) |
+| [CLAUDE-HOOKS](CLAUDE-HOOKS.md) | Flint | How a stronger AI reads a website or app design and proposes changes a person approves; Flint's levels in the creators; Polish it. | current |
 | [FLINT-CREATORS](FLINT-CREATORS.md) | Flint | A plan for the next step of Flint: a lightweight local "creators" helper that controls creative apps (Blender, Photoshop, | current |
 | [FLINT-TIERS](FLINT-TIERS.md) | Flint | Flint is TribeCode's built-in helper. | current |
 | [FLINT-CAPABILITY](FLINT-CAPABILITY.md) | Flint | Scores by editor and skill type, with no model and with the fixture model; written by `scripts/dev/flint-capability.js`. | current |
