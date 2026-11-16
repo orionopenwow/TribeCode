@@ -176,7 +176,15 @@ def main():
 
             # ---------- preview video: Motion Studio when it is there ----------
             pg.click("[data-lch-tab='video']"); pg.wait_for_selector("#lch-motion")
-            assert pg.is_disabled("#lch-motion"), "no Motion Studio, no button to press"
+            if not pg.evaluate("!!(window.TribeMotionStudio && TribeMotionStudio.open)"): assert pg.is_disabled("#lch-motion"), "no Motion Studio, no button to press"
+            else:   # the real Motion Studio is in this build: the hand-off opens its app-preview template
+                pg.click("#lch-motion"); pg.wait_for_function("TribeMotionStudio.isOpen()", timeout=30000)
+                st = pg.evaluate("TribeMotionStudio.state()") or {}
+                assert "app-preview" in json.dumps(st), str(st)[:300]
+                pg.wait_for_timeout(800); pg.evaluate("(() => { try { TribeMotionStudio.close(); } catch (e) { window.__mserr = String(e); } })()")
+                pg.wait_for_function("!TribeMotionStudio.isOpen()", timeout=5000)
+                if not pg.evaluate("TribeLaunchKit.state() && TribeLaunchKit.state().open"): pg.evaluate(f"TribeLaunchKit.open('{pid}', 'video')")
+                pg.wait_for_selector("[data-lch-tab='video']"); pg.click("[data-lch-tab='video']")
             pg.fill("#lch-yt", "https://www.youtube.com/playlist?list=PL1"); assert "playlist" in pg.inner_text("#lch-ytok")
             pg.fill("#lch-yt", "https://youtu.be/dQw4w9WgXcQ"); assert "Looks right" in pg.inner_text("#lch-ytok")
             pg.evaluate("window.TribeMotionStudio = { open: o => { window.__ms = o; } }")
@@ -186,7 +194,9 @@ def main():
             # ---------- the tribe's suggestions ----------
             assert api("/chat/general/send", "POST", {"text": "What's new in v0.5:\n- a shop\n- coins"}, host)[0] == 200
             code, v = api("/visuals", "POST", {"screen": "Shop", "png_base64": shot}, host); assert code == 200
-            pg.evaluate("window.TribeSuggest = { register: p => { window.__prov = p; } }; document.dispatchEvent(new Event('tribe:suggest-ready'))")
+            # the real engine in this build already took the provider; a stand-in catches it again either way
+            pg.evaluate("window.__prov = (window.TribeLaunchKit && TribeLaunchKit.suggestProvider) ? (typeof TribeLaunchKit.suggestProvider === 'function' && !TribeLaunchKit.suggestProvider.id ? TribeLaunchKit.suggestProvider() : TribeLaunchKit.suggestProvider) : null")
+            pg.evaluate("if (!(window.__prov && window.__prov.id === 'launch')) { window.TribeSuggest = { register: p => { window.__prov = p; } }; document.dispatchEvent(new Event('tribe:suggest-ready')); }")
             pg.wait_for_function("window.__prov && window.__prov.id === 'launch'", timeout=5000)
             pg.click("[data-lch-tab='text']"); pg.click("[data-lch-store='apple']"); pg.wait_for_selector("#lch-t-keywords"); pg.fill("#lch-t-keywords", "pixel,quest,coins,coin"); pg.wait_for_timeout(1200)
             pg.wait_for_timeout(300)
