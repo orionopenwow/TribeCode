@@ -763,7 +763,9 @@
    "do": "call:TribeAppCreator.open",
    "doLabel": "Open App Creator",
    "show": {
-    "go": "design"
+    "go": "design",
+    "sel": ".dfl-kind[data-kind='app']",
+    "say": "Apps start here: pick App, then a template."
    }
   },
   {
@@ -789,7 +791,9 @@
    "do": "call:TribeAppCreator.open",
    "doLabel": "Open App Creator",
    "show": {
-    "go": "design"
+    "go": "design",
+    "sel": ".dfl-kind[data-kind='app']",
+    "say": "Open an app here, then link screens and press Play."
    }
   },
   {
