@@ -394,6 +394,16 @@
       if (id === 'launch.keywords') setTimeout(() => { const k = document.querySelector('#lch-t-keywords'); if (k) { k.focus(); k.scrollIntoView({ block: 'center' }); } }, 600);
       return { text: T('opened', { x: 'Launch kit' }), sum: 'opened the Launch kit' };
     }
+    if (id === 'phone.path' || (id === 'publish.to' && sl.dest === 'install' && window.TribeHomescreen)) {   // Put it on your phone (homescreen.js)
+      if (!window.TribeHomescreen) return { text: T('noPlace', { x: 'Put it on your phone' }) };
+      window.TribeHomescreen.open(undefined, sl.stage || '');
+      return { text: T('opened', { x: 'Put it on your phone' }), sum: 'opened Put it on your phone' };
+    }
+    if (id === 'phone.ask') {   // the no-AI answers about phones, app stores and Macs (homescreen-core.js)
+      const HC = window.TribeHomeCore; if (!HC) return { text: T('noPlace', { x: 'Put it on your phone' }) };
+      const a = HC.answer(sl.topic), tr = x => (window.TribeI18n && window.TribeI18n.t ? window.TribeI18n.t(x, x) || x : x);
+      return { text: tr(a.text), acts: window.TribeHomescreen ? [[tr('Open the step-by-step path'), 'homescreen', a.stage]] : [], sum: `answered about ${sl.topic || 'phones'}` };
+    }
     if (id === 'publish.to') { if (window.TribePublish) window.TribePublish.open(undefined, sl.dest || ''); return { text: T('opened', { x: 'Publish' }), sum: 'opened Publish' }; }
     if (id === 'publish') { if (window.TribePublish) window.TribePublish.open(); return { text: T('opened', { x: 'Publish' }), sum: 'opened Publish' }; }
     if (id.startsWith('theme.')) {

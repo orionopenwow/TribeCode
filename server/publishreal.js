@@ -228,7 +228,7 @@ module.exports = function publishReal({ P, W, base, publish, getMembers, broadca
     }
     return fail(res, 404, 'no such publish route');
   }
-  return { route, status, zipFor, pages, view };
+  return { route, status, zipFor, pages, view, bundle, canSend };   // bundle/canSend: the phone path (server/homescreen.js) reads the same web folder and rule
 };
 module.exports.zip = zip;
 module.exports.pngIcon = pngIcon;

@@ -372,6 +372,33 @@
   I('launch.video', 'local', [/^(?:make|create|record|do)\s+(?:an?\s+|my\s+|the\s+)?app\s+preview(?:\s+video)?$/, /^(?:app\s*store|play\s*store|store)\s+(?:preview\s+)?video$/],
     { p: 0.97, ex: ['make an app preview video'] });
   I('launch.open', 'local', [/^(?:open|show|show me|go to)\s+(?:the\s+)?launch\s*kit$/, /^launch\s*kit$/], { p: 0.98, ex: ['open the launch kit'] });
+  // Put it on your phone (app/ui/homescreen.js): the guided path to an icon on the home screen, and Flint's no-AI answers
+  const MYAPP = '(?:my|our|the|this)\\s+(?:app|game|site|website|page|project|web app|pwa)|it|this';
+  const MYPHONE = '(?:my|a|the|our)\\s+(?:phone|iphone|android|android phone|mobile|ipad|tablet|cell|cellphone)';
+  I('phone.path', 'local', [
+    new RegExp(`^(?:how\\s+(?:do|can|could)\\s+(?:i|we)|how\\s+to|help\\s+me|i\\s+want\\s+to|can\\s+(?:i|we|you))\\s+(?:put|get|install|add|have|use|open)\\s+(?:${MYAPP})\\s+(?:on|onto|to|in)\\s+(?:${MYPHONE}|(?:my|the)\\s+home\\s*screen)$`),
+    new RegExp(`^(?:install|put|get)\\s+(?:my|our|the|this)\\s+(?:app|game|site|website|web app|pwa)\\s+(?:on|onto)\\s+${MYPHONE}$`),
+    new RegExp(`^(?:add|pin|save|put)\\s+(?:${MYAPP})\\s+(?:to|on|onto)\\s+(?:my|the)\\s+(?<home>home\\s*screen)$`),
+    /^(?<home>add to home\s*screen)$/, /^(?:how\s+(?:do|can)\s+(?:i|we)\s+)?(?<home>add\s+(?:an?\s+)?(?:app\s+)?icon\s+to\s+(?:my|the)\s+home\s*screen)$/,
+    new RegExp(`^(?:make|get)\\s+(?:${MYAPP})\\s+(?<ready>installable)(?:\\s+on\\s+(?:${MYPHONE}|phones))?$`),
+    new RegExp(`^(?:is|why\\s+is\\s*n[o']?t)\\s+(?:${MYAPP})\\s+(?<ready>installable)$`),
+    /^(?:open\s+)?(?:the\s+)?put it on (?:my|your) phone\s+(?:guide|path|steps)$/, /^(?:phone|home\s*screen)\s+(?:install|setup|set up)\s+(?:guide|steps|path)$/,
+    new RegExp(`^(?:how\\s+do\\s+i\\s+)?(?:turn|make)\\s+(?:${MYAPP})\\s+(?:into\\s+)?(?:an?\\s+)?(?:app\\s+)?(?:on|for)\\s+${MYPHONE}$`),
+  ], { p: 0.97, fill: s => ({ stage: s.home ? 'add' : s.ready ? 'ready' : '' }), ex: ['how do i put my app on my phone', 'add it to my home screen', 'make my app installable'] });
+  I('phone.ask', 'help', [
+    new RegExp(`^why\\s+(?:cant|can't|cannot|can not|wont|won't|doesnt|doesn't|isnt|isn't)\\s+(?:i|it|my app|this)\\s*(?:install|be installed|add|show)?\\s*(?:${MYAPP})?\\s*(?:it\\s+)?(?:on|to|from)?\\s*(?:my|an?|the)?\\s*(?<iphone>iphone|ipad|ios|safari)(?:\\s+home\\s*screen)?$`),
+    /^(?:there(?:s| is)\s+)?no\s+(?:install|add to home\s*screen)\s+(?:button|option)\s+(?:on|in)\s+(?:my\s+)?(?<iphone>iphone|ipad|safari)$/, /^(?<iphone>iphone)\s+(?:wont|won't|will not|doesnt|doesn't)\s+(?:let me\s+)?install\s+(?:it|my app)$/,
+    new RegExp(`^(?:how\\s+(?:do|can)\\s+i\\s+)?install\\s+(?:${MYAPP})\\s+on\\s+(?:an?\\s+|my\\s+)?(?<android>android)(?:\\s+phone)?$`), /^why\s+(?:wont|won't|doesnt|doesn't)\s+(?:chrome|my android)\s+(?:let me\s+)?(?<android>install)\s+(?:it|my app)$/,
+    new RegExp(`^(?:is\\s+it\\s+free|does\\s+it\\s+cost\\s+(?:any\\s+)?money|how\\s+much\\s+does\\s+it\\s+cost)(?<free>)\\s+to\\s+(?:put|install|get|add)\\s+(?:${MYAPP})\\s+(?:on|to|onto)\\s+(?:${MYPHONE}|(?:my|the)\\s+home\\s*screen|phones)$`),
+    new RegExp(`^(?:is|does)\\s+(?:putting|installing|getting|adding)\\s+(?:${MYAPP})\\s+(?:on|to|onto)\\s+(?:${MYPHONE}|(?:my|the)\\s+home\\s*screen)\\s+(?<free>free|cost (?:any )?money)$`),
+    /^how\s+much\s+(?:does|do)\s+(?:it|the app store|google play|the play store|the stores?)\s+cost(?<free>)(?:\s+to\s+(?:publish|put my app|get my app)(?:\s+there)?)?$/,
+    /^(?:do|will)\s+i\s+need\s+a\s+(?<mac>mac)(?:\s+(?:to|for)\s+(?:make|build|publish|put|get|release|submit)(?:\s+(?:an?\s+|my\s+)?(?:iphone\s+|ios\s+)?(?:app|it))?(?:\s+(?:on|to|in)\s+(?:the\s+)?(?:iphone|app store|apple store))?)?$/,
+    /^can\s+i\s+(?:make|build|publish)\s+(?:an?\s+)?(?:iphone|ios)\s+app\s+without\s+a\s+(?<mac>mac)$/,
+    /^why\s+(?:cant|can't|cannot|can not|wont|won't|will not)\s+i\s+(?:install|add)\s+(?:it|my app)\s+(?:from|in)\s+(?:the\s+)?(?<inapp>instagram|tiktok|messenger|facebook|snapchat)$/, /^(?:add to home\s*screen|install)\s+(?:is\s+)?(?:missing|not there|gone)\s+in\s+(?<inapp>instagram|tiktok|messenger|facebook|snapchat)$/,
+    /^it\s+(?:wont|won't|will not|doesnt|doesn't|does not)\s+install\s+(?:from|in)\s+(?<inapp>instagram|tiktok|messenger|facebook|snapchat)$/,
+    new RegExp(`^(?:will|does|can)\\s+(?:${MYAPP})\\s+work\\s+(?<offline>offline|without (?:internet|wifi|wi-fi|signal|a connection))(?:\\s+on\\s+${MYPHONE})?$`),
+    new RegExp(`^(?:do\\s+i\\s+need|should\\s+i\\s+(?:put|publish)\\s+(?:${MYAPP})\\s+(?:in|on))\\s+(?:the\\s+)?(?<store>app store|play store|google play|stores?)$`),
+  ], { p: 0.975, fill: s => ({ topic: s.iphone != null ? 'iphone' : s.android != null ? 'android' : s.free != null ? 'free' : s.mac != null ? 'mac' : s.inapp != null ? 'inapp' : s.offline != null ? 'offline' : s.store != null ? 'store' : 'path' }), ex: ['why cant i install it on my iphone', 'is it free', 'do i need a mac'] });
   // Share a clip (app/ui/shareclip.js): a short video of the project for a feed, made in Motion Studio
   const FEED = '(?<plat>x|twitter|tiktok|tik tok|instagram|insta|ig|reels|youtube|shorts|linkedin|social media|socials)';
   const PROJ = '(?:my|our|the|this)\\s+(?:app|game|site|website|project|build|changes|progress|update|work)';
@@ -1467,6 +1494,8 @@
     'github.connect': 'github sign log in connect account repo git', 'premium.open': 'plans premium upgrade pricing subscription paid pro tiers buy credits',
     'publish': 'publish ship release launch deploy live public go out world put website site game',
     'launch.open': 'launch kit app store play store google stores screenshots icon listing keywords paywall submit submission',
+    'phone.path': 'phone iphone android home screen homescreen install installable add icon pwa mobile put my app on',
+    'phone.ask': 'why cant install iphone safari free cost mac app store instagram tiktok offline android chrome',
     'share.clip': 'share clip video post reel tiktok instagram x twitter youtube shorts social feed promo show off', 'share.timelapse': 'timelapse time lapse progress history grew over time clip video',
     'preview.open': 'preview live look see open result running app', 'preview.device': 'phone mobile tablet device small screen preview check',
     'preview.reload': 'reload refresh again preview', 'preview.share': 'share preview link send show friend', 'checks.run': 'checks tests run check verify test quality works',

@@ -79,6 +79,8 @@
       rows.push(row('ios', 'phone', 'iPhone app', esc(T('Apple needs a Mac and a paid Apple developer account to sign an app. There is no way round that.')),
         `<small class="faint">${esc(T('On iPhone, Install on phones already works today: open the link in Safari, Share, Add to Home Screen.'))}</small>${!pg ? '' : io.on ? `<p class="pbr-ok">${ico('check', 14)} ${esc(T('The prepared build is in your GitHub project. It runs once you add your Apple signing secrets (the file lists them).'))}</p><button class="linkish" type="button" data-wrap="ios" data-on="0">${esc(T('Remove it'))}</button>` : `<button class="btn" type="button" data-wrap="ios" data-on="1">${esc(T('Add the prepared iPhone build'))}</button>`}`));
     }
+    // Put it on your phone (homescreen.js): the guided path from here to an icon on a phone's home screen, for any kind
+    if (window.TribeHomescreen) rows.push(row('phonepath', 'phone', 'Put it on your phone', esc(T('Step by step to an icon on your home screen: check it installs, put it online, scan the code, add it.')), `<button class="btn" type="button" data-homescreen>${esc(T('Put it on your phone'))}</button>`));
     // Launch kit (launchkit.js): screenshots, icon, store text, paywall and the checklist for the App Store and Google Play
     if (!site && window.TribeLaunchKit) rows.push(row('launch', 'store', 'Launch kit', esc(T('Store screenshots, an app icon, the store text and a checklist for the App Store and Google Play.')), `<button class="btn" type="button" data-launchkit>${esc(T('Open the Launch kit'))}</button>`));
     // Share a clip (shareclip.js): a short video of the project for X, TikTok, Instagram or YouTube, made in Motion Studio
@@ -120,6 +122,7 @@
     const idle = b => { b.disabled = false; if (b.dataset.was) b.textContent = b.dataset.was; };
     wireLinks(host);
     host.querySelectorAll('[data-shareclip]').forEach(b => b.onclick = () => { const m = document.querySelector('#invite-modal'); if (m && b.closest('#invite-modal')) m.classList.add('hidden'); window.TribeShareClip.open({ pid }); });
+    host.querySelectorAll('[data-homescreen]').forEach(b => b.onclick = () => { const m = document.querySelector('#invite-modal'); if (m && b.closest('#invite-modal')) m.classList.add('hidden'); window.TribeHomescreen.open(pid); });
     host.querySelectorAll('[data-launchkit]').forEach(b => b.onclick = () => { const m = document.querySelector('#invite-modal'); if (m && b.closest('#invite-modal')) m.classList.add('hidden'); window.TribeLaunchKit.open(pid); });
     host.querySelectorAll('[data-kind]').forEach(b => b.onclick = async () => { try { await C.api('/publish/real', { method: 'PUT', body: { project: pid, kind: b.dataset.kind } }); again(); } catch (e) { toast(e.message); } });
     const pwa = host.querySelector('#pbr-pwa'); if (pwa) pwa.onchange = async () => { try { await C.api('/publish/real', { method: 'PUT', body: { project: pid, pwa: pwa.checked } }); toast(T(pwa.checked ? 'It will be installable from the next publish' : 'Not installable from the next publish')); again(); } catch (e) { toast(e.message); } };
