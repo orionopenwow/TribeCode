@@ -204,6 +204,13 @@ def main():
             assert ok
             pg.evaluate("TribeAppCreator.close()")
             assert pg.evaluate("[...document.body.children].every(e => !e.inert)"), "pass 3: closing gives the app back (nothing left inert)"
+            # pass 3: a gallery template over the app the tribe already has asks first; Keep my app changes nothing
+            name0 = pg.evaluate(f"fetch('/api/projects/{pid}/app-config', {{ headers: {{ Authorization: 'Bearer {tok}' }} }}).then(r => r.json()).then(j => j.config.template)")
+            pg.evaluate("TribeDesignFlow.open({})"); pg.wait_for_timeout(300); pg.evaluate("TribeDesignFlow.gallery('app')")
+            pg.wait_for_selector("#dfl-grid [data-tpl='apc:notes']", timeout=8000); pg.click("#dfl-grid [data-tpl='apc:notes']")
+            pg.wait_for_selector("#apc-replace #apc-keep", timeout=8000); pg.click("#apc-keep"); pg.wait_for_selector("#apc .apc-edit .ax-screen", timeout=8000)
+            assert pg.evaluate("TribeAppCreator.doc().template") == name0, "Keep my app keeps it"
+            pg.evaluate("TribeAppCreator.close()")
 
             # ---- phones: 390px
             m = b.new_context(viewport={"width": 390, "height": 844}, is_mobile=True, has_touch=True); m.add_init_script(settings_js("Mara", tok, pid))

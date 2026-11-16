@@ -52,6 +52,19 @@
     if (pid) { try { const r = await C.api(`/projects/${encodeURIComponent(pid)}/app-config`); cur = r.config; st.rev = r.rev || 0; st.canEdit = r.canEdit !== false; } catch { cur = null; } }
     else cur = ls.get(LOCAL, null);
     let doc = cur ? A().normalize(cur) : null;
+    // pass 3: picking a template in the gallery over an app the tribe already has asks first (the old app was replaced
+    // and saved over at once; Undo only lasted until App Creator closed)
+    if (o.template && o.askReplace && doc && doc.screens && doc.screens.length && window.TribeUI && window.TribeUI.sheet) {
+      const pick = await new Promise(res => {
+        let done = false; const end = v => { if (done) return; done = true; sh.close(); res(v); };
+        const sh = window.TribeUI.sheet({ id: 'apc-replace', kind: 'decision', eyebrow: 'App Creator', title: 'Start over from this template?',
+          body: `<p>${esc(tr('This project already has an app'))}: <b>${esc(doc.name || '')}</b>. ${esc(tr('Starting over replaces it for everyone in the tribe.'))}</p>`,
+          foot: `<button type="button" class="btn" id="apc-keep">${esc(tr('Keep my app'))}</button><button type="button" class="btn primary" id="apc-over">${esc(tr('Start over'))}</button>`,
+          onClose: () => end('keep') });
+        sh.el.querySelector('#apc-keep').onclick = () => end('keep'); sh.el.querySelector('#apc-over').onclick = () => end('over');
+      });
+      if (pick !== 'over') o = { ...o, template: '' };
+    }
     if (o.template) { const t = A().template(o.template, { name: o.name, accent: o.accent }); if (t) { if (doc) st.undo.push(JSON.stringify(doc)); doc = t; } }
     if (!doc) doc = A().blank(o.name || 'My app');
     st.doc = doc; st.screen = doc.start;
