@@ -121,7 +121,10 @@
     if (!el || el.dataset.done) return; el.dataset.done = '1';
     try {
       const { request: x } = await C.api(`/projects/${encodeURIComponent(pid || projectId())}/changes/${encodeURIComponent(id)}`);
-      el.innerHTML = `${x.before || x.after ? `<div class="cr-pics">${x.before ? `<figure><img src="${esc(x.before)}" alt=""><figcaption>${esc(T('Before'))}</figcaption></figure>` : ''}${x.after ? `<figure><img src="${esc(x.after)}" alt=""><figcaption>${esc(T('After'))}</figcaption></figure>` : ''}</div>` : ''}${(x.summary || []).length ? `<ul class="cr-sum">${x.summary.map(s => `<li>${esc(s)}</li>`).join('')}</ul>` : ''}`;
+      // pass 4: no pictures came with it (an AI helper's proposal): draw the app before and after right here
+      const AC = window.TribeAppCreator; let drawn = '';
+      if (!x.before && !x.after && x.draw && x.draw.after && AC && AC.mini) { try { const bf = x.draw.before, af = x.draw.after, sc = (af.screens || []).find(s2 => { const o = ((bf && bf.screens) || []).find(y => y.id === s2.id); return !o || JSON.stringify(o) !== JSON.stringify(s2); }), sid = sc ? sc.id : af.start, has = bf && (bf.screens || []).some(y => y.id === sid); drawn = `<div class="cr-pics cr-draw">${bf ? `<figure>${AC.mini(bf, has ? sid : undefined, 132)}<figcaption>${esc(T('Before'))}</figcaption></figure>` : ''}<figure>${AC.mini(af, sid, 132)}<figcaption>${esc(T('After'))}</figcaption></figure></div>`; } catch {} }
+      el.innerHTML = `${drawn}${x.before || x.after ? `<div class="cr-pics">${x.before ? `<figure><img src="${esc(x.before)}" alt=""><figcaption>${esc(T('Before'))}</figcaption></figure>` : ''}${x.after ? `<figure><img src="${esc(x.after)}" alt=""><figcaption>${esc(T('After'))}</figcaption></figure>` : ''}</div>` : ''}${(x.summary || []).length ? `<ul class="cr-sum">${x.summary.map(s => `<li>${esc(s)}</li>`).join('')}</ul>` : ''}`;
     } catch { el.textContent = ''; }
   }
   async function act(b, pid, after) {

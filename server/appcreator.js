@@ -17,7 +17,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const A = require('../app/ui/appcreator-core.js');
 
-module.exports = function appCreator({ P, store, root, perms = null, requests = () => null, broadcast = () => {}, nameOf = x => x, ensureRepo = null, log = () => {} }) {
+module.exports = function appCreator({ P, store, root, perms = null, requests = () => null, brand = () => ({}), broadcast = () => {}, nameOf = x => x, ensureRepo = null, log = () => {} }) {
   const FONTS = [path.join(root, 'app', 'ui', 'assets', 'site-fonts'), path.join(root, 'ui', 'assets', 'site-fonts')].find(d => fs.existsSync(d)) || path.join(root, 'app', 'ui', 'assets', 'site-fonts');
   const rel = pid => `.tribe/appdesign/${String(pid).replace(/[^\w-]/g, '')}.json`;
   const loadRaw = pid => store.readJSON(rel(pid), null);
@@ -112,5 +112,35 @@ module.exports = function appCreator({ P, store, root, perms = null, requests = 
     if (r.doc.features !== undefined || off) save(pid, r.doc, me);
     return { say: r.say, features: r.doc.features || [] };
   }
-  return { route, addKit, addFeature, save: (pid, cfg, me) => save(pid, cfg, me), load: pid => { const r = loadRaw(pid); return r ? A.normalize(r) : null; } };
+  // ---------- MCP: an AI helper reads the app design and proposes steps (docs/CLAUDE-HOOKS.md) ----------
+  // app_read  the design as JSON (ids, types, words, links, the look), the brand kit, and the steps a helper may use
+  // app_propose { ops, note }  the steps are checked one by one (app/ui/appcreator-core.js propose); what passes becomes a
+  //   change request (server/changereq.js): the helper's person, or whoever approves changes to the app, sees it before
+  //   and after and approves or declines. A helper can never approve its own request, and nothing is saved until then.
+  const text = (t, isError) => ({ content: [{ type: 'text', text: t }], ...(isError ? { isError: true } : {}) });
+  const cur = a => (a && a.project) || (P && (P.current() || P.defaultId()));
+  const mcpTools = {
+    app_read: {
+      description: 'Read the project\'s phone app design (made in App Creator) as JSON: every screen with its id and name, each part (block) with its id, type, words and links, the look (theme), the brand kit, what parts, looks, fonts, icons and kits exist, and the steps app_propose accepts. Use it before app_propose. Pictures are left out.',
+      inputSchema: { type: 'object', properties: { project: { type: 'string' } }, additionalProperties: false },
+      run: async (a = {}) => { const pid = cur(a), raw = loadRaw(pid); if (!raw) return text('This project has no app design yet. A person starts one in App Creator (Design › App).', true); let k = {}; try { k = brand(pid) || {}; } catch {} return text(JSON.stringify({ ...A.readOut(raw), brand: { name: k.name, colors: k.colors, fonts: k.fonts, voice: k.voice } })); },
+    },
+    app_propose: {
+      description: `Propose changes to the project's phone app design as a list of safe steps. Nothing changes until a person approves the proposal (they see the app before and after), and Undo takes it back. ${A.PROPOSE_HELP}`,
+      inputSchema: { type: 'object', properties: { project: { type: 'string' }, note: { type: 'string', description: 'one or two sentences for the person: what you changed and why' }, ops: { type: 'array', items: { type: 'object' }, maxItems: 60 } }, required: ['ops'], additionalProperties: false },
+      run: async (a = {}, me) => {
+        try {
+          const pid = cur(a), p = P.get(pid); if (!p) return text('project not found', true);
+          const raw = loadRaw(pid); if (!raw) return text('This project has no app design yet. A person starts one in App Creator (Design › App).', true);
+          const r = A.propose(raw, a.ops); const skipped = r.skipped.length ? `\nSkipped:\n${r.skipped.map(x => '- ' + x).join('\n')}` : '';
+          if (!r.done.length) return text(`None of the steps could be used, so nothing was proposed.${skipped}`, true);
+          const rq = requests(); if (!rq) return text('change requests are not available here', true);
+          const who = me || { id: 'agent', role: 'agent', name: 'AI helper' };
+          const out = rq.create(pid, who, { tool: 'app', payload: r.doc, title: `${who.name || 'An AI helper'} proposes ${r.done.length} change${r.done.length === 1 ? '' : 's'} to the app`, why: String(a.note || '').slice(0, 600), summary: r.done.slice(0, 12) });
+          return text(`${out.applied ? `Applied ${r.done.length} change${r.done.length === 1 ? '' : 's'} (you hold the right to change the app).` : `Proposed ${r.done.length} change${r.done.length === 1 ? '' : 's'}. A person approves them under Requests in App Creator or in the inbox; nothing has changed yet.`}\n${r.done.map(x => '- ' + x).join('\n')}${skipped}`);
+        } catch (e) { return text(e.message, true); }
+      },
+    },
+  };
+  return { mcpTools, route, addKit, addFeature, save: (pid, cfg, me) => save(pid, cfg, me), load: pid => { const r = loadRaw(pid); return r ? A.normalize(r) : null; } };
 };

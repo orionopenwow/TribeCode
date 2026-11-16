@@ -628,11 +628,46 @@ const s = StyleSheet.create({
       '## Data to store (a first guess from the screens)', ...(ents.length ? ents.map(e => `- ${e.name}: ${e.fields.join(', ')} (seen on ${e.from})`) : ['- (none spotted)']), '',
       'The full design is `design.json` from **Export › Expo project** (same screens, links and theme as JSON).'].join('\n');
   }
+  // ---------- what an AI helper may read and propose (server/appcreator.js MCP app_read / app_propose, docs/CLAUDE-HOOKS.md) ----------
+  const PROPOSE_HELP = 'Steps (each { op, … }): theme { set: { accent?: "#RRGGBB", mode?: "light"|"dark", radius?: "sharp"|"soft"|"round"|"pill", font?: <font id>, density?: "compact"|"regular"|"roomy", icons?: "thin"|"regular"|"bold", motion?: "calm"|"standard"|"snappy", surface?: "neutral"|"warm"|"cool"|"tinted" } }; preset { id: <look id> }; text { block, path, value } (path like "title", "sub", "items.0.title"); icon { block, path, value: <icon name> }; illus { block, path, value: <picture name> }; block.add { screen, type, at? }; block.remove { block }; block.move { block, dir: -1|1 }; block.dup { block }; item.add | item.dup | item.remove | item.up | item.down { block, path: "items.0" }; link { block, path, to: <screen id>, how?: "push"|"sheet"|"fade"|"morph" }; unlink { block, path }; screen.add { name }; screen.rename { screen, name }; screen.move { screen, to: index }; kit { kit: <kit id> }; tabbar {}; rename { name }; start { screen }. Screens cannot be removed, working features and the iPhone or Android look cannot be changed, and nothing is exported: a person does those. Steps that do not fit are skipped and named.';
+  const PROPOSE_OK = new Set(['theme', 'preset', 'text', 'icon', 'illus', 'block.add', 'block.remove', 'block.move', 'block.dup', 'item.add', 'item.dup', 'item.remove', 'item.up', 'item.down', 'link', 'unlink', 'screen.add', 'screen.rename', 'screen.move', 'kit', 'tabbar', 'rename', 'start']);
+  // the design as an agent reads it: ids, types, words and links; pictures and anything binary are left out
+  function readOut(doc) {
+    const d = normalize(doc), words = (v, n) => typeof v === 'string' ? (/^data:/.test(v) ? '[picture]' : v.slice(0, 240)) : Array.isArray(v) ? v.slice(0, 16).map(x => words(x, n + 1)) : v && typeof v === 'object' && n < 4 ? Object.fromEntries(Object.entries(v).map(([k, x]) => [k, words(x, n + 1)])) : v;
+    return { name: d.name, platform: d.platform, start: d.start, theme: d.theme, screens: d.screens.map(sc => ({ id: sc.id, name: sc.name, ...(sc.tab ? { tab: true } : {}), blocks: sc.blocks.map(b => ({ id: b.id, type: b.type, props: words(b.props, 0), ...(Object.keys(b.links).length ? { links: b.links } : {}) })) })),
+      ...(d.features ? { features: d.features } : {}),
+      can: { parts: BLOCK_TYPES, looks: PRESETS.map(x => x.id), fonts: Object.keys(FONTS), icons: D.ICON_NAMES, pictures: ILL_NAMES, kits: Object.keys(KITS) }, steps: PROPOSE_HELP };
+  }
+  // a change list applied one by one; anything unknown or unsafe is skipped and named -> { doc, done: [words], skipped: [words] }
+  function propose(doc, ops) {
+    let d = normalize(doc); const done = [], skipped = [], short = (t, n) => { t = String(t || ''); return t.length > (n || 48) ? t.slice(0, (n || 48) - 1) + '…' : t; };
+    (Array.isArray(ops) ? ops.slice(0, 60) : []).forEach((o, i) => {
+      const skip = why => skipped.push(`Step ${i + 1}${o && typeof o.op === 'string' ? ` (${str(o.op, 20)})` : ''}: ${why}`);
+      if (!o || typeof o !== 'object' || Array.isArray(o)) return skip('not a step');
+      if (!PROPOSE_OK.has(o.op)) return skip('that step is not on the list');
+      if (o.path != null && (typeof o.path !== 'string' || !/^[\w.]{0,60}$/.test(o.path) || /(^|\.)(__proto__|constructor|prototype)(\.|$)/.test(o.path))) return skip('that is not a part that can be changed');
+      try {
+        const before = JSON.stringify(d);
+        if (o.op === 'start') { const sc = findScreen(d, String(o.screen || '')); if (!sc) return skip('that screen does not exist'); if (d.start === sc.id) return skip('the app already opens there'); d.start = sc.id; d = normalize(d); done.push(`The app opens on ${sc.name}`); return; }
+        if (o.op === 'theme') {
+          const set = {}; for (const k of ['accent', 'mode', 'radius', 'font', 'density', 'icons', 'motion', 'surface']) if (o.set && typeof o.set[k] === 'string') set[k] = o.set[k];
+          if (!Object.keys(set).length) return skip('nothing to change in the look'); if (set.accent && !HEX(set.accent)) return skip('the colour must look like #2A8C80');
+          const r = apply(d, { op: 'theme', set }); if (JSON.stringify(r.doc) === before) return skip('the look already is that'); d = r.doc; done.push(`The look: ${Object.entries(set).map(([k, v]) => `${k} ${v}`).join(', ')}`); return;
+        }
+        if (o.op === 'text') { const f = findBlock(d, String(o.block || '')); if (!f) return skip('that part is not in the app'); if (typeof o.value !== 'string') return skip('the words are missing'); const old = getPath(f.block.props, o.path || ''); if (typeof old !== 'string') return skip('that part is not words'); const r = apply(d, { op: 'text', block: f.block.id, path: o.path, value: o.value }); if (JSON.stringify(r.doc) === before) return skip('the words already say that'); d = r.doc; done.push(`${f.screen.name}: ${old ? `“${short(old)}” becomes ` : 'adds '}“${short(o.value)}”`); return; }
+        const clean = {}; for (const k of ['op', 'block', 'path', 'value', 'screen', 'type', 'at', 'dir', 'to', 'how', 'name', 'kit', 'id']) if (o[k] != null && (typeof o[k] === 'string' || typeof o[k] === 'number')) clean[k] = o[k];
+        const r = apply(d, clean);
+        if (JSON.stringify(r.doc) === before) return skip(r.say || 'nothing changed');
+        d = r.doc; done.push(r.say ? r.say.replace(/\.$/, '') : `Step ${i + 1}`);
+      } catch (e) { skip('could not be applied'); }
+    });
+    return { doc: d, done, skipped };
+  }
   function outline(doc) {
     doc = normalize(doc);
     return `${doc.name} (${doc.platform}, ${doc.theme.mode}, ${doc.screens.length} screens)\n` + doc.screens.map(s => `  ${s.id === doc.start ? '>' : ' '} ${s.name}: ${s.blocks.map(b => b.type + (Object.keys(b.links).length ? `[${Object.values(b.links).map(l => '→' + l.to).join(',')}]` : '')).join(' ')}`).join('\n');
   }
 
-  return { attrs, vars, baseCSS, allFonts, normalize, template, templateList, blank, kit, addTab, apply, css, screenHTML, blockHTML, pwa, expo, brief, outline, entities, illus, icon, palette, normTheme, findScreen, findBlock, getPath,
+  return { attrs, vars, baseCSS, allFonts, normalize, template, templateList, blank, kit, addTab, apply, css, screenHTML, blockHTML, pwa, expo, brief, outline, readOut, propose, PROPOSE_HELP, entities, illus, icon, palette, normTheme, findScreen, findBlock, getPath,
     AxRun, PRESETS, FONTS, BLOCKS, BLOCK_TYPES, GROUPS, TEMPLATES, KITS, COLORS, RADII, DENS, MOTION, ILL_NAMES, ICON_NAMES: D.ICON_NAMES, RUNTIME, contrast, version: 1 };
 });

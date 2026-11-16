@@ -894,6 +894,7 @@ html[data-dev=phone] .ehide-phone,html[data-dev=tablet] .ehide-tablet,html[data-
     const host = $('#wdz-flint'); if (!host || fui || !window.TribeFlint || !window.TribeFlint.mount) return;
     fui = window.TribeFlint.mount(host, { ctx: 'designer', echo: false, run: text => ask(text).then(() => true), onSay: m => { if (st) { st.log.push(m); logPaint(); } }, onClear: () => { if (st) { st.log = []; st.pending = null; logPaint(); } },
       hello: 'Say what to change: “add a link for my book club”, “make the buttons work”, “add a page called About”, “dark mode”. No AI needed, and Undo takes back any step.', chips: chipsNow, onEscape: () => escape() });
+    if (fui && FC() && FC().extra) FC().extra(fui, 'site', () => ask('polish it'), () => ask('make it beautiful'));
   }
   function chipsNow() {
     if (!st) return [];
@@ -905,7 +906,13 @@ html[data-dev=phone] .ehide-phone,html[data-dev=tablet] .ehide-tablet,html[data-
     if (links) return ['Add a link for…', 'Add my Instagram', 'Make the buttons work', 'Dark mode', 'Rounder corners'];
     return ['Make the buttons work', 'Add a page called About', 'Add a link for…', 'Dark mode', 'Add a gallery', 'Make the picture round'];
   }
-  function say(text, extra, acts) { st.log.push({ who: 'flint', text, html: extra || '', acts: acts || [] }); logPaint(); return text; }
+  // pass 4 (flintcreate.js): every reply says which level answered (rules, a local model, a stronger AI)
+  let lvlNow = 'rules';
+  const FC = () => window.TribeFlintCreate;
+  const fcApi = () => ({ design: () => st.cfg, core: () => S(), commit: c => commit(c), pid: () => st.pid, host: () => root, panel: n => { st.panel = n; paint(); },
+    outline: () => st.cfg.pages.map(pg => `${pg.title}: ${pg.blocks.filter(b => !b.hidden).map(b => b.type + (b.props && b.props.title ? ` “${String(b.props.title).slice(0, 40)}”` : '')).join(', ')}`).join('\n'),
+    say: (t, html, un, chips, lvl) => { const was = lvlNow; if (lvl) lvlNow = lvl; say(t, html || '', [...(un ? [undoAct()] : []), ...chipActs(chips)]); lvlNow = was; } });
+  function say(text, extra, acts) { st.log.push({ who: 'flint', text, html: extra || '', acts: acts || [], lvl: lvlNow }); logPaint(); return text; }
   function logPaint() {
     if (!fui) mountFlint(); if (!fui || !st) return;
     st.log = st.log.slice(-40); fui.set(st.log);
@@ -940,6 +947,13 @@ html[data-dev=phone] .ehide-phone,html[data-dev=tablet] .ehide-tablet,html[data-
     const steps = (P.steps || []).filter(s => s.intent && s.conf >= 0.6);
     if (startShown) hideStart();
     if (!steps.length || steps.length < (P.steps || []).length && !steps.some(s => /^site\./.test(s.intent))) {
+      if (FC() && FC().loose && NL) {   // pass 4
+        const lo = await FC().loose(text, { kind: 'site', ctx: ctxNow() });
+        if (lo && lo.says.length) {
+          const ls2 = lo.says.flatMap(q => ((NL.parse(q, ctxNow()).steps) || []).filter(x => x.intent && x.conf >= 0.6).map(x => ({ ...x, text: x.text || q })));
+          if (ls2.length) { lvlNow = lo.level; try { return await runSteps(ls2, text, `<small class="fc-read">${esc(tr('Read as'))}: ${lo.says.map(esc).join(' · ')}</small>`); } finally { lvlNow = 'rules'; } }
+        } else if (lo && lo.text) { lvlNow = lo.level; try { return say(lo.text); } finally { lvlNow = 'rules'; } }
+      }
       if (NL && NL.needsAI && !NL.needsAI(text) && NL.clarify) {   // feat/flint-unify: ask, don't shrug
         const alts = ((P.steps[0] || {}).alts || P.alts || []).map(a => a.example).filter(Boolean);
         const q = NL.clarify(text, { view: 'designer' });
@@ -950,12 +964,15 @@ html[data-dev=phone] .ehide-phone,html[data-dev=tablet] .ehide-tablet,html[data-
     }
     return runSteps(steps, text);
   }
-  async function runSteps(steps, text) {
+  async function runSteps(steps, text, note) {
     const before = JSON.stringify(st.cfg); let work = st.cfg; const said = []; let asked = null, chips = null, handed = false;
-    const done = [], acts = []; let html = '';   // feat/flint-max: what to repeat elsewhere, Flint's swatches and tappable ideas
+    const done = [], acts = []; let html = note || '';   // feat/flint-max: what to repeat elsewhere, Flint's swatches and tappable ideas
     for (const s of steps) {
       if (s.intent === 'undo') { if (work !== st.cfg) { st.cfg = work; } undo(); work = st.cfg; said.push(st.hist.length || st.fut.length ? 'Undone.' : 'Nothing to undo.'); continue; }
       if (s.intent === 'redo') { redo(); work = st.cfg; said.push('Redone.'); continue; }
+      // pass 4 (flintcreate.js): Polish it, Make it beautiful, Check, "what can you do here?", "remove this section"
+      if (s.intent === 'site.block.remove' && !s.slots.block) { const pg4 = work.pages.find(x => x.id === st.page) || work.pages[0], b4 = st.sel && pg4.blocks.find(x => x.id === st.sel.block); if (!b4) { said.push('Click the section first, then say it again.'); continue; } work = S().removeBlock(work, pg4.id, b4.id); st.sel = null; said.push(`Removed the ${S().BLOCKS[b4.type].label.toLowerCase()}. Undo brings it back.`); continue; }
+      if (FC() && FC().site && /^site\.(?:polish|beautify|help|check|fixall|el\.colorname)$/.test(s.intent)) { commitAll(before, work); const t4 = await FC().site(s, fcApi()); work = st.cfg; if (t4) said.push(t4); else handed = true; continue; }
       if (s.intent === 'lesson' && window.TribeFlintLessons) { window.TribeFlintLessons.open(s.slots.feature); said.push('Opened the lesson.'); continue; }
       if (/^site\.(hours|autofill)$/.test(s.intent) && st.pid) await loadFacts();
       // feat/flint-max: "do the same on the about page" replays the last edits there (one Undo with the rest)
@@ -1017,7 +1034,7 @@ html[data-dev=phone] .ehide-phone,html[data-dev=tablet] .ehide-tablet,html[data-
         const j = r && r.text ? JSON.parse((/\{[\s\S]*\}/.exec(r.text) || ['{}'])[0]) : null;
         let c = st.cfg, n = 0;
         for (const op of (j && j.ops) || []) { if (op.block && op.path && typeof op.value === 'string' && pg.blocks.some(b => b.id === op.block)) { c = S().setProp(c, st.page, op.block, op.path, op.value.slice(0, 600)); n++; } else if (op.add && S().BLOCKS[op.add]) { c = S().addBlock(c, st.page, op.add).cfg; n++; } }
-        if (n) { commit(c); return say(`${j.say || 'Done.'} ✦ via ${r.via}`, '', [undoAct()]); }
+        if (n) { commit(c); lvlNow = 'agent'; try { return say(`${j.say || 'Done.'} ✦ via ${r.via}`, '', [undoAct()]); } finally { lvlNow = 'rules'; } }
       } catch {}
     }
     const did = 'Nothing changed: that needs new writing or pictures. For free I add links, socials, buttons, pages and sections, change any words, colors and layouts, wire buttons, swap pictures and export HTML.';

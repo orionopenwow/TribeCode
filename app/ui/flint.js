@@ -538,11 +538,13 @@
   const linkify = s => esc(s).replace(/```[a-z]*\n?([\s\S]*?)```/g, (_, c) => `<pre class="fl-code"><code>${c.replace(/\n$/, '')}</code></pre>`)   // v0.27.1: lessons show code
     .replace(/`([^`\n]{1,80})`/g, '<code>$1</code>').replace(/\*\*([^*\n]{1,120})\*\*/g, '<b>$1</b>').replace(/“([^”]{1,120})”/g, '“<b>$1</b>”');
   const EVI = { reload: '↻', file: '✎', error: '!', agent: '◆', ask: '→', build: '▣', info: '·' };
+  // pass 4 (flintcreate.js): which level answered, said on the reply itself
+  const LVL = (window.TribeFlintCreate && window.TribeFlintCreate.LEVELS) || { rules: { label: 'No AI', title: '' }, browser: { label: 'In this browser', title: '' }, computer: { label: 'On this computer', title: '' }, agent: { label: 'A stronger AI', title: '' } };
   function msgHtml(m, i) {
     if (m.who === 'ev') return `<div class="fl-ev fl-ev-${esc(m.k || 'info')}" data-i="${i}"><span class="fl-ev-ic" aria-hidden="true">${EVI[m.k] || '·'}</span><span class="fl-ev-t">${m.who2 ? `<b>${esc(m.who2)}</b> ` : ''}${m.html || linkify(m.text)}${m.add != null ? ` <span class="fl-diff"><ins>+${m.add}</ins> <del>−${m.del || 0}</del></span>` : ''}</span>${(m.acts || []).length ? `<span class="fl-acts">${m.acts.map((a, j) => `<button class="fl-act" data-act="${i}:${j}">${esc(a.label)}</button>`).join('')}</span>` : ''}</div>`;
     const mine = m.who === 'me';
     return `<div class="fl-msg ${mine ? 'me' : 'fl'}${m.streaming ? ' streaming' : ''}${m.undone ? ' undone' : ''}" data-i="${i}">${mine ? '' : `<span class="fl-av sm">${flintIco(12)}</span>`}
-      <div class="fl-b">${mine && m.name ? `<small class="fl-who">${esc(m.name)}</small>` : ''}${m.text ? `<div class="fl-t">${linkify(m.text)}</div>` : ''}${m.html ? `<div class="fl-h">${m.html}</div>` : ''}${m.via && !m.streaming ? `<small class="fl-via">via ${esc(m.via)}</small>` : ''}${(m.acts || []).length ? `<div class="fl-acts">${m.acts.map((a, j) => `<button class="fl-act${a.primary ? ' primary' : ''}" data-act="${i}:${j}"${a.off ? ' disabled' : ''}>${esc(a.label)}</button>`).join('')}</div>` : ''}</div></div>`;
+      <div class="fl-b">${mine && m.name ? `<small class="fl-who">${esc(m.name)}</small>` : ''}${m.text ? `<div class="fl-t">${linkify(m.text)}</div>` : ''}${m.html ? `<div class="fl-h">${m.html}</div>` : ''}${m.via && !m.streaming ? `<small class="fl-via">via ${esc(m.via)}</small>` : ''}${m.lvl && LVL[m.lvl] && !mine ? `<small class="fl-lvl" data-lvl="${esc(m.lvl)}" title="${esc(LVL[m.lvl].title)}">${esc(window.TribeI18n && window.TribeI18n.t ? (window.TribeI18n.t(LVL[m.lvl].label, LVL[m.lvl].label) || LVL[m.lvl].label) : LVL[m.lvl].label)}</small>` : ''}${(m.acts || []).length ? `<div class="fl-acts">${m.acts.map((a, j) => `<button class="fl-act${a.primary ? ' primary' : ''}" data-act="${i}:${j}"${a.off ? ' disabled' : ''}>${esc(a.label)}</button>`).join('')}</div>` : ''}</div></div>`;
   }
   function threadHtml() { return thread.length ? thread.map(msgHtml).join('') : emptyHtml(); }
   function barHtml(id) {
@@ -685,8 +687,8 @@
   // history, a shared canvas thread); otherwise the thread is kept per ctx on this device.
   //   ui = { ctx, el, thread, say(text, acts, extra), ev(text, extra), me(text), add(m), set(list), draw(), chips(list),
   //          send(text), flint(text), capture(text), fill(text), focus(), extra, input }
-  const CTXN = { designer: 'Website', canvas: 'Design', preview: 'Preview', app: 'Anywhere' };
-  const CTXPH = { designer: 'Tell Flint what to change…', canvas: 'Describe a screen or a change…', preview: 'Ask Flint to change…', app: 'Ask Flint…' };
+  const CTXN = { designer: 'Website', canvas: 'Design', preview: 'Preview', app: 'Anywhere', appcreator: 'App' };
+  const CTXPH = { appcreator: 'Tell Flint what to change…', designer: 'Tell Flint what to change…', canvas: 'Describe a screen or a change…', preview: 'Ask Flint to change…', app: 'Ask Flint…' };
   function mount(el, o = {}) {
     if (!el) return null;
     const ctx = o.ctx || 'app';
@@ -702,7 +704,7 @@
     let list = o.onSay ? [] : (ls.get(KEYT, []) || []).filter(m => m && (m.text != null || m.html)).slice(-MAX), chipList = [];
     const box = root.querySelector('.flm-thread'), chipBox = root.querySelector('.flm-chips'), input = root.querySelector('.fl-in');
     if (o.placeholder || CTXPH[ctx]) input.placeholder = o.placeholder || CTXPH[ctx];
-    const keep = () => { if (!o.onSay) ls.set(KEYT, list.slice(-MAX).map(m => ({ who: m.who, text: m.text, html: m.html, acts: (m.acts || []).filter(a => a.act), at: m.at, k: m.k }))); };
+    const keep = () => { if (!o.onSay) ls.set(KEYT, list.slice(-MAX).map(m => ({ who: m.who, text: m.text, html: m.html, lvl: m.lvl, acts: (m.acts || []).filter(a => a.act), at: m.at, k: m.k }))); };
     const ui = {
       ctx, el: root, input, extra: root.querySelector('.flm-extra'), tools: root.querySelector('.flm-tools'), busy: false,
       get thread() { return list; },
