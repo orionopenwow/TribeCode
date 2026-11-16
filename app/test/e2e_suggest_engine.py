@@ -133,7 +133,7 @@ def main():
             ctx = b.new_context(viewport={"width": 1440, "height": 900}); ctx.add_init_script(settings_js("Mara", host, pid))
             pg = ctx.new_page(); watch(pg, "mara")
             pg.goto(BASE + "/?skipIntro=1"); pg.wait_for_function("window.TribeSuggest && window.TribeSuggestCore && TribeClient.connected()", timeout=20000)
-            assert pg.evaluate("TribeSuggest._providers().join()") == "site,talk,files,photos,edits,brand", pg.evaluate("TribeSuggest._providers().join()")
+            provs = pg.evaluate("TribeSuggest._providers()"); assert provs[:6] == ["site", "talk", "files", "photos", "edits", "brand"] and set(provs[6:]) <= {"motion", "app", "launch"}, provs   # tools on other branches add their own
 
             # ---- idle computing never blocks typing
             pg.evaluate("document.body.insertAdjacentHTML('beforeend', '<input id=\"sgx-type\" style=\"position:fixed;top:4px;left:4px;z-index:99999\">')")

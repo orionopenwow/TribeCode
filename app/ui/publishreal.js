@@ -79,6 +79,8 @@
       rows.push(row('ios', 'phone', 'iPhone app', esc(T('Apple needs a Mac and a paid Apple developer account to sign an app. There is no way round that.')),
         `<small class="faint">${esc(T('On iPhone, Install on phones already works today: open the link in Safari, Share, Add to Home Screen.'))}</small>${!pg ? '' : io.on ? `<p class="pbr-ok">${ico('check', 14)} ${esc(T('The prepared build is in your GitHub project. It runs once you add your Apple signing secrets (the file lists them).'))}</p><button class="linkish" type="button" data-wrap="ios" data-on="0">${esc(T('Remove it'))}</button>` : `<button class="btn" type="button" data-wrap="ios" data-on="1">${esc(T('Add the prepared iPhone build'))}</button>`}`));
     }
+    // Launch kit (launchkit.js): screenshots, icon, store text, paywall and the checklist for the App Store and Google Play
+    if (!site && window.TribeLaunchKit) rows.push(row('launch', 'store', 'Launch kit', esc(T('Store screenshots, an app icon, the store text and a checklist for the App Store and Google Play.')), `<button class="btn" type="button" data-launchkit>${esc(T('Open the Launch kit'))}</button>`));
     const dk = d.desktop || {};
     rows.push(row('desktop', 'monitor', 'Computer app', esc(T('Installers for Windows, Mac and Linux. A small window that opens your page. GitHub builds them in your account.')),
       !pg ? `<small class="faint">${esc(T('First give it a link that stays up (above).'))}</small>`
@@ -115,6 +117,7 @@
     const busy = (b, t) => { b.disabled = true; b.dataset.was = b.textContent; b.textContent = T(t); };
     const idle = b => { b.disabled = false; if (b.dataset.was) b.textContent = b.dataset.was; };
     wireLinks(host);
+    host.querySelectorAll('[data-launchkit]').forEach(b => b.onclick = () => { const m = document.querySelector('#invite-modal'); if (m && b.closest('#invite-modal')) m.classList.add('hidden'); window.TribeLaunchKit.open(pid); });
     host.querySelectorAll('[data-kind]').forEach(b => b.onclick = async () => { try { await C.api('/publish/real', { method: 'PUT', body: { project: pid, kind: b.dataset.kind } }); again(); } catch (e) { toast(e.message); } });
     const pwa = host.querySelector('#pbr-pwa'); if (pwa) pwa.onchange = async () => { try { await C.api('/publish/real', { method: 'PUT', body: { project: pid, pwa: pwa.checked } }); toast(T(pwa.checked ? 'It will be installable from the next publish' : 'Not installable from the next publish')); again(); } catch (e) { toast(e.message); } };
     host.querySelectorAll('[data-zip]').forEach(b => b.onclick = async () => {

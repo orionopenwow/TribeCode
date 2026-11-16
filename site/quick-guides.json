@@ -644,6 +644,44 @@
    ]
   },
   {
+   "id": "launch-kit",
+   "group": "publish",
+   "title": "Put your app in the App Store and Google Play",
+   "intro": "The Launch kit has what the stores ask for: screenshots, an app icon, the store text and a checklist. It is free and needs no other account to start.",
+   "asks": [
+    "put my app on the app store",
+    "publish to google play",
+    "what do i need to launch on the app store",
+    "store listing",
+    "launch checklist"
+   ],
+   "steps": [
+    "Open Publish and find Launch kit under Where it goes.",
+    "Make the screenshots and the app icon in their tabs.",
+    "Write the store text. A first draft fills itself in from your project.",
+    "Tick off the checklist as you go. Each step opens the place where you do it."
+   ]
+  },
+  {
+   "id": "store-shots",
+   "group": "publish",
+   "title": "Make store screenshots and an app icon",
+   "intro": "Pick one of 50 screenshot styles and 54 icon styles, add your own screens and headlines, and download every size each store needs in one zip.",
+   "asks": [
+    "make store screenshots",
+    "app store screenshots",
+    "make an app icon",
+    "feature graphic",
+    "screenshots for google play"
+   ],
+   "steps": [
+    "Open the Launch kit and stay on Screenshots.",
+    "Pick a screen for each screenshot: from the preview, the App Creator, or a picture you upload.",
+    "Type a headline, or tap one of the starters, then pick a style.",
+    "Download the screenshots, then do the same on the Icon tab."
+   ]
+  },
+  {
    "id": "back-up",
    "group": "safe",
    "title": "Back up everything",

@@ -1,7 +1,7 @@
 {
   "version": "v0.38.1",
-  "flintActions": 233,
-  "flintActionsAbout": 230,
+  "flintActions": 241,
+  "flintActionsAbout": 240,
   "addons": 553,
   "addonsPlus": 550,
   "lessons": 65,
@@ -10,7 +10,7 @@
   "designerTemplates": 52,
   "screenTemplates": 13,
   "companyTemplates": 7,
-  "quickGuides": 53,
+  "quickGuides": 55,
   "movingBackgrounds": 13,
   "languages": 8,
   "agentTools": 15,

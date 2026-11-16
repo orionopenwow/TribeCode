@@ -1,6 +1,6 @@
 # Motion Studio
 
-Motion graphics made in the app: UI morph reels, app promos, logo reveals, kinetic type, stats, charts, social posts, product tours, end cards, transitions, lower thirds and captions. The person's guide is [guide/16-motion-studio.md](guide/16-motion-studio.md).
+Motion graphics made in the app: UI morph reels, app promos, logo reveals, kinetic type, stats, charts, social posts, product tours, end cards, transitions, lower thirds and captions. The person's guide is [guide/17-motion-studio.md](guide/17-motion-studio.md).
 
 | File | What |
 |---|---|
