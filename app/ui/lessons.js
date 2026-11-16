@@ -132,9 +132,10 @@
     const t = get(tid), s = t && t.steps.find(x => x.id === sid), L = W.TribeFlintLessons;
     if (!s || !s.show || !L) return Promise.resolve(false);
     leave();
+    if (s.show.open !== 'sitelib') call('TribeSiteLib', 'close');   // pass 4 polish: the template shelf from an earlier step no longer sits over the next step's place
     if (!find(s.show.sel)) { try { (OPEN[s.show.open] || (() => {}))(); } catch {} }
     return new Promise(res => {
-      let n = 0; const tick = () => { const el = find(s.show.sel); if (el) { L.ring(el, T(s.text)); return res(true); } if (++n < 45) setTimeout(tick, 130); else { toast('Open a project first, then try Show me again.'); res(false); } };
+      let n = 0; const tick = () => { const el = find(s.show.sel); if (el) { L.ring(el, T(s.text)); return res(true); } if (++n < 45) setTimeout(tick, 130); else { toast(pid() ? 'That is not on screen yet. Do the earlier steps first, then try Show me again.' : 'Open a project first, then try Show me again.'); res(false); } };
       setTimeout(tick, 200);
     });
   }

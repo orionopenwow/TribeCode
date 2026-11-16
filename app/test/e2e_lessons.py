@@ -153,6 +153,10 @@ def main():
             ask("teach me to make an app"); pg.wait_for_function("(TribeLessons.state() || {}).track === 'first-app'", timeout=8000)
             ask("what is my next lesson"); pg.wait_for_function("(() => { const t = TribeFlint.thread(); const l = t[t.length - 1]; return l && l.who === 'flint' && /Your first phone app/.test(l.text); })()", timeout=8000)
             pg.evaluate(clean)
+            # pass 4 polish: Flint knows Where it lives, with no AI
+            ask("where is my site saved"); pg.wait_for_selector("#whl", timeout=8000)
+            pg.wait_for_function("(() => { const t = TribeFlint.thread(); const l = t[t.length - 1]; return l && l.who === 'flint' && /Where it lives/.test(l.text); })()", timeout=8000)
+            pg.evaluate("TribeWhere.close()"); pg.wait_for_timeout(200)
             acts = pg.evaluate("(window.TribePaletteActions || []).flatMap(f => f() || []).filter(x => x.kind === 'Lesson').map(x => x.label)")
             assert len(acts) == 5 and "Lesson: Take it online" in acts, acts
             print("  ok  Flint starts, lists and pauses lessons with no AI; Ctrl K lists them")
@@ -203,6 +207,14 @@ def main():
             assert box[0] >= 0 and box[1] <= 390 and box[2] <= 844 and box[3] >= 40, box
             assert pp.evaluate("document.documentElement.scrollWidth <= 390")
             pp.screenshot(path=str(SHOTS / "lessons-card-390.png"))
+            # pass 4 polish: on a phone some controls live under More; those steps still ring something real
+            pbad = []
+            for tid, sid in [("first-site", "phone"), ("first-site", "out"), ("power", "comments"), ("power", "site-zoom"), ("power", "app-comments"), ("power", "app-map"), ("power", "site-code"), ("power", "app-history")]:
+                ok = pp.evaluate(f"TribeLessons.show('{tid}', '{sid}')")
+                if not ok or pp.locator(".fls-ring").count() == 0: pbad.append(f"{tid}/{sid}")
+                pp.evaluate("TribeFlintLessons.unring()")
+            pp.evaluate(clean)
+            assert not pbad, "on a phone Show me rang nothing for: " + ", ".join(pbad)
             pp.evaluate("TribeLessons.stop(); TribeGuide.home()"); pp.wait_for_selector("#les-home .les-track"); pp.screenshot(path=str(SHOTS / "lessons-learn-390.png"))
             ph.close()
 

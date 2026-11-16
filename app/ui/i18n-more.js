@@ -2413,6 +2413,8 @@
     "Move this up": ["Sube esto","Mova isto para cima","Monte ceci","Schieb das nach oben","これを上へ","把它上移","이것을 위로"],
     "Duplicate this": ["Duplica esto","Duplique isto","Duplique ceci","Dupliziere das","これを複製","复制这个","이것 복제"],
     "Remove this": ["Quita esto","Remova isto","Retire ceci","Entferne das","これを削除","删除这个","이것 삭제"],
+    "That is not on screen yet. Do the earlier steps first, then try Show me again.": ["Eso aún no está en pantalla. Haz primero los pasos anteriores y prueba Muéstrame otra vez.","Isso ainda não está na tela. Faça primeiro os passos anteriores e tente Mostre-me de novo.","Ce n’est pas encore à l’écran. Faites d’abord les étapes précédentes, puis réessayez Montre-moi.","Das ist noch nicht auf dem Bildschirm. Mach zuerst die früheren Schritte und versuch „Zeig’s mir“ dann noch einmal.","まだ画面にありません。先に前のステップを済ませてから、もう一度「見せて」を試してください。","它还没出现在屏幕上。先完成前面的步骤，再试一次“给我看”。","아직 화면에 없습니다. 앞 단계를 먼저 하고 ‘보여 줘’를 다시 눌러 보세요."],
+    "In a tribe, your website and phone app are real files in the project’s folder.": ["En una tribu, tu sitio web y tu app del teléfono son archivos reales en la carpeta del proyecto.","Numa tribo, seu site e seu app de celular são arquivos de verdade na pasta do projeto.","Dans une tribu, votre site et votre appli mobile sont de vrais fichiers dans le dossier du projet.","In einem Tribe sind deine Website und deine Handy-App echte Dateien im Projektordner.","トライブでは、ウェブサイトとスマホアプリはプロジェクトのフォルダーにある本物のファイルです。","在部落里，你的网站和手机应用是项目文件夹里的真实文件。","부족 안에서는 웹사이트와 휴대폰 앱이 프로젝트 폴더의 실제 파일입니다."],
   });
   I.addPatterns({
     // pass 4 polish: count and status messages in the creators

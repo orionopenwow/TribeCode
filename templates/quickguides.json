@@ -1758,7 +1758,7 @@
      "text": "Press Phone to see the page at phone size. Most visitors will see this.",
      "show": {
       "open": "site",
-      "sel": "#wdz [data-dev='phone']"
+      "sel": "#wdz [data-dev='phone'], #wdz-framewrap"
      },
      "check": "site.phone"
     },
@@ -1778,7 +1778,7 @@
      "text": "Download the site as files, or close the designer and publish it to a public address.",
      "show": {
       "open": "site",
-      "sel": "#wdz-dl"
+      "sel": "#wdz-dl, #wdz .wdz-dl-more"
      },
      "check": "site.out"
     }
@@ -2039,7 +2039,7 @@
      "text": "In the website designer press Comment, then click a section and type.",
      "show": {
       "open": "site",
-      "sel": "#wdz-cmode"
+      "sel": "#wdz-cmode, #wdz .wdz-more"
      },
      "check": "site.comment"
     },
@@ -2099,7 +2099,7 @@
      "text": "Zoom out to see the whole page, or fit it to the window.",
      "show": {
       "open": "site",
-      "sel": "#wdz .wdz-zoom"
+      "sel": "#wdz .wdz-zoom, #wdz-framewrap"
      }
     },
     {
@@ -2135,7 +2135,7 @@
      "text": "Press Comment in App Creator and click a part of the screen.",
      "show": {
       "open": "app",
-      "sel": "#apc-cmb"
+      "sel": "#apc-cmb, #apc-more"
      }
     },
     {
@@ -2153,7 +2153,7 @@
      "text": "Open the map to see all screens and the links between them.",
      "show": {
       "open": "app",
-      "sel": "#apc-mapb"
+      "sel": "#apc-mapb, #apc-more"
      }
     },
     {

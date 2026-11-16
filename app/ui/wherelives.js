@@ -80,7 +80,8 @@
     const s3 = `${link ? `<p class="whl-path"><a href="${esc(link)}" target="_blank" rel="noopener" id="whl-link">${esc(link)}</a></p>` : ''}
       <div class="whl-row"><button type="button" class="btn${!none && st.people > 1 && !link ? ' primary' : ''}" data-whl-online ${none ? 'disabled' : ''}>${esc(T(link ? 'Update it' : 'Put it online'))}</button>${!link && play ? `<span class="faint">${esc(T('It has a play link, which works while the tribe can be reached.'))}</span>` : ''}</div>
       <small class="faint">${esc(T('A public address on your own GitHub account, free. It stays up when every computer is off.'))}</small>`;
-    root.innerHTML = step(1, 'folder', 'In a folder', 'Your website and phone app are real files in the project’s folder, where this tribe is kept.', none ? '' : 'Now', s1)
+    // pass 4 polish: with no tribe the first step says what is true (the browser keeps it), not that files are in a folder
+    root.innerHTML = step(1, 'folder', 'In a folder', online() ? 'Your website and phone app are real files in the project’s folder, where this tribe is kept.' : 'In a tribe, your website and phone app are real files in the project’s folder.', none ? '' : 'Now', s1)
       + step(2, 'friends', 'With your friends', 'One link lets friends in. Everyone changes the same website and app, live, by their role.', st.people > 1 ? 'Now' : '', s2)
       + step(3, 'online', 'Online', 'Put it online and anyone can open it, on any phone or computer.', link ? 'Live' : '', s3);
     wire(root);
