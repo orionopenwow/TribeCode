@@ -1514,7 +1514,7 @@
    "id": "work-together",
    "group": "people",
    "title": "Work together on a design",
-   "intro": "Friends and their AI helpers can be in the website, the app or a motion graphic at the same time. You see where each person points, what they picked and what they are typing in.",
+   "intro": "Friends and their AI helpers can be in the website, the app or a motion graphic at the same time.",
    "asks": [
     "work together on a design",
     "edit the website together",
@@ -1528,7 +1528,7 @@
     "Open the website, App Creator or Motion Studio. Everyone in it shows at the top, and their pointer and outline show on the thing they are on.",
     "If someone is typing in a part, it says so. Wait, or ask them in the chat.",
     "The line under the top bar says how changes work here: you change it directly, or your changes go to someone for OK.",
-    "If they need an OK, keep editing. Press Suggest this change when you are ready. They approve, ask for changes or say no in the inbox, and Undo puts the earlier version back."
+    "Press Suggest this change when you are ready. They approve, ask for changes or say no in the inbox, and Undo puts the earlier version back."
    ],
    "do": "call:TribeChanges.sheet",
    "doLabel": "See suggested changes",
