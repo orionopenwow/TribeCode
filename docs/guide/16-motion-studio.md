@@ -24,7 +24,7 @@ These work with no AI:
 |---|---|
 | "snappier", "calmer", "less bounce" | The springs change |
 | "make it 9:16 for TikTok" | The size changes (also square, 16:9 and 4:5) |
-| "sync it to the beat" | Every state moves onto the grid |
+| "put it on the beat" | Every state moves onto the grid |
 | "change the accent to teal" | The highlight colour changes |
 | "add a toast", "remove the chart" | A state is added or removed |
 | "export a GIF" | The file downloads |

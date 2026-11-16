@@ -1,7 +1,7 @@
 """The Design flow (feat/design-flow, app/ui/designflow.js, docs/STARTERS.md).
 
 On this device (no tribe, app/ui served as plain files):
-  Home › Design shows "What are you making?" with eight kinds and stroke icons, and Continue (the files view) below.
+  Home › Design shows "What are you making?" with nine kinds and stroke icons, and Continue (the files view) below.
   Game shows the starters with real thumbnails, a Blank card and the optional prompt. Picking Breakout with "a much
   faster breakout in pink" opens the workspace: the game runs in a sandboxed frame with the ball faster and the bricks
   pink (Flint's free words → knobs), its knobs change it live, and the Plan card has the game's seven steps. Ticking a
@@ -79,8 +79,8 @@ def on_this_device(b):
     pg.wait_for_selector("#dfl[data-step=kinds] .dfl-kind", timeout=20000)
     assert not pg.evaluate("TribeClient.connected()"), "no tribe here"
     kinds = pg.eval_on_selector_all("#dfl .dfl-kind b", "els => els.map(e => e.textContent)")
-    assert kinds == ["Website", "App", "Game", "Screen / UI mockup", "Slides", "Poster / graphic", "Whiteboard", "Logo / brand kit"], kinds
-    assert pg.locator("#dfl .dfl-kind svg").count() == 8, "a stroke icon on every tile"
+    assert kinds == ["Website", "App", "Game", "Screen / UI mockup", "Slides", "Poster / graphic", "Whiteboard", "Logo / brand kit", "Motion graphic"], kinds
+    assert pg.locator("#dfl .dfl-kind svg").count() == 9, "a stroke icon on every tile"
     assert pg.locator("#hub-design").is_visible() and "Continue" in pg.inner_text("#hub-design"), "Continue lists what is already made"
     shot(pg, "design-flow-1")
 

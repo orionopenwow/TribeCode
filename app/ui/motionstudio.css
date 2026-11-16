@@ -19,7 +19,7 @@ body.mos-on { overflow: hidden; }
 .mos-flint .btn { height: 38px; border-radius: 0 var(--r) var(--r) 0; border-width: 0 0 0 1px; }
 .mos-say { margin: 0; padding: 0 16px; font-size: 13px; line-height: 1.5; color: var(--muted); max-height: 0; overflow: hidden; transition: max-height var(--dur-base) var(--ease-out), padding var(--dur-base) var(--ease-out); }
 .mos-say.on { max-height: 64px; padding: 8px 16px; border-bottom: 1px solid var(--border); background: var(--surface); }
-.mos-body { display: grid; grid-template-columns: 360px minmax(0, 1fr); min-height: 0; }
+.mos-body { display: grid; grid-template-columns: 400px minmax(0, 1fr); min-height: 0; }
 .mos-side { display: grid; grid-template-rows: auto 1fr; min-height: 0; border-right: 1px solid var(--border); background: var(--surface); }
 .mos-tabs { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 2px; padding: 6px; border-bottom: 1px solid var(--border); }
 .mos-tabs::-webkit-scrollbar { display: none; }

@@ -496,11 +496,19 @@
     }
     void P;
   }
+  const BLUR = {};
   // draw(g, doc, t, { w, h, blur }) renders one frame at the canvas size; blur = N subframes blended for motion blur
   function draw(g, doc, t, o = {}) {
     const d = doc && doc.states && doc.theme && doc.spring ? doc : normalize(doc), W = o.w || d.size.w, H = o.h || d.size.h, n = o.blur != null ? o.blur : d.blur.n;
-    if (n > 1 && o.fps) {
-      for (let i = 0; i < n; i++) { g.save(); g.globalAlpha = 1 / (i + 1); drawFrame(g, d, seek(d, t + i / (n * o.fps)), W, H); g.restore(); }
+    if (n > 1 && o.fps && g.canvas && typeof document !== 'undefined') {
+      // motion blur: each subframe is drawn whole on its own canvas, then averaged in (1, 1/2, 1/3 … = a running mean)
+      const cv = g.canvas, off = BLUR.c && BLUR.c.width === cv.width && BLUR.c.height === cv.height ? BLUR.c : (BLUR.c = Object.assign(document.createElement('canvas'), { width: cv.width, height: cv.height }));
+      const og = off.getContext('2d'), m = g.getTransform();
+      for (let i = 0; i < n; i++) {
+        og.setTransform(1, 0, 0, 1, 0, 0); og.clearRect(0, 0, off.width, off.height); og.setTransform(m);
+        drawFrame(og, d, seek(d, t + i / (n * o.fps)), W, H);
+        g.save(); g.setTransform(1, 0, 0, 1, 0, 0); g.globalAlpha = 1 / (i + 1); g.drawImage(off, 0, 0); g.restore();
+      }
       return;
     }
     drawFrame(g, d, seek(d, t), W, H);
