@@ -763,7 +763,9 @@
    "do": "call:TribeAppCreator.open",
    "doLabel": "Open App Creator",
    "show": {
-    "go": "design"
+    "go": "design",
+    "sel": "#dfl [data-kind=app]",
+    "say": "Pick App to start from a designed template."
    }
   },
   {
@@ -789,7 +791,9 @@
    "do": "call:TribeAppCreator.open",
    "doLabel": "Open App Creator",
    "show": {
-    "go": "design"
+    "go": "design",
+    "sel": "#dfl [data-kind=app]",
+    "say": "Pick App to start from a designed template."
    }
   },
   {
