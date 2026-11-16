@@ -13,18 +13,21 @@
 (function (root, factory) {
   const data = typeof module === 'object' && module.exports ? require('./appcreator-data.js') : root.TribeAppData;
   const more = typeof module === 'object' && module.exports ? (() => { try { return require('./appcreator-more.js'); } catch { return null; } })() : root.TribeAppMore;
-  const api = factory(data, more);
+  const parts = typeof module === 'object' && module.exports ? (() => { try { return require('./appcreator-parts.js'); } catch { return null; } })() : root.TribeAppParts;
+  const api = factory(data, more, parts);
   if (typeof module === 'object' && module.exports) module.exports = api;
   else root.TribeAppCore = api;
-})(typeof self !== 'undefined' ? self : this, function (D, MORE) {
+})(typeof self !== 'undefined' ? self : this, function (D, MORE, PARTS) {
   'use strict';
+  // appcreator-parts.js (feat/asset-libs): more icons, parts, starting words and screens join the base sets here
+  if (PARTS) { Object.assign(D.ICONS, PARTS.ICONS || {}); D.ICON_NAMES = Object.keys(D.ICONS); D.DEFAULTS = Object.assign({}, D.DEFAULTS, PARTS.DEFAULTS || {}); }
   const clone = o => JSON.parse(JSON.stringify(o));
   const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const str = (v, n) => String(v == null ? '' : v).slice(0, n || 400);
   const HEX = v => /^#[0-9a-f]{6}$/i.test(v || '') ? v.toUpperCase() : '';
   const slug = s => String(s || '').toLowerCase().normalize('NFKD').replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 30) || 'screen';
   const TEMPLATES = D.TEMPLATES.concat(MORE && MORE.TEMPLATES ? MORE.TEMPLATES : []);
-  const KITS = Object.assign({}, D.KITS, MORE && MORE.KITS ? MORE.KITS : {});
+  const KITS = Object.assign({}, D.KITS, MORE && MORE.KITS ? MORE.KITS : {}, PARTS && PARTS.KITS ? PARTS.KITS : {});
 
   // ---------- colours ----------
   const hexRgb = h => [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16));
@@ -92,11 +95,12 @@
 
   // ---------- the theme ----------
   const THEME0 = { accent: '#F26B1D', mode: 'light', radius: 'soft', font: 'clean', density: 'regular', icons: 'regular', motion: 'standard', surface: 'neutral', preset: '' };
+  const TAPS = ['click', 'tap', 'tick', 'pop', 'bubble', 'typing'];   // feat/asset-libs: a short sound on every tap (the library's UI sounds)
   function normTheme(t) {
     t = Object.assign({}, THEME0, t || {});
     return { accent: HEX(t.accent) || THEME0.accent, mode: t.mode === 'dark' ? 'dark' : 'light', radius: RADII[t.radius] ? t.radius : 'soft', font: FONTS[t.font] ? t.font : 'clean',
       density: DENS[t.density] ? t.density : 'regular', icons: ['thin', 'regular', 'bold'].includes(t.icons) ? t.icons : 'regular', motion: MOTION[t.motion] ? t.motion : 'standard',
-      surface: SURF[t.surface] != null ? t.surface : 'neutral', preset: str(t.preset, 30) };
+      surface: SURF[t.surface] != null ? t.surface : 'neutral', preset: str(t.preset, 30), ...(TAPS.includes(t.sound) ? { sound: t.sound } : {}) };
   }
   // the palette, worked out so text always reads: ink on bg >= 7, muted >= 4.5, text on the accent >= 4.5
   function palette(theme) {
@@ -216,8 +220,9 @@
     grid: { label: 'Tile grid', icon: 'grid', group: 'Content', lists: { items: 'title' }, render: (p, h) => `<div class="ax-sec">${p.title ? h.e('title', p.title, 'h2', 'ax-h2') : ''}<div class="ax-grid">${(p.items || []).map((it, i) => `<div class="ax-gi" data-item="items.${i}"${h.lk('items.' + i)}><div class="ax-art"${h.im('items.' + i + '.illus')}>${illus(it.illus, h.theme)}</div>${h.e('items.' + i + '.title', it.title, 'b')}${it.price ? h.e('items.' + i + '.price', it.price, 'small') : ''}</div>`).join('')}</div></div>` },
     calendar: { label: 'Day and time picker', icon: 'calendar', group: 'Input', lists: { days: '', slots: '' }, render: (p, h) => `<div class="ax-sec">${p.title ? h.e('title', p.title, 'h2', 'ax-h2') : ''}<div class="ax-days">${(p.days || []).map((d, i) => `<button class="ax-day${i === (p.on | 0) ? ' on' : ''}" data-item="days.${i}" data-pick="day">${h.e('days.' + i, d, 'span')}</button>`).join('')}</div><div class="ax-slots">${(p.slots || []).map((s, i) => `<button class="ax-slot${i === (p.pick | 0) ? ' on' : ''}" data-item="slots.${i}" data-pick="slot">${h.e('slots.' + i, s, 'span')}</button>`).join('')}</div></div>` },
   };
+  if (PARTS && PARTS.BLOCKS) for (const [k, B] of Object.entries(PARTS.BLOCKS)) if (!BLOCKS[k]) BLOCKS[k] = { ...B, render: (p, h) => B.render(p, h, { icon, illus, esc }) };
   const BLOCK_TYPES = Object.keys(BLOCKS);
-  const GROUPS = ['Navigation', 'Text', 'Content', 'Input', 'Social', 'Data', 'Media', 'Flows'];
+  const GROUPS = ['Navigation', 'Text', 'Content', 'Input', 'Social', 'Commerce', 'Data', 'Media', 'Flows'];
 
   // ---------- the document ----------
   const rid = () => Math.random().toString(36).slice(2, 8);
@@ -311,7 +316,7 @@
   // theme (light/dark, corners, platform come in as variables or as data-plat / data-r on the root), so the editor puts it
   // on the page once and each screen or thumbnail only carries style="vars(theme)" and attrs(doc).
   const baseCache = {};
-  function attrs(doc) { const t = normTheme(doc.theme); return `data-plat="${doc.platform === 'android' ? 'android' : 'ios'}" data-r="${t.radius}"`; }
+  function attrs(doc) { const t = normTheme(doc.theme); return `data-plat="${doc.platform === 'android' ? 'android' : 'ios'}" data-r="${t.radius}"${t.sound ? ` data-snd="${t.sound}"` : ''}`; }
   function css(doc, opts) {
     const o = opts || {}, S = o.scope || '.ax', t = normTheme(doc.theme);
     return fontFaces(t, o.fontBase) + `${S}{${vars(t)}}` + baseCSS(S);
@@ -364,6 +369,7 @@
 & .ax-grid{display:grid;grid-template-columns:1fr 1fr;gap:var(--ax-gap)}& .ax-gi{display:flex;flex-direction:column;gap:2px}& .ax-gi .ax-art{aspect-ratio:1;margin-bottom:6px}& .ax-gi small{color:var(--ax-muted);font-size:13px}
 & .ax-days,& .ax-slots{display:flex;gap:8px;flex-wrap:wrap}& .ax-days{flex-wrap:nowrap;overflow-x:auto;margin-bottom:12px;scrollbar-width:none}& .ax-day{flex:none;min-width:64px;min-height:56px;border-radius:var(--ax-r);border:1px solid var(--ax-line);font-size:13px;font-weight:600;display:grid;place-items:center;padding:6px}& .ax-slot{min-height:44px;padding:0 16px;border-radius:var(--ax-rb);border:1px solid var(--ax-line);font-weight:600}& .ax-day.on,& .ax-slot.on{background:var(--ax-accent);color:var(--ax-on);border-color:var(--ax-accent)}
 & .ax-bwrap{display:flex}
+${PARTS && PARTS.CSS ? PARTS.CSS : ''}
 @media (prefers-reduced-motion: reduce){& *{transition:none!important;animation:none!important}}`));
   }
 
@@ -396,8 +402,11 @@
         return p.then(done);
       }
       function back() { var h = hist.pop(); if (h) return go(h.id, h.how === 'morph' ? 'fade' : h.how, true); }
+      var snd = { click: [[1800, .018, 'square', .18]], tap: [[880, .04, 'sine', .3]], tick: [[2400, .012, 'triangle', .2]], pop: [[520, .07, 'sine', .35, 1.8]], bubble: [[700, .09, 'sine', .3, 2.2]], typing: [[1500, .01, 'square', .1]] }, ac = null;
+      function beep() { var k = root.getAttribute('data-snd'), n = k && snd[k]; if (!n || reduce) return; try { ac = ac || new (window.AudioContext || window.webkitAudioContext)(); var t0 = ac.currentTime + .005; n.forEach(function (x) { var os = ac.createOscillator(), g = ac.createGain(); os.type = x[2]; os.frequency.setValueAtTime(x[0], t0); if (x[4]) os.frequency.exponentialRampToValueAtTime(x[0] * x[4], t0 + x[1]); g.gain.setValueAtTime(.0001, t0); g.gain.exponentialRampToValueAtTime(x[3], t0 + .004); g.gain.exponentialRampToValueAtTime(.0001, t0 + x[1]); os.connect(g); g.connect(ac.destination); os.start(t0); os.stop(t0 + x[1] + .02); }); } catch (er) {} }
       root.addEventListener('click', function (e) {
         var t = e.target; if (o.paused && o.paused()) return;
+        if (t.closest && t.closest('button, [data-to], [data-tog], [data-check], [data-pick], [data-chip], [data-plan], [data-like], [data-play], summary')) beep();
         var tog = t.closest('[data-tog]'); if (tog) { tog.classList.toggle('on'); tog.setAttribute('aria-checked', tog.classList.contains('on') ? 'true' : 'false'); return; }
         var chk = t.closest('[data-check]'); if (chk) { chk.classList.toggle('done'); return; }
         var chip = t.closest('[data-chip]'); if (chip) { Array.prototype.forEach.call(chip.parentNode.children, function (c) { c.classList.toggle('on', c === chip); }); return; }
@@ -432,7 +441,7 @@
     doc = normalize(doc); const say = s => ({ doc: normalize(doc), say: s });
     if (!op || typeof op !== 'object') return say('');
     const O = op.op;
-    if (O === 'theme') { const s = op.set || {}; doc.theme = normTheme(Object.assign({}, doc.theme, s, { preset: '' })); return say('Updated the look.'); }
+    if (O === 'theme') { const s = op.set || {}; doc.theme = normTheme(Object.assign({}, doc.theme, s, { preset: '' })); if ('sound' in s && Object.keys(s).length === 1) { if (!s.sound) delete doc.theme.sound; return say(s.sound ? `Every tap now plays a short “${s.sound}” sound. Say “no tap sounds” to turn it off.` : 'Taps are silent again.'); } return say('Updated the look.'); }
     if (O === 'preset') { const pr = PRESETS.find(x => x.id === op.id); if (!pr) return say('That look is not in the list.'); doc.theme = normTheme(Object.assign({}, pr.theme, { preset: pr.id })); return say(`Switched to the ${pr.name} look.`); }
     if (O === 'platform') { doc.platform = op.platform === 'android' ? 'android' : 'ios'; return say(doc.platform === 'android' ? 'Using the Android look.' : 'Using the iPhone look.'); }
     if (O === 'rename') { doc.name = str(op.name, 48) || doc.name; return say(`Renamed the app to ${doc.name}.`); }
@@ -488,7 +497,10 @@ ${screens}
   }
   const FEATHER = { home: 'home', search: 'search', plus: 'plus', user: 'user', users: 'users', settings: 'settings', heart: 'heart', chat: 'message-circle', bell: 'bell', cart: 'shopping-cart', calendar: 'calendar', chart: 'bar-chart-2', check: 'check', play: 'play', pause: 'pause', star: 'star', book: 'book', pin: 'map-pin', clock: 'clock', flame: 'zap', leaf: 'feather', dumbbell: 'activity', wallet: 'credit-card', music: 'music', image: 'image', back: 'chevron-left', chevron: 'chevron-right', more: 'more-horizontal', close: 'x', lock: 'lock', mail: 'mail', gift: 'gift', list: 'list', grid: 'grid', sun: 'sun', moon: 'moon', bookmark: 'bookmark', share: 'share', filter: 'filter', camera: 'camera', trophy: 'award', game: 'play-circle', edit: 'edit-2', trash: 'trash-2', send: 'send', mic: 'mic', globe: 'globe', coffee: 'coffee', food: 'coffee', target: 'target', tag: 'tag', bolt: 'zap', sparkle: 'star', note: 'file-text', plane: 'navigation', house: 'home', ticket: 'tag', soup: 'coffee', fish: 'anchor', mountain: 'triangle', car: 'truck', wave: 'wind' };
   function expo(doc) {
-    doc = normalize(doc); const k = palette(doc.theme), t = normTheme(doc.theme), [rc, rs, rb] = RADII[t.radius], [g, pd] = DENS[t.density];
+    doc = normalize(doc);
+    // parts from appcreator-parts.js have no native code: the export draws each as the plainer part it names, same words
+    if (PARTS && PARTS.basic) for (const s of doc.screens) s.blocks = s.blocks.map(bk => { if (!PARTS.BLOCKS[bk.type]) return bk; const r = PARTS.basic(bk.type, bk.props); return r ? { ...bk, type: r.type, props: Object.assign(clone(D.DEFAULTS[r.type] || {}), r.props) } : bk; });
+    const k = palette(doc.theme), t = normTheme(doc.theme), [rc, rs, rb] = RADII[t.radius], [g, pd] = DENS[t.density];
     const sl = slug(doc.name) || 'app';
     const pkg = JSON.stringify({ name: sl, version: '1.0.0', main: 'node_modules/expo/AppEntry.js', private: true, scripts: { start: 'expo start', android: 'expo start --android', ios: 'expo start --ios', web: 'expo start --web' }, dependencies: { expo: '~52.0.0', 'expo-status-bar': '~2.0.0', '@expo/vector-icons': '^14.0.0', react: '18.3.1', 'react-native': '0.76.5' } }, null, 2);
     const appJson = JSON.stringify({ expo: { name: doc.name, slug: sl, version: '1.0.0', orientation: 'portrait', userInterfaceStyle: t.mode === 'dark' ? 'dark' : 'light', backgroundColor: k.bg, ios: { supportsTablet: false }, android: {} } }, null, 2);

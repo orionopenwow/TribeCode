@@ -428,6 +428,10 @@ const LK = C.length;
 for (const [ctx, t, i, s] of require('./flint-eval/launch.js')) C.push({ t, i, s: s || undefined, ctx });
 for (let i = LK; i < C.length; i++) C[i].v = 'lk';
 
+// ---- feat/asset-libs: the design library, the newer backgrounds, the new App Creator parts, screens and tap sounds ----
+const AS0 = C.length;
+for (const [ctx, t, i, s] of require('./flint-eval/assets.js')) C.push({ t, i, s: s || undefined, ctx });
+for (let i = AS0; i < C.length; i++) C[i].v = 'as';
 // ---- App Creator (app/ui/appcreator.js): make an app from a sentence; kits, parts, links and the look inside it ----
 const AC = C.length;
 for (const [ctx, t, i, s] of require('./flint-eval/appcreator.js')) C.push({ t, i, s: s || undefined, ctx });

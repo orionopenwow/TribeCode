@@ -470,6 +470,12 @@
     if (id === 'market.search') { go('market'); setTimeout(() => { const i = document.querySelector('#mk-q, .mk-search input, [data-mk-search]'); if (i && sl.q) { i.value = sl.q; i.dispatchEvent(new Event('input', { bubbles: true })); } }, 350); return { text: T('market', { q: sl.q ? ` · “${sl.q}”` : '' }) }; }
     if (id === 'trending') { go('trending'); return { text: T('trending') }; }
     if (id === 'studio.open') { if (window.TribeStudios) window.TribeStudios.open(String(sl.app || '').toLowerCase()); return { text: T('opened', { x: sl.app }) }; }
+    if (id === 'library.open') {   // feat/asset-libs: the design library
+      const L = window.TribeAssetLib; if (!L) return legacy(s.text);
+      const k = String(sl.kind || '').toLowerCase(), kind = /colou?r|palette/.test(k) ? 'palette' : /font/.test(k) ? 'font' : /icon/.test(k) ? 'icon' : /sound/.test(k) ? 'sound' : /picture|illustration/.test(k) ? 'picture' : /background/.test(k) ? 'background' : /feel|motion/.test(k) ? 'motion' : /part/.test(k) ? 'part' : /screen/.test(k) ? 'screen' : /section/.test(k) ? 'section' : '';
+      if (sl.q) { const q = String(sl.q).toLowerCase().replace(/\s+/g, '-'), hit = L.list('sound', q)[0] || L.list('sound', String(sl.q))[0]; if (hit) { L.play(hit.id); L.open({ kind: 'sound', q: String(sl.q) }); return { text: `${T('Playing')} “${hit.name}”. ${T('More sounds are in the design library.')}` }; } }
+      L.open({ kind: kind || (sl.q ? 'sound' : ''), q: sl.q || '' }); return { text: T('opened', { x: 'Design library' }) };
+    }
     if (id === 'asset.add') return legacy(s.text);
     if (id === 'find') {   // feat/flint-meaning: by meaning first (docs, tasks, chat, files, Versions), then the plain search
       const TM = window.TribeMeaning, FMd = window.TribeFlintModel;

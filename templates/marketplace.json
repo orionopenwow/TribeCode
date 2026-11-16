@@ -15647,6 +15647,530 @@
       "source": "https://github.com/orionopenwow/TribeCode/blob/main/app/ui/appcreator-data.js",
       "docs": "https://github.com/orionopenwow/TribeCode/blob/main/docs/APP-CREATOR.md",
       "verified": "2026-11-15 bundled"
+    },
+    {
+      "id": "ap-pal-pastel",
+      "kind": "asset-pack",
+      "title": "Pastel palettes",
+      "summary": "Six soft palettes for calm apps and sites: powder, butter, pistachio, lilac, shell and sky.",
+      "tags": [
+        "assets",
+        "colours",
+        "palette",
+        "design"
+      ],
+      "for": [
+        "site",
+        "app",
+        "game"
+      ],
+      "assetKind": "palette",
+      "ref": "palettes",
+      "license": "CC0-1.0",
+      "score": 70,
+      "added": "2026-11-15",
+      "seat": "design",
+      "author": "TribeCode",
+      "source": "https://github.com/orionopenwow/TribeCode/blob/main/templates/marketplace.json",
+      "docs": "https://github.com/orionopenwow/TribeCode#readme",
+      "verified": "2026-11-15 bundled",
+      "lib": [
+        {
+          "kind": "palette",
+          "id": "powder",
+          "name": "Powder",
+          "tags": "pastel soft",
+          "license": "CC0-1.0",
+          "source": "Made for TribeCode",
+          "palette": {
+            "accent": "#8FB8DE",
+            "ink": "#1F2A36",
+            "bg": "#F7FAFD",
+            "more": [
+              "#D6E6F5",
+              "#4E7AA3"
+            ]
+          }
+        },
+        {
+          "kind": "palette",
+          "id": "butter",
+          "name": "Butter",
+          "tags": "pastel warm",
+          "license": "CC0-1.0",
+          "source": "Made for TribeCode",
+          "palette": {
+            "accent": "#F2C94C",
+            "ink": "#2E2814",
+            "bg": "#FFFCF0",
+            "more": [
+              "#FBEBB5",
+              "#8E7114"
+            ]
+          }
+        },
+        {
+          "kind": "palette",
+          "id": "pistachio",
+          "name": "Pistachio",
+          "tags": "pastel fresh",
+          "license": "CC0-1.0",
+          "source": "Made for TribeCode",
+          "palette": {
+            "accent": "#A8C686",
+            "ink": "#25301C",
+            "bg": "#F8FBF4",
+            "more": [
+              "#DCEAC9",
+              "#5E7B3F"
+            ]
+          }
+        },
+        {
+          "kind": "palette",
+          "id": "lilac",
+          "name": "Lilac",
+          "tags": "pastel soft",
+          "license": "CC0-1.0",
+          "source": "Made for TribeCode",
+          "palette": {
+            "accent": "#B9A2E8",
+            "ink": "#251F33",
+            "bg": "#FAF8FF",
+            "more": [
+              "#E5DBFA",
+              "#6C55A8"
+            ]
+          }
+        },
+        {
+          "kind": "palette",
+          "id": "shell",
+          "name": "Shell",
+          "tags": "pastel warm",
+          "license": "CC0-1.0",
+          "source": "Made for TribeCode",
+          "palette": {
+            "accent": "#F4B8A8",
+            "ink": "#33221E",
+            "bg": "#FFF8F5",
+            "more": [
+              "#FBDDD3",
+              "#A65F4E"
+            ]
+          }
+        },
+        {
+          "kind": "palette",
+          "id": "pastel-sky",
+          "name": "Pastel sky",
+          "tags": "pastel cool",
+          "license": "CC0-1.0",
+          "source": "Made for TribeCode",
+          "palette": {
+            "accent": "#9FD3F0",
+            "ink": "#172B36",
+            "bg": "#F5FBFE",
+            "more": [
+              "#D5ECF9",
+              "#3F86AD"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "ap-pal-dark",
+      "kind": "asset-pack",
+      "title": "Dark mode palettes",
+      "summary": "Six palettes made for dark screens with readable text: night teal, ember dusk, deep violet, graphite lime, navy gold and charcoal rose.",
+      "tags": [
+        "assets",
+        "colours",
+        "palette",
+        "design"
+      ],
+      "for": [
+        "site",
+        "app",
+        "game"
+      ],
+      "assetKind": "palette",
+      "ref": "palettes",
+      "license": "CC0-1.0",
+      "score": 70,
+      "added": "2026-11-15",
+      "seat": "design",
+      "author": "TribeCode",
+      "source": "https://github.com/orionopenwow/TribeCode/blob/main/templates/marketplace.json",
+      "docs": "https://github.com/orionopenwow/TribeCode#readme",
+      "verified": "2026-11-15 bundled",
+      "lib": [
+        {
+          "kind": "palette",
+          "id": "night-teal",
+          "name": "Night teal",
+          "tags": "dark fresh",
+          "license": "CC0-1.0",
+          "source": "Made for TribeCode",
+          "palette": {
+            "accent": "#3DD6C0",
+            "ink": "#E4F5F2",
+            "bg": "#0E1A1C",
+            "more": [
+              "#18302F",
+              "#7FA8FF"
+            ]
+          }
+        },
+        {
+          "kind": "palette",
+          "id": "ember-dusk",
+          "name": "Ember dusk",
+          "tags": "dark warm",
+          "license": "CC0-1.0",
+          "source": "Made for TribeCode",
+          "palette": {
+            "accent": "#FF8A3D",
+            "ink": "#F3E8E1",
+            "bg": "#16120F",
+            "more": [
+              "#2A211B",
+              "#C9A27E"
+            ]
+          }
+        },
+        {
+          "kind": "palette",
+          "id": "deep-violet",
+          "name": "Deep violet",
+          "tags": "dark bold",
+          "license": "CC0-1.0",
+          "source": "Made for TribeCode",
+          "palette": {
+            "accent": "#A68BFF",
+            "ink": "#ECE8FA",
+            "bg": "#120F1E",
+            "more": [
+              "#231D38",
+              "#FF7EB6"
+            ]
+          }
+        },
+        {
+          "kind": "palette",
+          "id": "graphite-lime",
+          "name": "Graphite lime",
+          "tags": "dark bright",
+          "license": "CC0-1.0",
+          "source": "Made for TribeCode",
+          "palette": {
+            "accent": "#B6F24A",
+            "ink": "#EDF5E1",
+            "bg": "#121411",
+            "more": [
+              "#22261F",
+              "#6FA8FF"
+            ]
+          }
+        },
+        {
+          "kind": "palette",
+          "id": "navy-gold",
+          "name": "Navy gold",
+          "tags": "dark calm",
+          "license": "CC0-1.0",
+          "source": "Made for TribeCode",
+          "palette": {
+            "accent": "#F2C14E",
+            "ink": "#EEF1F7",
+            "bg": "#0D1526",
+            "more": [
+              "#1B2741",
+              "#7FB2E5"
+            ]
+          }
+        },
+        {
+          "kind": "palette",
+          "id": "charcoal-rose",
+          "name": "Charcoal rose",
+          "tags": "dark soft",
+          "license": "CC0-1.0",
+          "source": "Made for TribeCode",
+          "palette": {
+            "accent": "#FF8FAB",
+            "ink": "#F5E9EC",
+            "bg": "#171315",
+            "more": [
+              "#2A2326",
+              "#B9A1A8"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "ap-pal-earth",
+      "kind": "asset-pack",
+      "title": "Earth tone palettes",
+      "summary": "Six grounded palettes: sandstone, cedar, river clay, lichen, adobe and basalt.",
+      "tags": [
+        "assets",
+        "colours",
+        "palette",
+        "design"
+      ],
+      "for": [
+        "site",
+        "app",
+        "game"
+      ],
+      "assetKind": "palette",
+      "ref": "palettes",
+      "license": "CC0-1.0",
+      "score": 70,
+      "added": "2026-11-15",
+      "seat": "design",
+      "author": "TribeCode",
+      "source": "https://github.com/orionopenwow/TribeCode/blob/main/templates/marketplace.json",
+      "docs": "https://github.com/orionopenwow/TribeCode#readme",
+      "verified": "2026-11-15 bundled",
+      "lib": [
+        {
+          "kind": "palette",
+          "id": "sandstone",
+          "name": "Sandstone",
+          "tags": "earthy warm",
+          "license": "CC0-1.0",
+          "source": "Made for TribeCode",
+          "palette": {
+            "accent": "#C9915C",
+            "ink": "#2F261D",
+            "bg": "#FAF5EE",
+            "more": [
+              "#EAD7C0",
+              "#7E5530"
+            ]
+          }
+        },
+        {
+          "kind": "palette",
+          "id": "cedar",
+          "name": "Cedar",
+          "tags": "earthy deep",
+          "license": "CC0-1.0",
+          "source": "Made for TribeCode",
+          "palette": {
+            "accent": "#8C5A3C",
+            "ink": "#271D17",
+            "bg": "#F6F0EA",
+            "more": [
+              "#DCC7B6",
+              "#4C2F1F"
+            ]
+          }
+        },
+        {
+          "kind": "palette",
+          "id": "river-clay",
+          "name": "River clay",
+          "tags": "earthy calm",
+          "license": "CC0-1.0",
+          "source": "Made for TribeCode",
+          "palette": {
+            "accent": "#A7775A",
+            "ink": "#2B2420",
+            "bg": "#F5EFEA",
+            "more": [
+              "#DECBBE",
+              "#6A4A37"
+            ]
+          }
+        },
+        {
+          "kind": "palette",
+          "id": "lichen",
+          "name": "Lichen",
+          "tags": "nature calm",
+          "license": "CC0-1.0",
+          "source": "Made for TribeCode",
+          "palette": {
+            "accent": "#9AA65B",
+            "ink": "#262A1A",
+            "bg": "#F7F8F0",
+            "more": [
+              "#DDE2BD",
+              "#5A6330"
+            ]
+          }
+        },
+        {
+          "kind": "palette",
+          "id": "adobe",
+          "name": "Adobe",
+          "tags": "earthy warm",
+          "license": "CC0-1.0",
+          "source": "Made for TribeCode",
+          "palette": {
+            "accent": "#C2643F",
+            "ink": "#2D201B",
+            "bg": "#FAF2EC",
+            "more": [
+              "#EBC8B6",
+              "#7A3A22"
+            ]
+          }
+        },
+        {
+          "kind": "palette",
+          "id": "basalt",
+          "name": "Basalt",
+          "tags": "earthy dark",
+          "license": "CC0-1.0",
+          "source": "Made for TribeCode",
+          "palette": {
+            "accent": "#C79A6B",
+            "ink": "#EDE6DE",
+            "bg": "#1A1816",
+            "more": [
+              "#2E2A27",
+              "#8C8279"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "ap-pal-brights",
+      "kind": "asset-pack",
+      "title": "Bright palettes",
+      "summary": "Six loud palettes for games, events and launches: electric, citrus, flamingo, cobalt, jungle and tangerine.",
+      "tags": [
+        "assets",
+        "colours",
+        "palette",
+        "design"
+      ],
+      "for": [
+        "site",
+        "app",
+        "game"
+      ],
+      "assetKind": "palette",
+      "ref": "palettes",
+      "license": "CC0-1.0",
+      "score": 70,
+      "added": "2026-11-15",
+      "seat": "design",
+      "author": "TribeCode",
+      "source": "https://github.com/orionopenwow/TribeCode/blob/main/templates/marketplace.json",
+      "docs": "https://github.com/orionopenwow/TribeCode#readme",
+      "verified": "2026-11-15 bundled",
+      "lib": [
+        {
+          "kind": "palette",
+          "id": "electric",
+          "name": "Electric",
+          "tags": "bright bold",
+          "license": "CC0-1.0",
+          "source": "Made for TribeCode",
+          "palette": {
+            "accent": "#2D5BFF",
+            "ink": "#0E1433",
+            "bg": "#F5F7FF",
+            "more": [
+              "#FFD60A",
+              "#FF3D7F"
+            ]
+          }
+        },
+        {
+          "kind": "palette",
+          "id": "citrus",
+          "name": "Citrus",
+          "tags": "bright fresh",
+          "license": "CC0-1.0",
+          "source": "Made for TribeCode",
+          "palette": {
+            "accent": "#FFB000",
+            "ink": "#2A2208",
+            "bg": "#FFFBEF",
+            "more": [
+              "#7ED321",
+              "#FF5E1A"
+            ]
+          }
+        },
+        {
+          "kind": "palette",
+          "id": "flamingo",
+          "name": "Flamingo",
+          "tags": "bright warm",
+          "license": "CC0-1.0",
+          "source": "Made for TribeCode",
+          "palette": {
+            "accent": "#FF4F8B",
+            "ink": "#2E1220",
+            "bg": "#FFF4F8",
+            "more": [
+              "#FFC93C",
+              "#3ED1C8"
+            ]
+          }
+        },
+        {
+          "kind": "palette",
+          "id": "cobalt",
+          "name": "Cobalt",
+          "tags": "bright cool",
+          "license": "CC0-1.0",
+          "source": "Made for TribeCode",
+          "palette": {
+            "accent": "#0047AB",
+            "ink": "#0B1530",
+            "bg": "#F2F6FD",
+            "more": [
+              "#FF9F1C",
+              "#2EC4B6"
+            ]
+          }
+        },
+        {
+          "kind": "palette",
+          "id": "jungle",
+          "name": "Jungle",
+          "tags": "bright nature",
+          "license": "CC0-1.0",
+          "source": "Made for TribeCode",
+          "palette": {
+            "accent": "#00A86B",
+            "ink": "#0E2A1E",
+            "bg": "#F2FBF6",
+            "more": [
+              "#FFC300",
+              "#FF5733"
+            ]
+          }
+        },
+        {
+          "kind": "palette",
+          "id": "tangerine",
+          "name": "Tangerine",
+          "tags": "bright warm",
+          "license": "CC0-1.0",
+          "source": "Made for TribeCode",
+          "palette": {
+            "accent": "#FF7F11",
+            "ink": "#2D1A06",
+            "bg": "#FFF7EF",
+            "more": [
+              "#2E86DE",
+              "#10AC84"
+            ]
+          }
+        }
+      ]
     }
   ]
 }

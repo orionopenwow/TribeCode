@@ -12794,6 +12794,1075 @@
    "v": "lk"
   },
   {
+   "t": "add a sparkle background",
+   "i": "site.fx",
+   "s": {
+    "op": "add",
+    "kind": "sparkle"
+   },
+   "ctx": "s",
+   "v": "as"
+  },
+  {
+   "t": "put sparkles behind the header",
+   "i": "site.fx",
+   "s": {
+    "op": "add",
+    "kind": "sparkle",
+    "block": "header"
+   },
+   "ctx": "s",
+   "v": "as"
+  },
+  {
+   "t": "add a snow background",
+   "i": "site.fx",
+   "s": {
+    "op": "add",
+    "kind": "snow"
+   },
+   "ctx": "s",
+   "v": "as"
+  },
+  {
+   "t": "make it snow in the background",
+   "i": "site.fx",
+   "s": {
+    "op": "add",
+    "kind": "snow"
+   },
+   "ctx": "s",
+   "v": "as"
+  },
+  {
+   "t": "put confetti behind the header",
+   "i": "site.fx",
+   "s": {
+    "op": "add",
+    "kind": "confetti",
+    "block": "header"
+   },
+   "ctx": "s",
+   "v": "as"
+  },
+  {
+   "t": "confetti background please",
+   "i": "site.fx",
+   "s": {
+    "op": "add",
+    "kind": "confetti"
+   },
+   "ctx": "s",
+   "v": "as"
+  },
+  {
+   "t": "use the aurora background",
+   "i": "site.fx",
+   "s": {
+    "op": "add",
+    "kind": "aurora"
+   },
+   "ctx": "s",
+   "v": "as"
+  },
+  {
+   "t": "northern lights behind the hero",
+   "i": "site.fx",
+   "s": {
+    "op": "add",
+    "kind": "aurora",
+    "block": "hero"
+   },
+   "ctx": "s",
+   "v": "as"
+  },
+  {
+   "t": "add a rain background",
+   "i": "site.fx",
+   "s": {
+    "op": "add",
+    "kind": "rain"
+   },
+   "ctx": "s",
+   "v": "as"
+  },
+  {
+   "t": "add fireflies behind the footer",
+   "i": "site.fx",
+   "s": {
+    "op": "add",
+    "kind": "fireflies",
+    "block": "footer"
+   },
+   "ctx": "s",
+   "v": "as"
+  },
+  {
+   "t": "add bubbles to the background",
+   "i": "site.fx",
+   "s": {
+    "op": "add",
+    "kind": "bubbles"
+   },
+   "ctx": "s",
+   "v": "as"
+  },
+  {
+   "t": "put code rain behind the hero",
+   "i": "site.fx",
+   "s": {
+    "op": "add",
+    "kind": "coderain",
+    "block": "hero"
+   },
+   "ctx": "s",
+   "v": "as"
+  },
+  {
+   "t": "matrix style background",
+   "i": "site.fx",
+   "s": {
+    "op": "add",
+    "kind": "coderain"
+   },
+   "ctx": "s",
+   "v": "as"
+  },
+  {
+   "t": "add a synthwave grid background",
+   "i": "site.fx",
+   "s": {
+    "op": "add",
+    "kind": "grid"
+   },
+   "ctx": "s",
+   "v": "as"
+  },
+  {
+   "t": "add a retro grid behind the header",
+   "i": "site.fx",
+   "s": {
+    "op": "add",
+    "kind": "grid",
+    "block": "header"
+   },
+   "ctx": "s",
+   "v": "as"
+  },
+  {
+   "t": "add a contour lines background",
+   "i": "site.fx",
+   "s": {
+    "op": "add",
+    "kind": "contour"
+   },
+   "ctx": "s",
+   "v": "as"
+  },
+  {
+   "t": "lava lamp blobs in the background",
+   "i": "site.fx",
+   "s": {
+    "op": "add",
+    "kind": "blobs"
+   },
+   "ctx": "s",
+   "v": "as"
+  },
+  {
+   "t": "add wave lines behind the hero",
+   "i": "site.fx",
+   "s": {
+    "op": "add",
+    "kind": "waves",
+    "block": "hero"
+   },
+   "ctx": "s",
+   "v": "as"
+  },
+  {
+   "t": "add a pool light background",
+   "i": "site.fx",
+   "s": {
+    "op": "add",
+    "kind": "caustics"
+   },
+   "ctx": "s",
+   "v": "as"
+  },
+  {
+   "t": "underwater light behind the contact section",
+   "i": "site.fx",
+   "s": {
+    "op": "add",
+    "kind": "caustics",
+    "block": "contact"
+   },
+   "ctx": "s",
+   "v": "as"
+  },
+  {
+   "t": "add a halftone background",
+   "i": "site.fx",
+   "s": {
+    "op": "add",
+    "kind": "halftone"
+   },
+   "ctx": "s",
+   "v": "as"
+  },
+  {
+   "t": "add sliding stripes behind the cta",
+   "i": "site.fx",
+   "s": {
+    "op": "add",
+    "kind": "stripes",
+    "block": "cta"
+   },
+   "ctx": "s",
+   "v": "as"
+  },
+  {
+   "t": "add a sunburst background",
+   "i": "site.fx",
+   "s": {
+    "op": "add",
+    "kind": "sunburst"
+   },
+   "ctx": "s",
+   "v": "as"
+  },
+  {
+   "t": "add a spiral background",
+   "i": "site.fx",
+   "s": {
+    "op": "add",
+    "kind": "spiral"
+   },
+   "ctx": "s",
+   "v": "as"
+  },
+  {
+   "t": "add a tunnel background",
+   "i": "site.fx",
+   "s": {
+    "op": "add",
+    "kind": "tunnel"
+   },
+   "ctx": "s",
+   "v": "as"
+  },
+  {
+   "t": "desert dunes in the background",
+   "i": "site.fx",
+   "s": {
+    "op": "add",
+    "kind": "dunes"
+   },
+   "ctx": "s",
+   "v": "as"
+  },
+  {
+   "t": "add clouds to the background",
+   "i": "site.fx",
+   "s": {
+    "op": "add",
+    "kind": "clouds"
+   },
+   "ctx": "s",
+   "v": "as"
+  },
+  {
+   "t": "add an ink background",
+   "i": "site.fx",
+   "s": {
+    "op": "add",
+    "kind": "ink"
+   },
+   "ctx": "s",
+   "v": "as"
+  },
+  {
+   "t": "add a marble background",
+   "i": "site.fx",
+   "s": {
+    "op": "add",
+    "kind": "marble"
+   },
+   "ctx": "s",
+   "v": "as"
+  },
+  {
+   "t": "add scanlines behind the hero",
+   "i": "site.fx",
+   "s": {
+    "op": "add",
+    "kind": "scanlines",
+    "block": "hero"
+   },
+   "ctx": "s",
+   "v": "as"
+  },
+  {
+   "t": "add a honeycomb background",
+   "i": "site.fx",
+   "s": {
+    "op": "add",
+    "kind": "hexes"
+   },
+   "ctx": "s",
+   "v": "as"
+  },
+  {
+   "t": "add a pencil hatch background",
+   "i": "site.fx",
+   "s": {
+    "op": "add",
+    "kind": "hatch"
+   },
+   "ctx": "s",
+   "v": "as"
+  },
+  {
+   "t": "add a checkerboard background",
+   "i": "site.fx",
+   "s": {
+    "op": "add",
+    "kind": "checker"
+   },
+   "ctx": "s",
+   "v": "as"
+  },
+  {
+   "t": "add a mesh gradient background",
+   "i": "site.fx",
+   "s": {
+    "op": "add",
+    "kind": "colorfield"
+   },
+   "ctx": "s",
+   "v": "as"
+  },
+  {
+   "t": "add ridge lines behind the hero",
+   "i": "site.fx",
+   "s": {
+    "op": "add",
+    "kind": "ridges",
+    "block": "hero"
+   },
+   "ctx": "s",
+   "v": "as"
+  },
+  {
+   "t": "add a radar background",
+   "i": "site.fx",
+   "s": {
+    "op": "add",
+    "kind": "radar"
+   },
+   "ctx": "s",
+   "v": "as"
+  },
+  {
+   "t": "add a bokeh background",
+   "i": "site.fx",
+   "s": {
+    "op": "add",
+    "kind": "bokeh"
+   },
+   "ctx": "s",
+   "v": "as"
+  },
+  {
+   "t": "add film grain to the background",
+   "i": "site.fx",
+   "s": {
+    "op": "add",
+    "kind": "grain"
+   },
+   "ctx": "s",
+   "v": "as"
+  },
+  {
+   "t": "add chevrons to the background",
+   "i": "site.fx",
+   "s": {
+    "op": "add",
+    "kind": "zigzag"
+   },
+   "ctx": "s",
+   "v": "as"
+  },
+  {
+   "t": "add a circuit board background",
+   "i": "site.fx",
+   "s": {
+    "op": "add",
+    "kind": "circuit"
+   },
+   "ctx": "s",
+   "v": "as"
+  },
+  {
+   "t": "add light beams behind the header",
+   "i": "site.fx",
+   "s": {
+    "op": "add",
+    "kind": "beams",
+    "block": "header"
+   },
+   "ctx": "s",
+   "v": "as"
+  },
+  {
+   "t": "add an equalizer background",
+   "i": "site.fx",
+   "s": {
+    "op": "add",
+    "kind": "equalizer"
+   },
+   "ctx": "s",
+   "v": "as"
+  },
+  {
+   "t": "add orbits to the background",
+   "i": "site.fx",
+   "s": {
+    "op": "add",
+    "kind": "orbits"
+   },
+   "ctx": "s",
+   "v": "as"
+  },
+  {
+   "t": "add a pendulum background",
+   "i": "site.fx",
+   "s": {
+    "op": "add",
+    "kind": "pendulum"
+   },
+   "ctx": "s",
+   "v": "as"
+  },
+  {
+   "t": "add a flow field background",
+   "i": "site.fx",
+   "s": {
+    "op": "add",
+    "kind": "flow"
+   },
+   "ctx": "s",
+   "v": "as"
+  },
+  {
+   "t": "add a looping curve background",
+   "i": "site.fx",
+   "s": {
+    "op": "add",
+    "kind": "lissajous"
+   },
+   "ctx": "s",
+   "v": "as"
+  },
+  {
+   "t": "add a 3d globe behind the hero",
+   "i": "site.fx",
+   "s": {
+    "op": "add",
+    "kind": "sphere",
+    "block": "hero"
+   },
+   "ctx": "s",
+   "v": "as"
+  },
+  {
+   "t": "add water drops to the background",
+   "i": "site.fx",
+   "s": {
+    "op": "add",
+    "kind": "drops"
+   },
+   "ctx": "s",
+   "v": "as"
+  },
+  {
+   "t": "add a weather card",
+   "i": "app.block",
+   "s": {
+    "type": "weather"
+   },
+   "ctx": "a",
+   "v": "as"
+  },
+  {
+   "t": "add a countdown",
+   "i": "app.block",
+   "s": {
+    "type": "countdown"
+   },
+   "ctx": "a",
+   "v": "as"
+  },
+  {
+   "t": "add a segmented control",
+   "i": "app.block",
+   "s": {
+    "type": "segmented"
+   },
+   "ctx": "a",
+   "v": "as"
+  },
+  {
+   "t": "add a slider",
+   "i": "app.block",
+   "s": {
+    "type": "slider"
+   },
+   "ctx": "a",
+   "v": "as"
+  },
+  {
+   "t": "add a star rating",
+   "i": "app.block",
+   "s": {
+    "type": "rating"
+   },
+   "ctx": "a",
+   "v": "as"
+  },
+  {
+   "t": "add a progress bar",
+   "i": "app.block",
+   "s": {
+    "type": "progress"
+   },
+   "ctx": "a",
+   "v": "as"
+  },
+  {
+   "t": "add story circles",
+   "i": "app.block",
+   "s": {
+    "type": "stories"
+   },
+   "ctx": "a",
+   "v": "as"
+  },
+  {
+   "t": "add a quote",
+   "i": "app.block",
+   "s": {
+    "type": "quote"
+   },
+   "ctx": "a",
+   "v": "as"
+  },
+  {
+   "t": "add a notice",
+   "i": "app.block",
+   "s": {
+    "type": "alert"
+   },
+   "ctx": "a",
+   "v": "as"
+  },
+  {
+   "t": "add an accordion",
+   "i": "app.block",
+   "s": {
+    "type": "accordion"
+   },
+   "ctx": "a",
+   "v": "as"
+  },
+  {
+   "t": "add a photo carousel",
+   "i": "app.block",
+   "s": {
+    "type": "carousel"
+   },
+   "ctx": "a",
+   "v": "as"
+  },
+  {
+   "t": "add a product card",
+   "i": "app.block",
+   "s": {
+    "type": "product"
+   },
+   "ctx": "a",
+   "v": "as"
+  },
+  {
+   "t": "add a receipt",
+   "i": "app.block",
+   "s": {
+    "type": "receipt"
+   },
+   "ctx": "a",
+   "v": "as"
+  },
+  {
+   "t": "add an order tracker",
+   "i": "app.block",
+   "s": {
+    "type": "tracker"
+   },
+   "ctx": "a",
+   "v": "as"
+  },
+  {
+   "t": "add activity rings",
+   "i": "app.block",
+   "s": {
+    "type": "rings"
+   },
+   "ctx": "a",
+   "v": "as"
+  },
+  {
+   "t": "add a table",
+   "i": "app.block",
+   "s": {
+    "type": "table"
+   },
+   "ctx": "a",
+   "v": "as"
+  },
+  {
+   "t": "add tags",
+   "i": "app.block",
+   "s": {
+    "type": "tags"
+   },
+   "ctx": "a",
+   "v": "as"
+  },
+  {
+   "t": "add a contact card",
+   "i": "app.block",
+   "s": {
+    "type": "contact"
+   },
+   "ctx": "a",
+   "v": "as"
+  },
+  {
+   "t": "add code boxes",
+   "i": "app.block",
+   "s": {
+    "type": "otp"
+   },
+   "ctx": "a",
+   "v": "as"
+  },
+  {
+   "t": "add a number pad",
+   "i": "app.block",
+   "s": {
+    "type": "keypad"
+   },
+   "ctx": "a",
+   "v": "as"
+  },
+  {
+   "t": "add a color picker",
+   "i": "app.block",
+   "s": {
+    "type": "swatches"
+   },
+   "ctx": "a",
+   "v": "as"
+  },
+  {
+   "t": "add comments",
+   "i": "app.block",
+   "s": {
+    "type": "comments"
+   },
+   "ctx": "a",
+   "v": "as"
+  },
+  {
+   "t": "add a notification card",
+   "i": "app.block",
+   "s": {
+    "type": "notice"
+   },
+   "ctx": "a",
+   "v": "as"
+  },
+  {
+   "t": "add a coupon",
+   "i": "app.kit",
+   "s": {
+    "kit": "coupon"
+   },
+   "ctx": "a",
+   "v": "as"
+  },
+  {
+   "t": "add a poll",
+   "i": "app.block",
+   "s": {
+    "type": "poll"
+   },
+   "ctx": "a",
+   "v": "as"
+  },
+  {
+   "t": "add a voice note",
+   "i": "app.block",
+   "s": {
+    "type": "voice"
+   },
+   "ctx": "a",
+   "v": "as"
+  },
+  {
+   "t": "add a video player",
+   "i": "app.block",
+   "s": {
+    "type": "video"
+   },
+   "ctx": "a",
+   "v": "as"
+  },
+  {
+   "t": "add kanban columns",
+   "i": "app.block",
+   "s": {
+    "type": "kanban"
+   },
+   "ctx": "a",
+   "v": "as"
+  },
+  {
+   "t": "add a hero image",
+   "i": "app.block",
+   "s": {
+    "type": "hero"
+   },
+   "ctx": "a",
+   "v": "as"
+  },
+  {
+   "t": "add switch rows",
+   "i": "app.block",
+   "s": {
+    "type": "toggles"
+   },
+   "ctx": "a",
+   "v": "as"
+  },
+  {
+   "t": "add an order tracker screen",
+   "i": "app.kit",
+   "s": {
+    "kit": "order-tracking"
+   },
+   "ctx": "a",
+   "v": "as"
+  },
+  {
+   "t": "add a product page",
+   "i": "app.kit",
+   "s": {
+    "kit": "product-page"
+   },
+   "ctx": "a",
+   "v": "as"
+  },
+  {
+   "t": "add a reviews screen",
+   "i": "app.kit",
+   "s": {
+    "kit": "reviews"
+   },
+   "ctx": "a",
+   "v": "as"
+  },
+  {
+   "t": "add a verify code screen",
+   "i": "app.kit",
+   "s": {
+    "kit": "verify-code"
+   },
+   "ctx": "a",
+   "v": "as"
+  },
+  {
+   "t": "add a send money screen",
+   "i": "app.kit",
+   "s": {
+    "kit": "send-money"
+   },
+   "ctx": "a",
+   "v": "as"
+  },
+  {
+   "t": "add a weather screen",
+   "i": "app.kit",
+   "s": {
+    "kit": "weather"
+   },
+   "ctx": "a",
+   "v": "as"
+  },
+  {
+   "t": "add an activity screen",
+   "i": "app.kit",
+   "s": {
+    "kit": "activity"
+   },
+   "ctx": "a",
+   "v": "as"
+  },
+  {
+   "t": "add a poll screen",
+   "i": "app.kit",
+   "s": {
+    "kit": "poll"
+   },
+   "ctx": "a",
+   "v": "as"
+  },
+  {
+   "t": "add a task board screen",
+   "i": "app.kit",
+   "s": {
+    "kit": "board"
+   },
+   "ctx": "a",
+   "v": "as"
+  },
+  {
+   "t": "add a help center",
+   "i": "app.kit",
+   "s": {
+    "kit": "help-center"
+   },
+   "ctx": "a",
+   "v": "as"
+  },
+  {
+   "t": "add an offline screen",
+   "i": "app.kit",
+   "s": {
+    "kit": "offline"
+   },
+   "ctx": "a",
+   "v": "as"
+  },
+  {
+   "t": "add an appearance screen",
+   "i": "app.kit",
+   "s": {
+    "kit": "theme-picker"
+   },
+   "ctx": "a",
+   "v": "as"
+  },
+  {
+   "t": "add an event page",
+   "i": "app.kit",
+   "s": {
+    "kit": "event-page"
+   },
+   "ctx": "a",
+   "v": "as"
+  },
+  {
+   "t": "add a set a goal screen",
+   "i": "app.kit",
+   "s": {
+    "kit": "goal-setup"
+   },
+   "ctx": "a",
+   "v": "as"
+  },
+  {
+   "t": "add a what's new screen",
+   "i": "app.kit",
+   "s": {
+    "kit": "whats-new"
+   },
+   "ctx": "a",
+   "v": "as"
+  },
+  {
+   "t": "add notification settings",
+   "i": "app.kit",
+   "s": {
+    "kit": "settings-notify"
+   },
+   "ctx": "a",
+   "v": "as"
+  },
+  {
+   "t": "add a video lesson screen",
+   "i": "app.kit",
+   "s": {
+    "kit": "lesson"
+   },
+   "ctx": "a",
+   "v": "as"
+  },
+  {
+   "t": "add a team contacts screen",
+   "i": "app.kit",
+   "s": {
+    "kit": "team-contacts"
+   },
+   "ctx": "a",
+   "v": "as"
+  },
+  {
+   "t": "play a click sound on tap",
+   "i": "app.theme",
+   "s": {
+    "sound": "click"
+   },
+   "ctx": "a",
+   "v": "as"
+  },
+  {
+   "t": "make buttons pop when you tap them with a sound",
+   "i": "app.theme",
+   "s": {
+    "sound": "pop"
+   },
+   "ctx": "a",
+   "v": "as"
+  },
+  {
+   "t": "add a tap sound to the buttons",
+   "i": "app.theme",
+   "s": {
+    "sound": "tap"
+   },
+   "ctx": "a",
+   "v": "as"
+  },
+  {
+   "t": "no tap sounds",
+   "i": "app.theme",
+   "s": {
+    "sound": ""
+   },
+   "ctx": "a",
+   "v": "as"
+  },
+  {
+   "t": "turn off the button sounds",
+   "i": "app.theme",
+   "s": {
+    "sound": ""
+   },
+   "ctx": "a",
+   "v": "as"
+  },
+  {
+   "t": "open the design library",
+   "i": "library.open",
+   "ctx": "g",
+   "v": "as"
+  },
+  {
+   "t": "design library",
+   "i": "library.open",
+   "ctx": "g",
+   "v": "as"
+  },
+  {
+   "t": "show me the library",
+   "i": "library.open",
+   "ctx": "g",
+   "v": "as"
+  },
+  {
+   "t": "show me the icons in the library",
+   "i": "library.open",
+   "s": {
+    "kind": "icons"
+   },
+   "ctx": "g",
+   "v": "as"
+  },
+  {
+   "t": "browse the backgrounds in the library",
+   "i": "library.open",
+   "s": {
+    "kind": "backgrounds"
+   },
+   "ctx": "g",
+   "v": "as"
+  },
+  {
+   "t": "show me the colours in the library",
+   "i": "library.open",
+   "s": {
+    "kind": "colours"
+   },
+   "ctx": "g",
+   "v": "as"
+  },
+  {
+   "t": "play a click sound",
+   "i": "library.open",
+   "s": {
+    "q": "click"
+   },
+   "ctx": "g",
+   "v": "as"
+  },
+  {
+   "t": "play the success sound",
+   "i": "library.open",
+   "s": {
+    "q": "success"
+   },
+   "ctx": "g",
+   "v": "as"
+  },
+  {
+   "t": "use the sunset palette",
+   "i": "design.palette",
+   "s": {
+    "mood": "sunset"
+   },
+   "ctx": "g",
+   "v": "as"
+  },
+  {
+   "t": "find a rocket icon",
+   "i": "asset.add",
+   "s": {
+    "kind": "icon"
+   },
+   "ctx": "g",
+   "v": "as"
+  },
+  {
+   "t": "add a pricing section",
+   "i": "site.block.add",
+   "s": {
+    "block": "pricing"
+   },
+   "ctx": "s",
+   "v": "as"
+  },
+  {
+   "t": "add a profile screen",
+   "i": "app.kit",
+   "s": {
+    "kit": "profile"
+   },
+   "ctx": "a",
+   "v": "as"
+  },
+  {
    "t": "make me a habit tracker app",
    "i": "app.make",
    "s": {
