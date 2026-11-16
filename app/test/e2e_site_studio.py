@@ -76,6 +76,10 @@ def shot(page, name):
 
 
 def tab(page, name):
+    # pass 3: every panel tab is inside the panel, none hidden off its edge (Check used to need a hidden sideways scroll)
+    off = page.evaluate("""(() => { const t = document.querySelector('.wdz-ptabs'); if (!t) return []; const box = t.getBoundingClientRect();
+      return [...t.querySelectorAll('button')].filter(b => b.offsetWidth).filter(b => { const r = b.getBoundingClientRect(); return r.right > box.right + 1 || r.left < box.left - 1; }).map(b => b.dataset.panel); })()""")
+    assert not off, f"panel tabs off the edge: {off}"
     page.click(f".wdz-ptabs [data-panel={name}]")
     page.wait_for_timeout(250)
 

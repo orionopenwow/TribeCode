@@ -37,6 +37,8 @@
 .shc-probs { font-size: 12px; color: var(--muted); }
 .shc-sp { flex: 1; }
 @media (max-width: 820px) {
+  /* pass 3: the tabs are 40px targets on phones */
+  .shc-tab { min-width: 40px; }
   .shc-cols { grid-template-columns: minmax(0, 1fr); }
   .shc-prev { position: static; }
   .shc-prev canvas { width: 180px; }

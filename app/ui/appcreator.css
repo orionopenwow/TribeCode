@@ -130,6 +130,8 @@ body.apc-open { overflow: hidden; }
 
 @media (max-width: 1180px) { .apc-body { grid-template-columns: 260px 1fr 260px; } }
 @media (max-width: 820px) {
+  /* pass 3: the app name is a 36px target on phones */
+  .apc-name { min-height: 36px; }
   .apc { grid-template-rows: auto 1fr auto; }
   .apc-top { gap: 4px; padding: 6px 8px; min-height: 52px; }
   .apc-title .apc-eyebrow, .apc-saved, .apc-top .apc-seg { display: none; }

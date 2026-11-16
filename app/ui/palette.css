@@ -94,7 +94,7 @@ button.claude[data-give]::before { content: '✨'; }
 #pj-check.hero .ock-card .ock-box { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); border: 0; margin: 0; }
 #pj-check.hero .ock-card.ock-next { border-color: color-mix(in srgb, var(--action, #B4512A) 55%, var(--edge)); background: color-mix(in srgb, var(--action, #B4512A) 8%, var(--raised)); }
 #pj-check.hero .ock-card.on { background: transparent; }
-.ock-emo { position: relative; width: 56px; height: 56px; border-radius: 14px; display: grid; place-items: center; font-size: 30px; line-height: 1; background: var(--surface-2, var(--surface)); border: 1px solid var(--edge); }
+.ock-emo { color: var(--text); position: relative; width: 56px; height: 56px; border-radius: 14px; display: grid; place-items: center; font-size: 30px; line-height: 1; background: var(--surface-2, var(--surface)); border: 1px solid var(--edge); }
 .ock-card.on .ock-emo { filter: grayscale(.7); opacity: .6; }
 .ock-emo-ok { position: absolute; right: -6px; bottom: -6px; width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; background: var(--ov-green); color: var(--canvas); border: 2px solid var(--surface); filter: none; }
 .ock-emo-ok svg.i { width: 13px; height: 13px; fill: none; stroke: currentColor; stroke-width: 3; }
