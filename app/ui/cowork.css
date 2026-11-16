@@ -65,3 +65,6 @@
 .wdz.has-cr { grid-template-rows: auto auto 1fr; }
 .mos.has-cr { grid-template-rows: auto auto auto 1fr; }
 @media (max-width: 820px) { .apc.has-cr { grid-template-rows: auto auto 1fr auto; } .wdz.has-cr { grid-template-rows: auto auto 1fr; } }
+
+/* the reason box reads like writing, not code */
+#cr-why { font-family: inherit; height: auto; min-height: 96px; padding: 10px 14px; line-height: 1.5; resize: vertical; }
