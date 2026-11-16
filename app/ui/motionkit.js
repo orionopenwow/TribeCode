@@ -602,7 +602,7 @@
   const focus = at => ({ type: 'focus', at });
 
   // UI morph reels
-  def('ui-reel', 'ui', 'The UI morph reel', 'Button, loader, check, island, player, scrub, volume, toggle, tabs, chart, ⌘K and a toast, all one shape. 120 BPM, 7 bars.', { bars: 7, thumb: 6.6 }, [
+  def('ui-reel', 'ui', 'The UI morph reel', 'Button, loader, check, island, player, scrub, volume, toggle, tabs, chart, ⌘K and a toast, all one shape. 120 BPM, 7 bars.', { bars: 7, thumb: 6.6, camera: { strength: 1, fill: 0.74 } }, [
     S('button', 0, { text: 'Get started' }, [click(1, 30, 10)]), S('loader', 1), S('check', 3), S('island', 4, { title: 'Lantern', sub: 'Now playing' }),
     S('player', 6, { title: 'Golden Hour', artist: 'The Night Owls' }, [click(7, 304, -44), drag(8.5, 10, 28, 70, 240, 70)]),
     S('slider', 11, { v0: 0.4 }, [drag(12, 13.5, -40, 0, 470, 0)]), S('toggle', 15, {}, [click(16, 0, 0), click(17, 0, 0)]),
