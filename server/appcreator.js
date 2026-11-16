@@ -96,5 +96,14 @@ module.exports = function appCreator({ P, store, root, broadcast = () => {}, nam
     save(pid, r.doc, me);
     return { added: r.added || [], say: r.say };
   }
-  return { route, addKit, load: pid => { const r = loadRaw(pid); return r ? A.normalize(r) : null; } };
+  // Flint's app features (app/ui/appfeatures.js) for a project whose app lives in App Creator: the design keeps them and
+  // the next export carries them (server/flintfree.js feature()).
+  function addFeature(pid, feature, me, off) {
+    const p = P.get(pid); if (!p) throw err(404, 'project not found');
+    const raw = loadRaw(pid); if (!raw) return null;
+    const r = A.apply(A.normalize(raw), { op: off ? 'feature.remove' : 'feature.add', feature });
+    if (r.doc.features !== undefined || off) save(pid, r.doc, me);
+    return { say: r.say, features: r.doc.features || [] };
+  }
+  return { route, addKit, addFeature, load: pid => { const r = loadRaw(pid); return r ? A.normalize(r) : null; } };
 };

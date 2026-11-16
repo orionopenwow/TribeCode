@@ -15,10 +15,11 @@
   const more = typeof module === 'object' && module.exports ? (() => { try { return require('./appcreator-more.js'); } catch { return null; } })() : root.TribeAppMore;
   const parts = typeof module === 'object' && module.exports ? (() => { try { return require('./appcreator-parts.js'); } catch { return null; } })() : root.TribeAppParts;
   const fl = typeof module === 'object' && module.exports ? (() => { try { return require('./fontlib.js'); } catch { return null; } })() : root.TribeFontLib;
-  const api = factory(data, more, parts, fl);
+  const feats = typeof module === 'object' && module.exports ? (() => { try { return require('./appfeatures.js'); } catch { return null; } })() : root.TribeAppFeatures;
+  const api = factory(data, more, parts, fl, feats);
   if (typeof module === 'object' && module.exports) module.exports = api;
   else root.TribeAppCore = api;
-})(typeof self !== 'undefined' ? self : this, function (D, MORE, PARTS, FL) {
+})(typeof self !== 'undefined' ? self : this, function (D, MORE, PARTS, FL, FEAT) {
   'use strict';
   // appcreator-parts.js (feat/asset-libs): more icons, parts, starting words and screens join the base sets here
   if (PARTS) { Object.assign(D.ICONS, PARTS.ICONS || {}); D.ICON_NAMES = Object.keys(D.ICONS); D.DEFAULTS = Object.assign({}, D.DEFAULTS, PARTS.DEFAULTS || {}); }
@@ -241,6 +242,7 @@
   function normalize(doc) {
     doc = doc && typeof doc === 'object' ? clone(doc) : {};
     const out = { v: 1, name: str(doc.name || 'My app', 48).trim() || 'My app', platform: doc.platform === 'android' ? 'android' : 'ios', device: ['phone', 'max', 'small', 'pixel'].includes(doc.device) ? doc.device : 'phone', theme: normTheme(doc.theme), screens: [], start: '' };
+    { const fx = FEAT ? FEAT.clean(doc.features) : []; if (fx.length) out.features = fx; }   // appfeatures.js: what the exported app does (Flint adds these with no AI)
     const ids = new Set(), seen = new Set();
     for (const s of Array.isArray(doc.screens) ? doc.screens.slice(0, 60) : []) {
       if (!s || typeof s !== 'object') continue;
@@ -449,6 +451,12 @@ ${PARTS && PARTS.CSS ? PARTS.CSS : ''}
     if (O === 'theme') { const s = op.set || {}; doc.theme = normTheme(Object.assign({}, doc.theme, s, { preset: '' })); if ('sound' in s && Object.keys(s).length === 1) { if (!s.sound) delete doc.theme.sound; return say(s.sound ? `Every tap now plays a short “${s.sound}” sound. Say “no tap sounds” to turn it off.` : 'Taps are silent again.'); } return say('Updated the look.'); }
     if (O === 'preset') { const pr = PRESETS.find(x => x.id === op.id); if (!pr) return say('That look is not in the list.'); doc.theme = normTheme(Object.assign({}, pr.theme, { preset: pr.id })); return say(`Switched to the ${pr.name} look.`); }
     if (O === 'platform') { doc.platform = op.platform === 'android' ? 'android' : 'ios'; return say(doc.platform === 'android' ? 'Using the Android look.' : 'Using the iPhone look.'); }
+    if (O === 'feature.add' || O === 'feature.remove') {   // appfeatures.js: "add offline storage", "remove the search box"
+      const fd = FEAT && FEAT.get(op.feature); if (!fd) return say('That feature is not in the list.');
+      const cur = doc.features || [], has = cur.includes(fd.id);
+      if (O === 'feature.add') { if (has) return say(`The app already has “${fd.title}”.`); doc.features = cur.concat(fd.id); return say(`Added “${fd.title}”: ${fd.what}${fd.note ? ' ' + fd.note : ''} It works in the exported phone web app.`); }
+      if (!has) return say(`The app doesn't have “${fd.title}”.`); doc.features = cur.filter(x => x !== fd.id); if (!doc.features.length) delete doc.features; return say(`Removed “${fd.title}”.`);
+    }
     if (O === 'rename') { doc.name = str(op.name, 48) || doc.name; return say(`Renamed the app to ${doc.name}.`); }
     if (O === 'kit') { const r = kit(doc, op.kit); if (!r.added.length) return say('That kit is not in the library.'); return { doc: r.doc, say: `Added ${(KITS[op.kit] || {}).title || 'the screens'}.`, added: r.added }; }
     if (O === 'screen.add') { let id = slug(op.name || 'Screen'); while (findScreen(doc, id)) id += '-2'; doc.screens.push({ id, name: str(op.name || 'New screen', 40), icon: 'star', blocks: [{ type: 'nav', props: { title: str(op.name || 'New screen', 40), back: true, action: '' } }, { type: 'empty', props: clone(D.DEFAULTS.empty) }] }); return { ...say(`Added the ${op.name || 'new'} screen.`), added: [id] }; }
@@ -485,13 +493,13 @@ ${PARTS && PARTS.CSS ? PARTS.CSS : ''}
     const screens = doc.screens.map(s => screenHTML(doc, s, { edit: false })).join('\n');
     const html = `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>${esc(doc.name)}</title>
 <meta name="theme-color" content="${k.bg}"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon.svg"><link rel="apple-touch-icon" href="icon.svg">
-<style>${css(doc, { scope: '.ax', fontBase: 'fonts/' })}
+<style>${css(doc, { scope: '.ax', fontBase: 'fonts/' })}${FEAT && doc.features ? FEAT.css(doc.features) : ''}
 html,body{margin:0;height:100%;background:${k.bg}}.ax{position:fixed;inset:0;overflow:hidden}.ax .ax-status{display:none}@supports(padding:env(safe-area-inset-top)){.ax .ax-screen{padding-top:env(safe-area-inset-top)}.ax .ax-tabs{padding-bottom:max(10px,env(safe-area-inset-bottom))}}@media(min-width:600px){body{display:grid;place-items:center}.ax{position:relative;inset:auto;width:390px;height:844px;border-radius:44px;border:1px solid ${k.line}}.ax .ax-status{display:flex}}</style></head>
 <body><main class="ax" id="app" ${attrs(doc)}>
 ${screens}
 </main><script src="app.js"></script></body></html>
 `;
-    const app = `// ${doc.name}: made with TribeCode's App Creator. Plain JavaScript, no build step.\n'use strict';\nvar AxRun = ${RUNTIME};\nAxRun(document.getElementById('app'), { start: ${JSON.stringify(doc.start)} });\ntry { if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(function () {}); } catch (e) { /* a sandboxed preview has no service worker */ }\n`;
+    const app = `// ${doc.name}: made with TribeCode's App Creator. Plain JavaScript, no build step.\n'use strict';\nvar AxRun = ${RUNTIME};\nAxRun(document.getElementById('app'), { start: ${JSON.stringify(doc.start)} });\ntry { if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(function () {}); } catch (e) { /* a sandboxed preview has no service worker */ }\n` + (FEAT && doc.features ? '\n' + FEAT.runtime(doc.features, { name: doc.name }) : '');
     const files = ['index.html', 'app.js', 'manifest.webmanifest', 'icon.svg'].concat(f.files.map(x => 'fonts/' + x + '.woff2'));
     const sw = `// Offline: keep the app's own files.\nvar C = 'app-${slug(doc.name)}-${Date.now().toString(36)}';\nself.addEventListener('install', function (e) { e.waitUntil(caches.open(C).then(function (c) { return c.addAll(${JSON.stringify(files.map(x => './' + x))}); })); self.skipWaiting(); });\nself.addEventListener('activate', function (e) { e.waitUntil(caches.keys().then(function (ks) { return Promise.all(ks.filter(function (k) { return k !== C; }).map(function (k) { return caches.delete(k); })); })); });\nself.addEventListener('fetch', function (e) { e.respondWith(caches.match(e.request).then(function (r) { return r || fetch(e.request); })); });\n`;
     const manifest = JSON.stringify({ name: doc.name, short_name: doc.name.slice(0, 12), start_url: '.', display: 'standalone', background_color: k.bg, theme_color: k.bg, icons: [{ src: 'icon.svg', sizes: 'any', type: 'image/svg+xml', purpose: 'any maskable' }] }, null, 2);
@@ -616,6 +624,7 @@ const s = StyleSheet.create({
       '## Look', `- Accent ${t.accent}, ${t.mode} mode, ${t.radius} corners, ${t.density} spacing, ${t.motion} motion, ${f.name} type.`, '',
       '## Screens', ...doc.screens.map(s => `- **${s.name}**${s.id === doc.start ? ' (first screen)' : ''}${s.tab ? ' (a tab)' : ''}: ${s.blocks.map(b => BLOCKS[b.type].label.toLowerCase()).join(', ')}`), '',
       '## Flows', ...(flows.length ? flows : ['- (no links yet)']), '',
+      ...(doc.features && FEAT ? ['## What it already does (added by Flint, on the phone only)', ...doc.features.map(id => { const g = FEAT.get(id); return `- ${g.title}: ${g.what}`; }), 'Keep these working; replace the on-phone parts with a real backend only where the tribe asks.', ''] : []),
       '## Data to store (a first guess from the screens)', ...(ents.length ? ents.map(e => `- ${e.name}: ${e.fields.join(', ')} (seen on ${e.from})`) : ['- (none spotted)']), '',
       'The full design is `design.json` from **Export › Expo project** (same screens, links and theme as JSON).'].join('\n');
   }

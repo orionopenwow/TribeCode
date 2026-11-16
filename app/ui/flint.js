@@ -248,7 +248,7 @@
   // the specific phrases the routes below handle well on their own (flintlocal.js lets them keep those)
   const LEGACY = ['inviteClaude', 'status', 'summarize', 'helper', 'connect', 'hosting', 'website', 'focus', 'prompt', 'preview', 'inspo', 'dress', 'asset', 'make', 'customize', 'task', 'note', 'doStep', 'nav'];
   const legacyHit = raw => { const text = String(raw || '').trim().replace(/\s+/g, ' '), t = text.toLowerCase(); return LEGACY.some(k => { const m = RX[k].exec(k === 'inspo' ? text : t); return m && (k !== 'task' || (m[1] && m[1].trim())); }); };
-  const LH = { clear: () => (sink && sink.clearAll ? sink.clearAll() : clear()), say: (text, acts, extra) => say(text, acts || [], extra), act, legacy: text => legacyRoute(text, false, true), special, legacyHit, task: (title, extra, quiet) => task(title, extra, quiet), guide: async t => { const Q = window.TribeQuick; if (Q) { await Q.load(); const c = Q.answer(t); if (c) return say(c.text, c.acts.map(x => act(x[0], x[1], x[2])), c.extra); } const g = await guideSearch(t); return g ? guideReply(g) : null; }, modelOnline: () => !!model.online && !(B() && B().choice() === 'none') };
+  const LH = { clear: () => (sink && sink.clearAll ? sink.clearAll() : clear()), say: (text, acts, extra) => say(text, acts || [], extra), act, legacy: text => legacyRoute(text, false, true), special, legacyHit, task: (title, extra, quiet) => task(title, extra, quiet), guide: async t => { { const a0 = await appAnswer(t, 0.35); if (a0) return a0; } const Q = window.TribeQuick; if (Q) { await Q.load(); const c = Q.answer(t); if (c) return say(c.text, c.acts.map(x => act(x[0], x[1], x[2])), c.extra); } const ab = await appAnswer(t); if (ab) return ab; const g = await guideSearch(t); return g ? guideReply(g) : null; }, modelOnline: () => !!model.online && !(B() && B().choice() === 'none') };
   async function legacyRoute(raw, specialsDone, viaLocal) {
     const text = String(raw || '').trim().replace(/\s+/g, ' '), t = text.toLowerCase();
     let m;
@@ -285,12 +285,20 @@
       ACTS.nav(v); if (FF()) later(260, () => { const w = v === 'whiteboard' ? seen('.wb') || seen('#whiteboard') || curView() : curView(); if (w) FF().done(w, NAME[v] ? NAME[v].replace(/^The /, '') : 'Here'); });
       return say(`Opened ${m[1] === 'home' ? 'Home' : v === 'whiteboard' ? 'the whiteboard' : m[1]}.`); }
     if ((m = RX.find.exec(t)) && !RX.help.test(t.replace(/^where('s| is)/, ''))) return find(text.slice(text.length - m[1].length).trim());
-    if (RX.help.test(t) || /\b(guide|how do i|how to)\b/.test(t)) { const g = await guideSearch(text); if (g) return guideReply(g); if (RX.invite.test(t)) return invite(); return fallback(text, true); }
+    if (RX.help.test(t) || /\b(guide|how do i|how to)\b/.test(t)) { const ab = await appAnswer(text); if (ab) return ab; const g = await guideSearch(text); if (g) return guideReply(g); if (RX.invite.test(t)) return invite(); return fallback(text, true); }
     if (RX.invite.test(t)) return invite();
     if (RX.hello.test(t)) return /^(thanks|thank you|thx|cheers)/.test(t) ? say('Any time.') : say(`Hi${C && C.state().me ? ' ' + esc(first(C.state().me.name)) : ''}. I can connect your AI, jot a note, add a task or tell you what's happening.`, chipsActs());
     return fallback(text);
   }
   const chipsActs = () => [act('Connect my AI', 'ask', 'Connect my AI'), act('What\'s happening?', 'ask', 'What\'s happening?')];
+  // feat/flint-appknow: general app-building questions ("how do I add login to my app") answer from docs/APP-BUILDING.md
+  // through the local knowledge base when it is clearly the better match; TribeCode's own questions keep the Guide.
+  async function appAnswer(q, min = 0.25) {
+    if (!(C && C.connected && C.connected() && C.api)) return null;
+    let a = null; try { a = ((await C.api('/flint/kb?k=1&q=' + encodeURIComponent(q))).answers || [])[0]; } catch { return null; }
+    if (!a || a.file !== 'docs/APP-BUILDING.md' || !(a.score >= min)) return null;
+    return say(`${a.heading}: ${a.snippet} (from Building apps: common questions)`, [act('What can you add to my app?', 'ask', 'What features can you add?')]);
+  }
   const guideReply = g => say(`${g.heading && g.heading !== g.title ? `${g.title} › ${g.heading}: ` : `${g.title}: `}${g.snippet}`, [act('Open in Guide', 'guide', g.slug)], { guide: g.slug });
 
   async function note(body) {

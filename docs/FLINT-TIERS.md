@@ -93,6 +93,18 @@ plus typo and filler variants, plus a held-out set that was never tuned against 
 - When an AI helper is connected, the brief also goes to them so they can take it further. With none, the free build
   stands on its own and Flint says what a stronger AI could add.
 
+## App features and app questions (no AI)
+
+- "Add offline storage to my app", "add a dark mode switch", "make the timer work": 48 working features
+  (`app/ui/appfeatures.js`). In an App Creator design they join the design; in a code app Flint writes
+  `tribe-features/features.js` and `.css` beside the page, adds two lines to `index.html` and commits it
+  ("Flint: add … (no AI)"). `POST /api/projects/:id/flint/feature { feature | ask, off?, dir? }`, `GET /api/flint/features`.
+- "How do I add login to my app?", "Expo or Capacitor?", "how do push notifications work on iPhone?": 107 answers in
+  `docs/APP-BUILDING.md`, from the local knowledge base, each with a source.
+- The honest line: real accounts, data shared between phones, payments, push when the app is closed, phone hardware
+  and encryption are `agent` tier; `POST /api/flint/tier` returns `ask`, a ready request for the AI helper, and a
+  person approves what comes back.
+
 ## Point and edit (no prompt)
 
 Pick an element with **Edit** in the preview and the **Properties** sheet opens in the Flint panel: padding, margin,

@@ -98,6 +98,17 @@ look", "make it teal", "play it", "export the app", "make an Expo project", "hav
 
 Cases: `scripts/dev/flint-eval/appcreator.js` (ctx `a` is App Creator open).
 
+## What it does: working features (no AI)
+
+Add › What it does lists 48 working features in 9 groups (`app/ui/appfeatures.js`): remember ticks and typed text,
+add to a list, swipe to remove, backup, CSV, favourites, search, sort, chip filters, dark mode switch, bigger text,
+less motion, reminders, camera, location, keep the screen on, timer, stopwatch, streak, totals, progress, chart, a
+demo sign-in and a PIN lock (both clearly this-phone-only), read aloud, speak to type, and more. The design keeps
+`features: [id, …]`; the exported phone web app carries the code; the AI brief lists them. Flint adds them by
+sentence ("add offline storage", "make the timer work", "remove the pin lock"), and from anywhere with "my app".
+Everything stays on the phone. Real accounts, data shared between phones, payments and push when the app is closed
+need a server: Flint says so and hands a ready request to a stronger AI. Cases: `scripts/dev/flint-eval/appknow.js`.
+
 ## For other features
 
 `window.TribeAppCreator.screens(projectId) -> Promise<[{ id, name, html, css, render(canvas, w, h) -> Promise<canvas> }]>`

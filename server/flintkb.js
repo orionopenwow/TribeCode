@@ -12,9 +12,12 @@ const path = require('node:path');
 // Only user-facing help is indexed (audit 2026-11-13). An allow-list, so a new internal doc (an audit, a review, a plan,
 // a launch checklist) can never surface in Flint's answers by being dropped into docs/. Add a file here when it
 // explains how to USE the app.
-const HELP_DOCS = new Set(['ACCOUNTS', 'ANY-LLM', 'ASSETS', 'BROWSER-APP', 'CLOUD', 'COMPANY', 'CRAFTS', 'DATA', 'DEMO-TRIBE', 'EXPORT', 'FLINT-CREATORS', 'FLINT-TIERS',
+const HELP_DOCS = new Set(['ACCOUNTS', 'ANY-LLM', 'APP-BUILDING', 'ASSETS', 'BROWSER-APP', 'CLOUD', 'COMPANY', 'CRAFTS', 'DATA', 'DEMO-TRIBE', 'EXPORT', 'FLINT-CREATORS', 'FLINT-TIERS',
   'GITHUB-AND-FOLDERS', 'HOSTING', 'LIGHT-HOSTING', 'LINK-READER', 'MARKETPLACE', 'MOBILE', 'MOBILE-TRIBES', 'OPEN-SPACE', 'PHONE-APP-MODE', 'PHONE-APPS', 'PHONE-HOSTING',
   'PREMIUM', 'PROJECTS', 'SHARED-COMPUTE', 'SIGN-IN', 'SITE-TEMPLATES', 'SOLO', 'STARTERS', 'UPDATES', 'VIEWERS', 'WEB-AND-DESKTOP', 'WEBSITE', 'WORKSHOP']);
+// feat/flint-appknow: the general app-building answers (docs/APP-BUILDING.md) weigh a little less than TribeCode's own
+// help, so "how do I invite a friend" still finds the Guide first.
+const DOC_W = { 'APP-BUILDING': 0.9 };
 const indexed = f => HELP_DOCS.has(String(f).replace(/\.md$/i, '').toUpperCase());
 const MAX = 200 * 1024;
 
@@ -55,7 +58,7 @@ module.exports = function flintkb({ ui, nlu, model } = {}) {
     }
     const dd = docDirs.find(isDir);
     if (dd) for (const f of fs.readdirSync(dd).filter(f => /\.md$/i.test(f) && indexed(f)).sort()) {
-      try { const full = path.join(dd, f), st = fs.lstatSync(full); if (!st.isFile() || st.size > MAX) continue; secs.push(...sections(f, fs.readFileSync(full, 'utf8'), { source: 'Docs', file: `docs/${f}`, name: f.replace(/\.md$/i, ''), w: 1 })); } catch {}
+      try { const full = path.join(dd, f), st = fs.lstatSync(full); if (!st.isFile() || st.size > MAX) continue; secs.push(...sections(f, fs.readFileSync(full, 'utf8'), { source: 'Docs', file: `docs/${f}`, name: f.replace(/\.md$/i, ''), w: DOC_W[f.replace(/\.md$/i, '').toUpperCase()] || 1 })); } catch {}
     }
     const docs = secs.map((s, i) => ({ id: i, text: `${s.title} ${s.heading} ${s.heading} ${plain(s.body).slice(0, 1800)}`, s }));
     fileList = [...new Set(secs.map(x => x.file).filter(Boolean))];
