@@ -137,7 +137,7 @@
         else { mark('Not saved yet: can’t reach the tribe. Kept on this device'); clearTimeout(saveT); saveT = setTimeout(run, 5000); }   // tried again by itself
       } finally { if (st) st.saving = false; }
     };
-    if (now) return run(); saveT = setTimeout(run, 500);
+    if (now) return run(); saveT = setTimeout(run, cw && cw.people && cw.people().length ? 250 : 500);   // pass 4 polish: with a friend in here, their copy follows sooner (as in the website designer)
   }
   // pass 3: a word typed just before the tab closes or hides is saved too (keepalive, like the website designer)
   function flushNow() {

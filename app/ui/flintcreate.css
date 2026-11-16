@@ -45,3 +45,7 @@
   .pol-in footer .btn, .fc-row .btn.btn { min-height: 40px; }
   .pol-x { width: 40px; height: 40px; }
 }
+
+/* pass 4 polish: in the phone sheet the sheet already says "Flint", so the panel inside keeps only its status and Clear */
+.apc-sheet [data-pane="flint"] .flm-head .fl-av, .apc-sheet [data-pane="flint"] .flm-head .flm-name, .apc-sheet [data-pane="flint"] .flm-head .flm-ctx { display: none; }
+.apc-sheet [data-pane="flint"] .flm-head { justify-content: flex-end; }

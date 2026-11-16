@@ -238,6 +238,8 @@
   }
   function onKey(e) {
     if (e.target && e.target.matches && e.target.matches('input, textarea, select, [contenteditable]')) return;
+    // pass 4 polish: a sheet or dialog opened over Motion Studio owns the keys (Esc closed the studio under it)
+    if (document.querySelector('.ui-card, .modal-wrap:not(.hidden), dialog[open]')) return;
     if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') { e.preventDefault(); e.shiftKey ? redo() : undo(); }
     else if (e.key === ' ') { e.preventDefault(); play(!playing); }
     else if (e.key === 'Escape') { if (pick) { pick = null; renderPick(); } else close(); }

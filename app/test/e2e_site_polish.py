@@ -250,6 +250,20 @@ def main():
             got = ok(api(f"/projects/{pid}/site-config", token=host))["config"]; assert "evil.example" not in json.dumps(got), (sv, got.get("css"))
             cp.wait_for_function(f"TribeSiteDesigner.state().rev > {rev}", timeout=10000)
 
+            # ---------- pass 4 polish: Tab stays inside the designer (the app behind is never reached) ----------
+            cp.locator("#wdz .wdz-left").click(position={"x": 5, "y": 5})
+            outside = 0
+            for _ in range(70):
+                cp.keyboard.press("Tab")
+                if not cp.evaluate("(() => { const a = document.activeElement; return !a || a === document.body || !!a.closest('#wdz, .ui-sheet, .ui-card, .toast, .les-card, .les-offer, .fls, .flm, .dfl-dock, [role=dialog]'); })()"): outside += 1
+            assert outside == 0, f"Tab left the designer {outside} times"
+            for _ in range(6): cp.keyboard.press("Shift+Tab")
+            assert cp.evaluate("!!document.activeElement.closest('#wdz')"), "Shift Tab stays inside too"
+            cp.keyboard.press("Escape")
+            # one name for the AI redesign: More › Make it beautiful opens the same sheet as the button under Flint
+            cp.click("#wdz [data-wdz='more']"); assert "Make it beautiful" in cp.inner_text("#wdz-agent") and cp.locator("#wdz-more").get_by_text("Have my agent do it").count() == 0
+            cp.click("#wdz-agent"); cp.wait_for_selector("#stu-agent"); assert "Make it beautiful" in cp.text_content("#stu-agent .wdz-eyebrow"); cp.click("#stu-agent [data-stu=agent-close]")
+            if cp.locator("#wdz-more:not([hidden])").count(): cp.keyboard.press("Escape")
             # ---------- 7: shortcuts ----------
             cp.locator("#wdz .wdz-left").click(position={"x": 5, "y": 5}); cp.keyboard.press("?"); cp.wait_for_selector("#wdz-keys:not([hidden])")
             kt = cp.inner_text("#wdz-keys"); assert all(x in kt for x in ["Ctrl C", "Ctrl V", "Zoom in", "Select the section above or below", "Ctrl D", "Esc"]), kt
@@ -341,6 +355,9 @@ def main():
             assert ph.evaluate("document.documentElement.scrollWidth <= innerWidth + 1")
             tabs = ph.evaluate("[...document.querySelectorAll('#wdz .wdz-ptabs [data-panel]')].map(b => [Math.round(b.getBoundingClientRect().top), Math.round(b.getBoundingClientRect().height)])")
             assert len({t[0] for t in tabs}) == 1 and all(t[1] >= 36 for t in tabs), tabs
+            # pass 4 polish: the saved state is a dot on a phone, so it never covers a page tab
+            sv = ph.evaluate("(() => { const s = document.querySelector('#wdz-saved').getBoundingClientRect(), p = document.querySelector('#wdz .wdz-pages').getBoundingClientRect(); return { w: Math.round(s.width), pagesRight: Math.round(p.right), dotLeft: Math.round(s.left) }; })()")
+            assert sv["w"] <= 12 and sv["pagesRight"] <= sv["dotLeft"] + 1, sv   # the tabs (they scroll inside their own box) end before the dot
             shot(ph, "p4-site-390.png")
             ph.click("#wdz [data-wdz='more']"); ph.wait_for_selector("#wdz-more:not([hidden])")
             mb = ph.evaluate("(() => { const m = document.querySelector('#wdz-more').getBoundingClientRect(); return [m.left, m.right, m.bottom, innerWidth, innerHeight]; })()")

@@ -148,6 +148,12 @@ def main():
             cp.evaluate(f"TribeMotionStudio.open({{ pid: '{pid}', template: 'ui-reel', autoplay: false }})"); cp.wait_for_selector("#mos #mos-cv", timeout=20000)
             cp.wait_for_function("TribeMotionStudio.state().key && TribeMotionStudio.state().saved", timeout=20000)
             mkey = cp.evaluate("TribeMotionStudio.state().key")
+            # pass 4 polish: someone who can change it directly sees no strip, so the requests list has its own button
+            try: cp.wait_for_selector("#mos [data-cr-entry]:not([hidden])", timeout=8000)
+            except Exception: raise AssertionError(cp.evaluate("(() => { const e = document.querySelector('#mos [data-cr-entry]'); return e ? JSON.stringify({ hidden: e.hidden, disp: getComputedStyle(e).display, r: e.getBoundingClientRect().toJSON(), n: document.querySelectorAll('[data-cr-entry]').length, conn: TribeClient.connected(), proj: TribeClient.project && TribeClient.project() }) : 'no entry element in #mos'; })()"))
+            cp.click("#mos [data-cr-entry]"); cp.wait_for_selector(".ui-card", timeout=8000); cp.keyboard.press("Escape")
+            cp.wait_for_function("!document.querySelector('.ui-card')", timeout=5000); cp.wait_for_timeout(200)
+            assert cp.locator("#mos #mos-cv").count() == 1, "Esc closed the sheet, not Motion Studio under it"
             mp.evaluate(f"TribeMotionStudio.open({{ pid: '{pid}', key: '{mkey}', autoplay: false }})"); mp.wait_for_selector("#mos #mos-cv", timeout=20000)
             mbox = mp.locator("#mos-cv").bounding_box()
             mp.mouse.move(mbox["x"] + mbox["width"] * 0.25, mbox["y"] + mbox["height"] * 0.7)

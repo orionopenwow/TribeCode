@@ -75,7 +75,7 @@ Pressing it sends a **design brief** (`brief()` in `flintcreate.js`) to the help
 | Tool | What it returns or does |
 |---|---|
 | `site_read { project? }` | The website as an outline: pages, each section with its id, type, layout and words, the theme, the brand kit, and which section types, looks and font pairs exist. No pictures. |
-| `site_propose { ops, note, project? }` | A proposal the person applies or declines in the website designer (one Undo). The step list is in the tool's description. |
+| `site_propose { ops, note, project? }` | A **change request** on the website (see below). The step list is in the tool's description. |
 | `app_read { project? }` | The app design as JSON: screens, each part with its id, type, words and links, the look, the brand kit, `can` (parts, looks, fonts, icons, pictures, kits) and `steps` (the list below). No pictures. |
 | `app_propose { ops, note, project? }` | A **change request** on the app (see below). |
 
@@ -91,7 +91,9 @@ skipped, each with its reason.
 
 ## What the person sees
 
-- **Website:** the proposal lands in the designer's Flint thread as a list in words with Apply and Decline.
+- **Website:** the same as the app since the pass 4 polish: a change request with the site drawn before and after.
+  Flint says so once in the designer ("… proposes changes to the website") with **Look at them**. A helper that
+  belongs to nobody (no person to ask on behalf of) still gets the older Apply / Decline list.
 - **App:** the proposal is a change request (`server/changereq.js`). It shows under Requests in App Creator and in the
   inbox, with the helper's note, the list of changes, and the app drawn **before and after** on the reviewer's own
   screen (a helper cannot draw, so no picture is uploaded). Approve applies it as one step; Deny or Request changes
@@ -110,9 +112,9 @@ curl -s $HOST/mcp -H "Authorization: Bearer $AGENT_TOKEN" -H 'Content-Type: appl
 ## Left open
 
 - Flint's sentences in replies are English; the buttons, badges and the Polish sheet are in eight languages.
-- The website's proposals use the designer's own list (Apply / Decline) and the app's use change requests. One shared
-  review surface for both would be simpler.
-- The website designer's top bar still has "Have my agent do it" (a free-text request to the helpers); "Make it
-  beautiful" in the Flint panel is the one-tap version of the same hook.
+- The host's AI key by itself does not count as "an AI in the tribe" for Make it beautiful: nothing there reads a
+  design and proposes. With only the key, the spot shows the honest line and Polish it.
+- In the website designer, More › **Make it beautiful** and the button under Flint open one sheet (say what should
+  change; it goes to the helpers). Saying "make it beautiful" to Flint sends the standard brief through the same pipe.
 - With only the host's AI key (no helper as a member) the brief goes to #agents; nothing there calls the MCP tools
   yet, so a proposal comes back only from a helper that is a member.

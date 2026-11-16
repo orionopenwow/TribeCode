@@ -2404,6 +2404,15 @@
     "basic mode · no model": ["modo básico · sin modelo","modo básico · sem modelo","mode basique · sans modèle","Basismodus · kein Modell","基本モード · モデルなし","基础模式 · 无模型","기본 모드 · 모델 없음"],
     "ready · in this browser": ["listo · en este navegador","pronto · neste navegador","prêt · dans ce navigateur","bereit · in diesem Browser","準備完了 · このブラウザ内","就绪 · 在此浏览器中","준비됨 · 이 브라우저에서"],
     "ready · on this computer": ["listo · en esta computadora","pronto · neste computador","prêt · sur cet ordinateur","bereit · auf diesem Computer","準備完了 · このコンピューター上","就绪 · 在这台电脑上","준비됨 · 이 컴퓨터에서"],
+    // pass 4 polish: Flint's suggestion chips in App Creator
+    "Add a settings screen": ["Añade una pantalla de ajustes","Adicione uma tela de ajustes","Ajoute un écran de réglages","Füge einen Einstellungsbildschirm hinzu","設定画面を追加","添加一个设置屏幕","설정 화면 추가"],
+    "Rounder": ["Más redondeado","Mais arredondado","Plus arrondi","Runder","もっと丸く","更圆润","더 둥글게"],
+    "Make it light": ["Hazlo claro","Deixe claro","Rends-le clair","Mach es hell","ライトにする","改成浅色","밝게 만들기"],
+    "Change this to…": ["Cambia esto a…","Mude isto para…","Change ceci en…","Ändere das zu…","これを…に変える","把它改成…","이것을 …로 바꾸기"],
+    "Link this to…": ["Enlaza esto con…","Ligue isto a…","Relie ceci à…","Verknüpfe das mit…","これを…にリンク","把它链接到…","이것을 …에 연결"],
+    "Move this up": ["Sube esto","Mova isto para cima","Monte ceci","Schieb das nach oben","これを上へ","把它上移","이것을 위로"],
+    "Duplicate this": ["Duplica esto","Duplique isto","Duplique ceci","Dupliziere das","これを複製","复制这个","이것 복제"],
+    "Remove this": ["Quita esto","Remova isto","Retire ceci","Entferne das","これを削除","删除这个","이것 삭제"],
   });
   I.addPatterns({
     // pass 4 polish: count and status messages in the creators
