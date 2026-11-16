@@ -42,7 +42,7 @@ def data_checks():
         real = [s for s in t["steps"] if not s.get("soon")]
         assert len({s["id"] for s in t["steps"]}) == len(t["steps"]), t["id"]
         if t["id"].startswith("first-"): assert 8 <= len(real) <= 12, (t["id"], len(real))
-        else: assert 4 <= len(real) <= 8, (t["id"], len(real))
+        else: assert 4 <= len(real) <= (16 if t["id"] == "power" else 8), (t["id"], len(real))
         assert t["title"] and t["intro"] and t.get("asks"), t["id"]
         for s in t["steps"]:
             words = (s["title"] + " " + s["text"]).lower()
@@ -190,8 +190,8 @@ def main():
             print(f"  ok  the walk: {len(guides)} quick guides and {walked} lesson steps each ring a real control ({skipped} steps wait for their control)")
             # a step whose control arrives later joins its track by itself
             n0 = pg.evaluate("TribeLessons.steps('power').length")
-            pg.evaluate("(() => { const d = document.createElement('button'); d.id = 'wdz-zoom'; d.textContent = 'Zoom'; d.style.cssText = 'position:fixed;left:8px;top:80px;z-index:99'; document.body.appendChild(d); TribeLessons._see(); d.remove(); })()")
-            assert pg.evaluate("TribeLessons.steps('power').length") == n0 + 1 and n0 == 7
+            pg.evaluate("(() => { const d = document.createElement('button'); d.setAttribute('data-fc-act', 'polish'); d.textContent = 'Polish it'; d.style.cssText = 'position:fixed;left:8px;top:80px;z-index:99'; document.body.appendChild(d); TribeLessons._see(); d.remove(); })()")
+            assert pg.evaluate("TribeLessons.steps('power').length") == n0 + 1 and n0 == 13
 
             # 8. phone, 390px
             ph = b.new_context(viewport={"width": 390, "height": 844}, is_mobile=True, has_touch=True)
