@@ -141,7 +141,8 @@ console.log(JSON.stringify({ done: r.done.length, skipped: r.skipped.length, tit
             pg.wait_for_function("window.TribeSiteDesigner && window.TribeSiteStudio && window.TribeClient && TribeClient.connected()", timeout=20000)
             pg.wait_for_selector("#wb-design", timeout=15000)
             pg.click("#wb-design")
-            pg.wait_for_selector("#wdz:not([hidden]) #wdz-start:not([hidden]) .wdz-tpl", timeout=10000)
+            pg.wait_for_selector("#wdz:not([hidden]) #wdz-start:not([hidden]) .wdz-kmain .wdz-kind", timeout=10000)   # p5-start: what kind of site first
+            pg.click("#wdz-start [data-kind=business]"); pg.wait_for_selector("#wdz-start .wdz-tpl[data-tpl=cafe]", timeout=10000)
             pg.click("#wdz-start .wdz-tpl[data-tpl=cafe]")
             pg.wait_for_function("TribeSiteDesigner.cfg() && TribeSiteDesigner.cfg().pages.length >= 1 && document.querySelector('#wdz-start').hidden", timeout=10000)
             pg.wait_for_timeout(600)

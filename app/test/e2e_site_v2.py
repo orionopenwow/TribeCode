@@ -123,6 +123,7 @@ def main():
             assert blocks(c)[0]["type"] == "links" and blocks(c)[0]["props"]["items"], "the link-in-bio template with its links (no tribe needed)"
             assert blocks(c)[0]["props"]["img"].startswith("data:image/"), "its picture is inside"
             sp.click("#wdz [data-wdz='more']"); sp.click("#wdz-more [data-wdz='templates']")
+            sp.wait_for_selector("#wdz-start:not([hidden]) .wdz-kmain .wdz-kind", timeout=10000); sp.click("#wdz-start [data-kind='all']")   # p5-start: what kind of site first
             sp.wait_for_function("document.querySelectorAll('#wdz-gal .wdz-tpl').length >= 40", timeout=10000)
             sp.wait_for_function("[...document.querySelectorAll('#wdz-gal .wdz-tpl img')].slice(0, 8).every(i => i.complete && i.naturalWidth > 100)", timeout=10000)
             assert sp.evaluate("document.querySelector('#wdz-gal .wdz-tpl img').src").endswith(".webp")
@@ -181,7 +182,7 @@ def main():
             assert c["name"] == "Ember Café" and blocks(c)[0]["props"]["name"] == "Ember Café", "filled from the project"
             assert any("instagram.com/embercafe" in (i["link"].get("to") or "") for i in blocks(c)[0]["props"]["items"]), "a link from chat"
             pg.wait_for_selector("#wdz-fill:not([hidden])", timeout=5000)
-            assert "Filled from your project" in pg.inner_text("#wdz-fill")
+            assert "Filled in from your project" in pg.inner_text("#wdz-fill")
             assert not pg.evaluate("document.body.innerText.includes('Failed to fetch')"), "no fetch failure"
             # a café-style template: hours from chat and the members
             pg.evaluate("TribeSiteDesigner.useTemplate('sb-agency')")
