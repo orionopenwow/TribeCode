@@ -86,10 +86,13 @@ module.exports = function publish({ P, W, base, preview, setupFlow, getMembers, 
   const canManage = (me, e) => !!me && (e.by === me.id || me.role === 'host' || roleIn(me, e.project) === 'host');
 
   // ---------- what gets published ----------
-  function files(pid) {
-    const r = preview.rootOf(pid);
-    if (!r.repo) throw err(400, 'This project has no code repository yet. Set it up first (Code repository › Create).');
-    if (!r.root) throw err(400, 'There is no index.html to publish yet. Build a first version, then publish it.');
+  let designRoot = null;   // pass 4 (server/designfiles.js): pid -> the folder of a designed website or app, or null
+  // at (pass 4): one folder to read instead of the project's web folder (a designed website or app, server/designfiles.js)
+  function files(pid, at) {
+    let r = at ? { repo: at, root: at } : preview.rootOf(pid);
+    if (!at && (!r.repo || !r.root) && designRoot) { const d = designRoot(pid); if (d) r = { repo: d, root: d }; }   // a designed website or app, with no code folder yet
+    if (!r.repo) throw err(400, 'Nothing to put online yet. Make a website or an app in Design first.');
+    if (!r.root) throw err(400, 'There is no first page to publish yet. Make a website or an app in Design, or build a first version, then publish it.');
     const out = []; let total = 0;
     (function walk(dir, rel) {
       let list = []; try { list = fs.readdirSync(dir, { withFileTypes: true }); } catch { return; }
@@ -106,8 +109,8 @@ module.exports = function publish({ P, W, base, preview, setupFlow, getMembers, 
     })(r.root, '');
     return { root: r.root, list: out, total };
   }
-  function check(pid) {
-    const { list, total } = files(pid), findings = [];
+  function check(pid, at) {
+    const { list, total } = files(pid, at), findings = [];
     for (const f of list) {
       if (f.dirSecret) { findings.push({ level: 'block', kind: 'Secrets folder', file: f.rel, why: 'A folder named secrets/ or .tribe/ sits in the web folder. Move it out; it is never published.' }); continue; }
       if (f.skip) { findings.push({ level: 'warn', kind: 'Key or database file left out', file: f.rel, why: 'Files like this are never published. Check the page still works without it.' }); continue; }
@@ -310,6 +313,6 @@ module.exports = function publish({ P, W, base, preview, setupFlow, getMembers, 
     },
   };
 
-  return { route, match, serve, check, files, canPublish, onApproval, entriesOf: pid => entriesOf(pid).map(view), entry: s => view(db.entries[s]), urlOf, mcpTools };
+  return { useDesign: fn => { designRoot = fn; }, route, match, serve, check, files, canPublish, onApproval, entriesOf: pid => entriesOf(pid).map(view), entry: s => view(db.entries[s]), urlOf, mcpTools };
 };
 module.exports.CSP = CSP;

@@ -35,7 +35,7 @@ const path = require('node:path');
 const S = require('../app/ui/sitecfg.js');
 const AI = require('../app/ui/aibasics-core.js');
 
-module.exports = function siteDesign({ perms = null, requests = () => null, base, root, showcase, siteFlint, P, tasks, nameOf = x => x, members = () => [], inspo, postChat, broadcast, log = () => {} }) {
+module.exports = function siteDesign({ files = null, perms = null, requests = () => null, base, root, showcase, siteFlint, P, tasks, nameOf = x => x, members = () => [], inspo, postChat, broadcast, log = () => {} }) {
   const LIB = path.join(root, 'templates', 'sites');
   const UI = [path.join(root, 'app', 'ui'), path.join(root, 'ui')].find(d => fs.existsSync(path.join(d, 'sitecfg.js'))) || path.join(root, 'app', 'ui');
   const FONTS = path.join(UI, 'assets', 'site-fonts');
@@ -62,9 +62,10 @@ module.exports = function siteDesign({ perms = null, requests = () => null, base
     return rec;
   }
   const pview = x => ({ id: x.id, by: x.by, byName: nameOf(x.by), at: x.at, note: x.note, ops: x.ops, done: x.done, skipped: x.skipped, status: x.status, rev: x.rev });
-  const loadRaw = pid => base.readJSON(file(pid), null);
+  // pass 4: the folder is the way back. With nothing saved here, the design file in the project's folder (site/site.json) is read.
+  const loadRaw = pid => { const c = base.readJSON(file(pid), null); if (c || !files || !P || !P.get(pid)) return c; const d = files.adopt(pid, 'site'); if (!d) return null; try { return { ...S.normalize(d), rev: 0, savedBy: '', savedAt: '' }; } catch { return null; } };
   const load = pid => { const c = loadRaw(pid); if (c) { delete c.rev; delete c.savedBy; delete c.savedAt; } return c; };
-  const save = (pid, cfg, me) => { const old = loadRaw(pid); const c = S.normalize(cfg); delete c.rev; delete c.savedBy; delete c.savedAt; const rec = { ...c, rev: ((old && old.rev) || 0) + 1, savedBy: me ? me.id : (old && old.savedBy) || '', savedAt: new Date().toISOString() }; base.writeJSON(file(pid), rec); try { if (broadcast) broadcast({ type: 'site-config', project: pid, rev: rec.rev, by: rec.savedBy || null }); } catch {} return { config: c, rev: rec.rev }; };   // feat/cowork-editors: others' open designers pick it up
+  const save = (pid, cfg, me) => { const old = loadRaw(pid); const c = S.normalize(cfg); delete c.rev; delete c.savedBy; delete c.savedAt; const rec = { ...c, rev: ((old && old.rev) || 0) + 1, savedBy: me ? me.id : (old && old.savedBy) || '', savedAt: new Date().toISOString() }; base.writeJSON(file(pid), rec); if (files && P && P.get(pid)) files.queue(pid, 'site', rec.savedBy); try { if (broadcast) broadcast({ type: 'site-config', project: pid, rev: rec.rev, by: rec.savedBy || null }); } catch {} return { config: c, rev: rec.rev }; };   // feat/cowork-editors: others' open designers pick it up
   if (siteFlint && siteFlint.useConfig) siteFlint.useConfig({ load, save: (pid, cfg) => save(pid, cfg).config });
   const MIME = { svg: 'image/svg+xml', png: 'image/png', jpg: 'image/jpeg', jpeg: 'image/jpeg', webp: 'image/webp', gif: 'image/gif' };
   const inlineFile = (dir, rel) => {
@@ -91,13 +92,26 @@ module.exports = function siteDesign({ perms = null, requests = () => null, base
     const walk = o => { if (Array.isArray(o)) return o.forEach(walk); if (!o || typeof o !== 'object') return; for (const k of Object.keys(o)) { if ((k === 'img' || k === 'logo') && typeof o[k] === 'string' && o[k] && !/^data:/.test(o[k])) o[k] = inlineFile(UI, o[k]); else walk(o[k]); } };
     walk(cfg); return S.normalize(cfg);
   }
-  function publish(pid) {
+  // The design as files (pass 4): pages, pictures, fonts and site.json. server/designfiles.js writes them into the project's
+  // folder a moment after every save; Publish here writes them now.
+  function fileList(pid) {
+    const cfg = load(pid); if (!cfg) return null;
+    const ex = S.exportFiles(cfg, 'zip'), out = [];
+    for (const [f, text] of Object.entries(ex.files)) out.push([f, text]);
+    for (const a of ex.assets) { const bytes = S.dataToBytes(a.src); if (bytes) out.push([a.path, Buffer.from(bytes)]); }
+    if (fs.existsSync(FONTS)) for (const f of ex.fonts) for (const n of [f.file, f.license]) { try { out.push(['fonts/' + n, fs.readFileSync(path.join(FONTS, n))]); } catch {} }
+    return out;
+  }
+  if (files) files.use('site', fileList);
+  function publish(pid, me) {
     const cfg = load(pid); if (!cfg) throw err(409, 'design the site first');
-    const dir = showcase.siteDir(pid).dir; fs.mkdirSync(path.join(dir, 'assets'), { recursive: true });
-    const ex = S.exportFiles(cfg, 'zip'); const written = [];
-    for (const [f, text] of Object.entries(ex.files)) { if (f.includes('/')) fs.mkdirSync(path.dirname(path.join(dir, f)), { recursive: true }); fs.writeFileSync(path.join(dir, f), text); written.push(f); }   // feat/site-3d: fx/ beside the pages
-    for (const a of ex.assets) { const bytes = S.dataToBytes(a.src); if (bytes) { fs.writeFileSync(path.join(dir, a.path), Buffer.from(bytes)); written.push(a.path); } }
-    if (fs.existsSync(FONTS) && ex.fonts.length) { fs.mkdirSync(path.join(dir, 'fonts'), { recursive: true }); for (const f of ex.fonts) for (const n of [f.file, f.license]) { try { fs.copyFileSync(path.join(FONTS, n), path.join(dir, 'fonts', n)); written.push('fonts/' + n); } catch {} } }
+    if (files) {
+      const r = files.write(pid, 'site', { force: true, by: me && me.id });
+      if (!r.ok) throw err(500, r.error || 'the files could not be written');
+      return { ok: true, dir: files.status(pid).folder + '/site/', files: r.files, kept: r.kept || '' };
+    }
+    const dir = showcase.siteDir(pid).dir; fs.mkdirSync(dir, { recursive: true }); const written = [];
+    for (const [f, data] of fileList(pid)) { fs.mkdirSync(path.dirname(path.join(dir, f)), { recursive: true }); fs.writeFileSync(path.join(dir, f), data); written.push(f); }
     return { ok: true, dir: showcase.siteDir(pid).shown.replace(/index\.html.*$/, ''), files: written };
   }
 
@@ -226,7 +240,7 @@ module.exports = function siteDesign({ perms = null, requests = () => null, base
           if (cur && body.base != null && !body.force && +body.base !== (cur.rev || 0) && cur.savedBy !== me.id + '#never') { const cc = { ...cur }; delete cc.rev; delete cc.savedBy; delete cc.savedAt; if (JSON.stringify(S.normalize(cc)) !== JSON.stringify(S.normalize(JSON.parse(JSON.stringify(body.config))))) return send(res, 409, { conflict: true, config: cc, rev: cur.rev || 0, by: nameOf(cur.savedBy), at: cur.savedAt }); }
           const r = save(b, body.config, me); return send(res, 200, { ok: true, config: r.config, rev: r.rev });
         }
-        if (d === 'publish' && m === 'POST') return send(res, 200, publish(b));
+        if (d === 'publish' && m === 'POST') return send(res, 200, publish(b, me));
       }
       if (a === 'projects' && c === 'site-autofill' && m === 'GET') return send(res, 200, { facts: await facts(b) });
       if (a === 'projects' && c === 'site-suggestions') {
