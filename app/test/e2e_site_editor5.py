@@ -4,7 +4,7 @@ Checks:
    (the last colour button is not cut off); Flint's thread ends at the box, at most three chips, Polish it is one row,
    the no-AI note is behind an info button;
  2 Ctrl J folds Flint to a slim rail on the far right and back, remembered when the designer opens again;
- 3 under 1280 Flint is a rail; open, he is a drawer that never covers the panel;
+ 3 under 1440 Flint is a rail; open, he is a drawer that never covers the panel; at 1440 the page is wider than a phone;
  4 a phone: the box to type in is at the bottom, the handle opens his replies, no chips in the folded state;
  5 the Design flow's plan stays out of the designer;
  6 the list of blocks: drag to reorder (a line shows where it lands), rename (double-click, F2), hide, lock; a locked
@@ -110,7 +110,8 @@ def main():
             fr.locator("[data-btn]").nth(1).click(); cp.wait_for_timeout(300)
             L, M, R, F = rect(cp, "#wdz .wdz-left"), rect(cp, "#wdz .wdz-stage"), rect(cp, "#wdz .wdz-right"), rect(cp, "#wdz-fl")
             assert L["r"] <= M["l"] + 1 and M["r"] <= R["l"] + 1 and R["r"] <= F["l"] + 1 and F["r"] >= 1439, ("blocks, page, panel, Flint", L, M, R, F)
-            assert F["w"] >= 300 and R["h"] >= 800 and F["h"] >= 800, (F, R)
+            assert F["w"] >= 280 and R["h"] >= 800 and F["h"] >= 800, (F, R)
+            assert frm(cp).evaluate("innerWidth") > 640 and frm(cp).evaluate("document.documentElement.dataset.dev") == "desktop", "Desktop shows the desktop layout with Flint open"
             strong = cp.locator("#wdz-insp [data-escol='ink'], #wdz-insp button:has-text('Strong')").first
             strong.scroll_into_view_if_needed(); sr = strong.bounding_box(); ir = rect(cp, "#wdz-insp")
             assert sr["y"] + sr["height"] <= ir["b"] + 1, ("the colour row is not cut off", sr, ir)
@@ -127,13 +128,13 @@ def main():
             # ---------- 2: Ctrl J, the rail, remembered ----------
             cp.keyboard.press("Control+j"); cp.wait_for_timeout(200)
             F2 = rect(cp, "#wdz-fl"); assert F2["w"] <= 48 and cp.locator("#wdz-fl .wdz-fl-rail").is_visible(), F2
-            assert rect(cp, "#wdz .wdz-stage")["w"] > M["w"] + 250, "the page gets the room back"
+            assert rect(cp, "#wdz .wdz-stage")["w"] > M["w"] + 200, "the page gets the room back"
             shot(cp, "p5-site-rail-1440.png")
             cp.evaluate("TribeSiteDesigner.close()"); cp.wait_for_selector("#wdz", state="hidden")
             open_designer(cp, tpl=False)
             assert rect(cp, "#wdz-fl")["w"] <= 48, "folded stays folded"
             cp.click("#wdz-fl .wdz-fl-rail"); cp.wait_for_timeout(200)
-            assert rect(cp, "#wdz-fl")["w"] >= 300 and cp.evaluate("document.activeElement && document.activeElement.classList.contains('fl-in')"), "open again, the box has the focus"
+            assert rect(cp, "#wdz-fl")["w"] >= 280 and cp.evaluate("document.activeElement && document.activeElement.classList.contains('fl-in')"), "open again, the box has the focus"
 
             # ---------- 5: the plan stays out ----------
             cp.evaluate("(() => { const c = document.createElement('button'); c.id = 'dfl-chip'; c.textContent = 'Plan 0/7'; document.querySelector('#wdz .wdz-top').appendChild(c); const d = document.createElement('aside'); d.id = 'dfl-dock'; d.textContent = 'Goal and audience'; document.body.appendChild(d); document.body.classList.add('dfl-side'); })()")
@@ -275,7 +276,7 @@ def main():
             for want in ["Ctrl J", "F2", "Ctrl F", "Ctrl Shift L", "Ctrl Alt C", "Tab"]: assert want in sheet, (want, sheet[:400])
             cp.keyboard.press("Escape")
 
-            # ---------- 3: under 1280, the drawer never covers the panel ----------
+            # ---------- 3: under 1440, the drawer never covers the panel ----------
             cp.set_viewport_size({"width": 1100, "height": 800}); cp.wait_for_timeout(300)
             assert rect(cp, "#wdz-fl")["w"] <= 48, "a rail in a narrower window"
             cp.click("#wdz-fl .wdz-fl-rail"); cp.wait_for_timeout(250)

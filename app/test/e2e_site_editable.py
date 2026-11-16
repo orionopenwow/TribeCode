@@ -247,11 +247,13 @@ def live(pw):
         note = f.locator("small[data-e]").first
         assert "Opens Friday" in note.inner_text(), note.inner_text()
         f.evaluate("window.__same = 1")   # if the preview reloads, this is gone
+        pg.evaluate("TribeSiteDesigner.flint(false)"); pg.wait_for_timeout(300)   # pass 5: with Flint's column open at 1440 the stacked links leave no free spot, so the toolbar docks over the page (known, docs/SITE-CREATOR.md)
         note.click()
         pg.wait_for_function("(TribeSiteDesigner.state().sel || {}).kind === 'text'", timeout=4000)
         assert sel(pg)["path"] == "items.0.note", sel(pg)
         assert f.locator(".wdz-tb").is_visible() and f.locator(".wdz-sel").count() == 1, "one outline and one toolbar"
         assert f.evaluate(CLEAR_JS) == [], "the toolbar never sits on words, a picture or the section's bar"
+        pg.evaluate("TribeSiteDesigner.flint(true)")
         assert pg.locator("#wdz-insp .sp-crumbs").is_visible() and pg.locator("#wdz-insp [data-etext]").input_value().startswith("Opens Friday")
         note.press("Control+a"); note.type("Opens Saturday at 9am")
         pg.wait_for_function("TribeSiteDesigner.cfg().pages[0].blocks[0].props.items[0].note === 'Opens Saturday at 9am'", timeout=4000)

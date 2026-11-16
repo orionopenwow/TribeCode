@@ -279,8 +279,8 @@ body.wdz-open { overflow: hidden; }
 /* ---------- pass 5: four columns. Blocks, the page, the panel, and Flint on the far right in a column of his own ---------- */
 .wdz-body { position: relative; }
 @media (min-width: 821px) {
-  .wdz-body { grid-template-columns: 220px minmax(0, 1fr) 290px 320px; }   /* the page keeps at least ~600px at 1440 */
-  .wdz.fl-rail .wdz-body { grid-template-columns: 220px minmax(0, 1fr) 290px 44px; }
+  .wdz-body { grid-template-columns: 200px minmax(0, 1fr) 270px 290px; }   /* at 1440 the page stays wider than a phone (640), so Desktop shows the desktop layout */
+  .wdz.fl-rail .wdz-body { grid-template-columns: 200px minmax(0, 1fr) 270px 44px; }
   .wdz .wdz-right { grid-template-rows: auto minmax(0, 1fr); }
   .wdz-right > .wdz-insp { max-height: none; border-bottom: 0; padding-bottom: 28px; }   /* the panel has the whole height now: nothing is cut off at its foot */
 }   /* the panel has the whole height now: nothing is cut off at its foot */
@@ -302,9 +302,9 @@ body.wdz-open { overflow: hidden; }
 .wdz-fl .fl-hi { margin: 0; font-size: 13px; line-height: 1.5; color: var(--muted); }
 .wdz-fl .flm-chips { flex-wrap: wrap; }
 .wdz-fl .flm-tools .flm-tool { width: 28px; height: 28px; min-width: 28px; padding: 0; display: inline-grid; place-items: center; }
-@media (max-width: 1439px) and (min-width: 1280px) { .wdz-body { grid-template-columns: 200px minmax(0, 1fr) 280px 300px; } .wdz.fl-rail .wdz-body { grid-template-columns: 200px minmax(0, 1fr) 280px 44px; } }
-/* a narrower window: the column is the rail; open, Flint is a drawer over the page, left of the panel */
-@media (max-width: 1279px) and (min-width: 821px) {
+/* under 1440 (a fourth column would leave the page narrower than a phone): the column is the rail; open, Flint is a
+   drawer over the page, left of the panel */
+@media (max-width: 1439px) and (min-width: 821px) {
   .wdz-body, .wdz.fl-rail .wdz-body, .wdz.fl-open .wdz-body { grid-template-columns: 210px minmax(0, 1fr) 280px 44px; }
   .wdz-fl .wdz-fl-rail { display: flex; flex: 1 1 auto; }
   .wdz.fl-open .wdz-fl-rail { color: var(--text); background: var(--surface-2); }

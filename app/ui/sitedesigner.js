@@ -1316,11 +1316,11 @@ html[data-dev=phone] .ehide-phone,html[data-dev=tablet] .ehide-tablet,html[data-
     return ['Make the buttons work', 'Add a page called About', 'Add a link for…', 'Dark mode', 'Add a gallery', 'Make the picture round'];
   }
   // pass 5: Flint has his own column on the far right, beside (never on top of) the panel. It folds to a slim rail
-  // (remembered per person) and opens again with one click or Ctrl J. In a narrower window (under 1280) he opens as a
+  // (remembered per person) and opens again with one click or Ctrl J. In a narrower window (under 1440) he opens as a
   // drawer over the page, still left of the panel; on a phone he is a sheet at the bottom whose box to type in is
   // always there, and his replies slide up above it.
   const FLKEY = 'tribecode.sitedesigner.flint';
-  const flMode = () => innerWidth <= 820 ? 'phone' : innerWidth < 1280 ? 'narrow' : 'wide';
+  const flMode = () => innerWidth <= 820 ? 'phone' : innerWidth < 1440 ? 'narrow' : 'wide';
   let flLast = '';
   function flintInit() {
     if (!root) return; const m = flMode(); flLast = m;

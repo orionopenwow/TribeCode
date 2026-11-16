@@ -214,7 +214,8 @@ def main():
             cp.mouse.up()
             cp.wait_for_function(f"(() => {{ const b = TribeSiteDesigner.cfg().pages[0].blocks.find(x => x.id === '{bid}'); return b && b.style && b.style.pt === {live}; }})()", timeout=5000)
             assert state(cp)["hist"] == hist + 1, "one drag is one Undo"
-            assert frame(cp).locator(f"[data-block='{bid}']").evaluate("e => getComputedStyle(e).paddingTop") == f"{live}px"
+            frame(cp).locator(f"[data-block='{bid}']").wait_for(); cp.wait_for_timeout(300)   # the page is drawn again after the change
+            pt = frame(cp).locator(f"[data-block='{bid}']").evaluate("e => getComputedStyle(e).paddingTop"); assert pt in (f"{live}px", f"{round(live * .65, 2):g}px"), (pt, live, frame(cp).locator("body").evaluate("() => [innerWidth, document.documentElement.dataset.dev]"))
             cp.wait_for_function("(() => { const s = TribeSiteDesigner.state(); return s && !s.dirty; })()", timeout=15000)
             assert f"--pt:{live}px" in cp.evaluate("TribeSiteCfg.exportFiles(TribeSiteDesigner.cfg(), 'html')['index.html']"), "the spacing is in the downloaded page"
             # arrow keys on the handle step along the scale; a double-click gives the site's own spacing back

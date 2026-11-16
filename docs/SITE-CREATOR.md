@@ -14,7 +14,8 @@ Pass 5 (`feat/p5-editor`, 16 Nov 2026), after Camp's note that Flint sat on top 
 never stacked under the panel any more, so the panel has the whole height and nothing in it is cut off at the foot.
 - Flint folds to a slim rail on the far right (the arrow in his header, or Ctrl J), and the page gets the room back.
   Folded or open is remembered per person.
-- Under 1280 px wide he is the rail. Opened, he is a drawer over the page, left of the panel, so he never covers it.
+- Under 1440 px wide he is the rail (a fourth column there would leave the page narrower than a phone, and Desktop
+  would show the phone layout). Opened, he is a drawer over the page, left of the panel, so he never covers it.
 - On a phone his box to type in is always at the bottom. The handle, or a reply, slides his replies up.
 - He is calmer: one short greeting, at most three ideas that follow what is selected, and Polish it as one quiet row.
   The note about what a stronger AI adds is behind the small info button. The thread ends at the box, like any chat.
