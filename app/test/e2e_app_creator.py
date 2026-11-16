@@ -114,6 +114,12 @@ def main():
             pg.wait_for_function("TribeAppCreator.doc().screens[0].blocks[0].props.title === 'Hi Sam'", timeout=3000)
             pg.evaluate("TribeAppCreator.undo()")
             pg.wait_for_function("TribeAppCreator.doc().screens[0].blocks[0].props.title === 'Good morning, Maya'", timeout=3000)
+            # pass 3: words typed just before the tab reloads are saved (they used to wait 500 ms and be lost)
+            h1 = pg.locator("#apc .apc-edit h1[data-e]").first
+            h1.click(); pg.keyboard.press("Control+a"); pg.keyboard.type("Kept on reload"); pg.reload()
+            pg.wait_for_function("window.TribeAppCreator && window.TribeClient && TribeClient.connected()", timeout=20000)
+            pg.wait_for_function(f"fetch('/api/projects/{pid}/app-config', {{ headers: {{ Authorization: 'Bearer {tok}' }} }}).then(r => r.json()).then(j => j.config.screens[0].blocks[0].props.title === 'Kept on reload')", timeout=6000)
+            pg.evaluate(f"TribeAppCreator.open({{ pid: '{pid}' }})"); pg.wait_for_selector("#apc .apc-edit .ax-screen", timeout=8000)
 
             # ---- recolour from Look: every screen follows
             pg.click("#apc [data-tab='look']"); pg.click("#apc [data-acc='#2F5BEA']")

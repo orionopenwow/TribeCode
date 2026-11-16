@@ -83,6 +83,15 @@
     };
     if (now) return run(); saveT = setTimeout(run, 500);
   }
+  // pass 3: a word typed just before the tab closes or hides is saved too (keepalive, like the website designer)
+  function flushNow() {
+    if (!st || !st.dirty || st.saving) return; clearTimeout(saveT);
+    if (st.local) { ls.set(LOCAL, st.doc); st.dirty = false; return; }
+    if (!st.canEdit || !st.pid) return;
+    C.api(`/projects/${encodeURIComponent(st.pid)}/app-config`, { method: 'PUT', body: { config: st.doc, base: st.rev }, keepalive: true }).then(r => { if (st) { st.rev = r.rev; st.dirty = false; mark('Saved'); } }).catch(() => {});
+  }
+  addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') flushNow(); });
+  addEventListener('pagehide', flushNow);
   const mark = t => { const el = root && root.querySelector('#apc-saved'); if (el) el.textContent = t; };
 
   // ---------- edits ----------

@@ -88,6 +88,14 @@
       savedAt = new Date().toISOString(); setSaved(tr('Saved'));
     } catch (e) { setSaved(tr('Not saved')); say(e.message || String(e)); }
   }
+  // pass 3: a change made just before the tab closes or hides is saved too (keepalive, like the website designer)
+  function flushNow() {
+    if (!saveT || !doc) return; clearTimeout(saveT); saveT = 0;
+    if (pid) { if (!key) key = slug(doc.name) + '-' + rid(); C.api(`/projects/${encodeURIComponent(pid)}/motion/${encodeURIComponent(key)}`, { method: 'PUT', body: { doc }, keepalive: true }).catch(() => {}); }
+    else save();
+  }
+  addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') flushNow(); });
+  addEventListener('pagehide', flushNow);
   async function list(p) { p = p || projectId(); if (!p) return []; try { return (await C.api(`/projects/${encodeURIComponent(p)}/motion`)).items || []; } catch { return []; } }
 
   // ---------- open / close ----------
