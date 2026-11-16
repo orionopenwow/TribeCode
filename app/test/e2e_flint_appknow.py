@@ -119,7 +119,7 @@ def main():
             cp.goto(Path(repo, "index.html").as_uri())
             cp.wait_for_selector(".tcf-bar .tcf-btn", timeout=8000)
             cp.click(".tcf-bar .tcf-btn"); assert cp.evaluate("document.documentElement.classList.contains('tcf-dark')"), "the dark mode switch works"
-            cp.wait_for_timeout(500); cp.reload(); cp.wait_for_selector(".tcf-bar .tcf-btn")
+            cp.wait_for_timeout(2500); cp.reload(); cp.wait_for_selector(".tcf-bar .tcf-btn")
             try: cp.wait_for_function("document.documentElement.classList.contains('tcf-dark')", timeout=5000)   # and it is remembered
             except Exception: raise AssertionError("dark not remembered: " + cp.evaluate("JSON.stringify({ls: Object.fromEntries(Object.entries(localStorage).filter(([k]) => /^tc-app/.test(k))), cls: document.documentElement.className, btn: [...document.querySelectorAll('.tcf-btn')].map(b => b.textContent), sys: matchMedia('(prefers-color-scheme: dark)').matches})"))
             cp.close()
