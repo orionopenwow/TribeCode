@@ -132,7 +132,8 @@
     const st = C && C.state ? C.state() : {};
     const PF = window.TribePreviewFlint, CV = window.TribeCanvas;
     let picked = null, selection = null; try { picked = PF && PF.picked && PF.picked(); } catch {} try { const s = CV && CV.state && CV.state(); if (s && s.open && s.selected && s.selected.length) selection = s.selected; } catch {}
-    let vw = view(); try { const D = window.TribeDocs, d = D && D.current && D.current(); if (vw === 'docs' && d) vw = d.kind === 'sheet' ? 'sheet' : d.kind === 'deck' ? 'deck' : 'doc'; } catch {}   // feat/flint-max: the open editor
+    let vw = view(); try { if (window.TribeMotionStudio && window.TribeMotionStudio.isOpen()) vw = 'motion'; } catch {}   // feat/motion
+    try { const D = window.TribeDocs, d = D && D.current && D.current(); if (vw === 'docs' && d) vw = d.kind === 'sheet' ? 'sheet' : d.kind === 'deck' ? 'deck' : 'doc'; } catch {}   // feat/flint-max: the open editor
     return { now: new Date(), view: vw, picked, selection, members: (st.members || []).filter(m => m.id !== (st.me && st.me.id)).map(m => ({ id: m.id, name: m.name, role: m.role })), tasks: tasksCache, last, learned: learnedList() };
   }
 
@@ -201,6 +202,7 @@
     if (window.TribeFlintMax && window.TribeFlintMax.has && window.TribeFlintMax.has(id)) return window.TribeFlintMax.run(s, { pushUndo, connected });   // feat/flint-max: palettes, fonts, copy, sheets, docs, slides
     if (window.TribeFlintCmds && window.TribeFlintCmds.has(id)) return window.TribeFlintCmds.run(s, { pushUndo, connected, tasks: () => tasks(true), clear: H.clear });   // feat/flint-unify: timers, motion, notifications, pins, reactions, more task moves…
     const legacy = async (text, sum) => { await H.legacy(text); return { said: true, sum: sum || text }; };
+    if (/^motion\./.test(id) && window.TribeMotionStudio) { const r = await window.TribeMotionStudio.command(s); return { text: r && r.text ? r.text : T('opened', { x: 'Motion Studio' }), sum: 'worked on a motion graphic' }; }   // feat/motion
     const needT = () => (connected() ? null : { text: T('needTribe'), acts: [['Host or join', 'invite']] });
     if (id === 'nav.settings' && sl.section === 'notifications' && window.TribeNotify && window.TribeNotify.openSettings) { window.TribeNotify.openSettings(); return { text: T('opened', { x: 'Notification settings' }), sum: 'opened notification settings' }; }
     if (id === 'nav.files' && sl.cat) {   // "show my pictures": Files on that kind's tab

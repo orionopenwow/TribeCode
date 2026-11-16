@@ -29,13 +29,21 @@
     constellation: { name: 'Constellation', about: '3D points joined by thin lines.', three: true, d: { s: 1, d: 1, i: 1 } },
     drift: { name: 'Floating particles', about: 'A deep 3D field of soft dots.', three: true, d: { s: 1, d: 0.7, i: 0.9 } },
     warp: { name: 'Starfield', about: '3D points streaming toward you.', three: true, d: { s: 1, d: 1, i: 1 } },
+    motion: { name: 'Your motion graphic', about: 'A piece from Motion Studio, playing behind the words.', motion: true, d: { s: 1, d: 1, i: 1 } },   // feat/motion: placed by Motion Studio, not picked here
   };
-  const LIST = Object.keys(KINDS), COLS = ['accent', 'ink', 'muted'];
+  const LIST = Object.keys(KINDS).filter(k => !KINDS[k].motion), COLS = ['accent', 'ink', 'muted'];
   const CREDIT = 'Several of these are ports of ThreeUI Community by Meng To (MIT).';
   const num = (v, d, lo, hi) => { v = +v; return Number.isFinite(v) ? Math.round(Math.max(lo, Math.min(hi, v)) * 100) / 100 : d; };
   function clean(fx) {
     if (!fx || typeof fx !== 'object' || !KINDS[fx.kind]) return null; const D = KINDS[fx.kind].d;
-    return { kind: fx.kind, s: num(fx.s, D.s, 0.2, 2.5), d: num(fx.d, D.d, 0.4, 2), i: num(fx.i, D.i, 0.2, 1.6), p: fx.p === 0 || fx.p === false ? 0 : 1, c: COLS.includes(fx.c) ? fx.c : 'accent', c2: COLS.includes(fx.c2) ? fx.c2 : 'ink' };
+    const out = { kind: fx.kind, s: num(fx.s, D.s, 0.2, 2.5), d: num(fx.d, D.d, 0.4, 2), i: num(fx.i, D.i, 0.2, 1.6), p: fx.p === 0 || fx.p === false ? 0 : 1, c: COLS.includes(fx.c) ? fx.c : 'accent', c2: COLS.includes(fx.c2) ? fx.c2 : 'ink' };
+    if (KINDS[fx.kind].motion) { const m = motionDoc(fx.m); if (!m) return null; out.m = m; }   // the motion doc rides along, checked by the engine
+    return out;
+  }
+  function motionDoc(m) {
+    if (!m || typeof m !== 'object') return null;
+    let K = null; try { K = typeof module === 'object' && module.exports && typeof require === 'function' ? require('./motionkit.js') : (typeof self !== 'undefined' && self.TribeMotionKit) || null; } catch { K = null; }
+    const d = K ? K.normalize(m) : m; try { if (JSON.stringify(d).length > 400000) return null; } catch { return null; } return d;
   }
   const fresh = kind => clean({ kind });
   function setFx(cfg, pageId, blockId, patch) {
@@ -43,13 +51,14 @@
     if (!patch) delete b.fx; else { const kindChanged = patch.kind && (!b.fx || b.fx.kind !== patch.kind); const next = clean({ ...(kindChanged ? {} : b.fx || {}), ...(kindChanged && b.fx ? { p: b.fx.p, c: b.fx.c, c2: b.fx.c2 } : {}), ...patch }); if (next) b.fx = next; }
     return c;
   }
-  function uses(cfg) { const kinds = new Set(); ((cfg && cfg.pages) || []).forEach(p => (p.blocks || []).forEach(b => { if (b.fx && KINDS[b.fx.kind] && !b.hidden) kinds.add(b.fx.kind); })); return { any: kinds.size > 0, three: [...kinds].some(k => KINDS[k].three), kinds: [...kinds] }; }
+  function uses(cfg) { const kinds = new Set(); ((cfg && cfg.pages) || []).forEach(p => (p.blocks || []).forEach(b => { if (b.fx && KINDS[b.fx.kind] && !b.hidden) kinds.add(b.fx.kind); })); return { any: kinds.size > 0, three: [...kinds].some(k => KINDS[k].three), motion: [...kinds].some(k => KINDS[k].motion), kinds: [...kinds] }; }
 
   // ---------- the still picture (flat shapes in the two colours; no script, no WebGL needed) ----------
   function still(kind, a, b) {
     let s = 7; const R = () => { s = (s * 16807) % 2147483647; return (s & 0xfffffff) / 0x10000000; }; let body = '';
     const C = (x, y, r, col, o) => `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${r.toFixed(1)}" fill="${col}" opacity="${o.toFixed(2)}"/>`;
-    if (/^(dots|ribbons|arc)$/.test(kind)) { for (let y = 0; y < 13; y++) for (let x = 0; x < 30; x++) { const dx = (x - 14.5) / 15, dy = (y - 6) / 6.5, k = kind === 'dots' ? Math.max(0, 1 - Math.hypot(dx, dy)) : kind === 'arc' ? Math.max(0, 1 - Math.abs((y / 12) - (0.3 + Math.pow(Math.abs(dx), 1.8) * 0.7)) * 3) * (1 - Math.pow(Math.abs(dx), 2.5)) : Math.max(0, 1 - Math.abs(dy - 0.4 * Math.sin(x / 4)) * 2.2); if (k > 0.08) body += kind === 'arc' ? `<rect x="${x * 20 + 2}" y="${y * 20 + 2}" width="16" height="16" fill="${k > 0.6 ? a : b}" opacity="${(k * 0.6).toFixed(2)}"/>` : C(x * 20 + 10, y * 20 + 10, 2 + k * 3, x % 2 ? a : b, k * 0.55); } }
+    if (kind === 'motion') body = `<rect x="200" y="100" width="200" height="60" rx="30" fill="${a}" opacity=".85"/><circle cx="420" cy="150" r="10" fill="${b}" opacity=".6"/>`;
+    else if (/^(dots|ribbons|arc)$/.test(kind)) { for (let y = 0; y < 13; y++) for (let x = 0; x < 30; x++) { const dx = (x - 14.5) / 15, dy = (y - 6) / 6.5, k = kind === 'dots' ? Math.max(0, 1 - Math.hypot(dx, dy)) : kind === 'arc' ? Math.max(0, 1 - Math.abs((y / 12) - (0.3 + Math.pow(Math.abs(dx), 1.8) * 0.7)) * 3) * (1 - Math.pow(Math.abs(dx), 2.5)) : Math.max(0, 1 - Math.abs(dy - 0.4 * Math.sin(x / 4)) * 2.2); if (k > 0.08) body += kind === 'arc' ? `<rect x="${x * 20 + 2}" y="${y * 20 + 2}" width="16" height="16" fill="${k > 0.6 ? a : b}" opacity="${(k * 0.6).toFixed(2)}"/>` : C(x * 20 + 10, y * 20 + 10, 2 + k * 3, x % 2 ? a : b, k * 0.55); } }
     else if (/^(horizon|streams)$/.test(kind)) body = kind === 'horizon' ? `<ellipse cx="300" cy="270" rx="360" ry="90" fill="${a}" opacity=".30"/><ellipse cx="380" cy="275" rx="260" ry="55" fill="${b}" opacity=".22"/>` : `<path d="M-20 200 C120 90 220 230 360 120 S560 60 640 -10" fill="none" stroke="${a}" stroke-width="34" opacity=".28"/><path d="M-20 300 C140 200 260 320 400 210 S580 160 640 110" fill="none" stroke="${b}" stroke-width="26" opacity=".2"/>`;
     else if (/^(rings|orb|sphere|dome)$/.test(kind)) body = kind === 'rings' ? [60, 110, 160, 215].map((r, i) => `<circle cx="300" cy="130" r="${r}" fill="none" stroke="${i % 2 ? b : a}" stroke-width="1.6" opacity="${(0.3 - i * 0.05).toFixed(2)}"/>`).join('') : kind === 'dome' ? `<path d="M120 260 A180 150 0 0 1 480 260" fill="none" stroke="${a}" stroke-width="3" stroke-dasharray="2 9" opacity=".6"/><path d="M170 260 A130 110 0 0 1 430 260" fill="none" stroke="${a}" stroke-width="3" stroke-dasharray="2 12" opacity=".4"/>` : `<circle cx="440" cy="130" r="82" fill="${a}" opacity="${kind === 'orb' ? '.42' : '.12'}"/><circle cx="440" cy="130" r="82" fill="none" stroke="${b}" stroke-width="2" opacity=".35"/>${kind === 'sphere' ? `<ellipse cx="440" cy="130" rx="100" ry="34" fill="none" stroke="${a}" stroke-width="2" opacity=".5" transform="rotate(-24 440 130)"/>` : ''}`;
     else { const n = kind === 'constellation' ? 26 : 70, pts = []; for (let i = 0; i < n; i++) { const x = R() * 600, y = R() * 260; pts.push([x, y]); body += C(x, y, kind === 'drops' ? 2 + R() * 5 : 1 + R() * 2.6, i % 3 ? a : b, 0.25 + R() * 0.4); } if (kind === 'constellation') for (let i = 0; i < n - 1; i++) { const [x1, y1] = pts[i], [x2, y2] = pts[i + 1]; if (Math.hypot(x1 - x2, y1 - y2) < 190) body += `<path d="M${x1.toFixed(0)} ${y1.toFixed(0)}L${x2.toFixed(0)} ${y2.toFixed(0)}" stroke="${b}" stroke-width="1" opacity=".3"/>`; } }
@@ -57,7 +66,7 @@
   }
 
   // ---------- the script texts (inlined into a one-file download, written out beside a zip or a published site) ----------
-  const FILES = { fx: 'fx.js', fx3d: 'fx3d.js', three: 'three.min.js', lic1: 'LICENSE-threeui.txt', lic2: 'LICENSE-three.txt' }, TEXT = {};
+  const FILES = { fx: 'fx.js', fx3d: 'fx3d.js', three: 'three.min.js', lic1: 'LICENSE-threeui.txt', lic2: 'LICENSE-three.txt', motion: '../motionkit.js' }, TEXT = {};
   const here = () => { try { return new URL('sitefx/', document.baseURI).href; } catch { return 'sitefx/'; } };
   function text(key) {
     if (TEXT[key] != null) return TEXT[key];
@@ -76,24 +85,24 @@
     // background the moment one is added (and frees it the moment it goes)
     const editJs = () => `<script src="${here().replace(/"/g, '%22')}fx.js"></script>`, tail = (h, js) => h.replace(/<\/body>(?![\s\S]*<\/body>)/, `${js}</body>`);
     if (!blocks.length) return o.edit ? tail(html, editJs()) : html;
-    let n = 0, three = false;
+    let n = 0, three = false, motion = false;
     for (const [b, f] of blocks) {
-      const a = K[f.c] || K.accent, b2 = K[f.c2] || K.ink, opt = JSON.stringify({ s: f.s, d: f.d, i: f.i, p: f.p, a, b: b2 });
+      const a = K[f.c] || K.accent, b2 = K[f.c2] || K.ink, opt = JSON.stringify({ s: f.s, d: f.d, i: f.i, p: f.p, a, b: b2, ...(f.m ? { m: f.m } : {}) }).replace(/'/g, '&#39;');
       const re = new RegExp(`(<(?:section|footer|div) id="b-${String(b.id).replace(/[^a-zA-Z0-9_-]/g, '')}" class=")([^"]*"[^>]*)>`);
       const next = html.replace(re, (m, p1, p2) => `${p1}has-fx ${p2} data-fx="${f.kind}" data-fx-o='${opt}'><div class="fx-layer" aria-hidden="true" style="background-image:url(&quot;${still(f.kind, a, b2)}&quot;)"></div>`);
-      if (next !== html) { n++; if (KINDS[f.kind].three) three = true; html = next; }
+      if (next !== html) { n++; if (KINDS[f.kind].three) three = true; if (KINDS[f.kind].motion) motion = true; html = next; }
     }
     if (!n) return o.edit ? tail(html, editJs()) : html;
     let js = '';
     if (o.edit) js = editJs();                                                                             // the preview: loaded from the app, like the designer's own helper
     else if (o.mode === 'pages') js = '<script src="fx/fx.js" defer></script>';                              // a folder of files: fx/ sits beside the pages
-    else { const t = text('fx'); if (t) js = inline(t) + (three && text('three') && text('fx3d') ? inline(text('three')) + inline(text('fx3d')) : ''); }   // one file: everything inside it
+    else { const t = text('fx'); if (t) js = (motion && text('motion') ? inline(text('motion')) : '') + inline(t) + (three && text('three') && text('fx3d') ? inline(text('three')) + inline(text('fx3d')) : ''); }   // one file: everything inside it
     return tail(html.replace('</style>', `${CSS}</style>`), js);   // the CSS joins the site's own sheet (the first one)
   }
   function exportInto(res, cfg, kind) {
     const u = uses(cfg); if (!u.any || kind !== 'zip' || !res || !res.files) return res;
     const put = (name, key) => { const t = text(key); if (t) res.files['fx/' + name] = t; };
-    put('fx.js', 'fx'); put('LICENSE-threeui.txt', 'lic1'); if (u.three) { put('three.min.js', 'three'); put('fx3d.js', 'fx3d'); put('LICENSE-three.txt', 'lic2'); }
+    put('fx.js', 'fx'); put('LICENSE-threeui.txt', 'lic1'); if (u.motion) put('motionkit.js', 'motion'); if (u.three) { put('three.min.js', 'three'); put('fx3d.js', 'fx3d'); put('LICENSE-three.txt', 'lic2'); }
     if (res.files['README.md']) res.files['README.md'] = res.files['README.md'].replace('no build step and no scripts', 'no build step, and one small script for the moving backgrounds').replace('\n- site.json', '\n- fx/: the moving backgrounds (they work offline; licenses alongside)\n- site.json');
     return res;
   }

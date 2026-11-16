@@ -148,9 +148,10 @@
     if (kind === 'poster') return d.POSTERS.map(s => ({ ...s, img: th('poster-' + s.id) }));
     if (kind === 'logo') return d.LOGOS.map(s => ({ ...s, img: th('logo-' + s.id) }));
     if (kind === 'whiteboard') return d.BOARDS.map(s => ({ ...s, img: th('board-' + s.id) }));
+    if (kind === 'motion' && window.TribeMotionKit && window.TribeMotionStudio) { const MK = window.TribeMotionKit, cat = Object.fromEntries(MK.CATS); return MK.LIST.map(id => ({ id, t: MK.TEMPLATES[id].name, d: `${cat[MK.TEMPLATES[id].cat]} · ${MK.TEMPLATES[id].about}`, img: window.TribeMotionStudio.thumb(id, 320, 200) })); }   // feat/motion: drawn by the engine
     return [];
   }
-  const PLACEHOLDER = { website: 'A site for Sunrise Bakery, warm colors, with the menu', app: 'A kanban board for our band called Gig Board, in teal', game: 'A floaty endless runner called Fox Dash in pink', screen: 'For Ember Coffee, in teal', slides: 'Our game jam recap: Lantern Run', poster: 'Open mic night, Friday 8pm, in orange', whiteboard: 'What should our first level feel like?', logo: 'Lantern Studio, warm and friendly, in amber' };
+  const PLACEHOLDER = { motion: 'A launch clip for Lantern Run in teal, snappy', website: 'A site for Sunrise Bakery, warm colors, with the menu', app: 'A kanban board for our band called Gig Board, in teal', game: 'A floaty endless runner called Fox Dash in pink', screen: 'For Ember Coffee, in teal', slides: 'Our game jam recap: Lantern Run', poster: 'Open mic night, Friday 8pm, in orange', whiteboard: 'What should our first level feel like?', logo: 'Lantern Studio, warm and friendly, in amber' };
   async function gallery(kind) {
     if (!host) return; view = 'gallery'; kindNow = kind;
     const k = D().KINDS.find(x => x.id === kind); if (!k) return kinds();
@@ -186,6 +187,7 @@
     if (kind === 'app' || kind === 'game') return makeCode(kind, tplId, ask);
     if (kind === 'slides') return makeSlides(tplId, ask);
     if (kind === 'whiteboard') return makeBoard(tplId, ask);
+    if (kind === 'motion') { const MS = window.TribeMotionStudio; if (!MS) throw new Error('Motion Studio did not load. Reload the app.'); await MS.open({ ...(tplId ? { template: tplId } : { doc: { name: 'Motion graphic', bars: 2, states: [{ kind: 'button', at: 0, text: 'Your words' }, { kind: 'toast', at: 4, text: 'Change anything' }] } }), ...(pidNow() ? { pid: pidNow() } : { pid: '' }), name: nameFrom(ask, '') || undefined, accent: accentFrom(ask) || undefined }); if (ask && !nameFrom(ask, '')) setTimeout(() => MS.ask(ask), 300); return; }   // feat/motion
     return makeCanvas(kind, tplId, ask);
   }
   // Website: the website designer takes over (its own entry), with the template and the prompt

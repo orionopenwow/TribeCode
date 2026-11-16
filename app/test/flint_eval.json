@@ -11242,6 +11242,935 @@
    },
    "ctx": "p",
    "v": "e2"
+  },
+  {
+   "t": "make a motion graphic",
+   "i": "motion.new",
+   "s": {
+    "tpl": "ui-reel"
+   },
+   "ctx": "g",
+   "v": "mo"
+  },
+  {
+   "t": "make a motion graphic of my app",
+   "i": "motion.new",
+   "s": {
+    "tpl": "ui-reel"
+   },
+   "ctx": "g",
+   "v": "mo"
+  },
+  {
+   "t": "open motion studio",
+   "i": "motion.new",
+   "ctx": "g",
+   "v": "mo"
+  },
+  {
+   "t": "i want a ui animation reel",
+   "i": "motion.new",
+   "s": {
+    "tpl": "ui-reel"
+   },
+   "ctx": "g",
+   "v": "mo"
+  },
+  {
+   "t": "make a dribbble style ui animation",
+   "i": "motion.new",
+   "s": {
+    "tpl": "ui-reel"
+   },
+   "ctx": "g",
+   "v": "mo"
+  },
+  {
+   "t": "make a logo reveal",
+   "i": "motion.new",
+   "s": {
+    "tpl": "logo-draw"
+   },
+   "ctx": "g",
+   "v": "mo"
+  },
+  {
+   "t": "animate our logo",
+   "i": "motion.new",
+   "s": {
+    "tpl": "logo-draw"
+   },
+   "ctx": "g",
+   "v": "mo"
+  },
+  {
+   "t": "logo intro for my channel",
+   "i": "motion.new",
+   "s": {
+    "tpl": "logo-draw"
+   },
+   "ctx": "g",
+   "v": "mo"
+  },
+  {
+   "t": "kinetic typography for my launch",
+   "i": "motion.new",
+   "s": {
+    "tpl": "type-punch"
+   },
+   "ctx": "g",
+   "v": "mo"
+  },
+  {
+   "t": "make animated text for a promo",
+   "i": "motion.new",
+   "s": {
+    "tpl": "type-punch"
+   },
+   "ctx": "g",
+   "v": "mo"
+  },
+  {
+   "t": "make an app preview video",
+   "i": "motion.new",
+   "s": {
+    "tpl": "app-preview"
+   },
+   "ctx": "g",
+   "v": "mo"
+  },
+  {
+   "t": "a promo video for my app",
+   "i": "motion.new",
+   "s": {
+    "tpl": "app-preview"
+   },
+   "ctx": "g",
+   "v": "mo"
+  },
+  {
+   "t": "make an app store video",
+   "i": "motion.new",
+   "s": {
+    "tpl": "app-preview"
+   },
+   "ctx": "g",
+   "v": "mo"
+  },
+  {
+   "t": "make an animated stat counter",
+   "i": "motion.new",
+   "s": {
+    "tpl": "stat-big"
+   },
+   "ctx": "g",
+   "v": "mo"
+  },
+  {
+   "t": "make an animated chart",
+   "i": "motion.new",
+   "s": {
+    "tpl": "chart-line"
+   },
+   "ctx": "g",
+   "v": "mo"
+  },
+  {
+   "t": "make a tiktok video for the game",
+   "i": "motion.new",
+   "s": {
+    "tpl": "social-hook"
+   },
+   "ctx": "g",
+   "v": "mo"
+  },
+  {
+   "t": "i need a clip for reels",
+   "i": "motion.new",
+   "s": {
+    "tpl": "social-hook"
+   },
+   "ctx": "g",
+   "v": "mo"
+  },
+  {
+   "t": "i need lower thirds for my stream",
+   "i": "motion.new",
+   "s": {
+    "tpl": "lower-name"
+   },
+   "ctx": "g",
+   "v": "mo"
+  },
+  {
+   "t": "make animated captions",
+   "i": "motion.new",
+   "s": {
+    "tpl": "cap-karaoke"
+   },
+   "ctx": "g",
+   "v": "mo"
+  },
+  {
+   "t": "make an end card for my video",
+   "i": "motion.new",
+   "s": {
+    "tpl": "end-remix"
+   },
+   "ctx": "g",
+   "v": "mo"
+  },
+  {
+   "t": "make a before and after video",
+   "i": "motion.new",
+   "s": {
+    "tpl": "tour-wipe"
+   },
+   "ctx": "g",
+   "v": "mo"
+  },
+  {
+   "t": "make a product tour video",
+   "i": "motion.new",
+   "s": {
+    "tpl": "tour-zoom"
+   },
+   "ctx": "g",
+   "v": "mo"
+  },
+  {
+   "t": "make a countdown animation",
+   "i": "motion.new",
+   "s": {
+    "tpl": "type-countdown"
+   },
+   "ctx": "g",
+   "v": "mo"
+  },
+  {
+   "t": "create a circle reveal transition",
+   "i": "motion.new",
+   "s": {
+    "tpl": "trans-circle"
+   },
+   "ctx": "g",
+   "v": "mo"
+  },
+  {
+   "t": "make an animated video for our launch",
+   "i": "motion.new",
+   "s": {
+    "tpl": "ui-reel"
+   },
+   "ctx": "g",
+   "v": "mo"
+  },
+  {
+   "t": "make it snappier",
+   "i": "motion.feel",
+   "s": {
+    "feel": "snappier"
+   },
+   "ctx": "mo",
+   "v": "mo"
+  },
+  {
+   "t": "punchier",
+   "i": "motion.feel",
+   "s": {
+    "feel": "snappier"
+   },
+   "ctx": "mo",
+   "v": "mo"
+  },
+  {
+   "t": "a bit snappier please",
+   "i": "motion.feel",
+   "s": {
+    "feel": "snappier"
+   },
+   "ctx": "mo",
+   "v": "mo"
+  },
+  {
+   "t": "calm it down",
+   "i": "motion.feel",
+   "s": {
+    "feel": "calmer"
+   },
+   "ctx": "mo",
+   "v": "mo"
+  },
+  {
+   "t": "make it smoother",
+   "i": "motion.feel",
+   "s": {
+    "feel": "calmer"
+   },
+   "ctx": "mo",
+   "v": "mo"
+  },
+  {
+   "t": "make it gentler please",
+   "i": "motion.feel",
+   "s": {
+    "feel": "calmer"
+   },
+   "ctx": "mo",
+   "v": "mo"
+  },
+  {
+   "t": "make it cinematic",
+   "i": "motion.feel",
+   "s": {
+    "feel": "cinematic"
+   },
+   "ctx": "mo",
+   "v": "mo"
+  },
+  {
+   "t": "give it a dreamy feel",
+   "i": "motion.feel",
+   "s": {
+    "feel": "dreamy"
+   },
+   "ctx": "mo",
+   "v": "mo"
+  },
+  {
+   "t": "use the playful preset",
+   "i": "motion.feel",
+   "s": {
+    "feel": "playful"
+   },
+   "ctx": "mo",
+   "v": "mo"
+  },
+  {
+   "t": "make it feel elegant",
+   "i": "motion.feel",
+   "s": {
+    "feel": "elegant"
+   },
+   "ctx": "mo",
+   "v": "mo"
+  },
+  {
+   "t": "slower please",
+   "i": "motion.speed",
+   "s": {
+    "dir": "slower"
+   },
+   "ctx": "mo",
+   "v": "mo"
+  },
+  {
+   "t": "its too fast",
+   "i": "motion.speed",
+   "s": {
+    "dir": "slower"
+   },
+   "ctx": "mo",
+   "v": "mo"
+  },
+  {
+   "t": "slow it down a little",
+   "i": "motion.speed",
+   "s": {
+    "dir": "slower"
+   },
+   "ctx": "mo",
+   "v": "mo"
+  },
+  {
+   "t": "make it faster",
+   "i": "motion.speed",
+   "s": {
+    "dir": "faster"
+   },
+   "ctx": "mo",
+   "v": "mo"
+  },
+  {
+   "t": "speed it up",
+   "i": "motion.speed",
+   "s": {
+    "dir": "faster"
+   },
+   "ctx": "mo",
+   "v": "mo"
+  },
+  {
+   "t": "raise the tempo",
+   "i": "motion.speed",
+   "s": {
+    "dir": "faster"
+   },
+   "ctx": "mo",
+   "v": "mo"
+  },
+  {
+   "t": "less bounce",
+   "i": "motion.overshoot",
+   "s": {
+    "more": false
+   },
+   "ctx": "mo",
+   "v": "mo"
+  },
+  {
+   "t": "its too bouncy",
+   "i": "motion.overshoot",
+   "s": {
+    "more": false
+   },
+   "ctx": "mo",
+   "v": "mo"
+  },
+  {
+   "t": "no overshoot",
+   "i": "motion.overshoot",
+   "s": {
+    "more": false
+   },
+   "ctx": "mo",
+   "v": "mo"
+  },
+  {
+   "t": "a little more bounce",
+   "i": "motion.overshoot",
+   "s": {
+    "more": true
+   },
+   "ctx": "mo",
+   "v": "mo"
+  },
+  {
+   "t": "make it 9:16 for tiktok",
+   "i": "motion.aspect",
+   "s": {
+    "ratio": "9:16"
+   },
+   "ctx": "mo",
+   "v": "mo"
+  },
+  {
+   "t": "vertical for reels",
+   "i": "motion.aspect",
+   "s": {
+    "ratio": "9:16"
+   },
+   "ctx": "mo",
+   "v": "mo"
+  },
+  {
+   "t": "make it for youtube shorts",
+   "i": "motion.aspect",
+   "s": {
+    "ratio": "9:16"
+   },
+   "ctx": "mo",
+   "v": "mo"
+  },
+  {
+   "t": "make it 16:9",
+   "i": "motion.aspect",
+   "s": {
+    "ratio": "16:9"
+   },
+   "ctx": "mo",
+   "v": "mo"
+  },
+  {
+   "t": "landscape for youtube",
+   "i": "motion.aspect",
+   "s": {
+    "ratio": "16:9"
+   },
+   "ctx": "mo",
+   "v": "mo"
+  },
+  {
+   "t": "make a version for twitter",
+   "i": "motion.aspect",
+   "s": {
+    "ratio": "16:9"
+   },
+   "ctx": "mo",
+   "v": "mo"
+  },
+  {
+   "t": "make it square",
+   "i": "motion.aspect",
+   "s": {
+    "ratio": "1:1"
+   },
+   "ctx": "mo",
+   "v": "mo"
+  },
+  {
+   "t": "size it for an instagram post",
+   "i": "motion.aspect",
+   "s": {
+    "ratio": "4:5"
+   },
+   "ctx": "mo",
+   "v": "mo"
+  },
+  {
+   "t": "loop it",
+   "i": "motion.loop",
+   "s": {
+    "on": true
+   },
+   "ctx": "mo",
+   "v": "mo"
+  },
+  {
+   "t": "make it loop seamlessly",
+   "i": "motion.loop",
+   "s": {
+    "on": true
+   },
+   "ctx": "mo",
+   "v": "mo"
+  },
+  {
+   "t": "play it once",
+   "i": "motion.loop",
+   "s": {
+    "on": false
+   },
+   "ctx": "mo",
+   "v": "mo"
+  },
+  {
+   "t": "stop looping",
+   "i": "motion.loop",
+   "s": {
+    "on": false
+   },
+   "ctx": "mo",
+   "v": "mo"
+  },
+  {
+   "t": "sync it to the beat",
+   "i": "motion.beat",
+   "ctx": "mo",
+   "v": "mo"
+  },
+  {
+   "t": "snap everything to the grid",
+   "i": "motion.beat",
+   "ctx": "mo",
+   "v": "mo"
+  },
+  {
+   "t": "line it up with the music",
+   "i": "motion.beat",
+   "ctx": "mo",
+   "v": "mo"
+  },
+  {
+   "t": "put everything on the beat",
+   "i": "motion.beat",
+   "ctx": "mo",
+   "v": "mo"
+  },
+  {
+   "t": "add a song",
+   "i": "motion.song",
+   "ctx": "mo",
+   "v": "mo"
+  },
+  {
+   "t": "use my music",
+   "i": "motion.song",
+   "ctx": "mo",
+   "v": "mo"
+  },
+  {
+   "t": "make it longer",
+   "i": "motion.length",
+   "s": {
+    "more": true
+   },
+   "ctx": "mo",
+   "v": "mo"
+  },
+  {
+   "t": "make it shorter",
+   "i": "motion.length",
+   "s": {
+    "more": false
+   },
+   "ctx": "mo",
+   "v": "mo"
+  },
+  {
+   "t": "change the accent to teal",
+   "i": "motion.accent",
+   "s": {
+    "color": "teal"
+   },
+   "ctx": "mo",
+   "v": "mo"
+  },
+  {
+   "t": "make it pink",
+   "i": "motion.accent",
+   "s": {
+    "color": "pink"
+   },
+   "ctx": "mo",
+   "v": "mo"
+  },
+  {
+   "t": "use #38C6B1 as the accent",
+   "i": "motion.accent",
+   "s": {
+    "color": "#38c6b1"
+   },
+   "ctx": "mo",
+   "v": "mo"
+  },
+  {
+   "t": "brand colour indigo",
+   "i": "motion.accent",
+   "s": {
+    "color": "indigo"
+   },
+   "ctx": "mo",
+   "v": "mo"
+  },
+  {
+   "t": "make it dark",
+   "i": "motion.theme",
+   "s": {
+    "theme": "night"
+   },
+   "ctx": "mo",
+   "v": "mo"
+  },
+  {
+   "t": "dark background please",
+   "i": "motion.theme",
+   "s": {
+    "theme": "night"
+   },
+   "ctx": "mo",
+   "v": "mo"
+  },
+  {
+   "t": "light mode",
+   "i": "motion.theme",
+   "s": {
+    "theme": "warm"
+   },
+   "ctx": "mo",
+   "v": "mo"
+  },
+  {
+   "t": "change the button text to Join now",
+   "i": "motion.text",
+   "s": {
+    "kind": "button",
+    "text": "Join now"
+   },
+   "ctx": "mo",
+   "v": "mo"
+  },
+  {
+   "t": "make the headline say Ship it Friday",
+   "i": "motion.text",
+   "s": {
+    "kind": "word",
+    "text": "Ship it Friday"
+   },
+   "ctx": "mo",
+   "v": "mo"
+  },
+  {
+   "t": "set the toast to Saved!",
+   "i": "motion.text",
+   "s": {
+    "kind": "toast"
+   },
+   "ctx": "mo",
+   "v": "mo"
+  },
+  {
+   "t": "add a toast",
+   "i": "motion.add",
+   "s": {
+    "kind": "toast"
+   },
+   "ctx": "mo",
+   "v": "mo"
+  },
+  {
+   "t": "add a toast at the end",
+   "i": "motion.add",
+   "s": {
+    "kind": "toast"
+   },
+   "ctx": "mo",
+   "v": "mo"
+  },
+  {
+   "t": "throw in a spinner",
+   "i": "motion.add",
+   "s": {
+    "kind": "loader"
+   },
+   "ctx": "mo",
+   "v": "mo"
+  },
+  {
+   "t": "add a bar chart",
+   "i": "motion.add",
+   "s": {
+    "kind": "bars"
+   },
+   "ctx": "mo",
+   "v": "mo"
+  },
+  {
+   "t": "add a command palette",
+   "i": "motion.add",
+   "s": {
+    "kind": "cmdk"
+   },
+   "ctx": "mo",
+   "v": "mo"
+  },
+  {
+   "t": "one more toggle",
+   "i": "motion.add",
+   "s": {
+    "kind": "toggle"
+   },
+   "ctx": "mo",
+   "v": "mo"
+  },
+  {
+   "t": "add a phone with screens",
+   "i": "motion.add",
+   "s": {
+    "kind": "phone"
+   },
+   "ctx": "mo",
+   "v": "mo"
+  },
+  {
+   "t": "remove the chart",
+   "i": "motion.remove",
+   "s": {
+    "kind": "chart"
+   },
+   "ctx": "mo",
+   "v": "mo"
+  },
+  {
+   "t": "get rid of the music player",
+   "i": "motion.remove",
+   "s": {
+    "kind": "player"
+   },
+   "ctx": "mo",
+   "v": "mo"
+  },
+  {
+   "t": "drop the dynamic island",
+   "i": "motion.remove",
+   "s": {
+    "kind": "island"
+   },
+   "ctx": "mo",
+   "v": "mo"
+  },
+  {
+   "t": "delete the slider",
+   "i": "motion.remove",
+   "s": {
+    "kind": "slider"
+   },
+   "ctx": "mo",
+   "v": "mo"
+  },
+  {
+   "t": "hide the cursor",
+   "i": "motion.cursor",
+   "s": {
+    "on": false
+   },
+   "ctx": "mo",
+   "v": "mo"
+  },
+  {
+   "t": "show the cursor again",
+   "i": "motion.cursor",
+   "s": {
+    "on": true
+   },
+   "ctx": "mo",
+   "v": "mo"
+  },
+  {
+   "t": "keep the camera still",
+   "i": "motion.camera",
+   "s": {
+    "on": false
+   },
+   "ctx": "mo",
+   "v": "mo"
+  },
+  {
+   "t": "zoom in more",
+   "i": "motion.camera",
+   "s": {
+    "more": true
+   },
+   "ctx": "mo",
+   "v": "mo"
+  },
+  {
+   "t": "turn on motion blur",
+   "i": "motion.blur",
+   "s": {
+    "on": true
+   },
+   "ctx": "mo",
+   "v": "mo"
+  },
+  {
+   "t": "no motion blur",
+   "i": "motion.blur",
+   "s": {
+    "on": false
+   },
+   "ctx": "mo",
+   "v": "mo"
+  },
+  {
+   "t": "export a gif",
+   "i": "motion.export",
+   "s": {
+    "fmt": "gif"
+   },
+   "ctx": "mo",
+   "v": "mo"
+  },
+  {
+   "t": "export it as an mp4",
+   "i": "motion.export",
+   "s": {
+    "fmt": "mp4"
+   },
+   "ctx": "mo",
+   "v": "mo"
+  },
+  {
+   "t": "download the video",
+   "i": "motion.export",
+   "s": {
+    "fmt": "mp4"
+   },
+   "ctx": "mo",
+   "v": "mo"
+  },
+  {
+   "t": "save it as an html page",
+   "i": "motion.export",
+   "s": {
+    "fmt": "html"
+   },
+   "ctx": "mo",
+   "v": "mo"
+  },
+  {
+   "t": "render a png",
+   "i": "motion.export",
+   "s": {
+    "fmt": "png"
+   },
+   "ctx": "mo",
+   "v": "mo"
+  },
+  {
+   "t": "use the ui reel",
+   "i": "motion.new",
+   "s": {
+    "tpl": "ui-reel"
+   },
+   "ctx": "mo",
+   "v": "mo"
+  },
+  {
+   "t": "switch to the logo reveal",
+   "i": "motion.new",
+   "s": {
+    "tpl": "logo-draw"
+   },
+   "ctx": "mo",
+   "v": "mo"
+  },
+  {
+   "t": "try lower thirds",
+   "i": "motion.new",
+   "s": {
+    "tpl": "lower-name"
+   },
+   "ctx": "mo",
+   "v": "mo"
+  },
+  {
+   "t": "play",
+   "i": "motion.play",
+   "s": {
+    "on": true
+   },
+   "ctx": "mo",
+   "v": "mo"
+  },
+  {
+   "t": "pause",
+   "i": "motion.play",
+   "s": {
+    "on": false
+   },
+   "ctx": "mo",
+   "v": "mo"
+  },
+  {
+   "t": "turn off animations",
+   "i": "settings.motion",
+   "ctx": "g",
+   "v": "mo"
+  },
+  {
+   "t": "reduce motion",
+   "i": "settings.motion",
+   "ctx": "g",
+   "v": "mo"
+  },
+  {
+   "t": "add a video",
+   "i": "site.video",
+   "ctx": "s",
+   "v": "mo"
+  },
+  {
+   "t": "make the background animation slower",
+   "i": "site.fx",
+   "ctx": "s",
+   "v": "mo"
+  },
+  {
+   "t": "design a logo for ember socks",
+   "i": "design.new",
+   "ctx": "g",
+   "v": "mo"
   }
  ]
 }

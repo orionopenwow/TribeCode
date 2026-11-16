@@ -29,6 +29,7 @@
     design: { label: 'Design', icon: 'i-canvas', title: 'Untitled design' },
     slides: { label: 'Slides', icon: 'i-play', title: 'Untitled slides' },   // feat/files-dash: a Markdown deck (deck.js)
     site: { label: 'Website', icon: 'i-net', title: 'Untitled website' },    // feat/files-dash: one HTML page with a live preview
+    motion: { label: 'Motion graphic', icon: 'i-play', title: 'Motion graphic' },   // feat/motion: a Motion Studio doc (motionstudio.js)
     file: { label: 'File', icon: 'i-clip', title: 'File' },
   };
   // what kind of file a name is (the same groups as server/uploads.js)
@@ -80,6 +81,7 @@
     if (kind === 'whiteboard') it.elements = {};
     if (kind === 'design') it.nodes = {};
     if (kind === 'slides') it.body = String(o.body || `<!-- theme: campfire -->\n\n# ${it.title}\n\nA one-line subtitle\n\n---\n\n## First point\n\n- \n`), it.version = 1;
+    if (kind === 'motion') it.body = String(o.body || '{}');
     if (kind === 'site') it.body = String(o.body || (window.TribeFilesView ? window.TribeFilesView.siteHtml(it.title) : `<!doctype html><title>${esc(it.title)}</title><h1>${esc(it.title)}</h1>`));
     await persist(it); emit(); return it;
   }
@@ -191,6 +193,7 @@
     if (it.kind === 'sheet') return openSheet(it);
     if (it.kind === 'slides') return openSlides(it);
     if (it.kind === 'site') return openSite(it);
+    if (it.kind === 'motion') { if (!window.TribeMotionStudio) return toast('Motion Studio did not load. Reload the app.'); return window.TribeMotionStudio.open({ local: it.id, pid: '' }); }
     if (it.kind === 'whiteboard') { if (!window.TribeWhiteboard) return toast('The whiteboard did not load. Reload the app.'); window.TribeWhiteboard.open(it.id, { backend: be('whiteboard') }); return chrome(it); }
     if (it.kind === 'design') { if (!window.TribeCanvas) return toast('The design canvas did not load. Reload the app.'); window.TribeCanvas.open(it.id, { backend: be('design') }); return chrome(it); }
     if (it.kind === 'file') return textish(it.fkind) && it.size < 2 * 1048576 ? openCode(it) : window.TribeHub && window.TribeHub.openFile(asFile(it));
