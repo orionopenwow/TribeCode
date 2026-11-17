@@ -1,11 +1,21 @@
 # Changelog
 
-## v0.40.1
-- **Demo tribe**: ticking a lesson step no longer shows "This needs the tribe online"; lesson progress is kept on the device.
-- **Flint**: "how does hosting work" is answered from the Guide again.
-- **Workshop**: ArtCraft's card shows a real screenshot of the app, with its credit.
-- **Website**: the free toolbox shows the ArtCraft screenshot.
-- **Phones**: the demo tribe fix applies on phones too.
+## v0.41.0
+- **Pick what kind of site first**: Link in bio or an app or project page, then a quiet row of the rest (business, portfolio, event, blog, blank). Each shows its own templates, best first, and See all shows all 61.
+- **One place to start a website**: Design, Ctrl K, the Website page, New site and Flint all open the same screen.
+- **Nine new templates**: six link-in-bio pages, a GitHub project page, an app download page, and Send people to my app.
+- **Send people to your app**: a page that sends visitors to your store page, a release or any address after a few seconds, with the address shown and a button. It only moves in the published or downloaded page, never while you edit.
+- **Your GitHub details fill in**: a project page picks up the project's GitHub address and latest version.
+- **Flint has his own column**: on the far right, never on top of the panel, and much less crowded. Fold him with Ctrl J; under 1440 he opens as a drawer.
+- **Drag everything**: sections in the list and on the page, entries inside a section, pages, and new blocks, with a line showing where they land and one Undo per move.
+- **A list like layers**: rename, hide and lock sections; right-click for cut, copy, paste, copy look and paste look, hide on phones or computers.
+- **Find and replace, and History**: change words on every page at once (Ctrl F), and go back to any step.
+- **More basics**: drop a picture file onto any picture, paste a link onto selected words, Tab between sections.
+- **Calmer designer**: the Plan checklist is gone for now.
+- **Flint**: "make a website", "make a page for my app", "send people to my app"; "how does hosting work" is answered from the Guide again.
+- **Workshop and website**: ArtCraft shows a real screenshot of the app.
+- **Fixes**: a button's words no longer get written over between the page and the panel ("The The The"); the panel is no longer cut off at the bottom; ticking a lesson in the demo tribe no longer shows "This needs the tribe online"; Where it lives and the App Creator offline messages now translate.
+- **Phones**: the kinds screen fits 390px; Flint's box stays at the bottom and his replies slide up; hold, then drag to reorder sections.
 
 ## v0.40.0
 - **Website designer, one row**: the top bar is one line on every screen. Templates, Save design, the look and the AI helpers are under More, and the side panel has four tabs: Edit, Ideas, Style, Check.
