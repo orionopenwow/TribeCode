@@ -300,7 +300,7 @@
     const c = chip(), inv = head.querySelector('#pj-invite');
     if (inv) { c.style.marginLeft = 'auto'; inv.style.marginLeft = '8px'; inv.before(c); } else { c.style.marginLeft = 'auto'; head.appendChild(c); }
   }
-  function mountCard() { const slot = document.getElementById('pj-next-slot'); if (slot) card(slot); mountChip(); }
+  function mountCard() { const slot = document.getElementById('pj-next-slot'); if (slot) card(slot); }   // pass 6: no Next chip in the header; the card is the one place (the ? menu still asks here)
   const hook = () => { const Cl = C(); if (!Cl || !Cl.on) return setTimeout(hook, 400); ['task', 'doc', 'vision', 'repo', 'cnv-op', 'publish', 'site-config', 'presence', 'project'].forEach(t => { try { Cl.on(t, refreshAll); } catch {} }); };
   hook();
   document.addEventListener('tribe:nextstep', () => setTimeout(refreshAll, 1500));

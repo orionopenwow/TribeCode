@@ -61,7 +61,7 @@
     flow = r.flow; minimized = true; popOpen = false; draw();   // starts folded to the slim Getting started bar (Open shows the card)
     App().show('chat');
     // qa-qol-2: not while a sheet is up (the invite sheet already says it, and on phones the toast covered its buttons)
-    setTimeout(() => { const m = $("#invite-modal"); if (!m || m.classList.contains("hidden")) toast(`${r.flow.name} is live. Share the link.`); }, 600);
+    if (!extra.quiet) setTimeout(() => { const m = $("#invite-modal"); if (!m || m.classList.contains("hidden")) toast(`${r.flow.name} is live. Share the link.`); }, 600);   // pass 6: quiet when the first preview follows
     return r.flow;
   }
   function suggestName() {
@@ -92,6 +92,9 @@
     const d = dockEl(); if (!d) return;
     if (!flow) { d.innerHTML = ''; d.className = 'flow-dock'; return; }
     const f = flow, desk = !matchMedia('(max-width: 820px)').matches;
+    // pass 6: no "Getting started" strip over the chat any more; the dashboard keeps the one next step (projects.js).
+    // The running plan's slim bar stays, and the full card still opens on purpose (Updates, a phone friend's card).
+    if (f.status !== 'running' && (desk ? !popOpen : minimized)) { d.innerHTML = ''; d.className = 'flow-dock'; return; }
     if (f.status === 'running' || (desk ? !popOpen : minimized)) {
       const pct = f.plan && f.plan.total ? Math.round(f.plan.done / f.plan.total * 100) : 0;
       const cm = f.plan && f.plan.milestones.find(m => m.id === f.plan.current);

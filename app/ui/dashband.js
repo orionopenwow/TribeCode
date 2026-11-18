@@ -23,8 +23,8 @@
   const toast = m => App() && App().toast && App().toast(m);
   const phone = () => matchMedia('(max-width: 820px)').matches;
   const ago = at => { const t = Date.parse(at); if (!t) return ''; const s = (Date.now() - t) / 1000; if (s < 60) return 'just now'; if (s < 3600) return `${Math.floor(s / 60)}m ago`; if (s < 86400) return `${Math.floor(s / 3600)}h ago`; if (s < 7 * 86400) return `${Math.floor(s / 86400)}d ago`; return new Date(t).toLocaleDateString([], { month: 'short', day: 'numeric' }); };
-  const LABEL = { app: 'App', site: 'Website', design: 'Design' };
-  const KIND_I = { app: 'i-play', site: 'i-net', design: 'i-canvas' };
+  const LABEL = { app: 'App', site: 'Website', phone: 'Phone app', design: 'Design' };
+  const KIND_I = { app: 'i-play', site: 'i-net', phone: 'i-grid', design: 'i-canvas' };
   const SANDBOX = 'allow-scripts allow-forms allow-pointer-lock allow-popups';
   const MAX = 5;
 
@@ -49,6 +49,10 @@
       <div class="db-site-body"><b>${esc(title)}</b>${s && s.tagline ? `<span>${esc(s.tagline)}</span>` : '<span class="db-ln"></span><span class="db-ln s"></span>'}<em></em>
       <div class="db-site-cols"><i></i><i></i><i></i></div></div></div>`;
   }
+  async function phonePic(pid) {   // pass 6: an App Creator app: its first screen, drawn small
+    try { const r = await api(`/projects/${encodeURIComponent(pid)}/app-config`, { project: pid }); const A = window.TribeAppCreator; if (r && r.config && A && A.mini) return `<div class="db-phone">${A.mini(r.config, null, 150)}</div>`; } catch {}
+    return '';
+  }
   async function designSvg(pid, d) {
     try { const r = await api('/canvas/' + encodeURIComponent(d.id), { project: pid }); const FV = window.TribeFilesView; if (FV && FV.thumb) return FV.thumb.design((r.file || {}).nodes); } catch {}
     return '';
@@ -60,7 +64,7 @@
     const upd = b.updated && b.updated.at ? `Updated ${esc(ago(b.updated.at))}${by}` : 'Not updated yet';
     const can = k => b.has[k];
     const sw = Object.keys(LABEL).map(k => `<button type="button" role="radio" class="db-sw-b" data-show="${k}" aria-checked="${b.pick === k}" ${can(k) && b.canSwitch ? '' : 'disabled'} title="${can(k) ? `Show the ${LABEL[k].toLowerCase()}` : `No ${LABEL[k].toLowerCase()} yet`}">${ico(KIND_I[k], 13)}<span>${LABEL[k]}</span></button>`).join('');
-    const second = b.pick === 'app' ? ['code', 'i-git', 'Open code'] : b.pick === 'site' ? ['designer', 'i-quill', 'Open designer'] : ['design', 'i-canvas', 'Open design'];
+    const second = b.pick === 'app' ? ['code', 'i-git', 'Open code'] : b.pick === 'site' ? ['designer', 'i-quill', 'Open designer'] : b.pick === 'phone' ? ['appcreator', 'i-grid', 'Open App Creator'] : ['design', 'i-canvas', 'Open design'];
     return `<div class="db-strip">
       <div class="db-id">${PJ() && PJ().face ? PJ().face(b.project, 'sm') : ''}<div class="db-id-t"><div class="db-name"><b>${esc(b.project.name)}</b><span class="db-kind">${ico(KIND_I[b.pick], 12)}${LABEL[b.pick]}</span>${b.isMain ? `<span class="db-main" title="${b.pinned ? 'Pinned as the tribe’s main project' : 'The tribe’s most active project'}">${b.pinned ? 'Main project' : 'Most active'}</span>` : ''}</div>
         <span class="db-upd">${upd}<span class="db-here" id="db-here-${where}"></span></span></div></div>
@@ -92,8 +96,10 @@
     let pic = '';
     if (b.pick === 'app') { const t = await loadThumb(b.project.id); pic = t && t.src && t.kind !== 'tile' ? `<img class="db-shot" alt="" decoding="async" referrerpolicy="no-referrer" src="${esc(srcOf(t.src))}">` : tile(b, t); }
     else if (b.pick === 'site') pic = siteMock(b.site, b.project.name);
+    else if (b.pick === 'phone') pic = await phonePic(b.project.id);
     else pic = (await designSvg(b.project.id, b.design)) || tile(b);
-    const live = b.pick === 'design' ? `${phone() ? 'Tap' : 'Click'} to open the design` : phone() ? 'Tap to run it live' : 'Hover or click to run it live';
+    const opens = b.pick === 'phone' || (b.pick === 'site' && b.site && b.site.designed);
+    const live = b.pick === 'design' ? `${phone() ? 'Tap' : 'Click'} to open the design` : opens ? `${phone() ? 'Tap' : 'Click'} to open the preview` : phone() ? 'Tap to run it live' : 'Hover or click to run it live';
     return `<section class="db-band" id="db-band-${where}" data-pick="${b.pick}" data-pid="${esc(b.project.id)}" aria-label="Preview of ${esc(b.project.name)}">
       <div class="db-stage" tabindex="0" role="button" aria-label="${esc(live)}"><div class="db-pic">${pic}</div><span class="db-hint">${ico(b.pick === 'design' ? 'i-canvas' : 'i-play', 12)}${live}</span></div>
       ${head(b, where)}</section>`;
@@ -140,10 +146,13 @@
     if (k === 'new-app') return inProject(pid, () => window.TribePreview && window.TribePreview.open());
     if (k === 'open') {
       if (b.pick === 'design') return inProject(pid, () => window.TribeCanvas && window.TribeCanvas.open(b.design.id));
+      // pass 6: a designed website and an App Creator app open full size (firstlook.js), like the first preview
+      if (window.TribeFirstLook && (b.pick === 'phone' || (b.pick === 'site' && b.site && b.site.designed))) return inProject(pid, () => window.TribeFirstLook.open(pid, b.pick === 'phone' ? 'app' : 'site'));
       return inProject(pid, async () => { if (!window.TribePreview) return; await window.TribePreview.open(); window.TribePreview.setSource(b.pick === 'site' ? 'site' : 'app', true); });
     }
     if (k === 'code') return inProject(pid, () => App().show('repo'));
     if (k === 'designer') return inProject(pid, () => window.TribeSiteDesigner && window.TribeSiteDesigner.open({ pid }));
+    if (k === 'appcreator') return inProject(pid, () => window.TribeAppCreator && window.TribeAppCreator.open({ pid }));
     if (k === 'design') return inProject(pid, () => window.TribeCanvas && window.TribeCanvas.open(b.design.id));
     if (k === 'share') { try { const r = await liveUrl(b); if (r.share) return copy(r.share); } catch (e) { return toast(e.message); } return toast('Nothing to share yet.'); }
     if (k === 'pin' || k === 'unpin') {
@@ -177,9 +186,9 @@
     });
     const stage = band.querySelector('.db-stage'); if (!stage) return;
     let hov = 0;
-    stage.onmouseenter = () => { if (!matchMedia('(hover: hover)').matches) return; hov = setTimeout(() => goLive(band, b), 700); };
+    stage.onmouseenter = () => { if (!matchMedia('(hover: hover)').matches || b.pick === 'phone' || (b.site && b.site.designed)) return; hov = setTimeout(() => goLive(band, b), 700); };
     stage.onmouseleave = () => clearTimeout(hov);
-    stage.onclick = () => (b.pick === 'design' ? act('open', b, where) : goLive(band, b));
+    stage.onclick = () => (b.pick === 'design' || b.pick === 'phone' || (b.pick === 'site' && b.site && b.site.designed) ? act('open', b, where) : goLive(band, b));
     stage.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); stage.onclick(); } };
     paintHere(band, b, where);
   }
