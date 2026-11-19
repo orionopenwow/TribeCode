@@ -1,26 +1,24 @@
 # TribeCode session handoff
 
-Written 2026-11-13, 19:45 Phoenix time, by the session that released v0.33.0 to v0.36.0. For any agent or Claude session picking up TribeCode work. Read `AGENTS.md` and `HANDOFF.md` first; this page covers what those don't: the current state, work in flight, how releases are done, and how two sessions avoid stepping on each other.
+Updated 2026-11-19 by the session that released v0.33.0 to v0.36.0, after catching up on the other session's v0.38.0 to v0.41.0. For any agent or Claude session picking up TribeCode work. Read `AGENTS.md` and `HANDOFF.md` first; this page covers what those don't: the current state, work in flight, how releases are done, and how two sessions avoid stepping on each other.
 
 ## Where things stand
 
-- **Released:** v0.36.0 is on `main` and `dev` (commit `84507d0`), with Windows, Mac and Linux installers published.
-- **Service worker cache:** `tribecode-shell-v200`. Bump it above whatever you find when shell files change.
-- **Flint's language score:** 1400/1421 (98.5%) on `flint_eval_test`; the bar is 98%.
+- **Released:** v0.41.0 is on `main` and `dev` (commit `96e1762`), with Windows, Mac and Linux installers published. `CHANGELOG.md` has every release in user terms; `docs/CONTEXT.md` has one line per release with the files involved.
+- **Service worker cache:** `tribecode-shell-v264` on `main`. Bump it above whatever you find when shell files change.
+- **Flint's language score:** 2365/2391 (98.9%) on `flint_eval_test`; the bar is 98%.
+- **The npm test chain** has about 296 steps; a full run is several hours on the sandbox, so releases use targeted tests plus the smoke set.
 - **Two-step sign-in and payments are built but off.** They turn on with `TRIBE_TWO_STEP=1` and `TRIBE_PAYMENTS=1` (or the host-only settings in `docs/ACCOUNTS.md` and `docs/PREMIUM.md`). The owner will say when.
+- **Beta tags:** every website claim is listed with its evidence in `docs/CLAIMS.md`. Claims only proven on simulated phones and mocked services carry a beta tag until the owner runs `docs/REAL-DEVICE-CHECK.md` (about 15 minutes).
 
-## In flight right now (four branches, not merged)
+## In flight
 
-Each is a git worktree cut from v0.36.0. Don't start the same work elsewhere.
-
-| Branch | What it does | Files it owns |
+| Branch | What it is | State |
 |---|---|---|
-| `feat/real-tribe` | Every tribe starts with the full feature set. The desktop app hosts a new tribe on this computer silently; a browser-only tribe shows a friendly "Put this tribe online" card instead of errors. The phrase "real tribe" is removed. The "On this device" header pill is replaced by a plain "Sharing and backup" card on the dashboard. | `offline.js`, `tribenew.js`, `livingrepo.js`, the dashboard part of `projects.js` |
-| `feat/design-site2` | Overhaul of the website designer, Design flow and canvas: better exported sites, more blocks, open-source icons, fonts and illustrations, a shared brand kit, "Check my site", and "Have my agent do it" over MCP tools. | `sitedesigner*`, `sitecfg.js`, `designflow*`, `canvas/*` |
-| `feat/company3` | Company made intuitive: setup by questions, plain words (roles, check-ins, money in and out), a summary strip, AI in roles made obvious. | `company*.js`, `server/company*.js`, `server/rituals.js` |
-| `feat/chat-invite-ui` | Chat is for people: instructions for an AI go privately to the person's agent, not into the channel; channels show only chosen one-line AI update cards. Also a taller, clearer invite sheet. | chat render and send in `app.js`, `chatx.js`, `askagent.js`, `inviteone.js` layout |
+| `fix/p7-cache` | v0.41.1: updates always show (cache cleared after an update), offline messages wait and send, an offline line and dot, full-colour project icons, a DM header fix. Contains `fix/p7-offline`. | Version bumped, not merged into `main`, not released. Its owner (the other session) should merge and release it, or the owner should say who does. |
+| `feat/docs-start` | One commit from 2026-11-06. | Old; check before using. |
 
-When they finish, the releasing session merges them into `integ6`, runs targeted tests and releases v0.37.0.
+The four branches listed here on 2026-11-13 (`feat/real-tribe`, `feat/design-site2`, `feat/company3`, `feat/chat-invite-ui`) were finished and released in v0.38.0.
 
 ## What the owner wants (standing instructions)
 
@@ -68,7 +66,7 @@ Commit messages end with a `Co-Authored-By` line for the model and a `Claude-Ses
 - **Email sign-in links** need the host's own mail server.
 - **Phone push notifications** need Apple and Google developer accounts.
 - **Screenshots** are 62 MB of the repo; 294 of them exist only because tests rewrite them. Deleting them needs edits to 34 tests; the owner hasn't decided.
-- **Open decisions for the owner:** which session owns `main`; whether cancelling a plan gets a grace period; whether passkeys stay visible while two-step is off.
+- **Open decisions for the owner:** which session owns `main`; whether cancelling a plan gets a grace period; whether passkeys stay visible while two-step is off; deleting the test-only screenshots.
 
 ## Where to look
 
@@ -76,5 +74,6 @@ Commit messages end with a `Co-Authored-By` line for the model and a `Claude-Ses
 - `docs/CONTEXT.md`: one line per release.
 - `CHANGELOG.md`: what each release contains, in user terms.
 - `docs/LAUNCH.md` and `docs/ONE-PAGER.md`: what must be true before launch.
-- `docs/APP-AUDIT-2026-11-13.md`: holes and ranked next features (a draft).
-- Feature docs: `ANY-LLM.md` (agents), `ACCOUNTS.md`, `PREMIUM.md`, `LIGHT-HOSTING.md` (folders and sync), `WEBSITE.md`, `COMPANY.md`, `WORK-BACKEND.md`, `FLINT-TIERS.md`, `FLINT-RESEARCH.md`, `MOBILE-COMPLETE.md`.
+- `docs/APP-AUDIT-2026-11-13.md`, `docs/PASS3-AUDIT.md`, `docs/PASS4-POLISH.md`: holes found and fixed, and features suggested.
+- `docs/REAL-DEVICE-CHECK.md` and `docs/CLAIMS.md`: what still needs real hardware.
+- Feature docs: `APP-CREATOR.md`, `MOTION-STUDIO.md`, `LAUNCH-KIT.md`, `SITE-CREATOR.md`, `LESSONS.md`, `ROLES-AND-PERMISSIONS.md`, `PUBLISH.md`, `HOMESCREEN-PATH.md`, `SUGGESTIONS.md`, `ASSET-LIBRARY.md`, `ANY-LLM.md` (agents), `ACCOUNTS.md`, `PREMIUM.md`, `LIGHT-HOSTING.md` (folders and sync), `WEBSITE.md`, `COMPANY.md`, `WORK-BACKEND.md`, `FLINT-TIERS.md`, `FLINT-RESEARCH.md`, `MOBILE-COMPLETE.md`.
