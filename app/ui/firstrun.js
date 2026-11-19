@@ -122,7 +122,10 @@
         setTimeout(() => { const i = window.TribePreview && window.TribePreview.info && window.TribePreview.info(); if (!i || i.hasIndex !== false) track('firstPreview'); }, 1500);
       }
       try { lsSet('tribecode.firstrun.ms', String(Date.now() - t0)); } catch {}
-      lsSet(K.step, 'invite'); next();
+      lsSet(K.step, 'invite');
+      // pass 6: the first preview has its own next actions; this run's next step waits until it is closed
+      if (window.TribeFirstLook && window.TribeFirstLook.isOpen && window.TribeFirstLook.isOpen()) addEventListener('tribe:firstlook-close', () => next(), { once: true });
+      else next();
     } catch (e) {
       stepUi(curStep, true);
       if (go) go.disabled = false; toast(e.message || 'Something went wrong');

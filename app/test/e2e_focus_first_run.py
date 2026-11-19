@@ -45,6 +45,12 @@ def main():
             host.click(".fr-chip:has-text('A pixel platformer')")
             assert "platformer" in host.input_value("#fr-in")
             t0 = time.time(); host.click("#fr-go")
+            # pass 6: the idea lands on its first preview (firstlook.js): a game, run from the project's code
+            host.wait_for_selector("#fpv .fpv-acts", timeout=90000)
+            assert host.evaluate("TribeFirstLook.state().kind") == "game" and "/preview/" in (host.get_attribute("#fpv-frame", "src") or "")
+            host.screenshot(path=str(SHOTS / "focus-first-preview-1440.png"))
+            assert host.locator("#fr-next").count() == 0, "the run's next step waits for the first preview to close"
+            host.click('#fpv [data-fpv="close"]')
             host.wait_for_selector("#fr-next", timeout=90000)
             took = time.time() - t0
             assert took < 90, f"first version took {took:.0f}s"
@@ -54,7 +60,6 @@ def main():
             assert not host.evaluate("TribeMode.allows(TribeMode.minFor('repo'))")
             assert host.evaluate("TribeMode.allows(TribeMode.minFor('chat'))") and host.evaluate("TribeMode.allows(TribeMode.minFor('docs'))") and host.evaluate("TribeMode.allows(TribeMode.minFor('ws-tasks'))")
             assert host.evaluate("TribeMode.unlock('ws-agents'), TribeMode.allows(TribeMode.minFor('ws-agents'))"), "Turn it on still works in focus"
-            host.wait_for_function("window.TribePreview && TribePreview.info() && TribePreview.info().hasIndex", timeout=20000)
             assert host.is_visible("#fr-all"), "Show everything is always there"
             time.sleep(2)
             act = api("/activation", token=tok)[1]

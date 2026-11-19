@@ -179,6 +179,7 @@
   }
   function close() {
     if (!box) return; box.remove(); box = null; document.body.classList.remove('fpv-open');
+    try { root.dispatchEvent(new CustomEvent('tribe:firstlook-close')); } catch {}
     if (App() && App().show) App().show('home');
     if (root.TribeProjects && root.TribeProjects.refresh) root.TribeProjects.refresh();
   }
@@ -235,6 +236,7 @@
     }
     if (k === 'edit' || k === 'better') {
       const pid = r.pid; box.remove(); box = null; document.body.classList.remove('fpv-open');
+      try { root.dispatchEvent(new CustomEvent('tribe:firstlook-close')); } catch {}
       if (r.kind === 'site' && root.TribeSiteDesigner) await root.TribeSiteDesigner.open({ pid });
       else if (r.kind === 'app' && root.TribeAppCreator) await root.TribeAppCreator.open({ pid });
       else if (root.TribePreview) { await root.TribePreview.open(); if (root.TribePreview.setSource) root.TribePreview.setSource('app', true); }
@@ -289,5 +291,5 @@
   }
   const failed = pid => ls.get(FAIL(pid)) || '';
   async function retry(pid) { const idea = failed(pid); if (!idea) return; const p = root.TribeProjects && root.TribeProjects.cur ? root.TribeProjects.cur() : null; return start({ pid, idea, name: (p && p.name) || 'My project' }); }
-  return { ...PURE, start, open, last, failed, retry, close, state: () => cur };
+  return { ...PURE, start, open, last, failed, retry, close, isOpen: () => !!(box && box.isConnected), state: () => cur };
 });
