@@ -822,9 +822,9 @@
    "do": "next:publish",
    "doLabel": "Open Publish",
    "show": {
-    "go": "home",
-    "sel": "#pj-next-slot, #pj-overview",
-    "say": "Publish from your project's front page."
+    "call": "TribePublish.open",
+    "sel": "#pb-go:not([hidden]), #pb-url, #pb-form",
+    "say": "Check the name and the short description, then press Publish."
    }
   },
   {

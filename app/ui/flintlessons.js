@@ -8,7 +8,7 @@
 (function (root, factory) { const api = factory(); if (typeof module === 'object' && module.exports) module.exports = api; else root.TribeFlintLessons = api; })(typeof self !== 'undefined' ? self : this, function () {
   'use strict';
   const LESSONS = {
-    site: { title: 'The website designer', steps: ['Pick a template, or tell Flint what the site is for: “something for my band”.', 'Click any words in the preview and type. Click a button to choose where it goes.', 'Blocks on the left: + Add block, drag to reorder, pick a layout on the right. Templates, Save design and Code are under More.', '“Dark mode”, “add a page called About”, “make the buttons work”: every change has Undo.', 'Download HTML gives one standalone file; the zip has a file per page.'], show: { go: 'designer', sel: '#wdz-blocks, #flm-in-designer', say: 'Blocks live here. Click one, or add a new one below.' }, guide: 'start-here' },
+    site: { title: 'The website designer', steps: ['Pick a template, or tell Flint what the site is for: “something for my band”.', 'Click any words in the preview and type. Click a button to choose where it goes.', 'Blocks on the left: + Add block, drag to reorder, pick a layout on the right. Templates, Save design and Code are under More.', '“Dark mode”, “add a page called About”, “make the buttons work”: every change has Undo.', 'Download HTML gives one standalone file; the zip has a file per page.'], show: { go: 'designer', sel: '#wdz-start .wdz-kmain, #wdz-blocks', say: 'Start here: pick a kind of site, or click a block to change it.' }, guide: 'start-here' },
     canvas: { title: 'Design (the canvas)', steps: ['Ask Flint for a screen: “a login screen for Ember”. It is real layers with auto layout.', 'Select a frame and say “dark mode”: the layers are recolored in place, Ctrl Z undoes it.', '“Wire this button to the login screen” links a layer to another screen.', '“Send to app” turns a frame into code in the project.'], show: { go: 'canvas', sel: '#cv-flint-btn, #flm-in-canvas, #nest-canvas', say: 'Talk to Flint here, or draw with the tools.' } },
     preview: { title: 'The live preview', steps: ['Preview runs your app, game or site beside everything else.', 'App | Website switches what it shows. Website opens the designer with “Design”.', 'Edit lets you click an element and change it in plain words, free.', 'Saved keeps designs of the website you can compare and restore. The project’s whole history is in Versions.'], show: { go: 'preview', sel: '#pvw, #nest-preview-slot .nest-row', say: 'Your project runs here, live.' } },
     tasks: { title: 'Tasks', steps: ['Say “add a task to fix the menu for Maya by friday”, or type /task in chat.', 'Every card has one clear button for the next step.', '“Mark it done”, “push it to monday”, “what needs someone” all work without AI.'], show: { go: 'ws-tasks', sel: '#nest-ws-tasks, #view-tasks', say: 'The Task Board: who does what.' }, guide: 'working-together' },
@@ -63,12 +63,15 @@
       if (key === 'inspo' && W.TribeInspoBoard) return W.TribeInspoBoard.open({});
       if (key === 'premium' && W.TribePremium) return W.TribePremium.open();
       if (key === 'flintpage' && W.TribeFlintPage) return W.TribeFlintPage.open('', 'device');
+      if (W.TribeFlintPage && W.TribeFlintPage.close && document.querySelector('.fpg')) W.TribeFlintPage.close();   // p6: going somewhere else leaves Flint's page
       if (W.TribeSiteDesigner && document.querySelector('#wdz:not([hidden])')) W.TribeSiteDesigner.close();
       if (sh && sh.go) return sh.go(key);
     } catch {}
   }
   const visible = el => { if (!el) return false; const r = el.getBoundingClientRect(); return r.width > 0 && r.height > 0; };
-  function find(sel) { for (const one of String(sel).split(',')) { const el = [...document.querySelectorAll(one.trim())].find(visible); if (el) return el; } return null; }
+  // p6: prefer a match nothing covers (an open tool can hide the dashboard's copy of the same control); else the first with a size
+  const clear = el => { const r = el.getBoundingClientRect(), x = Math.min(innerWidth - 1, Math.max(0, r.left + r.width / 2)), y = Math.min(innerHeight - 1, Math.max(0, r.top + r.height / 2)); const h = document.elementFromPoint(x, y); return !!h && (h === el || el.contains(h)); };
+  function find(sel) { let first = null; for (const one of String(sel).split(',')) { let all = []; try { all = [...document.querySelectorAll(one.trim())].filter(visible); } catch {} const top = all.find(clear); if (top) return top; first = first || all[0] || null; } return first; }
   // feat/work-v2: a lesson with a tour rings each real control in turn (about 2.6 s each); any tap ends it.
   let tourN = 0;
   function tour(steps) {
@@ -82,23 +85,70 @@
     const L = LESSONS[f]; if (!L) return;
     go(L.show.go);
     if (L.tour) { if (card) card.hidden = true; return setTimeout(() => tour(L.tour), 200); }
-    let n = 0; const tick = () => { const el = find(L.show.sel); if (el) return place(el, L.show.say); if (++n < 30) setTimeout(tick, 120); else say('Open a project first, then try Show me again.'); };
+    let n = 0, sel = L.show.sel, alt = false; const tick = () => { const el = find(sel); if (el) return place(el, L.show.say); if (n === 10 && !alt) { const a = phoneAlt(sel); if (a) { alt = true; sel = a; } } if (++n < 30) setTimeout(tick, 120); else say(notHere()); };
     setTimeout(tick, 150);
   }
-  function place(el, text) {
-    unring();
-    try { el.scrollIntoView({ block: 'nearest' }); } catch {}
+  // p6: Flint's full page sits over the app; ringing something behind it showed nothing. Close it first.
+  // A full-screen page left open (Flint's page, the inspiration board, Motion Studio, a shared clip, the Launch kit, the
+  // shelf's full page) sat over the control being shown, so the ring went round something nobody could see. When one of
+  // those covers the target and the target is not inside it, close it, then look again (up to three layers).
+  const W0 = window, COVERS = [
+    ['.fpg', () => W0.TribeFlintPage.close()], ['#ibd', () => W0.TribeInspoBoard.close()], ['.mos', () => W0.TribeMotionStudio.close()],
+    ['.lch, .lch-scrim', () => W0.TribeLaunchKit.close()], ['.shc, .shc-scrim', () => W0.TribeShareClip.close()], ['.mkp-page, .mk-page', () => W0.TribeMarket.unpage()],
+    ['#flint-full', () => W0.TribeFlint.closeFull()],
+    ['#pvw', () => W0.TribePreview.close()],   // a phone: Show me pressed in Flint's own sheet rang the app behind it
+    ['#settings-modal', () => W0.TribeSettings.close()], ['#nf-settings', () => document.querySelector('#nf-settings [data-x]').click()],
+    ['.ui-sheet, .ui-scrim', () => { const all = document.querySelectorAll('.ui-sheet'), x = all.length && all[all.length - 1].querySelector('.ui-x'); if (!x) throw 0; x.click(); }]];
+  // p6: on a phone some controls live somewhere else (the ? menu, Flint's own sheet, More in the designer, the drawer's +,
+  // the dashboard's people button). When the desktop control is not on screen, open the phone's version and ring that.
+  const PHONE_ALT = [
+    [/#tb-help|#tour-search/, () => { if (!document.querySelector('#help-menu') && W0.TribeHelp) W0.TribeHelp.open(); }, '#help-menu'],
+    [/#flint\b|#flint-home/, () => W0.TribeFlint && W0.TribeFlint.openFull(), '#flint-full .ff-foot'],
+    [/#wdz-dl/, null, "#wdz [data-wdz='more']"],
+    [/#pj-plus/, () => document.body.classList.add('drawer-open'), '.pj-plus[data-pj-new]'],
+    [/#ppl-btn/, () => { if (document.body.classList.contains('m2-in-chat') && W0.TribeShell) W0.TribeShell.go('home'); }, '#ppl-btn']];
+  function phoneAlt(sel) {
+    if (innerWidth > 820) return null;
+    const a = PHONE_ALT.find(([re]) => re.test(String(sel || ''))); if (!a) return null;
+    try { if (a[1]) a[1](); } catch {}
+    return a[2];
+  }
+  function clearCover(el) {
+    // a phone: the section list is a drawer off the left edge; a control in it was ringed off screen. Slide it in (the ring follows).
+    try { if (!document.body.classList.contains('drawer-open') && el.closest('.window > .side') && el.getBoundingClientRect().right <= 0) document.body.classList.add('drawer-open'); } catch {}
+    for (let i = 0; i < 3; i++) {
+      const r = el.getBoundingClientRect(), x = Math.min(innerWidth - 1, Math.max(0, r.left + r.width / 2)), y = Math.min(innerHeight - 1, Math.max(0, r.top + r.height / 2));
+      const h = document.elementFromPoint(x, y); if (!h || h === el || el.contains(h)) return;
+      const c = COVERS.find(([sel]) => { const L = h.closest(sel); return L && !L.contains(el); }); if (!c) return;
+      try { c[1](); } catch { return; }
+    }
+  }
+  // p6: the ring follows its target while it is up (a panel that settles, a list that grows, a scroll), and the tip is
+  // measured before it is placed, so it sits below or above the target and never on top of it.
+  let follow = 0;
+  function fit(el, tip) {
+    if (!ring || !el.isConnected) return;
     const r = el.getBoundingClientRect();
-    ring = document.createElement('div'); ring.className = 'fls-ring'; ring.setAttribute('role', 'status');
     ring.style.left = `${Math.max(4, r.left - 4)}px`; ring.style.top = `${Math.max(4, r.top - 4)}px`; ring.style.width = `${r.width + 8}px`; ring.style.height = `${r.height + 8}px`;
+    const th = tip.offsetHeight || 60, tw = tip.offsetWidth || 250, below = r.bottom + 12, above = r.top - 12 - th;
+    const top = below + th <= innerHeight - 8 ? below : above >= 8 ? above : Math.max(8, Math.min(innerHeight - th - 8, r.top + 8));
+    tip.style.left = `${Math.min(innerWidth - tw - 8, Math.max(8, r.left))}px`; tip.style.top = `${top}px`;
+  }
+  function place(el, text) {
+    unring(); clearCover(el);
+    try { el.scrollIntoView({ block: 'nearest' }); } catch {}
+    ring = document.createElement('div'); ring.className = 'fls-ring'; ring.setAttribute('role', 'status'); ring._el = el;   // p6: what it rings (the demo rings check reads it)
     const tip = document.createElement('p'); tip.className = 'fls-tip'; tip.textContent = text;
-    tip.style.left = `${Math.min(innerWidth - 260, Math.max(8, r.left))}px`; tip.style.top = `${r.bottom + 12 + 60 > innerHeight ? Math.max(8, r.top - 56) : r.bottom + 12}px`;
     ring.appendChild(document.createElement('span')); document.body.appendChild(ring); document.body.appendChild(tip); ring._tip = tip;
+    fit(el, tip);
+    clearInterval(follow); const mine = ring; follow = setInterval(() => { if (ring !== mine) return clearInterval(follow); fit(el, tip); }, 200);
     clearTimeout(ringT); ringT = setTimeout(unring, 7000);
     if (card) card.hidden = true;
   }
+
+  const notHere = () => (window.TribeClient && window.TribeClient.project && window.TribeClient.project() ? 'That isn’t on this screen right now. Open it from the menu, then try Show me again.' : 'Open a project first, then try Show me again.');
   function say(t) { if (window.TribeApp && window.TribeApp.toast) window.TribeApp.toast(t); }
-  function unring() { if (ring) { if (ring._tip) ring._tip.remove(); ring.remove(); ring = null; } }
+  function unring() { clearInterval(follow); if (ring) { if (ring._tip) ring._tip.remove(); ring.remove(); ring = null; } }
   addEventListener('pointerdown', e => { if (ring && !e.target.closest('.fls-tip')) unring(); }, true);
-  return { LESSONS, FEATURES, open, close, showMe, tour, ring: (el, text) => place(el, text), unring };
+  return { LESSONS, FEATURES, open, close, showMe, tour, ring: (el, text) => place(el, text), unring, phoneAlt, notHere };
 });

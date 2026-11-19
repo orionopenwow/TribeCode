@@ -94,7 +94,7 @@
 
   // ---------- Do it for me / Show me ----------
   const go = key => { try { if (key === 'design' && W.TribeDesignFlow && W.TribeDesignFlow.open) { if (W.TribeMarket && W.TribeMarket.unpage) W.TribeMarket.unpage(); return W.TribeDesignFlow.open({}); }   // pass 4: the shelf's full page was left over the flow, so Show me rang nothing   // pass 3: there is no 'design' place in the shell; Design is the creation flow
-    const sh = W.TribeShell; if (W.TribeMarket && W.TribeMarket.unpage && key !== 'market') W.TribeMarket.unpage(); if (sh && sh.go) return sh.go(key); if (W.TribeApp && W.TribeApp.show) W.TribeApp.show(key); } catch {} };
+    const sh = W.TribeShell; if (W.TribeMarket && W.TribeMarket.unpage && key !== 'market') W.TribeMarket.unpage(); if (W.TribeFlintPage && W.TribeFlintPage.close && document.querySelector('.fpg')) W.TribeFlintPage.close(); /* p6: Flint's page covered the place we show */ if (sh && sh.go) return sh.go(key); if (W.TribeApp && W.TribeApp.show) W.TribeApp.show(key); } catch {} };
   const fn = a => { const [g, m] = String(a).split('.'); const o = W[g]; return o && typeof o[m] === 'function' ? () => o[m]() : null; };
   const RUN = {
     next: a => W.TribeNextStep && (a === 'open' ? W.TribeNextStep.open() : W.TribeNextStep.act(a)),
@@ -117,13 +117,15 @@
     return true;
   }
   const visible = el => { if (!el) return false; const r = el.getBoundingClientRect(); return r.width > 0 && r.height > 0; };
-  const find = sel => { for (const one of String(sel).split(',')) { const el = [...document.querySelectorAll(one.trim())].find(visible); if (el) return el; } return null; };
+  // p6: prefer a match nothing covers (an open tool can hide the dashboard's copy of the same control); else the first with a size
+  const clear = el => { const r = el.getBoundingClientRect(), x = Math.min(innerWidth - 1, Math.max(0, r.left + r.width / 2)), y = Math.min(innerHeight - 1, Math.max(0, r.top + r.height / 2)); const h = document.elementFromPoint(x, y); return !!h && (h === el || el.contains(h)); };
+  const find = sel => { let first = null; for (const one of String(sel).split(',')) { let all = []; try { all = [...document.querySelectorAll(one.trim())].filter(visible); } catch {} const top = all.find(clear); if (top) return top; first = first || all[0] || null; } return first; };
   function show(id) {
     const g = get(id), L = W.TribeFlintLessons; if (!g || !g.show || !L) return false;
     const s = g.show; leave(false); mark('quick', id, 'seen');
     if (s.lesson) { L.showMe(s.lesson); return true; }
     try { if (!s.go && W.TribeMarket && W.TribeMarket.unpage) W.TribeMarket.unpage(); if (s.settings) RUN.settings(s.settings); else if (s.call) RUN.call(s.call); else if (s.go) go(s.go); } catch {}
-    let n = 0; const tick = () => { const el = find(s.sel); if (el) return L.ring(el, T(s.say)); if (++n < 30) setTimeout(tick, 120); else toast('Open a project first, then try Show me again.'); };
+    let n = 0, sel = s.sel, alt = false; const tick = () => { const el = find(sel); if (el) return L.ring(el, T(s.say)); if (n === 10 && !alt && L.phoneAlt) { const a = L.phoneAlt(sel); if (a) { alt = true; sel = a; } } if (++n < 30) setTimeout(tick, 120); else toast(T(L.notHere ? L.notHere() : 'Open a project first, then try Show me again.')); };   // p6: the phone's version of a control; an honest message when a project is open
     setTimeout(tick, 180);
     return true;
   }
