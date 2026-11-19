@@ -1,6 +1,11 @@
 # Changelog
 
 ## v0.41.0
+- **Your idea becomes a first version**: type what you want to make and a website, a phone app or a game appears straight away, with no AI. It opens full size; change the words, switch the kind, keep editing, polish it or invite a friend from there.
+- **The vision, once**: your first sentence is the project's vision; no second box asks for it.
+- **One next step**: the dashboard shows the preview and a single next step under it, with See all steps for the full list. The Getting started strip over the chat, the Next chip and the right panel's steps are gone, and the invite sheet no longer pops up after creating.
+- **Bug reports with a picture and a log**: Take a screenshot grabs the app, a log snapshot is attached with tokens and keys blanked (see it first), and Save to a file works with no tribe.
+- **Show me always shows**: it closes whatever is covering the place it points at, draws above sheets, follows the control if it moves, and only the latest Show me rings.
 - **Pick what kind of site first**: Link in bio or an app or project page, then a quiet row of the rest (business, portfolio, event, blog, blank). Each shows its own templates, best first, and See all shows all 61.
 - **One place to start a website**: Design, Ctrl K, the Website page, New site and Flint all open the same screen.
 - **Nine new templates**: six link-in-bio pages, a GitHub project page, an app download page, and Send people to my app.
@@ -15,7 +20,7 @@
 - **Flint**: "make a website", "make a page for my app", "send people to my app"; "how does hosting work" is answered from the Guide again.
 - **Workshop and website**: ArtCraft shows a real screenshot of the app.
 - **Fixes**: a button's words no longer get written over between the page and the panel ("The The The"); the panel is no longer cut off at the bottom; ticking a lesson in the demo tribe no longer shows "This needs the tribe online"; Where it lives and the App Creator offline messages now translate.
-- **Phones**: the kinds screen fits 390px; Flint's box stays at the bottom and his replies slide up; hold, then drag to reorder sections.
+- **Phones**: the kinds screen and the first preview fit 390px; Flint's box stays at the bottom and his replies slide up; hold, then drag to reorder sections; Show me uses the phone's own controls; in Chat the people button no longer covers the Agents tab and the huddle button is back.
 
 ## v0.40.0
 - **Website designer, one row**: the top bar is one line on every screen. Templates, Save design, the look and the AI helpers are under More, and the side panel has four tabs: Edit, Ideas, Style, Check.
