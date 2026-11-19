@@ -101,7 +101,7 @@
       const taken = new Set(projects().map(p => p.name)), base = nameFrom(idea); let name = base;
       for (let i = 2; taken.has(name); i++) name = `${base} ${i}`;
       const kind = KIND.find(([re]) => re.test(idea));
-      const f = await window.TribeFlow.create(name, { emoji: kind ? kind[1] : '✨', wait: 8000 });
+      const f = await window.TribeFlow.create(name, { emoji: kind ? kind[1] : '✨', wait: 8000, quiet: !!window.TribeFirstLook });
       const pid = f.project; track('firstProject');
       // the flow's invite sheet / toast are for the long setup; this run shows its own next step
       setTimeout(() => { const inv = $('#invite-modal'); if (inv && !inv.classList.contains('hidden')) { const x = inv.querySelector('[data-close], .modal-x, #invite-close'); if (x) x.click(); else inv.classList.add('hidden'); } }, 50);
@@ -109,16 +109,23 @@
       await api(`/projects/${encodeURIComponent(pid)}`, { method: 'PATCH', body: { bio: idea.slice(0, 200) } }).catch(() => {});
       await api('/vision', { method: 'PUT', project: pid, body: { text: `# ${name}\n\n${idea}\n` } }).catch(() => {});
       stepUi(2);
-      await api(`/projects/${encodeURIComponent(pid)}/setup/starter`, { method: 'POST', body: {} }).catch(() => {});
+      // pass 6: the idea becomes a first preview of the right kind (firstlook.js); the old code starter is the fallback
+      if (!window.TribeFirstLook) await api(`/projects/${encodeURIComponent(pid)}/setup/starter`, { method: 'POST', body: {} }).catch(() => {});
       // your own AI helpers build the rest, when there are any
       const agents = ((C.state() || {}).members || []).filter(m => m.role === 'agent');
       if (agents.length && window.TribeAskAgent) window.TribeAskAgent.send({ text: `Build this: ${idea}`, detail: 'Build it in the project\'s code so it runs in TribeCode\'s preview (index.html at the top folder, relative paths). A starter is already in the repo; build on it.', src: 'firstrun' }).catch(() => {});
       stepUi(3);
       const s = $('#fr-start'); if (s) s.remove();
-      if (window.TribePreview && window.TribePreview.open) { try { await window.TribePreview.open(); } catch {} }
-      setTimeout(() => { const i = window.TribePreview && window.TribePreview.info && window.TribePreview.info(); if (!i || i.hasIndex !== false) track('firstPreview'); }, 1500);
+      if (window.TribeFirstLook) { await window.TribeFirstLook.start({ pid, idea, name }); if (!window.TribeFirstLook.failed(pid)) track('firstPreview'); }
+      else {
+        if (window.TribePreview && window.TribePreview.open) { try { await window.TribePreview.open(); } catch {} }
+        setTimeout(() => { const i = window.TribePreview && window.TribePreview.info && window.TribePreview.info(); if (!i || i.hasIndex !== false) track('firstPreview'); }, 1500);
+      }
       try { lsSet('tribecode.firstrun.ms', String(Date.now() - t0)); } catch {}
-      lsSet(K.step, 'invite'); next();
+      lsSet(K.step, 'invite');
+      // pass 6: the first preview has its own next actions; this run's next step waits until it is closed
+      if (window.TribeFirstLook && window.TribeFirstLook.isOpen && window.TribeFirstLook.isOpen()) addEventListener('tribe:firstlook-close', () => next(), { once: true });
+      else next();
     } catch (e) {
       stepUi(curStep, true);
       if (go) go.disabled = false; toast(e.message || 'Something went wrong');

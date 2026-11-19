@@ -180,8 +180,11 @@ def main():
             assert len(ks) <= 5
             assert all(n == 1 for n in mb.eval_on_selector_all("#pj-crit-slot .db-item", "els => els.map(e => e.querySelectorAll('button').length)")), "one action per row"
             assert "NEEDS ATTENTION" in mb.inner_text("#pj-crit-slot").upper()
-            ys = mb.evaluate("['#pj-band-slot', '#pj-crit-slot', '#pj-living, #pj-check'].map(s => document.querySelector(s).getBoundingClientRect().top)")
+            # pass 6: the preview, then the one next step (while steps are left), then Needs attention, then the rest
+            ys = mb.evaluate("['#pj-band-slot', '#pj-crit-slot', '#pj-living'].map(s => { const e = document.querySelector(s); return e ? e.getBoundingClientRect().top : 1e9; })")
             assert ys[0] < ys[1] < ys[2], f"band, then criticals, then the rest {ys}"
+            ck = mb.evaluate("(() => { const e = document.querySelector('#pj-check'); return e ? e.getBoundingClientRect().top : null; })()")
+            assert ck is None or ys[0] < ck < ys[1], f"the next step sits between the preview and Needs attention {ys} {ck}"
             assert mb.locator("#pj-living .gl-needs").count() == 0, "Needs you moved up into Needs attention"
             shot(mb, "dash-criticals")
             mb.click("#pj-crit-slot .db-item[data-k=accept] button")

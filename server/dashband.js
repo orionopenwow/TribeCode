@@ -19,7 +19,7 @@
 const fs = require('node:fs');
 const path = require('node:path');
 
-const KINDS = ['app', 'site', 'design'];
+const KINDS = ['app', 'site', 'phone', 'design'];   // pass 6: phone = an App Creator app (.tribe/appdesign)
 const RANK = { build: 10, approval: 20, accept: 30, overdue: 40, blocked: 45, comments: 50, company: 60, setup: 70, mention: 80 };
 
 module.exports = function dashband({ P, base, preview, showcase, visuals, hubFor, approvals, loadTasks, canvas, company, notify, nameOf, broadcast, perms = null }) {
@@ -56,7 +56,12 @@ module.exports = function dashband({ P, base, preview, showcase, visuals, hubFor
     const accent = /^#[0-9a-f]{3,8}$/i.test(String(ac || '')) ? ac : null;
     const at = (cfg && cfg.savedAt) || (st.built && st.built.at) || (st.gen && st.gen.draft && st.gen.draft.updated) || null;
     const by = (cfg && cfg.savedBy) || (st.built && st.built.by) || null;
-    return { title, tagline, accent, blocks: blocks.length, pages: pages.length, at, by, published: !!st.built };
+    return { title, tagline, accent, blocks: blocks.length, pages: pages.length, at, by, published: !!st.built, designed: !!cfg };
+  }
+  function phoneOf(pid) {   // pass 6: an app made in App Creator
+    const d = base.readJSON(`.tribe/appdesign/${safe(pid)}.json`, null);
+    if (!d || !Array.isArray(d.screens) || !d.screens.length) return null;
+    return { name: str(d.name || '', 60), screens: d.screens.length, at: d.savedAt || iso(mtime(`.tribe/appdesign/${safe(pid)}.json`)), by: d.savedBy || null };
   }
   function designOf(pid) {
     let list = []; try { list = canvas.list(pid) || []; } catch {}
@@ -70,7 +75,7 @@ module.exports = function dashband({ P, base, preview, showcase, visuals, hubFor
   // how lively a project is, for "the most active one"
   function activity(pid) {
     let t = mtime(`chat/${P.channelOf(pid)}.jsonl`);
-    t = Math.max(t, mtime(`.tribe/website/${safe(pid)}.config.json`));
+    t = Math.max(t, mtime(`.tribe/website/${safe(pid)}.config.json`), mtime(`.tribe/appdesign/${safe(pid)}.json`));
     try { for (const f of canvas.list(pid) || []) t = Math.max(t, Date.parse(f.updated) || 0); } catch {}
     try { for (const x of P.inProject(pid, () => loadTasks())) t = Math.max(t, Date.parse(x.updated) || 0); } catch {}
     return t;
@@ -85,18 +90,19 @@ module.exports = function dashband({ P, base, preview, showcase, visuals, hubFor
   function band(pid, me) {
     const p = P.get(pid); if (!p) return null;
     const d = read(), main = mainFor(me);
-    const has = { app: appOf(pid, me), site: siteOf(pid), design: designOf(pid) };
+    const has = { app: appOf(pid, me), site: siteOf(pid), phone: phoneOf(pid), design: designOf(pid) };
     const chosen = KINDS.includes(d.show[pid]) ? d.show[pid] : null;
     const pick = chosen && has[chosen] ? chosen : KINDS.find(k => has[k]) || 'none';
     let updated = null;
     if (pick === 'app') updated = appUpdated(pid) || null;
     if (pick === 'site') updated = { at: has.site.at, byName: has.site.by ? nameOf(has.site.by) : '' };
     if (pick === 'design') updated = { at: has.design.at, byName: '' };
+    if (pick === 'phone') updated = { at: has.phone.at, byName: has.phone.by ? nameOf(has.phone.by) : '' };
     let shot = null; try { const s = (visuals.screens() || [])[0]; if (s && s.latest) shot = { at: s.latest.at || iso(parseInt(s.latest.ts, 10)) }; } catch {}
     if (pick === 'app' && !updated && shot) updated = { at: shot.at, byName: '' };
     return {
       project: { id: p.id, name: p.name, color: p.color, emoji: p.emoji || '' },
-      pick, chosen, has: { app: has.app, site: !!has.site, design: !!has.design }, site: has.site, design: has.design, updated,
+      pick, chosen, has: { app: has.app, site: !!has.site, phone: !!has.phone, design: !!has.design }, site: has.site, phone: has.phone, design: has.design, updated,
       main: main ? main.id : null, pinned: !!(main && main.pinned), isMain: !!(main && main.id === pid),
       canPin: isLead(me, pid), canSwitch: canSwitch(me, pid), signals: d.signals[pid] || {},
     };

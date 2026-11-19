@@ -107,21 +107,18 @@ def main():
             pg.wait_for_timeout(900)
             assert not pg.evaluate("[...document.querySelectorAll('.toast')].some(t => t.offsetParent && /is live/.test(t.textContent))"), "no toast over the invite sheet"
             close_sheets(pg)
-            pg.evaluate("TribeApp.show('chat')"); pg.wait_for_selector("#flow-dock .fbar .fk-steps", timeout=15000)
-            if pg.locator("#flow-dock .fk-pop").count():
-                assert pg.locator("#flow-dock .fk-pop .fk-steps").count() == 0, "the pop-out doesn't repeat the bar's steps"
+            # pass 6: no Getting started strip over the chat; the dashboard keeps the one next step
+            pg.evaluate("TribeApp.show('chat')"); pg.wait_for_timeout(800)
+            assert pg.locator("#flow-dock .fbar").count() == 0 and "Getting started" not in (pg.evaluate("(document.querySelector('#flow-dock') || {}).innerText || ''")), "no strip over the chat"
             assert pg.locator("#flow-gh").count() <= 1, "one Connect GitHub button (unique id)"
-            title = pg.locator("#flow-dock .fbar .fk-steps li").nth(4).get_attribute("title") or ""
-            assert "shared folder" in title, f"the Repo step explains itself: {title!r}"
 
             # ---- Dashboard: Camp setup is the only step list; elsewhere the panel's x sits on the Next steps row
             close_sheets(pg)
             pg.evaluate("TribeApp.show('home')"); pg.wait_for_selector("#pj-check.hero", timeout=15000); pg.wait_for_timeout(500)
             assert pg.locator("#room-next").count() == 0, "no Next steps copy next to Camp setup"
             assert "Set up sharing and backup" in pg.text_content("#pj-check")   # the home step (its wording changed with feat/folder-sync; text_content: one step shows at a time)
-            pg.evaluate("TribeApp.show('tasks')"); pg.wait_for_selector("#room-next .rn-card", timeout=8000)
-            x = pg.locator("#panel-close").bounding_box(); h = pg.locator("#room-next .rn-head").bounding_box()
-            assert abs((x["y"] + x["height"] / 2) - (h["y"] + h["height"] / 2)) < 16, ("the x sits on the Next steps row", x, h)
+            pg.evaluate("TribeApp.show('tasks')"); pg.wait_for_timeout(600)
+            assert pg.locator("#room-next").count() == 0, "pass 6: the right panel is for people and helpers, not steps"
 
             # ---- empty states say what to do
             pg.wait_for_selector("#board .tk-empty", timeout=8000)

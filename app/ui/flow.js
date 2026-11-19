@@ -61,7 +61,7 @@
     flow = r.flow; minimized = true; popOpen = false; draw();   // starts folded to the slim Getting started bar (Open shows the card)
     App().show('chat');
     // qa-qol-2: not while a sheet is up (the invite sheet already says it, and on phones the toast covered its buttons)
-    setTimeout(() => { const m = $("#invite-modal"); if (!m || m.classList.contains("hidden")) toast(`${r.flow.name} is live. Share the link.`); }, 600);
+    if (!extra.quiet) setTimeout(() => { const m = $("#invite-modal"); if (!m || m.classList.contains("hidden")) toast(`${r.flow.name} is live. Share the link.`); }, 600);   // pass 6: quiet when the first preview follows
     return r.flow;
   }
   function suggestName() {
@@ -92,6 +92,9 @@
     const d = dockEl(); if (!d) return;
     if (!flow) { d.innerHTML = ''; d.className = 'flow-dock'; return; }
     const f = flow, desk = !matchMedia('(max-width: 820px)').matches;
+    // pass 6: no "Getting started" strip over the chat any more; the dashboard keeps the one next step (projects.js).
+    // The running plan's slim bar stays, and the full card still opens on purpose (Updates, a phone friend's card).
+    if (f.status !== 'running' && (desk ? !popOpen : minimized)) { d.innerHTML = ''; d.className = 'flow-dock'; return; }
     if (f.status === 'running' || (desk ? !popOpen : minimized)) {
       const pct = f.plan && f.plan.total ? Math.round(f.plan.done / f.plan.total * 100) : 0;
       const cm = f.plan && f.plan.milestones.find(m => m.id === f.plan.current);
@@ -417,5 +420,7 @@
     window.TribeInvite.open({ who: 'friend', project: f.project || true, link: f.invite ? f.invite.link : '', linkKind: f.invite ? f.invite.kind : '', name: f.name });
   }
 
-  window.TribeFlow = { create, instant, inviteSheet, suggestName, load, open, state: () => flow, role, roleOfMember, folderOwner, openUpdates: () => open('updates'), openRoles: () => open('roles') };
+  // pass 6: the kickoff card (invite link, roles, notes, Start the flow) on purpose; the strip that opened it over the chat is gone
+  function kickoff() { if (!flow) return false; minimized = false; popOpen = true; try { localStorage.removeItem('tribecode.flowMin.' + flow.project); } catch {} if (App() && App().show) App().show('chat'); dock(); return true; }
+  window.TribeFlow = { create, instant, inviteSheet, suggestName, load, open, kickoff, state: () => flow, role, roleOfMember, folderOwner, openUpdates: () => open('updates'), openRoles: () => open('roles') };
 })();

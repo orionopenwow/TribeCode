@@ -237,9 +237,10 @@ def main():
             host.keyboard.press("Escape")
             host.evaluate("TribeApp.show('home')")
             host.wait_for_selector("#pj-check", timeout=15000)
-            if host.locator("#pj-check-all").count(): host.evaluate("(() => { const b = document.querySelector('#pj-check-all'); if (b && b.getAttribute('aria-expanded') === 'false') b.click(); })()"); host.wait_for_selector("#pj-check:not(.one)", timeout=15000)   # feat/calm-parity: See all steps
-            if host.locator("#pj-check [data-ck=home]").count():   # feat/folder-sync: where it lives = the living repo
-                host.click("#pj-check [data-ck=home]"); host.wait_for_selector("#lr-where [data-w=host]"); host.click("#lr-where [data-w=host]")
+            # pass 6: See all steps is a sheet; the home step is picked there
+            if host.locator("#pj-check [data-step=home]:not(.on)").count():   # feat/folder-sync: where it lives = the living repo
+                host.click("#pj-check-all"); host.wait_for_selector("#pj-steps [data-ck=home]", timeout=10000)
+                host.click("#pj-steps [data-ck=home]"); host.wait_for_selector("#lr-where [data-w=host]"); host.click("#lr-where [data-w=host]")
                 host.wait_for_selector("#pj-check [data-step=home].on, #pj-check.done", timeout=25000, state="attached")
             host.wait_for_selector("#su-starter", timeout=15000); host.wait_for_timeout(400)
             shot(host, "06-starter"); audit(host, "dashboard (starter)")

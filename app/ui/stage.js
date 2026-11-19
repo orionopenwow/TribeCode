@@ -44,7 +44,8 @@
     let box = document.getElementById('room-next');
     // qa-qol-2: on the Dashboard the Camp setup card already lists these same steps: no second copy in the panel
     const camp = document.body.dataset.view === 'home' && !!document.querySelector('#view-home:not(.hidden) #pj-check.hero');
-    const s = by[pid()], lv = level(s), show = s && lv !== 'going' && !camp && !document.body.classList.contains('global');
+    // pass 6: the right panel is for people, helpers and Flint, not steps; the dashboard has the one next step
+    const s = by[pid()], lv = level(s), show = false && s && lv !== 'going' && !camp && !document.body.classList.contains('global');
     if (!show) { if (box) box.remove(); return; }
     if (!box) { box = document.createElement('section'); box.id = 'room-next'; box.className = 'room-next'; const head = pane.querySelector(':scope > .room-head'); if (head) head.after(box); else pane.prepend(box); }   // qa-qol-2: under the head, so its × sits on the cards' row (it floated alone below them)
     const todo = KEYS.filter(k => !s[k]);

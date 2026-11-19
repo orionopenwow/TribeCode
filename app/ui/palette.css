@@ -319,7 +319,7 @@ body:not(.global)[data-stage="new"] #cc-connect, body:not(.global)[data-stage="n
 #pj-check.hero .ock-all + .ock-fold { margin-left: 4px; }
 #pj-check.hero.one { padding-top: 20px; padding-bottom: 20px; }
 #pj-check.hero.one .ock-hero-t, #pj-check.hero.one .ock-hero-p, #pj-check.hero.one .ock-bar, #pj-check.hero.one .ock-fold,
-#pj-check.hero.one .ock-head h3, #pj-check.hero.one .ock-card:not(.ock-next), #pj-check.hero.one .ock-gaps { display: none; }
+#pj-check.hero.one .ock-card:not(.ock-next), #pj-check.hero.one .ock-gaps { display: none; }
 #pj-check.hero.one .ock-eyebrow { margin: 0; }
 #pj-check.hero.one .ock-head { margin: -22px 0 12px; justify-content: flex-end; min-height: 32px; }
 #pj-check.hero.one .ock-n { margin-left: auto; }
