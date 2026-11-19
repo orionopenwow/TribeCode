@@ -257,6 +257,9 @@ module.exports = function siteDesign({ guides = null, files = null, perms = null
     // person's save sent with asRequest, becomes a change request the right people approve (server/changereq.js)
     const canEdit = mayRole && (!perms || a !== 'projects' || perms.can(me, 'site.edit', b));
     try {
+      // feat/ai-guides (security): a person invited to one project could read and change another project's website
+      // through its id. Like the app, the changes and the design files, a project you cannot see is not found.
+      if (a === 'projects' && P && P.get(b) && P.canSee && !P.canSee(me, b)) return fail(res, 404, 'project not found');
       if (a === 'site-designer') {
         if (b === 'templates' && m === 'GET') { const k = catalog(); return send(res, 200, { templates: k.templates, categories: k.categories || [] }); }
         if (b === 'template' && c && m === 'GET') return send(res, 200, { config: template(c) });
@@ -359,7 +362,7 @@ module.exports = function siteDesign({ guides = null, files = null, perms = null
           const tail = H ? `\n${H.checkLine('site', r.cfg)}\n${H.idsLine('site', r.cfg)}` : '';
           const did = [started, ...r.done].filter(Boolean);
           if (a.dry_run) return text(`Dry run: nothing was sent, and the ids of anything new below are examples (real ids come with the answer of the call that sends). ${did.length} step${did.length === 1 ? '' : 's'} would be proposed${pend ? ' on top of your waiting proposal' : ''}.\n${did.map(x => '- ' + x).join('\n')}${noteText}${tail}`);
-          if (!did.length) return text(`None of the steps could be applied, so nothing was proposed.${noteText}`, true);
+          if (!did.length || (ops.length && !r.done.length)) return text(`None of the steps could be applied, so nothing was proposed.${noteText}`, true);
           const out = propose(pid, who, { note: a.note || (pend && pend.why) || '', ops, base: started || pend ? base0 : null, result: r, started, prior: pend ? pend.summary : [] });
           const to = out.to && out.to.length ? ` (${out.to.join(', ')})` : '';
           return text(`Proposed ${did.length} change${did.length === 1 ? '' : 's'}${pend ? `, added to your waiting proposal (now ${out.total || did.length} in all)` : ''}. A person${to} approves them under Suggested changes in the website designer or in the inbox; nothing has changed yet.\n${did.map(x => '- ' + x).join('\n')}${noteText}${tail}`);

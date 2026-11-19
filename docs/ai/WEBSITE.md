@@ -151,7 +151,7 @@ Each step is `{ "op": …, … }`. `block` is always a section id from `site_rea
   `{"op":"estyle","block":"<block id>","path":"title","set":{"sz":"l","al":"center"}}`
 - `entrance`: A quiet entrance as the section scrolls in: fade, rise or "" for none.
   `{"op":"entrance","block":"<block id>","value":"fade"}`
-- `theme`: The whole look at once: colours, fonts and corners of a named look.
+- `theme`: The whole look at once: colours, fonts and corners of a named look. The site keeps the light or dark version it had: follow with mode to switch.
   `{"op":"theme","preset":"paper"}`
 - `palette`: Only the colours of a named look; fonts and corners stay.
   `{"op":"palette","preset":"sand"}`
@@ -234,7 +234,7 @@ A whole section in one step:
 **Colour**
 - One accent colour. Take it from the brand kit; with none, pick one that fits the trade and leave the rest to the look's neutrals.
 - Words need a contrast of 4.5 to 1 on their background, the accent 3 to 1. site_check reports both.
-- Choose the look (op theme) for the mood first, then set the accent. Dark looks suit evenings, music, games and tools; light looks suit food, shops, services and anything read in daylight.
+- Choose the look (op theme) for the mood first, then the light or dark version (op mode), then set the accent. Dark looks suit evenings, music, games and tools; light looks suit food, shops, services and anything read in daylight.
 
 **Pictures**
 - You cannot upload pictures. Fill an empty picture slot with a built-in illustration (op illustration) or choose a layout that needs none (hero minimal, center or accent).

@@ -124,7 +124,7 @@ Each step is `{ "op": …, … }`. `block` is a part id and `screen` a screen id
 - `screen.add`: Add an empty screen.
   `{"op":"screen.add","name":"Menu"}`
 - `screen.rename`: Rename a screen.
-  `{"op":"screen.rename","screen":"<screen id>","name":"Today"}`
+  `{"op":"screen.rename","screen":"<screen id>","name":"Orders"}`
 - `screen.move`: Reorder a screen (place number from 0).
   `{"op":"screen.move","screen":"<screen id>","to":1}`
 - `start`: Which screen the app opens on.

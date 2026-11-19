@@ -46,7 +46,7 @@
       { op: 'show', what: 'Hide a section (or one part of it, with path) on some screen sizes: phone, tablet, desktop. hide "" shows it everywhere.', ex: { op: 'show', block: '<block id>', hide: 'phone' } },
       { op: 'estyle', what: 'One element inside a section: sz s|l|xl, col accent|muted|ink, al left|center|right, b and i true|false.', ex: { op: 'estyle', block: '<block id>', path: 'title', set: { sz: 'l', al: 'center' } } },
       { op: 'entrance', what: 'A quiet entrance as the section scrolls in: fade, rise or "" for none.', ex: { op: 'entrance', block: '<block id>', value: 'fade' } },
-      { op: 'theme', what: 'The whole look at once: colours, fonts and corners of a named look.', ex: { op: 'theme', preset: 'paper' } },
+      { op: 'theme', what: 'The whole look at once: colours, fonts and corners of a named look. The site keeps the light or dark version it had: follow with mode to switch.', ex: { op: 'theme', preset: 'paper' } },
       { op: 'palette', what: 'Only the colours of a named look; fonts and corners stay.', ex: { op: 'palette', preset: 'sand' } },
       { op: 'accent', what: 'The one main colour (buttons, links). It is adjusted until it reads on the background.', ex: { op: 'accent', color: '#B4532C' } },
       { op: 'fonts', what: 'A font pair: one display face for headings, one for reading.', ex: { op: 'fonts', pair: 'editorial' } },
@@ -62,7 +62,7 @@
     app: [
       { op: 'kit', what: 'Add a ready-made screen or flow (settings, onboarding, profile …). The fastest way to a complete screen.', ex: { op: 'kit', kit: 'settings' } },
       { op: 'screen.add', what: 'Add an empty screen.', ex: { op: 'screen.add', name: 'Menu' } },
-      { op: 'screen.rename', what: 'Rename a screen.', ex: { op: 'screen.rename', screen: '<screen id>', name: 'Today' } },
+      { op: 'screen.rename', what: 'Rename a screen.', ex: { op: 'screen.rename', screen: '<screen id>', name: 'Orders' } },
       { op: 'screen.move', what: 'Reorder a screen (place number from 0).', ex: { op: 'screen.move', screen: '<screen id>', to: 1 } },
       { op: 'start', what: 'Which screen the app opens on.', ex: { op: 'start', screen: '<screen id>' } },
       { op: 'block.add', what: 'Add a part to a screen (at = place number; left out, it goes above the tab bar).', ex: { op: 'block.add', screen: '<screen id>', type: 'list' } },
@@ -135,7 +135,7 @@
         Colour: [
           'One accent colour. Take it from the brand kit; with none, pick one that fits the trade and leave the rest to the look\'s neutrals.',
           'Words need a contrast of 4.5 to 1 on their background, the accent 3 to 1. site_check reports both.',
-          'Choose the look (op theme) for the mood first, then set the accent. Dark looks suit evenings, music, games and tools; light looks suit food, shops, services and anything read in daylight.',
+          'Choose the look (op theme) for the mood first, then the light or dark version (op mode), then set the accent. Dark looks suit evenings, music, games and tools; light looks suit food, shops, services and anything read in daylight.',
         ],
         Pictures: [
           'You cannot upload pictures. Fill an empty picture slot with a built-in illustration (op illustration) or choose a layout that needs none (hero minimal, center or accent).',

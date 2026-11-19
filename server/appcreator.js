@@ -239,7 +239,7 @@ module.exports = function appCreator({ guides = null, files = null, P, store, ro
           const tail = H ? `\n${H.checkLine('app', r.doc)}\n${H.idsLine('app', r.doc)}` : '';
           const did = [started, ...r.done].filter(Boolean);
           if (a.dry_run) return text(`Dry run: nothing was sent, and the ids of anything new below are examples (real ids come with the answer of the call that sends). ${did.length} step${did.length === 1 ? '' : 's'} would be proposed${pend ? ' on top of your waiting proposal' : ''}.\n${did.map(x => '- ' + x).join('\n')}${skipped}${tail}`);
-          if (!did.length) return text(`None of the steps could be used, so nothing was proposed.${skipped}`, true);
+          if (!did.length || (ops.length && !r.done.length)) return text(`None of the steps could be used, so nothing was proposed.${skipped}`, true);
           if (!rq) return text('change requests are not available here', true);
           const all = [...(pend ? pend.summary : []), ...did], n = all.length;
           const out = rq.create(pid, who, { tool: 'app', payload: r.doc, title: started ? `${who.name || 'An AI helper'} proposes a new app design` : `${who.name || 'An AI helper'} proposes ${n} change${n === 1 ? '' : 's'} to the app`, why: String(a.note || (pend && pend.why) || '').slice(0, 600), summary: all.slice(0, 12) });
