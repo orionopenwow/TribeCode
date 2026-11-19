@@ -3,7 +3,9 @@
 //
 //   PROVIDERS                                  the free AI chats (name, url, a short how-to, a soft paste budget)
 //   strip(text) -> { text, found: [kind] }     takes anything that looks like a key, token or password out
-//   pack(o) -> { text, removed, chars, tokens } the context pack: goal, constraints, the strict reply format, the files
+//   pack(o) -> { text, removed, chars, tokens } the context pack: goal, constraints, the strict reply format, the files;
+//                                              for a website or app (o.site, o.design) also the project brief (o.brief) and
+//                                              the guide's essentials (app/ui/aiguide-core.js)
 //   split(text, max) -> [part]                 a pack too big for a free chat, in numbered parts
 //   parse(reply) -> { files, notes, site, html } fenced blocks with paths, unified diffs, whole files, a site config
 //   hunks(old, new) -> [hunk]                  line diff in hunks (3 lines of context) for the preview
@@ -96,6 +98,13 @@
       '- Change only what the goal needs; keep the existing style, names and file layout.',
       '- Do not add network calls, eval or new dependencies unless the goal asks for them.');
     (o.constraints || []).forEach(c => out.push('- ' + c));
+    // feat/ai-guides: a website or app request carries what the project is and how to make the result good
+    // (the same brief and the same guide an invited agent gets: app/ui/aiguide-core.js, server/aiguides.js)
+    const G = (root && root.TribeAIGuide) || (typeof module === 'object' && module.exports && typeof require === 'function' ? (() => { try { return require('./aiguide-core.js'); } catch { return null; } })() : null);
+    const kind = o.design || (o.site ? 'site' : '');
+    if (o.brief) out.push('', String(o.brief).trim());
+    const ess = o.guide || (kind && G ? G.essentials(kind) : '');
+    if (ess) out.push('', String(ess).trim());
     out.push('', FORMAT);
     const ctx = [];
     if (o.task) ctx.push(['Task', o.task]);

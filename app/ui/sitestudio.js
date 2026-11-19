@@ -110,7 +110,7 @@
     const t = document.getElementById('stu-ask'), text = (t && t.value || '').trim(); if (!text) { if (t) t.focus(); return; }
     const sheet = document.getElementById('stu-agent');
     try {
-      await C.api('/coord/asks', { method: 'POST', body: { text: `Website change request for the project's website (made in the website designer): ${text}\n\nHow to do it: call site_read to see the site, then site_propose with your steps and a short note. Do not edit files for this. The person approves the proposal in the designer.` } });
+      await C.api('/coord/asks', { method: 'POST', body: { design: 'site', text: `Website change request for the project's website (made in the website designer): ${text}\n\nHow to do it: the project brief is on top of this request. Call get_guide("website") and follow it, then site_read to see the site, then site_propose with your steps and a short note (dry_run: true tries them first). Do not edit files for this. The person approves the proposal in the designer.` } });   // design: the server puts the project brief on top
       if (sheet) sheet.remove();
       api.say('Sent to your agent. When it answers, you see the site before and after under Suggested changes. Nothing changes until a person approves.');
     } catch (e) { api.say(`That could not be sent: ${e && e.message ? e.message : 'the tribe did not answer'}.`); }
