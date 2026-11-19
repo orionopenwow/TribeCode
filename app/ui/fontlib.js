@@ -12,7 +12,7 @@
 //   calmer(id) / bolder(id)  the next pair in that direction
 (function (root, factory) { const api = factory(); if (typeof module === 'object' && module.exports) module.exports = api; else root.TribeFontLib = api; })(typeof self !== 'undefined' ? self : this, function () {
   const SERIF = 'Georgia, "Times New Roman", serif', SANS = 'system-ui, -apple-system, "Segoe UI", Roboto, sans-serif', MONO = 'ui-monospace, SFMono-Regular, Menlo, monospace', HAND = '"Segoe Print", "Bradley Hand", cursive';
-  const BUNDLED = ['Fraunces', 'Instrument Serif', 'Space Grotesk', 'Bricolage Grotesque', 'JetBrains Mono', 'Silkscreen', 'Inter', 'DM Serif Display', 'Outfit'];
+  const BUNDLED = ['Fraunces', 'Instrument Serif', 'Space Grotesk', 'Bricolage Grotesque', 'JetBrains Mono', 'Silkscreen', 'Inter', 'DM Serif Display', 'Outfit', 'Anton'];
   const two = '400;700', one = '400';
   const G = (list, w, fb) => list.map(f => [f, [w, fb]]);
   const GFONT = Object.fromEntries([
@@ -30,7 +30,7 @@
   const PAIRS = {
     classic: P('Classic serif', 'Fraunces', 'Inter', 700, 'serious'), editorial: P('Editorial', 'Instrument Serif', 'Inter', 400, 'elegant'), modern: P('Modern grotesk', 'Space Grotesk', 'Inter', 700, 'tech'),
     loud: P('Loud display', 'Bricolage Grotesque', 'Inter', 800, 'bold'), plain: P('Plain sans', 'Inter', 'Inter', 700, 'calm'), code: P('Code', 'JetBrains Mono', 'JetBrains Mono', 700, 'tech'), pixel: P('Pixel', 'Silkscreen', 'Inter', 400, 'retro'),
-    book: P('Book', 'Fraunces', 'System serif', 700, 'calm'), elegant: P('Elegant serif', 'DM Serif Display', 'Inter', 400, 'elegant'), friendly: P('Friendly round', 'Outfit', 'Inter', 700, 'playful'),
+    book: P('Book', 'Fraunces', 'System serif', 700, 'calm'), elegant: P('Elegant serif', 'DM Serif Display', 'Inter', 400, 'elegant'), friendly: P('Friendly round', 'Outfit', 'Inter', 700, 'playful'), poster: P('Poster condensed', 'Anton', 'Inter', 400, 'bold'),
   };
   [['playfair', 'Playfair Display', 'Lato', 700, 'elegant'], ['lora', 'Lora', 'Karla', 700, 'calm'], ['merriweather', 'Merriweather', 'Work Sans', 700, 'calm'], ['baskerville', 'Libre Baskerville', 'Raleway', 700, 'elegant'],
     ['cormorant', 'Cormorant Garamond', 'Montserrat', 700, 'elegant'], ['garamond', 'EB Garamond', 'Figtree', 700, 'calm'], ['crimson', 'Crimson Pro', 'IBM Plex Sans', 700, 'calm'], ['spectral', 'Spectral', 'Manrope', 700, 'calm'],
