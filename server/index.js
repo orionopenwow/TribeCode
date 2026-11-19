@@ -439,7 +439,7 @@ const claims = makeClaims({ store, id, broadcast, nameOf, project: () => P.curre
 // ---------- web: device links (/m/<key>/) + public https address ----------
 // Pages carry the server version they were served with (<meta name="tribe-version">): app/ui/selfheal.js compares it
 // with the running server's version, so a page cached before an update (service worker, an old tab) knows it is stale.
-const stampHtml = (file, data) => (path.extname(file) === '.html' ? Buffer.from(String(data).replace('<meta name="tribe-version" content="">', `<meta name="tribe-version" content="${VERSION}">`)) : data);
+const stampHtml = (file, data) => (path.extname(file) === '.html' ? Buffer.from(String(data).replace(/<meta name="tribe-version" content="[^"]*">/, `<meta name="tribe-version" content="${VERSION}">`)) : data);
 const devices = makeDevices({ store, id, hash, str, getMembers: () => members, publicMember, tribe, stamp: stampHtml });
 const media = require('./media')({ dir: DIR, getMembers: () => members, deviceTokens: mid => devices.list().filter(d => d.member === mid).flatMap(d => d.tokens) });   // fix/security-2: signed media links
 const share = makeShare({ port: PORT });

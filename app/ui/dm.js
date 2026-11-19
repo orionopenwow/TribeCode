@@ -49,8 +49,9 @@
       return;
     }
     const others = totalUnread(view) + generalUnread, ag = (member(withId) || {}).role === 'agent';
-    h.innerHTML = `<button class="dm-back" id="dm-back" title="Back to #general" aria-label="Back to #general">${BACK}#general${others ? `<span class="dm-badge">${others}</span>` : ''}</button>` +
-      `<span class="dm-with">${ag ? '<svg class="i spark"><use href="#i-sparkle"/></svg>' : '· '}${esc(nameOf(withId))}</span><span class="dm-lock" title="Only you and ${esc(nameOf(withId))} can read this">private</span>`;
+    // fix/p7: one row (back, name, private), so the header's status line sits under it instead of on top of it
+    h.innerHTML = `<span class="dm-row"><button class="dm-back" id="dm-back" title="Back to #general" aria-label="Back to #general">${BACK}#general${others ? `<span class="dm-badge">${others}</span>` : ''}</button>` +
+      `<span class="dm-with">${ag ? '<svg class="i spark"><use href="#i-sparkle"/></svg>' : ''}${esc(nameOf(withId))}</span><span class="dm-lock" title="Only you and ${esc(nameOf(withId))} can read this">private</span></span>`;
     h.querySelector('#dm-back').onclick = back;
   }
 
@@ -104,7 +105,7 @@
       list.scrollTop = list.scrollHeight;
       markRead(ch, messages.length ? messages[messages.length - 1].at : undefined);
       X().channelChanged(ch, { list, since });
-    } catch (e) { list.innerHTML = `<div class="empty-room">${esc(e.message)}</div>`; }
+    } catch (e) { list.innerHTML = `<div class="empty-room">${esc(!C.connected() ? (window.TribeI18n ? window.TribeI18n.t('Earlier messages show when your tribe is back. You can still write: it sends then.', 'Earlier messages show when your tribe is back. You can still write: it sends then.') : 'Earlier messages show when your tribe is back. You can still write: it sends then.') : e.message)}</div>`; if (window.TribeOfflineChat) window.TribeOfflineChat.paint(); }
     drawHead(); decorateRoom();
     $('#chat-input').focus();
   }
@@ -129,7 +130,7 @@
       list.scrollTop = list.scrollHeight;
       markRead(id, messages.length ? messages[messages.length - 1].at : undefined);
       X().channelChanged(id, { list, since });
-    } catch (e) { list.innerHTML = `<div class="empty-room">${esc(e.message)}</div>`; }
+    } catch (e) { list.innerHTML = `<div class="empty-room">${esc(!C.connected() ? (window.TribeI18n ? window.TribeI18n.t('Earlier messages show when your tribe is back. You can still write: it sends then.', 'Earlier messages show when your tribe is back. You can still write: it sends then.') : 'Earlier messages show when your tribe is back. You can still write: it sends then.') : e.message)}</div>`; if (window.TribeOfflineChat) window.TribeOfflineChat.paint(); }
     drawHead();
     if (!matchMedia('(max-width: 820px)').matches) inp.focus();
   }

@@ -10,7 +10,7 @@
 //     whose version differs from the app's re-runs the stale-server check (app.js hostHere).
 //  3. Error budget. Identical errors are de-duplicated and rate-limited before anything is filed
 //     (TribeSelfHeal.shouldFile, used by bugs.js for automatic crash reports).
-// Public: window.TribeSelfHeal = { check, shouldFile, report, reportsOn, versionCheck, logs, state }.
+// Public: window.TribeSelfHeal = { clearCache, check, shouldFile, report, reportsOn, versionCheck, logs, state }.
 // Docs: docs/EXPLORER.md ("Self-heal").
 (function () {
   'use strict';
@@ -235,5 +235,31 @@
     await clearCaches();
     const u = new URL(location.href); u.searchParams.set('fresh', Date.now().toString(36)); location.replace(u.toString());
   }
-  window.TribeSelfHeal = { check, refresh, shouldFile, report, reportsOn, versionCheck, healthy, logs: () => logs.slice(), state: () => ({ settled, bootErrors: bootErrors.slice(), healed: ss.get(HEAL), page: pageVersion() }) };
+  // ---------- fix/p7-cache: never keep showing an old version's screens ----------
+  // Drop every service-worker cache and worker (the app's own shell copies; saved settings live elsewhere and stay).
+  async function dropCaches() {
+    try { if (window.caches) for (const k of await caches.keys()) await caches.delete(k); } catch {}
+    try { if (navigator.serviceWorker) for (const r of await navigator.serviceWorker.getRegistrations()) await r.unregister(); } catch {}
+  }
+  // Settings › Clear the cache and restart. The desktop app also empties the web view's own cache on the way back up.
+  async function clearCache() {
+    await dropCaches();
+    ['tribecode.autoReloaded', 'tribecode.staleRecheck', 'tribecode.uiReloaded'].forEach(ss.del);
+    const inv = window.__TAURI__ && window.__TAURI__.core;
+    if (inv) { try { await inv.invoke('clear_web_cache_and_restart'); return; } catch {} }
+    const u = new URL(location.href); u.searchParams.set('fresh', Date.now().toString(36)); location.replace(u.href);
+  }
+  // The desktop app: the first start of a new version drops the old shell copies and reloads once into fresh files.
+  (async () => {
+    const T = window.__TAURI__; if (!T || !T.app) return;
+    let mine = ''; try { mine = await T.app.getVersion(); } catch { return; }
+    let last = ''; try { last = localStorage.getItem('tribecode.uiVersion') || ''; } catch {}
+    if (!mine || last === mine) return;
+    try { localStorage.setItem('tribecode.uiVersion', mine); } catch {}
+    if (!last || ss.get('tribecode.uiReloaded') === mine) return;   // a first install has nothing old to drop
+    ss.set('tribecode.uiReloaded', mine); log(`app updated from v${last} to v${mine}: dropping old cached files`);
+    await dropCaches(); location.reload();
+  })();
+
+  window.TribeSelfHeal = { clearCache, check, refresh, shouldFile, report, reportsOn, versionCheck, healthy, logs: () => logs.slice(), state: () => ({ settled, bootErrors: bootErrors.slice(), healed: ss.get(HEAL), page: pageVersion() }) };
 })();

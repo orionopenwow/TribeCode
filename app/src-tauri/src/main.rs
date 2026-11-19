@@ -20,6 +20,76 @@ fn working_lane_enabled() -> bool {
         .unwrap_or(false)
 }
 
+/// fix/p7-cache: the web view keeps cached copies of the app's own files between versions, so after an update it could
+/// still show the old screens. On the first start after the version changes (or after "Clear the cache and restart"),
+/// delete only the web view's cache folders, never its saved settings (Local Storage, IndexedDB stay). Std only.
+fn tribecode_home() -> Option<std::path::PathBuf> {
+    std::env::var_os("USERPROFILE").or_else(|| std::env::var_os("HOME")).map(|h| std::path::PathBuf::from(h).join(".tribecode"))
+}
+fn web_cache_roots() -> Vec<std::path::PathBuf> {
+    let id = "dev.tribecode.desktop";
+    let mut v = Vec::new();
+    #[cfg(windows)]
+    if let Some(l) = std::env::var_os("LOCALAPPDATA") {
+        v.push(std::path::PathBuf::from(l).join(id).join("EBWebView"));
+    }
+    #[cfg(target_os = "macos")]
+    if let Some(h) = std::env::var_os("HOME") {
+        let h = std::path::PathBuf::from(h);
+        v.push(h.join("Library").join("Caches").join(id));
+        v.push(h.join("Library").join("WebKit").join(id));
+    }
+    #[cfg(target_os = "linux")]
+    {
+        let cache = std::env::var_os("XDG_CACHE_HOME").map(std::path::PathBuf::from).or_else(|| std::env::var_os("HOME").map(|h| std::path::PathBuf::from(h).join(".cache")));
+        if let Some(c) = cache {
+            v.push(c.join(id));
+        }
+    }
+    v
+}
+fn remove_cache_dirs(dir: &std::path::Path, depth: u8) {
+    const CACHE_DIRS: [&str; 8] = ["Cache", "Code Cache", "GPUCache", "Service Worker", "CacheStorage", "NetworkCache", "WebKitCache", "fsCachedData"];
+    let Ok(rd) = std::fs::read_dir(dir) else { return };
+    for e in rd.flatten() {
+        let p = e.path();
+        if !p.is_dir() {
+            continue;
+        }
+        let name = e.file_name().to_string_lossy().to_string();
+        if CACHE_DIRS.contains(&name.as_str()) {
+            let _ = std::fs::remove_dir_all(&p);
+        } else if depth > 0 {
+            remove_cache_dirs(&p, depth - 1);
+        }
+    }
+}
+fn clear_stale_web_cache() {
+    let Some(home) = tribecode_home() else { return };
+    let marker = home.join("ui-version");
+    let asked = home.join("clear-cache");
+    let ver = env!("CARGO_PKG_VERSION");
+    let last = std::fs::read_to_string(&marker).unwrap_or_default();
+    if last.trim() == ver && !asked.is_file() {
+        return;
+    }
+    for r in web_cache_roots() {
+        remove_cache_dirs(&r, 3);
+    }
+    let _ = std::fs::create_dir_all(&home);
+    let _ = std::fs::write(&marker, ver);
+    let _ = std::fs::remove_file(&asked);
+}
+
+/// Settings › Clear the cache: ask for a clean start, then restart the app (the server stops with it).
+#[tauri::command]
+fn clear_web_cache_and_restart(app: tauri::AppHandle) -> Result<(), String> {
+    let home = tribecode_home().ok_or("no home folder")?;
+    std::fs::create_dir_all(&home).map_err(|e| e.to_string())?;
+    std::fs::write(home.join("clear-cache"), "1").map_err(|e| e.to_string())?;
+    app.restart();
+}
+
 /// The tribe server this app is hosting, if any (bundled as a sidecar binary).
 struct Host(Mutex<Option<(CommandChild, u16)>>);
 /// The last lines the server printed, so the app can show why it didn't start.
@@ -126,6 +196,7 @@ fn host_status(state: tauri::State<'_, Host>) -> Option<u16> {
 }
 
 fn main() {
+    clear_stale_web_cache();   // before the web view opens, so it starts from this version's files
     let app = tauri::Builder::default()
         // Must be first: a second launch (e.g. clicking a tribecode:// invite) focuses this window
         // and forwards the link to it instead of opening another copy.
@@ -147,7 +218,7 @@ fn main() {
         ))
         .manage(Host(Mutex::new(None)))
         .manage(HostLog(Arc::new(Mutex::new(Vec::new()))))
-        .invoke_handler(tauri::generate_handler![host_start, host_stop, host_status, host_log, host_kill_stale])
+        .invoke_handler(tauri::generate_handler![host_start, host_stop, host_status, host_log, host_kill_stale, clear_web_cache_and_restart])
         .setup(|app| {
             // Register tribecode:// at runtime too (needed for dev builds on Windows and Linux).
             #[cfg(any(windows, target_os = "linux"))]

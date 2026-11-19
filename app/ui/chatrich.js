@@ -142,6 +142,10 @@
     const inp = $('#chat-input'), text = inp ? inp.value.trim() : '';
     try {
       const items = await Promise.all(files.map(async f => ({ data: await toB64(f), mime: f.type })));
+      const O = window.TribeOfflineChat, bytes = files.reduce((n, f) => n + (f.size || 0), 0);   // p7: offline, it waits in the outbox
+      if (O && O.queueMedia(ch, items.length === 1 ? `/chat/${ch}/image` : `/chat/${ch}/images`, items.length === 1 ? { ...items[0], text } : { items, text }, (text ? text + ' · ' : '') + (items.length === 1 ? 'Picture' : `${items.length} pictures`), bytes)) {
+        if (inp) { inp.value = ''; inp.dispatchEvent(new Event('input', { bubbles: true })); } return;
+      }
       if (items.length === 1) await C.api(`/chat/${ch}/image`, { method: 'POST', body: { ...items[0], text } });
       else await C.api(`/chat/${ch}/images`, { method: 'POST', body: { items, text } });
       if (inp) { inp.value = ''; inp.dispatchEvent(new Event('input', { bubbles: true })); }
@@ -160,7 +164,10 @@
   // ---------- GIF picker ----------
   let gifCfg = null;
   async function gifSettings() { if (gifCfg) return gifCfg; try { gifCfg = await C.api('/gifs/settings'); } catch { gifCfg = { provider: null }; } return gifCfg; }
-  async function sendText(text) { try { await C.api(`/chat/${cur()}/send`, { method: 'POST', body: { text } }); } catch (e) { toast(e.message); } }
+  async function sendText(text) {   // p7: a GIF or quick text goes through the outbox like any message
+    if (window.TribeApp && window.TribeApp.sendQueued) { window.TribeApp.sendQueued(cur(), `/chat/${cur()}/send`, { text }); return; }
+    try { await C.api(`/chat/${cur()}/send`, { method: 'POST', body: { text } }); } catch (e) { toast(e.message); }
+  }
   function closeGif() { const p = $('#gif-pick'); if (p) p.remove(); }
   async function gifPicker(anchor) {
     if ($('#gif-pick')) return closeGif();
