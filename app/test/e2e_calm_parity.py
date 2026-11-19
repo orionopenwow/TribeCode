@@ -146,12 +146,13 @@ def host_part(b, tok, mid, garden, rocket):
     assert host.evaluate("document.body.dataset.calmAi || ''") == "", "its step is up: Connect your AI may show"
 
     # See all steps: the five, with the gaps at the end; one tap back
-    host.click("#pj-check-all"); host.wait_for_selector("#pj-check.hero:not(.one)")
-    assert host.eval_on_selector_all("#pj-check .ock-card", "els => els.filter(e => e.offsetParent).length") == 5
-    assert "5 steps" in host.inner_text("#pj-check .ock-hero-t") and "2 of 5 done" in host.inner_text("#pj-check-n")
-    host.wait_for_selector("#ock-gaps .ock-gap >> nth=0", state="visible")
-    assert [x.strip() for x in host.eval_on_selector_all("#ock-gaps .ock-l", "els => els.map(e => e.textContent)")] == ["No GitHub connected", "No backup yet"]
-    host.click("#pj-check-all"); host.wait_for_selector("#pj-check.hero.one")
+    # pass 6: the whole list opens in a sheet; the dashboard keeps its one step
+    host.click("#pj-check-all"); host.wait_for_selector("#pj-steps .ock-row")
+    assert host.locator("#pj-steps .ock-row:not(.ock-gap):not(.ock-flint)").count() == 5
+    assert "2 of 5 done" in host.inner_text("#pj-steps").replace("\n", " ").replace("2 OF 5 DONE", "2 of 5 done")
+    host.wait_for_selector("#pj-steps .ock-gap >> nth=0", state="visible")
+    assert [x.strip() for x in host.eval_on_selector_all("#pj-steps .ock-gap .ock-l", "els => els.map(e => e.textContent)")] == ["No GitHub connected", "No backup yet"]
+    host.keyboard.press("Escape"); host.wait_for_selector("#pj-steps", state="detached"); assert host.locator("#pj-check.hero.one").count() == 1
 
     # a task assigned to you brings Your focus back
     api("/tasks", "POST", {"title": "Water the garden", "assignee": api("/me", token=tok)["member"]["id"]}, token=tok, project=garden)

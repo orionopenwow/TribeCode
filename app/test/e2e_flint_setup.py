@@ -135,11 +135,12 @@ def main():
             go()
             # 3. the dashboard's Getting started list
             pg.evaluate("TribeApp.show('home')"); pg.wait_for_selector("#pj-check", timeout=15000)
-            if pg.locator("#pj-check.one").count(): pg.click("#pj-check-all")
-            pg.wait_for_selector("#pj-check .ock-flint .fsu", state="visible", timeout=10000)
-            row = pg.inner_text("#pj-check .ock-flint")
+            pg.click("#pj-check-all")   # pass 6: the whole list is in the See all steps sheet
+            pg.wait_for_selector("#pj-steps .ock-flint .fsu", state="visible", timeout=10000)
+            row = pg.inner_text("#pj-steps .ock-flint")
             assert "Give Flint a local brain" in row and "your tribe’s host" in row and "KB" in row, row   # the host's own copy: its real size
-            assert pg.locator("#pj-check .ock-card:not(.ock-flint)").count() == 5 and "5" in pg.inner_text("#pj-check-n"), "five counted steps, as before"
+            assert pg.locator("#pj-steps .ock-row:not(.ock-flint)").count() == 5 and "5" in pg.inner_text("#pj-check-n"), "five counted steps, as before"
+            pg.keyboard.press("Escape")
             # 4. metered, then low storage: it says why and suggests waiting
             pg.evaluate("Object.defineProperty(navigator, 'connection', { configurable: true, value: { saveData: false, type: 'cellular', effectiveType: '4g', downlink: 5 } })")
             adv = pg.evaluate("TribeFlintSetup.advise(30 * 1024 * 1024)"); assert adv["wait"] and adv["metered"] and "mobile data" in adv["why"], adv

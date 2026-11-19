@@ -83,7 +83,7 @@ def main():
             host.wait_for_selector("#pj-check.hero .ock-card", timeout=15000)
             steps = host.eval_on_selector_all("#pj-check .ock-row", "els => els.map(e => e.dataset.step)")
             assert [s for s in steps if s != "flint"] == ["vision", "task", "claude", "home", "share"], steps   # "flint" is the optional setup row (flintsetup.js, v0.36)
-            assert "5 steps" in host.text_content("#pj-check .ock-hero-t")
+            assert "of 5" in host.text_content("#pj-check-n")   # pass 6: one compact step, "1 of 5"; the big intro is gone
             assert "set up sharing and backup" in host.text_content("#pj-check [data-step=home]").lower()
             assert "create the code repository" not in host.text_content("#pj-check").lower(), "no separate repo step"
             assert host.locator("#pj-check [data-step=friend]").count() == 0
@@ -137,8 +137,8 @@ def main():
             assert host.evaluate("document.body.dataset.stage") == "growing"
 
             # 4. Create the repo in one click -> going -> the Task Board gets its tabs
-            host.evaluate("(() => { const b = document.querySelector('#pj-check-all'); if (b && b.getAttribute('aria-expanded') === 'false') b.click(); })()"); host.wait_for_selector("#pj-check:not(.one)", timeout=15000)   # feat/calm-parity: See all steps
-            host.click("#pj-check [data-ck=home]"); host.wait_for_selector("#lr-where [data-w=host]")
+            host.click("#pj-check-all"); host.wait_for_selector("#pj-steps [data-ck=home]", timeout=15000)   # pass 6: See all steps is a sheet
+            host.click("#pj-steps [data-ck=home]"); host.wait_for_selector("#lr-where [data-w=host]")
             host.click("#lr-where [data-w=host]")
             host.wait_for_selector("#pj-check [data-step=home].on", timeout=20000, state="attached")
             repo = tmp / "tribe" / "workspaces" / pid

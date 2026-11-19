@@ -58,11 +58,12 @@ def main():
             # feat/calm-parity: one card first (the next step), then See all steps shows the five as before
             host.wait_for_selector("#pj-check.hero.one .ock-next", timeout=10000)
             assert host.eval_on_selector_all("#pj-check .ock-card", "els => els.filter(e => e.offsetParent).length") == 1
-            host.evaluate("(() => { const b = document.querySelector('#pj-check-all'); if (b && b.getAttribute('aria-expanded') === 'false') b.click(); })()"); host.wait_for_selector("#pj-check:not(.one)", timeout=15000)   # feat/calm-parity: See all steps
-            host.wait_for_selector("#pj-check.hero .ock-hero-t", timeout=10000)
+            # pass 6: See all steps opens the whole list in a sheet; the dashboard keeps the one compact step
+            host.click("#pj-check-all"); host.wait_for_selector("#pj-steps .ock-row", timeout=10000)
+            assert host.locator("#pj-steps .ock-row").count() == 5   # vision, task, AI, where it lives, share
+            host.keyboard.press("Escape"); host.wait_for_selector("#pj-steps", state="detached", timeout=5000)
             assert host.locator("#pj-living").count() == 0, "no Living update before the tribe has begun"
-            assert host.locator("#pj-check.hero .ock-card .ock-emo").count() == 5   # vision, task, AI, where it lives, share
-            assert host.evaluate("parseFloat(getComputedStyle(document.querySelector('#pj-check .ock-hero-t')).fontSize)") >= 24
+            assert host.locator("#pj-check .ock-hero-t, #pj-check [data-ock-vis]").count() == 0, "no big intro and no inline vision box"
             n0 = host.evaluate("+document.querySelector('#pj-check .ock-bar').getAttribute('aria-valuenow')")
             host.wait_for_selector("#pj-check [data-step=task]:not(.on) [data-ck=newtask]", state="attached")
             assert host.locator("#pj-check .ock-next .btn.primary").count() == 1 and host.locator("#pj-check .btn.primary").count() == 1, "one solid button: the next step"
@@ -92,17 +93,16 @@ def main():
             assert host.locator("#home-start").is_hidden(), "the old Standup and files section is folded into Repo & Tools"
 
             # 3. Onboarding checklist: ticks itself
-            assert host.text_content("#pj-check h3").strip() in ("Set up", "Steps", "Getting started")   # v0.16.x: "Set up", not "Onboarding Checklist"
+            assert host.text_content("#pj-check h3").strip() in ("Next step", "Getting started")   # pass 6: the one next step (was "Steps")
             host.wait_for_selector("#pj-check [data-step=vision]:not(.on) [data-ck=vision]", state="attached")
             host.wait_for_selector("#pj-check [data-step=task].on", timeout=10000, state="attached")
             assert host.evaluate("+document.querySelector('#pj-check .ock-bar').getAttribute('aria-valuenow')") == n0 + 1
             assert host.get_attribute("#pj-check [data-step=task] .ock-box", "aria-checked") == "true"
-            # collapse, remembered across a reload
-            host.click("#pj-check-fold"); host.wait_for_selector("#pj-check.folded", timeout=30000)
-            assert host.locator("#pj-check .ock-list").is_hidden() and host.locator("#pj-check .ock-bar").is_visible()
+            # pass 6: one compact step, nothing to fold; it stays after a reload and moves on to the next step
+            assert host.locator("#pj-check-fold").count() == 0
             host.reload(); host.wait_for_function("window.TribeClient && TribeClient.connected()", timeout=15000)
-            host.evaluate("TribeApp.show('home')"); host.wait_for_selector("#pj-check.folded", timeout=15000)
-            host.click("#pj-check-fold"); host.wait_for_selector("#pj-check:not(.folded) .ock-list", state="visible")
+            host.evaluate("TribeApp.show('home')"); host.wait_for_selector("#pj-check.one .ock-next", timeout=15000)
+            assert host.get_attribute("#pj-check .ock-next", "data-step") != "task", "the next step moved on from the done task"
 
             # 4. Tribe & Agents
             wait_text = lambda sel, t: host.wait_for_function("([s, t]) => (document.querySelector(s) || {}).textContent?.includes(t)", arg=[sel, t], timeout=10000)

@@ -334,14 +334,14 @@ ${canEdit && !started ? `      <section class="pj-context" id="pj-context"><div 
   // feat/calm-parity: the setup gaps Needs attention would list (no GitHub, no backup) sit at the end of the step list
   // while the project is young. dashband.js loads them and says so with "tribe:dash-gaps".
   let calmPid = null;
-  function drawGaps() {
-    const box = $('#ock-gaps'), DB = window.TribeDashBand; if (!box) return;
+  function drawGaps(into) {
+    const box = into || $('#ock-gaps'), DB = window.TribeDashBand; if (!box) return;
     const gaps = DB && DB.gaps ? DB.gaps(cur()) : [];
     box.innerHTML = gaps.length ? `<span class="eyebrow ock-gaps-e">Also worth doing</span>${gaps.map((g, i) => `<div class="ock-row ock-gap" data-gap="${esc(g.go)}"><span class="ock-box" aria-hidden="true"></span>
       <div class="ock-main"><div class="ock-line"><span class="ock-l">${esc(g.title)}</span><span class="ock-acts"><button class="btn sm" type="button" data-gap-i="${i}">${esc(g.act)}</button></span></div><p class="ock-sub">${esc(g.sub || '')}</p></div></div>`).join('')}` : '';
     box.querySelectorAll('[data-gap-i]').forEach(b => b.onclick = () => DB.go(gaps[+b.dataset.gapI]));
   }
-  addEventListener('tribe:dash-gaps', drawGaps);
+  addEventListener('tribe:dash-gaps', () => drawGaps());
   C.on('project', () => { if (calmPid !== cur()) { delete document.body.dataset.calm; delete document.body.dataset.calmAi; } });
   // Toolbox: a few checked tools, libraries and Claude skills that fit this project (server/shelf.js). Tucked in: only picks, one row.
   const KIND_L = { skill: 'Claude skill', library: 'Library', tool: 'Tool', mcp: 'Agent tool' };
@@ -426,8 +426,9 @@ ${canEdit && !started ? `      <section class="pj-context" id="pj-context"><div 
     const tick = '<svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 12.5 4 4 8-9"/></svg>', n = steps.filter(x => x.done).length;
     const sh = UI.sheet({ id: 'pj-steps', eyebrow: `${n} of ${steps.length} done`, title: 'All steps',
       body: `<div class="ock-list pj-steps-list">${steps.map(x => `<div class="ock-row ${x.done ? 'on' : ''}" data-step="${x.id}"><span class="ock-box" role="checkbox" aria-checked="${x.done}" aria-label="${esc(x.label)}">${x.done ? tick : ''}</span>
-        <div class="ock-main"><span class="ock-l">${esc(x.label)}</span><p class="ock-sub">${x.done ? 'Done' : esc(x.sub || '')}</p></div>${!x.done && (x.acts || x.below) ? `<span class="ock-acts">${x.acts || ''}${x.below || ''}</span>` : ''}</div>`).join('')}</div>` });
+        <div class="ock-main"><span class="ock-l">${esc(x.label)}</span><p class="ock-sub">${x.done ? 'Done' : esc(x.sub || '')}</p></div>${!x.done && (x.acts || x.below) ? `<span class="ock-acts">${x.acts || ''}${x.below || ''}</span>` : ''}</div>`).join('')}${window.TribeFlintSetup && window.TribeFlintSetup.stepRow ? window.TribeFlintSetup.stepRow() : ''}<div class="ock-gaps pj-steps-gaps"></div></div>` });
     sh.body.querySelectorAll('[data-ck]').forEach(b => b.onclick = () => { sh.close(); step(b.dataset.ck); });
+    drawGaps(sh.body.querySelector('.pj-steps-gaps'));   // the setup gaps (no GitHub, no backup) wait here too
   }
   // ---------- the checklist, inline: write the vision right in its card, then pick a first task from suggestions ----------
   function bindInline(p, refocus) {
