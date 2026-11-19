@@ -475,6 +475,8 @@ body.global .nest-foot .nest-preview-slot, body.global .nest-foot #folder-item {
 /* Small matte emoji on a few internal labels (never the main icons): desaturated, a touch dim, so they sit in the flat palette. */
 .emo { display: inline-block; margin-right: .4em; font-size: .92em; line-height: 1; filter: saturate(.5) brightness(.92) contrast(.95); font-style: normal; text-transform: none; letter-spacing: 0; vertical-align: -.04em; }
 .eyebrow .emo, h6 .emo { font-size: 1.05em; }
+/* p7: a project's or tribe's face is a main icon, not a label: full colour, never dimmed (its box is .pj-face.emo too) */
+.pj-face.emo, .pj-face .pj-emo, .tribe-face, .tribe-face .emo { filter: none; margin-right: 0; }
 
 /* Bottom-left user bar (userbar.js, desktop): wedged into the corner across the rail and the sidebar, like a chat app's
    user panel. You (avatar, name, status) on the left; inbox, Friends and Settings on the right. */

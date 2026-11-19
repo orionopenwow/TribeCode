@@ -11,6 +11,16 @@
   'use strict';
   const I = window.TribeI18n; if (!I || !I.add) return;
   I.add({
+    // ---- p7: offline messages
+    "Didn't send": ['No se envió', 'Não enviado', 'Pas envoyé', 'Nicht gesendet', '送信できませんでした', '未发送', '보내지 못함'],
+    'Waiting to send': ['Esperando para enviar', 'Aguardando envio', 'En attente d’envoi', 'Wartet auf Senden', '送信待ち', '等待发送', '전송 대기 중'],
+    'Sending…': ['Enviando…', 'Enviando…', 'Envoi…', 'Wird gesendet…', '送信中…', '正在发送…', '보내는 중…'],
+    'Your tribe is offline': ['Tu tribu está sin conexión', 'Sua tribo está offline', 'Votre tribu est hors ligne', 'Dein Tribe ist offline', 'トライブはオフラインです', '你的部落已离线', '트라이브가 오프라인입니다'],
+    "{name}'s computer is off or asleep": ['El ordenador de {name} está apagado o en reposo', 'O computador de {name} está desligado ou em repouso', 'L’ordinateur de {name} est éteint ou en veille', '{name}s Computer ist aus oder im Ruhezustand', '{name}のコンピューターは電源オフかスリープ中です', '{name} 的电脑已关机或休眠', '{name}의 컴퓨터가 꺼져 있거나 절전 중입니다'],
+    '1 message will send when it’s back': ['1 mensaje se enviará cuando vuelva', '1 mensagem será enviada quando voltar', '1 message partira à son retour', '1 Nachricht wird gesendet, sobald er zurück ist', '戻ったら1件のメッセージを送ります', '恢复后将发送 1 条消息', '돌아오면 메시지 1개를 보냅니다'],
+    '{n} messages will send when they’re back': ['{n} mensajes se enviarán cuando vuelva', '{n} mensagens serão enviadas quando voltar', '{n} messages partiront à son retour', '{n} Nachrichten werden gesendet, sobald er zurück ist', '戻ったら{n}件のメッセージを送ります', '恢复后将发送 {n} 条消息', '돌아오면 메시지 {n}개를 보냅니다'],
+    'Messages will send when it’s back': ['Los mensajes se enviarán cuando vuelva', 'As mensagens serão enviadas quando voltar', 'Les messages partiront à son retour', 'Nachrichten werden gesendet, sobald er zurück ist', '戻ったらメッセージを送ります', '恢复后将发送消息', '돌아오면 메시지를 보냅니다'],
+    'That’s over 2 MB, so it needs your tribe online. Try again when it’s back.': ['Pesa más de 2 MB, así que necesita tu tribu en línea. Inténtalo cuando vuelva.', 'Tem mais de 2 MB, então precisa da tribo online. Tente quando voltar.', 'Plus de 2 Mo : il faut votre tribu en ligne. Réessayez à son retour.', 'Über 2 MB, dafür muss dein Tribe online sein. Versuch es, wenn er zurück ist.', '2 MBを超えるため、トライブがオンラインのときに送ってください。', '超过 2 MB，需要部落在线。恢复后再试。', '2MB가 넘어서 트라이브가 온라인일 때 보낼 수 있어요. 돌아오면 다시 시도하세요.'],
     // ---- bug report: screenshot and log snapshot
     'Take a screenshot': ['Hacer una captura', 'Tirar uma captura', 'Faire une capture', 'Bildschirmfoto machen', 'スクリーンショットを撮る', '截图', '스크린샷 찍기'],
     'Attach a log snapshot': ['Adjuntar una copia del registro', 'Anexar uma cópia do registro', 'Joindre un extrait du journal', 'Protokollauszug anhängen', 'ログを添付', '附上日志快照', '로그 스냅샷 첨부'],

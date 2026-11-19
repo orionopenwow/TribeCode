@@ -359,8 +359,11 @@
     const label = { online: 'connected', connecting: 'connecting…', reconnecting: 'reconnecting…', offline: 'local only' }[s.status];
     const dot = { online: 'var(--accent-2)', connecting: 'var(--amber)', reconnecting: 'var(--amber)', offline: 'var(--faint)' }[s.status];
     $('#sync-status').innerHTML = `<span class="dot" style="background:${dot}"></span>${label}`;
-    $('#chat-form').classList.toggle('disabled', s.status !== 'online');
-    $('#chat-input').placeholder = s.status === 'online' ? 'Message the tribe…' : 'Connect to a tribe to chat';
+    // p7: a member of a tribe can always write: offline, the message waits in the outbox and sends when the tribe is back.
+    // Only someone with no tribe at all sees the composer off.
+    const member = C.hasToken();
+    $('#chat-form').classList.toggle('disabled', !member && s.status !== 'online');
+    const inp = $('#chat-input'); if (!inp.dataset.dmPh) inp.placeholder = member ? 'Message the tribe…' : 'Connect to a tribe to chat';
   });
   $('#chat-form').addEventListener('submit', async e => {
     e.preventDefault();
@@ -371,13 +374,15 @@
   });
   // ---------- instant messages (the outbox, tribe.js): your message shows at once, faint until the server has it ----------
   // Offline or while the tribe wakes up, it waits in the outbox and sends by itself; a refusal marks it with Retry.
+  const obTr = t => (window.TribeI18n && window.TribeI18n.t ? window.TribeI18n.t(t, t) || t : t);
+  const obIco = n => (window.TribeIcons ? window.TribeIcons.svg(n, 12, 'msg-ico') : '');
   function pendingBubble(text, cid, state = 'sending') {
     const list = $('#chat-list'); if (!list) return;
     if (list.querySelector('.empty-room')) list.innerHTML = '';
     const me = C.state().me || {}, when = new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
     const old = list.querySelector(`.msg.pending[data-cid="${CSS.escape(cid)}"]`); if (old) old.remove();
     list.insertAdjacentHTML('beforeend', `<div class="msg mine pending ${state === 'failed' ? 'failed' : ''}" data-cid="${esc(cid)}"><div class="avatar" style="background:${esc(me.color || '#F26B1D')};color:${ink(me.color || '#F26B1D')}">${esc(initials(me.name || 'Me'))}</div>
-      <div><b>${esc(me.name || 'You')}</b><time>${when}</time><p>${md(text)}</p><span class="msg-state">${state === 'failed' ? 'Not sent · <button class="linkish" data-retry>Retry</button> · <button class="linkish" data-drop>Delete</button>' : state === 'waiting' ? 'Waiting to send…' : 'Sending…'}</span></div></div>`);
+      <div><b>${esc(me.name || 'You')}</b><time>${when}</time><p>${md(text)}</p><span class="msg-state">${state === 'failed' ? `${obIco('x')}${obTr("Didn't send")} · <button class="linkish" data-retry>${obTr('Try again')}</button> · <button class="linkish" data-drop>${obTr('Delete')}</button>` : state === 'waiting' ? `${obIco('clock')}${obTr('Waiting to send')}` : 'Sending…'}</span></div></div>`);
     readingHistory = false; list.scrollTop = 1e9;
   }
   function sendQueued(ch, path, body) {
@@ -393,7 +398,11 @@
     el.querySelector('[data-retry]').onclick = () => { pendingBubble(item.body.text, item.body.cid); C.queue(item.path, item.body, { kind: 'chat', ch: item.ch }); };
     el.querySelector('[data-drop]').onclick = () => el.remove();
   });
-  C.on('status', st => { if (st.status === 'online') document.querySelectorAll('.msg.pending:not(.failed) .msg-state').forEach(x => { x.textContent = 'Sending…'; }); });
+  C.on('status', st => { if (st.status === 'online') document.querySelectorAll('.msg.pending:not(.failed) .msg-state').forEach(x => { x.textContent = obTr('Sending…'); }); });
+  C.on('outbox-sent', ({ item }) => {   // p7: pictures and voice notes echo back without our bubble's text: drop the bubble once the server has it
+    const cid = item && item.body && item.body.cid; if (!cid || item.kind !== 'chat-media') return;
+    setTimeout(() => document.querySelectorAll(`.msg.pending[data-cid="${CSS.escape(cid)}"]`).forEach(el => el.remove()), 400);
+  });
 
   // ---- invites ----
   // Every way to invite opens the one sheet (inviteone.js): opts { who: 'friend' | 'guest' | 'claude', project }.
