@@ -40,8 +40,8 @@
   const ob = () => (outbox = outbox || obLoad());
   function obSave() { try { localStorage.setItem(OB(), JSON.stringify(ob())); } catch {} emit('outbox', ob()); }
   const cid = () => Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 10);
-  function queue(path, body = {}, { method = 'POST', kind = 'action', ch = null } = {}) {
-    const item = { id: body.cid || cid(), path, method, body: { ...body, cid: body.cid || undefined }, kind, ch, at: Date.now(), project: project() };
+  function queue(path, body = {}, { method = 'POST', kind = 'action', ch = null, label = '' } = {}) {
+    const item = { id: body.cid || cid(), path, method, body: { ...body, cid: body.cid || undefined }, kind, ch, at: Date.now(), project: project(), ...(label ? { label: String(label).slice(0, 80) } : {}) };
     ob().push(item); obSave(); flush(); return item;
   }
   async function flush() {

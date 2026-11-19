@@ -627,7 +627,11 @@
     const f = item.getAsFile(); if (!f) return;
     if (f.size > 3 * 1024 * 1024) return toast('Images up to 3 MB.');
     const text = $('#chat-input').value.trim();
-    try { await C.api(`/chat/${cur()}/image`, { method: 'POST', body: { data: await toB64(f), mime: f.type, text } }); $('#chat-input').value = ''; }
+    try {
+      const body = { data: await toB64(f), mime: f.type, text }, O = window.TribeOfflineChat;
+      if (O && O.queueMedia(cur(), `/chat/${cur()}/image`, body, (text ? text + ' · ' : '') + 'Picture', f.size)) { $('#chat-input').value = ''; return; }
+      await C.api(`/chat/${cur()}/image`, { method: 'POST', body }); $('#chat-input').value = '';
+    }
     catch (err) { toast(err.message); }
   });
 
@@ -681,7 +685,9 @@
     const n = 32, L = st.levels, max = Math.max(0.02, ...L);
     const wave = Array.from({ length: n }, (_, i) => { const seg = L.slice(Math.floor(i * L.length / n), Math.floor((i + 1) * L.length / n)); const v = seg.length ? Math.max(...seg) : 0; return Math.round(1 + 8 * v / max); });
     try {
-      await C.api(`/chat/${st.ch}/voice`, { method: 'POST', body: { data: await toB64(blob), mime: blob.type, dur: Math.round(secs), transcript: [...st.words, st.interim].filter(Boolean).join(' ').trim(), wave } });
+      const body = { data: await toB64(blob), mime: blob.type, dur: Math.round(secs), transcript: [...st.words, st.interim].filter(Boolean).join(' ').trim(), wave }, O = window.TribeOfflineChat;
+      if (O && O.queueMedia(st.ch, `/chat/${st.ch}/voice`, body, 'Voice note', blob.size)) return;   // p7: offline, it waits in the outbox
+      await C.api(`/chat/${st.ch}/voice`, { method: 'POST', body });
     } catch (err) { toast('Voice note not sent: ' + err.message); }
   }
   function bindMic() {
@@ -876,7 +882,11 @@
     if (!/^image\//.test(file.type)) return toast('That is not an image.');
     if (file.size > 3 * 1024 * 1024) return toast('Images up to 3 MB.');
     const inp = $('#chat-input'), text = inp.value.trim();
-    try { await C.api(`/chat/${cur()}/image`, { method: 'POST', body: { data: await toB64(file), mime: file.type, text } }); inp.value = ''; }
+    try {
+      const body = { data: await toB64(file), mime: file.type, text }, O = window.TribeOfflineChat;
+      if (O && O.queueMedia(cur(), `/chat/${cur()}/image`, body, (text ? text + ' · ' : '') + 'Picture', file.size)) { inp.value = ''; return; }
+      await C.api(`/chat/${cur()}/image`, { method: 'POST', body }); inp.value = '';
+    }
     catch (err) { toast(err.message); }
   }
   document.addEventListener('click', e => {

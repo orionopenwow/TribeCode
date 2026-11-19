@@ -225,13 +225,14 @@ module.exports = function chatx({ store, id, str, getMembers, postChat, dms, sen
     const body = m === 'GET' || m === 'DELETE' ? {} : await readBody(req, action === 'file' ? 12 * 1024 * 1024 : action === 'images' ? 40 * 1024 * 1024 : action === 'image' ? 9 * 1024 * 1024 : 6 * 1024 * 1024);
 
     // feat/chat2: several pictures in one message (a small grid in the chat). GIF files keep animating.
+    const cidOk = b => (b && typeof b.cid === 'string' && /^[A-Za-z0-9_-]{6,40}$/.test(b.cid) ? { cid: b.cid } : {});
     if (m === 'POST' && action === 'images') {
       const items = Array.isArray(body.items) ? body.items.slice(0, MAX_IMAGES + 1) : [];
       if (!items.length) return fail(res, 400, 'no pictures');
       if (items.length > MAX_IMAGES) return fail(res, 400, `up to ${MAX_IMAGES} pictures at a time`);
       const images = items.map(it => ({ ...saveMedia(it && it.data, it && it.mime, 'image'), kind: 'image' }));
       const text = str(body.text, 4000);
-      const msg = images.length === 1 ? postChat(ch, me.id, text, { media: images[0] }) : postChat(ch, me.id, text, { images });
+      const cid = cidOk(body), msg = images.length === 1 ? postChat(ch, me.id, text, { media: images[0], ...cid }) : postChat(ch, me.id, text, { images, ...cid });
       if (text) dms.onPost(ch, me, text);
       return send(res, 200, { message: msg });
     }
@@ -239,7 +240,7 @@ module.exports = function chatx({ store, id, str, getMembers, postChat, dms, sen
     if (m === 'POST' && action === 'file') {
       const media = saveFile(body.data, body.name, body.mime);
       const text = str(body.text, 4000);
-      const msg = postChat(ch, me.id, text, { media });
+      const msg = postChat(ch, me.id, text, { media, ...cidOk(body) });
       if (text) dms.onPost(ch, me, text);
       return send(res, 200, { message: msg });
     }
@@ -252,7 +253,7 @@ module.exports = function chatx({ store, id, str, getMembers, postChat, dms, sen
         if (Array.isArray(body.wave)) media.wave = body.wave.slice(0, 48).map(v => Math.max(0, Math.min(9, Math.round(Number(v) || 0))));
       }
       const text = str(action === 'voice' ? body.transcript : body.text, 4000);
-      const msg = postChat(ch, me.id, text, { media });
+      const msg = postChat(ch, me.id, text, { media, ...cidOk(body) });   // p7: the outbox's client id, so a retry never posts twice
       if (text) dms.onPost(ch, me, text);
       return send(res, 200, { message: msg });
     }

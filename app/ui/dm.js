@@ -104,7 +104,7 @@
       list.scrollTop = list.scrollHeight;
       markRead(ch, messages.length ? messages[messages.length - 1].at : undefined);
       X().channelChanged(ch, { list, since });
-    } catch (e) { list.innerHTML = `<div class="empty-room">${esc(e.message)}</div>`; }
+    } catch (e) { list.innerHTML = `<div class="empty-room">${esc(!C.connected() ? (window.TribeI18n ? window.TribeI18n.t('Earlier messages show when your tribe is back. You can still write: it sends then.', 'Earlier messages show when your tribe is back. You can still write: it sends then.') : 'Earlier messages show when your tribe is back. You can still write: it sends then.') : e.message)}</div>`; if (window.TribeOfflineChat) window.TribeOfflineChat.paint(); }
     drawHead(); decorateRoom();
     $('#chat-input').focus();
   }
@@ -129,7 +129,7 @@
       list.scrollTop = list.scrollHeight;
       markRead(id, messages.length ? messages[messages.length - 1].at : undefined);
       X().channelChanged(id, { list, since });
-    } catch (e) { list.innerHTML = `<div class="empty-room">${esc(e.message)}</div>`; }
+    } catch (e) { list.innerHTML = `<div class="empty-room">${esc(!C.connected() ? (window.TribeI18n ? window.TribeI18n.t('Earlier messages show when your tribe is back. You can still write: it sends then.', 'Earlier messages show when your tribe is back. You can still write: it sends then.') : 'Earlier messages show when your tribe is back. You can still write: it sends then.') : e.message)}</div>`; if (window.TribeOfflineChat) window.TribeOfflineChat.paint(); }
     drawHead();
     if (!matchMedia('(max-width: 820px)').matches) inp.focus();
   }
