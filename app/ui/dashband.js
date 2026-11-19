@@ -71,7 +71,7 @@
       <div class="db-acts">
         <button type="button" class="btn primary sm" data-db="open">${ico('i-play', 14)}${b.pick === 'design' ? 'Open design' : 'Open preview'}</button>
         ${b.pick === 'design' ? '' : `<button type="button" class="btn sm" data-db="${second[0]}">${ico(second[1], 14)}${second[2]}</button>`}
-        ${b.pick === 'design' ? '' : `<button type="button" class="btn sm" data-db="share">${ico('i-link', 14)}Share link</button>`}
+        ${b.pick === 'design' || b.pick === 'phone' ? '' : `<button type="button" class="btn sm" data-db="share">${ico('i-link', 14)}Share link</button>`}
         <span class="db-tools"><span class="db-sw" role="radiogroup" aria-label="What the band shows">${sw}</span>
         <button type="button" class="btn sm db-more" data-db="more" aria-haspopup="menu" aria-label="More" title="More">⋯</button></span>
       </div></div>`;

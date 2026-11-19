@@ -255,6 +255,7 @@
   function fail(pid, idea, e) {
     if (idea) ls.set(FAIL(pid), idea);
     close();
+    try { root.dispatchEvent(new CustomEvent('tribe:firstlook-fail', { detail: { pid } })); } catch {}
     toast(T(idea ? 'The first preview did not finish. Your project is saved; try again from the dashboard.' : 'The preview could not open. Try again in a moment.'), 'err');
     try { console.warn('first preview', e); } catch {}
   }

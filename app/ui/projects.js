@@ -127,6 +127,7 @@
 
   // ---------- Overview (pulse) ----------
   let ot; const overviewSoon = () => { clearTimeout(ot); ot = setTimeout(overview, 400); };
+  ['tribe:firstlook', 'tribe:firstlook-fail'].forEach(t => addEventListener(t, () => { lastOv = ''; overviewSoon(); }));   // pass 6: the first preview was made (or not): the dashboard follows
   // Put the standup/drop nodes (wired in app.js) back in #home-start, hidden, before a redraw wipes the overview.
   function stash() {
     const sc = $('#standup-card'), td = $('#tour-drop'); if (!sc || !td) return;
