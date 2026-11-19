@@ -36,6 +36,7 @@ const sha = buf => crypto.createHash('sha1').update(buf).digest('hex');
 const err = (status, m) => Object.assign(new Error(m), { status });
 
 module.exports = function designFiles({ P, base, isLocal = () => false, broadcast = () => {}, canChange = () => true, log = () => {} }) {
+  const afters = [];                       // feat/ai-guides: told after a design was written into a folder (the folder's AGENTS.md follows)
   const makers = {};                       // kind -> pid => [[rel, Buffer|string], …] | null
   const safe = pid => String(pid).replace(/[^\w-]/g, '');
   const mfile = pid => `.tribe/designfiles/${safe(pid)}.json`;
@@ -109,6 +110,7 @@ module.exports = function designFiles({ P, base, isLocal = () => false, broadcas
     const hadHold = !!(rec.held || rec.hands);
     m[kind] = { dir, files: next, at: new Date().toISOString(), by: by || rec.by || '' }; saveMan(pid, m);
     if (hadHold) { try { broadcast({ type: 'design-files', project: pid, kind, held: 0 }); } catch {} }
+    for (const fn of afters) { try { fn(pid, kind); } catch {} }
     return { ok: true, dir, files: Object.keys(next), wrote: todo.length, kept: kept ? kept.replace(/\\/g, '/') : '' };
   }
 
@@ -178,5 +180,5 @@ module.exports = function designFiles({ P, base, isLocal = () => false, broadcas
       return fail(res, 404, 'not found');
     } catch (e) { return fail(res, e.status || 500, e.message); }
   }
-  return { use: (kind, fn) => { makers[kind] = fn; }, settle, home, dirOf, write, queue, flush, flushAll, adopt, has, status, resolve, route, SUB, DESIGN };
+  return { after: fn => { afters.push(fn); }, use: (kind, fn) => { makers[kind] = fn; }, settle, home, dirOf, write, queue, flush, flushAll, adopt, has, status, resolve, route, SUB, DESIGN };
 };

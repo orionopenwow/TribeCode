@@ -492,6 +492,7 @@ const repoHub = {   // MCP tools run against the calling agent's project hub
   instructions: me => hubFor(P.current()).mcp.instructions(me) + (mcpFlow ? mcpFlow.instructions : ''),
 };
 let mcpFlow = null;
+let aiGuides = null;   // feat/ai-guides (server/aiguides.js), made once the creator tools exist
 // Notification hub + approvals (server/notify.js, server/approvals.js)
 const pocket = makeNotify({ store, bus, getMembers: () => members, sendTo, postChat: (...x) => postChat(...x), log: m => console.error('  notify: ' + m),
   dnd: mid => !!profiles && profiles.isDnd(mid), mail: (mid, subj, text) => accounts.mailMember(mid, subj, text), canMail: mid => accounts.canMail(mid), projectOf: ref => (P.byChannel(ref) || {}).id || null,   // feat/settings-tabs: email, per-project mutes
@@ -549,7 +550,7 @@ const busLog = makeBusLog({ broadcast, sendTo });
 const DEBUG = !!(args.dev || process.env.TRIBE_TEST === '1');
 const rooms = makeRooms({ checkFolder: (p, o) => folderHome.check(p, o), watchFolder: pid => folderHome.watch(pid), P, W, store, brain, getMembers: () => members, saveMembers, isLocal, presenceFor, loadTasks: () => loadTasks(), hubFor, resetHub, plan, approvals, docs,
   broadcast, postChat, nameOf, str, perms });
-const coord = makeCoord({ P, store, id, str, broadcast, postChat, bus, getMembers: () => members, presenceFor, loadTasks: () => loadTasks(), saveTask: t => saveTask(t), claims, hubFor, approvals, brain, nameOf });
+const coord = makeCoord({ designBrief: (pid, kind, me) => (aiGuides ? aiGuides.briefFor(pid, null, {}) : ''), P, store, id, str, broadcast, postChat, bus, getMembers: () => members, presenceFor, loadTasks: () => loadTasks(), saveTask: t => saveTask(t), claims, hubFor, approvals, brain, nameOf });
 // feat/ship-flow: Ship it (review what changed, vote to push), Turbo (ships on its own at calm moments), Share, Pulse, Split (server/ship.js)
 const ship = shipHub = require('./ship')({ styleOf: pid => perms.styleOf(pid), counting: pid => perms.counting(pid), passMark: perms.passMark, P, store, hubFor, approvals, getMembers: () => members, loadTasks: () => loadTasks(), createTask: o => createTask(o), postChat, broadcast, bus, str, nameOf,
   can: (m, cap) => m.role === 'host' || perms.can(m, cap, P.current()), pushAuth: () => githubAuth.pushAuth(), coord, claims, id, brain });
@@ -701,10 +702,10 @@ setupFlow = require('./setup')({ P, W, base: baseStore, sense, buildKit, readVis
 // pass 4: a design as real files in the project's folder, a moment after every save (server/designfiles.js)
 const designFiles = require('./designfiles')({ P, base: baseStore, isLocal, broadcast: m => broadcast(m), log: m => console.error('  ' + m),
   canChange: (me, pid, kind) => !!me && !['spectator', 'guest', 'agent'].includes(me.role) && ((P.get(pid) || {}).members || {})[me.id] !== 'spectator' && (!perms || perms.can(me, kind === 'app' ? 'app.edit' : 'site.edit', pid)) });
-const siteDesign = require('./sitedesign')({ files: designFiles, perms, requests: () => changeReq, base: baseStore, root: require('./tpldir').root(), showcase, siteFlint, P, nameOf, members: () => members, inspo: inspoBoard, postChat: (...a) => postChat(...a), broadcast: m => broadcast(m), tasks: { create: a => createTask(a), save: t => saveTask(t), load: () => loadTasks(), flow: taskFlow } });   // the website designer (server/sitedesign.js, app/ui/sitecfg.js)
+const siteDesign = require('./sitedesign')({ guides: () => aiGuides, files: designFiles, perms, requests: () => changeReq, base: baseStore, root: require('./tpldir').root(), showcase, siteFlint, P, nameOf, members: () => members, inspo: inspoBoard, postChat: (...a) => postChat(...a), broadcast: m => broadcast(m), tasks: { create: a => createTask(a), save: t => saveTask(t), load: () => loadTasks(), flow: taskFlow } });   // the website designer (server/sitedesign.js, app/ui/sitecfg.js)
 const suggestEngine = require('./suggest')({ P, base: baseStore, nameOf, loadTasks: () => loadTasks(), siteComments: pid => siteDesign.comments(pid), llm, broadcast: m => broadcast(m), log: m => console.error('  ' + m) });   // the tribe's suggestion engine (server/suggest.js, app/ui/suggest.js)
 const launchKit = require('./launchkit')({ P, base: baseStore, broadcast: m => broadcast(m), perms, requests: () => changeReq });   // Launch kit: store screenshots, icon, text, paywalls, checklist (server/launchkit.js)
-const appCreator = require('./appcreator')({ files: designFiles, P, store: baseStore, perms, requests: () => changeReq, brand: pid => siteDesign.brandGet(pid), root: require('./tpldir').root(), broadcast: m => broadcast(m), nameOf, ensureRepo: (pid, me) => setupFlow.ensureRepo(pid, me), log: m => console.error('  ' + m) });   // App Creator (server/appcreator.js)
+const appCreator = require('./appcreator')({ guides: () => aiGuides, files: designFiles, P, store: baseStore, perms, requests: () => changeReq, brand: pid => siteDesign.brandGet(pid), root: require('./tpldir').root(), broadcast: m => broadcast(m), nameOf, ensureRepo: (pid, me) => setupFlow.ensureRepo(pid, me), log: m => console.error('  ' + m) });   // App Creator (server/appcreator.js)
 const siteLib = require('./sitelib')({ P, W, root: require('./tpldir').root(), getMembers: () => members, broadcast, ensureRepo: (pid, me) => setupFlow.ensureRepo(pid, me), log: m => console.error('  ' + m) });   // website template library (server/sitelib.js)
 const flintFree = require('./flintfree')({ P, W, root: require('./tpldir').root(), startersDir: path.join(UI, 'starters'), getMembers: () => members, broadcast, ensureRepo: (pid, me) => setupFlow.ensureRepo(pid, me), siteLib, appDesign: () => appCreator, llmStatus: () => (llm.status ? llm.status() : {}), log: m => console.error('  ' + m) });   // Flint's free tier (server/flintfree.js)
 const flintRun = require('./flintrun')({ P, root: baseStore.root, tribe, getMembers: () => members, publicMember, visibleMembers: me => presenceFor(me).map(x => x.id), log: m => console.error('  ' + m) });   // feat/flint-runthrough: proof-of-work ZIPs + the Blender bridge stub (server/flintrun.js)
@@ -743,6 +744,11 @@ company.useLedger(pid => { const w = ledger.aiWeek(pid); return w.seats.some(x =
 const dashBand = require('./dashband')({ P, base: baseStore, preview, showcase, visuals, hubFor, approvals, loadTasks: () => loadTasks(), canvas: designCanvas, company, notify: pocket, nameOf, broadcast, perms });   // feat/dash-preview: the dashboard's preview band + Needs attention
 checksHub = require('./checks')({ P, base: baseStore, getMembers: () => members, signal: (pid, o) => dashBand.signal(pid, o), broadcast, bus, nameOf, perms, pushAuth: () => githubAuth.pushAuth(), syncLoad: pid => syncHub.load(pid), log: m => console.error('  ' + m) });   // feat/build-feeds: real build results
 mcpFlow = makeMcpFlow({ flow, P });
+// feat/ai-guides: the master guides, the project brief and the read tools an AI helper designs with (server/aiguides.js),
+// and the AGENTS.md a project folder gets (when the project is made, and whenever a design is written into the folder)
+aiGuides = require('./aiguides')({ P, base: baseStore, perms, site: siteDesign, app: appCreator, motion: motionStudio, requests: () => changeReq, files: designFiles, readVision: () => readVision(), facts: () => flintFacts.load(), tasks: () => loadTasks(), nameOf, members: () => members, log: m => console.error('  ' + m) });
+designFiles.after(pid => aiGuides.queueFolder(pid));
+{ const make = P.create; P.create = (...a) => { const p = make(...a); try { if (p && p.id) aiGuides.queueFolder(p.id, 2500); } catch {} return p; }; }
 // MCP calls run in the agent's project, or in `project` when the tool call names one it can see.
 function agentProject(me) { return P.pick(me, null, me.project || (online.get(me.owner) || {}).project); }
 function mcpScope(me, wanted, fn) {
@@ -766,7 +772,8 @@ const mcp = makeMcp({
       t.updated = new Date().toISOString(); t.updatedBy = me.id; return saveTask(t);
     },
   },
-  docs, claims, extraTools: { ...agentTools, ...appCreator.mcpTools, ...motionStudio.mcpTools, ...visuals.mcpTools, ...mcpFlow.tools, ...makeWorkshopMcp(workshop, { current: () => P.current() }), ...require('./mcp-preview')(preview, P), ...whiteboard.mcpTools, ...showcase.mcpTools, ...siteDesign.mcpTools, ...suggestEngine.mcpTools, ...captures.mcpTools, ...assetLib.mcpTools, ...company.mcpTools, ...taskFlow.mcpTools, ...ledger.mcpTools, ...seatpilot.mcpTools, ...talent.mcpTools /* v0.27 company */, ...market.mcpTools, ...academy.mcpTools, ...flintMem.mcpTools, ...publishHub.mcpTools, ...jamHub.mcpTools, ...pinsHub.mcpTools, ...buildKit.mcpTools, ...canvasAI.mcpTools, ...inviteClaude.mcpTools() }, port: PORT, gate: { tool: (me, n, a) => inviteClaude.gateTool(me, n, a), listable: (me, n) => inviteClaude.listable(me, n) }, coordTools: h => { const shipTools = ship.mcpTools(h); return { ...coord.mcpTools(h), ...agentnet.mcpTools(h), ...canvasAI.mcpTools, ...shipTools, ...syncHub.mcpTools(h, shipTools), ...checksHub.mcpTools(h) }; },   // sync wraps ship_status and adds ship_now; request_ship and the rest stay
+  resources: () => aiGuides.resources, prompts: () => aiGuides.prompts,
+  docs, claims, extraTools: { ...aiGuides.mcpTools, ...agentTools, ...appCreator.mcpTools, ...motionStudio.mcpTools, ...visuals.mcpTools, ...mcpFlow.tools, ...makeWorkshopMcp(workshop, { current: () => P.current() }), ...require('./mcp-preview')(preview, P), ...whiteboard.mcpTools, ...showcase.mcpTools, ...siteDesign.mcpTools, ...suggestEngine.mcpTools, ...captures.mcpTools, ...assetLib.mcpTools, ...company.mcpTools, ...taskFlow.mcpTools, ...ledger.mcpTools, ...seatpilot.mcpTools, ...talent.mcpTools /* v0.27 company */, ...market.mcpTools, ...academy.mcpTools, ...flintMem.mcpTools, ...publishHub.mcpTools, ...jamHub.mcpTools, ...pinsHub.mcpTools, ...buildKit.mcpTools, ...canvasAI.mcpTools, ...inviteClaude.mcpTools() }, port: PORT, gate: { tool: (me, n, a) => inviteClaude.gateTool(me, n, a), listable: (me, n) => inviteClaude.listable(me, n) }, coordTools: h => { const shipTools = ship.mcpTools(h); return { ...coord.mcpTools(h), ...agentnet.mcpTools(h), ...canvasAI.mcpTools, ...shipTools, ...syncHub.mcpTools(h, shipTools), ...checksHub.mcpTools(h) }; },   // sync wraps ship_status and adds ship_now; request_ship and the rest stay
   chat: {
     post(me, text, channel) {   // feat/chat2: optional channel ("design", "#design"); #general by default
       const tx = str(text, 4000); if (!tx) return; const muted = perms.muteBlock(me); if (muted) throw new Error(muted);   /* feat/roles */
@@ -1152,6 +1159,7 @@ async function apiInProject(req, res, url) {
   if (a === 'projects' && c === 'suggest') return suggestEngine.route(req, res, ctx());   // the tribe's suggestions (server/suggest.js)
   if (a === 'site-designer' || (a === 'projects' && (c === 'site-config' || c === 'site-autofill' || c === 'site-comments' || c === 'site-proposals' || c === 'site-suggestions' || c === 'brand'))) return siteDesign.route(req, res, { ...ctx(), d: parts[3] });
   if (a === 'projects' && c === 'launchkit') return launchKit.route(req, res, ctx());   // Launch kit (server/launchkit.js)
+  if (a === 'ai-guides' || (a === 'projects' && c === 'ai-brief')) return aiGuides.route(req, res, { ...ctx(), url });   // feat/ai-guides
   if (a === 'projects' && c === 'design-files') return designFiles.route(req, res, { ...ctx(), d: parts[3] });   // pass 4 (server/designfiles.js)
   if (a === 'projects' && (c === 'app-config' || c === 'app-comments')) return appCreator.route(req, res, { ...ctx(), d: parts[3], e: parts[4], f: parts[5] });   // App Creator (server/appcreator.js)
   if (a === 'site-library' || (a === 'projects' && (c === 'site-library' || c === 'site-data'))) return siteLib.route(req, res, ctx());   // website templates (server/sitelib.js)

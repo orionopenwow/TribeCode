@@ -34,8 +34,9 @@ const fs = require('node:fs');
 const path = require('node:path');
 const S = require('../app/ui/sitecfg.js');
 const AI = require('../app/ui/aibasics-core.js');
+const AG = require('../app/ui/aiguide-core.js');   // feat/ai-guides: the steps, their examples and the text views an AI helper gets
 
-module.exports = function siteDesign({ files = null, perms = null, requests = () => null, base, root, showcase, siteFlint, P, tasks, nameOf = x => x, members = () => [], inspo, postChat, broadcast, log = () => {} }) {
+module.exports = function siteDesign({ guides = null, files = null, perms = null, requests = () => null, base, root, showcase, siteFlint, P, tasks, nameOf = x => x, members = () => [], inspo, postChat, broadcast, log = () => {} }) {
   const LIB = path.join(root, 'templates', 'sites');
   const UI = [path.join(root, 'app', 'ui'), path.join(root, 'ui')].find(d => fs.existsSync(path.join(d, 'sitecfg.js'))) || path.join(root, 'app', 'ui');
   const FONTS = path.join(UI, 'assets', 'site-fonts');
@@ -50,20 +51,24 @@ module.exports = function siteDesign({ files = null, perms = null, requests = ()
   const brandGet = pid => showcase.kitGet(pid);   // one brand record, kept by server/showcase.js (it also feeds the project page)
   const brandSet = (pid, kit, me) => showcase.kitSet(pid, kit, me);
   // an agent's proposal: the steps are tried on a copy right away, so the person sees in words what would change
-  function propose(pid, me, { note, ops }) {
-    const cfg = load(pid); if (!cfg) throw err(404, 'this project has no website design yet: a person starts one in the website designer');
-    if (!Array.isArray(ops) || !ops.length) throw err(400, 'ops must be a list of steps');
-    const r = S.applyOps(cfg, ops); if (!r.done.length) throw err(400, `none of the steps could be applied: ${r.skipped.join('; ') || 'nothing to do'}`);
+  function propose(pid, me, { note, ops, base: from = null, result = null, started = '', prior = [] }) {
+    const cfg = from || load(pid); if (!cfg) throw err(404, 'this project has no website design yet: a person starts one in the website designer');
+    if (!Array.isArray(ops) || (!ops.length && !started)) throw err(400, 'ops must be a list of steps');
+    const r = result || S.applyOps(cfg, ops); if (!r.done.length && !started) throw err(400, `none of the steps could be applied: ${r.skipped.join('; ') || 'nothing to do'}`);
     // pass 4 polish: a helper's proposal is a change request, as it is for an app (server/changereq.js): the person sees
     // the site before and after, a person approves, a helper never approves its own, and Undo is on the request. The older
     // list below is kept only for a helper nobody owns (no person to ask on behalf of).
+    // feat/ai-guides: a helper's next call builds on its own waiting request (from = that request's design), and a
+    // project with no website can be started (from = a blank site or a template); both are still one request to approve.
     const rq = requests && requests();
     if (rq && rq.create && me && me.role === 'agent') {
       try {
-        const n = r.done.length, out = rq.create(pid, me, { tool: 'site', payload: r.cfg, title: `${me.name || 'An AI helper'} proposes ${n} change${n === 1 ? '' : 's'} to the website`, why: String(note || '').slice(0, 600), summary: r.done.slice(0, 12) });
-        return { id: out.request ? out.request.id : '', done: r.done, skipped: r.skipped, request: true, applied: !!out.applied };
-      } catch (e) { if (e && e.status && e.status !== 400 && e.status !== 404) throw e; }
+        const all = [...(Array.isArray(prior) ? prior : []), started, ...r.done].filter(Boolean), n = all.length;
+        const out = rq.create(pid, me, { tool: 'site', payload: r.cfg, title: started && !prior.length ? `${me.name || 'An AI helper'} proposes a new website` : `${me.name || 'An AI helper'} proposes ${n} change${n === 1 ? '' : 's'} to the website`, why: String(note || '').slice(0, 600), summary: all.slice(0, 12) });
+        return { id: out.request ? out.request.id : '', done: r.done, skipped: r.skipped, request: true, applied: !!out.applied, to: out.request ? out.request.to : [], total: n };
+      } catch (e) { if (e && e.status && e.status !== 400 && e.status !== 404) throw e; if (from) throw e; }
     }
+    if (from) throw err(409, 'this proposal needs a person to ask: an AI helper must belong to someone');
     const raw = loadRaw(pid), l = loadP(pid);
     const rec = { id: 'sp' + Date.now().toString(36) + Math.floor(Math.random() * 1296).toString(36), by: me ? me.id : 'agent', at: new Date().toISOString(), note: String(note || '').slice(0, 400), ops: JSON.parse(JSON.stringify(ops)).slice(0, 60), done: r.done, skipped: r.skipped, rev: (raw && raw.rev) || 0, status: 'open' };
     l.forEach(x => { if (x.status === 'open' && x.by === rec.by) x.status = 'replaced'; });   // one open proposal per helper
@@ -320,14 +325,46 @@ module.exports = function siteDesign({ files = null, perms = null, requests = ()
       run: async (a = {}) => { const l = loadC(cur(a)).filter(c => !a.open || c.status === 'open'); return text(l.length ? l.map(c => `[${c.status}] ${c.label || c.blockType || 'section'} (${c.block}): “${c.text}” · ${nameOf(c.by)}${c.task ? ` · task ${c.task}` : ''}`).join('\n') : 'No comments on the website.'); },
     },
     site_read: {
-      description: 'Read the project website as an outline: its pages, each section (block) with its id, type, layout variant and words, the theme, and which block types, looks and font pairs exist. Use it before site_propose. Pictures are left out.',
-      inputSchema: { type: 'object', properties: { project: { type: 'string' } }, additionalProperties: false },
-      run: async (a = {}) => { const cfg = load(cur(a)); if (!cfg) return text('This project has no website design yet. A person starts one in the website designer (Files › Website).', true); const k = brandGet(cur(a)); return text(JSON.stringify({ ...S.outline(cfg), brand: { name: k.name, colors: k.colors, fonts: k.fonts, voice: k.voice } })); },
+      description: 'Read the project website with its ids: the pages, each section (block) with its id, type, layout variant and words, the theme and the brand kit. You need these ids for site_propose. detail: "summary" returns only the structure (page and section ids, types, layouts, titles), which is enough to plan; page: a page id, slug or title returns that page in full. Pictures are left out. First time here? Call project_brief and get_guide("website") before this; site_view shows the same page as a visitor reads it.',
+      inputSchema: { type: 'object', properties: { project: { type: 'string' }, detail: { type: 'string', enum: ['full', 'summary'], description: 'summary: structure and ids only (small). full (default): with the words.' }, page: { type: 'string', description: 'Only this page (id, slug or title)' }, proposed: { type: 'boolean', description: 'Read your own waiting proposal (the site as it will be if approved) instead of the saved site' } }, additionalProperties: false },
+      run: async (a = {}, me) => {
+        const pend = a.proposed && requests && requests() && requests().pending ? requests().pending(cur(a), me, 'site') : null; if (a.proposed && !pend) return text('You have no proposal waiting for the website. Leave proposed out to read the saved site.', true);
+        const cfg = pend ? pend.payload : load(cur(a)); if (!cfg) return text('This project has no website design yet. Start one with site_propose and start: { "template": "<id>" } or { "blank": true } (site_catalog with part "templates" lists them); a person approves it.', true);
+        const k = brandGet(cur(a)), brand = { name: k.name, colors: k.colors, fonts: k.fonts, voice: k.voice };
+        if (a.detail === 'summary') return text(JSON.stringify({ ...AG.siteSummary(cfg, S), brand, next: 'site_read with page for the words; site_catalog for what can be added; site_propose to change it.' }));
+        const o = S.outline(cfg);
+        if (a.page) { const pg = o.pages.filter(p => p.id === a.page || p.title === a.page || (cfg.pages.find(x => x.id === p.id) || {}).slug === a.page); if (!pg.length) return text(`No page “${String(a.page).slice(0, 40)}”. Pages: ${o.pages.map(p => p.title).join(', ')}`, true); o.pages = pg; delete o.can; }
+        return text(JSON.stringify({ ...o, brand }));
+      },
     },
     site_propose: {
-      description: 'Propose changes to the project website as a list of safe steps. Nothing changes until a person approves the proposal in the website designer, where it becomes one undo step. Steps (each { op, … }): text { block, path, value } (path like "title", "text", "items.0.title", "buttons.0.label"); add { type, variant?, page?, after?: blockId, props?: words only }; remove { block }; move { block, to: "up"|"down"|"top"|"bottom"|index }; variant { block, variant }; style { block, bg: ""|"card"|"accent"|"ink", pad: ""|"s"|"l" }; link { block, path, kind: "page"|"section"|"url"|"email", to }; alt { block, path, value }; theme { preset }; palette { preset }; accent { color: "#RRGGBB" }; fonts { pair }; space { value: "compact"|"normal"|"roomy" }; radius { value }; page { title }; rename { page, title }; seo { title?, description? }. Pictures cannot be set. Steps that do not fit are skipped and named in the answer.',
-      inputSchema: { type: 'object', properties: { project: { type: 'string' }, note: { type: 'string', description: 'one or two sentences for the person: what you changed and why' }, ops: { type: 'array', items: { type: 'object' }, maxItems: 60 } }, required: ['ops'], additionalProperties: false },
-      run: async (a = {}, me) => { try { const r = propose(cur(a), me || { id: 'agent', role: 'agent' }, a); return text(`Proposed ${r.done.length} change${r.done.length === 1 ? '' : 's'}. A person approves them under Suggested changes in the website designer or in the inbox; nothing has changed yet.\n${r.done.map(x => '- ' + x).join('\n')}${r.skipped.length ? `\nSkipped:\n${r.skipped.map(x => '- ' + x).join('\n')}` : ''}`); } catch (e) { return text(e.message, true); } },
+      description: `Propose changes to the project website as a list of steps (ops). Nothing changes until a person approves: they see the site before and after, and it is one Undo. dry_run: true tries the steps on a copy and reports what each did, what was skipped and why (with a corrected example), the new section ids and what Check my site would say, without sending anything: use it first. While your earlier proposal is still waiting, new steps are added on top of it (one request for the person); fresh: true starts again from the saved site. With no website yet, start: { template: "<id>" } or { blank: true } begins one. Steps: ${AG.OPS.site.map(o => o.op).join(', ')}. Each with an example: site_catalog (part "steps") or get_guide("website"). Common ones: text { block, path, value } · add { type, variant?, after?, page?, props? } · variant { block, variant } · style { block, bg, pad } · link { block, path, kind, to } · theme { preset } · accent { color } · fonts { pair } · seo { title, description }. Pictures cannot be uploaded (use illustration), pages cannot be deleted, and nothing is published: a person does those. At most 60 steps a call.`,
+      inputSchema: { type: 'object', properties: { project: { type: 'string' }, note: { type: 'string', description: 'One or two sentences for the person: what you changed and why, then what only they can add' }, ops: { type: 'array', items: { type: 'object' }, maxItems: 60, description: 'The steps, each { op, … }' }, dry_run: { type: 'boolean', description: 'Try the steps and report; send nothing' }, fresh: { type: 'boolean', description: 'Do not build on your waiting proposal; start from the saved site' }, start: { type: 'object', description: 'Only when the project has no website: { template: "<id>" } or { blank: true }', properties: { template: { type: 'string' }, blank: { type: 'boolean' } }, additionalProperties: false } }, additionalProperties: false },
+      run: async (a = {}, me) => {
+        try {
+          const pid = cur(a), who = me || { id: 'agent', role: 'agent' }, H = guides && guides(), rq = requests && requests();
+          const ops = Array.isArray(a.ops) ? a.ops : [];
+          let cfg = load(pid), started = '';
+          if (a.start && typeof a.start === 'object') {
+            if (cfg) return text('This project already has a website, so start is not used: change it with steps (site_read gives the ids).', true);
+            if (a.start.template) { try { cfg = template(String(a.start.template)); } catch { return text(`No template “${String(a.start.template).slice(0, 40)}”. Some that exist: ${templates().slice(0, 14).map(t => t.id).join(', ')} (site_catalog with part "templates" lists all), or start: { "blank": true }.`, true); } const p = P && P.get(pid); if (p && p.name) cfg = S.setSiteText(cfg, 'name', p.name); started = `Starts a website from the ${String(a.start.template)} template`; }
+            else { cfg = S.blank((P && P.get(pid) || {}).name || 'My site'); started = 'Starts a new website'; }
+          }
+          const pend = !a.fresh && !started && rq && rq.pending ? rq.pending(pid, who, 'site') : null;   // your own waiting proposal: new steps go on top of it
+          if (!cfg && !(pend && pend.payload)) return text('This project has no website design yet. Add start: { "template": "<id>" } or start: { "blank": true } to this call to begin one (site_catalog with part "templates" lists the templates).', true);
+          if (!ops.length && !started) return text(`ops must be a list of steps. ${AG.hint('site', 'text')}`, true);
+          const base0 = pend && pend.payload ? pend.payload : cfg, r = S.applyOps(base0, ops);
+          const nl = H ? H.notes('site', ops, S.normalize(JSON.parse(JSON.stringify(base0))), r.skipped) : r.skipped.map(x => ({ step: 0, op: '', why: x }));
+          const noteText = nl.length ? `\nNot used, or changed on the way:\n${H ? AG.lintText(nl) : nl.map(n => '- ' + n.why).join('\n')}` : '';
+          const tail = H ? `\n${H.checkLine('site', r.cfg)}\n${H.idsLine('site', r.cfg)}` : '';
+          const did = [started, ...r.done].filter(Boolean);
+          if (a.dry_run) return text(`Dry run: nothing was sent, and the ids of anything new below are examples (real ids come with the answer of the call that sends). ${did.length} step${did.length === 1 ? '' : 's'} would be proposed${pend ? ' on top of your waiting proposal' : ''}.\n${did.map(x => '- ' + x).join('\n')}${noteText}${tail}`);
+          if (!did.length) return text(`None of the steps could be applied, so nothing was proposed.${noteText}`, true);
+          const out = propose(pid, who, { note: a.note || (pend && pend.why) || '', ops, base: started || pend ? base0 : null, result: r, started, prior: pend ? pend.summary : [] });
+          const to = out.to && out.to.length ? ` (${out.to.join(', ')})` : '';
+          return text(`Proposed ${did.length} change${did.length === 1 ? '' : 's'}${pend ? `, added to your waiting proposal (now ${out.total || did.length} in all)` : ''}. A person${to} approves them under Suggested changes in the website designer or in the inbox; nothing has changed yet.\n${did.map(x => '- ' + x).join('\n')}${noteText}${tail}`);
+        } catch (e) { return text(e.message, true); }
+      },
     },
     site_comments_to_tasks: {
       description: 'Summarize the open website comments into tasks, one per section, linked to the block and assigned per the project\'s task mode (Lead or Council). Finishing a task resolves its comments.',

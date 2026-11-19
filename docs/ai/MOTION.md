@@ -17,7 +17,7 @@ A motion graphic is **one JSON document** saved in the project under a key (`lau
     { "kind": "button", "at": 0, "text": "Order ahead", "acts": [ { "type": "click", "at": 1, "x": 30, "y": 10 } ] },
     { "kind": "loader", "at": 2 },
     { "kind": "check", "at": 4, "fill": "accent" },
-    { "kind": "stat", "at": 6, "value": "7am", "label": "Open every day" }
+    { "kind": "stat", "at": 6, "value": 365, "label": "days a year, open from 7" }
   ]
 }
 ```

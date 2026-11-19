@@ -38,13 +38,14 @@ You never send this document. You send **steps** (ops), TribeCode applies them t
 | 4 | `site_view` | The page as a person reads it, in plain text. `device: "phone"` shows what a phone hides and how long things get. |
 | 5 | `site_propose` with `dry_run: true` | Tries your steps on a copy and tells you what each did, what was skipped and why (with a corrected example), and what Check would say. Nothing is sent. |
 | 6 | `site_propose` | Sends the proposal. A person sees before and after and approves; it is one Undo. |
-| 7 | `site_check` | "Check my site" as the person sees it: what to fix (links, forms, contrast, empty parts, example words) and tips. Fix what you can and propose again. |
+| 7 | `site_check` with `proposed: true` | "Check my site" on your proposal: what to fix (links, forms, contrast, empty parts, example words) and tips. Fix what you can with more steps. |
 | 8 | `site_comments` | What people asked to change, by section. Answer them in your steps. |
 
 Rules of the tools:
 
 - **No website yet?** Call `site_propose` with `start: { "template": "<id>" }` or `start: { "blank": true }` plus your steps. `site_catalog` lists the templates. Starting is a proposal too.
-- **Ids of new things.** A section you add has no id until it exists. Run `dry_run` and read `site_read`-style ids from its answer (`sections`), or add everything a section needs in the `add` step's `props`.
+- **Ids of new things.** A section you add gets its id when the proposal is sent, and the answer lists every section with its id. Put everything a new section needs into its `add` step's `props`; to change it further, send the proposal, read the ids from the answer, and send more steps (they join the same proposal). Ids in a dry run's answer are examples only.
+- **Your waiting proposal** is not the saved site yet. `site_read`, `site_view` and `site_check` take `proposed: true` to look at the site as it will be if your proposal is approved. Check that, not the old site.
 - **More than 60 steps** do not fit one call. Call `site_propose` again: while your proposal is still waiting, new steps are added on top of it and the person still sees one request. `fresh: true` starts over instead.
 - **Skipped steps** are named with the reason and an example. Fix them and send only the fixed ones.
 - **Your access** is the access of the person who invited you, never more, and they can switch the website off for you. A refusal is an answer: do not look for another way in.
@@ -309,6 +310,6 @@ Then tell the person, in plain words: what you proposed, where to approve it (Su
   ] }
 ```
 
-4. The answer lists the new section ids. A second call (it adds to the same proposal) rewrites the hero with `text` steps, sets its layout with `variant`, links its button to the menu with `link`, fills its picture with `illustration`, and removes the starter sections that do not fit.
-5. `site_check`: no "fix" left that you can fix. `site_view` with `device: "phone"`: the menu has six entries, nothing is hidden.
-6. Send without `dry_run`. Tell the person: approve it under Suggested changes; add a photo of the shop, the street number and prices.
+4. Send it (without `dry_run`). The answer lists every section with its id. A second call (it adds to the same proposal) rewrites the hero with `text` steps, sets its layout with `variant`, links its button to the menu with `link`, fills its picture with `illustration`, and removes the starter sections that do not fit.
+5. `site_check` with `proposed: true`: no "fix" left that you can fix. `site_view` with `proposed: true, device: "phone"`: the menu has six entries, nothing is hidden.
+6. Tell the person: approve it under Suggested changes; add a photo of the shop, the street number and prices.

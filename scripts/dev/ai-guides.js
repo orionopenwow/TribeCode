@@ -30,7 +30,8 @@ for (const [key, f] of Object.entries(FILES)) {
   const lines = now.split('\n').length;
   if (lines > MAX_LINES) { console.error(`ai-guides: docs/ai/${f} is ${lines} lines (the limit is ${MAX_LINES})`); bad++; }
   if (now !== was) { if (check) { console.error(`ai-guides: docs/ai/${f} is out of date: run node scripts/dev/ai-guides.js`); bad++; } else fs.writeFileSync(file, now); }
-  out[key] = now;
+  // the served copy has no marks: an agent reads the lists, not how they got there
+  out[key] = now.replace(/^<!-- (gen:[a-z:]+|\/gen) -->\n/gm, '').replace(/^The parts between `gen` marks[^\n]*\n\n/m, '');
 }
 // the recipes can only name sections, layouts and parts that exist
 for (const r of G.RULES.site.recipes) for (const [t, v] of r.blocks) if (!LIB.site.BLOCKS[t] || !LIB.site.BLOCKS[t].variants.includes(v)) { console.error(`ai-guides: the recipe "${r.kind}" names ${t} · ${v}, which is gone`); bad++; }

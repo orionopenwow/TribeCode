@@ -38,12 +38,13 @@ You never send this document. You send **steps** (ops); TribeCode checks each on
 | 4 | `app_view` | Each screen as a person reads it, in plain text, with where every tap goes and which screens nothing leads to. |
 | 5 | `app_propose` with `dry_run: true` | Tries your steps on a copy: what each did, what was skipped and why (with a corrected example), the new ids, and what the check would say. Nothing is sent. |
 | 6 | `app_propose` | Sends the proposal. A person sees the app before and after and approves; it is one Undo. |
-| 7 | `app_check` | What a careful designer would point out: buttons that go nowhere, screens nothing opens, empty parts, colour that does not read. Fix what you can and propose again. |
+| 7 | `app_check` with `proposed: true` | What a careful designer would point out in your proposal: buttons that go nowhere, screens nothing opens, empty parts, colour that does not read. Fix what you can and propose again. |
 
 Rules of the tools:
 
 - **No app yet?** Call `app_propose` with `start: { "template": "<id>" }` or `start: { "blank": true }` plus your steps. Starting is a proposal too.
-- **Ids of new things.** A screen or part you add has no id until it exists. Run `dry_run`: its answer lists the screens and parts with their ids. Then send the steps that need them.
+- **Ids of new things.** A screen or part you add gets its id when the proposal is sent, and the answer lists every screen and part with its id. To change something new, send the proposal, read the ids from the answer, and send more steps (they join the same proposal). Ids in a dry run's answer are examples only.
+- **Your waiting proposal** is not the saved design yet. `app_read`, `app_view` and `app_check` take `proposed: true` to look at the app as it will be if your proposal is approved. Check that, not the old design.
 - **More than 60 steps** do not fit one call. Call `app_propose` again: while your proposal is still waiting, new steps are added on top of it and the person still sees one request. `fresh: true` starts over instead.
 - **Skipped steps** are named with the reason and an example. Fix them and send only the fixed ones.
 - **Your access** is the access of the person who invited you, never more, and they can switch designs off for you. A refusal is an answer: do not look for another way in.
@@ -271,6 +272,6 @@ Then tell the person, in plain words: what you proposed, where to approve it (Re
   "ops": [ { "op": "kit", "kit": "settings" }, { "op": "theme", "set": { "mode": "dark" } } ] }
 ```
 
-3. The answer lists the new screen (`settings`) and its parts. The kit made Settings a tab, so it is reachable. Its rows still say "Jordan" and "jordan@example.com": rewrite the ones this project would not have with `text` steps (`items.0.value`), and remove a group that does not apply with `block.remove`.
-4. `app_check`: every screen is reachable; the accent still reads on the dark background. If it did not: `{ "op": "theme", "set": { "accent": "#E08A5B" } }`.
-5. Send without `dry_run`. Tell the person: approve it under Requests; the Dark mode row is a drawing of a switch, and a working light and dark switch is a feature they add in App Creator.
+3. Send it (without `dry_run`). The answer lists the new screen (`settings`) and its parts with their ids. The kit made Settings a tab, so it is reachable. Its rows still say "Jordan" and "jordan@example.com": rewrite the ones this project would not have with `text` steps (`items.0.value`), and remove a group that does not apply with `block.remove`.
+4. `app_check` with `proposed: true`: every screen is reachable; the accent still reads on the dark background. If it did not: `{ "op": "theme", "set": { "accent": "#E08A5B" } }`.
+5. Tell the person: approve it under Requests; the Dark mode row is a drawing of a switch, and a working light and dark switch is a feature they add in App Creator.
