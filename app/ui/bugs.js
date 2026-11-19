@@ -9,9 +9,11 @@
   const recent = [];                                   // recent console errors for bug reports
   let bugs = [], loaded = false, autoSent = 0, filter = 'open';
 
-  const push = line => { recent.push(`${new Date().toISOString().slice(11, 19)} ${line}`); if (recent.length > 30) recent.shift(); };
+  const push = line => { recent.push(`${new Date().toISOString().slice(11, 19)} ${line}`); if (recent.length > 200) recent.shift(); };
   const origErr = console.error.bind(console);
   console.error = (...a) => { push(a.map(x => (x && x.stack) || String(x)).join(' ')); origErr(...a); };
+  const origWarn = console.warn.bind(console);
+  console.warn = (...a) => { push('warn ' + a.map(x => (x && x.message) || String(x)).join(' ')); origWarn(...a); };
   addEventListener('error', e => { push(`${e.message} @ ${e.filename}:${e.lineno}`); autoReport(e.message, e.error && e.error.stack); });
   addEventListener('unhandledrejection', e => { const r = e.reason || {}; push(`unhandled: ${r.message || r}`); autoReport(String(r.message || r), r.stack); });
 
@@ -22,6 +24,39 @@
     autoSent++;
     C.api('/bugs', { method: 'POST', body: { title: `Crash: ${String(msg).slice(0, 120)}`, details: 'Reported automatically by TribeCode.', logs: [stack || '', ...recent.slice(-10)].join('\n'), view: currentView(), version: window.TribeUpdater ? window.TribeUpdater.current() : '', auto: true } }).catch(() => {});
   }
+  // ---------- a log snapshot and a screenshot for the report (both stay in this window until Send) ----------
+  // Secrets never leave: tokens, keys and passwords are blanked before anything is shown or sent.
+  const redact = t => String(t)
+    .replace(/\b(sk-ant-[\w-]{6})[\w-]+/g, '$1…').replace(/\b(gh[pousr]_)\w+/g, '$1…').replace(/\b(github_pat_)\w+/g, '$1…')
+    .replace(/\b(tc[a-z]?_)[\w-]{8,}/g, '$1…').replace(/(Bearer\s+)[\w.\-~+/=]+/gi, '$1…')
+    .replace(/((?:token|key|secret|password|pass|code)["'\s:=]+)["']?[^\s"'&,;]{6,}/gi, '$1…');
+  async function logSnapshot() {
+    const U = window.TribeUpdater, inv = window.__TAURI__ && window.__TAURI__.core;
+    let host = [];
+    if (inv) host = (await inv.invoke('host_log').catch(() => [])).filter(Boolean).slice(-200);   // the desktop app's own server log
+    const lines = [
+      'TribeCode log snapshot', `When: ${new Date().toString()}`, `Version: ${U ? U.current() : '?'}`,
+      `Where: ${currentView() || 'Home'} (${location.pathname})`, `Window: ${innerWidth}x${innerHeight} @${devicePixelRatio}x`,
+      `Browser: ${navigator.userAgent}`, `Language: ${document.documentElement.lang || navigator.language}`,
+      `Tribe: ${C.connected() ? 'connected' : 'not connected'}${window.TribeHost && window.TribeHost.isDesktop ? ' · desktop app' : ''}`,
+      '', `## This window (${recent.length} lines: errors and warnings)`, ...(recent.length ? recent : ['(nothing logged)']),
+      ...(inv ? ['', `## The server on this computer (last ${host.length} lines)`, ...(host.length ? host : ['(empty)'])] : [])];
+    return redact(lines.join('\n'));
+  }
+  // One frame of this tab. Chrome, Edge and the desktop app ask once which screen to share; the stream stops at once.
+  async function screenshot() {
+    const md = navigator.mediaDevices; if (!md || !md.getDisplayMedia) throw new Error('no capture');
+    const st = await md.getDisplayMedia({ video: { displaySurface: 'browser' }, audio: false, preferCurrentTab: true, selfBrowserSurface: 'include' });
+    try {
+      const v = document.createElement('video'); v.muted = true; v.srcObject = st; await v.play();
+      await new Promise(r => setTimeout(r, 250));   // let the frame settle after the box hid
+      const c = document.createElement('canvas'); c.width = v.videoWidth; c.height = v.videoHeight; c.getContext('2d').drawImage(v, 0, 0);
+      return await new Promise(r => c.toBlob(r, 'image/png'));
+    } finally { st.getTracks().forEach(t => t.stop()); }
+  }
+  const stamp = () => new Date().toISOString().slice(0, 19).replace(/[T:]/g, '-');
+  const save = (blob, name) => { const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 4000); };
+
   const currentView = () => (document.querySelector('#crumb-label') || {}).textContent || '';
 
   async function load() {
@@ -132,22 +167,46 @@
       <div class="field"><label for="bug-title">What went wrong?</label><input class="input" id="bug-title" maxlength="160" placeholder="e.g. Dragging a task to Done doesn't stick"></div>
       <div class="field"><label for="bug-repro">Steps to reproduce</label><textarea class="input" id="bug-repro" style="height:84px;font-family:var(--font)" placeholder="1. …&#10;2. …"></textarea></div>
       <div class="field"><label for="bug-details">Anything else (optional)</label><textarea class="input" id="bug-details" style="height:64px;font-family:var(--font)"></textarea></div>
-      <div class="bug-cap-files"><button class="btn ghost" id="bug-attach"><svg class="i" style="width:15px;height:15px"><use href="#i-image"/></svg>Add screenshot</button><span class="faint" id="bug-files"></span></div>
-      <div class="faint" style="font-size:12px">Attached automatically: ${esc(currentView() || 'Home')} · v${esc(window.TribeUpdater ? window.TribeUpdater.current() : '')} · ${recent.length} log line${recent.length === 1 ? '' : 's'}</div>
-      <div class="modal-foot"><button class="btn" data-close>Cancel</button><button class="btn primary" id="bug-go">Send report</button></div>`;
+      <div class="bug-cap-files"><button class="btn ghost" id="bug-shot" type="button"><svg class="i" style="width:15px;height:15px"><use href="#i-image"/></svg>Take a screenshot</button><button class="btn ghost" id="bug-attach" type="button"><svg class="i" style="width:15px;height:15px"><use href="#i-upload"/></svg>Add a file</button></div>
+      <div class="bug-cap-list" id="bug-files"></div>
+      <label class="bug-cap-log"><input type="checkbox" id="bug-log" checked> <span>Attach a log snapshot</span> <button class="linkish" id="bug-log-see" type="button">See what's in it</button></label>
+      <pre class="bug-cap-pre" id="bug-log-pre" hidden></pre>
+      <div class="faint" style="font-size:12px">Also attached: ${esc(currentView() || 'Home')} · v${esc(window.TribeUpdater ? window.TribeUpdater.current() : '')}. Tokens and keys are blanked out. Or paste a picture here with Ctrl V.</div>
+      <div class="modal-foot"><button class="btn" data-close>Cancel</button><span style="flex:1"></span><button class="btn" id="bug-save" type="button">Save to a file</button><button class="btn primary" id="bug-go">Send report</button></div>`;
     $('#invite-modal').classList.remove('hidden'); $('#bug-title').focus();
     let files = [];
-    const show = () => { $('#bug-files').textContent = files.map(f => f.name).join(', '); };
+    const show = () => {
+      const box = $('#bug-files'); if (!box) return;
+      box.innerHTML = files.map((f, i) => `<span class="bug-cap-item">${/^image\//.test(f.type) ? `<img alt="" src="${esc(f._url || (f._url = URL.createObjectURL(f)))}">` : ''}<span>${esc(f.name)}</span><button type="button" class="bug-cap-x" data-bx="${i}" aria-label="Remove ${esc(f.name)}">×</button></span>`).join('');
+      box.querySelectorAll('[data-bx]').forEach(b => b.onclick = () => { files.splice(+b.dataset.bx, 1); show(); });
+    };
+    const modalEl = $('#invite-modal');
+    $('#bug-shot').onclick = async () => {
+      modalEl.classList.add('hidden');   // the picture shows the app, not this box
+      try { const b = await screenshot(); if (b) { files.push(new File([b], `screenshot-${stamp()}.png`, { type: 'image/png' })); show(); } }
+      catch (e) { window.TribeApp.toast(e && e.name === 'NotAllowedError' ? 'No screenshot taken.' : 'This browser can’t take one here. Press Win Shift S (Cmd Shift 4 on a Mac), then paste it in this box with Ctrl V.'); }
+      finally { modalEl.classList.remove('hidden'); }
+    };
+    $('#bug-log-see').onclick = async () => { const pre = $('#bug-log-pre'); if (pre.hidden) pre.textContent = await logSnapshot(); pre.hidden = !pre.hidden; };
+    const logFile = async () => $('#bug-log').checked ? new File([await logSnapshot()], `log-${stamp()}.txt`, { type: 'text/plain' }) : null;
+    $('#bug-save').onclick = async () => {   // works with no tribe: the report as a text file, plus each picture
+      const lf = await logFile();
+      const text = [`# ${$('#bug-title').value.trim() || 'Bug report'}`, '', '## Steps to reproduce', $('#bug-repro').value || '(none)', '', '## Details', $('#bug-details').value || '(none)', '', lf ? await lf.text() : ''].join('\n');
+      save(new Blob([text], { type: 'text/plain' }), `tribecode-bug-${stamp()}.txt`);
+      files.forEach(f => save(f, f.name));
+      window.TribeApp.toast('Saved to your Downloads folder');
+    };
     $('#bug-attach').onclick = () => { const i = document.createElement('input'); i.type = 'file'; i.accept = 'image/*,video/*,.txt,.log,.json'; i.multiple = true; i.onchange = () => { files = files.concat([...i.files]); show(); }; i.click(); };
     body.addEventListener('paste', e => { const f = [...(e.clipboardData && e.clipboardData.files || [])]; if (f.length) { files = files.concat(f); show(); } });
     body.querySelector('[data-close]').onclick = () => $('#invite-modal').classList.add('hidden');
     $('#bug-go').onclick = async () => {
       const title = $('#bug-title').value.trim(); if (!title) return $('#bug-title').focus();
-      if (!C.connected()) { window.TribeApp.toast('Connect to a tribe to send bug reports.'); return; }
+      if (!C.connected()) { window.TribeApp.toast('No tribe to send it to. Use Save to a file instead.'); return; }
       $('#bug-go').disabled = true;
       try {
         const r = await C.api('/bugs', { method: 'POST', body: { title, repro: $('#bug-repro').value, details: $('#bug-details').value, logs: recent.join('\n'), view: currentView(), version: window.TribeUpdater ? window.TribeUpdater.current() : '' } });
-        if (files.length) await attachFiles(r.bug.id, files);
+        const lf = await logFile();
+        if (files.length || lf) await attachFiles(r.bug.id, lf ? files.concat(lf) : files);
         $('#invite-modal').classList.add('hidden');
         window.TribeApp.toast(r.merged ? `Thanks! Merged with an existing report (seen ${r.bug.count}×).` : 'Thanks! Bug reported and sorted into the inbox.');
         if (loaded) load();

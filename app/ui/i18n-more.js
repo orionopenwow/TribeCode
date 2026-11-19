@@ -11,6 +11,14 @@
   'use strict';
   const I = window.TribeI18n; if (!I || !I.add) return;
   I.add({
+    // ---- bug report: screenshot and log snapshot
+    'Take a screenshot': ['Hacer una captura', 'Tirar uma captura', 'Faire une capture', 'Bildschirmfoto machen', 'スクリーンショットを撮る', '截图', '스크린샷 찍기'],
+    'Attach a log snapshot': ['Adjuntar una copia del registro', 'Anexar uma cópia do registro', 'Joindre un extrait du journal', 'Protokollauszug anhängen', 'ログを添付', '附上日志快照', '로그 스냅샷 첨부'],
+    "See what's in it": ['Ver qué contiene', 'Ver o que tem', 'Voir le contenu', 'Inhalt ansehen', '中身を見る', '查看内容', '내용 보기'],
+    'Save to a file': ['Guardar en un archivo', 'Salvar em um arquivo', 'Enregistrer dans un fichier', 'In Datei speichern', 'ファイルに保存', '保存为文件', '파일로 저장'],
+    'No screenshot taken.': ['No se hizo la captura.', 'Nenhuma captura feita.', 'Aucune capture prise.', 'Kein Bildschirmfoto gemacht.', 'スクリーンショットは撮られませんでした。', '未截图。', '스크린샷을 찍지 않았습니다.'],
+    'Saved to your Downloads folder': ['Guardado en tu carpeta Descargas', 'Salvo na sua pasta Downloads', 'Enregistré dans votre dossier Téléchargements', 'In deinem Download-Ordner gespeichert', 'ダウンロードフォルダに保存しました', '已保存到下载文件夹', '다운로드 폴더에 저장했습니다'],
+    'No tribe to send it to. Use Save to a file instead.': ['No hay tribu a la que enviarlo. Usa Guardar en un archivo.', 'Não há tribo para enviar. Use Salvar em um arquivo.', 'Aucune tribu à qui l’envoyer. Utilisez Enregistrer dans un fichier.', 'Kein Tribe zum Senden. Nutze In Datei speichern.', '送る先のトライブがありません。ファイルに保存を使ってください。', '没有可发送的部落。请使用保存为文件。', '보낼 트라이브가 없습니다. 파일로 저장을 사용하세요.'],
     // ---- sections and navigation
     'Home': ['Inicio', 'Início', 'Accueil', 'Start', 'ホーム', '首页', '홈'],
     'Work': ['Trabajo', 'Trabalho', 'Travail', 'Arbeit', '仕事', '工作', '일'],
