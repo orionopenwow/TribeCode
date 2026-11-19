@@ -85,7 +85,7 @@
     const L = LESSONS[f]; if (!L) return;
     go(L.show.go);
     if (L.tour) { if (card) card.hidden = true; return setTimeout(() => tour(L.tour), 200); }
-    let n = 0, sel = L.show.sel, alt = false; const tick = () => { const el = find(sel); if (el) return place(el, L.show.say); if (n === 10 && !alt) { const a = phoneAlt(sel); if (a) { alt = true; sel = a; } } if (++n < 30) setTimeout(tick, 120); else say(notHere()); };
+    const g = begin(); let n = 0, sel = L.show.sel, alt = false; const tick = () => { if (!live(g)) return; const el = find(sel); if (el) return place(el, L.show.say); if (n === 10 && !alt) { const a = phoneAlt(sel); if (a) { alt = true; sel = a; } } if (++n < 30) setTimeout(tick, 120); else say(notHere(), 'warn'); };
     setTimeout(tick, 150);
   }
   // p6: Flint's full page sits over the app; ringing something behind it showed nothing. Close it first.
@@ -97,6 +97,8 @@
     ['.lch, .lch-scrim', () => W0.TribeLaunchKit.close()], ['.shc, .shc-scrim', () => W0.TribeShareClip.close()], ['.mkp-page, .mk-page', () => W0.TribeMarket.unpage()],
     ['#flint-full', () => W0.TribeFlint.closeFull()],
     ['#pvw', () => W0.TribePreview.close()],   // a phone: Show me pressed in Flint's own sheet rang the app behind it
+    ['#vr, .vr-scrim', () => W0.TribeVersions.close()],
+    ['.ph-scrim', () => { const sc = [...document.querySelectorAll('.ph-scrim')].pop(); if (!sc) throw 0; sc.click(); }],   // any other phone-style sheet: its scrim closes it
     ['#settings-modal', () => W0.TribeSettings.close()], ['#nf-settings', () => document.querySelector('#nf-settings [data-x]').click()],
     ['.ui-sheet, .ui-scrim', () => { const all = document.querySelectorAll('.ui-sheet'), x = all.length && all[all.length - 1].querySelector('.ui-x'); if (!x) throw 0; x.click(); }]];
   // p6: on a phone some controls live somewhere else (the ? menu, Flint's own sheet, More in the designer, the drawer's +,
@@ -106,12 +108,13 @@
     [/#flint\b|#flint-home/, () => W0.TribeFlint && W0.TribeFlint.openFull(), '#flint-full .ff-foot'],
     [/#wdz-dl/, null, "#wdz [data-wdz='more']"],
     [/#pj-plus/, () => document.body.classList.add('drawer-open'), '.pj-plus[data-pj-new]'],
+    [/data-fc-act/, () => { const r = document.querySelector('#wdz'); if (r && !r.classList.contains('fl-sheet')) { const g = r.querySelector("[data-wdz='flint-sheet']"); if (g) g.click(); } }, null],   // the designer's Flint sheet
     [/#ppl-btn/, () => { if (document.body.classList.contains('m2-in-chat') && W0.TribeShell) W0.TribeShell.go('home'); }, '#ppl-btn']];
   function phoneAlt(sel) {
     if (innerWidth > 820) return null;
     const a = PHONE_ALT.find(([re]) => re.test(String(sel || ''))); if (!a) return null;
     try { if (a[1]) a[1](); } catch {}
-    return a[2];
+    return a[2] || sel;
   }
   function clearCover(el) {
     // a phone: the section list is a drawer off the left edge; a control in it was ringed off screen. Slide it in (the ring follows).
@@ -135,7 +138,7 @@
     tip.style.left = `${Math.min(innerWidth - tw - 8, Math.max(8, r.left))}px`; tip.style.top = `${top}px`;
   }
   function place(el, text) {
-    unring(); clearCover(el);
+    drop(); clearCover(el);
     try { el.scrollIntoView({ block: 'nearest' }); } catch {}
     ring = document.createElement('div'); ring.className = 'fls-ring'; ring.setAttribute('role', 'status'); ring._el = el;   // p6: what it rings (the demo rings check reads it)
     const tip = document.createElement('p'); tip.className = 'fls-tip'; tip.textContent = text;
@@ -147,8 +150,14 @@
   }
 
   const notHere = () => (window.TribeClient && window.TribeClient.project && window.TribeClient.project() ? 'That isn’t on this screen right now. Open it from the menu, then try Show me again.' : 'Open a project first, then try Show me again.');
-  function say(t) { if (window.TribeApp && window.TribeApp.toast) window.TribeApp.toast(t); }
-  function unring() { clearInterval(follow); if (ring) { if (ring._tip) ring._tip.remove(); ring.remove(); ring = null; } }
-  addEventListener('pointerdown', e => { if (ring && !e.target.closest('.fls-tip')) unring(); }, true);
-  return { LESSONS, FEATURES, open, close, showMe, tour, ring: (el, text) => place(el, text), unring, phoneAlt, notHere };
+  function say(t, kind) { if (window.TribeApp && window.TribeApp.toast) window.TribeApp.toast(t, kind); }
+  function drop() { clearInterval(follow); if (ring) { if (ring._tip) ring._tip.remove(); ring.remove(); ring = null; } }
+  // p6: only the newest Show me may ring. A Show me that was still looking for its control rang later, over the one you
+  // pressed after it. begin() starts one and retires any still looking. (unring() only clears the ring: a tool that
+  // closes while the next one opens must not cancel the Show me that is waiting for it.)
+  let gen = 0;
+  const begin = () => ++gen, live = g => g === gen;
+  function unring() { drop(); }
+  addEventListener('pointerdown', e => { if (ring && !e.target.closest('.fls-tip')) drop(); }, true);
+  return { LESSONS, FEATURES, open, close, showMe, tour, ring: (el, text, g) => { if (g == null || live(g)) place(el, text); }, unring, begin, live, phoneAlt, notHere };
 });

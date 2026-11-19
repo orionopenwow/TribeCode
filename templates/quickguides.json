@@ -823,7 +823,7 @@
    "doLabel": "Open Publish",
    "show": {
     "call": "TribePublish.open",
-    "sel": "#pb-go:not([hidden]), #pb-url, #pb-form",
+    "sel": "#pb-go:not([hidden]), #pb-url, #pb-form, #pb-body",
     "say": "Check the name and the short description, then press Publish."
    }
   },

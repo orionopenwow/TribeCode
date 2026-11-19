@@ -137,7 +137,7 @@
     if (s.show.open !== 'sitelib') call('TribeSiteLib', 'close');   // pass 4 polish: the template shelf from an earlier step no longer sits over the next step's place
     if (!find(s.show.sel)) { try { (OPEN[s.show.open] || (() => {}))(); } catch {} }
     return new Promise(res => {
-      let n = 0, sel = s.show.sel, alt = false; const tick = () => { const el = find(sel); if (el) { L.ring(el, T(s.text)); return res(true); } if (n === 12 && !alt && L.phoneAlt) { const a = L.phoneAlt(sel); if (a) { alt = true; sel = a; } } /* p6: the phone's version of a control */ if (++n < 45) setTimeout(tick, 130); else { toast(pid() ? 'That is not on screen yet. Do the earlier steps first, then try Show me again.' : 'Open a project first, then try Show me again.'); res(false); } };
+      const gn = L.begin ? L.begin() : null; let n = 0, sel = s.show.sel, alt = false; const tick = () => { if (gn != null && !L.live(gn)) return res(false); const el = find(sel); if (el) { L.ring(el, T(s.text), gn); return res(true); } if (n === 12 && !alt && L.phoneAlt) { const a = L.phoneAlt(sel); if (a) { alt = true; sel = a; } } /* p6: the phone's version of a control */ if (++n < 45) setTimeout(tick, 130); else { if (W.TribeApp && W.TribeApp.toast) W.TribeApp.toast(T(pid() ? 'That is not on screen yet. Do the earlier steps first, then try Show me again.' : 'Open a project first, then try Show me again.'), 'warn'); res(false); } };
       setTimeout(tick, 200);
     });
   }

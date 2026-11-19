@@ -125,7 +125,7 @@
     const s = g.show; leave(false); mark('quick', id, 'seen');
     if (s.lesson) { L.showMe(s.lesson); return true; }
     try { if (!s.go && W.TribeMarket && W.TribeMarket.unpage) W.TribeMarket.unpage(); if (s.settings) RUN.settings(s.settings); else if (s.call) RUN.call(s.call); else if (s.go) go(s.go); } catch {}
-    let n = 0, sel = s.sel, alt = false; const tick = () => { const el = find(sel); if (el) return L.ring(el, T(s.say)); if (n === 10 && !alt && L.phoneAlt) { const a = L.phoneAlt(sel); if (a) { alt = true; sel = a; } } if (++n < 30) setTimeout(tick, 120); else toast(T(L.notHere ? L.notHere() : 'Open a project first, then try Show me again.')); };   // p6: the phone's version of a control; an honest message when a project is open
+    const gn = L.begin ? L.begin() : null; let n = 0, sel = s.sel, alt = false; const tick = () => { if (gn != null && !L.live(gn)) return; const el = find(sel); if (el) return L.ring(el, T(s.say), gn); if (n === 10 && !alt && L.phoneAlt) { const a = L.phoneAlt(sel); if (a) { alt = true; sel = a; } } if (++n < 30) setTimeout(tick, 120); else if (W.TribeApp && W.TribeApp.toast) W.TribeApp.toast(T(L.notHere ? L.notHere() : 'Open a project first, then try Show me again.'), 'warn'); };   // p6: the phone's version of a control; an honest message when a project is open
     setTimeout(tick, 180);
     return true;
   }
