@@ -121,7 +121,7 @@ def main():
             ctx.add_init_script("sessionStorage.setItem('tribecode.view', 'chat')")
             def slow(route):
                 time.sleep(1.2); route.continue_()
-            ctx.route("**/hub.js", slow)
+            ctx.route("**/hub.js*", slow)
             pg = ctx.new_page(); watch(pg, "race")
             pg.goto(BASE + "/?skipIntro=1"); pg.wait_for_function("TribeClient.connected()")
             pg.wait_for_function("document.querySelectorAll('#chat-list .msg[data-id]').length > 0", timeout=8000)

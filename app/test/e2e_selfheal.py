@@ -122,7 +122,7 @@ def main():
             # ---------- 2. boot failure: clear caches, reload once, then the card ----------
             ctx = b.new_context(viewport={"width": 1280, "height": 800}); ctx.add_init_script(settings(tok))
             ctx.add_init_script("if (!sessionStorage.getItem('mkcache')) { sessionStorage.setItem('mkcache', '1'); caches.open('tribecode-stale-test').then(c => c.put('/stale', new Response('old'))); }")
-            ctx.route("**/shell.js", lambda route: route.fulfill(status=200, content_type="text/javascript", body="throw new Error('selfheal test: shell broke');"))
+            ctx.route("**/shell.js*", lambda route: route.fulfill(status=200, content_type="text/javascript", body="throw new Error('selfheal test: shell broke');"))
             pg = ctx.new_page()
             loads = []; pg.on("load", lambda: loads.append(time.time()))
             pg.goto(BASE + "/?skipIntro=1")
@@ -139,7 +139,7 @@ def main():
             # the user's button: Send report is already done
             assert pg.inner_text("#sh-report") == "Report sent"
             # fixed (e.g. the update finished): Reload starts normally
-            ctx.unroute("**/shell.js")
+            ctx.unroute("**/shell.js*")
             pg.click("#sh-reload")
             pg.wait_for_function("window.TribeClient && TribeClient.connected()")
             pg.wait_for_function("TribeSelfHeal.state().settled", timeout=8000)
@@ -148,7 +148,7 @@ def main():
 
             # ---------- 3. a shell that never builds (no error) -> the watchdog ----------
             ctx = b.new_context(viewport={"width": 390, "height": 844}); ctx.add_init_script(settings(tok))
-            ctx.route("**/shell.js", lambda route: route.fulfill(status=200, content_type="text/javascript", body="/* nothing */"))
+            ctx.route("**/shell.js*", lambda route: route.fulfill(status=200, content_type="text/javascript", body="/* nothing */"))
             pg = ctx.new_page()
             loads = []; pg.on("load", lambda: loads.append(1))
             pg.goto(BASE + "/?skipIntro=1&healWait=1500")
