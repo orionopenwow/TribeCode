@@ -132,7 +132,8 @@ def main():
             name = host.input_value("#np-input"); assert name.startswith("Orion's"), name
             host.click("#np-create")
             host.wait_for_selector(".modal-card.ii #ii-link", timeout=25000); host.click(".modal-card.ii [data-close]")   # step 3: invite friends
-            host.wait_for_selector("#view-chat:not(.hidden) #flow-expand"); host.click("#flow-expand")   # starts folded to the slim bar
+            host.wait_for_timeout(600); assert host.locator("#flow-dock .fbar").count() == 0, "pass 6: no Getting started strip over the chat"
+            host.evaluate("TribeFlow.kickoff()")   # the card itself still opens on purpose
             host.wait_for_selector("#view-chat:not(.hidden) #flow-kick")
             pid = host.evaluate("TribeClient.project()"); assert pid == "orion-s-studio", pid
             host.wait_for_function("document.querySelectorAll('#flow-dock .fk-steps li.ok').length === 4", timeout=25000)
@@ -161,8 +162,8 @@ def main():
             wait_text(friend, "#sync-status", "connected")
             ftoken = friend.evaluate("TribeStore.get().server.token")
             assert friend.evaluate("TribeClient.project()") == pid
-            chat(friend); friend.wait_for_selector("#flow-kick, #flow-expand")
-            if friend.locator("#flow-expand").count(): friend.click("#flow-expand")   # desktop: the card is a pop-out, opened from the bar
+            chat(friend); friend.wait_for_function("window.TribeFlow && TribeFlow.state()", timeout=15000)
+            if not friend.locator("#flow-kick").count(): friend.evaluate("TribeFlow.kickoff()")   # pass 6: no strip; the card opens on purpose
             friend.wait_for_selector("#flow-kick")
             maya = api("/me", token=ftoken)[1]["member"]["id"]
 

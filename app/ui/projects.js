@@ -679,10 +679,10 @@ ${canEdit && !started ? `      <section class="pj-context" id="pj-context"><div 
   const IDEAS = ['A cozy pixel game we can play together', 'A website for my friend\'s bakery', 'An app that tracks our habits', 'A party quiz for game night'];
   const KIND_OF = [[/\b(game|platformer|rpg|puzzle|shooter|runner|quiz|pixel|level|boss)\b/i, '🎮'], [/\b(site|website|page|portfolio|blog|landing|bakery|shop|caf[eé]|restaurant|event)\b/i, '🌐'], [/\b(app|tracker|planner|list|bot|tool|dashboard)\b/i, '📱']];
   function nameFromIdea(idea) {
-    const STOP = new Set('a an the and or of to for in on at with by is are be it its this that we our us you your my me i from as into where who can will make build want like some cozy simple small little new friend friends play together let lets track tracks tracking help helps keep keeps show shows'.split(' '));
+    const STOP = new Set('a an the and or of to for in on at with by is are be it its this that we our us you your my me i from as into where who can will make build want like some cozy simple small little new friend friends play together let lets track tracks tracking help helps keep keeps show shows group groups team family kids everyone people'.split(' '));
     const KINDW = /^(game|website|site|app|page|bot|tool|quiz)$/i;
     const pick = t => String(t).replace(/[^\p{L}\p{N}\s'-]/gu, ' ').split(/\s+/).filter(w => w && !STOP.has(w.toLowerCase()) && !/'s$/i.test(w));
-    let words = pick(String(idea).split(/\s(?:with|that|where|which|so|to help|for|,)\s/i)[0]);
+    let words = pick(String(idea).split(/\s(?:with|that|where|which|so|to help|,)\s/i)[0]);
     if (words.length < 2) words = pick(idea);
     words = words.slice(0, 3);
     if (words.length > 1 && KINDW.test(words[0])) words.push(words.shift());   // "website … bakery" -> "Bakery Website"

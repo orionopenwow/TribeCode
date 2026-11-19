@@ -420,5 +420,7 @@
     window.TribeInvite.open({ who: 'friend', project: f.project || true, link: f.invite ? f.invite.link : '', linkKind: f.invite ? f.invite.kind : '', name: f.name });
   }
 
-  window.TribeFlow = { create, instant, inviteSheet, suggestName, load, open, state: () => flow, role, roleOfMember, folderOwner, openUpdates: () => open('updates'), openRoles: () => open('roles') };
+  // pass 6: the kickoff card (invite link, roles, notes, Start the flow) on purpose; the strip that opened it over the chat is gone
+  function kickoff() { if (!flow) return false; minimized = false; popOpen = true; try { localStorage.removeItem('tribecode.flowMin.' + flow.project); } catch {} if (App() && App().show) App().show('chat'); dock(); return true; }
+  window.TribeFlow = { create, instant, inviteSheet, suggestName, load, open, kickoff, state: () => flow, role, roleOfMember, folderOwner, openUpdates: () => open('updates'), openRoles: () => open('roles') };
 })();
