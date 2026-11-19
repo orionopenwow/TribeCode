@@ -1,5 +1,14 @@
 # Changelog
 
+## v0.41.1
+- **Updates always show**: the first start after an update clears the app's old cached screens, so a new version is never hidden behind an old one. Your settings, projects and messages stay. If something still looks old: Settings > About > Clear the cache and restart.
+- **Write while the host is away**: messages, DMs, replies, GIFs and small pictures or voice notes show at once as "Waiting to send" and go out by themselves when the tribe is back, once and in order. A reload keeps them.
+- **You can see when the tribe is offline**: a line above the message box says whose computer is off and how many messages are waiting, the project circles get a small dot, and a DM no longer says "online" when nobody can be reached.
+- **The app opens with the host off**: it starts from its saved copy instead of an error page.
+- **Clearer icons**: project and tribe icons are shown in full colour.
+- **Fixes**: the DM header's back link no longer sits on top of the name.
+- **Phones**: the offline line sits above the composer at 390px, and the message box stays usable while the host is off.
+
 ## v0.41.0
 - **Your idea becomes a first version**: type what you want to make and a website, a phone app or a game appears straight away, with no AI. It opens full size; change the words, switch the kind, keep editing, polish it or invite a friend from there.
 - **The vision, once**: your first sentence is the project's vision; no second box asks for it.

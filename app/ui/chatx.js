@@ -784,7 +784,7 @@
       : `<span class="cb-av" style="background:${esc(peer.color || '#6C7CFF')};color:${ink(peer.color || '#6C7CFF')}">${esc(initials(peer.name))}</span>`;
     const humans = mem.filter(x => x.role !== 'agent'), on = humans.filter(x => x.online).length;
     const sub = !peer ? (chan && chan.topic ? chan.topic : `${humans.length} ${humans.length === 1 ? 'member' : 'members'} · ${on} online`)
-      : peer.role === 'agent' ? 'Your AI · private' : peer.online ? 'online' : 'offline';
+      : peer.role === 'agent' ? 'Your AI · private' : C.state().status !== 'online' ? 'offline' : peer.online ? 'online' : 'offline';   // fix/p7: never "online" while the tribe can't be reached
     const kids = [...h.childNodes];
     h.classList.add('cb');
     const np = (pinsBy.get(ch) || []).length;
@@ -820,6 +820,7 @@
   // feat/chat2: redraw the decorated header (channel emoji, topic, pinned count)
   function redrawHead() { const h = $('#chat-head'); if (!h) return; const s = h.querySelector('.cb-av'); if (!s) return decorateHead(); s.remove(); const kids = [...(h.querySelector('.cb-tt') || h).childNodes].filter(n => !(n.classList && n.classList.contains('cb-sub'))); h.innerHTML = ''; kids.forEach(k => h.appendChild(k)); }
   document.addEventListener('tribe-channels', () => setTimeout(redrawHead, 0));
+  { let was = ''; C.on('status', st => { const now = st && st.status === 'online' ? 'on' : 'off'; if (now !== was) { was = now; setTimeout(redrawHead, 0); } }); }   // fix/p7: the status line follows the tribe going offline and back
   // Who's here: a small panel from the header's ⓘ (a sheet on phones): the channel, its topic, people and AI helpers, online first.
   function infoPanel(anchor, ch) {
     const old = $('#info-panel'); if (old) { old.remove(); return; }

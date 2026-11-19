@@ -104,6 +104,10 @@ def main():
             fr.wait_for_timeout(400)
             n_wait = fr.evaluate("TribeClient.outbox().length"); assert n_wait >= 3, n_wait
             fr.wait_for_function("document.querySelector('#chat-offline') && /\\d+ messages will send/.test(document.querySelector('#chat-offline').innerText)", timeout=5000)
+            # the DM header: one row (back, name, private) over a status line that says offline, nothing overlapping
+            fr.wait_for_function("(document.querySelector('#chat-head .cb-sub') || {}).textContent === 'offline'", timeout=5000)
+            box = fr.evaluate("(() => { const r = e => document.querySelector(e).getBoundingClientRect(); const a = r('#chat-head .dm-back'), b = r('#chat-head .dm-with'), c = r('#chat-head .cb-sub'); return { same: Math.abs(a.top - b.top) < 6, under: c.top >= Math.max(a.bottom, b.bottom) - 1 }; })()")
+            assert box["same"] and box["under"], ("DM header layout", box)
             # the phone
             ph.fill("#chat-input", "off-4 phone"); ph.press("#chat-input", "Enter")
             ph.wait_for_selector("#chat-list .msg.pending", timeout=5000)

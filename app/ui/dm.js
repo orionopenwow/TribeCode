@@ -49,8 +49,9 @@
       return;
     }
     const others = totalUnread(view) + generalUnread, ag = (member(withId) || {}).role === 'agent';
-    h.innerHTML = `<button class="dm-back" id="dm-back" title="Back to #general" aria-label="Back to #general">${BACK}#general${others ? `<span class="dm-badge">${others}</span>` : ''}</button>` +
-      `<span class="dm-with">${ag ? '<svg class="i spark"><use href="#i-sparkle"/></svg>' : '· '}${esc(nameOf(withId))}</span><span class="dm-lock" title="Only you and ${esc(nameOf(withId))} can read this">private</span>`;
+    // fix/p7: one row (back, name, private), so the header's status line sits under it instead of on top of it
+    h.innerHTML = `<span class="dm-row"><button class="dm-back" id="dm-back" title="Back to #general" aria-label="Back to #general">${BACK}#general${others ? `<span class="dm-badge">${others}</span>` : ''}</button>` +
+      `<span class="dm-with">${ag ? '<svg class="i spark"><use href="#i-sparkle"/></svg>' : ''}${esc(nameOf(withId))}</span><span class="dm-lock" title="Only you and ${esc(nameOf(withId))} can read this">private</span></span>`;
     h.querySelector('#dm-back').onclick = back;
   }
 

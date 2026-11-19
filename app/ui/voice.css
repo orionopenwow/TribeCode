@@ -188,3 +188,8 @@
 .rec-time { font-family: var(--mono); font-size: 12px; color: var(--live-ink); flex: none; }
 .rec-tx { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text); }
 .rec-hint { font-family: var(--mono); font-size: 12px; color: var(--faint); flex: none; }
+
+/* fix/p7: the DM header's first line (back, name, private) stays one row; the status line goes under it */
+.dm-row { display: inline-flex; align-items: center; gap: 8px; min-width: 0; max-width: 100%; white-space: nowrap; }
+.dm-row .dm-with { min-width: 0; overflow: hidden; text-overflow: ellipsis; font-weight: 650; color: var(--text); }
+.dm-row .dm-lock { flex: none; }
