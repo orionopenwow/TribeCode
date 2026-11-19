@@ -423,7 +423,7 @@
       db().repo = db().repo || {}; db().repo[NEWID] = { name: 'campfire-crew/firefly-garden', branch: 'main', ahead: 0, behind: 0, dirty: 0 }; K().save(); K().push({ type: 'repo' });
       say('jay', 'Set up the code repository too 📌', NEWID);
       if (window.TribeProjects) await window.TribeProjects.overview();
-      await settle('#pj-check.done', 'checklist all set', 3000);
+      await settle('#pj-overview[data-steps-done="1"]', 'checklist all set', 3000);   // pass 6: all done = no step card
       await wait(1200);
       const lr = $(`#pj-rail [data-pj-open="${PID}"]`);
       if (lr) await click('me', lr, { noClick: true });

@@ -99,7 +99,7 @@ def main():
             assert order, "the next step sits under the preview"
             shot(pg, "1440-dashboard")
             pg.click("#pj-check-all"); pg.wait_for_selector("#pj-steps .ock-row", timeout=5000)
-            assert pg.locator("#pj-steps .ock-row").count() == 5 and pg.locator("#pj-steps .ock-row.on").count() >= 1, "See all steps lists every step, ticked"
+            assert pg.locator("#pj-steps .ock-row:not(.ock-gap):not(.ock-flint)").count() == 5 and pg.locator("#pj-steps .ock-row.on").count() >= 1, "See all steps lists every step, ticked"
             shot(pg, "1440-steps"); pg.keyboard.press("Escape"); pg.wait_for_timeout(300)
             # the band opens the preview full size again, as it is now
             pg.click("#pj-overview .db-band [data-db='open']"); pg.wait_for_selector("#fpv .fpv-acts", timeout=15000)

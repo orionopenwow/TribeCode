@@ -196,6 +196,7 @@
         done: team.length > 1 || lsg('shared') === '1', acts: canEdit ? '<button class="btn sm" data-ck="share">Share</button>' : '' },
     ];   // feat/folder-sync: five steps; where it lives and the code repository are one step, sharing is the last
     const nDone = steps.filter(x => x.done).length, allDone = nDone === steps.length;
+    el.dataset.stepsDone = allDone ? '1' : '0';   // pass 6: with every step done there is no step card at all (the demo and tests read this)
     // Until the tribe has really begun (a vision, a task or a friend; a pinned repo alone doesn't count), the checklist is
     // the hero of the page and the Living update stays hidden: there is nothing to report yet.
     // v0.24: the big step cards stay until every step is done (or the person hides them), so nobody skips the AI and the
