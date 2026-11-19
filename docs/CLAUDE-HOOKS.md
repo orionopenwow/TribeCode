@@ -70,6 +70,16 @@ Pressing it sends a **design brief** (`brief()` in `flintcreate.js`) to the help
 - the two tools to call and the rule that nothing changes until a person approves;
 - the brand kit (name, colours, fonts, voice), the audience when it is written down, and an outline of the design.
 
+## The guides, the brief and the read tools (v0.42)
+
+An agent now starts from two things, and the tools point to them: `project_brief` (what the project is: vision,
+audience, brand kit, what exists, facts, tasks, who approves) and `get_guide("website" | "app" | "motion")`, the master
+guides in [docs/ai/](ai/README.md). Around the two propose tools there are read tools: `site_catalog` / `app_catalog`
+(what can be added, every step with an example), `site_view` / `app_view` (the design as a person reads it, also on a
+phone), `site_check` / `app_check`. `site_propose` and `app_propose` take `dry_run`, can `start` a design where there
+is none, add later steps to the agent's own waiting request, and name every skipped step with a corrected example.
+"Make it beautiful" sends the project brief on top of the request. The table below still holds.
+
 ## The MCP tools
 
 | Tool | What it returns or does |

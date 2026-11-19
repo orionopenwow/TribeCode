@@ -59,5 +59,11 @@ const zlib = require('zlib');
   const fl = Buffer.concat([Buffer.from('%PDF-1.4\n1 0 obj\n<< /Length ' + z.length + ' /Filter /FlateDecode >>\nstream\n', 'latin1'), z, Buffer.from('\nendstream\nendobj\n%%EOF', 'latin1')]);
   const ft = await B.pdfText(new Uint8Array(fl), async u => new Uint8Array(zlib.inflateSync(Buffer.from(u))));
   assert(ft.includes('Flate text') && ft.includes('line two'), ft);
+  // feat/ai-guides: a website pack carries the project brief and the guide's essentials; a code pack does not
+  const sp = B.pack({ goal: 'Make it calmer', site: { name: 'Bean' }, brief: '# Project brief: Bean and Gone\n\n**Vision:** A coffee roaster.' });
+  assert(sp.text.includes('# Project brief: Bean and Gone') && sp.text.includes('How to make this website good') && sp.text.includes('Never:') && sp.text.indexOf('Project brief') < sp.text.indexOf('## How to reply'), sp.text.slice(0, 600));
+  assert(B.pack({ goal: 'x', design: 'app' }).text.includes('How to make this app good'));
+  assert(!B.pack({ goal: 'x', files: [{ path: 'a.js', text: '1' }] }).text.includes('How to make this'));
+  assert(B.pack({ goal: 'x', site: {}, brief: 'token sk-ant-' + 'a'.repeat(30) }).removed.length === 1, 'a secret in the brief is still taken out');
   console.log('ok aibridge_core_test');
 })().catch(e => { console.error(e); process.exit(1); });
