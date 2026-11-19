@@ -12,6 +12,7 @@
   const I = window.TribeI18n; if (!I || !I.add) return;
   I.add({
     // ---- p7: offline messages
+    'Earlier messages show when your tribe is back. You can still write: it sends then.': ['Los mensajes anteriores aparecen cuando vuelva tu tribu. Puedes escribir igual: se envía entonces.', 'As mensagens anteriores aparecem quando a tribo voltar. Você pode escrever mesmo assim: será enviado depois.', 'Les messages précédents s’affichent au retour de votre tribu. Vous pouvez écrire quand même : ce sera envoyé à ce moment-là.', 'Frühere Nachrichten erscheinen, wenn dein Tribe zurück ist. Du kannst trotzdem schreiben: Es wird dann gesendet.', 'トライブが戻ると以前のメッセージが表示されます。今書いても、そのときに送られます。', '部落恢复后会显示之前的消息。你现在也可以写，届时会发送。', '트라이브가 돌아오면 이전 메시지가 보입니다. 지금 써도 그때 보내집니다.'],
     "Didn't send": ['No se envió', 'Não enviado', 'Pas envoyé', 'Nicht gesendet', '送信できませんでした', '未发送', '보내지 못함'],
     'Waiting to send': ['Esperando para enviar', 'Aguardando envio', 'En attente d’envoi', 'Wartet auf Senden', '送信待ち', '等待发送', '전송 대기 중'],
     'Sending…': ['Enviando…', 'Enviando…', 'Envoi…', 'Wird gesendet…', '送信中…', '正在发送…', '보내는 중…'],

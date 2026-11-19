@@ -27,7 +27,10 @@ const at = rel => new URL(rel, self.registration.scope).href;
 
 self.addEventListener('install', e => {
   // one file that fails (a moved asset) must not leave the whole shell uncached
-  e.waitUntil(caches.open(CACHE).then(c => Promise.allSettled([OFFLINE, ...SHELL].map(f => c.add(f)))).catch(() => {}));
+  e.waitUntil(caches.open(CACHE).then(async c => {
+    const all = [OFFLINE, ...SHELL], r = await Promise.allSettled(all.map(f => c.add(f)));
+    for (const [i, x] of r.entries()) if (x.status === 'rejected') { try { await c.add(all[i]); } catch {} }   // p7: a second, calmer try for any that failed
+  }).catch(() => {}));
   self.skipWaiting();
 });
 self.addEventListener('activate', e => {
@@ -43,6 +46,16 @@ self.addEventListener('message', e => {
   const d = e.data || {};
   if (d.type === 'SKIP_WAITING') self.skipWaiting();
   if (d.type === 'tribe-strategy' && e.source) e.source.postMessage({ type: 'tribe-strategy', strategy: STRATEGY, cache: CACHE });
+  // p7: the page lists the files it really loaded; any not saved yet are saved now, one at a time, so the app opens whole
+  // when the host's computer is off (a first visit isn't served through this worker, and a busy install can miss some).
+  if (d.type === 'tribe-cache-these' && Array.isArray(d.urls)) e.waitUntil((async () => {
+    const c = await caches.open(CACHE), here = location.origin;
+    for (const u of d.urls.slice(0, 800)) {
+      try { const url = new URL(u, self.registration.scope); if (url.origin !== here || NETWORK_ONLY.test(url.pathname)) continue;
+        if (await c.match(url.href, { ignoreSearch: false })) continue;
+        const r = await fetch(url.href, { cache: 'no-cache' }); if (r.ok && r.type === 'basic') await c.put(url.href, r); } catch {}
+    }
+  })());
 });
 
 const isAppPage = u => { const s = SCOPE().pathname; return u.pathname === s || u.pathname === s + 'index.html'; };

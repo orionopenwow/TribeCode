@@ -34,11 +34,15 @@
   }
   function paint() {
     document.body.classList.toggle('tribe-off', off);
-    document.querySelectorAll('.pj-circle, #rail-logo').forEach(el => { if (off) el.setAttribute('data-off-tip', '1'); else el.removeAttribute('data-off-tip'); });
+    document.querySelectorAll('.pj-circle[data-pj-open], #rail-logo').forEach(el => { if (off) el.setAttribute('data-off-tip', '1'); else el.removeAttribute('data-off-tip'); });
     const form = $('#chat-form'); if (!form) return;
     let bar = $('#chat-offline');
     if (!off) { if (bar) bar.remove(); return; }
-    if (!bar) { bar = document.createElement('div'); bar.id = 'chat-offline'; bar.className = 'chat-offline'; bar.setAttribute('role', 'status'); form.parentNode.insertBefore(bar, form); }
+    if (!bar) {
+      bar = document.createElement('div'); bar.id = 'chat-offline'; bar.className = 'chat-offline'; bar.setAttribute('role', 'status');
+      const box = form.closest('#composer-mount') || form;   // the phone wraps the form in its pill: the line goes above the whole composer
+      box.parentNode.insertBefore(bar, box);
+    }
     bar.innerHTML = line();
     const rl = $('#rail-logo'); if (rl) rl.title = tr('Your tribe is offline');
   }
@@ -48,7 +52,7 @@
     graceT = setTimeout(() => { off = offNow(); paint(); }, 2500);
   }
   C.on('status', sync);
-  C.on('outbox', () => { if (off) paint(); redraw(); });
+  C.on('outbox', () => { if (off) paint(); watchList(); redraw(); });
   C.on('presence', () => { if (off) paint(); });
 
   // ---------- waiting messages drawn again (after a reload, or switching back to the channel) ----------
@@ -56,22 +60,24 @@
   function redraw() {
     clearTimeout(rdT);
     rdT = setTimeout(() => {
-      const list = $('#chat-list'), App = window.TribeApp; if (!list || !App || !App.pendingBubble) return;
-      const ch = curCh();
+      watchList();
+      const ch = curCh(), list = (ch !== 'general' && $('#dm-list')) || $('#chat-list'), App = window.TribeApp; if (!list || !App || !App.pendingBubble) return;
       drawing = true;
       try {
         for (const it of waiting()) {
           const cid = it.body && it.body.cid; if (!cid || (it.ch || 'general') !== ch) continue;
           if (list.querySelector(`[data-cid="${CSS.escape(cid)}"]`)) continue;
-          App.pendingBubble(it.kind === 'chat-media' ? (it.label || tr('Picture')) : (it.body.text || ''), cid, C.connected() ? 'sending' : 'waiting');
+          App.pendingBubble(it.kind === 'chat-media' ? (it.label || tr('Picture')) : (it.body.text || ''), cid, C.connected() ? 'sending' : 'waiting', ch);
         }
       } finally { drawing = false; }
     }, 80);
   }
   function watchList() {
-    const list = $('#chat-list'); if (!list || list.dataset.ofc) return;
-    list.dataset.ofc = '1';
-    new MutationObserver(() => { if (!drawing && waiting().length) redraw(); }).observe(list, { childList: true });
+    for (const list of [$('#chat-list'), $('#dm-list')]) {
+      if (!list || list.dataset.ofc) continue;
+      list.dataset.ofc = '1';
+      new MutationObserver(() => { if (!drawing && waiting().length) redraw(); }).observe(list, { childList: true });
+    }
   }
 
   // ---------- a picture or voice note while offline ----------
@@ -81,9 +87,21 @@
     if (!(C.hasToken && C.hasToken())) return false;
     if ((bytes || 0) > MAX) { if (window.TribeApp && window.TribeApp.toast) window.TribeApp.toast(tr('That’s over 2 MB, so it needs your tribe online. Try again when it’s back.')); return true; }
     const cid = C.newId(); C.queue(path, { ...body, cid }, { kind: 'chat-media', ch, label });
-    if (window.TribeApp && window.TribeApp.pendingBubble && ch === curCh()) window.TribeApp.pendingBubble(label, cid, 'waiting');
+    if (window.TribeApp && window.TribeApp.pendingBubble && ch === curCh()) window.TribeApp.pendingBubble(label, cid, 'waiting', ch);
     return true;
   }
+
+  // ---------- the app opens whole with the host off: tell the service worker every file this page loaded ----------
+  function keepFiles() {
+    if (!('serviceWorker' in navigator) || !window.isSecureContext) return;
+    const here = location.origin, urls = new Set();
+    document.querySelectorAll('script[src], link[rel="stylesheet"][href], link[rel="icon"][href], link[rel="manifest"][href]').forEach(el => urls.add(el.src || el.href));
+    try { performance.getEntriesByType('resource').forEach(r => urls.add(r.name)); } catch {}
+    const list = [...urls].filter(u => u.startsWith(here) && !/\/(api|mcp|ws|play|preview)\//.test(new URL(u).pathname));
+    navigator.serviceWorker.ready.then(reg => { const w = navigator.serviceWorker.controller || reg.active; if (w) w.postMessage({ type: 'tribe-cache-these', urls: list }); }).catch(() => {});
+  }
+  if (document.readyState === 'complete') setTimeout(keepFiles, 4000); else addEventListener('load', () => setTimeout(keepFiles, 4000));
+  if (navigator.serviceWorker) navigator.serviceWorker.addEventListener('controllerchange', () => setTimeout(keepFiles, 1500));
 
   function boot() { watchList(); sync(); redraw(); }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot); else boot();
