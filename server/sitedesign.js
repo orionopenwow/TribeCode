@@ -94,9 +94,13 @@ module.exports = function siteDesign({ files = null, perms = null, requests = ()
     return CAT;
   }
   const templates = () => catalog().templates;
-  function template(id) {
+  // site-templates2: the gallery's own file first (the offered templates are written by hand there). A template the
+  // gallery no longer offers gives the closest offered one (catalog: retired, alias); exact = that very file, as it was.
+  function template(id, exact) {
     id = String(id || '');
-    if (S.TEMPLATES.includes(id)) { const dir = path.join(LIB, id), d = JSON.parse(fs.readFileSync(path.join(dir, 'site.json'), 'utf8')); return S.fromTemplate(id, d, rel => inlineFile(dir, rel)); }
+    const entry = templates().find(t => t.id === id);
+    if (entry && entry.retired && entry.alias && !exact && templates().some(t => t.id === entry.alias && !t.retired)) id = entry.alias;
+    if (S.TEMPLATES.includes(id) && !(/^[a-z0-9-]{2,60}$/.test(id) && templates().some(t => t.id === id) && fs.existsSync(path.join(GAL, id + '.json')))) { const dir = path.join(LIB, id), d = JSON.parse(fs.readFileSync(path.join(dir, 'site.json'), 'utf8')); return S.fromTemplate(id, d, rel => inlineFile(dir, rel)); }
     if (!/^[a-z0-9-]{2,60}$/.test(id) || !templates().some(t => t.id === id)) throw err(404, 'no template by that name');
     const cfg = JSON.parse(fs.readFileSync(path.join(GAL, id + '.json'), 'utf8'));
     const walk = o => { if (Array.isArray(o)) return o.forEach(walk); if (!o || typeof o !== 'object') return; for (const k of Object.keys(o)) { if ((k === 'img' || k === 'logo') && typeof o[k] === 'string' && o[k] && !/^data:/.test(o[k])) o[k] = inlineFile(UI, o[k]); else walk(o[k]); } };
@@ -254,7 +258,7 @@ module.exports = function siteDesign({ files = null, perms = null, requests = ()
     try {
       if (a === 'site-designer') {
         if (b === 'templates' && m === 'GET') { const k = catalog(); return send(res, 200, { templates: k.templates, categories: k.categories || [] }); }
-        if (b === 'template' && c && m === 'GET') return send(res, 200, { config: template(c) });
+        if (b === 'template' && c && m === 'GET') return send(res, 200, { config: template(c, /[?&]exact=1\b/.test(req.url || '')) });
         return fail(res, 404, 'not found');
       }
       if (a === 'projects' && c === 'site-config') {

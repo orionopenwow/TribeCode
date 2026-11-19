@@ -287,7 +287,10 @@ html[data-dev=phone] .ehide-phone,html[data-dev=tablet] .ehide-tablet,html[data-
   function projectName(pid) { try { const p = ((C.state && C.state().projects) || []).find(x => x.id === pid); return (p && p.name) || 'My site'; } catch { return 'My site'; } }
   // a template as a config: the static gallery first (works with no tribe and offline), then the host, then the model
   const inlineImgs = async c => { const walk = async o => { if (Array.isArray(o)) { for (const x of o) await walk(x); return; } if (!o || typeof o !== 'object') return; for (const k of Object.keys(o)) { if ((k === 'img' || k === 'logo') && typeof o[k] === 'string' && o[k] && !/^data:/.test(o[k])) o[k] = await toData(o[k]); else await walk(o[k]); } }; await walk(c); return c; };
-  async function templateCfg(id) {
+  // site-templates2: a template the gallery no longer offers gives the closest offered one (catalog: retired, alias);
+  // exact = that very file as it was (its data stays loadable)
+  async function templateCfg(id, exact) {
+    if (!exact) { await loadGallery(); const a = gal.alias[id]; if (a) id = a; }
     try { const r = await fetch('sitetpl/' + encodeURIComponent(id) + '.json'); if (r.ok) return S().normalize(await inlineImgs(await r.json())); } catch {}
     if (connected()) { try { return (await C.api('/site-designer/template/' + encodeURIComponent(id))).config; } catch {} }
     if (S().TEMPLATES.includes(id)) return S().fromTemplate(id, { name: projectName(st && st.pid) });
@@ -821,20 +824,21 @@ html[data-dev=phone] .ehide-phone,html[data-dev=tablet] .ehide-tablet,html[data-
   }
 
   // ---------- the template gallery (feat/site-v2): thumbnails, categories, search, Use this, a larger peek ----------
-  const gal = { list: [], cats: [], cat: 'All', q: '', hov: null, ht: 0, kind: '' };
+  const gal = { list: [], cats: [], cat: 'All', q: '', hov: null, ht: 0, kind: '', alias: {} };
   async function loadGallery() {
     if (gal.list.length) return;
     try { const r = await fetch('sitetpl/catalog.json'); if (r.ok) { const j = await r.json(); gal.list = j.templates || []; gal.cats = j.categories || []; } } catch {}
     if (!gal.list.length && connected()) { try { const j = await C.api('/site-designer/templates'); gal.list = j.templates || []; gal.cats = j.categories || []; } catch {} }
+    gal.list.forEach(t => { if (t.retired && t.alias) gal.alias[t.id] = t.alias; }); gal.list = gal.list.filter(t => !t.retired);   // only the offered ones are shown
     if (!gal.list.length) gal.list = S().TEMPLATES.map(id => ({ id, title: id.charAt(0).toUpperCase() + id.slice(1), summary: '', category: '' }));
   }
   function galPaint() {
     const box = $('#wdz-gal'); if (!box) return;
     const q = gal.q.trim().toLowerCase();
-    const base = gal.kind && gal.kind !== 'all' && DD() ? DD().siteTemplatesFor(gal.list, gal.kind, q ? 0 : 12) : gal.list;   // p5-start: one kind's templates, best first
+    const base = gal.kind && gal.kind !== 'all' && DD() ? DD().siteTemplatesFor(gal.list, gal.kind, q ? 0 : DD().SITE_KIND_SHOWS || 3) : gal.list;   // p5-start: one kind's templates, best first
     const list = base.filter(t => (gal.kind !== 'all' || gal.cat === 'All' || t.category === gal.cat) && (!q || `${t.title} ${t.summary} ${t.category} ${(t.tags || []).join(' ')} ${t.source || ''}`.toLowerCase().includes(q)));
     $('#wdz-gcats').innerHTML = ['All', ...gal.cats].map(c => `<button type="button" class="wdz-chip" data-gcat="${esc(c)}" aria-pressed="${c === gal.cat}">${esc(c)}</button>`).join('');
-    box.innerHTML = list.length ? list.map(t => `<div class="wdz-tpl" data-tpl="${esc(t.id)}" data-title="${esc(t.title)}" role="button" tabindex="0" aria-label="Use the ${esc(t.title)} template"><span class="wdz-tthumb">${t.thumb ? `<img src="${esc(t.thumb)}" alt="" loading="lazy" width="480" height="360">` : ''}</span><b>${esc(t.title)}</b><small>${esc(t.summary)}</small><span class="wdz-tmeta"><span class="wdz-tcat">${esc(t.category || '')}</span>${t.source && t.source !== 'TribeCode' ? `<span class="wdz-tsrc" title="${esc(t.source)} · ${esc(t.license)}">${esc(t.license)}</span>` : ''}</span><span class="wdz-tact"><button type="button" class="btn sm primary" data-tpl="${esc(t.id)}" data-title="${esc(t.title)}">Use this</button><button type="button" class="btn sm ghost" data-peek="${esc(t.id)}">Peek</button></span></div>`).join('') : `<p class="wdz-hint">No template matches “${esc(gal.q)}”. Try another word, or start blank.</p>`;
+    box.innerHTML = list.length ? list.map(t => `<div class="wdz-tpl" data-tpl="${esc(t.id)}" data-title="${esc(t.title)}" role="button" tabindex="0" aria-label="Use the ${esc(t.title)} template"><span class="wdz-tthumb">${t.thumb ? `<img src="${esc(t.thumb)}" alt="" loading="lazy" width="720" height="540">` : ''}</span><b>${esc(tr(t.title))}</b><small>${esc(tr(t.summary))}</small><span class="wdz-tact"><button type="button" class="btn sm primary" data-tpl="${esc(t.id)}" data-title="${esc(t.title)}">Use this</button><button type="button" class="btn sm ghost" data-peek="${esc(t.id)}">Peek</button></span></div>`).join('') : `<p class="wdz-hint">No template matches “${esc(gal.q)}”. Try another word, or start blank.</p>`;
     box.querySelectorAll('img').forEach(i => { i.onerror = () => i.remove(); });
     $('#wdz-gcount').textContent = `${list.length} of ${gal.kind && gal.kind !== 'all' && DD() ? DD().siteTemplatesFor(gal.list, gal.kind).length : gal.list.length}`;
   }
@@ -1182,8 +1186,7 @@ html[data-dev=phone] .ehide-phone,html[data-dev=tablet] .ehide-tablet,html[data-
       <div class="wdz-gbar"><input class="input" id="wdz-gq" type="search" placeholder="${esc(tr('Search templates: bakery, portfolio, link in bio…'))}" aria-label="${esc(tr('Search templates'))}" value="${esc(gal.q)}"><span class="wdz-hint" id="wdz-gcount"></span>${keepBtn()}${all ? `<button type="button" class="btn sm ghost" data-import="1">${esc(tr('Import HTML…'))}</button>` : ''}</div>
       <div class="wdz-gcats" id="wdz-gcats" role="group" aria-label="${esc(tr('Categories'))}"${all ? '' : ' hidden'}></div>
       <div class="wdz-tpls" id="wdz-gal"><p class="wdz-hint">${esc(tr('Loading templates…'))}</p></div>
-      ${all ? '' : `<p class="wdz-row"><button type="button" class="btn sm" data-kind="all">${esc(tr('See all templates'))}</button></p>`}
-      <p class="wdz-hint">${esc(tr('Templates from Start Bootstrap and Tailwind Toolbox (MIT) and HTML5 UP (CC BY 3.0, credited in the footer) are converted into blocks; see docs/SITE-TEMPLATES.md.'))}</p></div>`;
+      ${all ? '' : `<p class="wdz-row"><button type="button" class="btn sm" data-kind="all">${esc(tr('See all templates'))} · ${gal.list.length}</button></p>`}</div>`;
     galPaint();
   }
   function hideStart() { const b = $('#wdz-start'); if (b) b.hidden = true; if (root) root.classList.remove('wdz-starting'); }

@@ -220,6 +220,7 @@ def main():
             c['thumb'] = f"sitetpl/thumbs/{c['id']}.webp"; c.pop('retired', None); c.pop('alias', None)
         else:   # no longer offered: its file stays, its picture goes, and it points at the closest offered one
             c['retired'] = True; c['alias'] = CUR['retired'].get(c['id']) or {'linkbio': 'linkbio', 'app': 'saas', 'portfolio': 'portfolio', 'event': 'conference', 'blog': 'blog'}.get(c['kind'], 'service'); c.pop('thumb', None)
+            for k in ('summary', 'tags', 'order', 'source', 'sourceUrl', 'credit'): c.pop(k, None)   # only what loading it needs
             try: (OUT / 'thumbs' / f"{c['id']}.webp").unlink()
             except Exception: pass
     cat.sort(key=lambda c: (1, c['id']) if c.get('retired') else (0, c.get('order', 99)))

@@ -144,7 +144,7 @@ add('service', 'Local service', 'For a trade that comes to you: plumber, electri
     blk('bprice', 'pricing', 'table', { title: 'Common jobs', note: 'Parts included. Anything unusual, we quote on the phone.', plans: [{ name: 'Fix a leaking tap', price: '£65', per: '', features: ['About 40 minutes'] }, { name: 'Unblock a sink or toilet', price: '£80', per: '', features: ['About an hour'] }, { name: 'Boiler service', price: '£90', per: '', features: ['With a written report'] }, { name: 'Fit a new radiator', price: '£180', per: '', features: ['Half a day'] }] }),
     blk('bsay', 'testimonials', 'quotes', { title: '', items: [{ quote: 'Came at 7am, fixed it by 8, charged what he said on the phone.', name: 'Priya S.', role: 'Easton' }] }),
     blk('bwhere', 'info', 'columns', { title: 'Where and when', items: [{ label: 'We cover', text: 'Easton, St George, Fishponds,\nRedfield and Kingswood' }, { label: 'Hours', text: 'Mon to Sat: 7am to 6pm\nEmergencies until 10pm' }, { label: 'Phone', text: '0117 496 0123' }], button: B('Write to us instead', SEC('contact')) }),
-    blk('bcontact', 'contact', 'form', { title: 'Ask for a quote', text: 'Say what is wrong and where you are. We answer the same day.', email: '', action: '', button: 'Send' }),
+    blk('bcontact', 'contact', 'form', { title: 'Ask for a quote', text: 'Say what is wrong and where you are. We answer the same day.', email: 'jobs@example.com', action: '', button: 'Send' }),
     foot('© Harlow Plumbing Ltd, 14 Bell Hill Road, Bristol'),
   ] }],
 });
@@ -285,7 +285,7 @@ add('wedding', 'Wedding or party', 'For a wedding, a big birthday, a reunion: an
     blk('bday', 'timeline', 'line', { title: 'The day', items: [{ when: '1.30pm', title: 'Arrive', text: 'A drink in the orchard. Flat shoes, the grass is soft.' }, { when: '2pm', title: 'Ceremony', text: 'Under the big oak if it is dry, in the barn if it is Yorkshire.' }, { when: '4pm', title: 'Dinner', text: 'Long tables. Leila\'s mum is in charge of the rice.' }, { when: '7.30pm', title: 'Dancing', text: 'Sam\'s brother has a playlist and will not be stopped.' }, { when: 'Midnight', title: 'Carriages', text: 'Two minibuses back to Hebden Bridge.' }] }, { w: 'narrow' }),
     blk('btravel', 'info', 'columns', { title: 'Getting there and staying', items: [{ label: 'By train', text: 'Hebden Bridge station, then our\nminibus at 1pm and 1.15pm' }, { label: 'By car', text: 'Hollin Barn, HX7 8PL\nParking in the lower field' }, { label: 'Staying', text: 'Rooms held at the White Lion\nuntil 1 April: say our names' }] }),
     blk('bfaq', 'faq', 'list', { title: 'Things people ask', items: [{ q: 'Can I bring the children?', a: 'Yes, please do. There is a quiet room and a box of Lego.' }, { q: 'What should I wear?', a: 'Whatever you would wear to a nice dinner. Bring a jumper for the evening.' }, { q: 'Presents?', a: 'Truly, just come. If you insist, there is a honeymoon jar at the bar.' }] }, { w: 'narrow' }),
-    blk('brsvp', 'contact', 'form', { title: 'RSVP', text: 'Tell us who is coming and anything you cannot eat. By 1 May, please.', email: '', action: '', button: 'Send our reply', lMessage: 'Who is coming, and any food to avoid' }),
+    blk('brsvp', 'contact', 'form', { title: 'RSVP', text: 'Tell us who is coming and anything you cannot eat. By 1 May, please.', email: 'rsvp@example.com', action: '', button: 'Send our reply', lMessage: 'Who is coming, and any food to avoid' }),
     foot('With love, L & S', [], 'minimal'),
   ] }],
 });

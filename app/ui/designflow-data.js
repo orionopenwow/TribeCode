@@ -231,6 +231,7 @@
     ['podcast', 'Podcast', 'Episodes and where to listen'], ['blog', 'Blog', 'Posts and a newsletter'], ['saas', 'Product', 'A startup or app page'], ['gamepage', 'Game page', 'Screens, trailer, wishlist'],
     ['resume', 'Resume', 'Who you are and what you did'], ['nonprofit', 'Nonprofit', 'Mission and a donate button'], ['photography', 'Photography', 'A gallery first'], ['comingsoon', 'Coming soon', 'A waitlist'],
     ['conference', 'Conference', 'Schedule, speakers, tickets'], ['menu', 'Restaurant menu', 'The menu first, with prices'], ['course', 'Class or course', 'What you learn, weeks, sign-up'], ['club', 'Club or group', 'When you meet and how to join'],
+    ['docs', 'Docs', 'A handbook with its contents down the side'], ['letter', 'Personal letter', 'One quiet column about you'],
   ].map(([id, t, d]) => ({ id, t, d }));
 
   // p5-start: starting a website asks what kind of site first, then shows that kind's templates (app/ui/sitedesigner.js
@@ -239,11 +240,11 @@
   const SITE_KINDS = [
     { id: 'linkbio', main: true, t: 'Link in bio', d: 'One page of links for your socials, shop and posts.',
       art: SV('<circle cx="32" cy="9" r="5"/><rect x="18" y="19" width="28" height="6" rx="3"/><rect x="18" y="29" width="28" height="6" rx="3"/><rect x="18" y="39" width="28" height="6" rx="3"/>') },
-    { id: 'app', main: true, t: 'App or project page', d: 'For an app, game or GitHub project: download buttons, screenshots and what\'s new. Or a page that sends people straight to your app.',
+    { id: 'app', main: true, t: 'App or project page', d: 'For an app, game or GitHub project: download buttons, screenshots, docs and what\'s new. Or a page that sends people straight to your app.',
       art: SV('<rect x="8" y="5" width="22" height="38" rx="4"/><path d="M16 37h6"/><path d="M44 10v18M37 22l7 7 7-7M37 36h14"/>') },
-    { id: 'business', t: 'Business or shop', d: 'A café, a service, a small shop or a group.',
+    { id: 'business', t: 'Business or shop', d: 'A café, a trade, a small shop, a club or a cause.',
       art: SV('<path d="M8 20h48M10 20l4-12h36l4 12M12 20v22h40V20"/><path d="M27 42V30h10v12"/>') },
-    { id: 'portfolio', t: 'Portfolio', d: 'Your work, your story, a resume.',
+    { id: 'portfolio', t: 'Portfolio', d: 'Your work, your photos, a resume, a band.',
       art: SV('<rect x="8" y="6" width="22" height="16" rx="2"/><rect x="34" y="6" width="22" height="16" rx="2"/><rect x="8" y="26" width="22" height="16" rx="2"/><rect x="34" y="26" width="22" height="16" rx="2"/>') },
     { id: 'event', t: 'Event', d: 'A wedding, a meetup, a class.',
       art: SV('<rect x="10" y="9" width="44" height="34" rx="3"/><path d="M10 19h44M22 5v8M42 5v8"/><path d="M22 29h6M36 29h6M22 36h6"/>') },
@@ -254,22 +255,24 @@
   ];
   // the best first in each kind; anything else of that kind follows in the catalog's order (See all shows everything)
   const SITE_PICKS = {
-    linkbio: ['linkbio', 'lb-musician', 'lb-shop', 'lb-dev', 'lb-artist', 'lb-writer', 'lb-coach', 'creator', 'tt-profile-card', 'h5-identity'],
-    app: ['gh-project', 'app-download', 'app-redirect', 'saas', 'gamepage', 'tt-app-landing', 'sb-new-age', 'comingsoon', 'h5-photon', 'tt-landing-page', 'sb-landing-page', 'h5-stellar'],
-    business: ['service', 'cafe', 'merch', 'menu', 'nonprofit', 'club', 'sb-small-business', 'tt-nordic-store', 'sb-agency', 'sb-business-casual', 'sb-modern-business', 'sb-creative'],
-    portfolio: ['portfolio', 'photography', 'resume', 'band', 'sb-freelancer', 'h5-forty', 'h5-miniport', 'sb-personal', 'sb-resume', 'h5-dimension', 'sb-stylish-portfolio', 'h5-read-only'],
+    linkbio: ['linkbio', 'creator'],
+    app: ['gh-project', 'app-download', 'app-redirect', 'saas', 'gamepage', 'docs', 'comingsoon'],
+    business: ['service', 'cafe', 'merch', 'menu', 'club', 'nonprofit'],
+    portfolio: ['portfolio', 'photography', 'resume', 'letter', 'band'],
     event: ['wedding', 'conference', 'course'],
-    blog: ['blog', 'podcast', 'sb-clean-blog', 'tt-ghostwind', 'tt-minimal-blog', 'h5-massively'],
+    blog: ['blog', 'podcast'],
   };
+  // site-templates2: a kind's screen shows its best three; the rest of that kind is under See all (and in the search)
+  const SITE_KIND_SHOWS = 3;
   // a template's kind: the catalog says (scripts/dev/site-gallery.py kind_of); this is the same rule for older catalogs
   const KIND_BY_CAT = { 'Link in bio': 'linkbio', Creator: 'linkbio', Projects: 'app', Startup: 'app', Games: 'app', 'Coming soon': 'app', Business: 'business', Shop: 'business', 'Food & drink': 'business', Nonprofit: 'business', Community: 'business', Portfolio: 'portfolio', Personal: 'portfolio', Music: 'portfolio', Events: 'event', Learning: 'event', Blog: 'blog' };
   const siteKindOf = t => (t && t.kind) || (t && t.id === 'podcast' ? 'blog' : KIND_BY_CAT[(t && t.category) || ''] || 'business');
   // the templates for one kind, best first, at most n (0: all of them)
   function siteTemplatesFor(list, kind, n) {
-    const mine = (list || []).filter(t => siteKindOf(t) === kind), pick = SITE_PICKS[kind] || [];
+    const mine = (list || []).filter(t => !t.retired && siteKindOf(t) === kind), pick = SITE_PICKS[kind] || [];
     const out = [...pick.map(id => mine.find(t => t.id === id)).filter(Boolean), ...mine.filter(t => !pick.includes(t.id))];
     return n ? out.slice(0, n) : out;
   }
 
-  window.TribeDesignData = { KINDS, PLANS, SCREENS, SLIDES, POSTERS, LOGOS, BOARDS, SITES, SITE_KINDS, SITE_PICKS, siteKindOf, siteTemplatesFor };
+  window.TribeDesignData = { KINDS, PLANS, SCREENS, SLIDES, POSTERS, LOGOS, BOARDS, SITES, SITE_KINDS, SITE_PICKS, SITE_KIND_SHOWS, siteKindOf, siteTemplatesFor };
 })();

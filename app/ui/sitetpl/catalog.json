@@ -544,18 +544,8 @@
   {
    "id": "h5-dimension",
    "title": "Dimension",
-   "summary": "A dark one-screen personal site: a name, four sections (intro, work, about, contact) and nothing else.",
    "category": "Personal",
-   "tags": [
-    "personal",
-    "dark",
-    "minimal"
-   ],
-   "source": "HTML5 UP (AJ, @ajlkn)",
-   "sourceUrl": "https://html5up.net/dimension",
    "license": "CC BY 3.0",
-   "credit": true,
-   "order": 126,
    "kind": "portfolio",
    "retired": true,
    "alias": "letter"
@@ -563,17 +553,8 @@
   {
    "id": "h5-eventually",
    "title": "Eventually",
-   "summary": "A coming-soon screen: one big line, an email signup, what's coming and where to follow along.",
    "category": "Coming soon",
-   "tags": [
-    "coming soon",
-    "signup"
-   ],
-   "source": "HTML5 UP (AJ, @ajlkn)",
-   "sourceUrl": "https://html5up.net/eventually",
    "license": "CC BY 3.0",
-   "credit": true,
-   "order": 127,
    "kind": "app",
    "retired": true,
    "alias": "comingsoon"
@@ -581,18 +562,8 @@
   {
    "id": "h5-forty",
    "title": "Forty",
-   "summary": "A dark tiled portfolio with big project tiles and a contact block.",
    "category": "Portfolio",
-   "tags": [
-    "portfolio",
-    "dark",
-    "tiles"
-   ],
-   "source": "HTML5 UP (AJ, @ajlkn)",
-   "sourceUrl": "https://html5up.net/forty",
    "license": "CC BY 3.0",
-   "credit": true,
-   "order": 124,
    "kind": "portfolio",
    "retired": true,
    "alias": "photography"
@@ -600,18 +571,8 @@
   {
    "id": "h5-identity",
    "title": "Identity",
-   "summary": "A single centered card: avatar, name, a line, and your links.",
    "category": "Link in bio",
-   "tags": [
-    "link in bio",
-    "personal",
-    "card"
-   ],
-   "source": "HTML5 UP (AJ, @ajlkn)",
-   "sourceUrl": "https://html5up.net/identity",
    "license": "CC BY 3.0",
-   "credit": true,
-   "order": 122,
    "kind": "linkbio",
    "retired": true,
    "alias": "linkbio"
@@ -619,17 +580,8 @@
   {
    "id": "h5-landed",
    "title": "Landed",
-   "summary": "A product page with alternating spotlights and a signup.",
    "category": "Startup",
-   "tags": [
-    "product",
-    "spotlights"
-   ],
-   "source": "HTML5 UP (AJ, @ajlkn)",
-   "sourceUrl": "https://html5up.net/landed",
    "license": "CC BY 3.0",
-   "credit": true,
-   "order": 131,
    "kind": "app",
    "retired": true,
    "alias": "saas"
@@ -637,18 +589,8 @@
   {
    "id": "h5-massively",
    "title": "Massively",
-   "summary": "A big-type blog with a featured post and a grid of articles.",
    "category": "Blog",
-   "tags": [
-    "blog",
-    "posts",
-    "magazine"
-   ],
-   "source": "HTML5 UP (AJ, @ajlkn)",
-   "sourceUrl": "https://html5up.net/massively",
    "license": "CC BY 3.0",
-   "credit": true,
-   "order": 130,
    "kind": "blog",
    "retired": true,
    "alias": "blog"
@@ -656,17 +598,8 @@
   {
    "id": "h5-miniport",
    "title": "Miniport",
-   "summary": "A personal portfolio: a hello, what I do, my work and contact.",
    "category": "Portfolio",
-   "tags": [
-    "portfolio",
-    "personal"
-   ],
-   "source": "HTML5 UP (AJ, @ajlkn)",
-   "sourceUrl": "https://html5up.net/miniport",
    "license": "CC BY 3.0",
-   "credit": true,
-   "order": 128,
    "kind": "portfolio",
    "retired": true,
    "alias": "portfolio"
@@ -674,17 +607,8 @@
   {
    "id": "h5-photon",
    "title": "Photon",
-   "summary": "A clean product page with a big intro band, features and a call to action.",
    "category": "Startup",
-   "tags": [
-    "product",
-    "landing"
-   ],
-   "source": "HTML5 UP (AJ, @ajlkn)",
-   "sourceUrl": "https://html5up.net/photon",
    "license": "CC BY 3.0",
-   "credit": true,
-   "order": 123,
    "kind": "app",
    "retired": true,
    "alias": "saas"
@@ -692,17 +616,8 @@
   {
    "id": "h5-read-only",
    "title": "Read Only",
-   "summary": "A one-person site with a sidebar feel: about, work, contact.",
    "category": "Personal",
-   "tags": [
-    "resume",
-    "personal"
-   ],
-   "source": "HTML5 UP (AJ, @ajlkn)",
-   "sourceUrl": "https://html5up.net/read-only",
    "license": "CC BY 3.0",
-   "credit": true,
-   "order": 129,
    "kind": "portfolio",
    "retired": true,
    "alias": "letter"
@@ -710,18 +625,8 @@
   {
    "id": "h5-stellar",
    "title": "Stellar",
-   "summary": "A friendly one-pager: intro, stats, features and get started.",
    "category": "Startup",
-   "tags": [
-    "startup",
-    "stats",
-    "features"
-   ],
-   "source": "HTML5 UP (AJ, @ajlkn)",
-   "sourceUrl": "https://html5up.net/stellar",
    "license": "CC BY 3.0",
-   "credit": true,
-   "order": 125,
    "kind": "app",
    "retired": true,
    "alias": "saas"
@@ -729,20 +634,8 @@
   {
    "id": "lb-artist",
    "title": "Artist links",
-   "summary": "For an illustrator or artist: commissions, prints, a few pieces and your socials.",
    "category": "Link in bio",
-   "tags": [
-    "artist",
-    "illustrator",
-    "commissions",
-    "prints",
-    "art",
-    "links",
-    "linktree"
-   ],
-   "source": "TribeCode",
    "license": "MIT",
-   "order": 7,
    "kind": "linkbio",
    "retired": true,
    "alias": "creator"
@@ -750,21 +643,8 @@
   {
    "id": "lb-coach",
    "title": "Coach or teacher links",
-   "summary": "For a coach, tutor or teacher: book a session, the free guide, and what people said.",
    "category": "Link in bio",
-   "tags": [
-    "coach",
-    "tutor",
-    "teacher",
-    "yoga",
-    "trainer",
-    "booking",
-    "links",
-    "linktree"
-   ],
-   "source": "TribeCode",
    "license": "MIT",
-   "order": 5,
    "kind": "linkbio",
    "retired": true,
    "alias": "linkbio"
@@ -772,21 +652,8 @@
   {
    "id": "lb-dev",
    "title": "Developer links",
-   "summary": "For a developer or maker: your projects, GitHub, the blog and how to reach you.",
    "category": "Link in bio",
-   "tags": [
-    "developer",
-    "programmer",
-    "github",
-    "open source",
-    "maker",
-    "links",
-    "linktree",
-    "portfolio"
-   ],
-   "source": "TribeCode",
    "license": "MIT",
-   "order": 6,
    "kind": "linkbio",
    "retired": true,
    "alias": "linkbio"
@@ -794,21 +661,8 @@
   {
    "id": "lb-musician",
    "title": "Musician links",
-   "summary": "Links for a singer, DJ or band: the new song first, your next shows, and where to listen.",
    "category": "Link in bio",
-   "tags": [
-    "musician",
-    "dj",
-    "band",
-    "singer",
-    "links",
-    "linktree",
-    "spotify",
-    "shows"
-   ],
-   "source": "TribeCode",
    "license": "MIT",
-   "order": 2,
    "kind": "linkbio",
    "retired": true,
    "alias": "creator"
@@ -816,20 +670,8 @@
   {
    "id": "lb-shop",
    "title": "Shop links",
-   "summary": "For a maker who sells online: the shop, this week's drop with pictures, and a newsletter.",
    "category": "Link in bio",
-   "tags": [
-    "shop",
-    "maker",
-    "etsy",
-    "drop",
-    "links",
-    "linktree",
-    "products"
-   ],
-   "source": "TribeCode",
    "license": "MIT",
-   "order": 3,
    "kind": "linkbio",
    "retired": true,
    "alias": "linkbio"
@@ -837,20 +679,8 @@
   {
    "id": "lb-writer",
    "title": "Writer links",
-   "summary": "For a writer or newsletter: the latest piece, the book, talks, and a sign-up box.",
    "category": "Link in bio",
-   "tags": [
-    "writer",
-    "author",
-    "newsletter",
-    "substack",
-    "book",
-    "links",
-    "linktree"
-   ],
-   "source": "TribeCode",
    "license": "MIT",
-   "order": 4,
    "kind": "linkbio",
    "retired": true,
    "alias": "linkbio"
@@ -858,18 +688,8 @@
   {
    "id": "sb-agency",
    "title": "Agency",
-   "summary": "A studio or agency: services, portfolio grid, about timeline, team, contact.",
    "category": "Business",
-   "tags": [
-    "agency",
-    "studio",
-    "services"
-   ],
-   "source": "Start Bootstrap",
-   "sourceUrl": "https://github.com/StartBootstrap/startbootstrap-agency",
    "license": "MIT",
-   "credit": false,
-   "order": 100,
    "kind": "business",
    "retired": true,
    "alias": "portfolio"
@@ -877,18 +697,8 @@
   {
    "id": "sb-business-casual",
    "title": "Business Casual",
-   "summary": "A warm small-business page with a story, opening hours and a promise.",
    "category": "Food & drink",
-   "tags": [
-    "cafe",
-    "shop",
-    "local"
-   ],
-   "source": "Start Bootstrap",
-   "sourceUrl": "https://github.com/StartBootstrap/startbootstrap-business-casual",
    "license": "MIT",
-   "credit": false,
-   "order": 101,
    "kind": "business",
    "retired": true,
    "alias": "cafe"
@@ -896,17 +706,8 @@
   {
    "id": "sb-business-frontpage",
    "title": "Business Frontpage",
-   "summary": "A plain business front page: headline, three features, a quote and a call to action.",
    "category": "Business",
-   "tags": [
-    "business",
-    "company"
-   ],
-   "source": "Start Bootstrap",
-   "sourceUrl": "https://github.com/StartBootstrap/startbootstrap-business-frontpage",
    "license": "MIT",
-   "credit": false,
-   "order": 102,
    "kind": "business",
    "retired": true,
    "alias": "service"
@@ -914,18 +715,8 @@
   {
    "id": "sb-clean-blog",
    "title": "Clean Blog",
-   "summary": "A reading-first blog: big masthead, post list with dates, subscribe.",
    "category": "Blog",
-   "tags": [
-    "blog",
-    "writing",
-    "posts"
-   ],
-   "source": "Start Bootstrap",
-   "sourceUrl": "https://github.com/StartBootstrap/startbootstrap-clean-blog",
    "license": "MIT",
-   "credit": false,
-   "order": 103,
    "kind": "blog",
    "retired": true,
    "alias": "blog"
@@ -933,18 +724,8 @@
   {
    "id": "sb-coming-soon",
    "title": "Coming Soon",
-   "summary": "One screen, one line, an email signup for launch day.",
    "category": "Coming soon",
-   "tags": [
-    "coming soon",
-    "waitlist",
-    "launch"
-   ],
-   "source": "Start Bootstrap",
-   "sourceUrl": "https://github.com/StartBootstrap/startbootstrap-coming-soon",
    "license": "MIT",
-   "credit": false,
-   "order": 104,
    "kind": "app",
    "retired": true,
    "alias": "comingsoon"
@@ -952,18 +733,8 @@
   {
    "id": "sb-creative",
    "title": "Creative",
-   "summary": "A bold one-pager for a creative service: services grid, portfolio, contact.",
    "category": "Business",
-   "tags": [
-    "creative",
-    "freelance",
-    "studio"
-   ],
-   "source": "Start Bootstrap",
-   "sourceUrl": "https://github.com/StartBootstrap/startbootstrap-creative",
    "license": "MIT",
-   "credit": false,
-   "order": 105,
    "kind": "business",
    "retired": true,
    "alias": "portfolio"
@@ -971,17 +742,8 @@
   {
    "id": "sb-freelancer",
    "title": "Freelancer",
-   "summary": "A one-person portfolio: avatar, work grid, about in two columns, contact.",
    "category": "Portfolio",
-   "tags": [
-    "freelancer",
-    "portfolio"
-   ],
-   "source": "Start Bootstrap",
-   "sourceUrl": "https://github.com/StartBootstrap/startbootstrap-freelancer",
    "license": "MIT",
-   "credit": false,
-   "order": 106,
    "kind": "portfolio",
    "retired": true,
    "alias": "portfolio"
@@ -989,18 +751,8 @@
   {
    "id": "sb-grayscale",
    "title": "Grayscale",
-   "summary": "A dark, quiet product page with projects side by side and a signup.",
    "category": "Startup",
-   "tags": [
-    "startup",
-    "product",
-    "dark"
-   ],
-   "source": "Start Bootstrap",
-   "sourceUrl": "https://github.com/StartBootstrap/startbootstrap-grayscale",
    "license": "MIT",
-   "credit": false,
-   "order": 107,
    "kind": "app",
    "retired": true,
    "alias": "saas"
@@ -1008,18 +760,8 @@
   {
    "id": "sb-landing-page",
    "title": "Landing Page",
-   "summary": "The classic landing page: signup hero, three icons, alternating showcase, testimonials.",
    "category": "Startup",
-   "tags": [
-    "landing",
-    "startup",
-    "app"
-   ],
-   "source": "Start Bootstrap",
-   "sourceUrl": "https://github.com/StartBootstrap/startbootstrap-landing-page",
    "license": "MIT",
-   "credit": false,
-   "order": 108,
    "kind": "app",
    "retired": true,
    "alias": "saas"
@@ -1027,17 +769,8 @@
   {
    "id": "sb-modern-business",
    "title": "Modern Business",
-   "summary": "A company site: hero, features, a testimonial, blog teasers, call to action.",
    "category": "Business",
-   "tags": [
-    "company",
-    "business"
-   ],
-   "source": "Start Bootstrap",
-   "sourceUrl": "https://github.com/StartBootstrap/startbootstrap-modern-business",
    "license": "MIT",
-   "credit": false,
-   "order": 109,
    "kind": "business",
    "retired": true,
    "alias": "service"
@@ -1045,18 +778,8 @@
   {
    "id": "sb-new-age",
    "title": "New Age",
-   "summary": "An app launch page: phone mockup hero, features, a quote, download buttons.",
    "category": "Startup",
-   "tags": [
-    "app",
-    "mobile",
-    "launch"
-   ],
-   "source": "Start Bootstrap",
-   "sourceUrl": "https://github.com/StartBootstrap/startbootstrap-new-age",
    "license": "MIT",
-   "credit": false,
-   "order": 110,
    "kind": "app",
    "retired": true,
    "alias": "app-download"
@@ -1064,17 +787,8 @@
   {
    "id": "sb-one-page-wonder",
    "title": "One Page Wonder",
-   "summary": "Three big alternating picture-and-text rows under a loud hero.",
    "category": "Startup",
-   "tags": [
-    "one page",
-    "product"
-   ],
-   "source": "Start Bootstrap",
-   "sourceUrl": "https://github.com/StartBootstrap/startbootstrap-one-page-wonder",
    "license": "MIT",
-   "credit": false,
-   "order": 111,
    "kind": "app",
    "retired": true,
    "alias": "saas"
@@ -1082,18 +796,8 @@
   {
    "id": "sb-personal",
    "title": "Personal",
-   "summary": "A personal home page: who you are, what you do, selected projects, experience and how to reach you.",
    "category": "Personal",
-   "tags": [
-    "personal",
-    "resume",
-    "about me"
-   ],
-   "source": "Start Bootstrap",
-   "sourceUrl": "https://github.com/StartBootstrap/startbootstrap-personal",
    "license": "MIT",
-   "credit": false,
-   "order": 112,
    "kind": "portfolio",
    "retired": true,
    "alias": "letter"
@@ -1101,17 +805,8 @@
   {
    "id": "sb-resume",
    "title": "Resume",
-   "summary": "A resume as a web page: about, experience, education, skills, interests.",
    "category": "Personal",
-   "tags": [
-    "resume",
-    "cv"
-   ],
-   "source": "Start Bootstrap",
-   "sourceUrl": "https://github.com/StartBootstrap/startbootstrap-resume",
    "license": "MIT",
-   "credit": false,
-   "order": 113,
    "kind": "portfolio",
    "retired": true,
    "alias": "resume"
@@ -1119,17 +814,8 @@
   {
    "id": "sb-small-business",
    "title": "Small Business",
-   "summary": "A small company: a picture and a pitch, a call-out band, three services, reviews, hours and a quote form.",
    "category": "Business",
-   "tags": [
-    "small business",
-    "local"
-   ],
-   "source": "Start Bootstrap",
-   "sourceUrl": "https://github.com/StartBootstrap/startbootstrap-small-business",
    "license": "MIT",
-   "credit": false,
-   "order": 114,
    "kind": "business",
    "retired": true,
    "alias": "service"
@@ -1137,17 +823,8 @@
   {
    "id": "sb-stylish-portfolio",
    "title": "Stylish Portfolio",
-   "summary": "A portfolio with services, a full-width call-out and a project grid.",
    "category": "Portfolio",
-   "tags": [
-    "portfolio",
-    "services"
-   ],
-   "source": "Start Bootstrap",
-   "sourceUrl": "https://github.com/StartBootstrap/startbootstrap-stylish-portfolio",
    "license": "MIT",
-   "credit": false,
-   "order": 115,
    "kind": "portfolio",
    "retired": true,
    "alias": "portfolio"
@@ -1155,18 +832,8 @@
   {
    "id": "tt-app-landing",
    "title": "App Landing",
-   "summary": "A dark app page: one claim, store buttons, a screenshot.",
    "category": "Startup",
-   "tags": [
-    "app",
-    "mobile",
-    "dark"
-   ],
-   "source": "Tailwind Toolbox",
-   "sourceUrl": "https://github.com/tailwindtoolbox/App-Landing-Page",
    "license": "MIT",
-   "credit": false,
-   "order": 117,
    "kind": "app",
    "retired": true,
    "alias": "app-download"
@@ -1174,17 +841,8 @@
   {
    "id": "tt-ghostwind",
    "title": "Ghostwind",
-   "summary": "A magazine-style blog home: a featured post, a grid of posts, an author box.",
    "category": "Blog",
-   "tags": [
-    "blog",
-    "magazine"
-   ],
-   "source": "Tailwind Toolbox",
-   "sourceUrl": "https://github.com/tailwindtoolbox/Ghostwind",
    "license": "MIT",
-   "credit": false,
-   "order": 118,
    "kind": "blog",
    "retired": true,
    "alias": "blog"
@@ -1192,18 +850,8 @@
   {
    "id": "tt-landing-page",
    "title": "Tailwind Landing",
-   "summary": "A friendly product landing page: hero, two feature rows, pricing, call to action.",
    "category": "Startup",
-   "tags": [
-    "landing",
-    "pricing",
-    "product"
-   ],
-   "source": "Tailwind Toolbox",
-   "sourceUrl": "https://github.com/tailwindtoolbox/Landing-Page",
    "license": "MIT",
-   "credit": false,
-   "order": 116,
    "kind": "app",
    "retired": true,
    "alias": "saas"
@@ -1211,18 +859,8 @@
   {
    "id": "tt-minimal-blog",
    "title": "Minimal Blog",
-   "summary": "One quiet column of writing with a subscribe box.",
    "category": "Blog",
-   "tags": [
-    "blog",
-    "minimal",
-    "newsletter"
-   ],
-   "source": "Tailwind Toolbox",
-   "sourceUrl": "https://github.com/tailwindtoolbox/Minimal-Blog",
    "license": "MIT",
-   "credit": false,
-   "order": 119,
    "kind": "blog",
    "retired": true,
    "alias": "blog"
@@ -1230,18 +868,8 @@
   {
    "id": "tt-nordic-store",
    "title": "Nordic Store",
-   "summary": "A calm product shop: a hero banner, a product grid, about the store.",
    "category": "Shop",
-   "tags": [
-    "shop",
-    "store",
-    "products"
-   ],
-   "source": "Tailwind Toolbox",
-   "sourceUrl": "https://github.com/tailwindtoolbox/Nordic-Store",
    "license": "MIT",
-   "credit": false,
-   "order": 120,
    "kind": "business",
    "retired": true,
    "alias": "merch"
@@ -1249,18 +877,8 @@
   {
    "id": "tt-profile-card",
    "title": "Profile Card",
-   "summary": "One card: photo, name, a few lines and your links.",
    "category": "Link in bio",
-   "tags": [
-    "link in bio",
-    "profile",
-    "card"
-   ],
-   "source": "Tailwind Toolbox",
-   "sourceUrl": "https://github.com/tailwindtoolbox/Profile-Card",
    "license": "MIT",
-   "credit": false,
-   "order": 121,
    "kind": "linkbio",
    "retired": true,
    "alias": "linkbio"
