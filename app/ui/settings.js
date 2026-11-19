@@ -252,6 +252,7 @@
     return sec('TribeCode', `${row('Version', '<span id="set-version" class="set-info">…</span>', '', { keys: 'version build release' })}
       ${row('Updates', '<span class="set-upd"><span id="set-upd-st" class="set-info"></span><button class="btn" id="set-check-update">Check for updates</button></span>', 'The desktop app updates itself. On the web, a reload gets the newest version.', { id: 'set-updates', keys: 'update upgrade restart' })}
       ${U && U.supported() ? row('Download updates in the background', sw('set-bgupdate', st.startup.autoUpdate !== false, 'Download updates in the background'), st.startup.autoUpdate !== false ? 'New versions download quietly. When one is ready, Restart to update opens it in seconds.' : 'You see Update available and choose when to download.') : ''}
+      ${row('Showing an old version?', '<button class="btn" id="set-clearcache">Clear the cache and restart</button>', window.TribeHost.isDesktop ? 'If an update didn\'t change what you see. Your settings, projects and messages stay.' : 'Reloads with fresh files. Your settings, projects and messages stay.', { id: 'set-clearcache-row', keys: 'cache stale old version refresh reload update not showing' })}
       ${row('What\'s new', '<a class="btn" href="https://github.com/orionopenwow/TribeCode/blob/main/CHANGELOG.md" target="_blank" rel="noopener">Changelog</a>', 'Every release, what changed.', { keys: 'changelog release notes' })}`)
     + sec('Help', `${window.TribeGuide ? row('Guide', '<button class="btn set-guide" id="set-guide" title="How to TribeCode"><span aria-hidden="true">?</span> Open the guide</button>', 'How to TribeCode, page by page.', { keys: 'docs manual how' }) : ''}
       ${row('Tour with Flint', '<button class="btn" id="set-tour">Start the tour</button>', 'A short walk around the app.', { keys: 'tour onboarding' })}
@@ -486,6 +487,7 @@
     if (q('#set-version')) aboutRows();
     click('#set-check-update', checkUpdates);
     click('#set-bgupdate', () => { const v = !S.get().startup.autoUpdate; S.set({ startup: { autoUpdate: v } }); if (v && window.TribeUpdater) window.TribeUpdater.check(); draw(); });
+    click('#set-clearcache', () => { const b = q('#set-clearcache'); if (b) { b.disabled = true; b.textContent = window.TribeI18n ? window.TribeI18n.t('Clearing…', 'Clearing…') : 'Clearing…'; } window.TribeSelfHeal && window.TribeSelfHeal.clearCache(); });
     click('#set-tour', () => { close(); window.TribeFlintTour && window.TribeFlintTour.start(); });
     click('#set-demo', () => { close(); window.TribeOffline.toggle(); });   // feat/offline-demo
     click('#set-guide', () => { close(); window.TribeGuide.open(); });   // feat/vision-guide

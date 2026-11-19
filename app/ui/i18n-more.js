@@ -11,6 +11,12 @@
   'use strict';
   const I = window.TribeI18n; if (!I || !I.add) return;
   I.add({
+    // ---- fix/p7-cache: clear the cache
+    'Showing an old version?': ['¿Ves una versión antigua?', 'Vendo uma versão antiga?', 'Une ancienne version s’affiche ?', 'Siehst du eine alte Version?', '古いバージョンが表示されていますか？', '显示的是旧版本？', '이전 버전이 보이나요?'],
+    'Clear the cache and restart': ['Borrar la caché y reiniciar', 'Limpar o cache e reiniciar', 'Vider le cache et redémarrer', 'Cache leeren und neu starten', 'キャッシュを消して再起動', '清除缓存并重启', '캐시 지우고 다시 시작'],
+    "If an update didn't change what you see. Your settings, projects and messages stay.": ['Si una actualización no cambió lo que ves. Tus ajustes, proyectos y mensajes se quedan.', 'Se uma atualização não mudou o que você vê. Suas configurações, projetos e mensagens ficam.', 'Si une mise à jour n’a pas changé ce que vous voyez. Vos réglages, projets et messages restent.', 'Wenn ein Update nichts an der Ansicht geändert hat. Einstellungen, Projekte und Nachrichten bleiben.', '更新しても表示が変わらないとき。設定、プロジェクト、メッセージは残ります。', '如果更新后界面没有变化。你的设置、项目和消息都会保留。', '업데이트 후에도 화면이 그대로일 때. 설정, 프로젝트, 메시지는 그대로 남습니다.'],
+    'Reloads with fresh files. Your settings, projects and messages stay.': ['Vuelve a cargar con archivos nuevos. Tus ajustes, proyectos y mensajes se quedan.', 'Recarrega com arquivos novos. Suas configurações, projetos e mensagens ficam.', 'Recharge avec des fichiers neufs. Vos réglages, projets et messages restent.', 'Lädt mit frischen Dateien neu. Einstellungen, Projekte und Nachrichten bleiben.', '新しいファイルで読み込み直します。設定、プロジェクト、メッセージは残ります。', '用新文件重新加载。你的设置、项目和消息都会保留。', '새 파일로 다시 불러옵니다. 설정, 프로젝트, 메시지는 그대로 남습니다.'],
+    'Clearing…': ['Borrando…', 'Limpando…', 'Nettoyage…', 'Wird geleert…', '消去中…', '正在清除…', '지우는 중…'],
     // ---- bug report: screenshot and log snapshot
     'Take a screenshot': ['Hacer una captura', 'Tirar uma captura', 'Faire une capture', 'Bildschirmfoto machen', 'スクリーンショットを撮る', '截图', '스크린샷 찍기'],
     'Attach a log snapshot': ['Adjuntar una copia del registro', 'Anexar uma cópia do registro', 'Joindre un extrait du journal', 'Protokollauszug anhängen', 'ログを添付', '附上日志快照', '로그 스냅샷 첨부'],

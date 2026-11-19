@@ -62,7 +62,7 @@
   // The wordmark follows the theme: "Tribe" in the theme's text color, "Code" in its accent. Every <img class="brand-wm">
   // gets the same SVG redrawn with the live colors (a data URL), so layouts and sizes stay exactly as they are.
   let wmSrc = null, wmKey = '';
-  const wmBase = () => { const s = document.querySelector('script[src$="themes.js"]'); return s ? s.src.replace(/themes\.js(\?.*)?$/, '') : ''; };
+  const wmBase = () => { const s = document.querySelector('script[src*="themes.js"]'); return s ? s.src.replace(/themes\.js(\?.*)?$/, '') : ''; };
   function paintWordmarks(force) {
     const imgs = document.querySelectorAll('img.brand-wm'); if (!imgs.length || !document.body) return;
     const cs = getComputedStyle(document.body), ink = (cs.getPropertyValue('--text') || '').trim() || '#F8FAFC', acc = (cs.getPropertyValue('--accent') || '').trim() || '#F26B1D';

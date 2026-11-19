@@ -48,6 +48,7 @@ const files = {
 let swFrom = null, swTo = null;
 if (!CHECK && next !== cur) {
   for (const [p, fn] of Object.entries(files)) fs.writeFileSync(f(p), fn(read(p)));
+  spawnSync('node', [path.join(__dirname, 'stamp-ui.js')], { stdio: 'inherit' });   // fix/p7-cache: x.js?v=<new version> in the app page
   const sw = read('app/ui/sw.js');
   const m = sw.match(/const CACHE = 'tribecode-shell-v(\d+)'/);
   if (m) { swFrom = +m[1]; swTo = swFrom + 1; fs.writeFileSync(f('app/ui/sw.js'), sw.replace(m[0], `const CACHE = 'tribecode-shell-v${swTo}'`)); }
@@ -83,7 +84,7 @@ if (!argv.includes('--skip-tests')) {
 // ---- 4. next steps ----
 console.log(problems.length ? `\n${problems.length} problem(s): fix them before releasing.` : '\nReady. Nothing was pushed. To ship it:');
 if (!problems.length) console.log(`
-  git add -A package.json app/package.json app/src-tauri/tauri.conf.json app/src-tauri/Cargo.toml app/ui/sw.js CHANGELOG.md
+  git add -A package.json app/package.json app/src-tauri/tauri.conf.json app/src-tauri/Cargo.toml app/ui/sw.js app/ui/index.html CHANGELOG.md
   git commit -m "v${next}: <one line>"          # with the Co-Authored-By / Claude-Session trailers
   git checkout dev && git merge --no-ff <your-branch> && git push origin dev
   git checkout main && git merge --no-ff dev -m "Release v${next}" && git push origin main
