@@ -57,6 +57,9 @@ let SETUP_CODE = String(process.env.TRIBE_SETUP_CODE || '').trim();
 if (CLOUD && !SETUP_CODE) SETUP_CODE = require('node:crypto').randomBytes(9).toString('base64url');
 const setupOk = c => { if (!CLOUD || !SETUP_CODE || typeof c !== 'string') return false; const a = Buffer.from(c.trim()), b = Buffer.from(SETUP_CODE); return a.length === b.length && require('node:crypto').timingSafeEqual(a, b); };
 const HOST = args.host || process.env.TRIBE_HOST || '0.0.0.0';
+// feat/easy-start: a value that came through empty (the desktop app with no folder chosen yet: `--dir ""`) reads as "true"
+// above; it used to stop the server at once with a path error. Options that need a value fall back to their default.
+for (const k of ['dir', 'ui', 'name', 'host', 'repo']) if (args[k] === true || (typeof args[k] === 'string' && !args[k].trim())) delete args[k];
 const DIR = args.dir || process.env.TRIBE_DIR || path.join(os.homedir(), 'TribeCode');
 const UI = path.resolve(args.ui || process.env.TRIBE_UI || path.join(__dirname, '..', 'app', 'ui'));
 const STATUSES = ['backlog', 'doing', 'review', 'done'];
@@ -64,7 +67,13 @@ const TASK_TYPES = ['build', 'fix', 'design', 'write', 'research'], TASK_DOERS =
 
 const REPO = args.repo ? path.resolve(args.repo) : (process.env.TRIBE_REPO || null);
 
-const baseStore = new Store(DIR);
+let baseStore;
+try { baseStore = new Store(DIR); }
+catch (e) {   // one plain line the desktop app can show (app.js hostProblem), instead of a stack trace
+  console.error(`Could not open the tribe folder ${DIR}: ${e.code || ''} ${e.message}`);
+  if (require.main === module) process.exit(1);
+  throw e;
+}
 const tribe = baseStore.readJSON('.tribe/tribe.json', null) || (() => { const t = { name: args.name || 'My Tribe', created: new Date().toISOString() }; baseStore.writeJSON('.tribe/tribe.json', t); return t; })();
 // Project rooms (server/projects.js): every module gets a project-aware view of the tribe folder.
 const P = makeProjects({ store: baseStore, tribe, slug, defaultRepo: REPO });

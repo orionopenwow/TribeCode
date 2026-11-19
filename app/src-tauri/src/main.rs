@@ -99,16 +99,44 @@ fn port_free(port: u16) -> bool {
     std::net::TcpListener::bind(("127.0.0.1", port)).is_ok()
 }
 
+/// feat/easy-start: is the program on this port a TribeCode server? Asks its health page (std only, short timeouts).
+/// Anything else that holds the port (another app, a hung older copy) is not reused: the server starts on the next free port.
+fn is_tribecode(port: u16) -> bool {
+    use std::io::{Read, Write};
+    use std::time::Duration;
+    let addr = std::net::SocketAddr::from(([127, 0, 0, 1], port));
+    let Ok(mut s) = std::net::TcpStream::connect_timeout(&addr, Duration::from_millis(700)) else { return false };
+    let _ = s.set_read_timeout(Some(Duration::from_millis(1500)));
+    let _ = s.set_write_timeout(Some(Duration::from_millis(700)));
+    let req = format!("GET /api/health HTTP/1.0\r\nHost: localhost:{port}\r\nConnection: close\r\n\r\n");
+    if s.write_all(req.as_bytes()).is_err() {
+        return false;
+    }
+    let mut buf = Vec::new();
+    let _ = s.take(16 * 1024).read_to_end(&mut buf);
+    let text = String::from_utf8_lossy(&buf);
+    text.starts_with("HTTP/1.") && text.contains(" 200") && text.contains("\"tribe\"") && text.contains("\"version\"")
+}
+
 #[tauri::command]
 fn host_start(app: tauri::AppHandle, state: tauri::State<'_, Host>, port: u16, dir: String, name: String) -> Result<String, String> {
     let mut slot = state.0.lock().map_err(|e| e.to_string())?;
     if let Some((_, p)) = slot.as_ref() {
         return Ok(format!("http://localhost:{p}"));
     }
-    // Something already listens on the port (often TribeCode started from the repo or another copy of
-    // the app): use it instead of starting a second server on the same folder.
+    // Something already listens on the port. A TribeCode server (started from the repo, or another copy of the
+    // app): use it instead of starting a second server on the same folder. Anything else (feat/easy-start: another
+    // program, or an older copy that no longer answers): start on the next free port instead of waiting on a port
+    // that will never answer.
+    let mut port = port;
     if !port_free(port) {
-        return Ok(format!("http://localhost:{port}"));
+        if is_tribecode(port) {
+            return Ok(format!("http://localhost:{port}"));
+        }
+        match (port.saturating_add(1)..=port.saturating_add(20)).find(|p| port_free(*p)) {
+            Some(p) => port = p,
+            None => return Err(format!("no free port near {port} on this computer")),
+        }
     }
     let ui = app
         .path()
@@ -116,11 +144,21 @@ fn host_start(app: tauri::AppHandle, state: tauri::State<'_, Host>, port: u16, d
         .map_err(|e| e.to_string())?;
     let port_s = port.to_string();
     let ui_s = ui.to_string_lossy().to_string();
+    // An empty folder or name is left out: the server then uses its own default (an empty value after --dir used to
+    // stop it at once).
+    let mut argv: Vec<&str> = vec!["--port", port_s.as_str()];
+    if !dir.trim().is_empty() {
+        argv.extend(["--dir", dir.as_str()]);
+    }
+    if !name.trim().is_empty() {
+        argv.extend(["--name", name.as_str()]);
+    }
+    argv.extend(["--ui", ui_s.as_str(), "--exit-with-parent"]);
     let (mut events, child) = app
         .shell()
         .sidecar("tribecode-server")
-        .map_err(|e| e.to_string())?
-        .args(["--port", port_s.as_str(), "--dir", dir.as_str(), "--name", name.as_str(), "--ui", ui_s.as_str(), "--exit-with-parent"])
+        .map_err(|e| format!("could not start the tribe server: {e}"))?
+        .args(argv)
         .spawn()
         .map_err(|e| format!("could not start the tribe server: {e}"))?;
     *slot = Some((child, port));
@@ -195,6 +233,15 @@ fn host_status(state: tauri::State<'_, Host>) -> Option<u16> {
     state.0.lock().ok().and_then(|s| s.as_ref().map(|(_, p)| *p))
 }
 
+/// feat/easy-start: what the app needs to say why a start failed: (the port our own server runs on, if any; is `port`
+/// free; does a TribeCode server answer on `port`).
+#[tauri::command]
+fn host_diag(state: tauri::State<'_, Host>, port: u16) -> (Option<u16>, bool, bool) {
+    let running = state.0.lock().ok().and_then(|s| s.as_ref().map(|(_, p)| *p));
+    let free = port_free(port);
+    (running, free, !free && is_tribecode(port))
+}
+
 fn main() {
     clear_stale_web_cache();   // before the web view opens, so it starts from this version's files
     let app = tauri::Builder::default()
@@ -218,7 +265,7 @@ fn main() {
         ))
         .manage(Host(Mutex::new(None)))
         .manage(HostLog(Arc::new(Mutex::new(Vec::new()))))
-        .invoke_handler(tauri::generate_handler![host_start, host_stop, host_status, host_log, host_kill_stale, clear_web_cache_and_restart])
+        .invoke_handler(tauri::generate_handler![host_start, host_stop, host_status, host_diag, host_log, host_kill_stale, clear_web_cache_and_restart])
         .setup(|app| {
             // Register tribecode:// at runtime too (needed for dev builds on Windows and Linux).
             #[cfg(any(windows, target_os = "linux"))]
