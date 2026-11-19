@@ -424,7 +424,7 @@ ${canEdit && !started ? `      <section class="pj-context" id="pj-context"><div 
   function allSteps(p, steps) {
     const UI = window.TribeUI; if (!UI || !UI.sheet) return;
     const tick = '<svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 12.5 4 4 8-9"/></svg>', n = steps.filter(x => x.done).length;
-    const sh = UI.sheet({ id: 'pj-steps', eyebrow: `${n} of ${steps.length} done`, title: `Steps for ${p.name}`,
+    const sh = UI.sheet({ id: 'pj-steps', eyebrow: `${n} of ${steps.length} done`, title: 'All steps',
       body: `<div class="ock-list pj-steps-list">${steps.map(x => `<div class="ock-row ${x.done ? 'on' : ''}" data-step="${x.id}"><span class="ock-box" role="checkbox" aria-checked="${x.done}" aria-label="${esc(x.label)}">${x.done ? tick : ''}</span>
         <div class="ock-main"><span class="ock-l">${esc(x.label)}</span><p class="ock-sub">${x.done ? 'Done' : esc(x.sub || '')}</p></div>${!x.done && (x.acts || x.below) ? `<span class="ock-acts">${x.acts || ''}${x.below || ''}</span>` : ''}</div>`).join('')}</div>` });
     sh.body.querySelectorAll('[data-ck]').forEach(b => b.onclick = () => { sh.close(); step(b.dataset.ck); });
@@ -648,7 +648,7 @@ ${canEdit && !started ? `      <section class="pj-context" id="pj-context"><div 
     }
     const row = (k, ic, t, sub, cls = '') => `<button class="ns-row ${cls}" data-ns="${k}"><span class="ns-ic">${ic}</span><span class="ns-t"><b>${t}</b><small>${sub}</small></span>${ico('i-chev', 16)}</button>`;
     body().innerHTML = `<button class="ns-x" data-close aria-label="Close">${ico('i-x', 16)}</button>
-      <div class="ns-head"><h2>What do you want to make?</h2><p class="lead">One sentence is enough. It becomes your project's vision, and the suggested tasks, starter and website follow from it.</p></div>
+      <div class="ns-head"><h2>What do you want to make?</h2><p class="lead">One sentence is enough. A first version appears right away, a website, an app or a game, and the sentence becomes the project's vision.</p></div>
       <form class="ns-prompt" id="np-prompt"><textarea class="input" id="np-idea" rows="3" maxlength="600" placeholder="e.g. A cozy pixel game where friends water plants at night" aria-label="What do you want to make?"></textarea>
         <div class="ns-chips">${IDEAS.map(t => `<button type="button" class="ns-chip" data-idea="${esc(t)}">${esc(t)}</button>`).join('')}</div>
         <div class="np-status" id="np-status"></div>
@@ -681,7 +681,7 @@ ${canEdit && !started ? `      <section class="pj-context" id="pj-context"><div 
     const STOP = new Set('a an the and or of to for in on at with by is are be it its this that we our us you your my me i from as into where who can will make build want like some cozy simple small little new friend friends play together let lets track tracks tracking help helps keep keeps show shows'.split(' '));
     const KINDW = /^(game|website|site|app|page|bot|tool|quiz)$/i;
     const pick = t => String(t).replace(/[^\p{L}\p{N}\s'-]/gu, ' ').split(/\s+/).filter(w => w && !STOP.has(w.toLowerCase()) && !/'s$/i.test(w));
-    let words = pick(String(idea).split(/\s(?:with|that|where|which|so|to help|,)\s/i)[0]);
+    let words = pick(String(idea).split(/\s(?:with|that|where|which|so|to help|for|,)\s/i)[0]);
     if (words.length < 2) words = pick(idea);
     words = words.slice(0, 3);
     if (words.length > 1 && KINDW.test(words[0])) words.push(words.shift());   // "website … bakery" -> "Bakery Website"
