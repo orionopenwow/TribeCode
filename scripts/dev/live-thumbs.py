@@ -67,7 +67,7 @@ def g_sites():
     return out, lambda tid: (ROOT / "templates" / "sites" / tid / "index.html").is_file() or (ROOT / "templates" / "sites" / tid).is_dir()
 
 def g_gallery():
-    cat = {t["id"] for t in json.loads(text("app/ui/sitetpl/catalog.json") or '{"templates":[]}')["templates"]}
+    cat = {t["id"] for t in json.loads(text("app/ui/sitetpl/catalog.json") or '{"templates":[]}')["templates"] if not t.get("retired")}   # retired ones have no card
     out = {f"app/ui/sitetpl/thumbs/{i}.webp": i for i in sorted(cat | set(ids_in("app/ui/sitetpl/thumbs", ".webp")))}
     return out, lambda i: i in cat and (ROOT / "app" / "ui" / "sitetpl" / f"{i}.json").is_file()
 

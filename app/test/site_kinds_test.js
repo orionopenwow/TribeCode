@@ -13,15 +13,15 @@ global.window = {}; require(path.join(ROOT, 'app', 'ui', 'designflow-data.js'));
 const cat = JSON.parse(fs.readFileSync(path.join(ROOT, 'app', 'ui', 'sitetpl', 'catalog.json'), 'utf8')).templates;
 let n = 0; const ok = (c, m) => { assert.ok(c, m); n++; };
 
-// 1. kinds: two main ones first; every template has a kind; the main kinds have 8 or more, the best first, 12 at most
+// 1. kinds: two main ones first; every template has a kind; each kind shows its best three (site-templates2: fewer, better)
 ok(D.SITE_KINDS.filter(k => k.main).map(k => k.id).join() === 'linkbio,app', 'the two main kinds');
 ok(D.SITE_KINDS.map(k => k.id).join() === 'linkbio,app,business,portfolio,event,blog,blank', 'the order of the kinds');
 ok(D.SITE_KINDS.every(k => /<svg[^>]*viewBox="0 0 64 48"/.test(k.art) && !/fill="#/.test(k.art)), 'each kind has its own drawing in the current colour');
 ok(cat.every(t => t.kind && D.siteKindOf(t) === t.kind), 'the catalog and the page agree on every kind');
-for (const k of ['linkbio', 'app']) { const l = D.siteTemplatesFor(cat, k); ok(l.length >= 8, `${k} has at least 8 templates (${l.length})`); ok(D.siteTemplatesFor(cat, k, 12).length <= 12, `${k}: at most 12 shown`); }
+for (const k of ['linkbio', 'app']) { const l = D.siteTemplatesFor(cat, k); ok(l.length >= 2 && l.every(t => !t.retired), `${k} has at least 2 offered templates (${l.length})`); ok(D.siteTemplatesFor(cat, k, D.SITE_KIND_SHOWS).length <= 3, `${k}: three shown at most`); }
 ok(D.siteTemplatesFor(cat, 'linkbio')[0].id === 'linkbio' && D.siteTemplatesFor(cat, 'app')[0].id === 'gh-project', 'the best first');
 ok(Object.values(D.SITE_PICKS).flat().every(id => cat.some(t => t.id === id)), 'every pick is a real template');
-ok(new Set(cat.map(t => t.id)).size === cat.length && cat.every(t => fs.existsSync(path.join(ROOT, 'app', 'ui', 'sitetpl', t.id + '.json')) && fs.existsSync(path.join(ROOT, 'app', 'ui', t.thumb))), 'every template has its file and picture');
+ok(new Set(cat.map(t => t.id)).size === cat.length && cat.every(t => fs.existsSync(path.join(ROOT, 'app', 'ui', 'sitetpl', t.id + '.json')) && (t.retired ? !t.thumb : fs.existsSync(path.join(ROOT, 'app', 'ui', t.thumb)))), 'every template has its file, and every offered one its picture');
 
 // 2. the 'go' section
 const page = (props) => S.normalize({ v: 1, name: 'x', pages: [{ title: 'Home', blocks: [{ type: 'go', variant: 'card', props }, { type: 'footer', props: { text: '©', links: [] } }] }] });
