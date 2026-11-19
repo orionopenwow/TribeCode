@@ -70,7 +70,9 @@
   const count = (o, rx) => (JSON.stringify(o || {}).match(rx) || []).length;
   const blocks = c => (c && c.pages ? c.pages.reduce((n, p) => n + (p.blocks || []).length, 0) : 0);
   const visible = el => { if (!el) return false; const r = el.getBoundingClientRect(); return r.width > 0 && r.height > 0; };
-  const find = sel => { for (const one of String(sel || '').split(',')) { let el = null; try { el = [...document.querySelectorAll(one.trim())].find(visible); } catch {} if (el) return el; } return null; };
+  // p6: prefer a match nothing covers (the lesson card and open tools can hide one copy of a control); else the first with a size
+  const clear = el => { const r = el.getBoundingClientRect(), x = Math.min(innerWidth - 1, Math.max(0, r.left + r.width / 2)), y = Math.min(innerHeight - 1, Math.max(0, r.top + r.height / 2)); const h = document.elementFromPoint(x, y); return !!h && (h === el || el.contains(h)); };
+  const find = sel => { let first = null; for (const one of String(sel || '').split(',')) { let all = []; try { all = [...document.querySelectorAll(one.trim())].filter(visible); } catch {} const top = all.find(clear); if (top) return top; first = first || all[0] || null; } return first; };
   const LINK = /"to":"[^"]+"/g;
   function baseline() {
     const c = scfg(), d = adoc();
@@ -135,7 +137,7 @@
     if (s.show.open !== 'sitelib') call('TribeSiteLib', 'close');   // pass 4 polish: the template shelf from an earlier step no longer sits over the next step's place
     if (!find(s.show.sel)) { try { (OPEN[s.show.open] || (() => {}))(); } catch {} }
     return new Promise(res => {
-      let n = 0; const tick = () => { const el = find(s.show.sel); if (el) { L.ring(el, T(s.text)); return res(true); } if (++n < 45) setTimeout(tick, 130); else { toast(pid() ? 'That is not on screen yet. Do the earlier steps first, then try Show me again.' : 'Open a project first, then try Show me again.'); res(false); } };
+      const gn = L.begin ? L.begin() : null; let n = 0, sel = s.show.sel, alt = false; const tick = () => { if (gn != null && !L.live(gn)) return res(false); const el = find(sel); if (el) { L.ring(el, T(s.text), gn); return res(true); } if (n === 12 && !alt && L.phoneAlt) { const a = L.phoneAlt(sel); if (a) { alt = true; sel = a; } } /* p6: the phone's version of a control */ if (++n < 45) setTimeout(tick, 130); else { if (W.TribeApp && W.TribeApp.toast) W.TribeApp.toast(T(pid() ? 'That is not on screen yet. Do the earlier steps first, then try Show me again.' : 'Open a project first, then try Show me again.'), 'warn'); res(false); } };
       setTimeout(tick, 200);
     });
   }

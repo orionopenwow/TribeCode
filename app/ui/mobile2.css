@@ -421,6 +421,7 @@
   .m2-bell .bd.hidden { display: none; }
   body.m2-in-chat .tabbar.m2-rack { right: calc(48px + env(safe-area-inset-right)); }   /* in Chat the tabs leave room for the bell */
   body.m2-in-chat #m2-pane { display: none; }
+  body.m2-in-chat .titlebar #ppl-btn { display: none; }   /* p6: it sat on top of the Agents tab in Chat; the dashboard's top bar still has it */
   .tabbar.m2-rack .m2-seg button { width: 56px; }
 }
 .m2-pjf .pj-face { width: 34px; height: 34px; border-radius: 10px; } .m2-pjlist .m2-mi.on { background: var(--raised); }

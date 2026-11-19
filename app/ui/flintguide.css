@@ -1,5 +1,5 @@
 /* Flint, the guide (flintguide.js): the mascot flies to things, points with a bubble, trails pixel embers. Flat matte. */
-.fg-root { position: fixed; inset: 0; z-index: 140; pointer-events: none; display: none; }
+.fg-root { position: fixed; inset: 0; z-index: 985; pointer-events: none; display: none; }
 .fg-root.on { display: block; }
 .fg-scrim { position: absolute; inset: 0; background: transparent; pointer-events: none; }
 .fg-root.dim .fg-scrim { pointer-events: auto; }
