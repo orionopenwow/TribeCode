@@ -136,7 +136,7 @@ def main():
             {"op": "move", "block": at["list"], "to": 1},
         ]
         assert {o["op"] for o in second} <= ops_ok
-        more = ag.good("site_propose", {"ops": second}); assert "added to your waiting proposal" in more and "Not used" not in more, more
+        more = ag.good("site_propose", {"ops": second}); assert "added to your waiting proposal" in more and "Skipped" not in more, more
         reqs = t.ok(t.api(f"/projects/{pid}/changes", token=maya))["requests"]; open_ = [r for r in reqs if r["status"] == "open"]
         assert len(open_) == 1 and open_[0]["tool"] == "site" and open_[0]["byName"] == "Maya" and open_[0]["agentName"] and open_[0]["to"] == ["Maya"] and "first site" in open_[0]["why"], reqs
         chk = json.loads(ag.good("site_check", {"proposed": True})); assert chk["fix"] == 0, chk

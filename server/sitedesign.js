@@ -358,7 +358,7 @@ module.exports = function siteDesign({ guides = null, files = null, perms = null
           if (!ops.length && !started) return text(`ops must be a list of steps. ${AG.hint('site', 'text')}`, true);
           const base0 = pend && pend.payload ? pend.payload : cfg, r = S.applyOps(base0, ops);
           const nl = H ? H.notes('site', ops, S.normalize(JSON.parse(JSON.stringify(base0))), r.skipped) : r.skipped.map(x => ({ step: 0, op: '', why: x }));
-          const noteText = nl.length ? `\nNot used, or changed on the way:\n${H ? AG.lintText(nl) : nl.map(n => '- ' + n.why).join('\n')}` : '';
+          const noteText = nl.length ? `\nSkipped, or changed on the way:\n${H ? AG.lintText(nl) : nl.map(n => '- ' + n.why).join('\n')}` : '';
           const tail = H ? `\n${H.checkLine('site', r.cfg)}\n${H.idsLine('site', r.cfg)}` : '';
           const did = [started, ...r.done].filter(Boolean);
           if (a.dry_run) return text(`Dry run: nothing was sent, and the ids of anything new below are examples (real ids come with the answer of the call that sends). ${did.length} step${did.length === 1 ? '' : 's'} would be proposed${pend ? ' on top of your waiting proposal' : ''}.\n${did.map(x => '- ' + x).join('\n')}${noteText}${tail}`);
