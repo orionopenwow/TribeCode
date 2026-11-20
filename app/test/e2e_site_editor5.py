@@ -127,13 +127,13 @@ def main():
 
             # ---------- 2: Ctrl J, the rail, remembered ----------
             cp.keyboard.press("Control+j"); cp.wait_for_timeout(200)
-            F2 = rect(cp, "#wdz-fl"); assert F2["w"] <= 48 and cp.locator("#wdz-fl .wdz-fl-rail").is_visible(), F2
+            F2 = rect(cp, "#wdz-fl"); assert F2["w"] <= 48 and cp.locator("#wdz-fl .wdz-fl-rail").count() == 0 and cp.locator("#wdz .wdz-top > .cs-flame").is_visible(), F2   # pass 9: no rail; the flame in the top bar
             assert rect(cp, "#wdz .wdz-stage")["w"] > M["w"] + 200, "the page gets the room back"
             shot(cp, "p5-site-rail-1440.png")
             cp.evaluate("TribeSiteDesigner.close()"); cp.wait_for_selector("#wdz", state="hidden")
             open_designer(cp, tpl=False)
             assert rect(cp, "#wdz-fl")["w"] <= 48, "folded stays folded"
-            cp.click("#wdz-fl .wdz-fl-rail"); cp.wait_for_timeout(200)
+            cp.click("#wdz .wdz-top > .cs-flame"); cp.wait_for_timeout(200)
             assert rect(cp, "#wdz-fl")["w"] >= 280 and cp.evaluate("document.activeElement && document.activeElement.classList.contains('fl-in')"), "open again, the box has the focus"
 
             # ---------- 5: the plan stays out ----------
@@ -279,7 +279,7 @@ def main():
             # ---------- 3: under 1440, the drawer never covers the panel ----------
             cp.set_viewport_size({"width": 1100, "height": 800}); cp.wait_for_timeout(300)
             assert rect(cp, "#wdz-fl")["w"] <= 48, "a rail in a narrower window"
-            cp.click("#wdz-fl .wdz-fl-rail"); cp.wait_for_timeout(250)
+            cp.click("#wdz .wdz-top > .cs-flame"); cp.wait_for_timeout(250)
             D, R = rect(cp, "#wdz-flint"), rect(cp, "#wdz .wdz-right")
             assert D["w"] >= 280 and D["r"] <= R["l"] + 1, ("the drawer stays left of the panel", D, R)
             shot(cp, "p5-site-1100.png")

@@ -301,7 +301,7 @@
   }
   const saveLocalC = () => ls.set(CLOCAL(), (st().comments || []).slice(-200));
   const me = () => { try { const S = C() && C().state && C().state(); return (S && S.me && (S.me.name || S.me.id)) || ''; } catch { return ''; } };
-  function commentMode(on) { const s = st(); s.cmode = !!on; closeBox(); if (on) { s.sel = null; s.sels = []; if (s.map) toggleMap(false); if (s.mode === 'play') s.mode = 'edit'; X.paint(); note('Click the part you want to comment on. Esc to stop.'); } else { paintTop(); placePins(); } }
+  function commentMode(on) { const s = st(); s.cmode = !!on; closeBox(); if (on) { s.showComments = true; s.sel = null; s.sels = []; if (s.map) toggleMap(false); if (s.mode === 'play') s.mode = 'edit'; X.paint(); note('Click the part you want to comment on. Esc to stop.'); } else { paintTop(); placePins(); } }
   function closeBox() { const b = root() && root().querySelector('#apc-cbox'); if (b) b.remove(); }
   function box(html, at) {
     closeBox(); const mid = root().querySelector('#apc-mid'), b = document.createElement('div'); b.id = 'apc-cbox'; b.className = 'apc-cbox'; b.innerHTML = html; mid.appendChild(b);

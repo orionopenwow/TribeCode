@@ -109,7 +109,7 @@ def main():
             # ---- the top bar is one row with Map, Comment and More; the right panel is useful with nothing selected
             assert pg.locator("#apc-mapb").is_visible() and pg.locator("#apc-cmb").is_visible() and pg.locator("#apc-more").is_visible()
             assert pg.evaluate("document.querySelector('.apc-top').getBoundingClientRect().height") <= 64
-            assert pg.locator("#apc-insp .apc-quick [data-q]").count() == 6 and pg.locator("#apc-insp #apc-scname").is_visible()
+            assert pg.locator("#apc-insp .apc-quick [data-q]").count() == 4 and pg.locator("#apc-insp #apc-scname").is_visible()
             shot(pg, "p4-app-empty-1440.png")
 
             # ---- several parts: Shift click, duplicate and remove together, one Undo each
