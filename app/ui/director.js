@@ -567,7 +567,7 @@
         window.TribeFlintGuide.hide();
       }
     } },
-    { id: 'preview', title: 'Preview', flint: ["#nest-preview", "Let's try what the team made. Click Preview game."], after: "That's the real game, running right next to the work. Anyone in the project can play it.", cap: 'Run what you’re building right next to the work. Play it together.', dur: 14000, pdur: 14000, async run() {
+    { id: 'preview', title: 'Preview', flintPhone: null, flint: ["#nest-preview", "Let's try what the team made. Click Preview game."], after: "That's the real game, running right next to the work. Anyone in the project can play it.", cap: 'Run what you’re building right next to the work. Play it together.', dur: 14000, pdur: 14000, async run() {
       if (window.TribeFlintGuide) window.TribeFlintGuide.hide();
       if (view() !== 'tasks' && view() !== 'home') A().show('home');
       if (window.TribeWidgets) await window.TribeWidgets.refresh();
@@ -798,7 +798,8 @@
     await uncover(s.flint[0]);
     if (guided) return guidedStep(s, n);
     if (!opts0.classic) {   // v0.22 default: Flint shows and tells, nothing to click
-      const [sel0, text0] = s.flint; const el0 = sel0 ? await waitFor(() => pick(sel0), 2000) : null;   // watchdog: 2 s, then on without a spotlight
+      let [sel0, text0] = s.flint; if (phone() && 'flintPhone' in s) sel0 = s.flintPhone;   // pass 8: a phone has no Preview row to point at
+      const el0 = sel0 ? await waitFor(() => pick(sel0), 2000) : null;   // watchdog: 2 s, then on without a spotlight
       if (sel0 && !el0) check('target found', false, sel0);
       spot(el0, 10); live(text0.replace(/\b(First, |Now |Then |Next, )?([Cc])lick\b/g, (m, a) => (a || '') + (a ? 'I click' : 'I click')).replace(/(^|[.!?]\s+)I click/g, (m, p) => p + 'I click'), { lead: `${n + 1}/${list.length} · ${s.title}` });
       await readFor(text0); return;
