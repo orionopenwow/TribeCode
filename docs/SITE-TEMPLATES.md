@@ -1,5 +1,82 @@
 # Website templates
 
+> **site-templates2: fewer, better, different.** The website designer's gallery offers **25 templates**, each
+> written by hand with its own opening, rhythm and type. The 61 it had before were measured (below): most were one
+> layout in other colours. The 38 that are no longer offered stay loadable, so an older design opens exactly as before.
+
+## The 25 the gallery offers
+
+They live in `scripts/dev/site-curated.js` (one designer config each, with sample words for a clearly invented
+business) and are built into `app/ui/sitetpl/<id>.json`, `catalog.json` and `thumbs/<id>.webp` by
+`python3 scripts/dev/site-gallery.py`. All are original to TribeCode (MIT). Pictures are the flat scenes in
+`sitecfg.js` (`ILLUS`), drawn in each site's own colours.
+
+| Template | id | Kind | Opens with | Type | Then |
+|---|---|---|---|---|---|
+| Link in bio | `linkbio` | Link in bio | a photo and a stack of pill buttons | Outfit (round) | nothing else: one screen |
+| Creator tiles | `creator` | Link in bio | a bento grid of link tiles | Bricolage Grotesque | one screen |
+| Open-source project | `gh-project` | App or project | a claim beside an install card | JetBrains Mono | why, steps, what's new |
+| App download page | `app-download` | App or project | a band of colour with the phone on it | Outfit | ticks, a strip of screens, questions |
+| Send people to my app | `app-redirect` | App or project | the card that sends visitors on | Bricolage Grotesque | (unchanged) |
+| Product page | `saas` | App or project | centred claim over the real screen | Space Grotesk | bento tiles, what it doesn't do, prices |
+| Indie game page | `gamepage` | App or project | key art edge to edge, title on it | Silkscreen (pixel) | facts bar, masonry shots, devlog |
+| Docs or handbook | `docs` | App or project | side navigation, three pages | Space Grotesk | steps, definitions, questions |
+| Coming soon | `comingsoon` | App or project | one centred card | Fraunces | what's coming, one signup |
+| Local service | `service` | Business | a phone bar, then words beside a picture | Inter | ticks, a price table, where and when |
+| Café or restaurant | `cafe` | Business | a picture across the top | Instrument Serif | a two-column menu, a map beside the hours |
+| Menu card | `menu` | Business | the menu itself, like a printed card | DM Serif Display | courses, hours and booking |
+| Store front | `merch` | Business | the products and their prices | Space Grotesk | delivery, about, order by email |
+| Club or group | `club` | Business | words beside a round picture | Bricolage Grotesque | a timetable of meets, how to join |
+| Nonprofit or cause | `nonprofit` | Business | the mission in very large type | Anton (condensed) | three big numbers, pictures and words in turn |
+| Portfolio | `portfolio` | Portfolio | one long sentence in a serif | Instrument Serif | projects with pictures, one quote |
+| Photography | `photography` | Portfolio | a mosaic of pictures | Inter | about, what you can ask for |
+| Resume | `resume` | Portfolio | name beside a short profile | Fraunces | a timeline, skills, education |
+| Personal letter | `letter` | Portfolio | a single column letter, signed | Fraunces + system serif | a few links |
+| Band or musician | `band` | Portfolio | the name across a stage picture | Anton | dates as a list, records |
+| Wedding or party | `wedding` | Event | an invitation card | DM Serif Display | the day as a timeline, travel, RSVP |
+| Conference or meetup | `conference` | Event | the name huge, facts in a bar | Space Grotesk | programme by the hour, speakers, tickets, map |
+| Class or course | `course` | Event | a claim beside the next-course card | Outfit | week by week, prices |
+| Blog or magazine | `blog` | Blog | a magazine grid: the newest piece large | Fraunces | subscribe, who writes it |
+| Podcast | `podcast` | Blog | the cover beside where to listen | JetBrains Mono | a log of episodes |
+
+Blank is the seventh kind on the start screen and is not a template.
+
+**Layouts added for them** (`app/ui/sitecfg.js`, each with a phone layout): hero `full` (a picture edge to edge with
+the words on it), `card` (a centred card), `aside` (words beside a card of facts); links `bento`; features `bento`;
+list `magazine` and `schedule`; gallery `mosaic` and `shop` (a price beside each caption); text `letter` (a drop cap
+and a signature); info `map` (a picture of a map beside the hours); and `nav: 'side'` for the whole site. A wide
+`list:menu` section sets its rows in two columns. A section with `props.h1` opens the page, so its heading is the h1.
+Twenty more illustrations (map, plate, portrait, mountains, city, still life, app window, terminal, T-shirt, tote,
+mug, framed print, flower arch, hall, garden beds, bikes, pixel night, notebook, show cover, van) and one more bundled
+font, **Anton** (SIL OFL 1.1, from Fontsource), the condensed poster face.
+
+**Sameness, measured** (`node scripts/dev/site-variety.js`; the "before" column was taken at v0.41.1: a signature is the opening composition plus the
+sections after it, never colours or words):
+
+| | Before (61) | After (25) |
+|---|---|---|
+| Opening compositions | 8 (43 of 61 were `hero:split` or `hero:minimal`) | 17 (none used more than three times) |
+| Type characters | 6 (34 grotesk, 17 serif) | 7 (serif, grotesk, round, mono, condensed, sans, pixel) |
+| Loosely alike (same opening, 60% the same kinds of section) | 20 pairs, 23 templates | 0 |
+| The same first screen as another template | 43 templates in 13 groups | 4 templates in 2 groups |
+| A headline over a row of feature cards | 15 | 0 |
+
+`app/test/site_variety_test.js` keeps it that way: no two offered templates share a signature, at least 12 openings
+and 6 type characters, every one renders at 1280 and 390 px with nothing sticking out, passes Check, exports with no
+script, and carries no placeholder words.
+
+**Retired templates.** `catalog.json` keeps an entry for each of the 38 with `retired: true` and `alias` (the closest
+offered template). Their `<id>.json` files stay, without thumbnails and outside the offline shell. A new site asked
+for by a retired id gets the alias (`templateCfg` in `sitedesigner.js`, `template()` in `server/sitedesign.js`); the
+very file is still served with `GET /api/site-designer/template/<id>?exact=1`. A site someone already made carries its
+own design and is not touched. Retired: the six `lb-*` link pages and everything imported (`sb-*`, `tt-*`, `h5-*`).
+The sections below describe how those older templates were made.
+
+---
+
+## The older customizer (templates/sites)
+
+
 > feat/site-v2: the website designer's gallery has **48 templates**: the 16 below and 32 imported open-source ones (end of this page), with thumbnails, categories, search, Peek and Use this. They load from `app/ui/sitetpl/` with no server, so they work with no tribe and offline.
 
 Sixteen real website templates, each with its own look, in `templates/sites/<id>/`. Pick one from the gallery

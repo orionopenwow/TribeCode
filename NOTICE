@@ -26,6 +26,11 @@ language), responsive previews, duplicate/hide and its keyboard shortcuts were r
 -------------------------------------------------------------------------------
 Website templates in app/ui/sitetpl (converted into designer configs; list: docs/SITE-TEMPLATES.md)
 -------------------------------------------------------------------------------
+The 25 templates the gallery offers (site-templates2) are original to TribeCode (MIT): written by hand in
+scripts/dev/site-curated.js, with pictures drawn by app/ui/sitecfg.js (ILLUS) in each site's own colours. The converted
+open-source templates below are no longer offered, but their files still ship (app/ui/sitetpl/sb-*.json, tt-*.json,
+h5-*.json) so that an older design can be opened exactly, and the notices and the CC BY credit line stay as they were.
+
 Start Bootstrap (https://startbootstrap.com, https://github.com/StartBootstrap), MIT License, Copyright (c) 2013-2023
 Start Bootstrap LLC: agency, business-casual, business-frontpage, clean-blog, coming-soon, creative,
 freelancer, grayscale, landing-page, modern-business, new-age, one-page-wonder, personal, resume, small-business,
@@ -51,6 +56,9 @@ Template pictures are original flat art made by scripts/dev/site-gallery.py; no 
 Fonts in app/ui/assets/site-fonts: SIL Open Font License 1.1 (licenses alongside the files). DM Serif Display
 (Copyright 2019 Google LLC, 2014-2017 Adobe) and Outfit (Copyright 2021 The Outfit Project Authors) were added with the
 website designer's Style panel; files from Fontsource (https://github.com/fontsource/font-files).
+Anton (Copyright 2020 The Anton Project Authors, https://github.com/googlefonts/AntonFont), SIL Open Font License 1.1,
+was added with the curated templates as the condensed poster face: anton-latin-400-normal.woff2 from Fontsource
+(fonts/google/anton/files), licence in LICENSE-Anton.txt.
 More font pairs (app/ui/fontlib.js): 73 further families, each SIL Open Font License 1.1, are not bundled. Pages
 link them from Google Fonts (https://fonts.google.com) when online and fall back to system fonts offline; each family's
 copyright and licence are on its Google Fonts page. The list names only OFL families.

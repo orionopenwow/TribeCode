@@ -145,7 +145,7 @@ def main():
             sp.click("#wdz-peek [data-peekclose]")
             sp.fill("#wdz-gq", "")
             sp.wait_for_timeout(200)
-            shot(sp, "site-gallery-v2.png")
+            shot(sp, "site-gallery-v3.png")
             sp.click("#wdz-gal .wdz-tpl[data-tpl='portfolio'] [data-tpl='portfolio']")
             sp.wait_for_selector("#wdz-replace #wdz-over", timeout=5000); sp.click("#wdz-over")   # p4-site: a template over a site that is already there asks first
             sp.wait_for_function("TribeSiteDesigner.cfg().template === 'portfolio'", timeout=10000)
