@@ -327,9 +327,10 @@
     } },
     { id: 'vision', title: 'Write the vision', dur: 18000, say: 'First, the vision: what we’re making and who it’s for. Everyone reads it, AI helpers too.', async run() {
       await inProject(); show('home'); await real(300);
-      const box = await point('the vision box', ['#ock-vis-in', '#pj-check [data-ck="vision"]', '#pj-check']);
+      let box = await point('the vision line', ['#pj-vis-in', '#pj-bio:not(:disabled)', '#pj-check [data-ck="vision"]', '#pj-check']);
+      if (box && box.id === 'pj-bio') { await press(box); await real(250); box = document.querySelector('#pj-vis-in'); }   // pass 9: written in place under the project's name
       if (box && box.tagName === 'TEXTAREA') await typeInto(box, VISION);
-      const save1 = await point('Save vision', ['[data-ock-vis] .ock-save'], { ms: 1200 });
+      const save1 = await point('Save', ['#pj-vis-save', '[data-ock-vis] .ock-save'], { ms: 1200 });
       if (save1) await press(save1);
       if (!(db().vision[PID] || '').trim()) { try { await api('/vision', { method: 'PUT', body: { text: `# ${NAME}\n\n${VISION}\n` } }); } catch {} }
       await hold(500);

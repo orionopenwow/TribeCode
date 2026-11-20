@@ -76,7 +76,7 @@ def main():
             # ---- overview: bio, vision, living update ----
             host.click("#nest-overview"); host.wait_for_selector("#pj-check", timeout=15000)
             wait_text(host, "#pj-bio", "lanterns")
-            host.click("#pj-check [data-ck=vision]"); host.fill("#pj-vtext", "Run through the night lighting lanterns.\nFor friends.\nDone: 3 levels."); host.click("#pj-vsave")
+            host.click("#pj-check [data-ck=vision]"); host.fill("#pj-vis-in", "Run through the night lighting lanterns.\nFor friends.\nDone: 3 levels."); host.click("#pj-vis-save")   # pass 9: written in the line under the name
             host.wait_for_selector("#pj-check [data-step=vision].on", timeout=10000, state="attached")
             host.wait_for_selector("#pj-living .gl-tile", timeout=10000)   # the tribe has begun: the Living update shows
             shot(host, "overview")

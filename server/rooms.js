@@ -133,7 +133,8 @@ module.exports = function rooms({ checkFolder = null, watchFolder = null, P, W, 
         .catch(() => briefs.set(pid, { text: null, at: Date.now(), key }));
     }
     const ai = cached && cached.text && cached.key === key ? cached.text : null;
-    return { bio: p.bio || '', vision: { has: !!vtext, excerpt: vtext.slice(0, 160) }, living: { mood, summary: ai || rule.replace(/\s+/g, ' ').trim(), by: ai ? 'local model' : 'tribecode', lines } };
+    const lead = !vtext ? '' : (() => { const body = vision.replace(/^#[^#].*$/m, ''), i = body.search(/^##\s/m); return (i >= 0 ? body.slice(0, i) : body).replace(/[ \t]+/g, ' ').replace(/\s*\n\s*/g, '\n').trim().slice(0, 600); })();   // pass 9
+    return { bio: p.bio || '', vision: { has: !!vtext, excerpt: vtext.slice(0, 160), lead }, living: { mood, summary: ai || rule.replace(/\s+/g, ' ').trim(), by: ai ? 'local model' : 'tribecode', lines } };
   }
 
   function requests(pid) {

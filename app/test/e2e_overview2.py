@@ -73,7 +73,7 @@ def main():
             assert host.locator("#pj-check.hero").count() == 1
 
             # 1-2. identity row, then the Living update: a pill and 3 equal tiles, no long sentence
-            assert "Add a short description" in host.text_content("#pj-bio") and "1 person" in host.text_content(".pj-meta")
+            assert "Add what you’re making" in host.text_content("#pj-bio") and "1 person" in host.text_content(".pj-meta")
             assert "Invite to My Tribe" in host.text_content("#pj-invite")
             assert "At a glance" in host.text_content("#pj-living .eyebrow")
             labels = host.eval_on_selector_all("#pj-living .gl-tile .gl-top small", "els => els.map(e => e.textContent.trim().toUpperCase())")

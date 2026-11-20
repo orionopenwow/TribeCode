@@ -238,7 +238,7 @@
     if (k === 'change') { const f = box.querySelector('#fpv-change'); f.hidden = false; f.querySelector('textarea').focus(); return; }
     if (k === 'change-x') { box.querySelector('#fpv-change').hidden = true; return; }
     if (k === 'as') return again(r.idea, el.dataset.as);
-    if (k === 'keep-mine') { box.querySelector('#fpv-keep').hidden = true; pending = null; return; }
+    if (k === 'keep-mine') { box.querySelector('#fpv-keep').hidden = true; pending = null; pendingKeepVision = false; return; }
     if (k === 'keep-replace') { const p = pending; pending = null; if (p) return again(p.idea, p.as, true); return; }
     if (k === 'invite') { const f = r.pid; close(); if (root.TribeFlow && root.TribeFlow.inviteSheet) root.TribeFlow.inviteSheet({ project: f }); else if (App() && App().openInvite) App().openInvite(); return; }
     if (k === 'ai') {
@@ -258,7 +258,7 @@
       }
     }
   }
-  let pending = null;
+  let pending = null, pendingKeepVision = false;
   async function again(idea, as, sure) {
     const r = cur; if (!r) return;
     if (!sure && await editedSince(r)) {   // never write over edits without asking
@@ -266,7 +266,12 @@
     }
     making(r.name, idea);
     try {
-      if (idea !== r.idea) { try { await C().api('/vision', { method: 'PUT', project: r.pid, body: { text: `# ${r.name}\n\n${idea}\n` } }); } catch {} }
+      if (idea !== r.idea && !pendingKeepVision) {   // the same text as the dashboard's line: only the opening lines change, "## …" sections stay
+        try { let full = ''; try { full = (await C().api('/vision', { project: r.pid })).text || ''; } catch {} const i = full.search(/^##\s/m), rest = i >= 0 ? '\n' + full.slice(i).trim() + '\n' : '';
+          await C().api('/vision', { method: 'PUT', project: r.pid, body: { text: `# ${r.name}\n\n${idea}\n${rest}` } });
+          await C().api(`/projects/${enc(r.pid)}`, { method: 'PATCH', body: { bio: idea.replace(/\s+/g, ' ').slice(0, 200) } }); } catch {}
+      }
+      pendingKeepVision = false;
       show(await make(r.pid, idea, r.name, as));
     } catch (e) { fail(r.pid, idea, e); }
   }
@@ -305,7 +310,18 @@
     } catch (e) { fail(pid, r.idea, e); }
     return true;
   }
+  // The dashboard's "Update the first version to match?" after the vision changed there: opens what is saved, then
+  // makes it again from the new words (asking first when the person has edited the design since).
+  async function update({ pid, idea, name }) {
+    idea = String(idea || '').trim(); if (!pid || !idea) return false;
+    const had = last(pid); if (!had) { await start({ pid, idea, name }); return true; }
+    if (!(await open(pid))) return false;
+    for (let i = 0; i < 80 && !(cur && cur.pid === pid && box && box.querySelector('#fpv-frame')); i++) await new Promise(r => setTimeout(r, 100));
+    if (!cur || cur.pid !== pid) return false;
+    if (name) cur.name = name;
+    pendingKeepVision = true; await again(idea, null); return true;
+  }
   const failed = pid => ls.get(FAIL(pid)) || '';
   async function retry(pid) { const idea = failed(pid); if (!idea) return; const p = root.TribeProjects && root.TribeProjects.cur ? root.TribeProjects.cur() : null; return start({ pid, idea, name: (p && p.name) || 'My project' }); }
-  return { ...PURE, start, open, last, failed, retry, close, isOpen: () => !!(box && box.isConnected), state: () => cur };
+  return { ...PURE, start, open, update, last, failed, retry, close, isOpen: () => !!(box && box.isConnected), state: () => cur };
 });

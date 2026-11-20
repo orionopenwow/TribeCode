@@ -11,6 +11,19 @@
   'use strict';
   const I = window.TribeI18n; if (!I || !I.add) return;
   I.add({
+    // ---- pass 9: the vision line and the first version from the sentence
+    "Add what you’re making": ["Añade lo que estás creando", "Adicione o que você está criando", "Ajoutez ce que vous créez", "Füge hinzu, was du baust", "作っているものを書く", "写下你在做什么", "만들고 있는 것을 적기"],
+    "Edit what you’re making": ["Editar lo que estás creando", "Editar o que você está criando", "Modifier ce que vous créez", "Bearbeiten, was du baust", "作っているものを編集", "编辑你在做什么", "만들고 있는 것 편집"],
+    "What you’re making": ["Lo que estás creando", "O que você está criando", "Ce que vous créez", "Was du baust", "作っているもの", "你在做什么", "만들고 있는 것"],
+    "What are you making, and who is it for?": ["¿Qué estás creando y para quién?", "O que você está criando, e para quem?", "Que créez-vous, et pour qui ?", "Was baust du, und für wen?", "何を、誰のために作っていますか？", "你在做什么，为谁而做？", "무엇을, 누구를 위해 만드나요?"],
+    "Say what you’re making": ["Di lo que estás creando", "Diga o que você está criando", "Dites ce que vous créez", "Sag, was du baust", "作っているものを伝える", "说说你在做什么", "만들고 있는 것을 말하기"],
+    "One or two sentences at the top of this page. Everyone reads them.": ["Una o dos frases al inicio de esta página. Todos las leen.", "Uma ou duas frases no topo desta página. Todos leem.", "Une ou deux phrases en haut de cette page. Tout le monde les lit.", "Ein oder zwei Sätze oben auf dieser Seite. Alle lesen sie.", "このページの上部に1〜2文。みんなが読みます。", "在本页顶部写一两句话。每个人都会读到。", "이 페이지 맨 위에 한두 문장. 모두가 읽습니다."],
+    "Update the first version to match?": ["¿Actualizar la primera versión para que coincida?", "Atualizar a primeira versão para combinar?", "Mettre à jour la première version pour correspondre ?", "Die erste Version daran anpassen?", "最初のバージョンを合わせて更新しますか？", "要更新第一个版本以保持一致吗？", "첫 버전을 이에 맞게 업데이트할까요?"],
+    "You have changed this since it was made": ["Has cambiado esto desde que se creó", "Você mudou isto desde que foi feito", "Vous avez modifié ceci depuis sa création", "Du hast das seit der Erstellung geändert", "作成後に変更されています", "自创建以来你已做过修改", "만든 뒤로 변경하셨습니다"],
+    "You have changed this since it was made. Making it again replaces your changes.": ["Has cambiado esto desde que se creó. Crearlo de nuevo reemplaza tus cambios.", "Você mudou isto desde que foi feito. Fazer de novo substitui suas mudanças.", "Vous avez modifié ceci depuis sa création. Le refaire remplace vos modifications.", "Du hast das seit der Erstellung geändert. Neu erstellen ersetzt deine Änderungen.", "作成後に変更されています。作り直すと変更が置き換わります。", "自创建以来你已做过修改。重新生成会替换你的修改。", "만든 뒤로 변경하셨습니다. 다시 만들면 변경 내용이 대체됩니다."],
+    "Keep my version": ["Conservar mi versión", "Manter minha versão", "Garder ma version", "Meine Version behalten", "自分のバージョンを残す", "保留我的版本", "내 버전 유지"],
+    "Replace it": ["Reemplazarla", "Substituir", "La remplacer", "Ersetzen", "置き換える", "替换", "바꾸기"],
+    "Make it more mine": ["Hacerlo más mío", "Deixar mais com a minha cara", "Le rendre plus personnel", "Mehr zu meinem machen", "もっと自分らしくする", "让它更像我的", "더 나답게 만들기"],
     // ---- bug button and Send to the TribeCode team
     'Send to TribeCode': ['Enviar a TribeCode', 'Enviar ao TribeCode', 'Envoyer à TribeCode', 'An TribeCode senden', 'TribeCodeに送る', '发送给 TribeCode', 'TribeCode에 보내기'],
     'Your report is open on GitHub: press Submit there to send it.': ['Tu informe está abierto en GitHub: pulsa Submit allí para enviarlo.', 'Seu relato está aberto no GitHub: pressione Submit lá para enviar.', 'Votre rapport est ouvert sur GitHub : appuyez sur Submit pour l’envoyer.', 'Dein Bericht ist auf GitHub geöffnet: Drücke dort Submit, um ihn zu senden.', 'レポートをGitHubで開きました。Submitを押して送信してください。', '你的报告已在 GitHub 打开：在那里按 Submit 发送。', '보고서가 GitHub에서 열렸습니다. 거기서 Submit을 눌러 보내세요.'],

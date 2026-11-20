@@ -221,11 +221,11 @@ def main():
             shot(host, "04-dashboard"); audit(host, "dashboard (new)"); no_dead_end(host, "dashboard")
             steps = host.eval_on_selector_all("#pj-check .ock-row", "els => els.map(e => e.dataset.step)")
             assert [s for s in steps if s != "flint"] == ["vision", "task", "claude", "home", "share"], steps   # "flint" is the optional setup row (flintsetup.js, v0.36)
-            host.click("#pj-check [data-ck=vision]"); host.wait_for_selector("#av-cats .av-cat")
+            host.evaluate("TribeAssist.vision(TribeProjects.cur(), { host: true, done: () => TribeProjects.refresh() })"); host.wait_for_selector("#av-cats .av-cat")
             # reload mid-flow: the composer is gone, nothing is half-saved, the checklist is still there
             host.reload(); host.wait_for_function("window.TribeClient && TribeClient.connected()", timeout=20000)
             host.evaluate("TribeApp.show('home')"); host.wait_for_selector("#pj-check [data-ck=vision]", timeout=45000)
-            host.click("#pj-check [data-ck=vision]"); host.wait_for_selector("#av-cats .av-cat")
+            host.evaluate("TribeAssist.vision(TribeProjects.cur(), { host: true, done: () => TribeProjects.refresh() })"); host.wait_for_selector("#av-cats .av-cat")
             host.click("#av-cats [data-cat=game]"); host.fill("#av-gist", "A cozy platformer where you light lanterns to find your way home")
             shot(host, "05-vision"); audit(host, "vision composer")
             host.dblclick("#pj-vsave")
