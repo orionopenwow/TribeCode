@@ -4,7 +4,7 @@ Updated 2026-11-19 by the session that released v0.33.0 to v0.36.0, after catchi
 
 ## Where things stand
 
-- **Released:** v0.41.3 is on `main` and `dev` (2026-11-19), with Windows, Mac and Linux installers published. `CHANGELOG.md` has every release in user terms; `docs/CONTEXT.md` has one line per release with the files involved.
+- **Released:** v0.42.0 is on `main` and `dev` (2026-11-19), with Windows, Mac and Linux installers published. `CHANGELOG.md` has every release in user terms; `docs/CONTEXT.md` has one line per release with the files involved.
 - **Service worker cache:** `tribecode-shell-v268` on `main`. Bump it above whatever you find when shell files change.
 - **Flint's language score:** 2365/2391 (98.9%) on `flint_eval_test`; the bar is 98%.
 - **The npm test chain** has about 296 steps; a full run is several hours on the sandbox, so releases use targeted tests plus the smoke set.

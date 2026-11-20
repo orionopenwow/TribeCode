@@ -1,5 +1,16 @@
 # Changelog
 
+## v0.42.0
+- **Your first version is built from your own sentence**: the words, the screens and the colours follow what you typed, even with no AI. "A running club app with a leaderboard" gives runs, km and a Leaderboard tab, not a stock template. Small chips show what TribeCode understood, and "Change it" asks before replacing anything you edited.
+- **One Back button everywhere**: every creator starts with "‹ Dashboard". It saves, then takes you back; Esc and your browser's Back do the same.
+- **Undo and Redo where you look for them**: together, right after the title, with History beside them.
+- **Flint in every creator**: his own column on the right in App Creator, the website designer, Motion Studio, the Launch kit and the first preview. Fold him away and one flame button brings him back (Ctrl J).
+- **Change your first preview by saying it**: "make it dark" or "add a settings screen" changes it right there, with Undo.
+- **What you're making is one line**: under the project's name; click it to edit. The separate vision box is gone. After you change it, you can update the first version to match, only if you say so.
+- **Suggested tasks come from your sentence**: for example "Decide what the leaderboard ranks".
+- **Calmer panels**: fewer tips and boxes in App Creator, a one-line lesson offer, a shorter helpers card.
+- **Phones**: Back, Undo/Redo and the flame fit one row at 390px; the flame opens Flint as a sheet; the vision line edits in place.
+
 ## v0.41.3
 - **A bug button in the top bar**: beside People. One click opens the report box (still Ctrl Shift B too).
 - **Send to TribeCode**: the report box can open your report as a filled-in form on GitHub, for the people who make TribeCode. You see it and press Submit there; nothing is sent by the app itself, and tokens and keys are blanked. A screenshot is saved to Downloads to drag onto it.
