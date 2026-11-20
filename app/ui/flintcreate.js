@@ -209,20 +209,21 @@
     const panel = api.root() && api.root().querySelector('.apc-flint .flint-mount'); if (!panel || !panel.offsetParent) api.note(String(text || ''));   // on a phone the panel is in a sheet: the short note still shows
     return text;
   }
-  function drawApp(api) { const s = api.st(); mounts.forEach(u => { if (!u.el.isConnected) { mounts.delete(u); return; } u.set((s && s.flog) || []); u.chips(appChips(api)); }); }
+  function drawApp(api) { const s = api.st(); mounts.forEach(u => { if (!u.el.isConnected) { mounts.delete(u); return; } u.set((s && s.flog) || []); u.chips(appChips(api).slice(0, 3)); }); }
   function appChips(api) {
     const s = api.st(); if (!s || !s.doc) return [];
     if (s.sel) return ['Change this to…', 'Link this to…', 'Move this up', 'Duplicate this', 'Remove this'];
     return [s.doc.theme.mode === 'dark' ? 'Make it light' : 'Make it dark', 'Add a settings screen', ...(s.doc.screens.some(x => x.blocks.some(b => b.type === 'tabs')) ? ['Rounder'] : ['Add a tab bar']), 'What can you do here?'];
   }
   // the Flint panel, the same chat as in the website designer (TribeFlint.mount). host: the old one-line form, or a sheet pane
-  function appPanel(host, api) {
+  function appPanel(host, api, o) {
     if (!host || !root.TribeFlint || !root.TribeFlint.mount) return null;
-    let box = host;
-    if (host.tagName === 'FORM') { box = document.createElement('section'); box.className = 'apc-flint'; box.id = 'apc-flint'; box.setAttribute('aria-label', 'Flint'); host.replaceWith(box); }
+    let box = host; const col = !!(o && o.column);   // pass 9: his own column in the creator shell
+    if (col) { box.classList.add('apc-flint', 'in-col'); if (!document.getElementById('apc-flint')) box.id = 'apc-flint'; }
+    else if (host.tagName === 'FORM') { box = document.createElement('section'); box.className = 'apc-flint'; box.id = 'apc-flint'; box.setAttribute('aria-label', 'Flint'); host.replaceWith(box); }
     else { host.innerHTML = ''; box = document.createElement('section'); box.className = 'apc-flint in-sheet'; host.appendChild(box); }
     const ui = root.TribeFlint.mount(box, { ctx: 'appcreator', echo: false, run: text => appAsk(text, api).then(() => true), onSay: m => { const s = api.st(); if (s) { flog(api).push(m); drawApp(api); } }, onClear: () => { const s = api.st(); if (s) { s.flog = []; drawApp(api); } },
-      hello: 'Say what to change: “add a settings screen”, “make it dark”, “link this to profile”, “polish it”. No AI needed, and Undo takes back any step.', chips: () => appChips(api), placeholder: 'Tell Flint what to change…' });
+      hello: 'Say what to change, like “make it dark” or “add a settings screen”.', chips: () => appChips(api).slice(0, 3), placeholder: 'Tell Flint what to change…', tools: (o && o.tools) || undefined });
     if (!ui) return null;
     if (!document.getElementById('apc-ask-in')) ui.input.id = 'apc-ask-in';
     extra(ui, 'app', () => appAsk('polish it', api), () => appAsk('make it beautiful', api));

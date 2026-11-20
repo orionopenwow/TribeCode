@@ -108,8 +108,9 @@
     if (o.template && cur) note('Started from the template. Undo brings back your earlier design.');   // pass 4: a short note under the phone, not a toast over the screen
     return st;
   }
-  function close() {
+  function close(fromBack) {
     if (!root) return; clearTimeout(saveT); if (st && st.dirty) save(true);
+    if (shell) { shell.destroy(); shell = null; } if (backDone) { const d = backDone; backDone = null; if (fromBack !== true) d(); }
     if (cw) { cw.detach(); cw = null; } crStrip = null; if (P()) P().stopPlay();
     inertOthers(false); root.remove(); root = null; document.body.classList.remove('apc-open'); if (st) st.open = false;
     document.removeEventListener('keydown', onKey, true);
@@ -178,13 +179,14 @@
     if (root) root.remove();
     root = document.createElement('div'); root.id = 'apc'; root.className = 'apc'; root.setAttribute('role', 'dialog'); root.setAttribute('aria-label', 'App Creator');
     root.innerHTML = `<header class="apc-top">
-        <button class="apc-tb" id="apc-close" aria-label="Close App Creator">${ic('x')}</button>
+        ${CS() ? CS().backHTML('apc-close') : `<button class="apc-tb" id="apc-close" aria-label="Close App Creator">${ic('x')}</button>`}
         <div class="apc-title"><span class="apc-eyebrow">App Creator</span><input id="apc-name" class="apc-name" aria-label="App name" maxlength="48" data-i18n-skip></div>
+        ${CS() ? CS().undoHTML({ undo: 'apc-undo', redo: 'apc-redo', history: 'apc-histc' }, { history: true }) : `<button class="apc-tb" id="apc-undo" aria-label="Undo" title="Undo">${ic('undo')}</button><button class="apc-tb" id="apc-redo" aria-label="Redo" title="Redo">${ic('redo')}</button>`}
         <span class="apc-saved faint" id="apc-saved"></span>
         <span class="cw-row" id="apc-cw" hidden></span>
         <span class="apc-sp"></span>
         <div class="apc-seg" role="group" aria-label="Phone look"><button data-plat="ios">iPhone</button><button data-plat="android">Android</button></div>
-        <button class="apc-tb" id="apc-undo" aria-label="Undo" title="Undo">${ic('undo')}</button><button class="apc-tb" id="apc-redo" aria-label="Redo" title="Redo">${ic('redo')}</button>
+        <span class="apc-sp"></span>
         <button class="btn" id="apc-play">${ic('play')}<span>Play</span></button>
         <div class="apc-menuw"><button class="btn primary" id="apc-export" aria-haspopup="true">Export</button>
           <div class="apc-menu" id="apc-menu" hidden>
@@ -199,13 +201,12 @@
       <div class="apc-body">
         <aside class="apc-left" id="apc-left"><nav class="apc-tabs" role="tablist"><button data-tab="screens" role="tab">Screens</button><button data-tab="add" role="tab">Add</button><button data-tab="look" role="tab">Look</button></nav><div class="apc-pane" id="apc-pane"></div></aside>
         <main class="apc-mid" id="apc-mid"><div class="apc-phone" id="apc-phone"><div class="apc-screenwrap" id="apc-stage"></div></div><div class="apc-bar" id="apc-bar" hidden></div><p class="apc-note" id="apc-note" role="status" hidden></p></main>
-        <aside class="apc-right" id="apc-right"><div id="apc-insp"></div>
-          <form class="apc-ask" id="apc-ask"><span class="apc-eyebrow">Flint</span><input class="input" id="apc-ask-in" placeholder="Add a settings screen, make it dark, rounder…" autocomplete="off"><button class="btn" type="submit">Do it</button><p class="apc-reply faint" id="apc-reply"></p></form></aside>
+        <aside class="apc-right" id="apc-right"><div id="apc-insp"></div></aside>
       </div>
       <nav class="apc-rack" id="apc-rack"><button data-sheet="screens">Screens</button><button data-sheet="add">Add</button><button data-sheet="look">Look</button><button data-sheet="edit">Edit</button><button data-sheet="flint">Flint</button></nav>`;
     document.body.appendChild(root); document.body.classList.add('apc-open'); root.classList.add('has-cr'); root.setAttribute('aria-modal', 'true'); inertOthers(true);
     const $ = s => root.querySelector(s);
-    $('#apc-close').onclick = close;
+    $('#apc-close').onclick = () => close();
     $('#apc-name').oninput = e => { st.doc.name = e.target.value.slice(0, 48); save(); };
     $('#apc-name').onchange = () => commit(st.doc, 'Renamed the app.', true);
     root.querySelectorAll('[data-plat]').forEach(b => b.onclick = () => { if (st.doc.device === 'tablet') { const c = JSON.parse(JSON.stringify(st.doc)); c.device = 'phone'; c.platform = b.dataset.plat; return commit(c, b.dataset.plat === 'android' ? 'Using the Android look.' : 'Using the iPhone look.', true); } apply({ op: 'platform', platform: b.dataset.plat }); });
@@ -217,8 +218,14 @@
     root.querySelectorAll('[data-tab]').forEach(b => b.onclick = () => { st.tab = b.dataset.tab; paintLeft(); });
     root.querySelectorAll('[data-sheet]').forEach(b => b.onclick = () => openSheet(b.dataset.sheet));
     if (P()) P().onBuild();
-    $('#apc-ask').onsubmit = async e => { e.preventDefault(); const i = $('#apc-ask-in'), t = i.value.trim(); if (!t) return; i.value = ''; const r = await ask(t); $('#apc-reply').textContent = r.text || ''; };
-    if (FC() && FC().appPanel) FC().appPanel($('#apc-ask'), fcApi);
+    // pass 9: Flint has his own column on the far right (the shared creator shell), opened again by the flame in the top bar
+    const hc = $('#apc-histc'); if (hc) hc.onclick = () => { if (P() && P().historySheet) P().historySheet(); };
+    if (CS()) {
+      shell = CS().flint(root, { top: $('.apc-top'), before: $('#apc-play'), body: $('.apc-body'), right: $('#apc-right'),
+        mount: (host, tools) => FC() && FC().appPanel ? FC().appPanel(host, fcApi, { column: true, tools }) : null,
+        phone: open => { if (open) openSheet('flint'); else if (st && st.sheet === 'flint') closeSheet(); } });
+      backDone = CS().history(root, () => close(true));
+    }
     document.addEventListener('keydown', onKey, true);
     paint();
     setTimeout(() => { const n = root && root.querySelector('#apc-name'); if (n && !st.mobile) n.blur(); }, 0);
@@ -240,6 +247,7 @@
     root.querySelectorAll('[data-plat]').forEach(b => b.classList.toggle('on', st.doc.platform === b.dataset.plat));
     $('#apc-play').classList.toggle('primary', st.mode === 'play'); $('#apc-play').innerHTML = st.mode === 'play' ? `${ic('stop')}<span>${tr('Stop')}</span>` : `${ic('play')}<span>${tr('Play')}</span>`;
     root.classList.toggle('apc-playing', st.mode === 'play');
+    const ub = $('#apc-undo'), rb = $('#apc-redo'); if (ub) ub.disabled = !st.undo.length; if (rb) rb.disabled = !st.redo.length;
     if (P()) P().paintTop();
   }
 
@@ -574,6 +582,8 @@
   // ---------- Flint (no AI): sentences -> the same edits ----------
   // pass 4 (flintcreate.js): the Flint panel, the level badge, Undo on every reply, the local model for loose requests, Polish it
   const FC = () => window.TribeFlintCreate;
+  const CS = () => window.TribeCreatorShell;
+  let shell = null, backDone = null;
   const fcApi = { st: () => st, core: () => A(), apply: op => apply(op), commit: (d, say) => commit(d, say || ''), undo: () => undo(), redo: () => redo(), paint: () => paint(), flint: step => flint(step), note: t => note(t), root: () => root, pid: () => (st && st.pid) || '', close: () => close() };
   async function ask(text) {
     if (FC() && FC().appAsk && st) return FC().appAsk(text, fcApi);

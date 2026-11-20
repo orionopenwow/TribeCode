@@ -42,7 +42,7 @@
           <button data-m="size" class="apc-m-phone"><b>Phone or tablet</b><small id="apc-size-l"></small></button>
           <button data-m="keys" class="apc-m-desk"><b>Keyboard shortcuts</b><small>Press ? any time.</small></button>
         </div></span>`;
-    (r.querySelector('#apc-redo') || sp).after(wrap);   // after Undo and Redo
+    (r.querySelector('.apc-top > .cs-flame') || r.querySelector('#apc-play') || sp).before(wrap);   // pass 9: on the right, before the flame and Play (Undo and Redo sit by the title)
     r.querySelector('#apc-mapb').onclick = () => toggleMap();
     r.querySelector('#apc-cmb').onclick = () => commentMode(!st().cmode);
     r.querySelector('#apc-more').onclick = e => { e.stopPropagation(); const m = r.querySelector('#apc-moremenu'); m.hidden = !m.hidden; const x = r.querySelector('#apc-menu'); if (x) x.hidden = true; paintTop(); };
