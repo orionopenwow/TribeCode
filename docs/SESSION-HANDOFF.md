@@ -4,8 +4,8 @@ Updated 2026-11-19 by the session that released v0.33.0 to v0.36.0, after catchi
 
 ## Where things stand
 
-- **Released:** v0.41.0 is on `main` and `dev` (commit `96e1762`), with Windows, Mac and Linux installers published. `CHANGELOG.md` has every release in user terms; `docs/CONTEXT.md` has one line per release with the files involved.
-- **Service worker cache:** `tribecode-shell-v264` on `main`. Bump it above whatever you find when shell files change.
+- **Released:** v0.41.1 is on `main` and `dev` (commit `1d7dd74`, 2026-11-19), with Windows, Mac and Linux installers published. `CHANGELOG.md` has every release in user terms; `docs/CONTEXT.md` has one line per release with the files involved.
+- **Service worker cache:** `tribecode-shell-v268` on `main`. Bump it above whatever you find when shell files change.
 - **Flint's language score:** 2365/2391 (98.9%) on `flint_eval_test`; the bar is 98%.
 - **The npm test chain** has about 296 steps; a full run is several hours on the sandbox, so releases use targeted tests plus the smoke set.
 - **Two-step sign-in and payments are built but off.** They turn on with `TRIBE_TWO_STEP=1` and `TRIBE_PAYMENTS=1` (or the host-only settings in `docs/ACCOUNTS.md` and `docs/PREMIUM.md`). The owner will say when.
@@ -15,7 +15,7 @@ Updated 2026-11-19 by the session that released v0.33.0 to v0.36.0, after catchi
 
 | Branch | What it is | State |
 |---|---|---|
-| `fix/p7-cache` | v0.41.1: updates always show (cache cleared after an update), offline messages wait and send, an offline line and dot, full-colour project icons, a DM header fix. Contains `fix/p7-offline`. | Version bumped, not merged into `main`, not released. Its owner (the other session) should merge and release it, or the owner should say who does. |
+| `fix/p7-cache` | v0.41.1: updates always show, offline messages, the offline line and dot. | Merged and released in v0.41.1. Nothing waiting. |
 | `feat/docs-start` | One commit from 2026-11-06. | Old; check before using. |
 
 The four branches listed here on 2026-11-13 (`feat/real-tribe`, `feat/design-site2`, `feat/company3`, `feat/chat-invite-ui`) were finished and released in v0.38.0.
