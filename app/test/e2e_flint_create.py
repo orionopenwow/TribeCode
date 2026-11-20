@@ -132,8 +132,8 @@ def main():
             # ---- one Flint: the same panel as the website designer
             pg.wait_for_selector("#apc-flint .flint-mount[data-flctx=appcreator] #apc-ask-in", timeout=5000)
             assert pg.locator("#apc form.apc-ask").count() == 0, "the one-line box is gone"
-            assert pg.locator("#apc-flint .fl-chip").count() >= 4, "chips"
-            assert pg.locator("#apc-flint .flm-ctx").inner_text().strip().lower() == "app"
+            assert pg.locator("#apc-flint .fl-chip").count() in (1, 2, 3), "chips: three at most (pass 9)"
+            assert pg.locator("#apc-flint .flm-ctx").text_content().strip().lower() == "app"
             assert pg.locator("#apc-flint [data-fc-act=polish]").count() == 1 and pg.locator("#apc-flint [data-fc-act=beauty]").count() == 0, "no AI in the tribe: Polish it only"
             assert "stronger AI" in pg.locator("#apc-flint [data-fc-line]").text_content(), "one honest line where Make it beautiful would be"
             pg.click("#apc-flint [data-fc-tip]"); assert pg.locator("#apc-flint [data-fc-line]").is_visible(), "pass 5: the line sits behind the small info button"
@@ -147,7 +147,7 @@ def main():
             pg.locator("#apc-flint .fl-msg.fl .fl-act", has_text="Undo").last.click()
             pg.wait_for_function(f"TribeAppCreator.doc().screens.length === {n0}", timeout=4000)
             # a chip runs
-            pg.locator("#apc-flint .fl-chip", has_text="What can you do here?").click()
+            pg.locator("#apc-flint .fl-chip").first.wait_for(); pg.fill("#apc-ask-in", "What can you do here?"); pg.press("#apc-ask-in", "Enter")   # pass 9: three chips at most, so this one is typed
             pg.wait_for_function(LAST + ".text.includes('Every step has an Undo')", timeout=4000)
             # ---- the selected thing
             first = doc(pg)["screens"][0]; hd = first["blocks"][0]
