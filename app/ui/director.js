@@ -224,7 +224,9 @@
     if (!liveOn()) return;
     const el = elOf(target);
     if (!spotEl || !spotEl.isConnected) { spotEl = document.createElement('div'); spotEl.className = 'dt-spot'; spotEl.id = 'dt-spot'; spotEl.setAttribute('aria-hidden', 'true'); document.body.appendChild(spotEl); }
+    spotEl._el = null; spotEl._want = typeof target === 'string' ? target : null;   // pass 8: e2e_demo_walk.py judges what the spotlight is on
     if (!el || !el.isConnected || !el.getClientRects().length) { spotEl.classList.add('wide'); return; }   // feat/demo-auto: no target, no dim (the old spot used to stay on a stale box)
+    spotEl._el = el;
     const r = el.getBoundingClientRect(), x = Math.max(4, r.left - pad), y = Math.max(4, r.top - pad);
     const w = Math.min(innerWidth - x - 4, r.width + pad * 2), h = Math.min(innerHeight - y - 4, r.height + pad * 2);
     spotEl.classList.remove('wide'); spotEl.style.transform = `translate(${Math.round(x)}px, ${Math.round(y)}px)`; spotEl.style.width = Math.round(w) + 'px'; spotEl.style.height = Math.round(h) + 'px';
@@ -770,9 +772,23 @@
   // Flint flies to the part of the screen this chapter is about, rings it (everything else dims a little) and says, in
   // a sentence, what it is and what you'd do there. He waits about as long as it takes to read (pause holds him), or
   // until you press "Show me".
+  // pass 8: a chapter's first target is in the app (the sidebar, the dashboard). A full-screen page the chapter before
+  // left open (Preview with the game, the website designer, App Creator) would sit on it, so Flint pointed at nothing.
+  async function uncover(sel) {
+    if (!sel) return;
+    const over = [['.pvw, #pvw', () => window.TribePreview && window.TribePreview.close()], ['#wdz', () => window.TribeSiteDesigner && window.TribeSiteDesigner.close && window.TribeSiteDesigner.close()], ['#apc', () => window.TribeAppCreator && window.TribeAppCreator.close && window.TribeAppCreator.close()]];
+    let shut = false;
+    for (const [root, close] of over) {
+      const r = $(root); if (!r || !r.getClientRects().length) continue;
+      if ([...document.querySelectorAll(sel)].some(e => r.contains(e))) continue;   // the target lives inside it
+      try { close(); shut = true; } catch {}
+    }
+    if (shut) await real(350);
+  }
   async function narrate(s, n) {
     const G = window.TribeFlintGuide;
     if (fast || quiet || !G || !s.flint) return;
+    await uncover(s.flint[0]);
     if (guided) return guidedStep(s, n);
     if (!opts0.classic) {   // v0.22 default: Flint shows and tells, nothing to click
       const [sel0, text0] = s.flint; const el0 = sel0 ? await waitFor(() => [...document.querySelectorAll(sel0)].find(e => e.getClientRects().length && e.getBoundingClientRect().width > 0), 2000) : null;   // watchdog: 2 s, then on without a spotlight
@@ -801,6 +817,7 @@
   function waitDone(t, isDone) { return new Promise((res, rej) => { const iv = setInterval(() => { if (t !== token || !running) { clearInterval(iv); rej(ABORT); } else if (isDone()) { clearInterval(iv); res(); } }, 80); }); }
   async function guidedStep(s, n) {
     const G = window.TribeFlintGuide, [sel, text] = s.flint;
+    await uncover(sel);
     const el = sel ? [...document.querySelectorAll(sel)].find(e => e.getClientRects().length && e.getBoundingClientRect().width > 0) : null;
     const t = token; let done = false;
     narrating = true; document.body.classList.add('dt-narr');
@@ -971,6 +988,7 @@
     _test: {
       log: () => log.slice(),
       state: () => ({ running, paused, done, speed: speedN, idx, id: cur && cur.id, scenes: list.map(s => s.id), elapsed: Math.round(vt), total }),
+      rush: n => { if (running && !fast) speedN = n; },   // pass 8: the narrated tour, quicker, for e2e_demo_walk.py
     },
   };
 
