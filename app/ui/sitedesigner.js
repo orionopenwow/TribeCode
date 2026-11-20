@@ -343,13 +343,12 @@ html[data-dev=phone] .ehide-phone,html[data-dev=tablet] .ehide-tablet,html[data-
     const P = S().PRESETS;
     root.innerHTML = `
       <header class="wdz-top">
-        <button type="button" class="btn ghost sm wdz-back" data-wdz="close" aria-label="Back" title="Back">${IC.back}<span class="wdz-lbl">Back</span></button>
+        <button type="button" class="cs-back wdz-back" data-wdz="close" data-cs="back" aria-label="Back to the dashboard" title="Back to the dashboard">${IC.back}<span>Dashboard</span></button>
         <b class="wdz-title"><span class="wdz-eyebrow">Website</span><span id="wdz-name"></span></b>
+        <span class="cs-undo" role="group" aria-label="Undo and redo"><button type="button" class="cs-ub" data-wdz="undo" title="Undo (Ctrl Z)" aria-label="Undo">${IC.undo}</button><button type="button" class="cs-ub" data-wdz="redo" title="Redo (Ctrl Shift Z)" aria-label="Redo">${IC.redo}</button><button type="button" class="cs-ub cs-hist" data-wdz="history" id="wdz-histc" title="History: go back to any step" aria-label="History" aria-haspopup="dialog"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button></span>
         <nav class="wdz-pages" id="wdz-pages" aria-label="Pages"></nav>
         <span class="wdz-sp"></span>
         <span class="wdz-saved" id="wdz-saved" aria-live="polite"></span>
-        <button type="button" class="btn ghost sm wdz-ic" data-wdz="undo" title="Undo (Ctrl Z)" aria-label="Undo">${IC.undo}</button>
-        <button type="button" class="btn ghost sm wdz-ic" data-wdz="redo" title="Redo (Ctrl Shift Z)" aria-label="Redo">${IC.redo}</button>
         <span class="wdz-devs" role="group" aria-label="Preview size"><button type="button" class="btn ghost sm" data-dev="desktop" aria-pressed="true" title="Desktop (1)">${ic('monitor')}<span class="wdz-lbl">Desktop</span></button><button type="button" class="btn ghost sm" data-dev="tablet" aria-pressed="false" title="Tablet (2)">${ic('tablet')}<span class="wdz-lbl">Tablet</span></button><button type="button" class="btn ghost sm" data-dev="phone" aria-pressed="false" title="Phone (3)">${ic('phone')}<span class="wdz-lbl">Phone</span></button></span>
         <span class="wdz-zoom" role="group" aria-label="Zoom"><button type="button" class="btn ghost sm wdz-ic" data-wdz="zoomout" title="Zoom out (Ctrl −)" aria-label="Zoom out">${IC.minus}</button><button type="button" class="btn ghost sm wdz-zv" data-wdz="zoom100" id="wdz-zoomv" title="Back to 100% (Ctrl 0)" aria-label="Zoom: back to 100%">100%</button><button type="button" class="btn ghost sm wdz-ic" data-wdz="zoomin" title="Zoom in (Ctrl +)" aria-label="Zoom in">${IC.plus}</button><button type="button" class="btn ghost sm wdz-zfit" data-wdz="zoomfit" title="Fit the whole width in the window (Shift 1)">Fit</button></span>
         <button type="button" class="btn sm wdz-hide-phone" data-wdz="comment" id="wdz-cmode" aria-pressed="false" title="Click a section to leave a comment (C)">Comment<span class="wdz-n" id="wdz-cn" hidden></span></button>
@@ -391,7 +390,6 @@ html[data-dev=phone] .ehide-phone,html[data-dev=tablet] .ehide-tablet,html[data-
           <div class="wdz-insp" id="wdz-insp"></div>
         </aside>
         <aside class="wdz-fl" id="wdz-fl" aria-label="Flint">
-          <button type="button" class="wdz-fl-rail" data-wdz="flint" aria-controls="wdz-flint" aria-expanded="true" title="Flint (Ctrl J)">${FLINT_IC}<span>Flint</span></button>
           <button type="button" class="wdz-fl-grab" data-wdz="flint-sheet" aria-label="Show Flint's replies" aria-expanded="false"><span></span></button>
           <section class="wdz-flint" id="wdz-flint" aria-label="Flint"></section>
         </aside>
@@ -429,7 +427,6 @@ html[data-dev=phone] .ehide-phone,html[data-dev=tablet] .ehide-tablet,html[data-
     // in a box (Flint's own box keeps its keys to itself, so these are caught on the way down)
     document.addEventListener('keydown', e => {
       if (!root || root.hidden || !st || layered() || !(e.ctrlKey || e.metaKey) || e.altKey) return;
-      if (e.code === 'KeyJ' && !e.shiftKey) { e.preventDefault(); e.stopPropagation(); return flintDock(); }
       if (e.code === 'KeyF' && !e.shiftKey) { e.preventDefault(); e.stopPropagation(); return findPanel(true); }
     }, true);
     // pass 4 polish: Tab stays inside the designer, the same rule as App Creator. The app behind is not made inert (the
@@ -1353,28 +1350,17 @@ html[data-dev=phone] .ehide-phone,html[data-dev=tablet] .ehide-tablet,html[data-
   // (remembered per person) and opens again with one click or Ctrl J. In a narrower window (under 1440) he opens as a
   // drawer over the page, still left of the panel; on a phone he is a sheet at the bottom whose box to type in is
   // always there, and his replies slide up above it.
-  const FLKEY = 'tribecode.sitedesigner.flint';
-  const flMode = () => innerWidth <= 820 ? 'phone' : innerWidth < 1440 ? 'narrow' : 'wide';
-  let flLast = '';
+  // pass 9: the dock itself is the creators' shared shell (app/ui/creatorshell.js): one flame in the top bar opens him
+  // again (Ctrl J), and the fold is remembered once for every creator. The rail is gone.
+  let shell = null;
   function flintInit() {
-    if (!root) return; const m = flMode(); flLast = m;
-    root.classList.remove('fl-open', 'fl-rail', 'fl-sheet');
-    if (m === 'phone') { flintAria(false); return; }
-    let pref = 'open'; try { pref = localStorage.getItem(FLKEY) || 'open'; } catch {}
-    const open = m === 'wide' && pref !== 'rail'; root.classList.add(open ? 'fl-open' : 'fl-rail'); flintAria(open);
+    if (!root) return;
+    if (shell) return shell.init();
+    const CS = window.TribeCreatorShell; if (!CS) return;
+    shell = CS.flint(root, { top: root.querySelector('.wdz-top'), before: root.querySelector('.wdz-dl'), aside: root.querySelector('#wdz-fl'), cls: { open: 'fl-open', closed: 'fl-rail', sheet: 'fl-sheet' },
+      ui: () => fui, onDock: (open) => { const g = root.querySelector('.wdz-fl-grab'); if (g) g.setAttribute('aria-expanded', String(!!open)); if (st && st.zoom === 'fit') applyZoom(); } });
   }
-  function flintAria(open) { const r = root && root.querySelector('.wdz-fl-rail'), g = root && root.querySelector('.wdz-fl-grab'); if (r) { r.setAttribute('aria-expanded', String(!!open)); r.title = open ? tr('Hide Flint (Ctrl J)') : tr('Flint (Ctrl J)'); } if (g) g.setAttribute('aria-expanded', String(!!open)); }
-  function flintDock(open, o = {}) {
-    if (!root) return; const m = flMode();
-    if (m === 'phone') { if (open == null) open = !root.classList.contains('fl-sheet'); root.classList.toggle('fl-sheet', !!open); flintAria(open); if (open && fui) setTimeout(() => { const b = fui.el && fui.el.querySelector('.flm-thread'); if (b) b.scrollTop = b.scrollHeight; }, 30); return; }
-    if (open == null) open = !root.classList.contains('fl-open');
-    root.classList.toggle('fl-open', !!open); root.classList.toggle('fl-rail', !open); flintAria(open);
-    if (m === 'wide' && o.remember !== false) try { localStorage.setItem(FLKEY, open ? 'open' : 'rail'); } catch {}
-    if (open && o.focus !== false && fui) fui.focus();
-    else if (!open && root.contains(document.activeElement) && document.activeElement.closest('.wdz-fl')) { const r = root.querySelector('.wdz-fl-rail'); if (r) r.focus(); }
-    if (st && st.zoom === 'fit') applyZoom();
-  }
-  addEventListener('resize', () => { if (!root || root.hidden) return; if (flMode() !== flLast) flintInit(); });
+  function flintDock(open, o = {}) { if (!root) return; if (!shell) flintInit(); if (shell) shell.dock(open, innerWidth <= 820 ? Object.assign({ focus: false }, o) : o); }
 
   // ---------- pass 5: find and replace words on every page ----------
   const fr = { q: '', r: '', case: false, whole: false, at: 0 };

@@ -48,3 +48,18 @@
 .apc-flint.in-col { margin: 0; padding: 0; border: 0; max-height: none; flex: 1 1 auto; }
 .apc-top .cs-undo { margin-left: 4px; }
 @media (max-width: 820px) { .apc-top .cs-hist { display: none; } .apc-top .cs-back span { display: none; } .apc-top .cs-back { padding: 0; width: 40px; justify-content: center; } }
+
+/* ---- the website designer in the shell: no rail; the flame in the top bar opens Flint again ---- */
+@media (min-width: 821px) {
+  #wdz.fl-rail .wdz-body { grid-template-columns: 200px minmax(0, 1fr) 270px 0; }
+  #wdz.fl-rail .wdz-fl { border-left: 0; }
+}
+@media (max-width: 1439px) and (min-width: 821px) {
+  #wdz .wdz-body, #wdz.fl-rail .wdz-body, #wdz.fl-open .wdz-body { grid-template-columns: 210px minmax(0, 1fr) 280px 0; }
+  #wdz .wdz-fl { border-left: 0; }
+  #wdz.fl-open .wdz-fl > .wdz-flint { right: 281px; }
+}
+#wdz .wdz-top .cs-back, #wdz .wdz-top .cs-undo, #wdz .wdz-top > .cs-flame { flex: 0 0 auto; min-width: max-content; }
+@media (max-width: 1180px) and (min-width: 821px) { #wdz .wdz-top .cs-back span { display: none; } #wdz .wdz-top .cs-back { padding: 0 8px; } }
+.wdz-top .cs-undo .cs-ub svg { width: 16px; height: 16px; }
+@media (max-width: 820px) { .wdz-top .cs-back span, .wdz-top .cs-hist { display: none; } .wdz-top .cs-back { width: 40px; padding: 0; justify-content: center; } .wdz-top > .cs-flame { display: none; } }

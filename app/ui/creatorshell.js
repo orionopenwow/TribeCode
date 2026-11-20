@@ -53,7 +53,8 @@
     flame.innerHTML = FLAME; flame.setAttribute('aria-controls', host.id || ''); flame.setAttribute('aria-label', tr('Ask Flint'));
     if (o.top) { if (o.before && o.before.parentElement) o.before.parentElement.insertBefore(flame, o.before); else o.top.appendChild(flame); }
     const fold = [{ title: tr('Hide Flint (Ctrl J)'), html: CHEV_R, attrs: { 'data-fl-hide': '1' }, fn: () => dock(false) }];
-    const mountNow = () => { if (ui || !o.mount) return ui; try { ui = o.mount(host, fold) || null; } catch { ui = null; } return ui; };
+    const mountNow = () => { if (ui) return ui; if (o.ui) return o.ui(); if (!o.mount) return null; try { ui = o.mount(host, fold) || null; } catch { ui = null; } return ui; };
+    const U = () => ui || (o.ui ? o.ui() : null);
     const isOpen = () => root.classList.contains(mode(o.wide) === 'phone' ? cls.sheet : cls.open);
     function aria(open) {
       flame.setAttribute('aria-expanded', String(!!open)); flame.classList.toggle('on', !!open);
@@ -78,21 +79,21 @@
         if (open == null) open = !root.classList.contains(cls.sheet);
         if (o.phone) { o.phone(!!open); aria(false); return; }
         mountNow(); root.classList.toggle(cls.sheet, !!open); aria(open);
-        if (open && ui) setTimeout(() => { const b = ui.el && ui.el.querySelector('.flm-thread'); if (b) b.scrollTop = b.scrollHeight; if (opt.focus !== false) ui.focus(); }, 30);
+        if (open && U()) setTimeout(() => { const u = U(), b = u.el && u.el.querySelector('.flm-thread'); if (b) b.scrollTop = b.scrollHeight; if (opt.focus === true) u.focus(); }, 30);
         if (o.onDock) o.onDock(!!open, m); return;
       }
       if (open == null) open = !root.classList.contains(cls.open);
       if (open) mountNow();
       root.classList.toggle(cls.open, !!open); root.classList.toggle(cls.closed, !open); aria(open); place();
       if (m === 'wide' && opt.remember !== false) try { localStorage.setItem(KEY, open ? 'open' : 'closed'); } catch {}
-      if (open && opt.focus !== false && ui) ui.focus();
+      if (open && opt.focus !== false && U()) U().focus();
       else if (!open && aside.contains(document.activeElement)) flame.focus();
       if (o.onDock) o.onDock(!!open, m);
     }
     flame.onclick = e => { e.stopPropagation(); dock(); };
     const onResize = () => { if (!root.isConnected) return destroy(); if (root.hidden) return; if (mode(o.wide) !== last) init(); else place(); };
     addEventListener('resize', onResize);
-    const ctl = { dock, init, isOpen, flame, aside, host, get ui() { return ui || mountNow(); }, root, destroy };
+    const ctl = { dock, init, isOpen, flame, aside, host, fold, get ui() { return U() || mountNow(); }, root, destroy };
     function destroy() { removeEventListener('resize', onResize); live.delete(ctl); }
     live.add(ctl); init();
     return ctl;
@@ -100,7 +101,7 @@
   // Ctrl J: show or hide Flint in the creator that is on top, even while typing
   addEventListener('keydown', e => {
     if (!(e.ctrlKey || e.metaKey) || e.altKey || e.shiftKey || String(e.key).toLowerCase() !== 'j') return;
-    let top = null; for (const c of live) { if (!c.root.isConnected) { live.delete(c); continue; } if (!c.root.hidden && c.root.offsetParent !== null || getComputedStyle(c.root).position === 'fixed' && !c.root.hidden) top = c; }
+    let top = null; for (const c of live) { if (!c.root.isConnected) { live.delete(c); continue; } if (!c.root.hidden && c.root.getClientRects().length) top = c; }
     if (!top) return; e.preventDefault(); e.stopPropagation(); top.dock();
   }, true);
 
