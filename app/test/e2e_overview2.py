@@ -60,7 +60,7 @@ def main():
             assert host.eval_on_selector_all("#pj-check .ock-card", "els => els.filter(e => e.offsetParent).length") == 1
             # pass 6: See all steps opens the whole list in a sheet; the dashboard keeps the one compact step
             host.click("#pj-check-all"); host.wait_for_selector("#pj-steps .ock-row", timeout=10000)
-            assert host.locator("#pj-steps .ock-row").count() == 5   # vision, task, AI, where it lives, share
+            assert host.locator("#pj-steps .ock-row:not(.ock-flint)").count() == 5   # vision, task, AI, where it lives, share (Flint's own setup row is extra)
             host.keyboard.press("Escape"); host.wait_for_selector("#pj-steps", state="detached", timeout=5000)
             assert host.locator("#pj-living").count() == 0, "no Living update before the tribe has begun"
             assert host.locator("#pj-check .ock-hero-t, #pj-check [data-ock-vis]").count() == 0, "no big intro and no inline vision box"
