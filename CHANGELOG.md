@@ -1,5 +1,10 @@
 # Changelog
 
+## v0.41.3
+- **A bug button in the top bar**: beside People. One click opens the report box (still Ctrl Shift B too).
+- **Send to TribeCode**: the report box can open your report as a filled-in form on GitHub, for the people who make TribeCode. You see it and press Submit there; nothing is sent by the app itself, and tokens and keys are blanked. A screenshot is saved to Downloads to drag onto it.
+- **Phones**: the report box's buttons wrap cleanly at 390px.
+
 ## v0.41.2
 - **Demo tour**: a chapter now closes the full-screen Preview or designer the chapter before left open, so its highlight is no longer hidden behind it. Highlights pick the control that is actually on screen.
 - **Phones**: the demo tour no longer ends early when it closes Preview, and the Preview chapter no longer points at a row phones don't have.
