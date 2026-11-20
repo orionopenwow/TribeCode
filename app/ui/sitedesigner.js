@@ -297,7 +297,7 @@ html[data-dev=phone] .ehide-phone,html[data-dev=tablet] .ehide-tablet,html[data-
     return null;
   }
   async function useTemplate(id, first, o = {}) {
-    const c = await templateCfg(id); if (!c) { say(`I could not load the ${id} template. Try another, or start blank.`); return false; }
+    const c = await templateCfg(id, o.exact); if (!c) { say(`I could not load the ${id} template. Try another, or start blank.`); return false; }
     if (o.name) c.name = o.name;
     st.unfilled = JSON.stringify(c);
     let filled = c, used = [];

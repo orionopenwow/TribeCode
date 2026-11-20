@@ -216,7 +216,7 @@ add('club', 'Club or group', 'For a running club, a choir, a book group: when yo
 });
 
 // ---------------------------------------------------------------- portfolio and personal
-add('portfolio', 'Portfolio', 'For designers, illustrators and studios: one sentence about what you do, then each project with its picture and its story.', 'Portfolio', 'portfolio', ['portfolio', 'designer', 'illustrator', 'studio', 'case study', 'work', 'freelance', 'creative'], {
+add('portfolio', 'Portfolio', 'For designers, illustrators and studios: one sentence about what you do, then each project with its picture and its story.', 'Portfolio', 'portfolio', ['portfolio', 'designer', 'illustrator', 'studio', 'agency', 'case study', 'work', 'freelance', 'creative'], {
   name: 'Ines Castellano', seo: { description: 'Ines Castellano designs identities and packaging for small food and drink makers. Selected work, and how to hire her.' },
   theme: theme(K('#FAFAF6', '#171717', '#5B5B55', '#EFEEE7', '#DAD8CD', '#1F4BD8'), 'Instrument Serif', 'Inter', 0, { dw: true, space: 'roomy' }),
   pages: [{ title: 'Home', blocks: [
