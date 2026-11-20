@@ -77,6 +77,12 @@
     const me = C.state().me || {};
     if (me.role === 'agent' || me.role === 'spectator' || me.guest) { el.innerHTML = `<p class="io-calm">${me.role === 'spectator' ? 'Spectators watch along, so they can\'t bring an AI in.' : 'Guests can\'t bring an AI in.'}</p>`; return; }
     copiedCode = false; made = {}; target = {}; ask = null; showSetup = {};
+    // feat/easy-start: a tribe that lives in this browser has no address an AI could reach yet: say so, with the one button
+    if (window.TribeOffline && window.TribeOffline.solo && window.TribeOffline.solo()) {
+      el.innerHTML = `<div class="io-calm"><p>Your own AI (Claude, ChatGPT, Cursor and others) joins through a link, which works once this tribe is online. Flint, the built-in helper, already works here.</p><button type="button" class="btn primary" id="ia-online">Put this tribe online</button></div>`;
+      el.querySelector('#ia-online').onclick = () => { if (window.TribeInvite && window.TribeInvite.close) window.TribeInvite.close(); if (window.TribeShare) window.TribeShare.online('agents'); };
+      return;
+    }
     el.innerHTML = '<p class="lead">Getting it ready…</p>';
     try { st = await C.api(API); } catch (e) { if (alive()) { if (window.TribeInvite && window.TribeInvite.cant) window.TribeInvite.cant(el, e, () => mount(el, opts)); else el.innerHTML = `<p class="io-calm">${esc(e.message)}</p>`; } return; }   // p10: the reason and the one fix
     if (!alive() || root !== el) return;

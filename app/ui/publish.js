@@ -59,7 +59,7 @@
     const agent = me().role === 'agent';
     const warns = ch.findings.filter(f => f.level === 'warn'), blocks = ch.findings.filter(f => f.level === 'block');
     const phone = !!st.phone;   // a tribe that lives on this phone: no play link (that needs a computer), the rest works
-    s.body.querySelector('.pb-sub').textContent = phone ? T('A play link needs the tribe on a computer. Everything below works from this phone.') : cur ? `Live at its play link · version ${cur.version}. Update it any time.` : 'Anyone with the link can open it, on any phone or computer. No account needed.';
+    s.body.querySelector('.pb-sub').textContent = phone ? T(matchMedia('(max-width: 820px)').matches || /Android|iPhone|iPad/i.test(navigator.userAgent || '') ? 'A play link needs the tribe on a computer. Everything below works from this phone.' : 'A quick play link needs the tribe online. Everything below works right here, in this browser.') : cur ? `Live at its play link · version ${cur.version}. Update it any time.` : 'Anyone with the link can open it, on any phone or computer. No account needed.';
     const chk = !ch.findings.length ? `<p class="pb-ok">✓ Safety check: ${ch.files} file${ch.files === 1 ? '' : 's'}, no secrets or risky code found.</p>`
       : `<div class="pb-check"><p class="pb-check__h">${blocks.length ? `✕ ${blocks.length} thing${blocks.length > 1 ? 's' : ''} must be fixed before this goes public` : `⚠ ${warns.length} warning${warns.length > 1 ? 's' : ''} to look over`}</p><ul class="pb-fl">${ch.findings.map(findingRow).join('')}</ul></div>`;
     $('#pb-body').innerHTML = `${cur ? live(cur) : ''}${chk}

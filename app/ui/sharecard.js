@@ -115,7 +115,7 @@
         const r = await L().host.computer({ step: t => progress(t), noReload: true });
         if (r && r.server && r.token) {
           progress(T('Done. Opening it…'));
-          if (feature === 'friends') try { sessionStorage.setItem('tribecode.invite.after', 'friend'); } catch {}
+          if (feature === 'friends' || feature === 'agents') try { sessionStorage.setItem('tribecode.invite.after', feature === 'agents' ? 'claude' : 'friend'); } catch {}   // back to what they were doing: the invite sheet opens again in the tribe's new home
           setTimeout(() => location.reload(), 250);
           return { ok: true };
         }
