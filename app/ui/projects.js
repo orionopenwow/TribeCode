@@ -382,7 +382,8 @@ ${canEdit && !started ? `      <section class="pj-context" id="pj-context"><div 
     const grow = () => { ta.style.height = 'auto'; ta.style.height = Math.min(220, ta.scrollHeight + 2) + 'px'; };
     grow(); ta.focus(); ta.setSelectionRange(ta.value.length, ta.value.length);
     let done = false;
-    const finish = () => { naming = false; lastOv = ''; overview(); };
+    // a redraw that is overtaken by a list refresh paints nothing, so redraw until the field is gone
+    const finish = async () => { naming = false; for (let i = 0; i < 5 && wrap.isConnected; i++) { lastOv = ''; try { await overview(); } catch {} } };
     const save = async () => {
       if (done) return; const text = ta.value.replace(/[ \t]+\n/g, '\n').trim();
       if (text === (cur || '').trim()) { done = true; return finish(); }
@@ -395,7 +396,7 @@ ${canEdit && !started ? `      <section class="pj-context" id="pj-context"><div 
           await C.api('/vision', { method: 'PUT', body: { text: `# ${p.name}\n\n${text}\n${rest}` } });
         }
         await C.api(`/projects/${encodeURIComponent(p.id)}`, { method: 'PATCH', body: { bio: text.replace(/\s+/g, ' ').slice(0, 200) } });
-        await refresh();
+        p.bio = text.replace(/\s+/g, ' ').slice(0, 200); await refresh();
         if (canVis && text && window.TribeFirstLook && window.TribeFirstLook.last && window.TribeFirstLook.last(p.id)) matchOffer = { pid: p.id, text };   // offered once, never done on its own
       } catch (e) { toast(e.message, 'err'); }
       finish();

@@ -90,7 +90,7 @@ def main():
             # ---- the composer opens from the checklist with prefilled prompts
             host.evaluate("TribeApp.show('home')")
             host.wait_for_selector("#pj-check [data-ck=vision]")
-            host.evaluate("TribeAssist.vision(TribeProjects.cur(), { host: true, done: () => TribeProjects.refresh() })")   # pass 9: no button opens the composer; it is tested directly
+            host.evaluate("TribeAssist.vision(TribeProjects.cur(), { host: true, done: () => TribeProjects.overview() })")   # pass 9: no button opens the composer; it is tested directly
             host.wait_for_selector(".av-wrap #av-gist")
             what = host.input_value("#av-gist")
             assert pname in what, what
@@ -113,7 +113,7 @@ def main():
             ag = ok(api("/agents", "POST", token=htok, project=pid), "connect claude")
             atok, aid = ag["token"], ag["agent"]["id"]
             host.wait_for_function("(TribeClient.state().members || []).some(m => m.role === 'agent')")
-            host.evaluate("TribeAssist.vision(TribeProjects.cur(), { host: true, done: () => TribeProjects.refresh() })")   # pass 9: no button opens the composer; it is tested directly
+            host.evaluate("TribeAssist.vision(TribeProjects.cur(), { host: true, done: () => TribeProjects.overview() })")   # pass 9: no button opens the composer; it is tested directly
             host.wait_for_selector(".av-imp[data-helper=claude]:not([disabled])")
             host.click(".av-imp[data-helper=claude]")
             wait_text(host, "#av-status", "Waiting for your AI")
