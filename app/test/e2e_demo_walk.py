@@ -28,6 +28,7 @@ IN_DEMO = "window.TribeOffline && TribeOffline.mode() === 'showcase' && window.T
 CLEAN = "(() => { try { if (window.TribeFlintPage && document.querySelector('.fpg')) TribeFlintPage.close(); if (window.TribeFlint) TribeFlint.closeFull(); if (window.TribeSettings) TribeSettings.close(); document.querySelectorAll('.fls-ring, .fls-tip').forEach(e => e.remove()); } catch (e) {} })()"
 SPOT = r"""() => { const s = document.querySelector('#dt-spot'); if (!s) return null; if (s.classList.contains('wide') || !s._el) return { want: s._want || null, v: s._want ? 'no target' : 'none asked' };
   const d = el => !el ? 'nothing' : (el.id ? '#' + el.id : el.tagName.toLowerCase() + (el.className && typeof el.className === 'string' ? '.' + el.className.trim().split(/\s+/).slice(0, 2).join('.') : ''));
+  if (getComputedStyle(s._el).pointerEvents === 'none') return { want: s._want || d(s._el), v: s._el.getClientRects().length ? 'ok' : 'no size' };   // a drawn caret or cursor: nothing to click, only to see
   return { want: s._want || d(s._el), v: window.__ringJudge(s._el, null, 0, d) }; }"""
 NEEDS = "[...document.querySelectorAll('.toast, .ui-sheet, .modal, [class*=needs]')].filter(e => e.getClientRects().length && /needs the tribe online/i.test(e.textContent)).length"
 

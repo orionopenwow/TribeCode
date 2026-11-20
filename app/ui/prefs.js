@@ -109,6 +109,7 @@
   }
   async function syncNow(pull) {
     if (!C() || !C().connected()) return;
+    if (window.TribeOffline && window.TribeOffline.active && window.TribeOffline.active()) return;   // pass 8: the demo tribe is pretend; your settings are not synced with it
     try {
       if (pull) {   // a new device picks up synced settings when the account turned sync on somewhere
         const r = await C().api('/me/settings'), mine = S.get().syncAt || '', on = get().sync || !!(r.settings && r.settings.prefs && r.settings.prefs.sync);

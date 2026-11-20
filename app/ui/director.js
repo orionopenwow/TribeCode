@@ -183,7 +183,10 @@
   function place(c) { c.el.style.transform = `translate(${Math.round(c.x)}px, ${Math.round(c.y)}px)`; }
   function dropCursor(id) { const c = cursors[id]; if (c) { c.el.remove(); delete cursors[id]; } }
   function clearCursors() { Object.keys(cursors).forEach(dropCursor); }
-  const elOf = t => (typeof t === 'string' ? $(t) : t);
+  // pass 8: of everything a selector matches, the one a person can see (on a phone the sidebar's rows sit off screen in the drawer, so the tab bar's button is the one to point at)
+  const onScreen = e => { const r = e.getBoundingClientRect(); return r.width > 0 && r.height > 0 && r.right > 2 && r.bottom > 2 && r.left < innerWidth - 2 && r.top < innerHeight - 2; };
+  const pick = sel => { let all = []; try { all = [...document.querySelectorAll(sel)]; } catch { return null; } return all.find(e => e.getClientRects().length && onScreen(e)) || null; };
+  const elOf = t => (typeof t === 'string' ? (pick(t) || $(t)) : t);
   function pointOf(t, dx = 0.5, dy = 0.5) {
     if (t && typeof t.x === 'number' && !(t instanceof Element)) return t;
     const el = elOf(t); if (!el) return null;
@@ -225,7 +228,7 @@
     const el = elOf(target);
     if (!spotEl || !spotEl.isConnected) { spotEl = document.createElement('div'); spotEl.className = 'dt-spot'; spotEl.id = 'dt-spot'; spotEl.setAttribute('aria-hidden', 'true'); document.body.appendChild(spotEl); }
     spotEl._el = null; spotEl._want = typeof target === 'string' ? target : null;   // pass 8: e2e_demo_walk.py judges what the spotlight is on
-    if (!el || !el.isConnected || !el.getClientRects().length) { spotEl.classList.add('wide'); return; }   // feat/demo-auto: no target, no dim (the old spot used to stay on a stale box)
+    if (!el || !el.isConnected || !el.getClientRects().length || !onScreen(el)) { spotEl.classList.add('wide'); return; }   // feat/demo-auto: no target, no dim (the old spot used to stay on a stale box)
     spotEl._el = el;
     const r = el.getBoundingClientRect(), x = Math.max(4, r.left - pad), y = Math.max(4, r.top - pad);
     const w = Math.min(innerWidth - x - 4, r.width + pad * 2), h = Math.min(innerHeight - y - 4, r.height + pad * 2);
@@ -526,7 +529,7 @@
       check('card moved to Done', !!id2 && !!(await waitFor(`#board [data-col="done"] .task[data-id="${id2}"]`, 2500)));
       if (id2) say('maya', 'Reviewed and merged ✅');
     } },
-    { id: 'agents', title: 'Agents Hub', flint: ["#nest-ws-agents", "Click Agents Hub to see what every AI helper is doing right now."], after: "Each AI helper works on its own part, so nobody gets in anyone's way. When one hands work to you, it takes one click.", cap: 'Every agent at work, in one calm place. Hand-offs take one click.', dur: 12000, pdur: 12000, async run() {
+    { id: 'agents', title: 'Agents Hub', flint: ["#nest-ws-agents, #tabbar [data-m2nav=\"agents\"]", "Click Agents Hub to see what every AI helper is doing right now."], after: "Each AI helper works on its own part, so nobody gets in anyone's way. When one hands work to you, it takes one click.", cap: 'Every agent at work, in one calm place. Hand-offs take one click.', dur: 12000, pdur: 12000, async run() {
       dropCursor('maya');
       await go('agents');
       await settle('#ad-dash .fl-row, #ad-hero .ad-agent', 'agents at work');   // feat/fleet: one row per agent
@@ -589,7 +592,7 @@
       await wait(400);
     } },
     { id: 'docs', title: 'Write together', flint: ["#nest-docs, #tabbar [data-nav=\"docs\"]", "Click Files to write a document together."], after: "Jay and Maya typed at the same time, each with their own colored cursor. Nothing gets lost.", cap: 'Docs are written live, together. Everyone’s cursor, in their color.', dur: 13000, pdur: 13000, async run() {
-      if (window.TribePreview) window.TribePreview.close();
+      shutPreview();
       await go('docs');
       if (window.TribeDocs) await window.TribeDocs.open('level-design');
       await settle('#doc-body', 'doc open');
@@ -650,7 +653,7 @@
       if (fr) await move('me', fr, 1600, { dx: 0.45, dy: 0.7 });
       await wait(2600);
     } },
-    { id: 'ship', title: 'Vote and ship', flint: ["#wt-board, #nest-ws-tasks", "Big changes get a vote from the team. Click Board."], after: "The vote passed and the milestone shipped. Everyone who helped gets the credit.", cap: 'Big changes get a vote. When the milestone is done, it ships 🎉', dur: 14000, pdur: 14000, async run() {
+    { id: 'ship', title: 'Vote and ship', flint: ["#wt-board, #nest-ws-tasks, #tabbar [data-nav=\"tasks\"]", "Big changes get a vote from the team. Click Board."], after: "The vote passed and the milestone shipped. Everyone who helped gets the credit.", cap: 'Big changes get a vote. When the milestone is done, it ships 🎉', dur: 14000, pdur: 14000, async run() {
       if (view() !== 'tasks') A().show('tasks');
       const tb = await waitFor('#wt-board', 2000);
       if (tb && !phone()) await click('me', tb); else A().show('board');
@@ -719,7 +722,7 @@
       ph.classList.remove('in'); await wait(400); ph.remove();
     } },
     { id: 'end', title: 'Your turn', cap: 'That’s TribeCode: friends and their agents, building one thing together.', dur: 8000, pdur: 8000, async run() {
-      clearCursors(); if (window.TribePreview) window.TribePreview.close();
+      clearCursors(); shutPreview();
       if (view() !== 'home') A().show('home');
       endCard();
       check('end card', !!$('#dt-end'));
@@ -774,9 +777,11 @@
   // until you press "Show me".
   // pass 8: a chapter's first target is in the app (the sidebar, the dashboard). A full-screen page the chapter before
   // left open (Preview with the game, the website designer, App Creator) would sit on it, so Flint pointed at nothing.
+  let popQuiet = 0;
+  function shutPreview() { if (!window.TribePreview) return; popQuiet = Date.now() + 1500; window.TribePreview.close(); }
   async function uncover(sel) {
     if (!sel) return;
-    const over = [['.pvw, #pvw', () => window.TribePreview && window.TribePreview.close()], ['#wdz', () => window.TribeSiteDesigner && window.TribeSiteDesigner.close && window.TribeSiteDesigner.close()], ['#apc', () => window.TribeAppCreator && window.TribeAppCreator.close && window.TribeAppCreator.close()]];
+    const over = [['.pvw, #pvw', shutPreview], ['#wdz', () => window.TribeSiteDesigner && window.TribeSiteDesigner.close && window.TribeSiteDesigner.close()], ['#apc', () => window.TribeAppCreator && window.TribeAppCreator.close && window.TribeAppCreator.close()]];
     let shut = false;
     for (const [root, close] of over) {
       const r = $(root); if (!r || !r.getClientRects().length) continue;
@@ -784,6 +789,8 @@
       try { close(); shut = true; } catch {}
     }
     if (shut) await real(350);
+    // the target is on the page but scrolled out of sight (the drop area low on the dashboard): bring it into view
+    if (!pick(sel)) { let all = []; try { all = [...document.querySelectorAll(sel)]; } catch {} const e = all.find(x => x.getClientRects().length && x.getBoundingClientRect().left >= 0 && x.getBoundingClientRect().right <= innerWidth); if (e) { e.scrollIntoView({ block: 'center' }); await real(250); } }
   }
   async function narrate(s, n) {
     const G = window.TribeFlintGuide;
@@ -791,13 +798,13 @@
     await uncover(s.flint[0]);
     if (guided) return guidedStep(s, n);
     if (!opts0.classic) {   // v0.22 default: Flint shows and tells, nothing to click
-      const [sel0, text0] = s.flint; const el0 = sel0 ? await waitFor(() => [...document.querySelectorAll(sel0)].find(e => e.getClientRects().length && e.getBoundingClientRect().width > 0), 2000) : null;   // watchdog: 2 s, then on without a spotlight
+      const [sel0, text0] = s.flint; const el0 = sel0 ? await waitFor(() => pick(sel0), 2000) : null;   // watchdog: 2 s, then on without a spotlight
       if (sel0 && !el0) check('target found', false, sel0);
       spot(el0, 10); live(text0.replace(/\b(First, |Now |Then |Next, )?([Cc])lick\b/g, (m, a) => (a || '') + (a ? 'I click' : 'I click')).replace(/(^|[.!?]\s+)I click/g, (m, p) => p + 'I click'), { lead: `${n + 1}/${list.length} · ${s.title}` });
       await readFor(text0); return;
     }
     const [sel, text] = s.flint;
-    const el = sel ? [...document.querySelectorAll(sel)].find(e => e.getClientRects().length && e.getBoundingClientRect().width > 0) : null;
+    const el = sel ? pick(sel) : null;
     const t = token; narrating = true; document.body.classList.add('dt-narr');
     let done = false, left = Math.max(5200, text.split(/\s+/).length * 360);
     G.point(el, text, { next: n === list.length - 1 ? 'Finish' : 'Show me', steps: list.length, step: n, dim: true }).then(() => { done = true; });
@@ -818,7 +825,7 @@
   async function guidedStep(s, n) {
     const G = window.TribeFlintGuide, [sel, text] = s.flint;
     await uncover(sel);
-    const el = sel ? [...document.querySelectorAll(sel)].find(e => e.getClientRects().length && e.getBoundingClientRect().width > 0) : null;
+    const el = sel ? pick(sel) : null;
     const t = token; let done = false;
     narrating = true; document.body.classList.add('dt-narr');
     const hit = e => el && el.contains(e.target);
@@ -981,7 +988,7 @@
 
   // feat/demo-auto: Esc, Back and a crash always lift the dim: Esc hands you the tribe (like Try it yourself)
   addEventListener('keydown', e => { if (e.key === 'Escape' && e.isTrusted && running && !$('#dt-intro')) { e.preventDefault(); tryIt(); } });
-  addEventListener('popstate', () => { if (running && !fast) tryIt(); });
+  addEventListener('popstate', () => { if (running && !fast && Date.now() > popQuiet) tryIt(); });   // pass 8: not when the tour itself closed Preview (its close steps the history back); that ended the phone tour at chapter 5
   addEventListener('error', () => { if (!running && spotEl) { spotEl.remove(); spotEl = null; } });
   window.TribeDirector = {
     start, stop, pause, play, skip, speed, tryIt, restart, active: () => running,
