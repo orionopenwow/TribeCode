@@ -132,7 +132,7 @@
   // one line on the project for a local model (server/aiguides.js; kept for five minutes; '' with no tribe)
   let lineAt = 0, lineOf = '', lineVal = '';
   async function projectLine(kind) {
-    let pid = ''; try { pid = (C.state && C.state().project) || ''; } catch {}
+    let pid = ''; try { pid = (C.project && C.project()) || (C.state && C.state().project) || ''; } catch {}
     if (!pid || !connected()) return '';
     if (lineOf === pid && Date.now() - lineAt < 300000) return lineVal;
     try { lineVal = (await C.api(`/projects/${encodeURIComponent(pid)}/ai-brief?kind=${kind === 'app' ? 'app' : 'site'}`)).line || ''; } catch { lineVal = ''; }
