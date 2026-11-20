@@ -92,7 +92,7 @@ def main():
         pid = ok(api("/projects", token=tok))["projects"][0]["id"]
         assert api("/site-designer/templates")[0] == 401, "members only"
         tl = ok(api("/site-designer/templates", token=tok))["templates"]
-        assert len(tl) >= 40 and sum(1 for t in tl if t.get("license") == "MIT" and t.get("source") == "TribeCode") == 29, len(tl)   # feat/site-v2: ours + the imported ones
+        assert sum(1 for t in tl if not t.get("retired") and t.get("license") == "MIT" and t.get("source") == "TribeCode") == 25 and sum(1 for t in tl if t.get("retired") and t.get("alias")) >= 30, len(tl)   # site-templates2: 25 offered, all ours; the older ones retired
         lb = ok(api("/site-designer/template/linkbio", token=tok))["config"]
         assert lb["pages"][0]["blocks"][0]["type"] == "links" and lb["pages"][0]["blocks"][0]["props"]["img"].startswith("data:image/"), "template pictures are inlined"
 
@@ -107,7 +107,7 @@ def main():
             pg.click("#wb-design")
             pg.wait_for_selector("#wdz:not([hidden]) #wdz-start:not([hidden]) .wdz-kmain .wdz-kind", timeout=10000)   # p5-start: what kind of site first
             pg.click("#wdz-start [data-kind='all']")
-            pg.wait_for_function("document.querySelectorAll('#wdz-start .wdz-tpl').length >= 40", timeout=10000)   # feat/site-v2: the gallery
+            pg.wait_for_function("document.querySelectorAll('#wdz-start .wdz-tpl').length >= 20", timeout=10000)   # feat/site-v2: the gallery
 
             # ---- "link tree website" -> the link-in-bio template
             out = ask(pg, "link tree website")

@@ -196,7 +196,8 @@ def in_a_tribe(b):
         pg.click("#dfl-back"); pg.wait_for_selector("#dfl[data-step=kinds]")
         pg.click("[data-kind=website]"); pg.wait_for_selector("#wdz-start:not([hidden]) .wdz-kmain [data-kind=linkbio]", timeout=15000)
         assert pg.evaluate("TribeSiteDesigner.state().pid") == pid
-        pg.click("#wdz-start [data-kind=portfolio]"); pg.wait_for_selector("#wdz-gal .wdz-tpl[data-tpl=band]", timeout=15000)
+        pg.click("#wdz-start [data-kind=portfolio]"); pg.wait_for_selector("#wdz-gal .wdz-tpl[data-tpl=portfolio]", timeout=15000)
+        pg.click("#wdz-start .wdz-row [data-kind=all]"); pg.wait_for_selector("#wdz-gal .wdz-tpl[data-tpl=band]", timeout=15000)   # a kind shows its best three; the rest are under See all
         pg.click("#wdz-gal .wdz-tpl[data-tpl=band] [data-tpl]")
         pg.wait_for_function("TribeSiteDesigner.cfg() && TribeSiteDesigner.cfg().template === 'band'", timeout=15000)
         ctx.close()
