@@ -68,7 +68,7 @@
   // ---------- history ----------
   function change(fn, note) {
     if (cw && sel >= 0 && cw.lockedBy('st:' + sel)) { const before = JSON.stringify(doc.states[sel]); const r0 = fn(clone(doc)); const after = r0 && r0.states ? JSON.stringify(K().normalize(r0).states[sel]) : before; if (after !== before) { cw.guard('st:' + sel); return; } }   // feat/cowork-editors: someone else is changing this state
-    hist.push(JSON.stringify(doc)); if (hist.length > 80) hist.shift(); fut = [];
+    hist.push(JSON.stringify(doc)); if (hist.length > 80) hist.shift(); fut = []; setTimeout(paintUndo, 0);
     const r = fn(clone(doc)); if (r) doc = r; doc = K().normalize(doc); doc.rev = (doc.rev || 0) + 1;
     if (sel >= doc.states.length) sel = doc.states.length - 1;
     scheduleSave(); renderAll(); if (note) say(note);
@@ -127,7 +127,7 @@
   function brandAccent() { try { const b = window.TribeBrand && window.TribeBrand.get && window.TribeBrand.get(); return b && b.accent || undefined; } catch { return undefined; } }
   // Closing saves only what has not been saved yet: a second save would make an unchanged graphic look newer than
   // the things it was made from (the suggestions compare those times).
-  function close() { if (cw) { cw.detach(); cw = null; } crStrip = null; play(false); stopAudio(); const pending = !!saveT || (doc && !key && !local); clearTimeout(saveT); saveT = 0; if (doc && pending) save(); if (root) root.remove(); root = null; document.body.classList.remove('mos-on'); }
+  function close(fromBack) { if (shell) { shell.destroy(); shell = null; } if (backDone) { const d = backDone; backDone = null; if (fromBack !== true) d(); } if (cw) { cw.detach(); cw = null; } crStrip = null; play(false); stopAudio(); const pending = !!saveT || (doc && !key && !local); clearTimeout(saveT); saveT = 0; if (doc && pending) save(); if (root) root.remove(); root = null; document.body.classList.remove('mos-on'); }
   const isOpen = () => !!root && document.body.contains(root);
 
   // ---------- working together (feat/cowork-editors) ----------
@@ -189,12 +189,12 @@
     root = document.createElement('div'); root.id = 'mos'; root.className = 'mos'; root.setAttribute('role', 'dialog'); root.setAttribute('aria-label', 'Motion Studio');
     root.innerHTML = `
       <header class="mos-top">
-        <button type="button" class="mos-ib" id="mos-close" aria-label="Close">${icon('x', 18)}</button>
+        ${CS() ? CS().backHTML('mos-close') : `<button type="button" class="mos-ib" id="mos-close" aria-label="Close">${icon('x', 18)}</button>`}
         <div class="mos-title"><span class="eyebrow">MOTION</span><input id="mos-name" class="mos-name" aria-label="Name" maxlength="80"></div>
+        ${CS() ? CS().undoHTML({ undo: 'mos-undo', redo: 'mos-redo' }) : `<div class="mos-undo"><button type="button" class="mos-ib" id="mos-undo" aria-label="Undo">↶</button></div>`}
         <span class="mos-saved faint" id="mos-saved"></span>
         <span class="cw-row" id="mos-cw" hidden></span>
-        <div class="mos-undo"><button type="button" class="mos-ib" id="mos-undo" aria-label="Undo"><svg class="mos-i" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M9 14L4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/></svg></button></div>
-        <form class="mos-flint" id="mos-flint"><span class="mos-fl-i">${icon('flame', 16)}</span><input id="mos-ask" autocomplete="off" placeholder="Tell Flint: snappier, make it 9:16, add a toast" aria-label="Tell Flint what to change"><button type="submit" class="btn" id="mos-ask-go">Go</button></form>
+        <span class="mos-sp"></span>
         ${window.TribeChanges && window.TribeChanges.entryHTML ? window.TribeChanges.entryHTML('mos-ib') : ''}
         <button type="button" class="btn" id="mos-ai">Have my AI do it</button>
         <button type="button" class="btn primary" id="mos-export-btn">Export</button>
@@ -219,10 +219,15 @@
         </main>
       </div>`;
     document.body.append(root); document.body.classList.add('mos-on'); root.classList.add('has-cr');
-    $('#mos-close', root).onclick = close;
+    $('#mos-close', root).onclick = () => close();
     $('#mos-undo', root).onclick = undo;
     const nm = $('#mos-name', root); nm.value = doc.name; nm.onchange = () => change(d => { d.name = nm.value.trim() || 'Motion graphic'; return d; });
-    $('#mos-flint', root).onsubmit = e => { e.preventDefault(); const v = $('#mos-ask', root).value.trim(); if (v) { ask(v); $('#mos-ask', root).value = ''; } };
+    // pass 9: Flint has his own column (the creators' shared shell); the flame in the top bar opens him again
+    const rb = $('#mos-redo', root); if (rb) rb.onclick = redo;
+    if (CS()) {
+      shell = CS().flint(root, { top: $('.mos-top', root), before: $('#mos-ai', root), body: $('.mos-body', root), mount: flintMount });
+      backDone = CS().history(root, () => close(true));
+    }
     $('#mos-ai', root).onclick = haveAi;
     $('#mos-export-btn', root).onclick = () => setTab('export');
     $('#mos-play', root).onclick = () => play(!playing);
@@ -250,7 +255,8 @@
     $$('[data-mos-tab]', root).forEach(b => { const on = b.dataset.mosTab === id; b.classList.toggle('on', on); b.setAttribute('aria-selected', on ? 'true' : 'false'); });
     renderPane();
   }
-  function renderAll() { if (!root) return; $('#mos-aspect', root).value = K().ASPECTS[doc.aspect] ? doc.aspect : '1:1'; $('#mos-loop', root).setAttribute('aria-pressed', doc.loop ? 'true' : 'false'); const nm = $('#mos-name', root); if (document.activeElement !== nm) nm.value = doc.name; renderTimeline(); renderPane(); frame(); }
+  function paintUndo() { if (!root) return; const ub = $('#mos-undo', root), rb = $('#mos-redo', root); if (ub) ub.disabled = !hist.length; if (rb) rb.disabled = !fut.length; }
+  function renderAll() { if (!root) return; paintUndo(); $('#mos-aspect', root).value = K().ASPECTS[doc.aspect] ? doc.aspect : '1:1'; $('#mos-loop', root).setAttribute('aria-pressed', doc.loop ? 'true' : 'false'); const nm = $('#mos-name', root); if (document.activeElement !== nm) nm.value = doc.name; renderTimeline(); renderPane(); frame(); }
 
   // ---------- preview ----------
   function frame() {
@@ -568,7 +574,19 @@ K.load(d).then(function(){function f(n){K.draw(g,d,still?K.beatSec(d,d.thumbAt>=
   }
 
   // ---------- Flint ----------
-  function say(s) { const el = root && $('#mos-say', root); if (el) { el.textContent = s || ''; el.classList.toggle('on', !!s); } }
+  // pass 9: Flint's column in Motion Studio. The same words as the old one-line box, with the thread, chips and Undo.
+  const CS = () => window.TribeCreatorShell;
+  let shell = null, backDone = null, lastSaid = '';
+  function flintMount(host, tools) {
+    const F = window.TribeFlint; if (!F || !F.mount) return null;
+    const ui = F.mount(host, { ctx: 'motion', tools, placeholder: tr('Tell Flint what to change…'), hello: tr('Say what to change, like “snappier” or “make it 9:16”.'),
+      chips: () => ['Snappier', 'Make it 9:16', 'Add a toast'],
+      run: async (text, u) => { const rev = doc ? doc.rev : 0; lastSaid = ''; const out = await ask(text); const changed = doc && doc.rev !== rev;
+        u.say(out || lastSaid || tr('Done.'), changed ? [{ label: tr('Undo'), fn: () => { undo(); u.say(tr('Undone.')); } }] : []); return true; } });
+    if (ui && ui.input) { ui.input.id = 'mos-ask'; const go = ui.el && ui.el.querySelector('.fl-send'); if (go) go.id = 'mos-ask-go'; }
+    return ui;
+  }
+  function say(s) { lastSaid = s || lastSaid; const el = root && $('#mos-say', root); if (el) { el.textContent = s || ''; el.classList.toggle('on', !!s); } }
   async function command(step) {
     if (!step) return { text: '' };
     if (step.intent === 'motion.new') { const id = K().TEMPLATES[step.slots && step.slots.tpl] ? step.slots.tpl : 'ui-reel'; if (!isOpen()) await open({ template: id }); else await useTemplate(id); const text = `${tr('Opened Motion Studio with')} ${tr(K().TEMPLATES[id].name)}.`; say(text); return { text }; }

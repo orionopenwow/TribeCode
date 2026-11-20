@@ -692,7 +692,7 @@
   // history, a shared canvas thread); otherwise the thread is kept per ctx on this device.
   //   ui = { ctx, el, thread, say(text, acts, extra), ev(text, extra), me(text), add(m), set(list), draw(), chips(list),
   //          send(text), flint(text), capture(text), fill(text), focus(), extra, input }
-  const CTXN = { designer: 'Website', canvas: 'Design', preview: 'Preview', app: 'Anywhere', appcreator: 'App' };
+  const CTXN = { designer: 'Website', canvas: 'Design', preview: 'Preview', app: 'Anywhere', appcreator: 'App', motion: 'Motion', launch: 'Launch kit', first: 'First preview' };
   const CTXPH = { appcreator: 'Tell Flint what to change…', designer: 'Tell Flint what to change…', canvas: 'Describe a screen or a change…', preview: 'Ask Flint to change…', app: 'Ask Flint…' };
   function mount(el, o = {}) {
     if (!el) return null;
