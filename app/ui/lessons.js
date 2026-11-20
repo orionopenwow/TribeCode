@@ -272,7 +272,7 @@
       if (offered(f.tid) || st || !f.ok()) { if (cur) cur.remove(); continue; }
       if (cur) continue;
       const el = document.createElement('div'); el.className = 'les-offer'; el.dataset.track = f.tid;
-      el.innerHTML = `<span>${esc(T('New here?'))} <b>${esc(T(t.title))}</b> · ${t.mins || 10} min</span><span class="les-offer-b"><button type="button" class="btn sm primary" data-les-go>${esc(T('Take the lesson'))}</button><button type="button" class="btn sm" data-les-no>${esc(T('No thanks'))}</button></span>`;
+      el.innerHTML = `<span>${esc(T('New here?'))} <button type="button" class="linkish" data-les-go title="${esc(T('Take the lesson'))}">${esc(T(t.title))} · ${t.mins || 10} min</button></span><button type="button" class="linkish les-offer-no" data-les-no>${esc(T('No thanks'))}</button>`;
       el.addEventListener('click', e => { const no = e.target.closest('[data-les-no]'), go = e.target.closest('[data-les-go]'); if (!no && !go) return; const k = ls.get(); k.off = k.off || {}; k.off[f.tid] = Date.now(); ls.set(k); el.remove(); if (go) start(f.tid); });
       host.appendChild(el);
     }

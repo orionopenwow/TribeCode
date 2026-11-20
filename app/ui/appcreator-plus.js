@@ -377,9 +377,9 @@
       <label class="apc-chk"><input type="checkbox" id="apc-first"${d.start === s.screen ? ' checked disabled' : ''}${can ? '' : ' disabled'}> <span>The app opens on this screen</span></label>
       ${reach.has(sc.id) ? '' : `<p class="apc-warn">${esc(tr('Nothing leads to this screen yet. Select a button and choose it under “When tapped, go to”.'))}</p>`}
       <p class="apc-eyebrow">${esc(tr('Do next'))}</p>
-      <div class="apc-quick">${[['add', 'plus', 'Add a part'], ['screen', 'grid', 'Add a screen'], ['dup', 'duplicate', 'Copy this screen'], ['map', 'map', 'Screen map'], ['comment', 'comment', 'Comment'], ['history', 'clock', 'History']].map(([k, i, l]) => `<button class="apc-q" data-q="${k}"${!can && /add|screen|dup/.test(k) ? ' disabled' : ''}>${svg(i)}<span>${esc(tr(l))}</span></button>`).join('')}</div>
-      ${commentsHTML()}
-      <p class="apc-eyebrow">${esc(tr('Good to know'))}</p><ul class="apc-tips"><li>${esc(tr('Click words to type. Click a part to move, copy, link or remove it.'))}</li><li>${esc(tr('Shift click selects several parts at once.'))}</li><li>${esc(tr('Press ? for every shortcut.'))}</li></ul>`;
+      <div class="apc-quick">${[['add', 'plus', 'Add a part'], ['screen', 'grid', 'Add a screen'], ['dup', 'duplicate', 'Copy this screen'], ['map', 'map', 'Screen map'], ...(s.mobile ? [['comment', 'comment', 'Comment'], ['history', 'clock', 'History']] : [])].map(([k, i, l]) => `<button class="apc-q" data-q="${k}"${!can && /add|screen|dup/.test(k) ? ' disabled' : ''}>${svg(i)}<span>${esc(tr(l))}</span></button>`).join('')}</div>
+      ${(() => { const n = (s.comments || []).filter(c => c.status === 'open').length, all = (s.comments || []).length; return !all ? '' : s.showComments || s.mobile ? commentsHTML() : `<button type="button" class="apc-cmore" id="apc-cmore">${svg('comment')}<span>${esc(tr('Comments'))} · <span data-i18n-skip>${n}</span></span></button>`; })()}`;
+    const cm = box0.querySelector('#apc-cmore'); if (cm) cm.onclick = () => { s.showComments = true; X.paint ? X.paint() : inspEmpty(box0); };
     const f = box0.querySelector('#apc-first'); if (f) f.onchange = () => { const c = clone(s.doc); c.start = s.screen; X.commit(c, 'The app opens here now.'); };
     const nm = box0.querySelector('#apc-scname'); if (nm) nm.onchange = () => X.apply({ op: 'screen.rename', screen: s.screen, name: nm.value });
     box0.querySelectorAll('[data-q]').forEach(b => b.onclick = () => { const k = b.dataset.q; if (s.sheet) X.closeSheet();

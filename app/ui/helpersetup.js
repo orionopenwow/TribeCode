@@ -23,7 +23,7 @@
 
   function html() {
     const s = state(), n = [s.flint, s.brain, s.ai].filter(Boolean).length;
-    const step = (k, ok, e, t, body) => `<li class="hs-step${ok ? ' ok' : ''}${!ok && firstOpen() === k ? ' open' : ''}" data-hs="${k}"><button type="button" class="hs-row" data-hs-toggle="${k}" aria-expanded="${!ok && firstOpen() === k}"><span class="hs-e" aria-hidden="true">${ok ? '✓' : e}</span><b>${t}</b></button>${ok ? '' : `<div class="hs-body">${body}</div>`}</li>`;
+    const step = (k, ok, e, t, body) => `<li class="hs-step${ok ? ' ok' : ''}" data-hs="${k}"><button type="button" class="hs-row" data-hs-toggle="${k}" aria-expanded="false"><span class="hs-e" aria-hidden="true">${ok ? '✓' : e}</span><b>${t}</b></button>${ok ? '' : `<div class="hs-body">${body}</div>`}</li>`;
     function firstOpen() { return !s.flint ? 'flint' : !s.brain ? 'brain' : !s.ai ? 'ai' : ''; }
     return `<section class="hs-card" id="helper-setup" aria-label="Set up your helpers">
       <div class="hs-head"><span class="eyebrow mono">Your helpers · ${n} of 3</span></div>

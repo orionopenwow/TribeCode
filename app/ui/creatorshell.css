@@ -84,3 +84,6 @@
 #fpv.fpv-working .fpv-stage { opacity: .55; }
 body.fpv-quiet #apc, body.fpv-quiet #wdz, body.fpv-quiet .les-card, body.fpv-quiet .toast { opacity: 0 !important; pointer-events: none !important; }
 @media (max-width: 820px) { #fpv .cs-fl { position: fixed; top: auto; width: auto; } #fpv.csf-open { padding-right: 16px; } .fpv-bar .cs-back span { display: none; } .fpv-bar .cs-back { width: 40px; padding: 0; justify-content: center; } }
+
+.apc-cmore { display: inline-flex; align-items: center; gap: 8px; margin-top: 14px; min-height: 36px; padding: 0 12px; border: 1px solid var(--border); border-radius: var(--r-sm); background: var(--surface-2); color: var(--text); font: 13px var(--font); cursor: pointer; }
+.apc-cmore:hover { border-color: var(--accent); }

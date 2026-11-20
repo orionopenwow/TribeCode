@@ -24,12 +24,12 @@ def main():
             assert "0 of 3" in pg.text_content("#helper-setup .hs-head")
             assert not pg.locator("#cc-connect").is_visible(), "no second Connect your AI card"
             assert not pg.locator("#flint .fl-head").is_visible(), "no empty Flint header"
-            pg.click("[data-hs-do='flint']")
+            pg.click("[data-hs-toggle='flint']"); pg.click("[data-hs-do='flint']")
             pg.wait_for_function("document.querySelector('#helper-setup .hs-head').textContent.includes('1 of 3')")
             assert pg.locator("[data-hs-brain='browser']").is_visible() and pg.locator("[data-hs-brain='cloud']").is_visible()
-            pg.click("[data-hs-do='brain']")
+            pg.click("[data-hs-toggle='brain']"); pg.click("[data-hs-do='brain']")
             pg.wait_for_selector("[data-hs-connect]", state="visible")
-            pg.click("[data-hs-do='ai']")
+            pg.click("[data-hs-toggle='ai']"); pg.click("[data-hs-do='ai']")
             pg.wait_for_function("!document.getElementById('helper-setup')")
             pg.reload(); pg.wait_for_function("window.TribeClient && TribeClient.connected()", timeout=15000); time.sleep(1)
             assert pg.locator("#helper-setup").count() == 0, "stays gone"
