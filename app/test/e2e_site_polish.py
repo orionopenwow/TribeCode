@@ -106,7 +106,7 @@ def main():
 
             # ---------- 10 (first, on a cold page): speed ----------
             cp = page(host, "Camp")
-            t0 = time.time(); open_designer(cp, ", template: 'cafe'"); ready(cp)
+            t0 = time.time(); open_designer(cp, ", template: 'club'"); ready(cp)
             first_open = round((time.time() - t0) * 1000)
             cp.wait_for_function("TribeSiteDesigner.state().rev > 0", timeout=15000)
             cp.evaluate("TribeSiteDesigner.close()"); cp.wait_for_selector("#wdz", state="hidden")
@@ -183,7 +183,7 @@ def main():
             cp.keyboard.press("Control+0"); assert cp.inner_text("#wdz-zoomv") == "100%"
             cp.keyboard.press("Control+="); assert cp.inner_text("#wdz-zoomv") == "110%"
             cp.keyboard.press("Control+-"); cp.keyboard.press("Control+-"); assert cp.inner_text("#wdz-zoomv") == "90%"
-            frame(cp).locator("[data-block]").nth(1).click(position={"x": 6, "y": 6}); cp.keyboard.press("Control+0")
+            frame(cp).locator("[data-block] img").first.click(); cp.keyboard.press("Control+0")   # a picture: a click beside words would start typing in them
             cp.wait_for_function("document.querySelector('#wdz-zoomv').textContent === '100%'", timeout=3000)
             fb = cp.locator("#wdz-frame").bounding_box(); cp.mouse.move(fb["x"] + 200, fb["y"] + 200)
             cp.keyboard.down("Control"); cp.mouse.wheel(0, -120); cp.keyboard.up("Control")

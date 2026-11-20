@@ -264,7 +264,7 @@ console.log(JSON.stringify({ done: r.done.length, skipped: r.skipped.length, tit
             # ---- illustrations: click the hero picture, one tap puts a scene in the site's colours there
             fr.locator("[data-img]").first.click(); pg.wait_for_timeout(400)
             pg.wait_for_selector("#wdz-insp [data-stu=illus]", timeout=5000)
-            assert pg.locator("#wdz-insp [data-stu=illus]").count() == 8
+            assert pg.locator("#wdz-insp [data-stu=illus]").count() == 28   # site-templates2: 20 more scenes
             shot(pg, "studio-illus-1440.png")
             pg.click("#wdz-insp [data-stu=illus][data-val=cafe]"); pg.wait_for_timeout(400)
             hero = next(x for x in cfg(pg)["pages"][0]["blocks"] if x["type"] == "hero")
