@@ -24,6 +24,7 @@ ok(offered.length >= 20 && offered.length <= 28, `20 to 28 templates offered (${
 for (const k of D.SITE_KINDS.filter(k => k.id !== 'blank')) { const l = D.siteTemplatesFor(cat, k.id); ok(l.length >= 2, `${k.id} has at least two (${l.length})`); ok(D.siteTemplatesFor(cat, k.id, D.SITE_KIND_SHOWS).length <= 3, `${k.id}: its screen shows three at most`); }
 ok(Object.values(D.SITE_PICKS).flat().every(id => offered.some(t => t.id === id)), 'every pick is an offered template');
 ok(offered.every(t => Object.values(D.SITE_PICKS).flat().includes(t.id)), 'every offered template is some kind\'s pick');
+ok(D.SITES.length === offered.length && D.SITES.every(x => offered.some(t => t.id === x.id)), 'the Design flow lists the same templates');
 ok(offered.every(t => t.title && t.summary && /^For /.test(t.summary) && t.summary.length <= 170 && fs.existsSync(path.join(ROOT, 'app', 'ui', t.thumb))), 'each card: an honest name, one line on who it is for, a picture');
 ok(retired.every(t => !t.thumb && !fs.existsSync(path.join(DIR, 'thumbs', t.id + '.webp'))), 'retired templates have no card picture');
 const sw = fs.readFileSync(path.join(ROOT, 'app', 'ui', 'sw.js'), 'utf8');

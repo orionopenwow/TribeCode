@@ -2,7 +2,7 @@
 small WebP (480x300).
 
   app/ui/starters/thumbs/<id>.webp       every app and game starter, running (headless Chrome, after a short play)
-  app/ui/assets/designflow/site-<id>.webp     the website designer's templates (templates/sites/<id>/thumb.png)
+  app/ui/assets/designflow/site-<id>.webp     the website designer's templates (app/ui/sitetpl/thumbs/<id>.webp)
   app/ui/assets/designflow/slides-<id>.webp   each slide template's first slide, drawn by deck.js
   app/ui/assets/designflow/screen-<id>.webp   each screen template, made by the flow and Flint's free canvas templates
   app/ui/assets/designflow/poster-<id>.webp, logo-<id>.webp   the poster and logo templates on the canvas
@@ -78,9 +78,9 @@ def starters(pg):
 
 def sites():
     print("website templates")
-    for d in sorted((ROOT / "templates" / "sites").iterdir()):
-        t = d / "thumb.png"
-        if t.exists(): webp(t.read_bytes(), OUT_D / f"site-{d.name}.webp")
+    # site-templates2: the same pictures the designer's gallery shows (app/ui/sitetpl/thumbs, made by site-gallery.py),
+    # so a card here looks like the template it opens
+    for t in sorted((UI / "sitetpl" / "thumbs").glob("*.webp")): webp(t.read_bytes(), OUT_D / f"site-{t.stem}.webp")
 
 
 def app_page(p):

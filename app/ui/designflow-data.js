@@ -224,14 +224,15 @@
     { id: 'retro', t: 'Retro', d: 'Went well, could be better, try next', els: [tx('h1', 40, 40, 'Went well', 24), tx('h2', 300, 40, 'Could be better', 24), tx('h3', 560, 40, 'Try next', 24), st('a', 40, 100, '', '#9AE6B4'), st('b', 300, 100, '', '#FBB6CE'), st('c', 560, 100, '', '#90CDF4')] },
     { id: 'flow', t: 'User flow', d: 'Steps from start to done', els: [tx('q', 40, 40, '{{q}}', 28), st('a', 40, 120, 'Start', '#90CDF4'), { id: 'ar1', t: 'arrow', pts: [[230, 190], [290, 190]], color: '#F8FAFC', sw: 2 }, st('b', 300, 120, 'Step'), { id: 'ar2', t: 'arrow', pts: [[490, 190], [550, 190]], color: '#F8FAFC', sw: 2 }, st('c', 560, 120, 'Done', '#9AE6B4')] },
   ];
-  // Website templates: the website designer's 16 (app/ui/sitecfg.js); thumbnails from templates/sites/<id>/thumb.png
+  // Website templates: the ones the website designer's gallery offers (app/ui/sitetpl/catalog.json, the entries that are
+  // not retired); thumbnails are the gallery's own (scripts/dev/design-thumbs.py)
   const SITES = [
     ['linkbio', 'Link in bio', 'All your links on one page'], ['cafe', 'Café', 'Menu, hours and where to find you'], ['band', 'Band', 'Tour dates, music, booking'], ['merch', 'Merch shop', 'Products and a buy button'],
     ['portfolio', 'Portfolio', 'Your work with the story'], ['creator', 'Creator', 'Stream schedule and links'], ['service', 'Local business', 'Prices, booking, reviews'], ['wedding', 'Event', 'Date, place, RSVP'],
     ['podcast', 'Podcast', 'Episodes and where to listen'], ['blog', 'Blog', 'Posts and a newsletter'], ['saas', 'Product', 'A startup or app page'], ['gamepage', 'Game page', 'Screens, trailer, wishlist'],
     ['resume', 'Resume', 'Who you are and what you did'], ['nonprofit', 'Nonprofit', 'Mission and a donate button'], ['photography', 'Photography', 'A gallery first'], ['comingsoon', 'Coming soon', 'A waitlist'],
     ['conference', 'Conference', 'Schedule, speakers, tickets'], ['menu', 'Restaurant menu', 'The menu first, with prices'], ['course', 'Class or course', 'What you learn, weeks, sign-up'], ['club', 'Club or group', 'When you meet and how to join'],
-    ['docs', 'Docs', 'A handbook with its contents down the side'], ['letter', 'Personal letter', 'One quiet column about you'],
+    ['docs', 'Docs', 'A handbook with its contents down the side'], ['letter', 'Personal letter', 'One quiet column about you'], ['gh-project', 'Open-source project', 'Install line, what changed, the code'], ['app-download', 'App download', 'Store buttons and a look inside'], ['app-redirect', 'Send people on', 'A small page that forwards visitors'],
   ].map(([id, t, d]) => ({ id, t, d }));
 
   // p5-start: starting a website asks what kind of site first, then shows that kind's templates (app/ui/sitedesigner.js
