@@ -172,7 +172,7 @@
       <label class="bug-cap-log"><input type="checkbox" id="bug-log" checked> <span>Attach a log snapshot</span> <button class="linkish" id="bug-log-see" type="button">See what's in it</button></label>
       <pre class="bug-cap-pre" id="bug-log-pre" hidden></pre>
       <div class="faint" style="font-size:12px">Also attached: ${esc(currentView() || 'Home')} · v${esc(window.TribeUpdater ? window.TribeUpdater.current() : '')}. Tokens and keys are blanked out. Or paste a picture here with Ctrl V.</div>
-      <div class="modal-foot"><button class="btn" data-close>Cancel</button><span style="flex:1"></span><button class="btn" id="bug-save" type="button">Save to a file</button><button class="btn primary" id="bug-go">Send report</button></div>`;
+      <div class="modal-foot"><button class="btn" data-close>Cancel</button><span style="flex:1"></span><button class="btn" id="bug-save" type="button">Save to a file</button><button class="btn" id="bug-team" type="button" title="Opens a GitHub page with your report filled in. It is public, and you press Submit there.">Send to TribeCode</button><button class="btn primary" id="bug-go">Send report</button></div>`;
     $('#invite-modal').classList.remove('hidden'); $('#bug-title').focus();
     let files = [];
     const show = () => {
@@ -196,6 +196,20 @@
       files.forEach(f => save(f, f.name));
       window.TribeApp.toast('Saved to your Downloads folder');
     };
+    // The people who make TribeCode: opens a filled-in, public GitHub form in the browser; the person presses Submit there.
+    // Nothing is sent from the app itself. Pictures can't ride in a link, so they are saved for dragging onto that page.
+    $('#bug-team').onclick = async () => {
+      const title = $('#bug-title').value.trim(); if (!title) { $('#bug-title').focus(); return; }
+      const U = window.TribeUpdater, where = `${window.TribeHost && window.TribeHost.isDesktop ? 'desktop app' : 'browser'} · v${U ? U.current() : '?'} · ${currentView() || 'Home'} · ${innerWidth}x${innerHeight}`;
+      const head = [title, '', '**Steps**', $('#bug-repro').value.trim() || '(none)', '', '**Details**', $('#bug-details').value.trim() || '(none)'].join('\n');
+      let log = $('#bug-log').checked ? redact(recent.slice(-40).join('\n')) : '';
+      const REPO = 'https://github.com/orionopenwow/TribeCode/issues/new';
+      const make = () => `${REPO}?${new URLSearchParams({ template: 'feedback.yml', title: `Bug: ${title.slice(0, 80)}`, facet: 'Bug', message: redact(head) + (log ? '\n\n**Log (this window, last lines)**\n```\n' + log + '\n```' : ''), where })}`;
+      let url = make(); while (url.length > 6500 && log) { log = log.split('\n').slice(Math.ceil(log.split('\n').length / 2)).join('\n').slice(-1500); if (log.length < 80) log = ''; url = make(); }
+      if (window.__TAURI__ && window.__TAURI__.opener) window.__TAURI__.opener.openUrl(url).catch(() => window.open(url, '_blank', 'noopener')); else window.open(url, '_blank', 'noopener');
+      const pics = files.filter(f => /^image\//.test(f.type)); pics.forEach(f => save(f, f.name));
+      window.TribeApp.toast(pics.length ? 'Your report is open on GitHub. Drag the screenshot from your Downloads folder onto it, then press Submit.' : 'Your report is open on GitHub: press Submit there to send it.');
+    };
     $('#bug-attach').onclick = () => { const i = document.createElement('input'); i.type = 'file'; i.accept = 'image/*,video/*,.txt,.log,.json'; i.multiple = true; i.onchange = () => { files = files.concat([...i.files]); show(); }; i.click(); };
     body.addEventListener('paste', e => { const f = [...(e.clipboardData && e.clipboardData.files || [])]; if (f.length) { files = files.concat(f); show(); } });
     body.querySelector('[data-close]').onclick = () => $('#invite-modal').classList.add('hidden');
@@ -218,6 +232,20 @@
   C.on('bug', b => { if (loaded) upsert(b); });
   document.addEventListener('keydown', e => { if (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === 'b') { e.preventDefault(); capture(); } });
   document.addEventListener('click', e => { if (!e.target.closest) return; const f = e.target.closest('[data-bf]'); if (f) { filter = f.dataset.bf; render(); } const sv = e.target.closest('[data-sevf]'); if (sv) { sev = sv.dataset.sevf; render(); } const w = e.target.closest('[data-whof]'); if (w) { who = w.dataset.whof; render(); } if (e.target.closest('#bug-new')) capture(); });
+
+  // The bug button in the top bar, beside People: one click opens the report box (the same as Ctrl Shift B).
+  (function topButton() {
+    const add = () => {
+      if (document.getElementById('bug-top')) return;
+      const tb = document.querySelector('.titlebar .tb-right'); if (!tb) return;
+      const b = document.createElement('button'); b.id = 'bug-top'; b.type = 'button'; b.className = 'ppl-btn bug-top';
+      b.title = 'Report a bug (Ctrl Shift B)'; b.setAttribute('aria-label', 'Report a bug'); b.innerHTML = '<svg class="i"><use href="#i-bug"/></svg>';
+      b.onclick = () => capture();
+      const ppl = document.getElementById('ppl-btn'); if (ppl && ppl.parentElement === tb) ppl.after(b); else tb.prepend(b);
+    };
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', () => setTimeout(add, 0)); else setTimeout(add, 0);
+    setTimeout(add, 1500);
+  })();
 
   window.TribeBugs = { load, capture };
 })();

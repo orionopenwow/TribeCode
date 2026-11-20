@@ -28,8 +28,18 @@ def main():
             for w, h in ((1440, 900), (390, 844)):   # the same person (the host), at two sizes
                 pg.set_viewport_size({"width": w, "height": h}); pg.goto(BASE + "/?skipIntro=1"); pg.wait_for_function("window.TribeBugs && window.TribeClient && TribeClient.connected() && TribeClient.project && TribeClient.project()", timeout=30000)
                 pg.evaluate("console.error('boom with token=abcdef1234567890 and sk-ant-api03-SECRETSECRET and ghp_SECRET123456')")
-                pg.evaluate("TribeBugs.capture()"); pg.wait_for_selector("#bug-title")
+                if w >= 1000:   # the bug button in the top bar, beside People
+                    pg.wait_for_selector("#bug-top", timeout=8000); pg.click("#bug-top")
+                else: pg.evaluate("TribeBugs.capture()")
+                pg.wait_for_selector("#bug-title")
                 pg.fill("#bug-title", f"Test bug {w}")
+                # Send to the TribeCode team: a filled-in public form opens; nothing secret is in the address
+                pg.evaluate("() => { window.__opened = []; window.open = u => { window.__opened.push(String(u)); return null; }; }")
+                pg.click("#bug-team"); pg.wait_for_function("window.__opened.length > 0", timeout=5000); url = pg.evaluate("window.__opened[0]")
+                assert url.startswith("https://github.com/orionopenwow/TribeCode/issues/new?") and "template=feedback.yml" in url and "facet=Bug" in url and len(url) < 7000, url[:200]
+                assert "SECRETSECRET" not in url and "abcdef1234567890" not in url and "SECRET123456" not in url, "secrets blanked in the link"
+                foot = pg.evaluate("(() => { const f = document.querySelector('#invite-modal .modal-foot').getBoundingClientRect(); return f.right <= innerWidth + 1 && [...document.querySelectorAll('#invite-modal .modal-foot .btn')].every(b => b.getBoundingClientRect().right <= innerWidth + 1); })()")
+                assert foot, "the report box's buttons fit"
                 pg.click("#bug-shot"); pg.wait_for_selector("#bug-files .bug-cap-item img", timeout=8000)
                 assert pg.evaluate("window.__shots") == 1 and not pg.locator("#invite-modal.hidden").count(), "one frame taken and the box is back"
                 pg.click("#bug-shot"); pg.wait_for_function("document.querySelectorAll('#bug-files .bug-cap-item').length === 2")

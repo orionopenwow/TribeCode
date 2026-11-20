@@ -11,6 +11,10 @@
   'use strict';
   const I = window.TribeI18n; if (!I || !I.add) return;
   I.add({
+    // ---- bug button and Send to the TribeCode team
+    'Send to TribeCode': ['Enviar a TribeCode', 'Enviar ao TribeCode', 'Envoyer à TribeCode', 'An TribeCode senden', 'TribeCodeに送る', '发送给 TribeCode', 'TribeCode에 보내기'],
+    'Your report is open on GitHub: press Submit there to send it.': ['Tu informe está abierto en GitHub: pulsa Submit allí para enviarlo.', 'Seu relato está aberto no GitHub: pressione Submit lá para enviar.', 'Votre rapport est ouvert sur GitHub : appuyez sur Submit pour l’envoyer.', 'Dein Bericht ist auf GitHub geöffnet: Drücke dort Submit, um ihn zu senden.', 'レポートをGitHubで開きました。Submitを押して送信してください。', '你的报告已在 GitHub 打开：在那里按 Submit 发送。', '보고서가 GitHub에서 열렸습니다. 거기서 Submit을 눌러 보내세요.'],
+    'Your report is open on GitHub. Drag the screenshot from your Downloads folder onto it, then press Submit.': ['Tu informe está abierto en GitHub. Arrastra la captura desde tu carpeta Descargas y pulsa Submit.', 'Seu relato está aberto no GitHub. Arraste a captura da pasta Downloads para lá e pressione Submit.', 'Votre rapport est ouvert sur GitHub. Faites-y glisser la capture depuis Téléchargements, puis appuyez sur Submit.', 'Dein Bericht ist auf GitHub geöffnet. Zieh das Bildschirmfoto aus dem Download-Ordner darauf und drücke Submit.', 'レポートをGitHubで開きました。ダウンロードフォルダのスクリーンショットをドラッグして、Submitを押してください。', '你的报告已在 GitHub 打开。把下载文件夹里的截图拖上去，然后按 Submit。', '보고서가 GitHub에서 열렸습니다. 다운로드 폴더의 스크린샷을 끌어다 놓고 Submit을 누르세요.'],
     // ---- fix/p7-cache: clear the cache
     'Showing an old version?': ['¿Ves una versión antigua?', 'Vendo uma versão antiga?', 'Une ancienne version s’affiche ?', 'Siehst du eine alte Version?', '古いバージョンが表示されていますか？', '显示的是旧版本？', '이전 버전이 보이나요?'],
     'Clear the cache and restart': ['Borrar la caché y reiniciar', 'Limpar o cache e reiniciar', 'Vider le cache et redémarrer', 'Cache leeren und neu starten', 'キャッシュを消して再起動', '清除缓存并重启', '캐시 지우고 다시 시작'],

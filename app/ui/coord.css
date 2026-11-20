@@ -252,3 +252,9 @@
 body.hs-on #cc-connect { display: none !important; }
 /* Flint's dock: just the Ask box until there is a conversation (no "basic mode · no model" header, no empty hello) */
 .flint:not(.has-msgs) .fl-head, .flint:not(.has-msgs) .fl-thread { display: none; }
+
+/* the report box has four actions: let them wrap on narrow windows */
+#invite-modal .modal-foot:has(#bug-team) { flex-wrap: wrap; row-gap: 8px; column-gap: 6px; }
+#invite-modal .modal-foot:has(#bug-team) .btn { padding-inline: 8px; }
+#invite-modal .modal-foot:has(#bug-team) > span { display: none; }
+#invite-modal .modal-foot:has(#bug-team) #bug-save { margin-left: auto; }
