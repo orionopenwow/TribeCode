@@ -80,6 +80,7 @@
   async function open(pid, tab) {
     if (!K() || !D()) return toast(T('The Launch kit did not load. Reload the app.'));
     pid = pid || (C && C.project && C.project()) || 'me';
+    if (st && st.el && st.pid === pid && tab && TABS.some(t => t[0] === tab)) { show(tab); return; }   // pass 9: already open (Flint asked for a tab): stay, with his thread
     if (st && st.el) close();
     const proj = ((C && C.state && C.state().projects) || []).find(p => p.id === pid) || {};
     const r = await load(pid);
@@ -89,12 +90,16 @@
     if (online(pid)) C.api(`/projects/${encodeURIComponent(pid)}/sense`, { project: pid }).then(s => { if (st && s) st.kind = s.kind === 'game' || s.kind === '3d' ? 'game' : 'app'; }).catch(() => {});
     const scrim = document.createElement('div'); scrim.className = 'lch-scrim';
     const el = document.createElement('section'); el.id = 'lch'; el.className = 'lch'; el.setAttribute('role', 'dialog'); el.setAttribute('aria-modal', 'true'); el.setAttribute('aria-labelledby', 'lch-h'); el.tabIndex = -1;
-    el.innerHTML = `<header class="lch-head"><div class="lch-ttl"><span class="eyebrow">${esc(T('Launch kit'))}</span><h2 id="lch-h">${esc(st.name)}</h2></div>
-      <span class="lch-prog" id="lch-prog"></span>${window.TribeAssetLib ? `<button type="button" class="btn sm ghost lch-lib" id="lch-lib">${ico('palette', 14)} <span>${esc(T('Library'))}</span></button>` : ''}${window.TribeChanges && window.TribeChanges.entryHTML ? window.TribeChanges.entryHTML('btn sm ghost') : ''}<button type="button" class="lch-x" id="lch-x" aria-label="${esc(T('Close'))}">${ico('x', 18)}</button></header>
+    const CS = window.TribeCreatorShell;
+    el.innerHTML = `<header class="lch-head">${CS ? CS.backHTML('lch-x').replace('class="cs-back"', 'class="cs-back lch-back"') : ''}<div class="lch-ttl"><span class="eyebrow">${esc(T('Launch kit'))}</span><h2 id="lch-h">${esc(st.name)}</h2></div>
+      <span class="lch-prog" id="lch-prog"></span>${window.TribeAssetLib ? `<button type="button" class="btn sm ghost lch-lib" id="lch-lib">${ico('palette', 14)} <span>${esc(T('Library'))}</span></button>` : ''}${window.TribeChanges && window.TribeChanges.entryHTML ? window.TribeChanges.entryHTML('btn sm ghost') : ''}${CS ? '' : `<button type="button" class="lch-x" id="lch-x" aria-label="${esc(T('Close'))}">${ico('x', 18)}</button>`}</header>
       <nav class="lch-tabs" role="tablist" aria-label="${esc(T('Launch kit'))}">${TABS.map(([id, l, i]) => `<button type="button" role="tab" class="lch-tab" data-lch-tab="${id}" aria-selected="false">${ico(i, 16)}<span>${esc(T(l))}</span></button>`).join('')}</nav>
       <div class="cr-strip" id="lch-cr" hidden></div>
       <div class="lch-body" id="lch-body"></div>`;
     document.body.append(scrim, el); st.el = el; st.scrim = scrim;
+    // pass 9: Flint's column and the flame, the same as in every creator (a drawer here: the kit is a sheet)
+    if (CS && window.TribeFlint && window.TribeFlint.mount) st.shell = CS.flint(el, { top: el.querySelector('.lch-head'), wide: 99999,
+      mount: (host, tools) => window.TribeFlint.mount(host, { ctx: 'launch', tools, placeholder: T('Ask Flint about your store page…'), hello: T('Ask for a tab or a hand, like “write my store text” or “open the checklist”.'), chips: () => ['Write my store text', 'Make my screenshots', 'Open the checklist'] }) });
     scrim.onclick = close; el.querySelector('#lch-x').onclick = close;
     const lib = el.querySelector('#lch-lib'); if (lib) lib.onclick = () => library();
     fontReady().then(ok => { if (ok && st && st.el === el) show(st.tab); });
@@ -130,6 +135,7 @@
   }
   function close() {
     if (!st || !st.el) return; save(true);
+    if (st.shell) { st.shell.destroy(); st.shell = null; }
     const { el, scrim } = st; st.el = null;
     const done = () => { el.remove(); scrim.remove(); };
     if (window.TribeUI && window.TribeUI.dismiss) window.TribeUI.dismiss([el, scrim], done); else done();

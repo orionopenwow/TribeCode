@@ -213,7 +213,7 @@
     $('#apc-undo').onclick = undo; $('#apc-redo').onclick = redo;
     $('#apc-play').onclick = () => { st.mode = st.mode === 'play' ? 'edit' : 'play'; st.sel = null; st.sels = []; if (st.map && P()) P().toggleMap(false); paint(); };
     $('#apc-export').onclick = e => { e.stopPropagation(); const m = $('#apc-menu'); m.hidden = !m.hidden; };
-    root.addEventListener('click', e => { if (!e.target.closest('.apc-menuw')) $('#apc-menu').hidden = true; });
+    root.addEventListener('click', e => { if (!root) return; if (!e.target.closest('.apc-menuw')) $('#apc-menu').hidden = true; });   // Back closes the tool before this runs
     root.querySelectorAll('[data-x]').forEach(b => b.onclick = () => { $('#apc-menu').hidden = true; doExport(b.dataset.x); });
     root.querySelectorAll('[data-tab]').forEach(b => b.onclick = () => { st.tab = b.dataset.tab; paintLeft(); });
     root.querySelectorAll('[data-sheet]').forEach(b => b.onclick = () => openSheet(b.dataset.sheet));

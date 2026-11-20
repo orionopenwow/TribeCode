@@ -178,20 +178,56 @@
     return box;
   }
   function close() {
-    if (!box) return; box.remove(); box = null; document.body.classList.remove('fpv-open');
+    if (!box) return; if (fshell) { fshell.destroy(); fshell = null; } box.remove(); box = null; document.body.classList.remove('fpv-open');
     try { root.dispatchEvent(new CustomEvent('tribe:firstlook-close')); } catch {}
     if (App() && App().show) App().show('home');
     if (root.TribeProjects && root.TribeProjects.refresh) root.TribeProjects.refresh();
   }
+  const CS = () => root.TribeCreatorShell;
   const head = (name, idea, busy) => `<header class="fpv-bar">
+      ${CS() ? CS().backHTML('fpv-back').replace('data-cs="back"', 'data-cs="back" data-fpv="close"') : ''}
       <div class="fpv-id"><span class="eyebrow">${esc(T(busy ? (idea ? 'Your first preview' : 'Preview') : idea ? 'Made from your idea' : 'Preview'))}</span><h1 class="fpv-name">${esc(name)}</h1>
         ${idea ? `<p class="fpv-idea"><span class="fpv-q">“${esc(idea)}”</span>${busy ? '' : ` <button type="button" class="linkish" data-fpv="change">${esc(T('Change it'))}</button>`}</p>` : ''}</div>
-      <button type="button" class="fpv-x" data-fpv="close" aria-label="${esc(T('Go to the dashboard'))}" title="${esc(T('Go to the dashboard'))}">${ico('i-x', 16)}</button></header>`;
+      ${CS() ? '' : `<button type="button" class="fpv-x" data-fpv="close" aria-label="${esc(T('Go to the dashboard'))}" title="${esc(T('Go to the dashboard'))}">${ico('i-x', 16)}</button>`}</header>`;
   function making(name, idea) {
     const b = shell(); b.setAttribute('aria-label', T('Making your first preview'));
     b.innerHTML = `${head(name, idea, true)}<div class="fpv-stage fpv-busy" aria-busy="true"><div class="fpv-making" role="status"><span class="spin" aria-hidden="true"></span><b>${esc(T(idea ? 'Making your first preview…' : 'Opening the preview…'))}</b>${idea ? `<small>${esc(T('From your idea, with no AI. A few seconds.'))}</small>` : ''}</div>
       <div class="fpv-skel" aria-hidden="true"><i></i><i></i><i></i><i></i></div></div>`;
     b.querySelector('[data-fpv="close"]').onclick = close;
+  }
+  // pass 9: Flint in the first preview. The creator's own Flint does the change out of sight, saves, and the preview is drawn again.
+  let fshell = null;
+  async function rendered(pid, kind) {
+    if (kind === 'site') { const d = await C().api(`/projects/${enc(pid)}/site-config`); return d && d.config ? { html: root.TribeSiteCfg.render(d.config, { mode: 'single', fonts: await fontsOf(d.config) }), config: d.config } : null; }
+    if (kind === 'app') { const d = await C().api(`/projects/${enc(pid)}/app-config`); return d && d.config ? { ...(await appHtml(d.config)), config: d.config } : null; }
+    return null;
+  }
+  async function flintRun(text, u) {
+    const r = cur; if (!r || !box) return true;
+    if (r.kind === 'game') return 'flint';   // a game is code: Flint's full brain answers, Keep editing opens it
+    const pid = r.pid, tool = r.kind === 'app' ? root.TribeAppCreator : root.TribeSiteDesigner; if (!tool) return 'flint';
+    let before = null, out = '';
+    document.body.classList.add('fpv-quiet'); box.classList.add('fpv-working');
+    try {
+      before = await rendered(pid, r.kind);
+      await tool.open({ pid }); out = await tool.ask(text); tool.close();
+      await new Promise(res => setTimeout(res, 450));   // the save the tool makes as it closes
+    } catch (e) { out = e && e.message ? e.message : String(e); }
+    finally { document.body.classList.remove('fpv-quiet'); if (box) box.classList.remove('fpv-working'); }
+    let after = null; try { after = await rendered(pid, r.kind); } catch {}
+    const changed = !!(before && after && JSON.stringify(before.config) !== JSON.stringify(after.config));
+    if (after && box && cur === r) { const f = box.querySelector('#fpv-frame'); if (f) { f.removeAttribute('src'); f.srcdoc = after.html || ''; } }
+    const say = typeof out === 'string' ? out : (out && out.text) || '';
+    const undo = async () => { try { await C().api(`/projects/${enc(pid)}/${r.kind}-config`, { method: 'PUT', body: r.kind === 'site' ? { config: before.config, force: true } : { config: before.config } }); const x = await rendered(pid, r.kind); const f = box && box.querySelector('#fpv-frame'); if (x && f) f.srcdoc = x.html || ''; u.say(T('Undone.')); } catch (e) { u.say(e.message || String(e)); } };
+    u.say(say || T(changed ? 'Done.' : 'I did not catch that. Try “make it dark” or “add a settings screen”, or press Keep editing.'), changed ? [{ label: T('Undo'), fn: undo }] : []);
+    return true;
+  }
+  function attachFlint(b, r) {
+    if (fshell) { fshell.destroy(); fshell = null; }
+    if (!CS() || !root.TribeFlint || !root.TribeFlint.mount) return;
+    const chips = r.kind === 'app' ? ['Make it dark', 'Add a settings screen', 'Rounder'] : r.kind === 'site' ? ['Dark mode', 'Add a page called About', 'Rounder corners'] : ['How do I change the game?'];
+    fshell = CS().flint(b, { top: b.querySelector('.fpv-bar'),
+      mount: (host, tools) => root.TribeFlint.mount(host, { ctx: 'first', tools, run: flintRun, chips: () => chips, placeholder: T('Tell Flint what to change…'), hello: T('Say what to change, like “make it dark”. I change it right here.') }) });
   }
   async function aiNow() { try { return root.TribeFlintCreate && root.TribeFlintCreate.hasAI ? await root.TribeFlintCreate.hasAI() : { any: false }; } catch { return { any: false }; } }
   async function show(r) {
@@ -212,6 +248,7 @@
       <div class="fpv-stage fpv-${r.kind}${r.phone ? ' fpv-phone' : ''}">${frame}</div>
       ${r.saved ? '' : `<p class="fpv-note faint">${esc(T('Shown here only: the tribe could not be reached, so nothing was saved yet.'))}</p>`}`;
     if (!r.url) b.querySelector('#fpv-frame').srcdoc = r.html || '';
+    attachFlint(b, r);
     b.querySelectorAll('[data-fpv]').forEach(x => { x.onclick = () => act(x.dataset.fpv, x); });
     b.querySelector('#fpv-change').onsubmit = e => { e.preventDefault(); const v = b.querySelector('#fpv-change-in').value.trim(); if (v) again(v, null); };
     const first = b.querySelector('[data-fpv="edit"]'); if (first && !matchMedia('(max-width: 820px)').matches) first.focus({ preventScroll: true });
@@ -235,13 +272,14 @@
       return;
     }
     if (k === 'edit' || k === 'better') {
-      const pid = r.pid; box.remove(); box = null; document.body.classList.remove('fpv-open');
+      const pid = r.pid; if (fshell) { fshell.destroy(); fshell = null; } box.remove(); box = null; document.body.classList.remove('fpv-open');
       try { root.dispatchEvent(new CustomEvent('tribe:firstlook-close')); } catch {}
+      if (App() && App().show) App().show('home');   // pass 9: Back in the creator lands on the dashboard
       if (r.kind === 'site' && root.TribeSiteDesigner) await root.TribeSiteDesigner.open({ pid });
       else if (r.kind === 'app' && root.TribeAppCreator) await root.TribeAppCreator.open({ pid });
       else if (root.TribePreview) { await root.TribePreview.open(); if (root.TribePreview.setSource) root.TribePreview.setSource('app', true); }
       if (k === 'better') {   // Polish it, from the creator's own Flint row (no AI)
-        const t0 = Date.now(); const tick = () => { const b2 = document.querySelector("[data-fc-act='polish']"); if (b2 && b2.offsetParent) return b2.click(); if (Date.now() - t0 < 6000) setTimeout(tick, 150); };
+        const t0 = Date.now(); const tick = () => { const b2 = document.querySelector("[data-fc-act='polish']"); if (b2 && b2.offsetParent) return b2.click(); const fl = !b2 || !b2.offsetParent ? document.querySelector('#apc .cs-flame[aria-expanded="false"], #wdz .cs-flame[aria-expanded="false"]') : null; if (fl && fl.offsetParent) fl.click(); if (Date.now() - t0 < 6000) setTimeout(tick, 150); };
         tick();
       }
     }
