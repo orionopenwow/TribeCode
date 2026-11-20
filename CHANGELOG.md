@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.41.2
+- **Demo tour**: a chapter now closes the full-screen Preview or designer the chapter before left open, so its highlight is no longer hidden behind it. Highlights pick the control that is actually on screen.
+- **Phones**: the demo tour no longer ends early when it closes Preview, and the Preview chapter no longer points at a row phones don't have.
+
 ## v0.41.1
 - **Updates always show**: the first start after an update clears the app's old cached screens, so a new version is never hidden behind an old one. Your settings, projects and messages stay. If something still looks old: Settings > About > Clear the cache and restart.
 - **Write while the host is away**: messages, DMs, replies, GIFs and small pictures or voice notes show at once as "Waiting to send" and go out by themselves when the tribe is back, once and in order. A reload keeps them.
