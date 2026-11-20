@@ -136,7 +136,7 @@ def main():
             wait_text(host, "#pj-bio", "A tiny game for friends")
             cur = host.evaluate("TribeProjects.current()")
             assert any(x["id"] == cur and x.get("bio") == "A tiny game for friends" for x in api("/projects", token=tok)[1]["projects"]), "bio saved"
-            host.click("#pj-check [data-ck=vision]"); host.fill("#pj-vtext", "A cozy platformer.\nFor friends.\nDone: 3 levels."); host.click("#pj-vsave")
+            host.click("#pj-bio"); host.fill("#pj-vis-in", "A cozy platformer.\nFor friends.\nDone: 3 levels."); host.click("#pj-vis-save")   # pass 9: the one line under the name is the vision
             host.wait_for_selector("#pj-check [data-step=vision].on", timeout=10000, state="attached")
 
             # ---- ?invite=1 (tribecode://invite, Invite-A-Friend.bat) ----

@@ -117,6 +117,10 @@
     return file => out.get(file) || '';
   };
 
+  // the saved design's fingerprint (firstmake.js sig): "Change it" asks before it replaces work the person has edited since
+  async function sigOf(pid, kind) { try { const M = root.TribeFirstMake; if (!M) return ''; const d = await C().api(`/projects/${enc(pid)}/${kind === 'app' ? 'app-config' : 'site-config'}`); return d && d.config ? M.sig(d.config) : ''; } catch { return ''; } }
+  const editedSince = async r => !!(r && r.sig && r.kind !== 'game' && (await sigOf(r.pid, r.kind)) !== r.sig);
+
   // ---------- making it ----------
   async function makeSite(pid, idea, name, g) {
     const S = root.TribeSiteCfg; if (!S) throw new Error('The website designer did not load. Reload the app.');
@@ -124,16 +128,20 @@
     let cfg = S.normalize(raw); cfg.template = cfg.template || g.tpl;
     const tl = line(idea);
     if (S.fill) { const f = S.fill(cfg, { name: siteName(name), ...(tl ? { tagline: tl } : {}) }); cfg = (f && f.cfg) || cfg; }
+    const M = root.TribeFirstMake, b = M ? M.brief(idea) : null;   // pass 9: the words, sections and look come from the sentence
+    if (b) { b.line = tl; try { cfg = S.normalize(M.site(S, cfg, b, siteName(name), g.tpl)); } catch (e) { try { console.warn('first make (site)', e); } catch {} } }
     cfg.seo = { ...(cfg.seo || {}), title: siteName(name), description: tl || (cfg.seo || {}).description || '' };
     let saved = true; try { await C().api(`/projects/${enc(pid)}/site-config`, { method: 'PUT', body: { config: cfg, force: true } }); } catch { saved = false; }
     const fonts = await fontsOf(cfg);
-    return { html: S.render(cfg, { mode: 'single', fonts }), saved };
+    return { html: S.render(cfg, { mode: 'single', fonts }), saved, sig: saved ? await sigOf(pid, 'site') : '' };
   }
   async function makeApp(pid, idea, name, g) {
     const A = root.TribeAppCore; if (!A) throw new Error('App Creator did not load. Reload the app.');
-    const doc = A.template(g.tpl, { name: String(name || 'My app').slice(0, 48) }) || A.template('todo', { name });
+    let doc = A.template(g.tpl, { name: String(name || 'My app').slice(0, 48) }) || A.template('todo', { name });
+    const M = root.TribeFirstMake, b = M ? M.brief(idea) : null;   // pass 9: the words, screens and look come from the sentence
+    if (b) { try { doc = M.app(A, doc, b, String(name || 'My app').slice(0, 48), g.tpl); } catch (e) { try { console.warn('first make (app)', e); } catch {} } }
     let saved = true; try { await C().api(`/projects/${enc(pid)}/app-config`, { method: 'PUT', body: { config: doc } }); } catch { saved = false; }
-    return { ...(await appHtml(doc)), saved };
+    return { ...(await appHtml(doc)), saved, sig: saved ? await sigOf(pid, 'app') : '' };
   }
   async function appHtml(doc) {   // the exported phone web app as one page for the frame (like App Creator's Play)
     const A = root.TribeAppCore, files = Object.fromEntries(A.pwa(doc).filter(f => typeof f[1] === 'string'));
@@ -163,7 +171,8 @@
     const out = g.kind === 'app' ? await makeApp(pid, idea, name, g) : g.kind === 'game' ? await makeGame(pid, idea, name, g) : await makeSite(pid, idea, name, g);
     // the dashboard's preview band shows what was just made (the project may also have a code folder with a page in it)
     if (out.saved) { try { await C().api('/dash/show', { method: 'PUT', project: pid, body: { show: g.kind === 'app' ? 'phone' : g.kind === 'site' ? 'site' : 'app' } }); } catch {} }
-    const rec = { pid, idea, name, kind: g.kind, sub: g.sub, tpl: g.tpl, label: g.label, sure: g.sure, at: Date.now() };
+    const M = root.TribeFirstMake, chips = M ? M.chips(M.brief(idea), g.kind === 'site' ? g.label : KIND_LABEL[g.kind]) : [];
+    const rec = { pid, idea, name, kind: g.kind, sub: g.sub, tpl: g.tpl, label: g.label, sure: g.sure, at: Date.now(), chips, sig: out.sig || '' };
     ls.set(KEY(pid), JSON.stringify(rec)); ls.set(FAIL(pid), null);
     try { root.dispatchEvent(new CustomEvent('tribe:firstlook', { detail: rec })); } catch {}
     return { ...rec, ...out };
@@ -239,12 +248,13 @@
         <button type="button" class="btn primary" data-fpv="edit">${ico('i-quill', 15)}${esc(T('Keep editing'))}</button>
         ${r.kind === 'game' ? '' : `<button type="button" class="btn" data-fpv="better">${ico('i-sparkle', 15)}${esc(T('Make it better'))}</button>`}
         <button type="button" class="btn" data-fpv="invite">${ico('i-users', 15)}${esc(T('Invite a friend'))}</button>
-        <span class="fpv-kind"><b>${esc(T(KIND_LABEL[r.kind]))}${r.kind === 'site' && r.label ? ` · ${esc(T(r.label))}` : ''}</b>${r.sure === false ? ` <span class="faint">${esc(T('(our best guess)'))}</span>` : ''}
+        <span class="fpv-kind"><b>${esc(T(KIND_LABEL[r.kind]))}${r.kind === 'site' && r.label ? ` · ${esc(T(r.label))}` : ''}</b>${(r.chips || []).slice(1).map(c => `<span class="fpv-chip">${esc(c)}</span>`).join('')}${r.sure === false ? ` <span class="faint">${esc(T('(our best guess)'))}</span>` : ''}
           ${r.idea ? `· ${other.map(k => `<button type="button" class="linkish" data-fpv="as" data-as="${k}">${esc(T(k === 'site' ? 'Make it a website instead' : k === 'app' ? 'Make it an app instead' : 'Make it a game instead'))}</button>`).join(' · ')}` : ''}</span>
       </div>
       <div class="fpv-ai" id="fpv-ai" hidden></div>
       <form class="fpv-change" id="fpv-change" hidden><label class="eyebrow" for="fpv-change-in">${esc(T('Your idea'))}</label><textarea class="input" id="fpv-change-in" rows="2" maxlength="600">${esc(r.idea)}</textarea>
         <div class="fpv-change-f"><button type="button" class="btn" data-fpv="change-x">${esc(T('Cancel'))}</button><button type="submit" class="btn primary">${esc(T('Make it again'))}</button></div></form>
+      <div class="fpv-keep" id="fpv-keep" hidden role="alertdialog" aria-label="${esc(T('You have changed this since it was made'))}"><span>${esc(T('You have changed this since it was made. Making it again replaces your changes.'))}</span><button type="button" class="btn" data-fpv="keep-mine">${esc(T('Keep my version'))}</button><button type="button" class="btn primary" data-fpv="keep-replace">${esc(T('Replace it'))}</button></div>
       <div class="fpv-stage fpv-${r.kind}${r.phone ? ' fpv-phone' : ''}">${frame}</div>
       ${r.saved ? '' : `<p class="fpv-note faint">${esc(T('Shown here only: the tribe could not be reached, so nothing was saved yet.'))}</p>`}`;
     if (!r.url) b.querySelector('#fpv-frame').srcdoc = r.html || '';
@@ -255,7 +265,7 @@
     const ai = await aiNow();
     if (ai.any && r.kind !== 'game' && box === b && cur === r) {
       const box2 = b.querySelector('#fpv-ai'); box2.hidden = false;
-      box2.innerHTML = `<span>${ico('i-sparkle', 14)}${esc(T('Your tribe has an AI helper.'))}</span> <button type="button" class="linkish" data-fpv="ai">${esc(T('Ask the AI to build a better first version'))}</button>`;
+      box2.innerHTML = `<span>${ico('i-sparkle', 14)}${esc(T('Your tribe has an AI helper.'))}</span> <button type="button" class="linkish" data-fpv="ai">${esc(T('Make it more mine'))}</button>`;
       box2.querySelector('[data-fpv="ai"]').onclick = () => act('ai');
     }
   }
@@ -265,6 +275,8 @@
     if (k === 'change') { const f = box.querySelector('#fpv-change'); f.hidden = false; f.querySelector('textarea').focus(); return; }
     if (k === 'change-x') { box.querySelector('#fpv-change').hidden = true; return; }
     if (k === 'as') return again(r.idea, el.dataset.as);
+    if (k === 'keep-mine') { box.querySelector('#fpv-keep').hidden = true; pending = null; pendingKeepVision = false; return; }
+    if (k === 'keep-replace') { const p = pending; pending = null; if (p) return again(p.idea, p.as, true); return; }
     if (k === 'invite') { const f = r.pid; close(); if (root.TribeFlow && root.TribeFlow.inviteSheet) root.TribeFlow.inviteSheet({ project: f }); else if (App() && App().openInvite) App().openInvite(); return; }
     if (k === 'ai') {
       try { const o = await root.TribeFlintCreate.beautify(r.kind === 'app' ? 'app' : 'site', { pid: r.pid, ask: `A better first version of: ${r.idea}` }); toast(o && o.text ? o.text : T('Sent to your tribe’s AI helper. Its version comes back as a change for you to approve.')); }
@@ -284,11 +296,20 @@
       }
     }
   }
-  async function again(idea, as) {
+  let pending = null, pendingKeepVision = false;
+  async function again(idea, as, sure) {
     const r = cur; if (!r) return;
+    if (!sure && await editedSince(r)) {   // never write over edits without asking
+      pending = { idea, as }; const k = box && box.querySelector('#fpv-keep'); if (k) { k.hidden = false; const b2 = k.querySelector('[data-fpv="keep-mine"]'); if (b2) b2.focus(); } return;
+    }
     making(r.name, idea);
     try {
-      if (idea !== r.idea) { try { await C().api('/vision', { method: 'PUT', project: r.pid, body: { text: `# ${r.name}\n\n${idea}\n` } }); } catch {} }
+      if (idea !== r.idea && !pendingKeepVision) {   // the same text as the dashboard's line: only the opening lines change, "## …" sections stay
+        try { let full = ''; try { full = (await C().api('/vision', { project: r.pid })).text || ''; } catch {} const i = full.search(/^##\s/m), rest = i >= 0 ? '\n' + full.slice(i).trim() + '\n' : '';
+          await C().api('/vision', { method: 'PUT', project: r.pid, body: { text: `# ${r.name}\n\n${idea}\n${rest}` } });
+          await C().api(`/projects/${enc(r.pid)}`, { method: 'PATCH', body: { bio: idea.replace(/\s+/g, ' ').slice(0, 200) } }); } catch {}
+      }
+      pendingKeepVision = false;
       show(await make(r.pid, idea, r.name, as));
     } catch (e) { fail(r.pid, idea, e); }
   }
@@ -327,7 +348,18 @@
     } catch (e) { fail(pid, r.idea, e); }
     return true;
   }
+  // The dashboard's "Update the first version to match?" after the vision changed there: opens what is saved, then
+  // makes it again from the new words (asking first when the person has edited the design since).
+  async function update({ pid, idea, name }) {
+    idea = String(idea || '').trim(); if (!pid || !idea) return false;
+    const had = last(pid); if (!had) { await start({ pid, idea, name }); return true; }
+    if (!(await open(pid))) return false;
+    for (let i = 0; i < 80 && !(cur && cur.pid === pid && box && box.querySelector('#fpv-frame')); i++) await new Promise(r => setTimeout(r, 100));
+    if (!cur || cur.pid !== pid) return false;
+    if (name) cur.name = name;
+    pendingKeepVision = true; await again(idea, null); return true;
+  }
   const failed = pid => ls.get(FAIL(pid)) || '';
   async function retry(pid) { const idea = failed(pid); if (!idea) return; const p = root.TribeProjects && root.TribeProjects.cur ? root.TribeProjects.cur() : null; return start({ pid, idea, name: (p && p.name) || 'My project' }); }
-  return { ...PURE, start, open, last, failed, retry, close, isOpen: () => !!(box && box.isConnected), state: () => cur };
+  return { ...PURE, start, open, update, last, failed, retry, close, isOpen: () => !!(box && box.isConnected), state: () => cur };
 });

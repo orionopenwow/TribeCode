@@ -97,7 +97,7 @@ def main():
             host.evaluate("TribeApp.show('home')"); host.wait_for_selector("#pj-check.hero [data-ck=vision]", timeout=10000)
 
             # 2. the vision: category chips + the gist -> a local draft; Save sets the kind
-            host.click("#pj-check [data-ck=vision]"); host.wait_for_selector("#av-cats .av-cat")
+            host.evaluate("TribeAssist.vision(TribeProjects.cur(), { host: true, done: () => TribeProjects.overview() })"); host.wait_for_selector("#av-cats .av-cat")
             assert host.locator("#av-cats .av-cat").count() == 6
             assert host.locator(".av-q").count() == 0, "no guided prompts any more"
             host.click("#av-cats [data-cat=game]")
@@ -232,7 +232,7 @@ def main():
             no_overflow(ph, "phone dashboard"); ph.evaluate("(document.querySelector('#pj-setup') || document.body).scrollIntoView()"); shot(ph, "phone-dashboard")
             ph.click("#pj-setup [data-role=writer]"); ph.wait_for_selector(".su-flow .su-opt"); no_overflow(ph, "phone role chooser")
             ph.click(".su-flow .su-opt >> nth=0"); ph.wait_for_selector("#pj-setup [data-role=writer].on", timeout=10000)
-            ph.evaluate("TribeProjects.step('vision')"); ph.wait_for_selector("#av-cats .av-cat"); ph.wait_for_timeout(200); no_overflow(ph, "phone vision composer"); shot(ph, "phone-vision")
+            ph.evaluate("TribeAssist.vision(TribeProjects.cur(), { host: true, done: () => TribeProjects.overview() })"); ph.wait_for_selector("#av-cats .av-cat"); ph.wait_for_timeout(200); no_overflow(ph, "phone vision composer"); shot(ph, "phone-vision")
             assert len(set(ph.eval_on_selector_all("#av-cats .av-cat", "els => els.map(e => Math.round(e.getBoundingClientRect().top))"))) >= 2, "chips wrap"
             ph.click("[data-close]"); ph.wait_for_timeout(200)
             ph.evaluate("TribeApp.show('tasks')"); ph.wait_for_selector("#task-new", timeout=10000)

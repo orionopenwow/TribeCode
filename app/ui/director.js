@@ -389,18 +389,18 @@
       const steps = document.querySelectorAll('#pj-check [data-step]');
       for (const s of steps) { await move('me', s, 500, { dx: 0.12 }); await wait(420); }
     } },
-    { id: 'vision', title: 'Write the vision', flint: ["#pj-check [data-ck=\"vision\"], #pj-check", "Every project starts with what you're making. Click here to write the vision."], after: "Now everyone, and every AI helper, knows the plan: a cozy garden game that plays on a phone.", cap: 'Say what you’re making. Everyone, and every agent, reads it.', dur: 13000, async run() {
+    { id: 'vision', title: 'Write the vision', flint: ["#pj-bio, #pj-check [data-ck=\"vision\"], #pj-check", "Every project starts with what you're making. Click here to write the vision."], after: "Now everyone, and every AI helper, knows the plan: a cozy garden game that plays on a phone.", cap: 'Say what you’re making. Everyone, and every agent, reads it.', dur: 13000, async run() {
       if (C().project() !== NEWID) await inProject(NEWID);
       if (view() !== 'home') A().show('home');
-      const b = await waitFor('#pj-check [data-ck="vision"]', 3000);
+      const b = await waitFor('#pj-bio:not(:disabled), #pj-check [data-ck="vision"]', 3000);
       if (b) await click('me', b); else if (window.TribeProjects) window.TribeProjects.step('vision');
-      const ta = await settle('#pj-vtext', 'vision composer open');
+      const ta = await settle('#pj-vis-in', 'vision line open');   // pass 9: written in place under the project's name
       if (ta) {
         ta.value = '';
         await click('me', ta, { noClick: true, dy: 0.3 });
         await type(ta, `${NEW}: a tiny cozy garden game.\nPlant seeds at night, fireflies light the paths.\nDone for now: one garden, five plants, plays on a phone.`, 34);
         await wait(500);
-        const save = $('#pj-vsave'); if (save) await click('me', save);
+        const save = $('#pj-vis-save') || $('#pj-vsave'); if (save) await click('me', save);
       }
       await waitFor(() => (db().vision || {})[NEWID], 3000);
       if (window.TribeProjects) await window.TribeProjects.overview();

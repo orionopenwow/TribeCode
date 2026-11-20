@@ -145,7 +145,7 @@
     else if (k === 'github') connectGithub(p);   // sign in to GitHub inside the app   // feat/setup-flow: one click makes the code repository
     else { App().show('tasks'); setTimeout(() => { const nb = $('#task-new'); nb && nb.click(); }, 80); }
   }
-  let ovSeq = 0, visDraft = '', naming = false, lastOv = '';   // naming: the project name is being edited, so a redraw waits   // the checklist's inline vision box keeps what you typed across redraws
+  let ovSeq = 0, visDraft = '', naming = false, lastOv = '', matchOffer = null, wantVisEdit = false, visLead = '';   // pass 9: the offer after a vision edit, a pending in-place edit, the vision's opening lines   // naming: the project name is being edited, so a redraw waits   // the checklist's inline vision box keeps what you typed across redraws
   // One redraw at a time: a request that arrives mid-redraw runs once right after it (never cancels it, so the page
   // always catches up even when events keep coming). A redraw that fails tries again shortly.
   let ovFlight = null, ovAgain = false;
@@ -185,8 +185,8 @@
     const pk = `tribecode.ov.${p.id}.`, lsg = k => { try { return localStorage.getItem(pk + k); } catch { return null; } };
     const lss = (k, v) => { try { v == null ? localStorage.removeItem(pk + k) : localStorage.setItem(pk + k, v); } catch {} };
     const steps = [
-      { id: 'vision', emo: 'sparkle', label: 'Write the vision', sub: 'Say what you’re making and who it’s for. Everyone reads it.', done: !!(d.vision && d.vision.has), acts: canEdit ? `<button class="btn sm" data-ck="vision">${isHost() ? 'Write it' : 'Suggest'}</button>` : '',
-        inline: '' },   // pass 6: no inline box; the first description is the vision, and "Write it" opens the one editor (TribeAssist.vision)
+      { id: 'vision', emo: 'sparkle', label: 'Say what you’re making', sub: 'One or two sentences at the top of this page. Everyone reads them.', done: !!(d.vision && d.vision.has), acts: isHost() || p.role === 'host' ? `<button class="btn sm" data-ck="vision">Write it</button>` : '',
+        inline: '' },   // pass 9: no box here; "Write it" puts the cursor in the one line under the project's name   // pass 6: no inline box; the first description is the vision, and "Write it" opens the one editor (TribeAssist.vision)
       { id: 'task', emo: 'tasks', label: 'Add a first task', sub: 'One small thing to build first.', done: (d.taskCount || 0) > 0, below: canEdit ? '<button class="btn sm primary" data-ck="newtask">New task</button>' : '',
         inline: canEdit && d.vision && d.vision.has ? `<div class="ock-inline ock-sugg"><span class="eyebrow">Suggested from your vision</span><div class="ock-sugg-list" id="ock-sugg"><span class="faint">Thinking of first tasks…</span></div></div>` : '' },
       { id: 'claude', emo: 'agent', label: 'Connect your AI', sub: 'Claude Code, Codex, Gemini or Cursor can build with you.', done: myAgent || d.agents.length > 0, acts: canEdit ? '<button class="btn sm" data-ck="claude">Connect</button>' : '' },
@@ -240,10 +240,14 @@
     if (window.TribeCompany) { if (window.TribeCompany.loadedFor() !== p.id && C.project() === p.id) await window.TribeCompany.refresh(p.id).catch(() => null); const ct = curP() === p && window.TribeCompany.tile(); if (ct) tiles.push(ct); }   // v0.27 company: one At a glance tile when the project is a company
     const r = d.repo;
     if (naming) return;
-    const visFocus = document.activeElement && document.activeElement.id === 'ock-vis-in';
+    // pass 9: what you're making is ONE line, edited right here: the vision's opening lines (else the short description)
+    const hasVis = !!(d.vision && d.vision.has), visText = hasVis ? (d.vision.lead || d.vision.excerpt || '') : (d.bio || '');
+    const canVis = isHost() || p.role === 'host', visEdit = canVis || (canEdit && !hasVis);   // the server asks for settings.edit to change the vision
+    visLead = hasVis ? visText : ''; const visFocus = false;
     const html = `<div class="view-head pj-title pj-title2"><button class="pj-face-btn" id="pj-face" title="Change the picture" aria-label="Change the project picture">${face(p, 'lg')}${canEdit ? `<span class="pj-cam" aria-hidden="true">${ico('i-photo', 12)}</span>` : ''}</button>
         <div class="pj-id"><h1>${canName ? `<button class="pj-inl pj-name-btn" id="pj-name" title="Rename">${esc(p.name)}</button>` : esc(p.name)}</h1>
-          <button class="pj-inl pj-bio ${d.bio ? '' : 'empty'}" id="pj-bio" ${canEdit ? '' : 'disabled'} title="${canEdit ? 'Edit the bio' : ''}">${d.bio ? esc(d.bio) : canEdit ? `${ico('i-quill', 14)}Add a short description` : ''}</button>
+          <button class="pj-inl pj-bio pj-vis ${visText ? '' : 'empty'}" id="pj-bio" ${visEdit ? '' : 'disabled'} title="${visEdit ? 'Edit what you’re making' : ''}">${visText ? `<span class="pj-vis-t">${esc(visText)}</span>${visEdit ? `<span class="pj-vis-pen" aria-hidden="true">${ico('i-quill', 13)}</span>` : ''}` : visEdit ? `${ico('i-quill', 14)}Add what you’re making` : ''}</button>
+          ${matchOffer && matchOffer.pid === p.id ? `<div class="pj-vmatch" id="pj-vmatch" role="status"><span>Update the first version to match?</span><button type="button" class="btn sm primary" id="pj-vmatch-go">Update it</button><button type="button" class="btn sm" id="pj-vmatch-x">Not now</button></div>` : ''}
           <span class="faint pj-meta">${team.length} ${team.length === 1 ? 'person' : 'people'}${r ? `<span class="pj-dot">·</span><span title="The code repository: the shared folder that holds this project's code">${esc(r.name)}</span><span class="pj-dot">·</span><span title="The branch: the version of the code you're looking at (main is the shared one)">${esc(r.branch)}</span>` : ''}<span id="pj-site-slot"></span></span></div>
         ${canEdit ? `<button class="btn" id="pj-invite" style="margin-left:auto">${ico('i-users', 15)}Invite to ${esc(p.name)}</button>` : ''}</div>
       <div id="pj-band-slot"></div>${window.TribeFirstLook && window.TribeFirstLook.failed(p.id) ? `<div class="pj-flfail" id="pj-flfail" role="status"><span>The first preview from your idea did not finish.</span><button type="button" class="btn sm primary" id="pj-flfail-go">Try again</button></div>` : ''}${hero ? checklist : ''}<!-- pass 6: the one next step sits right under the preview -->
@@ -285,7 +289,7 @@ ${canEdit && !started ? `      <section class="pj-context" id="pj-context"><div 
         <div class="pj-tools-row"><button class="linkish pj-tools-link" id="pj-tools-link">${ico('i-box', 14)}Tools for ${esc(p.name)}</button></div>
         <div id="pj-tools-slot"></div>`)}
       </details>`;
-    if (html === lastOv && el.dataset.ovPid === p.id && el.firstElementChild && !el.querySelector('.pj-name-in, .pj-bio-in')) return;   // nothing changed: keep the page as it is (nothing you're using gets replaced)
+    if (html === lastOv && el.dataset.ovPid === p.id && el.firstElementChild && !el.querySelector('.pj-name-in, .pj-bio-in')) { if (wantVisEdit && visEdit) { wantVisEdit = false; editVision(p, visText, canVis); } return; }   // nothing changed: keep the page as it is (nothing you're using gets replaced)
     lastOv = html; el.dataset.ovPid = p.id;
     el.innerHTML = html; el.classList.remove('from-cache');
     try { localStorage.setItem('tribecode.ovcache:' + p.id, html); } catch {}   // instant first paint next time
@@ -317,7 +321,11 @@ ${canEdit && !started ? `      <section class="pj-context" id="pj-context"><div 
     const more = $('#pj-more'); if (more) more.addEventListener('toggle', () => lss('more', more.open ? '1' : null));   // re-renders keep the current open state (moreOpen)
     $('#pj-face').onclick = () => (canName ? pickFace(p) : pickImage(p));   // feat/setup-flow: emoji grid + Upload a picture
     const nm = $('#pj-name'); if (nm) nm.onclick = () => editName(p);
-    const bio = $('#pj-bio'); if (bio && canEdit) bio.onclick = () => editBio(p, d.bio);
+    const bio = $('#pj-bio'); if (bio && visEdit) bio.onclick = () => editVision(p, visText, canVis);
+    { const go = $('#pj-vmatch-go'), no = $('#pj-vmatch-x');
+      if (go) go.onclick = () => { const m = matchOffer; matchOffer = null; lastOv = ''; if (m && window.TribeFirstLook && window.TribeFirstLook.update) window.TribeFirstLook.update({ pid: m.pid, idea: m.text, name: p.name }); else overview(); };
+      if (no) no.onclick = () => { matchOffer = null; lastOv = ''; overview(); }; }
+    if (wantVisEdit && visEdit) { wantVisEdit = false; editVision(p, visText, canVis); }
     const cc = $('#pj-cc'); if (cc) cc.onclick = () => App().connectClaude();
     $('#pj-tools-link').onclick = () => (window.TribeWorkshop && window.TribeWorkshop.open ? window.TribeWorkshop.open('shelf') : App().show('repo'));
     el.querySelectorAll('[data-go]').forEach(x => x.onclick = () => (x.dataset.go === 'company' && window.TribeCompany ? window.TribeCompany.go() : x.dataset.go === 'plan' ? window.TribeCoord.open('plan') : x.dataset.go === 'inbox' ? (window.TribeNotify && window.TribeNotify.openInbox()) : App().show(x.dataset.go)));
@@ -363,6 +371,41 @@ ${canEdit && !started ? `      <section class="pj-context" id="pj-context"><div 
     });
   }
 
+  // pass 9: what you're making, edited in place under the project's name. For the host this IS the vision (its opening
+  // lines; any "## …" sections below them are kept) and the short description follows it. Enter saves, Esc cancels.
+  function editVision(p, cur, canVis) {
+    const b = $('#pj-bio'); if (!b) return;
+    const wrap = document.createElement('div'); wrap.className = 'pj-vis-edit';
+    wrap.innerHTML = `<textarea class="input pj-bio-in pj-vis-in" id="pj-vis-in" rows="1" maxlength="600" aria-label="What you’re making" placeholder="What are you making, and who is it for?"></textarea><div class="pj-vis-acts"><button type="button" class="btn sm primary" id="pj-vis-save">Save</button><button type="button" class="btn sm" id="pj-vis-x">Cancel</button></div>`;
+    const ta = wrap.querySelector('textarea'); ta.value = cur || '';
+    b.replaceWith(wrap); naming = true;
+    const grow = () => { ta.style.height = 'auto'; ta.style.height = Math.min(220, ta.scrollHeight + 2) + 'px'; };
+    grow(); ta.focus(); ta.setSelectionRange(ta.value.length, ta.value.length);
+    let done = false;
+    // a redraw that is overtaken by a list refresh paints nothing, so redraw until the field is gone
+    const finish = async () => { naming = false; for (let i = 0; i < 5 && wrap.isConnected; i++) { lastOv = ''; try { await overview(); } catch {} } };
+    const save = async () => {
+      if (done) return; const text = ta.value.replace(/[ \t]+\n/g, '\n').trim();
+      if (text === (cur || '').trim()) { done = true; return finish(); }
+      done = true; wrap.querySelector('#pj-vis-save').disabled = true;
+      try {
+        if (canVis) {
+          let full = ''; try { full = (await C.api('/vision')).text || ''; } catch {}
+          if (/Replace these lines together/.test(full)) full = '';
+          const i = full.search(/^##\s/m), rest = i >= 0 ? '\n' + full.slice(i).trim() + '\n' : '';
+          await C.api('/vision', { method: 'PUT', body: { text: `# ${p.name}\n\n${text}\n${rest}` } });
+        }
+        await C.api(`/projects/${encodeURIComponent(p.id)}`, { method: 'PATCH', body: { bio: text.replace(/\s+/g, ' ').slice(0, 200) } });
+        p.bio = text.replace(/\s+/g, ' ').slice(0, 200); await refresh();
+        if (canVis && text && window.TribeFirstLook && window.TribeFirstLook.last && window.TribeFirstLook.last(p.id)) matchOffer = { pid: p.id, text };   // offered once, never done on its own
+      } catch (e) { toast(e.message, 'err'); }
+      finish();
+    };
+    const cancel = () => { if (done) return; done = true; finish(); };
+    ta.oninput = grow;
+    ta.onkeydown = e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); save(); } if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); cancel(); } };
+    wrap.querySelector('#pj-vis-save').onclick = save; wrap.querySelector('#pj-vis-x').onclick = cancel;
+  }
   // One-line bio, edited in place on the overview (any builder).
   function editBio(p, cur) {
     const b = $('#pj-bio'); if (!b) return;
@@ -456,6 +499,8 @@ ${canEdit && !started ? `      <section class="pj-context" id="pj-context"><div 
     if (list) (async () => {
       let sg = []; try { sg = (await C.api('/assist/tasks')).suggestions || []; } catch {}
       if (!list.isConnected) return;
+      { const M = window.TribeFirstMake, b = M && visLead ? M.brief(visLead) : null;   // pass 9: "Let members log a run", not generic ones, when the sentence names things
+        if (b && (b.features.length || b.domain)) { const mine = M.tasks(b).map(t => ({ title: t, why: 'From what you said you’re making' })), seen = new Set(mine.map(x => x.title.toLowerCase())); sg = mine.concat(sg.filter(x => !seen.has(String(x.title).toLowerCase()))); } }
       if (!sg.length) { list.innerHTML = '<span class="faint">No suggestions yet. Write your own below.</span>'; return; }
       list.innerHTML = sg.slice(0, 4).map(x => `<button type="button" class="ock-sg" data-title="${esc(x.title)}" title="${esc(x.why || '')}"><span aria-hidden="true">＋</span>${esc(x.title)}</button>`).join('');
       list.querySelectorAll('.ock-sg').forEach(b => b.onclick = async () => {
@@ -492,7 +537,11 @@ ${canEdit && !started ? `      <section class="pj-context" id="pj-context"><div 
   }
   // No vision yet: the host writes it (VISION.md, read by the plan, the board and the agents); others suggest one in chat.
   function writeVision(p) {
-    if (window.TribeAssist) return window.TribeAssist.vision(p, { host: isHost(), done: overview });   // feat/assist: guided prompts, Draft with Flint / my Claude, suggestion chips
+    // pass 9: one place. The line under the project's name on the dashboard is where the vision is written and changed.
+    { const b = $('#pj-bio'); if (App().view && App().view() !== 'home') App().show('home');
+      if (b && !b.disabled && b.offsetParent) { b.scrollIntoView({ block: 'center' }); b.click(); } else { wantVisEdit = true; lastOv = ''; overview(); }
+      return; }
+    if (window.TribeAssist) return window.TribeAssist.vision(p, { host: isHost(), done: overview });   // (kept for Flint's "draft the vision"; no button opens it)
     const m = $('#invite-modal'), body = $('#invite-body'); m.classList.remove('hidden');
     const h = isHost();
     body.innerHTML = `<span class="eyebrow">Vision · ${esc(p.name)}</span><h2>${h ? 'What are you building?' : 'Suggest a vision'}</h2>

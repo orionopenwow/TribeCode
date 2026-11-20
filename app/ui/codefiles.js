@@ -598,7 +598,7 @@
     el.innerHTML = `<div class="cf-file" id="cf-reader" role="dialog" aria-label="${esc(title)}"><header class="cf-fh"><button class="cf-x" id="cf-dclose" aria-label="Close">${svg(isPhone() ? I.back : I.x, 20)}</button><div class="cf-ft"><b>${esc(title)}</b><small>${esc(sub)}</small></div></header>
       ${acts ? `<div class="cf-acts">${acts}</div>` : ''}<div class="cf-fbody">${body}</div></div>`;
     $('#cf-dclose').onclick = () => { const k = reading; reading = null; drawReader(); drawDocList(); const b = k && document.querySelector(`#cf-dlist [data-doc="${CSS.escape(k.kind + '|' + k.id)}"]`); if (b) b.focus({ preventScroll: true }); };
-    const ve = $('#cf-vedit'); if (ve) ve.onclick = () => window.TribeAssist.vision(p, { host, done: () => { docsData = null; loadDocs().then(() => { drawDocList(); drawReader(); }); } });
+    const ve = $('#cf-vedit'); if (ve) ve.onclick = () => host && window.TribeProjects && window.TribeProjects.step ? window.TribeProjects.step('vision') : window.TribeAssist.vision(p, { host, done: () => { docsData = null; loadDocs().then(() => { drawDocList(); drawReader(); }); } });
     const dc = $('#cf-dcode'); if (dc) dc.onclick = () => { const path = r.id; reading = null; set('code'); setTimeout(() => reveal(path), 50); };
   }
 
