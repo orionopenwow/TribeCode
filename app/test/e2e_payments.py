@@ -350,14 +350,16 @@ def main():
             # hidden again (the default), with the keys in place: information only
             ok(api("/premium/admin", "PUT", {"secretKey": SK, "webhookSecret": WH, "enabled": False}, token=host)); hidden("turned off again")
             go(); pg.wait_for_function("() => window.TribePremium.offered() === false", timeout=15000)
-            pg.evaluate("() => window.TribeSettings.open('ai')"); pg.click("#set-plan-chip"); pg.wait_for_selector("#plans-pop #plp-coming", timeout=10000)
-            txt = pg.inner_text("#plans-pop"); assert "Paid plans are coming" in txt and "1,000" in txt and "Choose" not in txt and "Manage billing" not in txt, txt
-            assert pg.locator("#plans-pop [data-plp-plan], #plans-pop [data-plp-pack], #plans-pop [data-plp-manage], #plans-pop button.plp-pack").count() == 0, "nothing to buy with"
+            # feat/flow-ease: hidden means gone. No Plan row, no pop-out, no sheet, and the gates say "go ahead".
+            pg.evaluate("() => window.TribeSettings.open('ai')"); pg.wait_for_selector("#set-flintbrain, #set-model, .set-brain", timeout=10000)
+            assert pg.locator("#set-plan-chip").count() == 0, "no Plan row while payments are hidden"
+            pg.evaluate("() => { window.TribePlans.open(null); window.TribePremium.open(); }"); pg.wait_for_timeout(400)
+            assert pg.locator("#plans-pop, #pm-sheet").count() == 0 and pg.evaluate("() => window.TribePremium.gate('credits')") is True, "nothing to buy with, nothing shown"
             pg.keyboard.press("Escape"); pg.wait_for_timeout(600)
             assert pg.locator("#set-billing").count() == 0 and pg.locator("#bl-receipts").count() == 0 and not pg.locator("#set-ext-billing").is_visible(), "no receipts section"
             pg.evaluate("() => window.TribeSettings.open('admin')"); pg.wait_for_timeout(1500)
             assert pg.locator("#set-payments").count() == 0 and not pg.locator("#set-ext-payments").is_visible() and "Stripe" not in pg.inner_text("#set-pane-admin"), "no Payments section"
-            co = pg.evaluate("() => window.TribePremium.checkout('hosted')"); assert co["ok"] is False and co["reason"] == "no-provider" and "coming" in co["message"], co
+            co = pg.evaluate("() => window.TribePremium.checkout('hosted')"); assert co["ok"] is False and co["reason"] == "no-provider" and "free right now" in co["message"], co
             # Flint's line, in a new session: it doesn't promise a purchase
             p2 = cx.new_page(); p2.goto(BASE + "/?skipIntro=1"); p2.wait_for_function("() => window.TribeClient && window.TribeClient.connected() && window.TribePlans", timeout=20000)
             p2.wait_for_selector("#flint #fl-input", state="visible", timeout=15000)

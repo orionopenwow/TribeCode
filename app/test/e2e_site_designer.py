@@ -180,7 +180,7 @@ def main():
             card = pg.locator("[data-flctx=designer] .boost").last
             assert card.is_visible(), "the boost card"
             t = card.inner_text()
-            assert "Use my AI" in t and "Get credits / Premium" in t and "Free · no AI" in t.replace("FREE · NO AI", "Free · no AI") or "free" in t.lower(), t
+            assert "Use my AI" in t and "Premium" not in t and "Free · no AI" in t.replace("FREE · NO AI", "Free · no AI") or "free" in t.lower(), t
             assert "Send to my AI helper" not in pg.content()
 
             # ---- saved on the host

@@ -530,6 +530,10 @@
   I('help.kb', 'help', [/^(?:how|why|where|when|what|which|who|can i|could i|is|are|should|would|will|was|were|has|have|do i|does|do you|do we|explain|help|tell me about|how do i|how to|whats the difference|what is the difference|can you explain|i dont understand|what does)\b.+$/], { p: 0.66, ex: ['how do i invite a friend', 'how does publishing work', 'what is the secretary'] });
 
   I('redo', 'local', [/^(?:redo|redo that|redo it|put it back|bring it back|undo the undo|undo undo)$/], { p: 0.97, ex: ['redo', 'put it back'] });
+  // feat/flow-ease: "what does it cost", "is TribeCode free", "start my trial". One honest line (flintlocal.js): free right now; the plans once the host sells.
+  I('cost.ask', 'help', [/^(?:how much (?:does|is|will)|what does|whats the price of|what is the price of)\s+(?:it|this|tribecode|this app|the app|premium|flint)(?:\s+cost)?(?:\s+(?:a|per)\s+month)?$/, /^is\s+(?:tribecode|this app|the app|flint|this|everything)\s+(?:really\s+|actually\s+)?free(?:\s+to use)?$/,
+    /^(?:do|will|would)\s+i\s+(?:have|need)\s+to\s+pay(?:\s+(?:for\s+)?(?:anything|tribecode|this|it|something))?$/, /^(?:start|begin|get|try|activate|i want|give me|sign me up for|how do i start)\s+(?:my\s+|the\s+|a\s+)?(?:free\s+|premium\s+|14 day\s+|14-day\s+)*trial$/, /^(?:(?:free|premium|14 day|14-day)\s+)*trial$/,
+    /^tribecode\s+(?:pricing|prices|price|cost|costs)$/, /^(?:the\s+)?costs?$/, /^(?:is there|do you have)\s+a\s+(?:free\s+)?(?:trial|paid plan|subscription)$/], { p: 0.98, ex: ['how much does it cost', 'is tribecode free', 'start my trial'] });
   I('premium.open', 'team', [/^(?:buy|get|purchase|top up|add|need)\s+(?:some\s+|more\s+)?(?:ai\s+)?credits$/, /^(?:get|go|buy|try|upgrade to|start|see)\s+(?:tribecode\s+)?premium$/, /^(?:upgrade|subscribe|go pro|get a subscription|premium plans|see plans)$/], { ex: ['buy credits', 'get premium', 'upgrade'] });
   I('connect.ai', 'team', [/^use (?:my own|my) (?:ai|claude|model|key|api key|llm)$/, /^(?:bring|plug in) my own (?:ai|key|model)$/], { ex: ['use my own ai'] });
   // v0.32: GitHub (ghphone.js on a phone-only tribe, Home › Code's Connect GitHub panel elsewhere)

@@ -41,7 +41,8 @@
     tip: { label: 'Flint tip', icon: 'spark', cat: 'You', blurb: 'One useful thing a day', home: 1 },
     credits: { label: 'Plan & credits', icon: 'gauge', cat: 'You', blurb: 'Your plan and AI credits', home: 1 },
   };
-  const keys = scope => Object.keys(META).filter(k => scope !== 'home' || META[k].home);
+  const sells = () => !!(window.TribePremium && window.TribePremium.offered && window.TribePremium.offered());   // premium.js's one switch: no plan card to add while nothing is sold
+  const keys = scope => Object.keys(META).filter(k => (scope !== 'home' || META[k].home) && (k !== 'credits' || sells()));
 
   // Flint's tips: real features, each with a way to try it
   const TIPS = [
@@ -159,6 +160,7 @@
       return `<p class="wgc-tip">${esc(text)}</p><div class="wgc-foot">${act ? `<button type="button" class="btn sm" data-wgc-act="tipgo">${esc(act)}</button>` : ''}<button type="button" class="btn sm ghost" data-wgc-act="tipnext">Next tip</button></div>`;
     },
     credits() {
+      if (!sells()) return '<p class="wgc-sub wgc-pad">Everything is free right now. Bring your own AI for free, always.</p>';
       const P = window.TribePremium, plan = P && P.plan ? P.plan() : 'free', n = P && P.credits ? P.credits() : 0;
       const name = typeof plan === 'string' ? plan : (plan && (plan.name || plan.id)) || 'free';
       return `<ul class="wgc-list"><li><span class="wgc-txt">Plan</span><b class="wgc-num">${esc(name[0].toUpperCase() + name.slice(1))}</b></li><li><span class="wgc-txt">AI credits</span><b class="wgc-num">${n}</b></li></ul><p class="wgc-sub wgc-pad">Bring your own AI for free, always.</p><div class="wgc-foot"><button type="button" class="btn sm" data-wgc-act="plans">See plans</button></div>`;

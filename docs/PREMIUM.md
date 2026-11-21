@@ -27,6 +27,13 @@ own work.
 
 ## Where the app mentions it
 
+**Only once payments are open.** While payments are hidden (the default, see Payments below) the app says nothing about
+Premium or a trial anywhere: no sheet, no plan chip, no Plan row in Settings, no footer in Work, no Premium templates,
+no "Get credits / Premium" button on the AI card, and Flint answers "what does it cost" with "everything is free right
+now". Every gate answers "go ahead". One switch decides it, `TribePremium.offered()` in `app/ui/premium.js` (the
+server's `payments.offered`); everything else asks that. A tribe that already has a trial or a plan keeps it.
+`app/test/e2e_no_trial_prompts.py` walks the app in both states.
+
 Premium shows up as a calm sheet, at a few moments only. **"Not now" is always there**, and it is the first button.
 
 | Moment | Gate | "Not now" |
@@ -54,9 +61,8 @@ The footer of Work says which plan you're on, with "What does Premium add?".
 ## Payments (Stripe)
 
 **Hidden by default**, even with Stripe keys set. Open it with `TRIBE_PAYMENTS=1`, or on the host computer with
-`PUT /api/premium/admin { "enabled": true }` (there is no switch in the app while it is hidden). While hidden: the plans
-pop-out shows the plans and packs as information with "Paid plans are coming" and no buy or Manage billing buttons;
-Settings has no Billing and receipts or Payments section; `checkout`, `portal` and `history` answer `404 { code:
+`PUT /api/premium/admin { "enabled": true }` (there is no switch in the app while it is hidden). While hidden: the app shows nothing about plans at all (see above);
+Settings has no Plan row, Billing and receipts or Payments section; `checkout`, `portal` and `history` answer `404 { code:
 'payments-hidden' }` and the webhook 404. Plans, credits, the 402s, the trial and `PUT /api/premium` on the host
 computer work the same, and Flint's out-of-credits line doesn't mention buying.
 

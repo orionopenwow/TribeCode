@@ -42,7 +42,7 @@ def ok(r, what=""):
 
 def settings_js(name, token, pid):
     return (f"try {{ localStorage.setItem('tribecode.settings.v1', JSON.stringify({{name:'{name}', onboarded:true, theme:'dark', server:{{url:'{BASE}', token:'{token}'}}, checklist:{{setup:true}}, tour:{{done:true}}}}));"
-            f"localStorage.setItem('tribecode.project:{BASE}', '{pid}'); }} catch (e) {{}}")
+            f"localStorage.setItem('tribecode.project:{BASE}', '{pid}'); if (!localStorage.getItem('tribecode.plan.v1')) localStorage.setItem('tribecode.plan.v1', JSON.stringify({{offered:true}})); }} catch (e) {{}}")
 
 
 def watch(page, who):
@@ -95,7 +95,7 @@ def main():
     work = tempfile.mkdtemp(prefix="wv2-src-", dir="/tmp")
     pq = os.path.join(work, "pixel-quest")
     shutil.copytree(ROOT / "templates" / "starter-game", pq); make_repo(pq)
-    env = {**os.environ, "TRIBE_NO_GH": "1", "TRIBE_TEST": "1", "TRIBE_NO_DOWNLOAD": "1"}
+    env = {**os.environ, "TRIBE_NO_GH": "1", "TRIBE_TEST": "1", "TRIBE_NO_DOWNLOAD": "1", "TRIBE_PAYMENTS": "1"}   # feat/flow-ease: the Plan & credits card exists once the host has opened payments (e2e_no_trial_prompts checks it is gone otherwise)
     log = open(os.path.join(tmp, "server.log"), "w+")
     srv = subprocess.Popen(["node", str(ROOT / "server" / "index.js"), "--port", str(PORT), "--dir", tmp, "--ollama", "http://localhost:9", "--name", "Widget Crew"], stdout=log, stderr=subprocess.STDOUT, env=env)
     try:

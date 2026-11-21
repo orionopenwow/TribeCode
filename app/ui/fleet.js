@@ -45,7 +45,7 @@
   const copied = (ok, what) => toast(ok ? `${what || 'Command'} copied.` : 'Press and hold the text to copy it.');
 
   // ---------- tools: the tabs of Connect your AI (docs/ANY-LLM.md) ----------
-  const TABS = [['claude-code', 'Claude Code'], ['codex', 'Codex'], ['gemini', 'Gemini CLI'], ['cursor', 'Cursor'], ['qwen', 'Qwen Code'], ['mcp', 'Other MCP']];
+  const TABS = [['claude-code', 'Claude Code'], ['codex', 'Codex'], ['gemini', 'Gemini CLI'], ['cursor', 'Cursor'], ['qwen', 'Qwen Code'], ['mcp', 'Another tool']];
   const HINT = {
     'claude-code': 'Run it once in a terminal, then start claude in your project folder.',
     codex: 'Paste it into ~/.codex/config.toml, then start codex.',
@@ -91,7 +91,7 @@
     if (s === 'notribe') return `<section class="hero-card fl-hero" id="${id}" data-state="notribe">${head('Next step', 'Start a project first', 'Agents join a tribe\'s project: they read its plan, take its tasks and work on its code, next to you and your friends.')}
       <div class="fl-acts"><button class="btn primary" id="fl-start">Start a project</button><button class="btn" id="fl-demo">Try the demo</button></div></section>`;
     if (s === 'connect') {
-      return `<section class="hero-card fl-hero" id="${id}" data-state="connect">${head('Next step', 'Connect your AI', 'Pick the tool you use and run one line. It joins this project, reads the plan and asks you before anything ships.')}
+      return `<section class="hero-card fl-hero" id="${id}" data-state="connect">${head('Next step', 'Connect your AI', 'Pick the tool you use and run one line. It joins this project, reads the plan and asks you before anything goes live.')}
         <div class="fl-tabs" role="tablist" aria-label="Your AI tool">${TABS.map(([k, n]) => `<button type="button" role="tab" class="fl-tab${k === st.tab ? ' on' : ''}" aria-selected="${k === st.tab}" data-fl-tab="${k}">${glyph(k, 15)}<span>${esc(n)}</span></button>`).join('')}</div>
         <div class="fl-connect" id="fl-connect">${connectBody()}</div>
         <p class="fl-more"><button class="linkish" id="ad-tools" type="button">VS Code, Windsurf, Claude.ai and more →</button></p></section>`;
@@ -122,6 +122,8 @@
   }
   function connectBody() {
     const r = keyFor(st.tab);
+    // feat/flow-ease: a tribe kept in this browser can't be reached by an AI tool yet. Say so, with the one button, instead of a key that never comes.
+    if (!r && window.TribeOffline && window.TribeOffline.solo && window.TribeOffline.solo()) return `<div class="fl-needs" id="fl-needs"><p class="fl-wait">Your own AI tool joins through a link, which works once this tribe is online. Flint, the built-in helper, already works here.</p><button type="button" class="btn sm primary" data-sc-online="agents">Put this tribe online</button></div>`;
     if (!r) return `<p class="fl-wait">Making a key for ${esc((TABS.find(x => x[0] === st.tab) || [])[1])}…</p>`;
     const { have, pick } = places(r), s = (r.setup || {})[pick] || {};
     const blocks = (s.blocks || []).filter(b => !b.alt);

@@ -208,7 +208,7 @@ def main():
             host.check("#pvf-plan")
             send(host, "add multiplayer and a leaderboard")
             host.wait_for_selector("#pvf .fl-thread .boost", timeout=8000)   # feat/flint-site: the one AI-boost card
-            assert "Get credits / Premium" in host.inner_text("#pvf .fl-thread .boost")
+            bt = host.inner_text("#pvf .fl-thread .boost"); assert "Use my AI" in bt and "Premium" not in bt, bt   # feat/flow-ease: no credits button while payments are closed (e2e_premium checks it comes back)
             assert host.locator("#pvf .fl-thread [data-pvf='tribeai']").count() == 0, "no tribe-AI button when the tribe has no AI"
             shot(host, "honest")
             host.click("#pvf .fl-thread [data-boost='ai']")

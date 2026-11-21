@@ -17,7 +17,7 @@ errors = []
 
 # Every setting Settings had before the tabs (feat/settings-tabs), the words that find it, the element that must show, its tab.
 MAPPING = [
-    ("Account", "#set-account", "account"), ("Switch account", "#set-account", "account"), ("Plan", "#set-plan-chip", "ai"),
+    ("Account", "#set-account", "account"), ("Switch account", "#set-account", "account"),
     ("Personalize", "#set-personalize", "profile"), ("Profile", "#set-profile", "profile"), ("Show where I am", "#pz-show", "privacy"),
     ("Appear away", "#pz-away", "privacy"), ("Experience", "#set-mode", "workspace"), ("Name", "#set-name", "profile"),
     ("Color", "[data-color]", "profile"), ("Language", "#set-lang", "profile"), ("Theme", "#set-theme-sys", "profile"),

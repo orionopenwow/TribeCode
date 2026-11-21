@@ -54,7 +54,7 @@ def png(w, h, rgb):
     return b"\x89PNG\r\n\x1a\n" + chunk(b"IHDR", struct.pack(">IIBBBBB", w, h, 8, 2, 0, 0, 0)) + chunk(b"IDAT", zlib.compress(raw)) + chunk(b"IEND", b"")
 
 
-IGNORE = ("11434", "api.github.com", "ERR_CONNECTION_REFUSED", "ERR_NAME_NOT_RESOLVED", "ERR_INTERNET_DISCONNECTED", "ERR_NETWORK_CHANGED", "WebSocket connection", "ERR_CONNECTION_RESET", "ERR_EMPTY_RESPONSE", "net::ERR_ABORTED", "favicon")
+IGNORE = ("11434", "api.github.com", "ERR_CONNECTION_REFUSED", "ERR_NAME_NOT_RESOLVED", "ERR_INTERNET_DISCONNECTED", "ERR_NETWORK_CHANGED", "WebSocket connection", "ERR_CONNECTION_RESET", "ERR_EMPTY_RESPONSE", "net::ERR_ABORTED", "favicon", "ERR_INCOMPLETE_CHUNKED_ENCODING")   # the last one: the preview's live stream (/__tribe/live) is cut by the server restart in step 10, like the refused connections
 
 
 def watch(page, who):

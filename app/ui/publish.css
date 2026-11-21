@@ -98,3 +98,6 @@
 }
 .pbr-row.is-focus { border-color: var(--accent); }
 .pb-tg[hidden], .pb-sheet .btn[hidden] { display: none; }
+/* feat/flow-ease: nothing made yet. What to do, and the one button that does it */
+.pb-none { display: grid; gap: 8px; justify-items: start; margin-bottom: 14px; }
+.pb-none p { margin: 0; }

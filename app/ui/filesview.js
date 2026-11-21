@@ -124,7 +124,9 @@
     m.querySelector('#fx-ask-more').onclick = async () => {
       const AB = window.TribeAIBasics, on = AB && AB.online ? await AB.online().catch(() => null) : null;
       if (on && on.online) return toast(`Flint is using ${on.via || 'your AI'}.`);
-      m.remove(); if (window.TribePremium) window.TribePremium.gate('credits', { need: 'cloud' });
+      m.remove();
+      if (window.TribePremium && window.TribePremium.offered && window.TribePremium.offered()) return window.TribePremium.gate('credits', { need: 'cloud' });
+      if (window.TribeBrain && window.TribeBrain.open) window.TribeBrain.open(); else if (window.TribeConnectAI && window.TribeConnectAI.open) window.TribeConnectAI.open();   // payments closed: straight to connecting your own AI
     };
     m.querySelector('#fx-ask-f').onsubmit = async e => {
       e.preventDefault(); const ask = inp.value.trim(); if (!ask) return inp.focus();

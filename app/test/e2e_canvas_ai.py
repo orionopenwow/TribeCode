@@ -219,7 +219,7 @@ def main():
             # ---- honest cards
             out = ask(o, "rewrite the whole app in react with a database")
             card = o.locator("#cv-fpane .fl-thread .fl-msg.fl").last.locator(".boost")   # feat/flint-site: the one AI-boost card (aiboost.js)
-            assert "This one needs an AI" in out and card.locator("[data-boost='ai']").is_visible() and card.locator("[data-boost='credits']").is_visible(), out
+            assert "This one needs an AI" in out and card.locator("[data-boost='ai']").is_visible() and card.locator("[data-boost='credits']").count() == 0, out
             out = ask(o, "a cat wearing a tiny hat")
             assert "needs an AI" in out and "Nothing changed" in out, out
             o.locator("#cv-fpane .fl-thread [data-boost='ai']").last.click()

@@ -93,7 +93,9 @@ def main():
 
             # ---- every lesson's Show me finds its real control
             missing = []
+            assert pg.evaluate("TribeFlintLessons.open('premium')") is False, "no Premium lesson while payments are closed (feat/flow-ease)"
             for f in pg.evaluate("TribeFlintLessons.FEATURES"):
+                if f == "premium": continue   # its Show me points at the Premium sheet, which exists only once the host opens payments (e2e_premium)
                 pg.evaluate("document.querySelectorAll('.fls-ring, .fls-tip').forEach(e => e.remove()); document.querySelectorAll('#pm-sheet, .pm-scrim').forEach(e => e.remove())")
                 pg.keyboard.press("Escape")
                 pg.evaluate("f => TribeFlintLessons.showMe(f)", f)

@@ -15,7 +15,9 @@
   const label = () => { const p = P() ? P().plan().plan : 'free'; return p === 'premium' ? 'Premium' : p === 'trial' ? 'Trial' : 'Free'; };
   const n = x => Number(x).toLocaleString('en-US');
 
+  const sells = () => !!(P() && P().offered && P().offered());   // premium.js's one switch: payments are open here
   function chip({ id = '', label: l } = {}) {
+    if (!sells()) return '';   // nothing is sold yet: no plan chip anywhere
     return `<button type="button" class="plan-chip" data-plans aria-haspopup="dialog" aria-expanded="false"${id ? ` id="${esc(id)}"` : ''} title="See the plans and AI credits">${esc(l || label())}</button>`;
   }
 
@@ -52,7 +54,7 @@
     el.style.left = left + 'px'; el.style.top = Math.max(8, Math.min(top, vh - h - 8)) + 'px';
   }
   function open(anchor) {
-    if (!P()) return;
+    if (!P() || !sells()) return;
     if (cur) { const same = cur.anchor === anchor; close(); if (same) return; }
     const scrim = document.createElement('div'); scrim.className = 'plp-scrim';
     const el = document.createElement('div'); el.className = 'plp'; el.id = 'plans-pop';
@@ -95,18 +97,20 @@
   addEventListener('resize', () => { if (cur && !cur.el.classList.contains('is-sheet')) place(cur.el, cur.anchor); });
   window.addEventListener('tribe-plan', () => {
     document.querySelectorAll('.plan-chip[data-plans]').forEach(b => { if (!b.dataset.fixed) b.textContent = label(); });
-    if (cur) { cur.el.innerHTML = body(); }
+    if (cur) { if (sells()) cur.el.innerHTML = body(); else close(); }
+    if (document.body) upgrade(document);   // payments just opened (or were already): the chips become buttons
   });
 
   // ---------- every chip opens it ----------
   const SEL = '[data-plans], ' + FOREIGN;
-  document.addEventListener('click', e => { const b = e.target.closest && e.target.closest(SEL); if (!b) return; e.preventDefault(); e.stopPropagation(); open(b); }, true);
+  document.addEventListener('click', e => { const b = e.target.closest && e.target.closest(SEL); if (!b || !sells()) return; e.preventDefault(); e.stopPropagation(); open(b); }, true);
   document.addEventListener('keydown', e => {
     if (e.key !== 'Enter' && e.key !== ' ') return;
-    const b = e.target.closest && e.target.closest(FOREIGN); if (!b || b.tagName === 'BUTTON') return;
+    const b = e.target.closest && e.target.closest(FOREIGN); if (!b || b.tagName === 'BUTTON' || !sells()) return;
     e.preventDefault(); open(b);
   });
   function upgrade(root) {
+    if (!sells()) return;   // while nothing is sold, a "Free" chip is a plain label, not a button
     const list = root.matches && root.matches(FOREIGN) ? [root] : root.querySelectorAll ? root.querySelectorAll(FOREIGN) : [];
     for (const b of list) {
       if (b._plp) continue; b._plp = 1;
@@ -121,5 +125,5 @@
   };
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot, { once: true }); else boot();
 
-  window.TribePlans = { chip, open, close, isOpen: () => !!cur };
+  window.TribePlans = { chip, open, close, isOpen: () => !!cur, offered: sells };
 })();
