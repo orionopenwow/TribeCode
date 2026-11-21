@@ -88,8 +88,13 @@
         const LF = window.TribeLocalFiles; await LF.ready;
         if (local) await LF.save(local, { title: doc.name, body: JSON.stringify(doc) }); else { const it = await LF.create('motion', { title: doc.name, body: JSON.stringify(doc) }); local = it.id; }
       } else { try { localStorage.setItem('tribecode.motion.draft', JSON.stringify(doc)); } catch {} }
-      savedAt = new Date().toISOString(); setSaved(tr('Saved'));
-    } catch (e) { setSaved(tr('Not saved')); say(e.message || String(e)); }
+      savedAt = new Date().toISOString(); if (pid && key) { try { localStorage.removeItem(UNSENTK()); } catch {} }
+      setSaved(tr(onDevice() ? 'Saved on this device' : 'Saved'));
+    } catch (e) {
+      // feat/easy-start: a tribe that can't be reached keeps the change on this device and sends it when it is back
+      if (pid && key && !(e && e.status && e.status < 500)) { try { localStorage.setItem(UNSENTK(), JSON.stringify(doc)); setSaved(tr('Saved on this device')); clearTimeout(saveT); saveT = setTimeout(save, 5000); return; } catch {} }
+      setSaved(tr('Not saved')); say(e.message || String(e));
+    }
   }
   // pass 3: a change made just before the tab closes or hides is saved too (keepalive, like the website designer)
   function flushNow() {
@@ -111,6 +116,8 @@
     if (o.doc) d = o.doc;
     else if (key && pid) { try { const r0 = await C.api(`/projects/${encodeURIComponent(pid)}/motion/${encodeURIComponent(key)}`); d = r0.doc; canEdit = r0.canEdit !== false; canSuggest = !!r0.canSuggest; } catch (e) { toast(e.message); } }
     else if (local && window.TribeLocalFiles) { try { const it = await window.TribeLocalFiles.get(local); d = it && JSON.parse(it.body || 'null'); } catch {} }
+    let unsent = false;
+    if (key && pid && canEdit !== false && !o.doc) { try { const u = JSON.parse(localStorage.getItem(UNSENTK()) || 'null'); if (u && u.states) { d = u; unsent = true; } } catch {} }   // a change kept while the tribe was away
     if (!d) d = K().make(o.template || 'ui-reel', { screens: o.screens, name: o.name, caption: o.caption, cta: o.cta, accent: o.accent || brandAccent(), aspect: o.aspect, size: o.size });
     doc = K().normalize(d); doc.rev = (doc.rev || 0) + 1;
     base = JSON.stringify(doc.states) + doc.name;
@@ -118,6 +125,7 @@
     baseDoc = clone(K().normalize(d));
     await K().load(doc);
     mount();
+    if (unsent) scheduleSave();
     coworkOn();
     if (!key && !local) scheduleSave();
     if (o.ask) setTimeout(() => ask(o.ask), 50);
@@ -134,6 +142,8 @@
   // A spot on the preview is "cv" plus where on the canvas; a spot on the timeline is "tl" plus where along it; a state is
   // "st:<n>". Everyone sees each other's pointer on the same frame position at any window size.
   const DRAFTK = () => `tribecode.motion.draft.${pid}.${key || 'new'}`;
+  const UNSENTK = () => `tribecode.motion.unsent.${pid}.${key}`;   // feat/easy-start: a change the tribe has not got yet
+  const onDevice = () => !pid || !!(window.TribeOffline && window.TribeOffline.solo && window.TribeOffline.solo());   // no tribe, or one that lives in this browser
   function snapOf(d, at) {
     try {
       const keep = doc; doc = d; const c = document.createElement('canvas'); c.width = Math.round(d.size.w / 5); c.height = Math.round(d.size.h / 5);

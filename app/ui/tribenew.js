@@ -350,12 +350,12 @@
     let box = document.getElementById('tn-first'); if (box) return box;
     box = document.createElement('section'); box.id = 'tn-first'; box.className = 'tn-first'; box.setAttribute('aria-labelledby', 'tn-first-h');
     box.innerHTML = `<div><span class="eyebrow">${esc(want.name || 'Your tribe')} is ready</span><h2 id="tn-first-h">Start your first project</h2>
-      <p>A website, an app, a game, slides: pick one and Flint sets it up with a short plan.</p></div>
+      <p>Say what you want to make in one sentence. A first version appears right away.</p></div>
       <div class="tn-first-acts"><button type="button" class="btn primary" id="tn-first-go">Start a project</button><button type="button" class="btn" id="tn-first-later">Later</button></div>`;
     home.prepend(box);
     const gone = () => { lsSet(CARD, null); box.remove(); };
     $('#tn-first-later', box).onclick = gone;
-    $('#tn-first-go', box).onclick = () => { gone(); if (window.TribeDesignFlow && window.TribeDesignFlow.open) window.TribeDesignFlow.open(); else if (PJ() && PJ().gallery) PJ().gallery(); };
+    $('#tn-first-go', box).onclick = () => { gone(); if (PJ() && PJ().gallery) PJ().gallery(); else if (window.TribeDesignFlow && window.TribeDesignFlow.open) window.TribeDesignFlow.open(); };   // feat/easy-start: one sentence first; templates and kinds are under it
     return box;
   }
   // after a reload (a new host) or a route change, the card waits for the tribe's Dashboard

@@ -18,8 +18,12 @@
 .su-prog { display: flex; align-items: center; gap: 10px; padding: 14px 4px; font-size: 14px; color: var(--text); }
 .su-spin { width: 14px; height: 14px; border-radius: 50%; border: 2px solid var(--edge); border-top-color: var(--live); animation: su-spin 900ms linear infinite; }
 @keyframes su-spin { to { transform: rotate(360deg); } }
+.su-prog[hidden] { display: none; }
 .su-err { display: grid; gap: 6px; padding: 12px 14px; border: 1px solid var(--edge); border-left: 3px solid var(--alert); border-radius: 10px; background: var(--surface); }
 .su-err span { color: var(--muted); font-size: 13px; }
+.su-err .su-try { margin: 2px 0 0; display: grid; gap: 2px; color: var(--text); font-size: 13.5px; line-height: 1.5; }
+.su-err .su-try .eyebrow { color: var(--muted); font-size: 11px; }
+.su-err details .btn { margin-top: 8px; }
 .su-err details summary { cursor: pointer; color: var(--muted); font-size: 12px; }
 .su-err pre { margin: 6px 0 0; padding: 10px; max-height: 160px; overflow: auto; background: var(--canvas); border: 1px solid var(--edge); border-radius: 8px; font: 11.5px/1.5 var(--mono); white-space: pre-wrap; color: var(--muted); }
 .gs-err-acts { display: flex; gap: 8px; flex-wrap: wrap; }

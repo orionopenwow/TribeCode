@@ -111,16 +111,22 @@
       <div id="su-fail"></div>`, 'su-computer', 'This computer');
   }
   const step = t => { const x = document.getElementById('su-prog-t'); if (x) x.textContent = t; };
+  // feat/easy-start: the screen when this computer could not take the tribe. Plain words for what happened, the one
+  // thing to try, and it never traps: Keep working here always closes it with the project untouched.
   function failed(msg, retry) {
     const box = document.getElementById('su-fail'), prog = document.getElementById('su-prog'); if (!box) return;
     if (prog) prog.hidden = true;
-    const line = String(msg || '').split('\n')[0] || 'It didn’t work this time.';
-    box.innerHTML = `<div class="su-err" role="alert"><b>Couldn’t move it to this computer.</b> <span>${esc(line)}</span>
-      ${String(msg).includes('\n') || desktopApp() ? `<details><summary>Details</summary><pre>${esc(msg)}</pre></details>` : ''}
-      <div class="ph-acts"><button class="btn" id="su-offline">Keep working offline</button><button class="btn primary" id="su-retry">Try again</button></div></div>
-      <p class="ph-note">Your project is safe on this device; nothing was lost.</p>`;
+    const raw = String(msg || '');
+    const pr = A() && A().hostProblem && desktopApp() ? A().hostProblem(raw) : { kind: 'other', what: raw.split('\n')[0] || 'It didn’t work this time.', tryThis: 'Press Try again in a moment.', details: raw };
+    box.innerHTML = `<div class="su-err" role="alert" data-kind="${esc(pr.kind)}"><b>It’s still on this device, and it still works.</b>
+      <span id="su-what">${esc(pr.what)}</span>
+      <p class="su-try" id="su-try"><span class="eyebrow">What to try</span>${esc(pr.tryThis)}</p>
+      ${raw.includes('\n') || desktopApp() ? `<details id="su-details"><summary>Details for support</summary><pre>${esc(raw)}</pre><button type="button" class="btn sm" id="su-copy">Copy the details</button></details>` : ''}
+      <div class="ph-acts"><button class="btn" id="su-offline">Keep working here</button><button class="btn primary" id="su-retry">Try again</button></div></div>
+      <p class="ph-note">Nothing was lost. You can keep building right now; friends and AI helpers can join once it’s on this computer or online.</p>`;
     box.querySelector('#su-retry').onclick = retry;
     box.querySelector('#su-offline').onclick = () => { close(); toast('Still on this device. Put it online any time from Sharing and backup on the dashboard.'); };
+    const cp = box.querySelector('#su-copy'); if (cp) cp.onclick = async () => { try { await navigator.clipboard.writeText(raw); cp.textContent = 'Copied'; } catch { const pre = box.querySelector('pre'), r = document.createRange(); r.selectNodeContents(pre); const sel = getSelection(); sel.removeAllRanges(); sel.addRange(r); } };
   }
   async function computer() {
     syncing('Moving it to this computer');
@@ -134,7 +140,7 @@
     const say = o.step || (() => {});
     if (desktopApp()) {
       say('Starting the tribe server on this computer…');
-      const r = A() && A().hostHere ? await A().hostHere({ silent: true }) : { ok: false, error: 'The app did not load. Reload it.' };
+      const r = A() && A().hostHere ? await A().hostHere({ silent: true, step: say }) : { ok: false, error: 'The app did not load. Reload it.' };
       if (!r || !r.ok) throw new Error((r && r.error) || 'The tribe server did not start.');
       const st = S().get();
       return await importTo(r.url, st.server.token, { hosting: true, step: say, noReload: o.noReload });
@@ -160,6 +166,24 @@
     }
     return await importTo(location.origin, tok, { hosting: false, step: say, noReload: o.noReload });
   }
+  // feat/easy-start: the website, the app and the motion graphics made in this browser come along too. They are sent
+  // before this device forgets its copy; if one does not arrive the move stops there and Try again sends them again
+  // (the host makes no second project: it remembers the draft). data: what exportSolo() sent; d: the host's answer.
+  async function sendDesigns(server, token, data, d, say = () => {}) {
+    const DS = (window.TribePhoneLocal && window.TribePhoneLocal.designs && window.TribePhoneLocal.designs()) || {};
+    if (!Object.keys(DS).length) return 0;
+    const put = (path, body) => realFetch(`${server}/api${path}`, { method: 'PUT', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token }, body: JSON.stringify(body) }).then(x => x.ok).catch(() => false);
+    let sent = 0, missed = 0; say('Bringing your designs over…');
+    for (let i = 0; i < ((data && data.projects) || []).length; i++) {
+      const from = data.projects[i], to = ((d && d.projects) || [])[i], ds = DS[from.key]; if (!ds || !to || !to.id) continue;
+      const pp = `/projects/${encodeURIComponent(to.id)}`, one = async (path, body) => ((await put(path, body)) ? sent++ : missed++);
+      if (ds.site) await one(`${pp}/site-config`, { config: ds.site, force: true });
+      if (ds.app) await one(`${pp}/app-config`, { config: ds.app, force: true });
+      for (const [k, doc] of Object.entries(ds.motion || {})) await one(`${pp}/motion/${encodeURIComponent(k)}`, { doc });
+    }
+    if (missed) throw new Error('Your project arrived, but what you designed did not come along yet. It is still safe on this device.');
+    return sent;
+  }
   // Send the draft (idempotent: the host remembers draftId), then switch this device over to the host. The local copy
   // is forgotten only after the host answered that it has everything.
   async function importTo(server, token, { hosting, step: say = step, noReload, place } = {}) {
@@ -172,6 +196,7 @@
     }
     if (!r.ok) throw new Error(d.error || `The server said ${r.status}.`);
     const name = S().get().name, first = (d.projects || [])[0];
+    await sendDesigns(server, token, data, d, say);
     OFF().forget();
     S().set({ server: { url: server, token }, hosting: !!hosting, ...(hosting ? { hostOff: false, tribeHere: true } : {}), name });
     try { if (first && first.id) localStorage.setItem('tribecode.project:' + server, first.id); sessionStorage.setItem('tribecode.view', 'home'); } catch {}
@@ -455,7 +480,9 @@
   // A reload right after Create (before choosing) offers the last step again.
   addEventListener('load', () => { let p = null; try { p = localStorage.getItem('tribecode.setup.wherePending'); } catch {} if (p && OFF() && OFF().solo && OFF().solo()) setTimeout(() => { if (!el) where({ first: true }); }, 1200); });
 
-  const api = { start, where, choose, close, host: { computer: hostComputer, importTo, desktopApp, phoneLike }, github: { connect, live, mirror, files, guide: { detect: detectGitHub, html: guideWays, bind: bindWays, checks: guideSheetChecks } }, state: () => ({ open: el ? el.id : null, pid: pid(), home: homeOf() }), pid };
+  // feat/easy-start: another screen's attempt failed (the dashboard's Put this tribe online): the same calm screen.
+  function showFailed(msg) { syncing('Moving it to this computer'); failed(msg, computer); }
+  const api = { start, where, choose, close, failed: showFailed, host: { computer: hostComputer, importTo, sendDesigns, desktopApp, phoneLike }, github: { connect, live, mirror, files, guide: { detect: detectGitHub, html: guideWays, bind: bindWays, checks: guideSheetChecks } }, state: () => ({ open: el ? el.id : null, pid: pid(), home: homeOf() }), pid };
   window.TribeLocalSetup = api;
   // Also on window.TribeSetup (setup.js owns that name for the role cards): TribeSetup.start() / .where() for other screens.
   const alias = () => { const t = window.TribeSetup; if (!t) return; if (!t.start) t.start = start; if (!t.where) t.where = where; };

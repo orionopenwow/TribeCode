@@ -18,6 +18,7 @@
   const toast = m => (window.TribeApp && window.TribeApp.toast ? window.TribeApp.toast(m) : console.log(m));
   const tr = s => (window.TribeI18n && window.TribeI18n.t ? (window.TribeI18n.t(s, s) || s) : s);
   const connected = () => !!(C && C.connected && C.connected() && (!C.hasToken || C.hasToken()));
+  const onDevice = () => !!(window.TribeOffline && window.TribeOffline.solo && window.TribeOffline.solo());   // feat/easy-start: a tribe that lives in this browser saves here
   const LOCAL = 'tribecode.appcreator.local';
   const ls = { get(k, d) { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch { return d; } }, set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} } };
   const IC = { undo: '<path d="M9 14L4 9l5-5"/><path d="M4 9h10a6 6 0 0 1 0 12h-3"/>', redo: '<path d="M15 14l5-5-5-5"/><path d="M20 9H10a6 6 0 0 0 0 12h3"/>', up: '<path d="M12 19V5M6 11l6-6 6 6"/>', down: '<path d="M12 5v14M6 13l6 6 6-6"/>', play: '<path d="M8 5.5v13l10.5-6.5z"/>', stop: '<rect x="6.5" y="6.5" width="11" height="11" rx="1.5"/>' };
@@ -130,12 +131,12 @@
       }
       const pid = st.pid;
       st.saving = true; mark('Saving…'); ls.set(UNSENT(pid), { doc, base: st.rev, at: Date.now() });   // pass 4: on this device until the tribe has it
-      try { const r = await C.api(`/projects/${encodeURIComponent(pid)}/app-config`, { method: 'PUT', body: { config: doc, base: st.rev } }); if (!st || st.pid !== pid) return; st.rev = r.rev; if (st.doc === doc) { st.dirty = false; ls.set(UNSENT(pid), null); } mark('Saved'); if (st.doc !== doc) saveT = setTimeout(run, 300); }
+      try { const r = await C.api(`/projects/${encodeURIComponent(pid)}/app-config`, { method: 'PUT', body: { config: doc, base: st.rev } }); if (!st || st.pid !== pid) return; st.rev = r.rev; if (st.doc === doc) { st.dirty = false; ls.set(UNSENT(pid), null); } mark(onDevice() ? 'Saved on this device' : 'Saved'); if (st.doc !== doc) saveT = setTimeout(run, 300); }
       catch (e) {
         if (!st || st.pid !== pid) return;
         if (e && (e.status === 409 || /409|conflict/i.test(e.message || ''))) { try { const r = await C.api(`/projects/${encodeURIComponent(pid)}/app-config`); st.doc = A().normalize(r.config); st.rev = r.rev; ls.set(UNSENT(pid), null); paint(); toast('Someone else changed the app. You are seeing their version now.'); } catch {} }
         else if (e && e.status && e.status < 500) { ls.set(UNSENT(pid), null); mark('Not saved: ' + (e.message || '')); }
-        else { mark('Not saved yet: can’t reach the tribe. Kept on this device'); clearTimeout(saveT); saveT = setTimeout(run, 5000); }   // tried again by itself
+        else { mark('Saved on this device. It goes to the tribe when it’s back'); clearTimeout(saveT); saveT = setTimeout(run, 5000); }   // tried again by itself
       } finally { if (st) st.saving = false; }
     };
     if (now) return run(); saveT = setTimeout(run, cw && cw.people && cw.people().length ? 250 : 500);   // pass 4 polish: with a friend in here, their copy follows sooner (as in the website designer)

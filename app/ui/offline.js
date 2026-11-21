@@ -511,6 +511,10 @@
   const ASSIST_Q = [{ k: 'what', q: 'What are you making?' }, { k: 'who', q: 'Who is it for?' }, { k: 'fun', q: 'What makes it fun or useful?' }, { k: 'done', q: 'What does "done" look like for v1?' }, { k: 'out', q: 'What is out of scope?' }];
   const ASSIST_TASKS = [['Add a title screen with a Start button', 'every game needs a front door'], ['Show a score and lives on screen', 'players like to see progress'], ['Add jump and coin sounds', 'sound makes it feel alive'],
     ['Build a second level', 'more to play'], ['Add a simple boss at the end', 'a goal for the first world'], ['Add touch controls for phones', 'friends will open it on their phones']];
+  const ASSIST_APP = [['Put your own words on the first screen', 'it should sound like you'], ['Pick your colours and font', 'make it feel like yours'], ['Try it on your phone', 'that is where people will use it'], ['Show it to one friend', 'one honest reaction beats guessing'],
+    ['Add the one screen that is missing', 'what would you look for first?'], ['Give it a name and an icon', 'so it looks real on a home screen']];
+  const ASSIST_SITE = [['Write your own headline', 'say it the way you would say it out loud'], ['Swap in your own pictures', 'real pictures beat stock ones'], ['Check it on a phone', 'most visitors come from one'], ['Show it to one friend', 'one honest reaction beats guessing'],
+    ['Add how people reach you', 'a link, an email or an address'], ['Put it online', 'a link you can send']];
   function visionDraft(a) {
     const one = s => String(s || '').replace(/\s+/g, ' ').trim().replace(/\.$/, ''), list = s => String(s || '').split(/\s*(?:,|;|\n|\band\b)\s*/i).map(one).filter(Boolean), cap = s => s[0].toUpperCase() + s.slice(1);
     const out = [];
@@ -1197,7 +1201,10 @@
         if (b === 'complete' && POST) return ok({ phrases: [] });
         if (b === 'tasks' && !c && GET) {
           const have = new Set((db.tasks[pid] || []).map(t => t.title.toLowerCase())), gone = new Set(db.dismissed || []);
-          return ok({ model: { online: false }, suggestions: ASSIST_TASKS.filter(([t]) => !have.has(t.toLowerCase()) && !gone.has(t)).slice(0, q.get('more') ? 8 : 4).map(([title, why], i) => ({ id: 's-demo' + i, title, why, src: 'template' })) });
+          // feat/easy-start: first tasks that fit what the project is (a habit app is not asked for jump sounds)
+          const about = `${(proj(pid) || {}).name || ''} ${(proj(pid) || {}).bio || ''} ${db.vision[pid] || ''}`.toLowerCase();
+          const LIST = solo() && !/\b(game|platformer|level|boss|player|arcade|snake|quiz)\b/.test(about) ? (/\b(web ?site|site|page|bakery|shop|portfolio|blog|link in bio)\b/.test(about) ? ASSIST_SITE : ASSIST_APP) : ASSIST_TASKS;
+          return ok({ model: { online: false }, suggestions: LIST.filter(([t]) => !have.has(t.toLowerCase()) && !gone.has(t)).slice(0, q.get('more') ? 8 : 4).map(([title, why], i) => ({ id: 's-demo' + i, title, why, src: 'template' })) });
         }
         if (b === 'tasks' && c === 'dismiss' && POST) { (db.dismissed = db.dismissed || []).push(String(body.title || '')); save(); return ok({ ok: true }); }
         break;

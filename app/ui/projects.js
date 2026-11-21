@@ -707,8 +707,8 @@ ${canEdit && !started ? `      <section class="pj-context" id="pj-context"><div 
     modal().classList.remove('hidden'); body().classList.add('np-setup');
     const on = C.connected(), host = on && isHost(), desk = !!window.TribeHost.isDesktop, scoped = scopedMe();
     if (!on || scoped) {
-      body().innerHTML = `<button class="ns-x" data-close aria-label="Close">${ico('i-x', 16)}</button><div class="ns-head"><h2>${on ? 'Join a project' : 'Create your project'}</h2><p class="lead">${desk ? 'Your work lives in a shared GitHub repository; friends join with one link.' : 'Your work lives in a shared GitHub repository. Get the app to start a tribe, or join a friend.'}</p></div>
-        ${on ? '' : `<div class="ns-list"><button class="ns-row ns-own" id="np-host"><span class="ns-ic">${ico('i-plus', 18)}</span><span class="ns-t"><b>${desk ? 'Host on this computer' : 'Get the desktop app'}</b><small>${desk ? 'Start a tribe here, then make your first project' : 'Windows, Mac and Linux'}</small></span>${ico('i-chev', 16)}</button></div>`}
+      body().innerHTML = `<button class="ns-x" data-close aria-label="Close">${ico('i-x', 16)}</button><div class="ns-head"><h2>${on ? 'Join a project' : 'Create your project'}</h2><p class="lead">${on ? 'Ask a friend for their link to join their project.' : 'Start one right here, or join a friend with their link. Friends can come in later with one link.'}</p></div>
+        ${on ? '' : `<div class="ns-list"><button class="ns-row ns-own" id="np-host"><span class="ns-ic">${ico('i-plus', 18)}</span><span class="ns-t"><b>Start a project</b><small>${desk ? 'It’s kept on this computer. Nothing else to set up' : 'It starts in this browser. Nothing to install'}</small></span>${ico('i-chev', 16)}</button></div>`}
         ${joinFoot()}`;
       wireStart(); return;
     }
@@ -754,22 +754,45 @@ ${canEdit && !started ? `      <section class="pj-context" id="pj-context"><div 
     const n = words.slice(0, 3).map(w => w[0].toUpperCase() + w.slice(1)).join(' ');
     return (n || `${String(me().name || 'My').split(/\s+/)[0]}'s project`).slice(0, 40);
   }
+  const soloHere = () => !!(window.TribeOffline && window.TribeOffline.solo && window.TribeOffline.solo());
   async function createFromIdea(raw) {
-    const idea = String(raw || '').trim(); if (!idea) { $('#np-idea').focus(); return; }
+    const idea = String(raw || '').trim(); if (!idea) { const i = $('#np-idea'); if (i) i.focus(); return; }
     const kind = KIND_OF.find(([re]) => re.test(idea)), taken = new Set(projects.map(p => p.name)), base = nameFromIdea(idea);
     let name = base; for (let i = 2; taken.has(name); i++) name = `${base} ${i}`;
-    const btn = $('#np-idea-go'); btn.disabled = true; btn.innerHTML = '<span class="spin"></span>Setting it up…';
+    const btn = $('#np-idea-go'); if (btn) { btn.disabled = true; btn.innerHTML = '<span class="spin"></span>Setting it up…'; }
     try {
-      const f = await window.TribeFlow.create(name, { emoji: kind ? kind[1] : '✨', wait: 8000, quiet: !!window.TribeFirstLook });
-      const pid = f.project;
+      let pid;
+      if (soloHere()) {   // feat/easy-start: a tribe in this browser makes the project itself (no host to ask, no link to turn on)
+        const r = await C.api('/projects', { method: 'POST', body: { name, emoji: kind ? kind[1] : '✨' } }); pid = (r.project || r).id;
+        await refresh(); await switchTo(pid, 'home');
+      } else { const f = await window.TribeFlow.create(name, { emoji: kind ? kind[1] : '✨', wait: 8000, quiet: !!window.TribeFirstLook }); pid = f.project; var flow = f; }
       await C.api(`/projects/${encodeURIComponent(pid)}`, { method: 'PATCH', body: { bio: idea.slice(0, 200) } }).catch(() => {});
       await C.api('/vision', { method: 'PUT', project: pid, body: { text: `# ${name}\n\n${idea}\n` } }).catch(() => {});
       body().classList.remove('np-setup');
       await refresh();
       // pass 6: the sentence becomes a first preview straight away (firstlook.js); inviting is one of its next actions
       if (window.TribeFirstLook) { close(); window.TribeFirstLook.start({ pid, idea, name }); }
-      else window.TribeFlow.inviteSheet(f);
-    } catch (e) { btn.disabled = false; btn.textContent = 'Start building'; status(`<div class="np-err">${esc(e.message)}</div>`); }
+      else if (flow) window.TribeFlow.inviteSheet(flow);
+    } catch (e) { if (btn) { btn.disabled = false; btn.textContent = 'Start building'; status(`<div class="np-err">${esc(e.message)}</div>`); } else throw e; }
+  }
+  // feat/easy-start: the one sentence on the fresh Home. In a tribe it makes a project there. With no tribe it makes
+  // one in this browser without asking anything (its first project is the idea), so nothing can fail or wait: a name,
+  // a place to keep it and friends all come later, each one button away.
+  async function startFromIdea(raw) {
+    const idea = String(raw || '').trim(); if (!idea) return null;
+    if (C.connected()) return createFromIdea(idea);
+    const OFF = window.TribeOffline, LS = window.TribeLocalSetup;
+    if (!OFF || !OFF.start || !LS || (C.hasToken && C.hasToken())) { openNew(); return null; }   // a tribe that can't be reached right now: the usual sheet explains
+    const kind = KIND_OF.find(([re]) => re.test(idea)), name = nameFromIdea(idea);
+    OFF.start('solo', { name, emoji: kind ? kind[1] : '✨', bio: idea.slice(0, 200), quiet: true });
+    await new Promise(res => { let n = 0; const t = () => ((LS.pid() && C.connected()) || n++ > 80 ? res() : setTimeout(t, 100)); t(); });
+    const pid = LS.pid(); if (!pid || !C.connected()) throw new Error('It could not be made on this device. Is this a private window with storage turned off?');
+    try { localStorage.setItem('tribecode.firstrun.done', '1'); } catch {}
+    await C.api('/vision', { method: 'PUT', project: pid, body: { text: `# ${name}\n\n${idea}\n` } }).catch(() => {});
+    await refresh().catch(() => {});
+    window.dispatchEvent(new CustomEvent('tribe-project-created', { detail: { name, local: true } }));
+    if (window.TribeFirstLook) window.TribeFirstLook.start({ pid, idea, name });
+    return pid;
   }
   // Remix a starter (templates/starters.json): open-source projects checked for permissive licenses. Small ones copy
   // straight into a new project from GitHub; big collections open in the browser to borrow from. Credit stays with the authors.
@@ -802,7 +825,7 @@ ${canEdit && !started ? `      <section class="pj-context" id="pj-context"><div 
     const x = body().querySelector('[data-close]'); if (x) x.onclick = close;
     const join = () => { const v = $('#np-link').value.trim(); if (v) window.TribeApp.joinLink(v); else $('#np-link').focus(); };
     $('#np-join-go').onclick = join; $('#np-link').onkeydown = e => { if (e.key === 'Enter') join(); };
-    const hb = $('#np-host'); if (hb) hb.onclick = () => { close(); if (window.TribeHost.isDesktop && App().hostHere) App().hostHere(); else window.open('https://github.com/orionopenwow/TribeCode/releases/latest', '_blank', 'noopener'); };
+    const hb = $('#np-host'); if (hb) hb.onclick = () => { close(); if (window.TribeNew) return window.TribeNew.open(); if (window.TribeHost.isDesktop && App().hostHere) App().hostHere(); else window.open('https://github.com/orionopenwow/TribeCode/releases/latest', '_blank', 'noopener'); };   // feat/easy-start: the one create flow, which works with nothing installed
   }
   function customize() {
     const t = setup.tpl, first = String((me().name || 'My')).split(/\s+/)[0];
@@ -1076,5 +1099,5 @@ ${canEdit && !started ? `      <section class="pj-context" id="pj-context"><div 
     const tryIt = () => { if (!C.connected() || !me().id) return false; try { history.replaceState(null, '', location.pathname + location.hash); } catch {} if (isHost()) remix(r); else toastMsg('That starter needs the host to start it. Share the link with them: github.com/' + r); return true; };
     if (!tryIt()) C.on('hello', function once() { if (r && tryIt()) r = ''; });
   })();
-  window.TribeProjects = { hadProject, cachedList, loaded: () => loaded, gallery, createFromIdea, nameFromIdea, openStarters, remix, step, refresh, list: () => projects, current: cur, cur: curP, face, label, here, pulses: () => pulses, sheet, pickImage, workspacePanel, switchTo, onShow, whereLabel, openNew, startFromFiles, analyze, fromPath, fromFolder, overview, requests };
+  window.TribeProjects = { hadProject, cachedList, loaded: () => loaded, gallery, createFromIdea, startFromIdea, nameFromIdea, openStarters, remix, step, refresh, list: () => projects, current: cur, cur: curP, face, label, here, pulses: () => pulses, sheet, pickImage, workspacePanel, switchTo, onShow, whereLabel, openNew, startFromFiles, analyze, fromPath, fromFolder, overview, requests };
 })();

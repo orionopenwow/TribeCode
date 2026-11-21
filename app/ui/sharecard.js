@@ -119,7 +119,11 @@
           setTimeout(() => location.reload(), 250);
           return { ok: true };
         }
-      } catch (e) { toast(`${T('That didn’t work this time. Nothing was lost.')} ${String((e && e.message) || '').split('\n')[0]}`); }
+      } catch (e) {
+        // feat/easy-start: say what happened and the one thing to try, on the screen that also lets them carry on
+        if (L().failed) { going = false; progressDone(); L().failed(String((e && e.message) || e)); return { ok: false, failed: true }; }
+        toast(`${T('That didn’t work this time. Nothing was lost.')} ${String((e && e.message) || '').split('\n')[0]}`);
+      }
       finally { going = false; progressDone(); }
     }
     // no TribeCode on this device to carry it: the short list of places it can go

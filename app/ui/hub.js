@@ -186,6 +186,7 @@
     // Only after setup (a tribe was made on this computer): one actionable line, the host log under Details, Try again and
     // Keep working offline. Before setup nothing here ever says a server failed (feat/setup-local).
     const err = !on && desk && hostFailed() ? `<div class="gs-err" id="hub-host-err" role="status"><b>Your tribe is offline on this computer.</b> <span>Changes wait here and send when it's back.</span>
+        ${App().hostProblem ? `<p class="gs-err-why" id="hub-host-why">${esc(App().hostProblem(window.__hostError).what)} <b>${esc(App().hostProblem(window.__hostError).tryThis)}</b></p>` : ''}
         <details><summary>Details</summary><pre>${esc(window.__hostError)}</pre></details><div class="gs-err-acts"><button class="btn primary sm" id="hub-host-retry">Try again</button><button class="btn sm" id="hub-host-offline">Keep working offline</button></div></div>` : '';
     // Not in a tribe yet: one honest empty state with one clear way in, and the way to join a friend beside it.
     // Nothing is made until you press Start (no demo, no pretend tribe: the demo lives in the ? menu and Ctrl K).
@@ -199,14 +200,21 @@
       return `<section class="hero-card hub-hero hub-gs hub-empty" id="hub-hero">
         <div class="he-copy"><span class="eyebrow">Getting started</span>
           <h2>Make your first project</h2>
-          <p class="he-sub">${window.TribeLocalSetup ? 'A project is a room for you, your friends and your AI helpers: chat, files, tasks, a design canvas. It starts right away: give it a name and an icon, and invite friends whenever you like.' : desk ? 'A project is a room for you, your friends and your AI helpers: a chat, files, a task board, a design canvas and a live preview of what you build.' : 'Projects run on a computer with the TribeCode desktop app, or on a free cloud server. Here you can join a friend\'s tribe with their link.'}</p>
-          <div class="he-acts"><button class="btn primary he-go" id="hub-host">${ico('i-plus', 15)}${desk || window.TribeLocalSetup ? 'Start your first project' : 'Get the desktop app'}</button><button class="btn he-join" id="hub-join">${ico('i-link', 15)}Join with a link</button></div>
-          <div class="gs-links">${tourBtn}<a class="linkish" id="hub-about" href="https://tribecode.org/docs.html" target="_blank" rel="noopener">${ico('i-doc', 13)}How TribeCode works</a></div>
+          ${window.TribeLocalSetup && PJ() && PJ().startFromIdea ? `<p class="he-sub">Say what you want to make in one sentence. A first version appears right away: a website, an app or a game. Nothing to install or sign up for, and it works without an AI.</p>
+          <form class="he-idea" id="hub-idea-f" autocomplete="off"><label class="he-idea-l" for="hub-idea">What do you want to make?</label>
+            <textarea class="input" id="hub-idea" rows="2" maxlength="600" placeholder="e.g. A website for my friend’s bakery">${esc(ideaDraft)}</textarea>
+            <div class="he-chips">${['A website for my friend’s bakery', 'An app that tracks our habits', 'A snake game for our group'].map(t => `<button type="button" class="ns-chip" data-hub-idea="${esc(t)}">${esc(t)}</button>`).join('')}</div>
+            <p class="he-idea-err" id="hub-idea-err" role="status" hidden></p>
+            <div class="he-acts"><button class="btn primary he-go" id="hub-idea-go" type="submit">${ico('i-sparkle', 15)}Start building</button><button type="button" class="btn he-join" id="hub-join">${ico('i-link', 15)}Join with a link</button></div></form>
+          <div class="gs-links"><button class="linkish" id="hub-host">${ico('i-plus', 13)}Start with a name instead</button>${tourBtn}<a class="linkish" id="hub-about" href="https://tribecode.org/docs.html" target="_blank" rel="noopener">${ico('i-doc', 13)}How TribeCode works</a></div>`
+          : `<p class="he-sub">${desk ? 'A project is a room for you, your friends and your AI helpers: a chat, files, a task board, a design canvas and a live preview of what you build.' : 'Projects run on a computer with the TribeCode desktop app, or on a free cloud server. Here you can join a friend\'s tribe with their link.'}</p>
+          <div class="he-acts"><button class="btn primary he-go" id="hub-host">${ico('i-plus', 15)}${desk ? 'Start your first project' : 'Get the desktop app'}</button><button class="btn he-join" id="hub-join">${ico('i-link', 15)}Join with a link</button></div>
+          <div class="gs-links">${tourBtn}<a class="linkish" id="hub-about" href="https://tribecode.org/docs.html" target="_blank" rel="noopener">${ico('i-doc', 13)}How TribeCode works</a></div>`}
         </div>
         <ol class="he-steps" aria-label="What happens next">
-          <li><b>1</b><span><strong>Say what you want to make</strong><small>Flint builds a first version you can run, no AI needed.</small></span></li>
-          <li><b>2</b><span><strong>Invite friends</strong><small>One link. They join from a phone or a laptop.</small></span></li>
-          <li><b>3</b><span><strong>Connect your AI</strong><small>Claude Code, Codex, Gemini or a local model builds with you.</small></span></li>
+          <li><b>1</b><span><strong>Say what you want to make</strong><small>Flint, the built-in helper, makes a first version you can try. No AI needed.</small></span></li>
+          <li><b>2</b><span><strong>Change it and show a friend</strong><small>Click to edit. One link brings friends in, from a phone or a laptop.</small></span></li>
+          <li><b>3</b><span><strong>Bring your own AI, if you have one</strong><small>Claude, ChatGPT and others can build with you. It’s optional.</small></span></li>
         </ol>
         ${err}</section>`;
     }
@@ -1056,11 +1064,24 @@
     window.open((window.TribeWeb && window.TribeWeb.RELEASES) || 'https://github.com/orionopenwow/TribeCode/releases/latest', '_blank', 'noopener');
   }
   const join = () => window.TribeSettings && window.TribeSettings.joinPrompt();
+  // feat/easy-start: the fresh Home takes the idea itself. One sentence makes the first project, where it works with
+  // nothing set up (this device), and shows a first version; nothing is asked on the way.
+  let ideaDraft = '';
+  async function ideaGo(e) {
+    if (e) e.preventDefault();
+    const inp = $('#hub-idea'), btn = $('#hub-idea-go'), err = $('#hub-idea-err'); if (!inp) return;
+    const idea = inp.value.trim(); if (!idea) { inp.focus(); return; }
+    ideaDraft = idea; if (err) err.hidden = true;
+    if (btn) { btn.disabled = true; btn.textContent = 'Making it…'; }
+    try { await PJ().startFromIdea(idea); ideaDraft = ''; }
+    catch (er) { if (btn) { btn.disabled = false; btn.textContent = 'Start building'; } if (err) { err.textContent = `${(er && er.message) || 'That didn’t work this time.'} Nothing was lost; try again.`; err.hidden = false; } }
+  }
   function newProject() { if (!connected()) return window.TribeLocalSetup ? window.TribeLocalSetup.start() : canHost() ? host() : join(); PJ().openNew(); }
 
   function bind(el) {
     const on = (sel, fn) => { const b = el.querySelector(sel); if (b) b.onclick = fn; };
     el.querySelectorAll('[data-pj-go]').forEach(b => b.onclick = () => { const id = b.dataset.pjGo; if (PJ().current() === id) App().show('home'); else PJ().switchTo(id, 'home'); });
+    { const f = el.querySelector('#hub-idea-f'); if (f) { f.onsubmit = ideaGo; const ta = f.querySelector('#hub-idea'); ta.oninput = () => { ideaDraft = ta.value; }; ta.onkeydown = ev => { if (ev.key === 'Enter' && !ev.shiftKey) { ev.preventDefault(); ideaGo(); } }; f.querySelectorAll('[data-hub-idea]').forEach(c => c.onclick = () => { ta.value = ideaDraft = c.dataset.hubIdea; ta.focus(); }); } }
     on('#hub-new', newProject); on('#hub-instant', instant); on('#hub-join', join); on('#hub-host', host); on('#hub-cloud', () => window.TribePhoneHost && window.TribePhoneHost.cloud()); on('#hub-resume', resume);
     on('#hub-cc', () => App().connectClaude());
     on('#hub-tour', () => window.TribeFlintTour && window.TribeFlintTour.start());

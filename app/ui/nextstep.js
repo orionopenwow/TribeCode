@@ -71,7 +71,7 @@
   function steps0(st, what, name) {
     return [
       { id: 'start', stage: 'idea', done: !!(st.tribe && st.project), title: 'Start your first project', why: 'Everything you make lives in a project. It starts on this device in one tap.', act: 'Start a project', run: 'start' },
-      { id: 'vision', stage: 'idea', done: st.vision, title: 'Say what you are making', why: 'One or two sentences. Everyone, and every AI helper, reads them before they build.', act: 'Write it', run: 'vision' },
+      { id: 'vision', stage: 'idea', done: st.vision, title: 'Say what you are making', why: 'One or two sentences. Everyone, and every AI helper, reads them before they build.', act: 'Say it', run: 'vision' },
       { id: 'task', stage: 'idea', done: st.tasks > 0, title: 'Add a first small task', why: 'One small thing to build first turns the idea into something you can start today.', act: 'New task', run: 'task' },
       { id: 'design', stage: 'design', done: st.design || st.site || st.built, title: `Sketch how the ${what} looks`, why: 'A quick design gives you and your AI helper the same picture. Starters make it a two-minute job.', act: 'Open Design', run: 'design' },
       { id: 'build', stage: 'build', done: st.built, title: 'Build a first version', why: 'A rough version you can click beats a perfect plan. Flint builds one from a sentence, with no AI needed.', act: 'Ask Flint to build it', run: 'build', say: what === 'website' ? `make a website for ${name}` : what === 'game' ? `make a game called ${name}` : `build an app called ${name}` },

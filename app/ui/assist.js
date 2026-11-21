@@ -1,8 +1,6 @@
 // Assist (server/assist.js): write the vision with help, and suggested tasks wherever "New task" opens.
-//   - TribeAssist.vision(p, { host, done }): a calm composer (feat/setup-flow). A row of category chips (Game · App ·
-//     Website · Tool · Bot · Something else) and one "What's the gist?" box; a local template fills VISION.md at once
-//     (what / for whom / done for v1 / out of scope). "Improve with" Flint or My Claude is optional. Save also sets
-//     the project kind for sense (PUT /api/projects/:id/sense).
+//   - TribeAssist.vision(p, { host, done }): one plain box to change what the project is (feat/easy-start). The first
+//     sentence typed at creation is the vision; there is no template (For whom / Done for v1 / Out of scope) any more.
 //   - TribeAssist.ideas(box, { compact }): 3-5 suggested tasks. Tap adds to Backlog, ✕ dismisses (remembered),
 //     "More ideas" asks the local model (or more heuristics without one). Shown only while the board has fewer
 //     than 3 tasks.
@@ -27,109 +25,51 @@
   C.on('chat', ev => { if (onChat) try { onChat(ev); } catch {} });
   function stopWait() { if (wait) { clearTimeout(wait.t); busy(false); wait = null; } }
 
-  // feat/setup-flow: the streamlined composer. Pick a category, write the gist (one or two sentences), and a local
-  // template fills VISION.md at once: what / for whom / done for v1 / out of scope. No model needed. "Improve with"
-  // Flint or My Claude stays optional. Saving also tells project sense what kind of thing this is.
-  const CATS = [
-    { k: 'game', e: '🎮', t: 'Game', kind: 'game', who: 'Friends who like short, playful games', done: ['One level you can play start to finish', 'Controls that feel good on a keyboard and a phone', 'A win screen and a try-again screen'], out: ['Online multiplayer', 'Accounts and cloud saves', 'More than three levels'] },
-    { k: 'app', e: '📱', t: 'App', kind: 'app', who: 'People who want this in their pocket', done: ['One main screen that works', 'What you add is still there after a reload', 'Looks right on a phone'], out: ['Accounts and sign-in', 'Payments', 'App store releases'] },
-    { k: 'site', e: '🌐', t: 'Website', kind: 'site', who: 'Visitors who should get it in ten seconds', done: ['A clear headline and one button', 'Works on a phone', 'Live at a link you can share'], out: ['A blog', 'Logins', 'A content editor'] },
-    { k: 'tool', e: '🛠️', t: 'Tool', kind: 'tool', who: 'Us, to save time on a boring job', done: ['Runs with one command', 'Handles the common case well', 'A short README with one example'], out: ['A visual interface', 'Plugins', 'Every edge case'] },
-    { k: 'bot', e: '🤖', t: 'Bot', kind: 'bot', who: 'Our group chat', done: ['Answers one command', 'Runs on the host computer', 'Explains itself with /help'], out: ['Storing chat history', 'Many servers at once', 'Paid features'] },
-    { k: 'other', e: '✨', t: 'Something else', kind: '', who: 'Our tribe and the people we show it to', done: ['A first version friends can try', 'A short README'], out: ['Big features, for now'] },
-  ];
-  const KIND_CAT = { game: 'game', '3d': 'game', app: 'app', site: 'site', tool: 'tool', api: 'tool', bot: 'bot' };
-  function draftFrom(cat, gist) {
-    const c = CATS.find(x => x.k === cat) || CATS[5];
-    const g = String(gist || '').trim().replace(/\s+/g, ' ');
-    const what = g ? cap(g.replace(/([^.!?])$/, '$1.')) : `${c.k === 'other' ? 'Something' : 'A ' + c.t.toLowerCase()} we build together.`;
-    return `## What\n${what}\n\n## For whom\n${c.who}.\n\n## Done for v1\n${c.done.map(x => `- ${x}`).join('\n')}\n\n## Out of scope\n${c.out.map(x => `- ${x}`).join('\n')}`;
-  }
+  // feat/easy-start: what you are making is the sentence typed when the project started. This is the one place to
+  // change it by hand (the project's dashboard and settings open it; telling Flint "set the vision to: …" does the
+  // same): one plain box with what it says now. No template, no headings to fill in, nothing to pick.
+  const plain = t => String(t || '').replace(/^#\s+.*\n+/, '').trim();
   async function vision(p, opts = {}) {
     const m = $('#invite-modal'), body = $('#invite-body'); if (!m || !body) return;
     const h = opts.host !== undefined ? opts.host : me().role === 'host';
     stopWait();
     m.classList.remove('hidden');
-    body.innerHTML = `<div class="av-wrap"><span class="eyebrow">Vision · ${esc(p.name)}</span><h2>${h ? 'What are you building?' : 'Suggest a vision'}</h2><p class="lead">Loading…</p></div>`;
-    let ctx; try { ctx = await C.api('/assist/vision'); } catch (e) { ctx = { answers: {}, helpers: {}, model: {} }; }
-    let sk = ''; try { sk = window.TribeSense && window.TribeSense.kind ? window.TribeSense.kind() : ''; } catch {}
+    body.innerHTML = `<div class="av-wrap"><span class="eyebrow">${esc(p.name)}</span><h2>${h ? 'What are you making?' : 'Suggest what we’re making'}</h2><p class="lead">Loading…</p></div>`;
+    let text = ''; try { text = plain((await C.api('/vision', { project: p.id })).text); } catch {}
+    if (/Replace these lines together/.test(text)) text = '';   // the starter's placeholder is not a vision
     if (m.classList.contains('hidden')) return;
-    const hp = ctx.helpers || {};
-    let existing = String(ctx.vision || '').replace(/^#\s+.*\n+/, '').trim();
-    if (/Replace these lines together/.test(existing)) existing = '';   // the starter's placeholder is not a vision
-    let cat = KIND_CAT[sk] || '';
-    const gist0 = (existing.match(/##\s*What\s*\n+([^\n#]+)/i) || [])[1] || (ctx.answers || {}).what || p.bio || '';
-    body.innerHTML = `<div class="av-wrap av2">
-      <span class="eyebrow">Vision · ${esc(p.name)}</span><h2>${h ? 'What are you building?' : 'Suggest a vision'}</h2>
-      <p class="lead">Pick what it is and say the gist. The vision fills in by itself. ${h ? 'It becomes VISION.md, which the plan, the board and every agent read.' : 'It goes to the chat for the host to adopt.'}</p>
-      <div class="av-cats" id="av-cats" role="radiogroup" aria-label="What is it?">${CATS.map(c => `<button type="button" role="radio" class="av-cat" data-cat="${c.k}" aria-checked="${c.k === cat}"><span class="emo" aria-hidden="true">${c.e}</span>${esc(c.t)}</button>`).join('')}</div>
-      <label class="av-gist-l" for="av-gist">What’s the gist?</label>
-      <textarea class="input av-gist" id="av-gist" rows="2" maxlength="400" placeholder="One or two sentences. For example: a cozy platformer where you light lanterns to find your way home.">${esc(gist0)}</textarea>
-      <div class="av-draft-h"><span class="av-lbl">Your vision</span><span class="av-improve">Improve with
-        <button type="button" class="btn sm av-imp" data-helper="flint">Flint</button>
-        <button type="button" class="btn sm av-imp" data-helper="claude" ${hp.claude ? '' : 'disabled title="Connect your AI first"'}>My AI</button></span></div>
-      <div class="av-status hidden" id="av-status" role="status"></div>
-      <textarea class="input pj-vision-in av-text" id="pj-vtext" rows="9" aria-label="Your vision">${esc(existing)}</textarea>
-      <div class="modal-foot"><span style="flex:1"></span><button class="btn" data-close>Later</button><button class="btn primary" id="pj-vsave">${h ? 'Save the vision' : 'Send to chat'}</button></div></div>`;
-    const ta = $('#pj-vtext'), st = $('#av-status'), gi = $('#av-gist');
-    const status = (html, cls = '') => { st.className = `av-status ${cls}`; st.innerHTML = html; st.classList.toggle('hidden', !html); };
-    // The draft follows the chips and the gist until someone edits it by hand.
-    let edited = !!existing;
-    const redraw = () => { if (edited) return; ta.value = draftFrom(cat || 'other', gi.value); };
-    if (!existing) redraw();
-    ta.addEventListener('input', e => { if (e.isTrusted) edited = true; });
-    gi.addEventListener('input', redraw);
-    body.querySelectorAll('[data-cat]').forEach(b => b.onclick = () => {
-      cat = b.dataset.cat; body.querySelectorAll('[data-cat]').forEach(x => x.setAttribute('aria-checked', String(x === b)));
-      if (edited && !ta.value.trim()) edited = false;
-      redraw();
-    });
+    body.innerHTML = `<div class="av-wrap av1">
+      <span class="eyebrow">${esc(p.name)}</span><h2>${h ? 'What are you making?' : 'Suggest what we’re making'}</h2>
+      <p class="lead">${h ? 'A sentence or two in your own words. Flint, your friends and any AI helper read it before they build.' : 'It goes to the chat for the person who runs this project to use.'}</p>
+      <textarea class="input pj-vision-in av-text" id="pj-vtext" rows="4" maxlength="4000" aria-label="What are you making?" placeholder="For example: a cozy game where friends water plants at night.">${esc(text || p.bio || '')}</textarea>
+      <div class="modal-foot"><span style="flex:1"></span><button class="btn" data-close>Later</button><button class="btn primary" id="pj-vsave">${h ? 'Save' : 'Send to chat'}</button></div></div>`;
+    const ta = $('#pj-vtext');
     const close = () => { stopWait(); m.classList.add('hidden'); };
     body.querySelector('[data-close]').onclick = close;
-    const fill = (text, note) => { ta.value = text.trim(); edited = true; status(note, 'ok'); };
-    const answers = () => { const c = CATS.find(x => x.k === (cat || 'other')); return { what: gi.value.trim(), who: c.who, done: c.done.join('; '), out: c.out.join('; ') }; };
-
-    body.querySelectorAll('.av-imp').forEach(b => b.onclick = async () => {
-      if (b.disabled) return;
-      const helper = b.dataset.helper; b.disabled = true; stopWait();
-      try {
-        if (helper === 'flint') {
-          status('Flint is drafting…'); busy(true);
-          try { const r = await C.api('/assist/vision', { method: 'POST', body: { helper, answers: answers() } }); fill(r.draft, r.by === 'model' ? 'Improved by Flint with the local model. Edit away.' : 'Drafted by Flint from your answers. Edit away.'); }
-          finally { busy(false); }
-        } else {
-          const r = await C.api('/assist/vision', { method: 'POST', body: { helper, answers: answers() } });
-          const who = 'your AI';
-          status(`<span class="av-spin" aria-hidden="true"></span>Waiting for ${who}… <button type="button" class="linkish" id="av-cancel">Stop waiting</button>`, 'wait');
-          busy(true);
-          wait = { channel: r.channel, agent: r.agent.id, at: r.at, who, t: setTimeout(() => { if (wait) { stopWait(); status(`${cap(who)} hasn't answered yet. Its reply will be in your private chat with it.`); } }, 10 * 60_000) };
-          const cb = $('#av-cancel'); if (cb) cb.onclick = () => { stopWait(); status(''); };
-        }
-      } catch (e) { status(esc(e.message), 'err'); }
-      finally { b.disabled = false; }
-    });
-    onChat = ev => {
-      if (!wait || !ev || ev.channel !== wait.channel) return;
-      const msg = ev.message || {}; if (msg.by !== wait.agent || String(msg.at) < String(wait.at)) return;
-      if ($('#invite-modal').classList.contains('hidden') || !$('#pj-vtext')) return stopWait();
-      const who = wait.who; stopWait();
-      fill(clean(msg.text), `Drafted by ${esc(who)}. Edit away.`);
-    };
-    if (!phone()) (gi.value ? ta : gi).focus();
-
+    if (!phone()) { ta.focus(); try { ta.setSelectionRange(ta.value.length, ta.value.length); } catch {} }
     $('#pj-vsave').onclick = async () => {
-      const t = ta.value.trim(); if (!t) return gi.focus();
-      const kind = (CATS.find(x => x.k === cat) || {}).kind;
+      const t = ta.value.trim(); if (!t) return ta.focus();
       try {
-        if (h) {
-          await C.api('/vision', { method: 'PUT', body: { text: `# ${p.name}\n\n${t}\n` } });
-          if (kind) await C.api(`/projects/${encodeURIComponent(p.id)}/sense`, { method: 'PUT', body: { kind } }).catch(() => {});   // project sense follows the category
-          toast('Vision saved');
-        } else await C.api('/chat/general', { method: 'POST', body: { text: `💡 Vision suggestion for ${p.name}:\n${t}` } }).then(() => toast('Sent to the chat'));
+        if (h) { await C.api('/vision', { method: 'PUT', project: p.id, body: { text: `# ${p.name}\n\n${t}\n` } }); toast('Saved'); }
+        else await C.api('/chat/general', { method: 'POST', body: { text: `💡 Suggestion for what ${p.name} is: ${t}` } }).then(() => toast('Sent to the chat'));
         close(); ideasCache = null; if (opts.done) opts.done();
       } catch (e) { toast(e.message); }
     };
   }
+  // Settings › Projects: "What you’re making", with the sentence as it is now and Change.
+  (function settingsRow(n = 0) {
+    const T = window.TribeSettings; if (!T || !T.addSection) { if (n < 40) setTimeout(() => settingsRow(n + 1), 500); return; }
+    try { T.addSection('projects', { id: 'making', title: 'What you’re making', render: async el => {
+      const P = window.TribeProjects, p = P && P.cur && P.cur();
+      if (!p || !C.connected()) { el.innerHTML = '<p class="faint">Open a project to see and change what it says it is.</p>'; return; }
+      let text = ''; try { text = plain((await C.api('/vision', { project: p.id })).text); } catch {}
+      const mine = me().role === 'host' || p.role === 'host';
+      el.innerHTML = `<p class="av-set-t" id="av-set-t">${text ? esc(text.split('\n')[0].slice(0, 240)) : '<span class="faint">Nothing yet. One sentence is enough.</span>'}</p>
+        <p class="faint">${esc(p.name)} was made from this sentence. Flint, your friends and any AI helper read it. You can also tell Flint: “set the vision to: …”.</p>
+        <button type="button" class="btn" id="av-set-edit">${mine ? 'Change it' : 'Suggest a change'}</button>`;
+      el.querySelector('#av-set-edit').onclick = () => vision(p, { host: mine, done: () => { if (T.open) T.open('projects', 'making'); } });
+    } }); } catch {}
+  })();
   const cap = s => (s ? s[0].toUpperCase() + s.slice(1) : s);
   const clean = t => String(t || '').replace(/^```[a-z]*\n?|```$/gm, '').replace(/^#\s+.*\n+/, '').replace(/^@\S+\s+/, '').trim();
   function insert(ta, s) {

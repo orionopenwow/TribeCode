@@ -373,8 +373,71 @@
     return ok({ title, slug, basic: true, local: true });
   }
 
-  function route(method, parts, q, body) {
+  // ---------- App Creator and Motion Studio on this device (feat/easy-start; server/appcreator.js, server/motionstudio.js) ----------
+  // A tribe that lives in this browser saves its app and its motion graphics here, like its website. They move to the
+  // host with the rest (designs(), sent by setuplocal.js importTo).
+  function appDesign(method, pid, c, d, e, body) {
+    const s = bag('app', pid);
+    if (c === 'app-comments') { s.comments = s.comments || []; if (!d && method === 'GET') return ok({ comments: s.comments, canEdit: true }); return null; }
+    if (!d && method === 'GET') return ok({ config: s.config || null, rev: s.rev || 0, savedBy: s.config ? meName() : '', savedAt: s.at || '', canEdit: true, canSuggest: false, local: true });
+    if (!d && method === 'PUT') {
+      if (!body || typeof body.config !== 'object' || !body.config) return [400, { error: 'config missing' }];
+      if (JSON.stringify(body.config).length > 4 * 1024 * 1024) return [413, { error: 'That app is over 4 MB. Use smaller pictures.' }];
+      if (s.config && body.base != null && !body.force && +body.base !== (s.rev || 0)) return [409, { conflict: true, config: s.config, rev: s.rev || 0, by: meName() }];
+      s.config = body.config; s.rev = (s.rev || 0) + 1; s.at = iso(); save();
+      try { K().push({ type: 'app-config', project: pid, rev: s.rev }); } catch {}
+      return ok({ ok: true, config: s.config, rev: s.rev, local: true });
+    }
+    if (d === 'history' && !e && method === 'GET') return ok({ versions: [], canEdit: true });
+    return null;
+  }
+  const motionKey = k => /^[a-z0-9][a-z0-9-]{0,63}$/.test(String(k || ''));
+  function motion(method, pid, key, body) {
+    const m = bag('motion', pid);
+    if (!key && method === 'GET') return ok({ items: Object.entries(m).map(([k, r]) => ({ key: k, name: r.doc.name, template: r.doc.template, aspect: r.doc.aspect, bars: r.doc.bars, bpm: r.doc.bpm, updated: r.updated, by: 'me' })).sort((a, b) => String(b.updated).localeCompare(String(a.updated))) });
+    if (!motionKey(key)) return [400, { error: 'bad motion key' }];
+    if (method === 'GET') return m[key] ? ok({ ...m[key], canEdit: true, canSuggest: false }) : [404, { error: 'no such motion graphic' }];
+    if (method === 'DELETE') { delete m[key]; save(); return ok({ ok: true }); }
+    if (method === 'PUT') {
+      if (!body || typeof body.doc !== 'object' || !body.doc) return [400, { error: 'doc missing' }];
+      if (JSON.stringify(body.doc).length > 2 * 1024 * 1024) return [413, { error: 'that motion graphic is too big' }];
+      m[key] = { key, doc: body.doc, updated: iso(), by: 'me' }; save();
+      return ok({ key, updated: m[key].updated, local: true });
+    }
+    return null;
+  }
+  // What was designed in this browser, per project, for the move to a host: { [pid]: { site, app, motion: { key: doc } } }
+  function designs() {
+    const l = L(), out = {};
+    for (const [pid, s] of Object.entries(l.site || {})) if (s && s.config) (out[pid] = out[pid] || {}).site = s.config;
+    for (const [pid, s] of Object.entries(l.app || {})) if (s && s.config) (out[pid] = out[pid] || {}).app = s.config;
+    for (const [pid, m] of Object.entries(l.motion || {})) { const ks = Object.keys(m || {}); if (ks.length) (out[pid] = out[pid] || {}).motion = Object.fromEntries(ks.map(k => [k, m[k].doc])); }
+    return out;
+  }
+
+  // The dashboard's preview band (server/dashband.js): what this project has made, from this device's own copy.
+  function band(pid) {
+    const p = project(pid); if (!p.id) return null;
+    const st = bag('site', pid), ap = bag('app', pid), chosen = ((bag('show')[pid] || {}).k) || null;
+    let site = null;
+    if (st.config) { const pages = Array.isArray(st.config.pages) ? st.config.pages : [], blocks = Array.isArray((pages[0] || {}).blocks) ? pages[0].blocks : [], hero = blocks.find(b => b && /hero|header|cover/i.test(String(b.type || ''))) || blocks[0] || {}, f = hero.props || hero.fields || hero.data || {};
+      site = { designed: true, title: String((st.config.name && st.config.name !== 'My site' ? st.config.name : '') || f.title || f.headline || p.name || '').slice(0, 80), tagline: String(f.subtitle || f.tagline || f.text || '').slice(0, 140), accent: (st.config.theme && st.config.theme.colors && st.config.theme.colors.accent) || '', at: st.at || null, by: 'me' }; }
+    const phone = ap.config && Array.isArray(ap.config.screens) && ap.config.screens.length ? { name: String(ap.config.name || '').slice(0, 60), screens: ap.config.screens.length, at: ap.at || null, by: 'me' } : null;
+    const has = { site, phone }, pick = chosen && has[chosen] ? chosen : phone && (!site || String(ap.at || '') > String(st.at || '')) ? 'phone' : site ? 'site' : 'none';
+    return { project: { id: p.id, name: p.name, color: p.color, emoji: p.emoji || '' }, pick, chosen, has: { app: false, site: !!site, phone: !!phone, design: false }, site, phone, design: null,
+      updated: pick === 'none' ? null : { at: has[pick].at, byName: meName() }, main: pid, pinned: false, isMain: true, canPin: false, canSwitch: true, signals: {}, local: true };
+  }
+
+  function route(method, parts, q, body, headers) {
     if (!soloOnly()) return null;
+    // the dashboard band's "show this" and build signals: nothing to keep in a tribe with one device, and never a "needs the tribe online" card
+    if (parts[0] === 'dash') {
+      const hp = headers && headers['x-project'], bp = hp && K().proj(hp) ? hp : K().cur();
+      if (parts[1] === 'band' && method === 'GET') return ok({ band: band(bp) });
+      if (parts[1] === 'show' && method !== 'GET') { const sh = bag('show'); const v = String((body || {}).show || ''); if (['site', 'phone', 'app', 'design'].includes(v)) sh[bp] = { k: v }; else delete sh[bp]; save(); try { K().push({ type: 'dashband', project: bp }); } catch {} return ok({ band: band(bp) }); }
+      if (parts[1] === 'signal' && method !== 'GET') return ok({ ok: true, local: true });
+      if (parts[1] === 'criticals' && method === 'GET') return ok({ items: [], total: 0 });
+    }
     if (parts[0] === 'flint' && parts[1] === 'make' && method === 'POST') return flintMake(body || {});
     if (parts[0] === 'flint' && parts[1] === 'draft' && method === 'POST') return flintDraft(body || {});
     const [a, b, c, d, e, f] = parts, pid = K().cur(), B = body || {};
@@ -382,6 +445,8 @@
       case 'projects': {
         if (!K().proj(b)) return null;
         if (c === 'site-config' || c === 'site-autofill' || c === 'site-comments') return site(method, b, c, d, B, e);
+        if (c === 'app-config' || c === 'app-comments') return appDesign(method, b, c, d, e, B);
+        if (c === 'motion') return motion(method, b, d, B);
         if (c === 'website' && d === 'versions') return versions(method, b, e, B);
         if (c === 'ledger') return ledger(method, b, d, q, B);
         if (c === 'ledger.csv') return ledgerCsv(b, q);
@@ -417,5 +482,5 @@
     K().hooks.route.push(route); return true;
   }
   if (!install()) { const t = setInterval(() => { if (install()) clearInterval(t); }, 200); setTimeout(() => clearInterval(t), 15000); }
-  window.TribePhoneLocal = { route, needsHost, summary, code: pid => (K() && K().db() ? codeStore(pid || K().cur()) : null), save: () => K() && K().save() };
+  window.TribePhoneLocal = { route, needsHost, summary, designs, code: pid => (K() && K().db() ? codeStore(pid || K().cur()) : null), save: () => K() && K().save() };
 })();

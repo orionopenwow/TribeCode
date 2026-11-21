@@ -275,7 +275,7 @@
     if ((m = RX.note.exec(t))) return note(text.slice(text.length - m[1].length).trim());
     // Setup steps by name: Flint does them (and shows where they live) instead of explaining
     if ((m = RX.doStep.exec(t))) { const k = /task/.test(t) ? 'newtask' : /vision/.test(t) ? 'vision' : /repo/.test(t) ? 'repo' : 'claude';
-      if (window.TribeProjects && window.TribeProjects.step) { window.TribeProjects.step(k); return say(k === 'newtask' ? 'Opened the Task Board with a new task ready. Give it a short name.' : k === 'vision' ? 'Opened the vision. Pick what it is and write the gist.' : k === 'repo' ? 'Making the code repository: a home for the code, right on the host.' : 'Here’s how to connect your AI. Pick your tool and copy one line.'); } }
+      if (window.TribeProjects && window.TribeProjects.step) { window.TribeProjects.step(k); return say(k === 'newtask' ? 'Opened the Task Board with a new task ready. Give it a short name.' : k === 'vision' ? 'Opened it. Say what you’re making in a sentence or two.' : k === 'repo' ? 'Making the code repository: a home for the code, right on the host.' : 'Here’s how to connect your AI. Pick your tool and copy one line.'); } }
     if ((m = RX.nav.exec(t))) { const map = { files: 'docs', docs: 'docs', documents: 'docs', code: 'docs', tasks: 'tasks', 'task board': 'tasks', board: 'tasks', chat: 'chat', messages: 'chat', home: 'hub', dashboard: 'home', overview: 'home', repo: 'repo', guide: 'guide', settings: 'settings', calendar: 'calendar', 'agents hub': 'agents', agents: 'agents', mcp: 'mcp', bugs: 'bugs', website: 'website', whiteboard: 'whiteboard', 'white board': 'whiteboard' }, v = map[m[1]];
       // Flint flies to the place in the sidebar first, so you learn where it lives, then opens it
       const ROW = { docs: '#nest-docs', tasks: '#nest-ws-tasks', chat: '#nest-chat', hub: '#rail-logo', home: '#nest-home', agents: '#nest-ws-agents', repo: '#pin-repo .nest-row', settings: '#ub-gear', calendar: '#nest-extra [data-wkey="calendar"]', bugs: '#nest-extra [data-wkey="bugs"]', website: '#nest-extra [data-wkey="website"]', whiteboard: '#wg-whiteboard' }, row = ROW[v] && document.querySelector(ROW[v]);
@@ -530,7 +530,7 @@
     return host ? '🔒 Nothing you type here leaves it.' : '🔒 What you type stays in this tribe.';
   };
   // Early on Flint keeps it simple: a short hello and the next setup steps as nudges. He shows more as the tribe grows.
-  const NUDGE = { vision: ['✨ Write the vision', 'vision'], task: ['📝 Add a first task', 'newtask'], agent: ['🤖 Connect my AI', 'claude'], repo: ['🌿 Create the code repository', 'repo'] };   // feat/setup-flow: the four setup steps
+  const NUDGE = { vision: ['✨ Say what you’re making', 'vision'], task: ['📝 Add a first task', 'newtask'], agent: ['🤖 Connect my AI', 'claude'], repo: ['🌿 Create the code repository', 'repo'] };   // feat/setup-flow: the four setup steps
   function emptyHtml() {
     const S = window.TribeStage, lv = S ? S.level() : 'going', st = S ? S.steps() : null;
     if (lv !== 'going' && st) {   // the next steps are big cards at the top of the panel; Flint just says hi

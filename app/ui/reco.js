@@ -31,7 +31,7 @@
     const people = members(pid).length, seats = co ? (co.seats || []) : [], open = seats.filter(s => !(s.holder || {}).person && !(s.holder || {}).agent);
     const add = (o) => out.push(o);
 
-    if (!vision.trim()) add({ id: 'vision', e: '✨', t: 'Say what you’re making', why: 'One or two sentences. Flint, your AI helpers and everything below get smarter from it.', b: 'Write the vision', run: () => { const ck = $('#pj-check [data-ck="vision"]'); if (ck) ck.click(); else go('docs'); }, score: 100 });
+    if (!vision.trim()) add({ id: 'vision', e: '✨', t: 'Say what you’re making', why: 'One or two sentences. Flint, your AI helpers and everything below get smarter from it.', b: 'Say it', run: () => { const ck = $('#pj-check [data-ck="vision"]'); if (ck) ck.click(); else go('docs'); }, score: 100 });
     if (businessy && !co) add({ id: 'company', e: '🏢', t: 'Make it a company', why: 'This sounds like a business. Give each role a seat (CEO, Build, Grow, Run) and hand the ones you can’t fill to an AI helper.', b: 'Make it a company', run: () => go('company'), score: 90 });
     if (people <= 1) add({ id: 'friends', e: '👋', t: 'Bring a friend', why: 'Your tribe link lets anyone join with a name, no account. Projects move faster with two.', b: 'Invite friends', run: () => { const b = $('#tour-invite'); if (b) b.click(); }, score: 70 });
     if (!p.hasRepo && vision.trim()) add({ id: 'repo', e: '📦', t: 'Create the code repository', why: 'The shared folder for your code, saved on GitHub. The preview runs from it.', b: 'Set it up', run: () => go('repo'), unlock: 'repo', score: 65 });

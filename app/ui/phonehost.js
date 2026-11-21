@@ -93,8 +93,10 @@
   async function land(server, token, name) {
     const o = OFF();
     if (o && o.solo && o.solo()) {
-      const r = await fetch(`${server}/api/import/solo`, { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token }, body: JSON.stringify(o.exportSolo()) });
+      const data = o.exportSolo();
+      const r = await fetch(`${server}/api/import/solo`, { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token }, body: JSON.stringify(data) });
       const rd = await r.json().catch(() => ({})); if (!r.ok) throw new Error(rd.error || `HTTP ${r.status}`);
+      const LS = window.TribeLocalSetup; if (LS && LS.host && LS.host.sendDesigns) await LS.host.sendDesigns(server, token, data, rd);   // feat/easy-start: the website, app and motion graphics come along
     }
     // A web page (the PWA) can't use the host from another origin: open the host's own page, signed in with a device link.
     let go = null;

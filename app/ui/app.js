@@ -510,17 +510,49 @@
     if (!inv) return;
     const btn = $('#host-here'); if (btn) { btn.disabled = true; btn.textContent = 'Starting…'; }
     const reset = () => { if (btn) { btn.disabled = false; btn.textContent = 'Host a tribe on this computer'; } };
-    // Each check gives up after 1.5 s, and the whole start after 30 s, so this never hangs on "Starting…".
+    const say = t => { try { if (opts && opts.step) opts.step(t); } catch {} };
+    // Each check gives up after 1.5 s, so this never hangs on "Starting…".
     const healthy = async url => { const c = new AbortController(); const t = setTimeout(() => c.abort(), 1500);
       try { const r = await fetch(url + '/api/health', { signal: c.signal, cache: 'no-store' }); return r.ok; } catch { return false; } finally { clearTimeout(t); } };
-    try {
-      const url = await inv.invoke('host_start', { port: 4747, dir: st.folder || '', name: st.name && st.name !== 'Me' ? `${st.name.split(' ')[0]}'s Tribe` : 'My Tribe' });
-      let ok = false;
-      for (const until = Date.now() + 30000; Date.now() < until;) {
-        if ((ok = await healthy(url))) break;
-        const log = await inv.invoke('host_log').catch(() => []);
-        if (log.some(l => l.startsWith('[server stopped'))) break;
+    const logNow = async () => (await inv.invoke('host_log').catch(() => []) || []).filter(Boolean);
+    // feat/easy-start: wait for the server to answer. It ends early when the server stopped (its last lines say why) or
+    // when nothing of ours is running and nothing answers (another program holds that spot). A first start can be slow
+    // while the computer checks the new program, so the wait is long and says so.
+    const waitUp = async (url, ms) => {
+      const t0 = Date.now(); let told = false;
+      for (;;) {
+        if (await healthy(url)) return { ok: true };
+        const log = await logNow();
+        if (log.some(l => l.startsWith('[server stopped'))) return { ok: false, stopped: true, log };
+        const el = Date.now() - t0;
+        if (el > 2500 && !log.length) { const run = await inv.invoke('host_status').catch(() => undefined); if (run === null) return { ok: false, nobody: true, log }; }
+        if (el > ms) return { ok: false, slow: true, log };
+        if (el > 6000 && !told) { told = true; say('Still starting. The first time can take a minute while your computer checks the app…'); }
         await new Promise(r => setTimeout(r, 400));
+      }
+    };
+    try {
+      // No folder chosen yet: TribeCode's usual one (an empty value used to stop the server at once).
+      let folder = st.folder || '';
+      const usual = async () => { try { const h = await window.TribeHost.homeDir(); return h ? h.replace(/[\\/]$/, '') + (h.includes('\\') ? '\\TribeCode' : '/TribeCode') : ''; } catch { return ''; } };
+      if (!folder) { folder = await usual(); if (folder) S.set({ folder }); }
+      const tribeName = st.name && st.name !== 'Me' ? `${st.name.split(' ')[0]}'s Tribe` : 'My Tribe';
+      // Its usual spot first, then spare ones: another program (or a copy that hangs) on the first is no reason to fail.
+      const PORTS = (opts && opts.ports) || [4747, 4748, 4749, 4757];
+      let url = '', ok = false, last = null, folderRetried = false;
+      for (let i = 0; i < PORTS.length && !ok; i++) {
+        if (i) { say('That spot on this computer is taken. Trying another one…'); await inv.invoke('host_stop').catch(() => {}); }
+        try { url = await inv.invoke('host_start', { port: PORTS[i], dir: folder, name: tribeName }); }
+        catch (e) { last = { launch: true, log: [String((e && e.message) || e)] }; break; }   // the helper program itself would not launch: another spot does not help
+        last = await waitUp(url, i ? 25000 : 60000);
+        if ((ok = last.ok)) break;
+        const text = (last.log || []).join('\n');
+        if (last.stopped && /tribe folder|EPERM|EACCES|EROFS|ENOTDIR/i.test(text) && !folderRetried) {   // its folder can't be used: the usual one, once
+          folderRetried = true; const u = await usual();
+          if (u && u !== folder) { folder = u; say('That folder can’t be used. Using TribeCode’s usual folder…'); i--; continue; }
+        }
+        if (last.stopped && !/already in use|EADDRINUSE/i.test(text)) break;   // it stopped for a reason another spot won't fix
+        if (last.slow) break;   // ours is running but not answering yet: Try again keeps waiting for the same one
       }
       // Sense a stale server: an older copy of TribeCode left running on this port serves old code and blocks
       // updates. If its version differs from this app's, stop it and start ours.
@@ -531,13 +563,14 @@
           toast(`An older TribeCode server (v${theirs}) was still running. Restarting it as v${mine}…`);
           await inv.invoke('host_kill_stale').catch(() => {});
           for (const until = Date.now() + 8000; Date.now() < until;) { if (!(await healthy(url))) break; await new Promise(r => setTimeout(r, 300)); }
-          if (await healthy(url)) throw new Error(`Another TribeCode (v${theirs}) is running on port 4747 and isn't this app's server. Close it (for example a terminal running npm start), then reopen TribeCode.`);
+          if (await healthy(url)) throw new Error(`Another TribeCode (v${theirs}) is already running on this computer and isn't this app's server. Close it (for example a terminal running npm start), then reopen TribeCode.`);
           return hostHere({ ...(opts || {}), noStaleCheck: true });
         }
       }
       if (!ok) {
-        const log = (await inv.invoke('host_log').catch(() => [])).filter(Boolean).slice(-8).join('\n');
-        throw new Error('The tribe server did not start.' + (log ? '\n\n' + log : ' It printed nothing. Your antivirus may have blocked tribecode-server.exe.'));
+        const log = ((last && last.log) || []).slice(-8).join('\n');
+        const head = last && last.launch ? 'The tribe server could not be launched.' : last && last.slow ? 'The tribe server took too long to start.' : last && last.nobody ? 'The tribe server did not start: no free spot answered.' : 'The tribe server did not start.';
+        throw new Error(head + (log ? '\n\n' + log : last && (last.slow || last.nobody) ? '' : ' It printed nothing. Your antivirus may have blocked tribecode-server.exe.'));
       }
       // The OS user name is only known once the server runs: replace the placeholder name with it.
       if (!st.name || st.name === 'Me') {
@@ -550,7 +583,7 @@
       S.set({ server: { url, token: keep }, hosting: true, hostOff: false });
       const role = await C.ensureMember({ name: st.name, color: st.color, reclaim: true });
       C.connect(); refresh();
-      if (!role && !keep) { const m = `A TribeCode server is running here but this app could not sign in to it.\n${window.__authError || ''}`.trim(); if (silent) { S.set({ server: before, hosting: false }); return { ok: false, error: m }; } showHostError(m); return { ok: false, error: m }; }
+      if (!role && !keep) { const m = `TribeCode started on this computer, but this window could not sign in to it.\n${window.__authError || ''}`.trim(); if (silent) { S.set({ server: before, hosting: false }); return { ok: false, error: m }; } showHostError(m); return { ok: false, error: m }; }
       S.set({ tribeHere: true });   // a tribe exists on this computer: the next launch may start it (when Host is on)
       if (silent) return { ok: true, url, role: role || 'member' };
       if (role === 'reclaimed') toast('Welcome back. Your tribe runs on this computer again.');
@@ -559,9 +592,22 @@
     } catch (e) {
       reset();
       if (silent) { if (S.get().server !== before && !S.get().tribeHere) S.set({ server: before, hosting: false }); return { ok: false, error: String(e && e.message || e) }; }
-      if (!quiet || !(e && e.message)) toast(String(e && e.message || e)); else showHostError(e.message);
+      if (!quiet || !(e && e.message)) toast(hostProblem(e && e.message || e).what + ' ' + hostProblem(e && e.message || e).tryThis); else showHostError(e.message);
       return { ok: false, error: String(e && e.message || e) };
     }
+  }
+  // feat/easy-start: why the tribe did not start on this computer, in plain words, with the one thing to try. The raw
+  // text (the server's last lines) stays available under Details. { kind, what, tryThis, details }
+  function hostProblem(raw) {
+    const t = String(raw || ''), P = (kind, what, tryThis) => ({ kind, what, tryThis, details: t });
+    if (/isn't this app's server|Another TribeCode/i.test(t)) return P('other', 'Another copy of TribeCode is already running on this computer.', 'Close the other TribeCode window, then press Try again.');
+    if (/could not sign in/i.test(t)) return P('signin', 'TribeCode started on this computer, but this window could not sign in to it.', 'Close TribeCode completely, open it again, then press Try again.');
+    if (/could not be launched|could not start the tribe server|os error (2|5|193|225|1260)\b|Access is denied|virus|printed nothing/i.test(t)) return P('blocked', 'Your computer stopped the part of TribeCode that keeps your tribe on this computer.', 'This is usually antivirus. Allow TribeCode in it (the file is called tribecode-server), then press Try again. If that doesn’t help, install TribeCode again.');
+    if (/already in use|EADDRINUSE|no free (port|spot)/i.test(t)) return P('busy', 'Other programs on this computer are using the spots TribeCode needs.', 'Restart your computer, then press Try again.');
+    if (/tribe folder|EPERM|EACCES|EROFS|ENOSPC|ENOTDIR/i.test(t)) return P('folder', 'TribeCode could not save into its folder on this computer.', /ENOSPC/.test(t) ? 'The disk is full. Free some space, then press Try again.' : 'Pick another folder in Settings › Storage, then press Try again.');
+    if (/took too long/i.test(t)) return P('slow', 'TribeCode is taking longer than usual to start on this computer.', 'The first start can be slow while your computer checks the app. Press Try again; it keeps waiting where it left off.');
+    if (/did not load/i.test(t)) return P('load', 'The app did not finish loading.', 'Close TribeCode and open it again.');
+    return P('crash', 'The part of TribeCode that keeps your tribe on this computer stopped right after starting.', 'Press Try again. If it keeps happening, copy the details below and send them to us.');
   }
   // Stop this computer's tribe server (and any older copy left on the port).
   async function stopHost() {
@@ -575,7 +621,7 @@
     await stopHost(); refresh(); toast('Your tribe is offline now. It stays in its folder; switch it back on to bring it back.');
   }
   function showHostError(msg) {
-    toast(msg.split('\n')[0] + ' Details are on Home.');
+    toast(hostProblem(msg).what + ' Home says what to try.');
     window.__hostError = msg;
     dispatchEvent(new CustomEvent('tribe-host-error'));   // Home shows it with Try again, instead of a quiet "not in a tribe yet"
   }
@@ -794,5 +840,5 @@
   // The hub was only standing in for "no tribe yet": once connected (hosting or joined), open the project as usual.
   C.on('hello', () => { if (autoHub && current === 'hub') show('home'); autoHub = false; });
   setTimeout(iosHint, 1500);
-  Object.assign(window.TribeApp, { sendQueued, pendingBubble, show, hostHere, startFirst, fresh: () => !!window.__tribeFresh && !C.hasToken(), setHosting, stopHost, view: () => current, reloadChat: loadChat, openInvite, joinOrHost, joinLink, parseInvite, connectClaude, refreshRoom: () => renderRoom(C.state().members) });
+  Object.assign(window.TribeApp, { sendQueued, pendingBubble, show, hostHere, hostProblem, startFirst, fresh: () => !!window.__tribeFresh && !C.hasToken(), setHosting, stopHost, view: () => current, reloadChat: loadChat, openInvite, joinOrHost, joinLink, parseInvite, connectClaude, refreshRoom: () => renderRoom(C.state().members) });
 })();

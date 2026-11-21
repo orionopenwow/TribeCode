@@ -116,7 +116,7 @@ html[data-dev=phone] .ehide-phone,html[data-dev=tablet] .ehide-tablet,html[data-
   function redo() { if (!st.fut.length) return false; const was = JSON.stringify(st.cfg); st.hist.push(was); st.cfg = JSON.parse(st.fut.pop()); fixPage(); showChange(was, st.cfg); save(); paint(); return true; }
   function fixPage() { if (!st.cfg.pages.some(p => p.id === st.page)) st.page = st.cfg.pages[0].id; if (st.sel && st.sel.block !== '@' && !pageNow().blocks.some(b => b.id === st.sel.block)) st.sel = null; }
   const ago = t => { if (!t) return ''; const s = Math.round((Date.now() - t) / 1000); return s < 20 ? 'just now' : s < 60 ? `${s}s ago` : s < 3600 ? `${Math.round(s / 60)} min ago` : new Date(t).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }); };
-  function status(text) { const el = $('#wdz-saved'); if (!el) return; el.textContent = text != null ? text : st.dirty ? 'Saving…' : st.savedAt ? `Saved${st.pid && connected() ? '' : ' on this device'} · ${ago(st.savedAt)}` : ''; el.classList.toggle('is-dirty', !!st.dirty); }
+  function status(text) { const el = $('#wdz-saved'); if (!el) return; el.textContent = text != null ? text : st.dirty ? 'Saving…' : st.savedAt ? `Saved${st.pid && connected() && !(window.TribeOffline && window.TribeOffline.solo && window.TribeOffline.solo()) ? '' : ' on this device'} · ${ago(st.savedAt)}` : ''; el.classList.toggle('is-dirty', !!st.dirty); }
   setInterval(() => { if (st && root && !root.hidden && !st.dirty) status(); }, 15000);
   function save() {
     clearTimeout(saveT); st.dirty = true; writeDraft(); status('Saving…');
@@ -140,7 +140,7 @@ html[data-dev=phone] .ehide-phone,html[data-dev=tablet] .ehide-tablet,html[data-
       return true;
     } catch (e) {
       if (e && (e.status === 409 || /conflict|409/.test(e.message || ''))) { conflict(e.body || e.data || {}); return false; }
-      status('Not saved yet: ' + (e.message || 'offline') + ' · kept on this device'); saveT = setTimeout(push, 5000); return false;
+      status('Saved on this device. It goes to the tribe when it’s back'); saveT = setTimeout(push, 5000); return false;
     }
   }
   // flush now: the words being typed, then the draft, then the host (keepalive so it survives the page going away)

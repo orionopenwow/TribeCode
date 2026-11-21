@@ -382,6 +382,11 @@ body.global .crumbs .pj-switch, body.global .crumbs .pj-sep { display: none !imp
 .hub-empty .he-copy { display: flex; flex-direction: column; align-items: flex-start; gap: 10px; padding: 28px 28px 22px; }
 .hub-empty .he-copy h2 { margin: 0; font-family: var(--display); font-size: 28px; font-weight: 750; letter-spacing: -0.02em; line-height: 1.15; color: var(--text); }
 .hub-empty .he-sub { margin: 0; max-width: 56ch; color: var(--muted); font-size: 14.5px; line-height: 1.6; }
+.hub-empty .he-idea { display: grid; gap: 8px; margin-top: 4px; max-width: 56ch; }
+.hub-empty .he-idea-l { font-size: 13px; font-weight: 650; color: var(--text); }
+.hub-empty .he-idea textarea { height: 72px; min-height: 64px; max-height: 200px; resize: vertical; font-size: 15px; line-height: 1.5; }
+.hub-empty .he-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.hub-empty .he-idea-err { margin: 0; color: var(--alert); font-size: 13px; }
 .hub-empty .he-acts { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 6px; }
 .hub-empty .he-acts .btn { display: inline-flex; align-items: center; gap: 8px; min-height: 40px; padding: 0 16px; font-weight: 650; }
 .hub-empty .gs-links { justify-content: flex-start; padding: 6px 0 0; border-top: 0; }
@@ -424,6 +429,8 @@ body.global .crumbs .pj-switch, body.global .crumbs .pj-sep { display: none !imp
 .gs-err { display: grid; gap: 6px; margin: 0 0 14px; padding: 14px 16px; border: 1px solid #FF6F8E; border-radius: var(--r, 10px); background: var(--surface); }
 .gs-err b { color: var(--text); font-size: 14px; }
 .gs-err span { color: var(--muted); font-size: 13px; line-height: 1.5; }
+.gs-err-why { margin: 0; color: var(--muted); font-size: 13px; line-height: 1.5; }
+.gs-err-why b { font-size: 13px; font-weight: 600; }
 .gs-err details summary { cursor: pointer; color: var(--muted); font-size: 12px; }
 .gs-err pre { margin: 6px 0 0; padding: 10px; max-height: 160px; overflow: auto; background: var(--canvas, #12151A); border: 1px solid var(--edge); border-radius: 8px; font: 11.5px/1.5 var(--mono); white-space: pre-wrap; color: var(--muted); }
 .gs-err .btn { justify-self: start; margin-top: 4px; }
