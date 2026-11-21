@@ -2,7 +2,7 @@
 
 A tribe with four projects: Rocket (a repo with index.html, plus a website and a design), Bakery (a website and a
 design), Sketch (a design) and Blank (nothing). The band picks app, then website, then design, then "Set up your
-preview". A lead pins the main project from the ⋯ menu; Switch (App / Website / Design) changes what's shown; the app's
+preview". A lead pins the main project from the ⋯ menu; the tabs (App / Website / Design) change what's shown; the app's
 thumbnail is the cached screenshot (an <img>) and the live iframe only appears after a click. Needs attention for
 Maya (a builder) ranks a failing build, an approval, a task waiting for her Accept, an overdue task and website
 comments in that order, with one action each; Accept works from the row; Blank is "All clear". Home shows the band for
@@ -143,7 +143,7 @@ def main():
             pg.wait_for_function("(() => { const i = document.querySelector('#pj-band-slot img.db-shot'); return i && i.complete && i.naturalWidth > 0; })()", timeout=10000)
             assert pg.locator("#pj-band-slot .db-frame").count() == 0, "no iframe before interaction"
             txt = pg.inner_text("#pj-band-slot .db-strip")
-            assert "ROCKET" in txt.upper() and "App" in txt and "Open preview" in txt and "Open code" in txt and "Share link" in txt, txt
+            assert "ROCKET" in txt.upper() and "APP" in txt.upper() and "Open preview" in txt and "Open code" in txt and "Share link" in txt, txt
             pg.wait_for_timeout(1200)   # the overview settles; the band is kept, not reloaded
             assert pg.locator("#pj-band-slot .db-frame").count() == 0, "still no iframe without interaction"
             shot(pg, "dash-preview")
@@ -152,14 +152,14 @@ def main():
             src = pg.get_attribute("#pj-band-slot .db-frame", "src"); assert "/preview/" in src, src
             assert "allow-same-origin" not in pg.get_attribute("#pj-band-slot .db-frame", "sandbox")
 
-            # 4. Switch what's shown: App -> Website -> Design -> back to automatic
+            # 4. Tabs for what's shown: App -> Website -> Design -> back to automatic (living preview: real tabs, e2e_living_preview.py)
             pg.click("#pj-band-slot [data-show=site]")
             pg.wait_for_function("document.querySelector('#pj-band-slot .db-band').dataset.pick === 'site'", timeout=8000)
             assert "Rocket" in pg.inner_text("#pj-band-slot .db-site") and "Open designer" in pg.inner_text("#pj-band-slot .db-strip")
             pg.click("#pj-band-slot [data-show=design]")
             pg.wait_for_function("document.querySelector('#pj-band-slot .db-band').dataset.pick === 'design'", timeout=8000)
             assert pg.locator("#pj-band-slot .db-pic svg").count() == 1, "the design's own shapes"
-            assert api("/dash/band", token=mt, project=rocket)["band"]["pick"] == "design", "the switch is saved for the tribe"
+            assert api("/dash/band", token=mt, project=rocket)["band"]["pick"] == "app", "living preview: a tab is this device's choice; the tribe still sees the main app"
             pg.click("#pj-band-slot [data-db=more]"); pg.click(".db-menu [data-dbm=auto]")
             pg.wait_for_function("document.querySelector('#pj-band-slot .db-band').dataset.pick === 'app'", timeout=8000)
 

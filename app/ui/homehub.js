@@ -38,12 +38,13 @@
     const face = PJ() && PJ().face ? PJ().face(p, 'sm') : '';
     const by = c && c.updated && c.updated.at ? `${c.updated.byName ? esc(c.updated.byName) + ' · ' : ''}${esc(ago(c.updated.at))}` : '';
     const pic = c ? (c.pick === 'none' || !c.pic ? `<div class="hh-pic-empty">${ico('i-sparkle', 18)}<span>${t('Nothing to preview yet')}</span></div>` : c.pic) : '<div class="hh-pic-load" aria-hidden="true"></div>';
-    const canOpen = c && c.pick && c.pick !== 'none';
-    if (c && !canOpen) return `<article class="hh-card hh-card-sm" data-hh-pid="${esc(p.id)}"><button type="button" class="hh-sm" data-hh-go="open">${face}<span class="hh-tx"><b>${esc(p.name)}</b><small>${t('Nothing to preview yet')}</small></span>${ico('i-chev', 14)}</button></article>`;   // nothing to show: one compact row
+    const sketch = !!c && c.pick === 'sketch';   // living preview: only a sentence so far; the dashboard has "Make it real"
+    const canOpen = c && c.pick && c.pick !== 'none' && !sketch;
+    if (c && !canOpen && !sketch) return `<article class="hh-card hh-card-sm" data-hh-pid="${esc(p.id)}"><button type="button" class="hh-sm" data-hh-go="open">${face}<span class="hh-tx"><b>${esc(p.name)}</b><small>${t('Nothing to preview yet')}</small></span>${ico('i-chev', 14)}</button></article>`;   // nothing to show: one compact row
     return `<article class="hh-card" data-hh-pid="${esc(p.id)}">
-      <button type="button" class="hh-pic" data-hh-go="${canOpen ? 'preview' : 'open'}" aria-label="${esc(canOpen ? t('Open the preview of') + ' ' + p.name : t('Open') + ' ' + p.name)}">${pic}</button>
+      <button type="button" class="hh-pic${sketch ? ' hh-sketch' : ''}" data-hh-go="${canOpen ? 'preview' : 'open'}" aria-label="${esc(canOpen ? t('Open the preview of') + ' ' + p.name : t('Open') + ' ' + p.name)}">${pic}</button>
       <div class="hh-meta">${face}<div class="hh-tx"><b>${esc(p.name)}</b><small>${c && c.kind ? esc(t(c.kind)) + (by ? ' · ' : '') : ''}${by}</small></div></div>
-      <div class="hh-acts">${canOpen ? `<button type="button" class="btn sm primary" data-hh-go="preview">${ico('i-play', 13)}${t('Open preview')}</button>` : ''}<button type="button" class="btn sm" data-hh-go="open">${t('Open')}</button></div></article>`;
+      <div class="hh-acts">${sketch ? `<button type="button" class="btn sm primary" data-hh-go="open">${ico('i-sparkle', 13)}${t('See the sketch')}</button>` : canOpen ? `<button type="button" class="btn sm primary" data-hh-go="preview">${ico('i-play', 13)}${t('Open preview')}</button>` : ''}${sketch ? '' : `<button type="button" class="btn sm" data-hh-go="open">${t('Open')}</button>`}</div></article>`;
   }
   const rank = c => !c ? 1 : c.pick && c.pick !== 'none' ? 2 : 0;   // previews first, then loading, then the empty ones
   function drawPreviews() {
@@ -69,14 +70,15 @@
     const load = async node => {
       const pid = node.dataset.hhPid; if (!pid || node.__hh) return; node.__hh = 1;
       const c = DB() && DB().card ? await DB().card(pid).catch(() => null) : null;
-      if (!c) return; cards.set(pid, c);
+      if (!c) return; const was = cards.get(pid); c.at = Date.now(); cards.set(pid, c);
       const p = projectsNow().find(x => x.id === pid) || c.project;
       if (!node.isConnected || !p) return;
       const tmp = document.createElement('div'); tmp.innerHTML = cardHtml(p, c); const fresh = tmp.firstElementChild;
       fresh.__hh = 1; node.replaceWith(fresh); bindCard(fresh);
-      if (projectsNow().slice(0, 12).every(x => cards.has(x.id))) drawPreviews();   // all in: previews first
+      if ((!was || was.pick !== c.pick) && projectsNow().slice(0, 12).every(x => cards.has(x.id))) drawPreviews();   // all in: previews first (a card looked at again redraws only when it changed)
     };
-    const nodes = [...el.querySelectorAll('.hh-card')].filter(n => !cards.has(n.dataset.hhPid));
+    const fresh = pid => { const c = cards.get(pid); return !!c && Date.now() - (c.at || 0) < (c.pick === 'none' ? 3000 : 15000); };   // living preview: a card is looked at again after a while, so Home and the dashboard agree
+    const nodes = [...el.querySelectorAll('.hh-card')].filter(n => !fresh(n.dataset.hhPid));
     if (!('IntersectionObserver' in window)) { nodes.slice(0, 6).forEach(load); return; }
     io = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) { io.unobserve(e.target); load(e.target); } }), { rootMargin: '200px' });
     nodes.forEach(n => io.observe(n));

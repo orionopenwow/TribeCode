@@ -6,6 +6,7 @@
 //                               Invite a friend). Never blocks on an AI; with a member's AI helper in the tribe it also
 //                               offers "Ask the AI to build a better first version" (a change request someone approves).
 //   open(pid)                   shows the last first preview again (the dashboard's "Made from your idea" link)
+//   draft(idea, name)           -> what the sentence would make, not saved (the dashboard's sketch, dashband.js)
 //   failed(pid)                 -> the idea whose preview did not finish (the dashboard offers Try again), or ''
 // What it makes, all with what is already in the app:
 //   site  the website designer's best template for the kind of site (link in bio, app page, business, portfolio,
@@ -122,7 +123,8 @@
   const editedSince = async r => !!(r && r.sig && r.kind !== 'game' && (await sigOf(r.pid, r.kind)) !== r.sig);
 
   // ---------- making it ----------
-  async function makeSite(pid, idea, name, g) {
+  // what the sentence makes, put together and not saved (the dashboard's sketch draws the same thing small)
+  async function siteDraft(idea, name, g) {
     const S = root.TribeSiteCfg; if (!S) throw new Error('The website designer did not load. Reload the app.');
     let raw; try { raw = await json(`sitetpl/${g.tpl}.json`); } catch { raw = await json('sitetpl/linkbio.json'); g.tpl = 'linkbio'; }
     let cfg = S.normalize(raw); cfg.template = cfg.template || g.tpl;
@@ -131,15 +133,35 @@
     const M = root.TribeFirstMake, b = M ? M.brief(idea) : null;   // pass 9: the words, sections and look come from the sentence
     if (b) { b.line = tl; try { cfg = S.normalize(M.site(S, cfg, b, siteName(name), g.tpl)); } catch (e) { try { console.warn('first make (site)', e); } catch {} } }
     cfg.seo = { ...(cfg.seo || {}), title: siteName(name), description: tl || (cfg.seo || {}).description || '' };
+    return cfg;
+  }
+  function appDraft(idea, name, g) {
+    const A = root.TribeAppCore; if (!A) throw new Error('App Creator did not load. Reload the app.');
+    let doc = A.template(g.tpl, { name: String(name || 'My app').slice(0, 48) }) || A.template('todo', { name });
+    const M = root.TribeFirstMake, b = M ? M.brief(idea) : null;   // pass 9: the words, screens and look come from the sentence
+    if (b) { try { doc = M.app(A, doc, b, String(name || 'My app').slice(0, 48), g.tpl); } catch (e) { try { console.warn('first make (app)', e); } catch {} } }
+    return doc;
+  }
+  // The sketch (living preview): what a sentence would make, with nothing saved and nothing run.
+  //   -> { kind, sub, tpl, label, sure, chips, doc? (an app), cfg? (a website), starter? (a game: the starter's title) }
+  async function draft(idea, name) {
+    idea = String(idea || '').trim(); if (!idea) return null;
+    const g = guess(idea), M = root.TribeFirstMake;
+    const out = { kind: g.kind, sub: g.sub, tpl: g.tpl, label: g.label, sure: g.sure, idea, chips: M ? M.chips(M.brief(idea), g.kind === 'site' ? g.label : KIND_LABEL[g.kind]) : [] };
+    if (g.kind === 'app') out.doc = appDraft(idea, name, g);
+    else if (g.kind === 'site') out.cfg = await siteDraft(idea, name, g);
+    else { try { const cat = await json('starters/catalog.json'); const s = (cat.items || []).find(x => x.id === g.tpl); out.starter = (s && s.title) || ''; } catch { out.starter = ''; } }
+    out.tpl = g.tpl;
+    return out;
+  }
+  async function makeSite(pid, idea, name, g) {
+    const S = root.TribeSiteCfg, cfg = await siteDraft(idea, name, g);
     let saved = true; try { await C().api(`/projects/${enc(pid)}/site-config`, { method: 'PUT', body: { config: cfg, force: true } }); } catch { saved = false; }
     const fonts = await fontsOf(cfg);
     return { html: S.render(cfg, { mode: 'single', fonts }), saved, sig: saved ? await sigOf(pid, 'site') : '' };
   }
   async function makeApp(pid, idea, name, g) {
-    const A = root.TribeAppCore; if (!A) throw new Error('App Creator did not load. Reload the app.');
-    let doc = A.template(g.tpl, { name: String(name || 'My app').slice(0, 48) }) || A.template('todo', { name });
-    const M = root.TribeFirstMake, b = M ? M.brief(idea) : null;   // pass 9: the words, screens and look come from the sentence
-    if (b) { try { doc = M.app(A, doc, b, String(name || 'My app').slice(0, 48), g.tpl); } catch (e) { try { console.warn('first make (app)', e); } catch {} } }
+    const doc = appDraft(idea, name, g);
     let saved = true; try { await C().api(`/projects/${enc(pid)}/app-config`, { method: 'PUT', body: { config: doc } }); } catch { saved = false; }
     return { ...(await appHtml(doc)), saved, sig: saved ? await sigOf(pid, 'app') : '' };
   }
@@ -361,5 +383,5 @@
   }
   const failed = pid => ls.get(FAIL(pid)) || '';
   async function retry(pid) { const idea = failed(pid); if (!idea) return; const p = root.TribeProjects && root.TribeProjects.cur ? root.TribeProjects.cur() : null; return start({ pid, idea, name: (p && p.name) || 'My project' }); }
-  return { ...PURE, start, open, update, last, failed, retry, close, isOpen: () => !!(box && box.isConnected), state: () => cur };
+  return { ...PURE, start, open, update, draft, last, failed, retry, close, isOpen: () => !!(box && box.isConnected), state: () => cur };
 });
