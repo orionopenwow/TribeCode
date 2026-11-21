@@ -1,6 +1,25 @@
 /* Agents dashboard (app/ui/agentsdash.js, feat/agents-dash): a few big text cards and the Agents Hub's pinned-tab line.
    Flat matte: 1px borders, depth only from luminance steps, no gradients, glows or shadows. Teal = agents. */
 
+/* feat/p10-office: the hub shows one of three states: connect (the flow is the page), dashboard, or turned off */
+.ad-connectflow { max-width: 860px; }
+.ad-other { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 14px 0 0; }
+.ad-other .eyebrow { margin-right: 4px; }
+.ad-waiting { display: flex; align-items: center; gap: 8px; margin: 14px 0 0; font-size: 13px; }
+.ad-pulse-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--live); animation: ad-breathe 1.6s var(--ease-out) infinite; }
+@keyframes ad-breathe { 50% { opacity: .35; } }
+.ad-how { margin-top: 18px; border: 1px solid var(--edge); border-radius: var(--r-lg); background: var(--surface); }
+.ad-how > summary { cursor: pointer; padding: 12px 16px; font-weight: 600; list-style: none; }
+.ad-how > summary::-webkit-details-marker { display: none; }
+.ad-how > summary::after { content: '+'; float: right; color: var(--muted); }
+.ad-how[open] > summary::after { content: '–'; }
+.ad-how > .fl-sec { margin: 0; padding: 0 16px 16px; border: 0; }
+.ad-stale { margin: 0 0 10px; padding: 8px 12px; border: 1px solid var(--edge); border-radius: var(--r); background: var(--amber-tint); color: var(--amber-ink); font-size: 13px; }
+.ad-offcard .fl-lead { max-width: 60ch; }
+.ad-office { margin-top: 16px; }
+.ad-more { margin: 14px 0 0; }
+@media (prefers-reduced-motion: reduce) { .ad-pulse-dot { animation: none; } }
+
 /* ---------- the top line: Dashboard, pinned tabs, a temporary tab, + ---------- */
 .wt .wt-x { display: inline-grid; place-items: center; width: 18px; height: 18px; margin: 0 -4px 0 0; border-radius: 5px; font-size: 15px; line-height: 1; color: var(--faint); opacity: 0; cursor: pointer; }
 .wt:hover .wt-x, .wt:focus-visible .wt-x, .wt .wt-x.temp { opacity: 1; }

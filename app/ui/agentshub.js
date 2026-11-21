@@ -2,7 +2,7 @@
 // sessions, Claude Desktop (through the stdio bridge), any other MCP client, the local models at home and
 // the Secretary. One card per agent with a kind glyph and color, live/idle, what it's doing, its lane and
 // its last gist; connect buttons for each kind; revoke any key.
-//   window.TribeAgentsHub = { open(), close(), glyph(kind) }
+//   window.TribeAgentsHub = { open(), close(), glyph(kind), office() }
 // Server: server/agentshub.js (GET /api/agents/hub), POST /api/agents { kind, label }, DELETE /api/agents/mine?id=.
 // The view mounts in <section id="view-agents-hub"> (index.html) next to the app's own views; the shell nav
 // opens it with TribeAgentsHub.open() or a link to #/agents-hub.
@@ -82,7 +82,7 @@
     if (quiet && document.activeElement && document.activeElement.closest && document.activeElement.closest('#view-agents-hub input, #view-agents-hub select')) return;
     let root = sec.querySelector('#fl-root');
     if (!root) { sec.innerHTML = `<div class="ah ah-fleet">${head()}<div id="fl-root"></div></div>`; root = sec.querySelector('#fl-root'); }
-    const officeSec = () => (C.hasToken && C.hasToken() ? `<section class="fl-sec" id="ah-office-sec"><div class="sec-head"><span class="eyebrow">Optional</span><h2><span class="emo" aria-hidden="true">🪑</span>Office</h2></div><div id="ah-office">${officeHtml()}</div></section>` : '');
+    const officeSec = () => (C.hasToken && C.hasToken() ? `<section class="fl-sec" id="ah-office-sec"><div class="sec-head"><span class="eyebrow">Optional</span><h2>The office</h2></div><div id="ah-office-floor"></div><details class="ah-os-more"><summary>Also: Open Space, a pixel-art office for Claude Code sessions on this computer</summary><div id="ah-office">${officeHtml()}</div></details></section>` : '');
     return window.TribeFleet.render(root, { scope: 'all', alive: () => open, extra: () => officeSec() + (window.TribeAIBridge ? window.TribeAIBridge.guideHtml() : ''), after: () => { wireOffice(); if (C.hasToken && C.hasToken()) C.api('/openspace').then(o => { office = o; drawOffice(); }).catch(() => {}); } });
   }
   const head = () => fleet ? `<header class="sec-head ah-head"><span class="eyebrow">Every project</span><h1>Agent fleet</h1></header>` : `<header class="sec-head ah-head"><span class="eyebrow">Solo mode</span><h1>Your agents</h1></header>`;
@@ -153,7 +153,7 @@
         <div class="ah-connect${connectKind ? '' : ' hidden'}" id="ah-connect">${connectKind ? connectPanel() : ''}</div></section>
       ${window.TribeAIBridge ? window.TribeAIBridge.guideHtml() : ''}
       <section class="sec"><div class="sec-head"><span class="eyebrow">At home</span><h2><span class="emo" aria-hidden="true">🏠</span>Local models</h2></div>${modelsHtml(models, s)}</section>
-      <section class="sec" id="ah-office-sec"><div class="sec-head"><span class="eyebrow">Optional</span><h2><span class="emo" aria-hidden="true">🪑</span>Office</h2></div><div id="ah-office">${officeHtml()}</div></section>
+      <section class="sec" id="ah-office-sec"><div class="sec-head"><span class="eyebrow">Optional</span><h2>The office</h2></div><div id="ah-office-floor"></div><details class="ah-os-more"><summary>Also: Open Space, a pixel-art office for Claude Code sessions on this computer</summary><div id="ah-office">${officeHtml()}</div></details></section>
     </div>`;
     if (fleet) { const o = $('#ah-office-sec'), first = sec.querySelector('.ah > .sec'); if (o && first && o !== first) first.before(o); }   // Agent fleet: the Office leads
     wire();
@@ -233,8 +233,10 @@
     const logs = (o.busy || o.error) && o.log && o.log.length ? `<pre class="ah-os-log">${esc(o.log.join('\n'))}</pre>` : '';
     return `<div class="ah-office" style="--k:${k}"><span class="ah-glyph">${glyph('office')}</span>${intro}${st}${sw}</div>${need}${o.error ? `<p class="ah-os-err">${esc(o.error)}</p>` : ''}${logs}<div class="ah-acts">${acts}</div>${note}`;
   }
+  function mountOffice() { const f = $('#ah-office-floor'); if (f && window.TribeOffice && !f.dataset.m) { f.dataset.m = '1'; window.TribeOffice.mount(f); } }
   function drawOffice() { const el = $('#ah-office'); if (!el) return; el.innerHTML = officeHtml(); wireOffice(); }
   function wireOffice() {
+    mountOffice();
     const act = (id, path, done) => { const b = $(id); if (b) b.onclick = async () => {
       b.disabled = true; b.textContent = path === 'install' ? 'Installing…' : path === 'stop' ? 'Stopping…' : 'Opening…';
       try { office = await C.api('/openspace/' + path, { method: 'POST' }); if (done) toast(done); } catch (e) { toast(e.message); try { office = await C.api('/openspace'); } catch {} }
@@ -285,6 +287,8 @@
     });
   }
 
-  window.TribeAgentsHub = { open: show, close: hide, glyph, colors: COLOR, isOpen: () => open, fleet: () => open && fleet };
+  // feat/p10-office: the dashboard strip's "Open the office" lands on the office section
+  const officeGo = () => { if (!open) window.TribeAgentsHub.open(); setTimeout(() => { const o = $('#ah-office-sec'); if (o) o.scrollIntoView({ block: 'start' }); }, 300); };
+  window.TribeAgentsHub = { office: officeGo, open: show, close: hide, glyph, colors: COLOR, isOpen: () => open, fleet: () => open && fleet };
   if (location.hash === '#/fleet') setTimeout(() => show({ global: true }), 0);
 })();

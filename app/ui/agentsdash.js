@@ -12,7 +12,12 @@
 // TribeCoord.open(tab), TribeShell.go(key)) still work: an unpinned view shows as a temporary tab.
 // Hooks: coord.js calls render(el) for its 'agents' tab; shell.js asks tabs(list, cur), tabExtra(key), plusHtml()
 // and sig() while drawing the Agents Hub's tab line.
-//   window.TribeAgentsDash = { render, tabs, tabExtra, plusHtml, sig, pins, pin, unpin, openMenu }
+//   // feat/p10-office: while the hub waits for a first agent, it turns into the dashboard by itself when one connects;
+  // the office and the agents switch repaint it too
+  { let t = null; const again = () => { clearTimeout(t); t = setTimeout(() => { if (lastEl && lastEl.isConnected && onView()) render(lastEl); }, 500); };
+    if (C && C.on) { C.on('presence', ms => { if (lastEl && lastEl.dataset.hub === 'connect' && (ms || []).some(m => m.role === 'agent' && m.online)) again(); });
+      C.on('ws', m => { if (m && m.type === 'office' && lastEl) { if (window.TribeOffice) window.TribeOffice.load(true).then(again); else again(); } }); } }
+  window.TribeAgentsDash = { render, tabs, tabExtra, plusHtml, sig, pins, pin, unpin, openMenu }
 (function () {
   'use strict';
   const C = window.TribeClient;
@@ -125,8 +130,17 @@
   const canSteer = a => a.yours || me().role === 'host';
   const ctlLabel = c => (c ? `${c.action === 'stop' ? 'Stop' : 'Pause'} requested${c.seen ? ' · seen' : ' · not seen yet'}` : '');
 
+  // feat/p10-office: the last good dashboard, so a slow or offline tribe shows what was there (with a note) instead of
+  // a card stuck on "Looking at your agents…"
+  const LAST = 'tribecode.agents.last';
+  let lastGood = (() => { try { return JSON.parse(localStorage.getItem(LAST) || 'null'); } catch { return null; } })();
+  const keepLast = d => { try { lastGood = { pid: pid(), at: Date.now(), d: { fleet: d.fleet, agents: d.agents, reviews: d.reviews, handoffs: d.handoffs, delegations: d.delegations, owners: d.owners, messages: [], plan: null } }; localStorage.setItem(LAST, JSON.stringify(lastGood)); } catch {} };
+  const fallback = () => (lastGood && lastGood.pid === pid() ? { ...lastGood.d, stale: lastGood.at } : { fleet: null, agents: [], reviews: [], handoffs: [], delegations: [], owners: [], messages: [], plan: null, stale: -1 });
+  let lastEl = null, painted = 0;
   async function render(el, tries = 0) {
-    const n = ++seq;
+    const n = ++seq; lastEl = el;
+    if (window.TribeOffice) window.TribeOffice.load().then(() => { if (n === seq && painted === n && el.isConnected && onView() && el._d) paint(el, el._d); });
+    setTimeout(() => { if (n === seq && painted !== n && el.isConnected && onView()) { const w = el.querySelector('.ad-wait'); if (w) w.remove(); paint(el, fallback()); } }, 2000);
     if (!el.querySelector('#ad-dash') && !el.querySelector('.ad-wait')) el.insertAdjacentHTML('afterbegin', '<p class="faint ad-wait">Loading the agents…</p>');
     let res;
     try { res = await Promise.all([
@@ -139,14 +153,14 @@
       window.TribeFleet ? window.TribeFleet.load('project').catch(() => null) : null,   // feat/fleet: hero + one row per agent
     ]); } catch (e) {   // the first call can fail while a tribe (or the demo) is still starting: try again, never leave it blank
       if (n === seq && tries < 8 && el.isConnected) setTimeout(() => { if (n === seq) render(el, tries + 1); }, 500 + tries * 300);
-      else if (n === seq) { const w = el.querySelector('.ad-wait'); if (w) w.textContent = 'The agents dashboard could not load. ' + (e && e.message ? e.message : ''); }
+      else if (n === seq) { const w = el.querySelector('.ad-wait'); if (w) w.remove(); paint(el, fallback()); }
       return;
     }
     const [ag, rv, ho, dl, own, ch, fl] = res;
     if (n !== seq || !onView()) return;   // the tab changed while it loaded: don't paint over the new one
     { const w = el.querySelector('.ad-wait'); if (w) w.remove(); }
     const d = { fleet: fl, agents: ag.agents || [], reviews: rv.reviews || [], handoffs: ho.handoffs || [], delegations: dl.delegations || [], owners: own.owners || [], messages: ch.messages || [], conflicts: cfCache.pid === pid() ? cfCache.d : null, plan: null };
-    paint(el, d);
+    keepLast(d); paint(el, d); painted = n;
     const still = () => n === seq && el.isConnected && onView();
     // slower pieces fill in after the first paint
     C.api('/coord/plan').then(r => { d.plan = r.plan; if (still()) paint(el, d); }).catch(() => {});
@@ -255,8 +269,39 @@
     if (F) F.setData(d.fleet);
     const waits = (d.pulse || []).filter(x => x.kind === 'wait' || x.kind === 'ship');
     const pulse = waits.length ? `<div class="sh-pulse ad-pulse" id="ad-pulse">${waits.slice(0, 4).map(x => `<span class="${esc(x.kind)}">${esc(x.text)}</span>`).join('')}</div>` : '';
+    el._d = d; painted = seq;
+    const O = window.TribeOffice, os = O && O.state(), stale = d.stale ? `<p class="ad-stale faint" id="ad-stale">${d.stale > 0 ? `The tribe isn't answering right now. This is what was here ${esc(ago(new Date(d.stale).toISOString()))}.` : 'The tribe isn\'t answering right now.'}</p>` : '';
+    const how = F ? `<details class="ad-how" id="ad-how"><summary>How agents work here</summary>${F.how()}</details>` : '';
+    const anyAgent = (d.agents || []).length || (d.fleet && (d.fleet.agents || []).length);
+    const state = os && os.agentsOff ? 'off' : anyAgent ? 'dash' : 'connect';
+    el.dataset.hub = state;
+    if (state === 'off') {
+      el.innerHTML = `<div class="ad-dash" id="ad-dash">${stale}<section class="hero-card ad-offcard" id="ad-hero" data-state="off"><span class="eyebrow">Agents</span><h2 class="fl-title">AI helpers are turned off</h2>
+        <p class="fl-lead">No agent can work in this tribe until they are turned back on. Connections and keys are kept.</p>
+        ${os.canSet ? '<div class="fl-acts"><button class="btn primary" id="ad-agents-on">Turn agents back on</button></div>' : '<p class="faint">The host or an admin can turn them back on.</p>'}</section></div>`;
+      const b = el.querySelector('#ad-agents-on'); if (b) b.onclick = async () => { b.disabled = true; try { await C.api('/office', { method: 'PUT', body: { agentsOff: false } }); await O.load(true); render(el); } catch (e) { b.disabled = false; toast(e.message); } };
+      return;
+    }
+    if (state === 'connect') {
+      const fd = d.fleet || { connected: false, you: { canAct: me().role !== 'spectator' }, agents: [], next: [] };
+      const hero = F ? F.hero(fd) : heroCard(d);
+      el.innerHTML = `<div class="ad-dash ad-connectflow" id="ad-dash">${stale}${hero}
+        <div class="ad-other" id="ad-other"><span class="eyebrow">No AI tool?</span>
+          <button class="btn ghost" id="ad-tribe-ai" type="button">Use the tribe's AI</button>
+          ${window.TribeAIBridge ? '<button class="btn ghost" id="ad-free-ai" type="button">Use a free AI by copy and paste</button>' : ''}</div>
+        <p class="ad-waiting faint" id="ad-waiting"><i class="ad-pulse-dot"></i>Waiting for an agent to connect… this page changes by itself when it does.</p>
+        ${how}</div>`;
+      if (F) F.wire(el, { scope: 'project', reload: () => { if (el.isConnected && onView()) render(el); } });
+      const ta = el.querySelector('#ad-tribe-ai'); if (ta) ta.onclick = () => { if (window.TribeSettings) window.TribeSettings.open('ai'); };
+      const fa = el.querySelector('#ad-free-ai'); if (fa) fa.onclick = () => window.TribeAIBridge.open({});
+      el.onclick = e => click(e, el, d);
+      return;
+    }
+    const officeSec = O ? `<section class="ad-card ad-office" id="ad-office">${head('The office', 'Who is at their desk')}<div id="ad-office-floor"></div></section>` : '';
     const top = F ? F.hero(d.fleet) : heroCard(d), rowsH = F ? F.rows(d.fleet, { after: pulse }) : '';
-    el.innerHTML = `<div class="ad-dash" id="ad-dash">${top}${needsCard(d)}${rowsH}${left || right ? `<div class="ad-cols ${left && right ? 'two' : ''}">${left ? `<div class="ad-col">${left}</div>` : ''}${right ? `<div class="ad-col">${right}</div>` : ''}</div>` : ''}${F ? F.how() : ''}${window.TribeAIBridge ? window.TribeAIBridge.guideHtml() : ''}</div>`;
+    el.innerHTML = `<div class="ad-dash" id="ad-dash">${stale}${top}${needsCard(d)}${rowsH}${officeSec}${left || right ? `<div class="ad-cols ${left && right ? 'two' : ''}">${left ? `<div class="ad-col">${left}</div>` : ''}${right ? `<div class="ad-col">${right}</div>` : ''}</div>` : ''}${how}<p class="ad-more"><button class="linkish" id="ad-views" type="button" aria-haspopup="menu">More views: ownership, reviews, hand-offs…</button></p></div>`;
+    { const f = el.querySelector('#ad-office-floor'); if (f && O) { if (el._om) el._om.destroy(); el._om = O.mount(f); } }
+    { const v = el.querySelector('#ad-views'); if (v) v.onclick = () => openMenu(v); }
     if (F) F.wire(el, { scope: 'project', reload: () => { if (el.isConnected && onView()) render(el); } });
     const ni = el.querySelector('#talk-input'); if (ni && keep) ni.value = keep; if (ni && focused) ni.focus({ preventScroll: true });
     const form = el.querySelector('#talk-form');
