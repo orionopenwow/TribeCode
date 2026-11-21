@@ -15,6 +15,19 @@
   const toast = m => window.TribeApp && window.TribeApp.toast && window.TribeApp.toast(m);
   const reduce = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
   const SPEED = 3.2;   // tiles a second
+  // Gentle sound, off by default and per device: one soft two-note chime when someone newly needs your OK.
+  const LS_SOUND = 'tribecode.officespace.sound';
+  const soundOn = () => { try { return localStorage.getItem(LS_SOUND) === '1'; } catch { return false; } };
+  let actx = null;
+  function chime() {
+    if (!soundOn()) return;
+    try {
+      actx = actx || new (window.AudioContext || window.webkitAudioContext)();
+      [660, 880].forEach((f, i) => { const o = actx.createOscillator(), g = actx.createGain(), t = actx.currentTime + i * 0.12;
+        o.type = 'sine'; o.frequency.value = f; g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(0.05, t + 0.02); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.3);
+        o.connect(g); g.connect(actx.destination); o.start(t); o.stop(t + 0.32); });
+    } catch {}
+  }
 
   function mount(el, office) {
     let data = null, layout = null, set = S.get('tribecode'), raf = 0, last = 0, tick = 0, dead = false, view = { z: 0, ox: 0, oy: 0 };
@@ -27,6 +40,7 @@
         <button class="btn sm" data-os-act="look">${esc(tr('Your look'))}</button>
         <label class="os-set" hidden><span class="sr-only">${esc(tr('Set'))}</span><select class="input sm" data-os-set></select></label>
         <button class="btn sm" data-os-act="edit" hidden>${esc(tr('Edit layout'))}</button>
+        <button class="btn sm" data-os-act="sound" aria-pressed="${soundOn()}">${esc(soundOn() ? tr('Sound on') : tr('Sound off'))}</button>
         <span class="os-zoom"><button class="btn sm icon" data-os-act="out" aria-label="${esc(tr('Zoom out'))}">−</button><button class="btn sm icon" data-os-act="in" aria-label="${esc(tr('Zoom in'))}">+</button></span>
       </div>
       <div class="os-stage"><canvas class="os-canvas" role="img" aria-label="${esc(tr('Office Space: everyone at their desks'))}"></canvas><div class="os-layer" aria-live="polite"></div>
@@ -440,6 +454,7 @@
       const k = t.dataset.osAct;
       if (k === 'look') return openLook();
       if (k === 'edit') return editing ? null : openEdit();
+      if (k === 'sound') { try { localStorage.setItem(LS_SOUND, soundOn() ? '0' : '1'); } catch {} t.setAttribute('aria-pressed', String(soundOn())); t.textContent = soundOn() ? tr('Sound on') : tr('Sound off'); if (soundOn()) chime(); return; }
       if (k === 'in') return zoom(1);
       if (k === 'out') return zoom(-1);
     });
@@ -453,7 +468,11 @@
       if (editing && sel && (e.key === 'Delete' || e.key === 'Backspace') && !/input|select|textarea/i.test(e.target.tagName)) { layout.items = layout.items.filter(i => i !== sel); sel = null; draw(); }
     });
 
+    let asked = null;
     function update(d) {
+      const nowAsk = new Set(((d && d.desks) || []).flatMap(x => (x.asks || []).filter(a => a.canDecide).map(a => a.id)));
+      if (asked && [...nowAsk].some(id => !asked.has(id))) chime();
+      asked = nowAsk;
       data = d;
       if (!editing) {
         const L = d && d.layout ? JSON.parse(JSON.stringify(d.layout)) : null;

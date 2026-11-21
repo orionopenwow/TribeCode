@@ -176,3 +176,12 @@ Inter (https://rsms.me/inter), SIL Open Font License 1.1, Copyright (c) 2016 The
 weights in app/ui/motionfonts/ (the same files as site/assets/fonts), license text app/ui/motionfonts/LICENSE-Inter.txt.
 Mediabunny (https://github.com/Vanilagy/mediabunny), MPL-2.0, is loaded from a CDN only when someone exports an MP4; it
 is never bundled.
+
+-------------------------------------------------------------------------------
+Pixel Agents (https://github.com/pablodelucca/pixel-agents), MIT License, by Pablo De Lucca
+-------------------------------------------------------------------------------
+Office Space (app/ui/officespace.js, app/ui/officespace-sets.js, server/office.js) takes the idea of AI agents as
+small characters who walk to desks in a pixel office and show speech bubbles. No Pixel Agents code is included, and no
+art from it: its character art comes from a third-party pack whose license we could not confirm, so every tile,
+piece of furniture and character in Office Space is drawn in code by TribeCode. Path finding, animation, the editor
+and the set format are TribeCode's own.
