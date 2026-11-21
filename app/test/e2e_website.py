@@ -1,4 +1,7 @@
-"""Website: every project gets its own public page (Docs & Files > Website), made from what the project already has.
+"""Website: every project gets its own public page, made from what the project already has (server/showcase.js).
+feat/website-one: the website designer is the one website tool. The old builder's page (built through its API here)
+stays served and safe, and Files › Website shows it read-only with "Bring it into the designer"; its form, Build button
+and suggestion panel are gone from the app. The server checks below are unchanged.
 
   Host: a project with a repo (the one-click flow) -> bio, picture, vision, a screenshot, a remote, a commit by someone
         else -> Docs & Files > Website -> Build: site/index.html in the repo has the name, palette color, credits (names
@@ -8,7 +11,7 @@
   Escaping: a bio with <script> renders as text; the page has no script at all.
   Friend (second browser, project-scoped builder): fields are read-only, "Suggest an edit" -> a new tagline -> the host
         sees it, approves, the page updates; the friend cannot approve (403, no buttons).
-  Phone 390px: editor above the preview, no sideways scroll. Overview: a small "Website" link once the page exists.
+  Phone 390px: the preview fits, no sideways scroll. Overview: a small "Website" link once the page exists.
 Usage: python app/test/e2e_website.py [--shots]
 """
 import json, os, struct, subprocess, sys, tempfile, time, urllib.request, urllib.error, zlib, base64
@@ -131,11 +134,13 @@ def main():
             wait_text(host, "#crumb-label", "Files › Website")
             assert host.evaluate("location.hash") == "#/docs/website"
             assert host.evaluate("document.querySelector('#nest-docs').classList.contains('on')")
-            wait_text(host, ".wb-empty", "No page yet")
-            assert host.get_attribute("#wb-tagline", "placeholder") == "A cozy co-op platformer"
-            host.fill("#wb-headline", "Pixel Quest: jump together")
-            host.click("#wb-build")
-            host.wait_for_selector("#wb-frame", timeout=15000)
+            wait_text(host, "#wb-root", "Make your website")
+            assert host.locator("#wb-headline, #wb-build").count() == 0, "no old builder form"
+            st, r = api(f"/projects/{pid}/website", "PUT", {"fields": {"headline": "Pixel Quest: jump together"}}, token=tok); assert st == 200, r
+            st, r = api(f"/projects/{pid}/website/build", "POST", {}, token=tok); assert st == 200, r
+            host.evaluate("TribeWebsite.load()")
+            host.wait_for_selector("#wb-root[data-state='old'] #wb-frame", timeout=15000)
+            wait_text(host, "#wb-root", "Bring it into the designer")
             site = os.path.join(repo, "site", "index.html")
             html = Path(site).read_text()
             for want in ["Pixel Quest: jump together", "A cozy co-op platformer", "#38C6B1", "Orion", "Lead", "Lee Committer", "https://github.com/orion/pixel-quest",
@@ -145,9 +150,7 @@ def main():
             assert "<script" not in html.lower(), "the page needs no JavaScript"
             assert os.path.exists(os.path.join(repo, "site", "shots", "title-screen.png"))
             frame_text(host, "Pixel Quest: jump together"); frame_text(host, "Lee Committer")
-            assert host.get_attribute("#wb-frame", "sandbox") == "allow-popups allow-popups-to-escape-sandbox"
-            wait_text(host, "#wb-status", "site/index.html")
-            wait_text(host, "#wb-hint", "GitHub Pages")
+            assert host.get_attribute("#wb-frame", "sandbox") == "", "the older page shows read-only, no scripts"
             shot(host, "desktop")
             # the preview route: strict CSP + nosniff, images inlined; no key, no page; a signed token works
             st, body, hdr = api(f"/projects/{pid}/website/preview", token=tok, raw=True)
@@ -159,51 +162,40 @@ def main():
             assert urllib.request.urlopen(BASE + purl, timeout=10).status == 200
 
             # ---- auto: change the bio, it rebuilds by itself
-            host.click("#wb-auto"); host.wait_for_function("document.querySelector('#wb-auto').getAttribute('aria-checked') === 'true'")
-            wait_text(host, "#wb-status", "auto")
+            st, r = api(f"/projects/{pid}/website", "PUT", {"auto": True}, token=tok); assert st == 200, r
             assert api(f"/projects/{pid}/website", token=tok)[1]["website"]["auto"] is True
             st, r = api(f"/projects/{pid}", "PATCH", {"bio": "Now with a boss fight"}, token=tok); assert st == 200, r
             wait_file(site, lambda s: "Now with a boss fight" in s)
-            frame_text(host, "Now with a boss fight")
+            host.evaluate("TribeWebsite.load(true)"); frame_text(host, "Now with a boss fight")
             # escaping: a bio with <script> is text
             api(f"/projects/{pid}", "PATCH", {"bio": "<script>alert(1)</script> & <b>bold</b>"}, token=tok)
             html = wait_file(site, lambda s: "alert(1)" in s)
             assert "&lt;script&gt;alert(1)&lt;/script&gt; &amp; &lt;b&gt;bold&lt;/b&gt;" in html and "<script" not in html.lower(), "the bio is escaped"
-            frame_text(host, "<script>alert(1)</script> & <b>bold</b>")
+            host.evaluate("TribeWebsite.load(true)"); frame_text(host, "<script>alert(1)</script> & <b>bold</b>")
             api(f"/projects/{pid}", "PATCH", {"bio": "A cozy co-op platformer"}, token=tok)
             wait_file(site, lambda s: "alert(1)" not in s)
 
             # ---- a friend suggests a tagline, the host approves
             st, j = api("/join", "POST", {"code": code, "name": "Maya"}); assert st == 200, j
             ftok = j["token"]
+            st, r = api(f"/projects/{pid}/website/suggest", "POST", {"field": "tagline", "text": "Jump, bonk, repeat. Together."}, token=ftok); assert st == 200, r
             fctx = b.new_context(viewport={"width": 1280, "height": 820})
             fctx.add_init_script(settings_js("Maya", ftok, pid))
             fr = fctx.new_page(); watch(fr, "friend")
             fr.goto(BASE + "/?skipIntro=1#/docs/website")
             fr.wait_for_function("window.TribeClient && TribeClient.connected()", timeout=15000)
             fr.wait_for_selector("#wb-root", timeout=15000)
-            assert fr.get_attribute("#wb-headline", "readonly") is not None, "friends can't edit the page directly"
-            assert fr.locator("#wb-save").count() == 0
-            fr.wait_for_selector("#wb-suggest")
-            fr.select_option("#wb-sug-field", "tagline"); fr.fill("#wb-sug-text", "Jump, bonk, repeat. Together.")
-            fr.click("#wb-sug-send")
-            wait_text(fr, "#wb-sugs", "Jump, bonk, repeat. Together.")
-            assert fr.locator("#wb-sugs [data-ok]").count() == 0, "no approve button for friends"
+            assert fr.locator("#wb-headline, #wb-save, #wb-build").count() == 0, "no old builder form for anyone"
             sug = api(f"/projects/{pid}/website", token=ftok)[1]["website"]["suggestions"][0]
             assert sug["status"] == "open" and sug["byName"] == "Maya"
             st, r = api(f"/projects/{pid}/website/suggestions/{sug['id']}/approve", "POST", token=ftok); assert st == 403, (st, r)
             assert api(f"/projects/{pid}/website", "PUT", {"fields": {"tagline": "hijack"}}, token=ftok)[0] == 403
             chat = Path(tmp, "chat", f"p-{pid}"[:32] + ".jsonl").read_text()
             assert "Maya suggested a new tagline for the website" in chat, chat[-400:]
-            wait_text(host, "#wb-sugs-title", "1 waiting")
-            host.wait_for_selector(f"#wb-sugs [data-ok='{sug['id']}']")
-            shot(host, "suggestion")
-            host.click(f"#wb-sugs [data-ok='{sug['id']}']")
-            wait_text(host, "#wb-sugs", "approved")
+            st, r = api(f"/projects/{pid}/website/suggestions/{sug['id']}/approve", "POST", token=tok); assert st == 200, r
             wait_file(site, lambda s: "Jump, bonk, repeat. Together." in s)
-            frame_text(host, "Jump, bonk, repeat. Together.")
-            assert host.input_value("#wb-tagline") == "Jump, bonk, repeat. Together."
-            wait_text(fr, "#wb-sugs", "approved")
+            host.evaluate("TribeWebsite.load(true)"); frame_text(host, "Jump, bonk, repeat. Together.")
+            shot(host, "suggestion")
 
             # ---- with the repo autopilot on, auto mode commits site/ (only site/)
             st, r = api("/repo/settings", "PUT", {"autopilot": {"enabled": True}}, token=tok, project=pid); assert st == 200, r
@@ -232,11 +224,10 @@ def main():
             ph.wait_for_selector("#wb-root", timeout=15000); ph.wait_for_selector("#wb-frame")
             ph.wait_for_timeout(500)
             assert ph.evaluate("document.documentElement.scrollWidth <= innerWidth + 1"), ph.evaluate("[document.documentElement.scrollWidth, innerWidth]")
-            ed, pv = ph.locator(".wb-edit").bounding_box(), ph.locator(".wb-preview").bounding_box()
-            assert pv["y"] >= ed["y"] + ed["height"] - 1 and pv["x"] >= 0 and pv["x"] + pv["width"] <= 391, (ed, pv)
+            pv = ph.locator(".wb1-pv").bounding_box()
+            assert pv["x"] >= 0 and pv["x"] + pv["width"] <= 391, pv
             frame_text(ph, "Jump, bonk, repeat. Together.")
             shot(ph, "phone")
-            ph.locator(".wb-preview").scroll_into_view_if_needed(); shot(ph, "phone-preview")
             # the phone's Docs shows the same two tabs
             ph.click('#tabbar [data-nav="docs"]'); ph.wait_for_selector("#view-tabs:not(.hidden) #wt-website")
             assert ph.evaluate("document.documentElement.scrollWidth <= innerWidth + 1")
