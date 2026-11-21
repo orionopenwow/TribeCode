@@ -12,7 +12,7 @@
 .os-seg { display: inline-flex; gap: 0; border: 1px solid var(--edge); border-radius: var(--r-ctl, 8px); overflow: hidden; justify-self: start; }
 .os-seg button { min-height: 36px; padding: 0 14px; border: 0; border-right: 1px solid var(--edge); background: transparent; color: var(--muted); font: inherit; font-size: 13px; cursor: pointer; }
 .os-seg button:last-child { border-right: 0; }
-.os-seg button.on { background: var(--surface-2); color: var(--text); }
+.os-seg button.on { background: color-mix(in srgb, var(--brand) 18%, transparent); color: var(--text); font-weight: 600; }
 .os-seg button:focus-visible { outline: 2px solid var(--brand); outline-offset: -2px; }
 .os-cmd { display: flex; align-items: flex-start; gap: 8px; min-width: 0; padding: 10px 10px 10px 12px; border: 1px solid var(--edge); border-radius: var(--r-ctl, 8px); background: var(--canvas); }
 .os-cmd pre, .os-cmd code { flex: 1; min-width: 0; margin: 0; font: 12.5px/1.55 var(--mono); color: var(--text); white-space: pre-wrap; word-break: break-all; }

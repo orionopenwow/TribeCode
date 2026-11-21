@@ -61,7 +61,9 @@
     opts = opts || {};
     const App = window.TribeApp;
     // No tribe yet: there is nobody to invite to. The join / host sheet is the way in (app.js).
-    if (!C || !C.connected || !C.connected()) { if (App && App.joinOrHost) App.joinOrHost(); return; }
+    // p10: someone already in a tribe that's offline gets the sheet with one friendly line (cant), not the join screen
+    const inTribe = C && ((C.connected && C.connected()) || (C.hasToken && C.hasToken()));
+    if (!inTribe) { if (App && App.joinOrHost) App.joinOrHost(); return; }
     const m = modal(), b = body(); if (!m || !b) return;
     const pid = typeof opts.project === 'string' ? opts.project : curPid();
     const asked = opts.who === 'claude' ? 'agent' : opts.who;   // 'claude': what the third choice was called first

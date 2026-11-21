@@ -174,7 +174,7 @@
   // or "Not connected · Connect", and Connect always opens this sheet. A tribe kept only in this browser says so.
   async function status() {
     if (!live()) { const O = OFF(), db = O && O.state && O.state(), pid = db && (db.current || ((db.projects || [])[0] || {}).id), h = ((O && O.homes && O.homes()) || {})[pid] || {}; return { on: !!h.github, login: '', text: h.github ? T('Copy on GitHub') : T('Not connected'), local: true }; }
-    try { const g = window.TribeGitHub && window.TribeGitHub.status ? await window.TribeGitHub.status() : (await C().api('/github')).github; return { on: !!(g && g.signedIn), login: (g && g.login) || '', text: g && g.signedIn ? T('Connected as @{name}', { name: g.login || 'you' }) : T('Not connected') }; }
+    try { const g = (await C().api('/github')).github; return { on: !!(g && g.signedIn), login: (g && g.login) || '', text: g && g.signedIn ? T('Connected as @{name}', { name: g.login || 'you' }) : T('Not connected') }; }
     catch { return { on: false, login: '', text: T('Not connected') }; }
   }
   async function chip(el, o = {}) {

@@ -16,8 +16,9 @@
     // p10: the same words as the status line under your name (tribestatus.js); this pill only shows when something needs attention
     const D = window.TribeStatus && window.TribeStatus.now();
     if (status === 'online' && waiting) { kind = 'warn'; text = `${waiting} waiting to send`; }
-    else if (status === 'reconnecting' || status === 'connecting') { kind = 'warn'; text = D ? D.label : (Date.now() - since > 8000 ? 'Waking up the tribe…' : 'Reconnecting…'); }
-    else if (status === 'offline') { kind = 'off'; text = D && D.key === 'offline' ? D.label : (waiting ? `Offline · ${waiting} waiting` : 'Offline'); }
+    else if (status !== 'online' && D && D.tone !== 'live') { kind = D.tone === 'off' ? 'off' : 'warn'; text = D.label; }   // exactly what the line under your name says
+    else if (status === 'reconnecting' || status === 'connecting') { kind = 'warn'; text = Date.now() - since > 8000 ? 'Waking up the tribe…' : 'Reconnecting…'; }
+    else if (status === 'offline') { kind = 'off'; text = waiting ? `Offline · ${waiting} waiting` : 'Offline'; }
     pill.className = `health-pill ${kind}${text ? '' : ' hidden'}`;
     pill.innerHTML = text ? `<span class="hl-dot" aria-hidden="true"></span><span>${text}</span>` : '';
     pill.title = text ? ((D && D.sub ? D.sub + ' · ' : '') + 'Tap to try again now') : '';
@@ -27,5 +28,6 @@
   C().on('outbox', paint);
   addEventListener('online', () => { status = (C().state() || {}).status || status; paint(); setTimeout(() => { status = (C().state() || {}).status || status; paint(); }, 1500); });
   addEventListener('offline', () => { status = 'offline'; paint(); });
+  const hook = () => { if (window.TribeStatus && window.TribeStatus.on) window.TribeStatus.on(paint); else setTimeout(hook, 200); }; hook();   // redraw whenever the shared status changes
   window.TribeHealth = { refresh: paint };
 })();

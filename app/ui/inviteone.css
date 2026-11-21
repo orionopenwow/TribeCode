@@ -155,3 +155,6 @@
   .io-cant-acts { align-self: stretch; }
   .io-cant-acts .btn { flex: 1; min-height: 44px; }
 }
+
+/* p10: the friendly "can't" line stands on its own, not a box inside a box */
+.tl-box:has(> .io-cant) { border: 0; padding: 0; background: none; }
