@@ -541,7 +541,7 @@
   }
 
   async function refineGo() {
-    if (!connected() || !C.hasToken()) { refine.error = 'Refine uses the local model on the tribe\'s host: host or join a tribe first. Your notes stay on this device until then.'; return render(); }
+    if (!connected() || !C.hasToken()) { refine.error = 'Refine needs a tribe with an AI connected. Start or join one first; your notes stay on this device until then.'; return render(); }
     await scratch.flush();
     const list = scratch.notes(), sel = list.find(n => n.id && n.id === scratch.selected()) || list[0];
     const draft = ($('#hub-scratch .sc-in') || {}).value || '';
@@ -619,7 +619,7 @@
   C.on('ws', m => { if (m && m.type === 'insights') loadInsights(true); });
   function fallbackInsights() {
     const out = [], f = (data && data.fleet) || {}, m = f.models || {};
-    if (!connected()) return [{ id: 'off:tribe', kind: 'suggestion', title: 'Start or join a tribe', body: 'Insights come from your projects, your agents and the local model on the tribe\'s host.', source: 'Home', run: () => stepGo('tribe'), label: window.TribeHost && window.TribeHost.isDesktop ? 'Start hosting' : 'Join' }];
+    if (!connected()) return [{ id: 'off:tribe', kind: 'suggestion', title: 'Start or join a tribe', body: 'Ideas for what to do next show up here once you have a project. Make your first one above.', source: 'Home', run: () => stepGo('tribe'), label: window.TribeHost && window.TribeHost.isDesktop ? 'Start hosting' : 'Join' }];
     // qa-qol-2: plain words for a beginner (no "Ollama not reachable at http://…"); the details stay in Settings › Flint's brain
     if (data && m.online === false && !document.body.classList.contains('hs-on')) out.push({ id: 'h:model', kind: 'health', title: 'Flint has no AI yet', body: 'He answers with simple rules for now. Give him an AI (built in, on this computer, or a cloud key) for real answers, summaries and drafts.', source: 'Flint', run: () => (window.TribeBrain ? window.TribeBrain.open() : window.TribeSettings && window.TribeSettings.open()), label: 'Choose Flint\'s AI' });
     // the desktop right panel already has its own "Connect your AI" card above the insights: no second one there

@@ -154,7 +154,7 @@ def main():
             assert ok(api("/premium", token=tok))["payments"]["offered"] is False
             for i in range(3): ok(api("/projects", "POST", {"name": f"Side project {i + 1}"}, token=tok))
             c = b.new_context(viewport={"width": 1440, "height": 900})
-            c.add_init_script(f"if (!localStorage.getItem('tribecode.settings.v1')) localStorage.setItem('tribecode.settings.v1', JSON.stringify({{name: 'Orion', onboarded: true, tour: {{done: true}}, server: {{url: '{BASE}', token: '{tok}'}}}}))")
+            c.add_init_script(f"try {{ if (!localStorage.getItem('tribecode.settings.v1')) localStorage.setItem('tribecode.settings.v1', JSON.stringify({{name: 'Orion', onboarded: true, tour: {{done: true}}, server: {{url: '{BASE}', token: '{tok}'}}}})); }} catch (e) {{}}")
             pg = c.new_page(); pg.on("pageerror", lambda e: errors.append(f"tribe: {e}"))
             pg.goto(BASE + "/?skipIntro=1"); pg.wait_for_function("window.TribeClient && TribeClient.connected() && window.TribePremium && window.TribeProjects", timeout=20000)
             pg.evaluate("TribePremium.sync()"); pg.wait_for_function("TribePremium.offered() === false"); time.sleep(1.0)

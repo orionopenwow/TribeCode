@@ -180,7 +180,7 @@
     const sh = $('#wb-shots');
     const picked = Array.isArray(data.shots) ? data.shots : data.screens.slice(0, 3).map(s => s.slug);
     sh.innerHTML = data.screens.length ? `<span class="wb-lbl">Featured screenshots</span><div class="wb-chips">${data.screens.slice(0, 12).map(s => `<label class="wb-chip"><input type="checkbox" data-shot="${esc(s.slug)}" ${picked.includes(s.slug) ? 'checked' : ''} ${m ? '' : 'disabled'}><span>${esc(s.name)}</span></label>`).join('')}</div>`
-      : '<p class="wb-note">No screenshots yet. Post some in Visuals (or let your agent call add_visual) to feature them.</p>';
+      : '<p class="wb-note">No screenshots yet. Post some in Visuals (or ask your AI helper to add them) to feature them.</p>';
     box.parentElement.querySelectorAll('input[type=checkbox]').forEach(i => i.onchange = () => { dirty = true; });
     const a = $('#wb-auto'); if (a) a.setAttribute('aria-checked', String(!!data.auto));
   }

@@ -253,7 +253,7 @@
       recent, taskCount: tasks.length, upcoming: [], repo: (db.repo || {})[pid] || null, bio: p.bio || '',
       vision: { has: !!db.vision[pid], excerpt: String(db.vision[pid] || '').replace(/^#.*$/gm, '').replace(/\s+/g, ' ').trim().slice(0, 160) },
       living: { mood: db?.mode === 'showcase' ? 'buzzing' : chat.length ? 'steady' : 'fresh', by: 'tribecode',
-        summary: `${p.name} ${solo() ? 'lives on this phone for now' : `is a pretend project in the ${db?.mode === 'showcase' ? 'showcase' : 'offline demo'}`}. ${doing.length ? `Now: ${doing[0].title}.` : todo.length ? `Next: ${todo[0].title}.` : 'Add a first task.'}`,
+        summary: `${p.name} ${solo() ? 'is saved on this device for now' : `is a pretend project in the ${db?.mode === 'showcase' ? 'showcase' : 'offline demo'}`}. ${doing.length ? `Now: ${doing[0].title}.` : todo.length ? `Next: ${todo[0].title}.` : 'Add a first task.'}`,
         lines: { lately: recent[0] ? `Last: ${recent[0].text}` : 'Nothing yet', chat: chat.length ? `${chat.length} message${chat.length === 1 ? '' : 's'}` : 'No messages yet',
           next: doing.length ? `In progress: ${doing[0].title}` : todo.length ? `Up next: ${todo[0].title}` : 'No tasks yet', soon: 'Nothing on the calendar' } } };
   }
@@ -550,7 +550,7 @@
     let url = null; if (s.gen) { try { if (s.url) URL.revokeObjectURL(s.url); s.url = URL.createObjectURL(new Blob([siteHtml(p, s)], { type: 'text/html' })); url = s.url + '#draft'; } catch {} }
     const g = s.gen, ty = g ? g.type : siteGuess(p);
     return { project: p.id, auto: false, sections: {}, fields: {}, defaults: { headline: p.name, tagline: p.bio || '', about: '', footer: '' }, shots: null, screens: [], built: null, exists: false, path: 'site/index.html', inRepo: false, autopilot: false,
-      previewUrl: null, suggestions: [], open: 0, canManage: true, canSuggest: true, suggestable: {}, sectionList: [], hint: 'In the real app, Publish writes site/index.html and site/styles.css into the project repo.',
+      previewUrl: null, suggestions: [], open: 0, canManage: true, canSuggest: true, suggestable: {}, sectionList: [], hint: 'Once this tribe is online, Build saves the page into the project\'s files (site/index.html and site/styles.css).',
       gen: { draft: g ? { ...g, edited: g.edited || {}, polished: null, secs: SB.order[g.type] || SB.order.app } : null, live: s.live || null, unpublished: !!g && !s.live, draftUrl: url, brain: false, canDraft: true, canPublish: true, canBrand: true,
         layouts: SB.layouts, sections: Object.entries(SB.names).map(([id, name]) => ({ id, name })), types: SB.types, themes: SB.themes, guess: { type: ty, name: SB.types.find(t => t.id === ty).name },
         brand: { primary: (s.brand || {}).primary || '', accent: (s.brand || {}).accent || '', font: (s.brand || {}).font || '', wordmark: '', logo: null, notes: [], swatches: ['#B4432B', '#E4572E', '#E0951F', '#4C8C4A', '#2A8C80', '#2F5BEA', '#7A5CC2', '#C2417F'], fonts: SB.fonts, layoutFont: 'fraunces' },
@@ -583,7 +583,7 @@
       else { const t = siteGuess(p), th = SB.themes.find(x => x.id === ({ game: 'retro', business: 'bakery', event: 'bold', portfolio: 'studio', docs: 'night' }[t] || 'minimal')); s.idea = { type: t, theme: th.id, primary: th.primary, accent: th.accent, font: th.font, layout: th.layout, tagline: p.bio || '', why: `Suggested because ${th.name} suits this kind of project.`, via: 'rules' }; }
       save(); return ok({ idea: s.idea, website: siteView(p, s) });
     }
-    if (sub === 'code' && M === 'GET') { if (!s.gen) return no(404, 'make a draft first'); const h = siteHtml(p, s); return ok({ files: [{ name: 'index.html', bytes: h.length, text: h, note: 'The page.' }, { name: 'styles.css', bytes: 0, note: 'In the real app the look lives here, with brand tokens at the top.' }], folder: 'site/', inRepo: false, handEdited: [], draft: true, howTo: 'In the real app, Publish writes these files to the repo and never overwrites hand edits without asking.' }); }
+    if (sub === 'code' && M === 'GET') { if (!s.gen) return no(404, 'make a draft first'); const h = siteHtml(p, s); return ok({ files: [{ name: 'index.html', bytes: h.length, text: h, note: 'The page.' }, { name: 'styles.css', bytes: 0, note: 'In the real app the look lives here, with brand tokens at the top.' }], folder: 'site/', inRepo: false, handEdited: [], draft: true, howTo: 'Once this tribe is online, Build saves these files into the project and never overwrites hand edits without asking.' }); }
     if (sub === 'publish' && M === 'POST') { if (!s.gen) return no(409, 'make a draft first'); s.live = { layout: s.gen.layout, at: iso(), byName: me().name }; save(); return ok({ changed: true, website: siteView(p, s) }); }
     if (sub === 'write' && M === 'POST') return no(503, 'Writing needs a brain. In the demo there is none.');
     if (M === 'GET' && (sub === 'preview' || sub === 'export' || sub === 'draft')) return no(404, 'the demo shows the draft in the preview');
@@ -1009,7 +1009,7 @@
         break;
       }
       case 'templates': return ok({ templates: [] });
-      case 'vision': if (GET) return ok({ text: db.vision[pid] || '' }); if (PUT) { db.vision[pid] = String(body.text || '').slice(0, 20000); save(); post(pid, 'tribecode', 'VISION.md was updated'); return ok({ ok: true }); } break;
+      case 'vision': if (GET) return ok({ text: db.vision[pid] || '' }); if (PUT) { db.vision[pid] = String(body.text || '').slice(0, 20000); save(); post(pid, 'tribecode', 'The vision was updated'); return ok({ ok: true }); } break;
       case 'proposals': {   // the approval board (board.js): showcase.js seeds one and votes on it
         const list = (db.proposals = db.proposals || {})[pid] = db.proposals[pid] || [];
         if (GET && !b) return ok({ proposals: list.map(x => ({ ...x, tally: tally(x) })) });

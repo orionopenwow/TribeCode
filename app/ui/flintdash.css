@@ -3,7 +3,7 @@
 .fd-head { display: flex; align-items: center; gap: 8px; min-width: 0; margin-bottom: 12px; }
 .fd-head b { font-size: 15px; color: var(--text); }
 .fd-flame { width: 18px; height: 18px; color: var(--ember); flex: none; }
-.fd-mood { flex: none; padding: 1px 8px; border-radius: 999px; font: 600 10.5px/1.7 var(--mono); text-transform: uppercase; letter-spacing: .03em; color: var(--muted); background: var(--surface-2); }
+.fd-mood { flex: none; padding: 1px 8px; border-radius: 999px; font: 600 11px/1.7 var(--mono); text-transform: uppercase; letter-spacing: .03em; color: var(--muted); background: var(--surface-2); }
 .fd-mood.fd-buzzing { color: var(--ember); background: var(--ember-tint); }
 .fd-mood.fd-steady { color: var(--live); background: var(--live-tint); }
 .fd-sum { min-width: 0; color: var(--muted); font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -22,7 +22,7 @@
 .fd-up { display: flex; align-items: baseline; gap: 8px; font-size: 13px; color: var(--text); min-width: 0; }
 .fd-dot { flex: none; width: 7px; height: 7px; border-radius: 50%; background: var(--t, var(--muted)); transform: translateY(-1px); }
 .fd-up-t { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.fd-at { flex: none; color: var(--faint); font: 11.5px/1 var(--mono); }
+.fd-at { flex: none; color: var(--faint); font: 12px/1 var(--mono); }
 .fd-quiet { margin: 0; color: var(--muted); font-size: 13px; }
 .fd-ask { align-self: flex-start; display: inline-flex; align-items: center; gap: 6px; margin-top: 4px; font-size: 13px; }
 /* the one next setup step lives inside the card: drop its own card frame */

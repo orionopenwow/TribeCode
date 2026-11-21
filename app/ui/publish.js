@@ -49,7 +49,10 @@
     if (!st.canPublish && !cur) { $('#pb-body').innerHTML = `<p class="faint">${me().role === 'spectator' ? 'Spectators can watch, not publish. Ask the host for builder access.' : 'You can\'t publish this project.'}</p>`; return; }
     let ch; try { ch = await C.api('/publish/check', { method: 'POST', body: { project: pid } }); } catch (e) {
       // the Launch kit (launchkit.js) needs no code: store text, an icon and screenshots of the sample screens can start now
-      $('#pb-body').innerHTML = `<p class="pb-err">${esc(e.message)}</p>${window.TribeLaunchKit ? `<p class="faint">${esc(T('The store text, the app icon and the launch checklist do not need code yet.'))}</p><button class="btn" type="button" data-launchkit>${esc(T('Open the Launch kit'))}</button>` : ''}`;
+      // feat/flow-ease: nothing made yet is not an error: say what to do and give the one button that does it
+      const none = /nothing to put online yet/i.test(e.message || '') && window.TribeSiteDesigner;
+      $('#pb-body').innerHTML = `${none ? `<div class="pb-none" id="pb-none"><p><b>${esc(T('Nothing to put online yet'))}</b></p><p class="faint">${esc(T('Make a website first. It takes a minute, and then this is where you share it.'))}</p><button class="btn primary" type="button" data-pb-make>${esc(T('Make a website'))}</button></div>` : `<p class="pb-err">${esc(e.message)}</p>`}${window.TribeLaunchKit ? `<p class="faint">${esc(T('The store text, the app icon and the launch checklist do not need code yet.'))}</p><button class="btn${none ? ' ghost' : ''}" type="button" data-launchkit>${esc(T('Open the Launch kit'))}</button>` : ''}`;
+      const mk = $('#pb-body [data-pb-make]'); if (mk) mk.onclick = () => { s.close(); window.TribeSiteDesigner.open({ pid }); };
       const lk = $('#pb-body [data-launchkit]'); if (lk) lk.onclick = () => { s.close(); window.TribeLaunchKit.open(pid); };
       return;
     }

@@ -141,7 +141,7 @@ def main():
 
             # ---- 2. connect tabs: the exact command per tool, prefilled, and Copy copies exactly that
             tabs = host.evaluate("[...document.querySelectorAll('#fl-hero [data-fl-tab]')].map(b => b.textContent.trim())")
-            assert tabs == ["Claude Code", "Codex", "Gemini CLI", "Cursor", "Qwen Code", "Other MCP"], tabs
+            assert tabs == ["Claude Code", "Codex", "Gemini CLI", "Cursor", "Qwen Code", "Another tool"], tabs
             want = {"claude-code": "claude mcp add --transport http tribecode", "codex": "[mcp_servers.tribecode]", "gemini": "gemini mcp add", "cursor": '"mcpServers"', "qwen": "qwen mcp add", "mcp": "/mcp"}
             keys = {}
             for kind, frag in want.items():

@@ -146,3 +146,5 @@
   .fl-step { flex-direction: row; align-items: center; }
   .fl-ill { width: 112px; flex: none; }
 }
+/* feat/flow-ease: a tribe kept in this browser: the AI tools need it online, with the one button */
+.fl-needs { display: grid; gap: 10px; justify-items: start; }
