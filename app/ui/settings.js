@@ -206,7 +206,11 @@
   function tabProjects(st) {
     const desk = window.TribeHost.isDesktop, pr = P() ? P().get() : {};
     const ext = (EXTRA.projects || []).map(x => `<section class="set-sec" data-sec="${esc(x.id)}" id="set-ext-${esc(x.id)}"><h3 class="set-sec-h">${esc(x.title)}</h3><div class="set-ext" data-ext="${esc(x.id)}"></div></section>`).join('');
-    return sec('Where projects live', `${row('Default home for new projects', `<select class="input set-select" id="set-projhome" aria-label="Default home for new projects">${PHOMES.map(([v, l]) => `<option value="${v}" ${v === (pr.projectHome || 'ask') ? 'selected' : ''}>${l}</option>`).join('')}</select>`, 'Where a new project is kept unless you pick another place.', { keys: 'new project location where' })}
+    // p10: where the tribe runs, in the same words as the line under your name, and the advanced own-server option
+    const runs = window.TribeStatus ? window.TribeStatus.now() : null;
+    return (runs ? sec('Where your tribe runs', `${row('Right now', `<button type="button" class="btn ts-btn" id="set-runs"><span class="ts-dot" data-tone="${esc(runs.tone)}" aria-hidden="true"></span>${esc(runs.label)}</button>`, runs.sub, { id: 'set-runs-row', keys: 'online offline connected hosting where runs status server' })}
+      ${row('Run your own server', '<button type="button" class="btn" id="set-ownserver">Set it up…</button>', 'Advanced. Keep the tribe on a computer that stays on (a home PC, a Raspberry Pi, a small server), or connect friends straight to your computer over Tailscale.', { id: 'set-ownserver-row', keys: 'self host server docker raspberry pi vps always on tailscale peer p2p advanced' })}`) : '')
+    + sec('Where projects live', `${row('Default home for new projects', `<select class="input set-select" id="set-projhome" aria-label="Default home for new projects">${PHOMES.map(([v, l]) => `<option value="${v}" ${v === (pr.projectHome || 'ask') ? 'selected' : ''}>${l}</option>`).join('')}</select>`, 'Where a new project is kept unless you pick another place.', { keys: 'new project location where' })}
       ${on() && window.TribeStorage ? `<div class="set-row set-row-wide" id="set-storage-row" data-keys="storage sync drafts"><div class="set-l"><b>Storage &amp; sync</b><small>Where your tribe, code and drafts are kept, and what keeps them safe.</small></div><div class="set-c" id="set-storage"></div></div>` : ''}
       ${desk ? row('Folder', `<div class="folder"><input class="input" id="set-folder" value="${esc(st.folder)}" spellcheck="false" aria-label="Folder"><button class="btn" id="set-browse">Browse</button></div>`, 'Docs, tasks and chat live here as plain files.') : ''}`)
     + sec('GitHub', on() && window.TribeGitHub ? row('GitHub', '<div id="set-github"></div>', 'Sign in once and everything pushes on its own.', { keys: 'git push ship repo' }) : row('GitHub', '<span class="faint">Start your tribe first (Home › Create your first project), then sign in here.</span>', 'Sign in once and everything pushes on its own.'))
@@ -487,6 +491,8 @@
     if (q('#set-version')) aboutRows();
     click('#set-check-update', checkUpdates);
     click('#set-bgupdate', () => { const v = !S.get().startup.autoUpdate; S.set({ startup: { autoUpdate: v } }); if (v && window.TribeUpdater) window.TribeUpdater.check(); draw(); });
+    click('#set-runs', () => { const b = q('#set-runs'); if (b && window.TribeStatus) window.TribeStatus.open(b); });
+    click('#set-ownserver', () => window.TribeOwnServer && window.TribeOwnServer.open());
     click('#set-clearcache', () => { const b = q('#set-clearcache'); if (b) { b.disabled = true; b.textContent = window.TribeI18n ? window.TribeI18n.t('Clearing…', 'Clearing…') : 'Clearing…'; } window.TribeSelfHeal && window.TribeSelfHeal.clearCache(); });
     click('#set-tour', () => { close(); window.TribeFlintTour && window.TribeFlintTour.start(); });
     click('#set-demo', () => { close(); window.TribeOffline.toggle(); });   // feat/offline-demo

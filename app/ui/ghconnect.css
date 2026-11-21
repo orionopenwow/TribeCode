@@ -27,3 +27,12 @@
   .ghc-seg button { min-height: 40px; }
   .ghc-who { flex-wrap: wrap; }
 }
+
+/* p10: the one GitHub status chip (TribeGitHubConnect.chip): the same words and the same Connect everywhere */
+.ghc-chip { display: inline-flex; align-items: center; gap: 8px; min-height: 36px; padding: 4px 6px 4px 10px; border: 1px solid var(--edge); border-radius: var(--r-ctl, 8px); background: var(--surface); font-size: 13px; color: var(--muted); max-width: 100%; }
+.ghc-chip .gh-i { width: 16px; height: 16px; flex: none; color: var(--text); }
+.ghc-chip-t { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ghc-chip-t b { color: var(--text); font-weight: 600; }
+.ghc-chip[data-on="1"] { padding-right: 10px; }
+.ghc-chip .btn.sm { min-height: 28px; }
+@media (max-width: 820px) { .ghc-chip { min-height: 40px; } .ghc-chip .btn.sm { min-height: 34px; } }

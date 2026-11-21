@@ -12,7 +12,7 @@
     bar = document.createElement('div'); bar.className = 'userbar'; bar.id = 'userbar';
     bar.innerHTML = '<div class="ub-me" id="ub-me"><span class="ub-slot" id="ub-face"></span><span class="ub-t"><b id="ub-name"></b><small id="ub-st"></small></span></div><div class="ub-acts" id="ub-acts"></div>'
       + '<button class="nf-bell ub-gear" id="ub-gear" title="Settings" aria-label="Settings"><svg class="i"><use href="#i-gear"/></svg></button>';
-    const where = e => { if (!e.target.closest('.ub-where')) return; if (e.type === 'keydown' && e.key !== 'Enter' && e.key !== ' ') return; e.preventDefault(); e.stopPropagation(); if (window.TribeLocalSetup) window.TribeLocalSetup.where(); };
+    const where = e => { if (!e.target.closest('.ub-where')) return; if (e.type === 'keydown' && e.key !== 'Enter' && e.key !== ' ') return; e.preventDefault(); e.stopPropagation(); const t = e.target.closest('.ub-where'); if (t.classList.contains('ts-line') && window.TribeStatus) return window.TribeStatus.open(t); if (window.TribeLocalSetup) window.TribeLocalSetup.where(); };
     bar.addEventListener('click', where, true); bar.addEventListener('keydown', where, true);
     bar.querySelector('#ub-gear').onclick = () => window.TribeSettings && window.TribeSettings.open();
     return bar;
@@ -31,8 +31,13 @@
       st_.textContent = h.github ? 'Only you · copy on GitHub' : 'Only you';   // feat/real-tribe: who can see it; where it is saved is on the dashboard card
       st_.classList.add('ub-where'); st_.setAttribute('role', 'button'); st_.tabIndex = 0; st_.title = 'Sharing and backup';
     } else {
-      st_.textContent = on ? (m && m.role === 'host' ? 'On this computer' : 'Online') : (C && C.hasToken && C.hasToken() && !(O && O.asleep && O.asleep()) ? 'Reconnecting…' : 'Just you for now');
-      st_.classList.remove('ub-where'); st_.removeAttribute('role'); st_.removeAttribute('tabindex'); st_.title = '';
+      // p10: the one place that says where the tribe runs and whether you're connected (tribestatus.js); tap for what it means
+      const D = window.TribeStatus && window.TribeStatus.now();
+      if (D) { st_.textContent = D.label; st_.dataset.tone = D.tone; st_.classList.add('ub-where', 'ts-line'); st_.setAttribute('role', 'button'); st_.tabIndex = 0; st_.title = D.sub; }
+      else {
+        st_.textContent = on ? (m && m.role === 'host' ? 'On this computer' : 'Online') : (C && C.hasToken && C.hasToken() && !(O && O.asleep && O.asleep()) ? 'Reconnecting…' : 'Just you for now');
+        st_.classList.remove('ub-where'); st_.removeAttribute('role'); st_.removeAttribute('tabindex'); st_.title = '';
+      }
     }
     const ac = !on && window.TribeAccounts && window.TribeAccounts.status(true);   // signed out, a guest or a TEST account (accounts.js)
     if (ac) { $('#ub-st').textContent = ac; if (window.TribeAccounts.mode() === 'signedout') $('#ub-name').textContent = 'Signed out'; }
@@ -60,7 +65,7 @@
   function size() { if (!bar || phone.matches) return; const side = $('#tour-side'); const r = side && side.getBoundingClientRect(); if (r && r.right) bar.style.width = `${Math.round(r.right)}px`; }
   addEventListener('resize', size);
   // the bell and Friends buttons are added by their scripts on load; place once everything is there
-  const ready = () => { place(); if (C && C.on) { C.on('status', label); C.on('presence', label); } };
+  const ready = () => { place(); if (C && C.on) { C.on('status', label); C.on('presence', label); C.on('outbox', label); } if (window.TribeStatus) window.TribeStatus.on(label); };
   addEventListener('tribe-local-profile', label);
   addEventListener('tribe-local-home', label);   // a home was chosen for the project on this device (offline.js setHome)   // Make it yours before any tribe (personalize.js)
   if (document.readyState === 'complete') setTimeout(ready, 0); else addEventListener('load', ready);

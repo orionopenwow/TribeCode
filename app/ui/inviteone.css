@@ -132,3 +132,29 @@
 }
 .modal-card.io.ii { width: min(880px, calc(100vw - 32px)); }
 .modal-card.io .io-pane .linkbox code { min-width: 120px; }
+
+/* p10: the invite sheet fits its content (no tall empty card), and one friendly line replaces raw errors */
+.modal-card.io { min-height: 0; }
+.modal-card.io .io-pane { min-height: 0; }
+.modal-card.io > .modal-foot { padding-top: 18px; }
+.io-cant { display: flex; align-items: flex-start; gap: 12px; padding: 16px 18px; border: 1px solid var(--edge); border-radius: var(--r-card, 12px); background: var(--surface); }
+.io-cant-dot { width: 10px; height: 10px; margin-top: 6px; border-radius: 50%; flex: none; background: var(--amber); }
+.io-cant[data-cant="demo"] .io-cant-dot { background: var(--muted); }
+.io-cant-t { flex: 1; min-width: 0; display: grid; gap: 4px; }
+.io-cant-t b { font-size: 15.5px; line-height: 1.35; color: var(--text); }
+.io-cant-t small { font-size: 14px; line-height: 1.55; color: var(--muted); max-width: 60ch; }
+.io-cant-link { display: flex; align-items: center; gap: 8px; min-width: 0; margin-top: 6px; padding: 6px 6px 6px 12px; border: 1px solid var(--edge); border-radius: var(--r-ctl, 8px); background: var(--canvas); }
+.io-cant-link code { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 13.5px; }
+.io-cant-note { font-size: 12.5px !important; }
+.io-cant-acts { flex: none; display: flex; gap: 8px; align-self: center; }
+.io-cant-acts .btn { min-height: 40px; }
+.modal-card.io .io-opt.on .io-ot small { color: var(--text); }
+@media (max-width: 820px) {
+  .io-cant { flex-direction: column; gap: 10px; padding: 14px; }
+  .io-cant-dot { display: none; }
+  .io-cant-acts { align-self: stretch; }
+  .io-cant-acts .btn { flex: 1; min-height: 44px; }
+}
+
+/* p10: the friendly "can't" line stands on its own, not a box inside a box */
+.tl-box:has(> .io-cant) { border: 0; padding: 0; background: none; }

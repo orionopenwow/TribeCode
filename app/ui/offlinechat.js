@@ -28,7 +28,8 @@
   }
   function line() {
     const n = waiting().length, host = hostName();
-    const who = me().role === 'host' || !host ? tr('Your tribe is offline') : tr("{name}'s computer is off or asleep", { name: host });
+    const D = window.TribeStatus && window.TribeStatus.now();   // p10: the same words as the status line under your name
+    const who = D && D.who ? D.who : me().role === 'host' || !host ? tr('Your tribe is offline') : tr("{name}'s computer is off or asleep", { name: host });
     const tail = n ? (n === 1 ? tr('1 message will send when it’s back') : tr('{n} messages will send when they’re back', { n })) : tr('Messages will send when it’s back');
     return `${ico('cloud')}<span><b>${esc(who)}</b> · ${esc(tail)}</span>`;
   }

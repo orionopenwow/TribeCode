@@ -463,7 +463,7 @@
     if (id === 'github.connect') {
       const solo = window.TribeOffline && window.TribeOffline.solo && window.TribeOffline.solo();
       if (solo && window.TribeGhPhone) { window.TribeGhPhone.open(); return { text: 'Here is GitHub on this phone: paste a token once, then bring a repo in, push and pull. The token stays on this phone.' }; }
-      go('repo'); return { text: 'Opened the code repository. Connect GitHub there to push and pull with friends.' };
+      go('repo'); return { text: 'Opened your code. Connect GitHub there to keep a copy online and share changes with friends.' };
     }
     if (id === 'brain.pick') { if (window.TribeBrain) window.TribeBrain.open(); return { text: T('opened', { x: "Flint's brain" }) }; }
     if (id === 'helper.toggle') return legacy(`turn ${sl.on ? 'on' : 'off'} the ${sl.what}`);

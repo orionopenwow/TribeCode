@@ -13,8 +13,8 @@
   const hosting = () => { const c = C(); if (!c || !c.connected()) return false; const me = c.state().me || {}; return me.role === 'host' && isLocal() && !(S() && S().get().hostOff); };
 
   const pill = document.createElement('button');
-  pill.id = 'host-pill'; pill.className = 'host-pill hidden'; pill.setAttribute('aria-haspopup', 'dialog'); pill.title = 'Hosting: this computer runs the tribe';
-  pill.innerHTML = '<span class="hp-dot" aria-hidden="true"></span><span>Hosting</span>';
+  pill.id = 'host-pill'; pill.className = 'host-pill hidden'; pill.setAttribute('aria-haspopup', 'dialog'); pill.title = 'On this computer: this computer runs the tribe';
+  pill.innerHTML = '<span class="hp-dot" aria-hidden="true"></span><span>On this computer</span>';   // p10: the same words as the status line (tribestatus.js)
   const crumbs = $('#crumbs');
   if (crumbs) crumbs.parentNode.insertBefore(pill, crumbs); else ($('.titlebar') || document.body).appendChild(pill);
 
