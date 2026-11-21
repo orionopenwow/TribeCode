@@ -1,5 +1,15 @@
 # Changelog
 
+## v0.45.0
+- **Say what you're making when you create a tribe**: the create sheet has one optional "What are you making?" box under the name, with three examples. The sentence becomes the line under your project's name, a first version is made from it, and the suggested tasks follow it. Leave the name empty and the sentence names the project. A sentence already typed on Home is carried over.
+- **A sketch from your sentence**: with only a sentence and nothing made yet, the dashboard preview draws what the sentence describes, labelled as a sketch, with "Make it real".
+- **App and Website tabs on the preview**: the preview shows your main app first. Once a website exists too, a tab switches to it, and the buttons under the preview follow the tab. Your choice is remembered on this device. Home's project cards show the same thing.
+- **No Premium or trial prompts for now**: everything is free, so the "14-day trial" boxes, plan chips, badges and nudges are gone until paid plans are ready. Starting a fourth project or adding a sixth company seat just works. Ask Flint what it costs and he says so plainly.
+- **A calmer Flint card on the dashboard**: the next step is one row with its button at the right, a quiet project shows one line instead of an empty column, and "All clear" is a line, not a box.
+- **Fewer dead ends**: connecting an AI in a browser-only tribe says what it needs and offers the one button; Publish with nothing made offers "Make a website"; plainer words in a dozen places ("The vision was updated", "saved on this device", "Another tool").
+- **Fixes**: closing Versions while a version is loading no longer throws an error; a bakery sentence is no longer named "S Bakery Website".
+- **Phones**: the create sheet's sentence box, the sketch and the preview tabs fit 390px with 40px targets; Flint's step button drops under its text.
+
 ## v0.44.0
 - **Start with one sentence on a fresh Home**: type what you want to make and a first version appears, with nothing to install, sign up for or set up. "Start with a name instead" is still there.
 - **Saved on this device**: in a tribe that lives in your browser, App Creator, the website designer and Motion Studio save right where you are and say "Saved on this device", instead of "Not saved: this needs the tribe online". If your tribe is out of reach, changes wait on this device and go to the tribe when it's back.

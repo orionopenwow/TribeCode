@@ -1,11 +1,11 @@
 # TribeCode session handoff
 
-Updated 2026-11-21 by the session that released v0.44.0 (on top of the other session's v0.41.2 to v0.43.0). For any agent or Claude session picking up TribeCode work. Read `AGENTS.md` and `HANDOFF.md` first; this page covers what those don't: the current state, work in flight, how releases are done, and how two sessions avoid stepping on each other.
+Updated 2026-11-21 by the session that released v0.44.0 and v0.45.0 (on top of the other session's v0.41.2 to v0.43.0). For any agent or Claude session picking up TribeCode work. Read `AGENTS.md` and `HANDOFF.md` first; this page covers what those don't: the current state, work in flight, how releases are done, and how two sessions avoid stepping on each other.
 
 ## Where things stand
 
-- **Released:** v0.44.0 is on `main` and `dev` (2026-11-21). `CHANGELOG.md` has every release in user terms; `docs/CONTEXT.md` has one line per release with the files involved.
-- **Service worker cache:** `tribecode-shell-v286` on `main`. Bump it above whatever you find when shell files change. Retired website templates must stay out of `SHELL` (`site_variety_test` checks), so do not union them back in when resolving `sw.js`.
+- **Released:** v0.45.0 is on `main` and `dev` (2026-11-21). `CHANGELOG.md` has every release in user terms; `docs/CONTEXT.md` has one line per release with the files involved.
+- **Service worker cache:** `tribecode-shell-v291` on `main`. Bump it above whatever you find when shell files change. Retired website templates must stay out of `SHELL` (`site_variety_test` checks), so do not union them back in when resolving `sw.js`.
 - **Flint's language score:** 2365/2391 (98.9%) on `flint_eval_test`; the bar is 98%.
 - **The npm test chain** has about 296 steps; a full run is several hours on the sandbox, so releases use targeted tests plus the smoke set.
 - **Two-step sign-in and payments are built but off.** They turn on with `TRIBE_TWO_STEP=1` and `TRIBE_PAYMENTS=1` (or the host-only settings in `docs/ACCOUNTS.md` and `docs/PREMIUM.md`). The owner will say when.
@@ -17,7 +17,11 @@ Nothing waiting. v0.44.0 took the last of this session's branches (`feat/ai-guid
 
 `docs/SEAMLESS-PLAN.md` is the plan for friends, backup and your own AI with nothing to set up; its later batches are not built.
 
-Known red on plain v0.43.0 and still red: `e2e_first_run` ends on a console `net::ERR_INCOMPLETE_CHUNKED_ENCODING` (not caused by v0.44).
+Premium and trial prompts are hidden while payments are off; everything asks `TribePremium.offered()` (app/ui/premium.js). Do not add a prompt that skips it.
+
+Known red since v0.43.0: `e2e_nav` and `e2e_shell_polish` wait for `#view-tabs` on the agents view, which the v0.43 Agents hub no longer shows. Whoever owns that view should update the tests or the view.
+
+Ideas found in the v0.45 flow walk and not built: a fresh desktop start lands on an auto-made "My Tribe" instead of the one-sentence Home; the dashboard's "Share link" ends in a "Nothing to share yet" toast; Files › Website still has the old page builder beside the designer; suggested tasks after a website still talk about orders; the newcomer sidebar shows Set up company and Agents Hub before anything exists.
 
 ## What the owner wants (standing instructions)
 
