@@ -12,6 +12,21 @@
   const I = window.TribeI18n; if (!I || !I.add) return;
   I.add({
     'Describe the bug in your own words: what you did, what happened, what you expected.': ['Describe el error con tus palabras: qué hiciste, qué pasó y qué esperabas.', 'Descreva o erro com suas palavras: o que você fez, o que aconteceu e o que esperava.', 'Décrivez le bug avec vos mots : ce que vous avez fait, ce qui s’est passé, ce que vous attendiez.', 'Beschreibe den Fehler in deinen Worten: was du getan hast, was passiert ist und was du erwartet hast.', 'バグを自分の言葉で説明してください：何をして、何が起きて、何を期待したか。', '用你自己的话描述这个问题：你做了什么、发生了什么、你期望什么。', '버그를 직접 설명해 주세요: 무엇을 했고, 무슨 일이 있었고, 무엇을 기대했는지.'],
+    // ---- p10: Flint's dashboard card and the Design picker
+    'Fits this project': ['Encaja con este proyecto', 'Combina com este projeto', 'Va avec ce projet', 'Passt zu diesem Projekt', 'このプロジェクトに合う', '适合这个项目', '이 프로젝트에 맞음'],
+    'Living updates': ['Novedades en vivo', 'Novidades ao vivo', 'En direct', 'Live-Neuigkeiten', 'いまの動き', '实时动态', '실시간 소식'],
+    'Ask Flint about this project': ['Pregunta a Flint sobre este proyecto', 'Pergunte ao Flint sobre este projeto', 'Demander à Flint à propos de ce projet', 'Frag Flint zu diesem Projekt', 'このプロジェクトについてFlintに聞く', '向 Flint 询问这个项目', '이 프로젝트에 대해 Flint에게 묻기'],
+    'Quiet right now. Changes show up here as they happen.': ['Todo tranquilo. Los cambios aparecen aquí al momento.', 'Tudo calmo. As mudanças aparecem aqui na hora.', 'Calme pour l’instant. Les changements s’affichent ici en direct.', 'Gerade ruhig. Änderungen erscheinen hier, sobald sie passieren.', '今は静かです。変更はここにすぐ表示されます。', '现在很安静。变化会实时显示在这里。', '지금은 조용해요. 변화가 생기면 여기에 바로 보여요.'],
+    'Nothing waiting on you. Nice.': ['Nada te espera. Bien.', 'Nada esperando por você. Ótimo.', 'Rien ne vous attend. Parfait.', 'Nichts wartet auf dich. Schön.', 'あなた待ちのものはありません。', '没有等你处理的事。很好。', '기다리는 일이 없어요. 좋아요.'],
+    'Add as a task': ['Añadir como tarea', 'Adicionar como tarefa', 'Ajouter comme tâche', 'Als Aufgabe hinzufügen', 'タスクに追加', '添加为任务', '할 일로 추가'],
+    'Added to the task board': ['Añadido al tablero de tareas', 'Adicionado ao quadro de tarefas', 'Ajouté au tableau des tâches', 'Zum Aufgabenboard hinzugefügt', 'タスクボードに追加しました', '已添加到任务板', '작업 보드에 추가했어요'],
+    'You asked for it in your idea': ['Lo pediste en tu idea', 'Você pediu isso na sua ideia', 'Vous l’avez demandé dans votre idée', 'Du hast es in deiner Idee genannt', 'アイデアで頼んだもの', '你的想法里提到了它', '아이디어에서 요청했어요'],
+    'Someone is waiting for an OK': ['Alguien espera un OK', 'Alguém espera um OK', 'Quelqu’un attend un accord', 'Jemand wartet auf ein OK', '誰かがOKを待っています', '有人在等你同意', '누군가 승인을 기다려요'],
+    'Done and waiting for a look': ['Hecho y esperando revisión', 'Feito e esperando uma olhada', 'Fait, en attente d’un coup d’œil', 'Fertig und wartet auf einen Blick', '完了、確認待ち', '已完成，等你看看', '완료, 확인 대기 중'],
+    'New since you last looked': ['Nuevo desde tu última visita', 'Novo desde a última vez', 'Nouveau depuis votre dernier passage', 'Neu seit deinem letzten Blick', '前回から新着', '自上次查看后的新内容', '마지막으로 본 이후 새 소식'],
+    'Keep building': ['Sigue construyendo', 'Continue criando', 'Continuer à construire', 'Weiterbauen', '作り続ける', '继续构建', '계속 만들기'],
+    'Open where you left off': ['Abre donde lo dejaste', 'Abra onde parou', 'Reprendre là où vous étiez', 'Dort weitermachen, wo du warst', '続きから開く', '从上次的地方打开', '하던 곳에서 열기'],
+    'Your task': ['Tu tarea', 'Sua tarefa', 'Votre tâche', 'Deine Aufgabe', 'あなたのタスク', '你的任务', '내 작업'],
     // ---- pass 9: the creators' shared shell (Back, Undo/Redo, the flame, Flint's column)
     'Back to the dashboard': ['Volver al panel', 'Voltar ao painel', 'Retour au tableau de bord', 'Zurück zur Übersicht', 'ダッシュボードに戻る', '返回仪表板', '대시보드로 돌아가기'],
     'Undo and redo': ['Deshacer y rehacer', 'Desfazer e refazer', 'Annuler et rétablir', 'Rückgängig und wiederholen', '元に戻す・やり直す', '撤销和重做', '실행 취소와 다시 실행'],

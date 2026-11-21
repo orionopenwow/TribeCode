@@ -1122,7 +1122,7 @@
         computeRow(row),
       ].join('');
       const open = lsGet(HKEY, false) === true,   /* simple right panel: folded to one line unless you open it */ nOn = (rows.match(/class="hp-pill on"/g) || []).length;   // collapsible, remembered
-      box.innerHTML = `<button class="hp-head" id="helpers-toggle" aria-expanded="${open}" aria-controls="hp-pills"><span class="hp-t">⚙️ Background helpers</span><span class="hp-sum">${nOn ? `${nOn} on` : 'all off'}</span>${ico('i-chev', 14)}</button><div class="hp-pills" id="hp-pills">${rows}</div>`;
+      box.innerHTML = `<button class="hp-head" id="helpers-toggle" aria-expanded="${open}" aria-controls="hp-pills"><span class="hp-t">${ico('i-gear', 13)} Background helpers</span><span class="hp-sum">${nOn ? `${nOn} on` : 'all off'}</span>${ico('i-chev', 14)}</button><div class="hp-pills" id="hp-pills">${rows}</div>`;
       box.classList.toggle('closed', !open);
       box.querySelector('#helpers-toggle').onclick = () => { const o = box.classList.contains('closed'); lsSet(HKEY, o); box.classList.toggle('closed', !o); box.querySelector('#helpers-toggle').setAttribute('aria-expanded', String(o)); };
       box.querySelectorAll('[data-helper]').forEach(r => r.onclick = () => r.dataset.helper === 'compute' ? computeSheet() : r.dataset.helper === 'flint' && window.TribeFlint ? window.TribeFlint.focus() : fleetGo(r.dataset.helper));

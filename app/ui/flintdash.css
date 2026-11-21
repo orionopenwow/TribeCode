@@ -1,0 +1,51 @@
+/* Flint's card on the project dashboard (flintdash.js): Do this next + Living updates. Flat, Flint's ember tint. */
+.fd { margin: 14px 0; padding: 14px 16px 16px; border: 1px solid color-mix(in srgb, var(--ember) 32%, var(--border)); background: color-mix(in srgb, var(--ember) 4%, var(--surface)); border-radius: var(--r-lg); }
+.fd-head { display: flex; align-items: center; gap: 8px; min-width: 0; margin-bottom: 12px; }
+.fd-head b { font-size: 15px; color: var(--text); }
+.fd-flame { width: 18px; height: 18px; color: var(--ember); flex: none; }
+.fd-mood { flex: none; padding: 1px 8px; border-radius: 999px; font: 600 10.5px/1.7 var(--mono); text-transform: uppercase; letter-spacing: .03em; color: var(--muted); background: var(--surface-2); }
+.fd-mood.fd-buzzing { color: var(--ember); background: var(--ember-tint); }
+.fd-mood.fd-steady { color: var(--live); background: var(--live-tint); }
+.fd-sum { min-width: 0; color: var(--muted); font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.fd-cols { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 18px; }
+.fd-col { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.fd-col > .eyebrow { display: flex; align-items: center; gap: 6px; }
+.fd-pulse { width: 6px; height: 6px; border-radius: 50%; background: var(--live); }
+.fd-sugs, .fd-ups { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.fd-sug { display: flex; align-items: center; gap: 10px; padding: 9px 8px 9px 12px; border: 1px solid var(--border); border-left: 3px solid var(--t, var(--ember)); border-radius: var(--r-sm); background: var(--surface); }
+.fd-sug-t { display: flex; flex-direction: column; gap: 1px; min-width: 0; flex: 1; }
+.fd-sug-t b { font-size: 13.5px; font-weight: 600; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.fd-sug-t small { font-size: 12px; color: var(--muted); }
+.fd-go { flex: none; }
+.fd-x { flex: none; width: 28px; height: 28px; border: 0; border-radius: var(--r-sm); background: transparent; color: var(--faint); font-size: 16px; cursor: pointer; }
+.fd-x:hover { background: var(--surface-2); color: var(--text); }
+.fd-up { display: flex; align-items: baseline; gap: 8px; font-size: 13px; color: var(--text); min-width: 0; }
+.fd-dot { flex: none; width: 7px; height: 7px; border-radius: 50%; background: var(--t, var(--muted)); transform: translateY(-1px); }
+.fd-up-t { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.fd-at { flex: none; color: var(--faint); font: 11.5px/1 var(--mono); }
+.fd-quiet { margin: 0; color: var(--muted); font-size: 13px; }
+.fd-ask { align-self: flex-start; display: inline-flex; align-items: center; gap: 6px; margin-top: 4px; font-size: 13px; }
+/* the one next setup step lives inside the card: drop its own card frame */
+.fd-step #pj-check { margin: 4px 0 0; border: 0; background: transparent; padding: 0; }
+.fd-step #pj-check .ock-head h3 { font-size: 13px; }
+/* what the card replaces: the scattered next bits further down */
+#pj-overview:has(#fd) #pj-reco-slot, #pj-overview:has(#fd) #pj-suggest-slot { display: none; }
+@media (max-width: 760px) {
+  .fd { padding: 12px; margin: 10px 0; }
+  .fd-cols { grid-template-columns: 1fr; gap: 12px; }
+  .fd-sum { display: none; }
+  .fd-sug { padding: 8px 6px 8px 10px; }
+  .fd-go, .fd-x { min-height: 36px; }
+}
+
+/* the step inside Flint's card is one row, not a big card */
+.fd .fd-step #pj-check.hero { padding: 0; margin: 2px 0 0; border: 0; background: transparent; }
+.fd .fd-step #pj-check.hero::before { display: none; }
+.fd .fd-step #pj-check.hero .ock-head { margin: 0 0 6px; }
+.fd .fd-step #pj-check.hero .ock-bar { display: none; }
+.fd .fd-step #pj-check.hero .ock-card { grid-template-columns: 34px 1fr auto; gap: 10px; padding: 9px 10px 9px 12px; border-radius: var(--r-sm); border-left: 3px solid var(--ember); background: var(--surface); }
+.fd .fd-step #pj-check.hero .ock-card.ock-next { background: var(--surface); }
+.fd .fd-step #pj-check.hero .ock-emo { width: 34px; height: 34px; }
+.fd .fd-step #pj-check.hero .ock-l { font-size: 13.5px; }
+.fd .fd-step #pj-check.hero .ock-sub { font-size: 12px; margin: 1px 0 0; }
+@media (max-width: 760px) { .fd .fd-step #pj-check.hero .ock-card { grid-template-columns: 1fr; } .fd .fd-step #pj-check.hero .ock-emo { display: none; } }

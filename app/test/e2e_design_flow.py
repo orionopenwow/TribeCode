@@ -80,7 +80,7 @@ def on_this_device(b):
     assert not pg.evaluate("TribeClient.connected()"), "no tribe here"
     kinds = pg.eval_on_selector_all("#dfl .dfl-kind b", "els => els.map(e => e.textContent)")
     assert kinds == ["Website", "App", "Game", "Screen / UI mockup", "Slides", "Poster / graphic", "Whiteboard", "Logo / brand kit", "Motion graphic"], kinds
-    assert pg.locator("#dfl .dfl-kind svg").count() == 9, "a stroke icon on every tile"
+    assert pg.locator("#dfl .dfl-kind .dfl-ki svg").count() == 9, "a stroke icon on every tile"   # p10: each tile also has a tiny drawing (.dfl-mini)
     assert pg.locator("#hub-design").is_visible() and "Continue" in pg.inner_text("#hub-design"), "Continue lists what is already made"
     shot(pg, "design-flow-1")
 

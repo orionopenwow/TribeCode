@@ -31,6 +31,7 @@
 
   // ---------- icons: 1.6px strokes. icons.js (feat/shell-polish) wins when it has the name; these are the fallback ----------
   const P = {
+    media: '<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M10 9.5v5l4.5-2.5z"/>',
     globe: '<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/>',
     app: '<rect x="3" y="4" width="18" height="16" rx="2.5"/><path d="M3 9h18M7 6.5h.01M10 6.5h.01"/>',
     gamepad: '<path d="M7 9h10a4 4 0 0 1 4 4v1.5a2.5 2.5 0 0 1-4.5 1.5L15 14H9l-1.5 2A2.5 2.5 0 0 1 3 14.5V13a4 4 0 0 1 4-4z"/><path d="M8 11.5v2M7 12.5h2M15.5 12h.01M17.5 13h.01"/>',
@@ -56,7 +57,7 @@
   };
   function icon(name, size = 20) {
     const I = window.TribeIcons;
-    if (I && typeof I.svg === 'function') { try { const s = I.svg(name, size); if (s) return s; } catch {} }
+    if (!P[name] && I && typeof I.svg === 'function' && (!I.has || I.has(name))) { try { const s = I.svg(name, size); if (s) return s; } catch {} }   // p10: our own drawing first; the shared set fell back to a paperclip for names it lacks
     return `<svg class="dfl-ic" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${P[name] || P.blank}</svg>`;
   }
 
@@ -111,11 +112,40 @@
   }
   function toTop() { try { let e = host; while (e && e !== document.body) { if (e.scrollTop) e.scrollTop = 0; e = e.parentElement; } window.scrollTo(0, 0); } catch {} }
   function head(eyebrow, title, lead) { return `<header class="dfl-head"><span class="eyebrow">${esc(eyebrow)}</span><h1>${esc(title)}</h1>${lead ? `<p class="dfl-lead">${esc(lead)}</p>` : ''}</header>`; }
+  // ---------- p10: a colour and a tiny drawing per kind, and the kinds that fit this project first ----------
+  const TINT = { website: '--peer', app: '--live', game: '--ember', screen: '--peer', slides: '--amber', poster: '--ember', whiteboard: '--amber', logo: '--alert', motion: '--live' };
+  const SV = b => `<svg viewBox="0 0 64 44" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">${b}</svg>`;
+  const MINI = {
+    website: SV('<rect x="4" y="4" width="56" height="36" rx="3"/><path d="M4 11h56"/><rect x="10" y="16" width="20" height="4" rx="1" fill="currentColor" stroke="none" opacity=".5"/><path d="M10 25h30M10 30h22"/><rect x="40" y="16" width="14" height="18" rx="2"/>'),
+    app: SV('<rect x="22" y="2" width="20" height="40" rx="4"/><path d="M27 10h10M27 15h10M27 20h6"/><rect x="26" y="26" width="12" height="7" rx="2" fill="currentColor" stroke="none" opacity=".5"/>'),
+    game: SV('<path d="M6 36h52"/><rect x="12" y="26" width="10" height="10"/><rect x="34" y="18" width="14" height="6"/><circle cx="17" cy="20" r="3.5" fill="currentColor" stroke="none" opacity=".55"/><path d="M50 10l2 4 4 .5-3 3 .8 4-3.8-2-3.8 2 .8-4-3-3 4-.5z"/>'),
+    screen: SV('<rect x="6" y="6" width="16" height="32" rx="3"/><rect x="42" y="6" width="16" height="32" rx="3"/><path d="M24 22h16M36 18l4 4-4 4"/>'),
+    slides: SV('<rect x="6" y="6" width="52" height="30" rx="2"/><path d="M12 14h22M12 20h30"/><rect x="40" y="24" width="12" height="8" fill="currentColor" stroke="none" opacity=".5"/><path d="M32 36v5M26 41h12"/>'),
+    poster: SV('<rect x="18" y="3" width="28" height="38" rx="2"/><circle cx="32" cy="15" r="6" fill="currentColor" stroke="none" opacity=".5"/><path d="M23 28h18M25 33h14"/>'),
+    whiteboard: SV('<rect x="4" y="4" width="56" height="36" rx="2"/><rect x="10" y="10" width="12" height="10" fill="currentColor" stroke="none" opacity=".45"/><rect x="40" y="22" width="12" height="10" fill="currentColor" stroke="none" opacity=".3"/><path d="M22 17c8 0 10 10 18 10"/>'),
+    logo: SV('<circle cx="20" cy="22" r="11"/><path d="M15 22l4 4 7-8"/><path d="M38 18h20M38 25h14"/><circle cx="40" cy="33" r="2" fill="currentColor" stroke="none"/><circle cx="47" cy="33" r="2" fill="currentColor" stroke="none" opacity=".6"/><circle cx="54" cy="33" r="2" fill="currentColor" stroke="none" opacity=".3"/>'),
+    motion: SV('<rect x="4" y="8" width="56" height="28" rx="3"/><path d="M28 16v12l10-6z" fill="currentColor" stroke="none" opacity=".55"/><path d="M4 40h56"/><circle cx="22" cy="40" r="2" fill="currentColor" stroke="none"/>'),
+  };
+  const tr = s => (window.TribeI18n && window.TribeI18n.t ? window.TribeI18n.t(s, s) || s : s);
+  const FIT = { site: ['website', 'poster', 'logo'], app: ['app', 'screen', 'logo'], game: ['game', 'poster', 'motion'] };
+  let likelyN = 0;
+  function orderKinds() {
+    const all = D().KINDS.slice(); likelyN = 0;
+    if (scope !== 'project') return all;
+    const PJ = window.TribeProjects, cp = PJ && PJ.cur ? PJ.cur() : null, FL = window.TribeFirstLook;
+    const text = (cp && (cp.vision || cp.bio || cp.description)) || '';
+    let k = null; try { k = text && FL && FL.guess ? (FL.guess(text) || {}).kind : null; } catch {}
+    const fit = FIT[k] || []; if (!fit.length) return all;
+    likelyN = fit.length;
+    return [...fit.map(id => all.find(x => x.id === id)).filter(Boolean), ...all.filter(x => !fit.includes(x.id))];
+  }
+  const agoT = iso => { const s = (Date.now() - Date.parse(iso)) / 1000; if (!isFinite(s)) return ''; return s < 60 ? tr('just now') : s < 3600 ? `${Math.round(s / 60)} min ago` : s < 86400 ? `${Math.round(s / 3600)} h ago` : `${Math.round(s / 86400)} d ago`; };
+
   function kinds() {
     if (!host) return; view = 'kinds'; kindNow = '';
     document.body.classList.remove('dfl-deep');
     host.innerHTML = `<section class="dfl" id="dfl" data-step="kinds">${head('Design', 'What are you making?', PLANS_ON ? 'Pick one. Each comes with templates, an optional prompt for Flint and a plan to follow.' : 'Pick one. Each comes with templates and an optional prompt for Flint.')}
-      <div class="dfl-kinds" role="list">${D().KINDS.map(k => `<button type="button" class="dfl-kind" role="listitem" data-kind="${k.id}"><span class="dfl-ki">${icon(k.icon, 22)}</span><span class="dfl-kt"><b>${esc(k.t)}</b><small>${esc(k.d)}</small></span></button>`).join('')}</div>
+      <div class="dfl-kinds" role="list">${orderKinds().map((k, i) => `<button type="button" class="dfl-kind${i < likelyN ? ' likely' : ''}" role="listitem" data-kind="${k.id}" style="--k:var(${TINT[k.id] || '--accent'})"><span class="dfl-ki">${icon(k.icon, 22)}</span><span class="dfl-kt"><b>${esc(k.t)}</b><small>${esc(k.d)}</small>${i < likelyN ? `<span class="dfl-fit">${esc(tr('Fits this project'))}</span>` : ''}</span><span class="dfl-mini" aria-hidden="true">${MINI[k.id] || ''}</span></button>`).join('')}</div>
       ${scope === 'project' ? '<section class="dfl-cont" id="dfl-cont"><span class="eyebrow">Continue</span><h2>In this project</h2><div class="dfl-list" id="dfl-cont-list"><p class="faint">Loading…</p></div></section>' : '<div class="dfl-cont-plans" id="dfl-cont-plans"></div>'}</section>`;
     host.querySelectorAll('[data-kind]').forEach(b => b.onclick = () => swap(() => gallery(b.dataset.kind)));
     toTop();
@@ -124,14 +154,14 @@
   async function continueList() {
     const plans = await listPlans();
     const row = p => { const d = p.steps.filter(s => s.done).length, k = D().KINDS.find(x => x.id === p.kind) || {};
-      return `<button type="button" class="dfl-row" data-plan="${esc(p.key)}" data-pid="${esc(p.target.pid || '')}"><span class="dfl-ki sm">${icon(k.icon, 18)}</span><span class="dfl-kt"><b>${esc(p.title)}</b><small>${esc(k.t || p.kind)}${PLANS_ON ? ` · plan ${d}/${p.steps.length}` : ''}</small></span>${icon('chev', 16)}</button>`; };
+      return `<button type="button" class="dfl-row" data-plan="${esc(p.key)}" data-pid="${esc(p.target.pid || '')}" style="--k:var(${TINT[p.kind] || '--accent'})"><span class="dfl-ki sm">${icon(k.icon, 18)}</span><span class="dfl-kt"><b>${esc(p.title)}</b><small>${esc(k.t || p.kind)}${p.updated ? ` · ${esc(agoT(p.updated))}` : ''}${p.byName ? ` · ${esc(p.byName)}` : ''}${PLANS_ON ? ` · plan ${d}/${p.steps.length}` : ''}</small></span>${icon('chev', 16)}</button>`; };
     if (scope === 'project') {
       const box = host && host.querySelector('#dfl-cont-list'); if (!box) return;
       let files = []; try { files = (await C.api('/canvas')).files || []; } catch {}
       let boards = []; try { boards = (await C.api('/whiteboard')).boards || []; } catch {}
       const planned = new Set(plans.map(p => p.target.id));
-      const extra = [...files.filter(f => !planned.has(f.id)).map(f => ({ t: f.name, k: 'Design', ic: 'canvas', a: `data-cv="${esc(f.id)}"` })), ...boards.filter(b => !planned.has(b.id) && b.count).map(b => ({ t: b.name, k: 'Whiteboard', ic: 'whiteboard', a: `data-wb="${esc(b.id)}"` }))];
-      box.innerHTML = plans.map(row).join('') + extra.map(x => `<button type="button" class="dfl-row" ${x.a}><span class="dfl-ki sm">${icon(x.ic, 18)}</span><span class="dfl-kt"><b>${esc(x.t)}</b><small>${x.k}</small></span>${icon('chev', 16)}</button>`).join('') || '<p class="faint dfl-none">Nothing yet. Pick a kind above to start.</p>';
+      const extra = [...files.filter(f => !planned.has(f.id)).map(f => ({ t: f.name, k: 'Design', ic: 'canvas', tint: '--peer', at: f.updated || f.mtime, a: `data-cv="${esc(f.id)}"` })), ...boards.filter(b => !planned.has(b.id) && b.count).map(b => ({ t: b.name, k: 'Whiteboard', ic: 'whiteboard', tint: '--amber', at: b.updated, a: `data-wb="${esc(b.id)}"` }))];
+      box.innerHTML = plans.map(row).join('') + extra.map(x => `<button type="button" class="dfl-row" ${x.a} style="--k:var(${x.tint})"><span class="dfl-ki sm">${icon(x.ic, 18)}</span><span class="dfl-kt"><b>${esc(x.t)}</b><small>${x.k}${x.at ? ` · ${esc(agoT(x.at))}` : ''}</small></span>${icon('chev', 16)}</button>`).join('') || '<p class="faint dfl-none">Nothing yet. Pick a kind above to start.</p>';
       box.querySelectorAll('[data-cv]').forEach(b => b.onclick = () => openCanvas(b.dataset.cv));
       box.querySelectorAll('[data-wb]').forEach(b => b.onclick = () => window.TribeWhiteboard && window.TribeWhiteboard.open(b.dataset.wb));
     } else {
