@@ -1,5 +1,15 @@
 # Changelog
 
+## v0.44.0
+- **Start with one sentence on a fresh Home**: type what you want to make and a first version appears, with nothing to install, sign up for or set up. "Start with a name instead" is still there.
+- **Saved on this device**: in a tribe that lives in your browser, App Creator, the website designer and Motion Studio save right where you are and say "Saved on this device", instead of "Not saved: this needs the tribe online". If your tribe is out of reach, changes wait on this device and go to the tribe when it's back.
+- **The desktop app starts its tribe reliably**: an empty folder setting no longer stops it, and a busy port moves to the next free one, so "The tribe server did not start" is far rarer.
+- **Window buttons in every creator**: in the desktop app, App Creator, the website designer and Motion Studio have minimize, maximize and close at the top right again, and their top bar drags the window. Sheets like the Launch kit leave the title bar's own buttons usable.
+- **25 website templates that each look different**: fewer, better templates, each with its own layout, pictures, type and words. Templates you already used still open.
+- **Your business name everywhere**: when a template is filled in, its sample name (like "Marigold") is replaced in every heading, caption and description, not just the title.
+- **Guides any AI can read**: every project folder carries `AGENTS.md` and `CLAUDE.md`, and docs/ai has master guides for websites, apps and motion. Connected AI helpers get new tools: the project brief, the template and part catalogs, a preview, a Check, and a dry run before they change anything.
+- **Phones**: the Home sentence box and its example chips fit 390px; the creators' Back row is unchanged.
+
 ## v0.43.0
 - **Office Space**: turn it on for a tribe and the office becomes a small pixel floor (art from Pixel Agents, MIT, Pablo De Lucca, with Metro City characters by JIK-A-4, CC0). Everyone, people, AI helpers and Flint, sits at a desk, types, reads, visits the task board and rests in the lounge, based on what they're really doing. Office pets wander around.
 - **Click anyone in the office**: message, call, give a task, open what they're working on, or approve an agent's request right there. "Your look" dresses your character from a real wardrobe. Hosts can move furniture, choose who sits where and switch to Night studio.

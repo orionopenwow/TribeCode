@@ -1,11 +1,11 @@
 # TribeCode session handoff
 
-Updated 2026-11-19 by the session that released v0.33.0 to v0.36.0, after catching up on the other session's v0.38.0 to v0.41.0. For any agent or Claude session picking up TribeCode work. Read `AGENTS.md` and `HANDOFF.md` first; this page covers what those don't: the current state, work in flight, how releases are done, and how two sessions avoid stepping on each other.
+Updated 2026-11-21 by the session that released v0.44.0 (on top of the other session's v0.41.2 to v0.43.0). For any agent or Claude session picking up TribeCode work. Read `AGENTS.md` and `HANDOFF.md` first; this page covers what those don't: the current state, work in flight, how releases are done, and how two sessions avoid stepping on each other.
 
 ## Where things stand
 
-- **Released:** v0.43.0 is on `main` and `dev` (2026-11-19), with Windows, Mac and Linux installers published. `CHANGELOG.md` has every release in user terms; `docs/CONTEXT.md` has one line per release with the files involved.
-- **Service worker cache:** `tribecode-shell-v268` on `main`. Bump it above whatever you find when shell files change.
+- **Released:** v0.44.0 is on `main` and `dev` (2026-11-21). `CHANGELOG.md` has every release in user terms; `docs/CONTEXT.md` has one line per release with the files involved.
+- **Service worker cache:** `tribecode-shell-v286` on `main`. Bump it above whatever you find when shell files change. Retired website templates must stay out of `SHELL` (`site_variety_test` checks), so do not union them back in when resolving `sw.js`.
 - **Flint's language score:** 2365/2391 (98.9%) on `flint_eval_test`; the bar is 98%.
 - **The npm test chain** has about 296 steps; a full run is several hours on the sandbox, so releases use targeted tests plus the smoke set.
 - **Two-step sign-in and payments are built but off.** They turn on with `TRIBE_TWO_STEP=1` and `TRIBE_PAYMENTS=1` (or the host-only settings in `docs/ACCOUNTS.md` and `docs/PREMIUM.md`). The owner will say when.
@@ -13,14 +13,11 @@ Updated 2026-11-19 by the session that released v0.33.0 to v0.36.0, after catchi
 
 ## In flight
 
-| Branch | What it is | State |
-|---|---|---|
-| `fix/p7-cache` | v0.41.1: updates always show, offline messages, the offline line and dot. | Merged and released in v0.41.1. Nothing waiting. |
-| `feat/docs-start` | One commit from 2026-11-06. | Old; check before using. |
+Nothing waiting. v0.44.0 took the last of this session's branches (`feat/ai-guides`, `feat/site-templates2`, the useful parts of `feat/easy-start`). `feat/editor-chrome` and `rel/0411` were superseded by v0.42.0's creator shell and are not to be merged; the window buttons from editor-chrome live on as `app/ui/creatorwin.js`.
 
-The four branches listed here on 2026-11-13 (`feat/real-tribe`, `feat/design-site2`, `feat/company3`, `feat/chat-invite-ui`) were finished and released in v0.38.0.
+`docs/SEAMLESS-PLAN.md` is the plan for friends, backup and your own AI with nothing to set up; its later batches are not built.
 
-Branch `feat/site-templates2` (not merged): the website gallery cut from 61 templates to 25 hand-written ones that differ in structure; 38 retired but loadable; new layouts in `sitecfg.js`; `site_variety_test`. Cache `tribecode-shell-v269` on that branch. See `docs/SITE-TEMPLATES.md`.
+Known red on plain v0.43.0 and still red: `e2e_first_run` ends on a console `net::ERR_INCOMPLETE_CHUNKED_ENCODING` (not caused by v0.44).
 
 ## What the owner wants (standing instructions)
 
