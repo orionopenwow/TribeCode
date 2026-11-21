@@ -41,11 +41,19 @@
       let b = null; try { b = FM.brief(text); } catch {}
       const NAMES = { leaderboard: 'the leaderboard', streaks: 'streaks', chat: 'chat', map: 'the map', calendar: 'the calendar', booking: 'booking', shop: 'the shop', photos: 'the photo gallery', gallery: 'the photo gallery', timer: 'the timer', notes: 'notes', login: 'sign-in', profile: 'the profile screen', search: 'search', favourites: 'favourites', reminders: 'reminders', faq: 'the FAQ', pricing: 'pricing', contact: 'the contact form', signup: 'the sign-up form' };
       const have = tasks.map(t => String(t.title || '').toLowerCase()).join(' | ');
-      for (const f of (b && b.features) || []) {
+      const site = ctx.kind === 'site', named = [];
+      // feat/dash-layout: a website's next things are website tasks; an app's are its features, then its own tasks
+      if (!site) for (const f of (b && b.features) || []) {
         const nm = NAMES[f] || String(f).replace(/[-_]/g, ' ');
         if (have.includes(String(f).toLowerCase()) || have.includes(nm.replace(/^the /, ''))) continue;
         add({ id: 'feat:' + f, t: `${tr('Make')} ${nm} ${tr('work')}`, why: tr('You asked for it in your idea'), btn: tr('Add as a task'), act: 'task:' + `Make ${nm} work`, tone: '--ember' });
+        named.push(String(f).toLowerCase().replace(/s$/, ''));
+        if (out.length >= 2) break;
+      }
+      if (b && FM.tasks && (ctx.made || site)) for (const t of FM.tasks(b, ctx.kind || '')) {
         if (out.length >= 3) break;
+        const lo = t.toLowerCase(); if (have.includes(lo) || named.some(n => lo.includes(n))) continue;
+        add({ id: 'mk:' + lo.replace(/[^a-z0-9]+/g, '-').slice(0, 40), t: tr(t), why: tr(site ? 'Next for your website' : 'Next for what you made'), btn: tr('Add as a task'), act: 'task:' + t, tone: '--ember' });
       }
     }
     // 4. catching up
