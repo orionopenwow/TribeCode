@@ -171,7 +171,7 @@ module.exports = function publish({ P, W, base, preview, setupFlow, getMembers, 
       const ch = check(pid);
       if (ch.blocked) throw err(409, 'The safety check found secrets. Fix them before asking to publish.', { findings: ch.findings });
       const p = P.get(pid);
-      const ap = approvals.create({ title: `Publish ${p.name} to a public play link`, details: `Anyone with the link can open it.${ch.findings.length ? `\n\nSafety check warnings (${ch.findings.length}): ${ch.findings.slice(0, 5).map(f => `${f.kind} in ${f.file}`).join('; ')}` : '\n\nThe safety check found nothing.'}`, risk: 'medium', kind: 'publish' }, me);
+      const ap = approvals.create({ title: `Put ${p.name} online with a public link`, details: `Anyone with the link can open it.${ch.findings.length ? `\n\nSafety check warnings (${ch.findings.length}): ${ch.findings.slice(0, 5).map(f => `${f.kind} in ${f.file}`).join('; ')}` : '\n\nThe safety check found nothing.'}`, risk: 'medium', kind: 'publish' }, me);
       db.pending[ap.id] = { project: pid, body: { title: body.title, desc: body.desc, allowRemix: body.allowRemix, slug: body.slug, force: true }, by: me.id, at: new Date().toISOString() }; save();
       if (ap.status === 'approved') return onApproval(ap) || { pending: ap };
       return { pending: ap };
@@ -251,7 +251,7 @@ module.exports = function publish({ P, W, base, preview, setupFlow, getMembers, 
     const mm = /^\/play\/([a-z0-9][a-z0-9-]{0,47})(\/.*)?$/.exec(url.pathname);
     const e = mm && db.entries[mm[1]];
     const head = { 'X-Content-Type-Options': 'nosniff', 'Referrer-Policy': 'no-referrer', 'Content-Security-Policy': CSP };
-    const notFound = () => { res.writeHead(404, { 'Content-Type': 'text/html; charset=utf-8', ...head }); res.end('<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Not published</title><body style="font:16px system-ui;background:#12151A;color:#E6E9EE;display:grid;place-items:center;min-height:90vh;margin:0;padding:16px"><div style="max-width:420px"><h1 style="font-size:22px">Nothing here</h1><p style="color:#9AA4B2;line-height:1.6">This play link was taken down, or never existed.</p></div>'); };
+    const notFound = () => { res.writeHead(404, { 'Content-Type': 'text/html; charset=utf-8', ...head }); res.end('<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Not published</title><body style="font:16px system-ui;background:#12151A;color:#E6E9EE;display:grid;place-items:center;min-height:90vh;margin:0;padding:16px"><div style="max-width:420px"><h1 style="font-size:22px">Nothing here</h1><p style="color:#9AA4B2;line-height:1.6">This link was taken down, or never existed.</p></div>'); };
     if (!e) return notFound();
     if (!mm[2]) { res.writeHead(301, { Location: `/play/${e.slug}/`, ...head }); return res.end(); }
     let rel; try { rel = decodeURIComponent(mm[2]); } catch { return notFound(); }

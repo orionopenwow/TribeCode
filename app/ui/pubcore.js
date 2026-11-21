@@ -14,6 +14,7 @@
 //   assetLinks(pkg, fingerprints)       -> text
 //   pagesPublish(opts)                  -> { repo, url, commit, pagesEnabled, settingsUrl, created }
 //   slug(s), pkgId(login, slug)
+//   linkWords(kind)                     -> { link, the, title, live, liveAt, ready, down, phone, online }  the link's words for a game, a site, an app
 (function (root, factory) {
   if (typeof module === 'object' && module.exports) module.exports = factory();
   else root.TribePubCore = factory();
@@ -455,5 +456,15 @@ jobs:
     return { repo, login, branch, url: url.replace(/\/?$/, '/'), commit: c.d.sha, pagesEnabled, created, settingsUrl: `https://github.com/${repo}/settings/pages`, web: `https://github.com/${repo}` };
   }
 
-  return { slug, pkgId, kindOf, secrets, preflight, finish, pwaFiles, iconSvg, itch, ITCH, wrapperFiles, androidInfo, desktopInfo, assetLinks, pagesPublish, ANDROID_YML, IOS_YML, DESKTOP_YML, ANDROID, DESKTOP };
+  // ---------- the words for the link, by what was made (feat/website-one) ----------
+  // A game gets a play link; a website, a link to your site; an app, a link to try your app. One table for every label.
+  const WORDS = {
+    game: { link: 'play link', the: 'the play link', title: 'Publish to a play link', live: 'Live · play link', liveAt: 'Live at its play link', ready: 'Published: the play link is ready', down: 'Take the play link down? People with the link will see "Nothing here".', phone: 'A play link needs the tribe on a computer. Everything below works from this phone.', online: 'A quick play link needs the tribe online. Everything below works right here, in this browser.' },
+    site: { link: 'link to your site', the: 'the link to your site', title: 'Put your site online with a link', live: 'Live · link to your site', liveAt: 'Live at the link to your site', ready: 'Published: the link to your site is ready', down: 'Take the link to your site down? People with the link will see "Nothing here".', phone: 'A link to your site needs the tribe on a computer. Everything below works from this phone.', online: 'A quick link to your site needs the tribe online. Everything below works right here, in this browser.' },
+    app: { link: 'link to try your app', the: 'the link to try your app', title: 'Get a link to try your app', live: 'Live · link to try your app', liveAt: 'Live at the link to try your app', ready: 'Published: the link to try your app is ready', down: 'Take the link to try your app down? People with the link will see "Nothing here".', phone: 'A link to try your app needs the tribe on a computer. Everything below works from this phone.', online: 'A quick link to try your app needs the tribe online. Everything below works right here, in this browser.' },
+    any: { link: 'link', the: 'the link', title: 'Put it online with a link', live: 'Live · link', liveAt: 'Live at its link', ready: 'Published: the link is ready', down: 'Take the link down? People with the link will see "Nothing here".', phone: 'A link needs the tribe on a computer. Everything below works from this phone.', online: 'A quick link needs the tribe online. Everything below works right here, in this browser.' },
+  };
+  const linkWords = kind => WORDS[kind] || WORDS.any;
+
+  return { linkWords, WORDS, slug, pkgId, kindOf, secrets, preflight, finish, pwaFiles, iconSvg, itch, ITCH, wrapperFiles, androidInfo, desktopInfo, assetLinks, pagesPublish, ANDROID_YML, IOS_YML, DESKTOP_YML, ANDROID, DESKTOP };
 });

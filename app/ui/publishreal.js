@@ -51,6 +51,7 @@
     if (r) { r.classList.add('is-focus'); try { r.scrollIntoView({ block: 'center' }); } catch {} }
   }
   function draw(host, pid, s, form) {
+    try { dispatchEvent(new CustomEvent('tribe:pub-kind', { detail: { pid, kind: s.kind } })); } catch {}   // feat/website-one: publish.js words the link by what it is
     const d = s.dest || {}, pg = d.pages, gh = s.github || {}, can = s.canSend, game = s.kind === 'game', site = s.kind === 'site';
     const bad = (s.checks || []).filter(c => !c.ok && !c.auto), auto = (s.checks || []).filter(c => c.auto);
     const checks = !s.checks.length ? '' : `<div class="pbr-checks" id="pbr-checks"><p class="pbr-checks__h">${bad.length ? esc(T('Before it goes out')) : esc(T('Ready to go'))}</p><ul>${s.checks.map(c => `<li class="${c.ok ? 'is-ok' : c.auto ? 'is-auto' : 'is-bad'}">${ico(c.ok || c.auto ? 'check' : 'x', 14)}<span><b>${esc(T(c.label))}</b>${c.why ? `<small>${esc(c.whyKey ? fill(T(c.whyKey), c.vars) : T(c.why))}</small>` : ''}</span></li>`).join('')}</ul>${auto.length ? `<p class="faint pbr-auto">${esc(T('The ticked-in-grey ones are filled in for you when you publish.'))}</p>` : ''}</div>`;

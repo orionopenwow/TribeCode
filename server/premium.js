@@ -123,8 +123,12 @@ module.exports = function makePremium({ store, isLocal, log = () => {}, accountF
   }
 
   // The calm answer for a gated feature. need: 'plan' | 'credits'
+  // While payments are off (nothing to buy) the words never mention credits, plans or a trial: your own AI is free to connect.
+  const needText = need => need === 'credits'
+    ? (offered() ? 'You are out of AI credits. Connect your own AI for free, or get credits.' : 'The built-in AI is used up for now. Your own AI is free to connect: open Agents and pick yours.')
+    : (offered() ? 'This one comes with Premium. Everything else stays free.' : 'This one is not open here yet. Everything else is free, and your own AI is free to connect.');
   const refuse = (send, res, need, feature, me) => send(res, 402, {
-    error: need === 'credits' ? 'You are out of AI credits. Connect your own AI for free, or get credits.' : 'This one comes with Premium. Everything else stays free.',
+    error: needText(need),
     need, feature, plan: view(me).plan, credits: credits(me),
   });
   // POST /api/docs: a premium template's doc needs the plan
@@ -304,6 +308,6 @@ module.exports = function makePremium({ store, isLocal, log = () => {}, accountF
   }
   // the page we send a browser to: Stripe's own, over https (a test's local fake when TRIBE_TEST=1)
   const payUrl = u => typeof u === 'string' && (/^https:\/\/[a-z0-9.-]+\.stripe\.com\//.test(u) || (stripe.isTest() && /^https?:\/\//.test(u)));
-  return { route, webhook, view, active, reserve, refund, credits, refuse, docBlocked, AI_COST, PREMIUM_TEMPLATES, COST_TABLE, tokensOf, costOf };
+  return { route, webhook, view, active, reserve, refund, credits, refuse, needText, offered, docBlocked, AI_COST, PREMIUM_TEMPLATES, COST_TABLE, tokensOf, costOf };
 };
 module.exports.costOf = costOf; module.exports.tokensOf = tokensOf; module.exports.COST_TABLE = COST_TABLE;

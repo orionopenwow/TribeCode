@@ -103,7 +103,7 @@ def main():
             pg.goto(BASE + "/?skipIntro=1#/docs/website")
             pg.wait_for_function("window.TribeSiteDesigner && window.TribeClient && TribeClient.connected()", timeout=20000)
             pg.wait_for_selector("#wb-design", timeout=15000)
-            pg.wait_for_function("/No design yet/.test(document.querySelector('#wb-designs').textContent) && document.querySelector('#wb-design').textContent === 'Start a design'", timeout=8000)   # Files › Website lists the designs
+            pg.wait_for_function("document.querySelector('#wb-root').dataset.state === 'none' && document.querySelector('#wb-design').textContent === 'Make a website'", timeout=8000)   # feat/website-one: Files › Website, no site yet: one button
             pg.click("#wb-design")
             pg.wait_for_selector("#wdz:not([hidden]) #wdz-start:not([hidden]) .wdz-kmain .wdz-kind", timeout=10000)   # p5-start: what kind of site first
             pg.click("#wdz-start [data-kind='all']")

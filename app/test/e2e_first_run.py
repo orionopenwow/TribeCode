@@ -366,8 +366,7 @@ def main():
             d1 = len(api("/docs", token=tok, project=pid)[1].get("docs", []))
             assert d1 == d0 + 1, f"a double click on + made {d1 - d0} docs"
             host.click("#wt-website"); host.wait_for_selector("#wb-root")
-            host.fill("#wb-headline", "Lantern Garden: light the way home"); host.dblclick("#wb-build")
-            host.wait_for_function("!!document.querySelector('#wb-root iframe, #wb-root .wb-live, #wb-root [data-built]') || /Live|Built|Updated|Published/i.test(document.querySelector('#wb-root').innerText)", timeout=20000)
+            host.wait_for_selector("#wb-root #wb-design", timeout=20000)   # feat/website-one: one button into the website designer
             shot(host, "21-website"); audit(host, "website")
             dctx = b.new_context(viewport={"width": 1440, "height": 900}); dpg = dctx.new_page(); watch(dpg, "demo")
             dpg.goto(BASE + "/?demo=showcase&tour=fast")

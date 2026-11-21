@@ -143,7 +143,8 @@ def main():
             pg.goto(BASE + "/?skipIntro=1#/docs/website")
             pg.wait_for_function("window.TribeSiteDesigner && window.TribeFlint && TribeFlint.mount && window.TribeFlintMax && window.TribeClient && TribeClient.connected()", timeout=20000)
             pg.wait_for_selector("#wb-design", timeout=15000); pg.click("#wb-design")
-            pg.wait_for_selector("#wdz:not([hidden]) #wdz-start:not([hidden]) .wdz-tpl", timeout=10000)
+            pg.wait_for_selector("#wdz:not([hidden]) #wdz-start:not([hidden]) [data-kind='all']", timeout=10000); pg.click("#wdz-start [data-kind='all']"); pg.wait_for_selector("#wdz-start .wdz-tpl", timeout=10000)   # p5-start: kinds first, then every template
+            pg.evaluate("TribeSiteDesigner.flint(true)"); pg.wait_for_selector("#flm-in-designer", state="visible", timeout=8000)   # the creator shell's Flint dock opens on demand
             fask(pg, "designer", "website for my app")
             assert cfg(pg)["template"] == "saas", cfg(pg)["template"]
             mode0, hist0 = cfg(pg)["theme"]["mode"], pg.evaluate("TribeSiteDesigner.state().hist")

@@ -390,7 +390,7 @@
     if (empty) {
       frame = null; helperAlive = false;
       const sd = site && site.started;
-      if (sd) {   // started, but nothing to show here yet (a site in the repo, or builder settings): open that, don't offer a fresh one
+      if (sd && sd.kind !== 'config') {   // started, but nothing to show here yet (a site in the repo): open that, don't offer a fresh one (old builder settings alone are not a site: the designer starts one)
         holder.innerHTML = `<div class="pvw-empty pvw-build pvw-started"><span class="eyebrow">Website · already started</span><h3>Your team started the website</h3>
           <p>It's in <code>${esc(sd.path)}</code> (${esc(sd.label)}). Pick up where they left off in Files › Website${sd.kind === 'repo' ? ', or open the code' : ''}.</p>
           <div class="pvw-brow"><button type="button" class="btn primary" data-act="builder">Open the website</button>${sd.kind === 'repo' && /^(web\/)?index\.html$/.test(sd.path) && info.hasIndex ? `<button type="button" class="btn" data-act="toapp">${ico(I.app)} Show it</button>` : ''}</div></div>`;

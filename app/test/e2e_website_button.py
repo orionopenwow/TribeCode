@@ -1,8 +1,9 @@
 """The Website button finds a website the team already started (feat/tasks-company, server/showcase.js started()).
 A built page in the repo's site/, a site someone made in the repo (website/), a site-builder draft (.tribe/website) or
-builder settings with nothing built: the API says so (website.started), Files › Website says where it is with a way
-to open it, and the preview's Website source shows the page (or "Your team started the website"), never the empty
-"Make the project's website" card. A project with nothing started still gets that card. No project: a clear next step.
+builder settings with nothing built: the API says so (website.started). Files › Website (feat/website-one) shows an
+older page read-only with Bring it into the designer, or says where the code's site is with Open the code; the preview's
+Website source shows the page (or "Your team started the website"). Builder settings alone and nothing started get the
+designer's "Design the project's website" card. No project: a clear next step.
 Usage: python app/test/e2e_website_button.py
 """
 import json, os, subprocess, tempfile, time, urllib.request, urllib.error
@@ -77,42 +78,41 @@ def main():
                 pg.wait_for_function("document.querySelector('#pvw-frame') && (document.querySelector('#pvw-frame iframe') || document.querySelector('#pvw-frame .pvw-empty'))", timeout=10000); pg.wait_for_timeout(500)
                 return pg.inner_text("#pvw-frame") if pg.locator("#pvw-frame .pvw-empty").count() else "IFRAME:" + (pg.get_attribute("#pvw-frame iframe", "src") or "")
 
-            # 1. a built page in the repo: the view says where, Show the website opens it
+            # feat/website-one: an older page (built, or a builder draft) shows read-only with Bring it into the designer;
+            # a site in the code says where it is with Open the code; builder settings alone are not a site
+            state = lambda: pg.get_attribute("#wb-root", "data-state")
+            # 1. a built page in the repo
             website(built)
-            assert pg.locator("#wb-started:not(.hidden)").is_visible() and "site/index.html" in pg.inner_text("#wb-started")
-            pg.click("#wb-st-show")
-            pg.wait_for_selector("#pvw-frame iframe", timeout=10000)
-            assert "/website/preview" in pg.get_attribute("#pvw-frame iframe", "src")
-            fr = pg.frame_locator("#pvw-frame iframe"); fr.locator("h1").wait_for(timeout=8000)
+            assert state() == "old" and "Bring it into the designer" in pg.inner_text("#wb-root"), pg.inner_text("#wb-root")
+            assert "/website/preview" in pg.get_attribute("#wb-frame", "src")
+            fr = pg.frame_locator("#wb-frame"); fr.locator("h1").wait_for(timeout=8000)
             assert "Lantern Run: the site" in fr.locator("h1").inner_text()
-            pg.evaluate("TribePreview.close && TribePreview.close()")
             # 2. a site someone made in the repo's website/ folder
             website(inrepo)
-            assert "website/index.html" in pg.inner_text("#wb-started") and pg.locator("#wb-st-code").is_visible()
+            assert state() == "repo" and "website/index.html" in pg.inner_text("#wb-root") and pg.locator("#wb-code").is_visible(), (state(), pg.inner_text("#wb-root"))
             t = preview_site(); assert EMPTY not in t and "already started" in t.lower() and "website/index.html" in t, t
             # 3. a builder draft
             website(draft)
-            assert pg.locator("#wb-started").is_hidden(), "the draft shows in the builder itself"
+            assert state() == "old" and "/website/draft" in pg.get_attribute("#wb-frame", "src")
             t = preview_site(); assert t.startswith("IFRAME:") and "/website/draft" in t, t
-            # 4. builder settings, nothing built yet
+            # 4. builder settings, nothing built yet: no site, so the designer starts one
             website(cfg)
-            t = preview_site(); assert EMPTY not in t and "already started" in t.lower(), t
-            pg.click("#pvw-frame [data-act='builder']"); pg.wait_for_selector("#view-website:not(.hidden)", timeout=8000)
+            assert state() == "none"
+            t = preview_site(); assert EMPTY in t, t
             # 5. nothing started: the one-tap card is right
             website(none)
-            assert pg.locator("#wb-started").is_hidden()
+            assert state() == "none" and pg.locator("#wb-design").is_visible()
             t = preview_site(); assert EMPTY in t, t
             pg.evaluate("TribePreview.close && TribePreview.close()")
 
-            # feat/setup-github: the Website tab draws no orange line down the window. The preview card is a hero card;
-            # its accent stripe is positioned against the card, so the card must stay positioned at every width.
+            # feat/setup-github: the Website tab draws no orange line down the window and the card sits in the page
             for w in (1360, 1100, 900, 390):
                 pg.set_viewport_size({"width": w, "height": 900}); website(draft); pg.wait_for_timeout(300)
-                r = pg.evaluate("""(() => { const c = document.querySelector('#view-website .wb-preview'), cs = getComputedStyle(c), b = c.getBoundingClientRect();
+                r = pg.evaluate("""(() => { const c = document.querySelector('#view-website .wb1-card'), b = c.getBoundingClientRect();
                     const loose = [...document.querySelectorAll('.hero-card')].filter(e => e.offsetParent && getComputedStyle(e).position === 'static').map(e => e.className);
-                    return { pos: cs.position, stripe: getComputedStyle(c, '::before').position, left: Math.round(b.left), loose }; })()""")
-                assert r["pos"] in ("relative", "sticky") and r["stripe"] == "absolute" and not r["loose"], (w, r)
-                if w > 820: assert r["left"] > 200, (w, r)   # the card (and so its stripe) sits in the page, not at the window's edge
+                    return { left: Math.round(b.left), right: Math.round(b.right), loose }; })()""")
+                assert not r["loose"] and r["right"] <= w + 1, (w, r)
+                if w > 820: assert r["left"] > 200, (w, r)
             pg.set_viewport_size({"width": 1360, "height": 900})
 
             # Files › Websites: the project's website shows as a card with a live preview; none yet: a proper empty state
@@ -125,7 +125,7 @@ def main():
             pg.wait_for_selector("#fg-site", timeout=8000)
             assert "Ember Cafe" in pg.inner_text("#fg-site-title") and "Last saved" in pg.inner_text("#fg-site-meta") and "Not published yet" in pg.inner_text("#fg-site-meta")
             fr = pg.locator("#fg-site-pv iframe"); assert fr.count() == 1 and "/website/draft" in fr.get_attribute("src") and fr.get_attribute("sandbox") == "", "a live preview, with scripts off"
-            assert pg.inner_text("#fg-site-open") == "Open in the website builder" and pg.inner_text("#fg-site-pub") == "Publish"
+            assert pg.inner_text("#fg-site-open") == "Open the website" and pg.locator("#fg-site-pub").count() == 0, "an older site: open it (Bring it into the designer is there), nothing to publish from here"
             assert pg.locator("#fg-empty").count() == 0 and pg.inner_text(".fx-tabs [data-dk='sites'] [data-n]") == "1"
             pg.click(".fx-tabs [data-dk='all']"); pg.wait_for_selector(".fx-card[data-site]", timeout=5000)   # and it is one of the files under All
             pg.click(".fx-tabs [data-dk='sites']"); pg.wait_for_selector("#fg-site")

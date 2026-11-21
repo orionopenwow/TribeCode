@@ -138,7 +138,8 @@ def main():
             pg.goto(BASE + "/?skipIntro=1#/docs/website")
             pg.wait_for_function("window.TribeSiteDesigner && window.TribeFlint && TribeFlint.mount && window.TribeClient && TribeClient.connected()", timeout=20000)
             pg.wait_for_selector("#wb-design", timeout=15000); pg.click("#wb-design")
-            pg.wait_for_selector("#wdz:not([hidden]) #wdz-start:not([hidden]) .wdz-tpl", timeout=10000)
+            pg.wait_for_selector("#wdz:not([hidden]) #wdz-start:not([hidden]) [data-kind='all']", timeout=10000); pg.click("#wdz-start [data-kind='all']"); pg.wait_for_selector("#wdz-start .wdz-tpl", timeout=10000)   # p5-start: kinds first, then every template
+            pg.evaluate("TribeSiteDesigner.flint(true)")   # the creator shell's Flint dock opens on demand
             chips = same_component(pg, "designer")
             assert any("link" in c.lower() for c in chips) and any("buttons work" in c.lower() for c in chips), chips
             out = fask(pg, "designer", "link tree website")

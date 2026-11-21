@@ -260,7 +260,13 @@ ${logo}<text x="34" y="19" font-size="8" font-family="sans-serif" fill="${pal.in
   function list(pid) {
     const v = loadV(pid), st = showcase.load(pid);
     const out = v.versions.slice().reverse().map(x => ({ id: x.id, at: x.at, by: x.by, byName: nameOf(x.by), note: x.note, auto: !!x.auto, layout: (x.snap.gen || {}).layout, headline: (((x.snap.gen || {}).copy || {}).hero || {}).title || (x.cfg && ((((x.cfg.pages || [])[0] || {}).blocks || []).find(b => b.type === 'hero' || b.type === 'links') || { props: {} }).props.title) || '', designer: !!x.cfg, thumb: x.cfg && !x.snap.gen ? cfgThumb(x.cfg) : thumbUrl(pid, x.snap) }));
-    return { versions: out, saved: out.filter(x => !x.auto), recent: out.filter(x => x.auto).slice(0, 12), undo: v.undo.length, current: st.gen ? { thumb: thumbUrl(pid, snap(st)), headline: ((st.gen.copy || {}).hero || {}).title || '' } : null };
+    return { versions: out, saved: out.filter(x => !x.auto), recent: out.filter(x => x.auto).slice(0, 12), undo: v.undo.length, current: currentOf(pid, st) };
+  }
+  // the website as it is now: the designer's site first (the one website tool), else an older builder draft
+  function currentOf(pid, st) {
+    const cfg = cfgOf(pid);
+    if (cfg) return { thumb: cfgThumb(cfg), headline: ((((cfg.pages || [])[0] || {}).blocks || []).find(b => b.type === 'hero' || b.type === 'links') || { props: {} }).props.title || cfg.name || '', designer: true };
+    return st.gen ? { thumb: thumbUrl(pid, snap(st)), headline: ((st.gen.copy || {}).hero || {}).title || '' } : null;
   }
 
   async function route(req, res, { m, b, parts, me, readBody, send, fail }) {

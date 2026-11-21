@@ -4,7 +4,7 @@
 //   1 Start a project (the Onboarding Checklist)   2 Write the vision        3 Friends join, the checklist fills
 //   4 Add context (a file dropped in)               5 Messages               6 Task Board (create, drag to Done)
 //   7 Agents Hub (agents at work, a hand-off)       8 Flint answers + points 9 Preview: the game, played
-//   10 A doc written live with co-editors           11 The website builder   12 A vote passes, the milestone ships
+//   10 A doc written live with co-editors           11 The website designer  12 A vote passes, the milestone ships
 //   13 + Add a widget                               14 Approve from your phone   15 Make your own tribe
 // Phones (<= 820 px) play a shorter vertical cut (about 90 s) with touch dots instead of arrows.
 // A slim chapter bar sits at the bottom: chapter segments + title, time / total, Pause/Play, Skip, 2x, Try it yourself
@@ -634,24 +634,16 @@
       await settle(() => [...document.querySelectorAll('[class*="caret"], [class*="cursor"]')].find(e => /Jay|Maya/.test(e.textContent || '') || e.style.borderColor), 'remote carets drawn', 1500);
       await wait(1200);
     } },
-    { id: 'website', title: 'The website', flint: ["#wt-website, #nest-website", "Click Website: your project gets a public page."], after: "The page was built from what you already wrote. Publish it when you like it.", cap: 'A public page for your project, built from what you already wrote.', dur: 17000, async run() {
+    { id: 'website', title: 'The website', flint: ["#wt-website, #nest-website", "Click Website: your project gets a public page."], after: "Pick what kind of site, then a template. Every word is yours to change, and Flint helps for free.", cap: 'A public page for your project, made in the website designer.', dur: 17000, async run() {
       if (window.TribeShell && window.TribeShell.go) window.TribeShell.go('website'); else if (window.TribeWebsite) window.TribeWebsite.open();
       const tab = $('#wt-website'); if (tab && !phone()) await click('me', tab, { noClick: true });
-      const head = await settle('#wb-headline', 'website builder open', 4000);
-      if (head) {
-        await click('me', head, { noClick: true, dx: 0.2 });
-        head.value = ''; await type(head, 'Lantern Run', 26);
-        const tag = $('#wb-tagline'); if (tag) { await click('me', tag, { noClick: true, dx: 0.2 }); tag.value = ''; await type(tag, 'Carry a little flame. Light up the night.', 36); }
-        await wait(300);
-        const build = $('#wb-build'); if (build) await click('me', build);
-      }
-      const fr = await settle('#wb-frame', 'the built page in the preview', 4000);
-      const pv = fr && fr.closest('.wb-preview'); if (pv) pv.scrollIntoView({ block: 'start', behavior: calm() ? 'instant' : 'smooth' });
-      await real(fast ? 50 : 900);   // let the smooth scroll land before anything else moves
-      if (fr) await move('me', fr, 1200, { dx: 0.55, dy: 0.3 });
-      await wait(2200);   // time to read the built page
-      if (fr) await move('me', fr, 1600, { dx: 0.45, dy: 0.7 });
-      await wait(2600);
+      const make = await settle('#wb-design', 'the website page open', 4000);
+      if (make) { await click('me', make); }
+      const start = await settle('#wdz-start:not([hidden]) .wdz-kind', 'the website designer open', 5000);
+      if (start) await move('me', start, 1200, { dx: 0.5, dy: 0.5 });
+      await wait(3200);   // time to see the kinds of site
+      try { if (window.TribeSiteDesigner) window.TribeSiteDesigner.close(); } catch {}
+      await wait(600);
     } },
     { id: 'ship', title: 'Vote and ship', flint: ["#wt-board, #nest-ws-tasks, #tabbar [data-nav=\"tasks\"]", "Big changes get a vote from the team. Click Board."], after: "The vote passed and the milestone shipped. Everyone who helped gets the credit.", cap: 'Big changes get a vote. When the milestone is done, it ships 🎉', dur: 14000, pdur: 14000, async run() {
       if (view() !== 'tasks') A().show('tasks');
