@@ -28,6 +28,9 @@
   function here() {
     const pr = proj(), W = window, v = document.body.dataset.view || '';
     try { const sd = W.TribeSiteDesigner && W.TribeSiteDesigner.state(); if (sd && sd.open) return { k: 'site', id: sd.pid || pr, l: 'Website designer', pr: sd.pid || pr }; } catch {}
+    // feat/p10-office: the other full-screen creators, so the office's desk screens (and avatars) can say where someone is
+    try { const ac = W.TribeAppCreator && W.TribeAppCreator.state && W.TribeAppCreator.state(); if (ac && ac.open) return { k: 'view', id: 'app-creator', l: 'App Creator', pr: ac.pid || pr }; } catch {}
+    try { if (W.TribeMotionStudio && W.TribeMotionStudio.isOpen && W.TribeMotionStudio.isOpen()) return { k: 'view', id: 'motion', l: 'Motion Studio', pr }; } catch {}
     if (document.body.classList.contains('pvw-focus')) return { k: 'preview', id: pr, l: 'Preview', pr };
     try { const cv = W.TribeCanvas && W.TribeCanvas.state(); if (cv && cv.open) return { k: 'canvas', id: cv.file || 'main', l: cv.name || 'Design canvas', pr }; } catch {}
     if (v === 'tasks' && W.TribeTasks && W.TribeTasks.current) {

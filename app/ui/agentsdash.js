@@ -12,12 +12,7 @@
 // TribeCoord.open(tab), TribeShell.go(key)) still work: an unpinned view shows as a temporary tab.
 // Hooks: coord.js calls render(el) for its 'agents' tab; shell.js asks tabs(list, cur), tabExtra(key), plusHtml()
 // and sig() while drawing the Agents Hub's tab line.
-//   // feat/p10-office: while the hub waits for a first agent, it turns into the dashboard by itself when one connects;
-  // the office and the agents switch repaint it too
-  { let t = null; const again = () => { clearTimeout(t); t = setTimeout(() => { if (lastEl && lastEl.isConnected && onView()) render(lastEl); }, 500); };
-    if (C && C.on) { C.on('presence', ms => { if (lastEl && lastEl.dataset.hub === 'connect' && (ms || []).some(m => m.role === 'agent' && m.online)) again(); });
-      C.on('ws', m => { if (m && m.type === 'office' && lastEl) { if (window.TribeOffice) window.TribeOffice.load(true).then(again); else again(); } }); } }
-  window.TribeAgentsDash = { render, tabs, tabExtra, plusHtml, sig, pins, pin, unpin, openMenu }
+//   window.TribeAgentsDash = { render, tabs, tabExtra, plusHtml, sig, pins, pin, unpin, openMenu }
 (function () {
   'use strict';
   const C = window.TribeClient;
@@ -272,7 +267,9 @@
     el._d = d; painted = seq;
     const O = window.TribeOffice, os = O && O.state(), stale = d.stale ? `<p class="ad-stale faint" id="ad-stale">${d.stale > 0 ? `The tribe isn't answering right now. This is what was here ${esc(ago(new Date(d.stale).toISOString()))}.` : 'The tribe isn\'t answering right now.'}</p>` : '';
     const how = F ? `<details class="ad-how" id="ad-how"><summary>How agents work here</summary>${F.how()}</details>` : '';
-    const anyAgent = (d.agents || []).length || (d.fleet && (d.fleet.agents || []).length);
+    // an agent counts once it has connected at least once: making a connect key adds an idle, never-seen agent, which
+    // must not flip the page away from the connect flow before anything has joined
+    const anyAgent = d.fleet ? (d.fleet.agents || []).some(a => a.everSeen || a.online) : (d.agents || []).some(a => a.online || a.where);
     const state = os && os.agentsOff ? 'off' : anyAgent ? 'dash' : 'connect';
     el.dataset.hub = state;
     if (state === 'off') {
@@ -338,5 +335,10 @@
   }
   C.on('project', () => { moreAgents = false; moreOwners = false; cfCache = { at: 0, pid: '', d: null }; });
 
+  // feat/p10-office: while the hub waits for a first agent, it turns into the dashboard by itself when one connects;
+  // the office and the agents switch repaint it too
+  { let t = null; const again = () => { clearTimeout(t); t = setTimeout(() => { if (lastEl && lastEl.isConnected && onView()) render(lastEl); }, 500); };
+    if (C && C.on) { C.on('presence', ms => { if (lastEl && lastEl.dataset.hub === 'connect' && (ms || []).some(m => m.role === 'agent' && m.online)) again(); });
+      C.on('ws', m => { if (m && m.type === 'office' && lastEl) { if (window.TribeOffice) window.TribeOffice.load(true).then(again); else again(); } }); } }
   window.TribeAgentsDash = { render, tabs, tabExtra, plusHtml, sig, pins, pin, unpin, openMenu, closeMenu };
 })();

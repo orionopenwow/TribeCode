@@ -565,7 +565,7 @@ askai = require('./askai')({ store: baseStore, id, str, P, getMembers: () => mem
 const compute = require('./compute')({ store: baseStore, str, getMembers: () => members, isOnline: mid => online.has(mid), broadcast });   // shared compute (Helpers list)
 const openspace = require('./openspace')({ P, broadcast, isLocal, log: m => console.log('  ' + m) });   // Open Space office (optional, host-only)
 // feat/p10-office: the built-in office (desks with live screens for people and agents) and the tribe's "agents off" switch
-const office = require('./office')({ store: baseStore, getMembers: () => members, presenceFor, agentSeen, claims, loadTasks: () => loadTasks(), nameOf, broadcast: m => broadcast(m),
+const office = require('./office')({ store: baseStore, getMembers: () => members, presenceFor, placesFor: me => (places ? places.snapshot(me).places : {}), agentSeen, claims, loadTasks: () => loadTasks(), nameOf, broadcast: m => broadcast(m),
   changeReqs: me => { try { return changeReq.list(P.current(), me) || []; } catch { return []; } }, canSet: me => !!me && (me.role === 'host' || perms.atLeast(me, 'admin')) });
 const shelf = require('./shelf')({ P, root: require('./tpldir').root(), docs, postChat, str, nameOf });   // starter shelf: tools, libraries, Claude skills
 const assetLib = require('./assets')({ P, root: require('./tpldir').root(), base: baseStore, postChat, str, nameOf });   // v0.25: the open asset library (server/assets.js)

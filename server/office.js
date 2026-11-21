@@ -15,7 +15,7 @@
 // Broadcasts { type: 'office' } when the switches change.
 'use strict';
 
-module.exports = function office({ store, getMembers, presenceFor, agentSeen, claims, loadTasks, changeReqs, nameOf, broadcast, canSet }) {
+module.exports = function office({ store, getMembers, presenceFor, placesFor = () => ({}), agentSeen, claims, loadTasks, changeReqs, nameOf, broadcast, canSet }) {
   const FILE = 'office.json';
   const read = () => { try { const v = store.readJSON(FILE, {}); return { on: !!v.on, agentsOff: !!v.agentsOff }; } catch { return { on: false, agentsOff: false }; } };
   let cfg = read();
@@ -41,6 +41,7 @@ module.exports = function office({ store, getMembers, presenceFor, agentSeen, cl
   function desks(me) {
     const now = Date.now();
     const pres = presenceFor(me) || [];
+    const places = (() => { try { return placesFor(me) || {}; } catch { return {}; } })();   // the place each person has open (presence.js), as this viewer may see it
     const byId = new Map((getMembers() || []).map(m => [m.id, m]));
     const tasks = (() => { try { return loadTasks() || []; } catch { return []; } })();
     const cl = (() => { try { return claims.list() || []; } catch { return []; } })();
@@ -54,7 +55,7 @@ module.exports = function office({ store, getMembers, presenceFor, agentSeen, cl
       const done = mine.filter(t => t.status === 'done' && t.updated && now - Date.parse(t.updated) < HANDED_MS)[0] || null;
       const files = cl.filter(c => c.by === p.id).map(c => c.path).slice(0, 3);
       const d = { id: p.id, name: p.name, color: p.color || null, kind: agent ? 'agent' : 'person', agentKind: p.agentKind || null,
-        online: !!p.online, away: !!(p.away || p.idle), paused: !!p.paused, where: p.where || null, since: p.since || null,
+        online: !!p.online, away: !!(p.away || p.idle), paused: !!p.paused, where: p.role === 'agent' ? null : (places[p.id] || null), since: p.since || null,
         task: doing ? { id: doing.id, title: String(doing.title || '').slice(0, 90) } : null, files, lines: [], spot: 'desk', state: 'off' };
       if (agent) {
         const seen = agentSeen && agentSeen.get(p.id);
@@ -113,7 +114,7 @@ module.exports = function office({ store, getMembers, presenceFor, agentSeen, cl
     }
     if (m === 'PUT' || m === 'POST') {
       if (!canSet(me)) return fail(res, 403, 'only the host or an admin can change this');
-      const b = await readBody();
+      const b = (await readBody(req)) || {};
       if (typeof b.on === 'boolean') cfg.on = b.on;
       if (typeof b.agentsOff === 'boolean') cfg.agentsOff = b.agentsOff;
       save();

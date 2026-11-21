@@ -9,6 +9,8 @@
 (function () {
   const C = window.TribeClient;
   const $ = (s, r = document) => r.querySelector(s);
+  // the Open Space extra stays open across repaints once someone opens it (toggle doesn't bubble, so listen in capture)
+  document.addEventListener('toggle', e => { if (e.target && e.target.classList && e.target.classList.contains('ah-os-more')) window.__ahOsMore = e.target.open; }, true);
   const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const toast = m => (window.TribeApp && window.TribeApp.toast ? window.TribeApp.toast(m) : console.log(m));
   const NAME = 'agents-hub';
@@ -82,7 +84,7 @@
     if (quiet && document.activeElement && document.activeElement.closest && document.activeElement.closest('#view-agents-hub input, #view-agents-hub select')) return;
     let root = sec.querySelector('#fl-root');
     if (!root) { sec.innerHTML = `<div class="ah ah-fleet">${head()}<div id="fl-root"></div></div>`; root = sec.querySelector('#fl-root'); }
-    const officeSec = () => (C.hasToken && C.hasToken() ? `<section class="fl-sec" id="ah-office-sec"><div class="sec-head"><span class="eyebrow">Optional</span><h2>The office</h2></div><div id="ah-office-floor"></div><details class="ah-os-more"><summary>Also: Open Space, a pixel-art office for Claude Code sessions on this computer</summary><div id="ah-office">${officeHtml()}</div></details></section>` : '');
+    const officeSec = () => (C.hasToken && C.hasToken() ? `<section class="fl-sec" id="ah-office-sec"><div class="sec-head"><span class="eyebrow">Optional</span><h2>The office</h2></div><div id="ah-office-floor"></div><details class="ah-os-more"${window.__ahOsMore ? " open" : ""}><summary>Also: Open Space, a pixel-art office for Claude Code sessions on this computer</summary><div id="ah-office">${officeHtml()}</div></details></section>` : '');
     return window.TribeFleet.render(root, { scope: 'all', alive: () => open, extra: () => officeSec() + (window.TribeAIBridge ? window.TribeAIBridge.guideHtml() : ''), after: () => { wireOffice(); if (C.hasToken && C.hasToken()) C.api('/openspace').then(o => { office = o; drawOffice(); }).catch(() => {}); } });
   }
   const head = () => fleet ? `<header class="sec-head ah-head"><span class="eyebrow">Every project</span><h1>Agent fleet</h1></header>` : `<header class="sec-head ah-head"><span class="eyebrow">Solo mode</span><h1>Your agents</h1></header>`;
@@ -153,7 +155,7 @@
         <div class="ah-connect${connectKind ? '' : ' hidden'}" id="ah-connect">${connectKind ? connectPanel() : ''}</div></section>
       ${window.TribeAIBridge ? window.TribeAIBridge.guideHtml() : ''}
       <section class="sec"><div class="sec-head"><span class="eyebrow">At home</span><h2><span class="emo" aria-hidden="true">🏠</span>Local models</h2></div>${modelsHtml(models, s)}</section>
-      <section class="sec" id="ah-office-sec"><div class="sec-head"><span class="eyebrow">Optional</span><h2>The office</h2></div><div id="ah-office-floor"></div><details class="ah-os-more"><summary>Also: Open Space, a pixel-art office for Claude Code sessions on this computer</summary><div id="ah-office">${officeHtml()}</div></details></section>
+      <section class="sec" id="ah-office-sec"><div class="sec-head"><span class="eyebrow">Optional</span><h2>The office</h2></div><div id="ah-office-floor"></div><details class="ah-os-more"${window.__ahOsMore ? " open" : ""}><summary>Also: Open Space, a pixel-art office for Claude Code sessions on this computer</summary><div id="ah-office">${officeHtml()}</div></details></section>
     </div>`;
     if (fleet) { const o = $('#ah-office-sec'), first = sec.querySelector('.ah > .sec'); if (o && first && o !== first) first.before(o); }   // Agent fleet: the Office leads
     wire();

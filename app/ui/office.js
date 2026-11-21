@@ -11,7 +11,7 @@
   const C = window.TribeClient; if (!C) return;
   const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const tr = s => (window.TribeI18n && window.TribeI18n.t ? window.TribeI18n.t(s, s) : s);
-  const initials = n => (String(n || '?').trim().split(/\s+/).map(w => [...w][0]).slice(0, 2).join('') || '?').toUpperCase();
+  const initials = n => (String(n || '?').trim().split(/\s+/).filter(w => /^[\p{L}\p{N}]/u.test(w)).map(w => [...w][0]).slice(0, 2).join('') || '?').toUpperCase();   // "Claude · Maya" -> CM
   const LS_HIDE = 'tribecode.office.hide';
   const reduce = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
   let data = null, loading = null, last = 0;
@@ -63,8 +63,8 @@
     const live = d.state === 'active' && lines.length;
     return `<article class="of-desk" data-desk="${esc(d.id)}" data-role="${roleOf(d)}" data-state="${esc(d.state)}" tabindex="0" role="button" aria-label="${esc(d.name)}: ${esc(status(d))}${lines.length ? '. ' + esc(lines.join('. ')) : ''}">
       <div class="of-screen${live ? ' on' : ' saver'}">${live ? `<ul>${lines.map((l, i) => `<li>${esc(l)}${i === lines.length - 1 ? '<i class="of-caret"></i>' : ''}</li>`).join('')}</ul>` : `<span class="of-saver">${esc(d.state === 'off' ? tr('Away from desk') : status(d))}</span>`}</div>
-      <div class="of-chair">${here ? avatar(d) : '<span class="of-av of-empty" aria-hidden="true"></span>'}</div>
-      <footer class="of-name"><b>${esc(d.name)}</b><span>${esc(d.kind === 'flint' ? tr('Built-in helper') : d.kind === 'agent' ? tr('AI helper') : tr('Person'))}</span></footer>
+      <footer class="of-who"><span class="of-chair">${here ? avatar(d) : '<span class="of-av of-empty" aria-hidden="true"></span>'}</span>
+        <span class="of-name"><b>${esc(d.name)}</b><span>${esc(d.kind === 'flint' ? tr('Built-in helper') : d.kind === 'agent' ? tr('AI helper') : tr('Person'))}${!here && d.state !== 'off' ? ' · ' + esc(status(d)) : ''}</span></span></footer>
     </article>`;
   }
   function zone(id, title, list, extra = '') {
