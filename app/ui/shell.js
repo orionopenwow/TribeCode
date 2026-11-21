@@ -197,7 +197,10 @@
       bar.innerHTML = `<span class="eyebrow wt-eye">${esc(WS[w].label)}</span><div class="wt-row" role="tablist" aria-label="${esc(WS[w].label)}">${list.map(t => { const n = COUNT[t.key] && counts[t.key] ? counts[t.key] : 0;
         return `<button role="tab" class="wt ${t.key === cur ? 'on' : ''}" id="wt-${esc(t.key)}" data-tab="${esc(t.key)}" aria-selected="${t.key === cur}" tabindex="${t.key === cur ? 0 : -1}">${tabIco(t.key)}${esc(t.tab)}${n ? `<span class="n ${HOT[t.key] ? 'hot' : ''}">${n > 99 ? '99+' : n}</span>` : ''}${ad ? ad.tabExtra(t.key) : ''}</button>`; }).join('')}${ad ? ad.plusHtml() : ''}</div>`; }
     }
-    bar.classList.remove('hidden');
+    // feat/p10-office: the Agents hub with nothing pinned had a bare "+" row under its title; with one tab or none there is no row
+    // (the hub's own "More views" opens the same menu)
+    if (ad && list.length <= 1) { if (bar.innerHTML) bar.innerHTML = ''; bar.classList.add('hidden'); }
+    else bar.classList.remove('hidden');
     const onTab = bar.querySelector('.wt.on'), row = bar.querySelector('.wt-row');
     if (onTab && row && (onTab.offsetLeft < row.scrollLeft || onTab.offsetLeft + onTab.offsetWidth > row.scrollLeft + row.clientWidth)) row.scrollLeft = onTab.offsetLeft - 12;   // the current tab stays in view
     const want = `#/${w}/${d.slug}`;

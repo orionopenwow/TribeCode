@@ -101,8 +101,8 @@ def main():
             wait_text(host, "#ad-hero", "Connect your AI")   # feat/fleet: the hero is the next step
             host.wait_for_selector("#ad-hero #fl-cmd")
             assert cards(host) == ["#ad-hero"], cards(host)
-            assert tabs(host) == ["Dashboard"], tabs(host)
-            host.wait_for_selector("#view-tabs #wt-plus", state="visible")
+            assert tabs(host) == [], tabs(host)   # p10: one tab, no tab row
+            assert host.locator("#view-tabs #wt-plus:visible").count() == 0, "no bare + row"
             assert host.evaluate("location.hash") == "#/agents/agents"
             wait_text(host, "#crumb-label", "Agents Hub › Dashboard")
             fs = host.evaluate("parseFloat(getComputedStyle(document.querySelector('#ad-hero .fl-title')).fontSize)")
@@ -115,7 +115,7 @@ def main():
             host.wait_for_selector("#wt-mcp-directory.on .wt-x.temp")
             assert tabs(host) == ["Dashboard", "MCP"], tabs(host)
             host.click("#wt-mcp-directory .wt-x"); host.wait_for_selector("#view-coord:not(.hidden) #ad-hero")
-            assert tabs(host) == ["Dashboard"], tabs(host)
+            assert tabs(host) == [], tabs(host)   # p10: one tab, no tab row
 
             # ---- a friend with an agent at work, a review and a hand-off waiting
             inv = ok(api("/invites", "POST", {"hours": 1, "maxUses": 2, "role": "builder"}, token=token), "invite")["invite"]
@@ -152,10 +152,10 @@ def main():
             host.click("#ad-owners [data-ad-open='ownership']"); host.wait_for_function("TribeCoord.tab() === 'ownership'")
             host.wait_for_selector("#wt-ownership.on .wt-x.temp")
             host.click("#wt-agents"); host.wait_for_selector("#ad-hero")
-            assert tabs(host) == ["Dashboard"], tabs(host)
+            assert tabs(host) == [], tabs(host)   # p10: one tab, no tab row
 
             # ---- + pins a tab; it stays across a reload; × unpins it
-            host.click("#wt-plus"); host.wait_for_selector("#ad-menu [data-ad-pin='reviews']")
+            host.click("#ad-views"); host.wait_for_selector("#ad-menu [data-ad-pin='reviews']")
             labels = host.evaluate("[...document.querySelectorAll('#ad-menu [data-ad-pin]')].map(b => b.querySelector('b').textContent)")
             assert labels == ["Your agents", "Ownership", "Conflicts", "Hand-offs", "Reviews", "Daily plan", "Secretary", "MCP"], labels
             shot(host, "agents-dash-plus")
@@ -170,10 +170,10 @@ def main():
             assert tabs(host) == ["Dashboard", "Reviews"], tabs(host)
             host.hover("#wt-reviews"); host.click("#wt-reviews .wt-x")
             host.wait_for_function("!document.querySelector('#wt-reviews')")
-            assert tabs(host) == ["Dashboard"], tabs(host)
+            assert tabs(host) == [], tabs(host)   # p10: one tab, no tab row
             host.reload(); host.wait_for_function("TribeClient.connected()")
             host.evaluate("TribeShell.go('agents')"); host.wait_for_selector("#view-coord:not(.hidden) #ad-hero")
-            assert tabs(host) == ["Dashboard"], tabs(host)
+            assert tabs(host) == [], tabs(host)   # p10: one tab, no tab row
 
             # ---- deep links still work: a temporary tab
             host.goto(BASE + "/?skipIntro=1#/agents/conflicts")
@@ -196,7 +196,7 @@ def main():
             boxes = phone.evaluate("[...document.querySelectorAll('.ad-card')].map(c => { const r = c.getBoundingClientRect(); return [r.left, r.right]; })")
             assert boxes and all(l >= 0 and r <= 391 for l, r in boxes), boxes
             shot(phone, "agents-dash-phone")
-            phone.click("#wt-plus"); phone.wait_for_selector("#ad-menu.sheet")
+            phone.click("#ad-views"); phone.wait_for_selector("#ad-menu.sheet")
             phone.wait_for_timeout(350); bx = phone.locator("#ad-menu").bounding_box()
             assert bx["width"] >= 380 and abs(bx["y"] + bx["height"] - 844) < 6, bx
             assert phone.evaluate("document.documentElement.scrollWidth <= innerWidth + 1")

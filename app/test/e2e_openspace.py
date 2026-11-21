@@ -59,6 +59,7 @@ def main():
             # not installed: the Office shows Install
             # Home > Agent fleet keeps the dashboard sidebar (it doesn't switch to a project's)
             host.evaluate("TribeHub.open('home')"); host.wait_for_selector("#nest-fleet", timeout=15000); host.click("#nest-fleet")
+            host.wait_for_selector(".ah-os-more summary", timeout=15000); host.click(".ah-os-more summary")   # p10: Open Space is an extra, tucked under the built-in office
             host.wait_for_selector("#ah-office .ah-office", timeout=15000)
             assert host.evaluate("document.body.classList.contains('global') && document.body.dataset.view === 'agents-hub'"), "fleet keeps the global sidebar"
             assert host.evaluate("document.querySelector('#nest-fleet').classList.contains('on') && !!document.querySelector('#nest-hub')"), "Agent fleet lit, dashboard rows still there"
