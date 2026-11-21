@@ -30,9 +30,30 @@ module.exports = function rooms({ checkFolder = null, watchFolder = null, P, W, 
         bugs: store.listMd('bugs').map(f => (store.readMd(f) || {}).meta).filter(b => b && b.status !== 'resolved').length };
     });
   }
+  // feat/newcomer-start: the first project, which the server makes on its own, still exactly as it was made: no vision,
+  // no files, no design, no tasks, docs or messages, nobody in the tribe but its creator and no AI helper. Home treats it
+  // as "no project yet" (the one-sentence start), and that sentence fills this project instead of making a second one.
+  const hasFiles = dir => { try { return fs.readdirSync(dir).some(n => !n.startsWith('.')); } catch { return false; } };
+  function untouched(p) {
+    if (!p || p.id !== P.defaultId() || p.repo || p.folder || p.workspace || p.image || p.bio) return false;
+    const ms = getMembers();
+    if (ms.some(m => m.role === 'agent') || ms.length > 1 || Object.keys(p.members || {}).length > 1) return false;
+    return P.inProject(p.id, () => {
+      let v = ''; try { v = fs.readFileSync(store.p('VISION.md'), 'utf8'); } catch {}
+      if (!/Replace these lines together/.test(v) && v.replace(/^#.*$/gm, '').trim()) return false;
+      if (loadTasks().length || store.listMd('docs').length || store.listMd('proposals').length) return false;
+      if (hasFiles(store.p('repo'))) return false;
+      try { for (const n of fs.readdirSync(store.p('.tribe/canvas'))) { const c = JSON.parse(fs.readFileSync(store.p('.tribe/canvas', n), 'utf8')); if (n !== 'main.json' || Object.keys(c.nodes || {}).length) return false; } } catch {}   // 'main' is made empty on first open
+      const mine = `${p.id}.`;   // its website, app design, design files… (.tribe/<feature>/<project>.*.json)
+      try { for (const d of fs.readdirSync(store.p('.tribe'), { withFileTypes: true })) if (d.isDirectory() && fs.readdirSync(store.p('.tribe', d.name)).some(n => n.startsWith(mine))) return false; } catch {}
+      const ids = new Set(ms.map(m => m.id));
+      try { if (store.readJSONL('chat/general.jsonl', 400).some(m => m && !m.deleted && ids.has(m.by))) return false; } catch {}
+      return true;
+    });
+  }
   function listFor(me) {
     const people = presenceFor(me);
-    return P.visibleTo(me).map(p => P.view(p, { counts: counts(p.id), here: people.filter(m => m.online && m.project === p.id).map(m => m.id), role: p.members[me.id] || (P.scoped(me) ? 'builder' : me.role) }));
+    return P.visibleTo(me).map(p => P.view(p, { counts: counts(p.id), here: people.filter(m => m.online && m.project === p.id).map(m => m.id), role: p.members[me.id] || (P.scoped(me) ? 'builder' : me.role), ...(me.role === 'host' && untouched(p) ? { untouched: true } : {}) }));
   }
   const pushProjects = () => broadcast({ type: 'projects' });
 

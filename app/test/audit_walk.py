@@ -224,7 +224,9 @@ def walk(b, state, size, token, out, max_clicks, only):
     routes += [("hash:#/workshop", "location.hash = '#/workshop'"), ("hash:#/market", "location.hash = '#/market'"), ("hash:#/studios", "location.hash = '#/studios'")]
     routes += [("settings:" + t, f"TribeSettings.open('{t}')") for t in SETTINGS_TABS]
     sheets = {n: (o, c) for n, o, _, c in SHEETS}
-    routes += [(n, o) for n, o, _, _ in SHEETS]
+    # Plans is a sheet only while payments are on (TribePlans.offered(), premium.js); off, TribePlans.open() does nothing by design
+    plans_on = pg.evaluate("!!(window.TribePlans && TribePlans.offered && TribePlans.offered())")
+    routes += [(n, o) for n, o, _, _ in SHEETS if n != "sheet:plans" or plans_on]
     if only: routes = [r for r in routes if re.search(only, r[0])]
 
     def close_layers(name):

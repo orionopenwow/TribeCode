@@ -109,10 +109,14 @@ def settled(page):
 
 
 def check_global(page, row, key, crumb, hsh, tribe):
-    page.click("#" + row); page.wait_for_function("k => TribeRouter.where().key === k", arg=key, timeout=8000)
+    # feat/newcomer-start: with no tribe yet the Agent fleet row is kept back (newcomer.js); Ctrl K still opens it, and its row shows while it is open
+    quiet = page.evaluate("document.body.classList.contains('nc-quiet')")
+    if quiet and key == "fleet": page.evaluate("TribeShell.go('fleet')")
+    else: page.click("#" + row)
+    page.wait_for_function("k => TribeRouter.where().key === k", arg=key, timeout=8000)
     st = settled(page)
     assert st["global"] and st["place"] == "global", (row, st)
-    assert st["rows"] == [g[1] for g in GLOBAL], (row, st["rows"])   # the global sidebar stays: never a tribe's nest
+    assert st["rows"] == [g[1] for g in GLOBAL if not (quiet and g[1] == "fleet" and key != "fleet")], (row, st["rows"])   # the global sidebar stays: never a tribe's nest
     assert st["lit"] == [key], (row, st["lit"])
     assert len(st["panes"]) == 1, (row, st["panes"])   # no stale panes from the previous dashboard
     assert st["crumb"] == crumb and st["hash"] == hsh, (row, st)
@@ -137,7 +141,8 @@ def global_nav(page, tribe):
     page.go_back(); page.wait_for_function("TribeRouter.where().key === 'work'", timeout=8000)
     page.go_back(); page.wait_for_function("TribeRouter.where().key === 'hub'", timeout=8000)
     page.go_forward(); page.wait_for_function("TribeRouter.where().key === 'work'", timeout=8000)
-    st = settled(page); assert st["global"] and st["rows"] == [g[1] for g in GLOBAL] and len(st["panes"]) == 1, st
+    quiet = page.evaluate("document.body.classList.contains('nc-quiet')")
+    st = settled(page); assert st["global"] and st["rows"] == [g[1] for g in GLOBAL if not (quiet and g[1] == "fleet")] and len(st["panes"]) == 1, st
     # the logo is always Home, and it closes the Workshop layer on its way
     page.click("#rail-workshop"); page.wait_for_function("TribeWorkshop.isOpen()")
     assert page.locator("#rail-workshop use").get_attribute("href") == "#i-wrench", "the Workshop is a wrench"
@@ -254,13 +259,15 @@ def main():
             host.click("#wt-requests"); host.wait_for_selector("#view-requests:not(.hidden)"); wait_text(host, "#pj-requests", "Hook up the gamepad")
 
             # ---- Agents Hub: one dashboard; every deep view still opens (as a temporary tab when it isn't pinned)
-            host.click("#nest-ws-agents"); host.wait_for_selector("#view-tabs:not(.hidden)")
-            assert tabs(host) == ["Dashboard"], tabs(host)
+            # v0.43: with nothing pinned the hub is one clear page and shows no tab row (its "More views" opens the rest)
+            host.click("#nest-ws-agents"); host.wait_for_selector("#view-coord:not(.hidden)"); host.wait_for_function("TribeCoord.tab() === 'agents'")
+            assert host.locator("#view-tabs").is_hidden(), "no tab row with only Dashboard"
             for key in AGENT_KEYS:
                 host.evaluate("k => TribeShell.go(k)", key); host.wait_for_selector(OPENS[key], timeout=8000)
-                host.wait_for_function("k => document.querySelector(`#wt-${k}`) && document.querySelector(`#wt-${k}`).classList.contains('on')", arg=key, timeout=6000)
+                if key == "agents": host.wait_for_function("document.querySelector('#view-tabs').classList.contains('hidden')", timeout=6000)
+                else: host.wait_for_function("k => document.querySelector(`#wt-${k}`) && document.querySelector(`#wt-${k}`).classList.contains('on')", arg=key, timeout=6000)
                 assert host.evaluate("document.querySelector('#nest-ws-agents').classList.contains('on')"), key
-                assert len(tabs(host)) == (1 if key == "agents" else 2), (key, tabs(host))
+                assert len(tabs(host)) == (0 if key == "agents" else 2), (key, tabs(host))
                 if host.locator("#coord-tabs").count(): assert host.locator("#coord-tabs").is_hidden()
             host.evaluate("TribeShell.go('conflicts')"); host.wait_for_function("TribeCoord.tab() === 'conflicts'")
             wait_text(host, "#crumb-label", "Agents Hub › Conflicts")
@@ -346,7 +353,7 @@ def main():
             assert phone.evaluate("(() => { const s = document.querySelector('.window > .side'); return s.scrollWidth <= s.clientWidth + 1 && document.querySelector('#nest').scrollWidth <= document.querySelector('#nest').clientWidth + 1; })()")
             no_dupes(phone)
             shot(phone, "nav-phone-panel")
-            phone.click("#nest-ws-agents"); phone.wait_for_selector("#view-tabs:not(.hidden)")
+            phone.click("#nest-ws-agents"); phone.wait_for_selector("#view-coord:not(.hidden)")
             assert not phone.evaluate("document.body.classList.contains('drawer-open')")
             phone.evaluate("TribeShell.go('conflicts')"); phone.wait_for_function("TribeCoord.tab() === 'conflicts'")
             assert phone.evaluate("document.documentElement.scrollWidth <= innerWidth + 1")

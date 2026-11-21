@@ -44,9 +44,9 @@
   // feat/p10-home: once someone has a project, "Start your first project" never comes back on this device, and Home can
   // show their projects (names and faces only) while the tribe is offline. Then Home redraws with the real list.
   const HK = () => `tribecode.hadProject:${C.base()}`, PK = () => `tribecode.pjcache:${C.base()}`;
-  function remember() {
+  function remember() {   // a blank first project (newcomer.js) is no project yet
     try {
-      if (projects.length) { localStorage.setItem(HK(), '1'); localStorage.setItem(PK(), JSON.stringify(projects.slice(0, 24).map(p => ({ id: p.id, name: p.name, emoji: p.emoji || '', color: p.color || '', image: p.image || '', bio: p.bio || '' })))); }
+      if (projects.length && !(projects.length === 1 && projects[0].untouched)) { localStorage.setItem(HK(), '1'); localStorage.setItem(PK(), JSON.stringify(projects.slice(0, 24).map(p => ({ id: p.id, name: p.name, emoji: p.emoji || '', color: p.color || '', image: p.image || '', bio: p.bio || '' })))); }
     } catch {}
     dispatchEvent(new CustomEvent('tribe-projects-loaded', { detail: { count: projects.length } }));
   }
@@ -785,7 +785,7 @@ ${canEdit && !started ? `      <section class="pj-context" id="pj-context"><div 
   // a place to keep it and friends all come later, each one button away.
   async function startFromIdea(raw) {
     const idea = String(raw || '').trim(); if (!idea) return null;
-    if (C.connected()) return createFromIdea(idea);
+    if (C.connected()) { const b = window.TribeNewcomer && window.TribeNewcomer.blank(); return b ? fillBlank(b, idea) : createFromIdea(idea); }
     const OFF = window.TribeOffline, LS = window.TribeLocalSetup;
     if (!OFF || !OFF.start || !LS || (C.hasToken && C.hasToken())) { openNew(); return null; }   // a tribe that can't be reached right now: the usual sheet explains
     const kind = KIND_OF.find(([re]) => re.test(idea)), name = nameFromIdea(idea);
@@ -798,6 +798,18 @@ ${canEdit && !started ? `      <section class="pj-context" id="pj-context"><div 
     window.dispatchEvent(new CustomEvent('tribe-project-created', { detail: { name, local: true } }));
     if (window.TribeFirstLook) window.TribeFirstLook.start({ pid, idea, name });
     return pid;
+  }
+  // feat/newcomer-start: the server's own first project, still untouched (newcomer.js), takes the sentence: its name,
+  // vision and first version, instead of a second project beside an empty one.
+  async function fillBlank(p, idea) {
+    const kind = KIND_OF.find(([re]) => re.test(idea)), name = nameFromIdea(idea);
+    await keepIdea(p.id, name, idea);   // the vision first: from then on it is a real project, also for a second tab
+    await C.api(`/projects/${encodeURIComponent(p.id)}`, { method: 'PATCH', body: { name, emoji: kind ? kind[1] : '✨' } });
+    try { localStorage.setItem('tribecode.firstrun.done', '1'); } catch {}
+    await refresh(); await switchTo(p.id, 'home');
+    window.dispatchEvent(new CustomEvent('tribe-project-created', { detail: { name } }));
+    if (window.TribeFirstLook) window.TribeFirstLook.start({ pid: p.id, idea, name });
+    return p.id;
   }
   // Remix a starter (templates/starters.json): open-source projects checked for permissive licenses. Small ones copy
   // straight into a new project from GitHub; big collections open in the browser to borrow from. Credit stays with the authors.
