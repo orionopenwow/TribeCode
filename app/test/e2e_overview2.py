@@ -60,7 +60,7 @@ def main():
             assert host.eval_on_selector_all("#pj-check .ock-card", "els => els.filter(e => e.offsetParent).length") == 1
             # pass 6: See all steps opens the whole list in a sheet; the dashboard keeps the one compact step
             host.click("#pj-check-all"); host.wait_for_selector("#pj-steps .ock-row", timeout=10000)
-            assert host.locator("#pj-steps .ock-row:not(.ock-flint)").count() == 5   # vision, task, AI, where it lives, share (Flint's own setup row is extra)
+            assert host.locator("#pj-steps .ock-row:not(.ock-flint)").count() == 4   # task, AI, where it lives, share (feat/dash-layout: the line under the name asks for the vision; Flint's own setup row is extra)
             host.keyboard.press("Escape"); host.wait_for_selector("#pj-steps", state="detached", timeout=5000)
             assert host.locator("#pj-living").count() == 0, "no Living update before the tribe has begun"
             assert host.locator("#pj-check .ock-hero-t, #pj-check [data-ock-vis]").count() == 0, "no big intro and no inline vision box"
@@ -94,7 +94,7 @@ def main():
 
             # 3. Onboarding checklist: ticks itself
             assert host.text_content("#pj-check h3").strip() in ("Next step", "Getting started")   # pass 6: the one next step (was "Steps")
-            host.wait_for_selector("#pj-check [data-step=vision]:not(.on) [data-ck=vision]", state="attached")
+            assert host.locator("#pj-check [data-step=vision]").count() == 0 and "Add what you" in host.text_content("#pj-bio"), "the vision is asked once: the line under the name"   # feat/dash-layout
             host.wait_for_selector("#pj-check [data-step=task].on", timeout=10000, state="attached")
             assert host.evaluate("+document.querySelector('#pj-check .ock-bar').getAttribute('aria-valuenow')") == n0 + 1
             assert host.get_attribute("#pj-check [data-step=task] .ock-box", "aria-checked") == "true"
@@ -116,6 +116,8 @@ def main():
             # 6. Repo & Tools: repo empty state + standup button top right + the drop zone, wired as before
             wait_text("#pj-repo", "Code repository"); host.wait_for_function("document.querySelector('#pj-repo .pj-repo-sum, #pj-repo [data-go=repo]')")   # a summary + Open, or the empty state with Set up the repo
             host.wait_for_selector("#pj-sf h3 #standup-go", state="visible", timeout=15000)   # standup button in the card head (a redraw may be moving it back in)
+            host.wait_for_selector("#pj-context #pj-files-btn", state="visible", timeout=8000)   # feat/dash-layout: Add files is a slim row; a click opens the drop zone
+            host.wait_for_selector("#pj-context #dropzone", state="attached", timeout=8000); host.click("#pj-files-btn")
             host.wait_for_selector("#pj-context #dropzone", state="visible", timeout=8000)   # drop zone moved in (after the overview settles)
             assert host.evaluate("getComputedStyle(document.querySelector('#pj-context #dropzone')).borderStyle") == "dashed"
             # a redraw keeps the live nodes (they are moved, not copied)
