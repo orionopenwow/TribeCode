@@ -94,7 +94,7 @@ def main():
             # the newcomer's sidebar: no Agent fleet on Home
             assert pg.evaluate("document.body.classList.contains('nc-quiet')"), "quiet sidebar while it's just you"
             assert pg.locator("#nest-hub").count() == 1 and not visible(pg, "#nest-fleet"), "Agent fleet waits"
-            assert palette_finds(pg, "Agent fleet") and palette_finds(pg, "Agents Hub"), "Ctrl K still finds them"
+            assert palette_finds(pg, "Agents & office"), "Ctrl K still finds it"
             pg.mouse.move(700, 450); pg.screenshot(path="/tmp/newcomer-home-1440.png"); pg.screenshot(path=str(SHOTS / "nc-1-home.png"))
 
             # ---- 2. the sentence fills that project: one project, the vision, a first version
@@ -132,7 +132,7 @@ def main():
             assert pg.evaluate("document.body.classList.contains('nc-quiet')")
             assert not visible(pg, "#nest-ws-agents") and not visible(pg, "#nest-company"), "Agents Hub and Set up company wait"
             assert visible(pg, "#nest-chat") and visible(pg, "#nest-docs"), "the rest of the sidebar is there"
-            assert palette_finds(pg, "Agents Hub"), "Ctrl K finds the Agents Hub"
+            assert palette_finds(pg, "Agents & office"), "Ctrl K finds Agents & office"
             pg.evaluate("TribeShell.go('ws-agents')"); pg.wait_for_selector("#view-coord:not(.hidden)", timeout=8000)
             pg.wait_for_timeout(300)
             assert visible(pg, "#nest-ws-agents"), "its row shows while its page is open"

@@ -2945,6 +2945,7 @@
     'Click a piece to remove it.': ['Haz clic en una pieza para quitarla.', 'Clique numa peça para removê-la.', 'Cliquez sur un élément pour le retirer.', 'Klick ein Teil an, um es zu entfernen.', 'クリックで取り除きます。', '点击物件来移除。', '클릭해서 없애요.'],
     'Click an empty spot to place it.': ['Haz clic en un sitio libre para colocarlo.', 'Clique num espaço vazio para colocar.', 'Cliquez sur un emplacement libre pour le placer.', 'Klick auf einen freien Platz, um es aufzustellen.', '空いている場所をクリックして置きます。', '点击空位放置。', '빈 자리를 클릭해서 놓아요.'],
     // ---- feat/agents-office: Agents & office, Add an AI helper, the four loops, the pixel floor switch
+    "All agents & offices": ["Todos los agentes y oficinas", "Todos os agentes e escritórios", "Tous les agents et bureaux", "Alle Agenten & Büros", "すべてのエージェントとオフィス", "所有智能体与办公室", "모든 에이전트와 오피스"],
     "Agents & office": ["Agentes y oficina", "Agentes e escritório", "Agents et bureau", "Agenten & Büro", "エージェントとオフィス", "智能体与办公室", "에이전트와 오피스"],
     "Agents & office · every project": ["Agentes y oficina · todos los proyectos", "Agentes e escritório · todos os projetos", "Agents et bureau · tous les projets", "Agenten & Büro · alle Projekte", "エージェントとオフィス · すべてのプロジェクト", "智能体与办公室 · 所有项目", "에이전트와 오피스 · 모든 프로젝트"],
     "Who’s here and what they’re doing": ["Quién está y qué está haciendo", "Quem está aqui e o que está fazendo", "Qui est là et ce qu’ils font", "Wer da ist und was gerade passiert", "誰がいて、何をしているか", "谁在这里，在做什么", "누가 있고 무엇을 하는지"],

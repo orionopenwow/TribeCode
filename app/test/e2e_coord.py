@@ -312,8 +312,8 @@ def ui_host(b, host, orion, maya, pq, b1):
         host.click("#nest-ws-tasks"); host.wait_for_selector("#view-tabs:not(.hidden)")
         for label in ["Board", "Bugs", "Proposals", "Milestones", "Calendar", "Code repository", "Visuals"]: wait_text(host, "#view-tabs", label)
         # Agents Hub: one dashboard (feat/agents-dash); deep views open as temporary tabs or pinned from "+"
-        host.click("#nest-ws-agents"); host.wait_for_selector("#view-tabs:not(.hidden) #wt-agents")
-        wait_text(host, "#view-tabs", "Dashboard"); host.wait_for_selector("#view-tabs #wt-plus")
+        # Agents & office (v0.46): one page; the tab row only shows once a deep view is pinned (e2e_nav covers it)
+        host.click("#nest-ws-agents")
         host.wait_for_selector("#view-coord:not(.hidden) #ad-hero")
         wait_text(host, "#fl-agents", "Claude · Orion")   # feat/fleet: one row per agent under the next-step hero
         wait_text(host, "#fl-agents", "12k")
