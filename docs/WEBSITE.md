@@ -109,7 +109,9 @@ goes to Files › Website), "open the website designer" in Flint's chat, or `#/s
   (`server/siteflint.js` keeps `cfg` on each version).
 - **The 16 templates** open as configs (`GET /api/site-designer/template/:id`, pictures inlined).
 
-**v2 (feat/site-v2)**: the gallery has 48 templates with thumbnails, categories, search and Peek (32 imported from
+**site-templates2**: the gallery now offers 25 hand-written templates, each with its own layout; the older ones are retired but still load (docs/SITE-TEMPLATES.md).
+
+**v2 (feat/site-v2)**: the gallery had 48 templates with thumbnails, categories, search and Peek (32 imported from
 Start Bootstrap, Tailwind Toolbox and HTML5 UP: docs/SITE-TEMPLATES.md), plus Import HTML. More of OpenPage is ported
 (docs/OPENPAGE-PORT.md): newsletter, call to action, stats, logo cloud, banner, divider and image blocks, more variants,
 section backgrounds and spacing, duplicate and hide, ten more themes, font pairs, the Site panel (page title, description,

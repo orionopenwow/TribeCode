@@ -1,9 +1,9 @@
 """The website start screen (p5-start: app/ui/sitedesigner.js showStart, designflow-data.js SITE_KINDS, sitecfg.js 'go').
 Checks:
  1 starting a website asks what kind of site first: Link in bio and App or project page as the two main cards (with a
-   drawing and how many templates each has, at least 8), then a quiet row (Business or shop, Portfolio, Event, Blog or
+   drawing and how many templates each has, a few), then a quiet row (Business or shop, Portfolio, Event, Blog or
    notes, Blank), See all templates and Import HTML;
- 2 a kind shows only its templates, the best first, at most 12; See all shows every template with the categories;
+ 2 a kind shows only its templates, the best first, three at most; See all shows every template with the categories;
    All kinds goes back; search stays inside the kind;
  3 App or project page: GitHub project first and Send people to my app in the list; picking one fills the project's name
    with a dismissable note, and the GitHub placeholders stay clear when the project has no GitHub address;
@@ -77,6 +77,7 @@ def main():
         host = ok(api("/bootstrap", "POST", {"name": "Camp"}))["token"]
         p = ok(api("/projects", "POST", {"name": "Tidepool"}, token=host)); pid = (p.get("project") or p)["id"]
         cat = json.loads((ROOT / "app" / "ui" / "sitetpl" / "catalog.json").read_text())["templates"]
+        cat = [t for t in cat if not t.get("retired")]   # site-templates2: the gallery offers these
 
         with sync_playwright() as pw:
             b = pw.chromium.launch(executable_path="/usr/bin/google-chrome", args=["--no-proxy-server"])
@@ -98,7 +99,7 @@ def main():
             pg.evaluate(f"TribeSiteDesigner.open({{ pid: '{pid}' }})"); kinds_shown(pg)
             main_k = pg.eval_on_selector_all("#wdz-start .wdz-kmain .wdz-kind", "els => els.map(e => [e.dataset.kind, e.querySelector('b').textContent, !!e.querySelector('svg'), e.querySelector('.wdz-kn').textContent])")
             assert [k[0] for k in main_k] == ["linkbio", "app"] and main_k[0][1] == "Link in bio" and main_k[1][1] == "App or project page", main_k
-            assert all(k[2] for k in main_k) and all(int(k[3].split()[0]) >= 8 for k in main_k), main_k
+            assert all(k[2] for k in main_k) and all(int(k[3].split()[0]) >= 2 for k in main_k), main_k
             more = pg.eval_on_selector_all("#wdz-start .wdz-kmore .wdz-kind", "els => els.map(e => e.dataset.kind)")
             assert more == ["business", "portfolio", "event", "blog", "blank"], more
             assert pg.locator("#wdz-start [data-kind='all']").is_visible() and pg.locator("#wdz-start [data-import]").is_visible()
@@ -106,14 +107,14 @@ def main():
             shot(pg, "site-kinds-1440.png")
 
             print("step", '2 a kind', flush=True)
-            # 2 a kind's templates, best first, at most 12; See all; All kinds; search inside the kind
+            # 2 a kind's templates, best first, three at most (site-templates2); See all; All kinds; search inside the kind
             pg.click("#wdz-start .wdz-kmain [data-kind='linkbio']")
             ids = gallery_ids(pg)
             lb = [t["id"] for t in cat if t["kind"] == "linkbio"]
-            assert ids[0] == "linkbio" and 8 <= len(ids) <= 12 and set(ids) <= set(lb), ids
+            assert ids[0] == "linkbio" and 2 <= len(ids) <= 3 and set(ids) <= set(lb), ids
             assert pg.locator("#wdz-gcats").is_hidden(), "no category chips inside a kind"
-            pg.fill("#wdz-gq", "dev"); pg.wait_for_timeout(150)
-            assert gallery_ids(pg) == ["lb-dev"], gallery_ids(pg)
+            pg.fill("#wdz-gq", "streamer"); pg.wait_for_timeout(150)
+            assert gallery_ids(pg) == ["creator"], gallery_ids(pg)
             pg.fill("#wdz-gq", "")
             shot(pg, "site-kinds-linkbio-1440.png")
             pg.click("#wdz-start .wdz-row [data-kind='all']"); pg.wait_for_selector("#wdz-gcats:not([hidden]) .wdz-chip")
@@ -124,7 +125,7 @@ def main():
             # 3 App or project page
             pg.click("#wdz-start .wdz-kmain [data-kind='app']")
             ids = gallery_ids(pg)
-            assert ids[0] == "gh-project" and "app-redirect" in ids and "app-download" in ids and len(ids) <= 12, ids
+            assert ids[0] == "gh-project" and "app-redirect" in ids and "app-download" in ids and len(ids) <= 3, ids
             shot(pg, "site-kinds-app-1440.png")
             pg.click("#wdz-gal .wdz-tpl[data-tpl='gh-project'] [data-tpl]")
             pg.wait_for_selector("#wdz-start", state="hidden", timeout=15000)

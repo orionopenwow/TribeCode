@@ -25,7 +25,7 @@ stamps every place that quotes one.
 | 553 checked add-ons / 550+ add-ons | index, docs, Guide | `templates/marketplace.json`; `e2e_market` ("553 items") | Proven | False in places (500+, 575 in translations) |
 | 65 lessons in ten tracks | index, docs, Guide | `templates/academy.json`; `e2e_academy` | Proven | False (said 62) |
 | 16 website templates | index, flint, docs | `templates/sites`; `e2e_site_templates` | Proven | |
-| The website designer has 52 templates | docs, README | `app/ui/sitetpl/catalog.json`; `e2e_site_editable` walks all 52 | Proven | False (said 48) |
+| The website designer has 25 templates, each with a layout of its own | docs, README | `app/ui/sitetpl/catalog.json` (the entries without `retired`); `site_variety_test` counts them, checks no two share a structure, and renders all 25 at 1280 and 390 px | Proven | False (said 61, counted with the 38 since retired) |
 | 13 screen templates on the design canvas | index, flint, docs | `templates/canvas`; `e2e_canvas_flint2` | Proven | |
 | Seven company templates | docs | `templates/companies.json` (eight entries, one is Blank); `e2e_company_v2` | Proven | |
 | 51 quick guides | index | `templates/quickguides.json`; `e2e_learn` | Proven | not on the site |
@@ -72,7 +72,7 @@ stamps every place that quotes one.
 
 | Claim | Where | Evidence | Status | Was |
 |---|---|---|---|---|
-| Every word, picture and button on your site is editable; one small toolbar; right-click; drag to reorder | index | `e2e_site_editable` (all 52 templates) | Proven | not on the site |
+| Every word, picture and button on your site is editable; one small toolbar; right-click; drag to reorder | index | `e2e_site_editable` (every template in the catalog, offered and retired) | Proven | not on the site |
 | Suggestions from your tribe: one-tap changes with who said it, nothing changes until Apply, Undo takes it back | index | `e2e_site_suggest`, `sitesuggest_test` | Proven | not on the site |
 | Moving backgrounds pause off screen and show a still picture for reduced motion; ten are ThreeUI ports (MIT) | index | `e2e_site_fx`; `docs/SITE-3D.md`, `NOTICE` | Proven | not on the site |
 | One lead, a council, everyone equal, or your own roles; the app says who can and offers to ask | index, mission | `e2e_group_styles`, `security10_test` | Proven | site said CEO and C-suite only |

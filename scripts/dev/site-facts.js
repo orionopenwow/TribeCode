@@ -39,7 +39,7 @@ function count() {
     lessons: academy.tracks.reduce((n, t) => n + (t.lessons || []).length, 0),
     tracks: academy.tracks.length,
     websiteTemplates: fs.readdirSync(R('templates/sites')).filter(d => !d.startsWith('_') && fs.existsSync(R('templates/sites', d, 'site.json'))).length,
-    designerTemplates: (json('app/ui/sitetpl/catalog.json').templates || []).length,
+    designerTemplates: (json('app/ui/sitetpl/catalog.json').templates || []).filter(t => !t.retired).length,   // the ones the gallery offers
     screenTemplates: fs.readdirSync(R('templates/canvas')).filter(f => f.endsWith('.json')).length,
     companyTemplates: (companies.templates || companies.companies || companies).filter(c => c.id !== 'blank').length,
     quickGuides: (guides.guides || guides).length,

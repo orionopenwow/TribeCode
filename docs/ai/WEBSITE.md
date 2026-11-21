@@ -55,18 +55,18 @@ Rules of the tools:
 <!-- gen:site:blocks -->
 | type | What it is | Layouts (variant) | Words it holds (props) |
 | --- | --- | --- | --- |
-| `hero` | Hero | center, split, minimal, accent, cover | eyebrow, title, text, img, alt, shape, buttons[label] |
-| `features` | Features | grid, list, stats, alternating, icons, ticks | title, items[title, text] |
-| `gallery` | Gallery | grid, masonry, strip | title, items[img, alt, caption] |
+| `hero` | Hero | center, split, minimal, accent, cover, full, card, aside | eyebrow, title, text, img, alt, shape, buttons[label] |
+| `features` | Features | grid, list, stats, alternating, icons, ticks, bento | title, items[title, text] |
+| `gallery` | Gallery | grid, masonry, strip, mosaic, shop | title, items[img, alt, caption] |
 | `pricing` | Pricing | cards, table | title, note, plans[name, price, per, features, button] |
 | `testimonials` | Testimonials | cards, quotes, spotlight | title, items[quote, name, role] |
 | `faq` | FAQ | list, columns | title, items[q, a] |
 | `team` | Team | grid, list | title, items[name, role, img, alt] |
-| `links` | Links (link in bio) | stack, cards, pills | name, bio, img, alt, shape, items[label, note], socials[words] |
-| `list` | List (menu, dates, episodes) | rows, cards, menu | title, items[title, meta, text] |
+| `links` | Links (link in bio) | stack, cards, pills, bento | name, bio, img, alt, shape, items[label, note], socials[words] |
+| `list` | List (menu, dates, episodes) | rows, cards, menu, magazine, schedule | title, items[title, meta, text] |
 | `contact` | Contact form | form, simple | title, text, email, action, button |
 | `embed` | Video / embed | wide, inline | title, url, caption |
-| `text` | Text | plain, two, highlight | title, text |
+| `text` | Text | plain, two, highlight, letter | title, text |
 | `footer` | Footer | simple, columns, minimal | text, links[words] |
 | `newsletter` | Newsletter | inline, card | title, text, action, button |
 | `cta` | Call to action | simple, split, accent | title, text, buttons[label] |
@@ -76,7 +76,7 @@ Rules of the tools:
 | `divider` | Divider | line, space, dots |  |
 | `image` | Image | wide, side, framed | title, text, img, alt, shape |
 | `steps` | Steps (how it works) | row, stack | title, items[title, text] |
-| `info` | Visit us (address, hours, phone) | columns, card | title, items[label, text], button{label} |
+| `info` | Visit us (address, hours, phone) | columns, card, map | title, items[label, text], button{label} |
 | `go` | Send visitors on (redirect) | card, plain | title, text, to, wait, button |
 | `timeline` | Timeline (story, experience) | line, cards | title, items[when, title, text] |
 <!-- /gen -->
@@ -112,12 +112,12 @@ A look sets colours, fonts and corners at once (`theme`). `palette` takes only i
 
 Font pairs (`fonts`): 
 <!-- gen:site:fonts -->
-`classic` (Fraunces + Inter), `editorial` (Instrument Serif + Inter), `modern` (Space Grotesk + Inter), `loud` (Bricolage Grotesque + Inter), `plain` (Inter), `code` (JetBrains Mono), `pixel` (Silkscreen + Inter), `book` (Fraunces + System serif), `elegant` (DM Serif Display + Inter), `friendly` (Outfit + Inter), `playfair` (Playfair Display + Lato), `lora` (Lora + Karla), `merriweather` (Merriweather + Work Sans), `baskerville` (Libre Baskerville + Raleway), `cormorant` (Cormorant Garamond + Montserrat), `garamond` (EB Garamond + Figtree), `crimson` (Crimson Pro + IBM Plex Sans), `spectral` (Spectral + Manrope), `sourceserif` (Source Serif 4 + Public Sans), `bitter` (Bitter + Chivo), `zilla` (Zilla Slab + Hanken Grotesk), `arvo` (Arvo + Lato), `abril` (Abril Fatface + Poppins), `alfaslab` (Alfa Slab One + Rubik), `bebas` (Bebas Neue + DM Sans), `anton` (Anton + Barlow), `oswald` (Oswald + Source Sans 3), `archivo` (Archivo Black + Archivo), `jakarta` (Plus Jakarta Sans), `manrope` (Manrope + Inter), `plex` (IBM Plex Sans + IBM Plex Serif), `plexmono` (IBM Plex Mono + IBM Plex Sans), `spacemono` (Space Mono + IBM Plex Sans), `firacode` (Fira Code + Fira Sans), `rubik` (Rubik + Karla), `nunito` (Nunito), `quicksand` (Quicksand + Nunito), `poppins` (Poppins + Inter), `montserrat` (Montserrat + Merriweather), `raleway` (Raleway + Lora), `josefin` (Josefin Sans + Lato), `syne` (Syne + Inter), `sora` (Sora + DM Sans), `lexend` (Lexend), `unbounded` (Unbounded + Figtree), `righteous` (Righteous + Nunito), `pacifico` (Pacifico + Quicksand), `caveat` (Caveat + Karla), `lobster` (Lobster + Lato), `arcade` (Press Start 2P + Space Mono), `terminal` (VT323 + IBM Plex Mono), `epilogue` (Epilogue + Inter), `youngserif` (Young Serif + Instrument Sans), `gloock` (Gloock + Hanken Grotesk), `bodoni` (Bodoni Moda + Figtree), `cinzel` (Cinzel + Lato), `comfortaa` (Comfortaa + Nunito), `fredoka` (Fredoka + Nunito), `atkinson` (Atkinson Hyperlegible), `literata` (Literata), `newsreader` (Newsreader + Inter), `schibsted` (Schibsted Grotesk + Source Serif 4), `shrikhand` (Shrikhand + Rubik), `monoton` (Monoton + Barlow), `kalam` (Kalam + Karla), `redhat` (Red Hat Display + Red Hat Text), `baloo` (Baloo 2 + Nunito), `librefranklin` (Libre Franklin + Libre Baskerville)
+`classic` (Fraunces + Inter), `editorial` (Instrument Serif + Inter), `modern` (Space Grotesk + Inter), `loud` (Bricolage Grotesque + Inter), `plain` (Inter), `code` (JetBrains Mono), `pixel` (Silkscreen + Inter), `book` (Fraunces + System serif), `elegant` (DM Serif Display + Inter), `friendly` (Outfit + Inter), `poster` (Anton + Inter), `playfair` (Playfair Display + Lato), `lora` (Lora + Karla), `merriweather` (Merriweather + Work Sans), `baskerville` (Libre Baskerville + Raleway), `cormorant` (Cormorant Garamond + Montserrat), `garamond` (EB Garamond + Figtree), `crimson` (Crimson Pro + IBM Plex Sans), `spectral` (Spectral + Manrope), `sourceserif` (Source Serif 4 + Public Sans), `bitter` (Bitter + Chivo), `zilla` (Zilla Slab + Hanken Grotesk), `arvo` (Arvo + Lato), `abril` (Abril Fatface + Poppins), `alfaslab` (Alfa Slab One + Rubik), `bebas` (Bebas Neue + DM Sans), `anton` (Anton + Barlow), `oswald` (Oswald + Source Sans 3), `archivo` (Archivo Black + Archivo), `jakarta` (Plus Jakarta Sans), `manrope` (Manrope + Inter), `plex` (IBM Plex Sans + IBM Plex Serif), `plexmono` (IBM Plex Mono + IBM Plex Sans), `spacemono` (Space Mono + IBM Plex Sans), `firacode` (Fira Code + Fira Sans), `rubik` (Rubik + Karla), `nunito` (Nunito), `quicksand` (Quicksand + Nunito), `poppins` (Poppins + Inter), `montserrat` (Montserrat + Merriweather), `raleway` (Raleway + Lora), `josefin` (Josefin Sans + Lato), `syne` (Syne + Inter), `sora` (Sora + DM Sans), `lexend` (Lexend), `unbounded` (Unbounded + Figtree), `righteous` (Righteous + Nunito), `pacifico` (Pacifico + Quicksand), `caveat` (Caveat + Karla), `lobster` (Lobster + Lato), `arcade` (Press Start 2P + Space Mono), `terminal` (VT323 + IBM Plex Mono), `epilogue` (Epilogue + Inter), `youngserif` (Young Serif + Instrument Sans), `gloock` (Gloock + Hanken Grotesk), `bodoni` (Bodoni Moda + Figtree), `cinzel` (Cinzel + Lato), `comfortaa` (Comfortaa + Nunito), `fredoka` (Fredoka + Nunito), `atkinson` (Atkinson Hyperlegible), `literata` (Literata), `newsreader` (Newsreader + Inter), `schibsted` (Schibsted Grotesk + Source Serif 4), `shrikhand` (Shrikhand + Rubik), `monoton` (Monoton + Barlow), `kalam` (Kalam + Karla), `redhat` (Red Hat Display + Red Hat Text), `baloo` (Baloo 2 + Nunito), `librefranklin` (Libre Franklin + Libre Baskerville)
 <!-- /gen -->
 
 Illustrations for empty picture slots (`illustration`), drawn in the site's own colours: 
 <!-- gen:site:pictures -->
-`hills` (hills and sun), `cafe` (coffee cup), `desk` (desk and laptop), `shop` (shop front), `phone` (phone app), `people` (two people), `rocket` (rocket), `stage` (stage and mic)
+`hills` (hills and sun), `cafe` (coffee cup), `desk` (desk and laptop), `shop` (shop front), `phone` (phone app), `people` (two people), `rocket` (rocket), `stage` (stage and mic), `map` (street map), `plate` (dinner plate), `portrait` (portrait), `mountains` (mountain lake), `city` (city at night), `still` (vase and fruit), `dashboard` (app window), `terminal` (terminal), `tee` (t-shirt), `tote` (tote bag), `mug` (mug), `print` (framed print), `arch` (flower arch), `hall` (talk in a hall), `garden` (garden beds), `bikes` (two bikes), `lantern` (pixel night), `notebook` (notebook), `cover` (show cover), `tools` (van and tools)
 <!-- /gen -->
 
 ## 5. The steps (ops)

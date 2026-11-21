@@ -287,14 +287,17 @@ html[data-dev=phone] .ehide-phone,html[data-dev=tablet] .ehide-tablet,html[data-
   function projectName(pid) { try { const p = ((C.state && C.state().projects) || []).find(x => x.id === pid); return (p && p.name) || 'My site'; } catch { return 'My site'; } }
   // a template as a config: the static gallery first (works with no tribe and offline), then the host, then the model
   const inlineImgs = async c => { const walk = async o => { if (Array.isArray(o)) { for (const x of o) await walk(x); return; } if (!o || typeof o !== 'object') return; for (const k of Object.keys(o)) { if ((k === 'img' || k === 'logo') && typeof o[k] === 'string' && o[k] && !/^data:/.test(o[k])) o[k] = await toData(o[k]); else await walk(o[k]); } }; await walk(c); return c; };
-  async function templateCfg(id) {
+  // site-templates2: a template the gallery no longer offers gives the closest offered one (catalog: retired, alias);
+  // exact = that very file as it was (its data stays loadable)
+  async function templateCfg(id, exact) {
+    if (!exact) { await loadGallery(); const a = gal.alias[id]; if (a) id = a; }
     try { const r = await fetch('sitetpl/' + encodeURIComponent(id) + '.json'); if (r.ok) return S().normalize(await inlineImgs(await r.json())); } catch {}
     if (connected()) { try { return (await C.api('/site-designer/template/' + encodeURIComponent(id))).config; } catch {} }
     if (S().TEMPLATES.includes(id)) return S().fromTemplate(id, { name: projectName(st && st.pid) });
     return null;
   }
   async function useTemplate(id, first, o = {}) {
-    const c = await templateCfg(id); if (!c) { say(`I could not load the ${id} template. Try another, or start blank.`); return false; }
+    const c = await templateCfg(id, o.exact); if (!c) { say(`I could not load the ${id} template. Try another, or start blank.`); return false; }
     if (o.name) c.name = o.name;
     st.unfilled = JSON.stringify(c);
     let filled = c, used = [];
@@ -471,7 +474,7 @@ html[data-dev=phone] .ehide-phone,html[data-dev=tablet] .ehide-tablet,html[data-
   const FONTS = new Map(); let fontsAsked = false;
   async function loadFonts() {
     fontsAsked = true;
-    const files = ['fraunces-latin-700-normal', 'instrument-serif-latin-400-normal', 'space-grotesk-latin-700-normal', 'bricolage-grotesque-latin-800-normal', 'jetbrains-mono-latin-700-normal', 'silkscreen-latin-400-normal', 'inter-latin-400-normal', 'dm-serif-display-latin-400-normal', 'outfit-latin-700-normal'];
+    const files = ['fraunces-latin-700-normal', 'instrument-serif-latin-400-normal', 'space-grotesk-latin-700-normal', 'bricolage-grotesque-latin-800-normal', 'jetbrains-mono-latin-700-normal', 'silkscreen-latin-400-normal', 'inter-latin-400-normal', 'dm-serif-display-latin-400-normal', 'outfit-latin-700-normal', 'anton-latin-400-normal'];
     await Promise.all(files.map(async n => { try { const r = await fetch('assets/site-fonts/' + n + '.woff2'); if (!r.ok) return; const b = await r.blob(); FONTS.set(n, await new Promise(res => { const fr = new FileReader(); fr.onload = () => res(fr.result); fr.readAsDataURL(b); })); } catch {} }));
     if (FONTS.size && root && !root.hidden) frame();
   }
@@ -644,20 +647,20 @@ html[data-dev=phone] .ehide-phone,html[data-dev=tablet] .ehide-tablet,html[data-
     const lines = (x, y, n, w) => Array.from({ length: n }, (_, i) => R(x, y + i * 5, w - (i === n - 1 ? 8 : 0), 2.5, 0.3)).join('');
     const cards = (n, y, h) => Array.from({ length: n }, (_, i) => R(4 + i * (52 / n), y, 52 / n - 3, h, 0.25)).join('');
     const body = {
-      hero: v === 'split' ? R(4, 10, 24, 5, 0.6) + lines(4, 18, 2, 24) + R(4, 30, 10, 5, 0.8) + R(32, 6, 24, 30) : v === 'cover' ? R(0, 0, 60, 18) + R(4, 22, 30, 5, 0.6) + lines(4, 30, 1, 30) : v === 'accent' ? R(0, 0, 60, 40, 0.5) + R(14, 12, 32, 5, 0.9) + R(24, 24, 12, 5, 0.9) : R(12, 10, 36, 6, 0.6) + lines(16, 20, 2, 28) + R(24, 30, 12, 5, 0.8),
-      features: v === 'list' ? lines(4, 6, 6, 52) : v === 'alternating' ? R(4, 4, 22, 14) + lines(30, 8, 2, 26) + R(34, 22, 22, 14) + lines(4, 26, 2, 26) : v === 'stats' ? cards(3, 12, 16) : cards(3, 10, 22),
-      gallery: v === 'strip' ? cards(3, 10, 20) + R(56, 10, 4, 20, 0.15) : v === 'masonry' ? R(4, 4, 16, 18, .3) + R(22, 4, 16, 30, .3) + R(40, 4, 16, 14, .3) + R(4, 24, 16, 12, .3) + R(40, 20, 16, 16, .3) : cards(3, 4, 15) + cards(3, 22, 15),
+      hero: v === 'full' ? R(0, 0, 60, 40, 0.3) + R(5, 20, 30, 6, 0.9) + R(5, 31, 12, 5, 0.9) : v === 'card' ? R(0, 0, 60, 40, 0.12) + R(12, 6, 36, 28, 0.25) + R(20, 13, 20, 5, 0.7) + R(24, 24, 12, 5, 0.8) : v === 'aside' ? R(4, 10, 26, 5, 0.6) + lines(4, 18, 2, 26) + R(4, 30, 10, 5, 0.8) + R(36, 8, 20, 24, 0.25) + lines(39, 13, 3, 14) : v === 'split' ? R(4, 10, 24, 5, 0.6) + lines(4, 18, 2, 24) + R(4, 30, 10, 5, 0.8) + R(32, 6, 24, 30) : v === 'cover' ? R(0, 0, 60, 18) + R(4, 22, 30, 5, 0.6) + lines(4, 30, 1, 30) : v === 'accent' ? R(0, 0, 60, 40, 0.5) + R(14, 12, 32, 5, 0.9) + R(24, 24, 12, 5, 0.9) : R(12, 10, 36, 6, 0.6) + lines(16, 20, 2, 28) + R(24, 30, 12, 5, 0.8),
+      features: v === 'bento' ? R(4, 4, 33, 15, .3) + R(40, 4, 16, 15, .25) + R(4, 22, 16, 15, .25) + R(23, 22, 33, 15, .3) : v === 'list' ? lines(4, 6, 6, 52) : v === 'alternating' ? R(4, 4, 22, 14) + lines(30, 8, 2, 26) + R(34, 22, 22, 14) + lines(4, 26, 2, 26) : v === 'stats' ? cards(3, 12, 16) : cards(3, 10, 22),
+      gallery: v === 'mosaic' ? R(4, 4, 26, 32, .3) + R(32, 4, 11, 15, .3) + R(45, 4, 11, 15, .3) + R(32, 21, 24, 15, .3) : v === 'shop' ? cards(3, 5, 20) + [0, 1, 2].map(i => R(4 + i * 17.3, 28, 9, 2.5, .5) + R(15 + i * 17.3, 28, 3.5, 2.5, .8)).join('') : v === 'strip' ? cards(3, 10, 20) + R(56, 10, 4, 20, 0.15) : v === 'masonry' ? R(4, 4, 16, 18, .3) + R(22, 4, 16, 30, .3) + R(40, 4, 16, 14, .3) + R(4, 24, 16, 12, .3) + R(40, 20, 16, 16, .3) : cards(3, 4, 15) + cards(3, 22, 15),
       pricing: v === 'table' ? lines(4, 8, 5, 52) : cards(3, 6, 28), testimonials: v === 'spotlight' ? R(10, 12, 40, 5, 0.6) + R(16, 20, 28, 5, 0.6) + R(24, 30, 12, 3) : cards(3, 10, 20),
       faq: lines(4, 6, 6, 52), team: Array.from({ length: 4 }, (_, i) => `<circle cx="${10 + i * 14}" cy="18" r="5" fill="currentColor" opacity=".35"/>` + R(5 + i * 14, 27, 10, 2.5, .3)).join(''),
-      links: `<circle cx="30" cy="8" r="4" fill="currentColor" opacity=".4"/>` + R(14, 15, 32, 5) + R(14, 22, 32, 5) + R(14, 29, 32, 5),
-      list: lines(4, 6, 6, 52), contact: R(4, 6, 30, 4, 0.6) + R(4, 13, 40, 5, .2) + R(4, 20, 40, 5, .2) + R(4, 28, 14, 5, .7), embed: R(8, 4, 44, 30) + `<path d="M27 13 L35 19 L27 25Z" fill="currentColor" opacity=".7"/>`,
-      text: v === 'two' ? R(4, 8, 16, 5, .6) + lines(24, 8, 5, 32) : lines(8, 8, 6, 44), footer: R(0, 26, 60, 14, .2) + R(4, 31, 16, 3, .5) + R(40, 31, 16, 3, .4),
+      links: v === 'bento' ? R(4, 4, 25, 32, .25) + `<circle cx="10" cy="11" r="3.5" fill="currentColor" opacity=".5"/>` + R(31, 4, 25, 9, .7) + R(31, 15, 11.5, 9, .3) + R(44.5, 15, 11.5, 9, .3) + R(31, 26, 25, 10, .45) : `<circle cx="30" cy="8" r="4" fill="currentColor" opacity=".4"/>` + R(14, 15, 32, 5) + R(14, 22, 32, 5) + R(14, 29, 32, 5),
+      list: v === 'magazine' ? R(4, 4, 30, 18, .3) + R(4, 25, 26, 4, .6) + lines(38, 6, 2, 18) + lines(38, 20, 2, 18) : v === 'schedule' ? [0, 1, 2, 3].map(i => R(4, 6 + i * 8, 10, 3, .7) + R(18, 6 + i * 8, 34, 3, .3)).join('') : lines(4, 6, 6, 52), contact: R(4, 6, 30, 4, 0.6) + R(4, 13, 40, 5, .2) + R(4, 20, 40, 5, .2) + R(4, 28, 14, 5, .7), embed: R(8, 4, 44, 30) + `<path d="M27 13 L35 19 L27 25Z" fill="currentColor" opacity=".7"/>`,
+      text: v === 'letter' ? R(16, 5, 6, 8, .7) + lines(24, 6, 2, 20) + lines(16, 17, 3, 28) + R(16, 33, 10, 3, .6) : v === 'two' ? R(4, 8, 16, 5, .6) + lines(24, 8, 5, 32) : lines(8, 8, 6, 44), footer: R(0, 26, 60, 14, .2) + R(4, 31, 16, 3, .5) + R(40, 31, 16, 3, .4),
       newsletter: R(12, 8, 36, 5, .6) + R(10, 20, 28, 7, .2) + R(40, 20, 12, 7, .7), cta: v === 'accent' ? R(0, 4, 60, 32, .5) + R(16, 12, 28, 5, .9) + R(24, 22, 12, 5, .9) : R(14, 12, 32, 5, .6) + R(24, 22, 12, 6, .8),
       stats: [0, 1, 2].map(i => R(6 + i * 18, 12, 12, 8, .6) + R(6 + i * 18, 23, 14, 2.5, .3)).join(''), logos: [0, 1, 2, 3].map(i => R(4 + i * 14, 16, 10, 6, .3)).join(''),
       banner: R(0, 14, 60, 10, .5) + R(18, 17.5, 24, 3, .9), divider: v === 'dots' ? [0, 1, 2].map(i => `<circle cx="${24 + i * 6}" cy="20" r="1.5" fill="currentColor" opacity=".5"/>`).join('') : R(6, 19, 48, 1.5, .5), image: v === 'side' ? R(4, 6, 26, 28) + lines(34, 12, 3, 22) : R(4, 4, 52, 24) + R(4, 31, 30, 3, .4),
       // feat/design-site2: steps (numbered circles), visit us (facts in columns or a card with a button), timeline (a line with dots)
       steps: v === 'stack' ? [0, 1, 2].map(i => `<circle cx="9" cy="${8 + i * 12}" r="3.5" fill="currentColor" opacity=".6"/>` + R(17, 5.5 + i * 12, 22, 2.5, .5) + R(17, 9.5 + i * 12, 34, 2, .25)).join('') : [0, 1, 2].map(i => `<circle cx="${10 + i * 19}" cy="11" r="4" fill="currentColor" opacity=".6"/>` + R(5 + i * 19, 20, 12, 2.5, .5) + R(5 + i * 19, 25, 14, 2, .25) + R(5 + i * 19, 29, 10, 2, .25)).join(''),
-      info: v === 'card' ? R(4, 4, 52, 32, .15) + [0, 1, 2].map(i => R(8, 9 + i * 7, 9, 2, .3) + R(20, 9 + i * 7, 22, 2.5, .5)).join('') + R(8, 29, 14, 4.5, .8) : R(4, 5, 20, 4, .6) + [0, 1, 2].map(i => R(4 + i * 18, 16, 8, 2, .3) + R(4 + i * 18, 21, 14, 2.5, .5) + R(4 + i * 18, 26, 11, 2, .25)).join(''),
+      info: v === 'map' ? R(4, 5, 28, 30, .3) + `<circle cx="18" cy="18" r="3" fill="currentColor" opacity=".8"/>` + [0, 1, 2].map(i => R(36, 8 + i * 9, 8, 2, .3) + R(36, 11.5 + i * 9, 18, 2.5, .5)).join('') : v === 'card' ? R(4, 4, 52, 32, .15) + [0, 1, 2].map(i => R(8, 9 + i * 7, 9, 2, .3) + R(20, 9 + i * 7, 22, 2.5, .5)).join('') + R(8, 29, 14, 4.5, .8) : R(4, 5, 20, 4, .6) + [0, 1, 2].map(i => R(4 + i * 18, 16, 8, 2, .3) + R(4 + i * 18, 21, 14, 2.5, .5) + R(4 + i * 18, 26, 11, 2, .25)).join(''),
       timeline: v === 'cards' ? [0, 1, 2].map(i => R(4 + i * 18, 8, 15, 24, .2) + R(6 + i * 18, 11, 7, 2, .6) + R(6 + i * 18, 16, 11, 2, .3) + R(6 + i * 18, 20, 9, 2, .3)).join('') : R(9.25, 4, 1.5, 32, .3) + [0, 1, 2].map(i => `<circle cx="10" cy="${8 + i * 12}" r="2.5" fill="currentColor" opacity=".7"/>` + R(17, 5.5 + i * 12, 10, 2, .3) + R(17, 9.5 + i * 12, 30, 2.5, .5)).join(''),
     }[type] || lines(4, 6, 6, 52);
     return `<svg viewBox="0 0 60 40" width="60" height="40" aria-hidden="true">${body}</svg>`;
@@ -818,20 +821,21 @@ html[data-dev=phone] .ehide-phone,html[data-dev=tablet] .ehide-tablet,html[data-
   }
 
   // ---------- the template gallery (feat/site-v2): thumbnails, categories, search, Use this, a larger peek ----------
-  const gal = { list: [], cats: [], cat: 'All', q: '', hov: null, ht: 0, kind: '' };
+  const gal = { list: [], cats: [], cat: 'All', q: '', hov: null, ht: 0, kind: '', alias: {} };
   async function loadGallery() {
     if (gal.list.length) return;
     try { const r = await fetch('sitetpl/catalog.json'); if (r.ok) { const j = await r.json(); gal.list = j.templates || []; gal.cats = j.categories || []; } } catch {}
     if (!gal.list.length && connected()) { try { const j = await C.api('/site-designer/templates'); gal.list = j.templates || []; gal.cats = j.categories || []; } catch {} }
+    gal.list.forEach(t => { if (t.retired && t.alias) gal.alias[t.id] = t.alias; }); gal.list = gal.list.filter(t => !t.retired);   // only the offered ones are shown
     if (!gal.list.length) gal.list = S().TEMPLATES.map(id => ({ id, title: id.charAt(0).toUpperCase() + id.slice(1), summary: '', category: '' }));
   }
   function galPaint() {
     const box = $('#wdz-gal'); if (!box) return;
     const q = gal.q.trim().toLowerCase();
-    const base = gal.kind && gal.kind !== 'all' && DD() ? DD().siteTemplatesFor(gal.list, gal.kind, q ? 0 : 12) : gal.list;   // p5-start: one kind's templates, best first
+    const base = gal.kind && gal.kind !== 'all' && DD() ? DD().siteTemplatesFor(gal.list, gal.kind, q ? 0 : DD().SITE_KIND_SHOWS || 3) : gal.list;   // p5-start: one kind's templates, best first
     const list = base.filter(t => (gal.kind !== 'all' || gal.cat === 'All' || t.category === gal.cat) && (!q || `${t.title} ${t.summary} ${t.category} ${(t.tags || []).join(' ')} ${t.source || ''}`.toLowerCase().includes(q)));
     $('#wdz-gcats').innerHTML = ['All', ...gal.cats].map(c => `<button type="button" class="wdz-chip" data-gcat="${esc(c)}" aria-pressed="${c === gal.cat}">${esc(c)}</button>`).join('');
-    box.innerHTML = list.length ? list.map(t => `<div class="wdz-tpl" data-tpl="${esc(t.id)}" data-title="${esc(t.title)}" role="button" tabindex="0" aria-label="Use the ${esc(t.title)} template"><span class="wdz-tthumb">${t.thumb ? `<img src="${esc(t.thumb)}" alt="" loading="lazy" width="480" height="360">` : ''}</span><b>${esc(t.title)}</b><small>${esc(t.summary)}</small><span class="wdz-tmeta"><span class="wdz-tcat">${esc(t.category || '')}</span>${t.source && t.source !== 'TribeCode' ? `<span class="wdz-tsrc" title="${esc(t.source)} · ${esc(t.license)}">${esc(t.license)}</span>` : ''}</span><span class="wdz-tact"><button type="button" class="btn sm primary" data-tpl="${esc(t.id)}" data-title="${esc(t.title)}">Use this</button><button type="button" class="btn sm ghost" data-peek="${esc(t.id)}">Peek</button></span></div>`).join('') : `<p class="wdz-hint">No template matches “${esc(gal.q)}”. Try another word, or start blank.</p>`;
+    box.innerHTML = list.length ? list.map(t => `<div class="wdz-tpl" data-tpl="${esc(t.id)}" data-title="${esc(t.title)}" role="button" tabindex="0" aria-label="Use the ${esc(t.title)} template"><span class="wdz-tthumb">${t.thumb ? `<img src="${esc(t.thumb)}" alt="" loading="lazy" width="720" height="540">` : ''}</span><b>${esc(tr(t.title))}</b><small>${esc(tr(t.summary))}</small><span class="wdz-tact"><button type="button" class="btn sm primary" data-tpl="${esc(t.id)}" data-title="${esc(t.title)}">Use this</button><button type="button" class="btn sm ghost" data-peek="${esc(t.id)}">Peek</button></span></div>`).join('') : `<p class="wdz-hint">No template matches “${esc(gal.q)}”. Try another word, or start blank.</p>`;
     box.querySelectorAll('img').forEach(i => { i.onerror = () => i.remove(); });
     $('#wdz-gcount').textContent = `${list.length} of ${gal.kind && gal.kind !== 'all' && DD() ? DD().siteTemplatesFor(gal.list, gal.kind).length : gal.list.length}`;
   }
@@ -1179,8 +1183,7 @@ html[data-dev=phone] .ehide-phone,html[data-dev=tablet] .ehide-tablet,html[data-
       <div class="wdz-gbar"><input class="input" id="wdz-gq" type="search" placeholder="${esc(tr('Search templates: bakery, portfolio, link in bio…'))}" aria-label="${esc(tr('Search templates'))}" value="${esc(gal.q)}"><span class="wdz-hint" id="wdz-gcount"></span>${keepBtn()}${all ? `<button type="button" class="btn sm ghost" data-import="1">${esc(tr('Import HTML…'))}</button>` : ''}</div>
       <div class="wdz-gcats" id="wdz-gcats" role="group" aria-label="${esc(tr('Categories'))}"${all ? '' : ' hidden'}></div>
       <div class="wdz-tpls" id="wdz-gal"><p class="wdz-hint">${esc(tr('Loading templates…'))}</p></div>
-      ${all ? '' : `<p class="wdz-row"><button type="button" class="btn sm" data-kind="all">${esc(tr('See all templates'))}</button></p>`}
-      <p class="wdz-hint">${esc(tr('Templates from Start Bootstrap and Tailwind Toolbox (MIT) and HTML5 UP (CC BY 3.0, credited in the footer) are converted into blocks; see docs/SITE-TEMPLATES.md.'))}</p></div>`;
+      ${all ? '' : `<p class="wdz-row"><button type="button" class="btn sm" data-kind="all">${esc(tr('See all templates'))} · ${gal.list.length}</button></p>`}</div>`;
     galPaint();
   }
   function hideStart() { const b = $('#wdz-start'); if (b) b.hidden = true; if (root) root.classList.remove('wdz-starting'); }

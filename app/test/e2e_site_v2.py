@@ -3,7 +3,7 @@ tasks, the Website row, and autosave.
 
   "link tree website" works from Flint's main chat in a project, from Home with no tribe, and opens the designer with the
   link-in-bio template (never the old repo build); in the project it is filled from the project.
-  The gallery: 40+ templates with WebP thumbnails, category filter, search, Peek (a live preview) and Use this. An
+  The gallery: 20 to 28 templates (site-templates2; the older ones are retired but still load) with WebP thumbnails, category filter, search, Peek (a live preview) and Use this. An
   imported open-source template (Start Bootstrap, MIT) opens as blocks, takes an edit from Flint and exports; an HTML5 UP
   one (CC BY 3.0) carries its credit line in the export.
   Auto-populate: picking a template in a project fills the project name, opening hours from chat and the members, says
@@ -99,11 +99,13 @@ def main():
 
         # ---- server: the gallery, an imported template, facts, versioned saves
         tl = ok(api("/site-designer/templates", token=tok))["templates"]
-        assert len(tl) >= 40, len(tl)
-        lic = {t.get("license") for t in tl}
-        assert {"MIT", "CC BY 3.0"} <= lic, lic
-        ag = ok(api("/site-designer/template/sb-agency", token=tok))["config"]
+        offered = [t for t in tl if not t.get("retired")]; gone = [t for t in tl if t.get("retired")]
+        assert 20 <= len(offered) <= 28 and len(gone) >= 30, (len(offered), len(gone))   # site-templates2: fewer, better; the older ones stay loadable
+        assert all(t.get("alias") in {o["id"] for o in offered} for t in gone), "every retired template points at an offered one"
+        ag = ok(api("/site-designer/template/sb-agency?exact=1", token=tok))["config"]
         assert [b["type"] for b in blocks(ag)][:2] == ["hero", "features"] and ag["template"] == "sb-agency", [b["type"] for b in blocks(ag)]
+        ag2 = ok(api("/site-designer/template/sb-agency", token=tok))["config"]
+        assert ag2["template"] == "portfolio" and blocks(ag2)[0]["type"] == "hero", "a retired id gives the closest offered template"
         facts = ok(api(f"/projects/{pid}/site-autofill", token=tok, project=pid))["facts"]
         assert facts["name"] == "Ember Café" and any(h["d"] == "Mon–Fri" for h in facts.get("hours", [])), facts
         assert facts.get("email") == "hello@ember.cafe" and facts.get("members"), facts
@@ -124,7 +126,7 @@ def main():
             assert blocks(c)[0]["props"]["img"].startswith("data:image/"), "its picture is inside"
             sp.click("#wdz [data-wdz='more']"); sp.click("#wdz-more [data-wdz='templates']")
             sp.wait_for_selector("#wdz-start:not([hidden]) .wdz-kmain .wdz-kind", timeout=10000); sp.click("#wdz-start [data-kind='all']")   # p5-start: what kind of site first
-            sp.wait_for_function("document.querySelectorAll('#wdz-gal .wdz-tpl').length >= 40", timeout=10000)
+            sp.wait_for_function("document.querySelectorAll('#wdz-gal .wdz-tpl').length >= 20", timeout=10000)
             sp.wait_for_function("[...document.querySelectorAll('#wdz-gal .wdz-tpl img')].slice(0, 8).every(i => i.complete && i.naturalWidth > 100)", timeout=10000)
             assert sp.evaluate("document.querySelector('#wdz-gal .wdz-tpl img').src").endswith(".webp")
             n_all = sp.locator("#wdz-gal .wdz-tpl").count()
@@ -138,15 +140,15 @@ def main():
             assert 1 <= len(titles) < n_all, titles
             sp.fill("#wdz-gq", "agency")
             sp.wait_for_timeout(200)
-            sp.click("#wdz-gal [data-peek='sb-agency']")
+            sp.click("#wdz-gal [data-peek='portfolio']")
             sp.wait_for_function("(() => { const f = document.querySelector('#wdz-peek:not([hidden]) iframe'); return f && f.srcdoc.length > 2000; })()", timeout=10000)
             sp.click("#wdz-peek [data-peekclose]")
             sp.fill("#wdz-gq", "")
             sp.wait_for_timeout(200)
-            shot(sp, "site-gallery-v2.png")
-            sp.click("#wdz-gal .wdz-tpl[data-tpl='sb-agency'] [data-tpl='sb-agency']")
+            shot(sp, "site-gallery-v3.png")
+            sp.click("#wdz-gal .wdz-tpl[data-tpl='portfolio'] [data-tpl='portfolio']")
             sp.wait_for_selector("#wdz-replace #wdz-over", timeout=5000); sp.click("#wdz-over")   # p4-site: a template over a site that is already there asks first
-            sp.wait_for_function("TribeSiteDesigner.cfg().template === 'sb-agency'", timeout=10000)
+            sp.wait_for_function("TribeSiteDesigner.cfg().template === 'portfolio'", timeout=10000)
             before = blocks(cfg(sp))[0]["props"]["title"]
             out = dask(sp, "change the headline to Posters for every shop on the street")
             assert blocks(cfg(sp))[0]["props"]["title"] == "Posters for every shop on the street", out
@@ -157,13 +159,15 @@ def main():
             html = sp.evaluate("TribeSiteCfg.exportFiles(TribeSiteDesigner.cfg())['index.html']")
             assert "Posters for every shop on the street" in html and "Get the next update" not in html and "<script" not in html, "export: the edit, no hidden block, no scripts"
             # an HTML5 UP template keeps its credit in the export
-            sp.evaluate("TribeSiteDesigner.useTemplate('h5-identity')")
+            sp.evaluate("TribeSiteDesigner.useTemplate('h5-identity')")   # no longer offered: the closest offered one opens
+            sp.wait_for_function("TribeSiteDesigner.cfg().template === 'linkbio'", timeout=10000)
+            sp.evaluate("TribeSiteDesigner.useTemplate('h5-identity', false, { exact: true })")   # its own file still loads
             sp.wait_for_function("TribeSiteDesigner.cfg().template === 'h5-identity'", timeout=10000)
             html = sp.evaluate("TribeSiteCfg.exportFiles(TribeSiteDesigner.cfg())['index.html']")
             assert "HTML5 UP" in html and "CC BY 3.0" in html, "CC BY credit in the footer"
             # autosave with no tribe: reload at once, the local draft is back
             sp.evaluate("TribeSiteDesigner.useTemplate('sb-agency')")
-            sp.wait_for_function("TribeSiteDesigner.cfg().template === 'sb-agency'", timeout=10000)
+            sp.wait_for_function("TribeSiteDesigner.cfg().template === 'portfolio'", timeout=10000)
             dask(sp, "change the headline to Kept on this device")
             sp.reload(); sp.wait_for_function("window.TribeSiteDesigner", timeout=15000)
             sp.evaluate("TribeSiteDesigner.open({})"); sp.wait_for_function("TribeSiteDesigner.state() && TribeSiteDesigner.state().open", timeout=10000)
@@ -185,8 +189,8 @@ def main():
             assert "Filled in from your project" in pg.inner_text("#wdz-fill")
             assert not pg.evaluate("document.body.innerText.includes('Failed to fetch')"), "no fetch failure"
             # a café-style template: hours from chat and the members
-            pg.evaluate("TribeSiteDesigner.useTemplate('sb-agency')")
-            pg.wait_for_function("TribeSiteDesigner.cfg().template === 'sb-agency'", timeout=10000)
+            pg.evaluate("TribeSiteDesigner.useTemplate('conference')")   # it has a "who" section for the members
+            pg.wait_for_function("TribeSiteDesigner.cfg().template === 'conference'", timeout=10000)
             c = cfg(pg); types = [x["type"] for x in blocks(c)]
             hrs = [x for x in blocks(c) if x["type"] == "list" and "hour" in x["props"]["title"].lower()]
             assert hrs and any(i["title"] == "Mon–Fri" and i["meta"] == "8am–4pm" for i in hrs[0]["props"]["items"]), types

@@ -36,12 +36,12 @@
     ['business', /./, 'Business or shop'],
   ];
   const SITE_TPL = {   // the best template per kind, then words that pick a closer one (ids in app/ui/sitetpl/)
-    linkbio: ['linkbio', [['lb-musician', 'band|music|song|singer|dj|musician'], ['lb-shop', 'shop|store|sell|merch|etsy'], ['lb-writer', 'writer|book|author|newsletter'], ['lb-coach', 'coach|teacher|tutor|lessons'], ['lb-dev', 'developer|coder|github|code'], ['lb-artist', 'artist|illustrator|illustration|drawings?|paintings?|art']]],
-    app: ['gh-project', [['app-redirect', 'send (people|visitors|them) to|redirect'], ['app-download', 'download|app store|play store|phone app|mobile'], ['gamepage', 'game']]],
+    linkbio: ['linkbio', [['creator', 'band|music|song|singer|dj|musician|stream|twitch|youtube|creator|artist|illustrator|illustration|drawings?|paintings?|art']]],
+    app: ['gh-project', [['app-redirect', 'send (people|visitors|them) to|redirect'], ['app-download', 'download|app store|play store|phone app|mobile'], ['gamepage', 'game'], ['docs', 'docs|documentation|handbook|manual|guide']]],
     event: ['conference', [['wedding', 'wedding|marry|married'], ['band', 'gig|concert|band']]],
-    portfolio: ['portfolio', [['photography', 'photo'], ['resume', 'resume|cv|job'], ['sb-freelancer', 'freelance']]],
-    blog: ['blog', [['podcast', 'podcast'], ['tt-minimal-blog', 'minimal']]],
-    business: ['service', [['cafe', 'bakery|caf[eé]|coffee|tea|restaurant|food|pizza|brunch|panader[ií]a|boulangerie|bäckerei|padaria'], ['menu', 'menu'], ['merch', 'merch|shop|store|sell'], ['band', 'band|music'], ['club', 'club|team|league|running|community'], ['nonprofit', 'nonprofit|charity|volunteer|cause'], ['course', 'course|class|learn|teach|school'], ['saas', 'startup|software|saas|product'], ['comingsoon', 'coming soon|waitlist|launch'], ['sb-agency', 'agency']]],
+    portfolio: ['portfolio', [['photography', 'photo'], ['resume', 'resume|cv|job'], ['letter', 'about me|personal|letter']]],
+    blog: ['blog', [['podcast', 'podcast']]],
+    business: ['service', [['cafe', 'bakery|caf[eé]|coffee|tea|restaurant|food|pizza|brunch|panader[ií]a|boulangerie|bäckerei|padaria'], ['menu', 'menu'], ['merch', 'merch|shop|store|sell'], ['band', 'band|music'], ['club', 'club|team|league|running|community'], ['nonprofit', 'nonprofit|charity|volunteer|cause'], ['course', 'course|class|learn|teach|school'], ['saas', 'startup|software|saas|product'], ['comingsoon', 'coming soon|waitlist|launch'], ['portfolio', 'agency|studio']]],
   };
   const APP_TPL = [   // App Creator template ids and the words that pick them; the first match wins
     ['trivia', 'quiz|trivia'], ['party', 'party|game night'], ['habits', 'habits?|streaks?|track (our|my) days?'], ['workout', 'workout|gym|exercise|fitness'], ['running', 'run(ning)?|jog'],

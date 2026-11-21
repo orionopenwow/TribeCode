@@ -20,6 +20,8 @@ Updated 2026-11-19 by the session that released v0.33.0 to v0.36.0, after catchi
 
 The four branches listed here on 2026-11-13 (`feat/real-tribe`, `feat/design-site2`, `feat/company3`, `feat/chat-invite-ui`) were finished and released in v0.38.0.
 
+Branch `feat/site-templates2` (not merged): the website gallery cut from 61 templates to 25 hand-written ones that differ in structure; 38 retired but loadable; new layouts in `sitecfg.js`; `site_variety_test`. Cache `tribecode-shell-v269` on that branch. See `docs/SITE-TEMPLATES.md`.
+
 ## What the owner wants (standing instructions)
 
 - **Build and release.** No large audit passes or long audit documents. Short reports.

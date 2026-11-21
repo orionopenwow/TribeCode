@@ -1,7 +1,12 @@
 #!/usr/bin/env python3
 """The website template gallery (feat/site-v2): app/ui/sitetpl/{catalog.json, <id>.json, thumbs/<id>.webp}.
 
-  python3 scripts/dev/site-gallery.py [--src /path/to/clones] [--only id,id] [--no-thumbs]
+  python3 scripts/dev/site-gallery.py [--only id,id] [--no-thumbs]
+  python3 scripts/dev/site-gallery.py --legacy [--src /path/to/clones]     (rebuilds the retired ones too)
+
+site-templates2: the gallery offers the hand-written set in scripts/dev/site-curated.js (step 0). Every older template
+stays in catalog.json as retired, with the id of the closest offered one (alias), and its <id>.json stays loadable; it
+has no thumbnail and is not shown. Steps 1, 1b and 2 below made those older ones and only run with --legacy.
 
 1. The 16 TribeCode templates (templates/sites/<id>) become configs with sitecfg.fromTemplate, pictures inlined.
 2. The open-source templates in scripts/dev/site-sources.json are read from local clones (--src, default
@@ -12,7 +17,7 @@
 3. Thumbnails: each config rendered by sitecfg.render at 1280x960, saved as a 480x360 WebP.
 The catalog is what the gallery shows offline (no server needed), and what GET /api/site-designer/templates serves.
 """
-import json, os, re, sys, random, base64, io, urllib.parse
+import json, os, re, sys, random, base64, io, urllib.parse, subprocess
 import sys; sys.path.insert(0, str(__import__('pathlib').Path(__file__).resolve().parent))
 import fixedclock   # a fixed clock and seeded randomness, for this script and everything it starts
 from pathlib import Path
@@ -26,6 +31,9 @@ args = sys.argv[1:]
 SRC = Path(args[args.index('--src') + 1]) if '--src' in args else Path('/tmp/osrc/tpl')
 ONLY = set(args[args.index('--only') + 1].split(',')) if '--only' in args else None
 THUMBS = '--no-thumbs' not in args
+LEGACY = '--legacy' in args
+CUR = json.loads(subprocess.check_output(['node', str(ROOT / 'scripts' / 'dev' / 'site-curated.js')]))
+TW, TH = 720, 540   # thumbnails (the cards are larger now)
 SOURCES = json.loads((ROOT / 'scripts' / 'dev' / 'site-sources.json').read_text())
 NATIVE_CAT = {'linkbio': 'Link in bio', 'merch': 'Shop', 'portfolio': 'Portfolio', 'creator': 'Creator', 'band': 'Music', 'cafe': 'Food & drink', 'service': 'Business', 'wedding': 'Events',
               'podcast': 'Creator', 'blog': 'Blog', 'saas': 'Startup', 'gamepage': 'Games', 'resume': 'Personal', 'nonprofit': 'Nonprofit', 'photography': 'Portfolio', 'comingsoon': 'Coming soon'}
@@ -105,9 +113,17 @@ def main():
         br = p.chromium.launch(executable_path='/usr/bin/google-chrome' if os.path.exists('/usr/bin/google-chrome') else None, args=['--no-proxy-server', '--allow-file-access-from-files'])
         page = br.new_page(viewport={'width': 1280, 'height': 960}); fixedclock.apply(page)
         page.goto('about:blank'); page.add_script_tag(path=str(UI / 'sitecfg.js'))
+        # 0. the offered set, written by hand (scripts/dev/site-curated.js)
+        BUILD = '''([id, c]) => { const S = TribeSiteCfg; let cfg = S.normalize({ ...c, template: id });
+                const walk = o => { if (Array.isArray(o)) return o.forEach(walk); if (!o || typeof o !== 'object') return; for (const k of Object.keys(o)) { if (k === 'img' && /^illus:/.test(o[k] || '')) o[k] = S.illustration(o[k].slice(6), cfg); else walk(o[k]); } };
+                walk(cfg.pages); return S.autoWire(S.normalize(cfg), null, { quiet: true }).cfg; }'''
+        for t in CUR['templates'] + CUR['asIs']:
+            if 'config' in t and not (ONLY and t['id'] not in ONLY):
+                (OUT / f"{t['id']}.json").write_text(json.dumps(page.evaluate(BUILD, [t['id'], t['config']]), separators=(',', ':')))
+            cat.append({'id': t['id'], 'title': t['title'], 'summary': t['summary'], 'category': t['category'], 'tags': t['tags'], 'source': 'TribeCode', 'license': 'MIT', 'order': CUR['order'].index(t['id']) + 1, 'kind': t['kind']})
         # 1. ours
         for tid in json.loads(page.evaluate('JSON.stringify(TribeSiteCfg.TEMPLATES)')):
-            if ONLY and tid not in ONLY: continue
+            if not LEGACY or tid in CUR['order'] or (ONLY and tid not in ONLY): continue
             d = json.loads((ROOT / 'templates' / 'sites' / tid / 'site.json').read_text()); m = d.get('meta', {})
             imgs = {}
             for f in (ROOT / 'templates' / 'sites' / tid / 'img').glob('*'):
@@ -119,7 +135,7 @@ def main():
             cat.append({'id': tid, 'title': m.get('title', tid), 'summary': m.get('summary', ''), 'category': NATIVE_CAT.get(tid, 'Business'), 'tags': m.get('tags', []), 'source': 'TribeCode', 'license': 'MIT', 'order': m.get('order', 50)})
         # 1b. site types written as designer configs (scripts/dev/site-types.json); "illus:<name>" pictures are drawn in the site's colours
         for t in TYPES:
-            if ONLY and t['id'] not in ONLY: continue
+            if not LEGACY or t['id'] in CUR['order'] or (ONLY and t['id'] not in ONLY): continue
             cfg = page.evaluate('''([id, c]) => { const S = TribeSiteCfg; let cfg = S.normalize({ ...c, template: id });
                 const walk = o => { if (Array.isArray(o)) return o.forEach(walk); if (!o || typeof o !== 'object') return; for (const k of Object.keys(o)) { if (k === 'img' && /^illus:/.test(o[k] || '')) o[k] = S.illustration(o[k].slice(6), cfg); else walk(o[k]); } };
                 walk(cfg.pages); return S.autoWire(S.normalize(cfg), null, { quiet: true }).cfg; }''', [t['id'], t['config']])
@@ -127,7 +143,7 @@ def main():
             cat.append({'id': t['id'], 'title': t['title'], 'summary': t['summary'], 'category': t['category'], 'tags': t['tags'], 'source': 'TribeCode', 'license': 'MIT', 'order': t.get('order', 60)})
         # 2. imported
         for i, t in enumerate(SOURCES['templates']):
-            if ONLY and t['id'] not in ONLY: continue
+            if not LEGACY or (ONLY and t['id'] not in ONLY): continue
             repo = SOURCES['repos'][t['src']]
             cands = [SRC / f"{t['src']}-{t['name']}" / repo['file'], SRC / f"{t['src']}-{t['name'].lower()}" / repo['file'], SRC / 'zce' / t['name'] / repo['file']]
             f = next((c for c in cands if c.exists()), None)
@@ -182,12 +198,13 @@ def main():
         if THUMBS:
             fonts = (UI / 'assets' / 'site-fonts').as_uri() + '/'
             for c in cat:
+                if c['id'] not in CUR['order'] or (ONLY and c['id'] not in ONLY): continue
                 cfg = json.loads((OUT / f"{c['id']}.json").read_text())
                 html = page.evaluate('([c, f]) => TribeSiteCfg.render(c, { fonts: f, mode: "pages" })', [cfg, fonts])
                 tp = br.new_page(viewport={'width': 1280, 'height': 960}); fixedclock.apply(tp); tp.route('http*://**', lambda r: r.abort())
                 tmp = OUT / '_thumb.html'; tmp.write_text(html); tp.goto(tmp.as_uri()); tp.wait_for_timeout(250)
                 png = tp.screenshot(); tp.close()
-                im = Image.open(io.BytesIO(png)).convert('RGB').resize((480, 360), Image.LANCZOS)
+                im = Image.open(io.BytesIO(png)).convert('RGB').resize((TW, TH), Image.LANCZOS)
                 im.save(OUT / 'thumbs' / f"{c['id']}.webp", 'WEBP', quality=72, method=6)
             try: (OUT / '_thumb.html').unlink()
             except Exception: pass
@@ -197,10 +214,18 @@ def main():
     except Exception: pass
     have = {c['id'] for c in cat}
     cat += [x for i, x in old.items() if i not in have and (OUT / f'{i}.json').exists()]
-    for c in cat: c['thumb'] = f"sitetpl/thumbs/{c['id']}.webp"; c['kind'] = kind_of(c)
-    cat.sort(key=lambda c: (ORDER.index(c['category']) if c['category'] in ORDER else 99, c.get('order', 99)))
-    cats = [x for x in ORDER if any(c['category'] == x for c in cat)]
-    (OUT / 'catalog.json').write_text(json.dumps({'about': 'Website templates for the designer (scripts/dev/site-gallery.py). Sources and licenses: docs/SITE-TEMPLATES.md.', 'categories': cats, 'templates': cat}, indent=1))
-    print(f'{len(cat)} templates in {len(cats)} categories')
+    for c in cat:
+        c['kind'] = c.get('kind') or kind_of(c)
+        if c['id'] in CUR['order']:
+            c['thumb'] = f"sitetpl/thumbs/{c['id']}.webp"; c.pop('retired', None); c.pop('alias', None)
+        else:   # no longer offered: its file stays, its picture goes, and it points at the closest offered one
+            c['retired'] = True; c['alias'] = CUR['retired'].get(c['id']) or {'linkbio': 'linkbio', 'app': 'saas', 'portfolio': 'portfolio', 'event': 'conference', 'blog': 'blog'}.get(c['kind'], 'service'); c.pop('thumb', None)
+            for k in ('summary', 'tags', 'order', 'source', 'sourceUrl', 'credit'): c.pop(k, None)   # only what loading it needs
+            try: (OUT / 'thumbs' / f"{c['id']}.webp").unlink()
+            except Exception: pass
+    cat.sort(key=lambda c: (1, c['id']) if c.get('retired') else (0, c.get('order', 99)))
+    cats = [x for x in ORDER if any(c['category'] == x and not c.get('retired') for c in cat)]
+    (OUT / 'catalog.json').write_text(json.dumps({'about': 'Website templates for the designer (scripts/dev/site-gallery.py). Sources and licenses: docs/SITE-TEMPLATES.md. retired: no longer offered (its file still loads); alias: the closest offered one.', 'categories': cats, 'templates': cat}, indent=1))
+    print(f"{sum(1 for c in cat if not c.get('retired'))} templates offered in {len(cats)} categories, {sum(1 for c in cat if c.get('retired'))} retired")
 
 main()
