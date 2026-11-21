@@ -639,7 +639,7 @@
       const tab = $('#wt-website'); if (tab && !phone()) await click('me', tab, { noClick: true });
       const make = await settle('#wb-design', 'the website page open', 4000);
       if (make) { await click('me', make); }
-      const start = await settle('#wdz-start:not([hidden]) [data-kind], #wdz-frame', 'the website designer open', 5000);
+      const start = await settle('#wdz-start:not([hidden]) .wdz-kind', 'the website designer open', 5000);
       if (start) await move('me', start, 1200, { dx: 0.5, dy: 0.5 });
       await wait(3200);   // time to see the kinds of site
       try { if (window.TribeSiteDesigner) window.TribeSiteDesigner.close(); } catch {}
