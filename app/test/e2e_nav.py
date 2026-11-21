@@ -254,13 +254,15 @@ def main():
             host.click("#wt-requests"); host.wait_for_selector("#view-requests:not(.hidden)"); wait_text(host, "#pj-requests", "Hook up the gamepad")
 
             # ---- Agents Hub: one dashboard; every deep view still opens (as a temporary tab when it isn't pinned)
-            host.click("#nest-ws-agents"); host.wait_for_selector("#view-tabs:not(.hidden)")
-            assert tabs(host) == ["Dashboard"], tabs(host)
+            # v0.43: with nothing pinned the hub is one clear page and shows no tab row (its "More views" opens the rest)
+            host.click("#nest-ws-agents"); host.wait_for_selector("#view-coord:not(.hidden)"); host.wait_for_function("TribeCoord.tab() === 'agents'")
+            assert host.locator("#view-tabs").is_hidden(), "no tab row with only Dashboard"
             for key in AGENT_KEYS:
                 host.evaluate("k => TribeShell.go(k)", key); host.wait_for_selector(OPENS[key], timeout=8000)
-                host.wait_for_function("k => document.querySelector(`#wt-${k}`) && document.querySelector(`#wt-${k}`).classList.contains('on')", arg=key, timeout=6000)
+                if key == "agents": host.wait_for_function("document.querySelector('#view-tabs').classList.contains('hidden')", timeout=6000)
+                else: host.wait_for_function("k => document.querySelector(`#wt-${k}`) && document.querySelector(`#wt-${k}`).classList.contains('on')", arg=key, timeout=6000)
                 assert host.evaluate("document.querySelector('#nest-ws-agents').classList.contains('on')"), key
-                assert len(tabs(host)) == (1 if key == "agents" else 2), (key, tabs(host))
+                assert len(tabs(host)) == (0 if key == "agents" else 2), (key, tabs(host))
                 if host.locator("#coord-tabs").count(): assert host.locator("#coord-tabs").is_hidden()
             host.evaluate("TribeShell.go('conflicts')"); host.wait_for_function("TribeCoord.tab() === 'conflicts'")
             wait_text(host, "#crumb-label", "Agents Hub › Conflicts")
@@ -346,7 +348,7 @@ def main():
             assert phone.evaluate("(() => { const s = document.querySelector('.window > .side'); return s.scrollWidth <= s.clientWidth + 1 && document.querySelector('#nest').scrollWidth <= document.querySelector('#nest').clientWidth + 1; })()")
             no_dupes(phone)
             shot(phone, "nav-phone-panel")
-            phone.click("#nest-ws-agents"); phone.wait_for_selector("#view-tabs:not(.hidden)")
+            phone.click("#nest-ws-agents"); phone.wait_for_selector("#view-coord:not(.hidden)")
             assert not phone.evaluate("document.body.classList.contains('drawer-open')")
             phone.evaluate("TribeShell.go('conflicts')"); phone.wait_for_function("TribeCoord.tab() === 'conflicts'")
             assert phone.evaluate("document.documentElement.scrollWidth <= innerWidth + 1")

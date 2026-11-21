@@ -152,9 +152,11 @@ def main():
             pg.unroute("**/api/thumb")
 
             # ---------- 3. icons on tabs ----------
-            pg.evaluate("TribeShell.go('ws-agents')"); pg.wait_for_selector("#view-tabs:not(.hidden) [data-tab]")
+            # the v0.43 Agents hub shows its tab row only once a view is pinned (alone, Dashboard is one clear page)
+            pg.evaluate("TribeAgentsDash.pin('ownership')"); pg.evaluate("TribeShell.go('ws-agents')"); pg.wait_for_selector("#view-tabs:not(.hidden) [data-tab]")
             assert pg.evaluate("[...document.querySelectorAll('#view-tabs [data-tab]')].every(t => t.querySelector('svg'))"), "every workspace tab has an icon"
             assert pg.evaluate("[...document.querySelectorAll('#view-tabs [data-tab] svg')].every(s => s.getAttribute('stroke') === 'currentColor' && s.getAttribute('fill') === 'none')")
+            pg.evaluate("TribeAgentsDash.unpin('ownership')")
 
             # ---------- 1. the Workshop: a destination, lit like a tribe; Back leaves ----------
             pg.click("#rail-workshop"); pg.wait_for_function("TribeWorkshop.isOpen() && TribeRouter.where().place === 'workshop'"); pg.mouse.move(700, 600); pg.wait_for_timeout(400)
