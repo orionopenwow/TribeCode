@@ -295,9 +295,10 @@ def main():
             assert "Updated the story section" in mcp("website_edit_section", {"section": "story", "title": "How it started", "body": "We wanted a small game to play together."})
             assert "review" in mcp("website_request_publish", {"note": "New story"}).lower() or "Asked" in mcp("website_request_publish", {})
             assert api(f"/projects/{pid}/website", token=tok)[1]["website"]["gen"]["unpublished"] is True
-            # Flint: "make our website"
+            # Flint: website words open the website designer, the one website tool (feat/website-one)
             host.evaluate("TribeFlint.ask('shuffle our website layout')")
-            wait(host, "TribeFlint.thread().some(m => m.who === 'flint' && /draft in the/.test(m.text))", timeout=15000)
+            wait(host, "document.body.classList.contains('wdz-open')", timeout=15000)
+            host.evaluate("TribeSiteDesigner.close()")
 
             # ======== PHONE 390 ========
             pctx = b.new_context(**PHONE); pctx.add_init_script(settings_js("Orion", tok, pid))
