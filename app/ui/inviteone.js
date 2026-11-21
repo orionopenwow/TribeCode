@@ -68,7 +68,7 @@
     const pid = typeof opts.project === 'string' ? opts.project : curPid();
     const asked = opts.who === 'claude' ? 'agent' : opts.who;   // 'claude': what the third choice was called first
     const who = WHO.some(w => w[0] === asked) ? asked : 'friend';
-    st = { who, once: !!opts.once, proj: !!opts.project || scoped(), pid, preset: opts.link || '', presetKind: opts.linkKind || '', name: opts.name || '', made: null, guest: null, seq: 0, agent: { kind: opts.kind || (opts.who === 'claude' ? 'claude' : undefined), fresh: !!opts.fresh, welcome: !!opts.welcome } };
+    st = { who, once: !!opts.once, proj: !!opts.project || scoped(), pid, preset: opts.link || '', presetKind: opts.linkKind || '', name: opts.name || '', made: null, guest: null, seq: 0, agent: { kind: opts.kind || (opts.who === 'claude' ? 'claude' : undefined), alt: opts.alt || '', fresh: !!opts.fresh, welcome: !!opts.welcome } };
     if (window.TribeOffline && window.TribeOffline.active && window.TribeOffline.active() && !solo()) st.once = true;   // the offline demo has no tribe link: its pretend link is a one-time one
     b.className = 'modal-card io' + (st.preset ? ' ii' : '');
     m.classList.remove('hidden'); m.setAttribute('aria-label', 'Invite');

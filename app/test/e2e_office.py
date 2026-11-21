@@ -74,7 +74,7 @@ def main():
                 print("HUB", cp.evaluate("[...document.querySelectorAll('[data-hub]')].map(e => e.id + ':' + e.dataset.hub)"), cp.inner_text("#ad-dash")[:300]); raise
             assert "Looking at your agents" not in cp.inner_text("#ad-dash")
             assert cp.locator("#ad-how").count() == 1 and not cp.evaluate("document.querySelector('#ad-how').open"), "how it works is folded"
-            assert cp.locator("#ad-tribe-ai").count() == 1 and cp.locator("#ad-waiting").count() == 1, (cp.locator("#ad-tribe-ai").count(), cp.locator("#ad-waiting").count(), cp.inner_text("#ad-dash")[:400])
+            assert cp.locator("#ad-hero [data-ao-pick='free']").count() == 1 and cp.locator("#ad-waiting").count() == 1, (cp.locator("#ad-waiting").count(), cp.inner_text("#ad-dash")[:400])   # feat/agents-office: Add an AI helper, with a free one
             assert cp.evaluate("!document.querySelector('#view-tabs') || document.querySelector('#view-tabs').classList.contains('hidden') || !document.querySelector('#view-tabs #wt-plus')"), "no bare + row"
             if os.environ.get("TRIBE_SHOTS_DIR"):
                 cp.wait_for_timeout(600); cp.screenshot(path=os.path.join(os.environ["TRIBE_SHOTS_DIR"], "hub-connect-1440.png"))

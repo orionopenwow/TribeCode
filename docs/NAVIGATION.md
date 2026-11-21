@@ -6,8 +6,8 @@ Where every button goes, and the one router that keeps it continuous on desktop 
 
 | Place | What is on screen | Sidebar |
 | --- | --- | --- |
-| **Global** (your dashboard) | Home (updates), Files, Design, Code, Work, Agent fleet | The rows, no heading: Home · Files · Design · Code · Work · Agent fleet |
-| **Project** (inside a tribe) | Dashboard, Messages, Files, Design, Task Board (tabs), Agents Hub (tabs), Company… | The project's rows, under its header |
+| **Global** (your dashboard) | Home (updates), Files, Design, Code, Work, Agents & office | The rows, no heading: Home · Files · Design · Code · Work · Agents & office |
+| **Project** (inside a tribe) | Dashboard, Messages, Files, Design, Task Board (tabs), Agents & office (tabs), Company… | The project's rows, under its header |
 
 `TribeRouter.where()` says which (or `{ place: 'workshop' }` while the Workshop is on screen): `{ place: 'global', section: 'home' | 'docs' | 'design' | 'repos' | 'work' | 'fleet', key }` or `{ place: 'project', project, view, key }`. The global sections only change the main pane; they never draw the project nest. With no tribe on the device, a project place is never shown: Home opens with a toast that says what to do.
 
@@ -25,14 +25,14 @@ Where every button goes, and the one router that keeps it continuous on desktop 
 | Global: Design (`#nest-design-all`) | `TribeHub.open('design')`: every canvas and whiteboard, on this device and in your tribes | global | `#/hub/design` |
 | Global: Code (`#nest-repos-all`, key `repos-all` kept) | `TribeHub.open('repos')`: the repos you're in, then your code files | global | `#/hub/repos` |
 | Global: Work (`#nest-work`) | `TribeTalent.open()`; with no tribe, its empty state (Start your first project · Join with a link · Back to Home) | global | `#/hub/work` |
-| Global: Agent fleet (`#nest-fleet`) | `TribeAgentsHub.open({ global: true })` | global | `#/fleet` |
+| Global: Agents & office (`#nest-fleet`) | `TribeAgentsHub.open({ global: true })` | global | `#/fleet` |
 | Project: Dashboard (`#nest-overview`) | `App.show('home')`: the preview band of the project (app · website · design, `app/ui/dashband.js`), Needs attention under it, then the rest | project | |
 | Dashboard band actions | Open preview (`TribePreview`), Open code (`App.show('repo')`) / Open designer (`TribeSiteDesigner`) / Open design (`TribeCanvas`), Share link (copies), Switch App · Website · Design, ⋯ Pin as main project (leads). Each Needs attention row has one action (inbox, Accept in place, tasks, designer, Company, GitHub, backup) | project | |
 | Project: Messages (`#nest-chat`), streams | `App.show('chat')`, DMs, channels | project | |
 | Project: Files (`#nest-docs`) | Files tabs (stroke icons): Files · Code · Docs · Website · Captures · Academy; the Files tab is the shared Files dashboard | project | `#/docs/<tab>` |
 | Project: Design (`#nest-canvas`) | The design canvas | project | |
 | Project: Task Board (`#nest-ws-tasks`) | Last tab: Board · Bugs · Proposals · Milestones · Calendar · Code repository · Visuals (· Roles · Requests) | project | `#/tasks/<tab>` |
-| Project: Agents Hub (`#nest-ws-agents`) | Dashboard + pinned tabs (Your agents, MCP, Ownership, Conflicts, Hand-offs, Reviews, Daily plan, Secretary) | project | `#/agents/<tab>` |
+| Project: Agents & office (`#nest-ws-agents`) | Dashboard + pinned tabs (Your AI tools, MCP, Ownership, Conflicts, Hand-offs, Reviews, Daily plan, Secretary) | project | `#/agents/<tab>` |
 | Project: Code row (`#pin-repo`) | `App.show('repo')` | project | |
 | Breadcrumb (`#crumb-section`) | The same rows as the sidebar, then each workspace's tabs | either | |
 | Switcher (`#side-switch`, `#ws-name`) | Tribe Home, project views, pinned/rooms/personal projects, Workshop, scratchpad, new, join | either | |

@@ -118,7 +118,7 @@
     const ask = H().ASKS[cur.id];
     if (st.ai) return `<div class="hs-ai"><span class="eyebrow">${esc(T('Your AI can do more here'))}</span><p class="hs-ai-q" id="hs-ai-q">${esc(T(ask))}</p>
       <div class="hsp-row"><button type="button" class="btn" id="hs-ai-send">${esc(T('Ask my AI helpers'))}</button><small class="faint">${esc(T('They work in their own corner; you approve every change.'))}</small></div></div>`;
-    return `<div class="hs-ai is-local"><span class="eyebrow">${esc(T('With no AI'))}</span><p>${esc(T(cur.local))}</p><small class="faint">${esc(T('A stronger AI (your own Claude Code, Codex or Gemini) can go further here. Connect one in Agents Hub.'))}</small></div>`;
+    return `<div class="hs-ai is-local"><span class="eyebrow">${esc(T('With no AI'))}</span><p>${esc(T(cur.local))}</p><small class="faint">${esc(T('A stronger AI (your own Claude Code, Codex or Gemini) can go further here. Connect one in Agents & office.'))}</small></div>`;
   }
 
   // ---------- each stage ----------

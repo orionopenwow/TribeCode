@@ -20,7 +20,7 @@ SHOTS = ROOT / "docs" / "screenshots"
 take = "--shots" in sys.argv or os.environ.get("TRIBE_SHOTS") == "1"
 errors = []
 
-CORE = ["Dashboard", "Messages", "Files", "Design", "Task Board", "Agents Hub"]
+CORE = ["Dashboard", "Messages", "Files", "Design", "Task Board", "Agents & office"]
 SETUP_CO = "Set up company"   # polish: leads also see this quiet row (company.js) once the project's company view loads
 core = lambda rs: [r for r in rs if r != SETUP_CO]
 TASK_TABS = ["Board", "Bugs", "Proposals", "Milestones", "Calendar", "Code repository", "Visuals"]   # feat/shell-polish: stroke icons, not emoji
@@ -95,7 +95,7 @@ def no_dupes(page):
 # ---- the one router (app/ui/router.js, docs/NAVIGATION.md): global sections keep the global dashboard, Back works,
 # Work with no tribe stays global with a next step, the logo is always Home, one pane on screen, no dead ends.
 GLOBAL = [("nest-hub", "hub", "Your dashboard", "#/hub"), ("nest-docs-all", "docs-all", "Files", "#/hub/docs"), ("nest-design-all", "design-all", "Design", "#/hub/design"), ("nest-repos-all", "repos-all", "Code", "#/hub/repos"),
-          ("nest-work", "work", "Work", "#/hub/work"), ("nest-fleet", "fleet", "Agent fleet", "#/fleet")]
+          ("nest-work", "work", "Work", "#/hub/work"), ("nest-fleet", "fleet", "Agents & office", "#/fleet")]
 STATE = """() => ({ view: document.body.dataset.view, global: document.body.classList.contains('global'), place: TribeRouter.where().place,
   lit: [...document.querySelectorAll('.side [data-pnav].on')].filter(e => e.offsetParent).map(e => e.dataset.pnav),
   rows: [...document.querySelectorAll('.side [data-pnav]')].filter(e => e.offsetParent).map(e => e.dataset.pnav),
@@ -270,7 +270,7 @@ def main():
                 assert len(tabs(host)) == (0 if key == "agents" else 2), (key, tabs(host))
                 if host.locator("#coord-tabs").count(): assert host.locator("#coord-tabs").is_hidden()
             host.evaluate("TribeShell.go('conflicts')"); host.wait_for_function("TribeCoord.tab() === 'conflicts'")
-            wait_text(host, "#crumb-label", "Agents Hub › Conflicts")
+            wait_text(host, "#crumb-label", "Agents & office › Conflicts")
             host.mouse.move(720, 600); shot(host, "nav-tabs-conflicts")
             # deep links
             host.goto(BASE + "/?skipIntro=1#/tasks/calendar"); host.wait_for_selector("#view-calendar:not(.hidden)", timeout=10000)
@@ -284,8 +284,8 @@ def main():
             host.evaluate("document.querySelector('#crumb-section').click()"); host.wait_for_selector("#section-menu")
             menu = host.evaluate("[...document.querySelectorAll('#section-menu h6, #section-menu button')].map(e => (e.tagName === 'H6' ? '# ' : '') + (e.querySelector('span') || e).textContent.trim())")
             assert menu[:len(CORE)] == CORE, menu
-            assert "# Task Board" in menu and "# Agents Hub" in menu, menu
-            assert menu[menu.index("# Agents Hub") + 1:] == ["Agents dashboard", "Your agents", "TribeCode MCP", "Ownership map", "Conflict radar", "Hand-offs", "Reviews", "Daily plan", "Secretary"], menu
+            assert "# Task Board" in menu and "# Agents & office" in menu, menu
+            assert menu[menu.index("# Agents & office") + 1:] == ["Agents dashboard", "Your AI tools", "TribeCode MCP", "Ownership map", "Conflict radar", "Hand-offs", "Reviews", "Daily plan", "Secretary"], menu
             host.click("#section-menu [data-dest='calendar']"); host.wait_for_selector("#view-calendar:not(.hidden)")
 
             # ---- Ctrl K finds every destination exactly once

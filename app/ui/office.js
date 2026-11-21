@@ -2,9 +2,13 @@
 // screen at each desk says what they are doing right now, in short lines with a blinking cursor (a dim screensaver
 // when nobody is there). People walk to the thinking spot, the task board or the lounge and back. Idea from the
 // owner's own MIT project Vanilla Agents; drawn fresh in TribeCode's flat style.
-// Server: server/office.js (GET/PUT /api/office). Off by default: the host or an admin turns it on per tribe, and
-// each person can hide it for themselves on this device.
-//   window.TribeOffice = { mount(el, { compact }), refresh(), hidden(), setHidden(bool), state(), settingsHtml }
+// It is the top of Agents & office (agentsoffice.js): the desks are always there; the host or an admin can turn on the
+// pixel floor (Office Space, officespace.js) for the tribe, and each person can hide the office on their device.
+// One card for everyone: a click on someone at a desk, on the floor or in the list opens the same actions (Message,
+// Call, Give a task, Open what they're working on; for AI helpers Approve / Ask for changes, Pause, its page).
+// Server: server/office.js (GET/PUT /api/office).
+//   window.TribeOffice = { mount(el, { compact }), refresh(), hidden(), setHidden(bool), state(), load(), setOn(bool),
+//     openCard(id), cardBody(d), cardClick(e, card, d), cardSubmit(e, card, d), statusOf(d), linesOf(d), everyone() }
 //   mount() returns { destroy() }. compact: a one-line strip of who is at their desk (for the project dashboard).
 (function () {
   'use strict';
@@ -90,6 +94,10 @@
       <p class="of-foot faint">${esc(`${people} ${people === 1 ? tr('person') : tr('people')} · ${agents} ${agents === 1 ? tr('helper') : tr('helpers')}`)} · <button class="linkish" data-of-hide>${esc(tr('Hide the office for me'))}</button></p>
     </div>`;
   }
+  // Who's here, beside the pixel floor: the same people as the floor, as a list a keyboard and a screen reader can use.
+  function rosterHtml(d) {
+    return withFlint(d.desks).map(x => `<li><button type="button" class="of-ro" data-desk="${esc(x.id)}" data-role="${roleOf(x)}" data-state="${esc(x.state)}">${avatar(x)}<span class="of-ro-t"><b>${esc(x.name)}</b><small>${esc(screenLines(x)[0] || status(x))}</small></span></button></li>`).join('');
+  }
   function strip(d) {
     const list = withFlint(d.desks).filter(x => x.state === 'active');
     if (!list.length) return '';
@@ -97,11 +105,10 @@
       <div class="of-strip-row">${list.slice(0, 8).map(x => `<button class="of-strip-who" data-desk="${esc(x.id)}" data-role="${roleOf(x)}" title="${esc(x.name)} · ${esc(screenLines(x)[0] || status(x))}">${avatar(x)}<span>${esc(screenLines(x)[0] || status(x))}</span></button>`).join('')}</div>
       <button class="linkish of-strip-open" data-of-open>${esc(tr('Open the office'))} →</button></div>`;
   }
-  function offHtml(d) {
-    if (!d) return '';
-    if (!d.canSet) return `<div class="of-off"><p class="faint">${esc(tr('The office is off in this tribe. The host or an admin can turn it on.'))}</p></div>`;
-    return `<div class="of-off"><p>${esc(tr('A floor where everyone, people and AI helpers, has a desk whose screen shows what they are doing right now.'))}</p>
-      <button class="btn" data-of-on>${esc(tr('Turn on the office'))}</button></div>`;
+  // The pixel floor is off: the host or an admin sees one quiet offer above the desks.
+  function offerHtml(d) {
+    if (!d || d.on || !d.canSet || isPhone() || !window.TribeOfficeSpace) return '';
+    return `<p class="of-offer faint">${esc(tr('Show the office as a pixel floor, with everyone walking to their desk.'))} <button class="linkish" data-of-on>${esc(tr('Turn on the pixel floor'))}</button></p>`;
   }
 
   // ---------- FLIP: avatars glide from their old place to the new one ----------
@@ -123,22 +130,22 @@
     if (opts.compact) { el.innerHTML = d && d.on && !hidden() ? strip(d) : ''; el.hidden = !el.innerHTML; return; }
     glide(el, () => {
       if (!d) { el.innerHTML = `<p class="faint of-wait">${esc(tr('Opening the office…'))}</p>`; return; }
-      if (!d.on) { el.innerHTML = offHtml(d); return; }
       if (hidden()) { el.innerHTML = `<div class="of-off"><p class="faint">${esc(tr('You hid the office on this device.'))}</p><button class="btn" data-of-show>${esc(tr('Show the office'))}</button></div>`; return; }
-      const toggle = canFloor() ? `<div class="of-view" role="group" aria-label="${esc(tr('How to show the office'))}"><button class="btn sm${viewOf() === 'floor' ? ' on' : ''}" data-of-view="floor" aria-pressed="${viewOf() === 'floor'}">${esc(tr('Floor'))}</button><button class="btn sm${viewOf() === 'desks' ? ' on' : ''}" data-of-view="desks" aria-pressed="${viewOf() === 'desks'}">${esc(tr('Desks'))}</button></div>` : '';
-      if (canFloor() && viewOf() === 'floor') {
+      const toggle = canFloor() && d.on ? `<div class="of-view" role="group" aria-label="${esc(tr('How to show the office'))}"><button class="btn sm${viewOf() === 'floor' ? ' on' : ''}" data-of-view="floor" aria-pressed="${viewOf() === 'floor'}">${esc(tr('Floor'))}</button><button class="btn sm${viewOf() === 'desks' ? ' on' : ''}" data-of-view="desks" aria-pressed="${viewOf() === 'desks'}">${esc(tr('Desks'))}</button></div>` : '';
+      if (canFloor() && d.on && viewOf() === 'floor') {
         // keep the canvas alive between refreshes: only feed it new data
         if (!m.space || !el.querySelector('.of-space')) {
           if (m.space) m.space.destroy();
-          el.innerHTML = `${toggle}<div class="of-space"></div><p class="of-foot faint"><button class="linkish" data-of-hide>${esc(tr('Hide the office for me'))}</button></p>`;
+          el.innerHTML = `${toggle}<div class="of-space"></div><ul class="of-roster" aria-label="${esc(tr('Who’s here'))}"></ul><p class="of-foot faint"><button class="linkish" data-of-hide>${esc(tr('Hide the office for me'))}</button></p>`;
           m.space = window.TribeOfficeSpace.mount(el.querySelector('.of-space'), api);
           const v = el.querySelector(':scope > .of-view'), bar = el.querySelector('.os-bar'); if (v && bar) bar.prepend(v);
         }
         m.space.update(d);
+        const ro = el.querySelector('.of-roster'); if (ro) ro.innerHTML = rosterHtml(d);
         return;
       }
       if (m.space) { m.space.destroy(); m.space = null; }
-      el.innerHTML = toggle + floor(d);
+      el.innerHTML = toggle + offerHtml(d) + floor(d);
     });
   }
   function paintAll() { mounts.forEach(paint); }
@@ -147,13 +154,89 @@
     try { data = { ...(data || {}), ...(await C.api('/office', { method: 'PUT', body: { on } })) }; } catch (e) { if (window.TribeApp) window.TribeApp.toast(e.message); }
     refresh();
   }
+  // ---------- one card for everyone (the floor's card, the desks and the list in Agents & office) ----------
+  const everyone = () => withFlint((data && data.desks) || []);
+  const statusOf = d => (d.state === 'off' ? tr('Offline') : d.state === 'away' ? tr('Away') : d.spot === 'think' ? tr('Thinking') : d.spot === 'board' ? tr('At the task board') : d.spot === 'lounge' ? tr('In the lounge') : tr('At their desk'));
+  const kindText = d => (d.kind === 'agent' ? tr('AI helper') : d.kind === 'flint' ? tr('Built-in helper') : tr('Person'));
+  // The card's body. The attributes (data-os-*) are the floor's, so one click handler serves every place it shows.
+  function cardBody(d) {
+    if (d.kind === 'flint') return `<p class="faint">${esc(tr('TribeCode\'s own helper. He works with no AI and gets better with one.'))}</p>
+      <div class="os-acts"><button class="btn primary sm" data-os-do="flint">${esc(tr('Ask Flint'))}</button><button class="btn sm" data-os-do="next">${esc(tr('What to do next'))}</button><button class="btn sm" data-os-do="design">${esc(tr('Polish a design'))}</button></div>`;
+    if (d.kind === 'agent') {
+      const asks = (d.asks || []).map(a => `<li class="os-ask"><span>${esc(a.title)}</span>${a.canDecide ? `<span class="os-ask-acts"><button class="btn sm ok" data-os-ap="approve" data-id="${esc(a.id)}">${esc(tr('Approve'))}</button><button class="btn sm" data-os-ap="question" data-id="${esc(a.id)}">${esc(tr('Ask for changes'))}</button></span>` : `<em class="faint">${esc(tr('Waiting for an OK'))}</em>`}</li>`).join('');
+      return `<dl class="os-dl">${d.ownerName ? `<dt>${esc(tr('Helps'))}</dt><dd>${esc(d.ownerName)}</dd>` : ''}${d.agentKind ? `<dt>${esc(tr('Tool'))}</dt><dd>${esc(d.agentKind)}</dd>` : ''}${d.task ? `<dt>${esc(tr('Task'))}</dt><dd><button class="linkish" data-os-task="${esc(d.task.id)}">${esc(d.task.title)}</button></dd>` : ''}</dl>
+        ${(d.files || []).length ? `<p class="os-sub">${esc(tr('Files it claimed'))}</p><ul class="os-files">${d.files.map(f => `<li><button class="linkish" data-os-file="${esc(f)}">${esc(f)}</button></li>`).join('')}</ul>` : ''}
+        ${(d.lines || []).length ? `<p class="os-sub">${esc(tr('Last steps'))}</p><ul class="os-lines">${d.lines.map(l => `<li>${esc(tr(l))}</li>`).join('')}</ul>` : ''}
+        ${asks ? `<p class="os-sub">${esc(tr('Asking for your OK'))}</p><ul class="os-asks">${asks}</ul><input class="input sm os-note" maxlength="300" placeholder="${esc(tr('What to change (for Ask for changes)'))}" aria-label="${esc(tr('What to change (for Ask for changes)'))}">` : ''}
+        <div class="os-acts"><button class="btn sm" data-os-do="dm">${esc(tr('Message it'))}</button>${d.state !== 'off' ? `<button class="btn sm" data-os-do="${d.paused ? 'resume' : 'pause'}">${esc(d.paused ? tr('Resume') : tr('Pause'))}</button>` : ''}<button class="btn sm" data-os-do="agent">${esc(tr('Its page'))}</button></div>
+        <form class="os-give" data-os-give><input class="input sm" maxlength="140" placeholder="${esc(tr('Give a task…'))}" aria-label="${esc(tr('Give a task'))}"><button class="btn sm">${esc(tr('Give'))}</button></form>`;
+    }
+    const where = placeText(d), mine = (window.TribeTasks && window.TribeTasks.all ? window.TribeTasks.all() : []).filter(t => t.assignee === d.id).slice(-3).reverse();
+    const self = d.id === (data && data.me);
+    return `${where ? `<p class="os-where"><span class="faint">${esc(tr('Now'))}</span> ${esc(where)} <button class="linkish" data-os-do="open">${esc(tr('Open'))}</button></p>` : ''}
+      ${d.task ? `<p class="os-where"><span class="faint">${esc(tr('Task'))}</span> <button class="linkish" data-os-task="${esc(d.task.id)}">${esc(d.task.title)}</button></p>` : ''}
+      ${mine.length ? `<p class="os-sub">${esc(tr('Recent work'))}</p><ul class="os-lines">${mine.map(t => `<li><button class="linkish" data-os-task="${esc(t.id)}">${esc(t.title)}</button> <span class="faint">${esc(t.status || '')}</span></li>`).join('')}</ul>` : ''}
+      <div class="os-acts">${!self ? `<button class="btn primary sm" data-os-do="dm">${esc(tr('Message'))}</button><button class="btn sm" data-os-do="call">${esc(tr('Call'))}</button>` : `<button class="btn primary sm" data-os-act="look">${esc(tr('Your look'))}</button>`}<button class="btn sm" data-os-do="profile">${esc(tr('Profile'))}</button></div>
+      ${!self ? `<form class="os-give" data-os-give><input class="input sm" maxlength="140" placeholder="${esc(tr('Give a task…'))}" aria-label="${esc(tr('Give a task'))}"><button class="btn sm">${esc(tr('Give'))}</button></form>` : ''}`;
+  }
+  const toast = m => window.TribeApp && window.TribeApp.toast && window.TribeApp.toast(m);
+  async function cardAct(kind, d, btn) {
+    const W = window;
+    try {
+      if (kind === 'dm') { if (W.TribeDM && W.TribeDM.open) await W.TribeDM.open(d.id); return; }
+      if (kind === 'call') { if (W.TribeDM && W.TribeDM.open) await W.TribeDM.open(d.id); if (W.TribeHuddle && W.TribeHuddle.join) W.TribeHuddle.join(); return; }
+      if (kind === 'profile') { if (W.TribeProfiles && W.TribeProfiles.open) W.TribeProfiles.open(d.id, btn); else if (W.TribeProfile && W.TribeProfile.open) W.TribeProfile.open(d.id); return; }
+      if (kind === 'open') { if (W.TribePresence && W.TribePresence.jump) { const ok = await W.TribePresence.jump(d.id); if (ok === false) toast(tr('You can\'t open that from here.')); } return; }
+      if (kind === 'agent') { if (W.TribeShell && W.TribeShell.previewAgent) W.TribeShell.previewAgent(d.id); return; }
+      if (kind === 'pause' || kind === 'resume') { await C.api(`/coord/agents/${encodeURIComponent(d.id)}/control`, { method: 'POST', body: { action: kind } }); toast(kind === 'pause' ? tr('Paused') : tr('Resumed')); refresh(); return; }
+      if (kind === 'flint') { if (W.TribeFlint && W.TribeFlint.open) W.TribeFlint.open(); return; }
+      if (kind === 'next') { if (W.TribeShell && W.TribeShell.go) W.TribeShell.go('home'); return; }
+      if (kind === 'design') { if (W.TribeDesignFlow && W.TribeDesignFlow.open) W.TribeDesignFlow.open(); else if (W.TribeShell && W.TribeShell.go) W.TribeShell.go('canvas'); return; }
+    } catch (e) { toast(e.message); }
+  }
+  // A click inside a card. Returns true when it was one of the card's actions; done() runs after an action that leaves.
+  function cardClick(e, card, d, done) {
+    const t = e.target.closest && e.target.closest('[data-os-do],[data-os-ap],[data-os-task],[data-os-file]'); if (!t || !d) return false;
+    if (t.matches('[data-os-task]')) { if (done) done(); if (window.TribeTasks && window.TribeTasks.open) window.TribeTasks.open(t.dataset.osTask); return true; }
+    if (t.matches('[data-os-file]')) { if (done) done(); const A2 = window.TribeApp; if (A2 && A2.show) A2.show('code'); setTimeout(() => { if (window.TribeCodeFiles && window.TribeCodeFiles.open) window.TribeCodeFiles.open(t.dataset.osFile); }, 120); return true; }
+    if (t.matches('[data-os-ap]')) {
+      const v = t.dataset.osAp, note = (card.querySelector('.os-note') || {}).value || '';
+      if (v === 'question' && !note.trim()) { const n = card.querySelector('.os-note'); if (n) n.focus(); toast(tr('Say what to change first.')); return true; }
+      t.disabled = true;
+      (v === 'approve' ? C.api(`/approvals/${encodeURIComponent(t.dataset.id)}/approve`, { method: 'POST', body: { note: note.trim() || undefined } })
+        : C.api(`/approvals/${encodeURIComponent(t.dataset.id)}/question`, { method: 'POST', body: { text: note.trim() } }))
+        .then(() => { toast(v === 'approve' ? tr('Approved') : tr('Sent. It can change it and ask again.')); refresh(); }, err => { t.disabled = false; toast(err.message); });
+      return true;
+    }
+    const k = t.dataset.osDo;
+    if (done && !['pause', 'resume'].includes(k)) done();
+    cardAct(k, d, t);
+    return true;
+  }
+  function cardSubmit(e, card, d) {
+    const f = e.target.closest && e.target.closest('[data-os-give]'); if (!f || !d) return false; e.preventDefault();
+    const inp = f.querySelector('input'), title = inp.value.trim(); if (!title) return true;
+    // an AI helper hears about its task at once (the fleet's route); a person finds it on the board, assigned to them
+    const make = d.kind === 'agent' ? C.api(`/agents/fleet/${encodeURIComponent(d.id)}/task`, { method: 'POST', body: { title } })
+      : window.TribeTasks && window.TribeTasks.create ? window.TribeTasks.create(title, 'todo', { assignee: d.id }) : C.api('/tasks', { method: 'POST', body: { title, status: 'todo', assignee: d.id } });
+    Promise.resolve(make).then(() => { inp.value = ''; toast(tr('Task given')); refresh(); }, err => toast(err.message));
+    return true;
+  }
+  // The card on its own (from a desk or the list): the same body in the app's one sheet.
+  let cardSheet = null;
   function openCard(id) {
-    if (id === 'flint') { if (window.TribeFlint && window.TribeFlint.open) window.TribeFlint.open(); return; }
-    const S = window.TribeShell;
-    const d = data && (data.desks || []).find(x => x.id === id);
-    if (d && d.kind === 'agent' && S && S.previewAgent) return S.previewAgent(id);
-    if (window.TribeProfile && window.TribeProfile.open) return window.TribeProfile.open(id);
-    if (window.TribePresence && window.TribePresence.jump) window.TribePresence.jump(id);
+    const find = () => everyone().find(x => x.id === id);
+    const d = find(); if (!d) return;
+    const UI = window.TribeUI;
+    if (!UI || !UI.sheet) { if (d.kind === 'flint') return cardAct('flint', d); return cardAct(d.kind === 'agent' ? 'agent' : 'profile', d); }
+    if (cardSheet) cardSheet.close();
+    const sh = cardSheet = UI.sheet({ id: 'of-card', eyebrow: `${kindText(d)} · ${statusOf(d)}`, title: d.name, body: `<div class="os-card of-card" data-who="${esc(d.id)}">${cardBody(d)}</div>`, onClose: () => { if (cardSheet === sh) cardSheet = null; } });
+    const card = sh.body.querySelector('.of-card');
+    card.addEventListener('click', e => {
+      if (e.target.closest('[data-os-act="look"]')) { sh.close(); const m = [...mounts].find(x => x.space); if (m && m.el.querySelector('[data-os-act="look"]')) m.el.querySelector('.os-bar [data-os-act="look"]').click(); else toast(tr('Your look is set on the pixel floor.')); return; }
+      cardClick(e, card, find() || d, () => sh.close());
+    });
+    card.addEventListener('submit', e => cardSubmit(e, card, find() || d));
   }
   function click(e) {
     const t = e.target.closest('[data-of-on],[data-of-hide],[data-of-show],[data-of-open],[data-of-view],[data-desk],[data-task]'); if (!t) return;
@@ -161,9 +244,9 @@
     if (t.matches('[data-of-on]')) return setOn(true);
     if (t.matches('[data-of-hide]')) return setHidden(true);
     if (t.matches('[data-of-show]')) return setHidden(false);
-    if (t.matches('[data-of-open]')) {   // the project's Agents Hub, at the office
+    if (t.matches('[data-of-open]')) {   // Agents & office, where the office is the top of the page
       const S = window.TribeShell;
-      if (S && S.go) { S.go('agents'); setTimeout(() => { const o = document.getElementById('ad-office'); if (o) o.scrollIntoView({ block: 'start' }); }, 400); }
+      if (S && S.go) S.go('ws-agents');
       else if (window.TribeAgentsHub && window.TribeAgentsHub.office) window.TribeAgentsHub.office();
       return;
     }
@@ -193,11 +276,11 @@
   // ---------- Settings: Tribe & admin (host/admin) and Workspace (everyone: hide for me) ----------
   function wireSettings() {
     const S = window.TribeSettings; if (!S || !S.addSection) return false;
-    S.addSection('admin', { id: 'office', title: tr('The office'), render(el) {
+    S.addSection('admin', { id: 'office', title: tr('The office'), render(el) {   // "on" is the pixel floor: the desks are always in Agents & office
       el.innerHTML = `<p class="faint">${esc(tr('Loading…'))}</p>`;
       load(true).then(d => {
         const on = !!(d && d.on), off = !!(d && d.agentsOff);
-        el.innerHTML = `<div class="set-row"><div class="set-l"><b>${esc(tr('The office'))}</b><span class="set-hint">${esc(tr('Desks for everyone, people and AI helpers, with a screen that shows what they are doing. Off by default.'))}</span></div>
+        el.innerHTML = `<div class="set-row"><div class="set-l"><b>${esc(tr('Pixel floor'))}</b><span class="set-hint">${esc(tr('Shows the office in Agents & office as a pixel floor, with everyone walking to their desk. Off by default: the desks show instead.'))}</span></div>
           <button class="toggle set-toggle" role="switch" id="set-office" aria-checked="${on}"${d && d.canSet ? '' : ' disabled'}><span class="switch"></span></button></div>
           <div class="set-row"><div class="set-l"><b>${esc(tr('AI helpers can work'))}</b><span class="set-hint">${esc(tr('Turn off to pause every agent in this tribe at once.'))}</span></div>
           <button class="toggle set-toggle" role="switch" id="set-agents-on" aria-checked="${!off}"${d && d.canSet ? '' : ' disabled'}><span class="switch"></span></button></div>`;
@@ -214,5 +297,5 @@
   }
   if (!wireSettings()) document.addEventListener('DOMContentLoaded', wireSettings, { once: true });
 
-  window.TribeOffice = { mount, refresh, hidden, setHidden, state: () => data, setOn, load };
+  window.TribeOffice = { mount, refresh, hidden, setHidden, state: () => data, setOn, load, openCard, cardBody, cardClick, cardSubmit, statusOf, linesOf: screenLines, kindText, everyone };
 })();

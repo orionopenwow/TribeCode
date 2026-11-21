@@ -125,7 +125,7 @@
 <link rel="stylesheet" href="oauth.css?v=0.45.0">
 <link rel="stylesheet" href="connectai.css?v=0.45.0"><!-- feat/any-llm: Connect your AI, Flint's brain, Ask an agent -->
 <link rel="stylesheet" href="mcpdir.css?v=0.45.0"><!-- feat/mcp-directory: TribeCode MCP page -->
-<link rel="stylesheet" href="agentsdash.css?v=0.45.0"><link rel="stylesheet" href="office.css?v=0.45.0"><link rel="stylesheet" href="officespace.css?v=0.45.0"><link rel="stylesheet" href="fleet.css?v=0.45.0"><!-- feat/fleet --><!-- feat/agents-dash: the Agents dashboard -->
+<link rel="stylesheet" href="agentsdash.css?v=0.45.0"><link rel="stylesheet" href="office.css?v=0.45.0"><link rel="stylesheet" href="officespace.css?v=0.45.0"><link rel="stylesheet" href="fleet.css?v=0.45.0"><link rel="stylesheet" href="agentsoffice.css?v=0.45.0"><!-- feat/agents-office --><!-- feat/fleet --><!-- feat/agents-dash: the Agents dashboard -->
 <link rel="stylesheet" href="brainpick.css?v=0.45.0"><!-- feat/any-llm -->
 <link rel="stylesheet" href="profiles.css?v=0.45.0"><!-- feat/profiles -->
 <link rel="stylesheet" href="themes.css?v=0.45.0"><!-- themes (themes.js); keep last -->
@@ -197,9 +197,9 @@
 </svg>
 
 <!-- ============ App shell ============ -->
-<!-- The nest (shell.js): Chat & Streams · Docs & Files · Tasks & Board · Agents Hub, then Settings and Invite. Tasks & Board
-     and Agents Hub are tabbed workspaces (#view-tabs at the top of main); with no project selected the rows are the
-     Global ones (Hub · Global docs · All repos · Agent fleet). -->
+<!-- The nest (shell.js): Chat & Streams · Docs & Files · Tasks & Board · Agents & office, then Settings and Invite. Tasks & Board
+     and Agents & office are tabbed workspaces (#view-tabs at the top of main); with no project selected the rows are the
+     Global ones (Hub · Global docs · All repos · Agents & office). -->
 <!-- Layout: far-left circle rail (projects) | the project's nest | main | right panel (In the room / preview).
      app/ui/shell.js renders the nest (core rows, Project Hub, Coordinate & Ops, Settings; with no project selected a
      single Global group), breadcrumbs, Pinned, Recents and the preview panel. app/ui/hub.js renders the Global Hub. -->
@@ -248,7 +248,7 @@
           <button class="nest-row core" data-nav="docs" data-pnav="docs" id="nest-docs"><svg class="i"><use href="#i-doc"/></svg><span>Files</span></button>
           <button class="nest-row core" data-pnav="canvas" id="nest-canvas" title="Design: frames, components and auto layout"><svg class="i"><use href="#i-canvas"/></svg><span>Design</span></button>
           <button class="nest-row core" data-nav="tasks" data-pnav="ws-tasks" id="nest-ws-tasks"><svg class="i"><use href="#i-check"/></svg><span>Task Board</span><span class="n" id="nn-tasks"></span></button>
-          <button class="nest-row core" data-pnav="ws-agents" id="nest-ws-agents"><svg class="i"><use href="#i-robot"/></svg><span>Agents Hub</span><span class="n" id="nn-agents"></span></button>
+          <button class="nest-row core" data-pnav="ws-agents" id="nest-ws-agents"><svg class="i"><use href="#i-robot"/></svg><span>Agents &amp; office</span><span class="n" id="nn-agents"></span></button>
           <div class="nest-extra" id="nest-extra" role="group" aria-label="More for this project"></div><!-- feat/sidebar-widgets: Preview · Website · added widgets · + Add (widgets.js) -->
           <!-- Huddle and Capture to notes have no rows: the huddle starts from the chat header's call button and shows
                here only while it is live; Capture to notes lives in the profile menu and shows here only while on. -->
@@ -528,7 +528,7 @@
 <script src="connectai.js?v=0.45.0"></script><!-- feat/any-llm: Connect your AI (any coding agent) -->
 <script src="mcpdir.js?v=0.45.0"></script><!-- feat/mcp-directory: TribeCode MCP page + special connections -->
 <script src="fleet.js?v=0.45.0"></script><!-- feat/fleet: the Agent fleet -->
-<script src="officespace-sets.js?v=0.45.0"></script><script src="officespace-art.js?v=0.45.0"></script><script src="officespace.js?v=0.45.0"></script><script src="office.js?v=0.45.0"></script><script src="agentsdash.js?v=0.45.0"></script><!-- feat/agents-dash: the Agents dashboard + pinned tabs -->
+<script src="officespace-sets.js?v=0.45.0"></script><script src="officespace-art.js?v=0.45.0"></script><script src="officespace.js?v=0.45.0"></script><script src="office.js?v=0.45.0"></script><script src="agentsoffice.js?v=0.45.0"></script><script src="agentsdash.js?v=0.45.0"></script><!-- feat/agents-dash: the Agents dashboard + pinned tabs -->
 <script src="brainpick.js?v=0.45.0"></script><!-- feat/any-llm: Flint's brain (built-in WebLLM / Ollama / your key / none) -->
 <script src="askagent.js?v=0.45.0"></script><!-- feat/any-llm: Ask an agent -->
 <script src="flintmax.js?v=0.45.0"></script><script src="flintpage.js?v=0.45.0"></script><script src="flintlang.js?v=0.45.0"></script><!-- feat/languages: everyday requests in seven languages, before the rules --><script src="flintnlu.js?v=0.45.0"></script><script src="flintembed.js?v=0.45.0"></script><script src="flintmodel.js?v=0.45.0"></script><script src="flintsem.js?v=0.45.0"></script><script src="flintmeaning.js?v=0.45.0"></script><!-- feat/flint-meaning: the built-in word table, search by meaning with nothing to download --><script src="flintconv.js?v=0.45.0"></script><script src="flintplan.js?v=0.45.0"></script><script src="flintfacts.js?v=0.45.0"></script><script src="flintllm.js?v=0.45.0"></script><script src="flintsetup.js?v=0.45.0"></script><script src="flintdevice.js?v=0.45.0"></script><!-- feat/flint-local --><!-- feat/build-feeds: Flint tier 1, meaning-based matching on this device --><script src="flintcmds.js?v=0.45.0"></script><script src="flintlocal.js?v=0.45.0"></script><!-- flint-local: Flint understands and acts with no model -->

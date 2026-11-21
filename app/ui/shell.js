@@ -44,7 +44,7 @@
     { key: 'canvas', label: 'Design', icon: 'i-canvas', group: 'core', keys: 'design canvas figma frames components auto layout mockup ui screens draw', run: () => { const W = window, inPj = W.TribeClient && W.TribeClient.project && W.TribeClient.project(); if (inPj && W.TribeDesignFlow && W.TribeDesignFlow.open && W.TribeDesignData) return W.TribeDesignFlow.open({});   // pass 3: Ctrl K and Flint open Design the way the row does (the creation flow; the canvas is under Continue)
       const o = () => W.TribeCanvas && W.TribeCanvas.open(); if (W.TribeCanvas) o(); else addEventListener('load', o, { once: true }); } },   // P1-A design canvas (app/ui/canvas/canvas.js)
     { key: 'ws-tasks', label: 'Task Board', icon: 'i-check', group: 'core', keys: 'tasks board workspace kanban bugs proposals', run: () => openWs('tasks') },
-    { key: 'ws-agents', label: 'Agents Hub', icon: 'i-robot', group: 'core', keys: 'agents coordinate ops claude workspace', run: () => openWs('agents') },
+    { key: 'ws-agents', label: 'Agents & office', icon: 'i-robot', group: 'core', keys: 'agents hub fleet office desks floor coordinate ops claude workspace ai helpers', run: () => openWs('agents') },
     { key: 'company', label: 'Company', icon: 'i-flag', group: 'core', keys: 'company business seats ceo org chart goals okr decisions standup board', when: () => !!(window.TribeCompany && (window.TribeCompany.get() || (window.TribeCompany.view() || {}).canLead)), run: () => window.TribeCompany && window.TribeCompany.open() },   // v0.27 company (app/ui/company.js adds its sidebar row)
     { key: 'docs-files', label: 'Project files', tab: 'Files', slug: 'files', icon: 'i-doc', group: 'docs', keys: 'documents notes files pages journal', run: () => App().show('docs') },
     { key: 'website', label: 'Website', tab: 'Website', slug: 'website', icon: 'i-link', group: 'docs', keys: 'site page public showcase landing credits github pages', run: () => { const o = () => window.TribeWebsite && window.TribeWebsite.open(); if (window.TribeWebsite) o(); else addEventListener('load', o, { once: true }); } },   // app/ui/website.js (a deep link can run before it loads)
@@ -60,7 +60,7 @@
     { key: 'roles', label: 'Roles', tab: 'Roles', slug: 'roles', icon: 'i-users', group: 'tasks', keys: 'people roles folders', when: flowOn, run: () => window.TribeFlow && window.TribeFlow.openRoles() },
     { key: 'requests', label: 'Requests', tab: 'Requests', slug: 'requests', icon: 'i-inbox', group: 'tasks', keys: 'approvals change requests waiting', when: () => !!counts.requests || (App() && App().view() === 'requests'), run: () => App().show('requests') },
     { key: 'agents', label: 'Agents dashboard', tab: 'Dashboard', slug: 'agents', icon: 'i-robot', group: 'agents', keys: 'coordinate claude agents panel', run: () => coord('agents') },
-    { key: 'agents-hub', label: 'Your agents', tab: 'Your agents', slug: 'yours', icon: 'i-plug', group: 'agents', keys: 'claude desktop mcp local models hub connect', run: () => window.TribeAgentsHub && window.TribeAgentsHub.open() },
+    { key: 'agents-hub', label: 'Your AI tools', tab: 'Your AI tools', slug: 'yours', icon: 'i-plug', group: 'agents', keys: 'claude desktop mcp local models hub connect', run: () => window.TribeAgentsHub && window.TribeAgentsHub.open() },
     { key: 'mcp-directory', label: 'TribeCode MCP', tab: 'MCP', slug: 'mcp', icon: 'i-plug', group: 'agents', keys: 'mcp clients connect claude.ai chatgpt vs code cursor windsurf zed cline goose continue codex gemini artcraft apps connections', run: () => window.TribeMcpDir && window.TribeMcpDir.open() },   // feat/mcp-directory (app/ui/mcpdir.js)
     { key: 'ownership', label: 'Ownership map', tab: 'Ownership', slug: 'ownership', icon: 'i-map', group: 'agents', keys: 'claims files owners', run: () => coord('ownership') },
     { key: 'conflicts', label: 'Conflict radar', tab: 'Conflicts', slug: 'conflicts', icon: 'i-merge', group: 'agents', keys: 'merge overlap branches', run: () => coord('conflicts') },
@@ -74,7 +74,7 @@
     { key: 'design-all', label: 'Your designs', row: 'Design', icon: 'i-canvas', group: 'global', keys: 'all designs canvases whiteboards frames every project my designs', run: () => hubOpen('design') },   // feat/files-dash: Home parity
     { key: 'repos-all', label: 'Your code', row: 'Code', icon: 'i-git', group: 'global', keys: 'all code repos repositories every project branches status code files',   /* feat/files-dash: "Code" (was All code) */ run: () => hubOpen('repos') },
     { key: 'work', label: 'Work', icon: 'i-users', group: 'global', keys: 'work gigs jobs hire hiring talent people open to work time bank compute share bounty seat freelance', run: () => window.TribeTalent && window.TribeTalent.open() },   // v0.27 company: app/ui/talent.js
-    { key: 'fleet', label: 'Agent fleet', icon: 'i-robot', group: 'global', keys: 'agents models claude secretary all fleet office open space', run: () => window.TribeAgentsHub && window.TribeAgentsHub.open({ global: true }) },
+    { key: 'fleet', label: 'Agents & office', icon: 'i-robot', group: 'global', keys: 'agent fleet agents hub models claude secretary all office open space desks', run: () => window.TribeAgentsHub && window.TribeAgentsHub.open({ global: true }) },
     { key: 'updates', label: 'Updates', icon: 'i-bell', keys: 'inbox notifications plan feed timeline', run: () => openUpdates() },
     { key: 'huddle', label: 'Huddle', icon: 'i-mic', kind: 'Action', keys: 'voice call talk mic audio join start', hint: 'Ctrl Shift M', run: () => { const H = window.TribeHuddle; if (H && !H.inCall()) H.join(); } },
     { key: 'capture', label: 'Capture to notes', icon: 'i-doc', kind: 'Action', keys: 'voice speech transcribe dictate record notes toggle', hint: 'Ctrl Shift N', run: () => window.TribeCapture && window.TribeCapture.toggle() },
@@ -90,7 +90,7 @@
     { key: 'customize', label: 'Customize', icon: 'i-sparkle', kind: 'Action', keys: 'look theme background accent banner cover density font size tribe name emoji icon', run: () => window.TribeLook && window.TribeLook.open(isGlobal() ? 'tribe' : 'project') },   // feat/customize (app/ui/look.js)
   ];
   const byKey = k => DEST.find(d => d.key === k);
-  const WS = { docs: { label: 'Files', row: 'docs' }, tasks: { label: 'Task Board', row: 'ws-tasks' }, agents: { label: 'Agents Hub', row: 'ws-agents' } };
+  const WS = { docs: { label: 'Files', row: 'docs' }, tasks: { label: 'Task Board', row: 'ws-tasks' }, agents: { label: 'Agents & office', row: 'ws-agents' } };
   // shown: its own condition, plus the person's experience mode (app/ui/modes.js). The palette still finds everything.
   const shown = d => (!d.when || d.when()) && (!window.TribeMode || window.TribeMode.allows(window.TribeMode.minFor(d.key)));
   const tabsOf = w => DEST.filter(d => d.group === w && shown(d));
@@ -619,7 +619,7 @@
     const steer = a.yours || (C.state().me || {}).role === 'host', paused = a.control && a.control.action !== 'resume';
     const acts = [
       { label: 'Full timeline', primary: true, run: () => { closePreview(); window.TribePeople && window.TribePeople.open(id); } },
-      { label: 'Agents Hub', run: () => { closePreview(); go('agents'); } },
+      { label: 'Agents & office', run: () => { closePreview(); go('agents'); } },
       ...(steer && a.online ? [{ label: paused ? 'Resume' : 'Pause', run: async () => { try { await C.api(`/coord/agents/${encodeURIComponent(id)}/control`, { method: 'POST', body: { action: paused ? 'resume' : 'pause' } }); previewAgent(id); } catch (e) { toast(e.message); } } }] : []),
     ];
     // the buttons sit under the detail, so the panel header keeps the name readable

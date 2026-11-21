@@ -21,7 +21,7 @@ PORT = 4897 + OFF; BASE = f"http://localhost:{PORT}"
 STATIC = 5797 + OFF   # no tribe: the app from a plain file server (a TribeCode server would make a tribe on first open)
 SHOTS = ROOT / "docs" / "screenshots"
 take = "--shots" in sys.argv or os.environ.get("TRIBE_SHOTS") == "1"
-ROWS = ["Home", "Files", "Design", "Code", "Work", "Agent fleet"]
+ROWS = ["Home", "Files", "Design", "Code", "Work", "Agents & office"]
 errors, bad = [], []
 
 

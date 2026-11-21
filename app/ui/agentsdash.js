@@ -1,4 +1,5 @@
-// Agents dashboard (feat/agents-dash). The Agents Hub opens on one calm page of a few big cards, each shown only
+// Agents dashboard (feat/agents-dash), now Agents & office (feat/agents-office, agentsoffice.js draws the shared parts:
+// the office on top, Add an AI helper, the four loops). The agents workspace opens on one calm page of a few big cards, each shown only
 // when it has something to say:
 //   🤖 hero: "N agents working now" with live rows (who, task or file, when), or "No agents yet" + Connect your AI
 //   Needs you: pending reviews, hand-offs waiting, delegations to approve, conflicts, agents near their budget,
@@ -30,7 +31,7 @@
   // ---------- pinned tabs ----------
   const PINNABLE = ['agents-hub', 'ownership', 'conflicts', 'handoffs', 'reviews', 'plan', 'secretary', 'mcp-directory'];
   const ABOUT = {
-    'agents-hub': ['Your agents', 'Connect and manage your own AI tools'],
+    'agents-hub': ['Your AI tools', 'Keys, local models and the secretary'],
     ownership: ['Ownership', 'Who owns which files and areas'],
     conflicts: ['Conflicts', 'Branches that change the same files'],
     handoffs: ['Hand-offs', 'Work parked for a teammate'],
@@ -192,7 +193,7 @@
         <span class="ad-a-meta">${esc(a.yours ? 'yours' : `${a.ownerName}'s`)} · ${esc(when)}${a.tokens !== null && a.tokens !== undefined ? ` · ${esc(k(a.tokens))} tokens` : ''}${a.control ? ` · <span class="ad-warn">${esc(ctlLabel(a.control))}</span>` : ''}</span></div>${steer}</div>`;
     };
     const waits = (d.pulse || []).filter(x => x.kind === 'wait' || x.kind === 'ship');   // feat/ship-flow: who is waiting on whom
-    return `<section class="ad-card ad-hero" id="ad-hero">${head('Agents', on ? `${plural(on, 'agent')} working now` : 'No agents working right now', 'agents-hub', 'Your agents')}
+    return `<section class="ad-card ad-hero" id="ad-hero">${head('Agents', on ? `${plural(on, 'agent')} working now` : 'No agents working right now', 'agents-hub', 'Your AI tools')}
       <div class="ad-rows">${shown.map(row).join('')}</div>${waits.length ? `<div class="sh-pulse ad-pulse" id="ad-pulse">${waits.slice(0, 4).map(x => `<span class="${esc(x.kind)}">${esc(x.text)}</span>`).join('')}</div>` : ''}
       <div class="ad-acts ad-acts-sm">${list.length > 5 ? `<button class="linkish ad-more" data-ad-more="agents">${moreAgents ? 'Show fewer' : `Show all ${list.length}`}</button>` : ''}<button class="linkish ad-tools" id="ad-tools">See all tools</button></div></section>`;   // loops: the tools list stays one click away after your first agent
   }
@@ -256,11 +257,14 @@
       <div class="ad-rows">${list.map(i => `<div class="ad-plan ${i.accepted ? 'ok' : ''}"><span class="ad-p-ck">${i.accepted ? '✓' : '·'}</span><div><b>${esc(i.title)}</b><span>${esc(i.name || '')}</span></div></div>`).join('')}</div></section>`;
   }
 
+  // feat/agents-office: the page is Agents & office (agentsoffice.js): the office on top, then the agents' state (the
+  // next step, what needs you, one row per agent), then four loops (a friend, where it runs, privacy, GitHub backup).
+  // The office's element is kept across repaints, so the floor's characters don't jump back to their start.
   function paint(el, d) {
     const inp = el.querySelector('#talk-input'), keep = inp ? inp.value : '', focused = inp && document.activeElement === inp;
     const right = [ownersCard(d), todayCard(d)].filter(Boolean).join('');
     const left = channelCard(d);
-    const F = window.TribeFleet;   // feat/fleet: the hero is the next step, then one row per agent, then how agents work
+    const F = window.TribeFleet, AO = window.TribeAgentsOffice;   // feat/fleet: the hero is the next step, then one row per agent, then how agents work
     if (F) F.setData(d.fleet);
     const waits = (d.pulse || []).filter(x => x.kind === 'wait' || x.kind === 'ship');
     const pulse = waits.length ? `<div class="sh-pulse ad-pulse" id="ad-pulse">${waits.slice(0, 4).map(x => `<span class="${esc(x.kind)}">${esc(x.text)}</span>`).join('')}</div>` : '';
@@ -272,32 +276,37 @@
     const anyAgent = d.fleet ? (d.fleet.agents || []).some(a => a.everSeen || a.online) : (d.agents || []).some(a => a.online || a.where);
     const state = os && os.agentsOff ? 'off' : anyAgent ? 'dash' : 'connect';
     el.dataset.hub = state;
+    const top = AO ? AO.head() + AO.office() : '', loops = AO ? AO.setup() : '';
+    // keep the mounted office: take it out, paint, put it back where the new page has its place
+    const oldOffice = el.querySelector('#ad-office'); if (oldOffice) oldOffice.remove();
+    const done = () => {
+      const slot = el.querySelector('#ad-office');
+      if (slot && oldOffice && el._om) slot.replaceWith(oldOffice);
+      else if (slot && AO) el._om = AO.mountOffice(el, el._om);
+      if (AO) AO.wire(el);
+    };
     if (state === 'off') {
-      el.innerHTML = `<div class="ad-dash" id="ad-dash">${stale}<section class="hero-card ad-offcard" id="ad-hero" data-state="off"><span class="eyebrow">Agents</span><h2 class="fl-title">AI helpers are turned off</h2>
+      el.innerHTML = `<div class="ad-dash" id="ad-dash">${stale}${top}<section class="hero-card ad-offcard" id="ad-hero" data-state="off"><span class="eyebrow">Agents</span><h2 class="fl-title">AI helpers are turned off</h2>
         <p class="fl-lead">No agent can work in this tribe until they are turned back on. Connections and keys are kept.</p>
-        ${os.canSet ? '<div class="fl-acts"><button class="btn primary" id="ad-agents-on">Turn agents back on</button></div>' : '<p class="faint">The host or an admin can turn them back on.</p>'}</section></div>`;
+        ${os.canSet ? '<div class="fl-acts"><button class="btn primary" id="ad-agents-on">Turn agents back on</button></div>' : '<p class="faint">The host or an admin can turn them back on.</p>'}</section>${loops}</div>`;
+      done();
       const b = el.querySelector('#ad-agents-on'); if (b) b.onclick = async () => { b.disabled = true; try { await C.api('/office', { method: 'PUT', body: { agentsOff: false } }); await O.load(true); render(el); } catch (e) { b.disabled = false; toast(e.message); } };
       return;
     }
     if (state === 'connect') {
       const fd = d.fleet || { connected: false, you: { canAct: me().role !== 'spectator' }, agents: [], next: [] };
-      const hero = F ? F.hero(fd) : heroCard(d);
-      el.innerHTML = `<div class="ad-dash ad-connectflow" id="ad-dash">${stale}${hero}
-        <div class="ad-other" id="ad-other"><span class="eyebrow">No AI tool?</span>
-          <button class="btn ghost" id="ad-tribe-ai" type="button">Use the tribe's AI</button>
-          ${window.TribeAIBridge ? '<button class="btn ghost" id="ad-free-ai" type="button">Use a free AI by copy and paste</button>' : ''}</div>
-        <p class="ad-waiting faint" id="ad-waiting"><i class="ad-pulse-dot"></i>Waiting for an agent to connect… this page changes by itself when it does.</p>
-        ${how}</div>`;
+      const hero = AO ? AO.addAi('ad-hero') : F ? F.hero(fd) : heroCard(d);
+      el.innerHTML = `<div class="ad-dash ad-connectflow" id="ad-dash">${stale}${top}${hero}
+        <p class="ad-waiting faint" id="ad-waiting"><i class="ad-pulse-dot"></i>Waiting for an AI helper to connect… this page changes by itself when it does.</p>
+        ${loops}${how}</div>`;
+      done();
       if (F) F.wire(el, { scope: 'project', reload: () => { if (el.isConnected && onView()) render(el); } });
-      const ta = el.querySelector('#ad-tribe-ai'); if (ta) ta.onclick = () => { if (window.TribeSettings) window.TribeSettings.open('ai'); };
-      const fa = el.querySelector('#ad-free-ai'); if (fa) fa.onclick = () => window.TribeAIBridge.open({});
       el.onclick = e => click(e, el, d);
       return;
     }
-    const officeSec = O ? `<section class="ad-card ad-office" id="ad-office">${head('The office', 'Who is at their desk')}<div id="ad-office-floor"></div></section>` : '';
-    const top = F ? F.hero(d.fleet) : heroCard(d), rowsH = F ? F.rows(d.fleet, { after: pulse }) : '';
-    el.innerHTML = `<div class="ad-dash" id="ad-dash">${stale}${top}${needsCard(d)}${rowsH}${officeSec}${left || right ? `<div class="ad-cols ${left && right ? 'two' : ''}">${left ? `<div class="ad-col">${left}</div>` : ''}${right ? `<div class="ad-col">${right}</div>` : ''}</div>` : ''}${how}<p class="ad-more"><button class="linkish" id="ad-views" type="button" aria-haspopup="menu">More views: ownership, reviews, hand-offs…</button></p></div>`;
-    { const f = el.querySelector('#ad-office-floor'); if (f && O) { if (el._om) el._om.destroy(); el._om = O.mount(f); } }
+    const hero = F ? F.hero(d.fleet) : heroCard(d), rowsH = F ? F.rows(d.fleet, { after: pulse }) : '';
+    el.innerHTML = `<div class="ad-dash" id="ad-dash">${stale}${top}${hero}${needsCard(d)}${rowsH}${loops}${left || right ? `<div class="ad-cols ${left && right ? 'two' : ''}">${left ? `<div class="ad-col">${left}</div>` : ''}${right ? `<div class="ad-col">${right}</div>` : ''}</div>` : ''}${how}<p class="ad-more"><button class="linkish" id="ad-views" type="button" aria-haspopup="menu">More views: ownership, reviews, hand-offs…</button></p></div>`;
+    done();
     { const v = el.querySelector('#ad-views'); if (v) v.onclick = () => openMenu(v); }
     if (F) F.wire(el, { scope: 'project', reload: () => { if (el.isConnected && onView()) render(el); } });
     const ni = el.querySelector('#talk-input'); if (ni && keep) ni.value = keep; if (ni && focused) ni.focus({ preventScroll: true });

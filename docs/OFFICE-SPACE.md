@@ -1,8 +1,29 @@
 # Office Space
 
-Office Space is the office drawn as a top-down pixel floor, in the art of Pixel Agents. It is the same office as before
-(one switch per tribe, the host or an admin turns it on, anyone can hide it for themselves). On a computer it opens as
-the floor, and **Desks** switches back to the calm list. Phones always get the list.
+Office Space is the office drawn as a top-down pixel floor, in the art of Pixel Agents. It is the top of **Agents &
+office**, the one page for people and AI helpers (see below). The desks are always there; the pixel floor is one switch
+per tribe (the host or an admin turns it on, from the line above the desks or Settings), and anyone can hide the office
+for themselves. On a computer with the floor on it opens as the floor, with a list of who's here under it, and **Desks**
+switches back to the calm list. Phones always get the list.
+
+## Agents & office (one view)
+
+The sidebar's **Agents & office** (key `ws-agents`, also `TribeShell.go('agents')`), Home's row of the same name, Settings,
+the phone's Agents tab, Flint and "Your AI tools"' back link all open one page in the main area (`app/ui/agentsoffice.js`
+draws the shared parts, `agentsdash.js` paints a project's page, `agentshub.js` Home's page for every project):
+
+1. **The office**: the floor or the desks. A click on someone at a desk, on the floor or in the list opens the same card
+   (`TribeOffice.openCard`: Message, Call, Give a task, Open what they're working on, Profile; for AI helpers Approve /
+   Ask for changes, Pause, its page). A task given to an AI helper goes through the fleet's route, so it hears at once.
+2. **The agents' state**: with no AI helper yet, **Add an AI helper** (Claude, ChatGPT, Codex, Gemini, Cursor, a model on
+   this computer, a free AI in your browser, another tool), each opening the one setup in the invite sheet; nothing is
+   made until you copy it there. Once one has connected: the next step, what needs you, one row per agent, #agents.
+3. **Get set up**: four cards, one button each. Bring a friend (the one invite sheet: link, QR for a phone, code). Where
+   your tribe runs (the words from `tribestatus.js`, then this computer, a friend's computer connected directly over
+   Tailscale, a shared folder, free cloud). What's private (only true lines; `docs/CLAIMS.md`). Back up to GitHub (Connect
+   GitHub, with a link to make a free account for someone who has none; then "Linked to … · backed up …" and Back up now).
+
+Test: `app/test/e2e_agents_office.py`.
 
 The floor starts as Pixel Agents' default office: a wood work room with two desks and a meeting table, a blue lounge with
 sofas around a coffee table, a checker corner, bookshelves, plants, a clock and paintings on navy walls. A whiteboard
@@ -121,6 +142,6 @@ Agents' ideas (sprite sheets, layer order, colour swaps, wall autotiling, depth 
 JavaScript; no TypeScript or React code was copied. Flint's flame is TribeCode's own. Donarg's Office Interior Tileset
 is not included. Licence text: NOTICE and `app/ui/officespace/LICENSE.txt`.
 
-Files: `app/ui/officespace.js` (the floor, characters, card, wardrobe, editor), `app/ui/officespace-art.js` (loading and
+Files: `app/ui/agentsoffice.js` (Agents & office), `app/ui/officespace.js` (the floor, characters, wardrobe, editor; the card's body is office.js's), `app/ui/officespace-art.js` (loading and
 drawing the art), `app/ui/officespace-sets.js` (sets and starting looks), `app/ui/officespace.css`, `app/ui/office.js`
 (the office and the Floor/Desks switch), `server/office.js`. Test: `app/test/e2e_office_space.py`.

@@ -51,7 +51,7 @@
     ['Assign a task and it waits for an Accept, so nobody gets work they did not agree to.', 'Open tasks', () => go('ws-tasks')],
     ['Invite your own AI agent (Claude, Cursor, Codex…): it joins with your access and never more.', 'Invite', () => { const b = document.getElementById('sf-claude'); if (b) b.click(); }],
     ['Right-click a widget for its menu, or use its ⋯.', '', null],
-    ['Use any free AI from the Agents Hub: copy a context pack out, paste the answer back.', 'Agents Hub', () => go('ws-agents')],
+    ['Use any free AI from Agents & office: copy a context pack out, paste the answer back.', 'Agents & office', () => go('ws-agents')],
     ['The inspiration board turns pictures you save into a palette for the website.', '', null],
     ['Rituals post the standup questions in chat and write the answers into a doc.', 'Calendar', () => go('calendar')],
   ];

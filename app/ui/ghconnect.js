@@ -52,7 +52,13 @@
         <span class="ph-lab">1 · Sign in to GitHub</span>
         ${ready ? '' : `<p class="ph-note ghc-calm" id="ghc-off">${owner ? 'One-click sign-in isn’t switched on yet. A token works for now.' : 'One-click sign-in isn’t switched on for this tribe yet. Pasting a token works the same.'}</p>`}
         <div id="ghc-sign"></div>
+        <div class="ghc-new" id="ghc-new"><p class="ph-note"><b>No GitHub account?</b> It's free and takes a minute. Make one, then come back here and sign in: this step waits for you.</p>
+          <div class="ghc-new-acts"><a class="btn" id="ghc-signup" href="https://github.com/signup" target="_blank" rel="noopener noreferrer">Make a free GitHub account</a><button type="button" class="linkish" id="ghc-back" hidden>I made one. Sign in now</button></div></div>
         <p class="ph-note">Your sign-in is kept on the computer that runs this tribe. Nobody else in the tribe can see or use it.</p></div>`;
+      // feat/agents-office: no account yet → GitHub's sign-up in a new tab; coming back to this window offers the sign-in again
+      const su = el.querySelector('#ghc-signup'), back = el.querySelector('#ghc-back');
+      if (su) su.onclick = () => { back.hidden = false; const again = () => { if (!el.isConnected) return; back.hidden = false; const f = el.querySelector('#ghc-sign button, #ghc-sign input'); if (f) f.focus({ preventScroll: true }); }; addEventListener('focus', again, { once: true }); };
+      if (back) back.onclick = () => { const f = el.querySelector('#ghc-sign [data-gh="start"], #ghc-sign summary, #ghc-sign input'); if (f) { f.focus(); if (f.tagName === 'SUMMARY' && !f.parentElement.open) f.click(); } };
       if (window.TribeGitHub) { window.TribeGitHub.noAuto = true; window.TribeGitHub.mount(el.querySelector('#ghc-sign')); }
       if (o.onState) o.onState('signin');
     }
@@ -135,7 +141,7 @@
       foot.innerHTML = `${can.edit ? '<button type="button" class="btn" id="ghc-change">Use another</button>' : ''}<span style="flex:1"></span><button type="button" class="btn" id="ghc-close">Done</button><button type="button" class="btn primary" id="ghc-backup">Back up now</button>`;
       foot.hidden = false;
       foot.querySelector('#ghc-close').onclick = () => sh.close();
-      foot.querySelector('#ghc-backup').onclick = () => { sh.close(); if (window.TribeHome && window.TribeHome.sync) window.TribeHome.sync(); };
+      foot.querySelector('#ghc-backup').onclick = () => { sh.close(); if (window.TribeHome && window.TribeHome.ship) window.TribeHome.ship(); else if (window.TribeHome && window.TribeHome.sync) window.TribeHome.sync(); };   // feat/agents-office: Back up now backs up
       const ch = foot.querySelector('#ghc-change'); if (ch) ch.onclick = () => pick();
     }
     function pick() {

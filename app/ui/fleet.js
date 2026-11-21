@@ -6,8 +6,8 @@
 //   Agents: one row per agent (name, owner, kind, status with last seen, task + branch, files claimed, the last 3
 //     things it did) with Message, Give a task, Pause/Resume, Connect command (a new key) and Remove.
 //   How agents work here: 4 illustrated steps and a link to the Guide.
-// Two homes: inside a project the Agents Hub dashboard (agentsdash.js) paints hero(), rows() and how() around its own
-// cards and calls wire(); with no project selected the global Agent fleet (agentshub.js, #/fleet) calls render(el),
+// Two homes: inside a project Agents & office (agentsdash.js) paints hero(), rows() and how() around its own
+// cards and calls wire(); with no project selected the same page on Home (agentshub.js, #/fleet) calls render(el),
 // which shows your agents in every project. There, tapping an agent opens a preview in the right panel with
 // "Open in tribe"; nothing switches project by itself.
 // Server: GET /api/agents/fleet[?scope=all], POST /api/agents/fleet/<id>/task, POST /api/agents/channel { to },
@@ -90,6 +90,9 @@
     if (s === 'loading') return `<section class="hero-card fl-hero" id="${id}" data-state="loading">${head('Next step', 'Looking at your agents…')}</section>`;
     if (s === 'notribe') return `<section class="hero-card fl-hero" id="${id}" data-state="notribe">${head('Next step', 'Start a project first', 'Agents join a tribe\'s project: they read its plan, take its tasks and work on its code, next to you and your friends.')}
       <div class="fl-acts"><button class="btn primary" id="fl-start">Start a project</button><button class="btn" id="fl-demo">Try the demo</button></div></section>`;
+    // feat/agents-office: no AI helper of yours yet → Add an AI helper: pick the AI, and the one setup that fits opens
+    // (the invite sheet, inviteagent.js). Nothing is made until you copy it there.
+    if (s === 'connect' && window.TribeAgentsOffice) return window.TribeAgentsOffice.addAi(id);
     if (s === 'connect') {
       return `<section class="hero-card fl-hero" id="${id}" data-state="connect">${head('Next step', 'Connect your AI', 'Pick the tool you use and run one line. It joins this project, reads the plan and asks you before anything goes live.')}
         <div class="fl-tabs" role="tablist" aria-label="Your AI tool">${TABS.map(([k, n]) => `<button type="button" role="tab" class="fl-tab${k === st.tab ? ' on' : ''}" aria-selected="${k === st.tab}" data-fl-tab="${k}">${glyph(k, 15)}<span>${esc(n)}</span></button>`).join('')}</div>
@@ -100,7 +103,7 @@
     if (!top) {
       const n = (d.agents || []).length;
       return `<section class="hero-card fl-hero" id="${id}" data-state="calm">${head('Next step', n ? 'All quiet' : 'No agents here yet', n ? 'Your agents are connected and nothing is waiting on you. Give one a task when you\'re ready.' : 'Nobody has connected an agent to this project yet.')}
-        ${n ? '' : '<div class="fl-acts"><button class="btn primary" data-fl-go="connect">Connect your AI</button></div>'}</section>`;
+        ${n ? '' : '<div class="fl-acts"><button class="btn primary" data-fl-go="connect">Add an AI helper</button></div>'}</section>`;
     }
     const acts = {
       approval: `<button class="btn fl-ok" data-fl-ap="approve" data-id="${esc(top.approval)}" data-pj="${esc(top.project)}">Approve</button><button class="btn fl-no" data-fl-ap="deny" data-id="${esc(top.approval)}" data-pj="${esc(top.project)}">Deny</button>`,
@@ -238,7 +241,7 @@
   function wire(root, opts) {
     st.scope = opts.scope || 'project';
     root.__flOpts = opts;
-    if (heroState(st.data) === 'connect' && !keyFor(st.tab)) ensureKey(() => paintHero(root));
+    if (heroState(st.data) === 'connect' && !keyFor(st.tab) && !window.TribeAgentsOffice) ensureKey(() => paintHero(root));
     resumeTest(root);
     if (root.__flWired) return;
     root.__flWired = true;
@@ -301,6 +304,7 @@
     if (b && b.id === 'fl-start') { if (window.TribeSetup && typeof window.TribeSetup.start === 'function') window.TribeSetup.start(); else if (window.TribeApp && window.TribeApp.startFirst) window.TribeApp.startFirst().then(() => reload(root)); return; }
     if (b && b.id === 'fl-demo') { if (window.TribeOffline && window.TribeOffline.start) window.TribeOffline.start('showcase'); return; }
     if (b && b.dataset.flGo) {
+      if (b.dataset.flGo === 'connect' && window.TribeAgentsOffice) return window.TribeAgentsOffice.pick('other');
       if (b.dataset.flGo === 'connect') { st.stay = true; paintHero(root); ensureKey(() => paintHero(root)); return; }
       if (b.dataset.flGo === 'tasks' && window.TribeApp) window.TribeApp.show('tasks');
       return;
@@ -346,6 +350,9 @@
   // Inside a project: the shell's own agent detail. In the global fleet: a summary with "Open in tribe" (tap only).
   function openAgent(id) {
     const S = window.TribeShell, a = find(id);
+    // inside a project: the same card as the office's floor and desks (office.js), with "Its page" for the details
+    const O = window.TribeOffice;
+    if (st.scope !== 'all' && O && O.openCard && (O.everyone() || []).some(x => x.id === id)) return O.openCard(id);
     if (st.scope !== 'all' && S && S.previewAgent) return S.previewAgent(id);
     if (!a || !S || !S.preview) return;
     const sec = (eyebrow, inner) => `<section class="fl-pv-sec"><span class="eyebrow">${esc(eyebrow)}</span>${inner}</section>`;
