@@ -139,7 +139,7 @@ module.exports = function rooms({ checkFolder = null, watchFolder = null, P, W, 
       next: doing.length ? `In progress: ${doing[0].title}${doing.length > 1 ? ` (+${doing.length - 1})` : ''}` : todo.length ? `Up next: ${todo[0].title}${todo.length > 1 ? ` (+${todo.length - 1})` : ''}` : 'No tasks yet',
       soon: up.length ? `${up[0].title} · ${new Date(up[0].at).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}${up.length > 1 ? ` (+${up.length - 1})` : ''}` : 'Nothing on the calendar',
     };
-    const rule = mood === 'fresh' ? `${p.name} is brand new: write a line of vision, add a first task, invite a friend.`
+    const rule = mood === 'fresh' ? `${p.name} is brand new.`
       : mood === 'buzzing' ? `${p.name} is buzzing${speakers.length ? ` with ${speakers.slice(0, 2).join(' and ')}` : ''}. ${doing.length ? `Focus: ${doing[0].title}.` : todo.length ? `Next up: ${todo[0].title}.` : ''}`
       : mood === 'steady' ? `Steady progress${doneWeek.length ? `: ${pl(doneWeek.length, 'task')} done this week` : ''}. ${doing.length ? `Now: ${doing[0].title}.` : todo.length ? `Next: ${todo[0].title}.` : 'Pick the next task.'}`
       : `Quiet lately. ${todo.length ? `${todo[0].title} is waiting.` : 'A new task or a question in chat gets it moving.'}`;

@@ -140,5 +140,13 @@ ok(M.BANK.length >= 30, '30 subjects in the word bank'); ok(M.BANK.every(d => d.
 ok(M.FEATS.every(f => !f.kit || A.KITS[f.kit]), 'every kit exists: ' + M.FEATS.filter(f => f.kit && !A.KITS[f.kit]).map(f => f.kit));
 { const FX = require(path.join(UI, 'appfeatures.js')); ok(M.FEATS.every(f => f.fx.every(x => FX.get(x))), 'every working feature exists: ' + M.FEATS.flatMap(f => f.fx).filter(x => !FX.get(x))); }
 ok(M.FEATS.every(f => !f.sec || S.BLOCKS[f.sec]), 'every site section exists');
+// feat/dash-layout: suggested tasks fit what was made. A website never talks about orders or other app nouns; an app keeps them.
+{ const site = /headline/i, bad = /\b(orders?|log an?|sample)\b/i;
+  for (const idea of ['a website for my bakery', 'A bakery website with opening hours', 'a site for my coffee shop', 'a website for my running club', 'a portfolio site with a photo gallery']) {
+    const t = M.tasks(M.brief(idea)); ok(t.some(x => site.test(x)) && !t.some(x => bad.test(x)), `${idea}: website tasks (${t.join(' / ')})`);
+    ok(['Swap in your own pictures', 'Check it on a phone', 'Add how people reach you', 'Put it online'].every(x => t.includes(x)), `${idea}: pictures, phone, reach, online (${t.join(' / ')})`); }
+  const made = M.tasks(M.brief('my bakery'), 'site'); ok(!made.some(x => bad.test(x)) && made.includes('Say what you serve'), 'a bakery made as a website, sentence without "website": ' + made.join(' / '));
+  const app = M.tasks(M.brief('a bakery app for orders'), 'app'); ok(app.some(x => /order/i.test(x)), 'an app keeps its own nouns: ' + app.join(' / '));
+  ok(M.tasks(M.brief('a bakery app for orders')).some(x => /order/i.test(x)), 'an app sentence is an app: ' + M.tasks(M.brief('a bakery app for orders')).join(' / ')); }
 if (fails.length) { console.log(fails.map(f => "FAIL " + String(f).slice(0, 330)).join("\n")); process.exit(1); }
 console.log(`firstmake_test: OK (${n} checks, ${CASES.length} sentences)`);

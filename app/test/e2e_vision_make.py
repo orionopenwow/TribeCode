@@ -86,8 +86,8 @@ def main():
             run_pid = r["pid"]; to_dash(pg)
             assert RUN in pg.text_content("#pj-bio"), pg.text_content("#pj-bio")
             assert pg.locator("#ock-vis-in, [data-ock-vis], #pj-vtext, #av-cats").count() == 0, "no second vision box"
-            pg.wait_for_function("[...document.querySelectorAll('#ock-sugg .ock-sg')].length > 0", timeout=15000)
-            sg = pg.evaluate("[...document.querySelectorAll('#ock-sugg .ock-sg')].map(x => x.dataset.title)")
+            pg.wait_for_function("[...document.querySelectorAll('#fd .fd-go[data-fd-act^=\\'task:\\']')].length > 0", timeout=15000)   # feat/dash-layout: after a first version they are Flint's Do this next
+            sg = pg.evaluate("[...document.querySelectorAll('#fd .fd-go[data-fd-act^=\\'task:\\']')].map(x => x.dataset.fdAct.slice(5))")
             assert "Let members log a run" in sg and any("leaderboard" in x.lower() for x in sg), sg
             print("ok  dashboard: the sentence is the line under the name; suggested tasks come from it:", sg[:3])
             pg.click("#pj-bio"); pg.wait_for_selector("#pj-vis-in")

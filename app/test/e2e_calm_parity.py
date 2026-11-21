@@ -1,7 +1,7 @@
 """A calmer first dashboard and first-class projects on this device (feat/calm-parity).
 
 On a host:
- 1. A new project's Dashboard shows the preview band and ONE getting-started card (the next step, "1 of 5", See all
+ 1. A new project's Dashboard shows the preview band and ONE getting-started card (the next step, "1 of 4", See all
     steps). The setup gaps (No GitHub connected, No backup yet) are not in Needs attention: they wait at the end of the
     step list. Your focus and Connect your AI stay out of the way. Steps advance; See all steps shows the five.
  2. An established project (every step done, a task done) is as before: At a glance, the gaps in Needs attention.
@@ -117,11 +117,12 @@ def host_part(b, tok, mid, garden, rocket):
     host.wait_for_selector("#pj-check.hero.one", timeout=45000)
     assert host.locator("#pj-band-slot .db-band").count() == 1, "the preview band stays"
     vis = host.eval_on_selector_all("#pj-check .ock-card", "els => els.filter(e => e.offsetParent).map(e => e.dataset.step)")
-    assert vis == ["vision"], f"one card, the next step: {vis}"
-    assert host.inner_text("#pj-check-n").strip() == "1 of 5"
+    # feat/dash-layout: the line under the name asks for the vision, so the steps start at the first task ("1 of 4")
+    assert vis == ["task"], f"one card, the next step: {vis}"
+    assert host.inner_text("#pj-check-n").strip() == "1 of 4"
     assert host.inner_text("#pj-check-all").strip() == "See all steps"
     assert host.locator("#pj-check .btn.primary").count() == 1
-    assert host.evaluate("document.body.dataset.calm") == "vision"
+    assert host.evaluate("document.body.dataset.calm") == "task"
     assert not host.evaluate("!!(document.querySelector('#room-focus') && document.querySelector('#room-focus').innerText.trim())"), "Your focus waits"
     assert host.evaluate("(() => { const c = document.querySelector('#cc-connect'); return !c || !c.offsetParent; })()"), "Connect your AI waits for its step"
     shot(host, "dash-first-step")

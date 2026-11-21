@@ -6,7 +6,8 @@
 //   chips(brief, label)          -> ['Phone app', 'running club', 'Streaks', 'Leaderboard']   (what was understood)
 //   app(A, doc, brief, name, tpl)  -> doc    (A = TribeAppCore; words, screens for named features, the look)
 //   site(S, cfg, brief, name, tpl) -> cfg    (S = TribeSiteCfg; words, sections for named features, the look)
-//   tasks(brief)                 -> ['Set up the leaderboard', 'Let members log a run', …]   (the dashboard's suggestions)
+//   tasks(brief, kind?)          -> ['Set up the leaderboard', 'Let members log a run', …]   (the dashboard's suggestions; a website's
+//                                   are website tasks: headline, pictures, phone check, how to reach you, put it online)
 //   sig(x)                       -> a short fingerprint of a design without its ids (has the person edited it since?)
 // Rules: the same sentence gives the same result; nothing is invented about the person (no sample first names, "You"
 // instead); placeholders say they are placeholders; no prices for TribeCode anywhere.
@@ -116,7 +117,19 @@
     return out.slice(0, 6);
   }
   const people = b => (/members?|club|team|group|class|students?|friends|family|neighbou?rs?|guests?|customers?|clients?|readers|listeners|players|runners/.exec(b.audience + ' ' + b.idea.toLowerCase()) || [''])[0];
-  function tasks(b) {
+  // What was made decides the words (feat/dash-layout): a website gets website tasks (its headline, pictures, a phone
+  // check, how people reach you, putting it online), never an app's nouns ("add an order"); an app keeps its own nouns.
+  // kind: 'site' | 'app' | 'game' | '' (guessed from the sentence when not given).
+  const SITE_RX = /\b(web ?sites?|sites?|web ?pages?|landing page|home ?page|portfolio|blog|link in bio)\b/i, APP_RX = /\b(apps?|application|tracker|planner)\b/i;
+  function siteTasks(b) {
+    const D = b.domain ? DOMAIN[b.domain] : null, sec = D && D.site && D.site.feats && D.site.feats[0];
+    const feat = b.features.map(f => FEAT[f]).find(f => f.sec && f.task && f.id !== 'contact' && f.id !== 'photos');   // contact and photos are in the list already
+    const own = feat ? feat.task : sec && sec[1] && !/^say it in one line/i.test(sec[1]) ? String(sec[1]).replace(/\.$/, '') : '';
+    return ['Write your own headline', own, 'Swap in your own pictures', 'Check it on a phone', 'Add how people reach you', 'Put it online'].filter(Boolean);
+  }
+  function tasks(b, kind) {
+    const k = kind || (SITE_RX.test(b.idea || '') && !APP_RX.test(b.idea || '') ? 'site' : '');
+    if (k === 'site') return siteTasks(b);
     const out = [], D = b.domain ? DOMAIN[b.domain] : null, who = /club|team|group|society/.test(people(b)) ? 'members' : /class|students?/.test(people(b)) ? 'students' : /friends|family|guests?|customers?|clients?|readers|listeners|players|runners|neighbou?rs?/.test(people(b)) ? people(b).replace(/^(friend|guest|customer|client|neighbou?r|student)$/, '$1s') : '';
     for (const f of b.features) if (FEAT[f].task) out.push(FEAT[f].task);
     if (D) { out.push(who ? `Let ${who} ${D.add.charAt(0).toLowerCase() + D.add.slice(1)}` : `Try it yourself: ${D.add.charAt(0).toLowerCase() + D.add.slice(1)}`); out.push(`Replace the sample ${D.noun[1]} with your own`); }

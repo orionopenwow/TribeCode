@@ -41,11 +41,19 @@
       let b = null; try { b = FM.brief(text); } catch {}
       const NAMES = { leaderboard: 'the leaderboard', streaks: 'streaks', chat: 'chat', map: 'the map', calendar: 'the calendar', booking: 'booking', shop: 'the shop', photos: 'the photo gallery', gallery: 'the photo gallery', timer: 'the timer', notes: 'notes', login: 'sign-in', profile: 'the profile screen', search: 'search', favourites: 'favourites', reminders: 'reminders', faq: 'the FAQ', pricing: 'pricing', contact: 'the contact form', signup: 'the sign-up form' };
       const have = tasks.map(t => String(t.title || '').toLowerCase()).join(' | ');
-      for (const f of (b && b.features) || []) {
+      const site = ctx.kind === 'site', named = [];
+      // feat/dash-layout: a website's next things are website tasks; an app's are its features, then its own tasks
+      if (!site) for (const f of (b && b.features) || []) {
         const nm = NAMES[f] || String(f).replace(/[-_]/g, ' ');
         if (have.includes(String(f).toLowerCase()) || have.includes(nm.replace(/^the /, ''))) continue;
         add({ id: 'feat:' + f, t: `${tr('Make')} ${nm} ${tr('work')}`, why: tr('You asked for it in your idea'), btn: tr('Add as a task'), act: 'task:' + `Make ${nm} work`, tone: '--ember' });
+        named.push(String(f).toLowerCase().replace(/s$/, ''));
+        if (out.length >= 2) break;
+      }
+      if (b && FM.tasks && (ctx.made || site)) for (const t of FM.tasks(b, ctx.kind || '')) {
         if (out.length >= 3) break;
+        const lo = t.toLowerCase(); if (have.includes(lo) || named.some(n => lo.includes(n))) continue;
+        add({ id: 'mk:' + lo.replace(/[^a-z0-9]+/g, '-').slice(0, 40), t: tr(t), why: tr(site ? 'Next for your website' : 'Next for what you made'), btn: tr('Add as a task'), act: 'task:' + t, tone: '--ember' });
       }
     }
     // 4. catching up
@@ -99,7 +107,7 @@
       <header class="fd-head">${FLAME}<b>Flint</b>${mood ? `<span class="fd-mood fd-${esc(L.mood)}">${esc(mood)}</span>` : ''}<span class="fd-sum">${esc(L.summary || '')}</span></header>
       <div class="fd-cols">
         <div class="fd-col fd-next-col">${sug.length || !nextHtml ? `<span class="eyebrow">${esc(tr('Do this next'))}</span>` : ''}
-          ${sug.length ? `<ul class="fd-sugs">${sug.map(x => `<li class="fd-sug" data-fd="${esc(x.id)}" style="--t:var(${x.tone})"><span class="fd-sug-t"><b>${esc(x.t)}</b><small>${esc(x.why)}</small></span><button type="button" class="btn sm fd-go" data-fd-act="${esc(x.act)}">${esc(x.btn)}</button><button type="button" class="fd-x" data-fd-x="${esc(x.id)}" aria-label="${esc(tr('Not now'))}" title="${esc(tr('Not now'))}">×</button></li>`).join('')}</ul>` : (nextHtml ? '' : `<p class="fd-quiet">${esc(tr('Nothing waiting on you. Nice.'))}</p>`)}
+          ${sug.length ? `<ul class="fd-sugs">${sug.map(x => `<li class="fd-sug" data-fd="${esc(x.id)}" style="--t:var(${x.tone})" title="${esc(x.why)}"><span class="fd-sug-t"><b>${esc(x.t)}</b><small>${esc(x.why)}</small></span><button type="button" class="btn sm fd-go" data-fd-act="${esc(x.act)}">${esc(x.btn)}</button><button type="button" class="fd-x" data-fd-x="${esc(x.id)}" aria-label="${esc(tr('Not now'))}" title="${esc(tr('Not now'))}">×</button></li>`).join('')}</ul>` : (nextHtml ? '' : `<p class="fd-quiet">${esc(tr('Nothing waiting on you. Nice.'))}</p>`)}
           ${nextHtml ? `<div class="fd-step">${nextHtml}</div>` : ''}
         </div>
         <div class="fd-col fd-live-col"><span class="eyebrow">${esc(tr('Living updates'))}<i class="fd-pulse" aria-hidden="true"></i></span><div id="fd-ups" aria-live="polite">${updatesHtml(ctx)}</div>

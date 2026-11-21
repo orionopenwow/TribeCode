@@ -159,3 +159,65 @@
   .db-game-land i { display: none; }
   .db-sk-strip .db-acts .btn { flex: 1 1 auto; justify-content: center; }
 }
+
+/* feat/dash-layout: the preview and Flint's card side by side on wide screens (about 60/40, equal tops), so both are
+   seen without scrolling; stacked below that, and on phones. Add files is one slim row under Flint's card. */
+.pj-duo-main > #pj-band-slot:last-child { margin-bottom: 0; }
+@media (min-width: 1280px) {
+  @container ov (min-width: 680px) {
+    /* the two columns: the preview (stretched to the row) with Add files under it, Flint's card beside both */
+    .pj-duo { display: grid; grid-template-columns: minmax(0, 3fr) minmax(300px, 2fr); grid-template-rows: 1fr auto auto; grid-template-areas: "band flint" "fail flint" "files flint"; column-gap: 16px; align-items: stretch; margin: 0 0 16px; }
+    .pj-duo-main, .pj-duo-side { display: contents; }
+    .pj-duo #pj-band-slot { grid-area: band; margin: 0; display: flex; flex-direction: column; min-width: 0; }
+    .pj-duo #pj-flfail { grid-area: fail; margin: 10px 0 0; }
+    .pj-duo #pj-flint-slot { grid-area: flint; align-self: start; min-width: 0; }
+    .pj-duo #pj-context.pj-files-slim { grid-area: files; align-self: end; margin: 10px 0 0; }
+    .pj-duo #pj-band-slot > .db-wrap { flex: 1 1 auto; display: flex; flex-direction: column; }
+    .pj-duo .db-band { flex: 1 1 auto; display: flex; flex-direction: column; }
+    .pj-duo .db-band > .db-panel { flex: 1 1 auto; display: flex; flex-direction: column; }
+    .pj-duo .db-band .db-stage { flex: 1 1 auto; aspect-ratio: auto; max-height: none; min-height: 200px; }
+    .pj-duo .db-band.db-empty { justify-content: center; }
+    .pj-duo-side > #pj-flint-slot > .fd { margin: 0; }
+    .pj-duo .fd-cols { grid-template-columns: minmax(0, 1fr); gap: 12px; }
+    .pj-duo .fd-sum { display: none; }
+    /* the narrow column: titles wrap (two lines), the button goes under the text, × stays top right */
+    .pj-duo .fd-sug { display: grid; grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "t x" "go x"; align-items: start; gap: 6px 6px; }
+    .pj-duo .fd-sug-t { grid-area: t; }
+    .pj-duo .fd-sug-t b, .pj-duo .fd-up-t { white-space: normal; text-overflow: clip; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; overflow: hidden; }
+    .pj-duo .fd-sug .fd-go { grid-area: go; justify-self: start; }
+    .pj-duo .fd-sug .fd-x { grid-area: x; margin-top: -4px; }
+    .pj-duo .fd-up { align-items: flex-start; }
+    .pj-duo .fd-dot { transform: translateY(5px); }
+    .pj-duo .fd-at { padding-top: 2px; }
+    .pj-duo .fd .fd-step #pj-check.hero .ock-card { flex-wrap: wrap; align-items: flex-start; }
+    .pj-duo .fd .fd-step #pj-check.hero .ock-card .ock-main { flex: 1 1 0; }
+    .pj-duo .fd .fd-step #pj-check.hero .ock-card .ock-l, .pj-duo .fd .fd-step #pj-check.hero .ock-card .ock-sub { white-space: normal; overflow: visible; text-overflow: clip; }
+    .pj-duo .fd .fd-step #pj-check.hero .ock-card .ock-acts { flex: 1 0 100%; margin: 0; padding-left: 46px; }
+    .pj-duo .fd.fd-calm .fd-live-col { flex-direction: column; align-items: flex-start; gap: 4px; }
+    /* keep the narrow card short enough that the preview's buttons stay in view: the reason line moves to the tooltip,
+       and the three newest updates show */
+    .pj-duo .fd-sug-t small { display: none; }
+    .pj-duo .fd-sug { padding: 8px 6px 8px 12px; }
+    .pj-duo .fd-up:nth-child(n+4) { display: none; }
+    /* the website mock fills the taller stage with its content centred */
+    .pj-duo .db-band .db-site { display: flex; flex-direction: column; }
+    .pj-duo .db-band .db-site-body { flex: 1 1 auto; align-content: center; }
+  }
+}
+#pj-context.pj-files-slim { margin: 10px 0 16px; padding: 0; border: 1px solid var(--border); border-radius: var(--r); background: var(--surface); }
+.pj-duo-side > #pj-context.pj-files-slim:last-child { margin-bottom: 0; }
+.pj-files-btn { display: flex; align-items: center; gap: 8px; width: 100%; min-height: 40px; padding: 0 12px; border: 0; border-radius: var(--r); background: transparent; color: var(--muted); font: inherit; font-size: 13px; text-align: left; cursor: pointer; transition: background-color var(--dur-quick) var(--ease-out); }
+.pj-files-btn:hover { background: var(--surface-2); }
+.pj-files-btn:focus-visible { outline: 2px solid var(--brand); outline-offset: -2px; }
+.pj-files-btn .i { flex: none; color: var(--muted); }
+.pj-files-btn b { flex: none; color: var(--text); font-weight: 600; }
+.pj-files-dot { flex: none; color: var(--faint); }
+.pj-files-sub { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pj-files-n { flex: none; margin-left: auto; font: 600 11px/1.6 var(--mono); color: var(--muted); }
+#pj-context.pj-files-slim.open .pj-files-btn { border-radius: var(--r) var(--r) 0 0; }
+.pj-files-body { padding: 0 12px 12px; }
+.pj-files-body[hidden] { display: none; }
+.pj-files-why { margin: 0 0 8px; color: var(--muted); font-size: 12.5px; }
+#pj-context.pj-files-slim #dropzone { min-height: 88px; }
+#pj-context.pj-files-slim .pj-newfiles { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 8px; }
+@media (prefers-reduced-motion: reduce) { .pj-files-btn { transition: none; } }

@@ -17,8 +17,8 @@ const STOP = new Set('a an the and or of to for in on at with by is are be it it
 const TEMPLATE_TASKS = {
   game: [['Add a title screen with a Start button', 'every game needs a front door'], ['Show a score and lives on screen', 'players like to see progress'], ['Add jump and coin sounds', 'sound makes it feel alive'],
     ['Build a second level', 'more to play'], ['Add a simple boss at the end', 'a goal for the first world'], ['Add touch controls for phones', 'friends will open it on their phones']],
-  site: [['Write the home page headline and one-line pitch', 'the first thing people read'], ['Add an About page', 'who is behind it'], ['Make every page look good on phones', 'most visits are on phones'],
-    ['Add a contact or sign-up link', 'a way to reach you'], ['Add a favicon and page titles', 'small polish that shows']],
+  site: [['Write your own headline', 'the first thing people read'], ['Swap in your own pictures', 'real pictures beat stock ones'], ['Check it on a phone', 'most visits are on phones'],
+    ['Add how people reach you', 'a link, an email or an address'], ['Put it online', 'a link you can send'], ['Add an About page', 'who is behind it']],
   app: [['Sketch the main screen', 'the screen people use most'], ['Save data between sessions', 'nothing lost on reload'], ['Add a settings screen', 'a home for preferences'],
     ['Make it work offline', 'phones lose signal'], ['Add an empty state for first use', 'the first minute matters']],
   tool: [['Write usage examples in the README', 'how people learn it'], ['Add a --help flag', 'self-explaining'], ['Handle bad input with clear errors', 'friendlier failures']],
@@ -40,7 +40,7 @@ const QUESTIONS = [
   { k: 'done', q: 'What does "done" look like for v1?' }, { k: 'out', q: 'What is out of scope?' },
 ];
 
-module.exports = function assist({ P, store, brain, docs, loadTasks, getMembers, presenceFor, postChat, coord, shelf, str, nameOf }) {
+module.exports = function assist({ P, store, brain, docs, loadTasks, getMembers, presenceFor, postChat, coord, shelf, str, nameOf, madeKind }) {
   const FILE = '.tribe/assist.json';
   const clip = (s, n) => String(s || '').replace(/\s+/g, ' ').trim().slice(0, n);
   const first = n => String(n || 'someone').split(/\s+/)[0];
@@ -199,6 +199,8 @@ module.exports = function assist({ P, store, brain, docs, loadTasks, getMembers,
   function pool(me) {
     const p = proj(), vtext = readVision();
     let kind = kindOf(typesOf(p));
+    // feat/dash-layout: what was made decides (a website made from "my bakery" gets website tasks, not app or code ones)
+    if (kind === 'any' || kind === '3d') { let mk = ''; try { mk = madeKind ? madeKind(pid()) : ''; } catch {} if (mk && TEMPLATE_TASKS[mk]) kind = mk; }
     if (kind === 'any' || kind === '3d') {   // no starter picked yet: read the kind off the vision ("a cozy pixel game…")
       const v = String(vtext || '').toLowerCase();
       kind = /\b(game|platformer|puzzle|level|player|rpg|arcade)\b/.test(v) ? 'game' : /\b(website|site|landing page|portfolio|blog|shop page)\b/.test(v) ? 'site'
@@ -211,7 +213,7 @@ module.exports = function assist({ P, store, brain, docs, loadTasks, getMembers,
       ...(kind !== 'any' ? TEMPLATE_TASKS[kind] : []).map(([t, w]) => [t, `${kind} starter · ${w}`, 'template']),
       ...repoIdeas(repoDir(p)).map(x => [...x, 'repo']),
       ...(!docs.list().length ? [['Write a short design note in Files', 'no docs yet', 'docs']] : []),
-      ...TEMPLATE_TASKS.any.map(([t, w]) => [t, w, 'starter']),
+      ...(kind === 'site' ? [] : TEMPLATE_TASKS.any).map(([t, w]) => [t, w, 'starter']),   // a website needs no README or automated test
     ];
     const tasks = loadTasks().map(t => t.title), gone = dismissed(me), seen = [];
     const out = [];

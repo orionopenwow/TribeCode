@@ -116,8 +116,8 @@ def computer(p, tmp):
         pg.wait_for_function("TribeInvite.isOpen()", timeout=8000); pg.evaluate("TribeInvite.close()")
         pg.wait_for_selector("#pj-bio", timeout=15000); pg.wait_for_timeout(600)
         assert RUN in pg.text_content("#pj-bio"); one_vision_box(pg)
-        pg.wait_for_function("[...document.querySelectorAll('#ock-sugg .ock-sg')].length > 0", timeout=15000)
-        sg = pg.evaluate("[...document.querySelectorAll('#ock-sugg .ock-sg')].map(x => x.dataset.title)")
+        pg.wait_for_function("[...document.querySelectorAll('#fd .fd-go[data-fd-act^=\\'task:\\']')].length > 0", timeout=15000)   # feat/dash-layout: after a first version they are Flint's Do this next
+        sg = pg.evaluate("[...document.querySelectorAll('#fd .fd-go[data-fd-act^=\\'task:\\']')].map(x => x.dataset.fdAct.slice(5))")
         assert "Let members log a run" in sg, sg
         print("ok  in a tribe: the first version (app), then the invite sheet; suggested tasks come from the sentence:", sg[:3])
 

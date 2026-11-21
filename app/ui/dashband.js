@@ -242,7 +242,8 @@
     if (k === 'designer') return inProject(pid, () => window.TribeSiteDesigner && window.TribeSiteDesigner.open({ pid }));
     if (k === 'appcreator') return inProject(pid, () => window.TribeAppCreator && window.TribeAppCreator.open({ pid }));
     if (k === 'design') return inProject(pid, () => window.TribeCanvas && window.TribeCanvas.open(b.design.id));
-    if (k === 'share') { try { const r = await liveUrl(b); if (r.share) return copy(r.share); } catch (e) { return toast(e.message); } return toast('Nothing to share yet.'); }
+    // feat/dash-layout: a link copies; with nothing to share yet, the Publish sheet opens to put it online (no dead end)
+    if (k === 'share') { let r = null; try { r = await liveUrl(b); } catch {} if (r && r.share) return copy(r.share); if (window.TribePublish && window.TribePublish.open) return inProject(pid, () => window.TribePublish.open(pid)); return toast('Nothing to share yet.'); }
     if (k === 'pin' || k === 'unpin') {
       try { await api('/dash/main', { method: 'PUT', project: pid, body: { project: k === 'pin' ? pid : null } }); toast(k === 'pin' ? `${b.project.name} is the main project.` : 'Unpinned. The most active project leads.'); } catch (e) { toast(e.message); }
       return refresh();
