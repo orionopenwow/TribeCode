@@ -63,7 +63,7 @@
     const by = b.updated && b.updated.byName ? ` by ${esc(b.updated.byName)}` : '';
     const upd = b.updated && b.updated.at ? `Updated ${esc(ago(b.updated.at))}${by}` : 'Not updated yet';
     const can = k => b.has[k];
-    const sw = Object.keys(LABEL).map(k => `<button type="button" role="radio" class="db-sw-b" data-show="${k}" aria-checked="${b.pick === k}" ${can(k) && b.canSwitch ? '' : 'disabled'} title="${can(k) ? `Show the ${LABEL[k].toLowerCase()}` : `No ${LABEL[k].toLowerCase()} yet`}">${ico(KIND_I[k], 13)}<span>${LABEL[k]}</span></button>`).join('');
+    const sw = Object.keys(LABEL).filter(k => can(k) && b.canSwitch).map(k => `<button type="button" role="radio" class="db-sw-b" data-show="${k}" aria-checked="${b.pick === k}" ${can(k) && b.canSwitch ? '' : 'disabled'} title="${can(k) ? `Show the ${LABEL[k].toLowerCase()}` : `No ${LABEL[k].toLowerCase()} yet`}">${ico(KIND_I[k], 13)}<span>${LABEL[k]}</span></button>`).join('');
     const second = b.pick === 'app' ? ['code', 'i-git', 'Open code'] : b.pick === 'site' ? ['designer', 'i-quill', 'Open designer'] : b.pick === 'phone' ? ['appcreator', 'i-grid', 'Open App Creator'] : ['design', 'i-canvas', 'Open design'];
     return `<div class="db-strip">
       <div class="db-id">${PJ() && PJ().face ? PJ().face(b.project, 'sm') : ''}<div class="db-id-t"><div class="db-name"><b>${esc(b.project.name)}</b><span class="db-kind">${ico(KIND_I[b.pick], 12)}${LABEL[b.pick]}</span>${b.isMain ? `<span class="db-main" title="${b.pinned ? 'Pinned as the tribe’s main project' : 'The tribe’s most active project'}">${b.pinned ? 'Main project' : 'Most active'}</span>` : ''}</div>
@@ -72,7 +72,7 @@
         <button type="button" class="btn primary sm" data-db="open">${ico('i-play', 14)}${b.pick === 'design' ? 'Open design' : 'Open preview'}</button>
         ${b.pick === 'design' ? '' : `<button type="button" class="btn sm" data-db="${second[0]}">${ico(second[1], 14)}${second[2]}</button>`}
         ${b.pick === 'design' || b.pick === 'phone' ? '' : `<button type="button" class="btn sm" data-db="share">${ico('i-link', 14)}Share link</button>`}
-        <span class="db-tools"><span class="db-sw" role="radiogroup" aria-label="What the band shows">${sw}</span>
+        <span class="db-tools">${Object.keys(LABEL).filter(k => can(k) && b.canSwitch).length > 1 ? `<span class="db-sw" role="radiogroup" aria-label="What the band shows">${sw}</span>` : ''}
         <button type="button" class="btn sm db-more" data-db="more" aria-haspopup="menu" aria-label="More" title="More">⋯</button></span>
       </div></div>`;
   }

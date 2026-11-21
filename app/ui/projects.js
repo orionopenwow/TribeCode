@@ -244,13 +244,16 @@
     const hasVis = !!(d.vision && d.vision.has), visText = hasVis ? (d.vision.lead || d.vision.excerpt || '') : (d.bio || '');
     const canVis = isHost() || p.role === 'host', visEdit = canVis || (canEdit && !hasVis);   // the server asks for settings.edit to change the vision
     visLead = hasVis ? visText : ''; const visFocus = false;
+    // p10: Flint's card (Do this next + Living updates) right under the preview; the one next setup step lives inside it
+    const fdCtx = { p, d, steps, nextIx, tasks: tasksAll, meId, canEdit };
+    const FDh = nextHtml => window.TribeFlintDash ? `<div id="pj-flint-slot">${window.TribeFlintDash.html(fdCtx, nextHtml)}</div>` : nextHtml;
     const html = `<div class="view-head pj-title pj-title2"><button class="pj-face-btn" id="pj-face" title="Change the picture" aria-label="Change the project picture">${face(p, 'lg')}${canEdit ? `<span class="pj-cam" aria-hidden="true">${ico('i-photo', 12)}</span>` : ''}</button>
         <div class="pj-id"><h1>${canName ? `<button class="pj-inl pj-name-btn" id="pj-name" title="Rename">${esc(p.name)}</button>` : esc(p.name)}</h1>
           <button class="pj-inl pj-bio pj-vis ${visText ? '' : 'empty'}" id="pj-bio" ${visEdit ? '' : 'disabled'} title="${visEdit ? 'Edit what you’re making' : ''}">${visText ? `<span class="pj-vis-t">${esc(visText)}</span>${visEdit ? `<span class="pj-vis-pen" aria-hidden="true">${ico('i-quill', 13)}</span>` : ''}` : visEdit ? `${ico('i-quill', 14)}Add what you’re making` : ''}</button>
           ${matchOffer && matchOffer.pid === p.id ? `<div class="pj-vmatch" id="pj-vmatch" role="status"><span>Update the first version to match?</span><button type="button" class="btn sm primary" id="pj-vmatch-go">Update it</button><button type="button" class="btn sm" id="pj-vmatch-x">Not now</button></div>` : ''}
           <span class="faint pj-meta">${team.length} ${team.length === 1 ? 'person' : 'people'}${r ? `<span class="pj-dot">·</span><span title="The code repository: the shared folder that holds this project's code">${esc(r.name)}</span><span class="pj-dot">·</span><span title="The branch: the version of the code you're looking at (main is the shared one)">${esc(r.branch)}</span>` : ''}<span id="pj-site-slot"></span></span></div>
         ${canEdit ? `<button class="btn" id="pj-invite" style="margin-left:auto">${ico('i-users', 15)}Invite to ${esc(p.name)}</button>` : ''}</div>
-      <div id="pj-band-slot"></div>${window.TribeFirstLook && window.TribeFirstLook.failed(p.id) ? `<div class="pj-flfail" id="pj-flfail" role="status"><span>The first preview from your idea did not finish.</span><button type="button" class="btn sm primary" id="pj-flfail-go">Try again</button></div>` : ''}${hero ? checklist : ''}<!-- pass 6: the one next step sits right under the preview -->
+      <div id="pj-band-slot"></div>${window.TribeFirstLook && window.TribeFirstLook.failed(p.id) ? `<div class="pj-flfail" id="pj-flfail" role="status"><span>The first preview from your idea did not finish.</span><button type="button" class="btn sm primary" id="pj-flfail-go">Try again</button></div>` : ''}${FDh(hero ? checklist : '')}<!-- pass 6: the one next step sits right under the preview -->
       <div id="pj-crit-slot"></div><!-- feat/dash-preview: the main project's preview, then Needs attention (dashband.js) -->
 ${canEdit && !started ? `      <section class="pj-context" id="pj-context"><div class="pj-ctx-head"><span class="pj-ctx-e" aria-hidden="true">📎</span><div><h3>Add files</h3><p>Drop docs, PDFs, pictures or notes. Flint and the AI helpers read them to understand ${esc(p.name)}.</p></div></div><div id="pj-ctx-body"></div></section>` : ''}
       ${started ? `<section class="card pj-living pj-glance" id="pj-living" aria-label="At a glance"><div class="pl-head"><span class="eyebrow">At a glance</span><button class="linkish pj-share" id="pj-share" type="button" title="Copy progress, the GitHub link and an invite link">📤 Share progress</button></div>
@@ -299,6 +302,7 @@ ${canEdit && !started ? `      <section class="pj-context" id="pj-context"><div 
     const sfBody = $('#pj-sf-body'); if (sfText) sfBody.appendChild(sfText);
     const ctx = $('#pj-ctx-body'); if (ctx) [dzn, drops].forEach(n => n && ctx.appendChild(n));   // qa-pass: spectators get no drop zone   // the drop zone is a main point of the page: it gives everyone context
     el.querySelectorAll('[data-ck]').forEach(x => x.onclick = () => step(x.dataset.ck));
+    if (window.TribeFlintDash) window.TribeFlintDash.bind(el, fdCtx);
     // tell the room panel and Flint how far along this project is, so they can stay simple early on
     window.TribeStage && window.TribeStage.set(p.id, { vision: steps[0].done, task: steps[1].done, agent: steps[2].done, repo: steps[3].done });   // repo = where it lives
     const fold = $('#pj-check-fold');
