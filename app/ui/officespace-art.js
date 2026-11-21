@@ -16,11 +16,12 @@
   function load(path) {
     if (IMG.has(path)) return IMG.get(path);
     const p = new Promise(res => { const im = new Image(); im.decoding = 'async'; im.onload = () => res(im); im.onerror = () => res(null); im.src = BASE + path; });
-    IMG.set(path, p); p.then(im => { if (im) IMG.set(path, im); });
+    IMG.set(path, p); p.then(im => { if (im) { IMG.set(path, im); LOADED.add(path); } });
     return p;
   }
+  const LOADED = new Set();   // every art file that arrived (tests and the about box)
   const got = path => { const v = IMG.get(path); return v && !(v instanceof Promise) ? v : null; };
-  const json = path => fetch(BASE + path).then(r => { if (!r.ok) throw new Error(path + ' ' + r.status); return r.json(); });
+  const json = path => fetch(BASE + path).then(r => { if (!r.ok) throw new Error(path + ' ' + r.status); return r.json(); }).then(j => { LOADED.add(path); return j; });
   function pixels(path) {
     if (DATA.has(path)) return DATA.get(path);
     const im = got(path); if (!im) return null;
@@ -267,6 +268,7 @@
     swatches: slot => ((WARD && WARD.palettes[slot] && WARD.palettes[slot].squares) || []).map(s => s.hex),
     label: (slot, id) => { const p = part(slot, id); return p ? p.label : id; },
     loaded: () => !!CAT,
+    files: () => [...LOADED],
   };
   window.TribeOfficeArt = api;
 })();

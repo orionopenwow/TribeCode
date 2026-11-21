@@ -1,6 +1,7 @@
-"""Office Space (pass 11): the office as a pixel floor.
+"""Office Space (pass 11, art in 11b): the office as a pixel floor in Pixel Agents' art.
 
-A tribe with two people and two AI helpers: the canvas draws a character for each (plus Flint); an agent that claims a
+The art files load (catalog, character parts, furniture) and the character sprites render on the canvas; NOTICE credits
+Pixel Agents (MIT) and Metro City (CC0). A tribe with two people and two AI helpers: the canvas draws a character for each (plus Flint); an agent that claims a
 file walks to its desk, sits and types; an agent's approval ask shows a "Needs your OK" bubble and the card's Approve
 works; clicking a person opens a card with Message and Open; a wardrobe change persists; a layout edit saves and comes
 back after a reload; the night set switches; reduced motion snaps everyone to their spot; a DM never shows; phones get
@@ -86,6 +87,30 @@ def main():
             cp.wait_for_function("(() => { const c = document.querySelector('#ad-office .os-canvas'); if (!c || !c.width) return false; const x = c.getContext('2d').getImageData(0, 0, c.width, c.height).data; let n = 0; for (let i = 0; i < x.length; i += 4000) if (x[i] + x[i+1] + x[i+2] > 0) n++; return n > 20; })()", timeout=10000)   # the canvas is drawn
             print("ok  floor: characters for 2 people, 2 helpers and Flint on the canvas")
 
+            # ---------- the art: files load, sprites render ----------
+            cp.wait_for_function(OS + ".art()", timeout=20000)
+            loaded = cp.evaluate("TribeOfficeArt.files()")
+            for want in ("catalog.json", "characters/wardrobe.json", "default-layout-1.json", "walls/wall_0.png", "floors/floor_6.png", "furniture/DESK/DESK_FRONT.png", "furniture/PC/PC_FRONT_ON_1.png", "characters/body/", "characters/hair/", "pets/claudio/pet.png", "bubbles/permission.json"):
+                assert any(want in n for n in loaded), (want, len(loaded))
+            for path in ("officespace/catalog.json", "officespace/characters/wardrobe.json", "officespace/furniture/SOFA/SOFA_FRONT.png", "officespace/LICENSE.txt"):
+                with urllib.request.urlopen(BASE + "/" + path, timeout=10) as r: assert r.status == 200 and len(r.read()) > 50, path
+            lay = cp.evaluate(OS + ".layout()")
+            assert lay["v"] == 2 and any(i["t"] == "DESK" for i in lay["items"]) and any(i["t"] == "WHITEBOARD" for i in lay["items"]), "the default office is Pixel Agents' layout"
+            # a character's pixels: sample the canvas around Flint's and a helper's spot and find more than the floor's colours
+            sprite_px = """(id => { const os = %s, c = document.querySelector('#ad-office .os-canvas'), ch = os.chars().find(x => x.id === id); if (!ch) return 0;
+                const p = os.tileXY(ch.x, ch.y), r = c.getBoundingClientRect(), k = c.width / r.width, x0 = Math.round((p.x - r.left) * k), y0 = Math.round((p.y - r.top) * k);
+                const s = Math.max(4, Math.round(os.scale() * 16)), d = c.getContext('2d').getImageData(x0 - s / 2, y0 - s * 1.6, s, s * 1.6).data, seen = new Set();
+                for (let i = 0; i < d.length; i += 4) seen.add(d[i] + ',' + d[i + 1] + ',' + d[i + 2]); return seen.size; })""" % OS
+            cp.wait_for_timeout(600)
+            for who in ("flint", ag2["agent"]["id"]):
+                n = cp.evaluate(sprite_px + f"('{who}')"); assert n >= 8, (who, n)
+            assert cp.evaluate(OS + ".pets().length") == 2, "the two office pets"
+            notice = (ROOT / "NOTICE").read_text()
+            assert "Pixel Agents art and code ideas, MIT, (c) 2026 Pablo De Lucca" in notice and "Copyright (c) 2026 Pablo De Lucca" in notice, "NOTICE credits Pixel Agents with its licence"
+            assert "Metro City character pack by JIK-A-4, CC0 1.0" in notice, "NOTICE credits Metro City"
+            assert "Donarg" in notice and "NOT included" in notice
+            print("ok  art: catalog, parts, furniture, pets and bubbles load; sprites render; NOTICE credits both sources")
+
             # ---------- an agent claims a file: it sits at its desk and types ----------
             aid = ag["agent"]["id"]
             mcp(ag["token"], "claim_file", {"path": "src/leaderboard.js", "note": "leaderboard"})
@@ -140,21 +165,22 @@ def main():
             print("ok  wardrobe: a new look is saved to my profile")
 
             # ---------- the layout editor: place a plant, save, reload ----------
-            n0 = len([i for i in ok(api("/office", token=host))["layout"]["items"] if i["t"] == "plant"]) if ok(api("/office", token=host)).get("layout") else cp.evaluate(OS + ".layout().items.filter(i => i.t === 'plant').length")
+            n0 = cp.evaluate(OS + ".layout().items.filter(i => i.t === 'PLANT').length")
             cp.click("#ad-office .os-bar [data-os-act='edit']")
-            cp.click("#ad-office .os-edit [data-tool='plant']")
+            cp.click("#ad-office .os-edit [data-tool='f:PLANT']")
             spot = cp.evaluate(OS + ".free(Math.floor(" + OS + ".layout().w / 2))"); xy = cp.evaluate(f"{OS}.tileXY({spot['x']}, {spot['y']})")
             cp.mouse.click(xy["x"], xy["y"])
             cp.click("#ad-office .os-edit [data-ed='save']")
             for _ in range(30):
                 L = ok(api("/office", token=host)).get("layout")
-                if L and len([i for i in L["items"] if i["t"] == "plant"]) == n0 + 1: break
+                if L and len([i for i in L["items"] if i["t"] == "PLANT"]) == n0 + 1: break
                 time.sleep(0.2)
-            else: raise AssertionError(("layout not saved", L and [i for i in L["items"] if i["t"] == "plant"], n0, spot, cp.evaluate(OS + ".layout().items.filter(i => i.t === 'plant')")))
-            assert any(i["t"] == "plant" and i["x"] == spot["x"] and i["y"] == spot["y"] for i in L["items"]), "the plant is where I put it"
+            else: raise AssertionError(("layout not saved", L and [i for i in L["items"] if i["t"] == "PLANT"], n0, spot, cp.evaluate(OS + ".layout().items.filter(i => i.t === 'PLANT')")))
+            assert L["v"] == 2 and any(i["t"] == "PLANT" and i["x"] == spot["x"] and i["y"] == spot["y"] for i in L["items"]), "the plant is where I put it"
             cp.reload(wait_until="domcontentloaded"); cp.wait_for_function("window.TribeClient && TribeClient.connected() && window.TribeAgentsDash", timeout=45000)
             cp.evaluate("TribeShell.go('agents')"); cp.wait_for_function(OS + " && " + OS + ".layout()", timeout=20000)
-            assert cp.evaluate(f"{OS}.layout().items.some(i => i.t === 'plant' && i.x === {spot['x']} && i.y === {spot['y']})"), "the layout comes back after a reload"
+            cp.wait_for_function(OS + ".art()", timeout=20000)
+            assert cp.evaluate(f"{OS}.layout().items.some(i => i.t === 'PLANT' && i.x === {spot['x']} && i.y === {spot['y']})"), "the layout comes back after a reload"
             print("ok  layout editor: place, save, reload")
 
             # ---------- sets: switch to the night office ----------
