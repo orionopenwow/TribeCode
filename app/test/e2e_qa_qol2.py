@@ -137,7 +137,7 @@ def main():
             pg.keyboard.press("Escape"); pg.evaluate("window.TribePreview && TribePreview.close && TribePreview.close()")
 
             # ---- Connect your AI: a hint for "terminal"
-            pg.evaluate("TribeApp.connectClaude({fresh: true})"); pg.wait_for_selector("#invite-body:has-text('already connected')", timeout=10000)   # one Claude per person: the sheet shows the one Sam has (the terminal hint is covered by e2e_invite_one)
+            pg.evaluate("TribeApp.connectClaude({fresh: true})"); pg.wait_for_selector("#invite-body #ic-body .ic-q", timeout=10000)   # the one sheet on An AI helper; opening Agents & office made no key (feat/agents-office), so nothing is "already connected" (the terminal hint is covered by e2e_invite_one)
             close_sheets(pg)
 
             # ---- Settings: advanced rows live in their own tab (feat/settings-tabs), the last tab is remembered
