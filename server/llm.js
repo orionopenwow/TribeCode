@@ -209,7 +209,7 @@ module.exports = function makeLLM({ brain, store, log = () => {}, canUseHost = (
         if (signal && signal.aborted) break;
       }
     }
-    if (noCredits) throw Object.assign(new Error('You are out of AI credits. Connect your own AI for free, or get credits.'), { status: 402, need: 'credits', basic: true });
+    if (noCredits) throw Object.assign(new Error(credits && credits.needText ? credits.needText('credits') : 'The built-in AI is used up for now. Your own AI is free to connect: open Agents and pick yours.'), { status: 402, need: 'credits', basic: true });
     const block = CLOUD.has(cfg.provider) && cloudReady() ? cloudBlock(me) : '';
     if (block) throw Object.assign(new Error(block), { status: 403, basic: true });
     throw Object.assign(new Error(lastErr ? scrub(lastErr.message) : cfg.provider === 'none' ? 'The tribe\'s brain is off (basic mode)' : 'No model is available'), { status: 503, basic: true });
