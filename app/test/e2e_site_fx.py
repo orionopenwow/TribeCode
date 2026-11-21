@@ -152,7 +152,8 @@ console.log('model ok');
             ctx = b.new_context(viewport={"width": 1440, "height": 900}, accept_downloads=True); ctx.add_init_script(settings_js("Mara", tok, pid))
             pg = ctx.new_page(); watch(pg, "designer")
             pg.goto(BASE + "/?skipIntro=1#/chat/general"); pg.wait_for_function("window.TribeSiteDesigner && window.TribeSiteFx && window.TribeSiteFxUI", timeout=20000)
-            pg.evaluate("TribeSiteDesigner.open({ template: 'cafe' })"); pg.wait_for_function("TribeSiteDesigner.state() && TribeSiteDesigner.state().open && TribeSiteDesigner.cfg().pages[0].blocks.length > 2", timeout=20000)
+            pg.evaluate("fetch('sitetpl/cafe.json').then(r => r.json()).then(c => { c.pages[0].blocks[0].variant = 'split'; return TribeSiteDesigner.open({ cfg: c }); })");   # words beside the picture, so a background shows behind them
+            pg.wait_for_function("TribeSiteDesigner.state() && TribeSiteDesigner.state().open && TribeSiteDesigner.cfg().pages[0].blocks.length > 2", timeout=20000)
             h0 = hero(pg); assert h0["type"] == "hero" and "fx" not in h0, h0
             fr = pg.frame_locator("#wdz-frame")
             wait_frame(pg, "!!document.querySelector('[data-block]')")
