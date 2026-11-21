@@ -12,7 +12,7 @@
 const LIMIT = 300;
 const today = () => new Date().toISOString().slice(0, 10);
 
-module.exports = function coord({ P, store, id, str, broadcast, postChat, bus, getMembers, presenceFor, loadTasks, saveTask, claims, hubFor, approvals, brain, nameOf }) {
+module.exports = function coord({ designBrief = null, P, store, id, str, broadcast, postChat, bus, getMembers, presenceFor, loadTasks, saveTask, claims, hubFor, approvals, brain, nameOf }) {
   const FILE = '.tribe/coord.json';
   const db = Object.assign({ control: {}, usage: {}, inbox: [], lanes: [], handoffs: [], reviews: [], availability: {}, plans: {} }, store.readJSON(FILE, {}));
   const save = () => {
@@ -180,11 +180,14 @@ module.exports = function coord({ P, store, id, str, broadcast, postChat, bus, g
   }
   // "Ask an agent" (feat/any-llm): someone without an AI of their own asks the tribe's agents. It is an open hand-off
   // to anyone (ask: true) that the next connected agent takes with take_handoff (MCP) and answers in chat.
-  function ask({ text, task }, me) {
+  function ask({ text, task, design }, me) {
     text = str(text, 4000); if (!text) throw err(400, 'say what you need');
+    // feat/ai-guides: a request about the website or the app carries the project brief on top, so whichever agent takes
+    // it knows what the project is before it reads a line of the design (server/aiguides.js; only this project's own facts)
+    let pre = ''; if (designBrief && /^(site|app|motion)$/.test(design || '')) { try { pre = str(designBrief(pid(), design, me) || '', 9000); } catch { pre = ''; } }
     if (me.role === 'agent') throw err(403, 'agents use handoff or delegate');
     const t = task && tasksNow().find(x => x.id === task);
-    const h = { id: 'h-' + id(6).toLowerCase(), ask: true, title: str(t ? `${t.title}` : text.split('\n')[0], 160), context: t ? `${text}\n\nTask ${t.id}: ${t.title}${t.body ? '\n' + str(t.body, 1500) : ''}` : text,
+    const h = { id: 'h-' + id(6).toLowerCase(), ask: true, title: str(t ? `${t.title}` : text.split('\n')[0], 160), context: (pre ? pre + '\n\n---\n\n' : '') + (t ? `${text}\n\nTask ${t.id}: ${t.title}${t.body ? '\n' + str(t.body, 1500) : ''}` : text),
       from: me.id, to: null, task: t ? t.id : null, branch: null, files: [], status: 'open', created: now(), project: pid() };
     db.handoffs.push(h); save(); push('handoffs');
     postChat('general', 'tribecode', `🙋 ${me.name} asked the tribe's agents: **${h.title}**. The next agent that connects picks it up.`);

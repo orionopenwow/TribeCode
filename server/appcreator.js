@@ -27,8 +27,9 @@
 const fs = require('node:fs');
 const path = require('node:path');
 const A = require('../app/ui/appcreator-core.js');
+const AG = require('../app/ui/aiguide-core.js');   // feat/ai-guides: the steps, their examples and the text views an AI helper gets
 
-module.exports = function appCreator({ files = null, P, store, root, perms = null, requests = () => null, brand = () => ({}), broadcast = () => {}, nameOf = x => x, ensureRepo = null, log = () => {} }) {
+module.exports = function appCreator({ guides = null, files = null, P, store, root, perms = null, requests = () => null, brand = () => ({}), broadcast = () => {}, nameOf = x => x, ensureRepo = null, log = () => {} }) {
   const FONTS = [path.join(root, 'app', 'ui', 'assets', 'site-fonts'), path.join(root, 'ui', 'assets', 'site-fonts')].find(d => fs.existsSync(d)) || path.join(root, 'app', 'ui', 'assets', 'site-fonts');
   const rel = pid => `.tribe/appdesign/${String(pid).replace(/[^\w-]/g, '')}.json`;
   // pass 4: with nothing saved here, the design file in the project's folder (app-web/app-design.json) is read
@@ -204,23 +205,46 @@ module.exports = function appCreator({ files = null, P, store, root, perms = nul
   const cur = a => (a && a.project) || (P && (P.current() || P.defaultId()));
   const mcpTools = {
     app_read: {
-      description: 'Read the project\'s phone app design (made in App Creator) as JSON: every screen with its id and name, each part (block) with its id, type, words and links, the look (theme), the brand kit, what parts, looks, fonts, icons and kits exist, and the steps app_propose accepts. Use it before app_propose. Pictures are left out.',
-      inputSchema: { type: 'object', properties: { project: { type: 'string' } }, additionalProperties: false },
-      run: async (a = {}) => { const pid = cur(a), raw = loadRaw(pid); if (!raw) return text('This project has no app design yet. A person starts one in App Creator (Design › App).', true); let k = {}; try { k = brand(pid) || {}; } catch {} return text(JSON.stringify({ ...A.readOut(raw), brand: { name: k.name, colors: k.colors, fonts: k.fonts, voice: k.voice } })); },
+      description: 'Read the project\'s phone app design (made in App Creator) with its ids: every screen with its id and name, each part (block) with its id, type, words and links, the look (theme) and the brand kit. You need these ids for app_propose. detail: "summary" returns only the structure (screen and part ids, types, where taps go), which is enough to plan; screen: a screen id or name returns that screen in full. Pictures are left out. First time here? Call project_brief and get_guide("app") before this; app_view shows the same screens as a person reads them, and app_catalog lists what can be added.',
+      inputSchema: { type: 'object', properties: { project: { type: 'string' }, detail: { type: 'string', enum: ['full', 'summary'], description: 'summary: structure and ids only (small). full (default): with the words.' }, screen: { type: 'string', description: 'Only this screen (id or name)' }, proposed: { type: 'boolean', description: 'Read your own waiting proposal (the app as it will be if approved) instead of the saved design' } }, additionalProperties: false },
+      run: async (a = {}, me) => {
+        const pid = cur(a), pend = a.proposed && requests() && requests().pending ? requests().pending(pid, me, 'app') : null; if (a.proposed && !pend) return text('You have no proposal waiting for the app. Leave proposed out to read the saved design.', true);
+        const raw = pend ? pend.payload : loadRaw(pid); if (!raw) return text('This project has no app design yet. Start one with app_propose and start: { "template": "<id>" } or { "blank": true } (app_catalog with part "templates" lists them); a person approves it.', true);
+        let k = {}; try { k = brand(pid) || {}; } catch {} const bk = { name: k.name, colors: k.colors, fonts: k.fonts, voice: k.voice };
+        if (a.detail === 'summary') return text(JSON.stringify({ ...AG.appSummary(raw, A), brand: bk, next: 'app_read with screen for the words; app_catalog for what can be added; app_propose to change it.' }));
+        const o = A.readOut(raw);
+        if (a.screen) { const sc = o.screens.filter(x => x.id === a.screen || x.name === a.screen); if (!sc.length) return text(`No screen “${String(a.screen).slice(0, 40)}”. Screens: ${o.screens.map(x => `${x.id}: ${x.name}`).join(', ')}`, true); o.screens = sc; delete o.can; delete o.steps; }
+        return text(JSON.stringify({ ...o, brand: bk }));
+      },
     },
     app_propose: {
-      description: `Propose changes to the project's phone app design as a list of safe steps. Nothing changes until a person approves the proposal (they see the app before and after), and Undo takes it back. ${A.PROPOSE_HELP}`,
-      inputSchema: { type: 'object', properties: { project: { type: 'string' }, note: { type: 'string', description: 'one or two sentences for the person: what you changed and why' }, ops: { type: 'array', items: { type: 'object' }, maxItems: 60 } }, required: ['ops'], additionalProperties: false },
+      description: `Propose changes to the project's phone app design as a list of steps (ops). Nothing changes until a person approves the proposal (they see the app before and after), and Undo takes it back. dry_run: true tries the steps on a copy and reports what each did, what was skipped and why (with a corrected example), the ids of new screens and parts and what the check would say, without sending anything: use it first. While your earlier proposal is still waiting, new steps are added on top of it (one request for the person); fresh: true starts again from the saved design. With no app yet, start: { template: "<id>" } or { blank: true } begins one. Every step with an example: app_catalog (part "steps") or get_guide("app"). ${A.PROPOSE_HELP}`,
+      inputSchema: { type: 'object', properties: { project: { type: 'string' }, note: { type: 'string', description: 'One or two sentences for the person: what you changed and why, then what only they can add' }, ops: { type: 'array', items: { type: 'object' }, maxItems: 60, description: 'The steps, each { op, … }' }, dry_run: { type: 'boolean', description: 'Try the steps and report; send nothing' }, fresh: { type: 'boolean', description: 'Do not build on your waiting proposal; start from the saved design' }, start: { type: 'object', description: 'Only when the project has no app design: { template: "<id>" } or { blank: true }', properties: { template: { type: 'string' }, blank: { type: 'boolean' } }, additionalProperties: false } }, additionalProperties: false },
       run: async (a = {}, me) => {
         try {
           const pid = cur(a), p = P.get(pid); if (!p) return text('project not found', true);
-          const raw = loadRaw(pid); if (!raw) return text('This project has no app design yet. A person starts one in App Creator (Design › App).', true);
-          const r = A.propose(raw, a.ops); const skipped = r.skipped.length ? `\nSkipped:\n${r.skipped.map(x => '- ' + x).join('\n')}` : '';
-          if (!r.done.length) return text(`None of the steps could be used, so nothing was proposed.${skipped}`, true);
-          const rq = requests(); if (!rq) return text('change requests are not available here', true);
-          const who = me || { id: 'agent', role: 'agent', name: 'AI helper' };
-          const out = rq.create(pid, who, { tool: 'app', payload: r.doc, title: `${who.name || 'An AI helper'} proposes ${r.done.length} change${r.done.length === 1 ? '' : 's'} to the app`, why: String(a.note || '').slice(0, 600), summary: r.done.slice(0, 12) });
-          return text(`${out.applied ? `Applied ${r.done.length} change${r.done.length === 1 ? '' : 's'} (you hold the right to change the app).` : `Proposed ${r.done.length} change${r.done.length === 1 ? '' : 's'}. A person approves them under Requests in App Creator or in the inbox; nothing has changed yet.`}\n${r.done.map(x => '- ' + x).join('\n')}${skipped}`);
+          const rq = requests(), H = guides && guides(), who = me || { id: 'agent', role: 'agent', name: 'AI helper' }, ops = Array.isArray(a.ops) ? a.ops : [];
+          let raw = loadRaw(pid), started = '';
+          if (a.start && typeof a.start === 'object') {
+            if (raw) return text('This project already has an app design, so start is not used: change it with steps (app_read gives the ids).', true);
+            if (a.start.template) { const t = String(a.start.template); if (!A.templateList().some(x => x.id === t)) return text(`No template “${t.slice(0, 40)}”. Some that exist: ${A.templateList().slice(0, 14).map(x => x.id).join(', ')} (app_catalog with part "templates" lists all), or start: { "blank": true }.`, true); raw = A.template(t); raw.name = p.name || raw.name; started = `Starts an app from the ${t} template`; }
+            else { raw = A.blank(p.name || 'My app'); started = 'Starts a new app design'; }
+          }
+          const pend = !a.fresh && !started && rq && rq.pending ? rq.pending(pid, who, 'app') : null;   // your own waiting proposal: new steps go on top of it
+          if (!raw && !(pend && pend.payload)) return text('This project has no app design yet. Add start: { "template": "<id>" } or start: { "blank": true } to this call to begin one (app_catalog with part "templates" lists the templates).', true);
+          if (!ops.length && !started) return text(`ops must be a list of steps. ${AG.hint('app', 'text')}`, true);
+          const base0 = pend && pend.payload ? pend.payload : raw, r = A.propose(base0, ops);
+          const nl = H ? H.notes('app', ops, A.normalize(base0), r.skipped) : r.skipped.map(x => ({ step: 0, op: '', why: x }));
+          const skipped = nl.length ? `\nSkipped, or changed on the way:\n${H ? AG.lintText(nl) : nl.map(n => '- ' + n.why).join('\n')}` : '';
+          const tail = H ? `\n${H.checkLine('app', r.doc)}\n${H.idsLine('app', r.doc)}` : '';
+          const did = [started, ...r.done].filter(Boolean);
+          if (a.dry_run) return text(`Dry run: nothing was sent, and the ids of anything new below are examples (real ids come with the answer of the call that sends). ${did.length} step${did.length === 1 ? '' : 's'} would be proposed${pend ? ' on top of your waiting proposal' : ''}.\n${did.map(x => '- ' + x).join('\n')}${skipped}${tail}`);
+          if (!did.length || (ops.length && !r.done.length)) return text(`None of the steps could be used, so nothing was proposed.${skipped}`, true);
+          if (!rq) return text('change requests are not available here', true);
+          const all = [...(pend ? pend.summary : []), ...did], n = all.length;
+          const out = rq.create(pid, who, { tool: 'app', payload: r.doc, title: started ? `${who.name || 'An AI helper'} proposes a new app design` : `${who.name || 'An AI helper'} proposes ${n} change${n === 1 ? '' : 's'} to the app`, why: String(a.note || (pend && pend.why) || '').slice(0, 600), summary: all.slice(0, 12) });
+          const to = out.request && out.request.to && out.request.to.length ? ` (${out.request.to.join(', ')})` : '';
+          return text(`${out.applied ? `Applied ${did.length} change${did.length === 1 ? '' : 's'} (you hold the right to change the app).` : `Proposed ${did.length} change${did.length === 1 ? '' : 's'}${pend ? `, added to your waiting proposal (now ${n} in all)` : ''}. A person${to} approves them under Requests in App Creator or in the inbox; nothing has changed yet.`}\n${did.map(x => '- ' + x).join('\n')}${skipped}${tail}`);
         } catch (e) { return text(e.message, true); }
       },
     },

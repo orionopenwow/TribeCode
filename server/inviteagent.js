@@ -10,6 +10,8 @@
 //     Its projects follow yours on every call. "Let it act as me for admin" (adminAsMe, default off) lifts the cap to
 //     admin when you are an admin or the host; host-only rows stay host-only.
 //   Narrowing: scopes (chat, docs, tasks, files, website, approvals). Tools and API paths outside them are refused.
+//     website covers the three design tools: the website, the phone app design and motion graphics. The guides and the
+//     project brief (get_guide, project_brief) are always on: they only say what the owner can already see.
 //   Pause: every request with its key is refused at once (server/index.js stillValid). Remove: the key is wiped.
 //   Rate-limited (TRIBE_CLAUDE_RATE calls a minute, default 120). It never mints keys, invites, hosts, or changes its
 //     own permissions. It can't read anyone's DMs (server/dm.js: only its private line with you).
@@ -61,6 +63,7 @@ const ABOUT = { claude: 'Good at writing, planning and careful code.', cursor: '
 function scopeOfTool(name) {
   const n = String(name || '');
   if (n === 'tribe_api') return null;   // decided per path
+  if (/^(app|motion)_/.test(n)) return 'website';   // feat/ai-guides: the app and motion designs sit with the website (app_read, app_propose, motion_write …)
   if (/approv|^propose$/.test(n)) return 'approvals';
   if (/chat|message|^reply|inbox|vote|^agents_|mention|react/.test(n)) return 'chat';
   if (/doc|note|sheet|deck|whiteboard|journal|secretary|scratch/.test(n)) return 'docs';

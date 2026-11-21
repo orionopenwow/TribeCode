@@ -15,4 +15,6 @@ Building UI:
 - Add new shell files to `SHELL` in `app/ui/sw.js` and bump `const CACHE`.
 - Every feature gets a Playwright test in `app/test/` and a line in `package.json` `test`.
 
+Changing the website designer, App Creator or Motion Studio (a section, layout, part, kit, look, step or MCP tool): run `node scripts/dev/ai-guides.js` so the guides for AI agents in `docs/ai/` follow, and keep `app/ui/aiguide-core.js` (the steps' examples and the design rules) true.
+
 After changing a token in `app/ui/styles.css` or `app/ui/motion.css`, run `node scripts/dev/design-tokens.js`.

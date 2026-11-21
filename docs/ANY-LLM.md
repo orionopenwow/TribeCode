@@ -210,6 +210,9 @@ The sheet above is one journey, in plain words (app/ui/inviteagent.js; test: app
    *Just answer me* = chat. *Help build, ask before big changes* = chat, docs, tasks, files, approvals (not website).
    *Work on its own on tasks I give it* = all six. The boxes stay under it for a custom mix. A choice made before Copy
    is sent with the POST (`preset`), so the helper starts with it. It acts as you and never above your own role.
+   Since v0.42 *website* covers all three design tools (the website, the phone app design, motion graphics: every
+   `site_*`, `app_*` and `motion_*` tool); the guides and the project brief (`get_guide`, `project_brief`) are always on.
+   What an agent reads before it designs is in [docs/ai/](ai/README.md).
 3. **Connect it.** The setup text from the table above, then "Waiting for your Cursor to say hello…".
 4. **It says hello.** The first MCP call (`seen`) turns the line into a welcome: its face (kind glyph, a colour from the
    app's palette, an "about" line), one gentle line on what it is doing (from its presence: "reading the code",

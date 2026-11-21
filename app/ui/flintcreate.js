@@ -69,6 +69,7 @@
     return `You turn a person's request into commands for Flint inside ${kind === 'app' ? 'App Creator (a phone app design tool)' : 'the website designer'} of TribeCode. You cannot change anything yourself; you only choose commands.\n` +
       `Reply with JSON only. Either {"ops":[{"say":"<command>"}]} with 1 to 5 commands worded like the examples below (keep the person's own names, words and colours), or {"text":"<one short sentence>"} when no command fits.\n` +
       `Commands (examples):\n${near.slice(0, 18).map(t => `- ${t}`).join('\n')}` +
+      (root.TribeAIGuide && root.TribeAIGuide.trimmed(kind) ? `\n${root.TribeAIGuide.trimmed(kind)}` : '') + (ctx && ctx.brief ? `\n${String(ctx.brief).slice(0, 400)}` : '') +   // feat/ai-guides: the same rules every AI gets here, cut to a few lines
       (names.length ? `\n${kind === 'app' ? 'Screens' : 'Pages'}: ${names.slice(0, 16).join(', ')}` : '') + (ctx && ctx.selection ? '\nSomething is selected: “this” means the selected thing.' : '\nNothing is selected.');
   }
   // -> { ok, says: [sentence], text, why }   strict: the shape, 1 to 5 ops, each one exactly one sure creator command
@@ -101,8 +102,9 @@
       `${app ? 'App' : 'Website'} design request${o.from ? ` from ${o.from}` : ''} (made in TribeCode's ${app ? 'App Creator' : 'website designer'}): ${String(o.ask || '').trim() || 'Make it more beautiful: a clearer order of what is read first, calmer spacing, colour and type that fit the brand. Keep what it says and what it does.'}`,
       '',
       'How to do it (the hook contract is docs/CLAUDE-HOOKS.md):',
+      `0. The project brief is on top of this request (project_brief returns it again). Call get_guide("${app ? 'app' : 'website'}") and follow it: it has every step with an example and how to make the result good.`,
       `1. Call ${app ? 'app_read' : 'site_read'} to get the design, the brand kit and the steps you may use.`,
-      `2. Call ${app ? 'app_propose' : 'site_propose'} with { ops: [...], note: "what you changed and why, in one or two sentences" }.`,
+      `2. Call ${app ? 'app_propose' : 'site_propose'} with { ops: [...], note: "what you changed and why, in one or two sentences" } (dry_run: true tries it first), then ${app ? 'app_check' : 'site_check'} with proposed: true.`,
       'Do not edit files for this. Nothing changes until a person approves your proposal; they see it before and after, and Undo takes it back. Steps that are not on the list are skipped.',
       '',
       `Brand kit: ${[k.name ? `name ${k.name}` : '', cols ? `colours ${cols}` : '', k.fonts ? `fonts ${typeof k.fonts === 'string' ? k.fonts : Object.values(k.fonts).filter(Boolean).join(' + ')}` : '', k.voice ? `voice: ${String(k.voice).slice(0, 200)}` : ''].filter(Boolean).join('; ') || 'none saved yet (keep the colours and fonts the design already has unless asked)'}`,
@@ -127,11 +129,21 @@
   const LLM = () => root.TribeFlintLLM, NLU = () => root.TribeNLU, POL = () => root.TribePolish;
   const levelNow = () => { const c = LLM() && LLM().config ? LLM().config() : {}; return c.backend === 'browser' ? 'browser' : 'computer'; };
 
+  // one line on the project for a local model (server/aiguides.js; kept for five minutes; '' with no tribe)
+  let lineAt = 0, lineOf = '', lineVal = '';
+  async function projectLine(kind) {
+    let pid = ''; try { pid = (C.project && C.project()) || (C.state && C.state().project) || ''; } catch {}
+    if (!pid || !connected()) return '';
+    if (lineOf === pid && Date.now() - lineAt < 300000) return lineVal;
+    try { lineVal = (await C.api(`/projects/${encodeURIComponent(pid)}/ai-brief?kind=${kind === 'app' ? 'app' : 'site'}`)).line || ''; } catch { lineVal = ''; }
+    lineOf = pid; lineAt = Date.now(); return lineVal;
+  }
   // a loose request -> Flint's own commands, through the local model when there is one. null = no model, or it had nothing
   async function loose(text, o) {
     const L = LLM(), N = NLU(); if (!L || !N || !L.ready || !L.ready() || !L.chat) return null;
     try {
-      const raw = await L.chat([{ role: 'system', content: sys(o.kind, text, N, o.ctx) }, { role: 'user', content: String(text).slice(0, 600) }], { json: true, max: 300, timeoutMs: 30000 });
+      const line = await projectLine(o.kind);   // feat/ai-guides: one line on what the project is, for the model's choice of words
+      const raw = await L.chat([{ role: 'system', content: sys(o.kind, text, N, line ? { ...(o.ctx || {}), brief: line } : o.ctx) }, { role: 'user', content: String(text).slice(0, 600) }], { json: true, max: 300, timeoutMs: 30000 });
       const obj = L.parseReply ? L.parseReply(raw) : null, v = check(obj, N, o.ctx, o.kind);
       if (!v.ok) return { says: [], text: '', level: levelNow(), why: v.why };
       return { says: v.says, text: v.text, level: levelNow() };
@@ -160,7 +172,7 @@
     let me = ''; try { me = ((C.state && C.state().me) || {}).name || ''; } catch {}
     const text = brief(kind, { ask: o.ask, from: me, brand: kit, audience: o.audience, outline: o.outline });
     try {
-      await C.api('/coord/asks', { method: 'POST', body: { text }, ...(o.pid ? { project: o.pid } : {}) });
+      await C.api('/coord/asks', { method: 'POST', body: { text, design: app ? 'app' : 'site' }, ...(o.pid ? { project: o.pid } : {}) });   // design: the server puts the project brief on top (server/aiguides.js)
     } catch (e) { return { sent: false, text: `${tr('That could not be sent')}: ${e && e.message ? e.message : tr('the tribe did not answer')}.`, chips: ['Polish it'] }; }
     return { sent: true, text: tr(app ? 'Sent to your tribe’s AI. It reads the design and proposes changes. You see before and after under Suggested changes, and nothing changes until a person approves.' : 'Sent to your tribe’s AI. It reads the site and proposes changes. You see before and after under Suggested changes, and nothing changes until a person approves.'), chips: [] };
   }

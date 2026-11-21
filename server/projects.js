@@ -17,7 +17,7 @@ const path = require('node:path');
 const { AsyncLocalStorage } = require('node:async_hooks');
 
 const TAGGED = new Set(['tasks', 'docs', 'proposals', 'bugs', 'calendar', 'decisions']);
-const PER_PROJECT = /^(VISION\.md|TRIBE_CONTEXT\.md|milestones\.json|repo(\/|$)|changes(\/|$)|\.tribe\/context-state\.json$)/;
+const PER_PROJECT = /^(VISION\.md|TRIBE_CONTEXT\.md|milestones\.json|repo(\/|$)|changes(\/|$)|\.tribe\/context-state\.json$|\.tribe\/flint-facts\.json$)/;   // feat/ai-guides: project memory is kept with its project, as server/flintfacts.js says (it was one list for the whole tribe, so a person in one project read another's facts)
 const ID_RE = /^[a-z0-9][a-z0-9-]{0,39}$/;
 const COLORS = ['#F26B1D', '#38C6B1', '#6C7CFF', '#FFB86B', '#9AE66E', '#E86A92'];
 const ROLES = ['host', 'builder', 'spectator'];

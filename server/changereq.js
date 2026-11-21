@@ -127,6 +127,14 @@ module.exports = function changereq({ P, store, perms, groupStyle, approvals, bu
     return { request: view(x, me) };
   }
 
+  // feat/ai-guides: a helper's own waiting request for a tool, with the design it holds, so its next steps build on it
+  // (still one request for the person). Only ever the caller's own: by this helper, for its person.
+  function pending(pid, me, tool, key = null) {
+    const h = humanOf(me); if (!h || !me || me.role !== 'agent') return null;
+    const x = list.find(y => y.status === 'open' && y.project === pid && y.tool === tool && (y.key || null) === key && y.by === h.id && y.agent === me.id); if (!x) return null;
+    const bd = body(x.id) || {}; return bd.payload ? { id: x.id, payload: JSON.parse(JSON.stringify(bd.payload)), summary: x.summary || [], why: x.why || '' } : null;
+  }
+
   // ---------- answers (the approvals hook) ----------
   function decided(a) {
     if (!a || a.kind !== 'change' || !a.change) return;
@@ -159,6 +167,7 @@ module.exports = function changereq({ P, store, perms, groupStyle, approvals, bu
     if (x.status !== 'applied' || x.undoneAt) throw err(409, 'nothing to undo');
     if (!mayUndo(x, me)) throw err(403, 'the person who asked, the person who approved, or someone who can change this undoes it');
     const bd = body(x.id) || {};
+    if (bd.earlier == null && (x.tool === 'site' || x.tool === 'app')) throw err(409, 'this change started the design, so there is no earlier version to go back to');   // feat/ai-guides: a helper may start a design
     tools[x.tool].apply(x.project, bd.earlier, humanOf(me), x.key, { undo: true });
     x.undoneAt = new Date(now()).toISOString(); x.undoneBy = humanOf(me).id; save();
     broadcast({ type: 'change', project: pid, id: cid, tool: x.tool, status: 'undone', applied: true, by: x.undoneBy });
@@ -197,5 +206,5 @@ module.exports = function changereq({ P, store, perms, groupStyle, approvals, bu
   }
 
   approvals.onDecided(decided);
-  return { route, create, fromRefusal, decided, undo, withdraw, how, howFor, list: forProject, TOOL_TEXT };
+  return { route, create, pending, fromRefusal, decided, undo, withdraw, how, howFor, list: forProject, TOOL_TEXT };
 };

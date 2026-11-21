@@ -81,6 +81,7 @@
         const D = window.TribeSiteDesigner, cfg = D && D.cfg && D.cfg();
         st.site = cfg || (pid() ? ((await C.api(`/projects/${encodeURIComponent(pid())}/site-config`).catch(() => null)) || {}).config || null : null);
       }
+      if (src === 'site' && st.brief == null) st.brief = pid() ? ((await C.api(`/projects/${encodeURIComponent(pid())}/ai-brief?kind=site`).catch(() => null)) || {}).brief || '' : '';   // feat/ai-guides: with no tribe the pack still has the guide's essentials
     } catch {}
     if (st && el && !el.hidden) { rebuild(); draw(); }
   }
@@ -94,7 +95,7 @@
     if (st.src === 'task') { const t = (st.tasks || []).find(x => x.id === st.task); if (t) o.task = `${t.title}${t.body || t.description ? '\n\n' + (t.body || t.description) : ''}`; }
     if (st.src === 'doc' && st.docText) { o.doc = st.docText; o.docTitle = st.docTitle; }
     if (st.src === 'error') o.error = st.error || '';
-    if (st.src === 'site' && st.site) o.site = st.site;
+    if (st.src === 'site' && st.site) { o.site = st.site; o.design = 'site'; if (st.brief) o.brief = st.brief; }   // feat/ai-guides: the project brief rides along
     st.pk = B().pack(o); st.parts = null;
   }
   const projName = () => { try { const p = (C.state().projects || []).find(x => x.id === pid()); return p ? p.name : ''; } catch { return ''; } };
