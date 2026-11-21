@@ -6,7 +6,10 @@
 // (the desktop app, or a page its own server serves), quietly; otherwise in this browser, where everything still works
 // and "Put this tribe online" (sharecard.js) is one button away. "More options" on step 1 opens the list of places
 // (step 2 below) for a folder, GitHub, a free cloud or a shared folder.
-//   1. Name and icon.
+//   1. Name and icon, and one optional sentence: "What are you making?" (feat/vision-create). The sentence becomes the
+//      project's vision (the one line under its name on the dashboard, /vision) and its first version (firstlook.js),
+//      the same as the sentence box on Home. Left empty, nothing changes. With a sentence and no name, the name comes
+//      from the sentence (TribeProjects.nameFromIdea).
 //   2. (More options) Where it lives (feat/folder-sync): A folder on this computer · This device only · Free cloud ·
 //      GitHub repo, each with a plain line and a recommended default (the folder on the desktop app; off with a reason on
 //      a phone or the public website). GitHub can also be connected later to any of the others (livingrepo.js). Inside a tribe you
@@ -35,7 +38,10 @@
   const desktop = () => !!(window.TribeHost && window.TribeHost.isDesktop && window.__TAURI__);
   const phone = () => matchMedia('(max-width: 820px)').matches || /Android|iPhone|iPad/i.test(navigator.userAgent || '');
   const staticWeb = () => /(^|\.)tribecode\.org$|\.github\.io$/.test(location.hostname) || !/^https?:$/.test(location.protocol);
-  const CARD = 'tribecode.tribenew.card';
+  const CARD = 'tribecode.tribenew.card', LOOK = 'tribecode.tribenew.look';
+  // feat/vision-create: the same three examples as the sentence box on Home (hub.js)
+  const IDEAS = ['A website for my friend’s bakery', 'An app that tracks our habits', 'A snake game for our group'];
+  const homeIdea = () => { const h = document.getElementById('hub-idea'); return h && h.isConnected ? String(h.value || '') : ''; };   // typed on Home already: never typed twice
   const EMOJI = ['🏕️', '✦', '🎮', '🌐', '📱', '🎨', '🚀', '🔥', '🌱', '🎵', '🧪', '📚'];
   const STEPS = ['Name', 'Where', 'Friends'], QUICK = ['Name', 'Friends'];
 
@@ -106,7 +112,7 @@
   function open(pre = {}) {
     closeOthers();
     if (el) close(true);
-    st = { step: 1, name: String(pre.name || '').slice(0, 48), emoji: pre.emoji || EMOJI[0], where: recommended(), created: null, busy: false, from: pre.from || '', opts: false };
+    st = { step: 1, name: String(pre.name || '').slice(0, 48), vision: String(pre.vision != null ? pre.vision : homeIdea()).trim().slice(0, 600), emoji: pre.emoji || EMOJI[0], where: recommended(), created: null, busy: false, from: pre.from || '', opts: false };
     scrim = document.createElement('div'); scrim.className = 'ph-scrim tn-scrim'; scrim.onclick = () => close();
     el = document.createElement('div'); el.className = 'ph-sheet su-sheet tn-sheet'; el.id = 'tn';
     el.setAttribute('role', 'dialog'); el.setAttribute('aria-modal', 'true'); el.setAttribute('aria-labelledby', 'tn-h');
@@ -142,6 +148,10 @@
       <form id="tn-f1" autocomplete="off">
         <label class="ph-lab" for="tn-name">Name</label>
         <input class="input" id="tn-name" maxlength="48" placeholder="e.g. Lantern Crew" value="${esc(st.name)}">
+        <label class="ph-lab" for="tn-vis">What are you making? <span class="tn-opt">optional</span></label>
+        <textarea class="input tn-vis" id="tn-vis" rows="2" maxlength="600" placeholder="e.g. A website for my friend’s bakery" aria-describedby="tn-vis-h"${st.created ? ' disabled' : ''}>${esc(st.vision)}</textarea>
+        <div class="tn-chips">${IDEAS.map(t => `<button type="button" class="tn-chip" data-tn-idea="${esc(t)}"${st.created ? ' disabled' : ''}>${esc(t)}</button>`).join('')}</div>
+        <p class="tn-hint" id="tn-vis-h">One sentence is enough. A first version is made from it, and you can change it any time.</p>
         <span class="ph-lab" id="tn-emo-l">Icon</span>
         <div class="tn-emo" role="radiogroup" aria-labelledby="tn-emo-l">${EMOJI.map(e => `<button type="button" role="radio" data-tn-emo="${esc(e)}" aria-checked="${e === st.emoji}" aria-label="${esc(e)}">${esc(e)}</button>`).join('')}</div>
         <p class="tn-err" id="tn-err" role="status" hidden></p>
@@ -151,12 +161,25 @@
       <p class="ph-foot">${st.created || choices() < 2 ? '' : '<button type="button" class="linkish" id="tn-options">More options</button><span aria-hidden="true">·</span>'}${host ? '<button type="button" class="linkish" id="tn-more">Start from an idea, a template or my code</button><span aria-hidden="true">·</span>' : ''}<button type="button" class="linkish" id="tn-join">Join a friend’s tribe instead</button>${folderOk().ok ? '<span aria-hidden="true">·</span><button type="button" class="linkish" id="tn-join-shared">Join from a shared folder</button>' : ''}</p>`;
     const n = $('#tn-name', el);
     n.oninput = () => { st.name = n.value; err(''); };
+    const v = $('#tn-vis', el);
+    v.oninput = () => { st.vision = v.value; err(''); };
+    v.onkeydown = e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); $('#tn-f1', el).requestSubmit(); } };
+    el.querySelectorAll('[data-tn-idea]').forEach(b => b.onclick = () => { v.value = st.vision = b.dataset.tnIdea; err(''); v.focus(); });
     el.querySelectorAll('[data-tn-emo]').forEach(b => b.onclick = () => { st.emoji = b.dataset.tnEmo; el.querySelectorAll('[data-tn-emo]').forEach(x => x.setAttribute('aria-checked', String(x === b))); });
     $('#tn-cancel', el).onclick = () => close();
     $('#tn-join', el).onclick = () => { close(true); window.TribeSettings && window.TribeSettings.joinPrompt && window.TribeSettings.joinPrompt(); };
     const js = $('#tn-join-shared', el); if (js) js.onclick = () => { st.name = n.value.trim() || 'Shared tribe'; st.where = 'shared'; st.step = 2; draw(); };
-    const more = $('#tn-more', el); if (more) more.onclick = () => { close(true); PJ().gallery(); };
-    const named = () => { st.name = n.value.trim(); if (!st.name) { err('Give it a name first. You can change it later.'); n.focus(); return false; } return true; };
+    const more = $('#tn-more', el); if (more) more.onclick = () => { const idea = v.value.trim(); close(true); PJ().gallery(); const i = document.getElementById('np-idea'); if (i && idea) i.value = idea; };   // the sentence comes along
+    const named = () => {
+      st.name = n.value.trim(); if (!st.created) st.vision = v.value.trim();
+      if (!st.name && st.vision && PJ() && PJ().nameFromIdea) {   // a sentence and no name: the name comes from the sentence
+        const taken = new Set(((PJ().list && PJ().list()) || []).map(p => p.name)), base = PJ().nameFromIdea(st.vision);
+        let nm = base; for (let i = 2; taken.has(nm); i++) nm = `${base} ${i}`;
+        st.name = n.value = nm.slice(0, 48);
+      }
+      if (!st.name) { err('Give it a name, or say what you’re making. You can change both later.'); n.focus(); return false; }
+      return true;
+    };
     const op = $('#tn-options', el); if (op) op.onclick = () => { if (!named()) return; if (!st.opts) st.where = recommended(); st.opts = true; st.step = 2; draw(); };
     $('#tn-f1', el).onsubmit = e => {
       e.preventDefault(); if (!named()) return;
@@ -217,14 +240,24 @@
   const running = t => { const r = $('#tn-run', el); if (!r) return; r.hidden = !t; const x = $('#tn-run-t', el); if (x) x.textContent = t || ''; };
   function busy(on) {
     st.busy = on; if (!el) return;
-    el.querySelectorAll('#tn-go, #tn-b2, #tn-create, #tn-cancel, #tn-options, #tn-name, [data-tn-emo], [data-tn-where]:not([data-off]), #tn-detail input, #tn-detail button').forEach(b => { b.disabled = on; });
+    el.querySelectorAll('#tn-go, #tn-b2, #tn-create, #tn-cancel, #tn-options, #tn-name, #tn-vis, [data-tn-idea], [data-tn-emo], [data-tn-where]:not([data-off]), #tn-detail input, #tn-detail button').forEach(b => { b.disabled = on; });
     const back = $('#tn-back', el); if (back) back.hidden = on;
   }
   const parseRepo = v => { const m = String(v || '').trim().replace(/\.git$/, '').match(/(?:github\.com[/:])?([\w.-]+)\/([\w.-]+)\/?$/); return m ? `${m[1]}/${m[2]}` : ''; };
   function draft() {
     if (!OFF() || !OFF().start) throw new Error('Setup did not load. Reload the app and try again.');
-    if (!solo()) OFF().start('solo', { name: st.name, emoji: st.emoji, quiet: !st.opts && st.where === 'computer' });
+    if (!solo()) OFF().start('solo', { name: st.name, emoji: st.emoji, ...(st.vision ? { bio: st.vision.slice(0, 200) } : {}), quiet: !st.opts && st.where === 'computer' });
     return new Promise(res => { let n = 0; const t = () => (L() && L().pid() && inTribe()) || n++ > 60 ? res() : setTimeout(t, 100); t(); });
+  }
+  // feat/vision-create: the sentence becomes the project's vision, the one line under its name on the dashboard. The
+  // same storage as the sentence box on Home (TribeProjects.keepIdea: the line about it and /vision). A tribe that
+  // moves to this computer or a cloud takes it along with the rest of the draft.
+  async function keepVision(pid) {
+    if (!st.vision || !pid) return;
+    try {
+      if (PJ() && PJ().keepIdea) await PJ().keepIdea(pid, st.name, st.vision);
+      else await C().api('/vision', { method: 'PUT', project: pid, body: { text: `# ${st.name}\n\n${st.vision}\n` } });
+    } catch {}
   }
   async function create() {
     if (st.busy) return; err('');
@@ -244,6 +277,7 @@
         const body = { name: st.name, emoji: st.emoji, ...(w === 'github' && !st.ghNew ? { url: `https://github.com/${repo}` } : {}) };
         const r = await C().api('/projects', { method: 'POST', body });
         const p = r.project || r; st.created = { where: w, pid: p.id, server: (S().get().server || {}).url, repo };
+        await keepVision(p.id);
         if (w === 'github' && st.ghNew && st.ghCtl) {   // feat/setup-github: a new place on GitHub, made and connected in the same click
           running('Making it on GitHub…');
           try { const g = await st.ghCtl.resolve(); await C().api(`/projects/${encodeURIComponent(p.id)}/sync`, { method: 'PUT', body: { kind: 'github', repo: g.repo, branch: 'main' } }); st.created.repo = g.repo; st.created.url = g.url; }
@@ -255,6 +289,7 @@
       } else {
         running(st.opts ? (w === 'device' ? 'Making it on this device…' : 'Making it on this device first…') : 'Making it…');
         await draft();
+        await keepVision(L().pid());   // on the draft first: it goes along wherever the tribe is kept
         if (w === 'device') st.created = { where: w, pid: L().pid() };
         else if (w === 'bfolder') {   // kept in this browser; a copy of its files goes into the folder that was picked
           st.created = { where: 'device', pid: L().pid() };
@@ -316,7 +351,7 @@
       : `<p class="ph-lead">${esc(st.name)} is ready and saved in this browser. Friends and AI agents join once it is online; you can do that now or any time from the dashboard.</p>`}
       <p class="tn-err" id="tn-err" role="status" hidden></p>
       <div class="ph-acts"><button type="button" class="btn" id="tn-skip">Skip</button>${hosted ? `<button type="button" class="btn" id="tn-done">Open ${esc(st.name)}</button><button type="button" class="btn primary" id="tn-invite">Invite friends</button>` : c.where === 'github' ? `<button type="button" class="btn primary" id="tn-done">Open ${esc(st.name)}</button>` : `<button type="button" class="btn" id="tn-done">Open ${esc(st.name)}</button><button type="button" class="btn primary" id="tn-online">Put this tribe online</button>`}</div>`;
-    const ol = $('#tn-online', el); if (ol) ol.onclick = async () => { await finish(); if (window.TribeShare) setTimeout(() => window.TribeShare.online('friends'), 260); };
+    const ol = $('#tn-online', el); if (ol) ol.onclick = () => finish({ online: true });
     $('#tn-skip', el).onclick = () => finish(); $('#tn-done', el).onclick = () => finish();
     const iv = $('#tn-invite', el); if (iv) iv.onclick = () => finish({ invite: true });   // the one invite sheet (inviteone.js), once we're in the new tribe
     const copy = $('#tn-copy', el), inp = $('#tn-link', el);
@@ -326,11 +361,15 @@
   // ---------- done: land in the new tribe, with its first card ----------
   async function finish(then) {
     const c = st.created || {}, name = st.name, invite = !!(then && then.invite);
-    lsSet(CARD, JSON.stringify({ pid: c.pid || null, name, at: Date.now() }));
+    // feat/vision-create: with a sentence the first version opens (firstlook.js) and the "Start your first project" card,
+    // which asks for a sentence, is not shown: the question was answered already. Inviting comes right after it.
+    const want = st.vision && c.pid && window.TribeFirstLook ? { pid: c.pid, name, idea: st.vision, at: Date.now(), then: invite ? 'invite' : then && then.online ? 'online' : '' } : null;
+    if (want) { lsSet(LOOK, JSON.stringify(want)); lsSet(CARD, null); }
+    else lsSet(CARD, JSON.stringify({ pid: c.pid || null, name, at: Date.now() }));
     close();
     if (c.reload) {   // a new host: this device signs in to it on the next load
       S().set({ server: { url: c.server, token: c.token }, hosting: ['computer', 'folder', 'shared'].includes(c.where) && desktop(), name: S().get().name });
-      try { if (c.pid) localStorage.setItem('tribecode.project:' + c.server, c.pid); sessionStorage.setItem('tribecode.view', 'home'); if (invite) sessionStorage.setItem('tribecode.invite.after', 'friend'); } catch {}
+      try { if (c.pid) localStorage.setItem('tribecode.project:' + c.server, c.pid); sessionStorage.setItem('tribecode.view', 'home'); if (invite && !want) sessionStorage.setItem('tribecode.invite.after', 'friend'); } catch {}
       if (OFF() && OFF().forget) try { OFF().forget(); } catch {}
       setTimeout(() => location.reload(), reduced() ? 0 : 180);
       return;
@@ -339,9 +378,33 @@
       if (c.pid && PJ() && PJ().switchTo && (!PJ().current || PJ().current() !== c.pid)) await PJ().switchTo(c.pid, 'home');
       else if (A() && A().show) A().show('home');
     } catch {}
+    if (want) return look();
     setTimeout(card, 120);
     if (invite && A() && A().openInvite) setTimeout(() => A().openInvite({ who: 'friend' }), 200);
+    if (then && then.online && window.TribeShare) setTimeout(() => window.TribeShare.online('friends'), 260);
   }
+  // The first version from the sentence, once this device is in the new tribe (straight away, or after the reload that
+  // signs it in to a new home). What was picked on the last step (Invite friends, Put this tribe online) opens when the
+  // first version is closed, unless something else was opened from it.
+  let looking = false;
+  async function look() {
+    let w = null; try { w = JSON.parse(lsGet(LOOK) || 'null'); } catch {}
+    if (!w || !w.pid || !w.idea || Date.now() - (w.at || 0) > 864e5) { if (w) lsSet(LOOK, null); return; }
+    if (looking) return; looking = true;
+    try {
+      for (let i = 0; i < 100 && !(inTribe() && window.TribeFirstLook && PJ() && PJ().list && PJ().list().some(p => p.id === w.pid)); i++) await new Promise(r => setTimeout(r, 200));
+      if (!inTribe() || !window.TribeFirstLook) return;
+      lsSet(LOOK, null);
+      try { if (PJ() && PJ().switchTo && PJ().current && PJ().current() !== w.pid) await PJ().switchTo(w.pid, 'home'); } catch {}
+      if (w.then) addEventListener('tribe:firstlook-close', () => setTimeout(() => {
+        if (document.body.classList.contains('fpv-open') || document.querySelector('#wdz, #apc') || (window.TribeInvite && window.TribeInvite.isOpen && window.TribeInvite.isOpen())) return;
+        if (w.then === 'invite' && A() && A().openInvite) A().openInvite({ who: 'friend' });
+        if (w.then === 'online' && window.TribeShare) window.TribeShare.online('friends');
+      }, 320), { once: true });
+      await window.TribeFirstLook.start({ pid: w.pid, idea: w.idea, name: w.name });
+    } finally { looking = false; }
+  }
+  if (lsGet(LOOK)) addEventListener('load', () => setTimeout(look, 600));
   function card() {
     let want = null; try { want = JSON.parse(lsGet(CARD) || 'null'); } catch {}
     if (!want || Date.now() - (want.at || 0) > 7 * 864e5) { if (want) lsSet(CARD, null); return null; }
@@ -372,5 +435,5 @@
     setTimeout(wait, 0);
   }, true);
 
-  window.TribeNew = { open, close, isOpen: () => !!el, state: () => (st ? { step: st.step, where: st.where, name: st.name, emoji: st.emoji, created: st.created && { ...st.created, token: undefined } } : null), card, recommended, homes: () => homes().map(h => h.k) };
+  window.TribeNew = { open, close, isOpen: () => !!el, state: () => (st ? { step: st.step, where: st.where, name: st.name, vision: st.vision, emoji: st.emoji, created: st.created && { ...st.created, token: undefined } } : null), card, recommended, homes: () => homes().map(h => h.k) };
 })();
