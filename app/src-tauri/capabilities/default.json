@@ -21,6 +21,8 @@
     "core:window:allow-toggle-maximize",
     "core:window:allow-internal-toggle-maximize",
     "core:window:allow-close",
-    "core:window:allow-is-maximized"
+    "core:window:allow-is-maximized",
+    "core:webview:allow-create-webview-window",
+    "core:window:allow-get-all-windows"
   ]
 }

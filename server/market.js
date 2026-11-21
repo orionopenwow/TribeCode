@@ -303,6 +303,34 @@ module.exports = function market({ P, store, root, approvals, widgets, shelf, do
     return { updated: f.updated, source: f.source, items };
   }
 
+  // feat/p10-market: can a public page be shown inside TribeCode's browser (browser.js)? Looks only at the page's own
+  // X-Frame-Options / CSP frame-ancestors with one HEAD request: public http(s) hosts only (never this computer or the
+  // local network), 4 s, no cookies, nothing sent but the request itself, and only a yes/no comes back.
+  const frameCache = new Map();
+  const privateHost = h => /^(localhost|.*\.local|.*\.internal|0\.0\.0\.0|127\.|10\.|192\.168\.|169\.254\.|172\.(1[6-9]|2\d|3[01])\.|\[?::1\]?|\[?f[cd][0-9a-f]{2}:|\[?fe80:)/i.test(h);
+  async function frameable(raw) {
+    let u; try { u = new URL(String(raw || '').slice(0, 2000)); } catch { return { frame: false, why: 'not an address' }; }
+    if (!/^https?:$/.test(u.protocol) || privateHost(u.hostname) || u.username || u.password) return { frame: false, why: 'not a public page' };
+    const key = u.origin + u.pathname; const hit = frameCache.get(key); if (hit && Date.now() - hit.t < 6 * 3600e3) return hit.v;
+    let v = { frame: false, why: 'no answer' };
+    try {
+      const ac = new AbortController(), t = setTimeout(() => ac.abort(), 4000);
+      let r, at = u;
+      try {
+        for (let hop = 0; hop < 4; hop++) {   // follow redirects by hand, so a redirect can never point the check at the local network
+          r = await fetch(at.href, { method: 'HEAD', redirect: 'manual', signal: ac.signal, headers: { 'user-agent': 'TribeCode browser check' } });
+          const loc = r.status >= 300 && r.status < 400 && r.headers.get('location'); if (!loc) break;
+          at = new URL(loc, at); if (!/^https?:$/.test(at.protocol) || privateHost(at.hostname)) throw new Error('redirect to a private address');
+        }
+      } finally { clearTimeout(t); }
+      const xfo = String(r.headers.get('x-frame-options') || '').toLowerCase(), csp = String(r.headers.get('content-security-policy') || '').toLowerCase();
+      const fa = (csp.match(/frame-ancestors([^;]*)/) || [])[1];
+      const blocked = /deny|sameorigin/.test(xfo) || (fa != null && !/\*/.test(fa));
+      v = { frame: !blocked, why: blocked ? 'the site doesn’t allow being shown inside apps' : '' };
+    } catch {}
+    frameCache.set(key, { t: Date.now(), v }); if (frameCache.size > 500) frameCache.delete(frameCache.keys().next().value);
+    return v;
+  }
   async function route(req, res, { m, b, c, me, url, readBody, send, fail }) {
     if (!me) return fail(res, 401, 'not a member of this tribe');
     try {
@@ -310,6 +338,7 @@ module.exports = function market({ P, store, root, approvals, widgets, shelf, do
       if (m === 'GET' && !b) return send(res, 200, search(url.searchParams));
       if (m === 'GET' && b === 'trending') return send(res, 200, trendingView());
       if (m === 'GET' && b === 'facets') return send(res, 200, facets(url.searchParams));
+      if (m === 'GET' && b === 'frameable') return send(res, 200, await frameable(url.searchParams.get('url')));
       if (m === 'GET' && b === 'items' && c) { const it = byId.get(str(c, 80)); return it ? send(res, 200, { item: view(it, str(url.searchParams.get('project'), 80) || P.current() || '') }) : fail(res, 404, 'not in the marketplace'); }
       if (m === 'POST' && b && c === 'remove') return send(res, 200, await remove(b, await readBody(req, 8 * 1024), me));
       if (m === 'POST' && b && c === 'use') return send(res, 200, await use(b, await readBody(req, 8 * 1024), me));
