@@ -37,6 +37,7 @@
     if (refreshing) { again = true; return refreshing; }
     refreshing = (async () => {
       try { const r = await C.api('/projects'); projects = r.projects || []; loaded = true; render(); remember(); } catch {}
+      { const ov = $('#pj-overview'); if (ov && !ov.firstElementChild && App() && App().view && App().view() === 'home' && curP()) overviewSoon(); }   // the dashboard was shown before the list arrived: draw it now
       refreshing = null; if (again) { again = false; refresh(); }
     })();
     return refreshing;
@@ -186,7 +187,7 @@
     let tasksAll = []; try { tasksAll = (await C.api('/tasks')).tasks || []; } catch {}   // simple-dashboard: the Tasks tile and Up next
     let syn = null; try { syn = (await C.api(`/projects/${encodeURIComponent(p.id)}/sync`)).status || null; } catch {}   // feat/folder-sync: where it lives = the folder, the host's repo, GitHub
     let band = null; try { band = (await C.api('/dash/band', { project: p.id })).band || null; } catch {}   // feat/dash-layout: is there a first version yet, and what kind
-    if (!$('#pj-overview') || curP() !== p) return;   // switched away while loading
+    if (!$('#pj-overview') || (curP() || {}).id !== p.id) return;   // switched away while loading (by id: a list refresh mid-load makes new objects for the same project)
     stash();
     const sec = (id, title, inner) => `<section class="sec pj-sec" id="${id}"><h2 class="pj-sec-t">${title}</h2>${inner}</section>`;
     const L = d.living, canEdit = me().role !== 'spectator' && me().role !== 'agent';
