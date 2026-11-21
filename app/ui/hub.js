@@ -117,10 +117,10 @@
     if (mode === 'docs') return renderDocs(el);
     if (mode === 'design') return renderDesign(el);
     const on = connected(), tribe = (C.state().tribe || {}).name;
-    const pj = projects(), live = (data && data.status) || {};
+    const pj = blankPj() ? [] : projects(), live = (data && data.status) || {};   // a blank first project is no project yet
     const sub = on ? [greeting(), `${pj.length} project${pj.length === 1 ? '' : 's'}`, live.activeToday ? `${live.activeToday} active today` : ''].filter(Boolean).join(' · ')
       : C.hasToken() && !(window.TribeOffline && window.TribeOffline.asleep && window.TribeOffline.asleep()) ? `${greeting()}. ${offlineWord()}` : `${greeting()}. Not in a tribe yet: everything here works on this device.`;
-    const hubOn = C.hasToken() && (pj.length > 0 || hadPj()) && !!window.TribeHomeHub;   // feat/p10-home: once there is a project; a brand-new tribe keeps the start band
+    const hubOn = C.hasToken() && (pj.length > 0 || hadPj()) && !!window.TribeHomeHub && !blankPj();   // feat/p10-home: once there is a project; a brand-new tribe keeps the start band
     keepFocus(() => {
       el.innerHTML = `<div class="hub hub-home">${isPhone() ? `<div class="hub-ptop" id="hub-ptop"><button class="hpt-btn hpt-me" id="hpt-me" aria-label="Your profile">${meFace()}</button>
           <button class="hpt-brand" id="hpt-brand" aria-label="Your projects"><img class="hpt-mark tc-mark" src="assets/icon.svg" alt="" width="26" height="26"><img class="brand-wm" src="assets/wordmark.svg" alt="TribeCode">${ico('i-chev', 16)}</button>
@@ -137,7 +137,7 @@
       bind(el);
       { const hs = el.querySelector('#hub-site'); if (hs) hs.onclick = () => window.TribeHelp && window.TribeHelp.website && window.TribeHelp.website(); }
       if (hubOn && window.TribeHomeHub) window.TribeHomeHub.mount(el.querySelector('#hub-prev-slot'), el.querySelector('#hub-msgs-slot'));
-      else if (window.TribeDashBand) window.TribeDashBand.mountHome(el.querySelector('#hub-band-slot'));
+      else if (window.TribeDashBand && !blankPj()) window.TribeDashBand.mountHome(el.querySelector('#hub-band-slot'));   // a blank first project: the sentence below is the one start
       if (window.TribeFlint && window.TribeFlint.mountDashboard) window.TribeFlint.mountDashboard(el.querySelector('#hub-flint-slot'));   // feat/flint-ai: Flint on the Dashboard
     });
   }
@@ -195,18 +195,19 @@
       return `<section class="hero-card hub-hero hub-gs hub-away" id="hub-hero"><div class="gs-band"><span class="eyebrow">${esc(offlineChip())}</span><span class="gs-band-r">${esc(offlineWord())}</span></div>
         ${err}${cached.length ? `<div class="gs-grid">${cached.map(p => `<button class="gs-tile" data-pj-go="${esc(p.id)}"><span class="gs-ic gs-face">${PJ().face(p, 'sm')}</span><b>${esc(p.name)}</b><span>${esc(p.bio || 'Opens with what this device last saw')}</span></button>`).join('')}</div>` : ''}</section>`;
     }
-    if (!on) {
+    const bp = on ? blankPj() : null;   // feat/newcomer-start: the server's own first project, untouched, counts as none yet
+    if (!on || bp) {
       const tourBtn = window.TribeFlintTour ? `<button class="linkish" id="hub-tour">${ico('i-flint', 13)}${esc(window.TribeFlintTour.label())}</button>` : '';
       return `<section class="hero-card hub-hero hub-gs hub-empty" id="hub-hero">
         <div class="he-copy"><span class="eyebrow">Getting started</span>
           <h2>Make your first project</h2>
-          ${window.TribeLocalSetup && PJ() && PJ().startFromIdea ? `<p class="he-sub">Say what you want to make in one sentence. A first version appears right away: a website, an app or a game. Nothing to install or sign up for, and it works without an AI.</p>
+          ${(bp || window.TribeLocalSetup) && PJ() && PJ().startFromIdea ? `<p class="he-sub">Say what you want to make in one sentence. A first version appears right away: a website, an app or a game. Nothing to install or sign up for, and it works without an AI.</p>
           <form class="he-idea" id="hub-idea-f" autocomplete="off"><label class="he-idea-l" for="hub-idea">What do you want to make?</label>
             <textarea class="input" id="hub-idea" rows="2" maxlength="600" placeholder="e.g. A website for my friend’s bakery">${esc(ideaDraft)}</textarea>
             <div class="he-chips">${['A website for my friend’s bakery', 'An app that tracks our habits', 'A snake game for our group'].map(t => `<button type="button" class="ns-chip" data-hub-idea="${esc(t)}">${esc(t)}</button>`).join('')}</div>
             <p class="he-idea-err" id="hub-idea-err" role="status" hidden></p>
             <div class="he-acts"><button class="btn primary he-go" id="hub-idea-go" type="submit">${ico('i-sparkle', 15)}Start building</button><button type="button" class="btn he-join" id="hub-join">${ico('i-link', 15)}Join with a link</button></div></form>
-          <div class="gs-links"><button class="linkish" id="hub-host">${ico('i-plus', 13)}Start with a name instead</button>${tourBtn}<a class="linkish" id="hub-about" href="https://tribecode.org/docs.html" target="_blank" rel="noopener">${ico('i-doc', 13)}How TribeCode works</a></div>`
+          <div class="gs-links">${bp ? `<button class="linkish he-skip" id="hub-blank-open">${ico('i-chev', 13)}Skip and open ${esc(bp.name)} as it is</button>` : `<button class="linkish" id="hub-host">${ico('i-plus', 13)}Start with a name instead</button>`}${tourBtn}<a class="linkish" id="hub-about" href="https://tribecode.org/docs.html" target="_blank" rel="noopener">${ico('i-doc', 13)}How TribeCode works</a></div>`
           : `<p class="he-sub">${desk ? 'A project is a room for you, your friends and your AI helpers: a chat, files, a task board, a design canvas and a live preview of what you build.' : 'Projects run on a computer with the TribeCode desktop app, or on a free cloud server. Here you can join a friend\'s tribe with their link.'}</p>
           <div class="he-acts"><button class="btn primary he-go" id="hub-host">${ico('i-plus', 15)}${desk ? 'Start your first project' : 'Get the desktop app'}</button><button class="btn he-join" id="hub-join">${ico('i-link', 15)}Join with a link</button></div>
           <div class="gs-links">${tourBtn}<a class="linkish" id="hub-about" href="https://tribecode.org/docs.html" target="_blank" rel="noopener">${ico('i-doc', 13)}How TribeCode works</a></div>`}
@@ -244,6 +245,7 @@
       <div class="hh-grid">${sugPanel(on)}${askPanel(on)}${joinPanel(on)}</div></section>`;
   }
   const pj1 = () => projects()[0] || null;
+  const blankPj = () => (window.TribeNewcomer ? window.TribeNewcomer.blank() : null);   // feat/newcomer-start (newcomer.js)
   const hadPj = () => !!(PJ() && PJ().hadProject && C.hasToken() && PJ().hadProject());   // feat/p10-home: this device has seen a project in this tribe
   let sugOpen = false;
   function sugItems() {
@@ -1083,6 +1085,7 @@
     el.querySelectorAll('[data-pj-go]').forEach(b => b.onclick = () => { const id = b.dataset.pjGo; if (PJ().current() === id) App().show('home'); else PJ().switchTo(id, 'home'); });
     { const f = el.querySelector('#hub-idea-f'); if (f) { f.onsubmit = ideaGo; const ta = f.querySelector('#hub-idea'); ta.oninput = () => { ideaDraft = ta.value; }; ta.onkeydown = ev => { if (ev.key === 'Enter' && !ev.shiftKey) { ev.preventDefault(); ideaGo(); } }; f.querySelectorAll('[data-hub-idea]').forEach(c => c.onclick = () => { ta.value = ideaDraft = c.dataset.hubIdea; ta.focus(); }); } }
     on('#hub-new', newProject); on('#hub-instant', instant); on('#hub-join', join); on('#hub-host', host); on('#hub-cloud', () => window.TribePhoneHost && window.TribePhoneHost.cloud()); on('#hub-resume', resume);
+    on('#hub-blank-open', () => { const b = blankPj(); if (b) PJ().switchTo(b.id, 'home'); });
     on('#hub-cc', () => App().connectClaude());
     on('#hub-tour', () => window.TribeFlintTour && window.TribeFlintTour.start());
     on('#hub-sug-more', () => { sugOpen = !sugOpen; render(); });

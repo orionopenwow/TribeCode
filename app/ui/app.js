@@ -838,7 +838,8 @@
   addEventListener('tribe-signed-out', signedOutNote);
   C.on('hello', () => setTimeout(returnAfterLogin, 150));
   // The hub was only standing in for "no tribe yet": once connected (hosting or joined), open the project as usual.
-  C.on('hello', () => { if (autoHub && current === 'hub') show('home'); autoHub = false; });
+  // feat/newcomer-start: unless the only project is the server's own blank first one (newcomer.js); then Home with the sentence stays
+  C.on('hello', () => { if (autoHub && current === 'hub') { const N = window.TribeNewcomer; if (N && N.live()) N.whenKnown(b => { if (!b && current === 'hub') show('home'); }); else show('home'); } autoHub = false; });
   setTimeout(iosHint, 1500);
   Object.assign(window.TribeApp, { sendQueued, pendingBubble, show, hostHere, hostProblem, startFirst, fresh: () => !!window.__tribeFresh && !C.hasToken(), setHosting, stopHost, view: () => current, reloadChat: loadChat, openInvite, joinOrHost, joinLink, parseInvite, connectClaude, refreshRoom: () => renderRoom(C.state().members) });
 })();
