@@ -1,4 +1,5 @@
-"""Set up your helpers (v0.22): the right panel's first card. Meet Flint → Give Flint an AI (or keep simple rules) →
+"""Set up your helpers (v0.22): the right panel's first card while there is no project (feat/dash-layout: with one,
+its steps are Flint's steps on the dashboard). Meet Flint → Give Flint an AI (or keep simple rules) →
 Bring your own AI (or later); then the card is gone for good. Flint's dock shows only the Ask box until a conversation
 starts, and the project faces (emoji and pictures) are true squares."""
 import json, os, subprocess, tempfile, time, urllib.request
@@ -20,6 +21,11 @@ def main():
             pg = b.new_page(viewport={"width": 1300, "height": 820}); pg.on("pageerror", lambda e: errors.append(str(e)))
             pg.add_init_script("try { if (!localStorage.getItem('tribecode.settings.v1')) localStorage.setItem('tribecode.settings.v1', JSON.stringify({name: 'Camp', onboarded: true, tour: {done: true}})) } catch (e) {}")
             pg.goto(BASE + "/?skipIntro=1"); pg.wait_for_function("window.TribeClient && TribeClient.connected() && window.TribeHelpers", timeout=15000)
+            # feat/dash-layout: with a project open the card stays away (its steps are Flint's steps on the dashboard)
+            pg.wait_for_function("TribeClient.project()", timeout=15000); time.sleep(1.5)
+            assert pg.locator("#helper-setup").count() == 0, "no helpers card beside Flint's steps"
+            # with no project yet the card is there: three steps, then gone for good
+            pg.evaluate("window.__proj = TribeClient.project; TribeClient.project = () => ''; TribeHelpers.render()")
             pg.wait_for_selector("#helper-setup")
             assert "0 of 3" in pg.text_content("#helper-setup .hs-head")
             assert not pg.locator("#cc-connect").is_visible(), "no second Connect your AI card"
@@ -31,6 +37,7 @@ def main():
             pg.wait_for_selector("[data-hs-connect]", state="visible")
             pg.click("[data-hs-toggle='ai']"); pg.click("[data-hs-do='ai']")
             pg.wait_for_function("!document.getElementById('helper-setup')")
+            pg.evaluate("TribeClient.project = window.__proj")
             pg.reload(); pg.wait_for_function("window.TribeClient && TribeClient.connected()", timeout=15000); time.sleep(1)
             assert pg.locator("#helper-setup").count() == 0, "stays gone"
             # faces: a true square

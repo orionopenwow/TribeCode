@@ -4,6 +4,8 @@
 //   3 Your own AI     connect Claude Code, Codex, Cursor or Gemini so they build with the tribe (or later)
 // Steps tick themselves when they're already true (a brain is on, your agent is online). Once all three are done or
 // skipped the card goes away for good; Settings › Flint's brain and the Agents Hub stay the places to change things.
+// feat/dash-layout: with a project open the card stays away: its steps are in Flint's steps on the dashboard (Connect your
+// AI, Give Flint a local brain), so the right panel is Flint's chat. It only shows when there is no project yet.
 // While this card shows, the panel's separate "Connect your AI" card and the "Flint is in basic mode" insight stay hidden.
 (function () {
   'use strict';
@@ -41,7 +43,7 @@
   function render() {
     const pane = document.getElementById('room-pane') || document.getElementById('tour-room');
     let card = document.getElementById('helper-setup');
-    const show = !!pane && C() && C().connected() && !allDone() && !get().hidden;
+    const show = !!pane && C() && C().connected() && !(C().project && C().project()) && !allDone() && !get().hidden;
     document.body.classList.toggle('hs-on', !!show);
     if (!show) { if (card) card.remove(); return; }
     const box = document.createElement('div'); box.innerHTML = html(); const fresh = box.firstElementChild;
@@ -58,7 +60,7 @@
   }
   function boot() {
     render();
-    const c = C(); if (c && c.on) { c.on('hello', render); c.on('presence', () => { if (myAgent() && !get().ai) mark('ai'); }); }
+    const c = C(); if (c && c.on) { c.on('hello', render); c.on('project', render); c.on('projects', render); c.on('presence', () => { if (myAgent() && !get().ai) mark('ai'); }); }
     setInterval(() => { if (document.getElementById('helper-setup') && (brainOn() && !get().brain)) mark('brain'); }, 3000);
     window.addEventListener('tribe-flinttour', render);
   }
