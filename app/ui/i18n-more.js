@@ -3006,6 +3006,17 @@
     'Fixed what is safe': ['Arreglado lo seguro', 'Corrigido o que é seguro', 'Corrigé ce qui est sûr', 'Sicheres behoben', '安全なものを修正しました', '已修复安全项', '안전한 것을 고쳤습니다'],
     'That could not be sent': ['No se pudo enviar', 'Não foi possível enviar', 'Envoi impossible', 'Das konnte nicht gesendet werden', '送信できませんでした', '无法发送', '보낼 수 없습니다'],
     'the tribe did not answer': ['la tribu no respondió', 'a tribo não respondeu', 'la tribu n’a pas répondu', 'der Tribe hat nicht geantwortet', 'トライブから応答がありません', '部落没有响应', '트라이브가 응답하지 않았습니다'],
+    // ---- living preview: the sketch from the sentence, and the band's tabs
+    'A sketch from your sentence': ['Un boceto a partir de tu frase', 'Um esboço a partir da sua frase', 'Une esquisse d’après votre phrase', 'Eine Skizze aus deinem Satz', 'あなたの一文からのスケッチ', '根据你的一句话画的草图', '문장으로 그린 스케치'],
+    'Sketch from your sentence': ['Boceto a partir de tu frase', 'Esboço a partir da sua frase', 'Esquisse d’après votre phrase', 'Skizze aus deinem Satz', '一文からのスケッチ', '根据一句话画的草图', '문장으로 그린 스케치'],
+    'Sketch': ['Boceto', 'Esboço', 'Esquisse', 'Skizze', 'スケッチ', '草图', '스케치'],
+    'See the sketch': ['Ver el boceto', 'Ver o esboço', 'Voir l’esquisse', 'Skizze ansehen', 'スケッチを見る', '查看草图', '스케치 보기'],
+    'Nothing is made yet. This is what your sentence describes.': ['Aún no se ha hecho nada. Esto es lo que describe tu frase.', 'Nada foi feito ainda. Isto é o que a sua frase descreve.', 'Rien n’est encore fait. Voici ce que décrit votre phrase.', 'Noch ist nichts gemacht. Das beschreibt dein Satz.', 'まだ何も作られていません。あなたの一文が表す内容です。', '还没有做出任何东西。这是你那句话描述的样子。', '아직 만들어진 것은 없어요. 문장이 설명하는 모습이에요.'],
+    'Make it real': ['Hacerlo realidad', 'Tornar real', 'Le créer pour de vrai', 'Jetzt wirklich machen', '実際に作る', '把它做出来', '실제로 만들기'],
+    'Change the sentence': ['Cambiar la frase', 'Mudar a frase', 'Modifier la phrase', 'Satz ändern', '文を変える', '修改这句话', '문장 바꾸기'],
+    'Say what you’re making in one sentence and a sketch of it shows up here. Or start with one of these.': ['Di en una frase qué estás haciendo y aquí aparecerá un boceto. O empieza con una de estas opciones.', 'Diga em uma frase o que você está fazendo e um esboço aparece aqui. Ou comece por uma destas opções.', 'Dites en une phrase ce que vous créez et une esquisse s’affiche ici. Ou commencez par l’une de ces options.', 'Sag in einem Satz, was du machst, und hier erscheint eine Skizze davon. Oder beginne mit einer dieser Möglichkeiten.', '何を作るかを一文で書くと、ここにスケッチが表示されます。または次のどれかから始めてください。', '用一句话说说你在做什么，这里就会出现它的草图。也可以从下面选一个开始。', '무엇을 만드는지 한 문장으로 적으면 여기에 스케치가 나타나요. 아니면 아래에서 하나를 골라 시작하세요.'],
+    'What to preview': ['Qué mostrar', 'O que mostrar', 'Quoi afficher', 'Was gezeigt wird', '表示するもの', '要预览的内容', '미리 볼 항목'],
+    'Press start': ['Pulsa para empezar', 'Aperte para começar', 'Appuyez pour commencer', 'Start drücken', 'スタート', '按开始', '시작 누르기'],
   });
   I.addPlurals({
     '{n} tasks': [{ one: '{n} tarea', other: '{n} tareas' }, { one: '{n} tarefa', other: '{n} tarefas' }, { one: '{n} tâche', other: '{n} tâches' }, { one: '{n} Aufgabe', other: '{n} Aufgaben' }, '{n}件のタスク', '{n} 个任务', '작업 {n}개'],

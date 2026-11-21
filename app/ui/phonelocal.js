@@ -423,9 +423,13 @@
     if (st.config) { const pages = Array.isArray(st.config.pages) ? st.config.pages : [], blocks = Array.isArray((pages[0] || {}).blocks) ? pages[0].blocks : [], hero = blocks.find(b => b && /hero|header|cover/i.test(String(b.type || ''))) || blocks[0] || {}, f = hero.props || hero.fields || hero.data || {};
       site = { designed: true, title: String((st.config.name && st.config.name !== 'My site' ? st.config.name : '') || f.title || f.headline || p.name || '').slice(0, 80), tagline: String(f.subtitle || f.tagline || f.text || '').slice(0, 140), accent: (st.config.theme && st.config.theme.colors && st.config.theme.colors.accent) || '', at: st.at || null, by: 'me' }; }
     const phone = ap.config && Array.isArray(ap.config.screens) && ap.config.screens.length ? { name: String(ap.config.name || '').slice(0, 60), screens: ap.config.screens.length, at: ap.at || null, by: 'me' } : null;
-    const has = { site, phone }, pick = chosen && has[chosen] ? chosen : phone && (!site || String(ap.at || '') > String(st.at || '')) ? 'phone' : site ? 'site' : 'none';
-    return { project: { id: p.id, name: p.name, color: p.color, emoji: p.emoji || '' }, pick, chosen, has: { app: false, site: !!site, phone: !!phone, design: false }, site, phone, design: null,
-      updated: pick === 'none' ? null : { at: has[pick].at, byName: meName() }, main: pid, pinned: false, isMain: true, canPin: false, canSwitch: true, signals: {}, local: true };
+    // living preview: the main app first, then the website; with neither, the sentence the sketch is drawn from
+    const has = { site, phone }, pick = chosen && has[chosen] ? chosen : phone ? 'phone' : site ? 'site' : 'none';
+    const updates = {}; for (const k of ['site', 'phone']) if (has[k]) updates[k] = { at: has[k].at, byName: meName() };
+    let vision = '';
+    if (pick === 'none') { const v = String((K().db().vision || {})[pid] || '').replace(/^#[^#].*$/m, ''), i = v.search(/^##\s/m); vision = ((i >= 0 ? v.slice(0, i) : v).replace(/\s+/g, ' ').trim() || String(p.bio || '')).slice(0, 400); }
+    return { project: { id: p.id, name: p.name, color: p.color, emoji: p.emoji || '' }, pick, chosen, has: { app: false, site: !!site, phone: !!phone, design: false }, site, phone, design: null, updates, vision,
+      updated: pick === 'none' ? null : updates[pick], main: pid, pinned: false, isMain: true, canPin: false, canSwitch: true, signals: {}, local: true };
   }
 
   function route(method, parts, q, body, headers) {

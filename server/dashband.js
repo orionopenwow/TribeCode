@@ -2,6 +2,7 @@
 //
 // The band shows what the project is making, picked in this order unless someone switched it:
 //   app     the running app or game (server/preview.js: the repo has a page to serve, or a dev server)
+//   phone   an app made in App Creator (living preview: the main app comes before the website)
 //   site    the website (a designer config, a draft or a published site: server/sitedesign.js, server/showcase.js)
 //   design  the latest design canvas with something on it (server/canvas.js)
 //   none    nothing yet: the client shows a calm "Set up your preview" card
@@ -22,7 +23,9 @@ const path = require('node:path');
 const KINDS = ['app', 'site', 'phone', 'design'];   // pass 6: phone = an App Creator app (.tribe/appdesign)
 const RANK = { build: 10, approval: 20, accept: 30, overdue: 40, blocked: 45, comments: 50, company: 60, setup: 70, mention: 80 };
 
-module.exports = function dashband({ P, base, preview, showcase, visuals, hubFor, approvals, loadTasks, canvas, company, notify, nameOf, broadcast, perms = null }) {
+const ORDER = ['app', 'phone', 'site', 'design'];   // living preview: the main app first, then the website, then a design
+
+module.exports = function dashband({ P, base, preview, showcase, visuals, hubFor, approvals, loadTasks, canvas, company, notify, nameOf, broadcast, perms = null, visionOf = null, publish = null }) {
   const FILE = '.tribe/dashband.json';
   const read = () => { const d = base.readJSON(FILE, {}) || {}; d.show = d.show && typeof d.show === 'object' ? d.show : {}; d.signals = d.signals && typeof d.signals === 'object' ? d.signals : {}; return d; };
   const write = d => base.writeJSON(FILE, d);
@@ -63,6 +66,25 @@ module.exports = function dashband({ P, base, preview, showcase, visuals, hubFor
     if (!d || !Array.isArray(d.screens) || !d.screens.length) return null;
     return { name: str(d.name || '', 60), screens: d.screens.length, at: d.savedAt || iso(mtime(`.tribe/appdesign/${safe(pid)}.json`)), by: d.savedBy || null };
   }
+  // living preview: the sentence the sketch is drawn from (the vision's opening lines, else the short description)
+  function sentenceOf(pid, p) {
+    let v = ''; try { v = String((visionOf && visionOf(pid)) || ''); } catch {}
+    if (/Replace these lines together/.test(v)) v = '';
+    const body = v.replace(/^#[^#].*$/m, ''), i = body.search(/^##\s/m);
+    const lead = (i >= 0 ? body.slice(0, i) : body).replace(/\s+/g, ' ').trim();
+    return str(lead || (p && p.bio) || '', 400);
+  }
+  // "Online" only when the website has really been put online: a link that works for anyone, or a page on GitHub.
+  // A project with a code app publishes that app, so its website is not called online from here.
+  function siteOnline(pid, hasApp) {
+    if (hasApp) return false;
+    try {
+      const real = ((base.readJSON('.tribe/publish-real.json', {}) || {}).projects || {})[pid] || {};
+      if (real.what === 'app') return false;
+      if (real.pages && (real.pages.url || real.pages === true)) return true;
+      return !!(publish && publish.entriesOf && (publish.entriesOf(pid) || []).length);
+    } catch { return false; }
+  }
   function designOf(pid) {
     let list = []; try { list = canvas.list(pid) || []; } catch {}
     const d = list.filter(f => f.count > 0).sort((a, b) => String(b.updated || '').localeCompare(String(a.updated || '')))[0];
@@ -92,17 +114,18 @@ module.exports = function dashband({ P, base, preview, showcase, visuals, hubFor
     const d = read(), main = mainFor(me);
     const has = { app: appOf(pid, me), site: siteOf(pid), phone: phoneOf(pid), design: designOf(pid) };
     const chosen = KINDS.includes(d.show[pid]) ? d.show[pid] : null;
-    const pick = chosen && has[chosen] ? chosen : KINDS.find(k => has[k]) || 'none';
-    let updated = null;
-    if (pick === 'app') updated = appUpdated(pid) || null;
-    if (pick === 'site') updated = { at: has.site.at, byName: has.site.by ? nameOf(has.site.by) : '' };
-    if (pick === 'design') updated = { at: has.design.at, byName: '' };
-    if (pick === 'phone') updated = { at: has.phone.at, byName: has.phone.by ? nameOf(has.phone.by) : '' };
+    const pick = chosen && has[chosen] ? chosen : ORDER.find(k => has[k]) || 'none';
     let shot = null; try { const s = (visuals.screens() || [])[0]; if (s && s.latest) shot = { at: s.latest.at || iso(parseInt(s.latest.ts, 10)) }; } catch {}
-    if (pick === 'app' && !updated && shot) updated = { at: shot.at, byName: '' };
+    // when each thing last changed: the band's tabs show any of them (app/ui/dashband.js)
+    const updates = {};
+    if (has.app) updates.app = appUpdated(pid) || (shot ? { at: shot.at, byName: '' } : null);
+    if (has.site) { updates.site = { at: has.site.at, byName: has.site.by ? nameOf(has.site.by) : '' }; has.site.online = siteOnline(pid, has.app); }
+    if (has.design) updates.design = { at: has.design.at, byName: '' };
+    if (has.phone) updates.phone = { at: has.phone.at, byName: has.phone.by ? nameOf(has.phone.by) : '' };
+    const updated = updates[pick] || null;
     return {
       project: { id: p.id, name: p.name, color: p.color, emoji: p.emoji || '' },
-      pick, chosen, has: { app: has.app, site: !!has.site, phone: !!has.phone, design: !!has.design }, site: has.site, phone: has.phone, design: has.design, updated,
+      pick, chosen, has: { app: has.app, site: !!has.site, phone: !!has.phone, design: !!has.design }, site: has.site, phone: has.phone, design: has.design, updated, updates, vision: pick === 'none' ? sentenceOf(pid, p) : '',
       main: main ? main.id : null, pinned: !!(main && main.pinned), isMain: !!(main && main.id === pid),
       canPin: isLead(me, pid), canSwitch: canSwitch(me, pid), signals: d.signals[pid] || {},
     };
