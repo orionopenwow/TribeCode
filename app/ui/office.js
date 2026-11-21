@@ -12,7 +12,11 @@
   const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const tr = s => (window.TribeI18n && window.TribeI18n.t ? window.TribeI18n.t(s, s) : s);
   const initials = n => (String(n || '?').trim().split(/\s+/).filter(w => /^[\p{L}\p{N}]/u.test(w)).map(w => [...w][0]).slice(0, 2).join('') || '?').toUpperCase();   // "Claude · Maya" -> CM
-  const LS_HIDE = 'tribecode.office.hide';
+  const LS_HIDE = 'tribecode.office.hide', LS_VIEW = 'tribecode.office.view';
+  const isPhone = () => matchMedia('(max-width: 820px)').matches;
+  // Office Space (pass 11): on a computer the office opens as the pixel floor; "Desks" keeps the calm list. Phones get the list.
+  const viewOf = () => { try { return localStorage.getItem(LS_VIEW) === 'desks' ? 'desks' : 'floor'; } catch { return 'floor'; } };
+  const canFloor = () => !isPhone() && !!window.TribeOfficeSpace;
   const reduce = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
   let data = null, loading = null, last = 0;
   const mounts = new Set();
@@ -29,6 +33,7 @@
     return loading;
   }
   const refresh = () => load(true).then(paintAll);
+  const api = { refresh: () => refresh() };
 
   // Where a person is, in plain words (the same places presence.js shows on avatars).
   function placeText(d) {
@@ -120,7 +125,20 @@
       if (!d) { el.innerHTML = `<p class="faint of-wait">${esc(tr('Opening the office…'))}</p>`; return; }
       if (!d.on) { el.innerHTML = offHtml(d); return; }
       if (hidden()) { el.innerHTML = `<div class="of-off"><p class="faint">${esc(tr('You hid the office on this device.'))}</p><button class="btn" data-of-show>${esc(tr('Show the office'))}</button></div>`; return; }
-      el.innerHTML = floor(d);
+      const toggle = canFloor() ? `<div class="of-view" role="group" aria-label="${esc(tr('How to show the office'))}"><button class="btn sm${viewOf() === 'floor' ? ' on' : ''}" data-of-view="floor" aria-pressed="${viewOf() === 'floor'}">${esc(tr('Floor'))}</button><button class="btn sm${viewOf() === 'desks' ? ' on' : ''}" data-of-view="desks" aria-pressed="${viewOf() === 'desks'}">${esc(tr('Desks'))}</button></div>` : '';
+      if (canFloor() && viewOf() === 'floor') {
+        // keep the canvas alive between refreshes: only feed it new data
+        if (!m.space || !el.querySelector('.of-space')) {
+          if (m.space) m.space.destroy();
+          el.innerHTML = `${toggle}<div class="of-space"></div><p class="of-foot faint"><button class="linkish" data-of-hide>${esc(tr('Hide the office for me'))}</button></p>`;
+          m.space = window.TribeOfficeSpace.mount(el.querySelector('.of-space'), api);
+          const v = el.querySelector(':scope > .of-view'), bar = el.querySelector('.os-bar'); if (v && bar) bar.prepend(v);
+        }
+        m.space.update(d);
+        return;
+      }
+      if (m.space) { m.space.destroy(); m.space = null; }
+      el.innerHTML = toggle + floor(d);
     });
   }
   function paintAll() { mounts.forEach(paint); }
@@ -138,7 +156,8 @@
     if (window.TribePresence && window.TribePresence.jump) window.TribePresence.jump(id);
   }
   function click(e) {
-    const t = e.target.closest('[data-of-on],[data-of-hide],[data-of-show],[data-of-open],[data-desk],[data-task]'); if (!t) return;
+    const t = e.target.closest('[data-of-on],[data-of-hide],[data-of-show],[data-of-open],[data-of-view],[data-desk],[data-task]'); if (!t) return;
+    if (t.matches('[data-of-view]')) { try { localStorage.setItem(LS_VIEW, t.dataset.ofView); } catch {} return paintAll(); }
     if (t.matches('[data-of-on]')) return setOn(true);
     if (t.matches('[data-of-hide]')) return setHidden(true);
     if (t.matches('[data-of-show]')) return setHidden(false);
@@ -159,7 +178,7 @@
     el.addEventListener('click', click);
     el.addEventListener('keydown', e => { if ((e.key === 'Enter' || e.key === ' ') && e.target.matches('[data-desk]')) { e.preventDefault(); openCard(e.target.dataset.desk); } });
     paint(m); load().then(() => paint(m));
-    return { destroy() { mounts.delete(m); el.removeEventListener('click', click); } };
+    return { destroy() { mounts.delete(m); el.removeEventListener('click', click); if (m.space) m.space.destroy(); }, space: () => m.space };
   }
 
   // Live: presence, places, claims, tasks, change requests and the switches all repaint (at most every 1.5 s), plus a slow tick for "thinking".

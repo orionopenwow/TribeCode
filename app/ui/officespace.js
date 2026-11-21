@@ -19,10 +19,10 @@
   function mount(el, office) {
     let data = null, layout = null, set = S.get('tribecode'), raf = 0, last = 0, tick = 0, dead = false, view = { z: 0, ox: 0, oy: 0 };
     let editing = null, tool = 'move', sel = null, drag = null, cardFor = null;
+    let booted = false;
     const chars = new Map();   // id -> { d, x, y (tile, float), path, dir, pose, frame, visible, target }
     el.innerHTML = `<div class="os" data-os>
       <div class="os-bar">
-        <span class="eyebrow">${esc(tr('Office Space'))}</span>
         <span class="os-gap"></span>
         <button class="btn sm" data-os-act="look">${esc(tr('Your look'))}</button>
         <label class="os-set" hidden><span class="sr-only">${esc(tr('Set'))}</span><select class="input sm" data-os-set></select></label>
@@ -103,7 +103,7 @@
       for (const d of list) {
         let ch = chars.get(d.id);
         const tgt = targetOf(d, desks, used); used.add(tgt.x + ',' + tgt.y);
-        if (!ch) { const st = d.state === 'off' ? tgt : (reduce() ? tgt : door()); ch = { d, x: st.x, y: st.y, path: [], dir: 0, pose: 'stand', frame: 0, visible: d.state !== 'off', target: null }; chars.set(d.id, ch); }
+        if (!ch) { const st = d.state === 'off' || reduce() || !booted ? tgt : door(); ch = { d, x: st.x, y: st.y, path: [], dir: 0, pose: 'stand', frame: 0, visible: d.state !== 'off', target: null }; chars.set(d.id, ch); }
         ch.d = d;
         if (!ch.target || ch.target.x !== tgt.x || ch.target.y !== tgt.y || ch.target.leave !== tgt.leave) {
           ch.target = tgt;
@@ -113,6 +113,7 @@
         }
       }
       for (const id of [...chars.keys()]) if (!list.some(d => d.id === id)) chars.delete(id);
+      booted = true;   // after the first look, newcomers walk in from the door
       paintSr();
     }
     function poseOf(ch) {
@@ -126,7 +127,9 @@
     // ---------- drawing ----------
     function fit() {
       const r = stage.getBoundingClientRect(), dpr = Math.max(1, window.devicePixelRatio || 1);
-      const base = Math.max(1, Math.floor(Math.min(r.width / (layout.w * T), r.height / (layout.h * T)) * dpr));
+      // whole device pixels when there's room; quarter steps on narrow floors so the office still fills its card
+      const fitS = Math.min(r.width / (layout.w * T), r.height / (layout.h * T)) * dpr;
+      const base = fitS >= 2 ? Math.floor(fitS) : Math.max(1, Math.floor(fitS * 4) / 4);
       const scale = Math.max(1, base + view.z);
       cv.width = Math.round(r.width * dpr); cv.height = Math.round(r.height * dpr);
       cv.style.width = r.width + 'px'; cv.style.height = r.height + 'px';
@@ -166,7 +169,7 @@
       placeLayer();
     }
     function drawChar(ch) {
-      const x = ch.x * T, y = ch.y * T - 9, pose = poseOf(ch), d = ch.d, fr = reduce() ? 0 : ch.frame;
+      const pose = poseOf(ch), x = ch.x * T, y = ch.y * T - (pose === 'walk' || pose === 'stand' ? 9 : 6), d = ch.d, fr = reduce() ? 0 : ch.frame;
       if (d.kind === 'flint') S.drawFlint(ctx, x, y, pose, fr);
       else if (d.kind === 'agent') S.drawAgent(ctx, d.id, d.agentKind, x, y, pose, fr, ch.dir);
       else S.drawPerson(ctx, d.look || S.seedLook(d.id), x, y, pose, fr, ch.dir);
@@ -456,6 +459,7 @@
         const L = d && d.layout ? JSON.parse(JSON.stringify(d.layout)) : null;
         const sig = JSON.stringify(L);
         if (!layout || root.__lsig !== sig) { layout = L || S.defaultLayout(everyone().length); root.__lsig = sig; }
+        stage.style.aspectRatio = `${layout.w * T} / ${layout.h * T}`;
         normalise();
       }
       set = S.get(d && d.set);
@@ -468,12 +472,17 @@
       if (cardFor) { const keep = cardFor; if (everyone().some(x => x.id === keep)) openCard(keep); else closeCard(); }
       if (reduce()) draw(); else kick();
     }
-    return {
+    const inst = {
       update,
       destroy() { dead = true; if (raf) cancelAnimationFrame(raf); ro.disconnect(); },
       chars: () => [...chars.values()].map(c => ({ id: c.d.id, x: c.x, y: c.y, pose: poseOf(c), visible: c.visible, moving: !!c.path.length, bubble: c.d.bubble || null })),
       layout: () => layout,
+      // where a tile's centre is on screen (tests and keyboard helpers)
+      tileXY(x, y) { if (!F) draw(); const r = cv.getBoundingClientRect(); return { x: r.left + (F.ox + (x + 0.5) * T * F.scale) / F.dpr, y: r.top + (F.oy + (y + 0.5) * T * F.scale) / F.dpr }; },
+      free(minX = 1) { for (let y = 1; y < layout.h - 1; y++) for (let x = Math.max(1, minX); x < layout.w - 1; x++) if (walk(x, y) && !layout.items.some(i => i.x === x && i.y === y) && ![...chars.values()].some(c => Math.round(c.x) === x && Math.round(c.y) === y)) return { x, y }; return null; },
     };
+    root.__os = inst;
+    return inst;
   }
 
   window.TribeOfficeSpace = { mount };

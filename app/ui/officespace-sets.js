@@ -9,7 +9,7 @@
   const T = 16;   // px per tile
   // Read a palette token so the floor follows the app's own colours; fall back to the tokens' values.
   const tok = (name, fb) => { try { const v = getComputedStyle(document.documentElement).getPropertyValue(name).trim(); return v || fb; } catch { return fb; } };
-  const ember = () => tok('--ember', '#F26B1D'), teal = () => tok('--teal', '#38C6B1'), indigo = () => tok('--indigo', '#6C7CFF');
+  const ember = () => tok('--ember', '#F26B1D'), teal = () => tok('--live', '#38C6B1'), indigo = () => tok('--peer', '#6C7CFF');
 
   const SETS = new Map();
   function add(m) {
