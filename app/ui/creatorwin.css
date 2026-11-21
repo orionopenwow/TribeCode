@@ -1,0 +1,7 @@
+/* The window's own buttons on every creator's top bar, in the desktop app (creatorwin.js). The lights themselves are
+   .win-ctl (styles.css), so both sets always look the same. Flat: no fill, no shadow. */
+body.tauri [data-cw-bar], body.app-window [data-cw-bar] { -webkit-app-region: drag; }
+body.tauri [data-cw-bar] > *, body.app-window [data-cw-bar] > * { -webkit-app-region: no-drag; }
+body [data-cw-bar] > .win-ctl.cw-win { margin-left: auto; flex: none; padding-left: 8px; }   /* always at the far right */
+.cw-win .tl:focus-visible { outline: 2px solid var(--text); outline-offset: 2px; }
+.cw-float { position: fixed; z-index: 92; transform: translateY(-50%); margin: 0 !important; padding: 0 !important; border: 0 !important; height: auto !important; }
