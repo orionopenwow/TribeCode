@@ -567,7 +567,8 @@ const compute = require('./compute')({ store: baseStore, str, getMembers: () => 
 const openspace = require('./openspace')({ P, broadcast, isLocal, log: m => console.log('  ' + m) });   // Open Space office (optional, host-only)
 // feat/p10-office: the built-in office (desks with live screens for people and agents) and the tribe's "agents off" switch
 const office = require('./office')({ store: baseStore, getMembers: () => members, presenceFor, placesFor: me => (places ? places.snapshot(me).places : {}), agentSeen, claims, loadTasks: () => loadTasks(), nameOf, broadcast: m => broadcast(m),
-  changeReqs: me => { try { return changeReq.list(P.current(), me) || []; } catch { return []; } }, canSet: me => !!me && (me.role === 'host' || perms.atLeast(me, 'admin')) });
+  changeReqs: me => { try { return changeReq.list(P.current(), me) || []; } catch { return []; } }, canSet: me => !!me && (me.role === 'host' || perms.atLeast(me, 'admin')),
+  asksFor: (agentId, me) => approvals.list().filter(a => a.status === 'pending' && a.by === agentId).map(a => ({ id: a.id, title: a.title, canDecide: !!me && me.role !== 'agent' && (a.to || []).includes(me.id) })) });   // pass 11: an agent's waiting OKs, shown as a bubble
 const shelf = require('./shelf')({ P, root: require('./tpldir').root(), docs, postChat, str, nameOf });   // starter shelf: tools, libraries, Claude skills
 const assetLib = require('./assets')({ P, root: require('./tpldir').root(), base: baseStore, postChat, str, nameOf });   // v0.25: the open asset library (server/assets.js)
 const assist = require('./assist')({ P, store, brain, docs, loadTasks: () => loadTasks(), getMembers: () => members, presenceFor, postChat, coord, shelf, str, nameOf });   // feat/assist: vision drafting + suggested tasks (server/assist.js)
@@ -1146,7 +1147,7 @@ async function apiInProject(req, res, url) {
   if (a === 'files') return assetFiles.route(req, res, ctx());   // feat/viewers: repo assets for the 3D / pixel-art viewers
   if (a === 'phoneapp') return phoneapp.route(req, res, ctx());   // feat/viewers: phone app mode
   if (a === 'openspace') return openspace.route(req, res, ctx());
-  if (a === 'office' && !b) return office.route(req, res, ctx());   // feat/p10-office
+  if (a === 'office' && (!b || b === 'look')) return office.route(req, res, ctx());   // feat/p10-office; pass 11: /office/look
   if (a === 'flow' || a === 'gists' || (a === 'projects' && c === 'roles')) { const h = await flow.route(req, res, ctx()); if (h !== null) return; }
   if (a === 'projects' && c === 'setup') return setupFlow.route(req, res, ctx());
   if (a === 'projects' && c === 'company') return company.route(req, res, ctx());   // v0.27 company (server/company.js)
