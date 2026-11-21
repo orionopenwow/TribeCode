@@ -1,7 +1,17 @@
 /* Home's previews and Messages (feat/p10-home). Flat matte: 1px borders, luminance steps, tokens only. */
 
 /* ---- Being made: one card per project ---- */
-.hh-strip { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 14px; }
+.hh-two { display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr); gap: 28px; align-items: start; }
+.hh-two > div:empty { display: none; }
+@media (max-width: 1180px) { .hh-two { grid-template-columns: minmax(0, 1fr); gap: 8px; } }
+.hh-strip { display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; }
+@media (max-width: 1180px) and (min-width: 821px) { .hh-strip { grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); } }
+.hh-card-sm { border-radius: var(--r-lg); }
+.hh-sm { display: flex; align-items: center; gap: 10px; width: 100%; min-height: 52px; padding: 10px 14px; border: 0; background: transparent; color: inherit; text-align: left; font: inherit; cursor: pointer; }
+.hh-sm:hover { background: var(--surface-2); }
+.hh-sm:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+.hh-sm .hh-tx { flex: 1; }
+.hh-sm > svg { color: var(--faint); flex: none; transform: rotate(-90deg); }
 .hh-card { display: flex; flex-direction: column; min-width: 0; border: 1px solid var(--edge); border-radius: var(--r-lg); background: var(--surface); overflow: hidden; }
 .hh-pic { display: block; width: 100%; aspect-ratio: 16 / 10; padding: 0; border: 0; border-bottom: 1px solid var(--edge); background: var(--surface-2); cursor: pointer; overflow: hidden; position: relative; }
 .hh-pic > * { width: 100%; height: 100%; }
@@ -45,6 +55,7 @@
 @media (max-width: 820px) {
   .hh-strip { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; gap: 10px; padding-bottom: 4px; -webkit-overflow-scrolling: touch; }
   .hh-card { flex: 0 0 78%; scroll-snap-align: start; }
+  .hh-card-sm { flex: 0 0 62%; align-self: flex-start; }
   .hh-open { padding: 11px 6px 11px 12px; gap: 10px; }
   .hh-reply-b { width: 44px; }
   .hh-reply { padding: 0 12px 12px; }

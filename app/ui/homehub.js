@@ -39,18 +39,20 @@
     const by = c && c.updated && c.updated.at ? `${c.updated.byName ? esc(c.updated.byName) + ' · ' : ''}${esc(ago(c.updated.at))}` : '';
     const pic = c ? (c.pick === 'none' || !c.pic ? `<div class="hh-pic-empty">${ico('i-sparkle', 18)}<span>${t('Nothing to preview yet')}</span></div>` : c.pic) : '<div class="hh-pic-load" aria-hidden="true"></div>';
     const canOpen = c && c.pick && c.pick !== 'none';
+    if (c && !canOpen) return `<article class="hh-card hh-card-sm" data-hh-pid="${esc(p.id)}"><button type="button" class="hh-sm" data-hh-go="open">${face}<span class="hh-tx"><b>${esc(p.name)}</b><small>${t('Nothing to preview yet')}</small></span>${ico('i-chev', 14)}</button></article>`;   // nothing to show: one compact row
     return `<article class="hh-card" data-hh-pid="${esc(p.id)}">
       <button type="button" class="hh-pic" data-hh-go="${canOpen ? 'preview' : 'open'}" aria-label="${esc(canOpen ? t('Open the preview of') + ' ' + p.name : t('Open') + ' ' + p.name)}">${pic}</button>
       <div class="hh-meta">${face}<div class="hh-tx"><b>${esc(p.name)}</b><small>${c && c.kind ? esc(t(c.kind)) + (by ? ' · ' : '') : ''}${by}</small></div></div>
       <div class="hh-acts">${canOpen ? `<button type="button" class="btn sm primary" data-hh-go="preview">${ico('i-play', 13)}${t('Open preview')}</button>` : ''}<button type="button" class="btn sm" data-hh-go="open">${t('Open')}</button></div></article>`;
   }
+  const rank = c => !c ? 1 : c.pick && c.pick !== 'none' ? 2 : 0;   // previews first, then loading, then the empty ones
   function drawPreviews() {
     const el = slots.p; if (!el) return;
     const list = projectsNow();
     if (!C.hasToken() || !list.length) { el.innerHTML = ''; return; }
     el.innerHTML = `<section class="sec hub-sec hh-prev" id="hh-prev" aria-labelledby="hh-prev-t">
       <div class="sec-head"><span class="eyebrow">${t('Being made')}</span><h2 id="hh-prev-t">${t('What your groups are making')}</h2></div>
-      <div class="hh-strip" id="hh-strip">${list.slice(0, 12).map(p => cardHtml(p, cards.get(p.id))).join('')}</div></section>`;
+      <div class="hh-strip" id="hh-strip">${list.slice(0, 12).map(p => [p, cards.get(p.id)]).sort((a, b) => rank(b[1]) - rank(a[1])).map(([p, c]) => cardHtml(p, c)).join('')}</div></section>`;
     el.querySelectorAll('.hh-card').forEach(bindCard);
     if (C.connected()) lazyCards(el);
   }
@@ -72,6 +74,7 @@
       if (!node.isConnected || !p) return;
       const tmp = document.createElement('div'); tmp.innerHTML = cardHtml(p, c); const fresh = tmp.firstElementChild;
       fresh.__hh = 1; node.replaceWith(fresh); bindCard(fresh);
+      if (projectsNow().slice(0, 12).every(x => cards.has(x.id))) drawPreviews();   // all in: previews first
     };
     const nodes = [...el.querySelectorAll('.hh-card')].filter(n => !cards.has(n.dataset.hhPid));
     if (!('IntersectionObserver' in window)) { nodes.slice(0, 6).forEach(load); return; }

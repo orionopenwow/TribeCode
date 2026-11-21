@@ -74,5 +74,5 @@ module.exports = function dm({ store, getMembers, sendTo, broadcast, bus, canSee
     return send(res, 200, { conversations: list(me) });
   }
 
-  return { isDm, pair, canRead, deliver, onPost, handle, route, nameFor, member };
+  return { isDm, pair, canRead, deliver, onPost, handle, route, nameFor, member, list };   // list: feat/p10-home (Home's Messages)
 };

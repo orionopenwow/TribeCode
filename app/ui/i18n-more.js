@@ -11,6 +11,20 @@
   'use strict';
   const I = window.TribeI18n; if (!I || !I.add) return;
   I.add({
+    // ---- feat/p10-home: Home's previews and Messages
+    "Being made": ["En marcha", "Em andamento", "En cours", "In Arbeit", "制作中", "进行中", "만드는 중"],
+    "What your groups are making": ["Lo que hacen tus grupos", "O que seus grupos estão fazendo", "Ce que font vos groupes", "Was deine Gruppen bauen", "グループが作っているもの", "你的小组在做什么", "그룹이 만들고 있는 것"],
+    "Nothing to preview yet": ["Aún no hay vista previa", "Nada para mostrar ainda", "Rien à prévisualiser pour l’instant", "Noch keine Vorschau", "まだプレビューはありません", "还没有预览", "아직 미리 볼 것이 없습니다"],
+    "Open preview": ["Abrir vista previa", "Abrir prévia", "Ouvrir l’aperçu", "Vorschau öffnen", "プレビューを開く", "打开预览", "미리보기 열기"],
+    "No messages yet": ["Aún no hay mensajes", "Ainda sem mensagens", "Pas encore de messages", "Noch keine Nachrichten", "まだメッセージはありません", "还没有消息", "아직 메시지가 없습니다"],
+    "When someone writes in one of your projects or messages you, it shows here.": ["Cuando alguien escriba en uno de tus proyectos o te envíe un mensaje, aparecerá aquí.", "Quando alguém escrever em um dos seus projetos ou mandar mensagem para você, aparece aqui.", "Quand quelqu’un écrit dans l’un de vos projets ou vous envoie un message, cela s’affiche ici.", "Wenn jemand in einem deiner Projekte schreibt oder dir schreibt, erscheint es hier.", "誰かがプロジェクトに書き込んだり、あなたにメッセージを送ったりすると、ここに表示されます。", "有人在你的项目里发言或给你发消息时，会显示在这里。", "누군가 프로젝트에 글을 쓰거나 메시지를 보내면 여기에 표시됩니다."],
+    "Reply to": ["Responder a", "Responder a", "Répondre à", "Antworten an", "返信先：", "回复", "답장:"],
+    "Sent": ["Enviado", "Enviado", "Envoyé", "Gesendet", "送信しました", "已发送", "보냄"],
+    "new": ["nuevos", "novas", "nouveaux", "neu", "件の新着", "条新消息", "개 새 메시지"],
+    "just now": ["ahora mismo", "agora mesmo", "à l’instant", "gerade eben", "たった今", "刚刚", "방금"],
+    "Open the preview of": ["Abrir la vista previa de", "Abrir a prévia de", "Ouvrir l’aperçu de", "Vorschau öffnen von", "プレビューを開く：", "打开预览：", "미리보기 열기:"],
+    "Your tribe is offline. Open the project to write there: it sends when the tribe is back.": ["Tu tribu está sin conexión. Abre el proyecto para escribir allí: se enviará cuando vuelva.", "Sua tribo está offline. Abra o projeto para escrever lá: envia quando ela voltar.", "Votre tribu est hors ligne. Ouvrez le projet pour y écrire : cela partira à son retour.", "Dein Tribe ist offline. Öffne das Projekt, um dort zu schreiben: Es wird gesendet, sobald er zurück ist.", "トライブはオフラインです。プロジェクトを開いて書いてください。戻ったら送信されます。", "你的部落离线了。打开项目在那里写：部落恢复后会发送。", "트라이브가 오프라인입니다. 프로젝트를 열어 거기서 쓰세요. 돌아오면 전송됩니다."],
+    "Opens with what this device last saw": ["Se abre con lo último que vio este dispositivo", "Abre com o que este aparelho viu por último", "S’ouvre avec ce que cet appareil a vu en dernier", "Öffnet mit dem, was dieses Gerät zuletzt gesehen hat", "この端末が最後に見た内容で開きます", "以此设备最后看到的内容打开", "이 기기에서 마지막으로 본 내용으로 열립니다"],
     // ---- pass 9: the creators' shared shell (Back, Undo/Redo, the flame, Flint's column)
     'Back to the dashboard': ['Volver al panel', 'Voltar ao painel', 'Retour au tableau de bord', 'Zurück zur Übersicht', 'ダッシュボードに戻る', '返回仪表板', '대시보드로 돌아가기'],
     'Undo and redo': ['Deshacer y rehacer', 'Desfazer e refazer', 'Annuler et rétablir', 'Rückgängig und wiederholen', '元に戻す・やり直す', '撤销和重做', '실행 취소와 다시 실행'],
