@@ -101,7 +101,7 @@ def main():
             t = preview_site(); assert EMPTY in t, t
             # 5. nothing started: the one-tap card is right
             website(none)
-            assert state() == "none" and pg.locator("#wb-make").is_visible()
+            assert state() == "none" and pg.locator("#wb-design").is_visible()
             t = preview_site(); assert EMPTY in t, t
             pg.evaluate("TribePreview.close && TribePreview.close()")
 

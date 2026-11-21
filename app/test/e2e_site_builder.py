@@ -259,10 +259,12 @@ def main():
             host.wait_for_selector("#wb-root")
             assert host.locator("#wb-gen, .sg-modes, #sg-shuffle, [data-sgmode]").count() == 0, "the old site builder still shows beside the designer"
             assert host.evaluate("typeof window.TribeSiteGen") == "undefined"
-            # Flint: a sentence no template claims runs Instant ("birthday party" now picks the party/RSVP template: flint_eval)
+            # Flint: "make a website" opens the website designer, the one website tool (feat/website-one); no builder draft
+            before = json.dumps(W()["gen"].get("draft"))
             host.evaluate("TribeFlint.ask('make a website for our conference')")
-            host.wait_for_function("TribeFlint.thread().some(m => m.who === 'flint' && /as an event/.test(m.text))", timeout=15000)
-            assert W()["gen"]["draft"]["type"] == "event"
+            host.wait_for_function("document.body.classList.contains('wdz-open')", timeout=15000)
+            assert json.dumps(W()["gen"].get("draft")) == before, "Flint made no old-builder draft"
+            host.evaluate("TribeSiteDesigner.close()")
             # phone 390: Website + builder fit
             pctx = b.new_context(**PHONE)
             pctx.add_init_script(f"try {{ localStorage.setItem('tribecode.settings.v1', JSON.stringify({{name:'Orion', onboarded:true, theme:'campfire', themePicked:true, server:{{url:'{BASE}', token:'{tok}'}}, checklist:{{setup:true}}, tour:{{done:true}}}})); localStorage.setItem('tribecode.project:{BASE}', '{pid}'); if (!sessionStorage.getItem('sb-once')) {{ sessionStorage.setItem('sb-once', '1'); localStorage.setItem('tribecode.mode', 'intermediate'); }} }} catch (e) {{}}")

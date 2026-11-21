@@ -92,6 +92,8 @@
   // ---------- drawing ----------
   const frame = (attr, title) => `<iframe class="wb1-frame" id="wb-frame" title="${esc(T(title))}" sandbox="" referrerpolicy="no-referrer" loading="lazy" tabindex="-1" ${attr}></iframe>`;
   function siteHtml(cfg) { try { const S = window.TribeSiteCfg; return S ? S.exportFiles(cfg, 'html')['index.html'] : ''; } catch { return ''; } }
+  // Saved designs (siteshelf.js): the designer's site, or an older site's saved versions, so none of them is lost
+  const shelf = () => (window.TribeSiteShelf ? `<section class="wb1-saved" id="wb-versions-sec" aria-label="${esc(T('Saved designs'))}"><div class="sec-head"><span class="eyebrow">${esc(T('Website'))}</span><h2>${esc(T('Saved designs'))}</h2></div><div id="wb-versions"></div></section>` : '');
   function draw() {
     const sec = section(), f = cur; if (!sec || !f) return;
     let body = '';
@@ -102,30 +104,30 @@
         <div class="wb1-b"><span class="eyebrow">${esc(T('Your website'))}</span><h2 id="wb-name">${esc(c.name || projName())}</h2>
           <p class="wb1-meta">${n} ${esc(T(n === 1 ? 'page' : 'pages'))}${when ? ` · ${esc(T('saved'))} ${esc(when)}${f.savedBy ? ' · ' + esc(f.savedBy) : ''}` : ''}</p>
           <div class="wb1-online" id="wb-online" aria-live="polite"></div>
-          <div class="wb-acts"><button type="button" class="btn primary" id="wb-designer">${esc(T('Open the designer'))}</button><button type="button" class="btn" id="wb-put">${esc(T('Put it online'))}</button></div>
+          <div class="wb-acts"><button type="button" class="btn primary" id="wb-design">${esc(T('Open the designer'))}</button><button type="button" class="btn" id="wb-put">${esc(T('Put it online'))}</button></div>
           ${window.TribeVersions ? `<p class="wb-hint"><button type="button" class="linkish" id="wb-allv">${esc(T('History'))}</button>: ${esc(T('every saved version, to look at or bring back.'))}</p>` : ''}</div></section>
-        ${window.TribeSiteShelf ? `<section class="wb1-saved" id="wb-versions-sec" aria-label="${esc(T('Saved designs'))}"><div class="sec-head"><span class="eyebrow">${esc(T('Website'))}</span><h2>${esc(T('Saved designs'))}</h2></div><div id="wb-versions"></div></section>` : ''}`;
+        ${shelf()}`;
     } else if (f.state === 'old') {
       body = `<section class="wb1-card" id="wb-old" aria-label="${esc(T('Your older website'))}">
         <div class="wb1-pv">${frame(`src="${esc(abs(f.old.url))}"`, 'Your older website')}</div>
         <div class="wb1-b"><span class="eyebrow">${esc(T('Your older website'))}</span><h2>${esc(f.old.title || projName())}</h2>
           <p class="wb1-meta">${esc(T('Made with the old page builder'))}${f.old.at ? ` · ${esc(ago(f.old.at))}` : ''}</p>
           <p class="wb-note">${esc(T('It stays as it is. Bring it into the designer to keep working on it: its words and sections come along, and nothing of the old page is deleted.'))}</p>
-          ${f.canEdit ? `<div class="wb-acts"><button type="button" class="btn primary" id="wb-bring">${esc(T('Bring it into the designer'))}</button></div>` : `<p class="wb-hint">${esc(T('Someone who can change the website can bring it into the designer.'))}</p>`}</div></section>`;
+          ${f.canEdit ? `<div class="wb-acts"><button type="button" class="btn primary" id="wb-bring">${esc(T('Bring it into the designer'))}</button></div>` : `<p class="wb-hint">${esc(T('Someone who can change the website can bring it into the designer.'))}</p>`}</div></section>
+        ${shelf()}`;
     } else {
       body = `<section class="wb1-card wb1-none" id="wb-none" aria-label="${esc(T('Website'))}">
         <div class="wb1-b"><span class="eyebrow">${esc(T('Website'))}</span><h2>${esc(T('Make your website'))}</h2>
           <p class="wb-note">${esc(T('Pick what kind of site, then a template. Flint fills it in from the project, free. Every word, picture and colour is yours to change.'))}</p>
           ${f.repo ? `<p class="wb-note">${esc(T('Your team already has a website in the code'))}: <code>${esc(f.repo.path)}</code>.</p>` : ''}
-          <div class="wb-acts"><button type="button" class="btn primary" id="wb-make">${esc(T('Make a website'))}</button>${f.repo ? `<button type="button" class="btn" id="wb-code">${esc(T('Open the code'))}</button>` : ''}</div></div></section>`;
+          <div class="wb-acts"><button type="button" class="btn primary" id="wb-design" data-start="1">${esc(T('Make a website'))}</button>${f.repo ? `<button type="button" class="btn" id="wb-code">${esc(T('Open the code'))}</button>` : ''}</div></div></section>`;
     }
     sec.innerHTML = `<div class="wb1" id="wb-root" data-state="${f.state}">${body}</div>`;
     const opener = () => D() && D().open({ pid: pid() });
-    const dz = $('#wb-designer'); if (dz) dz.onclick = opener;
+    const dz = $('#wb-design'); if (dz) dz.onclick = dz.dataset.start ? () => D() && D().open({ pid: pid(), start: true }) : opener;   // a site: open it; none: the start screen
     const pv = $('#wb-pv'); if (pv) { pv.onclick = opener; pv.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); opener(); } }; }
     const put = $('#wb-put'); if (put) put.onclick = () => (window.TribePublish ? window.TribePublish.open(pid()) : toast(T('Publishing did not load. Reload the app.')));
     const av = $('#wb-allv'); if (av) av.onclick = () => window.TribeVersions.open();
-    const mk = $('#wb-make'); if (mk) mk.onclick = () => D() && D().open({ pid: pid(), start: true });
     const br = $('#wb-bring'); if (br) br.onclick = bring;
     const cd = $('#wb-code'); if (cd) cd.onclick = () => { if (window.TribeShell) window.TribeShell.go('docs-files'); setTimeout(() => { try { window.TribeCodeFiles && window.TribeCodeFiles.set('code'); } catch {} }, 120); };
     const vb = $('#wb-versions'); if (vb) window.TribeSiteShelf.render(vb, pid(), { head: false });

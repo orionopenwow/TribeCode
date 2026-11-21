@@ -637,7 +637,7 @@
     { id: 'website', title: 'The website', flint: ["#wt-website, #nest-website", "Click Website: your project gets a public page."], after: "Pick what kind of site, then a template. Every word is yours to change, and Flint helps for free.", cap: 'A public page for your project, made in the website designer.', dur: 17000, async run() {
       if (window.TribeShell && window.TribeShell.go) window.TribeShell.go('website'); else if (window.TribeWebsite) window.TribeWebsite.open();
       const tab = $('#wt-website'); if (tab && !phone()) await click('me', tab, { noClick: true });
-      const make = await settle('#wb-make, #wb-designer', 'the website page open', 4000);
+      const make = await settle('#wb-design', 'the website page open', 4000);
       if (make) { await click('me', make); }
       const start = await settle('#wdz-start:not([hidden]) [data-kind], #wdz-frame', 'the website designer open', 5000);
       if (start) await move('me', start, 1200, { dx: 0.5, dy: 0.5 });

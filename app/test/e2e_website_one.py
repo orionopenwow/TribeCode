@@ -95,7 +95,7 @@ def main():
             pg.wait_for_function("document.querySelector('#wb-versions') && document.querySelector('#wb-versions').textContent.trim().length > 0", timeout=8000)
             assert "There is no website yet" not in pg.inner_text("#wb-versions"), pg.inner_text("#wb-versions")
             pg.screenshot(path="/tmp/website-one-files.png")
-            pg.click("#wb-designer"); pg.wait_for_function(designer_open, timeout=8000)
+            pg.click("#wb-design"); pg.wait_for_function(designer_open, timeout=8000)
             assert pg.evaluate("TribeSiteDesigner.cfg().name") == "Lantern Bakery"
 
             # 2. no site: one button that starts the designer's kind-first start screen
@@ -103,7 +103,7 @@ def main():
             assert pg.get_attribute("#wb-root", "data-state") == "none"
             assert "Make your website" in t and pg.locator("#view-website button.primary").count() == 1, t
             for w in OLD_BUILDER: assert w not in t, f"{w!r}: {t}"
-            pg.click("#wb-make"); pg.wait_for_function(start_open, timeout=8000)
+            pg.click("#wb-design"); pg.wait_for_function(start_open, timeout=8000)
 
             # 3. an old-builder site: shown read-only with Bring it into the designer; the old data stays
             t = website(old)
