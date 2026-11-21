@@ -47,6 +47,7 @@ def main():
             # storage wiped: still Jay after a reload
             fr.evaluate("localStorage.clear(); sessionStorage.clear()")
             fr.goto(BASE + "/?skipIntro=1"); fr.wait_for_function("window.TribeClient && TribeClient.connected()", timeout=15000)
+            fr.wait_for_function("TribeClient.state().me && TribeClient.state().me.name", timeout=15000)   # who you are arrives a moment after the connection
             assert fr.evaluate("TribeClient.state().me.name") == "Jay", fr.evaluate("TribeClient.state().me")
             assert fr.evaluate("TribeStore.get().server.token"), "the key is back in storage"
             # a made-up or revoked cookie signs nobody in
