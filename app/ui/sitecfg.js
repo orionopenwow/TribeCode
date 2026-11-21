@@ -743,6 +743,12 @@
     const first = t => home.blocks.find(b => b.type === t);
     if (F.name) {
       const old = c.name; c.name = String(F.name).slice(0, 80); used.push('the name');
+      // v0.44: the template's own business name ("Marigold") never stays behind in the words, alt text or description
+      if (old && old.length >= 3 && old !== c.name) {
+        const re = new RegExp('\\b' + old.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\b', 'g'), SKIP = /^(img|src|to|kind|id|icon|href|url|favicon|image|logo)$/;
+        const walk = o => { if (Array.isArray(o)) o.forEach((v, i) => { if (typeof v === 'string') o[i] = v.replace(re, c.name); else walk(v); }); else if (o && typeof o === 'object') for (const k of Object.keys(o)) { if (typeof o[k] === 'string') { if (!SKIP.test(k) && !/^data:/.test(o[k])) o[k] = o[k].replace(re, c.name); } else walk(o[k]); } };
+        c.pages.forEach(p => p.blocks.forEach(b => walk(b.props))); if (c.seo) walk(c.seo);
+      }
       c.pages.forEach(p => p.blocks.forEach(b => { if (b.type === 'go' && old) ['title', 'text', 'button'].forEach(k => { if (typeof b.props[k] === 'string') b.props[k] = b.props[k].split(old).join(c.name); }); if (b.type === 'hero' && (b.props.title === old || p === home && b === first('hero'))) b.props.title = c.name; if (b.type === 'links') b.props.name = c.name; if (b.type === 'footer' && /^©|^$/.test(b.props.text || '') || b.type === 'footer' && b.props.text === old) b.props.text = `© ${new Date().getFullYear()} ${c.name}`; }));
     }
     const line = F.tagline || F.mission;

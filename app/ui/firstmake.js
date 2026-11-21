@@ -207,6 +207,7 @@
       // sections that were about the template's own subject go back to the designer's honest placeholders
       const RESET = new Set(['pricing', 'testimonials', 'faq', 'contact', 'list', 'team', 'stats', 'timeline', 'text', 'cta', 'newsletter', 'banner', 'info', 'steps']);
       if (S && S.BLOCKS) for (const p of c.pages) for (const bk of p.blocks) if (bk !== f && RESET.has(bk.type) && S.BLOCKS[bk.type] && S.BLOCKS[bk.type].make) { try { bk.props = clone(S.BLOCKS[bk.type].make(name || c.name)); } catch {} }
+      if (c.seo && typeof c.seo.description === 'string') c.seo.description = b.line ? String(b.line).slice(0, 160) : '';   // the search description was about the template's own business
       if (h && typeof h.props.text === 'string' && h.props.text && !b.line) h.props.text = b.subject ? `A line about ${/^(my|our)\b/.test(b.subject) ? b.subject : 'your ' + b.subject} goes here.` : h.props.text;
     }
     // a section for each thing the sentence names (the designer's own honest placeholders)
