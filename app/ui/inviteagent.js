@@ -78,7 +78,7 @@
     if (me.role === 'agent' || me.role === 'spectator' || me.guest) { el.innerHTML = `<p class="io-calm">${me.role === 'spectator' ? 'Spectators watch along, so they can\'t bring an AI in.' : 'Guests can\'t bring an AI in.'}</p>`; return; }
     copiedCode = false; made = {}; target = {}; ask = null; showSetup = {};
     el.innerHTML = '<p class="lead">Getting it ready…</p>';
-    try { st = await C.api(API); } catch (e) { if (alive()) el.innerHTML = `<p class="io-calm">Couldn't open this: ${esc(e.message)}</p>`; return; }
+    try { st = await C.api(API); } catch (e) { if (alive()) { if (window.TribeInvite && window.TribeInvite.cant) window.TribeInvite.cant(el, e, () => mount(el, opts)); else el.innerHTML = `<p class="io-calm">${esc(e.message)}</p>`; } return; }   // p10: the reason and the one fix
     if (!alive() || root !== el) return;
     const want0 = opts && opts.kind, mineAll = st.agents || [];
     if (want0 === 'ask' || (!want0 && !mineAll.length)) { stage = 'ask'; alt = ''; pick = null; }   // never connected an AI: the question comes first

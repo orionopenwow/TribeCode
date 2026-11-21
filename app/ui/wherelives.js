@@ -75,11 +75,13 @@
           <div class="whl-row">${f.canOpen ? `<button type="button" class="btn" data-whl-open>${esc(T('Open the folder'))}</button>` : `<small class="faint">${esc(T('The folder is where this tribe is kept. Open it on that computer.'))}</small>`}</div>
           <small class="faint">${esc(T('Every change is written there a moment after you make it. Double-click index.html to open it with no internet.'))}</small>`;
     const s2 = `<div class="whl-row"><button type="button" class="btn${!none && st.people < 2 ? ' primary' : ''}" data-whl-invite>${esc(T('Invite a friend'))}</button>${st.people > 1 ? `<span class="faint">${esc(F('{n} people are in this tribe', { n: st.people }))}</span>` : ''}</div>
-      <small class="faint">${esc(T('It reaches friends while the tribe can be reached. When it cannot, they see a plain message and what they typed waits on their device.'))}</small>`;
+      <small class="faint">${esc(T('It reaches friends while the tribe can be reached. When it cannot, they see a plain message and what they typed waits on their device.'))}</small>
+      ${window.TribeStatus ? `<div class="whl-row whl-runs"><span class="faint">${esc(T('Where your tribe runs'))}:</span> <button type="button" class="linkish" data-whl-runs>${esc(window.TribeStatus.now().label)}</button> <button type="button" class="linkish" data-whl-server>${esc(T('Run your own server'))}</button></div>` : ''}`;   // p10
     const link = pg ? pg.url : '';
     const s3 = `${link ? `<p class="whl-path"><a href="${esc(link)}" target="_blank" rel="noopener" id="whl-link">${esc(link)}</a></p>` : ''}
       <div class="whl-row"><button type="button" class="btn${!none && st.people > 1 && !link ? ' primary' : ''}" data-whl-online ${none ? 'disabled' : ''}>${esc(T(link ? 'Update it' : 'Put it online'))}</button>${!link && play ? `<span class="faint">${esc(T('It has a play link, which works while the tribe can be reached.'))}</span>` : ''}</div>
-      <small class="faint">${esc(T('A public address on your own GitHub account, free. It stays up when every computer is off.'))}</small>`;
+      <small class="faint">${esc(T('A public address on your own GitHub account, free. It stays up when every computer is off.'))}</small>
+      <div class="whl-row"><span class="ghc-chip" id="whl-gh"></span></div>`;   // p10: the same GitHub status as everywhere else
     // pass 4 polish: with no tribe the first step says what is true (the browser keeps it), not that files are in a folder
     root.innerHTML = step(1, 'folder', 'In a folder', online() ? 'Your website and phone app are real files in the project’s folder, where this tribe is kept.' : 'In a tribe, your website and phone app are real files in the project’s folder.', none ? '' : 'Now', s1)
       + step(2, 'friends', 'With your friends', 'One link lets friends in. Everyone changes the same website and app, live, by their role.', st.people > 1 ? 'Now' : '', s2)
@@ -99,6 +101,9 @@
     const leave = () => { try { if (window.TribeAppCreator && window.TribeAppCreator.state && window.TribeAppCreator.state() && document.querySelector('#apc')) window.TribeAppCreator.close(); } catch {} };   // App Creator is full screen and makes the app behind it inert; it has saved
     const i = q('[data-whl-invite]'); if (i) i.onclick = () => { const pid = st.pid; close(); leave(); if (window.TribeInvite) window.TribeInvite.open({}); else if (window.TribeApp && window.TribeApp.openInvite) window.TribeApp.openInvite(); void pid; };
     const on = q('[data-whl-online]'); if (on) on.onclick = () => { const pid = st.pid; close(); leave(); if (window.TribePublish) window.TribePublish.open(pid, 'pages'); };
+    const gh = q('#whl-gh'); if (gh && window.TribeGitHubConnect && window.TribeGitHubConnect.chip) window.TribeGitHubConnect.chip(gh, { before: () => { close(); leave(); } });
+    const runs = q('[data-whl-runs]'); if (runs) runs.onclick = () => window.TribeStatus && window.TribeStatus.open(runs);
+    const srv = q('[data-whl-server]'); if (srv) srv.onclick = () => { close(); leave(); if (window.TribeOwnServer) window.TribeOwnServer.open(); };
     root.querySelectorAll('[data-whl-use]').forEach(b => b.onclick = async () => { b.disabled = true; const r = await resolve(b.dataset.whlUse, 'design'); if (st) { if (r && r.status) st.files = r.status; draw(); } });
     root.querySelectorAll('[data-whl-mine]').forEach(b => b.onclick = async () => { b.disabled = true; const r = await resolve(b.dataset.whlMine, 'mine'); if (st) { if (r && r.status) st.files = r.status; draw(); } });
   }

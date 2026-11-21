@@ -10,12 +10,13 @@
 //   3. Done: connected as @name, the link, and when it was last backed up.
 // A tribe that lives only in this browser has no host to keep a sign-in, so there the block asks for owner/name and an
 // optional token that stays on this device (setuplocal.js github.connect does the work, as before).
-// Public: window.TribeGitHubConnect = { open(o), mount(el, o) -> { value(), resolve() }, slug(name) }
+// Public: window.TribeGitHubConnect = { open(o), mount(el, o) -> { value(), resolve() }, slug(name), status(), chip(el, o) }
 (function () {
   'use strict';
   const C = () => window.TribeClient, OFF = () => window.TribeOffline, L = () => window.TribeLocalSetup, UI = () => window.TribeUI;
   const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const toast = m => window.TribeApp && window.TribeApp.toast && window.TribeApp.toast(m);
+  const T = (t, v) => { let r = window.TribeI18n && window.TribeI18n.t ? window.TribeI18n.t(t, t) || t : t; if (v) for (const k in v) r = r.split('{' + k + '}').join(v[k]); return r; };
   const solo = () => !!(OFF() && OFF().solo && OFF().solo());
   const live = () => !!(C() && C().connected && C().connected()) && !solo();
   const pidNow = () => (window.TribeProjects && window.TribeProjects.current && window.TribeProjects.current()) || (C() && C().project && C().project()) || '';
@@ -169,5 +170,21 @@
   if (window.TribePalette && window.TribePalette.register) window.TribePalette.register(() => [
     { kind: 'Action', label: 'Connect GitHub', keys: 'github connect backup repo repository code online copy', run: () => open() },
   ]);
-  window.TribeGitHubConnect = { open, mount, slug, parse };
+  // p10: the one GitHub status, the same words everywhere (Where it lives, Publish, Code, Settings): "Connected as @name"
+  // or "Not connected · Connect", and Connect always opens this sheet. A tribe kept only in this browser says so.
+  async function status() {
+    if (!live()) { const O = OFF(), db = O && O.state && O.state(), pid = db && (db.current || ((db.projects || [])[0] || {}).id), h = ((O && O.homes && O.homes()) || {})[pid] || {}; return { on: !!h.github, login: '', text: h.github ? T('Copy on GitHub') : T('Not connected'), local: true }; }
+    try { const g = window.TribeGitHub && window.TribeGitHub.status ? await window.TribeGitHub.status() : (await C().api('/github')).github; return { on: !!(g && g.signedIn), login: (g && g.login) || '', text: g && g.signedIn ? T('Connected as @{name}', { name: g.login || 'you' }) : T('Not connected') }; }
+    catch { return { on: false, login: '', text: T('Not connected') }; }
+  }
+  async function chip(el, o = {}) {
+    if (!el) return;
+    el.classList.add('ghc-chip'); el.innerHTML = `${GH}<span class="ghc-chip-t">${esc(T('GitHub'))}…</span>`;
+    const s = await status(); if (!el.isConnected) return;
+    el.dataset.on = s.on ? '1' : '0';
+    el.innerHTML = `${GH}<span class="ghc-chip-t"><b>${esc(T('GitHub'))}</b> · ${esc(s.text)}</span>${s.on ? '' : `<button type="button" class="btn sm ghc-chip-go">${esc(T('Connect'))}</button>`}`;
+    const b = el.querySelector('.ghc-chip-go'); if (b) b.onclick = e => { e.preventDefault(); e.stopPropagation(); if (o.before) o.before(); open({ name: o.name }); };
+  }
+  addEventListener('tribe:github', () => document.querySelectorAll('.ghc-chip').forEach(el => chip(el)));
+  window.TribeGitHubConnect = { open, mount, slug, parse, status, chip };
 })();

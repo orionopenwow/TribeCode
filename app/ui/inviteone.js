@@ -7,7 +7,7 @@
 // It lives in the shared modal (#invite-modal). Nothing is made on the server until the person asks for it: the tribe
 // link already exists, a one-time or project link is made when its switch goes on, a guest pass when its button is
 // pressed, and the agent member on Copy or Download. The server APIs are unchanged (/api/tribe-link, /api/invites).
-//   window.TribeInvite = { open({ who, project, once, link, name, kind, fresh }), close(), isOpen(), state() }
+//   window.TribeInvite = { open({ who, project, once, link, name, kind, fresh }), close(), isOpen(), state(), cant(el, err, again) }
 //     who:     'friend' (default) | 'guest' | 'agent'   ('claude', its first name, still works and lands on Claude)
 //     kind:    with who 'agent': which agent the picker starts on ('cursor', 'codex', 'claude'…)
 //     project: a project id (or true for the current one): "Just this project" starts on
@@ -19,7 +19,7 @@
   const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const toast = (m, k) => (window.TribeApp && window.TribeApp.toast ? window.TribeApp.toast(m, k) : null);
   const swap = fn => (window.TribeMotion && window.TribeMotion.swap ? window.TribeMotion.swap(fn) : fn());
-  const WHO = [['friend', 'A friend', 'A link they open to join'], ['guest', 'A guest for a day', 'A pass that works once'], ['agent', 'An AI helper', 'Claude, Cursor, Codex and more']];
+  const WHO = [['friend', 'A friend', 'Send a link. They pick a name and they’re in'], ['guest', 'A guest for a day', 'A pass that works once and stops after a day'], ['agent', 'An AI helper', 'Claude, Cursor, Codex and more join your project']];
   // three large choices, each with a stroke icon from icons.js (people, a clock for the day pass, the agent plug)
   const ICON = { friend: 'people', guest: 'clock', agent: 'agent' }, TONE = { friend: 'k-ember', guest: 'k-indigo', agent: 'k-teal' };
   const glyph = k => (window.TribeIcons ? window.TribeIcons.svg(ICON[k], 26) : '');
@@ -75,6 +75,34 @@
     if (st.preset) copyText(st.preset).then(ok => { if (ok && isOpen()) { const c = $('#ii-copy'); if (c) c.textContent = 'Copied'; const t = $('#io-made-title'); if (t) t.textContent = 'Link copied. Send it to your friend.'; } });
   }
 
+  // p10: when an invite can't be made right now, one friendly line with the reason and the one fix, never a raw error box.
+  //   demo      "The demo can't invite real people" · Start my own tribe
+  //   offline   "<why it can't be reached>. Invites work again when it's back." · Try again, and the tribe link from last
+  //             time to copy (it works again once the tribe is back)
+  //   other     "Couldn't make it just now" + the server's own sentence · Try again
+  const linkKey = () => { try { return 'tribecode.tribelink:' + (C.base() || location.origin); } catch { return 'tribecode.tribelink'; } };
+  const lastLink = () => { try { return localStorage.getItem(linkKey()) || ''; } catch { return ''; } };
+  const keepLink = v => { try { if (v) localStorage.setItem(linkKey(), v); } catch {} };
+  const demoNow = () => !!(window.TribeOffline && window.TribeOffline.active && window.TribeOffline.active() && !solo());
+  const offNow = () => { const s = C.state && C.state().status; return !!s && s !== 'online'; };
+  function cant(el, err, again) {
+    if (!el) return;
+    const msg = String((err && err.message) || err || ''), D = window.TribeStatus && window.TribeStatus.now();
+    let kind = 'other', title = 'Couldn’t make it just now', line = msg && !/needs the tribe online|failed to fetch|networkerror|load failed/i.test(msg) ? msg : 'Something got in the way. It usually works on a second try.', act = ['again', 'Try again'];
+    if (demoNow()) { kind = 'demo'; title = 'The demo can’t invite real people'; line = 'Everything here stays in this browser. Start your own tribe and invite friends there; it takes a minute.'; act = ['own', 'Start my own tribe']; }
+    else if (offNow() || /needs the tribe online|failed to fetch|networkerror|load failed/i.test(msg)) { kind = 'offline'; title = (D && D.who) || 'Your tribe can’t be reached right now'; line = 'Invites work again when it’s back. Anything you type meanwhile waits and sends by itself.'; act = ['again', 'Try again']; }
+    const prev = kind === 'offline' ? lastLink() : '';
+    el.innerHTML = `<div class="io-cant" data-cant="${kind}" role="status"><span class="io-cant-dot" aria-hidden="true"></span><div class="io-cant-t"><b>${esc(T(title))}</b><small>${esc(T(line))}</small>
+        ${prev ? `<div class="io-cant-link"><code title="${esc(prev)}">${esc(prev)}</code><button type="button" class="btn sm" data-cant-copy>${esc(T('Copy'))}</button></div><small class="io-cant-note">${esc(T('Your tribe link. Friends can open it once the tribe is back.'))}</small>` : ''}
+      </div><div class="io-cant-acts"><button type="button" class="btn primary" data-cant="${act[0]}">${esc(T(act[1]))}</button></div></div>`;
+    const go = el.querySelector('[data-cant="again"]'); if (go) go.onclick = () => { if (C.connect && !(C.connected && C.connected() && !offNow())) C.connect(); if (again) again(); };
+    const own = el.querySelector('[data-cant="own"]'); if (own) own.onclick = () => { close(); if (window.TribeShare && window.TribeShare.online) window.TribeShare.online('friends'); else if (window.TribeApp && window.TribeApp.joinOrHost) window.TribeApp.joinOrHost(); };
+    const cp = el.querySelector('[data-cant-copy]'); if (cp) cp.onclick = async () => { if (await copyText(prev)) { cp.textContent = T('Copied'); toast(T('Tribe link copied')); } };
+  }
+  const T = t => (window.TribeI18n && window.TribeI18n.t ? window.TribeI18n.t(t, t) || t : t);
+  // back online while a "can't" line shows: draw the pane again, so the link appears by itself
+  if (C && C.on) C.on('status', s => { if (s && s.status === 'online' && isOpen() && document.querySelector('#io-pane .io-cant')) setTimeout(() => { if (isOpen()) pane(); }, 300); });
+
   // "Just this project" only means something inside a project of a tribe that has more than one (or for a scoped member).
   const canScope = () => !!st.pid && (projects().length > 1 || scoped() || !!st.preset);
   const sw = (id, on, title, sub, dis) => `<button type="button" class="toggle io-sw" role="switch" id="${id}" aria-checked="${!!on}"${dis ? ' disabled' : ''}><span class="io-swt"><b>${esc(title)}</b><small>${esc(sub)}</small></span><span class="switch"></span></button>`;
@@ -102,6 +130,7 @@
   function pane() {
     const p = $('#io-pane'); if (!p || !st) return;
     if (st.who === 'agent') {
+      if (demoNow()) return cant(p, null);
       p.innerHTML = '<div class="ic-pane" id="ic-body"></div>';
       if (IA() && IA().mount) IA().mount($('#ic-body'), st.agent);
       return;
@@ -115,6 +144,7 @@
       $('#io-where').onclick = () => { close(); const L = window.TribeLocalSetup, P = window.TribePhoneHost; if (window.TribeShare) window.TribeShare.online('friends'); else if (L && L.where && !matchMedia('(max-width: 820px)').matches) L.where(); else if (P && P.move) P.move(); };
       return;
     }
+    if (demoNow() && st.who === 'guest') return cant(p, null);
     if (st.who === 'guest') return guestPane(p);
     friendPane(p);
   }
@@ -205,7 +235,7 @@
       st.made = { want, link: s.link, note: s.note, code: invite.code };
       link.textContent = s.link; link.title = s.link; copy.disabled = false; qr($('#inv-qr'), s.link); $('#inv-net').textContent = s.note;
       done();
-    } catch (e) { if (st && seq === st.seq) link.textContent = 'Could not make a link: ' + e.message; }
+    } catch (e) { if (st && seq === st.seq) { const box = $('#io-made'); cant(box || $('#io-pane'), e, () => pane()); if (box) box.hidden = false; } }
   }
   // v0.26 tribe link: <host>/t/<name>, permanent until the host renames, renews or turns it off.
   async function tribeLink(patch) {
@@ -215,6 +245,7 @@
       if (!$('#tl-link')) return;
       const host = me().role === 'host', on = r.on !== false;
       $('#tl-link').textContent = on ? r.short : 'The tribe link is off'; $('#tl-copy').disabled = !on; $('#tl-copy').dataset.v = on ? r.short || '' : '';
+      if (on && r.short) keepLink(r.short);   // p10: offered again, to copy, while the tribe can't be reached
       const q = $('#tl-qr'); if (q && !q.classList.contains('hidden')) { if (on) q.innerHTML = window.TribeQR.svg(r.short); else q.classList.add('hidden'); }
       $('#tl-manage').hidden = !host;
       $('#tl-row').innerHTML = host ? `<label class="tl-name">${esc((r.short || '').replace(/\/t\/[^/]*$/, '/t/'))}<input class="input" id="tl-slug" value="${esc(r.slug || '')}" maxlength="32" aria-label="Tribe link name" spellcheck="false"></label><button class="btn sm" id="tl-save">Rename</button><button class="btn sm" id="tl-renew" title="The old link stops working">New link</button><button class="btn sm" id="tl-onoff">${on ? 'Turn off' : 'Turn on'}</button>` : '';
@@ -224,7 +255,7 @@
         $('#tl-renew').onclick = () => tribeLink({ renew: true }).then(() => toast('New tribe link made. The old one stopped working.'));
         $('#tl-onoff').onclick = () => tribeLink({ on: !on });
       }
-    } catch (e) { if ($('#tl-link')) $('#tl-link').textContent = e.message; }
+    } catch (e) { const box = $('#tl-box'); if (box) cant(box, e, () => pane()); }
   }
   // A new project's link that only works on this network: turn on the public address and swap the link in.
   async function goPublic() {
@@ -257,7 +288,7 @@
         st.guest = { link: s.link, note: s.note, code: invite.code }; guestPane(p);
         if (await copyText(s.link)) { toast('Guest pass copied'); const c = $('#io-guest-copy'); if (c) c.textContent = 'Copied'; }
         done();
-      } catch (err) { b.disabled = false; toast(err.message); }
+      } catch (err) { b.disabled = false; cant($('#io-guest') || p, err, () => guestPane(p)); }
     };
     const c = $('#io-guest-copy'); if (c) c.onclick = async () => { if (await copyText(g.link)) { c.textContent = 'Copied'; toast('Guest pass copied'); } else getSelection().selectAllChildren($('#io-guest-link')); };
     const qb = $('#io-guest-qrb'); if (qb) qb.onclick = () => { const q = $('#io-guest-qr'); if (!q.classList.toggle('hidden')) qr(q, g.link); };
@@ -272,5 +303,5 @@
     let did = false; const go = () => { if (did || !C.connected()) return; did = true; setTimeout(() => open({ who: want }), 600); };
     C.on('hello', go); setTimeout(go, 1500);
   })();
-  window.TribeInvite = { open, close, isOpen, state: () => (st ? { who: st.who, once: st.once, project: st.proj ? st.pid : null } : null) };
+  window.TribeInvite = { open, close, isOpen, cant, state: () => (st ? { who: st.who, once: st.once, project: st.proj ? st.pid : null } : null) };
 })();
