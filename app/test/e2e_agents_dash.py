@@ -104,7 +104,7 @@ def main():
             assert tabs(host) == [], tabs(host)   # p10: one tab, no tab row
             assert host.locator("#view-tabs #wt-plus:visible").count() == 0, "no bare + row"
             assert host.evaluate("location.hash") == "#/agents/agents"
-            wait_text(host, "#crumb-label", "Agents Hub › Dashboard")
+            wait_text(host, "#crumb-label", "Agents & office › Dashboard")
             fs = host.evaluate("parseFloat(getComputedStyle(document.querySelector('#ad-hero .fl-title')).fontSize)")
             assert fs >= 18, fs
             shot(host, "agents-dash-empty")
@@ -157,7 +157,7 @@ def main():
             # ---- + pins a tab; it stays across a reload; × unpins it
             host.click("#ad-views"); host.wait_for_selector("#ad-menu [data-ad-pin='reviews']")
             labels = host.evaluate("[...document.querySelectorAll('#ad-menu [data-ad-pin]')].map(b => b.querySelector('b').textContent)")
-            assert labels == ["Your agents", "Ownership", "Conflicts", "Hand-offs", "Reviews", "Daily plan", "Secretary", "MCP"], labels
+            assert labels == ["Your AI tools", "Ownership", "Conflicts", "Hand-offs", "Reviews", "Daily plan", "Secretary", "MCP"], labels
             shot(host, "agents-dash-plus")
             host.click("#ad-menu [data-ad-pin='reviews']"); host.wait_for_function("TribeCoord.tab() === 'reviews'")
             assert host.locator("#ad-menu").count() == 0

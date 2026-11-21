@@ -13,7 +13,7 @@
 //     one kind (from before there was one way) both show, with a hint to merge them. A new key is one deliberate tap.
 // Entry points: the sidebar row (#sf-claude), the People panel, the empty chat, the Agents Hub, Settings, Flint.
 //   window.TribeInviteAgent = { open(opts), mount(el, opts), unmount(), access(el), card(), close(), icon(kind, size) }
-//     open({ kind }): opens the one sheet on "An AI helper". kind: a choice ('code', 'cursor', 'chatgpt'…) or a kind
+//     open({ kind, alt }): opens the one sheet on "An AI helper". alt 'local' | 'free' (with kind 'ask'): that answer. kind: a choice ('code', 'cursor', 'chatgpt'…) or a kind
 //                     ('claude', 'gemini'…); an older tool name ('claude-code', 'claude-ai') works too.
 //     access(el): every agent's permissions block, for Settings.   card(): a small HTML card for the Agents Hub.
 //   window.TribeInviteClaude: the same functions under their first name; open() lands on Claude.
@@ -88,6 +88,7 @@
     if (!alive() || root !== el) return;
     const want0 = opts && opts.kind, mineAll = st.agents || [];
     if (want0 === 'ask' || (!want0 && !mineAll.length)) { stage = 'ask'; alt = ''; pick = null; }   // never connected an AI: the question comes first
+    if (opts && (opts.alt === 'local' || opts.alt === 'free')) { stage = 'alt'; alt = opts.alt; pick = null; }   // Agents & office: "A model on this computer" / "A free AI in your browser"
     else {
       stage = 'tool'; pick = resolvePick(want0);
       // A returning person lands on a helper they have, not on a tool they never chose.
@@ -162,7 +163,7 @@
       <div class="ic-step"><span class="eyebrow">Its first day</span></div>
       <ul class="ic-day">${list.map(([id, t, done]) => `<li class="${done ? 'done' : ''}" data-ic-day="${id}"><i aria-hidden="true">${done ? '✓' : ''}</i><span>${esc(t)}</span></li>`).join('')}</ul>
       <div class="ic-step"><span class="eyebrow">Where to find it</span></div>
-      <div class="ic-find"><button type="button" class="btn sm" data-ic-find="panel">Your private panel</button><button type="button" class="btn sm" data-ic-find="agents">The Agents page</button><span class="faint ic-small">Or type @ and its name in any channel.</span></div>
+      <div class="ic-find"><button type="button" class="btn sm" data-ic-find="panel">Your private panel</button><button type="button" class="btn sm" data-ic-find="agents">Agents &amp; office</button><span class="faint ic-small">Or type @ and its name in any channel.</span></div>
       <div class="ic-row ic-me"><label class="ic-small faint" for="ic-about-${esc(c.id)}">About it</label><input class="input ic-aboutin" id="ic-about-${esc(c.id)}" data-ic-about maxlength="140" value="${esc(c.about || '')}" autocomplete="off"><button type="button" class="btn sm" data-ic-about-save>Save</button></div>
       <div class="ic-row ic-colors" role="radiogroup" aria-label="Its colour">${((st && st.colors) || []).map(x => `<button type="button" role="radio" aria-checked="${x === c.color}" class="ic-color${x === c.color ? ' on' : ''}" data-ic-color="${esc(x)}" style="background:${esc(x)}" aria-label="Colour"></button>`).join('')}</div>
     </section>`;
@@ -285,7 +286,7 @@
     };
     const nk = body.querySelector('#ic-new'); if (nk) nk.onclick = () => { const k = kind(); showSetup[k] = true; delete made[k]; target[k] = (agentsOf(k)[0] || {}).id || ''; draw(); };
     const ot = body.querySelector('#ic-other'); if (ot) ot.onclick = () => { const A = window.TribeApp; close(); if (A && A.connectClaude) A.connectClaude({ tool: 'codex', fresh: true }); };
-    const br = body.querySelector('#ic-bridge'); if (br) br.onclick = () => { close(); if (window.TribeAIBridge && window.TribeAIBridge.open) window.TribeAIBridge.open({}); else toast('The copy-and-paste bridge is in the Agents Hub: Use any free AI.'); };
+    const br = body.querySelector('#ic-bridge'); if (br) br.onclick = () => { close(); if (window.TribeAIBridge && window.TribeAIBridge.open) window.TribeAIBridge.open({}); else toast('The copy-and-paste bridge is in Agents & office: Use any free AI.'); };
     body.querySelectorAll('[data-ic-of]').forEach(sec => wireAccess(sec, sec.dataset.icOf, draw));
     wireApprove();
   }
@@ -312,7 +313,7 @@
     const ai = sec.querySelector('[data-ic-about]'), as = sec.querySelector('[data-ic-about-save]');
     if (ai && as) { const go = () => put({ about: ai.value }, 'Saved. It shows on its People card.', 'about'); as.onclick = go; ai.onkeydown = e => { if (e.key === 'Enter') go(); }; }
     sec.querySelectorAll('[data-ic-color]').forEach(b => b.onclick = () => put({ color: b.dataset.icColor }, 'Saved.'));
-    sec.querySelectorAll('[data-ic-find]').forEach(b => b.onclick = () => { const w = b.dataset.icFind; close(); if (w === 'panel' && window.TribeAskAgent) window.TribeAskAgent.openMine(); else if (w === 'agents' && window.TribeAgentsHub) window.TribeAgentsHub.open(); });
+    sec.querySelectorAll('[data-ic-find]').forEach(b => b.onclick = () => { const w = b.dataset.icFind; close(); if (w === 'panel' && window.TribeAskAgent) window.TribeAskAgent.openMine(); else if (w === 'agents') { if (window.TribeShell && C.project && C.project()) window.TribeShell.go('ws-agents'); else if (window.TribeAgentsHub) window.TribeAgentsHub.open({ global: true }); } });
   }
   // One agent's controls. `after` repaints whoever shows them (the sheet, or Settings).
   function wireAccess(sec, cid, after) {

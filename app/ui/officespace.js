@@ -374,31 +374,12 @@
     function zoom(k) { view.z = Math.max(0, Math.min(6, view.z + k)); if (!view.z) { view.ox = 0; view.oy = 0; } draw(); }
 
     // ---------- the card: who, what they're doing, and one click into TribeCode ----------
-    const placeText = d => { const P = window.TribePresence; try { if (d.where && P && P.label) return P.label(d.where) || ''; } catch {} return typeof d.where === 'string' ? d.where : ''; };
+    // The body and its actions are TribeOffice's (office.js): the desks and the list in Agents & office open the same card.
+    const O = () => window.TribeOffice;
     function openCard(id) {
-      const d = everyone().find(x => x.id === id); if (!d) return;
+      const d = everyone().find(x => x.id === id); if (!d || !O()) return;
       cardFor = id; card.hidden = false; lookEl.hidden = true;
-      const st = d.state === 'off' ? tr('Offline') : d.state === 'away' ? tr('Away') : d.spot === 'think' ? tr('Thinking') : d.spot === 'board' ? tr('At the task board') : d.spot === 'lounge' ? tr('In the lounge') : tr('At their desk');
-      let body = '';
-      if (d.kind === 'flint') {
-        body = `<p class="faint">${esc(tr('TribeCode\'s own helper. He works with no AI and gets better with one.'))}</p>
-          <div class="os-acts"><button class="btn primary sm" data-os-do="flint">${esc(tr('Ask Flint'))}</button><button class="btn sm" data-os-do="next">${esc(tr('What to do next'))}</button><button class="btn sm" data-os-do="design">${esc(tr('Polish a design'))}</button></div>`;
-      } else if (d.kind === 'agent') {
-        const asks = (d.asks || []).map(a => `<li class="os-ask"><span>${esc(a.title)}</span>${a.canDecide ? `<span class="os-ask-acts"><button class="btn sm ok" data-os-ap="approve" data-id="${esc(a.id)}">${esc(tr('Approve'))}</button><button class="btn sm" data-os-ap="question" data-id="${esc(a.id)}">${esc(tr('Ask for changes'))}</button></span>` : `<em class="faint">${esc(tr('Waiting for an OK'))}</em>`}</li>`).join('');
-        body = `<dl class="os-dl">${d.ownerName ? `<dt>${esc(tr('Helps'))}</dt><dd>${esc(d.ownerName)}</dd>` : ''}${d.agentKind ? `<dt>${esc(tr('Tool'))}</dt><dd>${esc(d.agentKind)}</dd>` : ''}${d.task ? `<dt>${esc(tr('Task'))}</dt><dd><button class="linkish" data-os-task="${esc(d.task.id)}">${esc(d.task.title)}</button></dd>` : ''}</dl>
-          ${(d.files || []).length ? `<p class="os-sub">${esc(tr('Files it claimed'))}</p><ul class="os-files">${d.files.map(f => `<li><button class="linkish" data-os-file="${esc(f)}">${esc(f)}</button></li>`).join('')}</ul>` : ''}
-          ${(d.lines || []).length ? `<p class="os-sub">${esc(tr('Last steps'))}</p><ul class="os-lines">${d.lines.map(l => `<li>${esc(tr(l))}</li>`).join('')}</ul>` : ''}
-          ${asks ? `<p class="os-sub">${esc(tr('Asking for your OK'))}</p><ul class="os-asks">${asks}</ul><input class="input sm os-note" maxlength="300" placeholder="${esc(tr('What to change (for Ask for changes)'))}">` : ''}
-          <div class="os-acts"><button class="btn sm" data-os-do="dm">${esc(tr('Message it'))}</button>${d.state !== 'off' ? `<button class="btn sm" data-os-do="${d.paused ? 'resume' : 'pause'}">${esc(d.paused ? tr('Resume') : tr('Pause'))}</button>` : ''}<button class="btn sm" data-os-do="agent">${esc(tr('Its page'))}</button></div>`;
-      } else {
-        const where = placeText(d), mine = (window.TribeTasks && window.TribeTasks.all ? window.TribeTasks.all() : []).filter(t => t.assignee === d.id).slice(-3).reverse();
-        body = `${where ? `<p class="os-where"><span class="faint">${esc(tr('Now'))}</span> ${esc(where)} <button class="linkish" data-os-do="open">${esc(tr('Open'))}</button></p>` : ''}
-          ${d.task ? `<p class="os-where"><span class="faint">${esc(tr('Task'))}</span> <button class="linkish" data-os-task="${esc(d.task.id)}">${esc(d.task.title)}</button></p>` : ''}
-          ${mine.length ? `<p class="os-sub">${esc(tr('Recent work'))}</p><ul class="os-lines">${mine.map(t => `<li><button class="linkish" data-os-task="${esc(t.id)}">${esc(t.title)}</button> <span class="faint">${esc(t.status || '')}</span></li>`).join('')}</ul>` : ''}
-          <div class="os-acts">${d.id !== (data && data.me) ? `<button class="btn primary sm" data-os-do="dm">${esc(tr('Message'))}</button><button class="btn sm" data-os-do="call">${esc(tr('Call'))}</button>` : `<button class="btn primary sm" data-os-act="look">${esc(tr('Your look'))}</button>`}<button class="btn sm" data-os-do="profile">${esc(tr('Profile'))}</button></div>
-          ${d.id !== (data && data.me) ? `<form class="os-give" data-os-give><input class="input sm" maxlength="140" placeholder="${esc(tr('Give a task…'))}" aria-label="${esc(tr('Give a task'))}"><button class="btn sm">${esc(tr('Give'))}</button></form>` : ''}`;
-      }
-      card.innerHTML = `<header><canvas class="os-av" width="16" height="16" data-role="${esc(d.kind)}" aria-hidden="true"></canvas><div><b>${esc(d.name)}</b><span>${esc(d.kind === 'agent' ? tr('AI helper') : d.kind === 'flint' ? tr('Built-in helper') : tr('Person'))} · ${esc(st)}</span></div><button class="btn sm icon" data-os-close aria-label="${esc(tr('Close'))}">×</button></header>${body}`;
+      card.innerHTML = `<header><canvas class="os-av" width="16" height="16" data-role="${esc(d.kind)}" aria-hidden="true"></canvas><div><b>${esc(d.name)}</b><span>${esc(O().kindText(d))} · ${esc(O().statusOf(d))}</span></div><button class="btn sm icon" data-os-close aria-label="${esc(tr('Close'))}">×</button></header>${O().cardBody(d)}`;
       card.dataset.who = id;
       face(card.querySelector('.os-av'), d);
     }
@@ -410,46 +391,12 @@
       const sh = A.sheet(lookOf(d), () => face(c, d)); if (sh) x.drawImage(sh.c, 16, 2, 16, 16, 0, 0, 16, 16);
     }
     function closeCard() { card.hidden = true; cardFor = null; }
-    async function act(kind, d, btn) {
-      const W = window;
-      try {
-        if (kind === 'dm') { if (W.TribeDM && W.TribeDM.open) await W.TribeDM.open(d.id); return; }
-        if (kind === 'call') { if (W.TribeDM && W.TribeDM.open) await W.TribeDM.open(d.id); if (W.TribeHuddle && W.TribeHuddle.join) W.TribeHuddle.join(); return; }
-        if (kind === 'profile') { if (W.TribeProfiles && W.TribeProfiles.open) W.TribeProfiles.open(d.id, btn); return; }
-        if (kind === 'open') { if (W.TribePresence && W.TribePresence.jump) { const ok = await W.TribePresence.jump(d.id); if (ok === false) toast(tr('You can\'t open that from here.')); } return; }
-        if (kind === 'agent') { if (W.TribeShell && W.TribeShell.previewAgent) W.TribeShell.previewAgent(d.id); return; }
-        if (kind === 'pause' || kind === 'resume') { await C.api(`/coord/agents/${encodeURIComponent(d.id)}/control`, { method: 'POST', body: { action: kind } }); toast(kind === 'pause' ? tr('Paused') : tr('Resumed')); office.refresh(); return; }
-        if (kind === 'flint') { if (W.TribeFlint && W.TribeFlint.open) W.TribeFlint.open(); return; }
-        if (kind === 'next') { if (W.TribeShell && W.TribeShell.go) W.TribeShell.go('dashboard'); return; }
-        if (kind === 'design') { if (W.TribeDesignFlow && W.TribeDesignFlow.open) W.TribeDesignFlow.open(); else if (W.TribeShell && W.TribeShell.go) W.TribeShell.go('design'); return; }
-      } catch (e) { toast(e.message); }
-    }
-    card.addEventListener('click', async e => {
-      const t = e.target.closest('[data-os-close],[data-os-do],[data-os-ap],[data-os-task],[data-os-file],[data-os-act]'); if (!t) return;
-      const d = everyone().find(x => x.id === card.dataset.who); if (!d) return;
-      if (t.matches('[data-os-close]')) return closeCard();
-      if (t.matches('[data-os-act]')) return;   // handled below (Your look)
-      if (t.matches('[data-os-task]')) { if (window.TribeTasks && window.TribeTasks.open) window.TribeTasks.open(t.dataset.osTask); return; }
-      if (t.matches('[data-os-file]')) { const A2 = window.TribeApp; if (A2 && A2.show) A2.show('code'); setTimeout(() => { if (window.TribeCodeFiles && window.TribeCodeFiles.open) window.TribeCodeFiles.open(t.dataset.osFile); }, 120); return; }
-      if (t.matches('[data-os-ap]')) {
-        const v = t.dataset.osAp, note = (card.querySelector('.os-note') || {}).value || '';
-        if (v === 'question' && !note.trim()) { const n = card.querySelector('.os-note'); if (n) n.focus(); toast(tr('Say what to change first.')); return; }
-        try {
-          t.disabled = true;
-          if (v === 'approve') await C.api(`/approvals/${encodeURIComponent(t.dataset.id)}/approve`, { method: 'POST', body: { note: note.trim() || undefined } });
-          else await C.api(`/approvals/${encodeURIComponent(t.dataset.id)}/question`, { method: 'POST', body: { text: note.trim() } });
-          toast(v === 'approve' ? tr('Approved') : tr('Sent. It can change it and ask again.'));
-          office.refresh();
-        } catch (err) { t.disabled = false; toast(err.message); }
-        return;
-      }
-      act(t.dataset.osDo, d, t);
+    card.addEventListener('click', e => {
+      if (e.target.closest('[data-os-close]')) return closeCard();
+      const d = everyone().find(x => x.id === card.dataset.who); if (!d || !O()) return;
+      O().cardClick(e, card, d);
     });
-    card.addEventListener('submit', async e => {
-      const f = e.target.closest('[data-os-give]'); if (!f) return; e.preventDefault();
-      const inp = f.querySelector('input'), title = inp.value.trim(); if (!title) return;
-      try { if (window.TribeTasks && window.TribeTasks.create) await window.TribeTasks.create(title, 'todo', { assignee: card.dataset.who }); else await C.api('/tasks', { method: 'POST', body: { title, status: 'todo', assignee: card.dataset.who } }); inp.value = ''; toast(tr('Task given')); office.refresh(); } catch (err) { toast(err.message); }
-    });
+    card.addEventListener('submit', e => { const d = everyone().find(x => x.id === card.dataset.who); if (O()) O().cardSubmit(e, card, d); });
 
     // ---------- Your look: the wardrobe, with the real parts ----------
     let draft = null;

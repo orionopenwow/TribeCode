@@ -34,7 +34,7 @@
     { id: 'docs', sel: '#nest-docs', mock: 'Files', icon: 'i-doc', text: 'Files: docs that work like Notion, sheets, decks and any file you drop in.', tip: 'Start a note and it goes straight into your files.' },
     { id: 'canvas', sel: '#nest-canvas', mock: 'Design', icon: 'i-canvas', text: 'Design: a canvas like Figma. Draw screens, or ask me for one, then send it to the app as code.', tip: 'Try: "make a login screen".' },
     { id: 'tasks', sel: '#nest-ws-tasks', mock: 'Task Board', icon: 'i-check', text: 'Task Board: who does what, with one clear button for the next step on every task.', tip: 'Say "task: add a title screen" to me.' },
-    { id: 'agents', sel: '#nest-ws-agents', mock: 'Agents Hub', icon: 'i-robot', text: 'Agents Hub: everyone’s AI helpers, what they’re working on, and their hand-offs.', tip: 'Invite your own agent here: Claude, Cursor, Codex, Gemini and more.' },
+    { id: 'agents', sel: '#nest-ws-agents', mock: 'Agents & office', icon: 'i-robot', text: 'Agents & office: who’s here, what each AI helper is doing, and what needs your OK.', tip: 'Invite your own agent here: Claude, Cursor, Codex, Gemini and more.' },
     { id: 'preview', sel: '#nest-preview-slot .nest-row, #nest-preview-slot button, .wg-preview', mock: 'Preview app', icon: 'i-play', text: 'Preview: your app, game or site running live, with me beside it to change anything you click.', tip: 'Click a heading, then "make it bigger".' },
   ];
   function stops() {

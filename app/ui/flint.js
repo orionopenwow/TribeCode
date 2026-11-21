@@ -70,7 +70,7 @@
     secretary: () => window.TribeSecretary && window.TribeSecretary.open(),
     repo: () => App().show('repo'),
     model: () => (B() ? B().open() : ACTS.guide('agents-and-office')),
-    agents: () => window.TribeAgentsHub && window.TribeAgentsHub.open(),
+    agents: () => (window.TribeShell && window.TribeClient && window.TribeClient.project && window.TribeClient.project() ? window.TribeShell.go('ws-agents') : window.TribeAgentsHub && window.TribeAgentsHub.open({ global: true })),   // Agents & office
     doc: ref => { const [pid, slug] = String(ref).split('|'); const open = () => { App().show('docs'); setTimeout(() => window.TribeDocs && window.TribeDocs.open && window.TribeDocs.open(slug), 120); }; if (pid && PJ() && PJ().current && PJ().current() !== pid && PJ().switchTo) { PJ().switchTo(pid, 'docs'); setTimeout(open, 400); } else open(); },
     search: q => { if (!window.TribePalette) return; window.TribePalette.open(); const i = $('#pal-input'); if (i) { i.value = q || ''; i.dispatchEvent(new Event('input', { bubbles: true })); } },
     ask: text => send(text),
@@ -279,7 +279,7 @@
     if ((m = RX.nav.exec(t))) { const map = { files: 'docs', docs: 'docs', documents: 'docs', code: 'docs', tasks: 'tasks', 'task board': 'tasks', board: 'tasks', chat: 'chat', messages: 'chat', home: 'hub', dashboard: 'home', overview: 'home', repo: 'repo', guide: 'guide', settings: 'settings', calendar: 'calendar', 'agents hub': 'agents', agents: 'agents', mcp: 'mcp', bugs: 'bugs', website: 'website', whiteboard: 'whiteboard', 'white board': 'whiteboard' }, v = map[m[1]];
       // Flint flies to the place in the sidebar first, so you learn where it lives, then opens it
       const ROW = { docs: '#nest-docs', tasks: '#nest-ws-tasks', chat: '#nest-chat', hub: '#rail-logo', home: '#nest-home', agents: '#nest-ws-agents', repo: '#pin-repo .nest-row', settings: '#ub-gear', calendar: '#nest-extra [data-wkey="calendar"]', bugs: '#nest-extra [data-wkey="bugs"]', website: '#nest-extra [data-wkey="website"]', whiteboard: '#wg-whiteboard' }, row = ROW[v] && document.querySelector(ROW[v]);
-      const NAME = { docs: 'Files', tasks: 'Task Board', chat: 'Messages', hub: 'Home', home: 'The Dashboard', agents: 'Agents Hub', repo: 'Code repository', settings: 'Settings', calendar: 'Calendar', mcp: 'The MCP page', bugs: 'Bugs', website: 'Website', whiteboard: 'The whiteboard' };
+      const NAME = { docs: 'Files', tasks: 'Task Board', chat: 'Messages', hub: 'Home', home: 'The Dashboard', agents: 'Agents & office', repo: 'Code repository', settings: 'Settings', calendar: 'Calendar', mcp: 'The MCP page', bugs: 'Bugs', website: 'Website', whiteboard: 'The whiteboard' };
       if (v === 'agents' || v === 'mcp') { if (FF()) { if (seen(row)) FF().done(row, 'Opening'); } else if (row && row.offsetParent && window.TribeFlintGuide && !matchMedia('(max-width: 820px)').matches) window.TribeFlintGuide.point(row, `${NAME[v]} lives here. Opening it for you.`, { next: 'Thanks' });
         if (v === 'mcp' && window.TribeMcpDir && window.TribeMcpDir.open) window.TribeMcpDir.open(); else { const inTribe = !!(C && C.hasToken && C.hasToken() && C.project && C.project()); if (inTribe && window.TribeShell) window.TribeShell.go('ws-agents'); else if (window.TribeAgentsHub) window.TribeAgentsHub.open({ global: true }); }   // feat/agents-free: never a dead end (no tribe: the Agent fleet)
         return say(`Opened ${NAME[v].replace(/^The /, 'the ')}.`); }

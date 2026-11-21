@@ -61,7 +61,7 @@
       ${window.TribePersonalize ? item('personalize', 'i-sparkle', 'Personalize') : ''}
       ${m ? item('profile', window.TribeProfiles ? 'i-net' : 'i-users', window.TribeProfiles ? 'My activity' : 'My profile and activity') : ''}
       ${item('claude', 'i-sparkle', 'Connect your AI')}
-      ${window.TribeAgentsHub ? item('agents', 'i-robot', 'Your agents') : ''}
+      ${window.TribeAgentsHub ? item('agents', 'i-robot', 'Your AI tools') : ''}
       ${item('invite', 'i-link', 'Invite friends')}
       <div class="pf-sep"></div>
       ${window.TribeNotify ? item('notify', 'i-bell', 'Notifications') : ''}

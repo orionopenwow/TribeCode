@@ -529,7 +529,7 @@
       check('card moved to Done', !!id2 && !!(await waitFor(`#board [data-col="done"] .task[data-id="${id2}"]`, 2500)));
       if (id2) say('maya', 'Reviewed and merged ✅');
     } },
-    { id: 'agents', title: 'Agents Hub', flint: ["#nest-ws-agents, #tabbar [data-m2nav=\"agents\"]", "Click Agents Hub to see what every AI helper is doing right now."], after: "Each AI helper works on its own part, so nobody gets in anyone's way. When one hands work to you, it takes one click.", cap: 'Every agent at work, in one calm place. Hand-offs take one click.', dur: 12000, pdur: 12000, async run() {
+    { id: 'agents', title: 'Agents & office', flint: ["#nest-ws-agents, #tabbar [data-m2nav=\"agents\"]", "Click Agents & office to see what every AI helper is doing right now."], after: "Each AI helper works on its own part, so nobody gets in anyone's way. When one hands work to you, it takes one click.", cap: 'Every agent at work, in one calm place. Hand-offs take one click.', dur: 12000, pdur: 12000, async run() {
       dropCursor('maya');
       await go('agents');
       await settle('#ad-dash .fl-row, #ad-hero .ad-agent', 'agents at work');   // feat/fleet: one row per agent

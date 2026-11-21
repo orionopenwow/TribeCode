@@ -139,7 +139,7 @@
       const b = e.target.closest('[data-hb]'); if (!b) return;
       const k = b.dataset.hb;
       if (k === 'pjs') return projectsSheet();
-      if (k === 'agents') return C.connected() ? talkTo() : window.TribeAgentsHub && window.TribeAgentsHub.open({ global: true });   // your Claude, the AI, Manage agents
+      if (k === 'agents') return window.TribeAgentsHub && window.TribeAgentsHub.open({ global: true });   // feat/agents-office: Agents & office (the desk list, your AI helpers)
       if (k === 'notes') return window.TribeHub && window.TribeHub.open('docs');   // your docs center: your notes, then project docs
       if (k === 'msgs') return C.connected() ? messagesSheet() : window.TribeFriends && window.TribeFriends.open();   // all chats + DMs, color-coded
       if (k === 'notifs') return window.TribeNotify && window.TribeNotify.openInbox ? window.TribeNotify.openInbox() : null;
@@ -262,7 +262,7 @@
     return v;
   }
   function show(view) {
-    if (view === 'agents') return phone() ? talkTo() : window.TribeAgentsHub && window.TribeAgentsHub.open();   // phones: reach your Claude on your computer in one tap
+    if (view === 'agents') return window.TribeShell ? window.TribeShell.go('ws-agents') : talkTo();   // feat/agents-office: the one view (desks, AI helpers, what needs you)
     if (view === 'hub') return window.TribeHub ? window.TribeHub.open('home') : App().show('home');
     if (view !== 'updates') return App().show(view);
     if (window.TribeFlow && window.TribeFlow.isFlow && window.TribeFlow.isFlow() && window.TribeFlow.openUpdates) return window.TribeFlow.openUpdates();   // flow projects: the living plan + gists

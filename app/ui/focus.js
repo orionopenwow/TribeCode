@@ -66,7 +66,7 @@
     box.querySelectorAll('[data-fc]').forEach(b => b.onclick = () => act(b.dataset.fc, d));
     const f = box.querySelector('[data-fc-claim]'); if (f) f.onsubmit = async e => {
       e.preventDefault(); const area = f.querySelector('input').value.trim(); if (!area) return;
-      try { await C.api('/coord/lanes', { method: 'POST', body: { area } }); toast(`${area} is your part now. Others see it in the Agents Hub.`, 'ok'); refresh(); } catch (err) { toast(err.message, 'err'); }
+      try { await C.api('/coord/lanes', { method: 'POST', body: { area } }); toast(`${area} is your part now. Others see it in Agents & office.`, 'ok'); refresh(); } catch (err) { toast(err.message, 'err'); }
     };
   }
   async function act(k, d) {

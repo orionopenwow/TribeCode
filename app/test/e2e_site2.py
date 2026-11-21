@@ -107,7 +107,7 @@ def main():
             assert "Maya" in pg.inner_text("#stage-desc")
             # the stage is true to today's app: slate logo tile, the real sidebar, # general, Preview, In the room, Flint
             side = pg.inner_text(".mk-side")
-            for row in ["Dashboard", "Messages", "Files", "Task Board", "Agents Hub", "Add", "Invite friends"]:
+            for row in ["Dashboard", "Messages", "Files", "Task Board", "Agents & office", "Add", "Invite friends"]:
                 assert row in side, (row, side)
             assert pg.evaluate("document.querySelector('.mk-logo img').naturalWidth > 0")
             assert pg.evaluate("document.querySelectorAll('.mk-rail .mk-circle').length") >= 3 and pg.is_visible(".mk-bar__end .mk-lights")

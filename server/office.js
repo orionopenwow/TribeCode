@@ -4,8 +4,9 @@
 // project Vanilla Agents (desks with live screens, a fire to think at, a quest board), written fresh for TribeCode:
 // no art, code or scene from it.
 //
-// Off by default. The host or an admin turns it on per tribe (Settings › This tribe, or the offer in the Agents hub);
-// each person can still hide it for themselves (that lives on their device). The same file holds "agentsOff": with it
+// The desks are always there: they are the top of Agents & office (app/ui/agentsoffice.js) as a calm desk list. "on" is
+// the pixel floor (Office Space), off by default: the host or an admin turns it on per tribe (Settings › This tribe, or
+// the offer above the desks); each person can still hide the office for themselves (that lives on their device). The same file holds "agentsOff": with it
 // on, agents' MCP tool calls are refused with a plain sentence until someone turns agents back on.
 //
 // Privacy: desks come from presenceFor(viewer), so "Show where I am" off and "Appear away" are respected, a DM is only
@@ -137,7 +138,7 @@ module.exports = function office({ store, getMembers, presenceFor, placesFor = (
   }
 
   // Agents off: a plain refusal for every MCP tool call (the gate in server/index.js asks this).
-  const refuse = () => (cfg.agentsOff ? 'Agents are turned off in this tribe right now. Someone in the tribe can turn them back on in the Agents hub.' : null);
+  const refuse = () => (cfg.agentsOff ? 'Agents are turned off in this tribe right now. Someone in the tribe can turn them back on in Agents & office.' : null);
 
   async function route(req, res, { m, b: sub, me, send, fail, readBody }) {
     if (!me) return fail(res, 401, 'not a member of this tribe');
@@ -153,7 +154,7 @@ module.exports = function office({ store, getMembers, presenceFor, placesFor = (
     if (sub) return fail(res, 404, 'not found');
     if (m === 'GET') {
       const allowed = !!canSet(me);
-      return send(res, 200, { on: cfg.on, agentsOff: cfg.agentsOff, canSet: allowed, desks: cfg.on ? desks(me) : [], board: cfg.on ? board(me) : null, at: new Date().toISOString(),
+      return send(res, 200, { on: cfg.on, agentsOff: cfg.agentsOff, canSet: allowed, desks: desks(me), board: board(me), at: new Date().toISOString(),
         layout: cfg.on ? cfg.layout : null, set: cfg.set, me: me.id, myLook: lookOf(me.id) });
     }
     if (m === 'PUT' || m === 'POST') {

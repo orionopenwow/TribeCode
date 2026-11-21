@@ -18,7 +18,7 @@ PORT = 4993 + int(os.environ.get("TRIBE_PORT_OFFSET", "0"))
 BASE = f"http://localhost:{PORT}"
 SHOTS = "--shots" in sys.argv or os.environ.get("TRIBE_SHOTS") == "1"
 PHONE = dict(viewport={"width": 390, "height": 844}, device_scale_factor=2, is_mobile=True, has_touch=True)
-CORE = ["Dashboard", "Messages", "Files", "Design", "Task Board", "Agents Hub"]
+CORE = ["Dashboard", "Messages", "Files", "Design", "Task Board", "Agents & office"]
 errors = []
 
 

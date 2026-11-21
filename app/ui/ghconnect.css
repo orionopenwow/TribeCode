@@ -36,3 +36,8 @@
 .ghc-chip[data-on="1"] { padding-right: 10px; }
 .ghc-chip .btn.sm { min-height: 28px; }
 @media (max-width: 820px) { .ghc-chip { min-height: 40px; } .ghc-chip .btn.sm { min-height: 34px; } }
+/* feat/agents-office: a way in for someone with no GitHub account */
+.ghc-new { display: grid; gap: 8px; padding: 10px 12px; border: 1px solid var(--edge); border-radius: var(--r-ctl); background: var(--surface-2); }
+.ghc-new .ph-note { margin: 0; }
+.ghc-new-acts { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.ghc-new-acts .btn, .ghc-new-acts .linkish { min-height: 40px; }

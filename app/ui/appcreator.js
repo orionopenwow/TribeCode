@@ -651,7 +651,7 @@
           catch (e) {   // no AI helper in this project yet: the brief waits as a task the first helper (or person) picks up
             if (!/mention an agent/i.test(e.message || '')) throw e;
             await C.api('/tasks', { method: 'POST', body: { title: `Build “${st.doc.name}” for real`, body: text, type: 'build' } });
-            toast('No AI helper is connected yet, so the brief is a task now.'); note('Saved as a task. Connect your AI (Agents Hub) and it can pick it up.'); return { task: true, text };
+            toast('No AI helper is connected yet, so the brief is a task now.'); note('Saved as a task. Connect your AI (Agents & office) and it can pick it up.'); return { task: true, text };
           }
         }
         try { await navigator.clipboard.writeText(text); } catch {}

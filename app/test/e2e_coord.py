@@ -307,7 +307,7 @@ def ui_host(b, host, orion, maya, pq, b1):
             host.wait_for_selector(sel, state="visible")
         assert host.locator("#crumbs").is_hidden(), "the breadcrumb is gone on desktop: the sidebar already says where you are"
         # the nest: four rows; the full feature set lives in the Tasks & Board and Agents Hub tabs (e2e_nav.py covers it in depth)
-        for label in ["Messages", "Files", "Task Board", "Agents Hub"]:   # Settings: the gear in the bottom-left user bar
+        for label in ["Messages", "Files", "Task Board", "Agents & office"]:   # Settings: the gear in the bottom-left user bar
             wait_text(host, "#tour-side", label)
         host.click("#nest-ws-tasks"); host.wait_for_selector("#view-tabs:not(.hidden)")
         for label in ["Board", "Bugs", "Proposals", "Milestones", "Calendar", "Code repository", "Visuals"]: wait_text(host, "#view-tabs", label)
