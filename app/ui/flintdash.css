@@ -49,3 +49,30 @@
 .fd .fd-step #pj-check.hero .ock-l { font-size: 13.5px; }
 .fd .fd-step #pj-check.hero .ock-sub { font-size: 12px; margin: 1px 0 0; }
 @media (max-width: 760px) { .fd .fd-step #pj-check.hero .ock-card { grid-template-columns: 1fr; } .fd .fd-step #pj-check.hero .ock-emo { display: none; } }
+
+/* v0.45: a calmer card. Plain border (Flint's flame carries the identity), the step is one row like the suggestions,
+   and when nothing is happening the updates are one quiet line under the list instead of an empty half. */
+.fd { border-color: var(--border); background: var(--surface); }
+.fd-head { padding-bottom: 12px; border-bottom: 1px solid var(--border); }
+.fd-sug, .fd .fd-step #pj-check.hero .ock-card { background: var(--surface-2); }
+.fd .fd-step #pj-check.hero .ock-card { display: flex; align-items: center; gap: 12px; }
+.fd .fd-step #pj-check.hero .ock-card .ock-box { display: none; }
+.fd .fd-step #pj-check.hero .ock-card .ock-main { flex: 1; min-width: 0; }
+.fd .fd-step #pj-check.hero .ock-card .ock-acts { margin: 0 0 0 auto; flex: none; }
+.fd .fd-step #pj-check.hero .ock-emo { flex: none; color: var(--ember); }
+.fd .fd-step #pj-check.hero .ock-head h3 { font: 600 11px/1.6 var(--mono); letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+.fd:not(.fd-nosug) .fd-step { margin-top: 6px; }
+.fd.fd-calm .fd-cols { grid-template-columns: 1fr; gap: 12px; }
+.fd.fd-calm .fd-live-col { flex-direction: row; align-items: center; gap: 10px; padding-top: 10px; border-top: 1px solid var(--border); }
+.fd.fd-calm .fd-live-col > .eyebrow { flex: none; }
+.fd.fd-calm .fd-pulse { background: var(--faint); }
+.fd.fd-calm .fd-quiet { font-size: 12.5px; }
+/* "All clear" under it is a quiet line, not another box */
+#pj-overview:has(#fd) .db-crit.clear { border: 0; background: transparent; padding: 2px 4px; margin-top: 0; }
+@media (max-width: 760px) {
+  .fd .fd-step #pj-check.hero .ock-card { flex-wrap: wrap; }
+  .fd .fd-step #pj-check.hero .ock-card .ock-acts { margin-left: 0; width: 100%; }
+  .fd.fd-calm .fd-live-col { flex-direction: column; align-items: flex-start; gap: 4px; }
+}
+.fd .fd-step #pj-check.hero { margin: 0; }
+.fd .fd-step #pj-check.hero .ock-head { margin: 0 0 8px; min-height: 18px; align-items: center; }

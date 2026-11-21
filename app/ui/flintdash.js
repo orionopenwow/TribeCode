@@ -94,10 +94,11 @@
   function html(ctx, nextHtml = '') {
     const { d } = ctx, sug = suggestions(ctx), L = d.living || {};
     const mood = L.mood ? tr(MOOD[L.mood] || '') : '';
-    return `<section class="fd card" id="fd" aria-label="${esc(tr('Flint'))}">
+    const quiet = !updates(ctx).length && !aiHere();   // v0.45: nothing happening is one calm line under the list, not half an empty card
+    return `<section class="fd card${quiet ? ' fd-calm' : ''}${sug.length ? '' : ' fd-nosug'}" id="fd" aria-label="${esc(tr('Flint'))}">
       <header class="fd-head">${FLAME}<b>Flint</b>${mood ? `<span class="fd-mood fd-${esc(L.mood)}">${esc(mood)}</span>` : ''}<span class="fd-sum">${esc(L.summary || '')}</span></header>
       <div class="fd-cols">
-        <div class="fd-col fd-next-col"><span class="eyebrow">${esc(tr('Do this next'))}</span>
+        <div class="fd-col fd-next-col">${sug.length || !nextHtml ? `<span class="eyebrow">${esc(tr('Do this next'))}</span>` : ''}
           ${sug.length ? `<ul class="fd-sugs">${sug.map(x => `<li class="fd-sug" data-fd="${esc(x.id)}" style="--t:var(${x.tone})"><span class="fd-sug-t"><b>${esc(x.t)}</b><small>${esc(x.why)}</small></span><button type="button" class="btn sm fd-go" data-fd-act="${esc(x.act)}">${esc(x.btn)}</button><button type="button" class="fd-x" data-fd-x="${esc(x.id)}" aria-label="${esc(tr('Not now'))}" title="${esc(tr('Not now'))}">×</button></li>`).join('')}</ul>` : (nextHtml ? '' : `<p class="fd-quiet">${esc(tr('Nothing waiting on you. Nice.'))}</p>`)}
           ${nextHtml ? `<div class="fd-step">${nextHtml}</div>` : ''}
         </div>
@@ -132,6 +133,7 @@
   function refresh() {
     const el = document.getElementById('fd-ups'); if (!el || !live) { clearInterval(timer); return; }
     el.innerHTML = updatesHtml(live);
+    const box = document.getElementById('fd'); if (box) box.classList.toggle('fd-calm', !updates(live).length && !aiHere());
   }
   // live: presence, agents and the outbox change the updates without a full redraw
   const hook = () => { const C0 = C(); if (!C0 || !C0.on) return setTimeout(hook, 300); ['presence', 'outbox', 'outbox-sent', 'outbox-failed', 'task', 'doc', 'claims'].forEach(e => C0.on(e, () => setTimeout(refresh, 0))); };
