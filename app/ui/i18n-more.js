@@ -12,6 +12,7 @@
   const I = window.TribeI18n; if (!I || !I.add) return;
   I.add({
     // ---- p10: where the tribe runs, run your own server, invites that explain themselves
+    'Connect GitHub to update it.': ['Conecta GitHub para actualizarlo.', 'Conecte o GitHub para atualizar.', 'Connectez GitHub pour le mettre à jour.', 'Verbinde GitHub, um es zu aktualisieren.', '更新するにはGitHubを接続してください。', '连接 GitHub 即可更新。', '업데이트하려면 GitHub를 연결하세요.'],
     'Demo': ['Demo', 'Demo', 'Démo', 'Demo', 'デモ', '演示', '데모'],
     'Nothing leaves this browser': ['Nada sale de este navegador', 'Nada sai deste navegador', 'Rien ne quitte ce navigateur', 'Nichts verlässt diesen Browser', 'このブラウザの外には出ません', '不会离开这个浏览器', '이 브라우저 밖으로 나가지 않아요'],
     'Only on this device': ['Solo en este dispositivo', 'Só neste dispositivo', 'Seulement sur cet appareil', 'Nur auf diesem Gerät', 'この端末だけ', '仅在此设备上', '이 기기에만'],

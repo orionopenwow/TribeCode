@@ -42,12 +42,14 @@
     if (!g) { root.innerHTML = `${head({ ready: null, server: null })}${why()}<p class="faint">Open Settings › GitHub to sign in.</p>`; return; }
     if (!d) { root.innerHTML = `${head(null)}${why()}`; return; }
     root.innerHTML = d.ready ? `${head(d)}${connected(d)}`
-      : `${head(d)}${why()}<p class="hgh-lead">Three ways in. Pick one; each takes a minute.</p><div class="hgh-guide">${g.html(d)}</div>
+      : `${head(d)}${why()}<div class="hgh-acts hgh-one">${window.TribeGitHubConnect ? `<button type="button" class="btn primary" id="hgh-connect">${ico('github', 16)}<span>Connect GitHub</span></button>` : ''}</div>
+        <p class="hgh-lead">${window.TribeGitHubConnect ? 'One step for most people. Other ways, if you already use git:' : 'Three ways in. Pick one; each takes a minute.'}</p><div class="hgh-guide">${g.html(d)}</div>
         <p class="ph-err hidden" id="hgh-err" role="alert"></p>
-        <div class="hgh-acts"><button type="button" class="btn primary" id="hgh-recheck">${ico('refresh', 16)}<span>Check again</span></button></div>`;
+        <div class="hgh-acts"><button type="button" class="btn" id="hgh-recheck">${ico('refresh', 16)}<span>Check again</span></button></div>`;   // p10: the one Connect GitHub sheet comes first, everywhere
     const err = t => { const e = root.querySelector('#hgh-err'); if (e) { e.textContent = t; e.classList.toggle('hidden', !t); } };
     if (!d.ready) g.bind(root, err, q => check(q, err));
     const b = root.querySelector('#hgh-recheck'); if (b) b.onclick = () => check(false, err);
+    const one = root.querySelector('#hgh-connect'); if (one) one.onclick = () => window.TribeGitHubConnect.open({});
   }
   async function check(quiet, err) {
     const g = G(); if (!g || busy) return; busy = true;
