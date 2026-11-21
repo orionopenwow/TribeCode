@@ -1,21 +1,25 @@
-// Office Space (pass 11): the office drawn as a small pixel floor. Every person, AI helper and Flint is a character who
-// walks to their desk, types while writing, reads while reading, goes to the task board when they hand work in, sits in
-// the thinking corner while waiting, rests in the lounge when idle, and leaves by the door when they go offline. A bubble
-// says when an agent needs your OK or someone just finished. Click anyone for their card, with the actions TribeCode
-// already has (DM, call, give a task, open what they're editing, approve an agent's ask, pause it).
-// Data: TribeOffice (server/office.js). Art: TribeOfficeSets (ours, drawn in code). Idea for walking characters at desks
-// from Pixel Agents (MIT, Pablo De Lucca); no code or art from it is used here.
+// Office Space (pass 11b): the office as a Pixel Agents style floor. Every person, AI helper and Flint is a character who
+// walks to their desk, sits and types while writing, reads while reading, goes to the whiteboard when they hand work in,
+// sits in the lounge while idle, and leaves by the door when they go offline. A speech bubble says when an agent needs your
+// OK or someone just finished. Click anyone for their card, with the actions TribeCode already has (DM, call, give a task,
+// open what they're editing, approve an agent's ask, pause it).
+// Data: TribeOffice (server/office.js). Art: TribeOfficeArt (Pixel Agents' art, MIT, (c) 2026 Pablo De Lucca; character
+// parts based on JIK-A-4's Metro City, CC0). Depth sorting, seats facing desks and the sprite timings follow Pixel Agents,
+// ported to plain JavaScript; path finding, the card, the wardrobe and the editor are TribeCode's.
 //   window.TribeOfficeSpace = { mount(el, office) -> { update(data), destroy() } }
 (function () {
   'use strict';
-  const S = window.TribeOfficeSets, C = window.TribeClient; if (!S || !C) return;
-  const T = S.T;
+  const S = window.TribeOfficeSets, A = window.TribeOfficeArt, C = window.TribeClient; if (!S || !A || !C) return;
+  const T = 16;
   const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const tr = s => (window.TribeI18n && window.TribeI18n.t ? window.TribeI18n.t(s, s) : s);
   const toast = m => window.TribeApp && window.TribeApp.toast && window.TribeApp.toast(m);
   const reduce = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
-  const SPEED = 3.2;   // tiles a second
-  // Gentle sound, off by default and per device: one soft two-note chime when someone newly needs your OK.
+  const SPEED = 3;            // tiles a second (48 px/s, as in Pixel Agents)
+  const WALK = [0, 1, 2, 1];  // walk1 walk2 walk3 walk2, 0.15 s each
+  const SIT_PX = 6;           // seated characters sit 6 px lower, into the chair
+  // dir: 0 down, 1 up, 2 right, 3 left (the sheet's rows; left is the right row mirrored)
+  const STEP = [[0, 1], [0, -1], [1, 0], [-1, 0]];
   const LS_SOUND = 'tribecode.officespace.sound';
   const soundOn = () => { try { return localStorage.getItem(LS_SOUND) === '1'; } catch { return false; } };
   let actx = null;
@@ -28,12 +32,20 @@
         o.connect(g); g.connect(actx.destination); o.start(t); o.stop(t + 0.32); });
     } catch {}
   }
+  // AI helpers wear the Teal shirt, a lanyard and a cap in their tool's colour (swatch numbers from wardrobe.json).
+  const CAP = { claude: 3, cursor: 15, codex: 6, gemini: 12, qwen: 13 };
+  function agentLook(id, kind) {
+    const L = S.seedLook('agent:' + id);
+    return { ...L, top: 1, topColor: 8, pants: 0, pantsColor: 11, full: 0, jacket: 0, hat: 3, hatColor: CAP[String(kind || '').toLowerCase()] ?? 8, acc: 6, accColor: 5, beard: 0 };
+  }
+  const bubbleUrl = {};
+  const bubbleSrc = k => { if (bubbleUrl[k]) return bubbleUrl[k]; const c = A.bubble(k); if (!c) return ''; try { bubbleUrl[k] = c.toDataURL(); } catch { return ''; } return bubbleUrl[k]; };
 
   function mount(el, office) {
-    let data = null, layout = null, set = S.get('tribecode'), raf = 0, last = 0, tick = 0, dead = false, view = { z: 0, ox: 0, oy: 0 };
-    let editing = null, tool = 'move', sel = null, drag = null, cardFor = null;
-    let booted = false;
-    const chars = new Map();   // id -> { d, x, y (tile, float), path, dir, pose, frame, visible, target }
+    let data = null, layout = null, set = S.get('office'), raf = 0, last = 0, dead = false, view = { z: 0, ox: 0, oy: 0 };
+    let editing = null, tool = 'move', sel = null, drag = null, cardFor = null, booted = false, artOk = false, geo = null, clock = 0;
+    const chars = new Map();   // id -> { d, x, y (tile, float), path, dir, t, visible, target }
+    const pets = [];
     el.innerHTML = `<div class="os" data-os>
       <div class="os-bar">
         <span class="os-gap"></span>
@@ -50,27 +62,58 @@
     const root = el.querySelector('[data-os]'), cv = root.querySelector('canvas'), ctx = cv.getContext('2d'), layer = root.querySelector('.os-layer');
     const stage = root.querySelector('.os-stage'), card = root.querySelector('.os-card'), edit = root.querySelector('.os-edit'), lookEl = root.querySelector('.os-look');
 
-    // ---------- the layout, the occupied tiles and the spots ----------
-    const deskItems = () => layout.items.filter(i => i.t === 'desk');
-    const at = (x, y) => layout.items.find(i => i.x === x && i.y === y && !(S.ITEMS[i.t] || {}).floor);
+    // ---------- the layout: what stands where, which tiles are free, the seats and the spots ----------
+    const sz = it => A.size(it.t, it.r) || { fw: 1, fh: 1, w: 16, h: 16, bg: 0, cat: 'misc' };
     const tileAt = (x, y) => layout.tiles[y * layout.w + x];
     const inside = (x, y) => x >= 0 && y >= 0 && x < layout.w && y < layout.h;
-    const walk = (x, y) => inside(x, y) && tileAt(x, y) !== 'wall' && !((it => it && (S.ITEMS[it.t] || {}).block)(at(x, y)));
-    const seatOf = d => { const [dx, dy] = S.SEAT[d.r || 0]; return { x: d.x + dx, y: d.y + dy, dir: [2, 3, 0, 1][d.r || 0] }; };
-    const door = () => { for (let x = 0; x < layout.w; x++) if (tileAt(x, layout.h - 1) !== 'wall') return { x, y: layout.h - 1 }; return { x: 1, y: layout.h - 2 }; };
-    function deskFor() {
-      const out = new Map(), desks = deskItems(), free = desks.filter(d => !d.who);
-      const list = everyone();
-      for (const d of desks) if (d.who && list.some(p => p.id === d.who)) out.set(d.who, d);
-      for (const p of list) if (!out.has(p.id)) { const d = free.find(x => ![...out.values()].includes(x)); if (d) out.set(p.id, d); }
-      return out;
+    const covers = (it, x, y) => { const s = sz(it); return x >= it.x && x < it.x + s.fw && y >= it.y && y < it.y + s.fh; };
+    function rebuild() {
+      const w = layout.w, h = layout.h, block = new Uint8Array(w * h);
+      for (let i = 0; i < w * h; i++) if (layout.tiles[i] === 'wall' || layout.tiles[i] === 'void') block[i] = 1;
+      for (const it of layout.items) {
+        const s = sz(it); if (s.wall || s.surface) continue;
+        for (let dy = s.bg; dy < s.fh; dy++) for (let dx = 0; dx < s.fw; dx++) if (inside(it.x + dx, it.y + dy)) block[(it.y + dy) * w + it.x + dx] = 1;
+      }
+      const tableAt = (x, y) => layout.items.find(o => { const s = sz(o); return !s.wall && (s.cat === 'desks' || s.cat === 'electronics') && covers(o, x, y); });
+      const pcAt = (x, y) => layout.items.find(o => sz(o).cat === 'electronics' && covers(o, x, y));
+      const seats = [];
+      for (const it of layout.items) {
+        const s = sz(it); if (s.cat !== 'chairs') continue;
+        const views = Object.keys((A.cat()[it.t] || {}).views || {}).length;
+        for (let dy = s.bg; dy < s.fh; dy++) for (let dx = 0; dx < s.fw; dx++) {
+          const x = it.x + dx, y = it.y + dy; if (!inside(x, y)) continue;
+          // a chair with views faces its turn; a stool faces the desk next to it
+          let dir = views > 1 ? [0, 2, 1, 3][it.r | 0] : -1;
+          if (dir < 0) { dir = [1, 0, 2, 3].find(k => tableAt(x + STEP[k][0], y + STEP[k][1])); if (dir == null) dir = 0; }
+          const fx = x + STEP[dir][0], fy = y + STEP[dir][1];
+          // a work seat faces a computer (on the desk in front, or one tile further); a sofa by the coffee table does not
+          const pc = tableAt(fx, fy) ? (pcAt(fx, fy) || pcAt(fx + STEP[dir][0], fy + STEP[dir][1]) || null) : null;
+          seats.push({ x, y, dir, item: it, desk: !!pc, pc, sofa: it.t === 'SOFA' });
+        }
+      }
+      seats.sort((a, b) => a.y - b.y || a.x - b.x);   // the front desks fill first
+      geo = { block, seats };
     }
-    // Spots near an item: its own tile if it's a seat, otherwise the free tile in front of it.
-    function spotsNear(type) {
+    const walk = (x, y) => inside(x, y) && geo && !geo.block[y * layout.w + x];
+    const deskSeats = () => geo.seats.filter(s => s.desk);
+    function door() {
+      for (let y = layout.h - 1; y >= 0; y--) {
+        let best = null;
+        for (let x = 0; x < layout.w; x++) if (walk(x, y) && (!best || Math.abs(x - layout.w / 2) < Math.abs(best.x - layout.w / 2))) best = { x, y };
+        if (best) return best;
+      }
+      return { x: 1, y: 1 };
+    }
+    // Spots in front of a kind of thing (its free neighbours, facing it); wall pieces: the floor right under them.
+    function spotsNear(test) {
       const out = [];
-      for (const it of layout.items.filter(i => i.t === type)) {
-        if ((S.ITEMS[type] || {}).seat && type !== 'desk') out.push({ x: it.x, y: it.y, dir: 0, sit: true });
-        for (const [dx, dy] of [[0, 1], [1, 0], [-1, 0], [0, -1]]) if (walk(it.x + dx, it.y + dy)) out.push({ x: it.x + dx, y: it.y + dy, dir: dy === 1 ? 2 : dy === -1 ? 0 : dx === 1 ? 1 : 3 });
+      for (const it of layout.items.filter(test)) {
+        const s = sz(it);
+        if (s.wall) { for (let dx = 0; dx < s.fw; dx++) { const x = it.x + dx, y = it.y + s.fh; if (walk(x, y)) out.push({ x, y, dir: 1 }); } continue; }
+        for (let dy = 0; dy < s.fh; dy++) for (let dx = 0; dx < s.fw; dx++) for (let k = 0; k < 4; k++) {
+          const x = it.x + dx - STEP[k][0], y = it.y + dy - STEP[k][1];
+          if (walk(x, y) && !covers(it, x, y) && !out.some(o => o.x === x && o.y === y)) out.push({ x, y, dir: k });
+        }
       }
       return out;
     }
@@ -79,18 +122,25 @@
       list.push({ id: 'flint', name: 'Flint', kind: 'flint', state: 'active', spot: 'desk', lines: [] });
       return list;
     };
+    function deskFor() {
+      const out = new Map(), seats = deskSeats(), list = everyone().filter(d => d.kind !== 'flint'), taken = new Set();
+      for (const s of seats) if (s.item.who && list.some(p => p.id === s.item.who) && !out.has(s.item.who)) { out.set(s.item.who, s); taken.add(s); }
+      for (const p of list) if (!out.has(p.id)) { const s = seats.find(x => !taken.has(x) && !x.item.who); if (s) { out.set(p.id, s); taken.add(s); } }
+      return out;
+    }
     function targetOf(d, desks, used) {
       if (d.state === 'off') return { ...door(), leave: true };
-      const pick = (type, fallback) => { const all = spotsNear(type); const s = all.find(p => !used.has(p.x + ',' + p.y)) || all[0]; return s || fallback; };
-      if (d.id === 'flint') return pick('coffee', { x: 2, y: 2, dir: 0 });
-      const desk = desks.get(d.id);
-      if (d.spot === 'think') return pick('think', desk && seatOf(desk));
-      if (d.spot === 'board') return pick('board', desk && seatOf(desk));
-      if (d.spot === 'lounge' || d.state === 'away') return pick('sofa', pick('rug', desk && seatOf(desk)));
-      if (desk) return { ...seatOf(desk), desk: true };
-      return pick('sofa', door());
+      const free = list => list.find(p => !used.has(p.x + ',' + p.y)) || null;
+      const lounge = () => { const s = free(geo.seats.filter(x => x.sofa)) || free(geo.seats.filter(x => !x.desk)); return s ? { x: s.x, y: s.y, dir: s.dir, sit: true } : null; };
+      const desk = desks.get(d.id), atDesk = desk ? { x: desk.x, y: desk.y, dir: desk.dir, sit: true, desk: true, seat: desk } : null;
+      if (d.id === 'flint') return free(spotsNear(i => i.t === 'COFFEE')) || free(spotsNear(i => sz(i).cat === 'decor')) || door();
+      if (d.spot === 'board') return free(spotsNear(i => i.t === 'WHITEBOARD')) || atDesk || lounge() || door();
+      if (d.spot === 'think') return free(spotsNear(i => /BOOKSHELF/.test(i.t))) || lounge() || atDesk || door();
+      if (d.spot === 'lounge' || d.state === 'away') return lounge() || atDesk || door();
+      if (atDesk) return atDesk;
+      return lounge() || door();
     }
-    // Breadth-first search over the floor (four directions). Our own, small: floors are at most 40x28.
+    // Breadth-first search over the floor (four directions). Floors are at most 40x28.
     function route(from, to) {
       const sx = Math.round(from.x), sy = Math.round(from.y), key = (x, y) => y * layout.w + x;
       if (sx === to.x && sy === to.y) return [];
@@ -99,10 +149,9 @@
         const [x, y] = q.shift();
         for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
           const nx = x + dx, ny = y + dy, k = key(nx, ny);
-          if (prev.has(k)) continue;
+          if (!inside(nx, ny) || prev.has(k)) continue;
           const goal = nx === to.x && ny === to.y;
           if (!goal && !walk(nx, ny)) continue;
-          if (!inside(nx, ny)) continue;
           prev.set(k, key(x, y));
           if (goal) { const out = []; let c = k; while (c !== key(sx, sy)) { out.unshift({ x: c % layout.w, y: Math.floor(c / layout.w) }); c = prev.get(c); } return out; }
           q.push([nx, ny]);
@@ -113,38 +162,47 @@
 
     // ---------- the characters follow the data ----------
     function sync() {
+      if (!geo) return;
       const desks = deskFor(), used = new Set(), list = everyone();
       for (const d of list) {
         let ch = chars.get(d.id);
         const tgt = targetOf(d, desks, used); used.add(tgt.x + ',' + tgt.y);
-        if (!ch) { const st = d.state === 'off' || reduce() || !booted ? tgt : door(); ch = { d, x: st.x, y: st.y, path: [], dir: 0, pose: 'stand', frame: 0, visible: d.state !== 'off', target: null }; chars.set(d.id, ch); }
+        if (!ch) { const st = d.state === 'off' || reduce() || !booted ? tgt : door(); ch = { d, x: st.x, y: st.y, path: [], dir: st.dir || 0, t: Math.random() * 2, visible: d.state !== 'off', target: null }; chars.set(d.id, ch); }
         ch.d = d;
         if (!ch.target || ch.target.x !== tgt.x || ch.target.y !== tgt.y || ch.target.leave !== tgt.leave) {
           ch.target = tgt;
           if (d.state !== 'off') ch.visible = true;
-          if (reduce()) { ch.x = tgt.x; ch.y = tgt.y; ch.path = []; if (tgt.leave) ch.visible = false; }
+          if (reduce()) { ch.x = tgt.x; ch.y = tgt.y; ch.path = []; if (tgt.dir != null) ch.dir = tgt.dir; if (tgt.leave) ch.visible = false; }
           else ch.path = route({ x: ch.x, y: ch.y }, tgt);
-        }
+        } else ch.target = tgt;
       }
       for (const id of [...chars.keys()]) if (!list.some(d => d.id === id)) chars.delete(id);
-      booted = true;   // after the first look, newcomers walk in from the door
+      if (!pets.length && artOk) {
+        const spots = [door(), ...geo.seats.filter(s => s.sofa)].map(s => ({ x: s.x, y: s.y }));
+        ['claudio', 'gitcat'].forEach((name, i) => { const f = freeTile(4 + i * 6) || spots[0]; if (f) pets.push({ name, x: f.x, y: f.y, path: [], dir: 0, t: i, wait: 2 + i * 3, heart: 0 }); });
+      }
+      booted = true;
       paintSr();
     }
     function poseOf(ch) {
       if (ch.path.length) return 'walk';
       const d = ch.d, t = ch.target || {};
-      if (t.desk && d.state === 'active') return d.kind === 'agent' ? (d.act === 'read' ? 'read' : d.act === 'type' || (d.files || []).length || d.task ? 'type' : 'sit') : (d.where ? 'type' : 'sit');
+      if (d.kind === 'flint') return 'stand';
+      if (t.desk && d.state === 'active' && !d.paused) return d.kind === 'agent' ? (d.act === 'read' ? 'read' : d.act === 'type' || (d.files || []).length || d.task ? 'type' : 'sit') : (d.where ? 'type' : 'sit');
       if (t.sit) return 'sit';
       return 'stand';
     }
+    const colOf = (pose, t) => reduce() ? ({ walk: 1, type: 3, read: 5, sit: 7, stand: 1 }[pose]) :
+      pose === 'walk' ? WALK[Math.floor(t / 0.15) % 4] : pose === 'type' ? 3 + Math.floor(t / 0.3) % 2 : pose === 'read' ? 5 + Math.floor(t / 0.6) % 2 : pose === 'sit' ? 7 : 1;
+    const lookOf = d => d.kind === 'agent' ? agentLook(d.id, d.agentKind) : Object.assign(S.seedLook(d.id), d.look || {});
 
     // ---------- drawing ----------
     function fit() {
       const r = stage.getBoundingClientRect(), dpr = Math.max(1, window.devicePixelRatio || 1);
-      // whole device pixels when there's room; quarter steps on narrow floors so the office still fills its card
+      // whole device pixels (the art stays crisp); quarter steps only when the floor would not fit at 1x
       const fitS = Math.min(r.width / (layout.w * T), r.height / (layout.h * T)) * dpr;
-      const base = fitS >= 2 ? Math.floor(fitS) : Math.max(1, Math.floor(fitS * 4) / 4);
-      const scale = Math.max(1, base + view.z);
+      const base = fitS >= 1 ? Math.floor(fitS) : Math.max(0.25, Math.floor(fitS * 4) / 4);
+      const scale = Math.max(0.25, base + view.z);
       cv.width = Math.round(r.width * dpr); cv.height = Math.round(r.height * dpr);
       cv.style.width = r.width + 'px'; cv.style.height = r.height + 'px';
       const W = layout.w * T * scale, H = layout.h * T * scale;
@@ -152,51 +210,77 @@
       return { scale, ox, oy, dpr };
     }
     let F = null;
+    const pal = k => A.cvOf(set.palette[k]);
+    function wallMask(x, y) { const isW = (a, b) => inside(a, b) && tileAt(a, b) === 'wall'; return (isW(x, y - 1) ? 1 : 0) | (isW(x + 1, y) ? 2 : 0) | (isW(x, y + 1) ? 4 : 0) | (isW(x - 1, y) ? 8 : 0); }
     function draw() {
       if (!layout) return;
       F = fit();
       ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.imageSmoothingEnabled = false;
-      ctx.fillStyle = set.palette.floor2; ctx.fillRect(0, 0, cv.width, cv.height);
+      ctx.fillStyle = typeof set.palette.void === 'string' ? set.palette.void : '#12151A'; ctx.fillRect(0, 0, cv.width, cv.height);
+      if (!artOk || !geo) { placeLayer(); return; }
       ctx.setTransform(F.scale, 0, 0, F.scale, F.ox, F.oy); ctx.imageSmoothingEnabled = false;
-      for (let y = 0; y < layout.h; y++) for (let x = 0; x < layout.w; x++) S.drawTile(ctx, set, tileAt(x, y), x * T, y * T, x, y);
-      if (editing) for (const a of layout.areas || []) { ctx.strokeStyle = 'rgba(232,225,211,0.35)'; ctx.lineWidth = 1 / F.scale; ctx.strokeRect(a.x * T + 0.5, a.y * T + 0.5, a.w * T - 1, a.h * T - 1); }
-      // rugs first, then everything else and the characters sorted by row so nearer things draw over farther ones
-      for (const it of layout.items.filter(i => i.t === 'rug')) S.drawItem(ctx, set, it, it.x * T, it.y * T);
-      const desks = deskFor(), byDesk = new Map([...desks].map(([id, d]) => [d, id]));
-      const drawables = [];
+      // floors, then carpets over them (marching squares on the corners between tiles)
+      for (let y = 0; y < layout.h; y++) for (let x = 0; x < layout.w; x++) {
+        const k = tileAt(x, y); if (k === 'void' || k === 'wall') continue;
+        const img = A.floor(S.floorOf(k), pal(k === 'carpet' ? 'floor' : k)); if (img) ctx.drawImage(img, x * T, y * T);
+      }
+      const isC = (x, y) => inside(x, y) && tileAt(x, y) === 'carpet';
+      for (let jy = 0; jy <= layout.h; jy++) for (let jx = 0; jx <= layout.w; jx++) {
+        const c = (isC(jx - 1, jy - 1) ? 1 : 0) | (isC(jx, jy - 1) ? 2 : 0) | (isC(jx, jy) ? 4 : 0) | (isC(jx - 1, jy) ? 8 : 0);
+        if (c) { const img = A.carpet(0, c, pal('carpet')); if (img) ctx.drawImage(img, jx * T - 8, jy * T - 8); }
+      }
+      if (editing) for (const a of layout.areas || []) { ctx.strokeStyle = 'rgba(232,225,211,0.45)'; ctx.lineWidth = 1 / F.scale; ctx.strokeRect(a.x * T + 0.5, a.y * T + 0.5, a.w * T - 1, a.h * T - 1); }
+      // everything that stands, sorted by its base (Pixel Agents' zY rules)
+      const Z = [];
+      for (let y = 0; y < layout.h; y++) for (let x = 0; x < layout.w; x++) if (tileAt(x, y) === 'wall') { const img = A.wall(wallMask(x, y), pal('wall')); if (img) Z.push({ z: (y + 1) * T, f: () => ctx.drawImage(img, x * T, y * T - T) }); }
+      const desks = deskFor(), working = new Set();
+      for (const [id, s] of desks) { const ch = chars.get(id); if (s.pc && ch && ch.visible && !ch.path.length && ch.target && ch.target.desk && /type|read/.test(poseOf(ch))) working.add(s.pc); }
+      const tops = layout.items.filter(o => { const s = sz(o); return !s.wall && s.cat === 'desks'; });
       for (const it of layout.items) {
-        if (it.t === 'rug') continue;
-        drawables.push({ y: it.y, z: 0, f: () => {
-          const who = byDesk.get(it), ch = who && chars.get(who), on = !!(ch && ch.d.state === 'active' && ch.target && ch.target.desk && !ch.path.length);
-          S.drawItem(ctx, set, it, it.x * T, it.y * T, { on, tick, count: data && data.board ? Math.min(6, (data.board.todo || 0) + (data.board.doing || 0)) : 3 });
-          if (it.t === 'desk') { const s = seatOf(it); drawables.push({ y: s.y - 0.01, z: 1, f: () => S.drawItem(ctx, set, { t: 'chair' }, s.x * T, s.y * T) }); }
-          if (editing && sel === it) { ctx.strokeStyle = '#F26B1D'; ctx.lineWidth = 1 / F.scale; ctx.strokeRect(it.x * T + 0.5, it.y * T + 0.5, T - 1, T - 1); }
+        const s = sz(it), own = set.sprites[it.t];
+        const on = working.has(it), img = own ? null : A.furn(it.t, it.r, { on, frame: reduce() ? 0 : Math.floor(clock / 0.25) });
+        if (!img && !own) continue;
+        let z = it.y * T + s.h;
+        if (s.cat === 'chairs') z = (it.r | 0) === 2 ? (it.y + s.fh) * T + 1 : (it.y + 1) * T;
+        if (s.surface) { const under = tops.find(o => covers(o, it.x, it.y + s.fh - 1)); if (under) z = under.y * T + sz(under).h + 0.5; }
+        if (s.wall) z += 0.25;
+        Z.push({ z, f: () => {
+          if (own && own.img.complete && own.img.naturalWidth) ctx.drawImage(own.img, it.x * T, it.y * T, own.w * T, own.h * T); else if (img) ctx.drawImage(img, it.x * T, it.y * T);
+          if (editing && sel === it) { ctx.strokeStyle = '#F26B1D'; ctx.lineWidth = 1 / F.scale; ctx.strokeRect(it.x * T + 0.5, it.y * T + 0.5, s.fw * T - 1, s.fh * T - 1); }
         } });
       }
-      // run the item pass first so chairs get queued, then sort everything
-      const first = drawables.slice(); first.forEach(o => { o.q = true; });
-      const queue = [];
-      for (const o of first) queue.push(o);
-      for (const ch of chars.values()) if (ch.visible) queue.push({ y: ch.y + 0.5, z: 2, f: () => drawChar(ch) });
-      queue.sort((a, b) => a.y - b.y || a.z - b.z);
-      for (const o of queue) { const n = drawables.length; o.f(); if (drawables.length > n) for (const extra of drawables.slice(n)) { extra.f(); } drawables.length = n; }
-      placeLayer();
-    }
-    function drawChar(ch) {
-      const pose = poseOf(ch), x = ch.x * T, y = ch.y * T - (pose === 'walk' || pose === 'stand' ? 9 : 6), d = ch.d, fr = reduce() ? 0 : ch.frame;
-      if (d.kind === 'flint') S.drawFlint(ctx, x, y, pose, fr);
-      else if (d.kind === 'agent') S.drawAgent(ctx, d.id, d.agentKind, x, y, pose, fr, ch.dir);
-      else S.drawPerson(ctx, d.look || S.seedLook(d.id), x, y, pose, fr, ch.dir);
-    }
-    // Names and bubbles are real text over the canvas, so they stay crisp and translate.
-    function placeLayer() {
-      if (!F) return;
-      const dpr = F.dpr, out = [];
       for (const ch of chars.values()) {
         if (!ch.visible) continue;
-        const sx = (F.ox + (ch.x * T + 8) * F.scale) / dpr, sy = (F.oy + (ch.y * T - 9) * F.scale) / dpr;
-        const b = ch.d.bubble === 'ask' ? `<span class="os-bubble ask">${esc(tr('Needs your OK'))}</span>` : ch.d.bubble === 'done' ? `<span class="os-bubble done">${esc(tr('Done'))}</span>` : '';
-        out.push(`<button type="button" class="os-tag" data-os-who="${esc(ch.d.id)}" data-role="${esc(ch.d.kind)}" style="left:${sx.toFixed(1)}px;top:${sy.toFixed(1)}px">${b}<span class="os-name">${esc(ch.d.name)}</span></button>`);
+        const px = Math.round(ch.x * T + 8), py = Math.round(ch.y * T + 8), pose = poseOf(ch);
+        if (ch.d.kind === 'flint') { const hov = reduce() ? 0 : Math.round(Math.sin(clock * 3) * 1.5) + 2, img = A.flint(reduce() ? 0 : Math.floor(clock / 0.2)); Z.push({ z: py + 8.5, f: () => { ctx.fillStyle = 'rgba(0,0,0,0.25)'; ctx.fillRect(px - 3, py - 1, 6, 1); ctx.drawImage(img, px - 5, py - 15 - hov); } }); continue; }
+        const sh = A.sheet(lookOf(ch.d), () => kick());
+        const off = /type|read|sit/.test(pose) && ch.target && ch.target.sit && !ch.path.length ? SIT_PX : 0;
+        Z.push({ z: py + 8.5, f: () => A.drawSheet(ctx, sh, ch.dir, colOf(pose, ch.t), px, py + off) });
+      }
+      for (const p of pets) {
+        const px = Math.round(p.x * T + 8), py = Math.round(p.y * T + 8), sh = A.pet(p.name);
+        const col = p.path.length && !reduce() ? [0, 1, 0, 2][Math.floor(p.t / 0.15) % 4] : (p.dir < 2 && !reduce() ? 3 + [0, 1, 2, 1][Math.floor(p.t / 0.3) % 4] : 0);
+        Z.push({ z: py + 8.4, f: () => { A.drawPet(ctx, sh, p.dir, col, px, py + 4); if (p.heart > 0) { const b = A.bubble('heart'); if (b) ctx.drawImage(b, px - 5, py - 22); } } });
+      }
+      Z.sort((a, b) => a.z - b.z);
+      for (const o of Z) o.f();
+      placeLayer();
+    }
+    // Names and bubbles are real elements over the canvas: names stay crisp and translate; the bubble is Pixel Agents' art.
+    function headOf(ch) {
+      const pose = poseOf(ch), off = /type|read|sit/.test(pose) && ch.target && ch.target.sit && !ch.path.length ? SIT_PX : 0;
+      const top = ch.d.kind === 'flint' ? ch.y * T + 8 - 18 : ch.y * T + 8 - 32 + off + 2;
+      return { x: (F.ox + (ch.x * T + 8) * F.scale) / F.dpr, y: (F.oy + top * F.scale) / F.dpr };
+    }
+    function placeLayer() {
+      if (!F) return;
+      const out = [], bw = Math.max(11, Math.round(11 * F.scale / F.dpr));
+      for (const ch of chars.values()) {
+        if (!ch.visible) continue;
+        const h = headOf(ch), kind = ch.d.bubble === 'ask' ? 'ask' : ch.d.bubble === 'done' ? 'done' : '';
+        const src = kind && artOk ? bubbleSrc(kind) : '';
+        const b = kind ? `<span class="os-bubble ${kind}">${src ? `<img class="os-bub" src="${src}" alt="" style="width:${bw}px">` : ''}<span class="os-bubble-t">${esc(tr(kind === 'ask' ? 'Needs your OK' : 'Done'))}</span></span>` : '';
+        out.push(`<button type="button" class="os-tag" data-os-who="${esc(ch.d.id)}" data-role="${esc(ch.d.kind)}" style="left:${h.x.toFixed(1)}px;top:${h.y.toFixed(1)}px">${b}<span class="os-name">${ch.d.kind === 'agent' ? '<i class="os-ai">AI</i>' : ''}${esc(ch.d.name)}</span></button>`);
       }
       const html = out.join('');
       if (layer.__html !== html) { layer.innerHTML = html; layer.__html = html; }
@@ -207,21 +291,40 @@
     }
 
     // ---------- the loop: walk along paths, animate, redraw ----------
+    function freeTile(near) {
+      if (!geo) return null;
+      const all = [];
+      for (let y = 0; y < layout.h; y++) for (let x = 0; x < layout.w; x++) if (walk(x, y) && !geo.seats.some(s => s.x === x && s.y === y)) all.push({ x, y });
+      return all.length ? all[(near | 0) % all.length] : null;
+    }
+    function stepAlong(o, dt, speed) {
+      const n = o.path[0], dx = n.x - o.x, dy = n.y - o.y, dist = Math.hypot(dx, dy), step = speed * dt;
+      o.dir = Math.abs(dx) > Math.abs(dy) ? (dx < 0 ? 3 : 2) : (dy < 0 ? 1 : 0);
+      if (dist <= step) { o.x = n.x; o.y = n.y; o.path.shift(); return true; }
+      o.x += dx / dist * step; o.y += dy / dist * step; return false;
+    }
     function frame(now) {
       if (dead) return;
       raf = 0;
       const dt = Math.min(0.1, (now - (last || now)) / 1000); last = now;
       let moving = false;
-      if (!reduce()) {
-        tick = Math.floor(now / 160);
+      if (!reduce() && geo) {
+        clock += dt;
         for (const ch of chars.values()) {
-          ch.frame = tick;
+          ch.t += dt;
           if (!ch.path.length) { if (ch.target && ch.target.dir != null && !ch.target.leave) ch.dir = ch.target.dir; continue; }
           moving = true;
-          const n = ch.path[0], dx = n.x - ch.x, dy = n.y - ch.y, dist = Math.hypot(dx, dy), step = SPEED * dt;
-          ch.dir = Math.abs(dx) > Math.abs(dy) ? (dx < 0 ? 1 : 3) : (dy < 0 ? 2 : 0);
-          if (dist <= step) { ch.x = n.x; ch.y = n.y; ch.path.shift(); if (!ch.path.length && ch.target && ch.target.leave) ch.visible = false; }
-          else { ch.x += dx / dist * step; ch.y += dy / dist * step; }
+          if (stepAlong(ch, dt, SPEED) && !ch.path.length && ch.target && ch.target.leave) ch.visible = false;
+        }
+        for (const p of pets) {   // pets wander: walk somewhere near, rest 3-15 s, walk again
+          p.t += dt; if (p.heart > 0) p.heart -= dt;
+          if (p.path.length) { stepAlong(p, dt, 2); continue; }
+          p.wait -= dt;
+          if (p.wait <= 0) {
+            const opts = []; for (let y = Math.round(p.y) - 5; y <= Math.round(p.y) + 5; y++) for (let x = Math.round(p.x) - 5; x <= Math.round(p.x) + 5; x++) if (walk(x, y) && ![...chars.values()].some(c => Math.round(c.x) === x && Math.round(c.y) === y)) opts.push({ x, y });
+            const g = opts[Math.floor(Math.random() * opts.length)]; if (g) p.path = route(p, g).filter(s => walk(s.x, s.y));
+            p.wait = 3 + Math.random() * 12;
+          }
         }
       }
       draw();
@@ -231,7 +334,7 @@
     const kick = () => { if (!raf && !dead) raf = requestAnimationFrame(frame); };
     const ro = new ResizeObserver(() => { if (reduce()) draw(); else kick(); }); ro.observe(stage);
 
-    // ---------- clicks: a character, a desk, or (in the editor) a tile ----------
+    // ---------- clicks: a character, a pet, a desk, or (in the editor) a tile ----------
     function toTile(e) {
       const r = cv.getBoundingClientRect(), dpr = F ? F.dpr : 1;
       const x = ((e.clientX - r.left) * dpr - F.ox) / (F.scale * T), y = ((e.clientY - r.top) * dpr - F.oy) / (F.scale * T);
@@ -239,10 +342,11 @@
     }
     function hit(p) {
       let best = null;
-      for (const ch of chars.values()) if (ch.visible && Math.abs(p.fx - (ch.x + 0.5)) < 0.55 && p.fy > ch.y - 0.7 && p.fy < ch.y + 1) best = ch;
+      for (const ch of chars.values()) if (ch.visible && Math.abs(p.fx - (ch.x + 0.5)) < 0.5 && p.fy > ch.y - 1.5 && p.fy < ch.y + 0.9) best = ch;
       if (best) return best.d.id;
-      const it = at(p.x, p.y);
-      if (it && it.t === 'desk') { for (const [id, d] of deskFor()) if (d === it) return id; }
+      const pet = pets.find(q => Math.abs(p.fx - (q.x + 0.5)) < 0.5 && p.fy > q.y - 0.5 && p.fy < q.y + 0.9);
+      if (pet) { pet.heart = 1.5; kick(); return null; }
+      for (const [id, s] of deskFor()) if ((s.x === p.x && s.y === p.y) || (s.pc && covers(s.pc, p.x, p.y))) return id;
       return null;
     }
     cv.addEventListener('pointerdown', e => {
@@ -267,7 +371,7 @@
     });
     cv.addEventListener('wheel', e => { if (!e.ctrlKey && !e.metaKey) return; e.preventDefault(); zoom(e.deltaY < 0 ? 1 : -1); }, { passive: false });
     layer.addEventListener('click', e => { const t = e.target.closest('[data-os-who]'); if (t) openCard(t.dataset.osWho); });
-    function zoom(k) { view.z = Math.max(0, Math.min(4, view.z + k)); if (!view.z) { view.ox = 0; view.oy = 0; } draw(); }
+    function zoom(k) { view.z = Math.max(0, Math.min(6, view.z + k)); if (!view.z) { view.ox = 0; view.oy = 0; } draw(); }
 
     // ---------- the card: who, what they're doing, and one click into TribeCode ----------
     const placeText = d => { const P = window.TribePresence; try { if (d.where && P && P.label) return P.label(d.where) || ''; } catch {} return typeof d.where === 'string' ? d.where : ''; };
@@ -294,8 +398,16 @@
           <div class="os-acts">${d.id !== (data && data.me) ? `<button class="btn primary sm" data-os-do="dm">${esc(tr('Message'))}</button><button class="btn sm" data-os-do="call">${esc(tr('Call'))}</button>` : `<button class="btn primary sm" data-os-act="look">${esc(tr('Your look'))}</button>`}<button class="btn sm" data-os-do="profile">${esc(tr('Profile'))}</button></div>
           ${d.id !== (data && data.me) ? `<form class="os-give" data-os-give><input class="input sm" maxlength="140" placeholder="${esc(tr('Give a task…'))}" aria-label="${esc(tr('Give a task'))}"><button class="btn sm">${esc(tr('Give'))}</button></form>` : ''}`;
       }
-      card.innerHTML = `<header><span class="os-av" data-role="${esc(d.kind)}">${esc(String(d.name || '?').slice(0, 1).toUpperCase())}</span><div><b>${esc(d.name)}</b><span>${esc(d.kind === 'agent' ? tr('AI helper') : d.kind === 'flint' ? tr('Built-in helper') : tr('Person'))} · ${esc(st)}</span></div><button class="btn sm icon" data-os-close aria-label="${esc(tr('Close'))}">×</button></header>${body}`;
+      card.innerHTML = `<header><canvas class="os-av" width="16" height="16" data-role="${esc(d.kind)}" aria-hidden="true"></canvas><div><b>${esc(d.name)}</b><span>${esc(d.kind === 'agent' ? tr('AI helper') : d.kind === 'flint' ? tr('Built-in helper') : tr('Person'))} · ${esc(st)}</span></div><button class="btn sm icon" data-os-close aria-label="${esc(tr('Close'))}">×</button></header>${body}`;
       card.dataset.who = id;
+      face(card.querySelector('.os-av'), d);
+    }
+    // The card's avatar: the character's face (the top 16x16 of its front frame), or Flint.
+    function face(c, d) {
+      if (!c || !artOk) return;
+      const x = c.getContext('2d'); x.imageSmoothingEnabled = false; x.clearRect(0, 0, 16, 16);
+      if (d.kind === 'flint') { x.drawImage(A.flint(0), 2, 1); return; }
+      const sh = A.sheet(lookOf(d), () => face(c, d)); if (sh) x.drawImage(sh.c, 16, 2, 16, 16, 0, 0, 16, 16);
     }
     function closeCard() { card.hidden = true; cardFor = null; }
     async function act(kind, d, btn) {
@@ -316,9 +428,9 @@
       const t = e.target.closest('[data-os-close],[data-os-do],[data-os-ap],[data-os-task],[data-os-file],[data-os-act]'); if (!t) return;
       const d = everyone().find(x => x.id === card.dataset.who); if (!d) return;
       if (t.matches('[data-os-close]')) return closeCard();
-      if (t.matches('[data-os-act]')) return;   // handled by the bar's listener (Your look)
+      if (t.matches('[data-os-act]')) return;   // handled below (Your look)
       if (t.matches('[data-os-task]')) { if (window.TribeTasks && window.TribeTasks.open) window.TribeTasks.open(t.dataset.osTask); return; }
-      if (t.matches('[data-os-file]')) { const A = window.TribeApp; if (A && A.show) A.show('code'); setTimeout(() => { if (window.TribeCodeFiles && window.TribeCodeFiles.open) window.TribeCodeFiles.open(t.dataset.osFile); }, 120); return; }
+      if (t.matches('[data-os-file]')) { const A2 = window.TribeApp; if (A2 && A2.show) A2.show('code'); setTimeout(() => { if (window.TribeCodeFiles && window.TribeCodeFiles.open) window.TribeCodeFiles.open(t.dataset.osFile); }, 120); return; }
       if (t.matches('[data-os-ap]')) {
         const v = t.dataset.osAp, note = (card.querySelector('.os-note') || {}).value || '';
         if (v === 'question' && !note.trim()) { const n = card.querySelector('.os-note'); if (n) n.focus(); toast(tr('Say what to change first.')); return; }
@@ -339,27 +451,36 @@
       try { if (window.TribeTasks && window.TribeTasks.create) await window.TribeTasks.create(title, 'todo', { assignee: card.dataset.who }); else await C.api('/tasks', { method: 'POST', body: { title, status: 'todo', assignee: card.dataset.who } }); inp.value = ''; toast(tr('Task given')); office.refresh(); } catch (err) { toast(err.message); }
     });
 
-    // ---------- Your look: the wardrobe ----------
+    // ---------- Your look: the wardrobe, with the real parts ----------
     let draft = null;
+    const ROWS = [['body', 'Body'], ['hair', 'Hair'], ['top', 'Top'], ['pants', 'Bottoms'], ['shoes', 'Shoes'], ['jacket', 'Jacket'], ['full', 'Outfit'], ['beard', 'Beard'], ['hat', 'Hat'], ['acc', 'Extra']];
+    const SLOT = { glasses: 'shades', shades: 'shades' };
+    const nameOf = (k, i) => { const id = A.PARTS[k][((i | 0) % A.PARTS[k].length + A.PARTS[k].length) % A.PARTS[k].length]; return id ? A.label(k === 'acc' ? (SLOT[id] || id) : k, id) : 'None'; };
     function openLook() {
       closeCard(); edit.hidden = true;
       draft = Object.assign(S.seedLook((data && data.me) || 'me'), (data && data.myLook) || {});
       lookEl.hidden = false; paintLook();
     }
     function paintLook() {
-      const row = (k, label, names) => `<div class="os-part"><span>${esc(tr(label))}</span><button class="btn sm icon" data-lk="${k}" data-d="-1" aria-label="${esc(tr('Previous'))}">‹</button><b>${esc(names ? tr(names[draft[k]]) : String(draft[k] + 1))}</b><button class="btn sm icon" data-lk="${k}" data-d="1" aria-label="${esc(tr('Next'))}">›</button></div>`;
-      const sw = (k, cols, label) => `<div class="os-sw" role="radiogroup" aria-label="${esc(tr(label))}"><span>${esc(tr(label))}</span>${cols.map((c, i) => `<button class="os-dot${draft[k] === i ? ' on' : ''}" role="radio" aria-checked="${draft[k] === i}" data-lc="${k}" data-i="${i}" style="background:${c}" aria-label="${esc(tr(label))} ${i + 1}"></button>`).join('')}</div>`;
+      const row = (k, label) => `<div class="os-part"><span>${esc(tr(label))}</span><button class="btn sm icon" data-lk="${k}" data-d="-1" aria-label="${esc(tr('Previous'))}">‹</button><b>${esc(tr(nameOf(k, draft[k] || 0)))}</b><button class="btn sm icon" data-lk="${k}" data-d="1" aria-label="${esc(tr('Next'))}">›</button></div>`;
+      const sw = (k, slot, label) => { const cols = A.swatches(slot); return `<div class="os-sw" role="radiogroup" aria-label="${esc(tr(label))}"><span>${esc(tr(label))}</span>${cols.map((c, i) => `<button class="os-dot${(draft[k] | 0) === i ? ' on' : ''}" role="radio" aria-checked="${(draft[k] | 0) === i}" data-lc="${k}" data-i="${i}" style="background:${c}" aria-label="${esc(tr(label))} ${i + 1}"></button>`).join('')}</div>`; };
+      const full = !!draft.full;
       lookEl.innerHTML = `<header><b>${esc(tr('Your look'))}</b><button class="btn sm icon" data-lk-close aria-label="${esc(tr('Close'))}">×</button></header>
-        <div class="os-look-row"><canvas class="os-prev" width="64" height="96" aria-hidden="true"></canvas><div class="os-parts">
-          ${row('body', 'Body', S.NAMES.body)}${row('hair', 'Hair', S.NAMES.hair)}${row('top', 'Top', S.NAMES.top)}${row('acc', 'Extra', S.NAMES.acc)}</div></div>
-        ${sw('skin', S.SKIN, 'Skin')}${sw('hairColor', S.HAIR, 'Hair colour')}${sw('topColor', S.TOPS(), 'Top colour')}
+        <div class="os-look-row"><canvas class="os-prev" width="16" height="32" aria-hidden="true"></canvas><div class="os-parts">${ROWS.map(([k, l]) => row(k, l)).join('')}</div></div>
+        ${sw('skin', 'body', 'Skin')}${sw('hairColor', 'hair', 'Hair colour')}${full ? sw('fullColor', 'full', 'Outfit colour') : sw('topColor', 'top', 'Top colour') + sw('pantsColor', 'pants', 'Bottoms colour')}
+        ${draft.jacket ? sw('jacketColor', 'jacket', 'Jacket colour') : ''}${draft.hat ? sw('hatColor', 'hat', 'Hat colour') : ''}${sw('shoesColor', 'shoes', 'Shoes colour')}
         <div class="os-acts"><button class="btn primary sm" data-lk-save>${esc(tr('Save my look'))}</button><button class="btn sm" data-lk-random>${esc(tr('Surprise me'))}</button></div>`;
-      const pc = lookEl.querySelector('.os-prev').getContext('2d'); pc.imageSmoothingEnabled = false; pc.setTransform(4, 0, 0, 4, 0, 0); pc.clearRect(0, 0, 16, 24); S.drawPerson(pc, draft, 0, 0, 'stand', 0, 0);
+      preview();
+    }
+    function preview() {
+      const c = lookEl.querySelector('.os-prev'); if (!c) return;
+      const x = c.getContext('2d'); x.imageSmoothingEnabled = false; x.clearRect(0, 0, 16, 32);
+      const sh = A.sheet(draft, preview); if (sh) A.drawSheet(x, sh, 0, 1, 8, 32);
     }
     lookEl.addEventListener('click', async e => {
       const t = e.target.closest('[data-lk],[data-lc],[data-lk-close],[data-lk-save],[data-lk-random]'); if (!t) return;
       if (t.matches('[data-lk-close]')) { lookEl.hidden = true; return; }
-      if (t.matches('[data-lk]')) { const k = t.dataset.lk, n = S.PARTS[k]; draft[k] = (draft[k] + (+t.dataset.d) + n) % n; return paintLook(); }
+      if (t.matches('[data-lk]')) { const k = t.dataset.lk, n = S.LOOK[k] || A.PARTS[k].length; draft[k] = ((draft[k] | 0) + (+t.dataset.d) + n) % n; return paintLook(); }
       if (t.matches('[data-lc]')) { draft[t.dataset.lc] = +t.dataset.i; return paintLook(); }
       if (t.matches('[data-lk-random]')) { draft = S.seedLook(Math.random().toString(36)); return paintLook(); }
       if (t.matches('[data-lk-save]')) {
@@ -367,11 +488,10 @@
       }
     });
 
-    // ---------- the layout editor (host or admin) ----------
-    const TOOLS = [['move', 'Move'], ['rotate', 'Turn'], ['erase', 'Remove'], ['floor', 'Floor'], ['wall', 'Wall'], ['carpet', 'Carpet'], ['wood', 'Wood'], ['tile', 'Tiles'],
-      ['desk', 'Desk'], ['plant', 'Plant'], ['sofa', 'Sofa'], ['think', 'Thinking seat'], ['coffee', 'Coffee'], ['table', 'Table'], ['shelf', 'Shelf'], ['lamp', 'Lamp'], ['rug', 'Rug'], ['board', 'Task board'], ['area', 'Name an area']];
-    const TILE_TOOLS = new Set(['floor', 'wall', 'carpet', 'wood', 'tile']);
-    let before = null, areaStart = null;
+    // ---------- the layout editor (host or admin): the real furniture ----------
+    const TILE_TOOLS = [['wood', 'Wood'], ['floor', 'Floor'], ['tile', 'Tiles'], ['stone', 'Stone'], ['carpet', 'Carpet'], ['wall', 'Wall'], ['void', 'Outside']];
+    const CATS = [['desks', 'Desks and tables'], ['chairs', 'Seats'], ['electronics', 'Computers'], ['decor', 'Plants'], ['wall', 'On the wall'], ['misc', 'Other']];
+    let before = null;
     function openEdit() {
       if (!data || !data.canSet) return;
       closeCard(); lookEl.hidden = true;
@@ -379,30 +499,47 @@
       edit.hidden = false; root.classList.add('editing'); paintEdit(); draw();
     }
     function paintEdit() {
-      const people = everyone().filter(d => d.kind !== 'flint');
+      const people = everyone().filter(d => d.kind !== 'flint'), items = A.cat();
+      const furn = CATS.map(([c, l]) => { const ids = Object.keys(items).filter(id => items[id].cat === c); return ids.length ? `<p class="os-sub">${esc(tr(l))}</p><div class="os-tools os-furn">${ids.map(id => `<button class="btn sm os-fb${tool === 'f:' + id ? ' on' : ''}" data-tool="f:${id}" aria-pressed="${tool === 'f:' + id}" title="${esc(tr(items[id].name))}"><canvas width="16" height="16" data-thumb="${id}" aria-hidden="true"></canvas><span class="sr-only">${esc(tr(items[id].name))}</span></button>`).join('')}</div>` : ''; }).join('');
+      const seat = sel && sz(sel).cat === 'chairs';
       edit.innerHTML = `<header><b>${esc(tr('Edit layout'))}</b></header>
-        <div class="os-tools" role="toolbar">${TOOLS.map(([k, l]) => `<button class="btn sm${tool === k ? ' on' : ''}" data-tool="${k}" aria-pressed="${tool === k}">${esc(tr(l))}</button>`).join('')}</div>
-        ${sel && sel.t === 'desk' ? `<label class="os-assign"><span>${esc(tr('This desk is for'))}</span><select class="input sm" data-assign><option value="">${esc(tr('Anyone'))}</option>${people.map(p => `<option value="${esc(p.id)}"${sel.who === p.id ? ' selected' : ''}>${esc(p.name)}</option>`).join('')}</select></label>` : ''}
+        <div class="os-tools" role="toolbar">${[['move', 'Move'], ['rotate', 'Turn'], ['erase', 'Remove'], ['area', 'Name an area']].map(([k, l]) => `<button class="btn sm${tool === k ? ' on' : ''}" data-tool="${k}" aria-pressed="${tool === k}">${esc(tr(l))}</button>`).join('')}</div>
+        <p class="os-sub">${esc(tr('Floor'))}</p><div class="os-tools">${TILE_TOOLS.map(([k, l]) => `<button class="btn sm${tool === k ? ' on' : ''}" data-tool="${k}" aria-pressed="${tool === k}">${esc(tr(l))}</button>`).join('')}</div>
+        ${furn}
+        ${seat ? `<label class="os-assign"><span>${esc(tr('This seat is for'))}</span><select class="input sm" data-assign><option value="">${esc(tr('Anyone'))}</option>${people.map(p => `<option value="${esc(p.id)}"${sel.who === p.id ? ' selected' : ''}>${esc(p.name)}</option>`).join('')}</select></label>` : ''}
         <form class="os-area" data-area hidden><input class="input sm" maxlength="32" placeholder="${esc(tr('Area name, e.g. Lounge'))}"><button class="btn sm">${esc(tr('Name it'))}</button></form>
-        <p class="faint os-hint">${esc(tr(tool === 'area' ? 'Drag over the floor, then name the area.' : TILE_TOOLS.has(tool) ? 'Click or drag to paint.' : tool === 'move' ? 'Drag a piece to move it. Click a desk to choose who sits there.' : tool === 'rotate' ? 'Click a piece to turn it.' : tool === 'erase' ? 'Click a piece to remove it.' : 'Click an empty spot to place it.'))}</p>
+        <p class="faint os-hint">${esc(tr(tool === 'area' ? 'Drag over the floor, then name the area.' : TILE_TOOLS.some(t => t[0] === tool) ? 'Click or drag to paint.' : tool === 'move' ? 'Drag a piece to move it. Click a seat to choose who sits there.' : tool === 'rotate' ? 'Click a piece to turn it.' : tool === 'erase' ? 'Click a piece to remove it.' : 'Click an empty spot to place it.'))}</p>
         <div class="os-acts"><button class="btn primary sm" data-ed="save">${esc(tr('Save layout'))}</button><button class="btn sm" data-ed="cancel">${esc(tr('Cancel'))}</button></div>
         <div class="os-acts"><button class="btn sm" data-ed="reset">${esc(tr('Back to the default'))}</button><button class="btn sm" data-ed="export">${esc(tr('Export'))}</button><label class="btn sm os-import">${esc(tr('Import'))}<input type="file" accept="application/json,.json" data-ed-import hidden></label></div>`;
+      for (const c of edit.querySelectorAll('[data-thumb]')) {   // a small picture of each piece, fitted into 16x16
+        const img = A.furn(c.dataset.thumb, 0); if (!img) continue;
+        const x = c.getContext('2d'), k = Math.min(16 / img.width, 16 / img.height); x.imageSmoothingEnabled = false;
+        x.drawImage(img, Math.round((16 - img.width * k) / 2), Math.round((16 - img.height * k) / 2), Math.round(img.width * k), Math.round(img.height * k));
+      }
     }
+    // the piece under a tile: the nearest one in front (highest base) wins
+    function pieceAt(x, y) { let best = null, bz = -1; for (const it of layout.items) if (covers(it, x, y)) { const z = it.y + sz(it).fh + (sz(it).wall ? -0.5 : 0); if (z > bz) { bz = z; best = it; } } return best; }
+    const isTile = k => TILE_TOOLS.some(t => t[0] === k);
     function editDown(p, e) {
       if (!inside(p.x, p.y)) return;
       cv.setPointerCapture(e.pointerId);
-      if (TILE_TOOLS.has(tool)) { layout.tiles[p.y * layout.w + p.x] = tool; drag = { paint: true }; draw(); return; }
-      const it = at(p.x, p.y) || layout.items.find(i => i.x === p.x && i.y === p.y);
-      if (tool === 'area') { areaStart = p; drag = { area: true, a: p, b: p }; return; }
-      if (tool === 'move') { sel = it || null; drag = it ? { item: it } : null; paintEdit(); draw(); return; }
-      if (tool === 'rotate') { if (it) { it.r = ((it.r || 0) + 1) % 4; sel = it; } draw(); return; }
-      if (tool === 'erase') { if (it) { layout.items = layout.items.filter(i => i !== it); sel = null; } draw(); return; }
-      if (!it && tileAt(p.x, p.y) !== 'wall' || tool === 'board') { const n = { t: tool, x: p.x, y: p.y, r: 0 }; layout.items.push(n); sel = n; paintEdit(); draw(); }
+      if (isTile(tool)) { layout.tiles[p.y * layout.w + p.x] = tool; drag = { paint: true }; rebuild(); draw(); return; }
+      const it = pieceAt(p.x, p.y);
+      if (tool === 'area') { drag = { area: true, a: p, b: p }; return; }
+      if (tool === 'move') { sel = it || null; drag = it ? { item: it, dx: p.x - it.x, dy: p.y - it.y } : null; paintEdit(); draw(); return; }
+      if (tool === 'rotate') { if (it) { const views = Object.keys((A.cat()[it.t] || {}).views || {}).length; if (views > 1) it.r = ((it.r || 0) + 1) % 4; sel = it; rebuild(); } draw(); return; }
+      if (tool === 'erase') { if (it) { layout.items = layout.items.filter(i => i !== it); sel = null; rebuild(); } draw(); return; }
+      if (tool.startsWith('f:')) {
+        const id = tool.slice(2), s = A.size(id, 0); if (!s) return;
+        const fits = s.wall || s.surface || (() => { for (let dy = s.bg; dy < s.fh; dy++) for (let dx = 0; dx < s.fw; dx++) if (!walk(p.x + dx, p.y + dy)) return false; return true; })();
+        if (!fits || p.x + s.fw > layout.w || p.y + s.fh > layout.h) { toast(tr('There is no room for it there.')); return; }
+        const n = { t: id, x: p.x, y: p.y, r: 0 }; layout.items.push(n); sel = n; rebuild(); paintEdit(); draw();
+      }
     }
     function editMove(p) {
       if (!drag || !inside(p.x, p.y)) return;
-      if (drag.paint && TILE_TOOLS.has(tool)) { layout.tiles[p.y * layout.w + p.x] = tool; draw(); }
-      if (drag.item) { drag.item.x = p.x; drag.item.y = p.y; draw(); }
+      if (drag.paint && isTile(tool)) { layout.tiles[p.y * layout.w + p.x] = tool; rebuild(); draw(); }
+      if (drag.item) { drag.item.x = Math.max(0, p.x - drag.dx); drag.item.y = Math.max(0, p.y - drag.dy); rebuild(); draw(); }
       if (drag.area) { drag.b = p; draw(); }
     }
     function editUp() {
@@ -411,13 +548,13 @@
         const f = edit.querySelector('[data-area]'); f.hidden = false; f.dataset.rect = JSON.stringify({ x: Math.min(a.x, b.x), y: Math.min(a.y, b.y), w: Math.abs(a.x - b.x) + 1, h: Math.abs(a.y - b.y) + 1 }); f.querySelector('input').focus();
         return;
       }
-      drag = null;
+      drag = null; sync();
     }
     edit.addEventListener('click', async e => {
       const t = e.target.closest('[data-tool],[data-ed]'); if (!t) return;
       if (t.dataset.tool) { tool = t.dataset.tool; paintEdit(); return; }
       const k = t.dataset.ed;
-      if (k === 'cancel') { layout = JSON.parse(before); stopEdit(); return; }
+      if (k === 'cancel') { layout = JSON.parse(before); rebuild(); stopEdit(); return; }
       if (k === 'reset') { if (!confirm(tr('Put back the default floor? Your layout changes go away.'))) return; await saveLayout(null); stopEdit(); return; }
       if (k === 'export') { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([JSON.stringify(layout, null, 1)], { type: 'application/json' })); a.download = 'office-space-layout.json'; document.body.appendChild(a); a.click(); a.remove(); return; }
       if (k === 'save') { await saveLayout(layout); stopEdit(); }
@@ -426,7 +563,7 @@
       if (e.target.matches('[data-assign]') && sel) { if (e.target.value) { layout.items.forEach(i => { if (i !== sel && i.who === e.target.value) delete i.who; }); sel.who = e.target.value; } else delete sel.who; draw(); }
       if (e.target.matches('[data-ed-import]')) {
         const f = e.target.files && e.target.files[0]; if (!f) return;
-        try { const L = JSON.parse(await f.text()); if (!L || !Array.isArray(L.tiles) || !Array.isArray(L.items)) throw new Error(tr('That file is not an Office Space layout.')); layout = L; normalise(); draw(); toast(tr('Imported. Save to keep it.')); } catch (err) { toast(err.message); }
+        try { const L = JSON.parse(await f.text()); if (!L || L.v !== 2 || !Array.isArray(L.tiles) || !Array.isArray(L.items)) throw new Error(tr('That file is not an Office Space layout.')); layout = L; normalise(); rebuild(); draw(); toast(tr('Imported. Save to keep it.')); } catch (err) { toast(err.message); }
       }
     });
     edit.addEventListener('submit', e => {
@@ -435,16 +572,21 @@
       layout.areas = (layout.areas || []).concat([{ name, ...JSON.parse(f.dataset.rect || '{}') }]).slice(-12); f.hidden = true; f.querySelector('input').value = ''; draw();
     });
     async function saveLayout(L) {
-      try { const r = await C.api('/office', { method: 'PUT', body: { layout: L } }); if (data) data.layout = r.layout; layout = r.layout ? JSON.parse(JSON.stringify(r.layout)) : S.defaultLayout(everyone().length); normalise(); toast(L ? tr('Layout saved') : tr('Back to the default floor')); office.refresh(); }
+      try { const r = await C.api('/office', { method: 'PUT', body: { layout: L } }); if (data) data.layout = r.layout; layout = usable(r.layout) || A.defaultLayout(everyone().length - 1); normalise(); rebuild(); toast(L ? tr('Layout saved') : tr('Back to the default floor')); office.refresh(); }
       catch (err) { toast(err.message); }
     }
     function stopEdit() { editing = false; sel = null; edit.hidden = true; root.classList.remove('editing'); sync(); draw(); }
-    // More people than desks: add desks on free floor (only on screen; saving keeps them).
+    const usable = L => (L && L.v === 2 && Array.isArray(L.tiles) && Array.isArray(L.items) ? JSON.parse(JSON.stringify(L)) : null);   // layouts from before the art (v1) start from the new default
+    // More people than desk seats: add a desk, a computer and a stool on free floor (only on screen; saving keeps them).
     function normalise() {
+      rebuild();
       const need = everyone().filter(d => d.kind !== 'flint').length;
-      let have = deskItems().length;
-      for (let y = 2; y < layout.h - 2 && have < need; y += 3) for (let x = 2; x < layout.w - 2 && have < need; x += 3) {
-        if (walk(x, y) && walk(x, y + 1) && !at(x, y)) { layout.items.push({ t: 'desk', x, y, r: 0 }); have++; }
+      let have = deskSeats().length;
+      for (let y = 1; y < layout.h - 3 && have < need; y++) for (let x = 1; x < layout.w - 3 && have < need; x++) {
+        let ok = true; for (let dy = 0; dy < 4 && ok; dy++) for (let dx = 0; dx < 3 && ok; dx++) if (!walk(x + dx, y + dy) || layout.items.some(i => covers(i, x + dx, y + dy))) ok = false;
+        if (!ok) continue;
+        layout.items.push({ t: 'DESK', x, y, r: 0 }, { t: 'PC', x: x + 1, y, r: 0 }, { t: 'CUSHIONED_BENCH', x: x + 1, y: y + 2, r: 0 });
+        rebuild(); have = deskSeats().length;
       }
     }
 
@@ -463,9 +605,9 @@
       try { await C.api('/office', { method: 'PUT', body: { set: e.target.value } }); set = S.get(e.target.value); draw(); toast(tr('Set changed')); office.refresh(); } catch (err) { toast(err.message); }
     });
     root.addEventListener('keydown', e => {
-      if (e.key === 'Escape') { if (!lookEl.hidden) lookEl.hidden = true; else if (!card.hidden) closeCard(); else if (editing) { layout = JSON.parse(before); stopEdit(); } }
-      if (editing && sel && (e.key === 'r' || e.key === 'R')) { sel.r = ((sel.r || 0) + 1) % 4; draw(); }
-      if (editing && sel && (e.key === 'Delete' || e.key === 'Backspace') && !/input|select|textarea/i.test(e.target.tagName)) { layout.items = layout.items.filter(i => i !== sel); sel = null; draw(); }
+      if (e.key === 'Escape') { if (!lookEl.hidden) lookEl.hidden = true; else if (!card.hidden) closeCard(); else if (editing) { layout = JSON.parse(before); rebuild(); stopEdit(); } }
+      if (editing && sel && (e.key === 'r' || e.key === 'R') && !/input|select|textarea/i.test(e.target.tagName)) { sel.r = ((sel.r || 0) + 1) % 4; rebuild(); draw(); }
+      if (editing && sel && (e.key === 'Delete' || e.key === 'Backspace') && !/input|select|textarea/i.test(e.target.tagName)) { layout.items = layout.items.filter(i => i !== sel); sel = null; rebuild(); draw(); }
     });
 
     let asked = null;
@@ -474,31 +616,34 @@
       if (asked && [...nowAsk].some(id => !asked.has(id))) chime();
       asked = nowAsk;
       data = d;
-      if (!editing) {
-        const L = d && d.layout ? JSON.parse(JSON.stringify(d.layout)) : null;
-        const sig = JSON.stringify(L);
-        if (!layout || root.__lsig !== sig) { layout = L || S.defaultLayout(everyone().length); root.__lsig = sig; }
-        stage.style.aspectRatio = `${layout.w * T} / ${layout.h * T}`;
-        normalise();
-      }
       set = S.get(d && d.set);
       const sb = root.querySelector('.os-set'), sel2 = root.querySelector('[data-os-set]');
       sb.hidden = !(d && d.canSet); root.querySelector('[data-os-act="edit"]').hidden = !(d && d.canSet);
       if (sel2 && !sel2.options.length) sel2.innerHTML = S.list().map(s => `<option value="${esc(s.id)}">${esc(tr(s.name))}</option>`).join('');
       if (sel2) sel2.value = set.id;
       root.querySelector('[data-os-act="look"]').hidden = !(d && d.me) || ((d.desks || []).find(x => x.id === d.me) || {}).kind === 'agent';
+      if (!artOk) return;   // the art is still loading: ready() calls update again
+      if (!editing) {
+        const L = usable(d && d.layout), sig = JSON.stringify(L) + '|' + everyone().length;
+        if (!layout || root.__lsig !== sig) { layout = L || A.defaultLayout(everyone().length - 1); root.__lsig = sig; normalise(); }
+        stage.style.aspectRatio = `${layout.w * T} / ${layout.h * T}`;
+      }
       sync();
       if (cardFor) { const keep = cardFor; if (everyone().some(x => x.id === keep)) openCard(keep); else closeCard(); }
       if (reduce()) draw(); else kick();
     }
+    A.ready().then(() => { artOk = true; if (!dead && data) update(data); }).catch(() => { stage.dataset.noart = '1'; });
     const inst = {
       update,
       destroy() { dead = true; if (raf) cancelAnimationFrame(raf); ro.disconnect(); },
-      chars: () => [...chars.values()].map(c => ({ id: c.d.id, x: c.x, y: c.y, pose: poseOf(c), visible: c.visible, moving: !!c.path.length, bubble: c.d.bubble || null })),
+      chars: () => [...chars.values()].map(c => ({ id: c.d.id, x: c.x, y: c.y, pose: poseOf(c), dir: c.dir, visible: c.visible, moving: !!c.path.length, bubble: c.d.bubble || null })),
       layout: () => layout,
+      art: () => artOk,
+      pets: () => pets.map(p => ({ name: p.name, x: p.x, y: p.y })),
       // where a tile's centre is on screen (tests and keyboard helpers)
       tileXY(x, y) { if (!F) draw(); const r = cv.getBoundingClientRect(); return { x: r.left + (F.ox + (x + 0.5) * T * F.scale) / F.dpr, y: r.top + (F.oy + (y + 0.5) * T * F.scale) / F.dpr }; },
-      free(minX = 1) { for (let y = 1; y < layout.h - 1; y++) for (let x = Math.max(1, minX); x < layout.w - 1; x++) if (walk(x, y) && !layout.items.some(i => i.x === x && i.y === y) && ![...chars.values()].some(c => Math.round(c.x) === x && Math.round(c.y) === y)) return { x, y }; return null; },
+      free(minX = 1) { for (let y = 1; y < layout.h - 1; y++) for (let x = Math.max(1, minX); x < layout.w - 1; x++) if (walk(x, y) && walk(x, y + 1) && !layout.items.some(i => covers(i, x, y) || covers(i, x, y + 1)) && ![...chars.values()].some(c => Math.round(c.x) === x && Math.round(c.y) === y)) return { x, y }; return null; },
+      scale: () => (F ? F.scale : 0),
     };
     root.__os = inst;
     return inst;

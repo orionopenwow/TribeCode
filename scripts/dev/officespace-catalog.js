@@ -24,7 +24,8 @@ function build() {
   for (const id of fs.readdirSync(FUR).sort()) {
     const mf = path.join(FUR, id, 'manifest.json'); if (!fs.existsSync(mf)) continue;
     const m = JSON.parse(fs.readFileSync(mf, 'utf8')), v = {};
-    if (m.type === 'group') views(id, m, v); else views(id, { ...m, type: 'asset' }, v);
+    // a single picture's manifest names no file: it is <id>.png
+    if (m.type === 'group') views(id, m, v); else views(id, { ...m, type: 'asset', file: m.file || `${id}.png` }, v);
     for (const o of Object.values(v)) if (!o.f && o.on) o.f = o.on[0];
     items[id] = { name: m.name || id, cat: m.category || 'misc', bg: m.backgroundTiles | 0, ...(m.canPlaceOnSurfaces ? { surface: 1 } : {}), ...(m.canPlaceOnWalls ? { wall: 1 } : {}), views: v };
   }

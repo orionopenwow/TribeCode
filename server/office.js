@@ -18,24 +18,29 @@
 
 module.exports = function office({ store, getMembers, presenceFor, placesFor = () => ({}), agentSeen, claims, loadTasks, changeReqs, nameOf, broadcast, canSet, asksFor = () => [] }) {
   const FILE = 'office.json';
-  const read = () => { try { const v = store.readJSON(FILE, {}); return { on: !!v.on, agentsOff: !!v.agentsOff, layout: v.layout || null, set: typeof v.set === 'string' ? v.set : 'tribecode', looks: v.looks && typeof v.looks === 'object' ? v.looks : {} }; } catch { return { on: false, agentsOff: false, layout: null, set: 'tribecode', looks: {} }; } };
+  const read = () => { try { const v = store.readJSON(FILE, {}); return { on: !!v.on, agentsOff: !!v.agentsOff, layout: v.layout || null, set: typeof v.set === 'string' ? v.set : 'office', looks: v.looks && typeof v.looks === 'object' ? v.looks : {} }; } catch { return { on: false, agentsOff: false, layout: null, set: 'office', looks: {} }; } };
   let cfg = read();
   const save = (what = 'switches') => { store.writeJSON(FILE, cfg); broadcast({ type: 'office', on: cfg.on, agentsOff: cfg.agentsOff, what }); };
 
   // ---------- pass 11 Office Space: a checked layout and checked looks (never trust what a page sends) ----------
+  // v1 (pass 11): pieces drawn in code. v2 (pass 11b): Pixel Agents furniture ids (DESK, PC, SOFA...) and floor kinds.
   const ITEMS = new Set(['desk', 'plant', 'board', 'sofa', 'think', 'coffee', 'table', 'shelf', 'lamp', 'rug']);
-  const TILES = new Set(['floor', 'wall', 'carpet', 'wood', 'tile']);
+  const FURN = /^[A-Z][A-Z0-9_]{1,31}$/;
+  const TILES = new Set(['floor', 'wall', 'carpet', 'wood', 'tile', 'stone', 'void']);
   const short = (v, n) => String(v == null ? '' : v).replace(/[\u0000-\u001f<>]/g, '').slice(0, n);
   function cleanLayout(L) {
     if (!L || typeof L !== 'object') return null;
     const w = Math.max(10, Math.min(40, L.w | 0)), h = Math.max(8, Math.min(28, L.h | 0));
     const tiles = Array.isArray(L.tiles) ? L.tiles.slice(0, w * h).map(t => (TILES.has(t) ? t : 'floor')) : [];
     while (tiles.length < w * h) tiles.push('floor');
-    const items = (Array.isArray(L.items) ? L.items : []).slice(0, 120).filter(i => i && ITEMS.has(i.t)).map(i => ({ t: i.t, x: Math.max(0, Math.min(w - 1, i.x | 0)), y: Math.max(0, Math.min(h - 1, i.y | 0)), r: [0, 1, 2, 3].includes(i.r | 0) ? i.r | 0 : 0, ...(i.t === 'desk' && i.who ? { who: short(i.who, 40) } : {}) }));
+    const v = L.v === 2 ? 2 : 1, known = t => (v === 2 ? FURN.test(t) : ITEMS.has(t));
+    const items = (Array.isArray(L.items) ? L.items : []).slice(0, 240).filter(i => i && typeof i.t === 'string' && known(i.t)).map(i => ({ t: i.t, x: Math.max(0, Math.min(w - 1, i.x | 0)), y: Math.max(0, Math.min(h - 1, i.y | 0)), r: [0, 1, 2, 3].includes(i.r | 0) ? i.r | 0 : 0, ...((v === 2 || i.t === 'desk') && i.who ? { who: short(i.who, 40) } : {}) }));
     const areas = (Array.isArray(L.areas) ? L.areas : []).slice(0, 12).map(a => ({ name: short(a && a.name, 32), x: Math.max(0, a.x | 0), y: Math.max(0, a.y | 0), w: Math.max(1, Math.min(w, a.w | 0)), h: Math.max(1, Math.min(h, a.h | 0)) })).filter(a => a.name);
-    return { v: 1, w, h, tiles, items, areas };
+    return { v, w, h, tiles, items, areas };
   }
-  const PARTS = { body: 4, skin: 6, hair: 7, hairColor: 8, top: 6, topColor: 10, acc: 5 };
+  // how many choices each look field has (app/ui/officespace-sets.js LOOK; the parts are Pixel Agents' wardrobe)
+  const PARTS = { body: 2, skin: 4, hair: 14, hairColor: 18, top: 5, topColor: 17, pants: 7, pantsColor: 17, shoes: 2, shoesColor: 17,
+    jacket: 6, jacketColor: 17, full: 5, fullColor: 17, beard: 6, hat: 4, hatColor: 17, acc: 8, accColor: 10 };
   function cleanLook(o) {
     if (!o || typeof o !== 'object') return null;
     const out = {}; for (const [k, n] of Object.entries(PARTS)) if (Number.isInteger(o[k]) && o[k] >= 0 && o[k] < n) out[k] = o[k];

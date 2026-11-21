@@ -1,5 +1,5 @@
 /* Office Space (pass 11): the pixel floor inside the office. Chrome is flat matte (tokens, 1px borders, luminance steps);
-   the pixels themselves are drawn by officespace-sets.js. */
+   the pixels are Pixel Agents' art (app/ui/officespace/), drawn by officespace-art.js. */
 .of-view { display: inline-flex; gap: 4px; margin: 0 0 10px; }
 .of-view .btn.on { border-color: var(--edge-pop); background: var(--surface-2); color: var(--text); }
 .os { display: grid; gap: 8px; }
@@ -11,13 +11,15 @@
 .os.editing .os-canvas { cursor: crosshair; }
 .os-layer { position: absolute; inset: 0; pointer-events: none; }
 .os-tag { position: absolute; transform: translate(-50%, -100%); display: grid; justify-items: center; gap: 3px; padding: 0; border: 0; background: none; color: var(--text); font: 600 11px/1.2 var(--font); pointer-events: auto; cursor: pointer; }
-.os-name { padding: 1px 6px; border: 1px solid var(--edge); border-radius: 999px; background: var(--surface); white-space: nowrap; max-width: 140px; overflow: hidden; text-overflow: ellipsis; }
+.os-name { display: inline-flex; align-items: center; padding: 1px 6px; border: 1px solid var(--edge); border-radius: 999px; background: var(--surface); white-space: nowrap; max-width: 140px; overflow: hidden; text-overflow: ellipsis; }
 .os-tag[data-role="agent"] .os-name { border-color: var(--live); }
 .os-tag[data-role="flint"] .os-name { border-color: var(--brand); }
 .os-tag:focus-visible .os-name { outline: 2px solid var(--brand); outline-offset: 1px; }
-.os-bubble { padding: 3px 8px; border: 1px solid var(--edge-pop); border-radius: var(--r-ctl); background: var(--surface-2); white-space: nowrap; font-weight: 600; }
-.os-bubble.ask { border-color: var(--brand); color: var(--text); }
-.os-bubble.done { border-color: var(--online); }
+/* the bubble is the 11x13 pixel art, scaled with the floor; its words stay for screen readers */
+.os-bubble { display: block; line-height: 0; }
+.os-bub { display: block; height: auto; image-rendering: pixelated; image-rendering: crisp-edges; }
+.os-bubble-t { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.os-ai { margin-right: 4px; padding: 0 3px; border-radius: 3px; background: var(--live); color: var(--canvas); font: 700 9px/1.4 var(--mono); font-style: normal; letter-spacing: .04em; }
 .os-card, .os-edit, .os-look { position: absolute; top: 10px; right: 10px; width: min(340px, calc(100% - 20px)); max-height: calc(100% - 20px); overflow: auto; display: grid; gap: 10px; align-content: start; padding: 12px; border: 1px solid var(--edge); border-radius: var(--r-card); background: var(--surface); }
 .os-card[hidden], .os-edit[hidden], .os-look[hidden] { display: none; }
 .os-edit { left: 10px; right: auto; width: min(300px, calc(100% - 20px)); }
@@ -25,7 +27,7 @@
 .os-card header > div { display: grid; gap: 1px; flex: 1; min-width: 0; }
 .os-card header span { font-size: 12px; color: var(--muted); }
 .os-look header b, .os-edit header b { flex: 1; }
-.os-av { display: inline-grid; place-items: center; width: 32px; height: 32px; flex: none; border-radius: 50%; border: 1px solid var(--peer); background: var(--surface-2); font: 600 12px/1 var(--font); }
+.os-av { display: block; width: 32px; height: 32px; flex: none; border-radius: 50%; border: 1px solid var(--peer); background: var(--surface-2); image-rendering: pixelated; image-rendering: crisp-edges; }
 .os-av[data-role="agent"] { border-color: var(--live); }
 .os-av[data-role="flint"] { border-color: var(--brand); }
 .os-sub { margin: 0; font: 600 11px/1.3 var(--mono); letter-spacing: .04em; text-transform: uppercase; color: var(--faint); }
@@ -42,7 +44,7 @@
 .os-give { display: flex; gap: 6px; }
 .os-give .input { flex: 1; min-width: 0; }
 .os-look-row { display: flex; gap: 12px; align-items: center; }
-.os-prev { width: 64px; height: 96px; flex: none; image-rendering: pixelated; border: 1px solid var(--edge); border-radius: var(--r-ctl); background: var(--surface-2); }
+.os-prev { width: 64px; height: 128px; flex: none; image-rendering: pixelated; border: 1px solid var(--edge); border-radius: var(--r-ctl); background: var(--surface-2); }
 .os-parts { display: grid; gap: 4px; flex: 1; }
 .os-part { display: grid; grid-template-columns: 1fr auto minmax(64px, auto) auto; gap: 6px; align-items: center; font-size: 13px; }
 .os-part b { text-align: center; font-weight: 600; }
@@ -52,6 +54,9 @@
 .os-dot.on { outline: 2px solid var(--text); outline-offset: 1px; }
 .os-tools { display: flex; gap: 4px; flex-wrap: wrap; }
 .os-tools .btn.on { border-color: var(--brand); color: var(--text); }
+.os-furn .os-fb { padding: 3px; width: 40px; height: 40px; display: inline-grid; place-items: center; }
+.os-furn canvas { width: 32px; height: 32px; image-rendering: pixelated; image-rendering: crisp-edges; }
+.os-edit .os-sub { margin-top: 2px; }
 .os-assign { display: grid; gap: 4px; font-size: 13px; }
 .os-area { display: flex; gap: 6px; }
 .os-area[hidden] { display: none; }
