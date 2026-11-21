@@ -12,7 +12,7 @@
 // (#hub-band-slot in hub.js) for your most recent project, else the tribe's main one; with no tribe, Home shows the
 // most recent website or design kept on this device (localfiles.js). A tribe with no projects gets "Start your first
 // project". Server side: server/dashband.js. Test: app/test/e2e_dash_preview.py.
-//   window.TribeDashBand = { mountProject(p), mountHome(slot), refresh(), state() }
+//   window.TribeDashBand = { mountProject(p), mountHome(slot), refresh(), card(pid), open(pid, k), state() }
 (function () {
   'use strict';
   const C = () => window.TribeClient;
@@ -90,14 +90,24 @@
         <p>A project is where the app, the website and the designs live. Its preview shows up right here.</p>
         <div class="db-empty-acts"><button type="button" class="btn primary sm" data-db="start">${ico('i-plus', 14)}Start your first project</button></div></div></section>`;
   }
+  // the band's picture (no live iframe): also Home's preview cards (feat/p10-home)
+  async function picOf(b) {
+    if (b.pick === 'app') { const t = await loadThumb(b.project.id); return t && t.src && t.kind !== 'tile' ? `<img class="db-shot" alt="" decoding="async" referrerpolicy="no-referrer" src="${esc(srcOf(t.src))}">` : tile(b, t); }
+    if (b.pick === 'site') return siteMock(b.site, b.project.name);
+    if (b.pick === 'phone') return phonePic(b.project.id);
+    return (await designSvg(b.project.id, b.design)) || tile(b);
+  }
+  // Home (feat/p10-home): one project's preview as a small card's data, or null when it has nothing to show yet
+  async function card(pid) {
+    const b = await loadBand(pid); if (!b || !b.project) return null;
+    if (b.pick === 'none') return { pid, name: b.project.name, project: b.project, pick: 'none', pic: '', updated: b.updated || null };
+    let pic = ''; try { pic = await picOf(b); } catch {}
+    return { pid, name: b.project.name, project: b.project, pick: b.pick, kind: LABEL[b.pick] || '', pic, updated: b.updated || null };
+  }
   async function bandHtml(b, where) {
     if (!b) return '';
     if (b.pick === 'none') return emptyBand(b, where);
-    let pic = '';
-    if (b.pick === 'app') { const t = await loadThumb(b.project.id); pic = t && t.src && t.kind !== 'tile' ? `<img class="db-shot" alt="" decoding="async" referrerpolicy="no-referrer" src="${esc(srcOf(t.src))}">` : tile(b, t); }
-    else if (b.pick === 'site') pic = siteMock(b.site, b.project.name);
-    else if (b.pick === 'phone') pic = await phonePic(b.project.id);
-    else pic = (await designSvg(b.project.id, b.design)) || tile(b);
+    const pic = await picOf(b);
     const opens = b.pick === 'phone' || (b.pick === 'site' && b.site && b.site.designed);
     const live = b.pick === 'design' ? `${phone() ? 'Tap' : 'Click'} to open the design` : opens ? `${phone() ? 'Tap' : 'Click'} to open the preview` : phone() ? 'Tap to run it live' : 'Hover or click to run it live';
     return `<section class="db-band" id="db-band-${where}" data-pick="${b.pick}" data-pid="${esc(b.project.id)}" aria-label="Preview of ${esc(b.project.name)}">
@@ -281,6 +291,7 @@
     S.home.key = key; S.home.at = Date.now();
     if (!C() || !C().connected()) return homeLocal(slot);
     const list = (PJ() && PJ().list()) || [];
+    if (!list.length && window.TribeProjects && window.TribeProjects.hadProject && window.TribeProjects.hadProject() && !(window.TribeProjects.loaded && window.TribeProjects.loaded())) { slot.replaceChildren(); S.home.band = null; S.home.key = ''; return; }   // feat/p10-home: still loading, not "first project"
     if (!list.length) { const box = document.createElement('div'); box.className = 'db-wrap'; box.innerHTML = startBand(); slot.replaceChildren(box); bind(box.querySelector('.db-band'), null, 'home'); S.home.band = box; S.home.band.__sig = 'start'; return; }
     let last = null; try { last = JSON.parse(localStorage.getItem(`tribecode.lastSession:${C().base()}`) || 'null'); } catch {}
     let pid = last && list.some(x => x.id === last.project) ? last.project : null;
@@ -333,5 +344,5 @@
   hook();
   addEventListener('focus', () => { if (document.querySelector('.db-band')) refresh(); });
 
-  window.TribeDashBand = { mountProject, mountHome, refresh, fold, gaps, go: critGo, state: () => ({ project: S.pj.data, crits: S.pj.crits, home: S.home.data }) };
+  window.TribeDashBand = { mountProject, mountHome, refresh, fold, gaps, card, open: (pid, k = 'open') => loadBand(pid).then(b => b && act(k, b, 'home')), go: critGo, state: () => ({ project: S.pj.data, crits: S.pj.crits, home: S.home.data }) };
 })();

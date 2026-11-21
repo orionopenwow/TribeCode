@@ -218,7 +218,7 @@
     mine.filter(t => t.status !== 'doing').slice(0, 2).forEach(t => add(t.title, t.due ? `Due ${t.due}` : 'On your list', 'task', t.id));
     const free = tasks.filter(t => !t.assignee && t.status !== 'review'); if (free.length) add(free[0].title, `Nobody's on it yet (${free.length} like this)`, 'task', free[0].id);
     for (const n of (ctx.notes || []).slice(0, 20)) for (const l of String(n.text || '').split('\n')) { const m = /^\s*[-*]\s+\[ \]\s+(.+)$/.exec(l); if (m) add(m[1].trim(), 'An open checkbox in your notes', 'note', n.id); }
-    if (!items.length) add(ctx.connected === false ? 'Start your first project' : 'Pick one small thing to build', ctx.connected === false ? 'Everything else follows from it' : 'Nothing is waiting on you: a quiet day to make something', 'start', '');
+    if (!items.length) add(ctx.connected === false && !(typeof window !== 'undefined' && window.TribeProjects && window.TribeProjects.hadProject && window.TribeProjects.hadProject()) ? 'Start your first project' : 'Pick one small thing to build', ctx.connected === false && !(typeof window !== 'undefined' && window.TribeProjects && window.TribeProjects.hadProject && window.TribeProjects.hadProject()) ? 'Everything else follows from it' : 'Nothing is waiting on you: a quiet day to make something', 'start', '');
     const text = items.map((x, i) => `${i + 1}. ${x.t} (${x.why})`).join('\n');
     return { items, text };
   }

@@ -82,6 +82,7 @@
   setTimeout(() => { if (connected() && !data) load(true); }, 0);   // the hello can come before this script runs (a fast reload): the helpers still need the data
   C.on('status', () => { if (document.body.dataset.view === 'hub') render(); panel(); });
   C.on('projects', () => { if (document.body.dataset.view === 'hub') setTimeout(render, 300); });
+  addEventListener('tribe-projects-loaded', () => { if (document.body.dataset.view === 'hub' && mode === 'home') render(); });   // feat/p10-home: the list arrived after Home drew
   setInterval(() => { if (!document.hidden && connected()) load(true); }, 90_000);
 
   // ---------- render ----------
@@ -119,12 +120,13 @@
     const pj = projects(), live = (data && data.status) || {};
     const sub = on ? [greeting(), `${pj.length} project${pj.length === 1 ? '' : 's'}`, live.activeToday ? `${live.activeToday} active today` : ''].filter(Boolean).join(' · ')
       : C.hasToken() && !(window.TribeOffline && window.TribeOffline.asleep && window.TribeOffline.asleep()) ? `${greeting()}. ${offlineWord()}` : `${greeting()}. Not in a tribe yet: everything here works on this device.`;
+    const hubOn = C.hasToken() && (on || hadPj()) && !!window.TribeHomeHub;   // feat/p10-home
     keepFocus(() => {
       el.innerHTML = `<div class="hub hub-home">${isPhone() ? `<div class="hub-ptop" id="hub-ptop"><button class="hpt-btn hpt-me" id="hpt-me" aria-label="Your profile">${meFace()}</button>
           <button class="hpt-brand" id="hpt-brand" aria-label="Your projects"><img class="hpt-mark tc-mark" src="assets/icon.svg" alt="" width="26" height="26"><img class="brand-wm" src="assets/wordmark.svg" alt="TribeCode">${ico('i-chev', 16)}</button>
           <button class="hpt-btn" id="hpt-bell" aria-label="Notifications">${ico('i-bell', 26)}<span class="hpt-dot hidden" id="hpt-dot"></span></button></div>` : ''}
         ${idCard(on, tribe, pj, live, sub)}
-        <div id="hub-band-slot"></div><!-- feat/dash-preview: your most recent project's preview (dashband.js) -->
+        ${hubOn ? (isPhone() ? '<div id="hub-msgs-slot"></div><div id="hub-prev-slot"></div>' : '<div id="hub-prev-slot"></div><div id="hub-msgs-slot"></div>') : '<div id="hub-band-slot"></div>'}<!-- feat/p10-home: in a tribe, every project's preview and your messages; else the band (dashband.js) -->
         ${gsHero(on)}
         <div id="hub-flint-slot"></div>
         ${isPhone() && on && pj.length ? phoneProjects(pj) : ''}
@@ -134,7 +136,8 @@
       </div>`;
       bind(el);
       { const hs = el.querySelector('#hub-site'); if (hs) hs.onclick = () => window.TribeHelp && window.TribeHelp.website && window.TribeHelp.website(); }
-      if (window.TribeDashBand) window.TribeDashBand.mountHome(el.querySelector('#hub-band-slot'));
+      if (hubOn && window.TribeHomeHub) window.TribeHomeHub.mount(el.querySelector('#hub-prev-slot'), el.querySelector('#hub-msgs-slot'));
+      else if (window.TribeDashBand) window.TribeDashBand.mountHome(el.querySelector('#hub-band-slot'));
       if (window.TribeFlint && window.TribeFlint.mountDashboard) window.TribeFlint.mountDashboard(el.querySelector('#hub-flint-slot'));   // feat/flint-ai: Flint on the Dashboard
     });
   }
@@ -186,6 +189,11 @@
         <details><summary>Details</summary><pre>${esc(window.__hostError)}</pre></details><div class="gs-err-acts"><button class="btn primary sm" id="hub-host-retry">Try again</button><button class="btn sm" id="hub-host-offline">Keep working offline</button></div></div>` : '';
     // Not in a tribe yet: one honest empty state with one clear way in, and the way to join a friend beside it.
     // Nothing is made until you press Start (no demo, no pretend tribe: the demo lives in the ? menu and Ctrl K).
+    if (!on && hadPj()) {   // feat/p10-home: you have projects; the tribe is just offline or still connecting
+      const cached = (PJ() && PJ().cachedList ? PJ().cachedList() : []).slice(0, 6);
+      return `<section class="hero-card hub-hero hub-gs hub-away" id="hub-hero"><div class="gs-band"><span class="eyebrow">${esc(offlineChip())}</span><span class="gs-band-r">${esc(offlineWord())}</span></div>
+        ${err}${cached.length ? `<div class="gs-grid">${cached.map(p => `<button class="gs-tile" data-pj-go="${esc(p.id)}"><span class="gs-ic gs-face">${PJ().face(p, 'sm')}</span><b>${esc(p.name)}</b><span>${esc(p.bio || 'Opens with what this device last saw')}</span></button>`).join('')}</div>` : ''}</section>`;
+    }
     if (!on) {
       const tourBtn = window.TribeFlintTour ? `<button class="linkish" id="hub-tour">${ico('i-flint', 13)}${esc(window.TribeFlintTour.label())}</button>` : '';
       return `<section class="hero-card hub-hero hub-gs hub-empty" id="hub-hero">
@@ -228,6 +236,7 @@
       <div class="hh-grid">${sugPanel(on)}${askPanel(on)}${joinPanel(on)}</div></section>`;
   }
   const pj1 = () => projects()[0] || null;
+  const hadPj = () => !!(PJ() && PJ().hadProject && C.hasToken() && PJ().hadProject());   // feat/p10-home: this device has seen a project in this tribe
   let sugOpen = false;
   function sugItems() {
     const need = [...((data && data.hero) || []), ...((data && data.more) || [])].slice(0, 4).map(x => ({ ...x, need: true }));

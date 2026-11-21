@@ -36,11 +36,22 @@
     if (!C.hasToken() || !C.connected()) return;
     if (refreshing) { again = true; return refreshing; }
     refreshing = (async () => {
-      try { const r = await C.api('/projects'); projects = r.projects || []; loaded = true; render(); } catch {}
+      try { const r = await C.api('/projects'); projects = r.projects || []; loaded = true; render(); remember(); } catch {}
       refreshing = null; if (again) { again = false; refresh(); }
     })();
     return refreshing;
   }
+  // feat/p10-home: once someone has a project, "Start your first project" never comes back on this device, and Home can
+  // show their projects (names and faces only) while the tribe is offline. Then Home redraws with the real list.
+  const HK = () => `tribecode.hadProject:${C.base()}`, PK = () => `tribecode.pjcache:${C.base()}`;
+  function remember() {
+    try {
+      if (projects.length) { localStorage.setItem(HK(), '1'); localStorage.setItem(PK(), JSON.stringify(projects.slice(0, 24).map(p => ({ id: p.id, name: p.name, emoji: p.emoji || '', color: p.color || '', image: p.image || '', bio: p.bio || '' })))); }
+    } catch {}
+    dispatchEvent(new CustomEvent('tribe-projects-loaded', { detail: { count: projects.length } }));
+  }
+  const hadProject = () => { if (projects.length) return true; try { return localStorage.getItem(HK()) === '1'; } catch { return false; } };
+  const cachedList = () => { try { return JSON.parse(localStorage.getItem(PK()) || '[]') || []; } catch { return []; } };
   let rt; const soon = (ms = 250) => { clearTimeout(rt); rt = setTimeout(refresh, ms); };
 
   // ---------- project circles (rail) + the project's nest (second column) ----------
@@ -1061,5 +1072,5 @@ ${canEdit && !started ? `      <section class="pj-context" id="pj-context"><div 
     const tryIt = () => { if (!C.connected() || !me().id) return false; try { history.replaceState(null, '', location.pathname + location.hash); } catch {} if (isHost()) remix(r); else toastMsg('That starter needs the host to start it. Share the link with them: github.com/' + r); return true; };
     if (!tryIt()) C.on('hello', function once() { if (r && tryIt()) r = ''; });
   })();
-  window.TribeProjects = { gallery, createFromIdea, nameFromIdea, openStarters, remix, step, refresh, list: () => projects, current: cur, cur: curP, face, label, here, pulses: () => pulses, sheet, pickImage, workspacePanel, switchTo, onShow, whereLabel, openNew, startFromFiles, analyze, fromPath, fromFolder, overview, requests };
+  window.TribeProjects = { hadProject, cachedList, loaded: () => loaded, gallery, createFromIdea, nameFromIdea, openStarters, remix, step, refresh, list: () => projects, current: cur, cur: curP, face, label, here, pulses: () => pulses, sheet, pickImage, workspacePanel, switchTo, onShow, whereLabel, openNew, startFromFiles, analyze, fromPath, fromFolder, overview, requests };
 })();
