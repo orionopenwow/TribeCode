@@ -22,7 +22,7 @@
     const pid = box.dataset.pid, opts = box._opts || {};
     let r; try { r = await api(pid); } catch (e) { box.innerHTML = `<p class="ssh-none">${esc(e.message)}</p>`; return; }
     box._data = r;
-    if (!r.current) { box.innerHTML = `<p class="ssh-none">There is no website yet, so nothing to save. Make it first: one tap in the preview's Website tab or in Files › Website.</p>`; return; }
+    if (!r.current) { box.innerHTML = `<p class="ssh-none">Nothing to save yet. Make your website in the website designer first, then save designs of it here.</p>`; return; }
     const card = v => `<li class="ssh-card" data-vid="${esc(v.id)}"><img class="ssh-th" src="${v.thumb}" alt="" width="96" height="96">
       <div class="ssh-txt"><b>${esc(v.note)}</b><small>${esc(v.byName || '')} · ${esc(ago(v.at))}</small><small class="ssh-hl">“${esc(v.headline.slice(0, 48))}”</small>
       <span class="ssh-acts"><button type="button" class="btn sm" data-ssh="compare">Compare</button><button type="button" class="btn sm" data-ssh="restore">Restore</button><button type="button" class="ssh-x" data-ssh="del" title="Remove from Saved designs" aria-label="Remove ${esc(v.note)} from Saved designs">✕</button></span></div></li>`;

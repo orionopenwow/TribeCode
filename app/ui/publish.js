@@ -1,4 +1,5 @@
-// Publish (v0.27): one click turns what the preview shows into a public play link (server/publish.js).
+// Publish (v0.27): one click turns what the preview shows into a public link (server/publish.js), worded by what it is:
+// a game's play link, a link to your site, a link to try your app (pubcore.js linkWords).
 // The sheet runs the safety check first: secrets block publishing (with "Fix it", which asks your AI helpers through a
 // task), warnings can be published past. Then: the play link with Copy, a QR code, a share card preview, Remix on/off,
 // Update and Unpublish. Entry points: a 🚀 button in the preview toolbar (added from outside preview.js), a "Share it"
@@ -15,6 +16,23 @@
   const T = s => (window.TribeI18n && window.TribeI18n.t ? window.TribeI18n.t(s, s) : s);
   const ROCKET = '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 15c-1.5 1.3-2 4-2 6 2 0 4.7-.5 6-2"/><path d="M9 12a17 17 0 0 1 11-9c0 5-3 9-9 11z"/><path d="M9 12 6 11l2-3 4-1M12 15l1 3 3-2 1-4"/><circle cx="15" cy="8.5" r="1.4"/></svg>';
   const cache = {};   // pid -> { published, canPublish }
+  // feat/website-one: the link is worded by what was made: a game's play link, a link to your site, a link to try your app
+  const KIND = {};   // pid -> 'game' | 'site' | 'app' (from publishreal.js's status, or the sheet's "What is it?")
+  const W = pid => { const c = window.TribePubCore; const k = KIND[pid || pidNow()]; return c && c.linkWords ? c.linkWords(k) : { link: 'link', the: 'the link', title: 'Put it online with a link', live: 'Live · link', liveAt: 'Live at its link', ready: 'Published: the link is ready', down: 'Take the link down? People with the link will see "Nothing here".', phone: 'A link needs the tribe on a computer. Everything below works from this phone.', online: 'A quick link needs the tribe online. Everything below works right here, in this browser.' }; };
+  async function kindOf(pid) {
+    if (!pid) return '';
+    if (KIND[pid]) return KIND[pid];
+    try { const s = window.TribePublishReal ? await window.TribePublishReal.status(pid) : null; if (s && !s.offline && s.kind) KIND[pid] = s.kind; } catch {}
+    return KIND[pid] || '';
+  }
+  addEventListener('tribe:pub-kind', e => { const d = e.detail || {}; if (!d.pid || !d.kind || KIND[d.pid] === d.kind) return; KIND[d.pid] = d.kind; relabel(d.pid); });
+  let SHEET = null;   // the open sheet's { pid, cur, phone } so a change of "What is it?" rewords it
+  function subText(pid, cur, phone) { const w = W(pid); return phone ? T(matchMedia('(max-width: 820px)').matches || /Android|iPhone|iPad/i.test(navigator.userAgent || '') ? w.phone : w.online) : cur ? `${T(w.liveAt)} · ${T('version')} ${cur.version}. ${T('Update it any time.')}` : T('Anyone with the link can open it, on any phone or computer. No account needed.'); }
+  function relabel(pid) {
+    const m = $('#invite-modal'); if (SHEET && SHEET.pid === pid && m && !m.classList.contains('hidden')) { const sub = $('#invite-body .pb-sub'); if (sub) sub.textContent = subText(pid, SHEET.cur, SHEET.phone); const lv = $('#invite-body .pb-live'); if (lv) lv.setAttribute('aria-label', T(W(pid).link)); }
+    document.querySelectorAll('.pvw-btn[data-pub]').forEach(b => { if (pidNow() === pid) { b.title = T(W(pid).title); b.setAttribute('aria-label', T(W(pid).title)); } });
+    const c = document.getElementById('pb-dash'); if (c && c.dataset.pid === pid) { c.dataset.fresh = '0'; addCard(); }
+  }
 
   async function state(pid = pidNow(), fresh) {
     if (!pid) return { published: [], canPublish: false };
@@ -45,14 +63,15 @@
     const s = sheet(`<p class="eyebrow">Publish</p><h2 class="pb-h">Share ${esc(p.name)} with a link</h2><p class="faint pb-sub">Checking the files before anything goes public…</p><div class="pb-body" id="pb-body"><div class="pb-spin" aria-label="Checking"></div></div>
       <div class="modal-foot"><span style="flex:1"></span><button class="btn" data-close>Close</button></div>`);
     if (!s) return;
-    const st = await state(pid, true), cur = (st.published || [])[0];
-    if (!st.canPublish && !cur) { $('#pb-body').innerHTML = `<p class="faint">${me().role === 'spectator' ? 'Spectators can watch, not publish. Ask the host for builder access.' : 'You can\'t publish this project.'}</p>`; return; }
+    const [st] = await Promise.all([state(pid, true), kindOf(pid)]), cur = (st.published || [])[0];
+    if (!st.canPublish && !cur) { $('#pb-body').innerHTML = `<p class="faint">${me().role === 'spectator' ? 'Spectators can watch, not publish. Ask whoever runs the tribe to make you a builder.' : 'You can\'t publish this project.'}</p>`; return; }
     let ch; try { ch = await C.api('/publish/check', { method: 'POST', body: { project: pid } }); } catch (e) {
       // the Launch kit (launchkit.js) needs no code: store text, an icon and screenshots of the sample screens can start now
       // feat/flow-ease: nothing made yet is not an error: say what to do and give the one button that does it
-      const none = /nothing to put online yet/i.test(e.message || '') && window.TribeSiteDesigner;
-      $('#pb-body').innerHTML = `${none ? `<div class="pb-none" id="pb-none"><p><b>${esc(T('Nothing to put online yet'))}</b></p><p class="faint">${esc(T('Make a website first. It takes a minute, and then this is where you share it.'))}</p><button class="btn primary" type="button" data-pb-make>${esc(T('Make a website'))}</button></div>` : `<p class="pb-err">${esc(e.message)}</p>`}${window.TribeLaunchKit ? `<p class="faint">${esc(T('The store text, the app icon and the launch checklist do not need code yet.'))}</p><button class="btn${none ? ' ghost' : ''}" type="button" data-launchkit>${esc(T('Open the Launch kit'))}</button>` : ''}`;
+      const none = /nothing to put online yet|no first page to publish yet/i.test(e.message || '') && window.TribeSiteDesigner;
+      $('#pb-body').innerHTML = `${none ? `<div class="pb-none" id="pb-none"><p><b>${esc(T('Nothing to put online yet'))}</b></p><p class="faint">${esc(T('Make a website first. It takes a minute, and then this is where you share it.'))}</p><button class="btn primary" type="button" data-pb-make>${esc(T('Make a website'))}</button></div>` : `<p class="pb-err">${esc(e.message)}</p><button class="btn primary" type="button" data-pb-retry>${esc(T('Try again'))}</button>`}${window.TribeLaunchKit ? `<p class="faint">${esc(T('The store text, the app icon and the launch checklist do not need code yet.'))}</p><button class="btn${none ? ' ghost' : ''}" type="button" data-launchkit>${esc(T('Open the Launch kit'))}</button>` : ''}`;
       const mk = $('#pb-body [data-pb-make]'); if (mk) mk.onclick = () => { s.close(); window.TribeSiteDesigner.open({ pid }); };
+      const rt = $('#pb-body [data-pb-retry]'); if (rt) rt.onclick = () => open(pid, focus);
       const lk = $('#pb-body [data-launchkit]'); if (lk) lk.onclick = () => { s.close(); window.TribeLaunchKit.open(pid); };
       return;
     }
@@ -61,11 +80,12 @@
   function render(s, pid, p, cur, ch, st) {
     const agent = me().role === 'agent';
     const warns = ch.findings.filter(f => f.level === 'warn'), blocks = ch.findings.filter(f => f.level === 'block');
-    const phone = !!st.phone;   // a tribe that lives on this phone: no play link (that needs a computer), the rest works
-    s.body.querySelector('.pb-sub').textContent = phone ? T(matchMedia('(max-width: 820px)').matches || /Android|iPhone|iPad/i.test(navigator.userAgent || '') ? 'A play link needs the tribe on a computer. Everything below works from this phone.' : 'A quick play link needs the tribe online. Everything below works right here, in this browser.') : cur ? `Live at its play link · version ${cur.version}. Update it any time.` : 'Anyone with the link can open it, on any phone or computer. No account needed.';
+    const phone = !!st.phone;   // a tribe that lives on this phone: no quick link (that needs a computer), the rest works
+    SHEET = { pid, cur, phone };
+    s.body.querySelector('.pb-sub').textContent = subText(pid, cur, phone);
     const chk = !ch.findings.length ? `<p class="pb-ok">✓ Safety check: ${ch.files} file${ch.files === 1 ? '' : 's'}, no secrets or risky code found.</p>`
       : `<div class="pb-check"><p class="pb-check__h">${blocks.length ? `✕ ${blocks.length} thing${blocks.length > 1 ? 's' : ''} must be fixed before this goes public` : `⚠ ${warns.length} warning${warns.length > 1 ? 's' : ''} to look over`}</p><ul class="pb-fl">${ch.findings.map(findingRow).join('')}</ul></div>`;
-    $('#pb-body').innerHTML = `${cur ? live(cur) : ''}${chk}
+    $('#pb-body').innerHTML = `${cur ? live(cur, pid) : ''}${chk}
       <form class="pb-form" id="pb-form" autocomplete="off">
         <label class="pb-l">Title<input class="input" id="pb-title" maxlength="80" value="${esc((cur && cur.title) || p.name)}"></label>
         <label class="pb-l">One line about it<input class="input" id="pb-desc" maxlength="240" placeholder="What is it? Who is it for?" value="${esc((cur && cur.desc) || p.bio || '')}"></label>
@@ -88,19 +108,19 @@
       try {
         const r = await C.api('/publish', { method: 'POST', body: { project: pid, title: $('#pb-title').value, desc: $('#pb-desc').value, allowRemix: $('#pb-remix').checked, force: true } });
         if (r.pending) { $('#pb-body').innerHTML = `<p class="pb-ok">Asked ${esc((r.pending.toNames || []).join(', ') || 'your owner')} to approve. It goes live when they say yes.</p>`; go.remove(); return; }
-        const st2 = await state(pid, true); toast('Published: the play link is ready');
+        const st2 = await state(pid, true); toast(T(W(pid).ready));
         render(s, pid, p, (st2.published || [])[0], await C.api('/publish/check', { method: 'POST', body: { project: pid } }), st2);
         bump();
       } catch (e) { go.disabled = false; go.textContent = 'Try again'; toast(e.message); }
     };
     const down = $('#pb-down');
     if (down) down.onclick = async () => {
-      if (!confirm('Take the play link down? People with the link will see "Nothing here".')) return;
+      if (!confirm(T(W(pid).down))) return;
       try { await C.api('/publish/' + encodeURIComponent(cur.slug), { method: 'DELETE' }); toast('Unpublished'); await state(pid, true); s.close(); bump(); } catch (e) { toast(e.message); }
     };
   }
-  function live(e) {
-    return `<section class="pb-live" aria-label="Play link">
+  function live(e, pid) {
+    return `<section class="pb-live" aria-label="${esc(T(W(pid).link))}">
       <div class="pb-card">${e.card ? `<img src="${esc(e.card)}" alt="">` : `<div class="pb-card__ph" aria-hidden="true">${ROCKET}</div>`}<div class="pb-card__t"><b>${esc(e.title)}</b><span>${esc(e.desc || 'Made with TribeCode')}</span><small>${esc(String(e.url).replace(/^https?:\/\//, ''))}</small></div></div>
       <div class="linkbox pb-link"><code id="pb-url">${esc(e.url)}</code><button class="btn" id="pb-qrb" type="button" aria-label="Show QR code">QR</button><button class="btn" id="pb-open" type="button">Open</button><button class="btn primary" id="pb-copy" type="button">Copy</button></div>
       <div class="qr pb-qr hidden" id="pb-qr"></div>
@@ -119,7 +139,8 @@
     document.querySelectorAll('.pvw-btn[data-act="tab"]').forEach(tab => {
       const bar = tab.parentElement; if (!bar || bar.querySelector('[data-pub]')) return;
       const b = document.createElement('button');
-      b.type = 'button'; b.className = 'pvw-btn pb-tool'; b.dataset.pub = '1'; b.title = 'Publish to a play link'; b.setAttribute('aria-label', 'Publish to a play link'); b.innerHTML = ROCKET;
+      const lab = T(W().title); b.type = 'button'; b.className = 'pvw-btn pb-tool'; b.dataset.pub = '1'; b.title = lab; b.setAttribute('aria-label', lab); b.innerHTML = ROCKET;
+      const p0 = pidNow(); if (p0 && !KIND[p0]) kindOf(p0).then(() => relabel(p0));
       b.addEventListener('click', e => { e.preventDefault(); e.stopPropagation(); open(); });
       tab.after(b);
     });
@@ -133,12 +154,12 @@
     if (card && card.dataset.pid === pid && card.dataset.fresh === '1') return;
     if (!card) { card = document.createElement('section'); card.id = 'pb-dash'; card.className = 'card pb-dash'; card.setAttribute('aria-label', 'Share it'); slot.after(card); }
     card.dataset.pid = pid; card.dataset.fresh = '1';
-    const n = ++cardSeq, st = await state(pid); if (n !== cardSeq) return;
-    const e = (st.published || [])[0];
+    const n = ++cardSeq, [st] = await Promise.all([state(pid), kindOf(pid)]); if (n !== cardSeq) return;
+    const e = (st.published || [])[0], w = W(pid);
     if (!e && !st.canPublish) { card.remove(); return; }
     card.innerHTML = e
-      ? `<div class="pb-dash__i" aria-hidden="true">${ROCKET}</div><div class="pb-dash__t"><span class="eyebrow">Live · play link</span><b>${esc(e.title)}</b><a href="${esc(e.url)}" target="_blank" rel="noopener">${esc(String(e.url).replace(/^https?:\/\//, ''))}</a></div><div class="pb-dash__a"><button class="btn sm" data-pb-copy>Copy</button><button class="btn sm primary" data-pb-open>Update</button></div>`
-      : `<div class="pb-dash__i" aria-hidden="true">${ROCKET}</div><div class="pb-dash__t"><span class="eyebrow">Share it</span><b>Publish to a play link</b><small class="faint">Anyone can open it on a phone. A safety check runs first.</small></div><div class="pb-dash__a"><button class="btn sm primary" data-pb-open>Publish</button></div>`;
+      ? `<div class="pb-dash__i" aria-hidden="true">${ROCKET}</div><div class="pb-dash__t"><span class="eyebrow">${esc(T(w.live))}</span><b>${esc(e.title)}</b><a href="${esc(e.url)}" target="_blank" rel="noopener">${esc(String(e.url).replace(/^https?:\/\//, ''))}</a></div><div class="pb-dash__a"><button class="btn sm" data-pb-copy>Copy</button><button class="btn sm primary" data-pb-open>Update</button></div>`
+      : `<div class="pb-dash__i" aria-hidden="true">${ROCKET}</div><div class="pb-dash__t"><span class="eyebrow">${esc(T('Share it'))}</span><b>${esc(T(w.title))}</b><small class="faint">Anyone can open it on a phone. A safety check runs first.</small></div><div class="pb-dash__a"><button class="btn sm primary" data-pb-open>Publish</button></div>`;
     card.querySelector('[data-pb-open]').onclick = () => open(pid);
     const cp = card.querySelector('[data-pb-copy]'); if (cp) cp.onclick = async () => { try { await navigator.clipboard.writeText(e.url); toast('Link copied'); } catch { prompt('Copy this link', e.url); } };
   }
@@ -148,7 +169,7 @@
   C.on('project', () => { const c = document.getElementById('pb-dash'); if (c) c.dataset.fresh = '0'; });
   // 3) Ctrl K
   if (window.TribePalette && window.TribePalette.register) window.TribePalette.register(() => [
-    { kind: 'Action', label: 'Publish to a play link', keys: 'publish share play link deploy ship public live url', run: () => open() },
+    { kind: 'Action', label: T(W().title), keys: 'publish share play link site link app link put online deploy ship public live url', run: () => open() },
   ]);
   // 4) "Remix this" from a play page: /?remixPlay=<slug>
   (function remixFromLink() {

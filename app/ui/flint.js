@@ -262,7 +262,7 @@
     if (RX.helper.test(t)) return helper(t);
     if (RX.connect.test(t)) return inviteClaude(t);   // one way in: Bring an AI helper
     if (RX.hosting.test(t)) return hosting(t);
-    if (RX.website.test(t)) return website(t);
+    if (RX.website.test(t)) return website();
     if (RX.focus.test(t)) return focusReply();
     if (RX.prompt.test(t)) { await ACTS.prompt(); return say('I copied a prompt for your AI helper: your task, your part of the code, the branch to use, and what to leave alone so nothing collides. Paste it into Claude Code, Codex or Cursor.', [act('Copy it again', 'prompt')]); }
     if (RX.preview.test(t)) { ACTS.preview(); if (FF()) later(350, () => { const p = seen('#pvw'); if (p) FF().done(p, 'Preview'); }); return say('Opened the preview, right next to the work.', [act('Open it again', 'preview')]); }
@@ -321,27 +321,15 @@
       return say(`Added to Tasks${p ? ` in ${p.name}` : ''}: “${tk.title}”.`, [act('Open Tasks', 'nav', 'tasks')], { link: 'task:' + tk.id }); }
     catch (e) { if (FF()) FF().home(); say('I could not add that task: ' + e.message); return null; }
   }
-  // feat/customize: the site generator (server/sitegen.js). A draft only; the host or the project lead publishes.
-  async function website(t) {
-    if (!connected()) return say('Websites belong to a project. Start or join a tribe first.', [act('Host or join', 'invite')]);
-    const pid = PJ() && PJ().current && PJ().current(); if (!pid) return say('Open a project first, then ask me again.');
-    const how = /\b(shuffle|another|different|new layout)\b/.test(t) ? 'shuffle' : /\b(redo|refresh|regenerate)\b/.test(t) ? 'regenerate' : 'generate';
-    try {
-      // feat/site-builder: "make a website" / "build a site for my bakery" runs Instant (the kind of site is guessed from the words)
-      if (how === 'generate') {
-        const r = await C.api(`/projects/${encodeURIComponent(pid)}/website/instant`, { method: 'POST', body: { hint: t } });
-        const G = r.website.gen, L = (G.layouts.find(x => x.id === G.draft.layout) || {}).name || 'a', T = (G.types.find(x => x.id === r.type) || {}).name || 'site';
-        if (window.TribeSiteGen && window.TribeSiteGen.mode) window.TribeSiteGen.mode('instant');
-        ACTS.website(); if (FF()) later(400, () => { const w = seen('#pvw') || curView(); if (w) FF().done(w, 'Website draft ✓'); });
-        return say(`Here's a draft in the ${L} layout as ${/^[aeiou]/i.test(T) ? 'an' : 'a'} ${T.toLowerCase()}, filled from what the project has. It's in the preview now. Nothing is live yet${G.canPublish ? ': press Publish when you like it' : ': the host or the project lead publishes it'}.`,
-          [act('Open Website', 'website'), act('Another layout', 'ask', 'Shuffle our website layout')]);
-      }
-      const r = await C.api(`/projects/${encodeURIComponent(pid)}/website/gen`, { method: 'POST', body: { how } });
-      const G = r.website.gen, L = (G.layouts.find(x => x.id === G.draft.layout) || {}).name || 'a';
-      ACTS.website();
-      return say(`Here's a draft in the ${L} layout, filled from the bio, vision, screenshots, saved changes and team. Nothing is live yet${G.canPublish ? ': press Publish when you like it' : ': the host or the project lead publishes it'}.`,
-        [act('Open Website', 'website'), act('Another layout', 'ask', 'Shuffle our website layout')]);
-    } catch (e) { return say('I could not make the draft: ' + e.message); }
+  // feat/website-one: "make a website" opens the website designer, the one website tool (the old page builder is retired).
+  // With no site yet: its start screen (what kind of site first). With a site: the designer, on it.
+  async function website() {
+    const pid = PJ() && PJ().current && PJ().current();
+    const D = window.TribeSiteDesigner; if (!D) return say('The website designer did not load. Reload the app.');
+    let has = false; if (pid && connected()) { try { has = !!(await C.api(`/projects/${encodeURIComponent(pid)}/site-config`)).config; } catch {} }
+    await D.open(pid ? { pid } : {});
+    return say(has ? 'Opened your website in the designer. Click anything to change it, or tell me what to change.' : 'Opened the website designer. Pick what kind of site, then a template: I fill it in from the project, free.',
+      [act('Open Website', 'website')]);
   }
   // feat/focus: what you're on, what's next, and a prompt that keeps your AI helper in your part of the code
   async function focusReply() {

@@ -86,7 +86,11 @@
   const pidNow = () => (window.TribeProjects && window.TribeProjects.current && window.TribeProjects.current()) || '';
   const agoS = at => { const s = (Date.now() - Date.parse(at)) / 1000; if (!Number.isFinite(s)) return ''; if (s < 60) return 'just now'; if (s < 3600) return `${Math.floor(s / 60)} min ago`; if (s < 86400) return `${Math.floor(s / 3600)} h ago`; return new Date(at).toLocaleDateString([], { month: 'short', day: 'numeric' }); };
   function siteOf() {
-    const c = render.site; if (!c || c.pid !== pidNow() || !c.w) return null;
+    const c = render.site; if (!c || c.pid !== pidNow() || !(c.w || c.cfg)) return null;
+    if (c.cfg) {   // feat/website-one: the website designer's site, the one website tool
+      let html = ''; try { html = window.TribeSiteCfg ? window.TribeSiteCfg.exportFiles(c.cfg, 'html')['index.html'] : ''; } catch {}
+      return { title: c.cfg.name || `${projName().name || 'Project'} website`, at: c.savedAt || '', html, url: '', live: false, draft: false, designer: true, where: '' };
+    }
     const w = c.w, G = w.gen || {}, draft = !!(G.draft && G.draftUrl), live = !!(w.exists && w.previewUrl);
     if (!draft && !live && !w.started) return null;
     const useDraft = draft && (G.unpublished || !live);
@@ -96,20 +100,20 @@
   }
   function siteLead(cat) {
     const w = cat === 'sites' && siteOf(); if (!w) return '';
-    const state = w.draft ? (w.live ? 'Changes not published yet' : 'Not published yet') : w.live ? 'Built' : `Started in ${w.where || 'the project'}`;
+    const state = w.designer ? 'Made in the website designer' : w.draft ? (w.live ? 'Changes not published yet' : 'Not published yet') : w.live ? 'Built' : `Started in ${w.where || 'the project'}`;
     return `<section class="fg-site" id="fg-site" aria-label="Website">
-      <div class="fg-site-pv" id="fg-site-pv" role="button" tabindex="0" title="Open in the website builder">${w.url ? `<iframe src="${esc(w.url)}" title="Website preview" sandbox="" referrerpolicy="no-referrer" loading="lazy" tabindex="-1"></iframe>` : `<span class="fg-site-none">${FV().icon('sites', 22)}</span>`}</div>
+      <div class="fg-site-pv" id="fg-site-pv" role="button" tabindex="0" title="${w.designer ? 'Open the designer' : 'Open the website'}">${w.html ? `<iframe srcdoc="${esc(w.html)}" title="Website preview" sandbox="" referrerpolicy="no-referrer" loading="lazy" tabindex="-1"></iframe>` : w.url ? `<iframe src="${esc(w.url)}" title="Website preview" sandbox="" referrerpolicy="no-referrer" loading="lazy" tabindex="-1"></iframe>` : `<span class="fg-site-none">${FV().icon('sites', 22)}</span>`}</div>
       <div class="fg-site-b"><span class="eyebrow">Website</span><h2 id="fg-site-title">${esc(w.title)}</h2>
         <p id="fg-site-meta">${w.at ? `Last saved ${esc(agoS(w.at))} · ` : ''}${esc(state)}</p>
-        <div class="fg-site-acts"><button type="button" class="btn primary" id="fg-site-open">Open in the website builder</button><button type="button" class="btn" id="fg-site-pub">Publish</button></div></div>
+        <div class="fg-site-acts"><button type="button" class="btn primary" id="fg-site-open">${w.designer ? 'Open the designer' : 'Open the website'}</button>${w.designer ? '<button type="button" class="btn" id="fg-site-pub">Put it online</button>' : ''}</div></div>
     </section>`;
   }
-  const openSite = () => (window.TribeShell && window.TribeShell.go ? window.TribeShell.go('website') : window.TribeWebsite && window.TribeWebsite.open());
+  const openSite = () => { const w = siteOf(); if (w && w.designer && window.TribeSiteDesigner) return window.TribeSiteDesigner.open({ pid: pidNow() }); return window.TribeShell && window.TribeShell.go ? window.TribeShell.go('website') : window.TribeWebsite && window.TribeWebsite.open(); };
   function wireSite(body) {
     const pv = body.querySelector('#fg-site-pv'); if (!pv) return;
     pv.onclick = openSite; pv.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openSite(); } };
     body.querySelector('#fg-site-open').onclick = openSite;
-    body.querySelector('#fg-site-pub').onclick = () => (window.TribePublish && window.TribePublish.open ? window.TribePublish.open(pidNow()) : openSite());
+    const pub = body.querySelector('#fg-site-pub'); if (pub) pub.onclick = () => (window.TribePublish && window.TribePublish.open ? window.TribePublish.open(pidNow()) : openSite());
   }
   function create(k, anchor, o) {
     if (k === 'note' || k === 'doc') return o.create();
@@ -128,7 +132,7 @@
     }
   }
   async function make(kind, d, o) {
-    if (kind === 'site') { toast('Flint builds the project’s website in Files › Website.'); return window.TribeWebsite && window.TribeWebsite.open(); }
+    if (kind === 'site') return window.TribeWebsite && window.TribeWebsite.open();   // Files › Website: the website designer's site, or Make a website
     try { const r = await C.api('/docs', { method: 'POST', body: { title: d.title, body: d.body, ...(kind === 'sheet' ? { kind: 'sheet' } : kind === 'slides' ? { kind: 'deck' } : {}) } }); o.open(r.doc.slug); } catch (e) { toast(e.message); }
   }
   const saveBlob = (name, blob) => { const u = URL.createObjectURL(blob), a = document.createElement('a'); a.href = u; a.download = name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(u), 4000); };
@@ -186,7 +190,7 @@
       const up = root.querySelector('[data-up]'); if (up) up.onclick = () => { at = pane.dataset.fgFolder = ''; draw(shots); };
     };
     draw(render.shots);
-    { const p = pidNow(); if (p) try { const r = await C.api(`/projects/${encodeURIComponent(p)}/website`); const w = r.website || r, was = JSON.stringify(siteOf()); render.site = { pid: p, w }; if (was !== JSON.stringify(siteOf()) && pane.querySelector(':scope > .fg .fx') && !pane.querySelector('#doc-title') && !pane.querySelector('#fx-rename')) draw(render.shots); } catch {} }   // feat/setup-github
+    { const p = pidNow(); if (p) try { const [r, sc] = await Promise.all([C.api(`/projects/${encodeURIComponent(p)}/website`).catch(() => null), C.api(`/projects/${encodeURIComponent(p)}/site-config`).catch(() => null)]); const w = r ? (r.website || r) : null, was = JSON.stringify(siteOf()); render.site = { pid: p, w, cfg: sc && sc.config, savedAt: sc && sc.savedAt }; if (was !== JSON.stringify(siteOf()) && pane.querySelector(':scope > .fg .fx') && !pane.querySelector('#doc-title') && !pane.querySelector('#fx-rename')) draw(render.shots); } catch {} }   // feat/setup-github
     try { const u = await C.api('/uploads'); const ups = u.project || []; if (JSON.stringify(ups.map(x => x.id)) !== JSON.stringify((render.ups || []).map(x => x.id))) { render.ups = ups; if (pane.querySelector(':scope > .fg .fx') && !pane.querySelector('#doc-title') && !pane.querySelector('#fx-rename')) draw(render.shots); } } catch {}   // feat/dropzone
     try { const v = await C.api('/visuals'); const n = (v.screens || []).length; if (n !== (render.shots || []).length) { render.shots = v.screens || []; if (pane.querySelector(':scope > .fg .fx') && !pane.querySelector('#doc-title') && !pane.querySelector('#fx-rename')) draw(render.shots); } } catch {}
   }
