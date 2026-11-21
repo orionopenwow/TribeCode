@@ -3009,7 +3009,7 @@
       "kind": "widget",
       "emoji": "🐞",
       "title": "Bugs",
-      "summary": "Report it once, fix it once.",
+      "summary": "The tribe’s bug list: report one with a screenshot and a log, then follow it to fixed.",
       "tags": [
         "built-in",
         "qa"
@@ -3035,7 +3035,7 @@
       "kind": "widget",
       "emoji": "🗳️",
       "title": "Proposals & Board",
-      "summary": "Ideas the tribe votes on.",
+      "summary": "Ideas anyone can propose; the tribe votes, and the ones it backs become work.",
       "tags": [
         "built-in",
         "decisions"
@@ -3061,7 +3061,7 @@
       "kind": "widget",
       "emoji": "🚩",
       "title": "Milestones",
-      "summary": "The big steps, with progress.",
+      "summary": "The project’s big steps, each with its tasks and how far along it is.",
       "tags": [
         "built-in",
         "planning"
@@ -3113,7 +3113,7 @@
       "kind": "widget",
       "emoji": "📸",
       "title": "Visuals & screenshots",
-      "summary": "Screenshots of what got built.",
+      "summary": "Screenshots of what got built, kept over time so you can see the progress.",
       "tags": [
         "built-in",
         "design"
@@ -3139,7 +3139,7 @@
       "kind": "widget",
       "emoji": "🌐",
       "title": "Website",
-      "summary": "A public page for the project.",
+      "summary": "A public page for the project, made in the website designer.",
       "tags": [
         "built-in",
         "site"
@@ -3165,7 +3165,7 @@
       "kind": "widget",
       "emoji": "🧰",
       "title": "Workshop",
-      "summary": "Starters, assets and tools.",
+      "summary": "Starters, assets, studios and the Marketplace in one place.",
       "tags": [
         "built-in",
         "tools"

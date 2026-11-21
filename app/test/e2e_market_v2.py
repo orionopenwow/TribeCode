@@ -192,7 +192,7 @@ def main():
             pg.fill("#mk-q", mcp_item["title"]); pg.wait_for_selector(f".mk-card[data-id='{mcp_item['id']}']")
             pg.click(f".mk-card[data-id='{mcp_item['id']}'] .mk-t"); pg.wait_for_selector("#mk-detail h2")
             dt = pg.inner_text("#mk-detail")
-            assert "What Add does" in dt.replace("WHAT ADD DOES", "What Add does") and ".mcp.json" in dt and mcp_item["license"] in dt and "Open source ↗" in dt and "Docs ↗" in dt, dt
+            assert "What Add does" in dt.replace("WHAT ADD DOES", "What Add does") and ".mcp.json" in dt and mcp_item["license"] in dt and "Open source" in dt, dt   # p10: sources open in TribeCode's own browser (no ↗); Docs shows only when it differs from the source
             assert pg.evaluate("document.querySelector('#mk-detail').closest('#market') && getComputedStyle(document.querySelector('#mk-detail')).position !== 'fixed'"), "an in-page panel"
             assert pg.evaluate("document.querySelector('#mk-detail a[data-visit]').href.startsWith('https://')")
             assert pg.locator("#mk-detail .mk-thumb.big").count() == 1
