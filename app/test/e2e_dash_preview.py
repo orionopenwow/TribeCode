@@ -209,10 +209,11 @@ def main():
             # 8. Home: the band for your most recent project
             dash(pg, bakery); pg.evaluate("TribeHub.remember && TribeHub.remember('home')")
             pg.evaluate("TribeHub.open('home')")
-            pg.wait_for_function(f"(() => {{ const b = document.querySelector('#hub-band-slot .db-band'); return b && b.dataset.pid === {json.dumps(bakery)}; }})()", timeout=15000)
-            assert pg.locator("#hub-band-slot .db-frame").count() == 0
+            # feat/p10-home: a tribe with projects shows a preview card per project on Home (the band's own picture, no live frame)
+            pg.wait_for_function(f"!!document.querySelector('#hh-strip .hh-card[data-hh-pid={json.dumps(bakery)}] .hh-pic')", timeout=15000)
+            assert pg.locator("#hh-strip .db-frame").count() == 0
             # a tribe with no projects: Start your first project
-            pg.evaluate("(async () => { const L = TribeProjects.list; TribeProjects.list = () => []; await TribeDashBand.mountHome(document.querySelector('#hub-band-slot'), true); window.__restore = () => { TribeProjects.list = L; }; })()")
+            pg.evaluate("(async () => { const L = TribeProjects.list; TribeProjects.list = () => []; await TribeDashBand.mountHome((() => { let d = document.querySelector('#hub-band-slot'); if (!d) { d = document.createElement('div'); d.id = 'hub-band-slot'; document.querySelector('#view-hub .hub-home').append(d); } return d; })(), true); window.__restore = () => { TribeProjects.list = L; }; })()")
             pg.wait_for_function("document.querySelector('#hub-band-slot .db-band.db-start')", timeout=5000)
             assert "Start your first project" in pg.inner_text("#hub-band-slot")
             pg.evaluate("window.__restore(); TribeDashBand.mountHome(document.querySelector('#hub-band-slot'), true)")

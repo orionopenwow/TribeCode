@@ -522,6 +522,7 @@ const groupStyle = require('./groupstyle')({ P, store: baseStore, perms, getMemb
 perms.setStyle(groupStyle); chatx.votes.hooks.decided = m => groupStyle.decided(m); chatx.votes.hooks.counting = () => groupStyle.counting(P.current() || P.defaultId());
 // feat/chat2: created channels, link previews (SSRF-safe fetch + picture proxy), GIF search (server/channels.js, embeds.js, gifs.js)
 const chans = require('./channels')({ store: baseStore, P, str, broadcast, getMembers: () => members });
+const hubInbox = require('./hubinbox')({ store: baseStore, P, chans, dms, nameOf, memberById });   // feat/p10-home: Home's Messages
 const embeds = require('./embeds')({ store: baseStore });
 const gifs = require('./gifs')({ store: baseStore, pstore: store, P, channels: chans });
 // comms-smoke: meetings belong to the project where captions were turned on; optional after-huddle summary (server/huddlesum.js)
@@ -1347,6 +1348,7 @@ async function apiInProject(req, res, url) {
   if (a === 'people') { const h = await people.route(req, res, ctx()); if (h !== null) return; }   // person view (server/people.js)
   if (a === 'secretary') { const h = await secretary.route(req, res, ctx()); if (h !== null) return; }
   if (a === 'calls') { const h = await calls.route(req, res, ctx()); if (h !== null) return; }   // voice-video   // the Secretary (server/secretary.js)
+  if (a === 'hub' && b === 'inbox' && m === 'GET') { if (!me) return fail(res, 401, 'not a member of this tribe'); return send(res, 200, { rows: hubInbox.rows(me) }); }   // feat/p10-home: Home's Messages
   if (a === 'hub' || a === 'dashboard') { const h = await dashboard.route(req, res, ctx()); if (h !== null) return; }   // the Global Hub (server/hub.js)
   if (a === 'scratch') { const h = await scratch.route(req, res, ctx()); if (h !== null) return; }   // private scratchpad (server/scratch.js)
   if (a === 'insights') { const h = await insights.route(req, res, ctx()); if (h !== null) return; }   // AI Insights feed (server/insights.js)
