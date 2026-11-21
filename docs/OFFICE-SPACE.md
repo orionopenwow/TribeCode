@@ -1,29 +1,39 @@
 # Office Space
 
-Office Space is the office drawn as a small top-down pixel floor. It is the same office as before (one switch per
-tribe, the host or an admin turns it on, anyone can hide it for themselves). On a computer it opens as the floor, and
-**Desks** switches back to the calm list. Phones always get the list.
+Office Space is the office drawn as a top-down pixel floor, in the art of Pixel Agents. It is the same office as before
+(one switch per tribe, the host or an admin turns it on, anyone can hide it for themselves). On a computer it opens as
+the floor, and **Desks** switches back to the calm list. Phones always get the list.
+
+The floor starts as Pixel Agents' default office: a wood work room with two desks and a meeting table, a blue lounge with
+sofas around a coffee table, a checker corner, bookshelves, plants, a clock and paintings on navy walls. A whiteboard
+stands in for the task board. Bigger tribes get a wider work room (two more desks for every four columns, up to 40
+columns); if there are still more people than seats, a desk, a computer and a stool appear on free floor. The floor is
+drawn at a whole-number pixel zoom that fills the panel (+ and − zoom further, drag to pan).
 
 Everyone has a character:
 
-- **People** are drawn from parts (body, skin, hair, hair colour, top, top colour, an extra). Each person starts with
-  a look picked from their id. **Your look** opens the wardrobe, and the look is saved to their profile on the server.
-- **AI helpers** (Claude Code, Cursor, Codex, the tribe's own AI) are small robots in Teal, with a coloured accent for
-  the tool.
-- **Flint** is a flame in Ember, who stays by the coffee.
+- **People** are dressed from Pixel Agents' wardrobe: body, skin, hair and hair colour, top, bottoms, shoes, a jacket, an
+  outfit (suits and dresses), a beard, a hat and an extra (glasses, shades, earrings, a necklace, a watch, a lanyard),
+  each in its own colours. Each person starts with a look picked from their id. **Your look** opens the wardrobe, and
+  the look is saved to their profile on the server.
+- **AI helpers** (Claude Code, Cursor, Codex, the tribe's own AI) wear the Teal shirt, a lanyard and a cap in their
+  tool's colour (Claude orange, Cursor white, Codex green), and their name tag carries an **AI** mark.
+- **Flint** is a small pixel flame in Ember who stays by the coffee.
+- Two office pets, **Claudio** and **Gitcat**, wander between people. Click one for a heart.
 
 Characters follow what is really happening:
 
-| What happens | Where they go |
+| What happens | What they do |
 | --- | --- |
-| A person or agent is working (an agent claimed a file or is writing) | Walks to their desk, sits and types |
+| A person or agent is working (an agent claimed a file or is writing) | Walks to their desk, sits and types; their computer screen comes on |
 | An agent is reading (listing tasks, the overview, searching) | Sits at the desk and reads |
-| Someone just handed work in | Goes to the task board, with a "Done" bubble |
-| Waiting on something | The thinking corner |
-| Idle, away or paused | The lounge |
+| Someone just handed work in | Goes to the whiteboard, with a "Done" bubble |
+| Waiting on something | Stands at the bookshelves |
+| Idle, away or paused | Sits in the lounge |
 | Offline | Walks out of the door |
 
-An agent that asks for an approval gets a **Needs your OK** bubble. Click anyone (or their desk) for a card:
+An agent that asks for an approval gets the "…" speech bubble (**Needs your OK** for screen readers). Click anyone (or
+their seat or computer) for a card:
 
 - **People:** Message, Call, Profile, Give a task, recent work, and Open what they are working on.
 - **Agents:** who they help, the tool, their task, the files they claimed (each with Open), their last steps, approvals
@@ -33,63 +43,84 @@ An agent that asks for an approval gets a **Needs your OK** bubble. Click anyone
 
 The card only uses features TribeCode already has. DM text never appears on the floor or in its data.
 
+## How it is drawn
+
+`app/ui/officespace-art.js` loads the art from `app/ui/officespace/` and makes each piece once, then reuses it:
+
+- Floors and walls are grey art, colourised from the set's palette; walls pick one of 16 pieces from their
+  north/east/south/west neighbours; carpets are drawn on the corners between tiles (marching squares).
+- Furniture comes from `catalog.json` (made from the manifests by `node scripts/dev/officespace-catalog.js`): a view per
+  turn (front, side, back, side mirrored), and the computer's three "on" frames.
+- A character is a 128×96 sheet (rows: down, up, right; left is mirrored; columns: walk ×3, type ×2, read ×2, seated)
+  built from the layered parts in Pixel Agents' order, with its colour swaps and colourise.
+- Depth: everything is sorted by its base. Chairs sort by their top row (backs of back-facing chairs go over the person),
+  things on a desk sort just above the desk, and characters sort at their feet.
+- Walking is 3 tiles a second with 0.15 s steps; typing 0.3 s per frame; reading 0.6 s. Seated characters sit 6 px lower.
+
 ## Editing the floor (host and admins)
 
-**Edit layout** opens the editor: move, turn and remove pieces; paint floor, wall, carpet, wood and tiles; place desks,
-plants, sofas, thinking seats, coffee, tables, shelves, lamps, rugs and task boards; drag to name an area; pick who a
-desk is for. **Save layout** keeps it for the whole tribe. **Back to the default** removes your layout. **Export** gives
-a JSON file and **Import** reads one back (save afterwards to keep it). If there are more people than desks, extra desks
-appear on free floor.
+**Edit layout** opens the editor: move, turn and remove pieces; paint wood, floor, tiles, stone, carpet, wall and
+outside; place any of the 25 pieces of furniture (desks and tables, seats, computers, plants, things on the wall);
+drag to name an area; click a seat to pick who sits there. **Save layout** keeps it for the whole tribe. **Back to the
+default** removes your layout. **Export** gives a JSON file and **Import** reads one back (save afterwards to keep it).
 
 API: `GET /api/office` returns `layout` (or `null` for the default) and `set`; `PUT /api/office {layout}` (or
 `{layout: null}`) and `PUT /api/office {set}` need the host or an admin. `PUT /api/office/look {look}` sets your own
-look (people only). The server checks every value: known piece and tile names only, sizes clamped, short names.
+look (people only). The server checks every value: known tile names, furniture ids in capitals only, sizes clamped,
+short names, and look numbers inside their ranges.
 
-Layout JSON:
+Layout JSON (v2):
 
 ```json
-{ "v": 1, "w": 24, "h": 15,
-  "tiles": ["wall", "floor", "carpet", "wood", "tile", "..."],
-  "items": [{ "t": "desk", "x": 2, "y": 2, "r": 0, "who": "member-id" }],
-  "areas": [{ "name": "Lounge", "x": 15, "y": 9, "w": 8, "h": 5 }] }
+{ "v": 2, "w": 20, "h": 12,
+  "tiles": ["void", "wall", "wood", "floor", "tile", "stone", "carpet", "..."],
+  "items": [{ "t": "DESK", "x": 2, "y": 3, "r": 0 }, { "t": "CUSHIONED_BENCH", "x": 3, "y": 5, "r": 0, "who": "member-id" }],
+  "areas": [{ "name": "Lounge", "x": 11, "y": 2, "w": 8, "h": 7 }] }
 ```
 
-`tiles` has `w × h` entries, row by row. `r` is the turn (0–3). Sizes: `w` 10–40, `h` 8–28.
+`tiles` has `w × h` entries, row by row. `t` is a furniture id from `app/ui/officespace/catalog.json`. `r` is the turn:
+0 front, 1 side, 2 back, 3 side facing left. `who` on a seat keeps it for one person. Sizes: `w` 10–40, `h` 8–28.
+Layouts saved before the art (v1, pieces drawn in code) are kept on the server but the floor starts from the new
+default until someone saves a new one.
 
 ## Sets
 
-A set is how the floor looks. Two come with TribeCode: **TribeCode** (the app's matte greys with Ember, Teal and Indigo)
-and **Night studio** (a dark blue floor with warm lamps). The host or an admin picks the set; it is saved per tribe.
+A set is how the floor looks. Two come with TribeCode: **Office** (Pixel Agents' own colours, the default) and **Night
+studio** (the same art recoloured: a deep blue floor, plum wood and amber rugs). The host or an admin picks the set; it
+is saved per tribe. The old set name `tribecode` now means Office.
 
-A set is a small manifest:
+A set is a small manifest (the format is unchanged):
 
 ```json
 { "id": "night", "name": "Night studio",
-  "palette": { "floor": "#151B2B", "wall": "#232B42", "desk": "#3A2E3E", "glow": "#F2C46D", "sofa": "#B5623A" },
-  "sprites": { "plant": { "src": "data:image/png;base64,...", "w": 1, "h": 1 } } }
+  "palette": { "floor": "#151B2B", "wood": { "h": 285, "s": 22, "b": -70, "c": -88 }, "wall": "#232B42" },
+  "sprites": { "PLANT": { "src": "data:image/png;base64,...", "w": 1, "h": 2 } } }
 ```
 
 - `id`: 2–32 lowercase letters, digits or dashes.
-- `palette`: any of the colours in the TribeCode set (`app/ui/officespace-sets.js`). Missing ones fall back to it.
-- `sprites` (optional): a picture for a piece, 16 px per tile, `w`/`h` in tiles (1–4). Only `data:image/png` pictures
-  are used, never a web address, so a set can't load anything from outside.
+- `palette`: `floor`, `wood`, `tile`, `stone`, `carpet`, `wall` and `void` (outside). Each is a colour or a colourise
+  value `{h, s, b, c}` for the grey art. Missing ones fall back to Office.
+- `sprites` (optional): a picture for a furniture id, 16 px per tile, `w`/`h` in tiles (1–4). Only `data:image/png`
+  pictures are used, never a web address, so a set can't load anything from outside.
 
 Register one in the browser with `TribeOfficeSets.add(manifest)`. Only add art you made or have the rights to.
 
 ## Sound and motion
 
 Sound is off by default and is per device: **Sound on** plays one soft chime when someone newly needs your OK. Under
-reduced motion, characters appear at their spot straight away: no walking and no blinking.
+reduced motion, characters appear at their spot straight away: no walking, no animation frames, still screens and
+still pets.
 
 ## Credits
 
 The art is from [Pixel Agents](https://github.com/pablodelucca/pixel-agents) by Pablo De Lucca (MIT, (c) 2026 Pablo
-De Lucca): floors, walls, carpets, furniture, the pets and the default office, in `app/ui/officespace/`. The character
-parts are based on the [Metro City character pack](https://jik-a-4.itch.io/metrocity-free-topdown-character-pack) by
-JIK-A-4 (CC0 1.0). Pixel Agents' ideas (sprite sheets, layer order, colour swaps, wall autotiling, depth sorting) were
-ported to plain JavaScript; no TypeScript or React code was copied. Donarg's Office Interior Tileset is not included.
-Licence text: NOTICE and `app/ui/officespace/LICENSE.txt`.
+De Lucca): floors, walls, carpets, furniture, the pets, the speech bubbles and the default office, in
+`app/ui/officespace/`. The character parts are based on the
+[Metro City character pack](https://jik-a-4.itch.io/metrocity-free-topdown-character-pack) by JIK-A-4 (CC0 1.0). Pixel
+Agents' ideas (sprite sheets, layer order, colour swaps, wall autotiling, depth sorting) were ported to plain
+JavaScript; no TypeScript or React code was copied. Flint's flame is TribeCode's own. Donarg's Office Interior Tileset
+is not included. Licence text: NOTICE and `app/ui/officespace/LICENSE.txt`.
 
-Files: `app/ui/officespace.js` (the floor, characters, card, wardrobe, editor), `app/ui/officespace-sets.js` (sets and
-drawing), `app/ui/officespace.css`, `app/ui/office.js` (the office and the Floor/Desks switch), `server/office.js`.
-Test: `app/test/e2e_office_space.py`.
+Files: `app/ui/officespace.js` (the floor, characters, card, wardrobe, editor), `app/ui/officespace-art.js` (loading and
+drawing the art), `app/ui/officespace-sets.js` (sets and starting looks), `app/ui/officespace.css`, `app/ui/office.js`
+(the office and the Floor/Desks switch), `server/office.js`. Test: `app/test/e2e_office_space.py`.
