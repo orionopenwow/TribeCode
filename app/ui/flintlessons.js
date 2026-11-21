@@ -36,6 +36,7 @@
   let card = null, ring = null, ringT = 0;
   function open(f) {
     const L = LESSONS[f]; if (!L) return false;
+    if (f === 'premium' && !(window.TribePremium && window.TribePremium.offered && window.TribePremium.offered())) return false;   // nothing is sold yet: no lesson about it (Flint answers in one line instead)
     if (!card) { card = document.createElement('section'); card.id = 'fls'; card.className = 'fls'; card.setAttribute('role', 'dialog'); card.setAttribute('aria-label', 'Lesson'); document.body.appendChild(card); card.addEventListener('click', onClick); card.addEventListener('keydown', e => { if (e.key === 'Escape') close(); }); }
     card.dataset.feature = f; card.hidden = false;
     card.innerHTML = `<p class="fls-eyebrow"><img src="assets/flint.svg" alt="" width="11" height="14"> Lesson · free</p><h3>${esc(L.title)}</h3><ol>${L.steps.map(s => `<li>${esc(s)}</li>`).join('')}</ol>

@@ -117,7 +117,7 @@ def main():
             card = o.locator("#cv-fpane .fl-thread .boost").last
             assert card.is_visible(), "the AI-boost card"
             t = card.inner_text()
-            assert "Use my AI" in t and "Get credits / Premium" in t, t
+            assert "Use my AI" in t and "Premium" not in t and "credits" not in t.lower(), t   # feat/flow-ease: no credits button while payments are closed (e2e_premium checks it comes back)
             assert "Send to my AI helper" not in o.content()
 
             # ---- a lesson

@@ -38,7 +38,7 @@
     const T = L().TEMPLATES, evs = (s.rituals && s.rituals.events) || [];
     return `<div class="dt-lib" id="dt-lib">
       ${evs.length ? `<section class="dt-rit-on"><span class="eyebrow">Running</span>${evs.map(e => `<span class="dt-pill">${esc(e.title)} · ${esc(e.repeat === 'weekdays' ? 'weekdays' : e.repeat || 'once')} · ${esc(new Date(e.start).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }))}</span>`).join('')}</section>` : ''}
-      ${L().GROUPS.map(g => { const list = T.filter(t => t.group === g); return list.length ? `<section class="dt-group"><span class="eyebrow">${esc(g)}</span><div class="dt-grid">${list.map(t => `<button class="dt-card${t.premium ? ' prem' : ''}" data-tpl="${esc(t.id)}"><b>${esc(t.title)}${t.premium ? ' <i class="dt-prem">Premium</i>' : ''}</b><span>${esc(t.summary)}</span><small>Guided · ${t.qs.filter(q => q.guided).length} questions${t.ritual ? ' · can repeat' : ''}</small></button>`).join('')}</div></section>` : ''; }).join('')}
+      ${L().GROUPS.map(g => { const list = T.filter(t => t.group === g && (!t.premium || sells())); return list.length ? `<section class="dt-group"><span class="eyebrow">${esc(g)}</span><div class="dt-grid">${list.map(t => `<button class="dt-card${t.premium ? ' prem' : ''}" data-tpl="${esc(t.id)}"><b>${esc(t.title)}${t.premium ? ' <i class="dt-prem">Premium</i>' : ''}</b><span>${esc(t.summary)}</span><small>Guided · ${t.qs.filter(q => q.guided).length} questions${t.ritual ? ' · can repeat' : ''}</small></button>`).join('')}</div></section>` : ''; }).join('')}
       <p class="tl-fine">${connected() ? 'Docs are saved in the project\'s Files.' : 'No tribe yet: docs are saved on this device (Files) and move into a project with one tap.'}</p></div>`;
   }
 
@@ -93,8 +93,10 @@
   const preview = () => { const p = root.querySelector('#dt-preview'); if (p) p.innerHTML = md(L().render(s.t, s.v, { date: today() })); };
   const grab = () => root.querySelectorAll('.dt-in').forEach(i => { s.v[i.dataset.q] = i.value; });
 
+  const sells = () => !!(window.TribePremium && window.TribePremium.offered && window.TribePremium.offered());   // premium.js's one switch
   async function open(id) {
     const t = L() && L().byId(id); if (!t) return false;
+    if (t.premium && !sells()) return false;
     if (t.premium && window.TribePremium && !(await window.TribePremium.gate('template', { id: t.id, title: t.title }))) return false;
     let saved = {}; try { saved = JSON.parse(localStorage.getItem(LS) || '{}') || {}; } catch {}
     s = { ...s, view: 'fill', t, v: saved.id === id ? saved.v || {} : {}, step: saved.id === id ? saved.step || 0 : 0, adv: saved.id === id ? !!saved.adv : false, via: '', saved: null };
@@ -203,5 +205,6 @@
   }
   if (C() && C().on) C().on('ws', m => { if (m && m.type === 'ritual' && m.run) ritualCard(m.run); });
 
+  window.addEventListener('tribe-plan', () => { if (root && root.isConnected && s.view === 'lib') draw(); });   // payments opened or closed: the Premium group follows
   window.TribeTemplates = { mount, open, close, ritualCard, get lib() { return L(); }, get state() { return s; } };
 })();

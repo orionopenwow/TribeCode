@@ -10,6 +10,8 @@
 //   TribePremium.checkout(item)  hosted | tribe | credits-10 | credits-25 | credits-50: Stripe Checkout through the host
 //     (POST /api/premium/checkout), or one calm line when the host hasn't turned on payments.
 //   TribePremium.manage()  Stripe's customer portal;  payments()  is checkout on here;  billing()  the mirror of billing.
+//   TribePremium.offered()  THE switch: true once the host has opened payments. While false, gate() is always true and
+//     open(), the sheet, footHtml() and the plans pop-out (plans.js) show nothing. Ask this, never your own check.
 //   TribePremium.open()  the plan sheet;  footHtml()  a one-line "Free plan · What's Premium?" for views.
 (function () {
   'use strict';
@@ -54,8 +56,12 @@
   // session and this opens it (the system browser from the desktop app). The plan and credits change only when
   // Stripe's signed webhook reaches the server; coming back from Stripe just looks again.
   const OFF_MSG = 'The host hasn\'t turned on payments yet. Everything free keeps working, and the 14-day trial needs no card.';
-  const COMING = 'Paid plans are coming. Everything free keeps working, and the 14-day trial needs no card.';
-  const offered = () => read().offered === true;   // the host has opened payments (server: TRIBE_PAYMENTS). Until then nothing here sells anything.
+  const COMING = 'Everything in TribeCode is free right now. There is nothing to buy.';
+  // THE switch (feat/flow-ease): has the host opened payments (server: TRIBE_PAYMENTS=1 or the host setting; GET /api/premium
+  // `payments.offered`)? Until then nothing in the app sells, mentions or hints at Premium or a trial: no sheet, no chip,
+  // no footer, no plans pop-out, and every gate says "go ahead". Every other file asks this one function.
+  const offered = () => read().offered === true;
+  const FREE_NOW = 'Everything in TribeCode is free right now: every feature, with your own AI or none. There is nothing to buy and no trial to start.';
   const payments = () => offered() && read().payments === true;
   const billing = () => read().billing || null;
   function openPay(url) {
@@ -90,6 +96,7 @@
   function close(val) { if (!cur) return; const c = cur; cur = null; c.el.remove(); c.scrim.remove(); c.resolve(val); }
   function sheet(feature, ctx = {}) {
     const f = FEATURES[feature] || FEATURES.overview, p = plan();
+    if (!offered()) return Promise.resolve(true);   // payments aren't open: no sheet, the thing just goes ahead
     return new Promise(resolve => {
       if (cur) close(cur.soft);
       const scrim = document.createElement('div'); scrim.className = 'pm-scrim';
@@ -117,13 +124,14 @@
   addEventListener('keydown', e => { if (e.key === 'Escape' && cur) { e.stopPropagation(); const f = cur.el.dataset.feature; if (cur.soft) snooze(f); close(cur.soft); } }, true);
 
   async function gate(feature, ctx = {}) {
+    if (!offered()) return true;   // nothing is sold yet, so nothing is gated or announced
     if (active()) return true;
     if (!overThreshold(feature, ctx)) return true;
     const f = FEATURES[feature]; if (!f) return true;
     if (f.soft && snoozed(feature)) return true;
     return sheet(feature, ctx);
   }
-  const footHtml = () => `<p class="pm-foot" id="pm-foot">${active() ? 'Premium' : 'Free plan'} · local, open source, your own AI. <button class="linkish" data-pm-open type="button">What does Premium add?</button></p>`;
+  const footHtml = () => !offered() ? '' : `<p class="pm-foot" id="pm-foot">${active() ? 'Premium' : 'Free plan'} · local, open source, your own AI. <button class="linkish" data-pm-open type="button">What does Premium add?</button></p>`;
   document.addEventListener('click', e => { if (e.target.closest('[data-pm-open]')) sheet('overview'); });
 
   // AI credits on this device (feat/shell-polish). There is no credit store yet, so this is honest: 0 until payments open.
@@ -141,7 +149,7 @@
     if (p === 'trial' && c && c.connected && c.connected()) c.api('/premium/trial', { method: 'POST', body: {} }).then(sync, e => { toast(e.message); sync(); });
     return setLocal(p);
   };
-  addEventListener('tribe-402', e => { const d = (e && e.detail) || {}; if (window.TribePlans && window.TribePlans.open) window.TribePlans.open(null); else sheet(d.need === 'credits' ? 'credits' : d.feature === 'template' ? 'template' : 'overview'); });
+  addEventListener('tribe-402', e => { if (!offered()) return; const d = (e && e.detail) || {}; if (window.TribePlans && window.TribePlans.open) window.TribePlans.open(null); else sheet(d.need === 'credits' ? 'credits' : d.feature === 'template' ? 'template' : 'overview'); });
   // the first look waits for the tribe to answer (a slow start used to leave the mirror empty until the window got focus)
   (function first(n) { setTimeout(() => { const c = Cn(); if (c && c.connected && c.connected()) sync(); else if (n < 12) first(n + 1); }, n ? 2000 : 1500); })(0);
   addEventListener('focus', () => sync());
@@ -153,5 +161,5 @@
     setTimeout(() => toast(b === 'success' ? 'Thank you. Your plan and credits update here in a moment.' : b === 'cancel' ? 'No charge was made. Nothing changed.' : 'Billing is up to date.'), 1200);
     if (b !== 'cancel') [2500, 6000, 15000].forEach(ms => setTimeout(sync, ms));
   })();
-  window.TribePremium = { gate, plan, setPlan, checkout, manage, payments, offered, billing, sync, OFF_MSG, COMING, credits, open: () => sheet('overview'), footHtml, LIMITS, FEATURES: Object.keys(FEATURES), FREE, ADDS, PRICES, PRICING, DOCS };
+  window.TribePremium = { gate, plan, setPlan, checkout, manage, payments, offered, billing, sync, OFF_MSG, COMING, FREE_NOW, credits, open: () => sheet('overview'), footHtml, LIMITS, FEATURES: Object.keys(FEATURES), FREE, ADDS, PRICES, PRICING, DOCS };
 })();

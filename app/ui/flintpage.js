@@ -112,7 +112,7 @@
   }
   function lessons() {
     const L = window.TribeFlintLessons; if (!L || !L.LESSONS) return '';
-    return `<section class="fpg-sec" aria-label="Lessons"><h2>Lessons</h2><div class="fpg-lessons">${Object.entries(L.LESSONS).map(([k, l]) => `<button type="button" class="fpg-lesson" data-lesson="${esc(k)}"><b>${esc(l.title)}</b><small>${(l.steps || []).length} steps · Show me</small></button>`).join('')}</div></section>`;
+    return `<section class="fpg-sec" aria-label="Lessons"><h2>Lessons</h2><div class="fpg-lessons">${Object.entries(L.LESSONS).filter(([k]) => k !== 'premium' || (window.TribePremium && window.TribePremium.offered && window.TribePremium.offered())).map(([k, l]) => `<button type="button" class="fpg-lesson" data-lesson="${esc(k)}"><b>${esc(l.title)}</b><small>${(l.steps || []).length} steps · Show me</small></button>`).join('')}</div></section>`;
   }
   function open(q, focus) {
     lastFocus = document.activeElement;
@@ -124,7 +124,7 @@
     root.innerHTML = `<div class="fpg-card">
       <header class="fpg-head"><img src="assets/flint.svg" alt="" width="40" height="40"><div><span class="eyebrow">Your tribe's helper</span><h1>Flint</h1><p class="faint">Most of what he does needs no AI: rules, recipes, palettes and math, instant and offline. Bigger jobs go to a model you choose.</p></div>
         <button type="button" class="btn ghost fpg-x" id="fp-close" aria-label="Close">✕</button></header>
-      <section class="fpg-sec" aria-label="Flint's levels"><h2>Flint's levels</h2><div class="fpg-levels">${LEVELS.map(([k, t, d], i) => `<div class="fpg-lv${k === lv || (k === 'helper' && helperOn()) ? ' on' : ''}" data-lv="${k}"><span class="fpg-lv-n">${i}</span><b>${esc(t)}</b><small>${esc(d)}</small><span class="fpg-lv-on"${k === lv || (k === 'helper' && helperOn()) ? '' : ' hidden'}>Active</span></div>`).join('')}</div>
+      <section class="fpg-sec" aria-label="Flint's levels"><h2>Flint's levels</h2><div class="fpg-levels">${LEVELS.filter(([k]) => k !== 'credits' || (window.TribePremium && window.TribePremium.offered && window.TribePremium.offered())).map(([k, t, d], i) => `<div class="fpg-lv${k === lv || (k === 'helper' && helperOn()) ? ' on' : ''}" data-lv="${k}"><span class="fpg-lv-n">${i}</span><b>${esc(t)}</b><small>${esc(d)}</small><span class="fpg-lv-on"${k === lv || (k === 'helper' && helperOn()) ? '' : ' hidden'}>Active</span></div>`).join('')}</div>
         <p class="fpg-row"><button type="button" class="btn sm" id="fp-local">${helperOn() ? 'Local brain: manage' : 'Give Flint a local brain'}</button><button type="button" class="btn sm" id="fp-llm">Choose a local model</button><button type="button" class="btn sm" id="fp-facts">What Flint knows about this project</button><a class="btn ghost sm" id="fp-plan" href="${PLAN}" target="_blank" rel="noopener">Read the model plan</a></p></section>
       ${window.TribeFlintDevice ? window.TribeFlintDevice.html() : ''}
       <section class="fpg-sec" aria-label="What I can do"><div class="fpg-sh"><h2>What I can do</h2><span class="faint" id="fp-count"></span></div>

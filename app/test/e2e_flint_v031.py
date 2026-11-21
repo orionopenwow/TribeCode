@@ -118,7 +118,7 @@ def main():
             mp.keyboard.press("Escape"); mp.wait_for_timeout(200)
             # 12 · plans
             ask(mp, "see the plans")
-            until(lambda: mp.is_visible("#pm-sheet") or mp.is_visible(".plp"), "plans sheet open"); done.append("plans")
+            until(lambda: "free right now" in mp.locator("#flint .fl-msg.fl").last.inner_text(), "the honest answer: everything is free right now"); assert mp.locator("#pm-sheet, .plp").count() == 0; done.append("plans")   # feat/flow-ease: no pop-up while payments are closed
             mp.keyboard.press("Escape"); mp.wait_for_timeout(200)
             # 13 · Files on a kind
             ask(mp, "show my pictures")

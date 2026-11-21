@@ -2285,6 +2285,31 @@
    "ctx": "g"
   },
   {
+   "t": "how much does it cost",
+   "i": "cost.ask",
+   "ctx": "g"
+  },
+  {
+   "t": "is tribecode free",
+   "i": "cost.ask",
+   "ctx": "g"
+  },
+  {
+   "t": "start my trial",
+   "i": "cost.ask",
+   "ctx": "g"
+  },
+  {
+   "t": "do i have to pay",
+   "i": "cost.ask",
+   "ctx": "g"
+  },
+  {
+   "t": "free trial",
+   "i": "cost.ask",
+   "ctx": "g"
+  },
+  {
    "t": "get premium",
    "i": "premium.open",
    "ctx": "g"

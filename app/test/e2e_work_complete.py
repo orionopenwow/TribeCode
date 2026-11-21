@@ -49,7 +49,8 @@ def main():
             # ---------- 1. no tribe: empty state with next steps + templates ----------
             fresh = page("Orion"); fresh.goto(BASE + "/?skipIntro=1&freshopen=1"); fresh.wait_for_function("window.TribeTalent && window.TribeTemplates", timeout=15000)
             fresh.evaluate("TribeTalent.open('gigs')"); fresh.wait_for_selector("#tl-empty #tl-e-start", state="visible", timeout=10000)
-            for sel in ["#tl-e-join", "#tl-empty .wk-how", "#view-work [data-hc-home]", "#pm-foot"]: fresh.wait_for_selector(sel, state="visible")
+            for sel in ["#tl-e-join", "#tl-empty .wk-how", "#view-work [data-hc-home]"]: fresh.wait_for_selector(sel, state="visible")
+            assert fresh.locator("#pm-foot").count() == 0, "no plan footer while payments are closed (feat/flow-ease)"
             assert "Say what you need" in fresh.inner_text("#tl-empty .wk-how")
             fresh.click("#tl-e-tpl"); fresh.wait_for_selector("#dt-lib .dt-card[data-tpl='standup']", state="visible")
             fresh.context.close()

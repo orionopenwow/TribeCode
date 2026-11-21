@@ -167,6 +167,13 @@ def main():
             assert not pg.evaluate("document.querySelector('#rail-workshop').classList.contains('on')")
 
             # ---------- 5. the plans pop-out, from Settings › Plan ----------
+            # feat/flow-ease: closed (the default) there is no Plan row, no chip and no pop-out; the host opening payments brings them back
+            pg.evaluate("TribePremium.sync()"); pg.wait_for_function("TribePremium.offered() === false")
+            pg.evaluate("TribeSettings.open('ai')"); pg.wait_for_selector("#set-flintbrain, #set-model, .set-brain"); assert pg.locator("#set-plan-chip").count() == 0
+            assert pg.evaluate("TribePlans.chip({ id: 'x' })") == "" and "credits" not in pg.evaluate("TribeBoost.html({})").lower()
+            pg.evaluate("TribePlans.open(null)"); pg.wait_for_timeout(300); assert pg.locator("#plans-pop").count() == 0
+            pg.evaluate("TribeSettings.close()")
+            ok(api("/premium/admin", "PUT", {"enabled": True}, token=tok), "the host opens payments"); pg.evaluate("TribePremium.sync()"); pg.wait_for_function("TribePremium.offered() === true")
             pg.evaluate("TribeSettings.open('ai')"); pg.wait_for_selector("#set-plan-chip")
             assert pg.locator(".set-l b .ti svg").count() >= 5, "Settings sections carry icons"
             pg.click("#set-plan-chip"); pg.wait_for_selector("#plans-pop[role=dialog]")
@@ -244,7 +251,7 @@ def main():
 
             # ---------- 5. phone: the pop-out is a sheet that fits 390px ----------
             ph = page(390, 844)
-            ph.goto(BASE + "/?skipIntro=1"); ph.wait_for_function("window.TribePlans && window.TribePremium", timeout=15000)
+            ph.goto(BASE + "/?skipIntro=1"); ph.wait_for_function("window.TribePlans && window.TribePremium && (TribePremium.sync(), TribePremium.offered())", timeout=15000)
             ph.evaluate("(() => { const b = document.createElement('button'); b.innerHTML = TribePlans.chip({ id: 'ph-chip' }); const c = b.firstChild; c.style.cssText = 'position:fixed;top:120px;left:20px;z-index:500'; document.body.append(c); })()")
             ph.click("#ph-chip"); ph.wait_for_selector("#plans-pop.is-sheet")
             bx = ph.locator("#plans-pop").bounding_box(); assert bx["x"] >= 0 and bx["x"] + bx["width"] <= 390.5, bx

@@ -95,7 +95,7 @@ def main():
             assert not [r for r in palette(pg, "repair the glitch") if "by meaning" in r[2]], "no meaning rows without the model"
             assert files == [], "nothing is fetched until the person opts in"
             pg.evaluate("TribeFlintPage.open()"); pg.wait_for_selector("#flint-page .fpg-lv")
-            assert pg.locator(".fpg-lv").count() == 5 and pg.locator(".fpg-lv[data-lv=helper]").inner_text().startswith("1")
+            assert pg.locator(".fpg-lv").count() == 4 and pg.locator(".fpg-lv[data-lv=credits]").count() == 0 and pg.locator(".fpg-lv[data-lv=helper]").inner_text().startswith("1")
             assert pg.locator(".fpg-lv.on").count() == 1 and pg.locator(".fpg-lv.on").get_attribute("data-lv") == "none"
 
             # ---------- the opt-in sheet ----------
