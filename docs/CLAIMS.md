@@ -133,6 +133,10 @@ Checked 2026-11-15 on branch `feat/site-demos` (wave 1 merged in `integ9`).
 | Windows, Mac (Apple Silicon) and Linux installers | index, docs | GitHub release v0.36.0 has all of them | Proven | |
 | Zero npm dependencies, plain files and git, MIT | index | `package.json` has no dependencies; `LICENSE` | Proven | |
 | Chat, docs and code are plain files you can take with you | index | `e2e_export`, `e2e_files_local` | Proven | |
+| Agents & office says what is private and what is not: messages and files are not end-to-end encrypted, and the computer that runs the tribe keeps them as plain files | app (What's private) | `e2e_agents_office` checks the sheet says "not end-to-end encrypted" and never claims encryption that isn't real | Proven | |
+| Only the two people in a private message can open it; AI helpers can't read private messages, and DM text never shows on the office | app (What's private) | `e2e_agents_office` (a third member is refused, the office has no DM text), `e2e_invite_agent` (no agent reads DMs), `e2e_office` | Proven | |
+| The connection is encrypted when the address starts with https or goes through Tailscale; on localhost nothing crosses the network | app (What's private) | Worked out from the tribe's address in `app/ui/agentsoffice.js` (`privacyFacts`); `e2e_agents_office` checks the localhost line; https and Tailscale addresses are never served in tests | Partly | |
+| Your GitHub sign-in stays on the computer that runs the tribe and never comes back to a browser | app (What's private) | `e2e_github_connect` (no answer to a browser carries the token) | Proven | |
 
 ## Phones
 
