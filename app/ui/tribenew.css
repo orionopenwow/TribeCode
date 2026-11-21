@@ -20,6 +20,17 @@
 .tn-emo button[aria-checked="true"] { border-color: var(--accent); background: var(--surface-2); }
 .tn-emo button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
+/* 1. "What are you making?" (feat/vision-create): one optional sentence under the name, with examples to tap */
+.tn-opt { margin-left: 6px; font-weight: 400; letter-spacing: 0; text-transform: none; color: var(--faint); }
+.tn-sheet textarea.tn-vis { display: block; width: 100%; height: 64px; min-height: 64px; resize: none; line-height: 1.45; }
+.tn-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.tn-chip { min-height: 40px; max-width: 100%; padding: 0 12px; border: 1px solid var(--stroke); border-radius: var(--r-sm); background: var(--surface); color: var(--muted); font: inherit; font-size: 12.5px; line-height: 1.3; text-align: left; cursor: pointer;
+  transition: background-color var(--dur-quick) var(--ease-out), color var(--dur-quick) var(--ease-out); }
+.tn-chip:hover { background: var(--surface-2); color: var(--text); }
+.tn-chip:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.tn-chip[disabled] { opacity: .6; cursor: default; }
+.tn-hint { margin: 8px 0 4px; color: var(--faint); font-size: 12.5px; line-height: 1.45; }
+
 /* 2. where it lives: radio rows */
 .tn-where { display: grid; gap: 8px; }
 .tn-row[aria-checked="true"] { border-color: var(--accent); background: var(--surface-2); }
@@ -55,7 +66,7 @@
   .tn-first { flex-direction: column; align-items: stretch; }
   .tn-first-acts > .btn { flex: 1; }
 }
-@media (prefers-reduced-motion: reduce) { .tn-prog li::before, .tn-emo button, .tn-dot { transition: none; } }
+@media (prefers-reduced-motion: reduce) { .tn-prog li::before, .tn-emo button, .tn-chip, .tn-dot { transition: none; } }
 /* feat/folder-sync: the folder home's line under GitHub, and the inline folder picker (livingrepo.js) */
 .tn-later { display: block; margin-top: 4px; font-size: 12px; color: var(--faint); }
 .tn-row[data-off] small { color: var(--faint); }

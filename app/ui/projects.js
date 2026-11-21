@@ -746,13 +746,19 @@ ${canEdit && !started ? `      <section class="pj-context" id="pj-context"><div 
   function nameFromIdea(idea) {
     const STOP = new Set('a an the and or of to for in on at with by is are be it its this that we our us you your my me i from as into where who can will make build want like some cozy simple small little new friend friends play together let lets track tracks tracking help helps keep keeps show shows group groups team family kids everyone people'.split(' '));
     const KINDW = /^(game|website|site|app|page|bot|tool|quiz)$/i;
-    const pick = t => String(t).replace(/[^\p{L}\p{N}\s'-]/gu, ' ').split(/\s+/).filter(w => w && !STOP.has(w.toLowerCase()) && !/'s$/i.test(w));
+    const pick = t => String(t).replace(/[’‘]/g, "'").replace(/[^\p{L}\p{N}\s'-]/gu, ' ').split(/\s+/).filter(w => w && !STOP.has(w.toLowerCase()) && !/'s$/i.test(w));
     let words = pick(String(idea).split(/\s(?:with|that|where|which|so|to help|,)\s/i)[0]);
     if (words.length < 2) words = pick(idea);
     words = words.slice(0, 3);
     if (words.length > 1 && KINDW.test(words[0])) words.push(words.shift());   // "website … bakery" -> "Bakery Website"
     const n = words.slice(0, 3).map(w => w[0].toUpperCase() + w.slice(1)).join(' ');
     return (n || `${String(me().name || 'My').split(/\s+/)[0]}'s project`).slice(0, 40);
+  }
+  // The sentence becomes the project's line and its vision: the one place every way of starting writes it (the idea box
+  // here, the sentence on Home, and the create flow's "What are you making?", tribenew.js).
+  async function keepIdea(pid, name, idea) {
+    await C.api(`/projects/${encodeURIComponent(pid)}`, { method: 'PATCH', body: { bio: idea.slice(0, 200) } }).catch(() => {});
+    await C.api('/vision', { method: 'PUT', project: pid, body: { text: `# ${name}\n\n${idea}\n` } }).catch(() => {});
   }
   const soloHere = () => !!(window.TribeOffline && window.TribeOffline.solo && window.TribeOffline.solo());
   async function createFromIdea(raw) {
@@ -766,8 +772,7 @@ ${canEdit && !started ? `      <section class="pj-context" id="pj-context"><div 
         const r = await C.api('/projects', { method: 'POST', body: { name, emoji: kind ? kind[1] : '✨' } }); pid = (r.project || r).id;
         await refresh(); await switchTo(pid, 'home');
       } else { const f = await window.TribeFlow.create(name, { emoji: kind ? kind[1] : '✨', wait: 8000, quiet: !!window.TribeFirstLook }); pid = f.project; var flow = f; }
-      await C.api(`/projects/${encodeURIComponent(pid)}`, { method: 'PATCH', body: { bio: idea.slice(0, 200) } }).catch(() => {});
-      await C.api('/vision', { method: 'PUT', project: pid, body: { text: `# ${name}\n\n${idea}\n` } }).catch(() => {});
+      await keepIdea(pid, name, idea);
       body().classList.remove('np-setup');
       await refresh();
       // pass 6: the sentence becomes a first preview straight away (firstlook.js); inviting is one of its next actions
@@ -1099,5 +1104,5 @@ ${canEdit && !started ? `      <section class="pj-context" id="pj-context"><div 
     const tryIt = () => { if (!C.connected() || !me().id) return false; try { history.replaceState(null, '', location.pathname + location.hash); } catch {} if (isHost()) remix(r); else toastMsg('That starter needs the host to start it. Share the link with them: github.com/' + r); return true; };
     if (!tryIt()) C.on('hello', function once() { if (r && tryIt()) r = ''; });
   })();
-  window.TribeProjects = { hadProject, cachedList, loaded: () => loaded, gallery, createFromIdea, startFromIdea, nameFromIdea, openStarters, remix, step, refresh, list: () => projects, current: cur, cur: curP, face, label, here, pulses: () => pulses, sheet, pickImage, workspacePanel, switchTo, onShow, whereLabel, openNew, startFromFiles, analyze, fromPath, fromFolder, overview, requests };
+  window.TribeProjects = { hadProject, cachedList, loaded: () => loaded, gallery, createFromIdea, startFromIdea, nameFromIdea, keepIdea, openStarters, remix, step, refresh, list: () => projects, current: cur, cur: curP, face, label, here, pulses: () => pulses, sheet, pickImage, workspacePanel, switchTo, onShow, whereLabel, openNew, startFromFiles, analyze, fromPath, fromFolder, overview, requests };
 })();
