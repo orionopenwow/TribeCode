@@ -88,12 +88,12 @@
     if (!alive() || root !== el) return;
     const want0 = opts && opts.kind, mineAll = st.agents || [];
     if (want0 === 'ask' || (!want0 && !mineAll.length)) { stage = 'ask'; alt = ''; pick = null; }   // never connected an AI: the question comes first
-    if (opts && (opts.alt === 'local' || opts.alt === 'free')) { stage = 'alt'; alt = opts.alt; pick = null; }   // Agents & office: "A model on this computer" / "A free AI in your browser"
     else {
       stage = 'tool'; pick = resolvePick(want0);
       // A returning person lands on a helper they have, not on a tool they never chose.
       if (!want0 && mineAll.length && !mineAll.some(a => a.agentKind === kind())) pick = resolvePick(mineAll[0].agentKind);
     }
+    if (opts && (opts.alt === 'local' || opts.alt === 'free')) { stage = 'alt'; alt = opts.alt; pick = null; }   // Agents & office: "A model on this computer" / "A free AI in your browser"
     want = {};
     // Already here: show it and its access. A new key would cut a running session off, so the setup waits behind a button.
     if (opts && opts.fresh) showSetup[kind()] = true;
