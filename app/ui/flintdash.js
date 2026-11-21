@@ -107,7 +107,7 @@
       <header class="fd-head">${FLAME}<b>Flint</b>${mood ? `<span class="fd-mood fd-${esc(L.mood)}">${esc(mood)}</span>` : ''}<span class="fd-sum">${esc(L.summary || '')}</span></header>
       <div class="fd-cols">
         <div class="fd-col fd-next-col">${sug.length || !nextHtml ? `<span class="eyebrow">${esc(tr('Do this next'))}</span>` : ''}
-          ${sug.length ? `<ul class="fd-sugs">${sug.map(x => `<li class="fd-sug" data-fd="${esc(x.id)}" style="--t:var(${x.tone})"><span class="fd-sug-t"><b>${esc(x.t)}</b><small>${esc(x.why)}</small></span><button type="button" class="btn sm fd-go" data-fd-act="${esc(x.act)}">${esc(x.btn)}</button><button type="button" class="fd-x" data-fd-x="${esc(x.id)}" aria-label="${esc(tr('Not now'))}" title="${esc(tr('Not now'))}">×</button></li>`).join('')}</ul>` : (nextHtml ? '' : `<p class="fd-quiet">${esc(tr('Nothing waiting on you. Nice.'))}</p>`)}
+          ${sug.length ? `<ul class="fd-sugs">${sug.map(x => `<li class="fd-sug" data-fd="${esc(x.id)}" style="--t:var(${x.tone})" title="${esc(x.why)}"><span class="fd-sug-t"><b>${esc(x.t)}</b><small>${esc(x.why)}</small></span><button type="button" class="btn sm fd-go" data-fd-act="${esc(x.act)}">${esc(x.btn)}</button><button type="button" class="fd-x" data-fd-x="${esc(x.id)}" aria-label="${esc(tr('Not now'))}" title="${esc(tr('Not now'))}">×</button></li>`).join('')}</ul>` : (nextHtml ? '' : `<p class="fd-quiet">${esc(tr('Nothing waiting on you. Nice.'))}</p>`)}
           ${nextHtml ? `<div class="fd-step">${nextHtml}</div>` : ''}
         </div>
         <div class="fd-col fd-live-col"><span class="eyebrow">${esc(tr('Living updates'))}<i class="fd-pulse" aria-hidden="true"></i></span><div id="fd-ups" aria-live="polite">${updatesHtml(ctx)}</div>

@@ -4,7 +4,7 @@
    After a first version the next step is "Change one thing", then "Show a friend", not "Add a first task".
 2. Preview and Flint's card side by side on wide screens (equal tops, both visible), stacked at 1100 and 390, with the
    right panel open and closed.
-3. Add files is one slim row under Flint's card that opens into the drop area on click and when a file is dragged in.
+3. Add files is one slim row (under the preview beside Flint's card on wide screens, under Flint's card when stacked) that opens into the drop area on click and when a file is dragged in.
 4. No "Your helpers" card in the right panel beside Flint's steps.
 5. "Share link" with nothing to share opens Publish instead of a dead-end toast.
 6. A website's suggested tasks are website tasks (no "order").
@@ -37,9 +37,15 @@ def main():
                 if side:
                     assert abs(a["y"] - f["y"]) < 2 and f["x"] > a["x"] + a["w"] - 1, f"{label}: side by side with equal tops {a} {f}"
                     assert 0.5 < a["w"] / (a["w"] + f["w"]) < 0.7, f"{label}: the preview is about 60% ({a['w']} / {f['w']})"
-                    assert a["b"] <= 900 and f["b"] <= 900, f"{label}: both visible without scrolling {a} {f}"
+                    assert a["b"] <= 900 and f["y"] < 500, f"{label}: the preview whole and Flint's card in view without scrolling {a} {f}"
+                    c = box("#pj-context")
+                    assert c and abs(c["x"] - a["x"]) < 2 and c["y"] >= a["b"] - 1, f"{label}: Add files under the preview {a} {c}"
+                    assert c["b"] >= f["b"] - 2, f"{label}: the columns balance (no empty space under the preview) {c} {f}"
+                    clipped = pg.evaluate("[...document.querySelectorAll('#fd .fd-sug-t b, #fd .fd-up-t')].filter(e => e.scrollWidth > e.clientWidth + 1 || e.scrollHeight > e.clientHeight + 1).map(e => e.textContent)")
+                    assert not clipped, f"{label}: Flint's lines wrap instead of being cut {clipped}"
                 else:
                     assert f["y"] >= a["b"] - 1, f"{label}: stacked {a} {f}"
+                    c = box("#pj-context"); assert c["y"] >= f["b"] - 1, f"{label}: Add files under Flint's card when stacked {f} {c}"
             pg.goto(BASE + "/?skipIntro=1"); pg.wait_for_function("window.TribeProjects && TribeClient.connected() && TribeClient.project()", timeout=20000)
             dash()
 
@@ -64,8 +70,8 @@ def main():
             print("ok  no Your helpers card; the right panel is Flint's chat")
 
             # 3. Add files: slim, opens on click and on drag
-            c = box("#pj-context"); f = box("#fd")
-            assert c["h"] <= 56 and c["y"] >= f["b"] - 1 and abs(c["x"] - f["x"]) < 2, f"one slim row under Flint's card {c} {f}"
+            c = box("#pj-context"); a = box("#pj-band-slot")
+            assert c["h"] <= 56 and c["y"] >= a["b"] - 1 and abs(c["x"] - a["x"]) < 2, f"one slim row (under the preview, beside Flint's card, on wide screens) {c} {a}"
             assert not box("#pj-context #dropzone")["vis"], "the drop area waits"
             pg.click("#pj-files-btn"); pg.wait_for_timeout(200)
             assert box("#pj-context #dropzone")["vis"] and pg.get_attribute("#pj-files-btn", "aria-expanded") == "true", "click opens it"
@@ -76,7 +82,7 @@ def main():
             print("ok  Add files is one slim row; opens on click and on drag")
 
             # 2. side by side on wide screens, stacked below, right panel open and closed
-            layout(1440, True, "1440 panel open"); pg.screenshot(path="/tmp/dash-layout-1440.png")
+            pg.evaluate("document.activeElement && document.activeElement.blur()"); layout(1440, True, "1440 panel open"); pg.screenshot(path="/tmp/dash-layout-1440.png")
             pg.evaluate("document.body.classList.add('panel-off')"); layout(1440, True, "1440 panel closed")
             layout(1100, False, "1100 panel closed"); pg.evaluate("document.body.classList.remove('panel-off')"); layout(1100, False, "1100 panel open")
             pg.set_viewport_size({"width": 1440, "height": 900}); pg.wait_for_timeout(400)
@@ -115,8 +121,9 @@ def main():
             # busy: a done task and a message
             pg.evaluate("TribeClient.api('/tasks', { method: 'POST', body: { title: 'Write your own headline', status: 'done' } })")
             pg.evaluate("TribeClient.api('/tasks', { method: 'POST', body: { title: 'Swap in your own pictures', status: 'doing' } })")
-            pg.evaluate("TribeProjects.overview()"); pg.wait_for_timeout(2000); layout(1440, True, "1440 busy")
-            pg.screenshot(path="/tmp/dash-layout-1440-busy.png")
+            pg.evaluate("TribeProjects.overview()"); pg.wait_for_timeout(2000); pg.evaluate("document.activeElement && document.activeElement.blur()")
+            pg.screenshot(path="/tmp/dash-layout-1440-busy.png"); layout(1440, True, "1440 busy")
+            pg.evaluate("document.body.classList.add('panel-off')"); layout(1440, True, "1440 busy panel closed"); pg.screenshot(path="/tmp/dash-layout-1440-busy-wide.png"); pg.evaluate("document.body.classList.remove('panel-off')")
 
             # phones
             pg.set_viewport_size({"width": 390, "height": 844}); dash(); layout(390, False, "390")
