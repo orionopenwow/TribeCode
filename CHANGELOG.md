@@ -1,5 +1,22 @@
 # Changelog
 
+## v0.43.0
+- **Office Space**: turn it on for a tribe and the office becomes a small pixel floor (art from Pixel Agents, MIT, Pablo De Lucca, with Metro City characters by JIK-A-4, CC0). Everyone, people, AI helpers and Flint, sits at a desk, types, reads, visits the task board and rests in the lounge, based on what they're really doing. Office pets wander around.
+- **Click anyone in the office**: message, call, give a task, open what they're working on, or approve an agent's request right there. "Your look" dresses your character from a real wardrobe. Hosts can move furniture, choose who sits where and switch to Night studio.
+- **Messages on Home**: every conversation across your projects in one calm list, with unread dots; open one or reply from the row. Only your own DMs ever show. Home also shows a preview card of what each project is making.
+- **Flint on your dashboard**: right under the preview, up to three things to do next, each one click from done, and a live feed of what is happening.
+- **A clearer Design picker**: every kind has its own icon, colour and small drawing, and the kinds that fit your project come first.
+- **One status, the same words everywhere**: the line under your name says where your tribe runs and what's wrong ("On this computer", "On Camp's computer", "Offline · 2 waiting"). Tap it for the one fix.
+- **Run your own server** (Advanced): ready-to-copy commands, then connect with one code. A direct link over Tailscale is offered too.
+- **GitHub, one way**: one Connect GitHub step and one status everywhere.
+- **Friendlier invites**: when an invite can't be made you get the reason and one button, never an error box.
+- **The Agents hub shows one clear state**: connect your first agent, your agents' dashboard, or a calm "turned off" card. A tribe switch turns AI helpers off.
+- **Marketplace pictures**: every item shows what it really is, every kind has its own icon, and item pages say what Add needs.
+- **TribeCode's own browser**: sources and docs open inside the app; sites that don't allow it open in your browser.
+- **Simpler bug reports**: one box to describe the bug.
+- **Fixes**: "Start your first project" no longer shows once you have projects.
+- **Phones**: messages come first on Home and previews swipe sideways; the status line, invite sheet, Flint's card and item pages fit 390px; the office shows a list of desks.
+
 ## v0.42.0
 - **Your first version is built from your own sentence**: the words, the screens and the colours follow what you typed, even with no AI. "A running club app with a leaderboard" gives runs, km and a Leaderboard tab, not a stock template. Small chips show what TribeCode understood, and "Change it" asks before replacing anything you edited.
 - **One Back button everywhere**: every creator starts with "‹ Dashboard". It saves, then takes you back; Esc and your browser's Back do the same.
