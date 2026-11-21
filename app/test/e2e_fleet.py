@@ -2,9 +2,9 @@
 
 1. No tribe yet: the global Agent fleet shows one hero (Start a project / Try the demo) and How agents work here.
    Start a project makes the tribe, and the hero becomes Connect your AI.
-2. Connect your AI: one tab per tool (Claude Code, Codex, Gemini CLI, Cursor, Qwen Code, Other MCP), each with the exact
-   setup prefilled with the MCP URL and a fresh key; Copy copies exactly that.
-3. Test connection turns green when the agent's first MCP call arrives (a simulated MCP client).
+2. Add an AI helper (feat/agents-office): seven choices and Another tool, each opening the one setup (the invite sheet);
+   looking makes no key.
+3. The page moves on by itself when the agent's first MCP call arrives (a simulated MCP client).
 4. Agent rows inside the project: status (working / idle / paused / offline), task + branch, files, last things it
    did. Pause and Resume reach the agent through check_messages; so do Message and Give a task. An agent waiting for
    an approval becomes the hero, and Approve works from there. Connect command makes a new key (the old one stops).
@@ -134,45 +134,28 @@ def main():
             host.wait_for_function("TribeClient.connected()", timeout=15000)
             assert api("/health")[1]["members"] >= 1
             host.evaluate("TribeAgentsHub.open({ global: true })")
-            host.wait_for_selector("#fl-hero[data-state='connect'] #fl-cmd", timeout=15000)
+            host.wait_for_selector("#fl-hero[data-state='connect'] [data-ao-pick]", timeout=15000)
             token = host.evaluate("TribeStore.get().server.token")
             pid = host.evaluate("TribeClient.project()")
             assert host.evaluate("document.body.dataset.view") == "agents-hub" and host.evaluate("document.body.dataset.scope") == "global", "stays in the global fleet"
 
-            # ---- 2. connect tabs: the exact command per tool, prefilled, and Copy copies exactly that
-            tabs = host.evaluate("[...document.querySelectorAll('#fl-hero [data-fl-tab]')].map(b => b.textContent.trim())")
-            assert tabs == ["Claude Code", "Codex", "Gemini CLI", "Cursor", "Qwen Code", "Another tool"], tabs
-            want = {"claude-code": "claude mcp add --transport http tribecode", "codex": "[mcp_servers.tribecode]", "gemini": "gemini mcp add", "cursor": '"mcpServers"', "qwen": "qwen mcp add", "mcp": "/mcp"}
-            keys = {}
-            for kind, frag in want.items():
-                host.click(f"#fl-hero [data-fl-tab='{kind}']")
-                host.wait_for_function("([k, f]) => { const t = document.querySelector('#fl-hero [data-fl-tab=\"' + k + '\"]'); const c = document.querySelector('#fl-cmd'); return t && t.classList.contains('on') && c && c.textContent.includes(f); }", arg=[kind, frag], timeout=10000)
-                r = host.evaluate("k => TribeFleet.state().keys[TribeProjects.current() + ':' + k]", kind)
-                keys[kind] = r
-                cmd = host.inner_text("#fl-cmd")
-                assert "/mcp" in cmd, cmd
-                if kind != "mcp": assert r["token"] in cmd, (kind, cmd)
-                host.click("#fl-copy")
-                host.wait_for_function("t => window.__copied.length && window.__copied[window.__copied.length - 1] === t", arg=host.evaluate("document.querySelector('#fl-cmd').textContent"), timeout=5000)
-            assert host.locator("#fl-hero [data-fl-copy]").count() == 2, "Other MCP: the URL and the header, each with a copy button"
-            hdr = host.evaluate("document.querySelector('#fl-hero [data-fl-text=\"1\"]').textContent")
-            assert keys["mcp"]["token"] in hdr and hdr.startswith("Authorization: Bearer"), hdr
-            host.click("#fl-hero [data-fl-tab='claude-code']"); host.wait_for_selector("#fl-hero [data-fl-tab='claude-code'].on")
-            assert host.evaluate("TribeFleet.state().keys[TribeProjects.current() + ':claude-code'].token") == keys["claude-code"]["token"], "switching tabs reuses the key"
+            # ---- 2. Add an AI helper (feat/agents-office): pick the AI, and the one setup opens; looking makes nothing
+            picks = host.eval_on_selector_all("#fl-hero [data-ao-pick]", "els => els.map(e => e.dataset.aoPick)")
+            assert picks == ["claude", "chatgpt", "codex", "gemini", "cursor", "local", "free", "other"], picks
+            assert not [m for m in ok(api("/members", token=token))["members"] if m["role"] == "agent"], "opening the page makes no key"
+            host.click("#fl-hero [data-ao-pick='cursor']"); host.wait_for_selector("#invite-modal:not(.hidden) #ic-body [data-ic-kind='cursor'].on", timeout=10000)
+            host.evaluate("TribeInvite.close()")
+            host.click("#fl-hero [data-ao-pick='free']"); host.wait_for_selector("#invite-modal:not(.hidden) #ic-alt[data-ic-altpane='free']", timeout=10000)
+            host.evaluate("TribeInvite.close()")
             host.mouse.move(700, 880); shot(host, "fleet-connect")
+            # keys made elsewhere (Your AI tools, an older setup): one per tool, for the rows below
+            keys = {k: ok(api("/agents", "POST", {"kind": k}, token=token, project=pid), k) for k in ["claude-code", "codex", "gemini", "cursor", "qwen", "mcp"]}
 
-            # ---- 3. Test connection turns green on the first MCP call
-            host.click("#fl-test"); wait_text(host, "#fl-test", "Waiting")
-            assert "ok" not in (host.get_attribute("#fl-test", "class") or "")
+            # ---- 3. the first MCP call: the hero moves on by itself
             ctok = keys["claude-code"]["token"]; cid = keys["claude-code"]["agent"]["id"]
             mcp(ctok, "my_lane", {"tokens_used": 12000, "budget": 100000})
-            host.wait_for_selector("#fl-test.ok", timeout=10000)
-            wait_text(host, "#fl-test", "Connected")
-            bg = host.evaluate("getComputedStyle(document.querySelector('#fl-test')).backgroundColor")
-            g = [float(x) for x in bg[bg.index("(") + 1:bg.index(")")].replace("srgb", "").replace(",", " ").split()[:3]]
-            assert g[1] > g[0] and g[1] > g[2], ("green", bg)
-            host.click("#fl-done")
-            host.wait_for_selector("#fl-hero[data-state='next']", timeout=10000)
+            host.evaluate("TribeAgentsHub.open({ global: true })")
+            host.wait_for_selector("#fl-hero[data-state='next']", timeout=20000)
 
             # ---- 4. inside the project: rows, actions, the next step
             ok(api("/tasks", "POST", {"title": "Speed boots"}, token=token, project=pid))

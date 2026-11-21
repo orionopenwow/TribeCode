@@ -98,8 +98,8 @@ def main():
 
             # ---- a fresh tribe: one calm empty state, one tab, a +
             host.click("#nest-ws-agents"); host.wait_for_selector("#view-coord:not(.hidden) #ad-hero[data-state='connect']")
-            wait_text(host, "#ad-hero", "Connect your AI")   # feat/fleet: the hero is the next step
-            host.wait_for_selector("#ad-hero #fl-cmd")
+            wait_text(host, "#ad-hero", "Add an AI helper")   # feat/fleet: the hero is the next step
+            host.wait_for_selector("#ad-hero [data-ao-pick='claude']")   # feat/agents-office: Add an AI helper, the one setup per choice
             assert cards(host) == ["#ad-hero"], cards(host)
             assert tabs(host) == [], tabs(host)   # p10: one tab, no tab row
             assert host.locator("#view-tabs #wt-plus:visible").count() == 0, "no bare + row"
@@ -108,8 +108,8 @@ def main():
             fs = host.evaluate("parseFloat(getComputedStyle(document.querySelector('#ad-hero .fl-title')).fontSize)")
             assert fs >= 18, fs
             shot(host, "agents-dash-empty")
-            # Connect your AI: the tools as tabs, the command right in the hero (e2e_fleet.py covers it in depth)
-            assert host.locator("#ad-hero [data-fl-tab]").count() == 6
+            # Add an AI helper: seven choices and Another tool; each opens the invite sheet (e2e_agents_office.py covers it)
+            assert host.locator("#ad-hero [data-ao-pick]").count() == 8
             # See all tools: the MCP page, as a temporary tab; × closes it back to the dashboard
             host.click("#ad-tools"); host.wait_for_function("window.TribeMcpDir && TribeMcpDir.isOpen()")
             host.wait_for_selector("#wt-mcp-directory.on .wt-x.temp")
