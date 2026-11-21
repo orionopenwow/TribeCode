@@ -120,7 +120,7 @@
     const pj = projects(), live = (data && data.status) || {};
     const sub = on ? [greeting(), `${pj.length} project${pj.length === 1 ? '' : 's'}`, live.activeToday ? `${live.activeToday} active today` : ''].filter(Boolean).join(' · ')
       : C.hasToken() && !(window.TribeOffline && window.TribeOffline.asleep && window.TribeOffline.asleep()) ? `${greeting()}. ${offlineWord()}` : `${greeting()}. Not in a tribe yet: everything here works on this device.`;
-    const hubOn = C.hasToken() && (on || hadPj()) && !!window.TribeHomeHub;   // feat/p10-home
+    const hubOn = C.hasToken() && (pj.length > 0 || hadPj()) && !!window.TribeHomeHub;   // feat/p10-home: once there is a project; a brand-new tribe keeps the start band
     keepFocus(() => {
       el.innerHTML = `<div class="hub hub-home">${isPhone() ? `<div class="hub-ptop" id="hub-ptop"><button class="hpt-btn hpt-me" id="hpt-me" aria-label="Your profile">${meFace()}</button>
           <button class="hpt-brand" id="hpt-brand" aria-label="Your projects"><img class="hpt-mark tc-mark" src="assets/icon.svg" alt="" width="26" height="26"><img class="brand-wm" src="assets/wordmark.svg" alt="TribeCode">${ico('i-chev', 16)}</button>

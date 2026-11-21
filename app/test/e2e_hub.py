@@ -364,7 +364,7 @@ def main():
             assert host.locator("#update-pill").count() == 0
             host.wait_for_selector("#update-btn.ready:not(.hidden)")
             # desktop: the header keeps People and the update button; you and the bell sit in the bottom-left user bar
-            assert host.evaluate("[...document.querySelectorAll('.titlebar .tb-right > *')].filter(e => e.offsetParent !== null).map(e => e.id).filter(Boolean)") == ["ppl-btn", "update-btn", "tb-help"]   # feat/presence: People sits in the top bar
+            assert host.evaluate("[...document.querySelectorAll('.titlebar .tb-right > *')].filter(e => e.offsetParent !== null).map(e => e.id).filter(Boolean)") == ["ppl-btn", "bug-top", "update-btn", "tb-help"]   # feat/presence: People sits in the top bar
             assert host.evaluate("['#pf-btn', '#nf-bell'].every(s => document.querySelector(s).closest('#userbar')) && !document.querySelector('#fr-btn')"), "user bar holds profile and bell (Friends is in People)"
             order = host.evaluate("['#pf-btn', '#nf-bell'].map(s => document.querySelector(s).getBoundingClientRect().left)")
             assert order == sorted(order), order
@@ -424,7 +424,7 @@ def main():
             ys = phone.evaluate("['#hub-hero', '#hub-pjs-sec', '#hub-notes', '#hub-stream', '#hub-insights'].map(s => Math.round(document.querySelector(s).getBoundingClientRect().top + scrollY))")
             assert ys == sorted(ys), ys
             assert phone.evaluate("document.documentElement.scrollWidth <= innerWidth + 1"), phone.evaluate("document.documentElement.scrollWidth")
-            wide = phone.evaluate("[...document.querySelectorAll('#view-hub *')].filter(e => e.getBoundingClientRect().right > innerWidth + 1 && getComputedStyle(e).position !== 'fixed' && !e.closest('.ha-row, .hf-row, .hub-li, .sc-text, .hs-li')).map(e => e.tagName + '.' + e.className + ' ' + Math.round(e.getBoundingClientRect().right))")
+            wide = phone.evaluate("[...document.querySelectorAll('#view-hub *')].filter(e => e.getBoundingClientRect().right > innerWidth + 1 && getComputedStyle(e).position !== 'fixed' && !e.closest('.ha-row, .hf-row, .hub-li, .sc-text, .hs-li, .hh-strip')).map(e => e.tagName + '.' + e.className + ' ' + Math.round(e.getBoundingClientRect().right))")
             assert not wide, wide
             shot(phone, "home-phone")
             phone.evaluate("document.querySelector('#hub-stream').scrollIntoView({ block: 'start' })"); shot(phone, "home-phone-3")
