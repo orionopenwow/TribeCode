@@ -104,15 +104,11 @@ def website(p):
     assert "Sharing and backup" in pg.inner_text("#view-home") and pg.query_selector("#sc-online"), "where it is saved, and the one button"
     shot(pg, "web-dashboard")
 
-    # 4. the vision: one plain box, no template
-    pg.evaluate("TribeAssist.vision(TribeProjects.cur(), { host: true })"); pg.wait_for_selector("#pj-vtext", timeout=10000); time.sleep(0.3)
-    box = pg.inner_text("#invite-body"); val = pg.input_value("#pj-vtext")
-    assert not pg.query_selector("#av-cats, #av-gist, .av-imp"), "no category chips, gist box or Improve with"
-    for t in ("For whom", "Done for v1", "Out of scope", "Improve with", "Your vision"): assert t not in box and t not in val, t
-    assert val.strip() == "An app that tracks our habits", val
-    pg.fill("#pj-vtext", "An app that tracks our habits, for our flat."); pg.click("#pj-vsave"); time.sleep(0.6)
+    # 4. the vision: one line under the name, edited in place (v0.42), holding the first sentence
+    assert "An app that tracks our habits" in pg.evaluate("TribeClient.api('/vision').then(v => v.text)")
+    pg.click("#pj-bio"); pg.fill("#pj-vis-in", "An app that tracks our habits, for our flat"); pg.keyboard.press("Enter"); time.sleep(0.6)
     v = pg.evaluate("TribeClient.api('/vision').then(v => v.text)")
-    assert "for our flat" in v and "##" not in v, v
+    assert "for our flat" in v, v
     shot(pg, "web-vision")
 
     # 5. it is all still there after a reload, and so is the next step
