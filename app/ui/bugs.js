@@ -164,16 +164,16 @@
   function capture() {
     const body = $('#invite-body');
     body.innerHTML = `<h2>Report a bug</h2>
-      <div class="field"><label for="bug-title">What went wrong?</label><input class="input" id="bug-title" maxlength="160" placeholder="e.g. Dragging a task to Done doesn't stick"></div>
-      <div class="field"><label for="bug-repro">Steps to reproduce</label><textarea class="input" id="bug-repro" style="height:84px;font-family:var(--font)" placeholder="1. …&#10;2. …"></textarea></div>
-      <div class="field"><label for="bug-details">Anything else (optional)</label><textarea class="input" id="bug-details" style="height:64px;font-family:var(--font)"></textarea></div>
+      <div class="field"><label for="bug-what">What went wrong?</label><textarea class="input" id="bug-what" style="height:120px;font-family:var(--font);line-height:1.5" placeholder="Describe the bug in your own words: what you did, what happened, what you expected."></textarea></div>
       <div class="bug-cap-files"><button class="btn ghost" id="bug-shot" type="button"><svg class="i" style="width:15px;height:15px"><use href="#i-image"/></svg>Take a screenshot</button><button class="btn ghost" id="bug-attach" type="button"><svg class="i" style="width:15px;height:15px"><use href="#i-upload"/></svg>Add a file</button></div>
       <div class="bug-cap-list" id="bug-files"></div>
       <label class="bug-cap-log"><input type="checkbox" id="bug-log" checked> <span>Attach a log snapshot</span> <button class="linkish" id="bug-log-see" type="button">See what's in it</button></label>
       <pre class="bug-cap-pre" id="bug-log-pre" hidden></pre>
       <div class="faint" style="font-size:12px">Also attached: ${esc(currentView() || 'Home')} · v${esc(window.TribeUpdater ? window.TribeUpdater.current() : '')}. Tokens and keys are blanked out. Or paste a picture here with Ctrl V.</div>
       <div class="modal-foot"><button class="btn" data-close>Cancel</button><span style="flex:1"></span><button class="btn" id="bug-save" type="button">Save to a file</button><button class="btn" id="bug-team" type="button" title="Opens a GitHub page with your report filled in. It is public, and you press Submit there.">Send to TribeCode</button><button class="btn primary" id="bug-go">Send report</button></div>`;
-    $('#invite-modal').classList.remove('hidden'); $('#bug-title').focus();
+    $('#invite-modal').classList.remove('hidden'); $('#bug-what').focus();
+    // One box (Camp, 2026-11-20): the first line becomes the title, the rest the description.
+    const said = () => { const t = ($('#bug-what').value || '').trim(); const first = t.split('\n')[0].trim(); return { title: first.slice(0, 120) || '', body: t }; };
     let files = [];
     const show = () => {
       const box = $('#bug-files'); if (!box) return;
@@ -191,7 +191,7 @@
     const logFile = async () => $('#bug-log').checked ? new File([await logSnapshot()], `log-${stamp()}.txt`, { type: 'text/plain' }) : null;
     $('#bug-save').onclick = async () => {   // works with no tribe: the report as a text file, plus each picture
       const lf = await logFile();
-      const text = [`# ${$('#bug-title').value.trim() || 'Bug report'}`, '', '## Steps to reproduce', $('#bug-repro').value || '(none)', '', '## Details', $('#bug-details').value || '(none)', '', lf ? await lf.text() : ''].join('\n');
+      const w = said(); const text = [`# ${w.title || 'Bug report'}`, '', w.body || '(nothing written)', '', lf ? await lf.text() : ''].join('\n');
       save(new Blob([text], { type: 'text/plain' }), `tribecode-bug-${stamp()}.txt`);
       files.forEach(f => save(f, f.name));
       window.TribeApp.toast('Saved to your Downloads folder');
@@ -199,9 +199,9 @@
     // The people who make TribeCode: opens a filled-in, public GitHub form in the browser; the person presses Submit there.
     // Nothing is sent from the app itself. Pictures can't ride in a link, so they are saved for dragging onto that page.
     $('#bug-team').onclick = async () => {
-      const title = $('#bug-title').value.trim(); if (!title) { $('#bug-title').focus(); return; }
+      const w = said(), title = w.title; if (!title) { $('#bug-what').focus(); return; }
       const U = window.TribeUpdater, where = `${window.TribeHost && window.TribeHost.isDesktop ? 'desktop app' : 'browser'} · v${U ? U.current() : '?'} · ${currentView() || 'Home'} · ${innerWidth}x${innerHeight}`;
-      const head = [title, '', '**Steps**', $('#bug-repro').value.trim() || '(none)', '', '**Details**', $('#bug-details').value.trim() || '(none)'].join('\n');
+      const head = w.body;
       let log = $('#bug-log').checked ? redact(recent.slice(-40).join('\n')) : '';
       const REPO = 'https://github.com/orionopenwow/TribeCode/issues/new';
       const make = () => `${REPO}?${new URLSearchParams({ template: 'feedback.yml', title: `Bug: ${title.slice(0, 80)}`, facet: 'Bug', message: redact(head) + (log ? '\n\n**Log (this window, last lines)**\n```\n' + log + '\n```' : ''), where })}`;
@@ -214,11 +214,11 @@
     body.addEventListener('paste', e => { const f = [...(e.clipboardData && e.clipboardData.files || [])]; if (f.length) { files = files.concat(f); show(); } });
     body.querySelector('[data-close]').onclick = () => $('#invite-modal').classList.add('hidden');
     $('#bug-go').onclick = async () => {
-      const title = $('#bug-title').value.trim(); if (!title) return $('#bug-title').focus();
+      const w = said(), title = w.title; if (!title) return $('#bug-what').focus();
       if (!C.connected()) { window.TribeApp.toast('No tribe to send it to. Use Save to a file instead.'); return; }
       $('#bug-go').disabled = true;
       try {
-        const r = await C.api('/bugs', { method: 'POST', body: { title, repro: $('#bug-repro').value, details: $('#bug-details').value, logs: recent.join('\n'), view: currentView(), version: window.TribeUpdater ? window.TribeUpdater.current() : '' } });
+        const r = await C.api('/bugs', { method: 'POST', body: { title, repro: '', details: w.body, logs: recent.join('\n'), view: currentView(), version: window.TribeUpdater ? window.TribeUpdater.current() : '' } });
         const lf = await logFile();
         if (files.length || lf) await attachFiles(r.bug.id, lf ? files.concat(lf) : files);
         $('#invite-modal').classList.add('hidden');

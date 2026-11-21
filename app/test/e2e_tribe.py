@@ -289,13 +289,12 @@ def main():
 
             # ---- bug inbox: capture, triage, dedupe, self-heal ----
             host.keyboard.press("Control+Shift+B")
-            host.fill("#bug-title", "Chat stops syncing after reconnect")
-            host.fill("#bug-details", "Wifi dropped, chat never came back.")
+            host.fill("#bug-what", "Chat stops syncing after reconnect\nWifi dropped, chat never came back.")
             host.click("#bug-go")
             wait_text(host, "#bug-list", "Chat stops syncing after reconnect")
             wait_text(host, "#bug-list", "sync")
             friend.keyboard.press("Control+Shift+B")
-            friend.fill("#bug-title", "chat stops syncing after a reconnect")
+            friend.fill("#bug-what", "chat stops syncing after a reconnect")
             friend.click("#bug-go")
             wait_text(friend, ".toast", "Merged with an existing report")
             wait_text(host, "#bug-list", "seen 2×")

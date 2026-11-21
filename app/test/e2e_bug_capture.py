@@ -31,8 +31,8 @@ def main():
                 if w >= 1000:   # the bug button in the top bar, beside People
                     pg.wait_for_selector("#bug-top", timeout=8000); pg.click("#bug-top")
                 else: pg.evaluate("TribeBugs.capture()")
-                pg.wait_for_selector("#bug-title")
-                pg.fill("#bug-title", f"Test bug {w}")
+                pg.wait_for_selector("#bug-what")
+                pg.fill("#bug-what", f"Test bug {w}\nIt broke when I clicked Save.")
                 # Send to the TribeCode team: a filled-in public form opens; nothing secret is in the address
                 pg.evaluate("() => { window.__opened = []; window.open = u => { window.__opened.push(String(u)); return null; }; }")
                 pg.click("#bug-team"); pg.wait_for_function("window.__opened.length > 0", timeout=5000); url = pg.evaluate("window.__opened[0]")
@@ -56,7 +56,7 @@ def main():
                 logf = next(tmp.rglob(next(n for n in names if n.endswith(".txt"))))
                 assert "SECRETSECRET" not in logf.read_text() and "boom" in logf.read_text(), "the sent log is blanked too"
                 # Save to a file
-                pg.evaluate("TribeBugs.capture()"); pg.wait_for_selector("#bug-title"); pg.fill("#bug-title", "Saved bug")
+                pg.evaluate("TribeBugs.capture()"); pg.wait_for_selector("#bug-what"); pg.fill("#bug-what", "Saved bug\nMore words.")
                 with pg.expect_download() as d: pg.click("#bug-save")
                 txt = Path(d.value.path()).read_text(); assert "# Saved bug" in txt and "TribeCode log snapshot" in txt and "SECRETSECRET" not in txt, txt[:200]
                 pg.click("#invite-modal [data-close]")

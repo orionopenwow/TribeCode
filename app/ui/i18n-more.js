@@ -11,6 +11,7 @@
   'use strict';
   const I = window.TribeI18n; if (!I || !I.add) return;
   I.add({
+    'Describe the bug in your own words: what you did, what happened, what you expected.': ['Describe el error con tus palabras: qué hiciste, qué pasó y qué esperabas.', 'Descreva o erro com suas palavras: o que você fez, o que aconteceu e o que esperava.', 'Décrivez le bug avec vos mots : ce que vous avez fait, ce qui s’est passé, ce que vous attendiez.', 'Beschreibe den Fehler in deinen Worten: was du getan hast, was passiert ist und was du erwartet hast.', 'バグを自分の言葉で説明してください：何をして、何が起きて、何を期待したか。', '用你自己的话描述这个问题：你做了什么、发生了什么、你期望什么。', '버그를 직접 설명해 주세요: 무엇을 했고, 무슨 일이 있었고, 무엇을 기대했는지.'],
     // ---- pass 9: the creators' shared shell (Back, Undo/Redo, the flame, Flint's column)
     'Back to the dashboard': ['Volver al panel', 'Voltar ao painel', 'Retour au tableau de bord', 'Zurück zur Übersicht', 'ダッシュボードに戻る', '返回仪表板', '대시보드로 돌아가기'],
     'Undo and redo': ['Deshacer y rehacer', 'Desfazer e refazer', 'Annuler et rétablir', 'Rückgängig und wiederholen', '元に戻す・やり直す', '撤销和重做', '실행 취소와 다시 실행'],
