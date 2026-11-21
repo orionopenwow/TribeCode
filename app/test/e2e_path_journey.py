@@ -216,7 +216,7 @@ def main():
             # the tribe cannot be reached: said plainly, kept on the device, sent by itself later
             srv.terminate(); srv.wait(); time.sleep(0.4)
             sp.evaluate("TribeAppCreator.apply({ op: 'rename', name: 'Offline Habits' })")
-            sp.wait_for_function("/Kept on this device/.test(document.querySelector('#apc-saved').textContent)", timeout=8000)
+            sp.wait_for_function("/Saved on this device/.test(document.querySelector('#apc-saved').textContent)", timeout=8000)
             assert sp.evaluate(f"!!localStorage.getItem('tribecode.appcreator.unsent.{pid}')"), "kept on the device"
             # a second device opening App Creator now gets a plain message, never a blank app that would save over the real one
             sp2 = c2.new_page(); sp2.goto("about:blank")
@@ -228,7 +228,7 @@ def main():
             assert not sp.evaluate(f"!!JSON.parse(localStorage.getItem('tribecode.appcreator.unsent.{pid}') || 'null')")
             # closed with an unsent change, opened again later: it comes back and is sent
             srv.terminate(); srv.wait(); time.sleep(0.3)
-            sp.evaluate("TribeAppCreator.apply({ op: 'rename', name: 'Came Back' })"); sp.wait_for_function("/Kept on this device/.test(document.querySelector('#apc-saved').textContent)", timeout=8000)
+            sp.evaluate("TribeAppCreator.apply({ op: 'rename', name: 'Came Back' })"); sp.wait_for_function("/Saved on this device/.test(document.querySelector('#apc-saved').textContent)", timeout=8000)
             sp.evaluate("TribeAppCreator.close()")
             srv = start(); sp.reload(); sp.wait_for_function("window.TribeAppCreator && window.TribeClient && TribeClient.connected()", timeout=20000)
             sp.evaluate("TribeAppCreator.open({})"); sp.wait_for_selector("#apc .ax-screen", timeout=8000)

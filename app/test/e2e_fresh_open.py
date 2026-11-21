@@ -44,7 +44,7 @@ def main():
             assert not pg.evaluate("!!(window.TribeOffline && TribeOffline.active && TribeOffline.active())"), "no demo on open"
             assert pg.evaluate("TribeApp.fresh()"), "the app knows there's no tribe yet"
             assert pg.locator("#view-hub:not(.hidden) #hub-hero.hub-empty").count() == 1, "the Dashboard's empty state is underneath"
-            assert "Start your first project" in pg.text_content("#hub-host")
+            assert "Start building" in pg.text_content("#hub-idea-go") and pg.locator("#hub-idea").count() == 1 and "Start with a name" in pg.text_content("#hub-host")   # feat/easy-start: Home takes the idea itself
             assert pg.locator("#hub-demo").count() == 0, "the demo isn't offered on the Dashboard"
             pg.screenshot(path=str(SHOTS / "fo-1-personalize.png"))
             # 2. Make it yours works without a tribe (saved on this device)
@@ -69,6 +69,9 @@ def main():
                 txt = bubble(pg)
                 step = pg.text_content(".fg-steps") or ""
                 cur, total = [int(x) for x in step.replace(" ", "").split("/")]
+                for _ in range(20):   # the fresh Home's card is taller now (the sentence box): give the ring time to reach it
+                    if landed(pg): break
+                    pg.wait_for_timeout(150)
                 assert landed(pg), f"Flint landed at stop {cur}: {txt}"
                 seen.append(cur)
                 if cur == 5:

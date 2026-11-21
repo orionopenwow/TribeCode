@@ -81,6 +81,7 @@
     if (!el) return; const box = $('#vr-detail', el);
     el.querySelectorAll('.vr-row').forEach(r => r.setAttribute('aria-current', String(r.dataset.sha === sha)));
     let v; try { v = await api(`${sub()}/${sha}`); } catch (e) { box.innerHTML = `<p class="faint">${esc(e.message)}</p>`; return; }
+    if (!el || !st || !st.data || !box.isConnected) return;   // the sheet was closed while this version was loading
     const meta = (st.data.list || []).find(x => x.sha === sha) || {};
     const paint = () => {
       box.innerHTML = `<div class="vr-dh"><span class="eyebrow">${esc(sha.slice(0, 7))}${meta.tags && meta.tags.length ? ' · ' + esc(meta.tags.join(', ')) : ''}</span><h4>${esc(v.message)}</h4><p class="faint">${esc(v.author)} · ${when(v.at)}</p></div>
