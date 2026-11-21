@@ -109,10 +109,14 @@ def settled(page):
 
 
 def check_global(page, row, key, crumb, hsh, tribe):
-    page.click("#" + row); page.wait_for_function("k => TribeRouter.where().key === k", arg=key, timeout=8000)
+    # feat/newcomer-start: with no tribe yet the Agent fleet row is kept back (newcomer.js); Ctrl K still opens it, and its row shows while it is open
+    quiet = page.evaluate("document.body.classList.contains('nc-quiet')")
+    if quiet and key == "fleet": page.evaluate("TribeShell.go('fleet')")
+    else: page.click("#" + row)
+    page.wait_for_function("k => TribeRouter.where().key === k", arg=key, timeout=8000)
     st = settled(page)
     assert st["global"] and st["place"] == "global", (row, st)
-    assert st["rows"] == [g[1] for g in GLOBAL], (row, st["rows"])   # the global sidebar stays: never a tribe's nest
+    assert st["rows"] == [g[1] for g in GLOBAL if not (quiet and g[1] == "fleet" and key != "fleet")], (row, st["rows"])   # the global sidebar stays: never a tribe's nest
     assert st["lit"] == [key], (row, st["lit"])
     assert len(st["panes"]) == 1, (row, st["panes"])   # no stale panes from the previous dashboard
     assert st["crumb"] == crumb and st["hash"] == hsh, (row, st)
@@ -137,7 +141,8 @@ def global_nav(page, tribe):
     page.go_back(); page.wait_for_function("TribeRouter.where().key === 'work'", timeout=8000)
     page.go_back(); page.wait_for_function("TribeRouter.where().key === 'hub'", timeout=8000)
     page.go_forward(); page.wait_for_function("TribeRouter.where().key === 'work'", timeout=8000)
-    st = settled(page); assert st["global"] and st["rows"] == [g[1] for g in GLOBAL] and len(st["panes"]) == 1, st
+    quiet = page.evaluate("document.body.classList.contains('nc-quiet')")
+    st = settled(page); assert st["global"] and st["rows"] == [g[1] for g in GLOBAL if not (quiet and g[1] == "fleet")] and len(st["panes"]) == 1, st
     # the logo is always Home, and it closes the Workshop layer on its way
     page.click("#rail-workshop"); page.wait_for_function("TribeWorkshop.isOpen()")
     assert page.locator("#rail-workshop use").get_attribute("href") == "#i-wrench", "the Workshop is a wrench"
