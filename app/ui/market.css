@@ -253,3 +253,39 @@ body.mk-page-on #view-market.hidden { display: block !important; }   /* phone co
 .mk-offline b { color: var(--text); }
 .mk-offline .btn { margin-left: auto; flex: none; }
 .mk-off-dot { flex: none; width: 8px; height: 8px; border-radius: 50%; background: var(--muted); }
+
+/* ---------- feat/p10-market: drawn pictures (market-art.js) ---------- */
+.mk-tile.has-art { display: block; }
+.mk-tile.has-art .mk-tile-i { z-index: 1; background: var(--surface); }
+.mk-tile .ma { position: absolute; inset: 0; width: 100%; height: 100%; }
+.ma .ma-p { fill: var(--surface); stroke: var(--edge); stroke-width: 1; }
+.ma .ma-on { fill: currentColor; fill-opacity: .14; stroke: currentColor; stroke-opacity: .45; stroke-width: 1; }
+.ma .ma-a { fill: currentColor; }
+.ma .ma-l { fill: currentColor; fill-opacity: .28; }
+.ma .ma-e, .ma .ma-s { fill: none; stroke: var(--edge); stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+.ma .ma-s { stroke: currentColor; stroke-opacity: .7; }
+.ma .ma-ink { fill: none; stroke: var(--surface); stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.ma .ma-box { fill: none; stroke: currentColor; stroke-opacity: .6; stroke-width: 1.3; }
+.ma .ma-dot { fill: currentColor; fill-opacity: .35; }
+.ma .ma-term { fill: var(--canvas); stroke: var(--edge); stroke-width: 1; }
+.ma text { font-family: var(--font); }
+.ma .ma-t { fill: var(--text); font-size: 14px; font-weight: 650; }
+.ma .ma-b { fill: var(--text); font-size: 12px; }
+.ma .ma-m { fill: var(--muted); font-family: var(--mono); font-size: 11px; }
+.ma .ma-code { fill: currentColor; font-family: var(--mono); font-size: 12px; }
+.ma .ma-dim { fill: var(--muted); }
+.ma .ma-sm { font-size: 10.5px; }
+.ma .ma-inv { fill: var(--surface); }
+.ma-phone { position: absolute; inset: 0; display: grid; place-items: center; }
+.ma-phone .apc-mini { border-radius: 12px; border: 1px solid var(--edge); overflow: hidden; }
+
+/* related items in the detail pane */
+.mk-related { margin-top: 18px; }
+.mk-related h6 { margin: 0 0 8px; }
+.mk-rel { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.mk-relb { display: grid; gap: 6px; text-align: left; padding: 0; border: 1px solid var(--edge); border-radius: var(--r); background: var(--surface); color: inherit; cursor: pointer; overflow: hidden; }
+.mk-relb:hover { border-color: var(--edge-pop); }
+.mk-relb > span { display: grid; gap: 2px; padding: 0 10px 10px; }
+.mk-relb b { font-size: 13px; }
+.mk-relb small { color: var(--muted); font-size: 11.5px; }
+.mk-needs { color: var(--text); }

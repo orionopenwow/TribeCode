@@ -3366,7 +3366,14 @@
       "author": "TribeCode",
       "source": "https://github.com/orionopenwow/TribeCode/blob/main/templates/companies.json",
       "docs": "https://github.com/orionopenwow/TribeCode#readme",
-      "verified": "2026-11-12 bundled"
+      "verified": "2026-11-12 bundled",
+      "seats": [
+        "CEO",
+        "Build",
+        "Grow",
+        "Support",
+        "Money"
+      ]
     },
     {
       "id": "co-agency",
@@ -3390,7 +3397,14 @@
       "author": "TribeCode",
       "source": "https://github.com/orionopenwow/TribeCode/blob/main/templates/companies.json",
       "docs": "https://github.com/orionopenwow/TribeCode#readme",
-      "verified": "2026-11-12 bundled"
+      "verified": "2026-11-12 bundled",
+      "seats": [
+        "CEO",
+        "Sales",
+        "Design",
+        "Delivery",
+        "Money"
+      ]
     },
     {
       "id": "co-creator",
@@ -3413,7 +3427,13 @@
       "author": "TribeCode",
       "source": "https://github.com/orionopenwow/TribeCode/blob/main/templates/companies.json",
       "docs": "https://github.com/orionopenwow/TribeCode#readme",
-      "verified": "2026-11-12 bundled"
+      "verified": "2026-11-12 bundled",
+      "seats": [
+        "Creator",
+        "Make",
+        "Grow",
+        "Partners"
+      ]
     },
     {
       "id": "co-game-studio",
@@ -3437,7 +3457,13 @@
       "author": "TribeCode",
       "source": "https://github.com/orionopenwow/TribeCode/blob/main/templates/companies.json",
       "docs": "https://github.com/orionopenwow/TribeCode#readme",
-      "verified": "2026-11-12 bundled"
+      "verified": "2026-11-12 bundled",
+      "seats": [
+        "Director",
+        "Build",
+        "Art & sound",
+        "Community"
+      ]
     },
     {
       "id": "co-local",
@@ -3461,7 +3487,13 @@
       "author": "TribeCode",
       "source": "https://github.com/orionopenwow/TribeCode/blob/main/templates/companies.json",
       "docs": "https://github.com/orionopenwow/TribeCode#readme",
-      "verified": "2026-11-12 bundled"
+      "verified": "2026-11-12 bundled",
+      "seats": [
+        "Owner",
+        "Get found",
+        "Customers",
+        "Run"
+      ]
     },
     {
       "id": "co-nonprofit",
@@ -3484,7 +3516,13 @@
       "author": "TribeCode",
       "source": "https://github.com/orionopenwow/TribeCode/blob/main/templates/companies.json",
       "docs": "https://github.com/orionopenwow/TribeCode#readme",
-      "verified": "2026-11-12 bundled"
+      "verified": "2026-11-12 bundled",
+      "seats": [
+        "Director",
+        "Programs",
+        "Supporters",
+        "Treasurer"
+      ]
     },
     {
       "id": "co-club",
@@ -3507,7 +3545,12 @@
       "author": "TribeCode",
       "source": "https://github.com/orionopenwow/TribeCode/blob/main/templates/companies.json",
       "docs": "https://github.com/orionopenwow/TribeCode#readme",
-      "verified": "2026-11-12 bundled"
+      "verified": "2026-11-12 bundled",
+      "seats": [
+        "Organizer",
+        "Events",
+        "Members"
+      ]
     },
     {
       "id": "pb-ceo-weekly-review",

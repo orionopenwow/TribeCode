@@ -40,7 +40,8 @@
   };
   const TI = { search: 'search', x: 'x', installed: 'check', 'asset-pack': 'image', skill: 'star', ext: 'link', templates: 'folder', filter: 'filter', back: 'arrow-left' };   // our names -> app/ui/icons.js names
   function icon(name, sz = 16) {
-    try { if (TI[name] && window.TribeIcons && window.TribeIcons.svg) { const s = window.TribeIcons.svg(TI[name], sz); if (s && /<svg/.test(s)) return s; } } catch {}
+    // feat/p10-market: TribeIcons draws a paperclip for names it doesn't have; use our own drawing then, never the clip
+    try { if (TI[name] && window.TribeIcons && window.TribeIcons.svg) { const s = window.TribeIcons.svg(TI[name], sz); if (s && /<svg/.test(s) && !/data-i="other"/.test(s)) return s; } } catch {}
     return `<svg class="i mk-i" width="${sz}" height="${sz}" viewBox="0 0 24 24" aria-hidden="true"><path d="${PATHS[name] || PATHS.all}"/></svg>`;
   }
 
@@ -75,6 +76,21 @@
   const srcOf = it => it.source || (it.repo ? `https://github.com/${it.repo}` : it.url) || '';
   const host = u => { try { return new URL(u).hostname.replace(/^www\./, ''); } catch { return ''; } };
   const ago = d => { const t = Date.parse(d); if (!t) return ''; const days = (Date.now() - t) / 864e5; return days < 1 ? 'today' : days < 2 ? 'yesterday' : days < 45 ? `${Math.round(days)} days ago` : days < 540 ? `${Math.round(days / 30)} months ago` : `${(days / 365).toFixed(1).replace(/\.0$/, '')} years ago`; };
+  // what an item needs before it works, read from its own data (an MCP server's env keys, an install line, a download)
+  function needs(it) {
+    if (it.kind === 'connector' && it.mcp && it.mcp.config) {
+      const env = Object.keys(it.mcp.config.env || {}), cmd = it.mcp.config.command || (it.mcp.config.url ? 'a web address' : '');
+      return [env.length ? `${env.length === 1 ? 'A key' : 'Keys'} you set: ${env.join(', ')}` : '', cmd === 'npx' || cmd === 'node' ? 'Node.js on the computer that runs the tribe' : cmd === 'uvx' || cmd === 'python' ? 'Python (uv) on the computer that runs the tribe' : cmd === 'docker' ? 'Docker on the computer that runs the tribe' : ''].filter(Boolean).join(' · ') || 'Nothing else';
+    }
+    if (it.kind === 'connector') return 'Follow its README to set it up';
+    if (it.kind === 'skill') return 'Claude Code (it reads .claude/skills)';
+    if ((it.kind === 'library' || it.kind === 'tool') && it.install) return `Run it when you use it: ${String(it.install).split('\n')[0]}`;
+    if (it.kind === 'studio') return 'Download it from its site (TribeCode lists it; it doesn’t install it)';
+    if (it.kind === 'site-template') return it.repo ? 'Git, to copy the starter' : 'Nothing else';
+    if (it.kind === 'app-kit') return 'An app in App Creator';
+    if (it.kind === 'widget') return /link/.test((it.tags || []).join(' ')) ? `An account at ${host(it.url || it.source) || 'its site'}, if it asks` : 'Nothing else';
+    return 'Nothing else';
+  }
   const monogram = t => { const w = String(t || '?').replace(/[^\p{L}\p{N} ]/gu, ' ').trim().split(/\s+/); return ((w[0] || '?')[0] + (w[1] ? w[1][0] : (w[0] || '').slice(1, 2))).toUpperCase(); };
 
   const st = { q: '', sort: 'hot', kind: [], for: [], seat: [], tag: [], tab: 'browse', items: [], total: 0, catalog: 0, note: '', offset: 0, seq: 0, open: null, installedCount: 0, target: null };
@@ -190,6 +206,8 @@
     el.addEventListener('click', e => {
       const a = e.target.closest('[data-use]'); if (a) { e.stopPropagation(); return use(a.dataset.use, a); }
       const r = e.target.closest('[data-remove]'); if (r) { e.stopPropagation(); return remove(r.dataset.remove, r); }
+      const lk = e.target.closest('a[data-browse]');
+      if (lk && window.TribeBrowser && !e.ctrlKey && !e.metaKey && !e.shiftKey && !lk.closest('#mk-detail')) { e.preventDefault(); const c = lk.closest('.mk-card'); window.TribeBrowser.open(lk.href, { title: c ? c.getAttribute('aria-label') : '' }); return; }
       if (e.target.closest('a[href]')) return;
       const x = e.target.closest('[data-chip]'); if (x) { const [k, v] = x.dataset.chip.split(':'); st[k] = st[k].filter(y => y !== v); return load(true); }
       if (e.target.closest('[data-clear]')) { st.for = []; st.seat = []; st.tag = []; return load(true); }
@@ -257,7 +275,9 @@
     } catch { if (n === st.seq) grid.innerHTML = window.TribeUI.emptyHTML({ cls: 'mk-empty', center: true, title: 'The marketplace is resting', line: 'The saved list didn’t open either. Reload the app to try again.' }); }
   }
   function thumb(it, big) {
-    const tile = `<span class="mk-tile" aria-hidden="true"><span class="mk-tile-i">${icon(KIND_ICON[it.kind] || 'all', big ? 18 : 14)}</span><b>${esc(monogram(it.title))}</b></span>`;
+    // feat/p10-market: a drawn picture of what it is (market-art.js), never a monogram; a real screenshot covers it when there is one
+    const art = window.TribeMarketArt ? window.TribeMarketArt.html(it) : '';
+    const tile = `<span class="mk-tile${art ? ' has-art' : ''}" aria-hidden="true"><span class="mk-tile-i">${icon(KIND_ICON[it.kind] || 'all', big ? 18 : 14)}</span>${art || `<b>${esc(monogram(it.title))}</b>`}</span>`;
     const cls = `mk-thumb k-${esc(it.kind)}${it.thumbWide ? ' wide' : ''}${big ? ' big' : ''}`;
     return it.thumb ? `<div class="${cls}">${tile}<img src="${esc(it.thumb)}" alt="" loading="lazy" decoding="async" width="320" height="180"></div>` : `<div class="${cls} noimg">${tile}</div>`;
   }
@@ -276,7 +296,7 @@
         <b class="mk-t">${esc(it.title)}</b>
         <p class="mk-s">${esc(it.summary)}</p>
         ${by ? `<div class="mk-by">${by}</div>` : ''}
-        <div class="mk-card-foot">${src ? `<a class="mk-src" href="${esc(src)}" target="_blank" rel="noopener" data-src title="${esc(src)}">${esc(host(src) === 'github.com' ? 'Source' : host(src))} ↗</a>` : ''}<span class="mk-sp"></span>${addBtn(it)}</div>
+        <div class="mk-card-foot">${src ? `<a class="mk-src" href="${esc(src)}" target="_blank" rel="noopener" data-src data-browse title="${esc(src)}">${esc(host(src) === 'github.com' ? 'Source' : host(src))} ↗</a>` : ''}<span class="mk-sp"></span>${addBtn(it)}</div>
       </div>
     </article>`;
   }
@@ -372,12 +392,12 @@
       ${it.why ? `<p class="mk-why"><b>Why it’s here</b> ${esc(it.why)}</p>` : ''}
       ${it.steps ? `<ol class="mk-steps">${it.steps.map(s => `<li>${esc(s)}</li>`).join('')}</ol>` : ''}
       <div class="mk-dacts">${addBtn(it, true)}${second.map(([k, l]) => `<button class="btn sm" data-second="${k}">${esc(l)}</button>`).join('')}</div>
-      <section class="mk-does"><h6>What Add does</h6><p>${esc(whatAddDoes(it, loc))}</p>${payload}</section>
-      <div class="mk-links">${src ? `<a class="btn sm" href="${esc(src)}" target="_blank" rel="noopener" data-visit>Open source ↗</a>` : ''}${it.docs ? `<a class="btn sm" href="${esc(it.docs)}" target="_blank" rel="noopener" data-visit>Docs ↗</a>` : ''}</div>
+      <section class="mk-does"><h6>What Add does</h6><p>${esc(whatAddDoes(it, loc))}</p>${payload}<h6>It needs</h6><p class="mk-needs">${esc(needs(it))}</p></section>
+      <div class="mk-links">${src ? `<a class="btn sm" href="${esc(src)}" target="_blank" rel="noopener" data-visit data-browse>Open source</a>` : ''}${it.docs && it.docs !== src ? `<a class="btn sm" href="${esc(it.docs)}" target="_blank" rel="noopener" data-visit data-browse>Docs</a>` : ''}</div>
       <dl class="mk-meta">
         <dt>License</dt><dd>${esc(it.license || '—')}</dd>
         ${it.author ? `<dt>Author</dt><dd>${esc(it.author)}</dd>` : ''}
-        ${src ? `<dt>Source</dt><dd><a href="${esc(src)}" target="_blank" rel="noopener" data-visit>${esc(src.replace(/^https?:\/\//, '').replace(/\/$/, ''))}</a></dd>` : ''}
+        ${src ? `<dt>Source</dt><dd><a href="${esc(src)}" target="_blank" rel="noopener" data-visit data-browse>${esc(src.replace(/^https?:\/\//, '').replace(/\/$/, ''))}</a></dd>` : ''}
         ${it.updated ? `<dt>Updated</dt><dd>${esc(it.updated)} <span class="faint">(${esc(ago(it.updated))})</span></dd>` : ''}
         ${it.stars != null ? `<dt>Stars</dt><dd>${fmtStars(it.stars)} <span class="faint">as reported by the trend source</span></dd>` : ''}
         <dt>Made for</dt><dd>${(it.for || []).map(f => esc(FOR_LABEL[f] || f)).join(', ') || '—'}</dd>
@@ -387,12 +407,31 @@
       </dl>
       ${(it.seenOn || []).length ? `<div class="mk-seen"><span class="mk-eyebrow">Seen on</span>${it.seenOn.map(x => `<a href="${esc(x.url)}" target="_blank" rel="noopener" title="${esc(x.url)}">${esc(x.site)}${['Blog', 'News', 'Forum'].includes(x.site) && host(x.url) ? ` · ${esc(host(x.url))}` : ''}</a>`).join('')}</div>` : ''}
       ${(it.tags || []).length ? `<div class="mk-tags">${it.tags.map(t => `<button class="mk-chip" data-dtag="${esc(t)}">#${esc(t)}</button>`).join('')}</div>` : ''}
-      ${it.kind === 'legal' ? '<p class="mk-fine">A starting point, not legal advice. Check local law or ask a professional.</p>' : ''}`;
+      ${it.kind === 'legal' ? '<p class="mk-fine">A starting point, not legal advice. Check local law or ask a professional.</p>' : ''}
+      <section class="mk-related" id="mk-related" hidden><h6>Related</h6><div class="mk-rel"></div></section>`;
+    related(it);
     side.querySelectorAll('[data-dclose]').forEach(b => b.onclick = closeDetail);
+    browseLinks(side);
     side.querySelectorAll('[data-visit]').forEach(v => v.addEventListener('click', () => { if (!localMode()) C.api(`/market/${encodeURIComponent(it.id)}/use`, { method: 'POST', body: { only: 'open' } }).catch(() => {}); }));
     side.querySelectorAll('[data-dtag]').forEach(b => b.onclick = () => { closeDetail(); if (!st.tag.includes(b.dataset.dtag)) st.tag.push(b.dataset.dtag); load(true); });
     side.querySelectorAll('[data-second]').forEach(b => b.onclick = () => second2(it, b.dataset.second));
     side.querySelectorAll('[data-pick]').forEach(b => b.onclick = () => pick(it, b.dataset.pick));
+  }
+  // links to sources and docs open in TribeCode's own browser (browser.js) when it is there; anything else stays external
+  function browseLinks(el) {
+    el.querySelectorAll('a[data-browse]').forEach(a => a.addEventListener('click', e => {
+      if (!window.TribeBrowser || e.ctrlKey || e.metaKey || e.shiftKey || e.button) return;
+      e.preventDefault(); window.TribeBrowser.open(a.href, { title: (st.open && st.open.title) || a.textContent.trim() });
+    }));
+  }
+  // up to four items of the same kind that share the most tags (from the saved list, so it works with no tribe too)
+  async function related(it) {
+    const all = await savedList(); if (!root || !st.open || st.open.id !== it.id) return;
+    const tags = new Set(it.tags || []), score = x => (x.kind === it.kind ? 2 : 0) + (x.tags || []).filter(t => tags.has(t) && !['link', 'open-source', 'mcp', 'claude-code', 'skill'].includes(t)).length;
+    const list = all.filter(x => x.id !== it.id).map(x => [score(x), x]).filter(([n]) => n >= 3).sort((a, b) => b[0] - a[0] || b[1].score - a[1].score).slice(0, 4).map(([, x]) => x);
+    const sec = root.querySelector('#mk-related'); if (!sec || !list.length) return;
+    sec.querySelector('.mk-rel').innerHTML = list.map(x => `<button class="mk-relb" data-rel="${esc(x.id)}">${thumb(x)}<span><b>${esc(x.title)}</b><small>${esc(KIND_LABEL[x.kind] || x.kind)}</small></span></button>`).join('');
+    sec.hidden = false; sec.querySelectorAll('[data-rel]').forEach(b => b.onclick = () => openDetail(b.dataset.rel));
   }
   async function second2(it, k) {
     if (k === 'remix') { leave(); (window.TribeProjects.gallery || window.TribeProjects.openNew)(); setTimeout(() => window.TribeProjects.remix(it.repo), 60); }
