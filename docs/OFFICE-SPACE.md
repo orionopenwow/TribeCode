@@ -83,9 +83,12 @@ reduced motion, characters appear at their spot straight away: no walking and no
 
 ## Credits
 
-The idea of agents as little characters walking around an office comes from
-[Pixel Agents](https://github.com/pablodelucca/pixel-agents) by Pablo De Lucca (MIT). No code or art from it is used:
-every picture in Office Space is drawn in code by TribeCode (`app/ui/officespace-sets.js`). See NOTICE.
+The art is from [Pixel Agents](https://github.com/pablodelucca/pixel-agents) by Pablo De Lucca (MIT, (c) 2026 Pablo
+De Lucca): floors, walls, carpets, furniture, the pets and the default office, in `app/ui/officespace/`. The character
+parts are based on the [Metro City character pack](https://jik-a-4.itch.io/metrocity-free-topdown-character-pack) by
+JIK-A-4 (CC0 1.0). Pixel Agents' ideas (sprite sheets, layer order, colour swaps, wall autotiling, depth sorting) were
+ported to plain JavaScript; no TypeScript or React code was copied. Donarg's Office Interior Tileset is not included.
+Licence text: NOTICE and `app/ui/officespace/LICENSE.txt`.
 
 Files: `app/ui/officespace.js` (the floor, characters, card, wardrobe, editor), `app/ui/officespace-sets.js` (sets and
 drawing), `app/ui/officespace.css`, `app/ui/office.js` (the office and the Floor/Desks switch), `server/office.js`.
