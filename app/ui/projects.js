@@ -149,6 +149,7 @@
   // One setup step, from the checklist, Flint's nudges or anywhere else
   function step(k) {
     const p = curP(); if (!p) return;
+    if (k === 'change') { try { localStorage.setItem(`tribecode.ov.${p.id}.changed`, '1'); } catch {} lastOv = ''; const ob = document.querySelector('#pj-band-slot [data-db="open"]'); if (ob) ob.click(); else if (window.TribeFirstLook && window.TribeFirstLook.open) window.TribeFirstLook.open(p.id); overviewSoon(); return; }   // feat/dash-layout: Change one thing opens the first version
     if (k === 'vision') writeVision(p); else if (k === 'invite') App().openInvite(); else if (k === 'claude') App().connectClaude();
     else if (k === 'home' || (k === 'repo' && window.TribeHome && !p.hasRepo)) { if (window.TribeHome) window.TribeHome.where({ onHost: isHost() && !p.hasRepo ? () => createRepo(p) : null }); else if (!p.hasRepo && isHost()) createRepo(p); else App().show('repo'); }   // feat/folder-sync: where it lives = its living repo
     else if (k === 'share') { if (window.TribeHome) window.TribeHome.share(); else App().openInvite(); }
@@ -156,6 +157,7 @@
     else if (k === 'github') connectGithub(p);   // sign in to GitHub inside the app   // feat/setup-flow: one click makes the code repository
     else { App().show('tasks'); setTimeout(() => { const nb = $('#task-new'); nb && nb.click(); }, 80); }
   }
+  let madeKind = '', filesOpen = false;   // feat/dash-layout: 'site' | 'app' | '' — what the first version is, for suggested tasks that fit it
   let ovSeq = 0, visDraft = '', naming = false, lastOv = '', matchOffer = null, wantVisEdit = false, visLead = '';   // pass 9: the offer after a vision edit, a pending in-place edit, the vision's opening lines   // naming: the project name is being edited, so a redraw waits   // the checklist's inline vision box keeps what you typed across redraws
   // One redraw at a time: a request that arrives mid-redraw runs once right after it (never cancels it, so the page
   // always catches up even when events keep coming). A redraw that fails tries again shortly.
@@ -183,6 +185,7 @@
     let plan = null; try { plan = (await C.api('/coord/plan')).plan; } catch {}
     let tasksAll = []; try { tasksAll = (await C.api('/tasks')).tasks || []; } catch {}   // simple-dashboard: the Tasks tile and Up next
     let syn = null; try { syn = (await C.api(`/projects/${encodeURIComponent(p.id)}/sync`)).status || null; } catch {}   // feat/folder-sync: where it lives = the folder, the host's repo, GitHub
+    let band = null; try { band = (await C.api('/dash/band', { project: p.id })).band || null; } catch {}   // feat/dash-layout: is there a first version yet, and what kind
     if (!$('#pj-overview') || curP() !== p) return;   // switched away while loading
     stash();
     const sec = (id, title, inner) => `<section class="sec pj-sec" id="${id}"><h2 class="pj-sec-t">${title}</h2>${inner}</section>`;
@@ -195,18 +198,32 @@
     // Onboarding checklist: ticks itself from what the project already has (replaces "No vision yet" and "Start here").
     const pk = `tribecode.ov.${p.id}.`, lsg = k => { try { return localStorage.getItem(pk + k); } catch { return null; } };
     const lss = (k, v) => { try { v == null ? localStorage.removeItem(pk + k) : localStorage.setItem(pk + k, v); } catch {} };
+    // feat/dash-layout: what you're making is asked in ONE place, the line under the project's name. While that line is
+    // empty and on screen, Flint's steps skip the vision. After a first version the next step is changing one thing in
+    // it and showing a friend, not "Add a first task".
+    const hasVis = !!(d.vision && d.vision.has), visText = hasVis ? (d.vision.lead || d.vision.excerpt || '') : (d.bio || '');
+    const canVis = isHost() || p.role === 'host', visEdit = canVis || (canEdit && !hasVis);   // the server asks for settings.edit to change the vision
+    const FLl = window.TribeFirstLook && window.TribeFirstLook.last ? window.TribeFirstLook.last(p.id) : null;
+    const bh = (band && band.has) || {}, made = !!(bh.app || bh.site || bh.phone || bh.design || FLl);
+    madeKind = band && band.pick === 'site' ? 'site' : band && (band.pick === 'app' || band.pick === 'phone') ? 'app' : bh.site ? 'site' : bh.phone || bh.app ? 'app' : FLl && FLl.kind === 'site' ? 'site' : FLl && FLl.kind ? 'app' : '';
+    const hasTask = (d.taskCount || 0) > 0;
     const steps = [
       { id: 'vision', emo: 'sparkle', label: 'Say what you’re making', sub: 'One or two sentences at the top of this page. Everyone reads them.', done: !!(d.vision && d.vision.has), acts: isHost() || p.role === 'host' ? `<button class="btn sm" data-ck="vision">Write it</button>` : '',
         inline: '' },   // pass 9: no box here; "Write it" puts the cursor in the one line under the project's name   // pass 6: no inline box; the first description is the vision, and "Write it" opens the one editor (TribeAssist.vision)
+      made && !hasTask ? { id: 'task', emo: 'quill', label: 'Change one thing', sub: 'Open your first version and make one thing yours: a word, a colour or a picture.', done: lsg('changed') === '1', acts: canEdit ? '<button class="btn sm" data-ck="change">Open it</button>' : '' } :
       { id: 'task', emo: 'tasks', label: 'Add a first task', sub: 'One small thing to build first.', done: (d.taskCount || 0) > 0, below: canEdit ? '<button class="btn sm primary" data-ck="newtask">New task</button>' : '',
         inline: canEdit && d.vision && d.vision.has ? `<div class="ock-inline ock-sugg"><span class="eyebrow">Suggested from your vision</span><div class="ock-sugg-list" id="ock-sugg"><span class="faint">Thinking of first tasks…</span></div></div>` : '' },
       { id: 'claude', emo: 'agent', label: 'Connect your AI', sub: 'Claude Code, Codex, Gemini or Cursor can build with you.', done: myAgent || d.agents.length > 0, acts: canEdit ? '<button class="btn sm" data-ck="claude">Connect</button>' : '' },
       { id: 'home', emo: 'files', label: 'Set up sharing and backup', sub: 'Keep its files in a folder on this computer, and add GitHub as a backup copy if you like.',
         done: !!(p.hasFolder || p.hasRepo || d.repo || (syn && syn.connected)), acts: canEdit ? '<button class="btn sm" data-ck="home">Choose</button>' : '' },
-      { id: 'share', emo: 'people', label: 'Share it', sub: 'Work with friends anywhere (GitHub + an invite link), share on this network, or keep it just you for now.',
+      { id: 'share', emo: 'people', label: made ? 'Show a friend' : 'Share it', sub: made ? 'Send a friend a link so they can see it and build with you.' : 'Work with friends anywhere (GitHub + an invite link), share on this network, or keep it just you for now.',
         done: team.length > 1 || lsg('shared') === '1', acts: canEdit ? '<button class="btn sm" data-ck="share">Share</button>' : '' },
     ];   // feat/folder-sync: five steps; where it lives and the code repository are one step, sharing is the last
-    const nDone = steps.filter(x => x.done).length, allDone = nDone === steps.length;
+    const S1 = id => steps.find(x => x.id === id);
+    if (made) steps.splice(2, 0, ...steps.splice(steps.findIndex(x => x.id === 'share'), 1));   // after a first version: change one thing, then show a friend
+    // the steps Flint's card counts and shows: the vision only once it is written, or when the line can't ask for it
+    const ckSteps = steps.filter(x => x.id !== 'vision' || x.done || !visEdit);
+    const nDone = ckSteps.filter(x => x.done).length, allDone = nDone === ckSteps.length;
     el.dataset.stepsDone = allDone ? '1' : '0';   // pass 6: with every step done there is no step card at all (the demo and tests read this)
     // Until the tribe has really begun (a vision, a task or a friend; a pinned repo alone doesn't count), the checklist is
     // the hero of the page and the Living update stays hidden: there is nothing to report yet.
@@ -217,7 +234,7 @@
     // feat/calm-parity: a calmer first dashboard. While the steps are unfinished the hero shows ONE card (the next step,
     // "2 of 5", See all steps); the setup gaps (no GitHub, no backup) wait in that list until the project has real
     // activity (a first task done or a first ship); Your focus and Connect your AI stay out of the way (focus.js, CSS).
-    const nextIx = steps.findIndex(x => !x.done), one = hero;
+    const nextIx = ckSteps.findIndex(x => !x.done), one = hero;
     const activity = tasksAll.some(t => t.status === 'done') || !!(syn && syn.lastShip);
     const foldGaps = !allDone && !activity;
     const gapsBox = foldGaps ? '<div class="ock-gaps" id="ock-gaps"></div>' : '';
@@ -225,13 +242,13 @@
     const flintRow = window.TribeFlintSetup && window.TribeFlintSetup.stepRow ? window.TribeFlintSetup.stepRow() : '';   // feat/flint-local: "Give Flint a local brain (recommended)", an extra row, not a counted step
     const checklist = allDone ? '' : false ? `<section class="pj-check done" id="pj-check"><span class="ock-allset">${tick}All set</span><span class="faint ock-allsub">${esc(p.name)} has a vision, a task, an AI, a home and friends to share it with.</span><button class="ock-x" id="pj-check-x" title="Dismiss" aria-label="Dismiss the checklist">${ico('i-x', 14)}</button></section>`
       : `<section class="pj-check ${folded ? 'folded' : ''} ${hero ? 'hero' : ''} ${one ? 'one' : ''}" id="pj-check">
-          <div class="ock-head"><h3>${hero ? 'Next step' : 'Getting started'}</h3><span class="ock-n" id="pj-check-n"${one ? ` title="Step ${nextIx + 1} of ${steps.length}"` : ''}>${one ? `${nextIx + 1} of ${steps.length}` : `${nDone} of ${steps.length} done`}</span>${hero ? `<button class="linkish ock-all" id="pj-check-all" type="button" aria-haspopup="dialog">See all steps</button>` : ''}</div>
-          <div class="ock-bar" role="progressbar" aria-label="Checklist progress" aria-valuemin="0" aria-valuemax="${steps.length}" aria-valuenow="${nDone}"><span style="width:${Math.round(nDone / steps.length * 100)}%"></span></div>
-          ${hero ? `<div class="ock-list ock-cards">${steps.map((x, i) => `<div class="ock-row ock-card ${x.done ? 'on' : ''}${i === nextIx ? ' ock-next' : ''}" data-step="${x.id}"><span class="ock-box" role="checkbox" aria-checked="${x.done}" aria-label="${x.label}">${x.done ? tick : ''}</span>
+          <div class="ock-head"><h3>${hero ? 'Next step' : 'Getting started'}</h3><span class="ock-n" id="pj-check-n"${one ? ` title="Step ${nextIx + 1} of ${ckSteps.length}"` : ''}>${one ? `${nextIx + 1} of ${ckSteps.length}` : `${nDone} of ${ckSteps.length} done`}</span>${hero ? `<button class="linkish ock-all" id="pj-check-all" type="button" aria-haspopup="dialog">See all steps</button>` : ''}</div>
+          <div class="ock-bar" role="progressbar" aria-label="Checklist progress" aria-valuemin="0" aria-valuemax="${ckSteps.length}" aria-valuenow="${nDone}"><span style="width:${Math.round(nDone / ckSteps.length * 100)}%"></span></div>
+          ${hero ? `<div class="ock-list ock-cards">${ckSteps.map((x, i) => `<div class="ock-row ock-card ${x.done ? 'on' : ''}${i === nextIx ? ' ock-next' : ''}" data-step="${x.id}"><span class="ock-box" role="checkbox" aria-checked="${x.done}" aria-label="${x.label}">${x.done ? tick : ''}</span>
             <span class="ock-emo" aria-hidden="true">${window.TribeIcons ? window.TribeIcons.svg(x.emo, 22) : ""}${x.done ? `<i class="ock-emo-ok">${tick}</i>` : ''}</span>
             <div class="ock-main"><span class="ock-l">${x.label}</span><p class="ock-sub">${x.done ? 'Done' : esc(x.sub || '')}</p></div>
             ${!x.done && (x.acts || x.below) ? `<span class="ock-acts">${x.acts || ''}${x.below || ''}</span>` : ''}${!x.done && x.inline ? x.inline : ''}</div>`).join('')}${flintRow}${gapsBox}</div>` : ''}
-          ${hero ? '' : `<div class="ock-list">${steps.map(x => `<div class="ock-row ${x.done ? 'on' : ''}" data-step="${x.id}"><span class="ock-box" role="checkbox" aria-checked="${x.done}" aria-label="${x.label}">${x.done ? tick : ''}</span>
+          ${hero ? '' : `<div class="ock-list">${ckSteps.map(x => `<div class="ock-row ${x.done ? 'on' : ''}" data-step="${x.id}"><span class="ock-box" role="checkbox" aria-checked="${x.done}" aria-label="${x.label}">${x.done ? tick : ''}</span>
             <div class="ock-main"><div class="ock-line"><span class="ock-l">${x.label}</span>${!x.done && x.acts ? `<span class="ock-acts">${x.acts}</span>` : ''}</div>${!x.done && x.below ? `<div class="ock-below">${x.below}</div>` : ''}${!x.done && x.inline ? x.inline : ''}</div></div>`).join('')}${flintRow}${gapsBox}</div>`}</section>`;
     // simple-dashboard: four tiles that answer "what needs me?" at a glance, each one click from where it's handled
     const N = window.TribeNotify && window.TribeNotify.state ? window.TribeNotify.state() : {};
@@ -252,11 +269,9 @@
     const r = d.repo;
     if (naming) return;
     // pass 9: what you're making is ONE line, edited right here: the vision's opening lines (else the short description)
-    const hasVis = !!(d.vision && d.vision.has), visText = hasVis ? (d.vision.lead || d.vision.excerpt || '') : (d.bio || '');
-    const canVis = isHost() || p.role === 'host', visEdit = canVis || (canEdit && !hasVis);   // the server asks for settings.edit to change the vision
     visLead = hasVis ? visText : ''; const visFocus = false;
     // p10: Flint's card (Do this next + Living updates) right under the preview; the one next setup step lives inside it
-    const fdCtx = { p, d, steps, nextIx, tasks: tasksAll, meId, canEdit };
+    const fdCtx = { p, d, steps: ckSteps, nextIx, tasks: tasksAll, meId, canEdit, made, kind: madeKind };
     const FDh = nextHtml => window.TribeFlintDash ? `<div id="pj-flint-slot">${window.TribeFlintDash.html(fdCtx, nextHtml)}</div>` : nextHtml;
     const html = `<div class="view-head pj-title pj-title2"><button class="pj-face-btn" id="pj-face" title="Change the picture" aria-label="Change the project picture">${face(p, 'lg')}${canEdit ? `<span class="pj-cam" aria-hidden="true">${ico('i-photo', 12)}</span>` : ''}</button>
         <div class="pj-id"><h1>${canName ? `<button class="pj-inl pj-name-btn" id="pj-name" title="Rename">${esc(p.name)}</button>` : esc(p.name)}</h1>
@@ -264,9 +279,12 @@
           ${matchOffer && matchOffer.pid === p.id ? `<div class="pj-vmatch" id="pj-vmatch" role="status"><span>Update the first version to match?</span><button type="button" class="btn sm primary" id="pj-vmatch-go">Update it</button><button type="button" class="btn sm" id="pj-vmatch-x">Not now</button></div>` : ''}
           <span class="faint pj-meta">${team.length} ${team.length === 1 ? 'person' : 'people'}${r ? `<span class="pj-dot">·</span><span title="The code repository: the shared folder that holds this project's code">${esc(r.name)}</span><span class="pj-dot">·</span><span title="The branch: the version of the code you're looking at (main is the shared one)">${esc(r.branch)}</span>` : ''}<span id="pj-site-slot"></span></span></div>
         ${canEdit ? `<button class="btn" id="pj-invite" style="margin-left:auto">${ico('i-users', 15)}Invite to ${esc(p.name)}</button>` : ''}</div>
-      <div id="pj-band-slot"></div>${window.TribeFirstLook && window.TribeFirstLook.failed(p.id) ? `<div class="pj-flfail" id="pj-flfail" role="status"><span>The first preview from your idea did not finish.</span><button type="button" class="btn sm primary" id="pj-flfail-go">Try again</button></div>` : ''}${FDh(hero ? checklist : '')}<!-- pass 6: the one next step sits right under the preview -->
+      <div class="pj-duo-wrap"><div class="pj-duo" id="pj-duo"><div class="pj-duo-main"><div id="pj-band-slot"></div>${window.TribeFirstLook && window.TribeFirstLook.failed(p.id) ? `<div class="pj-flfail" id="pj-flfail" role="status"><span>The first preview from your idea did not finish.</span><button type="button" class="btn sm primary" id="pj-flfail-go">Try again</button></div>` : ''}</div>
+        <div class="pj-duo-side">${FDh(hero ? checklist : '')}<!-- pass 6: the one next step sits right under the preview; feat/dash-layout: beside it on wide screens -->
+${canEdit ? `        <section class="pj-context pj-files-slim${filesOpen ? ' open' : ''}" id="pj-context"><button type="button" class="pj-files-btn" id="pj-files-btn" aria-expanded="${filesOpen}" aria-controls="pj-ctx-body">${ico('i-upload', 15)}<b>Add files</b><span class="pj-files-dot" aria-hidden="true">·</span><span class="pj-files-sub">Drop docs, PDFs, pictures or notes</span>${newFiles.length ? `<span class="pj-files-n">${newFiles.length} new</span>` : ''}</button>
+          <div class="pj-files-body" id="pj-ctx-body"${filesOpen ? '' : ' hidden'}><p class="pj-files-why">Flint and the AI helpers read them to understand this project.</p>${newFiles.length ? `<div class="pj-newfiles">${newFiles.slice(0, 4).map(x => `<button class="pj-nf" data-doc="${esc(x.ref)}" title="${esc(x.text)}">${ico('i-doc', 13)}${esc(String(x.text).replace(/^(Edited|Added|Created)\s+/i, '').slice(0, 26))}</button>`).join('')}</div>` : ''}</div></section>` : ''}<!-- feat/dash-layout: Add files is one slim row that opens on click or when a file is dragged over the page -->
+        </div></div></div>
       <div id="pj-crit-slot"></div><!-- feat/dash-preview: the main project's preview, then Needs attention (dashband.js) -->
-${canEdit && !started ? `      <section class="pj-context" id="pj-context"><div class="pj-ctx-head"><span class="pj-ctx-e" aria-hidden="true">📎</span><div><h3>Add files</h3><p>Drop docs, PDFs, pictures or notes. Flint and the AI helpers read them to understand ${esc(p.name)}.</p></div></div><div id="pj-ctx-body"></div></section>` : ''}
       ${started ? `<section class="card pj-living pj-glance" id="pj-living" aria-label="At a glance"><div class="pl-head"><span class="eyebrow">At a glance</span><button class="linkish pj-share" id="pj-share" type="button" title="Copy progress, the GitHub link and an invite link">📤 Share progress</button></div>
           <div class="pl-grid gl-grid ${tiles.some(t => t.k === 'company') ? 'has-co' : ''}">${tiles.map(t => `<button class="gl-tile gl-${t.k} ${t.hot ? 'hot' : ''} ${t.n ? '' : 'zero'}" data-go="${t.go}" style="--gc:${t.c}" aria-label="${t.label}: ${t.n} · ${esc(t.line)}. ${t.act}">
             <span class="gl-top"><span class="gl-ic">${ico(t.icon, 16)}</span><small>${t.label}</small>${t.hot ? '<i class="gl-dot" aria-hidden="true"></i>' : ''}</span>
@@ -284,7 +302,6 @@ ${canEdit && !started ? `      <section class="pj-context" id="pj-context"><div 
         <section class="card" id="pj-upcoming"><h3>${ico('i-calendar', 16)}Up next</h3>
           ${openT.length ? openT.slice().sort((x, y) => (y.assignee === meId) - (x.assignee === meId) || (x.status === 'doing' ? -1 : 0)).slice(0, 4).map(t => `<div class="pj-row-line" data-go="tasks">${ico('i-check', 14)}<span class="t">${esc(t.title)}</span><span class="faint">${t.status === 'doing' ? 'in progress' : t.status === 'review' ? 'to review' : 'to do'}${t.assignee === meId ? ' · yours' : ''}</span></div>`).join('') : ''}
           ${d.upcoming.length ? d.upcoming.map(u => `<div class="pj-row-line" data-go="calendar">${ico(u.kind === 'task' ? 'i-check' : 'i-calendar', 14)}<span class="t">${esc(u.title)}</span><span class="faint ${u.overdue ? 'pj-over' : ''}">${u.overdue ? 'overdue' : esc(new Date(u.at).toLocaleString([], { weekday: 'short', hour: 'numeric', minute: '2-digit' }))}</span></div>`).join('') : (openT.length ? '' : '<div class="pj-none">Nothing planned yet. Open tasks and calendar items show up here.</div>')}</section></div>`)}
-      ${canEdit && started ? `<section class="pj-context pj-files-row" id="pj-context"><div class="pj-ctx-head"><span class="pj-ctx-e" aria-hidden="true">📎</span><div><h3>Add files</h3><p>Drop docs, pictures or notes here. Flint and the AI helpers read them.</p></div>${newFiles.length ? `<div class="pj-newfiles">${newFiles.slice(0, 4).map(x => `<button class="pj-nf" data-doc="${esc(x.ref)}" title="${esc(x.text)}">📄 ${esc(String(x.text).replace(/^(Edited|Added|Created)\s+/i, '').slice(0, 26))}</button>`).join('')}</div>` : ''}</div><div id="pj-ctx-body"></div></section>` : ''}
       <div id="pj-setup-slot"></div><!-- feat/setup-flow: role flows + Make the starter (setup.js) -->
       <div id="pj-insp-slot"></div>
       <details class="pj-more" id="pj-more"${moreOpen ? ' open' : ''}><summary>More about ${esc(p.name)}: people, AI helpers, code and standup</summary>
@@ -313,15 +330,16 @@ ${canEdit && !started ? `      <section class="pj-context" id="pj-context"><div 
     const sfBody = $('#pj-sf-body'); if (sfText) sfBody.appendChild(sfText);
     const ctx = $('#pj-ctx-body'); if (ctx) [dzn, drops].forEach(n => n && ctx.appendChild(n));   // qa-pass: spectators get no drop zone   // the drop zone is a main point of the page: it gives everyone context
     el.querySelectorAll('[data-ck]').forEach(x => x.onclick = () => step(x.dataset.ck));
+    { const fb = $('#pj-files-btn'); if (fb) fb.onclick = () => openFiles(!filesOpen); }
     if (window.TribeFlintDash) window.TribeFlintDash.bind(el, fdCtx);
     // tell the room panel and Flint how far along this project is, so they can stay simple early on
-    window.TribeStage && window.TribeStage.set(p.id, { vision: steps[0].done, task: steps[1].done, agent: steps[2].done, repo: steps[3].done });   // repo = where it lives
+    window.TribeStage && window.TribeStage.set(p.id, { vision: S1('vision').done, task: S1('task').done, agent: S1('claude').done, repo: S1('home').done });   // repo = where it lives
     const fold = $('#pj-check-fold');
     // feat/calm-parity: tell the right panel which step is up (CSS hides Connect your AI until then; focus.js waits for a task of yours)
-    { const b = document.body, st = allDone ? '' : (steps[nextIx] || {}).id || '', ai = allDone || steps[2].done || st === 'claude' ? '' : 'wait';
+    { const b = document.body, st = allDone ? '' : (ckSteps[nextIx] || {}).id || '', ai = allDone || S1('claude').done || st === 'claude' ? '' : 'wait';
       if ((b.dataset.calm || '') !== st) { if (st) b.dataset.calm = st; else delete b.dataset.calm; window.TribeFocus && window.TribeFocus.refresh(); }
       if ((b.dataset.calmAi || '') !== ai) { if (ai) b.dataset.calmAi = ai; else delete b.dataset.calmAi; } calmPid = p.id; }
-    const allB = $('#pj-check-all'); if (allB) allB.onclick = () => allSteps(p, steps);
+    const allB = $('#pj-check-all'); if (allB) allB.onclick = () => allSteps(p, ckSteps);
     const flr = $('#pj-flfail-go'); if (flr) flr.onclick = () => window.TribeFirstLook.retry(p.id);
     if (window.TribeDashBand && window.TribeDashBand.fold) window.TribeDashBand.fold(p.id, foldGaps);
     drawGaps();
@@ -355,6 +373,14 @@ ${canEdit && !started ? `      <section class="pj-context" id="pj-context"><div 
     if (window.TribeSetup) window.TribeSetup.card(p, d);   // feat/setup-flow: role flows + Make the starter (setup.js)
     if (window.TribeWebsite) window.TribeWebsite.overviewLink(p);   // "· Website" once the page exists (app/ui/website.js)
   }
+  // feat/dash-layout: Add files is a slim row under Flint's card; it opens into the drop area on click, and on its own
+  // when a file is dragged over the page (the drop overlay still takes the drop wherever it lands)
+  function openFiles(on) {
+    filesOpen = !!on;
+    const box = $('#pj-context'), body = $('#pj-ctx-body'), btn = $('#pj-files-btn'); if (!box || !body) return;
+    box.classList.toggle('open', filesOpen); body.hidden = !filesOpen; if (btn) btn.setAttribute('aria-expanded', String(filesOpen));
+  }
+  addEventListener('dragenter', e => { const t = e.dataTransfer && e.dataTransfer.types; if (t && [...t].includes('Files') && $('#pj-files-btn') && !filesOpen) openFiles(true); }, true);
   // feat/calm-parity: the setup gaps Needs attention would list (no GitHub, no backup) sit at the end of the step list
   // while the project is young. dashband.js loads them and says so with "tribe:dash-gaps".
   let calmPid = null;
@@ -515,7 +541,7 @@ ${canEdit && !started ? `      <section class="pj-context" id="pj-context"><div 
       let sg = []; try { sg = (await C.api('/assist/tasks')).suggestions || []; } catch {}
       if (!list.isConnected) return;
       { const M = window.TribeFirstMake, b = M && visLead ? M.brief(visLead) : null;   // pass 9: "Let members log a run", not generic ones, when the sentence names things
-        if (b && (b.features.length || b.domain)) { const mine = M.tasks(b).map(t => ({ title: t, why: 'From what you said you’re making' })), seen = new Set(mine.map(x => x.title.toLowerCase())); sg = mine.concat(sg.filter(x => !seen.has(String(x.title).toLowerCase()))); } }
+        if (b && (b.features.length || b.domain)) { const mine = M.tasks(b, madeKind).map(t => ({ title: t, why: 'From what you said you’re making' })), seen = new Set(mine.map(x => x.title.toLowerCase())); sg = mine.concat(sg.filter(x => !seen.has(String(x.title).toLowerCase()))); } }
       if (!sg.length) { list.innerHTML = '<span class="faint">No suggestions yet. Write your own below.</span>'; return; }
       list.innerHTML = sg.slice(0, 4).map(x => `<button type="button" class="ock-sg" data-title="${esc(x.title)}" title="${esc(x.why || '')}"><span aria-hidden="true">＋</span>${esc(x.title)}</button>`).join('');
       list.querySelectorAll('.ock-sg').forEach(b => b.onclick = async () => {
