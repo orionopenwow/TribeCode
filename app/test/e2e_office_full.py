@@ -192,7 +192,7 @@ def main():
             assert cp.locator("#ao-menu [data-aom-set] option").count() >= 2, "the office's set"
             cp.click("#ao-menu [data-aom='sound']"); assert cp.get_attribute("#ao-menu [data-aom='sound']", "aria-checked") == "true"
             cp.click("#ao-menu [data-aom='sound']")
-            cp.click("#ao-menu [data-aom='look']"); cp.wait_for_selector("#ad-office .os-look:not([hidden])", timeout=5000)
+            cp.click("#ao-menu [data-aom='look']"); cp.wait_for_selector("#olk-sheet [data-olk-tab='hair']", timeout=5000)   # the character creator (officelooks.js)
             cp.keyboard.press("Escape")
             cp.click("#ao-more"); cp.click("#ao-menu [data-aom='where']"); cp.wait_for_selector("#ao-where-sheet .ao-opt", timeout=8000); cp.keyboard.press("Escape")
             cp.wait_for_selector("#ao-where-sheet", state="detached", timeout=5000)
