@@ -3,7 +3,7 @@
 Office Space is the office drawn as a top-down pixel floor, in the art of Pixel Agents. It is the top of **Agents &
 office**, the one page for people and AI helpers (see below). The desks are always there; the pixel floor is one switch
 per tribe (the host or an admin turns it on, from the line above the desks or Settings), and anyone can hide the office
-for themselves. On a computer with the floor on it opens as the floor, with a list of who's here under it, and **Desks**
+for themselves. On a computer with the floor on it opens as the floor, with who's here as avatars in the head line, and **Desks**
 switches back to the calm list. Phones always get the list.
 
 ## Agents & office (one view)
@@ -12,24 +12,35 @@ The sidebar's **Agents & office** (key `ws-agents`, also `TribeShell.go('agents'
 the phone's Agents tab, Flint and "Your AI tools"' back link all open one page in the main area (`app/ui/agentsoffice.js`
 draws the shared parts, `agentsdash.js` paints a project's page, `agentshub.js` Home's page for every project):
 
-1. **The office**: the floor or the desks. A click on someone at a desk, on the floor or in the list opens the same card
+In a project the page is the office, full size (`app/ui/officefull.js`):
+
+1. **The head**: one line: "Agents & office · 2 people online · 1 AI helper working", who is here as small avatars, and
+   **Add an AI helper** / **Invite a friend**.
+2. **The office** fills the page: the floor or the desks. A slim toolbar on its top edge has Floor | Desks, − + and one
+   **⋯** menu: Fit, Your look, the office's set, Edit layout (host), Sound, Hide the office for me, Where your tribe runs,
+   What's private and Back up to GitHub. A click on someone at a desk, on the floor or on an avatar opens the same card
    (`TribeOffice.openCard`: Message, Call, Give a task, Open what they're working on, Profile; for AI helpers Approve /
    Ask for changes, Pause, its page). A task given to an AI helper goes through the fleet's route, so it hears at once.
-2. **The agents' state**: with no AI helper yet, **Add an AI helper** (Claude, ChatGPT, Codex, Gemini, Cursor, a model on
-   this computer, a free AI in your browser, another tool), each opening the one setup in the invite sheet; nothing is
-   made until you copy it there. Once one has connected: the next step, what needs you, one row per agent, #agents.
-3. **Get set up**: four cards, one button each. Bring a friend (the one invite sheet: link, QR for a phone, code). Where
-   your tribe runs (the words from `tribestatus.js`, then this computer, a friend's computer connected directly over
-   Tailscale, a shared folder, free cloud). What's private (only true lines; `docs/CLAIMS.md`). Back up to GitHub (Connect
-   GitHub, with a link to make a free account for someone who has none; then "Linked to … · backed up …" and Back up now).
+3. **The side panel** (folds to an icon rail; a bottom sheet on phones): **Working on** (what waits for an OK, with
+   Approve right there; the next step; one row per AI helper; the people here; tasks in progress; with no AI helper yet,
+   Add an AI helper and the four loops: a friend, where it runs, what's private, GitHub), **Preview** (the project's app
+   and website, live, in tabs) and **Updates** (what happened, newest first, with #agents).
+4. **The box**: one pill over the bottom of the floor. Plain words go to #general (they show in Messages);
+   "@claude do X" gives that AI helper a task; "@agents …" writes to #agents; "/" lists the commands (/task, /ai, /invite,
+   /flint, /look, /where); "add claude" opens Claude's one setup; a request Flint knows ("invite a friend", "make the
+   website darker", "what's everyone doing?") runs in Flint, with no AI needed. Replies show above it for a moment.
 
-Test: `app/test/e2e_agents_office.py`.
+Home with no project shows the same parts for every project (`agentshub.js`).
+
+Tests: `app/test/e2e_agents_office.py`, `app/test/e2e_office_full.py`.
 
 The floor starts as Pixel Agents' default office: a wood work room with two desks and a meeting table, a blue lounge with
 sofas around a coffee table, a checker corner, bookshelves, plants, a clock and paintings on navy walls. A whiteboard
 stands in for the task board. Bigger tribes get a wider work room (two more desks for every four columns, up to 40
 columns); if there are still more people than seats, a desk, a computer and a stool appear on free floor. The floor is
-drawn at a whole-number pixel zoom that fills the panel (+ and − zoom further, drag to pan).
+drawn at a whole-number pixel zoom. In Agents & office the camera picks the biggest zoom that keeps everyone in view and
+looks where people are, and more building (hall floor) is drawn around the office so the art reaches every edge; + and −
+zoom, drag looks around, and Fit in ⋯ puts it back.
 
 Everyone has a character:
 
