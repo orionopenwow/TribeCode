@@ -78,11 +78,14 @@ def main():
             pg.evaluate("TribeClient.api('/vision', { method: 'PUT', body: { text: 'A website for my friend\\'s bakery, with the menu' } })"); time.sleep(0.6)
             pg.evaluate("TribeShell.go('chat')"); until(pg, "/The vision was updated/.test(document.body.innerText)", 15, "3: chat says the vision was updated")
             assert "VISION.md" not in pg.inner_text("#view-chat"), "3: no file name in chat"
-            pg.evaluate("TribeShell.go('ws-agents')"); pg.wait_for_selector("#fl-needs [data-sc-online]", timeout=15000)
-            t = pg.inner_text("#fl-hero") if pg.query_selector("#fl-hero") else pg.inner_text("#view-coord")
-            assert "Making a key" not in t and "once this tribe is online" in t and "Put this tribe online" in t, ("4", t[:400])
-            assert "goes live" in t and "ships" not in t and "Another tool" in t and "Other MCP" not in t, ("5", t[:400])
-            pg.click("#fl-needs [data-sc-online]"); pg.wait_for_selector("#su-where, .su-where, [id^=su-]", timeout=10000)   # the one button goes to where it's kept
+            # Agents & office (v0.46): Add an AI helper → Claude in a browser tribe says what it needs, with one button
+            pg.evaluate("TribeShell.go('ws-agents')"); pg.wait_for_selector("[data-ao-pick='claude']", timeout=15000)
+            t0 = pg.inner_text("#view-coord")
+            assert "ships" not in t0 and "Another tool" in t0 and "Other MCP" not in t0, ("5", t0[:400])
+            pg.click("[data-ao-pick='claude']"); pg.wait_for_selector("[data-sc-online]:visible", timeout=10000)
+            t = pg.evaluate("[...document.querySelectorAll('[data-sc-online]')].filter(b => b.offsetParent).map(b => (b.closest('.sc-needs, .fl-needs, .ph, .ui-sheet, section') || b).innerText).join(' ')")
+            assert "Making a key" not in t and "online" in t, ("4", t[:400])
+            pg.locator("[data-sc-online]:visible").first.click(); pg.wait_for_selector("#su-where, .su-where, [id^=su-]", timeout=10000)   # the one button goes to where it's kept
             pg.close(); print("  A: plain words on Home and the dashboard, the vision line in chat, and Connect your AI says what it needs with one button")
 
             # ---------- B. a tribe on a server ----------
