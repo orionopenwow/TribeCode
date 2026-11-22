@@ -223,9 +223,9 @@
   // feat/office-full: the page is the office, full size (officefull.js lays it out: the head line, the floor edge to
   // edge with its toolbar, the side panel with Preview | Working on | Updates, the box at the bottom). This paints only
   // Working on, so the floor, the live preview and what you are typing stay put while the data changes.
-  function asksHtml() {
+  function asksHtml(skip) {
     const O = window.TribeOffice, od = O && O.state(), out = [];
-    for (const x of ((od && od.desks) || []).filter(x => x.kind === 'agent')) for (const a of x.asks || []) out.push({ a, x });
+    for (const x of ((od && od.desks) || []).filter(x => x.kind === 'agent')) for (const a of x.asks || []) if (a.id !== skip) out.push({ a, x });
     if (!out.length) return '';
     return `<section class="ofl-sec" id="ao-asks"><h3 class="ofl-h">Waiting for an OK</h3><ul class="ofl-list">${out.map(({ a, x }) => `<li class="ofl-row ofl-ask"><span class="ofl-row-t"><b>${esc(a.title)}</b><small>${esc(x.name)} asks</small></span>
       ${a.canDecide ? `<span class="ofl-acts"><button type="button" class="btn sm ok" data-ao-ap="approve" data-id="${esc(a.id)}">Approve</button><button type="button" class="btn sm" data-ao-ask="${esc(x.id)}">Ask for changes</button></span>` : '<em class="faint">Waiting for its owner</em>'}</li>`).join('')}</ul></section>`;
@@ -273,8 +273,9 @@
       html = `${stale}${AO.addAi('ad-hero')}<p class="ad-waiting faint" id="ad-waiting"><i class="ad-pulse-dot"></i>Waiting for an AI helper to connect… this page changes by itself when it does.</p>
         ${peopleHtml()}${doingHtml()}${AO.setup()}${how}`;
     } else {
-      const asks = asksHtml(), top = ((d.fleet && d.fleet.next) || [])[0];
-      const hero = F && !(asks && top && top.kind === 'approval') ? F.hero(d.fleet) : '';
+      // the next step first (it may be an approval, with Approve right there); the other asks for an OK under it
+      const top = ((d.fleet && d.fleet.next) || [])[0], asks = asksHtml(top && top.kind === 'approval' ? top.approval : null);
+      const hero = F ? F.hero(d.fleet) : '';
       html = `${stale}${asks}${hero}${needsCard(d)}${F ? F.rows(d.fleet, { after: pulse }) : heroCard(d)}${peopleHtml()}${doingHtml()}${how}
         <p class="ad-more"><button class="linkish" id="ad-views" type="button" aria-haspopup="menu">More views: ownership, reviews, hand-offs…</button></p>`;
     }

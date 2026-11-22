@@ -237,7 +237,8 @@ def main():
             ph.add_init_script("window.__copied = []; Object.defineProperty(navigator, 'clipboard', { configurable: true, value: undefined }); const ex = document.execCommand.bind(document); document.execCommand = (c, ...r) => { if (c === 'copy') { window.__copied.push(String(getSelection()) || (document.activeElement && document.activeElement.value) || ''); return true; } return ex(c, ...r); };")
             phone = ph.new_page(); watch(phone, "phone")
             phone.goto(BASE + "/?skipIntro=1"); phone.wait_for_function("TribeClient.connected()")
-            phone.evaluate("TribeShell.go('agents')"); phone.wait_for_selector(f"#fl-agents [data-fl-agent='{cid}']", timeout=10000)
+            phone.evaluate("TribeShell.go('agents')"); phone.wait_for_selector("#ofl-strip [data-ofl-sheet='work']", timeout=10000)
+            phone.click("#ofl-strip [data-ofl-sheet='work']"); phone.wait_for_selector(f"#fl-agents [data-fl-agent='{cid}']", timeout=10000)   # feat/office-full: Working on, a bottom sheet on phones
             prow = f"#view-coord #fl-agents [data-fl-agent='{cid}']"
             def no_sideways():
                 assert phone.evaluate("document.documentElement.scrollWidth <= innerWidth + 1"), phone.evaluate("document.documentElement.scrollWidth")

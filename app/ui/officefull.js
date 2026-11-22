@@ -30,8 +30,8 @@
   const TABS = [['preview', 'Preview', 'preview'], ['work', 'Working on', 'checklist'], ['updates', 'Updates', 'pulse']];
   const ago = iso => { const s = (Date.now() - Date.parse(iso)) / 1000; if (!Number.isFinite(s) || s < 0) return ''; return s < 60 ? T('now') : s < 3600 ? `${Math.floor(s / 60)} min` : s < 86400 ? `${Math.floor(s / 3600)} h` : new Date(iso).toLocaleDateString([], { month: 'short', day: 'numeric' }); };
 
-  let root = null, om = null, flint = null, tab = ls.get(LS_TAB, 'preview');
-  if (!TABS.some(t => t[0] === tab)) tab = 'preview';
+  let root = null, om = null, flint = null, tab = ls.get(LS_TAB, 'work');   // Working on first: it is what this page is for
+  if (!TABS.some(t => t[0] === tab)) tab = 'work';
   const panelOpen = () => { const v = ls.get(LS_PANEL, ''); return v ? v === 'open' : wide(); };
 
   // ---------- the frame ----------

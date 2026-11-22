@@ -218,19 +218,20 @@ def main():
             tool(akey, "request_approval", {"title": "Drop the old scores table", "risk": "high"})
             cp.evaluate("TribeOffice.refresh()")
             cp.click("#ofl-tab-work")
-            cp.wait_for_selector("#ao-work #ao-asks [data-ao-ap='approve']", timeout=15000)
-            assert "Drop the old scores table" in cp.inner_text("#ao-asks")
+            APPROVE = "#ao-work [data-ao-ap='approve'], #ao-work #ad-hero [data-fl-ap='approve']"   # the next step, or the list of asks under it
+            cp.wait_for_selector(APPROVE, timeout=15000)
+            until(cp, "document.querySelector('#ao-work').innerText.includes('Drop the old scores table')", 10, "the ask shows")
             cp.wait_for_selector(f"#ao-work [data-fl-agent='{aid}']", timeout=10000)
             assert "src/leaderboard.js" in cp.inner_text(f"#ao-work [data-fl-agent='{aid}']"), cp.inner_text("#ao-work")
             cp.wait_for_timeout(500); cp.screenshot(path="/tmp/office-full-1440-working.png")
-            cp.click("#ao-work #ao-asks [data-ao-ap='approve']")
+            cp.locator(APPROVE).first.click()
             end = time.time() + 10; done = False
             while time.time() < end:
                 aps = ok(api("/approvals", token=camp, project=pid)).get("approvals", [])
                 if any(a.get("title") == "Drop the old scores table" and a.get("status") == "approved" for a in aps): done = True; break
                 time.sleep(0.3)
             assert done, "approved from Working on"
-            cp.wait_for_selector("#ao-asks", state="detached", timeout=15000)
+            until(cp, "!document.querySelector('#ao-work').innerText.includes('Drop the old scores table')", 15, "the ask goes away")
             # Updates: recent events, newest first
             tool(akey, "post_update", {"text": "Leaderboard skeleton is in"}) if "post_update" in json.dumps(mcp(akey, "tools/list")) else None
             cp.click("#ofl-tab-updates")
