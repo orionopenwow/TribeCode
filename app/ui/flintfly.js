@@ -40,6 +40,7 @@
     const r = e.getBoundingClientRect(); if (!r.width && !r.height) return null; return r;
   }
   function homeEl() {
+    { const o = document.querySelector('.ao-full'); if (o && o.offsetParent) return null; }   // Agents & office (officefull.js): Flint is the pill's face; no flame parked over it
     if (phone()) return document.querySelector('#tabbar') || document.querySelector('.flint-fab');
     return document.querySelector('#flint:not(.hidden) .fl-bar, #flint:not(.hidden)') || document.querySelector('#flint-full:not(.hidden) .ff-foot') || document.querySelector('.flint-fab');
   }
@@ -86,7 +87,7 @@
     if (!el || !el.classList.contains('on')) return;
     el.classList.remove('is-working');
     const h = homeRect(); if (h) place(h.left, h.top);
-    hideT = setTimeout(() => el && el.classList.remove('on'), calm() ? 0 : 900);
+    hideT = setTimeout(() => el && el.classList.remove('on'), calm() || !h ? 0 : 900);   // no home on screen: go at once instead of staying where the work was
   }
   // a short pause so a glide reads before the real change lands (never more than a few hundred ms)
   const beat = (ms = 380) => new Promise(r => setTimeout(r, enabled() && !calm() ? ms : 0));

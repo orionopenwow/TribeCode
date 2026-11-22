@@ -217,23 +217,18 @@
       const ox = Math.round((cv.width - W) / 2 + view.ox * dpr), oy = Math.round((cv.height - H) / 2 + view.oy * dpr);
       return { scale, ox, oy, dpr };
     }
-    // Fill mode: the largest whole-pixel zoom at which the whole office fits, then bigger while everyone (with their
-    // name tags) still fits, up to the zoom at which the office covers the box; it looks at the middle of where people
-    // are. What the office does not cover is drawn as more building around it (hall()), never as dark bands.
+    // Fill mode: the largest whole-pixel zoom at which the whole office fits the box, centred; more building is drawn
+    // around it (hall()), so the art reaches every edge and there are no dark bands. Below 2x a small box gets 2x when
+    // everyone (with their name tags) still fits, looking at the middle of where people are.
     let cam = null;
     function camera(vw, vh) {
-      let bx0 = layout.w, by0 = layout.h, bx1 = 0, by1 = 0;
-      for (let y = 0; y < layout.h; y++) for (let x = 0; x < layout.w; x++) if (tileAt(x, y) !== 'void') { bx0 = Math.min(bx0, x); by0 = Math.min(by0, y); bx1 = Math.max(bx1, x); by1 = Math.max(by1, y); }
-      if (bx1 < bx0) { bx0 = 0; by0 = 0; bx1 = layout.w - 1; by1 = layout.h - 1; }
-      const fitS = Math.min(vw / ((bx1 - bx0 + 1) * T), vh / ((by1 - by0 + 2) * T));
+      const fitS = Math.min(vw / (layout.w * T), vh / (layout.h * T));
       let s = fitS >= 1 ? Math.floor(fitS) : Math.max(0.25, Math.floor(fitS * 4) / 4);
-      const cover = Math.max(vw / (layout.w * T), vh / (layout.h * T));
+      let fx = layout.w * T / 2, fy = layout.h * T / 2;
       const pts = [...chars.values()].filter(c => c.visible).map(c => c.target || c);
-      let fx = (bx0 + bx1 + 1) / 2 * T, fy = (by0 + by1 + 1) / 2 * T;
-      if (pts.length) {
+      if (s < 2 && fitS >= 1.5 && pts.length) {
         const px0 = Math.min(...pts.map(p => p.x)) - 1, px1 = Math.max(...pts.map(p => p.x)) + 2, py0 = Math.min(...pts.map(p => p.y)) - 2.5, py1 = Math.max(...pts.map(p => p.y)) + 1.5;
-        while (s >= 1 && s + 1 <= Math.ceil(cover) && (px1 - px0) * T * (s + 1) <= vw && (py1 - py0) * T * (s + 1) <= vh) s++;
-        fx = (px0 + px1) / 2 * T; fy = (py0 + py1) / 2 * T;
+        if ((px1 - px0) * T * 2 <= vw && (py1 - py0) * T * 2 <= vh) { s = 2; fx = (px0 + px1) / 2 * T; fy = (py0 + py1) / 2 * T; }
       }
       return { s, fx, fy, w: vw, h: vh };
     }
@@ -308,18 +303,35 @@
       const top = ch.d.kind === 'flint' ? ch.y * T + 8 - 18 : ch.y * T + 8 - 32 + off + 2;
       return { x: (F.ox + (ch.x * T + 8) * F.scale) / F.dpr, y: (F.oy + top * F.scale) / F.dpr };
     }
+    // Name tags: a pixel plate over each head (officespace.css): square, notched corners and a one-art-pixel outline at
+    // the floor's zoom (--px), the role as a colour notch (an AI helper's tool, Flint's flame, a person's presence),
+    // "Claude" with "Camp's" small for AI helpers, a pixel pointer to the head; tags never overlap (nudged up).
     function placeLayer() {
       if (!F) return;
+      const px = Math.max(1, F.scale / F.dpr);
+      if (layer.__px !== px) { layer.style.setProperty('--px', px.toFixed(2) + 'px'); layer.__px = px; }
       const out = [], bw = Math.max(11, Math.round(11 * F.scale / F.dpr));
       for (const ch of chars.values()) {
         if (!ch.visible) continue;
         const h = headOf(ch), kind = ch.d.bubble === 'ask' ? 'ask' : ch.d.bubble === 'done' ? 'done' : '';
         const src = kind && artOk ? bubbleSrc(kind) : '';
         const b = kind ? `<span class="os-bubble ${kind}">${src ? `<img class="os-bub" src="${src}" alt="" style="width:${bw}px">` : ''}<span class="os-bubble-t">${esc(tr(kind === 'ask' ? 'Needs your OK' : 'Done'))}</span></span>` : '';
-        out.push(`<button type="button" class="os-tag" data-os-who="${esc(ch.d.id)}" data-role="${esc(ch.d.kind)}" style="left:${h.x.toFixed(1)}px;top:${h.y.toFixed(1)}px">${b}<span class="os-name">${ch.d.kind === 'agent' ? '<i class="os-ai">AI</i>' : ''}${esc(ch.d.name)}</span></button>`);
+        const [main, owner] = String(ch.d.name || '').split(' · ');
+        const sub = ch.d.kind === 'agent' && owner ? `${owner.split(' ')[0]}'s` : '';
+        const tool = ch.d.kind === 'agent' ? String(ch.d.agentKind || 'other').toLowerCase().replace(/[^a-z]/g, '') : '';
+        const typing = /type/.test(poseOf(ch)) && !ch.path.length;
+        out.push(`<button type="button" class="os-tag" data-os-who="${esc(ch.d.id)}" data-role="${esc(ch.d.kind)}"${tool ? ` data-tool="${esc(tool)}"` : ''} data-state="${esc(ch.d.state || 'active')}"${typing ? ' data-typing="1"' : ''} style="left:${h.x.toFixed(1)}px;top:${h.y.toFixed(1)}px">${b}<span class="os-name"><i class="os-notch" aria-hidden="true"></i>${ch.d.kind === 'agent' ? `<span class="sr-only">${esc(tr('AI helper'))}: </span>` : ''}<b>${esc(main)}</b>${sub ? `<small>${esc(sub)}</small>` : ''}${typing ? '<i class="os-typing" aria-hidden="true"></i>' : ''}</span></button>`);
       }
       const html = out.join('');
       if (layer.__html !== html) { layer.innerHTML = html; layer.__html = html; }
+      // no two tags on top of each other: from the lowest up, a tag that would cover one below it moves up
+      layer.querySelectorAll('.os-tag').forEach(e => { e.style.marginTop = ''; });
+      const tags = [...layer.querySelectorAll('.os-tag')].map(e => ({ e, r: e.getBoundingClientRect(), dy: 0 })).sort((p, q) => q.r.bottom - p.r.bottom);
+      for (let i = 0; i < tags.length; i++) for (let j = 0; j < i; j++) {
+        const A2 = tags[i], B2 = tags[j], at = A2.r.top + A2.dy, ab = A2.r.bottom + A2.dy, bt = B2.r.top + B2.dy, bb = B2.r.bottom + B2.dy;
+        if (A2.r.left < B2.r.right && A2.r.right > B2.r.left && at < bb && ab > bt) A2.dy -= ab - bt + 2;
+      }
+      for (const t of tags) t.e.style.marginTop = t.dy ? `${t.dy}px` : '';
     }
     function paintSr() {
       const sr = root.querySelector('.os-sr'); if (!sr) return;

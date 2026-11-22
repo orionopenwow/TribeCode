@@ -110,6 +110,7 @@
       <hr>
       ${item('where', 'Where your tribe runs', S ? `${S.label}${S.sub ? ' · ' + S.sub : ''}` : '')}
       ${item('privacy', 'What’s private', T('Who can open what'))}
+      ${item('how', 'How AI helpers work here', T('Four steps, from connecting to your OK'))}
       ${item('github', gh && gh.btn === 'Back up now' ? 'Back up now' : 'Back up to GitHub', gh ? gh.text : T('A copy on GitHub keeps it safe'))}`;
   }
   function closeMenu() {
@@ -131,9 +132,16 @@
     if (k === 'sound') { if (sp) sp.act('sound'); const on = sp && sp.info().sound; btn.setAttribute('aria-checked', String(!!on)); btn.querySelector('b').textContent = T(on ? 'Sound on' : 'Sound off'); return; }
     if (k === 'hide') { closeMenu(); O().setHidden(!O().hidden()); return; }
     closeMenu();
+    if (k === 'how') return how();
     if (AO() && AO().run) AO().run(k, btn);
   }
 
+  function how() {
+    const F = window.TribeFleet, U = window.TribeUI; if (!F || !U || !U.sheet) return;
+    const sh = U.sheet({ id: 'ao-how-sheet', wide: true, eyebrow: T('Agents & office'), title: 'How AI helpers work here', body: F.how() });
+    sh.body.addEventListener('click', e => { if (e.target.closest('#fl-guide')) { sh.close(); if (window.TribeGuide) window.TribeGuide.open('08-agents-and-office'); } });
+    return sh;
+  }
   // ---------- the side panel ----------
   function show(k, focus) {
     if (!TABS.some(t => t[0] === k) || !root) return;
@@ -236,6 +244,9 @@
     flint = F.mount(box, { ctx: 'office', key: pidNow(), echo: false, placeholder: T('Message the tribe or ask Flint…'), hello: '', run: route, chips: [], after: () => { stripOn(); paintChips(); } });
     if (!flint) return;
     flint.clearAll();
+    // the same box as Messages: its classes (.composer-dock .compose, .cx-btn) give the same shape, size and buttons
+    box.classList.add('composer-dock'); flint.el.querySelector('.fl-bar').classList.add('compose');
+    flint.el.querySelectorAll('.fl-bar .fl-me, .fl-bar .fl-ic').forEach(b => b.classList.add('cx-btn'));
     const inp = flint.input; inp.setAttribute('aria-label', T('Message the tribe, an AI helper or Flint. Type / for commands.')); inp.id = 'ao-input';
     if (window.TribeMentions && window.TribeMentions.wire) window.TribeMentions.wire(inp);
     const pop = document.createElement('div'); pop.id = 'ao-cmds'; pop.className = 'ofl-cmds'; pop.setAttribute('role', 'listbox'); pop.setAttribute('aria-label', T('Commands')); pop.hidden = true;

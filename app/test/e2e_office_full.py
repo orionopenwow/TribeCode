@@ -60,10 +60,13 @@ def until(pg, js, timeout=20, what=""):
 COVER = """(() => { const os = document.querySelector('#ad-office .os').__os, st = document.querySelector('#ad-office .os-stage').getBoundingClientRect();
   const p = os.painted(), c = document.querySelector('#ad-office .os-canvas'), x = c.getContext('2d'), W = c.width, H = c.height;
   // the art reaches every edge: no pixel of the dark backdrop (the set's void colour) along the borders
-  const edge = []; for (let i = 1; i < 40; i++) { edge.push([Math.floor(W * i / 40), 1], [Math.floor(W * i / 40), H - 2], [1, Math.floor(H * i / 40)], [W - 2, Math.floor(H * i / 40)]); }
-  const bare = edge.filter(([a, b]) => { const d = x.getImageData(a, b, 1, 1).data; return d[0] === 18 && d[1] === 21 && d[2] === 26; }).length;
+  // every 6px along all four edges, two pixels in, and a column 40px in (under the toolbar): never the backdrop colour or near it
+  const edge = []; for (let a = 0; a < W; a += 6) edge.push([a, 1], [a, H - 2]); for (let b = 0; b < H; b += 6) edge.push([1, b], [W - 2, b], [40, b]);
+  const near = d => Math.abs(d[0] - 18) <= 12 && Math.abs(d[1] - 21) <= 12 && Math.abs(d[2] - 26) <= 12;
+  const bareAt = edge.filter(([a, b]) => near(x.getImageData(a, b, 1, 1).data)), bare = bareAt.length;
   const ch = os.chars().filter(q => q.visible).map(q => { const t = os.tileXY(q.x, q.y); return [q.id, t.x >= st.left && t.x <= st.right && t.y - 20 >= st.top && t.y <= st.bottom]; });
-  return { st: [st.left, st.top, st.right, st.bottom], p: [p.left, p.top, p.right, p.bottom], bare, off: ch.filter(q => !q[1]).map(q => q[0]), n: ch.length, scale: os.scale() }; })()"""
+  const L = os.layout(), whole = (() => { const a = os.tileXY(0, 0), b = os.tileXY(L.w - 1, L.h - 1); return a.x >= st.left - 1 && a.y >= st.top - 1 && b.x <= st.right + 1 && b.y <= st.bottom + 1; })();
+  return { st: [st.left, st.top, st.right, st.bottom], p: [p.left, p.top, p.right, p.bottom], bare, bareAt: bareAt.slice(0, 5), whole, off: ch.filter(q => !q[1]).map(q => q[0]), n: ch.length, scale: os.scale() }; })()"""
 
 
 def covers(pg, what):
@@ -74,6 +77,12 @@ def covers(pg, what):
     assert r["bare"] == 0, (what, "no dark bands", r)
     assert r["n"] >= 2 and not r["off"], (what, "everyone in view", r)
     assert r["scale"] == int(r["scale"]) and r["scale"] >= 1, (what, "whole pixels", r)
+    assert r["whole"] or r["scale"] == 2, (what, "the whole office is in view", r)
+    tg = pg.evaluate("""(() => { const t = [...document.querySelectorAll('#ad-office .os-tag')].map(e => [e.querySelector('.os-name').getBoundingClientRect(), e.dataset.osWho]);
+      const hit = []; for (let i = 0; i < t.length; i++) for (let j = i + 1; j < t.length; j++) { const a = t[i][0], b = t[j][0]; if (a.left < b.right && a.right > b.left && a.top < b.bottom && a.bottom > b.top) hit.push([t[i][1], t[j][1]]); }
+      return { h: t.map(x => Math.round(x[0].height)), hit }; })()""")
+    assert tg["h"] and min(tg["h"]) >= 18, (what, "name tags are pixel plates, not slim pills", tg)
+    assert not tg["hit"], (what, "tags never overlap", tg)
     return r
 
 
@@ -98,6 +107,9 @@ def main():
         mcp(akey, "initialize", {"protocolVersion": "2025-06-18", "clientInfo": {"name": "claude-code"}})
         tool(akey, "my_lane", {})
         tool(akey, "claim_file", {"path": "src/leaderboard.js", "note": "the leaderboard"})
+        # a second AI helper, so four characters share the floor (their tags must not overlap)
+        k2 = ok(api("/agents", "POST", {"kind": "codex"}, token=camp, project=pid)); c2key = k2.get("key") or k2.get("token")
+        mcp(c2key, "initialize", {"protocolVersion": "2025-06-18", "clientInfo": {"name": "codex"}}); tool(c2key, "claim_file", {"path": "src/map.js", "note": "the map"})
 
         with sync_playwright() as pw:
             b = pw.chromium.launch(executable_path="/usr/bin/google-chrome", args=["--no-proxy-server"])
@@ -161,6 +173,8 @@ def main():
             o2 = cp.evaluate("document.querySelector('#ad-office .os').__os.tileXY(5, 5)")
             assert abs(o2["x"] - o0["x"]) <= 1, (o0, o2)
             covers(cp, "after Fit")
+            box = cp.evaluate("(() => { const r = [...document.querySelectorAll('#ad-office .os-tag')].map(e => e.getBoundingClientRect()); const x0 = Math.min(...r.map(q => q.left)) - 40, y0 = Math.min(...r.map(q => q.top)) - 20, x1 = Math.max(...r.map(q => q.right)) + 40, y1 = Math.max(...r.map(q => q.bottom)) + 70; return { x: Math.max(0, x0), y: Math.max(0, y0), width: x1 - Math.max(0, x0), height: y1 - Math.max(0, y0) }; })()")
+            cp.screenshot(path="/tmp/office-full-tags.png", clip=box)
             print("ok  1b. the art covers the floor area with no dark bands, everyone in view: 1440 open %dx, folded %dx, 1920 %dx, 1100 %dx; drag and Fit" % (c1["scale"], c2["scale"], sizes[1920], sizes[1100]))
             print("ok  1. the floor fills the main area (open %dx%d at %dx, folded %d wide); one-line head" % (g["w"], g["h"], g["scale"], g2["w"]))
 
@@ -174,7 +188,7 @@ def main():
             cp.click("#ao-bar [data-ofl-zoom='out']")
             cp.click("#ao-more"); cp.wait_for_selector("#ao-menu")
             items = cp.eval_on_selector_all("#ao-menu [data-aom]", "els => els.map(e => e.dataset.aom)")
-            assert items == ["fit", "look", "edit", "sound", "hide", "where", "privacy", "github"], items
+            assert items == ["fit", "look", "edit", "sound", "hide", "where", "privacy", "how", "github"], items
             assert cp.locator("#ao-menu [data-aom-set] option").count() >= 2, "the office's set"
             cp.click("#ao-menu [data-aom='sound']"); assert cp.get_attribute("#ao-menu [data-aom='sound']", "aria-checked") == "true"
             cp.click("#ao-menu [data-aom='sound']")
@@ -198,6 +212,19 @@ def main():
             pill = cp.evaluate("(() => { const p = document.querySelector('#ao-box .fl-bar').getBoundingClientRect(), m = document.querySelector('.ofl-main').getBoundingClientRect(); return { w: p.width, mw: m.width, bottom: p.bottom, mb: m.bottom }; })()")
             assert pill["w"] <= 722 and pill["w"] < pill["mw"] - 40 and 0 <= pill["mb"] - pill["bottom"] <= 24, ("a pill over the floor, not a band", pill)
             assert cp.get_attribute(inp, "placeholder") == "Message the tribe or ask Flint…"
+            # the same bar as Messages: radius, height, border, font and button size
+            same = cp.evaluate("""(() => { const g = (e, k) => getComputedStyle(e)[k], a = document.querySelector('#ao-box .compose'), b = document.querySelector('#chat-form');
+              const ab = a.querySelector('.fl-send'), bb = document.querySelector('#chat-form .cx-btn'), ai = a.querySelector('.fl-in'), bi = document.querySelector('#chat-input');
+              return { r: [g(a, 'borderTopLeftRadius'), g(b, 'borderTopLeftRadius')], h: [a.getBoundingClientRect().height, parseFloat(g(b, 'height'))], bd: [g(a, 'borderTopWidth') + g(a, 'borderTopStyle'), g(b, 'borderTopWidth') + g(b, 'borderTopStyle')],
+                bg: [g(a, 'backgroundColor'), g(b, 'backgroundColor')], f: [g(ai, 'fontSize'), g(bi, 'fontSize')], btn: [ab.getBoundingClientRect().width, bb ? parseFloat(g(bb, 'width')) : 0] }; })()""")
+            assert same["r"][0] == same["r"][1] and abs(same["h"][0] - same["h"][1]) <= 2 and same["bd"][0] == same["bd"][1] and same["bg"][0] == same["bg"][1] and same["f"][0] == same["f"][1] and abs(same["btn"][0] - same["btn"][1]) <= 1, ("the Messages composer's look", same)
+            # toasts sit above the pill; nothing sits over it
+            cp.evaluate("TribeApp.toast('Needs your OK: a very long line that would sit right over the box at the bottom')"); cp.wait_for_timeout(300)
+            ov = cp.evaluate("""(() => { const p = document.querySelector('#ao-box .compose').getBoundingClientRect(), t = [...document.querySelectorAll('.toast')].filter(e => e.offsetParent).map(e => e.getBoundingClientRect());
+              const hit = t.some(r => r.bottom > p.top && r.top < p.bottom && r.right > p.left && r.left < p.right);
+              const pts = [[p.left + 14, p.top + p.height / 2], [p.left + p.width / 2, p.top + 4], [p.right - 14, p.top + p.height / 2]].map(([x, y]) => { const e = document.elementFromPoint(x, y); return !!(e && e.closest('#ao-box')); });
+              return { hit, pts }; })()""")
+            assert not ov["hit"] and all(ov["pts"]), ("nothing over the pill", ov)
             assert cp.locator("#ao-box .fl-chip:visible").count() == 0, "no chips until the box is focused"
             cp.click(inp); cp.wait_for_selector("#ao-box .fl-chip", timeout=3000)
             chips = cp.eval_on_selector_all("#ao-box .fl-chip", "els => els.map(e => e.textContent)")
@@ -255,6 +282,8 @@ def main():
             cp.wait_for_selector("#invite-modal:not(.hidden), #inv-sheet, .ui-sheet [data-inv], #io-sheet", timeout=10000)
             cp.keyboard.press("Escape"); cp.wait_for_timeout(400)
             if cp.evaluate("!!(window.TribeInvite && TribeInvite.close)"): cp.evaluate("TribeInvite.close()")
+            cp.wait_for_timeout(2600)
+            assert cp.evaluate("!document.querySelector('#flint-fly.on')"), "Flint's flame does not stay parked on this page"
             cp.fill(inp, "What's everyone doing?"); cp.press(inp, "Enter")
             until(cp, "document.querySelector('#ao-replies').innerText.includes('Claude · Camp:')", 8, "who is doing what")
             assert len(ok(api("/chat/general", token=camp, project=pid)).get("messages", [])) == n_chat, "Flint's, not the chat's"
@@ -282,12 +311,29 @@ def main():
             tool(akey, "request_approval", {"title": "Drop the old scores table", "risk": "high"})
             cp.evaluate("TribeOffice.refresh()")
             cp.click("#ofl-tab-work")
-            APPROVE = "#ao-work [data-ao-ap='approve'], #ao-work #ad-hero [data-fl-ap='approve']"   # the next step, or the list of asks under it
+            APPROVE = "#ao-work #ad-needs [data-ao-ap='approve']"
             cp.wait_for_selector(APPROVE, timeout=15000)
-            until(cp, "document.querySelector('#ao-work').innerText.includes('Drop the old scores table')", 10, "the ask shows")
-            cp.wait_for_selector(f"#ao-work [data-fl-agent='{aid}']", timeout=10000)
-            assert "src/leaderboard.js" in cp.inner_text(f"#ao-work [data-fl-agent='{aid}']"), cp.inner_text("#ao-work")
+            until(cp, "document.querySelector('#ad-needs').innerText.includes('Drop the old scores table')", 10, "the ask shows under Needs you")
+            cp.wait_for_selector(f"#ao-work #fl-agents [data-fl-agent='{aid}']", timeout=10000)
+            veil = cp.evaluate("[...document.querySelectorAll('.ui-veil, .ui-scrim')].map(e => (e.nextElementSibling || {}).id || e.className)")
+            assert not veil, ("nothing covers the page when an AI helper asks", veil)
+            # one order: Needs you, Working now, Up next, Here; plain words, no task slugs
+            order = cp.evaluate("[...document.querySelectorAll('#ao-work > .ofl-sec')].map(e => e.id)")
+            assert order[:2] == ["ad-needs", "fl-agents"] and order.index("fl-agents") < order.index("ao-people"), order
+            assert [x for x in ["ad-needs", "fl-agents", "ao-doing", "ao-people"] if x in order] == [x for x in order if x in ["ad-needs", "fl-agents", "ao-doing", "ao-people"]], order
+            wtxt = cp.inner_text("#ao-work")
+            assert "task/t-" not in wtxt and "Claimed" not in wtxt and "1 agent ·" not in wtxt and "Next step" not in wtxt, wtxt
+            row = f"#ao-work [data-fl-agent='{aid}']"
+            line = cp.inner_text(f"{row} .fl-lhead")
+            assert "Claude" in line and "yours" in line and "leaderboard" in line.lower(), line
+            assert cp.locator(f"{row} .fl-r-acts").count() == 0 and cp.locator(f"{row} .fl-lmore").count() == 1, "collapsed: only the ⋯"
             cp.wait_for_timeout(500); cp.screenshot(path="/tmp/office-full-1440-working.png")
+            cp.click(f"{row} .fl-lhead"); cp.wait_for_selector(f"{row} .fl-lbody [data-fl-act='pause']", timeout=5000)
+            acts = cp.eval_on_selector_all(f"{row} .fl-r-acts [data-fl-act]", "els => els.map(e => e.dataset.flAct)")
+            assert acts[:2] == ["msg", "task"] and "pause" in acts and "cmd" in acts and "remove" in acts, acts
+            assert "leaderboard.js" in cp.inner_text(f"{row} .fl-lbody")
+            cp.click(f"{row} [data-fl-act='task']"); cp.wait_for_selector(f"{row} [data-fl-form='task'] input", timeout=5000)
+            cp.click(f"{row} .fl-lmore"); cp.wait_for_function(f"!document.querySelector(\"{row} .fl-lbody\")", timeout=5000)
             cp.locator(APPROVE).first.click()
             end = time.time() + 10; done = False
             while time.time() < end:
@@ -295,7 +341,7 @@ def main():
                 if any(a.get("title") == "Drop the old scores table" and a.get("status") == "approved" for a in aps): done = True; break
                 time.sleep(0.3)
             assert done, "approved from Working on"
-            until(cp, "!document.querySelector('#ao-work').innerText.includes('Drop the old scores table')", 15, "the ask goes away")
+            until(cp, "!document.querySelector('#ad-needs') || !document.querySelector('#ad-needs').innerText.includes('Drop the old scores table')", 15, "the ask goes away")
             # Updates: recent events, newest first
             tool(akey, "post_update", {"text": "Leaderboard skeleton is in"}) if "post_update" in json.dumps(mcp(akey, "tools/list")) else None
             cp.click("#ofl-tab-updates")

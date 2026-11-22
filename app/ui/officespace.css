@@ -10,16 +10,37 @@
 .os-canvas { display: block; image-rendering: pixelated; image-rendering: crisp-edges; cursor: pointer; touch-action: none; }
 .os.editing .os-canvas { cursor: crosshair; }
 .os-layer { position: absolute; inset: 0; pointer-events: none; }
-.os-tag { position: absolute; transform: translate(-50%, -100%); display: grid; justify-items: center; gap: 3px; padding: 0; border: 0; background: none; color: var(--text); font: 600 11px/1.2 var(--font); pointer-events: auto; cursor: pointer; }
-.os-name { display: inline-flex; align-items: center; padding: 1px 6px; border: 1px solid var(--edge); border-radius: 999px; background: var(--surface); white-space: nowrap; max-width: 140px; overflow: hidden; text-overflow: ellipsis; }
+.os-tag { position: absolute; transform: translate(-50%, -100%); display: grid; justify-items: center; gap: 3px; padding: 0; border: 0; background: none; color: var(--text); font: 700 12px/13px var(--font); pointer-events: auto; cursor: pointer; --o: clamp(2px, var(--px), 4px); }
+/* the name tag: a pixel plate at the floor's zoom (--px is one art pixel): square with notched corners, a solid fill, a
+   one-art-pixel darker outline, a colour notch for the role, and a pixel pointer down to the head */
+.os-layer { --px: 3px; }
+.os-name { position: relative; display: inline-flex; align-items: center; gap: calc(var(--o) * 1.5); max-width: 170px; margin-bottom: calc(var(--o) * 2);
+  padding: calc(var(--o) * 0.75) calc(var(--o) * 1.75) calc(var(--o) * 0.75) calc(var(--o) * 1.25); border: var(--o) solid var(--edge-pop); background: var(--surface); white-space: nowrap;
+  clip-path: polygon(var(--o) 0, calc(100% - var(--o)) 0, calc(100% - var(--o)) var(--o), 100% var(--o), 100% calc(100% - var(--o)), calc(100% - var(--o)) calc(100% - var(--o)), calc(100% - var(--o)) 100%, var(--o) 100%, var(--o) calc(100% - var(--o)), 0 calc(100% - var(--o)), 0 var(--o), var(--o) var(--o));
+  -webkit-font-smoothing: none; font-smooth: never; text-rendering: optimizeSpeed; }
+.os-name b { font-weight: 700; overflow: hidden; text-overflow: ellipsis; }
+.os-name small { font: 600 10.5px/13px var(--font); color: var(--muted); }
+.os-tag::after { content: ''; position: absolute; left: 50%; bottom: 0; width: calc(var(--o) * 3); height: calc(var(--o) * 2); margin-left: calc(var(--o) * -1.5); background: var(--edge-pop); clip-path: polygon(0 0, 100% 0, 50% 100%); }
+.os-notch { flex: none; width: calc(var(--o) * 2); height: calc(var(--o) * 3); background: var(--peer); }
+.os-tag[data-role="person"][data-state="active"] .os-notch { background: var(--online); }
+.os-tag[data-role="agent"] .os-notch { background: var(--live); }
+.os-tag[data-tool="claude"] .os-notch, .os-tag[data-tool="claudecode"] .os-notch { background: var(--accent); }
+.os-tag[data-tool="cursor"] .os-notch { background: var(--text); }
+.os-tag[data-tool="codex"] .os-notch, .os-tag[data-tool="chatgpt"] .os-notch { background: var(--online); }
+.os-tag[data-tool="gemini"] .os-notch { background: var(--peer); }
+.os-tag[data-role="flint"] .os-notch { background: var(--ember); }
 .os-tag[data-role="agent"] .os-name { border-color: var(--live); }
+.os-tag[data-role="agent"]::after { background: var(--live); }
 .os-tag[data-role="flint"] .os-name { border-color: var(--brand); }
-.os-tag:focus-visible .os-name { outline: 2px solid var(--brand); outline-offset: 1px; }
+.os-tag[data-role="flint"]::after { background: var(--brand); }
+.os-tag[data-state="away"], .os-tag[data-state="off"] { opacity: .62; }
+.os-typing { flex: none; width: var(--o); height: var(--o); background: var(--live); animation: os-type 1s steps(1) infinite; }
+@keyframes os-type { 50% { opacity: 0; } }
+.os-tag:focus-visible .os-name { outline: 2px solid var(--brand); outline-offset: 2px; }
 /* the bubble is the 11x13 pixel art, scaled with the floor; its words stay for screen readers */
 .os-bubble { display: block; line-height: 0; }
 .os-bub { display: block; height: auto; image-rendering: pixelated; image-rendering: crisp-edges; }
 .os-bubble-t { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
-.os-ai { margin-right: 4px; padding: 0 3px; border-radius: 3px; background: var(--live); color: var(--canvas); font: 700 9px/1.4 var(--mono); font-style: normal; letter-spacing: .04em; }
 .os-card, .os-edit, .os-look { position: absolute; top: 10px; right: 10px; width: min(340px, calc(100% - 20px)); max-height: calc(100% - 20px); overflow: auto; display: grid; gap: 10px; align-content: start; padding: 12px; border: 1px solid var(--edge); border-radius: var(--r-card); background: var(--surface); }
 .os-card[hidden], .os-edit[hidden], .os-look[hidden] { display: none; }
 .os-edit { left: 10px; right: auto; width: min(300px, calc(100% - 20px)); }
@@ -64,4 +85,4 @@
 .os-import { cursor: pointer; }
 .os-set select { height: 30px; padding: 0 8px; font-size: 13px; }
 .os-bar .of-view { margin: 0; }
-@media (prefers-reduced-motion: reduce) { .os-tag, .os-card { transition: none; } }
+@media (prefers-reduced-motion: reduce) { .os-tag, .os-card { transition: none; } .os-typing { animation: none; } }

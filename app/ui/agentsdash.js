@@ -171,30 +171,6 @@
   // mono eyebrow with the "Open … →" link on its line, then the big title across the whole card
   const head = (eyebrow, title, open, openLabel) => `<header class="ad-head"><div class="ad-eyerow"><span class="eyebrow">${eyebrow}</span>${open ? `<button class="ad-open linkish" data-ad-open="${esc(open)}">${esc(openLabel)} →</button>` : ''}</div><h2 class="ad-title">${title}</h2></header>`;
 
-  function heroCard(d) {
-    const list = d.agents;
-    if (!list.length) return `<section class="ad-card ad-hero ad-empty" id="ad-hero">${head('Agents', 'No agents yet')}
-        <p class="ad-lead">An agent is an AI helper that writes code for you, like Claude Code, Codex or Cursor. Connect yours and it shows up here while it works, next to your friends' agents.</p>
-        <div class="ad-acts"><button class="btn primary" id="ad-connect">Connect your AI</button><button class="linkish ad-tools" id="ad-tools">See all tools</button></div></section>`;
-    const on = list.filter(a => a.online).length;
-    const shown = moreAgents ? list : list.slice(0, 5);
-    const row = a => {
-      const doing = a.task ? a.task.title : a.files.length ? a.files[0] : a.online ? (a.where || 'Working') : 'Idle';
-      const extra = a.task && a.files.length ? a.files[0] : '';
-      const when = a.online ? `active ${ago(a.lastActive)}` : a.lastActive ? `last seen ${ago(a.lastActive)}` : a.yours && matchMedia('(max-width: 820px)').matches ? 'not connected yet: connect it from a computer' : 'not connected yet';
-      const paused = a.control && a.control.action !== 'resume';
-      const steer = canSteer(a) && (a.online || paused) ? `<button class="btn ad-btn agent" data-ad-ctl="${paused ? 'resume' : 'pause'}" data-id="${esc(a.id)}">${paused ? 'Resume' : 'Pause'}</button>`
-        : a.yours && !a.online && !a.lastActive && !matchMedia('(max-width: 820px)').matches ? '<button class="btn ad-btn" data-ad-cc>Connect</button>' : '';   // qa-qol-2: your AI that never connected gets a next step
-      return `<div class="ad-agent ${a.online ? 'on' : ''}" data-ad-agent="${esc(a.id)}" tabindex="0"><span class="ad-dot"></span>
-        <div class="ad-a-main"><b>${esc(a.name)}</b><span class="ad-a-doing">${esc(doing)}${extra ? ` <code>${esc(extra)}</code>` : ''}</span>
-        <span class="ad-a-meta">${esc(a.yours ? 'yours' : `${a.ownerName}'s`)} · ${esc(when)}${a.tokens !== null && a.tokens !== undefined ? ` · ${esc(k(a.tokens))} tokens` : ''}${a.control ? ` · <span class="ad-warn">${esc(ctlLabel(a.control))}</span>` : ''}</span></div>${steer}</div>`;
-    };
-    const waits = (d.pulse || []).filter(x => x.kind === 'wait' || x.kind === 'ship');   // feat/ship-flow: who is waiting on whom
-    return `<section class="ad-card ad-hero" id="ad-hero">${head('Agents', on ? `${plural(on, 'agent')} working now` : 'No agents working right now', 'agents-hub', 'Your AI tools')}
-      <div class="ad-rows">${shown.map(row).join('')}</div>${waits.length ? `<div class="sh-pulse ad-pulse" id="ad-pulse">${waits.slice(0, 4).map(x => `<span class="${esc(x.kind)}">${esc(x.text)}</span>`).join('')}</div>` : ''}
-      <div class="ad-acts ad-acts-sm">${list.length > 5 ? `<button class="linkish ad-more" data-ad-more="agents">${moreAgents ? 'Show fewer' : `Show all ${list.length}`}</button>` : ''}<button class="linkish ad-tools" id="ad-tools">See all tools</button></div></section>`;   // loops: the tools list stays one click away after your first agent
-  }
-
   function needsItems(d) {
     const my = me().id, out = [];
     const rq = d.ship && d.ship.request;   // feat/ship-flow: a ship vote waiting on you
@@ -223,25 +199,41 @@
   // feat/office-full: the page is the office, full size (officefull.js lays it out: the head line, the floor edge to
   // edge with its toolbar, the side panel with Preview | Working on | Updates, the box at the bottom). This paints only
   // Working on, so the floor, the live preview and what you are typing stay put while the data changes.
-  function asksHtml(skip) {
+  // Working on, in one order: Needs you (only when something does) → Working now → Up next → Here.
+  const sec = (id, label, body) => `<section class="ofl-sec" id="${id}"><h3 class="ofl-h">${esc(label)}</h3>${body}</section>`;
+  function needsYou(d) {
     const O = window.TribeOffice, od = O && O.state(), out = [];
-    for (const x of ((od && od.desks) || []).filter(x => x.kind === 'agent')) for (const a of x.asks || []) if (a.id !== skip) out.push({ a, x });
-    if (!out.length) return '';
-    return `<section class="ofl-sec" id="ao-asks"><h3 class="ofl-h">Waiting for an OK</h3><ul class="ofl-list">${out.map(({ a, x }) => `<li class="ofl-row ofl-ask"><span class="ofl-row-t"><b>${esc(a.title)}</b><small>${esc(x.name)} asks</small></span>
-      ${a.canDecide ? `<span class="ofl-acts"><button type="button" class="btn sm ok" data-ao-ap="approve" data-id="${esc(a.id)}">Approve</button><button type="button" class="btn sm" data-ao-ask="${esc(x.id)}">Ask for changes</button></span>` : '<em class="faint">Waiting for its owner</em>'}</li>`).join('')}</ul></section>`;
+    for (const x of ((od && od.desks) || []).filter(x => x.kind === 'agent')) for (const a of x.asks || []) {
+      out.push(`<div class="ofl-need ofl-ask ad-need"><b class="ofl-need-t">${esc(a.title)}</b><span class="ofl-need-s">${esc(x.name.split(' · ')[0])} asks${x.ownerName ? ` · ${esc(x.ownerName.split(' ')[0])}'s` : ''}</span>
+        <div class="ofl-acts">${a.canDecide ? `<button type="button" class="btn sm primary" data-ao-ap="approve" data-id="${esc(a.id)}">Approve</button><button type="button" class="btn sm" data-ao-ask="${esc(x.id)}">Ask for changes</button>` : '<em class="faint">Waiting for its owner</em>'}
+        <button type="button" class="linkish ofl-see" data-ao-ask="${esc(x.id)}">See the change</button></div></div>`);
+    }
+    for (const i of needsItems(d)) out.push(`<div class="ofl-need ad-need"><b class="ofl-need-t">${esc(i.title)}</b><span class="ofl-need-s">${esc(i.kind)} · ${esc(i.sub)}</span><div class="ofl-acts">${i.acts}</div></div>`);
+    return out.length ? `<section class="ofl-sec" id="ad-needs"><h3 class="ofl-h">Needs you</h3><div class="ofl-needs">${out.join('')}</div></section>` : '';
   }
-  function peopleHtml() {
+  function peopleRows() {
     const O = window.TribeOffice, od = O && O.state(); if (!od || !od.desks) return '';
-    const list = od.desks.filter(x => x.kind === 'person' && x.state !== 'off');
-    if (!list.length) return '';
-    return `<section class="ofl-sec" id="ao-people"><h3 class="ofl-h">People</h3><ul class="ofl-list">${list.map(x => { const l = (O.linesOf(x) || [])[0];
-      return `<li><button type="button" class="ofl-row ofl-who" data-desk="${esc(x.id)}"><span class="ofl-row-t"><b>${esc(x.name)}${x.id === od.me ? ' <span class="faint">(you)</span>' : ''}</b><small>${esc(x.task ? x.task.title : l || O.statusOf(x))}</small></span></button></li>`; }).join('')}</ul></section>`;
+    return od.desks.filter(x => x.kind === 'person' && x.state === 'active' && x.id !== od.me && (x.task || (O.linesOf(x) || [])[0])).map(x => `<article class="fl-lrow"><div class="fl-lline"><button type="button" class="fl-lhead" data-desk="${esc(x.id)}">
+      <span class="fl-lav ofl-pav" aria-hidden="true">${esc(String(x.name || '?').trim()[0].toUpperCase())}</span><span class="fl-lt"><span class="fl-lname"><b>${esc(x.name)}</b></span><span class="fl-ldo">${esc(x.task ? x.task.title : (O.linesOf(x) || [])[0])}</span></span>
+      <span class="fl-lst st-working"><i aria-hidden="true"></i>now</span></button></div></article>`).join('');
   }
-  function doingHtml() {
-    const T = window.TribeTasks, list = (T && T.all ? T.all() : []).filter(t => t.status === 'doing').slice(0, 6);
+  function upNext() {
+    const T = window.TribeTasks, all = T && T.all ? T.all() : [];
+    let list = all.filter(t => t.status === 'doing').slice(0, 5);
+    if (!list.length) list = all.filter(t => t.status === 'todo' || t.status === 'backlog').slice(0, 1);
     if (!list.length) return '';
-    const ms = C.state().members || [], nameOf = id => ((ms.find(m => m.id === id) || {}).name) || '';
-    return `<section class="ofl-sec" id="ao-doing"><h3 class="ofl-h">In progress</h3><ul class="ofl-list">${list.map(t => `<li><button type="button" class="ofl-row" data-ao-task="${esc(t.id)}"><span class="ofl-row-t"><b>${esc(t.title)}</b>${t.assignee ? `<small>${esc(nameOf(t.assignee))}</small>` : ''}</span></button></li>`).join('')}</ul></section>`;
+    const ms = C.state().members || [], nameOf = id => ((ms.find(m => m.id === id) || {}).name || '').split(' · ')[0];
+    return sec('ao-doing', 'Up next', `<ul class="ofl-list">${list.map(t => `<li><button type="button" class="ofl-row" data-ao-task="${esc(t.id)}"><span class="ofl-row-t"><b>${esc(t.title)}</b><small>${esc([t.status === 'doing' ? 'In progress' : 'Next', nameOf(t.assignee)].filter(Boolean).join(' · '))}</small></span></button></li>`).join('')}</ul>`);
+  }
+  function here() {
+    const O = window.TribeOffice, od = O && O.state(); if (!od || !od.desks) return '';
+    const on = od.desks.filter(x => x.kind === 'person' && x.state !== 'off'); if (!on.length) return '';
+    return sec('ao-people', 'Here', `<div class="ofl-here">${on.map(x => `<button type="button" class="ofl-av" data-desk="${esc(x.id)}" data-role="person" title="${esc(x.name)}" aria-label="${esc(x.name)}">${esc(String(x.name || '?').trim()[0].toUpperCase())}</button>`).join('')}<span class="ofl-here-t">${esc(on.map(x => x.name.split(' ')[0] + (x.id === od.me ? ' (you)' : '')).join(', '))}</span></div>`);
+  }
+  function workingNow(d) {
+    const L = window.TribeFleet && window.TribeFleet.list ? window.TribeFleet.list(d.fleet) : { rows: '', spare: '' };
+    const rows = (L.rows || '') + peopleRows();
+    return `<section class="ofl-sec" id="fl-agents"><h3 class="ofl-h">Working now</h3>${rows ? `<div class="fl-lrows">${rows}</div>` : `<p class="ofl-empty">No one’s working right now · <button type="button" class="linkish" data-ao-give>Give someone a task</button></p>`}${L.spare || ''}</section>`;
   }
   function paint(el, d) {
     const F = window.TribeFleet, AO = window.TribeAgentsOffice, FU = window.TribeOfficeFull;
@@ -250,7 +242,6 @@
     const pulse = waits.length ? `<div class="sh-pulse ad-pulse" id="ad-pulse">${waits.slice(0, 4).map(x => `<span class="${esc(x.kind)}">${esc(x.text)}</span>`).join('')}</div>` : '';
     el._d = d; painted = seq;
     const O = window.TribeOffice, os = O && O.state(), stale = d.stale ? `<p class="ad-stale faint" id="ad-stale">${d.stale > 0 ? `The tribe isn't answering right now. This is what was here ${esc(ago(new Date(d.stale).toISOString()))}.` : 'The tribe isn\'t answering right now.'}</p>` : '';
-    const how = F ? `<details class="ad-how" id="ad-how"><summary>How agents work here</summary>${F.how()}</details>` : '';
     // an agent counts once it has connected at least once: making a connect key adds an idle, never-seen agent, which
     // must not flip the page away from the connect flow before anything has joined
     const anyAgent = d.fleet ? (d.fleet.agents || []).some(a => a.everSeen || a.online) : (d.agents || []).some(a => a.online || a.where);
@@ -267,16 +258,13 @@
     if (state === 'off') {
       html = `${stale}<section class="hero-card ad-offcard" id="ad-hero" data-state="off"><span class="eyebrow">Agents</span><h2 class="fl-title">AI helpers are turned off</h2>
         <p class="fl-lead">No agent can work in this tribe until they are turned back on. Connections and keys are kept.</p>
-        ${os.canSet ? '<div class="fl-acts"><button class="btn primary" id="ad-agents-on">Turn agents back on</button></div>' : '<p class="faint">The host or an admin can turn them back on.</p>'}</section>${peopleHtml()}${doingHtml()}`;
+        ${os.canSet ? '<div class="fl-acts"><button class="btn primary" id="ad-agents-on">Turn agents back on</button></div>' : '<p class="faint">The host or an admin can turn them back on.</p>'}</section>${upNext()}${here()}`;
     } else if (state === 'connect') {
       // the empty state says what to do: add an AI helper, and the four loops (a friend, where it runs, privacy, backup)
       html = `${stale}${AO.addAi('ad-hero')}<p class="ad-waiting faint" id="ad-waiting"><i class="ad-pulse-dot"></i>Waiting for an AI helper to connect… this page changes by itself when it does.</p>
-        ${peopleHtml()}${doingHtml()}${AO.setup()}${how}`;
+        ${upNext()}${here()}${AO.setup()}`;
     } else {
-      // the next step first (it may be an approval, with Approve right there); the other asks for an OK under it
-      const top = ((d.fleet && d.fleet.next) || [])[0], asks = asksHtml(top && top.kind === 'approval' ? top.approval : null);
-      const hero = F ? F.hero(d.fleet) : '';
-      html = `${stale}${asks}${hero}${needsCard(d)}${F ? F.rows(d.fleet, { after: pulse }) : heroCard(d)}${peopleHtml()}${doingHtml()}${how}
+      html = `${stale}${needsYou(d)}${workingNow(d)}${upNext()}${here()}${pulse}
         <p class="ad-more"><button class="linkish" id="ad-views" type="button" aria-haspopup="menu">More views: ownership, reviews, hand-offs…</button></p>`;
     }
     FU.work(html);
@@ -312,6 +300,7 @@
     if (b && b.dataset.adAp) return run(async () => { const v = b.dataset.adAp; await C.api(`/approvals/${encodeURIComponent(b.dataset.id)}/${v}`, { method: 'POST', body: {} }); resolve(b, v === 'approve' ? 'Approved' : 'Denied'); setTimeout(refresh, 3200); });
     if (b && b.dataset.aoAp) return run(async () => { await C.api(`/approvals/${encodeURIComponent(b.dataset.id)}/approve`, { method: 'POST', body: {} }); const li = b.closest('.ofl-ask'); if (li) li.remove(); toast('Approved'); if (window.TribeOffice) window.TribeOffice.refresh(); });
     if (b && b.dataset.aoAsk) return window.TribeOffice && window.TribeOffice.openCard(b.dataset.aoAsk);
+    if (b && 'aoGive' in b.dataset) { const bx = window.TribeOfficeFull && window.TribeOfficeFull.box(); if (bx) bx.fill('@'); return; }
     if (b && b.dataset.aoTask) return window.TribeTasks && window.TribeTasks.open && window.TribeTasks.open(b.dataset.aoTask);
     if (b && b.closest('#ao-work') && b.dataset.desk) return window.TribeOffice && window.TribeOffice.openCard(b.dataset.desk);
     if (b && b.hasAttribute('data-ad-sync')) return run(async () => { const r = await C.api('/coord/conflicts/sync', { method: 'POST', body: { a: b.dataset.a, b: b.dataset.b } }); cfCache.at = 0; resolve(b, `Asked ${r.asked.join(' and ')} to sync`); setTimeout(refresh, 300); });

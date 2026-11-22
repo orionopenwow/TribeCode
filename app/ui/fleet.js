@@ -12,7 +12,7 @@
 // "Open in tribe"; nothing switches project by itself.
 // Server: GET /api/agents/fleet[?scope=all], POST /api/agents/fleet/<id>/task, POST /api/agents/channel { to },
 // POST /api/agents { kind, label } (keys), POST /api/coord/agents/<id>/control, DELETE /api/agents/mine?id=.
-//   window.TribeFleet = { render, load, hero, rows, how, wire, openAgent, copy, state }
+//   window.TribeFleet = { render, load, hero, rows, list, how, wire, openAgent, copy, state }
 (function () {
   'use strict';
   const C = window.TribeClient;
@@ -62,7 +62,7 @@
   const st = {
     tab: (() => { try { const t = localStorage.getItem(LS); return TABS.some(x => x[0] === t) ? t : 'claude-code'; } catch { return 'claude-code'; } })(),
     place: '', keys: {}, minting: {}, test: {}, stay: false,
-    open: {}, drafts: {}, cmd: {}, data: null, scope: 'project',
+    open: {}, drafts: {}, cmd: {}, more: {}, compact: false, data: null, scope: 'project',
   };
   const keyFor = kind => st.keys[`${pidNow()}:${kind}`];
 
@@ -155,7 +155,7 @@
     if (a.status === 'paused') return `Paused${a.control && a.control.seen === false ? ' · not seen yet' : ''}`;
     return `${STATUS[a.status]} · ${a.lastSeen ? ago(a.lastSeen) : 'now'}`;
   }
-  function rowHtml(a, d) {
+  function rowHtml(a, d, compact) {
     const can = d.you && d.you.canAct, steer = a.yours || (d.you && d.you.host);
     const open = st.open[a.id];
     const owner = a.yours ? 'Yours' : `${a.ownerName}'s`;
@@ -170,6 +170,7 @@
       a.yours ? btn('cmd', 'Connect command') : '',
       a.yours ? btn('remove', 'Remove', 'quiet') : '',
     ].join('');
+    if (compact) return listRow(a, d, acts, open);
     return `<article class="fl-row s-${esc(a.status)}" data-fl-agent="${esc(a.id)}" tabindex="0" aria-label="${esc(a.name)}, ${esc(statusText(a))}">
       <div class="fl-r-top"><span class="fl-glyph">${glyph(a.kind)}</span>
         <div class="fl-id"><b>${esc(a.name)}</b><span>${esc(owner)} · ${esc(a.kindLabel)}${d.scope === 'all' && a.projectName ? ` · ${esc(a.projectName)}` : ''}${a.tokens ? ` · ${esc(kfmt(a.tokens))} tokens` : ''}</span></div>
@@ -177,6 +178,32 @@
       ${now}${files}${recent}
       ${acts ? `<div class="fl-r-acts">${acts}</div>` : ''}
       ${open ? `<div class="fl-drawer">${drawer(a, open, d)}</div>` : ''}</article>`;
+  }
+  // Agents & office's Working on: one calm line per AI helper ("Claude  Camp's", what it is doing in plain words, a live
+  // dot and when). A click on the line or ⋯ opens it in place: its task, files, last steps and every action.
+  const base = f => String(f || '').split('/').filter(Boolean).pop() || f;
+  const plain = t => String(t || '').replace(/\btask\/t-[\w-]+/gi, '').replace(/\s*\((?:the|a)\b[^)]*\)?\s*$/i, '').replace(/^Claimed\s+/i, 'Working on ').replace(/\s{2,}/g, ' ').trim();
+  const since = iso => { const s = (Date.now() - Date.parse(iso)) / 1000; if (!Number.isFinite(s) || s < 90) return 'now'; if (s < 3600) return `${Math.round(s / 60)} min`; if (s < 86400) return `${Math.round(s / 3600)} h`; return `${Math.round(s / 86400)} d`; };
+  function doingLine(a) {
+    const f = (a.files || [])[0];
+    if (a.status === 'paused') return 'Paused';
+    if (a.task) return [plain(a.task.title), f ? base(f) : ''].filter(Boolean).join(' · ');
+    if (f) return `Working on ${base(f)}`;
+    const r = (a.recent || [])[0]; if (r && a.status === 'working') return plain(r.text);
+    return a.status === 'offline' ? (a.lastSeen ? 'Away' : 'Not connected yet') : a.status === 'idle' ? 'Waiting for a task' : 'Working';
+  }
+  function listRow(a, d, acts, open) {
+    const on = !!st.more[a.id] || !!open, [nm] = String(a.name).split(' · ');
+    const who = a.yours ? 'yours' : a.ownerName ? `${a.ownerName.split(' ')[0]}'s` : '';
+    const files = (a.files || []).length ? `<div class="fl-lk"><span>Files</span><span class="fl-files">${a.files.slice(0, 4).map(f => `<code title="${esc(f)}">${esc(base(f))}</code>`).join('')}${a.files.length > 4 ? `<span class="fl-n">+${a.files.length - 4}</span>` : ''}</span></div>` : '';
+    const steps = (a.recent || []).length ? `<ol class="fl-recent" aria-label="Last things it did">${a.recent.slice(0, 3).map(x => `<li><span>${esc(plain(x.text))}</span><time>${esc(since(x.at))}</time></li>`).join('')}</ol>` : '';
+    return `<article class="fl-lrow s-${esc(a.status)}${on ? ' open' : ''}" data-fl-agent="${esc(a.id)}">
+      <div class="fl-lline"><button type="button" class="fl-lhead" data-fl-expand="${esc(a.id)}" aria-expanded="${on}"><span class="fl-lav" aria-hidden="true">${glyph(a.kind, 18)}</span>
+        <span class="fl-lt"><span class="fl-lname"><b>${esc(nm)}</b>${who ? `<small>${esc(who)}</small>` : ''}</span><span class="fl-ldo">${esc(doingLine(a))}</span></span>
+        <span class="fl-lst st-${esc(a.status)}"><i aria-hidden="true"></i>${esc(a.status === 'offline' ? (a.lastSeen ? since(a.lastSeen) : '') : since(a.lastSeen))}</span></button>
+        <button type="button" class="fl-lmore" data-fl-expand="${esc(a.id)}" aria-label="More for ${esc(a.name)}" title="More">⋯</button></div>
+      ${on ? `<div class="fl-lbody">${a.task ? `<div class="fl-lk"><span>Task</span><b>${esc(plain(a.task.title))}</b></div>` : ''}${files}${steps}
+        ${acts ? `<div class="fl-r-acts">${acts}</div>` : ''}${open ? `<div class="fl-drawer">${drawer(a, open, d)}</div>` : ''}</div>` : ''}</article>`;
   }
   function drawer(a, mode, d) {
     const v = esc(st.drafts[`${a.id}:${mode}`] || '');
@@ -196,6 +223,16 @@
     }
     return '';
   }
+  // Working on (agentsdash.js): the list rows only, and the keys that never connected as one quiet line
+  function list(d) {
+    if (!d) return '';
+    const all = d.agents || [], unused = all.filter(a => a.yours && !a.everSeen && !a.task && !st.open[a.id]);
+    st.compact = true;
+    const rowsH = all.filter(a => !unused.includes(a)).map(a => rowHtml(a, d, true)).join('');
+    const spare = unused.length ? `<details class="fl-unused" id="fl-unused"${st.unusedOpen ? ' open' : ''}><summary>${unused.length} key${unused.length === 1 ? '' : 's'} you made that never connected</summary>
+      <ul>${unused.map(a => `<li><span>${glyph(a.kind, 15)}${esc(a.name)} <small>${esc(a.kindLabel)}</small></span><span class="fl-u-acts"><button type="button" class="btn fl-b" data-fl-act="cmd" data-id="${esc(a.id)}">Connect command</button><button type="button" class="btn fl-b quiet" data-fl-act="remove" data-id="${esc(a.id)}">Remove</button></span></li>`).join('')}</ul></details>` : '';
+    return { rows: rowsH, spare, n: all.length - unused.length };
+  }
   function rows(d, opts = {}) {
     if (!d) return '';
     const all = d.agents || [];
@@ -209,7 +246,7 @@
     if (!list.length) return `<section class="fl-sec" id="fl-agents"><div class="sec-head"><span class="eyebrow">${d.scope === 'all' ? 'Yours, in every project' : 'Agents'}</span><h2>None connected yet</h2></div>${spare}</section>`;
     const eyebrow = d.scope === 'all' ? 'Yours, in every project' : 'Agents';
     return `<section class="fl-sec" id="fl-agents"><div class="sec-head"><span class="eyebrow">${eyebrow}</span><h2>${list.length} agent${list.length === 1 ? '' : 's'}${working ? ` · ${working} working` : ''}</h2></div>
-      <div class="fl-rows">${list.map(a => rowHtml(a, d)).join('')}</div>${heroState(d) === 'connect' ? '' : spare}${opts.after || ''}</section>`;
+      <div class="fl-rows">${list.map(a => rowHtml(a, d, (st.compact = !!opts.compact))).join('')}</div>${heroState(d) === 'connect' ? '' : spare}${opts.after || ''}</section>`;
   }
 
   // ---------- how agents work here: 4 steps, each with a small flat picture of the real thing ----------
@@ -249,7 +286,7 @@
     root.addEventListener('submit', e => { const f = e.target.closest && e.target.closest('[data-fl-form]'); if (!f) return; e.preventDefault(); submit(root, f); });
     root.addEventListener('keydown', e => { if (e.key === 'Enter' && e.target.matches && e.target.matches('[data-fl-agent]')) openAgent(e.target.dataset.flAgent); });
     root.addEventListener('click', e => click(root, e));
-    root.addEventListener('toggle', e => { if (e.target.id === 'fl-unused') st.unusedOpen = e.target.open; }, true);
+    root.addEventListener('toggle', e => { if (e.target.id === 'fl-unused') st.unusedOpen = e.target.open; if (e.target.dataset && e.target.dataset.flMore) st.more[e.target.dataset.flMore] = e.target.open; }, true);
   }
   const O = root => root.__flOpts || {};
   const reload = root => { const o = O(root); if (o.reload) o.reload(); };
@@ -261,7 +298,7 @@
   function paintRow(root, id) {
     const a = find(id), el = root.querySelector(`[data-fl-agent="${CSS.escape(id)}"]`);
     if (!a || !el) return;
-    const tmp = document.createElement('div'); tmp.innerHTML = rowHtml(a, st.data); el.replaceWith(tmp.firstElementChild);
+    const tmp = document.createElement('div'); tmp.innerHTML = rowHtml(a, st.data, st.compact && !!el.closest('.ofl-work')); el.replaceWith(tmp.firstElementChild);
     const inp = root.querySelector(`[data-fl-agent="${CSS.escape(id)}"] .fl-form input`); if (inp) inp.focus({ preventScroll: true });
   }
 
@@ -318,6 +355,7 @@
         .then(r => { st.cmd[a.id] = r; paintRow(root, a.id); }, err => { toast(err.message); b.disabled = false; });
       return;
     }
+    if (b && b.dataset.flExpand) { const id = b.dataset.flExpand; st.more[id] = !st.more[id]; if (!st.more[id]) st.open[id] = null; paintRow(root, id); const h = root.querySelector(`[data-fl-agent="${CSS.escape(id)}"] .fl-lhead`); if (h) h.focus({ preventScroll: true }); return; }
     if (b && b.dataset.flRowcopy) { const pre = root.querySelector(`[data-fl-rowcmd="${CSS.escape(b.dataset.flRowcopy)}"]`); if (pre) copy(pre.textContent).then(ok => copied(ok)); return; }
     if (b && b.dataset.flAct) {
       const a = find(b.dataset.id), mode = b.dataset.flAct; if (!a) return;
@@ -389,5 +427,5 @@
     catch (e) { if (n === seq) { const h = el.querySelector('.fl-hero .fl-title'); if (h) h.textContent = 'The fleet could not load'; toast(e.message); } }
   }
 
-  window.TribeFleet = { render, load, hero, rows, how, wire, openAgent, copy, state: () => st, setData: d => { st.data = d; } };
+  window.TribeFleet = { render, load, hero, rows, list, how, wire, openAgent, copy, state: () => st, setData: d => { st.data = d; } };
 })();
