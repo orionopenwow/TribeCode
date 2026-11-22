@@ -202,12 +202,18 @@
   // Working on, in one order: Needs you (only when something does) → Working now → Up next → Here.
   const sec = (id, label, body) => `<section class="ofl-sec" id="${id}"><h3 class="ofl-h">${esc(label)}</h3>${body}</section>`;
   function needsYou(d) {
-    const O = window.TribeOffice, od = O && O.state(), out = [];
+    const O = window.TribeOffice, od = O && O.state(), out = [], seen = new Set();
+    // the fleet knows the approvals you may decide as the host too (Approve / Deny through its own route)
+    const fl = new Map(((d.fleet && d.fleet.next) || []).filter(n => n.kind === 'approval').map(n => [n.approval, n]));
+    const card = (title, who, agentId, acts) => `<div class="ofl-need ofl-ask ad-need"><b class="ofl-need-t">${esc(title)}</b><span class="ofl-need-s">${esc(who)}</span>
+        <div class="ofl-acts">${acts}${agentId ? `<button type="button" class="linkish ofl-see" data-ao-ask="${esc(agentId)}">See the change</button>` : ''}</div></div>`;
     for (const x of ((od && od.desks) || []).filter(x => x.kind === 'agent')) for (const a of x.asks || []) {
-      out.push(`<div class="ofl-need ofl-ask ad-need"><b class="ofl-need-t">${esc(a.title)}</b><span class="ofl-need-s">${esc(x.name.split(' · ')[0])} asks${x.ownerName ? ` · ${esc(x.ownerName.split(' ')[0])}'s` : ''}</span>
-        <div class="ofl-acts">${a.canDecide ? `<button type="button" class="btn sm primary" data-ao-ap="approve" data-id="${esc(a.id)}">Approve</button><button type="button" class="btn sm" data-ao-ask="${esc(x.id)}">Ask for changes</button>` : '<em class="faint">Waiting for its owner</em>'}
-        <button type="button" class="linkish ofl-see" data-ao-ask="${esc(x.id)}">See the change</button></div></div>`);
+      seen.add(a.id);
+      const f = fl.get(a.id), who = `${x.name.split(' · ')[0]} asks${x.ownerName ? ` · ${x.ownerName.split(' ')[0]}'s` : ''}`;
+      out.push(card(a.title, who, x.id, a.canDecide ? `<button type="button" class="btn sm primary" data-ao-ap="approve" data-id="${esc(a.id)}">Approve</button><button type="button" class="btn sm" data-ao-ask="${esc(x.id)}">Ask for changes</button>`
+        : f ? `<button type="button" class="btn sm primary" data-fl-ap="approve" data-id="${esc(f.approval)}" data-pj="${esc(f.project || '')}">Approve</button><button type="button" class="btn sm" data-fl-ap="deny" data-id="${esc(f.approval)}" data-pj="${esc(f.project || '')}">Deny</button>` : '<em class="faint">Waiting for its owner</em>'));
     }
+    for (const [id, f] of fl) if (!seen.has(id)) out.push(card(f.sub || f.title, f.title, f.agent, `<button type="button" class="btn sm primary" data-fl-ap="approve" data-id="${esc(id)}" data-pj="${esc(f.project || '')}">Approve</button><button type="button" class="btn sm" data-fl-ap="deny" data-id="${esc(id)}" data-pj="${esc(f.project || '')}">Deny</button>`));
     for (const i of needsItems(d)) out.push(`<div class="ofl-need ad-need"><b class="ofl-need-t">${esc(i.title)}</b><span class="ofl-need-s">${esc(i.kind)} · ${esc(i.sub)}</span><div class="ofl-acts">${i.acts}</div></div>`);
     return out.length ? `<section class="ofl-sec" id="ad-needs"><h3 class="ofl-h">Needs you</h3><div class="ofl-needs">${out.join('')}</div></section>` : '';
   }

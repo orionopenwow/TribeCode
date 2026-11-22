@@ -202,7 +202,7 @@
         <span class="fl-lt"><span class="fl-lname"><b>${esc(nm)}</b>${who ? `<small>${esc(who)}</small>` : ''}</span><span class="fl-ldo">${esc(doingLine(a))}</span></span>
         <span class="fl-lst st-${esc(a.status)}"><i aria-hidden="true"></i>${esc(a.status === 'offline' ? (a.lastSeen ? since(a.lastSeen) : '') : since(a.lastSeen))}</span></button>
         <button type="button" class="fl-lmore" data-fl-expand="${esc(a.id)}" aria-label="More for ${esc(a.name)}" title="More">⋯</button></div>
-      ${on ? `<div class="fl-lbody">${a.task ? `<div class="fl-lk"><span>Task</span><b>${esc(plain(a.task.title))}</b></div>` : ''}${files}${steps}
+      ${on ? `<div class="fl-lbody"><div class="fl-lk"><span>Tool</span><span>${esc(a.kindLabel || '')}${a.tokens ? ` · ${esc(kfmt(a.tokens))} tokens` : ''}</span></div>${a.task ? `<div class="fl-lk"><span>Task</span><b>${esc(plain(a.task.title))}</b></div>` : ''}${files}${steps}
         ${acts ? `<div class="fl-r-acts">${acts}</div>` : ''}${open ? `<div class="fl-drawer">${drawer(a, open, d)}</div>` : ''}</div>` : ''}</article>`;
   }
   function drawer(a, mode, d) {

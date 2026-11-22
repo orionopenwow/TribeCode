@@ -167,13 +167,13 @@ def main():
             mcp(mag["token"], "my_lane", {})
             host.evaluate("TribeShell.go('agents')"); host.wait_for_selector(f"#view-coord:not(.hidden) #fl-agents [data-fl-agent='{cid}']", timeout=10000)
             row = f"#view-coord #fl-agents [data-fl-agent='{cid}']"
-            wait_text(host, row, "Working"); wait_text(host, row, "src/game.js"); wait_text(host, row, "On the title screen now")
-            wait_text(host, row, "Claude Code"); wait_text(host, row, "Yours")
+            # feat/office-full: Working on's calm line ("Claude  yours", what it is doing); a click opens it in place
+            wait_text(host, row, "game.js"); wait_text(host, row, "yours")
+            host.click(f"{row} .fl-lhead"); wait_text(host, row, "On the title screen now")
             mrow = f"#view-coord #fl-agents [data-fl-agent='{mag['agent']['id']}']"
-            wait_text(host, mrow, "Maya's"); wait_text(host, mrow, "Idle")
-            assert host.evaluate("[...document.querySelectorAll('.hero-card')].filter(e => e.offsetParent).length") == 1
+            wait_text(host, mrow, "Maya's"); wait_text(host, mrow, "Waiting for a task")
+            assert host.evaluate("[...document.querySelectorAll('#ao-work .hero-card')].filter(e => e.offsetParent).length") == 0, "no next-step card repeating the rows"
             # the keys made while browsing the tabs (never connected) fold into one quiet line, not 5 rows
-            wait_text(host, "#view-coord #fl-agents h2", "2 agents")
             wait_text(host, "#view-coord #fl-unused summary", "5 keys you made that never connected")
             host.click("#view-coord #fl-unused summary")
             host.once("dialog", lambda dlg: dlg.accept())
@@ -181,10 +181,11 @@ def main():
             wait_text(host, "#view-coord #fl-unused summary", "4 keys", 10000)
             assert mcp_raw(keys["codex"]["token"], "my_lane")[0] == 401, "Remove revoked the key"
             for a in ["msg", "task", "pause", "cmd", "remove"]: assert host.locator(f"{row} [data-fl-act='{a}']").count() == 1, a
+            host.click(f"{mrow} .fl-lhead"); host.wait_for_selector(f"{mrow} .fl-lbody", timeout=5000)
             assert host.locator(f"{mrow} [data-fl-act='remove']").count() == 0, "only your own agents can be removed here"
             # Give a task: on the board, assigned, and the agent hears about it
             host.click(f"{row} [data-fl-act='task']"); host.fill(f"{row} [data-fl-form='task'] input", "Add a title screen"); host.press(f"{row} [data-fl-form='task'] input", "Enter")
-            host.wait_for_function("([s]) => { const e = document.querySelector(s); return e && e.innerText.includes('Add a title screen') && e.innerText.includes('task/'); }", arg=[row], timeout=10000)
+            host.wait_for_function("([s]) => { const e = document.querySelector(s); return e && e.innerText.includes('Add a title screen') && !e.innerText.includes('task/'); }", arg=[row], timeout=10000)
             t = [x for x in ok(api("/tasks", token=token, project=pid))["tasks"] if x["title"] == "Add a title screen"][0]
             assert t["assignee"] == cid, t
             # Message
@@ -196,17 +197,15 @@ def main():
             host.click(f"{row} [data-fl-act='pause']"); host.wait_for_selector(f"{row}.s-paused [data-fl-act='resume']", timeout=8000)
             wait_text(host, row, "Paused")
             inbox = text_of(mcp(ctok, "check_messages")); assert "PAUSE" in inbox, inbox
-            assert host.evaluate("document.querySelector('#ad-hero').dataset.next") == "paused", "your paused agent is the next step"
             host.click(f"{row} [data-fl-act='resume']"); host.wait_for_selector(f"{row}:not(.s-paused) [data-fl-act='pause']", timeout=8000)
             inbox = text_of(mcp(ctok, "check_messages")); assert "RESUME" in inbox, inbox
             # an agent waiting for an approval is the next step; Approve right there
             ap = json.loads(text_of(mcp(mag["token"], "request_approval", {"title": "Drop the old save format", "details": "Migrates saves.", "risk": "high"})))
             host.evaluate("TribeCoord.refresh()")
-            host.wait_for_function("() => { const h = document.querySelector('#ad-hero'); return h && h.dataset.next === 'approval'; }", timeout=10000)
-            wait_text(host, "#ad-hero", "Claude · Maya is waiting for an approval"); wait_text(host, "#ad-hero", "Drop the old save format")
+            wait_text(host, "#ad-needs", "Drop the old save format")   # Needs you, first in Working on, with Approve right there
             host.mouse.move(700, 880); shot(host, "fleet-agents")
-            host.click("#ad-hero [data-fl-ap='approve']")
-            host.wait_for_function("() => document.querySelector('#ad-hero') && document.querySelector('#ad-hero').dataset.next !== 'approval'", timeout=10000)
+            host.click("#ad-needs .ad-need:has-text('Drop the old save format') :is([data-ao-ap='approve'], [data-fl-ap='approve'])")
+            host.wait_for_function("() => !document.querySelector('#ad-needs') || !document.querySelector('#ad-needs').innerText.includes('Drop the old save format')", timeout=10000)
             assert "approved" in text_of(mcp(mag["token"], "check_approval", {"id": ap["id"]})).lower()
             # Connect command: a new key, the old one stops working
             host.click(f"{row} [data-fl-act='cmd']"); host.click(f"{row} [data-fl-rotate]")
@@ -217,7 +216,9 @@ def main():
             host.click(f"{row} [data-fl-rowcopy]"); host.wait_for_function("t => window.__copied[window.__copied.length - 1] === t", arg=host.evaluate(f"document.querySelector(\"{row} [data-fl-rowcmd]\").textContent"))
             assert mcp_raw(ctok, "my_lane")[0] == 401, "the old key stopped working"
             mcp(ntok, "my_lane")
-            assert host.locator("#fl-how .fl-step").count() == 4
+            host.click("#ao-more"); host.click("#ao-menu [data-aom='how']"); host.wait_for_selector("#ao-how-sheet #fl-how", timeout=5000)   # How AI helpers work: in the ⋯ menu
+            assert host.locator("#ao-how-sheet #fl-how .fl-step").count() == 4
+            host.keyboard.press("Escape")
 
             # ---- 5. the global fleet: your agents in every project; a tap previews, never switches by itself
             host.evaluate("TribeHub.open('home')"); host.wait_for_selector("#nest-fleet", timeout=10000); host.click("#nest-fleet")
@@ -229,7 +230,7 @@ def main():
             host.wait_for_timeout(600)
             assert host.evaluate("document.body.dataset.view") == "agents-hub" and host.evaluate("document.body.dataset.scope") == "global", "no jump into the tribe"
             host.click("#preview-actions [data-pa='0']")
-            host.wait_for_selector("#view-coord:not(.hidden) #ad-hero", timeout=10000)
+            host.wait_for_selector("#view-coord:not(.hidden) #fl-agents", timeout=10000)
 
             # ---- 6. phone, 390px
             ph = b.new_context(viewport={"width": 390, "height": 844}, is_mobile=True, has_touch=True, device_scale_factor=2)
@@ -242,11 +243,10 @@ def main():
             prow = f"#view-coord #fl-agents [data-fl-agent='{cid}']"
             def no_sideways():
                 assert phone.evaluate("document.documentElement.scrollWidth <= innerWidth + 1"), phone.evaluate("document.documentElement.scrollWidth")
-                boxes = phone.evaluate("[...document.querySelectorAll('.fl-row, .fl-hero, .fl-step, .ad-card')].filter(e => e.offsetParent).map(c => { const r = c.getBoundingClientRect(); return [r.left, r.right]; })")
+                boxes = phone.evaluate("[...document.querySelectorAll('.fl-row, .fl-lrow, .fl-hero, .fl-step, .ad-card')].filter(e => e.offsetParent).map(c => { const r = c.getBoundingClientRect(); return [r.left, r.right]; })")
                 assert boxes and all(l >= -0.5 and r <= 390.5 for l, r in boxes), boxes
             no_sideways()
-            steps = phone.evaluate("[...document.querySelectorAll('#fl-how .fl-step')].map(e => Math.round(e.getBoundingClientRect().left))")
-            assert len(set(steps)) == 1, ("steps stack", steps)
+            if not phone.locator(f"{prow} .fl-lbody").count(): phone.click(f"{prow} .fl-lhead")
             phone.click(f"{prow} [data-fl-act='cmd']"); phone.click(f"{prow} [data-fl-rotate]"); phone.wait_for_selector(f"{prow} [data-fl-rowcmd]", timeout=8000)
             phone.click(f"{prow} [data-fl-rowcopy]")
             phone.wait_for_function("() => window.__copied.length && window.__copied[0].includes('claude mcp add')", timeout=5000)

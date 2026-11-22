@@ -21,11 +21,13 @@ In a project the page is the office, full size (`app/ui/officefull.js`):
    What's private and Back up to GitHub. A click on someone at a desk, on the floor or on an avatar opens the same card
    (`TribeOffice.openCard`: Message, Call, Give a task, Open what they're working on, Profile; for AI helpers Approve /
    Ask for changes, Pause, its page). A task given to an AI helper goes through the fleet's route, so it hears at once.
-3. **The side panel** (folds to an icon rail; a bottom sheet on phones): **Working on** (what waits for an OK, with
-   Approve right there; the next step; one row per AI helper; the people here; tasks in progress; with no AI helper yet,
-   Add an AI helper and the four loops: a friend, where it runs, what's private, GitHub), **Preview** (the project's app
-   and website, live, in tabs) and **Updates** (what happened, newest first, with #agents).
-4. **The box**: one pill over the bottom of the floor. Plain words go to #general (they show in Messages);
+3. **The side panel** (folds to an icon rail; a bottom sheet on phones): **Working on** in one order: Needs you
+   (approvals and other asks, with Approve right there; only when there are any), Working now (one line per person or AI
+   helper: "Claude  yours", what it is doing in plain words, a live dot; a click opens it with its task, files and
+   actions), Up next (tasks in progress, or the next one) and Here (who is online). With no AI helper yet: Add an AI
+   helper and the four loops (a friend, where it runs, what's private, GitHub). **Preview** (the project's app and
+   website, live, in tabs) and **Updates** (what happened, newest first, with #agents). How AI helpers work is in ⋯.
+4. **The box**: the Messages composer (same shape, size and buttons), floating over the bottom of the floor. Plain words go to #general (they show in Messages);
    "@claude do X" gives that AI helper a task; "@agents …" writes to #agents; "/" lists the commands (/task, /ai, /invite,
    /flint, /look, /where); "add claude" opens Claude's one setup; a request Flint knows ("invite a friend", "make the
    website darker", "what's everyone doing?") runs in Flint, with no AI needed. Replies show above it for a moment.
@@ -42,7 +44,11 @@ drawn at a whole-number pixel zoom. In Agents & office the camera picks the bigg
 looks where people are, and more building (hall floor) is drawn around the office so the art reaches every edge; + and −
 zoom, drag looks around, and Fit in ⋯ puts it back.
 
-Everyone has a character:
+Everyone has a character, with a name tag over their head: a pixel plate at the floor's zoom with a colour notch for
+the role (an AI helper's tool, Flint's flame, a person's presence), "Claude" with "Camp's" small for AI helpers, and a
+pixel pointer down to the head; tags never overlap.
+
+The characters:
 
 - **People** are dressed from Pixel Agents' wardrobe: body, skin, hair and hair colour, top, bottoms, shoes, a jacket, an
   outfit (suits and dresses), a beard, a hat and an extra (glasses, shades, earrings, a necklace, a watch, a lanyard),

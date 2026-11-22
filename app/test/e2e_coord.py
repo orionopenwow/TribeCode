@@ -314,9 +314,9 @@ def ui_host(b, host, orion, maya, pq, b1):
         # Agents Hub: one dashboard (feat/agents-dash); deep views open as temporary tabs or pinned from "+"
         # Agents & office (v0.46): one page; the tab row only shows once a deep view is pinned (e2e_nav covers it)
         host.click("#nest-ws-agents")
-        host.wait_for_selector("#view-coord:not(.hidden) #ad-hero")
-        wait_text(host, "#fl-agents", "Claude · Orion")   # feat/fleet: one row per agent under the next-step hero
-        wait_text(host, "#fl-agents", "12k")
+        host.wait_for_selector("#view-coord:not(.hidden) #fl-agents")
+        wait_text(host, "#fl-agents", "Claude")   # feat/office-full: one calm line per agent in Working on; a click opens it
+        host.click("#fl-agents [data-fl-agent] .fl-lhead"); wait_text(host, "#fl-agents", "12k")
         # feat/office-full: #agents shows in the side panel's Updates; "@agents …" in the box at the bottom writes there
         host.click("#ofl-tab-updates"); wait_text(host, "#ao-updates", "Polish bridge sprites")
         host.fill("#ao-box .fl-in", "@agents nice work"); host.press("#ao-box .fl-in", "Enter"); wait_text(host, "#ao-updates", "nice work")

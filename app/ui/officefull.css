@@ -32,6 +32,8 @@
 .ofl[data-view="floor"] #ao-floor .of-space, .ofl[data-view="floor"] #ao-floor .os { height: 100%; }
 .os-fill { grid-template-rows: minmax(0, 1fr); gap: 0; }
 .os-fill .os-stage { height: 100%; max-height: none; min-height: 0; border: 0; border-radius: 0; }
+/* the card, the wardrobe and the layout editor stay above the box at the bottom */
+.ofl .os-fill .os-card, .ofl .os-fill .os-edit, .ofl .os-fill .os-look { top: 56px; max-height: calc(100% - 56px - 92px); }
 .ofl:not([data-view="floor"]) #ao-floor { overflow: auto; padding: 56px 16px 84px; }
 .ofl #ao-floor .of-off { display: grid; justify-items: start; gap: 10px; }
 

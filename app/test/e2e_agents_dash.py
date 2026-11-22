@@ -131,10 +131,9 @@ def main():
             ok(api("/coord/lanes", "POST", {"area": "src/ui/", "owner": mid}, token=token, project=pid), "lane")
             host.evaluate("TribeCoord.refresh()")
             host.wait_for_selector("#fl-agents [data-fl-agent]")
-            wait_text(host, "#fl-agents", "Claude · Maya"); wait_text(host, "#fl-agents h2", "1 agent")
-            wait_text(host, "#ad-hero", "Claude · Maya is waiting for an approval")
+            wait_text(host, "#fl-agents", "Maya's")   # feat/office-full: Working on's calm line ("Claude  Maya's")
             wait_text(host, "#ad-needs", "Speed boots"); wait_text(host, "#ad-needs", "Campfire save points")
-            wait_text(host, "#ad-needs", "2 things need you")
+            assert host.locator("#ad-needs .ad-need").count() >= 2   # Needs you, first in Working on
             host.wait_for_selector("#ao-box .fl-in")   # feat/office-full: talking to agents is the box at the bottom ("@name …")
             assert host.locator("#ad-today").count() == 0 or host.locator("#ad-today .ad-plan").count() > 0, "Today only with a plan"
             host.mouse.move(720, 860); shot(host, "agents-dash")
@@ -150,7 +149,7 @@ def main():
             # who owns what is a full view (as a temporary tab)
             host.evaluate("TribeCoord.open('ownership')"); host.wait_for_function("TribeCoord.tab() === 'ownership'")
             host.wait_for_selector("#wt-ownership.on .wt-x.temp"); wait_text(host, "#coord-body", "src/ui/")
-            host.click("#wt-agents"); host.wait_for_selector("#ad-hero")
+            host.click("#wt-agents"); host.wait_for_selector("#fl-agents")
             assert tabs(host) == [], tabs(host)   # p10: one tab, no tab row
 
             # ---- + pins a tab; it stays across a reload; × unpins it
@@ -161,17 +160,17 @@ def main():
             host.click("#ad-menu [data-ad-pin='reviews']"); host.wait_for_function("TribeCoord.tab() === 'reviews'")
             assert host.locator("#ad-menu").count() == 0
             host.wait_for_selector("#wt-reviews.on"); assert host.locator("#wt-reviews .wt-x.temp").count() == 0
-            host.click("#wt-agents"); host.wait_for_selector("#ad-hero")
+            host.click("#wt-agents"); host.wait_for_selector("#fl-agents")
             assert tabs(host) == ["Dashboard", "Reviews"], tabs(host)
             host.reload(); host.wait_for_function("TribeClient.connected()")
-            host.evaluate("TribeShell.go('agents')"); host.wait_for_selector("#view-coord:not(.hidden) #ad-hero")
+            host.evaluate("TribeShell.go('agents')"); host.wait_for_selector("#view-coord:not(.hidden) #fl-agents")
             host.wait_for_function("[...document.querySelectorAll('#view-tabs [data-tab]')].length === 2")
             assert tabs(host) == ["Dashboard", "Reviews"], tabs(host)
             host.hover("#wt-reviews"); host.click("#wt-reviews .wt-x")
             host.wait_for_function("!document.querySelector('#wt-reviews')")
             assert tabs(host) == [], tabs(host)   # p10: one tab, no tab row
             host.reload(); host.wait_for_function("TribeClient.connected()")
-            host.evaluate("TribeShell.go('agents')"); host.wait_for_selector("#view-coord:not(.hidden) #ad-hero")
+            host.evaluate("TribeShell.go('agents')"); host.wait_for_selector("#view-coord:not(.hidden) #fl-agents")
             assert tabs(host) == [], tabs(host)   # p10: one tab, no tab row
 
             # ---- deep links still work: a temporary tab
@@ -189,7 +188,7 @@ def main():
             phone.goto(BASE + "/?skipIntro=1")
             phone.wait_for_function("TribeClient.connected()")
             phone.evaluate("TribeShell.go('agents')"); phone.wait_for_selector("#view-coord:not(.hidden) #ao-box .fl-in")
-            phone.click("#ofl-strip [data-ofl-sheet='work']"); phone.wait_for_selector("#view-coord:not(.hidden) #ad-hero")
+            phone.click("#ofl-strip [data-ofl-sheet='work']"); phone.wait_for_selector("#view-coord:not(.hidden) #fl-agents")
             wait_text(phone, "#fl-agents", "Maya")
             assert phone.evaluate("document.documentElement.scrollWidth <= innerWidth + 1"), phone.evaluate("document.documentElement.scrollWidth")
             boxes = phone.evaluate("[...document.querySelectorAll('#ao-work > *')].map(c => { const r = c.getBoundingClientRect(); return [r.left, r.right]; })")
