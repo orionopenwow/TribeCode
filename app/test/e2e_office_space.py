@@ -154,7 +154,7 @@ def main():
             print("ok  a person's card: Message, Call, Open, Give a task; no DM text")
 
             # ---------- Your look: a wardrobe change persists ----------
-            cp.click("#ad-office .os-bar [data-os-act='look']")
+            cp.click("#ao-more"); cp.click("#ao-menu [data-aom='look']")   # feat/office-full: the office's one ⋯ menu
             cp.wait_for_selector("#ad-office .os-look:not([hidden])")
             before = cp.inner_text("#ad-office .os-look .os-part:nth-child(2) b")
             cp.click("#ad-office .os-look [data-lk='hair'][data-d='1']")
@@ -166,7 +166,7 @@ def main():
 
             # ---------- the layout editor: place a plant, save, reload ----------
             n0 = cp.evaluate(OS + ".layout().items.filter(i => i.t === 'PLANT').length")
-            cp.click("#ad-office .os-bar [data-os-act='edit']")
+            cp.click("#ao-more"); cp.click("#ao-menu [data-aom='edit']")
             cp.click("#ad-office .os-edit [data-tool='f:PLANT']")
             spot = cp.evaluate(OS + ".free(Math.floor(" + OS + ".layout().w / 2))"); xy = cp.evaluate(f"{OS}.tileXY({spot['x']}, {spot['y']})")
             cp.mouse.click(xy["x"], xy["y"])
@@ -184,7 +184,7 @@ def main():
             print("ok  layout editor: place, save, reload")
 
             # ---------- sets: switch to the night office ----------
-            cp.select_option("#ad-office [data-os-set]", "night")
+            cp.click("#ao-more"); cp.select_option("#ao-menu [data-aom-set]", "night")
             for _ in range(30):
                 if ok(api("/office", token=host)).get("set") == "night": break
                 time.sleep(0.2)
