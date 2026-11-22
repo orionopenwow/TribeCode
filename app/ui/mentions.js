@@ -77,5 +77,5 @@
     };
     el.querySelectorAll('input, select').forEach(x => x.onchange = save);
   }
-  window.TribeMentions = { settingsRow, candidates, close };
+  window.TribeMentions = { settingsRow, candidates, close, wire };   // wire(input): the @ picker on another box (the office's, officefull.js)
 })();

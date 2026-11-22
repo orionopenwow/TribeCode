@@ -11,7 +11,8 @@
 //               What's private (true facts only, docs/CLAIMS.md), Back up to GitHub (ghconnect.js, with a way in for
 //               someone with no GitHub account).
 //   wire(root)  clicks and the async card lines.
-// Public: window.TribeAgentsOffice = { NAME, head, office, mountOffice, addAi, setup, wire, where, privacy, privacyFacts, pick }
+// A project's page is laid out by officefull.js (the office fills the page, a side panel, a box at the bottom).
+// Public: window.TribeAgentsOffice = { NAME, head, office, mountOffice, addAi, setup, wire, run, where, privacy, privacyFacts, pick, ghLoad, ghLine }
 (function () {
   'use strict';
   const C = () => window.TribeClient;
@@ -29,30 +30,32 @@
   const ago = iso => { const s = (Date.now() - Date.parse(iso)) / 1000; if (!Number.isFinite(s)) return ''; if (s < 60) return T('just now'); if (s < 3600) return T('{n} min ago', { n: Math.floor(s / 60) }); if (s < 86400) return T('{n} h ago', { n: Math.floor(s / 3600) }); return new Date(iso).toLocaleDateString([], { month: 'short', day: 'numeric' }); };
 
   // ---------- the head ----------
+  // One line: the title, who is here and what they are doing, the avatars (officefull.js fills #ao-here), and the
+  // two actions as small buttons at the right.
   function head(o = {}) {
-    const acts = hasTribe() ? `<div class="ao-head-acts"><button type="button" class="btn" data-ao="add">${ico('plug', 16)}<span>${esc(T('Add an AI helper'))}</span></button><button type="button" class="btn" data-ao="friend">${ico('people', 16)}<span>${esc(T('Invite a friend'))}</span></button></div>` : '';
-    return `<header class="ao-head" id="ao-head"><div class="ao-head-t"><span class="eyebrow">${esc(T(o.scope === 'all' ? 'Agents & office · every project' : NAME))}</span><h1 class="ao-title">${esc(T('Who’s here and what they’re doing'))}</h1>
-      <p class="ao-lead" id="ao-lead">${esc(lead())}</p></div>${acts}</header>`;
+    const acts = hasTribe() ? `<div class="ao-head-acts"><button type="button" class="btn sm" data-ao="add">${ico('plug', 15)}<span>${esc(T('Add an AI helper'))}</span></button><button type="button" class="btn sm" data-ao="friend">${ico('people', 15)}<span>${esc(T('Invite a friend'))}</span></button></div>` : '';
+    return `<header class="ao-head" id="ao-head"><div class="ao-head-t"><h1 class="ao-title">${esc(T(o.scope === 'all' ? 'Agents & office · every project' : NAME))}</h1><span class="ao-sep" aria-hidden="true">·</span>
+      <p class="ao-lead" id="ao-lead">${esc(lead())}</p><div class="ao-here" id="ao-here" role="group" aria-label="${esc(T('Who’s here'))}"></div></div>${acts}</header>`;
   }
-  // "2 people and 1 AI helper here. 1 is working." from the office's desks (the same data as the floor).
+  // "2 people online · 1 AI helper working" from the office's desks (the same data as the floor).
   function lead() {
     const O = window.TribeOffice, d = O && O.state && O.state();
     if (!hasTribe()) return T('Start a project first. Then friends and AI helpers join you here.');
     if (!d || !d.desks) return T('People and AI helpers at their desks, live.');
     const ppl = d.desks.filter(x => x.kind === 'person'), ai = d.desks.filter(x => x.kind === 'agent');
     const on = ai.filter(x => x.state === 'active').length, pOn = ppl.filter(x => x.state !== 'off').length;
-    const a = ppl.length === 1 ? T('Just you') : T('{n} people', { n: ppl.length }) + (pOn > 1 ? ` (${T('{n} online', { n: pOn })})` : '');
-    const b = !ai.length ? T('no AI helper yet') : ai.length === 1 ? T('1 AI helper') : T('{n} AI helpers', { n: ai.length });
-    return `${a}, ${b}${ai.length ? `, ${on ? T('{n} working now', { n: on }) : T('none working right now')}` : ''}.`;
+    const a = ppl.length <= 1 ? T('Just you') : pOn === 1 ? T('1 person online') : T('{n} people online', { n: pOn });
+    const b = !ai.length ? T('no AI helper yet') : on ? (on === 1 ? T('1 AI helper working') : T('{n} AI helpers working', { n: on })) : (ai.length === 1 ? T('1 AI helper, resting') : T('{n} AI helpers, resting', { n: ai.length }));
+    return `${a} · ${b}`;
   }
   function refreshLead() { const l = document.getElementById('ao-lead'); if (l) l.textContent = lead(); }
 
   // ---------- the office at the top ----------
   const office = () => (window.TribeOffice && hasTribe() ? `<section class="ao-office" id="ad-office" aria-label="${esc(T('The office'))}"><div class="ao-floor" id="ao-floor"></div></section>` : '');
-  function mountOffice(root, prev) {
+  function mountOffice(root, prev, opts) {
     const f = root.querySelector('#ao-floor'); if (!f || !window.TribeOffice) return null;
     if (prev && prev.destroy) prev.destroy();
-    return window.TribeOffice.mount(f);
+    return window.TribeOffice.mount(f, opts || {});
   }
 
   // ---------- add an AI helper ----------
@@ -105,19 +108,29 @@
     const gh = root.querySelector('#ao-github'); if (!gh) return;
     const line = gh.querySelector('[data-ao-line]'), btn = gh.querySelector('[data-ao="github"]');
     if (solo()) { const s = window.TribeGitHubConnect ? await window.TribeGitHubConnect.status().catch(() => null) : null; line.textContent = s && s.on ? T('A copy is on GitHub.') : T('Not backed up yet. A copy on GitHub keeps it safe, even with this computer off.'); return; }
-    if (!hasTribe() || !pidNow()) return;
-    let sync = null, me = null;
-    try { [sync, me] = await Promise.all([C().api(`/projects/${encodeURIComponent(pidNow())}/sync`), C().api('/github').catch(() => null)]); } catch { line.textContent = T('Not backed up yet.'); return; }
-    if (!gh.isConnected) return;
-    const st = (sync && sync.status) || {}, login = me && me.github && me.github.signedIn ? me.github.login : '';
-    gh.dataset.state = st.connected && st.kind === 'github' ? (st.lastShip && st.lastShip.at ? 'backed' : 'linked') : login ? 'signedin' : 'none';
-    if (st.connected && st.kind === 'github') {
-      line.innerHTML = `${esc(T('Linked to'))} <a href="${esc(st.url || '#')}" target="_blank" rel="noopener noreferrer">${esc(st.repo || '')}</a> · ${st.lastShip && st.lastShip.at ? esc(T('backed up {when}', { when: ago(st.lastShip.at) })) : esc(T('not backed up yet'))}`;
-      btn.textContent = T('Back up now');
-    } else if (st.connected && st.kind === 'folder') {
-      line.textContent = T('Shared through {where}. GitHub can be an extra copy.', { where: st.repo || T('a shared folder') });
-    } else line.textContent = login ? T('Signed in as @{name}. Pick where this project goes on GitHub.', { name: login }) : T('Not backed up yet. No GitHub account? You can make one on the way.');
+    const g = await ghLoad(); if (!g || !gh.isConnected) { if (!g && hasTribe()) line.textContent = T('Not backed up yet.'); return; }
+    gh.dataset.state = g.state; line.innerHTML = g.html; btn.textContent = T(g.btn);
   }
+  // Where the backup stands, for the GitHub card and the office's ⋯ menu: { state, text, html, btn }
+  let ghLast = null;
+  async function ghLoad() {
+    if (!hasTribe() || !pidNow()) return null;
+    let sync = null, me = null;
+    try { [sync, me] = await Promise.all([C().api(`/projects/${encodeURIComponent(pidNow())}/sync`), C().api('/github').catch(() => null)]); } catch { return null; }
+    const st = (sync && sync.status) || {}, login = me && me.github && me.github.signedIn ? me.github.login : '';
+    const state = st.connected && st.kind === 'github' ? (st.lastShip && st.lastShip.at ? 'backed' : 'linked') : login ? 'signedin' : 'none';
+    let text, html, btn = 'Back up to GitHub';
+    if (st.connected && st.kind === 'github') {
+      const when = st.lastShip && st.lastShip.at ? T('backed up {when}', { when: ago(st.lastShip.at) }) : T('not backed up yet');
+      text = `${T('Linked to')} ${st.repo || ''} · ${when}`;
+      html = `${esc(T('Linked to'))} <a href="${esc(st.url || '#')}" target="_blank" rel="noopener noreferrer">${esc(st.repo || '')}</a> · ${esc(when)}`;
+      btn = 'Back up now';
+    } else if (st.connected && st.kind === 'folder') text = T('Shared through {where}. GitHub can be an extra copy.', { where: st.repo || T('a shared folder') });
+    else text = login ? T('Signed in as @{name}. Pick where this project goes on GitHub.', { name: login }) : T('Not backed up yet. No GitHub account? You can make one on the way.');
+    ghLast = { state, text, html: html || esc(text), btn, pid: pidNow() };
+    return ghLast;
+  }
+  const ghLine = () => (ghLast && ghLast.pid === pidNow() ? ghLast : null);
 
   // ---------- Where your tribe runs ----------
   const SH = () => window.TribeUI;
@@ -219,7 +232,7 @@
   // ---------- GitHub ----------
   async function github(btn) {
     const G = window.TribeGitHubConnect, H = window.TribeHome;
-    const state = btn && btn.closest('#ao-github') ? btn.closest('#ao-github').dataset.state : '';
+    const state = btn && btn.closest('#ao-github') ? btn.closest('#ao-github').dataset.state : (ghLine() || {}).state || '';
     if ((state === 'linked' || state === 'backed') && H && H.ship) return H.ship();
     if (H && H.github) return H.github();
     if (G && G.open) return G.open({ pid: pidNow() });
@@ -238,13 +251,15 @@
     root.addEventListener('click', e => {
       const p = e.target.closest && e.target.closest('[data-ao-pick]'); if (p) { e.preventDefault(); return pick(p.dataset.aoPick); }
       const b = e.target.closest && e.target.closest('[data-ao]'); if (!b) return;
-      const k = b.dataset.ao;
-      if (k === 'add') return pick('other');
-      if (k === 'friend') return friend();
-      if (k === 'where') return where();
-      if (k === 'privacy') return privacy();
-      if (k === 'github') return github(b);
+      run(b.dataset.ao, b);
     });
+  }
+  function run(k, b) {
+    if (k === 'add') return pick('other');
+    if (k === 'friend') return friend();
+    if (k === 'where') return where();
+    if (k === 'privacy') return privacy();
+    if (k === 'github') return github(b);
   }
   // the lead and the cards follow the office and the GitHub status
   if (window.TribeClient && window.TribeClient.on) {
@@ -252,8 +267,8 @@
     window.TribeClient.on('presence', () => { clearTimeout(soon); soon = setTimeout(() => { refreshLead(); const r = document.getElementById('ao-setup'); if (r) fill(r.parentElement || document).catch(() => {}); }, 500); });
     window.TribeClient.on('ws', m => { if (m && m.type === 'office') setTimeout(refreshLead, 300); });
   }
-  addEventListener('tribe:github-connected', () => { const r = document.getElementById('ao-setup'); if (r) fill(r).catch(() => {}); });
+  addEventListener('tribe:github-connected', () => { ghLast = null; const r = document.getElementById('ao-setup'); if (r) fill(r).catch(() => {}); else ghLoad().catch(() => {}); });
   setInterval(() => { if (document.getElementById('ao-lead') && document.visibilityState === 'visible') refreshLead(); }, 9000);
 
-  window.TribeAgentsOffice = { NAME, head, office, mountOffice, addAi, setup, wire, where, privacy, privacyFacts, pick, refresh: refreshLead, fill };
+  window.TribeAgentsOffice = { NAME, head, office, mountOffice, addAi, setup, wire, where, privacy, privacyFacts, pick, run, friend, ghLoad, ghLine, refresh: refreshLead, fill };
 })();

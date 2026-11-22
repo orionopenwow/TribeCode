@@ -1,19 +1,16 @@
-// Agents dashboard (feat/agents-dash), now Agents & office (feat/agents-office, agentsoffice.js draws the shared parts:
-// the office on top, Add an AI helper, the four loops). The agents workspace opens on one calm page of a few big cards, each shown only
-// when it has something to say:
-//   🤖 hero: "N agents working now" with live rows (who, task or file, when), or "No agents yet" + Connect your AI
-//   Needs you: pending reviews, hand-offs waiting, delegations to approve, conflicts, agents near their budget,
-//              merged into one list with one-tap actions (hidden when empty)
-//   Who owns what: compact ownership lanes (top 5, Show all expands inline)
-//   #agents: the agents channel feed + composer
-//   Today: the daily plan's focus, only once a plan has items
+// Agents dashboard (feat/agents-dash), now Agents & office: the office fills the page (officefull.js lays it out, with
+// agentsoffice.js's shared parts). This file loads the agents' data and paints the side panel's Working on: what waits
+// for an OK (approve right there), the next step, Needs you (reviews, hand-offs, delegations, conflicts, budgets), one
+// row per AI helper (fleet.js), the people here and the tasks in progress. With no AI helper yet: Add an AI helper and
+// the four loops (a friend, where it runs, what's private, GitHub). #agents shows in Updates; talking to agents is the
+// box at the bottom ("@name …"); ownership and the daily plan are under More views.
 // The deep views stay reachable without a row of tabs: the Agents Hub's top line holds only Dashboard and the tabs
 // you pinned, plus a "+" at the end that pins any of Your agents, Ownership, Conflicts, Hand-offs, Reviews, Daily
 // plan, Secretary, MCP (saved in localStorage). A × unpins (or closes a temporary tab). Deep links (#/agents/<slug>,
 // TribeCoord.open(tab), TribeShell.go(key)) still work: an unpinned view shows as a temporary tab.
 // Hooks: coord.js calls render(el) for its 'agents' tab; shell.js asks tabs(list, cur), tabExtra(key), plusHtml()
 // and sig() while drawing the Agents Hub's tab line.
-//   window.TribeAgentsDash = { render, tabs, tabExtra, plusHtml, sig, pins, pin, unpin, openMenu }
+//   window.TribeAgentsDash = { render, repaint, tabs, tabExtra, plusHtml, sig, pins, pin, unpin, openMenu }
 (function () {
   'use strict';
   const C = window.TribeClient;
@@ -120,7 +117,7 @@
   new MutationObserver(() => closeMenu()).observe(document.body, { attributes: true, attributeFilter: ['data-view'] });
 
   // ---------- the dashboard ----------
-  let seq = 0, moreAgents = false, moreOwners = false;
+  let seq = 0, moreAgents = false;
   let cfCache = { at: 0, pid: '', d: null };
   const pid = () => (window.TribeProjects && window.TribeProjects.current && window.TribeProjects.current()) || 'default';
   const canSteer = a => a.yours || me().role === 'host';
@@ -223,48 +220,31 @@
       ${items.length > 8 ? `<p class="ad-foot">${items.length - 8} more in their views</p>` : ''}</section>`;
   }
 
-  function ownersCard(d) {
-    const rows = d.owners.map(o => {
-      const areas = [...new Set([...o.lanes.map(l => l.area), ...o.claims.map(c => c.path)])];
-      return { o, areas };
-    }).filter(x => x.areas.length).sort((a, b) => b.areas.length - a.areas.length);
-    if (!rows.length) return '';
-    const shown = moreOwners ? rows : rows.slice(0, 5);
-    return `<section class="ad-card ad-owners" id="ad-owners">${head('Who owns what', `${plural(rows.length, 'owner')}, ${plural(rows.reduce((s, r) => s + r.areas.length, 0), 'area')}`, 'ownership', 'Open ownership')}
-      <div class="ad-rows">${shown.map(({ o, areas }) => `<div class="ad-lane"><span class="ad-av ${o.kind === 'agent' ? 'agent' : ''}" style="${o.kind === 'agent' ? '' : `--c:${esc(o.color || '#6C7CFF')}`}">${o.kind === 'agent' ? '🤖' : esc((o.name || '?')[0])}</span>
-        <div class="ad-l-main"><b>${esc(o.name)}</b><span class="ad-l-areas">${areas.slice(0, 3).map(a => `<code>${esc(a)}</code>`).join('')}${areas.length > 3 ? `<span class="ad-l-n">+${areas.length - 3}</span>` : ''}</span></div></div>`).join('')}</div>
-      ${rows.length > 5 ? `<button class="linkish ad-more" data-ad-more="owners">${moreOwners ? 'Show fewer' : `Show all ${rows.length}`}</button>` : ''}</section>`;
+  // feat/office-full: the page is the office, full size (officefull.js lays it out: the head line, the floor edge to
+  // edge with its toolbar, the side panel with Preview | Working on | Updates, the box at the bottom). This paints only
+  // Working on, so the floor, the live preview and what you are typing stay put while the data changes.
+  function asksHtml() {
+    const O = window.TribeOffice, od = O && O.state(), out = [];
+    for (const x of ((od && od.desks) || []).filter(x => x.kind === 'agent')) for (const a of x.asks || []) out.push({ a, x });
+    if (!out.length) return '';
+    return `<section class="ofl-sec" id="ao-asks"><h3 class="ofl-h">Waiting for an OK</h3><ul class="ofl-list">${out.map(({ a, x }) => `<li class="ofl-row ofl-ask"><span class="ofl-row-t"><b>${esc(a.title)}</b><small>${esc(x.name)} asks</small></span>
+      ${a.canDecide ? `<span class="ofl-acts"><button type="button" class="btn sm ok" data-ao-ap="approve" data-id="${esc(a.id)}">Approve</button><button type="button" class="btn sm" data-ao-ask="${esc(x.id)}">Ask for changes</button></span>` : '<em class="faint">Waiting for its owner</em>'}</li>`).join('')}</ul></section>`;
   }
-
-  // qa-qol-2: the example names a real agent of this tribe (it said "@maya's-claude" to everyone)
-  function talkHint() { const a = (C.state().members || []).find(m => m.role === 'agent'); return a ? `@agents or @${String(a.name || '').toLowerCase().replace(/^claude · (.+)$/, "$1's-claude").replace(/\s+/g, '-')} …` : 'Write to @agents …'; }
-  function channelCard(d) {
-    if (!d.messages.length && !d.agents.some(a => a.online || a.lastActive)) return '';   // keys that never connected don't open the channel
-    const members = C.state().members || [];
-    const nameOf = id => ((members.find(m => m.id === id) || {}).name) || 'someone';
-    const msgs = d.messages.slice(-8);
-    return `<section class="ad-card ad-chan" id="ad-chan">${head('#agents', 'What the agents are saying')}
-      <div class="ad-talk talk">${msgs.length ? msgs.map(m => `<div class="talk-row ${m.human ? 'human' : ''}"><b>${esc(nameOf(m.by))}</b>${m.to ? `<span class="faint">→ ${esc(nameOf(m.to))}</span>` : ''}<span class="talk-t">${esc(m.text)}</span><span class="faint">${esc(ago(m.at))}</span></div>`).join('') : '<p class="ad-quiet">Quiet so far. Mention @agents or one agent by name to talk to them here.</p>'}</div>
-      <form class="ad-compose" id="talk-form"><input class="input" id="talk-input" placeholder="${esc(talkHint())}" maxlength="2000" autocomplete="off" aria-label="Message the agents"><button class="btn">Send</button></form></section>`;
+  function peopleHtml() {
+    const O = window.TribeOffice, od = O && O.state(); if (!od || !od.desks) return '';
+    const list = od.desks.filter(x => x.kind === 'person' && x.state !== 'off');
+    if (!list.length) return '';
+    return `<section class="ofl-sec" id="ao-people"><h3 class="ofl-h">People</h3><ul class="ofl-list">${list.map(x => { const l = (O.linesOf(x) || [])[0];
+      return `<li><button type="button" class="ofl-row ofl-who" data-desk="${esc(x.id)}"><span class="ofl-row-t"><b>${esc(x.name)}${x.id === od.me ? ' <span class="faint">(you)</span>' : ''}</b><small>${esc(x.task ? x.task.title : l || O.statusOf(x))}</small></span></button></li>`; }).join('')}</ul></section>`;
   }
-
-  function todayCard(d) {
-    const p = d.plan; if (!p || !p.items || !p.items.length) return '';
-    const my = me().id;
-    const mine = p.items.filter(i => i.member === my || ((C.state().members || []).find(m => m.id === i.member) || {}).owner === my);
-    const list = (mine.length ? mine : p.items).slice(0, 4);
-    return `<section class="ad-card ad-today" id="ad-today">${head('Today', esc(p.focus || 'Today\'s plan'), 'plan', 'Open daily plan')}
-      <div class="ad-rows">${list.map(i => `<div class="ad-plan ${i.accepted ? 'ok' : ''}"><span class="ad-p-ck">${i.accepted ? '✓' : '·'}</span><div><b>${esc(i.title)}</b><span>${esc(i.name || '')}</span></div></div>`).join('')}</div></section>`;
+  function doingHtml() {
+    const T = window.TribeTasks, list = (T && T.all ? T.all() : []).filter(t => t.status === 'doing').slice(0, 6);
+    if (!list.length) return '';
+    const ms = C.state().members || [], nameOf = id => ((ms.find(m => m.id === id) || {}).name) || '';
+    return `<section class="ofl-sec" id="ao-doing"><h3 class="ofl-h">In progress</h3><ul class="ofl-list">${list.map(t => `<li><button type="button" class="ofl-row" data-ao-task="${esc(t.id)}"><span class="ofl-row-t"><b>${esc(t.title)}</b>${t.assignee ? `<small>${esc(nameOf(t.assignee))}</small>` : ''}</span></button></li>`).join('')}</ul></section>`;
   }
-
-  // feat/agents-office: the page is Agents & office (agentsoffice.js): the office on top, then the agents' state (the
-  // next step, what needs you, one row per agent), then four loops (a friend, where it runs, privacy, GitHub backup).
-  // The office's element is kept across repaints, so the floor's characters don't jump back to their start.
   function paint(el, d) {
-    const inp = el.querySelector('#talk-input'), keep = inp ? inp.value : '', focused = inp && document.activeElement === inp;
-    const right = [ownersCard(d), todayCard(d)].filter(Boolean).join('');
-    const left = channelCard(d);
-    const F = window.TribeFleet, AO = window.TribeAgentsOffice;   // feat/fleet: the hero is the next step, then one row per agent, then how agents work
+    const F = window.TribeFleet, AO = window.TribeAgentsOffice, FU = window.TribeOfficeFull;
     if (F) F.setData(d.fleet);
     const waits = (d.pulse || []).filter(x => x.kind === 'wait' || x.kind === 'ship');
     const pulse = waits.length ? `<div class="sh-pulse ad-pulse" id="ad-pulse">${waits.slice(0, 4).map(x => `<span class="${esc(x.kind)}">${esc(x.text)}</span>`).join('')}</div>` : '';
@@ -275,46 +255,34 @@
     // must not flip the page away from the connect flow before anything has joined
     const anyAgent = d.fleet ? (d.fleet.agents || []).some(a => a.everSeen || a.online) : (d.agents || []).some(a => a.online || a.where);
     const state = os && os.agentsOff ? 'off' : anyAgent ? 'dash' : 'connect';
+    FU.ensure(el, pid());
+    const dash = el.querySelector('#ad-dash');
+    dash.classList.toggle('ad-connectflow', state === 'connect');
     el.dataset.hub = state;
-    const top = AO ? AO.head() + AO.office() : '', loops = AO ? AO.setup() : '';
-    // keep the mounted office: take it out, paint, put it back where the new page has its place
-    const oldOffice = el.querySelector('#ad-office'); if (oldOffice) oldOffice.remove();
-    const done = () => {
-      const slot = el.querySelector('#ad-office');
-      if (slot && oldOffice && el._om) slot.replaceWith(oldOffice);
-      else if (slot && AO) el._om = AO.mountOffice(el, el._om);
-      if (AO) AO.wire(el);
-    };
+    // keep what is being typed in Working on (a task for an agent, a message) across the repaint
+    const inp = el.querySelector('#ao-work input:focus'), keepSel = inp && inp.closest('[data-fl-form]') ? `[data-fl-form="${inp.closest('[data-fl-form]').dataset.flForm}"][data-id="${inp.closest('[data-fl-form]').dataset.id}"] input` : '';
+    let html;
     if (state === 'off') {
-      el.innerHTML = `<div class="ad-dash" id="ad-dash">${stale}${top}<section class="hero-card ad-offcard" id="ad-hero" data-state="off"><span class="eyebrow">Agents</span><h2 class="fl-title">AI helpers are turned off</h2>
+      html = `${stale}<section class="hero-card ad-offcard" id="ad-hero" data-state="off"><span class="eyebrow">Agents</span><h2 class="fl-title">AI helpers are turned off</h2>
         <p class="fl-lead">No agent can work in this tribe until they are turned back on. Connections and keys are kept.</p>
-        ${os.canSet ? '<div class="fl-acts"><button class="btn primary" id="ad-agents-on">Turn agents back on</button></div>' : '<p class="faint">The host or an admin can turn them back on.</p>'}</section>${loops}</div>`;
-      done();
-      const b = el.querySelector('#ad-agents-on'); if (b) b.onclick = async () => { b.disabled = true; try { await C.api('/office', { method: 'PUT', body: { agentsOff: false } }); await O.load(true); render(el); } catch (e) { b.disabled = false; toast(e.message); } };
-      return;
+        ${os.canSet ? '<div class="fl-acts"><button class="btn primary" id="ad-agents-on">Turn agents back on</button></div>' : '<p class="faint">The host or an admin can turn them back on.</p>'}</section>${peopleHtml()}${doingHtml()}`;
+    } else if (state === 'connect') {
+      // the empty state says what to do: add an AI helper, and the four loops (a friend, where it runs, privacy, backup)
+      html = `${stale}${AO.addAi('ad-hero')}<p class="ad-waiting faint" id="ad-waiting"><i class="ad-pulse-dot"></i>Waiting for an AI helper to connect… this page changes by itself when it does.</p>
+        ${peopleHtml()}${doingHtml()}${AO.setup()}${how}`;
+    } else {
+      const asks = asksHtml(), top = ((d.fleet && d.fleet.next) || [])[0];
+      const hero = F && !(asks && top && top.kind === 'approval') ? F.hero(d.fleet) : '';
+      html = `${stale}${asks}${hero}${needsCard(d)}${F ? F.rows(d.fleet, { after: pulse }) : heroCard(d)}${peopleHtml()}${doingHtml()}${how}
+        <p class="ad-more"><button class="linkish" id="ad-views" type="button" aria-haspopup="menu">More views: ownership, reviews, hand-offs…</button></p>`;
     }
-    if (state === 'connect') {
-      const fd = d.fleet || { connected: false, you: { canAct: me().role !== 'spectator' }, agents: [], next: [] };
-      const hero = AO ? AO.addAi('ad-hero') : F ? F.hero(fd) : heroCard(d);
-      el.innerHTML = `<div class="ad-dash ad-connectflow" id="ad-dash">${stale}${top}${hero}
-        <p class="ad-waiting faint" id="ad-waiting"><i class="ad-pulse-dot"></i>Waiting for an AI helper to connect… this page changes by itself when it does.</p>
-        ${loops}${how}</div>`;
-      done();
-      if (F) F.wire(el, { scope: 'project', reload: () => { if (el.isConnected && onView()) render(el); } });
-      el.onclick = e => click(e, el, d);
-      return;
-    }
-    const hero = F ? F.hero(d.fleet) : heroCard(d), rowsH = F ? F.rows(d.fleet, { after: pulse }) : '';
-    el.innerHTML = `<div class="ad-dash" id="ad-dash">${stale}${top}${hero}${needsCard(d)}${rowsH}${loops}${left || right ? `<div class="ad-cols ${left && right ? 'two' : ''}">${left ? `<div class="ad-col">${left}</div>` : ''}${right ? `<div class="ad-col">${right}</div>` : ''}</div>` : ''}${how}<p class="ad-more"><button class="linkish" id="ad-views" type="button" aria-haspopup="menu">More views: ownership, reviews, hand-offs…</button></p></div>`;
-    done();
-    { const v = el.querySelector('#ad-views'); if (v) v.onclick = () => openMenu(v); }
+    FU.work(html);
+    if (keepSel) { const n = el.querySelector(`#ao-work ${keepSel}`); if (n) n.focus({ preventScroll: true }); }
+    if (AO) { AO.wire(el); AO.fill(el).catch(() => {}); }
+    FU.sync();
     if (F) F.wire(el, { scope: 'project', reload: () => { if (el.isConnected && onView()) render(el); } });
-    const ni = el.querySelector('#talk-input'); if (ni && keep) ni.value = keep; if (ni && focused) ni.focus({ preventScroll: true });
-    const form = el.querySelector('#talk-form');
-    if (form) form.onsubmit = async e => {
-      e.preventDefault(); const t = el.querySelector('#talk-input').value.trim(); if (!t) return;
-      try { await C.api('/agents/channel', { method: 'POST', body: { text: t } }); el.querySelector('#talk-input').value = ''; refresh(); } catch (err) { toast(err.message); }
-    };
+    { const v = el.querySelector('#ad-views'); if (v) v.onclick = () => openMenu(v); }
+    const on = el.querySelector('#ad-agents-on'); if (on) on.onclick = async () => { on.disabled = true; try { await C.api('/office', { method: 'PUT', body: { agentsOff: false } }); await O.load(true); render(el); } catch (e) { on.disabled = false; toast(e.message); } };
     el.onclick = e => click(e, el, d);
     el.onkeydown = e => { if (e.key === 'Enter' && e.target.matches && e.target.matches('[data-ad-agent]')) openAgent(e.target.dataset.adAgent); };
   }
@@ -333,21 +301,28 @@
     if (b && b.id === 'ad-tools' && window.TribeFleet) return;   // the fleet hero handles it
     if (b && b.id === 'ad-tools') return go('mcp-directory');
     if (b && b.dataset.adOpen) return go(b.dataset.adOpen);
-    if (b && b.dataset.adMore) { if (b.dataset.adMore === 'agents') moreAgents = !moreAgents; else moreOwners = !moreOwners; return paint(el, d); }
+    if (b && b.dataset.adMore) { moreAgents = !moreAgents; return paint(el, d); }
     if (b && b.dataset.adCtl) return run(async () => { const action = b.dataset.adCtl; await C.api(`/coord/agents/${encodeURIComponent(b.dataset.id)}/control`, { method: 'POST', body: { action } }); toast(action === 'resume' ? 'Resumed' : 'Pause requested'); refresh(); side(); });
     if (b && b.dataset.adRv) return run(async () => { const v = b.dataset.adRv; await C.api(`/coord/reviews/${encodeURIComponent(b.dataset.id)}/${v}`, { method: 'POST', body: {} }); resolve(b, v === 'approve' ? 'Approved: task moved to Done' : 'Sent back to doing'); setTimeout(refresh, 300); });
     if (b && b.dataset.adShip) return run(async () => { const v = b.dataset.adShip; await C.api(`/ship/${encodeURIComponent(b.dataset.id)}/vote`, { method: 'POST', body: { vote: v } }); resolve(b, v === 'yes' ? 'Voted yes' : 'Voted no'); setTimeout(refresh, 600); });   // feat/ship-flow
     if (b && b.dataset.adTake) return run(async () => { await C.api(`/coord/handoffs/${encodeURIComponent(b.dataset.adTake)}/take`, { method: 'POST', body: {} }); resolve(b, 'It\'s yours'); setTimeout(refresh, 300); });
     if (b && b.dataset.adAp) return run(async () => { const v = b.dataset.adAp; await C.api(`/approvals/${encodeURIComponent(b.dataset.id)}/${v}`, { method: 'POST', body: {} }); resolve(b, v === 'approve' ? 'Approved' : 'Denied'); setTimeout(refresh, 3200); });
+    if (b && b.dataset.aoAp) return run(async () => { await C.api(`/approvals/${encodeURIComponent(b.dataset.id)}/approve`, { method: 'POST', body: {} }); const li = b.closest('.ofl-ask'); if (li) li.remove(); toast('Approved'); if (window.TribeOffice) window.TribeOffice.refresh(); });
+    if (b && b.dataset.aoAsk) return window.TribeOffice && window.TribeOffice.openCard(b.dataset.aoAsk);
+    if (b && b.dataset.aoTask) return window.TribeTasks && window.TribeTasks.open && window.TribeTasks.open(b.dataset.aoTask);
+    if (b && b.closest('#ao-work') && b.dataset.desk) return window.TribeOffice && window.TribeOffice.openCard(b.dataset.desk);
     if (b && b.hasAttribute('data-ad-sync')) return run(async () => { const r = await C.api('/coord/conflicts/sync', { method: 'POST', body: { a: b.dataset.a, b: b.dataset.b } }); cfCache.at = 0; resolve(b, `Asked ${r.asked.join(' and ')} to sync`); setTimeout(refresh, 300); });
     if (!b) { const row = t.closest('[data-ad-agent]'); if (row) openAgent(row.dataset.adAgent); }
   }
-  C.on('project', () => { moreAgents = false; moreOwners = false; cfCache = { at: 0, pid: '', d: null }; });
+  C.on('project', () => { moreAgents = false; cfCache = { at: 0, pid: '', d: null }; });
 
   // feat/p10-office: while the hub waits for a first agent, it turns into the dashboard by itself when one connects;
   // the office and the agents switch repaint it too
   { let t = null; const again = () => { clearTimeout(t); t = setTimeout(() => { if (lastEl && lastEl.isConnected && onView()) render(lastEl); }, 500); };
     if (C && C.on) { C.on('presence', ms => { if (lastEl && lastEl.dataset.hub === 'connect' && (ms || []).some(m => m.role === 'agent' && m.online)) again(); });
       C.on('ws', m => { if (m && m.type === 'office' && lastEl) { if (window.TribeOffice) window.TribeOffice.load(true).then(again); else again(); } }); } }
-  window.TribeAgentsDash = { render, tabs, tabExtra, plusHtml, sig, pins, pin, unpin, openMenu, closeMenu };
+  // the office changed (someone sat down, an AI helper asked for an OK): Working on follows, from the data it has
+  let rp = 0;
+  function repaint() { clearTimeout(rp); rp = setTimeout(() => { if (lastEl && lastEl.isConnected && lastEl._d && onView() && painted === seq) paint(lastEl, lastEl._d); }, 250); }
+  window.TribeAgentsDash = { render, repaint, tabs, tabExtra, plusHtml, sig, pins, pin, unpin, openMenu, closeMenu };
 })();

@@ -80,12 +80,12 @@
     const W = window.TribeChanges && window.TribeChanges.waiting ? window.TribeChanges.waiting() : 0, wn = typeof W === 'number' ? W : (W && W.length) || 0;
     if (wn) out.push({ k: 'change', t: wn === 1 ? tr('1 suggested change is waiting') : `${wn} ${tr('suggested changes are waiting')}`, at: '' });
     const VERB = { task: tr('updated the task'), doc: tr('edited'), commit: tr('saved') };
-    for (const r of (d.recent || []).slice(0, 6)) {
+    for (const r of (d.recent || []).slice(0, Math.max(6, ctx.max || 0))) {
       const by = String(r.sub || '').split(' · ').slice(-1)[0];
       const who = r.kind === 'commit' ? by : (/ · /.test(r.sub || '') ? by : '');
       out.push({ k: r.kind, who, t: who ? `${who} ${VERB[r.kind] || ''} “${r.text}”` : r.kind === 'task' ? `${tr('Task')}: ${r.text}` : r.kind === 'doc' ? `${tr('Doc')}: ${r.text}` : r.text, at: r.at });
     }
-    return out.slice(0, 5);
+    return out.slice(0, ctx.max || 5);
   }
   const TONE = { person: '--peer', agent: '--live', wait: '--amber', change: '--peer', task: '--live', doc: '--peer', commit: '--ember' };
   function updatesHtml(ctx) {

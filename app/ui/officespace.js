@@ -41,13 +41,15 @@
   const bubbleUrl = {};
   const bubbleSrc = k => { if (bubbleUrl[k]) return bubbleUrl[k]; const c = A.bubble(k); if (!c) return ''; try { bubbleUrl[k] = c.toDataURL(); } catch { return ''; } return bubbleUrl[k]; };
 
-  function mount(el, office) {
+  // o.bar === false: the page draws its own toolbar (Agents & office, agentsoffice.js) and calls act(k) / info();
+  // o.fill: the floor fills its box (no aspect ratio of its own, no frame), still at whole-pixel zoom, centred.
+  function mount(el, office, o = {}) {
     let data = null, layout = null, set = S.get('office'), raf = 0, last = 0, dead = false, view = { z: 0, ox: 0, oy: 0 };
     let editing = null, tool = 'move', sel = null, drag = null, cardFor = null, booted = false, artOk = false, geo = null, clock = 0;
     const chars = new Map();   // id -> { d, x, y (tile, float), path, dir, t, visible, target }
     const pets = [];
-    el.innerHTML = `<div class="os" data-os>
-      <div class="os-bar">
+    el.innerHTML = `<div class="os${o.fill ? ' os-fill' : ''}" data-os>
+      <div class="os-bar"${o.bar === false ? ' hidden' : ''}>
         <span class="os-gap"></span>
         <button class="btn sm" data-os-act="look">${esc(tr('Your look'))}</button>
         <label class="os-set" hidden><span class="sr-only">${esc(tr('Set'))}</span><select class="input sm" data-os-set></select></label>
@@ -541,16 +543,21 @@
     root.querySelector('.os-bar').addEventListener('click', e => {
       const t = e.target.closest('[data-os-act]'); if (!t) return;
       const k = t.dataset.osAct;
+      act(k);
+    });
+    function act(k, v) {
       if (k === 'look') return openLook();
       if (k === 'edit') return editing ? null : openEdit();
-      if (k === 'sound') { try { localStorage.setItem(LS_SOUND, soundOn() ? '0' : '1'); } catch {} t.setAttribute('aria-pressed', String(soundOn())); t.textContent = soundOn() ? tr('Sound on') : tr('Sound off'); if (soundOn()) chime(); return; }
+      if (k === 'sound') { try { localStorage.setItem(LS_SOUND, soundOn() ? '0' : '1'); } catch {} const t = root.querySelector('[data-os-act="sound"]'); t.setAttribute('aria-pressed', String(soundOn())); t.textContent = soundOn() ? tr('Sound on') : tr('Sound off'); if (soundOn()) chime(); return; }
       if (k === 'in') return zoom(1);
       if (k === 'out') return zoom(-1);
-    });
+      if (k === 'set') return setTo(v);
+    }
+    async function setTo(id) {
+      try { await C.api('/office', { method: 'PUT', body: { set: id } }); set = S.get(id); const s2 = root.querySelector('[data-os-set]'); if (s2) s2.value = set.id; draw(); toast(tr('Set changed')); office.refresh(); } catch (err) { toast(err.message); }
+    }
     card.addEventListener('click', e => { if (e.target.closest('[data-os-act="look"]')) openLook(); });
-    root.querySelector('[data-os-set]').addEventListener('change', async e => {
-      try { await C.api('/office', { method: 'PUT', body: { set: e.target.value } }); set = S.get(e.target.value); draw(); toast(tr('Set changed')); office.refresh(); } catch (err) { toast(err.message); }
-    });
+    root.querySelector('[data-os-set]').addEventListener('change', e => setTo(e.target.value));
     root.addEventListener('keydown', e => {
       if (e.key === 'Escape') { if (!lookEl.hidden) lookEl.hidden = true; else if (!card.hidden) closeCard(); else if (editing) { layout = JSON.parse(before); rebuild(); stopEdit(); } }
       if (editing && sel && (e.key === 'r' || e.key === 'R') && !/input|select|textarea/i.test(e.target.tagName)) { sel.r = ((sel.r || 0) + 1) % 4; rebuild(); draw(); }
@@ -573,7 +580,7 @@
       if (!editing) {
         const L = usable(d && d.layout), sig = JSON.stringify(L) + '|' + everyone().length;
         if (!layout || root.__lsig !== sig) { layout = L || A.defaultLayout(everyone().length - 1); root.__lsig = sig; normalise(); }
-        stage.style.aspectRatio = `${layout.w * T} / ${layout.h * T}`;
+        if (!o.fill) stage.style.aspectRatio = `${layout.w * T} / ${layout.h * T}`;
       }
       sync();
       if (cardFor) { const keep = cardFor; if (everyone().some(x => x.id === keep)) openCard(keep); else closeCard(); }
@@ -591,6 +598,9 @@
       tileXY(x, y) { if (!F) draw(); const r = cv.getBoundingClientRect(); return { x: r.left + (F.ox + (x + 0.5) * T * F.scale) / F.dpr, y: r.top + (F.oy + (y + 0.5) * T * F.scale) / F.dpr }; },
       free(minX = 1) { for (let y = 1; y < layout.h - 1; y++) for (let x = Math.max(1, minX); x < layout.w - 1; x++) if (walk(x, y) && walk(x, y + 1) && !layout.items.some(i => covers(i, x, y) || covers(i, x, y + 1)) && ![...chars.values()].some(c => Math.round(c.x) === x && Math.round(c.y) === y)) return { x, y }; return null; },
       scale: () => (F ? F.scale : 0),
+      act,
+      // what the page's own toolbar may offer: the host's set and layout, your look, the sound, the zoom
+      info: () => ({ canSet: !!(data && data.canSet), canLook: !!(data && data.me) && ((data.desks || []).find(x => x.id === data.me) || {}).kind !== 'agent', sound: soundOn(), set: set.id, sets: S.list().map(x => ({ id: x.id, name: tr(x.name) })), zoom: view.z }),
     };
     root.__os = inst;
     return inst;

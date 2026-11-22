@@ -84,14 +84,14 @@
     const sum = [b.todo ? `${b.todo} ${tr('to do')}` : '', b.doing ? `${b.doing} ${tr('in progress')}` : '', b.requests ? `${b.requests} ${tr('waiting for an OK')}` : ''].filter(Boolean).join(' · ') || tr('Nothing waiting');
     return `<p class="of-sum">${esc(sum)}</p>${(b.top || []).length ? `<ul class="of-cards">${b.top.map(t => `<li data-task="${esc(t.id)}"><span>${esc(t.title)}</span>${t.who ? `<em>${esc(t.who)}</em>` : ''}</li>`).join('')}</ul>` : ''}`;
   }
-  function floor(d) {
+  function floor(d, full) {
     const list = withFlint(d.desks);
     const at = s => list.filter(x => x.state !== 'off' && x.spot === s);
     const people = list.filter(x => x.kind === 'person').length, agents = list.filter(x => x.kind !== 'person').length;
     return `<div class="of-floor">
       <div class="of-desks">${list.map(desk).join('')}</div>
       <div class="of-zones">${zone('think', tr('Thinking spot'), at('think'))}${zone('board', tr('Task board'), at('board'), boardHtml(d.board))}${zone('lounge', tr('Lounge'), list.filter(x => x.state === 'away' || (x.state === 'active' && x.spot === 'lounge')))}</div>
-      <p class="of-foot faint">${esc(`${people} ${people === 1 ? tr('person') : tr('people')} · ${agents} ${agents === 1 ? tr('helper') : tr('helpers')}`)} · <button class="linkish" data-of-hide>${esc(tr('Hide the office for me'))}</button></p>
+      ${full ? '' : `<p class="of-foot faint">${esc(`${people} ${people === 1 ? tr('person') : tr('people')} · ${agents} ${agents === 1 ? tr('helper') : tr('helpers')}`)} · <button class="linkish" data-of-hide>${esc(tr('Hide the office for me'))}</button></p>`}
     </div>`;
   }
   // Who's here, beside the pixel floor: the same people as the floor, as a list a keyboard and a screen reader can use.
@@ -124,20 +124,28 @@
     });
   }
 
+  // full (Agents & office, agentsoffice.js): the office fills the page and the page draws the toolbar (Floor | Desks,
+  // zoom, ⋯), so here there is no toggle, no list under the floor and no footer; onPaint(m) runs after each paint.
   function paint(m) {
     const { el, opts } = m; if (!el.isConnected) { mounts.delete(m); return; }
+    paintOne(m);
+    if (opts.onPaint) try { opts.onPaint(m); } catch (e) { console.error(e); }
+  }
+  function paintOne(m) {
+    const { el, opts } = m, full = !!opts.full;
     const d = data;
     if (opts.compact) { el.innerHTML = d && d.on && !hidden() ? strip(d) : ''; el.hidden = !el.innerHTML; return; }
     glide(el, () => {
       if (!d) { el.innerHTML = `<p class="faint of-wait">${esc(tr('Opening the office…'))}</p>`; return; }
       if (hidden()) { el.innerHTML = `<div class="of-off"><p class="faint">${esc(tr('You hid the office on this device.'))}</p><button class="btn" data-of-show>${esc(tr('Show the office'))}</button></div>`; return; }
-      const toggle = canFloor() && d.on ? `<div class="of-view" role="group" aria-label="${esc(tr('How to show the office'))}"><button class="btn sm${viewOf() === 'floor' ? ' on' : ''}" data-of-view="floor" aria-pressed="${viewOf() === 'floor'}">${esc(tr('Floor'))}</button><button class="btn sm${viewOf() === 'desks' ? ' on' : ''}" data-of-view="desks" aria-pressed="${viewOf() === 'desks'}">${esc(tr('Desks'))}</button></div>` : '';
+      el.dataset.ofView = canFloor() && d.on && viewOf() === 'floor' ? 'floor' : 'desks';
+      const toggle = full ? '' : canFloor() && d.on ? `<div class="of-view" role="group" aria-label="${esc(tr('How to show the office'))}"><button class="btn sm${viewOf() === 'floor' ? ' on' : ''}" data-of-view="floor" aria-pressed="${viewOf() === 'floor'}">${esc(tr('Floor'))}</button><button class="btn sm${viewOf() === 'desks' ? ' on' : ''}" data-of-view="desks" aria-pressed="${viewOf() === 'desks'}">${esc(tr('Desks'))}</button></div>` : '';
       if (canFloor() && d.on && viewOf() === 'floor') {
         // keep the canvas alive between refreshes: only feed it new data
         if (!m.space || !el.querySelector('.of-space')) {
           if (m.space) m.space.destroy();
-          el.innerHTML = `${toggle}<div class="of-space"></div><ul class="of-roster" aria-label="${esc(tr('Who’s here'))}"></ul><p class="of-foot faint"><button class="linkish" data-of-hide>${esc(tr('Hide the office for me'))}</button></p>`;
-          m.space = window.TribeOfficeSpace.mount(el.querySelector('.of-space'), api);
+          el.innerHTML = full ? '<div class="of-space"></div>' : `${toggle}<div class="of-space"></div><ul class="of-roster" aria-label="${esc(tr('Who’s here'))}"></ul><p class="of-foot faint"><button class="linkish" data-of-hide>${esc(tr('Hide the office for me'))}</button></p>`;
+          m.space = window.TribeOfficeSpace.mount(el.querySelector('.of-space'), api, full ? { bar: false, fill: true } : {});
           const v = el.querySelector(':scope > .of-view'), bar = el.querySelector('.os-bar'); if (v && bar) bar.prepend(v);
         }
         m.space.update(d);
@@ -145,7 +153,7 @@
         return;
       }
       if (m.space) { m.space.destroy(); m.space = null; }
-      el.innerHTML = toggle + offerHtml(d) + floor(d);
+      el.innerHTML = toggle + offerHtml(d) + floor(d, full);
     });
   }
   function paintAll() { mounts.forEach(paint); }
@@ -297,5 +305,8 @@
   }
   if (!wireSettings()) document.addEventListener('DOMContentLoaded', wireSettings, { once: true });
 
-  window.TribeOffice = { mount, refresh, hidden, setHidden, state: () => data, setOn, load, openCard, cardBody, cardClick, cardSubmit, statusOf, linesOf: screenLines, kindText, everyone };
+  // the page's toolbar (agentsoffice.js): which view shows, switch it, and the pixel floor of a mount
+  const view = () => (data && data.on && canFloor() ? viewOf() : 'desks');
+  function setView(v) { try { localStorage.setItem(LS_VIEW, v === 'desks' ? 'desks' : 'floor'); } catch {} paintAll(); }
+  window.TribeOffice = { mount, refresh, hidden, setHidden, view, setView, canFloor, state: () => data, setOn, load, openCard, cardBody, cardClick, cardSubmit, statusOf, linesOf: screenLines, kindText, everyone };
 })();

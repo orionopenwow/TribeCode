@@ -16,7 +16,8 @@
 // (#hub-band-slot in hub.js) for your most recent project, else the tribe's main one; with no tribe, Home shows the
 // most recent website or design kept on this device (localfiles.js). A tribe with no projects gets "Start your first
 // project". Server side: server/dashband.js. Tests: app/test/e2e_dash_preview.py, e2e_living_preview.py.
-//   window.TribeDashBand = { mountProject(p), mountHome(slot), refresh(), card(pid), open(pid, k), state() }
+// Agents & office's side panel (officefull.js, #ao-preview-slot) shows the current project's band too, live at once.
+//   window.TribeDashBand = { mountProject(p), mountHome(slot), mountOffice(slot), refresh(), card(pid), open(pid, k), state() }
 (function () {
   'use strict';
   const C = () => window.TribeClient;
@@ -35,7 +36,7 @@
   const MAX = 5;
 
   // one band and one criticals block per place; kept as live nodes so a dashboard redraw doesn't reload the picture
-  const S = { pj: { band: null, crit: null, pid: null, data: null, crits: null, all: false }, home: { band: null, pid: null, data: null } };
+  const S = { pj: { band: null, crit: null, pid: null, data: null, crits: null, all: false }, home: { band: null, pid: null, data: null }, office: { band: null, pid: null, data: null } };
 
   // ---------- data ----------
   const api = (path, o = {}) => C().api(path, o);
@@ -348,13 +349,13 @@
     const html = await bandHtml(b, where);
     if (!slot.isConnected) return;
     const box = document.createElement('div'); box.className = 'db-wrap'; box.innerHTML = html; box.__sig = sig;
-    const go = () => { slot.replaceChildren(box); bind(box.querySelector('.db-band'), b, where); if (focus) { const t = box.querySelector('.db-tab[aria-selected="true"]'); if (t) t.focus({ preventScroll: true }); } };
+    const go = () => { slot.replaceChildren(box); bind(box.querySelector('.db-band'), b, where); if (where === 'office' && (b.pick === 'app' || (b.pick === 'site' && !(b.site && b.site.designed)))) goLive(box.querySelector('.db-band'), b); if (focus) { const t = box.querySelector('.db-tab[aria-selected="true"]'); if (t) t.focus({ preventScroll: true }); } };
     if (st.band && window.TribeMotion && window.TribeMotion.swap) window.TribeMotion.swap(go); else go();
     st.band = box;
   }
   // a tab was chosen: remember it for this project on this device, and swap the preview and its actions in place
   async function select(where, k, focus) {
-    const st = S[where], raw = st.data, slot = where === 'pj' ? $('#pj-band-slot') : $('#hub-band-slot');
+    const st = S[where], raw = st.data, slot = where === 'pj' ? $('#pj-band-slot') : where === 'office' ? $('#ao-preview-slot') : $('#hub-band-slot');
     if (!raw || !slot || !raw.has || !raw.has[k]) return;
     if (view(raw).pick === k) { if (focus) { const t = st.band && st.band.querySelector(`.db-tab[data-show="${k}"]`); if (t) t.focus(); } return; }
     ls.set(TABKEY(raw.project.id), k);
@@ -374,6 +375,21 @@
     S.pj.data = b; S.pj.crits = cr;
     if (b) await paint('pj', $('#pj-band-slot'), b);
     drawCrit();
+  }
+  // Agents & office (officefull.js): the current project's app and website, live, in the side panel's Preview tab
+  let oseq = 0;
+  async function mountOffice(slot) {
+    if (!slot) return;
+    const pid = (PJ() && PJ().current && PJ().current()) || (C() && C().project && C().project());
+    if (!pid) { slot.innerHTML = `<p class="ofl-quiet">${esc(T('Start a project first. Its app and website show here.'))}</p>`; return; }
+    if (S.office.pid === pid && S.office.band && S.office.band.parentNode !== slot) slot.replaceChildren(S.office.band);
+    if (S.office.pid !== pid) { S.office.band = null; S.office.data = null; }
+    S.office.pid = pid;
+    const my = ++oseq, b = await loadBand(pid);
+    if (my !== oseq || !slot.isConnected) return;
+    if (!b) { if (!S.office.band) slot.innerHTML = `<p class="ofl-quiet">${esc(T('The preview could not load right now.'))}</p>`; return; }
+    S.office.data = b;
+    await paint('office', slot, b);
   }
   // Home: your most recent project (else the tribe's main one); no tribe: the newest website or design on this device
   async function mountHome(slot, force) {
@@ -424,6 +440,7 @@
       const v = document.body.dataset.view;
       if (v === 'home' && PJ() && PJ().cur()) mountProject(PJ().cur());
       if (v === 'hub') { const s = $('#hub-band-slot'); if (s) mountHome(s, true); }
+      { const s = $('#ao-preview-slot'); if (s && s.offsetParent) mountOffice(s); }
     }, 250);
   }
   function hook() {
@@ -433,10 +450,11 @@
     if (window.TribePresence && window.TribePresence.on) window.TribePresence.on(() => {
       if (S.pj.band && S.pj.data) paintHere(S.pj.band, S.pj.data, 'pj');
       if (S.home.band && S.home.data) paintHere(S.home.band, S.home.data, 'home');
+      if (S.office.band && S.office.data) paintHere(S.office.band, S.office.data, 'office');
     });
   }
   hook();
   addEventListener('focus', () => { if (document.querySelector('.db-band')) refresh(); });
 
-  window.TribeDashBand = { mountProject, mountHome, refresh, fold, gaps, card, open: (pid, k = 'open') => loadBand(pid).then(b => b && act(k, view(b), 'home')), go: critGo, view, tabs: tabsOf, select, state: () => ({ project: S.pj.data, crits: S.pj.crits, home: S.home.data }) };
+  window.TribeDashBand = { mountProject, mountHome, mountOffice, refresh, fold, gaps, card, open: (pid, k = 'open') => loadBand(pid).then(b => b && act(k, view(b), 'home')), go: critGo, view, tabs: tabsOf, select, state: () => ({ project: S.pj.data, crits: S.pj.crits, home: S.home.data }) };
 })();
