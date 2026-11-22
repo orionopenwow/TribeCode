@@ -255,7 +255,9 @@
     // must not flip the page away from the connect flow before anything has joined
     const anyAgent = d.fleet ? (d.fleet.agents || []).some(a => a.everSeen || a.online) : (d.agents || []).some(a => a.online || a.where);
     const state = os && os.agentsOff ? 'off' : anyAgent ? 'dash' : 'connect';
-    FU.ensure(el, pid());
+    const built = FU.ensure(el, pid());
+    // with no AI helper yet, or with them turned off, Working on holds the next step: show it when that state begins
+    if (state !== 'dash' && (built || el.dataset.hub !== state)) FU.tab('work');
     const dash = el.querySelector('#ad-dash');
     dash.classList.toggle('ad-connectflow', state === 'connect');
     el.dataset.hub = state;

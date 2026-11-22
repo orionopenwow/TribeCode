@@ -125,7 +125,7 @@ def main():
                 cp.locator("#ad-office").scroll_into_view_if_needed(); cp.wait_for_timeout(500)
                 cp.screenshot(path=os.path.join(os.environ["TRIBE_SHOTS_DIR"], "office-1440.png"), full_page=False)
             # per-person hide
-            cp.click("#ad-office [data-of-hide]"); cp.wait_for_selector("#ad-office [data-of-show]")
+            cp.click("#ao-more"); cp.click("#ao-menu [data-aom='hide']"); cp.wait_for_selector("#ad-office [data-of-show]")   # feat/office-full: in the office's ⋯ menu
             assert ok(api("/office", token=host))["on"] is True, "hiding is only for me"
             cp.click("#ad-office [data-of-show]"); cp.wait_for_selector("#ad-office .of-desk")
             # the compact strip for the dashboard

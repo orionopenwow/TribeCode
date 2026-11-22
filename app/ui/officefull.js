@@ -344,5 +344,7 @@
   // leaving the page closes the sheet and the menu
   new MutationObserver(() => { if (document.body.dataset.view !== 'coord') { closeSheet(); closeMenu(); } }).observe(document.body, { attributes: true, attributeFilter: ['data-view'] });
 
-  window.TribeOfficeFull = { ensure, work, sync, open: k => (phone() ? sheet(k) : (setPanel(true), show(k))), close: closeSheet, panel: setPanel, route: t => (flint ? flint.send(t) : null), box: () => flint, updates, menu: openMenu, everyoneLine };
+  // tab(k): show a tab without popping the phone's sheet open (computers open the panel)
+  const tab0 = k => { if (!phone()) { if (root && root.dataset.panel !== 'open') { ls.set(LS_PANEL, 'open'); root.dataset.panel = 'open'; } } show(k); };
+  window.TribeOfficeFull = { ensure, work, sync, tab: tab0, open: k => (phone() ? sheet(k) : (setPanel(true), show(k))), close: closeSheet, panel: setPanel, route: t => (flint ? flint.send(t) : null), box: () => flint, updates, menu: openMenu, everyoneLine };
 })();
