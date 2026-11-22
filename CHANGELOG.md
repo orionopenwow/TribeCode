@@ -1,5 +1,14 @@
 # Changelog
 
+## v0.47.0
+- **The office fills the page**: Agents & office is now the pixel office edge to edge, with the whole office in view and the hall drawn around it so there's no empty space. Drag to look around, − and + to zoom, Fit in the ⋯ menu to reset. One slim toolbar: Floor or Desks, zoom, and one ⋯ menu (Your look, the office's look, Edit layout, Sound, where your tribe runs, what's private, GitHub).
+- **One box to drive everything**: a message box at the bottom of the office, the same as the one in Messages. Plain words go to #general and show up in Messages for everyone; @someone mentions them; "@claude add a leaderboard" gives your AI helper a task; "/" lists commands (task, add an AI helper, invite, ask Flint, your look, where it runs); "invite a friend" or "make the website darker" runs through Flint and doesn't post to chat. "add claude" opens Claude's one-line setup. Up brings back your last message.
+- **A side panel: Working on, Preview, Updates**: Working on is one calm list (Needs you, Working now, Up next, Here) with Approve right there; each helper is one line that opens for its task, files and actions. Preview shows your app and website in tabs, live. Updates is what happened, newest first.
+- **Name tags in pixel style**: thicker plates that match the art, the name big and the owner small, a colour mark for AI helpers, Flint and people, a dot while typing, never overlapping.
+- **A real character creator**: Your look has a large live preview (stand, walk, sit, type, every direction), ten tabs of picture swatches and Randomize, Undo, Reset. 95 parts, 31 of them new (afro, buns, mohawk, curls, hoodies, striped tees, skirts, high-tops, bucket hats, headphones and more), and 77 colours, including 12 skin tones. Colours are swapped shade by shade, so every part still looks hand-drawn. Owners can restyle their AI helpers; Flint stays Flint.
+- **Fixes**: reading characters have their arms back; stubble no longer leaves see-through holes; hair no longer pokes through hats; toasts on the office page sit above the message box.
+- **Phones**: the office keeps the desk list, the message box stays at the bottom, the side panel is a sheet, and the character creator is a sheet with 40px targets.
+
 ## v0.46.0
 - **Agents & office, one place inside the app**: the Agents hub and the office are one page in the main area. The office floor (or the desk grid) is at the top; under it, what each AI helper is doing and what's waiting for your OK. Clicking anyone on the floor or in the list gives the same card: message, give a task, approve, open what they're working on. Every old door (Agents Hub, Agent fleet, the office) leads here.
 - **Add an AI helper, start to finish**: pick Claude, ChatGPT, Codex, Gemini, Cursor, a model on this computer or a free AI in your browser; the one setup that fits opens; the helper sits at a desk and in the list; give it a first task and approve its work from its card.
