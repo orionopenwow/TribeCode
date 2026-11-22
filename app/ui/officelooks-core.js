@@ -301,8 +301,11 @@
   const colours = px => { const s = new Set(); for (let i = 0; i < px.length; i += 4) if (px[i + 3] > 1) s.add(hexOf(px[i], px[i + 1], px[i + 2])); return [...s]; };
   // get(file) -> { width, height, data } or null. mapCache (optional Map) keeps recolour maps between calls.
   function composite(look, get, mapCache) {
-    const out = new Uint8ClampedArray(W * H * 4), missing = [];
-    for (const l of layers(look)) {
+    const out = new Uint8ClampedArray(W * H * 4), missing = [], all = layers(look);
+    // Hair that rises above a hat (spikes, a quiff) is hidden: in each frame nothing of the hair draws above the hat's top.
+    const hatL = all.find(l => l.slot === 'hat'), hatImg = hatL && get(hatL.file), hatTop = new Map();
+    if (hatImg && hatImg.width === W) for (let i = 3; i < hatImg.data.length; i += 4) if (hatImg.data[i] > 1) { const p = i >> 2, f = ((p / W / 32) | 0) * 8 + (((p % W) / 16) | 0), y = (p / W) | 0; if (!hatTop.has(f) || y < hatTop.get(f)) hatTop.set(f, y); }
+    for (const l of all) {
       const img = get(l.file); if (!img) { missing.push(l.file); continue; }
       if (img.width !== W || img.height !== H) continue;
       const src = img.data;
@@ -317,6 +320,7 @@
         const p = i >> 2, x = p % W, y = (p / W) | 0;
         if (l.rows && !l.rows.includes((y / 32) | 0)) continue;
         if (l.cols && !l.cols.includes((x / 16) | 0)) continue;
+        if (l.slot === 'hair' && hatTop.size) { const t = hatTop.get(((y / 32) | 0) * 8 + ((x / 16) | 0)); if (t != null && y < t) continue; }
         let r = src[i], g = src[i + 1], b = src[i + 2];
         if (map) { const m = map.get(hexOf(r, g, b)); if (m) { const c = rgbOf(m); r = c[0]; g = c[1]; b = c[2]; } }
         const a = src[i + 3];
