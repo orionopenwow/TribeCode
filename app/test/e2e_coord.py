@@ -317,8 +317,10 @@ def ui_host(b, host, orion, maya, pq, b1):
         host.wait_for_selector("#view-coord:not(.hidden) #ad-hero")
         wait_text(host, "#fl-agents", "Claude · Orion")   # feat/fleet: one row per agent under the next-step hero
         wait_text(host, "#fl-agents", "12k")
-        wait_text(host, "#coord-body", "What the agents are saying"); wait_text(host, "#coord-body", "Polish bridge sprites")
-        host.fill("#talk-input", "@agents nice work"); host.press("#talk-input", "Enter"); wait_text(host, "#coord-body .talk", "nice work")
+        # feat/office-full: #agents shows in the side panel's Updates; "@agents …" in the box at the bottom writes there
+        host.click("#ofl-tab-updates"); wait_text(host, "#ao-updates", "Polish bridge sprites")
+        host.fill("#ao-box .fl-in", "@agents nice work"); host.press("#ao-box .fl-in", "Enter"); wait_text(host, "#ao-updates", "nice work")
+        host.click("#ofl-tab-work")
         host.click("#fl-agents [data-fl-act='pause']")
         wait_text(host, "#fl-agents", "Paused")
         shot(host, "coord-agents")

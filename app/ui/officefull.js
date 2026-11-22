@@ -10,7 +10,8 @@
 //                 tasks in progress), Updates (TribeFlintDash.updates and #agents, newest first). Phones: a tab strip
 //                 opens it as a bottom sheet.
 //   the box       one Messages-style box pinned at the bottom (Flint's box, TribeFlint.mount): plain words go to the
-//                 tribe's chat, "@name" to a person or an AI helper (mentions.js, the chat's own @commands), "/task …"
+//                 tribe's chat, "@name" to a person or an AI helper (mentions.js, the chat's own @commands), "@agents …" to
+//                 #agents, "/task …"
 //                 makes a task, and a request like "add an AI helper" or "make the website darker" goes to Flint (no AI
 //                 needed). Replies show for a while in a slim strip above it.
 // Public: window.TribeOfficeFull = { ensure(el, pid), work(html), sync(), open(tab), route(text), panel(), menu() }
@@ -265,6 +266,12 @@
     // "@an-ai-helper …" gives that helper a public command (server/askai.js)
     ui.me(text);
     const c = C(); if (!c || !c.hasToken || !c.hasToken()) { ui.say(T('Start or join a tribe first, then this goes to its chat.')); return null; }
+    // "@agents …" is for every AI helper: it goes to #agents (they read it there; it shows in Updates)
+    if (/^@agents\b/i.test(text)) {
+      try { await c.api('/agents/channel', { method: 'POST', body: { text } }); ui.ev(T('Sent to the AI helpers in #agents.'), { k: 'chat', acts: [{ label: T('Updates'), fn: () => (phone() ? sheet('updates') : (setPanel(true), show('updates'))) }] }); if (tab === 'updates') upSoon(); }
+      catch (e) { ui.say(e.message || String(e)); }
+      return null;
+    }
     const body = { text, cid: c.newId ? c.newId() : String(Date.now()) };
     if (c.queue) c.queue('/chat/general', body, { kind: 'chat', ch: 'general' }); else await c.api('/chat/general', { method: 'POST', body });
     const openChat = { label: T('Open chat'), fn: () => window.TribeApp && window.TribeApp.show && window.TribeApp.show('chat') };
