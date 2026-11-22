@@ -1,5 +1,21 @@
 # Changelog
 
+## v0.46.0
+- **Agents & office, one place inside the app**: the Agents hub and the office are one page in the main area. The office floor (or the desk grid) is at the top; under it, what each AI helper is doing and what's waiting for your OK. Clicking anyone on the floor or in the list gives the same card: message, give a task, approve, open what they're working on. Every old door (Agents Hub, Agent fleet, the office) leads here.
+- **Add an AI helper, start to finish**: pick Claude, ChatGPT, Codex, Gemini, Cursor, a model on this computer or a free AI in your browser; the one setup that fits opens; the helper sits at a desk and in the list; give it a first task and approve its work from its card.
+- **Bring a friend, where your tribe runs, what's private, GitHub**: four short cards on the same page. Invite by link or QR; see where the tribe runs and move it (this computer, a friend's computer connected directly, a shared folder, a free cloud); an honest "What's private" that says what is and isn't encrypted; Connect GitHub works whether or not you have an account yet, and ends with the project backed up.
+- **A fresh start opens on one sentence**: the first launch shows "What do you want to make?" instead of an empty "My Tribe". The sentence fills that project, so there's still only one. "Skip" is there if you'd rather look around.
+- **A quieter sidebar for newcomers**: Agents & office and Set up company wait until a friend or an AI helper joins. Ctrl K always finds them.
+- **The dashboard asks once**: what you're making is the line under the project's name; Flint's card no longer asks again. After a first version, the next step is "Change one thing", then "Show a friend".
+- **Preview and Flint side by side** on wide screens, with nothing cut off; "Add files" is one slim row that opens when you click it or drag a file in; the right panel is Flint's chat.
+- **Share link** opens Publish when there's nothing online yet, instead of "Nothing to share yet".
+- **A website's suggested tasks are about websites**: your headline, your pictures, a phone check, how people reach you, putting it online. No more "orders" for a bakery site.
+- **One website tool**: Files › Website shows the website designer's site with Open the designer and Put it online. The old page builder is gone from every menu; an old site gets "Bring it into the designer" and nothing is deleted.
+- **Publish says what you made**: a play link for a game, a link to your site for a website, a link to try your app for an app. Publish errors have Try again.
+- **No credit talk while payments are off**: when the built-in AI is used up, it says your own AI is free to connect.
+- **Fixes**: the dashboard no longer sometimes stays blank right after loading.
+- **Phones**: Agents & office shows the desk list and fits 390px; the newcomer Home, the slim Add files row and the website page fit with 40px targets.
+
 ## v0.45.0
 - **Say what you're making when you create a tribe**: the create sheet has one optional "What are you making?" box under the name, with three examples. The sentence becomes the line under your project's name, a first version is made from it, and the suggested tasks follow it. Leave the name empty and the sentence names the project. A sentence already typed on Home is carried over.
 - **A sketch from your sentence**: with only a sentence and nothing made yet, the dashboard preview draws what the sentence describes, labelled as a sketch, with "Make it real".
