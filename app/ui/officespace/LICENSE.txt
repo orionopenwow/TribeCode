@@ -1,6 +1,7 @@
 Art in this folder: Pixel Agents (https://github.com/pablodelucca/pixel-agents), MIT License, see below.
 Character parts (characters/) are based on the Metro City character pack by JIK-A-4, CC0 1.0
 (https://jik-a-4.itch.io/metrocity-free-topdown-character-pack).
+Parts made from them by TribeCode (scripts/dev/office-looks-parts.py, listed in NOTICE) follow the same terms.
 PNGs were losslessly recompressed (pixels unchanged); JSON was minified. catalog.json is made by scripts/dev/officespace-catalog.js.
 
 MIT License

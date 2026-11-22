@@ -5,7 +5,7 @@
 // colourise; walls autotiled by their N/E/S/W neighbours; carpets by marching squares; furniture views per turn.
 // Everything is cached: a tinted floor tile, wall piece, carpet piece, furniture view or character sheet is made once.
 //   window.TribeOfficeArt = { ready() -> Promise, T, cat(), floor(), wall(), carpet(), furn(), sheet(), pet(), bubble(),
-//     flint(), defaultLayout(n), parseType(), PARTS, wardrobe() }
+//     flint(), defaultLayout(n), parseType(), dress(look), partFiles(look), lookKey(look), wardrobe() }
 (function () {
   'use strict';
   const T = 16, BASE = 'officespace/';
@@ -134,69 +134,26 @@
   // Size in tiles of an item at a turn: { fw, fh, w, h, bg }
   function size(id, r) { const it = cat()[id], v = viewOf(id, r); if (!it || !v) return null; return { fw: v.fw, fh: v.fh, w: v.w, h: v.h, bg: it.bg | 0, cat: it.cat, wall: !!it.wall, surface: !!it.surface, on: !!v.on }; }
 
-  // ---------- characters (layered parts, Pixel Agents' order) ----------
-  const LAYERS = ['body', 'whites', 'iris', 'lashes', 'pants', 'top', 'full', 'tie', 'jacket', 'lanyard', 'necklace', 'watch', 'shoes', 'hair', 'earrings', 'beard', 'shades', 'hairshades', 'hat'];
-  const EYES = { flat: 'plain', bust: 'lashes' };
-  const part = (slot, id) => ((WARD && WARD.parts[slot]) || []).find(p => p.id === id) || null;
-  const valueOf = (slot, id, i) => { const P = WARD && WARD.palettes[slot]; const vals = P && P.values && P.values[id]; return vals && vals.length ? vals[((i | 0) % vals.length + vals.length) % vals.length] : null; };
-  // A look is plain numbers (server/office.js checks them); these lists turn them into part ids.
-  const PARTS = {
-    body: ['flat', 'bust'],
-    hair: ['short', 'spiky', 'parted', 'side_swept', 'mop', 'bowl_cut', 'slicked_back', 'bob', 'shoulder_length', 'long', 'long_waves', 'long_bangs', 'high_ponytail', 'low_ponytail'],
-    top: ['tshirt', 'long_sleeved_shirt', 'turtleneck', 'tank_top', 'tank_long'],
-    pants: ['jeans', 'low_cut_jeans', 'shorts', 'fitted_shorts', 'skirt', 'short_skirt', 'long_skirt'],
-    shoes: ['sneakers', 'boots'],
-    jacket: [null, 'open_shirt', 'vest', 'blazer', 'bomber', 'long_coat'],
-    full: [null, 'business_suit', 'suit_and_tie', 'dress', 'fitted_dress'],
-    beard: [null, 'stubble', 'moustache', 'goatee', 'full_beard', 'long_beard'],
-    hat: [null, 'plain_cap', 'flap_cap', 'badge_cap'],
-    acc: [null, 'glasses', 'shades', 'earrings', 'necklace', 'watch', 'lanyard', 'hairshades'],
-  };
-  const ACC_SLOT = { glasses: 'shades', shades: 'shades', earrings: 'earrings', necklace: 'necklace', watch: 'watch', lanyard: 'lanyard', hairshades: 'hairshades' };
-  const pick = (k, i) => { const L = PARTS[k]; return L[((i | 0) % L.length + L.length) % L.length]; };
-  // look -> { slot: { id, cv } } in draw order
-  function dress(look) {
-    const L = look || {}, out = {};
-    const body = pick('body', L.body), full = pick('full', L.full);
-    out.body = { id: body, cv: valueOf('body', body, L.skin) };
-    const eyes = EYES[body] || 'plain';
-    out.whites = { file: `eyes/${eyes}/whites.png` }; out.iris = { file: `eyes/${eyes}/iris.both.png` }; out.lashes = { file: `eyes/${eyes}/lashes.png` };
-    if (full) { out.full = { id: full, cv: valueOf('full', full, L.fullColor) }; if (full === 'suit_and_tie') out.tie = { file: 'tie/suit_and_tie.png' }; }
-    else {
-      const top = pick('top', L.top), pants = pick('pants', L.pants);
-      out.top = { id: top, cv: valueOf('top', top, L.topColor) }; out.pants = { id: pants, cv: valueOf('pants', pants, L.pantsColor) };
-    }
-    const jacket = pick('jacket', L.jacket); if (jacket) out.jacket = { id: jacket, cv: valueOf('jacket', jacket, L.jacketColor) };
-    const shoes = pick('shoes', L.shoes); out.shoes = { id: shoes, cv: valueOf('shoes', shoes, L.shoesColor) };
-    const hair = pick('hair', L.hair); out.hair = { id: hair, cv: valueOf('hair', hair, L.hairColor) };
-    const beard = pick('beard', L.beard); if (beard) out.beard = { id: beard, cv: valueOf('beard', beard, L.hairColor) };
-    const hat = pick('hat', L.hat); if (hat) out.hat = { id: hat, cv: valueOf('hat', hat, L.hatColor) };
-    for (const a of [pick('acc', L.acc), L.extra ? pick('acc', L.extra) : null]) if (a) { const s = ACC_SLOT[a]; out[s] = { id: a, cv: valueOf(s, a, L.accColor) }; }
-    return out;
-  }
-  const lookKey = look => JSON.stringify(look || {});
-  // Every part file a look needs (they load on first use, then stay cached by the service worker).
-  function partFiles(d) { return Object.entries(d).map(([slot, p]) => 'characters/' + (p.file || `${slot === 'shades' && p.id === 'glasses' ? 'shades' : slot}/${p.id}.png`)); }
-  // The look's sheet (128x96), composed bottom to top; earrings go under the hair in the back view. null until loaded.
+  // ---------- characters (layered parts, Pixel Agents' order; officelooks-core.js) ----------
+  // A look's parts and colours come from TribeOfficeLooksCore: every part palette-swapped once per look (the recolour
+  // maps are cached per part and colour), composed once into a 128x96 sheet, mirrored once for facing left. A floor of
+  // 20 people draws 20 cached canvases a frame. Old looks (v1 numbers) read as before.
+  const LK = () => window.TribeOfficeLooksCore;
+  const MAPS = new Map(), SHEETS = new Map(), SHEET_MAX = 240;
+  const lookKey = look => { const K = LK(); return K ? JSON.stringify(K.compact(look)) : JSON.stringify(look || {}); };
+  const dress = look => (LK() ? LK().layers(look) : []);
+  const partFiles = look => (LK() ? LK().files(look).map(f => 'characters/' + f) : []);
+  // The look's sheet (128x96), or null until its parts have loaded (onload runs then).
   function sheet(look, onload) {
-    const key = 'ch' + lookKey(look);
-    if (CACHE.has(key)) return CACHE.get(key);
-    const d = dress(look), files = partFiles(d);
-    const missing = files.filter(f => !got(f));
+    const K = LK(); if (!K) return null;
+    const key = lookKey(look);
+    if (SHEETS.has(key)) { const sh = SHEETS.get(key); SHEETS.delete(key); SHEETS.set(key, sh); return sh; }
+    const files = partFiles(look), missing = files.filter(f => !got(f));
     if (missing.length) { Promise.all(missing.map(load)).then(() => onload && onload()); return null; }
-    const W = 128, H = 96, out = new Uint8ClampedArray(W * H * 4);
-    const put = (src, rows) => { for (let i = 0; i < src.length; i += 4) { if (src[i + 3] < 2) continue; const row = Math.floor(i / 4 / W / 32); if (rows && !rows.includes(row)) continue; out[i] = src[i]; out[i + 1] = src[i + 1]; out[i + 2] = src[i + 2]; out[i + 3] = src[i + 3]; } };
-    const layer = slot => { const p = d[slot]; if (!p) return null; const file = 'characters/' + (p.file || `${slot}/${p.id}.png`); const px = pixels(file); if (!px || px.width !== W) return null; const pr = p.id ? part(slot, p.id) : null; return tint(px.data, p.cv, pr && pr.swaps); };
-    const cooked = {}; for (const s of LAYERS) cooked[s] = layer(s);
-    for (const s of LAYERS) {
-      if (!cooked[s]) continue;
-      if (s === 'hair') { put(cooked.hair); if (cooked.earrings) put(cooked.earrings, [0, 2]); continue; }
-      if (s === 'earrings') continue;
-      if (s === 'body' && cooked.earrings) { put(cooked.body); put(cooked.earrings, [1]); continue; }
-      put(cooked[s]);
-    }
-    const c = fromData(out, W, H), sh = { c, left: null };
-    CACHE.set(key, sh);
+    const out = K.composite(look, f => pixels('characters/' + f), MAPS);
+    const sh = { c: fromData(out.data, out.width, out.height), left: null, key };
+    SHEETS.set(key, sh);
+    if (SHEETS.size > SHEET_MAX) SHEETS.delete(SHEETS.keys().next().value);
     return sh;
   }
   // dir: 0 down, 1 up, 2 right, 3 left; col: 0-2 walk, 3-4 type, 5-6 read, 7 seated. Anchored bottom-centre at (x, y).
@@ -264,9 +221,7 @@
 
   const api = {
     T, ready, cat, size, viewOf, floor, wall, carpet, furn, sheet, drawSheet, pet, drawPet, bubble, flint, cvOf, parseType, defaultLayout,
-    PARTS, dress, partFiles, wardrobe: () => WARD,
-    swatches: slot => ((WARD && WARD.palettes[slot] && WARD.palettes[slot].squares) || []).map(s => s.hex),
-    label: (slot, id) => { const p = part(slot, id); return p ? p.label : id; },
+    dress, partFiles, lookKey, wardrobe: () => WARD,
     loaded: () => !!CAT,
     files: () => [...LOADED],
   };

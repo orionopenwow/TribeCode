@@ -226,3 +226,7 @@ Metro City character pack by JIK-A-4, CC0 1.0 (https://jik-a-4.itch.io/metrocity
 The character parts in app/ui/officespace/characters/ are based on JIK-A-4's Metro City free top-down character pack,
 dedicated to the public domain under CC0 1.0 Universal (https://creativecommons.org/publicdomain/zero/1.0/). No
 credit is required; we give it gladly.
+TribeCode adds 31 parts made by editing those pixels (scripts/dev/office-looks-parts.py): mirrored partings, buns,
+curls, a buzz cut and a mohawk; striped, ringer, pocket and polo tees and a hoodie; cuffed jeans and a pleated skirt;
+soled sneakers and high-tops; a cardigan and a zip hoodie; three beards; four hats; a bow tie, a scarf, headphones and
+studs. They are derived from the CC0 parts as shipped in Pixel Agents (MIT) and are offered under the same terms.

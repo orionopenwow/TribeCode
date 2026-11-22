@@ -176,7 +176,7 @@
         ${(d.files || []).length ? `<p class="os-sub">${esc(tr('Files it claimed'))}</p><ul class="os-files">${d.files.map(f => `<li><button class="linkish" data-os-file="${esc(f)}">${esc(f)}</button></li>`).join('')}</ul>` : ''}
         ${(d.lines || []).length ? `<p class="os-sub">${esc(tr('Last steps'))}</p><ul class="os-lines">${d.lines.map(l => `<li>${esc(tr(l))}</li>`).join('')}</ul>` : ''}
         ${asks ? `<p class="os-sub">${esc(tr('Asking for your OK'))}</p><ul class="os-asks">${asks}</ul><input class="input sm os-note" maxlength="300" placeholder="${esc(tr('What to change (for Ask for changes)'))}" aria-label="${esc(tr('What to change (for Ask for changes)'))}">` : ''}
-        <div class="os-acts"><button class="btn sm" data-os-do="dm">${esc(tr('Message it'))}</button>${d.state !== 'off' ? `<button class="btn sm" data-os-do="${d.paused ? 'resume' : 'pause'}">${esc(d.paused ? tr('Resume') : tr('Pause'))}</button>` : ''}<button class="btn sm" data-os-do="agent">${esc(tr('Its page'))}</button></div>
+        <div class="os-acts"><button class="btn sm" data-os-do="dm">${esc(tr('Message it'))}</button>${d.state !== 'off' ? `<button class="btn sm" data-os-do="${d.paused ? 'resume' : 'pause'}">${esc(d.paused ? tr('Resume') : tr('Pause'))}</button>` : ''}<button class="btn sm" data-os-do="agent">${esc(tr('Its page'))}</button>${data && (d.owner === data.me || data.canSet) && window.TribeOfficeLooks ? `<button class="btn sm" data-os-do="look">${esc(tr('Change its look'))}</button>` : ''}</div>
         <form class="os-give" data-os-give><input class="input sm" maxlength="140" placeholder="${esc(tr('Give a task…'))}" aria-label="${esc(tr('Give a task'))}"><button class="btn sm">${esc(tr('Give'))}</button></form>`;
     }
     const where = placeText(d), mine = (window.TribeTasks && window.TribeTasks.all ? window.TribeTasks.all() : []).filter(t => t.assignee === d.id).slice(-3).reverse();
@@ -197,6 +197,7 @@
       if (kind === 'open') { if (W.TribePresence && W.TribePresence.jump) { const ok = await W.TribePresence.jump(d.id); if (ok === false) toast(tr('You can\'t open that from here.')); } return; }
       if (kind === 'agent') { if (W.TribeShell && W.TribeShell.previewAgent) W.TribeShell.previewAgent(d.id); return; }
       if (kind === 'pause' || kind === 'resume') { await C.api(`/coord/agents/${encodeURIComponent(d.id)}/control`, { method: 'POST', body: { action: kind } }); toast(kind === 'pause' ? tr('Paused') : tr('Resumed')); refresh(); return; }
+      if (kind === 'look') { if (W.TribeOfficeLooks) W.TribeOfficeLooks.openHelper(d); return; }   // feat/office-looks: the helper's owner changes its look
       if (kind === 'flint') { if (W.TribeFlint && W.TribeFlint.open) W.TribeFlint.open(); return; }
       if (kind === 'next') { if (W.TribeShell && W.TribeShell.go) W.TribeShell.go('home'); return; }
       if (kind === 'design') { if (W.TribeDesignFlow && W.TribeDesignFlow.open) W.TribeDesignFlow.open(); else if (W.TribeShell && W.TribeShell.go) W.TribeShell.go('canvas'); return; }
@@ -241,7 +242,7 @@
     const sh = cardSheet = UI.sheet({ id: 'of-card', eyebrow: `${kindText(d)} · ${statusOf(d)}`, title: d.name, body: `<div class="os-card of-card" data-who="${esc(d.id)}">${cardBody(d)}</div>`, onClose: () => { if (cardSheet === sh) cardSheet = null; } });
     const card = sh.body.querySelector('.of-card');
     card.addEventListener('click', e => {
-      if (e.target.closest('[data-os-act="look"]')) { sh.close(); const m = [...mounts].find(x => x.space); if (m && m.el.querySelector('[data-os-act="look"]')) m.el.querySelector('.os-bar [data-os-act="look"]').click(); else toast(tr('Your look is set on the pixel floor.')); return; }
+      if (e.target.closest('[data-os-act="look"]')) { sh.close(); if (window.TribeOfficeLooks) window.TribeOfficeLooks.openMine(); return; }   // feat/office-looks
       cardClick(e, card, find() || d, () => sh.close());
     });
     card.addEventListener('submit', e => cardSubmit(e, card, find() || d));

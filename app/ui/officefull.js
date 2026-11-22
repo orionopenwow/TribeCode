@@ -316,7 +316,7 @@
       if (k === 'ai') { const kind = AI_KIND[rest.toLowerCase()] || 'claude'; A.pick(kind); ui.ev(T('The setup for {ai} is open: copy the one line and it joins here.', { ai: kind === 'claude' ? 'Claude' : rest || 'Claude' }), { k: 'info' }); return null; }
       if (k === 'invite') { A.friend(); ui.ev(T('The invite is open.'), { k: 'info' }); return null; }
       if (k === 'where') { A.run('where'); return null; }
-      if (k === 'look') { const sp = space(); if (sp && O().view() === 'floor') sp.act('look'); else ui.say(T('Your look is set on the pixel floor. Turn it on with Floor at the top.')); return null; }
+      if (k === 'look') { if (window.TribeOfficeLooks && window.TribeOfficeLooks.openMine) { window.TribeOfficeLooks.openMine(); return null; } const sp = space(); if (sp) sp.act('look'); return null; }
       if (k === 'flint') { await ui.flint(rest || 'what can you do'); return null; }
     }
     // "add claude", "connect chatgpt": the one setup for that AI, straight away

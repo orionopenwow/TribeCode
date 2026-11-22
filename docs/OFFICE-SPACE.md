@@ -50,12 +50,21 @@ pixel pointer down to the head; tags never overlap.
 
 The characters:
 
-- **People** are dressed from Pixel Agents' wardrobe: body, skin, hair and hair colour, top, bottoms, shoes, a jacket, an
-  outfit (suits and dresses), a beard, a hat and an extra (glasses, shades, earrings, a necklace, a watch, a lanyard),
-  each in its own colours. Each person starts with a look picked from their id. **Your look** opens the wardrobe, and
-  the look is saved to their profile on the server.
-- **AI helpers** (Claude Code, Cursor, Codex, the tribe's own AI) wear the Teal shirt, a lanyard and a cap in their
-  tool's colour (Claude orange, Cursor white, Codex green), and their name tag carries an **AI** mark.
+- **People** choose their character in **Your look** (`app/ui/officelooks.js`), a creator with a large live preview
+  (standing, walking, seated or typing, turned to face each way) and ten tabs: Body & skin, Face, Hair, Facial hair, Top
+  (with whole outfits), Jacket, Bottoms, Shoes, Accessories and Hat. Every choice is a swatch of the real part drawn on a
+  plain character, with colours for each part, and **Randomize**, **Undo**, **Reset** and **Save**. Arrow keys move along
+  the tabs and choices. On phones it is a sheet with 40px targets. Until someone saves, their look is picked from their id.
+- **What there is:** 95 parts (2 bodies, 5 eye styles, 23 hairstyles including bald, 11 tops, 4 whole outfits, 9 bottoms,
+  4 shoes, 7 jackets, 8 beards, 7 hats, and 15 accessories: glasses, sunglasses, shades on the head, a tie, a bow tie, a
+  scarf, headphones, earrings, studs, two necklaces, three watches and a lanyard) and 77 colours: 12 skin tones from
+  porcelain to the deepest browns, 20 hair colours (13 natural, 7 bright), 24 clothing colours chosen to sit on the
+  office's wood and navy, 8 eye colours, 5 metals and 8 frame colours. Clashes give way to what you just chose: a hat
+  takes off shades worn on the head, buns and a mohawk don't go under a hat, a tie needs a collar.
+- **AI helpers** (Claude Code, Cursor, Codex, the tribe's own AI) wear a long-sleeved teal shirt, a lanyard and a badge
+  cap in their tool's colour (Claude orange, Cursor white, Codex green), and their name tag carries an **AI** mark. The
+  helper's owner (or the host or an admin) can change it from the helper's card: **Change its look** opens the same
+  creator, and **Reset** there goes back to the tool's colours.
 - **Flint** is a small pixel flame in Ember who stays by the coffee.
 - Two office pets, **Claudio** and **Gitcat**, wander between people. Click one for a heart.
 
@@ -90,7 +99,16 @@ The card only uses features TribeCode already has. DM text never appears on the 
 - Furniture comes from `catalog.json` (made from the manifests by `node scripts/dev/officespace-catalog.js`): a view per
   turn (front, side, back, side mirrored), and the computer's three "on" frames.
 - A character is a 128×96 sheet (rows: down, up, right; left is mirrored; columns: walk ×3, type ×2, read ×2, seated)
-  built from the layered parts in Pixel Agents' order, with its colour swaps and colourise.
+  built from the layered parts in Pixel Agents' order (`app/ui/officelooks-core.js`, shared by the browser, the server's
+  look check, the contact sheets and the tests). The read frames hold a page (the art's own prop) so the hands show.
+- Colours are a palette swap, not a tint: every distinct colour of a part is a shade of its ramp, and each keeps its
+  place on the ramp (its lightness step from the part's reference shade in OKLab; for coloured sources its chroma ratio
+  and hue offset too). Grey sources get hand-made style hue shifts: shadows cooler, highlights warmer. Near-black
+  outlines, lenses, badges and shirt whites are kept, the body's outline stays dark on light skin, and the number of
+  distinct shades never changes. Each look is recoloured and composed once into a cached canvas (and mirrored once for
+  facing left), so a floor of 20 people draws 20 cached pictures a frame.
+- Looks are numbers (`{ v: 2, body, skin, hair, hairColor, ... }`, lists append-only); a look saved before v2 still reads
+  as it did.
 - Depth: everything is sorted by its base. Chairs sort by their top row (backs of back-facing chairs go over the person),
   things on a desk sort just above the desk, and characters sort at their feet.
 - Walking is 3 tiles a second with 0.15 s steps; typing 0.3 s per frame; reading 0.6 s. Seated characters sit 6 px lower.
@@ -104,7 +122,7 @@ default** removes your layout. **Export** gives a JSON file and **Import** reads
 
 API: `GET /api/office` returns `layout` (or `null` for the default) and `set`; `PUT /api/office {layout}` (or
 `{layout: null}`) and `PUT /api/office {set}` need the host or an admin. `PUT /api/office/look {look}` sets your own
-look (people only). The server checks every value: known tile names, furniture ids in capitals only, sizes clamped,
+look (people only); `{look, for: helperId}` sets an AI helper's, for its owner, the host or an admin. The server checks every value: known tile names, furniture ids in capitals only, sizes clamped,
 short names, and look numbers inside their ranges.
 
 Layout JSON (v2):
@@ -159,6 +177,14 @@ Agents' ideas (sprite sheets, layer order, colour swaps, wall autotiling, depth 
 JavaScript; no TypeScript or React code was copied. Flint's flame is TribeCode's own. Donarg's Office Interior Tileset
 is not included. Licence text: NOTICE and `app/ui/officespace/LICENSE.txt`.
 
-Files: `app/ui/agentsoffice.js` (Agents & office), `app/ui/officespace.js` (the floor, characters, wardrobe, editor; the card's body is office.js's), `app/ui/officespace-art.js` (loading and
+**Checking the characters.** `node scripts/dev/office-looks-sheet.js [dir]` draws contact sheets with the app's own
+rules: every part in every colour, every part's frames (front, back, side, walking, seated), 60 random characters, every
+skin tone with every hair colour, every frame of a few looks, and characters on the office floor by the furniture.
+`python3 scripts/dev/office-looks-parts.py` remakes the 31 derived parts. `node app/test/office_looks_test.js` checks
+that every part keeps the 16×32 frame grid, stays within 4px of the body, moves with the head (no jitter), keeps every
+shade when recoloured, and that random characters have no holes or clashes.
+
+Files: `app/ui/officelooks-core.js` (parts, palettes, the palette swap, look rules), `app/ui/officelooks.js` and
+`officelooks.css` (Your look), `app/ui/agentsoffice.js` (Agents & office), `app/ui/officespace.js` (the floor, characters, wardrobe, editor; the card's body is office.js's), `app/ui/officespace-art.js` (loading and
 drawing the art), `app/ui/officespace-sets.js` (sets and starting looks), `app/ui/officespace.css`, `app/ui/office.js`
 (the office and the Floor/Desks switch), `server/office.js`. Test: `app/test/e2e_office_space.py`.
