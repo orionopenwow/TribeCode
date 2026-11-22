@@ -64,7 +64,8 @@
   #olk-sheet .olk-turn .btn { min-width: 40px; width: 40px; min-height: 40px; height: 40px; }
   .olk-chip { width: 40px; height: 40px; }
   .olk-sws { grid-template-columns: repeat(auto-fill, minmax(72px, 1fr)); }
-  #olk-sheet .olk-foot .btn { min-height: 40px; height: 40px; }
+  #olk-sheet .olk-foot { flex-wrap: nowrap; gap: 6px; }
+  #olk-sheet .olk-foot .btn { min-height: 40px; height: 40px; padding: 0 10px; white-space: nowrap; }
   #olk-sheet .olk-foot [data-olk="cancel"], .olk-gap { display: none; }   /* the sheet's close button is there */
   .olk-foot > .btn.primary { margin-left: auto; }
 }
