@@ -68,7 +68,7 @@ def tabs(page):
     return page.evaluate("[...document.querySelectorAll('#view-tabs [data-tab]')].map(b => [...b.childNodes].filter(n => n.nodeType === 3).map(n => n.textContent).join('').trim())")  # tabs lead with an icon (icons.js); the label is the text node
 
 
-CARDS = ["#ad-hero", "#ad-needs", "#ad-owners", "#ad-chan", "#ad-today"]
+CARDS = ["#ad-hero", "#ad-needs", "#ad-owners", "#ad-chan", "#ad-today"]   # owners, #agents and today left the page (feat/office-full)
 
 
 def cards(page):
@@ -106,7 +106,7 @@ def main():
             assert host.evaluate("location.hash") == "#/agents/agents"
             wait_text(host, "#crumb-label", "Agents & office › Dashboard")
             fs = host.evaluate("parseFloat(getComputedStyle(document.querySelector('#ad-hero .fl-title')).fontSize)")
-            assert fs >= 18, fs
+            assert fs >= 15, fs   # feat/office-full: in the side panel's Working on
             shot(host, "agents-dash-empty")
             # Add an AI helper: seven choices and Another tool; each opens the invite sheet (e2e_agents_office.py covers it)
             assert host.locator("#ad-hero [data-ao-pick]").count() == 8
@@ -135,8 +135,7 @@ def main():
             wait_text(host, "#ad-hero", "Claude · Maya is waiting for an approval")
             wait_text(host, "#ad-needs", "Speed boots"); wait_text(host, "#ad-needs", "Campfire save points")
             wait_text(host, "#ad-needs", "2 things need you")
-            wait_text(host, "#ad-owners", "src/ui/")
-            host.wait_for_selector("#ad-chan #talk-input")
+            host.wait_for_selector("#ao-box .fl-in")   # feat/office-full: talking to agents is the box at the bottom ("@name …")
             assert host.locator("#ad-today").count() == 0 or host.locator("#ad-today .ad-plan").count() > 0, "Today only with a plan"
             host.mouse.move(720, 860); shot(host, "agents-dash")
             # one tap resolves each
@@ -148,9 +147,9 @@ def main():
             host.click("#ad-needs .ad-need:has-text('Campfire save points') [data-ad-take]")
             host.wait_for_selector("#ad-needs", state="detached", timeout=8000)
             assert [h for h in ok(api("/coord/handoffs", token=token, project=pid))["handoffs"] if h["title"] == "Campfire save points"][0]["status"] == "taken"
-            # a card header links to its full view (as a temporary tab)
-            host.click("#ad-owners [data-ad-open='ownership']"); host.wait_for_function("TribeCoord.tab() === 'ownership'")
-            host.wait_for_selector("#wt-ownership.on .wt-x.temp")
+            # who owns what is a full view (as a temporary tab)
+            host.evaluate("TribeCoord.open('ownership')"); host.wait_for_function("TribeCoord.tab() === 'ownership'")
+            host.wait_for_selector("#wt-ownership.on .wt-x.temp"); wait_text(host, "#coord-body", "src/ui/")
             host.click("#wt-agents"); host.wait_for_selector("#ad-hero")
             assert tabs(host) == [], tabs(host)   # p10: one tab, no tab row
 
@@ -189,11 +188,11 @@ def main():
             phone = ph.new_page(); watch(phone, "phone")
             phone.goto(BASE + "/?skipIntro=1")
             phone.wait_for_function("TribeClient.connected()")
-            phone.evaluate("TribeShell.go('agents')"); phone.wait_for_selector("#view-coord:not(.hidden) #ad-hero")
+            phone.evaluate("TribeShell.go('agents')"); phone.wait_for_selector("#view-coord:not(.hidden) #ao-box .fl-in")
+            phone.click("#ofl-strip [data-ofl-sheet='work']"); phone.wait_for_selector("#view-coord:not(.hidden) #ad-hero")
             wait_text(phone, "#fl-agents", "Maya")
-            phone.wait_for_selector("#ad-chan #talk-input")
             assert phone.evaluate("document.documentElement.scrollWidth <= innerWidth + 1"), phone.evaluate("document.documentElement.scrollWidth")
-            boxes = phone.evaluate("[...document.querySelectorAll('.ad-card')].map(c => { const r = c.getBoundingClientRect(); return [r.left, r.right]; })")
+            boxes = phone.evaluate("[...document.querySelectorAll('#ao-work > *')].map(c => { const r = c.getBoundingClientRect(); return [r.left, r.right]; })")
             assert boxes and all(l >= 0 and r <= 391 for l, r in boxes), boxes
             shot(phone, "agents-dash-phone")
             phone.click("#ad-views"); phone.wait_for_selector("#ad-menu.sheet")
