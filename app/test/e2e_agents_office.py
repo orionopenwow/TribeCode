@@ -1,13 +1,13 @@
 """Agents & office: the Agents hub and the office as one view inside the app (app/ui/agentsoffice.js, agentsdash.js,
 office.js, feat/agents-office). GitHub is a stand-in (app/test/ghmock.py); AI helpers are simulated MCP clients.
-  1. The view renders in the main area (no overlay), the office on top (desks while the pixel floor is off), then
-     Add an AI helper and the four loops. The old doors lead here: the sidebar row, TribeShell.go('agents'),
+  1. The view renders in the main area (no overlay), the office filling it (desks while the pixel floor is off), and the
+     side panel's Working on with Add an AI helper and the four loops (app/ui/officefull.js lays the page out). The old doors lead here: the sidebar row, TribeShell.go('agents'),
      TribeAgentsHub.office(), Settings, "Your AI tools"' back link, and Home's row (the same page for every project).
   2. Add an AI helper: Claude → the one setup (the invite sheet) → Copy → a simulated Claude Code connects → it sits at a
      desk and shows in the list → give it a first task from its card → it asks for an OK → Approve from the same card.
-  3. Click a person or an AI helper: a desk, the list under the pixel floor and the floor itself open the same actions.
+  3. Click a person or an AI helper: a desk, the avatars in the head line and the floor itself open the same actions.
   4. Bring a friend: the tribe link → a second browser on a 390px phone joins with join.html → the friend is at a desk.
-  5. Where your tribe runs: the current state and four options, each opening its flow (direct link, folder, free cloud).
+  5. Where your tribe runs (from the office's ... menu, like 6 and 7): the current state and four options, each opening its flow (direct link, folder, free cloud).
   6. Back up to GitHub: no account → GitHub's sign-up link, then sign in (a token, stand-in) → create → linked, and the
      card says so.
   7. What's private: only true lines ("not end-to-end encrypted"; this computer talks to itself); a third person can't
@@ -89,12 +89,21 @@ def main():
                 pg.wait_for_selector("#view-coord:not(.hidden) #ao-head", timeout=15000)
                 pg.wait_for_selector("#ad-office .of-desk, #ad-office .os-stage", timeout=15000)
 
+            def work(pg):   # the side panel's Working on
+                pg.evaluate("TribeOfficeFull.open('work')"); pg.wait_for_selector("#ofl-pane-work:not([hidden])", timeout=5000)
+
+            def menu(pg, k):   # an item of the office's ... menu
+                if not pg.locator("#ao-menu").count(): pg.click("#ao-more")
+                pg.wait_for_selector(f"#ao-menu [data-aom='{k}']", timeout=5000)
+                return f"#ao-menu [data-aom='{k}']"
+
             cp = page(camp, "Camp")
 
             # ---------- 1. one view, inside the app ----------
             assert cp.inner_text("#nest-ws-agents").strip() == "Agents & office", cp.inner_text("#nest-ws-agents")
             cp.click("#nest-ws-agents"); cp.wait_for_selector("#view-coord:not(.hidden) #ao-head", timeout=15000)
             cp.wait_for_selector("#ad-office [data-desk='flint']", timeout=15000)
+            work(cp)
             assert cp.evaluate("!!document.querySelector('#main #view-coord #ad-office') && !document.querySelector('.ui-scrim') && !document.querySelector('#invite-modal:not(.hidden)')"), "in the main area, not an overlay"
             assert cp.evaluate("document.querySelector('#ao-head').compareDocumentPosition(document.querySelector('#ad-office')) & Node.DOCUMENT_POSITION_FOLLOWING"), "the office right under the title"
             assert cp.evaluate("document.querySelector('#ad-office').compareDocumentPosition(document.querySelector('#ad-hero')) & Node.DOCUMENT_POSITION_FOLLOWING"), "the agents' state under the office"
@@ -116,13 +125,13 @@ def main():
             assert "Your AI tools" in cp.inner_text("#view-agents-hub h1")
             cp.click("[data-ah-back]"); cp.wait_for_selector("#view-coord:not(.hidden) #ao-head", timeout=10000)
             cp.evaluate("TribeHub.open('home')"); cp.wait_for_selector("#nest-fleet", timeout=10000)
-            assert cp.inner_text("#nest-fleet").strip() == "Agents & office"
+            assert cp.inner_text("#nest-fleet").strip() == "All agents & offices", cp.inner_text("#nest-fleet")
             cp.click("#nest-fleet"); cp.wait_for_selector("#view-agents-hub:not(.hidden) #ao-head", timeout=10000)
             cp.wait_for_selector("#view-agents-hub #ad-office [data-desk='flint']", timeout=10000)
             cp.wait_for_selector("#view-agents-hub #ao-setup", timeout=10000)
             assert cp.evaluate("document.body.dataset.view") == "agents-hub"
             cp.evaluate(f"TribeProjects.switchTo('{pid}', 'home')"); cp.wait_for_timeout(400)
-            to_view(cp)
+            to_view(cp); work(cp)
             print("ok  1. one view inside the app; every old door leads to it")
 
             # ---------- 2. add an AI helper, end to end ----------
@@ -180,7 +189,7 @@ def main():
             cp.evaluate("TribeOffice.refresh()")
             cp.wait_for_selector(f"#ad-office .of-desk[data-desk='{maya}'][data-role='person']", timeout=15000)
             cp.wait_for_function(f"document.querySelector(\"#ad-office .of-desk[data-desk='{maya}']\").dataset.state !== 'off'", timeout=15000)
-            cp.wait_for_function("document.querySelector('#ao-friend [data-ao-line]').textContent.includes('2 people')", timeout=10000)
+            cp.wait_for_function("document.querySelector('#ao-lead').textContent.includes('2 people online')", timeout=10000)
             print("ok  4. bring a friend: one link, a phone joins, she is at a desk and online")
 
             # ---------- 3. the same actions from a desk, the list and the floor ----------
@@ -188,8 +197,8 @@ def main():
             desk_acts = cp.eval_on_selector_all("#of-card [data-os-do], #of-card [data-os-give]", "els => els.map(e => e.dataset.osDo || 'give')")
             cp.keyboard.press("Escape"); cp.wait_for_selector("#of-card", state="detached")
             cp.click("#ad-office [data-of-on]")
-            cp.wait_for_selector("#ad-office .os-stage", timeout=15000); cp.wait_for_selector(f"#ad-office .of-roster [data-desk='{maya}']", timeout=10000)
-            cp.click(f"#ad-office .of-roster [data-desk='{maya}']"); cp.wait_for_selector("#of-card [data-os-do='dm']", timeout=8000)
+            cp.wait_for_selector("#ad-office .os-stage", timeout=15000); cp.wait_for_selector(f"#ao-here [data-desk='{maya}']", timeout=10000)
+            cp.click(f"#ao-here [data-desk='{maya}']"); cp.wait_for_selector("#of-card [data-os-do='dm']", timeout=8000)
             list_acts = cp.eval_on_selector_all("#of-card [data-os-do], #of-card [data-os-give]", "els => els.map(e => e.dataset.osDo || 'give')")
             cp.keyboard.press("Escape")
             cp.wait_for_selector(f"#ad-office .os-tag[data-os-who='{maya}']", timeout=15000)
@@ -201,27 +210,27 @@ def main():
             print("ok  3. a desk, the list and the floor open the same actions:", desk_acts)
 
             # ---------- 5. where your tribe runs ----------
-            assert "On this computer" in cp.inner_text("#ao-where [data-ao-line]")
-            cp.click("#ao-where [data-ao='where']"); cp.wait_for_selector("#ao-where-sheet .ao-opt", timeout=8000)
+            assert "On this computer" in cp.inner_text(menu(cp, "where"))
+            cp.click(menu(cp, "where")); cp.wait_for_selector("#ao-where-sheet .ao-opt", timeout=8000)
             assert cp.eval_on_selector_all("#ao-where-sheet [data-ao-opt]", "els => els.map(e => e.dataset.aoOpt)") == ["here", "direct", "folder", "cloud"]
             assert "Runs here now" in cp.inner_text("#ao-where-sheet [data-ao-opt='here']")
             for w in ("P2P", "host", "sync", "deploy"): assert w not in cp.inner_text("#ao-where-sheet"), w
             cp.click("#ao-where-sheet [data-ao-go='direct']"); cp.wait_for_selector("#os-sheet #os-p2p", timeout=8000)
             cp.wait_for_function("!document.querySelector('#os-ts').textContent.includes('Looking')", timeout=10000)
             cp.keyboard.press("Escape"); cp.wait_for_selector("#os-sheet", state="detached", timeout=5000)
-            cp.click("#ao-where [data-ao='where']"); cp.wait_for_selector("#ao-where-sheet [data-ao-go='cloud']")
+            cp.click(menu(cp, "where")); cp.wait_for_selector("#ao-where-sheet [data-ao-go='cloud']")
             cp.click("#ao-where-sheet [data-ao-go='cloud']"); cp.wait_for_selector("#ao-cloud-sheet #ao-cloud-go", timeout=8000)
             assert "render.com" in cp.inner_html("#ao-cloud-sheet")
             cp.keyboard.press("Escape"); cp.wait_for_selector("#ao-cloud-sheet", state="detached", timeout=5000)
-            cp.click("#ao-where [data-ao='where']"); cp.wait_for_selector("#ao-where-sheet [data-ao-go='folder']")
+            cp.click(menu(cp, "where")); cp.wait_for_selector("#ao-where-sheet [data-ao-go='folder']")
             fb = cp.locator("#ao-where-sheet [data-ao-go='folder']")
             if fb.is_disabled(): assert cp.locator("#ao-folder-why").count() == 1, "a disabled choice says why"
             cp.keyboard.press("Escape"); cp.wait_for_selector("#ao-where-sheet", state="detached", timeout=5000)
             print("ok  5. where your tribe runs: state + this computer, connect directly, shared folder, free cloud")
 
             # ---------- 6. back up to GitHub ----------
-            cp.wait_for_function("document.querySelector('#ao-github').dataset.state === 'none'", timeout=10000)
-            cp.click("#ao-github [data-ao='github']"); cp.wait_for_selector("#ghc-sheet [data-ghc='signin']", timeout=10000)
+            menu(cp, "github"); cp.wait_for_function("document.querySelector('#ao-menu [data-aom=\"github\"] small').textContent.includes('No GitHub account')", timeout=10000)
+            cp.click(menu(cp, "github")); cp.wait_for_selector("#ghc-sheet [data-ghc='signin']", timeout=10000)
             assert cp.get_attribute("#ghc-signup", "href") == "https://github.com/signup" and cp.get_attribute("#ghc-signup", "target") == "_blank"
             cp.evaluate("document.querySelector('#ghc-signup').addEventListener('click', e => e.preventDefault(), { once: true })"); cp.click("#ghc-signup")
             cp.wait_for_selector("#ghc-back:not([hidden])", timeout=5000)
@@ -230,13 +239,14 @@ def main():
             cp.click("#ghc-go"); cp.wait_for_selector("#ghc-sheet [data-ghc='done']", timeout=15000)
             assert "Connected as @camp-dev" in cp.inner_text("#ghc-login")
             cp.click("#ghc-close")
-            cp.wait_for_function("['linked', 'backed'].includes(document.querySelector('#ao-github').dataset.state)", timeout=15000)
-            assert "camp-dev/star-hopper" in cp.inner_text("#ao-github"), cp.inner_text("#ao-github")
-            assert cp.inner_text("#ao-github [data-ao='github']") == "Back up now"
+            cp.wait_for_timeout(500); menu(cp, "github")
+            cp.wait_for_function("document.querySelector('#ao-menu [data-aom=\"github\"]').textContent.includes('camp-dev/star-hopper')", timeout=15000)
+            assert cp.inner_text("#ao-menu [data-aom='github'] b") == "Back up now", cp.inner_text("#ao-menu [data-aom='github']")
+            cp.keyboard.press("Escape")
             print("ok  6. GitHub: a way in with no account, sign in, create, linked, and the card says so")
 
             # ---------- 7. what's private: only true lines ----------
-            cp.click("#ao-privacy [data-ao='privacy']"); cp.wait_for_selector("#ao-privacy-sheet #ao-facts", timeout=8000)
+            cp.click(menu(cp, "privacy")); cp.wait_for_selector("#ao-privacy-sheet #ao-facts", timeout=8000)
             facts = cp.inner_text("#ao-privacy-sheet")
             assert "not end-to-end encrypted" in facts and "talks to itself" in facts, facts
             low = facts.lower().replace("not end-to-end encrypted", "")
