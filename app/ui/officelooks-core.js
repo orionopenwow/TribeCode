@@ -319,7 +319,9 @@
         if (l.cols && !l.cols.includes((x / 16) | 0)) continue;
         let r = src[i], g = src[i + 1], b = src[i + 2];
         if (map) { const m = map.get(hexOf(r, g, b)); if (m) { const c = rgbOf(m); r = c[0]; g = c[1]; b = c[2]; } }
-        out[i] = r; out[i + 1] = g; out[i + 2] = b; out[i + 3] = src[i + 3];
+        const a = src[i + 3];
+        if (a > 253 || out[i + 3] < 2) { out[i] = r; out[i + 1] = g; out[i + 2] = b; out[i + 3] = a; }
+        else { const k = a / 255; out[i] = r * k + out[i] * (1 - k); out[i + 1] = g * k + out[i + 1] * (1 - k); out[i + 2] = b * k + out[i + 2] * (1 - k); out[i + 3] = Math.max(a, out[i + 3]); }   // stubble is a see-through shadow over the skin
       }
     }
     return { data: out, width: W, height: H, missing };

@@ -213,23 +213,20 @@ def mohawk():
         t = g["top"]
         if r != 2:
             cx = int(g["cx"])
-            for y in range(t - 3, t + (5 if r == 0 else 10)):
+            for y in range(t - 1, t + (5 if r == 0 else 10)):
                 put(a, cx - 1, y, dark)
                 put(a, cx + 2, y, dark)
                 put(a, cx, y, light if (r == 0 and y < t) else main)
                 put(a, cx + 1, y, main)
-            put(a, cx, t - 4, dark)
-            put(a, cx + 1, t - 4, dark)
+            put(a, cx, t - 2, dark)   # the frame leaves two rows above the head on the first walk frame
+            put(a, cx + 1, t - 2, dark)
         else:
             for x in range(g["left"] + 1, g["right"] - 2):
                 ht = next(y for y in range(oy, oy + FH) if BODY[y, x, 3] > 1)
-                put(a, x, ht - 3, dark)
-                put(a, x, ht - 2, light if x % 2 else main)
+                put(a, x, ht - 2, dark)
                 put(a, x, ht - 1, main)
                 put(a, x, ht, dark)
-            for y in range(t - 3, t + 1):
-                put(a, g["left"], y + 1, dark)
-                put(a, g["right"] - 2, y + 1, dark)
+
     return a
 
 

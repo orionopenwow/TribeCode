@@ -13,9 +13,10 @@
 // ever "in messages", and nothing here carries message text, keys or tokens.
 //
 // Routes: GET /api/office -> { on, agentsOff, canSet, desks, board, at, layout, set, looks }, PUT /api/office { on?, agentsOff?,
-// layout?, set? } (host/admin), PUT /api/office/look { look } (each person their own look, pass 11 Office Space).
+// layout?, set? } (host/admin), PUT /api/office/look { look, for? } (each person their own look; an AI helper's owner, the host or an admin the helper's).
 // Broadcasts { type: 'office' } when the switches, the layout, the set or a look change.
 'use strict';
+const LOOKS = require('../app/ui/officelooks-core.js');   // feat/office-looks: the look fields and their ranges
 
 module.exports = function office({ store, getMembers, presenceFor, placesFor = () => ({}), agentSeen, claims, loadTasks, changeReqs, nameOf, broadcast, canSet, asksFor = () => [] }) {
   const FILE = 'office.json';
@@ -39,13 +40,16 @@ module.exports = function office({ store, getMembers, presenceFor, placesFor = (
     const areas = (Array.isArray(L.areas) ? L.areas : []).slice(0, 12).map(a => ({ name: short(a && a.name, 32), x: Math.max(0, a.x | 0), y: Math.max(0, a.y | 0), w: Math.max(1, Math.min(w, a.w | 0)), h: Math.max(1, Math.min(h, a.h | 0)) })).filter(a => a.name);
     return { v, w, h, tiles, items, areas };
   }
-  // how many choices each look field has (app/ui/officespace-sets.js LOOK; the parts are Pixel Agents' wardrobe)
-  const PARTS = { body: 2, skin: 4, hair: 14, hairColor: 18, top: 5, topColor: 17, pants: 7, pantsColor: 17, shoes: 2, shoesColor: 17,
+  // A look: v2 fields from app/ui/officelooks-core.js (the creator, the floor and this check share them). A v1 look (no v,
+  // pass 11b's numbers) is checked against its old ranges, then read into v2.
+  const OLD = { body: 2, skin: 4, hair: 14, hairColor: 18, top: 5, topColor: 17, pants: 7, pantsColor: 17, shoes: 2, shoesColor: 17,
     jacket: 6, jacketColor: 17, full: 5, fullColor: 17, beard: 6, hat: 4, hatColor: 17, acc: 8, accColor: 10 };
+  const inRange = (o, ranges) => { const out = {}; for (const [k, n] of Object.entries(ranges)) if (Number.isInteger(o[k]) && o[k] >= 0 && o[k] < n) out[k] = o[k]; return out; };
   function cleanLook(o) {
-    if (!o || typeof o !== 'object') return null;
-    const out = {}; for (const [k, n] of Object.entries(PARTS)) if (Number.isInteger(o[k]) && o[k] >= 0 && o[k] < n) out[k] = o[k];
-    return Object.keys(out).length ? out : null;
+    if (!o || typeof o !== 'object' || Array.isArray(o)) return null;
+    const src = o.v === 2 ? o : LOOKS.migrate(inRange(o, OLD));
+    const out = inRange(src, LOOKS.FIELDS); delete out.v;
+    return Object.keys(out).length ? { v: 2, ...out } : null;
   }
   const lookOf = id => cfg.looks[id] || null;
 
@@ -142,14 +146,20 @@ module.exports = function office({ store, getMembers, presenceFor, placesFor = (
 
   async function route(req, res, { m, b: sub, me, send, fail, readBody }) {
     if (!me) return fail(res, 401, 'not a member of this tribe');
-    if (sub === 'look') {   // each person sets only their own look
+    if (sub === 'look') {   // each person sets their own look; an AI helper's owner (or the host or an admin) sets the helper's
       if (m !== 'PUT' && m !== 'POST') return fail(res, 405, 'method not allowed');
-      if (me.role === 'agent' || me.role === 'spectator') return fail(res, 403, 'people choose their own look');
       const body = (await readBody(req)) || {};
+      let who = me.id;
+      if (body.for && body.for !== me.id) {
+        const t = (getMembers() || []).find(x => x.id === body.for);
+        if (!t || t.removed || t.role !== 'agent') return fail(res, 404, 'no AI helper with that id');
+        if (t.owner !== me.id && !canSet(me)) return fail(res, 403, 'only its owner can change its look');
+        who = t.id;
+      } else if (me.role === 'agent' || me.role === 'spectator') return fail(res, 403, 'people choose their own look');
       const look = body.look === null ? null : cleanLook(body.look);
-      if (look) cfg.looks[me.id] = look; else delete cfg.looks[me.id];
+      if (look) cfg.looks[who] = look; else delete cfg.looks[who];
       save('look');
-      return send(res, 200, { look: lookOf(me.id) });
+      return send(res, 200, { look: lookOf(who), for: who });
     }
     if (sub) return fail(res, 404, 'not found');
     if (m === 'GET') {
