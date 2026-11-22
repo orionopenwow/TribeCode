@@ -1,10 +1,13 @@
 """The office, full page (app/ui/officefull.js, feat/office-full): a project's Agents & office.
   1. 1440x900: the pixel floor fills the main area (beside the side panel, open and folded), most of its height, at a
-     whole-pixel zoom; the head is one line; no people grid under the floor; no "Get set up" cards once an AI helper is in.
+     whole-pixel zoom; its art covers the whole floor area (more building around the office, no dark bands) with
+     everyone in view, at 1440 (panel open and folded), 1920x1080 and 1100 wide; drag looks around, Fit puts it back; the head is one line; no people grid under the floor; no "Get set up" cards once an AI helper is in.
   2. The toolbar: Floor | Desks, zoom - +, and one ... menu holding Your look, the office's set, Edit layout, Sound, Hide
      the office for me, Where your tribe runs, What's private and GitHub.
-  3. The box at the bottom: plain words land in the tribe's chat; "@my-claude ..." reaches the AI helper; "/task ..."
-     makes a task; "invite a friend" opens the invite sheet (Flint, no AI); the chips; replies show in the strip.
+  3. The box: one slim pill over the floor (not a band), two chips only while focused and empty; a plain message shows in
+     Messages #general for a second browser; replies show above it; Up recalls, Esc clears; "/" lists the commands and
+     "/task ..." makes a task; "@claude ..." gives the AI helper a task; Flint commands ("invite a friend", "what's
+     everyone doing") run in Flint and never post to the chat; "add claude" opens Claude's setup.
   4. The side panel: Preview shows App and Website tabs (both exist) and switches; Working on shows the AI helper's
      work and an approval that works right there; Updates lists recent events, newest first.
   5. 390px: the desks, the box pinned at the bottom, the panel as a bottom sheet from a tab strip; no sideways scroll,
@@ -54,6 +57,26 @@ def until(pg, js, timeout=20, what=""):
     raise AssertionError(f"timed out: {what or js}")
 
 
+COVER = """(() => { const os = document.querySelector('#ad-office .os').__os, st = document.querySelector('#ad-office .os-stage').getBoundingClientRect();
+  const p = os.painted(), c = document.querySelector('#ad-office .os-canvas'), x = c.getContext('2d'), W = c.width, H = c.height;
+  // the art reaches every edge: no pixel of the dark backdrop (the set's void colour) along the borders
+  const edge = []; for (let i = 1; i < 40; i++) { edge.push([Math.floor(W * i / 40), 1], [Math.floor(W * i / 40), H - 2], [1, Math.floor(H * i / 40)], [W - 2, Math.floor(H * i / 40)]); }
+  const bare = edge.filter(([a, b]) => { const d = x.getImageData(a, b, 1, 1).data; return d[0] === 18 && d[1] === 21 && d[2] === 26; }).length;
+  const ch = os.chars().filter(q => q.visible).map(q => { const t = os.tileXY(q.x, q.y); return [q.id, t.x >= st.left && t.x <= st.right && t.y - 20 >= st.top && t.y <= st.bottom]; });
+  return { st: [st.left, st.top, st.right, st.bottom], p: [p.left, p.top, p.right, p.bottom], bare, off: ch.filter(q => !q[1]).map(q => q[0]), n: ch.length, scale: os.scale() }; })()"""
+
+
+def covers(pg, what):
+    until(pg, "(document.querySelector('#ad-office .os') || {}).__os && document.querySelector('#ad-office .os').__os.art() && document.querySelector('#ad-office .os').__os.scale() > 0", 20, "drawn")
+    pg.wait_for_timeout(700)
+    r = pg.evaluate(COVER)
+    assert all(abs(a - b) <= 2 for a, b in zip(r["st"], r["p"])), (what, "the art covers the floor area", r)
+    assert r["bare"] == 0, (what, "no dark bands", r)
+    assert r["n"] >= 2 and not r["off"], (what, "everyone in view", r)
+    assert r["scale"] == int(r["scale"]) and r["scale"] >= 1, (what, "whole pixels", r)
+    return r
+
+
 def main():
     tmp = Path(tempfile.mkdtemp(prefix="tribe-ofl-", dir="/tmp"))
     env = {**os.environ, "TRIBE_NO_GH": "1", "TRIBE_TEST": "1", "TRIBE_NO_DOWNLOAD": "1", "NO_PROXY": "127.0.0.1,localhost"}
@@ -79,12 +102,12 @@ def main():
         with sync_playwright() as pw:
             b = pw.chromium.launch(executable_path="/usr/bin/google-chrome", args=["--no-proxy-server"])
 
-            def page(w=1440, h=900, mobile=False):
+            def page(w=1440, h=900, mobile=False, token=None, name='Camp'):
                 kw = {"viewport": {"width": w, "height": h}}
                 if mobile: kw.update(is_mobile=True, has_touch=True, device_scale_factor=2)
                 c = b.new_context(**kw)
                 c.add_init_script("try { if (!sessionStorage.getItem('t')) { sessionStorage.setItem('t', '1'); localStorage.setItem('tribecode.helpers.v1', JSON.stringify({flint:1,brain:1,ai:1})); localStorage.setItem('tribecode.office.view', 'floor');"
-                                  " localStorage.setItem('tribecode.settings.v1', JSON.stringify({name: 'Camp', onboarded: true, theme: 'dark', tour: {done: true}, server: {url: '%s', token: '%s'}})); } } catch (e) {}" % (BASE, camp))
+                                  " localStorage.setItem('tribecode.settings.v1', JSON.stringify({name: '%s', onboarded: true, theme: 'dark', tour: {done: true}, server: {url: '%s', token: '%s'}})); } } catch (e) {}" % (name, BASE, token or camp))
                 pg = c.new_page(); pg.on("pageerror", lambda e: errors.append(str(e)))
                 pg.goto(BASE + "/?skipIntro=1", wait_until="domcontentloaded", timeout=90000)
                 pg.wait_for_function("window.TribeClient && TribeClient.connected() && window.TribeOfficeFull && window.TribeShell && window.TribeAppCore", timeout=45000)
@@ -107,19 +130,38 @@ def main():
                   const m = r('#main'), s = r('#ao-side'), st = r('#ad-office .os-stage'), dock = r('#ao-dock'), head = r('#ao-head');
                   const os = document.querySelector('#ad-office .os').__os;
                   return { mw: m.width, ml: m.left, mt: m.top, mh: m.height, side: s.width, sl: s.left, w: st.width, l: st.left, top: st.top, h: st.height, dock: dock.top, head: head.height, scale: os.scale() }; })()""")
-            g = geo()
+            g = geo(); c1 = covers(cp, "1440 open")
             assert abs((g["w"] + g["side"]) - g["mw"]) <= 4 and abs(g["l"] - g["ml"]) <= 2, ("panel open: the floor fills the width beside it", g)
             assert g["side"] >= 340, g
-            assert g["h"] >= 0.7 * g["mh"] and abs(g["top"] + g["h"] - g["dock"]) <= 2, ("most of the height, down to the box", g)
+            assert g["h"] >= 0.8 * g["mh"] and abs(g["top"] + g["h"] - (g["mt"] + g["mh"])) <= 2, ("most of the height, down to the bottom edge under the box", g)
             assert g["head"] <= 60, ("the head is one line", g)
             assert g["scale"] == int(g["scale"]) and g["scale"] >= 1, ("whole pixels", g["scale"])
             assert cp.evaluate("getComputedStyle(document.querySelector('#ad-office .os-canvas')).imageRendering") in ("pixelated", "crisp-edges")
             assert cp.locator("#ad-office .of-roster, #ao-setup, #ao-head .eyebrow").count() == 0, "no people grid, no setup cards, no eyebrow"
             assert cp.locator(f"#ao-here [data-desk='{aid}']").count() == 1, "the avatars in the head"
             cp.click("#ofl-fold"); cp.wait_for_function("document.querySelector('#ad-dash').dataset.panel === 'closed'"); cp.wait_for_timeout(500)
-            g2 = geo()
+            g2 = geo(); c2 = covers(cp, "1440 folded")
             assert g2["side"] <= 56 and abs((g2["w"] + g2["side"]) - g2["mw"]) <= 4 and g2["w"] > g["w"] + 300, ("folded to a rail, the floor grows", g2)
+            cp.screenshot(path="/tmp/office-full-1440-folded.png")
             cp.click("#ofl-tab-preview"); cp.wait_for_function("document.querySelector('#ad-dash').dataset.panel === 'open'")
+            sizes = {}
+            for w, h in ((1920, 1080), (1100, 800)):
+                cp.set_viewport_size({"width": w, "height": h}); cp.wait_for_timeout(500)
+                sizes[w] = covers(cp, f"{w}x{h}")["scale"]
+                gg = geo(); assert abs(gg["top"] + gg["h"] - (gg["mt"] + gg["mh"])) <= 2, (w, "the floor runs to the bottom edge", gg)
+                cp.screenshot(path=f"/tmp/office-full-{w}.png")
+            cp.set_viewport_size({"width": 1440, "height": 900}); cp.wait_for_timeout(500)
+            # drag to look around; Fit in the menu puts it back
+            o0 = cp.evaluate("document.querySelector('#ad-office .os').__os.tileXY(5, 5)")
+            st = cp.evaluate("document.querySelector('#ad-office .os-stage').getBoundingClientRect().toJSON()")
+            cp.mouse.move(st["x"] + st["width"] / 2, st["y"] + st["height"] / 2); cp.mouse.down(); cp.mouse.move(st["x"] + st["width"] / 2 + 120, st["y"] + st["height"] / 2 + 40, steps=6); cp.mouse.up()
+            o1 = cp.evaluate("document.querySelector('#ad-office .os').__os.tileXY(5, 5)")
+            assert abs(o1["x"] - o0["x"] - 120) <= 2, (o0, o1)
+            cp.click("#ao-more"); cp.click("#ao-menu [data-aom='fit']"); cp.wait_for_timeout(300)
+            o2 = cp.evaluate("document.querySelector('#ad-office .os').__os.tileXY(5, 5)")
+            assert abs(o2["x"] - o0["x"]) <= 1, (o0, o2)
+            covers(cp, "after Fit")
+            print("ok  1b. the art covers the floor area with no dark bands, everyone in view: 1440 open %dx, folded %dx, 1920 %dx, 1100 %dx; drag and Fit" % (c1["scale"], c2["scale"], sizes[1920], sizes[1100]))
             print("ok  1. the floor fills the main area (open %dx%d at %dx, folded %d wide); one-line head" % (g["w"], g["h"], g["scale"], g2["w"]))
 
             # ---------- 2. the toolbar ----------
@@ -132,7 +174,7 @@ def main():
             cp.click("#ao-bar [data-ofl-zoom='out']")
             cp.click("#ao-more"); cp.wait_for_selector("#ao-menu")
             items = cp.eval_on_selector_all("#ao-menu [data-aom]", "els => els.map(e => e.dataset.aom)")
-            assert items == ["look", "edit", "sound", "hide", "where", "privacy", "github"], items
+            assert items == ["fit", "look", "edit", "sound", "hide", "where", "privacy", "github"], items
             assert cp.locator("#ao-menu [data-aom-set] option").count() >= 2, "the office's set"
             cp.click("#ao-menu [data-aom='sound']"); assert cp.get_attribute("#ao-menu [data-aom='sound']", "aria-checked") == "true"
             cp.click("#ao-menu [data-aom='sound']")
@@ -151,56 +193,78 @@ def main():
             cp.click("#ao-bar [data-ofl-view='floor']"); cp.wait_for_selector("#ad-office .os-stage", timeout=8000)
             print("ok  2. toolbar: Floor | Desks, zoom, one ... menu:", items)
 
-            # ---------- 3. the box at the bottom ----------
+            # ---------- 3. the box: one slim pill over the floor ----------
             inp = "#ao-box .fl-in"
+            pill = cp.evaluate("(() => { const p = document.querySelector('#ao-box .fl-bar').getBoundingClientRect(), m = document.querySelector('.ofl-main').getBoundingClientRect(); return { w: p.width, mw: m.width, bottom: p.bottom, mb: m.bottom }; })()")
+            assert pill["w"] <= 722 and pill["w"] < pill["mw"] - 40 and 0 <= pill["mb"] - pill["bottom"] <= 24, ("a pill over the floor, not a band", pill)
+            assert cp.get_attribute(inp, "placeholder") == "Message the tribe or ask Flint…"
+            assert cp.locator("#ao-box .fl-chip:visible").count() == 0, "no chips until the box is focused"
+            cp.click(inp); cp.wait_for_selector("#ao-box .fl-chip", timeout=3000)
             chips = cp.eval_on_selector_all("#ao-box .fl-chip", "els => els.map(e => e.textContent)")
-            assert len(chips) == 3 and "Invite a friend" in chips and any(c.startswith("Give ") for c in chips), chips
+            assert len(chips) == 2 and chips[0].startswith("Give "), chips
+            cp.keyboard.type("M"); cp.wait_for_function("!document.querySelector('#ao-box .fl-chip')", timeout=3000)
+            cp.fill(inp, "")
             def chat_has(t):
                 end = time.time() + 15
                 while time.time() < end:
-                    ms = ok(api("/chat/general", token=camp)).get("messages", [])
+                    ms = ok(api("/chat/general", token=camp, project=pid)).get("messages", [])
                     if any(m.get("text") == t for m in ms): return ms
                     time.sleep(0.3)
                 raise AssertionError(f"not in chat: {t}")
+            # a plain message is a message in Messages #general, for everyone
+            sam = ok(api("/join", "POST", {"code": ok(api("/invites", "POST", {"maxUses": 1}, token=camp))["invite"]["code"], "name": "Sam"}))["token"]
+            sp = page(token=sam, name="Sam"); sp.evaluate("TribeApp.show('chat')"); sp.wait_for_selector("#chat-list", timeout=10000)
             cp.fill(inp, "Morning all, the trail map is next"); cp.press(inp, "Enter")
             chat_has("Morning all, the trail map is next")
+            sp.wait_for_function("document.querySelector('#chat-list').innerText.includes('the trail map is next')", timeout=15000)
             cp.wait_for_selector("#ad-dash[data-replies='on'] #ao-replies .fl-ev", timeout=5000)
-            assert "chat" in cp.inner_text("#ao-replies").lower()
+            assert "Open in Messages" in cp.inner_text("#ao-replies") and "Ask Flint instead" in cp.inner_text("#ao-replies")
             # a reply in the chat shows in the strip
-            sam = ok(api("/join", "POST", {"code": ok(api("/invites", "POST", {"maxUses": 1}, token=camp))["invite"]["code"], "name": "Sam"}))["token"]
-            ok(api("/chat/general", "POST", {"text": "On it after lunch"}, token=sam, project=pid))
+            sp.fill("#chat-input", "On it after lunch"); sp.press("#chat-input", "Enter")
             until(cp, "document.querySelector('#ao-replies').innerText.includes('On it after lunch')", 10, "a reply shows above the box")
+            sp.context.close()
             cp.click("#ao-replies-x"); cp.wait_for_function("!document.querySelector('#ad-dash').dataset.replies")
-            # @ an AI helper: the @ picker, then a public command it hears
-            cp.click(inp); cp.keyboard.type("@my"); cp.wait_for_selector("#mention-pop .mn-opt", timeout=5000); cp.keyboard.press("Enter")
-            assert cp.input_value(inp) == "@my-claude ", cp.input_value(inp)
-            cp.keyboard.type("add a weekly leaderboard"); cp.keyboard.press("Enter")
-            chat_has("@my-claude add a weekly leaderboard")
-            end = time.time() + 15; heard = ""
-            while time.time() < end:
-                heard = json.dumps(tool(akey, "check_messages", {}))
-                if "weekly leaderboard" in heard: break
-                time.sleep(0.5)
-            assert "weekly leaderboard" in heard, heard[:400]
-            # /task makes a task
-            cp.fill(inp, "/task Draw the trail map"); cp.press(inp, "Enter")
+            # Up brings back what you sent; Esc clears
+            cp.click(inp); cp.keyboard.press("ArrowUp"); assert cp.input_value(inp) == "Morning all, the trail map is next"
+            cp.keyboard.press("Escape"); assert cp.input_value(inp) == ""
+            # "/" opens the commands
+            cp.keyboard.type("/"); cp.wait_for_selector("#ao-cmds:not([hidden]) [data-ofl-cmd]", timeout=3000)
+            cmds = cp.eval_on_selector_all("#ao-cmds [data-ofl-cmd]", "els => els.map(e => e.dataset.oflCmd.trim())")
+            assert cmds == ["/task", "/ai", "/invite", "/flint", "/look", "/where"], cmds
+            cp.keyboard.press("Enter"); assert cp.input_value(inp) == "/task ", cp.input_value(inp)
+            cp.keyboard.type("Draw the trail map"); cp.keyboard.press("Enter")
             end = time.time() + 15; ts = []
             while time.time() < end:
                 ts = [t for t in ok(api("/tasks", token=camp, project=pid)).get("tasks", []) if t.get("title") == "Draw the trail map"]
                 if ts: break
                 time.sleep(0.3)
-            assert ts, "the task was made"
-            # a request goes to Flint (no AI): invite a friend opens the invite sheet
-            n_chat = len(ok(api("/chat/general", token=camp)).get("messages", []))
+            assert ts, "/task made the task"
+            # "@claude do X": a task for that AI helper, straight from the box (the @ picker offers it)
+            cp.click(inp); cp.keyboard.type("@my"); cp.wait_for_selector("#mention-pop .mn-opt", timeout=5000); cp.keyboard.press("Escape")
+            cp.fill(inp, "@claude add a weekly leaderboard"); cp.press(inp, "Enter")
+            end = time.time() + 15; ts = []
+            while time.time() < end:
+                ts = [t for t in ok(api("/tasks", token=camp, project=pid)).get("tasks", []) if t.get("title") == "add a weekly leaderboard"]
+                if ts: break
+                time.sleep(0.3)
+            assert ts and ts[0].get("assignee") == aid, ts
+            until(cp, "document.querySelector('#ao-replies').innerText.includes('Task given to')", 8, "it says so")
+            # Flint commands run in Flint, never in the chat
+            n_chat = len(ok(api("/chat/general", token=camp, project=pid)).get("messages", []))
             cp.fill(inp, "invite a friend"); cp.press(inp, "Enter")
             cp.wait_for_selector("#invite-modal:not(.hidden), #inv-sheet, .ui-sheet [data-inv], #io-sheet", timeout=10000)
-            assert len(ok(api("/chat/general", token=camp)).get("messages", [])) == n_chat, "Flint's, not the chat's"
             cp.keyboard.press("Escape"); cp.wait_for_timeout(400)
-            if cp.evaluate("window.TribeInvite && TribeInvite.close"): cp.evaluate("TribeInvite.close()")
-            # what's everyone doing: answered from the office
-            cp.click("#ao-box .fl-chip:has-text('everyone')")
-            until(cp, "document.querySelector('#ao-replies').innerText.includes('Claude')", 8, "who is doing what")
-            print("ok  3. the box: chat, @ an AI helper (it heard), /task, Flint opens the invite, replies in the strip")
+            if cp.evaluate("!!(window.TribeInvite && TribeInvite.close)"): cp.evaluate("TribeInvite.close()")
+            cp.fill(inp, "What's everyone doing?"); cp.press(inp, "Enter")
+            until(cp, "document.querySelector('#ao-replies').innerText.includes('Claude · Camp:')", 8, "who is doing what")
+            assert len(ok(api("/chat/general", token=camp, project=pid)).get("messages", [])) == n_chat, "Flint's, not the chat's"
+            # "add claude": the Add an AI helper setup, on Claude
+            cp.fill(inp, "add claude"); cp.press(inp, "Enter")
+            cp.wait_for_selector("#invite-modal:not(.hidden) #ic-body [data-ic-kind='code'].on", timeout=10000)
+            assert "claude" in cp.inner_text("#invite-modal:not(.hidden)").lower()
+            cp.evaluate("TribeInvite.close()"); cp.wait_for_timeout(300)
+            cp.click("#ao-replies-x") if cp.evaluate("document.querySelector('#ad-dash').dataset.replies === 'on'") else None
+            print("ok  3. the box: a pill, chips on focus, a message lands in Messages for Sam, / commands, /task, @claude gets a task, Flint commands stay out of the chat, add claude opens its setup")
 
             # ---------- 4. the side panel ----------
             cp.click("#ofl-tab-preview")

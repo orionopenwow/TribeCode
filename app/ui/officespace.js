@@ -201,15 +201,48 @@
     // ---------- drawing ----------
     function fit() {
       const r = stage.getBoundingClientRect(), dpr = Math.max(1, window.devicePixelRatio || 1);
+      cv.width = Math.round(r.width * dpr); cv.height = Math.round(r.height * dpr);
+      cv.style.width = r.width + 'px'; cv.style.height = r.height + 'px';
+      if (o.fill) {   // the floor fills its box: the camera picks the zoom and where to look (camera()), the art reaches the edges (hall())
+        if (!cam || cam.w !== cv.width || cam.h !== cv.height) cam = camera(cv.width, cv.height);
+        const scale = Math.max(0.25, cam.s + view.z), W = layout.w * T * scale, H = layout.h * T * scale;
+        const at = (v, size, f) => (size <= v ? (v - size) / 2 : Math.min(0, Math.max(v - size, v / 2 - f * scale)));
+        return { scale, ox: Math.round(at(cv.width, W, cam.fx) + view.ox * dpr), oy: Math.round(at(cv.height, H, cam.fy) + view.oy * dpr), dpr };
+      }
       // whole device pixels (the art stays crisp); quarter steps only when the floor would not fit at 1x
       const fitS = Math.min(r.width / (layout.w * T), r.height / (layout.h * T)) * dpr;
       const base = fitS >= 1 ? Math.floor(fitS) : Math.max(0.25, Math.floor(fitS * 4) / 4);
       const scale = Math.max(0.25, base + view.z);
-      cv.width = Math.round(r.width * dpr); cv.height = Math.round(r.height * dpr);
-      cv.style.width = r.width + 'px'; cv.style.height = r.height + 'px';
       const W = layout.w * T * scale, H = layout.h * T * scale;
       const ox = Math.round((cv.width - W) / 2 + view.ox * dpr), oy = Math.round((cv.height - H) / 2 + view.oy * dpr);
       return { scale, ox, oy, dpr };
+    }
+    // Fill mode: the largest whole-pixel zoom at which the whole office fits, then bigger while everyone (with their
+    // name tags) still fits, up to the zoom at which the office covers the box; it looks at the middle of where people
+    // are. What the office does not cover is drawn as more building around it (hall()), never as dark bands.
+    let cam = null;
+    function camera(vw, vh) {
+      let bx0 = layout.w, by0 = layout.h, bx1 = 0, by1 = 0;
+      for (let y = 0; y < layout.h; y++) for (let x = 0; x < layout.w; x++) if (tileAt(x, y) !== 'void') { bx0 = Math.min(bx0, x); by0 = Math.min(by0, y); bx1 = Math.max(bx1, x); by1 = Math.max(by1, y); }
+      if (bx1 < bx0) { bx0 = 0; by0 = 0; bx1 = layout.w - 1; by1 = layout.h - 1; }
+      const fitS = Math.min(vw / ((bx1 - bx0 + 1) * T), vh / ((by1 - by0 + 2) * T));
+      let s = fitS >= 1 ? Math.floor(fitS) : Math.max(0.25, Math.floor(fitS * 4) / 4);
+      const cover = Math.max(vw / (layout.w * T), vh / (layout.h * T));
+      const pts = [...chars.values()].filter(c => c.visible).map(c => c.target || c);
+      let fx = (bx0 + bx1 + 1) / 2 * T, fy = (by0 + by1 + 1) / 2 * T;
+      if (pts.length) {
+        const px0 = Math.min(...pts.map(p => p.x)) - 1, px1 = Math.max(...pts.map(p => p.x)) + 2, py0 = Math.min(...pts.map(p => p.y)) - 2.5, py1 = Math.max(...pts.map(p => p.y)) + 1.5;
+        while (s >= 1 && s + 1 <= Math.ceil(cover) && (px1 - px0) * T * (s + 1) <= vw && (py1 - py0) * T * (s + 1) <= vh) s++;
+        fx = (px0 + px1) / 2 * T; fy = (py0 + py1) / 2 * T;
+      }
+      return { s, fx, fy, w: vw, h: vh };
+    }
+    // More building around the office: the hall floor outside it and in its empty (void) tiles
+    function hall() {
+      const sc = F.scale * T, x0 = Math.floor(-F.ox / sc) - 1, x1 = Math.ceil((cv.width - F.ox) / sc) + 1, y0 = Math.floor(-F.oy / sc) - 1, y1 = Math.ceil((cv.height - F.oy) / sc) + 1;
+      const f = set.palette.floor || {}, img = A.floor(S.floorOf('stone'), A.cvOf(typeof f === 'object' ? { ...f, b: (+f.b || 0) - 28 } : f));
+      if (!img) return;
+      for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) if (!inside(x, y) || tileAt(x, y) === 'void') ctx.drawImage(img, x * T, y * T);
     }
     let F = null;
     const pal = k => A.cvOf(set.palette[k]);
@@ -221,6 +254,7 @@
       ctx.fillStyle = typeof set.palette.void === 'string' ? set.palette.void : '#12151A'; ctx.fillRect(0, 0, cv.width, cv.height);
       if (!artOk || !geo) { placeLayer(); return; }
       ctx.setTransform(F.scale, 0, 0, F.scale, F.ox, F.oy); ctx.imageSmoothingEnabled = false;
+      if (o.fill) hall();
       // floors, then carpets over them (marching squares on the corners between tiles)
       for (let y = 0; y < layout.h; y++) for (let x = 0; x < layout.w; x++) {
         const k = tileAt(x, y); if (k === 'void' || k === 'wall') continue;
@@ -363,7 +397,7 @@
       if (!drag) return;
       const dx = e.clientX - drag.sx, dy = e.clientY - drag.sy;
       if (Math.abs(dx) + Math.abs(dy) > 4) drag.moved = true;
-      if (drag.moved && view.z > 0) { view.ox = drag.ox + dx; view.oy = drag.oy + dy; draw(); }
+      if (drag.moved && (view.z > 0 || o.fill)) { view.ox = drag.ox + dx; view.oy = drag.oy + dy; if (o.fill) { const r = stage.getBoundingClientRect(); view.ox = Math.max(-r.width / 2, Math.min(r.width / 2, view.ox)); view.oy = Math.max(-r.height / 2, Math.min(r.height / 2, view.oy)); } draw(); }
     });
     cv.addEventListener('pointerup', e => {
       if (editing) return editUp();
@@ -373,7 +407,8 @@
     });
     cv.addEventListener('wheel', e => { if (!e.ctrlKey && !e.metaKey) return; e.preventDefault(); zoom(e.deltaY < 0 ? 1 : -1); }, { passive: false });
     layer.addEventListener('click', e => { const t = e.target.closest('[data-os-who]'); if (t) openCard(t.dataset.osWho); });
-    function zoom(k) { view.z = Math.max(0, Math.min(6, view.z + k)); if (!view.z) { view.ox = 0; view.oy = 0; } draw(); }
+    function zoom(k) { view.z = Math.max(o.fill && cam ? 1 - cam.s : 0, Math.min(6, view.z + k)); if (!view.z && !o.fill) { view.ox = 0; view.oy = 0; } draw(); }
+    function refit() { view.z = 0; view.ox = 0; view.oy = 0; cam = null; draw(); }
 
     // ---------- the card: who, what they're doing, and one click into TribeCode ----------
     // The body and its actions are TribeOffice's (office.js): the desks and the list in Agents & office open the same card.
@@ -552,6 +587,7 @@
       if (k === 'in') return zoom(1);
       if (k === 'out') return zoom(-1);
       if (k === 'set') return setTo(v);
+      if (k === 'fit') return refit();
     }
     async function setTo(id) {
       try { await C.api('/office', { method: 'PUT', body: { set: id } }); set = S.get(id); const s2 = root.querySelector('[data-os-set]'); if (s2) s2.value = set.id; draw(); toast(tr('Set changed')); office.refresh(); } catch (err) { toast(err.message); }
@@ -583,6 +619,7 @@
         if (!o.fill) stage.style.aspectRatio = `${layout.w * T} / ${layout.h * T}`;
       }
       sync();
+      if (o.fill && cam && F && !view.z && [...chars.values()].some(c => { if (!c.visible) return false; const p = c.target || c, sx = F.ox + (p.x * T + 8) * F.scale, sy = F.oy + (p.y * T + 8) * F.scale; return sx < 0 || sy < 24 * F.dpr || sx > cv.width || sy > cv.height; })) cam = null;   // someone is out of view: look again
       if (cardFor) { const keep = cardFor; if (everyone().some(x => x.id === keep)) openCard(keep); else closeCard(); }
       if (reduce()) draw(); else kick();
     }
@@ -600,6 +637,8 @@
       scale: () => (F ? F.scale : 0),
       act,
       // what the page's own toolbar may offer: the host's set and layout, your look, the sound, the zoom
+      // the part of the box the office's art covers, in CSS pixels (fill mode: all of it)
+      painted: () => { if (!F) draw(); const r = cv.getBoundingClientRect(); if (o.fill) return { left: r.left, top: r.top, right: r.right, bottom: r.bottom }; const W = layout.w * T * F.scale / F.dpr, H = layout.h * T * F.scale / F.dpr; return { left: r.left + Math.max(0, F.ox / F.dpr), top: r.top + Math.max(0, F.oy / F.dpr), right: r.left + Math.min(r.width, F.ox / F.dpr + W), bottom: r.top + Math.min(r.height, F.oy / F.dpr + H) }; },
       info: () => ({ canSet: !!(data && data.canSet), canLook: !!(data && data.me) && ((data.desks || []).find(x => x.id === data.me) || {}).kind !== 'agent', sound: soundOn(), set: set.id, sets: S.list().map(x => ({ id: x.id, name: tr(x.name) })), zoom: view.z }),
     };
     root.__os = inst;

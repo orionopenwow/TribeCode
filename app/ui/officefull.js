@@ -2,18 +2,18 @@
 // this frame). One calm screen:
 //   the head      one line: "Agents & office · 2 people online · 1 AI helper working", who is here as small avatars
 //                 (a click opens the same card as the floor), and Add an AI helper / Invite a friend (agentsoffice.js)
-//   the office    the pixel floor (or the desks) edge to edge, as tall as the page allows, at whole-pixel zoom. One slim
-//                 toolbar on its top edge: Floor | Desks, zoom − +, and one ⋯ menu (Your look, the office's set, Edit
+//   the office    the pixel floor (or the desks) edge to edge, as tall as the page allows, at whole-pixel zoom, with more building drawn around it (no empty bands; drag to look around). One slim
+//                 toolbar on its top edge: Floor | Desks, zoom − +, and one ⋯ menu (Fit, Your look, the office's set, Edit
 //                 layout, Sound, Hide the office for me, Where your tribe runs, What's private, Back up to GitHub)
 //   the panel     on the right (≥1280px; folds to an icon rail): Preview (the live app and website of this project,
 //                 TribeDashBand's tabs), Working on (agentsdash.js: what needs an OK, each AI helper's work, people,
 //                 tasks in progress), Updates (TribeFlintDash.updates and #agents, newest first). Phones: a tab strip
 //                 opens it as a bottom sheet.
-//   the box       one Messages-style box pinned at the bottom (Flint's box, TribeFlint.mount): plain words go to the
-//                 tribe's chat, "@name" to a person or an AI helper (mentions.js, the chat's own @commands), "@agents …" to
-//                 #agents, "/task …"
-//                 makes a task, and a request like "add an AI helper" or "make the website darker" goes to Flint (no AI
-//                 needed). Replies show for a while in a slim strip above it.
+//   the box       one slim pill floating over the bottom of the floor (Flint's box, TribeFlint.mount). Plain words go
+//                 to #general the way the Messages box sends them (they show in Messages); "@a-person" mentions them;
+//                 "@claude do X" gives that AI helper a task; "@agents …" goes to #agents; "/" opens the commands (/task,
+//                 /ai, /invite, /flint, /look, /where); "add claude" opens Claude's one setup; a request Flint knows ("make
+//                 the website darker", "invite a friend") runs in Flint (no AI needed). Replies show briefly above it.
 // Public: window.TribeOfficeFull = { ensure(el, pid), work(html), sync(), open(tab), route(text), panel(), menu() }
 (function () {
   'use strict';
@@ -45,6 +45,7 @@
         <div class="ofl-main">
           <div class="ofl-bar" id="ao-bar" role="toolbar" aria-label="${esc(T('The office'))}"></div>
           ${AO().office()}
+          <div class="ofl-dock" id="ao-dock"><div class="ofl-box" id="ao-box"></div></div>
         </div>
         <aside class="ofl-side" id="ao-side" aria-label="${esc(T('Preview, work and updates'))}">
           <div class="ofl-tabs" role="tablist" aria-label="${esc(T('Side panel'))}">${tabs}<span class="ofl-gap"></span>
@@ -55,7 +56,6 @@
         </aside>
       </div>
       <nav class="ofl-strip" id="ofl-strip" aria-label="${esc(T('Preview, work and updates'))}">${TABS.map(([k, l, i]) => `<button type="button" class="btn ofl-sbtn" data-ofl-sheet="${k}">${ico(i, 16)}<span>${esc(T(l))}</span></button>`).join('')}</nav>
-      <div class="ofl-dock" id="ao-dock"><div class="ofl-box" id="ao-box"></div></div>
     </div>`;
   }
 
@@ -97,6 +97,7 @@
     const Of = O(), sp = space(), info = sp && sp.info ? sp.info() : null, v = Of ? Of.view() : 'desks', hid = Of && Of.hidden();
     const item = (k, label, sub, extra = '') => `<button type="button" role="menuitem" class="ofl-mi" data-aom="${k}"${extra}><span class="ofl-mi-t"><b>${esc(T(label))}</b>${sub ? `<small>${esc(sub)}</small>` : ''}</span></button>`;
     const floorPart = !hid && v === 'floor' && info ? [
+      item('fit', 'Fit', T('Back to the whole office, filling the screen')),
       info.canLook ? item('look', 'Your look', T('Your character on the floor')) : '',
       info.canSet ? `<label class="ofl-mi ofl-mset"><span class="ofl-mi-t"><b>${esc(T('Office'))}</b><small>${esc(T('The look of the whole floor'))}</small></span><select class="input sm" data-aom-set aria-label="${esc(T('Office'))}">${info.sets.map(s => `<option value="${esc(s.id)}"${s.id === info.set ? ' selected' : ''}>${esc(s.name)}</option>`).join('')}</select></label>` : '',
       info.canSet ? item('edit', 'Edit layout', T('Move desks, plants and walls')) : '',
@@ -126,7 +127,7 @@
   }
   function menuAct(k, btn) {
     const sp = space();
-    if (k === 'look' || k === 'edit') { closeMenu(); if (sp) sp.act(k); return; }
+    if (k === 'look' || k === 'edit' || k === 'fit') { closeMenu(); if (sp) sp.act(k); return; }
     if (k === 'sound') { if (sp) sp.act('sound'); const on = sp && sp.info().sound; btn.setAttribute('aria-checked', String(!!on)); btn.querySelector('b').textContent = T(on ? 'Sound on' : 'Sound off'); return; }
     if (k === 'hide') { closeMenu(); O().setHidden(!O().hidden()); return; }
     closeMenu();
@@ -193,51 +194,87 @@
       : `<li class="ofl-quiet">${esc(T('Quiet right now. What people and AI helpers do shows up here as it happens.'))}</li>`;
   }
 
-  // ---------- the box at the bottom ----------
+  // ---------- the box: one slim pill over the bottom of the floor ----------
   const TOK = n => String(n || '').toLowerCase().replace(/\s+/g, '-');
+  const agents = () => { const st = C() && C().state ? C().state() : {}; return (st.members || []).filter(m => m.role === 'agent' && m.owner).sort((a, b) => (b.online ? 1 : 0) - (a.online ? 1 : 0)); };
   function agentTok(a) {   // the same names mentions.js offers: @my-claude, @maya's agent as @mayas-claude
     const st = C().state(), me = st.me || {}, ms = st.members || [];
     if (a.owner === me.id) return 'my-claude';
     const o = ms.find(m => m.id === a.owner); return o ? `${TOK(String(o.name).split(/\s+/)[0])}s-claude` : '';
   }
-  function chips() {
-    const st = C() && C().state ? C().state() : {}, ms = st.members || [];
-    const agents = ms.filter(m => m.role === 'agent' && m.owner).sort((a, b) => (b.online ? 1 : 0) - (a.online ? 1 : 0));
-    const out = [];
-    const a = agents[0], tok = a && agentTok(a);
-    if (a && tok) out.push({ label: T('Give {name} a task', { name: a.name }), fn: ui => ui.fill(`@${tok} `) });
-    else out.push({ label: T('Add an AI helper'), fn: ui => ui.send('add an AI helper') });
-    out.push({ label: T('Invite a friend'), fn: ui => ui.send('invite a friend') });
-    out.push({ label: T('What’s everyone doing?'), fn: ui => ui.send('What’s everyone doing?') });
-    return out;
+  // "@my-claude", "@mayas-claude", "@claude" (yours, or the only one) or its name: which AI helper a mention means
+  function agentOf(tok) {
+    const t = String(tok || '').toLowerCase(), list = agents(), me = ((C().state() || {}).me || {}).id;
+    return list.find(a => agentTok(a) === t) || list.find(a => TOK(a.name) === t || TOK(String(a.name).split(/\s+·\s+/)[0]) === t && list.length === 1)
+      || (/^(?:claude|my-ai|ai-helper)$/.test(t) ? list.find(a => a.owner === me) || (list.length === 1 ? list[0] : null) : null);
   }
+  // two chips, only while the box is focused and empty
+  function chips() {
+    const a = agents()[0], tok = a && agentTok(a);
+    return a && tok ? [{ label: T('Give {name} a task', { name: String(a.name).split(' · ')[0] }), fn: ui => ui.fill(`@${tok} `) }, { label: T('What’s everyone doing?'), fn: ui => ui.send('What’s everyone doing?') }]
+      : [{ label: T('Add Claude'), fn: ui => ui.send('add claude') }, { label: T('Invite a friend'), fn: ui => ui.send('invite a friend') }];
+  }
+  // "/" opens the commands
+  const CMDS = [['/task ', 'Make a task', 'task'], ['/ai', 'Add an AI helper (Claude, ChatGPT…)', 'ai'], ['/invite', 'Invite a friend', 'invite'], ['/flint ', 'Ask Flint', 'flint'], ['/look', 'Your look on the floor', 'look'], ['/where', 'Where your tribe runs', 'where']];
+  let cmdSel = 0;
+  function cmdList() { const v = flint ? flint.input.value : ''; return /^\/\S*$/.test(v) ? CMDS.filter(c => c[0].trim().startsWith(v.trim())) : []; }
+  function paintCmds() {
+    const m = root && root.querySelector('#ao-cmds'); if (!m) return;
+    const l = cmdList(); m.hidden = !l.length; if (!l.length) return;
+    cmdSel = Math.min(cmdSel, l.length - 1);
+    m.innerHTML = l.map((c, i) => `<button type="button" role="option" class="ofl-cmd${i === cmdSel ? ' on' : ''}" aria-selected="${i === cmdSel}" data-ofl-cmd="${esc(c[0])}"><code>${esc(c[0].trim())}</code><span>${esc(T(c[1]))}</span></button>`).join('');
+  }
+  function pickCmd(c) {
+    const ui = flint; if (!ui) return;
+    if (/ $/.test(c)) { ui.fill(c); paintCmds(); return; }
+    ui.input.value = ''; paintCmds(); ui.send(c);
+  }
+  let last = [];
   function mountBox() {
     const box = root.querySelector('#ao-box'), F = window.TribeFlint; if (!box) return;
     if (!F || !F.mount) { box.innerHTML = `<p class="ofl-quiet">${esc(T('The message box did not load. Reload the app.'))}</p>`; return; }
-    flint = F.mount(box, { ctx: 'office', key: pidNow(), echo: false, placeholder: T('Message the tribe, @someone, /task, or ask Flint…'), hello: T('Replies show here.'), run: route, chips, after: () => { stripOn(); paintChips(); } });
+    flint = F.mount(box, { ctx: 'office', key: pidNow(), echo: false, placeholder: T('Message the tribe or ask Flint…'), hello: '', run: route, chips: [], after: () => { stripOn(); paintChips(); } });
     if (!flint) return;
     flint.clearAll();
-    const inp = flint.input; inp.setAttribute('aria-label', T('Message the tribe, an AI helper or Flint')); inp.id = 'ao-input';
+    const inp = flint.input; inp.setAttribute('aria-label', T('Message the tribe, an AI helper or Flint. Type / for commands.')); inp.id = 'ao-input';
     if (window.TribeMentions && window.TribeMentions.wire) window.TribeMentions.wire(inp);
-    inp.addEventListener('input', paintChips);
+    const pop = document.createElement('div'); pop.id = 'ao-cmds'; pop.className = 'ofl-cmds'; pop.setAttribute('role', 'listbox'); pop.setAttribute('aria-label', T('Commands')); pop.hidden = true;
+    flint.el.insertBefore(pop, flint.el.querySelector('.fl-bar'));
+    inp.addEventListener('input', () => { cmdSel = 0; paintCmds(); paintChips(); });
+    inp.addEventListener('focus', paintChips);
+    inp.addEventListener('blur', () => setTimeout(() => { if (!flint.el.contains(document.activeElement)) { flint.chips([]); const m = root && root.querySelector('#ao-cmds'); if (m) m.hidden = true; } }, 150));
+    inp.addEventListener('keydown', e => {
+      const l = cmdList();
+      if (l.length && (e.key === 'ArrowDown' || e.key === 'ArrowUp')) { e.preventDefault(); cmdSel = (cmdSel + (e.key === 'ArrowDown' ? 1 : -1) + l.length) % l.length; return paintCmds(); }
+      if (l.length && (e.key === 'Enter' || e.key === 'Tab') && !(l.length === 1 && l[0][0].trim() === inp.value.trim() && !/ $/.test(l[0][0]))) { e.preventDefault(); return pickCmd(l[cmdSel][0]); }
+      if (e.key === 'ArrowUp' && !inp.value && last.length) { e.preventDefault(); inp.value = last[last.length - 1]; paintChips(); return; }   // the last thing you sent, again
+      if (e.key === 'Escape' && inp.value) { e.preventDefault(); inp.value = ''; paintCmds(); paintChips(); }
+    });
+    pop.addEventListener('mousedown', e => { const b = e.target.closest('[data-ofl-cmd]'); if (b) { e.preventDefault(); pickCmd(b.dataset.oflCmd); } });
     const x = document.createElement('button'); x.type = 'button'; x.className = 'ofl-x'; x.id = 'ao-replies-x'; x.setAttribute('aria-label', T('Hide the replies')); x.title = T('Hide the replies'); x.innerHTML = ico('x', 14);
     x.onclick = stripOff; flint.el.insertBefore(x, flint.el.querySelector('.flm-thread'));
     flint.el.querySelector('.flm-thread').id = 'ao-replies';
-    paintChips();
   }
-  // the chips show while the box is empty
-  function paintChips() { if (!flint) return; const empty = !flint.input.value.trim(); flint.chips(empty ? chips() : []); }
+  // "/" anywhere on this page (outside a text box) puts you in the box
+  document.addEventListener('keydown', e => {
+    if (e.key !== '/' || e.ctrlKey || e.metaKey || e.altKey || !root || !root.isConnected || !flint || document.body.dataset.view !== 'coord') return;
+    const t = e.target; if (t && (t.isContentEditable || /^(input|textarea|select)$/i.test(t.tagName))) return;
+    if (!root.offsetParent) return;
+    e.preventDefault(); flint.input.focus(); flint.input.value = '/'; cmdSel = 0; paintCmds(); paintChips();
+  });
+  function paintChips() { if (!flint) return; const on = document.activeElement === flint.input && !flint.input.value; flint.chips(on ? chips() : []); }
   let stripT = 0, chatUntil = 0;
   function stripOn() {
     if (!root || !flint || !flint.thread.length) return;
     root.dataset.replies = 'on';
-    clearTimeout(stripT); stripT = setTimeout(() => { if (!root || (root.contains(document.activeElement) && document.activeElement.closest && document.activeElement.closest('#ao-replies'))) return; stripOff(); }, 45000);
+    clearTimeout(stripT); stripT = setTimeout(function fade() { const r = root && root.querySelector('#ao-replies'); if (r && (r.matches(':hover') || r.contains(document.activeElement))) { stripT = setTimeout(fade, 4000); return; } stripOff(); }, 12000);
   }
-  function stripOff() { clearTimeout(stripT); chatUntil = 0; if (root) delete root.dataset.replies; if (flint) flint.clearAll(); }
+  function stripOff() { clearTimeout(stripT); if (root) delete root.dataset.replies; if (flint) flint.clearAll(); }
 
-  // Where a sentence goes. Returns 'flint' to hand it to Flint (TribeFlint.mount runs him), anything else when done here.
+  // Where a sentence goes. TribeFlint.mount runs Flint when this returns 'flint'; anything else is done here.
   const SMALL = new Set(['hello', 'thanks', 'help.kb', 'chat.smalltalk', 'smalltalk', 'yes', 'no']);
   const DESIGN = /^(?:please\s+)?(?:make|change|turn|set|add|remove|put|use)\b.*\b(?:website|site|app|page|theme|colou?rs?|dark(?:er)?|light(?:er)?|font|logo|header|headline|button|section)\b/i;
+  const AI_KIND = { claude: 'claude', 'claude code': 'claude', chatgpt: 'chatgpt', codex: 'codex', gemini: 'gemini', cursor: 'cursor' };
   function forFlint(text) {
     const t = text.toLowerCase();
     if (/^flint\b[,:]?\s*/i.test(text)) return text.replace(/^flint\b[,:]?\s*/i, '') || 'hi';
@@ -254,43 +291,72 @@
     if (!list.length) return T('Nobody else is here right now.');
     return list.map(x => { const l = (O().linesOf ? O().linesOf(x) : x.lines || [])[0]; return `${x.name}: ${l || O().statusOf(x)}`; }).join(' · ');
   }
+  const openWork = () => (phone() ? sheet('work') : (setPanel(true), show('work')));
+  const sent = {};   // cid -> the chat message id, so "Ask Flint instead" can take a message back
   async function route(raw, ui) {
     const text = String(raw || '').trim(); if (!text) return null;
-    chatUntil = 0;
-    if (/^(?:what(?:'|’)?s|what is|what are)\s+(?:every(?:one|body)|people|the agents|the ai helpers)\s+(?:doing|up to|working on)\??$/i.test(text) || /^who(?:'|’)?s here\??$/i.test(text)) {
-      ui.me(text); ui.say(everyoneLine(), [{ label: T('Working on'), fn: () => (phone() ? sheet('work') : (setPanel(true), show('work'))) }]); return null;
-    }
-    const f = text.startsWith('@') || text.startsWith('/') ? null : forFlint(text);
-    if (f) { ui.me(text); await ui.flint(f); return null; }
-    // everything else is a message in the tribe's chat: "/task …" becomes a task there, "@someone" mentions them, and
-    // "@an-ai-helper …" gives that helper a public command (server/askai.js)
+    last = [...last.filter(x => x !== text), text].slice(-20);
+    const c = C(), A = AO();
     ui.me(text);
-    const c = C(); if (!c || !c.hasToken || !c.hasToken()) { ui.say(T('Start or join a tribe first, then this goes to its chat.')); return null; }
-    // "@agents …" is for every AI helper: it goes to #agents (they read it there; it shows in Updates)
+    // the commands
+    let m = text.match(/^\/(\w+)\s*(.*)$/);
+    if (m && m[1] !== 'task') {
+      const k = m[1].toLowerCase(), rest = m[2].trim();
+      if (k === 'ai') { const kind = AI_KIND[rest.toLowerCase()] || 'claude'; A.pick(kind); ui.ev(T('The setup for {ai} is open: copy the one line and it joins here.', { ai: kind === 'claude' ? 'Claude' : rest || 'Claude' }), { k: 'info' }); return null; }
+      if (k === 'invite') { A.friend(); ui.ev(T('The invite is open.'), { k: 'info' }); return null; }
+      if (k === 'where') { A.run('where'); return null; }
+      if (k === 'look') { const sp = space(); if (sp && O().view() === 'floor') sp.act('look'); else ui.say(T('Your look is set on the pixel floor. Turn it on with Floor at the top.')); return null; }
+      if (k === 'flint') { await ui.flint(rest || 'what can you do'); return null; }
+    }
+    // "add claude", "connect chatgpt": the one setup for that AI, straight away
+    m = text.match(/^(?:please\s+)?(?:add|connect|set ?up|invite|hook up)\s+(?:my\s+|a\s+|an\s+)?(claude(?: code)?|chatgpt|codex|gemini|cursor|(?:an?\s+)?ai(?: helper)?|ai helper)\b/i);
+    if (m) { const kind = AI_KIND[m[1].toLowerCase()] || 'other'; A.pick(kind); ui.ev(T('The setup is open: copy the one line and it sits down at a desk here.'), { k: 'info', acts: [{ label: T('Working on'), fn: openWork }] }); return null; }
+    if (/^(?:what(?:'|’)?s|what is|what are)\s+(?:every(?:one|body)|people|the agents|the ai helpers)\s+(?:doing|up to|working on)\??$/i.test(text) || /^who(?:'|’)?s here\??$/i.test(text)) {
+      ui.say(everyoneLine(), [{ label: T('Working on'), fn: openWork }]); return null;
+    }
+    // "@claude do X": a task for that AI helper, which hears about it at once (the fleet's route)
+    m = text.match(/^@([^\s@]+)\s+(.+)$/);
+    const ag = m && agentOf(m[1]);
+    if (ag && c && c.hasToken && c.hasToken()) {
+      try { await c.api(`/agents/fleet/${encodeURIComponent(ag.id)}/task`, { method: 'POST', body: { title: m[2].trim().slice(0, 200) } }); ui.ev(T('Task given to {name}. Its progress shows in Working on.', { name: ag.name }), { k: 'task', acts: [{ label: T('Working on'), fn: openWork }] }); if (O()) O().refresh(); }
+      catch (e) { ui.say(e.message || String(e)); }
+      return null;
+    }
+    if (!text.startsWith('@') && !text.startsWith('/')) { const f = forFlint(text); if (f) { await ui.flint(f); return null; } }
+    if (!c || !c.hasToken || !c.hasToken()) { ui.say(T('Start or join a tribe first, then this goes to its chat.')); return null; }
+    // "@agents …" is for every AI helper: #agents (it shows in Updates)
     if (/^@agents\b/i.test(text)) {
       try { await c.api('/agents/channel', { method: 'POST', body: { text } }); ui.ev(T('Sent to the AI helpers in #agents.'), { k: 'chat', acts: [{ label: T('Updates'), fn: () => (phone() ? sheet('updates') : (setPanel(true), show('updates'))) }] }); if (tab === 'updates') upSoon(); }
       catch (e) { ui.say(e.message || String(e)); }
       return null;
     }
-    const body = { text, cid: c.newId ? c.newId() : String(Date.now()) };
+    // everything else is a message in #general, the same way the Messages box sends it (the outbox: it shows in
+    // Messages, counts as unread and notifies; "/task …" becomes a task there, "@someone" mentions them)
+    const cid = c.newId ? c.newId() : String(Date.now()), body = { text, cid };
     if (c.queue) c.queue('/chat/general', body, { kind: 'chat', ch: 'general' }); else await c.api('/chat/general', { method: 'POST', body });
-    const openChat = { label: T('Open chat'), fn: () => window.TribeApp && window.TribeApp.show && window.TribeApp.show('chat') };
+    const inMessages = { label: T('Open in Messages'), fn: () => window.TribeApp && window.TribeApp.show && window.TribeApp.show('chat') };
     const task = text.match(/^\/task\s+(.+)/i);
     if (task) ui.ev(T('Task made: {t}', { t: task[1].trim() }), { k: 'task', acts: [{ label: T('Open the board'), fn: () => window.TribeApp && window.TribeApp.show && window.TribeApp.show('tasks') }] });
-    else if (/^@\S/.test(text)) ui.ev(T('Sent to the tribe’s chat. Replies show here.'), { k: 'chat', acts: [openChat] });
-    else ui.ev(T('Sent to the tribe’s chat.'), { k: 'chat', acts: [openChat] });
+    else ui.ev(T('Sent to #general.'), { k: 'chat', acts: [inMessages, ...(text.startsWith('@') ? [] : [{ label: T('Ask Flint instead'), fn: u => askInstead(u, text, cid) }])] });
     chatUntil = Date.now() + 3 * 60e3;
     return null;
+  }
+  // the message goes back out of #general and Flint gets it
+  async function askInstead(ui, text, cid) {
+    const c = C(), id = sent[cid];
+    if (id) try { await c.api(`/chat/general/msg/${encodeURIComponent(id)}`, { method: 'DELETE' }); } catch {}
+    await ui.flint(text.replace(/^flint\b[,:]?\s*/i, ''));
+    stripOn();
   }
   // replies in the chat for a few minutes after you wrote there
   function hook() {
     const c = C(); if (!c || !c.on) return setTimeout(hook, 300);
     c.on('ws', m => {
       if (!m || !flint || !root || !root.isConnected) return;
-      if (m.type === 'chat' && m.channel === 'general' && m.message && Date.now() < chatUntil) {
-        const st = c.state(), me = (st.me || {}).id, by = m.message.by; if (by === me) return;
-        const who = by === 'tribecode' ? 'TribeCode' : ((st.members || []).find(x => x.id === by) || {}).name || T('Someone');
-        flint.ev(String(m.message.text || '').slice(0, 280), { who2: who, k: 'chat' }); stripOn();
+      if (m.type === 'chat' && m.channel === 'general' && m.message) {
+        const st = c.state(), me = (st.me || {}).id, by = m.message.by;
+        if (by === me) { if (m.message.cid) sent[m.message.cid] = m.message.id; return; }
+        if (Date.now() < chatUntil) { const who = by === 'tribecode' ? 'TribeCode' : ((st.members || []).find(x => x.id === by) || {}).name || T('Someone'); flint.ev(String(m.message.text || '').slice(0, 280), { who2: who, k: 'chat' }); stripOn(); }
       }
       if (/^(office|coord|task|tasks|claims|chat|agents|approval)/.test(m.type || '') && tab === 'updates') upSoon();
     });
@@ -299,7 +365,6 @@
   let upT = 0; const upSoon = () => { clearTimeout(upT); upT = setTimeout(() => { if (root && root.isConnected) updates(); }, 600); };
   hook();
   setInterval(() => { if (root && root.isConnected && tab === 'updates' && document.visibilityState === 'visible') updates(); }, 30000);
-
   // ---------- the head line: who is here, as small avatars ----------
   const initials = n => (String(n || '?').trim().split(/\s+/).filter(w => /^[\p{L}\p{N}]/u.test(w)).map(w => [...w][0]).slice(0, 2).join('') || '?').toUpperCase();
   function hereHtml() {
