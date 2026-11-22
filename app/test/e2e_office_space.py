@@ -3,7 +3,7 @@
 The art files load (catalog, character parts, furniture) and the character sprites render on the canvas; NOTICE credits
 Pixel Agents (MIT) and Metro City (CC0). A tribe with two people and two AI helpers: the canvas draws a character for each (plus Flint); an agent that claims a
 file walks to its desk, sits and types; an agent's approval ask shows a "Needs your OK" bubble and the card's Approve
-works; clicking a person opens a card with Message and Open; a wardrobe change persists; a layout edit saves and comes
+works; clicking a person opens a card with Message and Open; a change in Your look persists; a layout edit saves and comes
 back after a reload; the night set switches; reduced motion snaps everyone to their spot; a DM never shows; phones get
 the list.
 Usage: python app/test/e2e_office_space.py
@@ -153,16 +153,15 @@ def main():
             cp.click("#ad-office .os-card [data-os-close]")
             print("ok  a person's card: Message, Call, Open, Give a task; no DM text")
 
-            # ---------- Your look: a wardrobe change persists ----------
+            # ---------- Your look: a change in the character creator persists (feat/office-looks) ----------
             cp.click("#ad-office .os-bar [data-os-act='look']")
-            cp.wait_for_selector("#ad-office .os-look:not([hidden])")
-            before = cp.inner_text("#ad-office .os-look .os-part:nth-child(2) b")
-            cp.click("#ad-office .os-look [data-lk='hair'][data-d='1']")
-            after = cp.inner_text("#ad-office .os-look .os-part:nth-child(2) b"); assert after != before, (before, after)
-            cp.click("#ad-office .os-look [data-lk-save]")
-            cp.wait_for_selector("#ad-office .os-look", state="hidden")
-            mine = ok(api("/office", token=host))["myLook"]; assert mine and "hair" in mine, mine
-            print("ok  wardrobe: a new look is saved to my profile")
+            cp.wait_for_selector("#olk-sheet [data-olk-tab='hair']")
+            cp.click("#olk-sheet [data-olk-tab='hair']")
+            cp.click("#olk-sheet .olk-sws [data-olk-f='hair'][aria-checked='false'] >> nth=3")
+            cp.click("#olk-sheet [data-olk='save']")
+            cp.wait_for_selector("#olk-sheet", state="detached")
+            mine = ok(api("/office", token=host))["myLook"]; assert mine and mine.get("v") == 2 and "hair" in mine, mine
+            print("ok  Your look: a new look is saved to my profile")
 
             # ---------- the layout editor: place a plant, save, reload ----------
             n0 = cp.evaluate(OS + ".layout().items.filter(i => i.t === 'PLANT').length")

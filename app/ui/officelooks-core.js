@@ -358,7 +358,7 @@
   const TOOL = { claude: 15, cursor: 0, codex: 12, gemini: 8, qwen: 22, chatgpt: 10, ollama: 2 };
   function agent(id, kind) {
     const L = seed('agent:' + id), c = TOOL[String(kind || '').toLowerCase()] ?? 10;
-    return normalize(Object.assign(L, { top: 1, topColor: 10, full: 0, pants: 0, pantsColor: 7, jacket: 0, hat: 3, hatColor: c, lanyard: 1, lanyardColor: c, beard: 0, headphones: 0, eyewear: L.eyewear === 3 ? 0 : L.eyewear, neck: 0 }));
+    return normalize(Object.assign(L, { top: 1, topColor: 10, full: 0, pants: 0, pantsColor: 7, jacket: 0, hat: 3, hatColor: c, lanyard: 1, lanyardColor: c, beard: 0, headphones: 0, eyewear: L.eyewear === 3 ? 0 : L.eyewear, neck: 0 }), 'hat');   // the cap stays (a bun or a mohawk gives way)
   }
 
   return { PAL, PARTS, FIELDS, COLOR, TABS, DEF, ORDER, conflicts, migrate, normalize, compact, layers, files, recolor, composite, colours, random, rng, seed, agent, describe,

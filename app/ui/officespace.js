@@ -194,7 +194,7 @@
     }
     const colOf = (pose, t) => reduce() ? ({ walk: 1, type: 3, read: 5, sit: 7, stand: 1 }[pose]) :
       pose === 'walk' ? WALK[Math.floor(t / 0.15) % 4] : pose === 'type' ? 3 + Math.floor(t / 0.3) % 2 : pose === 'read' ? 5 + Math.floor(t / 0.6) % 2 : pose === 'sit' ? 7 : 1;
-    const lookOf = d => d.kind === 'agent' ? agentLook(d.id, d.agentKind) : Object.assign(S.seedLook(d.id), d.look || {});
+    const lookOf = d => (window.TribeOfficeLooks ? window.TribeOfficeLooks.lookOf(d) : d.kind === 'agent' ? agentLook(d.id, d.agentKind) : Object.assign(S.seedLook(d.id), d.look || {}));   // feat/office-looks
 
     // ---------- drawing ----------
     function fit() {
@@ -398,42 +398,11 @@
     });
     card.addEventListener('submit', e => { const d = everyone().find(x => x.id === card.dataset.who); if (O()) O().cardSubmit(e, card, d); });
 
-    // ---------- Your look: the wardrobe, with the real parts ----------
-    let draft = null;
-    const ROWS = [['body', 'Body'], ['hair', 'Hair'], ['top', 'Top'], ['pants', 'Bottoms'], ['shoes', 'Shoes'], ['jacket', 'Jacket'], ['full', 'Outfit'], ['beard', 'Beard'], ['hat', 'Hat'], ['acc', 'Extra']];
-    const SLOT = { glasses: 'shades', shades: 'shades' };
-    const nameOf = (k, i) => { const id = A.PARTS[k][((i | 0) % A.PARTS[k].length + A.PARTS[k].length) % A.PARTS[k].length]; return id ? A.label(k === 'acc' ? (SLOT[id] || id) : k, id) : 'None'; };
+    // ---------- Your look: the character creator (officelooks.js, feat/office-looks) ----------
     function openLook() {
-      closeCard(); edit.hidden = true;
-      draft = Object.assign(S.seedLook((data && data.me) || 'me'), (data && data.myLook) || {});
-      lookEl.hidden = false; paintLook();
+      closeCard(); edit.hidden = true; lookEl.hidden = true;
+      if (window.TribeOfficeLooks) window.TribeOfficeLooks.openMine({ onSaved: () => office.refresh() });
     }
-    function paintLook() {
-      const row = (k, label) => `<div class="os-part"><span>${esc(tr(label))}</span><button class="btn sm icon" data-lk="${k}" data-d="-1" aria-label="${esc(tr('Previous'))}">‹</button><b>${esc(tr(nameOf(k, draft[k] || 0)))}</b><button class="btn sm icon" data-lk="${k}" data-d="1" aria-label="${esc(tr('Next'))}">›</button></div>`;
-      const sw = (k, slot, label) => { const cols = A.swatches(slot); return `<div class="os-sw" role="radiogroup" aria-label="${esc(tr(label))}"><span>${esc(tr(label))}</span>${cols.map((c, i) => `<button class="os-dot${(draft[k] | 0) === i ? ' on' : ''}" role="radio" aria-checked="${(draft[k] | 0) === i}" data-lc="${k}" data-i="${i}" style="background:${c}" aria-label="${esc(tr(label))} ${i + 1}"></button>`).join('')}</div>`; };
-      const full = !!draft.full;
-      lookEl.innerHTML = `<header><b>${esc(tr('Your look'))}</b><button class="btn sm icon" data-lk-close aria-label="${esc(tr('Close'))}">×</button></header>
-        <div class="os-look-row"><canvas class="os-prev" width="16" height="32" aria-hidden="true"></canvas><div class="os-parts">${ROWS.map(([k, l]) => row(k, l)).join('')}</div></div>
-        ${sw('skin', 'body', 'Skin')}${sw('hairColor', 'hair', 'Hair colour')}${full ? sw('fullColor', 'full', 'Outfit colour') : sw('topColor', 'top', 'Top colour') + sw('pantsColor', 'pants', 'Bottoms colour')}
-        ${draft.jacket ? sw('jacketColor', 'jacket', 'Jacket colour') : ''}${draft.hat ? sw('hatColor', 'hat', 'Hat colour') : ''}${sw('shoesColor', 'shoes', 'Shoes colour')}
-        <div class="os-acts"><button class="btn primary sm" data-lk-save>${esc(tr('Save my look'))}</button><button class="btn sm" data-lk-random>${esc(tr('Surprise me'))}</button></div>`;
-      preview();
-    }
-    function preview() {
-      const c = lookEl.querySelector('.os-prev'); if (!c) return;
-      const x = c.getContext('2d'); x.imageSmoothingEnabled = false; x.clearRect(0, 0, 16, 32);
-      const sh = A.sheet(draft, preview); if (sh) A.drawSheet(x, sh, 0, 1, 8, 32);
-    }
-    lookEl.addEventListener('click', async e => {
-      const t = e.target.closest('[data-lk],[data-lc],[data-lk-close],[data-lk-save],[data-lk-random]'); if (!t) return;
-      if (t.matches('[data-lk-close]')) { lookEl.hidden = true; return; }
-      if (t.matches('[data-lk]')) { const k = t.dataset.lk, n = S.LOOK[k] || A.PARTS[k].length; draft[k] = ((draft[k] | 0) + (+t.dataset.d) + n) % n; return paintLook(); }
-      if (t.matches('[data-lc]')) { draft[t.dataset.lc] = +t.dataset.i; return paintLook(); }
-      if (t.matches('[data-lk-random]')) { draft = S.seedLook(Math.random().toString(36)); return paintLook(); }
-      if (t.matches('[data-lk-save]')) {
-        try { const r = await C.api('/office/look', { method: 'PUT', body: { look: draft } }); if (data) data.myLook = r.look; toast(tr('Look saved')); lookEl.hidden = true; office.refresh(); } catch (err) { toast(err.message); }
-      }
-    });
 
     // ---------- the layout editor (host or admin): the real furniture ----------
     const TILE_TOOLS = [['wood', 'Wood'], ['floor', 'Floor'], ['tile', 'Tiles'], ['stone', 'Stone'], ['carpet', 'Carpet'], ['wall', 'Wall'], ['void', 'Outside']];

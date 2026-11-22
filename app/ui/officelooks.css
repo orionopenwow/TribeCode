@@ -1,0 +1,71 @@
+/* Your look (feat/office-looks): the character creator. Flat matte chrome around the pixel art: tokens, 1px borders,
+   luminance steps. The art is drawn at whole-number zooms into canvases (officelooks.js) and never smoothed. */
+#olk-sheet.ui-card.wide { width: min(1000px, calc(100vw - 32px)); height: min(700px, 90dvh); }
+#olk-sheet .ui-body { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; padding-bottom: 0; }
+.olk { flex: 1; min-height: 0; display: grid; grid-template-columns: 220px minmax(0, 1fr); gap: 16px; }
+.olk canvas { image-rendering: pixelated; image-rendering: crisp-edges; }
+
+/* the preview */
+.olk-stage { min-height: 0; overflow-y: auto; display: grid; align-content: start; justify-items: center; gap: 10px; }
+.olk-floor { width: 100%; display: grid; place-items: end center; padding: 12px 0 8px; border: 1px solid var(--edge); border-radius: var(--r-card); background: var(--surface-2); }
+.olk-prev { display: block; width: 128px; height: 256px; }
+.olk-turn { display: flex; align-items: center; gap: 8px; }
+.olk-dir { min-width: 96px; text-align: center; font-size: 12px; color: var(--muted); }
+.olk-poses { display: inline-flex; border: 1px solid var(--edge); border-radius: var(--r-ctl); overflow: hidden; }
+.olk-pose { min-height: 32px; padding: 0 10px; border: 0; border-right: 1px solid var(--edge); background: var(--surface); color: var(--muted); font: 600 12px/1 var(--font); cursor: pointer;
+  transition: background-color var(--dur-quick) var(--ease-out), color var(--dur-quick) var(--ease-out); }
+.olk-pose:last-child { border-right: 0; }
+.olk-pose[aria-checked="true"] { background: var(--surface-2); color: var(--text); }
+.olk-dirs { display: flex; gap: 4px; }
+.olk-dirs canvas { width: 48px; height: 96px; border: 1px solid var(--edge); border-radius: var(--r-ctl); background: var(--surface-2); }
+.olk-desc { margin: 0; font-size: 12px; text-align: center; line-height: 1.4; }
+
+/* the parts */
+.olk-edit { min-width: 0; min-height: 0; display: flex; flex-direction: column; gap: 10px; }
+.olk-tabs { display: flex; flex-wrap: wrap; gap: 4px; }
+.olk-tab { min-height: 32px; padding: 0 9px; border: 1px solid var(--edge); border-radius: var(--r-ctl); background: var(--surface); color: var(--muted); font: 600 12px/1 var(--font); cursor: pointer;
+  transition: border-color var(--dur-quick) var(--ease-out), color var(--dur-quick) var(--ease-out); }
+.olk-tab:hover { color: var(--text); }
+.olk-tab[aria-selected="true"] { border-color: var(--edge-pop); background: var(--surface-2); color: var(--text); }
+.olk-panel { flex: 1; min-height: 0; overflow-y: auto; display: grid; align-content: start; gap: 14px; padding: 2px 2px 14px; }
+.olk-group { display: grid; gap: 6px; }
+.olk-sub { margin: 0; font: 600 11px/1.3 var(--mono); letter-spacing: .04em; text-transform: uppercase; color: var(--faint); }
+.olk-note { margin: 0; font-size: 13px; color: var(--muted); }
+.olk-sws { display: grid; grid-template-columns: repeat(auto-fill, minmax(78px, 1fr)); gap: 6px; }
+.olk-sw { display: grid; justify-items: center; align-content: start; gap: 4px; min-height: 40px; padding: 6px 4px; border: 1px solid var(--edge); border-radius: var(--r-ctl); background: var(--surface); color: var(--muted); cursor: pointer;
+  transition: border-color var(--dur-quick) var(--ease-out), background-color var(--dur-quick) var(--ease-out); }
+.olk-sw:hover { border-color: var(--edge-pop); }
+.olk-sw[aria-checked="true"] { border-color: var(--brand); background: var(--surface-2); color: var(--text); }
+.olk-sw canvas { display: block; width: 32px; height: 64px; }
+.olk-sw.head canvas { width: 48px; height: 54px; }
+.olk-none { display: block; width: 32px; height: 54px; border: 1px dashed var(--edge); border-radius: var(--r-ctl); }
+.olk-sw-t { font-size: 12px; line-height: 1.2; text-align: center; hyphens: auto; }
+.olk-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.olk-chip { width: 32px; height: 32px; padding: 0; border: 1px solid var(--edge); border-radius: 50%; background: var(--olk-c, var(--surface-2)); cursor: pointer; }
+.olk-chip.same { background: var(--surface); border-style: dashed; }
+.olk-chip[aria-checked="true"] { outline: 2px solid var(--text); outline-offset: 2px; }
+.olk-sw:focus-visible, .olk-chip:focus-visible, .olk-tab:focus-visible, .olk-pose:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
+
+/* the buttons */
+.olk-foot { display: flex; align-items: center; gap: 8px; width: 100%; flex-wrap: wrap; }
+.olk-gap { flex: 1; }
+
+/* phones: a sheet; preview on top, tabs scroll sideways, 40px targets */
+@media (max-width: 700px) {
+  #olk-sheet.ui-card.wide { height: 92dvh; }
+  .olk { grid-template-columns: 1fr; grid-template-rows: auto minmax(0, 1fr); gap: 10px; }
+  .olk-stage { grid-template-columns: auto 1fr; justify-items: start; align-items: center; gap: 8px 12px; }
+  .olk-floor { grid-row: span 3; width: auto; padding: 6px 10px; }
+  .olk-prev { width: 64px; height: 128px; }
+  .olk-dirs, .olk-desc { display: none; }
+  .olk-tabs { flex-wrap: nowrap; overflow-x: auto; padding-bottom: 2px; }
+  #olk-sheet .olk-tab { flex: none; min-height: 40px; height: 40px; }
+  #olk-sheet .olk-pose { min-height: 40px; min-width: 44px; }
+  #olk-sheet .olk-turn .btn { min-width: 40px; width: 40px; min-height: 40px; height: 40px; }
+  .olk-chip { width: 40px; height: 40px; }
+  .olk-sws { grid-template-columns: repeat(auto-fill, minmax(72px, 1fr)); }
+  #olk-sheet .olk-foot .btn { min-height: 40px; height: 40px; }
+  #olk-sheet .olk-foot [data-olk="cancel"], .olk-gap { display: none; }   /* the sheet's close button is there */
+  .olk-foot > .btn.primary { margin-left: auto; }
+}
+@media (prefers-reduced-motion: reduce) { .olk-pose, .olk-tab, .olk-sw { transition: none; } }
