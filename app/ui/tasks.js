@@ -82,7 +82,14 @@
     const t = tasks.find(x => x.id === id); if (!t) return;
     tasks = tasks.filter(x => x.id !== id); if (openId === id) close(); render();
     if (remote()) { try { await C.api('/tasks/' + id, { method: 'DELETE' }); } catch { load(); } } else local.save(tasks);
-    window.TribeApp.toast(`Deleted "${t.title}"`);
+    window.TribeApp.toast(`Deleted "${t.title}"`, 'ok', { label: 'Undo', run: () => restore(t) });   // p13: a delete can be taken back
+  }
+  async function restore(t) {   // the same words, place, type, person and date come back (as a new task on the server)
+    if (remote()) {
+      try { const { task } = await C.api('/tasks', { method: 'POST', body: { title: t.title, body: t.body || '', status: t.status, type: t.type, assignee: t.assignee || null, due: t.due } }); upsert(task); }
+      catch (e) { window.TribeApp.toast('Could not bring it back: ' + e.message); }
+    } else { tasks.push(t); local.save(tasks); render(); }
+    window.TribeApp.toast(`Brought back "${t.title}"`, 'ok');
   }
 
   function upsert(t) { const i = tasks.findIndex(x => x.id === t.id); if (i >= 0) tasks[i] = t; else tasks.push(t); render(); }
@@ -283,7 +290,7 @@
     const sub = $('#tasks-sub'); if (sub) sub.textContent = `${total} task${total === 1 ? '' : 's'} · ${done} done · ${remote() ? 'shared with your tribe' : 'saved on this device'}`;
     const md = board.querySelector('#tk-mode'); if (md) { md.hidden = !remote(); const l = work.mode === 'council' ? 'Council' : 'Lead assigns'; if (md.dataset.l !== l) { md.dataset.l = l; md.innerHTML = `${ico(work.mode === 'council' ? 'hand' : 'flag', 14)}<span>${l}</span>${IC.chev}`; } }
     const F = window.TribeFlint, fl = board.querySelector('#tk-flint');
-    if (fl) { const h = F && F.ask ? `<button type="button" class="tk-chip" data-flint-plan>${ico('flame', 14)}<span>Plan this week with Flint</span></button>` : ''; if (fl.innerHTML !== h) fl.innerHTML = h; }   // feat/tasks-company: redrawn only when it changes (it lost its click handler on every presence blip)
+    if (fl) { const h = F && F.ask && total ? `<button type="button" class="tk-chip" data-flint-plan>${ico('flame', 14)}<span>Plan this week with Flint</span></button>` : ''; if (fl.innerHTML !== h) fl.innerHTML = h; }   // p13: hidden while the board is empty, where the welcome's "Ask Flint to plan" is the one way. feat/tasks-company: redrawn only when it changes (it lost its click handler on every presence blip)
     STATS.forEach(([k, , , fn]) => {
       const n = tasks.filter(fn).length, el = board.querySelector(`[data-segn="${k}"]`); if (el) el.textContent = n;
       const b = board.querySelector(`[data-seg="${k}"]`); if (b) { b.setAttribute('aria-pressed', String(filter === k)); b.classList.toggle('is-zero', !n); }

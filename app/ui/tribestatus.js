@@ -115,7 +115,7 @@
       : `<li class="faint">${esc(T('Nothing sent yet.'))}</li>`;
   }
   function copySection(d) {
-    if (!CP() || d.key === 'demo' || d.key === 'device' || d.key === 'none') return '';
+    if (!CP() || d.key === 'demo' || d.key === 'device' || d.key === 'none' || d.key === 'here') return '';   // p13: on the tribe's own computer there is no second copy to send or get
     const L = copyLine();
     return `<section class="ts-copy" id="ts-copy" aria-label="${esc(T('Your copy'))}"><span class="eyebrow">${esc(T('Your copy'))}</span>
       <p class="ts-copy-line" id="ts-copy-line" data-n="${L.n}">${esc(L.text)}</p>

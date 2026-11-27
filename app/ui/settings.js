@@ -135,7 +135,7 @@
     const den = st.density === 'compact' ? 'compact' : 'comfortable', fs = mine.fontSize || eff.fontSize || 'm';
     const initial = esc(((st.name || 'Me').trim()[0] || 'M').toUpperCase());
     const pv = `<div class="set-pv" aria-hidden="true"><div class="set-pv-who"><span class="set-pv-av" style="background:${esc(st.color)}">${initial}</span><span><b style="color:${esc(st.color)}">${esc(st.name || 'You')}</b><small>${esc(window.TribeThemes ? (window.TribeThemes.byId(window.TribeThemes.resolve(st)) || {}).name || '' : '')} · ${den === 'compact' ? 'Compact' : 'Comfortable'}</small></span></div>
-      <div class="set-pv-msgs"><span class="set-pv-b other">Pushed the new title screen.</span><span class="set-pv-b mine">Looks great. Shipping it.</span></div><span class="btn primary sm">Ship it</span></div>`;
+      <div class="set-pv-msgs"><span class="set-pv-b other">Saved the new title screen.</span><span class="set-pv-b mine">Looks great. Let’s share it.</span></div><span class="btn primary sm">Share it</span></div>`;
     return sec('Your profile', `${pv}
       ${on() && window.TribeProfiles ? row('Profile', '<button class="btn" id="set-profile">Edit profile</button>', 'Avatar, name color, bio, status and your profile icon.', { keys: 'avatar bio status picture photo' }) : ''}
       ${row('Name', `<input class="input" id="set-name" maxlength="32" value="${esc(st.name)}" autocomplete="off" aria-label="Name">`, 'What your tribe sees.', { id: 'set-name-row' })}

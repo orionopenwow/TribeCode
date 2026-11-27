@@ -155,7 +155,7 @@ html[data-dev=phone] .ehide-phone,html[data-dev=tablet] .ehide-tablet,html[data-
   // p12: both changed the site: put the two together block by block, and ask only about a block both changed
   async function mergeIn(d) {
     const pid = st && st.pid, b = CP() && pid && d && d.config ? CP().getBase('site:' + pid, st.rev) : null; if (!b) return false;
-    const theirs = S().normalize(d.config), m = await CP().mergeOrAsk(S().normalize(b), st.cfg, theirs, { what: tr('Website'), by: d.by });
+    const theirs = S().normalize(d.config), m = await CP().mergeOrAsk(S().normalize(b), st.cfg, theirs, { part: t => ((S().BLOCKS || {})[t] || {}).label, what: tr('Website'), by: d.by });
     if (!st || st.pid !== pid) return true;
     baseSet(pid, d.rev || 0, theirs); st.rev = d.rev || st.rev;
     if (!m) { st.hist.push(JSON.stringify(st.cfg)); st.cfg = theirs; st.dirty = false; writeDraft(); fixPage(); paint(); status(); say(tr('Kept their version for now. Undo brings yours back.')); return true; }
@@ -268,7 +268,7 @@ html[data-dev=phone] .ehide-phone,html[data-dev=tablet] .ehide-tablet,html[data-
     let d = !o.cfg && readDraft(pid);
     let merged = null;
     if (!o.cfg && d && d.dirty && server && !server._fromCopy && server.config && (d.rev || 0) < rev && CP() && CP().getBase('site:' + pid, d.rev || 0)) {   // p12: changed here while away, and by a friend since
-      const m = await CP().mergeOrAsk(S().normalize(CP().getBase('site:' + pid, d.rev || 0)), S().normalize(d.cfg), S().normalize(server.config), { what: tr('Website') });
+      const m = await CP().mergeOrAsk(S().normalize(CP().getBase('site:' + pid, d.rev || 0)), S().normalize(d.cfg), S().normalize(server.config), { part: t => ((S().BLOCKS || {})[t] || {}).label, what: tr('Website') });
       if (m) { merged = S().normalize(m.value); d = { ...d, cfg: merged, rev }; }
     }
     let restored = false, brought = false;
@@ -884,7 +884,7 @@ html[data-dev=phone] .ehide-phone,html[data-dev=tablet] .ehide-tablet,html[data-
     const s = st.sel, pg = pageNow(), b = s && pg.blocks.find(x => x.id === s.block);
     if (st.multi && st.multi.length > 1 && SP() && SP().multi) return SP().multi(box, spApi);
     if (s && s.block === '@' && SP()) return SP().siteSel(box, spApi);
-    if (!b) { box.innerHTML = `<p class="wdz-eyebrow">Edit</p><p class="wdz-hint">Click anything in the preview. Words: click and type. Buttons: pick where they go. Pictures: replace, round or square.</p><p class="wdz-hint">Right-click anything for more. Esc steps out to what holds it.</p>`; return; }
+    if (!b) { box.innerHTML = `<p class="wdz-eyebrow">Edit</p><p class="wdz-hint">Click anything in the preview. Words: click and type. Buttons: pick where they go. Pictures: replace, round or square.</p><p class="wdz-hint">${matchMedia('(pointer: coarse)').matches ? 'Press and hold anything for more.' : 'Right-click anything for more. Esc steps out to what holds it.'}</p>`; return; }   // p13: phones have no right-click or Esc
     const BL = S().BLOCKS[b.type];
     if (SP() && /^(text|item|icon|field)$/.test(s.kind)) return SP().element(box, b, spApi);
     if (s.kind === 'button') {

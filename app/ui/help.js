@@ -91,11 +91,14 @@
     // arrows move between the menu's buttons; inside the language picker they change the language instead
     if (menu && (e.key === 'ArrowDown' || e.key === 'ArrowUp') && !(document.activeElement && document.activeElement.tagName === 'SELECT')) { const bs = [...menu.querySelectorAll('button')], i = bs.indexOf(document.activeElement); bs[(i + (e.key === 'ArrowDown' ? 1 : -1) + bs.length) % bs.length].focus(); e.preventDefault(); }
     if ((e.ctrlKey || e.metaKey) && e.key === '/') { e.preventDefault(); shortcuts(); }
+    // p13: a plain ? opens them too, when nothing is being typed and nothing else is open
+    if (e.key === '?' && !e.ctrlKey && !e.metaKey && !e.altKey && !typing(e.target) && !document.querySelector('.ui-scrim, .modal:not(.hidden), #apc:not([hidden]), #wdz:not([hidden])')) { e.preventDefault(); shortcuts(); }
   });
+  const typing = el => !!el && (el.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(el.tagName) || !!(el.closest && el.closest('[contenteditable=""], [contenteditable="true"], .cm-editor')));
 
   // keyboard shortcuts sheet
   const KEYS = [
-    ['Anywhere', [['Ctrl K', 'Search or jump to anything'], ['Ctrl /', 'These shortcuts'], ['Ctrl Shift B', 'Report a bug'], ['Ctrl Shift D', 'Dictate into chat'], ['Ctrl Shift L', 'Switch between your light and dark theme'], ['Esc', 'Close a panel or menu']]],
+    ['Anywhere', [['Ctrl K', 'Search or jump to anything'], ['Ctrl /', 'These shortcuts'], ['?', 'These shortcuts, when you are not typing'], ['Ctrl Shift B', 'Report a bug'], ['Ctrl Shift D', 'Dictate into chat'], ['Ctrl Shift L', 'Switch between your light and dark theme'], ['Esc', 'Close a panel or menu']]],
     ['Writing docs', [['Ctrl B / I / U', 'Bold, italic, underline'], ['Ctrl K', 'Add a link'], ['Ctrl Alt 1 · 2 · 3', 'Heading 1, 2, 3 (0 for normal text)'], ['Ctrl Shift 7 · 8 · 9', 'Numbered, bulleted, checklist'], ['Ctrl Z / Y', 'Undo, redo'], ['/', 'Insert a block']]],
     ['Chat', [['Enter', 'Send'], ['Shift Enter', 'New line'], ['@', 'Mention someone or an agent']]],
     ['Design canvas', [['V · F · R · O · T · K', 'Move, frame, rectangle, ellipse, text, scale'], ['Shift A', 'Add auto layout'], ['Ctrl Alt K', 'Create a component'], ['Ctrl Alt B', 'Detach an instance'],

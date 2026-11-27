@@ -86,7 +86,8 @@
     if (!hub || !ls.get(OFFER) || state().choice === 'later' || !FM()) { if (old && !(state().installed && ls.get(OFFER))) old.remove(); return; }
     if (old && old.isConnected) return;
     const el = Object.assign(document.createElement('section'), { id: 'fs-step', className: 'fs-step' }); el.setAttribute('aria-label', 'Give Flint a local brain');
-    const after = hub.querySelector('#sg-next'); if (after && after.nextSibling) hub.insertBefore(el, after.nextSibling); else if (after) hub.appendChild(el); else hub.insertBefore(el, hub.firstChild);
+    const after = hub.querySelector('#sg-next') || hub.querySelector('.hub-home > .hub-head');   // p13: never above the page's own header (it pushed Home's title down on phones)
+    if (after) after.after(el); else hub.insertBefore(el, hub.firstChild);
     mount(el, 'home');
   }
   function offer() { if (decided()) return; ls.set(OFFER, 1); setTimeout(banner, 80); }

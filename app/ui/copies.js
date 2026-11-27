@@ -15,7 +15,7 @@
 // fetches the latest of the open project, fromGitHub() fills the copy from the GitHub backup when nobody's computer is
 // on (public repos; a private one says so plainly).
 //
-// Public: window.TribeCopies = { copyable, keep, read, peek, touch, setBase, getBase, merge3, choose, mergeOrAsk,
+// Public: window.TribeCopies = { copyable, keep, read, peek, touch, setBase, getBase, merge3, choose, describe, mergeOrAsk,
 //                                pending, send, get, lastContact, history, fromGitHub, on }
 (function (root) {
   'use strict';
@@ -83,7 +83,8 @@
   // decisions: { [key]: 'mine' | 'theirs' | 'both' } from choose(). Without one, a conflict keeps theirs for now.
   function merge3(b, m, t, decisions) {
     const conflicts = [], dec = decisions || {};
-    const add = (key, label, both, mv, tv) => { if (!conflicts.some(c => c.key === key)) conflicts.push({ key, label, both, mine: mv, theirs: tv }); };
+    // part: the block the conflict is in ({ type, mine, theirs }: both sides of it), so the sheet can name it in plain words
+    const add = (key, label, both, mv, tv, part) => { if (!conflicts.some(c => c.key === key)) conflicts.push({ key, label, both, mine: mv, theirs: tv, part: part || null, path: key.split('#')[0] }); };
     function walk(b, m, t, path, block) {
       if (same(m, t)) return m;
       if (same(m, b)) return t;
@@ -98,7 +99,7 @@
       const key = block ? block.key : path, label = block ? block.label : path.split('/').filter(Boolean).slice(-1)[0] || T('the design');
       const d = dec[key];
       if (d === 'mine' || d === 'both') return m;
-      if (d !== 'theirs') add(key, label, false, m, t);
+      if (d !== 'theirs') add(key, label, false, m, t, block && block.part);
       return t;
     }
     // a list of blocks: kept in their order, with mine's new blocks put after the block they followed in mine
@@ -106,11 +107,11 @@
       const bi = new Map(b.map(x => [String(x.id), x])), mi = new Map(m.map(x => [String(x.id), x])), ti = new Map(t.map(x => [String(x.id), x]));
       const out = [];
       for (const x of t) {
-        const id = String(x.id), key = path + '#' + id, label = nameOf(x, id);
+        const id = String(x.id), key = path + '#' + id, label = nameOf(x, id), part = { type: x.type, mine: mi.get(id), theirs: x };
         if (!mi.has(id)) {
           if (!bi.has(id)) { out.push(x); continue; }                       // new on their side
           if (same(bi.get(id), x)) continue;                                  // I removed it and they left it alone
-          const d = dec[key]; if (d === 'mine') continue; if (!d) add(key, label, false, undefined, x);   // I removed it, they changed it
+          const d = dec[key]; if (d === 'mine') continue; if (!d) add(key, label, false, undefined, x, part);   // I removed it, they changed it
           out.push(x); continue;
         }
         const mv = mi.get(id), bv = bi.get(id);
@@ -119,11 +120,11 @@
           if (d === 'mine') { out.push(mv); continue; }
           if (d === 'theirs') { out.push(x); continue; }
           if (d === 'both') { out.push(x); out.push({ ...mv, id: copyId(id, ti, mi) }); continue; }
-          const inner = []; const v = walkInner(bv, mv, x, key, label, inner);
+          const inner = []; const v = walkInner(bv, mv, x, key, label, inner, part);
           if (!inner.length) { out.push(v); continue; }                      // different parts of it: both kept
-          add(key, label, true, mv, x); out.push(x); continue;
+          add(key, label, true, mv, x, part); out.push(x); continue;
         }
-        out.push(walk(bv, mv, x, key, { key, label }));
+        out.push(walk(bv, mv, x, key, { key, label, part }));
       }
       // blocks only on my side: new ones go in; ones they removed come back only if I changed them
       m.forEach((x, i) => {
@@ -131,7 +132,7 @@
         const key = path + '#' + id, label = nameOf(x, id);
         if (bi.has(id)) {
           if (same(bi.get(id), x)) return;                                    // they removed it; I hadn't touched it
-          const d = dec[key]; if (d === 'theirs') return; if (!d) { add(key, label, false, x, undefined); return; }
+          const d = dec[key]; if (d === 'theirs') return; if (!d) { add(key, label, false, x, undefined, { type: x.type, mine: x, theirs: undefined }); return; }
         }
         let at = out.length;
         for (let j = i - 1; j >= 0; j--) { const p = out.findIndex(o => String(o.id) === String(m[j].id)); if (p >= 0) { at = p + 1; break; } }
@@ -140,8 +141,8 @@
       });
       return out;
     }
-    function walkInner(b, m, t, key, label, inner) {   // the same block changed on both sides: did they touch the same field?
-      const saved = conflicts.length, v = walk(b, m, t, key, { key, label });
+    function walkInner(b, m, t, key, label, inner, part) {   // the same block changed on both sides: did they touch the same field?
+      const saved = conflicts.length, v = walk(b, m, t, key, { key, label, part });
       if (conflicts.length > saved) {   // a smaller block inside asks for itself; a field of this very block asks here
         const got = conflicts.splice(saved);
         got.forEach(c => (c.key === key ? inner.push(c) : conflicts.push(c)));
@@ -153,6 +154,45 @@
   }
   const copyId = (id, a, b) => { let n = 2, v = id + '-' + n; while (a.has(v) || b.has(v)) v = id + '-' + (++n); return v; };
 
+  // ---------- plain names for what both changed (p13): "Big title · “Today”", never a raw block id or field key ----------
+  // o.part(type) -> the tool's own name for that kind of block (App Creator's parts, the website's sections).
+  const word = x => (typeof x === 'string' && x.trim() ? x.trim() : '');
+  const titleOf = v => {
+    if (typeof v === 'string' || typeof v === 'number') return String(v);
+    if (!isObj(v)) return '';
+    const pr = isObj(v.props) ? v.props : {};
+    return word(pr.title) || word(pr.heading) || word(pr.label) || word(pr.name) || word(pr.text) || word(v.title) || (v.type ? '' : word(v.name)) || '';
+  };
+  const clip = (t, n = 48) => (t.length > n ? t.slice(0, n - 1).trimEnd() + '…' : t);
+  const quote = t => '“' + clip(t) + '”';
+  const FIELDS = { name: 'The name', theme: 'The look', colors: 'Colours', fonts: 'Fonts', radius: 'Corners', mode: 'Light or dark', seo: 'Search and sharing',
+    start: 'The first screen', platform: 'Phone or tablet', device: 'Phone or tablet', pics: 'Pictures', title: 'The title', slug: 'The address' };
+  const pretty = t => { const w = String(t || '').replace(/[-_]+/g, ' ').trim(); return w ? w[0].toUpperCase() + w.slice(1) : ''; };
+  function describe(c, o = {}) {
+    const p = c.part, a = p ? p.mine : c.mine, b = p ? p.theirs : c.theirs, one = isObj(b) ? b : a;
+    let name = '';
+    if (p && isObj(one) && one.type) {
+      const own = isObj(a) && isObj(b) ? (word(a.name) && a.name === b.name ? word(a.name) : '') : word(one.name);   // a section someone named
+      name = own || T((o.part && o.part(one.type)) || pretty(one.type));
+    } else if (isObj(one) && Array.isArray(one.blocks)) name = T(one.slug != null ? 'Page' : 'Screen');
+    else {
+      const segs = String(c.path || c.key || '').split('/').filter(Boolean), hit = segs.find(k => FIELDS[k]);
+      name = T(hit ? FIELDS[hit] : segs[0] === 'theme' ? 'The look' : 'A setting');
+    }
+    let ta = titleOf(a), tb = titleOf(b);
+    if (ta === tb && isObj(a) && isObj(b) && isObj(a.props) && isObj(b.props)) {   // the title is the same: show the words that differ
+      const k = Object.keys(a.props).find(x => typeof a.props[x] === 'string' && typeof b.props[x] === 'string' && a.props[x] !== b.props[x] && a.props[x].trim() && b.props[x].trim());
+      if (k) { if (ta) name += ' · ' + quote(ta); ta = a.props[k]; tb = b.props[k]; }
+    }
+    let detail = '';
+    if (a === undefined) detail = T('You removed it. They changed it.');
+    else if (b === undefined) detail = T('They removed it. You changed it.');
+    else if (/^#[0-9a-f]{3,8}$/i.test(ta) && /^#[0-9a-f]{3,8}$/i.test(tb)) detail = T('Each of you picked a different colour.');
+    else if (ta && tb && ta !== tb) detail = T('Yours: {a} · Theirs: {b}', { a: quote(ta), b: quote(tb) });
+    else if (ta && ta === tb) name += ' · ' + quote(ta);
+    return { name, detail };
+  }
+
   // ---------- the choice: one sheet, one row per thing both people changed ----------
   // -> Promise<{ [key]: 'mine'|'theirs'|'both' } | null>   (null: closed without choosing; nothing changes)
   function choose(conflicts, o = {}) {
@@ -160,13 +200,14 @@
     return new Promise(res => {
       let done = false; const dec = {};
       const end = v => { if (done) return; done = true; sh.close(); res(v); };
-      const row = (c, i) => `<div class="cp-row" data-cp="${i}"><b>${esc(c.label)}</b><span class="cp-btns">
+      const row = (c, i) => { const d = describe(c, o); return `<div class="cp-row" data-cp="${i}"><span class="cp-what"><b>${esc(d.name)}</b>${d.detail ? `<small>${esc(d.detail)}</small>` : ''}</span><span class="cp-btns">
         <button type="button" class="btn sm" data-pick="mine">${esc(T('Keep mine'))}</button>
         <button type="button" class="btn sm" data-pick="theirs">${esc(T('Keep theirs'))}</button>
-        ${c.both ? `<button type="button" class="btn sm" data-pick="both">${esc(T('Keep both'))}</button>` : ''}</span></div>`;
+        ${c.both ? `<button type="button" class="btn sm" data-pick="both">${esc(T('Keep both'))}</button>` : ''}</span></div>`; };
+      const all = conflicts.length > 1 ? `<div class="cp-all"><span>${esc(T('For all of them:'))}</span><button type="button" class="linkish" data-all="mine">${esc(T('Keep all mine'))}</button><button type="button" class="linkish" data-all="theirs">${esc(T('Keep all theirs'))}</button></div>` : '';
       const who = o.by ? T('{name} changed it too.', { name: o.by }) : T('Someone changed it too.');
       const sh = UI.sheet({ id: 'cp-choose', kind: 'decision', eyebrow: o.what || T('Your copy'), title: T('Two people changed this'),
-        body: `<p>${esc(T('Everything else was put together by itself.'))} ${esc(who)}</p><div class="cp-rows">${conflicts.map(row).join('')}</div>`,
+        body: `<p>${esc(T('Everything else was put together by itself.'))} ${esc(who)}</p><div class="cp-rows">${conflicts.map(row).join('')}</div>${all}`,
         foot: `<button type="button" class="btn" id="cp-later">${esc(T('Decide later'))}</button><button type="button" class="btn primary" id="cp-done" disabled>${esc(T('Done'))}</button>`,
         onClose: () => end(null) });
       const done1 = sh.el.querySelector('#cp-done');
@@ -177,6 +218,7 @@
         done1.disabled = conflicts.some(cc => !dec[cc.key]);
       }));
       if (conflicts.length === 1) sh.el.querySelectorAll('[data-pick]').forEach(b => b.addEventListener('click', () => setTimeout(() => end({ ...dec }), 0)));
+      sh.el.querySelectorAll('[data-all]').forEach(b => b.addEventListener('click', () => { conflicts.forEach(c => { dec[c.key] = b.dataset.all; }); end({ ...dec }); }));   // p13: one tap for every row
       done1.onclick = () => end({ ...dec });
       sh.el.querySelector('#cp-later').onclick = () => end(null);
     });
@@ -266,5 +308,5 @@
     return { ok: true, got, url: st.url };
   }
 
-  root.TribeCopies = { copyable, keep, read, peek, touch, setBase, getBase, merge3, choose, mergeOrAsk, pending, send, get, lastContact, history, fromGitHub, on };
+  root.TribeCopies = { copyable, keep, read, peek, touch, setBase, getBase, merge3, choose, describe, mergeOrAsk, pending, send, get, lastContact, history, fromGitHub, on };
 })(typeof window !== 'undefined' ? window : globalThis);

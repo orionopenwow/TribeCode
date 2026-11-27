@@ -66,7 +66,7 @@
       else if (!doc || JSON.stringify(mine) === JSON.stringify(doc)) ls.set(UNSENT(pid), null);
       else if ((unsent.base || 0) === st.rev) { doc = mine; resend = true; }
       else if (CP() && CP().getBase('app:' + pid, unsent.base || 0)) {   // p12: both changed it: put the two together, ask only about the same block
-        const m = await CP().mergeOrAsk(A().normalize(CP().getBase('app:' + pid, unsent.base || 0)), mine, doc, { what: tr('App Creator') });
+        const m = await CP().mergeOrAsk(A().normalize(CP().getBase('app:' + pid, unsent.base || 0)), mine, doc, { part: t => ((A().BLOCKS || {})[t] || {}).label, what: tr('App Creator') });
         if (m) { st.undo.push(JSON.stringify(doc)); doc = A().normalize(m.value); resend = true; if (!m.asked) setTimeout(() => toast(tr('Your changes and a friend’s were put together.')), 50); }
       }
       else if (window.TribeUI && window.TribeUI.sheet) {
@@ -139,7 +139,7 @@
       catch (e) {
         if (!st || st.pid !== pid) return;
         if (e && (e.status === 409 || /409|conflict/i.test(e.message || '')) && e.data && e.data.config && CP() && CP().getBase('app:' + pid, st.rev)) {   // p12: put the two together first
-          const theirs = A().normalize(e.data.config), m = await CP().mergeOrAsk(A().normalize(CP().getBase('app:' + pid, st.rev)), st.doc, theirs, { what: tr('App Creator'), by: e.data.by });
+          const theirs = A().normalize(e.data.config), m = await CP().mergeOrAsk(A().normalize(CP().getBase('app:' + pid, st.rev)), st.doc, theirs, { part: t => ((A().BLOCKS || {})[t] || {}).label, what: tr('App Creator'), by: e.data.by });
           if (!st || st.pid !== pid) return;
           CP().setBase('app:' + pid, e.data.rev || 0, theirs); st.rev = e.data.rev || 0;
           if (m) { st.doc = A().normalize(m.value); st.dirty = true; paint(); saveT = setTimeout(run, 50); if (!m.asked) toast(tr('Your changes and a friend’s were put together.')); }

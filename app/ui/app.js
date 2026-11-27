@@ -66,14 +66,21 @@
     if (/(saved|done|added|approved|shipped|sent|copied|joined|connected|ready|merged|created|deleted|thanks|on\b|published|✓|✅|🎉)/.test(m)) return 'ok';
     return 'info';
   }
-  function toast(msg, kind) {
+  // p13: act = { label, run } adds one button (Undo after a delete); the toast then stays a little longer
+  function toast(msg, kind, act) {
     let t = $('.toast'); if (!t) { t = document.createElement('div'); t.className = 'toast'; t.setAttribute('role', 'status'); t.setAttribute('aria-live', 'polite'); document.body.appendChild(t); }
     const k = TOAST_ICON[kind] ? kind : toastKind(msg);
     t.className = `toast t-${k}`; t.innerHTML = '';
     const ic = document.createElement('span'); ic.className = 'toast-ic'; ic.setAttribute('aria-hidden', 'true'); ic.textContent = TOAST_ICON[k];
     const tx = document.createElement('span'); tx.className = 'toast-tx'; tx.textContent = msg;
-    t.append(ic, tx); t.classList.remove('hidden');
-    clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.add('hidden'), k === 'err' ? 5200 : 3600);
+    t.append(ic, tx);
+    if (act && act.label && typeof act.run === 'function') {
+      const b = document.createElement('button'); b.type = 'button'; b.className = 'toast-act'; b.textContent = act.label;
+      b.onclick = () => { t.classList.add('hidden'); clearTimeout(toastTimer); try { act.run(); } catch (e) { console.error(e); } };
+      t.append(b);
+    }
+    t.classList.remove('hidden');
+    clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.add('hidden'), act ? 7000 : k === 'err' ? 5200 : 3600);
   }
 
   // drop zone
