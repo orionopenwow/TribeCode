@@ -580,6 +580,7 @@ const openspace = require('./openspace')({ P, broadcast, isLocal, log: m => cons
 // feat/p10-office: the built-in office (desks with live screens for people and agents) and the tribe's "agents off" switch
 const office = require('./office')({ store: baseStore, getMembers: () => members, presenceFor, placesFor: me => (places ? places.snapshot(me).places : {}), agentSeen, claims, loadTasks: () => loadTasks(), nameOf, broadcast: m => broadcast(m),
   changeReqs: me => { try { return changeReq.list(P.current(), me) || []; } catch { return []; } }, canSet: me => !!me && (me.role === 'host' || perms.atLeast(me, 'admin')),
+  inCallFor: me => (huddleProject && !(me && P.canSee(me, huddleProject)) ? [] : [...huddle.keys()]),   // feat/p13-office: people in the huddle walk to the meeting table
   asksFor: (agentId, me) => approvals.list().filter(a => a.status === 'pending' && a.by === agentId).map(a => ({ id: a.id, title: a.title, canDecide: !!me && me.role !== 'agent' && (a.to || []).includes(me.id) })) });   // pass 11: an agent's waiting OKs, shown as a bubble
 const shelf = require('./shelf')({ P, root: require('./tpldir').root(), docs, postChat, str, nameOf });   // starter shelf: tools, libraries, Claude skills
 const assetLib = require('./assets')({ P, root: require('./tpldir').root(), base: baseStore, postChat, str, nameOf });   // v0.25: the open asset library (server/assets.js)

@@ -19,6 +19,12 @@
 .olk-dirs { display: flex; gap: 4px; }
 .olk-dirs canvas { width: 48px; height: 96px; border: 1px solid var(--edge); border-radius: var(--r-ctl); background: var(--surface-2); }
 .olk-desc { margin: 0; font-size: 12px; text-align: center; line-height: 1.4; }
+/* feat/p13-office: the name tag, live over the preview, and the box to change it */
+.olk-floor { position: relative; }
+.olk-tag { position: absolute; top: 8px; left: 50%; transform: translateX(-50%); max-width: calc(100% - 16px); padding: 1px 8px; border: 2px solid var(--edge-pop); background: var(--surface); font: 700 12px/16px var(--font); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.olk-tag:empty { display: none; }
+.olk-name { display: grid; gap: 4px; width: 100%; font-size: 12px; color: var(--muted); }
+.olk-name .input { width: 100%; }
 
 /* the parts */
 .olk-edit { min-width: 0; min-height: 0; display: flex; flex-direction: column; gap: 10px; }
@@ -55,7 +61,10 @@
   #olk-sheet.ui-card.wide { height: 92dvh; }
   .olk { grid-template-columns: 1fr; grid-template-rows: auto minmax(0, 1fr); gap: 10px; }
   .olk-stage { grid-template-columns: auto 1fr; justify-items: start; align-items: center; gap: 8px 12px; }
-  .olk-floor { grid-row: span 3; width: auto; padding: 6px 10px; }
+  .olk-floor { grid-row: span 3; width: auto; padding: 26px 10px 6px; }
+  .olk-name { grid-column: 1 / -1; }
+  .olk-name .input { font-size: 16px; min-height: 40px; }
+  .olk-tag { top: 4px; font-size: 11px; }
   .olk-prev { width: 64px; height: 128px; }
   .olk-dirs, .olk-desc { display: none; }
   .olk-tabs { flex-wrap: nowrap; overflow-x: auto; padding-bottom: 2px; }

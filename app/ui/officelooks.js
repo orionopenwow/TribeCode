@@ -3,8 +3,11 @@
 // Randomize, Undo, Reset and Save. It saves to the person's look (or an AI helper's, for its owner) in server/office.js,
 // and the floor, the desks and the card redraw for everyone.
 // Rules and art: TribeOfficeLooksCore (officelooks-core.js) and TribeOfficeArt (officespace-art.js).
-//   window.TribeOfficeLooks = { open(opts), openMine(), openHelper(desk), lookOf(desk), render(canvas, look, o) }
-//     open({ who: 'me' | agentId, name, look, base, onSaved(look) }); render draws one frame at a whole-number zoom.
+// feat/p13-office: the first time it opens as "Make your character" with Done; your own look also has a name tag (your
+// name in the tribe), and the last look you saved is kept on this device, so a new tribe starts with it (kept()).
+// faceUrl(id) is a character's face as a picture, for avatars elsewhere (profiles.js) once the office has been seen.
+//   window.TribeOfficeLooks = { open(opts), openMine(), openHelper(desk), lookOf(desk), render(canvas, look, o), kept(), faceUrl(id) }
+//     open({ who: 'me' | agentId, name, look, base, first, onSaved(look) }); render draws one frame at a whole-number zoom.
 (function () {
   'use strict';
   const K = () => window.TribeOfficeLooksCore, A = () => window.TribeOfficeArt, C = () => window.TribeClient;
@@ -85,10 +88,13 @@
     const start = L.normalize(opts.look || L.seed(opts.id || 'me'));
     const base = L.normalize(opts.base || start);
     const st = { draft: L.normalize(start), undo: [], tab: 'body', pose: 'walk', turn: 0, t0: performance.now(), raf: 0, saving: false };
-    const title = helper ? tr('Change its look') : tr('Your look');
+    const first = !helper && !!opts.first;
+    const meName = (() => { try { return ((C().state() || {}).me || {}).name || ''; } catch { return ''; } })();
+    const title = helper ? tr('Change its look') : first ? tr('Make your character') : tr('Your look');
     const body = `<div class="olk" data-olk>
       <section class="olk-stage" aria-label="${esc(tr('Preview'))}">
-        <div class="olk-floor"><canvas class="olk-prev" width="128" height="256" role="img" aria-label=""></canvas></div>
+        <div class="olk-floor">${helper ? '' : `<span class="olk-tag" aria-hidden="true">${esc(meName)}</span>`}<canvas class="olk-prev" width="128" height="256" role="img" aria-label=""></canvas></div>
+        ${helper ? '' : `<label class="olk-name"><span>${esc(tr('Name tag'))}</span><input class="input sm" id="olk-name" maxlength="32" autocomplete="nickname" value="${esc(meName)}"></label>`}
         <div class="olk-turn"><button type="button" class="btn sm icon" data-olk-turn="-1" aria-label="${esc(tr('Turn left'))}">‹</button><span class="olk-dir" aria-live="polite"></span><button type="button" class="btn sm icon" data-olk-turn="1" aria-label="${esc(tr('Turn right'))}">›</button></div>
         <div class="olk-poses" role="radiogroup" aria-label="${esc(tr('Pose'))}">${POSES.map(([k, l]) => `<button type="button" class="olk-pose" role="radio" data-olk-pose="${k}">${esc(tr(l))}</button>`).join('')}</div>
         <div class="olk-dirs" aria-hidden="true">${[0, 2, 1, 3].map(dr => `<canvas width="48" height="96" data-olk-d="${dr}"></canvas>`).join('')}</div>
@@ -99,8 +105,8 @@
         <div class="olk-panel" id="olk-panel" role="tabpanel"></div>
       </section>
     </div>`;
-    const foot = `<div class="olk-foot"><button type="button" class="btn sm" data-olk="random">${esc(tr('Randomize'))}</button><button type="button" class="btn sm" data-olk="undo">${esc(tr('Undo'))}</button><button type="button" class="btn sm" data-olk="reset">${esc(tr('Reset'))}</button><span class="olk-gap"></span><button type="button" class="btn sm" data-olk="cancel">${esc(tr('Cancel'))}</button><button type="button" class="btn primary sm" data-olk="save">${esc(tr(helper ? 'Save its look' : 'Save my look'))}</button></div>`;
-    const sh = UI.sheet({ id: 'olk-sheet', eyebrow: helper ? (opts.name || tr('AI helper')) : tr('Office'), title, body, foot, wide: true, onClose: () => { cancelAnimationFrame(st.raf); if (cur && cur.sh === sh) cur = null; } });
+    const foot = `<div class="olk-foot"><button type="button" class="btn sm" data-olk="random">${esc(tr('Randomize'))}</button><button type="button" class="btn sm" data-olk="undo">${esc(tr('Undo'))}</button><button type="button" class="btn sm" data-olk="reset">${esc(tr('Reset'))}</button><span class="olk-gap"></span><button type="button" class="btn sm" data-olk="cancel">${esc(tr(first ? 'Not now' : 'Cancel'))}</button><button type="button" class="btn primary sm" data-olk="save">${esc(tr(helper ? 'Save its look' : first ? 'Done' : 'Save my look'))}</button></div>`;
+    const sh = UI.sheet({ id: 'olk-sheet', eyebrow: helper ? (opts.name || tr('AI helper')) : first ? tr('Welcome to the office') : tr('Office'), title, body, foot, wide: true, onClose: () => { cancelAnimationFrame(st.raf); if (cur && cur.sh === sh) cur = null; } });
     const root = sh.el.querySelector('[data-olk]'), panel = root.querySelector('.olk-panel'), prev = root.querySelector('.olk-prev');
     sh.el.classList.add('olk-card');
 
@@ -192,6 +198,8 @@
     }
     function replace(next) { st.undo.push(st.draft); st.draft = L.normalize(next); paintPanel(); preview(); }
 
+    const nameIn = root.querySelector('#olk-name'), tagEl = root.querySelector('.olk-tag');
+    if (nameIn && tagEl) nameIn.addEventListener('input', () => { tagEl.textContent = nameIn.value.trim() || meName; });
     root.addEventListener('click', e => {
       const t = e.target.closest('[data-olk-tab],[data-olk-f],[data-olk-pose],[data-olk-turn]'); if (!t) return;
       if (t.dataset.olkTab) { st.tab = t.dataset.olkTab; paintTabs(); paintPanel(); return; }
@@ -221,7 +229,12 @@
         if (st.saving) return; st.saving = true; t.disabled = true;
         try {
           const r = await C().api('/office/look', { method: 'PUT', body: helper ? { look: L.compact(st.draft), for: opts.who } : { look: L.compact(st.draft) } });
-          toast(tr(helper ? 'Its look is saved' : 'Look saved'));
+          if (!helper) {
+            keep(r.look || L.compact(st.draft));
+            const n = root.querySelector('#olk-name'), nm = n ? n.value.trim().slice(0, 32) : '';
+            if (nm && nm !== meName) { try { await C().api('/me', { method: 'PATCH', body: { name: nm } }); } catch (err2) { toast(err2.message); } }
+          }
+          toast(tr(helper ? 'Its look is saved' : first ? 'Your character is at their desk' : 'Look saved'));
           if (opts.onSaved) opts.onSaved(r.look);
           if (window.TribeOffice && window.TribeOffice.refresh) window.TribeOffice.refresh();
           sh.close();
@@ -247,5 +260,25 @@
     return open(Object.assign({ who: desk.id, id: desk.id, name: desk.name, look: lookOf(desk), base: L.agent(desk.id, desk.agentKind) }, extra || {}));
   }
 
-  window.TribeOfficeLooks = { open, openMine, openHelper, lookOf, render, current: () => cur };
+  // ---------- kept on this device: the last look you saved, for the next tribe you join ----------
+  const LS_LOOK = 'tribecode.office.look';
+  function keep(look) { try { if (look) localStorage.setItem(LS_LOOK, JSON.stringify(look)); } catch {} }
+  function kept() { try { const v = JSON.parse(localStorage.getItem(LS_LOOK) || 'null'); return v && typeof v === 'object' && v.v === 2 ? v : null; } catch { return null; } }
+
+  // ---------- faces for avatars elsewhere (profiles.js): only saved looks, only once the art is loaded ----------
+  const FACES = new Map();
+  function faceUrl(id) {
+    const O = window.TribeOffice, d = O && O.state && O.state(), art = A(), L = K();
+    if (!d || !art || !L || !art.loaded || !art.loaded()) return null;
+    const desk = (d.desks || []).find(x => x.id === id); if (!desk || !desk.look) return null;
+    const look = lookOf(desk), key = id + '|' + JSON.stringify(look);
+    if (FACES.has(key)) return FACES.get(key);
+    const c = document.createElement('canvas'); c.width = 36; c.height = 36;
+    if (!render(c, look, { crop: 'head', dir: 0, col: 1 })) return null;
+    let url = null; try { url = c.toDataURL(); } catch {}
+    if (url) FACES.set(key, url);
+    return url;
+  }
+
+  window.TribeOfficeLooks = { open, openMine, openHelper, lookOf, render, current: () => cur, kept, keep, faceUrl };
 })();

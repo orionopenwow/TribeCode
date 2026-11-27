@@ -2,8 +2,9 @@
 // screen at each desk says what they are doing right now, in short lines with a blinking cursor (a dim screensaver
 // when nobody is there). People walk to the thinking spot, the task board or the lounge and back. Idea from the
 // owner's own MIT project Vanilla Agents; drawn fresh in TribeCode's flat style.
-// It is the top of Agents & office (agentsoffice.js): the desks are always there; the host or an admin can turn on the
-// pixel floor (Office Space, officespace.js) for the tribe, and each person can hide the office on their device.
+// It is the top of Agents & office (agentsoffice.js): the pixel floor (Office Space, officespace.js) is on for every tribe,
+// phones too (feat/p13-office); the host or an admin can turn it off (the desks show instead), and each person can hide
+// the office on their device. The first time someone is in a tribe, "Make your character" opens (officelooks.js).
 // One card for everyone: a click on someone at a desk, on the floor or in the list opens the same actions (Message,
 // Call, Give a task, Open what they're working on; for AI helpers Approve / Ask for changes, Pause, its page).
 // Server: server/office.js (GET/PUT /api/office).
@@ -20,7 +21,7 @@
   const isPhone = () => matchMedia('(max-width: 820px)').matches;
   // Office Space (pass 11): on a computer the office opens as the pixel floor; "Desks" keeps the calm list. Phones get the list.
   const viewOf = () => { try { return localStorage.getItem(LS_VIEW) === 'desks' ? 'desks' : 'floor'; } catch { return 'floor'; } };
-  const canFloor = () => !isPhone() && !!window.TribeOfficeSpace;
+  const canFloor = () => !!window.TribeOfficeSpace;   // phones too: the floor fits 390px and a tap opens the card
   const reduce = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
   let data = null, loading = null, last = 0;
   const mounts = new Set();
@@ -107,7 +108,7 @@
   }
   // The pixel floor is off: the host or an admin sees one quiet offer above the desks.
   function offerHtml(d) {
-    if (!d || d.on || !d.canSet || isPhone() || !window.TribeOfficeSpace) return '';
+    if (!d || d.on || !d.canSet || !window.TribeOfficeSpace) return '';
     return `<p class="of-offer faint">${esc(tr('Show the office as a pixel floor, with everyone walking to their desk.'))} <button class="linkish" data-of-on>${esc(tr('Turn on the pixel floor'))}</button></p>`;
   }
 
@@ -157,6 +158,8 @@
     });
   }
   function paintAll() { mounts.forEach(paint); }
+  // Speech bubbles on the floor: the last thing someone said in a channel, for a few seconds.
+  function say(id, text) { mounts.forEach(m => { if (m.space && m.space.say) m.space.say(id, String(text)); }); }
 
   async function setOn(on) {
     try { data = { ...(data || {}), ...(await C.api('/office', { method: 'PUT', body: { on } })) }; } catch (e) { if (window.TribeApp) window.TribeApp.toast(e.message); }
@@ -270,6 +273,7 @@
     el.addEventListener('click', click);
     el.addEventListener('keydown', e => { if ((e.key === 'Enter' || e.key === ' ') && e.target.matches('[data-desk]')) { e.preventDefault(); openCard(e.target.dataset.desk); } });
     paint(m); load().then(() => paint(m));
+    if (opts.full) makeSoon(900);   // opening the office is a good first moment for Make your character
     return { destroy() { mounts.delete(m); el.removeEventListener('click', click); if (m.space) m.space.destroy(); }, space: () => m.space };
   }
 
@@ -278,7 +282,12 @@
   const nudge = () => { if (!mounts.size) return; clearTimeout(soon); soon = setTimeout(() => load(true).then(paintAll), 400); };
   if (C.on) {
     C.on('presence', nudge);
-    C.on('ws', m => { if (m && /^(office|claims|task|tasks|places|place|changereq|coord|agents)/.test(m.type || '')) nudge(); });
+    C.on('ws', m => {
+      if (m && /^(office|claims|task|tasks|places|place|changereq|coord|agents|huddle|approval)/.test(m.type || '')) nudge();
+      // a message in a shared channel: a speech bubble over whoever sent it. Never a private message (dm-…): the office
+      // only ever says someone is "in messages".
+      if (m && m.type === 'chat' && typeof m.channel === 'string' && !/^dm[-:]/.test(m.channel) && m.message && m.message.by && typeof m.message.text === 'string' && !m.message.deleted && !m.message.e2ee) say(m.message.by, m.message.text);
+    });
   }
   setInterval(() => { if (mounts.size && document.visibilityState === 'visible') load(true).then(paintAll); }, 8000);
 
@@ -289,7 +298,7 @@
       el.innerHTML = `<p class="faint">${esc(tr('Loading…'))}</p>`;
       load(true).then(d => {
         const on = !!(d && d.on), off = !!(d && d.agentsOff);
-        el.innerHTML = `<div class="set-row"><div class="set-l"><b>${esc(tr('Pixel floor'))}</b><span class="set-hint">${esc(tr('Shows the office in Agents & office as a pixel floor, with everyone walking to their desk. Off by default: the desks show instead.'))}</span></div>
+        el.innerHTML = `<div class="set-row"><div class="set-l"><b>${esc(tr('Pixel floor'))}</b><span class="set-hint">${esc(tr('Everyone as a character at their desk, walking to meetings and the task board. Turn off to show a list of desks instead.'))}</span></div>
           <button class="toggle set-toggle" role="switch" id="set-office" aria-checked="${on}"${d && d.canSet ? '' : ' disabled'}><span class="switch"></span></button></div>
           <div class="set-row"><div class="set-l"><b>${esc(tr('AI helpers can work'))}</b><span class="set-hint">${esc(tr('Turn off to pause every agent in this tribe at once.'))}</span></div>
           <button class="toggle set-toggle" role="switch" id="set-agents-on" aria-checked="${!off}"${d && d.canSet ? '' : ' disabled'}><span class="switch"></span></button></div>`;
@@ -306,8 +315,40 @@
   }
   if (!wireSettings()) document.addEventListener('DOMContentLoaded', wireSettings, { once: true });
 
+  // ---------- Make your character (feat/p13-office) ----------
+  // The first time someone is in a tribe and has no look there: the look they made in another tribe (kept on this
+  // device) comes along by itself; with none, "Make your character" opens once. Not over the one-sentence start, not
+  // over another sheet, not for AI helpers. Automated browsers only with ?character=1.
+  const LS_MADE = 'tribecode.office.made';
+  const tribeKey = () => { try { const s = C.state ? C.state() : {}; const t = s.tribe; return String((C.base ? C.base() : '') + '|' + (t && typeof t === 'object' ? t.id || t.name || '' : t || ''));  } catch { return 'tribe'; } };
+  const madeHere = () => { try { return (JSON.parse(localStorage.getItem(LS_MADE) || '[]') || []).includes(tribeKey()); } catch { return false; } };
+  function markMade() { try { const l = JSON.parse(localStorage.getItem(LS_MADE) || '[]') || []; if (!l.includes(tribeKey())) l.push(tribeKey()); localStorage.setItem(LS_MADE, JSON.stringify(l.slice(-50))); } catch {} }
+  let asking = false;
+  async function maybeMake() {
+    if (asking || madeHere() || !C.hasToken || !C.hasToken() || !C.connected || !C.connected()) return;
+    if (navigator.webdriver && !/[?&]character=1/.test(location.search)) return;
+    const st = C.state ? C.state() : {}, me = st.me || {};
+    if (me.role === 'agent' || me.role === 'spectator') return;
+    const NC = window.TribeNewcomer, P = window.TribeProjects;
+    if ((NC && NC.blank && NC.blank()) || (P && P.loaded && !P.loaded()) || document.querySelector('#hub-idea')) return;   // the one-sentence start comes first
+    if (document.querySelector('.ui-sheet, .ui-scrim, dialog[open]')) return;
+    asking = true;
+    try {
+      const d = await load(true); if (!d || !d.me || d.myLook) { if (d && d.myLook) markMade(); return; }
+      const L = window.TribeOfficeLooks; if (!L) return;
+      const kept = L.kept && L.kept();
+      if (kept) { try { await C.api('/office/look', { method: 'PUT', body: { look: kept } }); markMade(); refresh(); return; } catch {} }
+      markMade();
+      L.openMine({ first: true });
+    } finally { asking = false; }
+  }
+  let makeT = null;
+  const makeSoon = (ms = 2500) => { clearTimeout(makeT); makeT = setTimeout(maybeMake, ms); };
+  if (C.on) C.on('hello', () => makeSoon());
+  addEventListener('tribe-projects-loaded', () => makeSoon());
+
   // the page's toolbar (agentsoffice.js): which view shows, switch it, and the pixel floor of a mount
   const view = () => (data && data.on && canFloor() ? viewOf() : 'desks');
   function setView(v) { try { localStorage.setItem(LS_VIEW, v === 'desks' ? 'desks' : 'floor'); } catch {} paintAll(); }
-  window.TribeOffice = { mount, refresh, hidden, setHidden, view, setView, canFloor, state: () => data, setOn, load, openCard, cardBody, cardClick, cardSubmit, statusOf, linesOf: screenLines, kindText, everyone };
+  window.TribeOffice = { mount, refresh, hidden, setHidden, view, setView, canFloor, state: () => data, setOn, load, openCard, cardBody, cardClick, cardSubmit, statusOf, linesOf: screenLines, kindText, everyone, say, maybeMake };
 })();
