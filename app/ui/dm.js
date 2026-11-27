@@ -51,8 +51,9 @@
     const others = totalUnread(view) + generalUnread, ag = (member(withId) || {}).role === 'agent';
     // fix/p7: one row (back, name, private), so the header's status line sits under it instead of on top of it
     h.innerHTML = `<span class="dm-row"><button class="dm-back" id="dm-back" title="Back to #general" aria-label="Back to #general">${BACK}#general${others ? `<span class="dm-badge">${others}</span>` : ''}</button>` +
-      `<span class="dm-with">${ag ? '<svg class="i spark"><use href="#i-sparkle"/></svg>' : ''}${esc(nameOf(withId))}</span><span class="dm-lock" title="Only you and ${esc(nameOf(withId))} can read this">private</span></span>`;
+      `<span class="dm-with">${ag ? '<svg class="i spark"><use href="#i-sparkle"/></svg>' : ''}${esc(nameOf(withId))}</span>${window.TribeE2E ? window.TribeE2E.headHtml(withId) : ''}</span>`;   // feat/p12-e2ee: the honest lock line
     h.querySelector('#dm-back').onclick = back;
+    const pv = h.querySelector('#dm-priv'); if (pv) pv.onclick = () => window.TribeE2E.check(withId);
   }
 
   // "#general ▾": conversations, your agent first.
@@ -97,11 +98,12 @@
     list.innerHTML = '<div class="empty-room">Loading…</div>';
     $('#chat-input').placeholder = m.role === 'agent' ? `Message ${m.name}…` : `Message ${m.name}…`;
     drawHead(); drawTyping(); decorateRoom(); X().channelChanged(ch); if (CH()) CH().applyBg();
+    if (window.TribeE2E) window.TribeE2E.ready().then(() => window.TribeE2E.fetchKeys([id, me()])).then(() => { if (view === ch) drawHead(); });   // feat/p12-e2ee: is this chat private yet?
     try {
       const { messages } = await C.api('/chat/' + ch + '?limit=200');
       if (view !== ch) return;
       list.innerHTML = messages.length ? messages.map(x => render(x, ch)).join('')
-        : `<div class="empty-room">${m.role === 'agent' ? 'Your AI reads this when it calls <b>check_messages</b> and answers with <b>reply</b>. Only you can see this chat.' : `This is the start of your conversation with ${esc(m.name)}. Only the two of you can see it.`}</div>`;
+        : `<div class="empty-room">${m.role === 'agent' ? 'Your AI reads this when it calls <b>check_messages</b> and answers with <b>reply</b>. Nobody else in the tribe can see this chat.' : `This is the start of your conversation with ${esc(m.name)}. Only the two of you can see it.`}</div>`;
       list.scrollTop = list.scrollHeight;
       markRead(ch, messages.length ? messages[messages.length - 1].at : undefined);
       X().channelChanged(ch, { list, since });
@@ -241,7 +243,7 @@
     } else if (!mine) {
       unread.set(channel, (unread.get(channel) || 0) + 1);
       const from = otherIn(channel);
-      window.TribeApp && window.TribeApp.toast(`${nameOf(from || message.by)}: ${String(message.text || (message.media ? 'sent a ' + (message.media.kind === 'voice' ? 'voice note' : 'picture') : '')).slice(0, 80)}`);
+      window.TribeApp && window.TribeApp.toast(`${nameOf(from || message.by)}: ${message.enc ? (window.TribeI18n ? window.TribeI18n.t('New message') : 'New message') : String(message.text || (message.media ? 'sent a ' + (message.media.kind === 'voice' ? 'voice note' : 'picture') : '')).slice(0, 80)}`);
       drawHead(); decorateRoom();
     }
   });
