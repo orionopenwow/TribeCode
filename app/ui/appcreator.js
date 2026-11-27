@@ -56,15 +56,19 @@
     let cur = null;
     // pass 4: changes that could not be sent (the tribe was unreachable) are kept on this device and come back here
     let unsent = pid ? ls.get(UNSENT(pid), null) : null, unreachable = false;
-    if (pid) { try { const r = await C.api(`/projects/${encodeURIComponent(pid)}/app-config`); cur = r.config; st.rev = r.rev || 0; st.canEdit = r.canEdit !== false; st.canDraft = st.canEdit || !!r.canSuggest; st.base = cur ? JSON.stringify(A().normalize(cur)) : ''; } catch (e) { cur = null; unreachable = !(e && e.status); } }
+    if (pid) { try { const r = await C.api(`/projects/${encodeURIComponent(pid)}/app-config`); cur = r.config; st.rev = r.rev || 0; st.canEdit = r.canEdit !== false; st.canDraft = st.canEdit || !!r.canSuggest; st.base = cur ? JSON.stringify(A().normalize(cur)) : ''; unreachable = !!r._fromCopy; if (cur && !r._fromCopy && CP()) CP().setBase('app:' + pid, st.rev, A().normalize(cur)); } catch (e) { cur = null; unreachable = !(e && e.status); } }   // p12: offline, this device's copy opens (copies.js)
     else cur = ls.get(LOCAL, null);
-    if (unreachable && !(unsent && unsent.doc)) { st = null; toast('Can’t reach the tribe right now. Your app is safe there; try again in a moment.'); return null; }   // never a blank app saved over the real one
+    if (unreachable && !cur && !(unsent && unsent.doc)) { st = null; toast('Can’t reach the tribe right now. Your app is safe there; try again in a moment.'); return null; }   // never a blank app saved over the real one
     let doc = cur ? A().normalize(cur) : null, resend = false;
     if (unsent && unsent.doc && st.canEdit) {
       const mine = A().normalize(unsent.doc);
       if (unreachable) { doc = mine; cur = mine; st.rev = unsent.base || 0; resend = true; }
       else if (!doc || JSON.stringify(mine) === JSON.stringify(doc)) ls.set(UNSENT(pid), null);
       else if ((unsent.base || 0) === st.rev) { doc = mine; resend = true; }
+      else if (CP() && CP().getBase('app:' + pid, unsent.base || 0)) {   // p12: both changed it: put the two together, ask only about the same block
+        const m = await CP().mergeOrAsk(A().normalize(CP().getBase('app:' + pid, unsent.base || 0)), mine, doc, { what: tr('App Creator') });
+        if (m) { st.undo.push(JSON.stringify(doc)); doc = A().normalize(m.value); resend = true; if (!m.asked) setTimeout(() => toast(tr('Your changes and a friend’s were put together.')), 50); }
+      }
       else if (window.TribeUI && window.TribeUI.sheet) {
         const pick = await new Promise(res => {
           let done = false; const end = v => { if (done) return; done = true; sh.close(); res(v); };
@@ -131,10 +135,17 @@
       }
       const pid = st.pid;
       st.saving = true; mark('Saving…'); ls.set(UNSENT(pid), { doc, base: st.rev, at: Date.now() });   // pass 4: on this device until the tribe has it
-      try { const r = await C.api(`/projects/${encodeURIComponent(pid)}/app-config`, { method: 'PUT', body: { config: doc, base: st.rev } }); if (!st || st.pid !== pid) return; st.rev = r.rev; if (st.doc === doc) { st.dirty = false; ls.set(UNSENT(pid), null); } mark(onDevice() ? 'Saved on this device' : 'Saved'); if (st.doc !== doc) saveT = setTimeout(run, 300); }
+      try { const r = await C.api(`/projects/${encodeURIComponent(pid)}/app-config`, { method: 'PUT', body: { config: doc, base: st.rev } }); if (!st || st.pid !== pid) return; st.rev = r.rev; if (CP()) CP().setBase('app:' + pid, r.rev, doc); if (st.doc === doc) { st.dirty = false; ls.set(UNSENT(pid), null); } mark(onDevice() ? 'Saved on this device' : 'Saved'); if (st.doc !== doc) saveT = setTimeout(run, 300); }
       catch (e) {
         if (!st || st.pid !== pid) return;
-        if (e && (e.status === 409 || /409|conflict/i.test(e.message || ''))) { try { const r = await C.api(`/projects/${encodeURIComponent(pid)}/app-config`); st.doc = A().normalize(r.config); st.rev = r.rev; ls.set(UNSENT(pid), null); paint(); toast('Someone else changed the app. You are seeing their version now.'); } catch {} }
+        if (e && (e.status === 409 || /409|conflict/i.test(e.message || '')) && e.data && e.data.config && CP() && CP().getBase('app:' + pid, st.rev)) {   // p12: put the two together first
+          const theirs = A().normalize(e.data.config), m = await CP().mergeOrAsk(A().normalize(CP().getBase('app:' + pid, st.rev)), st.doc, theirs, { what: tr('App Creator'), by: e.data.by });
+          if (!st || st.pid !== pid) return;
+          CP().setBase('app:' + pid, e.data.rev || 0, theirs); st.rev = e.data.rev || 0;
+          if (m) { st.doc = A().normalize(m.value); st.dirty = true; paint(); saveT = setTimeout(run, 50); if (!m.asked) toast(tr('Your changes and a friend’s were put together.')); }
+          else { st.doc = theirs; st.dirty = false; ls.set(UNSENT(pid), null); paint(); toast(tr('Kept their version for now. Undo brings yours back.')); }
+        }
+        else if (e && (e.status === 409 || /409|conflict/i.test(e.message || ''))) { try { const r = await C.api(`/projects/${encodeURIComponent(pid)}/app-config`); st.doc = A().normalize(r.config); st.rev = r.rev; ls.set(UNSENT(pid), null); paint(); toast('Someone else changed the app. You are seeing their version now.'); } catch {} }
         else if (e && e.status && e.status < 500) { ls.set(UNSENT(pid), null); mark('Not saved: ' + (e.message || '')); }
         else { mark('Saved on this device. It goes to the tribe when it’s back'); clearTimeout(saveT); saveT = setTimeout(run, 5000); }   // tried again by itself
       } finally { if (st) st.saving = false; }
@@ -146,14 +157,15 @@
     if (!st || !st.dirty || st.saving) return; clearTimeout(saveT);
     if (st.local) { ls.set(LOCAL, st.doc); st.dirty = false; return; }
     if (!st.canEdit || !st.pid) return;
-    const pid = st.pid; ls.set(UNSENT(pid), { doc: st.doc, base: st.rev, at: Date.now() });
-    C.api(`/projects/${encodeURIComponent(pid)}/app-config`, { method: 'PUT', body: { config: st.doc, base: st.rev }, keepalive: true }).then(r => { ls.set(UNSENT(pid), null); if (st) { st.rev = r.rev; st.dirty = false; mark('Saved'); } }).catch(() => {});
+    const pid = st.pid, doc0 = st.doc; ls.set(UNSENT(pid), { doc: st.doc, base: st.rev, at: Date.now() });
+    C.api(`/projects/${encodeURIComponent(pid)}/app-config`, { method: 'PUT', body: { config: st.doc, base: st.rev }, keepalive: true }).then(r => { ls.set(UNSENT(pid), null); if (CP()) CP().setBase('app:' + pid, r.rev, doc0); if (st) { st.rev = r.rev; st.dirty = false; mark('Saved'); } }).catch(() => {});
   }
   addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') flushNow(); });
   addEventListener('pagehide', flushNow);
   const mark = t => { const el = root && root.querySelector('#apc-saved'); if (el) el.textContent = tr(t); };
   const DRAFT = pid => `tribecode.appcreator.draft.${pid}`;
-  const UNSENT = pid => `tribecode.appcreator.unsent.${pid}`;   // pass 4: an edit the tribe has not confirmed yet
+  const UNSENT = pid => `tribecode.appcreator.unsent.${pid}`;
+  const CP = () => window.TribeCopies;   // p12: every friend keeps a copy   // pass 4: an edit the tribe has not confirmed yet
 
   // ---------- edits ----------
   function commit(doc, say, keepSel) {
@@ -722,11 +734,11 @@
   registerSuggest(); window.addEventListener('load', registerSuggest); setTimeout(registerSuggest, 1500);
 
   // the add-on shelf's app kits: market.js calls installKit when an "app-kit" item is used
-  C && C.on && C.on('ws', m => { if (!m || m.type !== 'app-config' || !st || !st.open || m.project !== st.pid || st.dirty || typing) return; C.api(`/projects/${encodeURIComponent(st.pid)}/app-config`).then(r => { if (!st || !r.config || r.rev <= st.rev || st.dirty) return; /* pass 4: an answer older than what is on screen (a save landed meanwhile) never replaces it */ st.base = JSON.stringify(A().normalize(r.config)); st.rev = r.rev; if (st.pendingDraft) { note('A friend changed the app. Your draft stays yours until you send it.'); return; } st.doc = A().normalize(r.config); paint(); note('Updated with a friend’s change.'); }).catch(() => {}); });
+  C && C.on && C.on('ws', m => { if (!m || m.type !== 'app-config' || !st || !st.open || m.project !== st.pid || st.dirty || typing) return; C.api(`/projects/${encodeURIComponent(st.pid)}/app-config`).then(r => { if (!st || !r.config || r.rev <= st.rev || st.dirty) return; /* pass 4: an answer older than what is on screen (a save landed meanwhile) never replaces it */ st.base = JSON.stringify(A().normalize(r.config)); st.rev = r.rev; if (CP()) CP().setBase('app:' + st.pid, r.rev, A().normalize(r.config)); if (st.pendingDraft) { note('A friend changed the app. Your draft stays yours until you send it.'); return; } st.doc = A().normalize(r.config); paint(); note('Updated with a friend’s change.'); }).catch(() => {}); });
   if (location.hash === '#/app-creator') setTimeout(() => open({}), 300);
   window.addEventListener('hashchange', () => { if (location.hash === '#/app-creator' && (!st || !st.open)) open({}); });
 
   // pass 4: the deeper tools (history, comments, several parts, clipboard, pictures, the map) live in appcreator-plus.js
   if (P()) P().init({ st: () => st, root: () => root, tr, ic, note, mini, connected, commit, apply: op => apply(op), paint, paintSel, fit, save: now => save(now), undo, redo, openSheet, closeSheet, setTab: t => { st.tab = t; paintLeft(); } });
-  window.TribeAppCreator = { open, close, state: () => st, doc: () => st && st.doc, ask, apply: op => apply(op), flint, installKit, screens, mini, templates: () => A().templateList(), undo, redo, export: doExport };
+  window.TribeAppCreator = { open, close, state: () => st, doc: () => st && st.doc, ask, apply: op => apply(op), flint, installKit, screens, mini, templates: () => A().templateList(), undo, redo, export: doExport, flush: () => flushNow(), isOpen: pid => !!(st && st.open && (pid == null || st.pid === pid)) };
 })();
