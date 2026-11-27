@@ -311,7 +311,7 @@
       if (id === 'dm.open') { if (D && D.openChannel) D.openChannel(ch); else if (D && D.open) D.open(p.id); return { text: T('dmOpen', { p: first(p.name) }) }; }
       let msg = (sl.msg || '').trim(); if (!msg) msg = summaryOf(prev); if (!msg) return { text: Q('What should I tell them?'), ask: true };
       if (/^(?:remind|to)\b/i.test(s.text) && !/^reminder/i.test(msg)) msg = 'Reminder: ' + msg;
-      try { const r = await C.api('/chat/' + encodeURIComponent(ch), { method: 'POST', body: { text: msg } }); const mid = r && r.message && r.message.id; if (mid) pushUndo(`message to ${first(p.name)}`, () => C.api(`/chat/${encodeURIComponent(ch)}/msg/${encodeURIComponent(mid)}`, { method: 'DELETE' })); return { text: T('sent', { p: first(p.name), m: msg }), acts: [[`Open chat with ${first(p.name)}`, 'dm', p.id]], sum: `told ${first(p.name)}` }; }
+      try { const r = await C.api('/chat/' + encodeURIComponent(ch), { method: 'POST', body: (window.TribeE2E ? await window.TribeE2E.seal(ch, { text: msg }) : { text: msg }) }); const mid = r && r.message && r.message.id; if (mid) pushUndo(`message to ${first(p.name)}`, () => C.api(`/chat/${encodeURIComponent(ch)}/msg/${encodeURIComponent(mid)}`, { method: 'DELETE' })); return { text: T('sent', { p: first(p.name), m: msg }), acts: [[`Open chat with ${first(p.name)}`, 'dm', p.id]], sum: `told ${first(p.name)}` }; }
       catch (e) { return { text: e.message }; }
     }
     if (id === 'event.add') {

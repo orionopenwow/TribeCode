@@ -390,15 +390,22 @@
   }
   function sendQueued(ch, path, body) {
     const cid = C.newId(); pendingBubble(body.text, cid, C.connected() ? 'sending' : 'waiting', ch);
-    C.queue(path, { ...body, cid }, { kind: 'chat', ch });
     if (C.send) C.send({ type: 'typing', channel: ch, stop: true });
+    const E = window.TribeE2E;
+    if (E && String(ch).startsWith('dm-')) {   // feat/p12-e2ee: a private message is sealed here, so the outbox and the server only see ciphertext
+      E.seal(ch, { ...body, cid }).then(b => C.queue(path, b, { kind: 'chat', ch }))
+        .catch(err => { pendingBubble(body.text, cid, 'failed', ch); toast(`Message not sent: ${err.message}`, 'err'); });
+      return cid;
+    }
+    C.queue(path, { ...body, cid }, { kind: 'chat', ch });
     return cid;
   }
   C.on('outbox-failed', ({ item, error }) => {
     if (item.kind !== 'chat') return toast(`Couldn't finish that: ${error}`, 'err');
-    pendingBubble(item.body.text, item.body.cid, 'failed', item.ch); toast(`Message not sent: ${error}`, 'err');
+    const said = item.body.enc ? ((window.TribeE2E && window.TribeE2E.peekPlain(item.body.cid)) || obTr('Private message')) : item.body.text;   // feat/p12-e2ee: the queue holds only the sealed copy
+    pendingBubble(said, item.body.cid, 'failed', item.ch); toast(`Message not sent: ${error}`, 'err');
     const el = document.querySelector(`.msg.pending[data-cid="${CSS.escape(item.body.cid)}"]`); if (!el) return;
-    el.querySelector('[data-retry]').onclick = () => { pendingBubble(item.body.text, item.body.cid, 'sending', item.ch); C.queue(item.path, item.body, { kind: 'chat', ch: item.ch }); };
+    el.querySelector('[data-retry]').onclick = () => { pendingBubble(said, item.body.cid, 'sending', item.ch); C.queue(item.path, item.body, { kind: 'chat', ch: item.ch }); };
     el.querySelector('[data-drop]').onclick = () => el.remove();
   });
   C.on('status', st => { if (st.status === 'online') document.querySelectorAll('.msg.pending:not(.failed) .msg-state').forEach(x => { x.textContent = obTr('Sending…'); }); });

@@ -95,7 +95,7 @@
   }
   function rowHtml(r, i) {
     const where = r.kind === 'dm' ? `<b>${esc(r.title)}</b>` : `<b>${esc(r.projectName || '')}</b><span class="hh-ch">${esc(r.title)}</span>`;
-    const line = `${r.mine ? `<span class="faint">${t('You')}: </span>` : r.kind === 'dm' ? '' : `<span class="hh-by">${esc(r.last.name)}: </span>`}${esc(r.last.text)}`;
+    const line = `${r.mine ? `<span class="faint">${t('You')}: </span>` : r.kind === 'dm' ? '' : `<span class="hh-by">${esc(r.last.name)}: </span>`}${esc(r.last.enc ? t('New message') : r.last.text)}`;   // feat/p12-e2ee: a private message shows no words here
     const u = unread(r);
     return `<li class="hh-row${u ? ' unread' : ''}${r.mention ? ' mention' : ''}" data-i="${i}">
       <button type="button" class="hh-open" data-hh-open="${i}">${who(r)}<span class="hh-main"><span class="hh-top">${where}${r.mention ? `<span class="hh-at">@${t('you')}</span>` : ''}<time datetime="${esc(r.last.at)}">${esc(ago(r.last.at))}</time></span><span class="hh-line">${line}</span></span>${u ? '<i class="hh-dot" aria-label="Unread"></i>' : ''}</button>
@@ -133,7 +133,9 @@
     const path = '/chat/' + (r.kind !== 'dm' && r.title === '#general' && same ? 'general' : r.channel);
     inp.disabled = true;
     try {
-      if (C.connected()) await C.api(path, { method: 'POST', body: { text, cid: C.newId ? C.newId() : undefined }, project: r.project || undefined });
+      const seal = b => (r.kind === 'dm' && window.TribeE2E ? window.TribeE2E.seal(r.channel, b) : Promise.resolve(b));   // feat/p12-e2ee: a private reply is sealed before it leaves
+      if (C.connected()) await C.api(path, { method: 'POST', body: await seal({ text, cid: C.newId ? C.newId() : undefined }), project: r.project || undefined });
+      else if (same && C.queue && r.kind === 'dm') C.queue(path, await seal({ text, cid: C.newId ? C.newId() : undefined }), { kind: 'chat', ch: r.channel });
       else if (same && C.queue) C.queue(path, { text, cid: C.newId ? C.newId() : undefined }, { kind: 'chat', ch: r.kind === 'dm' ? r.channel : 'general', label: text });
       else { toast(t('Your tribe is offline. Open the project to write there: it sends when the tribe is back.')); inp.disabled = false; return; }
       openReply = ''; markSeen(r.channel); toast(C.connected() ? t('Sent') : t('Waiting to send'), 'ok');
