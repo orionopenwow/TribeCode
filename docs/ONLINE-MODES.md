@@ -84,6 +84,10 @@ Settings › Projects and backup › Run your own server (also Where it lives, t
 - **Not built:** every friend's app keeping a full copy of the tribe and syncing directly with the others (true
   multi-copy peer to peer). Today one computer or server runs the tribe and the others connect to it, so it has to be
   on. Calls already connect people directly (WebRTC), but the tribe's data does not travel that way.
+- **Built in p12 (docs/COPIES.md):** every friend's device keeps a copy of what they can see. They can read and change it
+  offline, and it catches up on reconnect. Designs are put together block by block, with "Two people changed this" only
+  for the same block. Send my changes / Get the latest sits by the status line. "Get the latest from GitHub" works when
+  nobody's computer is on. The tribe server is still the meeting point; friend-to-friend over WebRTC is still later.
 
 ## GitHub, one status everywhere
 

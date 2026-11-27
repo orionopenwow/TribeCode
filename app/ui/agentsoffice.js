@@ -93,7 +93,7 @@
       ${card('ao-friend', 'people', 'Bring a friend', esc(T('A link, a QR code for a phone, or a code to type.')), `<button type="button" class="btn" data-ao="friend">${esc(T('Invite a friend'))}</button>`)}
       ${card('ao-where', 'globe', 'Where your tribe runs', S ? `<span class="ts-dot" data-tone="${esc(S.tone)}" aria-hidden="true"></span><b>${esc(S.label)}</b> · ${esc(S.sub)}${window.TribeCopy && window.TribeCopy.line() ? `<br><small class="faint" data-ao-saved>${esc(window.TribeCopy.line())}</small>` : ''}` : esc(T('Looking…')), `<button type="button" class="btn" data-ao="where">${esc(T('Change where it runs'))}</button>`)}
       ${card('ao-privacy', 'lock', 'What’s private', esc(T('Private messages between two people are end-to-end encrypted. Channels and files are not.')), `<button type="button" class="btn" data-ao="privacy">${esc(T('See what’s private'))}</button>`)}
-      ${card('ao-github', 'github', 'Back up to GitHub', esc(T('Looking…')), `<button type="button" class="btn" data-ao="github">${esc(T('Back up to GitHub'))}</button>`)}
+      ${card('ao-github', 'github', 'Backup on GitHub', esc(T('Looking…')), `<button type="button" class="btn" data-ao="github">${esc(T('Back up to GitHub'))}</button>`)}
     </div></section>`;
   }
   // The lines that need the server: people here, and where the backup stands.
@@ -108,6 +108,8 @@
     const gh = root.querySelector('#ao-github'); if (!gh) return;
     const line = gh.querySelector('[data-ao-line]'), btn = gh.querySelector('[data-ao="github"]');
     if (solo()) { const s = window.TribeGitHubConnect ? await window.TribeGitHubConnect.status().catch(() => null) : null; line.textContent = s && s.on ? T('A copy is on GitHub.') : T('Not backed up yet. A copy on GitHub keeps it safe, even with this computer off.'); return; }
+    const G = window.TribeGitHubConnect;
+    if (G && G.backup && hasTribe()) { gh.classList.add('ao-card-backup'); gh.innerHTML = '<div class="ghb-in"></div>'; await G.backup(gh.firstChild, { pid: pidNow() }); ghLoad().catch(() => {}); return; }   // p12: the one Backup on GitHub card
     const g = await ghLoad(); if (!g || !gh.isConnected) { if (!g && hasTribe()) line.textContent = T('Not backed up yet.'); return; }
     gh.dataset.state = g.state; line.innerHTML = g.html; btn.textContent = T(g.btn);
   }

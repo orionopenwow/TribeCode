@@ -24,6 +24,8 @@
   const FLINT_IC = '<img class="fl-face" src="assets/flint.svg" alt="" width="20" height="20" aria-hidden="true">';
   const ic = (n, z = 16) => (window.TribeIcons && window.TribeIcons.has && window.TribeIcons.has(n) ? window.TribeIcons.svg(n, z) : '');
   const connected = () => !!(C && C.connected && C.connected() && C.hasToken && C.hasToken());
+  const CP = () => window.TribeCopies;   // p12: every friend keeps a copy (copies.js)
+  const baseSet = (pid, rev, cfg) => { if (CP() && pid && cfg) CP().setBase('site:' + pid, rev, S().normalize(cfg)); };
   let root = null, st = null, saveT = 0, frameScroll = 0, liveText = null, liveT = 0;
   let cw = null, crStrip = null, cwEditing = '';   // feat/cowork-editors: who else is here (cowork.js), how changes work here (changes.js)
 
@@ -116,7 +118,8 @@ html[data-dev=phone] .ehide-phone,html[data-dev=tablet] .ehide-tablet,html[data-
   function redo() { if (!st.fut.length) return false; const was = JSON.stringify(st.cfg); st.hist.push(was); st.cfg = JSON.parse(st.fut.pop()); fixPage(); showChange(was, st.cfg); save(); paint(); return true; }
   function fixPage() { if (!st.cfg.pages.some(p => p.id === st.page)) st.page = st.cfg.pages[0].id; if (st.sel && st.sel.block !== '@' && !pageNow().blocks.some(b => b.id === st.sel.block)) st.sel = null; }
   const ago = t => { if (!t) return ''; const s = Math.round((Date.now() - t) / 1000); return s < 20 ? 'just now' : s < 60 ? `${s}s ago` : s < 3600 ? `${Math.round(s / 60)} min ago` : new Date(t).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }); };
-  function status(text) { const el = $('#wdz-saved'); if (!el) return; el.textContent = text != null ? text : st.dirty ? 'Saving…' : st.savedAt ? `Saved${st.pid && connected() && !(window.TribeOffline && window.TribeOffline.solo && window.TribeOffline.solo()) ? '' : ' on this device'} · ${ago(st.savedAt)}` : ''; el.classList.toggle('is-dirty', !!st.dirty); }
+  const ghTail = () => (st && st.pid && connected() && window.TribeGitHubConnect && window.TribeGitHubConnect.savedTail ? window.TribeGitHubConnect.savedTail(st.pid) : '');   // p12: the auto-save says where it goes, quietly
+  function status(text) { const el = $('#wdz-saved'); if (!el) return; el.textContent = text != null ? text : st.dirty ? 'Saving…' : st.savedAt ? `Saved${st.pid && connected() && !(window.TribeOffline && window.TribeOffline.solo && window.TribeOffline.solo()) ? '' : ' on this device'} · ${ago(st.savedAt)}${ghTail()}` : ''; el.classList.toggle('is-dirty', !!st.dirty); }
   setInterval(() => { if (st && root && !root.hidden && !st.dirty) status(); }, 15000);
   function save() {
     clearTimeout(saveT); st.dirty = true; writeDraft(); status('Saving…');
@@ -134,12 +137,12 @@ html[data-dev=phone] .ehide-phone,html[data-dev=tablet] .ehide-tablet,html[data-
     try {
       const r = await C.api(`/projects/${encodeURIComponent(pid)}/site-config`, { method: 'PUT', body: { config: cfg, base: st.rev, force: !!opts.force }, keepalive: !!opts.keepalive });
       if (!st || st.pid !== pid) return true;
-      st.rev = r.rev || st.rev + 1; if (JSON.stringify(st.cfg) === mine) st.dirty = false; st.savedAt = Date.now(); writeDraft(); status(); hideConflict();
+      st.rev = r.rev || st.rev + 1; baseSet(pid, st.rev, cfg); if (JSON.stringify(st.cfg) === mine) st.dirty = false; st.savedAt = Date.now(); writeDraft(); status(); hideConflict();
       dispatchEvent(new CustomEvent('tribe:site-draft', { detail: { pid, dirty: st.dirty } }));
       if (st.dirty) saveT = setTimeout(push, 600);
       return true;
     } catch (e) {
-      if (e && (e.status === 409 || /conflict|409/.test(e.message || ''))) { conflict(e.body || e.data || {}); return false; }
+      if (e && (e.status === 409 || /conflict|409/.test(e.message || ''))) { const d = e.body || e.data || {}; if (await mergeIn(d)) return true; conflict(d); return false; }
       status('Saved on this device. It goes to the tribe when it’s back'); saveT = setTimeout(push, 5000); return false;
     }
   }
@@ -149,6 +152,17 @@ html[data-dev=phone] .ehide-phone,html[data-dev=tablet] .ehide-tablet,html[data-
   addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') flushNow(true); });
   addEventListener('pagehide', () => flushNow(true));
   addEventListener('hashchange', () => { if (st && st.dirty) flushNow(false); });
+  // p12: both changed the site: put the two together block by block, and ask only about a block both changed
+  async function mergeIn(d) {
+    const pid = st && st.pid, b = CP() && pid && d && d.config ? CP().getBase('site:' + pid, st.rev) : null; if (!b) return false;
+    const theirs = S().normalize(d.config), m = await CP().mergeOrAsk(S().normalize(b), st.cfg, theirs, { what: tr('Website'), by: d.by });
+    if (!st || st.pid !== pid) return true;
+    baseSet(pid, d.rev || 0, theirs); st.rev = d.rev || st.rev;
+    if (!m) { st.hist.push(JSON.stringify(st.cfg)); st.cfg = theirs; st.dirty = false; writeDraft(); fixPage(); paint(); status(); say(tr('Kept their version for now. Undo brings yours back.')); return true; }
+    st.hist.push(JSON.stringify(st.cfg)); st.cfg = S().normalize(m.value); st.dirty = true; writeDraft(); fixPage(); paint();
+    if (!m.asked) say(tr('Your changes and a friend’s were put together.'));
+    return push();
+  }
   function conflict(d) {
     st.conflict = d; let bar = $('#wdz-conflict');
     if (!bar) { bar = document.createElement('div'); bar.id = 'wdz-conflict'; bar.className = 'wdz-note wdz-conflict'; bar.setAttribute('role', 'alert'); root.querySelector('.wdz-stage').prepend(bar); }
@@ -232,6 +246,7 @@ html[data-dev=phone] .ehide-phone,html[data-dev=tablet] .ehide-tablet,html[data-
     C.api(`/projects/${encodeURIComponent(st.pid)}/site-config`).then(r => {
       if (!st || !r || !r.config || (r.rev || 0) <= (st.rev || 0)) return;
       st.base = JSON.stringify(S().normalize(r.config));
+      if (!st.dirty && !liveText && !st.pendingDraft) baseSet(st.pid, r.rev, r.config);
       if (st.dirty || liveText || st.pendingDraft) { if (st.pendingDraft) status(tr('A friend changed the site. Your draft stays yours until you send it.')); return; }
       const mine = C.state && C.state().me && r.savedBy === C.state().me.id;
       st.cfg = S().normalize(r.config); st.rev = r.rev; fixPage(); paint(); status(tr(mine ? 'Updated' : 'Updated with a friend’s change'));
@@ -248,14 +263,21 @@ html[data-dev=phone] .ehide-phone,html[data-dev=tablet] .ehide-tablet,html[data-
     if (st && root && !root.hidden) await flush();
     const pid = o.pid !== undefined ? o.pid : (C && C.project && C.project()) || '';
     let cfg = o.cfg || null, rev = 0, server = null;
-    if (!cfg && pid && connected()) { try { server = await C.api(`/projects/${encodeURIComponent(pid)}/site-config`); cfg = server.config; rev = server.rev || 0; } catch {} }
+    if (!cfg && pid && connected()) { try { server = await C.api(`/projects/${encodeURIComponent(pid)}/site-config`); cfg = server.config; rev = server.rev || 0; if (cfg && !server._fromCopy) baseSet(pid, rev, cfg); } catch {} }
+    else if (!cfg && pid && CP()) { const cp = CP().peek(pid, `/projects/${encodeURIComponent(pid)}/site-config`); if (cp && cp.config) { cfg = cp.config; rev = cp.rev || 0; } }   // p12: offline, this device's copy
     let d = !o.cfg && readDraft(pid);
+    let merged = null;
+    if (!o.cfg && d && d.dirty && server && !server._fromCopy && server.config && (d.rev || 0) < rev && CP() && CP().getBase('site:' + pid, d.rev || 0)) {   // p12: changed here while away, and by a friend since
+      const m = await CP().mergeOrAsk(S().normalize(CP().getBase('site:' + pid, d.rev || 0)), S().normalize(d.cfg), S().normalize(server.config), { what: tr('Website') });
+      if (m) { merged = S().normalize(m.value); d = { ...d, cfg: merged, rev }; }
+    }
     let restored = false, brought = false;
     // pass 4: a site made on this device before there was a tribe comes along into a project that has none yet
     if (!o.cfg && !o.template && !o.prompt && pid && server && !server.config && !d && server.canEdit !== false) { const mine = readDraft(''); if (mine && mine.cfg && mine.cfg.pages && mine.cfg.pages.some(p => (p.blocks || []).length)) { d = { cfg: mine.cfg, at: Date.now(), rev: 0, dirty: true }; brought = true; } }
     if (d && (!cfg || (d.dirty && (d.rev || 0) >= rev) || (!connected() && d.at))) { cfg = d.cfg; restored = !!d.dirty && !!server; }
     mount();
     st = fresh(cfg || S().blank(projectName(pid)), pid); st.rev = rev; st.blank = !cfg;
+    if (merged) { st.dirty = true; setTimeout(() => { if (st && st.pid === pid) push(); }, 300); }
     if (server) { st.canEdit = server.canEdit !== false; st.canSuggest = !!server.canSuggest; st.base = server.config ? JSON.stringify(S().normalize(server.config)) : ''; st.pendingDraft = !st.canEdit && !!d && !!d.cfg && JSON.stringify(st.cfg) !== st.base; }
     st.savedAt = d && d.at || (server && server.savedAt ? Date.parse(server.savedAt) : 0);
     st.page = st.cfg.pages[0].id;

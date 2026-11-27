@@ -100,7 +100,9 @@ module.exports = function sync({ P, W, base, getMembers, approvals, broadcast, p
   function protect(dir) {   // .tribe/ never ships: keep it out of git without touching tracked files
     try { const f = path.join(dir, '.git', 'info', 'exclude'); fs.mkdirSync(path.dirname(f), { recursive: true }); const t = fs.existsSync(f) ? fs.readFileSync(f, 'utf8') : ''; const add = ['/.tribe/', '/.trees/'].filter(x => !t.split('\n').includes(x)); if (add.length) fs.appendFileSync(f, (t && !t.endsWith('\n') ? '\n' : '') + add.join('\n') + '\n'); } catch {}
   }
-  const pathspec = (s, add) => ['--', '.', ...(add ? [] : [':(exclude).tribe', ':(exclude).tribe/**']), ...(s.settings.exclude || []).filter(Boolean).map(x => `:(exclude,glob)${String(x).replace(/^\/+/, '')}`)];
+  // p12: keys never go to GitHub, whatever a .gitignore says (.env files, private keys, the tribe's own .tribe/)
+  const NEVER_SHIP = ['**/.env', '**/.env.*', '**/*.pem', '**/*.key', '**/id_rsa*', '**/id_ed25519*', '**/.npmrc', '**/secrets/**'];
+  const pathspec = (s, add) => ['--', '.', ...(add ? [] : [':(exclude).tribe', ':(exclude).tribe/**']), ...NEVER_SHIP.map(x => `:(exclude,glob)${x}`), ...(s.settings.exclude || []).filter(Boolean).map(x => `:(exclude,glob)${String(x).replace(/^\/+/, '')}`)];
 
   // ---------- what's waiting ----------
   async function remoteRef(dir, s) { const r = await git(dir, ['rev-parse', '--verify', '--quiet', `refs/remotes/${REMOTE}/${s.settings.branch}`]); return r.code ? null : r.out; }

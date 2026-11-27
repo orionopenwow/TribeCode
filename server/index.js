@@ -274,7 +274,8 @@ function broadcast(msg, except) {
     if (type === 'approval' && !msg.project && !(msg.approval && msg.approval.project)) pid = P.defaultId();
   }
   if (dashboard) dashboard.onEvent(type, pid);   // the Global Hub recomputes for whoever can see pid (server/hub.js)
-  if (sense) sense.onEvent(type, pid);   // feat/project-sense: recompute what the project is (debounced, server/sense.js)
+  if (sense) sense.onEvent(type, pid);
+  if (copiesLog && pid) copiesLog.note(msg.project ? msg : { ...msg, project: pid });   // p12: the short history by the tribe status   // feat/project-sense: recompute what the project is (debounced, server/sense.js)
   const asGeneral = typeof msg.channel === 'string' && pid && msg.channel === P.channelOf(pid) && msg.channel !== 'general' ? { ...msg, channel: 'general' } : msg;
   for (const [mid, o] of online) {
     const mem = memberById(mid); if (!mem) continue;
@@ -294,6 +295,7 @@ let checksHub = null;   // feat/build-feeds: the host's check runner (server/che
 let workFeed = null;   // feat/work-v2: this tribe's signed gig feed (server/workfeed.js, made below)
 let profiles = null;   // feat/profiles: avatar, name color, status, presence (server/profiles.js, made below)
 let moderation = null;   // feat/appstore: report, block, word filter (server/moderation.js, made below)
+let copiesLog = null;   // p12: who sent what (server/copies.js, made below)
 let sense = null;   // feat/project-sense (server/sense.js, made below)
 let buildKit = null;   // server/buildkit.js (made below)
 let setupFlow = null;   // feat/setup-flow (server/setup.js, made below)
@@ -763,6 +765,8 @@ mcpFlow = makeMcpFlow({ flow, P });
 // and the AGENTS.md a project folder gets (when the project is made, and whenever a design is written into the folder)
 aiGuides = require('./aiguides')({ P, base: baseStore, perms, site: siteDesign, app: appCreator, motion: motionStudio, requests: () => changeReq, files: designFiles, readVision: () => readVision(), facts: () => flintFacts.load(), tasks: () => loadTasks(), nameOf, members: () => members, log: m => console.error('  ' + m) });
 designFiles.after(pid => aiGuides.queueFolder(pid));
+designFiles.after(pid => { try { syncHub.onSave(pid); } catch {} });   // p12: the GitHub backup takes the design files a moment after each save (when it is on)
+copiesLog = require('./copies')({ base: baseStore, P, nameOf });
 { const make = P.create; P.create = (...a) => { const p = make(...a); try { if (p && p.id) aiGuides.queueFolder(p.id, 2500); } catch {} return p; }; }
 // MCP calls run in the agent's project, or in `project` when the tool call names one it can see.
 function agentProject(me) { return P.pick(me, null, me.project || (online.get(me.owner) || {}).project); }
@@ -1177,6 +1181,7 @@ async function apiInProject(req, res, url) {
   if (a === 'site-designer' || (a === 'projects' && (c === 'site-config' || c === 'site-autofill' || c === 'site-comments' || c === 'site-proposals' || c === 'site-suggestions' || c === 'brand'))) return siteDesign.route(req, res, { ...ctx(), d: parts[3] });
   if (a === 'projects' && c === 'launchkit') return launchKit.route(req, res, ctx());   // Launch kit (server/launchkit.js)
   if (a === 'ai-guides' || (a === 'projects' && c === 'ai-brief')) return aiGuides.route(req, res, { ...ctx(), url });   // feat/ai-guides
+  if (a === 'copies' && b === 'log') return copiesLog.route(req, res, ctx());   // p12 (server/copies.js)
   if (a === 'projects' && c === 'design-files') return designFiles.route(req, res, { ...ctx(), d: parts[3] });   // pass 4 (server/designfiles.js)
   if (a === 'projects' && (c === 'app-config' || c === 'app-comments')) return appCreator.route(req, res, { ...ctx(), d: parts[3], e: parts[4], f: parts[5] });   // App Creator (server/appcreator.js)
   if (a === 'site-library' || (a === 'projects' && (c === 'site-library' || c === 'site-data'))) return siteLib.route(req, res, ctx());   // website templates (server/sitelib.js)

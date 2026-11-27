@@ -20,11 +20,18 @@
   const project = () => state.project || null;
   async function api(path, { method = 'GET', body, project: pj, keepalive } = {}) {
     const pid = pj || project(), text = body ? JSON.stringify(body) : undefined;
-    const res = await fetch(base() + '/api' + path, {
-      method, headers: { 'Content-Type': 'application/json', ...(token() ? { Authorization: 'Bearer ' + token() } : {}), ...(pid ? { 'X-Project': pid } : {}) },
-      body: text, ...(keepalive && (!text || text.length < 60000) ? { keepalive: true } : {}),   // feat/site-v2: a save that outlives the page
-    });
+    // p12 (copies.js): what you can see is kept on this device, and read from there when the tribe can't be reached
+    const CP = method === 'GET' && window.TribeCopies && window.TribeCopies.copyable(path) ? window.TribeCopies : null;
+    let res;
+    try {
+      res = await fetch(base() + '/api' + path, {
+        method, headers: { 'Content-Type': 'application/json', ...(token() ? { Authorization: 'Bearer ' + token() } : {}), ...(pid ? { 'X-Project': pid } : {}) },
+        body: text, ...(keepalive && (!text || text.length < 60000) ? { keepalive: true } : {}),   // feat/site-v2: a save that outlives the page
+      });
+    } catch (e) { const c = CP && CP.read(base(), pid, path); if (c) return c; throw e; }
+    if (CP && (res.status === 502 || res.status === 503 || res.status === 504 || res.status === 530)) { const c = CP.read(base(), pid, path); if (c) return c; }   // a tunnel answering for a computer that is off
     const data = await res.json().catch(() => ({}));
+    if (res.ok && window.TribeCopies) { if (CP) CP.keep(base(), pid, path, data); else if (method !== 'GET') window.TribeCopies.touch(); }
     if (res.status === 402 && data && data.need) { try { window.dispatchEvent(new CustomEvent('tribe-402', { detail: data })); } catch {} }   // harden: the server's plan/credits gate -> the plans pop-out (premium.js)
     if (res.status === 403 && data && data.need) { try { window.dispatchEvent(new CustomEvent('tribe-403', { detail: data })); } catch {} }   // feat/group-styles: the refusal says who can do it -> the "Ask them" bar (groupstyle.js)
     if (!res.ok) throw Object.assign(new Error(data.error || res.statusText), { status: res.status, data });

@@ -78,3 +78,5 @@
   .ao-opt-a { grid-column: 1 / -1; justify-content: flex-start; }
 }
 @media (prefers-reduced-motion: reduce) { .ao-pick { transition: none; } }
+/* p12: the Backup on GitHub card fills its card (ghconnect.css draws it) */
+.ao-card.ao-card-backup { display: block; }
