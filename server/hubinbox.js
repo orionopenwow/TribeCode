@@ -31,7 +31,7 @@ module.exports = function hubInbox({ store, P, chans, dms, nameOf, memberById })
       const w = memberById(d.with) || {}, last = d.last || {};
       if (last.deleted) continue;
       out.push({ kind: 'dm', project: null, channel: d.channel, title: w.name || 'Someone', with: d.with, color: w.color || '', agent: w.role === 'agent',
-        last: { by: last.by, name: nameOf(last.by), text: clip(last.text || (last.file ? 'Sent a file' : 'Sent a voice note')), at: last.at }, mention: false, mine: last.by === me.id });
+        last: { by: last.by, name: nameOf(last.by), text: last.enc ? 'New message' : clip(last.text || (last.file ? 'Sent a file' : 'Sent a voice note')), at: last.at, ...(last.enc ? { enc: true } : {}) }, mention: false, mine: last.by === me.id });   // feat/p12-e2ee: a private message shows no words
     }
     return out.filter(r => r.last && r.last.at).sort((a, b) => String(b.last.at).localeCompare(String(a.last.at))).slice(0, limit);
   }

@@ -10,7 +10,7 @@ office.js, feat/agents-office). GitHub is a stand-in (app/test/ghmock.py); AI he
   5. Where your tribe runs (from the office's ... menu, like 6 and 7): the current state and four options, each opening its flow (direct link, folder, free cloud).
   6. Back up to GitHub: no account → GitHub's sign-up link, then sign in (a token, stand-in) → create → linked, and the
      card says so.
-  7. What's private: only true lines ("not end-to-end encrypted"; this computer talks to itself); a third person can't
+  7. What's private: only true lines (private messages locked, "channels and files are not end-to-end encrypted"; this computer talks to itself); a third person can't
      open someone else's private message.
   8. 390px: the desks are the list, nothing scrolls sideways, targets are at least 40px.
 Screenshots: /tmp/agents-office-1440.png, /tmp/agents-office-add-ai.png, /tmp/agents-office-390.png.
@@ -249,8 +249,8 @@ def main():
             # ---------- 7. what's private: only true lines ----------
             cp.click(menu(cp, "privacy")); cp.wait_for_selector("#ao-privacy-sheet #ao-facts", timeout=8000)
             facts = cp.inner_text("#ao-privacy-sheet")
-            assert "not end-to-end encrypted" in facts and "talks to itself" in facts, facts
-            low = facts.lower().replace("not end-to-end encrypted", "")
+            assert "channels and files are not end-to-end encrypted" in facts.lower() and "talks to itself" in facts, facts
+            low = facts.lower().replace("channels and files are not end-to-end encrypted", "").replace("private messages are locked", "").replace("messages between two people are end-to-end encrypted", "")
             assert "end-to-end encrypted" not in low, "never claims encryption that isn't real"
             cp.keyboard.press("Escape")
             # the claim behind "Only the two people in a private message can open it"

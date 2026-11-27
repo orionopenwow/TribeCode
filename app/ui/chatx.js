@@ -142,6 +142,11 @@
   function html(m, ch) {
     msgs.set(m.id, { m, ch });
     if (m.card && !m.deleted) return cardHtml(m);
+    if (m.enc && !m.deleted) {   // feat/p12-e2ee: a private message is opened here, on this device, or says plainly why it can't be
+      const E = window.TribeE2E, v = E ? E.view(m, ch) : { s: 'nokey' };
+      if (v && v.s === 'ok') m = { ...m, text: v.text, _priv: true };
+      else { if (E && (!v || v.s === 'wait')) E.open(m, ch).then(() => rerender(m.id)); m = { ...m, text: '', _locked: E ? E.lockedLine(v) : 'Private message' }; }
+    }
     const sys = m.by === 'tribecode', brain = m.by === 'brain', agent = isAgent(m.by), mine = !sys && !!me() && m.by === me();
     const when = new Date(m.at).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
     const md = t => (window.TribeMD ? window.TribeMD.inline(t).replace(/\n/g, '<br>') : esc(t));
@@ -151,8 +156,9 @@
       : `<div class="avatar" style="background:${esc(colorOf(m.by))};color:${ink(colorOf(m.by))}">${esc(initials(nameOf(m.by)))}</div>`;
     const meta = `<span class="mt">${m.edited && !m.deleted ? '<span class="edited">edited</span>' : ''}<time datetime="${esc(m.at)}">${when}</time>${mine ? `<span class="tk">${TICK1}</span>` : ''}</span>`;
     let body = '';
-    const rich = !sys && !m.deleted && !m.media && R() ? R().parts(m, ch) : null;
+    const rich = !sys && !m.deleted && !m.media && !m.enc && R() ? R().parts(m, ch) : null;   // no link previews for private words (a preview would ask the server)
     if (sys) body = `<p title="${esc(when)}">${md(m.text || '')}</p>` + (m.capture && window.TribeCaptures ? window.TribeCaptures.card(m.capture, ch) : '');   // feat/captures: the capture card
+    else if (m._locked) body = `<p class="pv-locked">${window.TribeIcons ? window.TribeIcons.svg('lock', 13, 'pv-i') : ''}${esc(m._locked)}${META}</p>`;
     else if (m.deleted) body = `<p class="gone">${m.removedBy ? 'removed by a moderator' : 'message deleted'}${META}</p>`;
     else {
       if (m.fwd) body += `<div class="fwd">${icon('i-fwd')}Forwarded from <b>${esc(nameOf(m.fwd.by))}</b> · ${esc(m.fwd.from || '')}</div>`;
@@ -164,7 +170,7 @@
       else if (Array.isArray(m.images) && m.images.length && R()) body += R().grid(m, ch) + (m.text ? `<p>${md(m.text)}${META}</p>` : META);   // feat/chat2: several pictures
       else if (rich && rich.only) body += rich.html + META;   // feat/chat2: a message that is just a picture / GIF link
       else body += `<p>${md(m.text || '')}${m.gist ? '' : META}</p>`;   // gists.js swaps a gist's <p> for its card, so its time sits below
-      if (!m.vote) body += rich ? (rich.only ? '' : rich.html) : linkChips(m.text);   // feat/chat2: previews + videos + linked pictures (chatrich.js)
+      if (!m.vote && !m.enc) body += rich ? (rich.only ? '' : rich.html) : linkChips(m.text);   // feat/chat2: previews + videos + linked pictures (chatrich.js)
       body += reactsHtml(m);
       if (window.TribeVotes) body += window.TribeVotes.hint(m);
     }
@@ -179,7 +185,7 @@
     const kind = m.deleted ? '' : m.vote ? 'has-vote' : m.media && m.media.kind === 'voice' ? 'has-vn' : m.media && m.media.kind === 'image' ? (m.text ? 'has-img' : 'has-img img-solo')
       : Array.isArray(m.images) && m.images.length ? 'has-img has-grid' : rich && rich.only ? 'has-img img-solo has-gif' : m.gist ? 'gist-msg' : '';
     const more = sys || m.deleted ? '' : `<button class="msg-more" aria-label="Message actions" title="More">${icon('i-more')}</button>`;
-    return `<div class="msg dx ${sys ? 'sys' : ''} ${brain ? 'brain' : ''} ${agent ? 'agent' : ''} ${mine ? 'mine' : ''} ${m.deleted ? 'deleted' : ''} ${kind}" data-id="${esc(m.id)}" data-at="${esc(m.at)}" data-by="${esc(m.by)}">${av}${sys ? '' : gut}
+    return `<div class="msg dx ${m.enc ? 'pv-msg' : ''} ${sys ? 'sys' : ''} ${brain ? 'brain' : ''} ${agent ? 'agent' : ''} ${mine ? 'mine' : ''} ${m.deleted ? 'deleted' : ''} ${kind}" data-id="${esc(m.id)}" data-at="${esc(m.at)}" data-by="${esc(m.by)}">${av}${sys ? '' : gut}
       <div class="mb">${nm}${body}</div>${more}</div>`;
   }
   function rerender(id) {
@@ -336,15 +342,15 @@
       // On touch the quick-react bar sits above the menu, so the menu skips its own emoji row.
       const row = touchMenu ? '' : `<div class="rx-row">${[...QUICK, '🔥'].map(x => `<button data-emoji="${x}" aria-label="React ${x}">${x}</button>`).join('')}<button data-emoji-more aria-label="More reactions" title="More reactions">${icon('i-smile-plus')}</button></div>`;
       menu.innerHTML = `${row}
-        <button role="menuitem" data-act="reply">${icon('i-reply')}Reply</button>
-        <button role="menuitem" data-act="forward">${icon('i-fwd')}Forward…</button>
+        ${m.enc ? '' : `<button role="menuitem" data-act="reply">${icon('i-reply')}Reply</button>
+        <button role="menuitem" data-act="forward">${icon('i-fwd')}Forward…</button>`}
         ${m.text ? `<button role="menuitem" data-act="copy">${icon('i-copy')}Copy text</button>` : ''}
         ${canPin() ? `<button role="menuitem" data-act="pin">${icon('i-pin')}${pinned ? 'Unpin' : 'Pin'}</button>` : ''}
         ${m.text && !m.vote ? `<button role="menuitem" data-act="task">${icon('i-check')}Make task</button>` : ''}
         ${m.text && !m.vote && window.TribeVotes ? `<button role="menuitem" data-act="vote">${icon('i-vote')}Make it a vote</button>` : ''}
         ${m.media && m.media.kind === 'voice' ? `<button role="menuitem" data-act="notes">${icon('i-doc')}Add to my notes</button>` : ''}
         ${window.TribeCaptures ? window.TribeCaptures.menuItems(m, ch) : ''}
-        ${own && !m.media && !m.vote ? `<button role="menuitem" data-act="edit">${icon('i-edit')}Edit</button>` : ''}
+        ${own && !m.media && !m.vote && !m.enc ? `<button role="menuitem" data-act="edit">${icon('i-edit')}Edit</button>` : ''}
         ${own ? `<button role="menuitem" data-act="delete" class="danger">${icon('i-trash')}Delete</button>` : ''}
         ${window.TribePWA ? window.TribePWA.menuItems(m) : ''}${window.TribeModeration ? window.TribeModeration.menuItems(m, ch) : ''}
         ${window.TribeRoles ? window.TribeRoles.msgMenuItems(m, ch) : ''}`;   // feat/appstore: Share, Report, Block (pwa.js, moderation.js) · feat/roles: mod tools (roles.js)
@@ -579,7 +585,7 @@
     const r = reply && reply.ch === ch ? reply.id : undefined;
     inp.value = ''; reply = null; drawReply();
     if (window.TribeApp && window.TribeApp.sendQueued) window.TribeApp.sendQueued(ch, `/chat/${ch}/send`, { text, replyTo: r });   // instant bubble + outbox
-    else try { await C.api(`/chat/${ch}/send`, { method: 'POST', body: { text, replyTo: r } }); } catch (err) { inp.value = text; toast(err.message); }
+    else try { await C.api(`/chat/${ch}/send`, { method: 'POST', body: (window.TribeE2E ? await window.TribeE2E.seal(ch, { text, replyTo: r }) : { text, replyTo: r }) }); } catch (err) { inp.value = text; toast(err.message); }
   }, true);
 
   // ---------- media: voice player, image lightbox, paste ----------

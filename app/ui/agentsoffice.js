@@ -92,7 +92,7 @@
     return `<section class="ao-setup" id="ao-setup" aria-label="${esc(T('Get set up'))}"><div class="sec-head"><span class="eyebrow">${esc(T('Get set up'))}</span><h2>${esc(T('Friends, where it runs, privacy and backup'))}</h2></div><div class="ao-cards">
       ${card('ao-friend', 'people', 'Bring a friend', esc(T('A link, a QR code for a phone, or a code to type.')), `<button type="button" class="btn" data-ao="friend">${esc(T('Invite a friend'))}</button>`)}
       ${card('ao-where', 'globe', 'Where your tribe runs', S ? `<span class="ts-dot" data-tone="${esc(S.tone)}" aria-hidden="true"></span><b>${esc(S.label)}</b> · ${esc(S.sub)}${window.TribeCopy && window.TribeCopy.line() ? `<br><small class="faint" data-ao-saved>${esc(window.TribeCopy.line())}</small>` : ''}` : esc(T('Looking…')), `<button type="button" class="btn" data-ao="where">${esc(T('Change where it runs'))}</button>`)}
-      ${card('ao-privacy', 'lock', 'What’s private', esc(T('Private messages stay between two people. Messages are not end-to-end encrypted.')), `<button type="button" class="btn" data-ao="privacy">${esc(T('See what’s private'))}</button>`)}
+      ${card('ao-privacy', 'lock', 'What’s private', esc(T('Private messages between two people are end-to-end encrypted. Channels and files are not.')), `<button type="button" class="btn" data-ao="privacy">${esc(T('See what’s private'))}</button>`)}
       ${card('ao-github', 'github', 'Back up to GitHub', esc(T('Looking…')), `<button type="button" class="btn" data-ao="github">${esc(T('Back up to GitHub'))}</button>`)}
     </div></section>`;
   }
@@ -221,7 +221,8 @@
       ['kept', 'lock', 'Where it is kept', T(kept, { name: hostName || T('a friend') })],
       ['wire', 'shield', 'On the way', T(line)],
       ['dm', 'eye', 'Private messages', T('Only the two people in a private message can open it. AI helpers can’t read private messages, and they never show on the office screens.')],
-      ['e2e', 'x', 'Not end-to-end encrypted', T('Messages and files are not end-to-end encrypted. The computer that runs the tribe keeps them as plain files, so pick one you trust.')],
+      ['e2e', 'lock', 'Private messages are locked', T('Messages between two people are end-to-end encrypted: the computer that runs the tribe stores only locked text.')],
+      ['plain', 'x', 'Channels and files are not end-to-end encrypted', T('Channels, files, pictures and AI helper chats are kept as plain files on the computer that runs the tribe, so pick one you trust.')],
       ['keys', 'key', 'Keys and sign-ins', T('Your GitHub sign-in stays on the computer that runs the tribe and never comes back to a browser. Each AI helper has its own key you can remove.')],
     ];
     if (S.key === 'cloud') out.push(['save', 'cloud', 'Cloud save', T('A free cloud tribe keeps a signed copy of what you can see in your browser, to bring it back after a nap. Signed means nobody can change it; it is not encrypted.')]);

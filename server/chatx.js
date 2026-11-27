@@ -171,7 +171,8 @@ module.exports = function chatx({ store, id, str, getMembers, postChat, dms, sen
   // Every member post (REST): slash commands, DM/mention notifications, @brain, vote hints.
   function onPost(ch, me, text, msg) {
     commands(ch, me, text);
-    dms.onPost(ch, me, text);
+    dms.onPost(ch, me, text, msg);
+    if (msg && msg.enc) return;   // a private message: the server can't read it, so no commands, @ai or vote hints
     if (/(^|\s)@ai\b/i.test(text) && me.role !== 'agent' && ask) Promise.resolve(ask(ch, me, text)).catch(e => console.error('ask ai', e));   // server/askai.js
     else if (/(^|\s)@brain\b/i.test(text) && me.role !== 'agent') askBrain(ch, me, text).catch(e => console.error('brain', e));
     else if (pubCmd && me.role !== 'agent' && /@[^\s]+/.test(text) && (() => { try { return pubCmd(ch, me, text); } catch (e) { console.error('public command', e); return null; } })()) { /* an agent took a public command (askai.command) */ }
@@ -270,6 +271,12 @@ module.exports = function chatx({ store, id, str, getMembers, postChat, dms, sen
       if (op === 'board') return send(res, 200, votes.toBoard(ch, arg, me));
       return fail(res, 404, 'not found');
     }
+    if (m === 'POST' && action === 'send' && body.enc && dms.isDm(ch)) {   // feat/p12-e2ee: a private message arrives sealed
+      const enc = dms.cleanEnc(ch, me, body.enc); if (!enc) return fail(res, 400, 'this private message could not be checked');
+      const cid = typeof body.cid === 'string' && /^[A-Za-z0-9_-]{6,40}$/.test(body.cid) ? body.cid : null;
+      const msg = postChat(ch, me.id, '', { enc, ...(cid ? { cid } : {}) }); if (!cid || msg.cid !== cid || Date.now() - Date.parse(msg.at) < 1500) onPost(ch, me, '', msg);
+      return send(res, 200, { message: msg });
+    }
     if (m === 'POST' && action === 'send') {
       const text = str(body.text, 4000); if (!text) return fail(res, 400, 'empty message');
       const voted = command(ch, me, text); if (voted) return send(res, 200, { message: voted });
@@ -306,6 +313,7 @@ module.exports = function chatx({ store, id, str, getMembers, postChat, dms, sen
       store.writeJSON(pinsFile(ch), ids); pushPins(ch);
       return send(res, 200, { pins: pins(ch) });
     }
+    if (target.enc && (action === 'forward' || action === 'notes' || (action === 'msg' && m === 'PATCH'))) return fail(res, 400, 'private messages can only be read in this conversation');   // feat/p12-e2ee
     if (m === 'POST' && action === 'forward') {
       if (target.deleted) return fail(res, 400, 'message was deleted');
       const from = label(ch, me);

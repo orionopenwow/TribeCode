@@ -58,11 +58,21 @@
     <tr><th>Data</th><th>Where it lives</th><th>Why</th></tr>
     <tr><td>Your name, color, avatar, profile (bio, links, status)</td><td>The host's tribe folder</td><td>So friends see who is who</td></tr>
     <tr><td>Messages, voice notes and transcripts, pictures, files, docs, tasks, votes</td><td>The host's tribe folder, and the project's Git repository if the tribe uses one (for example on GitHub)</td><td>The core of the app: building together</td></tr>
+    <tr><td>Private messages between two people</td><td>The host's tribe folder, as locked (encrypted) text only. The key to open them stays on each person's devices</td><td>So only the two people can read them (see below)</td></tr>
+    <tr><td>Each device's public key for private messages</td><td>The host's tribe folder</td><td>So friends can lock messages to your devices</td></tr>
     <tr><td>Sign-in keys and device links</td><td>The host's tribe folder (hashed where possible) and your device</td><td>Keeping you signed in</td></tr>
     <tr><td>Settings, drafts, unsent messages, an offline copy of what you can see</td><td>Your device only</td><td>Fast start-up and working offline</td></tr>
     <tr><td>Reports you send and people you block</td><td>The host's tribe folder; the host and the tribe's mods can read reports</td><td>Safety (reporting and blocking)</td></tr>
     <tr><td>Crash reports (on by default, Settings › Crash reports)</td><td>The tribe's own bug inbox on the host</td><td>Fixing problems</td></tr>
   </table>
+
+  <h2 id="private-messages">Private messages</h2>
+  <p>Messages between two people are <b>end-to-end encrypted</b> once both of them have opened a recent version of the app. Each device makes its own key and keeps it in the browser, where it can't be copied out. Messages are locked in the browser before they leave, so the host's computer, the server, waiting messages on your device, notifications and backups only ever hold the locked text. Notifications and Home say "New message" without the words.</p>
+  <ul>
+    <li><b>What is not encrypted:</b> channels, names, who talks to whom and when, pictures, voice notes and files sent in a private chat, and chats with an AI helper (the helper reads them to answer, and its AI provider sees them too). Messages sent before both people had a key stay as they were.</li>
+    <li><b>A new device</b> can read new private messages, but not older ones: moving them from an old device isn't built yet.</li>
+    <li><b>Checking:</b> in a private chat, tap the lock line and compare the safety number with your friend in person or on a call. If it matches, nobody is in the middle.</li>
+  </ul>
 
   <h2>Optional services</h2>
   <p>These only receive data when you or your host turn them on. Each has its own privacy policy.</p>

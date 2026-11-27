@@ -166,7 +166,7 @@
   async function gifSettings() { if (gifCfg) return gifCfg; try { gifCfg = await C.api('/gifs/settings'); } catch { gifCfg = { provider: null }; } return gifCfg; }
   async function sendText(text) {   // p7: a GIF or quick text goes through the outbox like any message
     if (window.TribeApp && window.TribeApp.sendQueued) { window.TribeApp.sendQueued(cur(), `/chat/${cur()}/send`, { text }); return; }
-    try { await C.api(`/chat/${cur()}/send`, { method: 'POST', body: { text } }); } catch (e) { toast(e.message); }
+    try { await C.api(`/chat/${cur()}/send`, { method: 'POST', body: (window.TribeE2E ? await window.TribeE2E.seal(cur(), { text }) : { text }) }); } catch (e) { toast(e.message); }
   }
   function closeGif() { const p = $('#gif-pick'); if (p) p.remove(); }
   async function gifPicker(anchor) {
