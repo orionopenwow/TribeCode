@@ -79,7 +79,7 @@ def dash(pg, pid):
 BAND = "#pj-band-slot .db-band"
 pick = lambda pg: pg.evaluate(f"document.querySelector('{BAND}').dataset.pick")
 tabs = lambda pg: pg.eval_on_selector_all(f"{BAND} [role=tablist] [role=tab]", "els => els.map(e => e.textContent.trim())")
-acts = lambda pg: pg.inner_text(f"{BAND} .db-acts")
+acts = lambda pg: " ".join(pg.eval_on_selector_all(f"{BAND} .db-acts [data-db]", "els => els.map(e => e.title || e.textContent)"))   # p12: Change it names its tool in the tooltip
 no_side_scroll = lambda pg: pg.evaluate("document.documentElement.scrollWidth <= innerWidth + 1")
 
 
@@ -182,7 +182,7 @@ def server_tribe(p):
         pg.click(f"{BAND} [role=tab][data-show=site]")
         pg.wait_for_function(f"document.querySelector('{BAND}').dataset.pick === 'site'", timeout=8000)
         assert "Trail Mates online" in pg.inner_text(f"{BAND} .db-site") and "Open designer" in acts(pg) and "Open App Creator" not in acts(pg), acts(pg)
-        assert sel() == [["false", -1], ["true", 0]] and "WEBSITE" in pg.inner_text(f"{BAND} .db-kind").upper()
+        assert sel() == [["false", -1], ["true", 0]] and "Website" in pg.inner_text(f"{BAND} .db-tab[aria-selected=true]")
         assert api("/dash/band", token=tok, project=both)["band"]["pick"] == "phone", "the choice is this device's, not the tribe's"
         # the actions act on the tab shown: Open designer opens the website designer
         pg.click(f"{BAND} [data-db=designer]")

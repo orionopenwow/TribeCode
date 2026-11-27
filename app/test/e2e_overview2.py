@@ -74,12 +74,10 @@ def main():
 
             # 1-2. identity row, then the Living update: a pill and 3 equal tiles, no long sentence
             assert "Add what you’re making" in host.text_content("#pj-bio") and "1 person" in host.text_content(".pj-meta")
-            assert "Invite to My Tribe" in host.text_content("#pj-invite")
-            assert "At a glance" in host.text_content("#pj-living .eyebrow")
-            labels = host.eval_on_selector_all("#pj-living .gl-tile .gl-top small", "els => els.map(e => e.textContent.trim().toUpperCase())")
-            assert labels == ["UNREAD", "TASKS", "NEW FILES"], labels   # feat/dash-preview: Needs you moved into Needs attention
-            widths = host.eval_on_selector_all("#pj-living .gl-tile", "els => els.map(e => Math.round(e.getBoundingClientRect().width))")
-            assert max(widths) - min(widths) <= 2, f"equal tiles {widths}"
+            assert host.locator("#pj-invite").count() == 0, "p12: Invite friends is in the sidebar and the Sharing card, not repeated here"
+            gos = host.eval_on_selector_all("#pj-living .gl-tile", "els => els.map(e => e.dataset.go)")
+            assert gos == ["chat", "tasks", "docs"], gos   # p12: At a glance is one slim line of counts
+            assert host.evaluate("document.querySelector('#pj-living').getBoundingClientRect().height") < 60, "one slim line"
             assert host.locator("#pj-living .pl-sum").count() == 0, "no duplicate sentence"
             # section order, top to bottom
             ys = host.evaluate(ORDER)

@@ -230,6 +230,11 @@
     'From your idea, with no AI. A few seconds.': ["A partir de tu idea, sin IA. Unos segundos.", "A partir da sua ideia, sem IA. Alguns segundos.", "À partir de ton idée, sans IA. Quelques secondes.", "Aus deiner Idee, ohne KI. Ein paar Sekunden.", "アイデアから、AIなしで。数秒です。", "根据你的想法，无需 AI。只需几秒。", "아이디어로, AI 없이. 몇 초면 돼요."],
     'Opening the preview…': ["Abriendo la vista previa…", "Abrindo a prévia…", "Ouverture de l’aperçu…", "Vorschau wird geöffnet…", "プレビューを開いています…", "正在打开预览…", "미리보기를 여는 중…"],
     'Change it': ["Cambiarla", "Mudar", "La changer", "Ändern", "変更する", "修改", "바꾸기"],
+    // ---- p12: the dashboard preview's quiet controls row (dashband.js)
+    'Share link': ["Compartir enlace", "Compartilhar link", "Partager le lien", "Link teilen", "リンクを共有", "分享链接", "링크 공유"],
+    'Open code': ["Abrir el código", "Abrir o código", "Ouvrir le code", "Code öffnen", "コードを開く", "打开代码", "코드 열기"],
+    'Open designer': ["Abrir el diseñador", "Abrir o designer", "Ouvrir le concepteur", "Designer öffnen", "デザイナーを開く", "打开设计器", "디자이너 열기"],
+    'Open design': ["Abrir el diseño", "Abrir o design", "Ouvrir le design", "Design öffnen", "デザインを開く", "打开设计", "디자인 열기"],
     'Go to the dashboard': ["Ir al panel", "Ir para o painel", "Aller au tableau de bord", "Zum Dashboard", "ダッシュボードへ", "前往仪表板", "대시보드로 가기"],
     'Keep editing': ["Seguir editando", "Continuar editando", "Continuer à modifier", "Weiter bearbeiten", "編集を続ける", "继续编辑", "계속 편집"],
     'Make it better': ["Mejorarlo", "Melhorar", "L’améliorer", "Besser machen", "もっと良くする", "让它更好", "더 좋게 만들기"],

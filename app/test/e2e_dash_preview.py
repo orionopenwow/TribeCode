@@ -142,8 +142,10 @@ def main():
             dash(pg, rocket)
             pg.wait_for_function("(() => { const i = document.querySelector('#pj-band-slot img.db-shot'); return i && i.complete && i.naturalWidth > 0; })()", timeout=10000)
             assert pg.locator("#pj-band-slot .db-frame").count() == 0, "no iframe before interaction"
-            txt = pg.inner_text("#pj-band-slot .db-strip")
-            assert "ROCKET" in txt.upper() and "APP" in txt.upper() and "Open preview" in txt and "Open code" in txt and "Share link" in txt, txt
+            # p12: one controls row above the picture: Open and Change it (it names the tool), Share link in ⋯
+            txt = pg.inner_text("#pj-band-slot .db-bar"); tips = pg.eval_on_selector_all("#pj-band-slot .db-acts [data-db]", "els => els.map(e => e.title)")
+            assert "Open" in txt and "Change it" in txt and tips[:2] == ["Open preview", "Open code"], (txt, tips)
+            pg.click("#pj-band-slot [data-db=more]"); assert "Share link" in pg.inner_text(".db-menu"); pg.keyboard.press("Escape")
             pg.wait_for_timeout(1200)   # the overview settles; the band is kept, not reloaded
             assert pg.locator("#pj-band-slot .db-frame").count() == 0, "still no iframe without interaction"
             shot(pg, "dash-preview")
@@ -155,7 +157,7 @@ def main():
             # 4. Tabs for what's shown: App -> Website -> Design -> back to automatic (living preview: real tabs, e2e_living_preview.py)
             pg.click("#pj-band-slot [data-show=site]")
             pg.wait_for_function("document.querySelector('#pj-band-slot .db-band').dataset.pick === 'site'", timeout=8000)
-            assert "Rocket" in pg.inner_text("#pj-band-slot .db-site") and "Open designer" in pg.inner_text("#pj-band-slot .db-strip")
+            assert "Rocket" in pg.inner_text("#pj-band-slot .db-site") and pg.get_attribute("#pj-band-slot [data-db=designer]", "title") == "Open designer"
             pg.click("#pj-band-slot [data-show=design]")
             pg.wait_for_function("document.querySelector('#pj-band-slot .db-band').dataset.pick === 'design'", timeout=8000)
             assert pg.locator("#pj-band-slot .db-pic svg").count() == 1, "the design's own shapes"
@@ -223,9 +225,9 @@ def main():
             ph = open_page(b, tok, "Orion", 390, 844)
             dash(ph, rocket)
             ph.wait_for_function("(() => { const i = document.querySelector('#pj-band-slot img.db-shot'); return i && i.naturalWidth > 0; })()", timeout=10000)
-            g = ph.evaluate("""(() => { const s = document.querySelector('#pj-band-slot .db-stage').getBoundingClientRect(), i = document.querySelector('#pj-band-slot .db-id').getBoundingClientRect(), a = document.querySelector('#pj-band-slot .db-acts').getBoundingClientRect();
-              return { stage: s.height, stacked: a.top >= i.bottom - 1, sw: document.documentElement.scrollWidth, w: innerWidth }; })()""")
-            assert g["stage"] < 200 and g["stacked"] and g["sw"] <= g["w"] + 1, g
+            g = ph.evaluate("""(() => { const s = document.querySelector('#pj-band-slot .db-stage').getBoundingClientRect(), a = document.querySelector('#pj-band-slot .db-acts').getBoundingClientRect();
+              return { stage: s.height, above: a.bottom <= s.top + 1, sw: document.documentElement.scrollWidth, w: innerWidth }; })()""")
+            assert g["stage"] <= 330 and g["above"] and g["sw"] <= g["w"] + 1, g   # p12: full width, the controls one row above it
             ph.evaluate("document.querySelector('#pj-band-slot').scrollIntoView()")
             shot(ph, "dash-preview-phone")
             ph.context.close()

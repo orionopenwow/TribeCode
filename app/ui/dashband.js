@@ -116,8 +116,8 @@
       <div class="db-site-body"><b>${esc(title)}</b>${s && s.tagline ? `<span>${esc(s.tagline)}</span>` : '<span class="db-ln"></span><span class="db-ln s"></span>'}<em></em>
       <div class="db-site-cols">${s && s.sections && s.sections.length ? s.sections.map(x => `<i><small>${esc(x)}</small></i>`).join('') : '<i></i><i></i><i></i>'}</div></div></div>`;
   }
-  async function phonePic(pid) {   // pass 6: an App Creator app: its first screen, drawn small
-    try { const r = await api(`/projects/${encodeURIComponent(pid)}/app-config`, { project: pid }); const A = window.TribeAppCreator; if (r && r.config && A && A.mini) return `<div class="db-phone">${A.mini(r.config, null, 150)}</div>`; } catch {}
+  async function phonePic(pid, size) {   // pass 6: an App Creator app: its first screen (p12: larger in the dashboard's band)
+    try { const r = await api(`/projects/${encodeURIComponent(pid)}/app-config`, { project: pid }); const A = window.TribeAppCreator; if (r && r.config && A && A.mini) return `<div class="db-phone">${A.mini(r.config, null, size || 150)}</div>`; } catch {}
     return '';
   }
   async function designSvg(pid, d) {
@@ -126,24 +126,30 @@
   }
 
   // ---------- band markup ----------
-  function head(b, where) {
+  // p12: the controls are one quiet row above the picture: what to preview on the left, Open and Change it on the right,
+  // the rest (Share link, pin, show automatically, refresh) in ⋯. The project's name is the page title, so it is not repeated.
+  const SECOND = { app: ['code', 'i-git', 'Open code'], site: ['designer', 'i-quill', 'Open designer'], phone: ['appcreator', 'i-grid', 'Open App Creator'] };
+  function acts(b) {
+    const second = SECOND[b.pick];
+    return `<div class="db-acts">
+        <button type="button" class="btn primary sm" data-db="open" title="${esc(T(b.pick === 'design' ? 'Open design' : 'Open preview'))}">${ico('i-play', 14)}<span class="db-l">${esc(T('Open'))}</span></button>
+        ${second ? `<button type="button" class="btn sm" data-db="${second[0]}" title="${esc(T(second[2]))}">${ico(second[1], 14)}<span class="db-l">${esc(T('Change it'))}</span></button>` : ''}
+        <span class="db-tools"><button type="button" class="btn sm db-more" data-db="more" aria-haspopup="menu" aria-label="${esc(T('More'))}" title="${esc(T('More'))}">⋯</button></span>
+      </div>`;
+  }
+  function barHtml(b, where) {
+    const tabs = tabsHtml(b, where);
+    return `<div class="db-bar">${tabs || `<span class="db-kind">${ico(KIND_I[b.pick], 13)}${esc(T(tabName(b, b.pick)))}</span>`}${acts(b)}</div>`;
+  }
+  function head(b, where) {   // a slim line under the picture: when it last changed and who is here
     const by = b.updated && b.updated.byName ? ` by ${esc(b.updated.byName)}` : '';
     const upd = b.updated && b.updated.at ? `Updated ${esc(ago(b.updated.at))}${by}` : 'Not updated yet';
-    const second = b.pick === 'app' ? ['code', 'i-git', 'Open code'] : b.pick === 'site' ? ['designer', 'i-quill', 'Open designer'] : b.pick === 'phone' ? ['appcreator', 'i-grid', 'Open App Creator'] : ['design', 'i-canvas', 'Open design'];
-    return `<div class="db-strip">
-      <div class="db-id">${PJ() && PJ().face ? PJ().face(b.project, 'sm') : ''}<div class="db-id-t"><div class="db-name"><b>${esc(b.project.name)}</b><span class="db-kind">${ico(KIND_I[b.pick], 12)}${LABEL[b.pick]}</span>${b.isMain ? `<span class="db-main" title="${b.pinned ? 'Pinned as the tribe’s main project' : 'The tribe’s most active project'}">${b.pinned ? 'Main project' : 'Most active'}</span>` : ''}</div>
-        <span class="db-upd">${upd}<span class="db-here" id="db-here-${where}"></span></span></div></div>
-      <div class="db-acts">
-        <button type="button" class="btn primary sm" data-db="open">${ico('i-play', 14)}${b.pick === 'design' ? 'Open design' : 'Open preview'}</button>
-        ${b.pick === 'design' ? '' : `<button type="button" class="btn sm" data-db="${second[0]}">${ico(second[1], 14)}${second[2]}</button>`}
-        ${b.pick === 'design' || b.pick === 'phone' ? '' : `<button type="button" class="btn sm" data-db="share">${ico('i-link', 14)}Share link</button>`}
-        <span class="db-tools"><button type="button" class="btn sm db-more" data-db="more" aria-haspopup="menu" aria-label="More" title="More">⋯</button></span>
-      </div></div>`;
+    return `<div class="db-strip db-foot"><span class="db-upd">${upd}${b.isMain && b.pinned ? `<span class="db-sep" aria-hidden="true">·</span><span class="db-main" title="Pinned as the tribe’s main project">Main project</span>` : ''}<span class="db-here" id="db-here-${where}"></span></span></div>`;
   }
   // the tab row: only for things that exist, and only when there is more than one
   function tabsHtml(b, where) {
     const ks = tabsOf(b); if (ks.length < 2) return '';
-    return `<div class="db-tabs" role="tablist" aria-label="${esc(T('What to preview'))}">${ks.map(k => `<button type="button" role="tab" class="db-tab" id="db-tab-${where}-${k}" data-show="${k}" aria-selected="${b.pick === k}" aria-controls="db-panel-${where}" tabindex="${b.pick === k ? 0 : -1}">${ico(KIND_I[k], 14)}<span>${esc(T(tabName(b, k)))}</span>${k === 'site' && b.site && b.site.online ? `<span class="db-on"><i class="db-dot" aria-hidden="true"></i>${esc(T('Online'))}</span>` : ''}</button>`).join('')}</div>`;
+    return `<div class="db-tabs" role="tablist" aria-label="${esc(T('What to preview'))}">${ks.map(k => `<button type="button" role="tab" class="db-tab" id="db-tab-${where}-${k}" data-show="${k}" title="${esc(T(tabName(b, k)))}" aria-selected="${b.pick === k}" aria-controls="db-panel-${where}" tabindex="${b.pick === k ? 0 : -1}">${ico(KIND_I[k], 14)}<span>${esc(T(tabName(b, k)))}</span>${k === 'site' && b.site && b.site.online ? `<span class="db-on"><i class="db-dot" aria-hidden="true"></i>${esc(T('Online'))}</span>` : ''}</button>`).join('')}</div>`;
   }
   function emptyBand(b, where) {
     const acts = b && b.canSwitch !== false;
@@ -160,10 +166,10 @@
         <div class="db-empty-acts"><button type="button" class="btn primary sm" data-db="start">${ico('i-plus', 14)}Start your first project</button></div></div></section>`;
   }
   // the band's picture (no live iframe): also Home's preview cards (feat/p10-home)
-  async function picOf(b) {
+  async function picOf(b, big) {
     if (b.pick === 'app') { const t = await loadThumb(b.project.id); return t && t.src && t.kind !== 'tile' ? `<img class="db-shot" alt="" decoding="async" referrerpolicy="no-referrer" src="${esc(srcOf(t.src))}">` : tile(b, t); }
     if (b.pick === 'site') return siteMock(b.site, b.project.name);
-    if (b.pick === 'phone') return phonePic(b.project.id);
+    if (b.pick === 'phone') return phonePic(b.project.id, big ? (phone() ? 170 : 200) : 150);
     return (await designSvg(b.project.id, b.design)) || tile(b);
   }
   // Home (feat/p10-home): one project's preview as a small card's data, or null when it has nothing to show yet
@@ -181,11 +187,11 @@
   async function bandHtml(b, where) {
     if (!b) return '';
     if (b.pick === 'none') { const d = await sketchOf(b); return d ? sketchBand(b, d, where) : emptyBand(b, where); }
-    const pic = await picOf(b), tabs = tabsHtml(b, where);
+    const pic = await picOf(b, true), tabs = tabsOf(b).length > 1;
     const opens = b.pick === 'phone' || (b.pick === 'site' && b.site && b.site.designed);
     const live = b.pick === 'design' ? `${phone() ? 'Tap' : 'Click'} to open the design` : opens ? `${phone() ? 'Tap' : 'Click'} to open the preview` : phone() ? 'Tap to run it live' : 'Hover or click to run it live';
-    return `<section class="db-band${tabs ? ' has-tabs' : ''}" id="db-band-${where}" data-pick="${b.pick}" data-pid="${esc(b.project.id)}" aria-label="Preview of ${esc(b.project.name)}">
-      ${tabs}<div class="db-panel" id="db-panel-${where}"${tabs ? ` role="tabpanel" aria-labelledby="db-tab-${where}-${b.pick}"` : ''}>
+    return `<section class="db-band has-bar${tabs ? ' has-tabs' : ''}" id="db-band-${where}" data-pick="${b.pick}" data-pid="${esc(b.project.id)}" aria-label="Preview of ${esc(b.project.name)}">
+      ${barHtml(b, where)}<div class="db-panel" id="db-panel-${where}"${tabs ? ` role="tabpanel" aria-labelledby="db-tab-${where}-${b.pick}"` : ''}>
       <div class="db-stage" tabindex="0" role="button" aria-label="${esc(live)}"><div class="db-pic">${pic}</div><span class="db-hint">${ico(b.pick === 'design' ? 'i-canvas' : 'i-play', 12)}${live}</span></div>
       ${head(b, where)}</div></section>`;
   }
@@ -254,6 +260,7 @@
   function menu(anchor, b, where) {
     document.querySelectorAll('.db-menu').forEach(x => x.remove());
     const items = [];
+    if (b && (b.pick === 'app' || b.pick === 'site')) items.push(['share', T('Share link')]);   // p12: out of the button row
     if (b && b.canPin) items.push(b.isMain && b.pinned ? ['unpin', 'Unpin main project'] : ['pin', 'Pin as main project']);
     if (b && (b.chosen || b.mine) && tabsOf(b).length > 1) items.push(['auto', 'Show automatically']);
     items.push(['refresh', 'Refresh the picture']);

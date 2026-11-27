@@ -106,7 +106,7 @@ def main():
 
             # 5. Share link with nothing to share opens Publish
             pg.route(re.compile(r".*/api/projects/[^/]+/website.*"), lambda r: r.fulfill(status=200, content_type="application/json", body='{"website":{}}'))
-            pg.click("#pj-band-slot [data-db='share']"); pg.wait_for_selector("#pb-body", timeout=8000)
+            pg.click("#pj-band-slot [data-db=more]"); pg.click(".db-menu [data-dbm=share]"); pg.wait_for_selector("#pb-body", timeout=8000)   # p12: Share link lives in ⋯
             assert "Nothing to share yet" not in pg.inner_text("body")
             pg.unroute(re.compile(r".*/api/projects/[^/]+/website.*")); pg.keyboard.press("Escape"); pg.wait_for_timeout(500)
             if pg.locator("#pb-body").count(): pg.evaluate("document.querySelector('#pb-body').closest('.modal, .ui-sheet, [role=dialog]')?.querySelector('[data-close]')?.click()"); pg.wait_for_timeout(300)

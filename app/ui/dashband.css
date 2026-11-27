@@ -6,7 +6,7 @@
 #pj-crit-slot { margin: 0 0 32px; }
 
 .db-band { position: relative; border: 1px solid var(--border); border-radius: var(--r-panel, 16px); background: var(--surface); overflow: hidden; }
-.db-stage { position: relative; display: block; width: 100%; aspect-ratio: 21 / 8; max-height: 340px; min-height: 200px; background: var(--surface-2); border-bottom: 1px solid var(--border); cursor: pointer; overflow: hidden; outline: none; }
+.db-stage { position: relative; display: block; width: 100%; aspect-ratio: 16 / 9; max-height: 440px; min-height: 240px; background: var(--surface-2); border-bottom: 1px solid var(--border); cursor: pointer; overflow: hidden; outline: none; }
 .db-stage:focus-visible { box-shadow: inset 0 0 0 2px var(--brand); }
 .db-pic { position: absolute; inset: 0; display: grid; place-items: center; }
 .db-pic > img.db-shot { width: 100%; height: 100%; object-fit: cover; object-position: top center; display: block; }
@@ -91,15 +91,13 @@
 
 /* phones: stacked, the picture shorter */
 @media (max-width: 820px) {
-  .db-stage { aspect-ratio: auto; height: 168px; min-height: 0; }
+  .db-stage { aspect-ratio: 4 / 3; height: auto; max-height: 320px; min-height: 0; }
   .db-site { inset: 10px 10px 0; }
   .db-site-body { padding: 16px 12px; gap: 6px; }
   .db-site-cols { display: none; }
   .db-strip { padding: 10px 12px; gap: 10px; }
-  .db-id { flex-basis: 100%; }
-  .db-acts { width: 100%; }
-  .db-acts .btn.primary { flex: 1 1 auto; justify-content: center; }
-  .db-tools { order: 5; width: 100%; }
+  .db-sk-strip .db-acts { width: 100%; }
+  .db-sk-strip .db-tools { order: 5; width: 100%; }
   .db-empty { padding: 20px 16px; }
   .db-empty h2 { font-size: 19px; }
   #pj-crit-slot { margin-bottom: 24px; }
@@ -115,6 +113,26 @@
 
 /* p10: the Open preview button says it; the hint on the picture repeated it */
 .db-hint { display: none; }
+
+/* p12: one quiet controls row above the picture (tabs or the one kind on the left; Open, Change it, ⋯ on the right),
+   and one slim line under it. Nothing sits on the picture. */
+.db-bar { display: flex; align-items: center; gap: 12px; min-height: 48px; border-bottom: 1px solid var(--border); background: var(--surface); }
+.db-bar > .db-tabs { flex: 1 1 auto; align-self: stretch; min-width: 0; border-bottom: 0; background: transparent; }
+.db-bar .db-tab { min-height: 48px; border-right: 0; }
+.db-bar > .db-kind { flex: 1 1 auto; min-width: 0; margin-left: 16px; padding: 0; border: 0; background: transparent; color: var(--text); font: 600 13px/1.2 var(--font); text-transform: none; letter-spacing: 0; gap: 6px; }
+.db-bar > .db-acts { flex: none; flex-wrap: nowrap; margin-left: auto; padding-right: 10px; }
+.db-foot { padding: 8px 16px; }
+.db-foot .db-main { padding: 0; border: 0; background: transparent; text-transform: none; letter-spacing: 0; font: 500 12.5px/1.4 var(--font); color: var(--accent-ink); }
+@media (max-width: 820px) {
+  .db-bar { gap: 6px; min-height: 44px; }
+  .db-bar .db-tab { min-height: 44px; padding: 0 12px; }
+  .db-bar .db-tab > span:not(.db-on), .db-bar .db-acts .btn:not(.primary) > .db-l { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  .db-bar .db-on { display: none; }
+  .db-bar > .db-kind { margin-left: 12px; }
+  .db-bar > .db-acts { padding-right: 8px; gap: 6px; }
+  .db-bar .db-acts .btn { min-height: 36px; }
+  .db-foot { padding: 6px 12px; }
+}
 
 /* living preview: tabs for what the project has (App | Website | …). Flat: a 1px rule, the shown tab one step lighter. */
 .db-tabs { display: flex; gap: 0; border-bottom: 1px solid var(--border); background: var(--surface-2); overflow-x: auto; scrollbar-width: none; }
@@ -152,9 +170,6 @@
 .db-game-land i:nth-child(1) { left: 12%; bottom: 46px; } .db-game-land i:nth-child(2) { left: 30%; bottom: 62px; } .db-game-land i:nth-child(3) { right: 16%; bottom: 46px; }
 .db-game-land u { position: absolute; left: 6%; bottom: 30px; width: 14px; height: 14px; border-radius: 3px; background: var(--live); }
 @media (max-width: 820px) {
-  .db-tabs { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); }
-  .db-tabs > .db-tab { min-height: 40px; justify-content: center; padding: 0 8px; }   /* above uikit's 36px floor for tab rows */
-  .db-tab:last-child { border-right: 0; }
   .db-game { inset: 10px 10px 0; padding: 26px 10px 36px; gap: 6px; }
   .db-game-land i { display: none; }
   .db-sk-strip .db-acts .btn { flex: 1 1 auto; justify-content: center; }
@@ -163,10 +178,10 @@
 /* feat/dash-layout: the preview and Flint's card side by side on wide screens (about 60/40, equal tops), so both are
    seen without scrolling; stacked below that, and on phones. Add files is one slim row under Flint's card. */
 .pj-duo-main > #pj-band-slot:last-child { margin-bottom: 0; }
-@media (min-width: 1280px) {
-  @container ov (min-width: 680px) {
-    /* the two columns: the preview (stretched to the row) with Add files under it, Flint's card beside both */
-    .pj-duo { display: grid; grid-template-columns: minmax(0, 3fr) minmax(300px, 2fr); grid-template-rows: 1fr auto auto; grid-template-areas: "band flint" "fail flint" "files flint"; column-gap: 16px; align-items: stretch; margin: 0 0 16px; }
+@media (min-width: 1440px) {
+  @container ov (min-width: 900px) {
+    /* p12: the two columns only when there is room: the preview keeps over 60% (stretched to the row) with Add files under it, Flint's card beside both */
+    .pj-duo { display: grid; grid-template-columns: minmax(0, 62fr) minmax(320px, 38fr); grid-template-rows: 1fr auto auto; grid-template-areas: "band flint" "fail flint" "files flint"; column-gap: 16px; align-items: stretch; margin: 0 0 16px; }
     .pj-duo-main, .pj-duo-side { display: contents; }
     .pj-duo #pj-band-slot { grid-area: band; margin: 0; display: flex; flex-direction: column; min-width: 0; }
     .pj-duo #pj-flfail { grid-area: fail; margin: 10px 0 0; }
@@ -175,7 +190,7 @@
     .pj-duo #pj-band-slot > .db-wrap { flex: 1 1 auto; display: flex; flex-direction: column; }
     .pj-duo .db-band { flex: 1 1 auto; display: flex; flex-direction: column; }
     .pj-duo .db-band > .db-panel { flex: 1 1 auto; display: flex; flex-direction: column; }
-    .pj-duo .db-band .db-stage { flex: 1 1 auto; aspect-ratio: auto; max-height: none; min-height: 200px; }
+    .pj-duo .db-band .db-stage { flex: 1 1 auto; aspect-ratio: auto; max-height: none; min-height: 340px; }
     .pj-duo .db-band.db-empty { justify-content: center; }
     .pj-duo-side > #pj-flint-slot > .fd { margin: 0; }
     .pj-duo .fd-cols { grid-template-columns: minmax(0, 1fr); gap: 12px; }
@@ -221,3 +236,16 @@
 #pj-context.pj-files-slim #dropzone { min-height: 88px; }
 #pj-context.pj-files-slim .pj-newfiles { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 8px; }
 @media (prefers-reduced-motion: reduce) { .pj-files-btn { transition: none; } }
+
+/* p12: At a glance is one slim line of counts under Needs attention (projects.js); each one click from where it's handled */
+#pj-living.pj-glance-slim { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 24px; padding: 0; border: 0; background: transparent; }
+.pj-glance-slim .gl-tile { display: inline-flex; flex-direction: row; align-items: center; gap: 6px; min-height: 36px; padding: 0 12px; border: 1px solid var(--border); border-radius: 999px; background: var(--surface); color: var(--muted); font: 500 13px/1.2 var(--font); cursor: pointer; transition: background-color var(--dur-quick) var(--ease-out), border-color var(--dur-quick) var(--ease-out); }
+.pj-glance-slim .gl-tile:hover { background: var(--surface-2); border-color: var(--border); }
+.pj-glance-slim .gl-tile .i { color: var(--gc); flex: none; }
+.pj-glance-slim .gl-num { color: var(--text); font: 700 13px/1.2 var(--font); }
+.pj-glance-slim .gl-tile.hot { background: var(--surface); }
+.pj-glance-slim .gl-tile.hot .gl-num { color: var(--text); }
+.pj-glance-slim .gl-line { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 32ch; }
+.pj-glance-slim .gl-dot { position: static; margin-left: 0; animation: none; width: 6px; height: 6px; border-radius: 50%; background: var(--brand); }
+@media (max-width: 820px) { #pj-living.pj-glance-slim { margin: 0 0 20px; padding: 0; gap: 6px; } .pj-glance-slim .gl-tile { min-height: 36px; padding: 0 10px; } }
+@media (prefers-reduced-motion: reduce) { .pj-glance-slim .gl-tile { transition: none; } }

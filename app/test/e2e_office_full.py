@@ -302,7 +302,7 @@ def main():
             assert tabs == ["App", "Website"], tabs
             cp.click("#db-band-office [role=tab][data-show=site]")
             cp.wait_for_function("document.querySelector('#db-band-office').dataset.pick === 'site'", timeout=8000)
-            assert "Open designer" in cp.inner_text("#db-band-office .db-acts")
+            assert cp.get_attribute("#db-band-office .db-acts [data-db=designer]", "title") == "Open designer"
             cp.click("#db-band-office [role=tab][data-show=phone]")
             cp.wait_for_function("document.querySelector('#db-band-office').dataset.pick === 'phone'", timeout=8000)
             cp.click("#ao-replies-x") if cp.evaluate("document.querySelector('#ad-dash').dataset.replies === 'on'") else None
