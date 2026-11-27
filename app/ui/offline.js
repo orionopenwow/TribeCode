@@ -859,6 +859,28 @@
       case 'me': if (GET && !b) return ok({ member: presence().find(m => m.id === 'me') });
         if (b === 'learn' && (GET || PUT)) return ok({ track: (body && body.track) || {} });   // lesson progress (lessons.js) stays on the device in the demo; without this every tick raised the "needs the tribe online" card
         if (PATCH && !b) { const m = me(); if (body.name) m.name = String(body.name).slice(0, 32); if (body.color) m.color = String(body.color); save(); pushPresence(); return ok({ member: m }); } break;
+      case 'import': {   // fix/p12-copies: "Open a saved tribe" / "Make my own copy" in a browser tribe: the same call a server takes
+        if (b !== 'solo' || !POST) break;
+        const S = (v, n) => String(v == null ? '' : v).slice(0, n), list = Array.isArray(body && body.projects) ? body.projects.slice(0, 12) : [];
+        if (!list.length) return no(400, 'nothing to bring over');
+        const out = [];
+        for (const sp of list) {
+          const name = S(sp && sp.name, 48) || 'A copy'; let id = slugify(name), n = 2; while (proj(id)) id = `${slugify(name)}-${n++}`;
+          const p = { id, name, emoji: S(sp.emoji, 4), image: null, bio: S(sp.bio, 200), color: /^#[0-9a-f]{6}$/i.test(sp.color || '') ? sp.color : '#38C6B1', channel: 'p-' + id, default: false, created: iso(), members: { me: 'host' } };
+          db.projects.push(p); db.tasks[id] = []; db.docs[id] = []; db.chat[id] = []; db.gists[id] = [];
+          if (sp.vision) (db.vision = db.vision || {})[id] = S(sp.vision, 20000);
+          for (const t of (Array.isArray(sp.tasks) ? sp.tasks : []).slice(0, 300)) if (t && t.title) addTask(id, { title: S(t.title, 200), by: 'me', status: t.status, body: S(t.body, 20000) });
+          for (const d of (Array.isArray(sp.docs) ? sp.docs : []).slice(0, 60)) {
+            if (!d || (!d.title && !d.body)) continue;
+            const title = S(d.title, 120) || 'A note', ds = db.docs[id]; let slug = slugify(title), k = 2; while (ds.some(x => x.slug === slug)) slug = `${slugify(title)}-${k++}`;
+            ds.push({ slug, title, by: 'me', created: iso(), updated: iso(), updatedBy: 'me', version: 1, project: id, body: S(d.body, 400000), ...(d.kind === 'sheet' || d.kind === 'deck' ? { kind: d.kind } : {}) });
+          }
+          for (const m of (Array.isArray(sp.chat) ? sp.chat : []).slice(-400)) if (m && m.text) db.chat[id].push({ id: 'm-' + rid(), at: S(m.at, 30) || iso(), by: 'tribecode', text: m.by === 'me' || m.by === 'tribecode' ? S(m.text, 4000) : `**${S(m.name || m.by, 32)}:** ${S(m.text, 3900)}`, imported: true });
+          out.push({ id, name, tasks: db.tasks[id].length, docs: db.docs[id].length, chat: db.chat[id].length });
+        }
+        save(); push({ type: 'projects' }); pushHub();
+        return ok({ ok: true, tribe: S(body.tribe && body.tribe.name, 48), projects: out, local: true });
+      }
       case 'projects': {
         if (!b && GET) return ok({ projects: projects(), current: cur() });
         if (!b && POST) {

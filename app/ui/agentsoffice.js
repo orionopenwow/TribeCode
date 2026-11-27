@@ -91,7 +91,7 @@
     const S = window.TribeStatus && window.TribeStatus.now ? window.TribeStatus.now() : null;
     return `<section class="ao-setup" id="ao-setup" aria-label="${esc(T('Get set up'))}"><div class="sec-head"><span class="eyebrow">${esc(T('Get set up'))}</span><h2>${esc(T('Friends, where it runs, privacy and backup'))}</h2></div><div class="ao-cards">
       ${card('ao-friend', 'people', 'Bring a friend', esc(T('A link, a QR code for a phone, or a code to type.')), `<button type="button" class="btn" data-ao="friend">${esc(T('Invite a friend'))}</button>`)}
-      ${card('ao-where', 'globe', 'Where your tribe runs', S ? `<span class="ts-dot" data-tone="${esc(S.tone)}" aria-hidden="true"></span><b>${esc(S.label)}</b> · ${esc(S.sub)}` : esc(T('Looking…')), `<button type="button" class="btn" data-ao="where">${esc(T('Change where it runs'))}</button>`)}
+      ${card('ao-where', 'globe', 'Where your tribe runs', S ? `<span class="ts-dot" data-tone="${esc(S.tone)}" aria-hidden="true"></span><b>${esc(S.label)}</b> · ${esc(S.sub)}${window.TribeCopy && window.TribeCopy.line() ? `<br><small class="faint" data-ao-saved>${esc(window.TribeCopy.line())}</small>` : ''}` : esc(T('Looking…')), `<button type="button" class="btn" data-ao="where">${esc(T('Change where it runs'))}</button>`)}
       ${card('ao-privacy', 'lock', 'What’s private', esc(T('Private messages stay between two people. Messages are not end-to-end encrypted.')), `<button type="button" class="btn" data-ao="privacy">${esc(T('See what’s private'))}</button>`)}
       ${card('ao-github', 'github', 'Back up to GitHub', esc(T('Looking…')), `<button type="button" class="btn" data-ao="github">${esc(T('Back up to GitHub'))}</button>`)}
     </div></section>`;
@@ -153,6 +153,8 @@
         ${row('folder', 'files', 'A shared folder', 'A Dropbox, OneDrive, Google Drive or iCloud folder you already use. Friends with the same folder join from it.', b('folder', 'Pick the shared folder', false, fo.ok ? '' : fo.why))}
         ${row('cloud', 'cloud', 'Free cloud', (window.TribeCloudHome && window.TribeCloudHome.SUB) || 'Online when your computer is off. Free, and it naps when nobody is there', b('cloud', 'Set up free cloud'))}
       </div>
+      ${window.TribeCopy ? `<div class="ao-opts ao-keep">${row('keep', 'download', 'Keep a copy', window.TribeCopy.line() || 'One file with your projects, designs, docs, tasks and chat. Keys and direct messages stay out.', `${b('save', 'Save on this computer', S.key === 'device' || S.key === 'demo')}${b('open', 'Open a saved tribe')}`)}
+        ${S.key !== 'device' && S.key !== 'demo' && S.key !== 'none' ? row('move', 'cloud', 'Move it to the cloud', 'Keep every project and bring your friends along, step by step.', b('move', 'Move it')) : ''}</div>` : ''}
       ${fo.ok ? '' : `<p class="faint ao-small" id="ao-folder-why">${esc(fo.why || '')}</p>`}
       <p class="faint ao-small">${esc(T('Messages, tasks and edits made while it can’t be reached wait and send by themselves.'))} <button type="button" class="linkish" data-ao-go="server">${esc(T('Run your own server'))}</button></p></div>`;
     const sh = whereSheet = SH().sheet({ id: 'ao-where-sheet', wide: true, eyebrow: NAME, title: 'Where your tribe runs', body, onClose: () => { if (whereSheet === sh) whereSheet = null; } });
@@ -169,6 +171,10 @@
       }
       if (k === 'folder') return H && H.sharedFolder ? H.sharedFolder() : null;
       if (k === 'cloud') return cloud();
+      const TC = window.TribeCopy; if (!TC) return;   // fix/p12-copies: keep, open and move copies (app/ui/tribecopy.js)
+      if (k === 'save') return TC.save();
+      if (k === 'open') return TC.open();
+      if (k === 'move') return TC.move();
     });
     return sh;
   }
@@ -270,5 +276,5 @@
   addEventListener('tribe:github-connected', () => { ghLast = null; const r = document.getElementById('ao-setup'); if (r) fill(r).catch(() => {}); else ghLoad().catch(() => {}); });
   setInterval(() => { if (document.getElementById('ao-lead') && document.visibilityState === 'visible') refreshLead(); }, 9000);
 
-  window.TribeAgentsOffice = { NAME, head, office, mountOffice, addAi, setup, wire, where, privacy, privacyFacts, pick, run, friend, ghLoad, ghLine, refresh: refreshLead, fill };
+  window.TribeAgentsOffice = { NAME, head, office, mountOffice, addAi, setup, wire, where, cloud, privacy, privacyFacts, pick, run, friend, ghLoad, ghLine, refresh: refreshLead, fill };
 })();

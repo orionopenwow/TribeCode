@@ -1,0 +1,20 @@
+/* Copies of the tribe (fix/p12-copies, app/ui/tribecopy.js): flat matte, tokens only */
+.tcp-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 12px 0 4px; }
+.tcp-row .input { flex: 1 1 220px; min-width: 0; }
+.tcp-path code { display: block; padding: 8px 10px; border: 1px solid var(--border); border-radius: var(--r-sm); background: var(--canvas); color: var(--text); font-family: var(--mono); font-size: 13px; overflow-wrap: anywhere; }
+.tcp-qr { width: 168px; margin: 12px 0; padding: 8px; border: 1px solid var(--border); border-radius: var(--r-sm); background: var(--surface); }
+.tcp-qr svg { display: block; width: 100%; height: auto; }
+.tcp-ro { display: flex; align-items: center; gap: 8px; margin: 0 0 12px; }
+.tcp-tag { padding: 2px 8px; border: 1px solid var(--border); border-radius: 999px; color: var(--muted); font-family: var(--mono); font-size: 11px; text-transform: uppercase; letter-spacing: .06em; }
+.tcp-frame { display: block; width: 100%; height: min(56vh, 460px); border: 1px solid var(--border); border-radius: var(--r-sm); background: var(--surface); }
+.tcp-sec { margin-top: 16px; }
+.tcp-read { max-width: 65ch; line-height: 1.6; white-space: pre-wrap; margin: 6px 0 0; }
+.tcp-tasks { margin: 6px 0 0; padding-left: 18px; line-height: 1.6; }
+.tcp-tasks .tcp-done { color: var(--muted); text-decoration: line-through; }
+.tcp-steps { list-style: none; margin: 12px 0; padding: 0; display: grid; gap: 12px; }
+.tcp-step { display: grid; grid-template-columns: 28px 1fr; gap: 12px; padding: 12px; border: 1px solid var(--border); border-radius: var(--r-sm); background: var(--surface-2); }
+.tcp-step p { margin: 4px 0 0; }
+.tcp-n { display: grid; place-items: center; width: 28px; height: 28px; border: 1px solid var(--border); border-radius: 50%; font-family: var(--mono); font-size: 13px; color: var(--ember); }
+.tcp-moved { position: fixed; left: 50%; bottom: 16px; transform: translateX(-50%); z-index: 90; display: flex; align-items: center; gap: 12px; max-width: calc(100vw - 32px); padding: 10px 12px 10px 16px; border: 1px solid var(--border); border-radius: var(--r-sm); background: var(--surface-2); color: var(--text); }
+.ao-keep { margin-top: 12px; }
+@media (max-width: 640px) { .tcp-row .btn { flex: 1 1 auto; } .tcp-moved { bottom: 76px; } }

@@ -74,7 +74,8 @@
         : `${heldBox(f)}<ul class="whl-files">${filesLine(f, 'site')}${filesLine(f, 'app')}</ul><p class="whl-path"><code id="whl-folder">${esc(f.folder)}</code></p>
           <div class="whl-row">${f.canOpen ? `<button type="button" class="btn" data-whl-open>${esc(T('Open the folder'))}</button>` : `<small class="faint">${esc(T('The folder is where this tribe is kept. Open it on that computer.'))}</small>`}</div>
           <small class="faint">${esc(T('Every change is written there a moment after you make it. Double-click index.html to open it with no internet.'))}</small>`;
-    const s2 = `<div class="whl-row"><button type="button" class="btn${!none && st.people < 2 ? ' primary' : ''}" data-whl-invite>${esc(T('Invite a friend'))}</button>${st.people > 1 ? `<span class="faint">${esc(F('{n} people are in this tribe', { n: st.people }))}</span>` : ''}</div>
+    const keep = window.TribeCopy ? `<div class="whl-row"><button type="button" class="btn" data-whl-save>${esc(T('Save on this computer'))}</button><button type="button" class="btn" data-whl-load>${esc(T('Open a saved tribe'))}</button>${window.TribeCopy.line() ? `<small class="faint" data-whl-saved>${esc(window.TribeCopy.line())}</small>` : ''}</div>` : '';
+    const s2 = `<div class="whl-row"><button type="button" class="btn${!none && st.people < 2 ? ' primary' : ''}" data-whl-invite>${esc(T('Invite a friend'))}</button>${window.TribeCopy ? `<button type="button" class="btn" data-whl-show>${esc(T('Show a friend'))}</button>` : ''}${st.people > 1 ? `<span class="faint">${esc(F('{n} people are in this tribe', { n: st.people }))}</span>` : ''}</div>
       <small class="faint">${esc(T('It reaches friends while the tribe can be reached. When it cannot, they see a plain message and what they typed waits on their device.'))}</small>
       ${window.TribeStatus ? `<div class="whl-row whl-runs"><span class="faint">${esc(T('Where your tribe runs'))}:</span> <button type="button" class="linkish" data-whl-runs>${esc(window.TribeStatus.now().label)}</button> <button type="button" class="linkish" data-whl-server>${esc(T('Run your own server'))}</button></div>` : ''}`;   // p10
     const link = pg ? pg.url : '';
@@ -83,7 +84,7 @@
       <small class="faint">${esc(T('A public address on your own GitHub account, free. It stays up when every computer is off.'))}</small>
       <div class="whl-row"><span class="ghc-chip" id="whl-gh"></span></div>`;   // p10: the same GitHub status as everywhere else
     // pass 4 polish: with no tribe the first step says what is true (the browser keeps it), not that files are in a folder
-    root.innerHTML = step(1, 'folder', 'In a folder', online() ? 'Your website and phone app are real files in the project’s folder, where this tribe is kept.' : 'In a tribe, your website and phone app are real files in the project’s folder.', none ? '' : 'Now', s1)
+    root.innerHTML = step(1, 'folder', 'In a folder', online() ? 'Your website and phone app are real files in the project’s folder, where this tribe is kept.' : 'In a tribe, your website and phone app are real files in the project’s folder.', none ? '' : 'Now', s1 + keep)
       + step(2, 'friends', 'With your friends', 'One link lets friends in. Everyone changes the same website and app, live, by their role.', st.people > 1 ? 'Now' : '', s2)
       + step(3, 'online', 'Online', 'Put it online and anyone can open it, on any phone or computer.', link ? 'Live' : '', s3);
     wire(root);
@@ -102,6 +103,10 @@
     const i = q('[data-whl-invite]'); if (i) i.onclick = () => { const pid = st.pid; close(); leave(); if (window.TribeInvite) window.TribeInvite.open({}); else if (window.TribeApp && window.TribeApp.openInvite) window.TribeApp.openInvite(); void pid; };
     const on = q('[data-whl-online]'); if (on) on.onclick = () => { const pid = st.pid; close(); leave(); if (window.TribePublish) window.TribePublish.open(pid, 'pages'); };
     const gh = q('#whl-gh'); if (gh && window.TribeGitHubConnect && window.TribeGitHubConnect.chip) window.TribeGitHubConnect.chip(gh, { before: () => { close(); leave(); } });
+    const TC = window.TribeCopy;   // fix/p12-copies: keep, open and show copies (app/ui/tribecopy.js)
+    const sv = q('[data-whl-save]'); if (sv && TC) sv.onclick = () => { close(); leave(); TC.save(); };
+    const ld = q('[data-whl-load]'); if (ld && TC) ld.onclick = () => { close(); leave(); TC.open(); };
+    const sf = q('[data-whl-show]'); if (sf && TC) sf.onclick = () => { const pid = st.pid; close(); leave(); TC.showFriend(pid); };
     const runs = q('[data-whl-runs]'); if (runs) runs.onclick = () => window.TribeStatus && window.TribeStatus.open(runs);
     const srv = q('[data-whl-server]'); if (srv) srv.onclick = () => { close(); leave(); if (window.TribeOwnServer) window.TribeOwnServer.open(); };
     root.querySelectorAll('[data-whl-use]').forEach(b => b.onclick = async () => { b.disabled = true; const r = await resolve(b.dataset.whlUse, 'design'); if (st) { if (r && r.status) st.files = r.status; draw(); } });

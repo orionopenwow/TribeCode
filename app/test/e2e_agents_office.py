@@ -212,7 +212,8 @@ def main():
             # ---------- 5. where your tribe runs ----------
             assert "On this computer" in cp.inner_text(menu(cp, "where"))
             cp.click(menu(cp, "where")); cp.wait_for_selector("#ao-where-sheet .ao-opt", timeout=8000)
-            assert cp.eval_on_selector_all("#ao-where-sheet [data-ao-opt]", "els => els.map(e => e.dataset.aoOpt)") == ["here", "direct", "folder", "cloud"]
+            assert cp.eval_on_selector_all("#ao-where-sheet .ao-opts:not(.ao-keep) [data-ao-opt]", "els => els.map(e => e.dataset.aoOpt)") == ["here", "direct", "folder", "cloud"]
+            assert cp.eval_on_selector_all("#ao-where-sheet .ao-keep [data-ao-opt]", "els => els.map(e => e.dataset.aoOpt)")[:1] == ["keep"], "Keep a copy sits under the four places (fix/p12-copies)"
             assert "Runs here now" in cp.inner_text("#ao-where-sheet [data-ao-opt='here']")
             for w in ("P2P", "host", "sync", "deploy"): assert w not in cp.inner_text("#ao-where-sheet"), w
             cp.click("#ao-where-sheet [data-ao-go='direct']"); cp.wait_for_selector("#os-sheet #os-p2p", timeout=8000)

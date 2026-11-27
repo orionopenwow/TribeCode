@@ -742,6 +742,7 @@ const pinsHub = require('./pins')({ P, base: baseStore, broadcast, bus, getMembe
 const designCanvas = require('./canvas')({ P, base: baseStore, broadcast, perms, nameOf, memberColor: mid => (memberById(mid) || {}).color || '#F26B1D' });   // P1-A: the design canvas (server/canvas.js)   // feat/whiteboard: the shared team board (server/whiteboard.js)
 const designPlans = require('./designplans')({ P, base: baseStore, broadcast, perms });
 const motionStudio = require('./motionstudio')({ P, base: baseStore, broadcast, perms, requests: () => changeReq });
+const tribeCopy = require('./tribecopy')({ P, store, docs, loadTasks: () => loadTasks(), siteDesign, appCreator, motionStudio, tribe: () => tribe, nameOf: id => nameOf(id), slug: s => slug(s), root: baseStore.root, isLocal, saveTribe: t => baseStore.writeJSON('.tribe/tribe.json', t), broadcast: m => broadcast(m) });   // fix/p12-copies: the tribe in one .tribe file
 // feat/cowork-editors: change requests across the creator tools (server/changereq.js). A request is an approval; when it
 // passes the change is applied here as one step and can be undone.
 const changeReq = require('./changereq')({ P, store: baseStore, perms, groupStyle, approvals, bus, broadcast: m => broadcast(m), getMembers: () => members, str, id, tools: {
@@ -1078,6 +1079,7 @@ async function apiInProject(req, res, url) {
   if (a === 'projects' && c === 'versions') return versionsHub.route(req, res, ctx());
   if (a === 'notify') { const h = await pocket.route(req, res, { m, b, c, me, readBody, send, fail }); if (h !== null) return; }
 
+  if (a === 'tribe' && (b === 'copy' || b === 'folder' || b === 'moved')) return tribeCopy.route(req, res, { m, me, url, send, fail, readBody, c: b === 'folder' ? (c === 'open' ? 'folder/open' : 'folder') : b });   // fix/p12-copies: Save on this computer, Send a copy
   // One-click backup of the whole tribe folder (server/backup.js): host only; secrets stay on the host.
   if (a === 'backup' && m === 'GET') {
     if (me.role !== 'host') return fail(res, 403, 'only the host can download a backup');
