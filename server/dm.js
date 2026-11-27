@@ -35,11 +35,13 @@ module.exports = function dm({ store, getMembers, sendTo, broadcast, bus, canSee
   }
 
   // After a member posts: DMs notify the other person, @mentions notify whoever was named.
-  function onPost(ch, me, text) {
+  // A private (end-to-end encrypted) message never puts its words in a notification: only "New message".
+  function onPost(ch, me, text, msg) {
     const p = pair(ch);
     if (p) {
       const other = p.find(x => x !== me.id);
-      bus.notify({ type: 'dm', to: [other], priority: 'high', title: `${me.name} sent you a message`, body: text.slice(0, 160), view: 'chat', ref: ch, from: me.id });
+      if (msg && msg.enc) bus.notify({ type: 'dm', to: [other], priority: 'high', title: `New message from ${me.name}`, body: '', view: 'chat', ref: ch, from: me.id, enc: true });
+      else bus.notify({ type: 'dm', to: [other], priority: 'high', title: `${me.name} sent you a message`, body: text.slice(0, 160), view: 'chat', ref: ch, from: me.id });
       return;
     }
     // @mentions in shared channels are handled by the notification hub (server/notify.js -> pocket.chat).
@@ -69,10 +71,57 @@ module.exports = function dm({ store, getMembers, sendTo, broadcast, bus, canSee
     return true;
   }
 
+  // ---------- private messages: device keys (feat/p12-e2ee) ----------
+  // Each device makes its own P-256 key pair in the browser (app/ui/e2ee.js). Only the PUBLIC half comes here, so the
+  // tribe can encrypt to it. Private keys never leave the device: this file, backups and exports hold no private key.
+  const KEYS = '.tribe/device-keys.json', DEV_RE = /^[A-Za-z0-9_-]{8,40}$/, B64 = /^[A-Za-z0-9+/]+={0,2}$/, MAX_DEV = 8;
+  const allKeys = () => { const k = store.readJSON(KEYS, {}); return k && typeof k === 'object' ? k : {}; };
+  const devicesOf = mid => (allKeys()[mid] || []).filter(d => d && DEV_RE.test(d.d) && typeof d.pub === 'string');
+  const okPub = pub => typeof pub === 'string' && pub.length === 88 && B64.test(pub) && (() => { const b = Buffer.from(pub, 'base64'); return b.length === 65 && b[0] === 4; })();
+  function addKey(me, d, pub) {
+    if (!DEV_RE.test(String(d || '')) || !okPub(pub)) return null;
+    const all = allKeys(), list = (all[me.id] || []).filter(x => x && x.d !== d);
+    list.push({ d, pub, at: new Date().toISOString() });
+    all[me.id] = list.slice(-32); store.writeJSON(KEYS, all);   // older devices stay listed so their old messages still open
+    return all[me.id];
+  }
+  // New messages are sealed only to a person's latest devices.
+  const activeOf = mid => devicesOf(mid).slice(-MAX_DEV);
+  function removeKey(me, d) { const all = allKeys(); all[me.id] = (all[me.id] || []).filter(x => x && x.d !== d); store.writeJSON(KEYS, all); }
+  // Both people must be real people (an AI helper reads its DMs, so those stay plain and say so).
+  const humans = ch => { const p = pair(ch); return p && p.every(id => { const x = member(id); return x && x.role !== 'agent'; }) ? p : null; };
+  // Shape check for a private message. The server can't read it; it only makes sure the sealed copies are for the two
+  // people's registered devices, so nobody can slip a copy to a stranger's key.
+  function cleanEnc(ch, me, enc) {
+    const p = humans(ch); if (!p || !p.includes(me.id) || !enc || typeof enc !== 'object') return null;
+    const s = (v, max) => typeof v === 'string' && v.length <= max && B64.test(v) ? v : null;
+    if (enc.v !== 1 || !DEV_RE.test(String(enc.from || '')) || !activeOf(me.id).some(x => x.d === enc.from)) return null;
+    const iv = s(enc.iv, 24), ct = s(enc.ct, 16000); if (!iv || !ct || !Array.isArray(enc.to) || !enc.to.length || enc.to.length > 2 * MAX_DEV) return null;
+    const to = [];
+    for (const t of enc.to) {
+      if (!t || !p.includes(t.m) || !activeOf(t.m).some(x => x.d === t.d)) return null;
+      const w = s(t.w, 120); if (!w) return null;
+      to.push({ m: t.m, d: t.d, w });
+    }
+    return { v: 1, from: enc.from, iv, ct, to };
+  }
+  // GET /api/keys?ids=a,b -> { keys: { a: [{ d, pub, at }] } }   POST /api/keys { d, pub }   DELETE /api/keys/<d>
+  async function keysRoute(req, res, { m, me, b, url, readBody, send, fail }) {
+    if (m === 'GET') {
+      const ids = String(url.searchParams.get('ids') || '').split(',').filter(Boolean).slice(0, 20), out = {};
+      for (const i of ids) if (member(i)) { const all = devicesOf(i), act = new Set(activeOf(i).map(x => x.d)); out[i] = all.map(({ d, pub, at }) => ({ d, pub, at, active: act.has(d) })); }
+      return send(res, 200, { keys: out });
+    }
+    if (me.role === 'agent') return fail(res, 403, 'AI helpers do not hold private-message keys');
+    if (m === 'POST') { const body = await readBody(req), list = addKey(me, body.d, body.pub); return list ? send(res, 200, { ok: true, devices: list.length }) : fail(res, 400, 'bad key'); }
+    if (m === 'DELETE' && b) { removeKey(me, String(b)); return send(res, 200, { ok: true }); }
+    return fail(res, 405, 'method not allowed');
+  }
+
   function route(req, res, { m, me, send, fail }) {
     if (m !== 'GET') return fail(res, 405, 'method not allowed');
     return send(res, 200, { conversations: list(me) });
   }
 
-  return { isDm, pair, canRead, deliver, onPost, handle, route, nameFor, member, list };   // list: feat/p10-home (Home's Messages)
+  return { isDm, pair, canRead, deliver, onPost, handle, route, nameFor, member, list, keysRoute, cleanEnc, humans, devicesOf };   // list: feat/p10-home (Home's Messages)
 };

@@ -1225,6 +1225,7 @@ async function apiInProject(req, res, url) {
   }
 
   if (a === 'dms') return dms.route(req, res, { m, me, send, fail });
+  if (a === 'keys') return dms.keysRoute(req, res, { m, me, b, url, readBody, send, fail });   // feat/p12-e2ee: device public keys
   if (a === 'chat' && b) {
     if (b === 'general') b = P.channelOf(P.current());   // #general is the current project's channel
     const chProject = P.byChannel(b); if (chProject && !P.canSee(me, chProject.id)) return fail(res, 403, 'you are not in that project');
@@ -1244,7 +1245,14 @@ async function apiInProject(req, res, url) {
     if (m === 'POST') {
       if (me.role === 'spectator') return fail(res, 403, 'spectators can read but not post');
       const muted = perms.muteBlock(me); if (muted) return fail(res, 403, muted);   // feat/roles
-      const body = await readBody(req); const text = str(body.text, 4000); if (!text) return fail(res, 400, 'empty message');
+      const body = await readBody(req);
+      if (body.enc && dms.isDm(b)) {   // feat/p12-e2ee: a private message arrives sealed; the host stores only that
+        const enc = dms.cleanEnc(b, me, body.enc); if (!enc) return fail(res, 400, 'this private message could not be checked');
+        const cid = cidOf(body), dup = !!(cid.cid && cidSeen.has(`${b}:${me.id}:${cid.cid}`));
+        const msg = postChat(b, me.id, '', { ...cid, enc }); if (!dup) dms.onPost(b, me, '', msg);
+        return send(res, 200, { message: msg });
+      }
+      const text = str(body.text, 4000); if (!text) return fail(res, 400, 'empty message');
       const voted = chatx.command(b, me, text); if (voted) return send(res, 200, { message: voted });   // /vote posts a vote card
       const cid = cidOf(body), dup = !!(cid.cid && cidSeen.has(`${b}:${me.id}:${cid.cid}`));
       const msg = postChat(b, me.id, text, cid); if (!dup) chatx.onPost(b, me, text, msg);   // commands, notifications, @brain, vote hints (not twice for a resend)
