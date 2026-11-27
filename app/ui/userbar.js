@@ -33,7 +33,7 @@
     } else {
       // p10: the one place that says where the tribe runs and whether you're connected (tribestatus.js); tap for what it means
       const D = window.TribeStatus && window.TribeStatus.now();
-      if (D) { st_.textContent = D.label; st_.dataset.tone = D.tone; st_.classList.add('ub-where', 'ts-line'); st_.setAttribute('role', 'button'); st_.tabIndex = 0; st_.title = D.sub; }
+      if (D) { const L = window.TribeStatus.copyLine && D.tone !== 'quiet' ? window.TribeStatus.copyLine() : { n: 0 }; st_.textContent = L.n ? `${D.label} · ${(window.TribeI18n && window.TribeI18n.t ? window.TribeI18n.t('{n} to send', '{n} to send') : '{n} to send').split('{n}').join(L.n)}` : D.label; st_.dataset.toSend = L.n; st_.dataset.tone = D.tone; st_.classList.add('ub-where', 'ts-line'); st_.setAttribute('role', 'button'); st_.tabIndex = 0; st_.title = D.sub; }
       else {
         st_.textContent = on ? (m && m.role === 'host' ? 'On this computer' : 'Online') : (C && C.hasToken && C.hasToken() && !(O && O.asleep && O.asleep()) ? 'Reconnecting…' : 'Just you for now');
         st_.classList.remove('ub-where'); st_.removeAttribute('role'); st_.removeAttribute('tabindex'); st_.title = '';
