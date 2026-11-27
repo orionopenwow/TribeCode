@@ -241,7 +241,8 @@
   function folderEdit(m) {
     if (!m || m.type !== 'folder-change' || !m.outside || !m.project || !hereHost()) return;
     const all = store.get(FKEY(), {}) || {}, set = new Set(all[m.project] || []);
-    (Array.isArray(m.files) ? m.files : []).slice(0, 200).forEach(f => set.add(String(f).slice(0, 300)));
+    (Array.isArray(m.files) ? m.files : []).slice(0, 200).filter(f => !/^(AGENTS|CLAUDE)\.md$|\.tribe$/i.test(String(f))).forEach(f => set.add(String(f).slice(0, 300)));   // TribeCode's own notes for AI helpers and the .tribe copy aren't your changes
+    if (!set.size) return;
     all[m.project] = [...set].slice(-300); store.set(FKEY(), all); emit('folder', { pid: m.project, n: set.size });
   }
   const folderEdits = () => store.get(FKEY(), {}) || {};
