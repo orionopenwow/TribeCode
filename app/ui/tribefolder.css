@@ -1,0 +1,9 @@
+/* The tribe's folder on the Desktop (p13, app/ui/tribefolder.js): one calm line, flat matte, tokens only */
+.tdf { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; margin: 12px 0 0; padding: 10px 12px; border: 1px solid var(--border); border-radius: var(--r-sm); background: var(--surface-2); color: var(--muted); font-size: 13px; line-height: 1.5; }
+.tdf[hidden] { display: none; }
+.tdf > svg { flex: 0 0 auto; color: var(--live); }
+.tdf-t { flex: 1 1 200px; min-width: 0; }
+.tdf-t b { color: var(--text); font-weight: 600; }
+.tdf-p { display: block; font-family: var(--mono); font-size: 12px; color: var(--muted); overflow-wrap: anywhere; }
+.tdf .linkish { font-size: 13px; }
+@media (max-width: 640px) { .tdf { margin-top: 8px; padding: 8px 10px; } }

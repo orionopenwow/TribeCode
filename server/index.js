@@ -275,6 +275,7 @@ function broadcast(msg, except) {
   }
   if (dashboard) dashboard.onEvent(type, pid);   // the Global Hub recomputes for whoever can see pid (server/hub.js)
   if (sense) sense.onEvent(type, pid);
+  if (tribeFolder) tribeFolder.note(msg);   // p13: the <Tribe>.tribe copy in the Desktop folder follows saves
   if (copiesLog && pid) copiesLog.note(msg.project ? msg : { ...msg, project: pid });   // p12: the short history by the tribe status   // feat/project-sense: recompute what the project is (debounced, server/sense.js)
   const asGeneral = typeof msg.channel === 'string' && pid && msg.channel === P.channelOf(pid) && msg.channel !== 'general' ? { ...msg, channel: 'general' } : msg;
   for (const [mid, o] of online) {
@@ -295,6 +296,7 @@ let checksHub = null;   // feat/build-feeds: the host's check runner (server/che
 let workFeed = null;   // feat/work-v2: this tribe's signed gig feed (server/workfeed.js, made below)
 let profiles = null;   // feat/profiles: avatar, name color, status, presence (server/profiles.js, made below)
 let moderation = null;   // feat/appstore: report, block, word filter (server/moderation.js, made below)
+let tribeFolder = null;   // p13: the tribe's folder on the Desktop (server/tribefolder.js, made below)
 let copiesLog = null;   // p12: who sent what (server/copies.js, made below)
 let sense = null;   // feat/project-sense (server/sense.js, made below)
 let buildKit = null;   // server/buildkit.js (made below)
@@ -767,7 +769,9 @@ aiGuides = require('./aiguides')({ P, base: baseStore, perms, site: siteDesign, 
 designFiles.after(pid => aiGuides.queueFolder(pid));
 designFiles.after(pid => { try { syncHub.onSave(pid); } catch {} });   // p12: the GitHub backup takes the design files a moment after each save (when it is on)
 copiesLog = require('./copies')({ base: baseStore, P, nameOf });
-{ const make = P.create; P.create = (...a) => { const p = make(...a); try { if (p && p.id) aiGuides.queueFolder(p.id, 2500); } catch {} return p; }; }
+tribeFolder = require('./tribefolder')({ P, baseStore, tribe, folderHome, tribeCopy, members: () => members, dataDir: DIR, cloud: CLOUD, log: m => console.log('  ' + m) });   // p13: Desktop/<Tribe>/ with a folder per project
+{ const make = P.create; P.create = (...a) => { const p = make(...a); try { if (p && p.id) aiGuides.queueFolder(p.id, 2500); } catch {} try { if (p && p.id) tribeFolder.onProject(p.id); } catch {} return p; }; }
+if (members.length && tribeFolder.state().path) tribeFolder.wireAll().catch(() => {});   // a project made while the server was off
 // MCP calls run in the agent's project, or in `project` when the tool call names one it can see.
 function agentProject(me) { return P.pick(me, null, me.project || (online.get(me.owner) || {}).project); }
 function mcpScope(me, wanted, fn) {
@@ -971,6 +975,7 @@ async function apiInProject(req, res, url) {
     if (body.tribe) { tribe.name = str(body.tribe, 48) || tribe.name; store.writeJSON('.tribe/tribe.json', tribe); }
     const out = newMember({ name, color: body.color, role: 'host' });
     postChat('general', 'tribecode', `${name} started the tribe 🔥`);
+    tribeFolder.onTribeMade();   // p13: its folder on the Desktop (server/tribefolder.js)
     return send(res, 200, { member: publicMember(out.member), token: out.token, tribe });
   }
 
@@ -1075,7 +1080,8 @@ async function apiInProject(req, res, url) {
   if (a === 'oauth') { const h = await oauth.route(req, res, { m, b, c, me, url, readBody, send, fail }); if (h !== null) return; }   // Sign in with Discord/GitHub/Google (server/oauth.js)
   if (a === 'site-library' && parts[2] === 'thumb.png') return siteLib.route(req, res, ctx());   // template thumbnails are public (gallery <img> tags carry no key)
   if (a === 'github' && b === 'detect' && m === 'GET' && !me) { const h = await githubAuth.route(req, res, ctx()); if (h !== null) return; }   // feat/tasks-company: setup on the host computer, before a tribe exists
-  if (a === 'folders') return folderHome.route(req, res, ctx());   // feat/folder-sync: the folder picker (host computer only, server/folderhome.js)
+  if (a === 'folders') return folderHome.route(req, res, ctx());
+  if (a === 'tribe' && b === 'desktop' && c === 'save-copy') return tribeFolder.route(req, res, { ...ctx(), isLocal });   // p13: a friend's copy as a folder on their own Desktop (this computer only)   // feat/folder-sync: the folder picker (host computer only, server/folderhome.js)
   if (a === 'work' && b === 'feed.json' && m === 'GET' && !me) return workFeed.route(req, res, ctx());   // feat/build-feeds: the gig feed, readable without sign-in only when the host published it openly
   if (!need()) return;
   if (a === 'projects' && c === 'sync') return syncHub.route(req, res, ctx());   // feat/folder-sync: GitHub sync (server/sync.js)
@@ -1083,6 +1089,7 @@ async function apiInProject(req, res, url) {
   if (a === 'projects' && c === 'versions') return versionsHub.route(req, res, ctx());
   if (a === 'notify') { const h = await pocket.route(req, res, { m, b, c, me, readBody, send, fail }); if (h !== null) return; }
 
+  if (a === 'tribe' && b === 'desktop') return tribeFolder.route(req, res, { ...ctx(), isLocal });   // p13: the tribe's folder on the Desktop (server/tribefolder.js)
   if (a === 'tribe' && (b === 'copy' || b === 'folder' || b === 'moved')) return tribeCopy.route(req, res, { m, me, url, send, fail, readBody, c: b === 'folder' ? (c === 'open' ? 'folder/open' : 'folder') : b });   // fix/p12-copies: Save on this computer, Send a copy
   // One-click backup of the whole tribe folder (server/backup.js): host only; secrets stay on the host.
   if (a === 'backup' && m === 'GET') {
@@ -1313,7 +1320,7 @@ async function apiInProject(req, res, url) {
   if (a === 'flint' && b === 'model') return flintModel.route(req, res, ctx());   // feat/build-feeds: where the browser gets Flint's small local model (server/flintmodel.js)
   if (a === 'flint' && b === 'kb') return flintKB.route(req, res, ctx());   // flint-local: how-to answers from the docs, no model (server/flintkb.js)
   if (a === 'flint' && ['memory', 'skills', 'vocab', 'draft', 'learned'].includes(b)) return flintMem.route(req, res, ctx());   // v0.27.1; flint-local: phrases people taught Flint
-  if (a === 'import' && b === 'solo') return soloImport.route(req, res, { ...ctx(), isBoss: x => x.role === 'host' || perms.can(x, 'project.create') });   // a phone tribe moves to this host (server/soloimport.js)
+  if (a === 'import' && b === 'solo') { const r = await soloImport.route(req, res, { ...ctx(), isBoss: x => x.role === 'host' || perms.can(x, 'project.create') }); if (res.statusCode === 200) tribeFolder.onImported(); return r; }   // p13: a tribe moved here gets its Desktop folder   // a phone tribe moves to this host (server/soloimport.js)
   if (a === 'flint') return flint.route(req, res, ctx());   // feat/flint: GET status, POST /ask streams the local model's reply
   if (a === 'look') return look.route(req, res, ctx());   // feat/customize: Settings › Look + the project menu's Customize (server/look.js)
   if (a === 'llm') return llm.route(req, res, ctx());   // feat/any-llm: Settings › Flint's brain (host sets provider + key; key never leaves the host)
