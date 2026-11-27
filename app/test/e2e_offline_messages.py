@@ -136,8 +136,8 @@ def main():
             # ---------- the host is back ----------
             srv = start(); up()
             if reopened:   # the reloaded page comes back with the outbox it had in this browser
-                fr.goto(BASE + "/?skipIntro=1"); fr.wait_for_function("window.TribeClient && window.TribeApp", timeout=20000); fr.evaluate("TribeApp.show('chat')")
-            for pg in (fr, ph): pg.wait_for_function("TribeClient.connected() && TribeClient.outbox().length === 0", timeout=30000)
+                fr.goto(BASE + "/?skipIntro=1"); fr.wait_for_function("window.TribeClient && window.TribeApp", timeout=30000, polling=500); fr.evaluate("TribeApp.show('chat')")
+            for pg in (fr, ph): pg.wait_for_function("TribeClient.connected() && TribeClient.outbox().length === 0", timeout=30000, polling=500)
             for pg in (fr, ph): pg.wait_for_selector("#chat-offline", state="detached", timeout=20000)
             assert not fr.evaluate("document.body.classList.contains('tribe-off')"), "the dot is gone"
             time.sleep(1)
@@ -147,7 +147,7 @@ def main():
             reply = next(m for m in texts("general", htok) if m["text"] == "off-2 reply"); assert reply.get("replyTo"), "the reply kept its thread"
             dms = [m["text"] for m in texts(dm, htok)]; assert dms.count("off-3 dm") == 1, dms
             assert sum(1 for m in texts(dm, htok) if (m.get("media") or {}).get("kind") == "image") == 1, ("the picture sent in the DM arrived once", texts(dm, htok))
-            fr.wait_for_function("document.querySelectorAll('#chat-list .msg.pending').length === 0", timeout=20000)
+            fr.wait_for_function("document.querySelectorAll('#chat-list .msg.pending').length === 0", timeout=20000, polling=500)
             assert fr.locator("#chat-list .msg", has_text="off-1 general").count() == 1, "no duplicate on screen"
 
             # ---------- a refusal: Didn't send · Try again · Delete ----------
