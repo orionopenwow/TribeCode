@@ -34,10 +34,12 @@ module.exports = function rooms({ checkFolder = null, watchFolder = null, P, W, 
   // no files, no design, no tasks, docs or messages, nobody in the tribe but its creator and no AI helper. Home treats it
   // as "no project yet" (the one-sentence start), and that sentence fills this project instead of making a second one.
   const hasFiles = dir => { try { return fs.readdirSync(dir).some(n => !n.startsWith('.')); } catch { return false; } };
-  function untouched(p) {
+  // fix/p12-copies: { anyMembers } asks only about the project's contents (a tribe moved here from a browser joins as
+  // a second person first, but the built-in first project is still empty and should take the moved one)
+  function untouched(p, { anyMembers = false } = {}) {
     if (!p || p.id !== P.defaultId() || p.repo || p.folder || p.workspace || p.image || p.bio) return false;
     const ms = getMembers();
-    if (ms.some(m => m.role === 'agent') || ms.length > 1 || Object.keys(p.members || {}).length > 1) return false;
+    if (!anyMembers && (ms.some(m => m.role === 'agent') || ms.length > 1 || Object.keys(p.members || {}).length > 1)) return false;
     return P.inProject(p.id, () => {
       let v = ''; try { v = fs.readFileSync(store.p('VISION.md'), 'utf8'); } catch {}
       if (!/Replace these lines together/.test(v) && v.replace(/^#.*$/gm, '').trim()) return false;
@@ -250,5 +252,5 @@ module.exports = function rooms({ checkFolder = null, watchFolder = null, P, W, 
     return null;
   }
 
-  return { route, listFor, counts, pulse, requests, create, pushProjects };
+  return { route, listFor, counts, pulse, requests, create, pushProjects, untouched };
 };

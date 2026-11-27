@@ -27,8 +27,17 @@ module.exports = function soloImport({ P, docs, postChat, store, str, saveTask, 
     const list = Array.isArray(body && body.projects) ? body.projects.slice(0, LIM.projects) : [];
     if (!list.length) { const e = new Error('nothing to bring over'); e.code = 400; throw e; }
     const out = [];
+    // fix/p12-copies: the server's own first project, still empty, takes the first moved project, so moving a tribe from
+    // a browser to this computer leaves one project, not an empty "My Tribe" beside the real one.
+    const first = P.all().find(x => x.id === P.defaultId());
+    let fill = !!(first && rooms && rooms.untouched && rooms.untouched(first, { anyMembers: true }));
     for (const sp of list) {
-      const p = P.create({ name: str(sp.name, 48) || 'From my phone', emoji: str(sp.emoji, 4), color: sp.color, by: me.id });
+      let p;
+      if (fill) {
+        fill = false;
+        p = P.update(first.id, { name: str(sp.name, 48) || first.name, emoji: str(sp.emoji, 4), color: sp.color });
+        if (P.addMember) P.addMember(p.id, me.id, 'host');
+      } else p = P.create({ name: str(sp.name, 48) || 'From my phone', emoji: str(sp.emoji, 4), color: sp.color, by: me.id });
       if (sp.bio) P.update(p.id, { bio: str(sp.bio, 200) });
       const n = { id: p.id, name: p.name, tasks: 0, docs: 0, chat: 0 };
       P.inProject(p.id, () => {
