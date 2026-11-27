@@ -22,23 +22,23 @@
   function refresh() { const on = hosting(); pill.classList.toggle('hidden', !on); if (!on) close(); }
   function close() { if (pop) { pop.remove(); pop = null; pill.setAttribute('aria-expanded', 'false'); document.removeEventListener('click', outside, true); } }
   const outside = e => { if (pop && !pop.contains(e.target) && !pill.contains(e.target)) close(); };
-  const reach = () => { const l = (health && health.lan) || [], k = (l[0] || {}).kind; return k === 'public' ? ['Anyone with a link', 'public https address'] : k === 'tailscale' ? ['Your Tailscale network', 'tailnet address'] : l.length ? ['People on your Wi-Fi', 'same network'] : ['Only this computer', 'local']; };
+  const reach = () => { const l = (health && health.lan) || [], k = (l[0] || {}).kind; return k === 'public' ? ['Internet link', 'public https address'] : k === 'tailscale' ? ['Private link (Tailscale)', 'tailnet address'] : l.length ? ['Same Wi-Fi', 'same network'] : ['Only this computer', 'local']; };
   async function open() {
     if (pop) return close();
     try { health = await C().api('/health'); } catch {}
     const tribe = (C().state().tribe || {}).name || 'your tribe', [who, kind] = reach(), addr = ((health && health.lan) || [])[0];
     const n = (C().state().members || []).filter(m => m.online && m.role !== 'agent').length;
-    pop = document.createElement('div'); pop.className = 'host-pop'; pop.id = 'host-pop'; pop.setAttribute('role', 'dialog'); pop.setAttribute('aria-label', 'Hosting');
-    pop.innerHTML = `<header><span class="hp-dot" aria-hidden="true"></span><div><span class="eyebrow">Hosting</span><b>${esc(tribe)} runs on this computer</b></div></header>
+    pop = document.createElement('div'); pop.className = 'host-pop'; pop.id = 'host-pop'; pop.setAttribute('role', 'dialog'); pop.setAttribute('aria-label', 'On this computer');
+    pop.innerHTML = `<header><span class="hp-dot" aria-hidden="true"></span><div><span class="eyebrow">On this computer</span><b>${esc(tribe)} meets on this computer</b></div></header>
       <div class="hpo-rows">
         <div class="hpo-row"><span>Who can reach you</span><b>${esc(who)}</b></div>
         <div class="hpo-row"><span>Online now</span><b>${n} ${n === 1 ? 'person' : 'people'}</b></div>
         ${addr ? `<div class="hpo-row"><span>Address</span><code title="${esc(addr.url)}">${esc(addr.url.replace(/^https?:\/\//, ''))}</code><button class="hpo-copy" id="hpo-copy" aria-label="Copy address">${ico('i-link')}</button></div>` : ''}
-        ${desktop() ? `<div class="hpo-row hpo-switch"><span>Host this tribe</span><button class="hpo-sw" id="hpo-sw" role="switch" aria-checked="true" aria-label="Host this tribe"><i></i></button></div>` : ''}
+        ${desktop() ? `<div class="hpo-row hpo-switch"><span>Keep the tribe on this computer</span><button class="hpo-sw" id="hpo-sw" role="switch" aria-checked="true" aria-label="Keep the tribe on this computer"><i></i></button></div>` : ''}
       </div>
       <div class="hpo-acts">
         <button id="hpo-invite">${ico('i-users')}<span>Invite a friend</span></button>
-        ${kind !== 'public https address' ? `<button id="hpo-share">${ico('i-net')}<span>Share beyond my Wi-Fi</span></button>` : ''}
+        <button id="hpo-share">${ico('i-net')}<span>How we're connected</span></button>
         <button id="hpo-settings">${ico('i-gear')}<span>Settings for this computer</span></button>
       </div>`;
     document.body.appendChild(pop);
@@ -47,7 +47,7 @@
     const on = (id, f) => { const b = pop.querySelector(id); if (b) b.onclick = f; };
     on('#hpo-copy', async () => { try { await navigator.clipboard.writeText(addr.url); A().toast('Address copied.'); } catch {} });
     on('#hpo-invite', () => { close(); window.TribeFlow && window.TribeFlow.instant ? window.TribeFlow.instant() : A().openInvite(); });
-    on('#hpo-share', () => { close(); A().openInvite(); });
+    on('#hpo-share', () => { close(); if (window.TribeNetMap) window.TribeNetMap.open(); else A().openInvite(); });   // p13: was a second invite button
     on('#hpo-settings', () => { close(); window.TribeSettings && window.TribeSettings.open('admin', 'set-host'); });   // feat/settings-tabs
     on('#hpo-sw', async () => { close(); await A().setHosting(false); refresh(); });
     setTimeout(() => document.addEventListener('click', outside, true), 0);

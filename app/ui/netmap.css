@@ -1,0 +1,44 @@
+/* Your network (p13, netmap.js): a flat diagram, 1px lines, luminance steps only. */
+.nm { display: flex; flex-direction: column; gap: 16px; }
+.nm-map { position: relative; height: 320px; border: 1px solid var(--edge); border-radius: var(--r-card); background: var(--canvas); overflow: hidden; }
+.nm-lines { position: absolute; inset: 0; width: 100%; height: 100%; }
+.nm-ln { stroke: var(--edge); stroke-width: 1.5; fill: none; }
+.nm-ln[data-k="here"], .nm-ln[data-k="wifi"] { stroke: var(--live); }
+.nm-ln[data-k="tailscale"] { stroke: var(--peer); stroke-dasharray: 6 4; }
+.nm-ln[data-k="internet"] { stroke: var(--brand); }
+.nm-ln[data-k="copy"] { stroke: var(--muted); stroke-dasharray: 2 4; }
+.nm-ln[data-k="waiting"] { stroke: var(--edge); stroke-dasharray: 2 4; }
+.nm-hub { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); display: flex; flex-direction: column; align-items: center; gap: 2px;
+  min-width: 128px; max-width: 46%; padding: 10px 12px; background: var(--raised, var(--surface-2)); border: 1px solid var(--edge); border-radius: var(--r-card); text-align: center; }
+.nm-hub-ico { color: var(--live); display: grid; place-items: center; }
+.nm-hub[data-off="1"] .nm-hub-ico { color: var(--muted); }
+.nm-hub b { color: var(--text); font-size: 13.5px; line-height: 1.25; overflow-wrap: anywhere; }
+.nm-hub small { font-family: var(--mono); font-size: 10.5px; letter-spacing: .06em; text-transform: uppercase; color: var(--faint, var(--muted)); }
+.nm-node { position: absolute; transform: translate(-50%, -50%); display: flex; flex-direction: column; align-items: center; gap: 1px; width: 112px; text-align: center; pointer-events: none; }
+.nm-face { width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; background: var(--surface-2); color: var(--canvas); font-weight: 700; font-size: 12.5px; border: 2px solid var(--canvas); margin-bottom: 3px; }
+.nm-node[data-k="copy"] .nm-face, .nm-node[data-k="waiting"] .nm-face { opacity: .55; }
+.nm-more .nm-face { color: var(--text); }
+.nm-name { color: var(--text); font-size: 12.5px; font-weight: 600; line-height: 1.2; background: var(--canvas); padding: 0 4px; border-radius: 4px; }
+.nm-lab { font-size: 11px; line-height: 1.25; color: var(--muted); background: var(--canvas); padding: 0 4px; border-radius: 4px; }
+.nm-node[data-k="wifi"] .nm-lab, .nm-node[data-k="here"] .nm-lab { color: var(--live); }
+.nm-node[data-k="tailscale"] .nm-lab { color: var(--peer); }
+.nm-node[data-k="internet"] .nm-lab { color: var(--text); }
+.nm-key { list-style: none; margin: -6px 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 12px; color: var(--muted); }
+.nm-key li { display: flex; align-items: center; gap: 6px; }
+.nm-key i { width: 18px; height: 0; border-top: 2px solid var(--edge); }
+.nm-key [data-k="here"] i, .nm-key [data-k="wifi"] i { border-color: var(--live); }
+.nm-key [data-k="tailscale"] i { border-top-style: dashed; border-color: var(--peer); }
+.nm-key [data-k="internet"] i { border-color: var(--brand); }
+.nm-key [data-k="copy"] i, .nm-key [data-k="waiting"] i { border-top-style: dotted; border-color: var(--muted); }
+.nm-say { max-width: 65ch; }
+.nm-say p { margin: 0 0 8px; line-height: 1.6; color: var(--text); font-size: 14px; }
+.nm-say p + p { color: var(--muted); }
+.nm-off, .nm-note { display: flex; align-items: center; gap: 8px; margin: 0; padding: 10px 12px; border: 1px solid var(--edge); border-radius: var(--r-ctl); background: var(--surface-2); color: var(--text); font-size: 13.5px; }
+.nm-acts { display: flex; flex-wrap: wrap; gap: 8px; }
+.nm-acts:empty { display: none; }
+@media (max-width: 520px) {
+  .nm-map { height: 300px; }
+  .nm-node { width: 92px; }
+  .nm-hub { min-width: 104px; padding: 8px; }
+  .nm-acts .btn { flex: 1 1 100%; min-height: 44px; }
+}

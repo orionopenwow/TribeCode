@@ -324,10 +324,11 @@
     if (document.getElementById('jw-card')) return;
     const me = C.state().me || {}, p = window.TribeProjects && window.TribeProjects.cur ? window.TribeProjects.cur() : null;
     const where = (p && p.name) || (C.state().tribe && C.state().tribe.name) || 'the tribe';
+    let by = ''; try { by = localStorage.getItem('tribecode.invitedBy') || ''; localStorage.removeItem('tribecode.invitedBy'); } catch {}   // p13: name who invited you
     const phone = matchMedia('(max-width: 820px)').matches;
     const el = document.createElement('div'); el.id = 'jw-card'; el.className = 'jw-card'; el.setAttribute('role', 'dialog'); el.setAttribute('aria-label', "You're in");
     el.innerHTML = `<button class="jw-x" id="jw-x" aria-label="Close">✕</button><div class="jw-e" aria-hidden="true">🎉</div>
-      <div class="jw-t"><b>You're in ${esc(where)}!</b><span>Say hi so everyone knows you're here.</span></div>
+      <div class="jw-t"><b>You're in ${esc(where)}!</b><span>${by ? `<em class="jw-by" id="jw-by">${esc(by.split(' ')[0])} invited you.</em> ` : ''}Say hi so everyone knows you're here.</span></div>
       <div class="jw-acts"><button class="btn primary" id="jw-hi">👋 Say hi</button>${phone ? '' : '<button class="btn" id="jw-ai">🔌 Connect my AI</button>'}</div>`;
     document.body.appendChild(el);
     const close = () => el.remove();
@@ -465,10 +466,12 @@
     if (!inv) return toast('Paste the full invite link, e.g. http://host:4747/join/abc12');
     if (location.protocol.startsWith('http') && !/(^|\.)tauri\.localhost$/i.test(location.hostname) && inv.server !== location.origin) { location.href = `${inv.server}/join/${inv.code}`; return; }
     const body = $('#invite-body'); $('#invite-modal').classList.remove('hidden');
-    body.innerHTML = '<h2>Checking invite…</h2>';
+    body.innerHTML = '<h2>Checking the link…</h2>';
     let info;
-    try { const r = await fetch(`${inv.server}/api/invites/${inv.code}`); info = await r.json(); if (!r.ok) throw new Error(info.error); }
-    catch (e) { body.innerHTML = `<h2>This invite doesn't work</h2><p class="lead">${esc(e.message === 'invite expired' ? 'It has expired. Ask your friend for a fresh link.' : "Couldn't reach the tribe. Check the link, and that you're on the same network or Tailscale.")}</p><div class="modal-foot"><button class="btn" data-close>Close</button></div>`; body.querySelector('[data-close]').onclick = closeInvite; return; }
+    try { const r = await fetch(`${inv.server}/api/invites/${inv.code}`); info = await r.json().catch(() => ({})); if (!r.ok) throw Object.assign(new Error(info.error || ''), { status: r.status }); }
+    catch (e) {   // p13: say which it is (expired, turned off, or the tribe's computer is off), in the same words as the join page
+      const off = !e.status || e.status >= 500;
+      body.innerHTML = `<h2>${esc(off ? "This tribe's computer is off right now" : e.status === 410 ? 'This link has expired' : e.status === 429 ? 'Too many tries' : "This link doesn't work")}</h2><p class="lead">${esc(off ? "Try again when it's back. If your friend is somewhere else, they may need to turn on the internet link." : e.status === 429 ? 'Wait a minute, then try again.' : 'Ask your friend for a new one.')}</p><div class="modal-foot"><button class="btn" data-close>Close</button></div>`; body.querySelector('[data-close]').onclick = closeInvite; return; }
     const st = S.get(), current = C.state().tribe;
     body.innerHTML = `<h2>Join ${esc(info.tribe)}</h2><p class="lead">${esc(info.invitedBy)} invited you${info.role === 'spectator' ? ' to watch' : ''}. No account needed.</p>
       ${current && current.name !== info.tribe ? `<p class="faint" style="font-size:12.5px;margin-bottom:12px">You'll switch from ${esc(current.name)}. You can rejoin it later with its link.</p>` : ''}
@@ -483,7 +486,8 @@
         const r = await fetch(`${inv.server}/api/join`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ code: inv.code, name, color: st.color }) });
         const d = await r.json(); if (!r.ok) throw new Error(d.error);
         S.set({ name, server: { url: inv.server, token: d.token }, hosting: false });
-        closeInvite(); C.connect(); refresh(); toast(`Welcome to ${info.tribe}!`);
+        try { localStorage.setItem('tribecode.afterJoin', '1'); if (d.invitedBy) localStorage.setItem('tribecode.invitedBy', d.invitedBy); if (d.project) localStorage.setItem('tribecode.project:' + inv.server, d.project); } catch {}   // p13: land on the dashboard with the welcome that names who invited you
+        closeInvite(); C.connect(); refresh();
       } catch (e) { toast(e.message); $('#jn-go').disabled = false; }
     };
   }
@@ -848,5 +852,5 @@
   // feat/newcomer-start: unless the only project is the server's own blank first one (newcomer.js); then Home with the sentence stays
   C.on('hello', () => { if (autoHub && current === 'hub') { const N = window.TribeNewcomer; if (N && N.live()) N.whenKnown(b => { if (!b && current === 'hub') show('home'); }); else show('home'); } autoHub = false; });
   setTimeout(iosHint, 1500);
-  Object.assign(window.TribeApp, { sendQueued, pendingBubble, show, hostHere, hostProblem, startFirst, fresh: () => !!window.__tribeFresh && !C.hasToken(), setHosting, stopHost, view: () => current, reloadChat: loadChat, openInvite, joinOrHost, joinLink, parseInvite, connectClaude, refreshRoom: () => renderRoom(C.state().members) });
+  Object.assign(window.TribeApp, { sendQueued, pendingBubble, show, hostHere, hostProblem, startFirst, fresh: () => !!window.__tribeFresh && !C.hasToken(), setHosting, stopHost, view: () => current, reloadChat: loadChat, openInvite, joinOrHost, joinLink, parseInvite, joinWelcome, connectClaude, refreshRoom: () => renderRoom(C.state().members) });
 })();

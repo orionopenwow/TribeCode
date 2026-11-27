@@ -767,6 +767,9 @@ aiGuides = require('./aiguides')({ P, base: baseStore, perms, site: siteDesign, 
 designFiles.after(pid => aiGuides.queueFolder(pid));
 designFiles.after(pid => { try { syncHub.onSave(pid); } catch {} });   // p12: the GitHub backup takes the design files a moment after each save (when it is on)
 copiesLog = require('./copies')({ base: baseStore, P, nameOf });
+const netHub = require('./network')({ base: baseStore, P, getMembers: () => members, memberById, nameOf, publicMember, presenceFor, isOnline: mid => online.has(mid), perms, bus, sendTo, postChat,   // p13: how we're connected + invites from the friends list
+  saveMembers, pushPresence, pushProjects: () => rooms.pushProjects(), tribe, share, lanUrls, cloud: !!CLOUD, id,
+  backupOn: me => P.visibleTo(me).some(p => { try { const st = syncHub.load(p.id).settings; return !!st.repo && st.mode === 'auto' && !st.paused; } catch { return false; } }) });
 { const make = P.create; P.create = (...a) => { const p = make(...a); try { if (p && p.id) aiGuides.queueFolder(p.id, 2500); } catch {} return p; }; }
 // MCP calls run in the agent's project, or in `project` when the tool call names one it can see.
 function agentProject(me) { return P.pick(me, null, me.project || (online.get(me.owner) || {}).project); }
@@ -853,6 +856,7 @@ async function apiInProject(req, res, url) {
   const [a, , c] = parts; let b = parts[1]; const m = req.method;
   const ctx = () => ({ m, a, b, c, parts, me, url, readBody, send, fail });
   const me = authed(req); res._me = me || null;
+  if (me && netHub) netHub.touch(me, req);   // p13: which way each person reaches the tribe (only the kind, never the address)
   const need = () => { if (!me) { fail(res, 401, 'not a member of this tribe'); return false; } return true; };
   { const hit = endpointLimited(req, parts.join('/'), me); if (hit) { res.setHeader('Retry-After', '60'); return fail(res, 429, hit.startsWith('search') ? 'Searching a lot: give it a minute, then try again.' : 'slow down: too many of those in a minute'); } }   // harden: per endpoint and client
 
@@ -1058,10 +1062,10 @@ async function apiInProject(req, res, url) {
     if (!inv) return fail(res, 410, 'invite expired or invalid');
     // Already a member (signed in on this device): a project invite adds that project instead of making a second account.
     const already = authed(req);
-    if (already && already.role !== 'agent') return send(res, 200, { member: publicMember(already), tribe, project: addToProject(already, inv), existing: true });
+    if (already && already.role !== 'agent') return send(res, 200, { member: publicMember(already), tribe, project: addToProject(already, inv), existing: true, invitedBy: nameOf(inv.by) });
     const name = str(body.name, 32); if (!name) return fail(res, 400, 'name required');
     const out = joinByInvite(inv, { name, color: body.color });
-    return send(res, 200, { member: publicMember(out.member), token: out.token, tribe, project: out.project });
+    return send(res, 200, { member: publicMember(out.member), token: out.token, tribe, project: out.project, invitedBy: nameOf(inv.by) });   // p13: the welcome names who invited you
   }
 
   if (a === 'device-link' || a === 'devices' || a === 'share') {
@@ -1181,6 +1185,8 @@ async function apiInProject(req, res, url) {
   if (a === 'site-designer' || (a === 'projects' && (c === 'site-config' || c === 'site-autofill' || c === 'site-comments' || c === 'site-proposals' || c === 'site-suggestions' || c === 'brand'))) return siteDesign.route(req, res, { ...ctx(), d: parts[3] });
   if (a === 'projects' && c === 'launchkit') return launchKit.route(req, res, ctx());   // Launch kit (server/launchkit.js)
   if (a === 'ai-guides' || (a === 'projects' && c === 'ai-brief')) return aiGuides.route(req, res, { ...ctx(), url });   // feat/ai-guides
+  if (a === 'network') { const h = await netHub.route(req, res, ctx()); if (h !== null) return; }   // p13 (server/network.js)
+  if (a === 'friend-invites') return netHub.routeInvites(req, res, ctx());
   if (a === 'copies' && b === 'log') return copiesLog.route(req, res, ctx());   // p12 (server/copies.js)
   if (a === 'projects' && c === 'design-files') return designFiles.route(req, res, { ...ctx(), d: parts[3] });   // pass 4 (server/designfiles.js)
   if (a === 'projects' && (c === 'app-config' || c === 'app-comments')) return appCreator.route(req, res, { ...ctx(), d: parts[3], e: parts[4], f: parts[5] });   // App Creator (server/appcreator.js)
@@ -1487,6 +1493,7 @@ server.on('upgrade', (req, sock) => {
   o.project = s.project;
   if (o.sockets.size >= MAX_SOCKETS_PER_MEMBER) { const oldest = o.sockets.values().next().value; o.sockets.delete(oldest); try { oldest.close ? oldest.close() : oldest.destroy && oldest.destroy(); } catch {} }   // harden: a tab flood can't grow without bound
   o.sockets.add(s); online.set(me.id, o);
+  netHub.touch(me, req);
   dashboard.seen(me.id, s.project);
   pocket.attach(me, s);   // idle/away tracking for notifications
   s.send({ type: 'hello', member: publicMember(me), tribe, members: presenceFor(me), version: VERSION, huddle: huddleProject && !P.canSee(me, huddleProject) ? [] : huddleState(), project: s.project, projects: rooms.listFor(me), places: places.snapshot(me) });

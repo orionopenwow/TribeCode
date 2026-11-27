@@ -45,6 +45,56 @@ back (the outbox in `tribe.js`). There is no switch to flip.
 - **Settings › Projects and backup › Where your tribe runs**: the same words, and Run your own server.
 - **Where it lives** (step 2): the same words, and Run your own server.
 
+## How we're connected (p13)
+
+One sheet, **Your network · How we're connected** (`app/ui/netmap.js`, `GET /api/network` in `server/network.js`),
+opened from the status line's card, the "On this computer" pill and Settings › Where your tribe runs.
+
+- A flat picture: the tribe's computer in the middle, each person around it with one label. The server sees which way
+  each signed-in request came (only the kind is kept, never the address, in `.tribe/network-seen.json`):
+
+  | Label | When |
+  | --- | --- |
+  | **This computer** | the same computer (loopback, no proxy header) |
+  | **Same Wi-Fi** | a home-network address (10/8, 172.16/12, 192.168/16, link-local, fc00::/7) |
+  | **Private link (Tailscale)** | a Tailscale address (100.64/10, fd7a:115c:a1e0::/48) |
+  | **Internet link** | through Cloudflare / Tailscale Funnel (a proxy header) or a public address |
+  | **Offline · has a copy** | offline, but connected before (so their device keeps a copy, COPIES.md) |
+  | **Waiting to connect** | never connected yet, or an in-app invite not answered yet |
+
+- Three sentences under it: where the tribe meets ("…and everyone keeps a copy on their own device"), who can reach it,
+  and what happens when that computer is off (friends keep their copy and catch up; plus the GitHub backup line when
+  it is on).
+- One button per fix: **Turn on the internet link** (the computer that runs the tribe; `POST /api/share/public`),
+  **Fix it** when that fails (Settings › this computer), **Try again now** when the tribe can't be reached. With the
+  tribe off, the sheet draws the last picture it saw (kept on the device) and says so.
+- The "On this computer" pill uses the same words (Same Wi-Fi, Private link (Tailscale), Internet link); its old
+  "Share beyond my Wi-Fi" (which only reopened the invite sheet) now opens this sheet.
+
+## Invite from your friends list (p13)
+
+- The invite sheet's **A friend** starts with **People you know**: everyone you can already see in the tribe (your
+  projects' people, starred friends first) who isn't in the open project yet (on Home: people who only see some
+  projects, invited to the whole tribe). **Invite** sends an in-app invite. The tribe link, QR and one-time links stay.
+- A friend's profile card and the People panel show **Invite to <project>** for the same people.
+- The invite shows in their Home (**Invites · Someone invited you**, Join / Not now), in their inbox, and as a toast if
+  they're in the app. **Nobody is added until they press Join.** Join adds the project (or the whole tribe), posts
+  "joined … (invited by Camp)" and lands them on its dashboard with "Camp invited you." on the welcome card.
+- API: `GET /api/friend-invites/people?project=`, `POST /api/friend-invites {to, project}`, `GET /api/friend-invites`,
+  `POST /api/friend-invites/<id> {answer: 'join'|'later'}` (only the invited person can answer). Invites run out after
+  14 days. The same permission rules as links: project-scoped people invite only to their projects.
+- Not built: friends from a different tribe (another TribeCode server). Each tribe knows only its own people; reaching
+  across tribes would need a directory both servers trust.
+
+## Joining (p13)
+
+`join.html`, `go.html` and the app's Paste invite link say the same thing for each case: **Checking the link…**;
+**This tribe's computer is off right now** ("You'll join as soon as it's back. We'll remember this link and keep
+checking": the link is kept in `tribecode.pendingJoin` and retried every 10–15 s, with **Try again now**);
+**This link has expired** / **This link doesn't work** ("Ask your friend for a new one"); **Too many tries**; **You're
+already in <tribe>** (then it opens; a key that stopped working falls back to the name step instead of a dead redirect).
+After joining, the welcome card names who invited you (`/api/join` returns `invitedBy`).
+
 ## Things that can't work offline
 
 Each says why in one line and offers the one fix, never a raw error. Inviting someone while the tribe can't be reached:

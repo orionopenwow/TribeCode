@@ -70,8 +70,8 @@
 <div class="jw"><div class="jc" id="card">
   <div class="jtop"><img class="icon" src="/assets/icon.svg" alt=""><img class="brand-wm" src="/assets/wordmark.svg" alt="TribeCode"><span class="tag">Invite</span></div>
   <div class="jbody" id="jbody">
-    <div class="eyebrow" id="eyebrow"><span class="dot"></span>Checking your invite</div>
-    <h1 id="title">Joining…</h1>
+    <div class="eyebrow" id="eyebrow"><span class="dot"></span>Checking the link</div>
+    <h1 id="title">One moment…</h1>
     <p class="lead" id="lead"><span class="skeleton" style="display:block;width:90%"></span><span class="skeleton" style="display:block;width:60%"></span></p>
     <div class="faces" id="faces"></div>
     <form id="form" class="hidden" autocomplete="off">
@@ -82,6 +82,7 @@
       <button class="btn primary big" id="go" type="submit">Join the tribe</button>
     </form>
     <div class="err" id="err"></div>
+    <button class="btn primary big hidden" id="again" type="button">Try again now</button>
     <a class="alt hidden" id="open-app">Have the desktop app? Open it there</a>
     <a class="alt hidden" id="oa-signin" href="/signin.html">Already in this tribe? Sign in</a>
   </div>
@@ -134,11 +135,13 @@
 
   async function load(skipLanding) {
     if (!skipLanding && OA.landed()) return oauthBack();
-    if (st.server && st.server.token && st.server.url === location.origin) return joinAsMember();
+    if (st.server && st.server.token && st.server.url === location.origin && await joinAsMember()) return;
+    $('#again').classList.add('hidden');
     try {
-      const r = await fetch('/api/invites/' + encodeURIComponent(code || ''));
-      const d = await r.json();
-      if (!r.ok) throw new Error(d.error);
+      const r = await fetch('/api/invites/' + encodeURIComponent(code || ''), { cache: 'no-store' });
+      const d = await r.json().catch(() => ({}));
+      if (!r.ok) throw Object.assign(new Error(d.error || 'unavailable'), { status: r.status });
+      forget();
       document.title = `Join ${d.tribe} · TribeCode`;
       $('#eyebrow').innerHTML = `<span class="dot"></span>${d.role === 'spectator' ? "You're invited to watch" : "You're invited"}`;
       $('#title').textContent = `Join ${d.tribe}`;
@@ -153,21 +156,36 @@
       $('#name').addEventListener('input', me);
       if (!mobile) $('#name').focus();   // on phones, don't pop the keyboard over the invite
     } catch (e) {
-      const busy = /slow down/i.test(e.message || ''), offline = e instanceof TypeError;
-      $('#eyebrow').innerHTML = '<span class="dot" style="background:var(--alert)"></span>Invite unavailable';
-      $('#title').textContent = busy ? 'Too many tries' : offline ? "Can't reach the tribe" : 'This invite has expired';
-      $('#lead').textContent = busy ? 'Wait a minute, then reload this page.' : offline ? "The computer that keeps your tribe online may be asleep or offline. Try again in a bit." : 'Ask your friend for a fresh link. Invites expire after a while to keep your tribe safe.';
+      // p13: one clear state for each case: expired, turned off, too many tries, or the tribe's computer is off
+      const busy = e.status === 429, gone = e.status === 410, off = !e.status || e.status >= 500;
+      $('#eyebrow').innerHTML = `<span class="dot" style="background:${off ? 'var(--muted)' : 'var(--alert)'}"></span>${off ? 'Waiting for the tribe' : 'Link unavailable'}`;
+      $('#title').textContent = busy ? 'Too many tries' : off ? "This tribe's computer is off right now" : gone ? 'This link has expired' : "This link doesn't work";
+      $('#lead').textContent = busy ? 'Wait a minute, then try again.' : off ? "You'll join as soon as it's back. We'll remember this link and keep checking while this page is open."
+        : gone ? 'Ask your friend for a new one. In TribeCode it takes one tap: Invite.' : 'It was turned off, or part of it is missing. Ask your friend for a new one.';
+      $('#faces').innerHTML = ''; $('#fine').innerHTML = '';
+      if (off || busy) { remember(); $('#again').classList.remove('hidden'); $('#again').onclick = () => { $('#lead').textContent = 'Checking…'; load(true); }; clearTimeout(retryT); retryT = setTimeout(() => load(true), off ? 10000 : 60000); }
+      else forget();
     }
   }
+  let retryT = null;
+  const PEND = 'tribecode.pendingJoin';
+  function remember() { try { localStorage.setItem(PEND, JSON.stringify({ server: location.origin, code, at: Date.now() })); } catch {} }
+  function forget() { try { const p = JSON.parse(localStorage.getItem(PEND) || 'null'); if (p && p.code === code) localStorage.removeItem(PEND); } catch {} }
 
   // Already signed in here: a project invite adds that project to your account, then opens it.
+  // p13: you're already in: say so and open it. A key that stopped working falls back to the name step (returns false).
   async function joinAsMember() {
     try {
       const r = await fetch('/api/join', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + st.server.token }, body: JSON.stringify({ code }) });
       const d = await r.json().catch(() => ({}));
-      if (r.ok && d.project) { try { localStorage.setItem('tribecode.project:' + location.origin, d.project); } catch {} }
-    } catch { /* offline: just open the app */ }
-    location.replace('/');
+      if (!r.ok || !d.existing) return false;
+      if (d.project) { try { localStorage.setItem('tribecode.project:' + location.origin, d.project); } catch {} }
+      $('#eyebrow').innerHTML = '<span class="dot"></span>Already a member';
+      $('#title').textContent = `You're already in ${(d.tribe && d.tribe.name) || 'this tribe'}`;
+      $('#lead').textContent = 'Opening it…';
+      forget(); setTimeout(() => location.replace('/'), 600);
+      return true;
+    } catch { return false; }
   }
 
   function joined(name) {
@@ -183,6 +201,8 @@
       const r = await fetch('/api/join', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ code, name, color }) });
       const d = await r.json(); if (!r.ok) throw new Error(d.error);
       window.TribeStore.set({ name, color, server: { url: location.origin, token: d.token } });
+      try { if (d.invitedBy) localStorage.setItem('tribecode.invitedBy', d.invitedBy); } catch {}   // p13: the welcome names who invited you
+      forget();
       if (d.project) { try { localStorage.setItem('tribecode.project:' + location.origin, d.project); } catch {} }
       try { localStorage.setItem('tribecode.intro.v1', 'seen'); } catch {}
       joined(name);
@@ -199,7 +219,9 @@
       try { localStorage.setItem('tribecode.afterJoin', '1'); } catch {}
       location.replace('/');
     } catch (err) {
-      $('#err').textContent = err.message || 'Could not join'; $('#go').disabled = false; $('#go').textContent = 'Join the tribe';
+      const off = err instanceof TypeError;
+      $('#err').textContent = off ? "This tribe's computer is off right now. Your name is kept: press Join again when it's back." : /expired|invalid/i.test(err.message || '') ? 'This link has expired. Ask your friend for a new one.' : (err.message || 'Could not join');
+      $('#go').disabled = false; $('#go').textContent = 'Join the tribe';
     }
   });
   load();

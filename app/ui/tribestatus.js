@@ -150,6 +150,7 @@
     if (d.tone === 'off' || d.tone === 'warn') acts.push(['retry', T('Try again now'), true]);
     if (d.key === 'device' || d.key === 'demo') acts.push(['online', T('Put it online'), true]);
     if (d.tone === 'live') acts.push(['invite', T('Invite a friend'), !mine]);
+    if (d.key !== 'demo' && d.key !== 'device' && d.key !== 'none') acts.push(['net', T("How we're connected"), false]);   // p13: the one picture (netmap.js)
     acts.push(['where', T('Where it lives'), false]);
     if (mine && root.TribeHostPill && root.TribeHostPill.open) acts.push(['host', T('Who can reach you'), false]);
     acts.push(['server', T('Run your own server'), false]);
@@ -177,6 +178,7 @@
     if (k === 'retry') { if (c.flush) c.flush(); if (c.connect && !(c.connected && c.connected())) c.connect(); since = Date.now() - 1; refresh(); if (root.TribeApp && root.TribeApp.toast) root.TribeApp.toast(T('Trying again…')); return; }
     if (k === 'invite') return root.TribeInvite ? root.TribeInvite.open() : root.TribeApp && root.TribeApp.openInvite && root.TribeApp.openInvite();
     if (k === 'online') return root.TribeShare && root.TribeShare.online ? root.TribeShare.online('friends') : root.TribeWhere && root.TribeWhere.open && root.TribeWhere.open();
+    if (k === 'net') return root.TribeNetMap && root.TribeNetMap.open();
     if (k === 'where') return root.TribeWhere && root.TribeWhere.open ? root.TribeWhere.open() : null;
     if (k === 'host') return root.TribeHostPill && root.TribeHostPill.open();
     if (k === 'server') return root.TribeOwnServer && root.TribeOwnServer.open ? root.TribeOwnServer.open() : root.TribeSettings && root.TribeSettings.open && root.TribeSettings.open('projects');

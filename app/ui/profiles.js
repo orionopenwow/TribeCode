@@ -449,6 +449,7 @@
     if (!pop || !pop.data) return;
     pop.el.innerHTML = `${pop.scrim ? '<div class="pf-grab" aria-hidden="true"></div>' : ''}${card(pop.data)}`;
     place();
+    if (window.TribeFriendInvite && pop.data && !pop.data.you && !(pop.data.member || {}).agent) window.TribeFriendInvite.offer(pop.el.querySelector('.pf-acts'), pop.id);   // p13: Invite to this project / tribe
   }
   function place() {
     if (!pop || pop.scrim) return;

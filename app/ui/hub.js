@@ -126,6 +126,7 @@
           <button class="hpt-brand" id="hpt-brand" aria-label="Your projects"><img class="hpt-mark tc-mark" src="assets/icon.svg" alt="" width="26" height="26"><img class="brand-wm" src="assets/wordmark.svg" alt="TribeCode">${ico('i-chev', 16)}</button>
           <button class="hpt-btn" id="hpt-bell" aria-label="Notifications">${ico('i-bell', 26)}<span class="hpt-dot hidden" id="hpt-dot"></span></button></div>` : ''}
         ${idCard(on, tribe, pj, live, sub)}
+        <div id="hub-finv-slot"></div><!-- p13: invites from friends, Join / Not now (friendinvite.js) -->
         ${hubOn ? '<div class="hh-two"><div id="hub-msgs-slot"></div><div id="hub-prev-slot"></div></div>' : '<div id="hub-band-slot"></div>'}<!-- feat/p10-home: in a tribe, every project's preview and your messages; else the band (dashband.js) -->
         ${gsHero(on)}
         <div id="hub-flint-slot"></div>
@@ -138,7 +139,8 @@
       { const hs = el.querySelector('#hub-site'); if (hs) hs.onclick = () => window.TribeHelp && window.TribeHelp.website && window.TribeHelp.website(); }
       if (hubOn && window.TribeHomeHub) window.TribeHomeHub.mount(el.querySelector('#hub-prev-slot'), el.querySelector('#hub-msgs-slot'));
       else if (window.TribeDashBand && !blankPj()) window.TribeDashBand.mountHome(el.querySelector('#hub-band-slot'));   // a blank first project: the sentence below is the one start
-      if (window.TribeFlint && window.TribeFlint.mountDashboard) window.TribeFlint.mountDashboard(el.querySelector('#hub-flint-slot'));   // feat/flint-ai: Flint on the Dashboard
+      if (window.TribeFlint && window.TribeFlint.mountDashboard) window.TribeFlint.mountDashboard(el.querySelector('#hub-flint-slot'));
+      if (window.TribeFriendInvite && C.hasToken()) window.TribeFriendInvite.mountHome(el.querySelector('#hub-finv-slot'));   // feat/flint-ai: Flint on the Dashboard
     });
   }
 

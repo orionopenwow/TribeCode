@@ -1,0 +1,20 @@
+/* Invite from your friends list (p13, friendinvite.js). Flat rows, 1px borders. */
+.fi-list { list-style: none; margin: 8px 0 0; padding: 0; display: flex; flex-direction: column; border: 1px solid var(--edge); border-radius: var(--r-ctl); overflow: hidden; }
+.fi-row { display: flex; align-items: center; gap: 10px; padding: 8px 10px; background: var(--surface); }
+.fi-row + .fi-row { border-top: 1px solid var(--edge); }
+.fi-face { width: 30px; height: 30px; flex: none; border-radius: 50%; display: grid; place-items: center; background: var(--surface-2); color: var(--canvas); font-weight: 700; font-size: 12px; }
+.fi-t { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.fi-t b { color: var(--text); font-size: 14px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.fi-t small { color: var(--muted); font-size: 12px; }
+.fi-home .fi-card { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border: 1px solid var(--edge); border-left: 3px solid var(--brand); border-radius: var(--r-card); background: var(--raised, var(--surface)); }
+.fi-home .fi-card + .fi-card { margin-top: 8px; }
+.fi-home .fi-t b { white-space: normal; }
+.fi-acts { display: flex; gap: 8px; flex: none; }
+.jw-by { font-style: normal; color: var(--text); }
+.pf-invite, .pp-invite { white-space: nowrap; }
+@media (max-width: 520px) {
+  .fi-home .fi-card { flex-direction: column; align-items: stretch; }
+  .fi-acts .btn { flex: 1; min-height: 44px; }
+}
+#hub-finv-slot:not(:empty) { margin-bottom: 40px; }
+@media (max-width: 820px) { #hub-finv-slot:not(:empty) { margin-bottom: 26px; } }

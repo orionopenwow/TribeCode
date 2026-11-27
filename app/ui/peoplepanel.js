@@ -126,6 +126,7 @@
     wire(body);
   }
   function wire(body) {
+    if (window.TribeFriendInvite) window.TribeFriendInvite.offerRows(body);   // p13: Invite to this project / tribe, for people you know
     body.querySelectorAll('[data-jump]').forEach(b => b.onclick = async () => { const id = b.dataset.jump; close(); await Z().jump(id); });
     body.querySelectorAll('[data-dm]').forEach(b => b.onclick = () => { const id = b.dataset.dm; close(); if (window.TribeApp) window.TribeApp.show('chat'); setTimeout(() => window.TribeDM && window.TribeDM.open(id), 120); });
     body.querySelectorAll('[data-prof]').forEach(b => b.onclick = () => { const id = b.dataset.prof, m = all().find(x => x.id === id); close(); if (window.TribeAbilities && m && !isAI(m)) window.TribeAbilities.profile(id); else if (window.TribeProfiles) window.TribeProfiles.open(id, btn); });

@@ -154,7 +154,8 @@
   // ---------- A friend ----------
   function friendPane(p) {
     const pre = st.preset ? 'ii' : 'inv', scope = canScope();
-    p.innerHTML = `<section class="tl-box" id="tl-box"><span class="eyebrow">Your tribe link</span><p class="faint tl-sub">One link for your whole tribe. Anyone with it picks a name and they're in, on a phone or a computer. No AI needed.</p>
+    p.innerHTML = `<section class="tl-box io-known" id="io-known" hidden></section><!-- p13: people you know (friendinvite.js) -->
+      <section class="tl-box" id="tl-box"><span class="eyebrow">Your tribe link</span><p class="faint tl-sub">One link for your whole tribe. Anyone with it picks a name and they're in, on a phone or a computer. No AI needed.</p>
         <div class="linkbox"><code id="tl-link">…</code><button class="btn io-qrb" id="tl-qrb" title="Show a QR code to scan with a phone" aria-label="Show QR code" aria-expanded="${wide()}">QR</button><button class="btn primary io-copy" id="tl-copy" disabled>Copy</button></div>
         <div class="qr tl-qr${wide() ? '' : ' hidden'}" id="tl-qr"></div><details class="io-manage" id="tl-manage" hidden><summary>Rename, renew or turn off</summary><div class="tl-row" id="tl-row"></div></details></section>
       <section class="tl-box io-made" id="io-made" hidden><span class="eyebrow" id="io-made-eyebrow"></span><p class="faint tl-sub" id="io-made-title"></p>
@@ -183,6 +184,7 @@
     tribeLink();
     sync();
     tidy();
+    if (window.TribeFriendInvite && !st.preset && !demoNow()) window.TribeFriendInvite.mount($('#io-known'), {});   // p13: invite from your friends list
   }
   // Two older helpers add themselves to this sheet (web.js: "Share beyond my Wi-Fi", for the host; livingrepo.js: "Ways
   // to share"). They belong to A friend only, below the link: the switch joins the other switches, the ways go in a fold.

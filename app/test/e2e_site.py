@@ -246,7 +246,7 @@ def main():
             # iPhone: site page -> host online -> auto hand-off to the host's join page -> device link
             ph = b.new_context(viewport={"width": 390, "height": 844}, device_scale_factor=2, is_mobile=True, has_touch=True, user_agent=IPHONE_UA).new_page()
             ph.goto(f"{SITE}/go.html#s={BASE}&c={code}")
-            ph.wait_for_selector("text=Join Campfire Crew"); assert "computer is online" in ph.inner_text("#view")
+            ph.wait_for_selector("text=Join Campfire Crew"); assert "The tribe is on" in ph.inner_text("#view")
             assert "Add to Home Screen" in ph.inner_text("#view")
             ph.screenshot(path=str(ROOT / "docs" / "screenshots" / "friend-link-site.png"))
             ph.wait_for_url(f"{BASE}/join/{code}", timeout=8000)
@@ -257,9 +257,9 @@ def main():
             dk.goto(f"{SITE}/go.html#s={BASE}&c={code}"); dk.wait_for_selector("#go")
             assert "Download TribeCode" in dk.inner_text("#view"); dk.wait_for_timeout(1200); assert dk.url.startswith(SITE)
             # expired / bad / offline
-            dk.goto(f"{SITE}/go.html#s={BASE}&c=nope1"); dk.wait_for_selector("text=Ask your friend for a fresh link")
+            dk.goto(f"{SITE}/go.html#s={BASE}&c=nope1"); dk.wait_for_selector("text=Ask your friend for a new one")
             dk.goto(f"{SITE}/go.html#c=abc"); dk.wait_for_selector("text=missing a piece")
-            dk.goto(f"{SITE}/go.html#s=http://localhost:{PORT + 7}&c={code}"); dk.wait_for_selector("text=computer is offline", timeout=12000)
+            dk.goto(f"{SITE}/go.html#s=http://localhost:{PORT + 7}&c={code}"); dk.wait_for_selector("text=computer is off right now", timeout=12000)
             dk.screenshot(path=str(ROOT / "docs" / "screenshots" / "friend-link-offline.png"))
             # the app understands site links when pasted
             app = b.new_page(); app.goto(BASE + "/?skipIntro=1")
