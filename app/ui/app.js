@@ -334,9 +334,9 @@
     let by = ''; try { by = localStorage.getItem('tribecode.invitedBy') || ''; localStorage.removeItem('tribecode.invitedBy'); } catch {}   // p13: name who invited you
     const phone = matchMedia('(max-width: 820px)').matches;
     const el = document.createElement('div'); el.id = 'jw-card'; el.className = 'jw-card'; el.setAttribute('role', 'dialog'); el.setAttribute('aria-label', "You're in");
-    el.innerHTML = `<button class="jw-x" id="jw-x" aria-label="Close">✕</button><div class="jw-e" aria-hidden="true">🎉</div>
+    el.innerHTML = `<button class="jw-x" id="jw-x" aria-label="Close">${(window.TribeIcons ? TribeIcons.svg('x') : '')}</button><div class="jw-e" aria-hidden="true">${(window.TribeIcons ? TribeIcons.svg('sparkle') : '')}</div>
       <div class="jw-t"><b>You're in ${esc(where)}!</b><span>${by ? `<em class="jw-by" id="jw-by">${esc(by.split(' ')[0])} invited you.</em> ` : ''}Say hi so everyone knows you're here.</span></div>
-      <div class="jw-acts"><button class="btn primary" id="jw-hi">👋 Say hi</button>${phone ? '' : '<button class="btn" id="jw-ai">🔌 Connect my AI</button>'}</div>`;
+      <div class="jw-acts"><button class="btn primary" id="jw-hi">${(window.TribeIcons ? TribeIcons.svg('hand') : '')} Say hi</button>${phone ? '' : `<button class="btn" id="jw-ai">${window.TribeIcons ? TribeIcons.svg('plug') : ''} Connect my AI</button>`}</div>`;
     document.body.appendChild(el);
     const close = () => el.remove();
     el.querySelector('#jw-x').onclick = close;
