@@ -63,14 +63,22 @@
 
   // ---------- the version both sides started from (by rev), so a merge knows what each side changed ----------
   const BKEY = k => 'tribecode.copies.base:' + server() + '|' + k;
-  const setBase = (k, rev, doc) => { if (doc) store.set(BKEY(k), { rev: rev || 0, doc }); };
-  const getBase = (k, rev) => { const b = store.get(BKEY(k), null); return b && (rev == null || (b.rev || 0) === (rev || 0)) ? b.doc : null; };
+  // the last few versions are kept, so changes made away from an older one still find where they started
+  const bases = k => { const b = store.get(BKEY(k), null); return Array.isArray(b) ? b : b && b.doc ? [b] : []; };
+  const setBase = (k, rev, doc) => { if (!doc) return; const l = bases(k).filter(x => (x.rev || 0) !== (rev || 0)); l.push({ rev: rev || 0, doc }); store.set(BKEY(k), l.slice(-4)); };
+  const getBase = (k, rev) => { const l = bases(k); const b = rev == null ? l[l.length - 1] : l.find(x => (x.rev || 0) === (rev || 0)); return b ? b.doc : null; };
 
   // ---------- the merge ----------
   const isObj = v => !!v && typeof v === 'object' && !Array.isArray(v);
   const same = (a, b) => JSON.stringify(a) === JSON.stringify(b);
   const idList = a => Array.isArray(a) && a.length > 0 && a.every(x => isObj(x) && x.id != null);
-  const nameOf = (o, fallback) => { if (!isObj(o)) return fallback; const n = o.name || o.title || o.label || o.heading || (typeof o.text === 'string' && o.text) || o.type || o.kind || o.id; return String(n || fallback).slice(0, 60); };
+  const nameOf = (o, fallback) => {
+    if (!isObj(o)) return fallback;
+    const pr = isObj(o.props) ? o.props : {}, words = x => (typeof x === 'string' && x.trim() ? x.trim() : '');
+    const n = words(o.name) || words(o.title) || words(o.label) || words(o.heading) || words(pr.title) || words(pr.heading) || words(pr.name) || words(pr.text) || words(o.text) || o.type || o.kind || o.id;
+    const kind = o.type && n !== o.type ? `${String(o.type).replace(/[-_]/g, ' ')}: ` : '';
+    return (kind + String(n || fallback)).slice(0, 70);
+  };
   // merge3(base, mine, theirs, decisions?) -> { value, conflicts: [{ key, label, both, mine, theirs }] }
   // decisions: { [key]: 'mine' | 'theirs' | 'both' } from choose(). Without one, a conflict keeps theirs for now.
   function merge3(b, m, t, decisions) {
@@ -203,8 +211,17 @@
       // it since, App Creator puts the two together the next time it opens (it asks only about the same block).
       for (const k of store.keys(APP_UNSENT)) {
         const v = store.get(k, null), pid = k.slice(APP_UNSENT.length); if (!v || !v.doc || (AC && AC.isOpen && AC.isOpen(pid))) continue;
-        try { await c.api(`/projects/${encodeURIComponent(pid)}/app-config`, { method: 'PUT', body: { config: v.doc, base: v.base || 0 } }); store.set(k, null); }
-        catch (e) { if (e && e.status === 409) { emit('needs-look', { kind: 'app', pid }); } }
+        try { const r = await c.api(`/projects/${encodeURIComponent(pid)}/app-config`, { method: 'PUT', body: { config: v.doc, base: v.base || 0 } }); setBase('app:' + pid, r.rev, v.doc); store.set(k, null); }
+        catch (e) {
+          if (!e || e.status !== 409) continue;
+          // someone changed it since: different blocks go together by themselves; the same block waits for App Creator
+          const b = getBase('app:' + pid, v.base || 0), d = e.data || {};
+          const m = b && d.config ? merge3(b, v.doc, d.config) : null;
+          if (m && !m.conflicts.length) {
+            try { const r = await c.api(`/projects/${encodeURIComponent(pid)}/app-config`, { method: 'PUT', body: { config: m.value, base: d.rev || 0 } }); setBase('app:' + pid, r.rev, m.value); store.set(k, null); emit('merged', { kind: 'app', pid }); continue; } catch {}
+          }
+          emit('needs-look', { kind: 'app', pid });
+        }
       }
       emit('sent', pending().length); return pending().length;
     })().finally(() => { sending = null; });
