@@ -1,5 +1,5 @@
 // The Agent fleet (feat/fleet): one calm page that says what your agents are doing and what to do next.
-//   Hero (the one next step): no tribe → Start a project / Try the demo; no agent of yours ever connected → Connect your
+//   Hero (the one next step): no tribe → Start a project / Try the demo; no agent of yours ever connected → Add an AI helper (Agents & office; p12: the old Connect your
 //     AI (tabs per tool, the exact command with a fresh key, Copy, Test connection that turns green on the first MCP
 //     call); otherwise whatever matters most (an agent waiting for an approval, suggested tasks nobody took, a paused or
 //     idle agent, an offline one, or who is working).
@@ -44,27 +44,26 @@
   }
   const copied = (ok, what) => toast(ok ? `${what || 'Command'} copied.` : 'Press and hold the text to copy it.');
 
-  // ---------- tools: the tabs of Connect your AI (docs/ANY-LLM.md) ----------
-  const TABS = [['claude-code', 'Claude Code'], ['codex', 'Codex'], ['gemini', 'Gemini CLI'], ['cursor', 'Cursor'], ['qwen', 'Qwen Code'], ['mcp', 'Another tool']];
-  const HINT = {
-    'claude-code': 'Run it once in a terminal, then start claude in your project folder.',
-    codex: 'Paste it into ~/.codex/config.toml, then start codex.',
-    gemini: 'Run it once in a terminal, then start gemini.',
-    cursor: 'Save it as .cursor/mcp.json in your project. Cursor picks it up in Settings › MCP.',
-    qwen: 'Run it once in a terminal, then start qwen.',
-    mcp: 'Add an MCP server named tribecode in your tool: Streamable HTTP, this URL and this header.',
-  };
+  // ---------- p12: the old Connect your AI tabs are gone. Every way in opens Agents & office › Add an AI helper
+  // (agentsoffice.js, the one way to add an AI). An old tool name (a saved tab, a link) picks the same AI there. ----------
+  const OLD = { 'claude-code': 'claude', claude: 'claude', codex: 'codex', gemini: 'gemini', cursor: 'cursor', qwen: 'other', mcp: 'other' };
+  try { localStorage.removeItem('tribecode.fleet.tab'); } catch {}
+  function addHelper(tool) {
+    const AO = window.TribeAgentsOffice, k = OLD[tool] || (tool && /^(chatgpt|local|free|other)$/.test(tool) ? tool : null);
+    if (AO && AO.pick && k) return AO.pick(k);
+    // no tool named: show the Add an AI helper card in Agents & office
+    if (window.TribeShell && window.TribeShell.go) { try { window.TribeShell.go('agents'); } catch {} }
+    else if (window.TribeApp && window.TribeApp.show) window.TribeApp.show('agents');
+    if (AO && AO.pick && !document.querySelector('.ao-add')) return AO.pick('other');
+  }
   const glyph = (k, size = 18) => (window.TribeAgentsHub && window.TribeAgentsHub.glyph ? window.TribeAgentsHub.glyph(k, size) : '');
   const PLACES = [['here', 'This computer'], ['wifi', 'Same Wi-Fi'], ['anywhere', 'Anywhere']];
 
   // ---------- state that survives repaints ----------
-  const LS = 'tribecode.fleet.tab';
   const st = {
-    tab: (() => { try { const t = localStorage.getItem(LS); return TABS.some(x => x[0] === t) ? t : 'claude-code'; } catch { return 'claude-code'; } })(),
-    place: '', keys: {}, minting: {}, test: {}, stay: false,
+    place: '',
     open: {}, drafts: {}, cmd: {}, more: {}, compact: false, data: null, scope: 'project',
   };
-  const keyFor = kind => st.keys[`${pidNow()}:${kind}`];
 
   // ---------- data ----------
   async function load(scope) {
@@ -77,7 +76,6 @@
     if (!hasTribe()) return 'notribe';
     if (!d) return 'loading';
     const top = (d.next || [])[0];
-    if (st.stay) return 'connect';
     if (top && top.kind === 'approval') return 'next';
     if (!d.connected && d.you && d.you.canAct) return 'connect';
     return 'next';
@@ -92,13 +90,8 @@
       <div class="fl-acts"><button class="btn primary" id="fl-start">Start a project</button><button class="btn" id="fl-demo">Try the demo</button></div></section>`;
     // feat/agents-office: no AI helper of yours yet → Add an AI helper: pick the AI, and the one setup that fits opens
     // (the invite sheet, inviteagent.js). Nothing is made until you copy it there.
-    if (s === 'connect' && window.TribeAgentsOffice) return window.TribeAgentsOffice.addAi(id);
-    if (s === 'connect') {
-      return `<section class="hero-card fl-hero" id="${id}" data-state="connect">${head('Next step', 'Connect your AI', 'Pick the tool you use and run one line. It joins this project, reads the plan and asks you before anything goes live.')}
-        <div class="fl-tabs" role="tablist" aria-label="Your AI tool">${TABS.map(([k, n]) => `<button type="button" role="tab" class="fl-tab${k === st.tab ? ' on' : ''}" aria-selected="${k === st.tab}" data-fl-tab="${k}">${glyph(k, 15)}<span>${esc(n)}</span></button>`).join('')}</div>
-        <div class="fl-connect" id="fl-connect">${connectBody()}</div>
-        <p class="fl-more"><button class="linkish" id="ad-tools" type="button">VS Code, Windsurf, Claude.ai and more →</button></p></section>`;
-    }
+    if (s === 'connect') return window.TribeAgentsOffice ? window.TribeAgentsOffice.addAi(id)
+      : `<section class="hero-card fl-hero" id="${id}" data-state="connect">${head('Next step', 'Add an AI helper', 'Pick the AI you already use. You get the one setup that fits.')}<div class="fl-acts"><button class="btn primary" data-fl-go="connect">Add an AI helper</button></div></section>`;
     const top = (d.next || [])[0];
     if (!top) {
       const n = (d.agents || []).length;
@@ -122,30 +115,6 @@
     const local = /^(localhost|127\.0\.0\.1|\[::1\])$/.test(location.hostname);
     const pick = have.some(x => x[0] === st.place) ? st.place : (local && have.some(x => x[0] === 'here') ? 'here' : (have.find(x => x[0] === 'anywhere') || have.find(x => x[0] === 'wifi') || have[0] || [])[0]);
     return { have, pick };
-  }
-  function connectBody() {
-    const r = keyFor(st.tab);
-    // feat/flow-ease: a tribe kept in this browser can't be reached by an AI tool yet. Say so, with the one button, instead of a key that never comes.
-    if (!r && window.TribeOffline && window.TribeOffline.solo && window.TribeOffline.solo()) return `<div class="fl-needs" id="fl-needs"><p class="fl-wait">Your own AI tool joins through a link, which works once this tribe is online. Flint, the built-in helper, already works here.</p><button type="button" class="btn sm primary" data-sc-online="agents">Put this tribe online</button></div>`;
-    if (!r) return `<p class="fl-wait">Making a key for ${esc((TABS.find(x => x[0] === st.tab) || [])[1])}…</p>`;
-    const { have, pick } = places(r), s = (r.setup || {})[pick] || {};
-    const blocks = (s.blocks || []).filter(b => !b.alt);
-    const t = st.test[r.agent.id];
-    return `${have.length > 1 ? `<div class="fl-places" role="radiogroup" aria-label="Where it runs">${have.map(([w, l]) => `<button type="button" role="radio" aria-checked="${w === pick}" class="fl-place${w === pick ? ' on' : ''}" data-fl-place="${w}">${esc(l)}</button>`).join('')}</div>` : ''}
-      ${blocks.map((b, i) => `<div class="fl-cmd">${blocks.length > 1 || st.tab === 'cursor' || st.tab === 'codex' ? `<span class="eyebrow">${esc(b.label)}</span>` : ''}<pre class="fl-pre" ${i === 0 ? 'id="fl-cmd"' : ''} data-fl-text="${i}">${esc(b.text)}</pre></div>`).join('')}
-      <div class="fl-acts">${blocks.map((b, i) => `<button class="btn ${i === 0 ? 'primary' : ''}" type="button" ${i === 0 ? 'id="fl-copy"' : ''} data-fl-copy="${i}">${blocks.length > 1 ? `Copy ${esc(b.label.toLowerCase())}` : 'Copy'}</button>`).join('')}
-        <button class="btn fl-test${t === 'ok' ? ' ok' : ''}" type="button" id="fl-test" aria-live="polite">${t === 'ok' ? '✓ Connected' : t === 'wait' ? 'Waiting for its first call…' : 'Test connection'}</button>
-        ${t === 'ok' ? '<button class="btn" type="button" id="fl-done">Done</button>' : ''}</div>
-      <p class="fl-hint">${esc(HINT[st.tab] || '')} It joins as <b>${esc(r.agent.name)}</b>.</p>`;
-  }
-  async function ensureKey(repaint) {
-    const kind = st.tab, k = `${pidNow()}:${kind}`;
-    if (st.keys[k] || st.minting[k] || !hasTribe()) return;
-    st.minting[k] = true;
-    try { st.keys[k] = await C.api('/agents', { method: 'POST', body: { kind } }); }
-    catch (e) { toast(e.message); }
-    finally { delete st.minting[k]; }
-    repaint();
   }
 
   // ---------- rows ----------
@@ -278,8 +247,6 @@
   function wire(root, opts) {
     st.scope = opts.scope || 'project';
     root.__flOpts = opts;
-    if (heroState(st.data) === 'connect' && !keyFor(st.tab) && !window.TribeAgentsOffice) ensureKey(() => paintHero(root));
-    resumeTest(root);
     if (root.__flWired) return;
     root.__flWired = true;
     root.addEventListener('input', e => { const f = e.target.closest && e.target.closest('[data-fl-form]'); if (f) st.drafts[`${f.dataset.id}:${f.dataset.flForm}`] = e.target.value; });
@@ -293,7 +260,6 @@
   function paintHero(root) {
     const h = root.querySelector('.fl-hero'); if (!h) return;
     const id = h.id; const tmp = document.createElement('div'); tmp.innerHTML = hero(st.data, { id }); h.replaceWith(tmp.firstElementChild);
-    resumeTest(root);
   }
   function paintRow(root, id) {
     const a = find(id), el = root.querySelector(`[data-fl-agent="${CSS.escape(id)}"]`);
@@ -302,23 +268,6 @@
     const inp = root.querySelector(`[data-fl-agent="${CSS.escape(id)}"] .fl-form input`); if (inp) inp.focus({ preventScroll: true });
   }
 
-  let testTimer = null, testAgent = null;
-  function resumeTest(root) {
-    const r = keyFor(st.tab); if (!r) return;
-    if (st.test[r.agent.id] === 'wait' && testAgent !== r.agent.id) startTest(root, r.agent.id);
-  }
-  function startTest(root, agentId) {
-    clearInterval(testTimer); testAgent = agentId; st.test[agentId] = 'wait'; st.stay = true;
-    const tick = async () => {
-      if (testAgent !== agentId || st.test[agentId] !== 'wait') return clearInterval(testTimer);
-      try {
-        const r = await C.api('/agents/mine'), a = (r.agents || []).find(x => x.id === agentId);
-        if (a && a.online) { st.test[agentId] = 'ok'; clearInterval(testTimer); testAgent = null; toast(`${a.name} is connected.`); paintHero(document.body.contains(root) ? root : document); }
-      } catch {}
-    };
-    tick(); testTimer = setInterval(tick, 1500);
-  }
-  if (C && C.on) C.on('presence', () => { if (testAgent) { const m = (C.state().members || []).find(x => x.id === testAgent); if (m && m.online && st.test[testAgent] === 'wait') { st.test[testAgent] = 'ok'; const id = testAgent; testAgent = null; clearInterval(testTimer); const root = document.querySelector('.fl-hero') && document.querySelector('.fl-hero').parentElement; if (root) paintHero(root); toast(`${m.name} is connected.`); void id; } } });
 
   async function act(root, b, fn, done) {
     b.disabled = true;
@@ -327,22 +276,12 @@
   function click(root, e) {
     const t = e.target; if (!t.closest) return;
     const b = t.closest('button');
-    if (b && b.dataset.flTab) { st.tab = b.dataset.flTab; try { localStorage.setItem(LS, st.tab); } catch {} paintHero(root); ensureKey(() => paintHero(root)); return; }
-    if (b && b.dataset.flPlace) { st.place = b.dataset.flPlace; paintHero(root); return; }
-    if (b && b.dataset.flCopy !== undefined) {
-      const pre = root.querySelector(`.fl-hero [data-fl-text="${b.dataset.flCopy}"]`); if (!pre) return;
-      copy(pre.textContent).then(ok => copied(ok, b.dataset.flCopy === '0' ? 'Command' : 'Text'));
-      return;
-    }
-    if (b && b.id === 'fl-test') { const r = keyFor(st.tab); if (r && st.test[r.agent.id] !== 'ok') { startTest(root, r.agent.id); paintHero(root); } return; }
-    if (b && b.id === 'fl-done') { st.stay = false; reload(root); return; }
     if (b && b.id === 'ad-tools') { if (st.scope === 'project' && window.TribeShell) window.TribeShell.go('mcp-directory'); else if (window.TribeMcpDir) window.TribeMcpDir.open(); return; }
     if (b && b.id === 'fl-guide') { if (window.TribeGuide) window.TribeGuide.open('08-agents-and-office'); else toast('The Guide is in Help.'); return; }
     if (b && b.id === 'fl-start') { if (window.TribeSetup && typeof window.TribeSetup.start === 'function') window.TribeSetup.start(); else if (window.TribeApp && window.TribeApp.startFirst) window.TribeApp.startFirst().then(() => reload(root)); return; }
     if (b && b.id === 'fl-demo') { if (window.TribeOffline && window.TribeOffline.start) window.TribeOffline.start('showcase'); return; }
     if (b && b.dataset.flGo) {
-      if (b.dataset.flGo === 'connect' && window.TribeAgentsOffice) return window.TribeAgentsOffice.pick('other');
-      if (b.dataset.flGo === 'connect') { st.stay = true; paintHero(root); ensureKey(() => paintHero(root)); return; }
+      if (b.dataset.flGo === 'connect') return addHelper();
       if (b.dataset.flGo === 'tasks' && window.TribeApp) window.TribeApp.show('tasks');
       return;
     }
@@ -427,5 +366,5 @@
     catch (e) { if (n === seq) { const h = el.querySelector('.fl-hero .fl-title'); if (h) h.textContent = 'The fleet could not load'; toast(e.message); } }
   }
 
-  window.TribeFleet = { render, load, hero, rows, list, how, wire, openAgent, copy, state: () => st, setData: d => { st.data = d; } };
+  window.TribeFleet = { render, load, hero, rows, list, how, wire, openAgent, copy, connect: addHelper, state: () => st, setData: d => { st.data = d; } };
 })();

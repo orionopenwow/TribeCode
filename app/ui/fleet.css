@@ -13,21 +13,13 @@
 .fl-more { margin: 0; }
 .fl-more .linkish { font-size: 14px; }
 
-/* connect: tool tabs, where it runs, the command */
-.fl-tabs { display: flex; flex-wrap: wrap; gap: 6px; }
-.fl-tab { display: inline-flex; align-items: center; gap: 7px; height: 36px; padding: 0 12px; font: inherit; font-size: 13.5px; color: var(--muted); background: var(--surface); border: 1px solid var(--edge); border-radius: var(--r-sm); cursor: pointer;
-  transition: color var(--dur-quick) var(--ease-out), border-color var(--dur-quick) var(--ease-out), background-color var(--dur-quick) var(--ease-out); }
-.fl-tab:hover { color: var(--text); border-color: var(--edge-pop); }
-.fl-tab.on { color: var(--text); background: var(--agents-soft); border-color: color-mix(in srgb, var(--agents) 45%, var(--edge)); }
-.fl-tab .ah-g { color: var(--agents-ink); flex: none; }
-.fl-connect { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+/* an agent's connect command: where it runs, the command (p12: the old tool tabs are gone) */
 .fl-places { display: flex; gap: 4px; flex-wrap: wrap; }
 .fl-place { font: inherit; font-size: 12.5px; height: 28px; padding: 0 10px; border-radius: 999px; border: 1px solid var(--edge); background: transparent; color: var(--muted); cursor: pointer; }
 .fl-place.on { color: var(--text); border-color: var(--edge-pop); background: var(--surface-2); }
 .fl-cmd { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
 .fl-pre { margin: 0; padding: 12px 14px; border: 1px solid var(--edge); border-radius: var(--r-sm); background: var(--canvas); font-family: var(--mono); font-size: 13px; line-height: 1.55; color: var(--text);
   white-space: pre-wrap; word-break: break-all; max-height: 240px; overflow: auto; user-select: all; -webkit-user-select: all; }
-.fl-test.ok { background: color-mix(in srgb, var(--online) 18%, var(--surface)); border-color: color-mix(in srgb, var(--online) 55%, var(--edge)); color: var(--text); }
 .btn.fl-ok { background: color-mix(in srgb, var(--online) 15%, var(--surface)); border-color: color-mix(in srgb, var(--online) 40%, var(--edge)); color: var(--text); }
 .btn.fl-no { background: color-mix(in srgb, var(--ember) 12%, var(--surface)); border-color: color-mix(in srgb, var(--ember) 36%, var(--edge)); color: var(--text); }
 
@@ -128,10 +120,6 @@
   .fl-hero.hero-card { padding: 16px 14px 16px 17px; gap: 10px; }
   .fl-title { font-size: 21px; }
   .fl-lead { font-size: 14.5px; }
-  .fl-tabs { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
-  .fl-tab { justify-content: center; padding: 0 6px; font-size: 13px; min-width: 0; }
-  .fl-tab span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .fl-tab .ah-g { display: none; }
   :is(.fl-page, .ad-dash) .fl-acts .btn { flex: 1 1 auto; height: 44px; }
   .fl-pre { font-size: 12.5px; }
   .fl-sec { margin-top: 26px; }

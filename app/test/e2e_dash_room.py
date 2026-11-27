@@ -94,6 +94,23 @@ def main():
             assert g["sw"] <= g["w"] + 1, "no sideways scroll"
             assert g["stage"]["h"] >= 220, g["stage"]
 
+            # 4. fleet.js: the old Connect your AI tabs are gone; every way in opens Add an AI helper
+            pg.set_viewport_size({"width": 1440, "height": 900}); pg.wait_for_timeout(400)
+            h = pg.evaluate("TribeFleet.hero({ connected: false, you: { canAct: true }, agents: [], next: [] }, { id: 'x-hero' })")
+            assert "fl-tab" not in h and "data-ao-pick" in h and "Add an AI helper" in h, h[:300]
+            calm = pg.evaluate("TribeFleet.hero({ connected: true, you: { canAct: true }, agents: [], next: [] }, { id: 'x-hero' })")
+            assert 'data-fl-go="connect"' in calm and "fl-tab" not in calm
+            pg.evaluate("TribeApp.show('agents')"); pg.wait_for_timeout(1500)
+            assert pg.locator(".fl-tabs, .fl-tab, #fl-connect, #fl-test").count() == 0, "no old Connect tabs anywhere"
+            # an old link (a saved tool tab) opens Add an AI helper on that AI
+            assert pg.evaluate("localStorage.getItem('tribecode.fleet.tab')") is None, "the old saved tab is cleared"
+            pg.evaluate("TribeFleet.connect('codex')"); pg.wait_for_selector("#ic-body", timeout=8000)
+            pg.keyboard.press("Escape"); pg.wait_for_selector("#ic-body", state="hidden", timeout=5000)
+            # the calm card's Add an AI helper button opens the same flow
+            pg.evaluate("""(() => { const d = document.createElement('div'); d.id = 'x-fl'; d.innerHTML = TribeFleet.hero({ connected: true, you: { canAct: true }, agents: [], next: [] }, { id: 'x-hero' }); document.body.append(d); TribeFleet.wire(d, {}); })()""")
+            pg.evaluate("document.querySelector('#x-fl [data-fl-go=connect]').click()"); pg.wait_for_selector("#ic-body", timeout=8000)
+            pg.keyboard.press("Escape"); pg.evaluate("document.querySelector('#x-fl').remove()")
+
             assert not errs, errs
             b.close()
         print("ok  e2e_dash_room: the preview has room")
