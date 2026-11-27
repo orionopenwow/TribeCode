@@ -162,7 +162,7 @@
   }
   addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') flushNow(); });
   addEventListener('pagehide', flushNow);
-  const mark = t => { const el = root && root.querySelector('#apc-saved'); if (el) el.textContent = tr(t); };
+  const mark = t => { const el = root && root.querySelector('#apc-saved'); if (el) el.textContent = tr(t) + (t === 'Saved' && st && st.pid && window.TribeGitHubConnect && window.TribeGitHubConnect.savedTail ? window.TribeGitHubConnect.savedTail(st.pid) : ''); };   // p12: "Saved · a copy goes to GitHub" while the backup is on
   const DRAFT = pid => `tribecode.appcreator.draft.${pid}`;
   const UNSENT = pid => `tribecode.appcreator.unsent.${pid}`;
   const CP = () => window.TribeCopies;   // p12: every friend keeps a copy   // pass 4: an edit the tribe has not confirmed yet

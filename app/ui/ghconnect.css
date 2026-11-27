@@ -41,3 +41,23 @@
 .ghc-new .ph-note { margin: 0; }
 .ghc-new-acts { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
 .ghc-new-acts .btn, .ghc-new-acts .linkish { min-height: 40px; }
+/* p12: Backup on GitHub, the one card (ghconnect.js backup: Agents & office, Where it lives) */
+.ghb { display: grid; gap: 8px; min-width: 0; }
+.ghb-head { display: flex; align-items: center; gap: 10px; }
+.ghb-head h3 { margin: 0; font-size: 15px; flex: 1; min-width: 0; }
+.ghb-head .gh-i { color: var(--muted); flex: none; }
+.ghb-sw { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: var(--muted); cursor: pointer; }
+.ghb-sw input { accent-color: var(--accent); width: 16px; height: 16px; }
+.ghb[data-state="on"] .ghb-sw span { color: var(--live); }
+.ghb-why { margin: 0; color: var(--muted); font-size: 13px; line-height: 1.5; max-width: 65ch; }
+.ghb-when { margin: 0; font-size: 13px; font-weight: 600; }
+.ghb-when a { color: var(--text); text-decoration: underline; text-underline-offset: 2px; font-weight: 400; }
+.ghb-what summary { cursor: pointer; color: var(--muted); font-size: 12.5px; }
+.ghb-what ul { margin: 6px 0 0; padding-left: 18px; display: grid; gap: 4px; font-size: 12.5px; line-height: 1.5; }
+.ghb-acts { display: flex; flex-wrap: wrap; gap: 6px; }
+.ghb-acts:empty { display: none; }
+.ghb-msg { margin: 0; font-size: 12.5px; min-height: 0; }
+.ghb-msg:empty { display: none; }
+.whl-backup { margin-top: 12px; padding: 12px; border: 1px solid var(--edge); border-radius: var(--r-card, 12px); background: var(--surface-2); }
+.whl-backup:empty { display: none; }
+@media (max-width: 820px) { .ghb-acts .btn { min-height: 40px; } }

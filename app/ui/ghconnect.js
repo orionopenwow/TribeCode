@@ -10,7 +10,11 @@
 //   3. Done: connected as @name, the link, and when it was last backed up.
 // A tribe that lives only in this browser has no host to keep a sign-in, so there the block asks for owner/name and an
 // optional token that stays on this device (setuplocal.js github.connect does the work, as before).
-// Public: window.TribeGitHubConnect = { open(o), mount(el, o) -> { value(), resolve() }, slug(name), status(), chip(el, o) }
+// p12: backup(el, o) draws the one "Backup on GitHub" card (Agents & office, Where it lives): On/Off (backs up a moment
+// after every save), "Backed up a minute ago", what is and isn't backed up, where to see it on GitHub, and "Get the latest
+// from GitHub" for a friend when nobody's computer is on (copies.js fromGitHub). savedTail(pid) is the quiet words the
+// designers add to "Saved" while the backup is on.
+// Public: window.TribeGitHubConnect = { open(o), mount(el, o) -> { value(), resolve() }, slug(name), status(), chip(el, o), backup(el, o), savedTail(pid) }
 (function () {
   'use strict';
   const C = () => window.TribeClient, OFF = () => window.TribeOffline, L = () => window.TribeLocalSetup, UI = () => window.TribeUI;
@@ -192,5 +196,58 @@
     const b = el.querySelector('.ghc-chip-go'); if (b) b.onclick = e => { e.preventDefault(); e.stopPropagation(); if (o.before) o.before(); open({ name: o.name }); };
   }
   addEventListener('tribe:github', () => document.querySelectorAll('.ghc-chip').forEach(el => chip(el)));
-  window.TribeGitHubConnect = { open, mount, slug, parse, status, chip };
+
+  // ---------- p12: Backup on GitHub, one card ----------
+  const backupOn = new Map();   // pid -> true while the backup runs by itself (for savedTail)
+  const agoT = iso => { const s = (Date.now() - Date.parse(iso)) / 1000; if (!Number.isFinite(s)) return ''; if (s < 60) return T('just now'); if (s < 3600) return T('{n} min ago', { n: Math.max(1, Math.floor(s / 60)) }); if (s < 86400) return T('{n} h ago', { n: Math.floor(s / 3600) }); return T('{n} days ago', { n: Math.floor(s / 86400) }); };
+  const savedTail = pid => {
+    pid = pid || pidNow();
+    if (pid && !backupOn.has(pid) && live()) {   // learned once in the background; the next "Saved" says it
+      backupOn.set(pid, false);
+      C().api(`/projects/${encodeURIComponent(pid)}/sync`).then(r => { const s = (r && r.status) || {}; backupOn.set(pid, !!(s.connected && s.kind === 'github' && s.mode === 'auto' && !s.paused)); }).catch(() => {});
+    }
+    return backupOn.get(pid) ? ' · ' + T('a copy goes to GitHub') : '';
+  };
+  async function backup(el, o = {}) {
+    if (!el) return;
+    const pid = o.pid || pidNow(); if (!pid) { el.innerHTML = ''; return; }
+    el.classList.add('ghb'); el.dataset.state = 'loading';
+    let s = {}, offline = false;
+    try { const r = await C().api(`/projects/${encodeURIComponent(pid)}/sync`); s = (r && r.status) || {}; offline = !!(r && r._fromCopy); } catch { offline = true; }
+    if (!el.isConnected) return;
+    const linked = s.connected && s.kind === 'github', on = linked && s.mode === 'auto' && !s.paused;
+    backupOn.set(pid, on);
+    const when = !linked ? T('Not set up yet.') : s.lastShip && s.lastShip.at ? T('Backed up {when}', { when: agoT(s.lastShip.at) }) : T('Not backed up yet');
+    el.dataset.state = !linked ? 'none' : on ? 'on' : 'off';
+    el.innerHTML = `<div class="ghb-head">${GH}<h3>${esc(T('Backup on GitHub'))}</h3>
+        ${linked ? `<label class="ghb-sw"><input type="checkbox" role="switch" id="ghb-on-${esc(pid)}" data-ghb="on"${on ? ' checked' : ''}${offline ? ' disabled' : ''}><span>${esc(on ? T('On') : T('Off'))}</span></label>` : ''}</div>
+      <p class="ghb-why">${esc(T('Every change is saved to your GitHub, so nothing is lost and friends can get the latest even when your computer is off.'))}</p>
+      <p class="ghb-when" data-ghb-when>${esc(when)}${linked && s.url ? ` · <a href="${esc(s.url)}" target="_blank" rel="noopener noreferrer">${esc(T('See it on GitHub'))}</a>` : ''}</p>
+      <details class="ghb-what"><summary>${esc(T('What is backed up'))}</summary><ul>
+        <li><b>${esc(T('Backed up'))}:</b> ${esc(T('the website and app designs as real files, and the project folder’s code and docs.'))}</li>
+        <li><b>${esc(T('Never'))}:</b> ${esc(T('keys, passwords and sign-ins, the tribe’s own settings, and anyone’s private messages.'))}</li></ul></details>
+      <div class="ghb-acts">${linked ? '' : `<button type="button" class="btn primary" data-ghb="connect">${esc(T('Back up to GitHub'))}</button>`}
+        ${linked ? `<button type="button" class="btn" data-ghb="get">${esc(T('Get the latest from GitHub'))}</button>` : ''}</div>
+      <p class="ghb-msg faint" data-ghb-msg aria-live="polite"></p>`;
+    const msg = el.querySelector('[data-ghb-msg]');
+    const sw = el.querySelector('[data-ghb="on"]');
+    if (sw) sw.onchange = async () => {
+      const want = sw.checked; sw.disabled = true;
+      try { await C().api(`/projects/${encodeURIComponent(pid)}/sync`, { method: 'PUT', body: want ? { mode: 'auto', trigger: 'save' } : { mode: 'manual' } }); msg.textContent = want ? T('On: every save goes to GitHub a moment later.') : T('Off: nothing goes to GitHub by itself.'); }
+      catch (e) { sw.checked = !want; msg.textContent = e && e.status === 403 ? T('Only the owner or the project lead turns the backup on or off.') : (e && e.message) || ''; }
+      sw.disabled = false; backup(el, o).then(() => { const m = el.querySelector('[data-ghb-msg]'); if (m && !m.textContent) m.textContent = msg.textContent; });
+    };
+    const c = el.querySelector('[data-ghb="connect"]'); if (c) c.onclick = () => { if (o.before) o.before(); open({ pid }); };
+    const g = el.querySelector('[data-ghb="get"]');
+    if (g) g.onclick = async () => {
+      const CP = window.TribeCopies; if (!CP) return;
+      g.disabled = true; msg.textContent = T('Getting…');
+      const r = await CP.fromGitHub(pid).catch(() => ({ ok: false, why: T('Can’t reach GitHub from here right now.') }));
+      g.disabled = false;
+      msg.textContent = r.ok ? T('Got the latest from GitHub. Open the website or app to see it.') : r.why;
+      if (r.ok) try { dispatchEvent(new CustomEvent('tribe:copies-got', { detail: { pid, from: 'github' } })); } catch {}
+    };
+  }
+  addEventListener('tribe:github-connected', () => document.querySelectorAll('.ghb').forEach(el => backup(el, { pid: el.dataset.pid || undefined })));
+  window.TribeGitHubConnect = { open, mount, slug, parse, status, chip, backup, savedTail };
 })();

@@ -81,7 +81,8 @@
     const s3 = `${link ? `<p class="whl-path"><a href="${esc(link)}" target="_blank" rel="noopener" id="whl-link">${esc(link)}</a></p>` : ''}
       <div class="whl-row"><button type="button" class="btn${!none && st.people > 1 && !link ? ' primary' : ''}" data-whl-online ${none ? 'disabled' : ''}>${esc(T(link ? 'Update it' : 'Put it online'))}</button>${!link && play ? `<span class="faint">${esc(T('It has a play link, which works while the tribe can be reached.'))}</span>` : ''}</div>
       <small class="faint">${esc(T('A public address on your own GitHub account, free. It stays up when every computer is off.'))}</small>
-      <div class="whl-row"><span class="ghc-chip" id="whl-gh"></span></div>`;   // p10: the same GitHub status as everywhere else
+      <div class="whl-row"><span class="ghc-chip" id="whl-gh"></span></div>
+      <div class="whl-backup" id="whl-backup"></div>`;   // p12: the one Backup on GitHub card (ghconnect.js backup)   // p10: the same GitHub status as everywhere else
     // pass 4 polish: with no tribe the first step says what is true (the browser keeps it), not that files are in a folder
     root.innerHTML = step(1, 'folder', 'In a folder', online() ? 'Your website and phone app are real files in the project’s folder, where this tribe is kept.' : 'In a tribe, your website and phone app are real files in the project’s folder.', none ? '' : 'Now', s1)
       + step(2, 'friends', 'With your friends', 'One link lets friends in. Everyone changes the same website and app, live, by their role.', st.people > 1 ? 'Now' : '', s2)
@@ -102,6 +103,7 @@
     const i = q('[data-whl-invite]'); if (i) i.onclick = () => { const pid = st.pid; close(); leave(); if (window.TribeInvite) window.TribeInvite.open({}); else if (window.TribeApp && window.TribeApp.openInvite) window.TribeApp.openInvite(); void pid; };
     const on = q('[data-whl-online]'); if (on) on.onclick = () => { const pid = st.pid; close(); leave(); if (window.TribePublish) window.TribePublish.open(pid, 'pages'); };
     const gh = q('#whl-gh'); if (gh && window.TribeGitHubConnect && window.TribeGitHubConnect.chip) window.TribeGitHubConnect.chip(gh, { before: () => { close(); leave(); } });
+    const bk = q('#whl-backup'); if (bk && window.TribeGitHubConnect && window.TribeGitHubConnect.backup && C && C.hasToken && C.hasToken()) window.TribeGitHubConnect.backup(bk, { pid: st && st.pid, before: () => { close(); leave(); } });
     const runs = q('[data-whl-runs]'); if (runs) runs.onclick = () => window.TribeStatus && window.TribeStatus.open(runs);
     const srv = q('[data-whl-server]'); if (srv) srv.onclick = () => { close(); leave(); if (window.TribeOwnServer) window.TribeOwnServer.open(); };
     root.querySelectorAll('[data-whl-use]').forEach(b => b.onclick = async () => { b.disabled = true; const r = await resolve(b.dataset.whlUse, 'design'); if (st) { if (r && r.status) st.files = r.status; draw(); } });
