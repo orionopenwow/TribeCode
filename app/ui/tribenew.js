@@ -349,8 +349,10 @@
       : c.where === 'github' ? `<p class="ph-lead">Friends can follow it on GitHub right away. To build together at the same time, keep it on this computer or a free cloud later, from Sharing and backup.</p>
         <div class="su-cmd tn-link"><input class="input" id="tn-link" readonly value="${esc(c.url || '')}" aria-label="Repository link"><button type="button" class="btn" id="tn-copy">Copy</button></div>`
       : `<p class="ph-lead">${esc(st.name)} is ready and saved in this browser. Friends and AI agents join once it is online; you can do that now or any time from the dashboard.</p>`}
+      <div id="tn-desk" hidden></div>
       <p class="tn-err" id="tn-err" role="status" hidden></p>
       <div class="ph-acts"><button type="button" class="btn" id="tn-skip">Skip</button>${hosted ? `<button type="button" class="btn" id="tn-done">Open ${esc(st.name)}</button><button type="button" class="btn primary" id="tn-invite">Invite friends</button>` : c.where === 'github' ? `<button type="button" class="btn primary" id="tn-done">Open ${esc(st.name)}</button>` : `<button type="button" class="btn" id="tn-done">Open ${esc(st.name)}</button><button type="button" class="btn primary" id="tn-online">Put this tribe online</button>`}</div>`;
+    const dk = $('#tn-desk', el); if (dk && hosted && window.TribeDesktopFolder) window.TribeDesktopFolder.line(dk, { pid: c.pid, wait: true, ...(c.server && c.token ? { server: c.server, token: c.token } : {}), before: () => close(true) });   // p13: "Saved on your Desktop · Open folder · Change"
     const ol = $('#tn-online', el); if (ol) ol.onclick = () => finish({ online: true });
     $('#tn-skip', el).onclick = () => finish(); $('#tn-done', el).onclick = () => finish();
     const iv = $('#tn-invite', el); if (iv) iv.onclick = () => finish({ invite: true });   // the one invite sheet (inviteone.js), once we're in the new tribe

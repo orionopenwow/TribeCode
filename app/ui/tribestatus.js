@@ -127,7 +127,7 @@
     const cp = CP(), line = pop && pop.querySelector('#ts-copy-line'); if (!cp) return;
     const was = btn.textContent; btn.disabled = true; btn.textContent = k === 'send' ? T('Sending…') : T('Getting…');
     let ok = true;
-    try { if (k === 'send') { const left = await cp.send(); ok = !left; } else ok = await cp.get(); } catch { ok = false; }
+    try { if (k === 'send') { const left = await cp.send(); ok = !left; } else ok = await cp.get({ asked: true }); } catch { ok = false; }
     btn.textContent = was; btn.disabled = false;
     if (line && line.isConnected) {
       const L = copyLine(); line.dataset.n = L.n;

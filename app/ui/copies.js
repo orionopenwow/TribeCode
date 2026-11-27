@@ -232,6 +232,22 @@
     return { value: merge3(base, mine, theirs, dec).value, asked: true };
   }
 
+  // ---------- the project folder (p13, server/tribefolder.js): files changed in another program count as changes ----------
+  // On the computer that keeps the tribe, an edit made outside TribeCode (VS Code, Finder…) is already with the tribe
+  // (friends see it live), so "Send my changes" sends it on to the GitHub backup when there is one; "Get the latest"
+  // brings friends' changes from the backup into the folder as files.
+  const FKEY = () => 'tribecode.copies.folder:' + server();
+  const hereHost = () => { const c = C(); const me = (c && c.state && c.state().me) || {}; return me.role === 'host' && (!!root.__TAURI__ || /^(localhost|127\.0\.0\.1|\[::1\])$/.test((root.location && root.location.hostname) || '')); };
+  function folderEdit(m) {
+    if (!m || m.type !== 'folder-change' || !m.outside || !m.project || !hereHost()) return;
+    const all = store.get(FKEY(), {}) || {}, set = new Set(all[m.project] || []);
+    (Array.isArray(m.files) ? m.files : []).slice(0, 200).forEach(f => set.add(String(f).slice(0, 300)));
+    all[m.project] = [...set].slice(-300); store.set(FKEY(), all); emit('folder', { pid: m.project, n: set.size });
+  }
+  const folderEdits = () => store.get(FKEY(), {}) || {};
+  const syncOf = async (c, pid) => { try { const r = await c.api(`/projects/${encodeURIComponent(pid)}/sync`); return (r && !r._fromCopy && r.status) || null; } catch { return null; } };
+  (function listen(n) { const c = C(); if (c && c.on) c.on('ws', folderEdit); else if (n < 40) setTimeout(() => listen(n + 1), 250); })(0);
+
   // ---------- send and get ----------
   const APP_UNSENT = 'tribecode.appcreator.unsent.', SITE_DRAFT = 'tribecode.sitedesigner.draft.';
   function pending() {
@@ -239,6 +255,7 @@
     (c.outbox ? c.outbox() : []).forEach(it => list.push({ kind: it.kind || 'action', label: it.label || '' }));
     store.keys(APP_UNSENT).forEach(k => { const v = store.get(k, null); if (v && v.doc) list.push({ kind: 'app', pid: k.slice(APP_UNSENT.length) }); });
     store.keys(SITE_DRAFT).forEach(k => { const pid = k.slice(SITE_DRAFT.length); if (pid === 'local') return; const v = store.get(k, null); if (v && v.dirty) list.push({ kind: 'site', pid }); });
+    Object.entries(folderEdits()).forEach(([pid, files]) => { if (files && files.length) list.push({ kind: 'folder', pid, n: files.length }); });   // p13
     return list;
   }
   let sending = null;
@@ -265,13 +282,22 @@
           emit('needs-look', { kind: 'app', pid });
         }
       }
+      // p13: files changed in the folder go on to the GitHub backup (already with the tribe); with no backup they are sent
+      for (const [pid, files] of Object.entries(folderEdits())) {
+        if (!files || !files.length) continue;
+        const st = await syncOf(c, pid);
+        if (st && st.connected) { try { await c.api(`/projects/${encodeURIComponent(pid)}/sync/ship`, { method: 'POST', body: { message: T('Changes made in the folder') } }); } catch { continue; } }
+        const all = folderEdits(); delete all[pid]; store.set(FKEY(), all);
+      }
       emit('sent', pending().length); return pending().length;
     })().finally(() => { sending = null; });
     return sending;
   }
-  async function get() {
+  async function get(o = {}) {
     const c = C(); if (!c || !c.api) return false;
     const pid = c.project ? c.project() : '';
+    // p13: asked by a person, a project folder with a GitHub backup gets friends' changes from it as files
+    if (o.asked && pid) { const st = await syncOf(c, pid); if (st && st.connected && st.hasFolder && !st.busy) { try { await c.api(`/projects/${encodeURIComponent(pid)}/sync/pull`, { method: 'POST', body: {} }); } catch {} } }
     const paths = ['/projects', ...(pid ? [`/projects/${encodeURIComponent(pid)}/site-config`, `/projects/${encodeURIComponent(pid)}/app-config`, `/projects/${encodeURIComponent(pid)}/sync`] : [])];
     const r = await Promise.all(paths.map(p => c.api(p).then(d => !d._fromCopy, () => false)));
     const ok = r.some(Boolean); if (ok) { touch(); emit('got', { pid }); try { dispatchEvent(new CustomEvent('tribe:copies-got', { detail: { pid } })); } catch {} }

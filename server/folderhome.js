@@ -222,7 +222,7 @@ module.exports = function folderHome({ P, W, baseStore, isLocal, broadcast, perm
   function copyTree(from, to) {
     fs.cpSync(from, to, { recursive: true, errorOnExist: false, force: false, filter: src => { try { return !fs.lstatSync(src).isSymbolicLink() && path.basename(src) !== '.trees'; } catch { return false; } } });
   }
-  async function setFolder(pid, body, me) {
+  async function setFolder(pid, body, me, { quiet = false } = {}) {   // quiet: the tribe's Desktop folder (server/tribefolder.js) says nothing in chat
     const p = P.get(pid); if (!p) throw fail(404, 'project not found');
     const want = check(body.path, { project: pid, create: !!body.create });
     if (!want.exists) fs.mkdirSync(want.real);
@@ -238,7 +238,7 @@ module.exports = function folderHome({ P, W, baseStore, isLocal, broadcast, perm
     P.update(pid, { repo: target, workspace: false, folder: target });
     resetHub(pid); watch(pid);
     try { broadcast({ type: 'projects' }); } catch {}
-    try { P.inProject(pid, () => postChat('general', 'tribecode', moved ? `${nameOf(me.id) || me.name} moved **${p.name}** to ${display(target)}. The old folder (${moved.from}) is still there.` : `**${p.name}** now lives in ${display(target)} on the host computer.`)); } catch {}
+    if (!quiet) try { P.inProject(pid, () => postChat('general', 'tribecode', moved ? `${nameOf(me.id) || me.name} moved **${p.name}** to ${display(target)}. The old folder (${moved.from}) is still there.` : `**${p.name}** now lives in ${display(target)} on the host computer.`)); } catch {}
     return { folder: info(pid, me), moved };
   }
   function info(pid, me) {
