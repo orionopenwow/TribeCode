@@ -1,11 +1,11 @@
 # TribeCode session handoff
 
-Updated 2026-11-21 by the session that released v0.44.0 to v0.47.0 (on top of the other session's v0.41.2 to v0.43.0). For any agent or Claude session picking up TribeCode work. Read `AGENTS.md` and `HANDOFF.md` first; this page covers what those don't: the current state, work in flight, how releases are done, and how two sessions avoid stepping on each other.
+Updated 2026-11-27 by the session that released v0.48.0 (on top of v0.44.0 to v0.47.0). For any agent or Claude session picking up TribeCode work. Read `AGENTS.md` and `HANDOFF.md` first; this page covers what those don't: the current state, work in flight, how releases are done, and how two sessions avoid stepping on each other.
 
 ## Where things stand
 
-- **Released:** v0.47.0 is on `main` and `dev` (2026-11-21). `CHANGELOG.md` has every release in user terms; `docs/CONTEXT.md` has one line per release with the files involved.
-- **Service worker cache:** `tribecode-shell-v299` on `main`. Bump it above whatever you find when shell files change. Retired website templates must stay out of `SHELL` (`site_variety_test` checks), so do not union them back in when resolving `sw.js`.
+- **Released:** v0.48.0 is on `main` and `dev` (2026-11-27). `CHANGELOG.md` has every release in user terms; `docs/CONTEXT.md` has one line per release with the files involved.
+- **Service worker cache:** `tribecode-shell-v342` on `main`. Bump it above whatever you find when shell files change. Retired website templates must stay out of `SHELL` (`site_variety_test` checks), so do not union them back in when resolving `sw.js`.
 - **Flint's language score:** 2365/2391 (98.9%) on `flint_eval_test`; the bar is 98%.
 - **The npm test chain** has about 296 steps; a full run is several hours on the sandbox, so releases use targeted tests plus the smoke set.
 - **Two-step sign-in and payments are built but off.** They turn on with `TRIBE_TWO_STEP=1` and `TRIBE_PAYMENTS=1` (or the host-only settings in `docs/ACCOUNTS.md` and `docs/PREMIUM.md`). The owner will say when.
@@ -13,7 +13,9 @@ Updated 2026-11-21 by the session that released v0.44.0 to v0.47.0 (on top of th
 
 ## In flight
 
-Nothing waiting. v0.44.0 took the last of this session's branches (`feat/ai-guides`, `feat/site-templates2`, the useful parts of `feat/easy-start`). `feat/editor-chrome` and `rel/0411` were superseded by v0.42.0's creator shell and are not to be merged; the window buttons from editor-chrome live on as `app/ui/creatorwin.js`.
+Nothing waiting: v0.48.0 took pass 12 (copies, push/pull, Backup on GitHub, encrypted DMs, dashboard room) and pass 13 (office on by default + Make your character, the Desktop tribe folder, How we're connected + invites from people you know, the UX sweep). Branches `feat/p12-*` and `feat/p13-*` are merged; `integ13` is the integration branch.
+
+Open follow-ups: one-button GitHub sign-in needs the owner's OAuth App Client ID (`BUILTIN_CLIENT_ID` in server/github-auth.js); friend-to-friend copies without the tribe's computer are not built (docs/COPIES.md); friends from other servers can't be listed in the invite sheet; `e2e_instant` fails at the old `#pj-check` vision step (stale since the dashboard changes); the ranked suggestions in `docs/UX-SWEEP-P13.md`; real Windows/OneDrive/macOS Desktop folders and Open folder in the Tauri app are not yet checked on real machines.
 
 `docs/SEAMLESS-PLAN.md` is the plan for friends, backup and your own AI with nothing to set up; its later batches are not built.
 

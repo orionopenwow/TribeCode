@@ -1,5 +1,20 @@
 # Changelog
 
+## v0.48.0
+- **Agents & office is on for every tribe**: everyone, people and AI helpers, is a character at a desk that stays theirs. Turn it off in Settings › Tribe & admin.
+- **Make your character**: the first time you're in a tribe, pick your body, hair, clothes and accessories, set your name tag and press Done. Friends see it, and your next tribe starts with it.
+- **The office shows what's really happening**: people in a call walk to the meeting corner, a message pops up as a speech bubble, an AI helper waiting for your OK raises its hand (click it to approve), and an empty desk says "Back soon". An empty tribe has a desk to invite a friend and one to add an AI helper.
+- **Your tribe gets a folder on your Desktop**: a README in plain words, a ready .gitignore, a .tribe copy that updates itself, and a folder for each project that's ready for GitHub. "Saved on your Desktop · Open folder · Change" after you make a tribe, in Where it lives and in Settings; friends with the app can save a folder of their own.
+- **Save, share and keep in step**: save the whole tribe as one .tribe file and open it again; "Show a friend" sends a read-only copy by link or file. Every friend keeps a copy to read and change offline; "Send my changes" and "Get the latest" sit by your status, with who sent what.
+- **Two people changed the same thing?** Different parts go together by themselves; for the same part you see it by name ("Big title", a section's title) with both versions, and choose Keep mine, Keep theirs or Keep both (or Keep all at once).
+- **Backup on GitHub**: one card with On/Off, when it last backed up, and what's never backed up (keys, private messages). Files you change in another program count as changes to send, and friends can get the latest from GitHub even when your computer is off.
+- **How we're connected**: a simple picture of the tribe's computer and how each friend reaches it (same Wi-Fi, private link, internet link, offline with a copy), three plain sentences and the one fix.
+- **Invite people you already know** from the invite sheet, their profile card or People: they see it in their Home with Join / Not now, and nobody is added until they press Join. Joining says clearly what's happening (checking, the tribe's computer is off and we'll keep trying, expired, already in) and the welcome names who invited you.
+- **Private messages are end-to-end encrypted** once both people have a recent version: the computer that runs the tribe stores only locked text. Channels, files and AI helper chats are not, and What's private says so.
+- **A roomier dashboard preview**: the preview takes most of the width; the old Connect tabs are gone.
+- **Small things**: Undo after deleting a task, press ? for keyboard shortcuts, plain words instead of "Ship it" and "Pinned repo", the welcome card uses icons instead of emoji.
+- **Phones**: the pixel office fits 390px and a tap opens anyone's card; the character creator, network picture, join pages, copy buttons and choice sheet all fit with 40px+ targets and no sideways scroll; Flint's local-brain offer no longer pushes Home's title down; the website designer says "Press and hold".
+
 ## v0.47.0
 - **The office fills the page**: Agents & office is now the pixel office edge to edge, with the whole office in view and the hall drawn around it so there's no empty space. Drag to look around, − and + to zoom, Fit in the ⋯ menu to reset. One slim toolbar: Floor or Desks, zoom, and one ⋯ menu (Your look, the office's look, Edit layout, Sound, where your tribe runs, what's private, GitHub).
 - **One box to drive everything**: a message box at the bottom of the office, the same as the one in Messages. Plain words go to #general and show up in Messages for everyone; @someone mentions them; "@claude add a leaderboard" gives your AI helper a task; "/" lists commands (task, add an AI helper, invite, ask Flint, your look, where it runs); "invite a friend" or "make the website darker" runs through Flint and doesn't post to chat. "add claude" opens Claude's one-line setup. Up brings back your last message.
