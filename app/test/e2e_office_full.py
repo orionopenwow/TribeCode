@@ -356,8 +356,7 @@ def main():
             # ---------- 5. phone, 390px ----------
             pp = page(390, 844, mobile=True)
             pp.evaluate("TribeShell.go('ws-agents')")
-            pp.wait_for_selector("#view-coord:not(.hidden) .ao-full #ad-office .of-desk", timeout=20000)
-            assert pp.locator("#ad-office .os-stage").count() == 0, "phones get the desks"
+            pp.wait_for_selector("#view-coord:not(.hidden) .ao-full #ad-office .os-stage", timeout=20000)   # feat/p13-office: phones get the pixel floor too
             pp.wait_for_selector("#ao-box .fl-in", timeout=10000)
             # the box stays at the bottom of the screen, above the phone's tab bar, while the page scrolls
             nav = "[...document.querySelectorAll('#tabbar, .m2-tabbar, nav')].filter(n => getComputedStyle(n).display !== 'none' && getComputedStyle(n).position === 'fixed' && n.getBoundingClientRect().bottom >= innerHeight - 2).map(n => n.getBoundingClientRect().top).concat([innerHeight])"
@@ -374,7 +373,7 @@ def main():
             pp.wait_for_timeout(300); pp.screenshot(path="/tmp/office-full-390.png")
             pp.click("#ofl-fold"); pp.wait_for_function("!document.querySelector('#ad-dash').dataset.sheet")
             assert pp.evaluate("document.documentElement.scrollWidth <= innerWidth + 1")
-            print("ok  5. 390px: desks, the box at the bottom, the panel as a bottom sheet, 40px targets")
+            print("ok  5. 390px: the floor, the box at the bottom, the panel as a bottom sheet, 40px targets")
             b.close()
         errs = [e for e in errors if "ResizeObserver" not in e]
         assert not errs, "\n".join(errs)

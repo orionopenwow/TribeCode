@@ -68,6 +68,9 @@ def main():
             time.sleep(0.2)
         camp = ok(api("/bootstrap", "POST", {"name": "Camp"}))["token"]
         pid = ok(api("/projects", "POST", {"name": "Star Hopper"}, token=camp))["project"]["id"]
+        # feat/p13-office: the pixel floor is on by default; this test starts with it off to cover the desks and the offer
+        assert ok(api("/office", token=camp))["on"] is True, "the pixel floor is on in a new tribe"
+        ok(api("/office", "PUT", {"on": False}, token=camp))
 
         with sync_playwright() as pw:
             b = pw.chromium.launch(executable_path="/usr/bin/google-chrome", args=["--no-proxy-server"])
@@ -266,13 +269,16 @@ def main():
             # ---------- 8. phone, 390px ----------
             pp = page(camp, "Camp", 390, 844, mobile=True)
             to_view(pp)
+            pp.wait_for_selector("#ad-office .os-stage", timeout=15000)   # feat/p13-office: phones get the pixel floor too
+            assert pp.evaluate("document.documentElement.scrollWidth <= innerWidth + 1"), "the floor fits"
+            pp.evaluate("TribeOffice.setView('desks')")
             pp.wait_for_selector(f"#ad-office .of-desk[data-desk='{maya}']", timeout=15000)
-            assert pp.locator("#ad-office .os-stage").count() == 0, "phones get the desk list"
+            assert pp.locator("#ad-office .os-stage").count() == 0, "Desks shows the desk list"
             assert pp.evaluate("document.documentElement.scrollWidth <= innerWidth + 1"), pp.evaluate("document.documentElement.scrollWidth")
             small = pp.evaluate("[...document.querySelectorAll('#ao-head .btn, #ao-setup .btn, .of-desk')].filter(e => e.offsetParent).map(e => e.getBoundingClientRect()).filter(r => r.height < 40).length")
             assert small == 0, small
             pp.wait_for_timeout(500); pp.screenshot(path="/tmp/agents-office-390.png")
-            print("ok  8. 390px: desk list, no sideways scroll, 40px targets")
+            print("ok  8. 390px: the floor, and the desk list under Desks; no sideways scroll, 40px targets")
             b.close()
         assert not errors, "\n".join(errors)
         print("E2E agents & office test passed")

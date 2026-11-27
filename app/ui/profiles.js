@@ -198,7 +198,10 @@
   // Markup for the inside of an avatar (the caller keeps its own box size).
   function inner(m) {
     const a = m && m.profile && m.profile.avatar;
-    if (!a) return null;
+    if (!a) {   // feat/p13-office: no avatar chosen, but a character made in the office: its face
+      const f = m && m.id && window.TribeOfficeLooks && window.TribeOfficeLooks.faceUrl ? window.TribeOfficeLooks.faceUrl(m.id) : null;
+      return f ? { html: `<img class="pf-img pf-char" src="${esc(f)}" alt="">`, bg: 'var(--surface-3)', cls: 'pf-k-char' } : null;
+    }
     if (a.kind === 'emoji') return { html: `<span class="pf-emo">${esc(a.emoji)}</span>`, bg: a.tint ? PALETTE[a.tint] : 'var(--surface-3)', cls: 'pf-k-emoji' };
     if (a.kind === 'pixel') return { html: svg(a.pixel, a.tint), bg: 'transparent', cls: 'pf-k-pixel' };
     if (a.kind === 'maker') return { html: makerSvg(a.spec, a.tint), bg: 'transparent', cls: 'pf-k-pixel' };
@@ -222,9 +225,9 @@
     const x = inner(m), sig = x ? x.html : '';
     if (el.dataset.pfSig === sig) return !!x;
     const keep = [...el.children].filter(c => c.matches('.st, .pf-dot, i.m2-on'));
-    if (!x) { if (el.dataset.pfSig) { delete el.dataset.pfSig; el.classList.remove('pf-filled', 'pf-k-emoji', 'pf-k-pixel', 'pf-k-photo', 'pf-anim'); } return false; }
+    if (!x) { if (el.dataset.pfSig) { delete el.dataset.pfSig; el.classList.remove('pf-filled', 'pf-k-emoji', 'pf-k-pixel', 'pf-k-photo', 'pf-k-char', 'pf-anim'); } return false; }
     el.dataset.pfSig = sig;
-    el.classList.remove('pf-k-emoji', 'pf-k-pixel', 'pf-k-photo', 'pf-anim');
+    el.classList.remove('pf-k-emoji', 'pf-k-pixel', 'pf-k-photo', 'pf-k-char', 'pf-anim');
     el.classList.add('pf-filled', ...x.cls.split(' '));
     el.style.background = x.bg; el.innerHTML = x.html; keep.forEach(k => el.appendChild(k));
     return true;
@@ -398,7 +401,7 @@
       ${facts ? `<div class="pf-facts">${facts}</div>` : ''}
       ${preview ? '' : `${(d.inCommon || []).length && !d.you ? `<section class="pf-sec"><span class="eyebrow">Projects in common</span><div class="pf-chips">${d.inCommon.map(x => `<span class="pf-chip">${esc(x.name)}</span>`).join('')}</div></section>` : ''}
       ${(d.agents || []).length ? `<section class="pf-sec"><span class="eyebrow">${d.you ? 'Your agents' : 'Their agents'}</span><div class="pf-agents">${d.agents.map(a => { const am = memberOf(a.id) || a; return `<button class="pf-agent" data-pop-agent="${esc(a.id)}">${avatar({ ...am, role: 'agent' }, 'sm')}<span>${esc(a.name)}</span><i class="pf-dot sm" data-state="${esc(stateOf(am))}"></i></button>`; }).join('')}</div></section>` : ''}
-      ${d.you ? `<div class="pf-acts"><button class="btn primary" data-pop="edit">Edit profile</button><button class="btn tonal" data-pop="activity">Activity</button></div>`
+      ${d.you ? `<div class="pf-acts"><button class="btn primary" data-pop="edit">Edit profile</button><button class="btn tonal" data-pop="activity">Activity</button>${window.TribeOfficeLooks ? `<button class="btn tonal" data-pop="character">Your character</button>` : ''}</div>`
         : `${window.TribePeople ? '<button class="linkish pf-full" data-pop="activity">View activity</button>' : ''}${window.TribeAbilities && !m.agent ? '<button class="linkish pf-full" data-pop="work">Abilities, gigs and finished work</button>' : ''}<section class="pf-sec pf-note"><label class="eyebrow" for="pf-note-in">Note <span class="pf-only">only you see this</span></label><textarea id="pf-note-in" class="pf-note-in" maxlength="256" rows="2" placeholder="Click to add a note">${esc(d.note || '')}</textarea></section>`}`}`;
   }
   let friendSet = null;
@@ -487,6 +490,7 @@
     if (k === 'dm') { close(); return window.TribeDM && window.TribeDM.open(id); }
     if (k === 'edit') { close(); return edit(); }
     if (k === 'activity') { close(); return window.TribePeople && window.TribePeople.open(id); }
+    if (k === 'character') { close(); return window.TribeOfficeLooks && window.TribeOfficeLooks.openMine(); }   // feat/p13-office
     if (k === 'work') { close(); return window.TribeAbilities && window.TribeAbilities.profile(id); }   // feat/company-gigs: the work profile page
     if (k === 'copy') { try { await navigator.clipboard.writeText(id); toast('User ID copied'); } catch { prompt('User ID', id); } return; }
     if (k === 'mute') {

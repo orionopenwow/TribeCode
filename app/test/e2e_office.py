@@ -49,6 +49,7 @@ def main():
             except Exception: pass
             time.sleep(0.2)
         host = ok(api("/bootstrap", "POST", {"name": "Camp"}))["token"]
+        ok(api("/office", "PUT", {"on": False}, token=host))   # feat/p13-office: the floor is on by default; this test covers the desks and the offer
         inv = ok(api("/invites", "POST", {}, token=host))["invite"]
         j = ok(api("/join", "POST", {"code": inv["code"], "name": "Maya"})); maya, maya_id = j["token"], j["member"]["id"]
 
@@ -84,7 +85,7 @@ def main():
             ag = ok(api("/agents", "POST", token=maya, project=pid), "agent")
             mcp(ag["token"], "my_lane", {})
             cp.wait_for_function("document.querySelector('[data-hub]') && document.querySelector('[data-hub]').dataset.hub === 'dash'", timeout=15000)
-            cp.wait_for_selector("#ad-office [data-of-on]", timeout=10000)   # the office: off by default, one offer
+            cp.wait_for_selector("#ad-office [data-of-on]", timeout=10000)   # the office turned off: one offer to turn it back on
             print("ok  hub: an agent connected -> the dashboard, live; the office is offered")
 
             # ---------- the office ----------

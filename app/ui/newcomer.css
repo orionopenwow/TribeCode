@@ -1,6 +1,6 @@
 /* Newcomer start (app/ui/newcomer.js, feat/newcomer-start): with nobody else and no AI helper yet, the sidebar leaves out
-   Set up company, Agents Hub and Agent fleet. A row stays while its own page is open (it is lit then). */
-body.nc-quiet .side .nest-row[data-pnav="ws-agents"]:not(.on),
+   Set up company and Agent fleet. A row stays while its own page is open (it is lit then). Agents & office always shows:
+   the office is on for every tribe and an empty one invites a friend and an AI helper (feat/p13-office). */
 body.nc-quiet .side .nest-row[data-pnav="company"]:not(.on),
 body.nc-quiet .side .nest-row[data-pnav="fleet"]:not(.on) { display: none; }
 

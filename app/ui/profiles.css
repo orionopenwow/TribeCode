@@ -17,7 +17,8 @@
 .pf-px { width: 100%; height: 100%; display: block; image-rendering: pixelated; }
 .pf-img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .pf-filled { overflow: hidden; }
-.pf-filled.pf-k-pixel, .pf-filled.pf-k-photo { padding: 0 !important; }
+.pf-filled.pf-k-pixel, .pf-filled.pf-k-photo, .pf-filled.pf-k-char { padding: 0 !important; }
+.pf-av .pf-char { width: 100%; height: 100%; object-fit: contain; image-rendering: pixelated; }   /* feat/p13-office: the office character's face */
 .pf-filled > .st { z-index: 1; }
 
 /* ---------- presence dots ---------- */

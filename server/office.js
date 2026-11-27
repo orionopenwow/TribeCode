@@ -5,8 +5,8 @@
 // no art, code or scene from it.
 //
 // The desks are always there: they are the top of Agents & office (app/ui/agentsoffice.js) as a calm desk list. "on" is
-// the pixel floor (Office Space), off by default: the host or an admin turns it on per tribe (Settings › This tribe, or
-// the offer above the desks); each person can still hide the office for themselves (that lives on their device). The same file holds "agentsOff": with it
+// the pixel floor (Office Space), on by default for every tribe (feat/p13-office): the host or an admin can turn it off
+// (Settings › Tribe & admin › The office; stored as floorOff, so tribes from before the switch flipped are on too); each person can still hide the office for themselves (that lives on their device). The same file holds "agentsOff": with it
 // on, agents' MCP tool calls are refused with a plain sentence until someone turns agents back on.
 //
 // Privacy: desks come from presenceFor(viewer), so "Show where I am" off and "Appear away" are respected, a DM is only
@@ -18,9 +18,10 @@
 'use strict';
 const LOOKS = require('../app/ui/officelooks-core.js');   // feat/office-looks: the look fields and their ranges
 
-module.exports = function office({ store, getMembers, presenceFor, placesFor = () => ({}), agentSeen, claims, loadTasks, changeReqs, nameOf, broadcast, canSet, asksFor = () => [] }) {
+module.exports = function office({ store, getMembers, presenceFor, placesFor = () => ({}), agentSeen, claims, loadTasks, changeReqs, nameOf, broadcast, canSet, asksFor = () => [], inCallFor = () => [] }) {
   const FILE = 'office.json';
-  const read = () => { try { const v = store.readJSON(FILE, {}); return { on: !!v.on, agentsOff: !!v.agentsOff, layout: v.layout || null, set: typeof v.set === 'string' ? v.set : 'office', looks: v.looks && typeof v.looks === 'object' ? v.looks : {} }; } catch { return { on: false, agentsOff: false, layout: null, set: 'office', looks: {} }; } };
+  // seats: who sits at which desk, given once and kept (a new person never moves anyone): { memberId: 0, 1, 2… }
+  const read = () => { try { const v = store.readJSON(FILE, {}); return { on: !v.floorOff, floorOff: !!v.floorOff, agentsOff: !!v.agentsOff, layout: v.layout || null, set: typeof v.set === 'string' ? v.set : 'office', looks: v.looks && typeof v.looks === 'object' ? v.looks : {}, seats: v.seats && typeof v.seats === 'object' ? v.seats : {} }; } catch { return { on: true, floorOff: false, agentsOff: false, layout: null, set: 'office', looks: {}, seats: {} }; } };
   let cfg = read();
   const save = (what = 'switches') => { store.writeJSON(FILE, cfg); broadcast({ type: 'office', on: cfg.on, agentsOff: cfg.agentsOff, what }); };
 
@@ -52,6 +53,15 @@ module.exports = function office({ store, getMembers, presenceFor, placesFor = (
     return Object.keys(out).length ? { v: 2, ...out } : null;
   }
   const lookOf = id => cfg.looks[id] || null;
+  // A desk for everyone, given the first time they show up and kept: the lowest free number (people who left free theirs).
+  let seatsDirty = false;
+  function seatOf(id) {
+    if (Number.isInteger(cfg.seats[id])) return cfg.seats[id];
+    const known = new Set((getMembers() || []).filter(m => !m.removed).map(m => m.id));
+    for (const k of Object.keys(cfg.seats)) if (!known.has(k)) delete cfg.seats[k];
+    const used = new Set(Object.values(cfg.seats)); let n = 0; while (used.has(n)) n++;
+    cfg.seats[id] = n; seatsDirty = true; return n;
+  }
 
   const THINK_MS = 25_000;   // an agent online with no tool step for this long is thinking (at the fire)
   const HANDED_MS = 90_000;  // a task finished in this window: the person walks to the board
@@ -61,7 +71,7 @@ module.exports = function office({ store, getMembers, presenceFor, placesFor = (
   const STEP = {
     claim_file: 'Claiming a file', release_file: 'Letting a file go', my_lane: 'Checking its lane', tribe_overview: 'Reading the tribe\'s plan',
     list_tasks: 'Looking at the task board', update_task: 'Updating a task', create_task: 'Adding a task', post_chat: 'Writing in #agents',
-    read_doc: 'Reading a doc', write_doc: 'Writing a doc', request_review: 'Asking for a review', site_read: 'Reading the website', site_propose: 'Suggesting website changes',
+    read_doc: 'Reading a doc', write_doc: 'Writing a doc', request_review: 'Asking for a review', request_approval: 'Asking for your OK', site_read: 'Reading the website', site_propose: 'Suggesting website changes',
     app_read: 'Reading the app', app_propose: 'Suggesting app changes', connected: 'Just connected',
   };
   const stepText = where => {
@@ -80,6 +90,7 @@ module.exports = function office({ store, getMembers, presenceFor, placesFor = (
     const byId = new Map((getMembers() || []).map(m => [m.id, m]));
     const tasks = (() => { try { return loadTasks() || []; } catch { return []; } })();
     const cl = (() => { try { return claims.list() || []; } catch { return []; } })();
+    const inCall = new Set((() => { try { return inCallFor(me) || []; } catch { return []; } })());
     const out = [];
     for (const p of pres) {
       const m = byId.get(p.id) || p;
@@ -91,7 +102,8 @@ module.exports = function office({ store, getMembers, presenceFor, placesFor = (
       const files = cl.filter(c => c.by === p.id).map(c => c.path).slice(0, 3);
       const d = { id: p.id, name: p.name, color: p.color || null, kind: agent ? 'agent' : 'person', agentKind: p.agentKind || null,
         online: !!p.online, away: !!(p.away || p.idle), paused: !!p.paused, where: p.role === 'agent' ? null : (places[p.id] || null), since: p.since || null,
-        task: doing ? { id: doing.id, title: String(doing.title || '').slice(0, 90) } : null, files, lines: [], spot: 'desk', state: 'off', look: lookOf(p.id), owner: agent ? (m.owner || null) : null, ownerName: agent && m.owner ? nameOf(m.owner) : null };
+        task: doing ? { id: doing.id, title: String(doing.title || '').slice(0, 90) } : null, files, lines: [], spot: 'desk', state: 'off', look: lookOf(p.id), owner: agent ? (m.owner || null) : null, ownerName: agent && m.owner ? nameOf(m.owner) : null,
+        seat: seatOf(p.id), inCall: !agent && !!p.online && inCall.has(p.id) };
       if (agent) { try { d.asks = (asksFor(p.id, me) || []).slice(0, 3).map(a => ({ id: a.id, title: String(a.title || '').slice(0, 90), canDecide: !!a.canDecide })); } catch { d.asks = []; } if (d.asks.length) d.bubble = 'ask'; }
       if (agent && seen0(p.id)) d.act = actOf(seen0(p.id).where);
       if (!agent && done) d.bubble = 'done';
@@ -116,7 +128,8 @@ module.exports = function office({ store, getMembers, presenceFor, placesFor = (
         else if (d.away) { d.state = 'away'; d.spot = 'lounge'; }
         else {
           d.state = 'active';
-          if (done) { d.spot = 'board'; d.lines.push(`Finished: ${String(done.title || '').slice(0, 60)}`); }
+          if (d.inCall) { d.spot = 'meet'; d.lines.push('In a call'); }
+          else if (done) { d.spot = 'board'; d.lines.push(`Finished: ${String(done.title || '').slice(0, 60)}`); }
           else if (!p.where) d.spot = 'lounge';
           if (doing) d.lines.push(`Task: ${d.task.title}`);
           if (files.length) d.lines.push(`Files: ${files.join(', ')}`);
@@ -125,7 +138,8 @@ module.exports = function office({ store, getMembers, presenceFor, placesFor = (
       d.lines = d.lines.slice(0, 4);
       out.push(d);
     }
-    // people first (by name), then agents; the order stays stable so desks don't jump around
+    if (seatsDirty) { seatsDirty = false; try { store.writeJSON(FILE, cfg); } catch {} }
+    // people first (by name), then agents; each keeps its own desk (seat), so nobody moves when someone joins
     out.sort((a, b) => (a.kind === b.kind ? 0 : a.kind === 'person' ? -1 : 1) || String(a.name).localeCompare(String(b.name)));
     return out;
   }
@@ -171,7 +185,7 @@ module.exports = function office({ store, getMembers, presenceFor, placesFor = (
       if (!canSet(me)) return fail(res, 403, 'only the host or an admin can change this');
       const b = (await readBody(req)) || {};
       let what = 'switches';
-      if (typeof b.on === 'boolean') cfg.on = b.on;
+      if (typeof b.on === 'boolean') { cfg.on = b.on; cfg.floorOff = !b.on; }
       if (typeof b.agentsOff === 'boolean') cfg.agentsOff = b.agentsOff;
       if ('layout' in b) { cfg.layout = b.layout === null ? null : cleanLayout(b.layout); what = 'layout'; }
       if (typeof b.set === 'string' && /^[a-z0-9-]{2,32}$/.test(b.set)) { cfg.set = b.set; what = 'set'; }

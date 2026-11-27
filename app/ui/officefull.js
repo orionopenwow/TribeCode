@@ -378,11 +378,12 @@
   setInterval(() => { if (root && root.isConnected && tab === 'updates' && document.visibilityState === 'visible') updates(); }, 30000);
   // ---------- the head line: who is here, as small avatars ----------
   const initials = n => (String(n || '?').trim().split(/\s+/).filter(w => /^[\p{L}\p{N}]/u.test(w)).map(w => [...w][0]).slice(0, 2).join('') || '?').toUpperCase();
+  const face = id => (window.TribeOfficeLooks && window.TribeOfficeLooks.faceUrl ? window.TribeOfficeLooks.faceUrl(id) : null);   // feat/p13-office: the character's face
   function hereHtml() {
     const Of = O(); if (!Of || !Of.state()) return '';
     const list = ((Of.state().desks) || []).slice().sort((a, b) => (a.state === 'off') - (b.state === 'off'));
     const shown = list.slice(0, 6);
-    return shown.map(x => `<button type="button" class="ofl-av" data-desk="${esc(x.id)}" data-role="${x.kind === 'agent' ? 'agent' : 'person'}" data-state="${esc(x.state)}" aria-label="${esc(x.name)}, ${esc(Of.statusOf(x))}" title="${esc(x.name)} · ${esc(Of.statusOf(x))}">${esc(initials(x.name))}</button>`).join('')
+    return shown.map(x => `<button type="button" class="ofl-av" data-desk="${esc(x.id)}" data-role="${x.kind === 'agent' ? 'agent' : 'person'}" data-state="${esc(x.state)}" aria-label="${esc(x.name)}, ${esc(Of.statusOf(x))}" title="${esc(x.name)} · ${esc(Of.statusOf(x))}">${face(x.id) ? `<img class="ofl-face" src="${esc(face(x.id))}" alt="">` : esc(initials(x.name))}</button>`).join('')
       + (list.length > 6 ? `<button type="button" class="ofl-av ofl-av-n" data-ofl-sheet="work" aria-label="${esc(T('{n} more', { n: list.length - 6 }))}">+${list.length - 6}</button>` : '');
   }
   function sync() {

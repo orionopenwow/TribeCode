@@ -126,11 +126,11 @@ def main():
             pg.evaluate("TribeHub.open('home')"); pg.wait_for_selector("#view-hub:not(.hidden) #hub-hero", timeout=10000)
             pg.wait_for_function("!document.querySelector('#hub-idea')", timeout=10000)
 
-            # in the project the sidebar is still quiet: no Agents Hub, no Set up company
+            # in the project the sidebar is still quiet: no Set up company (Agents & office is always there, feat/p13-office)
             pg.evaluate(f"TribeProjects.switchTo('{pid}', 'home')"); pg.wait_for_selector("#nest-chat", state="visible", timeout=10000)
             pg.wait_for_timeout(800)
             assert pg.evaluate("document.body.classList.contains('nc-quiet')")
-            assert not visible(pg, "#nest-ws-agents") and not visible(pg, "#nest-company"), "Agents Hub and Set up company wait"
+            assert visible(pg, "#nest-ws-agents") and not visible(pg, "#nest-company"), "Agents & office always shows (the office is on by default); Set up company waits"
             assert visible(pg, "#nest-chat") and visible(pg, "#nest-docs"), "the rest of the sidebar is there"
             assert palette_finds(pg, "Agents & office"), "Ctrl K finds Agents & office"
             pg.evaluate("TribeShell.go('ws-agents')"); pg.wait_for_selector("#view-coord:not(.hidden)", timeout=8000)

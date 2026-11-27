@@ -168,6 +168,8 @@ body:has(#view-coord:not(.hidden) .ao-full) .toast { bottom: 112px; }
   .ofl-body { order: 2; }
   .ofl-main { border: 1px solid var(--edge); border-radius: var(--r-lg); }
   .ofl-main #ao-floor { height: auto; }
+  .ofl[data-view="floor"] #ao-floor { overflow: clip; }   /* clip, not hidden: the box below stays sticky */
+  .ofl[data-view="floor"] #ao-floor { height: min(56dvh, 460px); }   /* feat/p13-office: the pixel floor on phones too */
   .ofl-bar { top: 8px; left: 8px; }
   .ofl-sg, .ofl-ib { height: 40px; min-width: 40px; }
   .ofl-menu { width: min(290px, calc(100vw - 48px)); }
@@ -196,3 +198,6 @@ body:has(#view-coord:not(.hidden) .ao-full) .toast { bottom: 112px; }
   .ofl-sg, .ofl-ib, .ofl-tab, button.ofl-row, .ofl-fold svg, .ofl-side { transition: none; }
   .ofl[data-replies="on"] .ofl-box .flm-thread, .ofl-scrim { animation: none; }
 }
+
+/* feat/p13-office: who is here, as their characters' faces */
+.ofl-av .ofl-face { width: 100%; height: 100%; object-fit: contain; image-rendering: pixelated; border-radius: inherit; }

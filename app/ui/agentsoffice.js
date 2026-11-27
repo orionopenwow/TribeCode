@@ -2,8 +2,8 @@
 // first page (coord.js 'agents' tab, painted by agentsdash.js; shell row "Agents & office", key ws-agents) and, on Home
 // with no project, the same page for every project (agentshub.js #/fleet). This file draws the parts both share:
 //   head()      the title, one line on who is here, and Add an AI helper / Invite a friend
-//   office()    the office at the top: the pixel floor when the tribe turned it on (computers), the desks otherwise and
-//               on phones. Click anyone (floor, desk or list) for the same card (office.js openCard).
+//   office()    the office at the top: the pixel floor (on for every tribe, phones too; feat/p13-office), the desks when
+//               the tribe turned it off or you chose Desks. Click anyone (floor, desk or list) for the same card (office.js openCard).
 //   addAi(id)   no AI helper yet: pick the AI you use (Claude, ChatGPT, Codex, Gemini, Cursor, a model on this computer,
 //               a free AI in your browser). Each choice opens the one setup that fits (the invite sheet, inviteagent.js).
 //   setup()     four loops that finish, each one card with one button: Bring a friend (the one invite sheet), Where

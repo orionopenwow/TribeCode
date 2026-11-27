@@ -6,7 +6,12 @@
 // Data: TribeOffice (server/office.js). Art: TribeOfficeArt (Pixel Agents' art, MIT, (c) 2026 Pablo De Lucca; character
 // parts based on JIK-A-4's Metro City, CC0). Depth sorting, seats facing desks and the sprite timings follow Pixel Agents,
 // ported to plain JavaScript; path finding, the card, the wardrobe and the editor are TribeCode's.
-//   window.TribeOfficeSpace = { mount(el, office) -> { update(data), destroy() } }
+// feat/p13-office: desks are given once and kept (server seats), a call walks people to the lounge's meeting corner, a
+// channel message shows as a speech bubble, an AI helper waiting for an OK raises its hand (a click opens the OK), an
+// offline person's desk gets a "Back soon" sign, and a tribe with nobody else shows a desk for "Invite a friend" and one
+// for "Add an AI helper". Drawing pauses off screen and in a hidden tab, and redraws at most ~12 times a second when
+// nobody walks.
+//   window.TribeOfficeSpace = { mount(el, office) -> { update(data), say(id, text), destroy() } }
 (function () {
   'use strict';
   const S = window.TribeOfficeSets, A = window.TribeOfficeArt, C = window.TribeClient; if (!S || !A || !C) return;
@@ -124,11 +129,25 @@
       list.push({ id: 'flint', name: 'Flint', kind: 'flint', state: 'active', spot: 'desk', lines: [] });
       return list;
     };
+    // A seat the host picked first; then everyone's own desk number (server/office.js seats), so desks never swap.
     function deskFor() {
       const out = new Map(), seats = deskSeats(), list = everyone().filter(d => d.kind !== 'flint'), taken = new Set();
       for (const s of seats) if (s.item.who && list.some(p => p.id === s.item.who) && !out.has(s.item.who)) { out.set(s.item.who, s); taken.add(s); }
-      for (const p of list) if (!out.has(p.id)) { const s = seats.find(x => !taken.has(x) && !x.item.who); if (s) { out.set(p.id, s); taken.add(s); } }
+      const open = seats.filter(x => !x.item.who), num = p => (Number.isInteger(p.seat) ? p.seat : 1e6);
+      for (const p of list.filter(q => !out.has(q.id)).sort((a, b) => num(a) - num(b))) {
+        let s = Number.isInteger(p.seat) ? open[p.seat] : null;
+        if (!s || taken.has(s)) s = open.find(x => !taken.has(x));
+        if (s) { out.set(p.id, s); taken.add(s); }
+      }
       return out;
+    }
+    // An empty tribe still looks alive: a free desk says "Invite a friend", another "Add an AI helper".
+    const wants = () => { const list = everyone(), w = []; if (list.filter(d => d.kind === 'person').length <= 1) w.push('invite'); if (!list.some(d => d.kind === 'agent')) w.push('ai'); return w; };
+    function spares(desks) {
+      if (!data || !data.me || editing) return [];
+      const used = new Set(desks.values());
+      const free = deskSeats().filter(x => !used.has(x) && !x.item.who);
+      return wants().map((k, i) => (free[i] ? { k, seat: free[i] } : null)).filter(Boolean);
     }
     function targetOf(d, desks, used) {
       if (d.state === 'off') return { ...door(), leave: true };
@@ -138,6 +157,7 @@
       if (d.id === 'flint') return free(spotsNear(i => i.t === 'COFFEE')) || free(spotsNear(i => sz(i).cat === 'decor')) || door();
       if (d.spot === 'board') return free(spotsNear(i => i.t === 'WHITEBOARD')) || atDesk || lounge() || door();
       if (d.spot === 'think') return free(spotsNear(i => /BOOKSHELF/.test(i.t))) || lounge() || atDesk || door();
+      if (d.spot === 'meet') { const s = free(geo.seats.filter(x => x.sofa)); return s ? { x: s.x, y: s.y, dir: s.dir, sit: true, meet: true } : free(spotsNear(i => /TABLE/.test(i.t))) || lounge() || atDesk || door(); }   // in a call: the meeting corner
       if (d.spot === 'lounge' || d.state === 'away') return lounge() || atDesk || door();
       if (atDesk) return atDesk;
       return lounge() || door();
@@ -230,6 +250,13 @@
         const px0 = Math.min(...pts.map(p => p.x)) - 1, px1 = Math.max(...pts.map(p => p.x)) + 2, py0 = Math.min(...pts.map(p => p.y)) - 2.5, py1 = Math.max(...pts.map(p => p.y)) + 1.5;
         if ((px1 - px0) * T * 2 <= vw && (py1 - py0) * T * 2 <= vh) { s = 2; fx = (px0 + px1) / 2 * T; fy = (py0 + py1) / 2 * T; }
       }
+      // phones: one step closer when everyone (with their tags) still fits, looking at where people are (drag to see the rest)
+      const dpr = Math.max(1, window.devicePixelRatio || 1);
+      if (vw / dpr < 600 && pts.length) {
+        const px0 = Math.min(...pts.map(p => p.x)) - 1.5, px1 = Math.max(...pts.map(p => p.x)) + 2.5, py0 = Math.min(...pts.map(p => p.y)) - 3, py1 = Math.max(...pts.map(p => p.y)) + 1.5;
+        const s2 = Math.floor(s) + 1;
+        if ((px1 - px0) * T * s2 <= vw && (py1 - py0) * T * s2 <= vh) { s = s2; fx = (px0 + px1) / 2 * T; fy = (py0 + py1) / 2 * T; }
+      }
       return { s, fx, fy, w: vw, h: vh };
     }
     // More building around the office: the hall floor outside it and in its empty (void) tiles
@@ -286,7 +313,8 @@
         if (ch.d.kind === 'flint') { const hov = reduce() ? 0 : Math.round(Math.sin(clock * 3) * 1.5) + 2, img = A.flint(reduce() ? 0 : Math.floor(clock / 0.2)); Z.push({ z: py + 8.5, f: () => { ctx.fillStyle = 'rgba(0,0,0,0.25)'; ctx.fillRect(px - 3, py - 1, 6, 1); ctx.drawImage(img, px - 5, py - 15 - hov); } }); continue; }
         const sh = A.sheet(lookOf(ch.d), () => kick());
         const off = /type|read|sit/.test(pose) && ch.target && ch.target.sit && !ch.path.length ? SIT_PX : 0;
-        Z.push({ z: py + 8.5, f: () => A.drawSheet(ctx, sh, ch.dir, colOf(pose, ch.t), px, py + off) });
+        const up = ch.d.bubble === 'ask' && !ch.path.length;
+        Z.push({ z: py + 8.5, f: () => { A.drawSheet(ctx, sh, ch.dir, colOf(pose, ch.t), px, py + off); if (up && sh) hand(lookOf(ch.d), px, py + off, ch.dir); } });
       }
       for (const p of pets) {
         const px = Math.round(p.x * T + 8), py = Math.round(p.y * T + 8), sh = A.pet(p.name);
@@ -296,6 +324,24 @@
       Z.sort((a, b) => a.z - b.z);
       for (const o of Z) o.f();
       placeLayer();
+    }
+    // A raised hand (an AI helper waiting for your OK): a sleeve and a hand in the character's own colours, drawn in art pixels.
+    function hand(look, px, py, dir) {
+      const K = window.TribeOfficeLooksCore; if (!K || !look) return;
+      const skin = (K.PAL.skin[look.skin | 0] || {}).hex || '#e9a384', cloth = (K.PAL.cloth[(look.full ? look.fullColor : look.topColor) | 0] || {}).hex || '#80858d';
+      const x = dir === 3 ? px - 7 : px + 5, b = clock && !reduce() ? Math.round(Math.sin(clock * 4)) : 0;   // a small wave
+      ctx.fillStyle = '#2a2228'; ctx.fillRect(x - 1, py - 32 + b, 4, 15 - b); ctx.fillRect(x - 2, py - 32 + b, 6, 4);
+      ctx.fillStyle = skin; ctx.fillRect(x - 1, py - 31 + b, 4, 2); ctx.fillRect(x, py - 29 + b, 2, 5);
+      ctx.fillStyle = cloth; ctx.fillRect(x, py - 24, 2, 6);
+    }
+    // where a desk seat's head height is on screen, in CSS pixels
+    const seatXY = st => ({ x: (F.ox + (st.x * T + 8) * F.scale) / F.dpr, y: (F.oy + (st.y * T + 8 - 26) * F.scale) / F.dpr });
+    const talk = new Map();   // id -> { text, until }: the last channel message, for a few seconds
+    function say(id, text) {
+      const t = String(text || '').replace(/\s+/g, ' ').trim(); if (!t || !chars.has(id)) return;
+      talk.set(id, { text: t.length > 56 ? t.slice(0, 55) + '…' : t, until: Date.now() + 5500 });
+      if (reduce()) draw(); else kick();
+      setTimeout(() => { if (!dead) { if (reduce()) draw(); else kick(); } }, 5600);
     }
     // Names and bubbles are real elements over the canvas: names stay crisp and translate; the bubble is Pixel Agents' art.
     function headOf(ch) {
@@ -315,12 +361,29 @@
         if (!ch.visible) continue;
         const h = headOf(ch), kind = ch.d.bubble === 'ask' ? 'ask' : ch.d.bubble === 'done' ? 'done' : '';
         const src = kind && artOk ? bubbleSrc(kind) : '';
-        const b = kind ? `<span class="os-bubble ${kind}">${src ? `<img class="os-bub" src="${src}" alt="" style="width:${bw}px">` : ''}<span class="os-bubble-t">${esc(tr(kind === 'ask' ? 'Needs your OK' : 'Done'))}</span></span>` : '';
+        const said = talk.get(ch.d.id), sayNow = said && said.until > Date.now() ? said.text : '';
+        const b = sayNow ? `<span class="os-say">${esc(sayNow)}</span>`
+          : kind ? `<span class="os-bubble ${kind}"${kind === 'ask' ? ' data-os-hand="1"' : ''}>${src ? `<img class="os-bub" src="${src}" alt="" style="width:${bw}px">` : ''}<span class="os-bubble-t">${esc(tr(kind === 'ask' ? 'Raised hand: needs your OK' : 'Done'))}</span></span>` : '';
         const [main, owner] = String(ch.d.name || '').split(' · ');
         const sub = ch.d.kind === 'agent' && owner ? `${owner.split(' ')[0]}'s` : '';
         const tool = ch.d.kind === 'agent' ? String(ch.d.agentKind || 'other').toLowerCase().replace(/[^a-z]/g, '') : '';
         const typing = /type/.test(poseOf(ch)) && !ch.path.length;
-        out.push(`<button type="button" class="os-tag" data-os-who="${esc(ch.d.id)}" data-role="${esc(ch.d.kind)}"${tool ? ` data-tool="${esc(tool)}"` : ''} data-state="${esc(ch.d.state || 'active')}"${typing ? ' data-typing="1"' : ''} style="left:${h.x.toFixed(1)}px;top:${h.y.toFixed(1)}px">${b}<span class="os-name"><i class="os-notch" aria-hidden="true"></i>${ch.d.kind === 'agent' ? `<span class="sr-only">${esc(tr('AI helper'))}: </span>` : ''}<b>${esc(main)}</b>${sub ? `<small>${esc(sub)}</small>` : ''}${typing ? '<i class="os-typing" aria-hidden="true"></i>' : ''}</span></button>`);
+        const doing = ch.d.kind === 'agent' && ch.d.state === 'active' && !ch.path.length ? String((ch.d.task && ch.d.task.title) || (ch.d.lines || [])[0] || '') : '';
+        const doingT = doing ? (doing.length > 34 ? doing.slice(0, 33) + '…' : doing) : '';
+        out.push(`<button type="button" class="os-tag" data-os-who="${esc(ch.d.id)}" data-role="${esc(ch.d.kind)}"${tool ? ` data-tool="${esc(tool)}"` : ''} data-state="${esc(ch.d.state || 'active')}"${typing ? ' data-typing="1"' : ''} style="left:${h.x.toFixed(1)}px;top:${h.y.toFixed(1)}px">${b}<span class="os-name"><i class="os-notch" aria-hidden="true"></i>${ch.d.kind === 'agent' ? `<span class="sr-only">${esc(tr('AI helper'))}: </span>` : ''}<b>${esc(main)}</b>${sub ? `<small>${esc(sub)}</small>` : ''}${typing ? '<i class="os-typing" aria-hidden="true"></i>' : ''}</span>${doingT ? `<span class="os-doing">${esc(tr(doingT))}</span>` : ''}</button>`);
+      }
+      // desks with nobody at them: "Back soon" for someone offline, and the two invitations in an empty tribe
+      if (artOk && geo && !editing) {
+        const desks = deskFor();
+        for (const [id, st] of desks) {
+          const ch = chars.get(id); if (!ch || ch.d.state !== 'off') continue;
+          const at = seatXY(st);
+          out.push(`<button type="button" class="os-tag os-sign" data-os-who="${esc(id)}" data-sign="away" style="left:${at.x.toFixed(1)}px;top:${at.y.toFixed(1)}px"><span class="os-name"><b>${esc(tr('Back soon'))}</b><small>${esc(String(ch.d.name || '').split(' · ')[0])}</small></span></button>`);
+        }
+        for (const sp of spares(desks)) {
+          const at = seatXY(sp.seat);
+          out.push(`<button type="button" class="os-tag os-spare" data-os-ph="${sp.k}" style="left:${at.x.toFixed(1)}px;top:${at.y.toFixed(1)}px"><span class="os-name"><i class="os-plus" aria-hidden="true">+</i><b>${esc(tr(sp.k === 'invite' ? 'Invite a friend' : 'Add an AI helper'))}</b></span></button>`);
+        }
       }
       const html = out.join('');
       if (layer.__html !== html) { layer.innerHTML = html; layer.__html = html; }
@@ -375,12 +438,20 @@
           }
         }
       }
-      draw();
-      if (!reduce() && document.visibilityState === 'visible' && el.isConnected) raf = requestAnimationFrame(frame);
-      else if (moving) raf = requestAnimationFrame(frame);
+      // calm and fast: full speed only while someone walks or you drag; otherwise ~12 frames a second (the sprites' own pace)
+      if (moving || drag || !drawn || now - drawn >= 80) { draw(); drawn = now; }
+      const live = document.visibilityState === 'visible' && el.isConnected && onScreen;
+      if (!reduce() && live) raf = requestAnimationFrame(frame);
+      else if (moving && live) raf = requestAnimationFrame(frame);
     }
+    let drawn = 0, onScreen = true;
     const kick = () => { if (!raf && !dead) raf = requestAnimationFrame(frame); };
-    const ro = new ResizeObserver(() => { if (reduce()) draw(); else kick(); }); ro.observe(stage);
+    const ro = new ResizeObserver(() => { drawn = 0; if (reduce()) draw(); else kick(); }); ro.observe(stage);
+    // off screen or in a hidden tab: nothing is drawn; back in view: it carries on
+    const io = 'IntersectionObserver' in window ? new IntersectionObserver(es => { onScreen = es.some(e => e.isIntersecting); if (onScreen) { drawn = 0; kick(); } }) : null;
+    if (io) io.observe(stage);
+    const onVis = () => { if (document.visibilityState === 'visible') { drawn = 0; kick(); } };
+    document.addEventListener('visibilitychange', onVis);
 
     // ---------- clicks: a character, a pet, a desk, or (in the editor) a tile ----------
     function toTile(e) {
@@ -418,19 +489,30 @@
       const id = hit(toTile(e)); if (id) openCard(id); else closeCard();
     });
     cv.addEventListener('wheel', e => { if (!e.ctrlKey && !e.metaKey) return; e.preventDefault(); zoom(e.deltaY < 0 ? 1 : -1); }, { passive: false });
-    layer.addEventListener('click', e => { const t = e.target.closest('[data-os-who]'); if (t) openCard(t.dataset.osWho); });
+    layer.addEventListener('click', e => {
+      const ph = e.target.closest('[data-os-ph]');
+      if (ph) { const AO = window.TribeAgentsOffice; if (ph.dataset.osPh === 'invite') { if (AO && AO.friend) AO.friend(); else if (window.TribeInvite && window.TribeInvite.open) window.TribeInvite.open(); } else if (AO && AO.pick) AO.pick('other'); return; }
+      const t = e.target.closest('[data-os-who]'); if (t) openCard(t.dataset.osWho, { ask: !!e.target.closest('[data-os-hand]') });
+    });
     function zoom(k) { view.z = Math.max(o.fill && cam ? 1 - cam.s : 0, Math.min(6, view.z + k)); if (!view.z && !o.fill) { view.ox = 0; view.oy = 0; } draw(); }
     function refit() { view.z = 0; view.ox = 0; view.oy = 0; cam = null; draw(); }
 
     // ---------- the card: who, what they're doing, and one click into TribeCode ----------
     // The body and its actions are TribeOffice's (office.js): the desks and the list in Agents & office open the same card.
     const O = () => window.TribeOffice;
-    function openCard(id) {
+    const narrow = () => matchMedia('(max-width: 820px)').matches;
+    function openCard(id, how) {
       const d = everyone().find(x => x.id === id); if (!d || !O()) return;
+      if (narrow() && O().openCard) { O().openCard(id); return; }   // phones: the same card as a sheet (40px targets)
+      const fa = card.contains(document.activeElement) ? document.activeElement : null;   // a refresh keeps your place in the card
+      const keepSel = fa && fa.dataset ? (fa.dataset.osAp ? `[data-os-ap="${fa.dataset.osAp}"][data-id="${fa.dataset.id}"]` : fa.dataset.osDo ? `[data-os-do="${fa.dataset.osDo}"]` : fa.matches('input') ? (fa.classList.contains('os-note') ? '.os-note' : '[data-os-give] input') : '') : '';
+      const keepVal = fa && fa.matches && fa.matches('input') ? fa.value : null;
       cardFor = id; card.hidden = false; lookEl.hidden = true;
       card.innerHTML = `<header><canvas class="os-av" width="16" height="16" data-role="${esc(d.kind)}" aria-hidden="true"></canvas><div><b>${esc(d.name)}</b><span>${esc(O().kindText(d))} · ${esc(O().statusOf(d))}</span></div><button class="btn sm icon" data-os-close aria-label="${esc(tr('Close'))}">×</button></header>${O().cardBody(d)}`;
       card.dataset.who = id;
       face(card.querySelector('.os-av'), d);
+      if (keepSel) { const n = card.querySelector(keepSel); if (n) { if (keepVal != null) n.value = keepVal; n.focus({ preventScroll: true }); } }
+      if (how && how.ask) { const ap = card.querySelector('[data-os-ap="approve"]') || card.querySelector('.os-ask'); if (ap && ap.focus) ap.focus({ preventScroll: true }); }   // the raised hand: straight to the OK
     }
     // The card's avatar: the character's face (the top 16x16 of its front frame), or Flint.
     function face(c, d) {
@@ -545,7 +627,8 @@
     // More people than desk seats: add a desk, a computer and a stool on free floor (only on screen; saving keeps them).
     function normalise() {
       rebuild();
-      const need = everyone().filter(d => d.kind !== 'flint').length;
+      const ppl = everyone().filter(d => d.kind !== 'flint');
+      const need = Math.max(ppl.length, ...ppl.map(d => (Number.isInteger(d.seat) ? d.seat + 1 : 0))) + wants().length;
       let have = deskSeats().length;
       for (let y = 1; y < layout.h - 3 && have < need; y++) for (let x = 1; x < layout.w - 3 && have < need; x++) {
         let ok = true; for (let dy = 0; dy < 4 && ok; dy++) for (let dx = 0; dx < 3 && ok; dx++) if (!walk(x + dx, y + dy) || layout.items.some(i => covers(i, x + dx, y + dy))) ok = false;
@@ -601,14 +684,17 @@
       }
       sync();
       if (o.fill && cam && F && !view.z && [...chars.values()].some(c => { if (!c.visible) return false; const p = c.target || c, sx = F.ox + (p.x * T + 8) * F.scale, sy = F.oy + (p.y * T + 8) * F.scale; return sx < 0 || sy < 24 * F.dpr || sx > cv.width || sy > cv.height; })) cam = null;   // someone is out of view: look again
-      if (cardFor) { const keep = cardFor; if (everyone().some(x => x.id === keep)) openCard(keep); else closeCard(); }
+      if (cardFor && !card.hidden) { const keep = cardFor; if (everyone().some(x => x.id === keep)) openCard(keep); else closeCard(); }
       if (reduce()) draw(); else kick();
     }
     A.ready().then(() => { artOk = true; if (!dead && data) update(data); }).catch(() => { stage.dataset.noart = '1'; });
     const inst = {
       update,
-      destroy() { dead = true; if (raf) cancelAnimationFrame(raf); ro.disconnect(); },
-      chars: () => [...chars.values()].map(c => ({ id: c.d.id, x: c.x, y: c.y, pose: poseOf(c), dir: c.dir, visible: c.visible, moving: !!c.path.length, bubble: c.d.bubble || null })),
+      say,
+      destroy() { dead = true; if (raf) cancelAnimationFrame(raf); ro.disconnect(); if (io) io.disconnect(); document.removeEventListener('visibilitychange', onVis); },
+      chars: () => [...chars.values()].map(c => ({ id: c.d.id, x: c.x, y: c.y, pose: poseOf(c), dir: c.dir, visible: c.visible, moving: !!c.path.length, bubble: c.d.bubble || null, spot: c.d.spot || null, meet: !!(c.target && c.target.meet), desk: !!(c.target && c.target.desk) })),
+      desks: () => { const m = deskFor(), o = {}; for (const [id, st] of m) o[id] = { x: st.x, y: st.y }; return o; },
+      running: () => !!raf,
       layout: () => layout,
       art: () => artOk,
       pets: () => pets.map(p => ({ name: p.name, x: p.x, y: p.y })),
