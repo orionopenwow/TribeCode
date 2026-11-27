@@ -52,7 +52,7 @@
     const list = projectsNow();
     if (!C.hasToken() || !list.length) { el.innerHTML = ''; return; }
     el.innerHTML = `<section class="sec hub-sec hh-prev" id="hh-prev" aria-labelledby="hh-prev-t">
-      <div class="sec-head"><span class="eyebrow">${t('Being made')}</span><h2 id="hh-prev-t">${t('What your groups are making')}</h2></div>
+      <div class="sec-head"><span class="eyebrow">${t('Your projects')}</span><h2 id="hh-prev-t">${t('What you’re making')}</h2></div>
       <div class="hh-strip" id="hh-strip">${list.slice(0, 12).map(p => [p, cards.get(p.id)]).sort((a, b) => rank(b[1]) - rank(a[1])).map(([p, c]) => cardHtml(p, c)).join('')}</div></section>`;
     el.querySelectorAll('.hh-card').forEach(bindCard);
     if (C.connected()) lazyCards(el);
@@ -95,7 +95,7 @@
   }
   function rowHtml(r, i) {
     const where = r.kind === 'dm' ? `<b>${esc(r.title)}</b>` : `<b>${esc(r.projectName || '')}</b><span class="hh-ch">${esc(r.title)}</span>`;
-    const line = `${r.mine ? `<span class="faint">${t('You')}: </span>` : r.kind === 'dm' ? '' : `<span class="hh-by">${esc(r.last.name)}: </span>`}${esc(r.last.enc ? t('New message') : r.last.text)}`;   // feat/p12-e2ee: a private message shows no words here
+    const line = `${r.mine ? `<span class="faint">${t('You')}: </span>` : r.kind === 'dm' ? '' : `<span class="hh-by">${esc(r.last.name)}: </span>`}${esc(r.last.enc ? t('New message') : String(r.last.text || '').replace(/\*\*(.+?)\*\*/g, '$1').replace(/(^|\s)[*_`](\S[^*_`]*?)[*_`](?=\s|$)/g, '$1$2'))}`;   // feat/p12-e2ee: a private message shows no words here
     const u = unread(r);
     return `<li class="hh-row${u ? ' unread' : ''}${r.mention ? ' mention' : ''}" data-i="${i}">
       <button type="button" class="hh-open" data-hh-open="${i}">${who(r)}<span class="hh-main"><span class="hh-top">${where}${r.mention ? `<span class="hh-at">@${t('you')}</span>` : ''}<time datetime="${esc(r.last.at)}">${esc(ago(r.last.at))}</time></span><span class="hh-line">${line}</span></span>${u ? '<i class="hh-dot" aria-label="Unread"></i>' : ''}</button>
@@ -108,10 +108,10 @@
     const list = rows || [];
     const n = list.filter(unread).length;
     const body = rows === null ? `<div class="hh-empty faint">${t('Loading…')}</div>`
-      : !list.length ? `<div class="hh-empty"><b>${t('No messages yet')}</b><span class="faint">${t('When someone writes in one of your projects or messages you, it shows here.')}</span></div>`
+      : !list.length ? `<p class="hh-empty-line faint">${ico('i-chat', 14)}${t('No messages yet. When someone writes in one of your projects, it shows here.')}</p>`
       : `<ul class="hh-list" id="hh-list">${list.slice(0, 20).map(rowHtml).join('')}</ul>`;
     el.innerHTML = `<section class="sec hub-sec hh-msgs" id="hh-msgs" aria-labelledby="hh-msgs-t">
-      <div class="sec-head"><span class="eyebrow">${t('Messages')}${n ? ` · ${n} ${t('new')}` : ''}${fromCache ? ` · <span class="hh-off">${t('offline')}</span>` : ''}</span><h2 id="hh-msgs-t">${t('Across your projects')}</h2></div>
+      <div class="sec-head hh-mhead"><span class="eyebrow">${t('Messages')}${n ? ` · ${n} ${t('new')}` : ''}</span><h2 id="hh-msgs-t">${t('Latest from your projects')}</h2>${fromCache && list.length ? `<span class="hh-off">${t('Saved on this device')}</span>` : ''}</div>
       ${body}</section>`;
     el.querySelectorAll('[data-hh-open]').forEach(b => b.onclick = () => go(list[+b.dataset.hhOpen]));
     el.querySelectorAll('[data-hh-reply]').forEach(b => b.onclick = () => { const r = list[+b.dataset.hhReply]; openReply = openReply === r.channel ? '' : r.channel; drawMessages(); const f = el.querySelector('.hh-reply input'); if (f) f.focus(); });

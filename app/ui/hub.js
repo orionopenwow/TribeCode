@@ -127,8 +127,8 @@
           <button class="hpt-btn" id="hpt-bell" aria-label="Notifications">${ico('i-bell', 26)}<span class="hpt-dot hidden" id="hpt-dot"></span></button></div>` : ''}
         ${idCard(on, tribe, pj, live, sub)}
         <div id="hub-finv-slot"></div><!-- p13: invites from friends, Join / Not now (friendinvite.js) -->
-        ${hubOn ? '<div class="hh-two"><div id="hub-msgs-slot"></div><div id="hub-prev-slot"></div></div>' : '<div id="hub-band-slot"></div>'}<!-- feat/p10-home: in a tribe, every project's preview and your messages; else the band (dashband.js) -->
-        ${gsHero(on)}
+        ${hubOn ? '<div class="hh-stack"><div id="hub-prev-slot"></div><div id="hub-msgs-slot"></div></div>' : '<div id="hub-band-slot"></div>'}<!-- feat/p10-home: in a tribe, every project's preview and your messages; else the band (dashband.js) -->
+        ${hubOn ? "" : gsHero(on)}
         <div id="hub-flint-slot"></div>
         ${isPhone() && on && pj.length ? phoneProjects(pj) : ''}
         <div class="hub-two hub-bottom">${notesSec(on)}${activitySec(on)}</div>
@@ -165,11 +165,11 @@
     const people = ((C.state() || {}).members || []).filter(m => m.role !== 'agent' && m.online && m.id !== me.id).length;
     const agents = ((C.state() || {}).members || []).filter(m => m.role === 'agent' && m.online).length;
     const chip = (k, n, l) => `<span class="hid-chip k-${k}"><b>${n}</b>${l}</span>`;
-    const chips = on ? chip('ember', pj.length, pj.length === 1 ? 'project' : 'projects') + chip('indigo', people, people === 1 ? 'friend online' : 'friends online') + chip('teal', agents, agents === 1 ? 'agent working' : 'agents working')
+    const chips = on ? chip('ember', pj.length, pj.length === 1 ? 'project' : 'projects') + (people ? chip('indigo', people, people === 1 ? 'friend online' : 'friends online') : '') + (agents ? chip('teal', agents, agents === 1 ? 'AI helper working' : 'AI helpers working') : '') + (tribe ? `<span class="hid-chip k-muted">${esc(tribe)}</span>` : '')
       : C.hasToken() && !(window.TribeOffline && window.TribeOffline.asleep && window.TribeOffline.asleep()) ? `<span class="hid-chip k-muted">${offlineChip()}</span>` : '';   // no tribe yet: said once, in the user bar
     return `<header class="hub-head hub-id">
       <div class="hid-art" aria-hidden="true"><img src="assets/illustrations/campfire.svg" alt=""></div>
-      <div class="hid-t">${hubCrumb(on && tribe ? `Your dashboard · ${tribe}` : 'Your dashboard')}
+      <div class="hid-t">
         <h1>${localFace(on) || `<span class="hid-av" style="background:${esc(color)}">${esc(([...name][0] || '').toUpperCase())}</span>`}<span>${greeting()}</span></h1>
         ${chips ? `<div class="hid-chips">${chips}</div>` : ''}</div>
     </header>`;

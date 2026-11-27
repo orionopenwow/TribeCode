@@ -2,7 +2,7 @@
 
 A host with two projects (Garden, Arcade), two friends (Maya, Zoe). Messages in each project's #general, a DM from Maya
 to the host, and a DM between Maya and Zoe that the host must never see. Then on the host's Home:
-  - "Being made" shows a card per project; "Messages" lists both projects' lines and Maya's DM, newest first, with
+  - "Your projects" shows a card per project; "Messages" lists both projects' lines and Maya's DM, newest first, with
     unread dots; the Maya<->Zoe DM is nowhere (not in the page, not in GET /api/hub/inbox for the host).
   - Clicking the Arcade row opens Arcade's chat; Reply from a row sends into that conversation.
   - "Start your first project" / "Make your first project" is not on Home once projects exist: not while connected,
@@ -121,8 +121,8 @@ def main():
             # phone
             host.set_viewport_size({"width": 390, "height": 844}); host.evaluate("TribeApp.show('hub')"); host.wait_for_timeout(1200)
             host.wait_for_selector("#hh-msgs .hh-row", timeout=15000)
-            order = host.evaluate("(() => { const m = document.querySelector('#hh-msgs'), p = document.querySelector('#hh-prev'); return !!(m && p && (m.compareDocumentPosition(p) & Node.DOCUMENT_POSITION_FOLLOWING)); })()")
-            assert order, "phones: messages before previews"
+            order = host.evaluate("(() => { const m = document.querySelector('#hh-msgs'), p = document.querySelector('#hh-prev'); return !!(m && p && (p.compareDocumentPosition(m) & Node.DOCUMENT_POSITION_FOLLOWING)); })()")
+            assert order, "projects first (a swipe strip on phones), then messages"
             sw = host.evaluate("document.documentElement.scrollWidth"); assert sw <= 390, f"sideways scroll at 390: {sw}"
             strip = host.evaluate("(() => { const s = document.querySelector('#hh-strip'); return s && getComputedStyle(s).overflowX; })()"); assert strip == "auto", strip
             shot(host, "390")

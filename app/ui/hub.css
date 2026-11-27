@@ -465,7 +465,6 @@ body.global .crumbs .pj-switch, body.global .crumbs .pj-sep { display: none !imp
 
 /* Home's identity card: the campfire, your greeting with your color, and three live numbers. Flat matte. */
 .hub-id { position: relative; display: flex; align-items: center; gap: 22px; margin: 4px 0 22px; padding: 20px 24px; border: 1px solid var(--edge); border-radius: 16px; background: var(--surface); overflow: hidden; }
-.hub-id::after { content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 3px; background: var(--accent); }
 .hid-art { flex: none; width: 132px; height: 90px; display: grid; place-items: center; border-radius: 12px; background: var(--canvas); border: 1px solid var(--edge); }
 .hid-art img { width: 118px; height: auto; display: block; }
 .hid-t { min-width: 0; flex: 1; }
