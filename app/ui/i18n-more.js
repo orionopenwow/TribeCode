@@ -11,6 +11,9 @@
   'use strict';
   const I = window.TribeI18n; if (!I || !I.add) return;
   I.add({
+    'Design Studio: make anything here, apps, websites, games and designs. Pick what you are making, or ask me for one.': ['Estudio de diseño: crea aquí lo que quieras, apps, webs, juegos y diseños. Elige qué vas a hacer o pídemelo.', 'Estúdio de design: crie aqui qualquer coisa, apps, sites, jogos e designs. Escolha o que vai fazer ou me peça.', 'Studio de création : créez ici tout ce que vous voulez, apps, sites, jeux et visuels. Choisissez ce que vous faites ou demandez-le-moi.', 'Design-Studio: Erstelle hier alles, Apps, Websites, Spiele und Designs. Wähle, was du machst, oder frag mich.', 'デザインスタジオ：アプリ、サイト、ゲーム、デザインなど何でもここで作れます。作るものを選ぶか、私に頼んでください。', '设计工作室：在这里做任何东西，应用、网站、游戏和设计。选择你要做的，或者让我来做。', '디자인 스튜디오: 앱, 웹사이트, 게임, 디자인 등 무엇이든 여기서 만들어요. 만들 것을 고르거나 저에게 부탁하세요.'],
+    'Design Studio': ['Estudio de diseño', 'Estúdio de design', 'Studio de création', 'Design-Studio', 'デザインスタジオ', '设计工作室', '디자인 스튜디오'],
+    'Design Studio: make anything, apps, websites, games, designs and more': ['Estudio de diseño: crea lo que quieras, apps, webs, juegos, diseños y más', 'Estúdio de design: crie qualquer coisa, apps, sites, jogos, designs e mais', 'Studio de création : créez tout, apps, sites, jeux, visuels et plus', 'Design-Studio: Erstelle alles, Apps, Websites, Spiele, Designs und mehr', 'デザインスタジオ：アプリ、サイト、ゲーム、デザインなど何でも作れます', '设计工作室：应用、网站、游戏、设计等，什么都能做', '디자인 스튜디오: 앱, 웹사이트, 게임, 디자인 등 무엇이든 만들어요'],
     // ---- p13 UX sweep: plain names in "Two people changed this", Undo after deleting a task, ? for shortcuts · [es, pt, fr, de, ja, zh, ko]
     'Page': ['Página', 'Página', 'Page', 'Seite', 'ページ', '页面', '페이지'],
     'The name': ['El nombre', 'O nome', 'Le nom', 'Der Name', '名前', '名称', '이름'],

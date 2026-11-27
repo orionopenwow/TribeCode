@@ -54,7 +54,7 @@
   function onShow() {   // app.js show('hub') calls this
     const want = mode === 'home' ? '#/hub' : `#/hub/${mode}`;
     if (location.hash !== want) history.replaceState(null, '', location.pathname + location.search + want);
-    const cl = $('#crumb-label'); if (cl) cl.textContent = mode === 'repos' ? 'Code' : mode === 'docs' ? 'Files' : mode === 'design' ? 'Design' : 'Your dashboard';
+    const cl = $('#crumb-label'); if (cl) cl.textContent = mode === 'repos' ? 'Code' : mode === 'docs' ? 'Files' : mode === 'design' ? 'Design Studio' : 'Your dashboard';
     document.body.classList.toggle('at-home', true);
     render(); load(); panel();
   }
@@ -688,7 +688,7 @@
     // everything you already made under Continue
     el.innerHTML = `<div class="hub hub-design-flow" id="hub-design-flow"></div><div class="hub hub-design" id="hub-design"></div>`;
     if (window.TribeDesignFlow) window.TribeDesignFlow.mount(el.querySelector('#hub-design-flow'), { scope: 'home' });
-    subset(el.querySelector('#hub-design'), { idp: 'hd', cat: 'designs', title: 'Continue', crumb: hubCrumb('Design'), kinds: ['design', 'whiteboard', 'upload'], h: 'h2', where: true });
+    subset(el.querySelector('#hub-design'), { idp: 'hd', cat: 'designs', title: 'Continue', crumb: hubCrumb('Design Studio'), kinds: ['design', 'whiteboard', 'upload'], h: 'h2', where: true });
   }
   // a Files view showing one kind (Code files, Design), with the same cards, menus and Studio
   function subset(root, o) {

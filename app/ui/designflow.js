@@ -144,7 +144,7 @@
   function kinds() {
     if (!host) return; view = 'kinds'; kindNow = '';
     document.body.classList.remove('dfl-deep');
-    host.innerHTML = `<section class="dfl" id="dfl" data-step="kinds">${head('Design', 'What are you making?', PLANS_ON ? 'Pick one. Each comes with templates, an optional prompt for Flint and a plan to follow.' : 'Pick one. Each comes with templates and an optional prompt for Flint.')}
+    host.innerHTML = `<section class="dfl" id="dfl" data-step="kinds">${head('Design Studio', 'What are you making?', PLANS_ON ? 'Pick one. Each comes with templates, an optional prompt for Flint and a plan to follow.' : 'Pick one. Each comes with templates and an optional prompt for Flint.')}
       <div class="dfl-kinds" role="list">${orderKinds().map((k, i) => `<button type="button" class="dfl-kind${i < likelyN ? ' likely' : ''}" role="listitem" data-kind="${k.id}" style="--k:var(${TINT[k.id] || '--accent'})"><span class="dfl-ki">${icon(k.icon, 22)}</span><span class="dfl-kt"><b>${esc(k.t)}</b><small>${esc(k.d)}</small>${i < likelyN ? `<span class="dfl-fit">${esc(tr('Fits this project'))}</span>` : ''}</span><span class="dfl-mini" aria-hidden="true">${MINI[k.id] || ''}</span></button>`).join('')}</div>
       ${scope === 'project' ? '<section class="dfl-cont" id="dfl-cont"><span class="eyebrow">Continue</span><h2>In this project</h2><div class="dfl-list" id="dfl-cont-list"><p class="faint">Loading…</p></div></section>' : '<div class="dfl-cont-plans" id="dfl-cont-plans"></div>'}</section>`;
     host.querySelectorAll('[data-kind]').forEach(b => b.onclick = () => swap(() => gallery(b.dataset.kind)));
@@ -592,7 +592,7 @@
     sec.classList.remove('hidden');
     document.body.classList.remove('mobile-chat', 'drawer-open');
     document.body.dataset.view = 'designflow';
-    const crumb = $('#crumb-label'); if (crumb) crumb.textContent = 'Design';
+    const crumb = $('#crumb-label'); if (crumb) crumb.textContent = 'Design Studio';
     if (!opts.quiet || !host || !sec.contains(host)) { sec.innerHTML = '<div class="dfl-page" id="dfl-page"></div>'; mount(sec.querySelector('#dfl-page'), { scope: 'project' }); }
     if (opts.kind) gallery(opts.kind);
   }
