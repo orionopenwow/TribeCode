@@ -254,7 +254,7 @@
     const W = window;
     try {
       if (kind === 'dm') { if (W.TribeDM && W.TribeDM.open) await W.TribeDM.open(d.id); return; }
-      if (kind === 'call') { if (W.TribeDM && W.TribeDM.open) await W.TribeDM.open(d.id); if (W.TribeHuddle && W.TribeHuddle.join) W.TribeHuddle.join(); return; }
+      if (kind === 'call') { if (W.TribeCall && W.TribeCall.callPerson) await W.TribeCall.callPerson(d.id); return; }   // p13b: a private call that rings them (was: join the project huddle without ringing)
       if (kind === 'profile') { if (W.TribeProfiles && W.TribeProfiles.open) W.TribeProfiles.open(d.id, btn); else if (W.TribeProfile && W.TribeProfile.open) W.TribeProfile.open(d.id); return; }
       if (kind === 'open') { if (W.TribePresence && W.TribePresence.jump) { const ok = await W.TribePresence.jump(d.id); if (ok === false) toast(tr('You can\'t open that from here.')); } return; }
       if (kind === 'agent') { if (W.TribeShell && W.TribeShell.previewAgent) W.TribeShell.previewAgent(d.id); return; }

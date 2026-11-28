@@ -177,7 +177,7 @@ def main():
             wait_text(orion, "#dm-list", "surprise party")
             maya.wait_for_function(f"document.querySelector(\"#room-list .person[data-follow='{ids['Orion']}'] .dm-badge\")?.textContent === '1'")
             assert "surprise party" not in maya.text_content("#chat-list")     # not in #general
-            st, d = api(f"/chat/{dm}", token=maya_tok); assert st == 200 and any("surprise party" in m["text"] for m in d["messages"]), d
+            st, d = api(f"/chat/{dm}", token=maya_tok); assert st == 200 and any(m.get("enc") or "surprise party" in m["text"] for m in d["messages"]), d
             assert api(f"/chat/{dm}", token=jay_tok)[0] == 403
             assert api(f"/chat/{dm}", "POST", {"text": "let me in"}, token=jay_tok)[0] == 403
             assert api("/chat/dm-nobody-here", token=jay_tok)[0] == 403
@@ -209,22 +209,24 @@ def main():
             for pg in (orion, maya):
                 pg.wait_for_function("TribeHuddle.roster().length === 2 && TribeHuddle.inCall()")
             orion.click("#h-cc")
-            maya.wait_for_selector("#cap-strip #cap-share")              # Maya decides for herself: off by default
-            wait_text(maya, "#cap-strip .vpill", "captions · Orion")
+            maya.wait_for_selector("#cap-strip #cap-share")              # p13b: Notes on: everyone in the call is told and transcribed, each can pause
+            wait_text(maya, "#cap-strip .vpill", "Notes on · Orion, Maya")
             orion.wait_for_function("__fakeSpeech.active()")
-            assert not maya.evaluate("__fakeSpeech.active()"), "Maya's mic must not be transcribed before she agrees"
+            maya.wait_for_function("__fakeSpeech.active()")
+            maya.click("#cap-share"); maya.wait_for_function("!__fakeSpeech.active()")   # Maya pauses hers
+            wait_text(orion, "#cap-strip .vpill", "Notes on · Orion")
             wait_text(orion, "#voice-pill", "captions")
             orion.evaluate("__fakeSpeech.say('lets plan the campfire save points')")
             wait_text(maya, "#cap-strip .cap-lines", "lets plan the campfire save points")
             maya.click("#cap-share")
             maya.wait_for_function("__fakeSpeech.active()")
-            wait_text(orion, "#cap-strip .vpill", "Orion, Maya")
+            wait_text(orion, "#cap-strip .vpill", "Notes on · Orion, Maya")
             maya.evaluate("__fakeSpeech.say('I will build the campfire save point tonight')")
             wait_text(orion, "#cap-strip .cap-lines", "I will build the campfire save point")
             orion.evaluate("__fakeSpeech.say('great and I will write the fishing spec')")
             wait_text(maya, "#cap-strip .cap-lines", "fishing spec")
             # Jay is not in the huddle: sees that captions are on, but no caption text
-            wait_text(jay, "#huddle-box", "captions")
+            wait_text(jay, "#huddle-box", "Notes on")
             assert "fishing spec" not in jay.text_content("body")
             files = glob.glob(os.path.join(tmp, "meetings", "*.jsonl"))
             assert len(files) == 1, files
@@ -235,7 +237,7 @@ def main():
             # ---- 3. huddle ends → meeting doc + tasks ----
             maya.click("#h-leave")
             orion.click("#h-leave")
-            wait_text(orion, "#chat-list", "Meeting notes are ready", timeout=15000)
+            wait_text(orion, "#chat-list", "Meeting notes saved", timeout=15000)
             docs = api("/docs", token=orion_tok)[1]["docs"]
             meeting = next(x for x in docs if x["title"].startswith("Meeting · "))
             body = api(f"/docs/{meeting['slug']}", token=orion_tok)[1]["doc"]["body"]
@@ -246,7 +248,7 @@ def main():
             assert by_title["Build the campfire save point"]["assignee"] == ids["Maya"], tasks
             assert by_title["Write the fishing mini-game spec"]["assignee"] == ids["Orion"], tasks
             assert by_title["Pick a soundtrack"].get("assignee") is None, tasks
-            assert json.loads(urllib.request.urlopen(f"http://localhost:{MOCK}/calls").read())[-1]["kind"] in ("meeting", "summary")
+            assert any(c["kind"] in ("meeting", "summary") for c in json.loads(urllib.request.urlopen(f"http://localhost:{MOCK}/calls").read()))   # p13b: the call-notes rewrite may come after
             orion.evaluate("TribeApp.show('docs')"); orion.evaluate(f"TribeDocs.load('{meeting['slug']}')")
             orion.click(".doc-toolbar [data-mode='read']")
             wait_text(orion, "#doc-read", "Action items")

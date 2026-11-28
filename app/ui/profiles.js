@@ -381,6 +381,7 @@
     ].filter(Boolean).join('');
     const acts = preview || d.you ? '' : `<div class="pf-acts">
         ${!m.agent || m.owner === meId() ? `<button class="btn tonal" data-pop="dm">${ico('i-chat')}Message</button>` : ''}
+        ${!m.agent && window.TribeCall ? `<button class="btn tonal" data-pop="call">${ico('i-phone')}Call</button>` : ''}
         ${!m.agent ? `<button class="btn tonal" data-pop="friend" aria-pressed="${isFriend(m.id)}">${ico('i-users')}${isFriend(m.id) ? 'Friends' : 'Add friend'}</button>` : ''}
         ${(m.agent || (d.agents || []).length) ? `<button class="btn tonal" data-pop="ask">${ico('i-sparkle')}Ask ${m.agent ? 'it' : 'their AI'}</button>` : ''}
       </div>`;
@@ -489,6 +490,7 @@
     }
     menuClose();
     if (k === 'dm') { close(); return window.TribeDM && window.TribeDM.open(id); }
+    if (k === 'call') { close(); return window.TribeCall && window.TribeCall.callPerson(id); }   // p13b: a private call that rings them
     if (k === 'edit') { close(); return edit(); }
     if (k === 'activity') { close(); return window.TribePeople && window.TribePeople.open(id); }
     if (k === 'character') { close(); return window.TribeOfficeLooks && window.TribeOfficeLooks.openMine(); }   // feat/p13-office

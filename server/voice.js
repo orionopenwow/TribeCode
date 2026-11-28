@@ -1,7 +1,10 @@
-// Huddle captions, meeting transcripts and meeting notes.
+// Huddle captions, meeting transcripts and meeting notes ("Notes" in the call).
 // Speech is recognized in each person's browser (Web Speech API); only final caption lines reach the
-// server. Captions are opt-in twice over: someone turns them on for the huddle, and each person decides
-// whether to share their own captions. Lines go to meetings/<date>-<id>.jsonl. When a captioned huddle
+// server, labelled with whose mic they came from (no voice fingerprinting). p13b: nothing is transcribed until
+// someone turns Notes on; then everyone in the call sees "Notes on", newcomers get the notice when they join, and
+// anyone can pause their own mic ("caption-share" off). A mic several people share can be marked as shared: its
+// lines say "Speaker" and anyone in the call can rename a line ("caption-rename"). Lines carry the speaker's own
+// timestamp (clamped to the last 15 s) so lines from several people merge into one ordered transcript. Lines go to meetings/<date>-<id>.jsonl. When a captioned huddle
 // ends (or someone presses "End & summarize") the local brain writes notes into a "Meeting · …" doc and
 // its action items become tasks. The meeting belongs to the project where captions were turned on: its notes,
 // chat lines and the optional after-huddle summary (server/huddlesum.js) land there, whoever leaves last and however.
@@ -12,36 +15,53 @@ const pad = n => String(n).padStart(2, '0');
 const day = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 const hm = d => `${pad(d.getHours())}:${pad(d.getMinutes())}`;
 
-module.exports = function voice({ store, id, str, huddle, sendTo, broadcast, postChat, createTask, getMembers, nameOf, brain, docs, bus, P = null, summary = null, canSeeHuddle = () => true }) {
+module.exports = function voice({ store, id, str, huddle, sendTo, broadcast, postChat, createTask, getMembers, nameOf, brain, docs, bus, P = null, summary = null, canSeeHuddle = () => true, dmOf = () => null }) {
   fs.mkdirSync(store.p('meetings'), { recursive: true });
-  let cap = null;                 // { id, file, on, by, started, sharing:Set, people:Set, lines:number }
+  let cap = null;                 // { id, file, on, by, started, sharing:Set, paused:Set, shared:Set, people:Set, attendees:Set, lines:number, buf:[], project, dm }
   const notes = new Set();        // members capturing their own speech to notes right now (shown to the huddle)
+  let seq = 0;
 
-  const state = () => ({ type: 'captions', on: !!(cap && cap.on), by: cap ? cap.by : null, meeting: cap ? cap.id : null,
-    sharing: cap && cap.on ? [...cap.sharing] : [], notes: [...notes], lines: cap ? cap.lines : 0 });
+  const state = () => ({ type: 'captions', on: !!(cap && cap.on), by: cap ? cap.by : null, meeting: cap ? cap.id : null, dm: !!(cap && cap.dm),
+    sharing: cap && cap.on ? [...cap.sharing] : [], paused: cap && cap.on ? [...cap.paused] : [], shared: cap && cap.on ? [...cap.shared] : [], notes: [...notes], lines: cap ? cap.lines : 0 });
   const push = () => broadcast(state());
   const inHuddle = me => huddle.has(me.id);
+  const chan = () => (cap && cap.dm) || dmOf() || 'general';   // a DM call's lines stay in that DM
+  const canTalk = mid => { const m = getMembers().find(x => x.id === mid); return !!m && m.role !== 'spectator' && m.role !== 'agent'; };
+  // everyone in the call who hasn't paused their mic is transcribed while Notes is on
+  function enrol() { if (!cap || !cap.on) return; for (const [mid] of huddle) { cap.attendees.add(mid); if (!cap.paused.has(mid) && canTalk(mid)) cap.sharing.add(mid); } }
 
   function start(me) {
     if (!cap) {
       const now = new Date();
       const mid = `${day(now)}-${id(6).replace(/[^A-Za-z0-9]/g, 'x')}`;
-      cap = { id: mid, file: `meetings/${mid}.jsonl`, on: true, by: me.id, started: now.toISOString(), sharing: new Set(), people: new Set(), lines: 0,
-        project: P ? P.current() || P.defaultId() : null };
+      cap = { id: mid, file: `meetings/${mid}.jsonl`, on: true, by: me.id, started: now.toISOString(), sharing: new Set(), paused: new Set(), shared: new Set(), people: new Set(), attendees: new Set(), lines: 0, buf: [],
+        project: P ? P.current() || P.defaultId() : null, dm: dmOf() };
     }
     cap.on = true; cap.by = me.id;
-    cap.sharing.add(me.id);        // turning captions on is agreeing to share your own
-    postChat('general', 'tribecode', `💬 ${me.name} turned on captions for the huddle. Each person chooses whether to share theirs.`);
+    cap.paused.delete(me.id);
+    enrol();
+    postChat(chan(), 'tribecode', `📝 ${me.name} turned on Notes for the call. Everyone in it sees "Notes on" and can pause their own mic.`);
   }
 
   function caption(me, msg) {
     if (!cap || !cap.on || !inHuddle(me) || !cap.sharing.has(me.id)) return;
     const text = str(msg.text, 600); if (!text) return;
-    const at = new Date().toISOString();
-    const line = { at, by: me.id, name: me.name, text, project: cap.project || null };
+    const now = Date.now(), said = Date.parse(msg.at);
+    const at = new Date(Number.isFinite(said) ? Math.min(now, Math.max(now - 15000, said)) : now).toISOString();   // the speaker's clock, within reason
+    const shared = cap.shared.has(me.id);
+    const line = { n: ++seq, at, by: me.id, name: shared ? 'Speaker' : me.name, ...(shared ? { mic: me.name } : {}), text, project: cap.project || null };
     store.appendJSONL(cap.file, line);
+    let i = cap.buf.length; while (i > 0 && cap.buf[i - 1].at > at) i--;   // merge in time order
+    cap.buf.splice(i, 0, line);
     cap.lines++; cap.people.add(me.id);
     for (const [mid] of huddle) sendTo(mid, { type: 'caption', meeting: cap.id, ...line });
+  }
+  function rename(me, msg) {
+    if (!cap || !inHuddle(me)) return;
+    const l = cap.buf.find(x => x.n === Number(msg.n)); const name = str(msg.name, 40).trim(); if (!l || !name) return;
+    l.name = name;
+    try { fs.writeFileSync(store.p(cap.file), cap.buf.map(x => JSON.stringify(x)).join('\n') + '\n'); } catch (e) { console.error('caption rename', e.message); }
+    for (const [mid] of huddle) sendTo(mid, { type: 'caption-renamed', meeting: cap.id, n: l.n, name });
   }
 
   function handle(sock, me, msg) {
@@ -49,13 +69,18 @@ module.exports = function voice({ store, id, str, huddle, sendTo, broadcast, pos
       case 'voice-sync': sock.send(canSeeHuddle(me) ? state() : { type: 'captions', on: false, by: null, meeting: null, sharing: [], notes: [], lines: 0 }); return true;   // fix/security-2: another project's huddle stays private
       case 'captions':
         if (!inHuddle(me) || me.role === 'spectator') return true;
-        if (msg.on) start(me);
-        else if (cap && cap.on) { cap.on = false; cap.sharing.clear(); postChat('general', 'tribecode', `${me.name} turned captions off.`); }
-        push(); return true;
-      case 'caption-share':
+        if (msg.on) { start(me); push(); }
+        else if (cap && cap.on) { postChat(chan(), 'tribecode', `${me.name} turned Notes off. Saving the meeting notes.`); finish(me.id).catch(e => console.error('meeting notes', e)); }   // p13b: Notes off saves the notes
+        return true;
+      case 'caption-share':   // pause / resume my own mic
         if (!cap || !cap.on || !inHuddle(me)) return true;
-        if (msg.on) cap.sharing.add(me.id); else cap.sharing.delete(me.id);
+        if (msg.on && canTalk(me.id)) { cap.sharing.add(me.id); cap.paused.delete(me.id); } else { cap.sharing.delete(me.id); cap.paused.add(me.id); }
         push(); return true;
+      case 'caption-mic':     // several people share this mic: its lines say "Speaker"
+        if (!cap || !cap.on || !inHuddle(me)) return true;
+        if (msg.shared) cap.shared.add(me.id); else cap.shared.delete(me.id);
+        push(); return true;
+      case 'caption-rename': rename(me, msg); return true;
       case 'caption': caption(me, msg); return true;
       case 'capture-state':
         if (msg.on) notes.add(me.id); else notes.delete(me.id);
@@ -72,6 +97,7 @@ module.exports = function voice({ store, id, str, huddle, sendTo, broadcast, pos
   function huddleChanged() {
     if (cap) for (const mid of [...cap.sharing]) if (!huddle.has(mid)) cap.sharing.delete(mid);
     if (huddle.size === 0 && cap) { finish(null).catch(e => console.error('meeting notes', e)); return; }
+    enrol();
     if (cap) push();
   }
   function socketClosed(me, stillOnline) { if (!stillOnline && notes.delete(me.id)) push(); }
@@ -82,15 +108,21 @@ module.exports = function voice({ store, id, str, huddle, sendTo, broadcast, pos
   async function finish(byId) {
     const m = cap; cap = null; push();
     if (!m) return null;
-    const lines = store.readJSONL(m.file, 5000).filter(l => l && l.text);
-    if (!lines.length) return null;
+    const ended = new Date().toISOString();
+    const lines = (m.buf && m.buf.length ? m.buf : store.readJSONL(m.file, 5000)).filter(l => l && l.text).sort((a, b) => String(a.at).localeCompare(String(b.at)));
     const inP = fn => (P && m.project ? P.inProject(m.project, fn) : fn());
-    const out = await inP(() => buildNotes(m, lines, byId));
-    if (summary && m.project) {
+    if (!lines.length) { if (m.on) inP(() => postChat(m.dm || 'general', 'tribecode', 'Notes were on, but nothing was transcribed, so there is nothing to save.')); return null; }
+    // a DM call's notes stay with its two people: no Docs page, no project tasks, no project summary
+    const out = m.dm ? { doc: null, tasks: [], transcript: m.file } : await inP(() => buildNotes(m, lines, byId));
+    if (summary && m.project && !m.dm) {
       try { out.summary = await summary.post({ project: m.project, started: m.started, lines, docTitle: out.doc && out.doc.title }); }
       catch (e) { console.error('huddle summary', e); }
     }
-    if (summary && summary.toCapture) { try { summary.toCapture({ project: m.project, started: m.started, lines, docTitle: out && out.doc && out.doc.title, summary: out && out.summary }); } catch (e) { console.error('huddle capture', e); } }   // feat/captures
+    if (summary && summary.toCapture) {   // feat/captures, p13b: one meeting note + one note per person (server/callnotes.js)
+      try { out.capture = await summary.toCapture({ project: m.project, started: m.started, ended, lines, dm: m.dm || null, attendees: [...new Set([...m.attendees, ...m.people])], by: byId || m.by, tasks: out.tasks.length, docTitle: out.doc && out.doc.title, summary: out.summary }); }
+      catch (e) { console.error('huddle capture', e); }
+    }
+    if (!out.capture && !m.dm) inP(() => postChat('general', 'tribecode', `📝 Meeting notes are ready: **${out.doc ? out.doc.title : 'Meeting'}**`));
     return out;
   }
 
@@ -160,7 +192,6 @@ module.exports = function voice({ store, id, str, huddle, sendTo, broadcast, pos
     const r = docs.upsert({ name: title, body, by: byId || m.by });
     const doc = r && r.doc;
     const tasksNote = made.length ? ` · ${made.length} action item${made.length > 1 ? 's' : ''} added to Tasks` : '';
-    postChat('general', 'tribecode', `📝 Meeting notes are ready: **${title}**${tasksNote}`);
     bus.notify({ type: 'meeting-notes', priority: 'low', to: 'all', title: 'Meeting notes are ready', body: `${title}${tasksNote}`, view: 'docs', ref: doc ? doc.slug : '' });
     return { doc, tasks: made, transcript: m.file };
   }
