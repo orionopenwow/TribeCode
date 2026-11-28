@@ -300,6 +300,7 @@ let tribeFolder = null;   // p13: the tribe's folder on the Desktop (server/trib
 let copiesLog = null;   // p12: who sent what (server/copies.js, made below)
 let sense = null;   // feat/project-sense (server/sense.js, made below)
 let buildKit = null;   // server/buildkit.js (made below)
+let brainHub = null, brainChanged = () => {};   // p13 Files · What we know (server/brainhub.js, made below)
 let setupFlow = null;   // feat/setup-flow (server/setup.js, made below)
 const agentSeen = new Map(); // agent id -> { at, where, project }
 const AGENT_IDLE = 3 * 60_000;
@@ -492,7 +493,7 @@ function hubFor(pid) {
     const h = require('./repo')({ repo: p.repo, store: P.scopedStore(() => p.id), str, broadcast: m => broadcast({ ...m, project: p.id }), postChat: inP(postChat),
       createTask: inP(o => createTask(o)), loadTasks: inP(() => loadTasks()), saveTask: inP(t => saveTask(t)), getMembers: () => members, nameOf, drift, board,
       presence: () => presence().map(m => (m.project && m.project !== p.id ? { ...m, online: false } : m)), readVision: inP(readVision), tribe, claims,
-      onHead: x => flow && flow.onHead(p.id, x), contextExtra: () => [...(flow ? flow.contextLines(p.id) : []), ...(buildKit ? buildKit.contextLines(p.id) : [])], pushAuth: () => githubAuth.pushAuth(), can: (me, cap) => perms.can(me, cap, p.id) });
+      onHead: x => flow && flow.onHead(p.id, x), contextExtra: () => [...(flow ? flow.contextLines(p.id) : []), ...(buildKit ? buildKit.contextLines(p.id) : []), ...(brainHub ? brainHub.contextLines(p.id) : [])], pushAuth: () => githubAuth.pushAuth(), can: (me, cap) => perms.can(me, cap, p.id) });
     return Object.assign(h, { drift });
   });
   hubs.set(p.id, hub);
@@ -543,7 +544,7 @@ const gifs = require('./gifs')({ store: baseStore, pstore: store, P, channels: c
 const huddleSum = require('./huddlesum')({ P, brain, postChat, nameOf, log: m => console.error('  ' + m) });
 // feat/captures: the link reader, voice notes and summaries (server/captures.js), optional packs (server/packs.js)
 const packs = require('./packs')({ store: baseStore, broadcast: m => broadcast(m), log: m => console.error('  ' + m) });
-const captures = require('./captures')({ P, store, base: baseStore, embeds, packs, llm, docs, dms, perms, postChat: (...x) => postChat(...x), broadcast: m => broadcast(m), sendTo: (...x) => sendTo(...x), createTask: o => createTask(o), getMembers: () => members, nameOf, log: m => console.error('  ' + m) });
+const captures = require('./captures')({ P, store, base: baseStore, embeds, packs, llm, docs, dms, perms, postChat: (...x) => postChat(...x), broadcast: m => broadcast(m), sendTo: (...x) => sendTo(...x), createTask: o => createTask(o), getMembers: () => members, nameOf, log: m => console.error('  ' + m), onSaved: pid => brainChanged(pid) });
 huddleSum.setSink(x => captures.fromHuddle(x));
 captureHook = (...x) => captures.onChat(...x);
 // voice-video: reactions, laser pointer, in-call chat and polls, recording notices, ring/missed, lobby, ICE/TURN config, history
@@ -766,7 +767,10 @@ checksHub = require('./checks')({ P, base: baseStore, getMembers: () => members,
 mcpFlow = makeMcpFlow({ flow, P });
 // feat/ai-guides: the master guides, the project brief and the read tools an AI helper designs with (server/aiguides.js),
 // and the AGENTS.md a project folder gets (when the project is made, and whenever a design is written into the folder)
-aiGuides = require('./aiguides')({ P, base: baseStore, perms, site: siteDesign, app: appCreator, motion: motionStudio, requests: () => changeReq, files: designFiles, readVision: () => readVision(), facts: () => flintFacts.load(), tasks: () => loadTasks(), nameOf, members: () => members, log: m => console.error('  ' + m) });
+aiGuides = require('./aiguides')({ P, base: baseStore, perms, site: siteDesign, app: appCreator, motion: motionStudio, requests: () => changeReq, files: designFiles, readVision: () => readVision(), facts: () => flintFacts.load(), tasks: () => loadTasks(), brain: pid => (brainHub ? brainHub.agentsLines(pid) : []), nameOf, members: () => members, log: m => console.error('  ' + m) });
+brainHub = require('./brainhub')({ P, store, captures, docs, dms, llm, nameOf, loadTasks: () => loadTasks(), facts: () => flintFacts.load(), repoStatus: pid => { const h = hubFor(pid); return h && h.status ? h.status() : null; }, broadcast: m => broadcast(m), log: m => console.error('  ' + m),
+  changed: pid => brainChanged(pid) });   // p13 Files · What we know
+brainChanged = pid => { try { const h = hubFor(pid); if (h && h.context) h.context.touch(); } catch {} try { aiGuides.queueFolder(pid, 4000); } catch {} };
 designFiles.after(pid => aiGuides.queueFolder(pid));
 designFiles.after(pid => { try { syncHub.onSave(pid); } catch {} });   // p12: the GitHub backup takes the design files a moment after each save (when it is on)
 copiesLog = require('./copies')({ base: baseStore, P, nameOf });
@@ -800,7 +804,7 @@ const mcp = makeMcp({
     },
   },
   resources: () => aiGuides.resources, prompts: () => aiGuides.prompts,
-  docs, claims, extraTools: { ...aiGuides.mcpTools, ...agentTools, ...appCreator.mcpTools, ...motionStudio.mcpTools, ...visuals.mcpTools, ...mcpFlow.tools, ...makeWorkshopMcp(workshop, { current: () => P.current() }), ...require('./mcp-preview')(preview, P), ...whiteboard.mcpTools, ...showcase.mcpTools, ...siteDesign.mcpTools, ...suggestEngine.mcpTools, ...captures.mcpTools, ...assetLib.mcpTools, ...company.mcpTools, ...taskFlow.mcpTools, ...ledger.mcpTools, ...seatpilot.mcpTools, ...talent.mcpTools /* v0.27 company */, ...market.mcpTools, ...academy.mcpTools, ...flintMem.mcpTools, ...publishHub.mcpTools, ...jamHub.mcpTools, ...pinsHub.mcpTools, ...buildKit.mcpTools, ...canvasAI.mcpTools, ...inviteClaude.mcpTools() }, port: PORT, gate: { tool: (me, n, a) => office.refuse() || inviteClaude.gateTool(me, n, a), listable: (me, n) => inviteClaude.listable(me, n) }, coordTools: h => { const shipTools = ship.mcpTools(h); return { ...coord.mcpTools(h), ...agentnet.mcpTools(h), ...canvasAI.mcpTools, ...shipTools, ...syncHub.mcpTools(h, shipTools), ...checksHub.mcpTools(h) }; },   // sync wraps ship_status and adds ship_now; request_ship and the rest stay
+  docs, claims, extraTools: { ...aiGuides.mcpTools, ...agentTools, ...appCreator.mcpTools, ...motionStudio.mcpTools, ...visuals.mcpTools, ...mcpFlow.tools, ...makeWorkshopMcp(workshop, { current: () => P.current() }), ...require('./mcp-preview')(preview, P), ...whiteboard.mcpTools, ...showcase.mcpTools, ...siteDesign.mcpTools, ...suggestEngine.mcpTools, ...captures.mcpTools, ...(brainHub ? brainHub.mcpTools : {}), ...assetLib.mcpTools, ...company.mcpTools, ...taskFlow.mcpTools, ...ledger.mcpTools, ...seatpilot.mcpTools, ...talent.mcpTools /* v0.27 company */, ...market.mcpTools, ...academy.mcpTools, ...flintMem.mcpTools, ...publishHub.mcpTools, ...jamHub.mcpTools, ...pinsHub.mcpTools, ...buildKit.mcpTools, ...canvasAI.mcpTools, ...inviteClaude.mcpTools() }, port: PORT, gate: { tool: (me, n, a) => office.refuse() || inviteClaude.gateTool(me, n, a), listable: (me, n) => inviteClaude.listable(me, n) }, coordTools: h => { const shipTools = ship.mcpTools(h); return { ...coord.mcpTools(h), ...agentnet.mcpTools(h), ...canvasAI.mcpTools, ...shipTools, ...syncHub.mcpTools(h, shipTools), ...checksHub.mcpTools(h) }; },   // sync wraps ship_status and adds ship_now; request_ship and the rest stay
   chat: {
     post(me, text, channel) {   // feat/chat2: optional channel ("design", "#design"); #general by default
       const tx = str(text, 4000); if (!tx) return; const muted = perms.muteBlock(me); if (muted) throw new Error(muted);   /* feat/roles */
@@ -1176,6 +1180,7 @@ async function apiInProject(req, res, url) {
   if (a === 'channels') return chans.route(req, res, ctx());   // feat/chat2
   if (a === 'embeds') return embeds.route(req, res, ctx());    // feat/chat2
   if (a === 'captures') return captures.route(req, res, ctx());   // feat/captures
+  if (a === 'brain') return brainHub.route(req, res, ctx());   // p13 Files · What we know (server/brainhub.js)
   if (a === 'packs') return packs.route(req, res, ctx());   // feat/captures: Settings › Packs (host only)
   if (a === 'gifs') return gifs.route(req, res, ctx());        // feat/chat2
   if (a === 'files') return assetFiles.route(req, res, ctx());   // feat/viewers: repo assets for the 3D / pixel-art viewers

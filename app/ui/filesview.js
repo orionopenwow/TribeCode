@@ -211,10 +211,11 @@
   // item: { id, cat, type, title, at, owner: { name, color }, loc: { key, label, device }, mine, thumb, attrs, cls, text, acts: [] }
   function mount(root, o) {
     const pfx = o.prefs || 'tribecode.files';
+    const cats = [CATS[0], ...(o.extraCats || []), ...CATS.slice(1)];   // p13: a project's Files adds Links, Decisions, Questions (filesbrain.js)
     const st = {
       q: o.q || '', items: [], loading: !!o.loading,
       view: lsGet(pfx + '.view', 'grid'), sort: lsGet(pfx + '.sort', 'updated'),
-      cat: (k => (CATS.some(c => c[0] === k) ? k : 'all'))(LEGACY[lsGet(pfx + '.kind', 'all')] || lsGet(pfx + '.kind', 'all')),
+      cat: (k => (cats.some(c => c[0] === k) ? k : 'all'))(LEGACY[lsGet(pfx + '.kind', 'all')] || lsGet(pfx + '.kind', 'all')),
       where: lsGet(pfx + '.where', o.defaultWhere || 'mine'),
     };
     if (o.fixedCat) st.cat = o.fixedCat;
@@ -232,7 +233,7 @@
           <button class="fx-btn fx-sort" id="${o.idp}-sort" type="button" title="Sort">${icon('sort', 15)}<span>${st.sort === 'name' ? 'Name A–Z' : 'Last updated'}</span></button>
           <div class="fx-seg" role="group" aria-label="View"><button type="button" data-dv="grid" aria-label="Grid" title="Grid">${icon('grid', 16)}</button><button type="button" data-dv="list" aria-label="List" title="List">${icon('list', 16)}</button></div>
       </div>
-      ${o.fixedCat ? '' : `<nav class="fx-tabs dc-chips" role="tablist" aria-label="Kinds of files">${CATS.map(([k, l, ic]) => `<button type="button" role="tab" data-dk="${k}" id="${o.idp}-tab-${k}"><span class="fx-tab-ic">${icon(ic, 14)}</span><span class="fx-tl">${l}</span><span class="fx-tn" data-n="${k}"></span></button>`).join('')}</nav>`}
+      ${o.fixedCat ? '' : `<nav class="fx-tabs dc-chips" role="tablist" aria-label="Kinds of files">${cats.map(([k, l, ic]) => `<button type="button" role="tab" data-dk="${k}" id="${o.idp}-tab-${k}"><span class="fx-tab-ic">${icon(ic, 14)}</span><span class="fx-tl">${l}</span><span class="fx-tn" data-n="${k}"></span></button>`).join('')}</nav>`}
       <div class="fx-top" id="${o.idp}-top">${o.top ? o.top() : ''}</div>
       <div class="fx-body" id="${ids.grid}"></div>
       <div class="fx-after" id="${o.idp}-after"></div>
@@ -267,7 +268,7 @@
       return st.items.filter(it => (!q || `${it.title} ${it.text || ''} ${it.loc ? it.loc.label : ''}`.toLowerCase().includes(q))
         && (w === 'all' || (w === 'mine' ? (it.mine || (it.loc && it.loc.device)) : it.loc && it.loc.key === w)));
     }
-    const sorter = (a, b) => st.sort === 'name' ? String(a.title).localeCompare(String(b.title)) : (Date.parse(b.at) || 0) - (Date.parse(a.at) || 0);
+    const sorter = (a, b) => ((b.pin ? 1 : 0) - (a.pin ? 1 : 0)) || (st.sort === 'name' ? String(a.title).localeCompare(String(b.title)) : (Date.parse(b.at) || 0) - (Date.parse(a.at) || 0));
     function card(it, i) {
       const av = it.owner && it.owner.name ? `<span class="fx-av" style="background:${esc(it.owner.color || 'var(--peer)')}" title="${esc(it.owner.name)}">${esc(([...it.owner.name][0] || '?').toUpperCase())}</span>` : '';
       const loc = it.loc ? `<span class="fx-loc${it.loc.device ? ' dev' : ''}" title="${esc(it.loc.label)}">${icon(it.loc.device ? 'device' : 'tribe', 12)}<span>${esc(it.loc.label)}</span></span>` : '';
@@ -299,15 +300,15 @@
       root.querySelectorAll('[data-n]').forEach(s => { const n = s.dataset.n === 'all' ? vis.length : counts[s.dataset.n] || 0; s.textContent = n ? String(n) : ''; });
       const lead = o.lead ? o.lead(st.cat) || '' : '';   // feat/setup-github: a caller's own card above the files (the project's website on the Websites tab)
       const list = vis.filter(it => (st.cat === 'all' || it.cat === st.cat) && !(lead && it.lead)).sort(sorter);
-      const cnt = $(`#${o.idp}-count`); if (cnt) cnt.textContent = st.loading && !st.items.length ? '' : (n => `${n} file${n === 1 ? '' : 's'}`)(list.length + (lead ? 1 : 0));
+      const cnt = $(`#${o.idp}-count`); if (cnt) cnt.textContent = (st.loading && !st.items.length) || (o.noCount && o.noCount(st.cat)) ? '' : (n => `${n} file${n === 1 ? '' : 's'}`)(list.length + (lead ? 1 : 0));
       shown = [];
       const body = grid;
       if (!list.length && lead) body.innerHTML = lead;
       else if (!list.length) {
-        let [t, s, k, a] = st.q ? ['Nothing matches that', 'Try another word, or look in Everything.', '', ''] : EMPTY[st.cat] || EMPTY.all;
+        let [t, s, k, a] = st.q ? ['Nothing matches that', 'Try another word, or look in Everything.', '', ''] : (o.empty && o.empty[st.cat]) || EMPTY[st.cat] || EMPTY.all;
         if (!st.q && s === EMPTY.all[1]) s = emptyWhere();   // fix/batch-fixes: the wording fits where you are
         body.innerHTML = `${st.loading ? '<div class="fx-empty dc-empty fg-empty"><span class="fx-spin"></span><b>Gathering your files…</b></div>'
-          : window.TribeUI.emptyHTML({ kind: 'files', cls: 'fg-empty', center: true, id: `${o.idp}-empty`, icon: icon(CATS.find(c => c[0] === st.cat)[2], 22), title: t, line: s, action: k ? { label: a, attr: `data-empty-new="${k}"` } : null })}`;
+          : window.TribeUI.emptyHTML({ kind: 'files', cls: 'fg-empty', center: true, id: `${o.idp}-empty`, icon: icon((cats.find(c => c[0] === st.cat) || CATS[0])[2], 22), title: t, line: s, action: k ? { label: a, attr: `data-empty-new="${k}"` } : null })}`;
         const eb = body.querySelector('[data-empty-new]'); if (eb) eb.onclick = e => o.create(eb.dataset.emptyNew, e.currentTarget);
       } else {
         const gs = groups(list), one = gs.length === 1 && !o.alwaysHeads;
@@ -364,7 +365,8 @@
       setTop(html) { const t = $(`#${o.idp}-top`); if (t) t.innerHTML = html; },
       setAfter(html) { const t = $(`#${o.idp}-after`); if (t) t.innerHTML = html; },
       state: () => ({ q: st.q, cat: st.cat, where: st.where, view: st.view, sort: st.sort, n: st.items.length }),
-      setCat(k) { if (CATS.some(c => c[0] === k)) { st.cat = k; lsSet(pfx + '.kind', k); paintTabs(); draw(); } },
+      setCat(k) { if (cats.some(c => c[0] === k)) { st.cat = k; lsSet(pfx + '.kind', k); paintTabs(); draw(); } },
+      setQ(v) { st.q = String(v || ''); inp.value = st.q; draw(); },   // p13: the Files hero's search box drives the list
       setWhere(k) { st.where = k; lsSet(pfx + '.where', k); if (wsel) wsel.value = k; draw(); },
     };
   }

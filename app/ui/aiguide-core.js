@@ -552,6 +552,7 @@
       const tasks = (d.tasks || []).slice(0, 10);
       out.push('', '## Open tasks', tasks.length ? tasks.map(t => `- ${t.id} [${t.status}] ${short(t.title, 110)}`).join('\n') : '- None.');
       const com = (d.comments || []).slice(0, 10);
+      if ((d.brain || []).length) out.push('', ...d.brain.map(l => l.replace(/^#{2,3} /, '## ')));   // p13: what the project knows (Files), quoted page gists
       out.push('', '## Open comments on the designs', com.length ? com.map(c => `- ${c.on}${c.where ? ` · ${short(c.where, 40)}` : ''}: “${short(c.text, 160)}”${c.by ? ` (${c.by})` : ''}`).join('\n') : '- None.');
     }
     const ap = d.approve || {};
@@ -602,6 +603,7 @@
       '- **Connected to TribeCode (MCP):** do not edit those files. Call `project_brief`, then `get_guide("website")` or `get_guide("app")`, and propose steps with `site_propose` / `app_propose`. A person approves; Undo takes it back.',
       '- **Not connected:** read `.tribe/ai/WEBSITE.md` or `.tribe/ai/APP.md` first. Change `site/site.json` or `app-web/app-design.json` (the design), never the generated pages, and tell the person to open the project in TribeCode and choose "Keep my files" or "Use the design".',
       '- Never publish, delete pages or screens, or invent facts about this project. Missing facts are questions for the person.',
+      ...((d.brain || []).length ? ['', ...d.brain] : []),
       '', '### Guides', '- `.tribe/ai/PROJECT.md`: what this project is, what exists, who approves what (kept current).', '- `.tribe/ai/WEBSITE.md`, `.tribe/ai/APP.md`, `.tribe/ai/MOTION.md`: how to build each well.', MARK.close);
     return lines.join('\n');
   }

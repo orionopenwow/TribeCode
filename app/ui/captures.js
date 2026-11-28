@@ -277,12 +277,15 @@
       <div class="cap-cc">${cap.thumb ? `<img class="cap-ct" alt="" loading="lazy" src="${esc(thumbUrl(cap.id))}">` : `<span class="cap-ct cap-ce" aria-hidden="true">${esc(cap.emoji || '📎')}</span>`}
         <div class="cap-cb"><b class="cap-cn">${esc(cap.title)}</b><small>${esc([cap.site, cap.kind === 'voice' ? '' : cap.kind].filter(Boolean).join(' · '))}</small></div></div>
       ${cap.summary ? `<div class="cap-cs">${esc(cap.summary)}</div>` : cap.note ? `<div class="cap-cs faint">${esc(cap.note)}</div>` : ''}
-      <div class="cap-cbtn"><button class="btn sm" data-cap-notes="${esc(cap.id)}">Open notes</button>${n ? `<button class="btn sm" data-cap-tasks="${esc(cap.id)}">Make tasks (${n})</button>` : ''}</div></div>`;
+      <div class="cap-cbtn"><button class="btn sm" data-cap-notes="${esc(cap.id)}">Open notes</button>${n ? `<button class="btn sm" data-cap-tasks="${esc(cap.id)}">Make tasks (${n})</button>` : ''}</div>
+      ${cap.files && window.TribeFilesBrain ? `<button type="button" class="cap-files" data-cap-files="${esc(cap.id)}">${window.TribeIcons ? window.TribeIcons.svg('check', 13) : ''}Saved to Files</button>` : ''}</div>`;   // p13: a project link is kept in Files › What we know
   }
   function refreshCards(id) { /* cards are snapshots; the notes page always loads the latest */ }
   document.addEventListener('click', async e => {
     const o = e.target.closest && e.target.closest('[data-cap-notes]');
     if (o) { e.preventDefault(); e.stopPropagation(); show(o.dataset.capNotes); return; }
+    const fb = e.target.closest && e.target.closest('[data-cap-files]');
+    if (fb) { e.preventDefault(); e.stopPropagation(); const id = fb.dataset.capFiles; window.TribeFilesBrain.go('links'); setTimeout(() => window.TribeFilesBrain.openItem(id), 450); return; }   // p13
     const t = e.target.closest && e.target.closest('[data-cap-tasks]');
     if (t) { e.preventDefault(); e.stopPropagation(); show(t.dataset.capTasks); return; }
   }, true);
@@ -293,7 +296,7 @@
     if (!m || m.deleted || !canWrite()) return '';
     const ic = id => `<svg class="i" aria-hidden="true"><use href="#${id}"/></svg>`;
     let out = '';
-    if (!m.media && urlsIn(m.text).length) out += `<button role="menuitem" data-act="cap-link">${ic('i-link')}📎 Read &amp; summarize</button>`;
+    if (!m.media && urlsIn(m.text).length) out += `<button role="menuitem" data-act="cap-link">${ic('i-link')}${ch && String(ch).startsWith('dm-') ? '📎 Read &amp; summarize' : 'Add to Files'}</button>`;   // p13: a project's links go to Files; a DM's stay in the DM
     if (m.media && m.media.kind === 'voice') out += `<button role="menuitem" data-act="cap-voice">${ic('i-doc')}🎙️ Make notes</button>`;
     return out;
   }
@@ -404,6 +407,7 @@
   // ---------- phone: Files shows a Captures entry ----------
   async function phoneEntry(force) {
     if (!phone() || document.body.dataset.view !== 'docs' || !C.connected()) return;
+    if (window.TribeFilesBrain) { const old = $('#cap-m2'); if (old) old.remove(); return; }   // p13: links live in Files › What we know now
     const view = $('#view-docs'); if (!view) return;
     let box = $('#cap-m2');
     if (!box) { box = document.createElement('section'); box.id = 'cap-m2'; box.className = 'm2-only m2-sect cap-m2'; const hub = $('#m2-docs-hub'); if (hub) hub.after(box); else view.prepend(box); }
@@ -421,6 +425,7 @@
   // ---------- Flint ----------
   async function flint(text) {
     const t = String(text || '').trim();
+    if (window.TribeFilesBrain) { const fb = await window.TribeFilesBrain.flint(t); if (fb) return fb; }   // p13: "what do we know about X", "use the moodboard links"
     let m = /^(?:please\s+)?(?:summari[sz]e|read|capture|save|tl;?dr)\s+(?:this\s+|that\s+)?(https?:\/\/\S+)/i.exec(t) || /^(https?:\/\/\S+)$/i.exec(t);
     if (m) {
       if (!C.connected()) return { text: 'Start or join a tribe first, then I can read links into Captures.' };

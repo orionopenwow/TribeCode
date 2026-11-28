@@ -433,9 +433,8 @@ def main():
         with sync_playwright() as p:
             b = p.chromium.launch(executable_path="/usr/bin/google-chrome", args=["--no-proxy-server", "--use-fake-ui-for-media-stream", "--use-fake-device-for-media-stream"])
             pg = login(b, {"width": 1280, "height": 860}, "Orion", orion)
-            pg.evaluate("TribeShell.go('captures')")
+            pg.evaluate("TribeCaptures.open()")   # p13: links live in Files › Links; the Captures list stays for the full notes
             pg.wait_for_selector("#view-captures:not(.hidden) .cap-row")
-            assert pg.locator("#wt-captures.on").count() == 1, "Files › Captures tab"
             assert pg.locator("#view-captures .btn.primary").count() == 1, "one primary action"
             # XSS never renders
             pg.fill("#cap-q", "Totally safe"); pg.wait_for_function("document.querySelectorAll('#cap-list .cap-row').length === 1")
@@ -477,8 +476,8 @@ def main():
 
             # phone 390
             ph = login(b, {"width": 390, "height": 844}, "Maya", maya, mobile=True)
-            ph.evaluate("TribeApp.show('docs')"); ph.wait_for_selector("#cap-m2 .cap-row", timeout=10000)
-            ph.click("#cap-m2-all"); ph.wait_for_selector("#view-captures:not(.hidden) .cap-row")
+            ph.evaluate("TribeApp.show('docs')"); ph.wait_for_selector("#fb-m2 .fb-card", timeout=15000)   # p13: phones see links in Files › What we know
+            ph.evaluate("TribeCaptures.open()"); ph.wait_for_selector("#view-captures:not(.hidden) .cap-row")
             sw = lambda: ph.evaluate("[document.documentElement.scrollWidth, document.body.scrollWidth, innerWidth]")
             assert max(sw()[:2]) <= 390, f"captures list, no sideways scroll: {sw()}"
             ph.wait_for_timeout(300); ph.screenshot(path=str(ROOT / "docs" / "screenshots" / "captures-phone.png"))

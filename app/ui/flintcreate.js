@@ -170,7 +170,8 @@
       : `A stronger AI can restyle the whole ${app ? 'app' : 'site'} at once: new layouts, colour and type chosen for your brand, rewritten words. None is connected to this tribe, so nothing was sent. With no AI, “Polish it” tidies spacing, sizes, colours and buttons right now.`), chips: ['Polish it'] };
     let kit = {}; if (o.pid) { try { kit = (await C.api(`/projects/${encodeURIComponent(o.pid)}/brand`)).kit || {}; } catch {} }
     let me = ''; try { me = ((C.state && C.state().me) || {}).name || ''; } catch {}
-    const text = brief(kind, { ask: o.ask, from: me, brand: kit, audience: o.audience, outline: o.outline });
+    const FB = root && root.TribeFilesBrain, knows = FB && FB.knows ? FB.knows() : '';   // p13: "Use what Files knows" (on by default when Files has links)
+    const text = brief(kind, { ask: o.ask, from: me, brand: kit, audience: o.audience, outline: o.outline }) + (knows ? `\n\n${knows}` : '');
     try {
       await C.api('/coord/asks', { method: 'POST', body: { text, design: app ? 'app' : 'site' }, ...(o.pid ? { project: o.pid } : {}) });   // design: the server puts the project brief on top (server/aiguides.js)
     } catch (e) { return { sent: false, text: `${tr('That could not be sent')}: ${e && e.message ? e.message : tr('the tribe did not answer')}.`, chips: ['Polish it'] }; }

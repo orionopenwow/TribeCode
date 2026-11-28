@@ -197,8 +197,10 @@
     host.innerHTML = `<section class="dfl dfl-gal" id="dfl" data-step="gallery" data-kind="${kind}"><button type="button" class="dfl-back" id="dfl-back">${icon('back', 16)}All kinds</button>
       ${head(k.t, 'Pick a starting point', kind === 'game' || kind === 'app' ? 'Open-source starters that run with no build step. Each keeps its authors\' license and credit.' : '')}
       <label class="dfl-prompt"><span class="dfl-pl">${icon('flame', 16)}Describe it <span class="faint">— optional</span></span><textarea id="dfl-ask" rows="2" maxlength="600" placeholder="${esc(PLACEHOLDER[kind] || '')}"></textarea><small class="faint" id="dfl-ai-note">Flint fills in the name, words and colors from this for free. With an AI connected, he goes further.</small></label>
+      <div class="dfl-files" id="dfl-files"></div>
       <div class="dfl-grid" id="dfl-grid"><p class="faint">Loading…</p></div></section>`;
     host.querySelector('#dfl-back').onclick = () => swap(kinds);
+    if (window.TribeFilesBrain && scope === 'project') window.TribeFilesBrain.designPicker(host.querySelector('#dfl-files'), host.querySelector('#dfl-ask'));   // p13: "From Files" (references, colours, fonts) and "Use what Files knows"
     toTop();
     const list = await templatesFor(kind), grid = host.querySelector('#dfl-grid'); if (!grid) return;
     grid.innerHTML = `<button type="button" class="dfl-tpl dfl-blank" data-tpl=""><span class="dfl-th">${icon('blank', 34)}</span><b>Blank</b><small>Start from nothing</small></button>` +
@@ -267,7 +269,7 @@
     const AB = window.TribeAIBasics;
     if (ask && AB && AB.ask && s.params.length) {
       try {
-        const r = await Promise.race([AB.ask('design.tune', { ask, starter: s.title, params: s.params.map(p => ({ key: p.key, label: p.label, type: p.type, min: p.min, max: p.max, default: p.default })) }, JSON.stringify(values)), new Promise(res => setTimeout(() => res(null), 12000))]);
+        const r = await Promise.race([AB.ask('design.tune', { ask, ...(window.TribeFilesBrain && window.TribeFilesBrain.knows() ? { knows: window.TribeFilesBrain.knows() } : {}), starter: s.title, params: s.params.map(p => ({ key: p.key, label: p.label, type: p.type, min: p.min, max: p.max, default: p.default })) }, JSON.stringify(values)), new Promise(res => setTimeout(() => res(null), 12000))]);
         const j = r && r.text ? JSON.parse((/\{[\s\S]*\}/.exec(r.text) || ['{}'])[0]) : null;
         const ai = j ? K().clean(j, s.params) : {};
         if (Object.keys(ai).length) { values = { ...values, ...ai }; said = Object.entries(ai).map(([k, v]) => `${(s.params.find(p => p.key === k) || {}).label || k} → ${v}`); via = '✦ via ' + r.via; }
