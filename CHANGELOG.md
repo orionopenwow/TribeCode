@@ -1,5 +1,19 @@
 # Changelog
 
+## v0.49.0
+- **Design Studio**: the Design section is now Design Studio, one place to make anything: apps, websites, games, slides, posters and more.
+- **A cleaner home**: your projects first as a grid with previews, messages under them, a calmer header with no empty counts.
+- **The office is always there**: Agents & office draws even with no tribe or with your tribe's computer off: you at your desk, your AI helpers resting, friends with "Back soon · seen 5 min ago", and it goes live when the tribe is back. The first visit is one flow: make your character, two short slides, then "This is you". The message box floats cleanly over the floor.
+- **A short intro on every screen**: the first time you open a screen, 1–3 slides say what it's for; Home's three double as the welcome. "Show intros again" in Settings, "Tour this screen" in Help.
+- **Files, redesigned**: one New menu (Doc, Sheet, Slides, Whiteboard, Design, Note, Upload, Paste a link), one search box that also saves a pasted link, previews on every file, "Jump back in" with the files you and your group open most, and long groups that fold with Show all.
+- **What we know, inside Files**: the project's living brain: a summary that updates itself, Links, Decisions and Questions. Links sent in project chat are read and saved automatically; AI helpers and Flint read it, and Design Studio can pull references, colours and fonts from it.
+- **Calls that ring**: call anyone privately from their card, a DM or the office; Answer / Not now, missed-call cards, video, screen sharing, and reconnecting after a short drop.
+- **Notes in calls, by name**: turn on Notes and everyone's own mic is transcribed into one transcript with names and live captions. When the call ends, one meeting note (attendees, summary, decisions, action items with owners) and a note for each person are saved in Files. A private call's notes stay with the two of you.
+- **Schedule meetings**: from the calendar, Messages, a channel's call button, a person's card or Ctrl K. A live card with Going / Maybe / Can't, reminders, Join now, Notes on start, add to your calendar, edit or cancel.
+- **Notifications per group, like Discord**: right-click a project circle for All messages / Only @mentions / Nothing and Mute (15 minutes to until you turn it back on); channels and DMs too, plus a bell in the chat header. Settings › Notifications lists every group, and your choices follow you to every device. Small groups (up to 5 people) notify you about every message by default.
+- **A calmer Company page**: who we are, what's next, who does what, with one facts line, grouped open roles and one main button per area.
+- **Phones**: the office fits and works offline; intros are a bottom sheet you swipe; Files has previews in rows and Jump back in; long-press a project circle, channel or DM for notifications; the meeting sheet opens from the bottom; no dead screen-share button on phones that can't share.
+
 ## v0.48.0
 - **Agents & office is on for every tribe**: everyone, people and AI helpers, is a character at a desk that stays theirs. Turn it off in Settings › Tribe & admin.
 - **Make your character**: the first time you're in a tribe, pick your body, hair, clothes and accessories, set your name tag and press Done. Friends see it, and your next tribe starts with it.
