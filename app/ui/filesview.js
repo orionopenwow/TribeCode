@@ -233,7 +233,11 @@
           <button class="fx-btn fx-sort" id="${o.idp}-sort" type="button" title="Sort">${icon('sort', 15)}<span>${st.sort === 'name' ? 'Name A–Z' : 'Last updated'}</span></button>
           <div class="fx-seg" role="group" aria-label="View"><button type="button" data-dv="grid" aria-label="Grid" title="Grid">${icon('grid', 16)}</button><button type="button" data-dv="list" aria-label="List" title="List">${icon('list', 16)}</button></div>
       </div>
-      ${o.fixedCat ? '' : `<nav class="fx-tabs dc-chips" role="tablist" aria-label="Kinds of files">${cats.map(([k, l, ic]) => `<button type="button" role="tab" data-dk="${k}" id="${o.idp}-tab-${k}"><span class="fx-tab-ic">${icon(ic, 14)}</span><span class="fx-tl">${l}</span><span class="fx-tn" data-n="${k}"></span></button>`).join('')}</nav>`}
+      ${o.fixedCat ? '' : (() => {   // p13: the first few kinds as tabs, the rest under More (one row, not three)
+        const tab = ([k, l, ic]) => `<button type="button" role="tab" data-dk="${k}" id="${o.idp}-tab-${k}"><span class="fx-tab-ic">${icon(ic, 14)}</span><span class="fx-tl">${l}</span><span class="fx-tn" data-n="${k}"></span></button>`;
+        const MAIN = cats.length > 7 ? 6 : cats.length, head = cats.slice(0, MAIN), rest = cats.slice(MAIN);
+        return `<nav class="fx-tabs dc-chips" role="tablist" aria-label="Kinds of files">${head.map(tab).join('')}${rest.length ? `<details class="fx-more" id="${o.idp}-more"><summary class="fx-more-b"><span class="fx-more-l">More</span><span class="fx-more-c" aria-hidden="true"></span></summary><div class="fx-more-m">${rest.map(tab).join('')}</div></details>` : ''}</nav>`;
+      })()}
       <div class="fx-top" id="${o.idp}-top">${o.top ? o.top() : ''}</div>
       <div class="fx-body" id="${ids.grid}"></div>
       <div class="fx-after" id="${o.idp}-after"></div>
@@ -247,8 +251,9 @@
     $(`#${o.idp}-sort`).onclick = e => { st.sort = st.sort === 'name' ? 'updated' : 'name'; lsSet(pfx + '.sort', st.sort); e.currentTarget.querySelector('span').textContent = st.sort === 'name' ? 'Name A–Z' : 'Last updated'; draw(); };
     const paintView = () => { root.querySelectorAll('[data-dv]').forEach(b => { const on = b.dataset.dv === st.view; b.classList.toggle('on', on); b.setAttribute('aria-pressed', String(on)); }); root.querySelectorAll('.fx-items').forEach(g => { g.classList.toggle('grid', st.view === 'grid'); g.classList.toggle('list', st.view === 'list'); }); };
     root.querySelectorAll('[data-dv]').forEach(b => b.onclick = () => { st.view = b.dataset.dv; lsSet(pfx + '.view', st.view); paintView(); });
-    const paintTabs = () => root.querySelectorAll('[data-dk]').forEach(b => { const on = b.dataset.dk === st.cat; b.classList.toggle('on', on); b.setAttribute('aria-selected', String(on)); b.tabIndex = on ? 0 : -1; });
-    root.querySelectorAll('[data-dk]').forEach(b => b.onclick = () => { st.cat = b.dataset.dk; lsSet(pfx + '.kind', st.cat); paintTabs(); draw(); });
+    let paintTabs = () => root.querySelectorAll('[data-dk]').forEach(b => { const on = b.dataset.dk === st.cat; b.classList.toggle('on', on); b.setAttribute('aria-selected', String(on)); b.tabIndex = on ? 0 : -1; });
+    { const pt = paintTabs; paintTabs = () => { pt(); const m = root.querySelector('.fx-more'); if (!m) return; const on = m.querySelector('[data-dk].on'); m.classList.toggle('on', !!on); const l = m.querySelector('.fx-more-l'); if (l) l.textContent = on ? on.querySelector('.fx-tl').textContent : 'More'; }; }
+    root.querySelectorAll('[data-dk]').forEach(b => b.onclick = () => { st.cat = b.dataset.dk; lsSet(pfx + '.kind', st.cat); const m = b.closest('.fx-more'); if (m) m.open = false; paintTabs(); draw(); });
     if ($('.fx-tabs')) $('.fx-tabs').addEventListener('keydown', e => { if (!['ArrowLeft', 'ArrowRight'].includes(e.key)) return; const bs = [...root.querySelectorAll('[data-dk]')], i = bs.findIndex(b => b.dataset.dk === st.cat), n = bs[(i + (e.key === 'ArrowRight' ? 1 : -1) + bs.length) % bs.length]; n.click(); n.focus(); });
     $('#' + CSS.escape(ids.create)).onclick = e => openStudio(e.currentTarget);
     function openStudio(anchor) { studio(anchor, { id: ids.menu, kinds: o.studio && o.studio.kinds, ids: o.studio && o.studio.ids, extra: o.studio && o.studio.extra, note: o.studio && o.studio.note, create: (k, a) => (k === 'flint' && o.make ? askSheet(a, { make: o.make, aiNote: o.studio && o.studio.aiNote }) : o.create(k, a)) }); }

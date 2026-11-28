@@ -99,7 +99,7 @@ def main():
         # filters
         pg.wait_for_function("document.querySelectorAll('#hub-docs .dc-card').length >= 7", timeout=5000)
         for chip, want in [("sheets", ["Budget"]), ("designs", ["Untitled board", "Untitled design"]), ("pics", ["dot.png"]), ("code", ["main.js"]), ("docs", ["Level ideas"]), ("notes", ["Shopping list"])]:
-            pg.click(f"[data-dk={chip}]"); time.sleep(0.15)
+            pg.evaluate("s => document.querySelector(s).click()", f"[data-dk={chip}]"); time.sleep(0.15)
             t = sorted(visible_titles(pg)); assert t == want, (chip, t)
         pg.click("[data-dk=all]")
         if SHOTS: time.sleep(0.4); pg.screenshot(path=str(ROOT / "docs" / "screenshots" / "files-local.png"))

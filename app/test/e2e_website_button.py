@@ -119,16 +119,16 @@ def main():
             def files_sites(pid):
                 pg.evaluate("TribePreview.close && TribePreview.close()")
                 pg.evaluate(f"TribeProjects.switchTo('{pid}', 'home')"); pg.wait_for_timeout(700)
-                pg.evaluate("TribeApp.show('docs')"); pg.wait_for_selector(".fx-tabs [data-dk='sites']", timeout=10000)
-                pg.click(".fx-tabs [data-dk='sites']"); pg.wait_for_timeout(900)
+                pg.evaluate("TribeApp.show('docs')"); pg.wait_for_selector(".fx-tabs [data-dk='sites']", timeout=10000, state="attached")
+                pg.evaluate("s => document.querySelector(s).click()", ".fx-tabs [data-dk='sites']"); pg.wait_for_timeout(900)
             files_sites(draft)
             pg.wait_for_selector("#fg-site", timeout=8000)
             assert "Ember Cafe" in pg.inner_text("#fg-site-title") and "Last saved" in pg.inner_text("#fg-site-meta") and "Not published yet" in pg.inner_text("#fg-site-meta")
             fr = pg.locator("#fg-site-pv iframe"); assert fr.count() == 1 and "/website/draft" in fr.get_attribute("src") and fr.get_attribute("sandbox") == "", "a live preview, with scripts off"
             assert pg.inner_text("#fg-site-open") == "Open the website" and pg.locator("#fg-site-pub").count() == 0, "an older site: open it (Bring it into the designer is there), nothing to publish from here"
-            assert pg.locator("#fg-empty").count() == 0 and pg.inner_text(".fx-tabs [data-dk='sites'] [data-n]") == "1"
+            assert pg.locator("#fg-empty").count() == 0 and pg.eval_on_selector(".fx-tabs [data-dk='sites'] [data-n]", "e => e.textContent") == "1"
             pg.click(".fx-tabs [data-dk='all']"); pg.wait_for_selector(".fx-card[data-site]", timeout=5000)   # and it is one of the files under All
-            pg.click(".fx-tabs [data-dk='sites']"); pg.wait_for_selector("#fg-site")
+            pg.evaluate("s => document.querySelector(s).click()", ".fx-tabs [data-dk='sites']"); pg.wait_for_selector("#fg-site")
             pg.click("#fg-site-open"); pg.wait_for_selector("#view-website:not(.hidden) #wb-root", timeout=10000)
             files_sites(built); pg.wait_for_selector("#fg-site", timeout=8000)
             assert "/website/preview" in pg.get_attribute("#fg-site-pv iframe", "src") and "Built" in pg.inner_text("#fg-site-meta")

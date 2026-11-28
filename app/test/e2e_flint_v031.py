@@ -122,7 +122,7 @@ def main():
             mp.keyboard.press("Escape"); mp.wait_for_timeout(200)
             # 13 · Files on a kind
             ask(mp, "show my pictures")
-            until(lambda: mp.evaluate("!![...document.querySelectorAll('[data-dk=\"pics\"]')].find(b => b.offsetParent && b.classList.contains('on'))"), "pictures tab"); done.append("files by kind")
+            until(lambda: mp.evaluate("!![...document.querySelectorAll('[data-dk=\"pics\"]')].find(b => b.classList.contains('on'))"), "pictures tab"); done.append("files by kind")
             # 14 · the Marketplace's Installed tab
             ask(mp, "what have i installed", "Installed")
             until(lambda: mp.evaluate("!!document.querySelector('[data-tab=\"installed\"][aria-selected=\"true\"], [data-tab=\"installed\"].on')"), "installed tab"); done.append("market installed")

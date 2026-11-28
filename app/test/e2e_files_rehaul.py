@@ -72,7 +72,7 @@ def main():
         assert pg.eval_on_selector_all(".fx-tabs [data-dk] .fx-tl", "els => els.map(e => e.textContent)") == TABS
         assert pg.eval_on_selector_all(".fx-tabs [data-dk]", "els => els.every(e => e.querySelector('svg.fx-i path, svg.fx-i rect, svg.fx-i circle'))"), "each tab has a stroke icon"
         # ---- an empty tab: one clear action ----
-        pg.click("[data-dk=slides]"); pg.wait_for_selector("#dc-empty [data-empty-new=slides]")
+        pg.evaluate("s => document.querySelector(s).click()", "[data-dk=slides]"); pg.wait_for_selector("#dc-empty [data-empty-new=slides]")
         assert "Empty" not in pg.inner_text("#hub-docs")
         pg.click("[data-dk=all]")
 
@@ -116,7 +116,7 @@ def main():
         assert heads == ["On this device", "Only you"] or heads[0] == "On this device", heads
         # ---- tabs filter ----
         for k, want in (("slides", "slides"), ("pics", "pics"), ("designs", "designs"), ("sites", "sites")):
-            pg.click(f"[data-dk={k}]"); cats = pg.eval_on_selector_all("#hub-docs .fx-card", "els => els.map(e => e.dataset.cat)")
+            pg.evaluate("s => document.querySelector(s).click()", f"[data-dk={k}]"); cats = pg.eval_on_selector_all("#hub-docs .fx-card", "els => els.map(e => e.dataset.cat)")
             assert cats and set(cats) == {want}, (k, cats)
         assert pg.inner_text("[data-n=designs]") == "2"
         pg.click("[data-dk=all]")

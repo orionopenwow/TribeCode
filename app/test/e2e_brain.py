@@ -279,7 +279,7 @@ def main():
             xs = ph.evaluate("[...document.querySelectorAll('.fb-card')].slice(0, 3).map(e => Math.round(e.getBoundingClientRect().left))")
             assert len(set(xs)) <= 2 and max(sw()[:2]) <= 390, (xs, sw())
             ph.wait_for_timeout(200); ph.screenshot(path=str(SHOTS / "brain-phone-links.png"))
-            ph.locator(".fb-card").first.click(); ph.wait_for_selector("#fb-reader #fb-r-design")
+            ph.locator(".fb-card").first.click(); ph.wait_for_selector("#fb-reader #fb-r-design"); ph.wait_for_timeout(600)   # let the slide-in finish
             rb = ph.evaluate("(() => { const r = document.querySelector('#fb-reader').getBoundingClientRect(); return [r.left, r.right]; })()")
             assert rb[0] >= 0 and rb[1] <= 390 and max(sw()[:2]) <= 390, (rb, sw())
             ph.wait_for_timeout(300); ph.screenshot(path=str(SHOTS / "brain-phone-reader.png"))
