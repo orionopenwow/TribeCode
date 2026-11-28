@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.49.2
+- **Updates always land**: the desktop app only reuses a TribeCode server of exactly its own version and build. An older one left running (a previous version's server, or `npm start`) is asked to stop and replaced, and the server is fully stopped before an update installs.
+- **Every release carries a build id**: the page, the server and the app compare it. A stale page refreshes itself once; a server that kept running after its files changed shows "Finish updating · Restart TribeCode"; friends see "TribeCode was updated · Reload" and it reloads when they stop typing.
+- **Settings › About › This install** shows whether the app, server and screens match, with **Repair install**: clears stored files, restarts TribeCode on this computer and reloads.
+- **Running from source**: the .bat files update with `scripts/update-from-source.js`, which never loses your edits (they go to `git stash`), stops an older server still running and prints the version you're on.
+- **Phones**: the update banners sit above the bottom bar and wrap to two lines; nothing else changes on phones.
+
 ## v0.49.1
 - Everything in v0.49.0 below; its release build stopped at a check, and this one ships it.
 - **Fix**: a screen intro could cover the page while joining from the first-run screen's "Have an invite link?" box.

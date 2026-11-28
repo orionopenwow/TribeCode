@@ -4,7 +4,7 @@ Updated 2026-11-27 by the session that released v0.48.0 and v0.49.0. For any age
 
 ## Where things stand
 
-- **Released:** v0.49.1 is on `main` and `dev` (2026-11-27); it ships v0.49.0, whose release gate stopped. `CHANGELOG.md` has every release in user terms; `docs/CONTEXT.md` has one line per release with the files involved.
+- **Released:** v0.49.2 is on `main` and `dev` (2026-11-27): robust updates (build id handshake). v0.49.1 shipped v0.49.0, whose release gate stopped. `CHANGELOG.md` has every release in user terms; `docs/CONTEXT.md` has one line per release with the files involved.
 - **Service worker cache:** `tribecode-shell-v421` on `main`. Bump it above whatever you find when shell files change. Retired website templates must stay out of `SHELL` (`site_variety_test` checks), so do not union them back in when resolving `sw.js`.
 - **Flint's language score:** 2365/2391 (98.9%) on `flint_eval_test`; the bar is 98%.
 - **The npm test chain** has about 296 steps; a full run is several hours on the sandbox, so releases use targeted tests plus the smoke set.
