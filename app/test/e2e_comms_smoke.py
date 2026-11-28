@@ -262,11 +262,11 @@ def main():
             host.wait_for_function("__fakeSpeech.active()")
             host.evaluate("__fakeSpeech.say('great, lets plan the campfire save points')")
             wait_text(maya, "#cap-strip .cap-lines", "plan the campfire save points")
-            maya.click("#cap-share"); maya.wait_for_function("__fakeSpeech.active()")
+            maya.wait_for_function("__fakeSpeech.active()")   # p13b: Notes on transcribes everyone in the call (each can pause theirs)
             maya.evaluate("__fakeSpeech.say('I will build the campfire save point tonight, this is fun')")
             wait_text(host, "#cap-strip .cap-lines", "campfire save point tonight")
             jay.wait_for_function("TribeCaptions.lines().some(l => l.text.includes('campfire save point tonight'))")   # the phone hears captions too
-            assert not jay.evaluate("__fakeSpeech.active()"), "Jay's mic is not transcribed until he opts in"
+            jay.evaluate("TribeCaptions.pause(true)"); jay.wait_for_function("!__fakeSpeech.active()")   # Jay pauses his own mic
             jay.evaluate("TribeCapture.toggle(true)"); jay.wait_for_function("__fakeSpeech.active()")
             jay.evaluate("__fakeSpeech.say('phone note remember the marshmallows')")
             date = jay.evaluate("TribeCapture.today()")
@@ -288,7 +288,7 @@ def main():
             step("huddle: leaving closes every peer connection, removes remote audio and releases the mic; closing the tab leaves too")
 
             # ================= 4. meeting notes + after-huddle summary (local model on) =================
-            wait_text(maya, "#chat-list", "Meeting notes are ready", timeout=20000)
+            wait_text(maya, "#chat-list", "Meeting notes saved", timeout=20000)
             meeting = wait_for(lambda: next((d for d in api("/docs", token=maya_tok)[1]["docs"] if d["title"].startswith("Meeting · ")), None), 10, "meeting doc in the project")
             body = api(f"/docs/{meeting['slug']}", token=maya_tok)[1]["doc"]["body"]
             for want in ("plan the campfire save points", "campfire save point tonight", "**Maya**", "**Orion**", "## Summary", "## Action items"):

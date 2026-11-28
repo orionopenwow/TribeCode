@@ -2,7 +2,10 @@
 // "perfect negotiation" pattern so anyone can add or drop tracks at any time. Audio, camera and screen.
 // A mesh (everyone connects to everyone) keeps it serverless and private; it works up to about six people.
 // The call stage, side panels, reactions, polls and recording live in call.js on top of this core.
-//   window.TribeHuddle = { join, leave, toggleMute, toggleDeaf, toggleHand, toggleCamera, flipCamera, share,
+// p13b: a 1:1 call (callPerson: from a DM, a person's card or the office) is private to those two people; a dropped
+// peer gets an ICE restart (after 3 s "disconnected" or on "failed"); when it still can't connect and no relay (TURN) is
+// set up, the call says so in one plain line.
+//   window.TribeHuddle = { join, leave, callPerson, toggleMute, toggleDeaf, toggleHand, toggleCamera, flipCamera, share,
 //     setPtt, pttDown, pttUp, setDevice, devices, inCall, roster, render, peers, local, streamsOf, quality, debug }
 (function () {
   const $ = s => document.querySelector(s);
@@ -15,7 +18,7 @@
   const setPref = (k, v) => { try { localStorage.setItem(LS(k), JSON.stringify(v)); } catch {} };
   let ICE = [{ urls: 'stun:stun.l.google.com:19302' }];
   let inCall = false, confirmed = false, muted = false, deaf = false, hand = false, local = null, cam = null, screen = null, roster = [], audioCtx = null;
-  let ptt = pref('ptt', false), pttHeld = false, facing = 'user', rejoin = 0, lobby = false;
+  let ptt = pref('ptt', false), pttHeld = false, facing = 'user', rejoin = 0, lobby = false, callDm = null, lastJoin = {};
   const peers = new Map(); // memberId -> { pc, polite, makingOffer, ignoreOffer, audio, streams: Map(id -> MediaStream), stopMeter, restarts }
 
   const meId = () => (C.state().me || {}).id;
@@ -95,11 +98,14 @@
       }
     };
     pc.onconnectionstatechange = () => {
+      clearTimeout(p.discTimer);
+      // a short Wi-Fi hop shows as "disconnected": give it 3 s to come back by itself, then restart ICE
+      if (pc.connectionState === 'disconnected' && inCall) p.discTimer = setTimeout(() => { if (pc.connectionState === 'disconnected' && p.restarts < 3 && inCall) { p.restarts++; emit('reconnecting', { id }); try { pc.restartIce(); } catch {} } }, 3000);
       // reconnect: try an ICE restart a few times before giving up on this peer (Wi-Fi hops, phone screen-lock)
-      if (pc.connectionState === 'failed' && p.restarts < 3 && inCall) { p.restarts++; try { pc.restartIce(); } catch {} }
+      if (pc.connectionState === 'failed' && p.restarts < 3 && inCall) { p.restarts++; emit('reconnecting', { id }); try { pc.restartIce(); } catch {} }
       else if (pc.connectionState === 'failed' || pc.connectionState === 'closed') {
         // still failing after the restarts and no relay configured: most likely cellular or a strict NAT
-        if (pc.connectionState === 'failed' && inCall && !ICE.some(s => [].concat(s.urls || s.url || []).some(u => /^turns?:/.test(u)))) { emit('relay-needed', { id }); if (window.TribeNextOpts) window.TribeNextOpts.nudge('relay'); }
+        if (pc.connectionState === 'failed' && inCall) { const relay = ICE.some(s => [].concat(s.urls || s.url || []).some(u => /^turns?:/.test(u))); emit('relay-needed', { id, relay }); if (!relay && window.TribeNextOpts) window.TribeNextOpts.nudge('relay'); }
         drop(id);
       }
       if (pc.connectionState === 'connected') p.restarts = 0;
@@ -144,7 +150,7 @@
     const p = peers.get(id); if (!p) return;
     try { p.pc.close(); } catch {}
     if (p.audio) p.audio.remove(); document.querySelectorAll(`#huddle-audio audio[data-peer="${CSS.escape(id)}"]`).forEach(a => a.remove());
-    if (p.stopMeter) p.stopMeter(); hideScreen(id);
+    if (p.stopMeter) p.stopMeter(); hideScreen(id); clearTimeout(p.discTimer);
     peers.delete(id); levels.delete(id); emit('video', { id });
   }
 
@@ -177,6 +183,7 @@
     if (roster.length >= MESH_MAX && !roster.some(m => m.id === meId())) {
       return toast(`Calls connect everyone to everyone, which works up to ${MESH_MAX} people. This one is full; use chat or a voice note for now.`, 'warn');
     }
+    lastJoin = { dm: opts.dm || null };
     try { const r = await C.api('/calls/ice'); if (r && Array.isArray(r.iceServers)) ICE = r.iceServers; } catch {}
     try { local = await micStream(pref('mic', '')); }
     catch (e) {
@@ -186,12 +193,25 @@
     inCall = true; confirmed = false; muted = ptt; deaf = false; hand = false; rejoin = 0;
     local.getAudioTracks().forEach(t => (t.enabled = !muted));
     local.stopMeter = meter(local, l => setLevel(meId(), muted ? 0 : l));
-    C.send({ type: 'huddle-join', muted });
+    C.send({ type: 'huddle-join', muted, ...(opts.dm ? { dm: opts.dm } : {}) });
     // a tribe that lives only on this phone has nobody to call yet (offline.js solo mode): say what would help
     try { if (window.TribeOffline && window.TribeOffline.solo && window.TribeOffline.solo() && window.TribeNextOpts) setTimeout(() => window.TribeNextOpts.nudge('huddle'), 600); } catch {}
     sync(roster);
     if (opts.video) toggleCamera();
     emit('join');
+  }
+
+  // Call one person: a private call in your DM with them, and their phone/desktop rings. Already in a call: just ring them.
+  async function callPerson(id, o = {}) {
+    if (!id || id === meId()) return;
+    if (inCall) { C.send({ type: 'call-ring', to: id, video: !!o.video }); toast(`Ringing ${nameOf(id)}…`); emit('ringing', { id }); return; }
+    const busy = roster.length > 0;   // a huddle I can see is on: join it and ring them into it
+    const dm = !busy && window.TribeDM && window.TribeDM.channelWith ? window.TribeDM.channelWith(id) : null;
+    await join({ dm, video: !!o.video });
+    if (!inCall) return;
+    C.send({ type: 'call-ring', to: id, video: !!o.video });
+    toast(busy ? `Joined the huddle that's on. Ringing ${nameOf(id)}…` : `Calling ${nameOf(id)}…`);
+    emit('ringing', { id });
   }
 
   function leave(fromServer = false) {
@@ -361,10 +381,15 @@
 
   C.on('huddle', sync);
   C.on('rtc', onSignal);
+  C.on('ws', m => {
+    if (m.type === 'huddle') callDm = m.dm || null;
+    else if (m.type === 'hello') callDm = m.huddleDm || null;
+    else if (m.type === 'huddle-error') { if (inCall) leave(true); toast(m.error || 'You can\'t join that call right now.', 'warn'); }
+  });
   C.on('ws', m => { if (m.type === 'call-lobby') { if (inCall) leave(true); lobby = true; emit('lobby'); } if (m.type === 'call-admitted' && lobby) { lobby = false; join(); } });
   // reconnect: a dropped connection takes you out; when the tribe connection comes back within two minutes, you rejoin
   C.on('status', s => { if (s.status !== 'online' && inCall) { rejoin = Date.now(); leave(true); } });
-  C.on('hello', () => { if (rejoin && Date.now() - rejoin < 120_000) { rejoin = 0; setTimeout(() => join(), 400); } });
+  C.on('hello', () => { if (rejoin && Date.now() - rejoin < 120_000) { rejoin = 0; setTimeout(() => join(lastJoin), 400); } });   // p13b: a DM call comes back as the same DM call
   document.addEventListener('keydown', e => {
     if (!(e.ctrlKey && e.shiftKey) || e.altKey) return;
     const k = e.key.toLowerCase();
@@ -375,7 +400,7 @@
   document.addEventListener('DOMContentLoaded', renderBar);
   setTimeout(renderBar, 0);
 
-  window.TribeHuddle = { join, leave, toggleMute, toggleDeaf, toggleHand, toggleCamera, flipCamera, share, stopShare, setPtt, pttDown, pttUp, setDevice, devices, canShare,
+  window.TribeHuddle = { join, leave, callPerson, dm: () => callDm, meshMax: MESH_MAX, toggleMute, toggleDeaf, toggleHand, toggleCamera, flipCamera, share, stopShare, setPtt, pttDown, pttUp, setDevice, devices, canShare,
     inCall: () => inCall, inLobby: () => lobby, roster: () => roster, render: renderBar, streamsOf, quality, level: id => levels.get(id) || 0,
     me: () => ({ id: meId(), muted, deaf, hand, ptt, video: !!cam, sharing: !!screen }),
     localAudio: () => local, remoteAudio: () => [...document.querySelectorAll('#huddle-audio audio')].map(a => a.srcObject).filter(Boolean),

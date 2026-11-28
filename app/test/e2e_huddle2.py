@@ -158,7 +158,7 @@ def main():
             o.evaluate(f"TribeCall.ring('{jay_id}')")
             j.wait_for_selector(".call-ring [data-ring-join]", timeout=5000)
             wait_text(j, ".call-ring", "is calling you")
-            j.wait_for_function("document.querySelector('.call-ring') && document.querySelector('.call-ring').textContent.includes('Missed huddle')", timeout=8000)
+            j.wait_for_function("document.querySelector('.call-ring') && document.querySelector('.call-ring').textContent.includes('Missed call')", timeout=8000)
 
             # reconnect: drop Maya's WebSocket; she comes back into the call by herself
             m.evaluate("window.__socks[window.__socks.length - 1].close()")

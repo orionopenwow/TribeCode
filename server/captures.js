@@ -702,7 +702,7 @@ module.exports = function captures({ P, store, base, embeds, packs, llm, docs, d
     };
   }
 
-  return { route, onChat, fromHuddle, rewrite, mcpTools: mcpTools(), captureLink, captureVoice, search, ask, read, list: listAll, parseVtt, parseWhisperJson, normUrl, platformOf };
+  return { route, onChat, fromHuddle, rewrite, mcpTools: mcpTools(), captureLink, captureVoice, search, ask, read, list: listAll, parseVtt, parseWhisperJson, normUrl, platformOf, save };   // save: p13b call notes (server/callnotes.js)
 };
 module.exports.parseVtt = parseVtt;
 module.exports.parseWhisperJson = parseWhisperJson;

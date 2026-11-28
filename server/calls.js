@@ -6,7 +6,8 @@
 //   call-poll    { q, options } | { poll, vote }   a quick poll inside the call
 //   call-rec     { on }                     someone started/stopped recording: everyone is told, chat gets a line
 //   call-present { on }                     "follow me": present TribeCode itself (no screen capture needed)
-//   call-ring    { to }                     ring a teammate; unanswered after 30 s = a missed-huddle notification
+//   call-ring    { to }                     ring a teammate; unanswered after 30 s = a missed-call notification (and a DM line for a DM call)
+//   call-decline { to }                     "Not now" on a ring: the caller is told right away (p13b)
 //   call-lock    { on }  call-admit { id }  a lobby: when locked, newcomers knock and someone in the call lets them in
 // HTTP:
 //   GET  /api/calls/ice        -> { iceServers, lanOnly }  what peers use to connect (TURN for phones on cellular)
@@ -17,7 +18,7 @@
 const DEFAULT_STUN = ['stun:stun.l.google.com:19302'];
 const EMOJI = new Set(['👍', '👏', '🎉', '😂', '❤️', '🔥', '🙌', '🤔', '✋', '👀', '🚀', '✅']);
 
-module.exports = function calls({ store, id, str, huddle, sendTo, broadcast, postChat, bus, nameOf, getProject, canSee }) {
+module.exports = function calls({ store, id, str, huddle, sendTo, broadcast, postChat, bus, nameOf, getProject, canSee, getDm = () => null, dmName = null }) {
   const CFG = '.tribe/calls.json';
   const HIST = 'calls/history.jsonl';
   try { require('node:fs').mkdirSync(store.p('calls'), { recursive: true }); } catch {}
@@ -26,6 +27,7 @@ module.exports = function calls({ store, id, str, huddle, sendTo, broadcast, pos
   const rings = new Map();      // to -> { by, at, timer }
   const members = () => [...huddle.keys()];
   const toCall = msg => { for (const mid of members()) sendTo(mid, msg); };
+  const chan = () => (cur && cur.dm) || getDm() || 'general';   // p13b: a DM call's notices stay in that DM
 
   function ice() {
     if (cfg.lanOnly) return { iceServers: [], lanOnly: true };
@@ -47,12 +49,12 @@ module.exports = function calls({ store, id, str, huddle, sendTo, broadcast, pos
   function changed() {
     const ids = members();
     if (ids.length && !cur) {
-      cur = { id: `c-${new Date().toISOString().slice(0, 10)}-${id(5).replace(/[^A-Za-z0-9]/g, 'x')}`, project: getProject(), started: new Date().toISOString(), people: new Set(), chat: [], polls: [], recordings: [], locked: false, admitted: new Set(), presenting: null };
+      cur = { id: `c-${new Date().toISOString().slice(0, 10)}-${id(5).replace(/[^A-Za-z0-9]/g, 'x')}`, project: getProject(), started: new Date().toISOString(), people: new Set(), chat: [], polls: [], recordings: [], locked: false, admitted: new Set(), presenting: null, dm: getDm() || null };
     }
     if (cur) for (const m of ids) { cur.people.add(m); const r = rings.get(m); if (r) { clearTimeout(r.timer); rings.delete(m); } }
     if (cur && cur.presenting && !ids.includes(cur.presenting)) { cur.presenting = null; toCall({ type: 'call-present', by: null, on: false }); }
     if (!ids.length && cur) {
-      const rec = { id: cur.id, project: cur.project, started: cur.started, ended: new Date().toISOString(), people: [...cur.people], chat: cur.chat.slice(-200), polls: cur.polls, recordings: cur.recordings };
+      const rec = { id: cur.id, project: cur.project, dm: cur.dm || null, started: cur.started, ended: new Date().toISOString(), people: [...cur.people], chat: cur.chat.slice(-200), polls: cur.polls, recordings: cur.recordings };
       if (rec.people.length) store.appendJSONL(HIST, rec);
       cur = null;
     }
@@ -75,15 +77,25 @@ module.exports = function calls({ store, id, str, huddle, sendTo, broadcast, pos
     if (t === 'call-ring') {
       const to = str(msg.to, 60); if (!to || to === me.id || huddle.has(to) || !canSee(to)) return true;
       const prev = rings.get(to); if (prev) clearTimeout(prev.timer);
-      sendTo(to, { type: 'call-ring', by: me.id, name: me.name });
-      bus.notify({ type: 'huddle', to: [to], priority: 'high', from: me.id, title: `${me.name} is calling you`, body: 'Tap to join the huddle.', view: 'call' });
+      const dm = getDm(); if (dm && dmName && dmName(me.id, to) !== dm) return true;   // a private call rings only its other person
+      sendTo(to, { type: 'call-ring', by: me.id, name: me.name, dm: dm || null, video: !!msg.video });
+      bus.notify({ type: 'huddle', to: [to], priority: 'high', from: me.id, title: `${me.name} is calling you`, body: 'Tap to answer.', view: 'call' });
       const timer = setTimeout(() => {
         rings.delete(to); if (huddle.has(to)) return;
-        sendTo(to, { type: 'call-missed', by: me.id, name: me.name });
-        bus.notify({ type: 'huddle', to: [to], priority: 'normal', from: me.id, title: `Missed huddle from ${me.name}`, body: 'Call back from the sidebar.', view: 'call' });
+        sendTo(to, { type: 'call-missed', by: me.id, name: me.name, dm: dm || null });
+        sendTo(me.id, { type: 'call-noanswer', to, name: nameOf(to) });
+        bus.notify({ type: 'huddle', to: [to], priority: 'normal', from: me.id, title: `Missed call from ${me.name}`, body: 'Call back from the sidebar.', view: 'call' });
+        if (dmName) postChat(dmName(me.id, to), 'tribecode', `📞 Missed call from ${me.name}`, { call: { missed: true, by: me.id } });
       }, Number(process.env.TRIBE_RING_MS) || 30_000);
       if (timer.unref) timer.unref();
       rings.set(to, { by: me.id, at: Date.now(), timer });
+      return true;
+    }
+    if (t === 'call-decline') {   // "Not now": stop ringing and tell the caller
+      const by = str(msg.to, 60), r = rings.get(me.id); if (!r || r.by !== by) return true;
+      clearTimeout(r.timer); rings.delete(me.id);
+      sendTo(by, { type: 'call-declined', by: me.id, name: me.name });
+      if (dmName) postChat(dmName(me.id, by), 'tribecode', `📞 ${me.name} couldn't take the call from ${nameOf(by)}`, { call: { declined: true, by } });
       return true;
     }
     if (!inCall || !cur) return true;
@@ -117,11 +129,11 @@ module.exports = function calls({ store, id, str, huddle, sendTo, broadcast, pos
     if (t === 'call-rec') {
       if (msg.on) {
         if (!cur.recordings.some(r => r.by === me.id && !r.ended)) cur.recordings.push({ by: me.id, started: new Date().toISOString(), ended: null, file: null });
-        postChat('general', 'tribecode', `🔴 ${me.name} started recording the huddle. Everyone in it can see the red dot.`);
+        postChat(chan(), 'tribecode', `🔴 ${me.name} started recording the huddle. Everyone in it can see the red dot.`);
       } else {
         const r = cur.recordings.find(x => x.by === me.id && !x.ended);
         if (r) { r.ended = new Date().toISOString(); r.file = str(msg.file || '', 120) || null; }
-        postChat('general', 'tribecode', `⏹ ${me.name} stopped recording${msg.file ? '. The recording is in Files.' : '.'}`);
+        postChat(chan(), 'tribecode', `⏹ ${me.name} stopped recording${msg.file ? '. The recording is in Files.' : '.'}`);
       }
       push(); return true;
     }
@@ -139,9 +151,9 @@ module.exports = function calls({ store, id, str, huddle, sendTo, broadcast, pos
       if (m === 'PUT') { if (me.role !== 'host') return fail(res, 403, 'only the host sets up call relays'); return readBody(req).then(body => send(res, 200, setConfig(body))); }
     }
     if (m === 'GET' && b === 'history') {
-      const list = store.readJSONL(HIST, 200).filter(c => !c.project || canSee(me.id, c.project)).filter(c => c.people.includes(me.id) || me.role === 'host').reverse().slice(0, 50)
+      const list = store.readJSONL(HIST, 200).filter(c => !c.project || canSee(me.id, c.project)).filter(c => c.people.includes(me.id) || (me.role === 'host' && !c.dm)).reverse().slice(0, 50)
         .map(c => ({ ...c, names: c.people.map(nameOf) }));
-      return send(res, 200, { calls: list, live: cur ? { id: cur.id, started: cur.started, people: members(), names: members().map(nameOf) } : null });
+      return send(res, 200, { calls: list, live: cur && (!cur.dm || cur.people.has(me.id)) ? { id: cur.id, started: cur.started, people: members(), names: members().map(nameOf) } : null });
     }
     return null;
   }

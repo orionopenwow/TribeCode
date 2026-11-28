@@ -796,7 +796,7 @@
     const np = (pinsBy.get(ch) || []).length;
     h.innerHTML = `${av}<span class="cb-tt"></span><span class="cb-acts">
       <button type="button" class="cb-btn cb-pins ${np ? 'has' : ''}" data-cb="pins" title="Pinned messages" aria-label="Pinned messages${np ? `, ${np}` : ''}" aria-haspopup="dialog">${icon('i-pin')}${np ? `<span class="cb-n">${np}</span>` : ''}</button>
-      <button type="button" class="cb-btn" data-cb="huddle" title="Start or join the huddle" aria-label="Huddle">${icon('i-phone')}</button>
+      <button type="button" class="cb-btn" data-cb="huddle" title="${peer && peer.role !== 'agent' ? 'Call' : 'Start or join the huddle'}" aria-label="${peer && peer.role !== 'agent' ? 'Call' : 'Huddle'}">${icon('i-phone')}</button>
       <button type="button" class="cb-btn" data-cb="share" title="Share your screen in the huddle" aria-label="Share screen">${icon('i-screen')}</button>
       <button type="button" class="cb-btn" data-cb="info" title="${peer ? 'Profile' : 'Who is here'}" aria-label="Details">${icon('i-info')}</button></span>`;
     const tt = h.querySelector('.cb-tt'); kids.forEach(k => tt.appendChild(k));
@@ -810,6 +810,7 @@
       if (b.dataset.cb === 'huddle') {
         if (!H) return toast('Voice calls are loading. Try again in a moment.', 'warn');
         if (!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia)) return toast('This browser can’t do voice calls here. Open TribeCode over https or in the desktop app.', 'warn');
+        if (!H.inCall() && peer && peer.role !== 'agent' && window.TribeCall && window.TribeCall.callPerson) return window.TribeCall.callPerson(peer.id);   // p13b: in a DM, call that person (private, rings them)
         return H.inCall() ? H.leave() : H.join();
       }
       if (b.dataset.cb === 'share') {

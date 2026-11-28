@@ -281,7 +281,7 @@ function broadcast(msg, except) {
   for (const [mid, o] of online) {
     const mem = memberById(mid); if (!mem) continue;
     if (pid && !P.canSee(mem, pid)) continue;
-    if ((type === 'huddle' || type === 'captions') && huddleProject && !P.canSee(mem, huddleProject)) continue;   // fix/security-2: the huddle's project only
+    if ((type === 'huddle' || type === 'captions') && !seesHuddle(mem)) { if (type === 'huddle' && huddleDm) for (const s of o.sockets) s.send({ type: 'huddle', members: [] }); continue; }   // fix/security-2: the huddle's project only; p13b: a DM call only for its two people
     const out = type === 'presence' ? { type: 'presence', members: presenceFor(mem) } : asGeneral;
     for (const s of o.sockets) {
       if (s === except) continue;
@@ -369,7 +369,9 @@ function flooding(s) {
 const huddle = new Map(); // memberId -> { muted, sharing, joined }
 let huddleProject = null;   // fix/security-2: the project the huddle started in; only people who can see it get its state, captions and audio
 const huddleState = () => [...huddle].map(([mid, h]) => ({ id: mid, muted: h.muted, sharing: h.sharing, joined: h.joined, deaf: !!h.deaf, hand: h.hand || null, video: !!h.video, cam: h.cam || null, scr: h.scr || null }));
-const pushHuddle = () => { broadcast({ type: 'huddle', members: huddleState() }); voice.huddleChanged(); calls.changed(); if (!huddle.size) huddleProject = null; };
+let huddleDm = null;   // p13b: a 1:1 call from a DM, a person's card or the office: only those two see it, its notes stay in that DM
+const seesHuddle = mem => !!mem && (!huddleProject || P.canSee(mem, huddleProject)) && (!huddleDm || dms.canRead(huddleDm, mem));
+const pushHuddle = () => { broadcast({ type: 'huddle', members: huddleState(), dm: huddleDm }); voice.huddleChanged(); calls.changed(); if (!huddle.size) { huddleProject = null; huddleDm = null; } };
 function sendTo(mid, msg) { const o = online.get(mid); if (o) for (const s of o.sockets) s.send(msg); }
 
 // ---------- chat ----------
@@ -544,12 +546,13 @@ const huddleSum = require('./huddlesum')({ P, brain, postChat, nameOf, log: m =>
 // feat/captures: the link reader, voice notes and summaries (server/captures.js), optional packs (server/packs.js)
 const packs = require('./packs')({ store: baseStore, broadcast: m => broadcast(m), log: m => console.error('  ' + m) });
 const captures = require('./captures')({ P, store, base: baseStore, embeds, packs, llm, docs, dms, perms, postChat: (...x) => postChat(...x), broadcast: m => broadcast(m), sendTo: (...x) => sendTo(...x), createTask: o => createTask(o), getMembers: () => members, nameOf, log: m => console.error('  ' + m) });
-huddleSum.setSink(x => captures.fromHuddle(x));
+const callNotes = require('./callnotes')({ P, captures, getMembers: () => members, postChat: (...x) => postChat(...x), llm, log: m => console.error('  ' + m) });
+huddleSum.setSink(x => callNotes.save(x));   // p13b: one meeting note + a note per person, as captures (was captures.fromHuddle)
 captureHook = (...x) => captures.onChat(...x);
 // voice-video: reactions, laser pointer, in-call chat and polls, recording notices, ring/missed, lobby, ICE/TURN config, history
-const calls = require('./calls')({ store, id, str, huddle, sendTo, broadcast, postChat, bus, nameOf, getProject: () => huddleProject,
+const calls = require('./calls')({ store, id, str, huddle, sendTo, broadcast, postChat, bus, nameOf, getProject: () => huddleProject, getDm: () => huddleDm, dmName: (a, b) => dms.nameFor(a, b),
   canSee: (mid, pid) => { const m = memberById(mid); return !!m && P.canSee(m, pid || huddleProject || P.current() || P.defaultId()); } });
-const voice = makeVoice({ canSeeHuddle: me => !huddleProject || P.canSee(me, huddleProject), store, id, str, huddle, sendTo, broadcast, postChat, createTask: o => createTask(o), getMembers: () => members, nameOf, brain, docs, bus, P, summary: huddleSum });
+const voice = makeVoice({ canSeeHuddle: me => seesHuddle(me), dmOf: () => huddleDm, store, id, str, huddle, sendTo, broadcast, postChat, createTask: o => createTask(o), getMembers: () => members, nameOf, brain, docs, bus, P, summary: huddleSum });
 const plan = makePlan({ store, id, str, broadcast, postChat, getMembers: () => members, loadTasks: () => loadTasks(), nameOf });
 rituals = require('./rituals')({ store, docs, plan, postChat, broadcast, getMembers: () => members, nameOf, str, isLead: me => taskFlow.isLead(me) });
 plan.guardRitual(me => rituals.mayStart(me), rituals.NO_AGENTS);   // harden: agents start rituals only when a lead allowed it   // feat/work-company: standup/retro rituals on the calendar
@@ -582,7 +585,7 @@ const openspace = require('./openspace')({ P, broadcast, isLocal, log: m => cons
 // feat/p10-office: the built-in office (desks with live screens for people and agents) and the tribe's "agents off" switch
 const office = require('./office')({ store: baseStore, getMembers: () => members, presenceFor, placesFor: me => (places ? places.snapshot(me).places : {}), agentSeen, claims, loadTasks: () => loadTasks(), nameOf, broadcast: m => broadcast(m),
   changeReqs: me => { try { return changeReq.list(P.current(), me) || []; } catch { return []; } }, canSet: me => !!me && (me.role === 'host' || perms.atLeast(me, 'admin')),
-  inCallFor: me => (huddleProject && !(me && P.canSee(me, huddleProject)) ? [] : [...huddle.keys()]),   // feat/p13-office: people in the huddle walk to the meeting table
+  inCallFor: me => (!seesHuddle(me) ? [] : [...huddle.keys()]),   // feat/p13-office: people in the huddle walk to the meeting table
   asksFor: (agentId, me) => approvals.list().filter(a => a.status === 'pending' && a.by === agentId).map(a => ({ id: a.id, title: a.title, canDecide: !!me && me.role !== 'agent' && (a.to || []).includes(me.id) })) });   // pass 11: an agent's waiting OKs, shown as a bubble
 const shelf = require('./shelf')({ P, root: require('./tpldir').root(), docs, postChat, str, nameOf });   // starter shelf: tools, libraries, Claude skills
 const assetLib = require('./assets')({ P, root: require('./tpldir').root(), base: baseStore, postChat, str, nameOf });   // v0.25: the open asset library (server/assets.js)
@@ -1504,7 +1507,7 @@ server.on('upgrade', (req, sock) => {
   netHub.touch(me, req);
   dashboard.seen(me.id, s.project);
   pocket.attach(me, s);   // idle/away tracking for notifications
-  s.send({ type: 'hello', member: publicMember(me), tribe, members: presenceFor(me), version: VERSION, huddle: huddleProject && !P.canSee(me, huddleProject) ? [] : huddleState(), project: s.project, projects: rooms.listFor(me), places: places.snapshot(me) });
+  s.send({ type: 'hello', member: publicMember(me), tribe, members: presenceFor(me), version: VERSION, huddle: !seesHuddle(me) ? [] : huddleState(), huddleDm: seesHuddle(me) ? huddleDm : null, project: s.project, projects: rooms.listFor(me), places: places.snapshot(me) });
   pushPresence();
   s.on('message', msg => P.inProject(s.project || P.defaultId(), () => onMessage(msg)));
   function onMessage(msg) {
@@ -1551,14 +1554,16 @@ server.on('upgrade', (req, sock) => {
     if (msg.type === 'typing' && !mine.typingOn(me.id)) return;   // feat/settings-tabs: typing indicators off
     if (dms.handle(s, me, msg) || voice.handle(s, me, msg) || calls.handle(s, me, msg)) return;   // typing, captions, meeting capture
     if (msg.type === 'announce' && typeof msg.text === 'string' && me.role !== 'spectator' && me.role !== 'agent' && !perms.muteBlock(me)) postChat('general', me.id, msg.text.slice(0, 400));   // fix/security-review: same rules as posting
-    if (msg.type === 'huddle-join' && me.role !== 'agent' && huddle.size && huddleProject && !P.canSee(me, huddleProject)) s.send({ type: 'huddle-error', error: 'A huddle is on in another project.' });   // fix/security-2
+    if (msg.type === 'huddle-join' && me.role !== 'agent' && huddle.size && !seesHuddle(me)) s.send({ type: 'huddle-error', error: huddleDm ? 'Two people are on a private call right now. Try again when it ends.' : 'A huddle is on in another project.' });   // fix/security-2, p13b
     else if (msg.type === 'huddle-join' && me.role !== 'agent' && !huddle.has(me.id) && !calls.canJoin(me)) s.send({ type: 'call-lobby', waiting: true });   // voice-video: a locked call
     else if (msg.type === 'huddle-join' && me.role !== 'agent') {
       const first = huddle.size === 0;
       if (first || !huddleProject) huddleProject = s.project || P.current() || P.defaultId();   // fix/security-2
+      if (first) huddleDm = typeof msg.dm === 'string' && dms.isDm(msg.dm) && dms.canRead(msg.dm, me) && dms.pair(msg.dm) ? msg.dm : null;   // p13b: a private 1:1 call
       huddle.set(me.id, { muted: !!msg.muted, sharing: false, joined: new Date().toISOString(), socket: s });
-      pushHuddle(); if (first) postChat('general', 'tribecode', `🎙️ ${me.name} started a huddle. Jump in from the sidebar.`);
-      if (first) bus.notify({ type: 'huddle', priority: 'low', from: me.id, title: `${me.name} started a huddle`, body: 'Jump in from the sidebar.', view: 'home' });
+      pushHuddle();
+      if (first && !huddleDm) postChat('general', 'tribecode', `🎙️ ${me.name} started a huddle. Jump in from the sidebar.`);
+      if (first && !huddleDm) bus.notify({ type: 'huddle', priority: 'low', from: me.id, title: `${me.name} started a huddle`, body: 'Jump in from the sidebar.', view: 'home' });
     }
     if (msg.type === 'huddle-leave' && huddle.has(me.id)) { huddle.delete(me.id); pushHuddle(); }
     if (msg.type === 'huddle-state' && huddle.has(me.id)) {
