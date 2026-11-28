@@ -61,11 +61,12 @@
     closeMenu();
     const people = (C.state().members || []).filter(m => m.role !== 'agent' && m.id !== me())
       .sort((a, b) => (unread.get(channelWith(b.id)) || 0) - (unread.get(channelWith(a.id)) || 0) || b.online - a.online || a.name.localeCompare(b.name));
-    const ag = myAgent(), row = (m, iconHtml) => { const n = unread.get(channelWith(m.id)) || 0; return `<button role="menuitem" data-dm="${esc(m.id)}">${iconHtml}<span>${esc(m.name)}</span>${n ? `<span class="dm-badge">${n}</span>` : ''}</button>`; };
+    const NG = window.TribeNotifGroups, chMuted = id => !!NG && NG.isMuted('channel', NG.refOf(id));   // p14: a muted channel or DM shows no unread dot / count
+    const ag = myAgent(), row = (m, iconHtml) => { const n = chMuted(channelWith(m.id)) ? 0 : unread.get(channelWith(m.id)) || 0; return `<button role="menuitem" data-dm="${esc(m.id)}">${iconHtml}<span>${esc(m.name)}</span>${n ? `<span class="dm-badge">${n}</span>` : ''}</button>`; };
     const menu = document.createElement('div'); menu.id = 'dm-menu'; menu.className = 'dm-menu chan-menu'; menu.setAttribute('role', 'menu');
     // feat/chat2: Channels (# general + created ones, unread dots, a "…" menu each), + New channel, then DMs.
     const chans = CH() ? CH().list() : [{ id: 'general', name: 'general', main: true }], manage = CH() && CH().canManage();
-    const dot = id => (id === 'general' ? (view !== 'general' && generalUnread) : unread.get(id)) ? '<span class="ch-dot" aria-label="new messages"></span>' : '';
+    const dot = id => (id === 'general' ? (view !== 'general' && generalUnread) : unread.get(id)) && !chMuted(id) ? '<span class="ch-dot" aria-label="new messages"></span>' : chMuted(id) ? `<span class="ch-muted" aria-label="muted">${window.TribeIcons ? window.TribeIcons.svg('bell-off', 13) : ''}</span>` : '';
     const crow = c => `<div class="ch-row ${c.id === view ? 'on' : ''} ${c.archived ? 'arch' : ''}"><button role="menuitem" data-ch="${esc(c.id)}"><span class="ch-ico" aria-hidden="true">${c.emoji ? esc(c.emoji) : '#'}</span><span class="ch-nm">${esc(c.name)}</span>${dot(c.id)}</button>`
       + `<button class="ch-more" data-chm="${esc(c.id)}" aria-label="#${esc(c.name)} options" title="Channel options"><svg class="i"><use href="#i-more"/></svg></button></div>`;
     const live = chans.filter(c => !c.archived), gone = chans.filter(c => c.archived);

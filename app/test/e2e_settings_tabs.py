@@ -163,16 +163,16 @@ def main():
             B.evaluate("TribePrefs.set({ sound: false }); window.__tcDings = 0")
             api("/chat/general", "POST", {"text": "@Ben silent one"}, token=atok); B.wait_for_timeout(1200); assert B.evaluate("window.__tcDings") == 0
             B.evaluate("TribePrefs.set({ sound: true })")
-            # channel mute: nothing from #general reaches Ben's inbox
-            B.evaluate("TribeSettings.open('notifications')"); B.wait_for_selector("[data-mute-kind='channels']")
-            ch = B.evaluate("document.querySelector(\"[data-mute-kind='channels']\").dataset.mute")
-            B.select_option(f"[data-mute-kind='channels'][data-mute='{ch}']", "none")
-            B.wait_for_function(f"TribeClient.api('/notify/prefs').then(r => r.prefs.mutes.channels['{ch}'] === 'none')", timeout=8000)
+            # p14: a project set to "Nothing" (Settings › Notifications › Projects and channels): nothing reaches Ben's inbox, not even an @mention
+            B.evaluate("TribeSettings.open('notifications')"); B.wait_for_selector("[data-ng-level]")
+            ch = B.evaluate("document.querySelector('[data-ng-level]').dataset.ngLevel")
+            B.select_option(f"[data-ng-level='{ch}']", "none")
+            B.wait_for_function(f"TribeClient.api('/notify/prefs').then(r => (r.prefs.groups.projects['{ch}'] || {{}}).level === 'none')", timeout=8000)
             time.sleep(0.6)
             api("/chat/general", "POST", {"text": "@Ben muted one"}, token=atok); time.sleep(1.2)
             st, inbox = api("/notify/inbox", token=btok); assert not any("muted one" in (i.get("body") or "") for i in inbox["items"]), "a muted channel stays silent"
-            st, state = api("/notify/state", token=btok); assert any(r.get("reason") == "muted" for r in state["recent"]), state["recent"][:3]
-            B.select_option(f"[data-mute-kind='channels'][data-mute='{ch}']", "all"); B.evaluate("TribeSettings.close()")
+            st, state = api("/notify/state", token=btok); assert any(r.get("reason") in ("muted", "nothing") for r in state["recent"]), state["recent"][:3]
+            B.select_option(f"[data-ng-level='{ch}']", "default"); B.evaluate("TribeSettings.close()")
 
             # 7) export / import settings round-trip (and reset)
             B.evaluate("TribeSettings.open('profile')"); B.click("[data-theme-id='nordic']"); B.wait_for_function("TribeStore.get().theme === 'nordic'")

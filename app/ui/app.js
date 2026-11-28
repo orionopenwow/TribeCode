@@ -351,8 +351,9 @@
   let unseen = 0, baseTitle = document.title;
   const paintTitle = () => { document.title = unseen ? `(${unseen > 99 ? '99+' : unseen}) ${baseTitle}` : baseTitle; };
   document.addEventListener('visibilitychange', () => { if (!document.hidden && unseen) { unseen = 0; paintTitle(); } });
-  C.on('chat', ({ message }) => {
+  C.on('chat', ({ channel: tChan, message }) => {
     if (!document.hidden || !message || message.by === 'tribecode' || message.by === (C.state().me || {}).id) return;
+    if (window.TribeNotifGroups && !window.TribeNotifGroups.countsChat(tChan, message)) return;   // p14: muted / "Only @mentions" / "Nothing" don't count
     if (!/^\(\d+\+?\) /.test(document.title)) baseTitle = document.title;
     unseen++; paintTitle();
   });

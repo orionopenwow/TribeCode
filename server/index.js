@@ -392,7 +392,7 @@ function postChat(channel, by, text, extra) {
   if (extra && extra.cid) { cidSeen.set(`${channel}:${by}:${extra.cid}`, msg); if (cidSeen.size > 2000) cidSeen.delete(cidSeen.keys().next().value); }
   store.appendJSONL(`chat/${channel}.jsonl`, msg);
   if (!dms.deliver(channel, msg)) broadcast({ type: 'chat', channel, message: msg });   // DMs reach only their two members
-  if (by !== 'tribecode' && !channel.startsWith('dm-')) pocket.chat(channel, by, text);   // @mentions -> notification hub
+  if (by !== 'tribecode' && !channel.startsWith('dm-')) pocket.chat(channel, by, text, chansOk() && chansOk().isCustom(channel) ? (chansOk().byId(channel) || {}).name : P.byChannel(channel) ? 'general' : channel);   // @mentions + plain messages -> notification hub (p14: per project / channel settings)
   if (chatHook) try { chatHook(channel, by, text, msg); } catch (e) { console.error(e); }
   if (captureHook && by !== 'tribecode' && !(extra && (extra.media || extra.images || extra.vote))) try { captureHook(channel, memberById(by), text, msg); } catch (e) { console.error(e); }   // feat/captures: a pasted link becomes a capture card
   return msg;
@@ -510,8 +510,14 @@ const repoHub = {   // MCP tools run against the calling agent's project hub
 let mcpFlow = null;
 let aiGuides = null;   // feat/ai-guides (server/aiguides.js), made once the creator tools exist
 // Notification hub + approvals (server/notify.js, server/approvals.js)
+function chansOk() { try { return chans; } catch { return null; } }   // p14: the channel registry is made further down
 const pocket = makeNotify({ store, bus, getMembers: () => members, sendTo, postChat: (...x) => postChat(...x), log: m => console.error('  notify: ' + m),
-  dnd: mid => !!profiles && profiles.isDnd(mid), mail: (mid, subj, text) => accounts.mailMember(mid, subj, text), canMail: mid => accounts.canMail(mid), projectOf: ref => (P.byChannel(ref) || {}).id || null,   // feat/settings-tabs: email, per-project mutes
+  dnd: mid => !!profiles && profiles.isDnd(mid), mail: (mid, subj, text) => accounts.mailMember(mid, subj, text), canMail: mid => accounts.canMail(mid), projectOf: ref => (P.byChannel(ref) || {}).id || (chansOk() && chansOk().projectOf(ref)) || null,   // feat/settings-tabs: email, per-project mutes
+  // p14: per project / channel notification settings (docs/NOTIFICATIONS.md): how big a project is (the default), who can read a channel, when a channel was made
+  projectSize: pid => members.filter(x => x.role !== 'agent' && P.canSee(x, pid)).length,
+  projectsFor: mid => { const mm = memberById(mid); return mm ? P.visibleTo(mm).map(p => ({ id: p.id, size: members.filter(x => x.role !== 'agent' && P.canSee(x, p.id)).length })) : []; },
+  canSeeRef: (mid, ref) => { const mm = memberById(mid); if (!mm) return false; const pid = (P.byChannel(ref) || {}).id || (chansOk() && chansOk().projectOf(ref)); return !pid || P.canSee(mm, pid); },
+  chanCreated: ref => (chansOk() && chansOk().isCustom(ref) && (chans.byId(ref) || {}).created) || null, testClock: process.env.TRIBE_TEST === '1',
   muted: (to, from) => (!!profiles && !!from && profiles.isMuted(to, from)) || (!!moderation && moderation.isBlocked(to, from)),   // feat/profiles: do not disturb, muted people
   publicUrl: () => (args['public-url'] || process.env.TRIBE_PUBLIC_URL || share.publicUrl() || (lanUrls()[0] || {}).url || `http://localhost:${PORT}`).replace(/\/+$/, '') });
 let shipHub = null, syncHub = null, folderHome = null, versionsHub = null;   // feat/ship-flow: a ship vote decided from a phone (one-tap approval) counts as that person's vote

@@ -354,7 +354,15 @@
   C.on('hello', () => { load(); sendState(true); });
   C.on('notification', m => {
     if (!m.item) return;
+    const NG = window.TribeNotifGroups;   // p14: per project / channel settings (notifgroups.js); the server already applied them
+    if (NG && !NG.allows(m.item)) return;
     if (m.pocket) { desktopNotify(m.item); return; }
+    if (m.item.transient) {   // p14: a plain message under "All messages": a sound, unless you are looking at that channel
+      const D = window.TribeDM, here = !document.hidden && window.TribeApp && window.TribeApp.view && window.TribeApp.view() === 'chat' && D && NG && NG.refOf(D.current()) === m.item.ref;
+      if (!here && window.TribePrefs) window.TribePrefs.onNotification(m.item);
+      window.__tcMsgNotes = (window.__tcMsgNotes || 0) + (here ? 0 : 1);
+      return;
+    }
     if (!items.some(x => x.id === m.item.id)) items.unshift(m.item);
     items = items.slice(0, 200);
     const loud = window.TribePrefs ? window.TribePrefs.onNotification(m.item) : true;   // feat/settings-tabs: sound, quiet hours, pop-ups (prefs.js)

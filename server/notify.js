@@ -9,7 +9,7 @@ const crypto = require('node:crypto');
 const fs = require('node:fs');
 const webpush = require('./webpush');
 
-const TYPES = ['approval', 'mention', 'dm', 'task-assigned', 'reminder', 'proposal', 'bug-critical', 'release', 'huddle', 'meeting-notes', 'repo', 'comment-reply', 'visual-diff'];
+const TYPES = ['message', 'approval', 'mention', 'dm', 'task-assigned', 'reminder', 'proposal', 'bug-critical', 'release', 'huddle', 'meeting-notes', 'repo', 'comment-reply', 'visual-diff'];
 const RATE_MS = 2 * 60_000;           // at most one pocket push per type per member per 2 minutes
 const INBOX_KEEP = 200;
 const NTFY_PRIORITY = { high: '4', normal: '3', low: '2' };
@@ -18,12 +18,14 @@ const NTFY_TAGS = { approval: 'raising_hand', mention: 'speech_balloon', dm: 'en
 
 function defaultPrefs() {
   return {
-    types: { approval: true, mention: true, dm: true, 'task-assigned': true, reminder: true, proposal: true, 'bug-critical': true, release: false, huddle: false, 'meeting-notes': false, repo: false, 'comment-reply': true, 'visual-diff': false },
+    types: { message: true, approval: true, mention: true, dm: true, 'task-assigned': true, reminder: true, proposal: true, 'bug-critical': true, release: false, huddle: false, 'meeting-notes': false, repo: false, 'comment-reply': true, 'visual-diff': false },
     channels: { ntfy: false, webpush: true, desktop: true, email: false },   // fix/security-review: ntfy (a third-party server, ntfy.sh by default) is opt-in
     ntfy: { server: 'https://ntfy.sh', topic: 'tribe-' + crypto.randomBytes(12).toString('base64url').replace(/[-_]/g, '').slice(0, 14).toLowerCase() },
     when: { mode: 'away', awayMinutes: 5, quiet: { on: false, from: '22:00', to: '08:00' } },
     digest: { on: true, everyHours: 4, at: '' },
-    mutes: { channels: {}, projects: {} },   // feat/settings-tabs: per channel / project: 'all' (default), 'mentions' or 'none'
+    mutes: { channels: {}, projects: {} },   // feat/settings-tabs: per channel / project: 'all' (default), 'mentions' or 'none' (legacy; groups below wins)
+    groups: { projects: {}, channels: {} },  // p14: Discord-style per project / channel settings (docs/NOTIFICATIONS.md)
+    app: { sound: true, toasts: true },      // p14: sounds and pop-ups, synced to all your devices
     tz: 'UTC',
     webpush: [],
   };
@@ -36,10 +38,16 @@ function mergePrefs(base, p) {
   if (typeof p.tz === 'string') out.tz = p.tz;
   if (Array.isArray(p.webpush)) out.webpush = p.webpush;
   if (p.mutes && typeof p.mutes === 'object') out.mutes = { channels: { ...((p.mutes || {}).channels || {}) }, projects: { ...((p.mutes || {}).projects || {}) } };
+  if (p.app && typeof p.app === 'object') Object.assign(out.app, p.app);
+  const g = p.groups && typeof p.groups === 'object' ? p.groups : (out.groups || {});
+  out.groups = { projects: JSON.parse(JSON.stringify(g.projects || {})), channels: JSON.parse(JSON.stringify(g.channels || {})) };
+  for (const kind of ['projects', 'channels']) for (const [k, lv] of Object.entries(out.mutes[kind])) {   // the old per channel / project levels carry over
+    if (!LEVELS.includes(lv)) continue; const o = out.groups[kind][k] = out.groups[kind][k] || {}; if (!o.level) o.level = lv;
+  }
   return out;
 }
 // Only accept known shapes from clients.
-function cleanPrefs(cur, body) {
+function cleanPrefs(cur, body, now = Date.now()) {
   const p = mergePrefs(cur, {});
   const b = body || {};
   if (b.types) for (const [k, v] of Object.entries(b.types)) if (TYPES.includes(k) || /^[a-z][a-z-]{1,30}$/.test(k)) p.types[k] = !!v;
@@ -72,6 +80,31 @@ function cleanPrefs(cur, body) {
     }
     const ks = Object.keys(p.mutes[kind]); if (ks.length > 200) for (const k of ks.slice(0, ks.length - 200)) delete p.mutes[kind][k];
   }
+  if (b.groups && typeof b.groups === 'object') for (const kind of ['projects', 'channels']) {
+    const m = b.groups[kind]; if (!m || typeof m !== 'object') continue;
+    for (const [k, v] of Object.entries(m)) {
+      if (!/^[A-Za-z0-9][A-Za-z0-9_-]{0,119}$/.test(k)) continue;
+      if (v === null) { delete p.groups[kind][k]; delete p.mutes[kind][k]; continue; }
+      if (!v || typeof v !== 'object') continue;
+      const o = { ...(p.groups[kind][k] || {}) };
+      if ('level' in v) {
+        if (v.level === 'default' || v.level === null) { delete o.level; delete p.mutes[kind][k]; }
+        else if (LEVELS.includes(v.level)) { o.level = v.level; if (v.level === 'all') delete p.mutes[kind][k]; else p.mutes[kind][k] = v.level; }
+      }
+      if ('mute' in v) {
+        if (v.mute === null || v.mute === false || v.mute === 'off') delete o.until;
+        else if (v.mute in MUTE_FOR) o.until = MUTE_FOR[v.mute] < 0 ? -1 : now + MUTE_FOR[v.mute];
+      }
+      if (kind === 'projects') {
+        for (const f of ['noEveryone', 'noRoles']) if (f in v) { if (v[f]) o[f] = true; else delete o[f]; }
+        if ('push' in v) { if (v.push === false) o.push = false; else delete o.push; }
+        if ('muteNew' in v) { if (v.muteNew) { o.muteNew = true; o.muteNewAt = o.muteNewAt || new Date(now).toISOString(); } else { delete o.muteNew; delete o.muteNewAt; } }
+      }
+      if (Object.keys(o).length) p.groups[kind][k] = o; else delete p.groups[kind][k];
+    }
+    const ks = Object.keys(p.groups[kind]); if (ks.length > 300) for (const k of ks.slice(0, ks.length - 300)) delete p.groups[kind][k];
+  }
+  if (b.app && typeof b.app === 'object') for (const k of ['sound', 'toasts']) if (k in b.app) p.app[k] = !!b.app[k];
   if (typeof b.tz === 'string' && validTz(b.tz)) p.tz = b.tz;
   return p;
 }
@@ -96,6 +129,37 @@ function mutedBy(prefs, n, project = n.project) {
   if (lv.includes('none') && n.type !== 'approval') return true;
   return lv.includes('mentions') && !['mention', 'dm', 'approval'].includes(n.type);
 }
+// ---------- p14: Discord-style per project / channel settings (docs/NOTIFICATIONS.md) ----------
+// level: 'all' | 'mentions' | 'none' (a channel can also say nothing = use the project's); until: ms, or -1 = until turned back on.
+const LEVELS = ['all', 'mentions', 'none'];
+const MUTE_FOR = { '15m': 15 * 60_000, '1h': 3600_000, '3h': 3 * 3600_000, '8h': 8 * 3600_000, '24h': 24 * 3600_000, forever: -1 };
+// Things addressed to you count like an @mention; everything else (a chat message, a release, a huddle) like a plain message.
+const PERSONAL = new Set(['mention', 'task-assigned', 'comment-reply', 'reminder', 'meeting', 'approval']);
+const SMALL = 5;   // a project of up to 5 people starts on "All messages", a bigger one on "Only @mentions"
+const defaultLevel = size => (size > SMALL ? 'mentions' : 'all');
+const mutedNow = (until, now) => until === -1 || (typeof until === 'number' && until > now);
+// Pure: (prefs, item, { project, size, now, chanCreated }) -> { notify, push, dot, badge, level, muted, reason }
+//   notify: in-app pop-up, sound, inbox, desktop · push: also to the phone · dot: the unread dot · badge: counts as a mention
+function groupVerdict(prefs, n, { project = null, size = 0, now = Date.now(), chanCreated = null } = {}) {
+  const g = (prefs && prefs.groups) || {}, ref = n.ref || '';
+  const pj = (project && (g.projects || {})[project]) || {}, ch = (ref && (g.channels || {})[ref]) || {};
+  if (n.type === 'approval' || n.force) return { notify: true, push: true, dot: true, badge: true, level: 'all', muted: false, reason: 'needs-you' };
+  if (n.type === 'dm' || /^dm-/.test(ref)) {   // DMs always notify unless that DM is muted
+    const m = mutedNow(ch.until, now);
+    return { notify: !m, push: !m, dot: !m, badge: !m, level: 'all', muted: m, reason: m ? 'dm-muted' : 'dm' };
+  }
+  if (!project && !ch.level && ch.until === undefined) return { notify: true, push: true, dot: true, badge: PERSONAL.has(n.type), level: 'all', muted: false, reason: 'no-project' };
+  const newMuted = !!(pj.muteNew && !ch.level && ch.until === undefined && chanCreated && pj.muteNewAt && chanCreated > pj.muteNewAt);
+  const muted = mutedNow(ch.until, now) || mutedNow(pj.until, now) || newMuted;
+  const level = ch.level && ch.level !== 'default' ? ch.level : pj.level || (project ? defaultLevel(size) : 'all');
+  let mention = PERSONAL.has(n.type);
+  if (mention && n.everyone && pj.noEveryone) mention = false;   // Suppress @everyone and @here: it counts as a plain message
+  if (mention && n.role && pj.noRoles) mention = false;
+  if (level === 'none') return { notify: false, push: false, dot: !muted, badge: false, level, muted, reason: 'nothing' };
+  const notify = mention || (level === 'all' && !muted);
+  return { notify, push: notify && pj.push !== false, dot: !muted, badge: mention, level, muted, reason: notify ? (mention ? 'mention' : 'all') : muted ? 'muted' : 'mentions-only' };
+}
+
 // The decision table. Pure: (prefs, event, presence, time, last pushes) -> what to do.
 //   pocket: send to phone/desktop now · digest: queue for the next summary · collapse: counted into the next push
 function decide({ prefs, n, away, now, lastPush = {}, rateMs = RATE_MS }) {
@@ -130,7 +194,24 @@ function mentionsIn(text, members, byId) {
     w === m.id.toLowerCase() || w === m.name.toLowerCase().replace(/\s+/g, '') || w === m.name.toLowerCase().split(/\s+/)[0]))).map(m => m.id);
 }
 
-function makeNotify({ store, bus, getMembers, sendTo, publicUrl, postChat = () => {}, log = () => {}, now = () => Date.now(), fetchImpl = (...a) => globalThis.fetch(...a), tick = true, dnd = () => false, muted = () => false, mail = () => false, canMail = () => false, projectOf = () => null }) {
+// p14: who a message mentions, and how: by name, through @everyone / @here, or through their role (@admins, @mods…).
+const ROLE_WORDS = { host: 'host', hosts: 'host', admin: 'admin', admins: 'admin', mod: 'mod', mods: 'mod', moderators: 'mod', builder: 'builder', builders: 'builder' };
+function mentionDetail(text, members, byId) {
+  const words = (String(text).match(/@[^\s@]+/g) || []).map(w => w.slice(1).replace(/[.,!?;:)]+$/, '').toLowerCase());
+  const out = new Map(); if (!words.length) return out;
+  const all = words.some(w => w === 'everyone' || w === 'here' || w === 'tribe'), roles = new Set(words.map(w => ROLE_WORDS[w]).filter(Boolean));
+  for (const m of members) {
+    if (m.role === 'agent' || m.id === byId) continue;
+    const named = words.some(w => w === m.id.toLowerCase() || w === m.name.toLowerCase().replace(/\s+/g, '') || w === m.name.toLowerCase().split(/\s+/)[0]);
+    if (named) out.set(m.id, {});
+    else if (roles.has(m.role)) out.set(m.id, { role: true });
+    else if (all) out.set(m.id, { everyone: true });
+  }
+  return out;
+}
+
+function makeNotify({ store, bus, getMembers, sendTo, publicUrl, postChat = () => {}, log = () => {}, now = () => Date.now(), fetchImpl = (...a) => globalThis.fetch(...a), tick = true, dnd = () => false, muted = () => false, mail = () => false, canMail = () => false, projectOf = () => null, projectSize = () => 0, projectsFor = () => [], canSeeRef = () => true, chanCreated = () => null, testClock = false }) {
+  const realNow = now; let skew = 0; now = () => realNow() + skew;   // p14: tests move the clock to see a mute run out
   fs.mkdirSync(store.p('.tribe/inbox'), { recursive: true });
   const db = store.readJSON('.tribe/notify.json', null) || {};
   db.secret = db.secret || crypto.randomBytes(32).toString('base64url');
@@ -236,9 +317,10 @@ function makeNotify({ store, bus, getMembers, sendTo, publicUrl, postChat = () =
     for (const [s, st] of live.get(mid) || []) if (st.desktop && s.open) { s.send({ type: 'notification', item, pocket: true, unread: unread(mid) }); n++; }
     return n > 0;
   }
-  async function pocket(mid, prefs, item) {
+  async function pocket(mid, prefs, item, { phone = true } = {}) {
     const used = [];
     const tries = [];
+    if (!phone) { if (prefs.channels.desktop && viaDesktop(mid, item)) used.push('desktop'); return used; }   // p14: the project's "Mobile push notifications" is off
     if (prefs.channels.ntfy && prefs.ntfy.topic && prefs.ntfy.server) tries.push(viaNtfy(mid, prefs, item).then(ok => ok && used.push('ntfy')).catch(e => log('ntfy failed: ' + e.message)));
     if (prefs.channels.webpush && prefs.webpush.length) tries.push(viaWebPush(mid, prefs, item).then(ok => ok && used.push('webpush')));
     if (prefs.channels.desktop && viaDesktop(mid, item)) used.push('desktop');
@@ -262,10 +344,16 @@ function makeNotify({ store, bus, getMembers, sendTo, publicUrl, postChat = () =
     for (const mid of recipients(n)) {
       const item = { id: 'n-' + crypto.randomBytes(6).toString('base64url'), at: n.at || new Date(now()).toISOString(), type: n.type, priority: n.priority || 'normal',
         title: String(n.title || n.type).slice(0, 160), body: String(n.body || '').slice(0, 600), view: n.view || null, ref: n.ref || null,
-        from: n.from || null, approval: n.approval || null, actions: n.actions || undefined, ...(n.project ? { project: String(n.project).slice(0, 64) } : {}) };
-      if (!n.force && mutedBy(prefsOf(mid), item, item.project || (item.ref ? projectOf(item.ref) : null))) { note(mid, { at: item.at, type: item.type, title: item.title, pocket: false, digest: false, reason: 'muted' }); continue; }   // feat/settings-tabs
-      if (!n.force) inboxAppend(mid, item);
-      sendTo(mid, { type: 'notification', item, unread: unread(mid) });
+        from: n.from || null, approval: n.approval || null, actions: n.actions || undefined, ...(n.project ? { project: String(n.project).slice(0, 64) } : {}),
+        ...(n.transient ? { transient: true } : {}), ...(n.channel ? { channel: n.channel } : {}) };
+      const pid = item.project || (item.ref ? projectOf(item.ref) : null);
+      if (pid && !item.project) item.project = pid;
+      // p14: the person's per project / channel settings (Discord semantics, docs/NOTIFICATIONS.md) decide first, for every kind
+      const gv = groupVerdict(prefsOf(mid), { ...item, force: n.force, everyone: !!(n.everyone && n.everyone.includes && n.everyone.includes(mid)), role: !!(n.role && n.role.includes && n.role.includes(mid)) },
+        { project: pid, size: pid ? projectSize(pid) : 0, now: now(), chanCreated: item.ref ? chanCreated(item.ref) : null });
+      if (!gv.notify) { note(mid, { at: item.at, type: item.type, title: item.title, pocket: false, digest: false, reason: gv.reason === 'mentions-only' || gv.reason === 'nothing' ? gv.reason : 'muted' }); continue; }
+      if (!n.force && !item.transient) inboxAppend(mid, item);
+      sendTo(mid, { type: 'notification', item, ...(item.transient ? {} : { unread: unread(mid) }) });
       const prefs = prefsOf(mid);
       const lp = lastPush.get(mid) || {};
       const d = !n.force && dnd(mid) ? { pocket: false, digest: false, reason: 'dnd' }   // feat/profiles: do not disturb silences pushes (the inbox still gets it)
@@ -276,7 +364,7 @@ function makeNotify({ store, bus, getMembers, sendTo, publicUrl, postChat = () =
         const out = c[item.type] ? { ...item, body: `${item.body}${item.body ? '\n' : ''}+${c[item.type]} more like this` } : item;
         delete c[item.type]; collapsed.set(mid, c);
         lp[item.type] = { at: now(), ref: item.ref }; lastPush.set(mid, lp);
-        const used = await pocket(mid, prefs, out);
+        const used = await pocket(mid, prefs, out, { phone: gv.push });
         recent.get(mid)[0].channels = used;
       } else if (d.digest) {
         const r = rec(mid); r.queue = [...(r.queue || []), { at: item.at, type: item.type, title: item.title, held: !!d.held }].slice(-100); save();
@@ -305,13 +393,17 @@ function makeNotify({ store, bus, getMembers, sendTo, publicUrl, postChat = () =
   }
   if (tick) setInterval(() => flushDigests().catch(e => log('digest: ' + e.message)), 30_000).unref();
 
-  // Chat hook: @name, @everyone
-  function chat(channel, by, text) {
+  // Chat hook: @name, @everyone, @role -> a mention; everyone else who can read the channel -> a plain message (p14), which
+  // only reaches people whose setting there is "All messages" (it never lands in the inbox).
+  function chat(channel, by, text, label) {
     if (by === 'tribecode') return;
-    const to = mentionsIn(text, getMembers(), by);
-    if (!to.length) return;
-    const who = (memberById(by) || {}).name || 'Someone';
-    bus.notify({ type: 'mention', priority: 'high', to, from: by, title: `${who} mentioned you in #${channel}`, body: String(text).slice(0, 300), view: 'chat', ref: channel });
+    const det = mentionDetail(text, getMembers(), by);
+    const to = [...det.keys()];
+    const who = (memberById(by) || {}).name || 'Someone', name = label || channel;
+    if (to.length) bus.notify({ type: 'mention', priority: 'high', to, from: by, title: `${who} mentioned you in #${name}`, body: String(text).slice(0, 300), view: 'chat', ref: channel,
+      everyone: to.filter(x => det.get(x).everyone), role: to.filter(x => det.get(x).role) });
+    const rest = humans().map(m => m.id).filter(mid => mid !== by && !det.has(mid) && canSeeRef(mid, channel));
+    if (rest.length) bus.notify({ type: 'message', priority: 'normal', transient: true, to: rest, from: by, title: `${who} in #${name}`, body: String(text).slice(0, 300), view: 'chat', ref: channel });
   }
 
   // ---------- REST: /api/notify/... ----------
@@ -320,17 +412,24 @@ function makeNotify({ store, bus, getMembers, sendTo, publicUrl, postChat = () =
     const r = rec(me.id);
     if (b === 'prefs' && m === 'GET') {
       const p = prefsOf(me.id);
-      return send(res, 200, { prefs: { ...p, webpush: undefined }, webpushDevices: p.webpush.length, vapidPublicKey: keys().publicKey,
+      return send(res, 200, { prefs: { ...p, webpush: undefined }, now: now(), defaults: Object.fromEntries(projectsFor(me.id).map(x => [x.id, defaultLevel(x.size)])), small: SMALL, webpushDevices: p.webpush.length, vapidPublicKey: keys().publicKey,
         ntfyUrl: `${p.ntfy.server}/${p.ntfy.topic}`, types: TYPES, publicUrl: publicUrl(), emailAvailable: !!canMail(me.id) });
     }
     if (b === 'prefs' && (m === 'PUT' || m === 'PATCH')) {
       const body = await readBody(req);
-      r.prefs = cleanPrefs(prefsOf(me.id), body); save();
-      const p = r.prefs; return send(res, 200, { prefs: { ...p, webpush: undefined }, ntfyUrl: `${p.ntfy.server}/${p.ntfy.topic}` });
+      r.prefs = cleanPrefs(prefsOf(me.id), body, now()); save();
+      const p = r.prefs, out = { ...p, webpush: undefined };
+      sendTo(me.id, { type: 'notify-prefs', prefs: out, now: now() });   // p14: your other devices follow at once
+      return send(res, 200, { prefs: out, now: now(), ntfyUrl: `${p.ntfy.server}/${p.ntfy.topic}` });
     }
     if (b === 'topic' && m === 'POST') { const p = prefsOf(me.id); p.ntfy.topic = defaultPrefs().ntfy.topic; save(); return send(res, 200, { topic: p.ntfy.topic, ntfyUrl: `${p.ntfy.server}/${p.ntfy.topic}` }); }
     if (b === 'inbox' && m === 'GET') return send(res, 200, { items: inbox(me.id), unread: unread(me.id), lastRead: r.lastRead, marks: r.marks || {} });
     if (b === 'read' && m === 'POST') {   // mark everything read (clears per-item "unread" marks, keeps snoozes)
+      const body = await readBody(req).catch(() => ({}));
+      if (body && typeof body.project === 'string') {   // p14: "Mark as read" on a project circle: only that project's items
+        for (const i of inbox(me.id)) if (isUnread(r, i) && (i.project === body.project || (i.ref && projectOf(i.ref) === body.project))) { r.marks = r.marks || {}; r.marks[i.id] = { ...(r.marks[i.id] || {}), read: true }; }
+        save(); return send(res, 200, { unread: unread(me.id) });
+      }
       r.lastRead = new Date(now()).toISOString();
       for (const k of Object.keys(r.marks || {})) { delete r.marks[k].read; if (!Object.keys(r.marks[k]).length) delete r.marks[k]; }
       save(); return send(res, 200, { unread: unread(me.id) });
@@ -361,6 +460,11 @@ function makeNotify({ store, bus, getMembers, sendTo, publicUrl, postChat = () =
       return send(res, 200, { message: msg, channel: ch });
     }
     if (b === 'state' && m === 'GET') return send(res, 200, { away: isAway(me.id), digest: { queued: (r.queue || []).length, items: r.queue || [] }, recent: recent.get(me.id) || [] });
+    if (b === 'clock' && m === 'POST' && testClock) {   // tests only (TRIBE_TEST=1): move the clock so a timed mute runs out
+      const body = await readBody(req); skew = Number(body.skewMs) || 0;
+      for (const mm of humans()) sendTo(mm.id, { type: 'notify-prefs', prefs: { ...prefsOf(mm.id), webpush: undefined }, now: now() });
+      return send(res, 200, { now: now(), skew });
+    }
     if (b === 'vapid' && m === 'GET') return send(res, 200, { publicKey: keys().publicKey });
     if (b === 'webpush' && m === 'POST') {
       const body = await readBody(req); const s = body.subscription || {};
@@ -385,4 +489,4 @@ function makeNotify({ store, bus, getMembers, sendTo, publicUrl, postChat = () =
 }
 
 module.exports = makeNotify;
-Object.assign(module.exports, { mutedBy, decide, inQuiet, digestDue, defaultPrefs, mergePrefs, cleanPrefs, mentionsIn, localParts, TYPES, RATE_MS });
+Object.assign(module.exports, { groupVerdict, mentionDetail, defaultLevel, LEVELS, MUTE_FOR, SMALL, mutedBy, decide, inQuiet, digestDue, defaultPrefs, mergePrefs, cleanPrefs, mentionsIn, localParts, TYPES, RATE_MS });

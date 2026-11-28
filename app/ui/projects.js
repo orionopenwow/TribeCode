@@ -65,15 +65,17 @@
   }
   const label = p => `${p.emoji ? esc(p.emoji) + ' ' : ''}${esc(p.name)}`;
   // Discord-style: a white pill on the left edge for unread chat, a red count for things waiting on you.
+  // p14: a muted project (notifgroups.js) hides its unread pill and shows a small crossed-out bell; @mentions still count.
+  const ngOf = p => (window.TribeNotifGroups ? window.TribeNotifGroups.circleState(p.id) : { muted: false, dot: true, mentions: 0, icon: '' });
   function badge(p) {
-    const k = p.counts || {}, n = k.requests || 0;
-    return (pulses[p.id] ? '<span class="pj-unread" aria-label="unread messages"></span>' : '') + (n ? `<span class="pj-badge" aria-label="${n} waiting">${n > 99 ? '99+' : n}</span>` : '');
+    const k = p.counts || {}, g = ngOf(p), n = (k.requests || 0) + (g.mentions || 0);
+    return (pulses[p.id] && g.dot ? '<span class="pj-unread" aria-label="unread messages"></span>' : '') + (n ? `<span class="pj-badge" aria-label="${n} waiting">${n > 99 ? '99+' : n}</span>` : '');
   }
   function circles(where) {
     const c = cur(), pin = window.TribeShell && window.TribeShell.pins ? window.TribeShell.pins() : [];
     const order = [...projects].sort((a, b) => (pin.includes(b.id) - pin.includes(a.id)));   // pinned first (right-click a bubble)
-    return order.map(p => `<button class="pj-circle ${p.id === c ? 'on' : ''}" role="listitem" data-pj-open="${esc(p.id)}" title="${esc(p.name)}" aria-label="${esc(p.name)}${p.id === c ? ' (current project)' : ''}" aria-current="${p.id === c}">
-        ${face(p)}${p.id === c ? '' : badge(p)}${here(p.id).some(m => m.id !== me().id) ? '<span class="pj-live-dot" title="People are here"></span>' : ''}</button>`).join('') +
+    return order.map(p => `<button class="pj-circle ${p.id === c ? 'on' : ''}${ngOf(p).muted ? ' ng-muted' : ''}" role="listitem" data-pj-open="${esc(p.id)}" title="${esc(p.name)}" aria-label="${esc(p.name)}${p.id === c ? ' (current project)' : ''}${ngOf(p).muted ? ' (muted)' : ''}" aria-current="${p.id === c}">
+        ${face(p)}${p.id === c ? '' : badge(p)}${ngOf(p).icon}${here(p.id).some(m => m.id !== me().id) ? '<span class="pj-live-dot" title="People are here"></span>' : ''}</button>`).join('') +
       (where === 'strip' && !scopedMe() ? '<button class="pj-circle pj-plus" data-pj-new title="Start a project" aria-label="Start a project">+</button>' : '');
   }
   function render() {
@@ -119,6 +121,7 @@
     App().refreshRoom && App().refreshRoom();
   });
   C.on('hello', () => refresh());
+  document.addEventListener('tribe-notif-groups', () => render());   // p14: a project muted or unmuted (notifgroups.js)
   C.on('projects', () => soon(50));
   C.on('project-pulse', m => { if (m.kind === 'chat') pulses[m.project] = (pulses[m.project] || 0) + 1; soon(400); });
   ['task', 'proposal', 'change', 'approval', 'bug', 'doc'].forEach(t => C.on(t, () => soon(800)));

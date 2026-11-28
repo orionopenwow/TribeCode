@@ -418,19 +418,32 @@
     recents();
     globalHead();
   }
-  // Right-click a project bubble: what the old dropdown held (pin, invite, settings), where the project is.
-  document.addEventListener('contextmenu', e => {
-    const b = e.target.closest && e.target.closest('#pj-rail [data-pj-open]'); if (!b) return;
-    e.preventDefault(); const id = b.dataset.pjOpen, pinned = pins.includes(id);
+  // Right-click a project bubble (long-press on a phone): Discord's server menu (p14, notifgroups.js): Mark as read,
+  // Notification settings ›, Mute project ›, Invite people, Project settings, then pin / history / customize.
+  async function railAct(id, k) {
+    if (k === 'reset-order') { window.TribeReorder.reset('rail'); return; }   // feat/shell-polish (reorder.js)
+    if (k === 'pin') { await togglePin(id); PJ().refresh && PJ().refresh(); return; }
+    if (PJ().current() !== id) await PJ().switchTo(id, k === 'chat' ? 'chat' : 'home');
+    if (k === 'open') App().show('home'); else if (k === 'chat') App().show('chat'); else if (k === 'invite') App().openInvite({ who: 'friend', project: id }); else if (k === 'settings') projectSettings(); else if (k === 'versions' && window.TribeVersions) window.TribeVersions.open(); else if (k === 'customize' && window.TribeLook) window.TribeLook.open('project');
+  }
+  function railMenu(b, id, pt) {
+    const pinned = pins.includes(id), NG = window.TribeNotifGroups;
+    if (NG) {
+      closePop();
+      return NG.projectMenu(b, id, { ...(pt || {}), invite: () => railAct(id, 'invite'), settings: () => railAct(id, 'settings'), extras: [
+        { label: pinned ? 'Unpin' : 'Pin to the top', icon: 'pin', act: () => railAct(id, 'pin') },
+        ...(window.TribeVersions ? [{ label: 'History', icon: 'clock', act: () => railAct(id, 'versions') }] : []),
+        { label: 'Customize', icon: 'palette', act: () => railAct(id, 'customize') },
+        ...(window.TribeReorder ? [{ label: 'Reset order', icon: 'refresh', act: () => railAct(id, 'reset-order') }] : []) ] });
+    }
     const el = pop(b, `<div class="sh-menu"><button data-rc="open">${ico('i-home', 15)}<span>Open dashboard</span></button><button data-rc="chat">${ico('i-chat', 15)}<span>Messages</span></button>
       <button data-rc="pin">${ico('i-tick', 15)}<span>${pinned ? 'Unpin' : 'Pin to the top'}</span></button><hr><button data-rc="invite">${ico('i-users', 15)}<span>Invite to this project</span></button><button data-rc="settings">${ico('i-gear', 15)}<span>Project settings</span></button>${window.TribeVersions ? `<button data-rc="versions">${ico('i-refresh', 15)}<span>History</span></button>` : ''}${window.TribeReorder ? `<button data-rc="reset-order">${ico('i-refresh', 15)}<span>Reset order</span></button>` : ''}<button data-rc="customize">${ico('i-sparkle', 15)}<span>Customize</span></button></div>`, { id: 'rail-menu', side: 'right' });
-    el.querySelectorAll('[data-rc]').forEach(x => x.onclick = async () => {
-      const k = x.dataset.rc; closePop();
-      if (k === 'reset-order') { window.TribeReorder.reset('rail'); return; }   // feat/shell-polish (reorder.js)
-      if (k === 'pin') { await togglePin(id); PJ().refresh && PJ().refresh(); return; }
-      if (PJ().current() !== id) await PJ().switchTo(id, k === 'chat' ? 'chat' : 'home');
-      if (k === 'open') App().show('home'); else if (k === 'chat') App().show('chat'); else if (k === 'invite') App().openInvite({ who: 'friend', project: id }); else if (k === 'settings') projectSettings(); else if (k === 'versions' && window.TribeVersions) window.TribeVersions.open(); else if (k === 'customize' && window.TribeLook) window.TribeLook.open('project');
-    });
+    el.querySelectorAll('[data-rc]').forEach(x => x.onclick = () => { closePop(); railAct(id, x.dataset.rc); });
+    return el;
+  }
+  document.addEventListener('contextmenu', e => {
+    const b = e.target.closest && e.target.closest('#pj-rail [data-pj-open], #pj-strip [data-pj-open]'); if (!b) return;
+    e.preventDefault(); railMenu(b, b.dataset.pjOpen, { x: e.clientX, y: e.clientY });
   });
   // The nest header and the core rows with no project selected: the tribe is the header, the rows dim and say
   // where they open, and one row goes straight into the current project.
@@ -714,5 +727,5 @@
 
   C.on('project', () => { closePreview(); recents(); });
   recents();
-  window.TribeShell = { tabs: () => { tabsSig = ''; drawTabs(); }, pins: () => pins.slice(), setPanel, previewAgent, render, onShow, preview, closePreview, previewDoc, previewImage, previewApproval, switcher, openNew, recent, go, dests: () => DEST.map(d => ({ key: d.key, label: d.label, group: d.group || '', kind: d.kind || 'Go to', visible: !d.when || !!d.when() })), counts: () => counts, current };
+  window.TribeShell = { railMenu, tabs: () => { tabsSig = ''; drawTabs(); }, pins: () => pins.slice(), setPanel, previewAgent, render, onShow, preview, closePreview, previewDoc, previewImage, previewApproval, switcher, openNew, recent, go, dests: () => DEST.map(d => ({ key: d.key, label: d.label, group: d.group || '', kind: d.kind || 'Go to', visible: !d.when || !!d.when() })), counts: () => counts, current };
 })();
