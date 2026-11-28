@@ -1,8 +1,8 @@
 """Company made intuitive (feat/company3, app/ui/company.js + companysetup.js).
 Checks: setup asks four plain questions (what you're making, name + one line, who does what, how you check in),
 Back keeps answers, and the answers land (name, mission, a friend and an AI helper in roles, check-ins, a goal);
-"Skip the questions" still sets it up in one click; the page shows a summary strip (roles, next check-in, money in
-and out, what needs a person's OK) and ONE next step at a time ("Not now" moves on, actions work); a role an AI
+"Skip the questions" still sets it up in one click; the page shows a facts line (roles, next check-in, money,
+what needs a person's OK; p13) and ONE next step at a time ("Not now" moves on, actions work); a role an AI
 holds says which AI, what it does alone and what waits for a person, and can be handed to a person in one click;
 plain words (no seat / standup / charter / ritual / C-suite / runway in the page's text); a 390px phone fits.
 Usage: TRIBE_PORT_OFFSET=6560 python3 app/test/e2e_company3.py
@@ -78,7 +78,7 @@ def main():
             pg.click("#cs-next"); pg.wait_for_selector("#co-setup[data-step='4']")
             pg.uncheck("#co-setup [data-rh='board']"); pg.fill("#cs-goal", "wishlist sign-ups"); pg.fill("#cs-target", "100")
             pg.screenshot(path=str(SHOTS / "q4.png"))
-            pg.click("#cs-next"); pg.wait_for_selector("#view-company #co-strip", timeout=20000)
+            pg.click("#cs-next"); pg.wait_for_selector("#view-company #co-facts", timeout=20000)
             c = ok(api(P, token=host, project=pid))["company"]
             assert c["name"] == "Firefly Games" and c["mission"].startswith("Cozy") and c["template"] == "game-studio", c
             assert c["seats"][1]["holder"]["agent"] == ag_id and c["seats"][2]["holder"]["person"] == maya_id and not c["seats"][3]["holder"]["person"], c["seats"]
@@ -86,10 +86,10 @@ def main():
             assert any(g["title"] == "100 wishlist sign-ups" and g["results"][0]["target"] == 100 for g in c["goals"]), c["goals"]
 
             # ---- the summary strip ----
-            pg.wait_for_function("document.querySelector('#co-strip-money').textContent.trim() === 'Nothing yet'", timeout=15000)
-            strip = pg.inner_text("#co-strip")
-            assert pg.locator("#co-strip [data-strip]").count() == 4 and "3 of 4 filled" in strip and "Daily check-in" in strip and "Nothing is waiting" in strip, strip
-            pg.click("#co-strip [data-strip='oks']"); pg.wait_for_timeout(400)
+            pg.wait_for_timeout(800)   # p13: one facts line; only facts with something in them (no money, nothing waiting)
+            strip = pg.inner_text("#co-facts")
+            assert "3 of 4 roles filled" in strip and "Next check-in" in strip and "waiting" not in strip and "this month" not in strip, strip
+            pg.click("#co-facts [data-fact='checkin']"); pg.wait_for_timeout(400)
 
             # ---- one next step at a time ----
             assert pg.locator("#view-company .co-next").count() == 1
@@ -105,7 +105,7 @@ def main():
             pg.click("#co-next [data-next='take']")   # I'll do it: the role is mine, the step moves on
             pg.wait_for_function("!document.querySelector('#co-next').innerText.includes('Community')", timeout=10000)
             assert ok(api(P, token=host, project=pid))["company"]["seats"][3]["holder"]["person"], "I'll do it gives me the role"
-            assert "4 of 4 filled" in pg.inner_text("#co-strip")
+            assert "4 of 4 roles filled" in pg.inner_text("#co-facts")
 
             # ---- an AI in a role: which AI, what alone, what waits, hand it over ----
             card = pg.locator("#view-company .co-seat[data-seat='cto']")
@@ -127,13 +127,13 @@ def main():
 
             # ---- Skip the questions: one click still sets it up; a lead with nothing to do sees the calm card ----
             pq = open_company(pid2); pq.wait_for_selector("#co-make", timeout=15000); pq.click("#co-make"); pq.wait_for_selector("#co-setup")
-            pq.click("#cs-skip"); pq.wait_for_selector("#view-company #co-strip", timeout=15000)
+            pq.click("#cs-skip"); pq.wait_for_selector("#view-company #co-facts", timeout=15000)
             assert [x["title"] for x in ok(api(f"/projects/{pid2}/company", token=host, project=pid2))["company"]["seats"]] == ["CEO", "Build", "Grow", "Run"]
             assert "lead" in pq.inner_text("#view-company .co-seat.ceo .co-role").lower(), "a role titled CEO reads Lead"
-            assert "Say what this company is for" in pq.inner_text("#co-next")
+            assert pq.locator("#co-edit-co").count() == 1 and "Say what" not in pq.inner_text("#co-next")   # p13: the purpose line asks, once
 
             # ---- phone ----
-            ph = open_company(pid, 390, 844, phone=True); ph.wait_for_selector("#view-company #co-strip", timeout=15000); ph.wait_for_timeout(600)
+            ph = open_company(pid, 390, 844, phone=True); ph.wait_for_selector("#view-company #co-facts", timeout=15000); ph.wait_for_timeout(600)
             sw = ph.evaluate("[document.documentElement.scrollWidth, document.querySelector('#view-company').scrollWidth, document.querySelector('#view-company').clientWidth]")
             assert sw[0] <= 391 and sw[1] <= sw[2] + 1, f"sideways scroll on phone: {sw}"
             assert ph.evaluate("Math.min(...[...document.querySelectorAll('#co-next .btn')].map(x => x.getBoundingClientRect().height))") >= 44, "thumb-sized next-step buttons"

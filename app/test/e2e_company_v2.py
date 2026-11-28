@@ -84,8 +84,9 @@ def main():
             assert secs == ["seats", "week", "money", "goals", "rituals", "activity"], secs
             for s in secs:   # each section: an icon, an eyebrow and a title
                 assert pg.locator(f"#view-company .co-sec[data-sec={s}] .co-sec-ic svg").count() == 1 and pg.inner_text(f"#view-company .co-sec[data-sec={s}] h2").strip(), s
-            assert "Firefly Labs" in pg.inner_text("#view-company .co-head h1") and pg.inner_text("#co-health").strip().endswith(".")
-            h = pg.inner_text("#co-health"); assert "person’s OK" in h and "%" in h, h
+            assert "Firefly Labs" in pg.inner_text("#view-company .co-head h1")
+            pg.wait_for_function("!document.querySelector('#co-facts-money').hidden", timeout=15000)   # p13: one facts line replaces the health sentence
+            h = pg.inner_text("#co-facts"); assert "waiting for an OK" in h and "roles filled" in h and "this month" in h, h
             seat = pg.locator("#view-company .co-seat[data-seat='growth']")
             assert "Maya" in seat.inner_text() and "Post in two forums" in seat.inner_text() and seat.locator(".co-av.lg").count() == 1
             assert seat.locator("[data-seat-act]").count() == 1, "one action per seat"
@@ -165,7 +166,7 @@ def main():
             assert pe.evaluate("Math.min(...[...document.querySelectorAll('#view-company .co-ig-art')].map(a => a.getBoundingClientRect().height))") >= 130
             small = pe.evaluate(SMALL); assert not small, f"empty state text under 12px: {small[:8]}"
             pe.click("#co-example"); pe.wait_for_selector("#view-company .co-sample .co-sec[data-sec=money] .co-chart", timeout=8000)
-            assert pe.locator("#view-company .co-sample .co-seat").count() == 5
+            assert pe.locator("#view-company .co-sample .co-seat, #view-company .co-sample .co-open-row").count() == 5
             pe.click("#co-sample-back"); pe.wait_for_selector("#view-company .co-ig-grid", timeout=5000)
             pe.click("#co-quick"); pe.wait_for_selector("#view-company .co-v2 .co-seat.ceo", timeout=10000)   # feat/company3: "Skip the questions" is the one-click path
             assert pe.locator("#view-company .co-sec[data-sec=money] .co-none").count() == 1, "money has its own empty state"

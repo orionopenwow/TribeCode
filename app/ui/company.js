@@ -1,5 +1,5 @@
 // Company mode (v0.27), client side. Server side: server/company.js (data contract in the company brief).
-//   The Company view (v2, feat/company-gigs) is a one-page report: header (name, mission, health in one sentence),
+//   The Company view (v2, feat/company-gigs) is a one-page report: header (name, the purpose line, one facts line; p13),
 //   Seats (big cards: avatar, role, holder, what they're on, one action), This week (standup, approvals, decisions),
 //   Money (ledger summary + a small flat chart), Charters & goals, Rituals (next run + Run now) and Activity. Sections
 //   fold on phones. A seat sheet edits the charter and who holds it. Empty state: "Make this project a company" with
@@ -74,7 +74,7 @@
   }
   const holderLine = x => [x.who.person && x.who.person.name, x.who.agent && x.who.agent.name].filter(Boolean).join(' + ');
   // ---------- v2: the company report (feat/company-gigs) ----------
-  // Reads top-down like a one-page report: header (name, mission, health in one sentence) → Seats → This week
+  // Reads top-down like a one-page report: header (name, purpose, facts line) → one next step → Seats (person cards + one Open roles list) → This week
   // (standup, approvals, decisions) → Money (ledger summary + a small flat chart) → Charters & goals → Rituals (next run,
   // Run now) → Activity. Every section has an icon, a mono eyebrow, a title, an empty state with one action, and on
   // phones it folds (the header is a toggle). Type: body ≥14px, labels ≥12px.
@@ -111,17 +111,20 @@
     const ask = short((x.charter || {}).needsApproval) || 'spending money, publishing, emailing people';
     return `<div class="co-ai" data-ai-line>${BOT}<p><b>${esc(x.who.agent.name)}</b> ${x.who.person ? 'helps with this role' : 'does this role'}. It asks a person before: ${esc(ask)}.</p></div>`;
   }
-  function stripHtml(c, d) {
+  // p13: one calm facts line instead of four tiles. Only facts with something in them; check-ins that are off fold into
+  // one muted "Turn on" link (leads). Money fills in once the ledger answers, and stays hidden when nothing is written down.
+  function factsHtml(c, d, lead) {
     const filled = c.seats.filter(x => x.who.person || x.who.agent), r = d.rituals || {};
     const NAMES = { standup: 'Daily check-in', weekly: 'Weekly look-back', board: 'Monthly summary' };
     const nxt = Object.keys(NAMES).filter(k => r[k] && r[k].on !== false && c.rhythms[k] !== false && r[k].next).sort((a, b) => String(r[a].next).localeCompare(String(r[b].next)))[0];
-    const avs = filled.slice(0, 5).map(x => avatar(x.who.person || x.who.agent, 'xs')).join('');
-    const cell = (k, jump, label, main, sub, hot) => `<button class="co-strip-c${hot ? ' hot' : ''}" type="button" data-strip="${k}" data-jump="${jump}"><span class="co-lbl">${label}</span><b>${main}</b><small>${sub}</small></button>`;
-    return `<nav class="co-strip" id="co-strip" aria-label="Company at a glance">
-      ${cell('roles', 'seats', 'Roles', `${avs ? `<span class="co-strip-avs">${avs}</span>` : ''}${filled.length} of ${c.seats.length} filled`, c.seats.length - filled.length ? `${plural(c.seats.length - filled.length, 'role')} with nobody yet` : 'Everyone has a role')}
-      ${cell('checkin', 'rituals', 'Next check-in', nxt ? esc(when(r[nxt].next)) : 'Off', nxt ? NAMES[nxt] : 'Turn check-ins on in Settings')}
-      ${cell('money', 'money', 'Money this month', '<span id="co-strip-money">…</span>', '<span id="co-strip-money-s">In and out</span>')}
-      ${cell('oks', 'week', 'Needs a person’s OK', d.waiting ? plural(d.waiting, 'thing') : 'Nothing', d.waiting ? 'Waiting for a yes or no' : 'Nothing is waiting', !!d.waiting)}
+    const stuck = c.seats.filter(x => x.status === 'blocked' && (x.who.person || x.who.agent)).length;
+    const f = (k, jump, text, cls = '') => `<button class="co-fact${cls ? ' ' + cls : ''}" type="button" data-fact="${k}"${jump ? ` data-jump="${jump}"` : ''}>${text}</button>`;
+    return `<nav class="co-facts" id="co-facts" aria-label="Company at a glance">
+      ${f('roles', 'seats', `${filled.length} of ${c.seats.length} roles filled`)}
+      ${d.waiting ? f('oks', 'week', `${d.waiting} waiting for an OK`, 'hot') : ''}
+      ${stuck ? f('stuck', 'seats', `${stuck} stuck`, 'hot') : ''}
+      <button class="co-fact" type="button" data-fact="money" data-jump="money" id="co-facts-money" hidden></button>
+      ${nxt ? f('checkin', 'rituals', `Next check-in ${esc(when(r[nxt].next))}`) : lead ? f('checkins-off', '', 'Check-ins are off · <u>Turn on</u>', 'off') : ''}
     </nav>`;
   }
   const skipKey = () => `tribecode.co.skip.${st.pid}`;
@@ -130,7 +133,7 @@
     const lead = d.canLead, out = [];
     const emptyRole = c.seats.find(x => !x.who.person && !x.who.agent);
     const due = c.seats.find(x => (d.mySeats || []).includes(x.id) && !((d.today || {}).standups || {})[x.id]);
-    if (lead && !c.mission) out.push({ k: 'mission', title: 'Say what this company is for', sub: 'One line, so every person and AI helper knows the point.', acts: [['mission', 'Write it']] });
+    // p13: no purpose yet is asked by the purpose line itself in the header, never again here
     if (lead && emptyRole) out.push({ k: 'role:' + emptyRole.id, sid: emptyRole.id, title: `Give the ${roleName(emptyRole)} role to someone`, sub: (emptyRole.charter || {}).goal ? `This role’s job: ${emptyRole.charter.goal}.` : 'A friend or an AI helper can do it.',
       acts: [['take', 'I’ll do it'], ...(d.myAgent ? [['ai', `Give it to ${d.myAgent.name}`]] : []), ['find', 'Find someone']] });
     if (d.waiting) out.push({ k: 'oks', title: `${plural(d.waiting, 'thing')} ${d.waiting === 1 ? 'is' : 'are'} waiting for a person’s OK`, sub: 'Nothing that costs money or goes public happens until someone says yes.', acts: [['oks', 'Look at them']] });
@@ -145,7 +148,7 @@
     if (!x) return `<section class="co-next card done" id="co-next" aria-label="Next step"><span class="co-lbl">Next step</span><h2>You’re set for today</h2><p>Nothing is waiting on you.</p></section>`;
     return `<section class="co-next card" id="co-next" data-step="${esc(x.k)}"${x.sid ? ` data-sid="${esc(x.sid)}"` : ''} aria-label="Next step"><div class="co-next-h"><span class="co-lbl">Next step</span>${list.length > 1 ? `<span class="co-next-n">${list.length - 1} more after this</span>` : ''}</div>
       <h2>${esc(x.title)}</h2><p>${esc(x.sub)}</p>
-      <div class="co-next-a">${x.acts.map(([a, l], i) => `<button class="btn ${i ? '' : 'primary'}" type="button" data-next="${a}">${esc(l)}</button>`).join('')}<button class="linkish" type="button" data-next="skip">Not now</button></div></section>`;
+      <div class="co-next-a">${x.acts.map(([a, l], i) => `<button class="btn ${i ? 'ghost' : 'primary'}" type="button" data-next="${a}">${esc(l)}</button>`).join('')}<button class="linkish" type="button" data-next="skip">Not now</button></div></section>`;
   }
   function refreshNext(force) {
     const el = $('#co-next'), c = co(); if (!el || !c || !open) return;
@@ -173,7 +176,7 @@
   function seatAction(x, d) {
     const emptySeat = !x.who.person && !x.who.agent, mine = (d.mySeats || []).includes(x.id);
     const posted = ((d.today || {}).standups || {})[x.id];
-    if (emptySeat) return d.canLead ? ['hire', 'Find someone'] : ['open', 'See what it does'];
+    if (emptySeat) return d.canLead ? ['hire', 'Find someone'] : ['', ''];
     if (mine && !posted) return ['standup', 'Post today’s update'];
     if (mine) return ['open', 'Edit role'];
     if (x.who.person) return ['profile', 'View profile'];
@@ -186,14 +189,24 @@
     const now = s ? (s.next || s.done) : x.last ? x.last.text : '';
     const [act, label] = seatAction(x, d);
     const big = w => w ? avatar(w, 'lg') : '';
-    return `<article class="co-seat ${ceo ? 'ceo' : ''} ${emptySeat ? 'empty' : ''} ${mine ? 'mine' : ''}" data-seat="${esc(x.id)}" style="--sc:${esc(x.color)}" tabindex="0" role="button" aria-label="${esc(roleName(x))} role${emptySeat ? ', nobody yet' : ': ' + esc(holderLine(x))}. ${esc(STATUS[x.status] || '')}">
+    // p13: a status only when it means something (needs you, stuck); the role colour is a small dot by the role name
+    const pill = x.status === 'needs-you' || x.status === 'blocked' ? `<span class="co-pill s-${esc(x.status)}">${esc(STATUS[x.status])}</span>` : '';
+    return `<article class="co-seat ${ceo ? 'ceo' : ''} ${emptySeat ? 'empty' : ''} ${mine ? 'mine' : ''}" data-seat="${esc(x.id)}" style="--sc:${esc(x.color)}" tabindex="0" role="button" aria-label="${esc(roleName(x))} role${emptySeat ? ', nobody yet' : ': ' + esc(holderLine(x))}.${pill ? ' ' + esc(STATUS[x.status]) : ''}">
       <div class="co-seat-top"><span class="co-avs">${emptySeat ? '<span class="co-av lg open" aria-hidden="true">+</span>' : big(x.who.person) + big(x.who.agent)}</span>
-        <span class="co-seat-id"><span class="co-role">${esc(roleName(x))}${x.title === 'CEO' && leadWord() === 'Lead' ? ' <span class="co-aka">CEO</span>' : ''}</span><b>${emptySeat ? 'Nobody yet' : esc(holderLine(x))}${mine ? ' <small>you</small>' : ''}</b>
-          <small class="co-kindl">${emptySeat ? 'A friend or an AI helper can do it' : x.who.person && x.who.agent ? 'A person, with an AI helper' : x.who.agent ? 'An AI helper does this' : 'A person does this'}</small></span>
-        <span class="co-pill s-${esc(x.status)}">${esc(STATUS[x.status] || x.status)}</span></div>
-      ${x.who.agent ? aiLine(x) : ''}${emptySeat ? '' : `<div class="co-now"><span class="co-lbl">Working on</span><p>${now ? esc(now) : '<span class="faint">No update yet today.</span>'}</p></div>`}
+        <span class="co-seat-id"><span class="co-role">${esc(roleName(x))}${x.title === 'CEO' && leadWord() === 'Lead' ? ' <span class="co-aka">CEO</span>' : ''}</span><b>${emptySeat ? 'Nobody yet' : esc(holderLine(x))}${mine ? ' <small>you</small>' : ''}</b></span>
+        ${pill}</div>
+      ${x.who.agent ? aiLine(x) : ''}${emptySeat ? '' : `<p class="co-now">${now ? esc(now) : '<span class="faint">No update yet today.</span>'}</p>`}
       ${goal ? `<div class="co-seat-goal"><span class="co-lbl">${esc(goal.title)}</span><span class="co-bar sm" role="progressbar" aria-label="${esc(goal.title)}" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${goal.progress}"><i style="width:${goal.progress}%"></i></span><span class="co-pct">${goal.progress}%</span></div>` : ''}
-      <div class="co-seat-f"><span class="faint">${x.last ? esc(ago(x.last.at)) : ''}</span><button class="btn sm ${act === 'hire' || act === 'standup' ? 'primary' : ''}" type="button" data-seat-act="${act}" data-sid="${esc(x.id)}">${esc(label)}</button></div></article>`;
+      <div class="co-seat-f"><span class="faint">${x.last ? esc(ago(x.last.at)) : ''}</span>${act ? `<button class="btn sm ${act === 'standup' ? 'primary' : act === 'hire' ? '' : 'ghost'}" type="button" data-seat-act="${act}" data-sid="${esc(x.id)}">${esc(label)}</button>` : ''}</div></article>`;
+  }
+  // p13: roles nobody does yet collapse into one compact "Open roles" list: a dot, the role, its job, a quiet Find someone
+  function openRoles(list, d, lead) {
+    if (!list.length) return '';
+    const fill = lead && d.myAgent && list.length ? `<button class="btn sm ghost" id="co-fill">Give ${list.length === 1 ? 'it' : 'them'} to ${esc(d.myAgent.name)}</button>` : '';
+    return `<section class="co-open" id="co-open" aria-label="Open roles"><div class="co-open-h"><span class="co-lbl">Open roles · ${list.length}</span>${fill}</div>
+      <ul class="co-open-l">${list.map(x => `<li class="co-open-row${x.kind === 'ceo' ? ' ceo' : ''}" data-seat-row="${esc(x.id)}" style="--sc:${esc(x.color)}"><span class="co-dot" aria-hidden="true"></span>
+        <button class="co-open-name" type="button" data-open="${esc(x.id)}"><b>${esc(roleName(x))}</b>${(x.charter || {}).goal ? `<small>${esc(x.charter.goal)}</small>` : ''}</button>
+        ${lead ? `<button class="btn sm" type="button" data-seat-act="hire" data-sid="${esc(x.id)}">Find someone</button>` : ''}</li>`).join('')}</ul></section>`;
   }
 
   // A live update never wipes what someone is typing: the redraw waits until the field loses focus. Open <details> stay open.
@@ -201,18 +214,19 @@
   function busyTyping(sec) { const a = document.activeElement; return !!(a && sec.contains(a) && /^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName) && (a.value || a.tagName === 'SELECT')); }
   function report(c, d, sample) {
     const lead = d.canLead && !sample, ceo = c.seats.find(x => x.kind === 'ceo'), rest = c.seats.filter(x => x !== ceo);
-    const h = d.health || { tone: 'good', text: '' };
-    const openSeats = c.seats.filter(x => !x.who.person && !x.who.agent).length;
-    const seatsX = lead ? `${d.myAgent && openSeats ? `<button class="btn sm" id="co-fill">Give ${plural(openSeats, 'empty role')} to ${esc(d.myAgent.name)}</button>` : ''}${c.seats.length < 16 ? '<button class="btn sm" id="co-add">Add a role</button>' : ''}` : '';
-    return `<header class="co-head"><div class="co-h-t"><span class="eyebrow">Company</span><h1>${esc(c.name)}</h1>
-        ${c.mission ? `<p class="co-mission">${esc(c.mission)}</p>` : lead ? '<button class="linkish co-mission-add" id="co-edit-co">Say what it’s for in one line</button>' : ''}
-        ${h.text ? `<p class="co-health t-${esc(h.tone)}" id="co-health"><span class="co-hdot" aria-hidden="true"></span>${esc(h.text)}</p>` : ''}</div>
-        <span class="co-h-acts"><button class="btn" id="co-whocan">${icon('shield', 16)}Who can do what</button>${lead ? `<button class="btn" id="co-settings" aria-label="Company settings">${icon('gear', 16)}Settings</button>` : d.propose && !sample ? `<button class="btn primary" id="co-propose" data-gs-ask="settings.edit">${icon('edit', 16)}Propose a change</button>` : ''}</span></header>
+    const isOpen = x => !x.who.person && !x.who.agent;
+    const held = [ceo, ...rest].filter(x => x && !isOpen(x)), openL = c.seats.filter(isOpen);
+    const seatsX = lead && c.seats.length < 16 ? '<button class="btn sm ghost" id="co-add">Add a role</button>' : '';
+    // p13: Company at a glance in three blocks: who we are (name, purpose, facts) · what's next (one card) · who does what
+    return `<div class="co-top"><header class="co-head"><div class="co-h-t"><span class="eyebrow">Company</span><h1>${esc(c.name)}</h1>
+        ${c.mission ? `<p class="co-mission">${esc(c.mission)}</p>` : lead ? '<button class="co-mission co-mission-add" type="button" id="co-edit-co">Say what it’s for in one line</button>' : ''}</div>
+        <span class="co-h-acts"><button class="btn ghost" id="co-whocan">${icon('shield', 16)}<span>Who can do what</span></button>${lead ? `<button class="btn ghost" id="co-settings" aria-label="Company settings">${icon('gear', 16)}<span>Settings</span></button>` : d.propose && !sample ? `<button class="btn primary" id="co-propose" data-gs-ask="settings.edit">${icon('edit', 16)}Propose a change</button>` : ''}</span></header>
       ${!lead && d.propose && !sample ? `<p class="co-propose-note" id="co-propose-note">${esc(window.TribeI18n ? window.TribeI18n.t('co.propose', 'The council decides changes here. Propose one; when enough of the council say yes, the edit buttons open for you for a day.') : '')}</p>` : ''}
-      ${sample ? '' : stripHtml(c, d)}${sample ? '' : nextHtml(c, d)}
-      ${sec('seats', 'users', 'Roles', `Who does what <span class="co-n">${c.seats.length}</span>`, `<div class="co-seats">${ceo ? seatCard(ceo, true, d) : ''}${rest.map(x => seatCard(x, false, d)).join('')}</div>`, seatsX)}
+      ${sample ? '' : factsHtml(c, d, lead)}</div>
+      ${sample ? '' : nextHtml(c, d)}
+      ${sec('seats', 'users', 'Roles', `Who does what <span class="co-n">${c.seats.length}</span>`, `${held.length ? `<div class="co-seats">${held.map(x => seatCard(x, x === ceo, d)).join('')}</div>` : ''}${openRoles(openL, d, lead)}`, seatsX)}
       ${sec('week', 'calendar', 'This week', 'Updates, OKs and decisions', `<div class="co-week-g">${todayCard(c, d)}${approvalsCard(c, d)}${decisionsCard(c, d, sample)}</div>`)}
-      ${sec('money', 'coins', 'Money', 'Money in and out this month', `<div id="co-money" class="co-money">${sample ? moneyHtml(SAMPLE_MONEY()) : '<p class="faint">Loading the ledger…</p>'}</div>`, `<button class="btn sm" id="co-money-open">Open Money</button>`)}
+      ${sec('money', 'coins', 'Money', 'Money in and out this month', `<div id="co-money" class="co-money">${sample ? moneyHtml(SAMPLE_MONEY()) : '<p class="faint">Loading the ledger…</p>'}</div>`, `<button class="btn sm ghost" id="co-money-open"${sample ? '' : ' hidden'}>Open Money</button>`)}
       ${sec('goals', 'target', 'Goals', 'This month’s goals', goalsCard(c, d))}
       ${sec('rituals', 'repeat', 'Check-ins', 'When the team checks in', ritualsCard(c, d, sample))}
       ${sec('activity', 'activity', 'Activity', 'What happened lately', activityCard(c, d))}`;
@@ -252,7 +266,7 @@
   function approvalsCard(c, d) {
     const list = d.approvals || [];
     return `<section class="card co-appr" aria-label="Needs a person's OK"><div class="co-c-h"><span class="co-lbl">Needs a person’s OK</span><h3>${list.length ? `${plural(d.waiting || list.length, 'thing')} waiting for an OK` : 'Nothing waiting'}</h3></div>
-      ${list.length ? `<ul class="co-list">${list.map(a => `<li><span class="co-risk r-${esc(a.risk)}">${esc(a.risk || 'low')}</span><div><b>${esc(a.title)}</b><small class="faint">${esc(a.byName || '')}${a.at ? ` · ${ago(a.at)}` : ''}</small></div></li>`).join('')}</ul><button class="btn sm primary" id="co-appr-open">Review in inbox</button>`
+      ${list.length ? `<ul class="co-list">${list.map(a => `<li><span class="co-risk r-${esc(a.risk)}">${esc(a.risk || 'low')}</span><div><b>${esc(a.title)}</b><small class="faint">${esc(a.byName || '')}${a.at ? ` · ${ago(a.at)}` : ''}</small></div></li>`).join('')}</ul><button class="btn sm" id="co-appr-open">Review in inbox</button>`
         : empty('Before anyone spends money, publishes or emails people, it waits here for a person’s OK.', '<button class="btn sm" id="co-appr-open">Open inbox</button>')}</section>`;
   }
   function decisionsCard(c, d) {
@@ -261,7 +275,7 @@
     return `<section class="card co-decs" aria-label="Decisions"><div class="co-c-h"><span class="co-lbl">Decisions</span><h3>${needs.length ? `${plural(needs.length, 'role')} need${needs.length === 1 ? 's' : ''} a decision` : 'Nothing to decide'}</h3></div>
       ${needs.length ? `<ul class="co-list">${needs.map(x => `<li><span class="co-dot" style="--sc:${esc(x.color)}"></span><div><b>${esc(x.title)}</b><small class="faint">${esc(x.status === 'blocked' ? 'Stuck' : 'Needs you')}${x.last ? ` · ${esc(x.last.text)}` : ''}</small></div></li>`).join('')}</ul>` : ''}
       <details class="co-dec" id="co-dec"><summary><span>Decisions made</span><span class="co-dec-n">${list.length ? `${list.length} logged` : 'None yet'}</span></summary>
-      ${canCall ? `<form class="co-call" id="co-call"><input class="input" id="co-call-t" maxlength="160" placeholder="Make a decision: what’s decided?" aria-label="Make a decision"><input class="input" id="co-call-w" maxlength="600" placeholder="Why (one line)" aria-label="Why"><button class="btn sm primary" type="submit">Log it</button></form>` : ''}
+      ${canCall ? `<form class="co-call" id="co-call"><input class="input" id="co-call-t" maxlength="160" placeholder="Make a decision: what’s decided?" aria-label="Make a decision"><input class="input" id="co-call-w" maxlength="600" placeholder="Why (one line)" aria-label="Why"><button class="btn sm" type="submit">Log it</button></form>` : ''}
       <div class="co-dec-list">${list.map(x => `<div class="co-dec-row"><span class="co-kind k-${esc(x.kind)}">${esc(KIND_L[x.kind] || x.kind)}</span><div><b>${esc(x.title)}</b>${x.why ? `<p>${esc(x.why)}</p>` : ''}<small class="faint">${esc(x.byName || 'TribeCode')} · ${ago(x.at)}</small></div></div>`).join('') || '<p class="faint">CEO calls, closed votes and decided approvals land here.</p>'}</div></details></section>`;
   }
   function goalsCard(c, d) {
@@ -273,7 +287,7 @@
         <span class="co-bar" role="progressbar" aria-label="${esc(g.title)}" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${g.progress}"><i style="width:${g.progress}%"></i></span>
         ${s ? `<span class="co-chip" style="--sc:${esc(s.color)}">${esc(s.title)}</span>` : ''}
         ${g.results.map((r, i) => `<div class="co-kr"><span>${esc(r.text)}</span><span class="co-kr-n">${r.current} / ${r.target}${r.unit ? ' ' + esc(r.unit) : ''}</span>${can(g) ? `<button class="co-inc" data-inc="${esc(g.id)}:${i}" aria-label="Add one to ${esc(r.text)}">+1</button>` : ''}</div>`).join('')}
-        ${d.canLead ? `<button class="linkish co-goal-del" data-gdel="${esc(g.id)}">Remove</button>` : ''}</div>`; }).join('')}</div>` : empty('No goals yet. One goal with a number for the month keeps everyone pointed the same way.', d.canLead ? '<button class="btn sm primary" id="co-goal-focus">Add a goal</button>' : '')}
+        ${d.canLead ? `<button class="linkish co-goal-del" data-gdel="${esc(g.id)}">Remove</button>` : ''}</div>`; }).join('')}</div>` : empty('No goals yet. One goal with a number for the month keeps everyone pointed the same way.')}
       ${d.canLead && c.goals.length < 12 ? `<form class="co-goal-add" id="co-goal-add"><input class="input" id="co-g-title" maxlength="160" placeholder="New goal, e.g. 25 sign-ups" aria-label="New goal"><input class="input co-g-n" id="co-g-target" type="number" min="1" placeholder="Target" aria-label="Target number"><button class="btn sm" type="submit">Add</button></form>` : ''}
       ${charters.length ? `<div class="co-charters"><span class="co-lbl">What each role is aiming for</span><ul class="co-list">${charters.map(x => `<li><span class="co-dot" style="--sc:${esc(x.color)}"></span><div><b>${esc(x.title)}</b><small>${esc(x.charter.goal)}</small></div></li>`).join('')}</ul></div>` : ''}</div>`;
   }
@@ -310,10 +324,12 @@
     } catch { m = null; }
     if (!el.isConnected) return;
     el.innerHTML = m ? moneyHtml(m) : empty('Money isn’t available for your role here.');
-    const sm = $('#co-strip-money'), ss = $('#co-strip-money-s');
-    if (sm && m) { const nw = m.months[m.months.length - 1], any = m.months.some(x => x.entries || x.revenue || x.costs); sm.textContent = any ? `${fmt(nw.revenue, m.currency)} in` : 'Nothing yet'; if (ss) ss.textContent = any ? `${fmt(nw.costs, m.currency)} out` : 'No money written down';
+    const fm = $('#co-facts-money'), mo = $('#co-money-open');
+    if (m) { const nw = m.months[m.months.length - 1], any = m.months.some(x => x.entries || x.revenue || x.costs), month = nw.entries || nw.revenue || nw.costs;
+      if (fm) { fm.hidden = !month; fm.textContent = month ? `${[nw.revenue ? `${fmt(nw.revenue, m.currency)} in` : '', nw.costs ? `${fmt(nw.costs, m.currency)} out` : ''].filter(Boolean).join(', ') || fmt(0, m.currency)} this month` : ''; }
+      if (mo) mo.hidden = !any;   // with nothing written down, the empty state's one button is the way in
       const was = st.moneyAny; st.moneyAny = any; if (was !== any) refreshNext(); }
-    else if (sm) { sm.textContent = '—'; if (ss) ss.textContent = 'Not shown for your role'; }
+    else if (fm) fm.hidden = true;
     const add = el.querySelector('#co-money-add'); if (add) add.onclick = openMoney;
   }
   function moneyHtml(m) {
@@ -397,7 +413,7 @@
         ${report(c, d, true)}</div>`;
     } finally { st = real; }
     sec.querySelectorAll('[data-fold]').forEach(b => b.onclick = () => { ui.fold[b.dataset.fold] = !ui.fold[b.dataset.fold]; b.closest('.co-sec').classList.toggle('folded', !!ui.fold[b.dataset.fold]); b.setAttribute('aria-expanded', String(!ui.fold[b.dataset.fold])); });
-    sec.querySelectorAll('.co-sample .co-seat, .co-sample button:not(#co-sample-back):not(#co-sample-make):not([data-fold]), .co-sample input, .co-sample form').forEach(x => { x.setAttribute('tabindex', '-1'); x.setAttribute('aria-disabled', 'true'); if (x.tagName === 'FORM') x.onsubmit = e => e.preventDefault(); else x.onclick = e => { e.preventDefault(); e.stopPropagation(); toast('This is an example. Make your own company to change things.'); }; });
+    sec.querySelectorAll('.co-sample .co-seat, .co-sample .co-open-name, .co-sample button:not(#co-sample-back):not(#co-sample-make):not([data-fold]), .co-sample input, .co-sample form').forEach(x => { x.setAttribute('tabindex', '-1'); x.setAttribute('aria-disabled', 'true'); if (x.tagName === 'FORM') x.onsubmit = e => e.preventDefault(); else x.onclick = e => { e.preventDefault(); e.stopPropagation(); toast('This is an example. Make your own company to change things.'); }; });
     sec.querySelector('#co-sample-back').onclick = () => { ui.sample = false; draw(); };
     const mk = sec.querySelector('#co-sample-make'); if (mk) mk.onclick = () => { ui.sample = false; ui.setup = true; draw(); };
   }
@@ -424,12 +440,14 @@
       openSeat(x.id);
     });
     sec.querySelectorAll('.co-seat[data-seat]').forEach(b => { b.onclick = () => openSeat(b.dataset.seat); b.onkeydown = e => { if ((e.key === 'Enter' || e.key === ' ') && e.target === b) { e.preventDefault(); openSeat(b.dataset.seat); } }; });
+    sec.querySelectorAll('[data-open]').forEach(b => b.onclick = () => openSeat(b.dataset.open));
+    const off = sec.querySelector('[data-fact="checkins-off"]'); if (off) off.onclick = settingsSheet;
     sec.querySelectorAll('[data-jump]').forEach(b => b.onclick = () => { const t = sec.querySelector(`.co-sec[data-sec="${b.dataset.jump}"]`); if (!t) return; ui.fold[b.dataset.jump] = false; t.classList.remove('folded'); t.scrollIntoView({ block: 'start', behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' }); });
     wireNext(c, d);
     const add = $('#co-add'); if (add) add.onclick = addSeatSheet;
     const set = $('#co-settings'); if (set) set.onclick = settingsSheet;
     const wc = $('#co-whocan'); if (wc) wc.onclick = () => window.TribeGroupStyle && window.TribeGroupStyle.open();
-    const ec = $('#co-edit-co'); if (ec) ec.onclick = settingsSheet;
+    const ec = $('#co-edit-co'); if (ec) ec.onclick = () => { settingsSheet(); const i = $('#cx-mission'); if (i) i.focus(); };
     const mo = $('#co-money-open'); if (mo) mo.onclick = openMoney;
     const ap = $('#co-appr-open'); if (ap) ap.onclick = () => (window.TribeNotify && window.TribeNotify.openInbox ? window.TribeNotify.openInbox() : toast('Open the bell to answer approvals.'));
     const gf = $('#co-goal-focus'); if (gf) gf.onclick = () => { const i = $('#co-g-title'); if (i) { i.scrollIntoView({ block: 'center' }); i.focus(); } };

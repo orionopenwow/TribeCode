@@ -3262,8 +3262,23 @@
     'Back soon': ['Vuelvo pronto', 'Volto logo', 'De retour bientôt', 'Bin gleich zurück', 'すぐ戻ります', '马上回来', '곧 돌아옴'],
     'Your character': ['Tu personaje', 'Seu personagem', 'Votre personnage', 'Deine Figur', 'あなたのキャラクター', '你的角色', '내 캐릭터'],
     'In a call': ['En una llamada', 'Em uma chamada', 'En appel', 'Im Anruf', '通話中', '通话中', '통화 중'],
+    // ---- p13 Company layout: the purpose line asks, one facts line, one Open roles list · [es, pt, fr, de, ja, zh, ko]
+    'Say what it’s for in one line': ['Di para qué es en una línea', 'Diga para que serve em uma linha', 'Dites à quoi elle sert en une ligne', 'Sag in einem Satz, wofür sie da ist', '何のための会社かを一行で', '用一句话说明它是做什么的', '무엇을 위한 곳인지 한 줄로 적어요'],
+    'Open roles': ['Roles libres', 'Funções em aberto', 'Rôles à pourvoir', 'Offene Rollen', '空いている役割', '空缺的角色', '비어 있는 역할'],
+    'Check-ins are off': ['Las puestas al día están desactivadas', 'Os pontos estão desligados', 'Les points sont désactivés', 'Abstimmungen sind aus', '近況共有はオフです', '同步已关闭', '근황 공유가 꺼져 있어요'],
+    'View profile': ['Ver perfil', 'Ver perfil', 'Voir le profil', 'Profil ansehen', 'プロフィールを見る', '查看资料', '프로필 보기'],
   });
   I.addPatterns({
+    // p13 Company layout: the facts line and the Open roles list
+    '{n} of {total} roles filled': ['{n} de {total} roles cubiertos', '{n} de {total} funções preenchidas', '{n} rôles pourvus sur {total}', '{n} von {total} Rollen besetzt', '{total} 件中 {n} 件の役割が決定', '已填补 {n}/{total} 个角色', '역할 {total}개 중 {n}개 채움'],
+    '{n} waiting for an OK': ['{n} esperando un OK', '{n} aguardando um OK', '{n} en attente d’accord', '{n} warten auf ein OK', '{n} 件がOK待ち', '{n} 项等待确认', '{n}개가 확인을 기다려요'],
+    '{n} stuck': ['{n} atascados', '{n} travados', '{n} bloqués', '{n} hängen fest', '{n} 件が停滞中', '{n} 个卡住了', '{n}개가 막혀 있어요'],
+    'Next check-in {when}': ['Próxima puesta al día {when}', 'Próximo ponto {when}', 'Prochain point {when}', 'Nächste Abstimmung {when}', '次の近況共有 {when}', '下次同步 {when}', '다음 근황 공유 {when}'],
+    '{money} in this month': ['{money} de entrada este mes', '{money} de entrada este mês', '{money} de rentrées ce mois-ci', '{money} Einnahmen diesen Monat', '今月の入金 {money}', '本月收入 {money}', '이번 달 들어온 돈 {money}'],
+    '{money} out this month': ['{money} de salida este mes', '{money} de saída este mês', '{money} de dépenses ce mois-ci', '{money} Ausgaben diesen Monat', '今月の出金 {money}', '本月支出 {money}', '이번 달 나간 돈 {money}'],
+    '{money} in, {cost} out this month': ['{money} de entrada, {cost} de salida este mes', '{money} de entrada, {cost} de saída este mês', '{money} de rentrées, {cost} de dépenses ce mois-ci', '{money} Einnahmen, {cost} Ausgaben diesen Monat', '今月の入金 {money}、出金 {cost}', '本月收入 {money}，支出 {cost}', '이번 달 들어온 돈 {money}, 나간 돈 {cost}'],
+    'Give them to {name}': ['Dáselos a {name}', 'Entregue para {name}', 'Les confier à {name}', 'Gib sie {name}', '{name}に任せる', '交给{name}', '{name}에게 맡기기'],
+    'Give it to {name}': ['Dáselo a {name}', 'Entregue para {name}', 'Le confier à {name}', 'Gib sie {name}', '{name}に任せる', '交给{name}', '{name}에게 맡기기'],
     // p13: Undo after deleting a task
     'Deleted "{title}"': ['Se eliminó «{title}»', '"{title}" excluída', '« {title} » supprimée', '„{title}“ gelöscht', '「{title}」を削除しました', '已删除“{title}”', '"{title}"을(를) 삭제했어요'],
     'Brought back "{title}"': ['Se recuperó «{title}»', '"{title}" de volta', '« {title} » est revenue', '„{title}“ ist zurück', '「{title}」を戻しました', '已恢复“{title}”', '"{title}"을(를) 되살렸어요'],
