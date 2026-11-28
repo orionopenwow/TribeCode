@@ -88,6 +88,8 @@ def main():
 
             # ---------- 2. Make your character opens by itself the first time ----------
             cp = page(host, "Camp")
+            cp.wait_for_timeout(1500); assert not cp.locator("#olk-sheet").count(), "not on app launch (feat/p13b-office)"
+            to_office(cp)   # the first open of Agents & office starts the intro: Make your character first
             cp.wait_for_selector("#olk-sheet", timeout=15000)
             assert "Make your character" in cp.inner_text("#olk-sheet"), cp.inner_text("#olk-sheet")[:200]
             assert cp.inner_text("#olk-sheet [data-olk='save']").strip() == "Done"
@@ -110,7 +112,7 @@ def main():
             assert [m for m in ok(api("/members", token=host))["members"] if m["id"] == camp_id][0]["name"] == "Camp W", "the name tag renames you"
             assert cp.evaluate("!!TribeOfficeLooks.kept()"), "the look is kept on this device for the next tribe"
             cp.reload(wait_until="domcontentloaded"); cp.wait_for_function("window.TribeClient && TribeClient.connected() && window.TribeOffice", timeout=45000)
-            cp.wait_for_timeout(3500); assert not cp.locator("#olk-sheet").count(), "it only opens the first time"
+            to_office(cp); cp.wait_for_timeout(2500); assert not cp.locator("#olk-sheet").count(), "it only opens the first time"
             print("ok  2. Make your character: opens once by itself; pick, Randomize, name tag, Done; saved on the tribe and kept here")
 
             # ---------- 1b. the empty tribe is alive ----------
@@ -131,7 +133,7 @@ def main():
             inv = ok(api("/invites", "POST", {}, token=host))["invite"]
             j = ok(api("/join", "POST", {"code": inv["code"], "name": "Maya"})); maya, maya_id = j["token"], j["member"]["id"]
             mp = page(maya, "Maya")
-            mp.wait_for_selector("#olk-sheet", timeout=15000)
+            to_office(mp); mp.wait_for_selector("#olk-sheet", timeout=15000)
             assert "Make your character" in mp.inner_text("#olk-sheet")
             mp.click("#olk-sheet [data-olk='random']"); mp.click("#olk-sheet [data-olk='random']")
             mlook = mp.evaluate("TribeOfficeLooks.current().state().draft")

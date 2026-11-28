@@ -106,7 +106,7 @@
       </section>
     </div>`;
     const foot = `<div class="olk-foot"><button type="button" class="btn sm" data-olk="random">${esc(tr('Randomize'))}</button><button type="button" class="btn sm" data-olk="undo">${esc(tr('Undo'))}</button><button type="button" class="btn sm" data-olk="reset">${esc(tr('Reset'))}</button><span class="olk-gap"></span><button type="button" class="btn sm" data-olk="cancel">${esc(tr(first ? 'Not now' : 'Cancel'))}</button><button type="button" class="btn primary sm" data-olk="save">${esc(tr(helper ? 'Save its look' : first ? 'Done' : 'Save my look'))}</button></div>`;
-    const sh = UI.sheet({ id: 'olk-sheet', eyebrow: helper ? (opts.name || tr('AI helper')) : first ? tr('Welcome to the office') : tr('Office'), title, body, foot, wide: true, onClose: () => { cancelAnimationFrame(st.raf); if (cur && cur.sh === sh) cur = null; } });
+    const sh = UI.sheet({ id: 'olk-sheet', eyebrow: helper ? (opts.name || tr('AI helper')) : first ? tr('Welcome to the office') : tr('Office'), title, body, foot, wide: true, onClose: () => { cancelAnimationFrame(st.raf); if (cur && cur.sh === sh) cur = null; if (opts.onClose) try { opts.onClose(!!st.saved, st.draft); } catch (e) { console.error(e); } } });
     const root = sh.el.querySelector('[data-olk]'), panel = root.querySelector('.olk-panel'), prev = root.querySelector('.olk-prev');
     sh.el.classList.add('olk-card');
 
@@ -227,8 +227,22 @@
       if (k === 'cancel') return sh.close();
       if (k === 'save') {
         if (st.saving) return; st.saving = true; t.disabled = true;
+        // feat/p13b-office: with no tribe, or the tribe out of reach, your own look is saved on this device and goes to the
+        // tribe when it answers again (office.js carryLook)
+        const here = !helper && (!C().hasToken || !C().hasToken() || (C().connected && !C().connected()));
+        if (here) {
+          keep(L.compact(st.draft)); if (C().hasToken && C().hasToken()) markPending();
+          const n = root.querySelector('#olk-name'), nm = n ? n.value.trim().slice(0, 32) : '';
+          if (nm && nm !== meName) try { const k = 'tribecode.settings.v1', v = JSON.parse(localStorage.getItem(k) || '{}'); v.name = nm; localStorage.setItem(k, JSON.stringify(v)); } catch {}
+          st.saved = true;
+          toast(tr(first ? 'Your character is at their desk' : 'Saved on this device'));
+          if (opts.onSaved) opts.onSaved(L.compact(st.draft));
+          if (window.TribeOffice && window.TribeOffice.refresh) window.TribeOffice.refresh();
+          sh.close(); return;
+        }
         try {
           const r = await C().api('/office/look', { method: 'PUT', body: helper ? { look: L.compact(st.draft), for: opts.who } : { look: L.compact(st.draft) } });
+          st.saved = true;
           if (!helper) {
             keep(r.look || L.compact(st.draft));
             const n = root.querySelector('#olk-name'), nm = n ? n.value.trim().slice(0, 32) : '';
@@ -250,7 +264,8 @@
   async function openMine(extra) {
     let d = null;
     try { d = window.TribeOffice && window.TribeOffice.state ? window.TribeOffice.state() : null; } catch {}
-    if (!d || !d.me) { try { d = await C().api('/office'); } catch (err) { toast(err.message); return null; } }
+    if (!d || !d.me) { try { d = window.TribeOffice && window.TribeOffice.load ? await window.TribeOffice.load(true) : await C().api('/office'); } catch (err) { toast(err.message); return null; } }
+    if (!d || !d.me) return null;
     const me = { id: d.me, kind: 'person', look: d.myLook };
     return open(Object.assign({ who: 'me', id: d.me, look: lookOf(me) }, extra || {}));
   }
@@ -263,6 +278,9 @@
   // ---------- kept on this device: the last look you saved, for the next tribe you join ----------
   const LS_LOOK = 'tribecode.office.look';
   function keep(look) { try { if (look) localStorage.setItem(LS_LOOK, JSON.stringify(look)); } catch {} }
+  const LS_PEND = 'tribecode.office.lookPending';   // saved here while the tribe was out of reach: send it when it's back
+  function markPending() { try { localStorage.setItem(LS_PEND, '1'); } catch {} }
+  function pending(clear) { try { if (clear) localStorage.removeItem(LS_PEND); return localStorage.getItem(LS_PEND) === '1'; } catch { return false; } }
   function kept() { try { const v = JSON.parse(localStorage.getItem(LS_LOOK) || 'null'); return v && typeof v === 'object' && v.v === 2 ? v : null; } catch { return null; } }
 
   // ---------- faces for avatars elsewhere (profiles.js): only saved looks, only once the art is loaded ----------
@@ -280,5 +298,5 @@
     return url;
   }
 
-  window.TribeOfficeLooks = { open, openMine, openHelper, lookOf, render, current: () => cur, kept, keep, faceUrl };
+  window.TribeOfficeLooks = { open, openMine, openHelper, lookOf, render, current: () => cur, kept, keep, faceUrl, pending };
 })();
