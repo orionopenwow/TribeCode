@@ -261,6 +261,7 @@
       ${row('What\'s new', '<a class="btn" href="https://github.com/orionopenwow/TribeCode/blob/main/CHANGELOG.md" target="_blank" rel="noopener">Changelog</a>', 'Every release, what changed.', { keys: 'changelog release notes' })}`)
     + sec('Help', `${window.TribeGuide ? row('Guide', '<button class="btn set-guide" id="set-guide" title="How to TribeCode"><span aria-hidden="true">?</span> Open the guide</button>', 'How to TribeCode, page by page.', { keys: 'docs manual how' }) : ''}
       ${row('Tour with Flint', '<button class="btn" id="set-tour">Start the tour</button>', 'A short walk around the app.', { keys: 'tour onboarding' })}
+      ${window.TribeIntro ? row('Screen intros', '<button class="btn" id="set-intros">Show intros again</button>', 'The short slides each screen shows the first time you open it.', { id: 'set-intros-row', keys: 'intro slides welcome tour first time again' }) : ''}
       ${window.TribeOffline ? row('Demo', `<button class="btn" id="set-demo">${esc(window.TribeOffline.label())}</button>`, 'A pretend tribe that lives only in this tab.', { keys: 'demo try' }) : ''}
       ${row('Keyboard shortcuts', '<button class="btn" id="set-keysheet">Show all</button>', 'Ctrl / opens them anywhere.', { id: 'set-keysheet-row', keys: 'shortcuts keys' })}
       ${row('Report a bug', '<button class="btn" id="set-bug">Report a bug</button>', 'A screenshot, what you did, and the recent logs go to the bug inbox.', { keys: 'bug problem broken feedback' })}
@@ -497,6 +498,7 @@
     click('#set-ownserver', () => window.TribeOwnServer && window.TribeOwnServer.open());
     click('#set-clearcache', () => { const b = q('#set-clearcache'); if (b) { b.disabled = true; b.textContent = window.TribeI18n ? window.TribeI18n.t('Clearing…', 'Clearing…') : 'Clearing…'; } window.TribeSelfHeal && window.TribeSelfHeal.clearCache(); });
     click('#set-tour', () => { close(); window.TribeFlintTour && window.TribeFlintTour.start(); });
+    click('#set-intros', () => { window.TribeIntro.reset(); close(); });   // p13b: every screen's intro shows again on its next open
     click('#set-demo', () => { close(); window.TribeOffline.toggle(); });   // feat/offline-demo
     click('#set-guide', () => { close(); window.TribeGuide.open(); });   // feat/vision-guide
     click('#set-keysheet', () => { close(); window.TribeHelp ? window.TribeHelp.shortcuts() : null; });

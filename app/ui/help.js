@@ -40,10 +40,11 @@
     // the two new entries
     next: ['i-flag', 'What should I do next?', 'One step for where this project is', () => window.TribeNextStep && window.TribeNextStep.open()],
     learn: ['i-doc', 'Learn', 'Quick guides, paths, skills and tours, in one place', () => window.TribeGuide && (window.TribeGuide.home ? window.TribeGuide.home() : window.TribeGuide.open())],
+    screen: ['i-eye', 'Tour this screen', 'A few slides about where you are', () => window.TribeIntro && window.TribeIntro.tour()],   // p13b: screenintro.js
     quick: ['i-zap', 'Quick guides', 'How do I…? One screen each', () => window.TribeQuick && window.TribeQuick.open()],   // feat/learn
     wrong: ['i-hand', "Something's wrong", 'Fix a problem, report a bug, check for updates', null],
   };
-  const MAIN = ['next', 'quick', 'learn', 'flint', 'wrong', 'keys', 'new'];
+  const MAIN = ['next', 'screen', 'quick', 'learn', 'flint', 'wrong', 'keys', 'new'];
   const WRONG = ['trouble', 'bug', 'update'];
   // the Help center groups the rest by what you want to do
   const GROUPS = [['Watch and try', ['tour', 'watch', 'flintrun', 'demo']], ['Set up', ['start', 'claude', 'phones']], ['More', ['review', 'site', 'docs', 'gh']]];
