@@ -490,7 +490,8 @@
     }
     menuClose();
     if (k === 'dm') { close(); return window.TribeDM && window.TribeDM.open(id); }
-    if (k === 'call') { close(); return window.TribeCall && window.TribeCall.callPerson(id); }   // p13b: a private call that rings them
+    if (k === 'call') { close(); return window.TribeCall && window.TribeCall.callPerson(id); }
+    if (k === 'meet') { close(); return window.TribeMeetings && window.TribeMeetings.open({ with: id }); }   // p14: schedule a private call   // p13b: a private call that rings them
     if (k === 'edit') { close(); return edit(); }
     if (k === 'activity') { close(); return window.TribePeople && window.TribePeople.open(id); }
     if (k === 'character') { close(); return window.TribeOfficeLooks && window.TribeOfficeLooks.openMine(); }   // feat/p13-office
@@ -515,6 +516,7 @@
     menuEl = document.createElement('div'); menuEl.id = 'pf-menu2'; menuEl.className = 'pf-menu2'; menuEl.setAttribute('role', 'menu');
     menuEl.innerHTML = `${window.TribePeople ? '<button role="menuitem" data-pop="activity">Activity</button>' : ''}
       ${d.you ? '<button role="menuitem" data-pop="edit">Edit profile</button>' : `<button role="menuitem" data-pop="mute">${d.muted ? 'Unmute' : 'Mute for me'}</button>`}
+      ${!d.you && !(d.member || {}).agent && window.TribeMeetings ? '<button role="menuitem" data-pop="meet">Schedule a call</button>' : ''}
       <button role="menuitem" data-pop="copy">Copy user ID</button>${window.TribeModeration ? window.TribeModeration.profileItems(d) : ''}`;   // feat/appstore: Report, Block
     pop.el.appendChild(menuEl);
     const r = btn.getBoundingClientRect(), pr = pop.el.getBoundingClientRect();

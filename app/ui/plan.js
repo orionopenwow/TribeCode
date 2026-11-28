@@ -130,18 +130,19 @@
         <div class="cal-nav"><button class="btn ghost" data-cal="prev" title="Previous" aria-label="Previous">‹</button><button class="btn" data-cal="today">Today</button><button class="btn ghost" data-cal="next" title="Next" aria-label="Next">›</button></div>
         <span class="cal-label" id="cal-label">${esc(label)}</span>
         <div class="tabs" id="cal-mode"><button data-mode="week" class="${cal.mode === 'week' ? 'on' : ''}">Week</button><button data-mode="month" class="${cal.mode === 'month' ? 'on' : ''}">Month</button></div>
-        <button class="btn primary" id="cal-new" style="margin-left:auto">New event</button></div>
+        ${window.TribeMeetings ? '<button class="btn" id="cal-meet" style="margin-left:auto">Schedule a meeting</button>' : ''}<button class="btn primary" id="cal-new" ${window.TribeMeetings ? '' : 'style="margin-left:auto"'}>New event</button></div>
       <div id="cal-body"></div>`;
     v.querySelector('[data-cal="prev"]').onclick = () => step(-1);
     v.querySelector('[data-cal="next"]').onclick = () => step(1);
     v.querySelector('[data-cal="today"]').onclick = () => { cal.anchor = new Date(); cal.scrolled = false; load(); };
     v.querySelectorAll('#cal-mode [data-mode]').forEach(b => b.onclick = () => { cal.mode = b.dataset.mode; localStorage.setItem('tribecode.calMode', cal.mode); load(); });
+    if ($('#cal-meet')) $('#cal-meet').onclick = () => window.TribeMeetings.open({ channel: 'general' });   // p14
     $('#cal-new').onclick = () => { const s = new Date(); s.setMinutes(s.getMinutes() < 30 ? 30 : 60, 0, 0); editor({ start: s.toISOString(), duration: 30 }); };
     if (cal.mode === 'week') week(a); else month(a);
   }
   function step(n) { cal.anchor = cal.mode === 'week' ? addDays(cal.anchor, 7 * n) : new Date(cal.anchor.getFullYear(), cal.anchor.getMonth() + n, 1); load(); }
 
-  const evColor = o => (o.huddle ? 'var(--live)' : 'var(--peer)');
+  const evColor = o => (o.kind === 'meeting' ? 'var(--accent)' : o.huddle ? 'var(--live)' : 'var(--peer)');   // p14: meetings in Ember
   const avatars = ids => `<span class="cal-avs">${(ids || []).slice(0, 4).map(id => { const m = member(id); return m ? `<span class="cal-av" style="background:${esc(m.color)};color:${fg(m.color)}" title="${esc(m.name)}">${esc(ini(m.name))}</span>` : ''; }).join('')}</span>`;
   const dueClass = t => { const today = ymd(new Date()); return t.status === 'done' ? 'done' : t.due < today ? 'overdue' : t.due === today ? 'today' : ''; };
   const taskChip = t => `<button class="due-chip cal-task ${dueClass(t)}" draggable="true" data-task-chip="${esc(t.id)}" data-peek="task:${esc(t.id)}" title="${esc(t.title)}"><svg class="i"><use href="#i-check"/></svg><span>${esc(t.title)}</span></button>`;
@@ -171,7 +172,7 @@
       flush();
       col.innerHTML = items.map(({ o, s, e, lane, n }) => {
         const top = (s - dayStart) / 3600000 * HOUR_PX, h = Math.max(20, (e - s) / 3600000 * HOUR_PX - 2);
-        return `<div class="cal-ev ${o.huddle ? 'huddle' : ''} ${h < 40 ? 'short' : ''}" data-ev="${esc(o.id)}" data-start="${esc(o.start)}" data-peek="event:${esc(o.key)}" style="top:${top}px;height:${h}px;left:calc(${lane / n * 100}% + 2px);width:calc(${100 / n}% - 4px);--evc:${evColor(o)}">
+        return `<div class="cal-ev ${o.huddle ? 'huddle' : ''} ${o.kind === 'meeting' ? 'meeting' : ''} ${o.cancelled ? 'cancelled' : ''} ${h < 40 ? 'short' : ''}" data-ev="${esc(o.id)}" data-start="${esc(o.start)}" data-peek="event:${esc(o.key)}" style="top:${top}px;height:${h}px;left:calc(${lane / n * 100}% + 2px);width:calc(${100 / n}% - 4px);--evc:${evColor(o)}">
           <b>${o.huddle ? '<svg class="i"><use href="#i-mic"/></svg>' : ''}${esc(o.title)}</b><span>${h >= 40 ? fmtRange(o.start, o.end) : fmtT(o.start)}${o.repeat ? ' · ' + (o.repeat === 'weekdays' ? 'weekdays' : o.repeat) : ''}</span>${h >= 58 ? avatars(o.attendees) : ''}</div>`;
       }).join('');
       if (ymd(d) === today) { const n = new Date(); col.insertAdjacentHTML('beforeend', `<div class="cal-now" style="top:${(n.getHours() * 60 + n.getMinutes()) / 60 * HOUR_PX}px"></div>`); }
@@ -296,6 +297,7 @@
 
   // ---------- full editor ----------
   function editor(ev) {
+    if (ev && ev.kind === 'meeting' && window.TribeMeetings) return window.TribeMeetings.openId(ev.id);   // p14: a meeting opens its own sheet
     const isNew = !ev.id, me = (C.state().me || {}).id;
     const s = new Date(ev.start), dur = ev.end ? Math.round((Date.parse(ev.end) - Date.parse(ev.start)) / 60000) : ev.duration || 30;
     const att = new Set(ev.attendees || (isNew && me ? [me] : []));

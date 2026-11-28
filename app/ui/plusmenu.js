@@ -32,6 +32,7 @@
     { k: 'askagent', icon: 'i-robot', t: 'Ask an agent', s: 'The next connected agent picks it up, no AI of your own needed', hide: inDm() || me().role === 'spectator' || !window.TribeAskAgent },   // feat/any-llm
     myAgent() ? { k: 'claude', icon: 'i-sparkle', t: 'Ask my AI', s: 'Opens your private chat with it' }
       : { k: 'ai', icon: 'i-sparkle', t: 'Ask AI', s: draft() ? `“${draft().slice(0, 40)}”` : 'The tribe\'s AI answers here, no AI of your own needed', hide: inDm() || me().role === 'spectator' },
+    { k: 'meet', icon: 'i-calendar', t: inDm() ? 'Schedule a call' : 'Schedule a meeting', s: inDm() ? 'Just you two, with a reminder and Join' : 'A time, who, an agenda; everyone can say if they\'re going', hide: !window.TribeMeetings || me().role === 'spectator' },   // p14
     { k: 'remind', icon: 'i-sun', t: 'Reminder or event', s: 'Like “playtest friday 7pm”', hide: !window.TribePlan },
     { k: 'note', icon: 'i-doc', t: 'Note', s: 'Into the living notes' },
     { k: 'newdoc', icon: 'i-doc', t: 'Doc, sheet or slides', s: 'Start one in Files. Export to Word, Excel, PowerPoint or Google', hide: !window.TribeDocs || me().role === 'spectator' },
@@ -79,6 +80,7 @@
     if (k === 'capture') { close(); const u = /^https?:\/\/\S+$/.test(text) ? text : ''; if (u) clearDraft(); return window.TribeCaptures.addLink({ channel: chan(), url: u }); }   // feat/captures
     if (k === 'voicenote') { close(); return window.TribeCaptures.recorder({ channel: chan() }); }   // feat/captures
     if (k === 'gif') return window.TribeChatRich.gifPicker(anchorBtn);   // feat/chat2
+    if (k === 'meet') { close(); return window.TribeMeetings.open({ channel: chan(), title: text.slice(0, 160) }); }   // p14
     if (k === 'poll') return window.TribeVotes.openComposer({ question: text.slice(0, 200), channel: 'general' });
     if (k === 'task') {
       const title = text || prompt('Task');

@@ -30,7 +30,9 @@ function occurrences(ev, from, to) {
 }
 
 module.exports = function plan({ store, id, str, broadcast, postChat, getMembers, loadTasks, nameOf }) {
-  let ritualHook = null, ritualGuard = null, ritualGuardMsg = '';   // harden: who may put a ritual on the calendar (server/rituals.js mayStart)   // server/rituals.js: a ritual event (standup…) starting -> collect answers in chat, write the doc
+  let ritualHook = null, ritualGuard = null, ritualGuardMsg = '';
+  let mt = null;   // p14 meetings (server/meetings.js): { visible(ev, me), deliver(ev, msg) -> bool, mayEdit(ev, me), patched(prev, next, me) }
+  const seen = (ev, me) => !mt || !ev || ev.kind !== 'meeting' || mt.visible(ev, me);   // harden: who may put a ritual on the calendar (server/rituals.js mayStart)   // server/rituals.js: a ritual event (standup…) starting -> collect answers in chat, write the doc
   const rel = eid => `calendar/${eid}.md`;
   const okId = v => /^e-[a-z0-9-]{3,40}$/i.test(v);
   try { require('node:fs').mkdirSync(store.p('calendar'), { recursive: true }); } catch {}
@@ -42,7 +44,7 @@ module.exports = function plan({ store, id, str, broadcast, postChat, getMembers
   function save(ev) {
     const { notes = '', ...meta } = ev;
     store.writeMd(rel(ev.id), meta, notes);
-    broadcast({ type: 'event', event: ev });
+    if (!(mt && ev.kind === 'meeting' && mt.deliver(ev, { type: 'event', event: ev }))) broadcast({ type: 'event', event: ev });   // p14: a DM meeting reaches only its two people
     return ev;
   }
 
@@ -66,6 +68,8 @@ module.exports = function plan({ store, id, str, broadcast, postChat, getMembers
     if (b.ritual !== undefined) out.ritual = /^[a-z][a-z0-9-]{1,30}$/.test(String(b.ritual || '')) ? String(b.ritual) : null;
     if (b.remind !== undefined) out.remind = b.remind === null ? null : Math.min(Math.max(Number(b.remind) || 0, 0), 7 * 24 * 60);
     if (b.notes !== undefined) out.notes = str(b.notes, 20000);
+    if (b.kind === 'meeting') out.kind = 'meeting';   // p14: meeting fields (server/meetings.js validates them before they get here)
+    for (const k of ['scope', 'dm', 'channel', 'agenda', 'notesOn', 'cancelled', 'rsvp', 'tz', 'msg']) if (b.kind === 'meeting' || prev.kind === 'meeting') { if (b[k] !== undefined) out[k] = b[k]; }
     return out;
   }
 
@@ -82,7 +86,8 @@ module.exports = function plan({ store, id, str, broadcast, postChat, getMembers
     const out = [];
     for (const ev of all()) for (const o of occurrences(ev, from, to))
       out.push({ id: ev.id, key: `${ev.id}@${new Date(o.start).toISOString()}`, title: ev.title, start: new Date(o.start).toISOString(), end: new Date(o.end).toISOString(),
-        attendees: ev.attendees || [], huddle: !!ev.huddle, repeat: ev.repeat || null, ritual: ev.ritual || null, by: ev.by });
+        attendees: ev.attendees || [], huddle: !!ev.huddle, repeat: ev.repeat || null, ritual: ev.ritual || null, by: ev.by,
+        ...(ev.kind === 'meeting' ? { kind: 'meeting', scope: ev.scope || 'project', dm: ev.dm || null, cancelled: !!ev.cancelled } : {}) });
     return out.sort((a, b) => a.start.localeCompare(b.start));
   }
   const dueTasks = (fromDay, toDay) => loadTasks().filter(t => isDay(t.due) && t.due >= fromDay && t.due <= toDay)
@@ -90,7 +95,7 @@ module.exports = function plan({ store, id, str, broadcast, postChat, getMembers
 
   function upcoming(n = 3, me) {
     const now = Date.now(), today = localDay(new Date());
-    const evs = expand(now, now + 60 * DAY).filter(e => Date.parse(e.end) > now).map(e => ({ kind: 'event', at: e.start, ...e }));
+    const evs = expand(now, now + 60 * DAY).filter(e => Date.parse(e.end) > now && !e.cancelled && seen(e, me)).map(e => ({ ...e, kind: 'event', at: e.start, meeting: e.kind === 'meeting' }));
     const tasks = loadTasks().filter(t => isDay(t.due) && t.status !== 'done').map(t => ({ kind: 'task', at: t.due + 'T23:59:00', id: t.id, title: t.title, due: t.due, status: t.status, assignee: t.assignee || null, overdue: t.due < today }));
     // Overdue tasks first (they need attention), then everything by time.
     return [...tasks.filter(t => t.overdue), ...[...evs, ...tasks.filter(t => !t.overdue)].sort((a, b) => Date.parse(a.at) - Date.parse(b.at))].slice(0, n);
@@ -106,6 +111,7 @@ module.exports = function plan({ store, id, str, broadcast, postChat, getMembers
   function tick(now = Date.now()) {
     const evs = all();
     for (const ev of evs) {
+      if (ev.kind === 'meeting') continue;   // p14: meetings remind through server/meetings.js (10 min before and at start, with Join)
       const lead = leadMs(ev);
       for (const o of occurrences(ev, now - 5 * 60_000, now + lead + 1)) {
         const key = `${ev.id}@${new Date(o.start).toISOString()}`;
@@ -145,23 +151,25 @@ module.exports = function plan({ store, id, str, broadcast, postChat, getMembers
     if (m === 'GET' && !b) {
       const from = Date.parse(url.searchParams.get('from')) || Date.now() - 7 * DAY, to = Date.parse(url.searchParams.get('to')) || from + 42 * DAY;
       if (to - from > 400 * DAY) return fail(res, 400, 'range too large');
-      return send(res, 200, { events: all(), occurrences: expand(from, to), tasks: dueTasks(localDay(new Date(from - DAY)), localDay(new Date(to + DAY))) });
+      return send(res, 200, { events: all().filter(e => seen(e, me)), occurrences: expand(from, to).filter(e => seen(e, me)), tasks: dueTasks(localDay(new Date(from - DAY)), localDay(new Date(to + DAY))) });
     }
-    if (m === 'GET' && b) { const ev = get(b); return ev ? send(res, 200, { event: ev }) : fail(res, 404, 'event not found'); }
+    if (m === 'GET' && b) { const ev = get(b); return ev && seen(ev, me) ? send(res, 200, { event: ev }) : fail(res, 404, 'event not found'); }
     if (me.role === 'spectator') return fail(res, 403, 'spectators are read-only');
     if (m === 'POST' && !b) { const body = await readBody(req); if (body && body.ritual && ritualGuard && !ritualGuard(me)) return fail(res, 403, ritualGuardMsg); const r = create(body, me.id); return r.error ? fail(res, 400, r.error) : send(res, 200, r); }
-    const ev = b && get(b); if (!ev) return fail(res, 404, 'event not found');
+    const ev = b && get(b); if (!ev || !seen(ev, me)) return fail(res, 404, 'event not found');
+    if (ev.kind === 'meeting' && mt && !mt.mayEdit(ev, me)) return fail(res, 403, 'only the organizer or a project lead changes this meeting');
     if (m === 'PATCH') {
       const pb = await readBody(req); if (pb && pb.ritual && ritualGuard && !ritualGuard(me)) return fail(res, 403, ritualGuardMsg);
       const c = clean(pb, ev); if (c.error) return fail(res, 400, c.error);
       const next = { ...ev, ...c, updated: new Date().toISOString(), updatedBy: me.id };
       if (c.start && c.start !== ev.start) for (const k of Object.keys(sent)) if (k.includes(ev.id + '@')) delete sent[k];   // moved: remind again
-      return send(res, 200, { event: save(next) });
+      save(next); if (ev.kind === 'meeting' && mt) mt.patched(ev, next, me);
+      return send(res, 200, { event: next });
     }
-    if (m === 'DELETE') { store.remove(rel(ev.id)); broadcast({ type: 'event-removed', id: ev.id }); return send(res, 200, { ok: true }); }
+    if (m === 'DELETE') { store.remove(rel(ev.id)); if (!(mt && ev.kind === 'meeting' && mt.deliver(ev, { type: 'event-removed', id: ev.id }))) broadcast({ type: 'event-removed', id: ev.id }); return send(res, 200, { ok: true }); }
     return null;
   }
 
-  return { route, all, get, create, expand, upcoming, tick, occurrences, onRitual: fn => { ritualHook = fn; }, guardRitual: (fn, msg) => { ritualGuard = fn; ritualGuardMsg = msg; } };
+  return { route, all, get, create, save, clean, expand, upcoming, tick, occurrences, meetings: h => { mt = h; }, onRitual: fn => { ritualHook = fn; }, guardRitual: (fn, msg) => { ritualGuard = fn; ritualGuardMsg = msg; } };
 };
 module.exports.occurrences = occurrences;

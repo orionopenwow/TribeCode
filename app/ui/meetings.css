@@ -1,0 +1,72 @@
+/* p14: scheduled meetings (meetings.js): the chat card, the sheet, Home's "Next" line, calendar tint. Flat matte, tokens only. */
+.mtg-card { margin-top: 8px; width: 100%; max-width: 460px; text-align: left; border: 1px solid var(--edge); border-radius: var(--r); background: var(--surface-2); padding: 12px 14px; display: flex; flex-direction: column; gap: 4px; }
+.mtg-card.st-live { border-color: var(--accent); }
+.mtg-card.st-cancelled .mtg-title, .mtg-card.st-cancelled .mtg-meta { text-decoration: line-through; color: var(--faint); }
+.mtg-top { display: flex; align-items: center; gap: 6px; font-family: var(--mono); font-size: 11px; letter-spacing: .04em; text-transform: uppercase; color: var(--faint); }
+.mtg-ic { display: inline-grid; place-items: center; color: var(--accent-ink); }
+.mtg-eb { color: var(--accent-ink); }
+.mtg-who { margin-left: auto; text-transform: none; letter-spacing: 0; font-family: inherit; font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 55%; }
+.mtg-title { font-size: 15px; font-weight: 600; color: var(--text); line-height: 1.35; }
+.mtg-meta { font-size: 13px; color: var(--muted); }
+.mtg-agenda { margin: 4px 0 0; padding-left: 18px; font-size: 13px; color: var(--muted); line-height: 1.5; }
+.mtg-foot { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+.mtg-sp { flex: 1; }
+.mtg-rsvp { display: inline-flex; border: 1px solid var(--edge); border-radius: var(--r-sm); overflow: hidden; }
+.mtg-rb { padding: 6px 12px; font-size: 13px; color: var(--muted); background: var(--surface); display: inline-flex; align-items: center; gap: 6px; transition: background var(--dur-quick) var(--ease-out), color var(--dur-quick) var(--ease-out); }
+.mtg-rb + .mtg-rb { border-left: 1px solid var(--edge); }
+.mtg-rb:hover { background: var(--surface-3); color: var(--text); }
+.mtg-rb.on { background: var(--surface-3); color: var(--accent-ink); font-weight: 600; }
+.mtg-rb b { font-family: var(--mono); font-size: 11px; font-weight: 500; color: var(--faint); }
+.mtg-join { display: inline-flex; align-items: center; gap: 6px; }
+.mtg-state { font-size: 13px; color: var(--faint); }
+.mtg-state.cancelled { color: var(--ember-ink); font-weight: 600; }
+.mtg-link { display: inline-flex; align-items: center; gap: 5px; font-size: 12.5px; color: var(--muted); padding: 4px 6px; border-radius: 6px; }
+.mtg-link:hover { color: var(--text); background: var(--surface-3); }
+
+/* the sheet */
+.mtg-sheet { width: min(520px, calc(100vw - 32px)); max-height: 90vh; overflow: auto; }
+.mtg-sh-head { margin-bottom: 14px; }
+.mtg-sh-head h2 { margin: 2px 0 0; }
+.mtg-sheet .field { margin-bottom: 14px; }
+.mtg-quick, .mtg-lens, .mtg-seg, .mtg-people { display: flex; flex-wrap: wrap; gap: 6px; }
+.mtg-quick { margin-bottom: 8px; }
+.mtg-lens { margin-top: 8px; }
+.mtg-chip { padding: 6px 12px; border: 1px solid var(--edge); border-radius: 999px; font-size: 13px; color: var(--muted); background: var(--surface); }
+.mtg-chip:hover { color: var(--text); border-color: var(--stroke); background: var(--surface-2); }
+.mtg-chip.on { color: var(--accent-ink); border-color: var(--accent); background: var(--surface-2); font-weight: 600; }
+.mtg-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.mtg-tz { display: flex; align-items: center; gap: 6px; margin-top: 6px; font-size: 12px; color: var(--faint); }
+.mtg-people { margin-top: 8px; }
+.mtg-person { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px 4px 4px; border: 1px solid var(--edge); border-radius: 999px; font-size: 13px; color: var(--muted); background: var(--surface); }
+.mtg-person.on { border-color: var(--accent); color: var(--text); background: var(--surface-2); }
+.mtg-av { width: 22px; height: 22px; border-radius: 50%; display: inline-grid; place-items: center; font-size: 11px; font-weight: 700; color: var(--canvas); }
+.mtg-dmwho { display: flex; align-items: center; gap: 8px; font-size: 14px; color: var(--text); }
+.mtg-dmwho small { color: var(--faint); font-size: 12px; margin-left: auto; }
+.mtg-hint { margin: 6px 0 0; font-size: 12.5px; color: var(--faint); }
+.mtg-hint:empty { display: none; }
+.mtg-sheet textarea.input { height: 76px; min-height: 64px; padding: 10px 14px; resize: vertical; line-height: 1.5; font: inherit; font-size: 14px; }
+.mtg-tg { flex: 1; min-width: 0; }
+.mtg-links { display: inline-flex; align-items: center; gap: 2px; margin-left: auto; }
+.mtg-cancel-m { color: var(--ember-ink); }
+
+/* phones: the same sheet from the bottom, tighter */
+.mtg-modal.mtg-phone { align-items: flex-end; padding: 0; }
+.mtg-phone .mtg-sheet { width: 100%; max-width: 100%; max-height: 92vh; border-radius: var(--r-lg) var(--r-lg) 0 0; padding: 16px 16px calc(16px + env(safe-area-inset-bottom, 0px)); }
+.mtg-phone .mtg-sh-head { margin-bottom: 10px; }
+.mtg-phone .field { margin-bottom: 10px; }
+.mtg-phone .modal-foot { position: sticky; bottom: calc(-16px - env(safe-area-inset-bottom, 0px)); background: var(--surface); padding: 10px 0 0; margin-bottom: 0; flex-wrap: wrap; }
+.mtg-phone .modal-foot .btn.primary { flex: 1; }
+
+/* Home: Next: Design review · in 25 min · Join */
+.mtg-next { display: flex; align-items: center; gap: 6px; padding: 8px 12px; margin: 0 0 10px; border: 1px solid var(--edge); border-radius: var(--r-sm); background: var(--surface-2); font-size: 13px; color: var(--muted); }
+.mtg-next.empty, .mtg-next:empty { display: none; }
+.mtg-next-ic { color: var(--accent-ink); display: inline-grid; }
+.mtg-next-k { font-family: var(--mono); font-size: 11px; text-transform: uppercase; letter-spacing: .04em; color: var(--faint); }
+.mtg-next-t { font-weight: 600; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+.mtg-next-t:hover { text-decoration: underline; }
+.mtg-next-w { white-space: nowrap; }
+.mtg-next-j { margin-left: auto; }
+
+/* the calendar: a cancelled meeting is struck through */
+.cal-ev.cancelled b, .cal-ev.cancelled span { text-decoration: line-through; opacity: .7; }
+@media (prefers-reduced-motion: reduce) { .mtg-rb { transition: none; } }
