@@ -794,7 +794,7 @@
     const kids = [...h.childNodes];
     h.classList.add('cb');
     const np = (pinsBy.get(ch) || []).length;
-    h.innerHTML = `${av}<span class="cb-tt"></span><span class="cb-acts">
+    h.innerHTML = `${av}<span class="cb-tt"></span><span class="cb-acts">${window.TribeNotifGroups ? window.TribeNotifGroups.chatBell(ch) : ''}
       <button type="button" class="cb-btn cb-pins ${np ? 'has' : ''}" data-cb="pins" title="Pinned messages" aria-label="Pinned messages${np ? `, ${np}` : ''}" aria-haspopup="dialog">${icon('i-pin')}${np ? `<span class="cb-n">${np}</span>` : ''}</button>
       <button type="button" class="cb-btn" data-cb="huddle" title="${peer && peer.role !== 'agent' ? 'Call' : 'Start or join the huddle'}" aria-label="${peer && peer.role !== 'agent' ? 'Call' : 'Huddle'}">${icon('i-phone')}</button>
       <button type="button" class="cb-btn" data-cb="share" title="Share your screen in the huddle" aria-label="Share screen">${icon('i-screen')}</button>

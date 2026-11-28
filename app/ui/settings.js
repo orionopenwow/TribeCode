@@ -532,8 +532,9 @@
         ${row('From', `<span class="set-upd"><input class="input set-time" type="time" id="set-quiet-from" value="${esc(p.when.quiet.from)}" aria-label="Quiet from"><span class="faint">to</span><input class="input set-time" type="time" id="set-quiet-to" value="${esc(p.when.quiet.to)}" aria-label="Quiet until"></span>`, `Your time zone: ${esc(p.tz)}.`, { id: 'set-quiet-times' })}`)
       + sec('Digest', `${row('Digest', sw('set-digest', p.digest.on, 'Digest'), 'What you didn\'t get pinged about, gathered into one summary.', { id: 'set-digest-row', keys: 'summary batch' })}
         ${row('How often', `<select class="input set-select" id="set-digest-every" aria-label="Digest every">${hours.map(h => `<option value="${h}" ${p.digest.everyHours === h ? 'selected' : ''}>Every ${h} hour${h === 1 ? '' : 's'}</option>`).join('')}</select><select class="input set-select" id="set-digest-at" aria-label="Digest at a time"><option value="">Any time</option>${['07:00', '08:00', '09:00', '12:00', '17:00', '20:00'].map(t => `<option ${p.digest.at === t ? 'selected' : ''}>${t}</option>`).join('')}</select>`, 'Pick a time for one a day.', { id: 'set-digest-when' })}`)
-      + sec('Channels and projects', (chans.map(c => row('#' + esc(c.name), muteSel('channels', c.id, 'Notifications from #' + c.name), c.hint || '', { id: 'set-mute-ch-' + slug(c.id), keys: 'mute channel' })).join('')
-        + projs.map(pj => row(esc(pj.name || pj.id), muteSel('projects', pj.id, 'Notifications from ' + (pj.name || pj.id)), 'The whole project', { id: 'set-mute-pj-' + slug(pj.id), keys: 'mute project' })).join('')) || '<p class="set-note">No channels yet.</p>', { note: 'Mute a busy channel, or only hear about mentions there.' })
+      + (window.TribeNotifGroups ? sec('Projects and channels', window.TribeNotifGroups.settingsRows({ row, esc }) || '<p class="set-note">No projects yet.</p>', { note: 'The same choices as right-clicking a project circle or a channel. Muted projects still tell you about @mentions.', id: 'ng' })   // p14: every project in one place (notifgroups.js)
+      : sec('Channels and projects', (chans.map(c => row('#' + esc(c.name), muteSel('channels', c.id, 'Notifications from #' + c.name), c.hint || '', { id: 'set-mute-ch-' + slug(c.id), keys: 'mute channel' })).join('')
+        + projs.map(pj => row(esc(pj.name || pj.id), muteSel('projects', pj.id, 'Notifications from ' + (pj.name || pj.id)), 'The whole project', { id: 'set-mute-pj-' + slug(pj.id), keys: 'mute project' })).join('')) || '<p class="set-note">No channels yet.</p>', { note: 'Mute a busy channel, or only hear about mentions there.' }))
       + sec('More', `${row('Test', '<button class="btn" id="set-nf-test">Send a test</button>', 'Checks your phone and desktop channels.', { keys: 'test' })}
         ${d.device ? '' : row('Advanced', '<button class="btn" id="set-nf-adv">ntfy and more…</button>', 'Your own ntfy topic, how long until you count as away.', { keys: 'ntfy advanced' })}`);
     wireNfLocal(el);
@@ -548,12 +549,13 @@
     ch('#set-quiet-from', v => put({ when: { quiet: { from: v } } })); ch('#set-quiet-to', v => put({ when: { quiet: { to: v } } }));
     ch('#set-digest-every', v => put({ digest: { everyHours: Number(v) } })); ch('#set-digest-at', v => put({ digest: { at: v } }));
     el.querySelectorAll('[data-mute]').forEach(s => s.onchange = () => put({ mutes: { [s.dataset.muteKind]: { [s.dataset.mute]: s.value } } }));
+    if (window.TribeNotifGroups) window.TribeNotifGroups.wireSettings(el);
     const pb = el.querySelector('#set-nf-push'); if (pb) pb.onclick = async () => { try { await window.TribeNotify.enableWebPush(); toast('Push is on for this device'); } catch (e) { toast(e.message || 'Push is not available here'); } };
     const tb = el.querySelector('#set-nf-test'); if (tb) tb.onclick = async () => { try { const r = await C().api('/notify/test', { method: 'POST' }); toast(r.channels && r.channels.length ? `Sent via ${r.channels.join(', ')}` : 'Sent to your inbox. No phone or desktop channel answered.'); } catch (e) { toast(e.message); } };
     const ad = el.querySelector('#set-nf-adv'); if (ad) ad.onclick = () => window.TribeNotify.openSettings();
   }
   function wireNfLocal(el) {
-    const tg = (id, k) => { const b = el.querySelector('#' + id); if (b) b.onclick = () => { const v = b.getAttribute('aria-checked') !== 'true'; b.setAttribute('aria-checked', String(v)); P().set({ [k]: v }); saved(); if (k === 'sound' && v) P().ding(); }; };
+    const tg = (id, k) => { const b = el.querySelector('#' + id); if (b) b.onclick = () => { const v = b.getAttribute('aria-checked') !== 'true'; b.setAttribute('aria-checked', String(v)); P().set({ [k]: v }); saved(); if (k === 'sound' && v) P().ding(); if (window.TribeNotifGroups && C() && C().connected()) window.TribeNotifGroups.setApp({ [k]: v }); }; };   // p14: sounds and pop-ups follow you to every device
     tg('set-nf-toasts', 'toasts'); tg('set-nf-sound', 'sound');
   }
   function channelsList(state) {
