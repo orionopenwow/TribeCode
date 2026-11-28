@@ -139,7 +139,6 @@ button.ofl-row:hover, button.ofl-row:focus-visible { background: var(--surface-2
 .ofl-box .flint-mount { position: relative; height: auto; gap: 6px; padding: 0; background: transparent; }
 /* the chat's dock strip (its background, top padding and edge) is not wanted here: only the pill floats over the floor */
 .ofl-box.composer-dock, .ofl-dock .ofl-box { padding: 0; margin: 0; border: 0; background: transparent; box-shadow: none; }
-.ofl-box .compose { background: var(--surface); border-color: var(--edge-strong, var(--edge)); }
 .ofl-box .flm-head { display: none; }
 .ofl-box .flm-thread { display: none; max-height: 120px; overflow: auto; padding: 6px 34px 6px 10px; border: 1px solid var(--edge); border-radius: var(--r); background: var(--surface); }
 .ofl[data-replies="on"] .ofl-box .flm-thread { display: block; animation: tm-rise var(--dur-base) var(--ease-out) both; }

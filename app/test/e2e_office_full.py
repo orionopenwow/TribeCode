@@ -188,7 +188,7 @@ def main():
             cp.click("#ao-bar [data-ofl-zoom='out']")
             cp.click("#ao-more"); cp.wait_for_selector("#ao-menu")
             items = cp.eval_on_selector_all("#ao-menu [data-aom]", "els => els.map(e => e.dataset.aom)")
-            assert items == ["fit", "look", "edit", "sound", "hide", "where", "privacy", "how", "github"], items
+            assert items == ["fit", "look", "edit", "sound", "hide", "intro", "where", "privacy", "how", "github"], items
             assert cp.locator("#ao-menu [data-aom-set] option").count() >= 2, "the office's set"
             cp.click("#ao-menu [data-aom='sound']"); assert cp.get_attribute("#ao-menu [data-aom='sound']", "aria-checked") == "true"
             cp.click("#ao-menu [data-aom='sound']")
