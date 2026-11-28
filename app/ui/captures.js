@@ -155,7 +155,7 @@
     const c = state.cur, sec = section(); if (!c || !sec) return;
     const w = c._canWrite, href = safeHref(c.url);
     const sec_ = s => !c.sections || c.sections.includes(s);
-    const meta = [c.kind === 'voice' ? (c.site === 'Huddle' ? 'Huddle' : 'Voice note') : c.site, c.author, c.published ? dateOf(c.published) : '', c.duration ? mmss(c.duration) : '', c.words ? `${c.words} words` : ''].filter(Boolean);
+    const meta = [c.kind === 'voice' ? (c.site || 'Voice note') : c.site, c.author, c.published ? dateOf(c.published) : '', c.duration ? mmss(c.duration) : '', c.words ? `${c.words} words` : ''].filter(Boolean);
     const working = c.status === 'working';
     sec.innerHTML = `<div class="cap-wrap cap-notes" data-cap="${esc(c.id)}">
       <button class="btn ghost cap-back" id="cap-back">← All captures</button>

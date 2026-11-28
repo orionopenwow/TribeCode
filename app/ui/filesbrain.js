@@ -136,7 +136,7 @@
     const keep = it => (!st.tag || (it.tags || []).includes(st.tag)) && (!st.kind || (st.kind === 'note' ? it.type === 'note' : st.kind === 'video' ? /video|short/.test(it.kind || '') : st.kind === 'voice' ? it.type === 'voice' : it.type === 'link' && !/video|short/.test(it.kind || '')));
     for (const l of d.links.filter(keep)) {
       const who = people(l.by);
-      out.push({ src: 'brain', id: 'fb:' + l.id, bid: l.id, item: l, cat: 'links', type: `${l.pinned ? 'Pinned · ' : ''}${l.type === 'voice' ? 'Voice note' : l.site || 'Link'}`, title: l.title, at: l.at, pin: l.pinned,
+      out.push({ src: 'brain', id: 'fb:' + l.id, bid: l.id, item: l, cat: 'links', type: `${l.pinned ? 'Pinned · ' : ''}${l.type === 'voice' ? (l.site && l.site !== 'Huddle' ? l.site : 'Voice note') : l.site || 'Link'}`, title: l.title, at: l.at, pin: l.pinned,
         owner: who ? { name: who.name, color: who.color } : l.byName ? { name: l.byName, color: 'var(--peer)' } : null, text: `${l.summary} ${(l.tags || []).join(' ')} ${l.site}`,
         thumb: l.thumb ? `<div class="fg-th fb-th has-img"><img alt="" loading="lazy" src="${esc(thumbUrl(l.id))}"><span class="fb-th-cap"><span class="fb-th-sum">${esc(l.summary)}</span></span></div>` : tile(l, 'link'), cls: 'fb-card', attrs: `data-fb-id="${esc(l.id)}"`, acts: ['open', 'rename', ...(human() ? ['delete'] : [])] });
     }
@@ -210,7 +210,7 @@
     if (!el) { el = document.createElement('aside'); el.id = 'fb-reader'; el.className = 'fb-reader'; el.setAttribute('role', 'dialog'); el.setAttribute('aria-label', 'Item from Files'); document.body.appendChild(el); el._back = back; requestAnimationFrame(() => el.classList.add('in')); }
     const note = item.type === 'note', href = safeHref(item.url);
     const look = item.look || {}, sw = (look.colors || []).slice(0, 6), fonts = (look.fonts || []).slice(0, 4);
-    el.innerHTML = `<header class="fb-rh"><span class="eyebrow">${esc(note ? 'Note' : item.type === 'voice' ? 'Voice note' : item.site || 'Link')}</span>
+    el.innerHTML = `<header class="fb-rh"><span class="eyebrow">${esc(note ? 'Note' : item.type === 'voice' ? (item.site && item.site !== 'Huddle' ? item.site : 'Voice note') : item.site || 'Link')}</span>
         <button type="button" class="fb-x" id="fb-r-x" aria-label="Close">${ico('x', 18)}</button></header>
       <div class="fb-rb">
         <input class="fb-rt" id="fb-r-title" value="${esc(item.title)}" maxlength="200" aria-label="Title" ${canWrite() && !loading ? '' : 'readonly'}>
