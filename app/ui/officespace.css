@@ -107,3 +107,11 @@
   .os-doing { max-width: 140px; }
   .os-say { max-width: 150px; }
 }
+/* feat/p13b-office: the plate on the wall when the floor shows what this device knows (no tribe, offline), and the
+   intro's "This is you" (everyone else a step quieter for a moment) */
+.os-plate { position: absolute; transform: translateX(-50%); max-width: calc(100% - 24px); padding: 2px 10px; border: 2px solid var(--edge-pop); background: var(--surface); color: var(--muted); font: 600 11.5px/16px var(--font); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; pointer-events: none; }
+.os-plate[data-local="offline"] { color: var(--text); border-color: var(--amber); }
+.os-you { order: -2; padding: 2px 8px; border: var(--o) solid var(--brand); background: var(--surface); color: var(--text); font: 700 12px/15px var(--font); white-space: nowrap; animation: os-pop var(--dur-base) var(--ease-out); }
+.os-layer[data-focus] .os-tag:not(.os-focus), .os-layer[data-focus] .os-plate { opacity: .35; transition: opacity var(--dur-base) var(--ease-out); }
+.of-intro-art { display: block; width: min(100%, 352px); height: auto; margin: 0 auto; image-rendering: pixelated; image-rendering: crisp-edges; }
+@media (prefers-reduced-motion: reduce) { .os-you { animation: none; } .os-layer[data-focus] .os-tag { transition: none; } }

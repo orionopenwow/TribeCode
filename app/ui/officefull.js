@@ -107,6 +107,7 @@
     const gh = AO() && AO().ghLine ? AO().ghLine() : null;
     return `${floorPart}${floorPart ? '<hr>' : ''}
       ${item('hide', hid ? 'Show the office' : 'Hide the office for me', T('Only on this device'))}
+      ${item('intro', 'Show the intro again', T('What the office is, in two slides'))}
       <hr>
       ${item('where', 'Where your tribe runs', S ? `${S.label}${S.sub ? ' · ' + S.sub : ''}` : '')}
       ${item('privacy', 'What’s private', T('Who can open what'))}
@@ -131,6 +132,7 @@
     if (k === 'look' || k === 'edit' || k === 'fit') { closeMenu(); if (sp) sp.act(k); return; }
     if (k === 'sound') { if (sp) sp.act('sound'); const on = sp && sp.info().sound; btn.setAttribute('aria-checked', String(!!on)); btn.querySelector('b').textContent = T(on ? 'Sound on' : 'Sound off'); return; }
     if (k === 'hide') { closeMenu(); O().setHidden(!O().hidden()); return; }
+    if (k === 'intro') { closeMenu(); if (O().intro) O().intro(); return; }   // feat/p13b-office
     closeMenu();
     if (k === 'how') return how();
     if (AO() && AO().run) AO().run(k, btn);

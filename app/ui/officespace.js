@@ -323,6 +323,13 @@
       }
       Z.sort((a, b) => a.z - b.z);
       for (const o of Z) o.f();
+      // "This is you" (the intro's last step): everything but you, a step darker for a moment
+      const fc = focusOn && focusOn.until > Date.now() ? chars.get(focusOn.id) : null;
+      if (fc && fc.visible) {
+        const sx = F.ox + (fc.x * T + 8) * F.scale, sy = F.oy + (fc.y * T - 6) * F.scale, rw = 18 * F.scale, rh = 26 * F.scale;
+        ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.fillStyle = 'rgba(12,14,18,0.58)';
+        ctx.beginPath(); ctx.rect(0, 0, cv.width, cv.height); ctx.rect(Math.round(sx - rw), Math.round(sy - rh), Math.round(rw * 2), Math.round(rh * 2)); ctx.fill('evenodd'); ctx.restore();
+      }
       placeLayer();
     }
     // A raised hand (an AI helper waiting for your OK): a sleeve and a hand in the character's own colours, drawn in art pixels.
@@ -336,6 +343,13 @@
     }
     // where a desk seat's head height is on screen, in CSS pixels
     const seatXY = st => ({ x: (F.ox + (st.x * T + 8) * F.scale) / F.dpr, y: (F.oy + (st.y * T + 8 - 26) * F.scale) / F.dpr });
+    let focusOn = null;   // { id, until, label }: the intro's "This is you"
+    function focus(id, ms = 2200, label) {
+      if (!chars.has(id)) return false;
+      focusOn = { id, until: Date.now() + ms, label }; drawn = 0; if (reduce()) draw(); else kick();
+      setTimeout(() => { if (!dead) { focusOn = null; drawn = 0; if (reduce()) draw(); else kick(); } }, ms + 30);
+      return true;
+    }
     const talk = new Map();   // id -> { text, until }: the last channel message, for a few seconds
     function say(id, text) {
       const t = String(text || '').replace(/\s+/g, ' ').trim(); if (!t || !chars.has(id)) return;
@@ -362,7 +376,8 @@
         const h = headOf(ch), kind = ch.d.bubble === 'ask' ? 'ask' : ch.d.bubble === 'done' ? 'done' : '';
         const src = kind && artOk ? bubbleSrc(kind) : '';
         const said = talk.get(ch.d.id), sayNow = said && said.until > Date.now() ? said.text : '';
-        const b = sayNow ? `<span class="os-say">${esc(sayNow)}</span>`
+        const you = focusOn && focusOn.until > Date.now() && focusOn.id === ch.d.id;
+        const b = you ? `<span class="os-you">${esc(tr(focusOn.label || 'This is you'))}</span>` : sayNow ? `<span class="os-say">${esc(sayNow)}</span>`
           : kind ? `<span class="os-bubble ${kind}"${kind === 'ask' ? ' data-os-hand="1"' : ''}>${src ? `<img class="os-bub" src="${src}" alt="" style="width:${bw}px">` : ''}<span class="os-bubble-t">${esc(tr(kind === 'ask' ? 'Raised hand: needs your OK' : 'Done'))}</span></span>` : '';
         const [main, owner] = String(ch.d.name || '').split(' · ');
         const sub = ch.d.kind === 'agent' && owner ? `${owner.split(' ')[0]}'s` : '';
@@ -370,15 +385,18 @@
         const typing = /type/.test(poseOf(ch)) && !ch.path.length;
         const doing = ch.d.kind === 'agent' && ch.d.state === 'active' && !ch.path.length ? String((ch.d.task && ch.d.task.title) || (ch.d.lines || [])[0] || '') : '';
         const doingT = doing ? (doing.length > 34 ? doing.slice(0, 33) + '…' : doing) : '';
-        out.push(`<button type="button" class="os-tag" data-os-who="${esc(ch.d.id)}" data-role="${esc(ch.d.kind)}"${tool ? ` data-tool="${esc(tool)}"` : ''} data-state="${esc(ch.d.state || 'active')}"${typing ? ' data-typing="1"' : ''} style="left:${h.x.toFixed(1)}px;top:${h.y.toFixed(1)}px">${b}<span class="os-name"><i class="os-notch" aria-hidden="true"></i>${ch.d.kind === 'agent' ? `<span class="sr-only">${esc(tr('AI helper'))}: </span>` : ''}<b>${esc(main)}</b>${sub ? `<small>${esc(sub)}</small>` : ''}${typing ? '<i class="os-typing" aria-hidden="true"></i>' : ''}</span>${doingT ? `<span class="os-doing">${esc(tr(doingT))}</span>` : ''}</button>`);
+        out.push(`<button type="button" class="os-tag${you ? ' os-focus' : ''}" data-os-who="${esc(ch.d.id)}" data-role="${esc(ch.d.kind)}"${tool ? ` data-tool="${esc(tool)}"` : ''} data-state="${esc(ch.d.state || 'active')}"${typing ? ' data-typing="1"' : ''} style="left:${h.x.toFixed(1)}px;top:${h.y.toFixed(1)}px">${b}<span class="os-name"><i class="os-notch" aria-hidden="true"></i>${ch.d.kind === 'agent' ? `<span class="sr-only">${esc(tr('AI helper'))}: </span>` : ''}<b>${esc(main)}</b>${sub ? `<small>${esc(sub)}</small>` : ''}${typing ? '<i class="os-typing" aria-hidden="true"></i>' : ''}</span>${doingT ? `<span class="os-doing">${esc(tr(doingT))}</span>` : ''}</button>`);
       }
+      // a plate on the wall when this is what the device knows, not the tribe live (feat/p13b-office)
+      const lw = data && data.local && data.local !== 'wait' ? { none: 'Just you, on this device', solo: 'Saved on this device', offline: 'Offline · showing what this device saw' }[data.local] : '';
+      if (lw && layout) out.push(`<span class="os-plate" role="status" data-local="${esc(data.local)}" style="left:${((F.ox + layout.w * T * F.scale / 2) / F.dpr).toFixed(1)}px;top:${Math.max(4, (F.oy + 3 * F.scale) / F.dpr).toFixed(1)}px">${esc(tr(lw))}</span>`);
       // desks with nobody at them: "Back soon" for someone offline, and the two invitations in an empty tribe
       if (artOk && geo && !editing) {
         const desks = deskFor();
         for (const [id, st] of desks) {
           const ch = chars.get(id); if (!ch || ch.d.state !== 'off') continue;
           const at = seatXY(st);
-          out.push(`<button type="button" class="os-tag os-sign" data-os-who="${esc(id)}" data-sign="away" style="left:${at.x.toFixed(1)}px;top:${at.y.toFixed(1)}px"><span class="os-name"><b>${esc(tr('Back soon'))}</b><small>${esc(String(ch.d.name || '').split(' · ')[0])}</small></span></button>`);
+          out.push(`<button type="button" class="os-tag os-sign" data-os-who="${esc(id)}" data-sign="away" style="left:${at.x.toFixed(1)}px;top:${at.y.toFixed(1)}px"><span class="os-name"><b>${esc(tr(ch.d.kind === 'agent' ? 'Resting' : 'Back soon'))}</b><small>${esc(String(ch.d.name || '').split(' · ')[0])}</small></span></button>`);
         }
         for (const sp of spares(desks)) {
           const at = seatXY(sp.seat);
@@ -387,6 +405,7 @@
       }
       const html = out.join('');
       if (layer.__html !== html) { layer.innerHTML = html; layer.__html = html; }
+      if (focusOn && focusOn.until > Date.now()) layer.dataset.focus = '1'; else delete layer.dataset.focus;
       // no two tags on top of each other: from the lowest up, a tag that would cover one below it moves up
       layer.querySelectorAll('.os-tag').forEach(e => { e.style.marginTop = ''; });
       const tags = [...layer.querySelectorAll('.os-tag')].map(e => ({ e, r: e.getBoundingClientRect(), dy: 0 })).sort((p, q) => q.r.bottom - p.r.bottom);
@@ -687,10 +706,12 @@
       if (cardFor && !card.hidden) { const keep = cardFor; if (everyone().some(x => x.id === keep)) openCard(keep); else closeCard(); }
       if (reduce()) draw(); else kick();
     }
-    A.ready().then(() => { artOk = true; if (!dead && data) update(data); }).catch(() => { stage.dataset.noart = '1'; });
+    A.ready().then(() => { artOk = true; if (!dead && data) update(data); cacheArt(); setTimeout(cacheArt, 4000); }).catch(() => { stage.dataset.noart = '1'; });
     const inst = {
       update,
       say,
+      focus,
+      focusing: () => !!(focusOn && focusOn.until > Date.now()),
       destroy() { dead = true; if (raf) cancelAnimationFrame(raf); ro.disconnect(); if (io) io.disconnect(); document.removeEventListener('visibilitychange', onVis); },
       chars: () => [...chars.values()].map(c => ({ id: c.d.id, x: c.x, y: c.y, pose: poseOf(c), dir: c.dir, visible: c.visible, moving: !!c.path.length, bubble: c.d.bubble || null, spot: c.d.spot || null, meet: !!(c.target && c.target.meet), desk: !!(c.target && c.target.desk) })),
       desks: () => { const m = deskFor(), o = {}; for (const [id, st] of m) o[id] = { x: st.x, y: st.y }; return o; },
@@ -712,5 +733,14 @@
     return inst;
   }
 
+  // The art the floor used is saved for offline (the service worker's 'tribe-cache-these'), so the office draws with
+  // the tribe's computer off or no network at all (feat/p13b-office).
+  function cacheArt() {
+    try {
+      const sw = navigator.serviceWorker; if (!sw || !A.files) return;
+      const urls = A.files().map(f => new URL('officespace/' + f, location.href).href);
+      sw.ready.then(reg => { const w = sw.controller || reg.active; if (w && urls.length) w.postMessage({ type: 'tribe-cache-these', urls }); }).catch(() => {});
+    } catch {}
+  }
   window.TribeOfficeSpace = { mount };
 })();

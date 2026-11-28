@@ -30,12 +30,65 @@
   function setHidden(v) { try { localStorage.setItem(LS_HIDE, v ? '1' : '0'); } catch {} paintAll(); }
 
   // ---------- data ----------
+  // feat/p13b-office: the office never waits for the network. With no tribe, with the tribe's computer off or offline,
+  // it draws from this device: you at your desk (your saved look), then the AI helpers and friends this device last saw
+  // (helpers resting in the lounge, friends away with "Back soon" on their desk). The tribe's answer merges in when it
+  // comes, and every good answer is kept (per tribe, people and looks only, no message text) for next time.
+  //   data.local: 'none' (no tribe yet) | 'solo' (a tribe kept in this browser) | 'offline' (not reachable) | 'wait' (asking)
+  const LS_LAST = 'tribecode.office.last';
+  const tribeKey = () => { try { if (!C.hasToken || !C.hasToken()) return 'local'; return String(C.base ? C.base() : 'tribe'); } catch { return 'tribe'; } };   // one tribe per server address
+  const solo = () => { try { const O2 = window.TribeOffline; return !!(O2 && O2.solo && O2.solo()); } catch { return false; } };
+  function readSnap() { try { const all = JSON.parse(localStorage.getItem(LS_LAST) || '{}') || {}; return all[tribeKey()] || all.__last || null; } catch { return null; } }
+  function saveSnap(d) {
+    if (!d || d.local || !d.desks) return;
+    try {
+      const keep = x => ({ id: x.id, name: x.name, kind: x.kind, agentKind: x.agentKind || null, color: x.color || null, look: x.look || null, seat: x.seat, owner: x.owner || null, ownerName: x.ownerName || null });
+      const snap = { at: Date.now(), me: d.me, on: d.on, set: d.set, layout: d.layout || null, myLook: d.myLook || null, desks: d.desks.slice(0, 40).map(keep) };
+      const all = JSON.parse(localStorage.getItem(LS_LAST) || '{}') || {};
+      all[tribeKey()] = snap; all.__last = snap;   // __last: the last tribe seen, for a first draw before the tribe is known
+      const ks = Object.keys(all).filter(k => k !== '__last'); if (ks.length > 8) delete all[ks[0]];
+      localStorage.setItem(LS_LAST, JSON.stringify(all));
+    } catch {}
+  }
+  function myName() {
+    try { const m = (C.state && C.state().me) || {}; if (m.name) return m.name; } catch {}
+    try { const P = window.TribePersonalize; const n = P && P.localMember ? P.localMember().name : ''; if (n) return n; } catch {}
+    try { const st = JSON.parse(localStorage.getItem('tribecode.settings.v1') || '{}'); if (st.name) return st.name; } catch {}
+    return tr('You');
+  }
+  function localData(why) {
+    const snap = why === 'none' ? null : readSnap(), L = window.TribeOfficeLooks;
+    const meId = (() => { try { const m = C.state && C.state().me; if (m && m.id) return m.id; } catch {} return (snap && snap.me) || 'me'; })();
+    const kept = L && L.kept ? L.kept() : null;
+    const mine = (snap && (snap.desks || []).find(x => x.id === meId)) || {};
+    const self = { id: meId, name: myName(), kind: 'person', state: 'active', spot: 'desk', online: true, where: null, lines: [], files: [], task: null,
+      look: kept || (snap && snap.myLook) || mine.look || null, seat: Number.isInteger(mine.seat) ? mine.seat : 0 };
+    const others = ((snap && snap.desks) || []).filter(x => x.id !== meId).map(x => (x.kind === 'agent'
+      ? { ...x, online: false, state: 'away', spot: 'lounge', away: true, lines: ['Resting'], files: [], task: null, asks: [] }   // honest: not running right now
+      : { ...x, online: false, state: 'off', spot: 'desk', lines: [], files: [], task: null }));
+    return { on: snap ? snap.on !== false : true, agentsOff: false, canSet: false, desks: [self, ...others], board: null, at: snap ? new Date(snap.at).toISOString() : null,
+      layout: (snap && snap.layout) || null, set: (snap && snap.set) || 'office', me: meId, myLook: self.look, local: why, seenAt: snap ? snap.at : null };
+  }
   async function load(force) {
-    if (!C.hasToken || !C.hasToken()) return null;
+    if (!C.hasToken || !C.hasToken()) { data = localData(solo() ? 'solo' : 'none'); last = Date.now(); return data; }
     if (loading) return loading;
-    if (!force && data && Date.now() - last < 1500) return data;
-    loading = C.api('/office').then(d => { data = d; last = Date.now(); return d; }).catch(() => data).finally(() => { loading = null; });
+    if (!force && data && !data.local && Date.now() - last < 1500) return data;
+    if (!data) data = localData(C.connected && !C.connected() ? 'offline' : 'wait');   // draw now; the answer merges in
+    const was = data;
+    loading = C.api('/office').then(d => { data = d; last = Date.now(); saveSnap(d); carryLook(d); return d; })
+      .catch(() => { if (!data || data.local || (C.connected && !C.connected())) data = localData(solo() ? 'solo' : 'offline'); if (was !== data) paintAll(); return data; })
+      .finally(() => { loading = null; });
     return loading;
+  }
+  // Your look comes with you: a tribe where you have none gets the one you made (kept on this device), quietly.
+  let carried = '';
+  function carryLook(d) {
+    const L = window.TribeOfficeLooks, kept = L && L.kept ? L.kept() : null;
+    const pend = !!(L && L.pending && L.pending());
+    if (!kept || !d || !d.me || (d.myLook && !pend) || carried === tribeKey()) return;
+    const me = (d.desks || []).find(x => x.id === d.me); if (me && me.kind !== 'person') return;
+    carried = tribeKey();
+    C.api('/office/look', { method: 'PUT', body: { look: kept } }).then(() => { if (L.pending) L.pending(true); refresh(); }).catch(() => { carried = ''; });
   }
   const refresh = () => load(true).then(paintAll);
   const api = { refresh: () => refresh() };
@@ -135,7 +188,7 @@
   function paintOne(m) {
     const { el, opts } = m, full = !!opts.full;
     const d = data;
-    if (opts.compact) { el.innerHTML = d && d.on && !hidden() ? strip(d) : ''; el.hidden = !el.innerHTML; return; }
+    if (opts.compact) { el.innerHTML = d && d.on && !d.local && !hidden() ? strip(d) : ''; el.hidden = !el.innerHTML; return; }
     glide(el, () => {
       if (!d) { el.innerHTML = `<p class="faint of-wait">${esc(tr('Opening the office…'))}</p>`; return; }
       if (hidden()) { el.innerHTML = `<div class="of-off"><p class="faint">${esc(tr('You hid the office on this device.'))}</p><button class="btn" data-of-show>${esc(tr('Show the office'))}</button></div>`; return; }
@@ -272,8 +325,8 @@
     el.classList.add('of-mount'); if (opts.compact) el.classList.add('of-compact');
     el.addEventListener('click', click);
     el.addEventListener('keydown', e => { if ((e.key === 'Enter' || e.key === ' ') && e.target.matches('[data-desk]')) { e.preventDefault(); openCard(e.target.dataset.desk); } });
-    paint(m); load().then(() => paint(m));
-    if (opts.full) makeSoon(900);   // opening the office is a good first moment for Make your character
+    load().then(() => paint(m)); paint(m);
+    if (!opts.compact) makeSoon(900);   // the first open of the office on this device: the intro (officeintro.js)
     return { destroy() { mounts.delete(m); el.removeEventListener('click', click); if (m.space) m.space.destroy(); }, space: () => m.space };
   }
 
@@ -289,7 +342,7 @@
       if (m && m.type === 'chat' && typeof m.channel === 'string' && !/^dm[-:]/.test(m.channel) && m.message && m.message.by && typeof m.message.text === 'string' && !m.message.deleted && !m.message.e2ee) say(m.message.by, m.message.text);
     });
   }
-  setInterval(() => { if (mounts.size && document.visibilityState === 'visible') load(true).then(paintAll); }, 8000);
+  setInterval(() => { if (mounts.size && document.visibilityState === 'visible' && C.hasToken && C.hasToken()) load(true).then(paintAll); }, 8000);
 
   // ---------- Settings: Tribe & admin (host/admin) and Workspace (everyone: hide for me) ----------
   function wireSettings() {
@@ -315,40 +368,106 @@
   }
   if (!wireSettings()) document.addEventListener('DOMContentLoaded', wireSettings, { once: true });
 
-  // ---------- Make your character (feat/p13-office) ----------
-  // The first time someone is in a tribe and has no look there: the look they made in another tribe (kept on this
-  // device) comes along by itself; with none, "Make your character" opens once. Not over the one-sentence start, not
-  // over another sheet, not for AI helpers. Automated browsers only with ?character=1.
-  const LS_MADE = 'tribecode.office.made';
-  const tribeKey = () => { try { const s = C.state ? C.state() : {}; const t = s.tribe; return String((C.base ? C.base() : '') + '|' + (t && typeof t === 'object' ? t.id || t.name || '' : t || ''));  } catch { return 'tribe'; } };
-  const madeHere = () => { try { return (JSON.parse(localStorage.getItem(LS_MADE) || '[]') || []).includes(tribeKey()); } catch { return false; } };
-  function markMade() { try { const l = JSON.parse(localStorage.getItem(LS_MADE) || '[]') || []; if (!l.includes(tribeKey())) l.push(tribeKey()); localStorage.setItem(LS_MADE, JSON.stringify(l.slice(-50))); } catch {} }
-  let asking = false;
-  async function maybeMake() {
-    if (asking || madeHere() || !C.hasToken || !C.hasToken() || !C.connected || !C.connected()) return;
-    if (navigator.webdriver && !/[?&]character=1/.test(location.search)) return;
-    const st = C.state ? C.state() : {}, me = st.me || {};
-    if (me.role === 'agent' || me.role === 'spectator') return;
-    const NC = window.TribeNewcomer, P = window.TribeProjects;
-    if ((NC && NC.blank && NC.blank()) || (P && P.loaded && !P.loaded()) || document.querySelector('#hub-idea')) return;   // the one-sentence start comes first
-    if (document.querySelector('.ui-sheet, .ui-scrim, dialog[open]')) return;
-    asking = true;
-    try {
-      const d = await load(true); if (!d || !d.me || d.myLook) { if (d && d.myLook) markMade(); return; }
-      const L = window.TribeOfficeLooks; if (!L) return;
-      const kept = L.kept && L.kept();
-      if (kept) { try { await C.api('/office/look', { method: 'PUT', body: { look: kept } }); markMade(); refresh(); return; } catch {} }
-      markMade();
-      L.openMine({ first: true });
-    } finally { asking = false; }
+  // ---------- the first open (feat/p13b-office): one flow ----------
+  // Opening Agents & office for the first time on this device: 1. Make your character ("Not now" gives you a random
+  // look), 2. the office's slides (TribeIntro, the shared screen intro: screenintro.js), 3. the floor with "This is you"
+  // for two seconds. Remembered per device; the ⋯ menu has "Show the intro again". Never on app launch, never over
+  // another sheet, never for AI helpers; automated browsers only with ?character=1 (the slides follow TribeIntro's own ?intro=1).
+  const LS_INTRO = 'tribecode.office.intro';
+  const introDone = () => { try { return localStorage.getItem(LS_INTRO) === '1'; } catch { return false; } };
+  const sheetOpen = () => !!document.querySelector('.ui-sheet, .ui-scrim, dialog[open], #olk-sheet');
+  let introRunning = false;
+  // the slides' pictures: drawn from the bundled art (your character, an AI helper, a friend; a raised hand, the sofa)
+  function pic(fn, w, h) { try { const c = document.createElement('canvas'); c.width = w; c.height = h; const x = c.getContext('2d'); x.imageSmoothingEnabled = false; if (fn(c, x) === false) return ''; return c.toDataURL(); } catch { return ''; } }
+  function introArt() {
+    const L = window.TribeOfficeLooks, K = window.TribeOfficeLooksCore, A = window.TribeOfficeArt;
+    if (!L || !K || !A || !A.loaded || !A.loaded()) return { team: null, acts: null };
+    const meD = (data && (data.desks || []).find(x => x.id === data.me)) || { id: 'me', kind: 'person', look: L.kept && L.kept() };
+    const looks = [L.lookOf(meD) || K.seed('me'), K.agent('intro-helper', 'claude'), K.seed('intro-friend')];
+    const team = pic((c, x) => {
+      const desk = A.furn('DESK', 0), pc = A.furn('PC', 0, { on: true, frame: 1 });
+      looks.forEach((lk, i) => {
+        const ox = 8 + i * 56;
+        if (desk) x.drawImage(desk, ox, 40);
+        if (pc) x.drawImage(pc, ox + 16, 24);
+        const one = document.createElement('canvas'); one.width = 16; one.height = 32;
+        L.render(one, lk, { dir: 1, col: 1 }); x.drawImage(one, ox + 16, 52);
+      });
+    }, 176, 88);
+    const acts = pic((c, x) => {
+      const ask = A.bubble && A.bubble('ask'), sofa = A.furn('SOFA', 0), wb = A.furn('WHITEBOARD', 0);
+      const one = document.createElement('canvas'); one.width = 16; one.height = 32; L.render(one, looks[1], { dir: 0, col: 1 });
+      x.drawImage(one, 12, 22); if (ask) x.drawImage(ask, 15, 6);
+      if (sofa) x.drawImage(sofa, 48, 38);
+      if (wb) x.drawImage(wb, 104, 18);
+      const f = document.createElement('canvas'); f.width = 16; f.height = 32; L.render(f, looks[2], { dir: 0, col: 7 }); x.drawImage(f, 56, 24);
+    }, 144, 64);
+    return { team, acts };
   }
-  let makeT = null;
-  const makeSoon = (ms = 2500) => { clearTimeout(makeT); makeT = setTimeout(maybeMake, ms); };
-  if (C.on) C.on('hello', () => makeSoon());
-  addEventListener('tribe-projects-loaded', () => makeSoon());
+  function officeSlides() {
+    const a = introArt(), img = (src, alt) => (src ? `<img class="of-intro-art" src="${src}" alt="${esc(tr(alt))}">` : null);
+    return [
+      { eyebrow: tr('Agents & office'), title: tr('Everyone has a desk'), art: img(a.team, 'Three characters at their desks') || 'office-floor',
+        body: tr('You, your friends and every AI helper sit here as characters, doing what they are really doing. It works offline too: you see what this device saw, and it catches up when the tribe is back.') },
+      { eyebrow: tr('Agents & office'), title: tr('What you can do here'), art: img(a.acts, 'A raised hand, the meeting corner and the task board') || null,
+        bullets: [tr('Click anyone for their card: message, call, give a task, open their work.'), tr('The box at the bottom talks to the tribe. @claude gives your AI helper a task.'),
+          tr('A raised hand means an AI helper needs your OK. Click it to approve.'), tr('In a call, people walk to the meeting corner.')] },
+    ];
+  }
+  // 3. the floor, with you in focus for a moment
+  function focusMe() {
+    const go = (n = 0) => { const sp = space(); if (sp && sp.focus && data && sp.focus(data.me, 2200, 'This is you')) return; if (n < 20) setTimeout(() => go(n + 1), 150); };
+    go();
+  }
+  async function slides(force) {
+    const I = window.TribeIntro; if (!I) return false;
+    try { await (window.TribeOfficeArt && window.TribeOfficeArt.ready ? window.TribeOfficeArt.ready() : null); } catch {}
+    try { return force ? (await I.show('office', officeSlides()), true) : await I.maybe('office', officeSlides()); } catch (e) { console.error(e); return false; }
+  }
+  async function intro(force) {
+    if (introRunning) return;
+    if (!force) {
+      if (introDone()) return;
+      if (navigator.webdriver && !/[?&]character=1/.test(location.search)) return;
+      const me = (C.state && C.state().me) || {};
+      if (me.role === 'agent' || me.role === 'spectator') return;
+      if (sheetOpen()) return setTimeout(() => intro(), 1500);   // never over another sheet: ask again once it closes
+    }
+    introRunning = true;
+    try {
+      if (!force) {
+        try { localStorage.setItem(LS_INTRO, '1'); } catch {}
+        await load();
+        const L = window.TribeOfficeLooks;
+        if (L) await new Promise(res => {
+          const sh = L.openMine({ first: true, onClose: saved => {
+            // "Not now" with no look yet: a random one, so you're never a stranger on the floor
+            if (!saved && !(data && data.myLook) && window.TribeOfficeLooksCore) {
+              const look = window.TribeOfficeLooksCore.compact(window.TribeOfficeLooksCore.random());
+              L.keep(look);
+              if (C.hasToken && C.hasToken() && (!C.connected || C.connected())) C.api('/office/look', { method: 'PUT', body: { look } }).then(refresh, () => {}); else refresh();
+            }
+            res();
+          } });
+          Promise.resolve(sh).then(x => { if (!x) res(); });
+        });
+      }
+      await slides(force);
+      focusMe();
+    } finally { introRunning = false; }
+  }
+  const makeSoon = (ms = 700) => setTimeout(() => intro(), ms);
+  const maybeMake = () => intro();
+  // tribe back: friends come in live (the floor redraws from the tribe's answer)
+  if (C.on) C.on('hello', () => { if (mounts.size && data && data.local) load(true).then(paintAll); });
+  // the tribe drops: friends turn to "Back soon" at once (no waiting for the next refresh)
+  if (C.on) C.on('status', () => { if (mounts.size && C.hasToken && C.hasToken() && C.connected && !C.connected() && data && !data.local) { data = localData(solo() ? 'solo' : 'offline'); paintAll(); } });
 
   // the page's toolbar (agentsoffice.js): which view shows, switch it, and the pixel floor of a mount
   const view = () => (data && data.on && canFloor() ? viewOf() : 'desks');
   function setView(v) { try { localStorage.setItem(LS_VIEW, v === 'desks' ? 'desks' : 'floor'); } catch {} paintAll(); }
-  window.TribeOffice = { mount, refresh, hidden, setHidden, view, setView, canFloor, state: () => data, setOn, load, openCard, cardBody, cardClick, cardSubmit, statusOf, linesOf: screenLines, kindText, everyone, say, maybeMake };
+  // the floor of the first mount that has one (the intro's "This is you")
+  const space = () => { for (const m of mounts) if (m.space && m.el.isConnected) return m.space; return null; };
+  window.TribeOffice = { mount, refresh, hidden, setHidden, view, setView, canFloor, state: () => data, setOn, load, openCard, cardBody, cardClick, cardSubmit, statusOf, linesOf: screenLines, kindText, everyone, say, maybeMake, space, localData, tribeKey,
+    intro: () => intro(true), introSeen: introDone, slides: officeSlides };
 })();

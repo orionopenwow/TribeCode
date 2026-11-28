@@ -40,8 +40,9 @@
   // "2 people online · 1 AI helper working" from the office's desks (the same data as the floor).
   function lead() {
     const O = window.TribeOffice, d = O && O.state && O.state();
-    if (!hasTribe()) return T('Start a project first. Then friends and AI helpers join you here.');
+    if (!hasTribe()) return T('Just you, on this device. Friends and AI helpers join when you start a tribe.');
     if (!d || !d.desks) return T('People and AI helpers at their desks, live.');
+    if (d.local === 'offline') return T('Offline · showing what this device saw');
     const ppl = d.desks.filter(x => x.kind === 'person'), ai = d.desks.filter(x => x.kind === 'agent');
     const on = ai.filter(x => x.state === 'active').length, pOn = ppl.filter(x => x.state !== 'off').length;
     const a = ppl.length <= 1 ? T('Just you') : pOn === 1 ? T('1 person online') : T('{n} people online', { n: pOn });
@@ -51,7 +52,7 @@
   function refreshLead() { const l = document.getElementById('ao-lead'); if (l) l.textContent = lead(); }
 
   // ---------- the office at the top ----------
-  const office = () => (window.TribeOffice && hasTribe() ? `<section class="ao-office" id="ad-office" aria-label="${esc(T('The office'))}"><div class="ao-floor" id="ao-floor"></div></section>` : '');
+  const office = () => (window.TribeOffice ? `<section class="ao-office" id="ad-office" aria-label="${esc(T('The office'))}"><div class="ao-floor" id="ao-floor"></div></section>` : '');
   function mountOffice(root, prev, opts) {
     const f = root.querySelector('#ao-floor'); if (!f || !window.TribeOffice) return null;
     if (prev && prev.destroy) prev.destroy();
