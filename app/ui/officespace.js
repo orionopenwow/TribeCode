@@ -194,7 +194,7 @@
         if (!ch.target || ch.target.x !== tgt.x || ch.target.y !== tgt.y || ch.target.leave !== tgt.leave) {
           ch.target = tgt;
           if (d.state !== 'off') ch.visible = true;
-          if (reduce()) { ch.x = tgt.x; ch.y = tgt.y; ch.path = []; if (tgt.dir != null) ch.dir = tgt.dir; if (tgt.leave) ch.visible = false; }
+          if (reduce() || (tgt.leave && data && data.local)) { ch.x = tgt.x; ch.y = tgt.y; ch.path = []; if (tgt.dir != null) ch.dir = tgt.dir; if (tgt.leave) ch.visible = false; }
           else ch.path = route({ x: ch.x, y: ch.y }, tgt);
         } else ch.target = tgt;
       }
@@ -341,6 +341,11 @@
       ctx.fillStyle = skin; ctx.fillRect(x - 1, py - 31 + b, 4, 2); ctx.fillRect(x, py - 29 + b, 2, 5);
       ctx.fillStyle = cloth; ctx.fillRect(x, py - 24, 2, 6);
     }
+    // "seen 5 min ago"
+    function seenAgo(t) {
+      const m = Math.max(0, Math.round((Date.now() - t) / 60000));
+      return m < 1 ? tr('seen just now') : m < 60 ? tr('seen {n} min ago').replace('{n}', m) : m < 1440 ? tr('seen {n} h ago').replace('{n}', Math.round(m / 60)) : tr('seen {n} d ago').replace('{n}', Math.round(m / 1440));
+    }
     // where a desk seat's head height is on screen, in CSS pixels
     const seatXY = st => ({ x: (F.ox + (st.x * T + 8) * F.scale) / F.dpr, y: (F.oy + (st.y * T + 8 - 26) * F.scale) / F.dpr });
     let focusOn = null;   // { id, until, label }: the intro's "This is you"
@@ -372,7 +377,7 @@
       if (layer.__px !== px) { layer.style.setProperty('--px', px.toFixed(2) + 'px'); layer.__px = px; }
       const out = [], bw = Math.max(11, Math.round(11 * F.scale / F.dpr));
       for (const ch of chars.values()) {
-        if (!ch.visible) continue;
+        if (!ch.visible || ch.d.state === 'off') continue;   // away: only the sign on their desk (below), never a stray tag
         const h = headOf(ch), kind = ch.d.bubble === 'ask' ? 'ask' : ch.d.bubble === 'done' ? 'done' : '';
         const src = kind && artOk ? bubbleSrc(kind) : '';
         const said = talk.get(ch.d.id), sayNow = said && said.until > Date.now() ? said.text : '';
@@ -396,7 +401,7 @@
         for (const [id, st] of desks) {
           const ch = chars.get(id); if (!ch || ch.d.state !== 'off') continue;
           const at = seatXY(st);
-          out.push(`<button type="button" class="os-tag os-sign" data-os-who="${esc(id)}" data-sign="away" style="left:${at.x.toFixed(1)}px;top:${at.y.toFixed(1)}px"><span class="os-name"><b>${esc(tr(ch.d.kind === 'agent' ? 'Resting' : 'Back soon'))}</b><small>${esc(String(ch.d.name || '').split(' · ')[0])}</small></span></button>`);
+          out.push(`<button type="button" class="os-tag os-sign" data-os-who="${esc(id)}" data-sign="away" style="left:${at.x.toFixed(1)}px;top:${at.y.toFixed(1)}px"><span class="os-name"><b>${esc(tr(ch.d.kind === 'agent' ? 'Resting' : 'Back soon'))}</b><small>${esc(String(ch.d.name || '').split(' · ')[0])}</small></span>${ch.d.seen ? `<span class="os-seen">${esc(seenAgo(ch.d.seen))}</span>` : ''}</button>`);
         }
         for (const sp of spares(desks)) {
           const at = seatXY(sp.seat);

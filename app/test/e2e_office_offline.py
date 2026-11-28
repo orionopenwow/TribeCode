@@ -178,6 +178,16 @@ def main():
             assert ag_d and ag_d["state"] == "away" and ag_d["lines"] == ["Resting"], ag_d
             cp.wait_for_function(f"(() => {{ const c = {CH % aid}; return c && c.visible && !c.desk; }})()", timeout=10000)
             assert "Offline" in cp.inner_text("#ao-lead")
+            # one Maya: her desk sign (with when she was last seen), no stray name tag
+            cp.wait_for_timeout(600)
+            assert cp.locator(f"#ad-office .os-tag:not(.os-sign)[data-os-who='{maya_id}']").count() == 0, "no stray tag for someone away"
+            assert "seen" in cp.inner_text(f"#ad-office .os-sign[data-os-who='{maya_id}'] .os-seen")
+            # Working on agrees with the floor: helpers resting, nobody "here" for real
+            cp.evaluate("TribeOfficeFull.open('work')")
+            cp.wait_for_function("(document.querySelector('#ao-work') || {}).innerText && /Resting/.test(document.querySelector('#ao-work').innerText)", timeout=10000)
+            work = cp.inner_text("#ao-work")
+            assert "Waiting for a task" not in work and cp.locator("#ao-work .fl-lst.st-working").count() == 0, work
+            assert "Offline · last seen here" in work, work
             cp.wait_for_timeout(1200); cp.screenshot(path=f"{SHOTS}/office-offline-1440.png")
             srv = start(tmp)   # back
             cp.wait_for_function("TribeClient.connected() && TribeOffice.state() && !TribeOffice.state().local", timeout=60000)

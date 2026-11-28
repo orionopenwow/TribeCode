@@ -231,12 +231,27 @@
     const ms = C.state().members || [], nameOf = id => ((ms.find(m => m.id === id) || {}).name || '').split(' · ')[0];
     return sec('ao-doing', 'Up next', `<ul class="ofl-list">${list.map(t => `<li><button type="button" class="ofl-row" data-ao-task="${esc(t.id)}"><span class="ofl-row-t"><b>${esc(t.title)}</b><small>${esc([t.status === 'doing' ? 'In progress' : 'Next', nameOf(t.assignee)].filter(Boolean).join(' · '))}</small></span></button></li>`).join('')}</ul>`);
   }
+  // fix/p13b-office2: offline (the office shows what this device saw), nobody is "here" or "working now" for real
+  const offlineOf = () => { const O = window.TribeOffice, od = O && O.state(); return od && od.local && od.local !== 'wait' ? od : null; };
+  function seenAgo(t) { if (!t) return ''; const m = Math.max(0, Math.round((Date.now() - t) / 60000)); return m < 1 ? 'just now' : m < 60 ? `${m} min ago` : m < 1440 ? `${Math.round(m / 60)} h ago` : `${Math.round(m / 1440)} d ago`; }
+  function offlineHelpers(od) {
+    const list = od.desks.filter(x => x.kind === 'agent'); if (!list.length) return '';
+    return list.map(x => `<article class="fl-lrow ofl-cached"><div class="fl-lline"><button type="button" class="fl-lhead" data-desk="${esc(x.id)}">
+      <span class="fl-lav ofl-pav" aria-hidden="true">${esc(String(x.name || '?').trim()[0].toUpperCase())}</span><span class="fl-lt"><span class="fl-lname"><b>${esc(x.name.split(' · ')[0])}</b>${x.ownerName ? ` <small>${esc(x.ownerName.split(' ')[0])}'s</small>` : ''}</span><span class="fl-ldo">${esc(x.seen ? `Resting · last seen ${seenAgo(x.seen)}` : 'Resting')}</span></span></button></div></article>`).join('');
+  }
   function here() {
     const O = window.TribeOffice, od = O && O.state(); if (!od || !od.desks) return '';
+    const off = offlineOf();
+    if (off) {
+      const ppl = od.desks.filter(x => x.kind === 'person' && x.id !== od.me);
+      return sec('ao-people', 'Here', `<p class="ofl-here-t ofl-cached">${esc(ppl.length ? `Offline · last seen here: ${ppl.map(x => x.name.split(' ')[0] + (x.seen ? ` (${seenAgo(x.seen)})` : '')).join(', ')}` : 'Offline · just you on this device')}</p>`);
+    }
     const on = od.desks.filter(x => x.kind === 'person' && x.state !== 'off'); if (!on.length) return '';
     return sec('ao-people', 'Here', `<div class="ofl-here">${on.map(x => `<button type="button" class="ofl-av" data-desk="${esc(x.id)}" data-role="person" title="${esc(x.name)}" aria-label="${esc(x.name)}">${esc(String(x.name || '?').trim()[0].toUpperCase())}</button>`).join('')}<span class="ofl-here-t">${esc(on.map(x => x.name.split(' ')[0] + (x.id === od.me ? ' (you)' : '')).join(', '))}</span></div>`);
   }
   function workingNow(d) {
+    const off = offlineOf();
+    if (off) { const r = offlineHelpers(off); return `<section class="ofl-sec" id="fl-agents"><h3 class="ofl-h">Working now</h3>${r ? `<div class="fl-lrows">${r}</div>` : ''}<p class="ofl-empty">Offline · nobody is working here right now. This catches up when the tribe is back.</p></section>`; }
     const L = window.TribeFleet && window.TribeFleet.list ? window.TribeFleet.list(d.fleet) : { rows: '', spare: '' };
     const rows = (L.rows || '') + peopleRows();
     return `<section class="ofl-sec" id="fl-agents"><h3 class="ofl-h">Working now</h3>${rows ? `<div class="fl-lrows">${rows}</div>` : `<p class="ofl-empty">No one’s working right now · <button type="button" class="linkish" data-ao-give>Give someone a task</button></p>`}${L.spare || ''}</section>`;

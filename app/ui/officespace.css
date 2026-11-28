@@ -115,3 +115,5 @@
 .os-layer[data-focus] .os-tag:not(.os-focus), .os-layer[data-focus] .os-plate { opacity: .35; transition: opacity var(--dur-base) var(--ease-out); }
 .of-intro-art { display: block; width: min(100%, 352px); height: auto; margin: 0 auto; image-rendering: pixelated; image-rendering: crisp-edges; }
 @media (prefers-reduced-motion: reduce) { .os-you { animation: none; } .os-layer[data-focus] .os-tag { transition: none; } }
+/* fix/p13b-office2: when someone away was last seen, over their "Back soon" */
+.os-seen { order: -1; padding: 0 5px; border: 1px solid var(--edge); background: var(--surface-2); color: var(--faint); font: 600 10px/13px var(--font); white-space: nowrap; }

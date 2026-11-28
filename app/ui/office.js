@@ -42,7 +42,7 @@
   function saveSnap(d) {
     if (!d || d.local || !d.desks) return;
     try {
-      const keep = x => ({ id: x.id, name: x.name, kind: x.kind, agentKind: x.agentKind || null, color: x.color || null, look: x.look || null, seat: x.seat, owner: x.owner || null, ownerName: x.ownerName || null });
+      const keep = x => ({ id: x.id, name: x.name, kind: x.kind, agentKind: x.agentKind || null, color: x.color || null, look: x.look || null, seat: x.seat, owner: x.owner || null, ownerName: x.ownerName || null, seen: x.seen || null });
       const snap = { at: Date.now(), me: d.me, on: d.on, set: d.set, layout: d.layout || null, myLook: d.myLook || null, desks: d.desks.slice(0, 40).map(keep) };
       const all = JSON.parse(localStorage.getItem(LS_LAST) || '{}') || {};
       all[tribeKey()] = snap; all.__last = snap;   // __last: the last tribe seen, for a first draw before the tribe is known
@@ -69,13 +69,19 @@
     return { on: snap ? snap.on !== false : true, agentsOff: false, canSet: false, desks: [self, ...others], board: null, at: snap ? new Date(snap.at).toISOString() : null,
       layout: (snap && snap.layout) || null, set: (snap && snap.set) || 'office', me: meId, myLook: self.look, local: why, seenAt: snap ? snap.at : null };
   }
+  // When each one was last seen here: now for whoever is around; otherwise what this device remembers (an AI helper's own
+  // last step when the tribe knows it). Shown as "seen 5 min ago" under "Back soon".
+  function seenTimes(d) {
+    const prev = new Map((((readSnap() || {}).desks) || []).map(x => [x.id, x.seen]));
+    for (const x of (d && d.desks) || []) x.seen = x.state !== 'off' ? Date.now() : (x.kind === 'agent' && x.lastStep ? Date.parse(x.lastStep) : prev.get(x.id) || null);
+  }
   async function load(force) {
     if (!C.hasToken || !C.hasToken()) { data = localData(solo() ? 'solo' : 'none'); last = Date.now(); return data; }
     if (loading) return loading;
     if (!force && data && !data.local && Date.now() - last < 1500) return data;
     if (!data) data = localData(C.connected && !C.connected() ? 'offline' : 'wait');   // draw now; the answer merges in
     const was = data;
-    loading = C.api('/office').then(d => { data = d; last = Date.now(); saveSnap(d); carryLook(d); return d; })
+    loading = C.api('/office').then(d => { seenTimes(d); data = d; last = Date.now(); saveSnap(d); carryLook(d); return d; })
       .catch(() => { if (!data || data.local || (C.connected && !C.connected())) data = localData(solo() ? 'solo' : 'offline'); if (was !== data) paintAll(); return data; })
       .finally(() => { loading = null; });
     return loading;

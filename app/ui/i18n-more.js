@@ -3279,6 +3279,13 @@
     'In a call, people walk to the meeting corner.': ['En una llamada, la gente va al rincón de reuniones.', 'Numa chamada, as pessoas vão para o canto de reuniões.', 'En appel, on rejoint le coin réunion.', 'Im Anruf gehen alle in die Besprechungsecke.', '通話中はみんな会議コーナーへ歩きます。', '通话时，大家会走到会议角。', '통화 중에는 회의 코너로 걸어가요.'],
     'Three characters at their desks': ['Tres personajes en sus escritorios', 'Três personagens nas mesas', 'Trois personnages à leur bureau', 'Drei Figuren an ihren Schreibtischen', 'デスクにいる3人のキャラクター', '三个坐在工位上的角色', '책상에 앉은 캐릭터 셋'],
     'A raised hand, the meeting corner and the task board': ['Una mano levantada, el rincón de reuniones y el tablero', 'Uma mão levantada, o canto de reuniões e o quadro', 'Une main levée, le coin réunion et le tableau', 'Eine gehobene Hand, die Besprechungsecke und das Board', '挙がった手、会議コーナー、タスクボード', '举起的手、会议角和任务板', '든 손, 회의 코너, 할 일 보드'],
+    // ---- fix/p13b-office2
+    'Offline · nobody is working here right now. This catches up when the tribe is back.': ['Sin conexión · nadie está trabajando aquí ahora. Se pone al día cuando vuelva la tribu.', 'Offline · ninguém está trabalhando aqui agora. Tudo se atualiza quando a tribo voltar.', 'Hors ligne · personne ne travaille ici pour l’instant. Tout se met à jour au retour de la tribu.', 'Offline · gerade arbeitet hier niemand. Alles holt auf, sobald der Tribe zurück ist.', 'オフライン・今ここで作業している人はいません。トライブが戻ると追いつきます。', '离线 · 现在没有人在这里工作。部落回来后会自动更新。', '오프라인 · 지금 여기서 일하는 사람이 없어요. 트라이브가 돌아오면 따라잡아요.'],
+    'Offline · just you on this device': ['Sin conexión · solo tú en este dispositivo', 'Offline · só você neste dispositivo', 'Hors ligne · juste vous sur cet appareil', 'Offline · nur du auf diesem Gerät', 'オフライン・この端末のあなただけ', '离线 · 只有你在这台设备上', '오프라인 · 이 기기의 당신뿐'],
+    'seen just now': ['visto hace un momento', 'visto agora há pouco', 'vu à l’instant', 'gerade eben gesehen', 'たった今', '刚刚在线', '방금 봄'],
+    'seen {n} min ago': ['visto hace {n} min', 'visto há {n} min', 'vu il y a {n} min', 'vor {n} Min. gesehen', '{n}分前', '{n} 分钟前在线', '{n}분 전에 봄'],
+    'seen {n} h ago': ['visto hace {n} h', 'visto há {n} h', 'vu il y a {n} h', 'vor {n} Std. gesehen', '{n}時間前', '{n} 小时前在线', '{n}시간 전에 봄'],
+    'seen {n} d ago': ['visto hace {n} d', 'visto há {n} d', 'vu il y a {n} j', 'vor {n} T. gesehen', '{n}日前', '{n} 天前在线', '{n}일 전에 봄'],
   });
   I.addPatterns({
     // p13: Undo after deleting a task
