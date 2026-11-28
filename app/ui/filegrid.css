@@ -70,3 +70,23 @@ body:has(#view-tabs.wt-files:not(.hidden)) #view-docs > #cf-switch { display: no
 .fg-site-acts .btn { max-width: 100%; height: auto; min-height: 36px; white-space: normal; text-align: center; }
 @container (max-width: 640px) { .fg-site { grid-template-columns: minmax(0, 1fr); } }
 @media (max-width: 640px) { .fg-site { grid-template-columns: minmax(0, 1fr); gap: 12px; padding: 12px; } .fg-site-acts .btn { flex: 1 1 auto; } }
+
+/* p14 phones: Files is the same page as on a computer. The old file list and "Pick a doc" give way to the grid, and the
+   code repository card sits under the files, compact (a small picture beside its name, no big coloured tile). */
+@media (max-width: 820px) {
+  #view-docs .docs-grid:has(.fg) { display: block; }
+  #view-docs .docs-grid:has(.fg) > #doc-list-wrap { display: none; }
+  .m2-hub-slim { margin: 8px 0 24px; }
+  .m2-hub-slim .sec-head { margin: 0 0 8px; }
+  .m2-hub-slim .rhx { display: grid; grid-template-columns: 72px minmax(0, 1fr); overflow: hidden; margin: 0; }
+  .m2-hub-slim .rhx-art { aspect-ratio: auto; min-height: 72px; border-bottom: 0; border-right: 1px solid var(--edge); }
+  .m2-hub-slim .rhx-tile span { font-size: 22px; }
+  .m2-hub-slim .rhx-src { display: none; }
+  .m2-hub-slim .rhx-band { padding: 10px 12px; min-width: 0; }
+  .m2-hub-slim .rhx-band > .eyebrow { display: none; }
+  .m2-hub-slim .rhx-band h2 { font-size: 15px; margin: 0 0 6px; }
+  .m2-hub-slim .rhx-band p { display: none; }
+  .m2-hub-slim .rhx-band .hero-acts .btn { height: 32px; }
+  .m2-hub-slim .rhx-t b { font-size: 14px; }
+  .m2-hub-slim .rhx-ic { width: 30px; height: 30px; }
+}

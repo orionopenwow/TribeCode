@@ -48,7 +48,7 @@ def main():
         def new(kind):
             pg.click("#dc-new"); pg.wait_for_selector("#dc-newmenu", state="visible")
             rows = pg.eval_on_selector_all("#dc-newmenu [data-new] b", "els => els.map(e => e.textContent)")
-            assert rows == ["Note", "Doc", "Sheet", "Slides", "Whiteboard", "Design", "Website", "Code file", "From a template", "Upload", "Ask Flint"], rows
+            assert rows == ["Doc", "Sheet", "Slides", "Whiteboard", "Design", "Note", "Upload files", "Website", "Code file", "From a template", "Ask Flint"], rows   # p14 New menu
             pg.click(f"#dc-newmenu [data-new='{kind}']")
 
         # 1. a note (the scratchpad, local until a tribe)

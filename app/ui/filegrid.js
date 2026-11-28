@@ -71,7 +71,7 @@
     const UPCAT = { image: 'pics', audio: 'media', video: 'media', code: 'code', text: 'docs', pdf: 'other' };
     for (const f of (render.ups || []).filter(x => (x.dir || '') === at)) {
       const who = memberOf(f.by), u = media(`/api/uploads/${encodeURIComponent(f.id)}/raw`);
-      out.push({ src: 'up', id: 'up:' + f.id, f, cat: UPCAT[f.kind] || 'other', type: f.kind === 'image' ? 'Picture' : f.kind === 'code' ? 'Code' : 'File', title: f.name, at: f.at, loc: here, mine: true,
+      out.push({ src: 'up', id: 'up:' + f.id, f, size: f.size, cat: UPCAT[f.kind] || 'other', type: f.kind === 'image' ? 'Picture' : f.kind === 'code' ? 'Code' : 'File', title: f.name, at: f.at, loc: here, mine: true,
         owner: who ? { name: who.name, color: who.color } : null, thumb: f.kind === 'image' && f.size < 4 * 1048576 && !/svg/.test(f.type) ? T.img(u) : T.icon(UPCAT[f.kind] || 'other', `${f.kind || 'file'} · ${Math.max(1, Math.round(f.size / 1024))} KB`),
         cls: 'fg-card', attrs: `data-up="${esc(f.id)}" data-upname="${esc(f.name)}" data-uptype="${esc(f.type || '')}" draggable="true"`, acts: ['open', 'download', 'delete'] });
     }
@@ -118,6 +118,8 @@
     const pub = body.querySelector('#fg-site-pub'); if (pub) pub.onclick = () => (window.TribePublish && window.TribePublish.open ? window.TribePublish.open(pidNow()) : openSite());
   }
   function create(k, anchor, o) {
+    if (k === 'note' && FB() && FB().noteSheet) return FB().noteSheet();   // p14: a project's note is a note in What we know
+    if (k === 'link') return pasteLink();
     if (k === 'note' || k === 'doc') return o.create();
     if (k === 'sheet') return o.create('sheet');
     if (k === 'slides') return o.create('deck');
@@ -132,6 +134,14 @@
       inp.onchange = () => { if (inp.files.length && window.TribeDocs && window.TribeDocs.importFiles) window.TribeDocs.importFiles([...inp.files]); };
       inp.click();
     }
+  }
+  // p14 New › Paste a link: the one search box takes it (a link already on the clipboard goes straight in)
+  async function pasteLink() {
+    const i = fv && fv.input; if (!i) return;
+    i.focus(); i.select();
+    let t = ''; try { t = navigator.clipboard && navigator.clipboard.readText ? (await navigator.clipboard.readText()).trim() : ''; } catch {}
+    if (/^https?:\/\/\S+$/i.test(t)) { i.value = t; i.dispatchEvent(new Event('input')); if (FB() && FB().submit) return FB().submit(t); }
+    toast('Paste the link in the search box. It is saved to Files.');
   }
   async function make(kind, d, o) {
     if (kind === 'site') return window.TribeWebsite && window.TribeWebsite.open();   // Files › Website: the website designer's site, or Make a website
@@ -178,18 +188,19 @@
       pane.innerHTML = '<div class="fg"></div>';
       const root = pane.firstChild;
       fv = FV().mount(root, {
-        scope: 'project', idp: 'fg', title: 'Files', eyebrow: projName().name ? `${projName().name} · files` : 'This project', cardClass: 'fg-card', prefs: 'tribecode.pfiles', q,
-        ids: { create: 'fg-new-menu', menu: 'fg-newmenu', grid: 'fg-items' },
-        studio: { ids: { doc: 'doc-first', sheet: 'fg-new-sheet', slides: 'fg-new-deck' }, extra: [{ k: 'assets', ic: 'assets', t: 'Assets', s: 'Sounds, models, sprites, icons', id: 'fg-assets' }], note: 'Everyone in the project sees what you make here.' },
+        scope: 'project', idp: 'fg', title: 'Files', eyebrow: projName().name || 'This project', cardClass: 'fg-card', prefs: 'tribecode.pfiles', q,
+        ids: { search: FB() && !at ? 'fb-q' : 'fg-q', create: 'fg-new-menu', menu: 'fg-newmenu', grid: 'fg-items' },
+        query: v => (FB() && !at ? FB().queryOf(v) : v), submit: v => (FB() && !at ? FB().submit(v) : null),
+        studio: { ids: { doc: 'doc-first', sheet: 'fg-new-sheet', slides: 'fg-new-deck' }, link: !!(FB() && !at), extra: [{ k: 'assets', ic: 'assets', t: 'Assets', s: 'Sounds, models, sprites, icons', id: 'fg-assets' }], note: 'Everyone in the project sees what you make here.' },
         top, create: (k, a) => create(k, a, o), make: (k, d) => make(k, d, o), act: (k, it, a, arg) => (it.src === 'brain' ? FB().act(k, it, a, arg) : act(k, it, a, arg)),
         lead: cat => (!at && FB() ? FB().lead(cat) : '') || siteLead(cat), wire: body => { wireSite(body); if (FB()) FB().wire(body); },
         extraCats: !at && FB() ? FB().cats() : null, noCount: cat => !!(FB() && FB().noCount(cat)),
-        empty: { links: ['No links yet', 'Paste a link in chat or in the box above. It is read, summed up and kept here.', '', ''] },
+        empty: { links: ['No links yet', 'Paste a link in chat or in the search box above. It is read, summed up and kept here.', 'link', 'Paste a link'] },
         open: it => (it.src === 'brain' ? FB().open(it) : it.src === 'site' ? openSite() : it.src === 'up' ? act('open', it) : it.src === 'shot' ? (window.TribePreview && window.TribePreview.image ? window.TribePreview.image(it.url, it.title) : window.open(it.url, '_blank', 'noopener')) : o.open(it.slug)),
         search: v => { q = v; },
       });
       fv.set(items(list, shots, at, o));
-      { const bs = root.querySelector('#fg-brain'); if (bs && FB()) { root.querySelector('.fx').classList.add('has-fb'); const hd = root.querySelector('.fx-head'); if (hd) hd.after(bs); const mine = fv; FB().attach({ slot: bs, fv, refresh: () => { if (fv === mine && root.isConnected) fv.set(items(list, render.shots, at, o)); } }); } }   // p13
+      { const bs = root.querySelector('#fg-brain'); if (bs && FB()) { root.querySelector('.fx').classList.add('has-fb'); const tp = root.querySelector('#fg-top'); if (tp) tp.prepend(bs); const mine = fv; FB().attach({ slot: bs, fv, refresh: () => { if (fv === mine && root.isConnected) fv.set(items(list, render.shots, at, o)); } }); } }   // p13
       const slot = root.querySelector('.fg-repo'), hero = document.getElementById('doc-repo-hero');
       if (slot && hero) { const extra = hero.nextElementSibling && hero.nextElementSibling.classList.contains('vw-assets') ? hero.nextElementSibling : null; slot.append(hero); if (extra) slot.append(extra); }
       root.querySelectorAll('[data-folder]').forEach(b => b.onclick = () => { at = pane.dataset.fgFolder = b.dataset.folder; draw(shots); });

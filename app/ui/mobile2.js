@@ -806,6 +806,9 @@
   function docsHub(force) {
     const view = $('#view-docs'), grid = view && view.querySelector('.docs-grid'); if (!grid) return;
     let top = $('#m2-docs-hub');
+    // p14: Files is the same page as on a computer (filegrid.js: search, What we know, chips, the files); the code
+    // repository card stays, compact, under the files. The journal's decisions live in Files › Decisions.
+    if (!top && window.TribeFileGrid) { top = document.createElement('div'); top.id = 'm2-docs-hub'; top.className = 'm2-only m2-hub m2-hub-slim'; grid.after(top); }
     if (!top) {
       top = document.createElement('div'); top.id = 'm2-docs-hub'; top.className = 'm2-only m2-hub'; view.insertBefore(top, grid);
       grid.insertAdjacentHTML('beforebegin', '<div class="sec-head m2-only m2-files-h" id="m2-files-h"><span class="eyebrow">Project</span><h2>Files</h2></div>');
@@ -862,6 +865,11 @@
     const p = PJ() && PJ().cur && PJ().cur(), r = hub.repo;
     const md = s => (window.TribeMD ? window.TribeMD.inline(s) : esc(s));
     const hero = '<div id="m2-repo-hero" class="m2-repo"></div>';
+    if (top.classList.contains('m2-hub-slim')) {
+      top.innerHTML = `<div class="sec-head"><span class="eyebrow">Code</span></div>${hero}`;
+      const rs = $('#m2-repo-hero'); if (rs && window.TribeRepoHero) window.TribeRepoHero.render(rs, { project: p, status: r && r.enabled ? r : null, empty: !(p && p.hasRepo) });
+      return;
+    }
     const notes = hub.notes || [], shown = notes.slice(0, hub.more ? 30 : 6);
     let lastDay = '', journal = '';
     for (const n of shown) {
