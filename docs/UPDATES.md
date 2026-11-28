@@ -43,7 +43,7 @@ The installer runs silently (`/S`): no wizard. `Tools\Turn-On-Auto-Update.bat` r
 | Install mode | `plugins.updater.windows.installMode` | `"quiet"`: the NSIS installer runs with `/S /UPDATE /R`. No window, and it relaunches the app (`/R`). The install is per user (`bundle.windows.nsis.installMode: "currentUser"`), so it never needs admin rights. |
 | In-app logic | `app/ui/updater.js` | Check, background download, the pill, restart, install on close |
 | Setting | `startup.autoUpdate` in `app/ui/store.js` | "Download updates in the background" (Settings) |
-| Server stop | `host_stop` and `host_kill_stale` in `app/src-tauri/src/main.rs` | A running `tribecode-server.exe` is locked on Windows, so it's stopped before installing. |
+| Server stop | `host_stop`, `host_shutdown` and `host_kill_stale` in `app/src-tauri/src/main.rs` | A running `tribecode-server.exe` is locked on Windows, so it's stopped (and its port waited for) before installing. |
 | Windows helper | `scripts/desktop/Tools/tribecode-update.ps1`, `scripts/desktop/TribeCode.bat` | Install, update, tidy up, launch |
 
 ### Keeping updates clean (v0.17.5)
@@ -102,3 +102,85 @@ To redraw them, run `python3 scripts/make-installer-art.py` (needs Pillow). They
 - On Windows the installer always reopens TribeCode after an update, including one installed on close. That's the updater plugin's default (`restart_after_install`), and the JS API can't change it per call.
 - An update that was ready but never installed (the app crashed or was killed) downloads again on the next start. The downloaded bytes live only in memory.
 - Release signing needs `TAURI_SIGNING_PRIVATE_KEY`. Without it, installers still build but `latest.json` isn't published. See `scripts/setup-release.js`.
+
+## Making sure an update really lands (fix/p15-updates)
+
+An update changes three things that must match: the **app** (the desktop window and its bundled screens), the
+**server** (the program that keeps your tribe, a sidecar inside the app or `npm start`), and the **screens** every
+browser and phone has stored. When people said "I updated but nothing changed" (or only some of it changed), one of the
+three was still the old one. From the release after v0.49.1, each of them carries the same **build id** and checks the others.
+
+### The build id
+
+`scripts/dev/release.js` stamps one id per release (UTC time + git commit, e.g. `20261127T101500Z-1a2b3c4`) with
+`scripts/dev/buildid.js` into:
+
+| Where | What reads it |
+| --- | --- |
+| `package.json`, `app/package.json` → `"tribeBuild"` | the server (`/api/health` → `build`, the websocket `hello` → `build`); the desktop sidecar bundle bakes it in |
+| `app/ui/index.html` → `<meta name="tribe-build">` | the page (`selfheal.js`), the desktop app (Rust reads its bundled copy), the service worker |
+
+The server never rewrites the page's build id, so a server that kept running after its files were updated shows up as a
+mismatch. `/api/health` also says `uiBuild`: the build of `index.html` on disk right now. `node scripts/dev/buildid.js
+--check` (also run by `stamp-ui.js --check`) fails when the places disagree.
+
+### The paths an old version used to survive, and what stops each one now
+
+1. **An old server kept the port** (most common). The desktop app reused *any* TribeCode server on port 4747, so after
+   an update an old sidecar, or `npm start` from an older checkout, kept serving old screens and old server code.
+   Now `host_start` (`app/src-tauri/src/main.rs`) reuses a server only when its version **and** build equal the app's.
+   Otherwise it asks it to stop (`POST /api/admin/shutdown`, below), then stops an old sidecar by name, waits for the
+   port, and starts its own. If it still won't stop, it starts on the next free port and says so in the server log
+   (lines starting `[tribecode]`, shown under Details when a start fails).
+2. **The installer couldn't replace a running `tribecode-server.exe`** (Windows locks running programs): new screens,
+   old server. Restart to update now stops the server cleanly and waits until its port is free before installing
+   (`updater.js` → `host_stop`, `host_shutdown`, `host_kill_stale`). If one still slips through, (1) catches it on the
+   next start.
+3. **A stored copy of the page** (service worker, web view cache, an open tab). The page compares its build with the
+   server's on start: on a mismatch it drops the stored files and service worker and reloads once with fresh files. If
+   it still doesn't match, the server is the old one: **Finish updating · Restart TribeCode**. A sessionStorage counter
+   per server build means it never loops.
+4. **Friends' pages after the tribe updated.** The websocket `hello` carries the server's build. A friend whose page is
+   older sees **TribeCode was updated · Reload**; it reloads by itself once they stop typing.
+5. **Running from source** (`git clone` + the `.bat` files). `git pull --ff-only --quiet` failed silently on any local
+   edit, and an already-running server kept the old code. The `.bat` files now run
+   `node scripts/update-from-source.js`: your own edits are set aside with `git stash` (never lost: `git stash pop`
+   brings them back), commits of your own that aren't on GitHub stop it with a clear message, otherwise it moves to
+   exactly `origin/<branch>`, stops an older server still on the port, and prints the version and build it is on.
+   `--serve` runs the server and restarts it when it asks (exit code 75), which is what Repair install uses.
+6. **The service worker.** Pages and the app's own code are network first (the cache is only the offline copy); `/api`
+   never goes through it. Even `?v=`-stamped files are not cache-first: a host running from source changes files
+   without changing the stamp. A new build (not only a new version) drops the old files; activating a new worker
+   deletes every other `tribecode-shell-*` cache; `pwa.js` reloads a page once when a new worker takes it (at most once a
+   minute). The server sends `Cache-Control: no-cache` with an `ETag` for every app file, so checking costs a 304.
+
+### The local admin door
+
+`server/admin.js`. The desktop app, its sidecar and `update-from-source.js` share a per-install secret in
+`~/.tribecode/admin-secret` (`TRIBECODE_HOME` overrides the folder; made once with mode 600 by whichever starts
+first). Requests say it in `X-Tribe-Admin`.
+
+- `POST /api/admin/shutdown`: the right secret, from this computer only → the server writes pending edits and exits.
+- `POST /api/admin/restart`: the secret or the host signed in on this computer → exit code 75 when a supervisor runs
+  it (`TRIBE_SUPERVISED=1`, set by `update-from-source.js --serve`), else `409` and the page says to close and reopen.
+
+"From this computer" is the same `isLocal()` check as everywhere else: a loopback address, no proxy headers, a
+`localhost` Host and no other site's Origin. A tunnel (Tailscale Funnel, Cloudflare) arrives with proxy headers and is
+refused even with the secret. Each server also writes `~/.tribecode/servers/<port>.json` (pid, version, build, folder)
+and removes it on exit.
+
+### Diagnosing
+
+- **Settings › About › This install** shows app version, server version, build, screens build and whether they match.
+  **Repair install** drops the stored files and service worker, restarts this computer's server (the desktop app
+  restarts itself with its web cache emptied) and reloads. Sign-in, settings, drafts and unsent messages stay.
+- `curl http://localhost:4747/api/health` → `version`, `build`, `uiBuild`. `build` ≠ `uiBuild`: the files were updated
+  but this server process is old; restart it.
+- `cat ~/.tribecode/servers/4747.json` says which process holds the port.
+- Desktop: when a start fails, Home shows the server log under Details; `[tribecode] stopped an older TribeCode server …` or
+  `… would not stop` explain what happened at start.
+
+### Tests
+
+`app/test/e2e_update_robust.py` (old server + new page, the service worker swap, the hello banner, the admin door,
+Repair install) and `app/test/update_scripts_test.js` (build-id stamping, `update-from-source.js`).

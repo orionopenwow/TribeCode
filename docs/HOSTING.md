@@ -58,3 +58,7 @@ Put Caddy in front for HTTPS (`caddy reverse-proxy --from tribe.example.com --to
 When a friend joins from a phone, the join page opens the app at a private link, `https://<host>/m/<key>/`. **Add to Home Screen** from there installs an app whose start address carries that key, so it opens already signed in (an iPhone Home Screen app does not share storage with Safari). Each key is stored hashed in `.tribe/devices.json` and can be signed out any time from **Settings → Devices & desktop app** (or **Signed-in devices** in `Ctrl K`). Signing a device out invalidates its key and every token it was given.
 
 Treat a `/m/<key>/` link like a password: anyone who has it is signed in as you until you sign that device out.
+
+## Updating
+
+How an update reaches the app, the server and every friend's page, and what to do when one still shows old screens: [UPDATES.md](UPDATES.md). Running from source, update with `node scripts/update-from-source.js` (the `.bat` files in `Tools/` do it for you): it never throws away your own edits and stops an older server still running on the port.

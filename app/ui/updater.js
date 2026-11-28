@@ -46,7 +46,11 @@
   // can't replace it.
   async function stopServer() {
     const inv = window.__TAURI__ && window.__TAURI__.core; if (!inv) return;
+    // fix/p15-updates: stop it cleanly and wait until its port is free, so the installer can replace tribecode-server.exe
+    // (a locked one stayed the OLD server inside the new app: new screens, old server code).
+    let port = 4747; try { const u = new URL(((JSON.parse(localStorage.getItem('tribecode.settings.v1') || '{}') || {}).server || {}).url || ''); if (/^(localhost|127\.0\.0\.1)$/.test(u.hostname)) port = Number(u.port) || 4747; } catch {}
     try { await inv.invoke('host_stop'); } catch {}
+    try { await inv.invoke('host_shutdown', { port }); } catch {}
     try { await inv.invoke('host_kill_stale'); } catch {}
   }
 

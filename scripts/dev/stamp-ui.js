@@ -14,5 +14,6 @@ for (const rel of PAGES) {
   if (CHECK) { const n = (html.match(/\.(?:js|css)"/g) || []).filter(Boolean).length; if (out !== html) { bad++; console.log(`stamp-ui: ${rel} has file addresses without ?v=${ver} (${n})`); } }
   else if (out !== html) fs.writeFileSync(file, out);
 }
+if (CHECK) { const b = require('./buildid').readBuilds(), v = Object.values(b); if (!v[0] || !v.every(x => x === v[0])) { bad++; console.log('stamp-ui: the build id differs (node scripts/dev/buildid.js --check): ' + JSON.stringify(b)); } }   // fix/p15-updates
 if (CHECK && bad) process.exit(1);
 console.log(`stamp-ui: ${CHECK ? 'OK' : 'stamped'} (v${ver})`);

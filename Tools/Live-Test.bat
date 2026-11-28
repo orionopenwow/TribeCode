@@ -33,8 +33,10 @@ if not exist "server\index.js" (
   cd TribeCode
 )
 
-echo  Getting the latest version...
-git pull --ff-only --quiet
+rem fix/p15-updates: update safely (your own edits are set aside with git stash, never lost; commits of your own stop it
+rem with a clear message), stop an older TribeCode still running on the port, and print the version you're on now.
+if not exist "scripts\update-from-source.js" git pull --ff-only
+node scripts\update-from-source.js
 
 node scripts\live.js
 pause

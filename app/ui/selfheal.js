@@ -10,7 +10,8 @@
 //     whose version differs from the app's re-runs the stale-server check (app.js hostHere).
 //  3. Error budget. Identical errors are de-duplicated and rate-limited before anything is filed
 //     (TribeSelfHeal.shouldFile, used by bugs.js for automatic crash reports).
-// Public: window.TribeSelfHeal = { clearCache, check, shouldFile, report, reportsOn, versionCheck, logs, state }.
+//  4. Build check (fix/p15-updates, docs/UPDATES.md): the page build (<meta name="tribe-build">) vs the server build; Repair install.
+// Public: window.TribeSelfHeal = { clearCache (= repair), repair, about, buildCheck, restartServer, check, shouldFile, report, reportsOn, versionCheck, logs, state }.
 // Docs: docs/EXPLORER.md ("Self-heal").
 (function () {
   'use strict';
@@ -108,7 +109,12 @@
   #sh-card button.sh-primary{background:#F26B1D;border-color:#F26B1D;color:#12151A}
   #sh-card button:focus-visible{outline:2px solid #38C6B1;outline-offset:2px}
   #sh-ver{position:fixed;left:50%;transform:translateX(-50%);bottom:16px;z-index:2147482000;display:flex;align-items:center;gap:12px;max-width:calc(100vw - 32px);background:#1B2028;border:1px solid #2A313C;border-radius:12px;padding:10px 10px 10px 14px;font:13.5px/1.4 Inter,system-ui,sans-serif;color:#F8FAFC}
-  #sh-ver span{color:#F8FAFC}
+  #sh-ver span,#sh-build span{color:#F8FAFC}
+  #sh-build{position:fixed;left:50%;transform:translateX(-50%);top:76px;z-index:2147482001;display:flex;align-items:center;gap:12px;max-width:calc(100vw - 32px);background:#1B2028;border:1px solid #2A313C;border-radius:12px;padding:10px 10px 10px 14px;font:13.5px/1.4 Inter,system-ui,sans-serif;color:#F8FAFC}
+  #sh-build button{height:32px;padding:0 12px;border-radius:8px;border:1px solid #2A313C;background:#1E242D;color:#F8FAFC;font:600 13px/1 inherit;cursor:pointer;white-space:nowrap}
+  #sh-build button.sh-primary{background:#F26B1D;border-color:#F26B1D;color:#12151A}
+  #sh-build button:focus-visible{outline:2px solid #38C6B1;outline-offset:2px}
+  @media (max-width:600px){#sh-build{top:auto;bottom:calc(84px + env(safe-area-inset-bottom));flex-wrap:wrap;width:calc(100vw - 32px)}#sh-build span{flex:1 1 100%}}
   #sh-ver button{height:32px;padding:0 12px;border-radius:8px;border:1px solid #2A313C;background:#1E242D;color:#F8FAFC;font:600 13px/1 inherit;cursor:pointer;white-space:nowrap}
   #sh-ver button.sh-primary{background:#F26B1D;border-color:#F26B1D;color:#12151A}
   @media (max-width:820px){#sh-ver{bottom:calc(84px + env(safe-area-inset-bottom))}}`;
@@ -241,14 +247,6 @@
     try { if (window.caches) for (const k of await caches.keys()) await caches.delete(k); } catch {}
     try { if (navigator.serviceWorker) for (const r of await navigator.serviceWorker.getRegistrations()) await r.unregister(); } catch {}
   }
-  // Settings › Clear the cache and restart. The desktop app also empties the web view's own cache on the way back up.
-  async function clearCache() {
-    await dropCaches();
-    ['tribecode.autoReloaded', 'tribecode.staleRecheck', 'tribecode.uiReloaded'].forEach(ss.del);
-    const inv = window.__TAURI__ && window.__TAURI__.core;
-    if (inv) { try { await inv.invoke('clear_web_cache_and_restart'); return; } catch {} }
-    const u = new URL(location.href); u.searchParams.set('fresh', Date.now().toString(36)); location.replace(u.href);
-  }
   // The desktop app: the first start of a new version drops the old shell copies and reloads once into fresh files.
   (async () => {
     const T = window.__TAURI__; if (!T || !T.app) return;
@@ -261,5 +259,126 @@
     await dropCaches(); location.reload();
   })();
 
-  window.TribeSelfHeal = { clearCache, check, refresh, shouldFile, report, reportsOn, versionCheck, healthy, logs: () => logs.slice(), state: () => ({ settled, bootErrors: bootErrors.slice(), healed: ss.get(HEAL), page: pageVersion() }) };
+  // ---------- fix/p15-updates: the build check (docs/UPDATES.md) ----------
+  // The page carries the build it was made from (<meta name="tribe-build">, stamped at release, never rewritten by the
+  // server); the server says its own (/api/health and the websocket hello). They differ when:
+  //   - a stored copy of the page is older than the server (service worker, an open tab): reload with fresh files;
+  //   - the files were updated but the server process is still the old one (a desktop sidecar or `npm start` left running):
+  //     only a restart of the server fixes it.
+  // So: the first mismatch for a server build drops the stored app files and reloads once (on start), or shows
+  // "TribeCode was updated · Reload" and reloads by itself when idle (mid-session, from the hello). If the page still
+  // doesn't match after that reload, "Finish updating · Restart TribeCode". sessionStorage counts, so it never loops.
+  const BUILDHEAL = 'tribecode.buildHeal';
+  const pageBuild = () => { const m = document.querySelector('meta[name="tribe-build"]'); return (m && m.content) || ''; };
+  const servedHere = () => /^https?:$/.test(location.protocol) && !/(^|\.)tauri\.localhost$/.test(location.hostname);
+  const localHost = u => /^https?:\/\/(localhost|127\.0\.0\.1|\[::1\])(:\d+)?(\/|$)/.test(String(u || ''));
+  const tr = s => { try { return window.TribeI18n && window.TribeI18n.t ? window.TribeI18n.t(s) : s; } catch { return s; } };
+  const healState = () => { try { return JSON.parse(ss.get(BUILDHEAL) || '{}') || {}; } catch { return {}; } };
+  let lastServer = { build: '', version: '' }, idleTimer = null, lastInput = Date.now();
+  ['keydown', 'pointerdown', 'input', 'wheel'].forEach(ev => addEventListener(ev, () => { lastInput = Date.now(); }, { passive: true, capture: true }));
+  const typing = () => { const a = document.activeElement; return !!(a && (a.tagName === 'TEXTAREA' || (a.tagName === 'INPUT' && !/^(button|submit|checkbox|radio|range)$/.test(a.type)) || a.isContentEditable) && String(a.value || a.textContent || '').trim()); };
+  const IDLE = Math.max(500, Number(params.get('updateIdle')) || 15000), EARLY = Math.max(0, Number(params.get('updateEarly')) || 15000);   // ?updateIdle= / ?updateEarly= (tests)
+  function hideBuildBar() { const b = document.getElementById('sh-build'); if (b) b.remove(); if (idleTimer) { clearInterval(idleTimer); idleTimer = null; } }
+  function buildBar(kind) {
+    style(); hideBuildBar();
+    const text = kind === 'reload' ? tr('TribeCode was updated. Reload to use the new version.')
+      : kind === 'manual' ? tr('Finish updating: close TribeCode on the computer that keeps your tribe, then open it again.')
+      : tr('Finish updating: restart TribeCode once to use the new version.');
+    const go = kind === 'finish' ? tr('Restart TribeCode') : tr('Reload');
+    const bar = document.createElement('div'); bar.id = 'sh-build'; bar.className = 'sh-ver-bar'; bar.dataset.kind = kind; bar.setAttribute('role', 'status');
+    bar.innerHTML = `<span>${esc(text)}</span>${kind === 'reload' ? `<button id="sh-build-later">${esc(tr('Later'))}</button>` : ''}<button class="sh-primary" id="sh-build-go">${esc(go)}</button>`;
+    (document.body || document.documentElement).appendChild(bar);
+    const later = bar.querySelector('#sh-build-later'); if (later) later.onclick = hideBuildBar;
+    bar.querySelector('#sh-build-go').onclick = async e => {
+      e.currentTarget.disabled = true; e.currentTarget.textContent = kind === 'finish' ? tr('Restarting…') : tr('Reloading…');
+      if (kind === 'finish') return repair({ why: 'finish updating' });
+      return freshReload(lastServer.build);
+    };
+    return bar;
+  }
+  let reloading = false;
+  async function freshReload(serverBuild) {
+    if (reloading) return; reloading = true;
+    ss.set(BUILDHEAL, JSON.stringify({ build: serverBuild || '', n: (healState().build === serverBuild ? (healState().n || 0) : 0) + 1, at: Date.now() }));
+    try { if (window.TribeApp && window.TribeApp.saveAll) await Promise.race([window.TribeApp.saveAll(), new Promise(r => setTimeout(r, 1500))]); } catch {}
+    await dropCaches();
+    const u = new URL(location.href); u.searchParams.set('fresh', Date.now().toString(36)); location.replace(u.href);
+  }
+  async function buildCheck(serverBuild, opts) {
+    const o = opts || {}, page = pageBuild();
+    if (serverBuild) lastServer = { build: serverBuild, version: o.version || lastServer.version };
+    if (!serverBuild || !page || reloading) return null;   // a development copy without build ids: nothing to compare
+    const T = window.__TAURI__, st = settings(), h = healState();
+    if (T && !servedHere()) {   // the desktop app's own page: only this computer's own server must match it
+      const url = (st.server && st.server.url) || '';
+      if (!st.hosting || st.hostOff || !localHost(url)) return null;   // a friend's tribe may run another version: fine
+      if (serverBuild === page) { ss.del(BUILDHEAL); hideBuildBar(); return 'ok'; }
+      if (h.build !== serverBuild) {
+        ss.set(BUILDHEAL, JSON.stringify({ build: serverBuild, n: 1, at: Date.now() }));
+        log(`this computer's server is build ${serverBuild}, the app is ${page}: restarting it`);
+        if (window.TribeApp && window.TribeApp.hostHere) window.TribeApp.hostHere({ quiet: true });
+        return 'recheck';
+      }
+      buildBar('finish'); return 'finish';
+    }
+    if (!servedHere()) return null;
+    if (serverBuild === page) { ss.del(BUILDHEAL); hideBuildBar(); return 'ok'; }
+    if (h.build === serverBuild && (h.n || 0) >= 1) {   // reloaded once already: the page on the server's disk is newer than the server
+      const me = server();
+      buildBar(localHost(location.href) && me.token ? 'finish' : 'manual'); log(`still build ${page} vs server ${serverBuild} after a fresh reload: finish updating`);
+      return 'finish';
+    }
+    const early = o.from !== 'hello' || Date.now() - t0 < EARLY;
+    if (early) { log(`page build ${page} vs server ${serverBuild}: dropping stored app files and reloading once`); await freshReload(serverBuild); return 'reload'; }
+    buildBar('reload');   // mid-session (the server was updated): ask, and reload by itself once nobody is typing
+    idleTimer = setInterval(() => { if (!typing() && Date.now() - lastInput >= IDLE && document.getElementById('sh-build')) { clearInterval(idleTimer); idleTimer = null; freshReload(serverBuild); } }, 1000);
+    return 'reload-soon';
+  }
+  // Ask this computer's server to restart (it can when started by the update script or the .bat loop: TRIBE_SUPERVISED).
+  async function restartServer() {
+    const me = server(); if (!me.base || !localHost(me.base)) return false;
+    let pid = 0; try { pid = (await (await fetch(me.base + '/api/health', { cache: 'no-store' })).json()).pid || 0; } catch {}
+    let r; try { r = await fetch(me.base + '/api/admin/restart', { method: 'POST', headers: me.token ? { Authorization: 'Bearer ' + me.token } : {} }); } catch { return false; }
+    if (!r.ok) return false;
+    for (const until = Date.now() + 30000; Date.now() < until;) {
+      await new Promise(res => setTimeout(res, 500));
+      try { const hh = await (await fetch(me.base + '/api/health', { cache: 'no-store' })).json(); if (hh.pid && hh.pid !== pid) return true; } catch {}
+    }
+    return false;
+  }
+  // Settings › About › Repair install, and the Finish updating button: drop the stored app files and the service worker,
+  // restart this computer's TribeCode server, reload. Sign-in, settings, drafts and unsent messages stay (localStorage).
+  async function repair(opts) {
+    log(`repair install${opts && opts.why ? ' (' + opts.why + ')' : ''}`);
+    try { const v = document.body && document.body.dataset.view; if (v) sessionStorage.setItem('tribecode.view', v); } catch {}
+    await dropCaches();
+    ['tribecode.autoReloaded', 'tribecode.staleRecheck', 'tribecode.uiReloaded', HEAL, BUILDHEAL].forEach(ss.del);
+    const inv = window.__TAURI__ && window.__TAURI__.core;
+    if (inv) {   // the desktop app restarts itself with its web cache emptied; its server stops with it and starts fresh
+      try { await inv.invoke('host_stop'); } catch {}
+      try { await inv.invoke('clear_web_cache_and_restart'); return 'restart'; } catch {}
+    }
+    if (servedHere() && localHost(location.href)) await restartServer();
+    const u = new URL(location.href); u.searchParams.set('fresh', Date.now().toString(36)); location.replace(u.href);
+    return 'reload';
+  }
+  // What Settings › About shows: app, server, builds, and whether they match.
+  async function about() {
+    let app = ''; try { if (window.__TAURI__ && window.__TAURI__.app) app = await window.__TAURI__.app.getVersion(); } catch {}
+    const me = server(); let h = {};
+    if (me.base || servedHere()) try { h = await (await fetch((me.base || '') + '/api/health', { cache: 'no-store' })).json(); } catch {}
+    const page = pageBuild(), mine = servedHere() || (settings().hosting && localHost(me.base));
+    const match = !h.build || !page ? null : (mine ? h.build === page && (!h.uiBuild || h.uiBuild === h.build) : true);
+    return { app, server: h.version || '', build: h.build || '', uiBuild: page, diskBuild: h.uiBuild || '', page: pageVersion(), mine: !!mine, match };
+  }
+  (function hookBuild(n = 0) {
+    if (window.TribeClient && window.TribeClient.on) window.TribeClient.on('hello', m => { if (m && m.build) buildCheck(m.build, { from: 'hello', version: m.version }); });
+    else if (n < 50) setTimeout(() => hookBuild(n + 1), 200);
+  })();
+  if (pageBuild() && servedHere()) setTimeout(() => {   // a page with no tribe yet still checks once, on start
+    if ((window.TribeOffline && window.TribeOffline.solo && window.TribeOffline.solo())) return;
+    fetch('/api/health', { cache: 'no-store' }).then(r => r.json()).then(hh => buildCheck(hh.build, { from: 'health', version: hh.version })).catch(() => {});
+  }, 300);
+
+  window.TribeSelfHeal = { clearCache: repair, repair, about, buildCheck, restartServer, check, refresh, shouldFile, report, reportsOn, versionCheck, healthy, logs: () => logs.slice(), state: () => ({ settled, bootErrors: bootErrors.slice(), healed: ss.get(HEAL), page: pageVersion() }) };
 })();

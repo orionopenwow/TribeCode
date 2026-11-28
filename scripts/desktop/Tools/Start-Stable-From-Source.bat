@@ -29,11 +29,13 @@ if not exist "TribeCode\server\index.js" (
   git clone https://github.com/orionopenwow/TribeCode.git TribeCode || (pause & exit /b 1)
 )
 cd TribeCode
-git checkout --quiet main
-echo  Getting the latest stable version...
-git pull --ff-only --quiet
+rem fix/p15-updates: update safely (your own edits are set aside with git stash, never lost; commits of your own stop it
+rem with a clear message), stop an older TribeCode still running on the port, and print the version you're on now.
+if not exist "scripts\update-from-source.js" git pull --ff-only
+node scripts\update-from-source.js --branch main --port 4747
 
-rem The installed desktop app also uses port 4747. If it's already running, just open it.
+rem The installed desktop app also uses port 4747. If TribeCode of this same version is still running, just open it
+rem (an older one was stopped above).
 curl -s -o nul http://localhost:4747/api/health && (
   echo  TribeCode is already running on this computer. Opening it...
   start msedge --app=http://localhost:4747 || start "" http://localhost:4747
@@ -44,5 +46,6 @@ curl -s -o nul http://localhost:4747/api/health && (
 echo.
 echo  Stable TribeCode: http://localhost:4747   (Ctrl+C to stop)
 start "" /b cmd /c "timeout /t 3 >nul && (start msedge --app=http://localhost:4747 || start http://localhost:4747)"
-node server\index.js --port 4747
+rem --serve restarts the server when it asks to finish an update (Settings > About > Repair install).
+node scripts\update-from-source.js --serve --no-update -- --port 4747
 pause

@@ -577,10 +577,14 @@
       // updates. If its version differs from this app's, stop it and start ours.
       if (ok && !(opts && opts.noStaleCheck)) {
         const mine = await (window.__TAURI__.app ? window.__TAURI__.app.getVersion().catch(() => '') : '');
-        const theirs = await fetch(url + '/api/health', { cache: 'no-store' }).then(r => r.json()).then(h => h.version || '').catch(() => '');
-        if (mine && theirs && mine !== theirs) {
+        const hh = await fetch(url + '/api/health', { cache: 'no-store' }).then(r => r.json()).catch(() => ({})), theirs = hh.version || '';
+        const myBuild = ((document.querySelector('meta[name="tribe-build"]') || {}).content) || '';   // fix/p15-updates: same version, other build is stale too
+        if ((mine && theirs && mine !== theirs) || (myBuild && hh.build && myBuild !== hh.build)) {
           toast(`An older TribeCode server (v${theirs}) was still running. Restarting it as v${mine}…`);
-          await inv.invoke('host_kill_stale').catch(() => {});
+          // fix/p15-updates: ask it to stop cleanly first (server/admin.js, works for `npm start` too), then the old sidecar by name
+          await inv.invoke('host_shutdown', { port: Number(new URL(url).port) || 4747 }).catch(() => {});
+          for (const until = Date.now() + 3000; Date.now() < until;) { if (!(await healthy(url))) break; await new Promise(r => setTimeout(r, 300)); }
+          if (await healthy(url)) await inv.invoke('host_kill_stale').catch(() => {});
           for (const until = Date.now() + 8000; Date.now() < until;) { if (!(await healthy(url))) break; await new Promise(r => setTimeout(r, 300)); }
           if (await healthy(url)) throw new Error(`Another TribeCode (v${theirs}) is already running on this computer and isn't this app's server. Close it (for example a terminal running npm start), then reopen TribeCode.`);
           return hostHere({ ...(opts || {}), noStaleCheck: true });

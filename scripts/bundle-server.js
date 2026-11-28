@@ -9,9 +9,10 @@ const root = path.resolve(__dirname, '..');
 const srv = path.join(root, 'server');
 const out = path.join(root, 'dist', 'tribecode-server.js');
 const version = require(path.join(root, 'app', 'package.json')).version;
+const build = require(path.join(root, 'app', 'package.json')).tribeBuild || '';   // fix/p15-updates: the release's build id
 
 const modules = fs.readdirSync(srv).filter(f => f.endsWith('.js'));
-let code = `'use strict';\n// TribeCode server ${version} (bundled)\nprocess.env.TRIBE_VERSION = process.env.TRIBE_VERSION || ${JSON.stringify(version)};\nconst __mods = {}, __cache = {};\n`;
+let code = `'use strict';\n// TribeCode server ${version} (bundled)\nprocess.env.TRIBE_VERSION = process.env.TRIBE_VERSION || ${JSON.stringify(version)};\nglobalThis.__TRIBE_BUILD = ${JSON.stringify(build)};\nconst __mods = {}, __cache = {};\n`;
 code += `function __req(name) { if (__cache[name]) return __cache[name].exports; const m = { exports: {} }; __cache[name] = m; __mods[name](m, m.exports, __req2(name)); return m.exports; }\n`;
 code += `function __req2() { return n => { const k = n.replace(/^\\.\\//, '').replace(/\\.js$/, ''); return __mods[k] ? __req(k) : require(n); }; }\n`;
 for (const f of modules) {

@@ -9,7 +9,8 @@
 // 1. Checks CHANGELOG.md has "## v<new>" with a **Phones** line (write the entry first: every release says
 //    what changed on phones, even "unchanged").
 // 2. Bumps the four version files (package.json, app/package.json, app/src-tauri/tauri.conf.json,
-//    app/src-tauri/Cargo.toml) and the service worker's cache name in app/ui/sw.js, so phones pick up the new shell.
+//    app/src-tauri/Cargo.toml) and the service worker's cache name in app/ui/sw.js, so phones pick up the new shell,
+//    and stamps a fresh build id (scripts/dev/buildid.js: package.json "tribeBuild" + <meta name="tribe-build">, docs/UPDATES.md).
 // 3. Runs bundle_test (the desktop sidecar bundle parses), the Tauri config check and a quick smoke subset.
 // 4. Prints the git commands to commit, merge and push. A release is published by CI when the version in
 //    tauri.conf.json changes on main; nothing here pushes or tags.
@@ -45,10 +46,11 @@ const files = {
   'app/src-tauri/tauri.conf.json': s => s.replace(/("version":\s*")[^"]+(")/, `$1${next}$2`),
   'app/src-tauri/Cargo.toml': s => s.replace(/^(version\s*=\s*")[^"]+(")/m, `$1${next}$2`),
 };
-let swFrom = null, swTo = null;
+let swFrom = null, swTo = null, buildId = '';
 if (!CHECK && next !== cur) {
   for (const [p, fn] of Object.entries(files)) fs.writeFileSync(f(p), fn(read(p)));
   spawnSync('node', [path.join(__dirname, 'stamp-ui.js')], { stdio: 'inherit' });   // fix/p7-cache: x.js?v=<new version> in the app page
+  buildId = require('./buildid').stampBuild(require('./buildid').makeBuildId());   // fix/p15-updates: one build id for app, server and page
   const sw = read('app/ui/sw.js');
   const m = sw.match(/const CACHE = 'tribecode-shell-v(\d+)'/);
   if (m) { swFrom = +m[1]; swTo = swFrom + 1; fs.writeFileSync(f('app/ui/sw.js'), sw.replace(m[0], `const CACHE = 'tribecode-shell-v${swTo}'`)); }
@@ -60,6 +62,8 @@ const versions = {
   'app/src-tauri/Cargo.toml': (read('app/src-tauri/Cargo.toml').match(/^version\s*=\s*"([^"]+)"/m) || [])[1],
 };
 step(Object.values(versions).every(v => v === next), `all four version files say ${next}` + (Object.values(versions).every(v => v === next) ? '' : ` (${JSON.stringify(versions)})`));
+if (buildId) step(true, `build id ${buildId} in package.json, app/package.json and app/ui/index.html`);
+{ const b = require('./buildid').readBuilds(), v = Object.values(b); step(!!v[0] && v.every(x => x === v[0]), 'build id agrees everywhere (scripts/dev/buildid.js --check)' + (v.every(x => x === v[0]) ? '' : ' ' + JSON.stringify(b))); }
 if (swTo) step(true, `app/ui/sw.js cache tribecode-shell-v${swFrom} -> v${swTo}`);
 else if (!CHECK) step(next === cur, 'app/ui/sw.js cache name bumped');
 

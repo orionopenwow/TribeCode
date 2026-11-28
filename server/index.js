@@ -48,6 +48,10 @@ const makeHub = require('./hub');
 const makeScratch = require('./scratch');
 
 const VERSION = process.env.TRIBE_VERSION || (() => { try { return require('../app/package.json').version; } catch { return '0.0.0'; } })();
+// fix/p15-updates: the release's build id (scripts/dev/buildid.js), read once at start. The page carries its own
+// (<meta name="tribe-build">, never rewritten here), so a server that kept running after its files were updated shows up as
+// a mismatch (docs/UPDATES.md). TRIBE_BUILD_ID overrides it (tests); the desktop bundle sets globalThis.__TRIBE_BUILD.
+const BUILD = String(process.env.TRIBE_BUILD_ID || globalThis.__TRIBE_BUILD || (() => { try { return require('../app/package.json').tribeBuild || ''; } catch { return ''; } })()).slice(0, 64);
 const args = Object.fromEntries(process.argv.slice(2).reduce((a, v, i, arr) => (v.startsWith('--') ? [...a, [v.slice(2), arr[i + 1] && !arr[i + 1].startsWith('--') ? arr[i + 1] : true]] : a), []));
 const PORT = Number(args.port || process.env.TRIBE_PORT || process.env.PORT || 4747);   // PORT: cloud hosts (Render, Koyeb, Railway) set it
 // Cloud mode (docs/CLOUD.md): a tribe server on a free cloud host. Nobody there is "the host machine", so the first
@@ -930,7 +934,7 @@ async function apiInProject(req, res, url) {
   }
   // a website's own contact form posting into its project (server/sitedesign.js form): the visitor has no sign-in
   if (a === 'site-form' && b && m === 'POST') { if (limited(req, 6)) { res.writeHead(429, { 'Content-Type': 'text/plain; charset=utf-8' }); return res.end('Too many messages just now. Please try again in a while.'); } return siteDesign.form(req, res, b, { send, postInProject: (pid, text) => P.inProject(pid, () => postChat('general', 'tribecode', text)) }); }
-  if (a === 'health') return send(res, 200, { ok: true, cloud: CLOUD, cloudSave: cloudsave.enabled, version: VERSION, tribe: tribe.name, members: members.length, startedAt: new Date(makePeople.STARTED).toISOString(), uptime: Math.round((Date.now() - makePeople.STARTED) / 1000), site: site.url(),
+  if (a === 'health') return send(res, 200, { ok: true, cloud: CLOUD, cloudSave: cloudsave.enabled, version: VERSION, build: BUILD, uiBuild: uiBuild(), pid: isLocal(req) ? process.pid : undefined, tribe: tribe.name, members: members.length, startedAt: new Date(makePeople.STARTED).toISOString(), uptime: Math.round((Date.now() - makePeople.STARTED) / 1000), site: site.url(),
     ...(me || isLocal(req) ? { lan: [...share.lanEntry(), ...lanUrls()] } : {}),   // fix/security-review: home network and Tailscale addresses only for members and this machine
     ...(isLocal(req) ? { user: (() => { try { return os.userInfo().username; } catch { return undefined; } })() } : {}) });   // the OS user name, only for this machine (zero-step setup)
 
@@ -1462,6 +1466,15 @@ async function apiInProject(req, res, url) {
 // send their URL (join codes, device keys) to other sites as a Referer.
 const SAFE_HEADERS = file => ({ 'X-Content-Type-Options': 'nosniff', 'Referrer-Policy': 'same-origin',
   ...(path.extname(file) === '.html' ? { 'Content-Security-Policy': "frame-ancestors 'self' tauri://localhost http://tauri.localhost https://tauri.localhost" } : {}) });
+// fix/p15-updates: the build id of the app page on disk right now (cached by its modified time). When it differs from BUILD,
+// the files were updated but this process is still the old one (docs/UPDATES.md).
+let uiBuildCache = { at: -1, build: '' };
+function uiBuild() {
+  try { const f = path.join(UI, 'index.html'), t = fs.statSync(f).mtimeMs; if (t !== uiBuildCache.at) { const m = /<meta name="tribe-build" content="([^"]*)">/.exec(fs.readFileSync(f, 'utf8')); uiBuildCache = { at: t, build: m ? m[1] : '' }; } } catch {}
+  return uiBuildCache.build;
+}
+// The app's own files: always revalidated (no-cache), so an update shows on the next load; an ETag makes that cheap (304).
+// No long cache even for ?v= files: a host running from source changes files without changing the ?v= stamp.
 function serveStatic(req, res, url) {
   if (applink.serve(req, res, url)) return;   // /app/<key>/: a project's app for the Home Screen (server/applink.js)
   if (devices.serveApp(req, res, url, UI)) return;
@@ -1477,10 +1490,16 @@ function serveStatic(req, res, url) {
   }
   const file = path.resolve(UI, '.' + rel);
   if (!file.startsWith(UI + path.sep)) return fail(res, 403, 'forbidden');
-  fs.readFile(file, (err, data) => {
-    if (err) return fail(res, 404, 'not found');
-    res.writeHead(200, { 'Content-Type': MIME[path.extname(file)] || 'application/octet-stream', 'Cache-Control': 'no-cache', ...SAFE_HEADERS(file) });
-    res.end(stampHtml(file, data));
+  fs.stat(file, (serr, st) => {
+    if (serr || !st.isFile()) return fail(res, 404, 'not found');
+    const tag = `W/"${st.size.toString(36)}-${Math.round(st.mtimeMs).toString(36)}-${VERSION}-${BUILD}"`;
+    const head = { 'Content-Type': MIME[path.extname(file)] || 'application/octet-stream', 'Cache-Control': 'no-cache', ETag: tag, ...SAFE_HEADERS(file) };
+    if (req.headers['if-none-match'] === tag) { res.writeHead(304, head); return res.end(); }
+    fs.readFile(file, (err, data) => {
+      if (err) return fail(res, 404, 'not found');
+      res.writeHead(200, head);
+      res.end(stampHtml(file, data));
+    });
   });
 }
 
@@ -1493,6 +1512,7 @@ const server = http.createServer(async (req, res) => {
     if (url.pathname === '/mcp') return await mcp.route(req, res, { me: authed(req), readBody, send, challenge: () => claudeAuth.challenge(req) });
     if (claudeAuth.matches(url)) return await claudeAuth.serve(req, res, url, { send, page: (r, status, text) => { r.writeHead(status, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store', ...SAFE_HEADERS('x.html') });
       r.end(`<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>TribeCode</title><body style="font:16px system-ui;background:#12151A;color:#E6E9EE;display:grid;place-items:center;min-height:90vh;margin:0;padding:16px"><div style="max-width:420px"><h1 style="font-size:22px">This sign-in can't continue</h1><p style="color:#9AA4B2;line-height:1.6">${String(text).replace(/[&<>"']/g, ch => `&#${ch.charCodeAt(0)};`)}</p></div>`); } });
+    if (url.pathname.startsWith('/api/admin/')) return admin.route(req, res, url);   // fix/p15-updates: local-only stop/restart (server/admin.js)
     if (url.pathname.startsWith('/api/')) return await api(req, res, url);
     if (preview.match(req, url)) return preview.serve(req, res, url);   // /preview/<project>/<pt>/… (server/preview.js)
     if (publishHub.match(req, url)) return publishHub.serve(req, res, url);   // /play/<slug>/… public play links (server/publish.js)
@@ -1523,7 +1543,7 @@ server.on('upgrade', (req, sock) => {
   netHub.touch(me, req);
   dashboard.seen(me.id, s.project);
   pocket.attach(me, s);   // idle/away tracking for notifications
-  s.send({ type: 'hello', member: publicMember(me), tribe, members: presenceFor(me), version: VERSION, huddle: !seesHuddle(me) ? [] : huddleState(), huddleDm: seesHuddle(me) ? huddleDm : null, project: s.project, projects: rooms.listFor(me), places: places.snapshot(me) });
+  s.send({ type: 'hello', member: publicMember(me), tribe, members: presenceFor(me), version: VERSION, build: BUILD, huddle: !seesHuddle(me) ? [] : huddleState(), huddleDm: seesHuddle(me) ? huddleDm : null, project: s.project, projects: rooms.listFor(me), places: places.snapshot(me) });
   pushPresence();
   s.on('message', msg => P.inProject(s.project || P.defaultId(), () => onMessage(msg)));
   function onMessage(msg) {
@@ -1606,6 +1626,7 @@ server.on('upgrade', (req, sock) => {
   });
 });
 
+const admin = require('./admin')({ port: PORT, version: VERSION, build: BUILD, ui: UI, dir: DIR, isLocal, authed, onStop: () => { try { docs.live.persistAll(); } catch {} }, log: m => console.log('  ' + m) });
 let devStamp = Date.now();   // feat/flint-runthrough: GET /api/dev/stamp lets a signed-out dev page (scripts/dev/clean-slate.js) live-reload too
 function start() {
   // --dev (used by scripts/live.js): open tabs reload when UI files change.
@@ -1639,8 +1660,9 @@ function start() {
     }, 10 * 60_000).unref();
   }
   server.listen(PORT, HOST, () => {
+    admin.writePid();   // fix/p15-updates: ~/.tribecode/servers/<port>.json, so an update can stop this exact process
     const lan = Object.values(os.networkInterfaces()).flat().find(i => i && i.family === 'IPv4' && !i.internal);
-    console.log(`\n  🔥 TribeCode server v${VERSION}  ·  tribe "${tribe.name}"`);
+    console.log(`\n  🔥 TribeCode server v${VERSION}${BUILD ? ` (build ${BUILD})` : ''}  ·  tribe "${tribe.name}"`);
     console.log(`  Folder:   ${store.root}`);
     console.log(`  Open:     http://localhost:${PORT}`);
     if (CLOUD) console.log(`  Cloud:    ${share.publicUrl() || 'your cloud address'} · first visitor claims the tribe with setup code ${members.length ? '(already claimed)' : SETUP_CODE}`);

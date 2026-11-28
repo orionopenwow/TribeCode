@@ -255,9 +255,10 @@
   function tabAbout(st) {
     const U = window.TribeUpdater;
     return sec('TribeCode', `${row('Version', '<span id="set-version" class="set-info">…</span>', '', { keys: 'version build release' })}
+      ${row('This install', '<span id="set-build" class="set-info set-build">…</span>', 'The app, the server and the screens should all be the same build.', { id: 'set-build-row', keys: 'build server app screens match install version' })}
       ${row('Updates', '<span class="set-upd"><span id="set-upd-st" class="set-info"></span><button class="btn" id="set-check-update">Check for updates</button></span>', 'The desktop app updates itself. On the web, a reload gets the newest version.', { id: 'set-updates', keys: 'update upgrade restart' })}
       ${U && U.supported() ? row('Download updates in the background', sw('set-bgupdate', st.startup.autoUpdate !== false, 'Download updates in the background'), st.startup.autoUpdate !== false ? 'New versions download quietly. When one is ready, Restart to update opens it in seconds.' : 'You see Update available and choose when to download.') : ''}
-      ${row('Showing an old version?', '<button class="btn" id="set-clearcache">Clear the cache and restart</button>', window.TribeHost.isDesktop ? 'If an update didn\'t change what you see. Your settings, projects and messages stay.' : 'Reloads with fresh files. Your settings, projects and messages stay.', { id: 'set-clearcache-row', keys: 'cache stale old version refresh reload update not showing' })}
+      ${row('Repair install', '<button class="btn" id="set-clearcache">Repair</button>', 'If an update didn\'t change what you see: clears the stored app files, restarts TribeCode on this computer and reloads. Your settings, projects and messages stay.', { id: 'set-clearcache-row', keys: 'repair cache stale old version refresh reload update not showing restart server' })}
       ${row('What\'s new', '<a class="btn" href="https://github.com/orionopenwow/TribeCode/blob/main/CHANGELOG.md" target="_blank" rel="noopener">Changelog</a>', 'Every release, what changed.', { keys: 'changelog release notes' })}`)
     + sec('Help', `${window.TribeGuide ? row('Guide', '<button class="btn set-guide" id="set-guide" title="How to TribeCode"><span aria-hidden="true">?</span> Open the guide</button>', 'How to TribeCode, page by page.', { keys: 'docs manual how' }) : ''}
       ${row('Tour with Flint', '<button class="btn" id="set-tour">Start the tour</button>', 'A short walk around the app.', { keys: 'tour onboarding' })}
@@ -496,7 +497,7 @@
     click('#set-runs', () => { const b = q('#set-runs'); if (b && window.TribeStatus) window.TribeStatus.open(b); });
     click('#set-netmap', () => window.TribeNetMap && window.TribeNetMap.open());
     click('#set-ownserver', () => window.TribeOwnServer && window.TribeOwnServer.open());
-    click('#set-clearcache', () => { const b = q('#set-clearcache'); if (b) { b.disabled = true; b.textContent = window.TribeI18n ? window.TribeI18n.t('Clearing…', 'Clearing…') : 'Clearing…'; } window.TribeSelfHeal && window.TribeSelfHeal.clearCache(); });
+    click('#set-clearcache', () => { const b = q('#set-clearcache'); if (b) { b.disabled = true; b.textContent = window.TribeI18n ? window.TribeI18n.t('Repairing…', 'Repairing…') : 'Repairing…'; } window.TribeSelfHeal && window.TribeSelfHeal.repair({ why: 'Settings' }); });
     click('#set-tour', () => { close(); window.TribeFlintTour && window.TribeFlintTour.start(); });
     click('#set-intros', () => { window.TribeIntro.reset(); close(); });   // p13b: every screen's intro shows again on its next open
     click('#set-demo', () => { close(); window.TribeOffline.toggle(); });   // feat/offline-demo
@@ -620,7 +621,18 @@
     let ver = ''; try { const r = await fetch((C().base ? C().base() : '') + '/api/health', { cache: 'no-store' }); ver = (await r.json()).version || ''; } catch {}
     if (!ver && window.TribeSelfHeal) try { ver = window.TribeSelfHeal.state().page || ''; } catch {}
     if (v) v.textContent = ver ? 'v' + String(ver).replace(/^v/, '') : 'Unknown';
+    buildRow();
     updState();
+    // fix/p15-updates: app, server and screens builds side by side, and whether they match (docs/UPDATES.md)
+    async function buildRow() {
+      const el = $('#set-build'), H = window.TribeSelfHeal; if (!el || !H || !H.about) return;
+      const t = x => (window.TribeI18n ? window.TribeI18n.t(x) : x);
+      let a = {}; try { a = await H.about(); } catch {}
+      const short = b => esc(String(b || '').replace(/^(\d{8})T\d{6}Z-/, '$1-') || '–');
+      const bits = [a.app ? `${t('App')} v${esc(a.app)}` : '', a.server ? `${t('Server')} v${esc(a.server)}` : '', `${t('Build')} ${short(a.build)}`, `${t('Screens')} ${short(a.uiBuild)}`].filter(Boolean);
+      const state = a.match === true ? `<span class="set-build-ok" data-match="yes">${esc(t('Everything matches.'))}</span>` : a.match === false ? `<span class="set-build-bad" data-match="no">${esc(t('Not matching: press Repair.'))}</span>` : '';
+      el.innerHTML = `<span class="set-build-ids">${bits.join(' · ')}</span>${state}`;
+    }
     function updState() {
       const s = $('#set-upd-st'); if (!s) return; const p = U && U.pending && U.pending();
       if (p && p.ready) { s.innerHTML = `v${esc(p.version)} is ready. <button class="btn primary sm" id="set-restart">Restart to update</button>`; const r = $('#set-restart'); if (r) r.onclick = () => U.restartNow(); }
