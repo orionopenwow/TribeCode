@@ -117,7 +117,7 @@ def main():
             def docs():
                 ph.click('#tabbar [data-nav="docs"]'); ph.wait_for_selector("#m2-docs-hub", timeout=15000)
                 ph.wait_for_selector("#m2-docs-hub #m2-repo-hero", timeout=15000)
-                ph.wait_for_selector("#doc-new", state="visible"); ph.click("#doc-new"); ph.wait_for_selector("#doc-title", timeout=10000)
+                ph.wait_for_selector("#fg-new-menu", state="visible"); ph.click("#fg-new-menu"); ph.click("#fg-newmenu #doc-first"); ph.wait_for_selector("#doc-title", timeout=10000)   # p14: Files › New › Doc
                 ph.fill("#doc-title", "Level ideas"); ph.press("#doc-title", "Tab")
                 if not ph.locator("#doc-body").is_visible():
                     w = ph.locator("[data-mode='write'], #doc-write");

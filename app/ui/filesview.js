@@ -443,7 +443,7 @@
     if (e.ctrlKey || e.metaKey || e.altKey || (e.key !== '/' && e.key !== 'n' && e.key !== 'N')) return;
     const a = document.activeElement; if (a && (a.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName))) return;
     if (document.querySelector('.fx-pop, .modal:not(.hidden), [role=dialog]:not(.hidden):not([hidden])')) return;
-    const fx = [...document.querySelectorAll('.fx')].find(x => x.offsetParent !== null && x.getBoundingClientRect().height > 0); if (!fx) return;
+    const fx = [...document.querySelectorAll('#view-docs .fx, #hub-files .fx')].find(x => x.offsetParent !== null && x.getBoundingClientRect().height > 0); if (!fx) return;
     if (e.key === '/') { const i = fx.querySelector('.fx-find input'); if (i) { e.preventDefault(); i.focus(); } return; }
     const b = fx.querySelector('.fx-create'); if (b) { e.preventDefault(); b.click(); }
   });

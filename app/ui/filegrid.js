@@ -64,7 +64,7 @@
     const out = list.filter(d => folderOf(d) === at || (!at && !folderOf(d))).map(d => {
       const type = typeOf(d), who = memberOf(d.updatedBy || d.by), cat = d.kind === 'deck' ? 'slides' : CAT[type] || 'docs';
       const th = type === 'doc' ? T.text(d.title, d.excerpt, d.img ? media(d.img) : '') : thumb(d, type);
-      return { src: 'doc', id: d.slug, slug: d.slug, cat, type: d.kind === 'sheet' ? 'Sheet' : TYPE_L[d.kind === 'deck' ? 'deck' : type] || 'Doc', title: d.title || 'Untitled', at: d.updated, owner: who ? { name: who.name, color: who.color } : (d.updatedBy && o.nameOf ? { name: o.nameOf(d.updatedBy), color: 'var(--peer)' } : null),
+      return { src: 'doc', id: d.slug, slug: d.slug, pin: !!d.pinned, cat, type: d.kind === 'sheet' ? 'Sheet' : TYPE_L[d.kind === 'deck' ? 'deck' : type] || 'Doc', title: d.title || 'Untitled', at: d.updated, owner: who ? { name: who.name, color: who.color } : (d.updatedBy && o.nameOf ? { name: o.nameOf(d.updatedBy), color: 'var(--peer)' } : null),
         loc: here, mine: true, text: d.excerpt || '', thumb: th, cls: 'fg-card', attrs: `data-slug="${esc(d.slug)}" data-type="${type}"`, acts: ['open', 'rename', 'move', 'duplicate', 'download', 'delete'] };
     });
     // feat/dropzone: the project's uploaded files, in the folder they were dropped from (draggable out to the desktop)

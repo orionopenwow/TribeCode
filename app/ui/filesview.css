@@ -228,7 +228,7 @@ details.fx-more { position: relative; flex: none; }
   .fx-title { row-gap: 4px; }
   .fx-title h1, .fx-title h2 { font-size: 22px; }
   .fx-create { height: 40px; padding: 0 12px; }
-  .fx-find { position: sticky; top: 0; z-index: 6; margin: 0 -16px 12px; padding: 8px 16px; background: var(--canvas); border-bottom: 1px solid transparent; }
+  .fx-find { position: sticky; top: -6px; z-index: 6; margin: 0 -16px 12px; padding: 8px 16px; background: var(--main, var(--canvas)); border-bottom: 1px solid transparent; }
   .fx-search { height: 42px; }
   .fx-slash { display: none; }
   .fx-find-a .btn { height: 42px; }
