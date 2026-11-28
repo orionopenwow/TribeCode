@@ -3286,8 +3286,23 @@
     'seen {n} min ago': ['visto hace {n} min', 'visto há {n} min', 'vu il y a {n} min', 'vor {n} Min. gesehen', '{n}分前', '{n} 分钟前在线', '{n}분 전에 봄'],
     'seen {n} h ago': ['visto hace {n} h', 'visto há {n} h', 'vu il y a {n} h', 'vor {n} Std. gesehen', '{n}時間前', '{n} 小时前在线', '{n}시간 전에 봄'],
     'seen {n} d ago': ['visto hace {n} d', 'visto há {n} d', 'vu il y a {n} j', 'vor {n} T. gesehen', '{n}日前', '{n} 天前在线', '{n}일 전에 봄'],
+    // ---- p13 Company layout: the purpose line asks, one facts line, one Open roles list · [es, pt, fr, de, ja, zh, ko]
+    'Say what it’s for in one line': ['Di para qué es en una línea', 'Diga para que serve em uma linha', 'Dites à quoi elle sert en une ligne', 'Sag in einem Satz, wofür sie da ist', '何のための会社かを一行で', '用一句话说明它是做什么的', '무엇을 위한 곳인지 한 줄로 적어요'],
+    'Open roles': ['Roles libres', 'Funções em aberto', 'Rôles à pourvoir', 'Offene Rollen', '空いている役割', '空缺的角色', '비어 있는 역할'],
+    'Check-ins are off': ['Las puestas al día están desactivadas', 'Os pontos estão desligados', 'Les points sont désactivés', 'Abstimmungen sind aus', '近況共有はオフです', '同步已关闭', '근황 공유가 꺼져 있어요'],
+    'View profile': ['Ver perfil', 'Ver perfil', 'Voir le profil', 'Profil ansehen', 'プロフィールを見る', '查看资料', '프로필 보기'],
   });
   I.addPatterns({
+    // p13 Company layout: the facts line and the Open roles list
+    '{n} of {total} roles filled': ['{n} de {total} roles cubiertos', '{n} de {total} funções preenchidas', '{n} rôles pourvus sur {total}', '{n} von {total} Rollen besetzt', '{total} 件中 {n} 件の役割が決定', '已填补 {n}/{total} 个角色', '역할 {total}개 중 {n}개 채움'],
+    '{n} waiting for an OK': ['{n} esperando un OK', '{n} aguardando um OK', '{n} en attente d’accord', '{n} warten auf ein OK', '{n} 件がOK待ち', '{n} 项等待确认', '{n}개가 확인을 기다려요'],
+    '{n} stuck': ['{n} atascados', '{n} travados', '{n} bloqués', '{n} hängen fest', '{n} 件が停滞中', '{n} 个卡住了', '{n}개가 막혀 있어요'],
+    'Next check-in {when}': ['Próxima puesta al día {when}', 'Próximo ponto {when}', 'Prochain point {when}', 'Nächste Abstimmung {when}', '次の近況共有 {when}', '下次同步 {when}', '다음 근황 공유 {when}'],
+    '{money} in this month': ['{money} de entrada este mes', '{money} de entrada este mês', '{money} de rentrées ce mois-ci', '{money} Einnahmen diesen Monat', '今月の入金 {money}', '本月收入 {money}', '이번 달 들어온 돈 {money}'],
+    '{money} out this month': ['{money} de salida este mes', '{money} de saída este mês', '{money} de dépenses ce mois-ci', '{money} Ausgaben diesen Monat', '今月の出金 {money}', '本月支出 {money}', '이번 달 나간 돈 {money}'],
+    '{money} in, {cost} out this month': ['{money} de entrada, {cost} de salida este mes', '{money} de entrada, {cost} de saída este mês', '{money} de rentrées, {cost} de dépenses ce mois-ci', '{money} Einnahmen, {cost} Ausgaben diesen Monat', '今月の入金 {money}、出金 {cost}', '本月收入 {money}，支出 {cost}', '이번 달 들어온 돈 {money}, 나간 돈 {cost}'],
+    'Give them to {name}': ['Dáselos a {name}', 'Entregue para {name}', 'Les confier à {name}', 'Gib sie {name}', '{name}に任せる', '交给{name}', '{name}에게 맡기기'],
+    'Give it to {name}': ['Dáselo a {name}', 'Entregue para {name}', 'Le confier à {name}', 'Gib sie {name}', '{name}に任せる', '交给{name}', '{name}에게 맡기기'],
     // p13: Undo after deleting a task
     'Deleted "{title}"': ['Se eliminó «{title}»', '"{title}" excluída', '« {title} » supprimée', '„{title}“ gelöscht', '「{title}」を削除しました', '已删除“{title}”', '"{title}"을(를) 삭제했어요'],
     'Brought back "{title}"': ['Se recuperó «{title}»', '"{title}" de volta', '« {title} » est revenue', '„{title}“ ist zurück', '「{title}」を戻しました', '已恢复“{title}”', '"{title}"을(를) 되살렸어요'],
@@ -3370,7 +3385,6 @@
     'Your tribe applied {n} like this and said no to {count} lately, so it comes up less.': ['Tu tribu aplicó {n} como esta y rechazó {count} hace poco, así que aparece menos.', 'Sua tribo aplicou {n} como esta e recusou {count} recentemente, então aparece menos.', 'Votre tribu en a appliqué {n} de ce type et refusé {count} récemment, elle apparaît donc moins.', 'Dein Tribe hat zuletzt {n} solche übernommen und {count} abgelehnt, darum kommt sie seltener.', 'トライブが最近このような提案を {n} 件適用し {count} 件断ったので、表示を減らします。', '你的部落最近采用了 {n} 条这类建议、拒绝了 {count} 条，所以它出现得少一些。', '트라이브가 최근 이런 제안을 {n}개 적용하고 {count}개 거절해서 덜 보여 줍니다.'],
     // ---- pass 4: Flint in the creators and Polish it (flintcreate.js, polish.js) · [es, pt, fr, de, ja, zh, ko]
     'Polish it': ['Pulirlo', 'Polir', 'Peaufiner', 'Feinschliff', '仕上げる', '润色', '다듬기'],
-    'Make it beautiful': ['Hazlo bonito', 'Deixar bonito', 'Rendre beau', 'Schön machen', '美しくする', '变得更美', '아름답게 만들기'],
     'No AI': ['Sin IA', 'Sem IA', 'Sans IA', 'Ohne KI', 'AIなし', '无 AI', 'AI 없음'],
     'no AI': ['sin IA', 'sem IA', 'sans IA', 'ohne KI', 'AIなし', '无 AI', 'AI 없음'],
     'In this browser': ['En este navegador', 'Neste navegador', 'Dans ce navigateur', 'In diesem Browser', 'このブラウザで', '在此浏览器中', '이 브라우저에서'],

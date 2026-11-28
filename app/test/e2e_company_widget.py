@@ -63,7 +63,7 @@ def main():
             pg.screenshot(path=str(SHOTS / "company-widget.png"), full_page=False)
             # See an example: the real view, read-only
             pg.click("#co-example"); pg.wait_for_selector("#view-company .co-sample .co-seat.ceo", timeout=5000)
-            assert "Lantern Games" in pg.inner_text("#view-company h1") and pg.locator("#view-company .co-sample .co-seat").count() == 5
+            assert "Lantern Games" in pg.inner_text("#view-company h1") and pg.locator("#view-company .co-sample .co-seat, #view-company .co-sample .co-open-row").count() == 5
             assert pg.locator("#view-company .co-sample .co-goal").count() == 2 and "save-slot" in pg.inner_text("#view-company .co-today")
             pg.locator("#view-company .co-sample .co-seat.ceo").click(force=True); pg.wait_for_timeout(400)
             assert pg.locator(".co-sheet:visible, #co-sheet:visible").count() == 0, "no seat sheet in the example"
