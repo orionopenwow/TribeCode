@@ -183,6 +183,28 @@ function jsonLd(doc) {
   return out;
 }
 
+// p13 Files · Brain: a page's look as plain values: up to 6 #rrggbb colours (theme-color first, then the most used in
+// its CSS), up to 4 font family names (Google Fonts links and font-family rules, generic names dropped) and up to 6
+// picture links (og:image, then <img>). Nothing is fetched here; values are validated, never rendered as HTML.
+function lookOf(doc, M, url, image) {
+  const hex = s => { s = String(s || '').trim().toLowerCase(); const m = /^#([0-9a-f]{3}|[0-9a-f]{6})$/.exec(s); if (!m) return ''; return m[1].length === 3 ? '#' + m[1].split('').map(c => c + c).join('') : s; };
+  const count = new Map(), add = (c, w) => { c = hex(c); if (c) count.set(c, (count.get(c) || 0) + w); };
+  add(M['theme-color'], 1000); add(M['msapplication-tilecolor'], 50);
+  let css = all(doc, n => n.tag === 'style').map(n => String(n.raw || textOf(n))).join('\n').slice(0, 400000);
+  css += '\n' + all(doc, n => n.attrs && n.attrs.style).slice(0, 400).map(n => n.attrs.style).join(';\n');
+  for (const m of css.matchAll(/#[0-9a-f]{6}\b|#[0-9a-f]{3}\b/gi)) add(m[0], 1);
+  const colors = [...count].sort((a, b) => b[1] - a[1]).map(x => x[0]).slice(0, 6);
+  const GENERIC = /^(serif|sans-serif|monospace|cursive|fantasy|system-ui|ui-\w+|inherit|initial|unset|-apple-system|blinkmacsystemfont|segoe ui|arial|helvetica|helvetica neue|roboto|times new roman|apple color emoji|segoe ui emoji|var\(.*)$/i;
+  const fonts = [];
+  const font = f => { f = String(f || '').replace(/["']/g, '').replace(/\+/g, ' ').trim(); if (f && f.length < 40 && /^[\p{L}\p{N} -]+$/u.test(f) && !GENERIC.test(f) && !fonts.some(x => x.toLowerCase() === f.toLowerCase())) fonts.push(f); };
+  for (const l of all(doc, n => n.tag === 'link' && n.attrs.href && /fonts\.googleapis\.com/.test(n.attrs.href)).slice(0, 4)) { try { const u = new URL(l.attrs.href, url); for (const fam of u.searchParams.getAll('family')) fam.split('|').forEach(x => font(x.split(':')[0])); } catch {} }
+  for (const m of css.matchAll(/font-family\s*:\s*([^;}{]+)/gi)) font(m[1].split(',')[0]);
+  const images = [];
+  const pic = s => { try { const u = new URL(s, url).href; if (/^https?:/.test(u) && u.length < 2048 && !/\.svg(\?|#|$)/i.test(u) && !images.includes(u)) images.push(u); } catch {} };
+  if (image) pic(image);
+  for (const n of all(doc, n => n.tag === 'img' && n.attrs.src).slice(0, 40)) { if (images.length >= 6) break; const w = Number(n.attrs.width) || 0; if (w && w < 80) continue; pic(n.attrs.src); }
+  return { colors, fonts: fonts.slice(0, 4), images: images.slice(0, 6) };
+}
 function extract(html, url) {
   const doc = parse(html);
   const M = meta(doc), LD = jsonLd(doc);
@@ -203,6 +225,7 @@ function extract(html, url) {
   const robots = `${pick('robots')} ${pick('x-robots-tag')}`.toLowerCase();
   const paywalled = LD.some(x => x.isAccessibleForFree === false || x.isAccessibleForFree === 'False' || x.isAccessibleForFree === 'false');
 
+  const look = lookOf(doc, M, url, image);   // p13 Files · Brain: colours, fonts and pictures for the design flow (plain values only)
   const bodyEl = all(doc, n => n.tag === 'body')[0] || doc;
   clean(bodyEl); LEN = new WeakMap();
   const { best, bestScore, scores, parent } = score(bodyEl);
@@ -223,7 +246,7 @@ function extract(html, url) {
   if (!title) title = (paragraphs.find(p => !p.startsWith('#')) || '').slice(0, 90);
   const description = pick('og:description', 'twitter:description', 'description');
   return { title: title.slice(0, 200), author: author.slice(0, 120), published: String(published).slice(0, 40), site: site.slice(0, 80), image: image.slice(0, 2048), lang: String(lang).slice(0, 16),
-    description: description.slice(0, 500), text, paragraphs: paragraphs.length, words: text.split(/\s+/).filter(Boolean).length, robots, paywalled };
+    description: description.slice(0, 500), text, paragraphs: paragraphs.length, words: text.split(/\s+/).filter(Boolean).length, robots, paywalled, look };
 }
 
 module.exports = { decodeBody, parse, extract, textOf, decodeEntities, squash };

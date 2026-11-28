@@ -113,7 +113,7 @@ function parseWhisperJson(j, offset = 0) {
   return segs.map(s => ({ t: Math.round(((s.offsets ? s.offsets.from : (s.start || 0) * 1000) / 1000 + offset) * 10) / 10, text: String(s.text || '').replace(/\s+/g, ' ').trim() })).filter(s => s.text && !/^\[(BLANK_AUDIO|MUSIC|Music)\]$/.test(s.text));
 }
 
-module.exports = function captures({ P, store, base, embeds, packs, llm, docs, dms, perms, postChat, broadcast, sendTo = () => {}, createTask, getMembers, nameOf, sense = () => null, log = () => {}, id: mkId }) {
+module.exports = function captures({ P, store, base, embeds, packs, llm, docs, dms, perms, postChat, broadcast, sendTo = () => {}, createTask, getMembers, nameOf, sense = () => null, log = () => {}, id: mkId, onSaved = () => {} }) {
   const TEST = process.env.TRIBE_TEST === '1';
   const OE_TEST = TEST ? String(process.env.TRIBE_TEST_OEMBED || '').replace(/\/+$/, '') : '';
   const SETTINGS = '.tribe/captures-settings.json', WEIGHTS = '.tribe/captures-weights.json';
@@ -160,11 +160,12 @@ module.exports = function captures({ P, store, base, embeds, packs, llm, docs, d
     const { transcript, text, points, actions, decisions, summaryItems, ...meta } = c;
     store.writeMd(rel(c.id, 'md'), { id: c.id, source: c.url || (/^offload:/.test(c.source || '') ? c.source : c.kind === 'voice' ? 'voice note' : ''), kind: c.kind, title: c.title, author: c.author || '', published: c.published || '', duration: c.duration || null, thumbnail: c.thumbnail || null, tags: c.tags || [], created: c.created, by: c.byName || '' }, markdown(c));
     notify({ type: 'capture', project: c.project, id: c.id, status: c.status }, c);
+    if (!c.dm) try { onSaved(c.project || projectId(), c); } catch {}   // p13 Files · Brain: TRIBE_CONTEXT.md + AGENTS.md follow
     return c;
   }
   const light = c => ({ id: c.id, title: c.title, kind: c.kind, site: c.site, url: c.url || '', author: c.author || '', created: c.created, updated: c.updated, status: c.status, note: c.note || '', tags: c.tags || [],
     thumb: !!c.thumbnail, summary: clip(c.summary, 280), actions: (c.actions || []).length, recipe: c.recipe, by: c.by, byName: c.byName, dm: !!c.dm, duration: c.duration || null, words: c.words || 0 });
-  const card = c => ({ id: c.id, title: c.title, kind: c.kind, site: c.site, url: c.url || '', thumb: !!c.thumbnail, summary: clip(c.summary || c.description || '', 280), actions: (c.actions || []).length, status: c.status, note: c.note || '', emoji: c.kind === 'voice' ? '🎙️' : '📎' });
+  const card = c => ({ id: c.id, title: c.title, kind: c.kind, site: c.site, url: c.url || '', thumb: !!c.thumbnail, summary: clip(c.summary || c.description || '', 280), actions: (c.actions || []).length, status: c.status, note: c.note || '', emoji: c.kind === 'voice' ? '🎙️' : '📎', files: !c.dm });   // files: p13, a project link is in Files › What we know ("Saved to Files"); a DM's never is
 
   // A DM capture's updates reach only that DM's members; everything else goes to the project.
   function notify(msg, c) { if (c.dm) { for (const m of getMembers()) if (dms.canRead(c.dm, m)) sendTo(m.id, { ...msg, dm: true }); } else broadcast(msg); }
@@ -255,6 +256,7 @@ module.exports = function captures({ P, store, base, embeds, packs, llm, docs, d
     const html = H.decodeBody(r.body, r.headers['content-type']);
     const x = H.extract(html, c.url);
     Object.assign(c, { title: c.title || x.title || c.url, author: c.author || x.author, published: c.published || x.published, site: c.site || x.site, lang: x.lang, description: x.description });
+    if (x.look && (x.look.colors.length || x.look.fonts.length || x.look.images.length)) c.look = x.look;   // p13: colours, fonts, picture links for the design flow
     const robots = `${x.robots} ${robotsHdr}`;
     if (/\b(noarchive|noai|none)\b/.test(robots)) { c.status = 'metadata'; c.note = 'This site asks not to be saved, so I kept only the title, a short description and the link.'; }
     else if (x.paywalled) { c.status = 'metadata'; c.note = 'This page looks like it\'s behind a paywall, so I kept only the title, a short description and the link.'; }
@@ -448,11 +450,15 @@ module.exports = function captures({ P, store, base, embeds, packs, llm, docs, d
   function onChat(channel, me, text, msg) {
     if (!settings().auto || !me || me.role === 'spectator' || me.role === 'agent') return;
     const t = String(text || '').trim();
-    if (!BARE.test(t) || IMG.test(t) || /giphy\.com|tenor\.com/i.test(t)) return;
+    // p13: any link in a message (up to 3), not only a bare one. Project channels go to Files; a DM's stay in the DM.
+    const urls = BARE.test(t) ? [t] : [...new Set((t.match(/https?:\/\/[^\s<>"'`)\]]+/gi) || []).map(u => u.replace(/[.,;:!?]+$/, '')))].slice(0, 3);
     const pid = projectId();
-    P.inProject(pid, () => captureLink(me, t, { channel, message: msg && msg.id })).then(r => {
-      if (r && r.capture && !r.error) P.inProject(pid, () => postCard(r.capture, channel, r.duplicate));
-    }).catch(e => log('captures: auto ' + e.message));
+    for (const u of urls) {
+      if (IMG.test(u) || /giphy\.com|tenor\.com/i.test(u)) continue;
+      P.inProject(pid, () => captureLink(me, u, { channel, message: msg && msg.id })).then(r => {
+        if (r && r.capture && !r.error) P.inProject(pid, () => postCard(r.capture, channel, r.duplicate));
+      }).catch(e => log('captures: auto ' + e.message));
+    }
   }
 
   // ---------- keep / discard ----------
@@ -702,7 +708,7 @@ module.exports = function captures({ P, store, base, embeds, packs, llm, docs, d
     };
   }
 
-  return { route, onChat, fromHuddle, rewrite, mcpTools: mcpTools(), captureLink, captureVoice, search, ask, read, list: listAll, parseVtt, parseWhisperJson, normUrl, platformOf };
+  return { route, onChat, fromHuddle, rewrite, mcpTools: mcpTools(), captureLink, save, captureVoice, search, ask, read, list: listAll, parseVtt, parseWhisperJson, normUrl, platformOf };
 };
 module.exports.parseVtt = parseVtt;
 module.exports.parseWhisperJson = parseWhisperJson;

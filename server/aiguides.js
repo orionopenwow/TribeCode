@@ -43,7 +43,7 @@ const kindGuess = (name, vision, site, app) => {
   return `${hit ? hit[1] : 'not stated (judge from the vision)'}${has ? `; it has ${has} in TribeCode` : ''}`;
 };
 
-module.exports = function aiGuides({ P, base, perms = null, site, app, motion = null, requests = () => null, files = null, readVision = () => '', facts = () => [], tasks = () => [], nameOf = x => x, members = () => [], log = () => {} }) {
+module.exports = function aiGuides({ P, base, perms = null, site, app, motion = null, requests = () => null, files = null, readVision = () => '', facts = () => [], tasks = () => [], brain = () => [], nameOf = x => x, members = () => [], log = () => {} }) {
   const safe = pid => String(pid).replace(/[^\w-]/g, '');
   const cur = () => P.current() || P.defaultId();
   const text = (t, isError) => ({ content: [{ type: 'text', text: typeof t === 'string' ? t : JSON.stringify(t) }], ...(isError ? { isError: true } : {}) });
@@ -67,6 +67,7 @@ module.exports = function aiGuides({ P, base, perms = null, site, app, motion = 
     // project memory: decisions first, then the rest, newest first
     try { const f = (inP(pid, () => facts()) || []).slice().reverse(); d.facts = [...f.filter(x => x.kind === 'decision'), ...f.filter(x => x.kind !== 'decision')].map(x => ({ kind: x.kind, key: x.key, value: x.value })); } catch { d.facts = []; }
     try { d.tasks = (inP(pid, () => tasks()) || []).filter(t => t.status !== 'done' && (!t.project || t.project === pid)).sort((a, b) => (/website|site|app|design|screen|page/i.test(b.title) ? 1 : 0) - (/website|site|app|design|screen|page/i.test(a.title) ? 1 : 0)).slice(0, 10).map(t => ({ id: t.id, status: t.status, title: t.title })); } catch { d.tasks = []; }
+    try { d.brain = brain(pid) || []; } catch { d.brain = []; }   // p13 Files · What we know (server/brainhub.js)
     d.comments = [];
     try { (site.comments(pid) || []).filter(c => c.status === 'open').slice(-8).forEach(c => d.comments.push({ on: 'Website', where: c.label || c.blockType || '', text: c.text, by: nameOf(c.by) })); } catch {}
     try { const l = base.readJSON(`.tribe/appdesign/${safe(pid)}.comments.json`, []); (Array.isArray(l) ? l : []).filter(c => c && !c.resolved && c.status !== 'resolved').slice(-6).forEach(c => d.comments.push({ on: 'App', where: c.label || c.screen || '', text: c.text || '', by: nameOf(c.by) })); } catch {}
