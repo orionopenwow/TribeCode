@@ -86,11 +86,15 @@ def main():
                 if api("/health")[0] == 200: break
             except Exception: time.sleep(0.1)
         tok = ok(api("/bootstrap", "POST", {"name": "Orion", "color": "#F26B1D"}), "bootstrap")["token"]
-        for i in range(13):
+        for i in range(20):
             ok(api("/docs", "POST", {"title": f"Level {i + 1:02d} notes", "body": f"# Level {i + 1}\n\n- lanterns\n- caves"}, token=tok))
         ok(api("/docs", "POST", {"title": "Launch plan", "body": "# Launch plan\n\nFriday."}, token=tok))
         ok(api("/docs/level-03-notes/meta", "PATCH", {"pinned": True}, token=tok), "pin")
         ok(api("/brain", "POST", {"note": {"title": "Cabin music", "text": "Soft guitar, rain on the roof.", "tags": ["audio"]}}, token=tok))
+        # opened from Files: Level 07 three times, Level 05 once (the project keeps the counts, per person)
+        for slug in ["level-07-notes"] * 3 + ["level-05-notes"]: ok(api(f"/docs/{slug}/opened", "POST", {}, token=tok), "opened")
+        d7 = next(d for d in ok(api("/docs", token=tok))["docs"] if d["slug"] == "level-07-notes")
+        assert d7["myOpens"] == 3 and d7["opens"] == 3, d7
 
         with sync_playwright() as p:
             b = p.chromium.launch(executable_path="/usr/bin/google-chrome", args=["--no-proxy-server"])
@@ -129,27 +133,53 @@ def main():
             tops = pg.eval_on_selector_all(".fx-row .fx-tabs > [data-dk], .fx-row details.fx-more", "e => e.map(x => Math.round(x.getBoundingClientRect().top))")
             assert len(set(tops)) == 1, f"one row: {tops}"
             assert pg.locator("details.fx-more [data-dk=pics]").count() == 1
-            # ---- 5. many files: list rows, Pinned · Recent · Everything else ----
-            pg.wait_for_selector("#fg-items .fx-items.list")
+            # ---- 5. many files: cards with real previews; Jump back in, Pinned, Recent, Everything else (collapsed) ----
+            pg.wait_for_selector("#fg-items .fx-items.grid:not(.fx-jump)")
             heads = pg.eval_on_selector_all("#fg-items .fx-gh h2", "e => e.map(x => x.textContent)")
-            assert heads[:3] == ["Pinned", "Recent", "Everything else"], heads
-            assert "Level 03 notes" in pg.inner_text("[data-group=pinned]")
+            assert heads[:4] == ["Jump back in", "Pinned", "Recent", "Everything else"], heads
+            pg.evaluate("document.querySelector('#main').scrollTop = 330"); shot(pg, "desk-top")
+            jump = pg.eval_on_selector_all("[data-group=jump] .fx-name", "e => e.map(x => x.textContent)")
+            assert len(jump) == 6 and jump[0] == "Level 07 notes" and jump[1] == "Level 05 notes", f"opened more ranks higher: {jump}"
+            assert "Level 03 notes" in pg.inner_text("[data-group=pinned]") and "Level 03 notes" not in jump
+            # previews: a doc's first page with its text, a note's card; every card has one
+            assert pg.eval_on_selector_all("#fg-items .fx-card", "e => e.every(c => c.querySelector('.fx-th .fg-th'))"), "every card has a preview"
+            assert "lanterns" in pg.inner_text("[data-group=jump] .fx-card >> nth=0"), "a doc's preview shows its text"
+            assert pg.locator("#fg-items .fx-card[data-cat=links] .fb-th").count() >= 1
+            # Everything else shows its first six, Show all 8 opens the rest and is remembered
+            assert pg.locator("[data-group=rest] .fx-card").count() == 6
+            assert pg.inner_text("[data-show=rest]").strip() == "Show all 9"
+            pg.click("[data-show=rest]"); pg.wait_for_function("document.querySelectorAll('[data-group=rest] .fx-card').length === 9")
+            assert pg.inner_text("[data-show=rest]").strip() == "Show fewer"
+            files(pg); assert pg.locator("[data-group=rest] .fx-card").count() == 9, "Show all is remembered"
+            # grid: every card the same size
+            sizes = pg.eval_on_selector_all("[data-group=rest] .fx-card, [data-group=recent] .fx-card", "e => e.map(x => [Math.round(x.getBoundingClientRect().width), Math.round(x.getBoundingClientRect().height)])")
+            assert len({s[0] for s in sizes}) == 1 and len({s[1] for s in sizes}) == 1, f"uniform cards: {set(map(tuple, sizes))}"
+            shot(pg, "desk-grid")
+            pg.click("[data-show=rest]"); pg.wait_for_function("document.querySelectorAll('[data-group=rest] .fx-card').length === 6")
+            # opening a card counts for you on the project
+            pg.click("[data-group=rest] .fx-card >> nth=0"); pg.wait_for_selector("#doc-title", timeout=10000)
+            t0 = time.time()
+            while not any(d.get("myOpens") for d in ok(api("/docs", token=tok))["docs"] if d["slug"] not in ("level-07-notes", "level-05-notes")):
+                assert time.time() - t0 < 10, "the open was counted"
+                time.sleep(0.3)
+            files(pg)
+            # list rows: a small real preview, the name and kind, who, when; ⋯ on hover
+            pg.click("[data-dv=list]"); pg.wait_for_selector("#fg-items .fx-items.list")
             r0 = pg.locator("#fg-items .fx-items.list .fx-card").first
-            assert r0.locator(".fx-lic").is_visible() and r0.locator(".fx-c-who").is_visible() and r0.locator(".fx-c-when").is_visible()
+            tb = r0.locator(".fx-th").bounding_box(); assert 40 <= tb["width"] <= 48 and r0.locator(".fx-th .fg-th").count() == 1, f"row preview: {tb}"
+            assert r0.locator(".fx-c-who").is_visible() and r0.locator(".fx-c-when").is_visible()
+            assert pg.locator("[data-group=jump] .fx-items.grid").count() == 1, "Jump back in stays cards"
             hh = pg.eval_on_selector_all("#fg-items .fx-items.list .fx-card", "e => e.map(x => Math.round(x.getBoundingClientRect().height))")
             assert min(hh) >= 52, f"rows are roomy: {hh}"
             r0.hover(); assert r0.locator(".fx-more").evaluate("e => getComputedStyle(e).opacity") == "1", "⋯ shows on hover"
             shot(pg, "desk-list")
-            # grid: every card the same size
-            pg.click("[data-dv=grid]"); pg.wait_for_selector("#fg-items .fx-items.grid")
-            sizes = pg.eval_on_selector_all("#fg-items .fx-items.grid .fx-card", "e => e.map(x => [Math.round(x.getBoundingClientRect().width), Math.round(x.getBoundingClientRect().height)])")
-            assert len({s[0] for s in sizes}) == 1 and len({s[1] for s in sizes}) == 1, f"uniform cards: {set(map(tuple, sizes))}"
-            shot(pg, "desk-grid")
-            pg.click("[data-dv=list]")
-            # search narrows
+            pg.click("[data-dv=grid]")
+            # search narrows, flat (no groups, nothing folded)
             pg.fill("#fb-q", "launch"); pg.wait_for_function("document.querySelectorAll('#fg-items .fx-card').length === 1")
             assert "Launch plan" in pg.inner_text("#fg-items")
-            pg.fill("#fb-q", ""); pg.wait_for_function("document.querySelectorAll('#fg-items .fx-card').length >= 15")
+            pg.fill("#fb-q", "level"); pg.wait_for_function("document.querySelectorAll('#fg-items .fx-card').length === 20")
+            assert pg.locator("#fg-items .fx-gh").count() == 0 and pg.locator("[data-show]").count() == 0, "search is flat"
+            pg.fill("#fb-q", ""); pg.wait_for_selector("[data-group=jump]")
             # an empty kind: one clear next step
             pg.click("#fg-tab-slides"); pg.wait_for_selector("#fg-empty [data-empty-new=slides]")
             assert "No slides yet" in pg.inner_text("#fg-empty") and pg.inner_text("#fg-empty [data-empty-new]").strip() == "New slides"
@@ -179,7 +209,8 @@ def main():
             files(pg)
             # an empty-state button makes it too: Sheets › New sheet opens the sheet
             pg.click("#fg-tab-sheets"); pg.click("#fg-empty [data-empty-new=sheet]"); pg.wait_for_selector("#sx-title", timeout=10000)
-            files(pg); pg.click("#fg-tab-all")
+            files(pg); pg.click("#fg-tab-sheets"); pg.wait_for_selector("#fg-items .fx-card .fg-th-sheet")   # a sheet's preview is its grid
+            pg.click("#fg-tab-all")
 
             # ---- 7. drop zone: dragging files over Files shows the overlay ----
             pg.evaluate("""() => { const dt = new DataTransfer(); dt.items.add(new File(['x'], 'a.txt', { type: 'text/plain' }));
@@ -198,6 +229,8 @@ def main():
             assert ys == sorted(ys), ys
             assert ph.locator(".fx input[type=search]").count() == 1 and ph.locator("#fb-q").is_visible()
             assert ph.locator("#fg-items .fx-items.list").count() >= 1, "phones: rows"
+            assert ph.locator("#fg-items .fx-items.list .fx-card .fx-th").first.is_visible(), "phone rows keep a small preview"
+            assert ph.locator("[data-group=jump] .fx-card:visible").count() == 4, "phones: the top four to jump back in"
             nb = ph.locator("#fg-new-menu").bounding_box(); assert nb["x"] + nb["width"] <= 390 and nb["y"] < 260, f"New sits in the header: {nb}"
             assert ph.locator("#doc-list-wrap").is_hidden(), "the old list gives way to Files"
             # no giant coloured tile: the code card is compact

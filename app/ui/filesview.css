@@ -108,16 +108,17 @@ details.fx-more { position: relative; flex: none; }
 
 /* list: rows with the kind, the name and kind, who, when, size and ⋯ on hover */
 .fx-items.list { display: grid; gap: 0; border: 1px solid var(--edge); border-radius: 12px; overflow: hidden; background: var(--surface); }
-.fx-items.list .fx-card { display: grid; grid-template-columns: 36px minmax(0, 1fr) minmax(0, 160px) 92px 72px 36px; align-items: center; column-gap: 14px; min-height: 56px; padding: 0 8px 0 14px; border: 0; border-radius: 0; background: none; }
+.fx-items.list .fx-card { display: grid; grid-template-columns: 48px minmax(0, 1fr) minmax(0, 160px) 92px 72px 36px; align-items: center; column-gap: 14px; min-height: 56px; padding: 0 8px 0 14px; border: 0; border-radius: 0; background: none; }
 .fx-items.list .fx-card + .fx-card { border-top: 1px solid var(--edge); }
 .fx-items.list .fx-card:hover, .fx-items.list .fx-card:focus-visible { background: var(--surface-2); }
 .fx-items.list .fx-card:focus-visible { outline-offset: -2px; }
-.fx-items.list .fx-th { display: none; }
-.fx-items.list .fx-lic { display: grid; width: 36px; height: 36px; border: 1px solid var(--edge); border-radius: 8px; background: var(--canvas); }
-/* pictures keep a small picture in the row */
-.fx-items.list .fx-card[data-cat="pics"] .fx-th { display: block; grid-column: 1; grid-row: 1; width: 36px; height: 36px; border: 1px solid var(--edge); border-radius: 8px; overflow: hidden; }
-.fx-items.list .fx-card[data-cat="pics"] .fx-th > .fg-th { width: 100%; height: 100%; aspect-ratio: auto; }
-.fx-items.list .fx-card[data-cat="pics"] .fx-lic { display: none; }
+.fx-items.list .fx-lic { display: none; }
+/* p14b: every row keeps a small real preview: the card's own thumbnail drawn at 192×144 and scaled to 48×36 */
+.fx-items.list .fx-th { grid-column: 1; grid-row: 1; width: 48px; height: 36px; border: 1px solid var(--edge); border-radius: 6px; overflow: hidden; }
+.fx-items.list .fx-th > .fg-th { position: absolute; left: 0; top: 0; width: 192px; height: 144px; aspect-ratio: auto; transform: scale(.25); transform-origin: 0 0; }
+.fx-items.list .fx-th > .fg-th-img { width: 100%; height: 100%; transform: none; }
+.fx-items.list .fx-th > .fx-th-icon .fx-i { width: 64px; height: 64px; }
+.fx-items.list .fx-th > .fx-th-icon small { display: none; }
 .fx-items.list .fx-meta-b { grid-column: 2; gap: 2px; padding: 8px 0; }
 .fx-items.list .fx-r1 { height: 20px; }
 .fx-items.list .fx-kic, .fx-items.list .fx-r2 { display: none; }
@@ -247,7 +248,7 @@ details.fx-more { position: relative; flex: none; }
   .fx-gh { margin-bottom: 8px; }
   .fx-meta-b { padding: 8px 8px 10px 10px; }
   .fx-loc { height: 20px; font-size: 11px; left: 6px; bottom: 6px; }
-  .fx-items.list .fx-card { grid-template-columns: 36px minmax(0, 1fr) 36px; column-gap: 12px; min-height: 60px; padding: 0 4px 0 12px; }
+  .fx-items.list .fx-card { grid-template-columns: 48px minmax(0, 1fr) 36px; column-gap: 12px; min-height: 60px; padding: 0 4px 0 12px; }
   .fx-items.list .fx-c-who, .fx-items.list .fx-c-when, .fx-items.list .fx-c-size { display: none; }
   .fx-items.list .fx-r2 { display: flex; height: 16px; font-size: 12px; }
   .fx-items.list .fx-r2 .fx-av { width: 16px; height: 16px; font-size: 9px; }
@@ -256,4 +257,16 @@ details.fx-more { position: relative; flex: none; }
   .fx-studio { width: calc(100vw - 16px); }
   .fx-si .fx-key { display: none; }
   .fx-ask { width: calc(100vw - 16px); }
+}
+
+/* p14b: Jump back in (big preview cards), "Show all N" on long groups, a video's first frame */
+.fx-gh-a { margin-left: auto; }
+.fx-showall { height: 28px; padding: 0 10px; border: 1px solid var(--edge); border-radius: 999px; background: none; color: var(--text); font: 600 12.5px var(--font); cursor: pointer; }
+.fx-showall:hover { background: var(--surface-2); }
+.fx-showall:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.fx-items.fx-jump { grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); }
+.fx-th-video video { width: 100%; height: 100%; object-fit: cover; display: block; background: var(--canvas); }
+@media (max-width: 820px) {
+  .fx-items.fx-jump { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+  .fx-items.fx-jump > .fx-card:nth-child(n+5) { display: none; }   /* phones: the top four */
 }

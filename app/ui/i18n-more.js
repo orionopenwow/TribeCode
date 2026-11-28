@@ -3470,6 +3470,7 @@
     "A time, who, an agenda; everyone can say if they're going": ["Una hora, quién y los temas; cada uno dice si va", "Um horário, quem e a pauta; cada um diz se vai", "Une heure, qui, un ordre du jour ; chacun dit s’il vient", "Eine Zeit, wer, eine Agenda; alle sagen, ob sie dabei sind", "日時、参加者、議題。参加するかどうか各自が答えられます", "时间、参与者、议程；每个人都能说去不去", "시간, 참석자, 안건. 모두 참석 여부를 알릴 수 있어요"],
   });
   I.addPatterns({
+    'Show all {n}': ['Mostrar los {n}', 'Mostrar todos os {n}', 'Afficher les {n}', 'Alle {n} zeigen', '{n}件すべて表示', '显示全部 {n} 个', '{n}개 모두 보기'],
     // p14: scheduled meetings (meetings.js)
     "You and {name}": ["Tú y {name}", "Você e {name}", "Vous et {name}", "Du und {name}", "あなたと{name}", "你和 {name}", "나와 {name}"],
     "Everyone in {project}": ["Todos en {project}", "Todos em {project}", "Tout le monde dans {project}", "Alle in {project}", "{project}の全員", "{project} 里的所有人", "{project}의 모든 사람"],
@@ -3621,6 +3622,8 @@
     'Compare these numbers with {name} in person or on a call. If they match, nobody is in the middle. They change when either of you adds a device.': ['Compara estos números con {name} en persona o en una llamada. Si coinciden, nadie está en medio. Cambian cuando alguno de los dos añade un dispositivo.', 'Compare estes números com {name} pessoalmente ou numa ligação. Se forem iguais, ninguém está no meio. Eles mudam quando um de vocês adiciona um dispositivo.', 'Comparez ces chiffres avec {name} en personne ou lors d’un appel. S’ils sont identiques, personne n’est au milieu. Ils changent quand l’un de vous ajoute un appareil.', 'Vergleiche diese Zahlen mit {name} persönlich oder bei einem Anruf. Wenn sie gleich sind, sitzt niemand dazwischen. Sie ändern sich, wenn einer von euch ein Gerät hinzufügt.', 'この番号を{name}と直接または通話で見比べてください。一致すれば、間に誰もいません。どちらかがデバイスを追加すると変わります。', '请当面或通话时和{name}核对这些数字。如果一致，就说明中间没有别人。你们任何一方添加设备后，数字都会变化。', '이 숫자를 {name}님과 직접 만나거나 통화하면서 비교하세요. 같으면 중간에 아무도 없어요. 둘 중 누가 기기를 추가하면 바뀌어요.'],
     "{name} invited you.": ["{name} te invitó.", "{name} convidou você.", "{name} vous a invité.", "{name} hat dich eingeladen.", "{name}さんが招待しました。", "{name}邀请了你。", "{name}님이 초대했어요."],
     // p14: Files design pass (filesview.js, filesbrain.js, filegrid.js)
+    "Jump back in": ["Retoma donde lo dejaste", "Continue de onde parou", "Reprendre", "Weitermachen", "続きから", "继续上次的", "이어서 하기"],
+    "Show fewer": ["Mostrar menos", "Mostrar menos", "Afficher moins", "Weniger zeigen", "少なく表示", "收起", "줄여 보기"],
     "Headings, lists and checkboxes": ["Títulos, listas y casillas", "Títulos, listas e caixas de seleção", "Titres, listes et cases à cocher", "Überschriften, Listen und Kästchen", "見出し、リスト、チェックボックス", "标题、列表和复选框", "제목, 목록, 체크박스"],
     "Rows, columns and formulas": ["Filas, columnas y fórmulas", "Linhas, colunas e fórmulas", "Lignes, colonnes et formules", "Zeilen, Spalten und Formeln", "行、列、数式", "行、列和公式", "행, 열, 수식"],
     "A deck to present": ["Una presentación para mostrar", "Uma apresentação para mostrar", "Une présentation à montrer", "Folien zum Vorführen", "発表用のスライド", "用来演示的幻灯片", "발표용 슬라이드"],

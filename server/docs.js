@@ -49,6 +49,21 @@ module.exports = function docs({ store, slug, str, broadcast, brain, postChat, o
       } catch (e) { /* brain off or slow: summaries are best-effort */ }
     }, delay));
   }
+  // p14 Files · Jump back in: who opened which file from Files, kept small (per file: person -> { n, at }) in
+  // docs/.opens.json. Only counts, never what was read. The list gives everyone the total and each person their own.
+  const OPENS = 'docs/.opens.json';
+  let opens = null, opensT = null;
+  const opensNow = () => (opens || (opens = store.readJSON(OPENS, {}) || {}));
+  function opened(s, who) {
+    const o = opensNow(), f = o[s] || (o[s] = {}), r = f[who] || (f[who] = { n: 0, at: '' });
+    r.n = Math.min(r.n + 1, 1e6); r.at = new Date().toISOString();
+    clearTimeout(opensT); opensT = setTimeout(() => { try { store.writeJSON(OPENS, opens); } catch {} }, 1500);
+    return r;
+  }
+  function withOpens(list, who) {
+    const o = opensNow();
+    return list.map(d => { const f = o[d.slug]; if (!f) return d; const mine = f[who]; return { ...d, opens: Object.values(f).reduce((n, r) => n + (r.n || 0), 0), myOpens: mine ? mine.n : 0, myOpenedAt: mine ? mine.at : '' }; });
+  }
   function uniqueSlug(title) {
     const base = slug(title); let s = base, n = 2;
     while (fs.existsSync(store.p(rel(s)))) s = `${base}-${n++}`;
@@ -56,8 +71,13 @@ module.exports = function docs({ store, slug, str, broadcast, brain, postChat, o
   }
 
   async function route(req, res, { m, b, c, me, readBody, send, fail }) {
-    if (m === 'GET' && !b) return send(res, 200, { docs: list() });
+    if (m === 'GET' && !b) return send(res, 200, { docs: withOpens(list(), me.id) });
     if (b && !okSlug(b)) return fail(res, 400, 'bad doc name');
+    if (m === 'POST' && c === 'opened') {   // p14: opened from Files (agents don't count)
+      if (!read(b)) return fail(res, 404, 'doc not found');
+      if (me.role === 'agent') return send(res, 200, { ok: true });
+      const r = opened(b, me.id); return send(res, 200, { ok: true, myOpens: r.n });
+    }
     if (m === 'GET') { const d = readFresh(b); return d ? send(res, 200, { doc: d }) : fail(res, 404, 'doc not found'); }
     if (me.role === 'spectator') return fail(res, 403, 'spectators are read-only');
 

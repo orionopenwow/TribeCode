@@ -581,6 +581,7 @@
     }
   });
   if (C.on) C.on('project', () => { if (remote() && !dirty) cur = null; });   // the open doc belongs to the project we left
+  if (C.on) C.on('project', () => setTimeout(() => { if (document.body.dataset.view === 'docs' && !cur && !document.querySelector('#doc-pane .fg')) load().catch(() => {}); }, 60));   // p14b: Files opened while the project was still settling: draw it for the project we are in
   C.on('doc-summary', ({ slug, summary }) => { if (cur && cur.slug === slug) { cur.summary = summary; renderTldr(); } });
   C.on('doc-removed', slug => { list = list.filter(d => d.slug !== slug); renderList(); if (cur && cur.slug === slug) { if (sess) { sess.leave(); sess = null; peersNow = []; } cur = null; renderEditor(); window.TribeApp.toast('This doc was deleted by a teammate'); } });
   C.on('status', s => { if (s.status === 'online' && loaded) load(); });

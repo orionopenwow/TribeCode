@@ -289,8 +289,9 @@
     $(`#${o.idp}-sort`).onclick = e => { st.sort = st.sort === 'name' ? 'updated' : 'name'; lsSet(pfx + '.sort', st.sort); e.currentTarget.querySelector('span').textContent = st.sort === 'name' ? 'Name A–Z' : 'Last updated'; draw(); };
     // p14: list by default once there are many files (more than 12), cards for a few; a pick is remembered
     let lastN = 0;
-    const viewNow = () => (st.view === 'auto' ? (lastN > 12 || matchMedia('(max-width: 820px)').matches ? 'list' : 'grid') : st.view);   // phones: rows
-    const paintView = () => { const v = viewNow(); root.querySelectorAll('[data-dv]').forEach(b => { const on = b.dataset.dv === v; b.classList.toggle('on', on); b.setAttribute('aria-pressed', String(on)); }); root.querySelectorAll('.fx-items').forEach(g => { g.classList.toggle('grid', v === 'grid'); g.classList.toggle('list', v === 'list'); }); };
+    // p14b: cards with their previews by default (rows with small previews on phones); a pick is remembered
+    const viewNow = () => (st.view === 'auto' ? (matchMedia('(max-width: 820px)').matches ? 'list' : 'grid') : st.view);
+    const paintView = () => { const v = viewNow(); root.querySelectorAll('[data-dv]').forEach(b => { const on = b.dataset.dv === v; b.classList.toggle('on', on); b.setAttribute('aria-pressed', String(on)); }); root.querySelectorAll('.fx-items:not(.fx-jump)').forEach(g => { g.classList.toggle('grid', v === 'grid'); g.classList.toggle('list', v === 'list'); }); };
     root.querySelectorAll('[data-dv]').forEach(b => b.onclick = () => { st.view = b.dataset.dv; lsSet(pfx + '.view', st.view); paintView(); });
     let paintTabs = () => root.querySelectorAll('[data-dk]').forEach(b => { const on = b.dataset.dk === st.cat; b.classList.toggle('on', on); b.setAttribute('aria-selected', String(on)); b.tabIndex = on ? 0 : -1; });
     { const pt = paintTabs; paintTabs = () => { pt(); const m = root.querySelector('details.fx-more'); if (!m) return; const on = m.querySelector('[data-dk].on'); m.classList.toggle('on', !!on); const l = m.querySelector('.fx-more-l'); if (l) l.textContent = on ? on.querySelector('.fx-tl').textContent : 'More'; }; }
@@ -342,10 +343,36 @@
     let shown = [];
     // p14: a project's files: Pinned, then Recent (the six newest, once there are more than 8), then everything else;
     // screenshots of the app keep their own shelf at the end. Home groups by where files live (o.groups).
+    // p14b: Jump back in: the files you are most likely to want, from how often you opened them (this device, and the
+    // project's count when the caller has one), how often anyone in the project did, and how recently they changed.
+    const OPK = `${pfx}.opens.${o.scopeKey || o.scope}`;
+    const opensLocal = () => { try { return JSON.parse(lsGet(OPK, '{}')) || {}; } catch { return {}; } };
+    function opened(it) {
+      if (!it || !it.id) return;
+      const m = opensLocal(), r = m[it.id] || { n: 0, at: '' }; r.n++; r.at = new Date().toISOString(); m[it.id] = r;
+      const ks = Object.keys(m); if (ks.length > 400) ks.sort((a, b) => String(m[a].at).localeCompare(String(m[b].at))).slice(0, ks.length - 400).forEach(k => delete m[k]);
+      lsSet(OPK, JSON.stringify(m));
+      if (o.opened) try { o.opened(it); } catch {}
+    }
+    const hrs = at => { const t = Date.parse(at); return Number.isFinite(t) ? (Date.now() - t) / 3600000 : 1e9; };
+    function score(it, loc) {
+      const l = loc[it.id] || { n: 0, at: '' }, mine = Math.max(l.n, it.myOpens || 0), all = Math.max(it.opens || 0, mine);
+      const lastMine = [l.at, it.myOpenedAt].filter(Boolean).sort().pop() || '';
+      return mine * 3 + (all - mine) * 1.5 + (hrs(it.at) < 24 ? 4 : hrs(it.at) < 168 ? 2 : 0) + (lastMine && hrs(lastMine) < 72 ? 3 : 0);
+    }
+    const JUMP = 6, FEW = 6;
+    const isOpen = k => lsGet(`${pfx}.show.${k}`, '') === '1';
     function groups(list) {
       if (o.groups) return o.groups(list, st.where);
-      const side = list.filter(it => it.loc && it.loc.key === 'shots'), main = list.filter(it => !side.includes(it));
-      const pins = main.filter(it => it.pin), rest = main.filter(it => !it.pin), out = [];
+      if (o.collapse && (st.q || st.cat !== 'all')) return [{ key: 'flat', label: '', items: list, flat: true }];   // search or a kind: everything, flat
+      const side = list.filter(it => it.loc && it.loc.key === 'shots'), out = [];
+      let main = list.filter(it => !side.includes(it));
+      if (o.collapse && main.length > JUMP + 2) {
+        const loc = opensLocal(), cand = main.filter(it => !it.pin).map(it => [it, score(it, loc)]).sort((a, b) => b[1] - a[1] || (Date.parse(b[0].at) || 0) - (Date.parse(a[0].at) || 0));
+        const jump = cand.slice(0, JUMP).map(x => x[0]);
+        if (jump.length) { out.push({ key: 'jump', label: 'Jump back in', icon: 'spark', items: jump, jump: true }); main = main.filter(it => !jump.includes(it)); }
+      }
+      const pins = main.filter(it => it.pin), rest = main.filter(it => !it.pin);
       if (pins.length) out.push({ key: 'pinned', label: 'Pinned', icon: 'pin', items: pins });
       if (st.sort !== 'name' && rest.length > 8) out.push({ key: 'recent', label: 'Recent', icon: 'clock', items: rest.slice(0, 6) }, { key: 'rest', label: 'Everything else', icon: 'all', items: rest.slice(6) });
       else if (rest.length) out.push({ key: 'rest', label: pins.length ? 'Everything else' : 'Files', icon: 'all', items: rest });
@@ -377,18 +404,22 @@
           : window.TribeUI.emptyHTML({ kind: 'files', cls: 'fg-empty', center: true, id: `${o.idp}-empty`, icon: icon((cats.find(c => c[0] === st.cat) || CATS[0])[2], 22), title: t, line: s, action: k ? { label: a, attr: `data-empty-new="${k}"` } : null })}`;
         const eb = body.querySelector('[data-empty-new]'); if (eb) eb.onclick = e => make(eb.dataset.emptyNew, e.currentTarget);
       } else {
-        const gs = groups(list), one = gs.length === 1 && !o.alwaysHeads;
+        const gs = groups(list), one = (gs.length === 1 && !o.alwaysHeads) || (gs[0] && gs[0].flat);
         body.innerHTML = lead + gs.map(g => {
-          const cards = g.items.map(it => { shown.push(it); return card(it, shown.length - 1); }).join('');
-          return `<section class="fx-group" data-group="${esc(g.key)}">${one ? '' : `<header class="fx-gh"><span class="fx-gh-ic">${icon(g.icon || (g.device ? 'device' : 'tribe'), 14)}</span><h2>${esc(g.label)}</h2><span class="fx-gh-n">${g.items.length}</span>${g.note ? `<span class="fx-gh-note">${esc(g.note)}</span>` : ''}</header>`}
-            <div class="fx-items dc-items ${viewNow()}">${cards}</div></section>`;
+          // p14b: a long group shows its first few, with "Show all N" (remembered); Jump back in is always cards
+          const cut = o.collapse && !g.flat && !g.jump && g.items.length > FEW + 1 && !isOpen(g.key), items = cut ? g.items.slice(0, FEW) : g.items;
+          const cards = items.map(it => { shown.push(it); return card(it, shown.length - 1); }).join('');
+          const tog = o.collapse && !g.flat && !g.jump && g.items.length > FEW + 1 ? `<button type="button" class="fx-showall" data-show="${esc(g.key)}" aria-expanded="${!cut}">${cut ? `Show all ${g.items.length}` : 'Show fewer'}</button>` : '';
+          return `<section class="fx-group${g.jump ? ' fx-jumpg' : ''}" data-group="${esc(g.key)}">${one ? '' : `<header class="fx-gh"><span class="fx-gh-ic">${icon(g.icon || (g.device ? 'device' : 'tribe'), 14)}</span><h2>${esc(g.label)}</h2>${g.jump ? '' : `<span class="fx-gh-n">${g.items.length}</span>`}${g.note ? `<span class="fx-gh-note">${esc(g.note)}</span>` : ''}${tog ? `<span class="fx-gh-a">${tog}</span>` : ''}</header>`}
+            <div class="fx-items dc-items ${g.jump ? 'grid fx-jump' : viewNow()}">${cards}</div></section>`;
         }).join('');
+        body.querySelectorAll('[data-show]').forEach(b => b.onclick = () => { const k = b.dataset.show; lsSet(`${pfx}.show.${k}`, isOpen(k) ? '' : '1'); draw(); const t = body.querySelector(`[data-group="${CSS.escape(k)}"]`); if (t && !isOpen(k)) t.scrollIntoView({ block: 'nearest' }); });
       }
       paintView();
       body.querySelectorAll('.fx-card').forEach(el => {
         const it = shown[+el.dataset.fx];
-        el.onclick = e => { if (e.target.closest('.fx-more, [data-mv]')) return; o.open(it, el); };
-        el.onkeydown = e => { if ((e.key === 'Enter' || e.key === ' ') && e.target === el) { e.preventDefault(); o.open(it, el); } };
+        el.onclick = e => { if (e.target.closest('.fx-more, [data-mv]')) return; opened(it); o.open(it, el); };
+        el.onkeydown = e => { if ((e.key === 'Enter' || e.key === ' ') && e.target === el) { e.preventDefault(); opened(it); o.open(it, el); } };
       });
       body.querySelectorAll('[data-more]').forEach(b => b.onclick = e => { e.stopPropagation(); more(b, shown[+b.dataset.more]); });
       if (o.wire) o.wire(body, shown);
@@ -400,7 +431,7 @@
       const m = document.createElement('div'); m.className = 'fx-pop fx-menu'; m.id = 'fx-more-menu'; m._for = it; m.setAttribute('role', 'menu'); m.setAttribute('aria-label', it.title);
       m.innerHTML = ACT.filter(([k]) => acts.includes(k)).map(([k, l, ic]) => `${k === 'delete' ? '<hr>' : ''}<button type="button" role="menuitem" data-act="${k}" class="${k === 'delete' ? 'danger' : ''}">${icon(ic, 15)}<span>${k === 'download' && it.exportLabel ? esc(it.exportLabel) : l}</span></button>`).join('');
       document.body.appendChild(m); place(m, anchor); outside(m, anchor);
-      m.querySelectorAll('[data-act]').forEach(b => b.onclick = () => { m.remove(); const k = b.dataset.act; if (k === 'open') return o.open(it); if (k === 'rename') return rename(it); if (k === 'delete') return remove(it, anchor); o.act(k, it, anchor); });
+      m.querySelectorAll('[data-act]').forEach(b => b.onclick = () => { m.remove(); const k = b.dataset.act; if (k === 'open') { opened(it); return o.open(it); } if (k === 'rename') return rename(it); if (k === 'delete') return remove(it, anchor); o.act(k, it, anchor); });
       const f = m.querySelector('button'); if (f) f.focus({ preventScroll: true });
     }
     // rename in place: the card's name becomes an input

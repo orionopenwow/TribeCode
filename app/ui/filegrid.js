@@ -64,7 +64,7 @@
     const out = list.filter(d => folderOf(d) === at || (!at && !folderOf(d))).map(d => {
       const type = typeOf(d), who = memberOf(d.updatedBy || d.by), cat = d.kind === 'deck' ? 'slides' : CAT[type] || 'docs';
       const th = type === 'doc' ? T.text(d.title, d.excerpt, d.img ? media(d.img) : '') : thumb(d, type);
-      return { src: 'doc', id: d.slug, slug: d.slug, pin: !!d.pinned, cat, type: d.kind === 'sheet' ? 'Sheet' : TYPE_L[d.kind === 'deck' ? 'deck' : type] || 'Doc', title: d.title || 'Untitled', at: d.updated, owner: who ? { name: who.name, color: who.color } : (d.updatedBy && o.nameOf ? { name: o.nameOf(d.updatedBy), color: 'var(--peer)' } : null),
+      return { src: 'doc', id: d.slug, slug: d.slug, pin: !!d.pinned, opens: d.opens || 0, myOpens: d.myOpens || 0, myOpenedAt: d.myOpenedAt || '', cat, type: d.kind === 'sheet' ? 'Sheet' : TYPE_L[d.kind === 'deck' ? 'deck' : type] || 'Doc', title: d.title || 'Untitled', at: d.updated, owner: who ? { name: who.name, color: who.color } : (d.updatedBy && o.nameOf ? { name: o.nameOf(d.updatedBy), color: 'var(--peer)' } : null),
         loc: here, mine: true, text: d.excerpt || '', thumb: th, cls: 'fg-card', attrs: `data-slug="${esc(d.slug)}" data-type="${type}"`, acts: ['open', 'rename', 'move', 'duplicate', 'download', 'delete'] };
     });
     // feat/dropzone: the project's uploaded files, in the folder they were dropped from (draggable out to the desktop)
@@ -72,7 +72,7 @@
     for (const f of (render.ups || []).filter(x => (x.dir || '') === at)) {
       const who = memberOf(f.by), u = media(`/api/uploads/${encodeURIComponent(f.id)}/raw`);
       out.push({ src: 'up', id: 'up:' + f.id, f, size: f.size, cat: UPCAT[f.kind] || 'other', type: f.kind === 'image' ? 'Picture' : f.kind === 'code' ? 'Code' : 'File', title: f.name, at: f.at, loc: here, mine: true,
-        owner: who ? { name: who.name, color: who.color } : null, thumb: f.kind === 'image' && f.size < 4 * 1048576 && !/svg/.test(f.type) ? T.img(u) : T.icon(UPCAT[f.kind] || 'other', `${f.kind || 'file'} · ${Math.max(1, Math.round(f.size / 1024))} KB`),
+        owner: who ? { name: who.name, color: who.color } : null, thumb: f.kind === 'image' && f.size < 4 * 1048576 && !/svg/.test(f.type) ? T.img(u) : f.kind === 'video' ? `<div class="fg-th fg-th-img fx-th-video"><video src="${esc(u)}#t=0.5" preload="metadata" muted playsinline tabindex="-1" aria-hidden="true"></video></div>` : T.icon(UPCAT[f.kind] || 'other', `${f.kind || 'file'} · ${Math.max(1, Math.round(f.size / 1024))} KB`),
         cls: 'fg-card', attrs: `data-up="${esc(f.id)}" data-upname="${esc(f.name)}" data-uptype="${esc(f.type || '')}" draggable="true"`, acts: ['open', 'download', 'delete'] });
     }
     // feat/setup-github: the project's website, once someone started it (a draft, a built page, or one in the code)
@@ -198,6 +198,8 @@
         empty: { links: ['No links yet', 'Paste a link in chat or in the search box above. It is read, summed up and kept here.', 'link', 'Paste a link'] },
         open: it => (it.src === 'brain' ? FB().open(it) : it.src === 'site' ? openSite() : it.src === 'up' ? act('open', it) : it.src === 'shot' ? (window.TribePreview && window.TribePreview.image ? window.TribePreview.image(it.url, it.title) : window.open(it.url, '_blank', 'noopener')) : o.open(it.slug)),
         search: v => { q = v; },
+        collapse: !at, scopeKey: pidNow(),   // p14b: Jump back in, and long groups show their first few
+        opened: it => { if (it.src === 'doc') C.api('/docs/' + encodeURIComponent(it.slug) + '/opened', { method: 'POST', body: {} }).catch(() => {}); },
       });
       fv.set(items(list, shots, at, o));
       { const bs = root.querySelector('#fg-brain'); if (bs && FB()) { root.querySelector('.fx').classList.add('has-fb'); const tp = root.querySelector('#fg-top'); if (tp) tp.prepend(bs); const mine = fv; FB().attach({ slot: bs, fv, refresh: () => { if (fv === mine && root.isConnected) fv.set(items(list, render.shots, at, o)); } }); } }   // p13
@@ -211,5 +213,13 @@
     try { const u = await C.api('/uploads'); const ups = u.project || []; if (JSON.stringify(ups.map(x => x.id)) !== JSON.stringify((render.ups || []).map(x => x.id))) { render.ups = ups; if (pane.querySelector(':scope > .fg .fx') && !pane.querySelector('#doc-title') && !pane.querySelector('#fx-rename')) draw(render.shots); } } catch {}   // feat/dropzone
     try { const v = await C.api('/visuals'); const n = (v.screens || []).length; if (n !== (render.shots || []).length) { render.shots = v.screens || []; if (pane.querySelector(':scope > .fg .fx') && !pane.querySelector('#doc-title') && !pane.querySelector('#fx-rename')) draw(render.shots); } } catch {}
   }
+  // a new or removed screenshot shows in Files right away (phones and computers)
+  if (C && C.on) C.on('ws', m => {
+    if (!m || (m.type !== 'visual' && m.type !== 'visual-removed' && m.type !== 'visuals')) return;
+    clearTimeout(render.vt); render.vt = setTimeout(async () => {
+      const pane = document.querySelector('.fg') && document.querySelector('.fg').parentElement; if (!pane || !fv || !document.querySelector('.fg .fx') || document.querySelector('#doc-title, #fx-rename')) return;
+      try { const v = await C.api('/visuals'); render.shots = v.screens || []; if (window.TribeDocs && window.TribeDocs.load) window.TribeDocs.load(); } catch {}
+    }, 300);
+  });
   window.TribeFileGrid = { render, typeOf, folder: pane => (pane && pane.dataset.fgFolder) || '' };
 })();
