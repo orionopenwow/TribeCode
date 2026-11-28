@@ -14,7 +14,7 @@ const when = t => { const d = new Date(t); return `${d.getDate()} ${d.toLocaleSt
 const clip = (s, n) => { s = String(s || '').replace(/\s+/g, ' ').trim(); return s.length > n ? s.slice(0, n - 1).replace(/\s+\S*$/, '') + '…' : s; };
 const first = n => String(n || '').trim().split(/\s+/)[0];
 
-module.exports = function callNotes({ P, captures, getMembers, postChat, llm = null, log = () => {} }) {
+module.exports = function callNotes({ P, captures, getMembers, postChat, llm = null, log = () => {}, meetingFor = () => null }) {
   const member = id => getMembers().find(m => m.id === id) || null;
 
   // { project, started, ended, lines:[{ at, by, name, text, mic? }], dm, attendees:[id], by, tasks }
@@ -28,13 +28,15 @@ module.exports = function callNotes({ P, captures, getMembers, postChat, llm = n
       const people = [...new Set([...attendees, ...lines.map(l => l.by)])].map(member).filter(m => m && m.role !== 'agent');
       const names = people.map(m => m.name);
       const proj = (P.get(pid) || {}).name || 'the project';
-      const title = dm ? `Call · ${when(t0)} · ${names.join(' & ')}` : `Meeting · ${when(t0)} · ${proj}`;
+      const mt = meetingFor({ project: pid, dm });   // p14: a scheduled meeting joined from its card names the note and carries its agenda
+      const title = mt ? `${mt.title} · ${when(t0)}` : dm ? `Call · ${when(t0)} · ${names.join(' & ')}` : `Meeting · ${when(t0)} · ${proj}`;
       const starter = member(by) || people[0] || { id: 'tribecode', name: 'TribeCode', role: 'host' };
       const tLine = l => ({ t: Math.max(0, Math.round((Date.parse(l.at) - t0) / 1000)), who: l.name === 'Speaker' ? `Speaker (${first(l.mic)}'s mic)` : first(l.name), text: String(l.text || '') });
       const channel = dm || 'general';
 
       // the meeting note: the capture's author line carries the attendees
       const { capture: c } = await captures.captureVoice({ ...starter, name: names.join(', ') || starter.name }, { lines: lines.map(tLine), title, recipe: 'meeting', dur, channel });
+      if (mt) { c.meeting = mt.id; if (mt.agenda) { c.agenda = mt.agenda; c.summary = `Agenda: ${clip(mt.agenda.replace(/\n+/g, '; '), 300)}\n\n${c.summary || ''}`.trim(); } }
       c.site = dm ? 'Call' : 'Meeting'; c.source = 'call'; c.attendees = names; c.ended = new Date(t1).toISOString(); c.transcriptVia = 'each person\'s own mic (call Notes)';
       captures.save(c);
 

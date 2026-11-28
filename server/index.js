@@ -547,7 +547,8 @@ const huddleSum = require('./huddlesum')({ P, brain, postChat, nameOf, log: m =>
 // feat/captures: the link reader, voice notes and summaries (server/captures.js), optional packs (server/packs.js)
 const packs = require('./packs')({ store: baseStore, broadcast: m => broadcast(m), log: m => console.error('  ' + m) });
 const captures = require('./captures')({ P, store, base: baseStore, embeds, packs, llm, docs, dms, perms, postChat: (...x) => postChat(...x), broadcast: m => broadcast(m), sendTo: (...x) => sendTo(...x), createTask: o => createTask(o), getMembers: () => members, nameOf, log: m => console.error('  ' + m), onSaved: pid => brainChanged(pid) });
-const callNotes = require('./callnotes')({ P, captures, getMembers: () => members, postChat: (...x) => postChat(...x), llm, log: m => console.error('  ' + m) });
+let meetings = null;   // p14: scheduled meetings (server/meetings.js, made below)
+const callNotes = require('./callnotes')({ P, captures, getMembers: () => members, postChat: (...x) => postChat(...x), llm, log: m => console.error('  ' + m), meetingFor: x => (meetings ? meetings.forNotes(x) : null) });
 huddleSum.setSink(x => callNotes.save(x));   // p13b: one meeting note + a note per person, as captures (was captures.fromHuddle)
 captureHook = (...x) => captures.onChat(...x);
 // voice-video: reactions, laser pointer, in-call chat and polls, recording notices, ring/missed, lobby, ICE/TURN config, history
@@ -556,6 +557,8 @@ const calls = require('./calls')({ store, id, str, huddle, sendTo, broadcast, po
 const voice = makeVoice({ canSeeHuddle: me => seesHuddle(me), dmOf: () => huddleDm, store, id, str, huddle, sendTo, broadcast, postChat, createTask: o => createTask(o), getMembers: () => members, nameOf, brain, docs, bus, P, summary: huddleSum });
 const plan = makePlan({ store, id, str, broadcast, postChat, getMembers: () => members, loadTasks: () => loadTasks(), nameOf });
 rituals = require('./rituals')({ store, docs, plan, postChat, broadcast, getMembers: () => members, nameOf, str, isLead: me => taskFlow.isLead(me) });
+meetings = require('./meetings')({ P, plan, str, postChat: (...x) => postChat(...x), getMembers: () => members, sendTo, dms, voice, huddle,
+  isLead: (me, pid) => !!me && me.role !== 'agent' && (me.role === 'host' || perms.can(me, 'settings.edit', pid)) });
 plan.guardRitual(me => rituals.mayStart(me), rituals.NO_AGENTS);   // harden: agents start rituals only when a lead allowed it   // feat/work-company: standup/retro rituals on the calendar
 const docsx = makeDocsX({ store, id, str, slug, broadcast, docs, getMembers: () => members, nameOf });
 const visuals = makeVisuals({ store, slug, str, broadcast, nameOf });
@@ -1413,6 +1416,8 @@ async function apiInProject(req, res, url) {
   }
   if (a === 'rituals') return rituals.route(req, res, ctx());   // feat/work-company
   if (a === 'calendar') { const h = await plan.route(req, res, ctx()); if (h !== null) return; }
+  if (a === 'meetings') { const h = await meetings.route(req, res, ctx()); if (h !== null) return; }   // p14
+  if (a === 'debug' && b === 'meetings-tick' && m === 'POST' && DEBUG) { meetings.tick(); return send(res, 200, { ok: true }); }
   if (a === 'workshop') { const h = await workshop.route(req, res, ctx()); if (h !== null) return; }
   if (a === 'visuals') { const h = await visuals.route(req, res, ctx()); if (h !== null) return; }
   if (a === 'preview') { const h = await preview.route(req, res, ctx()); if (h !== null) return; }   // app preview links + settings
@@ -1567,6 +1572,7 @@ server.on('upgrade', (req, sock) => {
       if (first) huddleDm = typeof msg.dm === 'string' && dms.isDm(msg.dm) && dms.canRead(msg.dm, me) && dms.pair(msg.dm) ? msg.dm : null;   // p13b: a private 1:1 call
       huddle.set(me.id, { muted: !!msg.muted, sharing: false, joined: new Date().toISOString(), socket: s });
       pushHuddle();
+      if (meetings) meetings.onHuddleJoin(me, s);   // p14: a meeting joined from its card turns on Notes when it asks for it
       if (first && !huddleDm) postChat('general', 'tribecode', `🎙️ ${me.name} started a huddle. Jump in from the sidebar.`);
       if (first && !huddleDm) bus.notify({ type: 'huddle', priority: 'low', from: me.id, title: `${me.name} started a huddle`, body: 'Jump in from the sidebar.', view: 'home' });
     }

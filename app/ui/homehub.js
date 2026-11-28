@@ -112,7 +112,7 @@
       : `<ul class="hh-list" id="hh-list">${list.slice(0, 20).map(rowHtml).join('')}</ul>`;
     el.innerHTML = `<section class="sec hub-sec hh-msgs" id="hh-msgs" aria-labelledby="hh-msgs-t">
       <div class="sec-head hh-mhead"><span class="eyebrow">${t('Messages')}${n ? ` · ${n} ${t('new')}` : ''}</span><h2 id="hh-msgs-t">${t('Latest from your projects')}</h2>${fromCache && list.length ? `<span class="hh-off">${t('Saved on this device')}</span>` : ''}</div>
-      ${body}</section>`;
+      ${window.TribeMeetings ? window.TribeMeetings.nextLine() : ''}${body}</section>`;
     el.querySelectorAll('[data-hh-open]').forEach(b => b.onclick = () => go(list[+b.dataset.hhOpen]));
     el.querySelectorAll('[data-hh-reply]').forEach(b => b.onclick = () => { const r = list[+b.dataset.hhReply]; openReply = openReply === r.channel ? '' : r.channel; drawMessages(); const f = el.querySelector('.hh-reply input'); if (f) f.focus(); });
     el.querySelectorAll('[data-hh-form]').forEach(f => f.onsubmit = e => { e.preventDefault(); reply(list[+f.dataset.hhForm], f.querySelector('input')); });

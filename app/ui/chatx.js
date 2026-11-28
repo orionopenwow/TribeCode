@@ -157,7 +157,7 @@
     const meta = `<span class="mt">${m.edited && !m.deleted ? '<span class="edited">edited</span>' : ''}<time datetime="${esc(m.at)}">${when}</time>${mine ? `<span class="tk">${TICK1}</span>` : ''}</span>`;
     let body = '';
     const rich = !sys && !m.deleted && !m.media && !m.enc && R() ? R().parts(m, ch) : null;   // no link previews for private words (a preview would ask the server)
-    if (sys) body = `<p title="${esc(when)}">${md(m.text || '')}</p>` + (m.capture && window.TribeCaptures ? window.TribeCaptures.card(m.capture, ch) : '');   // feat/captures: the capture card
+    if (sys) body = `<p title="${esc(when)}">${md(m.text || '')}</p>` + (m.capture && window.TribeCaptures ? window.TribeCaptures.card(m.capture, ch) : '') + (m.meeting && window.TribeMeetings ? window.TribeMeetings.card(m.meeting, ch) : '');   // p14: the meeting card (meetings.js)   // feat/captures: the capture card
     else if (m._locked) body = `<p class="pv-locked">${window.TribeIcons ? window.TribeIcons.svg('lock', 13, 'pv-i') : ''}${esc(m._locked)}${META}</p>`;
     else if (m.deleted) body = `<p class="gone">${m.removedBy ? 'removed by a moderator' : 'message deleted'}${META}</p>`;
     else {
