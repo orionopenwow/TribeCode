@@ -109,7 +109,7 @@ def main():
                 ph.evaluate(f"TribeDM.open({hid!r})"); ph.wait_for_selector("#chat-input", state="visible")
                 ph.fill("#chat-input", "Private hi from Maya"); ph.press("#chat-input", "Enter")
                 ch = "dm-" + "-".join(sorted([hid, ph.evaluate("TribeClient.state().me.id")]))
-                wait_until(lambda: any(m["text"] == "Private hi from Maya" for m in api(f"/chat/{ch}?limit=10", token=htok)[1].get("messages", [])), 10, "dm saved")
+                wait_until(lambda: any(m["text"] == "Private hi from Maya" or (m.get("enc") or {}).get("ct") for m in api(f"/chat/{ch}?limit=10", token=htok)[1].get("messages", [])), 10, "dm saved")
                 reload_phone(); ph.evaluate(f"TribeDM.open({hid!r})"); wait_text(ph, "#dm-list", "Private hi from Maya")
                 ph.evaluate("TribeDM.back && TribeDM.back()")
             feature("Direct message with the host, saved after a reload", dm)

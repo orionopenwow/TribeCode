@@ -227,7 +227,7 @@ def main():
             phone.fill("#chat-input", "psst"); phone.click("#m2-send")
             for _ in range(40):
                 dm = api(f"/chat/dm-{'-'.join(sorted([maya, orion]))}?limit=10", token=htok)[1].get("messages", [])
-                if any(m["text"] == "psst" for m in dm): break
+                if any(m["text"] == "psst" or (m.get("enc") or {}).get("ct") for m in dm): break   # private messages are end-to-end encrypted: the server keeps locked text
                 time.sleep(0.1)
             else: raise AssertionError("DM not sent")
             phone.evaluate("TribeMobile.talkTo()"); phone.click("#m2-talk-sheet [data-talk='general']")
