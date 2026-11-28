@@ -476,7 +476,7 @@ def main():
 
             # phone 390
             ph = login(b, {"width": 390, "height": 844}, "Maya", maya, mobile=True)
-            ph.evaluate("TribeApp.show('docs')"); ph.wait_for_selector("#fb-m2 .fb-card", timeout=15000)   # p13: phones see links in Files › What we know
+            ph.evaluate("TribeApp.show('docs')"); ph.wait_for_selector(".fg .fb-card", timeout=15000)   # p13/p14: phones see links in Files, the same page as on a computer
             ph.evaluate("TribeCaptures.open()"); ph.wait_for_selector("#view-captures:not(.hidden) .cap-row")
             sw = lambda: ph.evaluate("[document.documentElement.scrollWidth, document.body.scrollWidth, innerWidth]")
             assert max(sw()[:2]) <= 390, f"captures list, no sideways scroll: {sw()}"

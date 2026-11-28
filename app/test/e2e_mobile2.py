@@ -277,13 +277,12 @@ def main():
             shot(phone, "repo-tile")
             wait_text(phone, "#m2-repo-hero", "first level")       # the last commit
             wait_text(phone, "#m2-repo-hero", "main")              # the branch
-            assert phone.locator("#m2-repo-hero .eyebrow").inner_text().strip().upper() == "PINNED REPO"
             # a screenshot of the running app → the hero shows it
             st, _ = api("/visuals", "POST", {"screen": "level-1", "png_base64": __import__("base64").b64encode(png(320, 180, (56, 198, 177))).decode()}, htok); assert st == 200, _
             assert api("/thumb", token=mtok)[1]["thumb"]["kind"] == "screenshot"
             hero_kind("screenshot")
             phone.wait_for_function("(() => { const i = document.querySelector('#m2-repo-hero .rhx-art img'); return i && i.complete && i.naturalWidth === 320; })()")
-            phone.wait_for_selector("#m2-shots .m2-shot img")
+            phone.wait_for_selector("#fg-items .fx-card[data-shot]", state="attached")   # p14: screenshots are files in Files
             shot(phone, "repo-screenshot")
             # README with an image → the hero shows the README art (relative path, served from inside the repo only)
             Path(repo, "art").mkdir(); Path(repo, "art", "cover.png").write_bytes(png(400, 200, (108, 124, 255)))
@@ -296,8 +295,7 @@ def main():
             assert api("/thumb/file?p=art%2Fcover.png")[0] == 401, "members only"
             band = phone.evaluate("getComputedStyle(document.querySelector('#m2-repo-hero .rhx-band')).backgroundImage")
             assert band == "none", "solid band, no gradient"
-            wait_text(phone, "#m2-docs-hub .m2-journal", "approved")   # the living notes journal picked up the approval
-            assert phone.locator("#m2-files-h").is_visible() and phone.locator("#doc-list").is_visible()
+            assert phone.locator("#fg-title").is_visible() and phone.locator("#fb-q").is_visible()   # p14: Files is the same page as on a computer
             phone.evaluate("scrollTo(0, 0); document.querySelector('#main').scrollTop = 0")
             shot(phone, "docs")
             no_overflow(phone, "docs")

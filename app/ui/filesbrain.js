@@ -1,6 +1,7 @@
 // p13 Files · What we know: the project's living brain, as the top of Files (server/brainhub.js).
-//   The hero card "What we know" (a summary that updates itself, worked out with no AI; "Say it in plain words" when an
-//   AI is connected), one box to search Files or paste a link to save it, and quick counts that jump to a section.
+//   The card "What we know" (a summary that updates itself, worked out with no AI; "Say it in plain words" when an
+//   AI is connected): p14 made it compact, one line that opens to the rest (who said it, quick counts that jump to a
+//   section, Add a note). Files' one search box (filesview.js) also saves a pasted link: attach() wires it here.
 //   Files gets four more tabs: Links (saved links and notes, the old Captures), Decisions, Questions; Code shows the
 //   project's code and the GitHub links people saved. Every item opens the side reader: full notes, tags and title
 //   editable in place, Pin, Use in design, Make tasks, Remove (people only).
@@ -43,39 +44,34 @@
   const people = id => ((C.state() || {}).members || []).find(m => m.id === id) || null;
 
   // ---------- the hero ----------
+  const OPEN = 'tribecode.files.knowOpen';
   function hero() {
-    const d = st.data, s = d ? d.summary : null, n = d ? d.counts : {};
+    const d = st.data, s = d ? d.summary : null, n = d ? d.counts : {}, open = ls.get(OPEN, '0') === '1';
     const chip = (cat, k, one, many) => (n[k] ? `<button type="button" class="fb-stat" data-fb-cat="${cat}">${esc(String(n[k]))} ${esc(n[k] === 1 ? one : many)}</button>` : '');
-    return `<section class="fb-hero" id="fb-hero" aria-labelledby="fb-h">
-      <div class="fb-hh"><span class="eyebrow">What we know</span><h2 id="fb-h">${esc((((window.TribeProjects && window.TribeProjects.list && window.TribeProjects.list()) || []).find(p => p.id === pid()) || {}).name || 'This project')}</h2></div>
-      <p class="fb-sum${st.more ? ' open' : ''}" id="fb-sum">${s ? esc(s.text) : '<span class="fb-skel"></span><span class="fb-skel short"></span>'}</p>
-      ${s ? `<p class="fb-via"><span>${esc(s.model ? `Said in plain words by ${s.via}` : 'Worked out from your links, notes, decisions and tasks')} · ${esc(ago(s.at) || 'just now')}</span>${d.ai && canWrite() ? `<button type="button" class="linkish" id="fb-rewrite">${s.model ? 'Say it again' : 'Say it in plain words'}</button>` : ''}${s.model ? '<button type="button" class="linkish" id="fb-plain">Show the worked-out one</button>' : ''}</p>` : ''}
-      <form class="fb-find" id="fb-find" role="search">
-        <label class="fb-box">${ico('search', 16)}<span class="sr-only">Search Files or paste a link</span><input id="fb-q" type="search" autocomplete="off" spellcheck="false" placeholder="${canWrite() ? 'Search what we know, or paste a link to save it' : 'Search what we know'}" value="${esc(st.q)}"></label>
-        <button type="submit" class="btn primary hidden" id="fb-save">${ico('plus', 15)}<span>Save link</span></button>
-      </form>
-      <div class="fb-stats" id="fb-stats">${d ? [chip('links', 'links', 'link', 'links'), chip('links', 'notes', 'note', 'notes'), chip('decisions', 'decisions', 'decision', 'decisions'), chip('questions', 'questions', 'open question', 'open questions'), chip('code', 'github', 'code link', 'code links'), chip('docs', 'docs', 'doc', 'docs')].join('') : ''}${canWrite() ? `<button type="button" class="fb-stat ghost" id="fb-note">${ico('notes', 14)}Add a note</button>` : ''}</div>
+    return `<section class="fb-hero${open ? ' open' : ''}" id="fb-hero" aria-labelledby="fb-h">
+      <button type="button" class="fb-hh" id="fb-toggle" aria-expanded="${open}" aria-controls="fb-more">
+        <span class="fb-hh-ic" aria-hidden="true">${ico('spark', 15)}</span>
+        <span class="fb-hh-t"><b id="fb-h">What we know</b><span class="fb-sum" id="fb-sum">${s ? esc(s.text) : '<span class="fb-skel"></span>'}</span></span>
+        <span class="fb-hh-c" aria-hidden="true"></span>
+      </button>
+      <div class="fb-more" id="fb-more"${open ? '' : ' hidden'}>
+        ${s ? `<p class="fb-via"><span>${esc(s.model ? `Said in plain words by ${s.via}` : 'Worked out from your links, notes, decisions and tasks')} · ${esc(ago(s.at) || 'just now')}</span>${d.ai && canWrite() ? `<button type="button" class="linkish" id="fb-rewrite">${s.model ? 'Say it again' : 'Say it in plain words'}</button>` : ''}${s.model ? '<button type="button" class="linkish" id="fb-plain">Show the worked-out one</button>' : ''}</p>` : ''}
+        <div class="fb-stats" id="fb-stats">${d ? [chip('links', 'links', 'link', 'links'), chip('links', 'notes', 'note', 'notes'), chip('decisions', 'decisions', 'decision', 'decisions'), chip('questions', 'questions', 'open question', 'open questions'), chip('code', 'github', 'code link', 'code links'), chip('docs', 'docs', 'doc', 'docs')].join('') : ''}${canWrite() ? `<button type="button" class="fb-stat ghost" id="fb-note">${ico('notes', 14)}Add a note</button>` : ''}</div>
+      </div>
       <div class="fb-drop" aria-hidden="true">${ico('link', 22)}<b>Drop a link or a text file to save it</b></div>
     </section>`;
   }
   function paintHero() {
     const slot = st.slot; if (!slot || !slot.isConnected) return;
-    const had = document.activeElement && document.activeElement.id === 'fb-q', pos = had ? document.activeElement.selectionStart : 0;
     slot.innerHTML = hero(); wireHero(slot);
-    if (had) { const i = slot.querySelector('#fb-q'); i.focus(); try { i.setSelectionRange(pos, pos); } catch {} }
   }
   function wireHero(slot) {
-    const q = slot.querySelector('#fb-q'), save = slot.querySelector('#fb-save'), form = slot.querySelector('#fb-find');
-    const sync = () => { const v = q.value.trim(); save.classList.toggle('hidden', !(canWrite() && isUrl(v))); st.q = isUrl(v) ? '' : v; if (st.fv && st.fv.setQ) st.fv.setQ(st.q); };
-    let t = null; q.oninput = () => { clearTimeout(t); t = setTimeout(sync, 120); };
-    q.addEventListener('paste', () => setTimeout(() => { const v = q.value.trim(); if (canWrite() && isUrl(v)) { sync(); form.requestSubmit(); } }, 0));
-    q.onkeydown = e => { if (e.key === 'Escape' && q.value) { e.stopPropagation(); q.value = ''; sync(); } };
-    form.onsubmit = async e => { e.preventDefault(); const v = q.value.trim(); if (!isUrl(v)) return sync(); save.disabled = true; const r = await add(v); save.disabled = false; if (r) { q.value = ''; sync(); setCat('links'); } };
+    const tg = slot.querySelector('#fb-toggle'), more = slot.querySelector('#fb-more');
+    tg.onclick = () => { const open = more.hidden; more.hidden = !open; tg.setAttribute('aria-expanded', String(open)); slot.querySelector('#fb-hero').classList.toggle('open', open); ls.set(OPEN, open ? '1' : '0'); };
     slot.querySelectorAll('[data-fb-cat]').forEach(b => b.onclick = () => setCat(b.dataset.fbCat));
     const rw = slot.querySelector('#fb-rewrite'); if (rw) rw.onclick = async () => { rw.disabled = true; rw.textContent = 'Thinking…'; try { st.data = await C.api('/brain/summary', { method: 'POST', body: { model: true } }); st.at = Date.now(); } catch (e) { toast(e.message); } paintHero(); };
     const pl = slot.querySelector('#fb-plain'); if (pl) pl.onclick = async () => { try { st.data = await C.api('/brain/summary', { method: 'POST', body: {} }); st.at = Date.now(); } catch (e) { toast(e.message); } paintHero(); };
     const nb = slot.querySelector('#fb-note'); if (nb) nb.onclick = () => noteSheet();
-    const sm = slot.querySelector('#fb-sum'); if (sm) sm.onclick = () => { if (!isPhone()) return; st.more = !st.more; sm.classList.toggle('open', st.more); };   // phones: the summary opens with a tap
     // drop a link or a text file on the hero
     const hz = slot.querySelector('#fb-hero'); let n = 0;
     const ok = e => { const ty = [...((e.dataTransfer && e.dataTransfer.types) || [])]; return canWrite() && (ty.includes('text/uri-list') || ty.includes('Files') || ty.includes('text/plain')); };
@@ -121,11 +117,29 @@
   async function reload() { await load(true); paintHero(); if (st.refresh) st.refresh(); }
 
   // ---------- Files integration (filegrid.js / filesview.js) ----------
+  // Files' one search box: typing searches Files (links and notes too); a pasted link shows "Save link" and is saved
+  const queryOf = v => (isUrl(v) ? '' : v);
+  function wireFind(input, slotA) {
+    if (!input || input.dataset.fb) return; input.dataset.fb = '1';
+    if (canWrite()) input.placeholder = 'Search files, or paste a link to save it';
+    if (slotA) slotA.innerHTML = `<button type="submit" class="btn primary hidden" id="fb-save">${ico('plus', 15)}<span>Save link</span></button>`;
+    const sync = () => { const b = document.getElementById('fb-save'); if (b) b.classList.toggle('hidden', !(canWrite() && isUrl(input.value.trim()))); };
+    input.addEventListener('input', sync);
+    input.addEventListener('paste', () => setTimeout(() => { sync(); if (canWrite() && isUrl(input.value.trim())) submit(input.value.trim()); }, 0));
+    sync();
+  }
+  async function submit(v) {
+    if (!canWrite() || !isUrl(v)) return false;
+    const b = document.getElementById('fb-save'); if (b) b.disabled = true;
+    const r = await add(v); if (b) b.disabled = false;
+    if (r) { if (st.fv && st.fv.setQ) st.fv.setQ(''); const bb = document.getElementById('fb-save'); if (bb) bb.classList.add('hidden'); setCat('links'); }
+    return !!r;
+  }
   function attach(o) {
     st.slot = o.slot; st.fv = o.fv; st.refresh = o.refresh;
     if (st.pid !== pid()) { st.data = null; st.tag = ''; st.kind = ''; }
+    if (o.fv && o.fv.input) wireFind(o.fv.input, o.fv.findSlot);
     paintHero();
-    if (st.q && st.fv && st.fv.setQ) st.fv.setQ(st.q);
     load().then(d => { if (!d || !st.slot || !st.slot.isConnected) return; paintHero(); if (st.refresh) st.refresh(); });
   }
   const cats = () => CATS;
@@ -136,24 +150,24 @@
     const keep = it => (!st.tag || (it.tags || []).includes(st.tag)) && (!st.kind || (st.kind === 'note' ? it.type === 'note' : st.kind === 'video' ? /video|short/.test(it.kind || '') : st.kind === 'voice' ? it.type === 'voice' : it.type === 'link' && !/video|short/.test(it.kind || '')));
     for (const l of d.links.filter(keep)) {
       const who = people(l.by);
-      out.push({ src: 'brain', id: 'fb:' + l.id, bid: l.id, item: l, cat: 'links', type: `${l.pinned ? 'Pinned · ' : ''}${l.type === 'voice' ? (l.site && l.site !== 'Huddle' ? l.site : 'Voice note') : l.site || 'Link'}`, title: l.title, at: l.at, pin: l.pinned,
+      out.push({ src: 'brain', id: 'fb:' + l.id, bid: l.id, item: l, cat: 'links', type: `${l.type === 'voice' ? (l.site && l.site !== 'Huddle' ? l.site : 'Voice note') : l.site || 'Link'}`, title: l.title, at: l.at, pin: l.pinned,
         owner: who ? { name: who.name, color: who.color } : l.byName ? { name: l.byName, color: 'var(--peer)' } : null, text: `${l.summary} ${(l.tags || []).join(' ')} ${l.site}`,
         thumb: l.thumb ? `<div class="fg-th fb-th has-img"><img alt="" loading="lazy" src="${esc(thumbUrl(l.id))}"><span class="fb-th-cap"><span class="fb-th-sum">${esc(l.summary)}</span></span></div>` : tile(l, 'link'), cls: 'fb-card', attrs: `data-fb-id="${esc(l.id)}"`, acts: ['open', 'rename', ...(human() ? ['delete'] : [])] });
     }
     for (const n of d.notes.filter(keep)) {
       const who = people(n.by);
-      out.push({ src: 'brain', id: 'fb:' + n.id, bid: n.id, item: n, cat: 'links', type: `${n.pinned ? 'Pinned · ' : ''}Note${n.agent ? ' from an agent' : ''}`, title: n.title, at: n.at, pin: n.pinned,
+      out.push({ src: 'brain', id: 'fb:' + n.id, bid: n.id, item: n, cat: 'links', type: `Note${n.agent ? ' from an agent' : ''}`, title: n.title, at: n.at, pin: n.pinned,
         owner: who ? { name: who.name, color: who.color } : { name: n.byName || '?', color: 'var(--peer)' }, text: `${n.text} ${(n.tags || []).join(' ')}`, thumb: tile(n, 'note'), cls: 'fb-card', attrs: `data-fb-id="${esc(n.id)}"`, acts: ['open', 'rename', ...(human() ? ['delete'] : [])] });
     }
     return out;
   }
-  const qNow = () => (st.fv && st.fv.state ? st.fv.state().q : st.q || '').toLowerCase();
+  const qNow = () => (st.fv && st.fv.state ? st.fv.state().q : '').toLowerCase();
   const matches = (...s) => { const q = qNow(); return !q || s.join(' ').toLowerCase().includes(q); };
   function lead(cat) {
     const d = st.data; if (!d || st.pid !== pid()) return cat === 'decisions' || cat === 'questions' ? `<div class="fb-lead"><p class="fb-empty">Gathering…</p></div>` : '';
     if (cat === 'links') {
       const tags = d.tags.slice(0, 10), kinds = [['', 'Everything'], ['link', 'Pages'], ['video', 'Videos'], ['voice', 'Voice notes'], ['note', 'Notes']].filter(([k]) => !k || d.links.concat(d.notes).some(it => k === 'note' ? it.type === 'note' : k === 'video' ? /video|short/.test(it.kind || '') : k === 'voice' ? it.type === 'voice' : it.type === 'link' && !/video|short/.test(it.kind || '')));
-      if (!d.links.length && !d.notes.length) return `<div class="fb-lead"><div class="fb-empty-card"><b>No links yet</b><p>Paste a link in chat or in the box above. It is read, summed up and kept here, and every agent can use it.</p></div></div>`;
+      if (!d.links.length && !d.notes.length) return `<div class="fb-lead"><div class="fb-empty-card"><b>No links yet</b><p>Paste a link in chat or in the search box above. It is read, summed up and kept here, and every agent can use it.</p></div></div>`;
       return `<div class="fb-lead fb-filters" role="group" aria-label="Filter links">${kinds.length > 2 ? kinds.map(([k, l]) => `<button type="button" class="fb-chip${st.kind === k ? ' on' : ''}" data-fb-kind="${k}" aria-pressed="${st.kind === k}">${esc(l)}</button>`).join('') : ''}${tags.length ? `${kinds.length > 2 ? '<span class="fb-sep" aria-hidden="true"></span>' : ''}${tags.map(t => `<button type="button" class="fb-chip tag${st.tag === t ? ' on' : ''}" data-fb-tag="${esc(t)}" aria-pressed="${st.tag === t}">#${esc(t)}</button>`).join('')}` : ''}</div>`;
     }
     if (cat === 'decisions') {
@@ -313,7 +327,7 @@
       if (!h || !st.fv) { if (++n < 40) return setTimeout(wait, 100); return; }
       if (section && section !== 'top') setCat(section); else if (st.fv.setCat) st.fv.setCat('all');
       h.scrollIntoView({ block: 'start' });
-      if (section === 'top') { const q = $('#fb-q'); if (q && !isPhone()) q.focus({ preventScroll: true }); }
+      if (section === 'top') { const q = st.fv && st.fv.input; if (q && !isPhone()) q.focus({ preventScroll: true }); }
     })();
   }
 
@@ -343,53 +357,8 @@
   }
 
   document.addEventListener('keydown', e => { if (e.key === 'Escape' && $('#fb-reader') && !document.querySelector('#fb-note-sheet, #fb-dp-sheet')) { const a = document.activeElement; if (a && a.closest && a.closest('#fb-reader')) return; e.stopPropagation(); closeReader(); } }, true);
-  // ---------- phones: Files (mobile2.js's hub) gets the same hero and the sections, one column ----------
-  const M2 = [['links', 'Links', 'link'], ['decisions', 'Decisions', 'vote'], ['questions', 'Questions', 'help'], ['code', 'Code', 'code']];
-  function m2Row(it) {
-    const l = it.item, note = l.type === 'note';
-    return `<button type="button" class="fb-card fb-m2-row" data-fb-id="${esc(l.id)}">
-      <span class="fb-m2-th">${l.thumb ? `<img alt="" loading="lazy" src="${esc(thumbUrl(l.id))}">` : ico(note ? 'notes' : 'link', 18)}</span>
-      <span class="fb-m2-b"><b>${esc(l.title)}</b><small>${esc([it.type, it.owner && it.owner.name, ago(l.at)].filter(Boolean).join(' · '))}</small>
-      ${(note ? l.text : l.summary) ? `<span class="fb-th-sum">${esc(note ? l.text : l.summary)}</span>` : ''}
-      ${(l.tags || []).length ? `<span class="fb-tags">${l.tags.slice(0, 3).map(t => `<i>${esc(t)}</i>`).join('')}</span>` : ''}</span></button>`;
-  }
-  function drawM2() {
-    const box = $('#fb-m2-list'); if (!box) return;
-    const cat = st.m2cat || 'links', q = (st.q || '').toLowerCase();
-    document.querySelectorAll('[data-fb-m2]').forEach(b => { const on = b.dataset.fbM2 === cat; b.classList.toggle('on', on); b.setAttribute('aria-selected', String(on)); });
-    if (cat === 'links') {
-      const rows = items().filter(it => !q || `${it.title} ${it.text}`.toLowerCase().includes(q)).sort((a, b) => ((b.pin ? 1 : 0) - (a.pin ? 1 : 0)) || ((Date.parse(b.at) || 0) - (Date.parse(a.at) || 0)));
-      box.innerHTML = lead('links') + (rows.length ? `<div class="fb-m2-rows">${rows.slice(0, 60).map(m2Row).join('')}</div>` : q ? '<p class="fb-empty">Nothing matches that.</p>' : '');
-    } else box.innerHTML = lead(cat) || `<p class="fb-empty">${cat === 'code' ? 'No code yet. Links to GitHub people save show up here.' : ''}</p>`;
-    wire(box);
-    box.querySelectorAll('.fb-m2-row').forEach(b => b.onclick = () => openItem(b.dataset.fbId));
-  }
-  const m2fv = { setQ(v) { st.q = String(v || ''); drawM2(); }, setCat(k) { st.m2cat = M2.some(c => c[0] === k) ? k : 'links'; drawM2(); }, state: () => ({ q: st.q || '' }) };
-  function phoneMount() {
-    if (!isPhone() || document.body.dataset.view !== 'docs' || !C.connected || !C.connected() || !pid()) return;
-    const view = $('#view-docs'); if (!view) return;
-    let sec = $('#fb-m2');
-    if (!sec) {
-      sec = document.createElement('section'); sec.id = 'fb-m2'; sec.className = 'm2-only fb-m2'; sec.setAttribute('aria-label', 'What we know');
-      sec.innerHTML = `<div class="fg-brain" id="fb-m2-hero"></div><nav class="fb-m2-tabs" role="tablist" aria-label="What we know">${M2.map(([k, l, i]) => `<button type="button" role="tab" id="fg-tab-${k}" data-fb-m2="${k}">${ico(i, 14)}<span>${esc(l)}</span></button>`).join('')}</nav><div id="fb-m2-list" class="fb-m2-list"></div>`;
-      view.prepend(sec);
-      sec.querySelectorAll('[data-fb-m2]').forEach(b => b.onclick = () => m2fv.setCat(b.dataset.fbM2));
-    }
-    st.refresh = drawM2;
-    attach({ slot: sec.querySelector('#fb-m2-hero'), fv: m2fv, refresh: drawM2 });
-    drawM2();
-  }
-  new MutationObserver(() => { if (document.body.dataset.view === 'docs') setTimeout(phoneMount, 0); }).observe(document.body, { attributes: true, attributeFilter: ['data-view'] });
-  addEventListener('resize', () => { const s = $('#fb-m2'); if (s && !isPhone()) s.remove(); else if (!s) phoneMount(); });
-
-  // keyboard: "/" searches Files while Files is on screen
-  document.addEventListener('keydown', e => {
-    if (e.key !== '/' || e.ctrlKey || e.metaKey || e.altKey || document.body.dataset.view !== 'docs') return;
-    const a = document.activeElement; if (a && (a.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName))) return;
-    const q = $('#fb-q'); if (q && q.offsetParent) { e.preventDefault(); q.focus(); }
-  });
   // live: a new link or note anywhere in the project refreshes the hero
   if (C && C.on) C.on('ws', m => { if (!m || (m.type !== 'brain' && m.type !== 'capture') || m.dm) return; if (m.project && m.project !== pid()) return; if (st.slot && st.slot.isConnected) { clearTimeout(st.wt); st.wt = setTimeout(reload, 600); } else st.at = 0; });
 
-  window.TribeFilesBrain = { attach, cats, items, lead, noCount, wire, open, act, go, openItem, add, designPicker, optedIn, knows, flint, useInDesign, reload, state: () => st };
+  window.TribeFilesBrain = { attach, cats, items, lead, noCount, wire, open, act, go, openItem, add, submit, queryOf, noteSheet, designPicker, optedIn, knows, flint, useInDesign, reload, state: () => st };
 })();

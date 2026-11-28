@@ -39,7 +39,7 @@
     if (!openSlug && openSeq !== seq0) return;
     const keep = cur && list.some(d => d.slug === cur.slug) ? cur.slug : null;   // the open doc may belong to the project we just left
     if (cur && !keep) cur = null;   // …then don't ask the new project for its comments or backlinks either
-    const want = openSlug || keep || (!(window.TribeFileGrid && desk()) && list[0] && list[0].slug);   // desktop opens on the file grid (feat/file-grid)
+    const want = openSlug || keep || (!window.TribeFileGrid && list[0] && list[0].slug);   // Files opens on the file grid (feat/file-grid; p14: phones too)
     if (want) open(want); else renderEditor();
   }
 
@@ -321,7 +321,7 @@
     parkAside(); outlineCtl = null; wasDesk = desk();
     if (!cur) {
       wideMode(false);
-      if (window.TribeFileGrid && desk()) { window.TribeFileGrid.render(pane, list, { open, create: k => (k ? newCraft(k) : createOnce()), nameOf, ago }); return; }   // feat/file-grid: files as a drive-like grid
+      if (window.TribeFileGrid) { window.TribeFileGrid.render(pane, list, { open, create: k => (k ? newCraft(k) : createOnce()), nameOf, ago }); return; }   // feat/file-grid: files as a drive-like grid
       pane.innerHTML = `<div class="doc-empty"><svg class="i"><use href="#i-doc"/></svg><h2>${list.length ? 'Pick a doc to open' : 'Your tribe\'s files live here'}</h2>
         <p>Notes, docs, pictures, PDFs: any file, kept in the tribe folder. Docs are plain Markdown; type <span class="kbd">/</span> in one for blocks.</p>
         <button class="btn" id="doc-first">New doc</button></div>`;

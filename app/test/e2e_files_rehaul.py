@@ -19,7 +19,7 @@ OFF = int(os.environ.get("TRIBE_PORT_OFFSET", "0"))
 PORT = 5790 + OFF; BASE = f"http://localhost:{PORT}"
 PNG = base64.b64decode("iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAYAAABytg0kAAAAFklEQVR4nGP4z8DwnwEIGBgY/jMwAAA3BgP9tq9tMgAAAABJRU5ErkJggg==")
 TABS = ["All", "Notes", "Docs", "Sheets", "Slides", "Designs", "Websites", "Pictures", "Audio/Video", "Code", "Other"]
-STUDIO = ["Note", "Doc", "Sheet", "Slides", "Whiteboard", "Design", "Website", "Code file", "From a template", "Upload", "Ask Flint"]
+STUDIO = ["Doc", "Sheet", "Slides", "Whiteboard", "Design", "Note", "Upload files", "Website", "Code file", "From a template", "Ask Flint"]   # p14: New menu (Paste a link is a project's)
 SETTINGS = "try{localStorage.getItem('tribecode.settings.v1')||localStorage.setItem('tribecode.settings.v1',JSON.stringify({name:'Rae',color:'#38C6B1',onboarded:true,server:{url:'',token:''},hosting:false,tour:{done:true}}))}catch(e){}"
 
 
@@ -65,7 +65,8 @@ def main():
         # ---- header: Files, search, Where, sort, view, one + Create ----
         assert pg.inner_text("#dc-title").strip() == "Files"
         for sel in ("#hub-dq", "#dc-where", "#dc-sort", "[data-dv=grid]", "[data-dv=list]", "#dc-new"): assert pg.locator(sel).is_visible(), sel
-        assert pg.locator(".fx-head .btn.primary, .fx-tools .btn.primary").count() == 1, "one primary Create"
+        assert pg.locator(".fx-head .btn.primary, .fx-tools .btn.primary, .fx-row .btn.primary").count() == 1, "one primary New"
+        assert pg.inner_text("#dc-new").strip() == "New"
         assert pg.eval_on_selector_all("#dc-where option", "o => o.map(x => x.textContent)")[:2] == ["Mine", "Everything"]
         assert pg.eval_on_selector(".hub-crumb", "e => e.textContent").replace(" ", "") == "Home›Files", pg.eval_on_selector(".hub-crumb", "e => e.textContent")
         # ---- tabs with icons ----
