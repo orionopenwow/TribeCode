@@ -3,7 +3,7 @@
 //   window.TribeIntro = {
 //     maybe(key, slides, opts) -> Promise<boolean>   once per device per key (localStorage 'tribecode.intro.v1'); waits
 //                                                   while another sheet or dialog is open (or skips this time); never in
-//                                                   automated browsers unless the address has ?intro=1 (?intro=0: never);
+//                                                   automated browsers unless the address has ?screenintro=1 (?screenintro=0: never);
 //                                                   true when it was shown and then finished or skipped
 //     show(key, slides, opts) -> Promise<void>       always shows (Help › Tour this screen)
 //     seen(key) -> boolean, reset(key?)              reset() forgets every key (Settings › Show intros again)
@@ -35,7 +35,7 @@
 
   // Automated browsers keep the old behaviour (every existing test) unless the address asks for intros.
   function allowed() {
-    const p = params().get('intro');
+    const p = params().get('screenintro');   // its own flag: ?intro=1 already opens the app's first-run intro
     if (p === '0') return false;
     if (p === '1') return true;
     return !navigator.webdriver;

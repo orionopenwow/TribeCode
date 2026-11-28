@@ -1,5 +1,10 @@
 # Changelog
 
+## v0.49.1
+- Everything in v0.49.0 below; its release build stopped at a check, and this one ships it.
+- **Fix**: a screen intro could cover the page while joining from the first-run screen's "Have an invite link?" box.
+- **Phones**: unchanged from v0.49.0.
+
 ## v0.49.0
 - **Design Studio**: the Design section is now Design Studio, one place to make anything: apps, websites, games, slides, posters and more.
 - **A cleaner home**: your projects first as a grid with previews, messages under them, a calmer header with no empty counts.

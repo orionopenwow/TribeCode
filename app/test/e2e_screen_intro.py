@@ -1,9 +1,9 @@
 """Screen intros (feat/p13b-intro: app/ui/screenintro.js + screenintro.css).
 
 Every main screen shows a short set of slides the first time it opens on a device. Automated browsers never see them
-unless the address has ?intro=1, so every other test is unaffected (checked first here).
-  - Without ?intro=1: nothing shows and TribeIntro.maybe() resolves false.
-  - With ?intro=1: the first screen's intro shows; Esc skips it. Home's first open shows 3 slides: Next, Back,
+unless the address has ?screenintro=1, so every other test is unaffected (checked first here).
+  - Without ?screenintro=1: nothing shows and TribeIntro.maybe() resolves false.
+  - With ?screenintro=1: the first screen's intro shows; Esc skips it. Home's first open shows 3 slides: Next, Back,
     arrow keys, the dots, Get started on the last; remembered after a reload.
   - Messages' first open shows its one slide (no dots); Skip closes it.
   - No stacking: a screen opened under an intro, and a maybe() called while one is up, wait their turn.
@@ -49,13 +49,13 @@ def main():
             pg = ctx.new_page(); pg.on("pageerror", lambda e: errors.append(str(e)))
             pg.goto(BASE + "/?skipIntro=1"); pg.wait_for_function("window.TribeClient && TribeClient.connected() && window.TribeIntro", timeout=20000)
             time.sleep(2.5)
-            assert pg.locator("#sci").count() == 0, "an intro showed in an automated browser without ?intro=1"
+            assert pg.locator("#sci").count() == 0, "an intro showed in an automated browser without ?screenintro=1"
             assert pg.evaluate("TribeIntro.maybe('x', [{title:'x'}])") is False
-            print("ok  automated browsers see no intro without ?intro=1")
+            print("ok  automated browsers see no intro without ?screenintro=1")
 
             # ---- desktop (the same browser, now asking for intros)
             ctx.add_init_script(COUNT)
-            pg.goto(BASE + "/?skipIntro=1&intro=1"); pg.wait_for_function("window.TribeClient && TribeClient.connected() && window.TribeIntro", timeout=20000)
+            pg.goto(BASE + "/?skipIntro=1&screenintro=1"); pg.wait_for_function("window.TribeClient && TribeClient.connected() && window.TribeIntro", timeout=20000)
             first = pg.evaluate("TribeIntro.current()")
             wait_intro(pg, first, 12000)
             pg.wait_for_function("document.activeElement && document.activeElement.closest('#sci') !== null", timeout=3000)   # focus is in the intro
@@ -146,7 +146,7 @@ def main():
             # ---- phone (same person, a fresh intro memory)
             ctx = b.new_context(viewport={"width": 390, "height": 844}, is_mobile=True, has_touch=True, device_scale_factor=2, storage_state=state)
             pg = ctx.new_page(); pg.on("pageerror", lambda e: errors.append(str(e)))
-            pg.goto(BASE + "/?skipIntro=1&intro=1"); pg.wait_for_function("window.TribeClient && TribeClient.connected() && window.TribeIntro", timeout=20000)
+            pg.goto(BASE + "/?skipIntro=1&screenintro=1"); pg.wait_for_function("window.TribeClient && TribeClient.connected() && window.TribeIntro", timeout=20000)
             pg.evaluate("localStorage.setItem('tribecode.intro.v1', JSON.stringify({dashboard:1, messages:1}))")
             pg.evaluate("TribeHub.open('home')"); wait_intro(pg, 'home', 12000)
             time.sleep(0.4)
